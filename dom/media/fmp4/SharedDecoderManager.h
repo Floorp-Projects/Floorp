@@ -28,7 +28,8 @@ public:
     PlatformDecoderModule* aPDM,
     const mp4_demuxer::VideoDecoderConfig& aConfig,
     layers::LayersBackend aLayersBackend,
-    layers::ImageContainer* aImageContainer, FlushableMediaTaskQueue* aVideoTaskQueue,
+    layers::ImageContainer* aImageContainer,
+    FlushableMediaTaskQueue* aVideoTaskQueue,
     MediaDataDecoderCallback* aCallback);
 
   void SetReader(MediaDecoderReader* aReader);

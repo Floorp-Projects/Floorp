@@ -12,7 +12,10 @@ namespace mozilla {
 class SharedDecoderCallback : public MediaDataDecoderCallback
 {
 public:
-  explicit SharedDecoderCallback(SharedDecoderManager* aManager) : mManager(aManager) {}
+  explicit SharedDecoderCallback(SharedDecoderManager* aManager)
+    : mManager(aManager)
+  {
+  }
 
   virtual void Output(MediaData* aData) MOZ_OVERRIDE
   {
@@ -66,22 +69,29 @@ SharedDecoderManager::SharedDecoderManager()
   mCallback = new SharedDecoderCallback(this);
 }
 
-SharedDecoderManager::~SharedDecoderManager() {}
+SharedDecoderManager::~SharedDecoderManager()
+{
+}
 
 already_AddRefed<MediaDataDecoder>
 SharedDecoderManager::CreateVideoDecoder(
   PlatformDecoderModule* aPDM,
   const mp4_demuxer::VideoDecoderConfig& aConfig,
-  layers::LayersBackend aLayersBackend, layers::ImageContainer* aImageContainer,
-  FlushableMediaTaskQueue* aVideoTaskQueue, MediaDataDecoderCallback* aCallback)
+  layers::LayersBackend aLayersBackend,
+  layers::ImageContainer* aImageContainer,
+  FlushableMediaTaskQueue* aVideoTaskQueue,
+  MediaDataDecoderCallback* aCallback)
 {
   if (!mDecoder) {
     // We use the manager's task queue for the decoder, rather than the one
     // passed in, so that none of the objects sharing the decoder can shutdown
     // the task queue while we're potentially still using it for a *different*
     // object also sharing the decoder.
-    mDecoder = aPDM->CreateVideoDecoder(
-      aConfig, aLayersBackend, aImageContainer, mTaskQueue, mCallback);
+    mDecoder = aPDM->CreateVideoDecoder(aConfig,
+                                        aLayersBackend,
+                                        aImageContainer,
+                                        mTaskQueue,
+                                        mCallback);
     if (!mDecoder) {
       mPDM = nullptr;
       return nullptr;
@@ -103,7 +113,11 @@ SharedDecoderManager::Recreate(PlatformDecoderModule* aPDM,
 {
   mDecoder->Flush();
   mDecoder->Shutdown();
-  mDecoder = aPDM->CreateVideoDecoder(aConfig, aLayersBackend, aImageContainer, mTaskQueue, mCallback);
+  mDecoder = aPDM->CreateVideoDecoder(aConfig,
+                                      aLayersBackend,
+                                      aImageContainer,
+                                      mTaskQueue,
+                                      mCallback);
   if (!mDecoder) {
     mPDM = nullptr;
     return false;
@@ -189,13 +203,17 @@ SharedDecoderManager::IsPDMInUse(const mozilla::PlatformDecoderModule* aPDM) con
   return aPDM == mPDM;
 }
 
-SharedDecoderProxy::SharedDecoderProxy(
-  SharedDecoderManager* aManager, MediaDataDecoderCallback* aCallback)
-  : mManager(aManager), mCallback(aCallback)
+SharedDecoderProxy::SharedDecoderProxy(SharedDecoderManager* aManager,
+                                       MediaDataDecoderCallback* aCallback)
+  : mManager(aManager)
+  , mCallback(aCallback)
 {
 }
 
-SharedDecoderProxy::~SharedDecoderProxy() { Shutdown(); }
+SharedDecoderProxy::~SharedDecoderProxy()
+{
+  Shutdown();
+}
 
 nsresult
 SharedDecoderProxy::Init()
