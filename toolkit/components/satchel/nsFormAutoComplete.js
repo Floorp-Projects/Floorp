@@ -335,6 +335,7 @@ FormAutoCompleteChild.prototype = {
 
     _debug: false,
     _enabled: true,
+    _pendingSearch: null,
 
     /*
      * init
@@ -367,7 +368,9 @@ FormAutoCompleteChild.prototype = {
     autoCompleteSearchAsync : function (aInputName, aUntrimmedSearchString, aField, aPreviousResult, aListener) {
       this.log("autoCompleteSearchAsync");
 
-      this._pendingListener = aListener;
+      if (this._pendingSearch) {
+        this.stopAutoCompleteSearch();
+      }
 
       let rect = BrowserUtils.getElementBoundingScreenRect(aField);
 
@@ -389,26 +392,35 @@ FormAutoCompleteChild.prototype = {
         height: rect.height
       });
 
-      mm.addMessageListener("FormAutoComplete:AutoCompleteSearchAsyncResult",
-        function searchFinished(message) {
-          mm.removeMessageListener("FormAutoComplete:AutoCompleteSearchAsyncResult", searchFinished);
-          let result = new FormAutoCompleteResult(
-            null,
-            [{text: res} for (res of message.data.results)],
-            null,
-            null
-          );
-          if (aListener) {
-            aListener.onSearchCompletion(result);
-          }
-        }
-      );
+      let search = this._pendingSearch = {};
+      let searchFinished = message => {
+        mm.removeMessageListener("FormAutoComplete:AutoCompleteSearchAsyncResult", searchFinished);
 
+        // Check whether stopAutoCompleteSearch() was called, i.e. the search
+        // was cancelled, while waiting for a result.
+        if (search != this._pendingSearch) {
+          return;
+        }
+        this._pendingSearch = null;
+
+        let result = new FormAutoCompleteResult(
+          null,
+          [for (res of message.data.results) {text: res}],
+          null,
+          null
+        );
+        if (aListener) {
+          aListener.onSearchCompletion(result);
+        }
+      }
+
+      mm.addMessageListener("FormAutoComplete:AutoCompleteSearchAsyncResult", searchFinished);
       this.log("autoCompleteSearchAsync message was sent");
     },
 
     stopAutoCompleteSearch : function () {
-       this.log("stopAutoCompleteSearch");
+      this.log("stopAutoCompleteSearch");
+      this._pendingSearch = null;
     },
 }; // end of FormAutoCompleteChild implementation
 
