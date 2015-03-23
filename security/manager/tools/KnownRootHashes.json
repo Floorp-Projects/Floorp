@@ -798,7 +798,42 @@
       "label": "GlobalSign",
       "binNumber": 158,
       "sha256Fingerprint": "F5+8FIo90A/STqE0WMxDv6f1nIGC14OlE/br7BAMiSQ="
+    },
+    {
+      "label": "Staat_der_Nederlanden_Root_CA___G3",
+      "binNumber": 159,
+      "sha256Fingerprint": "PE+wuVq4swAy9DK4b1Nf4XLBhdD9OYZYN882GH+m9Cg="
+    },
+    {
+      "label": "Staat_der_Nederlanden_EV_Root_CA",
+      "binNumber": 160,
+      "sha256Fingerprint": "TSSRQUz+lWdG7Ezvps9vcuKKEylDL52KkHrEy12twVo="
+    },
+    {
+      "label": "IdenTrust_Commercial_Root_CA_1",
+      "binNumber": 161,
+      "sha256Fingerprint": "XVZJm+TS4IvPytCKPjhyPVBQO95waUjkL1VgMBnlKK4="
+    },
+    {
+      "label": "IdenTrust_Public_Sector_Root_CA_1",
+      "binNumber": 162,
+      "sha256Fingerprint": "MNCJWppEiiYgkWNVItH1IBC1hnrK4Sx475WP1PQ4ny8="
+    },
+    {
+      "label": "Entrust_Root_Certification_Authority___G2",
+      "binNumber": 163,
+      "sha256Fingerprint": "Q99XdLA+f+9f5A2TGnvt8bsua0JzjE5tOEEQPTqn8zk="
+    },
+    {
+      "label": "Entrust_Root_Certification_Authority___EC1",
+      "binNumber": 164,
+      "sha256Fingerprint": "Au0OsowU2kUWXFZnkXANZFHX+1bwsqsdO46wcOVu3/U="
+    },
+    {
+      "label": "CFCA_EV_ROOT",
+      "binNumber": 165,
+      "sha256Fingerprint": "XMPXjk4dXkVUegTmhz5k+Qz5U20czC74APNVxMX9cP0="
     }
   ],
-  "maxBin": 158
+  "maxBin": 165
 }
