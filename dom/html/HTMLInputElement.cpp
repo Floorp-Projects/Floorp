@@ -17,6 +17,7 @@
 #include "nsIRadioVisitor.h"
 #include "nsIPhonetic.h"
 
+#include "mozilla/Telemetry.h"
 #include "nsIControllers.h"
 #include "nsIStringBundle.h"
 #include "nsFocusManager.h"
@@ -4496,6 +4497,12 @@ HTMLInputElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
   // And now make sure our state is up to date
   UpdateState(false);
+
+#ifdef EARLY_BETA_OR_EARLIER
+  if (mType == NS_FORM_INPUT_PASSWORD) {
+    Telemetry::Accumulate(Telemetry::PWMGR_PASSWORD_INPUT_IN_FORM, !!mForm);
+  }
+#endif
 
   return rv;
 }
