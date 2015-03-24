@@ -1185,6 +1185,7 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
 void
 nsPluginStreamListenerPeer::OnStreamTypeSet(const int32_t aStreamType)
 {
+  MOZ_ASSERT(aStreamType != STREAM_TYPE_UNKNOWN);
   MOZ_ASSERT(mRequest);
   mStreamType = aStreamType;
   if (!mUseLocalCache && mStreamType >= NP_ASFILE) {
@@ -1200,8 +1201,6 @@ nsPluginStreamListenerPeer::OnStreamTypeSet(const int32_t aStreamType)
     SetupPluginCacheFile(channel);
   }
 }
-
-const int32_t nsPluginStreamListenerPeer::STREAM_TYPE_UNKNOWN = UINT16_MAX;
 
 nsresult
 nsPluginStreamListenerPeer::OnFileAvailable(nsIFile* aFile)
