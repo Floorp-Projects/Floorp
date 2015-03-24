@@ -334,7 +334,8 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsPluginStreamListenerPeer* streamPe
 
   if (streamType == nsPluginStreamListenerPeer::STREAM_TYPE_UNKNOWN) {
     SuspendRequest();
-  } else if (!SetStreamType(streamType, false)) {
+  }
+  if (!SetStreamType(streamType, false)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -364,6 +365,12 @@ nsNPAPIPluginStreamListener::SetStreamType(uint16_t aType, bool aNeedsResume)
       // instance is destroyed.
       NS_ADDREF_THIS();
       break;
+    case nsPluginStreamListenerPeer::STREAM_TYPE_UNKNOWN:
+      MOZ_ASSERT(!aNeedsResume);
+      mStreamType = nsPluginStreamListenerPeer::STREAM_TYPE_UNKNOWN;
+      // In this case we just want to set mStreamType but we do not want to
+      // execute anything else in this function.
+      return true;
     default:
       return false;
   }
