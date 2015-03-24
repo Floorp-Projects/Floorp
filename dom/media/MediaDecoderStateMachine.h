@@ -164,7 +164,16 @@ public:
   bool IsDormantNeeded();
   // Set/Unset dormant state.
   void SetDormant(bool aDormant);
+
+private:
   void Shutdown();
+public:
+
+  void DispatchShutdown()
+  {
+    TaskQueue()->Dispatch(NS_NewRunnableMethod(this, &MediaDecoderStateMachine::Shutdown));
+  }
+
   void ShutdownReader();
   void FinishShutdown();
 
