@@ -161,6 +161,7 @@ let RLSidebar = {
     } else {
       thumb.style.removeProperty("background-image");
     }
+    thumb.classList.toggle("preview-available", !!item.preview);
   },
 
   /**
@@ -200,7 +201,7 @@ let RLSidebar = {
       return;
     }
 
-    log.debug(`Setting activeItem: ${node ? node.id : null}`);
+    log.trace(`Setting activeItem: ${node ? node.id : null}`);
 
     if (node && node.classList.contains("active")) {
       return;
@@ -233,7 +234,7 @@ let RLSidebar = {
       return;
     }
 
-    log.debug(`Setting activeItem: ${node ? node.id : null}`);
+    log.trace(`Setting selectedItem: ${node ? node.id : null}`);
 
     let prevItem = document.querySelector("#list > .item.selected");
     if (prevItem) {
@@ -270,7 +271,7 @@ let RLSidebar = {
   },
 
   set selectedIndex(index) {
-    log.debug(`Setting selectedIndex: ${index}`);
+    log.trace(`Setting selectedIndex: ${index}`);
 
     if (index == -1) {
       this.selectedItem = null;

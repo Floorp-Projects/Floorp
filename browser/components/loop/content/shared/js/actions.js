@@ -361,7 +361,9 @@ loop.shared.actions = (function() {
      * XXX: should move to some roomActions module - refs bug 1079284
      */
     RoomFailure: Action.define("roomFailure", {
-      error: Object
+      error: Object,
+      // True when the failures occurs in the join room request to the loop-server.
+      failedJoinRequest: Boolean
     }),
 
     /**
