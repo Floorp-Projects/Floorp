@@ -11697,6 +11697,7 @@ class MFilterTypeSet
     virtual bool neverHoist() const override {
         return resultTypeSet()->empty();
     }
+    void computeRange(TempAllocator &alloc) override;
 };
 
 // Given a value, guard that the value is in a particular TypeSet, then returns
