@@ -54,7 +54,9 @@ if (!window.todo) {
 }
 if (!window.SimpleTest) {
   window.SimpleTest = {
+    expectAssertions: function(){},
     finish: function(){},
+    requestFlakyTimeout: function(){},
     requestLongerTimeout: function(){},
     waitForExplicitFinish: function(){},
   };
