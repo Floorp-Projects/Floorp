@@ -407,6 +407,10 @@ let RLSidebar = {
       // TODO: Refactor this so we pass a direction to a generic method.
       // See autocomplete.xml's getNextIndex
       event.preventDefault();
+
+      if (!this.numItems) {
+        return;
+      }
       let index = this.selectedIndex + 1;
       if (index >= this.numItems) {
         index = 0;
@@ -417,6 +421,9 @@ let RLSidebar = {
     } else if (event.keyCode == KeyEvent.DOM_VK_UP) {
       event.preventDefault();
 
+      if (!this.numItems) {
+        return;
+      }
       let index = this.selectedIndex - 1;
       if (index < 0) {
         index = this.numItems - 1;
