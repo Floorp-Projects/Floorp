@@ -29,14 +29,6 @@ const PREF_IMAGE_TOOLTIP_SIZE = "devtools.inspector.imagePreviewTooltipSize";
 const TOOLTIP_IMAGE_TYPE = "image";
 const TOOLTIP_FONTFAMILY_TYPE = "font-family";
 
-// Types of existing highlighters
-const HIGHLIGHTER_TRANSFORM_TYPE = "CssTransformHighlighter";
-const HIGHLIGHTER_SELECTOR_TYPE = "SelectorHighlighter";
-const HIGHLIGHTER_TYPES = [
-  HIGHLIGHTER_TRANSFORM_TYPE,
-  HIGHLIGHTER_SELECTOR_TYPE
-];
-
 // Types of nodes in the rule/computed-view
 const VIEW_NODE_SELECTOR_TYPE = exports.VIEW_NODE_SELECTOR_TYPE = 1;
 const VIEW_NODE_PROPERTY_TYPE = exports.VIEW_NODE_PROPERTY_TYPE = 2;
@@ -121,25 +113,17 @@ HighlightersOverlay.prototype = {
     }
 
     // Choose the type of highlighter required for the hovered node
-    let type, options;
+    let type;
     if (this._isRuleViewTransform(nodeInfo) ||
         this._isComputedViewTransform(nodeInfo)) {
-      type = HIGHLIGHTER_TRANSFORM_TYPE;
-    } else if (nodeInfo.type === VIEW_NODE_SELECTOR_TYPE) {
-      type = HIGHLIGHTER_SELECTOR_TYPE;
-      options = {
-        selector: nodeInfo.value,
-        hideInfoBar: true,
-        showOnly: "border",
-        region: "border"
-      };
+      type = "CssTransformHighlighter";
     }
 
     if (type) {
       this.highlighterShown = type;
       let node = this.view.inspector.selection.nodeFront;
       this._getHighlighter(type).then(highlighter => {
-        highlighter.show(node, options);
+        highlighter.show(node);
       });
     }
   },
