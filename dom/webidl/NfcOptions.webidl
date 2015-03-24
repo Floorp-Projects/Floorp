@@ -42,6 +42,15 @@ enum NfcNotificationType {
   "hciEventTransaction"
 };
 
+/**
+ * The source of HCI Transaction Event.
+ */
+enum HCIEventOrigin {
+  "SIM",
+  "eSE",
+  "ASSD"
+};
+
 dictionary NfcCommandOptions
 {
   required NfcRequestType type;
