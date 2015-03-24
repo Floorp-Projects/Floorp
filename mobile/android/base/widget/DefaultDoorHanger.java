@@ -31,30 +31,38 @@ public class DefaultDoorHanger extends DoorHanger {
     private List<PromptInput> mInputs;
     private CheckBox mCheckBox;
 
-    public DefaultDoorHanger(Context context) {
-
-        this(context, 0, null);
+    public DefaultDoorHanger(Context context, DoorhangerConfig config) {
+        this(context, config, Type.DEFAULT);
     }
 
-    public DefaultDoorHanger(Context context, Type type) {
-        this(context, 0, null, type);
-    }
-
-    public DefaultDoorHanger(Context context, int tabId, String id) {
-        this(context, tabId, id, Type.DEFAULT);
-    }
-
-    public DefaultDoorHanger(Context context, int tabId, String id, Type type) {
-
-        super(context, tabId, id, type);
+    public DefaultDoorHanger(Context context, DoorhangerConfig config, Type type) {
+        super(context, config, type);
 
         mResources = getResources();
 
         if (sSpinnerTextColor == -1) {
             sSpinnerTextColor = getResources().getColor(R.color.text_color_primary_disable_only);
         }
+        loadConfig(config);
     }
 
+    @Override
+    protected void loadConfig(DoorhangerConfig config) {
+        final String message = config.getMessage();
+        if (message != null) {
+            setMessage(message);
+        }
+
+        final JSONObject options = config.getOptions();
+        if (options != null) {
+            setOptions(options);
+        }
+
+        final DoorhangerConfig.Link link = config.getLink();
+        if (link != null) {
+            addLink(link.label, link.url, link.delimiter);
+        }
+    }
 
     @Override
     public List<PromptInput> getInputs() {
