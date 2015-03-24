@@ -1271,17 +1271,34 @@ static bool
 CloneProperties(JSContext *cx, HandleNativeObject selfHostedObject, HandleObject clone)
 {
     AutoIdVector ids(cx);
+    Vector<uint8_t, 16> attrs(cx);
 
     for (size_t i = 0; i < selfHostedObject->getDenseInitializedLength(); i++) {
         if (!selfHostedObject->getDenseElement(i).isMagic(JS_ELEMENTS_HOLE)) {
             if (!ids.append(INT_TO_JSID(i)))
                 return false;
+            if (!attrs.append(JSPROP_ENUMERATE))
+                return false;
         }
     }
 
+    AutoShapeVector shapes(cx);
     for (Shape::Range<NoGC> range(selfHostedObject->lastProperty()); !range.empty(); range.popFront()) {
         Shape &shape = range.front();
-        if (shape.enumerable() && !ids.append(shape.propid()))
+        if (shape.enumerable() && !shapes.append(&shape))
+            return false;
+    }
+
+    // Now our shapes are in last-to-first order, so....
+    Reverse(shapes.begin(), shapes.end());
+    for (size_t i = 0; i < shapes.length(); ++i) {
+        MOZ_ASSERT(!shapes[i]->isAccessorShape(),
+                   "Can't handle cloning accessors here yet.");
+        if (!ids.append(shapes[i]->propid()))
+            return false;
+        uint8_t shapeAttrs =
+            shapes[i]->attributes() & (JSPROP_ENUMERATE | JSPROP_PERMANENT | JSPROP_READONLY);
+        if (!attrs.append(shapeAttrs))
             return false;
     }
 
@@ -1293,7 +1310,7 @@ CloneProperties(JSContext *cx, HandleNativeObject selfHostedObject, HandleObject
         if (!GetUnclonedValue(cx, selfHostedObject, id, &selfHostedValue))
             return false;
         if (!CloneValue(cx, selfHostedValue, &val) ||
-            !JS_DefinePropertyById(cx, clone, id, val, 0))
+            !JS_DefinePropertyById(cx, clone, id, val, attrs[i]))
         {
             return false;
         }
