@@ -95,7 +95,10 @@ describe("loop.store.ActiveRoomStore", function () {
     });
 
     it("should log the error", function() {
-      store.roomFailure({error: fakeError});
+      store.roomFailure(new sharedActions.RoomFailure({
+        error: fakeError,
+        failedJoinRequest: false
+      }));
 
       sinon.assert.calledOnce(console.error);
       sinon.assert.calledWith(console.error,
@@ -105,13 +108,19 @@ describe("loop.store.ActiveRoomStore", function () {
     it("should set the state to `FULL` on server error room full", function() {
       fakeError.errno = REST_ERRNOS.ROOM_FULL;
 
-      store.roomFailure({error: fakeError});
+      store.roomFailure(new sharedActions.RoomFailure({
+        error: fakeError,
+        failedJoinRequest: false
+      }));
 
       expect(store._storeState.roomState).eql(ROOM_STATES.FULL);
     });
 
     it("should set the state to `FAILED` on generic error", function() {
-      store.roomFailure({error: fakeError});
+      store.roomFailure(new sharedActions.RoomFailure({
+        error: fakeError,
+        failedJoinRequest: false
+      }));
 
       expect(store._storeState.roomState).eql(ROOM_STATES.FAILED);
       expect(store._storeState.failureReason).eql(FAILURE_DETAILS.UNKNOWN);
@@ -121,7 +130,10 @@ describe("loop.store.ActiveRoomStore", function () {
       "invalid token", function() {
         fakeError.errno = REST_ERRNOS.INVALID_TOKEN;
 
-        store.roomFailure({error: fakeError});
+        store.roomFailure(new sharedActions.RoomFailure({
+          error: fakeError,
+          failedJoinRequest: false
+        }));
 
         expect(store._storeState.roomState).eql(ROOM_STATES.FAILED);
         expect(store._storeState.failureReason).eql(FAILURE_DETAILS.EXPIRED_OR_INVALID);
@@ -131,14 +143,20 @@ describe("loop.store.ActiveRoomStore", function () {
       "expired", function() {
         fakeError.errno = REST_ERRNOS.EXPIRED;
 
-        store.roomFailure({error: fakeError});
+        store.roomFailure(new sharedActions.RoomFailure({
+          error: fakeError,
+          failedJoinRequest: false
+        }));
 
         expect(store._storeState.roomState).eql(ROOM_STATES.FAILED);
         expect(store._storeState.failureReason).eql(FAILURE_DETAILS.EXPIRED_OR_INVALID);
       });
 
     it("should reset the multiplexGum", function() {
-      store.roomFailure({error: fakeError});
+      store.roomFailure(new sharedActions.RoomFailure({
+        error: fakeError,
+        failedJoinRequest: false
+      }));
 
       sinon.assert.calledOnce(fakeMultiplexGum.reset);
     });
@@ -146,14 +164,20 @@ describe("loop.store.ActiveRoomStore", function () {
     it("should set screen sharing inactive", function() {
       store.setStoreState({windowId: "1234"});
 
-      store.roomFailure({error: fakeError});
+      store.roomFailure(new sharedActions.RoomFailure({
+        error: fakeError,
+        failedJoinRequest: false
+      }));
 
       sinon.assert.calledOnce(fakeMozLoop.setScreenShareState);
       sinon.assert.calledWithExactly(fakeMozLoop.setScreenShareState, "1234", false);
     });
 
     it("should disconnect from the servers via the sdk", function() {
-      store.roomFailure({error: fakeError});
+      store.roomFailure(new sharedActions.RoomFailure({
+        error: fakeError,
+        failedJoinRequest: false
+      }));
 
       sinon.assert.calledOnce(fakeSdkDriver.disconnectSession);
     });
@@ -162,7 +186,10 @@ describe("loop.store.ActiveRoomStore", function () {
       sandbox.stub(window, "clearTimeout");
       store._timeout = {};
 
-      store.roomFailure({error: fakeError});
+      store.roomFailure(new sharedActions.RoomFailure({
+        error: fakeError,
+        failedJoinRequest: false
+      }));
 
       sinon.assert.calledOnce(clearTimeout);
     });
@@ -174,17 +201,32 @@ describe("loop.store.ActiveRoomStore", function () {
       }));
 
       // Now simulate room failure.
-      store.roomFailure({error: fakeError});
+      store.roomFailure(new sharedActions.RoomFailure({
+        error: fakeError,
+        failedJoinRequest: false
+      }));
 
       sinon.assert.calledOnce(fakeMozLoop.removeBrowserSharingListener);
     });
 
     it("should call mozLoop.rooms.leave", function() {
-      store.roomFailure({error: fakeError});
+      store.roomFailure(new sharedActions.RoomFailure({
+        error: fakeError,
+        failedJoinRequest: false
+      }));
 
       sinon.assert.calledOnce(fakeMozLoop.rooms.leave);
       sinon.assert.calledWithExactly(fakeMozLoop.rooms.leave,
         "fakeToken", "1627384950");
+    });
+
+    it("should not call mozLoop.rooms.leave if failedJoinRequest is true", function() {
+      store.roomFailure(new sharedActions.RoomFailure({
+        error: fakeError,
+        failedJoinRequest: true
+      }));
+
+      sinon.assert.notCalled(fakeMozLoop.rooms.leave);
     });
   });
 
@@ -271,7 +313,8 @@ describe("loop.store.ActiveRoomStore", function () {
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.RoomFailure({
-            error: fakeError
+            error: fakeError,
+            failedJoinRequest: false
           }));
       });
   });
@@ -449,7 +492,10 @@ describe("loop.store.ActiveRoomStore", function () {
 
       sinon.assert.calledOnce(dispatcher.dispatch);
       sinon.assert.calledWith(dispatcher.dispatch,
-        new sharedActions.RoomFailure({error: fakeError}));
+        new sharedActions.RoomFailure({
+          error: fakeError,
+          failedJoinRequest: true
+        }));
     });
   });
 
@@ -582,7 +628,8 @@ describe("loop.store.ActiveRoomStore", function () {
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWith(dispatcher.dispatch,
           new sharedActions.RoomFailure({
-            error: fakeError
+            error: fakeError,
+            failedJoinRequest: false
           }));
     });
   });
