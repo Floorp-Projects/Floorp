@@ -48,3 +48,13 @@
 #body[layout=vertical] #stackframes {
   visibility: hidden;
 }
+
+#source-progress-container {
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+}
+
+#source-progress {
+  flex: none;
+}
