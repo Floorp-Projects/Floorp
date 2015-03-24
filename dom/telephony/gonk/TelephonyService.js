@@ -1333,10 +1333,31 @@ TelephonyService.prototype = {
                                                        aCall.namePresentation]);
   },
 
-  notifySupplementaryService: function(aClientId, aCallIndex, aNotification) {
+  notifySupplementaryService: function(aClientId, aNumber, aNotification) {
     let notification = this._convertRILSuppSvcNotification(aNotification);
+
+    // Get the target call object for this notification.
+    let callIndex = -1;
+
+    let indexes = Object.keys(this.currentCalls);
+    if (indexes.length === 1) {
+      // Only one call exists. This should be the target.
+      callIndex = indexes[0];
+    } else {
+      // Find the call in |currentCalls| by the given number.
+      if (aNumber) {
+        for (let i in this._currentCalls) {
+          let call = this._currentCalls[aClientId][i];
+          if (call.number === aNumber) {
+            callIndex = i;
+            break;
+          }
+        }
+      }
+    }
+
     this._notifyAllListeners("supplementaryServiceNotification",
-                             [aClientId, aCallIndex, notification]);
+                             [aClientId, callIndex, notification]);
   },
 
   notifyConferenceCallStateChanged: function(aState) {

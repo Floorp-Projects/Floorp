@@ -1873,7 +1873,7 @@ RadioInterface.prototype = {
         break;
       case "suppSvcNotification":
         gTelephonyService.notifySupplementaryService(this.clientId,
-                                                     message.callIndex,
+                                                     message.number,
                                                      message.notification);
         break;
       case "ussdreceived":
