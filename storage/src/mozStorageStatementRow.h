@@ -14,6 +14,8 @@
 namespace mozilla {
 namespace storage {
 
+class Statement;
+
 class StatementRow final : public mozIStorageStatementRow
                              , public nsIXPCScriptable
 {

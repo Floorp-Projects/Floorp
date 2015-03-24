@@ -165,6 +165,8 @@ loop.OTSdkDriver = (function() {
         config);
       this.screenshare.on("accessAllowed", this._onScreenShareGranted.bind(this));
       this.screenshare.on("accessDenied", this._onScreenShareDenied.bind(this));
+
+      this._noteSharingState(options.videoSource, true);
     },
 
     /**
@@ -196,6 +198,7 @@ loop.OTSdkDriver = (function() {
       this.screenshare.off("accessAllowed accessDenied");
       this.screenshare.destroy();
       delete this.screenshare;
+      this._noteSharingState(this._windowId ? "browser" : "window", false);
       delete this._windowId;
       return true;
     },
@@ -648,15 +651,15 @@ loop.OTSdkDriver = (function() {
      * @private
      */
     _noteConnectionLength: function(callLengthSeconds) {
+      var buckets = this.mozLoop.TWO_WAY_MEDIA_CONN_LENGTH;
 
-      var bucket = this.mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.SHORTER_THAN_10S;
-
+      var bucket = buckets.SHORTER_THAN_10S;
       if (callLengthSeconds >= 10 && callLengthSeconds <= 30) {
-        bucket = this.mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.BETWEEN_10S_AND_30S;
+        bucket = buckets.BETWEEN_10S_AND_30S;
       } else if (callLengthSeconds > 30 && callLengthSeconds <= 300) {
-        bucket = this.mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.BETWEEN_30S_AND_5M;
+        bucket = buckets.BETWEEN_30S_AND_5M;
       } else if (callLengthSeconds > 300) {
-        bucket = this.mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.MORE_THAN_5M;
+        bucket = buckets.MORE_THAN_5M;
       }
 
       this.mozLoop.telemetryAddKeyedValue("LOOP_TWO_WAY_MEDIA_CONN_LENGTH",
@@ -705,7 +708,32 @@ loop.OTSdkDriver = (function() {
      * If set to true, make it easy to test/verify 2-way media connection
      * telemetry code operation by viewing the logs.
      */
-    _debugTwoWayMediaTelemetry: false
+    _debugTwoWayMediaTelemetry: false,
+
+    /**
+     * Note the sharing state. If this.mozLoop is not defined, we're assumed to
+     * be running in the standalone client and return immediately.
+     *
+     * @param  {String}  type    Type of sharing that was flipped. May be 'window'
+     *                           or 'tab'.
+     * @param  {Boolean} enabled Flag that tells us if the feature was flipped on
+     *                           or off.
+     * @private
+     */
+    _noteSharingState: function(type, enabled) {
+      if (!this.mozLoop) {
+        return;
+      }
+
+      var bucket = this.mozLoop.SHARING_STATE_CHANGE[type.toUpperCase() + "_" +
+        (enabled ? "ENABLED" : "DISABLED")];
+      if (!bucket) {
+        console.error("No sharing state bucket found for '" + type + "'");
+        return;
+      }
+
+      this.mozLoop.telemetryAddKeyedValue("LOOP_SHARING_STATE_CHANGE", bucket);
+    }
   };
 
   return OTSdkDriver;

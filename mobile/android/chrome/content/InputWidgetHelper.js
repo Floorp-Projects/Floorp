@@ -13,7 +13,7 @@ var InputWidgetHelper = {
   handleClick: function(aTarget) {
     // if we're busy looking at a InputWidget we want to eat any clicks that
     // come to us, but not to process them
-    if (this._uiBusy || !this.hasInputWidget(aTarget))
+    if (this._uiBusy || !this.hasInputWidget(aTarget) || this._isDisabledElement(aTarget))
       return;
 
     this._uiBusy = true;
@@ -81,5 +81,16 @@ var InputWidgetHelper = {
     setTimeout(function() {
       aElement.dispatchEvent(evt);
     }, 0);
+  },
+
+  _isDisabledElement : function(aElement) {
+    let currentElement = aElement;
+    while (currentElement) {
+      if (currentElement.disabled)
+	return true;
+
+      currentElement = currentElement.parentElement;
+    }
+    return false;
   }
 };

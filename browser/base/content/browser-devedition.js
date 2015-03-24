@@ -9,7 +9,7 @@
 let DevEdition = {
   _prefName: "browser.devedition.theme.enabled",
   _themePrefName: "general.skins.selectedSkin",
-  _lwThemePrefName: "lightweightThemes.isThemeSelected",
+  _lwThemePrefName: "lightweightThemes.selectedThemeID",
   _devtoolsThemePrefName: "devtools.theme",
 
   styleSheetLocation: "chrome://browser/skin/devedition.css",
@@ -76,7 +76,7 @@ let DevEdition = {
   _updateStyleSheetFromPrefs: function() {
     let lightweightThemeSelected = false;
     try {
-      lightweightThemeSelected = Services.prefs.getBoolPref(this._lwThemePrefName);
+      lightweightThemeSelected = !!Services.prefs.getCharPref(this._lwThemePrefName);
     } catch(e) {}
 
     let defaultThemeSelected = false;

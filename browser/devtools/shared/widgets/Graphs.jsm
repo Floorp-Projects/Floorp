@@ -181,6 +181,7 @@ this.AbstractCanvasGraph = function(parent, name, sharpness) {
     this._selection = new GraphArea();
     this._selectionDragger = new GraphAreaDragger();
     this._selectionResizer = new GraphAreaResizer();
+    this._isMouseActive = false;
 
     this._onAnimationFrame = this._onAnimationFrame.bind(this);
     this._onMouseMove = this._onMouseMove.bind(this);
@@ -952,13 +953,23 @@ AbstractCanvasGraph.prototype = {
    * Listener for the "mousemove" event on the graph's container.
    */
   _onMouseMove: function(e) {
+    let resizer = this._selectionResizer;
+    let dragger = this._selectionDragger;
+
+    // If a mouseup happened outside the toolbox and the current operation
+    // is causing the selection changed, then end it.
+    if (e.buttons == 0 && (this.hasSelectionInProgress() ||
+                           resizer.margin != null ||
+                           dragger.origin != null)) {
+      return this._onMouseUp(e);
+    }
+
     let offset = this._getContainerOffset();
     let mouseX = (e.clientX - offset.left) * this._pixelRatio;
     let mouseY = (e.clientY - offset.top) * this._pixelRatio;
     this._cursor.x = mouseX;
     this._cursor.y = mouseY;
 
-    let resizer = this._selectionResizer;
     if (resizer.margin != null) {
       this._selection[resizer.margin] = mouseX;
       this._shouldRedraw = true;
@@ -966,7 +977,6 @@ AbstractCanvasGraph.prototype = {
       return;
     }
 
-    let dragger = this._selectionDragger;
     if (dragger.origin != null) {
       this._selection.start = dragger.anchor.start - dragger.origin + mouseX;
       this._selection.end = dragger.anchor.end - dragger.origin + mouseX;
@@ -1013,6 +1023,7 @@ AbstractCanvasGraph.prototype = {
    * Listener for the "mousedown" event on the graph's container.
    */
   _onMouseDown: function(e) {
+    this._isMouseActive = true;
     let offset = this._getContainerOffset();
     let mouseX = (e.clientX - offset.left) * this._pixelRatio;
 
@@ -1051,6 +1062,7 @@ AbstractCanvasGraph.prototype = {
    * Listener for the "mouseup" event on the graph's container.
    */
   _onMouseUp: function(e) {
+    this._isMouseActive = false;
     let offset = this._getContainerOffset();
     let mouseX = (e.clientX - offset.left) * this._pixelRatio;
 
@@ -1161,21 +1173,17 @@ AbstractCanvasGraph.prototype = {
     this.emit("scroll");
   },
 
-  /**
+   /**
    * Listener for the "mouseout" event on the graph's container.
+   * Clear any active cursors if a drag isn't happening.
    */
-  _onMouseOut: function() {
-    if (this.hasSelectionInProgress()) {
-      this.dropSelection();
+  _onMouseOut: function(e) {
+    if (!this._isMouseActive) {
+      this._cursor.x = null;
+      this._cursor.y = null;
+      this._canvas.removeAttribute("input");
+      this._shouldRedraw = true;
     }
-
-    this._cursor.x = null;
-    this._cursor.y = null;
-    this._selectionResizer.margin = null;
-    this._selectionDragger.origin = null;
-
-    this._canvas.removeAttribute("input");
-    this._shouldRedraw = true;
   },
 
   /**
