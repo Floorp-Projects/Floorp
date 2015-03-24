@@ -22,6 +22,7 @@ this.DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
 XPCOMUtils.defineLazyServiceGetter(
     this, "cookieManager", "@mozilla.org/cookiemanager;1", "nsICookieManager");
 
+Cu.import("chrome://marionette/content/actions.js");
 Cu.import("chrome://marionette/content/elements.js");
 Cu.import("chrome://marionette/content/emulator.js");
 Cu.import("chrome://marionette/content/error.js");
@@ -239,6 +240,7 @@ this.GeckoDriver = function(appName, device, emulator) {
   this.oopFrameId = null;
   this.observing = null;
   this._browserIds = new WeakMap();
+  this.actions = new ActionChain(utils);
 
   this.sessionCapabilities = {
     // Mandated capabilities
@@ -1879,14 +1881,29 @@ GeckoDriver.prototype.singleTap = function(cmd, resp) {
  *     Last touch ID.
  */
 GeckoDriver.prototype.actionChain = function(cmd, resp) {
+  let {chain, nextId} = cmd.parameters;
+
   switch (this.context) {
     case Context.CHROME:
-      throw new WebDriverError("Command 'actionChain' is not available in chrome context");
+      if (this.appName != "Firefox") {
+        // be conservative until this has a use case and is established
+        // to work as expected on b2g/fennec
+        throw new WebDriverError(
+            "Command 'actionChain' is not available in chrome context");
+      }
+
+      let cbs = {};
+      cbs.onSuccess = val => resp.value = val;
+      cbs.onError = err => { throw err };
+
+      let win = this.getCurrentWindow();
+      let elm = this.curBrowser.elementManager;
+      this.actions.dispatchActions(chain, nextId, win, elm, cbs);
+      break;
 
     case Context.CONTENT:
       this.addFrameCloseListener("action chain");
-      resp.value = yield this.listener.actionChain(
-        {chain: cmd.parameters.chain, nextId: cmd.parameters.nextId});
+      resp.value = yield this.listener.actionChain({chain: chain, nextId: nextId});
       break;
   }
 };
