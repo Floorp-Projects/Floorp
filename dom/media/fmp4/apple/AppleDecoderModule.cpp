@@ -192,9 +192,9 @@ AppleDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aC
 }
 
 bool
-AppleDecoderModule::SupportsAudioMimeType(const char* aMimeType)
+AppleDecoderModule::SupportsAudioMimeType(const nsACString& aMimeType)
 {
-  return !strcmp(aMimeType, "audio/mp4a-latm") || !strcmp(aMimeType, "audio/mpeg");
+  return aMimeType.EqualsLiteral("audio/mp4a-latm") || aMimeType.EqualsLiteral("audio/mpeg");
 }
 
 bool
