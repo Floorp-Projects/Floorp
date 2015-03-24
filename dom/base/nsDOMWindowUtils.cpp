@@ -3985,6 +3985,32 @@ nsDOMWindowUtils::GetFramesReflowed(uint64_t* aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::SetServiceWorkersTestingEnabled(bool aEnabled)
+{
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(window);
+
+  window->SetServiceWorkersTestingEnabled(aEnabled);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::GetServiceWorkersTestingEnabled(bool *aEnabled)
+{
+  MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
+
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mWindow);
+  NS_ENSURE_STATE(window);
+
+  *aEnabled = window->GetServiceWorkersTestingEnabled();
+
+  return NS_OK;
+}
+
 NS_INTERFACE_MAP_BEGIN(nsTranslationNodeList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsITranslationNodeList)
