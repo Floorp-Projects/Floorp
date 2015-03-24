@@ -365,16 +365,5 @@ SharedBufferManagerChild::GetGraphicBuffer(int64_t key)
 }
 #endif
 
-bool
-SharedBufferManagerChild::IsValidKey(int64_t key)
-{
-#ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
-  if (mBuffers.count(key) != 1) {
-    return false;
-  }
-#endif
-  return true;
-}
-
 } /* namespace layers */
 } /* namespace mozilla */
