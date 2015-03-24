@@ -119,7 +119,8 @@ enum class GLFeature {
     renderbuffer_color_float,
     renderbuffer_color_half_float,
     robustness,
-    sRGB,
+    sRGB_framebuffer,
+    sRGB_texture,
     sampler_objects,
     standard_derivatives,
     texture_3D,
@@ -415,6 +416,7 @@ public:
         EXT_read_format_bgra,
         EXT_robustness,
         EXT_sRGB,
+        EXT_sRGB_write_control,
         EXT_shader_texture_lod,
         EXT_texture3D,
         EXT_texture_compression_dxt1,
@@ -1037,8 +1039,16 @@ public:
         }
 
         BeforeGLReadCall();
-        raw_fCopyTexImage2D(target, level, internalformat,
-                            x, y, width, height, border);
+        bool didCopyTexImage2D = false;
+        if (mScreen) {
+            didCopyTexImage2D = mScreen->CopyTexImage2D(target, level, internalformat, x,
+                                                        y, width, height, border);
+        }
+
+        if (!didCopyTexImage2D) {
+            raw_fCopyTexImage2D(target, level, internalformat, x, y, width, height,
+                                border);
+        }
         AfterGLReadCall();
     }
 
@@ -1932,6 +1942,9 @@ public:
     }
 
 private:
+
+    friend class SharedSurface_IOSurface;
+
     void raw_fCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
     {
         BEFORE_GL_CALL;

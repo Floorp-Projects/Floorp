@@ -49,7 +49,7 @@ add_task(function () {
 
   let defaultTheme = header.nextSibling;
   defaultTheme.doCommand();
-  is(Services.prefs.getBoolPref("lightweightThemes.isThemeSelected"), false, "No lwtheme should be selected");
+  is(Services.prefs.prefHasUserValue("lightweightThemes.selectedThemeID"), false, "No lwtheme should be selected");
 });
 
 add_task(function asyncCleanup() {

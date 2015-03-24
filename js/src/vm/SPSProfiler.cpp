@@ -14,6 +14,7 @@
 
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineJIT.h"
+#include "jit/JitcodeMap.h"
 #include "jit/JitFrameIterator.h"
 #include "jit/JitFrames.h"
 #include "vm/StringBuffer.h"
@@ -86,6 +87,15 @@ SPSProfiler::enable(bool enabled)
      * currently instrumented code is discarded
      */
     ReleaseAllJITCode(rt->defaultFreeOp());
+
+    // This function is called when the Gecko profiler makes a new TableTicker
+    // (and thus, a new circular buffer). Set all current entries in the
+    // JitcodeGlobalTable as expired and reset the buffer generation and lap
+    // count.
+    if (rt->hasJitRuntime() && rt->jitRuntime()->hasJitcodeGlobalTable())
+        rt->jitRuntime()->getJitcodeGlobalTable()->setAllEntriesAsExpired(rt);
+    rt->resetProfilerSampleBufferGen();
+    rt->resetProfilerSampleBufferLapCount();
 
     // Ensure that lastProfilingFrame is null before 'enabled' becomes true.
     if (rt->jitActivation) {
@@ -466,8 +476,8 @@ AutoSuppressProfilerSampling::AutoSuppressProfilerSampling(JSRuntime *rt
 
 AutoSuppressProfilerSampling::~AutoSuppressProfilerSampling()
 {
-        if (previouslyEnabled_)
-            rt_->enableProfilerSampling();
+    if (previouslyEnabled_)
+        rt_->enableProfilerSampling();
 }
 
 void *

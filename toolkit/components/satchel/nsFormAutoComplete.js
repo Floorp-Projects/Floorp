@@ -274,14 +274,20 @@ FormAutoComplete.prototype = {
             this.log("getAutocompleteValues failed: " + aError.message);
           },
           handleCompletion: aReason => {
-            this._pendingQuery = null;
-            if (!aReason) {
-              callback(results);
+            // Check that the current query is still the one we created. Our
+            // query might have been canceled shortly before completing, in
+            // that case we don't want to call the callback anymore.
+            if (query == this._pendingQuery) {
+              this._pendingQuery = null;
+              if (!aReason) {
+                callback(results);
+              }
             }
           }
         };
 
-        this._pendingQuery = FormHistory.getAutoCompleteResults(searchString, params, processResults);
+        let query = FormHistory.getAutoCompleteResults(searchString, params, processResults);
+        this._pendingQuery = query;
     },
 
     /*
@@ -329,6 +335,7 @@ FormAutoCompleteChild.prototype = {
 
     _debug: false,
     _enabled: true,
+    _pendingSearch: null,
 
     /*
      * init
@@ -361,7 +368,9 @@ FormAutoCompleteChild.prototype = {
     autoCompleteSearchAsync : function (aInputName, aUntrimmedSearchString, aField, aPreviousResult, aListener) {
       this.log("autoCompleteSearchAsync");
 
-      this._pendingListener = aListener;
+      if (this._pendingSearch) {
+        this.stopAutoCompleteSearch();
+      }
 
       let rect = BrowserUtils.getElementBoundingScreenRect(aField);
 
@@ -383,26 +392,35 @@ FormAutoCompleteChild.prototype = {
         height: rect.height
       });
 
-      mm.addMessageListener("FormAutoComplete:AutoCompleteSearchAsyncResult",
-        function searchFinished(message) {
-          mm.removeMessageListener("FormAutoComplete:AutoCompleteSearchAsyncResult", searchFinished);
-          let result = new FormAutoCompleteResult(
-            null,
-            [{text: res} for (res of message.data.results)],
-            null,
-            null
-          );
-          if (aListener) {
-            aListener.onSearchCompletion(result);
-          }
-        }
-      );
+      let search = this._pendingSearch = {};
+      let searchFinished = message => {
+        mm.removeMessageListener("FormAutoComplete:AutoCompleteSearchAsyncResult", searchFinished);
 
+        // Check whether stopAutoCompleteSearch() was called, i.e. the search
+        // was cancelled, while waiting for a result.
+        if (search != this._pendingSearch) {
+          return;
+        }
+        this._pendingSearch = null;
+
+        let result = new FormAutoCompleteResult(
+          null,
+          [for (res of message.data.results) {text: res}],
+          null,
+          null
+        );
+        if (aListener) {
+          aListener.onSearchCompletion(result);
+        }
+      }
+
+      mm.addMessageListener("FormAutoComplete:AutoCompleteSearchAsyncResult", searchFinished);
       this.log("autoCompleteSearchAsync message was sent");
     },
 
     stopAutoCompleteSearch : function () {
-       this.log("stopAutoCompleteSearch");
+      this.log("stopAutoCompleteSearch");
+      this._pendingSearch = null;
     },
 }; // end of FormAutoCompleteChild implementation
 

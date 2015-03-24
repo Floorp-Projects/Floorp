@@ -160,15 +160,24 @@ class UnpackFinder(FileFinder):
         return mozpack.path.join(base, jar), entry
 
 
+def unpack_to_registry(source, registry):
+    '''
+    Transform a jar chrome or omnijar packaged directory into a flat package.
+
+    The given registry is filled with the flat package.
+    '''
+    finder = UnpackFinder(source)
+    packager = SimplePackager(FlatFormatter(registry))
+    for p, f in finder.find('*'):
+        if mozpack.path.split(p)[0] not in STARTUP_CACHE_PATHS:
+            packager.add(p, f)
+    packager.close()
+
+
 def unpack(source):
     '''
     Transform a jar chrome or omnijar packaged directory into a flat package.
     '''
     copier = FileCopier()
-    finder = UnpackFinder(source)
-    packager = SimplePackager(FlatFormatter(copier))
-    for p, f in finder.find('*'):
-        if mozpack.path.split(p)[0] not in STARTUP_CACHE_PATHS:
-            packager.add(p, f)
-    packager.close()
+    unpack_to_registry(source, copier)
     copier.copy(source, skip_if_older=False)

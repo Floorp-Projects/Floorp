@@ -69,6 +69,8 @@ relativesrcdir toolkit/locales:
 #about:telemetry
   locale/@AB_CD@/browser/overrides/global/aboutTelemetry.dtd         (%chrome/global/aboutTelemetry.dtd)
   locale/@AB_CD@/browser/overrides/global/aboutTelemetry.properties  (%chrome/global/aboutTelemetry.properties)
+#about:webrtc
+  locale/@AB_CD@/browser/overrides/global/aboutWebrtc.properties  (%chrome/global/aboutWebrtc.properties)
 
 % override chrome://global/locale/about.dtd chrome://browser/locale/overrides/about.dtd
 % override chrome://global/locale/aboutAbout.dtd chrome://browser/locale/overrides/aboutAbout.dtd
@@ -89,6 +91,7 @@ relativesrcdir toolkit/locales:
 % override chrome://global/locale/mozilla.dtd chrome://browser/locale/overrides/global/mozilla.dtd
 % override chrome://global/locale/aboutTelemetry.dtd chrome://browser/locale/overrides/global/aboutTelemetry.dtd
 % override chrome://global/locale/aboutTelemetry.properties chrome://browser/locale/overrides/global/aboutTelemetry.properties
+% override chrome://global/locale/aboutWebrtc.properties chrome://browser/locale/overrides/global/aboutWebrtc.properties
 
 # overrides for dom l10n, also for en-US
 relativesrcdir dom/locales:

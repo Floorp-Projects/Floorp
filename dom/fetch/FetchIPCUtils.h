@@ -32,6 +32,11 @@ namespace IPC {
                                     mozilla::dom::RequestCredentials::Omit,
                                     mozilla::dom::RequestCredentials::EndGuard_> {};
   template<>
+  struct ParamTraits<mozilla::dom::RequestCache> :
+    public ContiguousEnumSerializer<mozilla::dom::RequestCache,
+                                    mozilla::dom::RequestCache::Default,
+                                    mozilla::dom::RequestCache::EndGuard_> {};
+  template<>
   struct ParamTraits<mozilla::dom::ResponseType> :
     public ContiguousEnumSerializer<mozilla::dom::ResponseType,
                                     mozilla::dom::ResponseType::Basic,
