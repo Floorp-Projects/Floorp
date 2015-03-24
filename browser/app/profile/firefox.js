@@ -1892,3 +1892,4 @@ pref("browser.readinglist.enabled", true);
 pref("browser.readinglist.sidebarEverOpened", false);
 // Enable the readinglist engine by default.
 pref("readinglist.scheduler.enabled", true);
+pref("readinglist.server", "https://readinglist.services.mozilla.com/v1");
