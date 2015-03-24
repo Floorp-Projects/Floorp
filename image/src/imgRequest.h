@@ -19,7 +19,6 @@
 #include "nsStringGlue.h"
 #include "nsError.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "mozilla/Mutex.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
 class imgCacheValidator;
@@ -131,8 +130,6 @@ public:
     return principal.forget();
   }
 
-  already_AddRefed<Image> GetImage();
-
   // Return the ProgressTracker associated with this imgRequest. It may live
   // in |mProgressTracker| or in |mImage.mProgressTracker|, depending on whether
   // mImage has been instantiated yet.
@@ -158,9 +155,6 @@ private:
   friend class imgCacheExpirationTracker;
   friend class imgRequestNotifyRunnable;
   friend class mozilla::image::ProgressTracker;
-
-  void SetImage(Image* aImage);
-  void SetProgressTracker(ProgressTracker* aProgressTracker);
 
   inline void SetLoadId(void *aLoadId) {
     mLoadId = aLoadId;
@@ -257,8 +251,6 @@ private:
   imgCacheValidator *mValidator;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel> mNewRedirectChannel;
-
-  mozilla::Mutex mMutex;
 
   // The ID of the inner window origin, used for error reporting.
   uint64_t mInnerWindowId;
