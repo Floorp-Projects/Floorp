@@ -36,7 +36,7 @@ class TestGenerateBrowserSearch(unittest.TestCase):
                 srcdir = os.path.join(test_data_path, name)
 
                 generate_browsersearch.main([
-                    '--verbose',
+                    '--silent',
                     '--srcdir', srcdir,
                     temp.name])
                 return json.load(temp)
