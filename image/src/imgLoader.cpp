@@ -28,7 +28,6 @@
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIFileURL.h"
 #include "nsCRT.h"
-#include "nsIDocument.h"
 #include "nsINetworkPredictor.h"
 
 #include "nsIApplicationCache.h"
@@ -1447,7 +1446,7 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
 
   // If we're currently in the middle of validating this request, just hand
   // back a proxy to it; the required work will be done for us.
-  if (request->mValidator) {
+  if (request->GetValidator()) {
     rv = CreateNewProxyForRequest(request, aLoadGroup, aObserver,
                                   aLoadFlags, aProxyRequest);
     if (NS_FAILED(rv)) {
@@ -1464,7 +1463,7 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
       proxy->SetNotificationsDeferred(true);
 
       // Attach the proxy without notifying
-      request->mValidator->AddProxy(proxy);
+      request->GetValidator()->AddProxy(proxy);
     }
 
     return NS_SUCCEEDED(rv);
@@ -1529,7 +1528,7 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
       listener = corsproxy;
     }
 
-    request->mValidator = hvc;
+    request->SetValidator(hvc);
 
     // We will send notifications from imgCacheValidator::OnStartRequest().
     // In the mean time, we must defer notifications because we are added to
@@ -1628,7 +1627,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
   //      validation is required.
   //
   void *key = (void *)aCX;
-  if (request->mLoadId != key) {
+  if (request->LoadId() != key) {
     // If we would need to revalidate this entry, but we're being told to
     // bypass the cache, we don't allow this entry to be used.
     if (aLoadFlags & nsIRequest::LOAD_BYPASS_CACHE)
@@ -1657,10 +1656,12 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
   nsCOMPtr<nsIApplicationCacheContainer> appCacheContainer;
   nsCOMPtr<nsIApplicationCache> requestAppCache;
   nsCOMPtr<nsIApplicationCache> groupAppCache;
-  if ((appCacheContainer = do_GetInterface(request->mRequest)))
+  if ((appCacheContainer = do_GetInterface(request->GetRequest()))) {
     appCacheContainer->GetApplicationCache(getter_AddRefs(requestAppCache));
-  if ((appCacheContainer = do_QueryInterface(aLoadGroup)))
+  }
+  if ((appCacheContainer = do_QueryInterface(aLoadGroup))) {
     appCacheContainer->GetApplicationCache(getter_AddRefs(groupAppCache));
+  }
 
   if (requestAppCache != groupAppCache) {
     PR_LOG(GetImgLog(), PR_LOG_DEBUG,
@@ -2044,12 +2045,6 @@ nsresult imgLoader::LoadImage(nsIURI *aURI,
     nsCOMPtr<nsITimedChannel> timedChannel = do_QueryInterface(newChannel);
     if (timedChannel) {
       timedChannel->SetInitiatorType(initiatorType);
-    }
-
-    // Pass the inner window ID of the loading document, if possible.
-    nsCOMPtr<nsIDocument> doc = do_QueryInterface(aCX);
-    if (doc) {
-      request->SetInnerWindowID(doc->InnerWindowID());
     }
 
     // create the proxy listener
@@ -2515,7 +2510,8 @@ NS_IMPL_ISUPPORTS(imgCacheValidator, nsIStreamListener, nsIRequestObserver,
 
 imgCacheValidator::imgCacheValidator(nsProgressNotificationProxy* progress,
                                      imgLoader* loader, imgRequest *request,
-                                     void *aContext, bool forcePrincipalCheckForCacheEntry)
+                                     nsISupports* aContext,
+                                     bool forcePrincipalCheckForCacheEntry)
  : mProgressProxy(progress),
    mRequest(request),
    mContext(aContext),
@@ -2528,7 +2524,7 @@ imgCacheValidator::imgCacheValidator(nsProgressNotificationProxy* progress,
 imgCacheValidator::~imgCacheValidator()
 {
   if (mRequest) {
-    mRequest->mValidator = nullptr;
+    mRequest->SetValidator(nullptr);
   }
 }
 
@@ -2556,10 +2552,15 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
     cacheChan->IsFromCache(&isFromCache);
 
     nsCOMPtr<nsIURI> channelURI;
-    bool sameURI = false;
     channel->GetURI(getter_AddRefs(channelURI));
-    if (channelURI)
-      channelURI->Equals(mRequest->mCurrentURI, &sameURI);
+
+    nsCOMPtr<nsIURI> currentURI;
+    mRequest->GetCurrentURI(getter_AddRefs(currentURI));
+
+    bool sameURI = false;
+    if (channelURI && currentURI) {
+      channelURI->Equals(currentURI, &sameURI);
+    }
 
     if (isFromCache && sameURI) {
       uint32_t count = mProxies.Count();
@@ -2582,7 +2583,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
       aRequest->Cancel(NS_BINDING_ABORTED);
 
       mRequest->SetLoadId(mContext);
-      mRequest->mValidator = nullptr;
+      mRequest->SetValidator(nullptr);
 
       mRequest = nullptr;
 
@@ -2615,7 +2616,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   // Doom the old request's cache entry
   mRequest->RemoveFromCache();
 
-  mRequest->mValidator = nullptr;
+  mRequest->SetValidator(nullptr);
   mRequest = nullptr;
 
   // We use originalURI here to fulfil the imgIRequest contract on GetURI.

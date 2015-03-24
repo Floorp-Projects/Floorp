@@ -287,13 +287,13 @@ FFmpegH264Decoder<LIBAV_VER>::~FFmpegH264Decoder()
 }
 
 AVCodecID
-FFmpegH264Decoder<LIBAV_VER>::GetCodecId(const char* aMimeType)
+FFmpegH264Decoder<LIBAV_VER>::GetCodecId(const nsACString& aMimeType)
 {
-  if (!strcmp(aMimeType, "video/avc") || !strcmp(aMimeType, "video/mp4")) {
+  if (aMimeType.EqualsLiteral("video/avc") || aMimeType.EqualsLiteral("video/mp4")) {
     return AV_CODEC_ID_H264;
   }
 
-  if (!strcmp(aMimeType, "video/x-vnd.on2.vp6")) {
+  if (aMimeType.EqualsLiteral("video/x-vnd.on2.vp6")) {
     return AV_CODEC_ID_VP6F;
   }
 

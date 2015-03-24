@@ -35,14 +35,14 @@ public:
   AndroidDecoderModule() {}
   virtual ~AndroidDecoderModule() {}
 
-  virtual bool SupportsAudioMimeType(const char* aMimeType) override;
+  virtual bool SupportsAudioMimeType(const nsACString& aMimeType) override;
 };
 
 class MediaCodecDataDecoder : public MediaDataDecoder {
 public:
 
   MediaCodecDataDecoder(MediaData::Type aType,
-                        const char* aMimeType,
+                        const nsACString& aMimeType,
                         widget::sdk::MediaFormat::Param aFormat,
                         MediaDataDecoderCallback* aCallback);
 
@@ -59,7 +59,7 @@ protected:
 
   MediaData::Type mType;
 
-  nsAutoPtr<char> mMimeType;
+  nsAutoCString mMimeType;
   widget::sdk::MediaFormat::GlobalRef mFormat;
 
   MediaDataDecoderCallback* mCallback;

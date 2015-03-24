@@ -4,6 +4,7 @@ for each(let e in newGlobal()) {
     if (e.name === "quit" || e.name == "readline" || e.name == "terminate" ||
 	e.name == "nestedShell")
 	continue;
+        print(e.name);
     try {
         e();
     } catch (r) {}

@@ -57,8 +57,6 @@ caches.open(name).then(function(cache) {
 }).then(function(keys) {
   is(keys.length, 1, "One match should be found");
   ok(keys[0].url.indexOf(tests[0]) >= 0, "Valid URL");
-  // TODO: Add tests for ignoreVary
-
   // Make sure cacheName is ignored.
   return c.keys(tests[0], {cacheName: "non-existing-cache"});
 }).then(function(keys) {

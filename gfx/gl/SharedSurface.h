@@ -156,6 +156,12 @@ public:
         MOZ_CRASH("Did you forget to override this function?");
     }
 
+    virtual bool CopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x,
+                                GLint y, GLsizei width, GLsizei height, GLint border)
+    {
+        return false;
+    }
+
     virtual bool ReadPixels(GLint x, GLint y,
                             GLsizei width, GLsizei height,
                             GLenum format, GLenum type,
