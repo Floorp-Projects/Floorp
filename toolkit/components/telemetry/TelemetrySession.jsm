@@ -727,6 +727,7 @@ this.TelemetrySession = Object.freeze({
     Impl._previousSubsessionId = null;
     Impl._subsessionCounter = 0;
     Impl._profileSubsessionCounter = 0;
+    Impl._subsessionStartActiveTicks = 0;
     this.uninstall();
     return this.setup();
   },
@@ -804,6 +805,8 @@ let Impl = {
   _profileSubsessionCounter: 0,
   // Date of the last session split
   _subsessionStartDate: null,
+  // The active ticks counted when the subsession starts
+  _subsessionStartActiveTicks: 0,
   // A task performing delayed initialization of the chrome process
   _delayedInitTask: null,
   // The deferred promise resolved when the initialization task completes.
@@ -816,10 +819,12 @@ let Impl = {
   /**
    * Gets a series of simple measurements (counters). At the moment, this
    * only returns startup data from nsIAppStartup.getStartupInfo().
+   * @param {Boolean} isSubsession True if this is a subsession, false otherwise.
+   * @param {Boolean} clearSubsession True if a new subsession is being started, false otherwise.
    *
    * @return simple measurements as a dictionary.
    */
-  getSimpleMeasurements: function getSimpleMeasurements(forSavedSession) {
+  getSimpleMeasurements: function getSimpleMeasurements(forSavedSession, isSubsession, clearSubsession) {
     this._log.trace("getSimpleMeasurements");
 
     let si = Services.startup.getStartupInfo();
@@ -909,7 +914,16 @@ let Impl = {
 
       let sr = drs.getSessionRecorder();
       if (sr) {
-        ret.activeTicks = sr.activeTicks;
+        let activeTicks = sr.activeTicks;
+        if (isSubsession) {
+          activeTicks = sr.activeTicks - this._subsessionStartActiveTicks;
+        }
+
+        if (clearSubsession) {
+          this._subsessionStartActiveTicks = activeTicks;
+        }
+
+        ret.activeTicks = activeTicks;
       }
     }
 
@@ -1340,9 +1354,13 @@ let Impl = {
     this._log.trace("getSessionPayload - reason: " + reason + ", clearSubsession: " + clearSubsession);
 #if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
     clearSubsession = false;
+    const isSubsession = false;
+#else
+    const isSubsession = !this._isClassicReason(reason);
 #endif
 
-    let measurements = this.getSimpleMeasurements(reason == REASON_SAVED_SESSION);
+    let measurements =
+      this.getSimpleMeasurements(reason == REASON_SAVED_SESSION, isSubsession, clearSubsession);
     let info = !IS_CONTENT_PROCESS ? this.getMetadata(reason) : null;
     let payload = this.assemblePayloadWithMeasurements(measurements, info, reason, clearSubsession);
 
