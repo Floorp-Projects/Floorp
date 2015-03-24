@@ -62,12 +62,17 @@ notification[type="critical"] {
   max-width: 24em;
 }
 
-.popup-notification-learnmore-link {
-  margin-top: 1em !important;
-}
-
+.popup-notification-originHost:not([value]),
 .popup-notification-learnmore-link:not([href]) {
   display: none;
+}
+
+.popup-notification-originHost {
+  margin-bottom: .3em !important;
+}
+
+.popup-notification-learnmore-link {
+  margin-top: .5em !important;
 }
 
 .popup-notification-button-container {
