@@ -2699,6 +2699,9 @@ IonBuilder::inlineAtomicsCompareExchange(CallInfo &callInfo)
     current->add(cas);
     current->push(cas);
 
+    if (!resumeAfter(cas))
+        return InliningStatus_Error;
+
     return InliningStatus_Inlined;
 }
 
@@ -2726,6 +2729,10 @@ IonBuilder::inlineAtomicsLoad(CallInfo &callInfo)
     load->setResultType(getInlineReturnType());
     current->add(load);
     current->push(load);
+
+    // Loads are considered effectful (they execute a memory barrier).
+    if (!resumeAfter(load))
+        return InliningStatus_Error;
 
     return InliningStatus_Inlined;
 }
@@ -2763,6 +2770,9 @@ IonBuilder::inlineAtomicsStore(CallInfo &callInfo)
     current->add(store);
     current->push(value);
 
+    if (!resumeAfter(store))
+        return InliningStatus_Error;
+
     return InliningStatus_Inlined;
 }
 
@@ -2779,6 +2789,10 @@ IonBuilder::inlineAtomicsFence(CallInfo &callInfo)
     MMemoryBarrier *fence = MMemoryBarrier::New(alloc());
     current->add(fence);
     pushConstant(UndefinedValue());
+
+    // Fences are considered effectful (they execute a memory barrier).
+    if (!resumeAfter(fence))
+        return InliningStatus_Error;
 
     return InliningStatus_Inlined;
 }
@@ -2830,6 +2844,9 @@ IonBuilder::inlineAtomicsBinop(CallInfo &callInfo, JSFunction *target)
     binop->setResultType(getInlineReturnType());
     current->add(binop);
     current->push(binop);
+
+    if (!resumeAfter(binop))
+        return InliningStatus_Error;
 
     return InliningStatus_Inlined;
 }
