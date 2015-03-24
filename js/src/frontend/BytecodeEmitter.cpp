@@ -2227,7 +2227,7 @@ IteratorResultShape(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned *shape)
     // No need to do any guessing for the object kind, since we know exactly how
     // many properties we plan to have.
     gc::AllocKind kind = gc::GetGCObjectKind(2);
-    obj = NewBuiltinClassInstance<PlainObject>(cx, kind);
+    obj = NewBuiltinClassInstance<PlainObject>(cx, kind, TenuredObject);
     if (!obj)
         return false;
 
@@ -7671,6 +7671,7 @@ CGObjectList::finish(ObjectArray *array)
     do {
         --cursor;
         MOZ_ASSERT(!*cursor);
+        MOZ_ASSERT(objbox->object->isTenured());
         *cursor = objbox->object;
     } while ((objbox = objbox->emitLink) != nullptr);
     MOZ_ASSERT(cursor == array->vector);
