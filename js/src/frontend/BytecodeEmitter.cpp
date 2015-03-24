@@ -2226,7 +2226,9 @@ IteratorResultShape(ExclusiveContext *cx, BytecodeEmitter *bce, unsigned *shape)
     MOZ_ASSERT(bce->script->compileAndGo());
 
     RootedPlainObject obj(cx);
-    gc::AllocKind kind = GuessObjectGCKind(2);
+    // No need to do any guessing for the object kind, since we know exactly how
+    // many properties we plan to have.
+    gc::AllocKind kind = gc::GetGCObjectKind(2);
     obj = NewBuiltinClassInstance<PlainObject>(cx, kind);
     if (!obj)
         return false;
@@ -6586,7 +6588,9 @@ BytecodeEmitter::emitObject(ParseNode *pn)
      */
     RootedPlainObject obj(cx);
     if (script->compileAndGo()) {
-        gc::AllocKind kind = GuessObjectGCKind(pn->pn_count);
+        // No need to do any guessing for the object kind, since we know exactly
+        // how many properties we plan to have.
+        gc::AllocKind kind = gc::GetGCObjectKind(pn->pn_count);
         obj = NewBuiltinClassInstance<PlainObject>(cx, kind, TenuredObject);
         if (!obj)
             return false;
