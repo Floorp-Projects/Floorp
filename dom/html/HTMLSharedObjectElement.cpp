@@ -62,6 +62,9 @@ HTMLSharedObjectElement::SetItemValueText(const nsAString& aValue)
 
 HTMLSharedObjectElement::~HTMLSharedObjectElement()
 {
+#ifdef XP_MACOSX
+  HTMLObjectElement::OnFocusBlurPlugin(this, false);
+#endif
   UnregisterActivityObserver();
   DestroyImageLoadingContent();
 }
@@ -159,6 +162,14 @@ void
 HTMLSharedObjectElement::UnbindFromTree(bool aDeep,
                                         bool aNullParent)
 {
+#ifdef XP_MACOSX
+  // When a page is reloaded (when an nsIDocument's content is removed), the
+  // focused element isn't necessarily sent an NS_BLUR_CONTENT event. See
+  // nsFocusManager::ContentRemoved(). This means that a widget may think it
+  // still contains a focused plugin when it doesn't -- which in turn can
+  // disable text input in the browser window. See bug 1137229.
+  HTMLObjectElement::OnFocusBlurPlugin(this, false);
+#endif
   nsObjectLoadingContent::UnbindFromTree(aDeep, aNullParent);
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
