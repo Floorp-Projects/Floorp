@@ -569,29 +569,29 @@ TelephonyService.prototype = {
 
   // Handling of supplementary services within a call as 3GPP TS 22.030 6.5.5
   _dialInCallMMI: function(aClientId, aNumber, aCallback) {
-    let mmiCallback = response => {
-      aCallback.notifyDialMMI(RIL.MMI_KS_SC_CALL);
-      if (!response.success) {
-        aCallback.notifyDialMMIError(RIL.MMI_ERROR_KS_ERROR);
-      } else {
-        aCallback.notifyDialMMISuccess(RIL.MMI_SM_KS_CALL_CONTROL);
-      }
+    let mmiCallback = {
+      notifyError: () => aCallback.notifyDialMMIError(RIL.MMI_ERROR_KS_ERROR),
+      notifySuccess: () => aCallback.notifyDialMMISuccess(RIL.MMI_SM_KS_CALL_CONTROL)
     };
 
     if (aNumber === "0") {
-      this._sendToRilWorker(aClientId, "hangUpBackground", null, mmiCallback);
+      aCallback.notifyDialMMI(RIL.MMI_KS_SC_CALL);
+      this._hangUpBackground(aClientId, mmiCallback);
     } else if (aNumber === "1") {
-      this._sendToRilWorker(aClientId, "hangUpForeground", null, mmiCallback);
+      aCallback.notifyDialMMI(RIL.MMI_KS_SC_CALL);
+      this._hangUpForeground(aClientId, mmiCallback);
     } else if (aNumber[0] === "1" && aNumber.length === 2) {
-      this._sendToRilWorker(aClientId, "hangUpCall",
-                            { callIndex: parseInt(aNumber[1]) }, mmiCallback);
+      aCallback.notifyDialMMI(RIL.MMI_KS_SC_CALL);
+      this.hangUpCall(aClientId, parseInt(aNumber[1]), mmiCallback);
     } else if (aNumber === "2") {
-      this._sendToRilWorker(aClientId, "switchActiveCall", null, mmiCallback);
+      aCallback.notifyDialMMI(RIL.MMI_KS_SC_CALL);
+      this._switchActiveCall(aClientId, mmiCallback);
     } else if (aNumber[0] === "2" && aNumber.length === 2) {
-      this._sendToRilWorker(aClientId, "separateCall",
-                            { callIndex: parseInt(aNumber[1]) }, mmiCallback);
+      aCallback.notifyDialMMI(RIL.MMI_KS_SC_CALL);
+      this._separateCallGsm(aClientId, parseInt(aNumber[1]), mmiCallback);
     } else if (aNumber === "3") {
-      this._sendToRilWorker(aClientId, "conferenceCall", null, mmiCallback);
+      aCallback.notifyDialMMI(RIL.MMI_KS_SC_CALL);
+      this._conferenceCallGsm(aClientId, mmiCallback);
     } else {
       this._dialCall(aClientId, aNumber, undefined, aCallback);
     }
