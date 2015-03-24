@@ -40,7 +40,7 @@ add_task(function*() {
   ok(!view.menuitemAddRule.hidden, "Add rule is visible");
 
   info("Waiting for rule view to change");
-  let onRuleViewChanged = once(view.element, "CssRuleViewChanged");
+  let onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Adding the new rule");
   view.menuitemAddRule.click();
@@ -63,7 +63,7 @@ function* testEditSelector(view, name) {
   editor.value = name;
 
   info("Waiting for rule view to refresh");
-  let onRuleViewRefresh = once(view.element, "CssRuleViewRefreshed");
+  let onRuleViewRefresh = once(view, "ruleview-refreshed");
 
   info("Entering the commit key");
   EventUtils.synthesizeKey("VK_RETURN", {});

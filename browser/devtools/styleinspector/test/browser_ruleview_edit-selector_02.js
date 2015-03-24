@@ -64,7 +64,7 @@ function* testEditSelector(view, name) {
   editor.input.value = name;
 
   info("Waiting for rule view to refresh");
-  let onRuleViewRefresh = once(view.element, "CssRuleViewRefreshed");
+  let onRuleViewRefresh = once(view, "ruleview-refreshed");
 
   info("Entering the commit key");
   EventUtils.synthesizeKey("VK_RETURN", {});
