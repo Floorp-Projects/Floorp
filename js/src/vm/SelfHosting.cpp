@@ -914,6 +914,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Number_valueOf",                  num_valueOf,                  0,0),
 
     JS_FN("std_Object_create",                   obj_create,                   2,0),
+    JS_FN("std_Object_propertyIsEnumerable",     obj_propertyIsEnumerable,     1,0),
     JS_FN("std_Object_defineProperty",           obj_defineProperty,           3,0),
     JS_FN("std_Object_getPrototypeOf",           obj_getPrototypeOf,           1,0),
     JS_FN("std_Object_getOwnPropertyNames",      obj_getOwnPropertyNames,      1,0),

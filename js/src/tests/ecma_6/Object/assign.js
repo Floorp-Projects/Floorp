@@ -284,75 +284,20 @@ function testStringAndSymbolPropertiesCopied() {
 }
 testStringAndSymbolPropertiesCopied();
 
-// Intermediate exceptions do not stop property traversal, first exception is reported (1)
+// Intermediate exceptions stop traversal and throw exception
 function testExceptionsDoNotStopFirstReported1() {
-    var ErrorA = function ErrorA() {};
-    var ErrorB = function ErrorB() {};
-    var log = "";
+    var TestError = function TestError() {};
     var source = new Proxy({}, {
         getOwnPropertyDescriptor: function(t, pk) {
-            log += pk;
-            throw new (pk === "a" ? ErrorA : ErrorB);
+            assertEq(pk, "b");
+            throw new TestError();
         },
         ownKeys: () => ["b", "a"]
     });
-    assertThrowsInstanceOf(() => Object.assign({}, source), ErrorB);
-    assertEq(log, "ba");
+    assertThrowsInstanceOf(() => Object.assign({}, source), TestError);
 }
 testExceptionsDoNotStopFirstReported1();
 
-// Properties are retrieved through Get()
-// Intermediate exceptions do not stop property traversal, first exception is reported (2)
-function testExceptionsDoNotStopFirstReported2() {
-    var ErrorA = function ErrorA() {};
-    var ErrorB = function ErrorB() {};
-    var log = "";
-    var source = new Proxy({
-        get a() { log += "a"; throw new ErrorA },
-        get b() { log += "b"; throw new ErrorB },
-    }, {
-        ownKeys: () => ["b", "a"]
-    });
-    assertThrowsInstanceOf(() => Object.assign({}, source), ErrorB);
-    assertEq(log, "ba");
-}
-testExceptionsDoNotStopFirstReported2();
-
-// Intermediate exceptions do not stop property traversal, first exception is reported (3)
-function testExceptionsDoNotStopFirstReported3() {
-    var ErrorA = function ErrorA() {};
-    var ErrorB = function ErrorB() {};
-    var log = "";
-    var source = new Proxy({a: 1, b: 2}, {
-        ownKeys: () => ["b", "a"]
-    });
-    var target = {
-        set a(v) { log += "a"; throw new ErrorA },
-        set b(v) { log += "b"; throw new ErrorB },
-    };
-    assertThrowsInstanceOf(() => Object.assign(target, source), ErrorB);
-    assertEq(log, "ba");
-}
-testExceptionsDoNotStopFirstReported3();
-
-// Intermediate exceptions do not stop property traversal, first exception is reported (4)
-function testExceptionsDoNotStopFirstReported4() {
-    var ErrorGetOwnProperty = function ErrorGetOwnProperty() {};
-    var ErrorGet = function ErrorGet() {};
-    var ErrorSet = function ErrorSet() {};
-    var source = new Proxy({
-        get a() { throw new ErrorGet }
-    }, {
-        getOwnPropertyDescriptor: function(t, pk) {
-            throw new ErrorGetOwnProperty;
-        }
-    });
-    var target = {
-        set a(v) { throw new ErrorSet }
-    };
-    assertThrowsInstanceOf(() => Object.assign({}, source), ErrorGetOwnProperty);
-}
-testExceptionsDoNotStopFirstReported4();
 
 if (typeof reportCompare == "function")
     reportCompare(true, true);
