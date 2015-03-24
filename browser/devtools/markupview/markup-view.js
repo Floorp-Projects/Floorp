@@ -27,6 +27,7 @@ const promise = require("resource://gre/modules/Promise.jsm").Promise;
 const {Tooltip} = require("devtools/shared/widgets/Tooltip");
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const Heritage = require("sdk/core/heritage");
+const {setTimeout, clearTimeout, setInterval, clearInterval} = require("sdk/timers");
 const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis", Ci.nsIPrefLocalizedString).data;
 
 Cu.import("resource://gre/modules/devtools/LayoutHelpers.jsm");
@@ -174,7 +175,7 @@ MarkupView.prototype = {
       let docEl = this.doc.documentElement;
 
       if (this._scrollInterval) {
-        this.win.clearInterval(this._scrollInterval);
+        clearInterval(this._scrollInterval);
       }
 
       // Auto-scroll when the mouse approaches top/bottom edge
@@ -189,7 +190,7 @@ MarkupView.prototype = {
         // Here, we use minus because the value of speed - 15 is always negative
         // and it makes the speed relative to the distance between mouse and edge
         // the closer to the edge, the faster
-        this._scrollInterval = this.win.setInterval(() => {
+        this._scrollInterval = setInterval(() => {
           docEl.scrollTop -= speed - DRAG_DROP_MAX_AUTOSCROLL_SPEED;
         }, 0);
       }
@@ -199,7 +200,7 @@ MarkupView.prototype = {
         let speed = map(distanceFromTop, 0, DRAG_DROP_AUTOSCROLL_EDGE_DISTANCE,
                         DRAG_DROP_MIN_AUTOSCROLL_SPEED, DRAG_DROP_MAX_AUTOSCROLL_SPEED);
 
-        this._scrollInterval = this.win.setInterval(() => {
+        this._scrollInterval = setInterval(() => {
           docEl.scrollTop += speed - DRAG_DROP_MAX_AUTOSCROLL_SPEED;
         }, 0);
       }
@@ -256,7 +257,7 @@ MarkupView.prototype = {
       this.indicateDragTarget(null);
     }
     if (this._scrollInterval) {
-      this.win.clearInterval(this._scrollInterval);
+      clearInterval(this._scrollInterval);
     }
   },
 
@@ -281,7 +282,7 @@ MarkupView.prototype = {
 
   _onMouseLeave: function() {
     if (this._scrollInterval) {
-      this.win.clearInterval(this._scrollInterval);
+      clearInterval(this._scrollInterval);
     }
     if (this.isDragging) return;
 
@@ -320,13 +321,13 @@ MarkupView.prototype = {
     let win = this._frame.contentWindow;
 
     if (this._briefBoxModelTimer) {
-      win.clearTimeout(this._briefBoxModelTimer);
+      clearTimeout(this._briefBoxModelTimer);
       this._briefBoxModelTimer = null;
     }
 
     this._showBoxModel(nodeFront);
 
-    this._briefBoxModelTimer = this._frame.contentWindow.setTimeout(() => {
+    this._briefBoxModelTimer = setTimeout(() => {
       this._hideBoxModel();
     }, NEW_SELECTION_HIGHLIGHTER_TIMER);
   },
@@ -1519,9 +1520,9 @@ MarkupView.prototype = {
     }
     let win = this._frame.contentWindow;
     this._previewBar.classList.add("hide");
-    win.clearTimeout(this._resizePreviewTimeout);
+    clearTimeout(this._resizePreviewTimeout);
 
-    win.setTimeout(() => {
+    setTimeout(() => {
       this._updatePreview();
       this._previewBar.classList.remove("hide");
     }, 1000);
@@ -1818,7 +1819,7 @@ MarkupContainer.prototype = {
 
     // Start dragging the container after a delay.
     this.markup._dragStartEl = target;
-    this.win.setTimeout(() => {
+    setTimeout(() => {
       // Make sure the mouse is still down and on target.
       if (!this._isMouseDown || this.markup._dragStartEl !== target ||
           this.node.isPseudoElement || this.node.isAnonymous ||
@@ -1885,10 +1886,10 @@ MarkupContainer.prototype = {
       let contentWin = this.win;
       this.flashed = true;
       if (this._flashMutationTimer) {
-        contentWin.clearTimeout(this._flashMutationTimer);
+        clearTimeout(this._flashMutationTimer);
         this._flashMutationTimer = null;
       }
-      this._flashMutationTimer = contentWin.setTimeout(() => {
+      this._flashMutationTimer = setTimeout(() => {
         this.flashed = false;
       }, this.markup.CONTAINER_FLASHING_DURATION);
     }
