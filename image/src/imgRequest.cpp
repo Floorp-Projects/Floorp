@@ -831,7 +831,7 @@ imgRequest::CheckListenerChain()
 
 /** nsIStreamListener methods **/
 
-struct NewPartResult MOZ_FINAL
+struct NewPartResult final
 {
   explicit NewPartResult(Image* aExistingImage)
     : mImage(aExistingImage)
@@ -924,7 +924,7 @@ PrepareForNewPart(nsIRequest* aRequest, nsIInputStream* aInStr, uint32_t aCount,
   return result;
 }
 
-class FinishPreparingForNewPartRunnable MOZ_FINAL : public nsRunnable
+class FinishPreparingForNewPartRunnable final : public nsRunnable
 {
 public:
   FinishPreparingForNewPartRunnable(imgRequest* aImgRequest,
@@ -935,7 +935,7 @@ public:
     MOZ_ASSERT(aImgRequest);
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     mImgRequest->FinishPreparingForNewPart(mResult);
     return NS_OK;
