@@ -9,6 +9,7 @@ let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let promise = devtools.require("resource://gre/modules/Promise.jsm").Promise;
 let {getInplaceEditorForSpan: inplaceEditor} = devtools.require("devtools/shared/inplace-editor");
 let clipboard = devtools.require("sdk/clipboard");
+let {setTimeout, clearTimeout} = devtools.require("sdk/timers");
 
 // All test are asynchronous
 waitForExplicitFinish();
