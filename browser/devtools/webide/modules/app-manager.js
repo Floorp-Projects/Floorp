@@ -229,9 +229,9 @@ let AppManager = exports.AppManager = {
 
   getTarget: function() {
     if (this.selectedProject.type == "mainProcess") {
-      // Fx >=37 exposes a ChromeActor to debug the main process
+      // Fx >=39 exposes a ChromeActor to debug the main process
       if (this.connection.client.mainRoot.traits.allowChromeProcess) {
-        return this.connection.client.attachProcess()
+        return this.connection.client.getProcess()
                    .then(aResponse => {
                      return devtools.TargetFactory.forRemoteTab({
                        form: aResponse.form,
@@ -240,7 +240,7 @@ let AppManager = exports.AppManager = {
                      });
                    });
       } else {
-        // Fx <37 exposes tab actors on the root actor
+        // Fx <39 exposes tab actors on the root actor
         return devtools.TargetFactory.forRemoteTab({
           form: this._listTabsResponse,
           client: this.connection.client,
@@ -442,8 +442,8 @@ let AppManager = exports.AppManager = {
   },
 
   isMainProcessDebuggable: function() {
-    // Fx <37 exposes chrome tab actors on RootActor
-    // Fx >=37 exposes a dedicated actor via attachProcess request
+    // Fx <39 exposes chrome tab actors on RootActor
+    // Fx >=39 exposes a dedicated actor via getProcess request
     return this.connection.client &&
            this.connection.client.mainRoot &&
            this.connection.client.mainRoot.traits.allowChromeProcess ||

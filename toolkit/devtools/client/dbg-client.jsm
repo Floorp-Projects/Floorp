@@ -624,16 +624,17 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Attach to a process in order to get the form of a ChildProcessActor.
+   * Fetch the ChromeActor for the main process or ChildProcessActor for a
+   * a given child process ID.
    *
    * @param number aId
    *        The ID for the process to attach (returned by `listProcesses`).
    *        Connected to the main process if omitted, or is 0.
    */
-  attachProcess: function (aId) {
+  getProcess: function (aId) {
     let packet = {
       to: "root",
-      type: "attachProcess"
+      type: "getProcess"
     }
     if (typeof(aId) == "number") {
       packet.id = aId;
