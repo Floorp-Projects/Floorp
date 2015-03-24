@@ -2035,11 +2035,12 @@ CheckScript(JSContext *cx, JSScript *script, bool osr)
         return false;
     }
 
-    if (!script->compileAndGo() && !script->functionNonDelazifying()) {
-        // Support non-CNG functions but not other scripts. For global scripts,
-        // IonBuilder currently uses the global object as scope chain, this is
-        // not valid for non-CNG code.
-        TrackAndSpewIonAbort(cx, script, "not compile-and-go");
+    if (script->hasPollutedGlobalScope() && !script->functionNonDelazifying()) {
+        // Support functions with a polluted global scope but not other
+        // scripts. For global scripts, IonBuilder currently uses the global
+        // object as scope chain, this is not valid when the script has a
+        // polluted global scope.
+        TrackAndSpewIonAbort(cx, script, "has polluted global scope");
         return false;
     }
 

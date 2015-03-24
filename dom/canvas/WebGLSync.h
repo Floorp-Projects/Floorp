@@ -21,7 +21,7 @@ class WebGLSync final
     friend class WebGL2Context;
 
 public:
-    explicit WebGLSync(WebGLContext* webgl);
+    WebGLSync(WebGLContext* webgl, GLenum condition, GLbitfield flags);
 
     void Delete();
     WebGLContext* GetParentObject() const;
@@ -33,6 +33,8 @@ public:
 
 private:
     ~WebGLSync();
+
+    GLsync mGLName;
 };
 
 } // namespace mozilla

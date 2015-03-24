@@ -5,7 +5,7 @@
 
 #include "WebGL1Context.h"
 
-using namespace mozilla;
+namespace mozilla {
 
 bool
 WebGL1Context::ValidateAttribPointerType(bool /*integerMode*/, GLenum type, GLsizei* out_alignment, const char* info)
@@ -33,3 +33,17 @@ WebGL1Context::ValidateAttribPointerType(bool /*integerMode*/, GLenum type, GLsi
     ErrorInvalidEnumInfo(info, type);
     return false;
 }
+
+bool
+WebGL1Context::ValidateUniformMatrixTranspose(bool transpose, const char* info)
+{
+    if (transpose) {
+        ErrorInvalidValue("%s: transpose must be FALSE as per the "
+                          "OpenGL ES 2.0 spec", info);
+        return false;
+    }
+
+    return true;
+}
+
+} // namespace mozilla
