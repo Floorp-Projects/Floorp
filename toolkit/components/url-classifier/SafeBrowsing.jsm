@@ -108,7 +108,7 @@ this.SafeBrowsing = {
     debug = Services.prefs.getBoolPref("browser.safebrowsing.debug");
     this.phishingEnabled = Services.prefs.getBoolPref("browser.safebrowsing.enabled");
     this.malwareEnabled = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
-    this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled");
+    this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled") || Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
     this.updateProviderURLs();
 
     // XXX The listManager backend gets confused if this is called before the
