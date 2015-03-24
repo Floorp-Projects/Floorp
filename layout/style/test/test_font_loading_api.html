@@ -724,7 +724,7 @@ function runTest() {
       var onloadingdoneTriggered = false, loadingdoneDispatched = false;
 
       function check() {
-        if (loadingdoneDispatched && loadingdoneDispatched) {
+        if (onloadingdoneTriggered && loadingdoneDispatched) {
           document.fonts.onloadingdone = null;
           document.fonts.removeEventListener("loadingdone", doneListener);
           aResolve();
@@ -755,6 +755,7 @@ function runTest() {
           document.fonts.clear();
           return document.fonts.ready;
         });
+
   }).then(function() {
 
     // (TEST 32) Test that pending restyles prevent document.fonts.status
