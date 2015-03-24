@@ -1,3 +1,5 @@
+var seenIndex = false;
+
 onfetch = function(ev) {
   if (ev.request.url.contains("synthesized.txt")) {
     ev.respondWith(Promise.resolve(
@@ -114,5 +116,48 @@ onfetch = function(ev) {
         return new Response(body, { status: res.status, statusText: res.statusText, headers: res.headers });
       });
     }));
+  }
+
+  else if (ev.request.url.contains('opaque-on-same-origin')) {
+    var url = 'http://example.com/tests/dom/base/test/file_CrossSiteXHR_server.sjs?status=200';
+    ev.respondWith(fetch(url, { mode: 'no-cors' }));
+  }
+
+  else if (ev.request.url.contains('opaque-no-cors')) {
+    if (ev.request.mode != "no-cors") {
+      ev.respondWith(Promise.reject());
+      return;
+    }
+
+    var url = 'http://example.com/tests/dom/base/test/file_CrossSiteXHR_server.sjs?status=200';
+    ev.respondWith(fetch(url, { mode: ev.request.mode }));
+  }
+
+  else if (ev.request.url.contains('cors-for-no-cors')) {
+    if (ev.request.mode != "no-cors") {
+      ev.respondWith(Promise.reject());
+      return;
+    }
+
+    var url = 'http://example.com/tests/dom/base/test/file_CrossSiteXHR_server.sjs?status=200&allowOrigin=*';
+    ev.respondWith(fetch(url));
+  }
+
+  else if (ev.request.url.contains('example.com')) {
+    ev.respondWith(fetch(ev.request));
+  }
+
+  else if (ev.request.url.contains("index.html")) {
+    if (seenIndex) {
+        var body = "<script>" +
+                     "opener.postMessage({status: 'ok', result: " + ev.isReload + "," +
+                                         "message: 'reload status should be indicated'}, '*');" +
+                     "opener.postMessage({status: 'done'}, '*');" +
+                   "</script>";
+        ev.respondWith(new Response(body, {headers: {'Content-Type': 'text/html'}}));
+    } else {
+      seenIndex = true;
+      ev.respondWith(fetch(ev.request.url));
+    }
   }
 }

@@ -332,26 +332,6 @@ CallJSDeletePropertyOp(JSContext *cx, JSDeletePropertyOp op, HandleObject receiv
     return result.succeed();
 }
 
-inline bool
-CallSetter(JSContext *cx, HandleObject obj, HandleId id, SetterOp op, unsigned attrs,
-           MutableHandleValue vp, ObjectOpResult &result)
-{
-    if (attrs & JSPROP_SETTER) {
-        RootedValue opv(cx, CastAsObjectJsval(op));
-        if (!InvokeGetterOrSetter(cx, obj, opv, 1, vp.address(), vp))
-            return false;
-        return result.succeed();
-    }
-
-    if (attrs & JSPROP_GETTER)
-        return result.fail(JSMSG_GETTER_ONLY);
-
-    if (!op)
-        return result.succeed();
-
-    return CallJSSetterOp(cx, op, obj, id, vp, result);
-}
-
 inline uintptr_t
 GetNativeStackLimit(ExclusiveContext *cx)
 {

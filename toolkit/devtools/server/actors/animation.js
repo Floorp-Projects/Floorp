@@ -250,6 +250,7 @@ let AnimationPlayerActor = ActorClass({
    */
   pause: method(function() {
     this.player.pause();
+    return this.player.ready;
   }, {
     request: {},
     response: {}
@@ -513,10 +514,13 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
    * Pause all animations in the current tabActor's frames.
    */
   pauseAll: method(function() {
+    let readyPromises = [];
     for (let player of this.getAllAnimationPlayers()) {
       player.pause();
+      readyPromises.push(player.ready);
     }
     this.allAnimationsPaused = true;
+    return promise.all(readyPromises);
   }, {
     request: {},
     response: {}

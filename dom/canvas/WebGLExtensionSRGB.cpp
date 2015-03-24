@@ -34,7 +34,8 @@ WebGLExtensionSRGB::IsSupported(const WebGLContext* webgl)
 {
     gl::GLContext* gl = webgl->GL();
 
-    return gl->IsSupported(gl::GLFeature::sRGB);
+    return gl->IsSupported(gl::GLFeature::sRGB_framebuffer) &&
+           gl->IsSupported(gl::GLFeature::sRGB_texture);
 }
 
 

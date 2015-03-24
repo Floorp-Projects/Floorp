@@ -152,6 +152,7 @@ JSScript::setBaselineScript(JSContext *maybecx, js::jit::BaselineScript *baselin
         js::jit::BaselineScript::writeBarrierPre(zone(), baseline);
     MOZ_ASSERT(!hasIonScript());
     baseline = baselineScript;
+    resetWarmUpResetCounter();
     updateBaselineOrIonRaw(maybecx);
 }
 

@@ -442,6 +442,9 @@ AnimationPlayer::DoPlay()
   // Clear ready promise. We'll create a new one lazily.
   mReady = nullptr;
 
+  // Clear the start time until we resolve a new one
+  mStartTime.SetNull();
+
   mIsPending = true;
 
   nsIDocument* doc = GetRenderedDocument();

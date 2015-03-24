@@ -50,3 +50,19 @@ WebGL1Context::ValidateBufferForTarget(GLenum target, WebGLBuffer* buffer,
 
     return true;
 }
+
+bool
+WebGL1Context::ValidateBufferUsageEnum(GLenum usage, const char* info)
+{
+    switch (usage) {
+    case LOCAL_GL_STREAM_DRAW:
+    case LOCAL_GL_STATIC_DRAW:
+    case LOCAL_GL_DYNAMIC_DRAW:
+        return true;
+    default:
+        break;
+    }
+
+    ErrorInvalidEnumInfo(info, usage);
+    return false;
+}

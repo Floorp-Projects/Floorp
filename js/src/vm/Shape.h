@@ -1019,16 +1019,7 @@ class Shape : public gc::TenuredCell
         return (attrs & (JSPROP_SETTER | JSPROP_GETTER)) != 0;
     }
 
-    /*
-     * For ES5 compatibility, we allow properties with SetterOp-flavored
-     * setters to be shadowed when set. The "own" property thereby created in
-     * the directly referenced object will have the same getter and setter as
-     * the prototype property. See bug 552432.
-     */
-    bool shadowable() const {
-        MOZ_ASSERT_IF(isDataDescriptor(), writable());
-        return hasSlot() || (attrs & JSPROP_SHADOWABLE);
-    }
+    bool hasShadowable() const { return attrs & JSPROP_SHADOWABLE; }
 
     uint32_t entryCount() {
         if (hasTable())
