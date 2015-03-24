@@ -78,7 +78,7 @@ function* runTestData(view, {value, commitKey, modifiers, expected}) {
   if (commitKey === "VK_ESCAPE") {
     is(propEditor.valueSpan.textContent, expected, "Value is as expected: " + expected);
   } else {
-    yield once(view.element, "CssRuleViewChanged");
+    yield once(view, "ruleview-changed");
     is(propEditor.valueSpan.textContent, expected, "Value is as expected: " + expected);
   }
 }
