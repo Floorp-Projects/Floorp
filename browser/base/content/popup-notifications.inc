@@ -10,7 +10,6 @@
 
     <popupnotification id="webRTC-shareDevices-notification" hidden="true">
       <popupnotificationcontent id="webRTC-selectCamera" orient="vertical">
-        <separator class="thin"/>
         <label value="&getUserMedia.selectCamera.label;"
                accesskey="&getUserMedia.selectCamera.accesskey;"
                control="webRTC-selectCamera-menulist"/>
@@ -20,7 +19,6 @@
       </popupnotificationcontent>
 
       <popupnotificationcontent id="webRTC-selectWindowOrScreen" orient="vertical">
-        <separator class="thin"/>
         <label id="webRTC-selectWindow-label"
                control="webRTC-selectWindow-menulist"/>
         <menulist id="webRTC-selectWindow-menulist"
@@ -31,7 +29,6 @@
       </popupnotificationcontent>
 
       <popupnotificationcontent id="webRTC-selectMicrophone" orient="vertical">
-        <separator class="thin"/>
         <label value="&getUserMedia.selectMicrophone.label;"
                accesskey="&getUserMedia.selectMicrophone.accesskey;"
                control="webRTC-selectMicrophone-menulist"/>
@@ -42,9 +39,7 @@
     </popupnotification>
 
     <popupnotification id="webapps-install-progress-notification" hidden="true">
-      <popupnotificationcontent id="webapps-install-progress-content" orient="vertical" align="start">
-        <separator class="thin"/>
-      </popupnotificationcontent>
+      <popupnotificationcontent id="webapps-install-progress-content" orient="vertical" align="start"/>
     </popupnotification>
 
     <popupnotification id="servicesInstall-notification" hidden="true">
@@ -55,7 +50,6 @@
 
     <popupnotification id="pointerLock-notification" hidden="true">
       <popupnotificationcontent orient="vertical" align="start">
-        <separator class="thin"/>
         <label id="pointerLock-cancel">&pointerLock.notification.message;</label>
       </popupnotificationcontent>
     </popupnotification>
@@ -73,3 +67,18 @@
       <popupnotificationcontent orient="vertical"/>
     </popupnotification>
 #endif
+
+    <popupnotification id="addon-progress-notification" hidden="true">
+      <button id="addon-progress-cancel"
+              oncommand="this.parentNode.cancel();"/>
+      <button id="addon-progress-accept" disabled="true"/>
+    </popupnotification>
+
+    <popupnotification id="addon-install-confirmation-notification" hidden="true">
+      <popupnotificationcontent id="addon-install-confirmation-content" orient="vertical"/>
+      <button id="addon-install-confirmation-cancel"
+              oncommand="PopupNotifications.getNotification('addon-install-confirmation').remove();"/>
+      <button id="addon-install-confirmation-accept"
+              oncommand="gXPInstallObserver.acceptInstallation();
+                         PopupNotifications.getNotification('addon-install-confirmation').remove();"/>
+    </popupnotification>
