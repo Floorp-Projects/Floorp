@@ -34,30 +34,6 @@ class BufferableRef
     bool maybeInRememberedSet(const Nursery &) const { return true; }
 };
 
-/*
- * HashKeyRef represents a reference to a HashMap key. This should normally
- * be used through the HashTableWriteBarrierPost function.
- */
-template <typename Map, typename Key>
-class HashKeyRef : public BufferableRef
-{
-    Map *map;
-    Key key;
-
-  public:
-    HashKeyRef(Map *m, const Key &k) : map(m), key(k) {}
-
-    void mark(JSTracer *trc) {
-        Key prior = key;
-        typename Map::Ptr p = map->lookup(key);
-        if (!p)
-            return;
-        trc->setTracingLocation(&*p);
-        Mark(trc, &key, "HashKeyRef");
-        map->rekeyIfMoved(prior, key);
-    }
-};
-
 typedef HashSet<void *, PointerHasher<void *, 3>, SystemAllocPolicy> EdgeSet;
 
 /* The size of a single block of store buffer storage space. */

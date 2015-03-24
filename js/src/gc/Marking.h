@@ -286,56 +286,6 @@ PushArena(GCMarker *gcmarker, ArenaHeader *aheader);
 
 /*** Generic ***/
 
-/*
- * The Mark() functions interface should only be used by code that must be
- * templated.  Other uses should use the more specific, type-named functions.
- */
-
-inline void
-Mark(JSTracer *trc, BarrieredBase<Value> *v, const char *name)
-{
-    MarkValue(trc, v, name);
-}
-
-inline void
-Mark(JSTracer *trc, BarrieredBase<JSObject*> *o, const char *name)
-{
-    MarkObject(trc, o, name);
-}
-
-inline void
-Mark(JSTracer *trc, BarrieredBase<JSScript*> *o, const char *name)
-{
-    MarkScript(trc, o, name);
-}
-
-inline void
-Mark(JSTracer *trc, HeapPtrJitCode *code, const char *name)
-{
-    MarkJitCode(trc, code, name);
-}
-
-/* For use by WeakMap's HashKeyRef instantiation. */
-inline void
-Mark(JSTracer *trc, JSObject **objp, const char *name)
-{
-    MarkObjectUnbarriered(trc, objp, name);
-}
-
-/* For use by Debugger::WeakMap's missingScopes HashKeyRef instantiation. */
-inline void
-Mark(JSTracer *trc, NativeObject **obj, const char *name)
-{
-    MarkObjectUnbarriered(trc, obj, name);
-}
-
-/* For use by Debugger::WeakMap's liveScopes HashKeyRef instantiation. */
-inline void
-Mark(JSTracer *trc, ScopeObject **obj, const char *name)
-{
-    MarkObjectUnbarriered(trc, obj, name);
-}
-
 inline bool
 IsMarked(BarrieredBase<Value> *v)
 {
@@ -405,6 +355,30 @@ ToMarkable(Cell *cell)
 {
     return cell;
 }
+
+/*
+ * HashKeyRef represents a reference to a HashMap key. This should normally
+ * be used through the HashTableWriteBarrierPost function.
+ */
+template <typename Map, typename Key>
+class HashKeyRef : public BufferableRef
+{
+    Map *map;
+    Key key;
+
+  public:
+    HashKeyRef(Map *m, const Key &k) : map(m), key(k) {}
+
+    void mark(JSTracer *trc) {
+        Key prior = key;
+        typename Map::Ptr p = map->lookup(key);
+        if (!p)
+            return;
+        trc->setTracingLocation(&*p);
+        TraceManuallyBarrieredEdge(trc, &key, "HashKeyRef");
+        map->rekeyIfMoved(prior, key);
+    }
+};
 
 } /* namespace gc */
 
