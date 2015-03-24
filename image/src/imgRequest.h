@@ -19,7 +19,7 @@
 #include "nsStringGlue.h"
 #include "nsError.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
-#include "mozilla/Atomics.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
 class imgCacheValidator;
@@ -41,6 +41,8 @@ class ImageURL;
 class ProgressTracker;
 } // namespace image
 } // namespace mozilla
+
+struct NewPartResult;
 
 class imgRequest final : public nsIStreamListener,
                              public nsIThreadRetargetableStreamListener,
@@ -89,7 +91,7 @@ public:
   void ContinueEvict();
 
   // Request that we start decoding the image as soon as data becomes available.
-  void RequestDecode() { mDecodeRequested = true; }
+  void RequestDecode();
 
   inline uint64_t InnerWindowID() const {
     return mInnerWindowId;
@@ -107,7 +109,7 @@ public:
   // HTTP cache may contain a different data then app cache.
   bool CacheChanged(nsIRequest* aNewRequest);
 
-  bool GetMultipart() const { return mIsMultiPartChannel; }
+  bool GetMultipart() const;
 
   // The CORS mode for which we loaded this image.
   int32_t GetCORSMode() const { return mCORSMode; }
@@ -185,7 +187,7 @@ private:
   void AdjustPriority(imgRequestProxy *aProxy, int32_t aDelta);
 
   // Return whether we've seen some data at this point
-  bool HasTransferredData() const { return mGotData; }
+  bool HasTransferredData() const;
 
   // Set whether this request is stored in the cache. If it isn't, regardless
   // of whether this request has a non-null mCacheEntry, this imgRequest won't
@@ -193,6 +195,9 @@ private:
   void SetIsInCache(bool cacheable);
 
   bool HasConsumers();
+
+  /// Returns true if RequestDecode() was called.
+  bool IsDecodeRequested() const;
 
 public:
   NS_DECL_NSISTREAMLISTENER
@@ -203,10 +208,16 @@ public:
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
   // Sets properties for this image; will dispatch to main thread if needed.
-  void SetProperties(nsIChannel* aChan);
+  void SetProperties(const nsACString& aContentType,
+                     const nsACString& aContentDisposition);
 
 private:
   friend class imgMemoryReporter;
+  friend class FinishPreparingForNewPartRunnable;
+
+  already_AddRefed<Image> GetImage() const;
+
+  void FinishPreparingForNewPart(const NewPartResult& aResult);
 
   // Weak reference to parent loader; this request cannot outlive its owner.
   imgLoader* mLoader;
@@ -221,9 +232,6 @@ private:
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
   // The principal of this image.
   nsCOMPtr<nsIPrincipal> mPrincipal;
-  // Progress tracker -- transferred to mImage, when it gets instantiated.
-  nsRefPtr<ProgressTracker> mProgressTracker;
-  nsRefPtr<Image> mImage;
   nsCOMPtr<nsIProperties> mProperties;
   nsCOMPtr<nsISupports> mSecurityInfo;
   nsCOMPtr<nsIChannel> mChannel;
@@ -254,11 +262,17 @@ private:
 
   nsresult mImageErrorCode;
 
-  mozilla::Atomic<bool> mDecodeRequested;
+  mutable mozilla::Mutex mMutex;
 
+  // Member variables protected by mMutex. Note that *all* flags in our bitfield
+  // are protected by mMutex; if you're adding a new flag that isn'protected, it
+  // must not be a part of this bitfield.
+  nsRefPtr<ProgressTracker> mProgressTracker;
+  nsRefPtr<Image> mImage;
   bool mIsMultiPartChannel : 1;
   bool mGotData : 1;
   bool mIsInCache : 1;
+  bool mDecodeRequested : 1;
   bool mNewPartPending : 1;
 };
 
