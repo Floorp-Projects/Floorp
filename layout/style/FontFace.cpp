@@ -401,6 +401,11 @@ FontFace::GetFamily(nsString& aResult)
   GetDesc(eCSSFontDesc_Family, value);
 
   aResult.Truncate();
+
+  if (value.GetUnit() == eCSSUnit_Null) {
+    return;
+  }
+
   nsDependentString family(value.GetStringBufferValue());
   if (!family.IsEmpty()) {
     // The string length can be zero when the author passed an invalid
