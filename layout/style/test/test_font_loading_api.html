@@ -53,7 +53,7 @@ var invalidValues = {
 
 // Invalid font family names.
 var invalidFontFamilyNames = [
-  "", "\"\"", "sans-serif", "A, B", "inherit"
+  "", "\"\"", "sans-serif", "A, B", "inherit", "a 1"
 ];
 
 // Will hold an ArrayBuffer containing a valid font.
@@ -293,6 +293,7 @@ function runTest() {
       familyTests = familyTests.then(function() {
         var face = new FontFace(aFamilyName, fontData);
         is(face.status, "error", "FontFace should be error immediately after construction with invalid family name " + aFamilyName + " (TEST 17)");
+        is(face.family, "", "FontFace.family should be the empty string after construction with invalid family name " + aFamilyName + " (TEST 17)");
         return face.loaded.then(function() {
           ok(false, "FontFace should not load after invalid family name " + aFamilyName + " specified (TEST 17)");
         }, function(aError) {
@@ -615,7 +616,8 @@ function runTest() {
   }).then(function() {
 
     // (TEST 29) Test that a loadingdone and a loadingerror event is dispatched
-    // when a FontFace with status "error" is added to the FontFaceSet.
+    // when a FontFace that eventually becomes status "error" is added to the
+    // FontFaceSet.
     var face;
     var awaitEvents = new Promise(function(aResolve, aReject) {
 
@@ -657,14 +659,16 @@ function runTest() {
       };
     });
 
-    face = new FontFace("test", new ArrayBuffer(0));
+    face = new FontFace("test", "url(x)");
+    face.load();
+    is(face.status, "loading", "FontFace should have status \"loading\" (TEST 29)");
+    document.fonts.add(face);
 
     return face.loaded
       .then(function() {
         ok(false, "the FontFace should not load (TEST 29)");
       }, function(aError) {
         is(face.status, "error", "FontFace should have status \"error\" (TEST 29)");
-        document.fonts.add(face);
         return awaitEvents;
       })
       .then(function() {
@@ -675,7 +679,7 @@ function runTest() {
   }).then(function() {
 
     // (TEST 30) Test that a loadingdone event is dispatched when a FontFace
-    // with status "loaded" is added to the FontFaceSet.
+    // that eventually becomes status "loaded" is added to the FontFaceSet.
     var face;
     var awaitEvents = new Promise(function(aResolve, aReject) {
 
@@ -701,12 +705,14 @@ function runTest() {
       };
     });
 
-    face = new FontFace("test", fontData);
+    face = new FontFace("test", "url(BitPattern.woff)");
+    face.load();
+    is(face.status, "loading", "FontFace should have status \"loading\" (TEST 30)");
+    document.fonts.add(face);
 
     return face.loaded
       .then(function() {
         is(face.status, "loaded", "FontFace should have status \"loaded\" (TEST 30)");
-        document.fonts.add(face);
         return awaitEvents;
       })
       .then(function() {
@@ -724,7 +730,7 @@ function runTest() {
       var onloadingdoneTriggered = false, loadingdoneDispatched = false;
 
       function check() {
-        if (loadingdoneDispatched && loadingdoneDispatched) {
+        if (onloadingdoneTriggered && loadingdoneDispatched) {
           document.fonts.onloadingdone = null;
           document.fonts.removeEventListener("loadingdone", doneListener);
           aResolve();
@@ -744,17 +750,19 @@ function runTest() {
     });
 
     face = new FontFace("test", "url(BitPattern.woff)");
+    is(face.status, "unloaded", "FontFace should have status \"unloaded\" (TEST 31)");
+    document.fonts.add(face);
 
     return face.load()
         .then(function() {
-          is(face.status, "loaded", "FontFace should have status \"loaded\" (TEST 31)");
-          document.fonts.add(face);
           return awaitEvents;
         })
         .then(function() {
+          is(face.status, "loaded", "FontFace should have status \"loaded\" (TEST 31)");
           document.fonts.clear();
           return document.fonts.ready;
         });
+
   }).then(function() {
 
     // (TEST 32) Test that pending restyles prevent document.fonts.status
@@ -861,6 +869,63 @@ function runTest() {
     });
 
     style.textContent = "";
+
+  }).then(function() {
+
+    // (TEST 35) Test that no loadingdone event is dispatched when a FontFace
+    // with "loaded" status is added to a "loaded" FontFaceSet.
+    var gotLoadingDone = false;
+    document.fonts.onloadingdone = function(aEvent) {
+      gotLoadingDone = true;
+    };
+
+    is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" (TEST 35)");
+    var face = new FontFace("test", fontData);
+
+    return face.loaded
+      .then(function() {
+        is(face.status, "loaded", "FontFace should have status \"loaded\" (TEST 35)");
+        document.fonts.add(face);
+        is(document.fonts.status, "loaded", "document.fonts.status should still have status \"loaded\" (TEST 35)");
+        return document.fonts.ready;
+      })
+      .then(function() {
+        ok(!gotLoadingDone, "loadingdone event should not be dispatched (TEST 35)");
+        document.fonts.onloadingdone = null;
+        document.fonts.clear();
+      });
+
+  }).then(function() {
+
+    // (TEST 36) Test that no loadingdone or loadingerror event is dispatched
+    // when a FontFace with "error" status is added to a "loaded" FontFaceSet.
+    var gotLoadingDone = false, gotLoadingError = false;
+    document.fonts.onloadingdone = function(aEvent) {
+      gotLoadingDone = true;
+    };
+    document.fonts.onloadingerror = function(aEvent) {
+      gotLoadingError = true;
+    };
+
+    is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" (TEST 36)");
+    var face = new FontFace("test", new ArrayBuffer(0));
+
+    return face.loaded
+      .then(function() {
+        ok(false, "FontFace should not have loaded (TEST 36)");
+      }, function() {
+        is(face.status, "error", "FontFace should have status \"error\" (TEST 36)");
+        document.fonts.add(face);
+        is(document.fonts.status, "loaded", "document.fonts.status should still have status \"loaded\" (TEST 36)");
+        return document.fonts.ready;
+      })
+      .then(function() {
+        ok(!gotLoadingDone, "loadingdone event should not be dispatched (TEST 36)");
+        ok(!gotLoadingError, "loadingerror event should not be dispatched (TEST 36)");
+        document.fonts.onloadingdone = null;
+        document.fonts.onloadingerror = null;
+        document.fonts.clear();
+      });
 
   }).then(function() {
 

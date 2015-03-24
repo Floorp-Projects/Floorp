@@ -51,6 +51,7 @@ EXTRA_JS_MODULES.devtools.shared += [
     'devices.js',
     'doorhanger.js',
     'frame-script-utils.js',
+    'getjson.js',
     'inplace-editor.js',
     'observable-object.js',
     'options-view.js',
@@ -61,6 +62,7 @@ EXTRA_JS_MODULES.devtools.shared += [
 ]
 
 EXTRA_JS_MODULES.devtools.shared.widgets += [
+    'widgets/CubicBezierPresets.js',
     'widgets/CubicBezierWidget.js',
     'widgets/FastListWidget.js',
     'widgets/Spectrum.js',

@@ -848,7 +848,10 @@ GetMaxDisplayPortSize(nsIContent* aContent)
   }
   nsPresContext* presContext = frame->PresContext();
 
-  uint32_t maxSizeInDevPixels = lm->GetMaxTextureSize();
+  int32_t maxSizeInDevPixels = lm->GetMaxTextureSize();
+  if (maxSizeInDevPixels < 0 || maxSizeInDevPixels == INT_MAX) {
+    return nscoord_MAX;
+  }
   return presContext->DevPixelsToAppUnits(maxSizeInDevPixels);
 }
 
@@ -1053,11 +1056,9 @@ GetDisplayPortImpl(nsIContent* aContent, nsRect *aResult, float aMultiplier)
   if (!gfxPrefs::LayersTilesEnabled()) {
     // Either we should have gotten a valid rect directly from the displayport
     // base, or we should have computed a valid rect from the margins.
-    NS_ASSERTION(GetMaxDisplayPortSize(aContent) <= 0 ||
-                 result.width < GetMaxDisplayPortSize(aContent),
+    NS_ASSERTION(result.width <= GetMaxDisplayPortSize(aContent),
                  "Displayport must be a valid texture size");
-    NS_ASSERTION(GetMaxDisplayPortSize(aContent) <= 0 ||
-                 result.height < GetMaxDisplayPortSize(aContent),
+    NS_ASSERTION(result.height <= GetMaxDisplayPortSize(aContent),
                  "Displayport must be a valid texture size");
   }
 

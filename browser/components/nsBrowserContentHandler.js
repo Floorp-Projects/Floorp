@@ -342,6 +342,17 @@ nsBrowserContentHandler.prototype = {
       cmdLine.preventDefault = true;
     }
 
+    // In the past, when an instance was not already running, the -remote
+    // option returned an error code. Any script or application invoking the
+    // -remote option is expected to be handling this case, otherwise they
+    // wouldn't be doing anything when there is no Firefox already running.
+    // Making the -remote option always return an error code makes those
+    // scripts or applications handle the situation as if Firefox was not
+    // already running.
+    if (cmdLine.handleFlag("remote", true)) {
+      throw NS_ERROR_ABORT;
+    }
+
     var uriparam;
     try {
       while ((uriparam = cmdLine.handleFlagWithParam("new-window", false))) {

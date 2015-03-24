@@ -38,7 +38,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(a3cd6509-da6a-4cd4-8f97-2645396909da)]
+[scriptable, uuid(80ee20a9-757b-4c4e-8a4a-84cbb5981879)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -219,6 +219,22 @@ interface nsIHttpChannelInternal : nsISupports
      * interception and proceed immediately to the network/cache.
      */
     void forceNoIntercept();
+
+    /**
+     * Set by nsCORSListenerProxy if credentials should be included in
+     * cross-origin requests. false indicates "same-origin", users should still
+     * check flag LOAD_ANONYMOUS!
+     */
+    attribute boolean corsIncludeCredentials;
+
+    const unsigned long CORS_MODE_SAME_ORIGIN = 0;
+    const unsigned long CORS_MODE_NO_CORS = 1;
+    const unsigned long CORS_MODE_CORS = 2;
+    const unsigned long CORS_MODE_CORS_WITH_FORCED_PREFLIGHT = 3;
+    /**
+     * Set by nsCORSListenerProxy to indicate CORS load type. Defaults to CORS_MODE_NO_CORS.
+     */
+    attribute unsigned long corsMode;
 
     /**
      * The URI of the top-level window that's associated with this channel.

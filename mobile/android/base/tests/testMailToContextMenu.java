@@ -16,7 +16,7 @@ public class testMailToContextMenu extends ContentContextMenuTest {
         blockForGeckoReady();
 
         MAILTO_PAGE_URL=getAbsoluteUrl(StringHelper.ROBOCOP_BIG_MAILTO_URL);
-        inputAndLoadUrl(MAILTO_PAGE_URL);
+        loadUrlAndWait(MAILTO_PAGE_URL);
         waitForText(MAILTO_PAGE_TITLE);
 
         verifyContextMenuItems(mailtoMenuItems);

@@ -5,9 +5,11 @@
 const {Cu} = require("chrome");
 const {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm");
 const {AddonManager} = Cu.import("resource://gre/modules/AddonManager.jsm");
-const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js");
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
-const {GetAddonsJSON} = require("devtools/webide/remote-resources");
+const {getJSON} = require("devtools/shared/getjson");
+const EventEmitter = require("devtools/toolkit/event-emitter");
+
+const ADDONS_URL = "devtools.webide.addonsURL";
 
 let SIMULATOR_LINK = Services.prefs.getCharPref("devtools.webide.simulatorAddonsURL");
 let ADB_LINK = Services.prefs.getCharPref("devtools.webide.adbAddonURL");
@@ -54,7 +56,7 @@ let GetAvailableAddons = exports.GetAvailableAddons = function() {
       simulators: [],
       adb: null
     }
-    GetAddonsJSON(true).then(json => {
+    getJSON(ADDONS_URL, true).then(json => {
       for (let stability in json) {
         for (let version of json[stability]) {
           addons.simulators.push(new SimulatorAddon(stability, version));

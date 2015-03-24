@@ -43,7 +43,7 @@ class TextSelection extends Layer implements GeckoEventListener {
     private final DrawListener mDrawListener;
     private boolean mDraggingHandles;
 
-    private int selectionID; // Unique ID provided for each selection action.
+    private String selectionID; // Unique ID provided for each selection action.
     private float mViewLeft;
     private float mViewTop;
     private float mViewZoom;
@@ -132,7 +132,7 @@ class TextSelection extends Layer implements GeckoEventListener {
             public void run() {
                 try {
                     if (event.equals("TextSelection:ShowHandles")) {
-                        selectionID = message.getInt("selectionID");
+                        selectionID = message.getString("selectionID");
                         final JSONArray handles = message.getJSONArray("handles");
                         for (int i=0; i < handles.length(); i++) {
                             String handle = handles.getString(i);

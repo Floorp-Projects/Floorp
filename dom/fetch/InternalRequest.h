@@ -208,6 +208,12 @@ public:
     return mCacheMode;
   }
 
+  void
+  SetCacheMode(RequestCache aCacheMode)
+  {
+    mCacheMode = aCacheMode;
+  }
+
   nsContentPolicyType
   ContentPolicyType() const
   {

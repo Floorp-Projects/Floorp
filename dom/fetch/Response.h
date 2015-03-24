@@ -56,15 +56,6 @@ public:
     aUrl.AsAString() = NS_ConvertUTF8toUTF16(url);
   }
 
-  bool
-  GetFinalURL(ErrorResult& aRv) const
-  {
-    return mInternalResponse->FinalURL();
-  }
-
-  void
-  SetFinalURL(bool aFinalURL, ErrorResult& aRv);
-
   uint16_t
   Status() const
   {

@@ -1165,6 +1165,15 @@ nsStandardURL::SetSpec(const nsACString &input)
         return NS_ERROR_MALFORMED_URI;
     }
 
+    int32_t refPos = input.FindChar('#');
+    if (refPos != kNotFound) {
+        const nsCSubstring& sub = Substring(input, refPos, input.Length());
+        nsresult rv = CheckRefCharacters(sub);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+    }
+
     // Make a backup of the curent URL
     nsStandardURL prevURL(false,false);
     prevURL.CopyMembers(this, eHonorRef);
@@ -2439,6 +2448,27 @@ nsStandardURL::SetQuery(const nsACString &input)
     return NS_OK;
 }
 
+nsresult
+nsStandardURL::CheckRefCharacters(const nsACString &input)
+{
+    nsACString::const_iterator start, end;
+    input.BeginReading(start);
+    input.EndReading(end);
+    for (; start != end; ++start) {
+        switch (*start) {
+            case 0x00:
+            case 0x09:
+            case 0x0A:
+            case 0x0D:
+                // These characters are not allowed in the Ref part.
+                return NS_ERROR_MALFORMED_URI;
+            default:
+                continue;
+        }
+    }
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsStandardURL::SetRef(const nsACString &input)
 {
@@ -2448,6 +2478,11 @@ nsStandardURL::SetRef(const nsACString &input)
     const char *ref = flat.get();
 
     LOG(("nsStandardURL::SetRef [ref=%s]\n", ref));
+
+    nsresult rv = CheckRefCharacters(input);
+    if (NS_FAILED(rv)) {
+        return rv;
+    }
 
     if (mPath.mLen < 0)
         return SetPath(flat);
@@ -2465,8 +2500,8 @@ nsStandardURL::SetRef(const nsACString &input)
         }
         return NS_OK;
     }
-            
-    int32_t refLen = strlen(ref);
+
+    int32_t refLen = flat.Length();
     if (ref[0] == '#') {
         ref++;
         refLen--;
@@ -2479,9 +2514,11 @@ nsStandardURL::SetRef(const nsACString &input)
         mRef.mLen = 0;
     }
 
+    // If precent encoding is necessary, `ref` will point to `buf`'s content.
+    // `buf` needs to outlive any use of the `ref` pointer.
+    nsAutoCString buf;
     if (nsContentUtils::EncodeDecodeURLHash()) {
         // encode ref if necessary
-        nsAutoCString buf;
         bool encoded;
         GET_SEGMENT_ENCODER(encoder);
         encoder.EncodeSegmentCount(ref, URLSegment(0, refLen), esc_Ref,

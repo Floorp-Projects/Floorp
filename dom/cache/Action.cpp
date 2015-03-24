@@ -10,13 +10,13 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-NS_IMPL_ISUPPORTS0(mozilla::dom::cache::Action::Resolver);
-
 void
 Action::CancelOnInitiatingThread()
 {
   NS_ASSERT_OWNINGTHREAD(Action);
-  MOZ_ASSERT(!mCanceled);
+  // It is possible for cancellation to be duplicated.  For example, an
+  // individual Cache could have its Actions canceled and then shutdown
+  // could trigger a second action.
   mCanceled = true;
 }
 

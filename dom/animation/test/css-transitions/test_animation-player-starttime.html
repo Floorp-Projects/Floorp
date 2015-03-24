@@ -190,23 +190,6 @@ function EventWatcher(watchedNode, eventTypes)
 // The former is the start of the start delay. The latter is the start of the
 // active interval. (If there is no delay, they are the same.)
 
-// Called when startTime is set to the time the start delay would ideally
-// start (not accounting for any delay to next paint tick).
-function checkStateOnSettingStartTimeToAnimationCreationTime(player)
-{
-  // We don't test player.startTime since our caller just set it.
-
-  assert_equals(player.playState, 'running',
-    'AnimationPlayer.playState should be "running" at the start of ' +
-    'the start delay');
-
-  var div = player.source.target;
-  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
-  assert_equals(marginLeft, INITIAL_POSITION,
-                'the computed value of margin-left should be unaffected ' +
-                'at the beginning of the start delay');
-}
-
 // Called when the ready Promise's callbacks should happen
 function checkStateOnReadyPromiseResolved(player)
 {
@@ -268,37 +251,28 @@ function checkStateAtActiveIntervalEndTime(player)
     'value at the end of the active duration');
 }
 
-
 test(function(t)
 {
   var div = addDiv(t, {'class': 'animated-div'});
-
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
 
   var player = div.getAnimationPlayers()[0];
+  assert_equals(player.startTime, null, 'startTime is unresolved');
+}, 'startTime of a newly created transition is unresolved');
 
-  // Animations shouldn't start until the next paint tick, so:
-  assert_equals(player.startTime, null,
-    'AnimationPlayer.startTime should be unresolved when an animation ' +
-    'is initially created');
 
-  assert_equals(player.playState, "pending",
-    'AnimationPlayer.playState should be "pending" when an animation ' +
-    'is initially created');
+test(function(t)
+{
+  var div = addDiv(t, {'class': 'animated-div'});
+  flushComputedStyle(div);
+  div.style.marginLeft = '200px'; // initiate transition
 
-  // XXX Ideally we would have a test to check the ready Promise is initially
-  // unresolved, but currently there is no Web API to do that. Waiting for the
-  // ready Promise with a timeout doesn't work because the resolved callback
-  // will be called (async) regardless of whether the Promise was resolved in
-  // the past or is resolved in the future.
-
+  var player = div.getAnimationPlayers()[0];
   var currentTime = player.timeline.currentTime;
   player.startTime = currentTime;
   assert_approx_equals(player.startTime, currentTime, 0.0001, // rounding error
     'Check setting of startTime actually works');
-
-  checkStateOnSettingStartTimeToAnimationCreationTime(player);
 }, 'Sanity test to check round-tripping assigning to new animation\'s ' +
    'startTime');
 

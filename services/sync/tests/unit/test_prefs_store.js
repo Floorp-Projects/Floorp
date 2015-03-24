@@ -95,28 +95,28 @@ function run_test() {
     // Ensure we don't go to the network to fetch personas and end up leaking
     // stuff.
     Services.io.offline = true;
-    do_check_false(!!prefs.get("lightweightThemes.isThemeSelected"));
+    do_check_false(!!prefs.get("lightweightThemes.selectedThemeID"));
     do_check_eq(LightweightThemeManager.currentTheme, null);
 
     let persona1 = makePersona();
     let persona2 = makePersona();
     let usedThemes = JSON.stringify([persona1, persona2]);
     record.value = {
-      "lightweightThemes.isThemeSelected": true,
+      "lightweightThemes.selectedThemeID": persona1.id,
       "lightweightThemes.usedThemes": usedThemes
     };
     store.update(record);
-    do_check_true(prefs.get("lightweightThemes.isThemeSelected"));
+    do_check_eq(prefs.get("lightweightThemes.selectedThemeID"), persona1.id);
     do_check_true(Utils.deepEquals(LightweightThemeManager.currentTheme,
                   persona1));
 
     _("Disable persona");
     record.value = {
-      "lightweightThemes.isThemeSelected": false,
+      "lightweightThemes.selectedThemeID": null,
       "lightweightThemes.usedThemes": usedThemes
     };
     store.update(record);
-    do_check_false(prefs.get("lightweightThemes.isThemeSelected"));
+    do_check_false(!!prefs.get("lightweightThemes.selectedThemeID"));
     do_check_eq(LightweightThemeManager.currentTheme, null);
 
     _("Only the current app's preferences are applied.");

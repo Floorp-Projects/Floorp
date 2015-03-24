@@ -7748,7 +7748,7 @@ var Distribution = {
     }
 
     // Apply a lightweight theme if necessary
-    if (prefs && prefs["lightweightThemes.isThemeSelected"]) {
+    if (prefs && prefs["lightweightThemes.selectedThemeID"]) {
       Services.obs.notifyObservers(null, "lightweight-theme-apply", "");
     }
 

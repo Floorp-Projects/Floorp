@@ -22,7 +22,8 @@ class TimeRanges;
 class MediaDecoderReader;
 class SharedDecoderManager;
 
-struct WaitForDataRejectValue {
+struct WaitForDataRejectValue
+{
   enum Reason {
     SHUTDOWN,
     CANCELED
@@ -32,6 +33,23 @@ struct WaitForDataRejectValue {
     :mType(aType), mReason(aReason) {}
   MediaData::Type mType;
   Reason mReason;
+};
+
+class MetadataHolder
+{
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MetadataHolder)
+  MediaInfo mInfo;
+  nsAutoPtr<MetadataTags> mTags;
+
+private:
+  virtual ~MetadataHolder() {}
+};
+
+enum class ReadMetadataFailureReason : int8_t
+{
+  WAITING_FOR_RESOURCES,
+  METADATA_ERROR
 };
 
 // Encapsulates the decoding and reading of media data. Reading can either
@@ -49,6 +67,7 @@ public:
     CANCELED
   };
 
+  typedef MediaPromise<nsRefPtr<MetadataHolder>, ReadMetadataFailureReason, /* IsExclusive = */ true> MetadataPromise;
   typedef MediaPromise<nsRefPtr<AudioData>, NotDecodedReason, /* IsExclusive = */ true> AudioDataPromise;
   typedef MediaPromise<nsRefPtr<VideoData>, NotDecodedReason, /* IsExclusive = */ true> VideoDataPromise;
   typedef MediaPromise<int64_t, nsresult, /* IsExclusive = */ true> SeekPromise;
@@ -147,6 +166,11 @@ public:
 
   virtual bool HasAudio() = 0;
   virtual bool HasVideo() = 0;
+
+  // The ReadMetadata API is unfortunately synchronous. We should fix that at
+  // some point, but for now we can make things a bit better by using a
+  // promise-y API on top of a synchronous call.
+  nsRefPtr<MetadataPromise> CallReadMetadata();
 
   // A function that is called before ReadMetadata() call.
   virtual void PreReadMetadata() {};

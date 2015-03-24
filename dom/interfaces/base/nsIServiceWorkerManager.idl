@@ -19,7 +19,7 @@ interface nsIServiceWorkerUnregisterCallback : nsISupports
   [noscript] void UnregisterFailed();
 };
 
-[builtinclass, uuid(706c3e6b-c9d2-4857-893d-4b4845fec48f)]
+[builtinclass, uuid(e4c8baa5-237a-4bf6-82d4-ea06eb4b76ba)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -59,7 +59,8 @@ interface nsIServiceWorkerManager : nsISupports
   bool isControlled(in nsIDocument aDocument);
 
   // Cause a fetch event to be dispatched to the worker global associated with the given document.
-  void dispatchFetchEvent(in nsIDocument aDoc, in nsIInterceptedChannel aChannel);
+  void dispatchFetchEvent(in nsIDocument aDoc, in nsIInterceptedChannel aChannel,
+                          in boolean aIsReload);
 
   // aTarget MUST be a ServiceWorkerRegistration.
   [noscript] void AddRegistrationEventListener(in DOMString aScope, in nsIDOMEventTarget aTarget);

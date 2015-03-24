@@ -177,7 +177,10 @@ public:
     ManagerList::ForwardIterator iter(sFactory->mManagerList);
     while (iter.HasMore()) {
       nsRefPtr<Manager> manager = iter.GetNext();
-      if (*manager->mManagerId == *aManagerId) {
+      // If there is an invalid Manager finishing up and a new Manager
+      // is created for the same origin, then the new Manager will
+      // be blocked until QuotaManager finishes clearing the origin.
+      if (manager->IsValid() && *manager->mManagerId == *aManagerId) {
         return manager.forget();
       }
     }
@@ -911,15 +914,19 @@ private:
   {
     // May be on any thread, including STS event target.
     MOZ_ASSERT(aClosure);
-    nsRefPtr<CachePutAllAction> action = static_cast<CachePutAllAction*>(aClosure);
+    // Weak ref as we are guaranteed to the action is alive until
+    // CompleteOnInitiatingThread is called.
+    CachePutAllAction* action = static_cast<CachePutAllAction*>(aClosure);
     action->CallOnAsyncCopyCompleteOnTargetThread(aRv);
   }
 
   void
   CallOnAsyncCopyCompleteOnTargetThread(nsresult aRv)
   {
-    // May be on any thread, including STS event target.
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableMethodWithArg<nsresult>(
+    // May be on any thread, including STS event target.  Non-owning runnable
+    // here since we are guaranteed the Action will survive until
+    // CompleteOnInitiatingThread is called.
+    nsCOMPtr<nsIRunnable> runnable = NS_NewNonOwningRunnableMethodWithArgs<nsresult>(
       this, &CachePutAllAction::OnAsyncCopyComplete, aRv);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
       mTargetThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL)));
@@ -1404,6 +1411,9 @@ Manager::RemoveListener(Listener* aListener)
   mListeners.RemoveElement(aListener, ListenerEntryListenerComparator());
   MOZ_ASSERT(!mListeners.Contains(aListener,
                                   ListenerEntryListenerComparator()));
+  if (mListeners.IsEmpty() && mContext) {
+    mContext->AllowToClose();
+  }
 }
 
 void
@@ -1419,6 +1429,21 @@ Manager::RemoveContext(Context* aContext)
   if (mShuttingDown) {
     Factory::Remove(this);
   }
+}
+
+void
+Manager::Invalidate()
+{
+  NS_ASSERT_OWNINGTHREAD(Manager);
+  // QuotaManager can trigger this more than once.
+  mValid = false;
+}
+
+bool
+Manager::IsValid() const
+{
+  NS_ASSERT_OWNINGTHREAD(Manager);
+  return mValid;
 }
 
 void
@@ -1450,7 +1475,7 @@ Manager::ReleaseCacheId(CacheId aCacheId)
         bool orphaned = mCacheIdRefs[i].mOrphaned;
         mCacheIdRefs.RemoveElementAt(i);
         // TODO: note that we need to check this cache for staleness on startup (bug 1110446)
-        if (orphaned && !mShuttingDown) {
+        if (orphaned && !mShuttingDown && mValid) {
           nsRefPtr<Context> context = CurrentContext();
           context->CancelForCacheId(aCacheId);
           nsRefPtr<Action> action = new DeleteOrphanedCacheAction(this,
@@ -1493,7 +1518,7 @@ Manager::ReleaseBodyId(const nsID& aBodyId)
         bool orphaned = mBodyIdRefs[i].mOrphaned;
         mBodyIdRefs.RemoveElementAt(i);
         // TODO: note that we need to check this body for staleness on startup (bug 1110446)
-        if (orphaned && !mShuttingDown) {
+        if (orphaned && !mShuttingDown && mValid) {
           nsRefPtr<Action> action = new DeleteOrphanedBodyAction(aBodyId);
           nsRefPtr<Context> context = CurrentContext();
           context->Dispatch(mIOThread, action);
@@ -1535,9 +1560,8 @@ Manager::CacheMatch(Listener* aListener, RequestId aRequestId, CacheId aCacheId,
 {
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_ASSERT(aListener);
-  if (mShuttingDown) {
-    aListener->OnCacheMatch(aRequestId, NS_ERROR_ILLEGAL_DURING_SHUTDOWN,
-                            nullptr, nullptr);
+  if (mShuttingDown || !mValid) {
+    aListener->OnCacheMatch(aRequestId, NS_ERROR_FAILURE, nullptr, nullptr);
     return;
   }
   nsRefPtr<Context> context = CurrentContext();
@@ -1556,8 +1580,8 @@ Manager::CacheMatchAll(Listener* aListener, RequestId aRequestId,
 {
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_ASSERT(aListener);
-  if (mShuttingDown) {
-    aListener->OnCacheMatchAll(aRequestId, NS_ERROR_ILLEGAL_DURING_SHUTDOWN,
+  if (mShuttingDown || !mValid) {
+    aListener->OnCacheMatchAll(aRequestId, NS_ERROR_FAILURE,
                                nsTArray<SavedResponse>(), nullptr);
     return;
   }
@@ -1578,8 +1602,8 @@ Manager::CachePutAll(Listener* aListener, RequestId aRequestId, CacheId aCacheId
 {
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_ASSERT(aListener);
-  if (mShuttingDown) {
-    aListener->OnCachePutAll(aRequestId, NS_ERROR_ILLEGAL_DURING_SHUTDOWN);
+  if (mShuttingDown || !mValid) {
+    aListener->OnCachePutAll(aRequestId, NS_ERROR_FAILURE);
     return;
   }
   ListenerId listenerId = SaveListener(aListener);
@@ -1598,8 +1622,8 @@ Manager::CacheDelete(Listener* aListener, RequestId aRequestId,
 {
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_ASSERT(aListener);
-  if (mShuttingDown) {
-    aListener->OnCacheDelete(aRequestId, NS_ERROR_ILLEGAL_DURING_SHUTDOWN, false);
+  if (mShuttingDown || !mValid) {
+    aListener->OnCacheDelete(aRequestId, NS_ERROR_FAILURE, false);
     return;
   }
   ListenerId listenerId = SaveListener(aListener);
@@ -1616,8 +1640,8 @@ Manager::CacheKeys(Listener* aListener, RequestId aRequestId,
 {
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_ASSERT(aListener);
-  if (mShuttingDown) {
-    aListener->OnCacheKeys(aRequestId, NS_ERROR_ILLEGAL_DURING_SHUTDOWN,
+  if (mShuttingDown || !mValid) {
+    aListener->OnCacheKeys(aRequestId, NS_ERROR_FAILURE,
                            nsTArray<SavedRequest>(), nullptr);
     return;
   }
@@ -1637,8 +1661,8 @@ Manager::StorageMatch(Listener* aListener, RequestId aRequestId,
 {
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_ASSERT(aListener);
-  if (mShuttingDown) {
-    aListener->OnStorageMatch(aRequestId, NS_ERROR_ILLEGAL_DURING_SHUTDOWN,
+  if (mShuttingDown || !mValid) {
+    aListener->OnStorageMatch(aRequestId, NS_ERROR_FAILURE,
                               nullptr, nullptr);
     return;
   }
@@ -1657,8 +1681,8 @@ Manager::StorageHas(Listener* aListener, RequestId aRequestId,
 {
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_ASSERT(aListener);
-  if (mShuttingDown) {
-    aListener->OnStorageHas(aRequestId, NS_ERROR_ILLEGAL_DURING_SHUTDOWN,
+  if (mShuttingDown || !mValid) {
+    aListener->OnStorageHas(aRequestId, NS_ERROR_FAILURE,
                             false);
     return;
   }
@@ -1675,8 +1699,8 @@ Manager::StorageOpen(Listener* aListener, RequestId aRequestId,
 {
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_ASSERT(aListener);
-  if (mShuttingDown) {
-    aListener->OnStorageOpen(aRequestId, NS_ERROR_ILLEGAL_DURING_SHUTDOWN, 0);
+  if (mShuttingDown || !mValid) {
+    aListener->OnStorageOpen(aRequestId, NS_ERROR_FAILURE, 0);
     return;
   }
   ListenerId listenerId = SaveListener(aListener);
@@ -1692,8 +1716,8 @@ Manager::StorageDelete(Listener* aListener, RequestId aRequestId,
 {
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_ASSERT(aListener);
-  if (mShuttingDown) {
-    aListener->OnStorageDelete(aRequestId, NS_ERROR_ILLEGAL_DURING_SHUTDOWN,
+  if (mShuttingDown || !mValid) {
+    aListener->OnStorageDelete(aRequestId, NS_ERROR_FAILURE,
                                false);
     return;
   }
@@ -1710,8 +1734,8 @@ Manager::StorageKeys(Listener* aListener, RequestId aRequestId,
 {
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_ASSERT(aListener);
-  if (mShuttingDown) {
-    aListener->OnStorageKeys(aRequestId, NS_ERROR_ILLEGAL_DURING_SHUTDOWN,
+  if (mShuttingDown || !mValid) {
+    aListener->OnStorageKeys(aRequestId, NS_ERROR_FAILURE,
                              nsTArray<nsString>());
     return;
   }
@@ -1727,6 +1751,7 @@ Manager::Manager(ManagerId* aManagerId, nsIThread* aIOThread)
   , mIOThread(aIOThread)
   , mContext(nullptr)
   , mShuttingDown(false)
+  , mValid(true)
 {
   MOZ_ASSERT(mManagerId);
   MOZ_ASSERT(mIOThread);
@@ -1765,11 +1790,6 @@ Manager::Shutdown()
   // complete before shutdown proceeds.
   mShuttingDown = true;
 
-  for (uint32_t i = 0; i < mStreamLists.Length(); ++i) {
-    nsRefPtr<StreamList> streamList = mStreamLists[i];
-    streamList->CloseAll();
-  }
-
   // If there is a context, then we must wait for it to complete.  Cancel and
   // only note that we are done after its cleaned up.
   if (mContext) {
@@ -1789,6 +1809,7 @@ Manager::CurrentContext()
   nsRefPtr<Context> ref = mContext;
   if (!ref) {
     MOZ_ASSERT(!mShuttingDown);
+    MOZ_ASSERT(mValid);
     nsRefPtr<Action> setupAction = new SetupAction();
     ref = Context::Create(this, setupAction);
     mContext = ref;
