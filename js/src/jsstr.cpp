@@ -2132,6 +2132,11 @@ class MOZ_STACK_CLASS StringRegExpGuard
         /* Build RegExp from pattern string. */
         RootedString opt(cx);
         if (optarg < args.length()) {
+            if (JSScript *script = cx->currentScript()) {
+                const char *filename = script->filename();
+                cx->compartment()->addTelemetry(filename, JSCompartment::DeprecatedFlagsArgument);
+            }
+
             opt = ToString<CanGC>(cx, args[optarg]);
             if (!opt)
                 return false;
