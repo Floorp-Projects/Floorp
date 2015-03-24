@@ -166,7 +166,7 @@ function getChromeActors(callback)
 
   let client = new DebuggerClient(DebuggerServer.connectPipe());
   client.connect(() => {
-    client.attachProcess().then(response => {
+    client.getProcess().then(response => {
       callback(client, response.form);
     });
   });
