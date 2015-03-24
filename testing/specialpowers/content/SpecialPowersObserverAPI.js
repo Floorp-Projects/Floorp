@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 "use strict";
 
 Components.utils.import("resource://gre/modules/Services.jsm");
@@ -14,16 +13,18 @@ if (typeof(Cc) == 'undefined') {
   var Cc = Components.classes;
 }
 
-this.SpecialPowersError = function(aMsg) {
-  Error.call(this);
-  let {stack} = new Error();
+/**
+ * Special Powers Exception - used to throw exceptions nicely
+ **/
+this.SpecialPowersException = function SpecialPowersException(aMsg) {
   this.message = aMsg;
-  this.name = "SpecialPowersError";
+  this.name = "SpecialPowersException";
 }
-SpecialPowersError.prototype = Object.create(Error.prototype);
 
-SpecialPowersError.prototype.toString = function() {
-  return `${this.name}: ${this.message}`;
+SpecialPowersException.prototype = {
+  toString: function SPE_toString() {
+    return this.name + ': "' + this.message + '"';
+  }
 };
 
 this.SpecialPowersObserverAPI = function SpecialPowersObserverAPI() {
@@ -220,7 +221,7 @@ SpecialPowersObserverAPI.prototype = {
     }
 
     if (status == 404) {
-      throw new SpecialPowersError(
+      throw new SpecialPowersException(
         "Error while executing chrome script '" + aUrl + "':\n" +
         "The script doesn't exists. Ensure you have registered it in " +
         "'support-files' in your mochitest.ini.");
@@ -246,19 +247,19 @@ SpecialPowersObserverAPI.prototype = {
 
         if (aMessage.json.op == "get") {
           if (!prefName || !prefType)
-            throw new SpecialPowersError("Invalid parameters for get in SPPrefService");
+            throw new SpecialPowersException("Invalid parameters for get in SPPrefService");
 
           // return null if the pref doesn't exist
           if (prefs.getPrefType(prefName) == prefs.PREF_INVALID)
             return null;
         } else if (aMessage.json.op == "set") {
           if (!prefName || !prefType  || prefValue === null)
-            throw new SpecialPowersError("Invalid parameters for set in SPPrefService");
+            throw new SpecialPowersException("Invalid parameters for set in SPPrefService");
         } else if (aMessage.json.op == "clear") {
           if (!prefName)
-            throw new SpecialPowersError("Invalid parameters for clear in SPPrefService");
+            throw new SpecialPowersException("Invalid parameters for clear in SPPrefService");
         } else {
-          throw new SpecialPowersError("Invalid operation for SPPrefService");
+          throw new SpecialPowersException("Invalid operation for SPPrefService");
         }
 
         // Now we make the call
@@ -305,7 +306,7 @@ SpecialPowersObserverAPI.prototype = {
           case "find-crash-dump-files":
             return this._findCrashDumpFiles(aMessage.json.crashDumpFilesToIgnore);
           default:
-            throw new SpecialPowersError("Invalid operation for SPProcessCrashService");
+            throw new SpecialPowersException("Invalid operation for SPProcessCrashService");
         }
         return undefined;	// See comment at the beginning of this function.
       }
@@ -337,8 +338,8 @@ SpecialPowersObserverAPI.prototype = {
             return false;
             break;
           default:
-            throw new SpecialPowersError(
-              "Invalid operation for SPPermissionManager");
+            throw new SpecialPowersException("Invalid operation for " +
+                                             "SPPermissionManager");
         }
         return undefined;	// See comment at the beginning of this function.
       }
@@ -376,7 +377,7 @@ SpecialPowersObserverAPI.prototype = {
               return;
             }
           default:
-            throw new SpecialPowersError("Invalid operation for SPWebAppsService");
+            throw new SpecialPowersException("Invalid operation for SPWebAppsService");
         }
         return undefined;	// See comment at the beginning of this function.
       }
@@ -389,7 +390,7 @@ SpecialPowersObserverAPI.prototype = {
             Services.obs.notifyObservers(null, topic, data);
             break;
           default:
-            throw new SpecialPowersError("Invalid operation for SPObserverervice");
+            throw new SpecialPowersException("Invalid operation for SPObserverervice");
         }
         return undefined;	// See comment at the beginning of this function.
       }
@@ -442,10 +443,9 @@ SpecialPowersObserverAPI.prototype = {
         try {
           Components.utils.evalInSandbox(jsScript, sb, "1.8", url, 1);
         } catch(e) {
-          throw new SpecialPowersError(
-            "Error while executing chrome script '" + url + "':\n" +
-            e + "\n" +
-            e.fileName + ":" + e.lineNumber);
+          throw new SpecialPowersException("Error while executing chrome " +
+                                           "script '" + url + "':\n" + e + "\n" +
+                                           e.fileName + ":" + e.lineNumber);
         }
         return undefined;	// See comment at the beginning of this function.
       }
@@ -471,7 +471,7 @@ SpecialPowersObserverAPI.prototype = {
         let op = msg.op;
 
         if (op != 'clear' && op != 'getUsage') {
-          throw new SpecialPowersError('Invalid operation for SPQuotaManager');
+          throw new SpecialPowersException('Invalid operation for SPQuotaManager');
         }
 
         let uri = this._getURI(msg.uri);
@@ -510,12 +510,13 @@ SpecialPowersObserverAPI.prototype = {
       }
 
       default:
-        throw new SpecialPowersError("Unrecognized Special Powers API");
+        throw new SpecialPowersException("Unrecognized Special Powers API");
     }
 
     // We throw an exception before reaching this explicit return because
     // we should never be arriving here anyway.
-    throw new SpecialPowersError("Unreached code");
+    throw new SpecialPowersException("Unreached code");
     return undefined;
   }
 };
+
