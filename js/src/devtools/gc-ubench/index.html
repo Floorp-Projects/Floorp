@@ -27,7 +27,8 @@
 
 <body onload="onload()" onunload="onunload()">
 
-<canvas id="graph" width="1080" height="550" style="padding-left:10px"></canvas>
+<canvas id="graph" width="1080" height="400" style="padding-left:10px"></canvas>
+<canvas id="memgraph" width="1080" height="400" style="padding-left:10px"></canvas>
 
 <div>
     <input type="button" id="stop" value="Pause" onclick="stopstart()"></input>
@@ -46,6 +47,12 @@
 
 <div>
     &nbsp;&nbsp;&nbsp;&nbsp;Time remaining: <span id="test-progress">(not running)</span>
+</div
+
+<div>
+    &nbsp;&nbsp;&nbsp;&nbsp;60 fps: <span id="pct60">n/a</span>
+    &nbsp;&nbsp;&nbsp;&nbsp;45 fps: <span id="pct45">n/a</span>
+    &nbsp;&nbsp;&nbsp;&nbsp;30 fps: <span id="pct30">n/a</span>
 </div
 
 <div>

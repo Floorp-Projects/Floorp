@@ -74,6 +74,7 @@ PYTHON_UNIT_TESTS += [
     'mozbuild/mozpack/test/test_packager.py',
     'mozbuild/mozpack/test/test_packager_formats.py',
     'mozbuild/mozpack/test/test_packager_l10n.py',
+    'mozbuild/mozpack/test/test_packager_unpack.py',
     'mozbuild/mozpack/test/test_path.py',
     'mozbuild/mozpack/test/test_unify.py',
 ]

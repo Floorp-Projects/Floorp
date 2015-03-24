@@ -37,7 +37,7 @@ public class testClearPrivateData extends PixelTest {
         String blank2 = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
         String title = StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE;
 
-        inputAndLoadUrl(blank1);
+        loadUrl(blank1);
         verifyUrlBarTitle(blank1);
         mDatabaseHelper.addOrUpdateMobileBookmark(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE, blank2);
 
@@ -101,7 +101,7 @@ public class testClearPrivateData extends PixelTest {
 
     // Load a URL, verify that the doorhanger appears and dismiss it
     public void loadCheckDismiss(String option, String url, String message) {
-        inputAndLoadUrl(url);
+        loadUrlAndWait(url);
         waitForText(message);
         mAsserter.is(mSolo.searchText(message), true, "Doorhanger:" + message + " has been displayed");
         mSolo.clickOnButton(option);

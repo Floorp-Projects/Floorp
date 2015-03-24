@@ -30,6 +30,12 @@
 namespace mozilla {
 namespace layers {
 
+bool FuzzyEqualsCoordinate(float aValue1, float aValue2)
+{
+  return FuzzyEqualsAdditive(aValue1, aValue2, COORDINATE_EPSILON)
+      || FuzzyEqualsMultiplicative(aValue1, aValue2);
+}
+
 extern StaticAutoPtr<ComputedTimingFunction> gVelocityCurveFunction;
 
 Axis::Axis(AsyncPanZoomController* aAsyncPanZoomController)
@@ -180,8 +186,8 @@ void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
   aOverscroll = ApplyResistance(aOverscroll);
   if (aOverscroll > 0) {
 #ifdef DEBUG
-    if (!FuzzyEqualsAdditive(GetCompositionEnd().value, GetPageEnd().value, COORDINATE_EPSILON)) {
-      nsPrintfCString message("composition end (%f) is not within COORDINATE_EPISLON of page end (%f)\n",
+    if (!FuzzyEqualsCoordinate(GetCompositionEnd().value, GetPageEnd().value)) {
+      nsPrintfCString message("composition end (%f) is not equal (within error) to page end (%f)\n",
                               GetCompositionEnd().value, GetPageEnd().value);
       NS_ASSERTION(false, message.get());
       MOZ_CRASH();
@@ -190,8 +196,8 @@ void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
     MOZ_ASSERT(mOverscroll >= 0);
   } else if (aOverscroll < 0) {
 #ifdef DEBUG
-    if (!FuzzyEqualsAdditive(GetOrigin().value, GetPageStart().value, COORDINATE_EPSILON)) {
-      nsPrintfCString message("composition origin (%f) is not within COORDINATE_EPISLON of page origin (%f)\n",
+    if (!FuzzyEqualsCoordinate(GetOrigin().value, GetPageStart().value)) {
+      nsPrintfCString message("composition origin (%f) is not equal (within error) to page origin (%f)\n",
                               GetOrigin().value, GetPageStart().value);
       NS_ASSERTION(false, message.get());
       MOZ_CRASH();

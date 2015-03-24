@@ -121,25 +121,6 @@ function testOk() {
   ok(!r4.ok, "Response with status 302 should have ok false");
 }
 
-// It is not possible to test setting finalURL until we have ServiceWorker
-// interception. This is because synthetic Responses do not have a url, the url
-// is set based on the request, so a SW could initiate a fetch() on behalf of
-// a client and set the resulting Response's finalURL before returning it to
-// the client, in which case the "set response's url to request's url" from the
-// client's point of view would not happen. A test for this will be added by
-// Bug 1134352.
-function testFinalURL() {
-  var r1 = new Response();
-  ok(!r1.finalURL, "Response.finalURL is false by default.");
-
-  try {
-    r1.finalURL = true;
-    ok(false, "Setting Response.finalURL of Response with null url should fail.");
-  } catch(e) {
-    ok(true, "Setting Response.finalURL of Response with null url should fail.");
-  }
-}
-
 function testBodyUsed() {
   var res = new Response("Sample body");
   ok(!res.bodyUsed, "bodyUsed is initially false.");
@@ -226,7 +207,6 @@ function runTest() {
   testError();
   testRedirect();
   testOk();
-  testFinalURL();
 
   return Promise.resolve()
     .then(testBodyCreation)
