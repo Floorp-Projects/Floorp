@@ -6,6 +6,8 @@ JAR_MANIFESTS += ['jar.mn']
 
 EXTRA_JS_MODULES.readinglist += [
     'ReadingList.jsm',
+    'Scheduler.jsm',
+    'ServerClient.jsm',
     'SQLiteStore.jsm',
 ]
 
@@ -16,10 +18,6 @@ TESTING_JS_MODULES += [
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 
 XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
-
-EXTRA_JS_MODULES.readinglist += [
-    'Scheduler.jsm',
-]
 
 with Files('**'):
     BUG_COMPONENT = ('Firefox', 'Reading List')
