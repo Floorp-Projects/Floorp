@@ -4,8 +4,8 @@
 
 "use strict";
 
-// Test that the selector highlighter is created when hovering over a selector
-// in the rule view
+// Test that the selector highlighter is created when clicking on a selector
+// icon in the rule view.
 
 const PAGE_CONTENT = [
   '<style type="text/css">',
@@ -16,29 +16,19 @@ const PAGE_CONTENT = [
   'Test the selector highlighter'
 ].join("\n");
 
-let TYPE = "SelectorHighlighter";
-
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + PAGE_CONTENT);
 
-  let {view: rView} = yield openRuleView();
-  let hs = rView.highlighters;
+  let {view} = yield openRuleView();
+  ok(!view.selectorHighlighter, "No selectorhighlighter exist in the rule-view");
 
-  ok(!hs.highlighters[TYPE], "No highlighter exists in the rule-view (1)");
-  ok(!hs.promises[TYPE], "No highlighter is being created in the rule-view (1)");
+  info("Clicking on a selector icon");
+  let icon = getRuleViewSelectorHighlighterIcon(view, "body, p, td");
 
-  info("Faking a mousemove NOT on a selector");
-  let {valueSpan} = getRuleViewProperty(rView, "body, p, td", "background");
-  hs._onMouseMove({target: valueSpan});
-  ok(!hs.highlighters[TYPE], "No highlighter exists in the rule-view (2)");
-  ok(!hs.promises[TYPE], "No highlighter is being created in the rule-view (2)");
+  let onToggled = view.once("ruleview-selectorhighlighter-toggled");
+  EventUtils.synthesizeMouseAtCenter(icon, {}, view.doc.defaultView);
+  let isVisible = yield onToggled;
 
-  info("Faking a mousemove on the body selector");
-  let selectorContainer = getRuleViewSelector(rView, "body, p, td");
-  // The highlighter appears for individual selectors only
-  let bodySelector = selectorContainer.firstElementChild;
-  hs._onMouseMove({target: bodySelector});
-  ok(hs.promises[TYPE], "The highlighter is being initialized");
-  let h = yield hs.promises[TYPE];
-  is(h, hs.highlighters[TYPE], "The initialized highlighter is the right one");
+  ok(view.selectorHighlighter, "The selectorhighlighter instance was created");
+  ok(isVisible, "The toggle event says the highlighter is visible");
 });

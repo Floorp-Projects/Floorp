@@ -1259,9 +1259,12 @@ CssRuleView.prototype = {
         this.highlightedSelector = selector;
         selectorIcon.classList.add("highlighted");
         this.lastSelectorIcon = selectorIcon;
-        this.highlightSelector(selector).catch(Cu.reportError);
+        this.highlightSelector(selector).then(() => {
+          this.emit("ruleview-selectorhighlighter-toggled", true);
+        }, Cu.reportError);
       } else {
         this.highlightedSelector = null;
+        this.emit("ruleview-selectorhighlighter-toggled", false);
       }
     }, Cu.reportError);
   },

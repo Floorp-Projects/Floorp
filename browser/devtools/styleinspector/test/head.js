@@ -653,6 +653,18 @@ function getRuleViewSelector(view, selectorText) {
 }
 
 /**
+ * Get a reference to the selectorhighlighter icon DOM element corresponding to
+ * a given selector in the rule-view
+ * @param {CssRuleView} view The instance of the rule-view panel
+ * @param {String} selectorText The selector in the rule-view to look for
+ * @return {DOMNode} The selectorhighlighter icon DOM element
+ */
+function getRuleViewSelectorHighlighterIcon(view, selectorText) {
+  let rule = getRuleViewRule(view, selectorText);
+  return rule.querySelector(".ruleview-selectorhighlighter");
+}
+
+/**
  * Simulate a color change in a given color picker tooltip, and optionally wait
  * for a given element in the page to have its style changed as a result
  * @param {SwatchColorPickerTooltip} colorPicker
