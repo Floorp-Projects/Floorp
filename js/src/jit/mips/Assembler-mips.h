@@ -788,6 +788,10 @@ class Assembler : public AssemblerShared
     void setPrinter(Sprinter* sp) {
     }
 
+    static const Register getStackPointer() {
+        return StackPointer;
+    }
+
   private:
     bool isFinished;
   public:

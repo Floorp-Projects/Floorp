@@ -1060,7 +1060,7 @@ HandleRegisterDump(Op op, MacroAssembler& masm, LiveRegisterSet liveRegs, Regist
             // To use the original value of the activation register (that's
             // now on top of the stack), we need the scratch register.
             masm.push(scratch);
-            masm.loadPtr(Address(StackPointer, sizeof(uintptr_t)), scratch);
+            masm.loadPtr(Address(masm.getStackPointer(), sizeof(uintptr_t)), scratch);
             op(scratch, dump);
             masm.pop(scratch);
         } else {
@@ -1438,7 +1438,7 @@ CodeGeneratorShared::emitAsmJSCall(LAsmJSCall* ins)
                   AsmJSStackAlignment % ABIStackAlignment == 0,
                   "The asm.js stack alignment should subsume the ABI-required alignment");
     Label ok;
-    masm.branchTestPtr(Assembler::Zero, StackPointer, Imm32(AsmJSStackAlignment - 1), &ok);
+    masm.branchTestStackPtr(Assembler::Zero, Imm32(AsmJSStackAlignment - 1), &ok);
     masm.breakpoint();
     masm.bind(&ok);
 #endif
