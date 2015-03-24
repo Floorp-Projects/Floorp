@@ -152,6 +152,15 @@ AppendToString(std::stringstream& aStream, const EventRegions& e,
   if (!e.mDispatchToContentHitRegion.IsEmpty()) {
     AppendToString(aStream, e.mDispatchToContentHitRegion, " dispatchtocontentregion=", "");
   }
+  if (!e.mNoActionRegion.IsEmpty()) {
+    AppendToString(aStream, e.mNoActionRegion, " NoActionRegion=","");
+  }
+  if (!e.mHorizontalPanRegion.IsEmpty()) {
+    AppendToString(aStream, e.mHorizontalPanRegion, " HorizontalPanRegion=", "");
+  }
+  if (!e.mVerticalPanRegion.IsEmpty()) {
+    AppendToString(aStream, e.mVerticalPanRegion, " VerticalPanRegion=", "");
+  }
   aStream << "}" << sfx;
 }
 
