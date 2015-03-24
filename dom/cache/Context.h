@@ -107,6 +107,9 @@ public:
     virtual bool MatchesCacheId(CacheId aCacheId) const = 0;
   };
 
+  // Create a Context attached to the given Manager.  The given Action
+  // will run on the QuotaManager IO thread.  Note, this Action must
+  // be execute synchronously.
   static already_AddRefed<Context>
   Create(Manager* aManager, Action* aQuotaIOThreadAction);
 

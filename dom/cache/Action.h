@@ -18,21 +18,19 @@ namespace cache {
 class Action
 {
 public:
-  class Resolver : public nsISupports
+  class Resolver
   {
-  protected:
-    // virtual because deleted through base class pointer
-    virtual ~Resolver() { }
-
   public:
     // Note: Action must drop Resolver ref after calling Resolve()!
     // Note: Must be called on the same thread used to execute
     //       Action::RunOnTarget().
     virtual void Resolve(nsresult aRv) = 0;
 
-    // We must use ISUPPORTS for our refcounting here because sub-classes also
-    // want to inherit interfaces like nsIRunnable.
-    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_IMETHOD_(MozExternalRefCountType)
+    AddRef(void) = 0;
+
+    NS_IMETHOD_(MozExternalRefCountType)
+    Release(void) = 0;
   };
 
   // Execute operations on the target thread.  Once complete call

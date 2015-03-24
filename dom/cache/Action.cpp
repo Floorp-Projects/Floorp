@@ -10,8 +10,6 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-NS_IMPL_ISUPPORTS0(mozilla::dom::cache::Action::Resolver);
-
 void
 Action::CancelOnInitiatingThread()
 {
