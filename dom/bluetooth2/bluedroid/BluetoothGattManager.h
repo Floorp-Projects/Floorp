@@ -13,6 +13,7 @@
 
 BEGIN_BLUETOOTH_NAMESPACE
 
+class BluetoothGattClient;
 class BluetoothReplyRunnable;
 
 class BluetoothGattManager final : public nsIObserver
@@ -35,6 +36,9 @@ public:
                   const nsAString& aDeviceAddr,
                   BluetoothReplyRunnable* aRunnable);
 
+  void Discover(const nsAString& aAppUuid,
+                BluetoothReplyRunnable* aRunnable);
+
   void UnregisterClient(int aClientIf,
                         BluetoothReplyRunnable* aRunnable);
 
@@ -50,6 +54,7 @@ private:
   class UnregisterClientResultHandler;
   class ConnectResultHandler;
   class DisconnectResultHandler;
+  class DiscoverResultHandler;
   class ReadRemoteRssiResultHandler;
 
   BluetoothGattManager();
@@ -136,6 +141,9 @@ private:
 
   void ListenNotification(BluetoothGattStatus aStatus,
                           int aServerIf) override;
+
+  void ProceedDiscoverProcess(BluetoothGattClient* aClient,
+                              const BluetoothGattServiceId& aServiceId);
 
   static bool mInShutdown;
 };

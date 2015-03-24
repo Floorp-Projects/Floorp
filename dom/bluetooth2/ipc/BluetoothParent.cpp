@@ -254,6 +254,8 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_ConnectGattClientRequest());
     case Request::TDisconnectGattClientRequest:
       return actor->DoRequest(aRequest.get_DisconnectGattClientRequest());
+    case Request::TDiscoverGattServicesRequest:
+      return actor->DoRequest(aRequest.get_DiscoverGattServicesRequest());
     case Request::TUnregisterGattClientRequest:
       return actor->DoRequest(aRequest.get_UnregisterGattClientRequest());
     case Request::TGattClientReadRemoteRssiRequest:
@@ -714,6 +716,18 @@ BluetoothRequestParent::DoRequest(const DisconnectGattClientRequest& aRequest)
 
   mService->DisconnectGattClientInternal(aRequest.appUuid(),
                                          aRequest.deviceAddress(),
+                                         mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const DiscoverGattServicesRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TDiscoverGattServicesRequest);
+
+  mService->DiscoverGattServicesInternal(aRequest.appUuid(),
                                          mReplyRunnable.get());
 
   return true;

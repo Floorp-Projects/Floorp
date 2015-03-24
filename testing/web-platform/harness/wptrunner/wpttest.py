@@ -21,12 +21,13 @@ class Result(object):
 
 
 class SubtestResult(object):
-    def __init__(self, name, status, message, expected=None):
+    def __init__(self, name, status, message, stack=None, expected=None):
         self.name = name
         if status not in self.statuses:
             raise ValueError("Unrecognised status %s" % status)
         self.status = status
         self.message = message
+        self.stack = stack
         self.expected = expected
 
 
@@ -83,11 +84,13 @@ class Test(object):
     result_cls = None
     subtest_result_cls = None
 
-    def __init__(self, url, expected_metadata, timeout=DEFAULT_TIMEOUT, path=None):
+    def __init__(self, url, expected_metadata, timeout=DEFAULT_TIMEOUT, path=None,
+                 protocol="http"):
         self.url = url
         self._expected_metadata = expected_metadata
         self.timeout = timeout
         self.path = path
+        self.protocol = protocol
 
     def __eq__(self, other):
         return self.id == other.id
@@ -98,7 +101,8 @@ class Test(object):
         return cls(manifest_item.url,
                    expected_metadata,
                    timeout=timeout,
-                   path=manifest_item.path)
+                   path=manifest_item.path,
+                   protocol="https" if manifest_item.https else "http")
 
 
     @property
@@ -160,7 +164,7 @@ class ManualTest(Test):
 class ReftestTest(Test):
     result_cls = ReftestResult
 
-    def __init__(self, url, expected, references, timeout=DEFAULT_TIMEOUT, path=None):
+    def __init__(self, url, expected, references, timeout=DEFAULT_TIMEOUT, path=None, protocol="http"):
         self.url = url
         for _, ref_type in references:
             if ref_type not in ("==", "!="):
@@ -168,10 +172,12 @@ class ReftestTest(Test):
         self._expected_metadata = expected
         self.timeout = timeout
         self.path = path
+        self.protocol = protocol
         self.references = references
 
     @classmethod
-    def from_manifest(cls, manifest_test,
+    def from_manifest(cls,
+                      manifest_test,
                       expected_metadata,
                       nodes=None,
                       references_seen=None):
@@ -189,7 +195,8 @@ class ReftestTest(Test):
                    expected_metadata,
                    [],
                    timeout=timeout,
-                   path=manifest_test.path)
+                   path=manifest_test.path,
+                   protocol="https" if manifest_test.https else "http")
 
         nodes[url] = node
 

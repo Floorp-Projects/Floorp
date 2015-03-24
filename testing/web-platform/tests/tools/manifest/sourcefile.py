@@ -40,17 +40,17 @@ class SourceFile(object):
         self.dir_path, self.filename = os.path.split(self.path)
         self.name, self.ext = os.path.splitext(self.filename)
 
+        self.type_flag = None
+        if "-" in self.name:
+            self.type_flag = self.name.rsplit("-", 1)[1]
+
+        self.meta_flags = self.name.split(".")[1:]
+
     def name_prefix(self, prefix):
         """Check if the filename starts with a given prefix
 
         :param prefix: The prefix to check"""
         return self.name.startswith(prefix)
-
-    def name_suffix(self, suffix):
-        """Check if the filename excluding extension ends with a given suffix
-
-        :param suffix: The suffix to check"""
-        return self.name.endswith(suffix)
 
     def open(self):
         """Return a File object opened for reading the file contents,
@@ -84,13 +84,13 @@ class SourceFile(object):
     def name_is_manual(self):
         """Check if the file name matches the conditions for the file to
         be a manual test file"""
-        return self.name_suffix("-manual")
+        return self.type_flag == "manual"
 
     @property
     def name_is_worker(self):
         """Check if the file name matches the conditions for the file to
         be a worker js test file"""
-        return self.filename.endswith(".worker.js")
+        return "worker" in self.meta_flags and self.ext == ".js"
 
     @property
     def name_is_webdriver(self):
@@ -108,7 +108,7 @@ class SourceFile(object):
     def name_is_reference(self):
         """Check if the file name matches the conditions for the file to
         be a reference file (not a reftest)"""
-        return self.name_suffix("-ref") or self.name_suffix("-notref")
+        return self.type_flag in ("ref", "notref")
 
     @property
     def markup_type(self):
@@ -183,6 +183,26 @@ class SourceFile(object):
         return bool(self.testharness_nodes)
 
     @cached_property
+    def variant_nodes(self):
+        """List of ElementTree Elements corresponding to nodes representing a
+        test variant"""
+        return self.root.findall(".//{http://www.w3.org/1999/xhtml}meta[@name='variant']")
+
+    @cached_property
+    def test_variants(self):
+        rv = []
+        for element in self.variant_nodes:
+            if "content" in element.attrib:
+                variant = element.attrib["content"]
+                assert variant == "" or variant[0] in ["#", "?"]
+                rv.append(variant)
+
+        if not rv:
+            rv = [""]
+
+        return rv
+
+    @cached_property
     def reftest_nodes(self):
         """List of ElementTree Elements corresponding to nodes representing a
         to a reftest <link>"""
@@ -233,7 +253,10 @@ class SourceFile(object):
             rv = [WebdriverSpecTest(self)]
 
         elif self.content_is_testharness:
-            rv = [TestharnessTest(self, self.url, timeout=self.timeout)]
+            rv = []
+            for variant in self.test_variants:
+                url = self.url + variant
+                rv.append(TestharnessTest(self, url, timeout=self.timeout))
 
         elif self.content_is_ref_node:
             rv = [RefTest(self, self.url, self.references, timeout=self.timeout)]

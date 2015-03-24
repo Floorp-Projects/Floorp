@@ -28,10 +28,10 @@ def browser_kwargs(**kwargs):
             "webdriver_binary": kwargs["webdriver_binary"]}
 
 
-def executor_kwargs(test_type, http_server_url, cache_manager, **kwargs):
+def executor_kwargs(test_type, server_config, cache_manager, **kwargs):
     from selenium.webdriver import DesiredCapabilities
 
-    executor_kwargs = base_executor_kwargs(test_type, http_server_url,
+    executor_kwargs = base_executor_kwargs(test_type, server_config,
                                            cache_manager, **kwargs)
     executor_kwargs["close_after_done"] = True
     executor_kwargs["capabilities"] = dict(DesiredCapabilities.CHROME.items() +

@@ -30,6 +30,18 @@ class TryTestParserTest(unittest.TestCase):
         )
 
         self.assertEquals(
+            parse_test_opts('mochitest-3[Ubuntu,10.6,10.8,Windows XP,Windows 7,Windows 8]'),
+            [
+                {
+                    'test': 'mochitest-3',
+                    'platforms': [
+                        'Ubuntu', '10.6', '10.8', 'Windows XP', 'Windows 7', 'Windows 8'
+                    ]
+                }
+            ]
+        )
+
+        self.assertEquals(
             parse_test_opts(''),
             []
         )

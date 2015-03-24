@@ -285,6 +285,16 @@ enum BluetoothSspVariant {
 
 struct BluetoothUuid {
   uint8_t mUuid[16];
+
+  bool operator==(const BluetoothUuid& aOther) const
+  {
+    for (uint8_t i = 0; i < sizeof(mUuid); i++) {
+      if (mUuid[i] != aOther.mUuid[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
 };
 
 struct BluetoothServiceRecord {
@@ -547,11 +557,21 @@ struct BluetoothGattAdvData {
 struct BluetoothGattId {
   BluetoothUuid mUuid;
   uint8_t mInstanceId;
+
+  bool operator==(const BluetoothGattId& aOther) const
+  {
+    return mUuid == aOther.mUuid && mInstanceId == aOther.mInstanceId;
+  }
 };
 
 struct BluetoothGattServiceId {
   BluetoothGattId mId;
   uint8_t mIsPrimary;
+
+  bool operator==(const BluetoothGattServiceId& aOther) const
+  {
+    return mId == aOther.mId && mIsPrimary == aOther.mIsPrimary;
+  }
 };
 
 struct BluetoothGattReadParam {

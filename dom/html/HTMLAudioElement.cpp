@@ -43,7 +43,8 @@ HTMLAudioElement::~HTMLAudioElement()
 bool
 HTMLAudioElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
 {
-  return HasAttr(kNameSpaceID_None, nsGkAtoms::controls);
+  return HasAttr(kNameSpaceID_None, nsGkAtoms::controls) ||
+         HTMLMediaElement::IsInteractiveHTMLContent(aIgnoreTabindex);
 }
 
 already_AddRefed<HTMLAudioElement>

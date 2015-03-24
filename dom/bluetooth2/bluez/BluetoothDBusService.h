@@ -194,6 +194,11 @@ public:
   DisconnectGattClientInternal(const nsAString& aAppUuid,
                                const nsAString& aDeviceAddress,
                                BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
+  DiscoverGattServicesInternal(const nsAString& aAppUuid,
+                               BluetoothReplyRunnable* aRunnable) override;
+
   virtual void
   UnregisterGattClientInternal(int aClientIf,
                                BluetoothReplyRunnable* aRunnable) override;

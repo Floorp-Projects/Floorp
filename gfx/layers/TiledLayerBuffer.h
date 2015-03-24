@@ -8,10 +8,12 @@
 // Debug defines
 //#define GFX_TILEDLAYER_DEBUG_OVERLAY
 //#define GFX_TILEDLAYER_PREF_WARNINGS
+//#define GFX_TILEDLAYER_RETAINING_LOG
 
 #include <stdint.h>                     // for uint16_t, uint32_t
 #include <sys/types.h>                  // for int32_t
 #include "gfxPlatform.h"                // for GetTileWidth/GetTileHeight
+#include "LayersLogging.h"              // for print_stderr
 #include "mozilla/gfx/Logging.h"        // for gfxCriticalError
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsPoint.h"                    // for nsIntPoint
@@ -113,16 +115,6 @@ public:
   // (x*GetScaledTileSize().width, y*GetScaledTileSize().height,
   //  GetScaledTileSize().width, GetScaledTileSize().height)
   Tile GetTile(int x, int y) const;
-
-  // This operates the same as GetTile(aTileOrigin), but will also replace the
-  // specified tile with the placeholder tile. This does not call ReleaseTile
-  // on the removed tile.
-  bool RemoveTile(const nsIntPoint& aTileOrigin, Tile& aRemovedTile);
-
-  // This operates the same as GetTile(x, y), but will also replace the
-  // specified tile with the placeholder tile. This does not call ReleaseTile
-  // on the removed tile.
-  bool RemoveTile(int x, int y, Tile& aRemovedTile);
 
   const gfx::IntSize& GetTileSize() const { return mTileSize; }
 
@@ -285,31 +277,6 @@ TiledLayerBuffer<Derived, Tile>::GetTile(int x, int y) const
   return mRetainedTiles.SafeElementAt(index, AsDerived().GetPlaceholderTile());
 }
 
-template<typename Derived, typename Tile> bool
-TiledLayerBuffer<Derived, Tile>::RemoveTile(const nsIntPoint& aTileOrigin,
-                                            Tile& aRemovedTile)
-{
-  gfx::IntSize scaledTileSize = GetScaledTileSize();
-  int firstTileX = floor_div(mValidRegion.GetBounds().x, scaledTileSize.width);
-  int firstTileY = floor_div(mValidRegion.GetBounds().y, scaledTileSize.height);
-  return RemoveTile(floor_div(aTileOrigin.x, scaledTileSize.width) - firstTileX,
-                    floor_div(aTileOrigin.y, scaledTileSize.height) - firstTileY,
-                    aRemovedTile);
-}
-
-template<typename Derived, typename Tile> bool
-TiledLayerBuffer<Derived, Tile>::RemoveTile(int x, int y, Tile& aRemovedTile)
-{
-  int index = x * mRetainedHeight + y;
-  const Tile& tileToRemove = mRetainedTiles.SafeElementAt(index, AsDerived().GetPlaceholderTile());
-  if (!tileToRemove.IsPlaceholderTile()) {
-    aRemovedTile = tileToRemove;
-    mRetainedTiles[index] = AsDerived().GetPlaceholderTile();
-    return true;
-  }
-  return false;
-}
-
 template<typename Derived, typename Tile> void
 TiledLayerBuffer<Derived, Tile>::Dump(std::stringstream& aStream,
                                       const char* aPrefix,
@@ -361,6 +328,22 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& newValidRegion,
   // of aNewValidRegion - so that the names match better and code easier to read
   const nsIntRegion& oldValidRegion = mValidRegion;
   const int oldRetainedHeight = mRetainedHeight;
+
+#ifdef GFX_TILEDLAYER_RETAINING_LOG
+  { // scope ss
+    std::stringstream ss;
+    ss << "TiledLayerBuffer " << this << " starting update"
+       << " on bounds ";
+    AppendToString(ss, newBound);
+    ss << " with mResolution=" << mResolution << "\n";
+    for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
+      ss << "mRetainedTiles[" << i << "] = ";
+      mRetainedTiles[i].Dump(ss);
+      ss << "\n";
+    }
+    print_stderr(ss);
+  }
+#endif
 
   // Pass 1: Recycle valid content from the old buffer
   // Recycle tiles from the old buffer that contain valid regions.
@@ -431,6 +414,21 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& newValidRegion,
   mRetainedWidth = tileX;
   mRetainedHeight = tileY;
 
+#ifdef GFX_TILEDLAYER_RETAINING_LOG
+  { // scope ss
+    std::stringstream ss;
+    ss << "TiledLayerBuffer " << this << " finished pass 1 of update;"
+       << " tilesMissing=" << tilesMissing << "\n";
+    for (size_t i = 0; i < oldRetainedTiles.Length(); i++) {
+      ss << "oldRetainedTiles[" << i << "] = ";
+      oldRetainedTiles[i].Dump(ss);
+      ss << "\n";
+    }
+    print_stderr(ss);
+  }
+#endif
+
+
   // Pass 1.5: Release excess tiles in oldRetainedTiles
   // Tiles in oldRetainedTiles that aren't in newRetainedTiles will be recycled
   // before creating new ones, but there could still be excess unnecessary
@@ -470,6 +468,24 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& newValidRegion,
 #endif
 
   nsIntRegion regionToPaint(aPaintRegion);
+
+#ifdef GFX_TILEDLAYER_RETAINING_LOG
+  { // scope ss
+    std::stringstream ss;
+    ss << "TiledLayerBuffer " << this << " finished pass 1.5 of update\n";
+    for (size_t i = 0; i < oldRetainedTiles.Length(); i++) {
+      ss << "oldRetainedTiles[" << i << "] = ";
+      oldRetainedTiles[i].Dump(ss);
+      ss << "\n";
+    }
+    for (size_t i = 0; i < newRetainedTiles.Length(); i++) {
+      ss << "newRetainedTiles[" << i << "] = ";
+      newRetainedTiles[i].Dump(ss);
+      ss << "\n";
+    }
+    print_stderr(ss);
+  }
+#endif
 
   // Pass 2: Validate
   // We know at this point that any tile in the new buffer that had valid content
@@ -564,6 +580,25 @@ TiledLayerBuffer<Derived, Tile>::Update(const nsIntRegion& newValidRegion,
   for (unsigned int i = 0; i < newRetainedTiles.Length(); ++i) {
     AsDerived().UnlockTile(newRetainedTiles[i]);
   }
+
+#ifdef GFX_TILEDLAYER_RETAINING_LOG
+  { // scope ss
+    std::stringstream ss;
+    ss << "TiledLayerBuffer " << this << " finished pass 2 of update;"
+       << " oldTileCount=" << oldTileCount << "\n";
+    for (size_t i = 0; i < oldRetainedTiles.Length(); i++) {
+      ss << "oldRetainedTiles[" << i << "] = ";
+      oldRetainedTiles[i].Dump(ss);
+      ss << "\n";
+    }
+    for (size_t i = 0; i < newRetainedTiles.Length(); i++) {
+      ss << "newRetainedTiles[" << i << "] = ";
+      newRetainedTiles[i].Dump(ss);
+      ss << "\n";
+    }
+    print_stderr(ss);
+  }
+#endif
 
   // At this point, oldTileCount should be zero
   MOZ_ASSERT(oldTileCount == 0, "Failed to release old tiles");

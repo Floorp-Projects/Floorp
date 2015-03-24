@@ -17,6 +17,8 @@ def parse_test_opts(input_str):
         tests.insert(0, cur_test)
 
     def add_platform(value):
+        # Ensure platforms exists...
+        cur_test['platforms'] = cur_test.get('platforms', [])
         cur_test['platforms'].insert(0, value.strip())
 
     # This might be somewhat confusing but we parse the string _backwards_ so
@@ -45,7 +47,6 @@ def parse_test_opts(input_str):
         elif char == ']':
             # Entering platform state.
             in_platforms = True
-            cur_test['platforms'] = []
         else:
             # Accumulator.
             token = char + token

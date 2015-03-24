@@ -135,7 +135,7 @@ class Router(object):
                         object and the response object.
 
         """
-        if type(methods) in types.StringTypes or methods is any_method:
+        if type(methods) in types.StringTypes or methods in (any_method, "*"):
             methods = [methods]
         for method in methods:
             self.routes.append((method, compile_path_match(path), handler))
@@ -149,7 +149,7 @@ class Router(object):
         """
         for method, regexp, handler in reversed(self.routes):
             if (request.method == method or
-                method is any_method or
+                method in (any_method, "*") or
                 (request.method == "HEAD" and method == "GET")):
                 m = regexp.match(request.url_parts.path)
                 if m:
