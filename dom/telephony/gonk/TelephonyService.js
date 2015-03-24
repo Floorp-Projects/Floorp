@@ -896,6 +896,17 @@ TelephonyService.prototype = {
     }
   },
 
+  _getCallsWithState: function(aClientId, aState) {
+    let calls = [];
+    for (let i in this._currentCalls[aClientId]) {
+      let call = this._currentCalls[aClientId][i];
+      if (call.state === aState) {
+        calls.push(call);
+      }
+    }
+    return calls;
+  },
+
   sendTones: function(aClientId, aDtmfChars, aPauseDuration, aToneDuration,
                       aCallback) {
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
@@ -940,7 +951,47 @@ TelephonyService.prototype = {
   },
 
   rejectCall: function(aClientId, aCallIndex, aCallback) {
-    this._sendToRilWorker(aClientId, "rejectCall", { callIndex: aCallIndex },
+    if (this._isCdmaClient(aClientId)) {
+      this._hangUpBackground(aClientId, aCallback);
+      return;
+    }
+
+    let call = this._currentCalls[aClientId][aCallIndex];
+    if (!call || call.state != nsITelephonyService.CALL_STATE_INCOMING) {
+      aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
+      return;
+    }
+
+    let callNum = Object.keys(this._currentCalls[aClientId]).length;
+    if (callNum !== 1) {
+      this._hangUpBackground(aClientId, aCallback);
+    } else {
+      this._sendToRilWorker(aClientId, "udub", null,
+                            this._defaultCallbackHandler.bind(this, aCallback));
+    }
+  },
+
+  _hangUpForeground: function(aClientId, aCallback) {
+    let calls = this._getCallsWithState(aClientId, nsITelephonyService.CALL_STATE_CONNECTED);
+    calls.forEach(call => call.hangUpLocal = true);
+
+    this._sendToRilWorker(aClientId, "hangUpForeground", null,
+                          this._defaultCallbackHandler.bind(this, aCallback));
+  },
+
+  _hangUpBackground: function(aClientId, aCallback) {
+    // When both a held and a waiting call exist, the request shall apply to
+    // the waiting call.
+    let waitingCalls = this._getCallsWithState(aClientId, nsITelephonyService.CALL_STATE_INCOMING);
+    let heldCalls = this._getCallsWithState(aClientId, nsITelephonyService.CALL_STATE_HELD);
+
+    if (waitingCalls.length) {
+      waitingCalls.forEach(call => call.hangUpLocal = true);
+    } else {
+      heldCalls.forEach(call => call.hangUpLocal = true);
+    }
+
+    this._sendToRilWorker(aClientId, "hangUpBackground", null,
                           this._defaultCallbackHandler.bind(this, aCallback));
   },
 
@@ -949,6 +1000,13 @@ TelephonyService.prototype = {
     // the parent call, we send 'parentId' to RIL.
     aCallIndex = this._currentCalls[aClientId][aCallIndex].parentId || aCallIndex;
 
+    let call = this._currentCalls[aClientId][aCallIndex];
+    if (call.state === nsITelephonyService.CALL_STATE_HELD) {
+      this._hangUpBackground(aClientId, aCallback);
+      return;
+    }
+
+    call.hangUpLocal = true;
     this._sendToRilWorker(aClientId, "hangUpCall", { callIndex: aCallIndex },
                           this._defaultCallbackHandler.bind(this, aCallback));
   },
