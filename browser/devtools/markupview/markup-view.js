@@ -781,11 +781,16 @@ MarkupView.prototype = {
     let addedOrEditedContainers = new Set();
     let removedContainers = new Set();
 
-    for (let {type, target, added, removed} of aMutations) {
+    for (let {type, target, added, removed, newValue} of aMutations) {
       let container = this.getContainer(target);
 
       if (container) {
-        if (type === "attributes" || type === "characterData") {
+        if (type === "characterData") {
+          addedOrEditedContainers.add(container);
+        } else if (type === "attributes" && newValue === null) {
+          // Removed attributes should flash the entire node.
+          // New or changed attributes will flash the attribute itself
+          // in ElementEditor.flashAttribute.
           addedOrEditedContainers.add(container);
         } else if (type === "childList") {
           // If there has been removals, flash the parent
@@ -1884,44 +1889,14 @@ MarkupContainer.prototype = {
   flashMutation: function() {
     if (!this.selected) {
       let contentWin = this.win;
-      this.flashed = true;
+      flashElementOn(this.tagState, this.editor.elt);
       if (this._flashMutationTimer) {
         clearTimeout(this._flashMutationTimer);
         this._flashMutationTimer = null;
       }
       this._flashMutationTimer = setTimeout(() => {
-        this.flashed = false;
+        flashElementOff(this.tagState, this.editor.elt);
       }, this.markup.CONTAINER_FLASHING_DURATION);
-    }
-  },
-
-  set flashed(aValue) {
-    if (aValue) {
-      // Make sure the animation class is not here
-      this.tagState.classList.remove("flash-out");
-
-      // Change the background
-      this.tagState.classList.add("theme-bg-contrast");
-
-      // Change the text color
-      this.editor.elt.classList.add("theme-fg-contrast");
-      [].forEach.call(
-        this.editor.elt.querySelectorAll("[class*=theme-fg-color]"),
-        span => span.classList.add("theme-fg-contrast")
-      );
-    } else {
-      // Add the animation class to smoothly remove the background
-      this.tagState.classList.add("flash-out");
-
-      // Remove the background
-      this.tagState.classList.remove("theme-bg-contrast");
-
-      // Remove the text color
-      this.editor.elt.classList.remove("theme-fg-contrast");
-      [].forEach.call(
-        this.editor.elt.querySelectorAll("[class*=theme-fg-color]"),
-        span => span.classList.remove("theme-fg-contrast")
-      );
     }
   },
 
@@ -2351,6 +2326,7 @@ function ElementEditor(aContainer, aNode) {
   this.doc = this.markup.doc;
 
   this.attrs = {};
+  this.animationTimers = {};
 
   // The templates will fill the following properties
   this.elt = null;
@@ -2408,9 +2384,23 @@ function ElementEditor(aContainer, aNode) {
   this.eventNode.style.display = this.node.hasEventListeners ? "inline-block" : "none";
 
   this.update();
+  this.initialized = true;
 }
 
 ElementEditor.prototype = {
+
+  flashAttribute: function(attrName) {
+    if (this.animationTimers[attrName]) {
+      clearTimeout(this.animationTimers[attrName]);
+    }
+
+    flashElementOn(this.getAttributeElement(attrName));
+
+    this.animationTimers[attrName] = setTimeout(() => {
+      flashElementOff(this.getAttributeElement(attrName));
+    }, this.markup.CONTAINER_FLASHING_DURATION);
+  },
+
   /**
    * Update the state of the editor from the node.
    */
@@ -2425,9 +2415,9 @@ ElementEditor.prototype = {
       let el = this.attrs[attr.name];
       let valueChanged = el && el.querySelector(".attr-value").innerHTML !== attr.value;
       let isEditing = el && el.querySelector(".editable").inplaceEditor;
-      let needToCreateAttributeEditor = el && (!valueChanged || isEditing);
+      let canSimplyShowEditor = el && (!valueChanged || isEditing);
 
-      if (needToCreateAttributeEditor) {
+      if (canSimplyShowEditor) {
         // Element already exists and doesn't need to be recreated.
         // Just show it (it's hidden by default due to the template).
         attrsToRemove.delete(el);
@@ -2437,6 +2427,13 @@ ElementEditor.prototype = {
         // has changed.
         let attribute = this._createAttribute(attr);
         attribute.style.removeProperty("display");
+
+        // Temporarily flash the attribute to highlight the change.
+        // But not if this is the first time the editor instance has
+        // been created.
+        if (this.initialized) {
+          this.flashAttribute(attr.name);
+        }
       }
     }
 
@@ -2709,7 +2706,12 @@ ElementEditor.prototype = {
     });
   },
 
-  destroy: function() {}
+  destroy: function() {
+    for (let key in this.animationTimers) {
+      clearTimeout(this.animationTimers[key]);
+    }
+    this.animationTimers = null;
+  }
 };
 
 function nodeDocument(node) {
@@ -2761,6 +2763,62 @@ function parseAttributeValues(attr, doc) {
 
   // Attributes return from DOMParser in reverse order from how they are entered.
   return attributes.reverse();
+}
+
+/**
+ * Apply a 'flashed' background and foreground color to elements.  Intended
+ * to be used with flashElementOff as a way of drawing attention to an element.
+ *
+ * @param  {Node} backgroundElt
+ *         The element to set the highlighted background color on.
+ * @param  {Node} foregroundElt
+ *         The element to set the matching foreground color on.
+ *         Optional.  This will equal backgroundElt if not set.
+ */
+function flashElementOn(backgroundElt, foregroundElt=backgroundElt) {
+  if (!backgroundElt || !foregroundElt) {
+    return;
+  }
+
+  // Make sure the animation class is not here
+  backgroundElt.classList.remove("flash-out");
+
+  // Change the background
+  backgroundElt.classList.add("theme-bg-contrast");
+
+  foregroundElt.classList.add("theme-fg-contrast");
+  [].forEach.call(
+    foregroundElt.querySelectorAll("[class*=theme-fg-color]"),
+    span => span.classList.add("theme-fg-contrast")
+  );
+}
+
+/**
+ * Remove a 'flashed' background and foreground color to elements.
+ * See flashElementOn.
+ *
+ * @param  {Node} backgroundElt
+ *         The element to reomve the highlighted background color on.
+ * @param  {Node} foregroundElt
+ *         The element to remove the matching foreground color on.
+ *         Optional.  This will equal backgroundElt if not set.
+ */
+function flashElementOff(backgroundElt, foregroundElt=backgroundElt) {
+  if (!backgroundElt || !foregroundElt) {
+    return;
+  }
+
+  // Add the animation class to smoothly remove the background
+  backgroundElt.classList.add("flash-out");
+
+  // Remove the background
+  backgroundElt.classList.remove("theme-bg-contrast");
+
+  foregroundElt.classList.remove("theme-fg-contrast");
+  [].forEach.call(
+    foregroundElt.querySelectorAll("[class*=theme-fg-color]"),
+    span => span.classList.remove("theme-fg-contrast")
+  );
 }
 
 /**
