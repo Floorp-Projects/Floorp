@@ -1475,6 +1475,16 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     return;
   }
 
+  // We can have a race condition where the vsync timestamp
+  // is before the most recent refresh due to a forced refresh.
+  // The underlying assumption is that the refresh driver tick can only
+  // go forward in time, not backwards. To prevent the refresh
+  // driver from going back in time, just skip this tick and
+  // wait until the next tick.
+  if ((aNowTime <= mMostRecentRefresh) && !mTestControllingRefreshes) {
+    return;
+  }
+
   TimeStamp previousRefresh = mMostRecentRefresh;
 
   mMostRecentRefresh = aNowTime;
