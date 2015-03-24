@@ -113,8 +113,6 @@ public:
   android::sp<android::GraphicBuffer> GetGraphicBuffer(int64_t key);
 #endif
 
-  bool IsValidKey(int64_t key);
-
   base::Thread* GetThread() const;
 
   MessageLoop* GetMessageLoop() const;
