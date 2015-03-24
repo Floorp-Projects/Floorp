@@ -188,22 +188,21 @@ BytecodeEmitter::updateLocalsToFrameSlots()
     return true;
 }
 
-ptrdiff_t
-BytecodeEmitter::emitCheck(ptrdiff_t delta)
+bool
+BytecodeEmitter::emitCheck(ptrdiff_t delta, ptrdiff_t *offset)
 {
-    ptrdiff_t offset = code().length();
+    *offset = code().length();
 
     // Start it off moderately large to avoid repeated resizings early on.
     // ~98% of cases fit within 1024 bytes.
     if (code().capacity() == 0 && !code().reserve(1024))
-        return -1;
+        return false;
 
-    jsbytecode dummy = 0;
-    if (!code().appendN(dummy, delta)) {
+    if (!code().growBy(delta)) {
         ReportOutOfMemory(cx);
-        return -1;
+        return false;
     }
-    return offset;
+    return true;
 }
 
 void
@@ -250,8 +249,9 @@ bool
 BytecodeEmitter::emit1(JSOp op)
 {
     MOZ_ASSERT(checkStrictOrSloppy(op));
-    ptrdiff_t offset = emitCheck(1);
-    if (offset < 0)
+
+    ptrdiff_t offset;
+    if (!emitCheck(1, &offset))
         return false;
 
     jsbytecode *code = this->code(offset);
@@ -264,8 +264,9 @@ bool
 BytecodeEmitter::emit2(JSOp op, jsbytecode op1)
 {
     MOZ_ASSERT(checkStrictOrSloppy(op));
-    ptrdiff_t offset = emitCheck(2);
-    if (offset < 0)
+
+    ptrdiff_t offset;
+    if (!emitCheck(2, &offset))
         return false;
 
     jsbytecode *code = this->code(offset);
@@ -284,8 +285,8 @@ BytecodeEmitter::emit3(JSOp op, jsbytecode op1, jsbytecode op2)
     MOZ_ASSERT(!IsArgOp(op));
     MOZ_ASSERT(!IsLocalOp(op));
 
-    ptrdiff_t offset = emitCheck(3);
-    if (offset < 0)
+    ptrdiff_t offset;
+    if (!emitCheck(3, &offset))
         return false;
 
     jsbytecode *code = this->code(offset);
@@ -296,16 +297,17 @@ BytecodeEmitter::emit3(JSOp op, jsbytecode op1, jsbytecode op2)
     return true;
 }
 
-ptrdiff_t
-BytecodeEmitter::emitN(JSOp op, size_t extra)
+bool
+BytecodeEmitter::emitN(JSOp op, size_t extra, ptrdiff_t *offset)
 {
     MOZ_ASSERT(checkStrictOrSloppy(op));
-    ptrdiff_t length = 1 + (ptrdiff_t)extra;
-    ptrdiff_t offset = emitCheck(length);
-    if (offset < 0)
-        return -1;
+    ptrdiff_t length = 1 + ptrdiff_t(extra);
 
-    jsbytecode *code = this->code(offset);
+    ptrdiff_t off;
+    if (!emitCheck(length, &off))
+        return false;
+
+    jsbytecode *code = this->code(off);
     code[0] = jsbytecode(op);
     /* The remaining |extra| bytes are set by the caller */
 
@@ -314,23 +316,27 @@ BytecodeEmitter::emitN(JSOp op, size_t extra)
      * operand yet to be stored in the extra bytes after op.
      */
     if (js_CodeSpec[op].nuses >= 0)
-        updateDepth(offset);
+        updateDepth(off);
 
-    return offset;
+    if (offset)
+        *offset = off;
+    return true;
 }
 
-ptrdiff_t
-BytecodeEmitter::emitJump(JSOp op, ptrdiff_t off)
+bool
+BytecodeEmitter::emitJump(JSOp op, ptrdiff_t off, ptrdiff_t *jumpOffset)
 {
-    ptrdiff_t offset = emitCheck(5);
-    if (offset < 0)
-        return -1;
+    ptrdiff_t offset;
+    if (!emitCheck(5, &offset))
+        return false;
 
     jsbytecode *code = this->code(offset);
     code[0] = jsbytecode(op);
     SET_JUMP_OFFSET(code, off);
     updateDepth(offset);
-    return offset;
+    if (jumpOffset)
+        *jumpOffset = offset;
+    return true;
 }
 
 bool
@@ -353,8 +359,8 @@ BytecodeEmitter::emitDupAt(unsigned slot)
         return false;
     }
 
-    ptrdiff_t off = emitN(JSOP_DUPAT, 3);
-    if (off < 0)
+    ptrdiff_t off;
+    if (!emitN(JSOP_DUPAT, 3, &off))
         return false;
 
     jsbytecode *pc = code(off);
@@ -414,7 +420,7 @@ BytecodeEmitter::emitBackPatchOp(ptrdiff_t *lastp)
     ptrdiff_t delta = offset() - *lastp;
     *lastp = offset();
     MOZ_ASSERT(delta > 0);
-    return emitJump(JSOP_BACKPATCH, delta) >= 0;
+    return emitJump(JSOP_BACKPATCH, delta);
 }
 
 static inline unsigned
@@ -673,22 +679,20 @@ NonLocalExitScope::prepareForNonLocalJump(StmtInfoBCE *toStmt)
 
 }  // anonymous namespace
 
-ptrdiff_t
+bool
 BytecodeEmitter::emitGoto(StmtInfoBCE *toStmt, ptrdiff_t *lastp, SrcNoteType noteType)
 {
     NonLocalExitScope nle(this);
 
     if (!nle.prepareForNonLocalJump(toStmt))
-        return -1;
+        return false;
 
     if (noteType != SRC_NULL) {
         if (newSrcNote(noteType) < 0)
-            return -1;
+            return false;
     }
 
-    if (!emitBackPatchOp(lastp))
-        return -1;
-    return *lastp;
+    return emitBackPatchOp(lastp);
 }
 
 void
@@ -993,8 +997,8 @@ BytecodeEmitter::emitIndex32(JSOp op, uint32_t index)
     const size_t len = 1 + UINT32_INDEX_LEN;
     MOZ_ASSERT(len == size_t(js_CodeSpec[op].length));
 
-    ptrdiff_t offset = emitCheck(len);
-    if (offset < 0)
+    ptrdiff_t offset;
+    if (!emitCheck(len, &offset))
         return false;
 
     jsbytecode *code = this->code(offset);
@@ -1013,8 +1017,8 @@ BytecodeEmitter::emitIndexOp(JSOp op, uint32_t index)
     const size_t len = js_CodeSpec[op].length;
     MOZ_ASSERT(len >= 1 + UINT32_INDEX_LEN);
 
-    ptrdiff_t offset = emitCheck(len);
-    if (offset < 0)
+    ptrdiff_t offset;
+    if (!emitCheck(len, &offset))
         return false;
 
     jsbytecode *code = this->code(offset);
@@ -1087,8 +1091,8 @@ BytecodeEmitter::emitLocalOp(JSOp op, uint32_t slot)
     MOZ_ASSERT(JOF_OPTYPE(op) != JOF_SCOPECOORD);
     MOZ_ASSERT(IsLocalOp(op));
 
-    ptrdiff_t off = emitN(op, LOCALNO_LEN);
-    if (off < 0)
+    ptrdiff_t off;
+    if (!emitN(op, LOCALNO_LEN, &off))
         return false;
 
     SET_LOCALNO(code(off), slot);
@@ -1117,8 +1121,8 @@ BytecodeEmitter::emitUnaliasedVarOp(JSOp op, uint32_t slot, MaybeCheckLexical ch
     }
 
     MOZ_ASSERT(IsArgOp(op));
-    ptrdiff_t off = emitN(op, ARGNO_LEN);
-    if (off < 0)
+    ptrdiff_t off;
+    if (!emitN(op, ARGNO_LEN, &off))
         return false;
 
     SET_ARGNO(code(off), slot);
@@ -1133,8 +1137,8 @@ BytecodeEmitter::emitScopeCoordOp(JSOp op, ScopeCoordinate sc)
     unsigned n = SCOPECOORD_HOPS_LEN + SCOPECOORD_SLOT_LEN;
     MOZ_ASSERT(int(n) + 1 /* op */ == js_CodeSpec[op].length);
 
-    ptrdiff_t off = emitN(op, n);
-    if (off < 0)
+    ptrdiff_t off;
+    if (!emitN(op, n, &off))
         return false;
 
     jsbytecode *pc = code(off);
@@ -2164,8 +2168,8 @@ bool
 BytecodeEmitter::emitNewInit(JSProtoKey key)
 {
     const size_t len = 1 + UINT32_INDEX_LEN;
-    ptrdiff_t offset = emitCheck(len);
-    if (offset < 0)
+    ptrdiff_t offset;
+    if (!emitCheck(len, &offset))
         return false;
 
     jsbytecode *code = this->code(offset);
@@ -2507,10 +2511,6 @@ bool
 BytecodeEmitter::emitNumberOp(double dval)
 {
     int32_t ival;
-    uint32_t u;
-    ptrdiff_t off;
-    jsbytecode *pc;
-
     if (NumberIsInt32(dval, &ival)) {
         if (ival == 0)
             return emit1(JSOP_ZERO);
@@ -2519,21 +2519,19 @@ BytecodeEmitter::emitNumberOp(double dval)
         if ((int)(int8_t)ival == ival)
             return emit2(JSOP_INT8, (jsbytecode)(int8_t)ival);
 
-        u = (uint32_t)ival;
+        uint32_t u = uint32_t(ival);
         if (u < JS_BIT(16)) {
             emitUint16Operand(JSOP_UINT16, u);
         } else if (u < JS_BIT(24)) {
-            off = emitN(JSOP_UINT24, 3);
-            if (off < 0)
+            ptrdiff_t off;
+            if (!emitN(JSOP_UINT24, 3, &off))
                 return false;
-            pc = code(off);
-            SET_UINT24(pc, u);
+            SET_UINT24(code(off), u);
         } else {
-            off = emitN(JSOP_INT32, 4);
-            if (off < 0)
+            ptrdiff_t off;
+            if (!emitN(JSOP_INT32, 4, &off))
                 return false;
-            pc = code(off);
-            SET_INT32(pc, ival);
+            SET_INT32(code(off), ival);
         }
         return true;
     }
@@ -2780,7 +2778,7 @@ BytecodeEmitter::emitSwitch(ParseNode *pn)
         return false;
 
     /* Emit switchOp followed by switchSize bytes of jump or lookup table. */
-    if (emitN(switchOp, switchSize) < 0)
+    if (!emitN(switchOp, switchSize))
         return false;
 
     off = -1;
@@ -2805,8 +2803,7 @@ BytecodeEmitter::emitSwitch(ParseNode *pn)
             caseNoteIndex = newSrcNote2(SRC_NEXTCASE, 0);
             if (caseNoteIndex < 0)
                 return false;
-            off = emitJump(JSOP_CASE, 0);
-            if (off < 0)
+            if (!emitJump(JSOP_CASE, 0, &off))
                 return false;
             pn3->pn_offset = off;
             if (beforeCases) {
@@ -2837,8 +2834,7 @@ BytecodeEmitter::emitSwitch(ParseNode *pn)
         }
 
         /* Emit default even if no explicit default statement. */
-        defaultOffset = emitJump(JSOP_DEFAULT, 0);
-        if (defaultOffset < 0)
+        if (!emitJump(JSOP_DEFAULT, 0, &defaultOffset))
             return false;
     } else {
         MOZ_ASSERT(switchOp == JSOP_TABLESWITCH);
@@ -2963,8 +2959,8 @@ BytecodeEmitter::emitYieldOp(JSOp op)
 
     MOZ_ASSERT(op == JSOP_INITIALYIELD || op == JSOP_YIELD);
 
-    ptrdiff_t off = emitN(op, 3);
-    if (off < 0)
+    ptrdiff_t off;
+    if (!emitN(op, 3, &off))
         return false;
 
     uint32_t yieldIndex = yieldOffsetList.length();
@@ -3385,8 +3381,8 @@ BytecodeEmitter::emitDefault(ParseNode *defaultExpr)
     // Emit source note to enable ion compilation.
     if (newSrcNote(SRC_IF) < 0)
         return false;
-    ptrdiff_t jump = emitJump(JSOP_IFEQ, 0);              // VALUE
-    if (jump < 0)
+    ptrdiff_t jump;
+    if (!emitJump(JSOP_IFEQ, 0, &jump))                   // VALUE
         return false;
     if (!emit1(JSOP_POP))                                 // .
         return false;
@@ -3430,8 +3426,8 @@ BytecodeEmitter::emitDestructuringOpsArrayHelper(ParseNode *pattern, VarEmitOpti
 
         if (elem->isKind(PNK_SPREAD)) {
             /* Create a new array with the rest of the iterator */
-            ptrdiff_t off = emitN(JSOP_NEWARRAY, 3);              // ... OBJ? ITER ARRAY
-            if (off < 0)
+            ptrdiff_t off;
+            if (!emitN(JSOP_NEWARRAY, 3, &off))                   // ... OBJ? ITER ARRAY
                 return false;
             checkTypeSet(JSOP_NEWARRAY);
             jsbytecode *pc = code(off);
@@ -3455,13 +3451,13 @@ BytecodeEmitter::emitDestructuringOpsArrayHelper(ParseNode *pattern, VarEmitOpti
                 return false;
 
             // Emit (result.done ? undefined : result.value)
-            // This is mostly copied from EmitConditionalExpression, except that this code
+            // This is mostly copied from emitConditionalExpression, except that this code
             // does not push new values onto the stack.
             ptrdiff_t noteIndex = newSrcNote(SRC_COND);
             if (noteIndex < 0)
                 return false;
-            ptrdiff_t beq = emitJump(JSOP_IFEQ, 0);
-            if (beq < 0)
+            ptrdiff_t beq;
+            if (!emitJump(JSOP_IFEQ, 0, &beq))
                 return false;
 
             if (!emit1(JSOP_POP))                                 // ... OBJ? ITER
@@ -3470,8 +3466,8 @@ BytecodeEmitter::emitDestructuringOpsArrayHelper(ParseNode *pattern, VarEmitOpti
                 return false;
 
             /* Jump around else, fixup the branch, emit else, fixup jump. */
-            ptrdiff_t jmp = emitJump(JSOP_GOTO, 0);
-            if (jmp < 0)
+            ptrdiff_t jmp;
+            if (!emitJump(JSOP_GOTO, 0, &jmp))
                 return false;
             setJumpOffsetAt(beq);
 
@@ -4332,8 +4328,8 @@ BytecodeEmitter::emitCatch(ParseNode *pn)
         // If the guard expression is false, fall through, pop the block scope,
         // and jump to the next catch block.  Otherwise jump over that code and
         // pop the dupped exception.
-        ptrdiff_t guardCheck = emitJump(JSOP_IFNE, 0);
-        if (guardCheck < 0)
+        ptrdiff_t guardCheck;
+        if (!emitJump(JSOP_IFNE, 0, &guardCheck))
             return false;
 
         {
@@ -4349,8 +4345,8 @@ BytecodeEmitter::emitCatch(ParseNode *pn)
                 return false;
 
             // Jump to the next handler.  The jump target is backpatched by emitTry.
-            ptrdiff_t guardJump = emitJump(JSOP_GOTO, 0);
-            if (guardJump < 0)
+            ptrdiff_t guardJump;
+            if (!emitJump(JSOP_GOTO, 0, &guardJump))
                 return false;
             stmt->guardJump() = guardJump;
         }
@@ -4571,8 +4567,7 @@ BytecodeEmitter::emitIf(ParseNode *pn)
     noteIndex = newSrcNote(pn3 ? SRC_IF_ELSE : SRC_IF);
     if (noteIndex < 0)
         return false;
-    beq = emitJump(JSOP_IFEQ, 0);
-    if (beq < 0)
+    if (!emitJump(JSOP_IFEQ, 0, &beq))
         return false;
 
     /* Emit code for the then and optional else parts. */
@@ -4588,9 +4583,9 @@ BytecodeEmitter::emitIf(ParseNode *pn)
          * this function will fix up the backpatch chain linked from
          * stmtInfo.breaks.
          */
-        jmp = emitGoto(&stmtInfo, &stmtInfo.breaks);
-        if (jmp < 0)
+        if (!emitGoto(&stmtInfo, &stmtInfo.breaks))
             return false;
+        jmp = stmtInfo.breaks;
 
         /* Ensure the branch-if-false comes here, then emit the else. */
         setJumpOffsetAt(beq);
@@ -4818,8 +4813,8 @@ BytecodeEmitter::emitForOf(StmtType type, ParseNode *pn, ptrdiff_t top)
     int noteIndex = newSrcNote(SRC_FOR_OF);
     if (noteIndex < 0)
         return false;
-    ptrdiff_t jmp = emitJump(JSOP_GOTO, 0);
-    if (jmp < 0)
+    ptrdiff_t jmp;
+    if (!emitJump(JSOP_GOTO, 0, &jmp))
         return false;
 
     top = offset();
@@ -4889,8 +4884,8 @@ BytecodeEmitter::emitForOf(StmtType type, ParseNode *pn, ptrdiff_t top)
     if (!emitAtomOp(cx->names().done, JSOP_GETPROP))      // ... RESULT DONE?
         return false;
 
-    ptrdiff_t beq = emitJump(JSOP_IFEQ, top - offset());  // ... RESULT
-    if (beq < 0)
+    ptrdiff_t beq;
+    if (!emitJump(JSOP_IFEQ, top - offset(), &beq))       // ... RESULT
         return false;
 
     MOZ_ASSERT(this->stackDepth == loopDepth);
@@ -4970,8 +4965,8 @@ BytecodeEmitter::emitForIn(ParseNode *pn, ptrdiff_t top)
      * Jump down to the loop condition to minimize overhead assuming at
      * least one iteration, as the other loop forms do.
      */
-    ptrdiff_t jmp = emitJump(JSOP_GOTO, 0);
-    if (jmp < 0)
+    ptrdiff_t jmp;
+    if (!emitJump(JSOP_GOTO, 0, &jmp))
         return false;
 
     top = offset();
@@ -5013,8 +5008,8 @@ BytecodeEmitter::emitForIn(ParseNode *pn, ptrdiff_t top)
         return false;
     if (!emit1(JSOP_ISNOITER))
         return false;
-    ptrdiff_t beq = emitJump(JSOP_IFEQ, top - offset());
-    if (beq < 0)
+    ptrdiff_t beq;
+    if (!emitJump(JSOP_IFEQ, top - offset(), &beq))
         return false;
 
     /* Set the srcnote offset so we can find the closing jump. */
@@ -5080,8 +5075,7 @@ BytecodeEmitter::emitNormalFor(ParseNode *pn, ptrdiff_t top)
     ptrdiff_t jmp = -1;
     if (forHead->pn_kid2) {
         /* Goto the loop condition, which branches back to iterate. */
-        jmp = emitJump(JSOP_GOTO, 0);
-        if (jmp < 0)
+        if (!emitJump(JSOP_GOTO, 0, &jmp))
             return false;
     } else {
         if (op != JSOP_NOP && !emit1(JSOP_NOP))
@@ -5156,7 +5150,7 @@ BytecodeEmitter::emitNormalFor(ParseNode *pn, ptrdiff_t top)
 
     /* If no loop condition, just emit a loop-closing jump. */
     op = forHead->pn_kid2 ? JSOP_IFNE : JSOP_GOTO;
-    if (emitJump(op, top - offset()) < 0)
+    if (!emitJump(op, top - offset()))
         return false;
 
     if (!tryNoteList.append(JSTRY_LOOP, stackDepth, top, offset()))
@@ -5368,8 +5362,8 @@ BytecodeEmitter::emitDo(ParseNode *pn)
     if (!emitTree(pn->pn_right))
         return false;
 
-    ptrdiff_t beq = emitJump(JSOP_IFNE, top - offset());
-    if (beq < 0)
+    ptrdiff_t beq;
+    if (!emitJump(JSOP_IFNE, top - offset(), &beq))
         return false;
 
     if (!tryNoteList.append(JSTRY_LOOP, stackDepth, top, offset()))
@@ -5414,8 +5408,8 @@ BytecodeEmitter::emitWhile(ParseNode *pn, ptrdiff_t top)
     if (noteIndex < 0)
         return false;
 
-    ptrdiff_t jmp = emitJump(JSOP_GOTO, 0);
-    if (jmp < 0)
+    ptrdiff_t jmp;
+    if (!emitJump(JSOP_GOTO, 0, &jmp))
         return false;
 
     top = offset();
@@ -5431,8 +5425,8 @@ BytecodeEmitter::emitWhile(ParseNode *pn, ptrdiff_t top)
     if (!emitTree(pn->pn_left))
         return false;
 
-    ptrdiff_t beq = emitJump(JSOP_IFNE, top - offset());
-    if (beq < 0)
+    ptrdiff_t beq;
+    if (!emitJump(JSOP_IFNE, top - offset(), &beq))
         return false;
 
     if (!tryNoteList.append(JSTRY_LOOP, stackDepth, top, offset()))
@@ -5460,7 +5454,7 @@ BytecodeEmitter::emitBreak(PropertyName *label)
         noteType = (stmt->type == STMT_SWITCH) ? SRC_SWITCHBREAK : SRC_BREAK;
     }
 
-    return emitGoto(stmt, &stmt->breaks, noteType) >= 0;
+    return emitGoto(stmt, &stmt->breaks, noteType);
 }
 
 bool
@@ -5481,7 +5475,7 @@ BytecodeEmitter::emitContinue(PropertyName *label)
             stmt = stmt->down;
     }
 
-    return emitGoto(stmt, &stmt->continues, SRC_CONTINUE) >= 0;
+    return emitGoto(stmt, &stmt->continues, SRC_CONTINUE);
 }
 
 bool
@@ -5688,8 +5682,8 @@ BytecodeEmitter::emitYieldStar(ParseNode *iter, ParseNode *gen)
     if (!emit1(JSOP_IN))                                         // EXCEPTION ITER THROW?
         return false;
     // if (THROW?) goto delegate
-    ptrdiff_t checkThrow = emitJump(JSOP_IFNE, 0);               // EXCEPTION ITER
-    if (checkThrow < 0)
+    ptrdiff_t checkThrow;
+    if (!emitJump(JSOP_IFNE, 0, &checkThrow))                    // EXCEPTION ITER
         return false;
     if (!emit1(JSOP_POP))                                        // EXCEPTION
         return false;
@@ -5757,7 +5751,7 @@ BytecodeEmitter::emitYieldStar(ParseNode *iter, ParseNode *gen)
     if (!emitAtomOp(cx->names().done, JSOP_GETPROP))             // ITER RESULT DONE
         return false;
     // if (!DONE) goto tryStart;
-    if (emitJump(JSOP_IFEQ, tryStart - offset()) < 0)            // ITER RESULT
+    if (!emitJump(JSOP_IFEQ, tryStart - offset()))               // ITER RESULT
         return false;
 
     // result.value
@@ -6182,8 +6176,8 @@ BytecodeEmitter::emitLogical(ParseNode *pn)
     ParseNode *pn2 = pn->pn_head;
     if (!emitTree(pn2))
         return false;
-    ptrdiff_t top = emitJump(JSOP_BACKPATCH, 0);
-    if (top < 0)
+    ptrdiff_t top;
+    if (!emitJump(JSOP_BACKPATCH, 0, &top))
         return false;
     if (!emit1(JSOP_POP))
         return false;
@@ -6193,8 +6187,8 @@ BytecodeEmitter::emitLogical(ParseNode *pn)
     while ((pn2 = pn2->pn_next)->pn_next) {
         if (!emitTree(pn2))
             return false;
-        ptrdiff_t off = emitJump(JSOP_BACKPATCH, 0);
-        if (off < 0)
+        ptrdiff_t off;
+        if (!emitJump(JSOP_BACKPATCH, 0, &off))
             return false;
         if (!emit1(JSOP_POP))
             return false;
@@ -6309,8 +6303,8 @@ BytecodeEmitter::emitLabeledStatement(const LabeledStatement *pn)
     if (!makeAtomIndex(pn->label(), &index))
         return false;
 
-    ptrdiff_t top = emitJump(JSOP_LABEL, 0);
-    if (top < 0)
+    ptrdiff_t top;
+    if (!emitJump(JSOP_LABEL, 0, &top))
         return false;
 
     /* Emit code for the labeled statement. */
@@ -6360,13 +6354,16 @@ BytecodeEmitter::emitConditionalExpression(ConditionalExpression &conditional)
     if (noteIndex < 0)
         return false;
 
-    ptrdiff_t beq = emitJump(JSOP_IFEQ, 0);
-    if (beq < 0 || !emitTree(&conditional.thenExpression()))
+    ptrdiff_t beq;
+    if (!emitJump(JSOP_IFEQ, 0, &beq))
+        return false;
+
+    if (!emitTree(&conditional.thenExpression()))
         return false;
 
     /* Jump around else, fixup the branch, emit else, fixup jump. */
-    ptrdiff_t jmp = emitJump(JSOP_GOTO, 0);
-    if (jmp < 0)
+    ptrdiff_t jmp;
+    if (!emitJump(JSOP_GOTO, 0, &jmp))
         return false;
     setJumpOffsetAt(beq);
 
@@ -6599,8 +6596,8 @@ BytecodeEmitter::emitArray(ParseNode *pn, uint32_t count)
             nspread++;
     }
 
-    ptrdiff_t off = emitN(JSOP_NEWARRAY, 3);                        // ARRAY
-    if (off < 0)
+    ptrdiff_t off;
+    if (!emitN(JSOP_NEWARRAY, 3, &off))                             // ARRAY
         return false;
     checkTypeSet(JSOP_NEWARRAY);
     jsbytecode *pc = code(off);
@@ -6641,8 +6638,7 @@ BytecodeEmitter::emitArray(ParseNode *pn, uint32_t count)
             if (!emit1(JSOP_INITELEM_INC))
                 return false;
         } else {
-            off = emitN(JSOP_INITELEM_ARRAY, 3);
-            if (off < 0)
+            if (!emitN(JSOP_INITELEM_ARRAY, 3, &off))
                 return false;
             SET_UINT24(code(off), atomIndex);
         }
@@ -6697,8 +6693,8 @@ BytecodeEmitter::emitDefaults(ParseNode *pn)
         // Emit source note to enable ion compilation.
         if (newSrcNote(SRC_IF) < 0)
             return false;
-        ptrdiff_t jump = emitJump(JSOP_IFEQ, 0);
-        if (jump < 0)
+        ptrdiff_t jump;
+        if (!emitJump(JSOP_IFEQ, 0, &jump))
             return false;
         if (!emitTree(arg->expr()))
             return false;
