@@ -27,14 +27,7 @@
 
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const {setTimeout, clearTimeout} = require("sdk/timers");
-
-const PREDEFINED = exports.PREDEFINED = {
-  "ease": [.25, .1, .25, 1],
-  "linear": [0, 0, 1, 1],
-  "ease-in": [.42, 0, 1, 1],
-  "ease-out": [0, 0, .58, 1],
-  "ease-in-out": [.42, 0, .58, 1]
-};
+const {PREDEFINED, PRESETS, DEFAULT_PRESET_CATEGORY} = require("devtools/shared/widgets/CubicBezierPresets");
 
 /**
  * CubicBezier data structure helper
@@ -59,7 +52,7 @@ function CubicBezier(coordinates) {
     return this.map(n => {
       return (Math.round(n * 100)/100 + '').replace(/^0\./, '.');
     }) + "";
-  }
+  };
 }
 
 exports.CubicBezier = CubicBezier;
@@ -74,7 +67,11 @@ CubicBezier.prototype = {
   },
 
   toString: function() {
-    return 'cubic-bezier(' + this.coordinates + ')';
+    // Check first if current coords are one of css predefined functions
+    let predefName = Object.keys(PREDEFINED)
+                           .find(key => coordsAreEqual(PREDEFINED[key], this.coordinates));
+
+    return predefName || 'cubic-bezier(' + this.coordinates + ')';
   }
 };
 
@@ -97,7 +94,7 @@ function BezierCanvas(canvas, bezier, padding) {
                  -canvas.height * (1 - p[0] - p[2]));
   this.ctx.translate(p[3] / (1 - p[1] - p[3]),
                      -1 - p[0] / (1 - p[0] - p[2]));
-};
+}
 
 exports.BezierCanvas = BezierCanvas;
 
@@ -115,7 +112,7 @@ BezierCanvas.prototype = {
     }, {
       left: w * (this.bezier.coordinates[2] * (1 - p[3] - p[1]) - p[3]) + 'px',
       top: h * (1 - this.bezier.coordinates[3] * (1 - p[0] - p[2]) - p[0]) + 'px'
-    }]
+    }];
   },
 
   /**
@@ -128,8 +125,8 @@ BezierCanvas.prototype = {
     p = p.map(function(a, i) { return a * (i % 2? w : h)});
 
     return [
-      (parseInt(element.style.left) - p[3]) / (w + p[1] + p[3]),
-      (h - parseInt(element.style.top) - p[2]) / (h - p[0] - p[2])
+      (parseFloat(element.style.left) - p[3]) / (w + p[1] + p[3]),
+      (h - parseFloat(element.style.top) - p[2]) / (h - p[0] - p[2])
     ];
   },
 
@@ -143,39 +140,47 @@ BezierCanvas.prototype = {
       handleColor: '#666',
       handleThickness: .008,
       bezierColor: '#4C9ED9',
-      bezierThickness: .015
+      bezierThickness: .015,
+      drawHandles: true
     };
 
     for (let setting in settings) {
       defaultSettings[setting] = settings[setting];
     }
 
-    this.ctx.clearRect(-.5,-.5, 2, 2);
+    // Clear the canvas –making sure to clear the
+    // whole area by resetting the transform first.
+    this.ctx.save();
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.restore();
 
-    // Draw control handles
-    this.ctx.beginPath();
-    this.ctx.fillStyle = defaultSettings.handleColor;
-    this.ctx.lineWidth = defaultSettings.handleThickness;
-    this.ctx.strokeStyle = defaultSettings.handleColor;
+    if (defaultSettings.drawHandles) {
+      // Draw control handles
+      this.ctx.beginPath();
+      this.ctx.fillStyle = defaultSettings.handleColor;
+      this.ctx.lineWidth = defaultSettings.handleThickness;
+      this.ctx.strokeStyle = defaultSettings.handleColor;
 
-    this.ctx.moveTo(0, 0);
-    this.ctx.lineTo(xy[0], xy[1]);
-    this.ctx.moveTo(1,1);
-    this.ctx.lineTo(xy[2], xy[3]);
+      this.ctx.moveTo(0, 0);
+      this.ctx.lineTo(xy[0], xy[1]);
+      this.ctx.moveTo(1,1);
+      this.ctx.lineTo(xy[2], xy[3]);
 
-    this.ctx.stroke();
-    this.ctx.closePath();
+      this.ctx.stroke();
+      this.ctx.closePath();
 
-    function circle(ctx, cx, cy, r) {
-      return ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, 2*Math.PI, !1);
-      ctx.closePath();
+      var circle = function(ctx, cx, cy, r) {
+        return ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, 2*Math.PI, !1);
+        ctx.closePath();
+      };
+
+      circle(this.ctx, xy[0], xy[1], 1.5 * defaultSettings.handleThickness);
+      this.ctx.fill();
+      circle(this.ctx, xy[2], xy[3], 1.5 * defaultSettings.handleThickness);
+      this.ctx.fill();
     }
-
-    circle(this.ctx, xy[0], xy[1], 1.5 * defaultSettings.handleThickness);
-    this.ctx.fill();
-    circle(this.ctx, xy[2], xy[3], 1.5 * defaultSettings.handleThickness);
-    this.ctx.fill();
 
     // Draw bezier curve
     this.ctx.beginPath();
@@ -197,18 +202,20 @@ BezierCanvas.prototype = {
  * Emits "updated" events whenever the curve is changed. Along with the event is
  * sent a CubicBezier object
  */
-function CubicBezierWidget(parent, coordinates=PREDEFINED["ease-in-out"]) {
+function CubicBezierWidget(parent, coordinates=PRESETS["ease-in"]["ease-in-sine"]) {
+  EventEmitter.decorate(this);
+
   this.parent = parent;
   let {curve, p1, p2} = this._initMarkup();
 
-  this.curve = curve;
   this.curveBoundingBox = curve.getBoundingClientRect();
+  this.curve = curve;
   this.p1 = p1;
   this.p2 = p2;
 
   // Create and plot the bezier curve
   this.bezierCanvas = new BezierCanvas(this.curve,
-    new CubicBezier(coordinates), [.25, 0]);
+    new CubicBezier(coordinates), [0.30, 0]);
   this.bezierCanvas.plot();
 
   // Place the control points
@@ -221,12 +228,15 @@ function CubicBezierWidget(parent, coordinates=PREDEFINED["ease-in-out"]) {
   this._onPointMouseDown = this._onPointMouseDown.bind(this);
   this._onPointKeyDown = this._onPointKeyDown.bind(this);
   this._onCurveClick = this._onCurveClick.bind(this);
-  this._initEvents();
+  this._onNewCoordinates = this._onNewCoordinates.bind(this);
+
+  // Add preset preview menu
+  this.presets = new CubicBezierPresetWidget(parent);
 
   // Add the timing function previewer
   this.timingPreview = new TimingFunctionPreviewWidget(parent);
 
-  EventEmitter.decorate(this);
+  this._initEvents();
 }
 
 exports.CubicBezierWidget = CubicBezierWidget;
@@ -234,6 +244,9 @@ exports.CubicBezierWidget = CubicBezierWidget;
 CubicBezierWidget.prototype = {
   _initMarkup: function() {
     let doc = this.parent.ownerDocument;
+
+    let wrap = doc.createElement("div");
+    wrap.className = "display-wrap";
 
     let plane = doc.createElement("div");
     plane.className = "coordinate-plane";
@@ -249,22 +262,24 @@ CubicBezierWidget.prototype = {
     plane.appendChild(p2);
 
     let curve = doc.createElement("canvas");
-    curve.setAttribute("height", "400");
-    curve.setAttribute("width", "200");
+    curve.setAttribute("width", 150);
+    curve.setAttribute("height", 370);
     curve.id = "curve";
-    plane.appendChild(curve);
 
-    this.parent.appendChild(plane);
+    plane.appendChild(curve);
+    wrap.appendChild(plane);
+
+    this.parent.appendChild(wrap);
 
     return {
       p1: p1,
       p2: p2,
       curve: curve
-    }
+    };
   },
 
   _removeMarkup: function() {
-    this.parent.ownerDocument.querySelector(".coordinate-plane").remove();
+    this.parent.ownerDocument.querySelector(".display-wrap").remove();
   },
 
   _initEvents: function() {
@@ -275,6 +290,8 @@ CubicBezierWidget.prototype = {
     this.p2.addEventListener("keydown", this._onPointKeyDown);
 
     this.curve.addEventListener("click", this._onCurveClick);
+
+    this.presets.on("new-coordinates", this._onNewCoordinates);
   },
 
   _removeEvents: function() {
@@ -285,6 +302,8 @@ CubicBezierWidget.prototype = {
     this.p2.removeEventListener("keydown", this._onPointKeyDown);
 
     this.curve.removeEventListener("click", this._onCurveClick);
+
+    this.presets.off("new-coordinates", this._onNewCoordinates);
   },
 
   _onPointMouseDown: function(event) {
@@ -317,7 +336,7 @@ CubicBezierWidget.prototype = {
     doc.onmouseup = function () {
       point.focus();
       doc.onmousemove = doc.onmouseup = null;
-    }
+    };
   },
 
   _onPointKeyDown: function(event) {
@@ -344,6 +363,8 @@ CubicBezierWidget.prototype = {
   },
 
   _onCurveClick: function(event) {
+    this.curveBoundingBox = this.curve.getBoundingClientRect();
+
     let left = this.curveBoundingBox.left;
     let top = this.curveBoundingBox.top;
     let x = event.pageX - left;
@@ -362,14 +383,19 @@ CubicBezierWidget.prototype = {
     this._updateFromPoints();
   },
 
+  _onNewCoordinates: function(event, coordinates) {
+    this.coordinates = coordinates;
+  },
+
   /**
    * Get the current point coordinates and redraw the curve to match
    */
   _updateFromPoints: function() {
     // Get the new coordinates from the point's offsets
-    let coordinates = this.bezierCanvas.offsetsToCoordinates(this.p1)
+    let coordinates = this.bezierCanvas.offsetsToCoordinates(this.p1);
     coordinates = coordinates.concat(this.bezierCanvas.offsetsToCoordinates(this.p2));
 
+    this.presets.refreshMenu(coordinates);
     this._redraw(coordinates);
   },
 
@@ -391,7 +417,7 @@ CubicBezierWidget.prototype = {
    * @param {Array} coordinates
    */
   set coordinates(coordinates) {
-    this._redraw(coordinates)
+    this._redraw(coordinates);
 
     // Move the points
     let offsets = this.bezierCanvas.offsets;
@@ -420,6 +446,7 @@ CubicBezierWidget.prototype = {
       coordinates = value.replace(/cubic-bezier|\(|\)/g, "").split(",").map(parseFloat);
     }
 
+    this.presets.refreshMenu(coordinates);
     this.coordinates = coordinates;
   },
 
@@ -428,8 +455,259 @@ CubicBezierWidget.prototype = {
     this._removeMarkup();
 
     this.timingPreview.destroy();
+    this.presets.destroy();
 
     this.curve = this.p1 = this.p2 = null;
+  }
+};
+
+/**
+ * CubicBezierPreset widget.
+ * Builds a menu of presets from CubicBezierPresets
+ * @param {DOMNode} parent The container where the preset panel should be created
+ *
+ * Emits "new-coordinate" event along with the coordinates
+ * whenever a preset is selected.
+ */
+function CubicBezierPresetWidget(parent) {
+  this.parent = parent;
+
+  let {presetPane, presets, categories} = this._initMarkup();
+  this.presetPane = presetPane;
+  this.presets = presets;
+  this.categories = categories;
+
+  this._activeCategory = null;
+  this._activePresetList = null;
+  this._activePreset = null;
+
+  this._onCategoryClick = this._onCategoryClick.bind(this);
+  this._onPresetClick = this._onPresetClick.bind(this);
+
+  EventEmitter.decorate(this);
+  this._initEvents();
+}
+
+exports.CubicBezierPresetWidget = CubicBezierPresetWidget;
+
+CubicBezierPresetWidget.prototype = {
+  /*
+   * Constructs a list of all preset categories and a list
+   * of presets for each category.
+   *
+   * High level markup:
+   *  div .preset-pane
+   *    div .preset-categories
+   *      div .category
+   *      div .category
+   *      ...
+   *    div .preset-container
+   *      div .presetList
+   *        div .preset
+   *        ...
+   *      div .presetList
+   *        div .preset
+   *        ...
+   */
+  _initMarkup: function() {
+    let doc = this.parent.ownerDocument;
+
+    let presetPane = doc.createElement("div");
+    presetPane.className = "preset-pane";
+
+    let categoryList = doc.createElement("div");
+    categoryList.id = "preset-categories";
+
+    let presetContainer = doc.createElement("div");
+    presetContainer.id = "preset-container";
+
+    Object.keys(PRESETS).forEach(categoryLabel => {
+      let category = this._createCategory(categoryLabel);
+      categoryList.appendChild(category);
+
+      let presetList = this._createPresetList(categoryLabel);
+      presetContainer.appendChild(presetList);
+    });
+
+    presetPane.appendChild(categoryList);
+    presetPane.appendChild(presetContainer);
+
+    this.parent.appendChild(presetPane);
+
+    let allCategories = presetPane.querySelectorAll(".category");
+    let allPresets = presetPane.querySelectorAll(".preset");
+
+    return {
+      presetPane: presetPane,
+      presets: allPresets,
+      categories: allCategories
+    };
+  },
+
+  _createCategory: function(categoryLabel) {
+    let doc = this.parent.ownerDocument;
+
+    let category = doc.createElement("div");
+    category.id = categoryLabel;
+    category.classList.add("category");
+
+    let categoryDisplayLabel = this._normalizeCategoryLabel(categoryLabel);
+    category.textContent = categoryDisplayLabel;
+
+    return category;
+  },
+
+  _normalizeCategoryLabel: function(categoryLabel) {
+    return categoryLabel.replace("/-/g", " ");
+  },
+
+  _createPresetList: function(categoryLabel) {
+    let doc = this.parent.ownerDocument;
+
+    let presetList = doc.createElement("div");
+    presetList.id = "preset-category-" + categoryLabel;
+    presetList.classList.add("preset-list");
+
+    Object.keys(PRESETS[categoryLabel]).forEach(presetLabel => {
+      let preset = this._createPreset(categoryLabel, presetLabel);
+      presetList.appendChild(preset);
+    });
+
+    return presetList;
+  },
+
+  _createPreset: function(categoryLabel, presetLabel) {
+    let doc = this.parent.ownerDocument;
+
+    let preset = doc.createElement("div");
+    preset.classList.add("preset");
+    preset.id = presetLabel;
+    preset.coordinates = PRESETS[categoryLabel][presetLabel];
+
+    // Create preset preview
+    let curve = doc.createElement("canvas");
+    let bezier = new CubicBezier(preset.coordinates);
+
+    curve.setAttribute("height", 55);
+    curve.setAttribute("width", 55);
+
+    preset.bezierCanvas = new BezierCanvas(curve, bezier, [0.15, 0]);
+    preset.bezierCanvas.plot({
+      drawHandles: false,
+      bezierThickness: 0.025
+    });
+
+    preset.appendChild(curve);
+
+    // Create preset label
+    let presetLabelElem = doc.createElement("p");
+    let presetDisplayLabel = this._normalizePresetLabel(categoryLabel, presetLabel);
+    presetLabelElem.textContent = presetDisplayLabel;
+    preset.appendChild(presetLabelElem);
+
+    return preset;
+  },
+
+  _normalizePresetLabel: function(categoryLabel, presetLabel) {
+    return presetLabel.replace(categoryLabel + "-", "").replace("/-/g", " ");
+  },
+
+  _initEvents: function() {
+    for (let category of this.categories) {
+      category.addEventListener("click", this._onCategoryClick);
+    }
+
+    for (let preset of this.presets) {
+      preset.addEventListener("click", this._onPresetClick);
+    }
+  },
+
+  _removeEvents: function() {
+    for (let category of this.categories) {
+      category.removeEventListener("click", this._onCategoryClick);
+    }
+
+    for (let preset of this.presets) {
+      preset.removeEventListener("click", this._onPresetClick);
+    }
+  },
+
+  _onPresetClick: function(event) {
+    this.emit("new-coordinates", event.currentTarget.coordinates);
+    this.activePreset = event.currentTarget;
+  },
+
+  _onCategoryClick: function(event) {
+    this.activeCategory = event.target;
+  },
+
+  _setActivePresetList: function(presetListId) {
+    let presetList = this.presetPane.querySelector("#" + presetListId);
+    swapClassName("active-preset-list", this._activePresetList, presetList);
+    this._activePresetList = presetList;
+  },
+
+  set activeCategory(category) {
+    swapClassName("active-category", this._activeCategory, category);
+    this._activeCategory = category;
+    this._setActivePresetList("preset-category-" + category.id);
+  },
+
+  get activeCategory() {
+    return this._activeCategory;
+  },
+
+  set activePreset(preset) {
+    swapClassName("active-preset", this._activePreset, preset);
+    this._activePreset = preset;
+  },
+
+  get activePreset() {
+    return this._activePreset;
+  },
+
+  /**
+   * Called by CubicBezierWidget onload and when
+   * the curve is modified via the canvas.
+   * Attempts to match the new user setting with an
+   * existing preset.
+   * @param {Array} coordinates new coords [i, j, k, l]
+   */
+  refreshMenu: function(coordinates) {
+    // If we cannot find a matching preset, keep
+    // menu on last known preset category.
+    let category = this._activeCategory;
+
+    // If we cannot find a matching preset
+    // deselect any selected preset.
+    let preset = null;
+
+    // If a category has never been viewed before
+    // show the default category.
+    if (!category) {
+      category = this.parent.querySelector("#" + DEFAULT_PRESET_CATEGORY);
+    }
+
+    // If the new coordinates do match a preset,
+    // set its category and preset button as active.
+    Object.keys(PRESETS).forEach(categoryLabel => {
+
+      Object.keys(PRESETS[categoryLabel]).forEach(presetLabel => {
+        if (coordsAreEqual(PRESETS[categoryLabel][presetLabel], coordinates)) {
+          category = this.parent.querySelector("#" + categoryLabel);
+          preset = this.parent.querySelector("#" + presetLabel);
+        }
+      });
+
+    });
+
+    this.activeCategory = category;
+    this.activePreset = preset;
+  },
+
+  destroy: function() {
+    this._removeEvents();
+    this.parent.querySelector(".preset-pane").remove();
   }
 };
 
@@ -553,4 +831,30 @@ function isValidTimingFunction(value) {
   }
 
   return false;
+}
+
+/**
+ * Removes a class from a node and adds it to another.
+ * @param {String} className the class to swap
+ * @param {DOMNode} from the node to remove the class from
+ * @param {DOMNode} to the node to add the class to
+ */
+function swapClassName(className, from, to) {
+  if (from !== null) {
+    from.classList.remove(className);
+  }
+
+  if (to !== null) {
+    to.classList.add(className);
+  }
+}
+
+/**
+ * Compares two arrays of coordinates [i, j, k, l]
+ * @param {Array} c1 first coordinate array to compare
+ * @param {Array} c2 second coordinate array to compare
+ * @return {Boolean}
+ */
+function coordsAreEqual(c1, c2) {
+  return c1.reduce((prev, curr, index) => prev && (curr === c2[index]), true);
 }

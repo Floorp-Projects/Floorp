@@ -105,7 +105,7 @@ loop.store.ActiveRoomStore = (function() {
       });
 
       this._leaveRoom(actionData.error.errno === REST_ERRNOS.ROOM_FULL ?
-          ROOM_STATES.FULL : ROOM_STATES.FAILED);
+          ROOM_STATES.FULL : ROOM_STATES.FAILED, actionData.failedJoinRequest);
     },
 
     /**
@@ -161,7 +161,10 @@ loop.store.ActiveRoomStore = (function() {
       this._mozLoop.rooms.get(actionData.roomToken,
         function(error, roomData) {
           if (error) {
-            this.dispatchAction(new sharedActions.RoomFailure({error: error}));
+            this.dispatchAction(new sharedActions.RoomFailure({
+              error: error,
+              failedJoinRequest: false
+            }));
             return;
           }
 
@@ -293,7 +296,15 @@ loop.store.ActiveRoomStore = (function() {
       this._mozLoop.rooms.join(this._storeState.roomToken,
         function(error, responseData) {
           if (error) {
-            this.dispatchAction(new sharedActions.RoomFailure({error: error}));
+            this.dispatchAction(new sharedActions.RoomFailure({
+              error: error,
+              // This is an explicit flag to avoid the leave happening if join
+              // fails. We can't track it on ROOM_STATES.JOINING as the user
+              // might choose to leave the room whilst the XHR is in progress
+              // which would then mean we'd run the race condition of not
+              // notifying the server of a leave.
+              failedJoinRequest: true
+            }));
             return;
           }
 
@@ -555,7 +566,10 @@ loop.store.ActiveRoomStore = (function() {
         this._storeState.sessionToken,
         function(error, responseData) {
           if (error) {
-            this.dispatchAction(new sharedActions.RoomFailure({error: error}));
+            this.dispatchAction(new sharedActions.RoomFailure({
+              error: error,
+              failedJoinRequest: false
+            }));
             return;
           }
 
@@ -567,9 +581,12 @@ loop.store.ActiveRoomStore = (function() {
      * Handles leaving a room. Clears any membership timeouts, then
      * signals to the server the leave of the room.
      *
-     * @param {ROOM_STATES} nextState The next state to switch to.
+     * @param {ROOM_STATES} nextState         The next state to switch to.
+     * @param {Boolean}     failedJoinRequest Optional. Set to true if the join
+     *                                        request to loop-server failed. It
+     *                                        will skip the leave message.
      */
-    _leaveRoom: function(nextState) {
+    _leaveRoom: function(nextState, failedJoinRequest) {
       if (loop.standaloneMedia) {
         loop.standaloneMedia.multiplexGum.reset();
       }
@@ -592,10 +609,11 @@ loop.store.ActiveRoomStore = (function() {
         delete this._timeout;
       }
 
-      if (this._storeState.roomState === ROOM_STATES.JOINING ||
-          this._storeState.roomState === ROOM_STATES.JOINED ||
-          this._storeState.roomState === ROOM_STATES.SESSION_CONNECTED ||
-          this._storeState.roomState === ROOM_STATES.HAS_PARTICIPANTS) {
+      if (!failedJoinRequest &&
+          (this._storeState.roomState === ROOM_STATES.JOINING ||
+           this._storeState.roomState === ROOM_STATES.JOINED ||
+           this._storeState.roomState === ROOM_STATES.SESSION_CONNECTED ||
+           this._storeState.roomState === ROOM_STATES.HAS_PARTICIPANTS)) {
         this._mozLoop.rooms.leave(this._storeState.roomToken,
           this._storeState.sessionToken);
       }

@@ -43,7 +43,6 @@ EXTRA_JS_MODULES += [
     'InsecurePasswordUtils.jsm',
     'LoginHelper.jsm',
     'LoginManagerContent.jsm',
-    'LoginManagerParent.jsm',
     'LoginRecipes.jsm',
 ]
 

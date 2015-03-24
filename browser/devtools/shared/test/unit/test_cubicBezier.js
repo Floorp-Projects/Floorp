@@ -19,6 +19,7 @@ function run_test() {
   coordinatesToStringOutputsAString();
   pointGettersReturnPointCoordinatesArrays();
   toStringOutputsCubicBezierValue();
+  toStringOutputsCssPresetValues();
 }
 
 function throwsWhenMissingCoordinates() {
@@ -84,8 +85,27 @@ function pointGettersReturnPointCoordinatesArrays() {
 function toStringOutputsCubicBezierValue() {
   do_print("toString() outputs the cubic-bezier() value");
 
+  let c = new CubicBezier([0, 1, 1, 0]);
+  do_check_eq(c.toString(), "cubic-bezier(0,1,1,0)");
+}
+
+function toStringOutputsCssPresetValues() {
+  do_print("toString() outputs the css predefined values");
+
   let c = new CubicBezier([0, 0, 1, 1]);
-  do_check_eq(c.toString(), "cubic-bezier(0,0,1,1)");
+  do_check_eq(c.toString(), "linear");
+
+  c = new CubicBezier([0.25, 0.1, 0.25, 1]);
+  do_check_eq(c.toString(), "ease");
+
+  c = new CubicBezier([0.42, 0, 1, 1]);
+  do_check_eq(c.toString(), "ease-in");
+
+  c = new CubicBezier([0, 0, 0.58, 1]);
+  do_check_eq(c.toString(), "ease-out");
+
+  c = new CubicBezier([0.42, 0, 0.58, 1]);
+  do_check_eq(c.toString(), "ease-in-out");
 }
 
 function do_check_throws(cb, info) {
