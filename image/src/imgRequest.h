@@ -129,6 +129,9 @@ public:
   // mImage has been instantiated yet.
   already_AddRefed<ProgressTracker> GetProgressTracker();
 
+  /// Returns the Image associated with this imgRequest, if it's ready.
+  already_AddRefed<Image> GetImage() const;
+
   // Get the current principal of the image. No AddRefing.
   inline nsIPrincipal* GetPrincipal() const { return mPrincipal.get(); }
 
@@ -141,9 +144,26 @@ public:
 
   nsresult GetImageErrorCode(void);
 
+  /// Returns true if we've received any data.
+  bool HasTransferredData() const;
+
+  /// Returns a non-owning pointer to this imgRequest's MIME type.
+  const char* GetMimeType() const { return mContentType.get(); }
+
+  /// @return the priority of the underlying network request, or
+  /// PRIORITY_NORMAL if it doesn't support nsISupportsPriority.
+  int32_t Priority() const;
+
+  /// Adjust the priority of the underlying network request by @aDelta on behalf
+  /// of @aProxy.
+  void AdjustPriority(imgRequestProxy* aProxy, int32_t aDelta);
+
+  nsITimedChannel* GetTimedChannel() const { return mTimedChannel; }
+
+  nsresult GetSecurityInfo(nsISupports** aSecurityInfoOut);
+
 private:
   friend class imgCacheEntry;
-  friend class imgRequestProxy;
   friend class imgLoader;
   friend class imgCacheValidator;
   friend class imgCacheExpirationTracker;
@@ -156,11 +176,6 @@ private:
   void EvictFromCache();
   void RemoveFromCache();
 
-  nsresult GetSecurityInfo(nsISupports **aSecurityInfo);
-
-  inline const char *GetMimeType() const {
-    return mContentType.get();
-  }
   inline nsIProperties *Properties() {
     return mProperties;
   }
@@ -175,17 +190,6 @@ private:
 
   // Update the cache entry size based on the image container.
   void UpdateCacheEntrySize();
-
-  // Return the priority of the underlying network request, or return
-  // PRIORITY_NORMAL if it doesn't support nsISupportsPriority.
-  int32_t Priority() const;
-
-  // Adjust the priority of the underlying network request by the given delta
-  // on behalf of the given proxy.
-  void AdjustPriority(imgRequestProxy *aProxy, int32_t aDelta);
-
-  // Return whether we've seen some data at this point
-  bool HasTransferredData() const;
 
   // Set whether this request is stored in the cache. If it isn't, regardless
   // of whether this request has a non-null mCacheEntry, this imgRequest won't
@@ -212,8 +216,6 @@ public:
 private:
   friend class imgMemoryReporter;
   friend class FinishPreparingForNewPartRunnable;
-
-  already_AddRefed<Image> GetImage() const;
 
   void FinishPreparingForNewPart(const NewPartResult& aResult);
 
