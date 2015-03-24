@@ -594,6 +594,7 @@ loop.panel = (function(_, mozL10n) {
     mixins: [Backbone.Events, sharedMixins.WindowCloseMixin],
 
     propTypes: {
+      mozLoop: React.PropTypes.object.isRequired,
       store: React.PropTypes.instanceOf(loop.store.RoomStore).isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       userDisplayName: React.PropTypes.string.isRequired  // for room creation
@@ -666,13 +667,67 @@ loop.panel = (function(_, mozL10n) {
               );
             }, this)
           ), 
-          React.createElement("p", null, 
+          React.createElement("div", null, 
+            React.createElement(ContextInfo, {mozLoop: this.props.mozLoop}), 
             React.createElement("button", {className: "btn btn-info new-room-button", 
                     onClick: this.handleCreateButtonClick, 
                     disabled: this._hasPendingOperation()}, 
               mozL10n.get("rooms_new_room_button_label")
             )
           )
+        )
+      );
+    }
+  });
+
+  /**
+   * Context info that is offered to be part of a Room.
+   */
+  var ContextInfo = React.createClass({displayName: "ContextInfo",
+    propTypes: {
+      mozLoop: React.PropTypes.object.isRequired,
+    },
+
+    mixins: [sharedMixins.DocumentVisibilityMixin],
+
+    getInitialState: function() {
+      return {
+        previewImage: "",
+        description: "",
+        url: ""
+      };
+    },
+
+    onDocumentVisible: function() {
+      var metadata = this.props.mozLoop.getSelectedTabMetadata();
+      var previewImage = metadata.previews.length ? metadata.previews[0] : "";
+      var description = metadata.description || metadata.title;
+      var url = metadata.url;
+      this.setState({previewImage: previewImage,
+                     description: description,
+                     url: url});
+    },
+
+    onDocumentHidden: function() {
+      this.setState({previewImage: "",
+                     description: "",
+                     url: ""});
+    },
+
+    render: function() {
+      if (!this.props.mozLoop.getLoopPref("contextInConverations.enabled") ||
+          !this.state.url) {
+        return null;
+      }
+      return (
+        React.createElement("div", {className: "context"}, 
+          React.createElement("label", {className: "context-enabled"}, 
+            React.createElement("input", {type: "checkbox"}), 
+            mozL10n.get("context_offer_label")
+          ), 
+          React.createElement("img", {className: "context-preview", src: this.state.previewImage}), 
+          React.createElement("span", {className: "context-description"}, this.state.description), 
+          React.createElement("span", {className: "context-url"}, this.state.url)
         )
       );
     }
@@ -819,7 +874,8 @@ loop.panel = (function(_, mozL10n) {
             React.createElement(Tab, {name: "rooms"}, 
               React.createElement(RoomList, {dispatcher: this.props.dispatcher, 
                         store: this.props.roomStore, 
-                        userDisplayName: this._getUserDisplayName()}), 
+                        userDisplayName: this._getUserDisplayName(), 
+                        mozLoop: this.props.mozLoop}), 
               React.createElement(ToSView, null)
             ), 
             React.createElement(Tab, {name: "contacts"}, 
@@ -890,6 +946,7 @@ loop.panel = (function(_, mozL10n) {
     init: init,
     AuthLink: AuthLink,
     AvailabilityDropdown: AvailabilityDropdown,
+    ContextInfo: ContextInfo,
     GettingStartedView: GettingStartedView,
     PanelView: PanelView,
     RoomEntry: RoomEntry,
