@@ -179,9 +179,9 @@ TextureClientD3D11::~TextureClientD3D11()
 {
   if (mActor) {
     if (mTexture) {
-      KeepUntilFullDeallocation(MakeUnique<TKeepAlive<ID3D10Texture2D>>(mTexture10));
-    } else if (mTexture10) {
       KeepUntilFullDeallocation(MakeUnique<TKeepAlive<ID3D11Texture2D>>(mTexture));
+    } else if (mTexture10) {
+      KeepUntilFullDeallocation(MakeUnique<TKeepAlive<ID3D10Texture2D>>(mTexture10));
     }
   }
 #ifdef DEBUG
