@@ -53,7 +53,7 @@ var invalidValues = {
 
 // Invalid font family names.
 var invalidFontFamilyNames = [
-  "", "\"\"", "sans-serif", "A, B", "inherit"
+  "", "\"\"", "sans-serif", "A, B", "inherit", "a 1"
 ];
 
 // Will hold an ArrayBuffer containing a valid font.
@@ -293,6 +293,7 @@ function runTest() {
       familyTests = familyTests.then(function() {
         var face = new FontFace(aFamilyName, fontData);
         is(face.status, "error", "FontFace should be error immediately after construction with invalid family name " + aFamilyName + " (TEST 17)");
+        is(face.family, "", "FontFace.family should be the empty string after construction with invalid family name " + aFamilyName + " (TEST 17)");
         return face.loaded.then(function() {
           ok(false, "FontFace should not load after invalid family name " + aFamilyName + " specified (TEST 17)");
         }, function(aError) {
