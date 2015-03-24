@@ -290,7 +290,7 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
  * API and AsyncOnChannelRedirect().  See nsIContentPolicy::ShouldLoad()
  * for detailed description of the parameters.
  */
-nsresult
+NS_IMETHODIMP
 nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
                                   nsIURI* aContentLocation,
                                   nsIURI* aRequestingLocation,
@@ -319,7 +319,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
 /* Static version of ShouldLoad() that contains all the Mixed Content Blocker
  * logic.  Called from non-static ShouldLoad().
  */
-NS_IMETHODIMP
+nsresult
 nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
                                   uint32_t aContentType,
                                   nsIURI* aContentLocation,
