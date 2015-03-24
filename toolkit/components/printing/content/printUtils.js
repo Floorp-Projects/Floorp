@@ -464,7 +464,8 @@ var PrintUtils = {
     let printSettings = this.getPrintSettings();
     mm.sendAsyncMessage("Printing:Preview:Enter", null, {
       printSettings: printSettings,
-      contentWindow: this._sourceBrowser.contentWindowAsCPOW,
+      contentWindow: this._sourceBrowser.contentWindowAsCPOW ||
+                     this._sourceBrowser.contentWindow,
     });
 
     if (this._webProgressPP.value) {
