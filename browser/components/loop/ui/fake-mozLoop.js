@@ -115,6 +115,7 @@ navigator.mozLoop = {
       // Ensure we skip FTE completely.
       case "gettingStarted.seen":
       case "contacts.gravatars.promo":
+      case "contextInConverations.enabled":
         return true;
       case "contacts.gravatars.show":
         return false;
@@ -126,6 +127,13 @@ navigator.mozLoop = {
   getUserAvatar: function(emailAddress) {
     return "http://www.gravatar.com/avatar/" + (Math.ceil(Math.random() * 3) === 2 ?
       "0a996f0fe2727ef1668bdb11897e4459" : "foo") + ".jpg?default=blank&s=40";
+  },
+  getSelectedTabMetadata: function() {
+    return {
+      previews: ["chrome://branding/content/about-logo.png"],
+      description: "sample webpage description",
+      url: "https://www.example.com"
+    };
   },
   contacts: {
     getAll: function(callback) {
