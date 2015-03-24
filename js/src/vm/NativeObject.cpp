@@ -1400,8 +1400,8 @@ js::NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId 
             attrs = ApplyOrDefaultAttributes(attrs, shape);
 
             if (shape->isAccessorDescriptor() && !(attrs & JSPROP_IGNORE_READONLY)) {
-                // ES6 draft 2014-10-14 9.1.6.3 step 7.c: Since [[Writable]] 
-                // is present, change the existing accessor property to a data 
+                // ES6 draft 2014-10-14 9.1.6.3 step 7.c: Since [[Writable]]
+                // is present, change the existing accessor property to a data
                 // property.
                 updateValue = UndefinedValue();
             } else {
@@ -2017,6 +2017,8 @@ js::SetPropertyByDefining(JSContext *cx, HandleObject obj, HandleObject receiver
     if (!receiver->is<NativeObject>())
         return DefineProperty(cx, receiver, id, v, getter, setter, attrs, result);
 
+    // If the receiver is native, there is one more legacy wrinkle: the class
+    // JSSetterOp is called after defining the new property.
     Rooted<NativeObject*> nativeReceiver(cx, &receiver->as<NativeObject>());
     return DefinePropertyOrElement(cx, nativeReceiver, id, getter, setter, attrs, v, true, result);
 }
@@ -2149,8 +2151,9 @@ NativeSet(JSContext *cx, HandleNativeObject obj, HandleObject receiver,
 }
 
 /*
- * Implement "the rest of" assignment to receiver[id] when an existing property
- * (shape) has been found on a native object (pobj).
+ * Finish the assignment `receiver[id] = vp` when an existing property (shape)
+ * has been found on a native object (pobj). This implements ES6 draft rev 32
+ * (2015 Feb 2) 9.1.9 steps 5 and 6.
  *
  * It is necessary to pass both id and shape because shape could be an implicit
  * dense or typed array element (i.e. not actually a pointer to a Shape).
@@ -2160,22 +2163,32 @@ SetExistingProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver
                     HandleNativeObject pobj, HandleShape shape, MutableHandleValue vp,
                     ObjectOpResult &result)
 {
+    // Step 5 for dense elements.
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
-        /* ES5 8.12.4 [[Put]] step 2, for a dense data property on pobj. */
+        // Step 5.a is a no-op: all dense elements are writable.
+        // Step 5.b has to do with non-object receivers, which we don't support yet.
+
+        // Pure optimization for the common case:
         if (pobj == receiver)
             return SetDenseOrTypedArrayElement(cx, pobj, JSID_TO_INT(id), vp, result);
-    } else {
-        /* ES5 8.12.4 [[Put]] step 2. */
-        if (shape->isAccessorDescriptor()) {
-            if (shape->hasDefaultSetter())
-                return result.fail(JSMSG_GETTER_ONLY);
-        } else {
-            MOZ_ASSERT(shape->isDataDescriptor());
-            if (!shape->writable())
-                return result.fail(JSMSG_READ_ONLY);
-        }
 
+        // Steps 5.c-f.
+        return SetPropertyByDefining(cx, obj, receiver, id, vp, obj == pobj, result);
+    }
+
+    // Step 5 for all other properties.
+    if (shape->isDataDescriptor()) {
+        // Step 5.a.
+        if (!shape->writable())
+            return result.fail(JSMSG_READ_ONLY);
+
+        // steps 5.c-f.
         if (pobj == receiver) {
+            // Pure optimization for the common case. There's no point performing
+            // the lookup in step 5.c again, as our caller just did it for us. The
+            // result is |shape|.
+
+            // Steps 5.e.i-ii.
             if (pobj->is<ArrayObject>() && id == NameToId(cx->names().length)) {
                 Rooted<ArrayObject*> arr(cx, &pobj->as<ArrayObject>());
                 return ArraySetLength(cx, arr, id, shape->attributes(), vp, result);
@@ -2183,20 +2196,36 @@ SetExistingProperty(JSContext *cx, HandleNativeObject obj, HandleObject receiver
             return NativeSet(cx, obj, receiver, shape, vp, result);
         }
 
-        // pobj[id] is not an own property of receiver. Call the setter or shadow it.
-        if (!shape->shadowable() &&
+        // SpiderMonkey special case: assigning to an inherited slotless
+        // property causes the setter to be called, instead of shadowing,
+        // unless the existing property is JSPROP_SHADOWABLE (see bug 552432)
+        // or it's the array length property.
+        if (!shape->hasSlot() &&
+            !shape->hasShadowable() &&
             !(pobj->is<ArrayObject>() && id == NameToId(cx->names().length)))
         {
-            // Weird special case: slotless property with default setter.
-            if (shape->hasDefaultSetter() && !shape->hasGetterValue())
+            // Even weirder sub-special-case: inherited slotless data property
+            // with default setter. Wut.
+            if (shape->hasDefaultSetter())
                 return result.succeed();
 
             return shape->set(cx, obj, receiver, vp, result);
         }
+
+        // Shadow pobj[id] by defining a new data property receiver[id].
+        // Delegate everything to SetPropertyByDefining.
+        return SetPropertyByDefining(cx, obj, receiver, id, vp, obj == pobj, result);
     }
 
-    // Shadow pobj[id] by defining a new data property receiver[id].
-    return SetPropertyByDefining(cx, obj, receiver, id, vp, obj == pobj, result);
+    // Steps 6-11.
+    MOZ_ASSERT(shape->isAccessorDescriptor());
+    MOZ_ASSERT_IF(!shape->hasSetterObject(), shape->hasDefaultSetter());
+    if (shape->hasDefaultSetter())
+        return result.fail(JSMSG_GETTER_ONLY);
+    Value setter = ObjectValue(*shape->setterObject());
+    if (!InvokeGetterOrSetter(cx, receiver, setter, 1, vp.address(), vp))
+        return false;
+    return result.succeed();
 }
 
 bool

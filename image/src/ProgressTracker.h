@@ -125,7 +125,7 @@ public:
   void ResetForNewRequest();
 
   // Stateless notifications. These are dispatched and immediately forgotten
-  // about. All except OnImageAvailable are main thread only.
+  // about. All of these notifications are main thread only.
   void OnDiscard();
   void OnUnlockedDraw();
   void OnImageAvailable();

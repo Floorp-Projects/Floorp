@@ -5643,6 +5643,22 @@ NewGlobalObject(JSContext *cx, JS::CompartmentOptions &options,
                 return nullptr;
         }
 
+        RootedObject performanceObj(cx, JS_NewObject(cx, nullptr));
+        if (!performanceObj)
+            return nullptr;
+        RootedObject mozMemoryObj(cx, JS_NewObject(cx, nullptr));
+        if (!mozMemoryObj)
+            return nullptr;
+        RootedObject gcObj(cx, gc::NewMemoryInfoObject(cx));
+        if (!gcObj)
+            return nullptr;
+        if (!JS_DefineProperty(cx, glob, "performance", performanceObj, JSPROP_ENUMERATE))
+            return nullptr;
+        if (!JS_DefineProperty(cx, performanceObj, "mozMemory", mozMemoryObj, JSPROP_ENUMERATE))
+            return nullptr;
+        if (!JS_DefineProperty(cx, mozMemoryObj, "gc", gcObj, JSPROP_ENUMERATE))
+            return nullptr;
+
         /* Initialize FakeDOMObject. */
         static const js::DOMCallbacks DOMcallbacks = {
             InstanceClassHasProtoAtDepth

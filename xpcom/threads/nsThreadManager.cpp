@@ -155,7 +155,6 @@ nsThreadManager::Init()
   }
 #endif // MOZ_NUWA_PROCESS
 
-  mLock = new Mutex("nsThreadManager.mLock");
 #ifdef MOZ_NUWA_PROCESS
   mMonitor = MakeUnique<ReentrantMonitor>("nsThreadManager.mMonitor");
 #endif // MOZ_NUWA_PROCESS
@@ -194,8 +193,10 @@ nsThreadManager::Shutdown()
 
   // Prevent further access to the thread manager (no more new threads!)
   //
-  // XXX What happens if shutdown happens before NewThread completes?
-  //     Fortunately, NewThread is only called on the main thread for now.
+  // What happens if shutdown happens before NewThread completes?
+  // We Shutdown() the new thread, and return error if we've started Shutdown
+  // between when NewThread started, and when the thread finished initializing
+  // and registering with ThreadManager.
   //
   mInitialized = false;
 
@@ -206,7 +207,7 @@ nsThreadManager::Shutdown()
   // holding the hashtable lock while calling nsIThread::Shutdown.
   nsThreadArray threads;
   {
-    MutexAutoLock lock(*mLock);
+    OffTheBooksMutexAutoLock lock(mLock);
     mThreadsByPRThread.Enumerate(AppendAndRemoveThread, &threads);
   }
 
@@ -234,7 +235,7 @@ nsThreadManager::Shutdown()
 
   // Clear the table of threads.
   {
-    MutexAutoLock lock(*mLock);
+    OffTheBooksMutexAutoLock lock(mLock);
     mThreadsByPRThread.Clear();
   }
 
@@ -246,7 +247,6 @@ nsThreadManager::Shutdown()
 
   // Release main thread object.
   mMainThread = nullptr;
-  mLock = nullptr;
 
   // Remove the TLS entry for the main thread.
   PR_SetThreadPrivate(mCurThreadIndex, nullptr);
@@ -260,7 +260,7 @@ nsThreadManager::RegisterCurrentThread(nsThread* aThread)
 {
   MOZ_ASSERT(aThread->GetPRThread() == PR_GetCurrentThread(), "bad aThread");
 
-  MutexAutoLock lock(*mLock);
+  OffTheBooksMutexAutoLock lock(mLock);
 
   ++mCurrentNumberOfThreads;
   if (mCurrentNumberOfThreads > mHighestNumberOfThreads) {
@@ -278,7 +278,7 @@ nsThreadManager::UnregisterCurrentThread(nsThread* aThread)
 {
   MOZ_ASSERT(aThread->GetPRThread() == PR_GetCurrentThread(), "bad aThread");
 
-  MutexAutoLock lock(*mLock);
+  OffTheBooksMutexAutoLock lock(mLock);
 
   --mCurrentNumberOfThreads;
   mThreadsByPRThread.Remove(aThread->GetPRThread());
@@ -338,28 +338,32 @@ nsThreadManager::NewThread(uint32_t aCreationFlags,
                            uint32_t aStackSize,
                            nsIThread** aResult)
 {
+  // Note: can be called from arbitrary threads
+  
   // No new threads during Shutdown
   if (NS_WARN_IF(!mInitialized)) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  nsThread* thr = new nsThread(nsThread::NOT_MAIN_THREAD, aStackSize);
-  if (!thr) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(thr);
-
-  nsresult rv = thr->Init();
+  nsRefPtr<nsThread> thr = new nsThread(nsThread::NOT_MAIN_THREAD, aStackSize);
+  nsresult rv = thr->Init();  // Note: blocks until the new thread has been set up
   if (NS_FAILED(rv)) {
-    NS_RELEASE(thr);
     return rv;
   }
 
-  // At this point, we expect that the thread has been registered in mThread;
+  // At this point, we expect that the thread has been registered in mThreadByPRThread;
   // however, it is possible that it could have also been replaced by now, so
-  // we cannot really assert that it was added.
+  // we cannot really assert that it was added.  Instead, kill it if we entered
+  // Shutdown() during/before Init()
 
-  *aResult = thr;
+  if (NS_WARN_IF(!mInitialized)) {
+    if (thr->ShutdownRequired()) {
+      thr->Shutdown(); // ok if it happens multiple times
+    }
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  thr.forget(aResult);
   return NS_OK;
 }
 
@@ -376,7 +380,7 @@ nsThreadManager::GetThreadFromPRThread(PRThread* aThread, nsIThread** aResult)
 
   nsRefPtr<nsThread> temp;
   {
-    MutexAutoLock lock(*mLock);
+    OffTheBooksMutexAutoLock lock(mLock);
     mThreadsByPRThread.Get(aThread, getter_AddRefs(temp));
   }
 
@@ -422,7 +426,7 @@ nsThreadManager::GetIsMainThread(bool* aResult)
 uint32_t
 nsThreadManager::GetHighestNumberOfThreads()
 {
-  MutexAutoLock lock(*mLock);
+  OffTheBooksMutexAutoLock lock(mLock);
   return mHighestNumberOfThreads;
 }
 

@@ -134,7 +134,6 @@ CryptoSample::Update(sp<MetaData>& aMetaData)
 void
 TrackConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
 {
-  // aMimeType points to a string from MediaDefs.cpp so we don't need to copy it
   mime_type = aMimeType;
   duration = FindInt64(aMetaData, kKeyDuration);
   media_time = FindInt64(aMetaData, kKeyMediaTime);
@@ -176,7 +175,7 @@ bool
 AudioDecoderConfig::IsValid()
 {
   return channel_count > 0 && samples_per_second > 0 && frequency_index > 0 &&
-         (mime_type != MEDIA_MIMETYPE_AUDIO_AAC || aac_profile > 0);
+         (!mime_type.Equals(MEDIA_MIMETYPE_AUDIO_AAC) || aac_profile > 0);
 }
 
 void

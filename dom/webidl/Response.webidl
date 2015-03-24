@@ -17,8 +17,6 @@ interface Response {
   readonly attribute ResponseType type;
 
   readonly attribute USVString url;
-  [Throws]
-           attribute boolean finalURL;
   readonly attribute unsigned short status;
   readonly attribute boolean ok;
   readonly attribute ByteString statusText;

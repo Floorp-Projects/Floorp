@@ -721,7 +721,7 @@ NS_NewRunnableMethodWithArgs(PtrType&& aPtr, Method aMethod, Args&&... aArgs)
 }
 
 template<typename... Storages, typename Method, typename PtrType, typename... Args>
-typename nsRunnableMethodTraits<Method, true>::base_type*
+typename nsRunnableMethodTraits<Method, false>::base_type*
 NS_NewNonOwningRunnableMethodWithArgs(PtrType&& aPtr, Method aMethod,
                                       Args&&... aArgs)
 {

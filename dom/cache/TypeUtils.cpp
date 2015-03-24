@@ -225,6 +225,7 @@ TypeUtils::ToPCacheRequest(PCacheRequest& aOut, InternalRequest* aIn,
   aOut.mode() = aIn->Mode();
   aOut.credentials() = aIn->GetCredentialsMode();
   aOut.context() = aIn->ContentPolicyType();
+  aOut.requestCache() = aIn->GetCacheMode();
 
   if (aBodyAction == IgnoreBody) {
     aOut.body() = void_t();
@@ -367,6 +368,7 @@ TypeUtils::ToInternalRequest(const PCacheRequest& aIn)
   internalRequest->SetMode(aIn.mode());
   internalRequest->SetCredentialsMode(aIn.credentials());
   internalRequest->SetContentPolicyType(aIn.context());
+  internalRequest->SetCacheMode(aIn.requestCache());
 
   nsRefPtr<InternalHeaders> internalHeaders =
     new InternalHeaders(aIn.headers(), aIn.headersGuard());

@@ -24,7 +24,7 @@
       document.currentScript == document.getElementById('intercepted-script');
   }
 
-  function fetch(name, onload, onerror, headers) {
+  function fetchXHR(name, onload, onerror, headers) {
     gExpected++;
 
     onload = onload || function() {
@@ -135,7 +135,7 @@
     } else if (e.data == "expect") {
       gExpected++;
     } else if (e.data.type == "ok") {
-      my_ok(e.data.value, e.data.msg);
+      my_ok(e.data.value, "Fetch test on worker: " + e.data.msg);
     }
   };
   worker.onerror = function() {

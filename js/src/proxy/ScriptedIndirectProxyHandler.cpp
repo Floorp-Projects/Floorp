@@ -10,6 +10,7 @@
 #include "jsapi.h"
 #include "jscntxt.h"
 
+#include "jscntxtinlines.h"
 #include "jsobjinlines.h"
 
 using namespace js;
@@ -322,6 +323,26 @@ ScriptedIndirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObjec
     if (!Trap(cx, handler, fval, 3, argv.begin(), &idv))
         return false;
     return result.succeed();
+}
+
+static bool
+CallSetter(JSContext *cx, HandleObject obj, HandleId id, SetterOp op, unsigned attrs,
+           MutableHandleValue vp, ObjectOpResult &result)
+{
+    if (attrs & JSPROP_SETTER) {
+        RootedValue opv(cx, CastAsObjectJsval(op));
+        if (!InvokeGetterOrSetter(cx, obj, opv, 1, vp.address(), vp))
+            return false;
+        return result.succeed();
+    }
+
+    if (attrs & JSPROP_GETTER)
+        return result.fail(JSMSG_GETTER_ONLY);
+
+    if (!op)
+        return result.succeed();
+
+    return CallJSSetterOp(cx, op, obj, id, vp, result);
 }
 
 bool

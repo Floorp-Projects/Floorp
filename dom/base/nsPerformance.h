@@ -13,6 +13,7 @@
 #include "nsContentUtils.h"
 #include "nsPIDOMWindow.h"
 #include "js/TypeDecls.h"
+#include "js/RootingAPI.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/DOMEventTargetHelper.h"
 
@@ -297,7 +298,7 @@ public:
                 nsPerformance* aParentPerformance);
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(nsPerformance, DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(nsPerformance, DOMEventTargetHelper)
 
   nsDOMNavigationTiming* GetDOMTiming() const
   {
@@ -344,6 +345,8 @@ public:
                mozilla::ErrorResult& aRv);
   void ClearMeasures(const mozilla::dom::Optional<nsAString>& aName);
 
+  void GetMozMemory(JSContext *aCx, JS::MutableHandle<JSObject*> aObj);
+
   IMPL_EVENT_HANDLER(resourcetimingbufferfull)
 
 private:
@@ -364,6 +367,7 @@ private:
   nsTArray<nsRefPtr<PerformanceEntry> > mEntries;
   nsRefPtr<nsPerformance> mParentPerformance;
   uint64_t mPrimaryBufferSize;
+  JS::Heap<JSObject*> mMozMemory;
 
   static const uint64_t kDefaultBufferSize = 150;
 
