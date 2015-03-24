@@ -1,6 +1,6 @@
 IFrameAutoresize = (function(){
   var IFRAME_BODY_MARGIN = 8;
-  var UPDATE_INTERVAL = 100; // ms
+  var UPDATE_INTERVAL = 300; // ms
   var MIN_HEIGHT = 100;
 
   function Start(elem, hasMargin) {

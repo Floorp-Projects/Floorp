@@ -23,6 +23,10 @@ function init()
 {
     description('Verify npot video');
 
+    if (navigator.userAgent.contains("Android")) {
+        SimpleTest.expectAssertions(4); // bug 1143227
+    }
+
     var canvas = document.getElementById("example");
     gl = wtu.create3DContext(canvas);
     var program = wtu.setupTexturedQuad(gl);
