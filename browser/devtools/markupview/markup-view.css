@@ -166,7 +166,7 @@ ul.children + .tag-line::before {
   margin-right: 0;
 }
 
-.tag-state.flash-out {
+.flash-out {
   transition: background .5s;
 }
 
