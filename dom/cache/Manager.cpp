@@ -914,15 +914,19 @@ private:
   {
     // May be on any thread, including STS event target.
     MOZ_ASSERT(aClosure);
-    nsRefPtr<CachePutAllAction> action = static_cast<CachePutAllAction*>(aClosure);
+    // Weak ref as we are guaranteed to the action is alive until
+    // CompleteOnInitiatingThread is called.
+    CachePutAllAction* action = static_cast<CachePutAllAction*>(aClosure);
     action->CallOnAsyncCopyCompleteOnTargetThread(aRv);
   }
 
   void
   CallOnAsyncCopyCompleteOnTargetThread(nsresult aRv)
   {
-    // May be on any thread, including STS event target.
-    nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableMethodWithArg<nsresult>(
+    // May be on any thread, including STS event target.  Non-owning runnable
+    // here since we are guaranteed the Action will survive until
+    // CompleteOnInitiatingThread is called.
+    nsCOMPtr<nsIRunnable> runnable = NS_NewNonOwningRunnableMethodWithArgs<nsresult>(
       this, &CachePutAllAction::OnAsyncCopyComplete, aRv);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
       mTargetThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL)));
