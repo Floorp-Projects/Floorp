@@ -1351,8 +1351,10 @@ class InitialShapeSetRef : public BufferableRef
 
     void mark(JSTracer *trc) {
         TaggedProto priorProto = proto;
-        if (proto.isObject())
-            Mark(trc, reinterpret_cast<JSObject**>(&proto), "initialShapes set proto");
+        if (proto.isObject()) {
+            TraceManuallyBarrieredEdge(trc, reinterpret_cast<JSObject**>(&proto),
+                                       "initialShapes set proto");
+        }
         if (proto == priorProto)
             return;
 
