@@ -12,6 +12,7 @@ import sys
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
 sys.path.insert(0, SCRIPT_DIR)
 
+from argparse import Namespace
 from urlparse import urlparse
 import ctypes
 import glob
@@ -21,7 +22,6 @@ import mozdebug
 import mozinfo
 import mozprocess
 import mozrunner
-import optparse
 import re
 import shutil
 import signal
@@ -332,7 +332,7 @@ class MochitestServer(object):
     "Web server used to serve Mochitests, for closer fidelity to the real web."
 
     def __init__(self, options, logger):
-        if isinstance(options, optparse.Values):
+        if isinstance(options, Namespace):
             options = vars(options)
         self._log = logger
         self._closeWhenDone = options['closeWhenDone']
@@ -2576,7 +2576,7 @@ def main():
     # parse command line options
     parser = MochitestOptions()
     commandline.add_logging_group(parser)
-    options, args = parser.parse_args()
+    options = parser.parse_args()
     if options is None:
         # parsing error
         sys.exit(1)

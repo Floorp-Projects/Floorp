@@ -161,7 +161,7 @@ class MochitestRunner(MozbuildObject):
             from mochitest_options import B2GOptions
 
         parser = B2GOptions()
-        options = parser.parse_args([])[0]
+        options = parser.parse_args([])
 
         if test_path:
             if chrome:
@@ -322,7 +322,7 @@ class MochitestRunner(MozbuildObject):
             logging.getLogger().removeHandler(handler)
 
         opts = mochitest.MochitestOptions()
-        options, args = opts.parse_args([])
+        options = opts.parse_args([])
 
         options.subsuite = ''
         flavor = suite
