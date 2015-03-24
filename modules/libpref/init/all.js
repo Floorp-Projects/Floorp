@@ -3825,6 +3825,10 @@ pref("image.cache.size", 5242880);
 // Size is given a weight of 1000 - timeweight.
 pref("image.cache.timeweight", 500);
 
+// Prevents images from automatically being decoded on load, instead allowing
+// them to be decoded on demand when they are drawn.
+pref("image.decode-only-on-draw.enabled", true);
+
 // Whether we attempt to downscale images during decoding.
 pref("image.downscale-during-decode.enabled", false);
 
@@ -3851,10 +3855,6 @@ pref("image.single-color-optimization.enabled", true);
 // Discards inactive image frames and re-decodes them on demand from
 // compressed data.
 pref("image.mem.discardable", true);
-
-// Prevents images from automatically being decoded on load, instead allowing
-// them to be decoded on demand when they are drawn.
-pref("image.mem.decodeondraw", true);
 
 // Allows image locking of decoded image data in content processes.
 pref("image.mem.allow_locking_in_content_processes", true);
