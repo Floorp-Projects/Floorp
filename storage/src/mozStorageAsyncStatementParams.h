@@ -38,7 +38,7 @@ protected:
 
   AsyncStatement *mStatement;
 
-  friend class AsyncStatement;
+  friend class AsyncStatementParamsHolder;
 };
 
 } // namespace storage
