@@ -158,42 +158,44 @@ public:
   /// of @aProxy.
   void AdjustPriority(imgRequestProxy* aProxy, int32_t aDelta);
 
+  /// Returns a weak pointer to the underlying request.
+  nsIRequest* GetRequest() const { return mRequest; }
+
   nsITimedChannel* GetTimedChannel() const { return mTimedChannel; }
 
   nsresult GetSecurityInfo(nsISupports** aSecurityInfoOut);
 
-  void ClearValidator() { mValidator = nullptr; }
+  imgCacheValidator* GetValidator() const { return mValidator; }
+  void SetValidator(imgCacheValidator* aValidator) { mValidator = aValidator; }
 
+  void* LoadId() const { return mLoadId; }
   void SetLoadId(void* aLoadId) { mLoadId = aLoadId; }
+
+  /// Reset the cache entry after we've dropped our reference to it. Used by
+  /// imgLoader when our cache entry is re-requested after we've dropped our
+  /// reference to it.
+  void SetCacheEntry(imgCacheEntry* aEntry);
+
+  /// Returns whether we've got a reference to the cache entry.
+  bool HasCacheEntry() const;
+
+  /// Set whether this request is stored in the cache. If it isn't, regardless
+  /// of whether this request has a non-null mCacheEntry, this imgRequest won't
+  /// try to update or modify the image cache.
+  void SetIsInCache(bool aCacheable);
 
   void EvictFromCache();
   void RemoveFromCache();
 
+  nsIProperties* Properties() const { return mProperties; }
+
 private:
-  friend class imgLoader;
   friend class mozilla::image::ProgressTracker;
 
   void Cancel(nsresult aStatus);
 
-  inline nsIProperties *Properties() {
-    return mProperties;
-  }
-
-  // Reset the cache entry after we've dropped our reference to it. Used by the
-  // imgLoader when our cache entry is re-requested after we've dropped our
-  // reference to it.
-  void SetCacheEntry(imgCacheEntry *entry);
-
-  // Returns whether we've got a reference to the cache entry.
-  bool HasCacheEntry() const;
-
   // Update the cache entry size based on the image container.
   void UpdateCacheEntrySize();
-
-  // Set whether this request is stored in the cache. If it isn't, regardless
-  // of whether this request has a non-null mCacheEntry, this imgRequest won't
-  // try to update or modify the image cache.
-  void SetIsInCache(bool cacheable);
 
   bool HasConsumers();
 
