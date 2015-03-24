@@ -633,7 +633,6 @@
 
           this.browser.finder.focusContent();
           this.browser.finder.enableSelection();
-          this._findField.blur();
 
           this._cancelTimers();
 
