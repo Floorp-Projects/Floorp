@@ -15,7 +15,6 @@
     }
 
     function runTests() {
-      netscape.security.PrivilegeManager.enablePrivilege('UniversalXPConnect');
       var utils = SpecialPowers.DOMWindowUtils;
       var scale = utils.screenPixelsPerCSSPixel;
 
@@ -67,7 +66,7 @@
       // change plugin focus.
 
       // Blur the window.
-      window.blur();
+      SpecialPowers.focus(opener);
 
       is(plugin1.getFocusState(), true, "(2) Plugin should still have focus.");
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
@@ -95,7 +94,7 @@
       expectedEventCount++;
 
       // Blur the window.
-      window.blur();
+      SpecialPowers.focus(opener);
 
       // Take focus from the plugin while the window is blurred.
       plugin2.focus();
@@ -104,7 +103,7 @@
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
       // Focus the window.
-      window.focus();
+      SpecialPowers.focus(window);
       expectedEventCount++;
 
       is(plugin1.getFocusState(), false, "(6) Plugin should not have focus.");

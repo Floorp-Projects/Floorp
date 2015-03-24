@@ -189,13 +189,17 @@ function Tooltip(doc, options) {
   // Used for namedTimeouts in the mouseover handling
   this.uid = "tooltip-" + Date.now();
 
-  // Emit show/hide events
-  for (let event of POPUP_EVENTS) {
-    this["_onPopup" + event] = ((e) => {
-      return () => this.emit(e);
-    })(event);
-    this.panel.addEventListener("popup" + event,
-      this["_onPopup" + event], false);
+  // Emit show/hide events when the panel does.
+  for (let eventName of POPUP_EVENTS) {
+    this["_onPopup" + eventName] = (name => {
+      return e => {
+        if (e.target === this.panel) {
+          this.emit(name);
+        }
+      };
+    })(eventName);
+    this.panel.addEventListener("popup" + eventName,
+      this["_onPopup" + eventName], false);
   }
 
   // Listen to keypress events to close the tooltip if configured to do so
@@ -303,9 +307,9 @@ Tooltip.prototype = {
   destroy: function () {
     this.hide();
 
-    for (let event of POPUP_EVENTS) {
-      this.panel.removeEventListener("popup" + event,
-        this["_onPopup" + event], false);
+    for (let eventName of POPUP_EVENTS) {
+      this.panel.removeEventListener("popup" + eventName,
+        this["_onPopup" + eventName], false);
     }
 
     let win = this.doc.querySelector("window");

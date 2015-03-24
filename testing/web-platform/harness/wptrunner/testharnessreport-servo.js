@@ -9,9 +9,10 @@ setup(props);
 add_completion_callback(function (tests, harness_status) {
     alert("RESULT: " + JSON.stringify({
         tests: tests.map(function(t) {
-            return { name: t.name, status: t.status, message: t.message }
+            return { name: t.name, status: t.status, message: t.message, stack: t.stack}
         }),
         status: harness_status.status,
         message: harness_status.message,
+        stack: harness_status.stack,
     }));
 });

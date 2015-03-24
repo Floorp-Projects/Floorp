@@ -303,8 +303,10 @@ SetNameOperation(JSContext *cx, JSScript *script, jsbytecode *pc, HandleObject s
                *pc == JSOP_STRICTSETNAME ||
                *pc == JSOP_SETGNAME ||
                *pc == JSOP_STRICTSETGNAME);
-    MOZ_ASSERT_IF(*pc == JSOP_SETGNAME, scope == cx->global());
-    MOZ_ASSERT_IF(*pc == JSOP_STRICTSETGNAME, scope == cx->global());
+    MOZ_ASSERT_IF(*pc == JSOP_SETGNAME && !script->hasPollutedGlobalScope(),
+                  scope == cx->global());
+    MOZ_ASSERT_IF(*pc == JSOP_STRICTSETGNAME && !script->hasPollutedGlobalScope(),
+                  scope == cx->global());
 
     bool strict = *pc == JSOP_STRICTSETNAME || *pc == JSOP_STRICTSETGNAME;
     RootedPropertyName name(cx, script->getName(pc));

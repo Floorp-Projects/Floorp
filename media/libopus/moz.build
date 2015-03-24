@@ -70,23 +70,24 @@ LOCAL_INCLUDES += [
 # imported.
 include('sources.mozbuild')
 
-SOURCES += celt_sources
-SOURCES += silk_sources
-SOURCES += opus_sources
+UNIFIED_SOURCES += celt_sources
+SOURCES += celt_nonunified_sources
+UNIFIED_SOURCES += silk_sources
+UNIFIED_SOURCES += opus_sources
 
 if CONFIG['MOZ_SAMPLE_TYPE_FLOAT32']:
     LOCAL_INCLUDES += [
         'silk/float',
     ]
-    SOURCES += silk_sources_float
-    SOURCES += opus_sources_float
+    UNIFIED_SOURCES += silk_sources_float
+    UNIFIED_SOURCES += opus_sources_float
 else:
     LOCAL_INCLUDES += [
         'silk/fixed',
     ]
-    SOURCES += silk_sources_fixed
+    UNIFIED_SOURCES += silk_sources_fixed
 # for webrtc
-    SOURCES += opus_sources_float
+    UNIFIED_SOURCES += opus_sources_float
 
 if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_AS']:
     SOURCES += celt_sources_arm

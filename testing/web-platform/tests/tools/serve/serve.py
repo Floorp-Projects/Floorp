@@ -17,17 +17,21 @@ from .. import localpaths
 
 import sslutils
 from wptserve import server as wptserve, handlers
-from wptserve.router import any_method
 from wptserve.logger import set_logger
 from mod_pywebsocket import standalone as pywebsocket
 
 repo_root = localpaths.repo_root
 
-@handlers.handler
-def workers_handler(request, response):
-    worker_path = request.url_parts.path.replace(".worker", ".worker.js")
-    return """
-<!doctype html>
+class WorkersHandler(object):
+    def __init__(self):
+        self.handler = handlers.handler(self.handle_request)
+
+    def __call__(self, request, response):
+        return self.handler(request, response)
+
+    def handle_request(self, request, response):
+        worker_path = request.url_parts.path.replace(".worker", ".worker.js")
+        return """<!doctype html>
 <meta charset=utf-8>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
@@ -37,19 +41,6 @@ fetch_tests_from_worker(new Worker("%s"));
 </script>
 """ % (worker_path,)
 
-
-routes = [("GET", "/tools/runner/*", handlers.file_handler),
-          ("POST", "/tools/runner/update_manifest.py", handlers.python_script_handler),
-          (any_method, "/_certs/*", handlers.ErrorHandler(404)),
-          (any_method, "/tools/*", handlers.ErrorHandler(404)),
-          (any_method, "{spec}/tools/*", handlers.ErrorHandler(404)),
-          (any_method, "/serve.py", handlers.ErrorHandler(404)),
-          (any_method, "*.py", handlers.python_script_handler),
-          ("GET", "*.asis", handlers.as_is_handler),
-          ("GET", "*.worker", workers_handler),
-          ("GET", "*", handlers.file_handler),
-          ]
-
 rewrites = [("GET", "/resources/WebIDLParser.js", "/resources/webidl2/lib/webidl2.js")]
 
 subdomains = [u"www",
@@ -57,6 +48,18 @@ subdomains = [u"www",
               u"www2",
               u"天気の良い日",
               u"élève"]
+
+def default_routes():
+    return [("GET", "/tools/runner/*", handlers.file_handler),
+            ("POST", "/tools/runner/update_manifest.py", handlers.python_script_handler),
+            ("*", "/_certs/*", handlers.ErrorHandler(404)),
+            ("*", "/tools/*", handlers.ErrorHandler(404)),
+            ("*", "{spec}/tools/*", handlers.ErrorHandler(404)),
+            ("*", "/serve.py", handlers.ErrorHandler(404)),
+            ("*", "*.py", handlers.python_script_handler),
+            ("GET", "*.asis", handlers.as_is_handler),
+            ("GET", "*.worker", WorkersHandler()),
+            ("GET", "*", handlers.file_handler),]
 
 def setup_logger(level):
     import logging
@@ -89,18 +92,18 @@ class ServerProc(object):
         self.daemon = None
         self.stop = Event()
 
-    def start(self, init_func, host, port, paths, bind_hostname, external_config, ssl_config,
-              **kwargs):
+    def start(self, init_func, host, port, paths, routes, bind_hostname, external_config,
+              ssl_config, **kwargs):
         self.proc = Process(target=self.create_daemon,
-                            args=(init_func, host, port, paths, bind_hostname,
+                            args=(init_func, host, port, paths, routes, bind_hostname,
                                   external_config, ssl_config))
         self.proc.daemon = True
         self.proc.start()
 
-    def create_daemon(self, init_func, host, port, paths, bind_hostname, external_config, ssl_config,
-                      **kwargs):
+    def create_daemon(self, init_func, host, port, paths, routes, bind_hostname,
+                      external_config, ssl_config, **kwargs):
         try:
-            self.daemon = init_func(host, port, paths, bind_hostname, external_config,
+            self.daemon = init_func(host, port, paths, routes, bind_hostname, external_config,
                                     ssl_config, **kwargs)
         except socket.error:
             print >> sys.stderr, "Socket error on port %s" % port
@@ -138,7 +141,8 @@ def check_subdomains(host, paths, bind_hostname, ssl_config):
     subdomains = get_subdomains(host)
 
     wrapper = ServerProc()
-    wrapper.start(start_http_server, host, port, paths, bind_hostname, None, ssl_config)
+    wrapper.start(start_http_server, host, port, paths, default_routes(), bind_hostname,
+                  None, ssl_config)
 
     connected = False
     for i in range(10):
@@ -170,7 +174,8 @@ def get_subdomains(host):
             for subdomain in subdomains}
 
 
-def start_servers(host, ports, paths, bind_hostname, external_config, ssl_config, **kwargs):
+def start_servers(host, ports, paths, routes, bind_hostname, external_config, ssl_config,
+                  **kwargs):
     servers = defaultdict(list)
     for scheme, ports in ports.iteritems():
         assert len(ports) == {"http":2}.get(scheme, 1)
@@ -184,14 +189,14 @@ def start_servers(host, ports, paths, bind_hostname, external_config, ssl_config
                          "wss":start_wss_server}[scheme]
 
             server_proc = ServerProc()
-            server_proc.start(init_func, host, port, paths, bind_hostname,
+            server_proc.start(init_func, host, port, paths, routes, bind_hostname,
                               external_config, ssl_config, **kwargs)
             servers[scheme].append((port, server_proc))
 
     return servers
 
 
-def start_http_server(host, port, paths, bind_hostname, external_config, ssl_config,
+def start_http_server(host, port, paths, routes, bind_hostname, external_config, ssl_config,
                       **kwargs):
     return wptserve.WebTestHttpd(host=host,
                                  port=port,
@@ -206,7 +211,7 @@ def start_http_server(host, port, paths, bind_hostname, external_config, ssl_con
                                  latency=kwargs.get("latency"))
 
 
-def start_https_server(host, port, paths, bind_hostname, external_config, ssl_config,
+def start_https_server(host, port, paths, routes, bind_hostname, external_config, ssl_config,
                        **kwargs):
     return wptserve.WebTestHttpd(host=host,
                                  port=port,
@@ -269,7 +274,7 @@ class WebSocketDaemon(object):
         self.server = None
 
 
-def start_ws_server(host, port, paths, bind_hostname, external_config, ssl_config,
+def start_ws_server(host, port, paths, routes, bind_hostname, external_config, ssl_config,
                     **kwargs):
     return WebSocketDaemon(host,
                            str(port),
@@ -280,7 +285,7 @@ def start_ws_server(host, port, paths, bind_hostname, external_config, ssl_confi
                            ssl_config)
 
 
-def start_wss_server(host, port, path, bind_hostname, external_config, ssl_config,
+def start_wss_server(host, port, path, routes, bind_hostname, external_config, ssl_config,
                      **kwargs):
     return
 
@@ -328,7 +333,7 @@ def get_ssl_config(config, external_domains, ssl_environment):
             "encrypt_after_connect": config["ssl"]["encrypt_after_connect"]}
 
 
-def start(config, ssl_environment, **kwargs):
+def start(config, ssl_environment, routes, **kwargs):
     host = config["host"]
     domains = get_subdomains(host)
     ports = get_ports(config, ssl_environment)
@@ -344,8 +349,8 @@ def start(config, ssl_environment, **kwargs):
     if config["check_subdomains"]:
         check_subdomains(host, paths, bind_hostname, ssl_config)
 
-    servers = start_servers(host, ports, paths, bind_hostname, external_config, ssl_config,
-                            **kwargs)
+    servers = start_servers(host, ports, paths, routes, bind_hostname, external_config,
+                            ssl_config, **kwargs)
 
     return external_config, servers
 
@@ -440,10 +445,8 @@ def main():
 
     setup_logger(config["log_level"])
 
-    ssl_env = get_ssl_environment(config)
-
     with get_ssl_environment(config) as ssl_env:
-        config_, servers = start(config, ssl_env, **kwargs)
+        config_, servers = start(config, ssl_env, default_routes(), **kwargs)
 
         try:
             while any(item.is_alive() for item in iter_procs(servers)):
