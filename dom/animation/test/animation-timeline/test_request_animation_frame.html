@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>Test RequestAnimationFrame Timestamps are monotonically increasing</title>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+  var lastRequestAnimationFrameTimestamp = 0;
+  var requestAnimationFrameCount = 20;
+  var currentCount = 0;
+
+  // Test that all timestamps are always increasing
+  // and do not ever go backwards
+  function rafCallback(aTimestamp) {
+    SimpleTest.ok(aTimestamp > lastRequestAnimationFrameTimestamp,
+      "New RequestAnimationFrame timestamp should be later than the previous RequestAnimationFrame timestamp");
+    lastRequestAnimationFrameTimestamp = aTimestamp;
+    if (currentCount == requestAnimationFrameCount) {
+      SimpleTest.finish();
+    } else {
+      currentCount++;
+      window.requestAnimationFrame(rafCallback);
+    }
+  }
+
+  window.requestAnimationFrame(rafCallback);
+  SimpleTest.waitForExplicitFinish();
+</script>
