@@ -31,8 +31,8 @@ public:
                      FlushableMediaTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) override;
 
-  bool SupportsVideoMimeType(const char* aMimeType) override;
-  bool SupportsAudioMimeType(const char* aMimeType) override;
+  bool SupportsVideoMimeType(const nsACString& aMimeType) override;
+  bool SupportsAudioMimeType(const nsACString& aMimeType) override;
 
   virtual void DisableHardwareAcceleration() override
   {

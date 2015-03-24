@@ -238,7 +238,7 @@ public:
   }
 
   virtual bool
-  SupportsAudioMimeType(const char* aMimeType) override
+  SupportsAudioMimeType(const nsACString& aMimeType) override
   {
     return true;
   }

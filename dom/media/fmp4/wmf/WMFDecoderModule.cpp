@@ -118,19 +118,19 @@ WMFDecoderModule::SupportsSharedDecoders(const mp4_demuxer::VideoDecoderConfig& 
 }
 
 bool
-WMFDecoderModule::SupportsVideoMimeType(const char* aMimeType)
+WMFDecoderModule::SupportsVideoMimeType(const nsACString& aMimeType)
 {
-  return !strcmp(aMimeType, "video/mp4") ||
-         !strcmp(aMimeType, "video/avc") ||
-         !strcmp(aMimeType, "video/webm; codecs=vp8") ||
-         !strcmp(aMimeType, "video/webm; codecs=vp9");
+  return aMimeType.EqualsLiteral("video/mp4") ||
+         aMimeType.EqualsLiteral("video/avc") ||
+         aMimeType.EqualsLiteral("video/webm; codecs=vp8") ||
+         aMimeType.EqualsLiteral("video/webm; codecs=vp9");
 }
 
 bool
-WMFDecoderModule::SupportsAudioMimeType(const char* aMimeType)
+WMFDecoderModule::SupportsAudioMimeType(const nsACString& aMimeType)
 {
-  return !strcmp(aMimeType, "audio/mp4a-latm") ||
-         !strcmp(aMimeType, "audio/mpeg");
+  return aMimeType.EqualsLiteral("audio/mp4a-latm") ||
+         aMimeType.EqualsLiteral("audio/mpeg");
 }
 
 static bool

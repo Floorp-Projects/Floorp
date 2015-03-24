@@ -122,8 +122,8 @@ public:
   // An audio decoder module must support AAC by default.
   // If more audio codec is to be supported, SupportsAudioMimeType will have
   // to be extended
-  virtual bool SupportsAudioMimeType(const char* aMimeType);
-  virtual bool SupportsVideoMimeType(const char* aMimeType);
+  virtual bool SupportsAudioMimeType(const nsACString& aMimeType);
+  virtual bool SupportsVideoMimeType(const nsACString& aMimeType);
 
   // Indicates if the video decoder requires AVCC format.
   virtual bool DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig);

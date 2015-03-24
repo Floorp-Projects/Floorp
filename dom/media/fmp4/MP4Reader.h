@@ -128,8 +128,8 @@ private:
   void Flush(mp4_demuxer::TrackType aTrack);
   void DrainComplete(mp4_demuxer::TrackType aTrack);
   void UpdateIndex();
-  bool IsSupportedAudioMimeType(const char* aMimeType);
-  bool IsSupportedVideoMimeType(const char* aMimeType);
+  bool IsSupportedAudioMimeType(const nsACString& aMimeType);
+  bool IsSupportedVideoMimeType(const nsACString& aMimeType);
   void NotifyResourcesStatusChanged();
   void RequestCodecResource();
   bool IsWaitingOnCodecResource();

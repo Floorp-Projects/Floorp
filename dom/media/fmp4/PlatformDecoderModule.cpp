@@ -180,15 +180,15 @@ PlatformDecoderModule::CreatePDM()
 }
 
 bool
-PlatformDecoderModule::SupportsAudioMimeType(const char* aMimeType)
+PlatformDecoderModule::SupportsAudioMimeType(const nsACString& aMimeType)
 {
-  return !strcmp(aMimeType, "audio/mp4a-latm");
+  return aMimeType.EqualsLiteral("audio/mp4a-latm");
 }
 
 bool
-PlatformDecoderModule::SupportsVideoMimeType(const char* aMimeType)
+PlatformDecoderModule::SupportsVideoMimeType(const nsACString& aMimeType)
 {
-  return !strcmp(aMimeType, "video/mp4") || !strcmp(aMimeType, "video/avc");
+  return aMimeType.EqualsLiteral("video/mp4") || aMimeType.EqualsLiteral("video/avc");
 }
 
 bool

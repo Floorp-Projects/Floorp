@@ -51,7 +51,7 @@ GonkAudioDecoderManager::GonkAudioDecoderManager(
   mUserData.AppendElements(aConfig.audio_specific_config->Elements(),
                            aConfig.audio_specific_config->Length());
   // Pass through mp3 without applying an ADTS header.
-  if (strcmp(aConfig.mime_type, "audio/mp4a-latm") != 0) {
+  if (!aConfig.mime_type.EqualsLiteral("audio/mp4a-latm")) {
       mUseAdts = false;
   }
 }
