@@ -191,8 +191,6 @@ public:
   bool HasConsumers() const;
 
 private:
-  friend class mozilla::image::ProgressTracker;
-
   void Cancel(nsresult aStatus);
 
   // Update the cache entry size based on the image container.
