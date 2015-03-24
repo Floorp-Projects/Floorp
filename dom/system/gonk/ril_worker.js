@@ -223,7 +223,6 @@ function RilObject(aContext) {
   this.context = aContext;
 
   this.telephonyRequestQueue = new TelephonyRequestQueue(this);
-  this.currentCalls = {};
   this.currentConferenceState = CALL_STATE_UNKNOWN;
   this._pendingSentSmsMap = {};
   this.pendingNetworkType = {};
@@ -232,8 +231,6 @@ function RilObject(aContext) {
 
   // Init properties that are only initialized once.
   this.v5Legacy = RILQUIRKS_V5_LEGACY;
-
-  this.pendingMO = null;
 }
 RilObject.prototype = {
   context: null,
@@ -243,11 +240,6 @@ RilObject.prototype = {
    */
   version: null,
   v5Legacy: null,
-
-  /**
-   * Valid calls.
-   */
-  currentCalls: null,
 
   /**
    * Call state of current conference group.
@@ -354,11 +346,11 @@ RilObject.prototype = {
      */
     this.basebandVersion = null;
 
-    // Clean up this.currentCalls: rild might have restarted.
-    for each (let currentCall in this.currentCalls) {
-      delete this.currentCalls[currentCall.callIndex];
-      this._handleDisconnectedCall(currentCall);
-    }
+    // Clean up currentCalls: rild might have restarted.
+    this.sendChromeMessage({
+      rilMessageType: "currentCalls",
+      calls: {}
+    });
 
     // Don't clean up this._pendingSentSmsMap
     // because on rild restart: we may continue with the pending segments.
@@ -400,12 +392,6 @@ RilObject.prototype = {
       MMI: cbmmi || null
     };
     this.mergedCellBroadcastConfig = null;
-
-    /**
-     * A successful dialing request.
-     * { options: options of the corresponding dialing request }
-     */
-    this.pendingMO = null;
 
     /**
      * True when the request to report SMS Memory Status is pending.
@@ -1593,9 +1579,9 @@ RilObject.prototype = {
   /**
    * Get current calls.
    */
-  getCurrentCalls: function() {
+  getCurrentCalls: function(options) {
     this.telephonyRequestQueue.push(REQUEST_GET_CURRENT_CALLS, () => {
-      this.context.Buf.simpleRequest(REQUEST_GET_CURRENT_CALLS);
+      this.context.Buf.simpleRequest(REQUEST_GET_CURRENT_CALLS, options);
     });
   },
 
@@ -2018,9 +2004,8 @@ RilObject.prototype = {
   /**
    * Get failure casue code for the most recently failed PDP context.
    */
-  getFailCauseCode: function(callback) {
-    this.context.Buf.simpleRequest(REQUEST_LAST_CALL_FAIL_CAUSE,
-                                   {callback: callback});
+  getFailCause: function(options) {
+    this.context.Buf.simpleRequest(REQUEST_LAST_CALL_FAIL_CAUSE, options);
   },
 
   sendMMI: function(options) {
@@ -3540,244 +3525,6 @@ RilObject.prototype = {
     }
   },
 
-  /**
-   * Classify new calls into three groups: (removed, remained, added).
-   */
-  _classifyCalls: function(newCalls) {
-    newCalls = newCalls || {};
-
-    let removedCalls = [];
-    let remainedCalls = [];
-    let addedCalls = [];
-
-    for each (let currentCall in this.currentCalls) {
-      let newCall = newCalls[currentCall.callIndex];
-      if (!newCall) {
-        removedCalls.push(currentCall);
-      } else {
-        remainedCalls.push(newCall);
-        delete newCalls[currentCall.callIndex];
-      }
-    }
-
-    // Go through any remaining calls that are new to us.
-    for each (let newCall in newCalls) {
-      if (newCall.isVoice) {
-        addedCalls.push(newCall);
-      }
-    }
-
-    return [removedCalls, remainedCalls, addedCalls];
-  },
-
-  /**
-   * Check the calls in addedCalls and assign an appropriate one to pendingMO.
-   * Also update the |isEmergency| on that call.
-   */
-  _assignPendingMO: function(addedCalls) {
-    let options = this.pendingMO.options;
-    this.pendingMO = null;
-
-    for (let call of addedCalls) {
-      if (call.state !== CALL_STATE_INCOMING) {
-        call.isEmergency = options.isEmergency;
-        options.success = true;
-        options.callIndex = call.callIndex;
-        this.sendChromeMessage(options);
-        return;
-      }
-    }
-
-    // The call doesn't exist.
-    options.success = false;
-    options.errorMsg = GECKO_CALL_ERROR_UNSPECIFIED;
-    this.sendChromeMessage(options);
-  },
-
-  /**
-   * Check the currentCalls and identify the conference group.
-   * Return the conference state and the group as a set.
-   */
-  _detectConference: function() {
-    // There are some difficuties to identify the conference by |.isMpty| so we
-    // don't rely on this flag.
-    //  - |.isMpty| becomes false when the conference call is put on hold.
-    //  - |.isMpty| may remain true when other participants left the conference.
-
-    // All the calls in the conference should have the same state and it is
-    // either ACTIVE or HOLDING. That means, if we find a group of call with
-    // the same state and its size is larger than 2, it must be a conference.
-    let activeCalls = new Set();
-    let holdingCalls = new Set();
-
-    for each (let call in this.currentCalls) {
-      if (call.state === CALL_STATE_ACTIVE) {
-        activeCalls.add(call);
-      } else if (call.state === CALL_STATE_HOLDING) {
-        holdingCalls.add(call);
-      }
-    }
-
-    if (activeCalls.size >= 2) {
-      return [CALL_STATE_ACTIVE, activeCalls];
-    } else if (holdingCalls.size >= 2) {
-      return [CALL_STATE_HOLDING, holdingCalls];
-    }
-
-    return [CALL_STATE_UNKNOWN, new Set()];
-  },
-
-  /**
-   * Helpers for processing call state changes.
-   */
-  _processCalls: function(newCalls, failCause) {
-    if (DEBUG) this.context.debug("_processCalls: " + JSON.stringify(newCalls) +
-                                  " failCause: " + failCause);
-
-    // Let's get the failCause first if there are removed calls. Otherwise, we
-    // need to trigger another async request when removing call and it cause
-    // the order of callDisconnected and conferenceCallStateChanged
-    // unpredictable.
-    if (failCause === undefined) {
-      for each (let currentCall in this.currentCalls) {
-        if (!newCalls[currentCall.callIndex] && !currentCall.hangUpLocal) {
-          this.getFailCauseCode((function(newCalls, failCause) {
-            this._processCalls(newCalls, failCause);
-          }).bind(this, newCalls));
-          return;
-        }
-      }
-    }
-
-    let [removedCalls, remainedCalls, addedCalls] =
-      this._classifyCalls(newCalls);
-
-    // Handle removed calls.
-    // Only remove it from the map here. Notify callDisconnected later.
-    for (let call of removedCalls) {
-      delete this.currentCalls[call.callIndex];
-      call.failCause = call.hangUpLocal ? GECKO_CALL_ERROR_NORMAL_CALL_CLEARING
-                                        : failCause;
-    }
-
-    let changedCalls = new Set();
-
-    // Handle remained calls.
-    for (let newCall of remainedCalls) {
-      let oldCall = this.currentCalls[newCall.callIndex];
-      if (oldCall.state == newCall.state) {
-        continue;
-      }
-
-      if (oldCall.state == CALL_STATE_WAITING &&
-          newCall.state == CALL_STATE_INCOMING) {
-        // Update the call internally but we don't notify chrome since these two
-        // states are viewed as the same one there.
-        oldCall.state = newCall.state;
-        continue;
-      }
-
-      if (!oldCall.started && newCall.state == CALL_STATE_ACTIVE) {
-        oldCall.started = new Date().getTime();
-      }
-
-      oldCall.state = newCall.state;
-      oldCall.number =
-        this._formatInternationalNumber(newCall.number, newCall.toa);
-      changedCalls.add(oldCall);
-    }
-
-    // Handle pendingMO.
-    if (this.pendingMO) {
-      this._assignPendingMO(addedCalls);
-    }
-
-    // Handle added calls.
-    for (let call of addedCalls) {
-      this._addVoiceCall(call);
-      changedCalls.add(call);
-    }
-
-    // Detect conference and update isConference flag.
-    let [newConferenceState, conference] = this._detectConference();
-    for each (let call in this.currentCalls) {
-      let isConference = conference.has(call);
-      if (call.isConference != isConference) {
-        call.isConference = isConference;
-        changedCalls.add(call);
-      }
-    }
-
-    // Update audio state. We have to send this message before callStateChange
-    // and callDisconnected to make sure that the audio state is ready first.
-    this.sendChromeMessage({
-      rilMessageType: "audioStateChanged",
-      state: this._detectAudioState()
-    });
-
-    // Notify call disconnected.
-    for (let call of removedCalls) {
-      this._handleDisconnectedCall(call);
-    }
-
-    // Notify call state change.
-    for (let call of changedCalls) {
-      this._handleChangedCallState(call);
-    }
-
-    // Notify conference state change.
-    if (this.currentConferenceState != newConferenceState) {
-      this.currentConferenceState = newConferenceState;
-      let message = {rilMessageType: "conferenceCallStateChanged",
-                     state: newConferenceState};
-      this.sendChromeMessage(message);
-    }
-  },
-
-  _detectAudioState: function() {
-    let callNum = Object.keys(this.currentCalls).length;
-    if (!callNum) {
-      return AUDIO_STATE_NO_CALL;
-    }
-
-    let firstIndex = Object.keys(this.currentCalls)[0];
-    if (callNum == 1 &&
-        this.currentCalls[firstIndex].state == CALL_STATE_INCOMING) {
-      return AUDIO_STATE_INCOMING;
-    }
-
-    return AUDIO_STATE_IN_CALL;
-  },
-
-  // Format international numbers appropriately.
-  _formatInternationalNumber: function(number, toa) {
-    if (number && toa == TOA_INTERNATIONAL && number[0] != "+") {
-      number = "+" + number;
-    }
-
-    return number;
-  },
-
-  _addVoiceCall: function(newCall) {
-    newCall.number = this._formatInternationalNumber(newCall.number, newCall.toa);
-    newCall.isOutgoing = !newCall.isMT;
-    newCall.isConference = false;
-
-    this.currentCalls[newCall.callIndex] = newCall;
-  },
-
-  _handleChangedCallState: function(changedCall) {
-    let message = {rilMessageType: "callStateChange",
-                   call: changedCall};
-    this.sendChromeMessage(message);
-  },
-
-  _handleDisconnectedCall: function(disconnectedCall) {
-    let message = {rilMessageType: "callDisconnected",
-                   call: disconnectedCall};
-    this.sendChromeMessage(message);
-  },
-
   _setDataCallGeckoState: function(datacall) {
     switch (datacall.active) {
       case DATACALL_INACTIVE:
@@ -4749,19 +4496,6 @@ RilObject.prototype = {
   },
 
   /**
-   * Get a list of current voice calls.
-   */
-  enumerateCalls: function(options) {
-    if (DEBUG) this.context.debug("Sending all current calls");
-    let calls = [];
-    for each (let call in this.currentCalls) {
-      calls.push(call);
-    }
-    options.calls = calls;
-    this.sendChromeMessage(options);
-  },
-
-  /**
    * Process STK Proactive Command.
    */
   processStkProactiveCommand: function() {
@@ -4915,10 +4649,13 @@ RilObject.prototype[REQUEST_ENTER_NETWORK_DEPERSONALIZATION_CODE] =
 };
 RilObject.prototype[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CALLS(length, options) {
   // Retry getCurrentCalls several times when error occurs.
-  if (options.rilRequestError &&
-      this._getCurrentCallsRetryCount < GET_CURRENT_CALLS_RETRY_MAX) {
-    this._getCurrentCallsRetryCount++;
-    this.getCurrentCalls();
+  if (options.rilRequestError) {
+    if (this._getCurrentCallsRetryCount < GET_CURRENT_CALLS_RETRY_MAX) {
+      this._getCurrentCallsRetryCount++;
+      this.getCurrentCalls(options);
+    } else {
+      this.sendDefaultResponse(options);
+    }
     return;
   }
 
@@ -4968,20 +4705,17 @@ RilObject.prototype[REQUEST_GET_CURRENT_CALLS] = function REQUEST_GET_CURRENT_CA
       };
     }
 
-    calls[call.callIndex] = call;
+    if (call.isVoice) {
+      calls[call.callIndex] = call;
+    }
   }
-  this._processCalls(calls);
+
+  options.calls = calls;
+  options.rilMessageType = options.rilMessageType || "currentCalls";
+  this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_DIAL] = function REQUEST_DIAL(length, options) {
-  if (options.rilRequestError === 0) {
-    this.pendingMO = {options: options};
-  } else {
-    this.getFailCauseCode((function(options, failCause) {
-      options.success = false;
-      options.errorMsg = failCause;
-      this.sendChromeMessage(options);
-    }).bind(this, options));
-  }
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_DIAL_EMERGENCY_CALL] = function REQUEST_DIAL_EMERGENCY_CALL(length, options) {
   RilObject.prototype[REQUEST_DIAL].call(this, length, options);
@@ -5019,21 +4753,22 @@ RilObject.prototype[REQUEST_UDUB] = function REQUEST_UDUB(length, options) {
   this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_LAST_CALL_FAIL_CAUSE] = function REQUEST_LAST_CALL_FAIL_CAUSE(length, options) {
-  let Buf = this.context.Buf;
-  let num = length ? Buf.readInt32() : 0;
-  let failCause = null;
+  // Treat it as CALL_FAIL_ERROR_UNSPECIFIED if the request failed.
+  let failCause = CALL_FAIL_ERROR_UNSPECIFIED;
 
-  if (num) {
-    let causeNum = Buf.readInt32();
-    // To make _processCalls work as design, failCause couldn't be "undefined."
-    // See Bug 1112550 for details.
-    failCause = RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[causeNum] || null;
-  }
-  if (DEBUG) this.context.debug("Last call fail cause: " + failCause);
+  if (options.rilRequestError === 0) {
+    let Buf = this.context.Buf;
+    let num = length ? Buf.readInt32() : 0;
 
-  if (options.callback) {
-    options.callback(failCause);
+    if (num) {
+      let causeNum = Buf.readInt32();
+      failCause = RIL_CALL_FAILCAUSE_TO_GECKO_CALL_ERROR[causeNum] || failCause;
+    }
+    if (DEBUG) this.context.debug("Last call fail cause: " + failCause);
   }
+
+  options.failCause = failCause;
+  this.sendChromeMessage(options);
 };
 RilObject.prototype[REQUEST_SIGNAL_STRENGTH] = function REQUEST_SIGNAL_STRENGTH(length, options) {
   this._receivedNetworkInfo(NETWORK_INFO_SIGNAL);
