@@ -969,8 +969,17 @@ function actionChain(msg) {
   touchProvider.createATouch = createATouch;
   touchProvider.emitTouchEvent = emitTouchEvent;
 
-  actions.dispatchActions(args, touchId, curFrame, elementManager, callbacks,
-                          touchProvider);
+  try {
+    actions.dispatchActions(
+        args,
+        touchId,
+        curFrame,
+        elementManager,
+        callbacks,
+        touchProvider);
+  } catch (e) {
+    sendError(e.message, e.code, e.stack, command_id);
+  }
 }
 
 /**
