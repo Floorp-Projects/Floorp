@@ -664,7 +664,7 @@ add_task(function* test_saveLoadPing() {
   }
 });
 
-add_task(function* test_checkSubsession() {
+add_task(function* test_checkSubsessionHistograms() {
   if (gIsAndroid) {
     // We don't support subsessions yet on Android.
     return;
@@ -850,6 +850,55 @@ add_task(function* test_checkSubsession() {
   Assert.equal(classic.keyedHistograms[KEYED_ID]["b"].sum, 2);
   Assert.equal(subsession.keyedHistograms[KEYED_ID]["a"].sum, 1);
   Assert.equal(subsession.keyedHistograms[KEYED_ID]["b"].sum, 1);
+});
+
+add_task(function* test_checkSubsessionData() {
+  if (gIsAndroid || !SESSION_RECORDER_EXPECTED) {
+    // We don't support subsessions yet on Android. Also bail out if we
+    // can't use the session recorder.
+    return;
+  }
+
+  // Keep track of the active ticks count if the session recorder is available.
+  let sessionRecorder = gDatareportingService.getSessionRecorder();
+  let activeTicksAtSubsessionStart = sessionRecorder.activeTicks;
+  let expectedActiveTicks = activeTicksAtSubsessionStart;
+
+  incrementActiveTicks = () => {
+    sessionRecorder.incrementActiveTicks();
+    ++expectedActiveTicks;
+  }
+
+  yield TelemetrySession.reset();
+
+  // Both classic and subsession payload data should be the same on the first subsession.
+  incrementActiveTicks();
+  let classic = TelemetrySession.getPayload();
+  let subsession = TelemetrySession.getPayload("environment-change");
+  Assert.equal(classic.simpleMeasurements.activeTicks, expectedActiveTicks,
+               "Classic pings must count active ticks since the beginning of the session.");
+  Assert.equal(subsession.simpleMeasurements.activeTicks, expectedActiveTicks,
+               "Subsessions must count active ticks as classic pings on the first subsession.");
+
+  // Start a new subsession and check that the active ticks are correctly reported.
+  incrementActiveTicks();
+  activeTicksAtSubsessionStart = sessionRecorder.activeTicks;
+  classic = TelemetrySession.getPayload();
+  subsession = TelemetrySession.getPayload("environment-change", true);
+  Assert.equal(classic.simpleMeasurements.activeTicks, expectedActiveTicks,
+               "Classic pings must count active ticks since the beginning of the session.");
+  Assert.equal(subsession.simpleMeasurements.activeTicks, expectedActiveTicks,
+               "Pings must not loose the tick count when starting a new subsession.");
+
+  // Get a new subsession payload without clearing the subsession.
+  incrementActiveTicks();
+  classic = TelemetrySession.getPayload();
+  subsession = TelemetrySession.getPayload("environment-change");
+  Assert.equal(classic.simpleMeasurements.activeTicks, expectedActiveTicks,
+               "Classic pings must count active ticks since the beginning of the session.");
+  Assert.equal(subsession.simpleMeasurements.activeTicks,
+               expectedActiveTicks - activeTicksAtSubsessionStart,
+               "Subsessions must count active ticks since the last new subsession.");
 });
 
 add_task(function* test_dailyCollection() {
