@@ -9,26 +9,30 @@
 
 namespace mozilla {
 
-WebGLSync::WebGLSync(WebGLContext* webgl):
-    WebGLContextBoundObject(webgl)
+WebGLSync::WebGLSync(WebGLContext* webgl, GLenum condition, GLbitfield flags)
+    : WebGLContextBoundObject(webgl)
 {
-    MOZ_CRASH("Not Implemented.");
+   mGLName = mContext->gl->fFenceSync(condition, flags);
 }
 
 WebGLSync::~WebGLSync()
-{}
+{
+    DeleteOnce();
+}
 
 void
 WebGLSync::Delete()
 {
-    MOZ_CRASH("Not Implemented.");
+    mContext->MakeContextCurrent();
+    mContext->gl->fDeleteSync(mGLName);
+    mGLName = 0;
+    LinkedListElement<WebGLSync>::remove();
 }
 
 WebGLContext*
 WebGLSync::GetParentObject() const
 {
-    MOZ_CRASH("Not Implemented.");
-    return nullptr;
+    return Context();
 }
 
 // -------------------------------------------------------------------------

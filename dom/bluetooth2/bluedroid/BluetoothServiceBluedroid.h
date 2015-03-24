@@ -185,6 +185,10 @@ public:
                                BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
+  DiscoverGattServicesInternal(const nsAString& aAppUuid,
+                               BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
   UnregisterGattClientInternal(int aClientIf,
                                BluetoothReplyRunnable* aRunnable) override;
 

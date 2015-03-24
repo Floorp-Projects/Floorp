@@ -471,11 +471,19 @@ asserts that `actual` is a number less than `expected`
 ### `assert_greater_than(actual, expected, description)`
 asserts that `actual` is a number greater than `expected`
 
+### `assert_between_exclusive(actual, lower, upper, description`
+asserts that `actual` is a number between `lower` and `upper` but not
+equal to either of them
+
 ### `assert_less_than_equal(actual, expected, description)`
 asserts that `actual` is a number less than or equal to `expected`
 
 ### `assert_greater_than_equal(actual, expected, description)`
 asserts that `actual` is a number greater than or equal to `expected`
+
+### `assert_between_inclusive(actual, lower, upper, description`
+asserts that `actual` is a number between `lower` and `upper` or
+equal to either of them
 
 ### `assert_regexp_match(actual, expected, description)`
 asserts that `actual` matches the regexp `expected`

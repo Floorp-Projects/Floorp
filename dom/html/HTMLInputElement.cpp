@@ -3224,7 +3224,8 @@ HTMLInputElement::Focus(ErrorResult& aError)
 bool
 HTMLInputElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
 {
-  return mType != NS_FORM_INPUT_HIDDEN;
+  return mType != NS_FORM_INPUT_HIDDEN ||
+         nsGenericHTMLFormElementWithState::IsInteractiveHTMLContent(aIgnoreTabindex);
 }
 
 NS_IMETHODIMP

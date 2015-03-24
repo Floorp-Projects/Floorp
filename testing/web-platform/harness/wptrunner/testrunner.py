@@ -498,7 +498,8 @@ class TestRunnerManager(threading.Thread):
                                     result.name,
                                     result.status,
                                     message=result.message,
-                                    expected=expected)
+                                    expected=expected,
+                                    stack=result.stack)
 
         # TODO: consider changing result if there is a crash dump file
 
