@@ -497,7 +497,8 @@ class imgCacheValidator : public nsIStreamListener,
 {
 public:
   imgCacheValidator(nsProgressNotificationProxy* progress, imgLoader* loader,
-                    imgRequest *request, void *aContext, bool forcePrincipalCheckForCacheEntry);
+                    imgRequest* aRequest, nsISupports* aContext,
+                    bool forcePrincipalCheckForCacheEntry);
 
   void AddProxy(imgRequestProxy *aProxy);
 
@@ -523,7 +524,7 @@ private:
   nsRefPtr<imgRequest> mNewRequest;
   nsRefPtr<imgCacheEntry> mNewEntry;
 
-  void *mContext;
+  nsCOMPtr<nsISupports> mContext;
 
   imgLoader* mImgLoader;
 };

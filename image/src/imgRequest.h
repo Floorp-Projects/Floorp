@@ -65,7 +65,7 @@ public:
                 nsIRequest *aRequest,
                 nsIChannel *aChannel,
                 imgCacheEntry *aCacheEntry,
-                void *aLoadId,
+                nsISupports* aCX,
                 nsIPrincipal* aLoadingPrincipal,
                 int32_t aCORSMode,
                 ReferrerPolicy aReferrerPolicy);
@@ -90,10 +90,6 @@ public:
 
   // Request that we start decoding the image as soon as data becomes available.
   void RequestDecode() { mDecodeRequested = true; }
-
-  inline void SetInnerWindowID(uint64_t aInnerWindowId) {
-    mInnerWindowId = aInnerWindowId;
-  }
 
   inline uint64_t InnerWindowID() const {
     return mInnerWindowId;
