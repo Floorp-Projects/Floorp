@@ -492,7 +492,9 @@ parent:
      */
     async SetDimensions(uint32_t aFlags, int32_t aX, int32_t aY, int32_t aCx, int32_t aCy);
 
-    prio(high) sync SynthesizedMouseWheelEvent(WidgetWheelEvent event);
+    prio(high) sync DispatchWheelEvent(WidgetWheelEvent event);
+    prio(high) sync DispatchMouseEvent(WidgetMouseEvent event);
+    prio(high) sync DispatchKeyboardEvent(WidgetKeyboardEvent event);
 
 child:
     /**
