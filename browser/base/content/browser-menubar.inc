@@ -306,6 +306,9 @@
                           type="checkbox"
                           observes="View:FullScreen"/>
 #endif
+                <menuitem id="menu_readerModeItem"
+                          observes="View:ReaderView"
+                          hidden="true"/>
                 <menuitem id="menu_showAllTabs"
                           hidden="true"
                           accesskey="&showAllTabsCmd.accesskey;"
