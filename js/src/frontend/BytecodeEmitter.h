@@ -367,7 +367,7 @@ struct BytecodeEmitter
 
     bool flushPops(int *npops);
 
-    ptrdiff_t emitCheck(ptrdiff_t delta);
+    bool emitCheck(ptrdiff_t delta, ptrdiff_t *offset);
 
     // Emit one bytecode.
     bool emit1(JSOp op);
@@ -396,11 +396,11 @@ struct BytecodeEmitter
     bool emitUint16Operand(JSOp op, uint32_t i);
 
     // Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
-    ptrdiff_t emitN(JSOp op, size_t extra);
+    bool emitN(JSOp op, size_t extra, ptrdiff_t *offset = nullptr);
 
     bool emitNumberOp(double dval);
 
-    ptrdiff_t emitJump(JSOp op, ptrdiff_t off);
+    bool emitJump(JSOp op, ptrdiff_t off, ptrdiff_t *jumpOffset = nullptr);
     bool emitCall(JSOp op, uint16_t argc, ParseNode *pn = nullptr);
 
     bool emitLoopHead(ParseNode *nextpn);
@@ -412,7 +412,7 @@ struct BytecodeEmitter
     bool emitBackPatchOp(ptrdiff_t *lastp);
     void backPatch(ptrdiff_t last, jsbytecode *target, jsbytecode op);
 
-    ptrdiff_t emitGoto(StmtInfoBCE *toStmt, ptrdiff_t *lastp, SrcNoteType noteType = SRC_NULL);
+    bool emitGoto(StmtInfoBCE *toStmt, ptrdiff_t *lastp, SrcNoteType noteType = SRC_NULL);
 
     bool emitIndex32(JSOp op, uint32_t index);
     bool emitIndexOp(JSOp op, uint32_t index);
