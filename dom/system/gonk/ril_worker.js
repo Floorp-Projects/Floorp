@@ -1568,42 +1568,10 @@ RilObject.prototype = {
     });
   },
 
-  /**
-   * Answer an incoming/waiting call.
-   *
-   * @param callIndex
-   *        Call index of the call to answer.
-   */
   answerCall: function(options) {
-    let call = this.currentCalls[options.callIndex];
-    if (!call) {
-      options.success = false;
-      options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-      this.sendChromeMessage(options);
-      return;
-    }
-
-    // Check for races. Since we dispatched the incoming/waiting call
-    // notification the incoming/waiting call may have changed. The main
-    // thread thinks that it is answering the call with the given index,
-    // so only answer if that is still incoming/waiting.
-    switch (call.state) {
-      case CALL_STATE_INCOMING:
-        this.telephonyRequestQueue.push(REQUEST_ANSWER, () => {
-          this.context.Buf.simpleRequest(REQUEST_ANSWER, options);
-        });
-        break;
-      case CALL_STATE_WAITING:
-        // Answer the waiting (second) call, and hold the first call.
-        this.switchActiveCall(options);
-        break;
-      default:
-        if (DEBUG) this.context.debug("AnswerCall: Invalid call state");
-
-        options.success = false;
-        options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-        this.sendChromeMessage(options);
-    }
+    this.telephonyRequestQueue.push(REQUEST_ANSWER, () => {
+      this.context.Buf.simpleRequest(REQUEST_ANSWER, options);
+    });
   },
 
   conferenceCall: function(options) {

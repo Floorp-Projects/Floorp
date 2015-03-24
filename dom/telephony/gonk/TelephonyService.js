@@ -946,8 +946,19 @@ TelephonyService.prototype = {
   },
 
   answerCall: function(aClientId, aCallIndex, aCallback) {
-    this._sendToRilWorker(aClientId, "answerCall", { callIndex: aCallIndex },
-                          this._defaultCallbackHandler.bind(this, aCallback));
+    let call = this._currentCalls[aClientId][aCallIndex];
+    if (!call || call.state != nsITelephonyService.CALL_STATE_INCOMING) {
+      aCallback.notifyError(RIL.GECKO_ERROR_GENERIC_FAILURE);
+      return;
+    }
+
+    let callNum = Object.keys(this._currentCalls[aClientId]).length;
+    if (callNum !== 1) {
+      this._switchActiveCall(aClientId, aCallback);
+    } else {
+      this._sendToRilWorker(aClientId, "answerCall", null,
+                            this._defaultCallbackHandler.bind(this, aCallback));
+    }
   },
 
   rejectCall: function(aClientId, aCallIndex, aCallback) {
