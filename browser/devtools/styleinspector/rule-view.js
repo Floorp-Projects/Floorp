@@ -16,6 +16,7 @@ const {OutputParser} = require("devtools/output-parser");
 const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/styleeditor/utils");
 const {parseSingleValue, parseDeclarations} = require("devtools/styleinspector/css-parsing-utils");
 const overlays = require("devtools/styleinspector/style-inspector-overlays");
+const EventEmitter = require("devtools/toolkit/event-emitter");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -1152,6 +1153,8 @@ function CssRuleView(aInspector, aDoc, aStore, aPageStyle) {
   this.tooltips.addToView();
   this.highlighters = new overlays.HighlightersOverlay(this);
   this.highlighters.addToView();
+
+  EventEmitter.decorate(this);
 }
 
 exports.CssRuleView = CssRuleView;
@@ -1691,9 +1694,7 @@ CssRuleView.prototype = {
       this._createEditors();
 
       // Notify anyone that cares that we refreshed.
-      var evt = this.doc.createEvent("Events");
-      evt.initEvent("CssRuleViewRefreshed", true, false);
-      this.element.dispatchEvent(evt);
+      this.emit("ruleview-refreshed");
       return undefined;
     }).then(null, promiseWarn);
   },
@@ -1741,9 +1742,7 @@ CssRuleView.prototype = {
    * Emits an event that clients can listen to.
    */
   _changed: function() {
-    var evt = this.doc.createEvent("Events");
-    evt.initEvent("CssRuleViewChanged", true, false);
-    this.element.dispatchEvent(evt);
+    this.emit("ruleview-changed");
   },
 
   /**
@@ -1964,11 +1963,7 @@ RuleEditor.prototype = {
         return;
       }
       let rule = this.rule.domRule;
-      let evt = this.doc.createEvent("CustomEvent");
-      evt.initCustomEvent("CssRuleViewCSSLinkClicked", true, false, {
-        rule: rule,
-      });
-      this.element.dispatchEvent(evt);
+      this.ruleView.emit("ruleview-linked-clicked", rule);
     }.bind(this));
     let sourceLabel = this.doc.createElementNS(XUL_NS, "label");
     sourceLabel.setAttribute("crop", "center");

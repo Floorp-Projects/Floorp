@@ -88,7 +88,7 @@ function* runTestData(inspector, view, data) {
         "Value is as expected: " + expected);
     is(idRuleEditor.isEditing, false, "Selector is not being edited.")
   } else {
-    yield once(view.element, "CssRuleViewRefreshed");
+    yield once(view, "ruleview-refreshed");
     ok(getRuleViewRule(view, expected),
         "Rule with " + name + " selector exists.");
   }
