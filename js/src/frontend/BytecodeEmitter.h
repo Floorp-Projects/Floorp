@@ -290,11 +290,11 @@ struct BytecodeEmitter
 
     // Append a new source note of the given type (and therefore size) to the
     // notes dynamic array, updating noteCount. Return the new note's index
-    // within the array pointed at by current->notes. Return -1 if out of
-    // memory.
-    int newSrcNote(SrcNoteType type);
-    int newSrcNote2(SrcNoteType type, ptrdiff_t offset);
-    int newSrcNote3(SrcNoteType type, ptrdiff_t offset1, ptrdiff_t offset2);
+    // within the array pointed at by current->notes as outparam.
+    bool newSrcNote(SrcNoteType type, unsigned *indexp = nullptr);
+    bool newSrcNote2(SrcNoteType type, ptrdiff_t offset, unsigned *indexp = nullptr);
+    bool newSrcNote3(SrcNoteType type, ptrdiff_t offset1, ptrdiff_t offset2,
+                     unsigned *indexp = nullptr);
 
     void copySrcNotes(jssrcnote *destination, uint32_t nsrcnotes);
     bool setSrcNoteOffset(unsigned index, unsigned which, ptrdiff_t offset);
