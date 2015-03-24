@@ -76,7 +76,6 @@ FontFaceSet::FontFaceSet(nsPIDOMWindow* aWindow, nsPresContext* aPresContext)
   , mDocument(aPresContext->Document())
   , mStatus(FontFaceSetLoadStatus::Loaded)
   , mNonRuleFacesDirty(false)
-  , mReadyIsResolved(true)
   , mHasLoadingFontFaces(false)
   , mHasLoadingFontFacesIsDirty(false)
 {
@@ -1349,7 +1348,7 @@ FontFaceSet::CheckLoadingStarted()
   (new AsyncEventDispatcher(this, NS_LITERAL_STRING("loading"),
                             false))->RunDOMEventWhenSafe();
 
-  if (mReadyIsResolved && PrefEnabled()) {
+  if (PrefEnabled()) {
     nsRefPtr<Promise> ready;
     if (GetParentObject()) {
       ErrorResult rv;
@@ -1358,7 +1357,6 @@ FontFaceSet::CheckLoadingStarted()
 
     if (ready) {
       mReady.swap(ready);
-      mReadyIsResolved = false;
     }
   }
 }
@@ -1425,7 +1423,7 @@ FontFaceSet::MightHavePendingFontLoads()
 void
 FontFaceSet::CheckLoadingFinished()
 {
-  if (mReadyIsResolved) {
+  if (mStatus == FontFaceSetLoadStatus::Loaded) {
     // We've already resolved mReady and dispatched the loadingdone/loadingerror
     // events.
     return;
@@ -1439,7 +1437,6 @@ FontFaceSet::CheckLoadingFinished()
   mStatus = FontFaceSetLoadStatus::Loaded;
   if (mReady) {
     mReady->MaybeResolve(this);
-    mReadyIsResolved = true;
   }
 
   // Now dispatch the loadingdone/loadingerror events.
