@@ -322,7 +322,7 @@ ShapeGetterSetterRef::mark(JSTracer *trc)
         return;
 
     trc->setTracingLocation(&*prior);
-    gc::Mark(trc, &obj, "AccessorShape getter or setter");
+    TraceManuallyBarrieredEdge(trc, &obj, "AccessorShape getter or setter");
     if (obj == *objp)
         return;
 

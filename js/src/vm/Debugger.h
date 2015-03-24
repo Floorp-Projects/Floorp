@@ -124,7 +124,7 @@ class DebuggerWeakMap : private WeakMap<PreBarriered<UnbarrieredKey>, Relocatabl
         for (Enum e(*static_cast<Base *>(this)); !e.empty(); e.popFront()) {
             traceValueEdges(tracer, e.front().value());
             Key key = e.front().key();
-            gc::Mark(tracer, &key, "Debugger WeakMap key");
+            TraceEdge(tracer, &key, "Debugger WeakMap key");
             if (key != e.front().key())
                 e.rekeyFront(key);
             key.unsafeSet(nullptr);

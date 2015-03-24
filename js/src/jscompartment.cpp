@@ -207,7 +207,7 @@ class WrapperMapRef : public BufferableRef
     void mark(JSTracer *trc) {
         CrossCompartmentKey prior = key;
         if (key.debugger)
-            Mark(trc, &key.debugger, "CCW debugger");
+            TraceManuallyBarrieredEdge(trc, &key.debugger, "CCW debugger");
         if (key.kind == CrossCompartmentKey::ObjectWrapper ||
             key.kind == CrossCompartmentKey::DebuggerObject ||
             key.kind == CrossCompartmentKey::DebuggerEnvironment ||
@@ -215,7 +215,8 @@ class WrapperMapRef : public BufferableRef
         {
             MOZ_ASSERT(IsInsideNursery(key.wrapped) ||
                        key.wrapped->asTenured().getTraceKind() == JSTRACE_OBJECT);
-            Mark(trc, reinterpret_cast<JSObject**>(&key.wrapped), "CCW wrapped object");
+            TraceManuallyBarrieredEdge(trc, reinterpret_cast<JSObject**>(&key.wrapped),
+                                       "CCW wrapped object");
         }
         if (key.debugger == prior.debugger && key.wrapped == prior.wrapped)
             return;
