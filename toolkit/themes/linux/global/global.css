@@ -281,10 +281,6 @@ notification > button {
   margin-bottom: 0;
 }
 
-popupnotificationcontent {
-  margin-top: .5em;
-}
-
 /* :::::: autoscroll popup ::::: */
 
 .autoscroller {
