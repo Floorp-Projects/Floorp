@@ -8,6 +8,16 @@
 interface nsIURI;
 interface nsIDomainSet;
 
+%{ C++
+namespace mozilla {
+namespace dom {
+class DomainPolicyClone;
+}
+}
+%}
+
+[ptr] native DomainPolicyClonePtr(mozilla::dom::DomainPolicyClone);
+
 /*
  * When a domain policy is instantiated by invoking activateDomainPolicy() on
  * nsIScriptSecurityManager, these domain sets are consulted when each new
@@ -20,7 +30,7 @@ interface nsIDomainSet;
  * When deactivate() is invoked, the domain sets are emptied, and the
  * nsIDomainPolicy ceases to have any effect on the system.
  */
-[scriptable, builtinclass, uuid(27b10f54-f34b-42b7-8594-4348d3ad7953)]
+[scriptable, builtinclass, uuid(82b24a20-6701-4d40-a0f9-f5dc7321b555)]
 interface nsIDomainPolicy : nsISupports
 {
     readonly attribute nsIDomainSet blacklist;
@@ -29,11 +39,19 @@ interface nsIDomainPolicy : nsISupports
     readonly attribute nsIDomainSet superWhitelist;
 
     void deactivate();
+
+    [noscript, notxpcom] void cloneDomainPolicy(in DomainPolicyClonePtr aClone);
+    [noscript, notxpcom] void applyClone(in DomainPolicyClonePtr aClone);
 };
 
-[scriptable, builtinclass, uuid(946a01ff-6525-4007-a2c2-447ebe1875d3)]
+[scriptable, builtinclass, uuid(665c981b-0a0f-4229-ac06-a826e02d4f69)]
 interface nsIDomainSet : nsISupports
 {
+    /*
+     * The type of the set. See: DomainSetType
+     */
+    [noscript] readonly attribute uint32_t type;
+
     /*
      * Add a domain to the set. No-op if it already exists.
      */
