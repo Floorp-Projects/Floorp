@@ -1219,7 +1219,7 @@ bool TabParent::SendMouseWheelEvent(WidgetWheelEvent& event)
   return PBrowserParent::SendMouseWheelEvent(event, guid, blockId);
 }
 
-bool TabParent::RecvSynthesizedMouseWheelEvent(const mozilla::WidgetWheelEvent& aEvent)
+bool TabParent::RecvDispatchWheelEvent(const mozilla::WidgetWheelEvent& aEvent)
 {
   nsCOMPtr<nsIWidget> widget = GetWidget();
   if (!widget) {
@@ -1231,6 +1231,38 @@ bool TabParent::RecvSynthesizedMouseWheelEvent(const mozilla::WidgetWheelEvent& 
   localEvent.refPoint -= GetChildProcessOffset();
 
   widget->DispatchAPZAwareEvent(&localEvent);
+  return true;
+}
+
+bool
+TabParent::RecvDispatchMouseEvent(const mozilla::WidgetMouseEvent& aEvent)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
+
+  WidgetMouseEvent localEvent(aEvent);
+  localEvent.widget = widget;
+  localEvent.refPoint -= GetChildProcessOffset();
+
+  widget->DispatchInputEvent(&localEvent);
+  return true;
+}
+
+bool
+TabParent::RecvDispatchKeyboardEvent(const mozilla::WidgetKeyboardEvent& aEvent)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
+
+  WidgetKeyboardEvent localEvent(aEvent);
+  localEvent.widget = widget;
+  localEvent.refPoint -= GetChildProcessOffset();
+
+  widget->DispatchInputEvent(&localEvent);
   return true;
 }
 
