@@ -411,7 +411,8 @@ var PrintUtils = {
     let ppBrowser = this._listener.getPrintPreviewBrowser();
     let mm = ppBrowser.messageManager;
     mm.sendAsyncMessage("Printing:Preview:Enter", null, {
-      contentWindow: this._sourceBrowser.contentWindowAsCPOW,
+      contentWindow: this._sourceBrowser.contentWindowAsCPOW ||
+                     this._sourceBrowser.contentWindow,
     });
 
     if (this._webProgressPP.value) {
