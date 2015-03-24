@@ -45,6 +45,9 @@ HTMLObjectElement::HTMLObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& a
 
 HTMLObjectElement::~HTMLObjectElement()
 {
+#ifdef XP_MACOSX
+  OnFocusBlurPlugin(this, false);
+#endif
   UnregisterActivityObserver();
   DestroyImageLoadingContent();
 }
@@ -106,20 +109,50 @@ NS_IMPL_NSICONSTRAINTVALIDATION(HTMLObjectElement)
 
 static nsIWidget* GetWidget(Element* aElement)
 {
-  nsIWidget* retval = NULL;
-  nsIFrame* frame = aElement->GetPrimaryFrame();
-  if (frame) {
-    retval = frame->GetNearestWidget();
-  }
-  return retval;
+  return nsContentUtils::WidgetForDocument(aElement->OwnerDoc());
 }
 
-static void OnFocusBlurPlugin(Element* aElement, bool aFocus)
+Element* HTMLObjectElement::sLastFocused = nullptr; // Weak
+
+class PluginFocusSetter : public nsRunnable
 {
-  nsIWidget* widget = GetWidget(aElement);
-  if (widget) {
-    bool value = aFocus;
-    widget->SetPluginFocused(value);
+public:
+  PluginFocusSetter(nsIWidget* aWidget, Element* aElement)
+  : mWidget(aWidget), mElement(aElement)
+  {
+  }
+
+  NS_IMETHOD Run()
+  {
+    if (mElement) {
+      HTMLObjectElement::sLastFocused = mElement;
+      bool value = true;
+      mWidget->SetPluginFocused(value);
+    } else if (!HTMLObjectElement::sLastFocused) {
+      bool value = false;
+      mWidget->SetPluginFocused(value);
+    }
+
+    return NS_OK;
+  }
+
+private:
+  nsCOMPtr<nsIWidget> mWidget;
+  nsCOMPtr<Element> mElement;
+};
+
+void
+HTMLObjectElement::OnFocusBlurPlugin(Element* aElement, bool aFocus)
+{
+  if (aFocus || aElement == sLastFocused) {
+    if (!aFocus) {
+      sLastFocused = nullptr;
+    }
+    nsIWidget* widget = GetWidget(aElement);
+    if (widget) {
+      nsContentUtils::AddScriptRunner(
+        new PluginFocusSetter(widget, aFocus ? aElement : nullptr));
+    }
   }
 }
 
@@ -203,6 +236,14 @@ void
 HTMLObjectElement::UnbindFromTree(bool aDeep,
                                   bool aNullParent)
 {
+#ifdef XP_MACOSX
+  // When a page is reloaded (when an nsIDocument's content is removed), the
+  // focused element isn't necessarily sent an NS_BLUR_CONTENT event. See
+  // nsFocusManager::ContentRemoved(). This means that a widget may think it
+  // still contains a focused plugin when it doesn't -- which in turn can
+  // disable text input in the browser window. See bug 1137229.
+  OnFocusBlurPlugin(this, false);
+#endif
   nsObjectLoadingContent::UnbindFromTree(aDeep, aNullParent);
   nsGenericHTMLFormElement::UnbindFromTree(aDeep, aNullParent);
 }
