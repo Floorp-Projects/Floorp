@@ -302,9 +302,8 @@ let UI = {
   },
 
   busyUntil: function(promise, operationDescription) {
-    // Freeze the UI until the promise is resolved. A 30s timeout
-    // will unfreeze the UI, just in case the promise never gets
-    // resolved.
+    // Freeze the UI until the promise is resolved. A timeout will unfreeze the
+    // UI, just in case the promise never gets resolved.
     this._busyPromise = promise;
     this._busyOperationDescription = operationDescription;
     this.setupBusyTimeout();
@@ -469,7 +468,13 @@ let UI = {
              // |busyUntil| will listen for rejections.
              // Bug 1121100 may find a better way to silence these.
            });
-    return this.busyUntil(promise, "Connecting to " + name);
+    promise = this.busyUntil(promise, "Connecting to " + name);
+    // Stop busy timeout for runtimes that take unknown or long amounts of time
+    // to connect.
+    if (runtime.prolongedConnection) {
+      this.cancelBusyTimeout();
+    }
+    return promise;
   },
 
   updateRuntimeButton: function() {
