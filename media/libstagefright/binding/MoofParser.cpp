@@ -338,11 +338,18 @@ Moof::ParseTraf(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf, b
   if (aTrex.mTrackId && tfhd.mTrackId != aTrex.mTrackId) {
     return;
   }
-  // Now search for TRUN box.
+  if (!tfdt.IsValid()) {
+    LOG(Moof, "Invalid tfdt dependency");
+    return;
+  }
+  // Now search for TRUN boxes.
+  uint64_t decodeTime = tfdt.mBaseMediaDecodeTime;
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("trun")) {
-      ParseTrun(box, tfhd, tfdt, aMdhd, aEdts, aIsAudio);
-      if (IsValid()) {
+      if (ParseTrun(box, tfhd, aMdhd, aEdts, &decodeTime, aIsAudio)) {
+        mValid = true;
+      } else {
+        mValid = false;
         break;
       }
     }
@@ -371,38 +378,35 @@ public:
   }
 };
 
-void
-Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts, bool aIsAudio)
+bool
+Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Mdhd& aMdhd, Edts& aEdts, uint64_t* aDecodeTime, bool aIsAudio)
 {
-  if (!aTfhd.IsValid() || !aTfdt.IsValid() ||
-      !aMdhd.IsValid() || !aEdts.IsValid()) {
-    LOG(Moof, "Invalid dependencies: aTfhd(%d) aTfdt(%d) aMdhd(%d) aEdts(%d)",
-        aTfhd.IsValid(), aTfdt.IsValid(), aMdhd.IsValid(), !aEdts.IsValid());
-    return;
+  if (!aTfhd.IsValid() || !aMdhd.IsValid() || !aEdts.IsValid()) {
+    LOG(Moof, "Invalid dependencies: aTfhd(%d) aMdhd(%d) aEdts(%d)",
+        aTfhd.IsValid(), aMdhd.IsValid(), !aEdts.IsValid());
+    return false;
   }
 
   BoxReader reader(aBox);
   if (!reader->CanReadType<uint32_t>()) {
     LOG(Moof, "Incomplete Box (missing flags)");
-    return;
+    return false;
   }
   uint32_t flags = reader->ReadU32();
   if ((flags & 0x404) == 0x404) {
     // Can't use these flags together
     reader->DiscardRemaining();
-    mValid = true;
-    return;
+    return true;
   }
   uint8_t version = flags >> 24;
 
   if (!reader->CanReadType<uint32_t>()) {
     LOG(Moof, "Incomplete Box (missing sampleCount)");
-    return;
+    return false;
   }
   uint32_t sampleCount = reader->ReadU32();
   if (sampleCount == 0) {
-    mValid = true;
-    return;
+    return true;
   }
 
   size_t need =
@@ -417,13 +421,13 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts, b
   if (reader->Remaining() < need) {
     LOG(Moof, "Incomplete Box (have:%lld need:%lld)",
         reader->Remaining(), need);
-    return;
+    return false;
   }
 
   uint64_t offset = aTfhd.mBaseDataOffset + (flags & 1 ? reader->ReadU32() : 0);
   bool hasFirstSampleFlags = flags & 4;
   uint32_t firstSampleFlags = hasFirstSampleFlags ? reader->ReadU32() : 0;
-  uint64_t decodeTime = aTfdt.mBaseMediaDecodeTime;
+  uint64_t decodeTime = *aDecodeTime;
   nsTArray<Interval<Microseconds>> timeRanges;
   for (size_t i = 0; i < sampleCount; i++) {
     uint32_t sampleDuration =
@@ -472,7 +476,8 @@ Moof::ParseTrun(Box& aBox, Tfhd& aTfhd, Tfdt& aTfdt, Mdhd& aMdhd, Edts& aEdts, b
   }
   mTimeRange = Interval<Microseconds>(ctsOrder[0]->mCompositionRange.start,
       ctsOrder.LastElement()->mCompositionRange.end);
-  mValid = true;
+  *aDecodeTime = decodeTime;
+  return true;
 }
 
 Tkhd::Tkhd(Box& aBox)

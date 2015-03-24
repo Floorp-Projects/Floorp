@@ -268,7 +268,7 @@ xpcAccessibleTable::GetSelectedCells(nsIArray** aSelectedCells)
   if (!Intl())
     return NS_ERROR_FAILURE;
 
-  NS_IMETHODIMP rv = NS_OK;
+  nsresult rv = NS_OK;
   nsCOMPtr<nsIMutableArray> selCells =
     do_CreateInstance(NS_ARRAY_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);

@@ -46,7 +46,7 @@ GMPDecoderModule::CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aCon
                                      FlushableMediaTaskQueue* aVideoTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
-  if (strcmp(aConfig.mime_type, "video/avc") != 0) {
+  if (!aConfig.mime_type.EqualsLiteral("video/avc")) {
     return nullptr;
   }
 
@@ -64,7 +64,7 @@ GMPDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aCon
                                      FlushableMediaTaskQueue* aAudioTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
-  if (strcmp(aConfig.mime_type, "audio/mp4a-latm") != 0) {
+  if (!aConfig.mime_type.EqualsLiteral("audio/mp4a-latm")) {
     return nullptr;
   }
 

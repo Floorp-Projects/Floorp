@@ -216,8 +216,8 @@ class NoPkgFilesRemover(object):
             self._error = errors.warn
             self._msg = 'Skipping %s'
 
-    def add_base(self, base):
-        self._formatter.add_base(base)
+    def add_base(self, base, *args):
+        self._formatter.add_base(base, *args)
 
     def add(self, path, content):
         if not any(mozpack.path.match(path, spec) for spec in self._files):
@@ -383,9 +383,13 @@ def main():
                                          'bin')
         else:
             gre_path = None
-        for base in sorted([[p for p in [mozpack.path.join('bin', b), b]
-                            if os.path.exists(os.path.join(args.source, p))][0]
-                           for b in sink.packager.get_bases()]):
+        def get_bases():
+            for b in sink.packager.get_bases(addons=False):
+                for p in (mozpack.path.join('bin', b), b):
+                    if os.path.exists(os.path.join(args.source, p)):
+                        yield p
+                        break
+        for base in sorted(get_bases()):
             if not gre_path:
                 gre_path = base
             base_path = sink.normalize_path(base)

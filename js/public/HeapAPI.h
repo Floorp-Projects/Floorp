@@ -383,6 +383,14 @@ IsIncrementalBarrierNeededOnTenuredGCThing(JS::shadow::Runtime *rt, const JS::GC
     return JS::shadow::Zone::asShadowZone(zone)->needsIncrementalBarrier();
 }
 
+/*
+ * Create an object providing access to the garbage collector's internal notion
+ * of the current state of memory (both GC heap memory and GCthing-controlled
+ * malloc memory.
+ */
+extern JS_PUBLIC_API(JSObject *)
+NewMemoryInfoObject(JSContext *cx);
+
 } /* namespace gc */
 } /* namespace js */
 

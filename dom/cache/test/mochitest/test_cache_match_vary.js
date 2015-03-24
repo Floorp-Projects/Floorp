@@ -79,6 +79,33 @@ function testBasics() {
     });
 }
 
+function testBasicKeys() {
+  function checkRequest(reqs) {
+    is(reqs.length, 1, "One request expected");
+    ok(reqs[0].url.indexOf(requestURL) >= 0, "The correct request expected");
+    ok(reqs[0].headers.get("WhatToVary"), "Cookie", "The correct request headers expected");
+  }
+  var test;
+  return setupTest({"WhatToVary": "Cookie"})
+    .then(function(t) {
+      test = t;
+      // Ensure that searching without specifying a Cookie header succeeds.
+      return test.cache.keys(requestURL);
+    }).then(function(r) {
+      return checkRequest(r);
+    }).then(function() {
+      // Ensure that searching with a non-matching value for the Cookie header fails.
+      return test.cache.keys(new Request(requestURL, {headers: {"Cookie": "foo=bar"}}));
+    }).then(function(r) {
+      is(r.length, 0, "Searching for a request with an unknown Vary header should not succeed");
+      // Ensure that searching with a non-matching value for the Cookie header but with ignoreVary set succeeds.
+      return test.cache.keys(new Request(requestURL, {headers: {"Cookie": "foo=bar"}}),
+                             {ignoreVary: true});
+    }).then(function(r) {
+      return checkRequest(r);
+    });
+}
+
 function testStar() {
   var test;
   return setupTest({"WhatToVary": "*", "Cookie": "foo=bar"})
@@ -262,6 +289,8 @@ function step(testPromise) {
 }
 
 step(testBasics()).then(function() {
+  return step(testBasicKeys());
+}).then(function() {
   return step(testStar());
 }).then(function() {
   return step(testMatch());

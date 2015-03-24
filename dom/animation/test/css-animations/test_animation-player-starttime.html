@@ -199,27 +199,6 @@ function EventWatcher(watchedNode, eventTypes)
 // The former is the start of the start delay. The latter is the start of the
 // active interval. (If there is no delay, they are the same.)
 
-// Called when startTime is set to the time the start delay would ideally
-// start (not accounting for any delay to next paint tick).
-function checkStateOnSettingStartTimeToAnimationCreationTime(player)
-{
-  // We don't test player.startTime since our caller just set it.
-
-  assert_equals(player.playState, 'running',
-    'AnimationPlayer.playState should be "running" at the start of ' +
-    'the start delay');
-
-  assert_equals(player.source.target.style.animationPlayState, 'running',
-    'AnimationPlayer.source.target.style.animationPlayState should be ' +
-    '"running" at the start of the start delay');
-
-  var div = player.source.target;
-  var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
-  assert_equals(marginLeft, UNANIMATED_POSITION,
-                'the computed value of margin-left should be unaffected ' +
-                'at the beginning of the start delay');
-}
-
 // Called when the ready Promise's callbacks should happen
 function checkStateOnReadyPromiseResolved(player)
 {
@@ -294,41 +273,92 @@ function checkStateAtActiveIntervalEndTime(player)
     'animation-fill-mode is none');
 }
 
+test(function(t)
+{
+  var div = addDiv(t, { 'style': 'animation: anim 100s' });
+  var player = div.getAnimationPlayers()[0];
+  assert_equals(player.startTime, null, 'startTime is unresolved');
+}, 'startTime of a newly created (play-pending) animation is unresolved');
+
+test(function(t)
+{
+  var div = addDiv(t, { 'style': 'animation: anim 100s paused' });
+  var player = div.getAnimationPlayers()[0];
+  assert_equals(player.startTime, null, 'startTime is unresolved');
+}, 'startTime of a newly created (pause-pending) animation is unresolved');
+
+async_test(function(t)
+{
+  var div = addDiv(t, { 'style': 'animation: anim 100s' });
+  var player = div.getAnimationPlayers()[0];
+  player.ready.then(t.step_func(function() {
+    assert_true(player.startTime > 0,
+                'startTime is resolved when running');
+    t.done();
+  }));
+}, 'startTime is resolved when running');
+
+async_test(function(t)
+{
+  var div = addDiv(t, { 'style': 'animation: anim 100s paused' });
+  var player = div.getAnimationPlayers()[0];
+  player.ready.then(t.step_func(function() {
+    assert_equals(player.startTime, null,
+                  'startTime is unresolved when paused');
+    t.done();
+  }));
+}, 'startTime is unresolved when paused');
+
+async_test(function(t)
+{
+  var div = addDiv(t, { 'style': 'animation: anim 100s' });
+  var player = div.getAnimationPlayers()[0];
+  player.ready.then(t.step_func(function() {
+    div.style.animationPlayState = 'paused';
+    getComputedStyle(div).animationPlayState;
+    /* FIXME: Switch this on once deferred pausing is enabled
+    assert_not_equals(player.startTime, null,
+                      'startTime is resolved when pause-pending');
+    */
+
+    div.style.animationPlayState = 'running';
+    getComputedStyle(div).animationPlayState;
+    assert_equals(player.startTime, null,
+                  'startTime is unresolved when play-pending');
+    t.done();
+  }));
+}, 'startTime while pause-pending and play-pending');
+
+async_test(function(t)
+{
+  var div = addDiv(t, { 'style': 'animation: anim 100s' });
+  var player = div.getAnimationPlayers()[0];
+  // Seek to end to put us in the finished state
+  // FIXME: Once we implement finish(), use that here.
+  player.currentTime = 100 * 1000;
+  player.ready.then(t.step_func(function() {
+    // Call play() which puts us back in the running state
+    player.play();
+    // FIXME: Enable this once we implement finishing behavior (bug 1074630)
+    /*
+    assert_equals(player.startTime, null, 'startTime is unresolved');
+    */
+    t.done();
+  }));
+}, 'startTime while play-pending from finished state');
+
 
 test(function(t)
 {
   var div = addDiv(t, {'class': 'animated-div'});
-
   div.style.animation = ANIM_PROPERTY_VAL;
 
   var player = div.getAnimationPlayers()[0];
-
-  // Animations shouldn't start until the next paint tick, so:
-  assert_equals(player.startTime, null,
-    'AnimationPlayer.startTime should be unresolved when an animation ' +
-    'is initially created');
-
-  assert_equals(player.playState, "pending",
-    'AnimationPlayer.playState should be "pending" when an animation ' +
-    'is initially created');
-
-  assert_equals(player.source.target.style.animationPlayState, 'running',
-    'AnimationPlayer.source.target.style.animationPlayState should be ' +
-    '"running" when an animation is initially created');
-
-  // XXX Ideally we would have a test to check the ready Promise is initially
-  // unresolved, but currently there is no Web API to do that. Waiting for the
-  // ready Promise with a timeout doesn't work because the resolved callback
-  // will be called (async) regardless of whether the Promise was resolved in
-  // the past or is resolved in the future.
-
   var currentTime = player.timeline.currentTime;
   player.startTime = currentTime;
   assert_approx_equals(player.startTime, currentTime, 0.0001, // rounding error
     'Check setting of startTime actually works');
-
-  checkStateOnSettingStartTimeToAnimationCreationTime(player);
-}, 'Sanity test to check round-tripping assigning to new animation\'s ' +
+}, 'Sanity test to check round-tripping assigning to a new animation\'s ' +
    'startTime');
 
 

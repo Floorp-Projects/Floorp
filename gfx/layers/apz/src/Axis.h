@@ -25,6 +25,16 @@ const float EPSILON = 0.0001f;
 // isn't too large.
 const float COORDINATE_EPSILON = 0.01f;
 
+/**
+ * Compare two coordinates for equality, accounting for rounding error.
+ * Use both FuzzyEqualsAdditive() with COORDINATE_EPISLON, which accounts for
+ * things like the error introduced by rounding during a round-trip to app
+ * units, and FuzzyEqualsMultiplicative(), which accounts for accumulated error
+ * due to floating-point operations (which can be larger than COORDINATE_EPISLON
+ * for sufficiently large coordinate values).
+ */
+bool FuzzyEqualsCoordinate(float aValue1, float aValue2);
+
 struct FrameMetrics;
 class AsyncPanZoomController;
 

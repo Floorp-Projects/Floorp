@@ -1436,11 +1436,6 @@ RasterImage::RequestDecode()
 NS_IMETHODIMP
 RasterImage::StartDecoding()
 {
-  if (!NS_IsMainThread()) {
-    return NS_DispatchToMainThread(
-      NS_NewRunnableMethod(this, &RasterImage::StartDecoding));
-  }
-
   // For decode-on-draw images, we only act on RequestDecodeForSize.
   if (mDecodeOnDraw) {
     return NS_OK;

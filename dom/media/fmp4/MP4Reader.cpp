@@ -311,19 +311,19 @@ MP4Reader::ExtractCryptoInitData(nsTArray<uint8_t>& aInitData)
 }
 
 bool
-MP4Reader::IsSupportedAudioMimeType(const char* aMimeType)
+MP4Reader::IsSupportedAudioMimeType(const nsACString& aMimeType)
 {
-  return (!strcmp(aMimeType, "audio/mpeg") ||
-          !strcmp(aMimeType, "audio/mp4a-latm")) &&
+  return (aMimeType.EqualsLiteral("audio/mpeg") ||
+          aMimeType.EqualsLiteral("audio/mp4a-latm")) &&
          mPlatform->SupportsAudioMimeType(aMimeType);
 }
 
 bool
-MP4Reader::IsSupportedVideoMimeType(const char* aMimeType)
+MP4Reader::IsSupportedVideoMimeType(const nsACString& aMimeType)
 {
-  return (!strcmp(aMimeType, "video/mp4") ||
-          !strcmp(aMimeType, "video/avc") ||
-          !strcmp(aMimeType, "video/x-vnd.on2.vp6")) &&
+  return (aMimeType.EqualsLiteral("video/mp4") ||
+          aMimeType.EqualsLiteral("video/avc") ||
+          aMimeType.EqualsLiteral("video/x-vnd.on2.vp6")) &&
          mPlatform->SupportsVideoMimeType(aMimeType);
 }
 

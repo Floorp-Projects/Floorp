@@ -1,78 +1,92 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 html {
-    background-color: #EDECEB;
-    font: message-box;
+  background-color: #edeceb;
+  font: message-box;
 }
 
-#logs {
-    font-family: monospace;
+.controls {
+  font-size: 1.1em;
+  display: inline-block;
+  margin: 0 0.5em;
 }
 
-.peer-connections {
-    padding: 2em;
-    margin: 1em 0em;
-    border: 1px solid #AFACA9;
-    border-radius: 10px;
-    background: none repeat scroll 0% 0% #FFF;
+.control {
+  margin: 0.5em 0;
 }
 
-.peer-connection h3 {
-    background-color: #DDD;
-    cursor: pointer;
+.control > button {
+  margin: 0 0.25em;
 }
 
-.peer-connection h3 span:last-child {
-    float: right;
+.message > p {
+  margin: 0.5em 0.5em;
+}
+
+.log p {
+  font-family: monospace;
+  padding-left: 2em;
+  text-indent: -2em;
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+#content {
+  padding: 1em 2em;
+  margin: 1em 0;
+  border: 1px solid #afaca9;
+  border-radius: 10px;
+  background: none repeat scroll 0% 0% #fff;
+}
+
+.peer-connection > h3,
+.log > h3 {
+  background-color: #ddd;
 }
 
 .peer-connection section {
-    border: 1px solid #AFACA9;
-    padding: 10px;
+  border: 1px solid #afaca9;
+  padding: 10px;
 }
 
 .peer-connection table {
-    width: 100%;
-    text-align: center;
-    border: none;
+  width: 100%;
+  text-align: center;
+  border: none;
 }
 
 .peer-connection table th,
 .peer-connection table td {
-    padding: 0.4em;
+  padding: 0.4em;
 }
 
 .peer-connection table tr:nth-child(even) {
-    background-color: #DDD;
+  background-color: #ddd;
 }
 
-.pcid span:first-child {
-    font-weight: bold;
+.info-label {
+  font-weight: bold;
 }
 
-.tabs > ul {
-  list-style-type: none;
-  margin: 0;
-  padding: 3px 10px;
+.section-ctrl {
+  margin: 1em 1.5em;
 }
 
-.tabs li {
-  display: inline;
-  position: relative;
-  top: 1px;
-  padding: 3px 10px;
+div.fold-trigger {
+  color: blue;
+  cursor: pointer;
 }
 
-.tabs li > a {
-  text-decoration: none;
-  padding: 0 2em;
+@media screen {
+  .fold-closed {
+    display: none !important;
+  }
 }
 
-.tabs li.active {
-  background-color: #FFF;
-  border: 1px solid #AFACA9;
-  border-bottom: none;
+@media print {
+  .no-print {
+    display: none !important;
+  }
 }
-
-.tabs section {
-  clear: both;
-}
-

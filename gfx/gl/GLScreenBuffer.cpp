@@ -314,6 +314,23 @@ GLScreenBuffer::BeforeReadCall()
 }
 
 bool
+GLScreenBuffer::CopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x,
+                               GLint y, GLsizei width, GLsizei height, GLint border)
+{
+    SharedSurface* surf;
+    if (GetReadFB() == 0) {
+        surf = SharedSurf();
+    } else {
+        surf = mGL->mFBOMapping[GetReadFB()];
+    }
+    if (surf) {
+        return surf->CopyTexImage2D(target, level, internalformat,  x, y, width, height, border);
+    }
+
+    return false;
+}
+
+bool
 GLScreenBuffer::ReadPixels(GLint x, GLint y,
                            GLsizei width, GLsizei height,
                            GLenum format, GLenum type,

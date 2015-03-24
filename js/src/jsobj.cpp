@@ -2107,7 +2107,7 @@ JSObject *
 js::CloneObjectLiteral(JSContext *cx, HandleObject srcObj)
 {
     if (srcObj->is<PlainObject>()) {
-        AllocKind kind = GetBackgroundAllocKind(GuessObjectGCKind(srcObj->as<PlainObject>().numFixedSlots()));
+        AllocKind kind = GetBackgroundAllocKind(gc::GetGCObjectKind(srcObj->as<PlainObject>().numFixedSlots()));
         MOZ_ASSERT_IF(srcObj->isTenured(), kind == srcObj->asTenured().getAllocKind());
 
         RootedObject proto(cx, cx->global()->getOrCreateObjectPrototype(cx));

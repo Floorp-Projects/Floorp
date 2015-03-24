@@ -10,6 +10,7 @@
 #include "VideoUtils.h"
 #include "ImageContainer.h"
 
+#include "nsPrintfCString.h"
 #include "mozilla/mozalloc.h"
 #include <stdint.h>
 #include <algorithm>
@@ -26,6 +27,12 @@ extern PRLogModuleInfo* gMediaDecoderLog;
 #else
 #define DECODER_LOG(x, ...)
 #endif
+
+// Same workaround as MediaDecoderStateMachine.cpp.
+#define DECODER_WARN_HELPER(a, b) NS_WARNING b
+#define DECODER_WARN(x, ...) \
+  DECODER_WARN_HELPER(0, (nsPrintfCString("Decoder=%p " x, mDecoder, ##__VA_ARGS__).get()))
+
 
 PRLogModuleInfo* gMediaPromiseLog;
 
@@ -181,6 +188,43 @@ MediaDecoderReader::ComputeStartTime(const VideoData* aVideo, const AudioData* a
   DECODER_LOG("ComputeStartTime first audio frame start %lld", aAudio ? aAudio->mTime : -1);
   NS_ASSERTION(startTime >= 0, "Start time is negative");
   return startTime;
+}
+
+nsRefPtr<MediaDecoderReader::MetadataPromise>
+MediaDecoderReader::CallReadMetadata()
+{
+  typedef ReadMetadataFailureReason Reason;
+
+  MOZ_ASSERT(OnDecodeThread());
+  mDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
+  DECODER_LOG("MediaDecoderReader::CallReadMetadata");
+
+  // PreReadMetadata causes us to try to allocate various hardware and OS
+  // resources, which may not be available at the moment.
+  PreReadMetadata();
+  if (IsWaitingMediaResources()) {
+    return MetadataPromise::CreateAndReject(Reason::WAITING_FOR_RESOURCES, __func__);
+  }
+
+  // Attempt to read the metadata.
+  nsRefPtr<MetadataHolder> metadata = new MetadataHolder();
+  nsresult rv = ReadMetadata(&metadata->mInfo, getter_Transfers(metadata->mTags));
+
+  // Reading metadata can cause us to discover that we need resources (like
+  // encryption keys).
+  if (IsWaitingMediaResources()) {
+    return MetadataPromise::CreateAndReject(Reason::WAITING_FOR_RESOURCES, __func__);
+  }
+
+  // We're not waiting for anything. If we didn't get the metadata, that's an
+  // error.
+  if (NS_FAILED(rv) || !metadata->mInfo.HasValidMedia()) {
+    DECODER_WARN("ReadMetadata failed, rv=%x HasValidMedia=%d", rv, metadata->mInfo.HasValidMedia());
+    return MetadataPromise::CreateAndReject(Reason::METADATA_ERROR, __func__);
+  }
+
+  // Success!
+  return MetadataPromise::CreateAndResolve(metadata, __func__);
 }
 
 class ReRequestVideoWithSkipTask : public nsRunnable
@@ -357,3 +401,7 @@ MediaDecoderReader::Shutdown()
 }
 
 } // namespace mozilla
+
+#undef DECODER_LOG
+#undef DECODER_WARN
+#undef DECODER_WARN_HELPER
