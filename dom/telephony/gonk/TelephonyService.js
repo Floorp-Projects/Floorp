@@ -674,7 +674,7 @@ TelephonyService.prototype = {
       return;
     }
 
-    let autoHoldCallback = {
+    this._switchActiveCall(aClientId, {
       QueryInterface: XPCOMUtils.generateQI([Ci.nsITelephonyCallback]),
 
       notifySuccess: () => {
@@ -689,13 +689,7 @@ TelephonyService.prototype = {
         if (DEBUG) debug("Error: Fail to automatically hold the active call.");
         aCallback.notifyError(aErrorMsg);
       }
-    };
-
-    if (activeCall.isConference) {
-      this.holdConference(aClientId, autoHoldCallback);
-    } else {
-      this.holdCall(aClientId, activeCall.callIndex, autoHoldCallback);
-    }
+    });
   },
 
   _dialCdmaThreeWayCall: function(aClientId, aNumber, aCallback) {
@@ -1043,6 +1037,10 @@ TelephonyService.prototype = {
       return;
     }
 
+    this._switchActiveCall(aClientId, aCallback);
+  },
+
+  _switchActiveCall: function(aClientId, aCallback) {
     this._sendToRilWorker(aClientId, "switchActiveCall", null,
                           this._defaultCallbackHandler.bind(this, aCallback));
   },
@@ -1197,8 +1195,7 @@ TelephonyService.prototype = {
       return;
     }
 
-    this._sendToRilWorker(aClientId, "switchActiveCall", null,
-                          this._defaultCallbackHandler.bind(this, aCallback));
+    this._switchActiveCall(aClientId, aCallback);
   },
 
   holdConference: function(aClientId, aCallback) {
