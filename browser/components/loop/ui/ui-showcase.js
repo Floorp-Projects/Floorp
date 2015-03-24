@@ -56,28 +56,6 @@
 
   function noop(){}
 
-  // We save the visibility change listeners so that we can fake an event
-  // to the panel once we've loaded all the views.
-  var visibilityListeners = [];
-  var rootObject = window;
-
-  rootObject.document.addEventListener = function(eventName, func) {
-    if (eventName === "visibilitychange") {
-      visibilityListeners.push(func);
-    }
-    window.addEventListener(eventName, func);
-  };
-
-  rootObject.document.removeEventListener = function(eventName, func) {
-    if (eventName === "visibilitychange") {
-      var index = visibilityListeners.indexOf(func);
-      visibilityListeners.splice(index, 1);
-    }
-    window.removeEventListener(eventName, func);
-  };
-
-  loop.shared.mixins.setRootObject(rootObject);
-
   // Feedback API client configured to send data to the stage input server,
   // which is available at https://input.allizom.org
   var stageFeedbackApiClient = new loop.FeedbackAPIClient(
@@ -779,10 +757,6 @@
   window.addEventListener("DOMContentLoaded", function() {
     try {
       React.renderComponent(React.createElement(App, null), document.getElementById("main"));
-
-      for (var listener of visibilityListeners) {
-        listener({target: {hidden: false}});
-      }
     } catch(err) {
       console.error(err);
       uncaughtError = err;
