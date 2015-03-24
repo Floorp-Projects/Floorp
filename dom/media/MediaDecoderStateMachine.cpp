@@ -1499,14 +1499,20 @@ void MediaDecoderStateMachine::SetDormant(bool aDormant)
     if (IsPlaying()) {
       StopPlayback();
     }
-    StopAudioThread();
-    FlushDecoding();
-    // Now that those threads are stopped, there's no possibility of
-    // mPendingWakeDecoder being needed again. Revoke it.
-    mPendingWakeDecoder = nullptr;
+
+    Reset();
+
+    // Note that we do not wait for the decode task queue to go idle before
+    // queuing the ReleaseMediaResources task - instead, we disconnect promises,
+    // reset state, and put a ResetDecode in the decode task queue. Any tasks
+    // that run after ResetDecode are supposed to run with a clean slate. We rely
+    // on that in other places (i.e. seeking), so it seems reasonable to rely on
+    // it here as well.
     DebugOnly<nsresult> rv = DecodeTaskQueue()->Dispatch(
     NS_NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources));
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+    // There's now no possibility of mPendingWakeDecoder being needed again. Revoke it.
+    mPendingWakeDecoder = nullptr;
     mDecoder->GetReentrantMonitor().NotifyAll();
   } else if ((aDormant != true) && (mState == DECODER_STATE_DORMANT)) {
     mDecodingFrozenAtStateDecoding = true;
@@ -1560,43 +1566,21 @@ void MediaDecoderStateMachine::StartDecoding()
   ScheduleStateMachine();
 }
 
-void MediaDecoderStateMachine::StartWaitForResources()
-{
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  NS_ASSERTION(OnDecodeThread(),
-               "Should be on decode thread.");
-  SetState(DECODER_STATE_WAIT_FOR_RESOURCES);
-  DECODER_LOG("StartWaitForResources");
-}
-
 void MediaDecoderStateMachine::NotifyWaitingForResourcesStatusChanged()
 {
-  AssertCurrentThreadInMonitor();
-  DECODER_LOG("NotifyWaitingForResourcesStatusChanged");
-  RefPtr<nsIRunnable> task(
-    NS_NewRunnableMethod(this,
-      &MediaDecoderStateMachine::DoNotifyWaitingForResourcesStatusChanged));
-  DecodeTaskQueue()->Dispatch(task);
-}
-
-void MediaDecoderStateMachine::DoNotifyWaitingForResourcesStatusChanged()
-{
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnStateMachineThread());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-
-  DECODER_LOG("DoNotifyWaitingForResourcesStatusChanged");
+  DECODER_LOG("NotifyWaitingForResourcesStatusChanged");
 
   if (mState == DECODER_STATE_WAIT_FOR_RESOURCES) {
-    // The reader is no longer waiting for resources (say a hardware decoder),
-    // we can now proceed to decode metadata.
+    // Try again.
     SetState(DECODER_STATE_DECODING_NONE);
+    ScheduleStateMachine();
   } else if (mState == DECODER_STATE_WAIT_FOR_CDM &&
              !mReader->IsWaitingOnCDMResource()) {
     SetState(DECODER_STATE_DECODING_FIRSTFRAME);
     EnqueueDecodeFirstFrameTask();
   }
-
-  ScheduleStateMachine();
 }
 
 void MediaDecoderStateMachine::PlayInternal()
@@ -1639,38 +1623,6 @@ void MediaDecoderStateMachine::PlayInternal()
   }
 
   ScheduleStateMachine();
-}
-
-void MediaDecoderStateMachine::ResetPlayback()
-{
-  MOZ_ASSERT(OnStateMachineThread());
-
-  // We should be reseting because we're seeking, shutting down, or
-  // entering dormant state. We could also be in the process of going dormant,
-  // and have just switched to exiting dormant before we finished entering
-  // dormant, hence the DECODING_NONE case below.
-  AssertCurrentThreadInMonitor();
-  MOZ_ASSERT(mState == DECODER_STATE_SEEKING ||
-             mState == DECODER_STATE_SHUTDOWN ||
-             mState == DECODER_STATE_DORMANT ||
-             mState == DECODER_STATE_DECODING_NONE);
-
-  // Audio thread should've been stopped at the moment. Otherwise, AudioSink
-  // might be accessing AudioQueue outside of the decoder monitor while we
-  // are clearing the queue and causes crash for no samples to be popped.
-  MOZ_ASSERT(!mAudioSink);
-
-  mVideoFrameEndTime = -1;
-  mDecodedVideoEndTime = -1;
-  mAudioStartTime = -1;
-  mAudioEndTime = -1;
-  mDecodedAudioEndTime = -1;
-  mAudioCompleted = false;
-  AudioQueue().Reset();
-  VideoQueue().Reset();
-  mFirstVideoFrameAfterSeek = nullptr;
-  mDropAudioUntilNextDiscontinuity = true;
-  mDropVideoUntilNextDiscontinuity = true;
 }
 
 void MediaDecoderStateMachine::NotifyDataArrived(const char* aBuffer,
@@ -1769,19 +1721,6 @@ void MediaDecoderStateMachine::StopAudioThread()
   }
   // Wake up those waiting for audio sink to finish.
   mDecoder->GetReentrantMonitor().NotifyAll();
-}
-
-nsresult
-MediaDecoderStateMachine::EnqueueDecodeMetadataTask()
-{
-  AssertCurrentThreadInMonitor();
-  MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
-
-  RefPtr<nsIRunnable> task(
-    NS_NewRunnableMethod(this, &MediaDecoderStateMachine::CallDecodeMetadata));
-  nsresult rv = DecodeTaskQueue()->Dispatch(task);
-  NS_ENSURE_SUCCESS(rv, rv);
-  return NS_OK;
 }
 
 nsresult
@@ -1926,14 +1865,8 @@ MediaDecoderStateMachine::InitiateSeek()
         mCurrentSeek.mTarget.mEventVisibility);
   NS_DispatchToMainThread(startEvent, NS_DISPATCH_NORMAL);
 
-  // The seek target is different than the current playback position,
-  // we'll need to seek the playback position, so shutdown our decode
-  // thread and audio sink.
-  StopAudioThread();
-  ResetPlayback();
-
-  // Put a reset in the pipe before seek.
-  ResetDecode();
+  // Reset our state machine and decoding pipeline before seeking.
+  Reset();
 
   // Do the seek.
   mSeekRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
@@ -2205,59 +2138,16 @@ MediaDecoderStateMachine::DecodeError()
 }
 
 void
-MediaDecoderStateMachine::CallDecodeMetadata()
+MediaDecoderStateMachine::OnMetadataRead(MetadataHolder* aMetadata)
 {
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  if (mState != DECODER_STATE_DECODING_METADATA) {
-    return;
-  }
-  if (NS_FAILED(DecodeMetadata())) {
-    DECODER_WARN("Decode metadata failed, shutting down decoder");
-    DecodeError();
-  }
-}
-
-nsresult MediaDecoderStateMachine::DecodeMetadata()
-{
-  AssertCurrentThreadInMonitor();
-  NS_ASSERTION(OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnStateMachineThread());
   MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
-  DECODER_LOG("Decoding Media Headers");
+  mMetadataRequest.Complete();
 
-  nsresult res;
-  MediaInfo info;
-  bool isAwaitingResources = false;
-  {
-    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    mReader->PreReadMetadata();
-
-    if (mReader->IsWaitingMediaResources()) {
-      StartWaitForResources();
-      return NS_OK;
-    }
-    res = mReader->ReadMetadata(&info, getter_Transfers(mMetadataTags));
-    isAwaitingResources = mReader->IsWaitingMediaResources();
-  }
-
-  if (NS_SUCCEEDED(res) &&
-      mState == DECODER_STATE_DECODING_METADATA &&
-      isAwaitingResources) {
-    // change state to DECODER_STATE_WAIT_FOR_RESOURCES
-    StartWaitForResources();
-    // affect values only if ReadMetadata succeeds
-    return NS_OK;
-  }
-
-  if (NS_FAILED(res) || (!info.HasValidMedia())) {
-    DECODER_WARN("ReadMetadata failed, res=%x HasValidMedia=%d", res, info.HasValidMedia());
-    return NS_ERROR_FAILURE;
-  }
-
-  if (NS_SUCCEEDED(res)) {
-    mDecoder->SetMediaSeekable(mReader->IsMediaSeekable());
-  }
-
-  mInfo = info;
+  mDecoder->SetMediaSeekable(mReader->IsMediaSeekable());
+  mInfo = aMetadata->mInfo;
+  mMetadataTags = aMetadata->mTags.forget();
 
   if (HasVideo()) {
     DECODER_LOG("Video decode isAsync=%d HWAccel=%d videoQueueSize=%d",
@@ -2275,23 +2165,33 @@ nsresult MediaDecoderStateMachine::DecodeMetadata()
     EnqueueLoadedMetadataEvent();
   }
 
-  if (mState == DECODER_STATE_DECODING_METADATA) {
-    if (mReader->IsWaitingOnCDMResource()) {
-      // Metadata parsing was successful but we're still waiting for CDM caps
-      // to become available so that we can build the correct decryptor/decoder.
-      SetState(DECODER_STATE_WAIT_FOR_CDM);
-      return NS_OK;
-    }
-
-    SetState(DECODER_STATE_DECODING_FIRSTFRAME);
-    res = EnqueueDecodeFirstFrameTask();
-    if (NS_FAILED(res)) {
-      return NS_ERROR_FAILURE;
-    }
+  if (mReader->IsWaitingOnCDMResource()) {
+    // Metadata parsing was successful but we're still waiting for CDM caps
+    // to become available so that we can build the correct decryptor/decoder.
+    SetState(DECODER_STATE_WAIT_FOR_CDM);
+    return;
   }
-  ScheduleStateMachine();
 
-  return NS_OK;
+  SetState(DECODER_STATE_DECODING_FIRSTFRAME);
+  EnqueueDecodeFirstFrameTask();
+  ScheduleStateMachine();
+}
+
+void
+MediaDecoderStateMachine::OnMetadataNotRead(ReadMetadataFailureReason aReason)
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  MOZ_ASSERT(OnStateMachineThread());
+  MOZ_ASSERT(mState == DECODER_STATE_DECODING_METADATA);
+  mMetadataRequest.Complete();
+
+  if (aReason == ReadMetadataFailureReason::WAITING_FOR_RESOURCES) {
+    SetState(DECODER_STATE_WAIT_FOR_RESOURCES);
+  } else {
+    MOZ_ASSERT(aReason == ReadMetadataFailureReason::METADATA_ERROR);
+    DECODER_WARN("Decode metadata failed, shutting down decoder");
+    DecodeError();
+  }
 }
 
 void
@@ -2674,8 +2574,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
         StopPlayback();
       }
 
-      StopAudioThread();
-      FlushDecoding();
+      Reset();
 
       // Put a task in the decode queue to shutdown the reader.
       // the queue to spin down.
@@ -2699,16 +2598,25 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
 
     case DECODER_STATE_DECODING_NONE: {
       SetState(DECODER_STATE_DECODING_METADATA);
-      // Ensure we have a decode thread to decode metadata.
-      return EnqueueDecodeMetadataTask();
+      ScheduleStateMachine();
+      return NS_OK;
     }
 
     case DECODER_STATE_DECODING_METADATA: {
+      if (!mMetadataRequest.Exists()) {
+        DECODER_LOG("Dispatching CallReadMetadata");
+        mMetadataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
+                                              &MediaDecoderReader::CallReadMetadata)
+          ->RefableThen(TaskQueue(), __func__, this,
+                        &MediaDecoderStateMachine::OnMetadataRead,
+                        &MediaDecoderStateMachine::OnMetadataNotRead));
+
+      }
       return NS_OK;
     }
 
     case DECODER_STATE_DECODING_FIRSTFRAME: {
-      // DECODER_STATE_DECODING_FIRSTFRAME will be started by DecodeMetadata
+      // DECODER_STATE_DECODING_FIRSTFRAME will be started by OnMetadataRead.
       return NS_OK;
     }
 
@@ -2838,47 +2746,45 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
 }
 
 void
-MediaDecoderStateMachine::FlushDecoding()
+MediaDecoderStateMachine::Reset()
 {
   MOZ_ASSERT(OnStateMachineThread());
   AssertCurrentThreadInMonitor();
+  DECODER_LOG("MediaDecoderStateMachine::Reset");
 
-  // Put a task in the decode queue to abort any decoding operations.
-  // The reader is not supposed to put any tasks to deliver samples into
-  // the queue after this runs (unless we request another sample from it).
-  ResetDecode();
-  {
-    // Wait for the ResetDecode to run and for the decoder to abort
-    // decoding operations and run any pending callbacks. This is
-    // important, as we don't want any pending tasks posted to the task
-    // queue by the reader to deliver any samples after we've posted the
-    // reader Shutdown() task below, as the sample-delivery tasks will
-    // keep video frames alive until after we've called Reader::Shutdown(),
-    // and shutdown on B2G will fail as there are outstanding video frames
-    // alive.
-    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    DecodeTaskQueue()->AwaitIdle();
-  }
+  // We should be resetting because we're seeking, shutting down, or entering
+  // dormant state. We could also be in the process of going dormant, and have
+  // just switched to exiting dormant before we finished entering dormant,
+  // hence the DECODING_NONE case below.
+  MOZ_ASSERT(mState == DECODER_STATE_SEEKING ||
+             mState == DECODER_STATE_SHUTDOWN ||
+             mState == DECODER_STATE_DORMANT ||
+             mState == DECODER_STATE_DECODING_NONE);
 
-  // We must reset playback so that all references to frames queued
-  // in the state machine are dropped, else subsequent calls to Shutdown()
-  // or ReleaseMediaResources() can fail on B2G.
-  ResetPlayback();
-}
+  // Stop the audio thread. Otherwise, AudioSink might be accessing AudioQueue
+  // outside of the decoder monitor while we are clearing the queue and causes
+  // crash for no samples to be popped.
+  StopAudioThread();
 
-void
-MediaDecoderStateMachine::ResetDecode()
-{
-  MOZ_ASSERT(OnStateMachineThread());
-  AssertCurrentThreadInMonitor();
+  mVideoFrameEndTime = -1;
+  mDecodedVideoEndTime = -1;
+  mAudioStartTime = -1;
+  mAudioEndTime = -1;
+  mDecodedAudioEndTime = -1;
+  mAudioCompleted = false;
+  AudioQueue().Reset();
+  VideoQueue().Reset();
+  mFirstVideoFrameAfterSeek = nullptr;
+  mDropAudioUntilNextDiscontinuity = true;
+  mDropVideoUntilNextDiscontinuity = true;
+  mDecodeToSeekTarget = false;
 
+  mMetadataRequest.DisconnectIfExists();
   mAudioDataRequest.DisconnectIfExists();
   mAudioWaitRequest.DisconnectIfExists();
   mVideoDataRequest.DisconnectIfExists();
   mVideoWaitRequest.DisconnectIfExists();
   mSeekRequest.DisconnectIfExists();
-
-  mDecodeToSeekTarget = false;
 
   RefPtr<nsRunnable> resetTask =
     NS_NewRunnableMethod(mReader, &MediaDecoderReader::ResetDecode);

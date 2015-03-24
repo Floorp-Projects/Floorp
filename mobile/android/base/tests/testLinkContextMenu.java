@@ -18,7 +18,7 @@ public class testLinkContextMenu extends ContentContextMenuTest {
 
         LINK_PAGE_URL=getAbsoluteUrl(StringHelper.ROBOCOP_BIG_LINK_URL);
         BLANK_PAGE_URL=getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
-        inputAndLoadUrl(LINK_PAGE_URL);
+        loadUrlAndWait(LINK_PAGE_URL);
         waitForText(LINK_PAGE_TITLE);
 
         verifyContextMenuItems(linkMenuItems); // Verify context menu items are correct

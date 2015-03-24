@@ -228,18 +228,5 @@ Response::Headers_()
 
   return mHeaders;
 }
-
-void
-Response::SetFinalURL(bool aFinalURL, ErrorResult& aRv)
-{
-  nsCString url;
-  mInternalResponse->GetUrl(url);
-  if (url.IsEmpty()) {
-    aRv.ThrowTypeError(MSG_RESPONSE_URL_IS_NULL);
-    return;
-  }
-
-  mInternalResponse->SetFinalURL(aFinalURL);
-}
 } // namespace dom
 } // namespace mozilla

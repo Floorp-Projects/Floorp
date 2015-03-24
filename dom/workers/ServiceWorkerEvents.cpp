@@ -7,6 +7,7 @@
 #include "ServiceWorkerEvents.h"
 #include "ServiceWorkerClient.h"
 
+#include "nsIHttpChannelInternal.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIOutputStream.h"
 #include "nsContentUtils.h"
@@ -120,7 +121,7 @@ public:
     mChannel->SynthesizeStatus(mInternalResponse->GetStatus(), mInternalResponse->GetStatusText());
 
     nsAutoTArray<InternalHeaders::Entry, 5> entries;
-    mInternalResponse->Headers()->GetEntries(entries);
+    mInternalResponse->UnfilteredHeaders()->GetEntries(entries);
     for (uint32_t i = 0; i < entries.Length(); ++i) {
        mChannel->SynthesizeHeader(entries[i].mName, entries[i].mValue);
     }
@@ -135,11 +136,14 @@ class RespondWithHandler final : public PromiseNativeHandler
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
   nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
+  RequestMode mRequestMode;
 public:
   RespondWithHandler(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
-                     nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker)
+                     nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker,
+                     RequestMode aRequestMode)
     : mInterceptedChannel(aChannel)
     , mServiceWorker(aServiceWorker)
+    , mRequestMode(aRequestMode)
   {
   }
 
@@ -213,8 +217,10 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     return;
   }
 
-  // FIXME(nsm) Bug 1136200 deal with opaque and no-cors (fetch spec 4.2.2.2).
-  if (response->Type() == ResponseType::Error) {
+  // Section 4.2, step 2.2 "If either response's type is "opaque" and request's
+  // mode is not "no-cors" or response's type is error, return a network error."
+  if (((response->Type() == ResponseType::Opaque) && (mRequestMode != RequestMode::No_cors)) ||
+      response->Type() == ResponseType::Error) {
     return;
   }
 
@@ -284,7 +290,8 @@ FetchEvent::RespondWith(Promise& aPromise, ErrorResult& aRv)
   }
 
   mWaitToRespond = true;
-  nsRefPtr<RespondWithHandler> handler = new RespondWithHandler(mChannel, mServiceWorker);
+  nsRefPtr<RespondWithHandler> handler =
+    new RespondWithHandler(mChannel, mServiceWorker, mRequest->Mode());
   aPromise.AppendNativeHandler(handler);
 }
 

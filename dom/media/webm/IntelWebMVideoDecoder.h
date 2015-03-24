@@ -54,7 +54,7 @@ private:
 
   bool SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed);
 
-  bool IsSupportedVideoMimeType(const char* aMimeType);
+  bool IsSupportedVideoMimeType(const nsACString& aMimeType);
 
   VP8Sample* PopSample();
 

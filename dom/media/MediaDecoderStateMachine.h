@@ -367,9 +367,8 @@ public:
   // be held.
   bool IsPlaying() const;
 
-  // Dispatch DoNotifyWaitingForResourcesStatusChanged task to the task queue.
   // Called when the reader may have acquired the hardware resources required
-  // to begin decoding. The decoder monitor must be held while calling this.
+  // to begin decoding.
   void NotifyWaitingForResourcesStatusChanged();
 
   // Notifies the state machine that should minimize the number of samples
@@ -407,8 +406,9 @@ public:
     WaitRequestRef(aRejection.mType).Complete();
   }
 
-  // Resets all state related to decoding, emptying all buffers etc.
-  void ResetDecode();
+  // Resets all state related to decoding and playback, emptying all buffers
+  // and aborting all pending operations on the decode task queue.
+  void Reset();
 
 private:
   void AcquireMonitorAndInvokeDecodeError();
@@ -465,8 +465,6 @@ protected:
 
   nsresult FinishDecodeFirstFrame();
 
-  nsAutoPtr<MetadataTags> mMetadataTags;
-
   // True if our buffers of decoded audio are not full, and we should
   // decode more.
   bool NeedToDecodeAudio();
@@ -513,14 +511,6 @@ protected:
 
   // Dispatches an asynchronous event to update the media element's ready state.
   void UpdateReadyState();
-
-  // Resets playback timing data. Called when we seek, on the decode thread.
-  void ResetPlayback();
-
-  // Orders the Reader to stop decoding, and blocks until the Reader
-  // has stopped decoding and finished delivering samples, then calls
-  // ResetPlayback() to discard all enqueued data.
-  void FlushDecoding();
 
   // Called when AudioSink reaches the end. |mPlayStartTime| and
   // |mPlayDuration| are updated to provide a good base for calculating video
@@ -590,8 +580,6 @@ protected:
   // decode thread.
   void DecodeError();
 
-  void StartWaitForResources();
-
   // Dispatches a task to the decode task queue to begin decoding metadata.
   // This is threadsafe and can be called on any thread.
   // The decoder monitor must be held.
@@ -659,12 +647,9 @@ protected:
   // must be held when calling this. Called on the decode thread.
   int64_t GetDecodedAudioDuration();
 
-  // Load metadata. Called on the decode thread. The decoder monitor
-  // must be held with exactly one lock count.
-  nsresult DecodeMetadata();
-
-  // Wraps the call to DecodeMetadata(), signals a DecodeError() on failure.
-  void CallDecodeMetadata();
+  // Promise callbacks for metadata reading.
+  void OnMetadataRead(MetadataHolder* aMetadata);
+  void OnMetadataNotRead(ReadMetadataFailureReason aReason);
 
   // Initiate first content decoding. Called on the state machine thread.
   // The decoder monitor must be held with exactly one lock count.
@@ -732,10 +717,6 @@ protected:
 
   // Called by the AudioSink to signal errors.
   void OnAudioSinkError();
-
-  // The state machine may move into DECODING_METADATA if we are in
-  // DECODER_STATE_WAIT_FOR_RESOURCES.
-  void DoNotifyWaitingForResourcesStatusChanged();
 
   // Return true if the video decoder's decode speed can not catch up the
   // play time.
@@ -1186,9 +1167,14 @@ protected:
   // we were at before the seek.
   int64_t mCurrentTimeBeforeSeek;
 
+  // Track our request for metadata from the reader.
+  MediaPromiseConsumerHolder<MediaDecoderReader::MetadataPromise> mMetadataRequest;
+
   // Stores presentation info required for playback. The decoder monitor
   // must be held when accessing this.
   MediaInfo mInfo;
+
+  nsAutoPtr<MetadataTags> mMetadataTags;
 
   mozilla::MediaMetadataManager mMetadataManager;
 

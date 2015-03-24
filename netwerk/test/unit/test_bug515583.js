@@ -24,43 +24,46 @@ const tests = [
 function checkData(request, data, ctx) {
   do_check_eq(tests[0][1], data);
   tests.shift();
-  next_test();
+  do_execute_soon(next_test);
 }
 
 function storeData(status, entry) {
-  do_check_eq(status, Components.results.NS_OK);
-  entry.setMetaDataElement("servertype", "0");
-  var os = entry.openOutputStream(0);
+  var scs = Cc["@mozilla.org/streamConverters;1"].
+            getService(Ci.nsIStreamConverterService);
+  var converter = scs.asyncConvertData("text/ftp-dir", "application/http-index-format",
+                                       new ChannelListener(checkData, null, CL_ALLOW_UNKNOWN_CL), null);
 
-  var written = os.write(tests[0][0], tests[0][0].length);
-  if (written != tests[0][0].length) {
-    do_throw("os.write has not written all data!\n" +
-             "  Expected: " + written  + "\n" +
-             "  Actual: " + tests[0][0].length + "\n");
-  }
-  os.close();
-  entry.close();
+  var stream = Cc["@mozilla.org/io/string-input-stream;1"].
+               createInstance(Ci.nsIStringInputStream);
+  stream.data = tests[0][0];
 
-  var ios = Components.classes["@mozilla.org/network/io-service;1"].
-            getService(Components.interfaces.nsIIOService);
-  var channel = ios.newChannel2(URL,
-                                "",
-                                null,
-                                null,      // aLoadingNode
-                                Services.scriptSecurityManager.getSystemPrincipal(),
-                                null,      // aTriggeringPrincipal
-                                Ci.nsILoadInfo.SEC_NORMAL,
-                                Ci.nsIContentPolicy.TYPE_OTHER);
-  channel.asyncOpen(new ChannelListener(checkData, null, CL_ALLOW_UNKNOWN_CL), null);
+  var url = {
+    password: "",
+    asciiSpec: URL,
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIURI])
+  };
+
+  var channel = {
+    URI: url,
+    contentLength: -1,
+    pending: true,
+    isPending: function() {
+      return this.pending;
+    },
+    QueryInterface: XPCOMUtils.generateQI([Ci.nsIChannel])
+  };
+
+  converter.onStartRequest(channel, null);
+  converter.onDataAvailable(channel, null, stream, 0, 0);
+  channel.pending = false;
+  converter.onStopRequest(channel, null, Cr.NS_OK);
 }
 
 function next_test() {
   if (tests.length == 0)
     do_test_finished();
   else {
-    asyncOpenCacheEntry(URL,
-                        "disk", Ci.nsICacheStorage.OPEN_NORMALLY, null,
-                        storeData);
+    storeData();
   }
 }
 

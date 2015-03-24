@@ -1495,6 +1495,63 @@ js::testingFunc_bailout(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 bool
+js::testingFunc_inJit(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!IsBaselineEnabled(cx)) {
+        JSString *error = JS_NewStringCopyZ(cx, "Baseline is disabled.");
+        if(!error)
+            return false;
+
+        args.rval().setString(error);
+        return true;
+    }
+
+    JSScript *script = cx->currentScript();
+    if (script && script->getWarmUpResetCount() >= 20) {
+        JSString *error = JS_NewStringCopyZ(cx, "Compilation is being repeatedly prevented. Giving up.");
+        if (!error)
+            return false;
+
+        args.rval().setString(error);
+        return true;
+    }
+
+    args.rval().setBoolean(cx->currentlyRunningInJit());
+    return true;
+}
+
+bool
+js::testingFunc_inIon(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (!IsIonEnabled(cx)) {
+        JSString *error = JS_NewStringCopyZ(cx, "Ion is disabled.");
+        if (!error)
+            return false;
+
+        args.rval().setString(error);
+        return true;
+    }
+
+    JSScript *script = cx->currentScript();
+    if (script && script->getWarmUpResetCount() >= 20) {
+        JSString *error = JS_NewStringCopyZ(cx, "Compilation is being repeatedly prevented. Giving up.");
+        if (!error)
+            return false;
+
+        args.rval().setString(error);
+        return true;
+    }
+
+    // false when not in ionMonkey
+    args.rval().setBoolean(false);
+    return true;
+}
+
+bool
 js::testingFunc_assertFloat32(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2715,6 +2772,20 @@ gc::ZealModeHelpText),
     JS_FN_HELP("bailout", testingFunc_bailout, 0, 0,
 "bailout()",
 "  Force a bailout out of ionmonkey (if running in ionmonkey)."),
+
+    JS_FN_HELP("inJit", testingFunc_inJit, 0, 0,
+"inJit()",
+"  Returns true when called within (jit-)compiled code. When jit compilation is disabled this\n"
+"  function returns an error string. This function returns false in all other cases.\n"
+"  Depending on truthiness, you should continue to wait for compilation to happen or stop execution.\n"),
+
+    JS_FN_HELP("inIon", testingFunc_inIon, 0, 0,
+"inIon()",
+"  Returns true when called within ion. When ion is disabled or when compilation is abnormally\n"
+"  slow to start, this function returns an error string. Otherwise, this function returns false.\n"
+"  This behaviour ensures that a falsy value means that we are not in ion, but expect a\n"
+"  compilation to occur in the future. Conversely, a truthy value means that we are either in\n"
+"  ion or that there is litle or no chance of ion ever compiling the current script."),
 
     JS_FN_HELP("assertJitStackInvariants", TestingFunc_assertJitStackInvariants, 0, 0,
 "assertJitStackInvariants()",

@@ -890,6 +890,11 @@ WebGLContext::FramebufferTexture2D(GLenum target,
     if (!ValidateFramebufferTarget(target, "framebufferTexture2D"))
         return;
 
+    if (!IsWebGL2() && level != 0) {
+        ErrorInvalidValue("framebufferTexture2D: level must be 0.");
+        return;
+    }
+
     WebGLFramebuffer* fb;
     switch (target) {
     case LOCAL_GL_FRAMEBUFFER:

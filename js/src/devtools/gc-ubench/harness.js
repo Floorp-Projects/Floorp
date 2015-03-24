@@ -1,6 +1,10 @@
 // Per-frame time sampling infra. Also GC'd: hopefully will not perturb things too badly.
 var numSamples = 500;
 var delays = new Array(numSamples);
+var gcs = new Array(numSamples);
+var minorGCs = new Array(numSamples);
+var gcBytes = new Array(numSamples);
+var mallocBytes = new Array(numSamples);
 var sampleIndex = 0;
 var sampleTime = 16; // ms
 var gHistogram = new Map(); // {ms: count}
@@ -9,7 +13,10 @@ var gHistogram = new Map(); // {ms: count}
 var stopped = 0;
 var start;
 var prev;
+var latencyGraph;
+var memoryGraph;
 var ctx;
+var memoryCtx;
 
 // Current test state.
 var activeTest = undefined;
@@ -22,64 +29,115 @@ var testQueue = [];
 var globalDefaultGarbageTotal = "8M";
 var globalDefaultGarbagePerFrame = "8K";
 
-function xpos(index)
-{
-    return index * 2;
+function Graph(ctx) {
+    this.ctx = ctx;
+
+    var { width, height } = ctx.canvas;
+    this.layout = {
+        xAxisLabel_Y: height - 20,
+    };
 }
 
-function ypos(delay)
+Graph.prototype.xpos = index => index * 2;
+
+Graph.prototype.clear = function () {
+    var { width, height } = this.ctx.canvas;
+    this.ctx.clearRect(0, 0, width, height);
+};
+
+Graph.prototype.drawScale = function (delay)
 {
-    var r = 525 - Math.log(delay) * 64;
+    this.drawHBar(delay, `${delay}ms`, 'rgb(150,150,150)');
+}
+
+Graph.prototype.draw60fps = function () {
+    this.drawHBar(1000/60, '60fps', '#00cf61', 25);
+}
+
+Graph.prototype.draw30fps = function () {
+    this.drawHBar(1000/30, '30fps', '#cf0061', 25);
+}
+
+Graph.prototype.drawAxisLabels = function (x_label, y_label)
+{
+    var ctx = this.ctx;
+    var { width, height } = ctx.canvas;
+
+    ctx.fillText(x_label, width / 2, this.layout.xAxisLabel_Y);
+
+    ctx.save();
+    ctx.rotate(Math.PI/2);
+    var start = height / 2 - ctx.measureText(y_label).width / 2;
+    ctx.fillText(y_label, start, -width+20);
+    ctx.restore();
+}
+
+Graph.prototype.drawFrame = function () {
+    var ctx = this.ctx;
+    var { width, height } = ctx.canvas;
+
+    // Draw frame to show size
+    ctx.strokeStyle = 'rgb(0,0,0)';
+    ctx.fillStyle = 'rgb(0,0,0)';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(width, 0);
+    ctx.lineTo(width, height);
+    ctx.lineTo(0, height);
+    ctx.closePath();
+    ctx.stroke();
+}
+
+function LatencyGraph(ctx) {
+    Graph.call(this, ctx);
+    console.log(this.ctx);
+}
+
+LatencyGraph.prototype = Object.create(Graph.prototype);
+
+Object.defineProperty(LatencyGraph.prototype, 'constructor', {
+    enumerable: false,
+    value: LatencyGraph });
+
+LatencyGraph.prototype.ypos = function (delay) {
+    var { height } = this.ctx.canvas;
+
+    var r = height + 100 - Math.log(delay) * 64;
     if (r < 5) return 5;
     return r;
 }
 
-function drawHBar(delay, color, label)
+LatencyGraph.prototype.drawHBar = function (delay, label, color='rgb(0,0,0)', label_offset=0)
 {
+    var ctx = this.ctx;
+
     ctx.fillStyle = color;
     ctx.strokeStyle = color;
-    ctx.fillText(label, xpos(numSamples) + 4, ypos(delay) + 3);
+    ctx.fillText(label, this.xpos(numSamples) + 4 + label_offset, this.ypos(delay) + 3);
 
     ctx.beginPath();
-    ctx.moveTo(xpos(0), ypos(delay));
-    ctx.lineTo(xpos(numSamples), ypos(delay));
+    ctx.moveTo(this.xpos(0), this.ypos(delay));
+    ctx.lineTo(this.xpos(numSamples) + label_offset, this.ypos(delay));
     ctx.stroke();
     ctx.strokeStyle = 'rgb(0,0,0)';
     ctx.fillStyle = 'rgb(0,0,0)';
 }
 
-function drawScale(delay)
-{
-    drawHBar(delay, 'rgb(150,150,150)', `${delay}ms`);
-}
+LatencyGraph.prototype.draw = function () {
+    var ctx = this.ctx;
 
-function draw60fps() {
-    drawHBar(1000/60, '#00cf61', '60fps');
-}
+    this.clear();
+    this.drawFrame();
 
-function draw30fps() {
-    drawHBar(1000/30, '#cf0061', '30fps');
-}
-
-function drawGraph()
-{
-    ctx.clearRect(0, 0, 1100, 550);
-
-    drawScale(10);
-    draw60fps();
-    drawScale(20);
-    drawScale(30);
-    draw30fps();
-    drawScale(50);
-    drawScale(100);
-    drawScale(200);
-    drawScale(400);
-    drawScale(800);
+    for (var delay of [ 10, 20, 30, 50, 100, 200, 400, 800 ])
+        this.drawScale(delay);
+    this.draw60fps();
+    this.draw30fps();
 
     var worst = 0, worstpos = 0;
     ctx.beginPath();
     for (var i = 0; i < numSamples; i++) {
-        ctx.lineTo(xpos(i), ypos(delays[i]));
+        ctx.lineTo(this.xpos(i), this.ypos(delays[i]));
         if (delays[i] >= worst) {
             worst = delays[i];
             worstpos = i;
@@ -87,21 +145,150 @@ function drawGraph()
     }
     ctx.stroke();
 
+    // Draw vertical lines marking minor and major GCs
+    if (performance.mozMemory) {
+        var { width, height } = ctx.canvas;
+
+        ctx.strokeStyle = 'rgb(255,100,0)';
+        var idx = sampleIndex % numSamples;
+        var gcCount = gcs[idx];
+        for (var i = 0; i < numSamples; i++) {
+            idx = (sampleIndex + i) % numSamples;
+            if (gcCount < gcs[idx]) {
+                ctx.beginPath();
+                ctx.moveTo(this.xpos(idx), 0);
+                ctx.lineTo(this.xpos(idx), this.layout.xAxisLabel_Y);
+                ctx.stroke();
+            }
+            gcCount = gcs[idx];
+        }
+
+        ctx.strokeStyle = 'rgb(0,255,100)';
+        idx = sampleIndex % numSamples;
+        gcCount = gcs[idx];
+        for (var i = 0; i < numSamples; i++) {
+            idx = (sampleIndex + i) % numSamples;
+            if (gcCount < minorGCs[idx]) {
+                ctx.beginPath();
+                ctx.moveTo(this.xpos(idx), 0);
+                ctx.lineTo(this.xpos(idx), 20);
+                ctx.stroke();
+            }
+            gcCount = minorGCs[idx];
+        }
+    }
+
     ctx.fillStyle = 'rgb(255,0,0)';
     if (worst)
-        ctx.fillText(''+worst.toFixed(2)+'ms', xpos(worstpos) - 10, ypos(worst) - 14);
+        ctx.fillText(`${worst.toFixed(2)}ms`, this.xpos(worstpos) - 10, this.ypos(worst) - 14);
 
+    // Mark and label the slowest frame
     ctx.beginPath();
     var where = sampleIndex % numSamples;
-    ctx.arc(xpos(where), ypos(delays[where]), 5, 0, Math.PI*2, true);
+    ctx.arc(this.xpos(where), this.ypos(delays[where]), 5, 0, Math.PI*2, true);
     ctx.fill();
     ctx.fillStyle = 'rgb(0,0,0)';
 
-    ctx.fillText('Time', 550, 420);
-    ctx.save();
-    ctx.rotate(Math.PI/2);
-    ctx.fillText('Pause between frames (log scale)', 150, -1060);
-    ctx.restore();
+    this.drawAxisLabels('Time', 'Pause between frames (log scale)');
+}
+
+function MemoryGraph(ctx) {
+    Graph.call(this, ctx);
+    this.worstEver = this.bestEver = performance.mozMemory.zone.gcBytes;
+    this.limit = Math.max(this.worstEver, performance.mozMemory.zone.gcAllocTrigger);
+}
+
+MemoryGraph.prototype = Object.create(Graph.prototype);
+
+Object.defineProperty(MemoryGraph.prototype, 'constructor', {
+    enumerable: false,
+    value: MemoryGraph });
+
+MemoryGraph.prototype.ypos = function (size) {
+    var { height } = this.ctx.canvas;
+
+    var range = this.limit - this.bestEver;
+    var percent = (size - this.bestEver) / range;
+
+    return (1 - percent) * height * 0.9 + 20;
+}
+
+MemoryGraph.prototype.drawHBar = function (size, label, color='rgb(150,150,150)')
+{
+    var ctx = this.ctx;
+
+    var y = this.ypos(size);
+
+    ctx.fillStyle = color;
+    ctx.strokeStyle = color;
+    ctx.fillText(label, this.xpos(numSamples) + 4, y + 3);
+
+    ctx.beginPath();
+    ctx.moveTo(this.xpos(0), y);
+    ctx.lineTo(this.xpos(numSamples), y);
+    ctx.stroke();
+    ctx.strokeStyle = 'rgb(0,0,0)';
+    ctx.fillStyle = 'rgb(0,0,0)';
+}
+
+function format_gcBytes(bytes) {
+    if (bytes < 4000)
+        return `${bytes} bytes`;
+    else if (bytes < 4e6)
+        return `${(bytes / 1024).toFixed(2)} KB`;
+    else if (bytes < 4e9)
+        return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+    else
+        return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
+};
+
+MemoryGraph.prototype.draw = function () {
+    var ctx = this.ctx;
+
+    this.clear();
+    this.drawFrame();
+
+    var worst = 0, worstpos = 0;
+    for (var i = 0; i < numSamples; i++) {
+        if (gcBytes[i] >= worst) {
+            worst = gcBytes[i];
+            worstpos = i;
+        }
+        if (gcBytes[i] < this.bestEver) {
+            this.bestEver = gcBytes[i];
+        }
+    }
+
+    if (this.worstEver < worst) {
+        this.worstEver = worst;
+        this.limit = Math.max(this.worstEver, performance.mozMemory.zone.gcAllocTrigger);
+    }
+
+    this.drawHBar(this.bestEver, `${format_gcBytes(this.bestEver)} min`, '#00cf61');
+    this.drawHBar(this.worstEver, `${format_gcBytes(this.worstEver)} max`, '#cc1111');
+    this.drawHBar(performance.mozMemory.zone.gcAllocTrigger, `${format_gcBytes(performance.mozMemory.zone.gcAllocTrigger)} trigger`, '#cc11cc');
+
+    ctx.fillStyle = 'rgb(255,0,0)';
+    if (worst)
+        ctx.fillText(format_gcBytes(worst), this.xpos(worstpos) - 10, this.ypos(worst) - 14);
+
+    ctx.beginPath();
+    var where = sampleIndex % numSamples;
+    ctx.arc(this.xpos(where), this.ypos(gcBytes[where]), 5, 0, Math.PI*2, true);
+    ctx.fill();
+
+    ctx.beginPath();
+    for (var i = 0; i < numSamples; i++) {
+        if (i == (sampleIndex + 1) % numSamples)
+            ctx.moveTo(this.xpos(i), this.ypos(gcBytes[i]));
+        else
+            ctx.lineTo(this.xpos(i), this.ypos(gcBytes[i]));
+        if (i == where)
+            ctx.stroke();
+    }
+    ctx.stroke();
+
+    this.drawAxisLabels('Time', 'Heap Memory Usage');
 }
 
 function stopstart()
@@ -118,6 +305,7 @@ function stopstart()
     }
 }
 
+var previous = 0;
 function handler(timestamp)
 {
     if (stopped)
@@ -144,10 +332,40 @@ function handler(timestamp)
     while (sampleIndex < newIndex) {
         sampleIndex++;
         delays[sampleIndex % numSamples] = delay;
+        if (performance.mozMemory) {
+            gcBytes[sampleIndex % numSamples] = performance.mozMemory.gcBytes;
+            gcs[sampleIndex % numSamples] = performance.mozMemory.gcNumber;
+            minorGCs[sampleIndex % numSamples] = performance.mozMemory.minorGCCount;
+        }
     }
 
-    drawGraph();
+    latencyGraph.draw();
+    if (memoryGraph)
+        memoryGraph.draw();
     window.requestAnimationFrame(handler);
+}
+
+function summarize(arr) {
+    if (arr.length == 0)
+        return [];
+
+    var result = [];
+    var run_start = 0;
+    var prev = arr[0];
+    for (var i = 1; i <= arr.length; i++) {
+        if (i == arr.length || arr[i] != prev) {
+            if (i == run_start + 1) {
+                result.push(arr[i]);
+            } else {
+                result.push(prev + " x " + (i - run_start));
+            }
+            run_start = i;
+        }
+        if (i != arr.length)
+            prev = arr[i];
+    }
+
+    return result;
 }
 
 function update_histogram(histogram, delay)
@@ -202,7 +420,12 @@ function onload()
 
     // Acquire our canvas.
     var canvas = document.getElementById('graph');
-    ctx = canvas.getContext('2d');
+    latencyGraph = new LatencyGraph(canvas.getContext('2d'));
+
+    if (performance.mozMemory) {
+        var canvas = document.getElementById('memgraph');
+        memoryGraph = new MemoryGraph(canvas.getContext('2d'));
+    }
 
     // Start drawing.
     reset_draw_state();
@@ -332,9 +555,9 @@ function change_active_test(new_test_name)
     activeTest = tests.get(new_test_name);
 
     if (!activeTest.garbagePerFrame)
-        activeTest.garbagePerFrame = activeTest.defaultGarbagePerFrame || globalDefaultGarbagePerFrame;
+        activeTest.garbagePerFrame = parse_units(activeTest.defaultGarbagePerFrame || globalDefaultGarbagePerFrame);
     if (!activeTest.garbageTotal)
-        activeTest.garbageTotal = activeTest.defaultGarbageTotal || globalDefaultGarbageTotal;
+        activeTest.garbageTotal = parse_units(activeTest.defaultGarbageTotal || globalDefaultGarbageTotal);
 
     document.getElementById("garbage-per-frame").value = format_units(activeTest.garbagePerFrame);
     document.getElementById("garbage-total").value = format_units(activeTest.garbageTotal);

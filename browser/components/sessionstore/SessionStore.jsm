@@ -45,7 +45,7 @@ const WINDOW_HIDEABLE_FEATURES = [
 ];
 
 // Messages that will be received via the Frame Message Manager.
-const FMM_MESSAGES = [
+const MESSAGES = [
   // The content script gives us a reference to an object that performs
   // synchronous collection of session data.
   "SessionStore:setupSyncHandler",
@@ -70,11 +70,15 @@ const FMM_MESSAGES = [
   // A tab that is being restored was reloaded. We call restoreTabContent to
   // finish restoring it right away.
   "SessionStore:reloadPendingTab",
+
+  // A crashed tab was revived by navigating to a different page. Remove its
+  // browser from the list of crashed browsers to stop ignoring its messages.
+  "SessionStore:crashedTabRevived",
 ];
 
 // The list of messages we accept from <xul:browser>s that have no tab
 // assigned. Those are for example the ones that preload about:newtab pages.
-const FMM_NOTAB_MESSAGES = new Set([
+const NOTAB_MESSAGES = new Set([
   // For a description see above.
   "SessionStore:setupSyncHandler",
 
@@ -82,15 +86,13 @@ const FMM_NOTAB_MESSAGES = new Set([
   "SessionStore:update",
 ]);
 
-// Messages that will be received via the Parent Process Message Manager.
-const PPMM_MESSAGES = [
-  // A tab is being revived from the crashed state. The sender of this
-  // message should actually be running in the parent process, since this
-  // will be the crashed tab interface. We use the Child and Parent Process
-  // Message Managers because the message is sent during framescript unload
-  // when the Frame Message Manager is not available.
-  "SessionStore:RemoteTabRevived",
-];
+// The list of messages we want to receive even during the short period after a
+// frame has been removed from the DOM and before its frame script has finished
+// unloading.
+const CLOSED_MESSAGES = new Set([
+  // For a description see above.
+  "SessionStore:crashedTabRevived",
+]);
 
 // These are tab events that we listen to.
 const TAB_EVENTS = [
@@ -423,8 +425,6 @@ let SessionStoreInternal = {
       Services.obs.addObserver(this, aTopic, true);
     }, this);
 
-    PPMM_MESSAGES.forEach(msg => ppmm.addMessageListener(msg, this));
-
     this._initPrefs();
     this._initialized = true;
   },
@@ -554,8 +554,6 @@ let SessionStoreInternal = {
 
     // Make sure to cancel pending saves.
     SessionSaver.cancel();
-
-    PPMM_MESSAGES.forEach(msg => ppmm.removeMessageListener(msg, this));
   },
 
   /**
@@ -602,12 +600,6 @@ let SessionStoreInternal = {
    * and thus enables communication with OOP tabs.
    */
   receiveMessage(aMessage) {
-    // We'll deal with any Parent Process Message Manager messages first...
-    if (aMessage.name == "SessionStore:RemoteTabRevived") {
-      this._crashedBrowsers.delete(aMessage.objects.browser.permanentKey);
-      return;
-    }
-
     // If we got here, that means we're dealing with a frame message
     // manager message, so the target will be a <xul:browser>.
     var browser = aMessage.target;
@@ -616,7 +608,7 @@ let SessionStoreInternal = {
 
     // Ensure we receive only specific messages from <xul:browser>s that
     // have no tab assigned, e.g. the ones that preload about:newtab pages.
-    if (!tab && !FMM_NOTAB_MESSAGES.has(aMessage.name)) {
+    if (!tab && !NOTAB_MESSAGES.has(aMessage.name)) {
       throw new Error(`received unexpected message '${aMessage.name}' ` +
                       `from a browser that has no tab`);
     }
@@ -709,6 +701,9 @@ let SessionStoreInternal = {
           }
         }
         break;
+      case "SessionStore:crashedTabRevived":
+        this._crashedBrowsers.delete(browser.permanentKey);
+        break;
       default:
         throw new Error(`received unknown message '${aMessage.name}'`);
         break;
@@ -799,7 +794,10 @@ let SessionStoreInternal = {
     aWindow.__SSi = this._generateWindowID();
 
     let mm = aWindow.getGroupMessageManager("browsers");
-    FMM_MESSAGES.forEach(msg => mm.addMessageListener(msg, this));
+    MESSAGES.forEach(msg => {
+      let listenWhenClosed = CLOSED_MESSAGES.has(msg);
+      mm.addMessageListener(msg, this, listenWhenClosed);
+    });
 
     // Load the frame script after registering listeners.
     mm.loadFrameScript("chrome://browser/content/content-sessionStore.js", true);
@@ -1128,7 +1126,7 @@ let SessionStoreInternal = {
     DyingWindowCache.set(aWindow, winData);
 
     let mm = aWindow.getGroupMessageManager("browsers");
-    FMM_MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));
+    MESSAGES.forEach(msg => mm.removeMessageListener(msg, this));
 
     delete aWindow.__SSi;
   },

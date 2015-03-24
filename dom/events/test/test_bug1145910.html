@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1145910
+-->
+<head>
+  <title>Test for Bug 1145910</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<style>
+div:active {
+  color: rgb(0, 255, 0);
+}
+</style>
+<div id="host">Foo</div>
+<script type="application/javascript">
+
+/** Test for Bug 1145910 **/
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(function() {
+  var host = document.getElementById("host");
+  var shadow = host.createShadowRoot();
+  shadow.innerHTML = '<style>div:active { color: rgb(0, 255, 0); }</style><div id="inner">Bar</div>';
+  var inner = shadow.getElementById("inner");
+
+  is(window.getComputedStyle(host).color, "rgb(0, 0, 0)", "The host should not be active");
+  is(window.getComputedStyle(inner).color, "rgb(0, 0, 0)", "The div inside the shadow root should not be active.");
+
+  synthesizeMouseAtCenter(host, { type: "mousedown" });
+
+  is(window.getComputedStyle(inner).color, "rgb(0, 255, 0)", "Div inside shadow root should be active.");
+  is(window.getComputedStyle(host).color, "rgb(0, 255, 0)", "Host should be active when the inner div is made active.");
+
+  synthesizeMouseAtCenter(host, { type: "mouseup" });
+
+  is(window.getComputedStyle(inner).color, "rgb(0, 0, 0)", "Div inside shadow root should no longer be active.");
+  is(window.getComputedStyle(host).color, "rgb(0, 0, 0)", "Host should no longer be active.");
+
+  SimpleTest.finish();
+});
+
+</script>
+</body>
+</html>

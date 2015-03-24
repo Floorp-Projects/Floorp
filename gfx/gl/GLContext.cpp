@@ -119,6 +119,7 @@ static const char *sExtensionNames[] = {
     "GL_EXT_read_format_bgra",
     "GL_EXT_robustness",
     "GL_EXT_sRGB",
+    "GL_EXT_sRGB_write_control",
     "GL_EXT_shader_texture_lod",
     "GL_EXT_texture3D",
     "GL_EXT_texture_compression_dxt1",
