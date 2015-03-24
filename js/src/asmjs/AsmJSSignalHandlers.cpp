@@ -1338,14 +1338,3 @@ js::InterruptRunningJitCode(JSRuntime *rt)
     pthread_kill(thread, sInterruptSignal);
 #endif
 }
-
-// This is not supported by clang-cl yet.
-#if defined(MOZ_ASAN) && defined(JS_STANDALONE) && !defined(_MSC_VER)
-// Usually, this definition is found in mozglue (see mozglue/build/AsanOptions.cpp).
-// However, when doing standalone JS builds, mozglue is not used and we must ensure
-// that we still allow custom SIGSEGV handlers for asm.js and ion to work correctly.
-extern "C" MOZ_ASAN_BLACKLIST
-const char* __asan_default_options() {
-    return "allow_user_segv_handler=1";
-}
-#endif
