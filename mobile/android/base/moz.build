@@ -492,6 +492,7 @@ gbjar.sources += [
     'widget/DefaultDoorHanger.java',
     'widget/Divider.java',
     'widget/DoorHanger.java',
+    'widget/DoorhangerConfig.java',
     'widget/EllipsisTextView.java',
     'widget/FadedMultiColorTextView.java',
     'widget/FadedSingleColorTextView.java',
