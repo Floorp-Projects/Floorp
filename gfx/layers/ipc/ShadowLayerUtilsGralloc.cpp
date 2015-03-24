@@ -147,11 +147,6 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
   if (sameProcess) {
     aResult->mGraphicBuffer = SharedBufferManagerParent::GetGraphicBuffer(aResult->mRef);
   } else {
-    if (SharedBufferManagerChild::GetSingleton()->IsValidKey(index)) {
-      aResult->mGraphicBuffer = SharedBufferManagerChild::GetSingleton()->GetGraphicBuffer(index);
-    }
-    MOZ_ASSERT(!aResult->mGraphicBuffer.get());
-
     // Deserialize GraphicBuffer
 #if ANDROID_VERSION >= 19
     sp<GraphicBuffer> buffer(new GraphicBuffer());
