@@ -268,6 +268,16 @@ function checkStateAtActiveIntervalEndTime(player)
     'value at the end of the active duration');
 }
 
+test(function(t)
+{
+  var div = addDiv(t, {'class': 'animated-div'});
+  flushComputedStyle(div);
+  div.style.marginLeft = '200px'; // initiate transition
+
+  var player = div.getAnimationPlayers()[0];
+  assert_equals(player.startTime, null, 'startTime is unresolved');
+}, 'startTime of a newly created transition is unresolved');
+
 
 test(function(t)
 {
