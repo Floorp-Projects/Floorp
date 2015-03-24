@@ -865,8 +865,15 @@ imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctxt,
     if (firstPart) {
       // Notify listeners that we have an image.
       nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-      progressTracker->OnImageAvailable();
-      MOZ_ASSERT(progressTracker->HasImage());
+
+      if (NS_IsMainThread()) {
+        progressTracker->OnImageAvailable();
+        MOZ_ASSERT(progressTracker->HasImage());
+      } else {
+        nsCOMPtr<nsIRunnable> runnable =
+          NS_NewRunnableMethod(progressTracker, &ProgressTracker::OnImageAvailable);
+        NS_DispatchToMainThread(runnable);
+      }
     }
 
     if (mImage->HasError() && !mIsMultiPartChannel) { // Probably bad mimetype
