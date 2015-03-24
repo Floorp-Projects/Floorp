@@ -14,6 +14,7 @@
 #include "WMFMediaDataDecoder.h"
 #include "nsIWindowsRegKey.h"
 #include "nsComponentManagerUtils.h"
+#include "nsServiceManagerUtils.h"
 #include "nsIGfxInfo.h"
 #include "GfxDriverInfo.h"
 #include "gfxWindowsPlatform.h"
