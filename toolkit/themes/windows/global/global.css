@@ -286,10 +286,6 @@ label[disabled="true"]:-moz-system-metric(windows-classic) {
   border: 1px dotted -moz-DialogText;
 }
 
-popupnotificationcontent {
-  margin-top: .5em;
-}
-
 /* :::::: autoscroll popup ::::: */
 
 .autoscroller {
