@@ -109,7 +109,9 @@ CompositableHost::UseTextureHost(TextureHost* aTexture)
   if (!aTexture) {
     return;
   }
-  aTexture->SetCompositor(GetCompositor());
+  if (GetCompositor()) {
+    aTexture->SetCompositor(GetCompositor());
+  }
 }
 
 void
