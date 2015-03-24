@@ -470,18 +470,24 @@
   </binding>
 
   <binding id="popup-notification">
-    <content align="start">
-      <xul:image class="popup-notification-icon"
-                 xbl:inherits="popupid,src=icon"/>
+    <content>
+      <xul:vbox>
+        <xul:image class="popup-notification-icon"
+                   xbl:inherits="popupid,src=icon"/>
+      </xul:vbox>
       <xul:vbox flex="1">
+        <xul:label class="popup-notification-originHost header"
+                   xbl:inherits="value=originhost"
+                   crop="end"/>
         <xul:description class="popup-notification-description"
-                         xbl:inherits="xbl:text=label"/>
+                         xbl:inherits="xbl:text=label,popupid"/>
         <children includes="popupnotificationcontent"/>
         <xul:label class="text-link popup-notification-learnmore-link"
                xbl:inherits="href=learnmoreurl">&learnMore;</xul:label>
         <xul:spacer flex="1"/>
         <xul:hbox class="popup-notification-button-container"
                   pack="end" align="center">
+          <children includes="button"/>
           <xul:button anonid="button"
                       class="popup-notification-menubutton"
                       type="menu-button"
