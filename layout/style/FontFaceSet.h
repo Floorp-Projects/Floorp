@@ -311,9 +311,6 @@ private:
   // Whether mNonRuleFaces has changed since last time UpdateRules ran.
   bool mNonRuleFacesDirty;
 
-  // Whether we have called MaybeResolve() on mReady.
-  bool mReadyIsResolved;
-
   // Whether any FontFace objects in mRuleFaces or mNonRuleFaces are
   // loading.  Only valid when mHasLoadingFontFacesIsDirty is false.  Don't use
   // this variable directly; call the HasLoadingFontFaces method instead.
