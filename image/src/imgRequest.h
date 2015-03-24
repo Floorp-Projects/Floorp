@@ -27,7 +27,6 @@ class imgLoader;
 class imgRequestProxy;
 class imgCacheEntry;
 class imgMemoryReporter;
-class imgRequestNotifyRunnable;
 class nsIApplicationCache;
 class nsIProperties;
 class nsIRequest;
@@ -148,7 +147,6 @@ private:
   friend class imgLoader;
   friend class imgCacheValidator;
   friend class imgCacheExpirationTracker;
-  friend class imgRequestNotifyRunnable;
   friend class mozilla::image::ProgressTracker;
 
   inline void SetLoadId(void *aLoadId) {
