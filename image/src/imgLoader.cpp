@@ -15,6 +15,7 @@
 
 #include "nsCOMPtr.h"
 
+#include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
 #include "nsCORSListenerProxy.h"
 #include "nsNetUtil.h"
@@ -29,6 +30,7 @@
 #include "nsIFileURL.h"
 #include "nsCRT.h"
 #include "nsINetworkPredictor.h"
+#include "mozilla/dom/nsMixedContentBlocker.h"
 
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
@@ -588,6 +590,71 @@ static bool ShouldRevalidateEntry(imgCacheEntry *aEntry,
   return bValidateEntry;
 }
 
+/* Call content policies on cached images that went through a redirect */
+static bool
+ShouldLoadCachedImage(imgRequest* aImgRequest,
+                      nsISupports* aLoadingContext,
+                      nsIPrincipal* aLoadingPrincipal)
+{
+  /* Call content policies on cached images - Bug 1082837
+   * Cached images are keyed off of the first uri in a redirect chain.
+   * Hence content policies don't get a chance to test the intermediate hops
+   * or the final desitnation.  Here we test the final destination using
+   * mCurrentURI off of the imgRequest and passing it into content policies.
+   * For Mixed Content Blocker, we do an additional check to determine if any
+   * of the intermediary hops went through an insecure redirect with the
+   * mHadInsecureRedirect flag
+   */
+  bool insecureRedirect = aImgRequest->HadInsecureRedirect();
+  nsCOMPtr<nsIURI> contentLocation;
+  aImgRequest->GetCurrentURI(getter_AddRefs(contentLocation));
+  nsresult rv;
+
+  int16_t decision = nsIContentPolicy::REJECT_REQUEST;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::TYPE_IMAGE,
+                                 contentLocation,
+                                 aLoadingPrincipal,
+                                 aLoadingContext,
+                                 EmptyCString(), //mime guess
+                                 nullptr, //aExtra
+                                 &decision,
+                                 nsContentUtils::GetContentPolicy(),
+                                 nsContentUtils::GetSecurityManager());
+  if (NS_FAILED(rv) || !NS_CP_ACCEPTED(decision)) {
+    return false;
+  }
+
+  // We call all Content Policies above, but we also have to call mcb
+  // individually to check the intermediary redirect hops are secure.
+  if (insecureRedirect) {
+    if (!nsContentUtils::IsSystemPrincipal(aLoadingPrincipal)) {
+      // Set the requestingLocation from the aLoadingPrincipal.
+      nsCOMPtr<nsIURI> requestingLocation;
+      if (aLoadingPrincipal) {
+        rv = aLoadingPrincipal->GetURI(getter_AddRefs(requestingLocation));
+        NS_ENSURE_SUCCESS(rv, false);
+      }
+
+      // reset the decision for mixed content blocker check
+      decision = nsIContentPolicy::REJECT_REQUEST;
+      rv = nsMixedContentBlocker::ShouldLoad(insecureRedirect,
+                                             nsIContentPolicy::TYPE_IMAGE,
+                                             contentLocation,
+                                             requestingLocation,
+                                             aLoadingContext,
+                                             EmptyCString(), //mime guess
+                                             nullptr,
+                                             aLoadingPrincipal,
+                                             &decision);
+      if (NS_FAILED(rv) || !NS_CP_ACCEPTED(decision)) {
+        return false;
+      }
+    }
+  }
+
+  return true;
+}
+
 // Returns true if this request is compatible with the given CORS mode on the
 // given loading principal, and false if the request may not be reused due
 // to CORS.  Also checks the Referrer Policy, since requests with different
@@ -595,7 +662,7 @@ static bool ShouldRevalidateEntry(imgCacheEntry *aEntry,
 static bool
 ValidateSecurityInfo(imgRequest* request, bool forcePrincipalCheck,
                      int32_t corsmode, nsIPrincipal* loadingPrincipal,
-                     ReferrerPolicy referrerPolicy)
+                     nsISupports* aCX, ReferrerPolicy referrerPolicy)
 {
   // If the entry's Referrer Policy doesn't match, we can't use this request.
   if (referrerPolicy != request->GetReferrerPolicy()) {
@@ -619,11 +686,14 @@ ValidateSecurityInfo(imgRequest* request, bool forcePrincipalCheck,
     if (otherprincipal && loadingPrincipal) {
       bool equals = false;
       otherprincipal->Equals(loadingPrincipal, &equals);
-      return equals;
+      if (!equals) {
+        return false;
+      }
     }
   }
 
-  return true;
+  // Content Policy Check on Cached Images
+  return ShouldLoadCachedImage(request, aCX, loadingPrincipal);
 }
 
 static nsresult NewImageChannel(nsIChannel **aResult,
@@ -1604,7 +1674,7 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
 
   if (!ValidateSecurityInfo(request, aEntry->ForcePrincipalCheck(),
                             aCORSMode, aLoadingPrincipal,
-                            aReferrerPolicy))
+                            aCX, aReferrerPolicy))
     return false;
 
   // data URIs are immutable and by their nature can't leak data, so we can

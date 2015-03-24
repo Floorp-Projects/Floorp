@@ -25,10 +25,12 @@ enum MixedContentTypes {
 #include "nsIContentPolicy.h"
 #include "nsIChannel.h"
 #include "nsIChannelEventSink.h"
+#include "imgRequest.h"
 
 class nsMixedContentBlocker : public nsIContentPolicy,
                               public nsIChannelEventSink
 {
+private:
   virtual ~nsMixedContentBlocker();
 
 public:
@@ -37,6 +39,25 @@ public:
   NS_DECL_NSICHANNELEVENTSINK
 
   nsMixedContentBlocker();
+
+  /* Static version of ShouldLoad() that contains all the Mixed Content Blocker
+   * logic.  Called from non-static ShouldLoad().
+   * Called directly from imageLib when an insecure redirect exists in a cached
+   * image load.
+   * @param aHadInsecureImageRedirect
+   *        boolean flag indicating that an insecure redirect through http
+   *        occured when this image was initially loaded and cached.
+   * Remaining parameters are from nsIContentPolicy::ShouldLoad().
+   */
+  static nsresult ShouldLoad(bool aHadInsecureImageRedirect,
+                             uint32_t aContentType,
+                             nsIURI* aContentLocation,
+                             nsIURI* aRequestingLocation,
+                             nsISupports* aRequestingContext,
+                             const nsACString& aMimeGuess,
+                             nsISupports* aExtra,
+                             nsIPrincipal* aRequestPrincipal,
+                             int16_t* aDecision);
   static bool sBlockMixedScript;
   static bool sBlockMixedDisplay;
 };
