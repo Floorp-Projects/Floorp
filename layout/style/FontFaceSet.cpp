@@ -1336,7 +1336,11 @@ FontFaceSet::DidRefresh()
 void
 FontFaceSet::CheckLoadingStarted()
 {
-  if (HasLoadingFontFaces() && !mDispatchedLoadingEvent) {
+  if (!HasLoadingFontFaces()) {
+    return;
+  }
+
+  if (!mDispatchedLoadingEvent) {
     mStatus = FontFaceSetLoadStatus::Loading;
     mDispatchedLoadingEvent = true;
     (new AsyncEventDispatcher(this, NS_LITERAL_STRING("loading"),
