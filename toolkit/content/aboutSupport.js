@@ -168,8 +168,65 @@ let snapshotFormatters = {
   },
 
   graphics: function graphics(data) {
+    let strings = stringBundle();
+
+    function localizedMsg(msgArray) {
+      let nameOrMsg = msgArray.shift();
+      if (msgArray.length) {
+        // formatStringFromName logs an NS_ASSERTION failure otherwise that says
+        // "use GetStringFromName".  Lame.
+        try {
+          return strings.formatStringFromName(nameOrMsg, msgArray,
+                                              msgArray.length);
+        }
+        catch (err) {
+          // Throws if nameOrMsg is not a name in the bundle.  This shouldn't
+          // actually happen though, since msgArray.length > 1 => nameOrMsg is a
+          // name in the bundle, not a message, and the remaining msgArray
+          // elements are parameters.
+          return nameOrMsg;
+        }
+      }
+      try {
+        return strings.GetStringFromName(nameOrMsg);
+      }
+      catch (err) {
+        // Throws if nameOrMsg is not a name in the bundle.
+      }
+      return nameOrMsg;
+    }
+
+    // Read APZ info out of data.info, stripping it out in the process.
+    let apzInfo = [];
+    let formatApzInfo = function (info) {
+      let out = [];
+      for (let type of ['Wheel', 'Touch']) {
+        let key = 'Apz' + type + 'Input';
+        let warningKey = key + 'Warning';
+
+        if (!(key in info))
+          continue;
+
+        let badPref = info[warningKey];
+        delete info[key];
+        delete info[warningKey];
+
+        let message;
+        if (badPref)
+          message = localizedMsg([type.toLowerCase() + 'Warning', badPref]);
+        else
+          message = localizedMsg([type.toLowerCase() + 'Enabled']);
+        dump(message + ', ' + (type.toLowerCase() + 'Warning') + ', ' + badPref + '\n');
+        out.push(message);
+      }
+
+      return out;
+    };
+
     // graphics-info-properties tbody
     if ("info" in data) {
+      apzInfo = formatApzInfo(data.info);
+
       let trs = sortedArrayFromObject(data.info).map(function ([prop, val]) {
         return $.new("tr", [
           $.new("th", prop, "column"),
@@ -212,34 +269,12 @@ let snapshotFormatters = {
 
     // graphics-tbody tbody
 
-    function localizedMsg(msgArray) {
-      let nameOrMsg = msgArray.shift();
-      if (msgArray.length) {
-        // formatStringFromName logs an NS_ASSERTION failure otherwise that says
-        // "use GetStringFromName".  Lame.
-        try {
-          return strings.formatStringFromName(nameOrMsg, msgArray,
-                                              msgArray.length);
-        }
-        catch (err) {
-          // Throws if nameOrMsg is not a name in the bundle.  This shouldn't
-          // actually happen though, since msgArray.length > 1 => nameOrMsg is a
-          // name in the bundle, not a message, and the remaining msgArray
-          // elements are parameters.
-          return nameOrMsg;
-        }
-      }
-      try {
-        return strings.GetStringFromName(nameOrMsg);
-      }
-      catch (err) {
-        // Throws if nameOrMsg is not a name in the bundle.
-      }
-      return nameOrMsg;
-    }
-
     let out = Object.create(data);
-    let strings = stringBundle();
+
+    if (apzInfo.length == 0)
+      out.asyncPanZoom = "none";
+    else
+      out.asyncPanZoom = apzInfo.join("; ");
 
     out.acceleratedWindows =
       data.numAcceleratedWindows + "/" + data.numTotalWindows;
