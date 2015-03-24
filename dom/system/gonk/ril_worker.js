@@ -1532,37 +1532,16 @@ RilObject.prototype = {
    *        Call index (1-based) as reported by REQUEST_GET_CURRENT_CALLS.
    */
   hangUpCall: function(options) {
-    let call = this.currentCalls[options.callIndex];
-    if (!call) {
-      // |hangUpCall()| is used to remove a call from the current call list,
-      // so we consider it as an successful case when hanging up a call that
-      // doesn't exist in the current call list.
-      options.success = true;
-      this.sendChromeMessage(options);
-      return;
-    }
-
-    call.hangUpLocal = true;
-    if (call.state === CALL_STATE_HOLDING) {
-      this.hangUpBackground(options);
-    } else {
-      this.telephonyRequestQueue.push(REQUEST_HANGUP, () => {
-        let Buf = this.context.Buf;
-        Buf.newParcel(REQUEST_HANGUP, options);
-        Buf.writeInt32(1);
-        Buf.writeInt32(options.callIndex);
-        Buf.sendParcel();
-      });
-    }
+    this.telephonyRequestQueue.push(REQUEST_HANGUP, () => {
+      let Buf = this.context.Buf;
+      Buf.newParcel(REQUEST_HANGUP, options);
+      Buf.writeInt32(1);
+      Buf.writeInt32(options.callIndex);
+      Buf.sendParcel();
+    });
   },
 
   hangUpForeground: function(options) {
-    for each (let currentCall in this.currentCalls) {
-      if (currentCall.state == CALL_STATE_ACTIVE) {
-        currentCall.hangUpLocal = true;
-      }
-    }
-
     this.telephonyRequestQueue.push(REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND, () => {
       this.context.Buf.simpleRequest(REQUEST_HANGUP_FOREGROUND_RESUME_BACKGROUND,
                                      options);
@@ -1570,28 +1549,6 @@ RilObject.prototype = {
   },
 
   hangUpBackground: function(options) {
-    let waitingCalls = [];
-    let heldCalls = [];
-
-    for each (let currentCall in this.currentCalls) {
-      switch (currentCall.state) {
-        case CALL_STATE_WAITING:
-          waitingCalls.push(currentCall);
-          break;
-        case CALL_STATE_HOLDING:
-          heldCalls.push(currentCall);
-          break;
-      }
-    }
-
-    // When both a held and a waiting call exist, the request shall apply to
-    // the waiting call.
-    if (waitingCalls.length) {
-      waitingCalls.forEach(call => call.hangUpLocal = true);
-    } else {
-      heldCalls.forEach(call => call.hangUpLocal = true);
-    }
-
     this.telephonyRequestQueue.push(REQUEST_HANGUP_WAITING_OR_BACKGROUND, () => {
       this.context.Buf.simpleRequest(REQUEST_HANGUP_WAITING_OR_BACKGROUND,
                                      options);
@@ -1642,52 +1599,6 @@ RilObject.prototype = {
         break;
       default:
         if (DEBUG) this.context.debug("AnswerCall: Invalid call state");
-
-        options.success = false;
-        options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
-        this.sendChromeMessage(options);
-    }
-  },
-
-  /**
-   * Reject an incoming/waiting call.
-   *
-   * @param callIndex
-   *        Call index of the call to reject.
-   */
-  rejectCall: function(options) {
-    let call = this.currentCalls[options.callIndex];
-    if (!call) {
-      // |hangUpCall()| is used to remove an imcoming call from the current
-      // call list, so we consider it as an successful case when rejecting
-      // a call that doesn't exist in the current call list.
-      options.success = true;
-      this.sendChromeMessage(options);
-      return;
-    }
-
-    call.hangUpLocal = true;
-
-    if (this._isCdma) {
-      // AT+CHLD=0 means "release held or UDUB."
-      this.hangUpBackground(options);
-      return;
-    }
-
-    // Check for races. Since we dispatched the incoming/waiting call
-    // notification the incoming/waiting call may have changed. The main
-    // thread thinks that it is rejecting the call with the given index,
-    // so only reject if that is still incoming/waiting.
-    switch (call.state) {
-      case CALL_STATE_INCOMING:
-        this.udub(options);
-        break;
-      case CALL_STATE_WAITING:
-        // Reject the waiting (second) call, and remain the first call.
-        this.hangUpBackground(options);
-        break;
-      default:
-        if (DEBUG) this.context.debug("RejectCall: Invalid call state");
 
         options.success = false;
         options.errorMsg = GECKO_ERROR_GENERIC_FAILURE;
