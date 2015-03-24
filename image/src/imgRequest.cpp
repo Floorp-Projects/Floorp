@@ -150,7 +150,7 @@ void imgRequest::ClearLoader() {
 }
 
 already_AddRefed<ProgressTracker>
-imgRequest::GetProgressTracker()
+imgRequest::GetProgressTracker() const
 {
   MutexAutoLock lock(mMutex);
 
@@ -449,7 +449,8 @@ imgRequest::RemoveFromCache()
   mCacheEntry = nullptr;
 }
 
-bool imgRequest::HasConsumers()
+bool
+imgRequest::HasConsumers() const
 {
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
   return progressTracker && progressTracker->ObserverCount() > 0;
