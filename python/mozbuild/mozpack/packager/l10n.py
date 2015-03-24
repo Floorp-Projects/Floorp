@@ -78,10 +78,20 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
 
     # For chrome and non chrome files or directories, store what langpack path
     # corresponds to a package path.
-    paths = dict((e.path,
-                  l10n_paths[mozpack.path.basedir(e.path, app.bases)][e.name])
-                 for e in app.entries
-                 if isinstance(e, ManifestEntryWithRelPath))
+    paths = {}
+    for e in app.entries:
+        if isinstance(e, ManifestEntryWithRelPath):
+            base = mozpack.path.basedir(e.path, app.bases)
+            if base not in l10n_paths:
+                errors.fatal("Locale doesn't contain %s/" % base)
+                # Allow errors to accumulate
+                continue
+            if e.name not in l10n_paths[base]:
+                errors.fatal("Locale doesn't have a manifest entry for '%s'" %
+                    e.name)
+                # Allow errors to accumulate
+                continue
+            paths[e.path] = l10n_paths[base][e.name]
 
     for pattern in non_chrome:
         for base in app.bases:
