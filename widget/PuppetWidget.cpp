@@ -17,6 +17,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/unused.h"
 #include "PuppetWidget.h"
 #include "nsIWidgetListener.h"
 
@@ -327,6 +328,28 @@ PuppetWidget::DispatchEvent(WidgetGUIEvent* event, nsEventStatus& aStatus)
   return NS_OK;
 }
 
+nsEventStatus
+PuppetWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
+{
+  if (!mTabChild) {
+    return nsEventStatus_eIgnore;
+  }
+
+  switch (aEvent->mClass) {
+    case eMouseEventClass:
+      unused <<
+        mTabChild->SendDispatchMouseEvent(*aEvent->AsMouseEvent());
+      break;
+    case eKeyboardEventClass:
+      unused <<
+        mTabChild->SendDispatchKeyboardEvent(*aEvent->AsKeyboardEvent());
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unsupported event type");
+  }
+
+  return nsEventStatus_eIgnore;
+}
 
 nsEventStatus
 PuppetWidget::DispatchAPZAwareEvent(WidgetInputEvent* aEvent)
@@ -343,7 +366,8 @@ PuppetWidget::DispatchAPZAwareEvent(WidgetInputEvent* aEvent)
 
   switch (aEvent->mClass) {
     case eWheelEventClass:
-      mTabChild->SendSynthesizedMouseWheelEvent(*aEvent->AsWheelEvent());
+      unused <<
+        mTabChild->SendDispatchWheelEvent(*aEvent->AsWheelEvent());
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("unsupported event type");
