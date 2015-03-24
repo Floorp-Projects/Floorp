@@ -1008,6 +1008,56 @@ add_task(function* test_dailyDuplication() {
   yield TelemetrySession.shutdown();
 });
 
+add_task(function* test_dailyOverdue() {
+  if (gIsAndroid) {
+    // We don't do daily collections yet on Android.
+    return;
+  }
+
+  let schedulerTickCallback = null;
+  let now = new Date(2030, 1, 1, 11, 0, 0);
+  fakeNow(now);
+  // Fake scheduler functions to control daily collection flow in tests.
+  fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  yield TelemetrySession.setup();
+
+  // Skip one hour ahead: nothing should be due.
+  now.setHours(now.getHours() + 1);
+  fakeNow(now);
+
+  // Assert if we receive something!
+  registerPingHandler((req, res) => {
+    Assert.ok(false, "No daily ping should be received if not overdue!.");
+  });
+
+  // This tick should not trigger any daily ping.
+  Assert.ok(!!schedulerTickCallback);
+  yield schedulerTickCallback();
+
+  // Restore the non asserting ping handler. This is done by the Request() constructor.
+  gRequestIterator = Iterator(new Request());
+
+  // Simulate an overdue ping: we're not close to midnight, but the last daily ping
+  // time is too long ago.
+  let dailyOverdue = new Date(2030, 1, 2, 13, 00, 0);
+  fakeNow(dailyOverdue);
+
+  // Run a scheduler tick: it should trigger the daily ping.
+  Assert.ok(!!schedulerTickCallback);
+  yield schedulerTickCallback();
+
+  // Get the first daily ping.
+  let request = yield gRequestIterator.next();
+  Assert.ok(!!request);
+  let ping = decodeRequestPayload(request);
+
+  Assert.equal(ping.type, PING_TYPE_MAIN);
+  Assert.equal(ping.payload.info.reason, REASON_DAILY);
+
+  // Shutdown to cleanup the aborted-session if it gets created.
+  yield TelemetrySession.shutdown();
+});
+
 add_task(function* test_environmentChange() {
   if (gIsAndroid) {
     // We don't split subsessions on environment changes yet on Android.
