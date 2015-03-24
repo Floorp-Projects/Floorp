@@ -2,14 +2,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from argparse import ArgumentParser
 from urlparse import urlparse
-import mozinfo
-import moznetwork
-import optparse
+import logging
 import os
 import tempfile
 
 from mozprofile import DEFAULT_PORTS
+import mozinfo
+import moznetwork
+
+from automation import Automation
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -24,8 +27,7 @@ __all__ = ["MochitestOptions", "B2GOptions"]
 VMWARE_RECORDING_HELPER_BASENAME = "vmwarerecordinghelper"
 
 
-class MochitestOptions(optparse.OptionParser):
-
+class MochitestOptions(ArgumentParser):
     """Usage instructions for runtests.py.
     All arguments are optional.
     If --chrome is specified, chrome tests will be run instead of web content tests.
@@ -43,23 +45,17 @@ class MochitestOptions(optparse.OptionParser):
           "help": "close the application when tests are done running",
           }],
         [["--appname"],
-         {"action": "store",
-          "type": "string",
-          "dest": "app",
+         {"dest": "app",
           "default": None,
           "help": "absolute path to application, overriding default",
           }],
         [["--utility-path"],
-         {"action": "store",
-          "type": "string",
-          "dest": "utilityPath",
+         {"dest": "utilityPath",
           "default": build_obj.bindir if build_obj is not None else None,
           "help": "absolute path to directory containing utility programs (xpcshell, ssltunnel, certutil)",
           }],
         [["--certificate-path"],
-         {"action": "store",
-          "type": "string",
-          "dest": "certPath",
+         {"dest": "certPath",
           "help": "absolute path to directory containing certificate store to use testing profile",
           "default": os.path.join(build_obj.topsrcdir, 'build', 'pgo', 'certs') if build_obj is not None else None,
           }],
@@ -70,19 +66,19 @@ class MochitestOptions(optparse.OptionParser):
           "default": False,
           }],
         [["--timeout"],
-         {"type": "int",
+         {"type": int,
           "dest": "timeout",
           "help": "per-test timeout in seconds",
           "default": None,
           }],
         [["--total-chunks"],
-         {"type": "int",
+         {"type": int,
           "dest": "totalChunks",
           "help": "how many chunks to split the tests up into",
           "default": None,
           }],
         [["--this-chunk"],
-         {"type": "int",
+         {"type": int,
           "dest": "thisChunk",
           "help": "which chunk to run",
           "default": None,
@@ -94,7 +90,7 @@ class MochitestOptions(optparse.OptionParser):
           "default": False,
           }],
         [["--chunk-by-dir"],
-         {"type": "int",
+         {"type": int,
           "dest": "chunkByDir",
           "help": "group tests together in the same chunk that are in the same top chunkByDir directories",
           "default": 0,
@@ -112,9 +108,7 @@ class MochitestOptions(optparse.OptionParser):
           "default": False,
           }],
         [["--console-level"],
-         {"action": "store",
-          "type": "choice",
-          "dest": "consoleLevel",
+         {"dest": "consoleLevel",
           "choices": LOG_LEVELS,
           "metavar": "LEVEL",
           "help": "one of %s to determine the level of console "
@@ -134,30 +128,22 @@ class MochitestOptions(optparse.OptionParser):
           "default": False,
           }],
         [["--test-path"],
-         {"action": "store",
-          "type": "string",
-          "dest": "testPath",
+         {"dest": "testPath",
           "help": "start in the given directory's tests",
           "default": "",
           }],
         [["--bisect-chunk"],
-         {"action": "store",
-          "type": "string",
-          "dest": "bisectChunk",
+         {"dest": "bisectChunk",
           "help": "Specify the failing test name to find the previous tests that may be causing the failure.",
           "default": None,
           }],
         [["--start-at"],
-         {"action": "store",
-          "type": "string",
-          "dest": "startAt",
+         {"dest": "startAt",
           "help": "skip over tests until reaching the given test",
           "default": "",
           }],
         [["--end-at"],
-         {"action": "store",
-          "type": "string",
-          "dest": "endAt",
+         {"dest": "endAt",
           "help": "don't run any tests after the given one",
           "default": "",
           }],
@@ -168,8 +154,7 @@ class MochitestOptions(optparse.OptionParser):
           "default": False,
           }],
         [["--subsuite"],
-         {"action": "store",
-          "dest": "subsuite",
+         {"dest": "subsuite",
           "help": "subsuite of tests to run",
           "default": None,
           }],
@@ -205,7 +190,6 @@ class MochitestOptions(optparse.OptionParser):
           }],
         [["--setenv"],
          {"action": "append",
-          "type": "string",
           "dest": "environment",
           "metavar": "NAME=VALUE",
           "help": "sets the given variable in the application's "
@@ -214,7 +198,6 @@ class MochitestOptions(optparse.OptionParser):
           }],
         [["--exclude-extension"],
          {"action": "append",
-          "type": "string",
           "dest": "extensionsToExclude",
           "help": "excludes the given extension from being installed "
           "in the test profile",
@@ -222,15 +205,13 @@ class MochitestOptions(optparse.OptionParser):
           }],
         [["--browser-arg"],
          {"action": "append",
-          "type": "string",
           "dest": "browserArgs",
           "metavar": "ARG",
           "help": "provides an argument to the test application",
           "default": [],
           }],
         [["--leak-threshold"],
-         {"action": "store",
-          "type": "int",
+         {"type": int,
           "dest": "defaultLeakThreshold",
           "metavar": "THRESHOLD",
           "help": "fail if the number of bytes leaked in default "
@@ -262,17 +243,13 @@ class MochitestOptions(optparse.OptionParser):
           "default": [],
           }],
         [["--profile-path"],
-         {"action": "store",
-          "type": "string",
-          "dest": "profilePath",
+         {"dest": "profilePath",
           "help": "Directory where the profile will be stored."
           "This directory will be deleted after the tests are finished",
           "default": None,
           }],
         [["--testing-modules-dir"],
-         {"action": "store",
-          "type": "string",
-          "dest": "testingModulesDir",
+         {"dest": "testingModulesDir",
           "help": "Directory where testing-only JS modules are located.",
           "default": None,
           }],
@@ -284,8 +261,7 @@ class MochitestOptions(optparse.OptionParser):
           "default": False,
           }],
         [["--repeat"],
-         {"action": "store",
-          "type": "int",
+         {"type": int,
           "dest": "repeat",
           "metavar": "REPEAT",
           "help": "repeats the test or set of tests the given number of times, ie: repeat: 1 will run the test twice.",
@@ -299,23 +275,17 @@ class MochitestOptions(optparse.OptionParser):
           "default": False,
           }],
         [["--manifest"],
-         {"action": "store",
-          "type": "string",
-          "dest": "manifestFile",
+         {"dest": "manifestFile",
           "help": ".ini format of tests to run.",
           "default": None,
           }],
         [["--testrun-manifest-file"],
-         {"action": "store",
-          "type": "string",
-          "dest": "testRunManifestFile",
+         {"dest": "testRunManifestFile",
           "help": "Overrides the default filename of the tests.json manifest file that is created from the manifest and used by the test runners to run the tests. Only useful when running multiple test runs simulatenously on the same machine.",
           "default": 'tests.json',
           }],
         [["--failure-file"],
-         {"action": "store",
-          "type": "string",
-          "dest": "failureFile",
+         {"dest": "failureFile",
           "help": "Filename of the output file where we can store a .json list of failures to be run in the future with --run-only-tests.",
           "default": None,
           }],
@@ -332,15 +302,12 @@ class MochitestOptions(optparse.OptionParser):
           "default": False,
           }],
         [["--httpd-path"],
-         {"action": "store",
-          "type": "string",
-          "dest": "httpdPath",
+         {"dest": "httpdPath",
           "default": None,
           "help": "path to the httpd.js file",
           }],
         [["--setpref"],
          {"action": "append",
-          "type": "string",
           "default": [],
           "dest": "extraPrefs",
           "metavar": "PREF=VALUE",
@@ -377,14 +344,12 @@ class MochitestOptions(optparse.OptionParser):
           "help": "Run tests with nested_oop preferences and test filtering enabled.",
           }],
         [["--dmd-path"],
-         {"action": "store",
-          "default": None,
+         {"default": None,
           "dest": "dmdPath",
           "help": "Specifies the path to the directory containing the shared library for DMD.",
           }],
         [["--dump-output-directory"],
-         {"action": "store",
-          "default": None,
+         {"default": None,
           "dest": "dumpOutputDirectory",
           "help": "Specifies the directory in which to place dumped memory reports.",
           }],
@@ -423,9 +388,7 @@ class MochitestOptions(optparse.OptionParser):
           "help": "Do not print test log lines unless a failure occurs."
           }],
         [["--pidfile"],
-         {"action": "store",
-          "type": "string",
-          "dest": "pidFile",
+         {"dest": "pidFile",
           "help": "name of the pidfile to generate",
           "default": "",
           }],
@@ -436,33 +399,26 @@ class MochitestOptions(optparse.OptionParser):
           "help": "Use test media device drivers for media testing.",
           }],
         [["--gmp-path"],
-         {"action": "store",
-          "default": None,
+         {"default": None,
           "dest": "gmp_path",
           "help": "Path to fake GMP plugin. Will be deduced from the binary if not passed.",
           }],
         [["--xre-path"],
-         {"action": "store",
-          "type": "string",
-          "dest": "xrePath",
+         {"dest": "xrePath",
           "default": None,    # individual scripts will set a sane default
           "help": "absolute path to directory containing XRE (probably xulrunner)",
           }],
         [["--symbols-path"],
-         {"action": "store",
-          "type": "string",
-          "dest": "symbolsPath",
+         {"dest": "symbolsPath",
           "default": None,
           "help": "absolute path to directory containing breakpad symbols, or the URL of a zip file containing symbols",
           }],
         [["--debugger"],
-         {"action": "store",
-          "dest": "debugger",
+         {"dest": "debugger",
           "help": "use the given debugger to launch the application",
           }],
         [["--debugger-args"],
-         {"action": "store",
-          "dest": "debuggerArgs",
+         {"dest": "debuggerArgs",
           "help": "pass the given args to the debugger _before_ the application on the command line",
           }],
         [["--debugger-interactive"],
@@ -471,31 +427,29 @@ class MochitestOptions(optparse.OptionParser):
           "help": "prevents the test harness from redirecting stdout and stderr for interactive debuggers",
           }],
         [["--max-timeouts"],
-         { "type": "int",
-           "dest": "maxTimeouts",
-           "help": "maximum number of timeouts permitted before halting testing",
-           "default": None,
-           }],
+         {"type": int,
+          "dest": "maxTimeouts",
+          "help": "maximum number of timeouts permitted before halting testing",
+          "default": None,
+          }],
         [["--tag"],
-         { "action": "append",
-           "dest": "test_tags",
-           "default": None,
-           "help": "filter out tests that don't have the given tag. Can be "
-                   "used multiple times in which case the test must contain "
-                   "at least one of the given tags.",
-         }],
+         {"action": "append",
+          "dest": "test_tags",
+          "default": None,
+          "help": "filter out tests that don't have the given tag. Can be "
+                  "used multiple times in which case the test must contain "
+                  "at least one of the given tags.",
+          }],
     ]
 
     def __init__(self, **kwargs):
-
-        optparse.OptionParser.__init__(self, **kwargs)
+        ArgumentParser.__init__(self, usage=self.__doc__, **kwargs)
         for option, value in self.mochitest_options:
             # Allocate new lists so references to original don't get mutated.
             # allowing multiple uses within a single process.
             if "default" in value and isinstance(value["default"], list):
                 value["default"] = []
-            self.add_option(*option, **value)
-        self.set_usage(self.__doc__)
+            self.add_argument(*option, **value)
 
     def verifyOptions(self, options, mochitest):
         """ verify correct options and cleanup paths """
@@ -528,7 +482,7 @@ class MochitestOptions(optparse.OptionParser):
         if options.xrePath is None:
             # default xrePath to the app path if not provided
             # but only if an app path was explicitly provided
-            if options.app != self.defaults['app']:
+            if options.app != self.get_default('app'):
                 options.xrePath = os.path.dirname(options.app)
                 if mozinfo.isMac:
                     options.xrePath = os.path.join(
@@ -698,9 +652,7 @@ class MochitestOptions(optparse.OptionParser):
 class B2GOptions(MochitestOptions):
     b2g_options = [
         [["--b2gpath"],
-         {"action": "store",
-          "type": "string",
-          "dest": "b2gPath",
+         {"dest": "b2gPath",
           "help": "path to B2G repo or qemu dir",
           "default": None,
           }],
@@ -711,30 +663,22 @@ class B2GOptions(MochitestOptions):
           "default": False,
           }],
         [["--marionette"],
-         {"action": "store",
-          "type": "string",
-          "dest": "marionette",
+         {"dest": "marionette",
           "help": "host:port to use when connecting to Marionette",
           "default": None,
           }],
         [["--emulator"],
-         {"action": "store",
-          "type": "string",
-          "dest": "emulator",
+         {"dest": "emulator",
           "help": "Architecture of emulator to use: x86 or arm",
           "default": None,
           }],
         [["--wifi"],
-         {"action": "store",
-          "type": "string",
-          "dest": "wifi",
+         {"dest": "wifi",
           "help": "Devine wifi configuration for on device mochitest",
           "default": False,
           }],
         [["--sdcard"],
-         {"action": "store",
-          "type": "string",
-          "dest": "sdcard",
+         {"dest": "sdcard",
           "help": "Define size of sdcard: 1MB, 50MB...etc",
           "default": "10MB",
           }],
@@ -745,89 +689,65 @@ class B2GOptions(MochitestOptions):
           "default": False,
           }],
         [["--adbpath"],
-         {"action": "store",
-          "type": "string",
-          "dest": "adbPath",
+         {"dest": "adbPath",
           "help": "path to adb",
           "default": "adb",
           }],
         [["--deviceIP"],
-         {"action": "store",
-          "type": "string",
-          "dest": "deviceIP",
+         {"dest": "deviceIP",
           "help": "ip address of remote device to test",
           "default": None,
           }],
         [["--devicePort"],
-         {"action": "store",
-          "type": "string",
-          "dest": "devicePort",
+         {"dest": "devicePort",
           "help": "port of remote device to test",
           "default": 20701,
           }],
         [["--remote-logfile"],
-         {"action": "store",
-          "type": "string",
-          "dest": "remoteLogFile",
+         {"dest": "remoteLogFile",
           "help": "Name of log file on the device relative to the device root. \
                   PLEASE ONLY USE A FILENAME.",
           "default": None,
           }],
         [["--remote-webserver"],
-         {"action": "store",
-          "type": "string",
-          "dest": "remoteWebServer",
+         {"dest": "remoteWebServer",
           "help": "ip address where the remote web server is hosted at",
           "default": None,
           }],
         [["--http-port"],
-         {"action": "store",
-          "type": "string",
-          "dest": "httpPort",
+         {"dest": "httpPort",
           "help": "ip address where the remote web server is hosted at",
-          "default": None,
+          "default": DEFAULT_PORTS['http'],
           }],
         [["--ssl-port"],
-         {"action": "store",
-          "type": "string",
-          "dest": "sslPort",
+         {"dest": "sslPort",
           "help": "ip address where the remote web server is hosted at",
-          "default": None,
+          "default": DEFAULT_PORTS['https'],
           }],
         [["--gecko-path"],
-         {"action": "store",
-          "type": "string",
-          "dest": "geckoPath",
+         {"dest": "geckoPath",
           "help": "the path to a gecko distribution that should \
                    be installed on the emulator prior to test",
           "default": None,
           }],
         [["--profile"],
-         {"action": "store",
-          "type": "string",
-          "dest": "profile",
+         {"dest": "profile",
           "help": "for desktop testing, the path to the \
                    gaia profile to use",
           "default": None,
           }],
         [["--logdir"],
-         {"action": "store",
-          "type": "string",
-          "dest": "logdir",
+         {"dest": "logdir",
           "help": "directory to store log files",
           "default": None,
           }],
         [['--busybox'],
-         {"action": 'store',
-          "type": 'string',
-          "dest": 'busybox',
+         {"dest": 'busybox',
           "help": "Path to busybox binary to install on device",
           "default": None,
           }],
         [['--profile-data-dir'],
-         {"action": 'store',
-          "type": 'string',
-          "dest": 'profile_data_dir',
+         {"dest": 'profile_data_dir',
           "help": "Path to a directory containing preference and other \
                    data to be installed into the profile",
           "default": os.path.join(here, 'profile_data'),
@@ -838,15 +758,12 @@ class B2GOptions(MochitestOptions):
         MochitestOptions.__init__(self)
 
         for option in self.b2g_options:
-            self.add_option(*option[0], **option[1])
+            self.add_argument(*option[0], **option[1])
 
         defaults = {}
-        defaults["httpPort"] = DEFAULT_PORTS['http']
-        defaults["sslPort"] = DEFAULT_PORTS['https']
         defaults["logFile"] = "mochitest.log"
         defaults["autorun"] = True
         defaults["closeWhenDone"] = True
-        defaults["testPath"] = ""
         defaults["extensionsToExclude"] = ["specialpowers"]
         # See dependencies of bug 1038943.
         defaults["defaultLeakThreshold"] = 5536
@@ -909,3 +826,229 @@ class B2GOptions(MochitestOptions):
     def elf_arm(self, filename):
         data = open(filename, 'rb').read(20)
         return data[:4] == "\x7fELF" and ord(data[18]) == 40  # EM_ARM
+
+
+class RemoteOptions(MochitestOptions):
+    remote_options = [
+        [["--remote-app-path"],
+         {"dest": "remoteAppPath",
+          "help": "Path to remote executable relative to device root using \
+                   only forward slashes. Either this or app must be specified \
+                   but not both.",
+          "default": None,
+          }],
+        [["--deviceIP"],
+         {"dest": "deviceIP",
+          "help": "ip address of remote device to test",
+          "default": None,
+          }],
+        [["--deviceSerial"],
+         {"dest": "deviceSerial",
+          "help": "ip address of remote device to test",
+          "default": None,
+          }],
+        [["--dm_trans"],
+         {"dest": "dm_trans",
+          "default": "sut",
+          "help": "the transport to use to communicate with device: \
+                   [adb|sut]; default=sut",
+          }],
+        [["--devicePort"],
+         {"dest": "devicePort",
+          "type": int,
+          "default": 20701,
+          "help": "port of remote device to test",
+          }],
+        [["--remote-product-name"],
+         {"dest": "remoteProductName",
+          "default": "fennec",
+          "help": "The executable's name of remote product to test - either \
+                   fennec or firefox, defaults to fennec",
+          }],
+        [["--remote-logfile"],
+         {"dest": "remoteLogFile",
+          "default": None,
+          "help": "Name of log file on the device relative to the device \
+                   root. PLEASE ONLY USE A FILENAME.",
+          }],
+        [["--remote-webserver"],
+         {"dest": "remoteWebServer",
+          "default": None,
+          "help": "ip address where the remote web server is hosted at",
+          }],
+        [["--http-port"],
+         {"dest": "httpPort",
+          "default": DEFAULT_PORTS['http'],
+          "help": "http port of the remote web server",
+          }],
+        [["--ssl-port"],
+         {"dest": "sslPort",
+          "default": DEFAULT_PORTS['https'],
+          "help": "ssl port of the remote web server",
+          }],
+        [["--robocop-ini"],
+         {"dest": "robocopIni",
+          "default": "",
+          "help": "name of the .ini file containing the list of tests to run",
+          }],
+        [["--robocop"],
+         {"dest": "robocop",
+          "default": "",
+          "help": "name of the .ini file containing the list of tests to run. \
+                   [DEPRECATED- please use --robocop-ini",
+          }],
+        [["--robocop-apk"],
+         {"dest": "robocopApk",
+          "default": "",
+          "help": "name of the Robocop APK to use for ADB test running",
+          }],
+        [["--robocop-path"],
+         {"dest": "robocopPath",
+          "default": "",
+          "help": "Path to the folder where robocop.apk is located at. \
+                   Primarily used for ADB test running. \
+                   [DEPRECATED- please use --robocop-apk]",
+          }],
+        [["--robocop-ids"],
+         {"dest": "robocopIds",
+          "default": "",
+          "help": "name of the file containing the view ID map \
+                   (fennec_ids.txt)",
+          }],
+        [["--remoteTestRoot"],
+         {"dest": "remoteTestRoot",
+          "default": None,
+          "help": "remote directory to use as test root \
+                   (eg. /mnt/sdcard/tests or /data/local/tests)",
+          }],
+    ]
+
+    def __init__(self, automation, **kwargs):
+        self._automation = automation or Automation()
+        MochitestOptions.__init__(self)
+
+        for option in self.remote_options:
+            self.add_argument(*option[0], **option[1])
+
+        defaults = {}
+        defaults["logFile"] = "mochitest.log"
+        defaults["autorun"] = True
+        defaults["closeWhenDone"] = True
+        defaults["utilityPath"] = None
+        self.set_defaults(**defaults)
+
+    def verifyRemoteOptions(self, options, automation):
+        options_logger = logging.getLogger('MochitestRemote')
+
+        if not options.remoteTestRoot:
+            options.remoteTestRoot = automation._devicemanager.deviceRoot
+
+        if options.remoteWebServer is None:
+            if os.name != "nt":
+                options.remoteWebServer = moznetwork.get_ip()
+            else:
+                options_logger.error(
+                    "you must specify a --remote-webserver=<ip address>")
+                return None
+
+        options.webServer = options.remoteWebServer
+
+        if (options.dm_trans == 'sut' and options.deviceIP is None):
+            options_logger.error(
+                "If --dm_trans = sut, you must provide a device IP")
+            return None
+
+        if (options.remoteLogFile is None):
+            options.remoteLogFile = options.remoteTestRoot + \
+                '/logs/mochitest.log'
+
+        if (options.remoteLogFile.count('/') < 1):
+            options.remoteLogFile = options.remoteTestRoot + \
+                '/' + options.remoteLogFile
+
+        if (options.remoteAppPath and options.app):
+            options_logger.error(
+                "You cannot specify both the remoteAppPath and the app setting")
+            return None
+        elif (options.remoteAppPath):
+            options.app = options.remoteTestRoot + "/" + options.remoteAppPath
+        elif (options.app is None):
+            # Neither remoteAppPath nor app are set -- error
+            options_logger.error("You must specify either appPath or app")
+            return None
+
+        # Only reset the xrePath if it wasn't provided
+        if (options.xrePath is None):
+            options.xrePath = options.utilityPath
+
+        if (options.pidFile != ""):
+            f = open(options.pidFile, 'w')
+            f.write("%s" % os.getpid())
+            f.close()
+
+        # Robocop specific deprecated options.
+        if options.robocop:
+            if options.robocopIni:
+                options_logger.error(
+                    "can not use deprecated --robocop and replacement --robocop-ini together")
+                return None
+            options.robocopIni = options.robocop
+            del options.robocop
+
+        if options.robocopPath:
+            if options.robocopApk:
+                options_logger.error(
+                    "can not use deprecated --robocop-path and replacement --robocop-apk together")
+                return None
+            options.robocopApk = os.path.join(
+                options.robocopPath,
+                'robocop.apk')
+            del options.robocopPath
+
+        # Robocop specific options
+        if options.robocopIni != "":
+            if not os.path.exists(options.robocopIni):
+                options_logger.error(
+                    "Unable to find specified robocop .ini manifest '%s'" %
+                    options.robocopIni)
+                return None
+            options.robocopIni = os.path.abspath(options.robocopIni)
+
+        if options.robocopApk != "":
+            if not os.path.exists(options.robocopApk):
+                options_logger.error(
+                    "Unable to find robocop APK '%s'" %
+                    options.robocopApk)
+                return None
+            options.robocopApk = os.path.abspath(options.robocopApk)
+
+        if options.robocopIds != "":
+            if not os.path.exists(options.robocopIds):
+                options_logger.error(
+                    "Unable to find specified robocop IDs file '%s'" %
+                    options.robocopIds)
+                return None
+            options.robocopIds = os.path.abspath(options.robocopIds)
+
+        # allow us to keep original application around for cleanup while
+        # running robocop via 'am'
+        options.remoteappname = options.app
+        return options
+
+    def verifyOptions(self, options, mochitest):
+        # since we are reusing verifyOptions, it will exit if App is not found
+        temp = options.app
+        options.app = __file__
+        tempPort = options.httpPort
+        tempSSL = options.sslPort
+        tempIP = options.webServer
+        # We are going to override this option later anyway, just pretend
+        # like it's not set for verification purposes.
+        options.dumpOutputDirectory = None
+        options = MochitestOptions.verifyOptions(self, options, mochitest)
+        options.webServer = tempIP
+        options.app = temp
+        options.sslPort = tempSSL
+        options.httpPort = tempPort
+
+        return options
