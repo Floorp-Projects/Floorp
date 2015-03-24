@@ -16,11 +16,13 @@ namespace layers {
 class IMFYCbCrImage : public PlanarYCbCrImage
 {
 public:
-  IMFYCbCrImage(IMFMediaBuffer* aBuffer, IMF2DBuffer* a2DBuffer);
+  IMFYCbCrImage(IMFMediaBuffer* aBuffer, IMF2DBuffer* a2DBuffer)
+    : PlanarYCbCrImage(nullptr)
+    , mBuffer(aBuffer)
+    , m2DBuffer(a2DBuffer)
+  {}
 
   virtual bool IsValid() { return true; }
-
-  virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
 
 protected:
   virtual uint8_t* AllocateBuffer(uint32_t aSize) MOZ_OVERRIDE {
@@ -28,11 +30,18 @@ protected:
     return nullptr;
   }
 
-  ~IMFYCbCrImage();
+  ~IMFYCbCrImage()
+  {
+    if (m2DBuffer) {
+      m2DBuffer->Unlock2D();
+    }
+    else {
+      mBuffer->Unlock();
+    }
+  }
 
   RefPtr<IMFMediaBuffer> mBuffer;
   RefPtr<IMF2DBuffer> m2DBuffer;
-  RefPtr<TextureClient> mTextureClient;
 };
 
 } // namepace layers
