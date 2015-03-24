@@ -21,7 +21,6 @@
   function runTest() {
     iframe = document.querySelector("iframe");
     iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/sandbox/register.html";
-    var ios;
     window.onmessage = function(e) {
       if (e.data.status == "ok") {
         ok(e.data.result, e.data.message);
