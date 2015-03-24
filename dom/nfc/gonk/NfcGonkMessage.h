@@ -39,13 +39,6 @@ enum NfcErrorCode {
   FailDisableLowPowerMode = 18,
 };
 
-enum SecureElementOrigin {
-  SIM = 0,
-  ESE = 1,
-  ASSD = 2,
-  OriginEndGuard = 3
-};
-
 } // namespace mozilla
 
 #endif // NfcGonkMessage_h
