@@ -170,71 +170,25 @@ body {
 /* Rooms */
 .rooms {
   min-height: 100px;
-  padding: 0 1rem;
 }
 
 .rooms > h1 {
   font-weight: bold;
   color: #999;
+  padding: .5rem 1rem;
+}
+
+.rooms > p {
   padding: .5rem 0;
+  margin: 0;
 }
 
-.rooms > div > .context {
-  margin: .5rem 0 0;
-  background-color: #DEEFF7;
-  border-radius: 3px 3px 0 0;
-  padding: .5rem;
-}
-
-.rooms > div > .context > .context-enabled {
-  margin-bottom: .5rem;
-  display: block;
-}
-
-.rooms > div > .context > .context-enabled > input {
-  -moz-margin-start: 0;
-}
-
-.rooms > div > .context > .context-preview {
-  float: right;
-  width: 100px;
-  max-height: 200px;
-  -moz-margin-start: 10px;
-  margin-bottom: 10px;
-}
-
-body[dir=rtl] .rooms > div > .context > .context-preview {
-  float: left;
-}
-
-.rooms > div > .context > .context-preview[src=""] {
-  display: none;
-}
-
-.rooms > div > .context > .context-description {
-  display: block;
-  color: #707070;
-}
-
-.rooms > div > .context > .context-url {
-  display: block;
-  color: #59A1D7;
-  clear: both;
-}
-
-.rooms > div > .btn {
+.rooms > p > .btn {
   display: block;
   font-size: 1rem;
-  margin: 0 auto .5rem;
-  width: 100%;
+  margin: 0 auto;
   padding: .5rem 1rem;
-  border-radius: 0 0 3px 3px;
-}
-
-/* Remove when bug 1142671 is backed out. */
-.rooms > div > :not(.context) + .btn {
   border-radius: 3px;
-  margin-top: 0.5rem;
 }
 
 .room-list {
@@ -243,8 +197,6 @@ body[dir=rtl] .rooms > div > .context > .context-preview {
   overflow: auto;
   border-top: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
-  margin-left: -1rem;
-  margin-right: -1rem;
 }
 
 .room-list:empty {
