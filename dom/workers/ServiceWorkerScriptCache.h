@@ -26,8 +26,8 @@ class CompareCallback
 public:
   virtual void ComparisonResult(nsresult aStatus, bool aInCacheAndEqual) = 0;
 
-  virtual MozExternalRefCountType AddRef() = 0;
-  virtual MozExternalRefCountType Release() = 0;
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
+  NS_IMETHOD_(MozExternalRefCountType) Release() = 0;
 };
 
 nsresult
