@@ -417,7 +417,7 @@ private:
   nsresult mRv;
 };
 
-class CancelWebSocketRunnable MOZ_FINAL : public nsRunnable
+class CancelWebSocketRunnable final : public nsRunnable
 {
 public:
   CancelWebSocketRunnable(nsIWebSocketChannel* aChannel, uint16_t aReasonCode,
@@ -427,7 +427,7 @@ public:
     , mReasonString(aReasonString)
   {}
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     mChannel->Close(mReasonCode, mReasonString);
     return NS_OK;
