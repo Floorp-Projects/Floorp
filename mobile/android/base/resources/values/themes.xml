@@ -113,6 +113,10 @@
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:backgroundDimEnabled">true</item>
 
+        <!-- Set the app's title bar color in the recent app switcher.
+
+             Note: We'd prefer not to show up in the recent app switcher (bug 1137928). -->
+        <item name="android:colorPrimary">@color/primary</item>
         <!-- We display the overlay on top of other Activities so show their status bar. -->
         <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
