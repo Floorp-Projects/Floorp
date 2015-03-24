@@ -2711,6 +2711,9 @@ public:
   const nsRegion& HitRegion() { return mHitRegion; }
   const nsRegion& MaybeHitRegion() { return mMaybeHitRegion; }
   const nsRegion& DispatchToContentHitRegion() { return mDispatchToContentHitRegion; }
+  const nsRegion& NoActionRegion() { return mNoActionRegion; }
+  const nsRegion& HorizontalPanRegion() { return mHorizontalPanRegion; }
+  const nsRegion& VerticalPanRegion() { return mVerticalPanRegion; }
 
   virtual void WriteDebugInfo(std::stringstream& aStream) override;
 
@@ -2724,6 +2727,15 @@ private:
   // These are points that need to be dispatched to the content thread for
   // resolution. Always contained in the union of mHitRegion and mMaybeHitRegion.
   nsRegion mDispatchToContentHitRegion;
+  // These are points where panning is disabled, as determined by the touch-action
+  // property. Always contained in the union of mHitRegion and mMaybeHitRegion.
+  nsRegion mNoActionRegion;
+  // These are points where panning is horizontal, as determined by the touch-action
+  // property. Always contained in the union of mHitRegion and mMaybeHitRegion.
+  nsRegion mHorizontalPanRegion;
+  // These are points where panning is vertical, as determined by the touch-action
+  // property. Always contained in the union of mHitRegion and mMaybeHitRegion.
+  nsRegion mVerticalPanRegion;
 };
 
 /**
