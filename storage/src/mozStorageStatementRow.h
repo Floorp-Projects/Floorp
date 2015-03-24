@@ -31,7 +31,7 @@ protected:
 
   Statement *mStatement;
 
-  friend class Statement;
+  friend class StatementRowHolder;
 };
 
 } // namespace storage
