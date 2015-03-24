@@ -1855,29 +1855,21 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
       theNode = childNode;
     }
 
-#ifdef DONT_DO_THIS_YET
-    // XXX: We can't use this code yet because the hinting
-    //      can cause us to attach to the wrong line frame.
-
     // Now that we have the child node, check if it too
     // can contain children. If so, call this method again!
-
-    if (theNode->IsElement())
+    if (theNode->IsElement() &&
+        theNode->GetChildCount() &&
+        !theNode->HasIndependentSelection())
     {
       int32_t newOffset = 0;
 
-      if (aOffset > childIndex)
-      {
+      if (aOffset > childIndex) {
         numChildren = theNode->GetChildCount();
-
         newOffset = numChildren;
       }
 
       return GetFrameForNodeOffset(theNode, newOffset, aHint, aReturnOffset);
-    }
-    else
-#endif // DONT_DO_THIS_YET
-    {
+    } else {
       // Check to see if theNode is a text node. If it is, translate
       // aOffset into an offset into the text node.
 
