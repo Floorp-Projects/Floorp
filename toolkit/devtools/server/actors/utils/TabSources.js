@@ -278,7 +278,7 @@ TabSources.prototype = {
     if (url) {
       try {
         let urlInfo = Services.io.newURI(url, null, null).QueryInterface(Ci.nsIURL);
-        if (urlInfo.fileExtension === "html") {
+        if (urlInfo.fileExtension === "html" || urlInfo.fileExtension === "xml") {
           spec.isInlineSource = true;
         }
         else if (urlInfo.fileExtension === "js") {
