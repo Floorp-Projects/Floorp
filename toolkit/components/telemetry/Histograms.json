@@ -6571,16 +6571,16 @@
     "n_buckets": 100,
     "description": "The peak number of open tabs in all windows for a session for devtools users."
   },
-  "DEVTOOLS_TABS_OPEN_AVERAGE_EXPONENTIAL": {
+  "DEVTOOLS_TABS_OPEN_AVERAGE_LINEAR": {
     "expires_in_version": "never",
-    "kind": "exponential",
+    "kind": "linear",
     "high": "101",
     "n_buckets": "100",
     "description": "The mean number of open tabs in all windows for a session for devtools users."
   },
-  "DEVTOOLS_TABS_PINNED_PEAK_EXPONENTIAL": {
+  "DEVTOOLS_TABS_PINNED_PEAK_LINEAR": {
     "expires_in_version": "never",
-    "kind": "exponential",
+    "kind": "linear",
     "high": "101",
     "n_buckets": "100",
     "description": "The peak number of pinned tabs (app tabs) in all windows for a session for devtools users."
@@ -7286,6 +7286,14 @@
     "keyed": true,
     "releaseChannelCollection": "opt-out",
     "description": "Connection length for bi-directionally connected media"
+  },
+  "LOOP_SHARING_STATE_CHANGE": {
+    "alert_emails": ["firefox-dev@mozilla.org", "mdeboer@mozilla.com"],
+    "expires_in_version": "43",
+    "kind": "count",
+    "keyed": true,
+    "releaseChannelCollection": "opt-in",
+    "description": "Number of times the sharing feature has been enabled and disabled"
   },
   "E10S_AUTOSTART": {
     "expires_in_version": "never",

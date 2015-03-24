@@ -58,6 +58,17 @@ const ITEM_RECORD_PROPERTIES = `
   readPosition
 `.trim().split(/\s+/);
 
+// Article objects that are passed to ReadingList.addItem may contain
+// some properties that are known but are not currently stored in the
+// ReadingList records. This is the list of properties that are knowingly
+// disregarded before the item is normalized.
+const ITEM_DISREGARDED_PROPERTIES = `
+  byline
+  dir
+  content
+  length
+`.trim().split(/\s+/);
+
 /**
  * A reading list contains ReadingListItems.
  *
@@ -853,6 +864,9 @@ ReadingListItemIterator.prototype = {
 function normalizeRecord(nonNormalizedRecord) {
   let record = {};
   for (let prop in nonNormalizedRecord) {
+    if (ITEM_DISREGARDED_PROPERTIES.includes(prop)) {
+      continue;
+    }
     if (!ITEM_RECORD_PROPERTIES.includes(prop)) {
       throw new Error("Unrecognized item property: " + prop);
     }
