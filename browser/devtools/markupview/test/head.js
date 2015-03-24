@@ -201,6 +201,15 @@ function getNodeFront(selector, {walker}) {
 }
 
 /**
+ * Get information about a DOM element, identified by its selector.
+ * @param {String} selector.
+ * @return {Promise} a promise that resolves to the element's information.
+ */
+function getNodeInfo(selector) {
+  return executeInContent("devtools:test:getDomElementInfo", {selector});
+}
+
+/**
  * Highlight a node and set the inspector's current selection to the node or
  * the first match of the given css selector.
  * @param {String|DOMNode} nodeOrSelector
