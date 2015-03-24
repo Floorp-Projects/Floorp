@@ -1508,7 +1508,7 @@ void MediaDecoderStateMachine::SetDormant(bool aDormant)
 
 void MediaDecoderStateMachine::Shutdown()
 {
-  NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
+  MOZ_ASSERT(OnTaskQueue());
 
   // Once we've entered the shutdown state here there's no going back.
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
