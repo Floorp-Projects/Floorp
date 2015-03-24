@@ -431,27 +431,9 @@ Statement::internalFinalize(bool aDestructing)
       asyncFinalize();
   }
 
-  // We are considered dead at this point, so any wrappers for row or params
-  // need to lose their reference to us.
-  if (mStatementParamsHolder) {
-    nsCOMPtr<nsIXPConnectWrappedNative> wrapper =
-        do_QueryInterface(mStatementParamsHolder);
-    nsCOMPtr<mozIStorageStatementParams> iParams =
-        do_QueryWrappedNative(wrapper);
-    StatementParams *params = static_cast<StatementParams *>(iParams.get());
-    params->mStatement = nullptr;
-    mStatementParamsHolder = nullptr;
-  }
-
-  if (mStatementRowHolder) {
-    nsCOMPtr<nsIXPConnectWrappedNative> wrapper =
-        do_QueryInterface(mStatementRowHolder);
-    nsCOMPtr<mozIStorageStatementRow> iRow =
-        do_QueryWrappedNative(wrapper);
-    StatementRow *row = static_cast<StatementRow *>(iRow.get());
-    row->mStatement = nullptr;
-    mStatementRowHolder = nullptr;
-  }
+  // Release the holders, so they can release the reference to us.
+  mStatementParamsHolder = nullptr;
+  mStatementRowHolder = nullptr;
 
   return convertResultCode(srv);
 }
