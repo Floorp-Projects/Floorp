@@ -301,6 +301,11 @@ let RLSidebar = {
                            .rootTreeItem
                            .QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindow);
+
+    let currentUrl = mainWindow.gBrowser.currentURI.spec;
+    if (currentUrl.startsWith("about:reader"))
+      url = "about:reader?url=" + encodeURIComponent(url);
+
     mainWindow.openUILink(url, event);
   },
 
@@ -422,7 +427,7 @@ let RLSidebar = {
     } else if (event.keyCode == KeyEvent.DOM_VK_RETURN) {
       let selectedItem = this.selectedItem;
       if (selectedItem) {
-        this.activeItem = this.selectedItem;
+        this.activeItem = selectedItem;
         this.openActiveItem(event);
       }
     }
