@@ -1424,14 +1424,6 @@ RilObject.prototype = {
   },
 
   /**
-   * Cache the request for making an emergency call when radio is off. The
-   * request shall include two types of callback functions. 'callback' is
-   * called when radio is ready, and 'onerror' is called when turning radio
-   * on fails.
-   */
-  cachedDialRequest : null,
-
-  /**
    * Dial a non-emergency number.
    *
    * @param isEmergency
@@ -1444,46 +1436,19 @@ RilObject.prototype = {
    *        Integer doing something XXX TODO
    */
   dial: function(options) {
-    let onerror = (function onerror(options, errorMsg) {
-      options.success = false;
-      options.errorMsg = errorMsg;
-      this.sendChromeMessage(options);
-    }).bind(this, options);
-
-    let isRadioOff = (this.radioState === GECKO_RADIOSTATE_DISABLED);
-
     if (options.isEmergency) {
       options.request = RILQUIRKS_REQUEST_USE_DIAL_EMERGENCY_CALL ?
                         REQUEST_DIAL_EMERGENCY_CALL : REQUEST_DIAL;
 
-      if (isRadioOff) {
-        if (DEBUG) {
-          this.context.debug("Automatically enable radio for an emergency call.");
-        }
-
-        this.cachedDialRequest = {
-          callback: this.dialInternal.bind(this, options),
-          onerror: onerror
-        };
-
-        this.setRadioEnabled({enabled: true});
-        return;
-      }
-
-      this.dialInternal(options);
     } else {
+      options.request = REQUEST_DIAL;
+
       // Exit emergency callback mode when user dial a non-emergency call.
       if (this._isInEmergencyCbMode) {
         this.exitEmergencyCbMode();
       }
-
-      options.request = REQUEST_DIAL;
-
-      this.dialInternal(options);
     }
-  },
 
-  dialInternal: function(options) {
     this.telephonyRequestQueue.push(options.request, () => {
       let Buf = this.context.Buf;
       Buf.newParcel(options.request, options);
@@ -3358,12 +3323,6 @@ RilObject.prototype = {
 
     info.rilMessageType = "signalstrengthchange";
     this._sendNetworkInfoMessage(NETWORK_INFO_SIGNAL, info);
-
-    if (this.cachedDialRequest && info.voice.signalStrength) {
-      // Radio is ready for making the cached emergency call.
-      this.cachedDialRequest.callback();
-      this.cachedDialRequest = null;
-    }
   },
 
   /**
@@ -4814,15 +4773,6 @@ RilObject.prototype[REQUEST_VOICE_REGISTRATION_STATE] = function REQUEST_VOICE_R
   if (DEBUG) this.context.debug("voice registration state: " + state);
 
   this._processVoiceRegistrationState(state);
-
-  if (this.cachedDialRequest &&
-       (this.voiceRegistrationState.emergencyCallsOnly ||
-        this.voiceRegistrationState.connected) &&
-      this.voiceRegistrationState.radioTech != NETWORK_CREG_TECH_UNKNOWN) {
-    // Radio is ready for making the cached emergency call.
-    this.cachedDialRequest.callback();
-    this.cachedDialRequest = null;
-  }
 };
 RilObject.prototype[REQUEST_DATA_REGISTRATION_STATE] = function REQUEST_DATA_REGISTRATION_STATE(length, options) {
   this._receivedNetworkInfo(NETWORK_INFO_DATA_REGISTRATION_STATE);
@@ -4846,19 +4796,7 @@ RilObject.prototype[REQUEST_OPERATOR] = function REQUEST_OPERATOR(length, option
   this._processOperator(operatorData);
 };
 RilObject.prototype[REQUEST_RADIO_POWER] = function REQUEST_RADIO_POWER(length, options) {
-  if (options.rilMessageType == null) {
-    // The request was made by ril_worker itself.
-    if (options.rilRequestError) {
-      if (this.cachedDialRequest && options.enabled) {
-        // Turning on radio fails. Notify the error of making an emergency call.
-        this.cachedDialRequest.onerror(GECKO_ERROR_RADIO_NOT_AVAILABLE);
-        this.cachedDialRequest = null;
-      }
-    }
-    return;
-  }
-
-  this.sendChromeMessage(options);
+  this.sendDefaultResponse(options);
 };
 RilObject.prototype[REQUEST_DTMF] = null;
 RilObject.prototype[REQUEST_SEND_SMS] = function REQUEST_SEND_SMS(length, options) {

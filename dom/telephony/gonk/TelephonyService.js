@@ -185,6 +185,25 @@ Call.prototype = {
   started: null
 };
 
+function MobileConnectionListener() {}
+MobileConnectionListener.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIMobileConnectionListener]),
+
+  // nsIMobileConnectionListener
+
+  notifyVoiceChanged: function() {},
+  notifyDataChanged: function() {},
+  notifyDataError: function(message) {},
+  notifyCFStateChanged: function(action, reason, number, timeSeconds, serviceClass) {},
+  notifyEmergencyCbModeChanged: function(active, timeoutMs) {},
+  notifyOtaStatusChanged: function(status) {},
+  notifyRadioStateChanged: function() {},
+  notifyClirModeChanged: function(mode) {},
+  notifyLastKnownNetworkChanged: function() {},
+  notifyLastKnownHomeNetworkChanged: function() {},
+  notifyNetworkSelectionModeChanged: function() {}
+};
+
 function TelephonyService() {
   this._numClients = gRadioInterfaceLayer.numRadioInterfaces;
   this._listeners = [];
@@ -292,7 +311,8 @@ TelephonyService.prototype = {
   },
 
   _isRadioOn: function(aClientId) {
-    return gGonkMobileConnectionService.getItemByServiceId(aClientId).radioState === nsIMobileConnection.MOBILE_RADIO_STATE_ENABLED;
+    let connection = gGonkMobileConnectionService.getItemByServiceId(aClientId);
+    return connection.radioState === nsIMobileConnection.MOBILE_RADIO_STATE_ENABLED;
   },
 
   // An array of nsITelephonyListener instances.
@@ -684,6 +704,32 @@ TelephonyService.prototype = {
       if (aClientId === -1) {
         if (DEBUG) debug("Error: No client is avaialble for emergency call.");
         aCallback.notifyError(DIAL_ERROR_INVALID_STATE_ERROR);
+        return;
+      }
+
+      // Radio is off. Turn it on first.
+      if (!this._isRadioOn(aClientId)) {
+        let connection = gGonkMobileConnectionService.getItemByServiceId(aClientId);
+        let listener = new MobileConnectionListener();
+
+        listener.notifyRadioStateChanged = () => {
+          if (this._isRadioOn(aClientId)) {
+            this._dialCall(aClientId, aNumber, undefined, aCallback);
+            connection.unregisterListener(listener);
+          }
+        };
+        connection.registerListener(listener);
+
+        // Turn on radio.
+        connection.setRadioEnabled(true, {
+          QueryInterface: XPCOMUtils.generateQI([Ci.nsIMobileConnectionCallback]),
+          notifySuccess: () => {},
+          notifyError: aErrorMsg => {
+            connection.unregisterListener(listener);
+            aCallback.notifyError(DIAL_ERROR_RADIO_NOT_AVAILABLE);
+          }
+        });
+
         return;
       }
     }
