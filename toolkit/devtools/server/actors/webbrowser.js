@@ -1240,14 +1240,14 @@ TabActor.prototype = {
   onReconfigure: function (aRequest) {
     let options = aRequest.options || {};
 
-    this._toggleJsOrCache(options);
+    this._toggleDevtoolsSettings(options);
     return {};
   },
 
   /**
-   * Handle logic to enable/disable JS/cache.
+   * Handle logic to enable/disable JS/cache/Service Worker testing.
    */
-  _toggleJsOrCache: function(options) {
+  _toggleDevtoolsSettings: function(options) {
     // Wait a tick so that the response packet can be dispatched before the
     // subsequent navigation event packet.
     let reload = false;
@@ -1260,6 +1260,13 @@ TabActor.prototype = {
     if (typeof options.cacheDisabled !== "undefined" &&
         options.cacheDisabled !== this._getCacheDisabled()) {
       this._setCacheDisabled(options.cacheDisabled);
+    }
+    if ((typeof options.serviceWorkersTestingEnabled !== "undefined") &&
+        (options.serviceWorkersTestingEnabled !==
+         this._getServiceWorkersTestingEnabled())) {
+      this._setServiceWorkersTestingEnabled(
+        options.serviceWorkersTestingEnabled
+      );
     }
 
     // Reload if:
@@ -1295,6 +1302,20 @@ TabActor.prototype = {
   },
 
   /**
+   * Disable or enable the service workers testing features.
+   */
+  _setServiceWorkersTestingEnabled: function(enabled) {
+    if (!this.docShell) {
+      // The tab is already closed.
+      return null;
+    }
+
+    let windowUtils = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindowUtils);
+    windowUtils.serviceWorkersTestingEnabled = enabled;
+  },
+
+  /**
    * Return cache allowed status.
    */
   _getCacheDisabled: function() {
@@ -1318,6 +1339,20 @@ TabActor.prototype = {
     }
 
     return this.docShell.allowJavascript;
+  },
+
+  /**
+   * Return service workers testing allowed status.
+   */
+  _getServiceWorkersTestingEnabled: function() {
+    if (!this.docShell) {
+      // The tab is already closed.
+      return null;
+    }
+
+    let windowUtils = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
+                                 .getInterface(Ci.nsIDOMWindowUtils);
+    return windowUtils.serviceWorkersTestingEnabled;
   },
 
   /**

@@ -1450,6 +1450,9 @@ pref("devtools.performance.ui.enable-framerate", true);
 // The default cache UI setting
 pref("devtools.cache.disabled", false);
 
+// The default service workers UI setting
+pref("devtools.serviceWorkers.testing.enabled", false);
+
 // Enable the Network Monitor
 pref("devtools.netmonitor.enabled", true);
 

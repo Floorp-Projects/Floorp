@@ -145,6 +145,10 @@
           <checkbox id="devtools-disable-javascript"
                     label="&options.disableJavaScript.label;"
                     tooltiptext="&options.disableJavaScript.tooltip;"/>
+          <checkbox id="devtools-enable-serviceWorkersTesting"
+                    label="&options.enableServiceWorkersTesting.label;"
+                    tooltiptext="&options.enableServiceWorkersTesting.tooltip;"
+                    data-pref="devtools.serviceWorkers.testing.enabled"/>
           <hbox class="hidden-labels-box">
             <checkbox label="&options.enableChrome.label5;"
                       tooltiptext="&options.enableChrome.tooltip3;"
