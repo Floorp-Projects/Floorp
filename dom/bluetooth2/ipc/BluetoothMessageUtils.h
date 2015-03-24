@@ -28,6 +28,73 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothStatus>
              mozilla::dom::bluetooth::STATUS_RMT_DEV_DOWN>
 { };
 
+template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothUuid>
+{
+  typedef mozilla::dom::bluetooth::BluetoothUuid paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    for (uint8_t i = 0; i < 16; i++) {
+      WriteParam(aMsg, aParam.mUuid[i]);
+    }
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    for (uint8_t i = 0; i < 16; i++) {
+      if (!ReadParam(aMsg, aIter, &(aResult->mUuid[i]))) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattId>
+{
+  typedef mozilla::dom::bluetooth::BluetoothGattId paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mUuid);
+    WriteParam(aMsg, aParam.mInstanceId);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &(aResult->mUuid)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mInstanceId))) {
+      return false;
+    }
+
+    return true;
+  }
+};
+
+template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattServiceId>
+{
+  typedef mozilla::dom::bluetooth::BluetoothGattServiceId paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mId);
+    WriteParam(aMsg, aParam.mIsPrimary);
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &(aResult->mId)) ||
+        !ReadParam(aMsg, aIter, &(aResult->mIsPrimary))) {
+      return false;
+    }
+
+    return true;
+  }
+};
 } // namespace IPC
 
 #endif // mozilla_dom_bluetooth_ipc_bluetoothmessageutils_h__

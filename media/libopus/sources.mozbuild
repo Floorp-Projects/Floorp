@@ -2,8 +2,6 @@
 celt_sources = [
     'celt/bands.c',
     'celt/celt.c',
-    'celt/celt_decoder.c',
-    'celt/celt_encoder.c',
     'celt/celt_lpc.c',
     'celt/cwrs.c',
     'celt/entcode.c',
@@ -18,6 +16,13 @@ celt_sources = [
     'celt/quant_bands.c',
     'celt/rate.c',
     'celt/vq.c',
+]
+
+celt_nonunified_sources = [
+    # Disabled because of name clash of opus_custom_encoder_get_size.
+    'celt/celt_decoder.c',
+    # Disabled because of name clash of opus_custom_encoder_get_size.
+    'celt/celt_encoder.c',
 ]
 
 celt_sources_arm = [

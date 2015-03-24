@@ -52,7 +52,8 @@ HTMLObjectElement::~HTMLObjectElement()
 bool
 HTMLObjectElement::IsInteractiveHTMLContent(bool aIgnoreTabindex) const
 {
-  return HasAttr(kNameSpaceID_None, nsGkAtoms::usemap);
+  return HasAttr(kNameSpaceID_None, nsGkAtoms::usemap) ||
+         nsGenericHTMLFormElement::IsInteractiveHTMLContent(aIgnoreTabindex);
 }
 
 bool

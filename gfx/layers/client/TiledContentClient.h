@@ -214,6 +214,11 @@ struct TileClient
   TileDescriptor GetTileDescriptor();
 
   /**
+   * For debugging.
+   */
+  void Dump(std::stringstream& aStream);
+
+  /**
   * Swaps the front and back buffers.
   */
   void Flip();

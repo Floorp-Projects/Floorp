@@ -299,15 +299,18 @@ HTMLTableHeaderCellAccessible::NativeRole()
 {
   // Check value of @scope attribute.
   static nsIContent::AttrValuesArray scopeValues[] =
-    {&nsGkAtoms::col, &nsGkAtoms::row, nullptr};
+    { &nsGkAtoms::col, &nsGkAtoms::colgroup,
+      &nsGkAtoms::row, &nsGkAtoms::rowgroup, nullptr };
   int32_t valueIdx =
     mContent->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::scope,
                               scopeValues, eCaseMatters);
 
   switch (valueIdx) {
     case 0:
-      return roles::COLUMNHEADER;
     case 1:
+      return roles::COLUMNHEADER;
+    case 2:
+    case 3:
       return roles::ROWHEADER;
   }
 

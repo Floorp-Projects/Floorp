@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<title>navigator.getBattery() - navigator.getBattery()'s returnvalue is Promise<BatteryManager>. </title>
+<meta charset="utf-8">
+<title>Battery Test: navigator.getBattery() returns BatteryManager as a promise</title>
 <link rel="author" title="YuichiNukiyama" href="https://github.com/YuichiNukiyama">
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
@@ -16,6 +17,10 @@
           });
     }, "navigator.getBattery() return BatteryManager");
 
+    test(function () {
+        assert_equals(navigator.getBattery(), navigator.getBattery());
+    }, "navigator.getBattery() shall always return the same promise");
 </script>
 
 <div id="log"></div>
+

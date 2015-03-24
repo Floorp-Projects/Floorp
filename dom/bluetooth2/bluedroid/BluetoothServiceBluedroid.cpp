@@ -1118,6 +1118,20 @@ BluetoothServiceBluedroid::DisconnectGattClientInternal(
 }
 
 void
+BluetoothServiceBluedroid::DiscoverGattServicesInternal(
+  const nsAString& aAppUuid, BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->Discover(aAppUuid, aRunnable);
+}
+
+void
 BluetoothServiceBluedroid::UnregisterGattClientInternal(
   int aClientIf, BluetoothReplyRunnable* aRunnable)
 {

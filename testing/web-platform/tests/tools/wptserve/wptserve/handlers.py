@@ -222,10 +222,13 @@ class PythonScriptHandler(object):
 
 python_script_handler = PythonScriptHandler()
 
-def FunctionHandler(func):
-    def inner(request, response):
+class FunctionHandler(object):
+    def __init__(self, func):
+        self.func = func
+
+    def __call__(self, request, response):
         try:
-            rv = func(request, response)
+            rv = self.func(request, response)
         except Exception:
             msg = traceback.format_exc()
             raise HTTPException(500, message=msg)
@@ -242,16 +245,22 @@ def FunctionHandler(func):
             else:
                 content = rv
             response.content = content
-    return inner
 
 
 #The generic name here is so that this can be used as a decorator
-handler = FunctionHandler
+def handler(func):
+    return FunctionHandler(func)
 
 
-def json_handler(func):
-    def inner(request, response):
-        rv = func(request, response)
+class JsonHandler(object):
+    def __init__(self, func):
+        self.func = func
+
+    def __call__(self, request, response):
+        return FunctionHandler(self.handle_request)(request, response)
+
+    def handle_request(self, request, response):
+        rv = self.func(request, response)
         response.headers.set("Content-Type", "application/json")
         enc = json.dumps
         if isinstance(rv, tuple):
@@ -263,8 +272,9 @@ def json_handler(func):
             length = len(value)
         response.headers.set("Content-Length", length)
         return value
-    return FunctionHandler(inner)
 
+def json_handler(func):
+    return JsonHandler(func)
 
 class AsIsHandler(object):
     def __init__(self, base_path=None, url_base="/"):

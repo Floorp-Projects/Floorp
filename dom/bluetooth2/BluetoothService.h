@@ -343,6 +343,14 @@ public:
                                BluetoothReplyRunnable* aRunnable) = 0;
 
   /**
+   * Discover GATT services, characteristic, descriptors from a remote GATT
+   * server. (platform specific implementation)
+   */
+  virtual void
+  DiscoverGattServicesInternal(const nsAString& aAppUuid,
+                               BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
    * Unregister a GATT client. (platform specific implementation)
    */
   virtual void

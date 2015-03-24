@@ -8,6 +8,7 @@
 <div id="log"></div>
 <script>
   var t1 = async_test("'beforescriptexecute'/'afterscriptexecute' events have been fired"),
+      t2 = async_test("default prevented 'beforescriptexecute' event aborts script execution"),
       a = false,
       b = false;
 
@@ -29,10 +30,26 @@
     }, "'afterscriptexecute' event is trusted, bubbles and isn't cancelable");
   };
 
-  document.body.onload = t1.step_func_done(function(){
-    assert_true(a && b);
-  });
+  var prevent_default = function(e) {
+    t2.step(function() {
+      e.preventDefault();
+      assert_true(e.defaultPrevented);
+    });
+  };
+
+  document.body.onload = function() {
+    t1.step(function() {
+      assert_true(a && b);
+    });
+    t1.done();
+    t2.done();
+  };
 </script>
 <script onbeforescriptexecute=before(event) onafterscriptexecute=after(event)>
   document.querySelector("script");
+</script>
+<script onbeforescriptexecute=prevent_default(event)>
+  t2.step(function() {
+    assert_unreached("script execution not aborted by default prevented 'beforescriptexecute' event");
+  });
 </script>
