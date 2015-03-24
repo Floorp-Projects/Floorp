@@ -49,6 +49,9 @@ public:
   // Cancellation is a best effort to stop processing as soon as possible, but
   // does not guarantee the Action will not run.
   //
+  // CancelOnInitiatingThread() may be called more than once.  Subsequent
+  // calls should have no effect.
+  //
   // Default implementation sets an internal cancellation flag that can be
   // queried with IsCanceled().
   virtual void CancelOnInitiatingThread();
