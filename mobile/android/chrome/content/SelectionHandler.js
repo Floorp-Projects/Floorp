@@ -45,7 +45,7 @@ var SelectionHandler = {
 
   _activeType: 0, // TYPE_NONE
   _selectionPrivate: null, // private selection reference
-  _selectionID: 0, // Unique Selection ID
+  _selectionID: null, // Unique Selection ID
 
   _draggingHandles: false, // True while user drags text selection handles
   _dragStartAnchorOffset: null, // Editables need initial pos during HandleMove events
@@ -82,6 +82,13 @@ var SelectionHandler = {
   get _domWinUtils() {
     return BrowserApp.selectedBrowser.contentWindow.QueryInterface(Ci.nsIInterfaceRequestor).
                                                     getInterface(Ci.nsIDOMWindowUtils);
+  },
+
+  // Provides UUID service for selection ID's.
+  get _idService() {
+    delete this._idService;
+    return this._idService = Cc["@mozilla.org/uuid-generator;1"].
+      getService(Ci.nsIUUIDGenerator);
   },
 
   _addObservers: function sh_addObservers() {
@@ -828,7 +835,7 @@ var SelectionHandler = {
       aElement.focus();
     }
 
-    this._selectionID++;
+    this._selectionID = this._idService.generateUUID().toString();
     this._stopDraggingHandles();
     this._contentWindow = aElement.ownerDocument.defaultView;
     this._targetIsRTL = (this._contentWindow.getComputedStyle(aElement, "").direction == "rtl");
