@@ -7626,6 +7626,11 @@
     "n_buckets" : 40,
     "description": "Time in days each saved login was last used"
   },
+  "PWMGR_PASSWORD_INPUT_IN_FORM": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether an <input type=password> is associated with a <form> when it is added to a document"
+  },
   "PWMGR_PROMPT_REMEMBER_ACTION" : {
     "expires_in_version": "never",
     "kind": "enumerated",
