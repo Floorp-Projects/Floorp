@@ -96,6 +96,10 @@ public:
     virtual bool IsInGonkEmulator() const { return mIsInGonkEmulator; }
 #endif
 
+    virtual bool SupportsApzTouchInput() override {
+      return true;
+    }
+
 private:
     int mScreenDepth;
     gfxImageFormat mOffscreenFormat;
