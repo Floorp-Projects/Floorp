@@ -601,6 +601,9 @@ class JitcodeGlobalEntry
     void setGeneration(uint32_t gen) {
         baseEntry().setGeneration(gen);
     }
+    void setAsExpired() {
+        baseEntry().setGeneration(UINT32_MAX);
+    }
     bool isSampled(uint32_t currentGen, uint32_t lapCount) {
         return baseEntry().isSampled(currentGen, lapCount);
     }
@@ -953,6 +956,7 @@ class JitcodeGlobalTable
     void removeEntry(JitcodeGlobalEntry &entry, JitcodeGlobalEntry **prevTower, JSRuntime *rt);
     void releaseEntry(JitcodeGlobalEntry &entry, JitcodeGlobalEntry **prevTower, JSRuntime *rt);
 
+    void setAllEntriesAsExpired(JSRuntime *rt);
     bool markIteratively(JSTracer *trc);
     void sweep(JSRuntime *rt);
 
