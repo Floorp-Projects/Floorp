@@ -77,9 +77,9 @@ WMFAudioMFTManager::WMFAudioMFTManager(
 {
   MOZ_COUNT_CTOR(WMFAudioMFTManager);
 
-  if (!strcmp(aConfig.mime_type, "audio/mpeg")) {
+  if (aConfig.mime_type.EqualsLiteral("audio/mpeg")) {
     mStreamType = MP3;
-  } else if (!strcmp(aConfig.mime_type, "audio/mp4a-latm")) {
+  } else if (aConfig.mime_type.EqualsLiteral("audio/mp4a-latm")) {
     mStreamType = AAC;
     AACAudioSpecificConfigToUserData(aConfig.aac_profile,
                                      aConfig.audio_specific_config->Elements(),

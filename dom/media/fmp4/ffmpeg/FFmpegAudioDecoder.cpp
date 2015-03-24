@@ -170,13 +170,13 @@ FFmpegAudioDecoder<LIBAV_VER>::Drain()
 }
 
 AVCodecID
-FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(const char* aMimeType)
+FFmpegAudioDecoder<LIBAV_VER>::GetCodecId(const nsACString& aMimeType)
 {
-  if (!strcmp(aMimeType, "audio/mpeg")) {
+  if (aMimeType.EqualsLiteral("audio/mpeg")) {
     return AV_CODEC_ID_MP3;
   }
 
-  if (!strcmp(aMimeType, "audio/mp4a-latm")) {
+  if (aMimeType.EqualsLiteral("audio/mp4a-latm")) {
     return AV_CODEC_ID_AAC;
   }
 
