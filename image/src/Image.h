@@ -44,14 +44,14 @@ public:
    *
    * INIT_FLAG_DISCARDABLE: The container should be discardable
    *
-   * INIT_FLAG_DECODE_ON_DRAW: The container should decode on draw rather than
-   * decoding on load.
+   * INIT_FLAG_DECODE_ONLY_ON_DRAW: The container should decode on draw rather
+   * than possibly being speculatively decoded earlier.
    *
    * INIT_FLAG_TRANSIENT: The container is likely to exist for only a short time
    * before being destroyed. (For example, containers for
    * multipart/x-mixed-replace image parts fall into this category.) If this
-   * flag is set, INIT_FLAG_DISCARDABLE and INIT_FLAG_DECODE_ON_DRAW must not be
-   * set.
+   * flag is set, INIT_FLAG_DISCARDABLE and INIT_FLAG_DECODE_ONLY_ON_DRAW must
+   * not be set.
    *
    * INIT_FLAG_DOWNSCALE_DURING_DECODE: The container should attempt to
    * downscale images during decoding instead of decoding them to their
@@ -59,7 +59,7 @@ public:
    */
   static const uint32_t INIT_FLAG_NONE                     = 0x0;
   static const uint32_t INIT_FLAG_DISCARDABLE              = 0x1;
-  static const uint32_t INIT_FLAG_DECODE_ON_DRAW           = 0x2;
+  static const uint32_t INIT_FLAG_DECODE_ONLY_ON_DRAW      = 0x2;
   static const uint32_t INIT_FLAG_TRANSIENT                = 0x4;
   static const uint32_t INIT_FLAG_DOWNSCALE_DURING_DECODE  = 0x8;
 
