@@ -294,6 +294,80 @@ function checkStateAtActiveIntervalEndTime(player)
     'animation-fill-mode is none');
 }
 
+test(function(t)
+{
+  var div = addDiv(t, { 'style': 'animation: anim 100s' });
+  var player = div.getAnimationPlayers()[0];
+  assert_equals(player.startTime, null, 'startTime is unresolved');
+}, 'startTime of a newly created (play-pending) animation is unresolved');
+
+test(function(t)
+{
+  var div = addDiv(t, { 'style': 'animation: anim 100s paused' });
+  var player = div.getAnimationPlayers()[0];
+  assert_equals(player.startTime, null, 'startTime is unresolved');
+}, 'startTime of a newly created (pause-pending) animation is unresolved');
+
+async_test(function(t)
+{
+  var div = addDiv(t, { 'style': 'animation: anim 100s' });
+  var player = div.getAnimationPlayers()[0];
+  player.ready.then(t.step_func(function() {
+    assert_true(player.startTime > 0,
+                'startTime is resolved when running');
+    t.done();
+  }));
+}, 'startTime is resolved when running');
+
+async_test(function(t)
+{
+  var div = addDiv(t, { 'style': 'animation: anim 100s paused' });
+  var player = div.getAnimationPlayers()[0];
+  player.ready.then(t.step_func(function() {
+    assert_equals(player.startTime, null,
+                  'startTime is unresolved when paused');
+    t.done();
+  }));
+}, 'startTime is unresolved when paused');
+
+async_test(function(t)
+{
+  var div = addDiv(t, { 'style': 'animation: anim 100s' });
+  var player = div.getAnimationPlayers()[0];
+  player.ready.then(t.step_func(function() {
+    div.style.animationPlayState = 'paused';
+    getComputedStyle(div).animationPlayState;
+    /* FIXME: Switch this on once deferred pausing is enabled
+    assert_not_equals(player.startTime, null,
+                      'startTime is resolved when pause-pending');
+    */
+
+    div.style.animationPlayState = 'running';
+    getComputedStyle(div).animationPlayState;
+    assert_equals(player.startTime, null,
+                  'startTime is unresolved when play-pending');
+    t.done();
+  }));
+}, 'startTime while pause-pending and play-pending');
+
+async_test(function(t)
+{
+  var div = addDiv(t, { 'style': 'animation: anim 100s' });
+  var player = div.getAnimationPlayers()[0];
+  // Seek to end to put us in the finished state
+  // FIXME: Once we implement finish(), use that here.
+  player.currentTime = 100 * 1000;
+  player.ready.then(t.step_func(function() {
+    // Call play() which puts us back in the running state
+    player.play();
+    // FIXME: Enable this once we implement finishing behavior (bug 1074630)
+    /*
+    assert_equals(player.startTime, null, 'startTime is unresolved');
+    */
+    t.done();
+  }));
+}, 'startTime while play-pending from finished state');
+
 
 test(function(t)
 {
