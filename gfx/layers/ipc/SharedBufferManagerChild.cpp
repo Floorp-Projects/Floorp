@@ -275,7 +275,9 @@ SharedBufferManagerChild::AllocGrallocBufferNow(const IntSize& aSize,
 
 #ifdef MOZ_HAVE_SURFACEDESCRIPTORGRALLOC
   mozilla::layers::MaybeMagicGrallocBufferHandle handle;
-  SendAllocateGrallocBuffer(aSize, aFormat, aUsage, &handle);
+  if (!SendAllocateGrallocBuffer(aSize, aFormat, aUsage, &handle)) {
+    return false;
+  }
   if (handle.type() != mozilla::layers::MaybeMagicGrallocBufferHandle::TMagicGrallocBufferHandle) {
     return false;
   }
@@ -283,6 +285,7 @@ SharedBufferManagerChild::AllocGrallocBufferNow(const IntSize& aSize,
 
   {
     MutexAutoLock lock(mBufferMutex);
+    MOZ_ASSERT(mBuffers.count(handle.get_MagicGrallocBufferHandle().mRef.mKey)==0);
     mBuffers[handle.get_MagicGrallocBufferHandle().mRef.mKey] = handle.get_MagicGrallocBufferHandle().mGraphicBuffer;
   }
   return true;
