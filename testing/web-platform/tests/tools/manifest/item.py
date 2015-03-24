@@ -36,6 +36,10 @@ class ManifestItem(object):
         """The test path relative to the test_root"""
         return self.source_file.rel_path
 
+    @property
+    def https(self):
+        return "https" in self.source_file.meta_flags
+
     def key(self):
         """A unique identifier for the test"""
         return (self.item_type, self.id)

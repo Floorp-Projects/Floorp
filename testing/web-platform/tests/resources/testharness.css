@@ -14,11 +14,6 @@ html {
   background: red;
 }
 
-#log pre {
-  border: 1px solid black;
-  padding: 1em;
-}
-
 section#summary {
     margin-bottom:1em;
 }
