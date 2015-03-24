@@ -692,14 +692,15 @@ FuncWith(JSContext *cx, unsigned argc, Value *vp)
     typedef typename V::Elem Elem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 2 || !IsVectorObject<V>(args[0]))
+    // Only the first argument is mandatory
+    if (args.length() < 1 || !IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
 
     Elem *vec = TypedObjectMemory<Elem *>(args[0]);
     Elem result[V::lanes];
 
     Elem value;
-    if (!V::toType(cx, args[1], &value))
+    if (!V::toType(cx, args.get(1), &value))
         return false;
 
     for (unsigned i = 0; i < V::lanes; i++)
@@ -856,11 +857,8 @@ FuncSplat(JSContext *cx, unsigned argc, Value *vp)
     typedef typename Vret::Elem RetElem;
 
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 1)
-        return ErrorBadArgs(cx);
-
     RetElem arg;
-    if (!Vret::toType(cx, args[0], &arg))
+    if (!Vret::toType(cx, args.get(0), &arg))
         return false;
 
     RetElem result[Vret::lanes];
