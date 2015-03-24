@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- package org.mozilla.gecko.widget;
+package org.mozilla.gecko.widget;
 
 import android.content.Context;
 import android.text.Html;
@@ -28,7 +28,21 @@ import java.util.List;
 
 public abstract class DoorHanger extends LinearLayout {
 
+    public static DoorHanger Get(Context context, DoorhangerConfig config) {
+        final Type type = config.getType();
+        if (type != null) {
+            switch (type) {
+                case PASSWORD:
+                case SITE:
+                    return new DefaultDoorHanger(context, config, type);
+            }
+        }
+
+        return new DefaultDoorHanger(context, config);
+    }
+
     public static enum Type { DEFAULT, PASSWORD, SITE }
+
     public interface OnButtonClickListener {
         public void onButtonClick(DoorHanger dh, String tag);
     }
@@ -54,28 +68,19 @@ public abstract class DoorHanger extends LinearLayout {
     private final ImageView mIcon;
     private final TextView mMessage;
 
+    protected Context mContext;
+
     protected int mDividerColor;
 
     protected boolean mPersistWhileVisible;
     protected int mPersistenceCount;
     protected long mTimeout;
 
-    public DoorHanger(Context context) {
-        this(context, 0, null);
-    }
-
-    public DoorHanger(Context context, int tabId, String id) {
-        this(context, tabId, id, Type.DEFAULT);
-    }
-    public DoorHanger(Context context, int tabId, String id, Type type) {
-        this(context, tabId, id, type, null);
-    }
-
-    public DoorHanger(Context context, int tabId, String id, Type type, JSONObject options) {
+    protected DoorHanger(Context context, DoorhangerConfig config, Type type) {
         super(context);
-
-        mTabId = tabId;
-        mIdentifier = id;
+        mContext = context;
+        mTabId = config.getTabId();
+        mIdentifier = config.getId();
 
         int resource;
         switch (type) {
@@ -97,15 +102,12 @@ public abstract class DoorHanger extends LinearLayout {
         mButtonsContainer = (LinearLayout) findViewById(R.id.doorhanger_buttons);
 
         mDividerColor = getResources().getColor(R.color.divider_light);
-
-        if (options != null) {
-            setOptions(options);
-        }
-
         setOrientation(VERTICAL);
     }
 
-    public void setOptions(final JSONObject options) {
+    abstract protected void loadConfig(DoorhangerConfig config);
+
+    protected void setOptions(final JSONObject options) {
         final int persistence = options.optInt("persistence");
         if (persistence > 0) {
             mPersistenceCount = persistence;
@@ -140,13 +142,12 @@ public abstract class DoorHanger extends LinearLayout {
         mIcon.setVisibility(View.VISIBLE);
     }
 
-    public void setMessage(String message) {
+    protected void setMessage(String message) {
         Spanned markupMessage = Html.fromHtml(message);
         mMessage.setText(markupMessage);
-        mMessage.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
-    public void addLink(String label, String url, String delimiter) {
+    protected void addLink(String label, String url, String delimiter) {
         String title = mMessage.getText().toString();
         SpannableString titleWithLink = new SpannableString(title + delimiter + label);
         URLSpan linkSpan = new URLSpan(url) {
