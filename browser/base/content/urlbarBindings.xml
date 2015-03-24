@@ -1573,17 +1573,16 @@
       <xul:image class="popup-notification-icon"
                  xbl:inherits="popupid,src=icon"/>
       <xul:vbox flex="1">
-        <xul:label class="popup-notification-originHost header"
-                   xbl:inherits="value=originhost"
-                   crop="end"/>
-        <xul:description class="popup-notification-description"
-                         xbl:inherits="xbl:text=label,popupid"/>
-        <xul:progressmeter anonid="progressmeter" flex="1" mode="undetermined" class="popup-progress-meter"/>
-        <xul:label anonid="progresstext" class="popup-progress-label" flex="1" crop="end"/>
+        <xul:description class="popup-notification-description addon-progress-description"
+                         xbl:inherits="xbl:text=label"/>
         <xul:spacer flex="1"/>
+        <xul:hbox align="center">
+          <xul:progressmeter anonid="progressmeter" flex="1" mode="undetermined" class="popup-progress-meter"/>
+          <xul:button anonid="cancel" class="popup-progress-cancel" oncommand="document.getBindingParent(this).cancel()"/>
+        </xul:hbox>
+        <xul:label anonid="progresstext" class="popup-progress-label"/>
         <xul:hbox class="popup-notification-button-container"
                   pack="end" align="center">
-          <children includes="button"/>
           <xul:button anonid="button"
                       class="popup-notification-menubutton"
                       type="menu-button"
@@ -1607,8 +1606,7 @@
     </content>
     <implementation>
       <constructor><![CDATA[
-        if (!this.notification)
-          return;
+        this.cancelbtn.setAttribute("tooltiptext", gNavigatorBundle.getString("addonDownloadCancelTooltip"));
 
         this.notification.options.installs.forEach(function(aInstall) {
           aInstall.addListener(this);
@@ -1633,6 +1631,9 @@
       <field name="progresstext" readonly="true">
         document.getAnonymousElementByAttribute(this, "anonid", "progresstext");
       </field>
+      <field name="cancelbtn" readonly="true">
+        document.getAnonymousElementByAttribute(this, "anonid", "cancel");
+      </field>
       <field name="DownloadUtils" readonly="true">
         let utils = {};
         Components.utils.import("resource://gre/modules/DownloadUtils.jsm", utils);
@@ -1641,9 +1642,6 @@
 
       <method name="destroy">
         <body><![CDATA[
-          if (!this.notification)
-            return;
-
           this.notification.options.installs.forEach(function(aInstall) {
             aInstall.removeListener(this);
           }, this);
@@ -1688,12 +1686,17 @@
 
           let status = null;
           [status, this.notification.last] = this.DownloadUtils.getDownloadStatus(aProgress, aMaxProgress, speed, this.notification.last);
-          this.progresstext.value = this.progresstext.tooltipText = status;
+          this.progresstext.value = status;
         ]]></body>
       </method>
 
       <method name="cancel">
         <body><![CDATA[
+          // Cache these as cancelling the installs will remove this
+          // notification which will drop these references
+          let browser = this.notification.browser;
+          let sourceURI = this.notification.options.sourceURI;
+
           let installs = this.notification.options.installs;
           installs.forEach(function(aInstall) {
             try {
@@ -1704,15 +1707,35 @@
             }
           }, this);
 
-          PopupNotifications.remove(this.notification);
+          let anchorID = "addons-notification-icon";
+          let notificationID = "addon-install-cancelled";
+          let messageString = gNavigatorBundle.getString("addonDownloadCancelled");
+          messageString = PluralForm.get(installs.length, messageString);
+          let buttonText = gNavigatorBundle.getString("addonDownloadRestart");
+          buttonText = PluralForm.get(installs.length, buttonText);
+
+          let action = {
+            label: buttonText,
+            accessKey: gNavigatorBundle.getString("addonDownloadRestart.accessKey"),
+            callback: function() {
+              let weblistener = Cc["@mozilla.org/addons/web-install-listener;1"].
+                                getService(Ci.amIWebInstallListener);
+              if (weblistener.onWebInstallRequested(browser, sourceURI,
+                                                    installs, installs.length)) {
+                installs.forEach(function(aInstall) {
+                  aInstall.install();
+                });
+              }
+            }
+          };
+
+          PopupNotifications.show(browser, notificationID, messageString,
+                                  anchorID, action);
         ]]></body>
       </method>
 
       <method name="updateProgress">
         <body><![CDATA[
-          if (!this.notification)
-            return;
-
           let downloadingCount = 0;
           let progress = 0;
           let maxProgress = 0;
@@ -1729,13 +1752,7 @@
 
           if (downloadingCount == 0) {
             this.destroy();
-            if (Preferences.get("xpinstall.customConfirmationUI", false)) {
-              this.progressmeter.mode = "undetermined";
-              this.progresstext.value = this.progresstext.tooltipText =
-                gNavigatorBundle.getString("addonDownloadVerifying");
-            } else {
-              PopupNotifications.remove(this.notification);
-            }
+            PopupNotifications.remove(this.notification);
           }
           else {
             this.setProgress(progress, maxProgress);
