@@ -112,10 +112,10 @@ IntelWebMVideoDecoder::Create(WebMReader* aReader)
 }
 
 bool
-IntelWebMVideoDecoder::IsSupportedVideoMimeType(const char* aMimeType)
+IntelWebMVideoDecoder::IsSupportedVideoMimeType(const nsACString& aMimeType)
 {
-  return (!strcmp(aMimeType, "video/webm; codecs=vp8") ||
-          !strcmp(aMimeType, "video/webm; codecs=vp9")) &&
+  return (aMimeType.EqualsLiteral("video/webm; codecs=vp8") ||
+          aMimeType.EqualsLiteral("video/webm; codecs=vp9")) &&
          mPlatform->SupportsVideoMimeType(aMimeType);
 }
 

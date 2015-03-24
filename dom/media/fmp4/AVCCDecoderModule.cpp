@@ -265,7 +265,8 @@ AVCCDecoderModule::CreateVideoDecoder(const mp4_demuxer::VideoDecoderConfig& aCo
 {
   nsRefPtr<MediaDataDecoder> decoder;
 
-  if (strcmp(aConfig.mime_type, "video/avc") ||
+  if ((!aConfig.mime_type.EqualsLiteral("video/avc") &&
+       !aConfig.mime_type.EqualsLiteral("video/mp4")) ||
       !mPDM->DecoderNeedsAVCC(aConfig)) {
     // There is no need for an AVCC wrapper for non-AVC content.
     decoder = mPDM->CreateVideoDecoder(aConfig,
@@ -295,13 +296,13 @@ AVCCDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aCo
 }
 
 bool
-AVCCDecoderModule::SupportsAudioMimeType(const char* aMimeType)
+AVCCDecoderModule::SupportsAudioMimeType(const nsACString& aMimeType)
 {
   return mPDM->SupportsAudioMimeType(aMimeType);
 }
 
 bool
-AVCCDecoderModule::SupportsVideoMimeType(const char* aMimeType)
+AVCCDecoderModule::SupportsVideoMimeType(const nsACString& aMimeType)
 {
   return mPDM->SupportsVideoMimeType(aMimeType);
 }

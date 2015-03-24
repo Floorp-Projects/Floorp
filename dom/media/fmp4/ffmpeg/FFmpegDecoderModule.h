@@ -51,12 +51,12 @@ public:
     return decoder.forget();
   }
 
-  virtual bool SupportsAudioMimeType(const char* aMimeType) override
+  virtual bool SupportsAudioMimeType(const nsACString& aMimeType) override
   {
     return FFmpegAudioDecoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE;
   }
 
-  virtual bool SupportsVideoMimeType(const char* aMimeType) override
+  virtual bool SupportsVideoMimeType(const nsACString& aMimeType) override
   {
     return FFmpegH264Decoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE;
   }

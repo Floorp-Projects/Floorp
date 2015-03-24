@@ -18,6 +18,7 @@
 
 #include "nsThreadUtils.h"
 #include "nsAutoPtr.h"
+#include "nsPromiseFlatString.h"
 
 #include <jni.h>
 #include <string.h>
@@ -28,14 +29,10 @@ using namespace mozilla::widget::sdk;
 
 namespace mozilla {
 
-static MediaCodec::LocalRef CreateDecoder(const char* aMimeType)
+static MediaCodec::LocalRef CreateDecoder(const nsACString& aMimeType)
 {
-  if (!aMimeType) {
-    return nullptr;
-  }
-
   MediaCodec::LocalRef codec;
-  NS_ENSURE_SUCCESS(MediaCodec::CreateDecoderByType(aMimeType, &codec), nullptr);
+  NS_ENSURE_SUCCESS(MediaCodec::CreateDecoderByType(PromiseFlatCString(aMimeType).get(), &codec), nullptr);
   return codec;
 }
 
@@ -251,7 +248,7 @@ public:
 };
 
 
-bool AndroidDecoderModule::SupportsAudioMimeType(const char* aMimeType) {
+bool AndroidDecoderModule::SupportsAudioMimeType(const nsACString& aMimeType) {
   return static_cast<bool>(CreateDecoder(aMimeType));
 }
 
@@ -300,11 +297,11 @@ AndroidDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& 
 }
 
 MediaCodecDataDecoder::MediaCodecDataDecoder(MediaData::Type aType,
-                                             const char* aMimeType,
+                                             const nsACString& aMimeType,
                                              MediaFormat::Param aFormat,
                                              MediaDataDecoderCallback* aCallback)
   : mType(aType)
-  , mMimeType(strdup(aMimeType))
+  , mMimeType(aMimeType)
   , mFormat(aFormat)
   , mCallback(aCallback)
   , mInputBuffers(nullptr)

@@ -35,14 +35,14 @@ AppleATDecoder::AppleATDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
   MOZ_COUNT_CTOR(AppleATDecoder);
   LOG("Creating Apple AudioToolbox decoder");
   LOG("Audio Decoder configuration: %s %d Hz %d channels %d bits per channel",
-      mConfig.mime_type,
+      mConfig.mime_type.get(),
       mConfig.samples_per_second,
       mConfig.channel_count,
       mConfig.bits_per_sample);
 
-  if (!strcmp(mConfig.mime_type, "audio/mpeg")) {
+  if (mConfig.mime_type.EqualsLiteral("audio/mpeg")) {
     mFormatID = kAudioFormatMPEGLayer3;
-  } else if (!strcmp(mConfig.mime_type, "audio/mp4a-latm")) {
+  } else if (mConfig.mime_type.EqualsLiteral("audio/mp4a-latm")) {
     mFormatID = kAudioFormatMPEG4AAC;
   } else {
     mFormatID = 0;
