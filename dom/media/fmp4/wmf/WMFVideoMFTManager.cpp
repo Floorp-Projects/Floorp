@@ -84,12 +84,12 @@ WMFVideoMFTManager::WMFVideoMFTManager(
   MOZ_COUNT_CTOR(WMFVideoMFTManager);
 
   // Need additional checks/params to check vp8/vp9
-  if (!strcmp(aConfig.mime_type, "video/mp4") ||
-      !strcmp(aConfig.mime_type, "video/avc")) {
+  if (aConfig.mime_type.EqualsLiteral("video/mp4") ||
+      aConfig.mime_type.EqualsLiteral("video/avc")) {
     mStreamType = H264;
-  } else if (!strcmp(aConfig.mime_type, "video/webm; codecs=vp8")) {
+  } else if (aConfig.mime_type.EqualsLiteral("video/webm; codecs=vp8")) {
     mStreamType = VP8;
-  } else if (!strcmp(aConfig.mime_type, "video/webm; codecs=vp9")) {
+  } else if (aConfig.mime_type.EqualsLiteral("video/webm; codecs=vp9")) {
     mStreamType = VP9;
   } else {
     mStreamType = Unknown;

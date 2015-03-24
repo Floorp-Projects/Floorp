@@ -36,6 +36,49 @@ SharedSurface_IOSurface::Fence()
 }
 
 bool
+SharedSurface_IOSurface::CopyTexImage2D(GLenum target, GLint level, GLenum internalformat,
+                                        GLint x, GLint y, GLsizei width, GLsizei height,
+                                        GLint border)
+{
+    /* Bug 896693 - OpenGL framebuffers that are backed by IOSurface on OSX expose a bug
+     * in glCopyTexImage2D --- internalformats GL_ALPHA, GL_LUMINANCE, GL_LUMINANCE_ALPHA
+     * return the wrong results. To work around, copy framebuffer to a temporary texture
+     * using GL_RGBA (which works), attach as read framebuffer and glCopyTexImage2D
+     * instead.
+     */
+
+    // https://www.opengl.org/sdk/docs/man3/xhtml/glCopyTexImage2D.xml says that width or
+    // height set to 0 results in a NULL texture. Lets not do any work and punt to
+    // original glCopyTexImage2D, since the FBO below will fail when trying to attach a
+    // texture of 0 width or height.
+    if (width == 0 || height == 0)
+        return false;
+
+    MOZ_ASSERT(mGL->IsCurrent());
+
+    ScopedTexture destTex(mGL);
+    {
+        ScopedBindTexture bindTex(mGL, destTex.Texture());
+        mGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MIN_FILTER,
+                            LOCAL_GL_NEAREST);
+        mGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_MAG_FILTER,
+                            LOCAL_GL_NEAREST);
+        mGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_S,
+                            LOCAL_GL_CLAMP_TO_EDGE);
+        mGL->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_WRAP_T,
+                            LOCAL_GL_CLAMP_TO_EDGE);
+        mGL->raw_fCopyTexImage2D(LOCAL_GL_TEXTURE_2D, 0, LOCAL_GL_RGBA, x, y, width,
+                                 height, 0);
+    }
+
+    ScopedFramebufferForTexture tmpFB(mGL, destTex.Texture(), LOCAL_GL_TEXTURE_2D);
+    ScopedBindFramebuffer bindFB(mGL, tmpFB.FB());
+    mGL->raw_fCopyTexImage2D(target, level, internalformat, x, y, width, height, border);
+
+    return true;
+}
+
+bool
 SharedSurface_IOSurface::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
                                     GLenum format, GLenum type, GLvoid* pixels)
 {

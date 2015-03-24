@@ -75,6 +75,28 @@ WebGL2Context::ValidateBufferForTarget(GLenum target, WebGLBuffer* buffer,
     return false;
 }
 
+bool
+WebGL2Context::ValidateBufferUsageEnum(GLenum usage, const char* info)
+{
+    switch (usage) {
+    case LOCAL_GL_DYNAMIC_COPY:
+    case LOCAL_GL_DYNAMIC_DRAW:
+    case LOCAL_GL_DYNAMIC_READ:
+    case LOCAL_GL_STATIC_COPY:
+    case LOCAL_GL_STATIC_DRAW:
+    case LOCAL_GL_STATIC_READ:
+    case LOCAL_GL_STREAM_COPY:
+    case LOCAL_GL_STREAM_DRAW:
+    case LOCAL_GL_STREAM_READ:
+        return true;
+    default:
+        break;
+    }
+
+    ErrorInvalidEnumInfo(info, usage);
+    return false;
+}
+
 // -------------------------------------------------------------------------
 // Buffer objects
 

@@ -418,7 +418,6 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
 {
     gcstats::AutoPhase ap(stats, gcstats::PHASE_MARK_ROOTS);
 
-    MOZ_ASSERT(trc->callback != GCMarker::GrayCallback);
     MOZ_ASSERT(traceOrMark == TraceRuntime || traceOrMark == MarkRuntime);
     MOZ_ASSERT(rootsSource == TraceRoots || rootsSource == UseSavedRoots);
 
@@ -562,29 +561,75 @@ js::gc::GCRuntime::bufferGrayRoots()
     for (GCZonesIter zone(rt); !zone.done(); zone.next())
         MOZ_ASSERT(zone->gcGrayRoots.empty());
 
-    // Transform the GCMarker into an unholy CallbackTracer doppleganger.
-    MOZ_ASSERT(!IsMarkingGray(&marker));
-    MOZ_ASSERT(IsMarkingTracer(&marker));
-    MOZ_ASSERT(!marker.callback);
-    MOZ_ASSERT(!marker.bufferingGrayRootsFailed);
-    marker.callback = GCMarker::GrayCallback;
-    MOZ_ASSERT(IsMarkingGray(&marker));
 
+    BufferGrayRootsTracer grayBufferer(rt);
     if (JSTraceDataOp op = grayRootTracer.op)
-        (*op)(&marker, grayRootTracer.data);
+        (*op)(&grayBufferer, grayRootTracer.data);
 
     // Propagate the failure flag from the marker to the runtime.
-    if (marker.bufferingGrayRootsFailed) {
+    if (grayBufferer.failed()) {
       grayBufferState = GrayBufferState::Failed;
       resetBufferedGrayRoots();
     } else {
       grayBufferState = GrayBufferState::Okay;
     }
+}
 
-    // Restore the GCMarker to its former correctness.
-    MOZ_ASSERT(IsMarkingGray(&marker));
-    marker.bufferingGrayRootsFailed = false;
-    marker.callback = nullptr;
-    MOZ_ASSERT(!IsMarkingGray(&marker));
-    MOZ_ASSERT(IsMarkingTracer(&marker));
+void
+BufferGrayRootsTracer::appendGrayRoot(void *thing, JSGCTraceKind kind)
+{
+    MOZ_ASSERT(runtime()->isHeapBusy());
+
+    if (bufferingGrayRootsFailed)
+        return;
+
+    GrayRoot root(thing, kind);
+#ifdef DEBUG
+    root.debugPrinter = debugPrinter();
+    root.debugPrintArg = debugPrintArg();
+    root.debugPrintIndex = debugPrintIndex();
+#endif
+
+    Zone *zone = TenuredCell::fromPointer(thing)->zone();
+    if (zone->isCollecting()) {
+        // See the comment on SetMaybeAliveFlag to see why we only do this for
+        // objects and scripts. We rely on gray root buffering for this to work,
+        // but we only need to worry about uncollected dead compartments during
+        // incremental GCs (when we do gray root buffering).
+        switch (kind) {
+          case JSTRACE_OBJECT:
+            static_cast<JSObject *>(thing)->compartment()->maybeAlive = true;
+            break;
+          case JSTRACE_SCRIPT:
+            static_cast<JSScript *>(thing)->compartment()->maybeAlive = true;
+            break;
+          default:
+            break;
+        }
+        if (!zone->gcGrayRoots.append(root))
+            bufferingGrayRootsFailed = true;
+    }
+}
+
+void
+GCRuntime::markBufferedGrayRoots(JS::Zone *zone)
+{
+    MOZ_ASSERT(grayBufferState == GrayBufferState::Okay);
+    MOZ_ASSERT(zone->isGCMarkingGray() || zone->isGCCompacting());
+
+    for (GrayRoot *elem = zone->gcGrayRoots.begin(); elem != zone->gcGrayRoots.end(); elem++) {
+#ifdef DEBUG
+        marker.setTracingDetails(elem->debugPrinter, elem->debugPrintArg, elem->debugPrintIndex);
+#endif
+        MarkKind(&marker, &elem->thing, elem->kind);
+    }
+}
+
+void
+GCRuntime::resetBufferedGrayRoots() const
+{
+    MOZ_ASSERT(grayBufferState != GrayBufferState::Okay,
+               "Do not clear the gray buffers unless we are Failed or becoming Unused");
+    for (GCZonesIter zone(rt); !zone.done(); zone.next())
+        zone->gcGrayRoots.clearAndFree();
 }

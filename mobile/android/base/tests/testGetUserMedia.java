@@ -54,7 +54,7 @@ public class testGetUserMedia extends BaseTest {
         // the enumeration is all that gets tested.
 
         // Test GUM notification showing
-        inputAndLoadUrl(GUM_CAMERA_URL);
+        loadUrlAndWait(GUM_CAMERA_URL);
         waitForText(GUM_MESSAGE);
         mAsserter.is(mSolo.searchText(GUM_MESSAGE), true, "getUserMedia doorhanger has been displayed");
         waitForSpinner();
@@ -66,7 +66,7 @@ public class testGetUserMedia extends BaseTest {
         verifyUrlBarTitle(GUM_CAMERA_URL);
 
         // Cameras don't work on the testing hardware, so stream a tab
-        inputAndLoadUrl(GUM_TAB_HTTPS_URL);
+        loadUrlAndWait(GUM_TAB_HTTPS_URL);
         waitForText(GUM_MESSAGE);
         mAsserter.is(mSolo.searchText(GUM_MESSAGE), true, "getUserMedia doorhanger has been displayed");
         waitForSpinner();
@@ -97,7 +97,7 @@ public class testGetUserMedia extends BaseTest {
             return;
         }
 
-        inputAndLoadUrl(GUM_TAB_HTTPS_URL);
+        loadUrlAndWait(GUM_TAB_HTTPS_URL);
         waitForText(GUM_MESSAGE);
         mAsserter.is(mSolo.searchText(GUM_MESSAGE), true, "getUserMedia doorhanger has been displayed");
 
@@ -112,7 +112,7 @@ public class testGetUserMedia extends BaseTest {
         mAsserter.is(mSolo.searchText(GUM_SELECT_TAB), false, "Tab selection dialog hidden");
         verifyUrlBarTitle(GUM_TAB_HTTPS_URL);
 
-        inputAndLoadUrl(GUM_TAB_HTTPS_URL);
+        loadUrlAndWait(GUM_TAB_HTTPS_URL);
         waitForText(GUM_MESSAGE);
         mAsserter.is(mSolo.searchText(GUM_MESSAGE), true, "getUserMedia doorhanger has been displayed");
 

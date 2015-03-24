@@ -240,6 +240,9 @@ abstract class BaseTest extends BaseRobocopTest {
      *
      * This method waits synchronously for the <code>DOMContentLoaded</code>
      * message from Gecko before returning.
+     *
+     * Unless you need to test text entry in the url bar, consider using loadUrl
+     * instead -- it loads pages more directly and quickly.
      */
     protected final void inputAndLoadUrl(String url) {
         enterUrl(url);
@@ -247,11 +250,12 @@ abstract class BaseTest extends BaseRobocopTest {
     }
 
     /**
-     * Load <code>url</code> using reflection and the internal
+     * Load <code>url</code> using the internal
      * <code>org.mozilla.gecko.Tabs</code> API.
      *
      * This method does not wait for any confirmation from Gecko before
-     * returning.
+     * returning -- consider using verifyUrlBarTitle or a similar approach
+     * to wait for the page to load, or at least use loadUrlAndWait.
      */
     protected final void loadUrl(final String url) {
         try {
@@ -260,6 +264,17 @@ abstract class BaseTest extends BaseRobocopTest {
             mAsserter.dumpLog("Exception in loadUrl", e);
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * Load <code>url</code> using the internal
+     * <code>org.mozilla.gecko.Tabs</code> API and wait for DOMContentLoaded.
+     */
+    protected final void loadUrlAndWait(final String url) {
+        Actions.EventExpecter contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
+        loadUrl(url);
+        contentEventExpecter.blockForEvent();
+        contentEventExpecter.unregisterListener();
     }
 
     protected final void closeTab(int tabId) {

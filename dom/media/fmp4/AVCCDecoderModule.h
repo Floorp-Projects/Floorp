@@ -41,8 +41,8 @@ public:
                      FlushableMediaTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) override;
 
-  virtual bool SupportsAudioMimeType(const char* aMimeType) override;
-  virtual bool SupportsVideoMimeType(const char* aMimeType) override;
+  virtual bool SupportsAudioMimeType(const nsACString& aMimeType) override;
+  virtual bool SupportsVideoMimeType(const nsACString& aMimeType) override;
 
 private:
   nsRefPtr<PlatformDecoderModule> mPDM;
