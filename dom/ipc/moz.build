@@ -154,6 +154,7 @@ for var in ('MOZ_PERMISSIONS', 'MOZ_CHILD_PERMISSIONS'):
 
 JAR_MANIFESTS += ['jar.mn']
 
+BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
