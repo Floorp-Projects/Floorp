@@ -48,17 +48,21 @@ class imgRequest final : public nsIStreamListener,
                              public nsIInterfaceRequestor,
                              public nsIAsyncVerifyRedirectCallback
 {
-  virtual ~imgRequest();
-
-public:
   typedef mozilla::image::Image Image;
   typedef mozilla::image::ImageURL ImageURL;
   typedef mozilla::image::ProgressTracker ProgressTracker;
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
+public:
   explicit imgRequest(imgLoader* aLoader);
 
   NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
+  NS_DECL_NSIREQUESTOBSERVER
+  NS_DECL_NSICHANNELEVENTSINK
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
   nsresult Init(nsIURI *aURI,
                 nsIURI *aCurrentURI,
@@ -186,11 +190,21 @@ public:
   void EvictFromCache();
   void RemoveFromCache();
 
+  // Sets properties for this image; will dispatch to main thread if needed.
+  void SetProperties(const nsACString& aContentType,
+                     const nsACString& aContentDisposition);
+
   nsIProperties* Properties() const { return mProperties; }
 
   bool HasConsumers() const;
 
 private:
+  friend class FinishPreparingForNewPartRunnable;
+
+  virtual ~imgRequest();
+
+  void FinishPreparingForNewPart(const NewPartResult& aResult);
+
   void Cancel(nsresult aStatus);
 
   // Update the cache entry size based on the image container.
@@ -198,23 +212,6 @@ private:
 
   /// Returns true if RequestDecode() was called.
   bool IsDecodeRequested() const;
-
-public:
-  NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSITHREADRETARGETABLESTREAMLISTENER
-  NS_DECL_NSIREQUESTOBSERVER
-  NS_DECL_NSICHANNELEVENTSINK
-  NS_DECL_NSIINTERFACEREQUESTOR
-  NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
-
-  // Sets properties for this image; will dispatch to main thread if needed.
-  void SetProperties(const nsACString& aContentType,
-                     const nsACString& aContentDisposition);
-
-private:
-  friend class FinishPreparingForNewPartRunnable;
-
-  void FinishPreparingForNewPart(const NewPartResult& aResult);
 
   // Weak reference to parent loader; this request cannot outlive its owner.
   imgLoader* mLoader;
