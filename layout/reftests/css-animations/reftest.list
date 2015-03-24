@@ -1,5 +1,4 @@
 == screen-animations.html screen-animations-ref.html
 != screen-animations.html screen-animations-notref.html
-# random-if on osx, bug 1145327
-random-if(cocoaWidget) fails-if(!cocoaWidget) == print-no-animations.html print-no-animations-ref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-print tests
-random-if(cocoaWidget) fails-if(!cocoaWidget) != print-no-animations.html print-no-animations-notref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-print tests
+fails == print-no-animations.html print-no-animations-ref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-print tests
+fails != print-no-animations.html print-no-animations-notref.html # reftest harness doesn't actually make pres context non-dynamic for reftest-print tests
