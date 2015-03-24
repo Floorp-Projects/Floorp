@@ -19,7 +19,7 @@ Cu.import("resource://gre/modules/FxAccountsCommon.js");
 XPCOMUtils.defineLazyModuleGetter(this, "WebChannel",
                                   "resource://gre/modules/WebChannel.jsm");
 
-const PROFILE_IMAGE_CHANGE_COMMAND = "profile:image:change";
+const PROFILE_CHANGE_COMMAND = "profile:change";
 
 /**
  * Create a new FxAccountsProfileChannel to listen to profile updates
@@ -102,8 +102,8 @@ this.FxAccountsProfileChannel.prototype = {
         let command = message.command;
         let data = message.data;
         switch (command) {
-          case PROFILE_IMAGE_CHANGE_COMMAND:
-            Services.obs.notifyObservers(null, ONPROFILE_IMAGE_CHANGE_NOTIFICATION, data.uid);
+          case PROFILE_CHANGE_COMMAND:
+            Services.obs.notifyObservers(null, ON_PROFILE_CHANGE_NOTIFICATION, data.uid);
           break;
         }
       }
