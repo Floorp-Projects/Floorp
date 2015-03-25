@@ -305,112 +305,11 @@ MaybeFoldConditionBlock(MIRGraph& graph, MBasicBlock* initialBlock)
     graph.removeBlock(testBlock);
 }
 
-static void
-MaybeFoldAndOrBlock(MIRGraph& graph, MBasicBlock* initialBlock)
-{
-    // Optimize the MIR graph to improve the code generated for && and ||
-    // operations when they are used in tests. This is very similar to the
-    // above method for folding condition blocks, though the two are
-    // separated (with as much common code as possible) for clarity. This
-    // normally requires three blocks. The final test can always be eliminated,
-    // though we don't try to constant fold away the branch block as well.
-
-    // Look for a triangle pattern:
-    //
-    //       initialBlock
-    //         /     |
-    // branchBlock   |
-    //         \     |
-    //         phiBlock
-    //            |
-    //        testBlock
-    //
-    // Where phiBlock contains a single phi combining values pushed onto the
-    // stack by initialBlock and testBlock, and testBlock contains a test on
-    // that phi. phiBlock and testBlock may be the same block; generated code
-    // will use different blocks if the &&/|| is in an inlined function.
-
-    MInstruction* ins = initialBlock->lastIns();
-    if (!ins->isTest())
-        return;
-    MTest* initialTest = ins->toTest();
-
-    bool branchIsTrue = true;
-    MBasicBlock* branchBlock = initialTest->ifTrue();
-    MBasicBlock* phiBlock = initialTest->ifFalse();
-    if (branchBlock->numSuccessors() != 1 || branchBlock->getSuccessor(0) != phiBlock) {
-        branchIsTrue = false;
-        branchBlock = initialTest->ifFalse();
-        phiBlock = initialTest->ifTrue();
-    }
-
-    if (branchBlock->numSuccessors() != 1 || branchBlock->getSuccessor(0) != phiBlock)
-        return;
-    if (branchBlock->numPredecessors() != 1 || phiBlock->numPredecessors() != 2)
-        return;
-
-    if (initialBlock->isLoopBackedge() || branchBlock->isLoopBackedge())
-        return;
-
-    MBasicBlock* testBlock = phiBlock;
-    if (testBlock->numSuccessors() == 1) {
-        if (testBlock->isLoopBackedge())
-            return;
-        testBlock = testBlock->getSuccessor(0);
-        if (testBlock->numPredecessors() != 1)
-            return;
-    }
-
-    // Make sure the test block does not have any outgoing loop backedges.
-    if (!SplitCriticalEdgesForBlock(graph, testBlock))
-        CrashAtUnhandlableOOM("MaybeFoldAndOrBlock");
-
-    MPhi* phi;
-    MTest* finalTest;
-    if (!BlockIsSingleTest(phiBlock, testBlock, &phi, &finalTest))
-        return;
-
-    MDefinition* branchResult = phi->getOperand(phiBlock->indexForPredecessor(branchBlock));
-    MDefinition* initialResult = phi->getOperand(phiBlock->indexForPredecessor(initialBlock));
-
-    if (initialResult != initialTest->input())
-        return;
-
-    // OK, we found the desired pattern, now transform the graph.
-
-    // Remove the phi from phiBlock.
-    phiBlock->discardPhi(*phiBlock->phisBegin());
-
-    // Change the end of the initial and branch blocks to a test that jumps
-    // directly to successors of testBlock, rather than to testBlock itself.
-
-    UpdateTestSuccessors(graph.alloc(), initialBlock, initialResult,
-                         branchIsTrue ? branchBlock : finalTest->ifTrue(),
-                         branchIsTrue ? finalTest->ifFalse() : branchBlock,
-                         testBlock);
-
-    UpdateTestSuccessors(graph.alloc(), branchBlock, branchResult,
-                         finalTest->ifTrue(), finalTest->ifFalse(), testBlock);
-
-    // Remove phiBlock, if different from testBlock.
-    if (phiBlock != testBlock) {
-        testBlock->removePredecessor(phiBlock);
-        graph.removeBlock(phiBlock);
-    }
-
-    // Remove testBlock itself.
-    finalTest->ifTrue()->removePredecessor(testBlock);
-    finalTest->ifFalse()->removePredecessor(testBlock);
-    graph.removeBlock(testBlock);
-}
-
 void
 jit::FoldTests(MIRGraph& graph)
 {
-    for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
+    for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++)
         MaybeFoldConditionBlock(graph, *block);
-        MaybeFoldAndOrBlock(graph, *block);
-    }
 }
 
 static void
