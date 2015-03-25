@@ -33,7 +33,11 @@ public:
 #ifdef XP_MACOSX
   // nsIDOMEventTarget
   NS_IMETHOD PostHandleEvent(EventChainPostVisitor& aVisitor) MOZ_OVERRIDE;
+  // Helper methods
+  static void OnFocusBlurPlugin(Element* aElement, bool aFocus);
   static void HandleFocusBlurPlugin(Element* aElement, WidgetEvent* aEvent);
+  // Weak pointer. Null if last action was blur.
+  static Element* sLastFocused;
 #endif
 
   // nsIDOMHTMLObjectElement
