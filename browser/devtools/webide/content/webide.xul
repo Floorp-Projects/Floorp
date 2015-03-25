@@ -193,7 +193,7 @@
   </popupset>
 
   <notificationbox flex="1" id="notificationbox">
-    <hbox flex="1">
+    <hbox flex="1" id="deck-panels">
       <vbox id="project-listing-panel" class="project-listing" flex="1">
         <div id="project-listing-wrapper">
           <iframe id="project-listing-panel-details" flex="1" src="project-listing.xhtml"/>

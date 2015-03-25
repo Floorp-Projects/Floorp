@@ -4,209 +4,211 @@
 const TEST_VALUE = "example.com";
 const START_VALUE = "example.org";
 
-let gFocusManager = Services.focus;
-
-function test() {
-  waitForExplicitFinish();
-
-  registerCleanupFunction(function () {
-    Services.prefs.clearUserPref("browser.altClickSave");
-  });
+add_task(function* setup() {
   Services.prefs.setBoolPref("browser.altClickSave", true);
 
-  runAltLeftClickTest();
-}
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.altClickSave");
+  });
+});
 
-// Monkey patch saveURL to avoid dealing with file save code paths
-var oldSaveURL = saveURL;
-saveURL = function() {
+add_task(function* alt_left_click_test() {
+  info("Running test: Alt left click");
+
+  // Monkey patch saveURL() to avoid dealing with file save code paths.
+  let oldSaveURL = saveURL;
+  let saveURLPromise = new Promise(resolve => {
+    saveURL = () => {
+      // Restore old saveURL() value.
+      saveURL = oldSaveURL;
+      resolve();
+    };
+  });
+
+  triggerCommand(true, {altKey: true});
+
+  yield saveURLPromise;
   ok(true, "SaveURL was called");
   is(gURLBar.value, "", "Urlbar reverted to original value");
-  saveURL = oldSaveURL;
-  runShiftLeftClickTest();
-}
-function runAltLeftClickTest() {
-  info("Running test: Alt left click");
-  triggerCommand(true, { altKey: true });
-}
+});
 
-function runShiftLeftClickTest() {
-  let listener = new BrowserWindowListener(getBrowserURL(), function(aWindow) {
-    Services.wm.removeListener(listener);
-    addPageShowListener(aWindow.gBrowser.selectedBrowser, function() {
-      executeSoon(function () {
-        info("URL should be loaded in a new window");
-        is(gURLBar.value, "", "Urlbar reverted to original value");
-        is(gFocusManager.focusedElement, null, "There should be no focused element");
-        is(gFocusManager.focusedWindow, aWindow.gBrowser.contentWindow, "Content window should be focused");
-        is(aWindow.gURLBar.textValue, TEST_VALUE, "New URL is loaded in new window");
-
-        aWindow.close();
-
-        // Continue testing when the original window has focus again.
-        whenWindowActivated(window, runNextTest);
-      });
-    }, "http://example.com/");
-  });
-  Services.wm.addListener(listener);
-
+add_task(function* shift_left_click_test() {
   info("Running test: Shift left click");
-  triggerCommand(true, { shiftKey: true });
-}
 
-function runNextTest() {
-  let test = gTests.shift();
-  if (!test) {
-    finish();
-    return;
+  let newWindowPromise = promiseWaitForNewWindow();
+  triggerCommand(true, {shiftKey: true});
+  let win = yield newWindowPromise;
+
+  // Wait for the initial browser to load.
+  let browser = win.gBrowser.selectedBrowser;
+  yield BrowserTestUtils.browserLoaded(browser);
+
+  info("URL should be loaded in a new window");
+  is(gURLBar.value, "", "Urlbar reverted to original value");
+  is(Services.focus.focusedElement, null, "There should be no focused element");
+  is(Services.focus.focusedWindow, win.gBrowser.contentWindow, "Content window should be focused");
+  is(win.gURLBar.textValue, TEST_VALUE, "New URL is loaded in new window");
+
+  // Cleanup.
+  yield promiseWindowClosed(win);
+});
+
+add_task(function* right_click_test() {
+  info("Running test: Right click on go button");
+
+  // Add a new tab.
+  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+  triggerCommand(true, {button: 2});
+
+  // Right click should do nothing (context menu will be shown).
+  is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
+
+  // Cleanup.
+  gBrowser.removeCurrentTab();
+});
+
+add_task(function* shift_accel_left_click_test() {
+  info("Running test: Shift+Ctrl/Cmd left click on go button");
+
+  // Add a new tab.
+  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+  let loadStartedPromise = promiseLoadStarted();
+  triggerCommand(true, {accelKey: true, shiftKey: true});
+  yield loadStartedPromise;
+
+  // Check the load occurred in a new background tab.
+  info("URL should be loaded in a new background tab");
+  is(gURLBar.value, "", "Urlbar reverted to original value");
+  ok(!gURLBar.focused, "Urlbar is no longer focused after urlbar command");
+  is(gBrowser.selectedTab, tab, "Focus did not change to the new tab");
+
+  // Select the new background tab
+  gBrowser.selectedTab = gBrowser.selectedTab.nextSibling;
+  is(gURLBar.value, TEST_VALUE, "New URL is loaded in new tab");
+
+  // Cleanup.
+  gBrowser.removeCurrentTab();
+  gBrowser.removeCurrentTab();
+});
+
+add_task(function* load_in_current_tab_test() {
+  let tests = [
+    {desc: "Simple return keypress"},
+    {desc: "Left click on go button", click: true},
+    {desc: "Ctrl/Cmd+Return keypress", event: {accelKey: true}},
+    {desc: "Alt+Return keypress in a blank tab", event: {altKey: true}}
+  ];
+
+  for (let test of tests) {
+    info(`Running test: ${test.desc}`);
+
+    // Add a new tab.
+    let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+    yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
+
+    // Trigger a load and check it occurs in the current tab.
+    let loadStartedPromise = promiseLoadStarted();
+    triggerCommand(test.click || false, test.event || {});
+    yield loadStartedPromise;
+
+    info("URL should be loaded in the current tab");
+    is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
+    is(Services.focus.focusedElement, null, "There should be no focused element");
+    is(Services.focus.focusedWindow, gBrowser.contentWindow, "Content window should be focused");
+    is(gBrowser.selectedTab, tab, "New URL was loaded in the current tab");
+
+    // Cleanup.
+    gBrowser.removeCurrentTab();
   }
+});
 
-  info("Running test: " + test.desc);
-  // Tab will be blank if test.startValue is null
-  let tab = gBrowser.selectedTab = gBrowser.addTab(test.startValue);
-  addPageShowListener(gBrowser.selectedBrowser, function() {
-    triggerCommand(test.click, test.event);
-    test.check(tab);
+add_task(function* load_in_new_tab_test() {
+  let tests = [
+    {desc: "Ctrl/Cmd left click on go button", click: true, event: {accelKey: true}},
+    {desc: "Alt+Return keypress in a dirty tab", event: {altKey: true}, url: START_VALUE}
+  ];
 
-    // Clean up
-    while (gBrowser.tabs.length > 1)
-      gBrowser.removeTab(gBrowser.selectedTab)
-    runNextTest();
-  });
-}
+  for (let test of tests) {
+    info(`Running test: ${test.desc}`);
 
-let gTests = [
-  { desc: "Right click on go button",
-    click: true,
-    event: { button: 2 },
-    check: function(aTab) {
-      // Right click should do nothing (context menu will be shown)
-      is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
-    }
-  },
+    // Add a new tab.
+    let tab = gBrowser.selectedTab = gBrowser.addTab(test.url || "about:blank");
+    yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  { desc: "Left click on go button",
-    click: true,
-    event: {},
-    check: checkCurrent
-  },
+    // Trigger a load and check it occurs in the current tab.
+    let tabSelectedPromise = promiseNewTabSelected();
+    triggerCommand(test.click || false, test.event || {});
+    yield tabSelectedPromise;
 
-  { desc: "Ctrl/Cmd left click on go button",
-    click: true,
-    event: { accelKey: true },
-    check: checkNewTab
-  },
+    // Check the load occurred in a new tab.
+    info("URL should be loaded in a new focused tab");
+    is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
+    is(Services.focus.focusedElement, null, "There should be no focused element");
+    is(Services.focus.focusedWindow, gBrowser.contentWindow, "Content window should be focused");
+    isnot(gBrowser.selectedTab, tab, "New URL was loaded in a new tab");
 
-  { desc: "Shift+Ctrl/Cmd left click on go button",
-    click: true,
-    event: { accelKey: true, shiftKey: true },
-    check: function(aTab) {
-      info("URL should be loaded in a new background tab");
-      is(gURLBar.value, "", "Urlbar reverted to original value");
-      ok(!gURLBar.focused, "Urlbar is no longer focused after urlbar command");
-      is(gBrowser.selectedTab, aTab, "Focus did not change to the new tab");
-
-      // Select the new background tab
-      gBrowser.selectedTab = gBrowser.selectedTab.nextSibling;
-      is(gURLBar.value, TEST_VALUE, "New URL is loaded in new tab");
-    }
-  },
-
-  { desc: "Simple return keypress",
-    event: {},
-    check: checkCurrent
-  },
-
-  { desc: "Alt+Return keypress in a blank tab",
-    event: { altKey: true },
-    check: checkCurrent
-  },
-
-  { desc: "Alt+Return keypress in a dirty tab",
-    event: { altKey: true },
-    check: checkNewTab,
-    startValue: START_VALUE
-  },
-
-  { desc: "Ctrl/Cmd+Return keypress",
-    event: { accelKey: true },
-    check: checkCurrent
+    // Cleanup.
+    gBrowser.removeCurrentTab();
+    gBrowser.removeCurrentTab();
   }
-]
+});
 
-let gGoButton = document.getElementById("urlbar-go-button");
-function triggerCommand(aClick, aEvent) {
+function triggerCommand(shouldClick, event) {
   gURLBar.value = TEST_VALUE;
   gURLBar.focus();
 
-  if (aClick) {
+  if (shouldClick) {
     is(gURLBar.getAttribute("pageproxystate"), "invalid",
        "page proxy state must be invalid for go button to be visible");
-    EventUtils.synthesizeMouseAtCenter(gGoButton, aEvent);
+
+    let goButton = document.getElementById("urlbar-go-button");
+    EventUtils.synthesizeMouseAtCenter(goButton, event);
+  } else {
+    EventUtils.synthesizeKey("VK_RETURN", event);
   }
-  else
-    EventUtils.synthesizeKey("VK_RETURN", aEvent);
 }
 
-/* Checks that the URL was loaded in the current tab */
-function checkCurrent(aTab) {
-  info("URL should be loaded in the current tab");
-  is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
-  is(gFocusManager.focusedElement, null, "There should be no focused element");
-  is(gFocusManager.focusedWindow, gBrowser.contentWindow, "Content window should be focused");
-  is(gBrowser.selectedTab, aTab, "New URL was loaded in the current tab");
-}
-
-/* Checks that the URL was loaded in a new focused tab */
-function checkNewTab(aTab) {
-  info("URL should be loaded in a new focused tab");
-  is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
-  is(gFocusManager.focusedElement, null, "There should be no focused element");
-  is(gFocusManager.focusedWindow, gBrowser.contentWindow, "Content window should be focused");
-  isnot(gBrowser.selectedTab, aTab, "New URL was loaded in a new tab");
-}
-
-function addPageShowListener(browser, cb, expectedURL) {
-  browser.addEventListener("pageshow", function pageShowListener() {
-    info("pageshow: " + browser.currentURI.spec);
-    if (expectedURL && browser.currentURI.spec != expectedURL)
-      return; // ignore pageshows for non-expected URLs
-    browser.removeEventListener("pageshow", pageShowListener, false);
-    cb();
+function promiseLoadStarted() {
+  return new Promise(resolve => {
+    gBrowser.addTabsProgressListener({
+      onStateChange(browser, webProgress, req, flags, status) {
+        if (flags & Ci.nsIWebProgressListener.STATE_START) {
+          gBrowser.removeTabsProgressListener(this);
+          resolve();
+        }
+      }
+    });
   });
 }
 
-function whenWindowActivated(win, cb) {
-  if (Services.focus.activeWindow == win) {
-    executeSoon(cb);
-    return;
-  }
-
-  win.addEventListener("activate", function onActivate() {
-    win.removeEventListener("activate", onActivate);
-    executeSoon(cb);
+function promiseNewTabSelected() {
+  return new Promise(resolve => {
+    gBrowser.tabContainer.addEventListener("TabSelect", function onSelect() {
+      gBrowser.tabContainer.removeEventListener("TabSelect", onSelect);
+      resolve();
+    });
   });
 }
 
-function BrowserWindowListener(aURL, aCallback) {
-  this.callback = aCallback;
-  this.url = aURL;
-}
-BrowserWindowListener.prototype = {
-  onOpenWindow: function(aXULWindow) {
-    let cb = () => this.callback(domwindow);
-    let domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDOMWindow);
+function promiseWaitForNewWindow() {
+  return new Promise(resolve => {
+    let listener = {
+      onOpenWindow(xulWindow) {
+        let win = xulWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindow);
 
-    let numWait = 2;
-    function maybeRunCallback() {
-      if (--numWait == 0)
-        cb();
-    }
+        Services.wm.removeListener(listener);
+        whenDelayedStartupFinished(win, () => resolve(win));
+      },
 
-    whenWindowActivated(domwindow, maybeRunCallback);
-    whenDelayedStartupFinished(domwindow, maybeRunCallback);
-  },
-  onCloseWindow: function(aXULWindow) {},
-  onWindowTitleChange: function(aXULWindow, aNewTitle) {}
+      onCloseWindow() {},
+      onWindowTitleChange() {}
+    };
+
+    Services.wm.addListener(listener);
+  });
 }

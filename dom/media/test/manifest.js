@@ -648,11 +648,16 @@ var gMetadataTests = [
 var gEMETests = [
   {
     name:"bipbop-cenc-videoinit.mp4",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
-    fragments:[ "bipbop-cenc-videoinit.mp4",
-                "bipbop-cenc-video1.m4s",
-                "bipbop-cenc-video2.m4s",
-              ],
+    tracks: [
+      {
+        name:"video",
+        type:"video/mp4; codecs=\"avc1.64000d\"",
+        fragments:[ "bipbop-cenc-videoinit.mp4",
+                    "bipbop-cenc-video1.m4s",
+                    "bipbop-cenc-video2.m4s",
+                  ]
+      }
+    ],
     keys: {
       // "keyid" : "key"
       "7e571d037e571d037e571d037e571d03" : "7e5733337e5733337e5733337e573333",
@@ -663,11 +668,16 @@ var gEMETests = [
   },
   {
     name:"bipbop-cenc-videoinit.mp4",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
-    fragments:[ "bipbop-cenc-videoinit.mp4",
-                "bipbop-cenc-video1.m4s",
-                "bipbop-cenc-video2.m4s",
-              ],
+    tracks: [
+      {
+        name:"video",
+        type:"video/mp4; codecs=\"avc1.64000d\"",
+        fragments:[ "bipbop-cenc-videoinit.mp4",
+                    "bipbop-cenc-video1.m4s",
+                    "bipbop-cenc-video2.m4s",
+                  ]
+      }
+    ],
     keys: {
       // "keyid" : "key"
       "7e571d037e571d037e571d037e571d03" : "7e5733337e5733337e5733337e573333",
@@ -679,7 +689,6 @@ var gEMETests = [
   },
   {
     name:"bipbop-cenc-videoinit.mp4",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",
@@ -709,7 +718,6 @@ var gEMETests = [
   },
   {
     name:"bipbop-cenc-videoinit.mp4",
-    type:"video/mp4; codecs=\"avc1.64000d,mp4a.40.2\"",
     tracks: [
       {
         name:"audio",

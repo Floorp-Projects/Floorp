@@ -16,8 +16,8 @@
 namespace mozilla {
 namespace net {
 
-class TLSServerSocket : public nsServerSocket
-                      , public nsITLSServerSocket
+class TLSServerSocket final : public nsServerSocket
+                            , public nsITLSServerSocket
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

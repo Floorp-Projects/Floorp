@@ -41,3 +41,5 @@ if [ -d "$topsrcdir/gtk3" ]; then
   mk_add_options "export LD_LIBRARY_PATH=$topsrcdir/gtk3/usr/local/lib"
   ac_add_options --enable-default-toolkit=cairo-gtk3
 fi
+
+export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token

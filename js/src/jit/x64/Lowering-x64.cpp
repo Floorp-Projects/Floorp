@@ -233,42 +233,56 @@ LIRGeneratorX64::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
     if (!ins->hasUses()) {
         LAsmJSAtomicBinopHeapForEffect *lir =
             new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(ptr),
-                                                        useRegister(ins->value()));
+                                                        useRegisterOrConstant(ins->value()));
         add(lir, ins);
         return;
     }
 
     // Case 2: the result of the operation is used.
     //
-    // For ADD and SUB we'll use XADD (with word and byte ops as appropriate):
+    // For ADD and SUB we'll use XADD with word and byte ops as
+    // appropriate.  Any output register can be used and if value is a
+    // register it's best if it's the same as output:
     //
-    //    movl       value, output
+    //    movl       value, output  ; if value != output
     //    lock xaddl output, mem
     //
-    // For AND/OR/XOR we need to use a CMPXCHG loop:
+    // For AND/OR/XOR we need to use a CMPXCHG loop, and the output is
+    // always in rax:
     //
-    //    movl          *mem, eax
-    // L: mov           eax, temp
+    //    movl          *mem, rax
+    // L: mov           rax, temp
     //    andl          value, temp
-    //    lock cmpxchg  temp, mem  ; reads eax also
+    //    lock cmpxchg  temp, mem  ; reads rax also
     //    jnz           L
-    //    ; result in eax
+    //    ; result in rax
     //
-    // Note the placement of L, cmpxchg will update eax with *mem if
+    // Note the placement of L, cmpxchg will update rax with *mem if
     // *mem does not have the expected value, so reloading it at the
     // top of the loop would be redundant.
-    //
-    // We want to fix eax as the output.  We also need a temp for
-    // the intermediate value.
 
     bool bitOp = !(ins->operation() == AtomicFetchAddOp || ins->operation() == AtomicFetchSubOp);
-    LAllocation value = useRegister(ins->value());
-    LDefinition tempDef = bitOp ? temp() : LDefinition::BogusTemp();
+    bool reuseInput = false;
+    LAllocation value;
+
+    if (bitOp || ins->value()->isConstant()) {
+        value = useRegisterOrConstant(ins->value());
+    } else {
+        reuseInput = true;
+        value = useRegisterAtStart(ins->value());
+    }
 
     LAsmJSAtomicBinopHeap *lir =
-        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(ptr), value, tempDef);
+        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(ptr),
+                                           value,
+                                           bitOp ? temp() : LDefinition::BogusTemp());
 
-    defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
+    if (reuseInput)
+        defineReuseInput(lir, ins, LAsmJSAtomicBinopHeap::valueOp);
+    else if (bitOp)
+        defineFixed(lir, ins, LAllocation(AnyRegister(rax)));
+    else
+        define(lir, ins);
 }
 
 void

@@ -109,7 +109,7 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
         void *returnAddress;
         void *activation;
         const char *label;
-        bool hasTrackedOptimizations;
+        bool mightHaveTrackedOptimizations;
     };
     uint32_t extractStack(Frame *frames, uint32_t offset, uint32_t end) const;
 

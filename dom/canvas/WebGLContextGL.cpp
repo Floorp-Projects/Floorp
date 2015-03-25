@@ -714,12 +714,10 @@ WebGLContext::DeleteRenderbuffer(WebGLRenderbuffer* rbuf)
     if (mBoundReadFramebuffer)
         mBoundReadFramebuffer->DetachRenderbuffer(rbuf);
 
-    // Invalidate framebuffer status cache
-    rbuf->NotifyFBsStatusChanged();
+    rbuf->InvalidateStatusOfAttachedFBs();
 
     if (mBoundRenderbuffer == rbuf)
-        BindRenderbuffer(LOCAL_GL_RENDERBUFFER,
-                         static_cast<WebGLRenderbuffer*>(nullptr));
+        BindRenderbuffer(LOCAL_GL_RENDERBUFFER, nullptr);
 
     rbuf->RequestDelete();
 }
@@ -742,8 +740,7 @@ WebGLContext::DeleteTexture(WebGLTexture* tex)
     if (mBoundReadFramebuffer)
         mBoundReadFramebuffer->DetachTexture(tex);
 
-    // Invalidate framebuffer status cache
-    tex->NotifyFBsStatusChanged();
+    tex->InvalidateStatusOfAttachedFBs();
 
     GLuint activeTexture = mActiveTexture;
     for (int32_t i = 0; i < mGLMaxTextureUnits; i++) {
@@ -752,7 +749,7 @@ WebGLContext::DeleteTexture(WebGLTexture* tex)
             (mBound3DTextures[i] == tex && tex->Target() == LOCAL_GL_TEXTURE_3D))
         {
             ActiveTexture(LOCAL_GL_TEXTURE0 + i);
-            BindTexture(tex->Target().get(), static_cast<WebGLTexture*>(nullptr));
+            BindTexture(tex->Target().get(), nullptr);
         }
     }
     ActiveTexture(LOCAL_GL_TEXTURE0 + activeTexture);
@@ -868,11 +865,8 @@ WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment,
                                     rbtarget);
     }
 
-    if (!ValidateFramebufferAttachment(fb, attachment,
-                                       "framebufferRenderbuffer"))
-    {
+    if (!ValidateFramebufferAttachment(fb, attachment, "framebufferRenderbuffer"))
         return;
-    }
 
     fb->FramebufferRenderbuffer(attachment, rbtarget, wrb);
 }
@@ -1146,11 +1140,11 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
     }
 
     if (IsExtensionEnabled(WebGLExtensionID::WEBGL_draw_buffers))
-        fb->EnsureColorAttachments(attachment - LOCAL_GL_COLOR_ATTACHMENT0);
+        fb->EnsureColorAttachPoints(attachment - LOCAL_GL_COLOR_ATTACHMENT0);
 
     MakeContextCurrent();
 
-    const WebGLFramebuffer::Attachment& fba = fb->GetAttachment(attachment);
+    const WebGLFramebuffer::AttachPoint& fba = fb->GetAttachPoint(attachment);
 
     if (fba.Renderbuffer()) {
         switch (pname) {
@@ -2329,8 +2323,6 @@ WebGLContext::RenderbufferStorage_base(const char* funcName, GLenum target,
                        height != mBoundRenderbuffer->Height();
 
     if (willRealloc) {
-        // Invalidate framebuffer status cache
-        mBoundRenderbuffer->NotifyFBsStatusChanged();
         GetAndFlushUnderlyingGLErrors();
         mBoundRenderbuffer->RenderbufferStorage(samples, internalFormatForGL,
                                                 width, height);

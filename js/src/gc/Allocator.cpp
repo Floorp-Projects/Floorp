@@ -93,10 +93,6 @@ GCRuntime::checkIncrementalZoneState(ExclusiveContext *cx, T *t)
 #endif
 }
 
-// Allocate a new GC thing. After a successful allocation the caller must
-// fully initialize the thing before calling any function that can potentially
-// trigger GC. This will ensure that GC tracing never sees junk values stored
-// in the partially initialized thing.
 template <typename T, AllowGC allowGC /* = CanGC */>
 JSObject *
 js::Allocate(ExclusiveContext *cx, AllocKind kind, size_t nDynamicSlots, InitialHeap heap,

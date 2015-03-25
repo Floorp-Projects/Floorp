@@ -45,6 +45,14 @@ public:
   virtual bool RecvShowEvent(const ShowEventData& aData) override;
   virtual bool RecvHideEvent(const uint64_t& aRootID) override;
 
+  virtual bool RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uint64_t& aID) override;
+  void Unbind()
+  {
+    mParent = nullptr;
+    mParentDoc->mChildDocs.RemoveElement(this);
+    mParentDoc = nullptr;
+  }
+
   void Destroy();
   virtual void ActorDestroy(ActorDestroyReason aWhy) override
   {
@@ -62,7 +70,8 @@ public:
    * Called when a document in a content process notifies the main process of a
    * new child document.
    */
-  bool AddChildDoc(DocAccessibleParent* aChildDoc, uint64_t aParentID);
+  bool AddChildDoc(DocAccessibleParent* aChildDoc, uint64_t aParentID,
+                   bool aCreating = true);
 
   /*
    * Called when the document in the content process this object represents

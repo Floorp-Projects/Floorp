@@ -110,6 +110,10 @@ public:
 
     virtual int GetScreenDepth() const override;
 
+    bool SupportsApzWheelInput() override {
+      return true;
+    }
+
 protected:
     static gfxFontconfigUtils *sFontconfigUtils;
 

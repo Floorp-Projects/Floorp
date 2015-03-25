@@ -5,3 +5,4 @@
 --enable-threadsafe
 --enable-arm-simulator
 --target=i686-pc-linux
+--host=i686-pc-linux

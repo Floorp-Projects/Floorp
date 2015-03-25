@@ -81,16 +81,6 @@
   <color name="text_color_secondary_inverse">#DDDDDD</color>
   <color name="text_color_tertiary_inverse">#A4A7A9</color>
 
-  <!-- Colour used for share overlay button labels -->
-  <color name="text_color_overlaybtn">#666666</color>
-  <color name="text_color_overlaybtn_disabled">#AFB1B3</color>
-
-  <color name="overlay_share_header_background">#FFFFFFFF</color>
-
-  <!-- Colours used for share overlay button background -->
-  <color name="overlay_share_background">#FFEBEBF0</color>
-  <color name="overlay_share_selected">#FFF5F5F5</color>
-
   <!-- Disabled colors -->
   <color name="text_color_primary_disable_only">#999999</color>
 

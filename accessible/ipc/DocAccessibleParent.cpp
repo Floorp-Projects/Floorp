@@ -137,9 +137,19 @@ DocAccessibleParent::RecvEvent(const uint64_t& aID, const uint32_t& aEventType)
   ProxyEvent(e->mProxy, aEventType);
   return true;
 }
+
+bool
+DocAccessibleParent::RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uint64_t& aID)
+{
+  auto childDoc = static_cast<DocAccessibleParent*>(aChildDoc);
+  DebugOnly<bool> result = AddChildDoc(childDoc, aID, false);
+  MOZ_ASSERT(result);
+  return true;
+}
+
 bool
 DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
-                                 uint64_t aParentID)
+                                 uint64_t aParentID, bool aCreating)
 {
   ProxyAccessible* outerDoc = mAccessibles.GetEntry(aParentID)->mProxy;
   if (!outerDoc)
@@ -149,7 +159,11 @@ DocAccessibleParent::AddChildDoc(DocAccessibleParent* aChildDoc,
   outerDoc->SetChildDoc(aChildDoc);
   mChildDocs.AppendElement(aChildDoc);
   aChildDoc->mParentDoc = this;
-  ProxyCreated(aChildDoc, 0);
+
+  if (aCreating) {
+    ProxyCreated(aChildDoc, 0);
+  }
+
   return true;
 }
 

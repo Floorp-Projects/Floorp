@@ -2566,7 +2566,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
     uint32_t mainLength = bce->offset();
     uint32_t prologLength = bce->prologOffset();
     uint32_t nsrcnotes;
-    if (!FinishTakingSrcNotes(cx, bce, &nsrcnotes))
+    if (!bce->finishTakingSrcNotes(&nsrcnotes))
         return false;
     uint32_t natoms = bce->atomIndices->count();
     if (!partiallyInit(cx, script,
@@ -2591,7 +2591,7 @@ JSScript::fullyInitFromEmitter(ExclusiveContext *cx, HandleScript script, Byteco
     jsbytecode *code = ssd->data;
     PodCopy<jsbytecode>(code, bce->prolog.code.begin(), prologLength);
     PodCopy<jsbytecode>(code + prologLength, bce->code().begin(), mainLength);
-    CopySrcNotes(bce, (jssrcnote *)(code + script->length()), nsrcnotes);
+    bce->copySrcNotes((jssrcnote *)(code + script->length()), nsrcnotes);
     InitAtomMap(bce->atomIndices.getMap(), ssd->atoms());
 
     if (!SaveSharedScriptData(cx, script, ssd, nsrcnotes))
@@ -3412,7 +3412,7 @@ JSScript::markChildren(JSTracer *trc)
     // JSScript::Create(), but not yet finished initializing it with
     // fullyInitFromEmitter() or fullyInitTrivial().
 
-    MOZ_ASSERT_IF(IsMarkingTracer(trc) &&
+    MOZ_ASSERT_IF(trc->isMarkingTracer() &&
                   static_cast<GCMarker *>(trc)->shouldCheckCompartments(),
                   zone()->isCollecting());
 
@@ -3450,7 +3450,7 @@ JSScript::markChildren(JSTracer *trc)
     if (maybeLazyScript())
         MarkLazyScriptUnbarriered(trc, &lazyScript, "lazyScript");
 
-    if (IsMarkingTracer(trc)) {
+    if (trc->isMarkingTracer()) {
         compartment()->mark();
 
         if (code())
