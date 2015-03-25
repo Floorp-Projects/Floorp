@@ -183,8 +183,8 @@ private:
       const SdpMediaSection& msection) const;
   const std::vector<SdpExtmapAttributeList::Extmap>* GetRtpExtensions(
       SdpMediaSection::MediaType type) const;
-  void AddCommonCodecs(const SdpMediaSection& remoteMsection,
-                       SdpMediaSection* msection);
+  std::vector<UniquePtr<JsepCodecDescription>> GetCommonCodecs(
+      const SdpMediaSection& remoteMsection);
   void AddCommonExtmaps(const SdpMediaSection& remoteMsection,
                         SdpMediaSection* msection);
   nsresult SetupIds();
