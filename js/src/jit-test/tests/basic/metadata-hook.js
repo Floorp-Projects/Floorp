@@ -1,8 +1,4 @@
 
-x = [1,2,3];
-setObjectMetadata(x, {y:0});
-assertEq(getObjectMetadata(x).y, 0);
-
 setObjectMetadataCallback(true);
 
 function Foo() {
