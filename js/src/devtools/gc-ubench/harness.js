@@ -9,6 +9,11 @@ var sampleIndex = 0;
 var sampleTime = 16; // ms
 var gHistogram = new Map(); // {ms: count}
 
+var features = {
+  trackingSizes: ('mozMemory' in performance),
+  showingGCs: ('mozMemory' in performance),
+};
+
 // Draw state.
 var stopped = 0;
 var start;
@@ -146,7 +151,7 @@ LatencyGraph.prototype.draw = function () {
     ctx.stroke();
 
     // Draw vertical lines marking minor and major GCs
-    if (performance.mozMemory) {
+    if (features.showingGCs) {
         var { width, height } = ctx.canvas;
 
         ctx.strokeStyle = 'rgb(255,100,0)';
@@ -331,11 +336,13 @@ function handler(timestamp)
     var newIndex = Math.round(t / sampleTime);
     while (sampleIndex < newIndex) {
         sampleIndex++;
-        delays[sampleIndex % numSamples] = delay;
-        if (performance.mozMemory) {
-            gcBytes[sampleIndex % numSamples] = performance.mozMemory.gcBytes;
-            gcs[sampleIndex % numSamples] = performance.mozMemory.gcNumber;
-            minorGCs[sampleIndex % numSamples] = performance.mozMemory.minorGCCount;
+        var idx = sampleIndex % numSamples;
+        delays[idx] = delay;
+        if (features.trackingSizes)
+            gcBytes[idx] = performance.mozMemory.gcBytes;
+        if (features.showingGCs) {
+            gcs[idx] = performance.mozMemory.gcNumber;
+            minorGCs[idx] = performance.mozMemory.minorGCCount;
         }
     }
 
@@ -422,10 +429,12 @@ function onload()
     var canvas = document.getElementById('graph');
     latencyGraph = new LatencyGraph(canvas.getContext('2d'));
 
-    if (performance.mozMemory) {
-        var canvas = document.getElementById('memgraph');
-        memoryGraph = new MemoryGraph(canvas.getContext('2d'));
+    if (!performance.mozMemory) {
+        document.getElementById('memgraph-disabled').style.display = 'block';
+        document.getElementById('track-sizes-div').style.display = 'none';
     }
+
+    trackHeapSizes(document.getElementById('track-sizes').checked);
 
     // Start drawing.
     reset_draw_state();
@@ -633,5 +642,20 @@ function garbage_per_frame_changed()
     if (activeTest) {
         activeTest.garbagePerFrame = value;
         console.log(`Updated garbage-per-frame to ${activeTest.garbagePerFrame} items`);
+    }
+}
+
+function trackHeapSizes(track)
+{
+    features.trackingSizes = track;
+
+    var canvas = document.getElementById('memgraph');
+
+    if (features.trackingSizes) {
+        canvas.style.display = 'block';
+        memoryGraph = new MemoryGraph(canvas.getContext('2d'));
+    } else {
+        canvas.style.display = 'none';
+        memoryGraph = null;
     }
 }
