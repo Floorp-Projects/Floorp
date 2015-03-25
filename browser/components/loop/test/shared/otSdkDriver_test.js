@@ -12,7 +12,7 @@ describe("loop.OTSdkDriver", function () {
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
 
   var sandbox;
-  var dispatcher, driver, publisher, sdk, session, sessionData;
+  var dispatcher, driver, mozLoop, publisher, sdk, session, sessionData;
   var fakeLocalElement, fakeRemoteElement, fakeScreenElement;
   var publisherConfig, fakeEvent;
 
@@ -64,9 +64,21 @@ describe("loop.OTSdkDriver", function () {
       }
     };
 
+    mozLoop = {
+      telemetryAddKeyedValue: sinon.stub(),
+      SHARING_STATE_CHANGE: {
+        WINDOW_ENABLED: "WINDOW_ENABLED",
+        WINDOW_DISABLED: "WINDOW_DISABLED",
+        BROWSER_ENABLED: "BROWSER_ENABLED",
+        BROWSER_DISABLED: "BROWSER_DISABLED"
+      }
+    }
+
     driver = new loop.OTSdkDriver({
+      mozLoop: mozLoop,
       dispatcher: dispatcher,
-      sdk: sdk
+      sdk: sdk,
+      mozLoop: mozLoop
     });
   });
 
@@ -169,6 +181,7 @@ describe("loop.OTSdkDriver", function () {
 
     beforeEach(function() {
       sandbox.stub(dispatcher, "dispatch");
+      sandbox.stub(driver, "_noteSharingState");
 
       fakeElement = {
         className: "fakeVideo"
@@ -193,6 +206,19 @@ describe("loop.OTSdkDriver", function () {
 
       sinon.assert.calledOnce(sdk.initPublisher);
       sinon.assert.calledWithMatch(sdk.initPublisher, fakeElement, options);
+    });
+
+    it("should log a telemetry action", function() {
+      var options = {
+        videoSource: "browser",
+        constraints: {
+          browserWindow: 42,
+          scrollWithPage: true
+        }
+      };
+      driver.startScreenShare(options);
+
+      sinon.assert.calledWithExactly(driver._noteSharingState, "browser", true);
     });
   });
 
@@ -231,25 +257,69 @@ describe("loop.OTSdkDriver", function () {
     beforeEach(function() {
       driver.getScreenShareElementFunc = function() {};
 
-      driver.startScreenShare({
-        videoSource: "window"
-      });
-
       sandbox.stub(dispatcher, "dispatch");
-
-      driver.session = session;
+      sandbox.stub(driver, "_noteSharingState");
     });
 
     it("should unpublish the share", function() {
+      driver.startScreenShare({
+        videoSource: "window"
+      });
+      driver.session = session;
+
       driver.endScreenShare(new sharedActions.EndScreenShare());
 
       sinon.assert.calledOnce(session.unpublish);
     });
 
+    it("should log a telemetry action", function() {
+      driver.startScreenShare({
+        videoSource: "window"
+      });
+      driver.session = session;
+
+      driver.endScreenShare(new sharedActions.EndScreenShare());
+
+      sinon.assert.calledWithExactly(driver._noteSharingState, "window", false);
+    });
+
     it("should destroy the share", function() {
+      driver.startScreenShare({
+        videoSource: "window"
+      });
+      driver.session = session;
+
       expect(driver.endScreenShare()).to.equal(true);
 
       sinon.assert.calledOnce(publisher.destroy);
+    });
+
+    it("should unpublish the share too when type is 'browser'", function() {
+      driver.startScreenShare({
+        videoSource: "browser",
+        constraints: {
+          browserWindow: 42
+        }
+      });
+      driver.session = session;
+
+      driver.endScreenShare(new sharedActions.EndScreenShare());
+
+      sinon.assert.calledOnce(session.unpublish);
+    });
+
+    it("should log a telemetry action too when type is 'browser'", function() {
+      driver.startScreenShare({
+        videoSource: "browser",
+        constraints: {
+          browserWindow: 42
+        }
+      });
+      driver.session = session;
+
+      driver.endScreenShare(new sharedActions.EndScreenShare());
+
+      sinon.assert.calledWithExactly(driver._noteSharingState, "browser", false);
     });
   });
 
@@ -308,6 +378,44 @@ describe("loop.OTSdkDriver", function () {
       driver.disconnectSession();
 
       sinon.assert.calledOnce(publisher.destroy);
+    });
+  });
+
+  describe("#_noteSharingState", function() {
+    it("should record enabled sharing states for window", function() {
+      driver._noteSharingState("window", true);
+
+      sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
+      sinon.assert.calledWithExactly(mozLoop.telemetryAddKeyedValue,
+        "LOOP_SHARING_STATE_CHANGE",
+        mozLoop.SHARING_STATE_CHANGE.WINDOW_ENABLED);
+    });
+
+    it("should record enabled sharing states for browser", function() {
+      driver._noteSharingState("browser", true);
+
+      sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
+      sinon.assert.calledWithExactly(mozLoop.telemetryAddKeyedValue,
+        "LOOP_SHARING_STATE_CHANGE",
+        mozLoop.SHARING_STATE_CHANGE.BROWSER_ENABLED);
+    });
+
+    it("should record disabled sharing states for window", function() {
+      driver._noteSharingState("window", false);
+
+      sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
+      sinon.assert.calledWithExactly(mozLoop.telemetryAddKeyedValue,
+        "LOOP_SHARING_STATE_CHANGE",
+        mozLoop.SHARING_STATE_CHANGE.WINDOW_DISABLED);
+    });
+
+    it("should record disabled sharing states for browser", function() {
+      driver._noteSharingState("browser", false);
+
+      sinon.assert.calledOnce(mozLoop.telemetryAddKeyedValue);
+      sinon.assert.calledWithExactly(mozLoop.telemetryAddKeyedValue,
+        "LOOP_SHARING_STATE_CHANGE",
+        mozLoop.SHARING_STATE_CHANGE.BROWSER_DISABLED);
     });
   });
 
