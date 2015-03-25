@@ -38,6 +38,10 @@ task:
         type: directory
         path: '/home/worker/artifacts/'
         expires: '{{#from_now}}1 year{{/from_now}}'
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts-public/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
 
 
     env:
@@ -48,6 +52,7 @@ task:
       GECKO_HEAD_REF: '{{head_ref}}'
       MOZHARNESS_REPOSITORY: '{{mozharness_repository}}'
       MOZHARNESS_REV: '{{mozharness_rev}}'
+      MOZHARNESS_REF: '{{mozharness_ref}}'
 
   extra:
     treeherder:
