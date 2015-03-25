@@ -527,6 +527,8 @@ private:
   nsCOMPtr<nsISupports> mContext;
 
   imgLoader* mImgLoader;
+
+  bool mHadInsecureRedirect;
 };
 
 #endif  // imgLoader_h__
