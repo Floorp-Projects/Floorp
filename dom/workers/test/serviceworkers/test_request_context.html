@@ -39,6 +39,8 @@
   SimpleTest.waitForExplicitFinish();
   onload = function() {
     SpecialPowers.pushPrefEnv({"set": [
+      ["dom.image.picture.enabled", true],
+      ["dom.image.srcset.enabled", true],
       ["dom.serviceWorkers.exemptFromPerDomainMax", true],
       ["dom.serviceWorkers.enabled", true],
       ["dom.serviceWorkers.testing.enabled", true],
