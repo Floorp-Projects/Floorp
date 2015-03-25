@@ -672,7 +672,6 @@ Edts::Edts(Box& aBox)
     segment_duration = reader->ReadU32();
     mMediaStart = reader->Read32();
   }
-  NS_ASSERTION(segment_duration == 0, "Can't handle edits with fixed durations");
   reader->DiscardRemaining();
 }
 
