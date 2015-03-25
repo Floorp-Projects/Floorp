@@ -30,6 +30,8 @@ class ErrorResult;
 namespace dom {
 
 class DOMError;
+struct ServerSocketOptions;
+class TCPServerSocket;
 class USVStringOrArrayBuffer;
 
 // This interface is only used for legacy navigator.mozTCPSocket API compatibility.
@@ -40,6 +42,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(LegacyMozTCPSocket)
 
   explicit LegacyMozTCPSocket(nsPIDOMWindow* aWindow);
+
+  already_AddRefed<TCPServerSocket>
+  Listen(uint16_t aPort,
+         const ServerSocketOptions& aOptions,
+         uint16_t aBacklog,
+         ErrorResult& aRv);
 
   already_AddRefed<TCPSocket>
   Open(const nsAString& aHost,
@@ -106,6 +114,11 @@ public:
               const SocketOptions& aOptions,
               ErrorResult& aRv);
 
+  // Create a TCPSocket object from an existing low-level socket connection.
+  // Used by the TCPServerSocket implementation when a new connection is accepted.
+  static already_AddRefed<TCPSocket>
+  CreateAcceptedSocket(nsIGlobalObject* aGlobal, nsISocketTransport* aTransport, bool aUseArrayBuffers);
+
   static bool SocketEnabled();
 
   IMPL_EVENT_HANDLER(open);
@@ -122,6 +135,12 @@ public:
 private:
   ~TCPSocket();
 
+  // Initialize this socket from an existing low-level connection.
+  nsresult InitWithTransport(nsISocketTransport* aTransport);
+  // Initialize the input/output streams for this socket object.
+  nsresult CreateStream();
+  // Initialize the asynchronous read operation from this socket's input stream.
+  nsresult CreateInputStreamPump();
   // Send the contents of the provided input stream, which is assumed to be the given length
   // for reporting and buffering purposes.
   bool Send(nsIInputStream* aStream, uint32_t aByteLength);

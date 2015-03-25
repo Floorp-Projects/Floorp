@@ -127,7 +127,7 @@ function waitForConnection(listeningServer) {
     // Because of the event model of sockets, we can't use the
     // listenForEventsOnSocket mechanism; we need to hook up listeners during
     // the connect event.
-    listeningServer.onconnect = function(socket) {
+    listeningServer.onconnect = function(event) {
       // Clobber the listener to get upset if it receives any more connections
       // after this.
       listeningServer.onconnect = function() {
@@ -135,8 +135,8 @@ function waitForConnection(listeningServer) {
       };
       ok(true, 'Listening server accepted socket');
       resolve({
-        socket: socket,
-        queue: listenForEventsOnSocket(socket, 'server')
+        socket: event.socket,
+        queue: listenForEventsOnSocket(event.socket, 'server')
       });
     };
   });
@@ -171,11 +171,10 @@ function* test_basics() {
   // test was using.
   let serverPort = 8085;
 
-  let mozTCPSocket = navigator.mozTCPSocket;
   // - Start up a listening socket.
-  let listeningServer = mozTCPSocket.listen(serverPort,
-                                         { binaryType: 'arraybuffer' },
-                                         SERVER_BACKLOG);
+  let listeningServer = new TCPServerSocket(serverPort,
+                                            { binaryType: 'arraybuffer' },
+                                            SERVER_BACKLOG);
 
   let connectedPromise = waitForConnection(listeningServer);
 
