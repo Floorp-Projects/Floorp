@@ -82,6 +82,7 @@ public:
     , mInitiatingThread(NS_GetCurrentThread())
     , mResult(NS_OK)
     , mState(STATE_INIT)
+    , mCanceled(false)
     , mNeedsQuotaRelease(false)
   {
     MOZ_ASSERT(mContext);
@@ -91,7 +92,7 @@ public:
 
   nsresult Dispatch()
   {
-    NS_ASSERT_OWNINGTHREAD(Action::Resolver);
+    NS_ASSERT_OWNINGTHREAD(QuotaInitRunnable);
     MOZ_ASSERT(mState == STATE_INIT);
 
     mState = STATE_CALL_WAIT_FOR_OPEN_ALLOWED;
@@ -101,6 +102,14 @@ public:
       Clear();
     }
     return rv;
+  }
+
+  void Cancel()
+  {
+    NS_ASSERT_OWNINGTHREAD(QuotaInitRunnable);
+    MOZ_ASSERT(!mCanceled);
+    mCanceled = true;
+    mQuotaIOThreadAction->CancelOnInitiatingThread();
   }
 
 private:
@@ -152,7 +161,7 @@ private:
 
   void Clear()
   {
-    NS_ASSERT_OWNINGTHREAD(Action::Resolver);
+    NS_ASSERT_OWNINGTHREAD(QuotaInitRunnable);
     MOZ_ASSERT(mContext);
     mContext = nullptr;
     mManager = nullptr;
@@ -168,6 +177,7 @@ private:
   QuotaInfo mQuotaInfo;
   nsMainThreadPtrHandle<OfflineStorage> mOfflineStorage;
   State mState;
+  Atomic<bool> mCanceled;
   bool mNeedsQuotaRelease;
 
 public:
@@ -223,6 +233,12 @@ Context::QuotaInitRunnable::Run()
     case STATE_CALL_WAIT_FOR_OPEN_ALLOWED:
     {
       MOZ_ASSERT(NS_IsMainThread());
+
+      if (mCanceled) {
+        resolver->Resolve(NS_ERROR_ABORT);
+        break;
+      }
+
       QuotaManager* qm = QuotaManager::GetOrCreate();
       if (!qm) {
         resolver->Resolve(NS_ERROR_FAILURE);
@@ -266,6 +282,11 @@ Context::QuotaInitRunnable::Run()
 
       mNeedsQuotaRelease = true;
 
+      if (mCanceled) {
+        resolver->Resolve(NS_ERROR_ABORT);
+        break;
+      }
+
       QuotaManager* qm = QuotaManager::Get();
       MOZ_ASSERT(qm);
 
@@ -288,6 +309,11 @@ Context::QuotaInitRunnable::Run()
       // recreated.  At least assert we're not on main thread or owning thread.
       MOZ_ASSERT(!NS_IsMainThread());
       MOZ_ASSERT(_mOwningThread.GetThread() != PR_GetCurrentThread());
+
+      if (mCanceled) {
+        resolver->Resolve(NS_ERROR_ABORT);
+        break;
+      }
 
       QuotaManager* qm = QuotaManager::Get();
       MOZ_ASSERT(qm);
@@ -318,7 +344,7 @@ Context::QuotaInitRunnable::Run()
     // -------------------
     case STATE_COMPLETING:
     {
-      NS_ASSERT_OWNINGTHREAD(Action::Resolver);
+      NS_ASSERT_OWNINGTHREAD(QuotaInitRunnable);
       if (mQuotaIOThreadAction) {
         mQuotaIOThreadAction->CompleteOnInitiatingThread(mResult);
       }
@@ -385,7 +411,7 @@ public:
 
   nsresult Dispatch()
   {
-    NS_ASSERT_OWNINGTHREAD(Action::Resolver);
+    NS_ASSERT_OWNINGTHREAD(ActionRunnable);
     MOZ_ASSERT(mState == STATE_INIT);
 
     mState = STATE_RUN_ON_TARGET;
@@ -400,14 +426,14 @@ public:
   virtual bool
   MatchesCacheId(CacheId aCacheId) const override
   {
-    NS_ASSERT_OWNINGTHREAD(Action::Resolver);
+    NS_ASSERT_OWNINGTHREAD(ActionRunnable);
     return mAction->MatchesCacheId(aCacheId);
   }
 
   virtual void
   Cancel() override
   {
-    NS_ASSERT_OWNINGTHREAD(Action::Resolver);
+    NS_ASSERT_OWNINGTHREAD(ActionRunnable);
     mAction->CancelOnInitiatingThread();
   }
 
@@ -447,7 +473,7 @@ private:
 
   void Clear()
   {
-    NS_ASSERT_OWNINGTHREAD(Action::Resolver);
+    NS_ASSERT_OWNINGTHREAD(ActionRunnable);
     MOZ_ASSERT(mContext);
     MOZ_ASSERT(mAction);
     mContext->RemoveActivity(this);
@@ -562,7 +588,7 @@ Context::ActionRunnable::Run()
     // -------------------
     case STATE_COMPLETING:
     {
-      NS_ASSERT_OWNINGTHREAD(Action::Resolver);
+      NS_ASSERT_OWNINGTHREAD(ActionRunnable);
       mAction->CompleteOnInitiatingThread(mResult);
       mState = STATE_COMPLETE;
       // Explicitly cleanup here as the destructor could fire on any of
@@ -679,9 +705,9 @@ Context::Create(Manager* aManager, Action* aQuotaIOThreadAction)
 {
   nsRefPtr<Context> context = new Context(aManager);
 
-  nsRefPtr<QuotaInitRunnable> runnable =
-    new QuotaInitRunnable(context, aManager, aQuotaIOThreadAction);
-  nsresult rv = runnable->Dispatch();
+  context->mInitRunnable = new QuotaInitRunnable(context, aManager,
+                                                 aQuotaIOThreadAction);
+  nsresult rv = context->mInitRunnable->Dispatch();
   if (NS_FAILED(rv)) {
     // Shutdown must be delayed until all Contexts are destroyed.  Shutdown
     // must also prevent any new Contexts from being constructed.  Crash
@@ -723,6 +749,12 @@ void
 Context::CancelAll()
 {
   NS_ASSERT_OWNINGTHREAD(Context);
+
+  if (mInitRunnable) {
+    MOZ_ASSERT(mState == STATE_CONTEXT_INIT);
+    mInitRunnable->Cancel();
+  }
+
   mState = STATE_CONTEXT_CANCELED;
   mPendingActions.Clear();
   {
@@ -806,6 +838,9 @@ Context::OnQuotaInit(nsresult aRv, const QuotaInfo& aQuotaInfo,
                      nsMainThreadPtrHandle<OfflineStorage>& aOfflineStorage)
 {
   NS_ASSERT_OWNINGTHREAD(Context);
+
+  MOZ_ASSERT(mInitRunnable);
+  mInitRunnable = nullptr;
 
   mQuotaInfo = aQuotaInfo;
 
