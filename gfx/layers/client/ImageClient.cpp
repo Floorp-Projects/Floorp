@@ -273,6 +273,7 @@ ImageClientSingle::OnDetach()
 ImageClient::ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
                          CompositableType aType)
 : CompositableClient(aFwd, aFlags)
+, mLayer(nullptr)
 , mType(aType)
 , mLastPaintedImageSerial(0)
 {}
@@ -292,7 +293,6 @@ ImageClientBridge::ImageClientBridge(CompositableForwarder* aFwd,
                                      TextureFlags aFlags)
 : ImageClient(aFwd, aFlags, CompositableType::IMAGE_BRIDGE)
 , mAsyncContainerID(0)
-, mLayer(nullptr)
 {
 }
 
