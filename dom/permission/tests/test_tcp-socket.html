@@ -21,10 +21,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=815105
  */
 function verifier(success, failure) {
   try {
-    var conn = this.getObj().open("http://mochi.test/", 80);
+    var conn = navigator.mozTCPSocket.open("http://mochi.test/", 80);
 
     if (conn) {
-      success("Opened connection");
+      if (conn instanceof window.TCPSocket) {
+        success("Opened connection");
+      } else {
+        failure("connection didn't match interface");
+      }
     } else {
       failure("failed to open connection");
     }
@@ -37,8 +41,6 @@ var gData = [
   {
     perm: ["tcp-socket"],
     needParentPerm: true,
-    obj: "mozTCPSocket",
-    idl: "nsIDOMTCPSocket",
     settings: [["dom.mozTCPSocket.enabled", true]],
     verifier: verifier.toSource(),
   }

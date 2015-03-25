@@ -43,6 +43,7 @@
 #include "mozilla/dom/Permissions.h"
 #include "mozilla/dom/Presentation.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
+#include "mozilla/dom/TCPSocket.h"
 #include "mozilla/dom/Telephony.h"
 #include "mozilla/dom/Voicemail.h"
 #include "mozilla/dom/TVManager.h"
@@ -1803,6 +1804,13 @@ Navigator::GetInputPortManager(ErrorResult& aRv)
   }
 
   return mInputPortManager;
+}
+
+already_AddRefed<LegacyMozTCPSocket>
+Navigator::MozTCPSocket()
+{
+  nsRefPtr<LegacyMozTCPSocket> socket = new LegacyMozTCPSocket(GetWindow());
+  return socket.forget();
 }
 
 #ifdef MOZ_B2G
