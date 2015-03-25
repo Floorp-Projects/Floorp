@@ -150,6 +150,7 @@ function radd_number(i) {
     var x = 1 + i;
     if (uceFault_add_number(i) || uceFault_add_number(i))
         assertEq(x, 100  /* = 1 + 99 */);
+    assertRecoveredOnBailout(x);
     return i;
 }
 

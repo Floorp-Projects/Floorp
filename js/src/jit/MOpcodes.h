@@ -66,7 +66,9 @@ namespace jit {
     _(ArraySplice)                                                          \
     _(Bail)                                                                 \
     _(Unreachable)                                                          \
+    _(EncodeSnapshot)                                                       \
     _(AssertFloat32)                                                        \
+    _(AssertRecoveredOnBailout)                                             \
     _(GetDynamicName)                                                       \
     _(FilterArgumentsOrEval)                                                \
     _(CallDirectEval)                                                       \

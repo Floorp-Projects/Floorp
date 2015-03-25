@@ -1686,6 +1686,12 @@ class LUnreachable : public LControlInstructionHelper<0, 0, 0>
     LIR_HEADER(Unreachable)
 };
 
+class LEncodeSnapshot : public LInstructionHelper<0, 0, 0>
+{
+  public:
+    LIR_HEADER(EncodeSnapshot)
+};
+
 template <size_t defs, size_t ops>
 class LDOMPropertyInstructionHelper : public LCallInstructionHelper<defs, 1 + ops, 3>
 {
