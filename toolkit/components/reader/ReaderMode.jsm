@@ -68,7 +68,7 @@ this.ReaderMode = {
    * @return boolean Whether or not we should show the reader mode button.
    */
   isProbablyReaderable: function(doc) {
-    let uri = Services.io.newURI(doc.documentURI, null, null);
+    let uri = Services.io.newURI(doc.location.href, null, null);
 
     if (!this._shouldCheckUri(uri)) {
       return false;
