@@ -393,9 +393,8 @@ LIRGenerator::lowerCallArguments(MCall *call)
     // Align the arguments of a call such that the callee would keep the same
     // alignment as the caller.
     uint32_t baseSlot = 0;
-    static const uint32_t alignment = JitStackAlignment / sizeof(Value);
-    if (alignment > 1)
-        baseSlot = AlignBytes(argc, alignment);
+    if (JitStackValueAlignment > 1)
+        baseSlot = AlignBytes(argc, JitStackValueAlignment);
     else
         baseSlot = argc;
 

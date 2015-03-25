@@ -1537,9 +1537,8 @@ class LJSCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
 {
   public:
     uint32_t argslot() const {
-        static const uint32_t alignment = JitStackAlignment / sizeof(Value);
-        if (alignment > 1)
-            return AlignBytes(mir()->numStackArgs(), alignment);
+        if (JitStackValueAlignment > 1)
+            return AlignBytes(mir()->numStackArgs(), JitStackValueAlignment);
         return mir()->numStackArgs();
     }
     MCall *mir() const {

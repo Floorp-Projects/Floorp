@@ -161,23 +161,27 @@ static MOZ_CONSTEXPR_VAR FloatRegister f30 = { FloatRegisters::f30, FloatRegiste
 
 // MIPS CPUs can only load multibyte data that is "naturally"
 // four-byte-aligned, sp register should be eight-byte-aligned.
-static const uint32_t ABIStackAlignment = 8;
-static const uint32_t CodeAlignment = 4;
-static const uint32_t JitStackAlignment = 8;
+static MOZ_CONSTEXPR_VAR uint32_t ABIStackAlignment = 8;
+static MOZ_CONSTEXPR_VAR uint32_t CodeAlignment = 4;
+static MOZ_CONSTEXPR_VAR uint32_t JitStackAlignment = 8;
+
+static MOZ_CONSTEXPR_VAR uint32_t JitStackValueAlignment = JitStackAlignment / sizeof(Value);
+static_assert(JitStackAlignment % sizeof(Value) == 0 && JitStackValueAlignment >= 1,
+  "Stack alignment should be a non-zero multiple of sizeof(Value)");
 
 // This boolean indicates whether we support SIMD instructions flavoured for
 // this architecture or not. Rather than a method in the LIRGenerator, it is
 // here such that it is accessible from the entire codebase. Once full support
 // for SIMD is reached on all tier-1 platforms, this constant can be deleted.
-static const bool SupportsSimd = false;
+static MOZ_CONSTEXPR_VAR bool SupportsSimd = false;
 // TODO this is just a filler to prevent a build failure. The MIPS SIMD
 // alignment requirements still need to be explored.
 // TODO Copy the static_asserts from x64/x86 assembler files.
-static const uint32_t SimdMemoryAlignment = 8;
+static MOZ_CONSTEXPR_VAR uint32_t SimdMemoryAlignment = 8;
 
-static const uint32_t AsmJSStackAlignment = SimdMemoryAlignment;
+static MOZ_CONSTEXPR_VAR uint32_t AsmJSStackAlignment = SimdMemoryAlignment;
 
-static const Scale ScalePointer = TimesFour;
+static MOZ_CONSTEXPR_VAR Scale ScalePointer = TimesFour;
 
 // MIPS instruction types
 //                +---------------------------------------------------------------+
