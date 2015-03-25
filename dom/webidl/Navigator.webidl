@@ -436,13 +436,10 @@ partial interface Navigator {
   readonly attribute Presentation? presentation;
 };
 
-/*
-  // Commented out due to the continued presence of nsIDOMTCPSocket and its navigator
-  // properties that interfere with tests.
-  partial interface Navigator {
+partial interface Navigator {
   [NewObject, Pref="dom.mozTCPSocket.enabled", CheckAnyPermissions="tcp-socket"]
   readonly attribute LegacyMozTCPSocket mozTCPSocket;
-};*/
+};
 
 #ifdef MOZ_EME
 partial interface Navigator {

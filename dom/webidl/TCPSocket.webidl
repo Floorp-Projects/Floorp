@@ -34,6 +34,9 @@ interface LegacyMozTCPSocket {
    */
   [Throws]
   TCPSocket open(DOMString host, unsigned short port, optional SocketOptions options);
+
+  [Throws]
+  TCPServerSocket listen(unsigned short port, optional ServerSocketOptions options, optional unsigned short backlog = 0);
 };
 
 [Constructor(DOMString host, unsigned short port, optional SocketOptions options),
