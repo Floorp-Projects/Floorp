@@ -1,5 +1,6 @@
 package org.mozilla.gecko.tests;
 
+import org.mozilla.gecko.tests.helpers.GeckoHelper;
 import org.mozilla.gecko.tests.helpers.NavigationHelper;
 
 /**
@@ -7,6 +8,8 @@ import org.mozilla.gecko.tests.helpers.NavigationHelper;
  */
 public class testReaderModeTitle extends UITest {
     public void testReaderModeTitle() {
+        GeckoHelper.blockForReady();
+
         NavigationHelper.enterAndLoadUrl(StringHelper.ROBOCOP_READER_MODE_BASIC_ARTICLE);
 
         mToolbar.pressReaderModeButton();

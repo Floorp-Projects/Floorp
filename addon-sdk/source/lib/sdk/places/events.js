@@ -23,6 +23,7 @@ const historyService = Cc['@mozilla.org/browser/nav-history-service;1']
 const { mapBookmarkItemType } = require('./utils');
 const { EventTarget } = require('../event/target');
 const { emit } = require('../event/core');
+const { when } = require('../system/unload');
 
 const emitter = EventTarget();
 
@@ -118,5 +119,10 @@ historyService.addObserver(historyObserver, false);
 
 let bookmarkObserver = createObserverInstance(BOOKMARK_EVENTS, BOOKMARK_ARGS);
 bookmarkService.addObserver(bookmarkObserver, false);
+
+when(() => {
+  historyService.removeObserver(historyObserver);
+  bookmarkService.removeObserver(bookmarkObserver);
+});
 
 exports.events = emitter;

@@ -10,6 +10,10 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/SharedPromptUtils.jsm");
 
+const LoginInfo =
+      Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
+                             "nsILoginInfo", "init");
+
 /* Constants for password prompt telemetry.
  * Mirrored in mobile/android/components/LoginManagerPrompter.js */
 const PROMPT_DISPLAYED = 0;
@@ -792,11 +796,13 @@ LoginManagerPrompter.prototype = {
   _showLoginCaptureDoorhanger(login, type) {
     let { browser } = this._getNotifyWindow();
 
-    let msgNames = type == "password-save" ? {
+    let saveMsgNames = {
       prompt: "rememberPasswordMsgNoUsername",
       buttonLabel: "notifyBarRememberPasswordButtonText",
       buttonAccessKey: "notifyBarRememberPasswordButtonAccessKey",
-    } : {
+    };
+
+    let changeMsgNames = {
       // We reuse the existing message, even if it expects a username, until we
       // switch to the final terminology in bug 1144856.
       prompt: "updatePasswordMsg",
@@ -804,28 +810,94 @@ LoginManagerPrompter.prototype = {
       buttonAccessKey: "notifyBarUpdateButtonAccessKey",
     };
 
+    let initialMsgNames = type == "password-save" ? saveMsgNames
+                                                  : changeMsgNames;
+
     let histogramName = type == "password-save" ? "PWMGR_PROMPT_REMEMBER_ACTION"
                                                 : "PWMGR_PROMPT_UPDATE_ACTION";
     let histogram = Services.telemetry.getHistogramById(histogramName);
     histogram.add(PROMPT_DISPLAYED);
 
+    let chromeDoc = browser.ownerDocument;
+
+    let currentNotification;
+
+    let updateButtonLabel = () => {
+      let foundLogins = Services.logins.findLogins({}, login.hostname,
+                                                   login.formSubmitURL,
+                                                   login.httpRealm);
+      let logins = foundLogins.filter(l => l.username == login.username);
+      let msgNames = (logins.length == 0) ? saveMsgNames : changeMsgNames;
+
+      // Update the label based on whether this will be a new login or not.
+      let label = this._getLocalizedString(msgNames.buttonLabel);
+      let accessKey = this._getLocalizedString(msgNames.buttonAccessKey);
+
+      // Update the labels for the next time the panel is opened.
+      currentNotification.mainAction.label = label;
+      currentNotification.mainAction.accessKey = accessKey;
+
+      // Update the labels in real time if the notification is displayed.
+      let element = [...currentNotification.owner.panel.childNodes]
+                    .find(n => n.notification == currentNotification);
+      if (element) {
+        element.setAttribute("buttonlabel", label);
+        element.setAttribute("buttonaccesskey", accessKey);
+      }
+    };
+
+    let writeDataToUI = () => {
+      chromeDoc.getElementById("password-notification-username")
+               .setAttribute("placeholder", usernamePlaceholder);
+      chromeDoc.getElementById("password-notification-username")
+               .setAttribute("value", login.username);
+      chromeDoc.getElementById("password-notification-password")
+               .setAttribute("value", login.password);
+      updateButtonLabel();
+    };
+
+    let readDataFromUI = () => {
+      login.username =
+        chromeDoc.getElementById("password-notification-username").value;
+      login.password =
+        chromeDoc.getElementById("password-notification-password").value;
+    };
+
+    let onUsernameInput = () => {
+      readDataFromUI();
+      updateButtonLabel();
+    };
+
+    let persistData = () => {
+      let foundLogins = Services.logins.findLogins({}, login.hostname,
+                                                   login.formSubmitURL,
+                                                   login.httpRealm);
+      let logins = foundLogins.filter(l => l.username == login.username);
+      if (logins.length == 0) {
+        // The original login we have been provided with might have its own
+        // metadata, but we don't want it propagated to the newly created one.
+        Services.logins.addLogin(new LoginInfo(login.hostname,
+                                               login.formSubmitURL,
+                                               login.httpRealm,
+                                               login.username,
+                                               login.password,
+                                               login.usernameField,
+                                               login.passwordField));
+      } else if (logins.length == 1) {
+        this._updateLogin(logins[0], login.password);
+      } else {
+        Cu.reportError("Unexpected match of multiple logins.");
+      }
+    };
+
     // The main action is the "Remember" or "Update" button.
     let mainAction = {
-      label: this._getLocalizedString(msgNames.buttonLabel),
-      accessKey: this._getLocalizedString(msgNames.buttonAccessKey),
+      label: this._getLocalizedString(initialMsgNames.buttonLabel),
+      accessKey: this._getLocalizedString(initialMsgNames.buttonAccessKey),
       callback: () => {
         histogram.add(PROMPT_ADD_OR_UPDATE);
-        let foundLogins = Services.logins.findLogins({}, login.hostname,
-                                                     login.formSubmitURL,
-                                                     login.httpRealm);
-        let logins = foundLogins.filter(l => l.username == login.username);
-        if (logins.length == 0) {
-          Services.logins.addLogin(login);
-        } else if (logins.length == 1) {
-          this._updateLogin(logins[0], login.password);
-        } else {
-          Cu.reportError("Unexpected match of multiple logins.");
-        }
+        readDataFromUI();
+        persistData();
         browser.focus();
       }
     };
@@ -847,7 +919,7 @@ LoginManagerPrompter.prototype = {
     this._getPopupNote().show(
       browser,
       "password",
-      this._getLocalizedString(msgNames.prompt, [displayHost]),
+      this._getLocalizedString(initialMsgNames.prompt, [displayHost]),
       "password-notification-icon",
       mainAction,
       secondaryActions,
@@ -856,18 +928,23 @@ LoginManagerPrompter.prototype = {
         persistWhileVisible: true,
         passwordNotificationType: type,
         eventCallback: function (topic) {
-          if (topic != "showing") {
-            return false;
+          switch (topic) {
+            case "showing":
+              currentNotification = this;
+              writeDataToUI();
+              chromeDoc.getElementById("password-notification-username")
+                       .addEventListener("input", onUsernameInput);
+              break;
+            case "dismissed":
+              readDataFromUI();
+              // Fall through.
+            case "removed":
+              currentNotification = null;
+              chromeDoc.getElementById("password-notification-username")
+                       .removeEventListener("input", onUsernameInput);
+              break;
           }
-
-          let chromeDoc = this.browser.ownerDocument;
-
-          chromeDoc.getElementById("password-notification-username")
-                   .setAttribute("placeholder", usernamePlaceholder);
-          chromeDoc.getElementById("password-notification-username")
-                   .setAttribute("value", login.username);
-          chromeDoc.getElementById("password-notification-password")
-                   .setAttribute("value", login.password);
+          return false;
         },
       }
     );

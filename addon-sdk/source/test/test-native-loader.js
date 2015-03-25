@@ -48,6 +48,14 @@ exports['test nodeResolve'] = function (assert) {
     './node_modules/test-math/node_modules/test-add/index.js',
     'Dependencies\' dependencies can be found');
 
+  resolveTest('resource://gre/modules/commonjs/sdk/tabs.js', './index.js', undefined,
+              'correctly ignores absolute URIs.');
+
+  resolveTest('../tabs', 'resource://gre/modules/commonjs/sdk/addon/bootstrap.js', undefined,
+              'correctly ignores attempts to resolve from a module at an absolute URI.');
+
+  resolveTest('sdk/tabs', 'resource://gre/modules/commonjs/sdk/addon/bootstrap.js', undefined,
+              'correctly ignores attempts to resolve from a module at an absolute URI.');
 
   function resolveTest (id, requirer, expected, msg) {
     let result = nodeResolve(id, requirer, { manifest: manifest, rootURI: rootURI });
