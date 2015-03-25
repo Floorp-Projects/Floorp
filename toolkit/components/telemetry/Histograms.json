@@ -7697,5 +7697,20 @@
     "expires_in_version": "never",
     "kind": "count",
     "description": "Count plugin hang notices in e10s"
+  },
+  "SERVICE_WORKER_SPAWN_ATTEMPTS": {
+    "expires_in_version": "50",
+    "kind": "count",
+    "description": "Count attempts to spawn a ServiceWorker for a domain"
+  },
+  "SERVICE_WORKER_WAS_SPAWNED": {
+    "expires_in_version": "50",
+    "kind": "count",
+    "description": "Count ServiceWorkers that really did get a thread created for them"
+  },
+  "SERVICE_WORKER_SPAWN_GETS_QUEUED": {
+    "expires_in_version": "50",
+    "kind": "count",
+    "description": "Tracking whether a ServiceWorker spawn gets queued due to hitting max workers per domain limit"
   }
 }

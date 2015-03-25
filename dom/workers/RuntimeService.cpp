@@ -14,6 +14,7 @@
 #include "nsIObserverService.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsISupportsPriority.h"
 #include "nsITimer.h"
@@ -26,6 +27,7 @@
 #include "jsfriendapi.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
 #include "mozilla/dom/AtomList.h"
@@ -1414,6 +1416,12 @@ RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
   nsCString sharedWorkerScriptSpec;
 
+  const bool isServiceWorker = aWorkerPrivate->IsServiceWorker();
+  if (isServiceWorker) {
+    AssertIsOnMainThread();
+    Telemetry::Accumulate(Telemetry::SERVICE_WORKER_SPAWN_ATTEMPTS, 1);
+  }
+
   bool isSharedOrServiceWorker = aWorkerPrivate->IsSharedWorker() ||
                                  aWorkerPrivate->IsServiceWorker();
   if (isSharedOrServiceWorker) {
@@ -1461,6 +1469,19 @@ RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
     if (queued) {
       domainInfo->mQueuedWorkers.AppendElement(aWorkerPrivate);
+      if (isServiceWorker) {
+        AssertIsOnMainThread();
+        // ServiceWorker spawn gets queued due to hitting max workers per domain
+        // limit so let's log a warning.
+        // Note: aWorkerPrivate->GetDocument() call might result nullptr due to
+        // no window so the message warning will show up in the browser console.
+        nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                        NS_LITERAL_CSTRING("DOM"),
+                                        aWorkerPrivate->GetDocument(),
+                                        nsContentUtils::eDOM_PROPERTIES,
+                                        "HittingMaxWorkersPerDomain");
+        Telemetry::Accumulate(Telemetry::SERVICE_WORKER_SPAWN_GETS_QUEUED, 1);
+      }
     }
     else if (parent) {
       domainInfo->mChildWorkerCount++;
@@ -1529,6 +1550,10 @@ RuntimeService::RegisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     return false;
   }
 
+  if (isServiceWorker) {
+    AssertIsOnMainThread();
+    Telemetry::Accumulate(Telemetry::SERVICE_WORKER_WAS_SPAWNED, 1);
+  }
   return true;
 }
 
