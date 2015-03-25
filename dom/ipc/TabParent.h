@@ -58,12 +58,12 @@ class nsIContentParent;
 class Element;
 struct StructuredCloneData;
 
-class TabParent : public PBrowserParent 
-                , public nsITabParent 
-                , public nsIAuthPromptProvider
-                , public nsISecureBrowserUI
-                , public nsSupportsWeakReference
-                , public TabContext
+class TabParent final : public PBrowserParent
+                      , public nsITabParent
+                      , public nsIAuthPromptProvider
+                      , public nsISecureBrowserUI
+                      , public nsSupportsWeakReference
+                      , public TabContext
 {
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
 
@@ -211,7 +211,9 @@ public:
                                    nsTArray<ScrollableLayerGuid>&& aTargets) override;
     virtual bool RecvSetAllowedTouchBehavior(const uint64_t& aInputBlockId,
                                              nsTArray<TouchBehaviorFlags>&& aTargets) override;
-    virtual bool RecvSynthesizedMouseWheelEvent(const mozilla::WidgetWheelEvent& aEvent) override;
+    virtual bool RecvDispatchWheelEvent(const mozilla::WidgetWheelEvent& aEvent) override;
+    virtual bool RecvDispatchMouseEvent(const mozilla::WidgetMouseEvent& aEvent) override;
+    virtual bool RecvDispatchKeyboardEvent(const mozilla::WidgetKeyboardEvent& aEvent) override;
 
     virtual PColorPickerParent*
     AllocPColorPickerParent(const nsString& aTitle, const nsString& aInitialColor) override;

@@ -1441,6 +1441,18 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent,
     default:
       MOZ_ASSERT_UNREACHABLE("unexpected scroll delta type");
   }
+
+  LayoutDeviceIntSize pageScrollSize = mFrameMetrics.GetPageScrollAmount();
+  if (Abs(aOutDeltaX) > pageScrollSize.width) {
+    aOutDeltaX = (aOutDeltaX >= 0)
+                 ? pageScrollSize.width
+                 : -pageScrollSize.width;
+  }
+  if (Abs(aOutDeltaY) > pageScrollSize.height) {
+    aOutDeltaY = (aOutDeltaY >= 0)
+                 ? pageScrollSize.height
+                 : -pageScrollSize.height;
+  }
 }
 
 // Return whether or not the underlying layer can be scrolled on either axis.

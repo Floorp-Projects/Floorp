@@ -676,3 +676,20 @@ function waitForPaintsFlushed() {
     waitForAllPaintsFlushed(resolve);
   });
 }
+
+function waitForVisitedLinkColoring(visitedLink, waitProperty, waitValue) {
+  function checkLink(resolve) {
+    if (SpecialPowers.DOMWindowUtils
+          .getVisitedDependentComputedStyle(visitedLink, "", waitProperty) ==
+        waitValue) {
+      // Our link has been styled as visited.  Resolve.
+      resolve(true);
+    } else {
+      // Our link is not yet styled as visited.  Poll for completion.
+      setTimeout(checkLink, 0, resolve);
+    }
+  }
+  return new Promise(function(resolve, reject) {
+    checkLink(resolve);
+  });
+}

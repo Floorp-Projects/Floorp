@@ -139,7 +139,7 @@ struct nsPipeReadState
 //-----------------------------------------------------------------------------
 
 // an input end of a pipe (maintained as a list of refs within the pipe)
-class nsPipeInputStream
+class nsPipeInputStream final
   : public nsIAsyncInputStream
   , public nsISeekableStream
   , public nsISearchableInputStream

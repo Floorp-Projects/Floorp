@@ -225,6 +225,10 @@ public:
   // Returns true if the given WidgetWheelEvent will resolve to a scroll action.
   static bool WheelEventIsScrollAction(WidgetWheelEvent* aEvent);
 
+  // Returns true if user prefs for wheel deltas apply to the given
+  // WidgetWheelEvent.
+  static bool WheelEventNeedsDeltaMultipliers(WidgetWheelEvent* aEvent);
+
   // Returns whether or not a frame can be vertically scrolled with a mouse
   // wheel (as opposed to, say, a selection or touch scroll).
   static bool CanVerticallyScrollFrameWithWheel(nsIFrame* aFrame);
@@ -422,6 +426,12 @@ protected:
      * user prefs.
      */
     void ApplyUserPrefsToDelta(WidgetWheelEvent* aEvent);
+
+    /**
+     * Returns whether or not ApplyUserPrefsToDelta() would change the delta
+     * values of an event.
+     */
+    bool HasUserPrefsForDelta(WidgetWheelEvent* aEvent);
 
     /**
      * If ApplyUserPrefsToDelta() changed the delta values with customized

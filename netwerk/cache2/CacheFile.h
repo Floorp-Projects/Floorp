@@ -44,9 +44,9 @@ public:
 NS_DEFINE_STATIC_IID_ACCESSOR(CacheFileListener, CACHEFILELISTENER_IID)
 
 
-class CacheFile : public CacheFileChunkListener
-                , public CacheFileIOListener
-                , public CacheFileMetadataListener
+class CacheFile final : public CacheFileChunkListener
+                      , public CacheFileIOListener
+                      , public CacheFileMetadataListener
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

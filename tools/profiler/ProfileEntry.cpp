@@ -343,7 +343,7 @@ void UniqueJITOptimizations::stream(JSStreamWriter& b, JSRuntime* rt)
 }
 
 void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JSRuntime* rt,
-                                            UniqueJITOptimizations &aUniqueOpts)
+                                            UniqueJITOptimizations& aUniqueOpts)
 {
   b.BeginArray();
 
@@ -468,7 +468,8 @@ void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JS
                       }
                       readAheadPos = (framePos + incBy) % mEntrySize;
                       if (readAheadPos != mWritePos &&
-                          mEntries[readAheadPos].mTagName == 'J') {
+                          (mEntries[readAheadPos].mTagName == 'J' ||
+                           mEntries[readAheadPos].mTagName == 'O')) {
                         void* pc = mEntries[readAheadPos].mTagPtr;
 
                         // TODOshu: cannot stream tracked optimization info if
@@ -486,11 +487,16 @@ void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JS
                           // Sampled JIT optimizations are deduplicated by
                           // aUniqueOpts to save space. Stream an index that
                           // references into the optimizations array.
-                          Maybe<unsigned> optsIndex = aUniqueOpts.getIndex(pc, rt);
-                          if (optsIndex.isSome()) {
-                            b.NameValue("optsIndex", optsIndex.value());
+                          bool mightHaveTrackedOpts = mEntries[readAheadPos].mTagName == 'O';
+                          if (mightHaveTrackedOpts) {
+                            Maybe<unsigned> optsIndex = aUniqueOpts.getIndex(pc, rt);
+                            if (optsIndex.isSome()) {
+                              b.NameValue("optsIndex", optsIndex.value());
+                            }
                           }
                         }
+
+                        incBy++;
                       }
                     b.EndObject();
                   }

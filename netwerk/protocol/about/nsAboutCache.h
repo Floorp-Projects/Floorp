@@ -17,8 +17,8 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 
-class nsAboutCache : public nsIAboutModule 
-                   , public nsICacheStorageVisitor
+class nsAboutCache final : public nsIAboutModule
+                         , public nsICacheStorageVisitor
 {
 public:
     NS_DECL_ISUPPORTS

@@ -327,7 +327,7 @@ class GCMarker : public JSTracer
 
 // Append traced things to a buffer on the zone for use later in the GC.
 // See the comment in GCRuntime.h above grayBufferState for details.
-class BufferGrayRootsTracer : public JSTracer
+class BufferGrayRootsTracer : public JS::CallbackTracer
 {
     // Set to false if we OOM while buffering gray roots.
     bool bufferingGrayRootsFailed;
@@ -336,10 +336,10 @@ class BufferGrayRootsTracer : public JSTracer
 
   public:
     explicit BufferGrayRootsTracer(JSRuntime *rt)
-      : JSTracer(rt, grayTraceCallback), bufferingGrayRootsFailed(false)
+      : JS::CallbackTracer(rt, grayTraceCallback), bufferingGrayRootsFailed(false)
     {}
 
-    static void grayTraceCallback(JSTracer *trc, void **thingp, JSGCTraceKind kind) {
+    static void grayTraceCallback(JS::CallbackTracer *trc, void **thingp, JSGCTraceKind kind) {
         static_cast<BufferGrayRootsTracer *>(trc)->appendGrayRoot(*thingp, kind);
     }
 
@@ -354,18 +354,8 @@ SetMarkStackLimit(JSRuntime *rt, size_t limit);
 inline bool
 IsBufferingGrayRoots(JSTracer *trc)
 {
-    return trc->callback == BufferGrayRootsTracer::grayTraceCallback;
-}
-
-// Return true if this trace is happening on behalf of the marking phase of GC.
-inline bool
-IsMarkingTracer(JSTracer *trc)
-{
-    // If we call this on the gray-buffering tracer, then we have encountered a
-    // marking path that will be wrong when tracing with a callback marker to
-    // enqueue for deferred gray marking.
-    MOZ_ASSERT(!IsBufferingGrayRoots(trc));
-    return trc->callback == nullptr;
+    return trc->isCallbackTracer() &&
+           trc->asCallbackTracer()->hasCallback(BufferGrayRootsTracer::grayTraceCallback);
 }
 
 } /* namespace js */
