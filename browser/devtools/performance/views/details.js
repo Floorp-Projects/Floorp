@@ -19,7 +19,7 @@ let DetailsView = {
       requires: ["timeline"]
     },
     "js-calltree": {
-      id: "js-calltree-view",
+      id: "js-profile-view",
       view: JsCallTreeView
     },
     "js-flamegraph": {
