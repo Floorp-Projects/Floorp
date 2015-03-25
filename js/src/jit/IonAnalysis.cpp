@@ -94,6 +94,59 @@ BlockComputesConstant(MBasicBlock* block, MDefinition* value)
     return true;
 }
 
+// Find phis that are redudant:
+//
+// 1) phi(a, a)
+//     can get replaced by a
+//
+// 2) phi(filtertypeset(a, type1), filtertypeset(a, type1))
+//     equals filtertypeset(a, type1)
+//
+// 3) phi(a, filtertypeset(a, type1))
+//     equals filtertypeset(a, type1 union type(a))
+//     equals filtertypeset(a, type(a))
+//     equals a
+//
+// 4) phi(filtertypeset(a, type1), filtertypeset(a, type2))
+//    equals filtertypeset(a, type1 union type2)
+//
+//    This is the special case. We can only replace this with 'a' iif
+//    type(a) == type1 union type2. Since optimizations could have
+//    happened based on a more specific phi type.
+static bool
+IsPhiRedudantFilter(MPhi* phi)
+{
+    // Handle (1) and (2)
+    if (phi->operandIfRedundant())
+        return true;
+
+    // Handle (3)
+    bool onlyFilters = false;
+    MDefinition* a = phi->getOperand(0);
+    if (a->isFilterTypeSet()) {
+        a = a->toFilterTypeSet()->input();
+        onlyFilters = true;
+    }
+
+    for (size_t i = 1; i < phi->numOperands(); i++) {
+        MDefinition* operand = phi->getOperand(i);
+        if (operand == a) {
+            onlyFilters = false;
+            continue;
+        }
+        if (operand->isFilterTypeSet() && operand->toFilterTypeSet()->input() == a)
+            continue;
+        return false;
+    }
+    if (!onlyFilters)
+        return true;
+
+    // Handle (4)
+    MOZ_ASSERT(onlyFilters);
+    return EqualTypes(a->type(), a->resultTypeSet(),
+                      phi->type(), phi->resultTypeSet());
+}
+
 // Determine whether phiBlock/testBlock simply compute a phi and perform a
 // test on it.
 static bool
@@ -131,8 +184,13 @@ BlockIsSingleTest(MBasicBlock* phiBlock, MBasicBlock* testBlock, MPhi** pphi, MT
     }
 
     for (MPhiIterator iter = phiBlock->phisBegin(); iter != phiBlock->phisEnd(); ++iter) {
-        if (*iter != phi)
-            return false;
+        if (*iter == phi)
+            continue;
+
+        if (IsPhiRedudantFilter(*iter))
+            continue;
+
+        return false;
     }
 
     if (phiBlock != testBlock && !testBlock->phisEmpty())
@@ -257,6 +315,23 @@ MaybeFoldConditionBlock(MIRGraph& graph, MBasicBlock* initialBlock)
 
     // OK, we found the desired pattern, now transform the graph.
 
+    // Patch up phis that filter their input.
+    for (MPhiIterator iter = phiBlock->phisBegin(); iter != phiBlock->phisEnd(); ++iter) {
+        if (*iter == phi)
+            continue;
+
+        MOZ_ASSERT(IsPhiRedudantFilter(*iter));
+        MDefinition* redundant = (*iter)->operandIfRedundant();
+
+        if (!redundant) {
+            redundant = (*iter)->getOperand(0);
+            if (redundant->isFilterTypeSet())
+                redundant = redundant->toFilterTypeSet()->input();
+        }
+
+        (*iter)->replaceAllUsesWith(redundant);
+    }
+
     // Remove the phi from phiBlock.
     phiBlock->discardPhi(*phiBlock->phisBegin());
 
@@ -374,8 +449,11 @@ jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph)
             // parameter passing might be live. Rewriting uses of these terms
             // in resume points may affect the interpreter's behavior. Rather
             // than doing a more sophisticated analysis, just ignore these.
-            if (ins->isUnbox() || ins->isParameter() || ins->isTypeBarrier() || ins->isComputeThis())
+            if (ins->isUnbox() || ins->isParameter() || ins->isTypeBarrier() ||
+                ins->isComputeThis() || ins->isFilterTypeSet())
+            {
                 continue;
+            }
 
             // Early intermediate values captured by resume points, such as
             // TypedObject, ArrayState and its allocation, may be legitimately
