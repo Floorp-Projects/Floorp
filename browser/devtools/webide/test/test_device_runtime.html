@@ -45,8 +45,6 @@
 
           yield lazyIframeIsLoaded(detailsIframe);
 
-          yield nextTick();
-
           yield detailsIframe.contentWindow.getDescriptionPromise;
 
           // device info and permissions content is checked in other tests
