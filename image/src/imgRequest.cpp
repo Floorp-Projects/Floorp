@@ -77,6 +77,7 @@ imgRequest::imgRequest(imgLoader* aLoader)
  , mIsInCache(false)
  , mDecodeRequested(false)
  , mNewPartPending(false)
+ , mHadInsecureRedirect(false)
 { }
 
 imgRequest::~imgRequest()
@@ -94,6 +95,7 @@ imgRequest::~imgRequest()
 
 nsresult imgRequest::Init(nsIURI *aURI,
                           nsIURI *aCurrentURI,
+                          bool aHadInsecureRedirect,
                           nsIRequest *aRequest,
                           nsIChannel *aChannel,
                           imgCacheEntry *aCacheEntry,
@@ -124,6 +126,26 @@ nsresult imgRequest::Init(nsIURI *aURI,
   mLoadingPrincipal = aLoadingPrincipal;
   mCORSMode = aCORSMode;
   mReferrerPolicy = aReferrerPolicy;
+
+  // If the original URI and the current URI are different, check whether the
+  // original URI is secure. We deliberately don't take the current URI into
+  // account, as it needs to be handled using more complicated rules than
+  // earlier elements of the redirect chain.
+  if (aURI != aCurrentURI) {
+    bool isHttps = false;
+    bool isChrome = false;
+    bool schemeLocal = false;
+    if (NS_FAILED(aURI->SchemeIs("https", &isHttps)) ||
+        NS_FAILED(aURI->SchemeIs("chrome", &isChrome)) ||
+        NS_FAILED(NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE , &schemeLocal))  ||
+        (!isHttps && !isChrome && !schemeLocal)) {
+      mHadInsecureRedirect = true;
+    }
+  }
+
+  // imgCacheValidator may have handled redirects before we were created, so we
+  // allow the caller to let us know if any redirects were insecure.
+  mHadInsecureRedirect = mHadInsecureRedirect || aHadInsecureRedirect;
 
   mChannel->GetNotificationCallbacks(getter_AddRefs(mPrevChannelSink));
 
@@ -1153,8 +1175,20 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
     LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::OnChannelRedirect", "old", spec.get());
   }
 
-  // make sure we have a protocol that returns data rather than opens
-  // an external application, e.g. mailto:
+  // If the previous URI is a non-HTTPS URI, record that fact for later use by
+  // security code, which needs to know whether there is an insecure load at any
+  // point in the redirect chain.
+  bool isHttps = false;
+  bool isChrome = false;
+  bool schemeLocal = false;
+  if (NS_FAILED(mCurrentURI->SchemeIs("https", &isHttps)) ||
+      NS_FAILED(mCurrentURI->SchemeIs("chrome", &isChrome)) ||
+      NS_FAILED(NS_URIChainHasFlags(mCurrentURI, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE , &schemeLocal))  ||
+      (!isHttps && !isChrome && !schemeLocal)) {
+    mHadInsecureRedirect = true;
+  }
+
+  // Update the current URI.
   mChannel->GetURI(getter_AddRefs(mCurrentURI));
 
   if (LOG_TEST(PR_LOG_DEBUG)) {
@@ -1164,6 +1198,8 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
     LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::OnChannelRedirect", "new", spec.get());
   }
 
+  // Make sure we have a protocol that returns data rather than opens an
+  // external application, e.g. 'mailto:'.
   bool doesNotReturnData = false;
   nsresult rv =
     NS_URIChainHasFlags(mCurrentURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,

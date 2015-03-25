@@ -18,8 +18,8 @@ struct JSContext;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
-class BluetoothClassOfDevice final : public nsISupports,
-                                         public nsWrapperCache
+class BluetoothClassOfDevice final : public nsISupports
+                                   , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -69,7 +69,8 @@ public:
   {
     return mOwnerWindow;
   }
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   BluetoothClassOfDevice(nsPIDOMWindow* aOwner);

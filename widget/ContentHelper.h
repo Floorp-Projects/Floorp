@@ -22,7 +22,6 @@ class ContentHelper
   typedef uint32_t TouchBehaviorFlags;
 
 private:
-  static uint32_t GetTouchActionFromFrame(nsIFrame* aFrame);
   static void UpdateAllowedBehavior(uint32_t aTouchActionValue, bool aConsiderPanning, TouchBehaviorFlags& aOutBehavior);
 
 public:
