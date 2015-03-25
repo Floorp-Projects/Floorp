@@ -317,13 +317,14 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
     // Case 1: the result of the operation is not used.
     //
     // We'll emit a single instruction: LOCK ADD, LOCK SUB, LOCK AND,
-    // LOCK OR, or LOCK XOR.
-    //
-    // For the 8-bit variant the ops need a byte register for the
-    // value; just pin the value to ebx.
+    // LOCK OR, or LOCK XOR.  These can all take an immediate.
 
     if (!ins->hasUses()) {
-        LAllocation value = byteArray ? useFixed(ins->value(), ebx) : useRegister(ins->value());
+        LAllocation value;
+        if (byteArray && !ins->value()->isConstant())
+            value = useFixed(ins->value(), ebx);
+        else
+            value = useRegisterOrConstant(ins->value());
         LAsmJSAtomicBinopHeapForEffect *lir =
             new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(ptr), value);
         lir->setAddrTemp(temp());
@@ -361,31 +362,34 @@ LIRGeneratorX86::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins)
     // For the 8-bit variants the temp must have a byte register.
     //
     // There are optimization opportunities:
-    //  - better register allocation and instruction selection, Bug #1077036.
+    //  - better 8-bit register allocation and instruction selection, Bug #1077036.
 
     bool bitOp = !(ins->operation() == AtomicFetchAddOp || ins->operation() == AtomicFetchSubOp);
     LDefinition tempDef = LDefinition::BogusTemp();
     LAllocation value;
 
-    // Optimization opportunity: "value" need not be pinned to something that
-    // has a byte register unless the back-end insists on using a byte move
-    // for the setup or the payload computation, which really it need not do.
-
     if (byteArray) {
         value = useFixed(ins->value(), ebx);
         if (bitOp)
             tempDef = tempFixed(ecx);
-    } else {
-        value = useRegister(ins->value());
+    } else if (bitOp || ins->value()->isConstant()) {
+        value = useRegisterOrConstant(ins->value());
         if (bitOp)
             tempDef = temp();
+    } else {
+        value = useRegisterAtStart(ins->value());
     }
 
     LAsmJSAtomicBinopHeap *lir =
         new(alloc()) LAsmJSAtomicBinopHeap(useRegister(ptr), value, tempDef);
 
     lir->setAddrTemp(temp());
-    defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
+    if (byteArray || bitOp)
+        defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
+    else if (ins->value()->isConstant())
+        define(lir, ins);
+    else
+        defineReuseInput(lir, ins, LAsmJSAtomicBinopHeap::valueOp);
 }
 
 void
