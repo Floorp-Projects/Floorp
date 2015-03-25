@@ -24,7 +24,11 @@ add_task(function* test_main_process_crash() {
 
   let basename;
   let deferred = Promise.defer();
-  do_crash("crashType = CrashTestUtils.CRASH_RUNTIMEABORT;",
+  do_crash(
+    function() {
+      crashType = CrashTestUtils.CRASH_RUNTIMEABORT;
+      crashReporter.annotateCrashReport("ShutdownProgress", "event-test");
+    },
     (minidump, extra) => {
       basename = minidump.leafName;
       cm._eventsDirs = [getEventDir()];
@@ -39,4 +43,5 @@ add_task(function* test_main_process_crash() {
   let crash = crashes[0];
   Assert.ok(crash.isOfType(cm.PROCESS_TYPE_MAIN, cm.CRASH_TYPE_CRASH));
   Assert.equal(crash.id + ".dmp", basename, "ID recorded properly");
+  Assert.equal(crash.metadata.ShutdownProgress, "event-test");
 });
