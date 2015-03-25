@@ -105,7 +105,15 @@ exports.testHtmlLocalizationPageWorker = createTest("en-GB", function(assert, lo
       self.postMessage([nodes[0].innerHTML,
                         nodes[1].innerHTML,
                         nodes[2].innerHTML,
-                        nodes[3].innerHTML]);
+                        nodes[3].innerHTML,
+                        nodes[4].title,
+                        nodes[4].getAttribute("alt"),
+                        nodes[4].getAttribute("accesskey"),
+                        nodes[4].getAttribute("aria-label"),
+                        nodes[4].getAttribute("aria-valuetext"),
+                        nodes[4].getAttribute("aria-moz-hint"),
+                        nodes[5].placeholder,
+                        nodes[6].label]);
     },
     onMessage: function (data) {
       assert.equal(
@@ -120,6 +128,19 @@ exports.testHtmlLocalizationPageWorker = createTest("en-GB", function(assert, lo
         "Content from .properties is text content; HTML can't be injected."
       );
       assert.equal(data[3], "Yes", "Multiple elements with same data-l10n-id are accepted.");
+      
+      // Attribute translation tests
+      assert.equal(data[4], "Yes", "Title attributes gets translated.");
+      assert.equal(data[5], "Yes", "Alt attributes gets translated.");
+      assert.equal(data[6], "B", "Accesskey gets translated.");
+      
+      assert.equal(data[7], "Yes", "Aria-Label gets translated.");
+      assert.equal(data[8], "Value", "Aria-valuetext gets translated.");
+      assert.equal(data[9], "Hint", "Aria-moz-hint gets translated.");
+      
+      assert.equal(data[10], "Yes", "Form placeholders are translateable.");
+      
+      assert.equal(data[11], "Yes", "Labels of select options and context menus are translateable.");
 
       done();
     }
@@ -144,7 +165,15 @@ exports.testHtmlLocalization = createTest("en-GB", function(assert, loader, done
           self.postMessage([nodes[0].innerHTML,
                             nodes[1].innerHTML,
                             nodes[2].innerHTML,
-                            nodes[3].innerHTML]);
+                            nodes[3].innerHTML,
+                            nodes[4].title,
+                            nodes[4].getAttribute("alt"),
+                            nodes[4].getAttribute("accesskey"),
+                            nodes[4].getAttribute("aria-label"),
+                            nodes[4].getAttribute("aria-valuetext"),
+                            nodes[4].getAttribute("aria-moz-hint"),
+                            nodes[5].placeholder,
+                            nodes[6].label]);
         },
         onMessage: function (data) {
           assert.equal(
@@ -159,6 +188,19 @@ exports.testHtmlLocalization = createTest("en-GB", function(assert, loader, done
             "Content from .properties is text content; HTML can't be injected."
           );
           assert.equal(data[3], "Yes", "Multiple elements with same data-l10n-id are accepted.");
+
+          // Attribute translation tests
+          assert.equal(data[4], "Yes", "Title attributes gets translated.");
+          assert.equal(data[5], "Yes", "Alt attributes gets translated.");
+          assert.equal(data[6], "B", "Accesskey gets translated.");
+          
+          assert.equal(data[7], "Yes", "Aria-Label gets translated.");
+          assert.equal(data[8], "Value", "Aria-valuetext gets translated.");
+          assert.equal(data[9], "Hint", "Aria-moz-hint gets translated.");
+          
+          assert.equal(data[10], "Yes", "Form placeholders are translateable.");
+          
+          assert.equal(data[11], "Yes", "Labels of select options and context menus are translateable.");
 
           tab.close(done);
         }

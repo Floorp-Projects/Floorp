@@ -496,10 +496,22 @@ ThreadState.prototype = {
     // Ignore "interrupted" events, to avoid UI flicker. These are generated
     // by the slow script dialog and internal events such as setting
     // breakpoints. Pressing the resume button does need to be shown, though.
-    if (aEvent == "paused" &&
-        aPacket.why.type == "interrupted" &&
-        !this.interruptedByResumeButton) {
-      return;
+    if (aEvent == "paused") {
+      if (aPacket.why.type == "interrupted" &&
+          !this.interruptedByResumeButton) {
+        return;
+      } else if (aPacket.why.type == "breakpointConditionThrown" && aPacket.why.message) {
+        let where = aPacket.frame.where;
+        let aLocation = {
+          line: where.line,
+          column: where.column,
+          actor: where.source ? where.source.actor : null
+        };
+        DebuggerView.Sources.showBreakpointConditionThrownMessage(
+          aLocation,
+          aPacket.why.message
+        );
+      }
     }
 
     this.interruptedByResumeButton = false;
@@ -589,6 +601,10 @@ StackFrames.prototype = {
       // If paused by a breakpoint, store the breakpoint location.
       case "breakpoint":
         this._currentBreakpointLocation = aPacket.frame.where;
+        break;
+      case "breakpointConditionThrown":
+        this._currentBreakpointLocation = aPacket.frame.where;
+        this._conditionThrowMessage = aPacket.why.message;
         break;
       // If paused by a client evaluation, store the evaluated value.
       case "clientEvaluated":
