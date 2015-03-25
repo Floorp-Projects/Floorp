@@ -37,7 +37,7 @@ import os
 import random
 import string
 import sys
-import mozpack.path
+import mozpack.path as mozpath
 from tempfile import mkdtemp
 from io import BytesIO
 from xpt import Typelib
@@ -870,7 +870,7 @@ class MatchTestTemplate(object):
                                                 finder.find(pattern)])
             self.assertEqual(sorted([f for f, c in finder.find(pattern)]),
                              sorted([f for f, c in finder
-                                     if mozpack.path.match(f, pattern)]))
+                                     if mozpath.match(f, pattern)]))
 
 
 def do_check(test, finder, pattern, result):
