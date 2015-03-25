@@ -15,8 +15,9 @@ test $MOZHARNESS_REPOSITORY # mozharness repository
 test $MOZHARNESS_REV # mozharness revision
 test $MOZHARNESS_REF # mozharness ref
 test $TARGET
+test $VARIANT
 
-. setup-ccache.sh
+. ../builder/setup-ccache.sh
 
 # First check if the mozharness directory is available. This is intended to be
 # used locally in development to test mozharness changes:
@@ -40,28 +41,11 @@ if [ 0$B2G_DEBUG -ne 0 ]; then
   debug_flag='--debug'
 fi
 
-./mozharness/scripts/b2g_build.py \
-  --config b2g/taskcluster-emulator.py \
-  "$debug_flag" \
-  --disable-mock \
-  --work-dir=$WORKSPACE/B2G \
-  --log-level=debug \
-  --target=$TARGET \
-  --b2g-config-dir=$TARGET \
-  --checkout-revision=$GECKO_HEAD_REV \
-  --base-repo=$GECKO_BASE_REPOSITORY \
-  --repo=$GECKO_HEAD_REPOSITORY
+backup_file=$(aws --output=text s3 ls s3://b2g-phone-backups/$TARGET/ | tail -1 | awk '{print $NF}')
 
-# Move files into artifact locations!
-mkdir -p $HOME/artifacts
+if echo $backup_file | grep '\.tar\.bz2'; then
+    aws s3 cp s3://b2g-phone-backups/$TARGET/$backup_file .
+    tar -xjf $backup_file -C $WORKSPACE/B2G
+    rm -f $backup_file
+fi
 
-ls -lah $WORKSPACE/B2G/out
-ls -lah $WORKSPACE/B2G/objdir-gecko/dist/
-
-mv $WORKSPACE/B2G/sources.xml $HOME/artifacts/sources.xml
-mv $WORKSPACE/B2G/out/target/product/generic/tests/gaia-tests.zip $HOME/artifacts/gaia-tests.zip
-mv $WORKSPACE/B2G/out/target/product/generic/tests/b2g-*.zip $HOME/artifacts/b2g-tests.zip
-mv $WORKSPACE/B2G/out/emulator.tar.gz $HOME/artifacts/emulator.tar.gz
-mv $WORKSPACE/B2G/objdir-gecko/dist/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
-
-ccache -s

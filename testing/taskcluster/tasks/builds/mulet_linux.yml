@@ -5,7 +5,7 @@ task:
     name: '[TC] Mulet Linux'
     description: Mulet Linux
 
-  workerType: b2gbuild-desktop
+  workerType: mulet-opt
   scopes:
     - 'docker-worker:cache:build-mulet-linux-workspace'
     - 'docker-worker:cache:tooltool-cache'
@@ -43,4 +43,3 @@ task:
     locations:
       build: 'public/build/target.linux-x86_64.tar.bz2'
       tests: 'public/build/target.tests.zip'
-
