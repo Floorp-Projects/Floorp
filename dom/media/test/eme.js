@@ -156,65 +156,6 @@ function MaybeCrossOriginURI(test, uri)
   }
 }
 
-function PlayFragmented(test, elem, token)
-{
-  if (!test.fragments) {
-    ok(false, token + " test does not have a fragments list");
-    return Promise.reject();
-  }
-
-  return new Promise(function(resolve, reject) {
-    var ms = new MediaSource();
-    elem.src = URL.createObjectURL(ms);
-
-    var sb;
-    var curFragment = 0;
-
-    function addNextFragment() {
-      /* We can get another updateevent as a result of calling ms.endOfStream() if
-         the highest end time of our source buffers is different from that of the
-         media source duration. Due to bug 1065207 this can happen because of
-         inaccuracies in the frame duration calculations. Check if we are already
-         "ended" and ignore the update event */
-      if (ms.readyState == "ended") {
-        return;
-      }
-
-      if (curFragment >= test.fragments.length) {
-        Log(token, "addNextFragment() end of stream");
-        ms.endOfStream();
-        resolve();
-        return;
-      }
-
-      var fragmentFile = MaybeCrossOriginURI(test, test.fragments[curFragment++]);
-
-      var req = new XMLHttpRequest();
-      req.open("GET", fragmentFile);
-      req.responseType = "arraybuffer";
-
-      req.addEventListener("load", function() {
-        Log(token, "fetch of " + fragmentFile + " complete, appending");
-        sb.appendBuffer(new Uint8Array(req.response));
-      });
-
-      req.addEventListener("error", function(){info(token + " error fetching " + fragmentFile);});
-      req.addEventListener("abort", function(){info(token + " aborted fetching " + fragmentFile);});
-
-      Log(token, "addNextFragment() fetching next fragment " + fragmentFile);
-      req.send(null);
-    }
-
-    ms.addEventListener("sourceopen", function () {
-      Log(token, "sourceopen");
-      sb = ms.addSourceBuffer(test.type);
-      sb.addEventListener("updateend", addNextFragment);
-
-      addNextFragment();
-    })
-  });
-}
-
 function AppendTrack(test, ms, track, token)
 {
   return new Promise(function(resolve, reject) {
@@ -275,7 +216,9 @@ function AppendTrack(test, ms, track, token)
   });
 }
 
-function PlayMultiTrack(test, elem, token)
+//Returns a promise that is resolved when the media element is ready to have
+//its play() function called; when it's loaded MSE fragments.
+function LoadTest(test, elem, token)
 {
   if (!test.tracks) {
     ok(false, token + " test does not have a tracks list");
@@ -304,27 +247,6 @@ function PlayMultiTrack(test, elem, token)
       });
     })
   });
-}
-
-// Returns a promise that is resolved when the media element is ready to have
-// its play() function called; when it's loaded MSE fragments, or once the load
-// has started for non-MSE video.
-function LoadTest(test, elem, token)
-{
-  if (test.fragments) {
-    // A |fragments| array indicates that this is an MSE test case with one track.
-    return PlayFragmented(test, elem, token);
-  }
-
-  if (test.tracks) {
-    // A |tracks| array indicates that this is an MSE test case with multiple tracks.
-    return PlayMultiTrack(test, elem, token);
-  }
-
-  // This file isn't fragmented; won't set the media source normally because
-  // EME doesn't support non-MSE source.
-  ok(false, token + " test does not have a fragments or tracks list");
-  return Promise.reject();
 }
 
 function SetupEME(test, token, params)
