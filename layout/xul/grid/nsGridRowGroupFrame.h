@@ -29,7 +29,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
+  virtual nsresult GetFrameName(nsAString& aResult) const override
   {
       return MakeFrameName(NS_LITERAL_STRING("nsGridRowGroup"), aResult);
   }
@@ -39,7 +39,7 @@ public:
                       nsBoxLayout* aLayoutManager):
     nsBoxFrame(aContext, false, aLayoutManager) {}
 
-  virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState) override;
 
 }; // class nsGridRowGroupFrame
 

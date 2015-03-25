@@ -31,7 +31,7 @@ public:
                                                   const InputEventInit& aParam,
                                                   ErrorResult& aRv);
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx) override
   {
     return InputEventBinding::Wrap(aCx, this);
   }

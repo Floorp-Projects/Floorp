@@ -29,7 +29,7 @@ extern "C" {
 // Provides JPEG encoding functionality. Use InitFromData() to do the
 // encoding. See that function definition for encoding options.
 
-class nsJPEGEncoder MOZ_FINAL : public imgIEncoder
+class nsJPEGEncoder final : public imgIEncoder
 {
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
 public:

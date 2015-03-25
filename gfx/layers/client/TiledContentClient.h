@@ -14,7 +14,7 @@
 #include "TiledLayerBuffer.h"           // for TiledLayerBuffer
 #include "Units.h"                      // for CSSPoint
 #include "gfxTypes.h"
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/ipc/Shmem.h"          // for Shmem
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory
@@ -77,15 +77,15 @@ protected:
   ~gfxMemorySharedReadLock();
 
 public:
-  virtual int32_t ReadLock() MOZ_OVERRIDE;
+  virtual int32_t ReadLock() override;
 
-  virtual int32_t ReadUnlock() MOZ_OVERRIDE;
+  virtual int32_t ReadUnlock() override;
 
-  virtual int32_t GetReadCount() MOZ_OVERRIDE;
+  virtual int32_t GetReadCount() override;
 
-  virtual gfxSharedReadLockType GetType() MOZ_OVERRIDE { return TYPE_MEMORY; }
+  virtual gfxSharedReadLockType GetType() override { return TYPE_MEMORY; }
 
-  virtual bool IsValid() const MOZ_OVERRIDE { return true; };
+  virtual bool IsValid() const override { return true; };
 
 private:
   int32_t mReadCount;
@@ -104,15 +104,15 @@ protected:
   ~gfxShmSharedReadLock();
 
 public:
-  virtual int32_t ReadLock() MOZ_OVERRIDE;
+  virtual int32_t ReadLock() override;
 
-  virtual int32_t ReadUnlock() MOZ_OVERRIDE;
+  virtual int32_t ReadUnlock() override;
 
-  virtual int32_t GetReadCount() MOZ_OVERRIDE;
+  virtual int32_t GetReadCount() override;
 
-  virtual bool IsValid() const MOZ_OVERRIDE { return mAllocSuccess; };
+  virtual bool IsValid() const override { return mAllocSuccess; };
 
-  virtual gfxSharedReadLockType GetType() MOZ_OVERRIDE { return TYPE_SHMEM; }
+  virtual gfxSharedReadLockType GetType() override { return TYPE_SHMEM; }
 
   mozilla::layers::ShmemSection& GetShmemSection() { return mShmemSection; }
 
@@ -537,12 +537,12 @@ protected:
                     bool aDumpHtml=false);
 
 public:
-  virtual TextureInfo GetTextureInfo() const MOZ_OVERRIDE
+  virtual TextureInfo GetTextureInfo() const override
   {
     return TextureInfo(CompositableType::CONTENT_TILED);
   }
 
-  virtual void ClearCachedResources() MOZ_OVERRIDE;
+  virtual void ClearCachedResources() override;
 
   enum TiledBufferType {
     TILED_BUFFER,

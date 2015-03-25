@@ -185,7 +185,7 @@ GetNextSubDomainForHost(const nsACString& aHost)
   return subDomain;
 }
 
-class AppClearDataObserver MOZ_FINAL : public nsIObserver {
+class AppClearDataObserver final : public nsIObserver {
   ~AppClearDataObserver() {}
 
 public:
@@ -193,7 +193,7 @@ public:
 
   // nsIObserver implementation.
   NS_IMETHODIMP
-  Observe(nsISupports *aSubject, const char *aTopic, const char16_t *data) MOZ_OVERRIDE
+  Observe(nsISupports *aSubject, const char *aTopic, const char16_t *data) override
   {
     MOZ_ASSERT(!nsCRT::strcmp(aTopic, "webapps-clear-data"));
 
@@ -247,7 +247,7 @@ nsPermissionManager::PermissionKey::PermissionKey(nsIPrincipal* aPrincipal)
  * Note: Once the callback has been called this DeleteFromMozHostListener cannot
  * be reused.
  */
-class CloseDatabaseListener MOZ_FINAL : public mozIStorageCompletionCallback
+class CloseDatabaseListener final : public mozIStorageCompletionCallback
 {
   ~CloseDatabaseListener() {}
 
@@ -298,7 +298,7 @@ CloseDatabaseListener::Complete(nsresult, nsISupports*)
  * Note: Once the callback has been called this DeleteFromMozHostListener cannot
  * be reused.
  */
-class DeleteFromMozHostListener MOZ_FINAL : public mozIStorageStatementCallback
+class DeleteFromMozHostListener final : public mozIStorageStatementCallback
 {
   ~DeleteFromMozHostListener() {}
 

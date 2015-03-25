@@ -11,7 +11,7 @@
 #include "nsThreadUtils.h"
 #include "nsProxyRelease.h"
 
-class nsInterfaceRequestorAgg MOZ_FINAL : public nsIInterfaceRequestor
+class nsInterfaceRequestorAgg final : public nsIInterfaceRequestor
 {
 public:
   // XXX This needs to support threadsafe refcounting until we fix bug 243591.

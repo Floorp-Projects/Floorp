@@ -35,12 +35,12 @@ class MediaSourceDecoder : public MediaDecoder
 public:
   explicit MediaSourceDecoder(dom::HTMLMediaElement* aElement);
 
-  virtual MediaDecoder* Clone() MOZ_OVERRIDE;
-  virtual MediaDecoderStateMachine* CreateStateMachine() MOZ_OVERRIDE;
-  virtual nsresult Load(nsIStreamListener**, MediaDecoder*) MOZ_OVERRIDE;
-  virtual nsresult GetSeekable(dom::TimeRanges* aSeekable) MOZ_OVERRIDE;
+  virtual MediaDecoder* Clone() override;
+  virtual MediaDecoderStateMachine* CreateStateMachine() override;
+  virtual nsresult Load(nsIStreamListener**, MediaDecoder*) override;
+  virtual nsresult GetSeekable(dom::TimeRanges* aSeekable) override;
 
-  virtual void Shutdown() MOZ_OVERRIDE;
+  virtual void Shutdown() override;
 
   static already_AddRefed<MediaResource> CreateResource(nsIPrincipal* aPrincipal = nullptr);
 
@@ -54,10 +54,10 @@ public:
   void OnTrackBufferConfigured(TrackBuffer* aTrackBuffer, const MediaInfo& aInfo);
 
   void Ended();
-  bool IsExpectingMoreData() MOZ_OVERRIDE;
+  bool IsExpectingMoreData() override;
 
   // Return the duration of the video in seconds.
-  virtual double GetDuration() MOZ_OVERRIDE;
+  virtual double GetDuration() override;
 
   void SetInitialDuration(int64_t aDuration);
   void SetMediaSourceDuration(double aDuration, MSRangeRemovalAction aAction);
@@ -73,7 +73,7 @@ public:
   void PrepareReaderInitialization();
 
 #ifdef MOZ_EME
-  virtual nsresult SetCDMProxy(CDMProxy* aProxy) MOZ_OVERRIDE;
+  virtual nsresult SetCDMProxy(CDMProxy* aProxy) override;
 #endif
 
   MediaSourceReader* GetReader() { return mReader; }

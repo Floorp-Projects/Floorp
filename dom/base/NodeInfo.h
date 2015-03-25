@@ -33,7 +33,7 @@ class nsNodeInfoManager;
 namespace mozilla {
 namespace dom {
 
-class NodeInfo MOZ_FINAL
+class NodeInfo final
 {
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(NodeInfo)

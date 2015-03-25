@@ -79,7 +79,7 @@
 #endif
 
 
-class nsLocalFile MOZ_FINAL
+class nsLocalFile final
 #ifdef MOZ_WIDGET_COCOA
   : public nsILocalFileMac
 #else

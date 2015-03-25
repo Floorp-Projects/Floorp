@@ -7,7 +7,7 @@
 
 #include "nsIIMEPicker.h"
 
-class nsIMEPicker MOZ_FINAL : public nsIIMEPicker
+class nsIMEPicker final : public nsIIMEPicker
 {
 public:
   NS_DECL_ISUPPORTS

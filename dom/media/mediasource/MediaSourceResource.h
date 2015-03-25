@@ -22,52 +22,52 @@ extern PRLogModuleInfo* GetMediaSourceLog();
 
 namespace mozilla {
 
-class MediaSourceResource MOZ_FINAL : public MediaResource
+class MediaSourceResource final : public MediaResource
 {
 public:
   explicit MediaSourceResource(nsIPrincipal* aPrincipal = nullptr)
     : mPrincipal(aPrincipal) {}
 
-  virtual nsresult Close() MOZ_OVERRIDE { return NS_OK; }
-  virtual void Suspend(bool aCloseImmediately) MOZ_OVERRIDE { UNIMPLEMENTED(); }
-  virtual void Resume() MOZ_OVERRIDE { UNIMPLEMENTED(); }
-  virtual bool CanClone() MOZ_OVERRIDE { UNIMPLEMENTED(); return false; }
-  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) MOZ_OVERRIDE { UNIMPLEMENTED(); return nullptr; }
-  virtual void SetReadMode(MediaCacheStream::ReadMode aMode) MOZ_OVERRIDE { UNIMPLEMENTED(); }
-  virtual void SetPlaybackRate(uint32_t aBytesPerSecond) MOZ_OVERRIDE  { UNIMPLEMENTED(); }
-  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
-  virtual nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
-  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) MOZ_OVERRIDE { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
-  virtual int64_t Tell() MOZ_OVERRIDE { UNIMPLEMENTED(); return -1; }
-  virtual void Pin() MOZ_OVERRIDE { UNIMPLEMENTED(); }
-  virtual void Unpin() MOZ_OVERRIDE { UNIMPLEMENTED(); }
-  virtual double GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE { UNIMPLEMENTED(); *aIsReliable = false; return 0; }
-  virtual int64_t GetLength() MOZ_OVERRIDE { UNIMPLEMENTED(); return -1; }
-  virtual int64_t GetNextCachedData(int64_t aOffset) MOZ_OVERRIDE { UNIMPLEMENTED(); return -1; }
-  virtual int64_t GetCachedDataEnd(int64_t aOffset) MOZ_OVERRIDE { UNIMPLEMENTED(); return -1; }
-  virtual bool IsDataCachedToEndOfResource(int64_t aOffset) MOZ_OVERRIDE { UNIMPLEMENTED(); return false; }
-  virtual bool IsSuspendedByCache() MOZ_OVERRIDE { UNIMPLEMENTED(); return false; }
-  virtual bool IsSuspended() MOZ_OVERRIDE { UNIMPLEMENTED(); return false; }
-  virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) MOZ_OVERRIDE { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
-  virtual nsresult Open(nsIStreamListener** aStreamListener) MOZ_OVERRIDE { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
+  virtual nsresult Close() override { return NS_OK; }
+  virtual void Suspend(bool aCloseImmediately) override { UNIMPLEMENTED(); }
+  virtual void Resume() override { UNIMPLEMENTED(); }
+  virtual bool CanClone() override { UNIMPLEMENTED(); return false; }
+  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) override { UNIMPLEMENTED(); return nullptr; }
+  virtual void SetReadMode(MediaCacheStream::ReadMode aMode) override { UNIMPLEMENTED(); }
+  virtual void SetPlaybackRate(uint32_t aBytesPerSecond) override  { UNIMPLEMENTED(); }
+  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) override { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
+  virtual nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount, uint32_t* aBytes) override { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
+  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) override { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
+  virtual int64_t Tell() override { UNIMPLEMENTED(); return -1; }
+  virtual void Pin() override { UNIMPLEMENTED(); }
+  virtual void Unpin() override { UNIMPLEMENTED(); }
+  virtual double GetDownloadRate(bool* aIsReliable) override { UNIMPLEMENTED(); *aIsReliable = false; return 0; }
+  virtual int64_t GetLength() override { UNIMPLEMENTED(); return -1; }
+  virtual int64_t GetNextCachedData(int64_t aOffset) override { UNIMPLEMENTED(); return -1; }
+  virtual int64_t GetCachedDataEnd(int64_t aOffset) override { UNIMPLEMENTED(); return -1; }
+  virtual bool IsDataCachedToEndOfResource(int64_t aOffset) override { UNIMPLEMENTED(); return false; }
+  virtual bool IsSuspendedByCache() override { UNIMPLEMENTED(); return false; }
+  virtual bool IsSuspended() override { UNIMPLEMENTED(); return false; }
+  virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
+  virtual nsresult Open(nsIStreamListener** aStreamListener) override { UNIMPLEMENTED(); return NS_ERROR_FAILURE; }
 
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() MOZ_OVERRIDE
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override
   {
     return nsRefPtr<nsIPrincipal>(mPrincipal).forget();
   }
 
-  virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) MOZ_OVERRIDE
+  virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) override
   {
     UNIMPLEMENTED();
     aRanges.AppendElement(MediaByteRange(0, GetLength()));
     return NS_OK;
   }
 
-  virtual bool IsTransportSeekable() MOZ_OVERRIDE { return true; }
-  virtual const nsCString& GetContentType() const MOZ_OVERRIDE { return mType; }
+  virtual bool IsTransportSeekable() override { return true; }
+  virtual const nsCString& GetContentType() const override { return mType; }
 
 private:
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
     size += mType.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
@@ -75,7 +75,7 @@ private:
     return size;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

@@ -31,7 +31,7 @@ class EventStateManager;
 
 // IMEContentObserver notifies widget of any text and selection changes
 // in the currently focused editor
-class IMEContentObserver MOZ_FINAL : public nsISelectionListener
+class IMEContentObserver final : public nsISelectionListener
                                    , public nsStubMutationObserver
                                    , public nsIReflowObserver
                                    , public nsIScrollObserver
@@ -58,7 +58,7 @@ public:
   NS_DECL_NSIREFLOWOBSERVER
 
   // nsIScrollObserver
-  virtual void ScrollPositionChanged() MOZ_OVERRIDE;
+  virtual void ScrollPositionChanged() override;
 
   bool OnMouseButtonEvent(nsPresContext* aPresContext,
                           WidgetMouseEvent* aMouseEvent);

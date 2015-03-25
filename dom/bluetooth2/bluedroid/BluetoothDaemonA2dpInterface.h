@@ -118,7 +118,7 @@ protected:
   static BluetoothA2dpNotificationHandler* sNotificationHandler;
 };
 
-class BluetoothDaemonA2dpInterface MOZ_FINAL
+class BluetoothDaemonA2dpInterface final
   : public BluetoothA2dpInterface
 {
   class CleanupResultHandler;

@@ -8,7 +8,7 @@
 
 #include "nsIVersionComparator.h"
 
-class nsVersionComparatorImpl MOZ_FINAL : public nsIVersionComparator
+class nsVersionComparatorImpl final : public nsIVersionComparator
 {
   ~nsVersionComparatorImpl() {}
 

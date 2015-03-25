@@ -20,7 +20,7 @@ public:
     virtual ~TestHandleParent() { }
 
 protected:
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE {}
+    virtual void ActorDestroy(ActorDestroyReason why) override {}
 };
 
 class TestJSONParent :
@@ -38,20 +38,20 @@ public:
 protected:
     virtual bool
     RecvTest(const JSONVariant& i,
-             JSONVariant* o) MOZ_OVERRIDE;
+             JSONVariant* o) override;
 
-    virtual PTestHandleParent* AllocPTestHandleParent() MOZ_OVERRIDE
+    virtual PTestHandleParent* AllocPTestHandleParent() override
     {
         return mKid = new TestHandleParent();
     }
 
-    virtual bool DeallocPTestHandleParent(PTestHandleParent* actor) MOZ_OVERRIDE
+    virtual bool DeallocPTestHandleParent(PTestHandleParent* actor) override
     {
         delete actor;
         return true;
     }
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -80,20 +80,20 @@ public:
 
 protected:
     virtual bool
-    RecvStart() MOZ_OVERRIDE;
+    RecvStart() override;
 
-    virtual PTestHandleChild* AllocPTestHandleChild() MOZ_OVERRIDE
+    virtual PTestHandleChild* AllocPTestHandleChild() override
     {
         return mKid = new TestHandleChild();
     }
 
-    virtual bool DeallocPTestHandleChild(PTestHandleChild* actor) MOZ_OVERRIDE
+    virtual bool DeallocPTestHandleChild(PTestHandleChild* actor) override
     {
         delete actor;
         return true;
     }
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");

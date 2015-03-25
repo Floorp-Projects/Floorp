@@ -27,7 +27,7 @@ void HandshakeCallback(PRFileDesc *fd, void *client_data);
 SECStatus CanFalseStartCallback(PRFileDesc* fd, void* client_data,
                                 PRBool *canFalseStart);
 
-class nsHTTPListener MOZ_FINAL : public nsIStreamLoaderObserver
+class nsHTTPListener final : public nsIStreamLoaderObserver
 {
 private:
   // For XPCOM implementations that are not a base class for some other

@@ -32,7 +32,7 @@ class Element;
 } // namespace dom
 } // namespace mozilla
 
-class nsPlainTextSerializer MOZ_FINAL : public nsIContentSerializer
+class nsPlainTextSerializer final : public nsIContentSerializer
 {
 public:
   nsPlainTextSerializer();
@@ -42,30 +42,30 @@ public:
   // nsIContentSerializer
   NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
                   const char* aCharSet, bool aIsCopying,
-                  bool aIsWholeDocument) MOZ_OVERRIDE;
+                  bool aIsWholeDocument) override;
 
   NS_IMETHOD AppendText(nsIContent* aText, int32_t aStartOffset,
-                        int32_t aEndOffset, nsAString& aStr) MOZ_OVERRIDE;
+                        int32_t aEndOffset, nsAString& aStr) override;
   NS_IMETHOD AppendCDATASection(nsIContent* aCDATASection,
                                 int32_t aStartOffset, int32_t aEndOffset,
-                                nsAString& aStr) MOZ_OVERRIDE;
+                                nsAString& aStr) override;
   NS_IMETHOD AppendProcessingInstruction(nsIContent* aPI,
                                          int32_t aStartOffset,
                                          int32_t aEndOffset,
-                                         nsAString& aStr) MOZ_OVERRIDE  { return NS_OK; }
+                                         nsAString& aStr) override  { return NS_OK; }
   NS_IMETHOD AppendComment(nsIContent* aComment, int32_t aStartOffset,
-                           int32_t aEndOffset, nsAString& aStr) MOZ_OVERRIDE  { return NS_OK; }
+                           int32_t aEndOffset, nsAString& aStr) override  { return NS_OK; }
   NS_IMETHOD AppendDoctype(nsIContent *aDoctype,
-                           nsAString& aStr) MOZ_OVERRIDE  { return NS_OK; }
+                           nsAString& aStr) override  { return NS_OK; }
   NS_IMETHOD AppendElementStart(mozilla::dom::Element* aElement,
                                 mozilla::dom::Element* aOriginalElement,
-                                nsAString& aStr) MOZ_OVERRIDE; 
+                                nsAString& aStr) override; 
   NS_IMETHOD AppendElementEnd(mozilla::dom::Element* aElement,
-                              nsAString& aStr) MOZ_OVERRIDE;
-  NS_IMETHOD Flush(nsAString& aStr) MOZ_OVERRIDE;
+                              nsAString& aStr) override;
+  NS_IMETHOD Flush(nsAString& aStr) override;
 
   NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
-                                 nsAString& aStr) MOZ_OVERRIDE;
+                                 nsAString& aStr) override;
 
 private:
   ~nsPlainTextSerializer();

@@ -36,23 +36,23 @@ protected:
   }
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
   RecvPMobileConnectionRequestConstructor(PMobileConnectionRequestParent* aActor,
-                                          const MobileConnectionRequest& aRequest) MOZ_OVERRIDE;
+                                          const MobileConnectionRequest& aRequest) override;
 
   virtual PMobileConnectionRequestParent*
-  AllocPMobileConnectionRequestParent(const MobileConnectionRequest& request) MOZ_OVERRIDE;
+  AllocPMobileConnectionRequestParent(const MobileConnectionRequest& request) override;
 
   virtual bool
-  DeallocPMobileConnectionRequestParent(PMobileConnectionRequestParent* aActor) MOZ_OVERRIDE;
+  DeallocPMobileConnectionRequestParent(PMobileConnectionRequestParent* aActor) override;
 
   virtual bool
   RecvInit(nsMobileConnectionInfo* aVoice, nsMobileConnectionInfo* aData,
            nsString* aLastKnownNetwork, nsString* aLastKnownHomeNetwork,
            int32_t* aNetworkSelectionMode, int32_t* aRadioState,
-           nsTArray<int32_t>* aSupportedNetworkTypes) MOZ_OVERRIDE;
+           nsTArray<int32_t>* aSupportedNetworkTypes) override;
 
 private:
   nsCOMPtr<nsIMobileConnection> mMobileConnection;
@@ -152,7 +152,7 @@ protected:
   }
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   nsresult
   SendReply(const MobileConnectionReply& aReply);

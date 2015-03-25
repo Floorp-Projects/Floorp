@@ -14,7 +14,7 @@ class nsWifiAccessPoint;
 
 namespace mozilla {
 
-class nsWifiScannerDBus MOZ_FINAL
+class nsWifiScannerDBus final
 {
 public:
   explicit nsWifiScannerDBus(nsCOMArray<nsWifiAccessPoint>* aAccessPoints);

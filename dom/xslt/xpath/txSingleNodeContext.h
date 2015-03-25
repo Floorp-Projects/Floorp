@@ -21,31 +21,31 @@ public:
     }
 
     nsresult getVariable(int32_t aNamespace, nsIAtom* aLName,
-                         txAExprResult*& aResult) MOZ_OVERRIDE
+                         txAExprResult*& aResult) override
     {
         NS_ASSERTION(mInner, "mInner is null!!!");
         return mInner->getVariable(aNamespace, aLName, aResult);
     }
 
-    bool isStripSpaceAllowed(const txXPathNode& aNode) MOZ_OVERRIDE
+    bool isStripSpaceAllowed(const txXPathNode& aNode) override
     {
         NS_ASSERTION(mInner, "mInner is null!!!");
         return mInner->isStripSpaceAllowed(aNode);
     }
 
-    void* getPrivateContext() MOZ_OVERRIDE
+    void* getPrivateContext() override
     {
         NS_ASSERTION(mInner, "mInner is null!!!");
         return mInner->getPrivateContext();
     }
 
-    txResultRecycler* recycler() MOZ_OVERRIDE
+    txResultRecycler* recycler() override
     {
         NS_ASSERTION(mInner, "mInner is null!!!");
         return mInner->recycler();
     }
 
-    void receiveError(const nsAString& aMsg, nsresult aRes) MOZ_OVERRIDE
+    void receiveError(const nsAString& aMsg, nsresult aRes) override
     {
         NS_ASSERTION(mInner, "mInner is null!!!");
 #ifdef DEBUG
@@ -57,17 +57,17 @@ public:
 #endif
     }
 
-    const txXPathNode& getContextNode() MOZ_OVERRIDE
+    const txXPathNode& getContextNode() override
     {
         return mNode;
     }
 
-    uint32_t size() MOZ_OVERRIDE
+    uint32_t size() override
     {
         return 1;
     }
 
-    uint32_t position() MOZ_OVERRIDE
+    uint32_t position() override
     {
         return 1;
     }

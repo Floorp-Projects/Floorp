@@ -31,10 +31,10 @@ public:
     void Main();
 
 protected:
-    virtual bool RecvPong() MOZ_OVERRIDE;
-    virtual bool RecvPong5() MOZ_OVERRIDE;
+    virtual bool RecvPong() override;
+    virtual bool RecvPong5() override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -83,16 +83,16 @@ public:
     virtual ~TestLatencyChild();
 
 protected:
-    virtual bool RecvPing() MOZ_OVERRIDE;
-    virtual bool RecvPing5() MOZ_OVERRIDE;
-    virtual bool AnswerRpc() MOZ_OVERRIDE;
-    virtual bool RecvSpam() MOZ_OVERRIDE;
-    virtual bool AnswerSynchro() MOZ_OVERRIDE;
-    virtual bool RecvCompressedSpam(const uint32_t& seqno) MOZ_OVERRIDE;
+    virtual bool RecvPing() override;
+    virtual bool RecvPing5() override;
+    virtual bool AnswerRpc() override;
+    virtual bool RecvSpam() override;
+    virtual bool AnswerSynchro() override;
+    virtual bool RecvCompressedSpam(const uint32_t& seqno) override;
     virtual bool AnswerSynchro2(uint32_t* lastSeqno,
-                                uint32_t* numMessagesDispatched) MOZ_OVERRIDE;
+                                uint32_t* numMessagesDispatched) override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");

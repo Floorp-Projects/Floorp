@@ -23,7 +23,7 @@ public:
       mImplData = static_cast<ClientLayer*>(this);
   }
 
-  virtual ShadowableLayer* AsShadowableLayer() MOZ_OVERRIDE { return this; }
+  virtual ShadowableLayer* AsShadowableLayer() override { return this; }
   virtual Layer* AsLayer() { return this; }
   virtual void RenderLayer() {}
 };

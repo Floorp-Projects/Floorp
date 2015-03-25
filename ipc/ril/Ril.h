@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace ipc {
 
-class RilConsumer MOZ_FINAL : public mozilla::ipc::StreamSocket
+class RilConsumer final : public mozilla::ipc::StreamSocket
 {
 public:
   static nsresult Register(
@@ -21,17 +21,17 @@ public:
     mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
   static void Shutdown();
 
-  ConnectionOrientedSocketIO* GetIO() MOZ_OVERRIDE;
+  ConnectionOrientedSocketIO* GetIO() override;
 
 private:
   RilConsumer(unsigned long aClientId,
               mozilla::dom::workers::WorkerCrossThreadDispatcher* aDispatcher);
 
-  void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage) MOZ_OVERRIDE;
+  void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aMessage) override;
 
-  void OnConnectSuccess() MOZ_OVERRIDE;
-  void OnConnectError() MOZ_OVERRIDE;
-  void OnDisconnect() MOZ_OVERRIDE;
+  void OnConnectSuccess() override;
+  void OnConnectError() override;
+  void OnDisconnect() override;
 
   nsRefPtr<mozilla::dom::workers::WorkerCrossThreadDispatcher> mDispatcher;
   unsigned long mClientId;

@@ -39,7 +39,7 @@ using namespace android;
 using namespace mozilla;
 BEGIN_MTP_NAMESPACE
 
-class FileWatcherUpdateRunnable MOZ_FINAL : public nsRunnable
+class FileWatcherUpdateRunnable final : public nsRunnable
 {
 public:
   FileWatcherUpdateRunnable(MozMtpDatabase* aMozMtpDatabase,
@@ -70,7 +70,7 @@ private:
 
 // The FileWatcherUpdate class listens for file-watcher-update events
 // and tells the MtpServer about the changes.
-class FileWatcherUpdate MOZ_FINAL : public nsIObserver
+class FileWatcherUpdate final : public nsIObserver
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -139,7 +139,7 @@ private:
 NS_IMPL_ISUPPORTS(FileWatcherUpdate, nsIObserver)
 static StaticRefPtr<FileWatcherUpdate> sFileWatcherUpdate;
 
-class AllocFileWatcherUpdateRunnable MOZ_FINAL : public nsRunnable
+class AllocFileWatcherUpdateRunnable final : public nsRunnable
 {
 public:
   AllocFileWatcherUpdateRunnable(MozMtpServer* aMozMtpServer)
@@ -157,7 +157,7 @@ private:
   nsRefPtr<MozMtpServer> mMozMtpServer;
 };
 
-class FreeFileWatcherUpdateRunnable MOZ_FINAL : public nsRunnable
+class FreeFileWatcherUpdateRunnable final : public nsRunnable
 {
 public:
   FreeFileWatcherUpdateRunnable(MozMtpServer* aMozMtpServer)

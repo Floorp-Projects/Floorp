@@ -69,7 +69,7 @@ public:
   NS_DECL_NSIGFXINFODEBUG
 #endif
 
-  virtual uint32_t OperatingSystemVersion() MOZ_OVERRIDE;
+  virtual uint32_t OperatingSystemVersion() override;
 
 protected:
 

@@ -330,7 +330,7 @@ AudioNode::Disconnect(uint32_t aOutput, ErrorResult& aRv)
     explicit RunnableRelease(already_AddRefed<AudioNode> aNode)
       : mNode(aNode) {}
 
-    NS_IMETHODIMP Run() MOZ_OVERRIDE
+    NS_IMETHODIMP Run() override
     {
       mNode = nullptr;
       return NS_OK;

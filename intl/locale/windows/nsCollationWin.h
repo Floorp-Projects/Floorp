@@ -14,7 +14,7 @@
 
 
 
-class nsCollationWin MOZ_FINAL : public nsICollation {
+class nsCollationWin final : public nsICollation {
   ~nsCollationWin();
 
 protected:

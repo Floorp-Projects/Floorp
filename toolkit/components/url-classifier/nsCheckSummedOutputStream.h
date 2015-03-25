@@ -25,9 +25,9 @@ public:
 
   nsCheckSummedOutputStream() {}
 
-  NS_IMETHOD Finish() MOZ_OVERRIDE;
-  NS_IMETHOD Write(const char *buf, uint32_t count, uint32_t *result) MOZ_OVERRIDE;
-  NS_IMETHOD Init(nsIFile* file, int32_t ioFlags, int32_t perm, int32_t behaviorFlags) MOZ_OVERRIDE;
+  NS_IMETHOD Finish() override;
+  NS_IMETHOD Write(const char *buf, uint32_t count, uint32_t *result) override;
+  NS_IMETHOD Init(nsIFile* file, int32_t ioFlags, int32_t perm, int32_t behaviorFlags) override;
 
 protected:
   virtual ~nsCheckSummedOutputStream() { nsSafeFileOutputStream::Close(); }

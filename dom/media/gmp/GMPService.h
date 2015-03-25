@@ -30,7 +30,7 @@ class GMPParent;
 
 #define GMP_DEFAULT_ASYNC_SHUTDONW_TIMEOUT 3000
 
-class GeckoMediaPluginService MOZ_FINAL : public mozIGeckoMediaPluginService
+class GeckoMediaPluginService final : public mozIGeckoMediaPluginService
                                         , public nsIObserver
 {
 public:

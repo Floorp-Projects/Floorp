@@ -17,7 +17,7 @@ class nsICacheSession;
 
 //-----------------------------------------------------------------------------
 
-class nsFtpProtocolHandler MOZ_FINAL : public nsIProxiedProtocolHandler
+class nsFtpProtocolHandler final : public nsIProxiedProtocolHandler
                                      , public nsIObserver
                                      , public nsSupportsWeakReference
 {

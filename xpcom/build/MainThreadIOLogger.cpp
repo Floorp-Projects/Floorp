@@ -43,7 +43,7 @@ struct ObservationWithStack
   nsString                                  mFilename;
 };
 
-class MainThreadIOLoggerImpl MOZ_FINAL : public mozilla::IOInterposeObserver
+class MainThreadIOLoggerImpl final : public mozilla::IOInterposeObserver
 {
 public:
   MainThreadIOLoggerImpl();

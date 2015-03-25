@@ -16,7 +16,7 @@ extern "C" {
 #include <libgnomevfs/gnome-vfs-mime-handlers.h>
 }
 
-class nsGnomeVFSMimeApp MOZ_FINAL : public nsIGnomeVFSMimeApp
+class nsGnomeVFSMimeApp final : public nsIGnomeVFSMimeApp
 {
 public:
   NS_DECL_ISUPPORTS
@@ -86,7 +86,7 @@ nsGnomeVFSMimeApp::Launch(const nsACString &aUri)
   return NS_OK;
 }
 
-class UTF8StringEnumerator MOZ_FINAL : public nsIUTF8StringEnumerator
+class UTF8StringEnumerator final : public nsIUTF8StringEnumerator
 {
 public:
   UTF8StringEnumerator() : mIndex(0) { }

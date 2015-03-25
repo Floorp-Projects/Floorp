@@ -24,7 +24,7 @@ IsOnChildMainThread()
 }
 
 // We just need a refcounted wrapper for GMPTask objects.
-class Runnable MOZ_FINAL
+class Runnable final
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Runnable)
@@ -50,7 +50,7 @@ private:
   GMPTask* mTask;
 };
 
-class SyncRunnable MOZ_FINAL
+class SyncRunnable final
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SyncRunnable)

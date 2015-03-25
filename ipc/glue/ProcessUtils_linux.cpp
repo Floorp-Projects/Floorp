@@ -129,10 +129,10 @@ public:
   ProcLoaderParent() {}
   virtual ~ProcLoaderParent() {}
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool RecvLoadComplete(const int32_t &aPid,
-                                const int32_t &aCookie) MOZ_OVERRIDE;
+                                const int32_t &aCookie) override;
 };
 
 void
@@ -436,7 +436,7 @@ class ProcLoaderChild : public PProcLoaderChild
 public:
   ProcLoaderChild(pid_t aPeerPid) : mPeerPid(aPeerPid) {}
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool RecvLoad(InfallibleTArray<nsCString>&& aArgv,
                         InfallibleTArray<nsCString>&& aEnv,

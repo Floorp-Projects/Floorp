@@ -16,7 +16,7 @@ class nsIWebNavigationInfo;
 class nsIHttpChannel;
 class nsAString;
 
-class nsDSURIContentListener MOZ_FINAL
+class nsDSURIContentListener final
   : public nsIURIContentListener
   , public nsSupportsWeakReference
 {

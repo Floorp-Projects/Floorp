@@ -31,11 +31,11 @@ public:
   // GMPVideoEncoderCallback
   virtual void Encoded(GMPVideoEncodedFrame* aEncodedFrame,
                        const uint8_t* aCodecSpecificInfo,
-                       uint32_t aCodecSpecificInfoLength) MOZ_OVERRIDE;
-  virtual void Error(GMPErr aError) MOZ_OVERRIDE;
+                       uint32_t aCodecSpecificInfoLength) override;
+  virtual void Error(GMPErr aError) override;
 
   // GMPSharedMemManager
-  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem) MOZ_OVERRIDE
+  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem) override
   {
 #ifndef SHMEM_ALLOC_IN_CHILD
     return CallNeedShmem(aSize, aMem);
@@ -47,7 +47,7 @@ public:
 #endif
 #endif
   }
-  virtual void Dealloc(Shmem& aMem) MOZ_OVERRIDE
+  virtual void Dealloc(Shmem& aMem) override
   {
 #ifndef SHMEM_ALLOC_IN_CHILD
     SendParentShmemForPool(aMem);
@@ -61,17 +61,17 @@ private:
   virtual bool RecvInitEncode(const GMPVideoCodec& aCodecSettings,
                               InfallibleTArray<uint8_t>&& aCodecSpecific,
                               const int32_t& aNumberOfCores,
-                              const uint32_t& aMaxPayloadSize) MOZ_OVERRIDE;
+                              const uint32_t& aMaxPayloadSize) override;
   virtual bool RecvEncode(const GMPVideoi420FrameData& aInputFrame,
                           InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
-                          InfallibleTArray<GMPVideoFrameType>&& aFrameTypes) MOZ_OVERRIDE;
-  virtual bool RecvChildShmemForPool(Shmem&& aEncodedBuffer) MOZ_OVERRIDE;
+                          InfallibleTArray<GMPVideoFrameType>&& aFrameTypes) override;
+  virtual bool RecvChildShmemForPool(Shmem&& aEncodedBuffer) override;
   virtual bool RecvSetChannelParameters(const uint32_t& aPacketLoss,
-                                        const uint32_t& aRTT) MOZ_OVERRIDE;
+                                        const uint32_t& aRTT) override;
   virtual bool RecvSetRates(const uint32_t& aNewBitRate,
-                            const uint32_t& aFrameRate) MOZ_OVERRIDE;
-  virtual bool RecvSetPeriodicKeyFrames(const bool& aEnable) MOZ_OVERRIDE;
-  virtual bool RecvEncodingComplete() MOZ_OVERRIDE;
+                            const uint32_t& aFrameRate) override;
+  virtual bool RecvSetPeriodicKeyFrames(const bool& aEnable) override;
+  virtual bool RecvEncodingComplete() override;
 
   GMPChild* mPlugin;
   GMPVideoEncoder* mVideoEncoder;

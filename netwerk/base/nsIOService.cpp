@@ -1512,7 +1512,7 @@ nsIOService::ExtractCharsetFromContentType(const nsACString &aTypeHeader,
 }
 
 // nsISpeculativeConnect
-class IOServiceProxyCallback MOZ_FINAL : public nsIProtocolProxyCallback
+class IOServiceProxyCallback final : public nsIProtocolProxyCallback
 {
     ~IOServiceProxyCallback() {}
 

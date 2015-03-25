@@ -301,7 +301,7 @@ public:
 // member of LoadInfoCollectRunner, which can't be in the anonymous namespace,
 // so it also can't be in an anonymous namespace: gcc warns about that setup
 // and this directory is fail-on-warnings.
-class RTCLoadInfo MOZ_FINAL
+class RTCLoadInfo final
 {
 private:
   ~RTCLoadInfo() {}

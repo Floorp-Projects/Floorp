@@ -165,7 +165,7 @@ protected:
   static bool           sIsTestingIME;
   static bool           sIsGettingNewIMEState;
 
-  class MOZ_STACK_CLASS GettingNewIMEStateBlocker MOZ_FINAL
+  class MOZ_STACK_CLASS GettingNewIMEStateBlocker final
   {
   public:
     GettingNewIMEStateBlocker()

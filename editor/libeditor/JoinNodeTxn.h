@@ -37,7 +37,7 @@ public:
   nsresult CheckValidity();
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(JoinNodeTxn, EditTxn)
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) MOZ_OVERRIDE;
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   NS_DECL_EDITTXN
 

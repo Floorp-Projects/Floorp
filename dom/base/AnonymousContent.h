@@ -17,7 +17,7 @@ namespace dom {
 
 class Element;
 
-class AnonymousContent MOZ_FINAL
+class AnonymousContent final
 {
 public:
   // Ref counting and cycle collection

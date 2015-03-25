@@ -20,7 +20,7 @@ namespace dom {
 
 class HTMLTrackElement;
 
-class WebVTTListener MOZ_FINAL : public nsIWebVTTListener,
+class WebVTTListener final : public nsIWebVTTListener,
                                  public nsIStreamListener,
                                  public nsIChannelEventSink,
                                  public nsIInterfaceRequestor

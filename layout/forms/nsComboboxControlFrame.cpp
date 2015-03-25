@@ -87,7 +87,7 @@ private:
 public:
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD HandleEvent(nsIDOMEvent*) MOZ_OVERRIDE
+  NS_IMETHOD HandleEvent(nsIDOMEvent*) override
   {
     mComboBox->ShowDropDown(!mComboBox->IsDroppedDown());
     return NS_OK;
@@ -367,7 +367,7 @@ nsComboboxControlFrame::ShowList(bool aShowList)
   return weakFrame.IsAlive();
 }
 
-class nsResizeDropdownAtFinalPosition MOZ_FINAL
+class nsResizeDropdownAtFinalPosition final
   : public nsIReflowCallback, public nsRunnable
 {
 public:
@@ -384,19 +384,19 @@ protected:
   }
 
 public:
-  virtual bool ReflowFinished() MOZ_OVERRIDE
+  virtual bool ReflowFinished() override
   {
     Run();
     NS_RELEASE_THIS();
     return false;
   }
 
-  virtual void ReflowCallbackCanceled() MOZ_OVERRIDE
+  virtual void ReflowCallbackCanceled() override
   {
     NS_RELEASE_THIS();
   }
 
-  NS_IMETHODIMP Run() MOZ_OVERRIDE
+  NS_IMETHODIMP Run() override
   {
     if (mFrame.IsAlive()) {
       static_cast<nsComboboxControlFrame*>(mFrame.GetFrame())->
@@ -1218,9 +1218,9 @@ public:
 
   // Need this so that line layout knows that this block's width
   // depends on the available width.
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
+  virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsBlockFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplacedContainsBlock));
@@ -1229,11 +1229,11 @@ public:
   virtual void Reflow(nsPresContext*           aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
                           const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+                          nsReflowStatus&          aStatus) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
 protected:
   nsComboboxControlFrame* mComboBox;
@@ -1461,7 +1461,7 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) MOZ_OVERRIDE;
+                     nsRenderingContext* aCtx) override;
   NS_DISPLAY_DECL_NAME("ComboboxFocus", TYPE_COMBOBOX_FOCUS)
 };
 

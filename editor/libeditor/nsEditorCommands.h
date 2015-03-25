@@ -23,8 +23,8 @@ public:
     
   NS_DECL_ISUPPORTS
     
-  NS_IMETHOD  IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, bool *_retval) MOZ_OVERRIDE = 0;
-  NS_IMETHOD  DoCommand(const char *aCommandName, nsISupports *aCommandRefCon) MOZ_OVERRIDE = 0;
+  NS_IMETHOD  IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, bool *_retval) override = 0;
+  NS_IMETHOD  DoCommand(const char *aCommandName, nsISupports *aCommandRefCon) override = 0;
 
 protected:
   virtual ~nsBaseEditorCommand() {}
@@ -35,10 +35,10 @@ protected:
 class _cmd : public nsBaseEditorCommand                 \
 {                                                       \
 public:                                                 \
-  NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, bool *_retval) MOZ_OVERRIDE; \
-  NS_IMETHOD DoCommand(const char *aCommandName, nsISupports *aCommandRefCon) MOZ_OVERRIDE; \
-  NS_IMETHOD DoCommandParams(const char *aCommandName,nsICommandParams *aParams, nsISupports *aCommandRefCon) MOZ_OVERRIDE; \
-  NS_IMETHOD GetCommandStateParams(const char *aCommandName,nsICommandParams *aParams, nsISupports *aCommandRefCon) MOZ_OVERRIDE; \
+  NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, bool *_retval) override; \
+  NS_IMETHOD DoCommand(const char *aCommandName, nsISupports *aCommandRefCon) override; \
+  NS_IMETHOD DoCommandParams(const char *aCommandName,nsICommandParams *aParams, nsISupports *aCommandRefCon) override; \
+  NS_IMETHOD GetCommandStateParams(const char *aCommandName,nsICommandParams *aParams, nsISupports *aCommandRefCon) override; \
 };
 
 

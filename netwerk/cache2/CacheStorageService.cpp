@@ -1505,12 +1505,12 @@ public:
 private:
   virtual ~CacheEntryDoomByKeyCallback();
 
-  NS_IMETHOD OnFileOpened(CacheFileHandle *aHandle, nsresult aResult) MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD OnDataWritten(CacheFileHandle *aHandle, const char *aBuf, nsresult aResult) MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD OnDataRead(CacheFileHandle *aHandle, char *aBuf, nsresult aResult) MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD OnFileDoomed(CacheFileHandle *aHandle, nsresult aResult) MOZ_OVERRIDE;
-  NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult) MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult) MOZ_OVERRIDE { return NS_OK; }
+  NS_IMETHOD OnFileOpened(CacheFileHandle *aHandle, nsresult aResult) override { return NS_OK; }
+  NS_IMETHOD OnDataWritten(CacheFileHandle *aHandle, const char *aBuf, nsresult aResult) override { return NS_OK; }
+  NS_IMETHOD OnDataRead(CacheFileHandle *aHandle, char *aBuf, nsresult aResult) override { return NS_OK; }
+  NS_IMETHOD OnFileDoomed(CacheFileHandle *aHandle, nsresult aResult) override;
+  NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult) override { return NS_OK; }
+  NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult) override { return NS_OK; }
 
   nsCOMPtr<nsICacheEntryDoomCallback> mCallback;
   nsresult mResult;

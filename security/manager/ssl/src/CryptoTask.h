@@ -91,8 +91,8 @@ protected:
   virtual void CallCallback(nsresult rv) = 0;
 
 private:
-  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL;
-  virtual void virtualDestroyNSSReference() MOZ_OVERRIDE MOZ_FINAL;
+  NS_IMETHOD Run() override final;
+  virtual void virtualDestroyNSSReference() override final;
 
   nsresult mRv;
   bool mReleasedNSSResources;

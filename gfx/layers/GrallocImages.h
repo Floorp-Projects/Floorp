@@ -84,7 +84,7 @@ public:
     GRALLOC_SW_UAGE = android::GraphicBuffer::USAGE_SOFTWARE_MASK,
   };
 
-  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
+  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() override;
 
   android::sp<android::GraphicBuffer> GetGraphicBuffer() const;
 
@@ -92,9 +92,9 @@ public:
 
   virtual bool IsValid() { return !!mTextureClient; }
 
-  virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
+  virtual TextureClient* GetTextureClient(CompositableClient* aClient) override;
 
-  virtual GrallocImage* AsGrallocImage() MOZ_OVERRIDE
+  virtual GrallocImage* AsGrallocImage() override
   {
     return this;
   }

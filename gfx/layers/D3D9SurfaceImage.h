@@ -38,13 +38,13 @@ public:
   // Returns the description of the shared surface.
   const D3DSURFACE_DESC& GetDesc() const;
 
-  gfx::IntSize GetSize() MOZ_OVERRIDE;
+  gfx::IntSize GetSize() override;
 
-  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
+  virtual TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() override;
 
-  virtual TextureClient* GetTextureClient(CompositableClient* aClient) MOZ_OVERRIDE;
+  virtual TextureClient* GetTextureClient(CompositableClient* aClient) override;
 
-  virtual bool IsValid() MOZ_OVERRIDE;
+  virtual bool IsValid() override;
 
 private:
 

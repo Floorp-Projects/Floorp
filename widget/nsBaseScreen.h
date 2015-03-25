@@ -24,24 +24,24 @@ public:
   // implementations where global display pixels may not correspond
   // to per-screen device pixels must override.
   NS_IMETHOD GetRectDisplayPix(int32_t *outLeft,  int32_t *outTop,
-                               int32_t *outWidth, int32_t *outHeight) MOZ_OVERRIDE;
+                               int32_t *outWidth, int32_t *outHeight) override;
   NS_IMETHOD GetAvailRectDisplayPix(int32_t *outLeft,  int32_t *outTop,
-                                    int32_t *outWidth, int32_t *outHeight) MOZ_OVERRIDE;
+                                    int32_t *outWidth, int32_t *outHeight) override;
 
   /**
    * Simple management of screen brightness locks. This abstract base class
    * allows all widget implementations to share brightness locking code.
    */
-  NS_IMETHOD LockMinimumBrightness(uint32_t aBrightness) MOZ_OVERRIDE;
-  NS_IMETHOD UnlockMinimumBrightness(uint32_t aBrightness) MOZ_OVERRIDE;
+  NS_IMETHOD LockMinimumBrightness(uint32_t aBrightness) override;
+  NS_IMETHOD UnlockMinimumBrightness(uint32_t aBrightness) override;
 
-  NS_IMETHOD GetRotation(uint32_t* aRotation) MOZ_OVERRIDE {
+  NS_IMETHOD GetRotation(uint32_t* aRotation) override {
     *aRotation = nsIScreen::ROTATION_0_DEG;
     return NS_OK;
   }
-  NS_IMETHOD SetRotation(uint32_t aRotation) MOZ_OVERRIDE { return NS_ERROR_NOT_AVAILABLE; }
+  NS_IMETHOD SetRotation(uint32_t aRotation) override { return NS_ERROR_NOT_AVAILABLE; }
 
-  NS_IMETHOD GetContentsScaleFactor(double* aContentsScaleFactor) MOZ_OVERRIDE;
+  NS_IMETHOD GetContentsScaleFactor(double* aContentsScaleFactor) override;
 
 protected:
   virtual ~nsBaseScreen();

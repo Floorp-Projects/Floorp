@@ -38,13 +38,13 @@ static const uint32_t RIL_TEST_PORT = 6200;
 
 static nsTArray<nsRefPtr<mozilla::ipc::RilConsumer> > sRilConsumers;
 
-class ConnectWorkerToRIL MOZ_FINAL : public WorkerTask
+class ConnectWorkerToRIL final : public WorkerTask
 {
 public:
-  bool RunTask(JSContext* aCx) MOZ_OVERRIDE;
+  bool RunTask(JSContext* aCx) override;
 };
 
-class SendRilSocketDataTask MOZ_FINAL : public nsRunnable
+class SendRilSocketDataTask final : public nsRunnable
 {
 public:
   SendRilSocketDataTask(unsigned long aClientId,
@@ -53,7 +53,7 @@ public:
     , mClientId(aClientId)
   { }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -160,7 +160,7 @@ ConnectWorkerToRIL::RunTask(JSContext* aCx)
                              PostToRIL, 2, 0);
 }
 
-class DispatchRILEvent MOZ_FINAL : public WorkerTask
+class DispatchRILEvent final : public WorkerTask
 {
 public:
   DispatchRILEvent(unsigned long aClient, UnixSocketRawData* aMessage)
@@ -168,7 +168,7 @@ public:
     , mMessage(aMessage)
   { }
 
-  bool RunTask(JSContext* aCx) MOZ_OVERRIDE;
+  bool RunTask(JSContext* aCx) override;
 
 private:
   unsigned long mClientId;
@@ -199,22 +199,22 @@ DispatchRILEvent::RunTask(JSContext* aCx)
   return JS_CallFunctionName(aCx, obj, "onRILMessage", args, &rval);
 }
 
-class RilConnector MOZ_FINAL : public mozilla::ipc::UnixSocketConnector
+class RilConnector final : public mozilla::ipc::UnixSocketConnector
 {
 public:
   RilConnector(unsigned long aClientId)
     : mClientId(aClientId)
   { }
 
-  int Create() MOZ_OVERRIDE;
+  int Create() override;
   bool CreateAddr(bool aIsServer,
                   socklen_t& aAddrSize,
                   sockaddr_any& aAddr,
-                  const char* aAddress) MOZ_OVERRIDE;
-  bool SetUp(int aFd) MOZ_OVERRIDE;
-  bool SetUpListenSocket(int aFd) MOZ_OVERRIDE;
+                  const char* aAddress) override;
+  bool SetUp(int aFd) override;
+  bool SetUpListenSocket(int aFd) override;
   void GetSocketAddr(const sockaddr_any& aAddr,
-                     nsAString& aAddrStr) MOZ_OVERRIDE;
+                     nsAString& aAddrStr) override;
 
 private:
   unsigned long mClientId;

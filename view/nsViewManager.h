@@ -21,7 +21,7 @@ class nsRegion;
 class nsDeviceContext;
 class nsIPresShell;
 
-class nsViewManager MOZ_FINAL
+class nsViewManager final
 {
   ~nsViewManager();
 public:

@@ -16,7 +16,7 @@
  * This filter is used to skip over various form control nodes and
  * mail's cite nodes
  */
-class nsComposeTxtSrvFilter MOZ_FINAL : public nsITextServicesFilter
+class nsComposeTxtSrvFilter final : public nsITextServicesFilter
 {
 public:
   nsComposeTxtSrvFilter();

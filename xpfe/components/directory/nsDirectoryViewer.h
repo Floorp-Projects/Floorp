@@ -34,7 +34,7 @@ protected:
     virtual ~nsDirectoryViewerFactory();
 };
 
-class nsHTTPIndex MOZ_FINAL : public nsIHTTPIndex,
+class nsHTTPIndex final : public nsIHTTPIndex,
                               public nsIRDFDataSource,
                               public nsIStreamListener,
                               public nsIDirIndexListener,

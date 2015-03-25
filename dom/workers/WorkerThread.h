@@ -38,7 +38,7 @@ class WorkerThreadFriendKey
   ~WorkerThreadFriendKey();
 };
 
-class WorkerThread MOZ_FINAL
+class WorkerThread final
   : public nsThread
 {
   class Observer;
@@ -84,7 +84,7 @@ private:
   // This should only be called by consumers that have an
   // nsIEventTarget/nsIThread pointer.
   NS_IMETHOD
-  Dispatch(nsIRunnable* aRunnable, uint32_t aFlags) MOZ_OVERRIDE;
+  Dispatch(nsIRunnable* aRunnable, uint32_t aFlags) override;
 };
 
 } // namespace workers

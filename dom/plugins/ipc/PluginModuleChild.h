@@ -65,37 +65,37 @@ class PluginModuleChild : public PPluginModuleChild
     typedef mozilla::dom::PCrashReporterChild PCrashReporterChild;
 protected:
     virtual mozilla::ipc::RacyInterruptPolicy
-    MediateInterruptRace(const Message& parent, const Message& child) MOZ_OVERRIDE
+    MediateInterruptRace(const Message& parent, const Message& child) override
     {
         return MediateRace(parent, child);
     }
 
-    virtual bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
+    virtual bool ShouldContinueFromReplyTimeout() override;
 
-    virtual bool RecvSettingChanged(const PluginSettings& aSettings) MOZ_OVERRIDE;
+    virtual bool RecvSettingChanged(const PluginSettings& aSettings) override;
 
     // Implement the PPluginModuleChild interface
-    virtual bool RecvDisableFlashProtectedMode() MOZ_OVERRIDE;
-    virtual bool AnswerNP_GetEntryPoints(NPError* rv) MOZ_OVERRIDE;
-    virtual bool AnswerNP_Initialize(const PluginSettings& aSettings, NPError* rv) MOZ_OVERRIDE;
-    virtual bool RecvAsyncNP_Initialize(const PluginSettings& aSettings) MOZ_OVERRIDE;
+    virtual bool RecvDisableFlashProtectedMode() override;
+    virtual bool AnswerNP_GetEntryPoints(NPError* rv) override;
+    virtual bool AnswerNP_Initialize(const PluginSettings& aSettings, NPError* rv) override;
+    virtual bool RecvAsyncNP_Initialize(const PluginSettings& aSettings) override;
     virtual bool AnswerSyncNPP_New(PPluginInstanceChild* aActor, NPError* rv)
-                                   MOZ_OVERRIDE;
-    virtual bool RecvAsyncNPP_New(PPluginInstanceChild* aActor) MOZ_OVERRIDE;
+                                   override;
+    virtual bool RecvAsyncNPP_New(PPluginInstanceChild* aActor) override;
 
     virtual PPluginModuleChild*
     AllocPPluginModuleChild(mozilla::ipc::Transport* aTransport,
-                            base::ProcessId aOtherProcess) MOZ_OVERRIDE;
+                            base::ProcessId aOtherProcess) override;
 
     virtual PPluginInstanceChild*
     AllocPPluginInstanceChild(const nsCString& aMimeType,
                               const uint16_t& aMode,
                               const InfallibleTArray<nsCString>& aNames,
                               const InfallibleTArray<nsCString>& aValues)
-                              MOZ_OVERRIDE;
+                              override;
 
     virtual bool
-    DeallocPPluginInstanceChild(PPluginInstanceChild* aActor) MOZ_OVERRIDE;
+    DeallocPPluginInstanceChild(PPluginInstanceChild* aActor) override;
 
     virtual bool
     RecvPPluginInstanceConstructor(PPluginInstanceChild* aActor,
@@ -103,56 +103,56 @@ protected:
                                    const uint16_t& aMode,
                                    InfallibleTArray<nsCString>&& aNames,
                                    InfallibleTArray<nsCString>&& aValues)
-                                   MOZ_OVERRIDE;
+                                   override;
     virtual bool
-    AnswerNP_Shutdown(NPError *rv) MOZ_OVERRIDE;
+    AnswerNP_Shutdown(NPError *rv) override;
 
     virtual bool
     AnswerOptionalFunctionsSupported(bool *aURLRedirectNotify,
                                      bool *aClearSiteData,
-                                     bool *aGetSitesWithData) MOZ_OVERRIDE;
+                                     bool *aGetSitesWithData) override;
 
     virtual bool
     AnswerNPP_ClearSiteData(const nsCString& aSite,
                             const uint64_t& aFlags,
                             const uint64_t& aMaxAge,
-                            NPError* aResult) MOZ_OVERRIDE;
+                            NPError* aResult) override;
 
     virtual bool
-    AnswerNPP_GetSitesWithData(InfallibleTArray<nsCString>* aResult) MOZ_OVERRIDE;
+    AnswerNPP_GetSitesWithData(InfallibleTArray<nsCString>* aResult) override;
 
     virtual bool
     RecvSetAudioSessionData(const nsID& aId,
                             const nsString& aDisplayName,
-                            const nsString& aIconPath) MOZ_OVERRIDE;
+                            const nsString& aIconPath) override;
 
     virtual bool
-    RecvSetParentHangTimeout(const uint32_t& aSeconds) MOZ_OVERRIDE;
+    RecvSetParentHangTimeout(const uint32_t& aSeconds) override;
 
     virtual PCrashReporterChild*
     AllocPCrashReporterChild(mozilla::dom::NativeThreadId* id,
-                             uint32_t* processType) MOZ_OVERRIDE;
+                             uint32_t* processType) override;
     virtual bool
-    DeallocPCrashReporterChild(PCrashReporterChild* actor) MOZ_OVERRIDE;
+    DeallocPCrashReporterChild(PCrashReporterChild* actor) override;
     virtual bool
     AnswerPCrashReporterConstructor(PCrashReporterChild* actor,
                                     mozilla::dom::NativeThreadId* id,
-                                    uint32_t* processType) MOZ_OVERRIDE;
+                                    uint32_t* processType) override;
 
     virtual void
-    ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+    ActorDestroy(ActorDestroyReason why) override;
 
     MOZ_NORETURN void QuickExit();
 
     virtual bool
-    RecvProcessNativeEventsInInterruptCall() MOZ_OVERRIDE;
+    RecvProcessNativeEventsInInterruptCall() override;
 
     virtual bool RecvStartProfiler(const uint32_t& aEntries,
                                    const double& aInterval,
                                    nsTArray<nsCString>&& aFeatures,
-                                   nsTArray<nsCString>&& aThreadNameFilters) MOZ_OVERRIDE;
-    virtual bool RecvStopProfiler() MOZ_OVERRIDE;
-    virtual bool AnswerGetProfile(nsCString* aProfile) MOZ_OVERRIDE;
+                                   nsTArray<nsCString>&& aThreadNameFilters) override;
+    virtual bool RecvStopProfiler() override;
+    virtual bool AnswerGetProfile(nsCString* aProfile) override;
 
 public:
     explicit PluginModuleChild(bool aIsChrome);
@@ -308,12 +308,12 @@ private:
     static gboolean DetectNestedEventLoop(gpointer data);
     static gboolean ProcessBrowserEvents(gpointer data);
 
-    virtual void EnteredCxxStack() MOZ_OVERRIDE;
-    virtual void ExitedCxxStack() MOZ_OVERRIDE;
+    virtual void EnteredCxxStack() override;
+    virtual void ExitedCxxStack() override;
 #elif defined(MOZ_WIDGET_QT)
 
-    virtual void EnteredCxxStack() MOZ_OVERRIDE;
-    virtual void ExitedCxxStack() MOZ_OVERRIDE;
+    virtual void EnteredCxxStack() override;
+    virtual void ExitedCxxStack() override;
 #endif
 
     PRLibrary* mLibrary;
@@ -392,8 +392,8 @@ public: // called by PluginInstanceChild
 
 private:
 #if defined(OS_WIN)
-    virtual void EnteredCall() MOZ_OVERRIDE;
-    virtual void ExitedCall() MOZ_OVERRIDE;
+    virtual void EnteredCall() override;
+    virtual void ExitedCall() override;
 
     // Entered/ExitedCall notifications keep track of whether the plugin has
     // entered a nested event loop within this interrupt call.

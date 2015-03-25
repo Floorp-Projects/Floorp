@@ -18,7 +18,7 @@ namespace mozilla {
 JSAddonId*
 MapURIToAddonID(nsIURI* aURI);
 
-class AddonPathService MOZ_FINAL : public amIAddonPathService
+class AddonPathService final : public amIAddonPathService
 {
 public:
   AddonPathService();

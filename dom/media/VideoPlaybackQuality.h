@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-class VideoPlaybackQuality MOZ_FINAL : public nsWrapperCache
+class VideoPlaybackQuality final : public nsWrapperCache
 {
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(VideoPlaybackQuality)
@@ -27,7 +27,7 @@ public:
 
   HTMLMediaElement* GetParentObject() const;
 
-  JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  JSObject* WrapObject(JSContext* aCx) override;
 
   DOMHighResTimeStamp CreationTime() const
   {

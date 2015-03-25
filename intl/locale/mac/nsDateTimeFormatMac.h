@@ -22,27 +22,27 @@ public:
                         const nsDateFormatSelector  dateFormatSelector, 
                         const nsTimeFormatSelector timeFormatSelector, 
                         const time_t  timetTime, 
-                        nsAString& stringOut) MOZ_OVERRIDE; 
+                        nsAString& stringOut) override; 
 
   // performs a locale sensitive date formatting operation on the struct tm parameter
   NS_IMETHOD FormatTMTime(nsILocale* locale, 
                           const nsDateFormatSelector  dateFormatSelector, 
                           const nsTimeFormatSelector timeFormatSelector, 
                           const struct tm*  tmTime, 
-                          nsAString& stringOut) MOZ_OVERRIDE; 
+                          nsAString& stringOut) override; 
   // performs a locale sensitive date formatting operation on the PRTime parameter
   NS_IMETHOD FormatPRTime(nsILocale* locale, 
                           const nsDateFormatSelector  dateFormatSelector, 
                           const nsTimeFormatSelector timeFormatSelector, 
                           const PRTime  prTime, 
-                          nsAString& stringOut) MOZ_OVERRIDE;
+                          nsAString& stringOut) override;
 
   // performs a locale sensitive date formatting operation on the PRExplodedTime parameter
   NS_IMETHOD FormatPRExplodedTime(nsILocale* locale, 
                                   const nsDateFormatSelector  dateFormatSelector, 
                                   const nsTimeFormatSelector timeFormatSelector, 
                                   const PRExplodedTime*  explodedTime, 
-                                  nsAString& stringOut) MOZ_OVERRIDE; 
+                                  nsAString& stringOut) override; 
 
   nsDateTimeFormatMac() {}
 

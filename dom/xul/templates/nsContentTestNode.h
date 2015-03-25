@@ -26,10 +26,10 @@ public:
                       nsIAtom* aContentVariable);
 
     virtual nsresult FilterInstantiations(InstantiationSet& aInstantiations,
-                                          bool* aCantHandleYet) const MOZ_OVERRIDE;
+                                          bool* aCantHandleYet) const override;
 
     nsresult
-    Constrain(InstantiationSet& aInstantiations) MOZ_OVERRIDE;
+    Constrain(InstantiationSet& aInstantiations) override;
 
     void SetTag(nsIAtom* aTag, nsIDOMDocument* aDocument)
     {

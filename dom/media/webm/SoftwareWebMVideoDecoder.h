@@ -17,12 +17,12 @@ class SoftwareWebMVideoDecoder : public WebMVideoDecoder
 public:
   static WebMVideoDecoder* Create(WebMReader* aReader);
 
-  virtual nsresult Init(unsigned int aWidth, unsigned int aHeight) MOZ_OVERRIDE;
+  virtual nsresult Init(unsigned int aWidth, unsigned int aHeight) override;
 
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                int64_t aTimeThreshold) MOZ_OVERRIDE;
+                                int64_t aTimeThreshold) override;
 
-  virtual void Shutdown() MOZ_OVERRIDE;
+  virtual void Shutdown() override;
 
   explicit SoftwareWebMVideoDecoder(WebMReader* aReader);
   ~SoftwareWebMVideoDecoder();

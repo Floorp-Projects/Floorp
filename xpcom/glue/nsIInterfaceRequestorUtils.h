@@ -32,7 +32,7 @@ public:
   }
 
   virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const
-    MOZ_OVERRIDE;
+    override;
 
 private:
   nsISupports* MOZ_NON_OWNING_REF mSource;

@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-class PresentationDeviceManager MOZ_FINAL : public nsIPresentationDeviceManager
+class PresentationDeviceManager final : public nsIPresentationDeviceManager
                                           , public nsIPresentationDeviceListener
                                           , public nsIPresentationDeviceEventListener
                                           , public nsIObserver

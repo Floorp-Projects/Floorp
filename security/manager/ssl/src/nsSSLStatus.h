@@ -15,7 +15,7 @@
 #include "nsIClassInfo.h"
 #include "nsNSSCertificate.h" // For EVStatus
 
-class nsSSLStatus MOZ_FINAL
+class nsSSLStatus final
   : public nsISSLStatus
   , public nsISerializable
   , public nsIClassInfo

@@ -27,37 +27,37 @@ class GLContextCGL : public GLContext
     NSOpenGLContext *mContext;
 
 public:
-    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextCGL, MOZ_OVERRIDE)
+    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextCGL, override)
     GLContextCGL(const SurfaceCaps& caps, NSOpenGLContext* context,
                  bool isOffscreen, ContextProfile profile);
 
     ~GLContextCGL();
 
-    virtual GLContextType GetContextType() const MOZ_OVERRIDE { return GLContextType::CGL; }
+    virtual GLContextType GetContextType() const override { return GLContextType::CGL; }
 
     static GLContextCGL* Cast(GLContext* gl) {
         MOZ_ASSERT(gl->GetContextType() == GLContextType::CGL);
         return static_cast<GLContextCGL*>(gl);
     }
 
-    bool Init() MOZ_OVERRIDE;
+    bool Init() override;
 
     NSOpenGLContext* GetNSOpenGLContext() const { return mContext; }
     CGLContextObj GetCGLContext() const;
 
-    virtual bool MakeCurrentImpl(bool aForce) MOZ_OVERRIDE;
+    virtual bool MakeCurrentImpl(bool aForce) override;
 
-    virtual bool IsCurrent() MOZ_OVERRIDE;
+    virtual bool IsCurrent() override;
 
-    virtual GLenum GetPreferredARGB32Format() const MOZ_OVERRIDE;
+    virtual GLenum GetPreferredARGB32Format() const override;
 
-    virtual bool SetupLookupFunction() MOZ_OVERRIDE;
+    virtual bool SetupLookupFunction() override;
 
-    virtual bool IsDoubleBuffered() const MOZ_OVERRIDE;
+    virtual bool IsDoubleBuffered() const override;
 
-    virtual bool SupportsRobustness() const MOZ_OVERRIDE;
+    virtual bool SupportsRobustness() const override;
 
-    virtual bool SwapBuffers() MOZ_OVERRIDE;
+    virtual bool SwapBuffers() override;
 };
 
 }

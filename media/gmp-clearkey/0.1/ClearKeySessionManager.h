@@ -18,13 +18,13 @@
 #include "mozilla/RefPtr.h"
 #include "RefCounted.h"
 
-class ClearKeySessionManager MOZ_FINAL : public GMPDecryptor
+class ClearKeySessionManager final : public GMPDecryptor
                                        , public RefCounted
 {
 public:
   ClearKeySessionManager();
 
-  virtual void Init(GMPDecryptorCallback* aCallback) MOZ_OVERRIDE;
+  virtual void Init(GMPDecryptorCallback* aCallback) override;
 
   virtual void CreateSession(uint32_t aCreateSessionToken,
                              uint32_t aPromiseId,
@@ -32,34 +32,34 @@ public:
                              uint32_t aInitDataTypeSize,
                              const uint8_t* aInitData,
                              uint32_t aInitDataSize,
-                             GMPSessionType aSessionType) MOZ_OVERRIDE;
+                             GMPSessionType aSessionType) override;
 
   virtual void LoadSession(uint32_t aPromiseId,
                            const char* aSessionId,
-                           uint32_t aSessionIdLength) MOZ_OVERRIDE;
+                           uint32_t aSessionIdLength) override;
 
   virtual void UpdateSession(uint32_t aPromiseId,
                              const char* aSessionId,
                              uint32_t aSessionIdLength,
                              const uint8_t* aResponse,
-                             uint32_t aResponseSize) MOZ_OVERRIDE;
+                             uint32_t aResponseSize) override;
 
   virtual void CloseSession(uint32_t aPromiseId,
                             const char* aSessionId,
-                            uint32_t aSessionIdLength) MOZ_OVERRIDE;
+                            uint32_t aSessionIdLength) override;
 
   virtual void RemoveSession(uint32_t aPromiseId,
                              const char* aSessionId,
-                             uint32_t aSessionIdLength) MOZ_OVERRIDE;
+                             uint32_t aSessionIdLength) override;
 
   virtual void SetServerCertificate(uint32_t aPromiseId,
                                     const uint8_t* aServerCert,
-                                    uint32_t aServerCertSize) MOZ_OVERRIDE;
+                                    uint32_t aServerCertSize) override;
 
   virtual void Decrypt(GMPBuffer* aBuffer,
-                       GMPEncryptedBufferMetadata* aMetadata) MOZ_OVERRIDE;
+                       GMPEncryptedBufferMetadata* aMetadata) override;
 
-  virtual void DecryptingComplete() MOZ_OVERRIDE;
+  virtual void DecryptingComplete() override;
 
   void PersistentSessionDataLoaded(GMPErr aStatus,
                                    uint32_t aPromiseId,

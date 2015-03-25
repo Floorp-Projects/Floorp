@@ -33,7 +33,7 @@ namespace dom {
 
 using namespace workers;
 
-class BroadcastChannelMessage MOZ_FINAL
+class BroadcastChannelMessage final
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(BroadcastChannelMessage)
@@ -122,7 +122,7 @@ GetPrincipalFromWorkerPrivate(WorkerPrivate* aWorkerPrivate)
   return wp->GetPrincipal();
 }
 
-class InitializeRunnable MOZ_FINAL : public WorkerMainThreadRunnable
+class InitializeRunnable final : public WorkerMainThreadRunnable
 {
 public:
   InitializeRunnable(WorkerPrivate* aWorkerPrivate, nsAString& aOrigin,
@@ -136,7 +136,7 @@ public:
     MOZ_ASSERT(mWorkerPrivate);
   }
 
-  bool MainThreadRun() MOZ_OVERRIDE
+  bool MainThreadRun() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -195,7 +195,7 @@ private:
   ErrorResult& mRv;
 };
 
-class BCPostMessageRunnable MOZ_FINAL : public nsICancelableRunnable
+class BCPostMessageRunnable final : public nsICancelableRunnable
 {
 public:
   NS_DECL_ISUPPORTS
@@ -208,7 +208,7 @@ public:
     MOZ_ASSERT(mActor);
   }
 
-  NS_IMETHODIMP Run() MOZ_OVERRIDE
+  NS_IMETHODIMP Run() override
   {
     MOZ_ASSERT(mActor);
     if (mActor->IsActorDestroyed()) {
@@ -242,7 +242,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHODIMP Cancel() MOZ_OVERRIDE
+  NS_IMETHODIMP Cancel() override
   {
     mActor = nullptr;
     return NS_OK;
@@ -257,7 +257,7 @@ private:
 
 NS_IMPL_ISUPPORTS(BCPostMessageRunnable, nsICancelableRunnable, nsIRunnable)
 
-class CloseRunnable MOZ_FINAL : public nsICancelableRunnable
+class CloseRunnable final : public nsICancelableRunnable
 {
 public:
   NS_DECL_ISUPPORTS
@@ -268,13 +268,13 @@ public:
     MOZ_ASSERT(mBC);
   }
 
-  NS_IMETHODIMP Run() MOZ_OVERRIDE
+  NS_IMETHODIMP Run() override
   {
     mBC->Shutdown();
     return NS_OK;
   }
 
-  NS_IMETHODIMP Cancel() MOZ_OVERRIDE
+  NS_IMETHODIMP Cancel() override
   {
     mBC = nullptr;
     return NS_OK;
@@ -288,7 +288,7 @@ private:
 
 NS_IMPL_ISUPPORTS(CloseRunnable, nsICancelableRunnable, nsIRunnable)
 
-class TeardownRunnable MOZ_FINAL : public nsICancelableRunnable
+class TeardownRunnable final : public nsICancelableRunnable
 {
 public:
   NS_DECL_ISUPPORTS
@@ -299,7 +299,7 @@ public:
     MOZ_ASSERT(mActor);
   }
 
-  NS_IMETHODIMP Run() MOZ_OVERRIDE
+  NS_IMETHODIMP Run() override
   {
     MOZ_ASSERT(mActor);
     if (!mActor->IsActorDestroyed()) {
@@ -308,7 +308,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHODIMP Cancel() MOZ_OVERRIDE
+  NS_IMETHODIMP Cancel() override
   {
     mActor = nullptr;
     return NS_OK;
@@ -322,7 +322,7 @@ private:
 
 NS_IMPL_ISUPPORTS(TeardownRunnable, nsICancelableRunnable, nsIRunnable)
 
-class BroadcastChannelFeature MOZ_FINAL : public workers::WorkerFeature
+class BroadcastChannelFeature final : public workers::WorkerFeature
 {
   BroadcastChannel* mChannel;
 
@@ -333,7 +333,7 @@ public:
     MOZ_COUNT_CTOR(BroadcastChannelFeature);
   }
 
-  virtual bool Notify(JSContext* aCx, workers::Status aStatus) MOZ_OVERRIDE
+  virtual bool Notify(JSContext* aCx, workers::Status aStatus) override
   {
     if (aStatus >= Closing) {
       mChannel->Shutdown();
@@ -349,7 +349,7 @@ private:
   }
 };
 
-class PrefEnabledRunnable MOZ_FINAL : public WorkerMainThreadRunnable
+class PrefEnabledRunnable final : public WorkerMainThreadRunnable
 {
 public:
   explicit PrefEnabledRunnable(WorkerPrivate* aWorkerPrivate)
@@ -357,7 +357,7 @@ public:
     , mEnabled(false)
   { }
 
-  bool MainThreadRun() MOZ_OVERRIDE
+  bool MainThreadRun() override
   {
     AssertIsOnMainThread();
     mEnabled = Preferences::GetBool("dom.broadcastChannel.enabled", false);

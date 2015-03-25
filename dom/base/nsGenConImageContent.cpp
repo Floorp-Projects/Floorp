@@ -20,7 +20,7 @@
 
 using namespace mozilla;
 
-class nsGenConImageContent MOZ_FINAL : public nsXMLElement,
+class nsGenConImageContent final : public nsXMLElement,
                                        public nsImageLoadingContent
 {
 public:
@@ -41,11 +41,11 @@ public:
   // nsIContent overrides
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
-  virtual void UnbindFromTree(bool aDeep, bool aNullParent) MOZ_OVERRIDE;
-  virtual EventStates IntrinsicState() const MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
+  virtual void UnbindFromTree(bool aDeep, bool aNullParent) override;
+  virtual EventStates IntrinsicState() const override;
 
-  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) MOZ_OVERRIDE
+  virtual nsresult PreHandleEvent(EventChainPreVisitor& aVisitor) override
   {
     MOZ_ASSERT(IsInNativeAnonymousSubtree());
     if (aVisitor.mEvent->message == NS_LOAD ||

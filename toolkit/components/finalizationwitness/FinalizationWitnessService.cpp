@@ -30,7 +30,7 @@ namespace {
  * Important note: we maintain the invariant that these private data
  * slots are already addrefed.
  */
-class FinalizationEvent MOZ_FINAL: public nsRunnable
+class FinalizationEvent final: public nsRunnable
 {
 public:
   FinalizationEvent(const char* aTopic,

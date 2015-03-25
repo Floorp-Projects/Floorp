@@ -491,17 +491,17 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) MOZ_OVERRIDE {
+                     nsRenderingContext* aCtx) override {
     mFrame->PaintHeaderFooter(*aCtx, ToReferenceFrame(), mDisableSubpixelAA);
   }
   NS_DISPLAY_DECL_NAME("HeaderFooter", nsDisplayItem::TYPE_HEADER_FOOTER)
 
-  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE {
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override {
     bool snap;
     return GetBounds(aBuilder, &snap);
   }
 
-  virtual void DisableComponentAlpha() MOZ_OVERRIDE {
+  virtual void DisableComponentAlpha() override {
     mDisableSubpixelAA = true;
   }
 protected:

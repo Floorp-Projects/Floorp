@@ -27,24 +27,24 @@ class nsChromeRegistryChrome : public nsChromeRegistry
   nsChromeRegistryChrome();
   ~nsChromeRegistryChrome();
 
-  nsresult Init() MOZ_OVERRIDE;
+  nsresult Init() override;
 
-  NS_IMETHOD CheckForNewChrome() MOZ_OVERRIDE;
-  NS_IMETHOD CheckForOSAccessibility() MOZ_OVERRIDE;
+  NS_IMETHOD CheckForNewChrome() override;
+  NS_IMETHOD CheckForOSAccessibility() override;
   NS_IMETHOD GetLocalesForPackage(const nsACString& aPackage,
-                                  nsIUTF8StringEnumerator* *aResult) MOZ_OVERRIDE;
+                                  nsIUTF8StringEnumerator* *aResult) override;
   NS_IMETHOD IsLocaleRTL(const nsACString& package,
-                         bool *aResult) MOZ_OVERRIDE;
+                         bool *aResult) override;
   NS_IMETHOD GetSelectedLocale(const nsACString& aPackage,
-                               nsACString& aLocale) MOZ_OVERRIDE;
+                               nsACString& aLocale) override;
   NS_IMETHOD Observe(nsISupports *aSubject, const char *aTopic,
-                     const char16_t *someData) MOZ_OVERRIDE;
+                     const char16_t *someData) override;
 
 #ifdef MOZ_XUL
   NS_IMETHOD GetXULOverlays(nsIURI *aURI,
-                            nsISimpleEnumerator **_retval) MOZ_OVERRIDE;
+                            nsISimpleEnumerator **_retval) override;
   NS_IMETHOD GetStyleOverlays(nsIURI *aURI,
-                              nsISimpleEnumerator **_retval) MOZ_OVERRIDE;
+                              nsISimpleEnumerator **_retval) override;
 #endif
 
   // If aChild is non-null then it is a new child to notify. If aChild is
@@ -66,12 +66,12 @@ class nsChromeRegistryChrome : public nsChromeRegistry
   nsresult OverrideLocalePackage(const nsACString& aPackage,
                                  nsACString& aOverride);
   nsresult SelectLocaleFromPref(nsIPrefBranch* prefs);
-  nsresult UpdateSelectedLocale() MOZ_OVERRIDE;
+  nsresult UpdateSelectedLocale() override;
   nsIURI* GetBaseURIFromPackage(const nsCString& aPackage,
                                  const nsCString& aProvider,
-                                 const nsCString& aPath) MOZ_OVERRIDE;
+                                 const nsCString& aPath) override;
   nsresult GetFlagsFromPackage(const nsCString& aPackage,
-                               uint32_t* aFlags) MOZ_OVERRIDE;
+                               uint32_t* aFlags) override;
 
   struct ProviderEntry
   {
@@ -166,19 +166,19 @@ class nsChromeRegistryChrome : public nsChromeRegistry
   nsClassHashtable<nsCStringHashKey, PackageEntry> mPackagesHash;
 
   virtual void ManifestContent(ManifestProcessingContext& cx, int lineno,
-                               char *const * argv, int flags) MOZ_OVERRIDE;
+                               char *const * argv, int flags) override;
   virtual void ManifestLocale(ManifestProcessingContext& cx, int lineno,
-                              char *const * argv, int flags) MOZ_OVERRIDE;
+                              char *const * argv, int flags) override;
   virtual void ManifestSkin(ManifestProcessingContext& cx, int lineno,
-                            char *const * argv, int flags) MOZ_OVERRIDE;
+                            char *const * argv, int flags) override;
   virtual void ManifestOverlay(ManifestProcessingContext& cx, int lineno,
-                               char *const * argv, int flags) MOZ_OVERRIDE;
+                               char *const * argv, int flags) override;
   virtual void ManifestStyle(ManifestProcessingContext& cx, int lineno,
-                             char *const * argv, int flags) MOZ_OVERRIDE;
+                             char *const * argv, int flags) override;
   virtual void ManifestOverride(ManifestProcessingContext& cx, int lineno,
-                                char *const * argv, int flags) MOZ_OVERRIDE;
+                                char *const * argv, int flags) override;
   virtual void ManifestResource(ManifestProcessingContext& cx, int lineno,
-                                char *const * argv, int flags) MOZ_OVERRIDE;
+                                char *const * argv, int flags) override;
 };
 
 #endif // nsChromeRegistryChrome_h

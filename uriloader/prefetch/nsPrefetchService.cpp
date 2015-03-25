@@ -69,7 +69,7 @@ PRTimeToSeconds(PRTime t_usec)
 //-----------------------------------------------------------------------------
 // nsPrefetchQueueEnumerator
 //-----------------------------------------------------------------------------
-class nsPrefetchQueueEnumerator MOZ_FINAL : public nsISimpleEnumerator
+class nsPrefetchQueueEnumerator final : public nsISimpleEnumerator
 {
 public:
     NS_DECL_ISUPPORTS

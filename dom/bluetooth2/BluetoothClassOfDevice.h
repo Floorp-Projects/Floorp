@@ -18,7 +18,7 @@ struct JSContext;
 
 BEGIN_BLUETOOTH_NAMESPACE
 
-class BluetoothClassOfDevice MOZ_FINAL : public nsISupports,
+class BluetoothClassOfDevice final : public nsISupports,
                                          public nsWrapperCache
 {
 public:
@@ -69,7 +69,7 @@ public:
   {
     return mOwnerWindow;
   }
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) override;
 
 private:
   BluetoothClassOfDevice(nsPIDOMWindow* aOwner);

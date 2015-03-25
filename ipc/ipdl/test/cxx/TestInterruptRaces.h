@@ -30,30 +30,30 @@ public:
 
 protected:
     virtual bool
-    RecvStartRace() MOZ_OVERRIDE;
+    RecvStartRace() override;
 
     virtual bool
-    AnswerRace(bool* hasRace) MOZ_OVERRIDE;
+    AnswerRace(bool* hasRace) override;
 
     virtual bool
-    AnswerStackFrame() MOZ_OVERRIDE;
+    AnswerStackFrame() override;
 
     virtual bool
-    AnswerStackFrame3() MOZ_OVERRIDE;
+    AnswerStackFrame3() override;
 
     virtual bool
-    AnswerParent() MOZ_OVERRIDE;
+    AnswerParent() override;
 
     virtual bool
-    RecvGetAnsweredParent(bool* answeredParent) MOZ_OVERRIDE;
+    RecvGetAnsweredParent(bool* answeredParent) override;
 
     virtual mozilla::ipc::RacyInterruptPolicy
-    MediateInterruptRace(const Message& parent, const Message& child) MOZ_OVERRIDE
+    MediateInterruptRace(const Message& parent, const Message& child) override
     {
         return MediateRace(parent, child);
     }
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");
@@ -84,33 +84,33 @@ public:
 
 protected:
     virtual bool
-    RecvStart() MOZ_OVERRIDE;
+    RecvStart() override;
 
     virtual bool
-    AnswerRace(bool* hasRace) MOZ_OVERRIDE;
+    AnswerRace(bool* hasRace) override;
 
     virtual bool
-    AnswerStackFrame() MOZ_OVERRIDE;
+    AnswerStackFrame() override;
 
     virtual bool
-    AnswerStackFrame3() MOZ_OVERRIDE;
+    AnswerStackFrame3() override;
 
     virtual bool
-    RecvWakeup() MOZ_OVERRIDE;
+    RecvWakeup() override;
 
     virtual bool
-    RecvWakeup3() MOZ_OVERRIDE;
+    RecvWakeup3() override;
 
     virtual bool
-    AnswerChild() MOZ_OVERRIDE;
+    AnswerChild() override;
 
     virtual mozilla::ipc::RacyInterruptPolicy
-    MediateInterruptRace(const Message& parent, const Message& child) MOZ_OVERRIDE
+    MediateInterruptRace(const Message& parent, const Message& child) override
     {
         return MediateRace(parent, child);
     }
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");

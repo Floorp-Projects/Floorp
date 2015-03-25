@@ -44,7 +44,7 @@ public:
     MOZ_COUNT_DTOR(CompositableChild);
   }
 
-  virtual void ActorDestroy(ActorDestroyReason) MOZ_OVERRIDE {
+  virtual void ActorDestroy(ActorDestroyReason) override {
     DestroyAsyncTransactionTrackersHolder();
     if (mCompositableClient) {
       mCompositableClient->mCompositableChild = nullptr;

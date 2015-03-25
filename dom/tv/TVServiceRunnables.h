@@ -23,7 +23,7 @@ namespace dom {
  *   new TVServiceNotifyRunnable(callback, dataList, optional errorCode);
  * return NS_DispatchToCurrentThread(runnable);
  */
-class TVServiceNotifyRunnable MOZ_FINAL : public nsRunnable
+class TVServiceNotifyRunnable final : public nsRunnable
 {
 public:
   TVServiceNotifyRunnable(nsITVServiceCallback* aCallback,

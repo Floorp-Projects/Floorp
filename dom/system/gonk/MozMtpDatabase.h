@@ -24,7 +24,7 @@ class RefCountedMtpServer;
 
 using namespace android;
 
-class MozMtpDatabase MOZ_FINAL : public MtpDatabase
+class MozMtpDatabase final : public MtpDatabase
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MozMtpDatabase)

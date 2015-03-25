@@ -74,7 +74,7 @@ typedef enum {
   BorderColorStyleDark
 } BorderColorStyle;
 
-class nsCSSBorderRenderer MOZ_FINAL
+class nsCSSBorderRenderer final
 {
   typedef mozilla::gfx::ColorPattern ColorPattern;
   typedef mozilla::gfx::DrawTarget DrawTarget;

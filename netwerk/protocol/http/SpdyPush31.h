@@ -22,7 +22,7 @@ namespace net {
 
 class SpdyPush31TransactionBuffer;
 
-class SpdyPushedStream31 MOZ_FINAL : public SpdyStream31
+class SpdyPushedStream31 final : public SpdyStream31
 {
 public:
   SpdyPushedStream31(SpdyPush31TransactionBuffer *aTransaction,
@@ -69,7 +69,7 @@ private:
   bool mDeferCleanupOnSuccess;
 };
 
-class SpdyPush31TransactionBuffer MOZ_FINAL : public nsAHttpTransaction
+class SpdyPush31TransactionBuffer final : public nsAHttpTransaction
 {
 public:
   NS_DECL_ISUPPORTS

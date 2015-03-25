@@ -195,35 +195,35 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetRect(int32_t *l, int32_t *t, int32_t *w, int32_t *h) MOZ_OVERRIDE {
+  NS_IMETHOD GetRect(int32_t *l, int32_t *t, int32_t *w, int32_t *h) override {
     *l = mScreenRect.x;
     *t = mScreenRect.y;
     *w = mScreenRect.width;
     *h = mScreenRect.height;
     return NS_OK;
   }
-  NS_IMETHOD GetAvailRect(int32_t *l, int32_t *t, int32_t *w, int32_t *h) MOZ_OVERRIDE {
+  NS_IMETHOD GetAvailRect(int32_t *l, int32_t *t, int32_t *w, int32_t *h) override {
     return GetRect(l, t, w, h);
   }
-  NS_IMETHOD GetRectDisplayPix(int32_t *l, int32_t *t, int32_t *w, int32_t *h) MOZ_OVERRIDE {
+  NS_IMETHOD GetRectDisplayPix(int32_t *l, int32_t *t, int32_t *w, int32_t *h) override {
     return GetRect(l, t, w, h);
   }
-  NS_IMETHOD GetAvailRectDisplayPix(int32_t *l, int32_t *t, int32_t *w, int32_t *h) MOZ_OVERRIDE {
+  NS_IMETHOD GetAvailRectDisplayPix(int32_t *l, int32_t *t, int32_t *w, int32_t *h) override {
     return GetAvailRect(l, t, w, h);
   }
 
-  NS_IMETHOD GetId(uint32_t* aId) MOZ_OVERRIDE { *aId = (uint32_t)-1; return NS_OK; }
-  NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth) MOZ_OVERRIDE { *aPixelDepth = 24; return NS_OK; }
-  NS_IMETHOD GetColorDepth(int32_t* aColorDepth) MOZ_OVERRIDE { *aColorDepth = 24; return NS_OK; }
+  NS_IMETHOD GetId(uint32_t* aId) override { *aId = (uint32_t)-1; return NS_OK; }
+  NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth) override { *aPixelDepth = 24; return NS_OK; }
+  NS_IMETHOD GetColorDepth(int32_t* aColorDepth) override { *aColorDepth = 24; return NS_OK; }
 
-  NS_IMETHOD LockMinimumBrightness(uint32_t aBrightness) MOZ_OVERRIDE { return NS_ERROR_NOT_AVAILABLE; }
-  NS_IMETHOD UnlockMinimumBrightness(uint32_t aBrightness) MOZ_OVERRIDE { return NS_ERROR_NOT_AVAILABLE; }
-  NS_IMETHOD GetRotation(uint32_t* aRotation) MOZ_OVERRIDE {
+  NS_IMETHOD LockMinimumBrightness(uint32_t aBrightness) override { return NS_ERROR_NOT_AVAILABLE; }
+  NS_IMETHOD UnlockMinimumBrightness(uint32_t aBrightness) override { return NS_ERROR_NOT_AVAILABLE; }
+  NS_IMETHOD GetRotation(uint32_t* aRotation) override {
     *aRotation = nsIScreen::ROTATION_0_DEG;
     return NS_OK;
   }
-  NS_IMETHOD SetRotation(uint32_t aRotation) MOZ_OVERRIDE { return NS_ERROR_NOT_AVAILABLE; }
-  NS_IMETHOD GetContentsScaleFactor(double* aContentsScaleFactor) MOZ_OVERRIDE {
+  NS_IMETHOD SetRotation(uint32_t aRotation) override { return NS_ERROR_NOT_AVAILABLE; }
+  NS_IMETHOD GetContentsScaleFactor(double* aContentsScaleFactor) override {
     *aContentsScaleFactor = 1.0;
     return NS_OK;
   }
@@ -242,17 +242,17 @@ public:
   explicit HMDInfoOculus(ovrHmd aHMD);
 
   bool SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRight,
-              double zNear, double zFar) MOZ_OVERRIDE;
+              double zNear, double zFar) override;
 
-  bool StartSensorTracking() MOZ_OVERRIDE;
-  VRHMDSensorState GetSensorState(double timeOffset) MOZ_OVERRIDE;
-  void StopSensorTracking() MOZ_OVERRIDE;
-  void ZeroSensor() MOZ_OVERRIDE;
+  bool StartSensorTracking() override;
+  VRHMDSensorState GetSensorState(double timeOffset) override;
+  void StopSensorTracking() override;
+  void ZeroSensor() override;
 
   void FillDistortionConstants(uint32_t whichEye,
                                const IntSize& textureSize, const IntRect& eyeViewport,
                                const Size& destViewport, const Rect& destRect,
-                               VRDistortionConstants& values) MOZ_OVERRIDE;
+                               VRDistortionConstants& values) override;
 
   void Destroy();
 

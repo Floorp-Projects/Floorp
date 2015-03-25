@@ -37,7 +37,7 @@ public:
                                            const WheelEventInit& aParam,
                                            ErrorResult& aRv);
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx) override
   {
     return WheelEventBinding::Wrap(aCx, this);
   }

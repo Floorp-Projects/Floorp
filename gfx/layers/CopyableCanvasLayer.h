@@ -38,9 +38,9 @@ protected:
   virtual ~CopyableCanvasLayer();
 
 public:
-  virtual void Initialize(const Data& aData) MOZ_OVERRIDE;
+  virtual void Initialize(const Data& aData) override;
 
-  virtual bool IsDataValid(const Data& aData) MOZ_OVERRIDE;
+  virtual bool IsDataValid(const Data& aData) override;
 
   bool IsGLLayer() { return !!mGLContext; }
 

@@ -269,11 +269,11 @@ class DefaultArea : public Area {
 public:
   explicit DefaultArea(nsIContent* aArea);
 
-  virtual bool IsInside(nscoord x, nscoord y) const MOZ_OVERRIDE;
+  virtual bool IsInside(nscoord x, nscoord y) const override;
   virtual void Draw(nsIFrame* aFrame, DrawTarget& aDrawTarget,
                     const ColorPattern& aColor,
-                    const StrokeOptions& aStrokeOptions) MOZ_OVERRIDE;
-  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect) MOZ_OVERRIDE;
+                    const StrokeOptions& aStrokeOptions) override;
+  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect) override;
 };
 
 DefaultArea::DefaultArea(nsIContent* aArea)
@@ -313,12 +313,12 @@ class RectArea : public Area {
 public:
   explicit RectArea(nsIContent* aArea);
 
-  virtual void ParseCoords(const nsAString& aSpec) MOZ_OVERRIDE;
-  virtual bool IsInside(nscoord x, nscoord y) const MOZ_OVERRIDE;
+  virtual void ParseCoords(const nsAString& aSpec) override;
+  virtual bool IsInside(nscoord x, nscoord y) const override;
   virtual void Draw(nsIFrame* aFrame, DrawTarget& aDrawTarget,
                     const ColorPattern& aColor,
-                    const StrokeOptions& aStrokeOptions) MOZ_OVERRIDE;
-  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect) MOZ_OVERRIDE;
+                    const StrokeOptions& aStrokeOptions) override;
+  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect) override;
 };
 
 RectArea::RectArea(nsIContent* aArea)
@@ -419,12 +419,12 @@ class PolyArea : public Area {
 public:
   explicit PolyArea(nsIContent* aArea);
 
-  virtual void ParseCoords(const nsAString& aSpec) MOZ_OVERRIDE;
-  virtual bool IsInside(nscoord x, nscoord y) const MOZ_OVERRIDE;
+  virtual void ParseCoords(const nsAString& aSpec) override;
+  virtual bool IsInside(nscoord x, nscoord y) const override;
   virtual void Draw(nsIFrame* aFrame, DrawTarget& aDrawTarget,
                     const ColorPattern& aColor,
-                    const StrokeOptions& aStrokeOptions) MOZ_OVERRIDE;
-  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect) MOZ_OVERRIDE;
+                    const StrokeOptions& aStrokeOptions) override;
+  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect) override;
 };
 
 PolyArea::PolyArea(nsIContent* aArea)
@@ -574,12 +574,12 @@ class CircleArea : public Area {
 public:
   explicit CircleArea(nsIContent* aArea);
 
-  virtual void ParseCoords(const nsAString& aSpec) MOZ_OVERRIDE;
-  virtual bool IsInside(nscoord x, nscoord y) const MOZ_OVERRIDE;
+  virtual void ParseCoords(const nsAString& aSpec) override;
+  virtual bool IsInside(nscoord x, nscoord y) const override;
   virtual void Draw(nsIFrame* aFrame, DrawTarget& aDrawTarget,
                     const ColorPattern& aColor,
-                    const StrokeOptions& aStrokeOptions) MOZ_OVERRIDE;
-  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect) MOZ_OVERRIDE;
+                    const StrokeOptions& aStrokeOptions) override;
+  virtual void GetRect(nsIFrame* aFrame, nsRect& aRect) override;
 };
 
 CircleArea::CircleArea(nsIContent* aArea)

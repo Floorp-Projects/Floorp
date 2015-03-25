@@ -166,7 +166,7 @@ BluetoothDaemonA2dpModule::HandleRsp(
 //
 
 // Returns the current notification handler to a notification runnable
-class BluetoothDaemonA2dpModule::NotificationHandlerWrapper MOZ_FINAL
+class BluetoothDaemonA2dpModule::NotificationHandlerWrapper final
 {
 public:
   typedef BluetoothA2dpNotificationHandler ObjectType;
@@ -180,7 +180,7 @@ public:
 };
 
 // Init operator class for ConnectionStateNotification
-class BluetoothDaemonA2dpModule::ConnectionStateInitOp MOZ_FINAL
+class BluetoothDaemonA2dpModule::ConnectionStateInitOp final
   : private PDUInitOp
 {
 public:
@@ -220,7 +220,7 @@ BluetoothDaemonA2dpModule::ConnectionStateNtf(
 }
 
 // Init operator class for AudioStateNotification
-class BluetoothDaemonA2dpModule::AudioStateInitOp MOZ_FINAL
+class BluetoothDaemonA2dpModule::AudioStateInitOp final
   : private PDUInitOp
 {
 public:
@@ -295,7 +295,7 @@ BluetoothDaemonA2dpInterface::BluetoothDaemonA2dpInterface(
 BluetoothDaemonA2dpInterface::~BluetoothDaemonA2dpInterface()
 { }
 
-class BluetoothDaemonA2dpInterface::InitResultHandler MOZ_FINAL
+class BluetoothDaemonA2dpInterface::InitResultHandler final
   : public BluetoothSetupResultHandler
 {
 public:
@@ -305,14 +305,14 @@ public:
     MOZ_ASSERT(mRes);
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
     mRes->OnError(aStatus);
   }
 
-  void RegisterModule() MOZ_OVERRIDE
+  void RegisterModule() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -348,7 +348,7 @@ BluetoothDaemonA2dpInterface::Init(
   }
 }
 
-class BluetoothDaemonA2dpInterface::CleanupResultHandler MOZ_FINAL
+class BluetoothDaemonA2dpInterface::CleanupResultHandler final
   : public BluetoothSetupResultHandler
 {
 public:
@@ -360,7 +360,7 @@ public:
     MOZ_ASSERT(mModule);
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -369,7 +369,7 @@ public:
     }
   }
 
-  void UnregisterModule() MOZ_OVERRIDE
+  void UnregisterModule() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

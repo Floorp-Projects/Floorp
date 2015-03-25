@@ -30,7 +30,7 @@ class Request;
 
 #define kFETCH_CLIENT_REFERRER_STR "about:client"
 
-class InternalRequest MOZ_FINAL
+class InternalRequest final
 {
   friend class Request;
 

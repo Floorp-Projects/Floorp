@@ -9,7 +9,7 @@
 
 #include "mozilla/ipc/FileDescriptor.h"
 
-struct DeviceStorageFileDescriptor MOZ_FINAL
+struct DeviceStorageFileDescriptor final
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DeviceStorageFileDescriptor)
   nsRefPtr<DeviceStorageFile> mDSFile;

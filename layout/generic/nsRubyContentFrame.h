@@ -19,7 +19,7 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFrame overrides
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE;
+  virtual bool IsFrameOfType(uint32_t aFlags) const override;
 
   // Indicates whether this is an "intra-level whitespace" frame, i.e.
   // an anonymous frame that was created to contain non-droppable

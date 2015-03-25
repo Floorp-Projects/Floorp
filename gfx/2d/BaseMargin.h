@@ -13,7 +13,7 @@ namespace mozilla {
 /**
  * Sides represents a set of physical sides.
  */
-struct Sides MOZ_FINAL {
+struct Sides final {
   Sides() : mBits(0) {}
   explicit Sides(SideBits aSideBits)
   {

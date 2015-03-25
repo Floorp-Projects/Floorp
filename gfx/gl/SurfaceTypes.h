@@ -17,7 +17,7 @@ class ISurfaceAllocator;
 
 namespace gl {
 
-struct SurfaceCaps MOZ_FINAL
+struct SurfaceCaps final
 {
     bool any;
     bool color, alpha;

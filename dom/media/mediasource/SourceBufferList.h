@@ -29,7 +29,7 @@ namespace dom {
 
 class MediaSource;
 
-class SourceBufferList MOZ_FINAL : public DOMEventTargetHelper
+class SourceBufferList final : public DOMEventTargetHelper
 {
 public:
   /** WebIDL Methods. */
@@ -46,7 +46,7 @@ public:
 
   MediaSource* GetParentObject() const;
 
-  JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  JSObject* WrapObject(JSContext* aCx) override;
 
   // Append a SourceBuffer and fire "addsourcebuffer" at the list.
   void Append(SourceBuffer* aSourceBuffer);

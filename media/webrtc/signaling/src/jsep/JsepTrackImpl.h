@@ -29,22 +29,22 @@ public:
 
   // Implement JsepTrackNegotiatedDetails.
   virtual mozilla::SdpMediaSection::Protocol
-  GetProtocol() const MOZ_OVERRIDE
+  GetProtocol() const override
   {
     return mProtocol;
   }
   virtual Maybe<std::string>
-  GetBandwidth(const std::string& type) const MOZ_OVERRIDE
+  GetBandwidth(const std::string& type) const override
   {
     return mBandwidth;
   }
   virtual size_t
-  GetCodecCount() const MOZ_OVERRIDE
+  GetCodecCount() const override
   {
     return mCodecs.size();
   }
   virtual nsresult
-  GetCodec(size_t index, const JsepCodecDescription** config) const MOZ_OVERRIDE
+  GetCodec(size_t index, const JsepCodecDescription** config) const override
   {
     if (index >= mCodecs.size()) {
       return NS_ERROR_INVALID_ARG;
@@ -54,7 +54,7 @@ public:
   }
 
   virtual const SdpExtmapAttributeList::Extmap*
-  GetExt(const std::string& ext_name) const MOZ_OVERRIDE
+  GetExt(const std::string& ext_name) const override
   {
     auto it = mExtmap.find(ext_name);
     if (it != mExtmap.end()) {
@@ -63,17 +63,17 @@ public:
     return nullptr;
   }
 
-  virtual std::vector<uint8_t> GetUniquePayloadTypes() const MOZ_OVERRIDE
+  virtual std::vector<uint8_t> GetUniquePayloadTypes() const override
   {
     return mUniquePayloadTypes;
   }
 
-  virtual void AddUniquePayloadType(uint8_t pt) MOZ_OVERRIDE
+  virtual void AddUniquePayloadType(uint8_t pt) override
   {
     mUniquePayloadTypes.push_back(pt);
   }
 
-  virtual void ClearUniquePayloadTypes() MOZ_OVERRIDE
+  virtual void ClearUniquePayloadTypes() override
   {
     mUniquePayloadTypes.clear();
   }

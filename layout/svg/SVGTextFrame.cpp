@@ -2721,16 +2721,16 @@ public:
 
   void NotifySelectionBackgroundNeedsFill(const Rect& aBackgroundRect,
                                           nscolor aColor,
-                                          DrawTarget& aDrawTarget) MOZ_OVERRIDE;
-  void NotifyBeforeText(nscolor aColor) MOZ_OVERRIDE;
-  void NotifyGlyphPathEmitted() MOZ_OVERRIDE;
-  void NotifyBeforeSVGGlyphPainted() MOZ_OVERRIDE;
-  void NotifyAfterSVGGlyphPainted() MOZ_OVERRIDE;
-  void NotifyAfterText() MOZ_OVERRIDE;
-  void NotifyBeforeDecorationLine(nscolor aColor) MOZ_OVERRIDE;
-  void NotifyDecorationLinePathEmitted() MOZ_OVERRIDE;
-  void NotifyBeforeSelectionDecorationLine(nscolor aColor) MOZ_OVERRIDE;
-  void NotifySelectionDecorationLinePathEmitted() MOZ_OVERRIDE;
+                                          DrawTarget& aDrawTarget) override;
+  void NotifyBeforeText(nscolor aColor) override;
+  void NotifyGlyphPathEmitted() override;
+  void NotifyBeforeSVGGlyphPainted() override;
+  void NotifyAfterSVGGlyphPainted() override;
+  void NotifyAfterText() override;
+  void NotifyBeforeDecorationLine(nscolor aColor) override;
+  void NotifyDecorationLinePathEmitted() override;
+  void NotifyBeforeSelectionDecorationLine(nscolor aColor) override;
+  void NotifySelectionDecorationLinePathEmitted() override;
 
 private:
   void SetupContext();
@@ -3130,15 +3130,15 @@ public:
 
   NS_DISPLAY_DECL_NAME("nsDisplaySVGText", TYPE_SVG_TEXT)
 
-  virtual void DisableComponentAlpha() MOZ_OVERRIDE {
+  virtual void DisableComponentAlpha() override {
     mDisableSubpixelAA = true;
   }
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                        HitTestState* aState,
-                       nsTArray<nsIFrame*> *aOutFrames) MOZ_OVERRIDE;
+                       nsTArray<nsIFrame*> *aOutFrames) override;
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) MOZ_OVERRIDE;
-  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE {
+                     nsRenderingContext* aCtx) override;
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override {
     bool snap;
     return GetBounds(aBuilder, &snap);
   }

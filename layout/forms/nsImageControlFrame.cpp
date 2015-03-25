@@ -23,10 +23,10 @@ public:
   explicit nsImageControlFrame(nsStyleContext* aContext);
   ~nsImageControlFrame();
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
+                    nsIFrame*         aPrevInFlow) override;
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
@@ -34,30 +34,30 @@ public:
   virtual void Reflow(nsPresContext*           aPresContext,
                           nsHTMLReflowMetrics&     aDesiredSize,
                           const nsHTMLReflowState& aReflowState,
-                          nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+                          nsReflowStatus&          aStatus) override;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                WidgetGUIEvent* aEvent,
-                               nsEventStatus* aEventStatus) MOZ_OVERRIDE;
+                               nsEventStatus* aEventStatus) override;
 
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
+  virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
+  virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("ImageControl"), aResult);
   }
 #endif
 
   virtual nsresult GetCursor(const nsPoint&    aPoint,
-                             nsIFrame::Cursor& aCursor) MOZ_OVERRIDE;
+                             nsIFrame::Cursor& aCursor) override;
   // nsIFormContromFrame
-  virtual void SetFocus(bool aOn, bool aRepaint) MOZ_OVERRIDE;
+  virtual void SetFocus(bool aOn, bool aRepaint) override;
   virtual nsresult SetFormProperty(nsIAtom* aName, 
-                                   const nsAString& aValue) MOZ_OVERRIDE;
+                                   const nsAString& aValue) override;
 };
 
 

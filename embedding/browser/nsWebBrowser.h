@@ -72,7 +72,7 @@ public:
 {0xcda5863a, 0xaa9c, 0x411e, { 0xbe, 0x49, 0xea, 0x0d, 0x52, 0x5a, 0xb4, 0xb5 }}
 
 
-class nsWebBrowser MOZ_FINAL : public nsIWebBrowser,
+class nsWebBrowser final : public nsIWebBrowser,
                                public nsIWebNavigation,
                                public nsIWebBrowserSetup,
                                public nsIDocShellTreeItem,
@@ -122,7 +122,7 @@ protected:
   // nsIWidgetListener
   virtual void WindowRaised(nsIWidget* aWidget);
   virtual void WindowLowered(nsIWidget* aWidget);
-  virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion) MOZ_OVERRIDE;
+  virtual bool PaintWindow(nsIWidget* aWidget, nsIntRegion aRegion) override;
 
 protected:
   nsRefPtr<nsDocShellTreeOwner> mDocShellTreeOwner;

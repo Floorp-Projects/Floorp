@@ -20,11 +20,11 @@ public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual void MarkIntrinsicISizesDirty() MOZ_OVERRIDE;
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) override;
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual void MarkIntrinsicISizesDirty() override;
 
   enum CroppingStyle { CropNone, CropLeft, CropRight, CropCenter };
 
@@ -32,16 +32,16 @@ public:
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
-                    nsIFrame*         asPrevInFlow) MOZ_OVERRIDE;
+                    nsIFrame*         asPrevInFlow) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
                                     nsIAtom*        aAttribute,
-                                    int32_t         aModType) MOZ_OVERRIDE;
+                                    int32_t         aModType) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
   void UpdateAttributes(nsIAtom*         aAttribute,
@@ -50,7 +50,7 @@ public:
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
   virtual ~nsTextBoxFrame();
 
@@ -61,11 +61,11 @@ public:
 
   nsRect GetComponentAlphaBounds();
 
-  virtual bool ComputesOwnOverflowArea() MOZ_OVERRIDE;
+  virtual bool ComputesOwnOverflowArea() override;
 
   void GetCroppedTitle(nsString& aTitle) const { aTitle = mCroppedTitle; }
 
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 
 protected:
   friend class nsAsyncAccesskeyUpdate;

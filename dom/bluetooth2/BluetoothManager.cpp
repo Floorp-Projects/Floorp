@@ -76,7 +76,7 @@ class GetAdaptersTask : public BluetoothReplyRunnable
   }
 
   virtual void
-  ReleaseMembers() MOZ_OVERRIDE
+  ReleaseMembers() override
   {
     BluetoothReplyRunnable::ReleaseMembers();
     mManager = nullptr;

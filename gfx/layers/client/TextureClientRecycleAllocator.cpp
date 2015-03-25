@@ -45,38 +45,38 @@ public:
   static void RecycleCallback(TextureClient* aClient, void* aClosure);
 
   // ISurfaceAllocator
-  virtual LayersBackend GetCompositorBackendType() const MOZ_OVERRIDE
+  virtual LayersBackend GetCompositorBackendType() const override
   {
     return mSurfaceAllocator->GetCompositorBackendType();
   }
 
   virtual bool AllocShmem(size_t aSize,
                           mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                          mozilla::ipc::Shmem* aShmem) MOZ_OVERRIDE
+                          mozilla::ipc::Shmem* aShmem) override
   {
     return mSurfaceAllocator->AllocShmem(aSize, aType, aShmem);
   }
 
   virtual bool AllocUnsafeShmem(size_t aSize,
                                 mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                                mozilla::ipc::Shmem* aShmem) MOZ_OVERRIDE
+                                mozilla::ipc::Shmem* aShmem) override
   {
     return mSurfaceAllocator->AllocUnsafeShmem(aSize, aType, aShmem);
   }
 
-  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) MOZ_OVERRIDE
+  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override
   {
     mSurfaceAllocator->DeallocShmem(aShmem);
   }
 
-  virtual bool IsSameProcess() const MOZ_OVERRIDE
+  virtual bool IsSameProcess() const override
   {
     return mSurfaceAllocator->IsSameProcess();
   }
 
 protected:
   // ISurfaceAllocator
-  virtual bool IsOnCompositorSide() const MOZ_OVERRIDE
+  virtual bool IsOnCompositorSide() const override
   {
     return false;
   }

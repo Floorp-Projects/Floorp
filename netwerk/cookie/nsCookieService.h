@@ -155,7 +155,7 @@ struct CookieDomainTuple
 
 // encapsulates in-memory and on-disk DB states, so we can
 // conveniently switch state when entering or exiting private browsing.
-struct DBState MOZ_FINAL
+struct DBState final
 {
   DBState() : cookieCount(0), cookieOldestTime(INT64_MAX), corruptFlag(OK)
   {
@@ -238,7 +238,7 @@ enum OpenDBResult
  * class declaration
  ******************************************************************************/
 
-class nsCookieService MOZ_FINAL : public nsICookieService
+class nsCookieService final : public nsICookieService
                                 , public nsICookieManager2
                                 , public nsIObserver
                                 , public nsSupportsWeakReference

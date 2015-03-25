@@ -55,7 +55,7 @@ public:
     // nsITreeView
     NS_DECL_NSITREEVIEW
     // nsINativeTreeView: Untrusted code can use us
-    NS_IMETHOD EnsureNative() MOZ_OVERRIDE { return NS_OK; }
+    NS_IMETHOD EnsureNative() override { return NS_OK; }
 
     // nsIMutationObserver
     NS_DECL_NSIMUTATIONOBSERVER_NODEWILLBEDESTROYED
@@ -72,7 +72,7 @@ protected:
     /**
      * Uninitialize the template builder
      */
-    virtual void Uninit(bool aIsFinal) MOZ_OVERRIDE;
+    virtual void Uninit(bool aIsFinal) override;
 
     /**
      * Get sort variables from the active <treecol>
@@ -81,7 +81,7 @@ protected:
     EnsureSortVariables();
 
     virtual nsresult
-    RebuildAll() MOZ_OVERRIDE;
+    RebuildAll() override;
 
     /**
      * Given a row, use the row's match to figure out the appropriate
@@ -169,7 +169,7 @@ protected:
     NS_IMETHOD
     HasGeneratedContent(nsIRDFResource* aResource,
                         nsIAtom* aTag,
-                        bool* aGenerated) MOZ_OVERRIDE;
+                        bool* aGenerated) override;
 
     // GetInsertionLocations, ReplaceMatch and SynchronizeResult are inherited
     // from nsXULTemplateBuilder
@@ -180,7 +180,7 @@ protected:
      */
     bool
     GetInsertionLocations(nsIXULTemplateResult* aResult,
-                          nsCOMArray<nsIContent>** aLocations) MOZ_OVERRIDE;
+                          nsCOMArray<nsIContent>** aLocations) override;
 
     /**
      * Implement result replacement
@@ -189,13 +189,13 @@ protected:
     ReplaceMatch(nsIXULTemplateResult* aOldResult,
                  nsTemplateMatch* aNewMatch,
                  nsTemplateRule* aNewMatchRule,
-                 void* aContext) MOZ_OVERRIDE;
+                 void* aContext) override;
 
     /**
      * Implement match synchronization
      */
     virtual nsresult
-    SynchronizeResult(nsIXULTemplateResult* aResult) MOZ_OVERRIDE;
+    SynchronizeResult(nsIXULTemplateResult* aResult) override;
 
     /**
      * The tree's box object, used to communicate with the front-end.

@@ -138,7 +138,7 @@ public:
   }
 };
 
-class AudioChannelVolInitCallback MOZ_FINAL : public nsISettingsServiceCallback
+class AudioChannelVolInitCallback final : public nsISettingsServiceCallback
 {
 public:
   NS_DECL_ISUPPORTS

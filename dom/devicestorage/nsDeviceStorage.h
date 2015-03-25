@@ -57,7 +57,7 @@ enum DeviceStorageRequestType {
     DEVICE_STORAGE_REQUEST_CREATEFD
 };
 
-class DeviceStorageUsedSpaceCache MOZ_FINAL
+class DeviceStorageUsedSpaceCache final
 {
 public:
   static DeviceStorageUsedSpaceCache* CreateOrGet();
@@ -66,7 +66,7 @@ public:
   ~DeviceStorageUsedSpaceCache();
 
 
-  class InvalidateRunnable MOZ_FINAL : public nsRunnable
+  class InvalidateRunnable final : public nsRunnable
   {
     public:
       InvalidateRunnable(DeviceStorageUsedSpaceCache* aCache, 
@@ -76,7 +76,7 @@ public:
 
       ~InvalidateRunnable() {}
 
-      NS_IMETHOD Run() MOZ_OVERRIDE
+      NS_IMETHOD Run() override
       {
         nsRefPtr<DeviceStorageUsedSpaceCache::CacheEntry> cacheEntry;
         cacheEntry = mCache->GetCacheEntry(mStorageName);
@@ -145,7 +145,7 @@ private:
   static mozilla::StaticAutoPtr<DeviceStorageUsedSpaceCache> sDeviceStorageUsedSpaceCache;
 };
 
-class DeviceStorageTypeChecker MOZ_FINAL
+class DeviceStorageTypeChecker final
 {
 public:
   static DeviceStorageTypeChecker* CreateOrGet();
@@ -174,7 +174,7 @@ private:
   static mozilla::StaticAutoPtr<DeviceStorageTypeChecker> sDeviceStorageTypeChecker;
 };
 
-class ContinueCursorEvent MOZ_FINAL : public nsRunnable
+class ContinueCursorEvent final : public nsRunnable
 {
 public:
   explicit ContinueCursorEvent(already_AddRefed<mozilla::dom::DOMRequest> aRequest);
@@ -182,13 +182,13 @@ public:
   ~ContinueCursorEvent();
   void Continue();
 
-  NS_IMETHOD Run() MOZ_OVERRIDE;
+  NS_IMETHOD Run() override;
 private:
   already_AddRefed<DeviceStorageFile> GetNextFile();
   nsRefPtr<mozilla::dom::DOMRequest> mRequest;
 };
 
-class nsDOMDeviceStorageCursor MOZ_FINAL
+class nsDOMDeviceStorageCursor final
   : public mozilla::dom::DOMCursor
   , public nsIContentPermissionRequest
   , public mozilla::dom::devicestorage::DeviceStorageRequestChildCallback
@@ -199,7 +199,7 @@ public:
   NS_FORWARD_NSIDOMDOMCURSOR(mozilla::dom::DOMCursor::)
 
   // DOMCursor
-  virtual void Continue(mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+  virtual void Continue(mozilla::ErrorResult& aRv) override;
 
   nsDOMDeviceStorageCursor(nsPIDOMWindow* aWindow,
                            nsIPrincipal* aPrincipal,
@@ -213,7 +213,7 @@ public:
 
   void GetStorageType(nsAString & aType);
 
-  void RequestComplete() MOZ_OVERRIDE;
+  void RequestComplete() override;
 
 private:
   ~nsDOMDeviceStorageCursor();

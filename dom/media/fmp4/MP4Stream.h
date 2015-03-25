@@ -24,10 +24,10 @@ public:
   virtual ~MP4Stream();
   bool BlockingReadIntoCache(int64_t aOffset, size_t aCount, Monitor* aToUnlock);
   virtual bool ReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
-                      size_t* aBytesRead) MOZ_OVERRIDE;
+                      size_t* aBytesRead) override;
   virtual bool CachedReadAt(int64_t aOffset, void* aBuffer, size_t aCount,
-                            size_t* aBytesRead) MOZ_OVERRIDE;
-  virtual bool Length(int64_t* aSize) MOZ_OVERRIDE;
+                            size_t* aBytesRead) override;
+  virtual bool Length(int64_t* aSize) override;
 
   struct ReadRecord {
     ReadRecord(int64_t aOffset, size_t aCount) : mOffset(aOffset), mCount(aCount) {}

@@ -44,7 +44,7 @@ protected:
 
 public:
   virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx) override;
 
   static already_AddRefed<AbortablePromise>
   Constructor(const GlobalObject& aGlobal, PromiseInit& aInit,

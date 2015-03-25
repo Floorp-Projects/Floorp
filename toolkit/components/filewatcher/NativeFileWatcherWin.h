@@ -16,7 +16,7 @@
 
 namespace mozilla {
 
-class NativeFileWatcherService MOZ_FINAL : public nsINativeFileWatcherService,
+class NativeFileWatcherService final : public nsINativeFileWatcherService,
                                            public nsIObserver
 {
 public:

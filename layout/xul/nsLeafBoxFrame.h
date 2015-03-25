@@ -18,14 +18,14 @@ public:
 
   friend nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aState) MOZ_OVERRIDE;
-  virtual nsSize GetMinSize(nsBoxLayoutState& aState) MOZ_OVERRIDE;
-  virtual nsSize GetMaxSize(nsBoxLayoutState& aState) MOZ_OVERRIDE;
-  virtual nscoord GetFlex(nsBoxLayoutState& aState) MOZ_OVERRIDE;
-  virtual nscoord GetBoxAscent(nsBoxLayoutState& aState) MOZ_OVERRIDE;
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aState) override;
+  virtual nsSize GetMinSize(nsBoxLayoutState& aState) override;
+  virtual nsSize GetMaxSize(nsBoxLayoutState& aState) override;
+  virtual nscoord GetFlex(nsBoxLayoutState& aState) override;
+  virtual nscoord GetBoxAscent(nsBoxLayoutState& aState) override;
 
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
+  virtual nsIAtom* GetType() const override;
+  virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     // This is bogus, but it's what we've always done.
     // Note that nsLeafFrame is also eReplacedContainsBlock.
@@ -34,14 +34,14 @@ public:
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
   // nsIHTMLReflow overrides
 
-  virtual void MarkIntrinsicISizesDirty() MOZ_OVERRIDE;
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual void MarkIntrinsicISizesDirty() override;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
   // Our auto size is that provided by nsFrame, not nsLeafFrame
   virtual mozilla::LogicalSize
@@ -52,38 +52,38 @@ public:
                   const mozilla::LogicalSize& aMargin,
                   const mozilla::LogicalSize& aBorder,
                   const mozilla::LogicalSize& aPadding,
-                  bool aShrinkWrap) MOZ_OVERRIDE;
+                  bool aShrinkWrap) override;
 
   virtual void Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+                      nsReflowStatus&          aStatus) override;
 
-  virtual nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) MOZ_OVERRIDE;
+  virtual nsresult CharacterDataChanged(CharacterDataChangeInfo* aInfo) override;
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
-                    nsIFrame*         asPrevInFlow) MOZ_OVERRIDE;
+                    nsIFrame*         asPrevInFlow) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
   virtual nsresult AttributeChanged(int32_t aNameSpaceID,
                                     nsIAtom* aAttribute,
-                                    int32_t aModType) MOZ_OVERRIDE;
+                                    int32_t aModType) override;
 
-  virtual bool ComputesOwnOverflowArea() MOZ_OVERRIDE { return false; }
+  virtual bool ComputesOwnOverflowArea() override { return false; }
 
 protected:
 
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aState) MOZ_OVERRIDE;
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aState) override;
 
 #ifdef DEBUG_LAYOUT
-  virtual void GetBoxName(nsAutoString& aName) MOZ_OVERRIDE;
+  virtual void GetBoxName(nsAutoString& aName) override;
 #endif
 
-  virtual nscoord GetIntrinsicISize() MOZ_OVERRIDE;
+  virtual nscoord GetIntrinsicISize() override;
 
  explicit nsLeafBoxFrame(nsStyleContext* aContext);
 

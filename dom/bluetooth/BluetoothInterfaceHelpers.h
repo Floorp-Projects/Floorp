@@ -61,7 +61,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     ((*mObj).*mMethod)();
     return NS_OK;
@@ -120,7 +120,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     ((*mObj).*mMethod)(mArg1);
     return NS_OK;
@@ -186,7 +186,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     ((*mObj).*mMethod)(mArg1, mArg2, mArg3);
     return NS_OK;
@@ -266,7 +266,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -333,7 +333,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -406,7 +406,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -482,7 +482,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -560,7 +560,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -640,7 +640,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -689,7 +689,7 @@ private:
 //
 
 template <typename T1>
-class ConstantInitOp1 MOZ_FINAL
+class ConstantInitOp1 final
 {
 public:
   ConstantInitOp1(const T1& aArg1)
@@ -708,7 +708,7 @@ private:
 };
 
 template <typename T1, typename T2>
-class ConstantInitOp2 MOZ_FINAL
+class ConstantInitOp2 final
 {
 public:
   ConstantInitOp2(const T1& aArg1, const T2& aArg2)
@@ -730,7 +730,7 @@ private:
 };
 
 template <typename T1, typename T2, typename T3>
-class ConstantInitOp3 MOZ_FINAL
+class ConstantInitOp3 final
 {
 public:
   ConstantInitOp3(const T1& aArg1, const T2& aArg2, const T3& aArg3)

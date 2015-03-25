@@ -191,7 +191,7 @@ public:
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  NS_IMETHOD Run() MOZ_OVERRIDE {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
@@ -205,7 +205,7 @@ public:
 
   NS_IMETHOD Observe(nsISupports* aSubject,
                      const char* aTopic,
-                     const char16_t* aSomeData) MOZ_OVERRIDE
+                     const char16_t* aSomeData) override
   {
     if (!strcmp(aTopic, "gmp-shutdown") &&
         mNodeId.Equals(nsDependentString(aSomeData))) {
@@ -257,7 +257,7 @@ public:
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  NS_IMETHOD Run() MOZ_OVERRIDE {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
@@ -276,7 +276,7 @@ public:
 
   NS_IMETHOD Observe(nsISupports* aSubject,
                      const char* aTopic,
-                     const char16_t* aSomeData) MOZ_OVERRIDE
+                     const char16_t* aSomeData) override
   {
     if (!strcmp(aTopic, "gmp-clear-storage-complete")) {
       nsCOMPtr<nsIObserverService> observerService =
@@ -1084,7 +1084,7 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
 
   virtual void SessionMessage(const nsCString& aSessionId,
                               GMPSessionMessageType aMessageType,
-                              const nsTArray<uint8_t>& aMessage) MOZ_OVERRIDE
+                              const nsTArray<uint8_t>& aMessage) override
   {
     MonitorAutoLock mon(mMonitor);
 
@@ -1102,28 +1102,28 @@ class GMPStorageTest : public GMPDecryptorProxyCallback
   }
 
   virtual void SetSessionId(uint32_t aCreateSessionToken,
-                            const nsCString& aSessionId) MOZ_OVERRIDE { }
+                            const nsCString& aSessionId) override { }
   virtual void ResolveLoadSessionPromise(uint32_t aPromiseId,
-                                         bool aSuccess) MOZ_OVERRIDE {}
-  virtual void ResolvePromise(uint32_t aPromiseId) MOZ_OVERRIDE {}
+                                         bool aSuccess) override {}
+  virtual void ResolvePromise(uint32_t aPromiseId) override {}
   virtual void RejectPromise(uint32_t aPromiseId,
                              nsresult aException,
-                             const nsCString& aSessionId) MOZ_OVERRIDE { }
+                             const nsCString& aSessionId) override { }
   virtual void ExpirationChange(const nsCString& aSessionId,
-                                GMPTimestamp aExpiryTime) MOZ_OVERRIDE {}
-  virtual void SessionClosed(const nsCString& aSessionId) MOZ_OVERRIDE {}
+                                GMPTimestamp aExpiryTime) override {}
+  virtual void SessionClosed(const nsCString& aSessionId) override {}
   virtual void SessionError(const nsCString& aSessionId,
                             nsresult aException,
                             uint32_t aSystemCode,
-                            const nsCString& aMessage) MOZ_OVERRIDE {}
+                            const nsCString& aMessage) override {}
   virtual void KeyStatusChanged(const nsCString& aSessionId,
                                 const nsTArray<uint8_t>& aKeyId,
-                                GMPMediaKeyStatus aStatus) MOZ_OVERRIDE { }
-  virtual void SetCaps(uint64_t aCaps) MOZ_OVERRIDE {}
+                                GMPMediaKeyStatus aStatus) override { }
+  virtual void SetCaps(uint64_t aCaps) override {}
   virtual void Decrypted(uint32_t aId,
                          GMPErr aResult,
-                         const nsTArray<uint8_t>& aDecryptedData) MOZ_OVERRIDE { }
-  virtual void Terminated() MOZ_OVERRIDE { }
+                         const nsTArray<uint8_t>& aDecryptedData) override { }
+  virtual void Terminated() override { }
 
 private:
   ~GMPStorageTest() { }

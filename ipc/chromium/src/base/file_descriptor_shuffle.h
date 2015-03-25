@@ -44,9 +44,9 @@ class InjectionDelegate {
 // An implementation of the InjectionDelegate interface using the file
 // descriptor table of the current process as the domain.
 class FileDescriptorTableInjection : public InjectionDelegate {
-  virtual bool Duplicate(int* result, int fd) MOZ_OVERRIDE;
-  virtual bool Move(int src, int dest) MOZ_OVERRIDE;
-  virtual void Close(int fd) MOZ_OVERRIDE;
+  virtual bool Duplicate(int* result, int fd) override;
+  virtual bool Move(int src, int dest) override;
+  virtual void Close(int fd) override;
 };
 
 // A single arc of the directed graph which describes an injective multimapping.

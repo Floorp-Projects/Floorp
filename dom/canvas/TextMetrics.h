@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-class TextMetrics MOZ_FINAL : public NonRefcountedDOMObject
+class TextMetrics final : public NonRefcountedDOMObject
 {
 public:
   explicit TextMetrics(float aValue) : width(aValue)

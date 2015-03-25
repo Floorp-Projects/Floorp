@@ -37,7 +37,7 @@ class FileImpl;
 class nsIContentParent;
 class PBlobStreamParent;
 
-class BlobParent MOZ_FINAL
+class BlobParent final
   : public PBlobParent
 {
   typedef mozilla::ipc::PBackgroundParent PBackgroundParent;
@@ -203,42 +203,42 @@ private:
 
   // These methods are only called by the IPDL message machinery.
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual PBlobStreamParent*
   AllocPBlobStreamParent(const uint64_t& aStart,
-                         const uint64_t& aLength) MOZ_OVERRIDE;
+                         const uint64_t& aLength) override;
 
   virtual bool
   RecvPBlobStreamConstructor(PBlobStreamParent* aActor,
                              const uint64_t& aStart,
-                             const uint64_t& aLength) MOZ_OVERRIDE;
+                             const uint64_t& aLength) override;
 
   virtual bool
-  DeallocPBlobStreamParent(PBlobStreamParent* aActor) MOZ_OVERRIDE;
+  DeallocPBlobStreamParent(PBlobStreamParent* aActor) override;
 
   virtual bool
-  RecvResolveMystery(const ResolveMysteryParams& aParams) MOZ_OVERRIDE;
+  RecvResolveMystery(const ResolveMysteryParams& aParams) override;
 
   virtual bool
   RecvBlobStreamSync(const uint64_t& aStart,
                      const uint64_t& aLength,
                      InputStreamParams* aParams,
-                     OptionalFileDescriptorSet* aFDs) MOZ_OVERRIDE;
+                     OptionalFileDescriptorSet* aFDs) override;
 
   virtual bool
-  RecvWaitForSliceCreation() MOZ_OVERRIDE;
+  RecvWaitForSliceCreation() override;
 
   virtual bool
-  RecvGetFileId(int64_t* aFileId) MOZ_OVERRIDE;
+  RecvGetFileId(int64_t* aFileId) override;
 
   virtual bool
-  RecvGetFilePath(nsString* aFilePath) MOZ_OVERRIDE;
+  RecvGetFilePath(nsString* aFilePath) override;
 };
 
 // Only let ContentParent call BlobParent::Startup() and ensure that
 // ContentParent can't access any other BlobParent internals.
-class BlobParent::FriendKey MOZ_FINAL
+class BlobParent::FriendKey final
 {
   friend class ContentParent;
 

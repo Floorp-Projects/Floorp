@@ -18,7 +18,7 @@ public:
    : AudioCallbackAdapter(aCallback)
   {}
 
-  virtual void Error(GMPErr aErr) MOZ_OVERRIDE;
+  virtual void Error(GMPErr aErr) override;
 };
 
 class EMEAudioDecoder : public GMPAudioDecoder {
@@ -33,8 +33,8 @@ public:
   }
 
 private:
-  virtual void InitTags(nsTArray<nsCString>& aTags) MOZ_OVERRIDE;
-  virtual nsCString GetNodeId() MOZ_OVERRIDE;
+  virtual void InitTags(nsTArray<nsCString>& aTags) override;
+  virtual nsCString GetNodeId() override;
 
   nsRefPtr<CDMProxy> mProxy;
 };

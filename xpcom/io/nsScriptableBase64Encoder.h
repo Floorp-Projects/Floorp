@@ -16,7 +16,7 @@
 #define NS_SCRIPTABLEBASE64ENCODER_CONTRACTID \
   "@mozilla.org/scriptablebase64encoder;1"
 
-class nsScriptableBase64Encoder MOZ_FINAL : public nsIScriptableBase64Encoder
+class nsScriptableBase64Encoder final : public nsIScriptableBase64Encoder
 {
 public:
   NS_DECL_ISUPPORTS

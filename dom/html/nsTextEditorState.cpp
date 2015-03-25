@@ -182,7 +182,7 @@ SuppressEventHandlers(nsPresContext* aPresContext)
   return suppressHandlers;
 }
 
-class nsAnonDivObserver MOZ_FINAL : public nsStubMutationObserver
+class nsAnonDivObserver final : public nsStubMutationObserver
 {
 public:
   explicit nsAnonDivObserver(nsTextEditorState* aTextEditorState)
@@ -198,7 +198,7 @@ private:
   nsTextEditorState* mTextEditorState;
 };
 
-class nsTextInputSelectionImpl MOZ_FINAL : public nsSupportsWeakReference
+class nsTextInputSelectionImpl final : public nsSupportsWeakReference
                                          , public nsISelectionController
 {
   ~nsTextInputSelectionImpl(){}
@@ -214,36 +214,36 @@ public:
     { return mFrameSelection; }
 
   //NSISELECTIONCONTROLLER INTERFACES
-  NS_IMETHOD SetDisplaySelection(int16_t toggle) MOZ_OVERRIDE;
-  NS_IMETHOD GetDisplaySelection(int16_t* _retval) MOZ_OVERRIDE;
-  NS_IMETHOD SetSelectionFlags(int16_t aInEnable) MOZ_OVERRIDE;
-  NS_IMETHOD GetSelectionFlags(int16_t *aOutEnable) MOZ_OVERRIDE;
-  NS_IMETHOD GetSelection(int16_t type, nsISelection** _retval) MOZ_OVERRIDE;
-  NS_IMETHOD ScrollSelectionIntoView(int16_t aType, int16_t aRegion, int16_t aFlags) MOZ_OVERRIDE;
-  NS_IMETHOD RepaintSelection(int16_t type) MOZ_OVERRIDE;
+  NS_IMETHOD SetDisplaySelection(int16_t toggle) override;
+  NS_IMETHOD GetDisplaySelection(int16_t* _retval) override;
+  NS_IMETHOD SetSelectionFlags(int16_t aInEnable) override;
+  NS_IMETHOD GetSelectionFlags(int16_t *aOutEnable) override;
+  NS_IMETHOD GetSelection(int16_t type, nsISelection** _retval) override;
+  NS_IMETHOD ScrollSelectionIntoView(int16_t aType, int16_t aRegion, int16_t aFlags) override;
+  NS_IMETHOD RepaintSelection(int16_t type) override;
   NS_IMETHOD RepaintSelection(nsPresContext* aPresContext, SelectionType aSelectionType);
-  NS_IMETHOD SetCaretEnabled(bool enabled) MOZ_OVERRIDE;
-  NS_IMETHOD SetCaretReadOnly(bool aReadOnly) MOZ_OVERRIDE;
-  NS_IMETHOD GetCaretEnabled(bool* _retval) MOZ_OVERRIDE;
-  NS_IMETHOD GetCaretVisible(bool* _retval) MOZ_OVERRIDE;
-  NS_IMETHOD SetCaretVisibilityDuringSelection(bool aVisibility) MOZ_OVERRIDE;
-  NS_IMETHOD PhysicalMove(int16_t aDirection, int16_t aAmount, bool aExtend) MOZ_OVERRIDE;
-  NS_IMETHOD CharacterMove(bool aForward, bool aExtend) MOZ_OVERRIDE;
-  NS_IMETHOD CharacterExtendForDelete() MOZ_OVERRIDE;
-  NS_IMETHOD CharacterExtendForBackspace() MOZ_OVERRIDE;
-  NS_IMETHOD WordMove(bool aForward, bool aExtend) MOZ_OVERRIDE;
-  NS_IMETHOD WordExtendForDelete(bool aForward) MOZ_OVERRIDE;
-  NS_IMETHOD LineMove(bool aForward, bool aExtend) MOZ_OVERRIDE;
-  NS_IMETHOD IntraLineMove(bool aForward, bool aExtend) MOZ_OVERRIDE;
-  NS_IMETHOD PageMove(bool aForward, bool aExtend) MOZ_OVERRIDE;
-  NS_IMETHOD CompleteScroll(bool aForward) MOZ_OVERRIDE;
-  NS_IMETHOD CompleteMove(bool aForward, bool aExtend) MOZ_OVERRIDE;
-  NS_IMETHOD ScrollPage(bool aForward) MOZ_OVERRIDE;
-  NS_IMETHOD ScrollLine(bool aForward) MOZ_OVERRIDE;
-  NS_IMETHOD ScrollCharacter(bool aRight) MOZ_OVERRIDE;
-  NS_IMETHOD SelectAll(void) MOZ_OVERRIDE;
-  NS_IMETHOD CheckVisibility(nsIDOMNode *node, int16_t startOffset, int16_t EndOffset, bool* _retval) MOZ_OVERRIDE;
-  virtual nsresult CheckVisibilityContent(nsIContent* aNode, int16_t aStartOffset, int16_t aEndOffset, bool* aRetval) MOZ_OVERRIDE;
+  NS_IMETHOD SetCaretEnabled(bool enabled) override;
+  NS_IMETHOD SetCaretReadOnly(bool aReadOnly) override;
+  NS_IMETHOD GetCaretEnabled(bool* _retval) override;
+  NS_IMETHOD GetCaretVisible(bool* _retval) override;
+  NS_IMETHOD SetCaretVisibilityDuringSelection(bool aVisibility) override;
+  NS_IMETHOD PhysicalMove(int16_t aDirection, int16_t aAmount, bool aExtend) override;
+  NS_IMETHOD CharacterMove(bool aForward, bool aExtend) override;
+  NS_IMETHOD CharacterExtendForDelete() override;
+  NS_IMETHOD CharacterExtendForBackspace() override;
+  NS_IMETHOD WordMove(bool aForward, bool aExtend) override;
+  NS_IMETHOD WordExtendForDelete(bool aForward) override;
+  NS_IMETHOD LineMove(bool aForward, bool aExtend) override;
+  NS_IMETHOD IntraLineMove(bool aForward, bool aExtend) override;
+  NS_IMETHOD PageMove(bool aForward, bool aExtend) override;
+  NS_IMETHOD CompleteScroll(bool aForward) override;
+  NS_IMETHOD CompleteMove(bool aForward, bool aExtend) override;
+  NS_IMETHOD ScrollPage(bool aForward) override;
+  NS_IMETHOD ScrollLine(bool aForward) override;
+  NS_IMETHOD ScrollCharacter(bool aRight) override;
+  NS_IMETHOD SelectAll(void) override;
+  NS_IMETHOD CheckVisibility(nsIDOMNode *node, int16_t startOffset, int16_t EndOffset, bool* _retval) override;
+  virtual nsresult CheckVisibilityContent(nsIContent* aNode, int16_t aStartOffset, int16_t aEndOffset, bool* aRetval) override;
 
 private:
   nsRefPtr<nsFrameSelection> mFrameSelection;

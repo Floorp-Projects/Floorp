@@ -12,7 +12,7 @@
 #include "nsIScreenManager.h"
 #include "WidgetUtils.h"
 
-class nsScreenAndroid MOZ_FINAL : public nsBaseScreen
+class nsScreenAndroid final : public nsBaseScreen
 {
 public:
     nsScreenAndroid(void *nativeScreen);
@@ -25,10 +25,10 @@ public:
     NS_IMETHOD GetColorDepth(int32_t* aColorDepth);
 
 protected:
-    virtual void ApplyMinimumBrightness(uint32_t aBrightness) MOZ_OVERRIDE;
+    virtual void ApplyMinimumBrightness(uint32_t aBrightness) override;
 };
 
-class nsScreenManagerAndroid MOZ_FINAL : public nsIScreenManager
+class nsScreenManagerAndroid final : public nsIScreenManager
 {
 private:
     ~nsScreenManagerAndroid();

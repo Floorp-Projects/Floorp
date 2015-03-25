@@ -190,7 +190,7 @@ BluetoothDaemonPDUConsumer::~BluetoothDaemonPDUConsumer()
 // BluetoothDaemonConnectionIO
 //
 
-class BluetoothDaemonConnectionIO MOZ_FINAL : public UnixSocketWatcher
+class BluetoothDaemonConnectionIO final : public UnixSocketWatcher
                                             , public ConnectionOrientedSocketIO
 {
 public:
@@ -227,11 +227,11 @@ public:
 
   nsresult Receive(struct msghdr& msg);
 
-  void OnSocketCanReceiveWithoutBlocking() MOZ_OVERRIDE;
-  void OnSocketCanSendWithoutBlocking() MOZ_OVERRIDE;
+  void OnSocketCanReceiveWithoutBlocking() override;
+  void OnSocketCanSendWithoutBlocking() override;
 
-  void OnConnected() MOZ_OVERRIDE;
-  void OnError(const char* aFunction, int aErrno) MOZ_OVERRIDE;
+  void OnConnected() override;
+  void OnError(const char* aFunction, int aErrno) override;
 
 private:
   ssize_t  ReceiveData(int aFd);
@@ -511,7 +511,7 @@ BluetoothDaemonConnectionIO::OnError(const char* aFunction, int aErrno)
 // I/O helper tasks
 //
 
-class BluetoothDaemonConnectTask MOZ_FINAL
+class BluetoothDaemonConnectTask final
   : public SocketIOTask<BluetoothDaemonConnectionIO>
 {
 public:
@@ -519,7 +519,7 @@ public:
   : SocketIOTask<BluetoothDaemonConnectionIO>(aIO)
   { }
 
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     if (IsCanceled()) {
       return;

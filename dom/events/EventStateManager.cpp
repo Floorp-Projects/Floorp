@@ -191,7 +191,7 @@ GetDocumentFromWindow(nsIDOMWindow *aWindow)
 /* mozilla::UITimerCallback                                       */
 /******************************************************************/
 
-class UITimerCallback MOZ_FINAL : public nsITimerCallback
+class UITimerCallback final : public nsITimerCallback
 {
 public:
   UITimerCallback() : mPreviousCount(0) {}

@@ -4436,7 +4436,7 @@ public:
   {
   }
 
-  virtual void AddLayerRectangles(mozilla::dom::Sequence<mozilla::dom::ProfileTimelineLayerRect>& aRectangles) MOZ_OVERRIDE
+  virtual void AddLayerRectangles(mozilla::dom::Sequence<mozilla::dom::ProfileTimelineLayerRect>& aRectangles) override
   {
     nsIntRegionRectIterator it(mRegion);
     while (const nsIntRect* iterRect = it.Next()) {

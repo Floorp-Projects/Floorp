@@ -18,8 +18,8 @@ class TrackUnionStream : public ProcessedMediaStream {
 public:
   explicit TrackUnionStream(DOMMediaStream* aWrapper);
 
-  virtual void RemoveInput(MediaInputPort* aPort) MOZ_OVERRIDE;
-  virtual void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) MOZ_OVERRIDE;
+  virtual void RemoveInput(MediaInputPort* aPort) override;
+  virtual void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
   // Consumers may specify a filtering callback to apply to every input track.
   // Returns true to allow the track to act as an input; false to reject it entirely.
@@ -29,7 +29,7 @@ public:
 
   // Forward SetTrackEnabled(output_track_id, enabled) to the Source MediaStream,
   // translating the output track ID into the correct ID in the source.
-  virtual void ForwardTrackEnabled(TrackID aOutputID, bool aEnabled) MOZ_OVERRIDE;
+  virtual void ForwardTrackEnabled(TrackID aOutputID, bool aEnabled) override;
 
 protected:
   TrackIDFilterCallback mFilterCallback;

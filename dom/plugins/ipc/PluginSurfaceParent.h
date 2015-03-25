@@ -27,7 +27,7 @@ public:
                       const bool transparent);
   ~PluginSurfaceParent();
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   gfxASurface* Surface() { return mSurface; }
 

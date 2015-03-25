@@ -33,7 +33,7 @@ typedef nsSVGContainerFrame nsSVGMaskFrameBase;
 #define GFX_ARGB32_OFFSET_B 0
 #endif
 
-class nsSVGMaskFrame MOZ_FINAL : public nsSVGMaskFrameBase
+class nsSVGMaskFrame final : public nsSVGMaskFrameBase
 {
   friend nsIFrame*
   NS_NewSVGMaskFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
@@ -62,27 +62,27 @@ public:
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
                                     nsIAtom*        aAttribute,
-                                    int32_t         aModType) MOZ_OVERRIDE;
+                                    int32_t         aModType) override;
 
 #ifdef DEBUG
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
+                    nsIFrame*         aPrevInFlow) override;
 #endif
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE {}
+                                const nsDisplayListSet& aLists) override {}
 
   /**
    * Get the "type" of the frame
    *
    * @see nsGkAtoms::svgMaskFrame
    */
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
+  virtual nsresult GetFrameName(nsAString& aResult) const override
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGMask"), aResult);
   }
@@ -123,7 +123,7 @@ private:
   bool mInUse;
 
   // nsSVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM() MOZ_OVERRIDE;
+  virtual gfxMatrix GetCanvasTM() override;
 };
 
 #endif

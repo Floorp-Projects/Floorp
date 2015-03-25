@@ -316,8 +316,8 @@ class JSAPITest
 #define BEGIN_TEST(testname)                                            \
     class cls_##testname : public JSAPITest {                           \
       public:                                                           \
-        virtual const char * name() MOZ_OVERRIDE { return #testname; }  \
-        virtual bool run(JS::HandleObject global) MOZ_OVERRIDE
+        virtual const char * name() override { return #testname; }  \
+        virtual bool run(JS::HandleObject global) override
 
 #define END_TEST(testname)                                              \
     };                                                                  \
@@ -334,8 +334,8 @@ class JSAPITest
 #define BEGIN_FIXTURE_TEST(fixture, testname)                           \
     class cls_##testname : public fixture {                             \
       public:                                                           \
-        virtual const char * name() MOZ_OVERRIDE { return #testname; }  \
-        virtual bool run(JS::HandleObject global) MOZ_OVERRIDE
+        virtual const char * name() override { return #testname; }  \
+        virtual bool run(JS::HandleObject global) override
 
 #define END_FIXTURE_TEST(fixture, testname)                             \
     };                                                                  \

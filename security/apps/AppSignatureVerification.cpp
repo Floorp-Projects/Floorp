@@ -845,7 +845,7 @@ VerifySignedManifest(AppTrustedRoot aTrustedRoot,
   return NS_OK;
 }
 
-class OpenSignedAppFileTask MOZ_FINAL : public CryptoTask
+class OpenSignedAppFileTask final : public CryptoTask
 {
 public:
   OpenSignedAppFileTask(AppTrustedRoot aTrustedRoot, nsIFile* aJarFile,
@@ -857,7 +857,7 @@ public:
   }
 
 private:
-  virtual nsresult CalculateResult() MOZ_OVERRIDE
+  virtual nsresult CalculateResult() override
   {
     return OpenSignedAppFile(mTrustedRoot, mJarFile,
                              getter_AddRefs(mZipReader),
@@ -866,9 +866,9 @@ private:
 
   // nsNSSCertificate implements nsNSSShutdownObject, so there's nothing that
   // needs to be released
-  virtual void ReleaseNSSResources() MOZ_OVERRIDE { }
+  virtual void ReleaseNSSResources() override { }
 
-  virtual void CallCallback(nsresult rv) MOZ_OVERRIDE
+  virtual void CallCallback(nsresult rv) override
   {
     (void) mCallback->OpenSignedAppFileFinished(rv, mZipReader, mSignerCert);
   }
@@ -880,7 +880,7 @@ private:
   nsCOMPtr<nsIX509Cert> mSignerCert; // out
 };
 
-class VerifySignedmanifestTask MOZ_FINAL : public CryptoTask
+class VerifySignedmanifestTask final : public CryptoTask
 {
 public:
   VerifySignedmanifestTask(AppTrustedRoot aTrustedRoot,
@@ -896,7 +896,7 @@ public:
   }
 
 private:
-  virtual nsresult CalculateResult() MOZ_OVERRIDE
+  virtual nsresult CalculateResult() override
   {
     return VerifySignedManifest(mTrustedRoot, mManifestStream,
                                 mSignatureStream, getter_AddRefs(mSignerCert));
@@ -904,9 +904,9 @@ private:
 
   // nsNSSCertificate implements nsNSSShutdownObject, so there's nothing that
   // needs to be released
-  virtual void ReleaseNSSResources() MOZ_OVERRIDE { }
+  virtual void ReleaseNSSResources() override { }
 
-  virtual void CallCallback(nsresult rv) MOZ_OVERRIDE
+  virtual void CallCallback(nsresult rv) override
   {
     (void) mCallback->VerifySignedManifestFinished(rv, mSignerCert);
   }

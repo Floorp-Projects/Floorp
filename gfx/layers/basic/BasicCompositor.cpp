@@ -35,23 +35,23 @@ class DataTextureSourceBasic : public DataTextureSource
 {
 public:
 
-  virtual TextureSourceBasic* AsSourceBasic() MOZ_OVERRIDE { return this; }
+  virtual TextureSourceBasic* AsSourceBasic() override { return this; }
 
-  virtual gfx::SourceSurface* GetSurface(DrawTarget* aTarget) MOZ_OVERRIDE { return mSurface; }
+  virtual gfx::SourceSurface* GetSurface(DrawTarget* aTarget) override { return mSurface; }
 
-  SurfaceFormat GetFormat() const MOZ_OVERRIDE
+  SurfaceFormat GetFormat() const override
   {
     return mSurface->GetFormat();
   }
 
-  virtual IntSize GetSize() const MOZ_OVERRIDE
+  virtual IntSize GetSize() const override
   {
     return mSurface->GetSize();
   }
 
   virtual bool Update(gfx::DataSourceSurface* aSurface,
                       nsIntRegion* aDestRegion = nullptr,
-                      gfx::IntPoint* aSrcOffset = nullptr) MOZ_OVERRIDE
+                      gfx::IntPoint* aSrcOffset = nullptr) override
   {
     // XXX - For this to work with IncrementalContentHost we will need to support
     // the aDestRegion and aSrcOffset parameters properly;
@@ -59,7 +59,7 @@ public:
     return true;
   }
 
-  virtual void DeallocateDeviceData() MOZ_OVERRIDE
+  virtual void DeallocateDeviceData() override
   {
     mSurface = nullptr;
     SetUpdateSerial(0);

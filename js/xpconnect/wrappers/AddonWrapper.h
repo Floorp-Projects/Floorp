@@ -26,18 +26,18 @@ class AddonWrapper : public Base {
 
     virtual bool getOwnPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                           JS::Handle<jsid> id,
-                                          JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+                                          JS::MutableHandle<JSPropertyDescriptor> desc) const override;
     virtual bool defineProperty(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
-                                JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
-    virtual bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp) const MOZ_OVERRIDE;
+                                JS::MutableHandle<JSPropertyDescriptor> desc) const override;
+    virtual bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, bool *bp) const override;
     virtual bool get(JSContext *cx, JS::Handle<JSObject*> wrapper, JS::Handle<JSObject*> receiver,
-                     JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) const MOZ_OVERRIDE;
+                     JS::Handle<jsid> id, JS::MutableHandle<JS::Value> vp) const override;
     virtual bool set(JSContext *cx, JS::HandleObject wrapper, JS::HandleObject receiver,
-                     JS::HandleId id, bool strict, JS::MutableHandleValue vp) const MOZ_OVERRIDE;
+                     JS::HandleId id, bool strict, JS::MutableHandleValue vp) const override;
 
     virtual bool getPropertyDescriptor(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                        JS::Handle<jsid> id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc) const MOZ_OVERRIDE;
+                                       JS::MutableHandle<JSPropertyDescriptor> desc) const override;
 
     static const AddonWrapper singleton;
 };

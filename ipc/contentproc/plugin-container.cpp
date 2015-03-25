@@ -90,7 +90,7 @@ void StartSandboxCallback()
 
 class WinSandboxStarter : public mozilla::gmp::SandboxStarter {
 public:
-    virtual void Start(const char *aLibPath) MOZ_OVERRIDE {
+    virtual void Start(const char *aLibPath) override {
         StartSandboxCallback();
     }
 };
@@ -109,7 +109,7 @@ public:
             return nullptr;
         }
     }
-    virtual void Start(const char *aLibPath) MOZ_OVERRIDE {
+    virtual void Start(const char *aLibPath) override {
         mozilla::SetMediaPluginSandbox(aLibPath);
     }
 };

@@ -8,7 +8,7 @@
 #include "nsISocketProvider.h"
 #include "mozilla/Attributes.h"
 
-class nsUDPSocketProvider MOZ_FINAL : public nsISocketProvider
+class nsUDPSocketProvider final : public nsISocketProvider
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

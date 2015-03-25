@@ -15,7 +15,7 @@ class nsIRequestObserver;
 
 //-----------------------------------------------------------------------------
 
-class nsAsyncStreamCopier MOZ_FINAL : public nsIAsyncStreamCopier,
+class nsAsyncStreamCopier final : public nsIAsyncStreamCopier,
                                       nsIAsyncStreamCopier2
 {
 public:
@@ -31,7 +31,7 @@ public:
                     nsIEventTarget *aTarget,
                     uint32_t aChunkSize,
                     bool aCloseSource,
-                    bool aCloseSink) MOZ_OVERRIDE;
+                    bool aCloseSink) override;
 
     nsAsyncStreamCopier();
 

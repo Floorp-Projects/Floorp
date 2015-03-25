@@ -17,7 +17,7 @@
 namespace mozilla
 {
 
-class SipccSdpParser MOZ_FINAL : public SdpErrorHolder
+class SipccSdpParser final : public SdpErrorHolder
 {
 public:
   SipccSdpParser() {}

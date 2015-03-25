@@ -15,7 +15,7 @@
 class nsXBLPrototypeBinding;
 class nsXBLProtoImplAnonymousMethod;
 
-class nsXBLProtoImpl MOZ_FINAL
+class nsXBLProtoImpl final
 {
 public:
   nsXBLProtoImpl()

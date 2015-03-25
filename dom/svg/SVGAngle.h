@@ -15,7 +15,7 @@ class nsSVGAngle;
 namespace mozilla {
 namespace dom {
 
-class SVGAngle MOZ_FINAL : public nsWrapperCache
+class SVGAngle final : public nsWrapperCache
 {
 public:
   typedef enum {
@@ -34,7 +34,7 @@ public:
 
   // WebIDL
   nsSVGElement* GetParentObject() { return mSVGElement; }
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) override;
   uint16_t UnitType() const;
   float Value() const;
   void GetValueAsString(nsAString& aValue);

@@ -13,7 +13,7 @@
 #ifndef __nsWifiAccessPoint__
 #define __nsWifiAccessPoint__
 
-class nsWifiAccessPoint MOZ_FINAL : public nsIWifiAccessPoint
+class nsWifiAccessPoint final : public nsIWifiAccessPoint
 {
   ~nsWifiAccessPoint();
 

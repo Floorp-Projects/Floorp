@@ -163,8 +163,8 @@ public:
      return GetOwner();
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
-  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) override;
+  virtual void DisconnectFromOwner() override;
 
   /**
    * Set this adapter's discovery handle in use (mDiscoveryHandleInUse).

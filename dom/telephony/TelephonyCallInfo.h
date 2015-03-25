@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 namespace telephony {
 
-class TelephonyCallInfo MOZ_FINAL : public nsITelephonyCallInfo
+class TelephonyCallInfo final : public nsITelephonyCallInfo
 {
 public:
   NS_DECL_ISUPPORTS

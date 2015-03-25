@@ -41,7 +41,7 @@
 #include "nsISimpleEnumerator.h"
 #include "mozilla/Attributes.h"
 
-class mozHunspellDirProvider MOZ_FINAL :
+class mozHunspellDirProvider final :
   public nsIDirectoryServiceProvider2
 {
 public:
@@ -54,7 +54,7 @@ public:
 private:
   ~mozHunspellDirProvider() {}
 
-  class AppendingEnumerator MOZ_FINAL : public nsISimpleEnumerator
+  class AppendingEnumerator final : public nsISimpleEnumerator
   {
   public:
     NS_DECL_ISUPPORTS

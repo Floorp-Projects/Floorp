@@ -83,7 +83,7 @@ private:
   const bool mMinimizeMemoryUsage;
 };
 
-class GCAndCCLogDumpRunnable MOZ_FINAL
+class GCAndCCLogDumpRunnable final
   : public nsRunnable
   , public nsIDumpGCAndCCLogsCallback
 {
@@ -99,7 +99,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     nsCOMPtr<nsIMemoryInfoDumper> dumper =
       do_GetService("@mozilla.org/memory-info-dumper;1");
@@ -109,12 +109,12 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD OnDump(nsIFile* aGCLog, nsIFile* aCCLog, bool aIsParent) MOZ_OVERRIDE
+  NS_IMETHOD OnDump(nsIFile* aGCLog, nsIFile* aCCLog, bool aIsParent) override
   {
     return NS_OK;
   }
 
-  NS_IMETHOD OnFinish() MOZ_OVERRIDE
+  NS_IMETHOD OnFinish() override
   {
     return NS_OK;
   }
@@ -318,7 +318,7 @@ EnsureNonEmptyIdentifier(nsAString& aIdentifier)
 // Use XPCOM refcounting to fire |onFinish| when all reference-holders
 // (remote dump actors or the |DumpGCAndCCLogsToFile| activation itself)
 // have gone away.
-class nsDumpGCAndCCLogsCallbackHolder MOZ_FINAL
+class nsDumpGCAndCCLogsCallbackHolder final
   : public nsIDumpGCAndCCLogsCallback
 {
 public:
@@ -329,12 +329,12 @@ public:
   {
   }
 
-  NS_IMETHODIMP OnFinish() MOZ_OVERRIDE
+  NS_IMETHODIMP OnFinish() override
   {
     return NS_ERROR_UNEXPECTED;
   }
 
-  NS_IMETHODIMP OnDump(nsIFile* aGCLog, nsIFile* aCCLog, bool aIsParent) MOZ_OVERRIDE
+  NS_IMETHODIMP OnDump(nsIFile* aGCLog, nsIFile* aCCLog, bool aIsParent) override
   {
     return mCallback->OnDump(aGCLog, aCCLog, aIsParent);
   }
@@ -456,7 +456,7 @@ private:
 // We need two callbacks: one that handles reports, and one that is called at
 // the end of reporting. Both the callbacks need access to the same JSONWriter,
 // so we implement both of them in this one class.
-class HandleReportAndFinishReportingCallbacks MOZ_FINAL
+class HandleReportAndFinishReportingCallbacks final
   : public nsIHandleReportCallback, public nsIFinishReportingCallback
 {
 public:
@@ -475,7 +475,7 @@ public:
   NS_IMETHOD Callback(const nsACString& aProcess, const nsACString& aPath,
                       int32_t aKind, int32_t aUnits, int64_t aAmount,
                       const nsACString& aDescription,
-                      nsISupports* aData) MOZ_OVERRIDE
+                      nsISupports* aData) override
   {
     nsAutoCString process;
     if (aProcess.IsEmpty()) {
@@ -515,7 +515,7 @@ public:
   }
 
   // This is the callback for nsIFinishReportingCallback.
-  NS_IMETHOD Callback(nsISupports* aData) MOZ_OVERRIDE
+  NS_IMETHOD Callback(nsISupports* aData) override
   {
     mWriter->EndArray();  // end of "reports" array
     mWriter->End();
@@ -546,7 +546,7 @@ private:
 NS_IMPL_ISUPPORTS(HandleReportAndFinishReportingCallbacks,
                   nsIHandleReportCallback, nsIFinishReportingCallback)
 
-class TempDirFinishCallback MOZ_FINAL : public nsIFinishDumpingCallback
+class TempDirFinishCallback final : public nsIFinishDumpingCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -558,7 +558,7 @@ public:
   {
   }
 
-  NS_IMETHOD Callback(nsISupports* aData) MOZ_OVERRIDE
+  NS_IMETHOD Callback(nsISupports* aData) override
   {
     // Rename the memory reports file, now that we're done writing all the
     // files. Its final name is "memory-report<-identifier>-<pid>.json.gz".

@@ -25,7 +25,7 @@ public:
   // nsIFrame replacements
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE {
+                                const nsDisplayListSet& aLists) override {
     DO_GLOBAL_REFLOW_COUNT_DSP("nsLeafFrame");
     DisplayBorderBackgroundOutline(aBuilder, aLists);
   }
@@ -34,8 +34,8 @@ public:
    * Both GetMinISize and GetPrefISize will return whatever GetIntrinsicISize
    * returns.
    */
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
   /**
    * Our auto size is just intrinsic width and intrinsic height.
@@ -48,7 +48,7 @@ public:
                   const mozilla::LogicalSize& aMargin,
                   const mozilla::LogicalSize& aBorder,
                   const mozilla::LogicalSize& aPadding,
-                  bool aShrinkWrap) MOZ_OVERRIDE;
+                  bool aShrinkWrap) override;
 
   /**
    * Reflow our frame.  This will use the computed width plus borderpadding for
@@ -59,7 +59,7 @@ public:
   virtual void Reflow(nsPresContext*      aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&      aStatus) MOZ_OVERRIDE;
+                      nsReflowStatus&      aStatus) override;
   
   /**
    * This method does most of the work that Reflow() above need done.
@@ -69,7 +69,7 @@ public:
                         const nsHTMLReflowState& aReflowState,
                         nsReflowStatus&      aStatus);
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
+  virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     // We don't actually contain a block, but we do always want a
     // computed width, so tell a little white lie here.

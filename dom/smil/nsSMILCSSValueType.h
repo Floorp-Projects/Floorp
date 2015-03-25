@@ -34,22 +34,22 @@ public:
 protected:
   // nsISMILType Methods
   // -------------------
-  virtual void     Init(nsSMILValue& aValue) const MOZ_OVERRIDE;
-  virtual void     Destroy(nsSMILValue&) const MOZ_OVERRIDE;
+  virtual void     Init(nsSMILValue& aValue) const override;
+  virtual void     Destroy(nsSMILValue&) const override;
   virtual nsresult Assign(nsSMILValue& aDest,
-                          const nsSMILValue& aSrc) const MOZ_OVERRIDE;
+                          const nsSMILValue& aSrc) const override;
   virtual bool     IsEqual(const nsSMILValue& aLeft,
-                           const nsSMILValue& aRight) const MOZ_OVERRIDE;
+                           const nsSMILValue& aRight) const override;
   virtual nsresult Add(nsSMILValue& aDest,
                        const nsSMILValue& aValueToAdd,
-                       uint32_t aCount) const MOZ_OVERRIDE;
+                       uint32_t aCount) const override;
   virtual nsresult ComputeDistance(const nsSMILValue& aFrom,
                                    const nsSMILValue& aTo,
-                                   double& aDistance) const MOZ_OVERRIDE;
+                                   double& aDistance) const override;
   virtual nsresult Interpolate(const nsSMILValue& aStartVal,
                                const nsSMILValue& aEndVal,
                                double aUnitDistance,
-                               nsSMILValue& aResult) const MOZ_OVERRIDE;
+                               nsSMILValue& aResult) const override;
 
 public:
   // Helper Methods

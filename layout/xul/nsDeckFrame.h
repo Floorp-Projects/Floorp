@@ -29,29 +29,29 @@ public:
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
                                     nsIAtom*        aAttribute,
-                                    int32_t         aModType) MOZ_OVERRIDE;
+                                    int32_t         aModType) override;
 
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aState) MOZ_OVERRIDE;
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aState) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
   virtual void RemoveFrame(ChildListID aListID,
-                           nsIFrame* aOldFrame) MOZ_OVERRIDE;
+                           nsIFrame* aOldFrame) override;
 
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,
-                                           const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                           const nsDisplayListSet& aLists) override;
                                          
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
+                    nsIFrame*         aPrevInFlow) override;
 
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
+  virtual nsresult GetFrameName(nsAString& aResult) const override
   {
       return MakeFrameName(NS_LITERAL_STRING("Deck"), aResult);
   }

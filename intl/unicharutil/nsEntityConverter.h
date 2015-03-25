@@ -39,10 +39,10 @@ public:
 	//
 	// nsIEntityConverter
 	//
-	NS_IMETHOD ConvertUTF32ToEntity(uint32_t character, uint32_t entityVersion, char **_retval) MOZ_OVERRIDE;
-	NS_IMETHOD ConvertToEntity(char16_t character, uint32_t entityVersion, char **_retval) MOZ_OVERRIDE;
+	NS_IMETHOD ConvertUTF32ToEntity(uint32_t character, uint32_t entityVersion, char **_retval) override;
+	NS_IMETHOD ConvertToEntity(char16_t character, uint32_t entityVersion, char **_retval) override;
 
-	NS_IMETHOD ConvertToEntities(const char16_t *inString, uint32_t entityVersion, char16_t **_retval) MOZ_OVERRIDE;
+	NS_IMETHOD ConvertToEntities(const char16_t *inString, uint32_t entityVersion, char16_t **_retval) override;
 
 protected:
 

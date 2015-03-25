@@ -15,17 +15,17 @@ class MP4Decoder : public MediaDecoder
 {
 public:
 
-  virtual MediaDecoder* Clone() MOZ_OVERRIDE {
+  virtual MediaDecoder* Clone() override {
     if (!IsEnabled()) {
       return nullptr;
     }
     return new MP4Decoder();
   }
 
-  virtual MediaDecoderStateMachine* CreateStateMachine() MOZ_OVERRIDE;
+  virtual MediaDecoderStateMachine* CreateStateMachine() override;
 
 #ifdef MOZ_EME
-  virtual nsresult SetCDMProxy(CDMProxy* aProxy) MOZ_OVERRIDE;
+  virtual nsresult SetCDMProxy(CDMProxy* aProxy) override;
 #endif
 
   // Returns true if aMIMEType is a type that we think we can render with the

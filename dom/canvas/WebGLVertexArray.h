@@ -54,7 +54,7 @@ public:
         return Context();
     }
 
-    virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* cx) override;
 
     NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(WebGLVertexArray)
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(WebGLVertexArray)

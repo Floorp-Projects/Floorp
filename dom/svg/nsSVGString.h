@@ -51,7 +51,7 @@ private:
   bool mIsBaseSet;
 
 public:
-  struct DOMAnimatedString MOZ_FINAL : public mozilla::dom::SVGAnimatedString
+  struct DOMAnimatedString final : public mozilla::dom::SVGAnimatedString
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimatedString)
@@ -63,17 +63,17 @@ public:
 
     nsSVGString* mVal; // kept alive because it belongs to content
 
-    void GetBaseVal(nsAString & aResult) MOZ_OVERRIDE
+    void GetBaseVal(nsAString & aResult) override
     {
       mVal->GetBaseValue(aResult, mSVGElement);
     }
 
-    void SetBaseVal(const nsAString & aValue) MOZ_OVERRIDE
+    void SetBaseVal(const nsAString & aValue) override
     {
       mVal->SetBaseValue(aValue, mSVGElement, true);
     }
 
-    void GetAnimVal(nsAString & aResult) MOZ_OVERRIDE
+    void GetAnimVal(nsAString & aResult) override
     {
       mSVGElement->FlushAnimations();
       mVal->GetAnimValue(aResult, mSVGElement);
@@ -98,10 +98,10 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const mozilla::dom::SVGAnimationElement *aSrcElement,
                                      nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const MOZ_OVERRIDE;
-    virtual nsSMILValue GetBaseValue() const MOZ_OVERRIDE;
-    virtual void ClearAnimValue() MOZ_OVERRIDE;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) MOZ_OVERRIDE;
+                                     bool& aPreventCachingOfSandwich) const override;
+    virtual nsSMILValue GetBaseValue() const override;
+    virtual void ClearAnimValue() override;
+    virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
 #endif //__NS_SVGSTRING_H__

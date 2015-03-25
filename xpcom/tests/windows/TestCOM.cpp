@@ -30,7 +30,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsITestCom, NS_ITEST_COM_IID)
  * nsTestCom
  */
 
-class nsTestCom MOZ_FINAL : public nsITestCom {
+class nsTestCom final : public nsITestCom {
   NS_DECL_ISUPPORTS
 
 public:
@@ -69,7 +69,7 @@ MozExternalRefCountType nsTestCom::Release()
   return res;
 }
 
-class nsTestComFactory MOZ_FINAL : public nsIFactory {
+class nsTestComFactory final : public nsIFactory {
   ~nsTestComFactory() {}
   NS_DECL_ISUPPORTS
 public:

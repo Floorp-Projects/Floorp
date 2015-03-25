@@ -81,7 +81,7 @@
 { 0x56c778e4, 0x1bee, 0x45f3, \
   { 0xa6, 0x89, 0x88, 0x66, 0x92, 0xa9, 0x7f, 0xe7 } }
 
-class mozHunspell MOZ_FINAL : public mozISpellCheckingEngine,
+class mozHunspell final : public mozISpellCheckingEngine,
                               public nsIObserver,
                               public nsSupportsWeakReference,
                               public nsIMemoryReporter
@@ -102,7 +102,7 @@ public:
   nsresult ConvertCharset(const char16_t* aStr, char ** aDst);
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                            nsISupports* aData, bool aAnonymize) override
   {
     return MOZ_COLLECT_REPORT(
       "explicit/spell-check", KIND_HEAP, UNITS_BYTES, HunspellAllocator::MemoryAllocated(),

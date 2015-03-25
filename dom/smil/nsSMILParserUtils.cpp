@@ -586,7 +586,7 @@ public:
     mPreventCachingOfSandwich(aPreventCachingOfSandwich)
   {}
 
-  virtual bool Parse(const nsAString& aValueStr) MOZ_OVERRIDE {
+  virtual bool Parse(const nsAString& aValueStr) override {
     nsSMILValue newValue;
     bool tmpPreventCachingOfSandwich = false;
     if (NS_FAILED(mSMILAttr->ValueFromString(aValueStr, mSrcElement, newValue,

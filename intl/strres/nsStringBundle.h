@@ -59,7 +59,7 @@ class nsExtensibleStringBundle;
  * @created         28/Dec/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsExtensibleStringBundle MOZ_FINAL : public nsIStringBundle
+class nsExtensibleStringBundle final : public nsIStringBundle
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTRINGBUNDLE

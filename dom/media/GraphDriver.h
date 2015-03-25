@@ -256,21 +256,21 @@ class ThreadedDriver : public GraphDriver
 public:
   explicit ThreadedDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~ThreadedDriver();
-  virtual void Start() MOZ_OVERRIDE;
-  virtual void Stop() MOZ_OVERRIDE;
-  virtual void Resume() MOZ_OVERRIDE;
-  virtual void Revive() MOZ_OVERRIDE;
+  virtual void Start() override;
+  virtual void Stop() override;
+  virtual void Resume() override;
+  virtual void Revive() override;
   /**
    * Runs main control loop on the graph thread. Normally a single invocation
    * of this runs for the entire lifetime of the graph thread.
    */
   void RunThread();
   friend class MediaStreamGraphInitThreadRunnable;
-  virtual uint32_t IterationDuration() MOZ_OVERRIDE {
+  virtual uint32_t IterationDuration() override {
     return MEDIA_GRAPH_TARGET_PERIOD_MS;
   }
 
-  virtual bool OnThread() MOZ_OVERRIDE { return !mThread || NS_GetCurrentThread() == mThread; }
+  virtual bool OnThread() override { return !mThread || NS_GetCurrentThread() == mThread; }
 
 protected:
   nsCOMPtr<nsIThread> mThread;
@@ -286,10 +286,10 @@ public:
   explicit SystemClockDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~SystemClockDriver();
   virtual void GetIntervalForIteration(GraphTime& aFrom,
-                                       GraphTime& aTo) MOZ_OVERRIDE;
-  virtual GraphTime GetCurrentTime() MOZ_OVERRIDE;
-  virtual void WaitForNextIteration() MOZ_OVERRIDE;
-  virtual void WakeUp() MOZ_OVERRIDE;
+                                       GraphTime& aTo) override;
+  virtual GraphTime GetCurrentTime() override;
+  virtual void WaitForNextIteration() override;
+  virtual void WakeUp() override;
 
 
 private:
@@ -307,12 +307,12 @@ public:
   OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl, GraphTime aSlice);
   virtual ~OfflineClockDriver();
   virtual void GetIntervalForIteration(GraphTime& aFrom,
-                                       GraphTime& aTo) MOZ_OVERRIDE;
-  virtual GraphTime GetCurrentTime() MOZ_OVERRIDE;
-  virtual void WaitForNextIteration() MOZ_OVERRIDE;
-  virtual void WakeUp() MOZ_OVERRIDE;
-  virtual TimeStamp GetCurrentTimeStamp() MOZ_OVERRIDE;
-  virtual OfflineClockDriver* AsOfflineClockDriver() MOZ_OVERRIDE {
+                                       GraphTime& aTo) override;
+  virtual GraphTime GetCurrentTime() override;
+  virtual void WaitForNextIteration() override;
+  virtual void WakeUp() override;
+  virtual TimeStamp GetCurrentTimeStamp() override;
+  virtual OfflineClockDriver* AsOfflineClockDriver() override {
     return this;
   }
 
@@ -349,16 +349,16 @@ public:
                                dom::AudioChannel aChannel = dom::AudioChannel::Normal);
   virtual ~AudioCallbackDriver();
 
-  virtual void Destroy() MOZ_OVERRIDE;
-  virtual void Start() MOZ_OVERRIDE;
-  virtual void Stop() MOZ_OVERRIDE;
-  virtual void Resume() MOZ_OVERRIDE;
-  virtual void Revive() MOZ_OVERRIDE;
+  virtual void Destroy() override;
+  virtual void Start() override;
+  virtual void Stop() override;
+  virtual void Resume() override;
+  virtual void Revive() override;
   virtual void GetIntervalForIteration(GraphTime& aFrom,
-                                       GraphTime& aTo) MOZ_OVERRIDE;
-  virtual GraphTime GetCurrentTime() MOZ_OVERRIDE;
-  virtual void WaitForNextIteration() MOZ_OVERRIDE;
-  virtual void WakeUp() MOZ_OVERRIDE;
+                                       GraphTime& aTo) override;
+  virtual GraphTime GetCurrentTime() override;
+  virtual void WaitForNextIteration() override;
+  virtual void WakeUp() override;
 
   /* Static wrapper function cubeb calls back. */
   static long DataCallback_s(cubeb_stream * aStream,
@@ -378,7 +378,7 @@ public:
   void StateCallback(cubeb_state aState);
   /* This is an approximation of the number of millisecond there are between two
    * iterations of the graph. */
-  virtual uint32_t IterationDuration() MOZ_OVERRIDE;
+  virtual uint32_t IterationDuration() override;
 
   /* This function gets called when the graph has produced the audio frames for
    * this iteration. */
@@ -386,9 +386,9 @@ public:
                              AudioSampleFormat aFormat,
                              uint32_t aChannels,
                              uint32_t aFrames,
-                             uint32_t aSampleRate) MOZ_OVERRIDE;
+                             uint32_t aSampleRate) override;
 
-  virtual AudioCallbackDriver* AsAudioCallbackDriver() MOZ_OVERRIDE {
+  virtual AudioCallbackDriver* AsAudioCallbackDriver() override {
     return this;
   }
 
@@ -405,7 +405,7 @@ public:
    */
   bool InCallback();
 
-  virtual bool OnThread() MOZ_OVERRIDE { return !mStarted || InCallback(); }
+  virtual bool OnThread() override { return !mStarted || InCallback(); }
 
   /* Whether the underlying cubeb stream has been started. See comment for
    * mStarted for details. */
@@ -522,7 +522,7 @@ protected:
   virtual ~AsyncCubebTask();
 
 private:
-  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL;
+  NS_IMETHOD Run() override final;
   nsCOMPtr<nsIThread> mThread;
   nsRefPtr<AudioCallbackDriver> mDriver;
   AsyncCubebOperation mOperation;

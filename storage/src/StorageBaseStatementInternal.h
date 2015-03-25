@@ -153,10 +153,10 @@ NS_DEFINE_STATIC_IID_ACCESSOR(StorageBaseStatementInternal,
 
 #define NS_DECL_STORAGEBASESTATEMENTINTERNAL \
   virtual Connection *getOwner(); \
-  virtual int getAsyncStatement(sqlite3_stmt **_stmt) MOZ_OVERRIDE; \
-  virtual nsresult getAsynchronousStatementData(StatementData &_data) MOZ_OVERRIDE; \
+  virtual int getAsyncStatement(sqlite3_stmt **_stmt) override; \
+  virtual nsresult getAsynchronousStatementData(StatementData &_data) override; \
   virtual already_AddRefed<mozIStorageBindingParams> newBindingParams( \
-    mozIStorageBindingParamsArray *aOwner) MOZ_OVERRIDE;
+    mozIStorageBindingParamsArray *aOwner) override;
 
 /**
  * Helper macro to implement the proxying implementations.  Because we are

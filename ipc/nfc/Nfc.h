@@ -20,7 +20,7 @@ public:
   virtual void ReceiveSocketData(nsAutoPtr<UnixSocketRawData>& aData) = 0;
 };
 
-class NfcConsumer MOZ_FINAL : public mozilla::ipc::StreamSocket
+class NfcConsumer final : public mozilla::ipc::StreamSocket
 {
 public:
   NfcConsumer(NfcSocketListener* aListener);
@@ -28,15 +28,15 @@ public:
   void Shutdown();
   bool PostToNfcDaemon(const uint8_t* aData, size_t aSize);
 
-  ConnectionOrientedSocketIO* GetIO() MOZ_OVERRIDE;
+  ConnectionOrientedSocketIO* GetIO() override;
 
 private:
   void ReceiveSocketData(
-    nsAutoPtr<UnixSocketRawData>& aData) MOZ_OVERRIDE;
+    nsAutoPtr<UnixSocketRawData>& aData) override;
 
-  void OnConnectSuccess() MOZ_OVERRIDE;
-  void OnConnectError() MOZ_OVERRIDE;
-  void OnDisconnect() MOZ_OVERRIDE;
+  void OnConnectSuccess() override;
+  void OnConnectError() override;
+  void OnDisconnect() override;
 
 private:
   NfcSocketListener* mListener;

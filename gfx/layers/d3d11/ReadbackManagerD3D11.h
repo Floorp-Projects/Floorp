@@ -18,7 +18,7 @@ namespace layers {
 class TextureReadbackSink;
 struct ReadbackTask;
 
-class ReadbackManagerD3D11 MOZ_FINAL
+class ReadbackManagerD3D11 final
 {
   NS_INLINE_DECL_REFCOUNTING(ReadbackManagerD3D11)
 public:

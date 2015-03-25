@@ -1,4 +1,4 @@
-/* -*- Mode: C++ MOZ_FINAL; tab-width: 2 MOZ_FINAL; indent-tabs-mode: nil MOZ_FINAL; c-basic-offset: 2 -*- */
+/* -*- Mode: C++ final; tab-width: 2 final; indent-tabs-mode: nil final; c-basic-offset: 2 -*- */
 /* vim: set ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
@@ -26,55 +26,55 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessibleTable
-  NS_IMETHOD GetCaption(nsIAccessible** aCaption) MOZ_FINAL MOZ_OVERRIDE;
-  NS_IMETHOD GetSummary(nsAString& aSummary) MOZ_FINAL MOZ_OVERRIDE;
-  NS_IMETHOD GetColumnCount(int32_t* aColumnCount) MOZ_FINAL MOZ_OVERRIDE;
-  NS_IMETHOD GetRowCount(int32_t* aRowCount) MOZ_FINAL MOZ_OVERRIDE;
+  NS_IMETHOD GetCaption(nsIAccessible** aCaption) final override;
+  NS_IMETHOD GetSummary(nsAString& aSummary) final override;
+  NS_IMETHOD GetColumnCount(int32_t* aColumnCount) final override;
+  NS_IMETHOD GetRowCount(int32_t* aRowCount) final override;
   NS_IMETHOD GetCellAt(int32_t aRowIndex, int32_t aColumnIndex,
-                       nsIAccessible** aCell) MOZ_FINAL MOZ_OVERRIDE;
+                       nsIAccessible** aCell) final override;
   NS_IMETHOD GetCellIndexAt(int32_t aRowIndex, int32_t aColumnIndex,
-                            int32_t* aCellIndex) MOZ_FINAL MOZ_OVERRIDE;
+                            int32_t* aCellIndex) final override;
   NS_IMETHOD GetColumnIndexAt(int32_t aCellIndex, int32_t* aColumnIndex)
-    MOZ_FINAL MOZ_OVERRIDE;
+    final override;
   NS_IMETHOD GetRowIndexAt(int32_t aCellIndex, int32_t* aRowIndex)
-    MOZ_FINAL MOZ_OVERRIDE;
+    final override;
   NS_IMETHOD GetRowAndColumnIndicesAt(int32_t aCellIndex, int32_t* aRowIndex,
                                       int32_t* aColumnIndex)
-    MOZ_FINAL MOZ_OVERRIDE;
+    final override;
   NS_IMETHOD GetColumnExtentAt(int32_t row, int32_t column,
-                               int32_t* aColumnExtent) MOZ_FINAL MOZ_OVERRIDE;
+                               int32_t* aColumnExtent) final override;
   NS_IMETHOD GetRowExtentAt(int32_t row, int32_t column,
-                            int32_t* aRowExtent) MOZ_FINAL MOZ_OVERRIDE;
+                            int32_t* aRowExtent) final override;
   NS_IMETHOD GetColumnDescription(int32_t aColIdx, nsAString& aDescription)
-    MOZ_FINAL MOZ_OVERRIDE;
+    final override;
   NS_IMETHOD GetRowDescription(int32_t aRowIdx, nsAString& aDescription)
-    MOZ_FINAL MOZ_OVERRIDE;
+    final override;
   NS_IMETHOD IsColumnSelected(int32_t aColIdx, bool* _retval)
-    MOZ_FINAL MOZ_OVERRIDE;
+    final override;
   NS_IMETHOD IsRowSelected(int32_t aRowIdx, bool* _retval)
-    MOZ_FINAL MOZ_OVERRIDE;
+    final override;
   NS_IMETHOD IsCellSelected(int32_t aRowIdx, int32_t aColIdx, bool* _retval)
-    MOZ_FINAL MOZ_OVERRIDE;
+    final override;
   NS_IMETHOD GetSelectedCellCount(uint32_t* aSelectedCellCount)
-    MOZ_FINAL MOZ_OVERRIDE;
+    final override;
   NS_IMETHOD GetSelectedColumnCount(uint32_t* aSelectedColumnCount)
-    MOZ_FINAL MOZ_OVERRIDE;
+    final override;
   NS_IMETHOD GetSelectedRowCount(uint32_t* aSelectedRowCount)
-    MOZ_FINAL MOZ_OVERRIDE;
-  NS_IMETHOD GetSelectedCells(nsIArray** aSelectedCell) MOZ_FINAL MOZ_OVERRIDE;
+    final override;
+  NS_IMETHOD GetSelectedCells(nsIArray** aSelectedCell) final override;
   NS_IMETHOD GetSelectedCellIndices(uint32_t* aCellsArraySize,
                                     int32_t** aCellsArray)
-    MOZ_FINAL MOZ_OVERRIDE;
+    final override;
   NS_IMETHOD GetSelectedColumnIndices(uint32_t* aColsArraySize,
                                       int32_t** aColsArray)
-    MOZ_FINAL MOZ_OVERRIDE;
+    final override;
   NS_IMETHOD GetSelectedRowIndices(uint32_t* aRowsArraySize,
-                                   int32_t** aRowsArray) MOZ_FINAL MOZ_OVERRIDE;
-  NS_IMETHOD SelectColumn(int32_t aColIdx) MOZ_FINAL MOZ_OVERRIDE;
-  NS_IMETHOD SelectRow(int32_t aRowIdx) MOZ_FINAL MOZ_OVERRIDE;
-  NS_IMETHOD UnselectColumn(int32_t aColIdx) MOZ_FINAL MOZ_OVERRIDE;
-  NS_IMETHOD UnselectRow(int32_t aRowIdx) MOZ_FINAL MOZ_OVERRIDE;
-  NS_IMETHOD IsProbablyForLayout(bool* aIsForLayout) MOZ_FINAL MOZ_OVERRIDE;
+                                   int32_t** aRowsArray) final override;
+  NS_IMETHOD SelectColumn(int32_t aColIdx) final override;
+  NS_IMETHOD SelectRow(int32_t aRowIdx) final override;
+  NS_IMETHOD UnselectColumn(int32_t aColIdx) final override;
+  NS_IMETHOD UnselectRow(int32_t aRowIdx) final override;
+  NS_IMETHOD IsProbablyForLayout(bool* aIsForLayout) final override;
 
 protected:
   virtual ~xpcAccessibleTable() {}

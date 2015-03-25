@@ -23,7 +23,7 @@
  * Both of these caches are invalidated on the next tick of the event
  * loop.
  */
-class nsScreenManagerProxy MOZ_FINAL : public nsIScreenManager,
+class nsScreenManagerProxy final : public nsIScreenManager,
                                        public mozilla::dom::PScreenManagerChild
 {
 public:

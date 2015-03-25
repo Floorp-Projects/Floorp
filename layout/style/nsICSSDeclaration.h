@@ -66,14 +66,14 @@ public:
 
   // Also have to declare all the nsIDOMCSSStyleDeclaration methods,
   // since we want to be able to call them from the WebIDL versions.
-  NS_IMETHOD GetCssText(nsAString& aCssText) MOZ_OVERRIDE = 0;
-  NS_IMETHOD SetCssText(const nsAString& aCssText) MOZ_OVERRIDE = 0;
+  NS_IMETHOD GetCssText(nsAString& aCssText) override = 0;
+  NS_IMETHOD SetCssText(const nsAString& aCssText) override = 0;
   NS_IMETHOD GetPropertyValue(const nsAString& aPropName,
-                              nsAString& aValue) MOZ_OVERRIDE = 0;
+                              nsAString& aValue) override = 0;
   virtual already_AddRefed<mozilla::dom::CSSValue>
     GetPropertyCSSValue(const nsAString& aPropertyName,
                         mozilla::ErrorResult& aRv) = 0;
-  NS_IMETHOD GetPropertyCSSValue(const nsAString& aProp, nsIDOMCSSValue** aVal) MOZ_OVERRIDE
+  NS_IMETHOD GetPropertyCSSValue(const nsAString& aProp, nsIDOMCSSValue** aVal) override
   {
     mozilla::ErrorResult error;
     nsRefPtr<mozilla::dom::CSSValue> val = GetPropertyCSSValue(aProp, error);
@@ -86,14 +86,14 @@ public:
     return NS_OK;
   }
   NS_IMETHOD RemoveProperty(const nsAString& aPropertyName,
-                            nsAString& aReturn) MOZ_OVERRIDE = 0;
+                            nsAString& aReturn) override = 0;
   NS_IMETHOD GetPropertyPriority(const nsAString& aPropertyName,
-                                 nsAString& aReturn) MOZ_OVERRIDE = 0;
+                                 nsAString& aReturn) override = 0;
   NS_IMETHOD SetProperty(const nsAString& aPropertyName,
                          const nsAString& aValue,
-                         const nsAString& aPriority) MOZ_OVERRIDE = 0;
-  NS_IMETHOD GetLength(uint32_t* aLength) MOZ_OVERRIDE = 0;
-  NS_IMETHOD Item(uint32_t aIndex, nsAString& aReturn) MOZ_OVERRIDE
+                         const nsAString& aPriority) override = 0;
+  NS_IMETHOD GetLength(uint32_t* aLength) override = 0;
+  NS_IMETHOD Item(uint32_t aIndex, nsAString& aReturn) override
   {
     bool found;
     IndexedGetter(aIndex, found, aReturn);
@@ -102,7 +102,7 @@ public:
     }
     return NS_OK;
   }
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) MOZ_OVERRIDE = 0;
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) override = 0;
 
   // WebIDL interface for CSSStyleDeclaration
   void SetCssText(const nsAString& aString, mozilla::ErrorResult& rv) {
@@ -155,21 +155,21 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsICSSDeclaration, NS_ICSSDECLARATION_IID)
 
 #define NS_DECL_NSICSSDECLARATION                                   \
   NS_IMETHOD GetPropertyValue(const nsCSSProperty aPropID,          \
-                              nsAString& aValue) MOZ_OVERRIDE;      \
+                              nsAString& aValue) override;      \
   NS_IMETHOD GetAuthoredPropertyValue(const nsAString& aPropName,   \
-                                      nsAString& aValue) MOZ_OVERRIDE; \
+                                      nsAString& aValue) override; \
   NS_IMETHOD SetPropertyValue(const nsCSSProperty aPropID,          \
-                              const nsAString& aValue) MOZ_OVERRIDE;
+                              const nsAString& aValue) override;
 
 #define NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER \
-  NS_IMETHOD GetCssText(nsAString & aCssText) MOZ_OVERRIDE; \
-  NS_IMETHOD SetCssText(const nsAString & aCssText) MOZ_OVERRIDE; \
-  NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval) MOZ_OVERRIDE; \
-  NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval) MOZ_OVERRIDE; \
-  NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval) MOZ_OVERRIDE; \
-  NS_IMETHOD SetProperty(const nsAString & propertyName, const nsAString & value, const nsAString & priority) MOZ_OVERRIDE; \
-  NS_IMETHOD GetLength(uint32_t *aLength) MOZ_OVERRIDE; \
-  NS_IMETHOD Item(uint32_t index, nsAString & _retval) MOZ_OVERRIDE; \
-  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) MOZ_OVERRIDE;
+  NS_IMETHOD GetCssText(nsAString & aCssText) override; \
+  NS_IMETHOD SetCssText(const nsAString & aCssText) override; \
+  NS_IMETHOD GetPropertyValue(const nsAString & propertyName, nsAString & _retval) override; \
+  NS_IMETHOD RemoveProperty(const nsAString & propertyName, nsAString & _retval) override; \
+  NS_IMETHOD GetPropertyPriority(const nsAString & propertyName, nsAString & _retval) override; \
+  NS_IMETHOD SetProperty(const nsAString & propertyName, const nsAString & value, const nsAString & priority) override; \
+  NS_IMETHOD GetLength(uint32_t *aLength) override; \
+  NS_IMETHOD Item(uint32_t index, nsAString & _retval) override; \
+  NS_IMETHOD GetParentRule(nsIDOMCSSRule * *aParentRule) override;
 
 #endif // nsICSSDeclaration_h__

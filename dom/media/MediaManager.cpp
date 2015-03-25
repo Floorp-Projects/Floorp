@@ -607,7 +607,7 @@ public:
     }
   }
 
-  virtual void Stop() MOZ_OVERRIDE
+  virtual void Stop() override
   {
     if (mSourceStream) {
       mSourceStream->EndAllTrackAndFinish();
@@ -618,7 +618,7 @@ public:
   // single-source trackunion like we have here, the TrackUnion will assign trackids
   // that match the source's trackids, so we can avoid needing a mapping function.
   // XXX This will not handle more complex cases well.
-  virtual void StopTrack(TrackID aTrackID) MOZ_OVERRIDE
+  virtual void StopTrack(TrackID aTrackID) override
   {
     if (mSourceStream) {
       mSourceStream->EndTrack(aTrackID);
@@ -649,7 +649,7 @@ public:
 #endif
 
   // Allow getUserMedia to pass input data directly to PeerConnection/MediaPipeline
-  virtual bool AddDirectListener(MediaStreamDirectListener *aListener) MOZ_OVERRIDE
+  virtual bool AddDirectListener(MediaStreamDirectListener *aListener) override
   {
     if (mSourceStream) {
       mSourceStream->AddDirectListener(aListener);
@@ -673,7 +673,7 @@ public:
     mPlayoutDelay = aPlayoutDelay;
   }
 
-  virtual void RemoveDirectListener(MediaStreamDirectListener *aListener) MOZ_OVERRIDE
+  virtual void RemoveDirectListener(MediaStreamDirectListener *aListener) override
   {
     if (mSourceStream) {
       mSourceStream->RemoveDirectListener(aListener);
@@ -681,7 +681,7 @@ public:
   }
 
   // let us intervene for direct listeners when someone does track.enabled = false
-  virtual void SetTrackEnabled(TrackID aID, bool aEnabled) MOZ_OVERRIDE
+  virtual void SetTrackEnabled(TrackID aID, bool aEnabled) override
   {
     // We encapsulate the SourceMediaStream and TrackUnion into one entity, so
     // we can handle the disabling at the SourceMediaStream
@@ -691,12 +691,12 @@ public:
     GetStream()->AsProcessedStream()->ForwardTrackEnabled(aID, aEnabled);
   }
 
-  virtual DOMLocalMediaStream* AsDOMLocalMediaStream() MOZ_OVERRIDE
+  virtual DOMLocalMediaStream* AsDOMLocalMediaStream() override
   {
     return this;
   }
 
-  virtual MediaEngineSource* GetMediaEngine(TrackID aTrackID) MOZ_OVERRIDE
+  virtual MediaEngineSource* GetMediaEngine(TrackID aTrackID) override
   {
     // MediaEngine supports only one video and on video track now and TrackID is
     // fixed in MediaEngine.
@@ -773,7 +773,7 @@ public:
                             DOMMediaStream* aStream)
       : mWindowID(aWindowID), mOnSuccess(aSuccess), mManager(aManager),
         mStream(aStream) {}
-    virtual void NotifyTracksAvailable(DOMMediaStream* aStream) MOZ_OVERRIDE
+    virtual void NotifyTracksAvailable(DOMMediaStream* aStream) override
     {
       // We're in the main thread, so no worries here.
       if (!(mManager->IsWindowStillActive(mWindowID))) {

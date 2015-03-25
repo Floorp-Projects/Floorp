@@ -19,11 +19,11 @@ public:
   TimerEvent(Scheduler* aScheduler, int aTimerId)
     : mScheduler(aScheduler), mTimerId(aTimerId) {}
 
-  NS_IMETHOD Run() MOZ_OVERRIDE {
+  NS_IMETHOD Run() override {
     return mScheduler->TimeoutExpired(mTimerId);
   }
 
-  NS_IMETHOD Notify(nsITimer* aTimer) MOZ_OVERRIDE {
+  NS_IMETHOD Notify(nsITimer* aTimer) override {
     return mScheduler->TimeoutExpired(mTimerId);
   }
 private:

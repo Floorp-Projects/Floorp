@@ -337,7 +337,7 @@ public:
       , mInput(aInput)
     {}
 
-    virtual void Run() MOZ_OVERRIDE {
+    virtual void Run() override {
         if (gFocusedWindow) {
             gFocusedWindow->DispatchTouchInputViaAPZ(mInput);
         }

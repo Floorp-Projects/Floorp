@@ -648,7 +648,7 @@ public:
    * message for the redirected keydown message.  AutoFlusher class is a helper
    * class for doing it.  This must be created in the stack.
    */
-  class MOZ_STACK_CLASS AutoFlusher MOZ_FINAL
+  class MOZ_STACK_CLASS AutoFlusher final
   {
   public:
     AutoFlusher(nsWindowBase* aWidget, const MSG &aMsg) :

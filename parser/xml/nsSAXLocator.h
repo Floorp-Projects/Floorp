@@ -16,7 +16,7 @@
 0xc1cd4045, 0x846b, 0x43bb, \
 { 0xa9, 0x5e, 0x74, 0x5a, 0x3d, 0x7b, 0x40, 0xe0} }
 
-class nsSAXLocator MOZ_FINAL : public nsISAXLocator
+class nsSAXLocator final : public nsISAXLocator
 {
 public:
   NS_DECL_ISUPPORTS

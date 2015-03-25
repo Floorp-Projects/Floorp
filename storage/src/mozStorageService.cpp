@@ -663,7 +663,7 @@ Service::OpenSpecialDatabase(const char *aStorageKey,
 
 namespace {
 
-class AsyncInitDatabase MOZ_FINAL : public nsRunnable
+class AsyncInitDatabase final : public nsRunnable
 {
 public:
   AsyncInitDatabase(Connection* aConnection,

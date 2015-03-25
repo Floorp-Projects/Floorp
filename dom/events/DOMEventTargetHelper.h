@@ -64,15 +64,15 @@ public:
 
   NS_DECL_NSIDOMEVENTTARGET
 
-  virtual EventListenerManager* GetExistingListenerManager() const MOZ_OVERRIDE;
-  virtual EventListenerManager* GetOrCreateListenerManager() MOZ_OVERRIDE;
+  virtual EventListenerManager* GetExistingListenerManager() const override;
+  virtual EventListenerManager* GetOrCreateListenerManager() override;
 
   using dom::EventTarget::RemoveEventListener;
   virtual void AddEventListener(const nsAString& aType,
                                 dom::EventListener* aListener,
                                 bool aCapture,
                                 const dom::Nullable<bool>& aWantsUntrusted,
-                                ErrorResult& aRv) MOZ_OVERRIDE;
+                                ErrorResult& aRv) override;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOMEVENTTARGETHELPER_IID)
 
@@ -120,7 +120,7 @@ public:
                        JSContext* aCx,
                        JS::Value* aValue);
   using dom::EventTarget::GetEventHandler;
-  virtual nsIDOMWindow* GetOwnerGlobal() MOZ_OVERRIDE
+  virtual nsIDOMWindow* GetOwnerGlobal() override
   {
     return nsPIDOMWindow::GetOuterFromCurrentInner(GetOwner());
   }
@@ -145,8 +145,8 @@ public:
   }
   bool HasOrHasHadOwner() { return mHasOrHasHadOwnerWindow; }
 
-  virtual void EventListenerAdded(nsIAtom* aType) MOZ_OVERRIDE;
-  virtual void EventListenerRemoved(nsIAtom* aType) MOZ_OVERRIDE;
+  virtual void EventListenerAdded(nsIAtom* aType) override;
+  virtual void EventListenerRemoved(nsIAtom* aType) override;
   virtual void EventListenerWasAdded(const nsAString& aType,
                                      ErrorResult& aRv,
                                      JSCompartment* aCompartment = nullptr) {}
@@ -281,11 +281,11 @@ NS_DEFINE_STATIC_IID_ACCESSOR(DOMEventTargetHelper,
   using _class::RemoveEventListener;                \
   NS_FORWARD_NSIDOMEVENTTARGET(_class::)            \
   virtual mozilla::EventListenerManager*            \
-  GetOrCreateListenerManager() MOZ_OVERRIDE {       \
+  GetOrCreateListenerManager() override {       \
     return _class::GetOrCreateListenerManager();    \
   }                                                 \
   virtual mozilla::EventListenerManager*            \
-  GetExistingListenerManager() const MOZ_OVERRIDE { \
+  GetExistingListenerManager() const override { \
     return _class::GetExistingListenerManager();    \
   }
 

@@ -7,7 +7,7 @@
 #define ChangeAttributeTxn_h__
 
 #include "EditTxn.h"                      // base class
-#include "mozilla/Attributes.h"           // MOZ_OVERRIDE
+#include "mozilla/Attributes.h"           // override
 #include "nsCOMPtr.h"                     // nsCOMPtr members
 #include "nsCycleCollectionParticipant.h" // NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED
 #include "nsISupportsImpl.h"              // NS_DECL_ISUPPORTS_INHERITED
@@ -39,7 +39,7 @@ public:
 
   NS_DECL_EDITTXN
 
-  NS_IMETHOD RedoTransaction() MOZ_OVERRIDE;
+  NS_IMETHOD RedoTransaction() override;
 
 private:
   virtual ~ChangeAttributeTxn();

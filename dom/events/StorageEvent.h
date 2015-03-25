@@ -42,7 +42,7 @@ protected:
 public:
   virtual StorageEvent* AsStorageEvent();
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObjectInternal(JSContext* aCx) override;
 
   static already_AddRefed<StorageEvent>
   Constructor(EventTarget* aOwner, const nsAString& aType,

@@ -22,7 +22,7 @@ class IDBRequest;
 
 class DataStoreRevisionCallback;
 
-class DataStoreRevision MOZ_FINAL : public nsIDOMEventListener
+class DataStoreRevision final : public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS
@@ -38,7 +38,7 @@ public:
                        DataStoreRevisionCallback* aCallback);
 
   // nsIDOMEventListener
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE;
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override;
 
 private:
   ~DataStoreRevision() {}

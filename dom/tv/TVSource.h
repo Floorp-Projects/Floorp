@@ -26,7 +26,7 @@ class TVChannel;
 class TVProgram;
 class TVTuner;
 
-class TVSource MOZ_FINAL : public DOMEventTargetHelper
+class TVSource final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -38,7 +38,7 @@ public:
 
   // WebIDL (internal functions)
 
-  virtual JSObject* WrapObject(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *aCx) override;
 
   nsresult SetCurrentChannel(nsITVChannelData* aChannelData);
 

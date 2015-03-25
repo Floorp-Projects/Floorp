@@ -23,7 +23,7 @@ class nsIChannel;
  * the sink bound with the channel being redirected while the result of
  * redirect decision is returned through the callback.
  */
-class nsAsyncRedirectVerifyHelper MOZ_FINAL : public nsIRunnable,
+class nsAsyncRedirectVerifyHelper final : public nsIRunnable,
                                               public nsIAsyncVerifyRedirectCallback
 {
     NS_DECL_THREADSAFE_ISUPPORTS

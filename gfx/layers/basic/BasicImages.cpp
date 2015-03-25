@@ -48,17 +48,17 @@ public:
     }
   }
 
-  virtual void SetData(const Data& aData) MOZ_OVERRIDE;
-  virtual void SetDelayedConversion(bool aDelayed) MOZ_OVERRIDE { mDelayedConversion = aDelayed; }
+  virtual void SetData(const Data& aData) override;
+  virtual void SetDelayedConversion(bool aDelayed) override { mDelayedConversion = aDelayed; }
 
-  TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
+  TemporaryRef<gfx::SourceSurface> GetAsSourceSurface() override;
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t size = PlanarYCbCrImage::SizeOfExcludingThis(aMallocSizeOf);
     size += mDecodedBuffer.SizeOfExcludingThis(aMallocSizeOf);

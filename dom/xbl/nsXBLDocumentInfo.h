@@ -15,7 +15,7 @@
 class nsXBLPrototypeBinding;
 class nsXBLDocGlobalObject;
 
-class nsXBLDocumentInfo MOZ_FINAL : public nsSupportsWeakReference
+class nsXBLDocumentInfo final : public nsSupportsWeakReference
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

@@ -16,8 +16,8 @@ public:
   nsPlatformCharset();
 
   NS_IMETHOD Init();
-  NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsACString& oResult) MOZ_OVERRIDE;
-  NS_IMETHOD GetDefaultCharsetForLocale(const nsAString& localeName, nsACString& oResult) MOZ_OVERRIDE;
+  NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsACString& oResult) override;
+  NS_IMETHOD GetDefaultCharsetForLocale(const nsAString& localeName, nsACString& oResult) override;
 
 private:
   nsCString mCharset;

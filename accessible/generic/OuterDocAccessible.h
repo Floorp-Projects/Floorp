@@ -20,7 +20,7 @@ namespace a11y {
  * the inner document root.
  */
 
-class OuterDocAccessible MOZ_FINAL : public AccessibleWrap
+class OuterDocAccessible final : public AccessibleWrap
 {
 public:
   OuterDocAccessible(nsIContent* aContent, DocAccessible* aDoc);
@@ -28,20 +28,20 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual void Shutdown() MOZ_OVERRIDE;
-  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual void Shutdown() override;
+  virtual mozilla::a11y::role NativeRole() override;
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
-                                   EWhichChildAtPoint aWhichChild) MOZ_OVERRIDE;
+                                   EWhichChildAtPoint aWhichChild) override;
 
-  virtual void InvalidateChildren() MOZ_OVERRIDE;
-  virtual bool InsertChildAt(uint32_t aIdx, Accessible* aChild) MOZ_OVERRIDE;
-  virtual bool RemoveChild(Accessible* aAccessible) MOZ_OVERRIDE;
+  virtual void InvalidateChildren() override;
+  virtual bool InsertChildAt(uint32_t aIdx, Accessible* aChild) override;
+  virtual bool RemoveChild(Accessible* aAccessible) override;
 
 protected:
-  virtual ~OuterDocAccessible() MOZ_OVERRIDE;
+  virtual ~OuterDocAccessible() override;
 
   // Accessible
-  virtual void CacheChildren() MOZ_OVERRIDE;
+  virtual void CacheChildren() override;
 };
 
 } // namespace a11y

@@ -40,9 +40,9 @@ public:
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; }
 
     /* overrides for the pure virtual methods in gfxFont */
-    virtual uint32_t GetSpaceGlyph() MOZ_OVERRIDE;
+    virtual uint32_t GetSpaceGlyph() override;
 
-    virtual bool SetupCairoFont(gfxContext *aContext) MOZ_OVERRIDE;
+    virtual bool SetupCairoFont(gfxContext *aContext) override;
 
     /* override Measure to add padding for antialiasing */
     virtual RunMetrics Measure(gfxTextRun *aTextRun,
@@ -50,36 +50,36 @@ public:
                                BoundingBoxType aBoundingBoxType,
                                gfxContext *aContextForTightBoundingBox,
                                Spacing *aSpacing,
-                               uint16_t aOrientation) MOZ_OVERRIDE;
+                               uint16_t aOrientation) override;
 
     /* required for MathML to suppress effects of ClearType "padding" */
     virtual gfxFont*
-    CopyWithAntialiasOption(AntialiasOption anAAOption) MOZ_OVERRIDE;
+    CopyWithAntialiasOption(AntialiasOption anAAOption) override;
 
     // If the font has a cmap table, we handle it purely with harfbuzz;
     // but if not (e.g. .fon fonts), we'll use a GDI callback to get glyphs.
-    virtual bool ProvidesGetGlyph() const MOZ_OVERRIDE {
+    virtual bool ProvidesGetGlyph() const override {
         return !mFontEntry->HasCmapTable();
     }
 
     virtual uint32_t GetGlyph(uint32_t aUnicode,
-                              uint32_t aVarSelector) MOZ_OVERRIDE;
+                              uint32_t aVarSelector) override;
 
-    virtual bool ProvidesGlyphWidths() const MOZ_OVERRIDE { return true; }
+    virtual bool ProvidesGlyphWidths() const override { return true; }
 
     // get hinted glyph width in pixels as 16.16 fixed-point value
     virtual int32_t GetGlyphWidth(DrawTarget& aDrawTarget,
-                                  uint16_t aGID) MOZ_OVERRIDE;
+                                  uint16_t aGID) override;
 
     virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                         FontCacheSizes* aSizes) const;
     virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                         FontCacheSizes* aSizes) const;
 
-    virtual FontType GetType() const MOZ_OVERRIDE { return FONT_TYPE_GDI; }
+    virtual FontType GetType() const override { return FONT_TYPE_GDI; }
 
 protected:
-    virtual const Metrics& GetHorizontalMetrics() MOZ_OVERRIDE;
+    virtual const Metrics& GetHorizontalMetrics() override;
 
     /* override to ensure the cairo font is set up properly */
     virtual bool ShapeText(gfxContext     *aContext,
@@ -88,7 +88,7 @@ protected:
                            uint32_t        aLength,
                            int32_t         aScript,
                            bool            aVertical,
-                           gfxShapedText  *aShapedText) MOZ_OVERRIDE;
+                           gfxShapedText  *aShapedText) override;
 
     void Initialize(); // creates metrics and Cairo fonts
 

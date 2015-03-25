@@ -27,17 +27,17 @@ public:
                           const mp4_demuxer::AudioDecoderConfig& aConfig);
   ~GonkAudioDecoderManager();
 
-  virtual android::sp<MediaCodecProxy> Init(MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
+  virtual android::sp<MediaCodecProxy> Init(MediaDataDecoderCallback* aCallback) override;
 
   virtual nsresult Output(int64_t aStreamOffset,
-                          nsRefPtr<MediaData>& aOutput) MOZ_OVERRIDE;
+                          nsRefPtr<MediaData>& aOutput) override;
 
-  virtual nsresult Flush() MOZ_OVERRIDE;
+  virtual nsresult Flush() override;
 
 protected:
-  virtual bool PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
+  virtual bool PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) override;
 
-  virtual status_t SendSampleToOMX(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
+  virtual status_t SendSampleToOMX(mp4_demuxer::MP4Sample* aSample) override;
 
 private:
 

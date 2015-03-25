@@ -42,11 +42,11 @@ public:
        const DWORD aTimeout);
 
   virtual nsresult
-  Send() MOZ_OVERRIDE;
+  Send() override;
 
 protected:
   void
-  OnEvent() MOZ_OVERRIDE;
+  OnEvent() override;
 
 private:
   HANDLE mParentEvent;

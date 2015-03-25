@@ -85,14 +85,14 @@ nsHtml5Module::Initialize(nsIParser* aParser, nsIDocument* aDoc, nsIURI* aURI, n
   return parser->Initialize(aDoc, aURI, aContainer, aChannel);
 }
 
-class nsHtml5ParserThreadTerminator MOZ_FINAL : public nsIObserver
+class nsHtml5ParserThreadTerminator final : public nsIObserver
 {
   public:
     NS_DECL_ISUPPORTS
     explicit nsHtml5ParserThreadTerminator(nsIThread* aThread)
       : mThread(aThread)
     {}
-    NS_IMETHODIMP Observe(nsISupports *, const char *topic, const char16_t *) MOZ_OVERRIDE
+    NS_IMETHODIMP Observe(nsISupports *, const char *topic, const char16_t *) override
     {
       NS_ASSERTION(!strcmp(topic, "xpcom-shutdown-threads"), 
                    "Unexpected topic");

@@ -97,7 +97,7 @@ private:
                   BluetoothSocketResultHandler* aRes);
 };
 
-class BluetoothDaemonSocketInterface MOZ_FINAL
+class BluetoothDaemonSocketInterface final
   : public BluetoothSocketInterface
 {
 public:

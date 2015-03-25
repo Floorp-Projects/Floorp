@@ -57,7 +57,7 @@ public:
   };
   void SetTimelineParameter(uint32_t aIndex,
                             const AudioParamTimeline& aValue,
-                            TrackRate aSampleRate) MOZ_OVERRIDE
+                            TrackRate aSampleRate) override
   {
     mRecomputeParameters = true;
     switch (aIndex) {
@@ -76,7 +76,7 @@ public:
     }
   }
 
-  virtual void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam) MOZ_OVERRIDE
+  virtual void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam) override
   {
     switch (aIndex) {
     case START: mStart = aParam; break;
@@ -86,7 +86,7 @@ public:
     }
   }
 
-  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam) MOZ_OVERRIDE
+  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override
   {
     switch (aIndex) {
       case TYPE:
@@ -129,7 +129,7 @@ public:
     // End index switch.
   }
 
-  virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) MOZ_OVERRIDE
+  virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) override
   {
     MOZ_ASSERT(mCustomLength, "Custom buffer sent before length");
     mCustom = aBuffer;
@@ -287,7 +287,7 @@ public:
   virtual void ProcessBlock(AudioNodeStream* aStream,
                             const AudioChunk& aInput,
                             AudioChunk* aOutput,
-                            bool* aFinished) MOZ_OVERRIDE
+                            bool* aFinished) override
   {
     MOZ_ASSERT(mSource == aStream, "Invalid source stream");
 
@@ -333,7 +333,7 @@ public:
 
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
 
@@ -354,7 +354,7 @@ public:
     return amount;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

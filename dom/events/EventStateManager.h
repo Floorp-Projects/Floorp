@@ -43,7 +43,7 @@ class Element;
 class TabParent;
 } // namespace dom
 
-class OverOutElementsWrapper MOZ_FINAL : public nsISupports
+class OverOutElementsWrapper final : public nsISupports
 {
   ~OverOutElementsWrapper();
 

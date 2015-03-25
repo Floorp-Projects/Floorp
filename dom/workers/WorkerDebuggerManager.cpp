@@ -11,7 +11,7 @@
 
 USING_WORKERS_NAMESPACE
 
-class RegisterDebuggerRunnable MOZ_FINAL : public nsRunnable
+class RegisterDebuggerRunnable final : public nsRunnable
 {
   nsRefPtr<WorkerDebuggerManager> mManager;
   nsRefPtr<WorkerDebugger> mDebugger;
@@ -31,7 +31,7 @@ private:
   { }
 
   NS_IMETHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     mManager->RegisterDebuggerOnMainThread(mDebugger, mHasListeners);
 
@@ -43,7 +43,7 @@ NS_IMPL_ISUPPORTS(RegisterDebuggerRunnable, nsIRunnable);
 
 BEGIN_WORKERS_NAMESPACE
 
-class WorkerDebuggerEnumerator MOZ_FINAL : public nsISimpleEnumerator
+class WorkerDebuggerEnumerator final : public nsISimpleEnumerator
 {
   nsTArray<nsCOMPtr<nsISupports>> mDebuggers;
   uint32_t mIndex;

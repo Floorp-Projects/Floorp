@@ -185,7 +185,7 @@ private:
   ConnectionStatus mConnectionStatus;
 };
 
-class SocketConnectTask MOZ_FINAL : public SocketIOTask<DroidSocketImpl>
+class SocketConnectTask final : public SocketIOTask<DroidSocketImpl>
 {
 public:
   SocketConnectTask(DroidSocketImpl* aDroidSocketImpl, int aFd)
@@ -193,7 +193,7 @@ public:
   , mFd(aFd)
   { }
 
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(!IsCanceled());
@@ -205,7 +205,7 @@ private:
   int mFd;
 };
 
-class SocketListenTask MOZ_FINAL : public SocketIOTask<DroidSocketImpl>
+class SocketListenTask final : public SocketIOTask<DroidSocketImpl>
 {
 public:
   SocketListenTask(DroidSocketImpl* aDroidSocketImpl, int aFd)
@@ -213,7 +213,7 @@ public:
   , mFd(aFd)
   { }
 
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
 
@@ -226,14 +226,14 @@ private:
   int mFd;
 };
 
-class SocketConnectClientFdTask MOZ_FINAL
+class SocketConnectClientFdTask final
 : public SocketIOTask<DroidSocketImpl>
 {
   SocketConnectClientFdTask(DroidSocketImpl* aImpl)
   : SocketIOTask<DroidSocketImpl>(aImpl)
   { }
 
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
 
@@ -334,7 +334,7 @@ DroidSocketImpl::OnSocketCanReceiveWithoutBlocking(int aFd)
   }
 }
 
-class AcceptTask MOZ_FINAL : public SocketIOTask<DroidSocketImpl>
+class AcceptTask final : public SocketIOTask<DroidSocketImpl>
 {
 public:
   AcceptTask(DroidSocketImpl* aDroidSocketImpl, int aFd)
@@ -342,7 +342,7 @@ public:
   , mFd(aFd)
   { }
 
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(!IsCanceled());
@@ -354,7 +354,7 @@ private:
   int mFd;
 };
 
-class AcceptResultHandler MOZ_FINAL : public BluetoothSocketResultHandler
+class AcceptResultHandler final : public BluetoothSocketResultHandler
 {
 public:
   AcceptResultHandler(DroidSocketImpl* aImpl)
@@ -364,7 +364,7 @@ public:
   }
 
   void Accept(int aFd, const nsAString& aBdAddress,
-              int aConnectionStatus) MOZ_OVERRIDE
+              int aConnectionStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -385,7 +385,7 @@ public:
                                      new AcceptTask(mImpl, fd.forget()));
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
     BT_LOGR("BluetoothSocketInterface::Accept failed: %d", (int)aStatus);
@@ -403,7 +403,7 @@ private:
   DroidSocketImpl* mImpl;
 };
 
-class AcceptRunnable MOZ_FINAL : public SocketIORunnable<DroidSocketImpl>
+class AcceptRunnable final : public SocketIORunnable<DroidSocketImpl>
 {
 public:
   AcceptRunnable(DroidSocketImpl* aImpl, int aFd)
@@ -411,7 +411,7 @@ public:
   , mFd(aFd)
   { }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(sBluetoothSocketInterface);
@@ -511,7 +511,7 @@ BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver,
   mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
 }
 
-class ConnectSocketResultHandler MOZ_FINAL : public BluetoothSocketResultHandler
+class ConnectSocketResultHandler final : public BluetoothSocketResultHandler
 {
 public:
   ConnectSocketResultHandler(DroidSocketImpl* aImpl)
@@ -521,7 +521,7 @@ public:
   }
 
   void Connect(int aFd, const nsAString& aBdAddress,
-               int aConnectionStatus) MOZ_OVERRIDE
+               int aConnectionStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -540,7 +540,7 @@ public:
                                      new SocketConnectTask(mImpl, aFd));
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
     BT_WARNING("Connect failed: %d", (int)aStatus);
@@ -581,7 +581,7 @@ BluetoothSocket::ConnectSocket(const nsAString& aDeviceAddress, int aChannel)
   return true;
 }
 
-class ListenResultHandler MOZ_FINAL : public BluetoothSocketResultHandler
+class ListenResultHandler final : public BluetoothSocketResultHandler
 {
 public:
   ListenResultHandler(DroidSocketImpl* aImpl)
@@ -590,7 +590,7 @@ public:
     MOZ_ASSERT(mImpl);
   }
 
-  void Listen(int aFd) MOZ_OVERRIDE
+  void Listen(int aFd) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -598,7 +598,7 @@ public:
                                      new SocketListenTask(mImpl, aFd));
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

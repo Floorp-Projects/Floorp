@@ -102,7 +102,7 @@ _InstanceClass##Constructor(nsISupports *aOuter, REFNSIID aIID,               \
 
 namespace mozilla {
 
-class GenericModule MOZ_FINAL : public nsIModule
+class GenericModule final : public nsIModule
 {
   ~GenericModule() {}
 

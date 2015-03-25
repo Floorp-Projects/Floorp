@@ -84,7 +84,7 @@ public:
 
 protected:
   virtual bool
-  ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue) MOZ_OVERRIDE
+  ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue) override
   {
     aValue.setUndefined();
     return true;

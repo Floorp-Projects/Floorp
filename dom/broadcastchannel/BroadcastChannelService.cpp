@@ -78,7 +78,7 @@ BroadcastChannelService::UnregisterActor(BroadcastChannelParent* aParent)
 
 namespace {
 
-struct MOZ_STACK_CLASS PostMessageData MOZ_FINAL
+struct MOZ_STACK_CLASS PostMessageData final
 {
   PostMessageData(BroadcastChannelParent* aParent,
                   const ClonedMessageData& aData,

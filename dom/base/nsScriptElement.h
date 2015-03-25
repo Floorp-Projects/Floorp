@@ -34,7 +34,7 @@ public:
   {
   }
 
-  virtual nsresult FireErrorEvent() MOZ_OVERRIDE;
+  virtual nsresult FireErrorEvent() override;
 
 protected:
   // Internal methods
@@ -44,7 +44,7 @@ protected:
    */
   virtual bool HasScriptContent() = 0;
 
-  virtual bool MaybeProcessScript() MOZ_OVERRIDE;
+  virtual bool MaybeProcessScript() override;
 };
 
 #endif // nsScriptElement_h

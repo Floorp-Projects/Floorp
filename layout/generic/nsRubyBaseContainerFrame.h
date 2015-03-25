@@ -27,7 +27,7 @@ namespace mozilla {
 struct RubyColumn;
 }
 
-class nsRubyBaseContainerFrame MOZ_FINAL : public nsContainerFrame
+class nsRubyBaseContainerFrame final : public nsContainerFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS
@@ -35,13 +35,13 @@ public:
   NS_DECL_QUERYFRAME
 
   // nsIFrame overrides
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE;
-  virtual bool CanContinueTextRun() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
+  virtual bool IsFrameOfType(uint32_t aFlags) const override;
+  virtual bool CanContinueTextRun() const override;
   virtual void AddInlineMinISize(nsRenderingContext *aRenderingContext,
-                                 InlineMinISizeData *aData) MOZ_OVERRIDE;
+                                 InlineMinISizeData *aData) override;
   virtual void AddInlinePrefISize(nsRenderingContext *aRenderingContext,
-                                  InlinePrefISizeData *aData) MOZ_OVERRIDE;
+                                  InlinePrefISizeData *aData) override;
   virtual mozilla::LogicalSize
     ComputeSize(nsRenderingContext *aRenderingContext,
                 mozilla::WritingMode aWritingMode,
@@ -50,17 +50,17 @@ public:
                 const mozilla::LogicalSize& aMargin,
                 const mozilla::LogicalSize& aBorder,
                 const mozilla::LogicalSize& aPadding,
-                ComputeSizeFlags aFlags) MOZ_OVERRIDE;
+                ComputeSizeFlags aFlags) override;
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus& aStatus) MOZ_OVERRIDE;
+                      nsReflowStatus& aStatus) override;
 
   virtual nscoord
-    GetLogicalBaseline(mozilla::WritingMode aWritingMode) const MOZ_OVERRIDE;
+    GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
 protected:

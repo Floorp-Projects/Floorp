@@ -235,7 +235,7 @@ protected:
  * sync, so we can safely expose any protected base class methods required by
  * the SMIL code.
  */
-class SVGPathDataAndInfo MOZ_FINAL : public SVGPathData
+class SVGPathDataAndInfo final : public SVGPathData
 {
 public:
   explicit SVGPathDataAndInfo(nsSVGElement *aElement = nullptr)

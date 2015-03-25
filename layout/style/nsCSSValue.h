@@ -150,7 +150,7 @@ struct GridNamedArea {
   uint32_t mRowEnd;
 };
 
-struct GridTemplateAreasValue MOZ_FINAL {
+struct GridTemplateAreasValue final {
   // Parsed value
   nsTArray<GridNamedArea> mNamedAreas;
 
@@ -200,7 +200,7 @@ private:
   operator=(const GridTemplateAreasValue& aOther) = delete;
 };
 
-class FontFamilyListRefCnt MOZ_FINAL : public FontFamilyList {
+class FontFamilyListRefCnt final : public FontFamilyList {
 public:
     FontFamilyListRefCnt()
         : FontFamilyList()
@@ -769,7 +769,7 @@ protected:
   } mValue;
 };
 
-struct nsCSSValue::Array MOZ_FINAL {
+struct nsCSSValue::Array final {
 
   // return |Array| with reference count of zero
   static Array* Create(size_t aItemCount) {
@@ -913,7 +913,7 @@ private:
 // nsCSSValueList_heap differs from nsCSSValueList only in being
 // refcounted.  It should not be necessary to use this class directly;
 // it's an implementation detail of nsCSSValue.
-struct nsCSSValueList_heap MOZ_FINAL : public nsCSSValueList {
+struct nsCSSValueList_heap final : public nsCSSValueList {
   NS_INLINE_DECL_REFCOUNTING(nsCSSValueList_heap)
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -929,7 +929,7 @@ private:
 // a wrapper for the reference count and a pointer to the head of the
 // list, whereas the other list types (such as nsCSSValueList) do
 // not have such a wrapper.
-struct nsCSSValueSharedList MOZ_FINAL {
+struct nsCSSValueSharedList final {
   nsCSSValueSharedList()
     : mHead(nullptr)
   {
@@ -1044,7 +1044,7 @@ struct nsCSSRect {
 // nsCSSRect_heap differs from nsCSSRect only in being
 // refcounted.  It should not be necessary to use this class directly;
 // it's an implementation detail of nsCSSValue.
-struct nsCSSRect_heap MOZ_FINAL : public nsCSSRect {
+struct nsCSSRect_heap final : public nsCSSRect {
   NS_INLINE_DECL_REFCOUNTING(nsCSSRect_heap)
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -1139,7 +1139,7 @@ struct nsCSSValuePair {
 // nsCSSValuePair_heap differs from nsCSSValuePair only in being
 // refcounted.  It should not be necessary to use this class directly;
 // it's an implementation detail of nsCSSValue.
-struct nsCSSValuePair_heap MOZ_FINAL : public nsCSSValuePair {
+struct nsCSSValuePair_heap final : public nsCSSValuePair {
   // forward constructor
   nsCSSValuePair_heap(const nsCSSValue& aXValue, const nsCSSValue& aYValue)
       : nsCSSValuePair(aXValue, aYValue)
@@ -1230,7 +1230,7 @@ struct nsCSSValueTriplet {
 // nsCSSValueTriplet_heap differs from nsCSSValueTriplet only in being
 // refcounted.  It should not be necessary to use this class directly;
 // it's an implementation detail of nsCSSValue.
-struct nsCSSValueTriplet_heap MOZ_FINAL : public nsCSSValueTriplet {
+struct nsCSSValueTriplet_heap final : public nsCSSValueTriplet {
   // forward constructor
   nsCSSValueTriplet_heap(const nsCSSValue& aXValue, const nsCSSValue& aYValue, const nsCSSValue& aZValue)
     : nsCSSValueTriplet(aXValue, aYValue, aZValue)
@@ -1312,7 +1312,7 @@ private:
 // nsCSSValuePairList_heap differs from nsCSSValuePairList only in being
 // refcounted.  It should not be necessary to use this class directly;
 // it's an implementation detail of nsCSSValue.
-struct nsCSSValuePairList_heap MOZ_FINAL : public nsCSSValuePairList {
+struct nsCSSValuePairList_heap final : public nsCSSValuePairList {
   NS_INLINE_DECL_REFCOUNTING(nsCSSValuePairList_heap)
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -1377,7 +1377,7 @@ public:
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 };
 
-struct nsCSSValueGradient MOZ_FINAL {
+struct nsCSSValueGradient final {
   nsCSSValueGradient(bool aIsRadial, bool aIsRepeating);
 
   // true if gradient is radial, false if it is linear
@@ -1478,7 +1478,7 @@ private:
   nsCSSValueGradient& operator=(const nsCSSValueGradient& aOther) = delete;
 };
 
-struct nsCSSValueTokenStream MOZ_FINAL {
+struct nsCSSValueTokenStream final {
   nsCSSValueTokenStream();
 
 private:
@@ -1557,7 +1557,7 @@ private:
   nsCSSValueTokenStream& operator=(const nsCSSValueTokenStream& aOther) = delete;
 };
 
-class nsCSSValueFloatColor MOZ_FINAL {
+class nsCSSValueFloatColor final {
 public:
   nsCSSValueFloatColor(float aComponent1, float aComponent2, float aComponent3,
                        float aAlpha)

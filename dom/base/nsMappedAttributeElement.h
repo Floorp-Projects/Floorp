@@ -38,11 +38,11 @@ public:
   static void MapNoAttributesInto(const nsMappedAttributes* aAttributes, 
                                   nsRuleData* aRuleData);
 
-  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) MOZ_OVERRIDE;
+  NS_IMETHOD WalkContentStyleRules(nsRuleWalker* aRuleWalker) override;
   virtual bool SetMappedAttribute(nsIDocument* aDocument,
                                     nsIAtom* aName,
                                     nsAttrValue& aValue,
-                                    nsresult* aRetval) MOZ_OVERRIDE;
+                                    nsresult* aRetval) override;
 };
 
 #endif // NS_MAPPEDATTRIBUTEELEMENT_H_

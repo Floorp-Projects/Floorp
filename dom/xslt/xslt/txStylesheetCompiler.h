@@ -125,10 +125,10 @@ public:
     nsresult addVariable(const txExpandedName& aName);
 
     // txIParseContext
-    nsresult resolveNamespacePrefix(nsIAtom* aPrefix, int32_t& aID) MOZ_OVERRIDE;
+    nsresult resolveNamespacePrefix(nsIAtom* aPrefix, int32_t& aID) override;
     nsresult resolveFunctionCall(nsIAtom* aName, int32_t aID,
-                                 FunctionCall** aFunction) MOZ_OVERRIDE;
-    bool caseInsensitiveNameTests() MOZ_OVERRIDE;
+                                 FunctionCall** aFunction) override;
+    bool caseInsensitiveNameTests() override;
 
     /**
      * Should the stylesheet be parsed in forwards compatible parsing mode.
@@ -138,7 +138,7 @@ public:
         return mElementContext->mForwardsCompatibleParsing;
     }
 
-    void SetErrorOffset(uint32_t aOffset) MOZ_OVERRIDE;
+    void SetErrorOffset(uint32_t aOffset) override;
 
     static void shutdown();
 
@@ -186,7 +186,7 @@ struct txStylesheetAttr
     nsString mValue;
 };
 
-class txStylesheetCompiler MOZ_FINAL : private txStylesheetCompilerState,
+class txStylesheetCompiler final : private txStylesheetCompilerState,
                                        public txACompileObserver
 {
 public:

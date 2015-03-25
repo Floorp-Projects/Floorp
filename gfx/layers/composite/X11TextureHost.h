@@ -22,26 +22,26 @@ public:
   X11TextureHost(TextureFlags aFlags,
                  const SurfaceDescriptorX11& aDescriptor);
 
-  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+  virtual void SetCompositor(Compositor* aCompositor) override;
 
-  virtual bool Lock() MOZ_OVERRIDE;
+  virtual bool Lock() override;
 
-  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
+  virtual gfx::SurfaceFormat GetFormat() const override;
 
-  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
+  virtual gfx::IntSize GetSize() const override;
 
-  virtual TextureSource* GetTextureSources() MOZ_OVERRIDE
+  virtual TextureSource* GetTextureSources() override
   {
     return mTextureSource;
   }
 
-  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override
   {
     return nullptr; // XXX - implement this (for MOZ_DUMP_PAINTING)
   }
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() MOZ_OVERRIDE { return "X11TextureHost"; }
+  virtual const char* Name() override { return "X11TextureHost"; }
 #endif
 
 protected:

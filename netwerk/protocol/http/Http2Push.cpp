@@ -23,7 +23,7 @@
 namespace mozilla {
 namespace net {
 
-class CallChannelOnPush MOZ_FINAL : public nsRunnable {
+class CallChannelOnPush final : public nsRunnable {
   public:
   CallChannelOnPush(nsIHttpChannelInternal *associatedChannel,
                     const nsACString &pushedURI,

@@ -24,26 +24,26 @@ namespace android {
 class TestGonkCameraHardware : public android::GonkCameraHardware
 {
 public:
-  virtual int AutoFocus() MOZ_OVERRIDE;
-  virtual int StartFaceDetection() MOZ_OVERRIDE;
-  virtual int StopFaceDetection() MOZ_OVERRIDE;
-  virtual int TakePicture() MOZ_OVERRIDE;
-  virtual int StartPreview() MOZ_OVERRIDE;
-  virtual int PushParameters(const mozilla::GonkCameraParameters& aParams) MOZ_OVERRIDE;
-  virtual nsresult PullParameters(mozilla::GonkCameraParameters& aParams) MOZ_OVERRIDE;
-  virtual int StartRecording() MOZ_OVERRIDE;
-  virtual int StopRecording() MOZ_OVERRIDE;
-  virtual int SetListener(const sp<GonkCameraListener>& aListener) MOZ_OVERRIDE;
-  virtual int StoreMetaDataInBuffers(bool aEnabled) MOZ_OVERRIDE;
+  virtual int AutoFocus() override;
+  virtual int StartFaceDetection() override;
+  virtual int StopFaceDetection() override;
+  virtual int TakePicture() override;
+  virtual int StartPreview() override;
+  virtual int PushParameters(const mozilla::GonkCameraParameters& aParams) override;
+  virtual nsresult PullParameters(mozilla::GonkCameraParameters& aParams) override;
+  virtual int StartRecording() override;
+  virtual int StopRecording() override;
+  virtual int SetListener(const sp<GonkCameraListener>& aListener) override;
+  virtual int StoreMetaDataInBuffers(bool aEnabled) override;
 
   virtual int
-  PushParameters(const CameraParameters& aParams) MOZ_OVERRIDE
+  PushParameters(const CameraParameters& aParams) override
   {
     return GonkCameraHardware::PushParameters(aParams);
   }
 
   virtual void
-  PullParameters(CameraParameters& aParams) MOZ_OVERRIDE
+  PullParameters(CameraParameters& aParams) override
   {
     GonkCameraHardware::PullParameters(aParams);
   }
@@ -53,7 +53,7 @@ public:
                          const sp<Camera>& aCamera);
   virtual ~TestGonkCameraHardware();
 
-  virtual nsresult Init() MOZ_OVERRIDE;
+  virtual nsresult Init() override;
 
 protected:
   const nsCString TestCase();

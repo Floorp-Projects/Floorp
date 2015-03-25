@@ -1172,14 +1172,14 @@ public:
     : nsDisplayItem(aBuilder, aFrame) {}
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) MOZ_OVERRIDE
+                           bool* aSnap) override
   {
     *aSnap = false;
     return mFrame->GetVisualOverflowRectRelativeToSelf() + ToReferenceFrame();
   }
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) MOZ_OVERRIDE
+                     nsRenderingContext* aCtx) override
   {
     nsImageFrame* f = static_cast<nsImageFrame*>(mFrame);
     EventStates state = f->GetContent()->AsElement()->State();

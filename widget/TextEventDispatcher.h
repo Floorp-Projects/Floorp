@@ -30,7 +30,7 @@ struct IMENotification;
  * handle IME.
  */
 
-class TextEventDispatcher MOZ_FINAL
+class TextEventDispatcher final
 {
   ~TextEventDispatcher()
   {

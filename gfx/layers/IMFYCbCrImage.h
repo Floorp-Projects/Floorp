@@ -25,7 +25,7 @@ public:
   virtual bool IsValid() { return true; }
 
 protected:
-  virtual uint8_t* AllocateBuffer(uint32_t aSize) MOZ_OVERRIDE {
+  virtual uint8_t* AllocateBuffer(uint32_t aSize) override {
     MOZ_CRASH("Can't do manual allocations with IMFYCbCrImage");
     return nullptr;
   }

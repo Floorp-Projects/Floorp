@@ -134,15 +134,15 @@ private:
     {}
 
     NS_DECL_ISUPPORTS_INHERITED
-    NS_IMETHOD Run() MOZ_OVERRIDE {
+    NS_IMETHOD Run() override {
       if (mTarget) {
         mTarget->mPendingNotification = nullptr;
         mTarget->ElementChanged(mFrom, mTo);
       }
       return NS_OK;
     }
-    virtual void SetTo(Element* aTo) MOZ_OVERRIDE { mTo = aTo; }
-    virtual void Clear() MOZ_OVERRIDE
+    virtual void SetTo(Element* aTo) override { mTo = aTo; }
+    virtual void Clear() override
     {
       Notification::Clear(); mFrom = nullptr; mTo = nullptr;
     }
@@ -172,7 +172,7 @@ private:
   private:
     virtual ~DocumentLoadNotification() {}
 
-    virtual void SetTo(Element* aTo) MOZ_OVERRIDE { }
+    virtual void SetTo(Element* aTo) override { }
 
     nsString mRef;
   };

@@ -118,7 +118,7 @@ static int32_t sCanvasImageCacheLimit = 0;
 
 class ImageCacheObserver;
 
-class ImageCache MOZ_FINAL : public nsExpirationTracker<ImageCacheEntryData,4> {
+class ImageCache final : public nsExpirationTracker<ImageCacheEntryData,4> {
 public:
   // We use 3 generations of 1 second each to get a 2-3 seconds timeout.
   enum { GENERATION_MS = 1000 };
@@ -143,7 +143,7 @@ public:
 static ImageCache* gImageCache = nullptr;
 
 // Listen memory-pressure event for image cache purge
-class ImageCacheObserver MOZ_FINAL : public nsIObserver
+class ImageCacheObserver final : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -162,7 +162,7 @@ public:
 
   NS_IMETHODIMP Observe(nsISupports* aSubject,
                         const char* aTopic,
-                        const char16_t* aSomeData) MOZ_OVERRIDE
+                        const char16_t* aSomeData) override
   {
     if (!mImageCache || strcmp(aTopic, "memory-pressure")) {
       return NS_OK;
@@ -207,7 +207,7 @@ private:
 
 NS_IMPL_ISUPPORTS(ImageCacheObserver, nsIObserver)
 
-class CanvasImageCacheShutdownObserver MOZ_FINAL : public nsIObserver
+class CanvasImageCacheShutdownObserver final : public nsIObserver
 {
   ~CanvasImageCacheShutdownObserver() {}
 public:

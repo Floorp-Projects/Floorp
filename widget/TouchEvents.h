@@ -31,7 +31,7 @@ namespace mozilla {
 class WidgetGestureNotifyEvent : public WidgetGUIEvent
 {
 public:
-  virtual WidgetGestureNotifyEvent* AsGestureNotifyEvent() MOZ_OVERRIDE
+  virtual WidgetGestureNotifyEvent* AsGestureNotifyEvent() override
   {
     return this;
   }
@@ -44,7 +44,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     // XXX Looks like this event is handled only in PostHandleEvent() of
     //     EventStateManager.  Therefore, it might be possible to handle this
@@ -89,7 +89,7 @@ public:
 class WidgetSimpleGestureEvent : public WidgetMouseEventBase
 {
 public:
-  virtual WidgetSimpleGestureEvent* AsSimpleGestureEvent() MOZ_OVERRIDE
+  virtual WidgetSimpleGestureEvent* AsSimpleGestureEvent() override
   {
     return this;
   }
@@ -115,7 +115,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eSimpleGestureEventClass,
                "Duplicate() must be overridden by sub class");
@@ -159,7 +159,7 @@ public:
   typedef nsTArray<nsRefPtr<mozilla::dom::Touch>> TouchArray;
   typedef nsAutoTArray<nsRefPtr<mozilla::dom::Touch>, 10> AutoTouchArray;
 
-  virtual WidgetTouchEvent* AsTouchEvent() MOZ_OVERRIDE { return this; }
+  virtual WidgetTouchEvent* AsTouchEvent() override { return this; }
 
   WidgetTouchEvent()
   {
@@ -189,7 +189,7 @@ public:
     MOZ_COUNT_DTOR(WidgetTouchEvent);
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eTouchEventClass,
                "Duplicate() must be overridden by sub class");

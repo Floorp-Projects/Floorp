@@ -127,7 +127,7 @@ JSObject *createTestGlobal()
     return JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook, options);
 }
 
-virtual bool init() MOZ_OVERRIDE
+virtual bool init() override
 {
     if (!JSAPITest::init())
         return false;
@@ -136,7 +136,7 @@ virtual bool init() MOZ_OVERRIDE
     return true;
 }
 
-virtual void uninit() MOZ_OVERRIDE
+virtual void uninit() override
 {
     JS_RemoveFinalizeCallback(rt, FinalizeCallback);
     JSAPITest::uninit();

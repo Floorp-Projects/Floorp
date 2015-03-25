@@ -226,7 +226,7 @@ public:
   { }
 
   nsresult
-  InitMetaData() MOZ_OVERRIDE
+  InitMetaData() override
   {
     mMetaData.number_of_faces = 1;
     AllocateFacesArray(1);
@@ -255,7 +255,7 @@ public:
   { }
 
   nsresult
-  InitMetaData() MOZ_OVERRIDE
+  InitMetaData() override
   {
     mMetaData.number_of_faces = 2;
     AllocateFacesArray(2);
@@ -296,7 +296,7 @@ public:
   { }
 
   nsresult
-  InitMetaData() MOZ_OVERRIDE
+  InitMetaData() override
   {
     mMetaData.number_of_faces = 1;
     AllocateFacesArray(1);
@@ -329,7 +329,7 @@ public:
   { }
 
   nsresult
-  InitMetaData() MOZ_OVERRIDE
+  InitMetaData() override
   {
     mMetaData.number_of_faces = 0;
     mMetaData.faces = nullptr;

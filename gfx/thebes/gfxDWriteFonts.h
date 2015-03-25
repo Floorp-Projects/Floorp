@@ -29,18 +29,18 @@ public:
     ~gfxDWriteFont();
 
     virtual gfxFont*
-    CopyWithAntialiasOption(AntialiasOption anAAOption) MOZ_OVERRIDE;
+    CopyWithAntialiasOption(AntialiasOption anAAOption) override;
 
-    virtual uint32_t GetSpaceGlyph() MOZ_OVERRIDE;
+    virtual uint32_t GetSpaceGlyph() override;
 
-    virtual bool SetupCairoFont(gfxContext *aContext) MOZ_OVERRIDE;
+    virtual bool SetupCairoFont(gfxContext *aContext) override;
 
-    virtual bool AllowSubpixelAA() MOZ_OVERRIDE
+    virtual bool AllowSubpixelAA() override
     { return mAllowManualShowGlyphs; }
 
     bool IsValid() const;
 
-    virtual gfxFloat GetAdjustedSize() const MOZ_OVERRIDE {
+    virtual gfxFloat GetAdjustedSize() const override {
         return mAdjustedSize;
     }
 
@@ -52,15 +52,15 @@ public:
                                BoundingBoxType aBoundingBoxType,
                                gfxContext *aContextForTightBoundingBox,
                                Spacing *aSpacing,
-                               uint16_t aOrientation) MOZ_OVERRIDE;
+                               uint16_t aOrientation) override;
 
-    virtual bool ProvidesGlyphWidths() const MOZ_OVERRIDE;
+    virtual bool ProvidesGlyphWidths() const override;
 
     virtual int32_t GetGlyphWidth(DrawTarget& aDrawTarget,
-                                  uint16_t aGID) MOZ_OVERRIDE;
+                                  uint16_t aGID) override;
 
     virtual mozilla::TemporaryRef<mozilla::gfx::GlyphRenderingOptions>
-    GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams = nullptr) MOZ_OVERRIDE;
+    GetGlyphRenderingOptions(const TextRunDrawParams* aRunParams = nullptr) override;
 
     virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                         FontCacheSizes* aSizes) const;
@@ -70,12 +70,12 @@ public:
     virtual FontType GetType() const { return FONT_TYPE_DWRITE; }
 
     virtual mozilla::TemporaryRef<mozilla::gfx::ScaledFont>
-    GetScaledFont(mozilla::gfx::DrawTarget *aTarget) MOZ_OVERRIDE;
+    GetScaledFont(mozilla::gfx::DrawTarget *aTarget) override;
 
-    virtual cairo_scaled_font_t *GetCairoScaledFont() MOZ_OVERRIDE;
+    virtual cairo_scaled_font_t *GetCairoScaledFont() override;
 
 protected:
-    virtual const Metrics& GetHorizontalMetrics() MOZ_OVERRIDE;
+    virtual const Metrics& GetHorizontalMetrics() override;
 
     bool GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics);
 

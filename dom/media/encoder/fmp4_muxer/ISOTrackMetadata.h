@@ -13,13 +13,13 @@ namespace mozilla {
 class AACTrackMetadata : public AudioTrackMetadata {
 public:
   // AudioTrackMetadata members
-  uint32_t GetAudioFrameDuration() MOZ_OVERRIDE { return mFrameDuration; }
-  uint32_t GetAudioFrameSize() MOZ_OVERRIDE { return mFrameSize; }
-  uint32_t GetAudioSampleRate() MOZ_OVERRIDE { return mSampleRate; }
-  uint32_t GetAudioChannels() MOZ_OVERRIDE { return mChannels; }
+  uint32_t GetAudioFrameDuration() override { return mFrameDuration; }
+  uint32_t GetAudioFrameSize() override { return mFrameSize; }
+  uint32_t GetAudioSampleRate() override { return mSampleRate; }
+  uint32_t GetAudioChannels() override { return mChannels; }
 
   // TrackMetadataBase member
-  MetadataKind GetKind() const MOZ_OVERRIDE { return METADATA_AAC; }
+  MetadataKind GetKind() const override { return METADATA_AAC; }
 
   // AACTrackMetadata members
   AACTrackMetadata()
@@ -43,15 +43,15 @@ public:
 class AVCTrackMetadata : public VideoTrackMetadata {
 public:
   // VideoTrackMetadata members
-  uint32_t GetVideoHeight() MOZ_OVERRIDE { return mHeight; }
-  uint32_t GetVideoWidth() MOZ_OVERRIDE {return mWidth; }
-  uint32_t GetVideoDisplayHeight() MOZ_OVERRIDE { return mDisplayHeight; }
-  uint32_t GetVideoDisplayWidth() MOZ_OVERRIDE { return mDisplayWidth;  }
-  uint32_t GetVideoClockRate() MOZ_OVERRIDE { return AVC_CLOCK_RATE; }
-  uint32_t GetVideoFrameRate() MOZ_OVERRIDE { return mFrameRate; }
+  uint32_t GetVideoHeight() override { return mHeight; }
+  uint32_t GetVideoWidth() override {return mWidth; }
+  uint32_t GetVideoDisplayHeight() override { return mDisplayHeight; }
+  uint32_t GetVideoDisplayWidth() override { return mDisplayWidth;  }
+  uint32_t GetVideoClockRate() override { return AVC_CLOCK_RATE; }
+  uint32_t GetVideoFrameRate() override { return mFrameRate; }
 
   // TrackMetadataBase member
-  MetadataKind GetKind() const MOZ_OVERRIDE { return METADATA_AVC; }
+  MetadataKind GetKind() const override { return METADATA_AVC; }
 
   // AVCTrackMetadata
   AVCTrackMetadata()
@@ -86,13 +86,13 @@ public:
   //
   // The number of sample sets generates by encoder is variant. So the
   // frame duration and frame size are both 0.
-  uint32_t GetAudioFrameDuration() MOZ_OVERRIDE { return 0; }
-  uint32_t GetAudioFrameSize() MOZ_OVERRIDE { return 0; }
-  uint32_t GetAudioSampleRate() MOZ_OVERRIDE { return AMR_SAMPLE_RATE; }
-  uint32_t GetAudioChannels() MOZ_OVERRIDE { return AMR_CHANNELS; }
+  uint32_t GetAudioFrameDuration() override { return 0; }
+  uint32_t GetAudioFrameSize() override { return 0; }
+  uint32_t GetAudioSampleRate() override { return AMR_SAMPLE_RATE; }
+  uint32_t GetAudioChannels() override { return AMR_CHANNELS; }
 
   // TrackMetadataBase member
-  MetadataKind GetKind() const MOZ_OVERRIDE { return METADATA_AMR; }
+  MetadataKind GetKind() const override { return METADATA_AMR; }
 
   // AMRTrackMetadata members
   AMRTrackMetadata() { MOZ_COUNT_CTOR(AMRTrackMetadata); }

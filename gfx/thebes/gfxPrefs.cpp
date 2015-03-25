@@ -18,7 +18,7 @@ class PreferenceAccessImpl : public mozilla::gfx::PreferenceAccess
 {
 public:
   virtual ~PreferenceAccessImpl();
-  virtual void LivePref(const char* aName, int32_t* aVar, int32_t aDefault) MOZ_OVERRIDE;
+  virtual void LivePref(const char* aName, int32_t* aVar, int32_t aDefault) override;
 };
 
 PreferenceAccessImpl::~PreferenceAccessImpl()

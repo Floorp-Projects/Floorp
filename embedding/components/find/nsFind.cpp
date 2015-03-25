@@ -79,7 +79,7 @@ PR_STATIC_ASSERT(CH_SHY <= 255);
 // 5) The implementation assumes that First() and Next() are only called
 // in find-forward mode, while Last() and Prev() are used in find-backward.
 
-class nsFindContentIterator MOZ_FINAL : public nsIContentIterator
+class nsFindContentIterator final : public nsIContentIterator
 {
 public:
   explicit nsFindContentIterator(bool aFindBackward)
@@ -94,12 +94,12 @@ public:
     NS_DECL_CYCLE_COLLECTION_CLASS(nsFindContentIterator)
 
   // nsIContentIterator
-  virtual nsresult Init(nsINode* aRoot) MOZ_OVERRIDE
+  virtual nsresult Init(nsINode* aRoot) override
   {
     NS_NOTREACHED("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
   }
-  virtual nsresult Init(nsIDOMRange* aRange) MOZ_OVERRIDE
+  virtual nsresult Init(nsIDOMRange* aRange) override
   {
     NS_NOTREACHED("internal error");
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -107,13 +107,13 @@ public:
   // Not a range because one of the endpoints may be anonymous.
   nsresult Init(nsIDOMNode* aStartNode, int32_t aStartOffset,
                 nsIDOMNode* aEndNode, int32_t aEndOffset);
-  virtual void First() MOZ_OVERRIDE;
-  virtual void Last() MOZ_OVERRIDE;
-  virtual void Next() MOZ_OVERRIDE;
-  virtual void Prev() MOZ_OVERRIDE;
-  virtual nsINode* GetCurrentNode() MOZ_OVERRIDE;
-  virtual bool IsDone() MOZ_OVERRIDE;
-  virtual nsresult PositionAt(nsINode* aCurNode) MOZ_OVERRIDE;
+  virtual void First() override;
+  virtual void Last() override;
+  virtual void Next() override;
+  virtual void Prev() override;
+  virtual nsINode* GetCurrentNode() override;
+  virtual bool IsDone() override;
+  virtual nsresult PositionAt(nsINode* aCurNode) override;
 
 protected:
   virtual ~nsFindContentIterator()

@@ -27,7 +27,7 @@ public:
   nsCOMPtr<nsIScreen> mScreen;
 };
 
-class nsScreenManagerWin MOZ_FINAL : public nsIScreenManager
+class nsScreenManagerWin final : public nsIScreenManager
 {
 public:
   nsScreenManagerWin ( );

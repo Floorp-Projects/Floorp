@@ -67,7 +67,7 @@ RunBeforeNextEvent(IDBTransaction* aTransaction)
 
 } // anonymous namespace
 
-class IDBTransaction::WorkerFeature MOZ_FINAL
+class IDBTransaction::WorkerFeature final
   : public mozilla::dom::workers::WorkerFeature
 {
   WorkerPrivate* mWorkerPrivate;
@@ -100,7 +100,7 @@ public:
 
 private:
   virtual bool
-  Notify(JSContext* aCx, Status aStatus) MOZ_OVERRIDE;
+  Notify(JSContext* aCx, Status aStatus) override;
 };
 
 IDBTransaction::IDBTransaction(IDBDatabase* aDatabase,

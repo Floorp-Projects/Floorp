@@ -26,7 +26,7 @@ public:
   {
   }
 
-  JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
+  JSObject* WrapObject(JSContext* aCx) override
   {
     return SVGRectBinding::Wrap(aCx, this);
   }

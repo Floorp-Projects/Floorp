@@ -258,7 +258,7 @@ public:
   {
   }
 
-  virtual void trace(JSTracer* trc) MOZ_OVERRIDE
+  virtual void trace(JSTracer* trc) override
   {
     mArray->TraceSelf(trc);
   }
@@ -281,7 +281,7 @@ public:
   {
   }
 
-  virtual void trace(JSTracer* trc) MOZ_OVERRIDE
+  virtual void trace(JSTracer* trc) override
   {
     if (!mArray->IsNull()) {
       mArray->Value().TraceSelf(trc);

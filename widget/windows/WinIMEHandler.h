@@ -27,7 +27,7 @@ struct MSGResult;
  * API set. By using this class, non-IME handler classes don't need to worry
  * that we're in which mode.
  */
-class IMEHandler MOZ_FINAL
+class IMEHandler final
 {
 public:
   static void Initialize();

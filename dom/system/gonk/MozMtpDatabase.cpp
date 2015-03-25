@@ -228,7 +228,7 @@ MozMtpDatabase::UpdateEntry(MtpObjectHandle aHandle, DeviceStorageFile* aFile)
 }
 
 
-class FileWatcherNotifyRunnable MOZ_FINAL : public nsRunnable
+class FileWatcherNotifyRunnable final : public nsRunnable
 {
 public:
   FileWatcherNotifyRunnable(nsACString& aStorageName,

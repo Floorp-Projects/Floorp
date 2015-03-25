@@ -10,7 +10,7 @@
 #include "nsIObserver.h"
 #include "mozilla/Attributes.h"
 
-class nsProfiler MOZ_FINAL : public nsIProfiler, public nsIObserver
+class nsProfiler final : public nsIProfiler, public nsIObserver
 {
 public:
     nsProfiler();

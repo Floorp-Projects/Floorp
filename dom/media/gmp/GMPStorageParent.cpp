@@ -137,7 +137,7 @@ public:
     MOZ_ASSERT(!mFiles.Count());
   }
 
-  virtual GMPErr Open(const nsCString& aRecordName) MOZ_OVERRIDE
+  virtual GMPErr Open(const nsCString& aRecordName) override
   {
     MOZ_ASSERT(!IsOpen(aRecordName));
     PRFileDesc* fd = nullptr;
@@ -149,7 +149,7 @@ public:
     return GMPNoErr;
   }
 
-  virtual bool IsOpen(const nsCString& aRecordName) MOZ_OVERRIDE {
+  virtual bool IsOpen(const nsCString& aRecordName) override {
     return mFiles.Contains(aRecordName);
   }
 
@@ -206,7 +206,7 @@ public:
   }
 
   virtual GMPErr Read(const nsCString& aRecordName,
-                      nsTArray<uint8_t>& aOutBytes) MOZ_OVERRIDE
+                      nsTArray<uint8_t>& aOutBytes) override
   {
     // Our error strategy is to report records with invalid contents as
     // containing 0 bytes. Zero length records are considered "deleted" by
@@ -250,7 +250,7 @@ public:
   }
 
   virtual GMPErr Write(const nsCString& aRecordName,
-                       const nsTArray<uint8_t>& aBytes) MOZ_OVERRIDE
+                       const nsTArray<uint8_t>& aBytes) override
   {
     PRFileDesc* fd = mFiles.Get(aRecordName);
     if (!fd) {
@@ -285,7 +285,7 @@ public:
     return (bytesWritten == (int32_t)aBytes.Length()) ? GMPNoErr : GMPGenericErr;
   }
 
-  virtual GMPErr GetRecordNames(nsTArray<nsCString>& aOutRecordNames) MOZ_OVERRIDE
+  virtual GMPErr GetRecordNames(nsTArray<nsCString>& aOutRecordNames) override
   {
     nsCOMPtr<nsIFile> storageDir;
     nsresult rv = GetGMPStorageDir(getter_AddRefs(storageDir), mNodeId);
@@ -351,7 +351,7 @@ public:
     return GMPNoErr;
   }
 
-  virtual void Close(const nsCString& aRecordName) MOZ_OVERRIDE
+  virtual void Close(const nsCString& aRecordName) override
   {
     PRFileDesc* fd = mFiles.Get(aRecordName);
     if (fd) {
@@ -370,7 +370,7 @@ private:
 
 class GMPMemoryStorage : public GMPStorage {
 public:
-  virtual GMPErr Open(const nsCString& aRecordName) MOZ_OVERRIDE
+  virtual GMPErr Open(const nsCString& aRecordName) override
   {
     MOZ_ASSERT(!IsOpen(aRecordName));
 
@@ -383,7 +383,7 @@ public:
     return GMPNoErr;
   }
 
-  virtual bool IsOpen(const nsCString& aRecordName) MOZ_OVERRIDE {
+  virtual bool IsOpen(const nsCString& aRecordName) override {
     Record* record = nullptr;
     if (!mRecords.Get(aRecordName, &record)) {
       return false;
@@ -392,7 +392,7 @@ public:
   }
 
   virtual GMPErr Read(const nsCString& aRecordName,
-                      nsTArray<uint8_t>& aOutBytes) MOZ_OVERRIDE
+                      nsTArray<uint8_t>& aOutBytes) override
   {
     Record* record = nullptr;
     if (!mRecords.Get(aRecordName, &record)) {
@@ -403,7 +403,7 @@ public:
   }
 
   virtual GMPErr Write(const nsCString& aRecordName,
-                       const nsTArray<uint8_t>& aBytes) MOZ_OVERRIDE
+                       const nsTArray<uint8_t>& aBytes) override
   {
     Record* record = nullptr;
     if (!mRecords.Get(aRecordName, &record)) {
@@ -413,13 +413,13 @@ public:
     return GMPNoErr;
   }
 
-  virtual GMPErr GetRecordNames(nsTArray<nsCString>& aOutRecordNames) MOZ_OVERRIDE
+  virtual GMPErr GetRecordNames(nsTArray<nsCString>& aOutRecordNames) override
   {
     mRecords.EnumerateRead(EnumRecordNames, &aOutRecordNames);
     return GMPNoErr;
   }
 
-  virtual void Close(const nsCString& aRecordName) MOZ_OVERRIDE
+  virtual void Close(const nsCString& aRecordName) override
   {
     Record* record = nullptr;
     if (!mRecords.Get(aRecordName, &record)) {

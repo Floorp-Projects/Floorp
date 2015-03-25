@@ -68,7 +68,7 @@ private:
   int64_t mSize;
 };
 
-class OriginInfo MOZ_FINAL
+class OriginInfo final
 {
   friend class GroupInfo;
   friend class QuotaManager;
@@ -147,7 +147,7 @@ public:
   }
 };
 
-class GroupInfo MOZ_FINAL
+class GroupInfo final
 {
   friend class GroupInfoPair;
   friend class OriginInfo;

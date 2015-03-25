@@ -12,7 +12,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-struct DOMAnimatedString MOZ_FINAL : public SVGAnimatedString
+struct DOMAnimatedString final : public SVGAnimatedString
 {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimatedString)
@@ -24,17 +24,17 @@ struct DOMAnimatedString MOZ_FINAL : public SVGAnimatedString
 
   nsSVGClass* mVal; // kept alive because it belongs to content
 
-  void GetBaseVal(nsAString& aResult) MOZ_OVERRIDE
+  void GetBaseVal(nsAString& aResult) override
   {
     mVal->GetBaseValue(aResult, mSVGElement);
   }
 
-  void SetBaseVal(const nsAString& aValue) MOZ_OVERRIDE
+  void SetBaseVal(const nsAString& aValue) override
   {
     mVal->SetBaseValue(aValue, mSVGElement, true);
   }
 
-  void GetAnimVal(nsAString& aResult) MOZ_OVERRIDE;
+  void GetAnimVal(nsAString& aResult) override;
 
 private:
   ~DOMAnimatedString() {}

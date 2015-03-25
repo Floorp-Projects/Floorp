@@ -23,7 +23,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DynamicsCompressorNode, AudioNode)
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) override;
 
   AudioParam* Threshold() const
   {
@@ -56,13 +56,13 @@ public:
     return mRelease;
   }
 
-  virtual const char* NodeType() const MOZ_OVERRIDE
+  virtual const char* NodeType() const override
   {
     return "DynamicsCompressorNode";
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
 protected:
   virtual ~DynamicsCompressorNode();

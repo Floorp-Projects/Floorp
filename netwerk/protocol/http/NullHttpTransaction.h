@@ -41,10 +41,10 @@ public:
   bool Claim();
 
   // Overload of nsAHttpTransaction methods
-  bool IsNullTransaction() MOZ_OVERRIDE MOZ_FINAL { return true; }
-  NullHttpTransaction *QueryNullTransaction() MOZ_OVERRIDE MOZ_FINAL { return this; }
-  bool ResponseTimeoutEnabled() const MOZ_OVERRIDE MOZ_FINAL {return true; }
-  PRIntervalTime ResponseTimeout() MOZ_OVERRIDE MOZ_FINAL
+  bool IsNullTransaction() override final { return true; }
+  NullHttpTransaction *QueryNullTransaction() override final { return this; }
+  bool ResponseTimeoutEnabled() const override final {return true; }
+  PRIntervalTime ResponseTimeout() override final
   {
     return PR_SecondsToInterval(15);
   }

@@ -23,8 +23,8 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD CompareRegressionData(FILE* aFile1, FILE* aFile2,int32_t aRegressionOutput=0) MOZ_OVERRIDE;
-  NS_IMETHOD DumpRegressionData(FILE* aInputFile, FILE* aOutputFile) MOZ_OVERRIDE;
+  NS_IMETHOD CompareRegressionData(FILE* aFile1, FILE* aFile2,int32_t aRegressionOutput=0) override;
+  NS_IMETHOD DumpRegressionData(FILE* aInputFile, FILE* aOutputFile) override;
 
   struct Node;
   struct Tag;

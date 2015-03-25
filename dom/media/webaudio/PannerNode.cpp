@@ -68,7 +68,7 @@ public:
     mHRTFPanner = new HRTFPanner(aNode->Context()->SampleRate(), loader);
   }
 
-  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam) MOZ_OVERRIDE
+  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override
   {
     switch (aIndex) {
     case PannerNode::PANNING_MODEL:
@@ -104,7 +104,7 @@ public:
       NS_ERROR("Bad PannerNodeEngine Int32Parameter");
     }
   }
-  virtual void SetThreeDPointParameter(uint32_t aIndex, const ThreeDPoint& aParam) MOZ_OVERRIDE
+  virtual void SetThreeDPointParameter(uint32_t aIndex, const ThreeDPoint& aParam) override
   {
     switch (aIndex) {
     case PannerNode::LISTENER_POSITION: mListenerPosition = aParam; break;
@@ -118,7 +118,7 @@ public:
       NS_ERROR("Bad PannerNodeEngine ThreeDPointParameter");
     }
   }
-  virtual void SetDoubleParameter(uint32_t aIndex, double aParam) MOZ_OVERRIDE
+  virtual void SetDoubleParameter(uint32_t aIndex, double aParam) override
   {
     switch (aIndex) {
     case PannerNode::LISTENER_DOPPLER_FACTOR: mListenerDopplerFactor = aParam; break;
@@ -137,7 +137,7 @@ public:
   virtual void ProcessBlock(AudioNodeStream* aStream,
                             const AudioChunk& aInput,
                             AudioChunk* aOutput,
-                            bool *aFinished) MOZ_OVERRIDE
+                            bool *aFinished) override
   {
     if (aInput.IsNull()) {
       // mLeftOverData != INT_MIN means that the panning model was HRTF and a
@@ -184,7 +184,7 @@ public:
   float InverseGainFunction(float aDistance);
   float ExponentialGainFunction(float aDistance);
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
     if (mHRTFPanner) {
@@ -194,7 +194,7 @@ public:
     return amount;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

@@ -32,7 +32,7 @@ protected:
 }; // VsyncObserver
 
 // Used to dispatch vsync events in the parent process to compositors
-class CompositorVsyncDispatcher MOZ_FINAL
+class CompositorVsyncDispatcher final
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorVsyncDispatcher)
 
@@ -62,7 +62,7 @@ private:
 };
 
 // Dispatch vsync event to ipc actor parent and chrome RefreshTimer.
-class RefreshTimerVsyncDispatcher MOZ_FINAL
+class RefreshTimerVsyncDispatcher final
 {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RefreshTimerVsyncDispatcher)
 

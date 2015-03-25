@@ -134,20 +134,20 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(HTMLContentSink, nsContentSink)
 
   // nsIContentSink
-  NS_IMETHOD WillParse(void) MOZ_OVERRIDE;
-  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) MOZ_OVERRIDE;
-  NS_IMETHOD DidBuildModel(bool aTerminated) MOZ_OVERRIDE;
-  NS_IMETHOD WillInterrupt(void) MOZ_OVERRIDE;
-  NS_IMETHOD WillResume(void) MOZ_OVERRIDE;
-  NS_IMETHOD SetParser(nsParserBase* aParser) MOZ_OVERRIDE;
-  virtual void FlushPendingNotifications(mozFlushType aType) MOZ_OVERRIDE;
-  NS_IMETHOD SetDocumentCharset(nsACString& aCharset) MOZ_OVERRIDE;
-  virtual nsISupports *GetTarget() MOZ_OVERRIDE;
-  virtual bool IsScriptExecuting() MOZ_OVERRIDE;
+  NS_IMETHOD WillParse(void) override;
+  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) override;
+  NS_IMETHOD DidBuildModel(bool aTerminated) override;
+  NS_IMETHOD WillInterrupt(void) override;
+  NS_IMETHOD WillResume(void) override;
+  NS_IMETHOD SetParser(nsParserBase* aParser) override;
+  virtual void FlushPendingNotifications(mozFlushType aType) override;
+  NS_IMETHOD SetDocumentCharset(nsACString& aCharset) override;
+  virtual nsISupports *GetTarget() override;
+  virtual bool IsScriptExecuting() override;
 
   // nsIHTMLContentSink
-  NS_IMETHOD OpenContainer(ElementType aNodeType) MOZ_OVERRIDE;
-  NS_IMETHOD CloseContainer(ElementType aTag) MOZ_OVERRIDE;
+  NS_IMETHOD OpenContainer(ElementType aNodeType) override;
+  NS_IMETHOD CloseContainer(ElementType aTag) override;
 
 protected:
   virtual ~HTMLContentSink();
@@ -175,7 +175,7 @@ protected:
 
   mozilla::dom::NodeInfo* mNodeInfoCache[NS_HTML_TAG_MAX + 1];
 
-  nsresult FlushTags() MOZ_OVERRIDE;
+  nsresult FlushTags() override;
 
   // Routines for tags that require special handling
   nsresult CloseHTML();
@@ -185,7 +185,7 @@ protected:
   void CloseHeadContext();
 
   // nsContentSink overrides
-  void UpdateChildCounts() MOZ_OVERRIDE;
+  void UpdateChildCounts() override;
 
   void NotifyInsert(nsIContent* aContent,
                     nsIContent* aChildContent,

@@ -88,7 +88,7 @@ private:
     shutdown(calledFromObject);
   }
 
-  void virtualDestroyNSSReference() MOZ_OVERRIDE
+  void virtualDestroyNSSReference() override
   {
     destructorSafeDestroyNSSReference();
   }
@@ -128,7 +128,7 @@ private:
     shutdown(calledFromObject);
   }
 
-  virtual void virtualDestroyNSSReference() MOZ_OVERRIDE
+  virtual void virtualDestroyNSSReference() override
   {
     destructorSafeDestroyNSSReference();
   }
@@ -165,7 +165,7 @@ private:
     shutdown(calledFromObject);
   }
 
-  void virtualDestroyNSSReference() MOZ_OVERRIDE
+  void virtualDestroyNSSReference() override
   {
     destructorSafeDestroyNSSReference();
   }
@@ -187,7 +187,7 @@ private:
   void operator=(const SignRunnable &) = delete;
 };
 
-class IdentityCryptoService MOZ_FINAL : public nsIIdentityCryptoService
+class IdentityCryptoService final : public nsIIdentityCryptoService
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

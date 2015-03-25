@@ -25,7 +25,7 @@ class SpdyPushedStream31;
 class SpdyStream31;
 class nsHttpTransaction;
 
-class SpdySession31 MOZ_FINAL : public ASpdySession
+class SpdySession31 final : public ASpdySession
                               , public nsAHttpConnection
                               , public nsAHttpSegmentReader
                               , public nsAHttpSegmentWriter
@@ -42,18 +42,18 @@ public:
   explicit SpdySession31(nsISocketTransport *);
 
   bool AddStream(nsAHttpTransaction *, int32_t,
-                 bool, nsIInterfaceRequestor *) MOZ_OVERRIDE;
-  bool CanReuse() MOZ_OVERRIDE { return !mShouldGoAway && !mClosed; }
-  bool RoomForMoreStreams() MOZ_OVERRIDE;
+                 bool, nsIInterfaceRequestor *) override;
+  bool CanReuse() override { return !mShouldGoAway && !mClosed; }
+  bool RoomForMoreStreams() override;
 
   // When the connection is active this is called up to once every 1 second
   // return the interval (in seconds) that the connection next wants to
   // have this invoked. It might happen sooner depending on the needs of
   // other connections.
-  uint32_t  ReadTimeoutTick(PRIntervalTime now) MOZ_OVERRIDE;
+  uint32_t  ReadTimeoutTick(PRIntervalTime now) override;
 
   // Idle time represents time since "goodput".. e.g. a data or header frame
-  PRIntervalTime IdleTime() MOZ_OVERRIDE;
+  PRIntervalTime IdleTime() override;
 
   // Registering with a newID of 0 means pick the next available odd ID
   uint32_t RegisterStreamID(SpdyStream31 *, uint32_t aNewID = 0);
@@ -164,13 +164,13 @@ public:
                     const char *, uint32_t);
 
   // an overload of nsAHttpConnection
-  void TransactionHasDataToWrite(nsAHttpTransaction *) MOZ_OVERRIDE;
+  void TransactionHasDataToWrite(nsAHttpTransaction *) override;
 
   // a similar version for SpdyStream31
   void TransactionHasDataToWrite(SpdyStream31 *);
 
   // an overload of nsAHttpSegementReader
-  virtual nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment) MOZ_OVERRIDE;
+  virtual nsresult CommitToSegmentSize(uint32_t size, bool forceCommitment) override;
   nsresult BufferOutput(const char *, uint32_t, uint32_t *);
   void     FlushOutputQueue();
   uint32_t AmountOfOutputBuffered() { return mOutputQueueUsed - mOutputQueueSent; }
@@ -183,7 +183,7 @@ public:
 
   uint64_t Serial() { return mSerial; }
 
-  void     PrintDiagnostics (nsCString &log) MOZ_OVERRIDE;
+  void     PrintDiagnostics (nsCString &log) override;
 
   // Streams need access to these
   uint32_t SendingChunkSize() { return mSendingChunkSize; }
@@ -193,9 +193,9 @@ public:
   int64_t RemoteSessionWindow() { return mRemoteSessionWindow; }
   void DecrementRemoteSessionWindow (uint32_t bytes) { mRemoteSessionWindow -= bytes; }
 
-  void SendPing() MOZ_OVERRIDE;
+  void SendPing() override;
 
-  bool MaybeReTunnel(nsAHttpTransaction *) MOZ_OVERRIDE;
+  bool MaybeReTunnel(nsAHttpTransaction *) override;
 
 private:
 

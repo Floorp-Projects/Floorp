@@ -87,7 +87,7 @@ class ReadbackLayer : public Layer {
 public:
   MOZ_LAYER_DECL_NAME("ReadbackLayer", TYPE_READBACK)
 
-  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) MOZ_OVERRIDE
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
   {
     // Snap our local transform first, and snap the inherited transform as well.
     // This makes our snapping equivalent to what would happen if our content
@@ -174,9 +174,9 @@ protected:
     mBackgroundColor(gfxRGBA(0,0,0,0))
   {}
 
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
-  virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) MOZ_OVERRIDE;
+  virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) override;
 
   uint64_t mSequenceCounter;
   nsAutoPtr<ReadbackSink> mSink;

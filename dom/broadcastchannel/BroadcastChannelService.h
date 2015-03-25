@@ -19,7 +19,7 @@ namespace dom {
 class BroadcastChannelParent;
 class ClonedMessageData;
 
-class BroadcastChannelService MOZ_FINAL
+class BroadcastChannelService final
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(BroadcastChannelService)

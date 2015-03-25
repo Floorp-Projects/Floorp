@@ -10,7 +10,7 @@
 
 class nsHtml5AtomTable;
 
-class nsHtml5ReleasableAttributeName MOZ_FINAL : public nsHtml5AttributeName
+class nsHtml5ReleasableAttributeName final : public nsHtml5AttributeName
 {
   public:
     nsHtml5ReleasableAttributeName(int32_t* uri, nsIAtom** local, nsIAtom** prefix);

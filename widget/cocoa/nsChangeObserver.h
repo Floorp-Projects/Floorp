@@ -12,9 +12,9 @@ class nsIDocument;
 class nsIAtom;
 
 #define NS_DECL_CHANGEOBSERVER \
-void ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent, nsIAtom *aAttribute) MOZ_OVERRIDE; \
-void ObserveContentRemoved(nsIDocument *aDocument, nsIContent *aChild, int32_t aIndexInContainer) MOZ_OVERRIDE; \
-void ObserveContentInserted(nsIDocument *aDocument, nsIContent* aContainer, nsIContent *aChild) MOZ_OVERRIDE;
+void ObserveAttributeChanged(nsIDocument *aDocument, nsIContent *aContent, nsIAtom *aAttribute) override; \
+void ObserveContentRemoved(nsIDocument *aDocument, nsIContent *aChild, int32_t aIndexInContainer) override; \
+void ObserveContentInserted(nsIDocument *aDocument, nsIContent* aContainer, nsIContent *aChild) override;
 
 // Something that wants to be alerted to changes in attributes or changes in
 // its corresponding content object.

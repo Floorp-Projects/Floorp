@@ -36,7 +36,7 @@ class FileSystemBase;
 class Promise;
 class StringOrFileOrDirectory;
 
-class Directory MOZ_FINAL
+class Directory final
   : public nsISupports
   , public nsWrapperCache
 {
@@ -56,7 +56,7 @@ public:
   GetParentObject() const;
 
   virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx) override;
 
   void
   GetName(nsString& aRetval) const;

@@ -18,7 +18,7 @@ class nsXULTemplateResultRDF;
 /**
  * An enumerator used to iterate over a set of results.
  */
-class nsXULTemplateResultSetRDF MOZ_FINAL : public nsISimpleEnumerator
+class nsXULTemplateResultSetRDF final : public nsISimpleEnumerator
 {
 private:
     nsXULTemplateQueryProcessorRDF* mProcessor;

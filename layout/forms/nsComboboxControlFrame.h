@@ -43,7 +43,7 @@ class DrawTarget;
 }
 }
 
-class nsComboboxControlFrame MOZ_FINAL : public nsBlockFrame,
+class nsComboboxControlFrame final : public nsBlockFrame,
                                          public nsIFormControlFrame,
                                          public nsIComboboxControlFrame,
                                          public nsIAnonymousContentCreator,
@@ -66,62 +66,62 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) MOZ_OVERRIDE;
+  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
   virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                        uint32_t aFilter) MOZ_OVERRIDE;
-  virtual nsIFrame* CreateFrameFor(nsIContent* aContent) MOZ_OVERRIDE;
+                                        uint32_t aFilter) override;
+  virtual nsIFrame* CreateFrameFor(nsIContent* aContent) override;
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
+  virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
 
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
 
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
   virtual void Reflow(nsPresContext*           aCX,
                       nsHTMLReflowMetrics&     aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+                      nsReflowStatus&          aStatus) override;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,
-                               nsEventStatus* aEventStatus) MOZ_OVERRIDE;
+                               nsEventStatus* aEventStatus) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
   void PaintFocus(DrawTarget& aDrawTarget, nsPoint aPt);
 
   // XXXbz this is only needed to prevent the quirk percent height stuff from
   // leaking out of the combobox.  We may be able to get rid of this as more
   // things move to IsFrameOfType.
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
+  virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsBlockFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));
   }
 
-  virtual nsIScrollableFrame* GetScrollTargetFrame() MOZ_OVERRIDE {
+  virtual nsIScrollableFrame* GetScrollTargetFrame() override {
     return do_QueryFrame(mDropdownFrame);
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual void SetInitialChildList(ChildListID     aListID,
-                                   nsFrameList&    aChildList) MOZ_OVERRIDE;
-  virtual const nsFrameList& GetChildList(ChildListID aListID) const MOZ_OVERRIDE;
-  virtual void GetChildLists(nsTArray<ChildList>* aLists) const MOZ_OVERRIDE;
+                                   nsFrameList&    aChildList) override;
+  virtual const nsFrameList& GetChildList(ChildListID aListID) const override;
+  virtual void GetChildLists(nsTArray<ChildList>* aLists) const override;
 
-  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE;
+  virtual nsContainerFrame* GetContentInsertionFrame() override;
 
   // nsIFormControlFrame
-  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) MOZ_OVERRIDE;
+  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) override;
   /**
    * Inform the control that it got (or lost) focus.
    * If it lost focus, the dropdown menu will be rolled up if needed,
@@ -130,20 +130,20 @@ public:
    * @param aRepaint if true then force repaint (NOTE: we always force repaint currently)
    * @note This method might destroy |this|.
    */
-  virtual void SetFocus(bool aOn, bool aRepaint) MOZ_OVERRIDE;
+  virtual void SetFocus(bool aOn, bool aRepaint) override;
 
   //nsIComboboxControlFrame
-  virtual bool IsDroppedDown() MOZ_OVERRIDE { return mDroppedDown; }
+  virtual bool IsDroppedDown() override { return mDroppedDown; }
   /**
    * @note This method might destroy |this|.
    */
-  virtual void ShowDropDown(bool aDoDropDown) MOZ_OVERRIDE;
-  virtual nsIFrame* GetDropDown() MOZ_OVERRIDE;
-  virtual void SetDropDown(nsIFrame* aDropDownFrame) MOZ_OVERRIDE;
+  virtual void ShowDropDown(bool aDoDropDown) override;
+  virtual nsIFrame* GetDropDown() override;
+  virtual void SetDropDown(nsIFrame* aDropDownFrame) override;
   /**
    * @note This method might destroy |this|.
    */
-  virtual void RollupFromList() MOZ_OVERRIDE;
+  virtual void RollupFromList() override;
 
   /**
    * Return the available space above and below this frame for
@@ -154,20 +154,20 @@ public:
   void GetAvailableDropdownSpace(nscoord* aAbove,
                                  nscoord* aBelow,
                                  nsPoint* aTranslation);
-  virtual int32_t GetIndexOfDisplayArea() MOZ_OVERRIDE;
+  virtual int32_t GetIndexOfDisplayArea() override;
   /**
    * @note This method might destroy |this|.
    */
-  NS_IMETHOD RedisplaySelectedText() MOZ_OVERRIDE;
-  virtual int32_t UpdateRecentIndex(int32_t aIndex) MOZ_OVERRIDE;
-  virtual void OnContentReset() MOZ_OVERRIDE;
+  NS_IMETHOD RedisplaySelectedText() override;
+  virtual int32_t UpdateRecentIndex(int32_t aIndex) override;
+  virtual void OnContentReset() override;
 
   // nsISelectControlFrame
-  NS_IMETHOD AddOption(int32_t index) MOZ_OVERRIDE;
-  NS_IMETHOD RemoveOption(int32_t index) MOZ_OVERRIDE;
-  NS_IMETHOD DoneAddingChildren(bool aIsDone) MOZ_OVERRIDE;
-  NS_IMETHOD OnOptionSelected(int32_t aIndex, bool aSelected) MOZ_OVERRIDE;
-  NS_IMETHOD OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) MOZ_OVERRIDE;
+  NS_IMETHOD AddOption(int32_t index) override;
+  NS_IMETHOD RemoveOption(int32_t index) override;
+  NS_IMETHOD DoneAddingChildren(bool aIsDone) override;
+  NS_IMETHOD OnOptionSelected(int32_t aIndex, bool aSelected) override;
+  NS_IMETHOD OnSetSelectedIndex(int32_t aOldIndex, int32_t aNewIndex) override;
 
   //nsIRollupListener
   /**
@@ -175,34 +175,34 @@ public:
    * @note This method might destroy |this|.
    */
   virtual bool Rollup(uint32_t aCount, bool aFlush,
-                      const nsIntPoint* pos, nsIContent** aLastRolledUp) MOZ_OVERRIDE;
-  virtual void NotifyGeometryChange() MOZ_OVERRIDE;
+                      const nsIntPoint* pos, nsIContent** aLastRolledUp) override;
+  virtual void NotifyGeometryChange() override;
 
   /**
    * A combobox should roll up if a mousewheel event happens outside of
    * the popup area.
    */
-  virtual bool ShouldRollupOnMouseWheelEvent() MOZ_OVERRIDE
+  virtual bool ShouldRollupOnMouseWheelEvent() override
     { return true; }
 
-  virtual bool ShouldConsumeOnMouseWheelEvent() MOZ_OVERRIDE
+  virtual bool ShouldConsumeOnMouseWheelEvent() override
     { return false; }
 
   /**
    * A combobox should not roll up if activated by a mouse activate message
    * (eg. X-mouse).
    */
-  virtual bool ShouldRollupOnMouseActivate() MOZ_OVERRIDE
+  virtual bool ShouldRollupOnMouseActivate() override
     { return false; }
 
-  virtual uint32_t GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain) MOZ_OVERRIDE
+  virtual uint32_t GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain) override
     { return 0; }
 
-  virtual nsIWidget* GetRollupWidget() MOZ_OVERRIDE;
+  virtual nsIWidget* GetRollupWidget() override;
 
   //nsIStatefulFrame
-  NS_IMETHOD SaveState(nsPresState** aState) MOZ_OVERRIDE;
-  NS_IMETHOD RestoreState(nsPresState* aState) MOZ_OVERRIDE;
+  NS_IMETHOD SaveState(nsPresState** aState) override;
+  NS_IMETHOD RestoreState(nsPresState* aState) override;
 
   static bool ToolkitHasNativePopup();
 

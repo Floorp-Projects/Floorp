@@ -27,7 +27,7 @@ using namespace mozilla::ipc;
 
 using mozilla::DeprecatedAbs;
 
-class nsMultiplexInputStream MOZ_FINAL
+class nsMultiplexInputStream final
   : public nsIMultiplexInputStream
   , public nsISeekableStream
   , public nsIIPCSerializableInputStream

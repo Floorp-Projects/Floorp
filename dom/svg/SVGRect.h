@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace dom {
 
-class SVGRect MOZ_FINAL : public SVGIRect
+class SVGRect final : public SVGIRect
 {
 public:
   explicit SVGRect(nsIContent* aParent, float x=0.0f, float y=0.0f, float w=0.0f,
@@ -26,47 +26,47 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SVGRect)
 
   // WebIDL
-  virtual float X() const MOZ_OVERRIDE MOZ_FINAL
+  virtual float X() const override final
   {
     return mX;
   }
 
-  virtual void SetX(float aX, ErrorResult& aRv) MOZ_FINAL
+  virtual void SetX(float aX, ErrorResult& aRv) final
   {
     mX = aX;
   }
 
-  virtual float Y() const MOZ_OVERRIDE MOZ_FINAL
+  virtual float Y() const override final
   {
     return mY;
   }
 
-  virtual void SetY(float aY, ErrorResult& aRv) MOZ_FINAL
+  virtual void SetY(float aY, ErrorResult& aRv) final
   {
     mY = aY;
   }
 
-  virtual float Width() const MOZ_OVERRIDE MOZ_FINAL
+  virtual float Width() const override final
   {
     return mWidth;
   }
 
-  virtual void SetWidth(float aWidth, ErrorResult& aRv) MOZ_FINAL
+  virtual void SetWidth(float aWidth, ErrorResult& aRv) final
   {
     mWidth = aWidth;
   }
 
-  virtual float Height() const MOZ_OVERRIDE MOZ_FINAL
+  virtual float Height() const override final
   {
     return mHeight;
   }
 
-  virtual void SetHeight(float aHeight, ErrorResult& aRv) MOZ_FINAL
+  virtual void SetHeight(float aHeight, ErrorResult& aRv) final
   {
     mHeight = aHeight;
   }
 
-  virtual nsIContent* GetParentObject() const MOZ_OVERRIDE
+  virtual nsIContent* GetParentObject() const override
   {
     return mParent;
   }

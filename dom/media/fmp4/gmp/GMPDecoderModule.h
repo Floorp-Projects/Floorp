@@ -23,15 +23,15 @@ public:
                      layers::LayersBackend aLayersBackend,
                      layers::ImageContainer* aImageContainer,
                      FlushableMediaTaskQueue* aVideoTaskQueue,
-                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
+                     MediaDataDecoderCallback* aCallback) override;
 
   // Decode thread.
   virtual already_AddRefed<MediaDataDecoder>
   CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aConfig,
                      FlushableMediaTaskQueue* aAudioTaskQueue,
-                     MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
+                     MediaDataDecoderCallback* aCallback) override;
 
-  virtual bool DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig) MOZ_OVERRIDE;
+  virtual bool DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig) override;
 };
 
 } // namespace mozilla

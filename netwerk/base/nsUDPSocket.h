@@ -14,7 +14,7 @@
 
 //-----------------------------------------------------------------------------
 
-class nsUDPSocket MOZ_FINAL : public nsASocketHandler
+class nsUDPSocket final : public nsASocketHandler
                             , public nsIUDPSocket
 {
 public:
@@ -22,12 +22,12 @@ public:
   NS_DECL_NSIUDPSOCKET
 
   // nsASocketHandler methods:
-  virtual void OnSocketReady(PRFileDesc* fd, int16_t outFlags) MOZ_OVERRIDE;
-  virtual void OnSocketDetached(PRFileDesc* fd) MOZ_OVERRIDE;
-  virtual void IsLocal(bool* aIsLocal) MOZ_OVERRIDE;
+  virtual void OnSocketReady(PRFileDesc* fd, int16_t outFlags) override;
+  virtual void OnSocketDetached(PRFileDesc* fd) override;
+  virtual void IsLocal(bool* aIsLocal) override;
 
-  uint64_t ByteCountSent() MOZ_OVERRIDE { return mByteWriteCount; }
-  uint64_t ByteCountReceived() MOZ_OVERRIDE { return mByteReadCount; }
+  uint64_t ByteCountSent() override { return mByteWriteCount; }
+  uint64_t ByteCountReceived() override { return mByteReadCount; }
 
   void AddOutputBytes(uint64_t aBytes);
 

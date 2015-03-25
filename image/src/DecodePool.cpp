@@ -54,7 +54,7 @@ public:
     NS_DispatchToMainThread(worker);
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     mImage->NotifyProgress(mProgress, mInvalidRect, mFlags);
@@ -91,7 +91,7 @@ public:
     NS_DispatchToMainThread(worker);
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     mDecoder->Finish();
@@ -116,7 +116,7 @@ public:
     MOZ_ASSERT(mDecoder);
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
     DecodePool::Singleton()->Decode(mDecoder);
@@ -129,7 +129,7 @@ private:
 
 #ifdef MOZ_NUWA_PROCESS
 
-class DecodePoolNuwaListener MOZ_FINAL : public nsIThreadPoolListener
+class DecodePoolNuwaListener final : public nsIThreadPoolListener
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

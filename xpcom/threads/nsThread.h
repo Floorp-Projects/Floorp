@@ -142,7 +142,7 @@ protected:
     nsEventQueue mQueue;
   };
 
-  class nsNestedEventTarget MOZ_FINAL : public nsIEventTarget
+  class nsNestedEventTarget final : public nsIEventTarget
   {
   public:
     NS_DECL_THREADSAFE_ISUPPORTS

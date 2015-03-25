@@ -17,7 +17,7 @@
 
 #define ZIP_BUFLEN (4 * 1024 - 1)
 
-class nsDeflateConverter MOZ_FINAL : public nsIStreamConverter
+class nsDeflateConverter final : public nsIStreamConverter
 {
 public:
     NS_DECL_ISUPPORTS

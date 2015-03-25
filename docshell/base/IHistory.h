@@ -131,14 +131,14 @@ NS_DEFINE_STATIC_IID_ACCESSOR(IHistory, IHISTORY_IID)
 
 #define NS_DECL_IHISTORY \
   NS_IMETHOD RegisterVisitedCallback(nsIURI* aURI, \
-                                     mozilla::dom::Link* aContent) MOZ_OVERRIDE; \
+                                     mozilla::dom::Link* aContent) override; \
   NS_IMETHOD UnregisterVisitedCallback(nsIURI* aURI, \
-                                       mozilla::dom::Link* aContent) MOZ_OVERRIDE; \
+                                       mozilla::dom::Link* aContent) override; \
   NS_IMETHOD VisitURI(nsIURI* aURI, \
                       nsIURI* aLastVisitedURI, \
-                      uint32_t aFlags) MOZ_OVERRIDE; \
-  NS_IMETHOD SetURITitle(nsIURI* aURI, const nsAString& aTitle) MOZ_OVERRIDE; \
-  NS_IMETHOD NotifyVisited(nsIURI* aURI) MOZ_OVERRIDE;
+                      uint32_t aFlags) override; \
+  NS_IMETHOD SetURITitle(nsIURI* aURI, const nsAString& aTitle) override; \
+  NS_IMETHOD NotifyVisited(nsIURI* aURI) override;
 
 } // namespace mozilla
 

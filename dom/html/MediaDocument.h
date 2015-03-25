@@ -23,7 +23,7 @@ public:
   MediaDocument();
   virtual ~MediaDocument();
 
-  virtual nsresult Init() MOZ_OVERRIDE;
+  virtual nsresult Init() override;
 
   virtual nsresult StartDocumentLoad(const char*         aCommand,
                                      nsIChannel*         aChannel,
@@ -31,11 +31,11 @@ public:
                                      nsISupports*        aContainer,
                                      nsIStreamListener** aDocListener,
                                      bool                aReset = true,
-                                     nsIContentSink*     aSink = nullptr) MOZ_OVERRIDE;
+                                     nsIContentSink*     aSink = nullptr) override;
 
-  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) MOZ_OVERRIDE;
+  virtual void SetScriptGlobalObject(nsIScriptGlobalObject* aGlobalObject) override;
 
-  virtual bool WillIgnoreCharsetOverride() MOZ_OVERRIDE
+  virtual bool WillIgnoreCharsetOverride() override
   {
     return true;
   }

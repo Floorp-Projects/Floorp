@@ -133,7 +133,7 @@ IsAnonymous(const nsACString& aName)
          StringBeginsWith(aName, NS_LITERAL_CSTRING("[stack:"));
 }
 
-class SystemReporter MOZ_FINAL : public nsIMemoryReporter
+class SystemReporter final : public nsIMemoryReporter
 {
   ~SystemReporter() {}
 
@@ -159,7 +159,7 @@ public:
   REPORT_WITH_CLEANUP(_path, UNITS_BYTES, _amount, _desc, (void)0)
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                            nsISupports* aData, bool aAnonymize) override
   {
     // There is lots of privacy-sensitive data in /proc. Just skip this
     // reporter entirely when anonymization is required.

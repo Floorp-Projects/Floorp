@@ -27,7 +27,7 @@ namespace dom {
 
 namespace {
 
-class ProgressRunnable MOZ_FINAL : public nsIRunnable
+class ProgressRunnable final : public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -50,7 +50,7 @@ private:
   uint64_t mProgressMax;
 };
 
-class CloseRunnable MOZ_FINAL : public nsIRunnable
+class CloseRunnable final : public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -66,7 +66,7 @@ private:
   nsRefPtr<FileHelper> mFileHelper;
 };
 
-class DestroyRunnable MOZ_FINAL : public nsIRunnable
+class DestroyRunnable final : public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

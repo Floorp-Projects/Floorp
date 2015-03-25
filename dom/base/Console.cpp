@@ -148,7 +148,7 @@ static const JSStructuredCloneCallbacks gConsoleCallbacks = {
   ConsoleStructuredCloneCallbacksError
 };
 
-class ConsoleCallData MOZ_FINAL
+class ConsoleCallData final
 {
 public:
   ConsoleCallData()
@@ -394,7 +394,7 @@ private:
 
 // This runnable appends a CallData object into the Console queue running on
 // the main-thread.
-class ConsoleCallDataRunnable MOZ_FINAL : public ConsoleRunnable
+class ConsoleCallDataRunnable final : public ConsoleRunnable
 {
 public:
   ConsoleCallDataRunnable(Console* aConsole,
@@ -408,7 +408,7 @@ private:
   { }
 
   bool
-  PreDispatch(JSContext* aCx) MOZ_OVERRIDE
+  PreDispatch(JSContext* aCx) override
   {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -441,7 +441,7 @@ private:
 
   void
   RunConsole(JSContext* aCx, nsPIDOMWindow* aOuterWindow,
-             nsPIDOMWindow* aInnerWindow) MOZ_OVERRIDE
+             nsPIDOMWindow* aInnerWindow) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -520,7 +520,7 @@ private:
 };
 
 // This runnable calls ProfileMethod() on the console on the main-thread.
-class ConsoleProfileRunnable MOZ_FINAL : public ConsoleRunnable
+class ConsoleProfileRunnable final : public ConsoleRunnable
 {
 public:
   ConsoleProfileRunnable(Console* aConsole, const nsAString& aAction,
@@ -534,7 +534,7 @@ public:
 
 private:
   bool
-  PreDispatch(JSContext* aCx) MOZ_OVERRIDE
+  PreDispatch(JSContext* aCx) override
   {
     ClearException ce(aCx);
 
@@ -570,7 +570,7 @@ private:
 
   void
   RunConsole(JSContext* aCx, nsPIDOMWindow* aOuterWindow,
-             nsPIDOMWindow* aInnerWindow) MOZ_OVERRIDE
+             nsPIDOMWindow* aInnerWindow) override
   {
     ClearException ce(aCx);
 
@@ -934,7 +934,7 @@ public:
     }
   }
 
-  virtual bool Equals(const TimelineMarker* aOther) MOZ_OVERRIDE
+  virtual bool Equals(const TimelineMarker* aOther) override
   {
     if (!TimelineMarker::Equals(aOther)) {
       return false;
@@ -943,7 +943,7 @@ public:
     return GetCause() == aOther->GetCause();
   }
 
-  virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker) MOZ_OVERRIDE
+  virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker) override
   {
     if (GetMetaData() == TRACING_INTERVAL_START) {
       aMarker.mCauseName.Construct(GetCause());

@@ -20,15 +20,15 @@ public:
                                bool aAuth, bool aEncrypt);
   virtual ~BluetoothUnixSocketConnector()
   {}
-  virtual int Create() MOZ_OVERRIDE;
+  virtual int Create() override;
   virtual bool CreateAddr(bool aIsServer,
                           socklen_t& aAddrSize,
                           mozilla::ipc::sockaddr_any& aAddr,
-                          const char* aAddress) MOZ_OVERRIDE;
-  virtual bool SetUp(int aFd) MOZ_OVERRIDE;
-  virtual bool SetUpListenSocket(int aFd) MOZ_OVERRIDE;
+                          const char* aAddress) override;
+  virtual bool SetUp(int aFd) override;
+  virtual bool SetUpListenSocket(int aFd) override;
   virtual void GetSocketAddr(const mozilla::ipc::sockaddr_any& aAddr,
-                             nsAString& aAddrStr) MOZ_OVERRIDE;
+                             nsAString& aAddrStr) override;
 
 private:
   BluetoothSocketType mType;

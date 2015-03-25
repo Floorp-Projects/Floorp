@@ -143,7 +143,7 @@ using namespace mozilla::gfx;
 
 /* Class to listen for pref changes so that chrome code can dynamically
    force sRGB as an output profile. See Bug #452125. */
-class SRGBOverrideObserver MOZ_FINAL : public nsIObserver,
+class SRGBOverrideObserver final : public nsIObserver,
                                        public nsSupportsWeakReference
 {
     ~SRGBOverrideObserver() {}
@@ -163,9 +163,9 @@ class CrashStatsLogForwarder: public mozilla::gfx::LogForwarder
 {
 public:
   explicit CrashStatsLogForwarder(const char* aKey);
-  virtual void Log(const std::string& aString) MOZ_OVERRIDE;
+  virtual void Log(const std::string& aString) override;
 
-  virtual std::vector<std::pair<int32_t,std::string> > StringsVectorCopy() MOZ_OVERRIDE;
+  virtual std::vector<std::pair<int32_t,std::string> > StringsVectorCopy() override;
 
   void SetCircularBufferSize(uint32_t aCapacity);
 
@@ -299,7 +299,7 @@ static const char* kObservedPrefs[] = {
     nullptr
 };
 
-class FontPrefsObserver MOZ_FINAL : public nsIObserver
+class FontPrefsObserver final : public nsIObserver
 {
     ~FontPrefsObserver() {}
 public:
@@ -324,7 +324,7 @@ FontPrefsObserver::Observe(nsISupports *aSubject,
     return NS_OK;
 }
 
-class MemoryPressureObserver MOZ_FINAL : public nsIObserver
+class MemoryPressureObserver final : public nsIObserver
 {
     ~MemoryPressureObserver() {}
 public:

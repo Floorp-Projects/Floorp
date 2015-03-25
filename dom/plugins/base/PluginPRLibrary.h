@@ -45,9 +45,9 @@ public:
         // unref here??
     }
 
-    virtual void SetPlugin(nsNPAPIPlugin*) MOZ_OVERRIDE { }
+    virtual void SetPlugin(nsNPAPIPlugin*) override { }
 
-    virtual bool HasRequiredFunctions() MOZ_OVERRIDE {
+    virtual bool HasRequiredFunctions() override {
         mNP_Initialize = (NP_InitializeFunc)
             PR_FindFunctionSymbol(mLibrary, "NP_Initialize");
         if (!mNP_Initialize)
@@ -83,44 +83,44 @@ public:
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)
     virtual nsresult NP_Initialize(NPNetscapeFuncs* aNetscapeFuncs,
-                                   NPPluginFuncs* aFuncs, NPError* aError) MOZ_OVERRIDE;
+                                   NPPluginFuncs* aFuncs, NPError* aError) override;
 #else
     virtual nsresult NP_Initialize(NPNetscapeFuncs* aNetscapeFuncs,
-                                   NPError* aError) MOZ_OVERRIDE;
+                                   NPError* aError) override;
 #endif
 
-    virtual nsresult NP_Shutdown(NPError* aError) MOZ_OVERRIDE;
-    virtual nsresult NP_GetMIMEDescription(const char** aMimeDesc) MOZ_OVERRIDE;
+    virtual nsresult NP_Shutdown(NPError* aError) override;
+    virtual nsresult NP_GetMIMEDescription(const char** aMimeDesc) override;
 
     virtual nsresult NP_GetValue(void* aFuture, NPPVariable aVariable,
-                                 void* aValue, NPError* aError) MOZ_OVERRIDE;
+                                 void* aValue, NPError* aError) override;
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
-    virtual nsresult NP_GetEntryPoints(NPPluginFuncs* aFuncs, NPError* aError) MOZ_OVERRIDE;
+    virtual nsresult NP_GetEntryPoints(NPPluginFuncs* aFuncs, NPError* aError) override;
 #endif
 
     virtual nsresult NPP_New(NPMIMEType aPluginType, NPP aInstance,
                              uint16_t aMode, int16_t aArgc, char* aArgn[],
                              char* aArgv[], NPSavedData* aSaved,
-                             NPError* aError) MOZ_OVERRIDE;
+                             NPError* aError) override;
 
     virtual nsresult NPP_ClearSiteData(const char* aSite, uint64_t aFlags,
-                                       uint64_t aMaxAge) MOZ_OVERRIDE;
-    virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& aResult) MOZ_OVERRIDE;
+                                       uint64_t aMaxAge) override;
+    virtual nsresult NPP_GetSitesWithData(InfallibleTArray<nsCString>& aResult) override;
 
-    virtual nsresult AsyncSetWindow(NPP aInstance, NPWindow* aWindow) MOZ_OVERRIDE;
-    virtual nsresult GetImageContainer(NPP aInstance, mozilla::layers::ImageContainer** aContainer) MOZ_OVERRIDE;
-    virtual nsresult GetImageSize(NPP aInstance, nsIntSize* aSize) MOZ_OVERRIDE;
-    virtual bool IsOOP() MOZ_OVERRIDE { return false; }
+    virtual nsresult AsyncSetWindow(NPP aInstance, NPWindow* aWindow) override;
+    virtual nsresult GetImageContainer(NPP aInstance, mozilla::layers::ImageContainer** aContainer) override;
+    virtual nsresult GetImageSize(NPP aInstance, nsIntSize* aSize) override;
+    virtual bool IsOOP() override { return false; }
 #if defined(XP_MACOSX)
-    virtual nsresult IsRemoteDrawingCoreAnimation(NPP aInstance, bool* aDrawing) MOZ_OVERRIDE;
-    virtual nsresult ContentsScaleFactorChanged(NPP aInstance, double aContentsScaleFactor) MOZ_OVERRIDE;
+    virtual nsresult IsRemoteDrawingCoreAnimation(NPP aInstance, bool* aDrawing) override;
+    virtual nsresult ContentsScaleFactorChanged(NPP aInstance, double aContentsScaleFactor) override;
 #endif
-    virtual nsresult SetBackgroundUnknown(NPP instance) MOZ_OVERRIDE;
+    virtual nsresult SetBackgroundUnknown(NPP instance) override;
     virtual nsresult BeginUpdateBackground(NPP instance,
-                                           const nsIntRect&, gfxContext** aCtx) MOZ_OVERRIDE;
+                                           const nsIntRect&, gfxContext** aCtx) override;
     virtual nsresult EndUpdateBackground(NPP instance,
-                                         gfxContext* aCtx, const nsIntRect&) MOZ_OVERRIDE;
+                                         gfxContext* aCtx, const nsIntRect&) override;
     virtual void GetLibraryPath(nsACString& aPath) { aPath.Assign(mFilePath); }
 
 private:

@@ -942,7 +942,7 @@ private:
 // of |BluetoothResultRunnable| and |BluetoothNotificationRunnable|. The
 // call operators of |UnpackPDUInitOp| unpack a PDU into the supplied
 // arguments.
-class UnpackPDUInitOp MOZ_FINAL : private PDUInitOp
+class UnpackPDUInitOp final : private PDUInitOp
 {
 public:
   UnpackPDUInitOp(BluetoothDaemonPDU& aPDU)

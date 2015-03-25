@@ -21,7 +21,7 @@ class nsIAtom;
 class nsHTMLStyleSheet;
 class nsRuleWalker;
 
-class nsMappedAttributes MOZ_FINAL : public nsIStyleRule
+class nsMappedAttributes final : public nsIStyleRule
 {
 public:
   nsMappedAttributes(nsHTMLStyleSheet* aSheet,
@@ -73,9 +73,9 @@ public:
   
 
   // nsIStyleRule 
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;

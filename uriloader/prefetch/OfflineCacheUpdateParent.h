@@ -48,7 +48,7 @@ public:
 
     OfflineCacheUpdateParent(uint32_t aAppId, bool aIsInBrowser);
 
-    virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+    virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
 private:
     ~OfflineCacheUpdateParent();

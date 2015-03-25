@@ -145,7 +145,7 @@ struct CachedOffsetForFrame {
   bool mCanCacheFrameOffset;    // cached frame offset is valid?
 };
 
-class nsAutoScrollTimer MOZ_FINAL : public nsITimerCallback
+class nsAutoScrollTimer final : public nsITimerCallback
 {
 public:
 
@@ -204,7 +204,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Notify(nsITimer *timer) MOZ_OVERRIDE
+  NS_IMETHOD Notify(nsITimer *timer) override
   {
     if (mSelection && mPresContext)
     {

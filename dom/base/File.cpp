@@ -51,7 +51,7 @@ namespace dom {
 // ensure that the buffer underlying the stream we get
 // from NS_NewByteInputStream is held alive as long as the
 // stream is.  We do that by passing back this class instead.
-class DataOwnerAdapter MOZ_FINAL : public nsIInputStream,
+class DataOwnerAdapter final : public nsIInputStream,
                                    public nsISeekableStream,
                                    public nsIIPCSerializableInputStream
 {
@@ -1099,7 +1099,7 @@ FileImplMemory::DataOwner::sMemoryReporterRegistered = false;
 
 MOZ_DEFINE_MALLOC_SIZE_OF(MemoryFileDataOwnerMallocSizeOf)
 
-class FileImplMemoryDataOwnerMemoryReporter MOZ_FINAL
+class FileImplMemoryDataOwnerMemoryReporter final
   : public nsIMemoryReporter
 {
   ~FileImplMemoryDataOwnerMemoryReporter() {}
@@ -1108,7 +1108,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   NS_IMETHOD CollectReports(nsIMemoryReporterCallback *aCallback,
-                            nsISupports *aClosure, bool aAnonymize) MOZ_OVERRIDE
+                            nsISupports *aClosure, bool aAnonymize) override
   {
     typedef FileImplMemory::DataOwner DataOwner;
 

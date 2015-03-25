@@ -25,7 +25,7 @@ class nsITVProgramData;
 namespace mozilla {
 namespace dom {
 
-class FakeTVService MOZ_FINAL : public nsITVService
+class FakeTVService final : public nsITVService
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

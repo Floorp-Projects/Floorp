@@ -23,7 +23,7 @@
 typedef nsInterfaceHashtable<nsCharPtrHashKey,
                              nsISupports> nsProperties_HashBase;
 
-class nsProperties MOZ_FINAL
+class nsProperties final
   : public nsIProperties
   , public nsProperties_HashBase
 {

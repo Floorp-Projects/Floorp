@@ -893,7 +893,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
 /**
  * Dispatched from the main thread to send reports for one CSP violation.
  */
-class CSPReportSenderRunnable MOZ_FINAL : public nsRunnable
+class CSPReportSenderRunnable final : public nsRunnable
 {
   public:
     CSPReportSenderRunnable(nsISupports* aBlockedContentSource,

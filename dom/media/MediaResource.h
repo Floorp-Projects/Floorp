@@ -430,11 +430,11 @@ private:
 
 class BaseMediaResource : public MediaResource {
 public:
-  virtual nsIURI* URI() const MOZ_OVERRIDE { return mURI; }
-  virtual void SetLoadInBackground(bool aLoadInBackground) MOZ_OVERRIDE;
+  virtual nsIURI* URI() const override { return mURI; }
+  virtual void SetLoadInBackground(bool aLoadInBackground) override;
 
   virtual size_t SizeOfExcludingThis(
-                  MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+                  MallocSizeOf aMallocSizeOf) const override
   {
     // Might be useful to track in the future:
     // - mChannel
@@ -448,7 +448,7 @@ public:
   }
 
   virtual size_t SizeOfIncludingThis(
-                  MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+                  MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
@@ -472,7 +472,7 @@ protected:
     MOZ_COUNT_DTOR(BaseMediaResource);
   }
 
-  virtual const nsCString& GetContentType() const MOZ_OVERRIDE
+  virtual const nsCString& GetContentType() const override
   {
     return mContentType;
   }
@@ -558,56 +558,56 @@ public:
 
   // Ensure that the media cache writes any data held in its partial block.
   // Called on the main thread.
-  virtual void FlushCache() MOZ_OVERRIDE;
+  virtual void FlushCache() override;
 
   // Notify that the last data byte range was loaded.
-  virtual void NotifyLastByteRange() MOZ_OVERRIDE;
+  virtual void NotifyLastByteRange() override;
 
   // Main thread
-  virtual nsresult Open(nsIStreamListener** aStreamListener) MOZ_OVERRIDE;
-  virtual nsresult Close() MOZ_OVERRIDE;
-  virtual void     Suspend(bool aCloseImmediately) MOZ_OVERRIDE;
-  virtual void     Resume() MOZ_OVERRIDE;
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() MOZ_OVERRIDE;
+  virtual nsresult Open(nsIStreamListener** aStreamListener) override;
+  virtual nsresult Close() override;
+  virtual void     Suspend(bool aCloseImmediately) override;
+  virtual void     Resume() override;
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
   // Return true if the stream has been closed.
   bool IsClosed() const { return mCacheStream.IsClosed(); }
-  virtual bool     CanClone() MOZ_OVERRIDE;
-  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) MOZ_OVERRIDE;
+  virtual bool     CanClone() override;
+  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) override;
   // Set statistics to be recorded to the object passed in. If not called,
   // |ChannelMediaResource| will create it's own statistics objects in |Open|.
-  void RecordStatisticsTo(MediaChannelStatistics *aStatistics) MOZ_OVERRIDE {
+  void RecordStatisticsTo(MediaChannelStatistics *aStatistics) override {
     NS_ASSERTION(aStatistics, "Statistics param cannot be null!");
     MutexAutoLock lock(mLock);
     if (!mChannelStatistics) {
       mChannelStatistics = aStatistics;
     }
   }
-  virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) MOZ_OVERRIDE;
-  virtual void     EnsureCacheUpToDate() MOZ_OVERRIDE;
+  virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override;
+  virtual void     EnsureCacheUpToDate() override;
 
   // Other thread
-  virtual void     SetReadMode(MediaCacheStream::ReadMode aMode) MOZ_OVERRIDE;
-  virtual void     SetPlaybackRate(uint32_t aBytesPerSecond) MOZ_OVERRIDE;
-  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE;
+  virtual void     SetReadMode(MediaCacheStream::ReadMode aMode) override;
+  virtual void     SetPlaybackRate(uint32_t aBytesPerSecond) override;
+  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) override;
   virtual nsresult ReadAt(int64_t offset, char* aBuffer,
-                          uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE;
-  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) MOZ_OVERRIDE;
-  virtual int64_t  Tell() MOZ_OVERRIDE;
+                          uint32_t aCount, uint32_t* aBytes) override;
+  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) override;
+  virtual int64_t  Tell() override;
 
   // Any thread
-  virtual void    Pin() MOZ_OVERRIDE;
-  virtual void    Unpin() MOZ_OVERRIDE;
-  virtual double  GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE;
-  virtual int64_t GetLength() MOZ_OVERRIDE;
-  virtual int64_t GetNextCachedData(int64_t aOffset) MOZ_OVERRIDE;
-  virtual int64_t GetCachedDataEnd(int64_t aOffset) MOZ_OVERRIDE;
-  virtual bool    IsDataCachedToEndOfResource(int64_t aOffset) MOZ_OVERRIDE;
-  virtual bool    IsSuspendedByCache() MOZ_OVERRIDE;
-  virtual bool    IsSuspended() MOZ_OVERRIDE;
-  virtual bool    IsTransportSeekable() MOZ_OVERRIDE;
+  virtual void    Pin() override;
+  virtual void    Unpin() override;
+  virtual double  GetDownloadRate(bool* aIsReliable) override;
+  virtual int64_t GetLength() override;
+  virtual int64_t GetNextCachedData(int64_t aOffset) override;
+  virtual int64_t GetCachedDataEnd(int64_t aOffset) override;
+  virtual bool    IsDataCachedToEndOfResource(int64_t aOffset) override;
+  virtual bool    IsSuspendedByCache() override;
+  virtual bool    IsSuspended() override;
+  virtual bool    IsTransportSeekable() override;
 
   virtual size_t SizeOfExcludingThis(
-                      MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE {
+                      MallocSizeOf aMallocSizeOf) const override {
     // Might be useful to track in the future:
     //   - mListener (seems minor)
     //   - mChannelStatistics (seems minor)
@@ -620,11 +620,11 @@ public:
   }
 
   virtual size_t SizeOfIncludingThis(
-                      MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE {
+                      MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  class Listener MOZ_FINAL : public nsIStreamListener,
+  class Listener final : public nsIStreamListener,
                              public nsIInterfaceRequestor,
                              public nsIChannelEventSink
   {
@@ -645,7 +645,7 @@ public:
   };
   friend class Listener;
 
-  virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) MOZ_OVERRIDE;
+  virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) override;
 
 protected:
   // These are called on the main thread by Listener.

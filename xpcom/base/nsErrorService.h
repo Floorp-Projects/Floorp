@@ -13,7 +13,7 @@
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 
-class nsErrorService MOZ_FINAL : public nsIErrorService
+class nsErrorService final : public nsIErrorService
 {
 public:
   NS_DECL_ISUPPORTS

@@ -62,14 +62,14 @@ public:
   GetCookie(std::wstring& aCookie);
 
   virtual nsresult
-  Send() MOZ_OVERRIDE;
+  Send() override;
 
   bool
   IsConnected() const;
 
 protected:
   void
-  OnEvent() MOZ_OVERRIDE;
+  OnEvent() override;
 
 private:
   void

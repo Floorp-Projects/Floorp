@@ -530,7 +530,7 @@ Mark(uint32_t aType, void* aItem, const char* aText, const char* aText2)
 
 // The scriptable classes
 
-class VisualEventTracerLog MOZ_FINAL: public nsIVisualEventTracerLog
+class VisualEventTracerLog final: public nsIVisualEventTracerLog
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIVISUALEVENTTRACERLOG

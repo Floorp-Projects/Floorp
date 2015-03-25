@@ -22,7 +22,7 @@
 
 #define NS_MEDIA_SNIFFER_CONTRACTID "@mozilla.org/media/sniffer;1"
 
-class nsMediaSniffer MOZ_FINAL : public nsIContentSniffer
+class nsMediaSniffer final : public nsIContentSniffer
 {
   public:
     NS_DECL_ISUPPORTS

@@ -44,7 +44,7 @@ using namespace layers;
 namespace image {
 
 // Helper-class: SVGRootRenderingObserver
-class SVGRootRenderingObserver MOZ_FINAL : public nsSVGRenderingObserver {
+class SVGRootRenderingObserver final : public nsSVGRenderingObserver {
 public:
   SVGRootRenderingObserver(SVGDocumentWrapper* aDocWrapper,
                            VectorImage*        aVectorImage)
@@ -75,12 +75,12 @@ public:
   }
 
 protected:
-  virtual Element* GetTarget() MOZ_OVERRIDE
+  virtual Element* GetTarget() override
   {
     return mDocWrapper->GetRootSVGElem();
   }
 
-  virtual void DoUpdate() MOZ_OVERRIDE
+  virtual void DoUpdate() override
   {
     Element* elem = GetTarget();
     MOZ_ASSERT(elem, "missing root SVG node");
@@ -112,7 +112,7 @@ protected:
   bool mHonoringInvalidations;
 };
 
-class SVGParseCompleteListener MOZ_FINAL : public nsStubDocumentObserver {
+class SVGParseCompleteListener final : public nsStubDocumentObserver {
 public:
   NS_DECL_ISUPPORTS
 
@@ -139,7 +139,7 @@ private:
   }
 
 public:
-  void EndLoad(nsIDocument* aDocument) MOZ_OVERRIDE
+  void EndLoad(nsIDocument* aDocument) override
   {
     MOZ_ASSERT(aDocument == mDocument, "Got EndLoad for wrong document?");
 
@@ -166,7 +166,7 @@ private:
 
 NS_IMPL_ISUPPORTS(SVGParseCompleteListener, nsIDocumentObserver)
 
-class SVGLoadEventListener MOZ_FINAL : public nsIDOMEventListener {
+class SVGLoadEventListener final : public nsIDOMEventListener {
 public:
   NS_DECL_ISUPPORTS
 
@@ -195,7 +195,7 @@ private:
   }
 
 public:
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) MOZ_OVERRIDE
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) override
   {
     MOZ_ASSERT(mDocument, "Need an SVG document. Received multiple events?");
 

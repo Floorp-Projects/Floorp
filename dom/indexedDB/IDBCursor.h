@@ -34,7 +34,7 @@ class IDBObjectStore;
 class IDBRequest;
 class IDBTransaction;
 
-class IDBCursor MOZ_FINAL
+class IDBCursor final
   : public nsISupports
   , public nsWrapperCache
 {
@@ -185,7 +185,7 @@ public:
 
   // nsWrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx) override;
 
 private:
   IDBCursor(Type aType,

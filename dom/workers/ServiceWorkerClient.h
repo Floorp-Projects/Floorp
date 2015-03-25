@@ -16,7 +16,7 @@ namespace mozilla {
 namespace dom {
 namespace workers {
 
-class ServiceWorkerClient MOZ_FINAL : public nsISupports,
+class ServiceWorkerClient final : public nsISupports,
                                       public nsWrapperCache
 {
 public:
@@ -43,7 +43,7 @@ public:
                    const Optional<Sequence<JS::Value>>& aTransferable,
                    ErrorResult& aRv);
 
-  JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  JSObject* WrapObject(JSContext* aCx) override;
 
 private:
   ~ServiceWorkerClient()

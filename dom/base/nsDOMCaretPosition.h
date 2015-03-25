@@ -86,7 +86,7 @@ public:
   }
 
   virtual JSObject* WrapObject(JSContext *aCx)
-    MOZ_OVERRIDE MOZ_FINAL;
+    override final;
 
 protected:
   virtual ~nsDOMCaretPosition();

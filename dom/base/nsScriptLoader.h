@@ -36,7 +36,7 @@ class AutoJSAPI;
 // Script loader implementation
 //////////////////////////////////////////////////////////////
 
-class nsScriptLoader MOZ_FINAL : public nsIStreamLoaderObserver
+class nsScriptLoader final : public nsIStreamLoaderObserver
 {
   class MOZ_STACK_CLASS AutoCurrentScriptUpdater
   {

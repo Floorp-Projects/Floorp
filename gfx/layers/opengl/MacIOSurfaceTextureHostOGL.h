@@ -28,24 +28,24 @@ public:
                                MacIOSurface* aSurface);
   virtual ~MacIOSurfaceTextureSourceOGL();
 
-  virtual TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE { return this; }
+  virtual TextureSourceOGL* AsSourceOGL() override { return this; }
 
-  virtual void BindTexture(GLenum activetex, gfx::Filter aFilter) MOZ_OVERRIDE;
+  virtual void BindTexture(GLenum activetex, gfx::Filter aFilter) override;
 
-  virtual bool IsValid() const MOZ_OVERRIDE { return !!gl(); }
+  virtual bool IsValid() const override { return !!gl(); }
 
-  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
+  virtual gfx::IntSize GetSize() const override;
 
-  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
+  virtual gfx::SurfaceFormat GetFormat() const override;
 
-  virtual GLenum GetTextureTarget() const MOZ_OVERRIDE { return LOCAL_GL_TEXTURE_RECTANGLE_ARB; }
+  virtual GLenum GetTextureTarget() const override { return LOCAL_GL_TEXTURE_RECTANGLE_ARB; }
 
-  virtual GLenum GetWrapMode() const MOZ_OVERRIDE { return LOCAL_GL_CLAMP_TO_EDGE; }
+  virtual GLenum GetWrapMode() const override { return LOCAL_GL_CLAMP_TO_EDGE; }
 
   // MacIOSurfaceTextureSourceOGL doesn't own any gl texture
-  virtual void DeallocateDeviceData() MOZ_OVERRIDE {}
+  virtual void DeallocateDeviceData() override {}
 
-  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+  virtual void SetCompositor(Compositor* aCompositor) override;
 
   gl::GLContext* gl() const;
 
@@ -66,30 +66,30 @@ public:
                              const SurfaceDescriptorMacIOSurface& aDescriptor);
 
   // MacIOSurfaceTextureSourceOGL doesn't own any GL texture
-  virtual void DeallocateDeviceData() MOZ_OVERRIDE {}
+  virtual void DeallocateDeviceData() override {}
 
-  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+  virtual void SetCompositor(Compositor* aCompositor) override;
 
-  virtual bool Lock() MOZ_OVERRIDE;
+  virtual bool Lock() override;
 
-  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
+  virtual gfx::SurfaceFormat GetFormat() const override;
 
-  virtual TextureSource* GetTextureSources() MOZ_OVERRIDE
+  virtual TextureSource* GetTextureSources() override
   {
     return mTextureSource;
   }
 
-  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override
   {
     return nullptr; // XXX - implement this (for MOZ_DUMP_PAINTING)
   }
 
   gl::GLContext* gl() const;
 
-  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
+  virtual gfx::IntSize GetSize() const override;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() MOZ_OVERRIDE { return "MacIOSurfaceTextureHostOGL"; }
+  virtual const char* Name() override { return "MacIOSurfaceTextureHostOGL"; }
 #endif
 
 protected:

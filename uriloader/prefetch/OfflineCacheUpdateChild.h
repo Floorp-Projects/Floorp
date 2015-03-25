@@ -30,16 +30,16 @@ public:
 
     virtual bool
     RecvNotifyStateEvent(const uint32_t& stateEvent,
-                         const uint64_t& byteProgress) MOZ_OVERRIDE;
+                         const uint64_t& byteProgress) override;
 
     virtual bool
     RecvAssociateDocuments(
             const nsCString& cacheGroupId,
-            const nsCString& cacheClientId) MOZ_OVERRIDE;
+            const nsCString& cacheClientId) override;
 
     virtual bool
     RecvFinish(const bool& succeeded,
-               const bool& isUpgrade) MOZ_OVERRIDE;
+               const bool& isUpgrade) override;
 
     explicit OfflineCacheUpdateChild(nsIDOMWindow* aWindow);
 

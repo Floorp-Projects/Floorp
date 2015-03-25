@@ -10,7 +10,7 @@
 #ifndef nsNodeInfoManager_h___
 #define nsNodeInfoManager_h___
 
-#include "mozilla/Attributes.h"           // for MOZ_FINAL
+#include "mozilla/Attributes.h"           // for final
 #include "nsCOMPtr.h"                     // for member
 #include "nsAutoPtr.h"                    // for nsRefPtr
 #include "nsCycleCollectionParticipant.h" // for NS_DECL_CYCLE_*
@@ -32,7 +32,7 @@ class NodeInfo;
 }
 }
 
-class nsNodeInfoManager MOZ_FINAL
+class nsNodeInfoManager final
 {
 private:
   ~nsNodeInfoManager();

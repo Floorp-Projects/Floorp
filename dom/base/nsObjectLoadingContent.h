@@ -505,7 +505,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
     nsPluginFrame* GetExistingFrame();
 
     // Helper class for SetupProtoChain
-    class SetupProtoChainRunner MOZ_FINAL : public nsIRunnable
+    class SetupProtoChainRunner final : public nsIRunnable
     {
       ~SetupProtoChainRunner();
     public:
@@ -513,7 +513,7 @@ class nsObjectLoadingContent : public nsImageLoadingContent
 
       explicit SetupProtoChainRunner(nsObjectLoadingContent* aContent);
 
-      NS_IMETHOD Run() MOZ_OVERRIDE;
+      NS_IMETHOD Run() override;
 
     private:
       // We store an nsIObjectLoadingContent because we can

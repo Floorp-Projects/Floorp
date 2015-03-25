@@ -34,7 +34,7 @@ ServiceWorkerClient::WrapObject(JSContext* aCx)
 
 namespace {
 
-class ServiceWorkerClientPostMessageRunnable MOZ_FINAL : public nsRunnable
+class ServiceWorkerClientPostMessageRunnable final : public nsRunnable
 {
   uint64_t mId;
   JSAutoStructuredCloneBuffer mBuffer;

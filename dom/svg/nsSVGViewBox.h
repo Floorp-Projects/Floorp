@@ -98,7 +98,7 @@ private:
   bool mHasBaseVal;
 
 public:
-  struct DOMBaseVal MOZ_FINAL : public mozilla::dom::SVGIRect
+  struct DOMBaseVal final : public mozilla::dom::SVGIRect
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMBaseVal)
@@ -112,32 +112,32 @@ public:
     nsSVGViewBox* mVal; // kept alive because it belongs to content
     nsRefPtr<nsSVGElement> mSVGElement;
 
-    float X() const MOZ_OVERRIDE MOZ_FINAL
+    float X() const override final
     {
       return mVal->GetBaseValue().x;
     }
 
-    float Y() const MOZ_OVERRIDE MOZ_FINAL
+    float Y() const override final
     {
       return mVal->GetBaseValue().y;
     }
 
-    float Width() const MOZ_OVERRIDE MOZ_FINAL
+    float Width() const override final
     {
       return mVal->GetBaseValue().width;
     }
 
-    float Height() const MOZ_OVERRIDE MOZ_FINAL
+    float Height() const override final
     {
       return mVal->GetBaseValue().height;
     }
 
-    void SetX(float aX, mozilla::ErrorResult& aRv) MOZ_FINAL MOZ_OVERRIDE;
-    void SetY(float aY, mozilla::ErrorResult& aRv) MOZ_FINAL MOZ_OVERRIDE;
-    void SetWidth(float aWidth, mozilla::ErrorResult& aRv) MOZ_FINAL MOZ_OVERRIDE;
-    void SetHeight(float aHeight, mozilla::ErrorResult& aRv) MOZ_FINAL MOZ_OVERRIDE;
+    void SetX(float aX, mozilla::ErrorResult& aRv) final override;
+    void SetY(float aY, mozilla::ErrorResult& aRv) final override;
+    void SetWidth(float aWidth, mozilla::ErrorResult& aRv) final override;
+    void SetHeight(float aHeight, mozilla::ErrorResult& aRv) final override;
 
-    virtual nsIContent* GetParentObject() const MOZ_OVERRIDE
+    virtual nsIContent* GetParentObject() const override
     {
       return mSVGElement;
     }
@@ -146,7 +146,7 @@ public:
     virtual ~DOMBaseVal();
   };
 
-  struct DOMAnimVal MOZ_FINAL : public mozilla::dom::SVGIRect
+  struct DOMAnimVal final : public mozilla::dom::SVGIRect
   {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimVal)
@@ -162,51 +162,51 @@ public:
 
     // Script may have modified animation parameters or timeline -- DOM getters
     // need to flush any resample requests to reflect these modifications.
-    float X() const MOZ_OVERRIDE MOZ_FINAL
+    float X() const override final
     {
       mSVGElement->FlushAnimations();
       return mVal->GetAnimValue().x;
     }
 
-    float Y() const MOZ_OVERRIDE MOZ_FINAL
+    float Y() const override final
     {
       mSVGElement->FlushAnimations();
       return mVal->GetAnimValue().y;
     }
 
-    float Width() const MOZ_OVERRIDE MOZ_FINAL
+    float Width() const override final
     {
       mSVGElement->FlushAnimations();
       return mVal->GetAnimValue().width;
     }
 
-    float Height() const MOZ_OVERRIDE MOZ_FINAL
+    float Height() const override final
     {
       mSVGElement->FlushAnimations();
       return mVal->GetAnimValue().height;
     }
 
-    void SetX(float aX, mozilla::ErrorResult& aRv) MOZ_FINAL MOZ_OVERRIDE
+    void SetX(float aX, mozilla::ErrorResult& aRv) final override
     {
       aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     }
 
-    void SetY(float aY, mozilla::ErrorResult& aRv) MOZ_FINAL MOZ_OVERRIDE
+    void SetY(float aY, mozilla::ErrorResult& aRv) final override
     {
       aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     }
 
-    void SetWidth(float aWidth, mozilla::ErrorResult& aRv) MOZ_FINAL MOZ_OVERRIDE
+    void SetWidth(float aWidth, mozilla::ErrorResult& aRv) final override
     {
       aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     }
 
-    void SetHeight(float aHeight, mozilla::ErrorResult& aRv) MOZ_FINAL MOZ_OVERRIDE
+    void SetHeight(float aHeight, mozilla::ErrorResult& aRv) final override
     {
       aRv.Throw(NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR);
     }
 
-    virtual nsIContent* GetParentObject() const MOZ_OVERRIDE
+    virtual nsIContent* GetParentObject() const override
     {
       return mSVGElement;
     }
@@ -232,10 +232,10 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const mozilla::dom::SVGAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const MOZ_OVERRIDE;
-    virtual nsSMILValue GetBaseValue() const MOZ_OVERRIDE;
-    virtual void ClearAnimValue() MOZ_OVERRIDE;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) MOZ_OVERRIDE;
+                                     bool& aPreventCachingOfSandwich) const override;
+    virtual nsSMILValue GetBaseValue() const override;
+    virtual void ClearAnimValue() override;
+    virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 
   static nsSVGAttrTearoffTable<nsSVGViewBox, mozilla::dom::SVGAnimatedRect>

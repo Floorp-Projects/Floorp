@@ -33,7 +33,7 @@ public:
                                int32_t aType,
                                bool aVisual,
                                bool aLockInScrollView,
-                               bool aFollowOOFs) MOZ_OVERRIDE;
+                               bool aFollowOOFs) override;
 
 protected:
   virtual ~nsFrameTraversal();

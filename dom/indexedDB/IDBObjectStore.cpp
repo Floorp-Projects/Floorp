@@ -136,7 +136,7 @@ struct IDBObjectStore::StructuredCloneWriteInfo
 
 namespace {
 
-struct MOZ_STACK_CLASS MutableFileData MOZ_FINAL
+struct MOZ_STACK_CLASS MutableFileData final
 {
   nsString type;
   nsString name;
@@ -152,7 +152,7 @@ struct MOZ_STACK_CLASS MutableFileData MOZ_FINAL
   }
 };
 
-struct MOZ_STACK_CLASS BlobOrFileData MOZ_FINAL
+struct MOZ_STACK_CLASS BlobOrFileData final
 {
   uint32_t tag;
   uint64_t size;
@@ -174,7 +174,7 @@ struct MOZ_STACK_CLASS BlobOrFileData MOZ_FINAL
   }
 };
 
-struct MOZ_STACK_CLASS GetAddInfoClosure MOZ_FINAL
+struct MOZ_STACK_CLASS GetAddInfoClosure final
 {
   IDBObjectStore::StructuredCloneWriteInfo& mCloneWriteInfo;
   JS::Handle<JS::Value> mValue;

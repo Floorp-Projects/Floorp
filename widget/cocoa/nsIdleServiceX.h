@@ -12,7 +12,7 @@ class nsIdleServiceX : public nsIdleService
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  bool PollIdleTime(uint32_t* aIdleTime) MOZ_OVERRIDE;
+  bool PollIdleTime(uint32_t* aIdleTime) override;
 
   static already_AddRefed<nsIdleServiceX> GetInstance() 
   {
@@ -27,7 +27,7 @@ public:
 protected:
     nsIdleServiceX() { }
     virtual ~nsIdleServiceX() { }
-    bool UsePollMode() MOZ_OVERRIDE;
+    bool UsePollMode() override;
 };
 
 #endif // nsIdleServiceX_h_

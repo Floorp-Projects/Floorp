@@ -70,7 +70,7 @@ public:
   nsresult WriteBlock(uint32_t aBlockIndex, const uint8_t* aData);
 
   // Performs block writes and block moves on its own thread.
-  NS_IMETHOD Run() MOZ_OVERRIDE;
+  NS_IMETHOD Run() override;
 
   // Synchronously reads data from file. May read from file or memory
   // depending on whether written blocks have been flushed to file yet.
@@ -87,7 +87,7 @@ public:
   // Represents a change yet to be made to a block in the file. The change
   // is either a write (and the data to be written is stored in this struct)
   // or a move (and the index of the source block is stored instead).
-  struct BlockChange MOZ_FINAL {
+  struct BlockChange final {
 
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BlockChange)
 

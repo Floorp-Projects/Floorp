@@ -15,7 +15,7 @@ class nsIFrame;
 
 namespace mozilla {
 
-class PendingPlayerTracker MOZ_FINAL
+class PendingPlayerTracker final
 {
 public:
   explicit PendingPlayerTracker(nsIDocument* aDocument)

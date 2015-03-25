@@ -14,7 +14,7 @@
 
 namespace mozilla {
 
-class MFTDecoder MOZ_FINAL {
+class MFTDecoder final {
   ~MFTDecoder();
 
 public:

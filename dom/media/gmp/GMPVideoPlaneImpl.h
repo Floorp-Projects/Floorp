@@ -36,19 +36,19 @@ public:
   // GMPPlane
   virtual GMPErr CreateEmptyPlane(int32_t aAllocatedSize,
                                   int32_t aStride,
-                                  int32_t aPlaneSize) MOZ_OVERRIDE;
-  virtual GMPErr Copy(const GMPPlane& aPlane) MOZ_OVERRIDE;
+                                  int32_t aPlaneSize) override;
+  virtual GMPErr Copy(const GMPPlane& aPlane) override;
   virtual GMPErr Copy(int32_t aSize,
                       int32_t aStride,
-                      const uint8_t* aBuffer) MOZ_OVERRIDE;
-  virtual void Swap(GMPPlane& aPlane) MOZ_OVERRIDE;
-  virtual int32_t AllocatedSize() const MOZ_OVERRIDE;
-  virtual void ResetSize() MOZ_OVERRIDE;
-  virtual bool IsZeroSize() const MOZ_OVERRIDE;
-  virtual int32_t Stride() const MOZ_OVERRIDE;
-  virtual const uint8_t* Buffer() const MOZ_OVERRIDE;
-  virtual uint8_t* Buffer() MOZ_OVERRIDE;
-  virtual void Destroy() MOZ_OVERRIDE;
+                      const uint8_t* aBuffer) override;
+  virtual void Swap(GMPPlane& aPlane) override;
+  virtual int32_t AllocatedSize() const override;
+  virtual void ResetSize() override;
+  virtual bool IsZeroSize() const override;
+  virtual int32_t Stride() const override;
+  virtual const uint8_t* Buffer() const override;
+  virtual uint8_t* Buffer() override;
+  virtual void Destroy() override;
 
 private:
   GMPErr MaybeResize(int32_t aNewSize);

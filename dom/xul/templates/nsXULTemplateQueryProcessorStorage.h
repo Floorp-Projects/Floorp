@@ -20,7 +20,7 @@
 
 class nsXULTemplateQueryProcessorStorage;
 
-class nsXULTemplateResultSetStorage MOZ_FINAL : public nsISimpleEnumerator
+class nsXULTemplateResultSetStorage final : public nsISimpleEnumerator
 {
 private:
 
@@ -46,7 +46,7 @@ public:
 
 };
 
-class nsXULTemplateQueryProcessorStorage MOZ_FINAL : public nsIXULTemplateQueryProcessor
+class nsXULTemplateQueryProcessorStorage final : public nsIXULTemplateQueryProcessor
 {
 public:
 

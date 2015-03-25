@@ -22,7 +22,7 @@ public:
                nsPresContext* aPresContext,
                WidgetPointerEvent* aEvent);
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx) override
   {
     return PointerEventBinding::Wrap(aCx, this);
   }

@@ -149,7 +149,7 @@ class Method<Traits, void> : public Method<Traits, bool>
 public:
     template<typename... Args>
     static void Call(const Owner* cls, nsresult* rv,
-                     const Args&... args) MOZ_OVERRIDE
+                     const Args&... args) override
     {
         JNIEnv* const env = Base::BeginAccess();
 
@@ -178,7 +178,7 @@ class Constructor : protected Method<Traits, typename Traits::ReturnType> {
 public:
     template<typename... Args>
     static ReturnType Call(const Owner* cls, nsresult* rv,
-                           const Args&... args) MOZ_OVERRIDE
+                           const Args&... args) override
     {
         JNIEnv* const env = Base::BeginAccess();
 

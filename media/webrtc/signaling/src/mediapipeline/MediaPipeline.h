@@ -388,7 +388,7 @@ public:
   {}
 
   // Initialize (stuff here may fail)
-  virtual nsresult Init() MOZ_OVERRIDE;
+  virtual nsresult Init() override;
 
   virtual void AttachToTrack(const std::string& track_id);
 
@@ -397,7 +397,7 @@ public:
   // Not set until first media is received
   virtual TrackID const trackid_locked() { return listener_->trackid(); }
   // written and used from MainThread
-  virtual bool IsVideo() const MOZ_OVERRIDE { return is_video_; }
+  virtual bool IsVideo() const override { return is_video_; }
 
 #ifdef MOZILLA_INTERNAL_API
   // when the principal of the PeerConnection changes, it calls through to here
@@ -407,7 +407,7 @@ public:
 #endif
 
   // Called on the main thread.
-  virtual void DetachMediaStream() MOZ_OVERRIDE {
+  virtual void DetachMediaStream() override {
     ASSERT_ON_THREAD(main_thread_);
     domstream_->RemoveDirectListener(listener_);
     domstream_ = nullptr;
@@ -417,7 +417,7 @@ public:
   }
 
   // Override MediaPipeline::TransportReady.
-  virtual nsresult TransportReady_s(TransportInfo &info) MOZ_OVERRIDE;
+  virtual nsresult TransportReady_s(TransportInfo &info) override;
 
   // Replace a track with a different one
   // In non-compliance with the likely final spec, allow the new
@@ -470,14 +470,14 @@ public:
     virtual void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
                                           StreamTime offset,
                                           uint32_t events,
-                                          const MediaSegment& queued_media) MOZ_OVERRIDE;
-    virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) MOZ_OVERRIDE {}
+                                          const MediaSegment& queued_media) override;
+    virtual void NotifyPull(MediaStreamGraph* aGraph, StreamTime aDesiredTime) override {}
 
     // Implement MediaStreamDirectListener
     virtual void NotifyRealtimeData(MediaStreamGraph* graph, TrackID tid,
                                     StreamTime offset,
                                     uint32_t events,
-                                    const MediaSegment& media) MOZ_OVERRIDE;
+                                    const MediaSegment& media) override;
 
    private:
     void NewData(MediaStreamGraph* graph, TrackID tid,
@@ -588,15 +588,15 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
                                      numeric_track_id, conduit, queue_track)) {
   }
 
-  virtual void DetachMediaStream() MOZ_OVERRIDE {
+  virtual void DetachMediaStream() override {
     ASSERT_ON_THREAD(main_thread_);
     listener_->EndTrack();
     stream_->RemoveListener(listener_);
     stream_ = nullptr;
   }
 
-  virtual nsresult Init() MOZ_OVERRIDE;
-  virtual bool IsVideo() const MOZ_OVERRIDE { return false; }
+  virtual nsresult Init() override;
+  virtual bool IsVideo() const override { return false; }
 
  private:
   // Separate class to allow ref counting
@@ -621,8 +621,8 @@ class MediaPipelineReceiveAudio : public MediaPipelineReceive {
     virtual void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
                                           StreamTime offset,
                                           uint32_t events,
-                                          const MediaSegment& queued_media) MOZ_OVERRIDE {}
-    virtual void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) MOZ_OVERRIDE;
+                                          const MediaSegment& queued_media) override {}
+    virtual void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) override;
 
    private:
     RefPtr<MediaSessionConduit> conduit_;
@@ -662,7 +662,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
   }
 
   // Called on the main thread.
-  virtual void DetachMediaStream() MOZ_OVERRIDE {
+  virtual void DetachMediaStream() override {
     ASSERT_ON_THREAD(main_thread_);
 
     listener_->EndTrack();
@@ -675,8 +675,8 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
     stream_ = nullptr;
   }
 
-  virtual nsresult Init() MOZ_OVERRIDE;
-  virtual bool IsVideo() const MOZ_OVERRIDE { return true; }
+  virtual nsresult Init() override;
+  virtual bool IsVideo() const override { return true; }
 
  private:
   class PipelineRenderer : public VideoRenderer {
@@ -717,8 +717,8 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
     virtual void NotifyQueuedTrackChanges(MediaStreamGraph* graph, TrackID tid,
                                           StreamTime offset,
                                           uint32_t events,
-                                          const MediaSegment& queued_media) MOZ_OVERRIDE {}
-    virtual void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) MOZ_OVERRIDE;
+                                          const MediaSegment& queued_media) override {}
+    virtual void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) override;
 
     // Accessors for external writes from the renderer
     void FrameSizeChange(unsigned int width,

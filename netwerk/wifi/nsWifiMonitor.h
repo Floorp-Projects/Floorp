@@ -50,7 +50,7 @@ class nsWifiListener
 };
 
 #ifndef MOZ_WIDGET_GONK
-class nsWifiMonitor MOZ_FINAL : nsIRunnable, nsIWifiMonitor, nsIObserver
+class nsWifiMonitor final : nsIRunnable, nsIWifiMonitor, nsIObserver
 {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -81,7 +81,7 @@ class nsWifiMonitor MOZ_FINAL : nsIRunnable, nsIWifiMonitor, nsIObserver
 };
 #else
 #include "nsIWifi.h"
-class nsWifiMonitor MOZ_FINAL : nsIWifiMonitor, nsIWifiScanResultsReady, nsIObserver
+class nsWifiMonitor final : nsIWifiMonitor, nsIWifiScanResultsReady, nsIObserver
 {
  public:
   NS_DECL_ISUPPORTS

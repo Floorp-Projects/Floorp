@@ -40,7 +40,7 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIEquals, NS_IEQUALS_IID)
 
-class ConsumerContext MOZ_FINAL : public nsIEquals {
+class ConsumerContext final : public nsIEquals {
 
     ~ConsumerContext() {}
 
@@ -49,7 +49,7 @@ public:
 
     ConsumerContext() { }
 
-    NS_IMETHOD Equals(void *aPtr, bool *_retval) MOZ_OVERRIDE {
+    NS_IMETHOD Equals(void *aPtr, bool *_retval) override {
         *_retval = true;
         if (aPtr != this) *_retval = false;
         return NS_OK;

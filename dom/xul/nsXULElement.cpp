@@ -123,7 +123,7 @@ uint32_t             nsXULPrototypeAttribute::gNumCacheSets;
 uint32_t             nsXULPrototypeAttribute::gNumCacheFills;
 #endif
 
-class nsXULElementTearoff MOZ_FINAL : public nsIDOMElementCSSInlineStyle,
+class nsXULElementTearoff final : public nsIDOMElementCSSInlineStyle,
                                       public nsIFrameLoaderOwner
 {
   ~nsXULElementTearoff() {}
@@ -138,7 +138,7 @@ public:
   {
   }
 
-  NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle) MOZ_OVERRIDE
+  NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle) override
   {
     nsXULElement* element = static_cast<nsXULElement*>(mElement.get());
     NS_ADDREF(*aStyle = element->Style());

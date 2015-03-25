@@ -366,7 +366,7 @@ private:
  * maintains high-level invariants and encapsulates the details of the surface
  * cache's implementation.
  */
-class SurfaceCacheImpl MOZ_FINAL : public nsIMemoryReporter
+class SurfaceCacheImpl final : public nsIMemoryReporter
 {
 public:
   NS_DECL_ISUPPORTS
@@ -752,7 +752,7 @@ public:
   NS_IMETHOD
   CollectReports(nsIHandleReportCallback* aHandleReport,
                  nsISupports*             aData,
-                 bool                     aAnonymize) MOZ_OVERRIDE
+                 bool                     aAnonymize) override
   {
     MutexAutoLock lock(mMutex);
 
@@ -828,7 +828,7 @@ private:
     { }
 
   protected:
-    virtual void NotifyExpired(CachedSurface* aSurface) MOZ_OVERRIDE
+    virtual void NotifyExpired(CachedSurface* aSurface) override
     {
       if (sInstance) {
         MutexAutoLock lock(sInstance->GetMutex());
@@ -843,7 +843,7 @@ private:
 
     NS_IMETHOD Observe(nsISupports*,
                        const char* aTopic,
-                       const char16_t*) MOZ_OVERRIDE
+                       const char16_t*) override
     {
       if (sInstance && strcmp(aTopic, "memory-pressure") == 0) {
         MutexAutoLock lock(sInstance->GetMutex());

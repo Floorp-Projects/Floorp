@@ -45,7 +45,7 @@ protected:
   }
 
 public:
-  virtual void RenderLayer() MOZ_OVERRIDE
+  virtual void RenderLayer() override
   {
     if (GetMaskLayer()) {
       ToClientLayer(GetMaskLayer())->RenderLayer();
@@ -74,13 +74,13 @@ public:
     }
   }
 
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion) override
   {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     ContainerLayer::SetVisibleRegion(aRegion);
   }
-  virtual bool InsertAfter(Layer* aChild, Layer* aAfter) MOZ_OVERRIDE
+  virtual bool InsertAfter(Layer* aChild, Layer* aAfter) override
   {
     if(!ClientManager()->InConstruction()) {
       NS_ERROR("Can only set properties in construction phase");
@@ -97,7 +97,7 @@ public:
     return true;
   }
 
-  virtual bool RemoveChild(Layer* aChild) MOZ_OVERRIDE
+  virtual bool RemoveChild(Layer* aChild) override
   {
     if (!ClientManager()->InConstruction()) {
       NS_ERROR("Can only set properties in construction phase");
@@ -112,7 +112,7 @@ public:
     return true;
   }
 
-  virtual bool RepositionChild(Layer* aChild, Layer* aAfter) MOZ_OVERRIDE
+  virtual bool RepositionChild(Layer* aChild, Layer* aAfter) override
   {
     if (!ClientManager()->InConstruction()) {
       NS_ERROR("Can only set properties in construction phase");
@@ -127,10 +127,10 @@ public:
     return true;
   }
 
-  virtual Layer* AsLayer() MOZ_OVERRIDE { return this; }
-  virtual ShadowableLayer* AsShadowableLayer() MOZ_OVERRIDE { return this; }
+  virtual Layer* AsLayer() override { return this; }
+  virtual ShadowableLayer* AsShadowableLayer() override { return this; }
 
-  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) MOZ_OVERRIDE
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override
   {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }

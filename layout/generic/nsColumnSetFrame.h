@@ -12,7 +12,7 @@
 #include "nsContainerFrame.h"
 #include "nsIFrameInlines.h" // for methods used by IS_TRUE_OVERFLOW_CONTAINER
 
-class nsColumnSetFrame MOZ_FINAL : public nsContainerFrame {
+class nsColumnSetFrame final : public nsContainerFrame {
 public:
   NS_DECL_FRAMEARENA_HELPERS
 
@@ -21,22 +21,22 @@ public:
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus& aStatus) MOZ_OVERRIDE;
+                      nsReflowStatus& aStatus) override;
 
 #ifdef DEBUG
   virtual void SetInitialChildList(ChildListID     aListID,
-                                   nsFrameList&    aChildList) MOZ_OVERRIDE;
+                                   nsFrameList&    aChildList) override;
   virtual void AppendFrames(ChildListID     aListID,
-                            nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                            nsFrameList&    aFrameList) override;
   virtual void InsertFrames(ChildListID     aListID,
                             nsIFrame*       aPrevFrame,
-                            nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                            nsFrameList&    aFrameList) override;
   virtual void RemoveFrame(ChildListID     aListID,
-                           nsIFrame*       aOldFrame) MOZ_OVERRIDE;
+                           nsIFrame*       aOldFrame) override;
 #endif
 
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
   /**
    * Retrieve the available height for content of this frame. The available content
@@ -44,7 +44,7 @@ public:
    */
   virtual nscoord GetAvailableContentBSize(const nsHTMLReflowState& aReflowState);
 
-  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
+  virtual nsContainerFrame* GetContentInsertionFrame() override {
     nsIFrame* frame = GetFirstPrincipalChild();
 
     // if no children return nullptr
@@ -54,7 +54,7 @@ public:
     return frame->GetContentInsertionFrame();
   }
 
-  virtual nsresult StealFrame(nsIFrame* aChild, bool aForceNormal) MOZ_OVERRIDE
+  virtual nsresult StealFrame(nsIFrame* aChild, bool aForceNormal) override
   {
     // nsColumnSetFrame keeps true overflow containers in the normal flow
     // child lists (i.e. the principal and overflow lists).
@@ -62,7 +62,7 @@ public:
                                         IS_TRUE_OVERFLOW_CONTAINER(aChild));
   }
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
+  virtual bool IsFrameOfType(uint32_t aFlags) const override
    {
      return nsContainerFrame::IsFrameOfType(aFlags &
               ~(nsIFrame::eCanContainOverflowContainers));
@@ -70,9 +70,9 @@ public:
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
 
   virtual void PaintColumnRule(nsRenderingContext* aCtx,
                                const nsRect&        aDirtyRect,
@@ -86,7 +86,7 @@ public:
   void DrainOverflowColumns();
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
+  virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("ColumnSet"), aResult);
   }
 #endif

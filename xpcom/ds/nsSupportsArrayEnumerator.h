@@ -12,7 +12,7 @@
 
 class nsISupportsArray;
 
-class nsSupportsArrayEnumerator MOZ_FINAL : public nsIBidirectionalEnumerator
+class nsSupportsArrayEnumerator final : public nsIBidirectionalEnumerator
 {
 public:
   NS_DECL_ISUPPORTS

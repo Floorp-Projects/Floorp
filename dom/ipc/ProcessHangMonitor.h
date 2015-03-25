@@ -28,7 +28,7 @@ class ContentParent;
 class PProcessHangMonitorParent;
 class PProcessHangMonitorChild;
 
-class ProcessHangMonitor MOZ_FINAL
+class ProcessHangMonitor final
   : public nsIObserver
 {
  private:

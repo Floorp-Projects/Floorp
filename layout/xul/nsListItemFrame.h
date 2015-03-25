@@ -21,9 +21,9 @@ public:
   // unless allowevents="true" is specified on the listitem
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,
-                                           const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                           const nsDisplayListSet& aLists) override;
 
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aState) MOZ_OVERRIDE;
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aState) override;
 
 protected:
   explicit nsListItemFrame(nsStyleContext *aContext,

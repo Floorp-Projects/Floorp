@@ -40,13 +40,13 @@ public:
    * process it is firing an event.
    */
   virtual bool RecvEvent(const uint64_t& aID, const uint32_t& aType)
-    MOZ_OVERRIDE;
+    override;
 
-  virtual bool RecvShowEvent(const ShowEventData& aData) MOZ_OVERRIDE;
-  virtual bool RecvHideEvent(const uint64_t& aRootID) MOZ_OVERRIDE;
+  virtual bool RecvShowEvent(const ShowEventData& aData) override;
+  virtual bool RecvHideEvent(const uint64_t& aRootID) override;
 
   void Destroy();
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override
   {
     if (!mShutdown)
       Destroy();

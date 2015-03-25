@@ -6,7 +6,7 @@
 #include "nsIBrowserDOMWindow.h"
 #include "nsString.h"
 
-class nsOpenURIInFrameParams MOZ_FINAL : public nsIOpenURIInFrameParams
+class nsOpenURIInFrameParams final : public nsIOpenURIInFrameParams
 {
 public:
   NS_DECL_ISUPPORTS

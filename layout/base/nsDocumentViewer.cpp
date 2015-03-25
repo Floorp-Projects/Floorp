@@ -213,7 +213,7 @@ private:
 
 
 //-------------------------------------------------------------
-class nsDocumentViewer MOZ_FINAL : public nsIContentViewer,
+class nsDocumentViewer final : public nsIContentViewer,
                                    public nsIContentViewerEdit,
                                    public nsIContentViewerFile,
                                    public nsIDocumentViewerPrint
@@ -441,7 +441,7 @@ public:
   explicit nsDocumentShownDispatcher(nsCOMPtr<nsIDocument> aDocument)
   : mDocument(aDocument) {}
 
-  NS_IMETHOD Run() MOZ_OVERRIDE;
+  NS_IMETHOD Run() override;
 
 private:
   nsCOMPtr<nsIDocument> mDocument;

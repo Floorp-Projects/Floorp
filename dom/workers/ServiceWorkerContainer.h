@@ -22,7 +22,7 @@ class ServiceWorker;
 }
 
 // Lightweight serviceWorker APIs collection.
-class ServiceWorkerContainer MOZ_FINAL : public DOMEventTargetHelper
+class ServiceWorkerContainer final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -35,7 +35,7 @@ public:
   explicit ServiceWorkerContainer(nsPIDOMWindow* aWindow);
 
   virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx) override;
 
   already_AddRefed<Promise>
   Register(const nsAString& aScriptURL,
@@ -70,7 +70,7 @@ public:
                                        ErrorResult& aRv);
 
   // DOMEventTargetHelper
-  void DisconnectFromOwner() MOZ_OVERRIDE;
+  void DisconnectFromOwner() override;
 
 private:
   ~ServiceWorkerContainer();

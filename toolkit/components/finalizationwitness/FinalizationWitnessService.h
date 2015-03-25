@@ -12,7 +12,7 @@ namespace mozilla {
 /**
  * XPConnect initializer, for use in the main thread.
  */
-class FinalizationWitnessService MOZ_FINAL : public nsIFinalizationWitnessService
+class FinalizationWitnessService final : public nsIFinalizationWitnessService
 {
  public:
   NS_DECL_ISUPPORTS

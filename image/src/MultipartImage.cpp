@@ -18,7 +18,7 @@ class NextPartObserver : public IProgressObserver
 {
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(NextPartObserver)
-  NS_INLINE_DECL_REFCOUNTING(NextPartObserver, MOZ_OVERRIDE)
+  NS_INLINE_DECL_REFCOUNTING(NextPartObserver, override)
 
   explicit NextPartObserver(MultipartImage* aOwner)
     : mOwner(aOwner)
@@ -41,7 +41,7 @@ public:
   }
 
   virtual void Notify(int32_t aType,
-                      const nsIntRect* aRect = nullptr) MOZ_OVERRIDE
+                      const nsIntRect* aRect = nullptr) override
   {
     if (!mImage) {
       // We've already finished observing the last image we were given.
@@ -53,7 +53,7 @@ public:
     }
   }
 
-  virtual void OnLoadComplete(bool aLastPart) MOZ_OVERRIDE
+  virtual void OnLoadComplete(bool aLastPart) override
   {
     if (!mImage) {
       // We've already finished observing the last image we were given.
@@ -69,12 +69,12 @@ public:
   }
 
   // Other notifications are ignored.
-  virtual void BlockOnload() MOZ_OVERRIDE { }
-  virtual void UnblockOnload() MOZ_OVERRIDE { }
-  virtual void SetHasImage() MOZ_OVERRIDE { }
-  virtual void OnStartDecode() MOZ_OVERRIDE { }
-  virtual bool NotificationsDeferred() const MOZ_OVERRIDE { return false; }
-  virtual void SetNotificationsDeferred(bool) MOZ_OVERRIDE { }
+  virtual void BlockOnload() override { }
+  virtual void UnblockOnload() override { }
+  virtual void SetHasImage() override { }
+  virtual void OnStartDecode() override { }
+  virtual bool NotificationsDeferred() const override { return false; }
+  virtual void SetNotificationsDeferred(bool) override { }
 
 private:
   virtual ~NextPartObserver() { }
