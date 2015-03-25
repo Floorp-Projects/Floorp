@@ -2237,15 +2237,16 @@ JsepSessionImpl::ValidateAnswer(const Sdp& offer, const Sdp& answer)
       return NS_ERROR_INVALID_ARG;
     }
 
-    if (!MsectionIsDisabled(answerMsection)) {
-      if (offerMsection.GetAttributeList().GetMid() !=
-          answerMsection.GetAttributeList().GetMid()) {
-        JSEP_SET_ERROR("Answer changes mid for level, was \'"
-                       << offerMsection.GetAttributeList().GetMid()
-                       << "\', now \'"
-                       << answerMsection.GetAttributeList().GetMid() << "\'");
-        return NS_ERROR_INVALID_ARG;
-      }
+    const SdpAttributeList& answerAttrs(answerMsection.GetAttributeList());
+    const SdpAttributeList& offerAttrs(offerMsection.GetAttributeList());
+    if (answerAttrs.HasAttribute(SdpAttribute::kMidAttribute) &&
+        offerAttrs.HasAttribute(SdpAttribute::kMidAttribute) &&
+        offerAttrs.GetMid() != answerAttrs.GetMid()) {
+      JSEP_SET_ERROR("Answer changes mid for level, was \'"
+                     << offerMsection.GetAttributeList().GetMid()
+                     << "\', now \'"
+                     << answerMsection.GetAttributeList().GetMid() << "\'");
+      return NS_ERROR_INVALID_ARG;
     }
   }
 
