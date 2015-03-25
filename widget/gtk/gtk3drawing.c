@@ -762,37 +762,17 @@ moz_gtk_radio_get_metrics(gint* indicator_size, gint* indicator_spacing)
 gint
 moz_gtk_get_focus_outline_size(gint* focus_h_width, gint* focus_v_width)
 {
-    gboolean interior_focus;
-    gint focus_width = 0;
+    GtkBorder border;
+    GtkBorder padding;
+    GtkStyleContext *style;
 
     ensure_entry_widget();
-    gtk_widget_style_get(gEntryWidget,
-                         "interior-focus", &interior_focus,
-                         "focus-line-width", &focus_width,
-                         NULL);
-    if (interior_focus) {
-        GtkBorder border;
-        GtkStyleContext *style = gtk_widget_get_style_context(gEntryWidget);
-        gtk_style_context_get_border(style, 0, &border);
-        *focus_h_width = border.left + focus_width;
-        *focus_v_width = border.top + focus_width;
-    } else {
-        *focus_h_width = focus_width;
-        *focus_v_width = focus_width;
-    }
-    return MOZ_GTK_SUCCESS;
-}
+    style = gtk_widget_get_style_context(gEntryWidget);
 
-gint
-moz_gtk_widget_get_focus(GtkWidget* widget, gboolean* interior_focus,
-                         gint* focus_width, gint* focus_pad) 
-{
-    gtk_widget_style_get (widget,
-                          "interior-focus", interior_focus,
-                          "focus-line-width", focus_width,
-                          "focus-padding", focus_pad,
-                          NULL);
-
+    gtk_style_context_get_border(style, 0, &border);
+    gtk_style_context_get_padding(style, 0, &padding);
+    *focus_h_width = border.left + padding.left;
+    *focus_v_width = border.top + padding.top;
     return MOZ_GTK_SUCCESS;
 }
 
@@ -877,24 +857,6 @@ moz_gtk_splitter_get_metrics(gint orientation, gint* size)
         ensure_vpaned_widget();
         gtk_widget_style_get(gVPanedWidget, "handle_size", size, NULL);
     }
-    return MOZ_GTK_SUCCESS;
-}
-
-gint
-moz_gtk_button_get_inner_border(GtkWidget* widget, GtkBorder* inner_border)
-{
-    static const GtkBorder default_inner_border = { 1, 1, 1, 1 };
-    GtkBorder *tmp_border;
-
-    gtk_widget_style_get (widget, "inner-border", &tmp_border, NULL);
-
-    if (tmp_border) {
-        *inner_border = *tmp_border;
-        gtk_border_free(tmp_border);
-    }
-    else
-        *inner_border = default_inner_border;
-
     return MOZ_GTK_SUCCESS;
 }
 
@@ -1056,33 +1018,23 @@ calculate_button_inner_rect(GtkWidget* button, GdkRectangle* rect,
                             GtkTextDirection direction,
                             gboolean ignore_focus)
 {
-    GtkBorder inner_border;
-    gboolean interior_focus;
-    gint focus_width, focus_pad;
     GtkStyleContext* style;
     GtkBorder border;
+    GtkBorder padding = {0, 0, 0, 0};
 
     style = gtk_widget_get_style_context(button);
 
     /* This mirrors gtkbutton's child positioning */
-    moz_gtk_button_get_inner_border(button, &inner_border);
-    moz_gtk_widget_get_focus(button, &interior_focus,
-                             &focus_width, &focus_pad);
-
-    if (ignore_focus)
-        focus_width = focus_pad = 0;
-
     gtk_style_context_get_border(style, 0, &border);
+    if (!ignore_focus)
+        gtk_style_context_get_padding(style, 0, &padding);
 
-    inner_rect->x = rect->x + border.left + focus_width + focus_pad;
-    inner_rect->x += direction == GTK_TEXT_DIR_LTR ?
-                        inner_border.left : inner_border.right;
-    inner_rect->y = rect->y + inner_border.top + border.top +
-                    focus_width + focus_pad;
-    inner_rect->width = MAX(1, rect->width - inner_border.left -
-       inner_border.right - (border.left + focus_pad + focus_width) * 2);
-    inner_rect->height = MAX(1, rect->height - inner_border.top -
-       inner_border.bottom - (border.top + focus_pad + focus_width) * 2);
+    inner_rect->x = rect->x + border.left + padding.left;
+    inner_rect->y = rect->y + padding.top + border.top;
+    inner_rect->width = MAX(1, rect->width - padding.left -
+       padding.right - border.left * 2);
+    inner_rect->height = MAX(1, rect->height - padding.top -
+       padding.bottom - border.top * 2);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -1457,18 +1409,11 @@ moz_gtk_entry_paint(cairo_t *cr, GdkRectangle* rect,
 {
     gint x = rect->x, y = rect->y, width = rect->width, height = rect->height;
     GtkStyleContext* style;
-    gboolean interior_focus;
-    gint focus_width;
     int draw_focus_outline_only = state->depressed; // NS_THEME_FOCUS_OUTLINE
 
     gtk_widget_set_direction(widget, direction);
 
     style = gtk_widget_get_style_context(widget);
-
-    gtk_widget_style_get(widget,
-                         "interior-focus", &interior_focus,
-                         "focus-line-width", &focus_width,
-                         NULL);
 
     if (draw_focus_outline_only) {
         // Inflate the given 'rect' with the focus outline size.
@@ -1501,14 +1446,6 @@ moz_gtk_entry_paint(cairo_t *cr, GdkRectangle* rect,
         /* This will get us the lit borders that focused textboxes enjoy on
          * some themes. */
         gtk_style_context_set_state(style, GTK_STATE_FLAG_FOCUSED);
-        if (!interior_focus) {
-            /* Indent the border a little bit if we have exterior focus 
-               (this is what GTK does to draw native entries) */
-            x += focus_width;
-            y += focus_width;
-            width -= 2 * focus_width;
-            height -= 2 * focus_width;
-        }
     }
 
     if (state->disabled) {
@@ -1520,11 +1457,6 @@ moz_gtk_entry_paint(cairo_t *cr, GdkRectangle* rect,
     }
     gtk_render_frame(style, cr, x, y, width, height);
 
-    if (state->focused && !state->disabled) {
-        if (!interior_focus) {
-            gtk_render_focus(style, cr, rect->x, rect->y, rect->width, rect->height);
-        }
-    }
     gtk_style_context_restore(style);
 
     return MOZ_GTK_SUCCESS;
@@ -1829,8 +1761,6 @@ moz_gtk_container_paint(cairo_t *cr, GdkRectangle* rect,
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
     GtkStyleContext* style;
     GtkWidget *widget;
-    gboolean interior_focus;
-    gint focus_width, focus_pad;
 
     if (isradio) {
         ensure_radiobutton_widget();
@@ -1843,7 +1773,6 @@ moz_gtk_container_paint(cairo_t *cr, GdkRectangle* rect,
 
     style = gtk_widget_get_style_context(widget);
     gtk_style_context_save(style);
-    moz_gtk_widget_get_focus(widget, &interior_focus, &focus_width, &focus_pad);
     gtk_style_context_set_state(style, state_flags);
   
     /* this is for drawing a prelight box */
@@ -1852,10 +1781,6 @@ moz_gtk_container_paint(cairo_t *cr, GdkRectangle* rect,
                               rect->x, rect->y, rect->width, rect->height);
     }
   
-    if (state->focused && !interior_focus) {
-        gtk_render_focus(style, cr,
-                        rect->x, rect->y, rect->width, rect->height);
-    }
     gtk_style_context_restore(style);
   
     return MOZ_GTK_SUCCESS;
@@ -1868,7 +1793,6 @@ moz_gtk_toggle_label_paint(cairo_t *cr, GdkRectangle* rect,
 {
     GtkStyleContext *style;
     GtkWidget *widget;
-    gboolean interior_focus;
 
     if (!state->focused)
         return MOZ_GTK_SUCCESS;
@@ -1888,10 +1812,6 @@ moz_gtk_toggle_label_paint(cairo_t *cr, GdkRectangle* rect,
       gtk_style_context_add_class(style, GTK_STYLE_CLASS_CHECK);
     }
     gtk_widget_set_direction(widget, direction);
-
-    gtk_widget_style_get(widget, "interior-focus", &interior_focus, NULL);
-    if (!interior_focus)
-        return MOZ_GTK_SUCCESS;
 
     gtk_style_context_set_state(style, GetStateFlagsFromGtkWidgetState(state));
     gtk_render_focus(style, cr,
@@ -2690,26 +2610,18 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     switch (widget) {
     case MOZ_GTK_BUTTON:
         {
-            GtkBorder inner_border;
-            gboolean interior_focus;
-            gint focus_width, focus_pad;
-
             ensure_button_widget();
+            style = gtk_widget_get_style_context(gButtonWidget);
+
             *left = *top = *right = *bottom = gtk_container_get_border_width(GTK_CONTAINER(gButtonWidget));
 
             /* Don't add this padding in HTML, otherwise the buttons will
                become too big and stuff the layout. */
             if (!inhtml) {
-                moz_gtk_widget_get_focus(gButtonWidget, &interior_focus, &focus_width, &focus_pad);
-                moz_gtk_button_get_inner_border(gButtonWidget, &inner_border);
-                *left += focus_width + focus_pad + inner_border.left;
-                *right += focus_width + focus_pad + inner_border.right;
-                *top += focus_width + focus_pad + inner_border.top;
-                *bottom += focus_width + focus_pad + inner_border.bottom;
+                moz_gtk_add_style_padding(style, left, top, right, bottom);
             }
 
-            moz_gtk_add_style_border(gtk_widget_get_style_context(gButtonWidget), 
-                                     left, top, right, bottom);
+            moz_gtk_add_style_border(style, left, top, right, bottom);
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_ENTRY:
@@ -2717,7 +2629,13 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
             ensure_entry_widget();
             style = gtk_widget_get_style_context(gEntryWidget);
             moz_gtk_add_style_border(style, left, top, right, bottom);
-            moz_gtk_add_style_padding(style, left, top, right, bottom);
+
+            /* Use the document padding in HTML
+               and GTK style padding in XUL. */
+            if (!inhtml) {
+                moz_gtk_add_style_padding(style, left, top, right, bottom);
+            }
+
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_TREEVIEW:
@@ -2737,23 +2655,15 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
              * assigned.
              * That is why the following code is the same as for MOZ_GTK_BUTTON.  
              * */
-
-            GtkBorder inner_border;
-            gboolean interior_focus;
-            gint focus_width, focus_pad;
+            GtkStyleContext *style;
 
             ensure_tree_header_cell_widget();
             *left = *top = *right = *bottom = gtk_container_get_border_width(GTK_CONTAINER(gTreeHeaderCellWidget));
 
-            moz_gtk_widget_get_focus(gTreeHeaderCellWidget, &interior_focus, &focus_width, &focus_pad);
-            moz_gtk_button_get_inner_border(gTreeHeaderCellWidget, &inner_border);
-            *left += focus_width + focus_pad + inner_border.left;
-            *right += focus_width + focus_pad + inner_border.right;
-            *top += focus_width + focus_pad + inner_border.top;
-            *bottom += focus_width + focus_pad + inner_border.bottom;
-        
-            moz_gtk_add_style_border(gtk_widget_get_style_context(gTreeHeaderCellWidget), 
-                                     left, top, right, bottom);
+            style = gtk_widget_get_style_context(gTreeHeaderCellWidget);
+
+            moz_gtk_add_style_border(style, left, top, right, bottom);
+            moz_gtk_add_style_padding(style, left, top, right, bottom);
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_TREE_HEADER_SORTARROW:
@@ -2773,29 +2683,23 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
             /* We need to account for the arrow on the dropdown, so text
              * doesn't come too close to the arrow, or in some cases spill
              * into the arrow. */
-            gboolean ignored_interior_focus, wide_separators;
-            gint focus_width, focus_pad, separator_width;
+            gboolean wide_separators;
+            gint separator_width;
             GtkRequisition arrow_req;
             GtkBorder border;
 
             ensure_combo_box_widgets();
 
-            *left = gtk_container_get_border_width(GTK_CONTAINER(gComboBoxButtonWidget));
+            *left = *top = *right = *bottom = 
+                gtk_container_get_border_width(GTK_CONTAINER(gComboBoxButtonWidget));
+
+            style = gtk_widget_get_style_context(gComboBoxButtonWidget);
 
             if (!inhtml) {
-                moz_gtk_widget_get_focus(gComboBoxButtonWidget,
-                                         &ignored_interior_focus,
-                                         &focus_width, &focus_pad);
-                *left += focus_width + focus_pad;
+                moz_gtk_add_style_padding(style, left, top, right, bottom);
             }
           
-            style = gtk_widget_get_style_context(gComboBoxButtonWidget);
-            gtk_style_context_get_border(style, 0, &border);
-
-            *top = *left + border.top;
-            *left += border.left;
-
-            *right = *left; *bottom = *top;
+            moz_gtk_add_style_border(style, left, top, right, bottom);
 
             /* If there is no separator, don't try to count its width. */
             separator_width = 0;
@@ -2847,60 +2751,23 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
         ensure_frame_widget();
         w = gFrameWidget;
         break;
-    case MOZ_GTK_CHECKBUTTON_LABEL:
-    case MOZ_GTK_RADIOBUTTON_LABEL:
-        {
-            gboolean interior_focus;
-            gint focus_width, focus_pad;
-
-            /* If the focus is interior, then the label has a border of
-               (focus_width + focus_pad). */
-            if (widget == MOZ_GTK_CHECKBUTTON_LABEL) {
-                ensure_checkbox_widget();
-                moz_gtk_widget_get_focus(gCheckboxWidget, &interior_focus,
-                                           &focus_width, &focus_pad);
-            }
-            else {
-                ensure_radiobutton_widget();
-                moz_gtk_widget_get_focus(gRadiobuttonWidget, &interior_focus,
-                                        &focus_width, &focus_pad);
-            }
-
-            if (interior_focus)
-                *left = *top = *right = *bottom = (focus_width + focus_pad);
-
-            return MOZ_GTK_SUCCESS;
-        }
-
     case MOZ_GTK_CHECKBUTTON_CONTAINER:
     case MOZ_GTK_RADIOBUTTON_CONTAINER:
         {
-            gboolean interior_focus;
-            gint focus_width, focus_pad;
-
-            /* If the focus is _not_ interior, then the container has a border
-               of (focus_width + focus_pad). */
             if (widget == MOZ_GTK_CHECKBUTTON_CONTAINER) {
                 ensure_checkbox_widget();
-                moz_gtk_widget_get_focus(gCheckboxWidget, &interior_focus,
-                                           &focus_width, &focus_pad);
                 w = gCheckboxWidget;
             } else {
                 ensure_radiobutton_widget();
-                moz_gtk_widget_get_focus(gRadiobuttonWidget, &interior_focus,
-                                        &focus_width, &focus_pad);
                 w = gRadiobuttonWidget;
             }
+            style = gtk_widget_get_style_context(w);
 
             *left = *top = *right = *bottom = gtk_container_get_border_width(GTK_CONTAINER(w));
-
-            if (!interior_focus) {
-                *left += (focus_width + focus_pad);
-                *right += (focus_width + focus_pad);
-                *top += (focus_width + focus_pad);
-                *bottom += (focus_width + focus_pad);
-            }
-
+            moz_gtk_add_style_border(style,
+                                     left, top, right, bottom);
+            moz_gtk_add_style_padding(style,
+                                      left, top, right, bottom);
             return MOZ_GTK_SUCCESS;
         }
     case MOZ_GTK_MENUPOPUP:
@@ -2927,6 +2794,8 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
             return MOZ_GTK_SUCCESS;
         }
     /* These widgets have no borders, since they are not containers. */
+    case MOZ_GTK_CHECKBUTTON_LABEL:
+    case MOZ_GTK_RADIOBUTTON_LABEL:
     case MOZ_GTK_SPLITTER_HORIZONTAL:
     case MOZ_GTK_SPLITTER_VERTICAL:
     case MOZ_GTK_CHECKBUTTON:
