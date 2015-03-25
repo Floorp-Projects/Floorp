@@ -31,7 +31,7 @@ const openWindow = () => {
 exports.openWindow = openWindow;
 
 const closeWindow = (window) => {
-  const closed = when(window, "unload", true).then(_target);
+  const closed = when(window, "unload", true).then(_ => window);
   window.close();
   return closed;
 };

@@ -13,6 +13,30 @@
 
 namespace mozilla {
 
+namespace dom {
+class nsIContentParent;
+};
+
+namespace ipc {
+class URIParams;
+};
+
+enum DomainSetChangeType{
+    ACTIVATE_POLICY,
+    DEACTIVATE_POLICY,
+    ADD_DOMAIN,
+    REMOVE_DOMAIN,
+    CLEAR_DOMAINS
+};
+
+enum DomainSetType{
+    NO_TYPE,
+    BLACKLIST,
+    SUPER_BLACKLIST,
+    WHITELIST,
+    SUPER_WHITELIST
+};
+
 class DomainPolicy : public nsIDomainPolicy
 {
 public:
@@ -35,11 +59,16 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOMAINSET
 
-    DomainSet() {}
+    explicit DomainSet(DomainSetType aType)
+        : mType(aType)
+    {}
+
+    void CloneSet(InfallibleTArray<mozilla::ipc::URIParams>* aDomains);
 
 protected:
     virtual ~DomainSet() {}
     nsTHashtable<nsURIHashKey> mHashTable;
+    DomainSetType mType;
 };
 
 } /* namespace mozilla */

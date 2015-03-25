@@ -298,7 +298,7 @@ js::DumpCompartmentPCCounts(JSContext *cx)
         }
     }
 
-    for (OBJECT_ALLOC_KINDS(thingKind)) {
+    for (auto thingKind : ObjectAllocKinds()) {
         for (ZoneCellIter i(cx->zone(), thingKind); !i.done(); i.next()) {
             JSObject *obj = i.get<JSObject>();
             if (obj->compartment() != cx->compartment())

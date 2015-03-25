@@ -6,6 +6,8 @@
 
 #include "jit/PerfSpewer.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
+
 #if defined(__linux__)
 # include <unistd.h>
 #endif

@@ -3,8 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var readParam = require("./node-scripts/utils").readParam;
-var path = require("path");
+var Promise = require("promise");
 var Mocha = require("mocha");
 var mocha = new Mocha({
   ui: "bdd",
@@ -12,16 +11,19 @@ var mocha = new Mocha({
   timeout: 900000
 });
 
-var type = readParam("type");
+exports.run = function(type) {
+  return new Promise(function(resolve) {
+    type = type || "";
+    [
+      (/^(modules)?$/.test(type)) && require.resolve("../bin/node-scripts/test.modules"),
+      (/^(addons)?$/.test(type)) && require.resolve("../bin/node-scripts/test.addons"),
+      (/^(examples)?$/.test(type)) && require.resolve("../bin/node-scripts/test.examples"),
+    ].sort().forEach(function(filepath) {
+      filepath && mocha.addFile(filepath);
+    })
 
-[
-  (!type || type == "modules") && require.resolve("../bin/node-scripts/test.modules"),
-  (!type || type == "addons") && require.resolve("../bin/node-scripts/test.addons"),
-  (!type || type == "examples") && require.resolve("../bin/node-scripts/test.examples"),
-].sort().forEach(function(filepath) {
-  filepath && mocha.addFile(filepath);
-})
-
-mocha.run(function (failures) {
-  process.exit(failures);
-});
+    mocha.run(function(failures) {
+      resolve(failures);
+    });
+  });
+}

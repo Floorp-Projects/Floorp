@@ -158,8 +158,23 @@ enum class ScaleMode : int8_t {
 };
 
 struct EventRegions {
+  // The hit region for a layer contains all areas on the layer that are
+  // sensitive to events. This region is an over-approximation and may
+  // contain regions that are not actually sensitive, but any such regions
+  // will be included in the mDispatchToContentHitRegion.
   nsIntRegion mHitRegion;
+  // The mDispatchToContentHitRegion for a layer contains all areas for
+  // which the main-thread must be consulted before responding to events.
+  // This region will be a subregion of mHitRegion.
   nsIntRegion mDispatchToContentHitRegion;
+
+  // The following regions represent the touch-action areas of this layer.
+  // All of these regions are approximations to the true region, but any
+  // variance between the approximation and the true region is guaranteed
+  // to be included in the mDispatchToContentHitRegion.
+  nsIntRegion mNoActionRegion;
+  nsIntRegion mHorizontalPanRegion;
+  nsIntRegion mVerticalPanRegion;
 
   EventRegions()
   {

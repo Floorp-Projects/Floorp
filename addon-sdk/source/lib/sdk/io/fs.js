@@ -692,8 +692,6 @@ function writeSync(fd, buffer, offset, length, position) {
   else if (length + offset !== buffer.length) {
     buffer = buffer.slice(offset, offset + length);
   }
-  let writeStream = new WriteStream(fd, { position: position,
-                                          length: length });
 
   let output = BinaryOutputStream(nsIFileOutputStream(fd));
   nsIBinaryOutputStream(fd, output);

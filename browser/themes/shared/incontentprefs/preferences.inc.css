@@ -151,6 +151,11 @@ treecol {
   margin-right: 4px !important;
 }
 
+#defaultFontSizeLabel {
+  /* !important needed to override common !important rule */
+  -moz-margin-start: 4px !important;
+}
+
 /* Applications Pane Styles */
 
 #applicationsContent {

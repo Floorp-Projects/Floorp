@@ -16,6 +16,6 @@ function startNewTabTestCase(aTestNumber) {
 }
 
 function test() {
-  requestLongerTimeout(5);  // slowwww shutdown on e10s
+  requestLongerTimeout(10);  // slowwww shutdown on e10s
   startReferrerTest(startNewTabTestCase);
 }

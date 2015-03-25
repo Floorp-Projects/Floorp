@@ -28,6 +28,7 @@
 #include "mozilla/docshell/OfflineCacheUpdateChild.h"
 #include "mozilla/dom/ContentBridgeChild.h"
 #include "mozilla/dom/ContentBridgeParent.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/DOMStorageIPC.h"
 #include "mozilla/dom/ExternalHelperAppChild.h"
 #include "mozilla/dom/PCrashReporterChild.h"
@@ -110,8 +111,9 @@
 #include "mozilla/dom/PMemoryReportRequestChild.h"
 #include "mozilla/dom/PCycleCollectWithLogsChild.h"
 
-#ifdef MOZ_PERMISSIONS
 #include "nsIScriptSecurityManager.h"
+
+#ifdef MOZ_PERMISSIONS
 #include "nsPermission.h"
 #include "nsPermissionManager.h"
 #endif
@@ -168,6 +170,7 @@
 #include "nsIPrincipal.h"
 #include "nsDeviceStorage.h"
 #include "AudioChannelService.h"
+#include "DomainPolicy.h"
 #include "mozilla/dom/DataStoreService.h"
 #include "mozilla/dom/telephony/PTelephonyChild.h"
 #include "mozilla/dom/time/DateCacheCleaner.h"
@@ -786,8 +789,20 @@ ContentChild::InitXPCOM()
 
     bool isOffline;
     ClipboardCapabilities clipboardCaps;
-    SendGetXPCOMProcessAttributes(&isOffline, &mAvailableDictionaries, &clipboardCaps);
+    DomainPolicyClone domainPolicy;
+
+    SendGetXPCOMProcessAttributes(&isOffline, &mAvailableDictionaries, &clipboardCaps, &domainPolicy);
     RecvSetOffline(isOffline);
+
+    if (domainPolicy.active()) {
+        nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+        MOZ_ASSERT(ssm);
+        ssm->ActivateDomainPolicyInternal(getter_AddRefs(mPolicy));
+        if (!mPolicy) {
+            MOZ_CRASH("Failed to activate domain policy.");
+        }
+        mPolicy->ApplyClone(&domainPolicy);
+    }
 
     nsCOMPtr<nsIClipboard> clipboard(do_GetService("@mozilla.org/widget/clipboard;1"));
     if (nsCOMPtr<nsIClipboardProxy> clipboardProxy = do_QueryInterface(clipboard)) {
@@ -2596,8 +2611,82 @@ ContentChild::RecvAssociatePluginId(const uint32_t& aPluginId,
 }
 
 bool
+ContentChild::RecvDomainSetChanged(const uint32_t& aSetType, const uint32_t& aChangeType,
+                                   const OptionalURIParams& aDomain)
+{
+    if (aChangeType == ACTIVATE_POLICY) {
+        if (mPolicy) {
+            return true;
+        }
+        nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+        MOZ_ASSERT(ssm);
+        ssm->ActivateDomainPolicyInternal(getter_AddRefs(mPolicy));
+        return !!mPolicy;
+    } else if (!mPolicy) {
+        MOZ_ASSERT_UNREACHABLE("If the domain policy is not active yet,"
+                               " the first message should be ACTIVATE_POLICY");
+        return false;
+    }
+
+    NS_ENSURE_TRUE(mPolicy, false);
+
+    if (aChangeType == DEACTIVATE_POLICY) {
+        mPolicy->Deactivate();
+        mPolicy = nullptr;
+        return true;
+    }
+
+    nsCOMPtr<nsIDomainSet> set;
+    switch(aSetType) {
+        case BLACKLIST:
+            mPolicy->GetBlacklist(getter_AddRefs(set));
+            break;
+        case SUPER_BLACKLIST:
+            mPolicy->GetSuperBlacklist(getter_AddRefs(set));
+            break;
+        case WHITELIST:
+            mPolicy->GetWhitelist(getter_AddRefs(set));
+            break;
+        case SUPER_WHITELIST:
+            mPolicy->GetSuperWhitelist(getter_AddRefs(set));
+            break;
+        default:
+            NS_NOTREACHED("Unexpected setType");
+            return false;
+    }
+
+    MOZ_ASSERT(set);
+
+    nsCOMPtr<nsIURI> uri = DeserializeURI(aDomain);
+
+    switch(aChangeType) {
+        case ADD_DOMAIN:
+            NS_ENSURE_TRUE(uri, false);
+            set->Add(uri);
+            break;
+        case REMOVE_DOMAIN:
+            NS_ENSURE_TRUE(uri, false);
+            set->Remove(uri);
+            break;
+        case CLEAR_DOMAINS:
+            set->Clear();
+            break;
+        default:
+            NS_NOTREACHED("Unexpected changeType");
+            return false;
+    }
+
+    return true;
+}
+
+bool
 ContentChild::RecvShutdown()
 {
+    if (mPolicy) {
+        mPolicy->Deactivate();
+        mPolicy = nullptr;
+    }
+
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
         os->NotifyObservers(this, "content-child-shutdown", nullptr);
