@@ -12,12 +12,15 @@ MOCHITEST_MANIFESTS += ['tests/mochitest/mochitest.ini']
 EXPORTS.mozilla.dom += [
     'Presentation.h',
     'PresentationDeviceManager.h',
+    'PresentationService.h',
     'PresentationSession.h',
+    'PresentationSessionInfo.h',
 ]
 
 UNIFIED_SOURCES += [
     'Presentation.cpp',
     'PresentationDeviceManager.cpp',
+    'PresentationService.cpp',
     'PresentationSession.cpp',
     'PresentationSessionRequest.cpp',
 ]

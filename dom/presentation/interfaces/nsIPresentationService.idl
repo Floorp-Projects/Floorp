@@ -1,0 +1,112 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+interface nsIInputStream;
+interface nsIPresentationListener;
+interface nsIPresentationSessionListener;
+
+%{C++
+#define PRESENTATION_SERVICE_CID \
+  { 0x1d9bb10c, 0xc0ab, 0x4fe8, \
+    { 0x9e, 0x4f, 0x40, 0x58, 0xb8, 0x51, 0x98, 0x32 } }
+#define PRESENTATION_SERVICE_CONTRACTID \
+  "@mozilla.org/presentation/presentationservice;1"
+%}
+
+[scriptable, uuid(12073206-0065-4b10-9488-a6eb9b23e65b)]
+interface nsIPresentationServiceCallback : nsISupports
+{
+  /*
+   * Called when the operation succeeds.
+   */
+  void notifySuccess();
+
+  /*
+   * Called when the operation fails.
+   *
+   * @param error: error message.
+   */
+  void notifyError(in nsresult error);
+};
+
+[scriptable, uuid(5801efd9-9dba-4af7-8be9-8fc97c2d54a6)]
+interface nsIPresentationService : nsISupports
+{
+  /*
+   * Start a new presentation session and display a prompt box which asks users
+   * to select a device.
+   *
+   * @param url: The url of presenting page.
+   * @param sessionId: An ID to identify presentation session.
+   * @param origin: The url of requesting page.
+   * @param callback: Invoke the callback when the operation is completed.
+   *                  NotifySuccess() is called with |id| if a session is
+   *                  established successfully with the selected device.
+   *                  Otherwise, NotifyError() is called with a error message.
+   */
+  void startSession(in DOMString url,
+                    in DOMString sessionId,
+                    in DOMString origin,
+                    in nsIPresentationServiceCallback callback);
+
+  /*
+   * Send the message wrapped with an input stream to the session.
+   *
+   * @param sessionId: An ID to identify presentation session.
+   * @param stream: The message is converted to an input stream.
+   */
+  void sendSessionMessage(in DOMString sessionId,
+                          in nsIInputStream stream);
+
+  /*
+   * Terminate the session.
+   *
+   * @param sessionId: An ID to identify presentation session.
+   */
+  void terminate(in DOMString sessionId);
+
+  /*
+   * Register a listener. Must be called from the main thread.
+   *
+   * @param listener: The listener to register.
+   */
+  void registerListener(in nsIPresentationListener listener);
+
+  /*
+   * Unregister a listener. Must be called from the main thread.
+   * @param listener: The listener to unregister.
+   */
+  void unregisterListener(in nsIPresentationListener listener);
+
+  /*
+   * Register a session listener. Must be called from the main thread.
+   *
+   * @param sessionId: An ID to identify presentation session.
+   * @param listener: The listener to register.
+   */
+  void registerSessionListener(in DOMString sessionId,
+                               in nsIPresentationSessionListener listener);
+
+  /*
+   * Unregister a session listener. Must be called from the main thread.
+   *
+   * @param sessionId: An ID to identify presentation session.
+   */
+  void unregisterSessionListener(in DOMString sessionId);
+
+  /*
+   * Check if the presentation instance has an existent session ID at launch.
+   * An empty string is returned at sender side; non-empty at receiver side.
+   */
+  DOMString getExistentSessionIdAtLaunch();
+
+  /*
+   * Notify the receiver page is ready for presentation use.
+   *
+   * @param sessionId: An ID to identify presentation session.
+   */
+  void notifyReceiverReady(in DOMString sessionId);
+};
