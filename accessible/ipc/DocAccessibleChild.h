@@ -208,6 +208,22 @@ public:
                             uint64_t* aIDOfAnchor,
                             bool* aOk) override;
 
+  virtual bool RecvLinkCount(const uint64_t& aID,
+                             uint32_t* aCount) override;
+
+  virtual bool RecvLinkAt(const uint64_t& aID,
+                          const uint32_t& aIndex,
+                          uint64_t* aIDOfLink,
+                          bool* aOk) override;
+
+  virtual bool RecvLinkIndexOf(const uint64_t& aID,
+                               const uint64_t& aLinkID,
+                               int32_t* aIndex) override;
+
+  virtual bool RecvLinkIndexAtOffset(const uint64_t& aID,
+                                     const uint32_t& aOffset,
+                                     int32_t* aIndex) override;
+
 private:
 
   Accessible* IdToAccessible(const uint64_t& aID) const;
