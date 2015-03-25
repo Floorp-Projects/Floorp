@@ -99,13 +99,12 @@ let OverviewView = {
    *        The { startTime, endTime }, in milliseconds.
    */
   setTimeInterval: function(interval, options = {}) {
-    if (this.isDisabled()) {
-      return;
-    }
-
     let recording = PerformanceController.getCurrentRecording();
     if (recording == null) {
       throw new Error("A recording should be available in order to set the selection.");
+    }
+    if (this.isDisabled()) {
+      return;
     }
     let mapStart = () => 0;
     let mapEnd = () => recording.getDuration();
@@ -123,13 +122,11 @@ let OverviewView = {
    */
   getTimeInterval: function() {
     let recording = PerformanceController.getCurrentRecording();
-
-    if (this.isDisabled()) {
-      return { startTime: 0, endTime: recording.getDuration() };
-    }
-
     if (recording == null) {
       throw new Error("A recording should be available in order to get the selection.");
+    }
+    if (this.isDisabled()) {
+      return { startTime: 0, endTime: recording.getDuration() };
     }
     let mapStart = () => 0;
     let mapEnd = () => recording.getDuration();
