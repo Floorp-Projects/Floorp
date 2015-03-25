@@ -26,6 +26,17 @@ function promiseObserver(topic) {
   });
 }
 
+function ReadingListMock() {
+  this.listener = null;
+}
+
+ReadingListMock.prototype = {
+  addListener(listener) {
+    ok(!this.listener, "mock only expects 1 listener");
+    this.listener = listener;
+  },
+}
+
 function createScheduler(options) {
   // avoid typos in the test and other footguns in the options.
   let allowedOptions = ["expectedDelay", "expectNewTimer", "syncFunction"];
@@ -34,10 +45,11 @@ function createScheduler(options) {
       throw new Error("Invalid option " + key);
     }
   }
-  let scheduler = createTestableScheduler();
+  let rlMock = new ReadingListMock();
+  let scheduler = createTestableScheduler(rlMock);
   // make our hooks
   let syncFunction = options.syncFunction || Promise.resolve;
-  scheduler._engine.sync = syncFunction;
+  scheduler._engine.start = syncFunction;
   // we expect _setTimeout to be called *twice* - first is the initial sync,
   // and there's no need to test the delay used for that. options.expectedDelay
   // is to check the *subsequent* timer.
@@ -86,6 +98,27 @@ add_task(function* testSuccess() {
   // New delay should be "as regularly scheduled".
   prefs.set("schedule", 100);
   let scheduler = createScheduler({expectedDelay: 100});
+  yield Promise.all(allNotifications);
+  scheduler.finalize();
+});
+
+// Test that if we get a reading list notification while we are syncing we
+// immediately start a new one when it complets.
+add_task(function* testImmediateResyncWhenChangedDuringSync() {
+  // promises which resolve once we've got all the expected notifications.
+  let allNotifications = [
+    promiseObserver("readinglist:sync:start"),
+    promiseObserver("readinglist:sync:finish"),
+  ];
+  prefs.set("schedule", 100);
+  // New delay should be "immediate".
+  let scheduler = createScheduler({
+    expectedDelay: 0,
+    syncFunction: () => {
+      // we are now syncing - pretend the readinglist has an item change
+      scheduler.readingList.listener.onItemAdded();
+      return Promise.resolve();
+    }});
   yield Promise.all(allNotifications);
   scheduler.finalize();
 });
