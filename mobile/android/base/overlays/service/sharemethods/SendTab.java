@@ -303,7 +303,7 @@ public class SendTab extends ShareMethod {
 
     @Override
     public String getFailureMessage() {
-        return context.getResources().getString(R.string.sync_text_tab_not_sent);
+        return context.getResources().getString(R.string.overlay_share_tab_not_sent);
     }
 
     /**
