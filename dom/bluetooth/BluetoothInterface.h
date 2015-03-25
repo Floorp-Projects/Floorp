@@ -514,7 +514,7 @@ public:
   virtual void SspRequestNotification(const nsAString& aRemoteBdAddr,
                                       const nsAString& aBdName,
                                       uint32_t aCod,
-                                      const nsAString& aPairingVariant,
+                                      BluetoothSspVariant aPairingVariant,
                                       uint32_t aPassKey) { }
 
   virtual void BondStateChangedNotification(BluetoothStatus aStatus,
