@@ -14,12 +14,19 @@ interface nsILoadContext;
 
 %{ C++
 #include "jspubtd.h"
+
+namespace mozilla {
+namespace dom {
+class DomainPolicyClone;
+}
+}
 %}
 
 [ptr] native JSContextPtr(JSContext);
 [ptr] native JSObjectPtr(JSObject);
+[ptr] native DomainPolicyClonePtr(mozilla::dom::DomainPolicyClone);
 
-[scriptable, uuid(f649959d-dae3-4027-83fd-5b7f8c8a8815)]
+[scriptable, uuid(ba602ca6-dc7a-457e-a57a-ee5b343fd863)]
 interface nsIScriptSecurityManager : nsISupports
 {
     /**
@@ -239,6 +246,22 @@ interface nsIScriptSecurityManager : nsISupports
      */
     nsIDomainPolicy activateDomainPolicy();
     readonly attribute boolean domainPolicyActive;
+
+    /**
+     * Only the parent process can directly access domain policies, child
+     * processes only have a read-only mirror to the one in the parent.
+     * For child processes the mirror is updated via messages
+     * and ContentChild will hold the DomainPolicy by calling
+     * ActivateDomainPolicyInternal directly. New consumer to this
+     * function should not be addded.
+     */
+    [noscript] nsIDomainPolicy activateDomainPolicyInternal();
+
+    /**
+     * This function is for internal use only. Every time a child process is spawned, we
+     * must clone any active domain policies in the parent to the new child.
+     */
+    [noscript, notxpcom] void cloneDomainPolicy(in DomainPolicyClonePtr aClone);
 
     /**
      * Query mechanism for the above policy.

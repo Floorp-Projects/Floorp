@@ -38,7 +38,7 @@ IterateCompartmentsArenasCells(JSRuntime *rt, Zone *zone, void *data,
     for (CompartmentsInZoneIter comp(zone); !comp.done(); comp.next())
         (*compartmentCallback)(rt, data, comp);
 
-    for (ALL_ALLOC_KINDS(thingKind)) {
+    for (auto thingKind : AllAllocKinds()) {
         JSGCTraceKind traceKind = MapAllocToTraceKind(thingKind);
         size_t thingSize = Arena::thingSize(thingKind);
 
@@ -117,7 +117,7 @@ js::IterateGrayObjects(Zone *zone, GCThingCallback cellCallback, void *data)
     zone->runtimeFromMainThread()->gc.evictNursery();
     AutoPrepareForTracing prep(zone->runtimeFromMainThread(), SkipAtoms);
 
-    for (OBJECT_ALLOC_KINDS(thingKind)) {
+    for (auto thingKind : ObjectAllocKinds()) {
         for (ZoneCellIterUnderGC i(zone, thingKind); !i.done(); i.next()) {
             JSObject *obj = i.get<JSObject>();
             if (obj->asTenured().isMarked(GRAY))

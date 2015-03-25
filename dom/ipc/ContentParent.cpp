@@ -2782,8 +2782,9 @@ ContentParent::RecvAddNewProcess(const uint32_t& aPid,
     bool isOffline;
     InfallibleTArray<nsString> unusedDictionaries;
     ClipboardCapabilities clipboardCaps;
+    DomainPolicyClone domainPolicy;
     RecvGetXPCOMProcessAttributes(&isOffline, &unusedDictionaries,
-                                  &clipboardCaps);
+                                  &clipboardCaps, &domainPolicy);
     mozilla::unused << content->SendSetOffline(isOffline);
     MOZ_ASSERT(!clipboardCaps.supportsSelectionClipboard() &&
                !clipboardCaps.supportsFindClipboard(),
@@ -3119,7 +3120,8 @@ ContentParent::RecvGetProcessAttributes(ContentParentId* aCpId,
 bool
 ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
                                              InfallibleTArray<nsString>* dictionaries,
-                                             ClipboardCapabilities* clipboardCaps)
+                                             ClipboardCapabilities* clipboardCaps,
+                                             DomainPolicyClone* domainPolicy)
 {
     nsCOMPtr<nsIIOService> io(do_GetIOService());
     MOZ_ASSERT(io, "No IO service?");
@@ -3139,6 +3141,11 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
 
     rv = clipboard->SupportsFindClipboard(&clipboardCaps->supportsFindClipboard());
     MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    // Let's copy the domain policy from the parent to the child (if it's active).
+    nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
+    NS_ENSURE_TRUE(ssm, false);
+    ssm->CloneDomainPolicy(domainPolicy);
 
     return true;
 }
