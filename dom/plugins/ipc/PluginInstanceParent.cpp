@@ -197,13 +197,10 @@ PluginInstanceParent::ActorDestroy(ActorDestroyReason why)
         UnsubclassPluginWindow();
     }
 #endif
-    // After this method, the data backing the remote surface may no
-    // longer be valid. The X surface may be destroyed, or the shared
-    // memory backing this surface may no longer be valid.
     if (mFrontSurface) {
         mFrontSurface = nullptr;
         if (mImageContainer) {
-            mImageContainer->SetCurrentImage(nullptr);
+            mImageContainer->ClearAllImages();
         }
 #ifdef MOZ_X11
         FinishX(DefaultXDisplay());
@@ -639,7 +636,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
         container->SetCurrentImage(cairoImage);
     }
     else if (mImageContainer) {
-        mImageContainer->SetCurrentImage(nullptr);
+        mImageContainer->ClearAllImages();
     }
 
     mFrontSurface = surface;
