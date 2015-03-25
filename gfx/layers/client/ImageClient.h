@@ -23,6 +23,7 @@
 namespace mozilla {
 namespace layers {
 
+class ClientLayer;
 class CompositableForwarder;
 class AsyncTransactionTracker;
 class Image;
@@ -63,6 +64,9 @@ public:
 
   virtual already_AddRefed<Image> CreateImage(ImageFormat aFormat) = 0;
 
+  void SetLayer(ClientLayer* aLayer) { mLayer = aLayer; }
+  ClientLayer* GetLayer() const { return mLayer; }
+
   /**
    * Create AsyncTransactionTracker that is used for FlushAllImagesAsync().
    */
@@ -84,6 +88,7 @@ protected:
   ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
               CompositableType aType);
 
+  ClientLayer* mLayer;
   CompositableType mType;
   int32_t mLastPaintedImageSerial;
   gfx::IntRect mPictureRect;
@@ -132,10 +137,6 @@ public:
   virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags) override;
   virtual bool Connect() override { return false; }
   virtual void Updated() {}
-  void SetLayer(ShadowableLayer* aLayer)
-  {
-    mLayer = aLayer;
-  }
 
   virtual TextureInfo GetTextureInfo() const override
   {
@@ -155,7 +156,6 @@ public:
 
 protected:
   uint64_t mAsyncContainerID;
-  ShadowableLayer* mLayer;
 };
 
 #ifdef MOZ_WIDGET_GONK
