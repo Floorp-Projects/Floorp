@@ -8,6 +8,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import('resource://gre/modules/Task.jsm');
 
 
 XPCOMUtils.defineLazyModuleGetter(this, 'LogManager',
@@ -24,7 +25,14 @@ XPCOMUtils.defineLazyModuleGetter(this, 'setTimeout',
 XPCOMUtils.defineLazyModuleGetter(this, 'clearTimeout',
   'resource://gre/modules/Timer.jsm');
 
-Cu.import('resource://gre/modules/Task.jsm');
+// The main readinglist module.
+XPCOMUtils.defineLazyModuleGetter(this, 'ReadingList',
+  'resource:///modules/readinglist/ReadingList.jsm');
+
+// The "engine"
+XPCOMUtils.defineLazyModuleGetter(this, 'Sync',
+  'resource:///modules/readinglist/Sync.jsm');
+
 
 this.EXPORTED_SYMBOLS = ["ReadingListScheduler"];
 
@@ -35,21 +43,12 @@ const OBSERVERS = [
   "network:offline-status-changed",
   // FxA notifications also cause us to check if we should sync.
   "fxaccounts:onverified",
-  // When something notices a local change to an item.
-  "readinglist:item-changed",
   // some notifications the engine might send if we have been requested to backoff.
   "readinglist:backoff-requested",
   // request to sync now
   "readinglist:user-sync",
 
 ];
-
-///////// A temp object until we get our "engine"
-let engine = {
-  ERROR_AUTHENTICATION: "authentication error",
-  sync: Task.async(function* () {
-  }),
-}
 
 let prefs = new Preferences("readinglist.scheduler.");
 
@@ -62,23 +61,29 @@ let intervals = {
   },
 
   // How long after startup do we do an initial sync?
-  get initial() this._fixupIntervalPref("initial", 20), // 20 seconds.
+  get initial() this._fixupIntervalPref("initial", 10), // 10 seconds.
   // Every interval after the first.
   get schedule() this._fixupIntervalPref("schedule", 2 * 60 * 60), // 2 hours
-  // After we've been told an item has changed
-  get dirty() this._fixupIntervalPref("dirty", 2 * 60), // 2 mins
   // After an error
   get retry() this._fixupIntervalPref("retry", 2 * 60), // 2 mins
 };
 
 // This is the implementation, but it's not exposed directly.
-function InternalScheduler() {
+function InternalScheduler(readingList = null) {
   // oh, I don't know what logs yet - let's guess!
-  let logs = ["readinglist", "FirefoxAccounts", "browserwindow.syncui"];
+  let logs = [
+    "browserwindow.syncui",
+    "FirefoxAccounts",
+    "readinglist.api",
+    "readinglist.serverclient",
+    "readinglist.sync",
+  ];
+
   this._logManager = new LogManager("readinglist.", logs, "readinglist");
   this.log = Log.repository.getLogger("readinglist.scheduler");
   this.log.info("readinglist scheduler created.")
   this.state = this.STATE_OK;
+  this.readingList = readingList || ReadingList; // hook point for tests.
 
   // don't this.init() here, but instead at the module level - tests want to
   // add hooks before it is called.
@@ -98,7 +103,7 @@ InternalScheduler.prototype = {
   // rejects.
   _timerRunning: false,
   // Our sync engine - XXX - maybe just a callback?
-  _engine: engine,
+  _engine: Sync,
 
   // Our state variable and constants.
   state: null,
@@ -108,12 +113,33 @@ InternalScheduler.prototype = {
 
   init() {
     this.log.info("scheduler initialzing");
+    this._setupRLListener();
     this._observe = this.observe.bind(this);
     for (let notification of OBSERVERS) {
       Services.obs.addObserver(this._observe, notification, false);
     }
     this._nextScheduledSync = Date.now() + intervals.initial;
     this._setupTimer();
+  },
+
+  _setupRLListener() {
+    let maybeSync = () => {
+      if (this._timerRunning) {
+        // If a sync is currently running it is possible it will miss the change
+        // just made, so tell the timer the next sync should be 1 ms after
+        // it completes (we don't use zero as that has special meaning re backoffs)
+        this._maybeReschedule(1);
+      } else {
+        // Do the sync now.
+        this._syncNow();
+      }
+    };
+    let listener = {
+      onItemAdded: maybeSync,
+      onItemUpdated: maybeSync,
+      onItemDeleted: maybeSync,
+    }
+    this.readingList.addListener(listener);
   },
 
   // Note: only called by tests.
@@ -141,9 +167,6 @@ InternalScheduler.prototype = {
         this._maybeReschedule(0);
         break;
       }
-      case "readinglist:local:dirty":
-        this._maybeReschedule(intervals.dirty);
-        break;
       case "readinglist:user-sync":
         this._syncNow();
         break;
@@ -234,8 +257,8 @@ InternalScheduler.prototype = {
     }
     // If there is something currently scheduled before the requested delay,
     // keep the existing value (eg, if we have a timer firing in 1 second, and
-    // get a "dirty" notification that says we should sync in 2 seconds, we
-    // keep the 1 second value)
+    // get a notification that says we should sync in 2 seconds, we keep the 1
+    // second value)
     this._nextScheduledSync = Math.min(this._nextScheduledSync, now + delay);
     // But we still need to honor a backoff.
     this._nextScheduledSync = Math.max(this._nextScheduledSync, this._backoffUntil);
@@ -252,7 +275,7 @@ InternalScheduler.prototype = {
     // we are running does the right thing.
     this._nextScheduledSync = 0;
     Services.obs.notifyObservers(null, "readinglist:sync:start", null);
-    this._engine.sync().then(() => {
+    this._engine.start().then(() => {
       this.log.info("Sync completed successfully");
       // Write a pref in the same format used to services/sync to indicate
       // the last success.
@@ -292,6 +315,11 @@ InternalScheduler.prototype = {
   // already running, and rescheduling the timer.
   // To call this, just send a "readinglist:user-sync" notification.
   _syncNow() {
+    if (!prefs.get("enabled")) {
+      this.log.info("syncNow() but syncing is disabled - ignoring");
+      return;
+    }
+
     if (this._timerRunning) {
       this.log.info("syncNow() but a sync is already in progress - ignoring");
       return;
@@ -326,14 +354,14 @@ let ReadingListScheduler = {
 
 // These functions are exposed purely for tests, which manage to grab them
 // via a BackstagePass.
-function createTestableScheduler() {
+function createTestableScheduler(readingList) {
   // kill the "real" scheduler as we don't want it listening to notifications etc.
   if (internalScheduler) {
     internalScheduler.finalize();
     internalScheduler = null;
   }
   // No .init() call - that's up to the tests after hooking.
-  return new InternalScheduler();
+  return new InternalScheduler(readingList);
 }
 
 // mochitests want the internal state of the real scheduler for various things.

@@ -280,12 +280,19 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
     size_t newDocCount = newChildDocs.Length();
     for (size_t i = 0; i < newDocCount; i++) {
       DocAccessible* childDoc = newChildDocs[i];
-      DocAccessibleChild* ipcDoc = new DocAccessibleChild(childDoc);
+      Accessible* parent = childDoc->Parent();
+      DocAccessibleChild* parentIPCDoc = mDocument->IPCDoc();
+      uint64_t id = reinterpret_cast<uintptr_t>(parent->UniqueID());
+      MOZ_ASSERT(id);
+      DocAccessibleChild* ipcDoc = childDoc->IPCDoc();
+      if (ipcDoc) {
+        parentIPCDoc->SendBindChildDoc(ipcDoc, id);
+        continue;
+      }
+
+      ipcDoc = new DocAccessibleChild(childDoc);
       childDoc->SetIPCDoc(ipcDoc);
       auto contentChild = dom::ContentChild::GetSingleton();
-      DocAccessibleChild* parentIPCDoc = mDocument->IPCDoc();
-      uint64_t id = reinterpret_cast<uintptr_t>(childDoc->Parent()->UniqueID());
-      MOZ_ASSERT(id);
       contentChild->SendPDocAccessibleConstructor(ipcDoc, parentIPCDoc, id);
     }
   }

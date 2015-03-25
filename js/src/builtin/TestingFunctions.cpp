@@ -782,12 +782,11 @@ struct JSCountHeapNode {
 
 typedef HashSet<void *, PointerHasher<void *, 3>, SystemAllocPolicy> VisitedSet;
 
-class CountHeapTracer
+class CountHeapTracer : public JS::CallbackTracer
 {
   public:
-    CountHeapTracer(JSRuntime *rt, JSTraceCallback callback) : base(rt, callback) {}
+    CountHeapTracer(JSRuntime *rt, JSTraceCallback callback) : CallbackTracer(rt, callback) {}
 
-    JSTracer            base;
     VisitedSet          visited;
     JSCountHeapNode     *traceList;
     JSCountHeapNode     *recycleList;
@@ -795,10 +794,8 @@ class CountHeapTracer
 };
 
 static void
-CountHeapNotify(JSTracer *trc, void **thingp, JSGCTraceKind kind)
+CountHeapNotify(JS::CallbackTracer *trc, void **thingp, JSGCTraceKind kind)
 {
-    MOZ_ASSERT(trc->callback == CountHeapNotify);
-
     CountHeapTracer *countTracer = (CountHeapTracer *)trc;
     void *thing = *thingp;
 
@@ -906,9 +903,9 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
     countTracer.recycleList = nullptr;
 
     if (startValue.isUndefined()) {
-        JS_TraceRuntime(&countTracer.base);
+        JS_TraceRuntime(&countTracer);
     } else {
-        JS_CallUnbarrieredValueTracer(&countTracer.base, startValue.address(), "root");
+        JS_CallUnbarrieredValueTracer(&countTracer, startValue.address(), "root");
     }
 
     JSCountHeapNode *node;
@@ -926,7 +923,7 @@ CountHeap(JSContext *cx, unsigned argc, jsval *vp)
         countTracer.traceList = node->next;
         node->next = countTracer.recycleList;
         countTracer.recycleList = node;
-        JS_TraceChildren(&countTracer.base, node->thing, node->kind);
+        JS_TraceChildren(&countTracer, node->thing, node->kind);
     }
     while ((node = countTracer.recycleList) != nullptr) {
         countTracer.recycleList = node->next;

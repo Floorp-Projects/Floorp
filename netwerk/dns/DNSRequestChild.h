@@ -16,7 +16,7 @@
 namespace mozilla {
 namespace net {
 
-class DNSRequestChild
+class DNSRequestChild final
   : public PDNSRequestChild
   , public nsICancelable
 {

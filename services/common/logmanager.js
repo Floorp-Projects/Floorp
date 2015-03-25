@@ -80,7 +80,11 @@ LogManager.prototype = {
       let observer = newVal => {
         let level = Log.Level[newVal] || defaultLevel;
         if (findSmallest) {
-          // We need to find the smallest value from all prefs controlling this appender.
+          // As some of our appenders have global impact (ie, there is only one
+          // place 'dump' goes to), we need to find the smallest value from all
+          // prefs controlling this appender.
+          // For example, if consumerA has dump=Debug then consumerB sets
+          // dump=Error, we need to keep dump=Debug so consumerA is respected.
           for (let branch of allBranches) {
             let lookPrefBranch = new Preferences(branch);
             let lookVal = Log.Level[lookPrefBranch.get(prefName)];
@@ -110,6 +114,12 @@ LogManager.prototype = {
     // now attach the appenders to all our logs.
     for (let logName of logNames) {
       let log = Log.repository.getLogger(logName);
+      // Set all of the logs themselves to log all messages, and rely on the
+      // more restrictive levels on the appenders to restrict what is seen.
+      // (We possibly could find the smallest appender level and set the logs
+      // to that, but that gets tricky when we consider a singe log might end
+      // up being managed by multiple log managers - so this is fine for now.)
+      log.level = Log.Level.All;
       for (let appender of [fapp, dumpAppender, consoleAppender]) {
         log.addAppender(appender);
       }

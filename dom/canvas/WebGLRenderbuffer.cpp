@@ -181,6 +181,8 @@ WebGLRenderbuffer::RenderbufferStorage(GLsizei samples, GLenum internalFormat,
 {
     MOZ_ASSERT(mContext->mBoundRenderbuffer == this);
 
+    InvalidateStatusOfAttachedFBs();
+
     gl::GLContext* gl = mContext->gl;
     MOZ_ASSERT(samples >= 0 && samples <= 256); // Sanity check.
 

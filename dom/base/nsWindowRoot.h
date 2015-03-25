@@ -26,7 +26,7 @@ class EventChainPreVisitor;
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 
-class nsWindowRoot : public nsPIWindowRoot
+class nsWindowRoot final : public nsPIWindowRoot
 {
 public:
   explicit nsWindowRoot(nsPIDOMWindow* aWindow);

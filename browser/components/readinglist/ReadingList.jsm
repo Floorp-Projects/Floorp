@@ -19,6 +19,12 @@ Cu.import("resource://gre/modules/Log.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SQLiteStore",
   "resource:///modules/readinglist/SQLiteStore.jsm");
 
+// We use Sync's "Utils" module for the device name, which is unfortunate,
+// but let's give it a better name here.
+XPCOMUtils.defineLazyGetter(this, "SyncUtils", function() {
+  const {Utils} = Cu.import("resource://services-sync/util.js", {});
+  return Utils;
+});
 
 { // Prevent the parent log setup from leaking into the global scope.
   let parentLog = Log.repository.getLogger("readinglist");
@@ -36,16 +42,21 @@ let log = Log.repository.getLogger("readinglist.api");
 // Each ReadingListItem has a _record property, an object containing the raw
 // data from the server and local store.  These are the names of the properties
 // in that object.
+//
+// Not important, but FYI: The order that these are listed in follows the order
+// that the server doc lists the fields in the article data model, more or less:
+// http://readinglist.readthedocs.org/en/latest/model.html
 const ITEM_RECORD_PROPERTIES = `
   guid
-  lastModified
+  serverLastModified
   url
+  preview
   title
   resolvedURL
   resolvedTitle
   excerpt
-  preview
-  status
+  archived
+  deleted
   favorite
   isArticle
   wordCount
@@ -56,6 +67,7 @@ const ITEM_RECORD_PROPERTIES = `
   markedReadBy
   markedReadOn
   readPosition
+  syncStatus
 `.trim().split(/\s+/);
 
 // Article objects that are passed to ReadingList.addItem may contain
@@ -68,6 +80,37 @@ const ITEM_DISREGARDED_PROPERTIES = `
   content
   length
 `.trim().split(/\s+/);
+
+// Each local item has a syncStatus indicating the state of the item in relation
+// to the sync server.  See also Sync.jsm.
+const SYNC_STATUS_SYNCED = 0;
+const SYNC_STATUS_NEW = 1;
+const SYNC_STATUS_CHANGED_STATUS = 2;
+const SYNC_STATUS_CHANGED_MATERIAL = 3;
+const SYNC_STATUS_DELETED = 4;
+
+// These options are passed as the "control" options to store methods and filter
+// out all records in the store with syncStatus SYNC_STATUS_DELETED.
+const STORE_OPTIONS_IGNORE_DELETED = {
+  syncStatus: [
+    SYNC_STATUS_SYNCED,
+    SYNC_STATUS_NEW,
+    SYNC_STATUS_CHANGED_STATUS,
+    SYNC_STATUS_CHANGED_MATERIAL,
+  ],
+};
+
+// Changes to the following item properties are considered "status," or
+// "status-only," changes, in relation to the sync server.  Changes to other
+// properties are considered "material" changes.  See also Sync.jsm.
+const SYNC_STATUS_PROPERTIES_STATUS = `
+  favorite
+  markedReadBy
+  markedReadOn
+  readPosition
+  unread
+`.trim().split(/\s+/);
+
 
 /**
  * A reading list contains ReadingListItems.
@@ -131,6 +174,18 @@ ReadingListImpl.prototype = {
 
   ItemRecordProperties: ITEM_RECORD_PROPERTIES,
 
+  SyncStatus: {
+    SYNCED: SYNC_STATUS_SYNCED,
+    NEW: SYNC_STATUS_NEW,
+    CHANGED_STATUS: SYNC_STATUS_CHANGED_STATUS,
+    CHANGED_MATERIAL: SYNC_STATUS_CHANGED_MATERIAL,
+    DELETED: SYNC_STATUS_DELETED,
+  },
+
+  SyncStatusProperties: {
+    STATUS: SYNC_STATUS_PROPERTIES_STATUS,
+  },
+
   /**
    * Yields the number of items in the list.
    *
@@ -140,7 +195,7 @@ ReadingListImpl.prototype = {
    *         with an Error on error.
    */
   count: Task.async(function* (...optsList) {
-    return (yield this._store.count(...optsList));
+    return (yield this._store.count(optsList, STORE_OPTIONS_IGNORE_DELETED));
   }),
 
   /**
@@ -151,7 +206,7 @@ ReadingListImpl.prototype = {
    *                    whether the URL is in the list or not.
    */
   hasItemForURL: Task.async(function* (url) {
-    url = normalizeURI(url).spec;
+    url = normalizeURI(url);
 
     // This is used on every tab switch and page load of the current tab, so we
     // want it to be quick and avoid a DB query whenever possible.
@@ -189,6 +244,26 @@ ReadingListImpl.prototype = {
    *         an Error on error.
    */
   forEachItem: Task.async(function* (callback, ...optsList) {
+    yield this._forEachItem(callback, optsList, STORE_OPTIONS_IGNORE_DELETED);
+  }),
+
+  /**
+   * Like forEachItem, but enumerates only previously synced items that are
+   * marked as being locally deleted.
+   */
+  forEachSyncedDeletedItem: Task.async(function* (callback, ...optsList) {
+    yield this._forEachItem(callback, optsList, {
+      syncStatus: SYNC_STATUS_DELETED,
+    });
+  }),
+
+  /**
+   * See forEachItem.
+   *
+   * @param storeOptions An options object passed to the store as the "control"
+   *        options.
+   */
+  _forEachItem: Task.async(function* (callback, optsList, storeOptions) {
     let promiseChain = Promise.resolve();
     yield this._store.forEachItem(record => {
       promiseChain = promiseChain.then(() => {
@@ -201,7 +276,7 @@ ReadingListImpl.prototype = {
           return undefined;
         });
       });
-    }, ...optsList);
+    }, optsList, storeOptions);
     yield promiseChain;
   }),
 
@@ -236,10 +311,23 @@ ReadingListImpl.prototype = {
    */
   addItem: Task.async(function* (record) {
     record = normalizeRecord(record);
-    record.addedOn = Date.now();
-    if (Services.prefs.prefHasUserValue("services.sync.client.name")) {
-      record.addedBy = Services.prefs.getCharPref("services.sync.client.name");
+    if (!record.url) {
+      throw new Error("The item must have a url");
     }
+    if (!("addedOn" in record)) {
+      record.addedOn = Date.now();
+    }
+    if (!("addedBy" in record)) {
+      try {
+        record.addedBy = Services.prefs.getCharPref("services.sync.client.name");
+      } catch (ex) {
+        record.addedBy = SyncUtils.getDefaultDeviceName();
+      }
+    }
+    if (!("syncStatus" in record)) {
+      record.syncStatus = SYNC_STATUS_NEW;
+    }
+
     yield this._store.addItem(record);
     this._invalidateIterators();
     let item = this._itemFromRecord(record);
@@ -264,6 +352,9 @@ ReadingListImpl.prototype = {
    *         Error on error.
    */
   updateItem: Task.async(function* (item) {
+    if (!item._record.url) {
+      throw new Error("The item must have a url");
+    }
     this._ensureItemBelongsToList(item);
     yield this._store.updateItem(item._record);
     this._invalidateIterators();
@@ -282,7 +373,26 @@ ReadingListImpl.prototype = {
    */
   deleteItem: Task.async(function* (item) {
     this._ensureItemBelongsToList(item);
-    yield this._store.deleteItemByURL(item.url);
+
+    // If the item is new and therefore hasn't been synced yet, delete it from
+    // the store.  Otherwise mark it as deleted but don't actually delete it so
+    // that its status can be synced.
+    if (item._record.syncStatus == SYNC_STATUS_NEW) {
+      yield this._store.deleteItemByURL(item.url);
+    }
+    else {
+      // To prevent data leakage, only keep the record fields needed to sync
+      // the deleted status: guid and syncStatus.
+      let newRecord = {};
+      for (let prop of ITEM_RECORD_PROPERTIES) {
+        newRecord[prop] = null;
+      }
+      newRecord.guid = item._record.guid;
+      newRecord.syncStatus = SYNC_STATUS_DELETED;
+      item._record = newRecord;
+      yield this._store.updateItemByGUID(item._record);
+    }
+
     item.list = null;
     this._itemsByNormalizedURL.delete(item.url);
     this._invalidateIterators();
@@ -309,7 +419,7 @@ ReadingListImpl.prototype = {
    * @return The first matching item, or null if there are no matching items.
    */
   itemForURL: Task.async(function* (uri) {
-    let url = normalizeURI(uri).spec;
+    let url = normalizeURI(uri);
     return (yield this.item({ url: url }, { resolvedURL: url }));
   }),
 
@@ -508,7 +618,7 @@ ReadingListItem.prototype = {
    * @type string
    */
   get url() {
-    return this._record.url;
+    return this._record.url || undefined;
   },
 
   /**
@@ -529,7 +639,7 @@ ReadingListItem.prototype = {
    * @type string
    */
   get resolvedURL() {
-    return this._record.resolvedURL;
+    return this._record.resolvedURL || undefined;
   },
   set resolvedURL(val) {
     this._updateRecord({ resolvedURL: val });
@@ -554,7 +664,7 @@ ReadingListItem.prototype = {
    * @type string
    */
   get title() {
-    return this._record.title;
+    return this._record.title || undefined;
   },
   set title(val) {
     this._updateRecord({ title: val });
@@ -565,7 +675,7 @@ ReadingListItem.prototype = {
    * @type string
    */
   get resolvedTitle() {
-    return this._record.resolvedTitle;
+    return this._record.resolvedTitle || undefined;
   },
   set resolvedTitle(val) {
     this._updateRecord({ resolvedTitle: val });
@@ -576,21 +686,21 @@ ReadingListItem.prototype = {
    * @type string
    */
   get excerpt() {
-    return this._record.excerpt;
+    return this._record.excerpt || undefined;
   },
   set excerpt(val) {
     this._updateRecord({ excerpt: val });
   },
 
   /**
-   * The item's status.
-   * @type integer
+   * The item's archived status.
+   * @type boolean
    */
-  get status() {
-    return this._record.status;
+  get archived() {
+    return !!this._record.archived;
   },
-  set status(val) {
-    this._updateRecord({ status: val });
+  set archived(val) {
+    this._updateRecord({ archived: !!val });
   },
 
   /**
@@ -620,7 +730,7 @@ ReadingListItem.prototype = {
    * @type integer
    */
   get wordCount() {
-    return this._record.wordCount;
+    return this._record.wordCount || undefined;
   },
   set wordCount(val) {
     this._updateRecord({ wordCount: val });
@@ -668,7 +778,7 @@ ReadingListItem.prototype = {
    * @type string
    */
   get markedReadBy() {
-    return this._record.markedReadBy;
+    return this._record.markedReadBy || undefined;
   },
   set markedReadBy(val) {
     this._updateRecord({ markedReadBy: val });
@@ -692,7 +802,7 @@ ReadingListItem.prototype = {
    * @param integer
    */
   get readPosition() {
-    return this._record.readPosition;
+    return this._record.readPosition || undefined;
   },
   set readPosition(val) {
     this._updateRecord({ readPosition: val });
@@ -703,7 +813,7 @@ ReadingListItem.prototype = {
    * @type string
    */
    get preview() {
-     return this._record.preview;
+     return this._record.preview || undefined;
    },
 
   /**
@@ -730,6 +840,11 @@ ReadingListItem.prototype = {
    * not normalized, but everywhere else, records are always normalized unless
    * otherwise stated.  The setter normalizes the passed-in value, so it will
    * throw an error if the value is not a valid record.
+   *
+   * This object should reflect the item's representation in the local store, so
+   * when calling the setter, be careful that it doesn't drift away from the
+   * store's record.  If you set it, you should also call updateItem() around
+   * the same time.
    */
   get _record() {
     return this.__record;
@@ -746,6 +861,18 @@ ReadingListItem.prototype = {
    */
   _updateRecord(partialRecord) {
     let record = this._record;
+
+    // The syncStatus flag can change from SYNCED to either CHANGED_STATUS or
+    // CHANGED_MATERIAL, or from CHANGED_STATUS to CHANGED_MATERIAL.
+    if (record.syncStatus == SYNC_STATUS_SYNCED ||
+        record.syncStatus == SYNC_STATUS_CHANGED_STATUS) {
+      let allStatusChanges = Object.keys(partialRecord).every(prop => {
+        return SYNC_STATUS_PROPERTIES_STATUS.indexOf(prop) >= 0;
+      });
+      record.syncStatus = allStatusChanges ? SYNC_STATUS_CHANGED_STATUS :
+                          SYNC_STATUS_CHANGED_MATERIAL;
+    }
+
     for (let prop in partialRecord) {
       record[prop] = partialRecord[prop];
     }
@@ -864,17 +991,20 @@ ReadingListItemIterator.prototype = {
 function normalizeRecord(nonNormalizedRecord) {
   let record = {};
   for (let prop in nonNormalizedRecord) {
-    if (ITEM_DISREGARDED_PROPERTIES.includes(prop)) {
+    if (ITEM_DISREGARDED_PROPERTIES.indexOf(prop) >= 0) {
       continue;
     }
-    if (!ITEM_RECORD_PROPERTIES.includes(prop)) {
+    if (ITEM_RECORD_PROPERTIES.indexOf(prop) < 0) {
       throw new Error("Unrecognized item property: " + prop);
     }
     switch (prop) {
     case "url":
     case "resolvedURL":
       if (nonNormalizedRecord[prop]) {
-        record[prop] = normalizeURI(nonNormalizedRecord[prop]).spec;
+        record[prop] = normalizeURI(nonNormalizedRecord[prop]);
+      }
+      else {
+        record[prop] = nonNormalizedRecord[prop];
       }
       break;
     default:
@@ -890,17 +1020,22 @@ function normalizeRecord(nonNormalizedRecord) {
  * or compare against.
  *
  * @param {nsIURI/String} uri - URI to normalize.
- * @returns {nsIURI} Cloned and normalized version of the input URI.
+ * @returns {String} String spec of a cloned and normalized version of the
+ *          input URI.
  */
 function normalizeURI(uri) {
   if (typeof uri == "string") {
-    uri = Services.io.newURI(uri, "", null);
+    try {
+      uri = Services.io.newURI(uri, "", null);
+    } catch (ex) {
+      return uri;
+    }
   }
   uri = uri.cloneIgnoringRef();
   try {
     uri.userPass = "";
   } catch (ex) {} // Not all nsURI impls (eg, nsSimpleURI) support .userPass
-  return uri;
+  return uri.spec;
 };
 
 function hash(str) {
@@ -944,7 +1079,7 @@ function getMetadataFromBrowser(browser) {
 Object.defineProperty(this, "ReadingList", {
   get() {
     if (!this._singleton) {
-      let store = new SQLiteStore("reading-list-temp2.sqlite");
+      let store = new SQLiteStore("reading-list.sqlite");
       this._singleton = new ReadingListImpl(store);
     }
     return this._singleton;

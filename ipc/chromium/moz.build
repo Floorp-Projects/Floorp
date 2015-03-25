@@ -102,12 +102,11 @@ if os_win:
         'src/chrome/common/transport_dib_win.cc',
     ]
 elif not CONFIG['MOZ_NATIVE_LIBEVENT']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'src/third_party/libevent/buffer.c',
         'src/third_party/libevent/bufferevent.c',
         'src/third_party/libevent/bufferevent_ratelim.c',
         'src/third_party/libevent/bufferevent_sock.c',
-        'src/third_party/libevent/evdns.c',
         'src/third_party/libevent/event.c',
         'src/third_party/libevent/event_tagging.c',
         'src/third_party/libevent/evmap.c',
@@ -124,6 +123,10 @@ elif not CONFIG['MOZ_NATIVE_LIBEVENT']:
         'src/third_party/libevent/signal.c',
         'src/third_party/libevent/strlcpy.c',
     ]
+    SOURCES += [
+        # This file cannot be built in unified mode because of strtotimeval symbol clash.
+        'src/third_party/libevent/evdns.c',
+    ]
     DEFINES['HAVE_CONFIG_H'] = True
     LOCAL_INCLUDES += [
         'src/third_party/libevent',
@@ -131,7 +134,7 @@ elif not CONFIG['MOZ_NATIVE_LIBEVENT']:
     ]
 
 if os_posix:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'src/base/condition_variable_posix.cc',
         'src/base/file_descriptor_shuffle.cc',
         'src/base/file_util_posix.cc',
@@ -154,7 +157,7 @@ if os_posix:
         'src/chrome/common/process_watcher_posix_sigchld.cc',
     ]
     if CONFIG['OS_TARGET'] == 'Android':
-        SOURCES += [
+        UNIFIED_SOURCES += [
             'src/base/message_pump_android.cc',
         ]
         DEFINES['ANDROID'] = True
@@ -162,22 +165,23 @@ if os_posix:
 
 if os_macosx:
     UNIFIED_SOURCES += [
+        'src/base/chrome_application_mac.mm',
+        'src/base/file_util_mac.mm',
         'src/base/idle_timer.cc',
+        'src/base/mac_util.mm',
+        'src/base/message_pump_mac.mm',
+        'src/base/process_util_mac.mm',
+        'src/base/scoped_nsautorelease_pool.mm',
         'src/base/sys_info_mac.cc',
+        'src/base/sys_string_conversions_mac.mm',
         'src/base/time_mac.cc',
+        'src/chrome/common/mach_ipc_mac.mm',
         'src/chrome/common/mach_message_source_mac.cc',
         'src/chrome/common/transport_dib_mac.cc',
     ]
     SOURCES += [
-        'src/base/chrome_application_mac.mm',
-        'src/base/file_util_mac.mm',
-        'src/base/mac_util.mm',
-        'src/base/message_pump_mac.mm',
+        # This file cannot be built in unified mode because of the redefinition of NoOp.
         'src/base/platform_thread_mac.mm',
-        'src/base/process_util_mac.mm',
-        'src/base/scoped_nsautorelease_pool.mm',
-        'src/base/sys_string_conversions_mac.mm',
-        'src/chrome/common/mach_ipc_mac.mm',
     ]
     if not CONFIG['MOZ_NATIVE_LIBEVENT']:
         UNIFIED_SOURCES += [

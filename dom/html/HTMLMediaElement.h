@@ -1394,9 +1394,6 @@ private:
   // Total time an MSE video has spent playing
   TimeDurationAccumulator mPlayTime;
 
-  // Time spent buffering in an MSE video
-  TimeDurationAccumulator mRebufferTime;
-
   // Time spent between video load and video playback.
   TimeDurationAccumulator mJoinLatency;
 };

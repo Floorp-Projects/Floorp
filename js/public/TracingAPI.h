@@ -15,6 +15,7 @@
 class JS_PUBLIC_API(JSTracer);
 
 namespace JS {
+class JS_PUBLIC_API(CallbackTracer);
 template <typename T> class Heap;
 template <typename T> class TenuredHeap;
 }
@@ -77,7 +78,7 @@ GCTraceKindToAscii(JSGCTraceKind kind);
 // of its mappings. This should be used in cases where the tracer
 // wants to use the existing liveness of entries.
 typedef void
-(* JSTraceCallback)(JSTracer *trc, void **thingp, JSGCTraceKind kind);
+(* JSTraceCallback)(JS::CallbackTracer *trc, void **thingp, JSGCTraceKind kind);
 
 // Callback that JSTraceOp implementation can provide to return a string
 // describing the reference traced with JS_CallTracer.
@@ -93,9 +94,6 @@ enum WeakMapTraceKind {
 class JS_PUBLIC_API(JSTracer)
 {
   public:
-    JSTracer(JSRuntime *rt, JSTraceCallback traceCallback,
-             WeakMapTraceKind weakTraceKind = TraceWeakMapValues);
-
     // Set debugging information about a reference to a traceable thing to prepare
     // for the following call to JS_CallTracer.
     //
@@ -152,9 +150,6 @@ class JS_PUBLIC_API(JSTracer)
     // Return the weak map tracing behavior set on this tracer.
     WeakMapTraceKind eagerlyTraceWeakMaps() const { return eagerlyTraceWeakMaps_; }
 
-    // Update the trace callback.
-    void setTraceCallback(JSTraceCallback traceCallback);
-
 #ifdef JS_GC_ZEAL
     // Sets the "real" location for a marked reference, when passing the address
     // directly is not feasable. This address is used for matching against the
@@ -171,12 +166,22 @@ class JS_PUBLIC_API(JSTracer)
     void **tracingLocation(void **thingp) { return nullptr; }
 #endif
 
-    // We expose |callback| directly so that IS_GC_MARKING_TRACER can compare
-    // it to GCMarker::GrayCallback.
-    JSTraceCallback     callback;
+    // An intermediate state on the road from C to C++ style dispatch.
+    enum TracerKindTag {
+        MarkingTracer,
+        CallbackTracer
+    };
+    bool isMarkingTracer() const { return tag == MarkingTracer; }
+    bool isCallbackTracer() const { return tag == CallbackTracer; }
+    inline JS::CallbackTracer *asCallbackTracer();
+
+  protected:
+    JSTracer(JSRuntime *rt, TracerKindTag tag,
+             WeakMapTraceKind weakTraceKind = TraceWeakMapValues);
 
   private:
     JSRuntime           *runtime_;
+    TracerKindTag       tag;
     JSTraceNamePrinter  debugPrinter_;
     const void          *debugPrintArg_;
     size_t              debugPrintIndex_;
@@ -185,6 +190,44 @@ class JS_PUBLIC_API(JSTracer)
     void                *realLocation_;
 #endif
 };
+
+namespace JS {
+
+class JS_PUBLIC_API(CallbackTracer) : public JSTracer
+{
+  public:
+    CallbackTracer(JSRuntime *rt, JSTraceCallback traceCallback,
+                   WeakMapTraceKind weakTraceKind = TraceWeakMapValues)
+      : JSTracer(rt, JSTracer::CallbackTracer, weakTraceKind), callback(traceCallback)
+    {}
+
+    // Update the trace callback.
+    void setTraceCallback(JSTraceCallback traceCallback);
+
+    // Test if the given callback is the same as our callback.
+    bool hasCallback(JSTraceCallback maybeCallback) const {
+        return maybeCallback == callback;
+    }
+
+    // Call the callback.
+    void invoke(void **thing, JSGCTraceKind kind) {
+        callback(this, thing, kind);
+    }
+
+  private:
+    // Exposed publicly for several callers that need to check if the tracer
+    // calling them is of the right type.
+    JSTraceCallback callback;
+};
+
+} // namespace JS
+
+JS::CallbackTracer *
+JSTracer::asCallbackTracer()
+{
+    MOZ_ASSERT(isCallbackTracer());
+    return static_cast<JS::CallbackTracer *>(this);
+}
 
 // The JS_Call*Tracer family of functions traces the given GC thing reference.
 // This performs the tracing action configured on the given JSTracer:

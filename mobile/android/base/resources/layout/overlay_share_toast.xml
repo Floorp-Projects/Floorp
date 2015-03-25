@@ -4,55 +4,23 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/overlay_share_toast"
-    android:layout_width="wrap_content"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:background="@drawable/share_overlay_background"
-    android:layout_marginLeft="5dp"
-    android:layout_marginRight="5dp"
-    android:layout_gravity="bottom|center">
+    android:background="@drawable/dropshadow"
+    android:padding="3dp">
 
-    <!-- Header -->
-    <LinearLayout
+    <TextView
+        android:id="@+id/overlay_toast_message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="0dp"
-        android:background="@color/background_light"
-        android:orientation="horizontal"
-        android:paddingLeft="5dp"
-        android:paddingRight="10dp"
-        android:paddingTop="5dp"
-        android:paddingBottom="5dp">
+        android:layout_gravity="center_vertical"
+        android:padding="20dp"
+        android:background="@drawable/toolbar_grey_round"
+        android:textColor="@color/text_and_tabs_tray_grey"
+        android:textSize="14sp"
+        android:drawablePadding="15dp"
+        android:drawableLeft="@drawable/overlay_check"/>
 
-        <!-- Large attractive green tick with label to the right -->
-        <TextView
-            style="@style/ShareOverlayButton.Text"
-            android:id="@+id/overlay_toast_message"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:textColor="@color/placeholder_active_grey"
-            android:textSize="14sp"
-            android:drawableLeft="@drawable/overlay_check"/>
-
-        <!-- Evil separator -->
-        <View
-            android:id="@+id/overlay_toast_separator"
-            android:layout_marginTop="15dp"
-            android:layout_marginBottom="15dp"
-            android:layout_height="match_parent"
-            android:layout_width="1dp"
-            android:background="@color/background_light"/>
-
-        <!-- Retry button -->
-        <Button
-            android:id="@+id/overlay_toast_retry_btn"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:text="@string/overlay_share_retry"
-            android:onClick="selfDestruct" />
-
-    </LinearLayout>
-</LinearLayout>
+</FrameLayout>

@@ -57,6 +57,12 @@ parent:
   ShowEvent(ShowEventData data);
   HideEvent(uint64_t aRootID);
 
+  /*
+   * Tell the parent document to bind the existing document as a new child
+   * document.
+   */
+  BindChildDoc(PDocAccessible aChildDoc, uint64_t aID);
+
 child:
   // Accessible
   prio(high) sync State(uint64_t aID) returns(uint64_t states);

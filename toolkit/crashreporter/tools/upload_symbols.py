@@ -55,7 +55,7 @@ def main():
             files={'symbols.zip': open(sys.argv[1], 'rb')},
             headers={'Auth-Token': auth_token},
             allow_redirects=False,
-            timeout=60,
+            timeout=120,
         )
     except requests.exceptions.RequestException as e:
         print('Error: {0}'.format(e))

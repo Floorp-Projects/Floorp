@@ -4,6 +4,10 @@
 
 %include ../../shared/readinglist/sidebar.inc.css
 
+html {
+  background-color: #EEF3FA;
+}
+
 .item {
   -moz-padding-end: 0;
 }

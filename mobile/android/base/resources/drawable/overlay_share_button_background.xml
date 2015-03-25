@@ -5,9 +5,11 @@
   - file, You can obtain one at http://mozilla.org/MPL/2.0/.
   -->
 
+<!-- Should be kept in sync with overlay_share_button_background_first.xml -->
+
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:state_pressed="true" android:drawable="@color/overlay_share_selected" />
-    <item android:drawable="@color/overlay_share_background"/>
+    <item android:state_pressed="true" android:drawable="@color/toolbar_grey_pressed" />
+    <item android:drawable="@color/toolbar_grey"/>
 
 </selector>

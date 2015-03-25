@@ -38,6 +38,18 @@ function f2(ia, k) {
     Atomics.sub(ia, 2, 1);
 }
 
+function f4(ia, k) {
+    // For effect, variable value.  The generated code on x86/x64
+    // should be one LOCK ORB.  (On ARM, there should be no
+    // sign-extend of the current value in the cell, otherwise this is
+    // still a LDREX/STREX loop.)
+    Atomics.or(ia, 6, k);
+
+    // Ditto constant value.  Here the LOCK ORB should have an
+    // immediate operand.
+    Atomics.or(ia, 6, 1);
+}
+
 function g(ia, k) {
     // For its value, variable value.  The generated code on x86/x64
     // should be one LOCK XADDB.
@@ -59,6 +71,16 @@ function g2(ia, k) {
     // operand, so in the second case there should be a preliminary
     // MOV of the negated immediate to the output register.
     sum += Atomics.sub(ia, 3, 1);
+}
+
+function g4(ia, k) {
+    // For its value, variable value.  The generated code on x86/x64
+    // should be a loop around ORB ; CMPXCHGB
+    sum += Atomics.or(ia, 7, k);
+
+    // Ditto constant value.  Here the ORB in the loop should have
+    // an immediate operand.
+    sum += Atomics.or(ia, 7, 1);
 }
 
 function mod(stdlib, ffi, heap) {
@@ -92,6 +114,8 @@ for ( var i=0 ; i < 10000 ; i++ ) {
     g2(i8a, i % 10);
     f3(i % 10);
     g3(i % 10);
+    f4(i8a, i % 10);
+    g4(i8a, i % 10);
 }
 
 assertEq(i8a[0], ((10000 + 10000*4.5) << 24) >> 24);
@@ -100,3 +124,5 @@ assertEq(i8a[2], ((-10000 + -10000*4.5) << 24) >> 24);
 assertEq(i8a[3], ((-10000 + -10000*4.5) << 24) >> 24);
 assertEq(i8a[4], ((10000 + 10000*4.5) << 24) >> 24);
 assertEq(i8a[5], ((10000 + 10000*4.5) << 24) >> 24);
+assertEq(i8a[6], 15);
+assertEq(i8a[7], 15);

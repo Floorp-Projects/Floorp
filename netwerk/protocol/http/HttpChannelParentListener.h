@@ -19,10 +19,10 @@ namespace net {
 
 class HttpChannelParent;
 
-class HttpChannelParentListener : public nsIInterfaceRequestor
-                                 , public nsIChannelEventSink
-                                 , public nsIRedirectResultListener
-                                 , public nsIStreamListener
+class HttpChannelParentListener final : public nsIInterfaceRequestor
+                                      , public nsIChannelEventSink
+                                      , public nsIRedirectResultListener
+                                      , public nsIStreamListener
 {
 public:
   NS_DECL_ISUPPORTS
