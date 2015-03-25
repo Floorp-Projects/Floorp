@@ -45,7 +45,7 @@ if [ ! -f "$ABSDIR/variants/$VARIANT" ]; then
     exit 1
 fi
 
-(cd "$SOURCE/js/src"; autoconf-2.13 || autoconf2.13)
+(cd "$SOURCE/js/src"; autoconf-2.13 || autoconf2.13 || autoconf213)
 
 TRY_OVERRIDE=$SOURCE/js/src/config.try
 if [ -r $TRY_OVERRIDE ]; then
@@ -70,6 +70,9 @@ USE_64BIT=false
 
 if [[ "$OSTYPE" == darwin* ]]; then
   USE_64BIT=true
+  if [ "$VARIANT" = "arm-sim-osx" ]; then
+    USE_64BIT=false
+  fi
 elif [ "$OSTYPE" = "linux-gnu" ]; then
   if [ -n "$AUTOMATION" ]; then
       GCCDIR="${GCCDIR:-/tools/gcc-4.7.2-0moz1}"
