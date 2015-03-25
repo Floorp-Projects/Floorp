@@ -11,6 +11,7 @@ using HeadersGuardEnum from "mozilla/dom/FetchIPCUtils.h";
 using RequestCredentials from "mozilla/dom/FetchIPCUtils.h";
 using RequestMode from "mozilla/dom/FetchIPCUtils.h";
 using RequestCache from "mozilla/dom/FetchIPCUtils.h";
+using RequestContext from "mozilla/dom/FetchIPCUtils.h";
 using mozilla::dom::ResponseType from "mozilla/dom/FetchIPCUtils.h";
 using mozilla::void_t from "ipc/IPCMessageUtils.h";
 using struct nsID from "nsID.h";
@@ -54,7 +55,8 @@ struct PCacheRequest
   RequestMode mode;
   RequestCredentials credentials;
   PCacheReadStreamOrVoid body;
-  uint32_t context;
+  uint32_t contentPolicyType;
+  RequestContext context;
   RequestCache requestCache;
 };
 

@@ -23,5 +23,8 @@
   testFetch()
   .then(function() {
     finish();
+  }, function(e) {
+    ok(false, "A promise was rejected: " + e);
+    finish();
   });
 </script>
