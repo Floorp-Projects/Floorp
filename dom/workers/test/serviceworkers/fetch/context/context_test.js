@@ -12,8 +12,16 @@ self.addEventListener("fetch", function(event) {
     if (event.request.context == "image") {
       event.respondWith(fetch("realimg.jpg"));
     }
-  } else {
-    // Fail any request that we don't know about.
-    event.respondWith(Promise.reject());
+  } else if (event.request.url.indexOf("responsive.jpg") >= 0) {
+    if (event.request.context == "imageset") {
+      event.respondWith(fetch("realimg.jpg"));
+    }
+  }
+  // Fail any request that we don't know about.
+  try {
+    event.respondWith(Promise.reject(event.request.url));
+  } catch(e) {
+    // Eat up the possible InvalidStateError exception that we may get if some
+    // code above has called respondWith too.
   }
 });
