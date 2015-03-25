@@ -6,11 +6,6 @@
 
 DIRS += ['interfaces']
 
-XPCSHELL_TESTS_MANIFESTS += [
-    'tests/unit/xpcshell.ini',
-    'tests/unit_ipc/xpcshell.ini',
-]
-
 if CONFIG['MOZ_B2G_RIL']:
     XPCSHELL_TESTS_MANIFESTS += ['tests/unit_stats/xpcshell.ini']
 

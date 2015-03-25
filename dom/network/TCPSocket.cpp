@@ -6,6 +6,7 @@
 #include "mozilla/ErrorResult.h"
 #include "TCPSocket.h"
 #include "TCPServerSocket.h"
+#include "TCPSocketChild.h"
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/TCPSocketBinding.h"
 #include "mozilla/dom/TCPSocketErrorEvent.h"
@@ -113,6 +114,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TCPSocket,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMultiplexStream)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMultiplexStreamCopier)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPendingDataAfterStartTLS)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSocketBridgeChild)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSocketBridgeParent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TCPSocket,
@@ -126,6 +129,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TCPSocket,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMultiplexStream)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mMultiplexStreamCopier)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPendingDataAfterStartTLS)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSocketBridgeChild)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mSocketBridgeParent)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(TCPSocket, DOMEventTargetHelper)
@@ -151,7 +156,9 @@ TCPSocket::TCPSocket(nsIGlobalObject* aGlobal, const nsAString& aHost, uint16_t 
   , mAsyncCopierActive(false)
   , mWaitingForDrain(false)
   , mInnerWindowID(0)
+  , mBufferedAmount(0)
   , mSuspendCount(0)
+  , mTrackingNumber(0)
   , mWaitingForStartTLS(false)
 #ifdef MOZ_WIDGET_GONK
   , mTxBytes(0)
@@ -237,6 +244,12 @@ TCPSocket::Init()
 
   mReadyState = TCPReadyState::Connecting;
 
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mSocketBridgeChild = new TCPSocketChild(mHost, mPort);
+    mSocketBridgeChild->SendOpen(this, mSsl, mUseArrayBuffers);
+    return NS_OK;
+  }
+
   nsCOMPtr<nsISocketTransportService> sts =
     do_GetService("@mozilla.org/network/socket-transport-service;1");
 
@@ -259,6 +272,16 @@ TCPSocket::Init()
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
+}
+
+void
+TCPSocket::InitWithSocketChild(TCPSocketChild* aSocketBridge)
+{
+  mSocketBridgeChild = aSocketBridge;
+  mReadyState = TCPReadyState::Open;
+  mSocketBridgeChild->SetSocket(this);
+  mSocketBridgeChild->GetHost(mHost);
+  mSocketBridgeChild->GetPort(&mPort);
 }
 
 nsresult
@@ -302,6 +325,11 @@ TCPSocket::UpgradeToSecure(mozilla::ErrorResult& aRv)
   }
 
   mSsl = true;
+
+  if (mSocketBridgeChild) {
+    mSocketBridgeChild->SendStartTLS();
+    return;
+  }
 
   uint32_t count = 0;
   mMultiplexStream->GetCount(&count);
@@ -358,6 +386,11 @@ TCPSocket::NotifyCopyComplete(nsresult aStatus)
 {
   mAsyncCopierActive = false;
   mMultiplexStream->RemoveStream(0);
+  if (mSocketBridgeParent) {
+    mozilla::unused << mSocketBridgeParent->SendUpdateBufferedAmount(BufferedAmount(),
+                                                                     mTrackingNumber);
+  }
+
   if (NS_FAILED(aStatus)) {
     MaybeReportErrorAndCloseIfOpen(aStatus);
     return;
@@ -390,7 +423,9 @@ TCPSocket::NotifyCopyComplete(nsresult aStatus)
     }
   }
 
-  if (mWaitingForDrain) {
+  // If we have a connected child, we let the child decide whether
+  // ondrain should be dispatched.
+  if (mWaitingForDrain && !mSocketBridgeParent) {
     mWaitingForDrain = false;
     FireEvent(NS_LITERAL_STRING("drain"));
   }
@@ -416,6 +451,11 @@ TCPSocket::ActivateTLS()
 void
 TCPSocket::FireErrorEvent(const nsAString& aName, const nsAString& aType)
 {
+  if (mSocketBridgeParent) {
+    mSocketBridgeParent->FireErrorEvent(aName, aType, mReadyState);
+    return;
+  }
+
   TCPSocketErrorEventInit init;
   init.mBubbles = false;
   init.mCancelable = false;
@@ -432,6 +472,11 @@ TCPSocket::FireErrorEvent(const nsAString& aName, const nsAString& aType)
 void
 TCPSocket::FireEvent(const nsAString& aType)
 {
+  if (mSocketBridgeParent) {
+    mSocketBridgeParent->FireEvent(aType, mReadyState);
+    return;
+  }
+
   AutoJSAPI api;
   if (NS_WARN_IF(!api.Init(GetOwner()))) {
     return;
@@ -443,6 +488,8 @@ TCPSocket::FireEvent(const nsAString& aType)
 void
 TCPSocket::FireDataEvent(JSContext* aCx, const nsAString& aType, JS::Handle<JS::Value> aData)
 {
+  MOZ_ASSERT(!mSocketBridgeParent);
+
   RootedDictionary<TCPSocketEventInit> init(aCx);
   init.mBubbles = false;
   init.mCancelable = false;
@@ -482,6 +529,9 @@ TCPSocket::Ssl()
 uint64_t
 TCPSocket::BufferedAmount()
 {
+  if (mSocketBridgeChild) {
+    return mBufferedAmount;
+  }
   if (mMultiplexStream) {
     uint64_t available = 0;
     mMultiplexStream->Available(&available);
@@ -493,6 +543,10 @@ TCPSocket::BufferedAmount()
 void
 TCPSocket::Suspend()
 {
+  if (mSocketBridgeChild) {
+    mSocketBridgeChild->SendSuspend();
+    return;
+  }
   if (mInputStreamPump) {
     mInputStreamPump->Suspend();
   }
@@ -502,6 +556,10 @@ TCPSocket::Suspend()
 void
 TCPSocket::Resume(mozilla::ErrorResult& aRv)
 {
+  if (mSocketBridgeChild) {
+    mSocketBridgeChild->SendResume();
+    return;
+  }
   if (!mSuspendCount) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
@@ -645,6 +703,11 @@ TCPSocket::Close()
 
   mReadyState = TCPReadyState::Closing;
 
+  if (mSocketBridgeChild) {
+    mSocketBridgeChild->SendClose();
+    return;
+  }
+
   uint32_t count = 0;
   mMultiplexStream->GetCount(&count);
   if (!count) {
@@ -653,64 +716,101 @@ TCPSocket::Close()
   mSocketInputStream->Close();
 }
 
+void
+TCPSocket::SendWithTrackingNumber(const nsACString& aData,
+                                  const uint32_t& aTrackingNumber,
+                                  mozilla::ErrorResult& aRv)
+{
+  MOZ_ASSERT(mSocketBridgeParent);
+  mTrackingNumber = aTrackingNumber;
+  // The JSContext isn't necessary for string values; it's a codegen limitation.
+  Send(nullptr, aData, aRv);
+}
+
 bool
-TCPSocket::Send(const nsACString& aData, mozilla::ErrorResult& aRv)
+TCPSocket::Send(JSContext* aCx, const nsACString& aData, mozilla::ErrorResult& aRv)
 {
   if (mReadyState != TCPReadyState::Open) {
     aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
-  nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream), aData);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return false;
-  }
   uint64_t byteLength;
-  rv = stream->Available(&byteLength);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return false;
+  nsCOMPtr<nsIInputStream> stream;
+  if (mSocketBridgeChild) {
+    mSocketBridgeChild->SendSend(aData, ++mTrackingNumber);
+    byteLength = aData.Length();
+  } else {
+    nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream), aData);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return false;
+    }
+    rv = stream->Available(&byteLength);
+    if (NS_FAILED(rv)) {
+      aRv.Throw(rv);
+      return false;
+    }
   }
   return Send(stream, byteLength);
 }
 
+void
+TCPSocket::SendWithTrackingNumber(JSContext* aCx,
+                                  const ArrayBuffer& aData,
+                                  uint32_t aByteOffset,
+                                  const Optional<uint32_t>& aByteLength,
+                                  const uint32_t& aTrackingNumber,
+                                  mozilla::ErrorResult& aRv)
+{
+  MOZ_ASSERT(mSocketBridgeParent);
+  mTrackingNumber = aTrackingNumber;
+  Send(aCx, aData, aByteOffset, aByteLength, aRv);
+}
+
 bool
-TCPSocket::Send(const ArrayBuffer& aData,
+TCPSocket::Send(JSContext* aCx,
+                const ArrayBuffer& aData,
                 uint32_t aByteOffset,
                 const Optional<uint32_t>& aByteLength,
                 mozilla::ErrorResult& aRv)
 {
-  AutoJSAPI api;
-  if (!api.Init(GetOwner()) ||
-      mReadyState != TCPReadyState::Open) {
+  if (mReadyState != TCPReadyState::Open) {
     aRv.Throw(NS_ERROR_FAILURE);
     return false;
   }
 
+  nsCOMPtr<nsIArrayBufferInputStream> stream;
+
   aData.ComputeLengthAndData();
   uint32_t byteLength = aByteLength.WasPassed() ? aByteLength.Value() : aData.Length();
 
-  JS::Rooted<JSObject*> obj(api.cx(), aData.Obj());
-  JSAutoCompartment ac(api.cx(), obj);
-  JS::Rooted<JS::Value> value(api.cx(), JS::ObjectValue(*obj));
+  if (mSocketBridgeChild) {
+    nsresult rv = mSocketBridgeChild->SendSend(aData, aByteOffset, byteLength, ++mTrackingNumber);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return false;
+    }
+  } else {
+    JS::Rooted<JSObject*> obj(aCx, aData.Obj());
+    JSAutoCompartment ac(aCx, obj);
+    JS::Rooted<JS::Value> value(aCx, JS::ObjectValue(*obj));
 
-  nsCOMPtr<nsIArrayBufferInputStream> stream =
-      do_CreateInstance("@mozilla.org/io/arraybuffer-input-stream;1");
-  nsresult rv = stream->SetData(value, aByteOffset, byteLength, api.cx());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return false;
+    stream = do_CreateInstance("@mozilla.org/io/arraybuffer-input-stream;1");
+    nsresult rv = stream->SetData(value, aByteOffset, byteLength, aCx);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      aRv.Throw(rv);
+      return false;
+    }
   }
-
   return Send(stream, byteLength);
 }
 
 bool
 TCPSocket::Send(nsIInputStream* aStream, uint32_t aByteLength)
 {
-  bool bufferFull = BufferedAmount() + aByteLength > BUFFER_SIZE;
+  uint64_t newBufferedAmount = BufferedAmount() + aByteLength;
+  bool bufferFull = newBufferedAmount > BUFFER_SIZE;
   if (bufferFull) {
     // If we buffered more than some arbitrary amount of data,
     // (65535 right now) we should tell the caller so they can
@@ -718,6 +818,13 @@ TCPSocket::Send(nsIInputStream* aStream, uint32_t aByteLength)
     // buffered data has been written to the socket, ondrain is
     // called.
     mWaitingForDrain = true;
+  }
+
+  if (mSocketBridgeChild) {
+    // In the child, we just add the buffer length to our bufferedAmount and let
+    // the parent update our bufferedAmount when the data have been sent.
+    mBufferedAmount = newBufferedAmount;
+    return !bufferFull;
   }
 
   if (mWaitingForStartTLS) {
@@ -763,6 +870,16 @@ TCPSocket::CreateAcceptedSocket(nsIGlobalObject* aGlobal,
   nsRefPtr<TCPSocket> socket = new TCPSocket(aGlobal, EmptyString(), 0, false, aUseArrayBuffers);
   nsresult rv = socket->InitWithTransport(aTransport);
   NS_ENSURE_SUCCESS(rv, nullptr);
+  return socket.forget();
+}
+
+already_AddRefed<TCPSocket>
+TCPSocket::CreateAcceptedSocket(nsIGlobalObject* aGlobal,
+                                TCPSocketChild* aBridge,
+                                bool aUseArrayBuffers)
+{
+  nsRefPtr<TCPSocket> socket = new TCPSocket(aGlobal, EmptyString(), 0, false, aUseArrayBuffers);
+  socket->InitWithSocketChild(aBridge);
   return socket.forget();
 }
 
@@ -845,11 +962,11 @@ NS_IMETHODIMP
 TCPSocket::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext, nsIInputStream* aStream,
                            uint64_t aOffset, uint32_t aCount)
 {
-  AutoJSAPI api;
-  if (!api.Init(GetOwner())) {
-    return NS_ERROR_FAILURE;
-  }
-  JSContext* cx = api.cx();
+#ifdef MOZ_WIDGET_GONK
+  // Collect received amount for network statistics.
+  mRxBytes += aCount;
+  SaveNetworkStats(false);
+#endif
 
   if (mUseArrayBuffers) {
     nsTArray<uint8_t> buffer;
@@ -860,28 +977,46 @@ TCPSocket::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext, nsIInput
     MOZ_ASSERT(actual == aCount);
     buffer.SetLength(actual);
 
+    if (mSocketBridgeParent) {
+      mSocketBridgeParent->FireArrayBufferDataEvent(buffer, mReadyState);
+      return NS_OK;
+    }
+
+    AutoJSAPI api;
+    if (!api.Init(GetOwner())) {
+      return NS_ERROR_FAILURE;
+    }
+    JSContext* cx = api.cx();
+
     JS::Rooted<JS::Value> value(cx);
     if (!ToJSValue(cx, TypedArrayCreator<Uint8Array>(buffer), &value)) {
       return NS_ERROR_FAILURE;
     }
     FireDataEvent(cx, NS_LITERAL_STRING("data"), value);
-  } else {
-    nsCString data;
-    nsresult rv = mInputStreamScriptable->ReadBytes(aCount, data);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    JS::Rooted<JS::Value> value(cx);
-    if (!ToJSValue(cx, NS_ConvertASCIItoUTF16(data), &value)) {
-      return NS_ERROR_FAILURE;
-    }
-    FireDataEvent(cx, NS_LITERAL_STRING("data"), value);
+    return NS_OK;
   }
 
-#ifdef MOZ_WIDGET_GONK
-  // Collect received amount for network statistics.
-  mRxBytes += aCount;
-  SaveNetworkStats(false);
-#endif
+  nsCString data;
+  nsresult rv = mInputStreamScriptable->ReadBytes(aCount, data);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mSocketBridgeParent) {
+    mSocketBridgeParent->FireStringDataEvent(data, mReadyState);
+    return NS_OK;
+  }
+
+  AutoJSAPI api;
+  if (!api.Init(GetOwner())) {
+    return NS_ERROR_FAILURE;
+  }
+  JSContext* cx = api.cx();
+
+  JS::Rooted<JS::Value> value(cx);
+  if (!ToJSValue(cx, NS_ConvertASCIItoUTF16(data), &value)) {
+    return NS_ERROR_FAILURE;
+  }
+  FireDataEvent(cx, NS_LITERAL_STRING("data"), value);
+
   return NS_OK;
 }
 
@@ -907,6 +1042,43 @@ TCPSocket::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext, nsresult a
   // We call this even if there is no error.
   MaybeReportErrorAndCloseIfOpen(aStatus);
   return NS_OK;
+}
+
+void
+TCPSocket::SetSocketBridgeParent(TCPSocketParent* aBridgeParent)
+{
+  mSocketBridgeParent = aBridgeParent;
+}
+
+void
+TCPSocket::SetAppIdAndBrowser(uint32_t aAppId, bool aInBrowser)
+{
+#ifdef MOZ_WIDGET_GONK
+  mAppId = aAppId;
+  mInBrowser = aInBrowser;
+#endif
+}
+
+void
+TCPSocket::UpdateReadyState(uint32_t aReadyState)
+{
+  MOZ_ASSERT(mSocketBridgeChild);
+  mReadyState = static_cast<TCPReadyState>(aReadyState);
+}
+
+void
+TCPSocket::UpdateBufferedAmount(uint32_t aBufferedAmount, uint32_t aTrackingNumber)
+{
+  if (aTrackingNumber != mTrackingNumber) {
+    return;
+  }
+  mBufferedAmount = aBufferedAmount;
+  if (!mBufferedAmount) {
+    if (mWaitingForDrain) {
+      mWaitingForDrain = false;
+      FireEvent(NS_LITERAL_STRING("drain"));
+    }
+  }
 }
 
 #ifdef MOZ_WIDGET_GONK

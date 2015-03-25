@@ -67,7 +67,7 @@ parent:
               FTPChannelCreationArgs args);
 
   PWebSocket(PBrowserOrId browser, SerializedLoadContext loadContext);
-  PTCPServerSocket(uint16_t localPort, uint16_t backlog, nsString binaryType);
+  PTCPServerSocket(uint16_t localPort, uint16_t backlog, bool useArrayBuffers);
   PUDPSocket(Principal principal, nsCString filter);
 
   PDNSRequest(nsCString hostName, uint32_t flags, nsCString networkInterface);
