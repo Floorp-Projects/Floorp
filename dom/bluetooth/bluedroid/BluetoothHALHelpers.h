@@ -111,18 +111,20 @@ nsresult
 Convert(const nsAString& aIn, bt_ssp_variant_t& aOut);
 
 inline nsresult
-Convert(const bt_ssp_variant_t& aIn, nsAString& aOut)
+Convert(const bt_ssp_variant_t& aIn, BluetoothSspVariant& aOut)
 {
-  static const char * const sSspVariant[] = {
-    CONVERT(BT_SSP_VARIANT_PASSKEY_CONFIRMATION, "PasskeyConfirmation"),
-    CONVERT(BT_SSP_VARIANT_PASSKEY_ENTRY, "PasskeyEntry"),
-    CONVERT(BT_SSP_VARIANT_CONSENT, "Consent"),
-    CONVERT(BT_SSP_VARIANT_PASSKEY_NOTIFICATION, "PasskeyNotification")
+  static const BluetoothSspVariant sSspVariant[] = {
+    CONVERT(BT_SSP_VARIANT_PASSKEY_CONFIRMATION,
+      SSP_VARIANT_PASSKEY_CONFIRMATION),
+    CONVERT(BT_SSP_VARIANT_PASSKEY_ENTRY, SSP_VARIANT_PASSKEY_ENTRY),
+    CONVERT(BT_SSP_VARIANT_CONSENT, SSP_VARIANT_CONSENT),
+    CONVERT(BT_SSP_VARIANT_PASSKEY_NOTIFICATION,
+      SSP_VARIANT_PASSKEY_NOTIFICATION)
   };
   if (aIn >= MOZ_ARRAY_LENGTH(sSspVariant)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  aOut = NS_ConvertUTF8toUTF16(sSspVariant[aIn]);
+  aOut = sSspVariant[aIn];
   return NS_OK;
 }
 
