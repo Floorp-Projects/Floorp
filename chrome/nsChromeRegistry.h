@@ -47,20 +47,20 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIXULChromeRegistry methods:
-  NS_IMETHOD ReloadChrome() MOZ_OVERRIDE;
-  NS_IMETHOD RefreshSkins() MOZ_OVERRIDE;
+  NS_IMETHOD ReloadChrome() override;
+  NS_IMETHOD RefreshSkins() override;
   NS_IMETHOD AllowScriptsForPackage(nsIURI* url,
-                                    bool* _retval) MOZ_OVERRIDE;
+                                    bool* _retval) override;
   NS_IMETHOD AllowContentToAccess(nsIURI* url,
-                                  bool* _retval) MOZ_OVERRIDE;
+                                  bool* _retval) override;
   NS_IMETHOD CanLoadURLRemotely(nsIURI* url,
-                                bool* _retval) MOZ_OVERRIDE;
+                                bool* _retval) override;
   NS_IMETHOD MustLoadURLRemotely(nsIURI* url,
-                                 bool* _retval) MOZ_OVERRIDE;
+                                 bool* _retval) override;
 
   // nsIChromeRegistry methods:
-  NS_IMETHOD_(bool) WrappersEnabled(nsIURI *aURI) MOZ_OVERRIDE;
-  NS_IMETHOD ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult) MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) WrappersEnabled(nsIURI *aURI) override;
+  NS_IMETHOD ConvertChromeURL(nsIURI* aChromeURI, nsIURI* *aResult) override;
 
   // nsChromeRegistry methods:
   nsChromeRegistry() : mInitialized(false) { }

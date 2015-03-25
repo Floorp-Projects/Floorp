@@ -9,7 +9,7 @@
 
 /* CID: {f6913e2e-1dd1-11b2-84be-f455dee342af} */
 
-class nsDirIndex MOZ_FINAL : public nsIDirIndex {
+class nsDirIndex final : public nsIDirIndex {
 
 private:
     ~nsDirIndex();

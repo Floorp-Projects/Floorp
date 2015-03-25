@@ -37,7 +37,7 @@ public:
   explicit DesktopNotificationRequest(DesktopNotification* aNotification)
     : mDesktopNotification(aNotification) {}
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     nsCOMPtr<nsPIDOMWindow> window = mDesktopNotification->GetOwner();
     nsContentPermissionUtils::AskPermission(this, window);

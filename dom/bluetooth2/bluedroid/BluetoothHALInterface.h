@@ -12,7 +12,7 @@
 
 BEGIN_BLUETOOTH_NAMESPACE
 
-class BluetoothHALInterface MOZ_FINAL : public BluetoothInterface
+class BluetoothHALInterface final : public BluetoothInterface
 {
 public:
   static BluetoothHALInterface* GetInstance();

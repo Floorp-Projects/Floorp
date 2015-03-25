@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-class VideoDocument MOZ_FINAL : public MediaDocument
+class VideoDocument final : public MediaDocument
 {
 public:
   virtual nsresult StartDocumentLoad(const char*         aCommand,

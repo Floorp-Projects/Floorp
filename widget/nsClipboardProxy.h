@@ -27,7 +27,7 @@ public:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIClipboardProxy, NS_CLIPBOARDPROXY_IID)
 
-class nsClipboardProxy MOZ_FINAL : public nsIClipboardProxy
+class nsClipboardProxy final : public nsIClipboardProxy
 {
 public:
   NS_DECL_ISUPPORTS
@@ -35,7 +35,7 @@ public:
 
   nsClipboardProxy();
 
-  virtual void SetCapabilities(const ClipboardCapabilities& aClipboardCaps) MOZ_OVERRIDE;
+  virtual void SetCapabilities(const ClipboardCapabilities& aClipboardCaps) override;
 
 private:
   ~nsClipboardProxy() {}

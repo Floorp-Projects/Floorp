@@ -6,7 +6,7 @@
 
 #include <stdlib.h>                     // for getenv
 
-#include "mozilla/Attributes.h"         // for MOZ_FINAL
+#include "mozilla/Attributes.h"         // for final
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/Services.h"           // for GetXULChromeRegistryService
 #include "mozilla/dom/Element.h"        // for Element
@@ -109,7 +109,7 @@ GetLoadContext(nsIEditor* aEditor)
  * Fetches the dictionary stored in content prefs and maintains state during the
  * fetch, which is asynchronous.
  */
-class DictionaryFetcher MOZ_FINAL : public nsIContentPrefCallback2
+class DictionaryFetcher final : public nsIContentPrefCallback2
 {
 public:
   NS_DECL_ISUPPORTS
@@ -121,7 +121,7 @@ public:
 
   NS_IMETHOD Fetch(nsIEditor* aEditor);
 
-  NS_IMETHOD HandleResult(nsIContentPref* aPref) MOZ_OVERRIDE
+  NS_IMETHOD HandleResult(nsIContentPref* aPref) override
   {
     nsCOMPtr<nsIVariant> value;
     nsresult rv = aPref->GetValue(getter_AddRefs(value));
@@ -130,13 +130,13 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleCompletion(uint16_t reason) MOZ_OVERRIDE
+  NS_IMETHOD HandleCompletion(uint16_t reason) override
   {
     mSpellCheck->DictionaryFetched(this);
     return NS_OK;
   }
 
-  NS_IMETHOD HandleError(nsresult error) MOZ_OVERRIDE
+  NS_IMETHOD HandleError(nsresult error) override
   {
     return NS_OK;
   }
@@ -296,7 +296,7 @@ nsEditorSpellCheck::CanSpellCheck(bool* _retval)
 }
 
 // Instances of this class can be used as either runnables or RAII helpers.
-class CallbackCaller MOZ_FINAL : public nsRunnable
+class CallbackCaller final : public nsRunnable
 {
 public:
   explicit CallbackCaller(nsIEditorSpellCheckCallback* aCallback)

@@ -25,13 +25,13 @@ public:
   ~OggWriter();
 
   nsresult WriteEncodedTrack(const EncodedFrameContainer &aData,
-                             uint32_t aFlags = 0) MOZ_OVERRIDE;
+                             uint32_t aFlags = 0) override;
 
   nsresult GetContainerData(nsTArray<nsTArray<uint8_t> >* aOutputBufs,
-                            uint32_t aFlags = 0) MOZ_OVERRIDE;
+                            uint32_t aFlags = 0) override;
 
   // Check metadata type integrity and reject unacceptable track encoder.
-  nsresult SetMetadata(TrackMetadataBase* aMetadata) MOZ_OVERRIDE;
+  nsresult SetMetadata(TrackMetadataBase* aMetadata) override;
 private:
   nsresult Init();
 

@@ -18,7 +18,7 @@
 #define USE_NC_EXTENSION
 #endif
 
-class FileSystemDataSource MOZ_FINAL : public nsIRDFDataSource
+class FileSystemDataSource final : public nsIRDFDataSource
 {
 public:
     NS_DECL_ISUPPORTS

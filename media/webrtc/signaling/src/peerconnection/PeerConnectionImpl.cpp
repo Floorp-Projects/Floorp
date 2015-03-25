@@ -187,7 +187,7 @@ public:
   , mPcHandle(pcHandle)
   {}
 
-  virtual void NotifyTracksAvailable(DOMMediaStream* aStream) MOZ_OVERRIDE
+  virtual void NotifyTracksAvailable(DOMMediaStream* aStream) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

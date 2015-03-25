@@ -20,7 +20,7 @@ typedef RootAccessible RootAccessibleWrap;
  * It is added into root when the toplevel window is created, and removed
  * from root when the toplevel window is destroyed.
  */
-class GtkWindowAccessible MOZ_FINAL : public DummyAccessible
+class GtkWindowAccessible final : public DummyAccessible
 {
 public:
   explicit GtkWindowAccessible(AtkObject* aAccessible);

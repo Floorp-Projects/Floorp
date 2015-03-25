@@ -17,7 +17,7 @@
 #include "xpctest_returncode.h"
 #include "mozilla/Attributes.h"
 
-class xpcTestObjectReadOnly MOZ_FINAL : public nsIXPCTestObjectReadOnly {
+class xpcTestObjectReadOnly final : public nsIXPCTestObjectReadOnly {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCTESTOBJECTREADONLY
@@ -34,7 +34,7 @@ class xpcTestObjectReadOnly MOZ_FINAL : public nsIXPCTestObjectReadOnly {
     PRTime  timeProperty;
 };
 
-class xpcTestObjectReadWrite MOZ_FINAL : public nsIXPCTestObjectReadWrite {
+class xpcTestObjectReadWrite final : public nsIXPCTestObjectReadWrite {
   public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIXPCTESTOBJECTREADWRITE
@@ -53,7 +53,7 @@ class xpcTestObjectReadWrite MOZ_FINAL : public nsIXPCTestObjectReadWrite {
      PRTime timeProperty;
 };
 
-class nsXPCTestParams MOZ_FINAL : public nsIXPCTestParams
+class nsXPCTestParams final : public nsIXPCTestParams
 {
 public:
     NS_DECL_ISUPPORTS
@@ -65,7 +65,7 @@ private:
     ~nsXPCTestParams();
 };
 
-class nsXPCTestReturnCodeParent MOZ_FINAL : public nsIXPCTestReturnCodeParent
+class nsXPCTestReturnCodeParent final : public nsIXPCTestReturnCodeParent
 {
 public:
     NS_DECL_ISUPPORTS

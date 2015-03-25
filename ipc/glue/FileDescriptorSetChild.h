@@ -23,7 +23,7 @@ namespace ipc {
 class BackgroundChildImpl;
 class FileDescriptor;
 
-class FileDescriptorSetChild MOZ_FINAL
+class FileDescriptorSetChild final
   : public PFileDescriptorSetChild
 {
   friend class BackgroundChildImpl;
@@ -40,7 +40,7 @@ private:
   ~FileDescriptorSetChild();
 
   virtual bool
-  RecvAddFileDescriptor(const FileDescriptor& aFileDescriptor) MOZ_OVERRIDE;
+  RecvAddFileDescriptor(const FileDescriptor& aFileDescriptor) override;
 };
 
 } // namespace ipc

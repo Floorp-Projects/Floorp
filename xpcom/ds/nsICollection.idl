@@ -43,7 +43,7 @@ class MOZ_STACK_CLASS nsQueryElementAt : public nsCOMPtr_helper
         }
 
       virtual nsresult NS_FASTCALL operator()( const nsIID& aIID, void** )
-        const MOZ_OVERRIDE;
+        const override;
 
     private:
       nsICollection* MOZ_NON_OWNING_REF mCollection;

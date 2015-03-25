@@ -35,20 +35,20 @@ public:
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
+                    nsIFrame*         aPrevInFlow) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   /** @see nsIFrame::DidSetStyleContext */
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
   
   virtual void AppendFrames(ChildListID     aListID,
-                            nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                            nsFrameList&    aFrameList) override;
   virtual void InsertFrames(ChildListID     aListID,
                             nsIFrame*       aPrevFrame,
-                            nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                            nsFrameList&    aFrameList) override;
   virtual void RemoveFrame(ChildListID     aListID,
-                           nsIFrame*       aOldFrame) MOZ_OVERRIDE;
+                           nsIFrame*       aOldFrame) override;
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aPresShell the pres shell for this frame
@@ -58,13 +58,13 @@ public:
   friend nsTableRowFrame* NS_NewTableRowFrame(nsIPresShell* aPresShell,
                                               nsStyleContext* aContext);
 
-  virtual nsMargin GetUsedMargin() const MOZ_OVERRIDE;
-  virtual nsMargin GetUsedBorder() const MOZ_OVERRIDE;
-  virtual nsMargin GetUsedPadding() const MOZ_OVERRIDE;
+  virtual nsMargin GetUsedMargin() const override;
+  virtual nsMargin GetUsedBorder() const override;
+  virtual nsMargin GetUsedPadding() const override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
   nsTableCellFrame* GetFirstCell() ;
 
@@ -84,7 +84,7 @@ public:
   virtual void Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+                      nsReflowStatus&          aStatus) override;
 
   void DidResize();
 
@@ -93,10 +93,10 @@ public:
    *
    * @see nsGkAtoms::tableRowFrame
    */
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
  
   void UpdateHeight(nscoord           aHeight,
@@ -219,17 +219,17 @@ public:
   void SetContinuousBCBorderWidth(uint8_t     aForSide,
                                   BCPixelSize aPixelValue);
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
+  virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsContainerFrame::IsFrameOfType(aFlags & ~(nsIFrame::eTablePart));
   }
 
-  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0) MOZ_OVERRIDE;
-  virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0) MOZ_OVERRIDE;
-  virtual void InvalidateFrameForRemoval() MOZ_OVERRIDE { InvalidateFrameSubtree(); }
+  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0) override;
+  virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0) override;
+  virtual void InvalidateFrameForRemoval() override { InvalidateFrameSubtree(); }
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
+  virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
 
 protected:
@@ -244,7 +244,7 @@ protected:
                             bool                    aBorderCollapse,
                             nsTableCellReflowState& aReflowState);
   
-  virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const MOZ_OVERRIDE;
+  virtual LogicalSides GetLogicalSkipSides(const nsHTMLReflowState* aReflowState = nullptr) const override;
 
   // row-specific methods
 

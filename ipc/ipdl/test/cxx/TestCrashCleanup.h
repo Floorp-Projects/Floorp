@@ -23,7 +23,7 @@ public:
     void Main();
 
 protected:    
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (AbnormalShutdown != why)
             fail("unexpected destruction!");
@@ -42,9 +42,9 @@ public:
     virtual ~TestCrashCleanupChild();
 
 protected:
-    virtual bool AnswerDIEDIEDIE() MOZ_OVERRIDE;
+    virtual bool AnswerDIEDIEDIE() override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         fail("should have 'crashed'!");
     }

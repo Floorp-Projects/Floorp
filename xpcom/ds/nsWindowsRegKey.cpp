@@ -20,7 +20,7 @@
 #define MAX_KEY_NAME_LEN     255
 #define MAX_VALUE_NAME_LEN   16383
 
-class nsWindowsRegKey MOZ_FINAL : public nsIWindowsRegKey
+class nsWindowsRegKey final : public nsIWindowsRegKey
 {
 public:
   NS_DECL_ISUPPORTS

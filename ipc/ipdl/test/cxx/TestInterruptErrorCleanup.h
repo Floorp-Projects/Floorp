@@ -24,13 +24,13 @@ public:
     void Main();
 
 protected:    
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (AbnormalShutdown != why)
             fail("unexpected destruction!");  
     }
 
-    virtual void ProcessingError(Result aCode, const char* aReason) MOZ_OVERRIDE;
+    virtual void ProcessingError(Result aCode, const char* aReason) override;
 
     bool mGotProcessingError;
 };
@@ -44,9 +44,9 @@ public:
     virtual ~TestInterruptErrorCleanupChild();
 
 protected:
-    virtual bool AnswerError() MOZ_OVERRIDE;
+    virtual bool AnswerError() override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         fail("should have 'crashed'!");
     }

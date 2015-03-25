@@ -123,7 +123,7 @@ public:
     return &c->mFrame;
   }
   // Override default impl
-  virtual void ReplaceWithDisabled() MOZ_OVERRIDE {
+  virtual void ReplaceWithDisabled() override {
     for (ChunkIterator i(*this);
          !i.IsEnded(); i.Next()) {
       VideoChunk& chunk = *i;
@@ -134,7 +134,7 @@ public:
   // Segment-generic methods not in MediaSegmentBase
   static Type StaticType() { return VIDEO; }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

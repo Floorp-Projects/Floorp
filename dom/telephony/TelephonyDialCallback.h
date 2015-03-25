@@ -23,7 +23,7 @@ namespace mozilla {
 namespace dom {
 namespace telephony {
 
-class TelephonyDialCallback MOZ_FINAL : public TelephonyCallback,
+class TelephonyDialCallback final : public TelephonyCallback,
                                         public nsITelephonyDialCallback
 {
 public:

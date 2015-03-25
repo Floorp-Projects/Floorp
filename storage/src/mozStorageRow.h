@@ -17,7 +17,7 @@ struct sqlite3_stmt;
 namespace mozilla {
 namespace storage {
 
-class Row MOZ_FINAL : public mozIStorageRow
+class Row final : public mozIStorageRow
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

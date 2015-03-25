@@ -81,7 +81,7 @@ public:
 
   virtual void SetTimelineParameter(uint32_t aIndex,
                                     const dom::AudioParamTimeline& aValue,
-                                    TrackRate aSampleRate) MOZ_OVERRIDE
+                                    TrackRate aSampleRate) override
   {
     switch (aIndex) {
     case AudioBufferSourceNode::PLAYBACKRATE:
@@ -92,7 +92,7 @@ public:
       NS_ERROR("Bad AudioBufferSourceNodeEngine TimelineParameter");
     }
   }
-  virtual void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam) MOZ_OVERRIDE
+  virtual void SetStreamTimeParameter(uint32_t aIndex, StreamTime aParam) override
   {
     switch (aIndex) {
     case AudioBufferSourceNode::STOP: mStop = aParam; break;
@@ -100,7 +100,7 @@ public:
       NS_ERROR("Bad AudioBufferSourceNodeEngine StreamTimeParameter");
     }
   }
-  virtual void SetDoubleParameter(uint32_t aIndex, double aParam) MOZ_OVERRIDE
+  virtual void SetDoubleParameter(uint32_t aIndex, double aParam) override
   {
     switch (aIndex) {
     case AudioBufferSourceNode::START:
@@ -117,7 +117,7 @@ public:
       NS_ERROR("Bad AudioBufferSourceNodeEngine double parameter.");
     };
   }
-  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam) MOZ_OVERRIDE
+  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override
   {
     switch (aIndex) {
     case AudioBufferSourceNode::SAMPLE_RATE: mBufferSampleRate = aParam; break;
@@ -134,7 +134,7 @@ public:
       NS_ERROR("Bad AudioBufferSourceNodeEngine Int32Parameter");
     }
   }
-  virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) MOZ_OVERRIDE
+  virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) override
   {
     mBuffer = aBuffer;
   }
@@ -427,7 +427,7 @@ public:
   virtual void ProcessBlock(AudioNodeStream* aStream,
                             const AudioChunk& aInput,
                             AudioChunk* aOutput,
-                            bool* aFinished) MOZ_OVERRIDE
+                            bool* aFinished) override
   {
     if (!mBuffer || !mBufferEnd) {
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -483,7 +483,7 @@ public:
     }
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     // Not owned:
     // - mBuffer - shared w/ AudioNode
@@ -503,7 +503,7 @@ public:
     return amount;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

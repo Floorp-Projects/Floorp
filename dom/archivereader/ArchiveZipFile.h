@@ -56,7 +56,7 @@ public:
   }
 
   // Overrides:
-  virtual nsresult GetInternalStream(nsIInputStream**) MOZ_OVERRIDE;
+  virtual nsresult GetInternalStream(nsIInputStream**) override;
 protected:
   virtual ~ArchiveZipFileImpl()
   {
@@ -65,7 +65,7 @@ protected:
 
   virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength, const nsAString& aContentType,
-              mozilla::ErrorResult& aRv) MOZ_OVERRIDE;
+              mozilla::ErrorResult& aRv) override;
 
 private: // Data
   ZipCentral mCentral;

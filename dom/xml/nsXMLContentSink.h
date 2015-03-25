@@ -65,26 +65,26 @@ public:
   NS_DECL_NSIEXPATSINK
 
   // nsIContentSink
-  NS_IMETHOD WillParse(void) MOZ_OVERRIDE;
-  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) MOZ_OVERRIDE;
-  NS_IMETHOD DidBuildModel(bool aTerminated) MOZ_OVERRIDE;
-  NS_IMETHOD WillInterrupt(void) MOZ_OVERRIDE;
-  NS_IMETHOD WillResume(void) MOZ_OVERRIDE;
-  NS_IMETHOD SetParser(nsParserBase* aParser) MOZ_OVERRIDE;
-  virtual void FlushPendingNotifications(mozFlushType aType) MOZ_OVERRIDE;
-  NS_IMETHOD SetDocumentCharset(nsACString& aCharset) MOZ_OVERRIDE;
-  virtual nsISupports *GetTarget() MOZ_OVERRIDE;
-  virtual bool IsScriptExecuting() MOZ_OVERRIDE;
-  virtual void ContinueInterruptedParsingAsync() MOZ_OVERRIDE;
+  NS_IMETHOD WillParse(void) override;
+  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) override;
+  NS_IMETHOD DidBuildModel(bool aTerminated) override;
+  NS_IMETHOD WillInterrupt(void) override;
+  NS_IMETHOD WillResume(void) override;
+  NS_IMETHOD SetParser(nsParserBase* aParser) override;
+  virtual void FlushPendingNotifications(mozFlushType aType) override;
+  NS_IMETHOD SetDocumentCharset(nsACString& aCharset) override;
+  virtual nsISupports *GetTarget() override;
+  virtual bool IsScriptExecuting() override;
+  virtual void ContinueInterruptedParsingAsync() override;
 
   // nsITransformObserver
-  NS_IMETHOD OnDocumentCreated(nsIDocument *aResultDocument) MOZ_OVERRIDE;
-  NS_IMETHOD OnTransformDone(nsresult aResult, nsIDocument *aResultDocument) MOZ_OVERRIDE;
+  NS_IMETHOD OnDocumentCreated(nsIDocument *aResultDocument) override;
+  NS_IMETHOD OnTransformDone(nsresult aResult, nsIDocument *aResultDocument) override;
 
   // nsICSSLoaderObserver
   NS_IMETHOD StyleSheetLoaded(mozilla::CSSStyleSheet* aSheet,
                               bool aWasAlternate,
-                              nsresult aStatus) MOZ_OVERRIDE;
+                              nsresult aStatus) override;
   static bool ParsePIData(const nsString &aData, nsString &aHref,
                           nsString &aTitle, nsString &aMedia,
                           bool &aIsAlternate);
@@ -135,9 +135,9 @@ protected:
   void PopContent();
   bool HaveNotifiedForCurrentContent() const;
 
-  nsresult FlushTags() MOZ_OVERRIDE;
+  nsresult FlushTags() override;
 
-  void UpdateChildCounts() MOZ_OVERRIDE;
+  void UpdateChildCounts() override;
 
   void DidAddContent()
   {
@@ -152,7 +152,7 @@ protected:
                                     bool aAlternate,
                                     const nsSubstring& aTitle,
                                     const nsSubstring& aType,
-                                    const nsSubstring& aMedia) MOZ_OVERRIDE;
+                                    const nsSubstring& aMedia) override;
 
   nsresult LoadXSLStyleSheet(nsIURI* aUrl);
 

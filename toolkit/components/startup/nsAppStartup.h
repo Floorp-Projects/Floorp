@@ -29,7 +29,7 @@ struct PLEvent;
 { 0x7dd4d320, 0xc84b, 0x4624, { 0x8d, 0x45, 0x7b, 0xb9, 0xb2, 0x35, 0x69, 0x77 } }
 
 
-class nsAppStartup MOZ_FINAL : public nsIAppStartup,
+class nsAppStartup final : public nsIAppStartup,
                                public nsIWindowCreator2,
                                public nsIObserver,
                                public nsSupportsWeakReference

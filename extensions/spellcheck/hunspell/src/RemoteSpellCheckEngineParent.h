@@ -18,17 +18,17 @@ public:
 
   virtual ~RemoteSpellcheckEngineParent();
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool RecvSetDictionary(const nsString& aDictionary,
-                                   bool* success) MOZ_OVERRIDE;
+                                   bool* success) override;
 
-  virtual bool RecvCheck(const nsString& aWord, bool* aIsMisspelled) MOZ_OVERRIDE;
+  virtual bool RecvCheck(const nsString& aWord, bool* aIsMisspelled) override;
 
   virtual bool RecvCheckAndSuggest(const nsString& aWord,
                                      bool* aIsMisspelled,
                                      InfallibleTArray<nsString>* aSuggestions)
-      MOZ_OVERRIDE;
+      override;
 
 private:
   nsCOMPtr<nsISpellChecker> mSpellChecker;

@@ -18,7 +18,7 @@ class DOMRequest;
 class OwningMozIccInfoOrMozGsmIccInfoOrMozCdmaIccInfo;
 class Promise;
 
-class Icc MOZ_FINAL : public DOMEventTargetHelper
+class Icc final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -53,7 +53,7 @@ public:
 
   // WrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx) override;
 
   // MozIcc WebIDL
   void

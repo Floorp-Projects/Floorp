@@ -27,7 +27,7 @@ class nsIFrame;
  * biggest sizes.
  */
 
-class nsGridCell MOZ_FINAL
+class nsGridCell final
 {
 public:
     nsGridCell();

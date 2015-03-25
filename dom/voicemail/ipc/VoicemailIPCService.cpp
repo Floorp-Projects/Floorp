@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 namespace voicemail {
 
-class VoicemailIPCProvider MOZ_FINAL : public nsIVoicemailProvider
+class VoicemailIPCProvider final : public nsIVoicemailProvider
 {
   friend class VoicemailIPCService;
 
@@ -26,7 +26,7 @@ public:
   explicit VoicemailIPCProvider(uint32_t aServiceId);
 
 private:
-  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
+  // final suppresses -Werror,-Wdelete-non-virtual-dtor
   ~VoicemailIPCProvider() {}
 
 private:

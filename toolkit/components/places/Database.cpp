@@ -218,7 +218,7 @@ SetJournalMode(nsCOMPtr<mozIStorageConnection>& aDBConn,
   return JOURNAL_DELETE;
 }
 
-class ConnectionCloseCallback MOZ_FINAL : public mozIStorageCompletionCallback {
+class ConnectionCloseCallback final : public mozIStorageCompletionCallback {
   bool mDone;
 
   ~ConnectionCloseCallback() {}

@@ -34,7 +34,7 @@ using namespace hal;
 static const nsTArray<nsIDOMWindow*>::index_type NoIndex =
   nsTArray<nsIDOMWindow*>::NoIndex;
 
-class nsDeviceSensorData MOZ_FINAL : public nsIDeviceSensorData
+class nsDeviceSensorData final : public nsIDeviceSensorData
 {
 public:
   NS_DECL_ISUPPORTS

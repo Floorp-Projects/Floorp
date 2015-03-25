@@ -223,7 +223,7 @@ private:
   bool mGotTimecodeScale;
 };
 
-class WebMBufferedState MOZ_FINAL
+class WebMBufferedState final
 {
   NS_INLINE_DECL_REFCOUNTING(WebMBufferedState)
 

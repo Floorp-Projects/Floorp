@@ -112,10 +112,10 @@ public:
   LastShowDurationMs() const;
 
   virtual void
-  OnMiniShmEvent(MiniShmBase* aMiniShmObj) MOZ_OVERRIDE;
+  OnMiniShmEvent(MiniShmBase* aMiniShmObj) override;
 
   virtual void
-  OnMiniShmConnect(MiniShmBase* aMiniShmObj) MOZ_OVERRIDE;
+  OnMiniShmConnect(MiniShmBase* aMiniShmObj) override;
 
 private:
   nsresult

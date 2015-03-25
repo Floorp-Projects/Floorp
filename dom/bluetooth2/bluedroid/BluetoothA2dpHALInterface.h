@@ -16,7 +16,7 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothHALInterface;
 
-class BluetoothA2dpHALInterface MOZ_FINAL
+class BluetoothA2dpHALInterface final
   : public BluetoothA2dpInterface
 {
 public:

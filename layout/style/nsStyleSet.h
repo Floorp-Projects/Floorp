@@ -39,42 +39,42 @@ namespace mozilla {
 class EventStates;
 } // namespace mozilla
 
-class nsEmptyStyleRule MOZ_FINAL : public nsIStyleRule
+class nsEmptyStyleRule final : public nsIStyleRule
 {
 private:
   ~nsEmptyStyleRule() {}
 
 public:
   NS_DECL_ISUPPORTS
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
 };
 
-class nsInitialStyleRule MOZ_FINAL : public nsIStyleRule
+class nsInitialStyleRule final : public nsIStyleRule
 {
 private:
   ~nsInitialStyleRule() {}
 
 public:
   NS_DECL_ISUPPORTS
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
 };
 
-class nsDisableTextZoomStyleRule MOZ_FINAL : public nsIStyleRule
+class nsDisableTextZoomStyleRule final : public nsIStyleRule
 {
 private:
   ~nsDisableTextZoomStyleRule() {}
 
 public:
   NS_DECL_ISUPPORTS
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData) MOZ_OVERRIDE;
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
 };
 

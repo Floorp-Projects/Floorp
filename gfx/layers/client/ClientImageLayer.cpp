@@ -6,7 +6,7 @@
 #include "ClientLayerManager.h"         // for ClientLayerManager, etc
 #include "ImageContainer.h"             // for AutoLockImage, etc
 #include "ImageLayers.h"                // for ImageLayer
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ImageClient.h"  // for ImageClient, etc
@@ -40,35 +40,35 @@ protected:
     MOZ_COUNT_DTOR(ClientImageLayer);
   }
 
-  virtual void SetContainer(ImageContainer* aContainer) MOZ_OVERRIDE
+  virtual void SetContainer(ImageContainer* aContainer) override
   {
     ImageLayer::SetContainer(aContainer);
     mImageClientTypeContainer = CompositableType::UNKNOWN;
   }
 
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion) override
   {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     ImageLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void RenderLayer() MOZ_OVERRIDE;
+  virtual void RenderLayer() override;
   
-  virtual void ClearCachedResources() MOZ_OVERRIDE
+  virtual void ClearCachedResources() override
   {
     DestroyBackBuffer();
   }
 
-  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) MOZ_OVERRIDE
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override
   {
     aAttrs = ImageLayerAttributes(mFilter, mScaleToSize, mScaleMode);
   }
 
-  virtual Layer* AsLayer() MOZ_OVERRIDE { return this; }
-  virtual ShadowableLayer* AsShadowableLayer() MOZ_OVERRIDE { return this; }
+  virtual Layer* AsLayer() override { return this; }
+  virtual ShadowableLayer* AsShadowableLayer() override { return this; }
 
-  virtual void Disconnect() MOZ_OVERRIDE
+  virtual void Disconnect() override
   {
     DestroyBackBuffer();
     ClientLayer::Disconnect();
@@ -82,7 +82,7 @@ protected:
     }
   }
 
-  virtual CompositableClient* GetCompositableClient() MOZ_OVERRIDE
+  virtual CompositableClient* GetCompositableClient() override
   {
     return mImageClient;
   }

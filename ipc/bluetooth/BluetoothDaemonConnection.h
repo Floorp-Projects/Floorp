@@ -39,7 +39,7 @@ class BluetoothDaemonConnectionIO;
  *    https://git.kernel.org/cgit/bluetooth/bluez.git/tree/android/hal-ipc-api.txt?id=5.24
  *
  */
-class BluetoothDaemonPDU MOZ_FINAL : public UnixSocketIOBuffer
+class BluetoothDaemonPDU final : public UnixSocketIOBuffer
 {
 public:
   enum {
@@ -123,7 +123,7 @@ public:
   // ConnectionOrientedSocket
   //
 
-  virtual ConnectionOrientedSocketIO* GetIO() MOZ_OVERRIDE;
+  virtual ConnectionOrientedSocketIO* GetIO() override;
 
 protected:
 

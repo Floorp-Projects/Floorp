@@ -50,13 +50,13 @@ public:
   // using GfxInfoBase::GetFeatureSuggestedDriverVersion;
   // using GfxInfoBase::GetWebGLParameter;
   // to import the relevant methods into their namespace.
-  NS_IMETHOD GetFeatureStatus(int32_t aFeature, int32_t *_retval) MOZ_OVERRIDE;
-  NS_IMETHOD GetFeatureSuggestedDriverVersion(int32_t aFeature, nsAString & _retval) MOZ_OVERRIDE;
-  NS_IMETHOD GetWebGLParameter(const nsAString & aParam, nsAString & _retval) MOZ_OVERRIDE;
+  NS_IMETHOD GetFeatureStatus(int32_t aFeature, int32_t *_retval) override;
+  NS_IMETHOD GetFeatureSuggestedDriverVersion(int32_t aFeature, nsAString & _retval) override;
+  NS_IMETHOD GetWebGLParameter(const nsAString & aParam, nsAString & _retval) override;
 
-    NS_IMETHOD GetFailures(uint32_t *failureCount, int32_t** indices, char ***failures) MOZ_OVERRIDE;
-  NS_IMETHOD_(void) LogFailure(const nsACString &failure) MOZ_OVERRIDE;
-  NS_IMETHOD GetInfo(JSContext*, JS::MutableHandle<JS::Value>) MOZ_OVERRIDE;
+    NS_IMETHOD GetFailures(uint32_t *failureCount, int32_t** indices, char ***failures) override;
+  NS_IMETHOD_(void) LogFailure(const nsACString &failure) override;
+  NS_IMETHOD GetInfo(JSContext*, JS::MutableHandle<JS::Value>) override;
 
   // Initialization function. If you override this, you must call this class's
   // version of Init first.
@@ -68,7 +68,7 @@ public:
   virtual nsresult Init();
   
   // only useful on X11
-  NS_IMETHOD_(void) GetData() MOZ_OVERRIDE { }
+  NS_IMETHOD_(void) GetData() override { }
 
   static void AddCollector(GfxInfoCollectorBase* collector);
   static void RemoveCollector(GfxInfoCollectorBase* collector);

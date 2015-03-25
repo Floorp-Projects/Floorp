@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace gl {
 
-class TextureGarbageBin MOZ_FINAL {
+class TextureGarbageBin final {
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureGarbageBin)
 
 private:

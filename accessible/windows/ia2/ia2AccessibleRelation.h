@@ -19,7 +19,7 @@
 namespace mozilla {
 namespace a11y {
 
-class ia2AccessibleRelation MOZ_FINAL : public IAccessibleRelation
+class ia2AccessibleRelation final : public IAccessibleRelation
 {
 public:
   ia2AccessibleRelation(RelationType aType, Relation* aRel);

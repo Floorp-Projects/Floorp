@@ -31,7 +31,7 @@ class IMEStateManager;
  * this class, the instances use the stored event target.
  */
 
-class TextComposition MOZ_FINAL
+class TextComposition final
 {
   friend class IMEStateManager;
 
@@ -321,7 +321,7 @@ private:
                                uint32_t aEventMessage,
                                const nsAString& aData,
                                bool aIsSynthesizedEvent = false);
-    NS_IMETHOD Run() MOZ_OVERRIDE;
+    NS_IMETHOD Run() override;
 
   private:
     nsRefPtr<TextComposition> mTextComposition;
@@ -361,7 +361,7 @@ private:
  * in the array can be destroyed by calling some methods of itself.
  */
 
-class TextCompositionArray MOZ_FINAL :
+class TextCompositionArray final :
   public nsAutoTArray<nsRefPtr<TextComposition>, 2>
 {
 public:

@@ -539,7 +539,7 @@ public:
    * or false if there is no fling or the fling has ended.
    */
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
-                        const TimeDuration& aDelta) MOZ_OVERRIDE
+                        const TimeDuration& aDelta) override
   {
     float friction = gfxPrefs::APZFlingFriction();
     float threshold = gfxPrefs::APZFlingStoppedThreshold();
@@ -649,7 +649,7 @@ public:
   {}
 
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
-                        const TimeDuration& aDelta) MOZ_OVERRIDE
+                        const TimeDuration& aDelta) override
   {
     mDuration += aDelta;
     double animPosition = mDuration / mTotalDuration;
@@ -706,7 +706,7 @@ public:
   }
 
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
-                        const TimeDuration& aDelta) MOZ_OVERRIDE
+                        const TimeDuration& aDelta) override
   {
     // Can't inline these variables due to short-circuit evaluation.
     bool continueX = mApzc.mX.SampleOverscrollAnimation(aDelta);

@@ -10,7 +10,7 @@
 #include "nsIMutableArray.h"
 #include "nsAndroidHandlerApp.h"
 
-class nsMIMEInfoAndroid MOZ_FINAL : public nsIMIMEInfo
+class nsMIMEInfoAndroid final : public nsIMIMEInfo
 {
 public:
   static bool
@@ -44,7 +44,7 @@ private:
   nsCOMPtr<nsIHandlerApp> mPrefApp;
 
 public:
-  class SystemChooser MOZ_FINAL : public nsIHandlerApp {
+  class SystemChooser final : public nsIHandlerApp {
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIHANDLERAPP

@@ -17,7 +17,7 @@ namespace dom {
 
 class BroadcastChannel;
 
-class BroadcastChannelChild MOZ_FINAL : public PBroadcastChannelChild
+class BroadcastChannelChild final : public PBroadcastChannelChild
 {
   friend class mozilla::ipc::BackgroundChildImpl;
 
@@ -29,7 +29,7 @@ public:
     mBC = aBC;
   }
 
-  virtual bool RecvNotify(const ClonedMessageData& aData) MOZ_OVERRIDE;
+  virtual bool RecvNotify(const ClonedMessageData& aData) override;
 
   bool IsActorDestroyed() const
   {
@@ -42,7 +42,7 @@ private:
 
   ~BroadcastChannelChild();
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   // This raw pointer is actually the parent object.
   // It's set to null when the parent object is deleted.

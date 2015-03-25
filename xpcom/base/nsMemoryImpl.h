@@ -20,12 +20,12 @@ class nsMemoryImpl : public nsIMemory
 {
 public:
   // We don't use the generic macros because we are a special static object
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult) MOZ_OVERRIDE;
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) MOZ_OVERRIDE
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aResult) override;
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override
   {
     return 1;
   }
-  NS_IMETHOD_(MozExternalRefCountType) Release(void) MOZ_OVERRIDE
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) override
   {
     return 1;
   }

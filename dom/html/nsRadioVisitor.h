@@ -25,7 +25,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual bool Visit(nsIFormControl* aRadio) MOZ_OVERRIDE = 0;
+  virtual bool Visit(nsIFormControl* aRadio) override = 0;
 };
 
 /**
@@ -43,7 +43,7 @@ public:
     : mCheckedChanged(aCheckedChanged)
     { }
 
-  virtual bool Visit(nsIFormControl* aRadio) MOZ_OVERRIDE;
+  virtual bool Visit(nsIFormControl* aRadio) override;
 
 protected:
   bool mCheckedChanged;
@@ -63,7 +63,7 @@ public:
     , mExcludeElement(aExcludeElement)
     { }
 
-  virtual bool Visit(nsIFormControl* aRadio) MOZ_OVERRIDE;
+  virtual bool Visit(nsIFormControl* aRadio) override;
 
 protected:
   bool* mCheckedChanged;
@@ -85,7 +85,7 @@ public:
     , mNotify(aNotify)
     { }
 
-  virtual bool Visit(nsIFormControl* aRadio) MOZ_OVERRIDE;
+  virtual bool Visit(nsIFormControl* aRadio) override;
 
 protected:
   nsIFormControl* mExcludeElement;

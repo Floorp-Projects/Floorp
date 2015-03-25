@@ -230,7 +230,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSISPEECHTASKCALLBACK
 
-  NS_IMETHOD Run() MOZ_OVERRIDE;
+  NS_IMETHOD Run() override;
 
   bool IsCurrentTask() { return mService->mCurrentTask == mTask; }
 
@@ -342,7 +342,7 @@ void
 PicoCallbackRunnable::DispatchSynthDataRunnable(
   already_AddRefed<SharedBuffer>&& aBuffer, size_t aBufferSize)
 {
-  class PicoSynthDataRunnable MOZ_FINAL : public nsRunnable
+  class PicoSynthDataRunnable final : public nsRunnable
   {
   public:
     PicoSynthDataRunnable(already_AddRefed<SharedBuffer>& aBuffer,

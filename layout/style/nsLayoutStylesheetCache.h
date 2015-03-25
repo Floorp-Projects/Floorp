@@ -24,7 +24,7 @@ class Loader;
 }
 }
 
-class nsLayoutStylesheetCache MOZ_FINAL
+class nsLayoutStylesheetCache final
  : public nsIObserver
  , public nsIMemoryReporter
 {

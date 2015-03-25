@@ -42,18 +42,18 @@ public:
   virtual void
   Init(nsIContent*       aContent,
        nsContainerFrame* aParent,
-       nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
+       nsIFrame*         aPrevInFlow) override;
 
   NS_IMETHOD
-  InheritAutomaticData(nsIFrame* aParent) MOZ_OVERRIDE;
+  InheritAutomaticData(nsIFrame* aParent) override;
 
   virtual nsresult
   AttributeChanged(int32_t         aNameSpaceID,
                    nsIAtom*        aAttribute,
-                   int32_t         aModType) MOZ_OVERRIDE;
+                   int32_t         aModType) override;
 
   virtual bool
-  IsMrowLike() MOZ_OVERRIDE
+  IsMrowLike() override
   {
     return mFrames.FirstChild() != mFrames.LastChild() ||
            !mFrames.FirstChild();

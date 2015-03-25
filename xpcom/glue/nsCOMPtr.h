@@ -157,7 +157,7 @@ public:
  * often enough that the codesize savings are big enough to warrant the
  * specialcasing.
  */
-class MOZ_STACK_CLASS nsQueryInterface MOZ_FINAL
+class MOZ_STACK_CLASS nsQueryInterface final
 {
 public:
   explicit
@@ -341,7 +341,7 @@ protected:
 // template<class T> class nsGetterAddRefs;
 
 template<class T>
-class nsCOMPtr MOZ_FINAL
+class nsCOMPtr final
 #ifdef NSCAP_FEATURE_USE_BASE
   : private nsCOMPtr_base
 #endif

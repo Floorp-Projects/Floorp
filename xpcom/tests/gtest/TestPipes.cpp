@@ -46,11 +46,11 @@ WriteAll(nsIOutputStream *os, const char *buf, uint32_t bufLen, uint32_t *lenWri
     return NS_OK;
 }
 
-class nsReceiver MOZ_FINAL : public nsIRunnable {
+class nsReceiver final : public nsIRunnable {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
-    NS_IMETHOD Run() MOZ_OVERRIDE {
+    NS_IMETHOD Run() override {
         nsresult rv;
         char buf[101];
         uint32_t count;
@@ -140,11 +140,11 @@ TestPipe(nsIInputStream* in, nsIOutputStream* out)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsShortReader MOZ_FINAL : public nsIRunnable {
+class nsShortReader final : public nsIRunnable {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
-    NS_IMETHOD Run() MOZ_OVERRIDE {
+    NS_IMETHOD Run() override {
         nsresult rv;
         char buf[101];
         uint32_t count;
@@ -261,12 +261,12 @@ TestShortWrites(nsIInputStream* in, nsIOutputStream* out)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsPump MOZ_FINAL : public nsIRunnable
+class nsPump final : public nsIRunnable
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
-    NS_IMETHOD Run() MOZ_OVERRIDE {
+    NS_IMETHOD Run() override {
         nsresult rv;
         uint32_t count;
         while (true) {

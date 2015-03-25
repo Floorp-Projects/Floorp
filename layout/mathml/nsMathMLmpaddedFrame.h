@@ -20,10 +20,10 @@ public:
   friend nsIFrame* NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
   NS_IMETHOD
-  InheritAutomaticData(nsIFrame* aParent) MOZ_OVERRIDE;
+  InheritAutomaticData(nsIFrame* aParent) override;
 
   NS_IMETHOD
-  TransmitAutomaticData() MOZ_OVERRIDE {
+  TransmitAutomaticData() override {
     return TransmitAutomaticDataForMrowLikeElement();
   }
 
@@ -31,15 +31,15 @@ public:
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
-         nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+         nsReflowStatus&          aStatus) override;
   
   virtual nsresult
   Place(nsRenderingContext& aRenderingContext,
         bool                 aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
+        nsHTMLReflowMetrics& aDesiredSize) override;
 
   bool
-  IsMrowLike() MOZ_OVERRIDE {
+  IsMrowLike() override {
     return mFrames.FirstChild() != mFrames.LastChild() ||
            !mFrames.FirstChild();
   }
@@ -50,7 +50,7 @@ protected:
   
   virtual nsresult
   MeasureForWidth(nsRenderingContext& aRenderingContext,
-                  nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
+                  nsHTMLReflowMetrics& aDesiredSize) override;
 
 private:
   nsCSSValue mWidth;

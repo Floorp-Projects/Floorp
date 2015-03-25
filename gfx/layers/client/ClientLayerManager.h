@@ -9,7 +9,7 @@
 #include <stdint.h>                     // for int32_t
 #include "Layers.h"
 #include "gfxContext.h"                 // for gfxContext
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/LinkedList.h"         // For LinkedList
 #include "mozilla/WidgetUtils.h"        // for ScreenRotation
 #include "mozilla/gfx/Rect.h"           // for Rect
@@ -36,14 +36,14 @@ class ImageLayer;
 class PLayerChild;
 class TextureClientPool;
 
-class ClientLayerManager MOZ_FINAL : public LayerManager
+class ClientLayerManager final : public LayerManager
 {
   typedef nsTArray<nsRefPtr<Layer> > LayerRefArray;
 
 public:
   explicit ClientLayerManager(nsIWidget* aWidget);
 
-  virtual void Destroy() MOZ_OVERRIDE
+  virtual void Destroy() override
   {
     // It's important to call ClearCachedResource before Destroy because the
     // former will early-return if the later has already run.
@@ -55,72 +55,72 @@ protected:
   virtual ~ClientLayerManager();
 
 public:
-  virtual ShadowLayerForwarder* AsShadowForwarder() MOZ_OVERRIDE
+  virtual ShadowLayerForwarder* AsShadowForwarder() override
   {
     return mForwarder;
   }
 
-  virtual ClientLayerManager* AsClientLayerManager() MOZ_OVERRIDE
+  virtual ClientLayerManager* AsClientLayerManager() override
   {
     return this;
   }
 
-  virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE;
+  virtual int32_t GetMaxTextureSize() const override;
 
   virtual void SetDefaultTargetConfiguration(BufferMode aDoubleBuffering, ScreenRotation aRotation);
-  virtual void BeginTransactionWithTarget(gfxContext* aTarget) MOZ_OVERRIDE;
-  virtual void BeginTransaction() MOZ_OVERRIDE;
-  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) MOZ_OVERRIDE;
+  virtual void BeginTransactionWithTarget(gfxContext* aTarget) override;
+  virtual void BeginTransaction() override;
+  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override;
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
-                              EndTransactionFlags aFlags = END_DEFAULT) MOZ_OVERRIDE;
+                              EndTransactionFlags aFlags = END_DEFAULT) override;
 
-  virtual LayersBackend GetBackendType() MOZ_OVERRIDE { return LayersBackend::LAYERS_CLIENT; }
-  virtual LayersBackend GetCompositorBackendType() MOZ_OVERRIDE
+  virtual LayersBackend GetBackendType() override { return LayersBackend::LAYERS_CLIENT; }
+  virtual LayersBackend GetCompositorBackendType() override
   {
     return AsShadowForwarder()->GetCompositorBackendType();
   }
-  virtual void GetBackendName(nsAString& name) MOZ_OVERRIDE;
-  virtual const char* Name() const MOZ_OVERRIDE { return "Client"; }
+  virtual void GetBackendName(nsAString& name) override;
+  virtual const char* Name() const override { return "Client"; }
 
-  virtual void SetRoot(Layer* aLayer) MOZ_OVERRIDE;
+  virtual void SetRoot(Layer* aLayer) override;
 
-  virtual void Mutated(Layer* aLayer) MOZ_OVERRIDE;
+  virtual void Mutated(Layer* aLayer) override;
 
-  virtual bool IsOptimizedFor(PaintedLayer* aLayer, PaintedLayerCreationHint aHint) MOZ_OVERRIDE;
+  virtual bool IsOptimizedFor(PaintedLayer* aLayer, PaintedLayerCreationHint aHint) override;
 
-  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<PaintedLayer> CreatePaintedLayerWithHint(PaintedLayerCreationHint aHint) MOZ_OVERRIDE;
-  virtual already_AddRefed<ContainerLayer> CreateContainerLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<ImageLayer> CreateImageLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<ColorLayer> CreateColorLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<RefLayer> CreateRefLayer() MOZ_OVERRIDE;
+  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() override;
+  virtual already_AddRefed<PaintedLayer> CreatePaintedLayerWithHint(PaintedLayerCreationHint aHint) override;
+  virtual already_AddRefed<ContainerLayer> CreateContainerLayer() override;
+  virtual already_AddRefed<ImageLayer> CreateImageLayer() override;
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() override;
+  virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer() override;
+  virtual already_AddRefed<ColorLayer> CreateColorLayer() override;
+  virtual already_AddRefed<RefLayer> CreateRefLayer() override;
 
   TextureFactoryIdentifier GetTextureFactoryIdentifier()
   {
     return mForwarder->GetTextureFactoryIdentifier();
   }
 
-  virtual void FlushRendering() MOZ_OVERRIDE;
+  virtual void FlushRendering() override;
   void SendInvalidRegion(const nsIntRegion& aRegion);
 
-  virtual uint32_t StartFrameTimeRecording(int32_t aBufferSize) MOZ_OVERRIDE;
+  virtual uint32_t StartFrameTimeRecording(int32_t aBufferSize) override;
 
   virtual void StopFrameTimeRecording(uint32_t         aStartIndex,
-                                      nsTArray<float>& aFrameIntervals) MOZ_OVERRIDE;
+                                      nsTArray<float>& aFrameIntervals) override;
 
-  virtual bool NeedsWidgetInvalidation() MOZ_OVERRIDE { return false; }
+  virtual bool NeedsWidgetInvalidation() override { return false; }
 
   ShadowableLayer* Hold(Layer* aLayer);
 
   bool HasShadowManager() const { return mForwarder->HasShadowManager(); }
 
-  virtual bool IsCompositingCheap() MOZ_OVERRIDE;
-  virtual bool HasShadowManagerInternal() const MOZ_OVERRIDE { return HasShadowManager(); }
+  virtual bool IsCompositingCheap() override;
+  virtual bool HasShadowManagerInternal() const override { return HasShadowManager(); }
 
-  virtual void SetIsFirstPaint() MOZ_OVERRIDE;
+  virtual void SetIsFirstPaint() override;
 
   TextureClientPool* GetTexturePool(gfx::SurfaceFormat aFormat);
 
@@ -136,11 +136,11 @@ public:
    * configuration gets set when the window paints.
    */
   void StorePluginWidgetConfigurations(const nsTArray<nsIWidget::Configuration>&
-                                       aConfigurations) MOZ_OVERRIDE;
+                                       aConfigurations) override;
 
   // Drop cached resources and ask our shadow manager to do the same,
   // if we have one.
-  virtual void ClearCachedResources(Layer* aSubtree = nullptr) MOZ_OVERRIDE;
+  virtual void ClearCachedResources(Layer* aSubtree = nullptr) override;
 
   void HandleMemoryPressure();
 
@@ -168,7 +168,7 @@ public:
   CompositorChild* GetCompositorChild();
 
   // Disable component alpha layers with the software compositor.
-  virtual bool ShouldAvoidComponentAlphaLayers() MOZ_OVERRIDE { return !IsCompositingCheap(); }
+  virtual bool ShouldAvoidComponentAlphaLayers() override { return !IsCompositingCheap(); }
 
   /**
    * Called for each iteration of a progressive tile update. Updates
@@ -199,18 +199,18 @@ public:
   }
   bool NeedsComposite() const { return mNeedsComposite; }
 
-  virtual void Composite() MOZ_OVERRIDE;
-  virtual bool RequestOverfill(mozilla::dom::OverfillCallback* aCallback) MOZ_OVERRIDE;
-  virtual void RunOverfillCallback(const uint32_t aOverfill) MOZ_OVERRIDE;
+  virtual void Composite() override;
+  virtual bool RequestOverfill(mozilla::dom::OverfillCallback* aCallback) override;
+  virtual void RunOverfillCallback(const uint32_t aOverfill) override;
 
   virtual void DidComposite(uint64_t aTransactionId);
 
-  virtual bool SupportsMixBlendModes(EnumSet<gfx::CompositionOp>& aMixBlendModes) MOZ_OVERRIDE
+  virtual bool SupportsMixBlendModes(EnumSet<gfx::CompositionOp>& aMixBlendModes) override
   {
    return (GetTextureFactoryIdentifier().mSupportedBlendModes & aMixBlendModes) == aMixBlendModes;
   }
 
-  virtual bool AreComponentAlphaLayersEnabled() MOZ_OVERRIDE;
+  virtual bool AreComponentAlphaLayersEnabled() override;
 
   // Log APZ test data for the current paint. We supply the paint sequence
   // number ourselves, and take care of calling APZTestData::StartNewPaint()
@@ -249,7 +249,7 @@ public:
 
   void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) { mTransactionIdAllocator = aAllocator; }
 
-  float RequestProperty(const nsAString& aProperty) MOZ_OVERRIDE;
+  float RequestProperty(const nsAString& aProperty) override;
 protected:
   enum TransactionPhase {
     PHASE_NONE, PHASE_CONSTRUCTION, PHASE_DRAWING, PHASE_FORWARD
@@ -258,7 +258,7 @@ protected:
 
 private:
   // Listen memory-pressure event for ClientLayerManager
-  class MemoryPressureObserver MOZ_FINAL : public nsIObserver
+  class MemoryPressureObserver final : public nsIObserver
   {
   public:
     NS_DECL_ISUPPORTS

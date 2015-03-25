@@ -91,7 +91,7 @@ public:
     }
 
     // nsSMILParserUtils::GenericValueParser interface
-    virtual bool Parse(const nsAString& aValueStr) MOZ_OVERRIDE;
+    virtual bool Parse(const nsAString& aValueStr) override;
 
   protected:
     PathGenerator*          mPathGenerator;

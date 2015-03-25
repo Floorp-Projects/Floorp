@@ -43,9 +43,9 @@ public:
   // the shared pool singleton when the refcount drops to 0. The addref/release
   // are implemented using locking, so it's not recommended that you use them
   // in a tight loop.
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) MOZ_OVERRIDE;
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) MOZ_OVERRIDE;
-  NS_IMETHOD_(MozExternalRefCountType) Release(void) MOZ_OVERRIDE;
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override;
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) override;
 
   // Forward behaviour to wrapped thread pool implementation.
   NS_FORWARD_SAFE_NSITHREADPOOL(mPool);

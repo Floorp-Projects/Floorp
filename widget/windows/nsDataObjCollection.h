@@ -33,7 +33,7 @@ public:
  * associated with instances via SetDragDrop().
  */
  
-class nsDataObjCollection MOZ_FINAL : public nsIDataObjCollection, public nsDataObj
+class nsDataObjCollection final : public nsIDataObjCollection, public nsDataObj
 {
   public:
     nsDataObjCollection();

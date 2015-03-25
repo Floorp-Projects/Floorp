@@ -29,7 +29,7 @@ class nsXULTemplateQueryProcessorXML;
   {0x0358d692, 0xccce, 0x4a97, \
     { 0xb2, 0x51, 0xba, 0x8f, 0x17, 0x0f, 0x3b, 0x6f }}
  
-class nsXMLQuery MOZ_FINAL : public nsISupports
+class nsXMLQuery final : public nsISupports
 {
   public:
     NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXMLQUERY_IID)
@@ -82,7 +82,7 @@ class nsXMLQuery MOZ_FINAL : public nsISupports
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXMLQuery, NS_IXMLQUERY_IID)
 
-class nsXULTemplateResultSetXML MOZ_FINAL : public nsISimpleEnumerator
+class nsXULTemplateResultSetXML final : public nsISimpleEnumerator
 {
 private:
 
@@ -118,7 +118,7 @@ public:
     {}
 };
 
-class nsXULTemplateQueryProcessorXML MOZ_FINAL : public nsIXULTemplateQueryProcessor,
+class nsXULTemplateQueryProcessorXML final : public nsIXULTemplateQueryProcessor,
                                                  public nsIDOMEventListener
 {
 public:

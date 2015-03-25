@@ -37,11 +37,11 @@ public:
 	//
 	// nsIEntityConverter
 	//
-  NS_IMETHOD Init(const char *charset, uint32_t attr, uint32_t entityVersion) MOZ_OVERRIDE;
+  NS_IMETHOD Init(const char *charset, uint32_t attr, uint32_t entityVersion) override;
 
-  NS_IMETHOD Convert(const char16_t *inString, char **_retval) MOZ_OVERRIDE;
+  NS_IMETHOD Convert(const char16_t *inString, char **_retval) override;
 
-  NS_IMETHODIMP GetCharset(char * *aCharset) MOZ_OVERRIDE;
+  NS_IMETHODIMP GetCharset(char * *aCharset) override;
 
 protected:
 

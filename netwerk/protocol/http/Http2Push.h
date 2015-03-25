@@ -21,7 +21,7 @@ namespace net {
 
 class Http2PushTransactionBuffer;
 
-class Http2PushedStream MOZ_FINAL : public Http2Stream
+class Http2PushedStream final : public Http2Stream
 {
 public:
   Http2PushedStream(Http2PushTransactionBuffer *aTransaction,
@@ -33,21 +33,21 @@ public:
   bool GetPushComplete();
 
   // The consumer stream is the synthetic pull stream hooked up to this push
-  virtual Http2Stream *GetConsumerStream() MOZ_OVERRIDE { return mConsumerStream; };
+  virtual Http2Stream *GetConsumerStream() override { return mConsumerStream; };
 
   void SetConsumerStream(Http2Stream *aStream);
   bool GetHashKey(nsCString &key);
 
   // override of Http2Stream
-  nsresult ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *) MOZ_OVERRIDE;
-  nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *) MOZ_OVERRIDE;
+  nsresult ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *) override;
+  nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *) override;
 
-  nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() MOZ_OVERRIDE { return mLoadGroupCI; };
+  nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() override { return mLoadGroupCI; };
   void ConnectPushedStream(Http2Stream *consumer);
 
   bool TryOnPush();
 
-  virtual bool DeferCleanup(nsresult status) MOZ_OVERRIDE;
+  virtual bool DeferCleanup(nsresult status) override;
   void SetDeferCleanupOnSuccess(bool val) { mDeferCleanupOnSuccess = val; }
 
   bool IsOrphaned(TimeStamp now);
@@ -56,7 +56,7 @@ public:
   nsresult GetBufferedData(char *buf, uint32_t count, uint32_t *countWritten);
 
   // overload of Http2Stream
-  virtual bool HasSink() MOZ_OVERRIDE { return !!mConsumerStream; }
+  virtual bool HasSink() override { return !!mConsumerStream; }
 
   nsCString &GetRequestString() { return mRequestString; }
 
@@ -89,7 +89,7 @@ private:
 
 };
 
-class Http2PushTransactionBuffer MOZ_FINAL : public nsAHttpTransaction
+class Http2PushTransactionBuffer final : public nsAHttpTransaction
 {
 public:
   NS_DECL_ISUPPORTS

@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace widget {
 
-class NativeKeyBindings MOZ_FINAL
+class NativeKeyBindings final
 {
   typedef nsIWidget::NativeKeyBindingsType NativeKeyBindingsType;
   typedef nsIWidget::DoCommandCallback DoCommandCallback;

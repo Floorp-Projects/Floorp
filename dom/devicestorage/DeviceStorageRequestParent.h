@@ -52,7 +52,7 @@ private:
     virtual ~CancelableRunnable() {
     }
 
-    NS_IMETHOD Run() MOZ_OVERRIDE {
+    NS_IMETHOD Run() override {
       nsresult rv = NS_OK;
       if (!mCanceled) {
         rv = CancelableRun();

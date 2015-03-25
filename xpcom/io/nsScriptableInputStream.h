@@ -17,7 +17,7 @@
 
 #define NS_SCRIPTABLEINPUTSTREAM_CONTRACTID "@mozilla.org/scriptableinputstream;1"
 
-class nsScriptableInputStream MOZ_FINAL : public nsIScriptableInputStream
+class nsScriptableInputStream final : public nsIScriptableInputStream
 {
 public:
   // nsISupports methods

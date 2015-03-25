@@ -17,7 +17,7 @@
  * object returned by calls to nsJAR::GetInputStream(filename) for the
  * purpose of reading a file item out of a JAR file. 
  *------------------------------------------------------------------------*/
-class nsJARInputStream MOZ_FINAL : public nsIInputStream
+class nsJARInputStream final : public nsIInputStream
 {
   public:
     nsJARInputStream() : 

@@ -12,7 +12,7 @@
 
 namespace mozilla {
 
-class nsTerminator MOZ_FINAL: public nsIObserver {
+class nsTerminator final: public nsIObserver {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER

@@ -24,7 +24,7 @@ class DecodeSuccessCallback;
 class Promise;
 }
 
-struct WebAudioDecodeJob MOZ_FINAL
+struct WebAudioDecodeJob final
 {
   // You may omit both the success and failure callback, or you must pass both.
   // The callbacks are only necessary for asynchronous operation.

@@ -245,7 +245,7 @@ struct BlurCacheData {
  *
  * An entry stays in the cache as long as it is used often.
  */
-class BlurCache MOZ_FINAL : public nsExpirationTracker<BlurCacheData,4>
+class BlurCache final : public nsExpirationTracker<BlurCacheData,4>
 {
   public:
     BlurCache()

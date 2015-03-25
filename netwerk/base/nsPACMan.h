@@ -50,7 +50,7 @@ public:
                                const nsCString &newPACURL) = 0;
 };
 
-class PendingPACQuery MOZ_FINAL : public nsRunnable,
+class PendingPACQuery final : public nsRunnable,
                                   public mozilla::LinkedListElement<PendingPACQuery>
 {
 public:
@@ -79,7 +79,7 @@ private:
  * defined on this class are intended to be called on the main thread only.
  */
 
-class nsPACMan MOZ_FINAL : public nsIStreamLoaderObserver
+class nsPACMan final : public nsIStreamLoaderObserver
                          , public nsIInterfaceRequestor
                          , public nsIChannelEventSink
 {

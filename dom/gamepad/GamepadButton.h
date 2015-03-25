@@ -30,7 +30,7 @@ public:
     return mParent;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) override;
 
   void SetPressed(bool aPressed)
   {

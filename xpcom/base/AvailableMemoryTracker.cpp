@@ -336,7 +336,7 @@ LowMemoryEventsPhysicalDistinguishedAmount()
   return sNumLowPhysicalMemEvents;
 }
 
-class LowEventsReporter MOZ_FINAL : public nsIMemoryReporter
+class LowEventsReporter final : public nsIMemoryReporter
 {
   ~LowEventsReporter() {}
 
@@ -394,7 +394,7 @@ NS_IMPL_ISUPPORTS(LowEventsReporter, nsIMemoryReporter)
  * other observers will synchronously free some memory that we'll be able to
  * purge here.
  */
-class nsJemallocFreeDirtyPagesRunnable MOZ_FINAL : public nsIRunnable
+class nsJemallocFreeDirtyPagesRunnable final : public nsIRunnable
 {
   ~nsJemallocFreeDirtyPagesRunnable() {}
 
@@ -422,7 +422,7 @@ nsJemallocFreeDirtyPagesRunnable::Run()
  * and reacting upon them. We use one instance per process currently only for
  * cleaning up dirty unused pages held by jemalloc.
  */
-class nsMemoryPressureWatcher MOZ_FINAL : public nsIObserver
+class nsMemoryPressureWatcher final : public nsIObserver
 {
   ~nsMemoryPressureWatcher() {}
 

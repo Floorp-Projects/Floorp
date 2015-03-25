@@ -52,10 +52,10 @@ public:
 
   virtual nsresult
   GetSuccessResult(JSContext* aCx,
-                   JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
+                   JS::MutableHandle<JS::Value> aVal) override;
 
   virtual void
-  ReleaseObjects() MOZ_OVERRIDE
+  ReleaseObjects() override
   {
     mMutableFile = nullptr;
     MetadataHelper::ReleaseObjects();

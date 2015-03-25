@@ -28,7 +28,7 @@ class mozIStorageAsyncStatement;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsPermissionManager MOZ_FINAL : public nsIPermissionManager,
+class nsPermissionManager final : public nsIPermissionManager,
                                       public nsIObserver,
                                       public nsSupportsWeakReference
 {

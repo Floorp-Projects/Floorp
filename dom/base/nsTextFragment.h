@@ -34,7 +34,7 @@ class nsCString;
  * This class does not have a virtual destructor therefore it is not
  * meant to be subclassed.
  */
-class nsTextFragment MOZ_FINAL {
+class nsTextFragment final {
 public:
   static nsresult Init();
   static void Shutdown();

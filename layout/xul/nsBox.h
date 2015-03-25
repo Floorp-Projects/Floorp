@@ -19,34 +19,34 @@ public:
 
   static void Shutdown();
 
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetMinSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetMaxSize(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nscoord GetFlex(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nscoord GetBoxAscent(nsBoxLayoutState& aBoxLayoutState) override;
 
-  virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) override;
 
-  virtual bool IsCollapsed() MOZ_OVERRIDE;
+  virtual bool IsCollapsed() override;
 
   virtual void SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect,
-                         bool aRemoveOverflowAreas = false) MOZ_OVERRIDE;
+                         bool aRemoveOverflowAreas = false) override;
 
-  virtual nsresult GetBorder(nsMargin& aBorderAndPadding) MOZ_OVERRIDE;
-  virtual nsresult GetPadding(nsMargin& aBorderAndPadding) MOZ_OVERRIDE;
-  virtual nsresult GetMargin(nsMargin& aMargin) MOZ_OVERRIDE;
+  virtual nsresult GetBorder(nsMargin& aBorderAndPadding) override;
+  virtual nsresult GetPadding(nsMargin& aBorderAndPadding) override;
+  virtual nsresult GetMargin(nsMargin& aMargin) override;
 
-  virtual Valignment GetVAlign() const MOZ_OVERRIDE { return vAlign_Top; }
-  virtual Halignment GetHAlign() const MOZ_OVERRIDE { return hAlign_Left; }
+  virtual Valignment GetVAlign() const override { return vAlign_Top; }
+  virtual Halignment GetHAlign() const override { return hAlign_Left; }
 
-  virtual nsresult RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild) MOZ_OVERRIDE;
+  virtual nsresult RelayoutChildAtOrdinal(nsBoxLayoutState& aState, nsIFrame* aChild) override;
 
 #ifdef DEBUG_LAYOUT
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIFrame** aBox);
-  virtual nsresult GetDebug(bool& aDebug) MOZ_OVERRIDE;
-  virtual nsresult SetDebug(nsBoxLayoutState& aState, bool aDebug) MOZ_OVERRIDE;
+  virtual nsresult GetDebug(bool& aDebug) override;
+  virtual nsresult SetDebug(nsBoxLayoutState& aState, bool aDebug) override;
 
-  virtual nsresult DumpBox(FILE* out) MOZ_OVERRIDE;
+  virtual nsresult DumpBox(FILE* out) override;
   void PropagateDebug(nsBoxLayoutState& aState);
 #endif
 

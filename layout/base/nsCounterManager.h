@@ -102,7 +102,7 @@ struct nsCounterUseNode : public nsCounterNode {
     }
 
     virtual bool InitTextFrame(nsGenConList* aList,
-            nsIFrame* aPseudoFrame, nsIFrame* aTextFrame) MOZ_OVERRIDE;
+            nsIFrame* aPseudoFrame, nsIFrame* aTextFrame) override;
 
     mozilla::CounterStyle* GetCounterStyle();
     void SetCounterStyleDirty()

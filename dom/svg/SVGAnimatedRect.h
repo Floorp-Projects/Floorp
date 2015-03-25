@@ -18,7 +18,7 @@ class nsSVGViewBox;
 namespace mozilla {
 namespace dom {
 
-class SVGAnimatedRect MOZ_FINAL : public nsWrapperCache
+class SVGAnimatedRect final : public nsWrapperCache
 {
 public:
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(SVGAnimatedRect)
@@ -31,7 +31,7 @@ public:
     return mSVGElement;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) override;
 
   already_AddRefed<SVGIRect> GetBaseVal();
 

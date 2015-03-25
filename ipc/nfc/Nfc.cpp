@@ -35,7 +35,7 @@ static const char NFC_SOCKET_NAME[] = "/dev/socket/nfcd";
 // desktop development.
 static const uint32_t NFC_TEST_PORT = 6400;
 
-class SendNfcSocketDataTask MOZ_FINAL : public nsRunnable
+class SendNfcSocketDataTask final : public nsRunnable
 {
 public:
   SendNfcSocketDataTask(NfcConsumer* aConsumer, UnixSocketRawData* aRawData)
@@ -62,21 +62,21 @@ private:
   nsAutoPtr<UnixSocketRawData> mRawData;
 };
 
-class NfcConnector MOZ_FINAL : public mozilla::ipc::UnixSocketConnector
+class NfcConnector final : public mozilla::ipc::UnixSocketConnector
 {
 public:
   NfcConnector()
   { }
 
-  int Create() MOZ_OVERRIDE;
+  int Create() override;
   bool CreateAddr(bool aIsServer,
                   socklen_t& aAddrSize,
                   sockaddr_any& aAddr,
-                  const char* aAddress) MOZ_OVERRIDE;
-  bool SetUp(int aFd) MOZ_OVERRIDE;
-  bool SetUpListenSocket(int aFd) MOZ_OVERRIDE;
+                  const char* aAddress) override;
+  bool SetUp(int aFd) override;
+  bool SetUpListenSocket(int aFd) override;
   void GetSocketAddr(const sockaddr_any& aAddr,
-                     nsAString& aAddrStr) MOZ_OVERRIDE;
+                     nsAString& aAddrStr) override;
 };
 
 int

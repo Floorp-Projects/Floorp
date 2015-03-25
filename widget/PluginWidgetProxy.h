@@ -21,7 +21,7 @@ class PluginWidgetChild;
 }
 namespace widget {
 
-class PluginWidgetProxy MOZ_FINAL : public PuppetWidget
+class PluginWidgetProxy final : public PuppetWidget
 {
 public:
   explicit PluginWidgetProxy(dom::TabChild* aTabChild,
@@ -36,16 +36,16 @@ public:
   // nsIWidget
   NS_IMETHOD Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                     const nsIntRect& aRect,
-                    nsWidgetInitData* aInitData = nullptr) MOZ_OVERRIDE;
-  NS_IMETHOD Destroy() MOZ_OVERRIDE;
-  NS_IMETHOD SetFocus(bool aRaise = false) MOZ_OVERRIDE;
-  NS_IMETHOD SetParent(nsIWidget* aNewParent) MOZ_OVERRIDE;
+                    nsWidgetInitData* aInitData = nullptr) override;
+  NS_IMETHOD Destroy() override;
+  NS_IMETHOD SetFocus(bool aRaise = false) override;
+  NS_IMETHOD SetParent(nsIWidget* aNewParent) override;
 
-  virtual nsIWidget* GetParent(void) MOZ_OVERRIDE;
-  virtual void* GetNativeData(uint32_t aDataType) MOZ_OVERRIDE;
-  virtual nsTransparencyMode GetTransparencyMode() MOZ_OVERRIDE
+  virtual nsIWidget* GetParent(void) override;
+  virtual void* GetNativeData(uint32_t aDataType) override;
+  virtual nsTransparencyMode GetTransparencyMode() override
   { return eTransparencyOpaque; }
-  virtual void GetWindowClipRegion(nsTArray<nsIntRect>* aRects) MOZ_OVERRIDE;
+  virtual void GetWindowClipRegion(nsTArray<nsIntRect>* aRects) override;
 
 public:
   /**

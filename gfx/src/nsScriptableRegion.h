@@ -13,7 +13,7 @@
 #include "nsRegion.h"
 #include "mozilla/Attributes.h"
 
-class NS_GFX nsScriptableRegion MOZ_FINAL : public nsIScriptableRegion {
+class NS_GFX nsScriptableRegion final : public nsIScriptableRegion {
 public:
 	nsScriptableRegion();
 

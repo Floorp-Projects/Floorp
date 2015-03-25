@@ -29,7 +29,7 @@ class XPathResult;
 /**
  * A class for evaluating an XPath expression string
  */
-class XPathEvaluator MOZ_FINAL : public nsIDOMXPathEvaluator
+class XPathEvaluator final : public nsIDOMXPathEvaluator
 {
     ~XPathEvaluator();
 

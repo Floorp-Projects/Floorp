@@ -27,7 +27,7 @@ namespace mozilla {
  *
  * See: http://tools.ietf.org/html/draft-ietf-rtcweb-security-arch-09#section-5.6.5.3.3.1
  */
-class PeerIdentity MOZ_FINAL
+class PeerIdentity final
 {
 public:
   explicit PeerIdentity(const nsAString& aPeerIdentity)

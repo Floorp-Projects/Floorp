@@ -14,7 +14,7 @@ class nsIObserver;
 namespace mozilla {
 namespace embedding {
 
-class PrintProgressDialogChild MOZ_FINAL : public PPrintProgressDialogChild,
+class PrintProgressDialogChild final : public PPrintProgressDialogChild,
                                            public nsIWebProgressListener,
                                            public nsIPrintProgressParams
 {
@@ -25,7 +25,7 @@ class PrintProgressDialogChild MOZ_FINAL : public PPrintProgressDialogChild,
 public:
   MOZ_IMPLICIT PrintProgressDialogChild(nsIObserver* aOpenObserver);
 
-  virtual bool RecvDialogOpened() MOZ_OVERRIDE;
+  virtual bool RecvDialogOpened() override;
 
 private:
   virtual ~PrintProgressDialogChild();

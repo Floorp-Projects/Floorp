@@ -193,7 +193,7 @@ protected:
   friend class AtomicRefCountedWithFinalize<ISurfaceAllocator>;
 };
 
-class GfxMemoryImageReporter MOZ_FINAL : public nsIMemoryReporter
+class GfxMemoryImageReporter final : public nsIMemoryReporter
 {
   ~GfxMemoryImageReporter() {}
 
@@ -225,7 +225,7 @@ public:
   }
 
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                            nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                            nsISupports* aData, bool aAnonymize) override
   {
     return MOZ_COLLECT_REPORT(
       "explicit/gfx/heap-textures", KIND_HEAP, UNITS_BYTES, sAmount,

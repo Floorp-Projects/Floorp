@@ -12,7 +12,7 @@
 
 class nsIThreadPool;
 
-class nsStreamTransportService MOZ_FINAL : public nsIStreamTransportService
+class nsStreamTransportService final : public nsIStreamTransportService
                                          , public nsIEventTarget
                                          , public nsIObserver
 {

@@ -29,7 +29,7 @@ class GLContextEGL : public GLContext
                     EGLSurface surface);
 
 public:
-    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEGL, MOZ_OVERRIDE)
+    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEGL, override)
     GLContextEGL(const SurfaceCaps& caps,
                  GLContext* shareContext,
                  bool isOffscreen,
@@ -39,16 +39,16 @@ public:
 
     ~GLContextEGL();
 
-    virtual GLContextType GetContextType() const MOZ_OVERRIDE { return GLContextType::EGL; }
+    virtual GLContextType GetContextType() const override { return GLContextType::EGL; }
 
     static GLContextEGL* Cast(GLContext* gl) {
         MOZ_ASSERT(gl->GetContextType() == GLContextType::EGL);
         return static_cast<GLContextEGL*>(gl);
     }
 
-    bool Init() MOZ_OVERRIDE;
+    bool Init() override;
 
-    virtual bool IsDoubleBuffered() const MOZ_OVERRIDE {
+    virtual bool IsDoubleBuffered() const override {
         return mIsDoubleBuffered;
     }
 
@@ -56,31 +56,31 @@ public:
         mIsDoubleBuffered = aIsDB;
     }
 
-    virtual bool SupportsRobustness() const MOZ_OVERRIDE {
+    virtual bool SupportsRobustness() const override {
         return sEGLLibrary.HasRobustness();
     }
 
-    virtual bool IsANGLE() const MOZ_OVERRIDE {
+    virtual bool IsANGLE() const override {
         return sEGLLibrary.IsANGLE();
     }
 
-    virtual bool BindTexImage() MOZ_OVERRIDE;
+    virtual bool BindTexImage() override;
 
-    virtual bool ReleaseTexImage() MOZ_OVERRIDE;
+    virtual bool ReleaseTexImage() override;
 
     void SetEGLSurfaceOverride(EGLSurface surf);
 
-    virtual bool MakeCurrentImpl(bool aForce) MOZ_OVERRIDE;
+    virtual bool MakeCurrentImpl(bool aForce) override;
 
-    virtual bool IsCurrent() MOZ_OVERRIDE;
+    virtual bool IsCurrent() override;
 
-    virtual bool RenewSurface() MOZ_OVERRIDE;
+    virtual bool RenewSurface() override;
 
-    virtual void ReleaseSurface() MOZ_OVERRIDE;
+    virtual void ReleaseSurface() override;
 
-    virtual bool SetupLookupFunction() MOZ_OVERRIDE;
+    virtual bool SetupLookupFunction() override;
 
-    virtual bool SwapBuffers() MOZ_OVERRIDE;
+    virtual bool SwapBuffers() override;
 
     // hold a reference to the given surface
     // for the lifetime of this context.

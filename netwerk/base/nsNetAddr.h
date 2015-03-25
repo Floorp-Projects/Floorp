@@ -11,7 +11,7 @@
 #include "mozilla/net/DNS.h"
 #include "mozilla/Attributes.h"
 
-class nsNetAddr MOZ_FINAL : public nsINetAddr
+class nsNetAddr final : public nsINetAddr
 {
   ~nsNetAddr() {}
 

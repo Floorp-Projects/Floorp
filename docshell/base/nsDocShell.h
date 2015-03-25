@@ -135,7 +135,7 @@ enum eCharsetReloadState
 //***    nsDocShell
 //*****************************************************************************
 
-class nsDocShell MOZ_FINAL
+class nsDocShell final
   : public nsDocLoader
   , public nsIDocShell
   , public nsIWebNavigation
@@ -165,7 +165,7 @@ public:
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
-  virtual nsresult Init() MOZ_OVERRIDE;
+  virtual nsresult Init() override;
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -187,7 +187,7 @@ public:
   NS_DECL_NSINETWORKINTERCEPTCONTROLLER
   NS_FORWARD_SAFE_NSIDOMSTORAGEMANAGER(TopSessionStorageManager())
 
-  NS_IMETHOD Stop() MOZ_OVERRIDE {
+  NS_IMETHOD Stop() override {
     // Need this here because otherwise nsIWebNavigation::Stop
     // overrides the docloader's Stop()
     return nsDocLoader::Stop();
@@ -204,7 +204,7 @@ public:
                          const nsAString& aFileName,
                          nsIInputStream* aPostDataStream,
                          nsIInputStream* aHeadersDataStream,
-                         bool aIsTrusted) MOZ_OVERRIDE;
+                         bool aIsTrusted) override;
   NS_IMETHOD OnLinkClickSync(nsIContent* aContent,
                              nsIURI* aURI,
                              const char16_t* aTargetSpec,
@@ -212,11 +212,11 @@ public:
                              nsIInputStream* aPostDataStream = 0,
                              nsIInputStream* aHeadersDataStream = 0,
                              nsIDocShell** aDocShell = 0,
-                             nsIRequest** aRequest = 0) MOZ_OVERRIDE;
+                             nsIRequest** aRequest = 0) override;
   NS_IMETHOD OnOverLink(nsIContent* aContent,
                         nsIURI* aURI,
-                        const char16_t* aTargetSpec) MOZ_OVERRIDE;
-  NS_IMETHOD OnLeaveLink() MOZ_OVERRIDE;
+                        const char16_t* aTargetSpec) override;
+  NS_IMETHOD OnLeaveLink() override;
 
   nsDocShellInfoLoadType ConvertLoadTypeToDocShellLoadInfo(uint32_t aLoadType);
   uint32_t ConvertDocShellLoadInfoToLoadType(
@@ -224,17 +224,17 @@ public:
 
   // Don't use NS_DECL_NSILOADCONTEXT because some of nsILoadContext's methods
   // are shared with nsIDocShell (appID, etc.) and can't be declared twice.
-  NS_IMETHOD GetAssociatedWindow(nsIDOMWindow**) MOZ_OVERRIDE;
-  NS_IMETHOD GetTopWindow(nsIDOMWindow**) MOZ_OVERRIDE;
-  NS_IMETHOD GetTopFrameElement(nsIDOMElement**) MOZ_OVERRIDE;
-  NS_IMETHOD GetNestedFrameId(uint64_t*) MOZ_OVERRIDE;
-  NS_IMETHOD IsAppOfType(uint32_t, bool*) MOZ_OVERRIDE;
-  NS_IMETHOD GetIsContent(bool*) MOZ_OVERRIDE;
-  NS_IMETHOD GetUsePrivateBrowsing(bool*) MOZ_OVERRIDE;
-  NS_IMETHOD SetUsePrivateBrowsing(bool) MOZ_OVERRIDE;
-  NS_IMETHOD SetPrivateBrowsing(bool) MOZ_OVERRIDE;
-  NS_IMETHOD GetUseRemoteTabs(bool*) MOZ_OVERRIDE;
-  NS_IMETHOD SetRemoteTabs(bool) MOZ_OVERRIDE;
+  NS_IMETHOD GetAssociatedWindow(nsIDOMWindow**) override;
+  NS_IMETHOD GetTopWindow(nsIDOMWindow**) override;
+  NS_IMETHOD GetTopFrameElement(nsIDOMElement**) override;
+  NS_IMETHOD GetNestedFrameId(uint64_t*) override;
+  NS_IMETHOD IsAppOfType(uint32_t, bool*) override;
+  NS_IMETHOD GetIsContent(bool*) override;
+  NS_IMETHOD GetUsePrivateBrowsing(bool*) override;
+  NS_IMETHOD SetUsePrivateBrowsing(bool) override;
+  NS_IMETHOD SetPrivateBrowsing(bool) override;
+  NS_IMETHOD GetUseRemoteTabs(bool*) override;
+  NS_IMETHOD SetRemoteTabs(bool) override;
 
   // Restores a cached presentation from history (mLSHE).
   // This method swaps out the content viewer and simulates loads for
@@ -281,7 +281,7 @@ public:
 protected:
   // Object Management
   virtual ~nsDocShell();
-  virtual void DestroyChildren() MOZ_OVERRIDE;
+  virtual void DestroyChildren() override;
 
   // Content Viewer Management
   nsresult EnsureContentViewer();
@@ -456,7 +456,7 @@ protected:
   virtual void OnRedirectStateChange(nsIChannel* aOldChannel,
                                      nsIChannel* aNewChannel,
                                      uint32_t aRedirectFlags,
-                                     uint32_t aStateFlags) MOZ_OVERRIDE;
+                                     uint32_t aStateFlags) override;
 
   /**
    * Helper function that determines if channel is an HTTP POST.
@@ -691,7 +691,7 @@ protected:
                              int32_t aCurVerticalPos);
 
   // Override the parent setter from nsDocLoader
-  virtual nsresult SetDocLoaderParent(nsDocLoader* aLoader) MOZ_OVERRIDE;
+  virtual nsresult SetDocLoaderParent(nsDocLoader* aLoader) override;
 
   void ClearFrameHistory(nsISHEntry* aEntry);
 

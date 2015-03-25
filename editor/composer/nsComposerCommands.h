@@ -38,8 +38,8 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIControllerCommand. Declared longhand so we can make them pure virtual
-  NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, bool *_retval) MOZ_OVERRIDE = 0;
-  NS_IMETHOD DoCommand(const char * aCommandName, nsISupports *aCommandRefCon) MOZ_OVERRIDE = 0;
+  NS_IMETHOD IsCommandEnabled(const char * aCommandName, nsISupports *aCommandRefCon, bool *_retval) override = 0;
+  NS_IMETHOD DoCommand(const char * aCommandName, nsISupports *aCommandRefCon) override = 0;
 
 };
 

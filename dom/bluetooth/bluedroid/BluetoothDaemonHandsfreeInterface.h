@@ -381,7 +381,7 @@ protected:
 #endif
 };
 
-class BluetoothDaemonHandsfreeInterface MOZ_FINAL
+class BluetoothDaemonHandsfreeInterface final
   : public BluetoothHandsfreeInterface
 {
   class CleanupResultHandler;

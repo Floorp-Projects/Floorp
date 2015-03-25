@@ -50,11 +50,11 @@ public:
   Init();
 
   nsresult
-  DoAsyncRun(nsISupports* aStream) MOZ_OVERRIDE;
+  DoAsyncRun(nsISupports* aStream) override;
 
   nsresult
   GetSuccessResult(JSContext* aCx,
-                   JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
+                   JS::MutableHandle<JS::Value> aVal) override;
 
 protected:
   uint64_t mLocation;
@@ -77,7 +77,7 @@ public:
 
   nsresult
   GetSuccessResult(JSContext* aCx,
-                   JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
+                   JS::MutableHandle<JS::Value> aVal) override;
 
 private:
   nsString mEncoding;
@@ -129,7 +129,7 @@ private:
     { }
   protected:
     nsresult
-    DoStreamWork(nsISupports* aStream) MOZ_OVERRIDE;
+    DoStreamWork(nsISupports* aStream) override;
 
     uint64_t mOffset;
   };
@@ -157,7 +157,7 @@ private:
     { }
   protected:
     nsresult
-    DoStreamWork(nsISupports* aStream) MOZ_OVERRIDE;
+    DoStreamWork(nsISupports* aStream) override;
   };
 };
 

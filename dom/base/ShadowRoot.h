@@ -103,7 +103,7 @@ public:
   nsIContent* GetPoolHost() { return mPoolHost; }
   nsTArray<HTMLShadowElement*>& ShadowDescendants() { return mShadowDescendants; }
 
-  JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  JSObject* WrapObject(JSContext* aCx) override;
 
   static bool IsPooledNode(nsIContent* aChild, nsIContent* aContainer,
                            nsIContent* aHost);
@@ -193,13 +193,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ShadowRootStyleSheetList, StyleSheetList)
 
-  virtual nsINode* GetParentObject() const MOZ_OVERRIDE
+  virtual nsINode* GetParentObject() const override
   {
     return mShadowRoot;
   }
 
-  virtual uint32_t Length() MOZ_OVERRIDE;
-  virtual CSSStyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) MOZ_OVERRIDE;
+  virtual uint32_t Length() override;
+  virtual CSSStyleSheet* IndexedGetter(uint32_t aIndex, bool& aFound) override;
 
 protected:
   virtual ~ShadowRootStyleSheetList();

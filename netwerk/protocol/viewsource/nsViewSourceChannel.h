@@ -18,7 +18,7 @@
 #include "nsIUploadChannel.h"
 #include "mozilla/Attributes.h"
 
-class nsViewSourceChannel MOZ_FINAL : public nsIViewSourceChannel,
+class nsViewSourceChannel final : public nsIViewSourceChannel,
                                       public nsIStreamListener,
                                       public nsIHttpChannel,
                                       public nsIHttpChannelInternal,

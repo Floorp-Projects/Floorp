@@ -39,13 +39,13 @@ public:
   void Shutdown();
 
 protected:
-  virtual bool RecvOpen(const nsCString& aRecordName) MOZ_OVERRIDE;
-  virtual bool RecvRead(const nsCString& aRecordName) MOZ_OVERRIDE;
+  virtual bool RecvOpen(const nsCString& aRecordName) override;
+  virtual bool RecvRead(const nsCString& aRecordName) override;
   virtual bool RecvWrite(const nsCString& aRecordName,
-                         InfallibleTArray<uint8_t>&& aBytes) MOZ_OVERRIDE;
-  virtual bool RecvGetRecordNames() MOZ_OVERRIDE;
-  virtual bool RecvClose(const nsCString& aRecordName) MOZ_OVERRIDE;
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+                         InfallibleTArray<uint8_t>&& aBytes) override;
+  virtual bool RecvGetRecordNames() override;
+  virtual bool RecvClose(const nsCString& aRecordName) override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
 private:
   ~GMPStorageParent() {}

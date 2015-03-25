@@ -85,7 +85,7 @@ private:
   ReentrantMonitor** mReentrantMonitorPtr;
 };
 
-class Factory MOZ_FINAL : public nsIFactory
+class Factory final : public nsIFactory
 {
   ~Factory() {}
 
@@ -96,9 +96,9 @@ public:
 
   NS_IMETHOD CreateInstance(nsISupports* aDelegate,
                             const nsIID& aIID,
-                            void** aResult) MOZ_OVERRIDE;
+                            void** aResult) override;
 
-  NS_IMETHOD LockFactory(bool aLock) MOZ_OVERRIDE {
+  NS_IMETHOD LockFactory(bool aLock) override {
     return NS_OK;
   }
 
@@ -107,7 +107,7 @@ public:
 
 NS_IMPL_ISUPPORTS(Factory, nsIFactory)
 
-class Component1 MOZ_FINAL : public nsISupports
+class Component1 final : public nsISupports
 {
   ~Component1() {}
 
@@ -128,7 +128,7 @@ NS_INTERFACE_MAP_BEGIN(Component1)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-class Component2 MOZ_FINAL : public nsISupports
+class Component2 final : public nsISupports
 {
   ~Component2() {}
 

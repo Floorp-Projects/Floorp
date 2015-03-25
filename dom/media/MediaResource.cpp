@@ -1208,63 +1208,63 @@ public:
   }
 
   // Main thread
-  virtual nsresult Open(nsIStreamListener** aStreamListener) MOZ_OVERRIDE;
-  virtual nsresult Close() MOZ_OVERRIDE;
-  virtual void     Suspend(bool aCloseImmediately) MOZ_OVERRIDE {}
-  virtual void     Resume() MOZ_OVERRIDE {}
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() MOZ_OVERRIDE;
-  virtual bool     CanClone() MOZ_OVERRIDE;
-  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) MOZ_OVERRIDE;
-  virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) MOZ_OVERRIDE;
+  virtual nsresult Open(nsIStreamListener** aStreamListener) override;
+  virtual nsresult Close() override;
+  virtual void     Suspend(bool aCloseImmediately) override {}
+  virtual void     Resume() override {}
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
+  virtual bool     CanClone() override;
+  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) override;
+  virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override;
 
   // These methods are called off the main thread.
 
   // Other thread
-  virtual void     SetReadMode(MediaCacheStream::ReadMode aMode) MOZ_OVERRIDE {}
-  virtual void     SetPlaybackRate(uint32_t aBytesPerSecond) MOZ_OVERRIDE {}
-  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE;
+  virtual void     SetReadMode(MediaCacheStream::ReadMode aMode) override {}
+  virtual void     SetPlaybackRate(uint32_t aBytesPerSecond) override {}
+  virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes) override;
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer,
-                          uint32_t aCount, uint32_t* aBytes) MOZ_OVERRIDE;
-  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) MOZ_OVERRIDE;
-  virtual int64_t  Tell() MOZ_OVERRIDE;
+                          uint32_t aCount, uint32_t* aBytes) override;
+  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) override;
+  virtual int64_t  Tell() override;
 
   // Any thread
-  virtual void    Pin() MOZ_OVERRIDE {}
-  virtual void    Unpin() MOZ_OVERRIDE {}
-  virtual double  GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE
+  virtual void    Pin() override {}
+  virtual void    Unpin() override {}
+  virtual double  GetDownloadRate(bool* aIsReliable) override
   {
     // The data's all already here
     *aIsReliable = true;
     return 100*1024*1024; // arbitray, use 100MB/s
   }
-  virtual int64_t GetLength() MOZ_OVERRIDE {
+  virtual int64_t GetLength() override {
     MutexAutoLock lock(mLock);
 
     EnsureSizeInitialized();
     return mSizeInitialized ? mSize : 0;
   }
-  virtual int64_t GetNextCachedData(int64_t aOffset) MOZ_OVERRIDE
+  virtual int64_t GetNextCachedData(int64_t aOffset) override
   {
     MutexAutoLock lock(mLock);
 
     EnsureSizeInitialized();
     return (aOffset < mSize) ? aOffset : -1;
   }
-  virtual int64_t GetCachedDataEnd(int64_t aOffset) MOZ_OVERRIDE {
+  virtual int64_t GetCachedDataEnd(int64_t aOffset) override {
     MutexAutoLock lock(mLock);
 
     EnsureSizeInitialized();
     return std::max(aOffset, mSize);
   }
-  virtual bool    IsDataCachedToEndOfResource(int64_t aOffset) MOZ_OVERRIDE { return true; }
-  virtual bool    IsSuspendedByCache() MOZ_OVERRIDE { return true; }
-  virtual bool    IsSuspended() MOZ_OVERRIDE { return true; }
-  virtual bool    IsTransportSeekable() MOZ_OVERRIDE { return true; }
+  virtual bool    IsDataCachedToEndOfResource(int64_t aOffset) override { return true; }
+  virtual bool    IsSuspendedByCache() override { return true; }
+  virtual bool    IsSuspended() override { return true; }
+  virtual bool    IsTransportSeekable() override { return true; }
 
-  nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) MOZ_OVERRIDE;
+  nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges) override;
 
   virtual size_t SizeOfExcludingThis(
-                        MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+                        MallocSizeOf aMallocSizeOf) const override
   {
     // Might be useful to track in the future:
     // - mInput
@@ -1272,7 +1272,7 @@ public:
   }
 
   virtual size_t SizeOfIncludingThis(
-                        MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+                        MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

@@ -228,7 +228,7 @@ TLSServerSocket::SetRequestClientCertificate(uint32_t aMode)
 
 namespace {
 
-class TLSServerSecurityObserverProxy MOZ_FINAL : public nsITLSServerSecurityObserver
+class TLSServerSecurityObserverProxy final : public nsITLSServerSecurityObserver
 {
   ~TLSServerSecurityObserverProxy() {}
 

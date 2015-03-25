@@ -79,7 +79,7 @@ protected:
 private:
 
   // Legacy interface from |SocketBase|; should be replaced by |Close|.
-  void CloseSocket() MOZ_OVERRIDE
+  void CloseSocket() override
   {
     Close();
   }

@@ -591,30 +591,30 @@ protected:
   }
 
 public:
-  virtual void GetPrefix(nsSubstring& aResult) MOZ_OVERRIDE;
-  virtual void GetSuffix(nsSubstring& aResult) MOZ_OVERRIDE;
+  virtual void GetPrefix(nsSubstring& aResult) override;
+  virtual void GetSuffix(nsSubstring& aResult) override;
   virtual void GetSpokenCounterText(CounterValue aOrdinal,
                                     WritingMode aWritingMode,
                                     nsSubstring& aResult,
-                                    bool& aIsBullet) MOZ_OVERRIDE;
-  virtual bool IsBullet() MOZ_OVERRIDE;
+                                    bool& aIsBullet) override;
+  virtual bool IsBullet() override;
 
-  virtual void GetNegative(NegativeType& aResult) MOZ_OVERRIDE;
-  virtual bool IsOrdinalInRange(CounterValue aOrdinal) MOZ_OVERRIDE;
-  virtual bool IsOrdinalInAutoRange(CounterValue aOrdinal) MOZ_OVERRIDE;
-  virtual void GetPad(PadType& aResult) MOZ_OVERRIDE;
-  virtual CounterStyle* GetFallback() MOZ_OVERRIDE;
-  virtual uint8_t GetSpeakAs() MOZ_OVERRIDE;
-  virtual bool UseNegativeSign() MOZ_OVERRIDE;
+  virtual void GetNegative(NegativeType& aResult) override;
+  virtual bool IsOrdinalInRange(CounterValue aOrdinal) override;
+  virtual bool IsOrdinalInAutoRange(CounterValue aOrdinal) override;
+  virtual void GetPad(PadType& aResult) override;
+  virtual CounterStyle* GetFallback() override;
+  virtual uint8_t GetSpeakAs() override;
+  virtual bool UseNegativeSign() override;
 
   virtual bool GetInitialCounterText(CounterValue aOrdinal,
                                      WritingMode aWritingMode,
                                      nsSubstring& aResult,
-                                     bool& aIsRTL) MOZ_OVERRIDE;
+                                     bool& aIsRTL) override;
 
   // Builtin counter style does not need refcount at all
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() MOZ_OVERRIDE { return 2; }
-  NS_IMETHOD_(MozExternalRefCountType) Release() MOZ_OVERRIDE { return 2; }
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override { return 2; }
+  NS_IMETHOD_(MozExternalRefCountType) Release() override { return 2; }
 };
 
 /* virtual */ void
@@ -950,7 +950,7 @@ BuiltinCounterStyle::GetInitialCounterText(CounterValue aOrdinal,
   }
 }
 
-class DependentBuiltinCounterStyle MOZ_FINAL : public BuiltinCounterStyle
+class DependentBuiltinCounterStyle final : public BuiltinCounterStyle
 {
 private:
   ~DependentBuiltinCounterStyle() {}
@@ -963,12 +963,12 @@ public:
     MOZ_ASSERT(!IsCustomStyle(), "Not a builtin style");
   }
 
-  virtual CounterStyle* GetFallback() MOZ_OVERRIDE;
+  virtual CounterStyle* GetFallback() override;
 
   // DependentBuiltinCounterStyle is managed in the same way as
   // CustomCounterStyle.
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() MOZ_OVERRIDE;
-  NS_IMETHOD_(MozExternalRefCountType) Release() MOZ_OVERRIDE;
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
+  NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
   void* operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
   {
@@ -1017,7 +1017,7 @@ DependentBuiltinCounterStyle::GetFallback()
   }
 }
 
-class CustomCounterStyle MOZ_FINAL : public CounterStyle
+class CustomCounterStyle final : public CounterStyle
 {
 private:
   ~CustomCounterStyle() {}
@@ -1052,30 +1052,30 @@ public:
   nsCSSCounterStyleRule* GetRule() const { return mRule; }
   uint32_t GetRuleGeneration() const { return mRuleGeneration; }
 
-  virtual void GetPrefix(nsSubstring& aResult) MOZ_OVERRIDE;
-  virtual void GetSuffix(nsSubstring& aResult) MOZ_OVERRIDE;
+  virtual void GetPrefix(nsSubstring& aResult) override;
+  virtual void GetSuffix(nsSubstring& aResult) override;
   virtual void GetSpokenCounterText(CounterValue aOrdinal,
                                     WritingMode aWritingMode,
                                     nsSubstring& aResult,
-                                    bool& aIsBullet) MOZ_OVERRIDE;
-  virtual bool IsBullet() MOZ_OVERRIDE;
+                                    bool& aIsBullet) override;
+  virtual bool IsBullet() override;
 
-  virtual void GetNegative(NegativeType& aResult) MOZ_OVERRIDE;
-  virtual bool IsOrdinalInRange(CounterValue aOrdinal) MOZ_OVERRIDE;
-  virtual bool IsOrdinalInAutoRange(CounterValue aOrdinal) MOZ_OVERRIDE;
-  virtual void GetPad(PadType& aResult) MOZ_OVERRIDE;
-  virtual CounterStyle* GetFallback() MOZ_OVERRIDE;
-  virtual uint8_t GetSpeakAs() MOZ_OVERRIDE;
-  virtual bool UseNegativeSign() MOZ_OVERRIDE;
+  virtual void GetNegative(NegativeType& aResult) override;
+  virtual bool IsOrdinalInRange(CounterValue aOrdinal) override;
+  virtual bool IsOrdinalInAutoRange(CounterValue aOrdinal) override;
+  virtual void GetPad(PadType& aResult) override;
+  virtual CounterStyle* GetFallback() override;
+  virtual uint8_t GetSpeakAs() override;
+  virtual bool UseNegativeSign() override;
 
   virtual void CallFallbackStyle(CounterValue aOrdinal,
                                  WritingMode aWritingMode,
                                  nsSubstring& aResult,
-                                 bool& aIsRTL) MOZ_OVERRIDE;
+                                 bool& aIsRTL) override;
   virtual bool GetInitialCounterText(CounterValue aOrdinal,
                                      WritingMode aWritingMode,
                                      nsSubstring& aResult,
-                                     bool& aIsRTL) MOZ_OVERRIDE;
+                                     bool& aIsRTL) override;
 
   bool IsExtendsSystem()
   {
@@ -1085,8 +1085,8 @@ public:
   // CustomCounterStyle should be reference-counted because it may be
   // dereferenced from the manager but still referenced by nodes and
   // frames before the style change is propagated.
-  NS_IMETHOD_(MozExternalRefCountType) AddRef() MOZ_OVERRIDE;
-  NS_IMETHOD_(MozExternalRefCountType) Release() MOZ_OVERRIDE;
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() override;
+  NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
   void* operator new(size_t sz, nsPresContext* aPresContext) CPP_THROW_NEW
   {

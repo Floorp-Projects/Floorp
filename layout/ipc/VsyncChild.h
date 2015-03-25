@@ -24,7 +24,7 @@ namespace layout {
 // delivers it to the child process. Currently this is restricted to the main
 // thread only. The actor will stay alive until the process dies or its
 // PVsyncParent actor dies.
-class VsyncChild MOZ_FINAL : public PVsyncChild
+class VsyncChild final : public PVsyncChild
 {
   NS_INLINE_DECL_REFCOUNTING(VsyncChild)
 
@@ -43,8 +43,8 @@ private:
   VsyncChild();
   virtual ~VsyncChild();
 
-  virtual bool RecvNotify(const TimeStamp& aVsyncTimestamp) MOZ_OVERRIDE;
-  virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) MOZ_OVERRIDE;
+  virtual bool RecvNotify(const TimeStamp& aVsyncTimestamp) override;
+  virtual void ActorDestroy(ActorDestroyReason aActorDestroyReason) override;
 
   bool mObservingVsync;
   bool mIsShutdown;

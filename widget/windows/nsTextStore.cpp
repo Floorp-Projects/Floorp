@@ -638,7 +638,7 @@ GetModifiersName(Modifiers aModifiers)
 /* InputScopeImpl                                                 */
 /******************************************************************/
 
-class InputScopeImpl MOZ_FINAL : public ITfInputScope
+class InputScopeImpl final : public ITfInputScope
 {
   ~InputScopeImpl() {}
 
@@ -703,7 +703,7 @@ private:
 /* TSFStaticSink                                                  */
 /******************************************************************/
 
-class TSFStaticSink MOZ_FINAL : public ITfActiveLanguageProfileNotifySink
+class TSFStaticSink final : public ITfActiveLanguageProfileNotifySink
                               , public ITfInputProcessorProfileActivationSink
 {
 public:

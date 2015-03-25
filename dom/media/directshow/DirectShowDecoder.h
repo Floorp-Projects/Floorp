@@ -19,14 +19,14 @@ public:
   DirectShowDecoder();
   virtual ~DirectShowDecoder();
 
-  MediaDecoder* Clone() MOZ_OVERRIDE {
+  MediaDecoder* Clone() override {
     if (!IsEnabled()) {
       return nullptr;
     }
     return new DirectShowDecoder();
   }
 
-  MediaDecoderStateMachine* CreateStateMachine() MOZ_OVERRIDE;
+  MediaDecoderStateMachine* CreateStateMachine() override;
 
   // Returns true if aType is a MIME type that we render with the
   // DirectShow backend. If aCodecList is non null,

@@ -15,7 +15,7 @@ namespace mozilla {
 // Thread pool listener which ensures that MSCOM is initialized and
 // deinitialized on the thread pool thread. We may call into WMF or
 // DirectShow on this thread, so we need MSCOM working.
-class MSCOMInitThreadPoolListener MOZ_FINAL : public nsIThreadPoolListener {
+class MSCOMInitThreadPoolListener final : public nsIThreadPoolListener {
   ~MSCOMInitThreadPoolListener() {}
   public:
   NS_DECL_THREADSAFE_ISUPPORTS

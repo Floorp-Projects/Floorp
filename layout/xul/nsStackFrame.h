@@ -26,7 +26,7 @@ public:
                                     nsStyleContext* aContext);
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
+  virtual nsresult GetFrameName(nsAString& aResult) const override
   {
     return MakeFrameName(NS_LITERAL_STRING("Stack"), aResult);
   }
@@ -34,7 +34,7 @@ public:
 
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,
-                                           const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                           const nsDisplayListSet& aLists) override;
 
 protected:
   explicit nsStackFrame(nsStyleContext* aContext);

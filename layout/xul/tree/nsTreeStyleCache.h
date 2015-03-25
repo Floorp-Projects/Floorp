@@ -45,7 +45,7 @@ public:
 protected:
   typedef uint32_t DFAState;
 
-  class Transition MOZ_FINAL
+  class Transition final
   {
   public:
     Transition(DFAState aState, nsIAtom* aSymbol);

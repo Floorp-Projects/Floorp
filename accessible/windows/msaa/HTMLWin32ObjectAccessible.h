@@ -55,7 +55,7 @@ public:
   HTMLWin32ObjectAccessible(void* aHwnd, DocAccessible* aDoc);
   virtual ~HTMLWin32ObjectAccessible() {}
 
-  virtual void GetNativeInterface(void** aNativeAccessible) MOZ_OVERRIDE;
+  virtual void GetNativeInterface(void** aNativeAccessible) override;
 
 protected:
   void* mHwnd;

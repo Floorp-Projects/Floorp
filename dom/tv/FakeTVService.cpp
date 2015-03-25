@@ -180,7 +180,7 @@ FakeTVService::SetSource(const nsAString& aTunerId,
   return NS_DispatchToCurrentThread(runnable);
 }
 
-class EITBroadcastedCallback MOZ_FINAL : public nsITimerCallback
+class EITBroadcastedCallback final : public nsITimerCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -196,7 +196,7 @@ public:
   {}
 
   NS_IMETHODIMP
-  Notify(nsITimer* aTimer) MOZ_OVERRIDE
+  Notify(nsITimer* aTimer) override
   {
     // Notify mock EIT broadcasting.
     nsITVProgramData** programDataList =
@@ -228,7 +228,7 @@ private:
 
 NS_IMPL_ISUPPORTS(EITBroadcastedCallback, nsITimerCallback)
 
-class ScanCompleteCallback MOZ_FINAL : public nsITimerCallback
+class ScanCompleteCallback final : public nsITimerCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -242,7 +242,7 @@ public:
   {}
 
   NS_IMETHODIMP
-  Notify(nsITimer* aTimer) MOZ_OVERRIDE
+  Notify(nsITimer* aTimer) override
   {
     return mSourceListener->NotifyChannelScanComplete(mTunerId, mSourceType);
   }

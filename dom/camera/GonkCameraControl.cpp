@@ -933,7 +933,7 @@ nsGonkCameraControl::SetThumbnailSize(const Size& aSize)
     ~SetThumbnailSize() { MOZ_COUNT_DTOR(SetThumbnailSize); }
 
     NS_IMETHODIMP
-    Run() MOZ_OVERRIDE
+    Run() override
     {
       nsresult rv = mCameraControl->SetThumbnailSizeImpl(mSize);
       if (NS_FAILED(rv)) {
@@ -1051,7 +1051,7 @@ nsGonkCameraControl::SetPictureSize(const Size& aSize)
     ~SetPictureSize() { MOZ_COUNT_DTOR(SetPictureSize); }
 
     NS_IMETHODIMP
-    Run() MOZ_OVERRIDE
+    Run() override
     {
       nsresult rv = mCameraControl->SetPictureSizeImpl(mSize);
       if (NS_FAILED(rv)) {
@@ -1308,7 +1308,7 @@ nsGonkCameraControl::OnAutoFocusComplete(bool aSuccess)
     { }
 
     NS_IMETHODIMP
-    Run() MOZ_OVERRIDE
+    Run() override
     {
       mCameraControl->OnAutoFocusComplete(mSuccess);
       return NS_OK;

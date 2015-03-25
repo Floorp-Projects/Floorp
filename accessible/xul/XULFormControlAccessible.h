@@ -36,21 +36,21 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual mozilla::a11y::role NativeRole() override;
+  virtual uint64_t NativeState() override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() MOZ_OVERRIDE;
-  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
-  virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
+  virtual uint8_t ActionCount() override;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  virtual bool DoAction(uint8_t aIndex) override;
 
   // Widgets
-  virtual bool IsWidget() const MOZ_OVERRIDE;
-  virtual bool IsActiveWidget() const MOZ_OVERRIDE;
-  virtual bool AreItemsOperable() const MOZ_OVERRIDE;
-  virtual Accessible* ContainerWidget() const MOZ_OVERRIDE;
+  virtual bool IsWidget() const override;
+  virtual bool IsActiveWidget() const override;
+  virtual bool AreItemsOperable() const override;
+  virtual Accessible* ContainerWidget() const override;
 
-  virtual bool IsAcceptableChild(Accessible* aPossibleChild) const MOZ_OVERRIDE;
+  virtual bool IsAcceptableChild(Accessible* aPossibleChild) const override;
 
 protected:
   virtual ~XULButtonAccessible();
@@ -70,13 +70,13 @@ public:
   XULCheckboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual mozilla::a11y::role NativeRole() override;
+  virtual uint64_t NativeState() override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() MOZ_OVERRIDE;
-  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
-  virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
+  virtual uint8_t ActionCount() override;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  virtual bool DoAction(uint8_t aIndex) override;
 };
 
 /**
@@ -89,13 +89,13 @@ public:
   XULDropmarkerAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual mozilla::a11y::role NativeRole() override;
+  virtual uint64_t NativeState() override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() MOZ_OVERRIDE;
-  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
-  virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
+  virtual uint8_t ActionCount() override;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  virtual bool DoAction(uint8_t aIndex) override;
 
 private:
   bool DropmarkerOpen(bool aToggleOpen) const;
@@ -104,18 +104,18 @@ private:
 /**
  * Used for XUL groupbox element.
  */
-class XULGroupboxAccessible MOZ_FINAL : public AccessibleWrap
+class XULGroupboxAccessible final : public AccessibleWrap
 {
 public:
   XULGroupboxAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
+  virtual mozilla::a11y::role NativeRole() override;
+  virtual Relation RelationByType(RelationType aType) override;
 
 protected:
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
+  virtual ENameValueFlag NativeName(nsString& aName) override;
 };
 
 /**
@@ -128,11 +128,11 @@ public:
   XULRadioButtonAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
-  virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
+  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeInteractiveState() const override;
 
   // Widgets
-  virtual Accessible* ContainerWidget() const MOZ_OVERRIDE;
+  virtual Accessible* ContainerWidget() const override;
 };
 
 /**
@@ -144,13 +144,13 @@ public:
   XULRadioGroupAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
+  virtual mozilla::a11y::role NativeRole() override;
+  virtual uint64_t NativeInteractiveState() const override;
 
   // Widgets
-  virtual bool IsWidget() const MOZ_OVERRIDE;
-  virtual bool IsActiveWidget() const MOZ_OVERRIDE;
-  virtual bool AreItemsOperable() const MOZ_OVERRIDE;
+  virtual bool IsWidget() const override;
+  virtual bool IsActiveWidget() const override;
+  virtual bool AreItemsOperable() const override;
 };
 
 /**
@@ -162,7 +162,7 @@ public:
   XULStatusBarAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual mozilla::a11y::role NativeRole() override;
 };
 
 /**
@@ -175,7 +175,7 @@ public:
 
   // Accessible
   virtual void GetPositionAndSizeInternal(int32_t* aPosInSet,
-                                          int32_t* aSetSize) MOZ_OVERRIDE;
+                                          int32_t* aSetSize) override;
 
   // nsXULToolbarButtonAccessible
   static bool IsSeparator(Accessible* aAccessible);
@@ -190,11 +190,11 @@ public:
   XULToolbarAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual mozilla::a11y::role NativeRole() override;
 
 protected:
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
+  virtual ENameValueFlag NativeName(nsString& aName) override;
 };
 
 /**
@@ -207,8 +207,8 @@ public:
                                 DocAccessible* aDoc);
 
   // Accessible
-  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual mozilla::a11y::role NativeRole() override;
+  virtual uint64_t NativeState() override;
 };
 
 } // namespace a11y

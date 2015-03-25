@@ -32,7 +32,7 @@
 #define NS_SAMPLE_CONTRACTID "@mozilla.org/sample;1"
 
 
-class nsSampleImpl MOZ_FINAL : public nsISample
+class nsSampleImpl final : public nsISample
 {
 public:
   nsSampleImpl();

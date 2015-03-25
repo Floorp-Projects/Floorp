@@ -221,7 +221,7 @@ public:
     nsEncoderNodeFixup();
 
     NS_DECL_ISUPPORTS
-    NS_IMETHOD FixupNode(nsIDOMNode *aNode, bool *aSerializeCloneKids, nsIDOMNode **aOutNode) MOZ_OVERRIDE;
+    NS_IMETHOD FixupNode(nsIDOMNode *aNode, bool *aSerializeCloneKids, nsIDOMNode **aOutNode) override;
 
     nsWebBrowserPersist *mWebBrowserPersist;
 

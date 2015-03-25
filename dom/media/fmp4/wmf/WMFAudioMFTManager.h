@@ -20,17 +20,17 @@ public:
   WMFAudioMFTManager(const mp4_demuxer::AudioDecoderConfig& aConfig);
   ~WMFAudioMFTManager();
 
-  virtual TemporaryRef<MFTDecoder> Init() MOZ_OVERRIDE;
+  virtual TemporaryRef<MFTDecoder> Init() override;
 
-  virtual HRESULT Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
+  virtual HRESULT Input(mp4_demuxer::MP4Sample* aSample) override;
 
   // Note WMF's AAC decoder sometimes output negatively timestamped samples,
   // presumably they're the preroll samples, and we strip them. We may return
   // a null aOutput in this case.
   virtual HRESULT Output(int64_t aStreamOffset,
-                         nsRefPtr<MediaData>& aOutput) MOZ_OVERRIDE;
+                         nsRefPtr<MediaData>& aOutput) override;
 
-  virtual void Shutdown() MOZ_OVERRIDE;
+  virtual void Shutdown() override;
 
 private:
 

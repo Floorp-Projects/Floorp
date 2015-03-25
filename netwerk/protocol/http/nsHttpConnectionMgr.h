@@ -430,7 +430,7 @@ private:
     // nsHalfOpenSocket is used to hold the state of an opening TCP socket
     // while we wait for it to establish and bind it to a connection
 
-    class nsHalfOpenSocket MOZ_FINAL : public nsIOutputStreamCallback,
+    class nsHalfOpenSocket final : public nsIOutputStreamCallback,
                                        public nsITransportEventSink,
                                        public nsIInterfaceRequestor,
                                        public nsITimerCallback

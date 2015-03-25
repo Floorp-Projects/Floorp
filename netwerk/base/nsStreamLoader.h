@@ -14,7 +14,7 @@
 
 class nsIRequest;
 
-class nsStreamLoader MOZ_FINAL : public nsIStreamLoader
+class nsStreamLoader final : public nsIStreamLoader
                                , public nsIThreadRetargetableStreamListener
 {
 public:

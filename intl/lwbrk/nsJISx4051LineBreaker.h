@@ -18,16 +18,16 @@ private:
 public:
   nsJISx4051LineBreaker();
 
-  int32_t Next( const char16_t* aText, uint32_t aLen, uint32_t aPos) MOZ_OVERRIDE;
+  int32_t Next( const char16_t* aText, uint32_t aLen, uint32_t aPos) override;
 
-  int32_t Prev( const char16_t* aText, uint32_t aLen, uint32_t aPos) MOZ_OVERRIDE;
+  int32_t Prev( const char16_t* aText, uint32_t aLen, uint32_t aPos) override;
 
   virtual void GetJISx4051Breaks(const char16_t* aText, uint32_t aLength,
                                  uint8_t aBreakMode,
-                                 uint8_t* aBreakBefore) MOZ_OVERRIDE;
+                                 uint8_t* aBreakBefore) override;
   virtual void GetJISx4051Breaks(const uint8_t* aText, uint32_t aLength,
                                  uint8_t aBreakMode,
-                                 uint8_t* aBreakBefore) MOZ_OVERRIDE;
+                                 uint8_t* aBreakBefore) override;
 
 private:
   int32_t WordMove(const char16_t* aText, uint32_t aLen, uint32_t aPos,

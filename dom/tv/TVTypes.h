@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-class TVTunerData MOZ_FINAL : public nsITVTunerData
+class TVTunerData final : public nsITVTunerData
 {
 public:
   NS_DECL_ISUPPORTS
@@ -28,7 +28,7 @@ private:
   uint32_t mCount;
 };
 
-class TVChannelData MOZ_FINAL : public nsITVChannelData
+class TVChannelData final : public nsITVChannelData
 {
 public:
   NS_DECL_ISUPPORTS
@@ -49,7 +49,7 @@ private:
   bool mIsFree;
 };
 
-class TVProgramData MOZ_FINAL : public nsITVProgramData
+class TVProgramData final : public nsITVProgramData
 {
 public:
   NS_DECL_ISUPPORTS

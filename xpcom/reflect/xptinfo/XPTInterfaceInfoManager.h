@@ -25,7 +25,7 @@ class xptiTypelibGuts;
 
 namespace mozilla {
 
-class XPTInterfaceInfoManager MOZ_FINAL
+class XPTInterfaceInfoManager final
     : public nsIInterfaceInfoManager
     , public nsIMemoryReporter
 {

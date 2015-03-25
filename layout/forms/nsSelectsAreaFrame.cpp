@@ -36,8 +36,8 @@ public:
                               nsIFrame* aFrame, nsDisplayList* aList)
     : nsDisplayWrapList(aBuilder, aFrame, aList) {}
   virtual void HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
-                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) MOZ_OVERRIDE;
-  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE {
+                       HitTestState* aState, nsTArray<nsIFrame*> *aOutFrames) override;
+  virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
   }
   NS_DISPLAY_DECL_NAME("OptionEventGrabber", TYPE_OPTION_EVENT_GRABBER)
@@ -103,7 +103,7 @@ public:
   }
 #endif
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE {
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override {
     *aSnap = false;
     // override bounds because the list item focus ring may extend outside
     // the nsSelectsAreaFrame
@@ -112,7 +112,7 @@ public:
            listFrame->GetOffsetToCrossDoc(ReferenceFrame());
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) MOZ_OVERRIDE {
+                     nsRenderingContext* aCtx) override {
     nsListControlFrame* listFrame = GetEnclosingListFrame(Frame());
     // listFrame must be non-null or we wouldn't get called.
     listFrame->PaintFocus(*aCtx, aBuilder->ToReferenceFrame(listFrame));

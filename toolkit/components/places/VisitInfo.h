@@ -14,7 +14,7 @@ class nsIURI;
 namespace mozilla {
 namespace places {
 
-class VisitInfo MOZ_FINAL : public mozIVisitInfo
+class VisitInfo final : public mozIVisitInfo
 {
 public:
   NS_DECL_ISUPPORTS

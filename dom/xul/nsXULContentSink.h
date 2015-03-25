@@ -22,7 +22,7 @@ class nsXULPrototypeDocument;
 class nsXULPrototypeElement;
 class nsXULPrototypeNode;
 
-class XULContentSinkImpl MOZ_FINAL : public nsIXMLContentSink,
+class XULContentSinkImpl final : public nsIXMLContentSink,
                                      public nsIExpatSink
 {
 public:
@@ -35,15 +35,15 @@ public:
     NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(XULContentSinkImpl, nsIXMLContentSink)
 
     // nsIContentSink
-    NS_IMETHOD WillParse(void) MOZ_OVERRIDE { return NS_OK; }
-    NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) MOZ_OVERRIDE;
-    NS_IMETHOD DidBuildModel(bool aTerminated) MOZ_OVERRIDE;
-    NS_IMETHOD WillInterrupt(void) MOZ_OVERRIDE;
-    NS_IMETHOD WillResume(void) MOZ_OVERRIDE;
-    NS_IMETHOD SetParser(nsParserBase* aParser) MOZ_OVERRIDE;
-    virtual void FlushPendingNotifications(mozFlushType aType) MOZ_OVERRIDE { }
-    NS_IMETHOD SetDocumentCharset(nsACString& aCharset) MOZ_OVERRIDE;
-    virtual nsISupports *GetTarget() MOZ_OVERRIDE;
+    NS_IMETHOD WillParse(void) override { return NS_OK; }
+    NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) override;
+    NS_IMETHOD DidBuildModel(bool aTerminated) override;
+    NS_IMETHOD WillInterrupt(void) override;
+    NS_IMETHOD WillResume(void) override;
+    NS_IMETHOD SetParser(nsParserBase* aParser) override;
+    virtual void FlushPendingNotifications(mozFlushType aType) override { }
+    NS_IMETHOD SetDocumentCharset(nsACString& aCharset) override;
+    virtual nsISupports *GetTarget() override;
 
     /**
      * Initialize the content sink, giving it an nsIDocument object

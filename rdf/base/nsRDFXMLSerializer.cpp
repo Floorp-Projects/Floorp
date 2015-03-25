@@ -1006,7 +1006,7 @@ nsRDFXMLSerializer::SerializeEpilogue(nsIOutputStream* aStream)
     return rdf_BlockingWrite(aStream, NS_LITERAL_CSTRING("</RDF:RDF>\n"));
 }
 
-class QNameCollector MOZ_FINAL : public rdfITripleVisitor {
+class QNameCollector final : public rdfITripleVisitor {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_RDFITRIPLEVISITOR

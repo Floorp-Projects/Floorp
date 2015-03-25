@@ -12,7 +12,7 @@
 class nsIChannel;
 class nsIHttpChannelInternal;
 
-class nsChannelClassifier MOZ_FINAL : public nsIURIClassifierCallback
+class nsChannelClassifier final : public nsIURIClassifierCallback
 {
 public:
     nsChannelClassifier();

@@ -23,14 +23,14 @@ public:
 
     void Main();
 
-    virtual bool RecvStartDeath() MOZ_OVERRIDE;
+    virtual bool RecvStartDeath() override;
 
-    virtual bool RecvOrphan() MOZ_OVERRIDE;
+    virtual bool RecvOrphan() override;
 
 protected:
     void StartShuttingDown();
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (AbnormalShutdown != why)
             fail("unexpected destruction!");  
@@ -46,11 +46,11 @@ public:
     virtual ~TestInterruptShutdownRaceChild();
 
 protected:
-    virtual bool RecvStart() MOZ_OVERRIDE;
+    virtual bool RecvStart() override;
 
-    virtual bool AnswerExit() MOZ_OVERRIDE;
+    virtual bool AnswerExit() override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         fail("should have 'crashed'!");
     }

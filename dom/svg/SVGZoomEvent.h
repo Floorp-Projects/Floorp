@@ -20,7 +20,7 @@ class nsISVGPoint;
 
 namespace dom {
 
-class SVGZoomEvent MOZ_FINAL : public UIEvent
+class SVGZoomEvent final : public UIEvent
 {
 public:
 
@@ -33,7 +33,7 @@ public:
   // Forward to base class
   NS_FORWARD_TO_UIEVENT
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx) override
   {
     return SVGZoomEventBinding::Wrap(aCx, this);
   }

@@ -122,7 +122,7 @@ private:
 
 public:
   NS_IMETHODIMP Observe(nsISupports* aSubject, const char* aTopic,
-                        const char16_t* aData) MOZ_OVERRIDE {
+                        const char16_t* aData) override {
     if (strcmp(aTopic, "profile-change-net-teardown") == 0) {
       LOG(("Shutting down SCTP"));
       if (sctp_initialized) {

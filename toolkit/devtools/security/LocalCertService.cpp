@@ -66,7 +66,7 @@ protected:
   nsCString mNickname;
 };
 
-class LocalCertGetTask MOZ_FINAL : public LocalCertTask
+class LocalCertGetTask final : public LocalCertTask
 {
 public:
   LocalCertGetTask(const nsACString& aNickname,
@@ -78,7 +78,7 @@ public:
   }
 
 private:
-  virtual nsresult CalculateResult() MOZ_OVERRIDE
+  virtual nsresult CalculateResult() override
   {
     // Try to lookup an existing cert in the DB
     nsresult rv = GetFromDB();
@@ -315,9 +315,9 @@ private:
     return NS_OK;
   }
 
-  virtual void ReleaseNSSResources() MOZ_OVERRIDE {}
+  virtual void ReleaseNSSResources() override {}
 
-  virtual void CallCallback(nsresult rv) MOZ_OVERRIDE
+  virtual void CallCallback(nsresult rv) override
   {
     (void) mCallback->HandleCert(mCert, rv);
   }
@@ -326,7 +326,7 @@ private:
   nsCOMPtr<nsIX509Cert> mCert; // out
 };
 
-class LocalCertRemoveTask MOZ_FINAL : public LocalCertTask
+class LocalCertRemoveTask final : public LocalCertTask
 {
 public:
   LocalCertRemoveTask(const nsACString& aNickname,
@@ -337,14 +337,14 @@ public:
   }
 
 private:
-  virtual nsresult CalculateResult() MOZ_OVERRIDE
+  virtual nsresult CalculateResult() override
   {
     return RemoveExisting();
   }
 
-  virtual void ReleaseNSSResources() MOZ_OVERRIDE {}
+  virtual void ReleaseNSSResources() override {}
 
-  virtual void CallCallback(nsresult rv) MOZ_OVERRIDE
+  virtual void CallCallback(nsresult rv) override
   {
     (void) mCallback->HandleResult(rv);
   }

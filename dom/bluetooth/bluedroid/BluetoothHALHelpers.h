@@ -914,7 +914,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     ((*mObj).*mMethod)();
     return NS_OK;
@@ -940,7 +940,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     ((*mObj).*mMethod)(mArg1);
     return NS_OK;
@@ -973,7 +973,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     ((*mObj).*mMethod)(mArg1, mArg2, mArg3);
     return NS_OK;
@@ -1021,7 +1021,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -1083,7 +1083,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -1160,7 +1160,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -1244,7 +1244,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -1333,7 +1333,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -1431,7 +1431,7 @@ public:
   }
 
   NS_METHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

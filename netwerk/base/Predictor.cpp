@@ -497,7 +497,7 @@ Predictor::GetInterface(const nsIID &iid, void **result)
 namespace {
 class NuwaMarkPredictorThreadRunner : public nsRunnable
 {
-  NS_IMETHODIMP Run() MOZ_OVERRIDE
+  NS_IMETHODIMP Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
 
@@ -611,7 +611,7 @@ public:
   { }
   ~PredictorThreadShutdownRunner() { }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread(), "Shutting down io thread off main thread!");
     if (mSuccess) {
@@ -637,7 +637,7 @@ public:
 
   ~PredictorOldCleanupRunner() { }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread(), "Cleaning up old files on main thread!");
     nsresult rv = CheckForAndDeleteOldDBFiles();

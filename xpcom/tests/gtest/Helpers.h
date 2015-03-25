@@ -35,7 +35,7 @@ void
 ConsumeAndValidateStream(nsIInputStream* aStream,
                          const nsACString& aExpectedData);
 
-class OutputStreamCallback MOZ_FINAL : public nsIOutputStreamCallback
+class OutputStreamCallback final : public nsIOutputStreamCallback
 {
 public:
   OutputStreamCallback();

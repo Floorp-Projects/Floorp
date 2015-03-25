@@ -20,16 +20,16 @@ public:
 
   virtual void BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
                                            const nsRect&           aDirtyRect,
-                                           const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                           const nsDisplayListSet& aLists) override;
 
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,
-                               nsEventStatus* aEventStatus) MOZ_OVERRIDE;
+                               nsEventStatus* aEventStatus) override;
 
   virtual void MouseClicked(nsPresContext* aPresContext,
                             mozilla::WidgetMouseEvent* aEvent);
 
-  void UpdateMouseThrough() MOZ_OVERRIDE { AddStateBits(NS_FRAME_MOUSE_THROUGH_NEVER); }
+  void UpdateMouseThrough() override { AddStateBits(NS_FRAME_MOUSE_THROUGH_NEVER); }
 
 protected:
   bool mTrackingMouseMove;

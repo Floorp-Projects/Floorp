@@ -33,7 +33,7 @@ class SVGTransform;
  *
  * See the architecture comment in SVGAnimatedTransformList.h.
  */
-class DOMSVGTransformList MOZ_FINAL : public nsISupports,
+class DOMSVGTransformList final : public nsISupports,
                                       public nsWrapperCache
 {
   friend class AutoChangeTransformListNotifier;
@@ -64,7 +64,7 @@ public:
     InternalListLengthWillChange(aInternalList.Length()); // Sync mItems
   }
 
-  virtual JSObject* WrapObject(JSContext *cx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *cx) override;
 
   nsISupports* GetParentObject()
   {

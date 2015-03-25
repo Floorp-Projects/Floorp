@@ -23,7 +23,7 @@ class nsGridCell;
 /**
  * The nsBoxLayout implementation for a grid.
  */
-class nsGridLayout2 MOZ_FINAL : public nsStackLayout, 
+class nsGridLayout2 final : public nsStackLayout, 
                                 public nsIGridPart
 {
 public:
@@ -32,34 +32,34 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual void IntrinsicISizesDirty(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  virtual void IntrinsicISizesDirty(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
 
-  virtual nsGridRowGroupLayout* CastToRowGroupLayout() MOZ_OVERRIDE { return nullptr; }
-  virtual nsGridLayout2* CastToGridLayout() MOZ_OVERRIDE { return this; }
-  virtual nsGrid* GetGrid(nsIFrame* aBox, int32_t* aIndex, nsGridRowLayout* aRequestor=nullptr) MOZ_OVERRIDE;
-  virtual nsIGridPart* GetParentGridPart(nsIFrame* aBox, nsIFrame** aParentBox) MOZ_OVERRIDE {
+  virtual nsGridRowGroupLayout* CastToRowGroupLayout() override { return nullptr; }
+  virtual nsGridLayout2* CastToGridLayout() override { return this; }
+  virtual nsGrid* GetGrid(nsIFrame* aBox, int32_t* aIndex, nsGridRowLayout* aRequestor=nullptr) override;
+  virtual nsIGridPart* GetParentGridPart(nsIFrame* aBox, nsIFrame** aParentBox) override {
     NS_NOTREACHED("Should not be called"); return nullptr;
   }
-  virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount) MOZ_OVERRIDE { aRowCount++; }
-  virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) MOZ_OVERRIDE { }
-  virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows) MOZ_OVERRIDE;
-  virtual nsMargin GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal) MOZ_OVERRIDE;
-  virtual Type GetType() MOZ_OVERRIDE { return eGrid; }
+  virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount) override { aRowCount++; }
+  virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) override { }
+  virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows) override;
+  virtual nsMargin GetTotalMargin(nsIFrame* aBox, bool aIsHorizontal) override;
+  virtual Type GetType() override { return eGrid; }
   virtual void ChildrenInserted(nsIFrame* aBox, nsBoxLayoutState& aState,
                                 nsIFrame* aPrevBox,
-                                const nsFrameList::Slice& aNewChildren) MOZ_OVERRIDE;
+                                const nsFrameList::Slice& aNewChildren) override;
   virtual void ChildrenAppended(nsIFrame* aBox, nsBoxLayoutState& aState,
-                                const nsFrameList::Slice& aNewChildren) MOZ_OVERRIDE;
+                                const nsFrameList::Slice& aNewChildren) override;
   virtual void ChildrenRemoved(nsIFrame* aBox, nsBoxLayoutState& aState,
-                               nsIFrame* aChildList) MOZ_OVERRIDE;
+                               nsIFrame* aChildList) override;
   virtual void ChildrenSet(nsIFrame* aBox, nsBoxLayoutState& aState,
-                           nsIFrame* aChildList) MOZ_OVERRIDE;
+                           nsIFrame* aChildList) override;
 
-  virtual nsIGridPart* AsGridPart() MOZ_OVERRIDE { return this; }
+  virtual nsIGridPart* AsGridPart() override { return this; }
 
   static void AddOffset(nsBoxLayoutState& aState, nsIFrame* aChild, nsSize& aSize);
 

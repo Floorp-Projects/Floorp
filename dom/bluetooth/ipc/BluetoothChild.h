@@ -56,25 +56,25 @@ protected:
   BeginShutdown();
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
   RecvNotify(const BluetoothSignal& aSignal);
 
   virtual bool
-  RecvEnabled(const bool& aEnabled) MOZ_OVERRIDE;
+  RecvEnabled(const bool& aEnabled) override;
 
   virtual bool
-  RecvBeginShutdown() MOZ_OVERRIDE;
+  RecvBeginShutdown() override;
 
   virtual bool
-  RecvNotificationsStopped() MOZ_OVERRIDE;
+  RecvNotificationsStopped() override;
 
   virtual PBluetoothRequestChild*
-  AllocPBluetoothRequestChild(const Request& aRequest) MOZ_OVERRIDE;
+  AllocPBluetoothRequestChild(const Request& aRequest) override;
 
   virtual bool
-  DeallocPBluetoothRequestChild(PBluetoothRequestChild* aActor) MOZ_OVERRIDE;
+  DeallocPBluetoothRequestChild(PBluetoothRequestChild* aActor) override;
 };
 
 /*******************************************************************************
@@ -94,10 +94,10 @@ protected:
   virtual ~BluetoothRequestChild();
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
-  Recv__delete__(const BluetoothReply& aReply) MOZ_OVERRIDE;
+  Recv__delete__(const BluetoothReply& aReply) override;
 };
 
 END_BLUETOOTH_NAMESPACE

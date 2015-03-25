@@ -16,7 +16,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
 
-class nsThreadPool MOZ_FINAL
+class nsThreadPool final
   : public nsIThreadPool
   , public nsIRunnable
 {

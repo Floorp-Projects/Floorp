@@ -20,31 +20,31 @@ protected:
   ~RawReader();
 
 public:
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor) MOZ_OVERRIDE;
-  virtual nsresult ResetDecode() MOZ_OVERRIDE;
-  virtual bool DecodeAudioData() MOZ_OVERRIDE;
+  virtual nsresult Init(MediaDecoderReader* aCloneDonor) override;
+  virtual nsresult ResetDecode() override;
+  virtual bool DecodeAudioData() override;
 
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                  int64_t aTimeThreshold) MOZ_OVERRIDE;
+                                  int64_t aTimeThreshold) override;
 
-  virtual bool HasAudio() MOZ_OVERRIDE
+  virtual bool HasAudio() override
   {
     return false;
   }
 
-  virtual bool HasVideo() MOZ_OVERRIDE
+  virtual bool HasVideo() override
   {
     return true;
   }
 
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags) MOZ_OVERRIDE;
+                                MetadataTags** aTags) override;
   virtual nsRefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aEndTime) MOZ_OVERRIDE;
+  Seek(int64_t aTime, int64_t aEndTime) override;
 
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;
+  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) override;
 
-  virtual bool IsMediaSeekable() MOZ_OVERRIDE;
+  virtual bool IsMediaSeekable() override;
 
 private:
   bool ReadFromResource(MediaResource *aResource, uint8_t *aBuf, uint32_t aLength);

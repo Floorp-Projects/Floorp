@@ -69,7 +69,7 @@ public:
 //   - DataStore::GetOwner(...)
 //   - DataStore::GetRevisionId(...)
 // on the main thread.
-class DataStoreGetStringRunnable MOZ_FINAL : public DataStoreRunnable
+class DataStoreGetStringRunnable final : public DataStoreRunnable
 {
   typedef void
   (DataStore::*FuncType)(nsAString&, ErrorResult&);
@@ -95,7 +95,7 @@ public:
 
 protected:
   virtual bool
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
 
@@ -108,7 +108,7 @@ protected:
 
 // A DataStoreRunnable to run DataStore::GetReadOnly(...) on the main
 // thread.
-class DataStoreGetReadOnlyRunnable MOZ_FINAL : public DataStoreRunnable
+class DataStoreGetReadOnlyRunnable final : public DataStoreRunnable
 {
   ErrorResult& mRv;
 
@@ -128,7 +128,7 @@ public:
 
 protected:
   virtual bool
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
 
@@ -169,7 +169,7 @@ protected:
 };
 
 // A DataStoreRunnable to run DataStore::Get(...) on the main thread.
-class DataStoreGetRunnable MOZ_FINAL : public DataStoreProxyRunnable
+class DataStoreGetRunnable final : public DataStoreProxyRunnable
 {
   Sequence<OwningStringOrUnsignedLong> mId;
   ErrorResult& mRv;
@@ -193,7 +193,7 @@ public:
 
 protected:
   virtual bool
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
 
@@ -204,7 +204,7 @@ protected:
 };
 
 // A DataStoreRunnable to run DataStore::Put(...) on the main thread.
-class DataStorePutRunnable MOZ_FINAL : public DataStoreProxyRunnable
+class DataStorePutRunnable final : public DataStoreProxyRunnable
 {
   JSAutoStructuredCloneBuffer mObjBuffer;
   const StringOrUnsignedLong& mId;
@@ -237,7 +237,7 @@ public:
 
 protected:
   virtual bool
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
 
@@ -267,7 +267,7 @@ protected:
 };
 
 // A DataStoreRunnable to run DataStore::Add(...) on the main thread.
-class DataStoreAddRunnable MOZ_FINAL : public DataStoreProxyRunnable
+class DataStoreAddRunnable final : public DataStoreProxyRunnable
 {
   JSAutoStructuredCloneBuffer mObjBuffer;
   const Optional<StringOrUnsignedLong>& mId;
@@ -300,7 +300,7 @@ public:
 
 protected:
   virtual bool
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
 
@@ -331,7 +331,7 @@ protected:
 
 // A DataStoreRunnable to run DataStore::Remove(...) on the main
 // thread.
-class DataStoreRemoveRunnable MOZ_FINAL : public DataStoreProxyRunnable
+class DataStoreRemoveRunnable final : public DataStoreProxyRunnable
 {
   const StringOrUnsignedLong& mId;
   const nsString mRevisionId;
@@ -355,7 +355,7 @@ public:
 
 protected:
   virtual bool
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
 
@@ -366,7 +366,7 @@ protected:
 };
 
 // A DataStoreRunnable to run DataStore::Clear(...) on the main thread.
-class DataStoreClearRunnable MOZ_FINAL : public DataStoreProxyRunnable
+class DataStoreClearRunnable final : public DataStoreProxyRunnable
 {
   const nsString mRevisionId;
   ErrorResult& mRv;
@@ -387,7 +387,7 @@ public:
 
 protected:
   virtual bool
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
 
@@ -398,7 +398,7 @@ protected:
 };
 
 // A DataStoreRunnable to run DataStore::Sync(...) on the main thread.
-class DataStoreSyncStoreRunnable MOZ_FINAL : public DataStoreRunnable
+class DataStoreSyncStoreRunnable final : public DataStoreRunnable
 {
   WorkerDataStoreCursor* mWorkerCursor;
   const nsString mRevisionId;
@@ -421,7 +421,7 @@ public:
 
 protected:
   virtual bool
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
 
@@ -637,7 +637,7 @@ WorkerDataStore::GetRevisionId(JSContext* aCx,
 }
 
 // A DataStoreRunnable to run DataStore::GetLength(...) on the main thread.
-class DataStoreGetLengthRunnable MOZ_FINAL : public DataStoreProxyRunnable
+class DataStoreGetLengthRunnable final : public DataStoreProxyRunnable
 {
   ErrorResult& mRv;
 
@@ -655,7 +655,7 @@ public:
 
 protected:
   virtual bool
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
 
@@ -750,7 +750,7 @@ public:
   }
 
   virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     MOZ_ASSERT(aWorkerPrivate);
     aWorkerPrivate->AssertIsOnWorkerThread();

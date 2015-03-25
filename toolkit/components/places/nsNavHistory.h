@@ -61,7 +61,7 @@ class nsIAutoCompleteController;
 
 // nsNavHistory
 
-class nsNavHistory MOZ_FINAL : public nsSupportsWeakReference
+class nsNavHistory final : public nsSupportsWeakReference
                              , public nsINavHistoryService
                              , public nsIObserver
                              , public nsIBrowserHistory

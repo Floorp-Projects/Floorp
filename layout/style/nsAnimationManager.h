@@ -52,7 +52,7 @@ struct AnimationEventInfo {
 
 typedef InfallibleTArray<AnimationEventInfo> EventArray;
 
-class CSSAnimationPlayer MOZ_FINAL : public dom::AnimationPlayer
+class CSSAnimationPlayer final : public dom::AnimationPlayer
 {
 public:
  explicit CSSAnimationPlayer(dom::AnimationTimeline* aTimeline)
@@ -64,14 +64,14 @@ public:
   }
 
   virtual CSSAnimationPlayer*
-  AsCSSAnimationPlayer() MOZ_OVERRIDE { return this; }
+  AsCSSAnimationPlayer() override { return this; }
 
-  virtual dom::Promise* GetReady(ErrorResult& aRv) MOZ_OVERRIDE;
-  virtual void Play() MOZ_OVERRIDE;
-  virtual void Pause() MOZ_OVERRIDE;
+  virtual dom::Promise* GetReady(ErrorResult& aRv) override;
+  virtual void Play() override;
+  virtual void Pause() override;
 
-  virtual dom::AnimationPlayState PlayStateFromJS() const MOZ_OVERRIDE;
-  virtual void PlayFromJS() MOZ_OVERRIDE;
+  virtual dom::AnimationPlayState PlayStateFromJS() const override;
+  virtual void PlayFromJS() override;
 
   void PlayFromStyle();
   void PauseFromStyle();
@@ -82,7 +82,7 @@ public:
 
 protected:
   virtual ~CSSAnimationPlayer() { }
-  virtual css::CommonAnimationManager* GetAnimationManager() const MOZ_OVERRIDE;
+  virtual css::CommonAnimationManager* GetAnimationManager() const override;
 
   static nsString PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType);
 
@@ -149,7 +149,7 @@ protected:
 
 } /* namespace mozilla */
 
-class nsAnimationManager MOZ_FINAL
+class nsAnimationManager final
   : public mozilla::css::CommonAnimationManager
 {
 public:
@@ -173,12 +173,12 @@ public:
 
   // nsIStyleRuleProcessor (parts)
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-    const MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
+    const MOZ_MUST_OVERRIDE override;
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
-    const MOZ_MUST_OVERRIDE MOZ_OVERRIDE;
+    const MOZ_MUST_OVERRIDE override;
 
   // nsARefreshObserver
-  virtual void WillRefresh(mozilla::TimeStamp aTime) MOZ_OVERRIDE;
+  virtual void WillRefresh(mozilla::TimeStamp aTime) override;
 
   void FlushAnimations(FlushFlags aFlags);
 
@@ -211,16 +211,16 @@ public:
   }
 
 protected:
-  virtual nsIAtom* GetAnimationsAtom() MOZ_OVERRIDE {
+  virtual nsIAtom* GetAnimationsAtom() override {
     return nsGkAtoms::animationsProperty;
   }
-  virtual nsIAtom* GetAnimationsBeforeAtom() MOZ_OVERRIDE {
+  virtual nsIAtom* GetAnimationsBeforeAtom() override {
     return nsGkAtoms::animationsOfBeforeProperty;
   }
-  virtual nsIAtom* GetAnimationsAfterAtom() MOZ_OVERRIDE {
+  virtual nsIAtom* GetAnimationsAfterAtom() override {
     return nsGkAtoms::animationsOfAfterProperty;
   }
-  virtual bool IsAnimationManager() MOZ_OVERRIDE {
+  virtual bool IsAnimationManager() override {
     return true;
   }
 

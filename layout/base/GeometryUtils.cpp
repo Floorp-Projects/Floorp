@@ -176,7 +176,7 @@ public:
   {
   }
 
-  virtual void AddBox(nsIFrame* aFrame) MOZ_OVERRIDE
+  virtual void AddBox(nsIFrame* aFrame) override
   {
     nsIFrame* f = aFrame;
     nsRect box = GetBoxRectForFrame(&f, mBoxType);

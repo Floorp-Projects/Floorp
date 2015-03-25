@@ -15,7 +15,7 @@ namespace mozilla {
  * This class is the observer that calls into the profiler whenever
  * main thread I/O occurs.
  */
-class ProfilerIOInterposeObserver MOZ_FINAL : public IOInterposeObserver
+class ProfilerIOInterposeObserver final : public IOInterposeObserver
 {
 public:
   virtual void Observe(Observation& aObservation);

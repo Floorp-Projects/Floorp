@@ -44,12 +44,12 @@ public:
 
   ~GonkVideoDecoderManager();
 
-  virtual android::sp<MediaCodecProxy> Init(MediaDataDecoderCallback* aCallback) MOZ_OVERRIDE;
+  virtual android::sp<MediaCodecProxy> Init(MediaDataDecoderCallback* aCallback) override;
 
   virtual nsresult Output(int64_t aStreamOffset,
-                          nsRefPtr<MediaData>& aOutput) MOZ_OVERRIDE;
+                          nsRefPtr<MediaData>& aOutput) override;
 
-  virtual nsresult Flush() MOZ_OVERRIDE;
+  virtual nsresult Flush() override;
 
   virtual void AllocateMediaResources();
 
@@ -58,9 +58,9 @@ public:
   static void RecycleCallback(TextureClient* aClient, void* aClosure);
 
 protected:
-  virtual bool PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
+  virtual bool PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) override;
 
-  virtual android::status_t SendSampleToOMX(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
+  virtual android::status_t SendSampleToOMX(mp4_demuxer::MP4Sample* aSample) override;
 
 private:
   struct FrameInfo
@@ -99,8 +99,8 @@ private:
     VideoResourceListener(GonkVideoDecoderManager *aManager);
     ~VideoResourceListener();
 
-    virtual void codecReserved() MOZ_OVERRIDE;
-    virtual void codecCanceled() MOZ_OVERRIDE;
+    virtual void codecReserved() override;
+    virtual void codecCanceled() override;
 
   private:
     // Forbidden

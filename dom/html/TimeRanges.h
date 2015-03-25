@@ -25,7 +25,7 @@ namespace dom {
 
 // Implements media TimeRanges:
 // http://www.whatwg.org/specs/web-apps/current-work/multipage/video.html#timeranges
-class TimeRanges MOZ_FINAL : public nsIDOMTimeRanges
+class TimeRanges final : public nsIDOMTimeRanges
 {
 public:
   NS_DECL_ISUPPORTS

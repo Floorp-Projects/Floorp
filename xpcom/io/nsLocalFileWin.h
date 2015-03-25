@@ -25,7 +25,7 @@
 
 #include <sys/stat.h>
 
-class nsLocalFile MOZ_FINAL
+class nsLocalFile final
   : public nsILocalFileWin
   , public nsIHashable
 {

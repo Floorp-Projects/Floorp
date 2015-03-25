@@ -153,13 +153,13 @@ public:
   bool     IsDirty() { return mIsDirty; }
   uint32_t MemoryUsage() { return sizeof(CacheFileMetadata) + mHashArraySize + mBufSize; }
 
-  NS_IMETHOD OnFileOpened(CacheFileHandle *aHandle, nsresult aResult) MOZ_OVERRIDE;
+  NS_IMETHOD OnFileOpened(CacheFileHandle *aHandle, nsresult aResult) override;
   NS_IMETHOD OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
-                           nsresult aResult) MOZ_OVERRIDE;
-  NS_IMETHOD OnDataRead(CacheFileHandle *aHandle, char *aBuf, nsresult aResult) MOZ_OVERRIDE;
-  NS_IMETHOD OnFileDoomed(CacheFileHandle *aHandle, nsresult aResult) MOZ_OVERRIDE;
-  NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult) MOZ_OVERRIDE;
-  NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult) MOZ_OVERRIDE;
+                           nsresult aResult) override;
+  NS_IMETHOD OnDataRead(CacheFileHandle *aHandle, char *aBuf, nsresult aResult) override;
+  NS_IMETHOD OnFileDoomed(CacheFileHandle *aHandle, nsresult aResult) override;
+  NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult) override;
+  NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult) override;
 
   // Memory reporting
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;

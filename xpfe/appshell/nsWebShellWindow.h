@@ -23,7 +23,7 @@ namespace mozilla {
 class WebShellWindowTimerCallback;
 } // namespace mozilla
 
-class nsWebShellWindow MOZ_FINAL : public nsXULWindow,
+class nsWebShellWindow final : public nsXULWindow,
                                    public nsIWebProgressListener,
                                    public nsIWidgetListener
 {
@@ -47,20 +47,20 @@ public:
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   // nsIBaseWindow
-  NS_IMETHOD Destroy() MOZ_OVERRIDE;
+  NS_IMETHOD Destroy() override;
 
   // nsIWidgetListener
-  virtual nsIXULWindow* GetXULWindow() MOZ_OVERRIDE { return this; }
-  virtual nsIPresShell* GetPresShell() MOZ_OVERRIDE;
-  virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) MOZ_OVERRIDE;
-  virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight) MOZ_OVERRIDE;
-  virtual bool RequestWindowClose(nsIWidget* aWidget) MOZ_OVERRIDE;
-  virtual void SizeModeChanged(nsSizeMode sizeMode) MOZ_OVERRIDE;
-  virtual void OSToolbarButtonPressed() MOZ_OVERRIDE;
+  virtual nsIXULWindow* GetXULWindow() override { return this; }
+  virtual nsIPresShell* GetPresShell() override;
+  virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) override;
+  virtual bool WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight) override;
+  virtual bool RequestWindowClose(nsIWidget* aWidget) override;
+  virtual void SizeModeChanged(nsSizeMode sizeMode) override;
+  virtual void OSToolbarButtonPressed() override;
   virtual bool ZLevelChanged(bool aImmediate, nsWindowZ *aPlacement,
-                             nsIWidget* aRequestBelow, nsIWidget** aActualBelow) MOZ_OVERRIDE;
-  virtual void WindowActivated() MOZ_OVERRIDE;
-  virtual void WindowDeactivated() MOZ_OVERRIDE;
+                             nsIWidget* aRequestBelow, nsIWidget** aActualBelow) override;
+  virtual void WindowActivated() override;
+  virtual void WindowDeactivated() override;
 
 protected:
   friend class mozilla::WebShellWindowTimerCallback;

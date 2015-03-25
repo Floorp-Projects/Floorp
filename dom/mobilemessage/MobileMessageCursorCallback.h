@@ -24,7 +24,7 @@ namespace mobilemessage {
 class MobileMessageCursorCallback;
 } // namespace mobilemessage
 
-class MobileMessageCursor MOZ_FINAL : public DOMCursor
+class MobileMessageCursor final : public DOMCursor
 {
   friend class mobilemessage::MobileMessageCursorCallback;
 
@@ -38,13 +38,13 @@ public:
 
   // Override XPIDL continue function to suppress -Werror,-Woverloaded-virtual.
   NS_IMETHOD
-  Continue(void) MOZ_OVERRIDE;
+  Continue(void) override;
 
   virtual void
-  Continue(ErrorResult& aRv) MOZ_OVERRIDE;
+  Continue(ErrorResult& aRv) override;
 
 private:
-  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
+  // final suppresses -Werror,-Wdelete-non-virtual-dtor
   ~MobileMessageCursor() {}
 
 private:
@@ -57,7 +57,7 @@ private:
 
 namespace mobilemessage {
 
-class MobileMessageCursorCallback MOZ_FINAL : public nsIMobileMessageCursorCallback
+class MobileMessageCursorCallback final : public nsIMobileMessageCursorCallback
 {
   friend class mozilla::dom::MobileMessageManager;
 
@@ -73,7 +73,7 @@ public:
   }
 
 private:
-  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
+  // final suppresses -Werror,-Wdelete-non-virtual-dtor
   ~MobileMessageCursorCallback()
   {
     MOZ_COUNT_DTOR(MobileMessageCursorCallback);

@@ -18,7 +18,7 @@ namespace mobilemessage {
 
 class PSmsChild;
 
-class SmsIPCService MOZ_FINAL : public nsISmsService
+class SmsIPCService final : public nsISmsService
                               , public nsIMmsService
                               , public nsIMobileMessageDatabaseService
                               , public nsIObserver
@@ -36,7 +36,7 @@ public:
 private:
   SmsIPCService();
 
-  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
+  // final suppresses -Werror,-Wdelete-non-virtual-dtor
   ~SmsIPCService();
 
   uint32_t mMmsDefaultServiceId;

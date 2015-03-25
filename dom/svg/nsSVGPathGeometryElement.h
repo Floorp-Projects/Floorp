@@ -46,13 +46,13 @@ public:
   explicit nsSVGPathGeometryElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 
   virtual nsresult AfterSetAttr(int32_t aNamespaceID, nsIAtom* aName,
-                                const nsAttrValue* aValue, bool aNotify) MOZ_OVERRIDE;
+                                const nsAttrValue* aValue, bool aNotify) override;
 
   /**
    * Causes this element to discard any Path object that GetOrBuildPath may
    * have cached.
    */
-  virtual void ClearAnyCachedPath() MOZ_OVERRIDE MOZ_FINAL {
+  virtual void ClearAnyCachedPath() override final {
     mCachedPath = nullptr;
   }
 

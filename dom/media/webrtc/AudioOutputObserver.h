@@ -32,7 +32,7 @@ public:
                      AudioSampleFormat aFormat,
                      uint32_t aChannels,
                      uint32_t aFrames,
-                     uint32_t aSampleRate) MOZ_OVERRIDE;
+                     uint32_t aSampleRate) override;
 
   void Clear();
   void InsertFarEnd(const AudioDataValue *aBuffer, uint32_t aFrames, bool aOverran,

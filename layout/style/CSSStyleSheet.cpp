@@ -50,17 +50,17 @@ using namespace mozilla::dom;
 // -------------------------------
 // Style Rule List for the DOM
 //
-class CSSRuleListImpl MOZ_FINAL : public CSSRuleList
+class CSSRuleListImpl final : public CSSRuleList
 {
 public:
   explicit CSSRuleListImpl(CSSStyleSheet *aStyleSheet);
 
-  virtual CSSStyleSheet* GetParentObject() MOZ_OVERRIDE;
+  virtual CSSStyleSheet* GetParentObject() override;
 
   virtual nsIDOMCSSRule*
-  IndexedGetter(uint32_t aIndex, bool& aFound) MOZ_OVERRIDE;
+  IndexedGetter(uint32_t aIndex, bool& aFound) override;
   virtual uint32_t
-  Length() MOZ_OVERRIDE;
+  Length() override;
 
   void DropReference() { mStyleSheet = nullptr; }
 

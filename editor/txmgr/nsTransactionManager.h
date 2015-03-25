@@ -23,7 +23,7 @@ class nsTransactionItem;
 /** implementation of a transaction manager object.
  *
  */
-class nsTransactionManager MOZ_FINAL : public nsITransactionManager
+class nsTransactionManager final : public nsITransactionManager
                                      , public nsSupportsWeakReference
 {
 private:

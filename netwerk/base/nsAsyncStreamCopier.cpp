@@ -24,7 +24,7 @@ static PRLogModuleInfo *gStreamCopierLog = nullptr;
 /**
  * An event used to perform initialization off the main thread.
  */
-class AsyncApplyBufferingPolicyEvent MOZ_FINAL: public nsRunnable
+class AsyncApplyBufferingPolicyEvent final: public nsRunnable
 {
 public:
     /**

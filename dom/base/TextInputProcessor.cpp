@@ -20,7 +20,7 @@ namespace mozilla {
  * TextInputProcessorNotification
  ******************************************************************************/
 
-class TextInputProcessorNotification MOZ_FINAL :
+class TextInputProcessorNotification final :
         public nsITextInputProcessorNotification
 {
 public:
@@ -31,7 +31,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetType(nsACString& aType) MOZ_OVERRIDE MOZ_FINAL
+  NS_IMETHOD GetType(nsACString& aType) override final
   {
     aType = mType;
     return NS_OK;

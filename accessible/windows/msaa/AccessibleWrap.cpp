@@ -657,7 +657,7 @@ AccessibleWrap::get_accFocus(
  * This helper class implements IEnumVARIANT for a nsTArray containing
  * accessible objects.
  */
-class AccessibleEnumerator MOZ_FINAL : public IEnumVARIANT
+class AccessibleEnumerator final : public IEnumVARIANT
 {
 public:
   AccessibleEnumerator(const nsTArray<Accessible*>& aArray) :

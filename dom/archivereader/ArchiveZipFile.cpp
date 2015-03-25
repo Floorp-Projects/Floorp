@@ -20,7 +20,7 @@ USING_ARCHIVEREADER_NAMESPACE
 /**
  * Input stream object for zip files
  */
-class ArchiveInputStream MOZ_FINAL : public nsIInputStream,
+class ArchiveInputStream final : public nsIInputStream,
                                      public nsISeekableStream
 {
 public:

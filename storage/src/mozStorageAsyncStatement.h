@@ -27,7 +27,7 @@ namespace storage {
 class AsyncStatementJSHelper;
 class Connection;
 
-class AsyncStatement MOZ_FINAL : public mozIStorageAsyncStatement
+class AsyncStatement final : public mozIStorageAsyncStatement
                                , public StorageBaseStatementInternal
 {
 public:

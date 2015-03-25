@@ -85,19 +85,19 @@ struct TraceCallbackFunc : public TraceCallbacks
   explicit TraceCallbackFunc(Func aCb) : mCallback(aCb) {}
 
   virtual void Trace(JS::Heap<JS::Value>* aPtr, const char* aName,
-                     void* aClosure) const MOZ_OVERRIDE;
+                     void* aClosure) const override;
   virtual void Trace(JS::Heap<jsid>* aPtr, const char* aName,
-                     void* aClosure) const MOZ_OVERRIDE;
+                     void* aClosure) const override;
   virtual void Trace(JS::Heap<JSObject*>* aPtr, const char* aName,
-                     void* aClosure) const MOZ_OVERRIDE;
+                     void* aClosure) const override;
   virtual void Trace(JS::TenuredHeap<JSObject*>* aPtr, const char* aName,
-                     void* aClosure) const MOZ_OVERRIDE;
+                     void* aClosure) const override;
   virtual void Trace(JS::Heap<JSString*>* aPtr, const char* aName,
-                     void* aClosure) const MOZ_OVERRIDE;
+                     void* aClosure) const override;
   virtual void Trace(JS::Heap<JSScript*>* aPtr, const char* aName,
-                     void* aClosure) const MOZ_OVERRIDE;
+                     void* aClosure) const override;
   virtual void Trace(JS::Heap<JSFunction*>* aPtr, const char* aName,
-                     void* aClosure) const MOZ_OVERRIDE;
+                     void* aClosure) const override;
 
 private:
   Func mCallback;
@@ -182,7 +182,7 @@ public:
   }
 
   NS_IMETHOD_(void) Trace(void* aPtr, const TraceCallbacks& aCb,
-                          void* aClosure) MOZ_OVERRIDE = 0;
+                          void* aClosure) override = 0;
 
   static void NoteJSChild(JS::GCCellPtr aGCThing, const char* aName,
                           void* aClosure);
@@ -202,11 +202,11 @@ public:
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_XPCOMCYCLECOLLECTIONPARTICIPANT_IID)
 
-  NS_IMETHOD_(void) Root(void* aPtr) MOZ_OVERRIDE;
-  NS_IMETHOD_(void) Unroot(void* aPtr) MOZ_OVERRIDE;
+  NS_IMETHOD_(void) Root(void* aPtr) override;
+  NS_IMETHOD_(void) Unroot(void* aPtr) override;
 
   NS_IMETHOD_(void) Trace(void* aPtr, const TraceCallbacks& aCb,
-                          void* aClosure) MOZ_OVERRIDE;
+                          void* aClosure) override;
 
   static bool CheckForRightISupports(nsISupports* aSupports);
 };
@@ -486,7 +486,7 @@ DowncastCCParticipant(void* aPtr)
 #define NS_CHECK_FOR_RIGHT_PARTICIPANT_BASE                                    \
     virtual void CheckForRightParticipant()
 #define NS_CHECK_FOR_RIGHT_PARTICIPANT_DERIVED                                 \
-    virtual void CheckForRightParticipant() MOZ_OVERRIDE
+    virtual void CheckForRightParticipant() override
 #define NS_CHECK_FOR_RIGHT_PARTICIPANT_BODY(_class)                            \
     {                                                                          \
       nsXPCOMCycleCollectionParticipant *p;                                    \
@@ -508,8 +508,8 @@ DowncastCCParticipant(void* aPtr)
 #define NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(_class, _base)           \
 public:                                                                        \
   NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb)         \
-    MOZ_OVERRIDE;                                                              \
-  NS_IMETHOD_(void) DeleteCycleCollectable(void *p) MOZ_OVERRIDE               \
+    override;                                                              \
+  NS_IMETHOD_(void) DeleteCycleCollectable(void *p) override               \
   {                                                                            \
     DowncastCCParticipant<_class>(p)->DeleteCycleCollectable();                \
   }                                                                            \
@@ -527,7 +527,7 @@ public:                                                                        \
 
 #define NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                     \
   NS_DECL_CYCLE_COLLECTION_CLASS_BODY_NO_UNLINK(_class, _base)                 \
-  NS_IMETHOD_(void) Unlink(void *p) MOZ_OVERRIDE;
+  NS_IMETHOD_(void) Unlink(void *p) override;
 
 #define NS_PARTICIPANT_AS(type, participant)                                   \
   const_cast<type*>(reinterpret_cast<const type*>(participant))
@@ -545,7 +545,7 @@ public:                                                                        \
  * builds.
  */
 #ifdef DEBUG
-#define NOT_INHERITED_CANT_OVERRIDE virtual void BaseCycleCollectable() MOZ_FINAL {}
+#define NOT_INHERITED_CANT_OVERRIDE virtual void BaseCycleCollectable() final {}
 #else
 #define NOT_INHERITED_CANT_OVERRIDE
 #endif
@@ -574,9 +574,9 @@ public:                                                                         
   : nsXPCOMCycleCollectionParticipant(true) {}                                   \
 private:                                                                         \
   NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                             \
-  NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed) MOZ_OVERRIDE;    \
-  NS_IMETHOD_(bool) CanSkipInCCReal(void *p) MOZ_OVERRIDE;                       \
-  NS_IMETHOD_(bool) CanSkipThisReal(void *p) MOZ_OVERRIDE;                       \
+  NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed) override;    \
+  NS_IMETHOD_(bool) CanSkipInCCReal(void *p) override;                       \
+  NS_IMETHOD_(bool) CanSkipThisReal(void *p) override;                       \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                         \
 };                                                                               \
 NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)                                      \
@@ -592,7 +592,7 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                            
 {                                                                                      \
   NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                                   \
   NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure)            \
-    MOZ_OVERRIDE;                                                                      \
+    override;                                                                      \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                               \
 };                                                                                     \
 NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)                                            \
@@ -608,10 +608,10 @@ public:                                                                         
   : nsXPCOMCycleCollectionParticipant(true) {}                                            \
 private:                                                                                  \
   NS_DECL_CYCLE_COLLECTION_CLASS_BODY(_class, _base)                                      \
-  NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure) MOZ_OVERRIDE; \
-  NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed) MOZ_OVERRIDE;             \
-  NS_IMETHOD_(bool) CanSkipInCCReal(void *p) MOZ_OVERRIDE;                                \
-  NS_IMETHOD_(bool) CanSkipThisReal(void *p) MOZ_OVERRIDE;                                \
+  NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure) override; \
+  NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed) override;             \
+  NS_IMETHOD_(bool) CanSkipInCCReal(void *p) override;                                \
+  NS_IMETHOD_(bool) CanSkipThisReal(void *p) override;                                \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                                  \
 };                                                                                        \
 NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL(_class)                                               \
@@ -627,10 +627,10 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                            
  : public NS_CYCLE_COLLECTION_CLASSNAME(_base_class)                                   \
 {                                                                                      \
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)                   \
-  NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure) MOZ_OVERRIDE; \
-  NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed) MOZ_OVERRIDE;          \
-  NS_IMETHOD_(bool) CanSkipInCCReal(void *p) MOZ_OVERRIDE;                             \
-  NS_IMETHOD_(bool) CanSkipThisReal(void *p) MOZ_OVERRIDE;                             \
+  NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure) override; \
+  NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed) override;          \
+  NS_IMETHOD_(bool) CanSkipInCCReal(void *p) override;                             \
+  NS_IMETHOD_(bool) CanSkipThisReal(void *p) override;                             \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                               \
 }; \
 NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL_INHERITED(_class)  \
@@ -643,7 +643,7 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
                                                                 _base_class)   \
 public:                                                                        \
   NS_IMETHOD Traverse(void *p, nsCycleCollectionTraversalCallback &cb)         \
-    MOZ_OVERRIDE;                                                              \
+    override;                                                              \
   static _class* Downcast(nsISupports* s)                                      \
   {                                                                            \
     return static_cast<_class*>(static_cast<_base_class*>(                     \
@@ -652,7 +652,7 @@ public:                                                                        \
 
 #define NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)     \
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY_NO_UNLINK(_class, _base_class) \
-  NS_IMETHOD_(void) Unlink(void *p) MOZ_OVERRIDE;
+  NS_IMETHOD_(void) Unlink(void *p) override;
 
 #define NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(_class, _base_class)          \
 class NS_CYCLE_COLLECTION_INNERCLASS                                           \
@@ -684,7 +684,7 @@ class NS_CYCLE_COLLECTION_INNERCLASS                                            
 {                                                                                      \
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED_BODY(_class, _base_class)                   \
   NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure)            \
-    MOZ_OVERRIDE;                                                                      \
+    override;                                                                      \
   NS_IMPL_GET_XPCOM_CYCLE_COLLECTION_PARTICIPANT(_class)                               \
 };                                                                                     \
 NS_CHECK_FOR_RIGHT_PARTICIPANT_IMPL_INHERITED(_class)                                  \
@@ -694,12 +694,12 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
 
 #define NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                     \
   public:                                                                      \
-    NS_IMETHOD_(void) Root(void *n) MOZ_OVERRIDE;                              \
-    NS_IMETHOD_(void) Unlink(void *n) MOZ_OVERRIDE;                            \
-    NS_IMETHOD_(void) Unroot(void *n) MOZ_OVERRIDE;                            \
+    NS_IMETHOD_(void) Root(void *n) override;                              \
+    NS_IMETHOD_(void) Unlink(void *n) override;                            \
+    NS_IMETHOD_(void) Unroot(void *n) override;                            \
     NS_IMETHOD Traverse(void *n, nsCycleCollectionTraversalCallback &cb)       \
-  MOZ_OVERRIDE;                                                                \
-    NS_IMETHOD_(void) DeleteCycleCollectable(void *n) MOZ_OVERRIDE             \
+  override;                                                                \
+    NS_IMETHOD_(void) DeleteCycleCollectable(void *n) override             \
     {                                                                          \
       DowncastCCParticipant<_class>(n)->DeleteCycleCollectable();              \
     }                                                                          \
@@ -741,9 +741,9 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
     : nsCycleCollectionParticipant(true) {}                                    \
   private:                                                                     \
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                         \
-    NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed) MOZ_OVERRIDE;\
-    NS_IMETHOD_(bool) CanSkipInCCReal(void *p) MOZ_OVERRIDE;                   \
-    NS_IMETHOD_(bool) CanSkipThisReal(void *p) MOZ_OVERRIDE;                   \
+    NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed) override;\
+    NS_IMETHOD_(bool) CanSkipInCCReal(void *p) override;                   \
+    NS_IMETHOD_(bool) CanSkipThisReal(void *p) override;                   \
     static nsCycleCollectionParticipant* GetParticipant()                      \
     {                                                                          \
       return &_class::NS_CYCLE_COLLECTION_INNERNAME;                           \
@@ -760,9 +760,9 @@ public:                                                                        \
   : nsCycleCollectionParticipant(true) {}                                      \
 private:                                                                       \
   NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                           \
-  NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed) MOZ_OVERRIDE;  \
-  NS_IMETHOD_(bool) CanSkipInCCReal(void *p) MOZ_OVERRIDE;                     \
-  NS_IMETHOD_(bool) CanSkipThisReal(void *p) MOZ_OVERRIDE;                     \
+  NS_IMETHOD_(bool) CanSkipReal(void *p, bool aRemovingAllowed) override;  \
+  NS_IMETHOD_(bool) CanSkipInCCReal(void *p) override;                     \
+  NS_IMETHOD_(bool) CanSkipThisReal(void *p) override;                     \
   static nsCycleCollectionParticipant* GetParticipant()                        \
   {                                                                            \
     return &_class::NS_CYCLE_COLLECTION_INNERNAME;                             \
@@ -780,7 +780,7 @@ static NS_CYCLE_COLLECTION_INNERCLASS NS_CYCLE_COLLECTION_INNERNAME;
   {                                                                            \
     NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS_BODY(_class)                         \
     NS_IMETHOD_(void) Trace(void *p, const TraceCallbacks &cb, void *closure)  \
-      MOZ_OVERRIDE;                                                            \
+      override;                                                            \
     static MOZ_CONSTEXPR nsScriptObjectTracer* GetParticipant()                \
     {                                                                          \
       return &_class::NS_CYCLE_COLLECTION_INNERNAME;                           \

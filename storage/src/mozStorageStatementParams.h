@@ -16,7 +16,7 @@ class mozIStorageStatement;
 namespace mozilla {
 namespace storage {
 
-class StatementParams MOZ_FINAL : public mozIStorageStatementParams
+class StatementParams final : public mozIStorageStatementParams
                                 , public nsIXPCScriptable
 {
 public:

@@ -31,7 +31,7 @@ struct ShutdownObserver : public nsIObserver
 {
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD Observe(nsISupports*, const char* aTopic, const char16_t*) MOZ_OVERRIDE
+  NS_IMETHOD Observe(nsISupports*, const char* aTopic, const char16_t*) override
   {
     if (strcmp(aTopic, "xpcom-shutdown") != 0) {
       return NS_OK;

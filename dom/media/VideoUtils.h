@@ -84,7 +84,7 @@ class ShutdownThreadEvent : public nsRunnable
 public:
   explicit ShutdownThreadEvent(nsIThread* aThread) : mThread(aThread) {}
   ~ShutdownThreadEvent() {}
-  NS_IMETHOD Run() MOZ_OVERRIDE {
+  NS_IMETHOD Run() override {
     mThread->Shutdown();
     mThread = nullptr;
     return NS_OK;

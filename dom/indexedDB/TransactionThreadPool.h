@@ -24,7 +24,7 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-class TransactionThreadPool MOZ_FINAL
+class TransactionThreadPool final
 {
   class FinishTransactionRunnable;
   friend class FinishTransactionRunnable;

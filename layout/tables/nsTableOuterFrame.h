@@ -34,41 +34,41 @@ public:
   
   // nsIFrame overrides - see there for a description
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
-  virtual const nsFrameList& GetChildList(ChildListID aListID) const MOZ_OVERRIDE;
-  virtual void GetChildLists(nsTArray<ChildList>* aLists) const MOZ_OVERRIDE;
+  virtual const nsFrameList& GetChildList(ChildListID aListID) const override;
+  virtual void GetChildLists(nsTArray<ChildList>* aLists) const override;
 
   virtual void SetInitialChildList(ChildListID     aListID,
-                                   nsFrameList&    aChildList) MOZ_OVERRIDE;
+                                   nsFrameList&    aChildList) override;
   virtual void AppendFrames(ChildListID     aListID,
-                            nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                            nsFrameList&    aFrameList) override;
   virtual void InsertFrames(ChildListID     aListID,
                             nsIFrame*       aPrevFrame,
-                            nsFrameList&    aFrameList) MOZ_OVERRIDE;
+                            nsFrameList&    aFrameList) override;
   virtual void RemoveFrame(ChildListID     aListID,
-                           nsIFrame*       aOldFrame) MOZ_OVERRIDE;
+                           nsIFrame*       aOldFrame) override;
 
-  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
+  virtual nsContainerFrame* GetContentInsertionFrame() override {
     return GetFirstPrincipalChild()->GetContentInsertionFrame();
   }
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
+  virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
   void BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilder,
                                      const nsRect&           aDirtyRect,
                                      const nsDisplayListSet& aLists);
 
-  virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const MOZ_OVERRIDE;
+  virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
 
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
   virtual mozilla::LogicalSize
   ComputeAutoSize(nsRenderingContext *aRenderingContext,
@@ -78,7 +78,7 @@ public:
                   const mozilla::LogicalSize& aMargin,
                   const mozilla::LogicalSize& aBorder,
                   const mozilla::LogicalSize& aPadding,
-                  bool aShrinkWrap) MOZ_OVERRIDE;
+                  bool aShrinkWrap) override;
 
   /** process a reflow command for the table.
     * This involves reflowing the caption and the inner table.
@@ -86,20 +86,20 @@ public:
   virtual void Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+                      nsReflowStatus&          aStatus) override;
 
   /**
    * Get the "type" of the frame
    *
    * @see nsGkAtoms::tableOuterFrame
    */
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  virtual nsStyleContext* GetParentStyleContext(nsIFrame** aProviderFrame) const MOZ_OVERRIDE;
+  virtual nsStyleContext* GetParentStyleContext(nsIFrame** aProviderFrame) const override;
 
   /**
    * Return the content for the cell at the given row and column.
@@ -246,7 +246,7 @@ protected:
                       nscoord                  aAvailableWidth,
                       mozilla::LogicalMargin&  aMargin);
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
+  virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsContainerFrame::IsFrameOfType(aFlags &
                                            (~eCanContainOverflowContainers));

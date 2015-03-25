@@ -36,7 +36,7 @@ class ContentParent;
  * method here, you'll need to write a corresponding public method on the
  * singleton.
  */
-class PreallocatedProcessManager MOZ_FINAL
+class PreallocatedProcessManager final
 {
   typedef mozilla::dom::ContentParent ContentParent;
 

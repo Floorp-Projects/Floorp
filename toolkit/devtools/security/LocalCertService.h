@@ -9,7 +9,7 @@
 
 namespace mozilla {
 
-class LocalCertService MOZ_FINAL : public nsILocalCertService
+class LocalCertService final : public nsILocalCertService
 {
 public:
   NS_DECL_ISUPPORTS

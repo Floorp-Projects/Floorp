@@ -12,7 +12,7 @@
 #include "mozilla/layers/APZCTreeManager.h" // for APZCTreeManager
 #include "mozilla/layers/APZThreadUtils.h" // for AssertOnControllerThread
 #include "FrameMetrics.h"               // for FrameMetrics
-#include "mozilla/Attributes.h"         // for MOZ_FINAL
+#include "mozilla/Attributes.h"         // for final
 #include "mozilla/Preferences.h"        // for Preferences
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
 #include "mozilla/mozalloc.h"           // for operator new

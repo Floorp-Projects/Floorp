@@ -17,7 +17,7 @@ class RevocableStore {
   // store wishes to revoke its items, it sets |store_| to null.  Items are
   // permitted to release their reference to the |StoreRef| when they no longer
   // require the store.
-  class StoreRef MOZ_FINAL {
+  class StoreRef final {
    public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(StoreRef)
     explicit StoreRef(RevocableStore* store) : store_(store) { }

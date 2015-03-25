@@ -258,7 +258,7 @@ static void SetRunning(ProxyAutoConfig *arg)
 }
 
 // The PACResolver is used for dnsResolve()
-class PACResolver MOZ_FINAL : public nsIDNSListener
+class PACResolver final : public nsIDNSListener
                             , public nsITimerCallback
 {
 public:
@@ -272,7 +272,7 @@ public:
   // nsIDNSListener
   NS_IMETHODIMP OnLookupComplete(nsICancelable *request,
                                  nsIDNSRecord *record,
-                                 nsresult status) MOZ_OVERRIDE
+                                 nsresult status) override
   {
     if (mTimer) {
       mTimer->Cancel();
@@ -286,7 +286,7 @@ public:
   }
 
   // nsITimerCallback
-  NS_IMETHODIMP Notify(nsITimer *timer) MOZ_OVERRIDE
+  NS_IMETHODIMP Notify(nsITimer *timer) override
   {
     if (mRequest)
       mRequest->Cancel(NS_ERROR_NET_TIMEOUT);

@@ -97,7 +97,7 @@ void do_test_finished();
 /**
  * Spins current thread until a topic is received.
  */
-class WaitForTopicSpinner MOZ_FINAL : public nsIObserver
+class WaitForTopicSpinner final : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -125,7 +125,7 @@ public:
 
   NS_IMETHOD Observe(nsISupports* aSubject,
                      const char* aTopic,
-                     const char16_t* aData) MOZ_OVERRIDE
+                     const char16_t* aData) override
   {
     mTopicReceived = true;
     nsCOMPtr<nsIObserverService> observerService =
@@ -149,7 +149,7 @@ NS_IMPL_ISUPPORTS(
 /**
  * Spins current thread until an async statement is executed.
  */
-class AsyncStatementSpinner MOZ_FINAL : public mozIStorageStatementCallback
+class AsyncStatementSpinner final : public mozIStorageStatementCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -372,7 +372,7 @@ addURI(nsIURI* aURI)
 static const char TOPIC_PROFILE_CHANGE[] = "profile-before-change";
 static const char TOPIC_PLACES_CONNECTION_CLOSED[] = "places-connection-closed";
 
-class WaitForConnectionClosed MOZ_FINAL : public nsIObserver
+class WaitForConnectionClosed final : public nsIObserver
 {
   nsRefPtr<WaitForTopicSpinner> mSpinner;
 
@@ -394,7 +394,7 @@ public:
 
   NS_IMETHOD Observe(nsISupports* aSubject,
                      const char* aTopic,
-                     const char16_t* aData) MOZ_OVERRIDE
+                     const char16_t* aData) override
   {
     nsCOMPtr<nsIObserverService> os =
       do_GetService(NS_OBSERVERSERVICE_CONTRACTID);

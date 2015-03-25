@@ -16,48 +16,48 @@ class MockMediaResource : public MediaResource
 {
 public:
   explicit MockMediaResource(const char* aFileName);
-  virtual nsIURI* URI() const MOZ_OVERRIDE { return nullptr; }
-  virtual nsresult Close() MOZ_OVERRIDE { return NS_OK; }
-  virtual void Suspend(bool aCloseImmediately) MOZ_OVERRIDE {}
-  virtual void Resume() MOZ_OVERRIDE {}
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() MOZ_OVERRIDE
+  virtual nsIURI* URI() const override { return nullptr; }
+  virtual nsresult Close() override { return NS_OK; }
+  virtual void Suspend(bool aCloseImmediately) override {}
+  virtual void Resume() override {}
+  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override
   {
     return nullptr;
   }
-  virtual bool CanClone() MOZ_OVERRIDE { return false; }
+  virtual bool CanClone() override { return false; }
   virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder)
-    MOZ_OVERRIDE
+    override
   {
     return nullptr;
   }
-  virtual void SetReadMode(MediaCacheStream::ReadMode aMode) MOZ_OVERRIDE {}
-  virtual void SetPlaybackRate(uint32_t aBytesPerSecond) MOZ_OVERRIDE {}
+  virtual void SetReadMode(MediaCacheStream::ReadMode aMode) override {}
+  virtual void SetPlaybackRate(uint32_t aBytesPerSecond) override {}
   virtual nsresult Read(char* aBuffer, uint32_t aCount, uint32_t* aBytes)
-    MOZ_OVERRIDE
+    override
   {
     return NS_OK;
   }
   virtual nsresult ReadAt(int64_t aOffset, char* aBuffer, uint32_t aCount,
-                          uint32_t* aBytes) MOZ_OVERRIDE;
-  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) MOZ_OVERRIDE
+                          uint32_t* aBytes) override;
+  virtual nsresult Seek(int32_t aWhence, int64_t aOffset) override
   {
     return NS_OK;
   }
-  virtual int64_t Tell() MOZ_OVERRIDE { return 0; }
-  virtual void Pin() MOZ_OVERRIDE {}
-  virtual void Unpin() MOZ_OVERRIDE {}
-  virtual double GetDownloadRate(bool* aIsReliable) MOZ_OVERRIDE { return 0; }
-  virtual int64_t GetLength() MOZ_OVERRIDE;
-  virtual int64_t GetNextCachedData(int64_t aOffset) MOZ_OVERRIDE;
-  virtual int64_t GetCachedDataEnd(int64_t aOffset) MOZ_OVERRIDE;
-  virtual bool IsDataCachedToEndOfResource(int64_t aOffset) MOZ_OVERRIDE
+  virtual int64_t Tell() override { return 0; }
+  virtual void Pin() override {}
+  virtual void Unpin() override {}
+  virtual double GetDownloadRate(bool* aIsReliable) override { return 0; }
+  virtual int64_t GetLength() override;
+  virtual int64_t GetNextCachedData(int64_t aOffset) override;
+  virtual int64_t GetCachedDataEnd(int64_t aOffset) override;
+  virtual bool IsDataCachedToEndOfResource(int64_t aOffset) override
   {
     return false;
   }
-  virtual bool IsSuspendedByCache() MOZ_OVERRIDE { return false; }
-  virtual bool IsSuspended() MOZ_OVERRIDE { return false; }
+  virtual bool IsSuspendedByCache() override { return false; }
+  virtual bool IsSuspended() override { return false; }
   virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset,
-                                 uint32_t aCount) MOZ_OVERRIDE
+                                 uint32_t aCount) override
   {
     uint32_t bytesRead = 0;
     nsresult rv = ReadAt(aOffset, aBuffer, aCount, &bytesRead);
@@ -65,11 +65,11 @@ public:
     return bytesRead == aCount ? NS_OK : NS_ERROR_FAILURE;
   }
 
-  virtual bool IsTransportSeekable() MOZ_OVERRIDE { return true; }
-  virtual nsresult Open(nsIStreamListener** aStreamListener) MOZ_OVERRIDE;
+  virtual bool IsTransportSeekable() override { return true; }
+  virtual nsresult Open(nsIStreamListener** aStreamListener) override;
   virtual nsresult GetCachedRanges(nsTArray<MediaByteRange>& aRanges)
-    MOZ_OVERRIDE;
-  virtual const nsCString& GetContentType() const MOZ_OVERRIDE
+    override;
+  virtual const nsCString& GetContentType() const override
   {
     return mContentType;
   }

@@ -143,7 +143,7 @@ public:
 class ImageResource : public Image
 {
 public:
-  already_AddRefed<ProgressTracker> GetProgressTracker() MOZ_OVERRIDE
+  already_AddRefed<ProgressTracker> GetProgressTracker() override
   {
     nsRefPtr<ProgressTracker> progressTracker = mProgressTracker;
     MOZ_ASSERT(progressTracker);
@@ -151,38 +151,38 @@ public:
   }
 
   void SetProgressTracker(
-                       ProgressTracker* aProgressTracker) MOZ_OVERRIDE MOZ_FINAL
+                       ProgressTracker* aProgressTracker) override final
   {
     MOZ_ASSERT(aProgressTracker);
     MOZ_ASSERT(!mProgressTracker);
     mProgressTracker = aProgressTracker;
   }
 
-  virtual void IncrementAnimationConsumers() MOZ_OVERRIDE;
-  virtual void DecrementAnimationConsumers() MOZ_OVERRIDE;
+  virtual void IncrementAnimationConsumers() override;
+  virtual void DecrementAnimationConsumers() override;
 #ifdef DEBUG
-  virtual uint32_t GetAnimationConsumers() MOZ_OVERRIDE
+  virtual uint32_t GetAnimationConsumers() override
   {
     return mAnimationConsumers;
   }
 #endif
 
-  virtual void OnSurfaceDiscarded() MOZ_OVERRIDE { }
+  virtual void OnSurfaceDiscarded() override { }
 
-  virtual void SetInnerWindowID(uint64_t aInnerWindowId) MOZ_OVERRIDE
+  virtual void SetInnerWindowID(uint64_t aInnerWindowId) override
   {
     mInnerWindowId = aInnerWindowId;
   }
-  virtual uint64_t InnerWindowID() const MOZ_OVERRIDE { return mInnerWindowId; }
+  virtual uint64_t InnerWindowID() const override { return mInnerWindowId; }
 
-  virtual bool HasError() MOZ_OVERRIDE    { return mError; }
-  virtual void SetHasError() MOZ_OVERRIDE { mError = true; }
+  virtual bool HasError() override    { return mError; }
+  virtual void SetHasError() override { mError = true; }
 
   /*
    * Returns a non-AddRefed pointer to the URI associated with this image.
    * Illegal to use off-main-thread.
    */
-  virtual ImageURL* GetURI() MOZ_OVERRIDE { return mURI.get(); }
+  virtual ImageURL* GetURI() override { return mURI.get(); }
 
 protected:
   explicit ImageResource(ImageURL* aURI);

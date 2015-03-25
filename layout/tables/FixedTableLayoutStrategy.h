@@ -24,11 +24,11 @@ public:
     virtual ~FixedTableLayoutStrategy();
 
     // nsITableLayoutStrategy implementation
-    virtual nscoord GetMinISize(nsRenderingContext* aRenderingContext) MOZ_OVERRIDE;
+    virtual nscoord GetMinISize(nsRenderingContext* aRenderingContext) override;
     virtual nscoord GetPrefISize(nsRenderingContext* aRenderingContext,
-                                 bool aComputingSize) MOZ_OVERRIDE;
-    virtual void MarkIntrinsicISizesDirty() MOZ_OVERRIDE;
-    virtual void ComputeColumnWidths(const nsHTMLReflowState& aReflowState) MOZ_OVERRIDE;
+                                 bool aComputingSize) override;
+    virtual void MarkIntrinsicISizesDirty() override;
+    virtual void ComputeColumnWidths(const nsHTMLReflowState& aReflowState) override;
 
 private:
     nsTableFrame *mTableFrame;

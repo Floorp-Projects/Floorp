@@ -49,7 +49,7 @@
 
 namespace mozilla {
 
-class TransportFlow MOZ_FINAL : public nsISupports,
+class TransportFlow final : public nsISupports,
                                 public sigslot::has_slots<> {
  public:
   TransportFlow()

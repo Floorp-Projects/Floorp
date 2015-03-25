@@ -53,10 +53,10 @@ public:
   /**
    * When the IPC channel down or something bad make this Manager die, clear all the buffer reference!
    */
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool RecvAllocateGrallocBuffer(const IntSize&, const uint32_t&, const uint32_t&, mozilla::layers::MaybeMagicGrallocBufferHandle*) MOZ_OVERRIDE;
-  virtual bool RecvDropGrallocBuffer(const mozilla::layers::MaybeMagicGrallocBufferHandle& handle) MOZ_OVERRIDE;
+  virtual bool RecvAllocateGrallocBuffer(const IntSize&, const uint32_t&, const uint32_t&, mozilla::layers::MaybeMagicGrallocBufferHandle*) override;
+  virtual bool RecvDropGrallocBuffer(const mozilla::layers::MaybeMagicGrallocBufferHandle& handle) override;
 
   /**
    * Break the buffer's sharing state, decrease buffer reference for both side
@@ -67,7 +67,7 @@ public:
   IToplevelProtocol*
   CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
                 base::ProcessHandle aPeerProcess,
-                mozilla::ipc::ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
+                mozilla::ipc::ProtocolCloneContext* aCtx) override;
   MessageLoop* GetMessageLoop();
 
 protected:

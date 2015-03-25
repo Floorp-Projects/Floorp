@@ -22,7 +22,7 @@ class DOMLocalStorageManager;
 // is responsible to send all requests to the parent process
 // and expects asynchronous answers. Those are then transparently
 // forwarded back to consumers on the child process.
-class DOMStorageDBChild MOZ_FINAL : public DOMStorageDBBridge
+class DOMStorageDBChild final : public DOMStorageDBBridge
                                   , public PStorageChild
 {
   virtual ~DOMStorageDBChild();
@@ -106,7 +106,7 @@ private:
 // DOMStorageCache consumer.
 // Also responsible for forwardning all chrome operation notifications
 // such as cookie cleaning etc to the child process.
-class DOMStorageDBParent MOZ_FINAL : public PStorageParent
+class DOMStorageDBParent final : public PStorageParent
                                    , public DOMStorageObserverSink
 {
   virtual ~DOMStorageDBParent();
@@ -116,7 +116,7 @@ public:
 
   virtual mozilla::ipc::IProtocol*
   CloneProtocol(Channel* aChannel,
-                mozilla::ipc::ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
+                mozilla::ipc::ProtocolCloneContext* aCtx) override;
 
   NS_IMETHOD_(MozExternalRefCountType) AddRef(void);
   NS_IMETHOD_(MozExternalRefCountType) Release(void);
@@ -173,20 +173,20 @@ public:
 
 private:
   // IPC
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
-  bool RecvAsyncPreload(const nsCString& aScope, const bool& aPriority) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  bool RecvAsyncPreload(const nsCString& aScope, const bool& aPriority) override;
   bool RecvPreload(const nsCString& aScope, const uint32_t& aAlreadyLoadedCount,
                    InfallibleTArray<nsString>* aKeys, InfallibleTArray<nsString>* aValues,
-                   nsresult* aRv) MOZ_OVERRIDE;
-  bool RecvAsyncGetUsage(const nsCString& aScope) MOZ_OVERRIDE;
-  bool RecvAsyncAddItem(const nsCString& aScope, const nsString& aKey, const nsString& aValue) MOZ_OVERRIDE;
-  bool RecvAsyncUpdateItem(const nsCString& aScope, const nsString& aKey, const nsString& aValue) MOZ_OVERRIDE;
-  bool RecvAsyncRemoveItem(const nsCString& aScope, const nsString& aKey) MOZ_OVERRIDE;
-  bool RecvAsyncClear(const nsCString& aScope) MOZ_OVERRIDE;
-  bool RecvAsyncFlush() MOZ_OVERRIDE;
+                   nsresult* aRv) override;
+  bool RecvAsyncGetUsage(const nsCString& aScope) override;
+  bool RecvAsyncAddItem(const nsCString& aScope, const nsString& aKey, const nsString& aValue) override;
+  bool RecvAsyncUpdateItem(const nsCString& aScope, const nsString& aKey, const nsString& aValue) override;
+  bool RecvAsyncRemoveItem(const nsCString& aScope, const nsString& aKey) override;
+  bool RecvAsyncClear(const nsCString& aScope) override;
+  bool RecvAsyncFlush() override;
 
   // DOMStorageObserverSink
-  virtual nsresult Observe(const char* aTopic, const nsACString& aScopePrefix) MOZ_OVERRIDE;
+  virtual nsresult Observe(const char* aTopic, const nsACString& aScopePrefix) override;
 
 private:
   CacheParentBridge* NewCache(const nsACString& aScope);

@@ -207,7 +207,7 @@ public:
 // 2. Command list.
 // 3. Error callback function.
 // 4. Index of current execution command.
-class CommandChain MOZ_FINAL
+class CommandChain final
 {
 public:
   CommandChain(const NetworkParams& aParams,
@@ -267,7 +267,7 @@ private:
   bool mIsPending;
 };
 
-class NetworkUtils MOZ_FINAL
+class NetworkUtils final
 {
 public:
   NetworkUtils(MessageCallback aCallback);

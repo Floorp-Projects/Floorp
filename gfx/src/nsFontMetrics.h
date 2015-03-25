@@ -43,7 +43,7 @@ struct nsBoundingMetrics;
  * implementations are expected to select non-Western fonts that "fit"
  * reasonably well with the Western font that is loaded at Init time.
  */
-class nsFontMetrics MOZ_FINAL
+class nsFontMetrics final
 {
 public:
     nsFontMetrics();

@@ -121,20 +121,20 @@ PrintCycle(const BlockingResourceBase::DDT::ResourceAcquisitionArray* aCycle,
 }
 
 #ifndef MOZ_CALLSTACK_DISABLED
-struct CodeAddressServiceLock MOZ_FINAL
+struct CodeAddressServiceLock final
 {
   static void Unlock() { }
   static void Lock() { }
   static bool IsLocked() { return true; }
 };
 
-struct CodeAddressServiceStringAlloc MOZ_FINAL
+struct CodeAddressServiceStringAlloc final
 {
   static char* copy(const char* aString) { return ::strdup(aString); }
   static void free(char* aString) { ::free(aString); }
 };
 
-class CodeAddressServiceStringTable MOZ_FINAL
+class CodeAddressServiceStringTable final
 {
 public:
   CodeAddressServiceStringTable() : mSet(32) {}

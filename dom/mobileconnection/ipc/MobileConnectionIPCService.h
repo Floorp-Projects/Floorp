@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 namespace mobileconnection {
 
-class MobileConnectionIPCService MOZ_FINAL : public nsIMobileConnectionService
+class MobileConnectionIPCService final : public nsIMobileConnectionService
 {
 public:
   NS_DECL_ISUPPORTS
@@ -22,7 +22,7 @@ public:
   MobileConnectionIPCService();
 
 private:
-  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
+  // final suppresses -Werror,-Wdelete-non-virtual-dtor
   ~MobileConnectionIPCService();
 
   nsTArray<nsRefPtr<MobileConnectionChild>> mItems;

@@ -189,7 +189,7 @@ public:
     NS_ASSERTION(aPopup, "null popup supplied to nsXULPopupShowingEvent constructor");
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE;
+  NS_IMETHOD Run() override;
 
 private:
   nsCOMPtr<nsIContent> mPopup;
@@ -218,7 +218,7 @@ public:
     // aNextPopup and aLastPopup may be null
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE;
+  NS_IMETHOD Run() override;
 
 private:
   nsCOMPtr<nsIContent> mPopup;
@@ -254,7 +254,7 @@ public:
     NS_ASSERTION(aMenu, "null menu supplied to nsXULMenuCommandEvent constructor");
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE;
+  NS_IMETHOD Run() override;
 
   void SetCloseMenuMode(CloseMenuMode aCloseMenuMode) { mCloseMenuMode = aCloseMenuMode; }
 
@@ -270,7 +270,7 @@ private:
   CloseMenuMode mCloseMenuMode;
 };
 
-class nsXULPopupManager MOZ_FINAL : public nsIDOMEventListener,
+class nsXULPopupManager final : public nsIDOMEventListener,
                                     public nsIRollupListener,
                                     public nsITimerCallback,
                                     public nsIObserver
@@ -289,13 +289,13 @@ public:
 
   // nsIRollupListener
   virtual bool Rollup(uint32_t aCount, bool aFlush,
-                      const nsIntPoint* pos, nsIContent** aLastRolledUp) MOZ_OVERRIDE;
-  virtual bool ShouldRollupOnMouseWheelEvent() MOZ_OVERRIDE;
-  virtual bool ShouldConsumeOnMouseWheelEvent() MOZ_OVERRIDE;
-  virtual bool ShouldRollupOnMouseActivate() MOZ_OVERRIDE;
-  virtual uint32_t GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain) MOZ_OVERRIDE;
-  virtual void NotifyGeometryChange() MOZ_OVERRIDE {}
-  virtual nsIWidget* GetRollupWidget() MOZ_OVERRIDE;
+                      const nsIntPoint* pos, nsIContent** aLastRolledUp) override;
+  virtual bool ShouldRollupOnMouseWheelEvent() override;
+  virtual bool ShouldConsumeOnMouseWheelEvent() override;
+  virtual bool ShouldRollupOnMouseActivate() override;
+  virtual uint32_t GetSubmenuWidgetChain(nsTArray<nsIWidget*> *aWidgetChain) override;
+  virtual void NotifyGeometryChange() override {}
+  virtual nsIWidget* GetRollupWidget() override;
 
   static nsXULPopupManager* sInstance;
 

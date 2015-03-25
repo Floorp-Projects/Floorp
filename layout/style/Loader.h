@@ -145,7 +145,7 @@ enum StyleSheetState {
   eSheetComplete
 };
 
-class Loader MOZ_FINAL {
+class Loader final {
   typedef mozilla::net::ReferrerPolicy ReferrerPolicy;
 
 public:

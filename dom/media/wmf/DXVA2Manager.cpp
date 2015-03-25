@@ -24,14 +24,14 @@ public:
 
   HRESULT Init();
 
-  IUnknown* GetDXVADeviceManager() MOZ_OVERRIDE;
+  IUnknown* GetDXVADeviceManager() override;
 
   // Copies a region (aRegion) of the video frame stored in aVideoSample
   // into an image which is returned by aOutImage.
   HRESULT CopyToImage(IMFSample* aVideoSample,
                       const nsIntRect& aRegion,
                       ImageContainer* aContainer,
-                      Image** aOutImage) MOZ_OVERRIDE;
+                      Image** aOutImage) override;
 
 private:
   nsRefPtr<IDirect3D9Ex> mD3D9;

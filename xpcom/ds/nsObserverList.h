@@ -79,7 +79,7 @@ private:
   nsTArray<ObserverRef> mObservers;
 };
 
-class nsObserverEnumerator MOZ_FINAL : public nsISimpleEnumerator
+class nsObserverEnumerator final : public nsISimpleEnumerator
 {
 public:
   NS_DECL_ISUPPORTS

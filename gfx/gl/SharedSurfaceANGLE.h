@@ -60,20 +60,20 @@ protected:
 public:
     virtual ~SharedSurface_ANGLEShareHandle();
 
-    virtual void LockProdImpl() MOZ_OVERRIDE;
-    virtual void UnlockProdImpl() MOZ_OVERRIDE;
+    virtual void LockProdImpl() override;
+    virtual void UnlockProdImpl() override;
 
-    virtual void Fence() MOZ_OVERRIDE;
-    virtual void ProducerAcquireImpl() MOZ_OVERRIDE;
-    virtual void ProducerReleaseImpl() MOZ_OVERRIDE;
-    virtual void ConsumerAcquireImpl() MOZ_OVERRIDE;
-    virtual void ConsumerReleaseImpl() MOZ_OVERRIDE;
-    virtual bool WaitSync() MOZ_OVERRIDE;
-    virtual bool PollSync() MOZ_OVERRIDE;
+    virtual void Fence() override;
+    virtual void ProducerAcquireImpl() override;
+    virtual void ProducerReleaseImpl() override;
+    virtual void ConsumerAcquireImpl() override;
+    virtual void ConsumerReleaseImpl() override;
+    virtual bool WaitSync() override;
+    virtual bool PollSync() override;
 
-    virtual void Fence_ContentThread_Impl() MOZ_OVERRIDE;
-    virtual bool WaitSync_ContentThread_Impl() MOZ_OVERRIDE;
-    virtual bool PollSync_ContentThread_Impl() MOZ_OVERRIDE;
+    virtual void Fence_ContentThread_Impl() override;
+    virtual bool WaitSync_ContentThread_Impl() override;
+    virtual bool PollSync_ContentThread_Impl() override;
 
     // Implementation-specific functions below:
     HANDLE GetShareHandle() {
@@ -106,7 +106,7 @@ protected:
                                     const SurfaceCaps& caps,
                                     bool* const out_success);
 
-    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) MOZ_OVERRIDE {
+    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {
         bool hasAlpha = mReadCaps.alpha;
         return SharedSurface_ANGLEShareHandle::Create(mProdGL,
                                                       mContext, mConfig,

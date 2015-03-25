@@ -16,7 +16,7 @@ namespace gl {
 class GLContextWGL : public GLContext
 {
 public:
-    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextWGL, MOZ_OVERRIDE)
+    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextWGL, override)
     // From Window: (possibly for offscreen!)
     GLContextWGL(const SurfaceCaps& caps,
                  GLContext* sharedContext,
@@ -36,28 +36,28 @@ public:
 
     ~GLContextWGL();
 
-    virtual GLContextType GetContextType() const MOZ_OVERRIDE { return GLContextType::WGL; }
+    virtual GLContextType GetContextType() const override { return GLContextType::WGL; }
 
     static GLContextWGL* Cast(GLContext* gl) {
         MOZ_ASSERT(gl->GetContextType() == GLContextType::WGL);
         return static_cast<GLContextWGL*>(gl);
     }
 
-    bool Init() MOZ_OVERRIDE;
+    bool Init() override;
 
-    virtual bool MakeCurrentImpl(bool aForce) MOZ_OVERRIDE;
+    virtual bool MakeCurrentImpl(bool aForce) override;
 
-    virtual bool IsCurrent() MOZ_OVERRIDE;
+    virtual bool IsCurrent() override;
 
     void SetIsDoubleBuffered(bool aIsDB);
 
-    virtual bool IsDoubleBuffered() const MOZ_OVERRIDE;
+    virtual bool IsDoubleBuffered() const override;
 
-    virtual bool SupportsRobustness() const MOZ_OVERRIDE;
+    virtual bool SupportsRobustness() const override;
 
-    virtual bool SwapBuffers() MOZ_OVERRIDE;
+    virtual bool SwapBuffers() override;
 
-    virtual bool SetupLookupFunction() MOZ_OVERRIDE;
+    virtual bool SetupLookupFunction() override;
 
     HGLRC Context() { return mContext; }
 

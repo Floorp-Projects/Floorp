@@ -16,7 +16,7 @@ namespace mozilla {
 class InternalMutationEvent : public WidgetEvent
 {
 public:
-  virtual InternalMutationEvent* AsMutationEvent() MOZ_OVERRIDE { return this; }
+  virtual InternalMutationEvent* AsMutationEvent() override { return this; }
 
   InternalMutationEvent(bool aIsTrusted, uint32_t aMessage)
     : WidgetEvent(aIsTrusted, aMessage, eMutationEventClass)
@@ -25,7 +25,7 @@ public:
     mFlags.mCancelable = false;
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eMutationEventClass,
                "Duplicate() must be overridden by sub class");

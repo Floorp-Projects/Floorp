@@ -22,7 +22,7 @@ public:
   {}
   explicit Sinf(Box& aBox);
 
-  virtual bool IsValid() MOZ_OVERRIDE
+  virtual bool IsValid() override
   {
     return !!mDefaultIVSize && !!mDefaultEncryptionType;
   }

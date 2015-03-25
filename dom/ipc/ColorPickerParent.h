@@ -22,10 +22,10 @@ class ColorPickerParent : public PColorPickerParent
   , mInitialColor(aInitialColor)
   {}
 
-  virtual bool RecvOpen() MOZ_OVERRIDE;
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual bool RecvOpen() override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  class ColorPickerShownCallback MOZ_FINAL
+  class ColorPickerShownCallback final
     : public nsIColorPickerShownCallback
   {
   public:

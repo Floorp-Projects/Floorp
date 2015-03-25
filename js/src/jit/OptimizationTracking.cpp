@@ -1173,7 +1173,7 @@ class ForEachTypeInfoAdapter : public IonTrackedOptimizationsTypeInfo::ForEachOp
       : op_(op)
     { }
 
-    void readType(const IonTrackedTypeWithAddendum &tracked) MOZ_OVERRIDE {
+    void readType(const IonTrackedTypeWithAddendum &tracked) override {
         TypeSet::Type ty = tracked.type;
 
         if (ty.isPrimitive() || ty.isUnknown() || ty.isAnyObject()) {
@@ -1207,7 +1207,7 @@ class ForEachTypeInfoAdapter : public IonTrackedOptimizationsTypeInfo::ForEachOp
         op_.readType("prototype", buf, nullptr, 0);
     }
 
-    void operator()(JS::TrackedTypeSite site, MIRType mirType) MOZ_OVERRIDE {
+    void operator()(JS::TrackedTypeSite site, MIRType mirType) override {
         op_(site, StringFromMIRType(mirType));
     }
 };

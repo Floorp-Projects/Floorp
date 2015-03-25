@@ -466,7 +466,7 @@ GetJSObjectFromArray(JSContext* aCtx,
   return NS_OK;
 }
 
-class VisitedQuery MOZ_FINAL: public AsyncStatementCallback,
+class VisitedQuery final: public AsyncStatementCallback,
                               public mozIStorageCompletionCallback
 {
 public:
@@ -518,7 +518,7 @@ public:
 
   // Note: the return value matters here.  We call into this method, it's not
   // just xpcom boilerplate.
-  NS_IMETHOD Complete(nsresult aResult, nsISupports* aStatement) MOZ_OVERRIDE
+  NS_IMETHOD Complete(nsresult aResult, nsISupports* aStatement) override
   {
     NS_ENSURE_SUCCESS(aResult, aResult);
     nsCOMPtr<mozIStorageAsyncStatement> stmt = do_QueryInterface(aStatement);
@@ -531,7 +531,7 @@ public:
     return stmt->ExecuteAsync(this, getter_AddRefs(handle));
   }
 
-  NS_IMETHOD HandleResult(mozIStorageResultSet* aResults) MOZ_OVERRIDE
+  NS_IMETHOD HandleResult(mozIStorageResultSet* aResults) override
   {
     // If this method is called, we've gotten results, which means we have a
     // visit.
@@ -539,14 +539,14 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleError(mozIStorageError* aError) MOZ_OVERRIDE
+  NS_IMETHOD HandleError(mozIStorageError* aError) override
   {
     // mIsVisited is already set to false, and that's the assumption we will
     // make if an error occurred.
     return NS_OK;
   }
 
-  NS_IMETHOD HandleCompletion(uint16_t aReason) MOZ_OVERRIDE
+  NS_IMETHOD HandleCompletion(uint16_t aReason) override
   {
     if (aReason != mozIStorageStatementCallback::REASON_FINISHED) {
       return NS_OK;
@@ -857,7 +857,7 @@ CanAddURI(nsIURI* aURI,
 /**
  * Adds a visit to the database.
  */
-class InsertVisitedURIs MOZ_FINAL: public nsRunnable
+class InsertVisitedURIs final: public nsRunnable
 {
 public:
   /**
@@ -1306,7 +1306,7 @@ private:
   nsRefPtr<History> mHistory;
 };
 
-class GetPlaceInfo MOZ_FINAL : public nsRunnable {
+class GetPlaceInfo final : public nsRunnable {
 public:
   /**
    * Get the place info for a given place (by GUID or URI)  asynchronously.
@@ -1475,7 +1475,7 @@ private:
 /**
  * Adds download-specific annotations to a download page.
  */
-class SetDownloadAnnotations MOZ_FINAL : public mozIVisitInfoCallback
+class SetDownloadAnnotations final : public mozIVisitInfoCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -1488,13 +1488,13 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  NS_IMETHOD HandleError(nsresult aResultCode, mozIPlaceInfo *aPlaceInfo) MOZ_OVERRIDE
+  NS_IMETHOD HandleError(nsresult aResultCode, mozIPlaceInfo *aPlaceInfo) override
   {
     // Just don't add the annotations in case the visit isn't added.
     return NS_OK;
   }
 
-  NS_IMETHOD HandleResult(mozIPlaceInfo *aPlaceInfo) MOZ_OVERRIDE
+  NS_IMETHOD HandleResult(mozIPlaceInfo *aPlaceInfo) override
   {
     // Exit silently if the download destination is not a local file.
     nsCOMPtr<nsIFileURL> destinationFileURL = do_QueryInterface(mDestination);
@@ -1556,7 +1556,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleCompletion() MOZ_OVERRIDE
+  NS_IMETHOD HandleCompletion() override
   {
     return NS_OK;
   }
@@ -2037,7 +2037,7 @@ History::NotifyVisited(nsIURI* aURI)
   return NS_OK;
 }
 
-class ConcurrentStatementsHolder MOZ_FINAL : public mozIStorageCompletionCallback {
+class ConcurrentStatementsHolder final : public mozIStorageCompletionCallback {
 public:
   NS_DECL_ISUPPORTS
 
@@ -2047,7 +2047,7 @@ public:
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
 
-  NS_IMETHOD Complete(nsresult aStatus, nsISupports* aConnection) MOZ_OVERRIDE {
+  NS_IMETHOD Complete(nsresult aStatus, nsISupports* aConnection) override {
     if (NS_FAILED(aStatus))
       return NS_OK;
     mReadOnlyDBConn = do_QueryInterface(aConnection);

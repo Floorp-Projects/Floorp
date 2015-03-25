@@ -27,7 +27,7 @@
 namespace mozilla {
 namespace net {
 
-class nsPreloadedStream MOZ_FINAL : public nsIAsyncInputStream
+class nsPreloadedStream final : public nsIAsyncInputStream
 {
  public:
     NS_DECL_THREADSAFE_ISUPPORTS

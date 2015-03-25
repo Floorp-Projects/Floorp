@@ -32,7 +32,7 @@ public:
   {
   }
 
-  virtual bool NotifyVsync(TimeStamp aVsyncTimeStamp) MOZ_OVERRIDE {
+  virtual bool NotifyVsync(TimeStamp aVsyncTimeStamp) override {
     MonitorAutoLock lock(mVsyncMonitor);
     mDidGetVsyncNotification = true;
     mVsyncMonitor.Notify();

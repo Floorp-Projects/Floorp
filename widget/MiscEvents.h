@@ -22,7 +22,7 @@ namespace mozilla {
 class WidgetContentCommandEvent : public WidgetGUIEvent
 {
 public:
-  virtual WidgetContentCommandEvent* AsContentCommandEvent() MOZ_OVERRIDE
+  virtual WidgetContentCommandEvent* AsContentCommandEvent() override
   {
     return this;
   }
@@ -37,7 +37,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     // This event isn't an internal event of any DOM event.
     NS_ASSERTION(!IsAllowedToDispatchDOMEvent(),
@@ -99,7 +99,7 @@ public:
 class WidgetCommandEvent : public WidgetGUIEvent
 {
 public:
-  virtual WidgetCommandEvent* AsCommandEvent() MOZ_OVERRIDE { return this; }
+  virtual WidgetCommandEvent* AsCommandEvent() override { return this; }
 
   WidgetCommandEvent(bool aIsTrusted, nsIAtom* aEventType,
                      nsIAtom* aCommand, nsIWidget* aWidget)
@@ -110,7 +110,7 @@ public:
     userType = aEventType;
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eCommandEventClass,
                "Duplicate() must be overridden by sub class");
@@ -143,7 +143,7 @@ public:
 class WidgetPluginEvent : public WidgetGUIEvent
 {
 public:
-  virtual WidgetPluginEvent* AsPluginEvent() MOZ_OVERRIDE { return this; }
+  virtual WidgetPluginEvent* AsPluginEvent() override { return this; }
 
   WidgetPluginEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
     : WidgetGUIEvent(aIsTrusted, aMessage, aWidget, ePluginEventClass)
@@ -151,7 +151,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     // NOTE: PluginEvent has to be dispatched to nsIFrame::HandleEvent().
     //       So, this event needs to support Duplicate().

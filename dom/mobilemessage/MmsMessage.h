@@ -24,14 +24,14 @@ class MmsMessageData;
 
 class ContentParent;
 
-class MmsMessage MOZ_FINAL : public nsIDOMMozMmsMessage
+class MmsMessage final : public nsIDOMMozMmsMessage
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOMMOZMMSMESSAGE
 
   // If this is changed, change the WebIDL dictionary as well.
-  struct Attachment MOZ_FINAL
+  struct Attachment final
   {
     nsRefPtr<File> content;
     nsString id;

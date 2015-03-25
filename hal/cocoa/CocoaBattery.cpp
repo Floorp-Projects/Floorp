@@ -111,7 +111,7 @@ bool MacPowerInformationService::sShuttingDown = false;
 MacPowerInformationService* MacPowerInformationService::sInstance = nullptr;
 
 namespace {
-struct SingletonDestroyer MOZ_FINAL : public nsIObserver
+struct SingletonDestroyer final : public nsIObserver
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER

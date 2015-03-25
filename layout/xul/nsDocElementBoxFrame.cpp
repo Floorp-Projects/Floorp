@@ -30,7 +30,7 @@ class nsDocElementBoxFrame : public nsBoxFrame,
                              public nsIAnonymousContentCreator
 {
 public:
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
   friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
                                   nsStyleContext* aContext);
@@ -42,11 +42,11 @@ public:
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) MOZ_OVERRIDE;
+  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
   virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                        uint32_t aFilter) MOZ_OVERRIDE;
+                                        uint32_t aFilter) override;
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
+  virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     // Override nsBoxFrame.
     if (aFlags & (nsIFrame::eReplacedContainsBlock | nsIFrame::eReplaced))
@@ -55,7 +55,7 @@ public:
   }
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 private:
   nsCOMPtr<Element> mPopupgroupContent;

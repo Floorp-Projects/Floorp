@@ -25,7 +25,7 @@
 { 0xab1da296, 0x6125, 0x40ba, \
 { 0x96, 0xd0, 0x47, 0xa8, 0x28, 0x2a, 0xe3, 0xdb} }
 
-class nsSAXXMLReader MOZ_FINAL : public nsISAXXMLReader,
+class nsSAXXMLReader final : public nsISAXXMLReader,
                                  public nsIExtendedExpatSink,
                                  public nsIContentSink
 {
@@ -41,35 +41,35 @@ public:
   nsSAXXMLReader();
 
   //nsIContentSink
-  NS_IMETHOD WillParse() MOZ_OVERRIDE
+  NS_IMETHOD WillParse() override
   {
     return NS_OK;
   }
 
-  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) MOZ_OVERRIDE;
-  NS_IMETHOD DidBuildModel(bool aTerminated) MOZ_OVERRIDE;
-  NS_IMETHOD SetParser(nsParserBase* aParser) MOZ_OVERRIDE;
+  NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) override;
+  NS_IMETHOD DidBuildModel(bool aTerminated) override;
+  NS_IMETHOD SetParser(nsParserBase* aParser) override;
   
-  NS_IMETHOD WillInterrupt() MOZ_OVERRIDE
+  NS_IMETHOD WillInterrupt() override
   {
     return NS_OK;
   }
 
-  NS_IMETHOD WillResume() MOZ_OVERRIDE
+  NS_IMETHOD WillResume() override
   {
     return NS_OK;
   }
   
-  virtual void FlushPendingNotifications(mozFlushType aType) MOZ_OVERRIDE
+  virtual void FlushPendingNotifications(mozFlushType aType) override
   {
   }
   
-  NS_IMETHOD SetDocumentCharset(nsACString& aCharset) MOZ_OVERRIDE
+  NS_IMETHOD SetDocumentCharset(nsACString& aCharset) override
   {
     return NS_OK;
   }
   
-  virtual nsISupports *GetTarget() MOZ_OVERRIDE
+  virtual nsISupports *GetTarget() override
   {
     return nullptr;
   }

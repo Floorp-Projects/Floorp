@@ -18,9 +18,9 @@ public:
   VorbisTrackEncoder();
   virtual ~VorbisTrackEncoder();
 
-  already_AddRefed<TrackMetadataBase> GetMetadata() MOZ_FINAL MOZ_OVERRIDE;
+  already_AddRefed<TrackMetadataBase> GetMetadata() final override;
 
-  nsresult GetEncodedTrack(EncodedFrameContainer& aData) MOZ_FINAL MOZ_OVERRIDE;
+  nsresult GetEncodedTrack(EncodedFrameContainer& aData) final override;
 
 protected:
   /**
@@ -28,11 +28,11 @@ protected:
    * We use 1024 samples for the write buffer; libvorbis will construct packets
    * with the appropriate duration for the encoding mode internally.
    */
-  int GetPacketDuration() MOZ_FINAL MOZ_OVERRIDE {
+  int GetPacketDuration() final override {
     return 1024;
   }
 
-  nsresult Init(int aChannels, int aSamplingRate) MOZ_FINAL MOZ_OVERRIDE;
+  nsresult Init(int aChannels, int aSamplingRate) final override;
 
 private:
   // Write Xiph-style lacing to aOutput.

@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace net {
 
-class CallObserveActivity MOZ_FINAL : public nsIRunnable
+class CallObserveActivity final : public nsIRunnable
 {
   ~CallObserveActivity()
   {
@@ -44,7 +44,7 @@ public:
     , mExtraStringData(aExtraStringData)
   {
   }
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
     nsCOMPtr<nsIURI> uri;

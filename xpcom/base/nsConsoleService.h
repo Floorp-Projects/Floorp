@@ -19,7 +19,7 @@
 
 #include "nsIConsoleService.h"
 
-class nsConsoleService MOZ_FINAL : public nsIConsoleService
+class nsConsoleService final : public nsIConsoleService
 {
 public:
   nsConsoleService();

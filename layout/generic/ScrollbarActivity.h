@@ -55,7 +55,7 @@ namespace layout {
  * ActivityStarted().
  */
 
-class ScrollbarActivity MOZ_FINAL : public nsIDOMEventListener,
+class ScrollbarActivity final : public nsIDOMEventListener,
                                     public nsARefreshObserver {
 public:
   explicit ScrollbarActivity(nsIScrollbarMediator* aScrollableFrame)
@@ -83,7 +83,7 @@ public:
   void ActivityStarted();
   void ActivityStopped();
 
-  virtual void WillRefresh(TimeStamp aTime) MOZ_OVERRIDE;
+  virtual void WillRefresh(TimeStamp aTime) override;
 
   static void FadeBeginTimerFired(nsITimer* aTimer, void* aSelf) {
     nsRefPtr<ScrollbarActivity> scrollbarActivity(

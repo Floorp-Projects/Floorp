@@ -143,7 +143,7 @@ FMRadioService::~FMRadioService()
   UnregisterFMRadioObserver(this);
 }
 
-class EnableRunnable MOZ_FINAL : public nsRunnable
+class EnableRunnable final : public nsRunnable
 {
 public:
   EnableRunnable(uint32_t aUpperLimit, uint32_t aLowerLimit, uint32_t aSpaceType, uint32_t aPreemphasis)
@@ -186,7 +186,7 @@ private:
  * Read the airplane-mode setting, if the airplane-mode is not enabled, we
  * enable the FM radio.
  */
-class ReadAirplaneModeSettingTask MOZ_FINAL : public nsISettingsServiceCallback
+class ReadAirplaneModeSettingTask final : public nsISettingsServiceCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -244,7 +244,7 @@ private:
 
 NS_IMPL_ISUPPORTS(ReadAirplaneModeSettingTask, nsISettingsServiceCallback)
 
-class DisableRunnable MOZ_FINAL : public nsRunnable
+class DisableRunnable final : public nsRunnable
 {
 public:
   DisableRunnable() { }
@@ -265,7 +265,7 @@ public:
   }
 };
 
-class SetFrequencyRunnable MOZ_FINAL : public nsRunnable
+class SetFrequencyRunnable final : public nsRunnable
 {
 public:
   SetFrequencyRunnable(int32_t aFrequency)
@@ -281,7 +281,7 @@ private:
   int32_t mFrequency;
 };
 
-class SeekRunnable MOZ_FINAL : public nsRunnable
+class SeekRunnable final : public nsRunnable
 {
 public:
   SeekRunnable(FMRadioSeekDirection aDirection) : mDirection(aDirection) { }
@@ -304,7 +304,7 @@ private:
   FMRadioSeekDirection mDirection;
 };
 
-class NotifyRunnable MOZ_FINAL : public nsRunnable
+class NotifyRunnable final : public nsRunnable
 {
 public:
   NotifyRunnable(FMRadioEventType aType) : mType(aType) { }

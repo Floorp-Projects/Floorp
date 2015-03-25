@@ -26,9 +26,9 @@ public:
   explicit nsGIFDecoder2(RasterImage* aImage);
   ~nsGIFDecoder2();
 
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) MOZ_OVERRIDE;
-  virtual void FinishInternal() MOZ_OVERRIDE;
-  virtual Telemetry::ID SpeedHistogram() MOZ_OVERRIDE;
+  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
+  virtual void FinishInternal() override;
+  virtual Telemetry::ID SpeedHistogram() override;
 
 private:
   // These functions will be called when the decoder has a decoded row,

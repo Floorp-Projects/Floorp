@@ -36,7 +36,7 @@ namespace mozilla {
 namespace dom {
 namespace indexedDB {
 
-class MOZ_STACK_CLASS LoggingIdString MOZ_FINAL
+class MOZ_STACK_CLASS LoggingIdString final
   : public nsAutoCString
 {
 public:
@@ -75,7 +75,7 @@ private:
   }
 };
 
-class MOZ_STACK_CLASS LoggingString MOZ_FINAL
+class MOZ_STACK_CLASS LoggingString final
   : public nsAutoCString
 {
   static const char kQuote = '\"';

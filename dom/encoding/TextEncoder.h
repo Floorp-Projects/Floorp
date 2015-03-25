@@ -16,7 +16,7 @@ class ErrorResult;
 
 namespace dom {
 
-class TextEncoder MOZ_FINAL : public NonRefcountedDOMObject
+class TextEncoder final : public NonRefcountedDOMObject
 {
 public:
   // The WebIDL constructor.

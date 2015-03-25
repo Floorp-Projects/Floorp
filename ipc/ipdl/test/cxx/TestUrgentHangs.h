@@ -26,11 +26,11 @@ public:
     bool RecvTest1_2();
     bool RecvTestInner();
 
-    bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE
+    bool ShouldContinueFromReplyTimeout() override
     {
       return false;
     }
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         passed("ok");
         QuitParent();
@@ -52,7 +52,7 @@ public:
     bool RecvTest4();
     bool RecvTest4_1();
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         QuitChild();
     }

@@ -92,7 +92,7 @@ public:
     bool WriteToStream(void *aPtr, uint32_t aSize);
 
     // nsIInputStreamCallback
-    NS_IMETHODIMP OnInputStreamReady(nsIAsyncInputStream *aStream) MOZ_OVERRIDE;
+    NS_IMETHODIMP OnInputStreamReady(nsIAsyncInputStream *aStream) override;
 
 private:
     virtual ~LayerScopeWebSocketHandler() { CloseConnection(); }
@@ -259,7 +259,7 @@ public:
 
     int64_t GetFrameStamp() const { return mFrameStamp; }
 
-    virtual bool Write() MOZ_OVERRIDE {
+    virtual bool Write() override {
         Packet packet;
         packet.set_type(mDataType);
 
@@ -302,7 +302,7 @@ public:
     intptr_t GetContextAddress() const { return mContextAddress; }
     uint32_t GetDataSize() const { return mDatasize; }
 
-    virtual bool Write() MOZ_OVERRIDE {
+    virtual bool Write() override {
         if (!WriteToStream(mPacket))
             return false;
         return true;
@@ -377,7 +377,7 @@ public:
     uint32_t GetColor() const { return mColor; }
     const nsIntSize& GetSize() const { return mSize; }
 
-    virtual bool Write() MOZ_OVERRIDE {
+    virtual bool Write() override {
         Packet packet;
         packet.set_type(mDataType);
 
@@ -405,7 +405,7 @@ public:
           mPacket(Move(aPacket))
     { }
 
-    virtual bool Write() MOZ_OVERRIDE {
+    virtual bool Write() override {
         mPacket->set_type(mDataType);
 
         if (!WriteToStream(*mPacket))
@@ -431,7 +431,7 @@ public:
           mComposedByHwc(false)
     { }
 
-    virtual bool Write() MOZ_OVERRIDE {
+    virtual bool Write() override {
         Packet packet;
         packet.set_type(mDataType);
 
@@ -461,7 +461,7 @@ public:
     /* nsIServerSocketListener */
 
     NS_IMETHODIMP OnSocketAccepted(nsIServerSocket *aServ,
-                                   nsISocketTransport *aTransport) MOZ_OVERRIDE
+                                   nsISocketTransport *aTransport) override
     {
         if (!WebSocketHelper::GetSocketManager())
             return NS_OK;
@@ -472,7 +472,7 @@ public:
     }
 
     NS_IMETHODIMP OnStopListening(nsIServerSocket *aServ,
-                                  nsresult aStatus) MOZ_OVERRIDE
+                                  nsresult aStatus) override
     {
         return NS_OK;
     }
@@ -508,7 +508,7 @@ public:
 
     /* nsIRunnable impl; send the data */
 
-    NS_IMETHODIMP Run() MOZ_OVERRIDE {
+    NS_IMETHODIMP Run() override {
         DebugGLData *d;
         nsresult rv = NS_OK;
 

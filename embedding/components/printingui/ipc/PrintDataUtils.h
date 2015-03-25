@@ -20,7 +20,7 @@
 namespace mozilla {
 namespace embedding {
 
-class MockWebBrowserPrint MOZ_FINAL : public nsIWebBrowserPrint
+class MockWebBrowserPrint final : public nsIWebBrowserPrint
 {
 public:
   explicit MockWebBrowserPrint(PrintData aData);

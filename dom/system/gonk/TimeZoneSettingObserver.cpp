@@ -49,7 +49,7 @@ public:
   static nsresult SetTimeZone(const JS::Value &aValue, JSContext *aContext);
 };
 
-class TimeZoneSettingCb MOZ_FINAL : public nsISettingsServiceCallback
+class TimeZoneSettingCb final : public nsISettingsServiceCallback
 {
 public:
   NS_DECL_ISUPPORTS

@@ -20,7 +20,7 @@
 namespace mozilla {
 namespace ipc {
 
-class SharedMemoryBasic MOZ_FINAL : public SharedMemory
+class SharedMemoryBasic final : public SharedMemory
 {
 public:
   typedef base::FileDescriptor Handle;
@@ -29,16 +29,16 @@ public:
 
   SharedMemoryBasic(const Handle& aHandle);
 
-  virtual bool Create(size_t aNbytes) MOZ_OVERRIDE;
+  virtual bool Create(size_t aNbytes) override;
 
-  virtual bool Map(size_t nBytes) MOZ_OVERRIDE;
+  virtual bool Map(size_t nBytes) override;
 
-  virtual void* memory() const MOZ_OVERRIDE
+  virtual void* memory() const override
   {
     return mMemory;
   }
 
-  virtual SharedMemoryType Type() const MOZ_OVERRIDE
+  virtual SharedMemoryType Type() const override
   {
     return TYPE_BASIC;
   }

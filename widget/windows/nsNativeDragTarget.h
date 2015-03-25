@@ -27,7 +27,7 @@ struct IDataObject;
  * behavior from the associated adapter (m_dragDrop).
  */
 
-class nsNativeDragTarget MOZ_FINAL : public IDropTarget
+class nsNativeDragTarget final : public IDropTarget
 {
 public:
   nsNativeDragTarget(nsIWidget * aWidget);

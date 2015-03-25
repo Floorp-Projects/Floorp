@@ -84,7 +84,7 @@ public:
   virtual void SetAttribute(uint32_t aIndex, const IntPoint &aValue);
   virtual void SetAttribute(uint32_t aIndex, const IntRect &aValue);
 
-  virtual ID2D1Effect* InputEffect() MOZ_OVERRIDE;
+  virtual ID2D1Effect* InputEffect() override;
 
 private:
   void UpdateChain();
@@ -105,8 +105,8 @@ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeExtendInputAdapterD2D1)
   FilterNodeExtendInputAdapterD2D1(ID2D1DeviceContext *aDC, FilterNodeD2D1 *aFilterNode, FilterType aType);
 
-  virtual ID2D1Effect* InputEffect() MOZ_OVERRIDE { return mExtendInputEffect.get(); }
-  virtual ID2D1Effect* OutputEffect() MOZ_OVERRIDE { return mWrappedFilterNode->OutputEffect(); }
+  virtual ID2D1Effect* InputEffect() override { return mExtendInputEffect.get(); }
+  virtual ID2D1Effect* OutputEffect() override { return mWrappedFilterNode->OutputEffect(); }
 
 private:
   RefPtr<FilterNodeD2D1> mWrappedFilterNode;
@@ -119,8 +119,8 @@ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodePremultiplyAdapterD2D1)
   FilterNodePremultiplyAdapterD2D1(ID2D1DeviceContext *aDC, FilterNodeD2D1 *aFilterNode, FilterType aType);
 
-  virtual ID2D1Effect* InputEffect() MOZ_OVERRIDE { return mPrePremultiplyEffect.get(); }
-  virtual ID2D1Effect* OutputEffect() MOZ_OVERRIDE { return mPostUnpremultiplyEffect.get(); }
+  virtual ID2D1Effect* InputEffect() override { return mPrePremultiplyEffect.get(); }
+  virtual ID2D1Effect* OutputEffect() override { return mPostUnpremultiplyEffect.get(); }
 
 private:
   RefPtr<ID2D1Effect> mPrePremultiplyEffect;

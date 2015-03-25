@@ -467,7 +467,7 @@ BluetoothDaemonAvrcpModule::HandleRsp(
 //
 
 // Returns the current notification handler to a notification runnable
-class BluetoothDaemonAvrcpModule::NotificationHandlerWrapper MOZ_FINAL
+class BluetoothDaemonAvrcpModule::NotificationHandlerWrapper final
 {
 public:
   typedef BluetoothAvrcpNotificationHandler ObjectType;
@@ -481,7 +481,7 @@ public:
 };
 
 // Init operator class for RemoteFeatureNotification
-class BluetoothDaemonAvrcpModule::RemoteFeatureInitOp MOZ_FINAL
+class BluetoothDaemonAvrcpModule::RemoteFeatureInitOp final
   : private PDUInitOp
 {
 public:
@@ -550,7 +550,7 @@ BluetoothDaemonAvrcpModule::ListPlayerAppValuesNtf(
 }
 
 // Init operator class for GetPlayerAppValueNotification
-class BluetoothDaemonAvrcpModule::GetPlayerAppValueInitOp MOZ_FINAL
+class BluetoothDaemonAvrcpModule::GetPlayerAppValueInitOp final
   : private PDUInitOp
 {
 public:
@@ -591,7 +591,7 @@ BluetoothDaemonAvrcpModule::GetPlayerAppValueNtf(
 }
 
 // Init operator class for GetPlayerAppAttrsTextNotification
-class BluetoothDaemonAvrcpModule::GetPlayerAppAttrsTextInitOp MOZ_FINAL
+class BluetoothDaemonAvrcpModule::GetPlayerAppAttrsTextInitOp final
   : private PDUInitOp
 {
 public:
@@ -632,7 +632,7 @@ BluetoothDaemonAvrcpModule::GetPlayerAppAttrsTextNtf(
 }
 
 // Init operator class for GetPlayerAppValuesTextNotification
-class BluetoothDaemonAvrcpModule::GetPlayerAppValuesTextInitOp MOZ_FINAL
+class BluetoothDaemonAvrcpModule::GetPlayerAppValuesTextInitOp final
   : private PDUInitOp
 {
 public:
@@ -687,7 +687,7 @@ BluetoothDaemonAvrcpModule::SetPlayerAppValueNtf(
 }
 
 // Init operator class for GetElementAttrNotification
-class BluetoothDaemonAvrcpModule::GetElementAttrInitOp MOZ_FINAL
+class BluetoothDaemonAvrcpModule::GetElementAttrInitOp final
   : private PDUInitOp
 {
 public:
@@ -747,7 +747,7 @@ BluetoothDaemonAvrcpModule::VolumeChangeNtf(
 }
 
 // Init operator class for PassthroughCmdNotification
-class BluetoothDaemonAvrcpModule::PassthroughCmdInitOp MOZ_FINAL
+class BluetoothDaemonAvrcpModule::PassthroughCmdInitOp final
   : private PDUInitOp
 {
 public:
@@ -840,7 +840,7 @@ BluetoothDaemonAvrcpInterface::BluetoothDaemonAvrcpInterface(
 BluetoothDaemonAvrcpInterface::~BluetoothDaemonAvrcpInterface()
 { }
 
-class BluetoothDaemonAvrcpInterface::InitResultHandler MOZ_FINAL
+class BluetoothDaemonAvrcpInterface::InitResultHandler final
   : public BluetoothSetupResultHandler
 {
 public:
@@ -850,14 +850,14 @@ public:
     MOZ_ASSERT(mRes);
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
     mRes->OnError(aStatus);
   }
 
-  void RegisterModule() MOZ_OVERRIDE
+  void RegisterModule() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -897,7 +897,7 @@ BluetoothDaemonAvrcpInterface::Init(
   }
 }
 
-class BluetoothDaemonAvrcpInterface::CleanupResultHandler MOZ_FINAL
+class BluetoothDaemonAvrcpInterface::CleanupResultHandler final
   : public BluetoothSetupResultHandler
 {
 public:
@@ -909,7 +909,7 @@ public:
     MOZ_ASSERT(mModule);
   }
 
-  void OnError(BluetoothStatus aStatus) MOZ_OVERRIDE
+  void OnError(BluetoothStatus aStatus) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -918,7 +918,7 @@ public:
     }
   }
 
-  void UnregisterModule() MOZ_OVERRIDE
+  void UnregisterModule() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

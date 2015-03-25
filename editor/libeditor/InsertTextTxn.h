@@ -47,7 +47,7 @@ public:
 	
   NS_DECL_EDITTXN
 
-  NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) MOZ_OVERRIDE;
+  NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
 
   /** Return the string data associated with this transaction */
   void GetData(nsString& aResult);

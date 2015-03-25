@@ -70,37 +70,37 @@ class PluginInstanceChild : public PPluginInstanceChild
 #endif
 
 protected:
-    virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window) MOZ_OVERRIDE;
+    virtual bool AnswerNPP_SetWindow(const NPRemoteWindow& window) override;
 
     virtual bool
-    AnswerNPP_GetValue_NPPVpluginWantsAllNetworkStreams(bool* wantsAllStreams, NPError* rv) MOZ_OVERRIDE;
+    AnswerNPP_GetValue_NPPVpluginWantsAllNetworkStreams(bool* wantsAllStreams, NPError* rv) override;
     virtual bool
-    AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(bool* needs, NPError* rv) MOZ_OVERRIDE;
+    AnswerNPP_GetValue_NPPVpluginNeedsXEmbed(bool* needs, NPError* rv) override;
     virtual bool
     AnswerNPP_GetValue_NPPVpluginScriptableNPObject(PPluginScriptableObjectChild** value,
-                                                    NPError* result) MOZ_OVERRIDE;
+                                                    NPError* result) override;
     virtual bool
     AnswerNPP_GetValue_NPPVpluginNativeAccessibleAtkPlugId(nsCString* aPlugId,
-                                                           NPError* aResult) MOZ_OVERRIDE;
+                                                           NPError* aResult) override;
     virtual bool
-    AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value, NPError* result) MOZ_OVERRIDE;
+    AnswerNPP_SetValue_NPNVprivateModeBool(const bool& value, NPError* result) override;
 
     virtual bool
-    AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled) MOZ_OVERRIDE;
+    AnswerNPP_HandleEvent(const NPRemoteEvent& event, int16_t* handled) override;
     virtual bool
     AnswerNPP_HandleEvent_Shmem(const NPRemoteEvent& event,
                                 Shmem&& mem,
                                 int16_t* handled,
-                                Shmem* rtnmem) MOZ_OVERRIDE;
+                                Shmem* rtnmem) override;
     virtual bool
     AnswerNPP_HandleEvent_IOSurface(const NPRemoteEvent& event,
                                     const uint32_t& surface,
-                                    int16_t* handled) MOZ_OVERRIDE;
+                                    int16_t* handled) override;
 
     // Async rendering
     virtual bool
     RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
-                       const NPRemoteWindow& aWindow) MOZ_OVERRIDE;
+                       const NPRemoteWindow& aWindow) override;
 
     virtual void
     DoAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
@@ -109,44 +109,44 @@ protected:
 
     virtual PPluginSurfaceChild*
     AllocPPluginSurfaceChild(const WindowsSharedMemoryHandle&,
-                             const gfxIntSize&, const bool&) MOZ_OVERRIDE {
+                             const gfxIntSize&, const bool&) override {
         return new PPluginSurfaceChild();
     }
 
-    virtual bool DeallocPPluginSurfaceChild(PPluginSurfaceChild* s) MOZ_OVERRIDE {
+    virtual bool DeallocPPluginSurfaceChild(PPluginSurfaceChild* s) override {
         delete s;
         return true;
     }
 
     virtual bool
-    AnswerPaint(const NPRemoteEvent& event, int16_t* handled) MOZ_OVERRIDE
+    AnswerPaint(const NPRemoteEvent& event, int16_t* handled) override
     {
         PaintTracker pt;
         return AnswerNPP_HandleEvent(event, handled);
     }
 
     virtual bool
-    RecvWindowPosChanged(const NPRemoteEvent& event) MOZ_OVERRIDE;
+    RecvWindowPosChanged(const NPRemoteEvent& event) override;
 
     virtual bool
-    RecvContentsScaleFactorChanged(const double& aContentsScaleFactor) MOZ_OVERRIDE;
+    RecvContentsScaleFactorChanged(const double& aContentsScaleFactor) override;
 
     virtual bool
-    AnswerNPP_Destroy(NPError* result) MOZ_OVERRIDE;
+    AnswerNPP_Destroy(NPError* result) override;
 
     virtual PPluginScriptableObjectChild*
-    AllocPPluginScriptableObjectChild() MOZ_OVERRIDE;
+    AllocPPluginScriptableObjectChild() override;
 
     virtual bool
-    DeallocPPluginScriptableObjectChild(PPluginScriptableObjectChild* aObject) MOZ_OVERRIDE;
+    DeallocPPluginScriptableObjectChild(PPluginScriptableObjectChild* aObject) override;
 
     virtual bool
-    RecvPPluginScriptableObjectConstructor(PPluginScriptableObjectChild* aActor) MOZ_OVERRIDE;
+    RecvPPluginScriptableObjectConstructor(PPluginScriptableObjectChild* aActor) override;
 
     virtual bool
     RecvPBrowserStreamConstructor(PBrowserStreamChild* aActor, const nsCString& aURL,
                                   const uint32_t& aLength, const uint32_t& aLastmodified,
-                                  PStreamNotifyChild* aNotifyData, const nsCString& aHeaders) MOZ_OVERRIDE;
+                                  PStreamNotifyChild* aNotifyData, const nsCString& aHeaders) override;
 
     virtual bool
     AnswerNPP_NewStream(
@@ -154,49 +154,49 @@ protected:
             const nsCString& mimeType,
             const bool& seekable,
             NPError* rv,
-            uint16_t* stype) MOZ_OVERRIDE;
+            uint16_t* stype) override;
 
     virtual bool
     RecvAsyncNPP_NewStream(
             PBrowserStreamChild* actor,
             const nsCString& mimeType,
-            const bool& seekable) MOZ_OVERRIDE;
+            const bool& seekable) override;
 
     virtual PBrowserStreamChild*
     AllocPBrowserStreamChild(const nsCString& url,
                              const uint32_t& length,
                              const uint32_t& lastmodified,
                              PStreamNotifyChild* notifyData,
-                             const nsCString& headers) MOZ_OVERRIDE;
+                             const nsCString& headers) override;
 
     virtual bool
-    DeallocPBrowserStreamChild(PBrowserStreamChild* stream) MOZ_OVERRIDE;
+    DeallocPBrowserStreamChild(PBrowserStreamChild* stream) override;
 
     virtual PPluginStreamChild*
     AllocPPluginStreamChild(const nsCString& mimeType,
                             const nsCString& target,
-                            NPError* result) MOZ_OVERRIDE;
+                            NPError* result) override;
 
     virtual bool
-    DeallocPPluginStreamChild(PPluginStreamChild* stream) MOZ_OVERRIDE;
+    DeallocPPluginStreamChild(PPluginStreamChild* stream) override;
 
     virtual PStreamNotifyChild*
     AllocPStreamNotifyChild(const nsCString& url, const nsCString& target,
                             const bool& post, const nsCString& buffer,
                             const bool& file,
-                            NPError* result) MOZ_OVERRIDE;
+                            NPError* result) override;
 
     virtual bool
-    DeallocPStreamNotifyChild(PStreamNotifyChild* notifyData) MOZ_OVERRIDE;
+    DeallocPStreamNotifyChild(PStreamNotifyChild* notifyData) override;
 
     virtual bool
-    AnswerSetPluginFocus() MOZ_OVERRIDE;
+    AnswerSetPluginFocus() override;
 
     virtual bool
-    AnswerUpdateWindow() MOZ_OVERRIDE;
+    AnswerUpdateWindow() override;
 
     virtual bool
-    RecvNPP_DidComposite() MOZ_OVERRIDE;
+    RecvNPP_DidComposite() override;
 
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     bool CreateWindow(const NPRemoteWindow& aWindow);
@@ -266,16 +266,16 @@ private:
     bool IsAsyncDrawing();
 
     virtual bool RecvUpdateBackground(const SurfaceDescriptor& aBackground,
-                                      const nsIntRect& aRect) MOZ_OVERRIDE;
+                                      const nsIntRect& aRect) override;
 
     virtual PPluginBackgroundDestroyerChild*
-    AllocPPluginBackgroundDestroyerChild() MOZ_OVERRIDE;
+    AllocPPluginBackgroundDestroyerChild() override;
 
     virtual bool
-    RecvPPluginBackgroundDestroyerConstructor(PPluginBackgroundDestroyerChild* aActor) MOZ_OVERRIDE;
+    RecvPPluginBackgroundDestroyerConstructor(PPluginBackgroundDestroyerChild* aActor) override;
 
     virtual bool
-    DeallocPPluginBackgroundDestroyerChild(PPluginBackgroundDestroyerChild* aActor) MOZ_OVERRIDE;
+    DeallocPPluginBackgroundDestroyerChild(PPluginBackgroundDestroyerChild* aActor) override;
 
 #if defined(OS_WIN)
     static bool RegisterWindowClass();
@@ -348,7 +348,7 @@ private:
           mWindowed(isWindowed)
         {}
 
-        void Run() MOZ_OVERRIDE;
+        void Run() override;
 
         WNDPROC GetProc();
         HWND GetWnd() { return mWnd; }
@@ -545,7 +545,7 @@ private:
 
     void Destroy();
 
-    void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+    void ActorDestroy(ActorDestroyReason aWhy) override;
 
     // Set as true when SetupLayer called
     // and go with different path in InvalidateRect function

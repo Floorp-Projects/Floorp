@@ -26,15 +26,15 @@ public:
     void Main();
 
 protected:
-    virtual bool ShouldContinueFromReplyTimeout() MOZ_OVERRIDE;
+    virtual bool ShouldContinueFromReplyTimeout() override;
 
     virtual bool RecvNonce() {
         return true;
     }
 
-    virtual bool AnswerStackFrame() MOZ_OVERRIDE;
+    virtual bool AnswerStackFrame() override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (AbnormalShutdown != why)
             fail("unexpected destruction!");  
@@ -56,22 +56,22 @@ public:
     virtual ~TestHangsChild();
 
 protected:
-    virtual bool RecvStart() MOZ_OVERRIDE {
+    virtual bool RecvStart() override {
         if (!SendNonce())
             fail("sending Nonce");
         return true;
     }
 
-    virtual bool AnswerStackFrame() MOZ_OVERRIDE
+    virtual bool AnswerStackFrame() override
     {
         if (CallStackFrame())
             fail("should have failed");
         return true;
     }
 
-    virtual bool AnswerHang() MOZ_OVERRIDE;
+    virtual bool AnswerHang() override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (AbnormalShutdown != why)
             fail("unexpected destruction!");

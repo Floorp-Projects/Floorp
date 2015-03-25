@@ -38,7 +38,7 @@ class nsDownload;
 #include "nsDownloadScanner.h"
 #endif
 
-class nsDownloadManager MOZ_FINAL : public nsIDownloadManager,
+class nsDownloadManager final : public nsIDownloadManager,
                                     public nsINavHistoryObserver,
                                     public nsIObserver,
                                     public nsSupportsWeakReference
@@ -264,7 +264,7 @@ private:
   friend class nsDownload;
 };
 
-class nsDownload MOZ_FINAL : public nsIDownload
+class nsDownload final : public nsIDownload
 {
 public:
   NS_DECL_NSIWEBPROGRESSLISTENER

@@ -15,7 +15,7 @@ class mozIStorageRow;
 namespace mozilla {
 namespace storage {
 
-class ResultSet MOZ_FINAL : public mozIStorageResultSet
+class ResultSet final : public mozIStorageResultSet
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

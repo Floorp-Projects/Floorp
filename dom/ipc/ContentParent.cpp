@@ -240,7 +240,7 @@ using namespace mozilla::widget;
 
 #ifdef ENABLE_TESTS
 
-class BackgroundTester MOZ_FINAL : public nsIIPCBackgroundChildCreateCallback,
+class BackgroundTester final : public nsIIPCBackgroundChildCreateCallback,
                                    public nsIObserver
 {
     static uint32_t sCallbackCount;
@@ -250,7 +250,7 @@ private:
     { }
 
     virtual void
-    ActorCreated(PBackgroundChild* aActor) MOZ_OVERRIDE
+    ActorCreated(PBackgroundChild* aActor) override
     {
         MOZ_RELEASE_ASSERT(aActor,
                            "Failed to create a PBackgroundChild actor!");
@@ -282,14 +282,14 @@ private:
     }
 
     virtual void
-    ActorFailed() MOZ_OVERRIDE
+    ActorFailed() override
     {
         MOZ_CRASH("Failed to create a PBackgroundChild actor!");
     }
 
     NS_IMETHOD
     Observe(nsISupports* aSubject, const char* aTopic, const char16_t* aData)
-            MOZ_OVERRIDE
+            override
     {
         nsCOMPtr<nsIObserverService> observerService =
             mozilla::services::GetObserverService();
@@ -386,9 +386,9 @@ public:
     MemoryReportRequestParent();
     virtual ~MemoryReportRequestParent();
 
-    virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+    virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-    virtual bool Recv__delete__(const uint32_t& aGeneration, InfallibleTArray<MemoryReport>&& aReport) MOZ_OVERRIDE;
+    virtual bool Recv__delete__(const uint32_t& aGeneration, InfallibleTArray<MemoryReport>&& aReport) override;
 
 private:
     ContentParent* Owner()
@@ -426,7 +426,7 @@ MemoryReportRequestParent::~MemoryReportRequestParent()
 }
 
 // IPC receiver for remote GC/CC logging.
-class CycleCollectWithLogsParent MOZ_FINAL : public PCycleCollectWithLogsParent
+class CycleCollectWithLogsParent final : public PCycleCollectWithLogsParent
 {
 public:
     ~CycleCollectWithLogsParent()
@@ -459,19 +459,19 @@ public:
     }
 
 private:
-    virtual bool RecvCloseGCLog() MOZ_OVERRIDE
+    virtual bool RecvCloseGCLog() override
     {
         unused << mSink->CloseGCLog();
         return true;
     }
 
-    virtual bool RecvCloseCCLog() MOZ_OVERRIDE
+    virtual bool RecvCloseCCLog() override
     {
         unused << mSink->CloseCCLog();
         return true;
     }
 
-    virtual bool Recv__delete__() MOZ_OVERRIDE
+    virtual bool Recv__delete__() override
     {
         // Report completion to mCallback only on successful
         // completion of the protocol.
@@ -482,7 +482,7 @@ private:
         return true;
     }
 
-    virtual void ActorDestroy(ActorDestroyReason aReason) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason aReason) override
     {
         // If the actor is unexpectedly destroyed, we deliberately
         // don't call Close[GC]CLog on the sink, because the logs may
@@ -502,7 +502,7 @@ private:
 };
 
 // A memory reporter for ContentParent objects themselves.
-class ContentParentsMemoryReporter MOZ_FINAL : public nsIMemoryReporter
+class ContentParentsMemoryReporter final : public nsIMemoryReporter
 {
     ~ContentParentsMemoryReporter() {}
 public:
@@ -1344,7 +1344,7 @@ ContentParent::ForwardKnownInfo()
 
 namespace {
 
-class SystemMessageHandledListener MOZ_FINAL
+class SystemMessageHandledListener final
     : public nsITimerCallback
     , public LinkedListElement<SystemMessageHandledListener>
 {
@@ -1392,7 +1392,7 @@ public:
                                  nsITimer::TYPE_ONE_SHOT);
     }
 
-    NS_IMETHOD Notify(nsITimer* aTimer) MOZ_OVERRIDE
+    NS_IMETHOD Notify(nsITimer* aTimer) override
     {
         // Careful: ShutDown() may delete |this|.
         ShutDown();

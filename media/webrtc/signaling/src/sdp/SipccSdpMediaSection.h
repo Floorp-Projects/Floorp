@@ -24,14 +24,14 @@ namespace mozilla
 class SipccSdp;
 class SdpErrorHolder;
 
-class SipccSdpBandwidths MOZ_FINAL : public std::map<std::string, uint32_t>
+class SipccSdpBandwidths final : public std::map<std::string, uint32_t>
 {
 public:
   bool Load(sdp_t* sdp, uint16_t level, SdpErrorHolder& errorHolder);
   void Serialize(std::ostream& os) const;
 };
 
-class SipccSdpMediaSection MOZ_FINAL : public SdpMediaSection
+class SipccSdpMediaSection final : public SdpMediaSection
 {
   friend class SipccSdp;
 
@@ -39,32 +39,32 @@ public:
   ~SipccSdpMediaSection() {}
 
   virtual MediaType
-  GetMediaType() const MOZ_OVERRIDE
+  GetMediaType() const override
   {
     return mMediaType;
   }
 
-  virtual unsigned int GetPort() const MOZ_OVERRIDE;
-  virtual void SetPort(unsigned int port) MOZ_OVERRIDE;
-  virtual unsigned int GetPortCount() const MOZ_OVERRIDE;
-  virtual Protocol GetProtocol() const MOZ_OVERRIDE;
-  virtual const SdpConnection& GetConnection() const MOZ_OVERRIDE;
-  virtual SdpConnection& GetConnection() MOZ_OVERRIDE;
-  virtual uint32_t GetBandwidth(const std::string& type) const MOZ_OVERRIDE;
-  virtual const std::vector<std::string>& GetFormats() const MOZ_OVERRIDE;
+  virtual unsigned int GetPort() const override;
+  virtual void SetPort(unsigned int port) override;
+  virtual unsigned int GetPortCount() const override;
+  virtual Protocol GetProtocol() const override;
+  virtual const SdpConnection& GetConnection() const override;
+  virtual SdpConnection& GetConnection() override;
+  virtual uint32_t GetBandwidth(const std::string& type) const override;
+  virtual const std::vector<std::string>& GetFormats() const override;
 
-  virtual const SdpAttributeList& GetAttributeList() const MOZ_OVERRIDE;
-  virtual SdpAttributeList& GetAttributeList() MOZ_OVERRIDE;
-  virtual SdpDirectionAttribute GetDirectionAttribute() const MOZ_OVERRIDE;
+  virtual const SdpAttributeList& GetAttributeList() const override;
+  virtual SdpAttributeList& GetAttributeList() override;
+  virtual SdpDirectionAttribute GetDirectionAttribute() const override;
 
   virtual void AddCodec(const std::string& pt, const std::string& name,
-                        uint32_t clockrate, uint16_t channels) MOZ_OVERRIDE;
-  virtual void ClearCodecs() MOZ_OVERRIDE;
+                        uint32_t clockrate, uint16_t channels) override;
+  virtual void ClearCodecs() override;
 
   virtual void AddDataChannel(const std::string& pt, const std::string& name,
-                              uint16_t streams) MOZ_OVERRIDE;
+                              uint16_t streams) override;
 
-  virtual void Serialize(std::ostream&) const MOZ_OVERRIDE;
+  virtual void Serialize(std::ostream&) const override;
 
 private:
   SipccSdpMediaSection(size_t level, const SipccSdpAttributeList* sessionLevel)

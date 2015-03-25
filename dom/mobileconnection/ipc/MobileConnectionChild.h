@@ -25,7 +25,7 @@ namespace mobileconnection {
  * shutdown. For multi-sim device, more than one instance will
  * be created and each instance represents a sim slot.
  */
-class MobileConnectionChild MOZ_FINAL : public PMobileConnectionChild
+class MobileConnectionChild final : public PMobileConnectionChild
                                       , public nsIMobileConnection
 {
 public:
@@ -43,7 +43,7 @@ public:
 private:
   MobileConnectionChild() = delete;
 
-  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
+  // final suppresses -Werror,-Wdelete-non-virtual-dtor
   ~MobileConnectionChild()
   {
     MOZ_COUNT_DTOR(MobileConnectionChild);
@@ -55,49 +55,49 @@ protected:
               nsIMobileConnectionCallback* aCallback);
 
   virtual void
-  ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason why) override;
 
   virtual PMobileConnectionRequestChild*
-  AllocPMobileConnectionRequestChild(const MobileConnectionRequest& request) MOZ_OVERRIDE;
+  AllocPMobileConnectionRequestChild(const MobileConnectionRequest& request) override;
 
   virtual bool
-  DeallocPMobileConnectionRequestChild(PMobileConnectionRequestChild* aActor) MOZ_OVERRIDE;
+  DeallocPMobileConnectionRequestChild(PMobileConnectionRequestChild* aActor) override;
 
   virtual bool
-  RecvNotifyVoiceInfoChanged(nsIMobileConnectionInfo* const& aInfo) MOZ_OVERRIDE;
+  RecvNotifyVoiceInfoChanged(nsIMobileConnectionInfo* const& aInfo) override;
 
   virtual bool
-  RecvNotifyDataInfoChanged(nsIMobileConnectionInfo* const& aInfo) MOZ_OVERRIDE;
+  RecvNotifyDataInfoChanged(nsIMobileConnectionInfo* const& aInfo) override;
 
   virtual bool
-  RecvNotifyDataError(const nsString& aMessage) MOZ_OVERRIDE;
+  RecvNotifyDataError(const nsString& aMessage) override;
 
   virtual bool
   RecvNotifyCFStateChanged(const uint16_t& aAction, const uint16_t& aReason,
                            const nsString& aNumber, const uint16_t& aTimeSeconds,
-                           const uint16_t& aServiceClass) MOZ_OVERRIDE;
+                           const uint16_t& aServiceClass) override;
 
   virtual bool
   RecvNotifyEmergencyCbModeChanged(const bool& aActive,
-                                   const uint32_t& aTimeoutMs) MOZ_OVERRIDE;
+                                   const uint32_t& aTimeoutMs) override;
 
   virtual bool
-  RecvNotifyOtaStatusChanged(const nsString& aStatus) MOZ_OVERRIDE;
+  RecvNotifyOtaStatusChanged(const nsString& aStatus) override;
 
   virtual bool
-  RecvNotifyRadioStateChanged(const int32_t& aRadioState) MOZ_OVERRIDE;
+  RecvNotifyRadioStateChanged(const int32_t& aRadioState) override;
 
   virtual bool
-  RecvNotifyClirModeChanged(const uint32_t& aMode) MOZ_OVERRIDE;
+  RecvNotifyClirModeChanged(const uint32_t& aMode) override;
 
   virtual bool
-  RecvNotifyLastNetworkChanged(const nsString& aNetwork) MOZ_OVERRIDE;
+  RecvNotifyLastNetworkChanged(const nsString& aNetwork) override;
 
   virtual bool
-  RecvNotifyLastHomeNetworkChanged(const nsString& aNetwork) MOZ_OVERRIDE;
+  RecvNotifyLastHomeNetworkChanged(const nsString& aNetwork) override;
 
   virtual bool
-  RecvNotifyNetworkSelectionModeChanged(const int32_t& aMode) MOZ_OVERRIDE;
+  RecvNotifyNetworkSelectionModeChanged(const int32_t& aMode) override;
 
 private:
   uint32_t mServiceId;
@@ -166,10 +166,10 @@ protected:
   }
 
   virtual void
-  ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason why) override;
 
   virtual bool
-  Recv__delete__(const MobileConnectionReply& aReply) MOZ_OVERRIDE;
+  Recv__delete__(const MobileConnectionReply& aReply) override;
 
 private:
   nsCOMPtr<nsIMobileConnectionCallback> mRequestCallback;

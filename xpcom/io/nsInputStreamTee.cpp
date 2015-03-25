@@ -37,7 +37,7 @@ GetTeeLog()
 #define LOG(args)
 #endif
 
-class nsInputStreamTee MOZ_FINAL : public nsIInputStreamTee
+class nsInputStreamTee final : public nsIInputStreamTee
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

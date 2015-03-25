@@ -180,7 +180,7 @@ public:
     , mNewDuration(aNewDuration)
   { }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE MOZ_FINAL {
+  NS_IMETHOD Run() override final {
     mDecoder->DurationChanged(mOldDuration, mNewDuration);
     return NS_OK;
   }

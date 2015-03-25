@@ -88,7 +88,7 @@ public:
   virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
                                         StreamTime aTrackOffset,
                                         uint32_t aTrackEvents,
-                                        const MediaSegment& aQueuedMedia) MOZ_OVERRIDE
+                                        const MediaSegment& aQueuedMedia) override
   {
     if (aTrackEvents & (TRACK_EVENT_CREATED | TRACK_EVENT_ENDED)) {
       nsRefPtr<TrackChange> runnable =
@@ -121,7 +121,7 @@ public:
     nsRefPtr<StreamListener> mListener;
   };
 
-  virtual void NotifyFinishedTrackCreation(MediaStreamGraph* aGraph) MOZ_OVERRIDE
+  virtual void NotifyFinishedTrackCreation(MediaStreamGraph* aGraph) override
   {
     nsRefPtr<TracksCreatedRunnable> runnable = new TracksCreatedRunnable(this);
     aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());

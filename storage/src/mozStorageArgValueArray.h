@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace storage {
 
-class ArgValueArray MOZ_FINAL : public mozIStorageValueArray
+class ArgValueArray final : public mozIStorageValueArray
 {
 public:
   ArgValueArray(int32_t aArgc, sqlite3_value **aArgv);

@@ -243,7 +243,7 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
     }
 
     /* Keep all tracked objects live across GC. */
-    virtual void trace(JSTracer *trc) MOZ_OVERRIDE {
+    virtual void trace(JSTracer *trc) override {
         if (!map.initialized())
             return;
         for (Map::Enum e(map); !e.empty(); e.popFront()) {

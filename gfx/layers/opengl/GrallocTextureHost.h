@@ -27,46 +27,46 @@ public:
 
   virtual ~GrallocTextureHostOGL();
 
-  virtual void Updated(const nsIntRegion* aRegion) MOZ_OVERRIDE {}
+  virtual void Updated(const nsIntRegion* aRegion) override {}
 
-  virtual bool Lock() MOZ_OVERRIDE;
+  virtual bool Lock() override;
 
-  virtual void Unlock() MOZ_OVERRIDE;
+  virtual void Unlock() override;
 
-  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+  virtual void SetCompositor(Compositor* aCompositor) override;
 
-  virtual void DeallocateSharedData() MOZ_OVERRIDE;
+  virtual void DeallocateSharedData() override;
 
-  virtual void ForgetSharedData() MOZ_OVERRIDE;
+  virtual void ForgetSharedData() override;
 
-  virtual void DeallocateDeviceData() MOZ_OVERRIDE;
+  virtual void DeallocateDeviceData() override;
 
   virtual gfx::SurfaceFormat GetFormat() const;
 
-  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE { return mDescriptorSize; }
+  virtual gfx::IntSize GetSize() const override { return mDescriptorSize; }
 
-  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
+  virtual LayerRenderState GetRenderState() override;
 
-  virtual void PrepareTextureSource(CompositableTextureSourceRef& aTextureSource) MOZ_OVERRIDE;
+  virtual void PrepareTextureSource(CompositableTextureSourceRef& aTextureSource) override;
 
-  virtual bool BindTextureSource(CompositableTextureSourceRef& aTextureSource) MOZ_OVERRIDE;
+  virtual bool BindTextureSource(CompositableTextureSourceRef& aTextureSource) override;
 
-  virtual void UnbindTextureSource() MOZ_OVERRIDE;
+  virtual void UnbindTextureSource() override;
 
-  virtual TextureSource* GetTextureSources() MOZ_OVERRIDE;
+  virtual TextureSource* GetTextureSources() override;
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-  virtual TextureHostOGL* AsHostOGL() MOZ_OVERRIDE
+  virtual TextureHostOGL* AsHostOGL() override
   {
     return this;
   }
 #endif
 
-  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override;
 
   bool IsValid() const;
 
-  virtual const char* Name() MOZ_OVERRIDE { return "GrallocTextureHostOGL"; }
+  virtual const char* Name() override { return "GrallocTextureHostOGL"; }
 
   gl::GLContext* GetGLContext() const { return mCompositor ? mCompositor->gl() : nullptr; }
 

@@ -112,9 +112,9 @@ class nsSelectionCommandsBase : public nsIControllerCommand
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_IMETHOD IsCommandEnabled(const char* aCommandName, nsISupports* aCommandContext, bool* _retval) MOZ_OVERRIDE;
-  NS_IMETHOD GetCommandStateParams(const char* aCommandName, nsICommandParams* aParams, nsISupports* aCommandContext) MOZ_OVERRIDE;
-  NS_IMETHOD DoCommandParams(const char* aCommandName, nsICommandParams* aParams, nsISupports* aCommandContext) MOZ_OVERRIDE;
+  NS_IMETHOD IsCommandEnabled(const char* aCommandName, nsISupports* aCommandContext, bool* _retval) override;
+  NS_IMETHOD GetCommandStateParams(const char* aCommandName, nsICommandParams* aParams, nsISupports* aCommandContext) override;
+  NS_IMETHOD DoCommandParams(const char* aCommandName, nsICommandParams* aParams, nsISupports* aCommandContext) override;
 
 protected:
   virtual ~nsSelectionCommandsBase() {}
@@ -465,7 +465,7 @@ nsPhysicalSelectCommand::DoCommand(const char *aCommandName,
 #pragma mark -
 #endif
 
-class nsClipboardCommand MOZ_FINAL : public nsIControllerCommand
+class nsClipboardCommand final : public nsIControllerCommand
 {
   ~nsClipboardCommand() {}
 
@@ -875,7 +875,7 @@ nsGoBackCommand::DoWebNavCommand(const char *aCommandName, nsIWebNavigation* aWe
 
 ----------------------------------------------------------------------------*/
 
-class nsClipboardDragDropHookCommand MOZ_FINAL : public nsIControllerCommand
+class nsClipboardDragDropHookCommand final : public nsIControllerCommand
 {
   ~nsClipboardDragDropHookCommand() {}
 

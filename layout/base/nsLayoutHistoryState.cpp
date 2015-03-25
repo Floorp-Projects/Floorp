@@ -14,7 +14,7 @@
 #include "nsPresState.h"
 #include "mozilla/Attributes.h"
 
-class nsLayoutHistoryState MOZ_FINAL : public nsILayoutHistoryState,
+class nsLayoutHistoryState final : public nsILayoutHistoryState,
                                        public nsSupportsWeakReference
 {
 public:
@@ -27,15 +27,15 @@ public:
 
   // nsILayoutHistoryState
   virtual void
-  AddState(const nsCString& aKey, nsPresState* aState) MOZ_OVERRIDE;
+  AddState(const nsCString& aKey, nsPresState* aState) override;
   virtual nsPresState*
-  GetState(const nsCString& aKey) MOZ_OVERRIDE;
+  GetState(const nsCString& aKey) override;
   virtual void
-  RemoveState(const nsCString& aKey) MOZ_OVERRIDE;
+  RemoveState(const nsCString& aKey) override;
   virtual bool
-  HasStates() const MOZ_OVERRIDE;
+  HasStates() const override;
   virtual void
-  SetScrollPositionOnly(const bool aFlag) MOZ_OVERRIDE;
+  SetScrollPositionOnly(const bool aFlag) override;
 
 
 private:

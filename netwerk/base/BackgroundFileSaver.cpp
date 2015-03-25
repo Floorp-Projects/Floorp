@@ -67,7 +67,7 @@ PRLogModuleInfo *BackgroundFileSaver::prlog = nullptr;
  * Runnable object used to notify the control thread that file contents will now
  * be saved to the specified file.
  */
-class NotifyTargetChangeRunnable MOZ_FINAL : public nsRunnable
+class NotifyTargetChangeRunnable final : public nsRunnable
 {
 public:
   NotifyTargetChangeRunnable(BackgroundFileSaver *aSaver, nsIFile *aTarget)

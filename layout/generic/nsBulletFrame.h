@@ -20,7 +20,7 @@ class imgRequestProxy;
 
 class nsBulletFrame;
 
-class nsBulletListener MOZ_FINAL : public imgINotificationObserver,
+class nsBulletListener final : public imgINotificationObserver,
                                    public imgIOnloadBlocker
 {
 public:
@@ -42,7 +42,7 @@ private:
  * A simple class that manages the layout and rendering of html bullets.
  * This class also supports the CSS list-style properties.
  */
-class nsBulletFrame MOZ_FINAL : public nsFrame {
+class nsBulletFrame final : public nsFrame {
   typedef mozilla::image::DrawResult DrawResult;
 
 public:
@@ -66,23 +66,23 @@ public:
   NS_IMETHOD UnblockOnload(imgIRequest* aRequest);
 
   // nsIFrame
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
+  virtual nsIAtom* GetType() const override;
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
   // nsIHTMLReflow
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aMetrics,
                       const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus& aStatus) MOZ_OVERRIDE;
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
-  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+                      nsReflowStatus& aStatus) override;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
+  virtual nscoord GetPrefISize(nsRenderingContext *aRenderingContext) override;
 
   // nsBulletFrame
   int32_t SetListItemOrdinal(int32_t aNextOrdinal, bool* aChanged,
@@ -96,9 +96,9 @@ public:
   DrawResult PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
                          const nsRect& aDirtyRect, uint32_t aFlags);
   
-  virtual bool IsEmpty() MOZ_OVERRIDE;
-  virtual bool IsSelfEmpty() MOZ_OVERRIDE;
-  virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const MOZ_OVERRIDE;
+  virtual bool IsEmpty() override;
+  virtual bool IsSelfEmpty() override;
+  virtual nscoord GetLogicalBaseline(mozilla::WritingMode aWritingMode) const override;
 
   float GetFontSizeInflation() const;
   bool HasFontSizeInflation() const {

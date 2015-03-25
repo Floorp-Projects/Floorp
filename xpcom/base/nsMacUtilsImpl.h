@@ -11,7 +11,7 @@
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 
-class nsMacUtilsImpl MOZ_FINAL : public nsIMacUtils
+class nsMacUtilsImpl final : public nsIMacUtils
 {
 public:
   NS_DECL_ISUPPORTS

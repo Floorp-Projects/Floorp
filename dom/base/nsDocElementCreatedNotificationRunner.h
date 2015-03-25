@@ -21,7 +21,7 @@ public:
   {
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     nsContentSink::NotifyDocElementCreated(mDoc);
     return NS_OK;

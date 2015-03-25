@@ -23,7 +23,7 @@ namespace indexedDB {
 class FileInfo;
 
 // Implemented in ActorsParent.cpp.
-class FileManager MOZ_FINAL
+class FileManager final
 {
   friend class FileInfo;
 

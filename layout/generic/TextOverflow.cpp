@@ -28,12 +28,12 @@
 namespace mozilla {
 namespace css {
 
-class LazyReferenceRenderingContextGetterFromFrame MOZ_FINAL :
+class LazyReferenceRenderingContextGetterFromFrame final :
     public gfxFontGroup::LazyReferenceContextGetter {
 public:
   explicit LazyReferenceRenderingContextGetterFromFrame(nsIFrame* aFrame)
     : mFrame(aFrame) {}
-  virtual already_AddRefed<gfxContext> GetRefContext() MOZ_OVERRIDE
+  virtual already_AddRefed<gfxContext> GetRefContext() override
   {
     return mFrame->PresContext()->PresShell()->CreateReferenceRenderingContext();
   }
@@ -167,16 +167,16 @@ public:
   }
 #endif
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) MOZ_OVERRIDE {
+                           bool* aSnap) override {
     *aSnap = false;
     nsRect shadowRect =
       nsLayoutUtils::GetTextShadowRectsUnion(mRect, mFrame);
     return mRect.Union(shadowRect);
   }
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) MOZ_OVERRIDE;
+                     nsRenderingContext* aCtx) override;
 
-  virtual uint32_t GetPerFrameKey() MOZ_OVERRIDE { 
+  virtual uint32_t GetPerFrameKey() override { 
     return (mIndex << nsDisplayItem::TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); 
   }
   void PaintTextToContext(nsRenderingContext* aCtx,

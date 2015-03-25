@@ -17,7 +17,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-class MultipartFileImpl MOZ_FINAL : public FileImplBase
+class MultipartFileImpl final : public FileImplBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -84,25 +84,25 @@ public:
   virtual already_AddRefed<FileImpl>
   CreateSlice(uint64_t aStart, uint64_t aLength,
               const nsAString& aContentType,
-              ErrorResult& aRv) MOZ_OVERRIDE;
+              ErrorResult& aRv) override;
 
-  virtual uint64_t GetSize(ErrorResult& aRv) MOZ_OVERRIDE
+  virtual uint64_t GetSize(ErrorResult& aRv) override
   {
     return mLength;
   }
 
-  virtual nsresult GetInternalStream(nsIInputStream** aInputStream) MOZ_OVERRIDE;
+  virtual nsresult GetInternalStream(nsIInputStream** aInputStream) override;
 
-  virtual const nsTArray<nsRefPtr<FileImpl>>* GetSubBlobImpls() const MOZ_OVERRIDE
+  virtual const nsTArray<nsRefPtr<FileImpl>>* GetSubBlobImpls() const override
   {
     return &mBlobImpls;
   }
 
   virtual void GetMozFullPathInternal(nsAString& aFullPath,
-                                      ErrorResult& aRv) MOZ_OVERRIDE;
+                                      ErrorResult& aRv) override;
 
   virtual nsresult
-  SetMutable(bool aMutable) MOZ_OVERRIDE;
+  SetMutable(bool aMutable) override;
 
   void SetName(const nsAString& aName)
   {
@@ -114,7 +114,7 @@ public:
     mIsFromNsIFile = aValue;
   }
 
-  virtual bool MayBeClonedToOtherThreads() const MOZ_OVERRIDE;
+  virtual bool MayBeClonedToOtherThreads() const override;
 
 protected:
   virtual ~MultipartFileImpl() {}

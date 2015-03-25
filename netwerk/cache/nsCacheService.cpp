@@ -202,14 +202,14 @@ private:
 
 NS_IMPL_ISUPPORTS(nsCacheProfilePrefObserver, nsIObserver)
 
-class nsSetDiskSmartSizeCallback MOZ_FINAL : public nsITimerCallback
+class nsSetDiskSmartSizeCallback final : public nsITimerCallback
 {
     ~nsSetDiskSmartSizeCallback() {}
 
 public:
     NS_DECL_THREADSAFE_ISUPPORTS
 
-    NS_IMETHOD Notify(nsITimer* aTimer) MOZ_OVERRIDE {
+    NS_IMETHOD Notify(nsITimer* aTimer) override {
         if (nsCacheService::gService) {
             nsCacheServiceAutoLock autoLock(LOCK_TELEM(NSSETDISKSMARTSIZECALLBACK_NOTIFY));
             nsCacheService::gService->SetDiskSmartSize_Locked();

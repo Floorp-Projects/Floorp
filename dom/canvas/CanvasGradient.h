@@ -51,7 +51,7 @@ public:
   // WebIDL
   void AddColorStop(float offset, const nsAString& colorstr, ErrorResult& rv);
 
-  JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
+  JSObject* WrapObject(JSContext* aCx) override
   {
     return CanvasGradientBinding::Wrap(aCx, this);
   }

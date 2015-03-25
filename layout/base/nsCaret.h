@@ -36,7 +36,7 @@ class DrawTarget;
 }
 
 //-----------------------------------------------------------------------------
-class nsCaret MOZ_FINAL : public nsISelectionListener
+class nsCaret final : public nsISelectionListener
 {
     typedef mozilla::gfx::DrawTarget DrawTarget;
 

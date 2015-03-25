@@ -37,10 +37,10 @@ public:
   nsTArray<uint8_t> DecodeSpecificInfo;
 
   // MuxerOperation methods
-  nsresult Generate(uint32_t* aBoxSize) MOZ_OVERRIDE;
-  nsresult Write() MOZ_OVERRIDE;
+  nsresult Generate(uint32_t* aBoxSize) override;
+  nsresult Write() override;
   nsresult Find(const nsACString& aType,
-                nsTArray<nsRefPtr<MuxerOperation>>& aOperations) MOZ_OVERRIDE;
+                nsTArray<nsRefPtr<MuxerOperation>>& aOperations) override;
 
   // ES_Descriptor methods
   ES_Descriptor(ISOControl* aControl);
@@ -58,8 +58,8 @@ public:
   nsRefPtr<ES_Descriptor> es_descriptor;
 
   // MuxerOperation methods
-  nsresult Generate(uint32_t* aBoxSize) MOZ_OVERRIDE;
-  nsresult Write() MOZ_OVERRIDE;
+  nsresult Generate(uint32_t* aBoxSize) override;
+  nsresult Write() override;
 
   // ESDBox methods
   ESDBox(ISOControl* aControl);
@@ -74,8 +74,8 @@ public:
   nsRefPtr<ESDBox> es;
 
   // MuxerOperation methods
-  nsresult Generate(uint32_t* aBoxSize) MOZ_OVERRIDE;
-  nsresult Write() MOZ_OVERRIDE;
+  nsresult Generate(uint32_t* aBoxSize) override;
+  nsresult Write() override;
 
   // MP4AudioSampleEntry methods
   MP4AudioSampleEntry(ISOControl* aControl);

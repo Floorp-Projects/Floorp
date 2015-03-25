@@ -25,36 +25,36 @@ protected:
   virtual ~TelephonyChild();
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual PTelephonyRequestChild*
-  AllocPTelephonyRequestChild(const IPCTelephonyRequest& aRequest) MOZ_OVERRIDE;
+  AllocPTelephonyRequestChild(const IPCTelephonyRequest& aRequest) override;
 
   virtual bool
-  DeallocPTelephonyRequestChild(PTelephonyRequestChild* aActor) MOZ_OVERRIDE;
+  DeallocPTelephonyRequestChild(PTelephonyRequestChild* aActor) override;
 
   virtual bool
   RecvNotifyCallError(const uint32_t& aClientId, const int32_t& aCallIndex,
-                      const nsString& aError) MOZ_OVERRIDE;
+                      const nsString& aError) override;
 
   virtual bool
-  RecvNotifyCallStateChanged(nsITelephonyCallInfo* const& aInfo) MOZ_OVERRIDE;
+  RecvNotifyCallStateChanged(nsITelephonyCallInfo* const& aInfo) override;
 
   virtual bool
   RecvNotifyCdmaCallWaiting(const uint32_t& aClientId,
-                            const IPCCdmaWaitingCallData& aData) MOZ_OVERRIDE;
+                            const IPCCdmaWaitingCallData& aData) override;
 
   virtual bool
-  RecvNotifyConferenceCallStateChanged(const uint16_t& aCallState) MOZ_OVERRIDE;
+  RecvNotifyConferenceCallStateChanged(const uint16_t& aCallState) override;
 
   virtual bool
   RecvNotifyConferenceError(const nsString& aName,
-                            const nsString& aMessage) MOZ_OVERRIDE;
+                            const nsString& aMessage) override;
 
   virtual bool
   RecvNotifySupplementaryService(const uint32_t& aClientId,
                                  const int32_t& aCallIndex,
-                                 const uint16_t& aNotification) MOZ_OVERRIDE;
+                                 const uint16_t& aNotification) override;
 
 private:
   nsRefPtr<TelephonyIPCService> mService;
@@ -70,16 +70,16 @@ protected:
   virtual ~TelephonyRequestChild() {}
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
-  Recv__delete__(const IPCTelephonyResponse& aResponse) MOZ_OVERRIDE;
+  Recv__delete__(const IPCTelephonyResponse& aResponse) override;
 
   virtual bool
-  RecvNotifyEnumerateCallState(nsITelephonyCallInfo* const& aInfo) MOZ_OVERRIDE;
+  RecvNotifyEnumerateCallState(nsITelephonyCallInfo* const& aInfo) override;
 
   virtual bool
-  RecvNotifyDialMMI(const nsString& aServiceCode) MOZ_OVERRIDE;
+  RecvNotifyDialMMI(const nsString& aServiceCode) override;
 
 private:
   bool

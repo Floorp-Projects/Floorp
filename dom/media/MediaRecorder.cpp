@@ -49,7 +49,7 @@ namespace dom {
 + * least one Recorder is registered. In MediaRecorder, the reporter is unregistered
 + * when it is destroyed.
 + */
-class MediaRecorderReporter MOZ_FINAL : public nsIMemoryReporter
+class MediaRecorderReporter final : public nsIMemoryReporter
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -73,7 +73,7 @@ public:
 
   NS_METHOD
   CollectReports(nsIHandleReportCallback* aHandleReport,
-                 nsISupports* aData, bool aAnonymize) MOZ_OVERRIDE
+                 nsISupports* aData, bool aAnonymize) override
   {
     int64_t amount = 0;
     RecordersArray& recorders = GetRecorders();
@@ -649,7 +649,7 @@ private:
     }
   }
 
-  NS_IMETHODIMP Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) MOZ_OVERRIDE
+  NS_IMETHODIMP Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) override
   {
     MOZ_ASSERT(NS_IsMainThread());
     LOG(PR_LOG_DEBUG, ("Session.Observe XPCOM_SHUTDOWN %p", this));

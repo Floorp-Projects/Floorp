@@ -45,7 +45,7 @@ public:
   virtual int32_t operator() (const char16_t*,
                               const char16_t*,
                               uint32_t,
-                              uint32_t) const MOZ_OVERRIDE;
+                              uint32_t) const override;
 };
 
 class nsCaseInsensitiveUTF8StringComparator : public nsCStringComparator
@@ -54,7 +54,7 @@ public:
   virtual int32_t operator() (const char*,
                               const char*,
                               uint32_t,
-                              uint32_t) const MOZ_OVERRIDE;
+                              uint32_t) const override;
 };
 
 class nsCaseInsensitiveStringArrayComparator
@@ -73,7 +73,7 @@ public:
   virtual int operator() (const char16_t*,
                           const char16_t*,
                           uint32_t,
-                          uint32_t) const MOZ_OVERRIDE;
+                          uint32_t) const override;
 };
 
 inline bool

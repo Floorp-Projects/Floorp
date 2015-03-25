@@ -54,7 +54,7 @@ public:
   /**
    * Used by nsNSSShutDownList to manage nsNSSShutDownObjects.
    */
-  void virtualDestroyNSSReference() MOZ_OVERRIDE;
+  void virtualDestroyNSSReference() override;
 
   /**
    * Number of worker threads that are currently running.
@@ -322,8 +322,8 @@ public:
   BackgroundFileSaverOutputStream();
 
 protected:
-  virtual bool HasInfiniteBuffer() MOZ_OVERRIDE;
-  virtual nsAsyncCopyProgressFun GetProgressCallback() MOZ_OVERRIDE;
+  virtual bool HasInfiniteBuffer() override;
+  virtual nsAsyncCopyProgressFun GetProgressCallback() override;
 
 private:
   ~BackgroundFileSaverOutputStream();
@@ -349,8 +349,8 @@ public:
   BackgroundFileSaverStreamListener();
 
 protected:
-  virtual bool HasInfiniteBuffer() MOZ_OVERRIDE;
-  virtual nsAsyncCopyProgressFun GetProgressCallback() MOZ_OVERRIDE;
+  virtual bool HasInfiniteBuffer() override;
+  virtual nsAsyncCopyProgressFun GetProgressCallback() override;
 
 private:
   ~BackgroundFileSaverStreamListener();
@@ -400,7 +400,7 @@ public:
   DigestOutputStream(nsIOutputStream* outputStream, PK11Context* aContext);
 
   // We don't own any NSS objects here, so no need to clean up
-  void virtualDestroyNSSReference() MOZ_OVERRIDE { }
+  void virtualDestroyNSSReference() override { }
 
 private:
   ~DigestOutputStream();

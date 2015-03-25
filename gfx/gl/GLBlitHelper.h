@@ -70,7 +70,7 @@ void CreateRenderbuffersForOffscreen(GLContext* aGL, const GLFormats& aFormats,
 
 
 /** Buffer blitting helper */
-class GLBlitHelper MOZ_FINAL
+class GLBlitHelper final
 {
     enum Channel
     {

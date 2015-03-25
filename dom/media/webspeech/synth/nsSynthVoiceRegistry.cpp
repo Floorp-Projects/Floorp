@@ -67,7 +67,7 @@ namespace dom {
 
 // VoiceData
 
-class VoiceData MOZ_FINAL
+class VoiceData final
 {
 private:
   // Private destructor, to discourage deletion outside of Release():

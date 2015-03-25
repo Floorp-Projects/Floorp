@@ -61,7 +61,7 @@ class ShadowLayerForwarder;
 
 namespace ipc {
 
-class Shmem MOZ_FINAL
+class Shmem final
 {
   friend struct IPC::ParamTraits<mozilla::ipc::Shmem>;
 #ifdef DEBUG

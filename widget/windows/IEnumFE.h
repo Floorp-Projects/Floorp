@@ -57,7 +57,7 @@ private:
  * application up.
  */
 
-class CEnumFormatEtc MOZ_FINAL : public IEnumFORMATETC
+class CEnumFormatEtc final : public IEnumFORMATETC
 {
 public:
     CEnumFormatEtc(nsTArray<FormatEtc>& aArray);

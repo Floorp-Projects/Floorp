@@ -50,7 +50,7 @@ class TableUpdate;
 
 // This is a proxy class that just creates a background thread and delagates
 // calls to the background thread.
-class nsUrlClassifierDBService MOZ_FINAL : public nsIUrlClassifierDBService,
+class nsUrlClassifierDBService final : public nsIUrlClassifierDBService,
                                            public nsIURIClassifier,
                                            public nsIObserver
 {
@@ -134,7 +134,7 @@ private:
   static nsIThread* gDbBackgroundThread;
 };
 
-class nsUrlClassifierDBServiceWorker MOZ_FINAL :
+class nsUrlClassifierDBServiceWorker final :
   public nsIUrlClassifierDBServiceWorker
 {
 public:

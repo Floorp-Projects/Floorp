@@ -51,13 +51,13 @@ private:
 #define DECL_IUNKNOWN                                                          \
 public:                                                                        \
   virtual HRESULT STDMETHODCALLTYPE QueryInterface(REFIID, void**);            \
-  virtual ULONG STDMETHODCALLTYPE AddRef() MOZ_FINAL                           \
+  virtual ULONG STDMETHODCALLTYPE AddRef() final                           \
   {                                                                            \
     MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");                       \
     ++mRefCnt;                                                                 \
     return mRefCnt;                                                            \
   }                                                                            \
-  virtual ULONG STDMETHODCALLTYPE Release() MOZ_FINAL                          \
+  virtual ULONG STDMETHODCALLTYPE Release() final                          \
   {                                                                            \
      MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");                          \
      --mRefCnt;                                                                \

@@ -45,9 +45,9 @@ public:
   void Notify(const BluetoothSignal& aParam);
 
   void Unroot();
-  virtual void SetPropertyByValue(const BluetoothNamedValue& aValue) MOZ_OVERRIDE;
+  virtual void SetPropertyByValue(const BluetoothNamedValue& aValue) override;
 
-  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
+  virtual void DisconnectFromOwner() override;
 
   void GetAddress(nsString& aAddress) const
   {
@@ -169,7 +169,7 @@ public:
   }
 
   virtual JSObject*
-    WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+    WrapObject(JSContext* aCx) override;
 
 private:
   BluetoothAdapter(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);

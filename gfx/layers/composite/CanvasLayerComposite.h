@@ -7,7 +7,7 @@
 #define GFX_CanvasLayerComposite_H
 
 #include "Layers.h"                     // for CanvasLayer, etc
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
 #include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
@@ -35,39 +35,39 @@ protected:
 
 public:
   // CanvasLayer impl
-  virtual void Initialize(const Data& aData) MOZ_OVERRIDE
+  virtual void Initialize(const Data& aData) override
   {
     NS_RUNTIMEABORT("Incompatibe surface type");
   }
 
-  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
+  virtual LayerRenderState GetRenderState() override;
 
-  virtual bool SetCompositableHost(CompositableHost* aHost) MOZ_OVERRIDE;
+  virtual bool SetCompositableHost(CompositableHost* aHost) override;
 
-  virtual void Disconnect() MOZ_OVERRIDE
+  virtual void Disconnect() override
   {
     Destroy();
   }
 
-  virtual void SetLayerManager(LayerManagerComposite* aManager) MOZ_OVERRIDE;
+  virtual void SetLayerManager(LayerManagerComposite* aManager) override;
 
-  virtual Layer* GetLayer() MOZ_OVERRIDE;
-  virtual void RenderLayer(const nsIntRect& aClipRect) MOZ_OVERRIDE;
+  virtual Layer* GetLayer() override;
+  virtual void RenderLayer(const nsIntRect& aClipRect) override;
 
-  virtual void CleanupResources() MOZ_OVERRIDE;
+  virtual void CleanupResources() override;
 
-  virtual void GenEffectChain(EffectChain& aEffect) MOZ_OVERRIDE;
+  virtual void GenEffectChain(EffectChain& aEffect) override;
 
-  CompositableHost* GetCompositableHost() MOZ_OVERRIDE;
+  CompositableHost* GetCompositableHost() override;
 
-  virtual LayerComposite* AsLayerComposite() MOZ_OVERRIDE { return this; }
+  virtual LayerComposite* AsLayerComposite() override { return this; }
 
   void SetBounds(nsIntRect aBounds) { mBounds = aBounds; }
 
-  virtual const char* Name() const MOZ_OVERRIDE { return "CanvasLayerComposite"; }
+  virtual const char* Name() const override { return "CanvasLayerComposite"; }
 
 protected:
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
 private:
   gfx::Filter GetEffectFilter();

@@ -64,7 +64,7 @@ protected:
   void DoMemoryReport(uint32_t aCurrentSize);
 };
 
-class CacheStorageService MOZ_FINAL : public nsICacheStorageService
+class CacheStorageService final : public nsICacheStorageService
                                     , public nsIMemoryReporter
                                     , public nsITimerCallback
 {

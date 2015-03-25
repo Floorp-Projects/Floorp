@@ -19,7 +19,7 @@ namespace mozilla {
 template<typename T>
 class Maybe;
 
-class EventListenerInfo MOZ_FINAL : public nsIEventListenerInfo
+class EventListenerInfo final : public nsIEventListenerInfo
 {
 public:
   EventListenerInfo(const nsAString& aType,
@@ -54,7 +54,7 @@ protected:
   bool mInSystemEventGroup;
 };
 
-class EventListenerService MOZ_FINAL : public nsIEventListenerService
+class EventListenerService final : public nsIEventListenerService
 {
   ~EventListenerService() {}
 public:

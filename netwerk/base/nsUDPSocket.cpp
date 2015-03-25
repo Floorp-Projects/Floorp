@@ -374,7 +374,7 @@ namespace {
 //-----------------------------------------------------------------------------
 // UDPMessageProxy
 //-----------------------------------------------------------------------------
-class UDPMessageProxy MOZ_FINAL : public nsIUDPMessage
+class UDPMessageProxy final : public nsIUDPMessage
 {
 public:
   UDPMessageProxy(NetAddr* aAddr,
@@ -697,7 +697,7 @@ namespace {
 //-----------------------------------------------------------------------------
 // SocketListenerProxy
 //-----------------------------------------------------------------------------
-class SocketListenerProxy MOZ_FINAL : public nsIUDPSocketListener
+class SocketListenerProxy final : public nsIUDPSocketListener
 {
   ~SocketListenerProxy() {}
 

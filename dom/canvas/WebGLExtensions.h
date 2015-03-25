@@ -41,7 +41,7 @@ protected:
 };
 
 #define DECL_WEBGL_EXTENSION_GOOP \
-    virtual JSObject* WrapObject(JSContext* cx) MOZ_OVERRIDE;
+    virtual JSObject* WrapObject(JSContext* cx) override;
 
 #define IMPL_WEBGL_EXTENSION_GOOP(WebGLExtensionType)            \
     JSObject*                                                    \

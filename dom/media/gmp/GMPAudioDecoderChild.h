@@ -26,19 +26,19 @@ public:
   GMPAudioHostImpl& Host();
 
   // GMPAudioDecoderCallback
-  virtual void Decoded(GMPAudioSamples* aEncodedSamples) MOZ_OVERRIDE;
-  virtual void InputDataExhausted() MOZ_OVERRIDE;
-  virtual void DrainComplete() MOZ_OVERRIDE;
-  virtual void ResetComplete() MOZ_OVERRIDE;
-  virtual void Error(GMPErr aError) MOZ_OVERRIDE;
+  virtual void Decoded(GMPAudioSamples* aEncodedSamples) override;
+  virtual void InputDataExhausted() override;
+  virtual void DrainComplete() override;
+  virtual void ResetComplete() override;
+  virtual void Error(GMPErr aError) override;
 
 private:
   // PGMPAudioDecoderChild
-  virtual bool RecvInitDecode(const GMPAudioCodecData& codecSettings) MOZ_OVERRIDE;
-  virtual bool RecvDecode(const GMPAudioEncodedSampleData& input) MOZ_OVERRIDE;
-  virtual bool RecvReset() MOZ_OVERRIDE;
-  virtual bool RecvDrain() MOZ_OVERRIDE;
-  virtual bool RecvDecodingComplete() MOZ_OVERRIDE;
+  virtual bool RecvInitDecode(const GMPAudioCodecData& codecSettings) override;
+  virtual bool RecvDecode(const GMPAudioEncodedSampleData& input) override;
+  virtual bool RecvReset() override;
+  virtual bool RecvDrain() override;
+  virtual bool RecvDecodingComplete() override;
 
   GMPChild* mPlugin;
   GMPAudioDecoder* mAudioDecoder;

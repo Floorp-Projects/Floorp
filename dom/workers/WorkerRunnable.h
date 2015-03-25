@@ -151,7 +151,7 @@ protected:
 
 private:
   virtual bool
-  DispatchInternal() MOZ_OVERRIDE;
+  DispatchInternal() override;
 };
 
 // This runnable is identical to WorkerSyncRunnable except it is meant to be
@@ -180,7 +180,7 @@ protected:
 
 private:
   virtual bool
-  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     AssertIsOnMainThread();
     return true;
@@ -188,7 +188,7 @@ private:
 
   virtual void
   PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-               bool aDispatchResult) MOZ_OVERRIDE;
+               bool aDispatchResult) override;
 };
 
 // This runnable is used to stop a sync loop . As sync loops keep the busy count
@@ -220,10 +220,10 @@ protected:
 
 private:
   virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE;
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
 
   virtual bool
-  DispatchInternal() MOZ_OVERRIDE;
+  DispatchInternal() override;
 };
 
 // This runnable is identical to StopSyncLoopRunnable except it is meant to be
@@ -247,7 +247,7 @@ protected:
 
 private:
   virtual bool
-  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     AssertIsOnMainThread();
     return true;
@@ -255,7 +255,7 @@ private:
 
   virtual void
   PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-               bool aDispatchResult) MOZ_OVERRIDE;
+               bool aDispatchResult) override;
 };
 
 // This runnable is processed as soon as it is received by the worker,
@@ -285,7 +285,7 @@ public:
 
 private:
   virtual bool
-  DispatchInternal() MOZ_OVERRIDE;
+  DispatchInternal() override;
 
   // Should only be called by WorkerPrivate::DoRunLoop.
   using WorkerRunnable::Cancel;
@@ -304,7 +304,7 @@ protected:
   { }
 
   virtual bool
-  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     AssertIsOnMainThread();
     return true;
@@ -312,7 +312,7 @@ protected:
 
   virtual void
   PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-               bool aDispatchResult) MOZ_OVERRIDE;
+               bool aDispatchResult) override;
 };
 
 // A WorkerRunnable that should be dispatched from the worker to itself for
@@ -332,15 +332,15 @@ protected:
   { }
 
   virtual bool
-  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE;
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override;
 
   virtual void
   PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-               bool aDispatchResult) MOZ_OVERRIDE;
+               bool aDispatchResult) override;
 
   virtual void
   PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-          bool aRunResult) MOZ_OVERRIDE;
+          bool aRunResult) override;
 };
 
 // Base class for the runnable objects, which makes a synchronous call to
@@ -362,7 +362,7 @@ public:
   bool Dispatch(JSContext* aCx);
 
 private:
-  NS_IMETHOD Run() MOZ_OVERRIDE;  
+  NS_IMETHOD Run() override;  
 };
 
 END_WORKERS_NAMESPACE

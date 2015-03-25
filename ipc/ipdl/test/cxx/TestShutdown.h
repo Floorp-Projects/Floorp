@@ -33,7 +33,7 @@ public:
 
 protected:
     virtual void
-    ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+    ActorDestroy(ActorDestroyReason why) override;
 
 private:
     bool mExpectParentDeleted;
@@ -58,19 +58,19 @@ public:
 
 protected:
     virtual bool
-    AnswerStackFrame() MOZ_OVERRIDE
+    AnswerStackFrame() override
     {
         return CallStackFrame();
     }
 
     virtual PTestShutdownSubsubParent*
-    AllocPTestShutdownSubsubParent(const bool& expectParentDelete) MOZ_OVERRIDE
+    AllocPTestShutdownSubsubParent(const bool& expectParentDelete) override
     {
         return new TestShutdownSubsubParent(expectParentDelete);
     }
 
     virtual bool
-    DeallocPTestShutdownSubsubParent(PTestShutdownSubsubParent* actor) MOZ_OVERRIDE
+    DeallocPTestShutdownSubsubParent(PTestShutdownSubsubParent* actor) override
     {
         delete actor;
         ++mDeletedCount;
@@ -78,7 +78,7 @@ protected:
     }
 
     virtual void
-    ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+    ActorDestroy(ActorDestroyReason why) override;
 
 private:
     bool mExpectCrash;
@@ -104,23 +104,23 @@ public:
     void Main();
 
 protected:
-    virtual bool RecvSync() MOZ_OVERRIDE { return true; }
+    virtual bool RecvSync() override { return true; }
 
     virtual PTestShutdownSubParent*
-    AllocPTestShutdownSubParent(const bool& expectCrash) MOZ_OVERRIDE
+    AllocPTestShutdownSubParent(const bool& expectCrash) override
     {
         return new TestShutdownSubParent(expectCrash);
     }
 
     virtual bool
-    DeallocPTestShutdownSubParent(PTestShutdownSubParent* actor) MOZ_OVERRIDE
+    DeallocPTestShutdownSubParent(PTestShutdownSubParent* actor) override
     {
         delete actor;
         return true;
     }
 
     virtual void
-    ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+    ActorDestroy(ActorDestroyReason why) override;
 };
 
 
@@ -141,7 +141,7 @@ public:
 
 protected:
     virtual void
-    ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+    ActorDestroy(ActorDestroyReason why) override;
 
 private:
     bool mExpectParentDeleted;
@@ -161,23 +161,23 @@ public:
     }
 
 protected:
-    virtual bool AnswerStackFrame() MOZ_OVERRIDE;
+    virtual bool AnswerStackFrame() override;
 
     virtual PTestShutdownSubsubChild*
-    AllocPTestShutdownSubsubChild(const bool& expectParentDelete) MOZ_OVERRIDE
+    AllocPTestShutdownSubsubChild(const bool& expectParentDelete) override
     {
         return new TestShutdownSubsubChild(expectParentDelete);
     }
 
     virtual bool
-    DeallocPTestShutdownSubsubChild(PTestShutdownSubsubChild* actor) MOZ_OVERRIDE
+    DeallocPTestShutdownSubsubChild(PTestShutdownSubsubChild* actor) override
     {
         delete actor;
         return true;
     }
 
     virtual void
-    ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+    ActorDestroy(ActorDestroyReason why) override;
 
 private:
     bool mExpectCrash;
@@ -201,20 +201,20 @@ protected:
 
     virtual PTestShutdownSubChild*
     AllocPTestShutdownSubChild(
-        const bool& expectCrash) MOZ_OVERRIDE
+        const bool& expectCrash) override
     {
         return new TestShutdownSubChild(expectCrash);
     }
 
     virtual bool
-    DeallocPTestShutdownSubChild(PTestShutdownSubChild* actor) MOZ_OVERRIDE
+    DeallocPTestShutdownSubChild(PTestShutdownSubChild* actor) override
     {
         delete actor;
         return true;
     }
 
     virtual void
-    ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+    ActorDestroy(ActorDestroyReason why) override;
 };
 
 

@@ -23,11 +23,11 @@ public:
     void Main();
 
 protected:    
-    virtual bool RecvNonce() MOZ_OVERRIDE;
+    virtual bool RecvNonce() override;
 
     void BreakNestedLoop();
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -47,11 +47,11 @@ public:
     virtual ~TestNestedLoopsChild();
 
 protected:
-    virtual bool RecvStart() MOZ_OVERRIDE;
+    virtual bool RecvStart() override;
 
-    virtual bool AnswerR() MOZ_OVERRIDE;
+    virtual bool AnswerR() override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");

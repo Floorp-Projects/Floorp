@@ -24,15 +24,15 @@ public:
     void Main();
 
 protected:
-    PTestActorPunningPunnedParent* AllocPTestActorPunningPunnedParent() MOZ_OVERRIDE;
-    bool DeallocPTestActorPunningPunnedParent(PTestActorPunningPunnedParent* a) MOZ_OVERRIDE;
+    PTestActorPunningPunnedParent* AllocPTestActorPunningPunnedParent() override;
+    bool DeallocPTestActorPunningPunnedParent(PTestActorPunningPunnedParent* a) override;
 
-    PTestActorPunningSubParent* AllocPTestActorPunningSubParent() MOZ_OVERRIDE;
-    bool DeallocPTestActorPunningSubParent(PTestActorPunningSubParent* a) MOZ_OVERRIDE;
+    PTestActorPunningSubParent* AllocPTestActorPunningSubParent() override;
+    bool DeallocPTestActorPunningSubParent(PTestActorPunningSubParent* a) override;
 
-    virtual bool RecvPun(PTestActorPunningSubParent* a, const Bad& bad) MOZ_OVERRIDE;
+    virtual bool RecvPun(PTestActorPunningSubParent* a, const Bad& bad) override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown == why)
             fail("should have died from error!");  
@@ -48,7 +48,7 @@ public:
     TestActorPunningPunnedParent() {}
     virtual ~TestActorPunningPunnedParent() {}
 protected:
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE {}
+    virtual void ActorDestroy(ActorDestroyReason why) override {}
 };
 
 class TestActorPunningSubParent :
@@ -58,7 +58,7 @@ public:
     TestActorPunningSubParent() {}
     virtual ~TestActorPunningSubParent() {}
 protected:
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE {}
+    virtual void ActorDestroy(ActorDestroyReason why) override {}
 };
 
 
@@ -70,15 +70,15 @@ public:
     virtual ~TestActorPunningChild() {}
 
 protected:
-    PTestActorPunningPunnedChild* AllocPTestActorPunningPunnedChild() MOZ_OVERRIDE;
-    bool DeallocPTestActorPunningPunnedChild(PTestActorPunningPunnedChild* a) MOZ_OVERRIDE;
+    PTestActorPunningPunnedChild* AllocPTestActorPunningPunnedChild() override;
+    bool DeallocPTestActorPunningPunnedChild(PTestActorPunningPunnedChild* a) override;
 
-    PTestActorPunningSubChild* AllocPTestActorPunningSubChild() MOZ_OVERRIDE;
-    bool DeallocPTestActorPunningSubChild(PTestActorPunningSubChild* a) MOZ_OVERRIDE;
+    PTestActorPunningSubChild* AllocPTestActorPunningSubChild() override;
+    bool DeallocPTestActorPunningSubChild(PTestActorPunningSubChild* a) override;
 
-    virtual bool RecvStart() MOZ_OVERRIDE;
+    virtual bool RecvStart() override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         fail("should have been killed off!");
     }
@@ -99,7 +99,7 @@ public:
     TestActorPunningSubChild() {}
     virtual ~TestActorPunningSubChild() {}
 
-    virtual bool RecvBad() MOZ_OVERRIDE;
+    virtual bool RecvBad() override;
 };
 
 

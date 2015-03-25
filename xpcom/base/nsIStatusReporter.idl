@@ -65,15 +65,15 @@ interface nsIStatusReporterManager : nsISupports
  * Note that this defaults 'process' to "", which is usually what's desired.
  */
 #define NS_STATUS_REPORTER_IMPLEMENT(_classname, _name, _desc_Function)       \
-    class StatusReporter_##_classname MOZ_FINAL : public nsIStatusReporter {  \
+    class StatusReporter_##_classname final : public nsIStatusReporter {  \
       ~StatusReporter_##_classname() {}                                       \
     public:                                                                   \
       NS_DECL_ISUPPORTS                                                       \
-      NS_IMETHOD GetName(nsACString &name) MOZ_OVERRIDE                       \
+      NS_IMETHOD GetName(nsACString &name) override                       \
         { name.AssignLiteral(_name); return NS_OK; }                          \
-      NS_IMETHOD GetProcess(nsACString &process) MOZ_OVERRIDE                 \
+      NS_IMETHOD GetProcess(nsACString &process) override                 \
         { process.Truncate(); return NS_OK; }                                 \
-      NS_IMETHOD GetDescription(nsACString &desc) MOZ_OVERRIDE                \
+      NS_IMETHOD GetDescription(nsACString &desc) override                \
         { _desc_Function(desc); return NS_OK; }                               \
     };                                                                        \
     NS_IMPL_ISUPPORTS(StatusReporter_##_classname, nsIStatusReporter)

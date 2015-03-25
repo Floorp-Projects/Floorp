@@ -17,7 +17,7 @@ class nsIFile;
 // class nsAppFileLocationProvider
 //*****************************************************************************
 
-class nsAppFileLocationProvider MOZ_FINAL : public nsIDirectoryServiceProvider2
+class nsAppFileLocationProvider final : public nsIDirectoryServiceProvider2
 {
 public:
   nsAppFileLocationProvider();

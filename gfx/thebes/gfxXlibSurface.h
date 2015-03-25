@@ -17,7 +17,7 @@
 
 #include "nsSize.h"
 
-class gfxXlibSurface MOZ_FINAL : public gfxASurface {
+class gfxXlibSurface final : public gfxASurface {
 public:
     // construct a wrapper around the specified drawable with dpy/visual.
     // Will use XGetGeometry to query the window/pixmap size.
@@ -52,10 +52,10 @@ public:
 
     virtual already_AddRefed<gfxASurface>
     CreateSimilarSurface(gfxContentType aType,
-                         const gfxIntSize& aSize) MOZ_OVERRIDE;
-    virtual void Finish() MOZ_OVERRIDE;
+                         const gfxIntSize& aSize) override;
+    virtual void Finish() override;
 
-    virtual const gfxIntSize GetSize() const MOZ_OVERRIDE;
+    virtual const gfxIntSize GetSize() const override;
 
     Display* XDisplay() { return mDisplay; }
     Screen* XScreen();
@@ -81,7 +81,7 @@ public:
 
     // This surface is a wrapper around X pixmaps, which are stored in the X
     // server, not the main application.
-    virtual gfxMemoryLocation GetMemoryLocation() const MOZ_OVERRIDE;
+    virtual gfxMemoryLocation GetMemoryLocation() const override;
 
 #if defined(GL_PROVIDER_GLX)
     GLXPixmap GetGLXPixmap();

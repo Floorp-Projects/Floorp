@@ -24,7 +24,7 @@ using namespace mozilla;
 using namespace mozilla::a11y;
 using mozilla::dom::Selection;
 
-struct mozilla::a11y::SelData MOZ_FINAL
+struct mozilla::a11y::SelData final
 {
   SelData(Selection* aSel, int32_t aReason) :
     mSel(aSel), mReason(aReason) {}

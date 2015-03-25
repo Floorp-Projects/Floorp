@@ -59,7 +59,7 @@ public:
  ~BluetoothVoidReplyRunnable();
 
 protected:
-  virtual bool ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue) MOZ_OVERRIDE
+  virtual bool ParseSuccessfulReply(JS::MutableHandle<JS::Value> aValue) override
   {
     aValue.setUndefined();
     return true;

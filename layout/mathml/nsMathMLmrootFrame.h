@@ -22,23 +22,23 @@ public:
 
   virtual void
   SetAdditionalStyleContext(int32_t          aIndex, 
-                            nsStyleContext*  aStyleContext) MOZ_OVERRIDE;
+                            nsStyleContext*  aStyleContext) override;
   virtual nsStyleContext*
-  GetAdditionalStyleContext(int32_t aIndex) const MOZ_OVERRIDE;
+  GetAdditionalStyleContext(int32_t aIndex) const override;
 
   virtual void
   Init(nsIContent*       aContent,
        nsContainerFrame* aParent,
-       nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
+       nsIFrame*         aPrevInFlow) override;
 
   NS_IMETHOD
-  TransmitAutomaticData() MOZ_OVERRIDE;
+  TransmitAutomaticData() override;
 
   virtual void
   Reflow(nsPresContext*          aPresContext,
          nsHTMLReflowMetrics&     aDesiredSize,
          const nsHTMLReflowState& aReflowState,
-         nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+         nsReflowStatus&          aStatus) override;
 
   void
   GetRadicalXOffsets(nscoord aIndexWidth, nscoord aSqrWidth,
@@ -48,14 +48,14 @@ public:
 
   virtual void
   GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingContext,
-                           nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
+                           nsHTMLReflowMetrics& aDesiredSize) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
   uint8_t
-  ScriptIncrement(nsIFrame* aFrame) MOZ_OVERRIDE
+  ScriptIncrement(nsIFrame* aFrame) override
   {
     return (aFrame && aFrame == mFrames.LastChild()) ? 2 : 0;
   }

@@ -964,7 +964,7 @@ nsDocShellTreeOwner::GetOwnerRequestor()
 ///////////////////////////////////////////////////////////////////////////////
 // DefaultTooltipTextProvider
 
-class DefaultTooltipTextProvider MOZ_FINAL : public nsITooltipTextProvider
+class DefaultTooltipTextProvider final : public nsITooltipTextProvider
 {
 public:
     DefaultTooltipTextProvider();

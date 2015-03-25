@@ -116,7 +116,7 @@ NS_IMPL_RELEASE(WMFByteStream)
 
 
 // Stores data regarding an async read opreation.
-class ReadRequest MOZ_FINAL : public IUnknown {
+class ReadRequest final : public IUnknown {
   ~ReadRequest() {}
 
 public:
@@ -159,7 +159,7 @@ ReadRequest::QueryInterface(REFIID aIId, void **aInterface)
   return E_NOINTERFACE;
 }
 
-class ProcessReadRequestEvent MOZ_FINAL : public nsRunnable {
+class ProcessReadRequestEvent final : public nsRunnable {
 public:
   ProcessReadRequestEvent(WMFByteStream* aStream,
                           IMFAsyncResult* aResult,

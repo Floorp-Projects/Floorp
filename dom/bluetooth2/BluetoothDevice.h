@@ -29,7 +29,7 @@ class BluetoothValue;
 class BluetoothSignal;
 class BluetoothSocket;
 
-class BluetoothDevice MOZ_FINAL : public DOMEventTargetHelper
+class BluetoothDevice final : public DOMEventTargetHelper
                                 , public BluetoothSignalObserver
 {
 public:
@@ -94,8 +94,8 @@ public:
      return GetOwner();
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
-  virtual void DisconnectFromOwner() MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) override;
+  virtual void DisconnectFromOwner() override;
 
 private:
   BluetoothDevice(nsPIDOMWindow* aOwner, const BluetoothValue& aValue);

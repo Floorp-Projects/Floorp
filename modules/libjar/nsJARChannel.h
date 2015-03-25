@@ -30,7 +30,7 @@ class nsJARInputThunk;
 
 //-----------------------------------------------------------------------------
 
-class nsJARChannel MOZ_FINAL : public nsIJARChannel
+class nsJARChannel final : public nsIJARChannel
                              , public nsIDownloadObserver
                              , public nsIStreamListener
                              , public nsIRemoteOpenFileListener

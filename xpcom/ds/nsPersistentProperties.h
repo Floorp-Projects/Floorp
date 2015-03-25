@@ -15,7 +15,7 @@
 
 class nsIUnicharInputStream;
 
-class nsPersistentProperties MOZ_FINAL : public nsIPersistentProperties
+class nsPersistentProperties final : public nsIPersistentProperties
 {
 public:
   nsPersistentProperties();
@@ -36,7 +36,7 @@ protected:
   PLArenaPool mArena;
 };
 
-class nsPropertyElement MOZ_FINAL : public nsIPropertyElement
+class nsPropertyElement final : public nsIPropertyElement
 {
 public:
   nsPropertyElement()

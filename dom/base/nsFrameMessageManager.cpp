@@ -1273,7 +1273,7 @@ struct MessageManagerReferentCount
 namespace mozilla {
 namespace dom {
 
-class MessageManagerReporter MOZ_FINAL : public nsIMemoryReporter
+class MessageManagerReporter final : public nsIMemoryReporter
 {
   ~MessageManagerReporter() {}
 
@@ -1727,7 +1727,7 @@ public:
   }
 
   virtual bool DoLoadMessageManagerScript(const nsAString& aURL,
-                                          bool aRunInGlobalScope) MOZ_OVERRIDE
+                                          bool aRunInGlobalScope) override
   {
     ProcessGlobal* global = ProcessGlobal::Get();
     MOZ_ASSERT(!aRunInGlobalScope);
@@ -1739,7 +1739,7 @@ public:
                                   const nsAString& aMessage,
                                   const StructuredCloneData& aData,
                                   JS::Handle<JSObject *> aCpows,
-                                  nsIPrincipal* aPrincipal) MOZ_OVERRIDE
+                                  nsIPrincipal* aPrincipal) override
   {
     nsRefPtr<nsIRunnable> ev =
       new nsAsyncMessageToSameProcessChild(aCx, aMessage, aData, aCpows,
@@ -1748,25 +1748,25 @@ public:
     return true;
   }
 
-  bool CheckPermission(const nsAString& aPermission) MOZ_OVERRIDE
+  bool CheckPermission(const nsAString& aPermission) override
   {
     // In a single-process scenario, the child always has all capabilities.
     return true;
   }
 
-  bool CheckManifestURL(const nsAString& aManifestURL) MOZ_OVERRIDE
+  bool CheckManifestURL(const nsAString& aManifestURL) override
   {
     // In a single-process scenario, the child always has all capabilities.
     return true;
   }
 
-  bool CheckAppHasPermission(const nsAString& aPermission) MOZ_OVERRIDE
+  bool CheckAppHasPermission(const nsAString& aPermission) override
   {
     // In a single-process scenario, the child always has all capabilities.
     return true;
   }
 
-  virtual bool CheckAppHasStatus(unsigned short aStatus) MOZ_OVERRIDE
+  virtual bool CheckAppHasStatus(unsigned short aStatus) override
   {
     // In a single-process scenario, the child always has all capabilities.
     return true;
@@ -1795,7 +1795,7 @@ public:
                                      JS::Handle<JSObject *> aCpows,
                                      nsIPrincipal* aPrincipal,
                                      InfallibleTArray<nsString>* aJSONRetVal,
-                                     bool aIsSync) MOZ_OVERRIDE
+                                     bool aIsSync) override
   {
     mozilla::dom::ContentChild* cc =
       mozilla::dom::ContentChild::GetSingleton();
@@ -1822,7 +1822,7 @@ public:
                                   const nsAString& aMessage,
                                   const mozilla::dom::StructuredCloneData& aData,
                                   JS::Handle<JSObject *> aCpows,
-                                  nsIPrincipal* aPrincipal) MOZ_OVERRIDE
+                                  nsIPrincipal* aPrincipal) override
   {
     mozilla::dom::ContentChild* cc =
       mozilla::dom::ContentChild::GetSingleton();
@@ -1896,7 +1896,7 @@ public:
                                      JS::Handle<JSObject *> aCpows,
                                      nsIPrincipal* aPrincipal,
                                      InfallibleTArray<nsString>* aJSONRetVal,
-                                     bool aIsSync) MOZ_OVERRIDE
+                                     bool aIsSync) override
   {
     nsTArray<nsCOMPtr<nsIRunnable> > asyncMessages;
     if (nsFrameMessageManager::sPendingSameProcessAsyncMessages) {
@@ -1920,7 +1920,7 @@ public:
                                   const nsAString& aMessage,
                                   const mozilla::dom::StructuredCloneData& aData,
                                   JS::Handle<JSObject *> aCpows,
-                                  nsIPrincipal* aPrincipal) MOZ_OVERRIDE
+                                  nsIPrincipal* aPrincipal) override
   {
     if (!nsFrameMessageManager::sPendingSameProcessAsyncMessages) {
       nsFrameMessageManager::sPendingSameProcessAsyncMessages = new nsTArray<nsCOMPtr<nsIRunnable> >;

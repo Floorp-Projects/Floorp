@@ -342,7 +342,7 @@ public:
   virtual nsresult RunImpl() = 0;
 
   NS_IMETHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(mCameraControl);
     MOZ_ASSERT(NS_GetCurrentThread() == mCameraControl->mCameraThread);
@@ -396,7 +396,7 @@ CameraControlImpl::Start(const Configuration* aConfig)
     }
 
     nsresult
-    RunImpl() MOZ_OVERRIDE
+    RunImpl() override
     {
       if (mHaveInitialConfig) {
         return mCameraControl->StartImpl(&mConfig);
@@ -426,7 +426,7 @@ CameraControlImpl::SetConfiguration(const Configuration& aConfig)
     { }
 
     nsresult
-    RunImpl() MOZ_OVERRIDE
+    RunImpl() override
     {
       return mCameraControl->SetConfigurationImpl(mConfig);
     }
@@ -450,7 +450,7 @@ CameraControlImpl::AutoFocus()
     { }
 
     nsresult
-    RunImpl() MOZ_OVERRIDE
+    RunImpl() override
     {
       return mCameraControl->AutoFocusImpl();
     }
@@ -471,7 +471,7 @@ CameraControlImpl::StartFaceDetection()
     { }
 
     nsresult
-    RunImpl() MOZ_OVERRIDE
+    RunImpl() override
     {
       return mCameraControl->StartFaceDetectionImpl();
     }
@@ -492,7 +492,7 @@ CameraControlImpl::StopFaceDetection()
     { }
 
     nsresult
-    RunImpl() MOZ_OVERRIDE
+    RunImpl() override
     {
       return mCameraControl->StopFaceDetectionImpl();
     }
@@ -513,7 +513,7 @@ CameraControlImpl::TakePicture()
     { }
 
     nsresult
-    RunImpl() MOZ_OVERRIDE
+    RunImpl() override
     {
       return mCameraControl->TakePictureImpl();
     }
@@ -544,7 +544,7 @@ CameraControlImpl::StartRecording(DeviceStorageFileDescriptor* aFileDescriptor,
     }
 
     nsresult
-    RunImpl() MOZ_OVERRIDE
+    RunImpl() override
     {
       return mCameraControl->StartRecordingImpl(mFileDescriptor,
         mOptionsPassed ? &mOptions : nullptr);
@@ -575,7 +575,7 @@ CameraControlImpl::StopRecording()
     { }
 
     nsresult
-    RunImpl() MOZ_OVERRIDE
+    RunImpl() override
     {
       return mCameraControl->StopRecordingImpl();
     }
@@ -596,7 +596,7 @@ CameraControlImpl::StartPreview()
     { }
 
     nsresult
-    RunImpl() MOZ_OVERRIDE
+    RunImpl() override
     {
       return mCameraControl->StartPreviewImpl();
     }
@@ -617,7 +617,7 @@ CameraControlImpl::StopPreview()
     { }
 
     nsresult
-    RunImpl() MOZ_OVERRIDE
+    RunImpl() override
     {
       return mCameraControl->StopPreviewImpl();
     }
@@ -638,7 +638,7 @@ CameraControlImpl::ResumeContinuousFocus()
     { }
 
     nsresult
-    RunImpl() MOZ_OVERRIDE
+    RunImpl() override
     {
       return mCameraControl->ResumeContinuousFocusImpl();
     }
@@ -659,7 +659,7 @@ CameraControlImpl::Stop()
     { }
 
     nsresult
-    RunImpl() MOZ_OVERRIDE
+    RunImpl() override
     {
       return mCameraControl->StopImpl();
     }
@@ -707,7 +707,7 @@ CameraControlImpl::AddListener(CameraControlListener* aListener)
     { }
 
     nsresult
-    RunImpl() MOZ_OVERRIDE
+    RunImpl() override
     {
       mCameraControl->AddListenerImpl(mListener.forget());
       return NS_OK;
@@ -741,7 +741,7 @@ CameraControlImpl::RemoveListener(CameraControlListener* aListener)
     { }
 
     nsresult
-    RunImpl() MOZ_OVERRIDE
+    RunImpl() override
     {
       mCameraControl->RemoveListenerImpl(mListener);
       return NS_OK;

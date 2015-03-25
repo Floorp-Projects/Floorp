@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace storage {
 
-class VacuumManager MOZ_FINAL : public nsIObserver
+class VacuumManager final : public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS

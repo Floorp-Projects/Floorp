@@ -53,7 +53,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD Observe(nsISupports *subject, const char *aTopic,
-                     const char16_t *aData) MOZ_OVERRIDE
+                     const char16_t *aData) override
   {
     MOZ_ASSERT(strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0);
 

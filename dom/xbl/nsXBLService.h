@@ -28,7 +28,7 @@ class EventTarget;
 }
 }
 
-class nsXBLService MOZ_FINAL : public nsSupportsWeakReference
+class nsXBLService final : public nsSupportsWeakReference
 {
   NS_DECL_ISUPPORTS
 

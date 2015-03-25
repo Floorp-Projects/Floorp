@@ -23,27 +23,27 @@ public:
     void Main();
 
 protected:    
-    virtual bool RecvAsync() MOZ_OVERRIDE {
+    virtual bool RecvAsync() override {
         if (!mOnStack)
             fail("not on C++ stack?!");
         return true;
     }
 
-    virtual bool RecvSync() MOZ_OVERRIDE {
+    virtual bool RecvSync() override {
         if (!mOnStack)
             fail("not on C++ stack?!");
         return true;
     }
 
-    virtual bool AnswerRpc() MOZ_OVERRIDE {
+    virtual bool AnswerRpc() override {
         if (!mOnStack)
             fail("not on C++ stack?!");
         return true;
     }
 
-    virtual bool AnswerStackFrame() MOZ_OVERRIDE;
+    virtual bool AnswerStackFrame() override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -51,17 +51,17 @@ protected:
         QuitParent();
     }
 
-    virtual void EnteredCxxStack() MOZ_OVERRIDE {
+    virtual void EnteredCxxStack() override {
         mOnStack = true;
     }
-    virtual void ExitedCxxStack() MOZ_OVERRIDE {
+    virtual void ExitedCxxStack() override {
         mOnStack = false;
     }
 
-    virtual void EnteredCall() MOZ_OVERRIDE {
+    virtual void EnteredCall() override {
         ++mIncallDepth;
     }
-    virtual void ExitedCall() MOZ_OVERRIDE {
+    virtual void ExitedCall() override {
         --mIncallDepth;
     }
 
@@ -81,11 +81,11 @@ public:
     void RunTests();
 
 protected:
-    virtual bool RecvStart() MOZ_OVERRIDE;
+    virtual bool RecvStart() override;
 
-    virtual bool AnswerStackFrame() MOZ_OVERRIDE;
+    virtual bool AnswerStackFrame() override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");
@@ -99,19 +99,19 @@ protected:
         QuitChild();
     }
 
-    virtual void EnteredCxxStack() MOZ_OVERRIDE {
+    virtual void EnteredCxxStack() override {
         ++mEntered;
         mOnStack = true;
     }
-    virtual void ExitedCxxStack() MOZ_OVERRIDE {
+    virtual void ExitedCxxStack() override {
         ++mExited;
         mOnStack = false;
     }
 
-    virtual void EnteredCall() MOZ_OVERRIDE {
+    virtual void EnteredCall() override {
         ++mIncallDepth;
     }
-    virtual void ExitedCall() MOZ_OVERRIDE {
+    virtual void ExitedCall() override {
         --mIncallDepth;
     }
 

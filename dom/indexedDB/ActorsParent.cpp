@@ -270,7 +270,7 @@ private:
 };
 
 template <class MetadataType>
-class MOZ_STACK_CLASS MetadataNameOrIdMatcher MOZ_FINAL
+class MOZ_STACK_CLASS MetadataNameOrIdMatcher final
 {
   typedef MetadataNameOrIdMatcher<MetadataType> SelfType;
 
@@ -1382,7 +1382,7 @@ UpgradeSchemaFrom7To8(mozIStorageConnection* aConnection)
   return NS_OK;
 }
 
-class CompressDataBlobsFunction MOZ_FINAL
+class CompressDataBlobsFunction final
   : public mozIStorageFunction
 {
 public:
@@ -1394,7 +1394,7 @@ private:
 
   NS_IMETHOD
   OnFunctionCall(mozIStorageValueArray* aArguments,
-                 nsIVariant** aResult) MOZ_OVERRIDE
+                 nsIVariant** aResult) override
   {
     MOZ_ASSERT(aArguments);
     MOZ_ASSERT(aResult);
@@ -1716,7 +1716,7 @@ UpgradeSchemaFrom10_0To11_0(mozIStorageConnection* aConnection)
   return NS_OK;
 }
 
-class EncodeKeysFunction MOZ_FINAL
+class EncodeKeysFunction final
   : public mozIStorageFunction
 {
 public:
@@ -1728,7 +1728,7 @@ private:
 
   NS_IMETHOD
   OnFunctionCall(mozIStorageValueArray* aArguments,
-                 nsIVariant** aResult) MOZ_OVERRIDE
+                 nsIVariant** aResult) override
   {
     MOZ_ASSERT(aArguments);
     MOZ_ASSERT(aResult);
@@ -2691,7 +2691,7 @@ private:
   NS_DECL_MOZISTORAGEPROGRESSHANDLER
 };
 
-class MOZ_STACK_CLASS DatabaseOperationBase::AutoSetProgressHandler MOZ_FINAL
+class MOZ_STACK_CLASS DatabaseOperationBase::AutoSetProgressHandler final
 {
   mozIStorageConnection* mConnection;
   DebugOnly<DatabaseOperationBase*> mDEBUGDatabaseOp;
@@ -2781,7 +2781,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class Factory MOZ_FINAL
+class Factory final
   : public PBackgroundIDBFactoryParent
 {
   // Counts the number of "live" Factory instances that have not yet had
@@ -2817,41 +2817,41 @@ private:
 
   // IPDL methods are only called by IPDL.
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
-  RecvDeleteMe() MOZ_OVERRIDE;
+  RecvDeleteMe() override;
 
   virtual bool
-  RecvIncrementLoggingRequestSerialNumber() MOZ_OVERRIDE;
+  RecvIncrementLoggingRequestSerialNumber() override;
 
   virtual PBackgroundIDBFactoryRequestParent*
   AllocPBackgroundIDBFactoryRequestParent(const FactoryRequestParams& aParams)
-                                          MOZ_OVERRIDE;
+                                          override;
 
   virtual bool
   RecvPBackgroundIDBFactoryRequestConstructor(
                                      PBackgroundIDBFactoryRequestParent* aActor,
                                      const FactoryRequestParams& aParams)
-                                     MOZ_OVERRIDE;
+                                     override;
 
   virtual bool
   DeallocPBackgroundIDBFactoryRequestParent(
                                      PBackgroundIDBFactoryRequestParent* aActor)
-                                     MOZ_OVERRIDE;
+                                     override;
 
   virtual PBackgroundIDBDatabaseParent*
   AllocPBackgroundIDBDatabaseParent(
                                    const DatabaseSpec& aSpec,
                                    PBackgroundIDBFactoryRequestParent* aRequest)
-                                   MOZ_OVERRIDE;
+                                   override;
 
   virtual bool
   DeallocPBackgroundIDBDatabaseParent(PBackgroundIDBDatabaseParent* aActor)
-                                      MOZ_OVERRIDE;
+                                      override;
 };
 
-class Database MOZ_FINAL
+class Database final
   : public PBackgroundIDBDatabaseParent
 {
   friend class VersionChangeTransaction;
@@ -3014,34 +3014,34 @@ private:
 
   // IPDL methods are only called by IPDL.
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual PBackgroundIDBDatabaseFileParent*
   AllocPBackgroundIDBDatabaseFileParent(PBlobParent* aBlobParent)
-                                        MOZ_OVERRIDE;
+                                        override;
 
   virtual bool
   DeallocPBackgroundIDBDatabaseFileParent(
                                        PBackgroundIDBDatabaseFileParent* aActor)
-                                       MOZ_OVERRIDE;
+                                       override;
 
   virtual PBackgroundIDBTransactionParent*
   AllocPBackgroundIDBTransactionParent(
                                     const nsTArray<nsString>& aObjectStoreNames,
                                     const Mode& aMode)
-                                    MOZ_OVERRIDE;
+                                    override;
 
   virtual bool
   RecvPBackgroundIDBTransactionConstructor(
                                     PBackgroundIDBTransactionParent* aActor,
                                     InfallibleTArray<nsString>&& aObjectStoreNames,
                                     const Mode& aMode)
-                                    MOZ_OVERRIDE;
+                                    override;
 
   virtual bool
   DeallocPBackgroundIDBTransactionParent(
                                         PBackgroundIDBTransactionParent* aActor)
-                                        MOZ_OVERRIDE;
+                                        override;
 
   virtual PBackgroundIDBVersionChangeTransactionParent*
   AllocPBackgroundIDBVersionChangeTransactionParent(
@@ -3049,24 +3049,24 @@ private:
                                               const uint64_t& aRequestedVersion,
                                               const int64_t& aNextObjectStoreId,
                                               const int64_t& aNextIndexId)
-                                              MOZ_OVERRIDE;
+                                              override;
 
   virtual bool
   DeallocPBackgroundIDBVersionChangeTransactionParent(
                            PBackgroundIDBVersionChangeTransactionParent* aActor)
-                           MOZ_OVERRIDE;
+                           override;
 
   virtual bool
-  RecvDeleteMe() MOZ_OVERRIDE;
+  RecvDeleteMe() override;
 
   virtual bool
-  RecvBlocked() MOZ_OVERRIDE;
+  RecvBlocked() override;
 
   virtual bool
-  RecvClose() MOZ_OVERRIDE;
+  RecvClose() override;
 };
 
-class DatabaseFile MOZ_FINAL
+class DatabaseFile final
   : public PBackgroundIDBDatabaseFileParent
 {
   friend class Database;
@@ -3130,7 +3130,7 @@ private:
   { }
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE
+  ActorDestroy(ActorDestroyReason aWhy) override
   {
     AssertIsOnBackgroundThread();
 
@@ -3458,7 +3458,7 @@ private:
   CommitOrAbort();
 };
 
-class TransactionBase::CommitOp MOZ_FINAL
+class TransactionBase::CommitOp final
   : public DatabaseOperationBase
   , public TransactionThreadPool::FinishCallback
 {
@@ -3484,10 +3484,10 @@ private:
   NS_DECL_NSIRUNNABLE
 
   virtual void
-  TransactionFinishedBeforeUnblock() MOZ_OVERRIDE;
+  TransactionFinishedBeforeUnblock() override;
 
   virtual void
-  TransactionFinishedAfterUnblock() MOZ_OVERRIDE;
+  TransactionFinishedAfterUnblock() override;
 
 public:
   void
@@ -3500,7 +3500,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 };
 
-class TransactionBase::UpdateRefcountFunction MOZ_FINAL
+class TransactionBase::UpdateRefcountFunction final
   : public mozIStorageFunction
 {
   class FileInfoEntry
@@ -3627,7 +3627,7 @@ private:
                          void* aUserArg);
 };
 
-class MOZ_STACK_CLASS TransactionBase::AutoSavepoint MOZ_FINAL
+class MOZ_STACK_CLASS TransactionBase::AutoSavepoint final
 {
   TransactionBase* mTransaction;
 
@@ -3645,7 +3645,7 @@ public:
   Commit();
 };
 
-class TransactionBase::CachedStatement MOZ_FINAL
+class TransactionBase::CachedStatement final
 {
   friend class TransactionBase;
 
@@ -3701,7 +3701,7 @@ private:
   CachedStatement& operator=(const CachedStatement&) = delete;
 };
 
-class NormalTransaction MOZ_FINAL
+class NormalTransaction final
   : public TransactionBase
   , public PBackgroundIDBTransactionParent
 {
@@ -3724,47 +3724,47 @@ private:
 
   // Only called by TransactionBase.
   virtual bool
-  SendCompleteNotification(nsresult aResult) MOZ_OVERRIDE;
+  SendCompleteNotification(nsresult aResult) override;
 
   // IPDL methods are only called by IPDL.
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
-  RecvDeleteMe() MOZ_OVERRIDE;
+  RecvDeleteMe() override;
 
   virtual bool
-  RecvCommit() MOZ_OVERRIDE;
+  RecvCommit() override;
 
   virtual bool
-  RecvAbort(const nsresult& aResultCode) MOZ_OVERRIDE;
+  RecvAbort(const nsresult& aResultCode) override;
 
   virtual PBackgroundIDBRequestParent*
-  AllocPBackgroundIDBRequestParent(const RequestParams& aParams) MOZ_OVERRIDE;
+  AllocPBackgroundIDBRequestParent(const RequestParams& aParams) override;
 
   virtual bool
   RecvPBackgroundIDBRequestConstructor(PBackgroundIDBRequestParent* aActor,
                                        const RequestParams& aParams)
-                                       MOZ_OVERRIDE;
+                                       override;
 
   virtual bool
   DeallocPBackgroundIDBRequestParent(PBackgroundIDBRequestParent* aActor)
-                                     MOZ_OVERRIDE;
+                                     override;
 
   virtual PBackgroundIDBCursorParent*
-  AllocPBackgroundIDBCursorParent(const OpenCursorParams& aParams) MOZ_OVERRIDE;
+  AllocPBackgroundIDBCursorParent(const OpenCursorParams& aParams) override;
 
   virtual bool
   RecvPBackgroundIDBCursorConstructor(PBackgroundIDBCursorParent* aActor,
                                       const OpenCursorParams& aParams)
-                                      MOZ_OVERRIDE;
+                                      override;
 
   virtual bool
   DeallocPBackgroundIDBCursorParent(PBackgroundIDBCursorParent* aActor)
-                                    MOZ_OVERRIDE;
+                                    override;
 };
 
-class VersionChangeTransaction MOZ_FINAL
+class VersionChangeTransaction final
   : public TransactionBase
   , public PBackgroundIDBVersionChangeTransactionParent
 {
@@ -3794,62 +3794,62 @@ private:
 
   // Only called by TransactionBase.
   virtual void
-  UpdateMetadata(nsresult aResult) MOZ_OVERRIDE;
+  UpdateMetadata(nsresult aResult) override;
 
   // Only called by TransactionBase.
   virtual bool
-  SendCompleteNotification(nsresult aResult) MOZ_OVERRIDE;
+  SendCompleteNotification(nsresult aResult) override;
 
   // IPDL methods are only called by IPDL.
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
-  RecvDeleteMe() MOZ_OVERRIDE;
+  RecvDeleteMe() override;
 
   virtual bool
-  RecvCommit() MOZ_OVERRIDE;
+  RecvCommit() override;
 
   virtual bool
-  RecvAbort(const nsresult& aResultCode) MOZ_OVERRIDE;
+  RecvAbort(const nsresult& aResultCode) override;
 
   virtual bool
-  RecvCreateObjectStore(const ObjectStoreMetadata& aMetadata) MOZ_OVERRIDE;
+  RecvCreateObjectStore(const ObjectStoreMetadata& aMetadata) override;
 
   virtual bool
-  RecvDeleteObjectStore(const int64_t& aObjectStoreId) MOZ_OVERRIDE;
+  RecvDeleteObjectStore(const int64_t& aObjectStoreId) override;
 
   virtual bool
   RecvCreateIndex(const int64_t& aObjectStoreId,
-                  const IndexMetadata& aMetadata) MOZ_OVERRIDE;
+                  const IndexMetadata& aMetadata) override;
 
   virtual bool
   RecvDeleteIndex(const int64_t& aObjectStoreId,
-                  const int64_t& aIndexId) MOZ_OVERRIDE;
+                  const int64_t& aIndexId) override;
 
   virtual PBackgroundIDBRequestParent*
-  AllocPBackgroundIDBRequestParent(const RequestParams& aParams) MOZ_OVERRIDE;
+  AllocPBackgroundIDBRequestParent(const RequestParams& aParams) override;
 
   virtual bool
   RecvPBackgroundIDBRequestConstructor(PBackgroundIDBRequestParent* aActor,
                                        const RequestParams& aParams)
-                                       MOZ_OVERRIDE;
+                                       override;
 
   virtual bool
   DeallocPBackgroundIDBRequestParent(PBackgroundIDBRequestParent* aActor)
-                                     MOZ_OVERRIDE;
+                                     override;
 
   virtual PBackgroundIDBCursorParent*
-  AllocPBackgroundIDBCursorParent(const OpenCursorParams& aParams) MOZ_OVERRIDE;
+  AllocPBackgroundIDBCursorParent(const OpenCursorParams& aParams) override;
 
   virtual bool
   RecvPBackgroundIDBCursorConstructor(PBackgroundIDBCursorParent* aActor,
                                       const OpenCursorParams& aParams)
-                                      MOZ_OVERRIDE;
+                                      override;
 
   virtual bool
   DeallocPBackgroundIDBCursorParent(PBackgroundIDBCursorParent* aActor)
-                                    MOZ_OVERRIDE;
+                                    override;
 };
 
 class FactoryOp
@@ -4017,14 +4017,14 @@ protected:
 
   // Common nsIRunnable implementation that subclasses may not override.
   NS_IMETHOD
-  Run() MOZ_FINAL;
+  Run() final;
 
   // IPDL methods.
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
-  RecvPermissionRetry() MOZ_OVERRIDE;
+  RecvPermissionRetry() override;
 
   virtual void
   SendBlockedNotification() = 0;
@@ -4042,7 +4042,7 @@ private:
   FinishOpen();
 };
 
-struct FactoryOp::MaybeBlockedDatabaseInfo MOZ_FINAL
+struct FactoryOp::MaybeBlockedDatabaseInfo final
 {
   nsRefPtr<Database> mDatabase;
   bool mBlocked;
@@ -4080,7 +4080,7 @@ struct FactoryOp::MaybeBlockedDatabaseInfo MOZ_FINAL
   }
 };
 
-class OpenDatabaseOp MOZ_FINAL
+class OpenDatabaseOp final
   : public FactoryOp
 {
   friend class Database;
@@ -4143,28 +4143,28 @@ private:
 #endif
 
   virtual nsresult
-  QuotaManagerOpen() MOZ_OVERRIDE;
+  QuotaManagerOpen() override;
 
   virtual nsresult
-  DoDatabaseWork() MOZ_OVERRIDE;
+  DoDatabaseWork() override;
 
   virtual nsresult
-  BeginVersionChange() MOZ_OVERRIDE;
+  BeginVersionChange() override;
 
   virtual void
-  NoteDatabaseClosed(Database* aDatabase) MOZ_OVERRIDE;
+  NoteDatabaseClosed(Database* aDatabase) override;
 
   virtual void
-  SendBlockedNotification() MOZ_OVERRIDE;
+  SendBlockedNotification() override;
 
   virtual nsresult
-  DispatchToWorkThread() MOZ_OVERRIDE;
+  DispatchToWorkThread() override;
 
   virtual void
-  SendResults() MOZ_OVERRIDE;
+  SendResults() override;
 };
 
-class OpenDatabaseOp::VersionChangeOp MOZ_FINAL
+class OpenDatabaseOp::VersionChangeOp final
   : public TransactionDatabaseOperationBase
 {
   friend class OpenDatabaseOp;
@@ -4191,19 +4191,19 @@ private:
   { }
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 
   virtual nsresult
-  SendSuccessResult() MOZ_OVERRIDE;
+  SendSuccessResult() override;
 
   virtual bool
-  SendFailureResult(nsresult aResultCode) MOZ_OVERRIDE;
+  SendFailureResult(nsresult aResultCode) override;
 
   virtual void
-  Cleanup() MOZ_OVERRIDE;
+  Cleanup() override;
 };
 
-class DeleteDatabaseOp MOZ_FINAL
+class DeleteDatabaseOp final
   : public FactoryOp
 {
   class VersionChangeOp;
@@ -4228,28 +4228,28 @@ private:
   LoadPreviousVersion(nsIFile* aDatabaseFile);
 
   virtual nsresult
-  QuotaManagerOpen() MOZ_OVERRIDE;
+  QuotaManagerOpen() override;
 
   virtual nsresult
-  DoDatabaseWork() MOZ_OVERRIDE;
+  DoDatabaseWork() override;
 
   virtual nsresult
-  BeginVersionChange() MOZ_OVERRIDE;
+  BeginVersionChange() override;
 
   virtual void
-  NoteDatabaseClosed(Database* aDatabase) MOZ_OVERRIDE;
+  NoteDatabaseClosed(Database* aDatabase) override;
 
   virtual void
-  SendBlockedNotification() MOZ_OVERRIDE;
+  SendBlockedNotification() override;
 
   virtual nsresult
-  DispatchToWorkThread() MOZ_OVERRIDE;
+  DispatchToWorkThread() override;
 
   virtual void
-  SendResults() MOZ_OVERRIDE;
+  SendResults() override;
 };
 
-class DeleteDatabaseOp::VersionChangeOp MOZ_FINAL
+class DeleteDatabaseOp::VersionChangeOp final
   : public DatabaseOperationBase
 {
   friend class DeleteDatabaseOp;
@@ -4289,7 +4289,7 @@ class VersionChangeTransactionOp
 {
 public:
   virtual void
-  Cleanup() MOZ_OVERRIDE;
+  Cleanup() override;
 
 protected:
   explicit VersionChangeTransactionOp(VersionChangeTransaction* aTransaction)
@@ -4302,13 +4302,13 @@ protected:
 
 private:
   virtual nsresult
-  SendSuccessResult() MOZ_OVERRIDE;
+  SendSuccessResult() override;
 
   virtual bool
-  SendFailureResult(nsresult aResultCode) MOZ_OVERRIDE;
+  SendFailureResult(nsresult aResultCode) override;
 };
 
-class CreateObjectStoreOp MOZ_FINAL
+class CreateObjectStoreOp final
   : public VersionChangeTransactionOp
 {
   friend class VersionChangeTransaction;
@@ -4329,10 +4329,10 @@ private:
   { }
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 };
 
-class DeleteObjectStoreOp MOZ_FINAL
+class DeleteObjectStoreOp final
   : public VersionChangeTransactionOp
 {
   friend class VersionChangeTransaction;
@@ -4353,10 +4353,10 @@ private:
   { }
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 };
 
-class CreateIndexOp MOZ_FINAL
+class CreateIndexOp final
   : public VersionChangeTransactionOp
 {
   friend class VersionChangeTransaction;
@@ -4391,13 +4391,13 @@ private:
   InsertDataFromObjectStore(TransactionBase* aTransaction);
 
   virtual bool
-  Init(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  Init(TransactionBase* aTransaction) override;
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 };
 
-class CreateIndexOp::ThreadLocalJSRuntime MOZ_FINAL
+class CreateIndexOp::ThreadLocalJSRuntime final
 {
   friend class CreateIndexOp;
   friend class nsAutoPtr<ThreadLocalJSRuntime>;
@@ -4451,7 +4451,7 @@ private:
   Init();
 };
 
-class DeleteIndexOp MOZ_FINAL
+class DeleteIndexOp final
   : public VersionChangeTransactionOp
 {
   friend class VersionChangeTransaction;
@@ -4472,7 +4472,7 @@ private:
   { }
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 };
 
 class NormalTransactionOp
@@ -4483,7 +4483,7 @@ class NormalTransactionOp
 
 public:
   virtual void
-  Cleanup() MOZ_OVERRIDE;
+  Cleanup() override;
 
 protected:
   explicit NormalTransactionOp(TransactionBase* aTransaction)
@@ -4501,17 +4501,17 @@ protected:
 
 private:
   virtual nsresult
-  SendSuccessResult() MOZ_OVERRIDE;
+  SendSuccessResult() override;
 
   virtual bool
-  SendFailureResult(nsresult aResultCode) MOZ_OVERRIDE;
+  SendFailureResult(nsresult aResultCode) override;
 
   // IPDL methods.
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
-class ObjectStoreAddOrPutRequestOp MOZ_FINAL
+class ObjectStoreAddOrPutRequestOp final
   : public NormalTransactionOp
 {
   friend class TransactionBase;
@@ -4549,19 +4549,19 @@ private:
   CopyFileData(nsIInputStream* aInputStream, nsIOutputStream* aOutputStream);
 
   virtual bool
-  Init(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  Init(TransactionBase* aTransaction) override;
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 
   virtual void
-  GetResponse(RequestResponse& aResponse) MOZ_OVERRIDE;
+  GetResponse(RequestResponse& aResponse) override;
 
   virtual void
-  Cleanup() MOZ_OVERRIDE;
+  Cleanup() override;
 };
 
-struct ObjectStoreAddOrPutRequestOp::StoredFileInfo MOZ_FINAL
+struct ObjectStoreAddOrPutRequestOp::StoredFileInfo final
 {
   nsRefPtr<DatabaseFile> mFileActor;
   nsRefPtr<FileInfo> mFileInfo;
@@ -4584,7 +4584,7 @@ struct ObjectStoreAddOrPutRequestOp::StoredFileInfo MOZ_FINAL
   }
 };
 
-class ObjectStoreGetRequestOp MOZ_FINAL
+class ObjectStoreGetRequestOp final
   : public NormalTransactionOp
 {
   friend class TransactionBase;
@@ -4611,13 +4611,13 @@ private:
                   SerializedStructuredCloneReadInfo& aSerializedInfo);
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 
   virtual void
-  GetResponse(RequestResponse& aResponse) MOZ_OVERRIDE;
+  GetResponse(RequestResponse& aResponse) override;
 };
 
-class ObjectStoreGetAllKeysRequestOp MOZ_FINAL
+class ObjectStoreGetAllKeysRequestOp final
   : public NormalTransactionOp
 {
   friend class TransactionBase;
@@ -4637,13 +4637,13 @@ private:
   { }
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 
   virtual void
-  GetResponse(RequestResponse& aResponse) MOZ_OVERRIDE;
+  GetResponse(RequestResponse& aResponse) override;
 };
 
-class ObjectStoreDeleteRequestOp MOZ_FINAL
+class ObjectStoreDeleteRequestOp final
   : public NormalTransactionOp
 {
   friend class TransactionBase;
@@ -4662,16 +4662,16 @@ private:
   { }
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 
   virtual void
-  GetResponse(RequestResponse& aResponse) MOZ_OVERRIDE
+  GetResponse(RequestResponse& aResponse) override
   {
     aResponse = Move(mResponse);
   }
 };
 
-class ObjectStoreClearRequestOp MOZ_FINAL
+class ObjectStoreClearRequestOp final
   : public NormalTransactionOp
 {
   friend class TransactionBase;
@@ -4690,16 +4690,16 @@ private:
   { }
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 
   virtual void
-  GetResponse(RequestResponse& aResponse) MOZ_OVERRIDE
+  GetResponse(RequestResponse& aResponse) override
   {
     aResponse = Move(mResponse);
   }
 };
 
-class ObjectStoreCountRequestOp MOZ_FINAL
+class ObjectStoreCountRequestOp final
   : public NormalTransactionOp
 {
   friend class TransactionBase;
@@ -4718,10 +4718,10 @@ private:
   { }
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 
   virtual void
-  GetResponse(RequestResponse& aResponse) MOZ_OVERRIDE
+  GetResponse(RequestResponse& aResponse) override
   {
     aResponse = Move(mResponse);
   }
@@ -4750,7 +4750,7 @@ private:
                          const RequestParams& aParams);
 };
 
-class IndexGetRequestOp MOZ_FINAL
+class IndexGetRequestOp final
   : public IndexRequestOpBase
 {
   friend class TransactionBase;
@@ -4772,13 +4772,13 @@ private:
   { }
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 
   virtual void
-  GetResponse(RequestResponse& aResponse) MOZ_OVERRIDE;
+  GetResponse(RequestResponse& aResponse) override;
 };
 
-class IndexGetKeyRequestOp MOZ_FINAL
+class IndexGetKeyRequestOp final
   : public IndexRequestOpBase
 {
   friend class TransactionBase;
@@ -4798,13 +4798,13 @@ private:
   { }
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 
   virtual void
-  GetResponse(RequestResponse& aResponse) MOZ_OVERRIDE;
+  GetResponse(RequestResponse& aResponse) override;
 };
 
-class IndexCountRequestOp MOZ_FINAL
+class IndexCountRequestOp final
   : public IndexRequestOpBase
 {
   friend class TransactionBase;
@@ -4824,16 +4824,16 @@ private:
   { }
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 
   virtual void
-  GetResponse(RequestResponse& aResponse) MOZ_OVERRIDE
+  GetResponse(RequestResponse& aResponse) override
   {
     aResponse = Move(mResponse);
   }
 };
 
-class Cursor MOZ_FINAL :
+class Cursor final :
     public PBackgroundIDBCursorParent
 {
   friend class TransactionBase;
@@ -4899,13 +4899,13 @@ private:
 
   // IPDL methods.
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
-  RecvDeleteMe() MOZ_OVERRIDE;
+  RecvDeleteMe() override;
 
   virtual bool
-  RecvContinue(const CursorRequestParams& aParams) MOZ_OVERRIDE;
+  RecvContinue(const CursorRequestParams& aParams) override;
 };
 
 class Cursor::CursorOpBase
@@ -4934,13 +4934,13 @@ protected:
   { }
 
   virtual bool
-  SendFailureResult(nsresult aResultCode) MOZ_OVERRIDE;
+  SendFailureResult(nsresult aResultCode) override;
 
   virtual void
-  Cleanup() MOZ_OVERRIDE;
+  Cleanup() override;
 };
 
-class Cursor::OpenOp MOZ_FINAL
+class Cursor::OpenOp final
   : public Cursor::CursorOpBase
 {
   friend class Cursor;
@@ -4975,13 +4975,13 @@ private:
   DoIndexKeyDatabaseWork(TransactionBase* aTransaction);
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 
   virtual nsresult
-  SendSuccessResult() MOZ_OVERRIDE;
+  SendSuccessResult() override;
 };
 
-class Cursor::ContinueOp MOZ_FINAL
+class Cursor::ContinueOp final
   : public Cursor::CursorOpBase
 {
   friend class Cursor;
@@ -5002,13 +5002,13 @@ private:
   { }
 
   virtual nsresult
-  DoDatabaseWork(TransactionBase* aTransaction) MOZ_OVERRIDE;
+  DoDatabaseWork(TransactionBase* aTransaction) override;
 
   virtual nsresult
-  SendSuccessResult() MOZ_OVERRIDE;
+  SendSuccessResult() override;
 };
 
-class PermissionRequestHelper MOZ_FINAL
+class PermissionRequestHelper final
   : public PermissionRequestBase
   , public PIndexedDBPermissionRequestParent
 {
@@ -5027,17 +5027,17 @@ protected:
 
 private:
   virtual void
-  OnPromptComplete(PermissionValue aPermissionValue) MOZ_OVERRIDE;
+  OnPromptComplete(PermissionValue aPermissionValue) override;
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
 /*******************************************************************************
  * Other class declarations
  ******************************************************************************/
 
-struct DatabaseActorInfo MOZ_FINAL
+struct DatabaseActorInfo final
 {
   friend class nsAutoPtr<DatabaseActorInfo>;
 
@@ -5067,7 +5067,7 @@ private:
   }
 };
 
-class DatabaseLoggingInfo MOZ_FINAL
+class DatabaseLoggingInfo final
 {
 #ifdef DEBUG
   // Just for potential warnings.
@@ -5121,7 +5121,7 @@ private:
   ~DatabaseLoggingInfo();
 };
 
-class NonMainThreadHackBlobImpl MOZ_FINAL
+class NonMainThreadHackBlobImpl final
   : public FileImplFile
 {
 public:
@@ -5149,7 +5149,7 @@ private:
   { }
 };
 
-class QuotaClient MOZ_FINAL
+class QuotaClient final
   : public mozilla::dom::quota::Client
 {
   class ShutdownTransactionThreadPoolRunnable;
@@ -5207,43 +5207,43 @@ public:
   void
   NoteBackgroundThread(nsIEventTarget* aBackgroundThread);
 
-  NS_INLINE_DECL_REFCOUNTING(QuotaClient, MOZ_OVERRIDE)
+  NS_INLINE_DECL_REFCOUNTING(QuotaClient, override)
 
   virtual mozilla::dom::quota::Client::Type
-  GetType() MOZ_OVERRIDE;
+  GetType() override;
 
   virtual nsresult
   InitOrigin(PersistenceType aPersistenceType,
              const nsACString& aGroup,
              const nsACString& aOrigin,
-             UsageInfo* aUsageInfo) MOZ_OVERRIDE;
+             UsageInfo* aUsageInfo) override;
 
   virtual nsresult
   GetUsageForOrigin(PersistenceType aPersistenceType,
                     const nsACString& aGroup,
                     const nsACString& aOrigin,
-                    UsageInfo* aUsageInfo) MOZ_OVERRIDE;
+                    UsageInfo* aUsageInfo) override;
 
   virtual void
   OnOriginClearCompleted(PersistenceType aPersistenceType,
                          const nsACString& aOrigin)
-                         MOZ_OVERRIDE;
+                         override;
 
   virtual void
-  ReleaseIOThreadObjects() MOZ_OVERRIDE;
+  ReleaseIOThreadObjects() override;
 
   virtual bool
-  IsFileServiceUtilized() MOZ_OVERRIDE;
+  IsFileServiceUtilized() override;
 
   virtual bool
-  IsTransactionServiceActivated() MOZ_OVERRIDE;
+  IsTransactionServiceActivated() override;
 
   virtual void
   WaitForStoragesToComplete(nsTArray<nsIOfflineStorage*>& aStorages,
-                            nsIRunnable* aCallback) MOZ_OVERRIDE;
+                            nsIRunnable* aCallback) override;
 
   virtual void
-  ShutdownTransactionService() MOZ_OVERRIDE;
+  ShutdownTransactionService() override;
 
 private:
   ~QuotaClient();
@@ -5259,7 +5259,7 @@ private:
                                bool aDatabaseFiles);
 };
 
-class QuotaClient::ShutdownTransactionThreadPoolRunnable MOZ_FINAL
+class QuotaClient::ShutdownTransactionThreadPoolRunnable final
   : public nsRunnable
 {
   nsRefPtr<QuotaClient> mQuotaClient;
@@ -5288,7 +5288,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class QuotaClient::WaitForTransactionsRunnable MOZ_FINAL
+class QuotaClient::WaitForTransactionsRunnable final
   : public nsRunnable
 {
   nsRefPtr<QuotaClient> mQuotaClient;
@@ -5342,7 +5342,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class DatabaseOfflineStorage MOZ_FINAL
+class DatabaseOfflineStorage final
   : public nsIOfflineStorage
 {
   // Must be released on the main thread!
@@ -5440,7 +5440,7 @@ private:
 
 #ifdef DEBUG
 
-class DEBUGThreadSlower MOZ_FINAL
+class DEBUGThreadSlower final
   : public nsIThreadObserver
 {
 public:
@@ -5741,7 +5741,7 @@ FullDatabaseMetadata::Duplicate() const
 {
   AssertIsOnBackgroundThread();
 
-  class MOZ_STACK_CLASS IndexClosure MOZ_FINAL
+  class MOZ_STACK_CLASS IndexClosure final
   {
     FullObjectStoreMetadata& mNew;
 
@@ -5772,7 +5772,7 @@ FullDatabaseMetadata::Duplicate() const
     }
   };
 
-  class MOZ_STACK_CLASS ObjectStoreClosure MOZ_FINAL
+  class MOZ_STACK_CLASS ObjectStoreClosure final
   {
     FullDatabaseMetadata& mNew;
 
@@ -6176,7 +6176,7 @@ Database::Invalidate()
 {
   AssertIsOnBackgroundThread();
 
-  class MOZ_STACK_CLASS Helper MOZ_FINAL
+  class MOZ_STACK_CLASS Helper final
   {
   public:
     static bool
@@ -6415,7 +6415,7 @@ Database::AllocPBackgroundIDBTransactionParent(
 {
   AssertIsOnBackgroundThread();
 
-  class MOZ_STACK_CLASS Closure MOZ_FINAL
+  class MOZ_STACK_CLASS Closure final
   {
     const nsString& mName;
     FallibleTArray<nsRefPtr<FullObjectStoreMetadata>>& mObjectStores;
@@ -8021,7 +8021,7 @@ VersionChangeTransaction::UpdateMetadata(nsresult aResult)
   MOZ_ASSERT(mOpenDatabaseOp->mDatabase);
   MOZ_ASSERT(!mOpenDatabaseOp->mDatabaseId.IsEmpty());
 
-  class MOZ_STACK_CLASS Helper MOZ_FINAL
+  class MOZ_STACK_CLASS Helper final
   {
   public:
     static PLDHashOperator
@@ -8852,7 +8852,7 @@ FileManager::Init(nsIFile* aDirectory,
 nsresult
 FileManager::Invalidate()
 {
-  class MOZ_STACK_CLASS Helper MOZ_FINAL
+  class MOZ_STACK_CLASS Helper final
   {
   public:
     static PLDHashOperator
@@ -12071,7 +12071,7 @@ OpenDatabaseOp::MetadataToSpec(DatabaseSpec& aSpec)
   AssertIsOnOwningThread();
   MOZ_ASSERT(mMetadata);
 
-  class MOZ_STACK_CLASS Helper MOZ_FINAL
+  class MOZ_STACK_CLASS Helper final
   {
     DatabaseSpec& mSpec;
     ObjectStoreSpec* mCurrentObjectStoreSpec;
@@ -12152,7 +12152,7 @@ OpenDatabaseOp::AssertMetadataConsistency(const FullDatabaseMetadata* aMetadata)
 {
   AssertIsOnBackgroundThread();
 
-  class MOZ_STACK_CLASS Helper MOZ_FINAL
+  class MOZ_STACK_CLASS Helper final
   {
     const ObjectStoreTable& mOtherObjectStores;
     IndexTable* mCurrentOtherIndexTable;
@@ -14036,7 +14036,7 @@ CreateIndexOp::CreateIndexOp(VersionChangeTransaction* aTransaction,
   MOZ_ASSERT(mFileManager);
   MOZ_ASSERT(!mDatabaseId.IsEmpty());
 
-  class MOZ_STACK_CLASS Helper MOZ_FINAL
+  class MOZ_STACK_CLASS Helper final
   {
   public:
     static void
@@ -14096,7 +14096,7 @@ CreateIndexOp::InitThreadLocals()
 {
   AssertIsOnBackgroundThread();
 
-  class MOZ_STACK_CLASS Helper MOZ_FINAL
+  class MOZ_STACK_CLASS Helper final
   {
   public:
     static void

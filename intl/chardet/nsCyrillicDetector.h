@@ -92,12 +92,12 @@ class nsCyrXPCOMDetector :
     nsCyrXPCOMDetector(uint8_t aItems, 
                       const uint8_t ** aCyrillicClass, 
                       const char **aCharsets);
-    NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver) MOZ_OVERRIDE;
-    NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, bool *oDontFeedMe) MOZ_OVERRIDE;
-    NS_IMETHOD Done() MOZ_OVERRIDE;
+    NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver) override;
+    NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, bool *oDontFeedMe) override;
+    NS_IMETHOD Done() override;
   protected:
     virtual ~nsCyrXPCOMDetector();
-    virtual void Report(const char* aCharset) MOZ_OVERRIDE;
+    virtual void Report(const char* aCharset) override;
   private:
     nsCOMPtr<nsICharsetDetectionObserver> mObserver;
 };
@@ -113,10 +113,10 @@ class nsCyrXPCOMStringDetector :
                       const uint8_t ** aCyrillicClass, 
                       const char **aCharsets);
     NS_IMETHOD DoIt(const char* aBuf, uint32_t aLen, 
-                     const char** oCharset, nsDetectionConfident &oConf) MOZ_OVERRIDE;
+                     const char** oCharset, nsDetectionConfident &oConf) override;
   protected:
     virtual ~nsCyrXPCOMStringDetector();
-    virtual void Report(const char* aCharset) MOZ_OVERRIDE;
+    virtual void Report(const char* aCharset) override;
   private:
     nsCOMPtr<nsICharsetDetectionObserver> mObserver;
     const char* mResult;

@@ -98,7 +98,7 @@ static bool EnsureGLContext()
   return sPluginContext != nullptr;
 }
 
-class SharedPluginTexture MOZ_FINAL {
+class SharedPluginTexture final {
 public:
   NS_INLINE_DECL_REFCOUNTING(SharedPluginTexture)
 

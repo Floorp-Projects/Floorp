@@ -20,7 +20,7 @@
 
 class nsDocumentOpenInfo;
 
-class nsURILoader MOZ_FINAL : public nsIURILoader
+class nsURILoader final : public nsIURILoader
 {
 public:
   NS_DECL_NSIURILOADER

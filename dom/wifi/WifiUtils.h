@@ -78,7 +78,7 @@ public:
 };
 
 // Concrete class to use to access the wpa supplicant.
-class WpaSupplicant MOZ_FINAL
+class WpaSupplicant final
 {
 public:
   WpaSupplicant();

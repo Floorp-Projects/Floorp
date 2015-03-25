@@ -22,10 +22,10 @@ class SpeechSynthesisParent : public PSpeechSynthesisParent
   friend class SpeechSynthesisRequestParent;
 
 public:
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   bool RecvReadVoiceList(InfallibleTArray<RemoteVoice>* aVoices,
-                         InfallibleTArray<nsString>* aDefaults) MOZ_OVERRIDE;
+                         InfallibleTArray<nsString>* aDefaults) override;
 
 protected:
   SpeechSynthesisParent();
@@ -36,9 +36,9 @@ protected:
                                                                     const float& aVolume,
                                                                     const float& aRate,
                                                                     const float& aPitch)
-                                                                    MOZ_OVERRIDE;
+                                                                    override;
 
-  bool DeallocPSpeechSynthesisRequestParent(PSpeechSynthesisRequestParent* aActor) MOZ_OVERRIDE;
+  bool DeallocPSpeechSynthesisRequestParent(PSpeechSynthesisRequestParent* aActor) override;
 
   bool RecvPSpeechSynthesisRequestConstructor(PSpeechSynthesisRequestParent* aActor,
                                               const nsString& aText,
@@ -46,7 +46,7 @@ protected:
                                               const nsString& aUri,
                                               const float& aVolume,
                                               const float& aRate,
-                                              const float& aPitch) MOZ_OVERRIDE;
+                                              const float& aPitch) override;
 };
 
 class SpeechSynthesisRequestParent : public PSpeechSynthesisRequestParent
@@ -59,13 +59,13 @@ public:
 
 protected:
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual bool RecvPause() MOZ_OVERRIDE;
+  virtual bool RecvPause() override;
 
-  virtual bool RecvResume() MOZ_OVERRIDE;
+  virtual bool RecvResume() override;
 
-  virtual bool RecvCancel() MOZ_OVERRIDE;
+  virtual bool RecvCancel() override;
 };
 
 class SpeechTaskParent : public nsSpeechTask

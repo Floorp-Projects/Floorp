@@ -29,7 +29,7 @@ class FileImpl;
 class nsIContentChild;
 class PBlobStreamChild;
 
-class BlobChild MOZ_FINAL
+class BlobChild final
   : public PBlobChild
 {
   typedef mozilla::ipc::PBackgroundChild PBackgroundChild;
@@ -207,19 +207,19 @@ private:
 
   // These methods are only called by the IPDL message machinery.
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual PBlobStreamChild*
   AllocPBlobStreamChild(const uint64_t& aStart,
-                        const uint64_t& aLength) MOZ_OVERRIDE;
+                        const uint64_t& aLength) override;
 
   virtual bool
-  DeallocPBlobStreamChild(PBlobStreamChild* aActor) MOZ_OVERRIDE;
+  DeallocPBlobStreamChild(PBlobStreamChild* aActor) override;
 };
 
 // Only let ContentChild call BlobChild::Startup() and ensure that
 // ContentChild can't access any other BlobChild internals.
-class BlobChild::FriendKey MOZ_FINAL
+class BlobChild::FriendKey final
 {
   friend class ContentChild;
 

@@ -311,7 +311,7 @@ FileInfoComparator(gconstpointer a, gconstpointer b)
 
 //-----------------------------------------------------------------------------
 
-class nsGnomeVFSInputStream MOZ_FINAL : public nsIInputStream
+class nsGnomeVFSInputStream final : public nsIInputStream
 {
   public:
     NS_DECL_THREADSAFE_ISUPPORTS
@@ -738,7 +738,7 @@ nsGnomeVFSInputStream::IsNonBlocking(bool *aResult)
 
 //-----------------------------------------------------------------------------
 
-class nsGnomeVFSProtocolHandler MOZ_FINAL : public nsIProtocolHandler
+class nsGnomeVFSProtocolHandler final : public nsIProtocolHandler
                                           , public nsIObserver
 {
   public:

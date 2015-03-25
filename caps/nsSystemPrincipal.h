@@ -17,7 +17,7 @@
 #define NS_SYSTEMPRINCIPAL_CONTRACTID "@mozilla.org/systemprincipal;1"
 
 
-class nsSystemPrincipal MOZ_FINAL : public nsJSPrincipals
+class nsSystemPrincipal final : public nsJSPrincipals
 {
 public:
     // Our refcount is managed by nsJSPrincipals.  Use this macro to avoid
@@ -28,10 +28,10 @@ public:
 
     nsSystemPrincipal();
 
-    virtual void GetScriptLocation(nsACString &aStr) MOZ_OVERRIDE;
+    virtual void GetScriptLocation(nsACString &aStr) override;
 
 #ifdef DEBUG
-    virtual void dumpImpl() MOZ_OVERRIDE;
+    virtual void dumpImpl() override;
 #endif 
 
 protected:

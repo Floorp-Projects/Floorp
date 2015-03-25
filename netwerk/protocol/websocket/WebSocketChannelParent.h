@@ -46,18 +46,18 @@ class WebSocketChannelParent : public PWebSocketParent,
                      const bool& aClientSetPingInterval,
                      const uint32_t& aPingTimeout,
                      const bool& aClientSetPingTimeout,
-                     const WebSocketLoadInfoArgs& aLoadInfoArgs) MOZ_OVERRIDE;
-  bool RecvClose(const uint16_t & code, const nsCString & reason) MOZ_OVERRIDE;
-  bool RecvSendMsg(const nsCString& aMsg) MOZ_OVERRIDE;
-  bool RecvSendBinaryMsg(const nsCString& aMsg) MOZ_OVERRIDE;
+                     const WebSocketLoadInfoArgs& aLoadInfoArgs) override;
+  bool RecvClose(const uint16_t & code, const nsCString & reason) override;
+  bool RecvSendMsg(const nsCString& aMsg) override;
+  bool RecvSendBinaryMsg(const nsCString& aMsg) override;
   bool RecvSendBinaryStream(const InputStreamParams& aStream,
-                            const uint32_t& aLength) MOZ_OVERRIDE;
-  bool RecvDeleteSelf() MOZ_OVERRIDE;
+                            const uint32_t& aLength) override;
+  bool RecvDeleteSelf() override;
 
-  void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  void ActorDestroy(ActorDestroyReason why) override;
 
-  void OfflineDisconnect() MOZ_OVERRIDE;
-  uint32_t GetAppId() MOZ_OVERRIDE;
+  void OfflineDisconnect() override;
+  uint32_t GetAppId() override;
   nsRefPtr<OfflineObserver> mObserver;
 
   nsCOMPtr<nsIAuthPromptProvider> mAuthProvider;

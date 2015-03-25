@@ -702,10 +702,10 @@ public:
     mNeedsMixing(false)
   {}
 
-  virtual SourceMediaStream* AsSourceStream() MOZ_OVERRIDE { return this; }
+  virtual SourceMediaStream* AsSourceStream() override { return this; }
 
   // Media graph thread only
-  virtual void DestroyImpl() MOZ_OVERRIDE;
+  virtual void DestroyImpl() override;
 
   // Call these on any thread.
   /**
@@ -809,7 +809,7 @@ public:
 
   // Overriding allows us to hold the mMutex lock while changing the track enable status
   virtual void
-  SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) MOZ_OVERRIDE {
+  SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) override {
     MutexAutoLock lock(mMutex);
     MediaStream::SetTrackEnabledImpl(aTrackID, aEnabled);
   }
@@ -817,7 +817,7 @@ public:
   // Overriding allows us to ensure mMutex is locked while changing the track enable status
   virtual void
   ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment,
-                      MediaSegment* aRawSegment = nullptr) MOZ_OVERRIDE {
+                      MediaSegment* aRawSegment = nullptr) override {
     mMutex.AssertCurrentThreadOwns();
     MediaStream::ApplyTrackDisabling(aTrackID, aSegment, aRawSegment);
   }
@@ -947,7 +947,7 @@ protected:
  * the Destroy message is processed on the graph manager thread we disconnect
  * the port and drop the graph's reference, destroying the object.
  */
-class MediaInputPort MOZ_FINAL {
+class MediaInputPort final {
 private:
   // Do not call this constructor directly. Instead call aDest->AllocateInputPort.
   MediaInputPort(MediaStream* aSource, ProcessedMediaStream* aDest,
@@ -1090,7 +1090,7 @@ public:
    */
   void SetAutofinish(bool aAutofinish);
 
-  virtual ProcessedMediaStream* AsProcessedStream() MOZ_OVERRIDE { return this; }
+  virtual ProcessedMediaStream* AsProcessedStream() override { return this; }
 
   friend class MediaStreamGraphImpl;
 
@@ -1108,7 +1108,7 @@ public:
   {
     return mInputs.Length();
   }
-  virtual void DestroyImpl() MOZ_OVERRIDE;
+  virtual void DestroyImpl() override;
   /**
    * This gets called after we've computed the blocking states for all
    * streams (mBlocked is up to date up to mStateComputedTime).
@@ -1141,7 +1141,7 @@ public:
   // true for echo loops, only for muted cycles.
   bool InMutedCycle() const { return mCycleMarker; }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = MediaStream::SizeOfExcludingThis(aMallocSizeOf);
     // Not owned:
@@ -1150,7 +1150,7 @@ public:
     return amount;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

@@ -269,7 +269,7 @@ namespace {
  * This runnable runs for the lifetime of the program, once started.  It's
  * responsible for "playing" vibration patterns.
  */
-class VibratorRunnable MOZ_FINAL
+class VibratorRunnable final
   : public nsIRunnable
   , public nsIObserver
 {
@@ -1158,7 +1158,7 @@ RoundOomScoreAdjUpWithBackroundLRU(int& aOomScoreAdj, uint32_t aBackgroundLRU)
 }
 
 #define OOM_LOG(level, args...) __android_log_print(level, "OomLogger", ##args)
-class OomVictimLogger MOZ_FINAL
+class OomVictimLogger final
   : public nsIObserver
 {
 public:

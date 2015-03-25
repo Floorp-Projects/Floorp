@@ -36,12 +36,12 @@ public:
 
   // nsIProtocolHandler methods, except for GetScheme which is only defined
   // in subclasses.
-  NS_IMETHOD GetDefaultPort(int32_t *aDefaultPort) MOZ_OVERRIDE;
-  NS_IMETHOD GetProtocolFlags(uint32_t *aProtocolFlags) MOZ_OVERRIDE;
-  NS_IMETHOD NewURI(const nsACString & aSpec, const char * aOriginCharset, nsIURI *aBaseURI, nsIURI * *_retval) MOZ_OVERRIDE;
-  NS_IMETHOD NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadinfo, nsIChannel * *_retval) MOZ_OVERRIDE;
-  NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel * *_retval) MOZ_OVERRIDE;
-  NS_IMETHOD AllowPort(int32_t port, const char * scheme, bool *_retval) MOZ_OVERRIDE;
+  NS_IMETHOD GetDefaultPort(int32_t *aDefaultPort) override;
+  NS_IMETHOD GetProtocolFlags(uint32_t *aProtocolFlags) override;
+  NS_IMETHOD NewURI(const nsACString & aSpec, const char * aOriginCharset, nsIURI *aBaseURI, nsIURI * *_retval) override;
+  NS_IMETHOD NewChannel2(nsIURI *aURI, nsILoadInfo *aLoadinfo, nsIChannel * *_retval) override;
+  NS_IMETHOD NewChannel(nsIURI *aURI, nsIChannel * *_retval) override;
+  NS_IMETHOD AllowPort(int32_t port, const char * scheme, bool *_retval) override;
 
   // If principal is not null, its origin will be used to generate the URI.
   static nsresult GenerateURIString(const nsACString &aScheme,
@@ -68,19 +68,19 @@ private:
 class nsBlobProtocolHandler : public nsHostObjectProtocolHandler
 {
 public:
-  NS_IMETHOD GetScheme(nsACString &result) MOZ_OVERRIDE;
+  NS_IMETHOD GetScheme(nsACString &result) override;
 };
 
 class nsMediaStreamProtocolHandler : public nsHostObjectProtocolHandler
 {
 public:
-  NS_IMETHOD GetScheme(nsACString &result) MOZ_OVERRIDE;
+  NS_IMETHOD GetScheme(nsACString &result) override;
 };
 
 class nsMediaSourceProtocolHandler : public nsHostObjectProtocolHandler
 {
 public:
-  NS_IMETHOD GetScheme(nsACString &result) MOZ_OVERRIDE;
+  NS_IMETHOD GetScheme(nsACString &result) override;
 };
 
 class nsFontTableProtocolHandler : public nsHostObjectProtocolHandler

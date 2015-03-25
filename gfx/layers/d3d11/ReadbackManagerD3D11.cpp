@@ -31,7 +31,7 @@ struct ReadbackTask {
 
 // This class is created and dispatched from the Readback thread but it must be
 // destroyed by the main thread.
-class ReadbackResultWriterD3D11 MOZ_FINAL : public nsIRunnable
+class ReadbackResultWriterD3D11 final : public nsIRunnable
 {
   ~ReadbackResultWriterD3D11() {}
   NS_DECL_THREADSAFE_ISUPPORTS

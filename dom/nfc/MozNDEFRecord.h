@@ -28,7 +28,7 @@ namespace dom {
 
 class MozNDEFRecordOptions;
 
-class MozNDEFRecord MOZ_FINAL : public nsISupports,
+class MozNDEFRecord final : public nsISupports,
                                 public nsWrapperCache
 {
 public:
@@ -47,7 +47,7 @@ public:
     return mWindow;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) override;
 
   static already_AddRefed<MozNDEFRecord>
   Constructor(const GlobalObject& aGlobal,

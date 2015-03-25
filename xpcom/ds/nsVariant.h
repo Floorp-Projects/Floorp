@@ -91,7 +91,7 @@ struct nsDiscriminatedUnion
  * use to help them do all the 'standard' nsIVariant data conversions.
  */
 
-class nsVariant MOZ_FINAL : public nsIWritableVariant
+class nsVariant final : public nsIWritableVariant
 {
 public:
   NS_DECL_ISUPPORTS

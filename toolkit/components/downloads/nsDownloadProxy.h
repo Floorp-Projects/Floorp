@@ -40,7 +40,7 @@ public:
                      PRTime aStartTime,
                      nsIFile* aTempFile,
                      nsICancelable* aCancelable,
-                     bool aIsPrivate) MOZ_OVERRIDE {
+                     bool aIsPrivate) override {
     nsresult rv;
     nsCOMPtr<nsIDownloadManager> dm = do_GetService("@mozilla.org/download-manager;1", &rv);
     NS_ENSURE_SUCCESS(rv, rv);
@@ -82,7 +82,7 @@ public:
 
   NS_IMETHODIMP OnStateChange(nsIWebProgress* aWebProgress,
                               nsIRequest* aRequest, uint32_t aStateFlags,
-                              nsresult aStatus) MOZ_OVERRIDE
+                              nsresult aStatus) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->OnStateChange(aWebProgress, aRequest, aStateFlags, aStatus);
@@ -90,7 +90,7 @@ public:
   
   NS_IMETHODIMP OnStatusChange(nsIWebProgress *aWebProgress,
                                nsIRequest *aRequest, nsresult aStatus,
-                               const char16_t *aMessage) MOZ_OVERRIDE
+                               const char16_t *aMessage) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->OnStatusChange(aWebProgress, aRequest, aStatus, aMessage);
@@ -98,7 +98,7 @@ public:
 
   NS_IMETHODIMP OnLocationChange(nsIWebProgress *aWebProgress,
                                  nsIRequest *aRequest, nsIURI *aLocation,
-                                 uint32_t aFlags) MOZ_OVERRIDE
+                                 uint32_t aFlags) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->OnLocationChange(aWebProgress, aRequest, aLocation, aFlags);
@@ -109,7 +109,7 @@ public:
                                  int32_t aCurSelfProgress,
                                  int32_t aMaxSelfProgress,
                                  int32_t aCurTotalProgress,
-                                 int32_t aMaxTotalProgress) MOZ_OVERRIDE
+                                 int32_t aMaxTotalProgress) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->OnProgressChange(aWebProgress, aRequest,
@@ -124,7 +124,7 @@ public:
                                    int64_t aCurSelfProgress,
                                    int64_t aMaxSelfProgress,
                                    int64_t aCurTotalProgress,
-                                   int64_t aMaxTotalProgress) MOZ_OVERRIDE
+                                   int64_t aMaxTotalProgress) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->OnProgressChange64(aWebProgress, aRequest,
@@ -138,32 +138,32 @@ public:
                                    nsIURI *aUri,
                                    int32_t aDelay,
                                    bool aSameUri,
-                                   bool *allowRefresh) MOZ_OVERRIDE
+                                   bool *allowRefresh) override
   {
     *allowRefresh = true;
     return NS_OK;
   }
 
   NS_IMETHODIMP OnSecurityChange(nsIWebProgress *aWebProgress,
-                                 nsIRequest *aRequest, uint32_t aState) MOZ_OVERRIDE
+                                 nsIRequest *aRequest, uint32_t aState) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->OnSecurityChange(aWebProgress, aRequest, aState);
   }
 
-  NS_IMETHODIMP SetSha256Hash(const nsACString& aHash) MOZ_OVERRIDE
+  NS_IMETHODIMP SetSha256Hash(const nsACString& aHash) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->SetSha256Hash(aHash);
   }
 
-  NS_IMETHODIMP SetSignatureInfo(nsIArray* aSignatureInfo) MOZ_OVERRIDE
+  NS_IMETHODIMP SetSignatureInfo(nsIArray* aSignatureInfo) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->SetSignatureInfo(aSignatureInfo);
   }
 
-  NS_IMETHODIMP SetRedirects(nsIArray* aRedirects) MOZ_OVERRIDE
+  NS_IMETHODIMP SetRedirects(nsIArray* aRedirects) override
   {
     NS_ENSURE_TRUE(mInner, NS_ERROR_NOT_INITIALIZED);
     return mInner->SetRedirects(aRedirects);

@@ -10,7 +10,7 @@
 
 #include "mozilla/dom/PColorPickerChild.h"
 
-class nsColorPickerProxy MOZ_FINAL : public nsIColorPicker,
+class nsColorPickerProxy final : public nsIColorPicker,
                                      public mozilla::dom::PColorPickerChild
 {
 public:
@@ -19,8 +19,8 @@ public:
 
   nsColorPickerProxy() {}
 
-  virtual bool RecvUpdate(const nsString& aColor) MOZ_OVERRIDE;
-  virtual bool Recv__delete__(const nsString& aColor) MOZ_OVERRIDE;
+  virtual bool RecvUpdate(const nsString& aColor) override;
+  virtual bool Recv__delete__(const nsString& aColor) override;
 
 private:
   ~nsColorPickerProxy() {}

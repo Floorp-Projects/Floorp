@@ -1289,7 +1289,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHODIMP OnRedirectVerifyCallback(nsresult aResult) MOZ_OVERRIDE
+  NS_IMETHODIMP OnRedirectVerifyCallback(nsresult aResult) override
   {
     if (NS_SUCCEEDED(aResult)) {
       nsCOMPtr<nsIStreamListener> listener = do_QueryReferent(mWeakListener);

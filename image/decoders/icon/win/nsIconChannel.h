@@ -25,7 +25,7 @@
 
 class nsIFile;
 
-class nsIconChannel MOZ_FINAL : public nsIChannel, public nsIStreamListener
+class nsIconChannel final : public nsIChannel, public nsIStreamListener
 {
   ~nsIconChannel();
 

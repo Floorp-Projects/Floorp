@@ -44,7 +44,7 @@ enum
   CALLBACK_TYPE_OBSERVER  = 3
 };
 
-class nsTimerImpl MOZ_FINAL : public nsITimer
+class nsTimerImpl final : public nsITimer
 {
 public:
   typedef mozilla::TimeStamp TimeStamp;
@@ -78,7 +78,7 @@ public:
   }
 #endif
 
-  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 
 private:
   ~nsTimerImpl();

@@ -69,7 +69,7 @@ PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault, Get##Name##Pref
 
 class PreferenceAccessImpl;
 class gfxPrefs;
-class gfxPrefs MOZ_FINAL
+class gfxPrefs final
 {
 private:
   /// See Logging.h.  This lets Moz2D access preference values it owns.

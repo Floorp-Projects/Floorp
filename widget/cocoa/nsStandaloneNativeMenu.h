@@ -19,9 +19,9 @@ public:
   NS_DECL_NSISTANDALONENATIVEMENU
 
   // nsMenuObjectX
-  nsMenuObjectTypeX MenuObjectType() MOZ_OVERRIDE { return eStandaloneNativeMenuObjectType; }
-  void * NativeData() MOZ_OVERRIDE { return mMenu != nullptr ? mMenu->NativeData() : nullptr; }
-  virtual void IconUpdated() MOZ_OVERRIDE;
+  nsMenuObjectTypeX MenuObjectType() override { return eStandaloneNativeMenuObjectType; }
+  void * NativeData() override { return mMenu != nullptr ? mMenu->NativeData() : nullptr; }
+  virtual void IconUpdated() override;
 
   nsMenuX * GetMenuXObject() { return mMenu; }
 

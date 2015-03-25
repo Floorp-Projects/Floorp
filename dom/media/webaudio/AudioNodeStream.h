@@ -82,7 +82,7 @@ public:
     mAudioParamStream = true;
   }
 
-  virtual AudioNodeStream* AsAudioNodeStream() MOZ_OVERRIDE { return this; }
+  virtual AudioNodeStream* AsAudioNodeStream() override { return this; }
 
   // Graph thread only
   void SetStreamTimeParameterImpl(uint32_t aIndex, MediaStream* aRelativeToStream,
@@ -90,7 +90,7 @@ public:
   void SetChannelMixingParametersImpl(uint32_t aNumberOfChannels,
                                       ChannelCountMode aChannelCountMoe,
                                       ChannelInterpretation aChannelInterpretation);
-  virtual void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) MOZ_OVERRIDE;
+  virtual void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
   /**
    * Produce the next block of output, before input is provided.
    * ProcessInput() will be called later, and it then should not change
@@ -107,13 +107,13 @@ public:
   {
     return mLastChunks;
   }
-  virtual bool MainThreadNeedsUpdates() const MOZ_OVERRIDE
+  virtual bool MainThreadNeedsUpdates() const override
   {
     // Only source and external streams need updates on the main thread.
     return (mKind == MediaStreamGraph::SOURCE_STREAM && mFinished) ||
            mKind == MediaStreamGraph::EXTERNAL_STREAM;
   }
-  virtual bool IsIntrinsicallyConsumed() const MOZ_OVERRIDE
+  virtual bool IsIntrinsicallyConsumed() const override
   {
     return true;
   }
@@ -141,8 +141,8 @@ public:
   double DestinationTimeFromTicks(AudioNodeStream* aDestination,
                                   StreamTime aPosition);
 
-  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
   void SizeOfAudioNodesIncludingThis(MallocSizeOf aMallocSizeOf,
                                      AudioNodeSizes& aUsage) const;

@@ -267,7 +267,7 @@ public:
   {
   }
 
-  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) MOZ_OVERRIDE
+  virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap) override
   {
     *aSnap = true;
     nsStyleBorder styleBorder = *mFrame->StyleBorder();
@@ -279,7 +279,7 @@ public:
     return bounds;
   }
 
-  virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) MOZ_OVERRIDE
+  virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override
   {
     nsStyleBorder styleBorder = *mFrame->StyleBorder();
     nsMathMLmtdFrame* frame = static_cast<nsMathMLmtdFrame*>(mFrame);

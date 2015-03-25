@@ -166,7 +166,7 @@ static CINDItem sCINDItems[] = {
 #endif
 };
 
-class BluetoothHfpManager::GetVolumeTask MOZ_FINAL
+class BluetoothHfpManager::GetVolumeTask final
   : public nsISettingsServiceCallback
 {
 public:
@@ -235,7 +235,7 @@ BluetoothHfpManager::Notify(const hal::BatteryInformation& aBatteryInfo)
 class BluetoothHfpManager::RespondToBLDNTask : public Task
 {
 private:
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(sBluetoothHfpManager);
 
@@ -256,7 +256,7 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -296,7 +296,7 @@ private:
 class BluetoothHfpManager::CloseScoTask : public Task
 {
 private:
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(sBluetoothHfpManager);
 

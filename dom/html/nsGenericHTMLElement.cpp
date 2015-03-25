@@ -177,7 +177,7 @@ class nsGenericHTMLElementTearoff : public nsIDOMElementCSSInlineStyle
   {
   }
 
-  NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle) MOZ_OVERRIDE
+  NS_IMETHOD GetStyle(nsIDOMCSSStyleDeclaration** aStyle) override
   {
     NS_ADDREF(*aStyle = mElement->Style());
     return NS_OK;

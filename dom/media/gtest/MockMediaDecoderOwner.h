@@ -13,34 +13,34 @@ namespace mozilla
 class MockMediaDecoderOwner : public MediaDecoderOwner
 {
 public:
-  virtual nsresult DispatchAsyncEvent(const nsAString& aName) MOZ_OVERRIDE
+  virtual nsresult DispatchAsyncEvent(const nsAString& aName) override
   {
     return NS_OK;
   }
-  virtual void FireTimeUpdate(bool aPeriodic) MOZ_OVERRIDE {}
-  virtual bool GetPaused() MOZ_OVERRIDE { return false; }
+  virtual void FireTimeUpdate(bool aPeriodic) override {}
+  virtual bool GetPaused() override { return false; }
   virtual void MetadataLoaded(const MediaInfo* aInfo,
-                              nsAutoPtr<const MetadataTags> aTags) MOZ_OVERRIDE
+                              nsAutoPtr<const MetadataTags> aTags) override
   {
   }
-  virtual void NetworkError() MOZ_OVERRIDE {}
-  virtual void DecodeError() MOZ_OVERRIDE {}
-  virtual void LoadAborted() MOZ_OVERRIDE {}
-  virtual void PlaybackEnded() MOZ_OVERRIDE {}
-  virtual void SeekStarted() MOZ_OVERRIDE {}
-  virtual void SeekCompleted() MOZ_OVERRIDE {}
-  virtual void DownloadSuspended() MOZ_OVERRIDE {}
-  virtual void DownloadResumed(bool aForceNetworkLoading) MOZ_OVERRIDE {}
-  virtual void NotifySuspendedByCache(bool aIsSuspended) MOZ_OVERRIDE {}
-  virtual void NotifyDecoderPrincipalChanged() MOZ_OVERRIDE {}
-  virtual void UpdateReadyStateForData(NextFrameStatus aNextFrame) MOZ_OVERRIDE
+  virtual void NetworkError() override {}
+  virtual void DecodeError() override {}
+  virtual void LoadAborted() override {}
+  virtual void PlaybackEnded() override {}
+  virtual void SeekStarted() override {}
+  virtual void SeekCompleted() override {}
+  virtual void DownloadSuspended() override {}
+  virtual void DownloadResumed(bool aForceNetworkLoading) override {}
+  virtual void NotifySuspendedByCache(bool aIsSuspended) override {}
+  virtual void NotifyDecoderPrincipalChanged() override {}
+  virtual void UpdateReadyStateForData(NextFrameStatus aNextFrame) override
   {
   }
-  virtual VideoFrameContainer* GetVideoFrameContainer() MOZ_OVERRIDE
+  virtual VideoFrameContainer* GetVideoFrameContainer() override
   {
     return nullptr;
   }
-  virtual void ResetConnectionState() MOZ_OVERRIDE {}
+  virtual void ResetConnectionState() override {}
 };
 }
 

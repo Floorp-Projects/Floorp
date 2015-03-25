@@ -38,7 +38,7 @@ protected:
   }
 
 public:
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion) override
   {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
@@ -47,9 +47,9 @@ public:
 
   virtual void Paint(DrawTarget* aDT,
                      const gfx::Point& aDeviceOffset,
-                     Layer* aMaskLayer) MOZ_OVERRIDE;
+                     Layer* aMaskLayer) override;
 
-  virtual TemporaryRef<SourceSurface> GetAsSourceSurface() MOZ_OVERRIDE;
+  virtual TemporaryRef<SourceSurface> GetAsSourceSurface() override;
 
 protected:
   BasicLayerManager* BasicManager()

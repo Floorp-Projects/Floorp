@@ -140,7 +140,7 @@ public:
   {
     return mContent;
   }
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) override;
 
   // WebIDL
   Attr* GetNamedItem(const nsAString& aAttrName);

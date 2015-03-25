@@ -97,19 +97,19 @@ protected:
     }
 
   protected:
-    virtual void ElementChanged(Element* aFrom, Element* aTo) MOZ_OVERRIDE
+    virtual void ElementChanged(Element* aFrom, Element* aTo) override
     {
       nsReferencedElement::ElementChanged(aFrom, aTo);
       mSpec->UpdateReferencedElement(aFrom, aTo);
     }
-    virtual bool IsPersistent() MOZ_OVERRIDE { return true; }
+    virtual bool IsPersistent() override { return true; }
   private:
     nsSMILTimeValueSpec* mSpec;
   };
 
   TimeReferenceElement mReferencedElement;
 
-  class EventListener MOZ_FINAL : public nsIDOMEventListener
+  class EventListener final : public nsIDOMEventListener
   {
     ~EventListener() {}
   public:

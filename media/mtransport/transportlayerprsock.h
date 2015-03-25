@@ -63,26 +63,26 @@ class TransportLayerPrsock : public TransportLayer {
       }
 
       // Implement nsASocket
-      virtual void OnSocketReady(PRFileDesc *fd, int16_t outflags) MOZ_OVERRIDE {
+      virtual void OnSocketReady(PRFileDesc *fd, int16_t outflags) override {
         if (prsock_) {
           prsock_->OnSocketReady(fd, outflags);
         }
       }
 
-      virtual void OnSocketDetached(PRFileDesc *fd) MOZ_OVERRIDE {
+      virtual void OnSocketDetached(PRFileDesc *fd) override {
         if (prsock_) {
           prsock_->OnSocketDetached(fd);
         }
         PR_Close(fd_);
       }
 
-      virtual void IsLocal(bool *aIsLocal) MOZ_OVERRIDE {
+      virtual void IsLocal(bool *aIsLocal) override {
         // TODO(jesup): better check? Does it matter? (likely no)
         *aIsLocal = false;
       }
 
-      virtual uint64_t ByteCountSent() MOZ_OVERRIDE { return 0; }
-      virtual uint64_t ByteCountReceived() MOZ_OVERRIDE { return 0; }
+      virtual uint64_t ByteCountSent() override { return 0; }
+      virtual uint64_t ByteCountReceived() override { return 0; }
 
       // nsISupports methods
       NS_DECL_THREADSAFE_ISUPPORTS

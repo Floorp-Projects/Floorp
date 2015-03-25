@@ -28,7 +28,7 @@ struct SAXAttr
   nsString value;
 };
 
-class nsSAXAttributes MOZ_FINAL : public nsISAXMutableAttributes
+class nsSAXAttributes final : public nsISAXMutableAttributes
 {
 public:
   NS_DECL_ISUPPORTS

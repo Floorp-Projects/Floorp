@@ -159,12 +159,12 @@ public:
   ~nsFSMultipartFormData();
  
   virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue) MOZ_OVERRIDE;
+                                    const nsAString& aValue) override;
   virtual nsresult AddNameFilePair(const nsAString& aName,
                                    nsIDOMBlob* aBlob,
-                                   const nsString& aFilename) MOZ_OVERRIDE;
+                                   const nsString& aFilename) override;
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream) MOZ_OVERRIDE;
+                                        nsIInputStream** aPostDataStream) override;
 
   void GetContentType(nsACString& aContentType)
   {

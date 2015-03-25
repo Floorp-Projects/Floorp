@@ -269,7 +269,7 @@ NS_ProcessNextEvent(nsIThread* aThread, bool aMayWait)
 
 namespace {
 
-class nsNameThreadRunnable MOZ_FINAL : public nsIRunnable
+class nsNameThreadRunnable final : public nsIRunnable
 {
   ~nsNameThreadRunnable() {}
 

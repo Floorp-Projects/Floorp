@@ -31,7 +31,7 @@
 class nsFormHistory;
 class nsINode;
 
-class nsFormFillController MOZ_FINAL : public nsIFormFillController,
+class nsFormFillController final : public nsIFormFillController,
                                        public nsIAutoCompleteInput,
                                        public nsIAutoCompleteSearch,
                                        public nsIDOMEventListener,

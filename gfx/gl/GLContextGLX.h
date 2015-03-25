@@ -16,7 +16,7 @@ namespace gl {
 class GLContextGLX : public GLContext
 {
 public:
-    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextGLX, MOZ_OVERRIDE)
+    MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextGLX, override)
     static already_AddRefed<GLContextGLX>
     CreateGLContext(const SurfaceCaps& caps,
                     GLContextGLX* shareContext,
@@ -29,26 +29,26 @@ public:
 
     ~GLContextGLX();
 
-    virtual GLContextType GetContextType() const MOZ_OVERRIDE { return GLContextType::GLX; }
+    virtual GLContextType GetContextType() const override { return GLContextType::GLX; }
 
     static GLContextGLX* Cast(GLContext* gl) {
         MOZ_ASSERT(gl->GetContextType() == GLContextType::GLX);
         return static_cast<GLContextGLX*>(gl);
     }
 
-    bool Init() MOZ_OVERRIDE;
+    bool Init() override;
 
-    virtual bool MakeCurrentImpl(bool aForce) MOZ_OVERRIDE;
+    virtual bool MakeCurrentImpl(bool aForce) override;
 
-    virtual bool IsCurrent() MOZ_OVERRIDE;
+    virtual bool IsCurrent() override;
 
-    virtual bool SetupLookupFunction() MOZ_OVERRIDE;
+    virtual bool SetupLookupFunction() override;
 
-    virtual bool IsDoubleBuffered() const MOZ_OVERRIDE;
+    virtual bool IsDoubleBuffered() const override;
 
-    virtual bool SupportsRobustness() const MOZ_OVERRIDE;
+    virtual bool SupportsRobustness() const override;
 
-    virtual bool SwapBuffers() MOZ_OVERRIDE;
+    virtual bool SwapBuffers() override;
 
 private:
     friend class GLContextProviderGLX;

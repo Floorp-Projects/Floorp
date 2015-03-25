@@ -67,7 +67,7 @@ namespace gmp {
 static const uint32_t NodeIdSaltLength = 32;
 static StaticRefPtr<GeckoMediaPluginService> sSingletonService;
 
-class GMPServiceCreateHelper MOZ_FINAL : public nsRunnable
+class GMPServiceCreateHelper final : public nsRunnable
 {
   nsRefPtr<GeckoMediaPluginService> mService;
 

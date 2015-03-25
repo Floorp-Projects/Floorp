@@ -86,7 +86,7 @@ protected:
   }
 
 public:
-  virtual WidgetKeyboardEvent* AsKeyboardEvent() MOZ_OVERRIDE { return this; }
+  virtual WidgetKeyboardEvent* AsKeyboardEvent() override { return this; }
 
   WidgetKeyboardEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget,
                       EventClassID aEventClassID = eKeyboardEventClass)
@@ -108,7 +108,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eKeyboardEventClass,
                "Duplicate() must be overridden by sub class");
@@ -302,7 +302,7 @@ public:
   // default actions of keydown/keyup event is prevented.
   Nullable<bool> mEmbeddedCancelled;
 
-  virtual InternalBeforeAfterKeyboardEvent* AsBeforeAfterKeyboardEvent() MOZ_OVERRIDE
+  virtual InternalBeforeAfterKeyboardEvent* AsBeforeAfterKeyboardEvent() override
   {
     return this;
   }
@@ -313,7 +313,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eBeforeAfterKeyboardEventClass,
                "Duplicate() must be overridden by sub class");
@@ -360,7 +360,7 @@ public:
   uint32_t mSeqno;
 
 public:
-  virtual WidgetCompositionEvent* AsCompositionEvent() MOZ_OVERRIDE
+  virtual WidgetCompositionEvent* AsCompositionEvent() override
   {
     return this;
   }
@@ -376,7 +376,7 @@ public:
     mFlags.mCancelable = false;
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eCompositionEventClass,
                "Duplicate() must be overridden by sub class");
@@ -452,7 +452,7 @@ private:
   }
 
 public:
-  virtual WidgetQueryContentEvent* AsQueryContentEvent() MOZ_OVERRIDE
+  virtual WidgetQueryContentEvent* AsQueryContentEvent() override
   {
     return this;
   }
@@ -467,7 +467,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     // This event isn't an internal event of any DOM event.
     NS_ASSERTION(!IsAllowedToDispatchDOMEvent(),
@@ -611,7 +611,7 @@ public:
   uint32_t mSeqno;
 
 public:
-  virtual WidgetSelectionEvent* AsSelectionEvent() MOZ_OVERRIDE
+  virtual WidgetSelectionEvent* AsSelectionEvent() override
   {
     return this;
   }
@@ -628,7 +628,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     // This event isn't an internal event of any DOM event.
     NS_ASSERTION(!IsAllowedToDispatchDOMEvent(),
@@ -664,7 +664,7 @@ private:
   }
 
 public:
-  virtual InternalEditorInputEvent* AsEditorInputEvent() MOZ_OVERRIDE
+  virtual InternalEditorInputEvent* AsEditorInputEvent() override
   {
     return this;
   }
@@ -684,7 +684,7 @@ public:
     mFlags.mCancelable = false;
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eEditorInputEventClass,
                "Duplicate() must be overridden by sub class");

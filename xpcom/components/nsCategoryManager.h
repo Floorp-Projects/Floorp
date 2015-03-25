@@ -95,7 +95,7 @@ private:
  *
  * This implementation is thread-safe.
  */
-class nsCategoryManager MOZ_FINAL
+class nsCategoryManager final
   : public nsICategoryManager
   , public nsIMemoryReporter
 {

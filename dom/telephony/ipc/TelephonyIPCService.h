@@ -16,7 +16,7 @@ BEGIN_TELEPHONY_NAMESPACE
 class IPCTelephonyRequest;
 class PTelephonyChild;
 
-class TelephonyIPCService MOZ_FINAL : public nsITelephonyService
+class TelephonyIPCService final : public nsITelephonyService
                                      , public nsITelephonyListener
                                      , public nsIObserver
 {

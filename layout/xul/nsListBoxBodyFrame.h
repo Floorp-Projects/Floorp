@@ -20,7 +20,7 @@ class nsListScrollSmoother;
 nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
 
-class nsListBoxBodyFrame MOZ_FINAL : public nsBoxFrame,
+class nsListBoxBodyFrame final : public nsBoxFrame,
                                      public nsIScrollbarMediator,
                                      public nsIReflowCallback
 {
@@ -48,34 +48,34 @@ public:
   // nsIFrame
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent, 
-                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
+                    nsIFrame*         aPrevInFlow) override;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
-  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsIAtom* aAttribute, int32_t aModType) MOZ_OVERRIDE;
+  virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsIAtom* aAttribute, int32_t aModType) override;
 
   // nsIScrollbarMediator
-  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
-  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
-  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection) MOZ_OVERRIDE;
-  virtual void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) MOZ_OVERRIDE;
+  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection) override;
+  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection) override;
+  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection) override;
+  virtual void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) override;
   virtual void ThumbMoved(nsScrollbarFrame* aScrollbar,
                           int32_t aOldPos,
-                          int32_t aNewPos) MOZ_OVERRIDE;
-  virtual void VisibilityChanged(bool aVisible) MOZ_OVERRIDE;
-  virtual nsIFrame* GetScrollbarBox(bool aVertical) MOZ_OVERRIDE;
-  virtual void ScrollbarActivityStarted() const MOZ_OVERRIDE {}
-  virtual void ScrollbarActivityStopped() const MOZ_OVERRIDE {}
+                          int32_t aNewPos) override;
+  virtual void VisibilityChanged(bool aVisible) override;
+  virtual nsIFrame* GetScrollbarBox(bool aVertical) override;
+  virtual void ScrollbarActivityStarted() const override {}
+  virtual void ScrollbarActivityStopped() const override {}
 
 
   // nsIReflowCallback
-  virtual bool ReflowFinished() MOZ_OVERRIDE;
-  virtual void ReflowCallbackCanceled() MOZ_OVERRIDE;
+  virtual bool ReflowFinished() override;
+  virtual void ReflowCallbackCanceled() override;
 
-  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual void MarkIntrinsicISizesDirty() MOZ_OVERRIDE;
+  NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual void MarkIntrinsicISizesDirty() override;
 
-  virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetPrefSize(nsBoxLayoutState& aBoxLayoutState) override;
 
   // size calculation 
   int32_t GetRowCount();
@@ -128,9 +128,9 @@ public:
     return true;
   }
 
-  virtual bool SupportsOrdinalsInChildren() MOZ_OVERRIDE;
+  virtual bool SupportsOrdinalsInChildren() override;
 
-  virtual bool ComputesOwnOverflowArea() MOZ_OVERRIDE { return true; }
+  virtual bool ComputesOwnOverflowArea() override { return true; }
 
 protected:
   class nsPositionChangedEvent;
@@ -144,7 +144,7 @@ protected:
       mFrame(aFrame), mUp(aUp), mDelta(aDelta)
     {}
   
-    NS_IMETHOD Run() MOZ_OVERRIDE
+    NS_IMETHOD Run() override
     {
       if (!mFrame) {
         return NS_OK;

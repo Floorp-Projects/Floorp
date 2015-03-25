@@ -108,20 +108,20 @@ public:
     NS_DECL_NSIEXPATSINK
 
     // nsIContentSink
-    NS_IMETHOD WillParse(void) MOZ_OVERRIDE;
-    NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) MOZ_OVERRIDE;
-    NS_IMETHOD DidBuildModel(bool aTerminated) MOZ_OVERRIDE;
-    NS_IMETHOD WillInterrupt(void) MOZ_OVERRIDE;
-    NS_IMETHOD WillResume(void) MOZ_OVERRIDE;
-    NS_IMETHOD SetParser(nsParserBase* aParser) MOZ_OVERRIDE;
-    virtual void FlushPendingNotifications(mozFlushType aType) MOZ_OVERRIDE { }
-    NS_IMETHOD SetDocumentCharset(nsACString& aCharset) MOZ_OVERRIDE { return NS_OK; }
-    virtual nsISupports *GetTarget() MOZ_OVERRIDE { return nullptr; }
+    NS_IMETHOD WillParse(void) override;
+    NS_IMETHOD WillBuildModel(nsDTDMode aDTDMode) override;
+    NS_IMETHOD DidBuildModel(bool aTerminated) override;
+    NS_IMETHOD WillInterrupt(void) override;
+    NS_IMETHOD WillResume(void) override;
+    NS_IMETHOD SetParser(nsParserBase* aParser) override;
+    virtual void FlushPendingNotifications(mozFlushType aType) override { }
+    NS_IMETHOD SetDocumentCharset(nsACString& aCharset) override { return NS_OK; }
+    virtual nsISupports *GetTarget() override { return nullptr; }
 
     // nsIRDFContentSink
-    NS_IMETHOD Init(nsIURI* aURL) MOZ_OVERRIDE;
-    NS_IMETHOD SetDataSource(nsIRDFDataSource* aDataSource) MOZ_OVERRIDE;
-    NS_IMETHOD GetDataSource(nsIRDFDataSource*& aDataSource) MOZ_OVERRIDE;
+    NS_IMETHOD Init(nsIURI* aURL) override;
+    NS_IMETHOD SetDataSource(nsIRDFDataSource* aDataSource) override;
+    NS_IMETHOD GetDataSource(nsIRDFDataSource*& aDataSource) override;
 
     // pseudo constants
     static int32_t gRefCnt;

@@ -89,9 +89,9 @@ protected:
  }
 
 public:
-  virtual WidgetMouseEventBase* AsMouseEventBase() MOZ_OVERRIDE { return this; }
+  virtual WidgetMouseEventBase* AsMouseEventBase() override { return this; }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_CRASH("WidgetMouseEventBase must not be most-subclass");
     return nullptr;
@@ -215,7 +215,7 @@ protected:
   }
 
 public:
-  virtual WidgetMouseEvent* AsMouseEvent() MOZ_OVERRIDE { return this; }
+  virtual WidgetMouseEvent* AsMouseEvent() override { return this; }
 
   WidgetMouseEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget,
                    reasonType aReason, contextType aContext = eNormal) :
@@ -247,7 +247,7 @@ public:
   }
 #endif
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eMouseEventClass,
                "Duplicate() must be overridden by sub class");
@@ -307,7 +307,7 @@ public:
 class WidgetDragEvent : public WidgetMouseEvent
 {
 public:
-  virtual WidgetDragEvent* AsDragEvent() MOZ_OVERRIDE { return this; }
+  virtual WidgetDragEvent* AsDragEvent() override { return this; }
 
   WidgetDragEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
     : WidgetMouseEvent(aIsTrusted, aMessage, aWidget, eDragEventClass, eReal)
@@ -320,7 +320,7 @@ public:
        aMessage != NS_DRAGDROP_END);
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eDragEventClass,
                "Duplicate() must be overridden by sub class");
@@ -367,7 +367,7 @@ private:
   }
 
 public:
-  virtual WidgetMouseScrollEvent* AsMouseScrollEvent() MOZ_OVERRIDE
+  virtual WidgetMouseScrollEvent* AsMouseScrollEvent() override
   {
     return this;
   }
@@ -381,7 +381,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eMouseScrollEventClass,
                "Duplicate() must be overridden by sub class");
@@ -430,7 +430,7 @@ private:
   }
 
 public:
-  virtual WidgetWheelEvent* AsWheelEvent() MOZ_OVERRIDE { return this; }
+  virtual WidgetWheelEvent* AsWheelEvent() override { return this; }
 
   WidgetWheelEvent(bool aIsTrusted, uint32_t aMessage, nsIWidget* aWidget)
     : WidgetMouseEventBase(aIsTrusted, aMessage, aWidget, eWheelEventClass)
@@ -450,7 +450,7 @@ public:
   {
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == eWheelEventClass,
                "Duplicate() must be overridden by sub class");
@@ -578,7 +578,7 @@ class WidgetPointerEvent : public WidgetMouseEvent
   }
 
 public:
-  virtual WidgetPointerEvent* AsPointerEvent() MOZ_OVERRIDE { return this; }
+  virtual WidgetPointerEvent* AsPointerEvent() override { return this; }
 
   WidgetPointerEvent(bool aIsTrusted, uint32_t aMsg, nsIWidget* w)
     : WidgetMouseEvent(aIsTrusted, aMsg, w, ePointerEventClass, eReal)
@@ -617,7 +617,7 @@ public:
     }
   }
 
-  virtual WidgetEvent* Duplicate() const MOZ_OVERRIDE
+  virtual WidgetEvent* Duplicate() const override
   {
     MOZ_ASSERT(mClass == ePointerEventClass,
                "Duplicate() must be overridden by sub class");

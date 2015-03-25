@@ -36,7 +36,7 @@ struct CompareCacheHashEntryPtr : PLDHashEntryHdr {
   CompareCacheHashEntry *entry;
 };
 
-class nsCertAddonInfo MOZ_FINAL : public nsISupports
+class nsCertAddonInfo final : public nsISupports
 {
 private:
   ~nsCertAddonInfo() {}

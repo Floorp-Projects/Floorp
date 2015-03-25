@@ -14,7 +14,7 @@
 { 0x60ffe9e, 0xd114, 0x486b,                              \
     {0xae, 0xb7, 0xda, 0x62, 0xe7, 0x27, 0x3e, 0xd5} }
 
-class nsDeviceProtocolHandler MOZ_FINAL : public nsIProtocolHandler {
+class nsDeviceProtocolHandler final : public nsIProtocolHandler {
   ~nsDeviceProtocolHandler() {}
 
 public:

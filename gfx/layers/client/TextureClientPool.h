@@ -18,7 +18,7 @@ namespace layers {
 
 class ISurfaceAllocator;
 
-class TextureClientPool MOZ_FINAL
+class TextureClientPool final
 {
   ~TextureClientPool();
 

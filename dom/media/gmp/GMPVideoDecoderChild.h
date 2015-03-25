@@ -30,16 +30,16 @@ public:
   GMPVideoHostImpl& Host();
 
   // GMPVideoDecoderCallback
-  virtual void Decoded(GMPVideoi420Frame* decodedFrame) MOZ_OVERRIDE;
-  virtual void ReceivedDecodedReferenceFrame(const uint64_t pictureId) MOZ_OVERRIDE;
-  virtual void ReceivedDecodedFrame(const uint64_t pictureId) MOZ_OVERRIDE;
-  virtual void InputDataExhausted() MOZ_OVERRIDE;
-  virtual void DrainComplete() MOZ_OVERRIDE;
-  virtual void ResetComplete() MOZ_OVERRIDE;
-  virtual void Error(GMPErr aError) MOZ_OVERRIDE;
+  virtual void Decoded(GMPVideoi420Frame* decodedFrame) override;
+  virtual void ReceivedDecodedReferenceFrame(const uint64_t pictureId) override;
+  virtual void ReceivedDecodedFrame(const uint64_t pictureId) override;
+  virtual void InputDataExhausted() override;
+  virtual void DrainComplete() override;
+  virtual void ResetComplete() override;
+  virtual void Error(GMPErr aError) override;
 
   // GMPSharedMemManager
-  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem) MOZ_OVERRIDE
+  virtual bool Alloc(size_t aSize, Shmem::SharedMemory::SharedMemoryType aType, Shmem* aMem) override
   {
 #ifndef SHMEM_ALLOC_IN_CHILD
     return CallNeedShmem(aSize, aMem);
@@ -51,7 +51,7 @@ public:
 #endif
 #endif
   }
-  virtual void Dealloc(Shmem& aMem) MOZ_OVERRIDE
+  virtual void Dealloc(Shmem& aMem) override
   {
 #ifndef SHMEM_ALLOC_IN_CHILD
     SendParentShmemForPool(aMem);
@@ -64,15 +64,15 @@ private:
   // PGMPVideoDecoderChild
   virtual bool RecvInitDecode(const GMPVideoCodec& aCodecSettings,
                               InfallibleTArray<uint8_t>&& aCodecSpecific,
-                              const int32_t& aCoreCount) MOZ_OVERRIDE;
+                              const int32_t& aCoreCount) override;
   virtual bool RecvDecode(const GMPVideoEncodedFrameData& aInputFrame,
                           const bool& aMissingFrames,
                           InfallibleTArray<uint8_t>&& aCodecSpecificInfo,
-                          const int64_t& aRenderTimeMs) MOZ_OVERRIDE;
-  virtual bool RecvChildShmemForPool(Shmem&& aFrameBuffer) MOZ_OVERRIDE;
-  virtual bool RecvReset() MOZ_OVERRIDE;
-  virtual bool RecvDrain() MOZ_OVERRIDE;
-  virtual bool RecvDecodingComplete() MOZ_OVERRIDE;
+                          const int64_t& aRenderTimeMs) override;
+  virtual bool RecvChildShmemForPool(Shmem&& aFrameBuffer) override;
+  virtual bool RecvReset() override;
+  virtual bool RecvDrain() override;
+  virtual bool RecvDecodingComplete() override;
 
   GMPChild* mPlugin;
   GMPVideoDecoder* mVideoDecoder;

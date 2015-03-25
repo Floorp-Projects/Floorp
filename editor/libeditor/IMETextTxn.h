@@ -50,7 +50,7 @@ public:
 
   NS_DECL_EDITTXN
 
-  NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) MOZ_OVERRIDE;
+  NS_IMETHOD Merge(nsITransaction* aTransaction, bool* aDidMerge) override;
 
   void MarkFixed();
 

@@ -16,7 +16,7 @@ namespace a11y {
 /**
  * Used to fetch accessible children.
  */
-class ChildrenEnumVariant MOZ_FINAL : public IEnumVARIANT
+class ChildrenEnumVariant final : public IEnumVARIANT
 {
 public:
   ChildrenEnumVariant(AccessibleWrap* aAnchor) : mAnchorAcc(aAnchor),

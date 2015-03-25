@@ -30,7 +30,7 @@ void printString(nsString &str) {
     printf("%s", NS_ConvertUTF16toUTF8(str).get());
 }
 
-class TestObserver MOZ_FINAL : public nsIObserver,
+class TestObserver final : public nsIObserver,
                                public nsSupportsWeakReference
 {
 public:

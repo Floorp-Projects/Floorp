@@ -40,7 +40,7 @@ public:
     (new WriteRecordClient(aData, aOnSuccess, aOnFailure))->Do(aRecordName);
   }
 
-  virtual void OpenComplete(GMPErr aStatus) MOZ_OVERRIDE {
+  virtual void OpenComplete(GMPErr aStatus) override {
     if (GMP_FAILED(aStatus) ||
         GMP_FAILED(mRecord->Write(&mData.front(), mData.size()))) {
       Done(mOnFailure, mOnSuccess);
@@ -49,11 +49,11 @@ public:
 
   virtual void ReadComplete(GMPErr aStatus,
                             const uint8_t* aData,
-                            uint32_t aDataSize) MOZ_OVERRIDE {
+                            uint32_t aDataSize) override {
     MOZ_ASSERT(false, "Should not reach here.");
   }
 
-  virtual void WriteComplete(GMPErr aStatus) MOZ_OVERRIDE {
+  virtual void WriteComplete(GMPErr aStatus) override {
     if (GMP_FAILED(aStatus)) {
       Done(mOnFailure, mOnSuccess);
     } else {
@@ -119,7 +119,7 @@ public:
     (new ReadRecordClient(aContinuation))->Do(aRecordName);
   }
 
-  virtual void OpenComplete(GMPErr aStatus) MOZ_OVERRIDE {
+  virtual void OpenComplete(GMPErr aStatus) override {
     auto err = aStatus;
     if (GMP_FAILED(err) ||
         GMP_FAILED(err = mRecord->Read())) {
@@ -129,11 +129,11 @@ public:
 
   virtual void ReadComplete(GMPErr aStatus,
                             const uint8_t* aData,
-                            uint32_t aDataSize) MOZ_OVERRIDE {
+                            uint32_t aDataSize) override {
     Done(aStatus, aData, aDataSize);
   }
 
-  virtual void WriteComplete(GMPErr aStatus) MOZ_OVERRIDE {
+  virtual void WriteComplete(GMPErr aStatus) override {
     MOZ_ASSERT(false, "Should not reach here.");
   }
 
