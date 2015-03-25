@@ -66,8 +66,8 @@ let TEST_DATA = [{
   desc: "Object attribute names",
   text: "toString=\"true\" hasOwnProperty=\"false\"",
   expectedAttributes: {
-    toString: "true",
-    hasOwnProperty: "false"
+    tostring: "true",
+    hasownproperty: "false"
   }
 }, {
   desc: "Add event handlers",

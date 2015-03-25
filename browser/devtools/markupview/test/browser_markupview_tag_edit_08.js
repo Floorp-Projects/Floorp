@@ -29,7 +29,7 @@ function* testCollapsedLongAttribute(inspector) {
   yield setNodeAttribute("#node24", "data-long", LONG_ATTRIBUTE);
   yield onMutated;
 
-  assertAttributes("#node24", {
+  yield assertAttributes("#node24", {
     id: "node24",
     "class": "",
     "data-long": LONG_ATTRIBUTE
@@ -51,7 +51,7 @@ function* testCollapsedLongAttribute(inspector) {
   let visibleAttrText = editor.attrs["data-long"].querySelector(".attr-value").textContent;
   is (visibleAttrText, LONG_ATTRIBUTE_COLLAPSED)
 
-  assertAttributes("#node24", {
+  yield assertAttributes("#node24", {
     id: "node24",
     class: "",
     'data-long': LONG_ATTRIBUTE,
@@ -62,7 +62,7 @@ function* testCollapsedLongAttribute(inspector) {
 function* testModifyInlineStyleWithQuotes(inspector) {
   info("Modify inline style containing \"");
 
-  assertAttributes("#node26", {
+  yield assertAttributes("#node26", {
     id: "node26",
     style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.org%2F");'
   });
@@ -89,7 +89,7 @@ function* testModifyInlineStyleWithQuotes(inspector) {
 
   yield onMutated;
 
-  assertAttributes("#node26", {
+  yield assertAttributes("#node26", {
     id: "node26",
     style: 'background-image: url("moz-page-thumb://thumbnail?url=http%3A%2F%2Fwww.mozilla.com%2F");'
   });
@@ -98,7 +98,7 @@ function* testModifyInlineStyleWithQuotes(inspector) {
 function* testEditingAttributeWithMixedQuotes(inspector) {
   info("Modify class containing \" and \'");
 
-  assertAttributes("#node27", {
+  yield assertAttributes("#node27", {
     "id": "node27",
     "class": 'Double " and single \''
   });
@@ -122,7 +122,7 @@ function* testEditingAttributeWithMixedQuotes(inspector) {
 
   yield onMutated;
 
-  assertAttributes("#node27", {
+  yield assertAttributes("#node27", {
     id: "node27",
     class: '" " and \' \''
   });
