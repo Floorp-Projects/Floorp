@@ -30,7 +30,8 @@ public:
 
   IMPL_EVENT_HANDLER(devicefound);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
 private:
   BluetoothDiscoveryHandle(nsPIDOMWindow* aWindow);
