@@ -29,6 +29,13 @@
 
 <canvas id="graph" width="1080" height="400" style="padding-left:10px"></canvas>
 <canvas id="memgraph" width="1080" height="400" style="padding-left:10px"></canvas>
+<div id="memgraph-disabled" style="display: none"><i>No performance.mozMemory object available. Set dom.enable_memory_stats to True to see heap size info.</i></div>
+
+<hr>
+
+<div id='track-sizes-div'>
+  Show heap size graph: <input id='track-sizes' type='checkbox' onclick="trackHeapSizes(this.checked)">
+</div>
 
 <div>
     <input type="button" id="stop" value="Pause" onclick="stopstart()"></input>
