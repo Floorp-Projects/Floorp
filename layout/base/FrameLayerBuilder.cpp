@@ -687,17 +687,17 @@ public:
 
   nscoord GetAppUnitsPerDevPixel() { return mAppUnitsPerDevPixel; }
 
-  nsIntRect ScaleToNearestPixels(const nsRect& aRect)
+  nsIntRect ScaleToNearestPixels(const nsRect& aRect) const
   {
     return aRect.ScaleToNearestPixels(mParameters.mXScale, mParameters.mYScale,
                                       mAppUnitsPerDevPixel);
   }
-  nsIntRegion ScaleRegionToNearestPixels(const nsRegion& aRegion)
+  nsIntRegion ScaleRegionToNearestPixels(const nsRegion& aRegion) const
   {
     return aRegion.ScaleToNearestPixels(mParameters.mXScale, mParameters.mYScale,
                                         mAppUnitsPerDevPixel);
   }
-  nsIntRect ScaleToOutsidePixels(const nsRect& aRect, bool aSnap = false)
+  nsIntRect ScaleToOutsidePixels(const nsRect& aRect, bool aSnap = false) const
   {
     if (aSnap && mSnappingEnabled) {
       return ScaleToNearestPixels(aRect);
@@ -705,7 +705,7 @@ public:
     return aRect.ScaleToOutsidePixels(mParameters.mXScale, mParameters.mYScale,
                                       mAppUnitsPerDevPixel);
   }
-  nsIntRect ScaleToInsidePixels(const nsRect& aRect, bool aSnap = false)
+  nsIntRect ScaleToInsidePixels(const nsRect& aRect, bool aSnap = false) const
   {
     if (aSnap && mSnappingEnabled) {
       return ScaleToNearestPixels(aRect);
@@ -714,7 +714,7 @@ public:
                                      mAppUnitsPerDevPixel);
   }
 
-  nsIntRegion ScaleRegionToInsidePixels(const nsRegion& aRegion, bool aSnap = false)
+  nsIntRegion ScaleRegionToInsidePixels(const nsRegion& aRegion, bool aSnap = false) const
   {
     if (aSnap && mSnappingEnabled) {
       return ScaleRegionToNearestPixels(aRegion);
@@ -723,7 +723,7 @@ public:
                                         mAppUnitsPerDevPixel);
   }
 
-  nsIntRegion ScaleRegionToOutsidePixels(const nsRegion& aRegion, bool aSnap = false)
+  nsIntRegion ScaleRegionToOutsidePixels(const nsRegion& aRegion, bool aSnap = false) const
   {
     if (aSnap && mSnappingEnabled) {
       return ScaleRegionToNearestPixels(aRegion);
