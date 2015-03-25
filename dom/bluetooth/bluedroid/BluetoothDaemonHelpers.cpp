@@ -455,18 +455,18 @@ Convert(BluetoothSocketType aIn, uint8_t& aOut)
 }
 
 nsresult
-Convert(uint8_t aIn, BluetoothSspPairingVariant& aOut)
+Convert(uint8_t aIn, BluetoothSspVariant& aOut)
 {
-  static const BluetoothSspPairingVariant sSspPairingVariant[] = {
+  static const BluetoothSspVariant sSspVariant[] = {
     CONVERT(0x00, SSP_VARIANT_PASSKEY_CONFIRMATION),
     CONVERT(0x01, SSP_VARIANT_PASSKEY_ENTRY),
     CONVERT(0x02, SSP_VARIANT_CONSENT),
     CONVERT(0x03, SSP_VARIANT_PASSKEY_NOTIFICATION)
   };
-  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sSspPairingVariant))) {
+  if (NS_WARN_IF(aIn >= MOZ_ARRAY_LENGTH(sSspVariant))) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  aOut = sSspPairingVariant[aIn];
+  aOut = sSspVariant[aIn];
   return NS_OK;
 }
 
@@ -599,7 +599,7 @@ Convert(const nsAString& aIn, BluetoothServiceName& aOut)
 }
 
 nsresult
-Convert(const nsAString& aIn, BluetoothSspPairingVariant& aOut)
+Convert(const nsAString& aIn, BluetoothSspVariant& aOut)
 {
   if (aIn.EqualsLiteral("PasskeyConfirmation")) {
     aOut = SSP_VARIANT_PASSKEY_CONFIRMATION;
@@ -942,7 +942,7 @@ Convert(BluetoothScanMode aIn, int32_t& aOut)
 }
 
 nsresult
-Convert(BluetoothSspPairingVariant aIn, uint8_t& aOut)
+Convert(BluetoothSspVariant aIn, uint8_t& aOut)
 {
   static const uint8_t sValue[] = {
     CONVERT(SSP_VARIANT_PASSKEY_CONFIRMATION, 0x00),
@@ -959,7 +959,7 @@ Convert(BluetoothSspPairingVariant aIn, uint8_t& aOut)
 }
 
 nsresult
-Convert(BluetoothSspPairingVariant aIn, nsAString& aOut)
+Convert(BluetoothSspVariant aIn, nsAString& aOut)
 {
   static const char* const sString[] = {
     CONVERT(SSP_VARIANT_PASSKEY_CONFIRMATION, "PasskeyConfirmation"),
@@ -1331,10 +1331,9 @@ PackPDU(BluetoothPropertyType aIn, BluetoothDaemonPDU& aPDU)
 }
 
 nsresult
-PackPDU(BluetoothSspPairingVariant aIn, BluetoothDaemonPDU& aPDU)
+PackPDU(BluetoothSspVariant aIn, BluetoothDaemonPDU& aPDU)
 {
-  return PackPDU(PackConversion<BluetoothSspPairingVariant, uint8_t>(aIn),
-                 aPDU);
+  return PackPDU(PackConversion<BluetoothSspVariant, uint8_t>(aIn), aPDU);
 }
 
 nsresult
@@ -1641,10 +1640,10 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothServiceRecord& aOut)
 }
 
 nsresult
-UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothSspPairingVariant& aOut)
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothSspVariant& aOut)
 {
   return UnpackPDU(
-    aPDU, UnpackConversion<uint8_t, BluetoothSspPairingVariant>(aOut));
+    aPDU, UnpackConversion<uint8_t, BluetoothSspVariant>(aOut));
 }
 
 nsresult
