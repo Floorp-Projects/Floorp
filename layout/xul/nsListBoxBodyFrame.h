@@ -54,13 +54,20 @@ public:
   virtual nsresult AttributeChanged(int32_t aNameSpaceID, nsIAtom* aAttribute, int32_t aModType) override;
 
   // nsIScrollbarMediator
-  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection) override;
-  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection) override;
-  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection) override;
+  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                            nsIScrollbarMediator::ScrollSnapMode snapMode
+                              = nsIScrollbarMediator::DISABLE_SNAP) override;
+  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                             nsIScrollbarMediator::ScrollSnapMode snapMode
+                               = nsIScrollbarMediator::DISABLE_SNAP) override;
+  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                            nsIScrollbarMediator::ScrollSnapMode snapMode
+                              = nsIScrollbarMediator::DISABLE_SNAP) override;
   virtual void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) override;
   virtual void ThumbMoved(nsScrollbarFrame* aScrollbar,
                           int32_t aOldPos,
                           int32_t aNewPos) override;
+  virtual void ScrollbarReleased(nsScrollbarFrame* aScrollbar) override {}
   virtual void VisibilityChanged(bool aVisible) override;
   virtual nsIFrame* GetScrollbarBox(bool aVertical) override;
   virtual void ScrollbarActivityStarted() const override {}
