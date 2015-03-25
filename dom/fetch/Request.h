@@ -78,14 +78,20 @@ public:
   RequestContext
   Context() const
   {
-    return mContext;
+    return mRequest->Context();
   }
 
   // [ChromeOnly]
   void
   SetContext(RequestContext aContext)
   {
-    mContext = aContext;
+    mRequest->SetContext(aContext);
+  }
+
+  void
+  SetContentPolicyType(nsContentPolicyType aContentPolicyType)
+  {
+    mRequest->SetContentPolicyType(aContentPolicyType);
   }
 
   void
@@ -126,7 +132,6 @@ private:
   nsRefPtr<InternalRequest> mRequest;
   // Lazily created.
   nsRefPtr<Headers> mHeaders;
-  RequestContext mContext;
 };
 
 } // namespace dom
