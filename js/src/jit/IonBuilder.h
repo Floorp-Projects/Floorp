@@ -1350,8 +1350,6 @@ class CallInfo
     }
 };
 
-bool TypeSetIncludes(TypeSet *types, MIRType input, TypeSet *inputTypes);
-
 bool NeedsPostBarrier(CompileInfo &info, MDefinition *value);
 
 } // namespace jit
