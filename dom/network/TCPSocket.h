@@ -32,7 +32,8 @@ namespace dom {
 class DOMError;
 struct ServerSocketOptions;
 class TCPServerSocket;
-class USVStringOrArrayBuffer;
+class TCPSocketChild;
+class TCPSocketParent;
 
 // This interface is only used for legacy navigator.mozTCPSocket API compatibility.
 class LegacyMozTCPSocket : public nsISupports
@@ -98,8 +99,9 @@ public:
   void Suspend();
   void Resume(ErrorResult& aRv);
   void Close();
-  bool Send(const nsCString& aData, ErrorResult& aRv);
-  bool Send(const ArrayBuffer& aData,
+  bool Send(JSContext* aCx, const nsACString& aData, ErrorResult& aRv);
+  bool Send(JSContext* aCx,
+            const ArrayBuffer& aData,
             uint32_t aByteOffset,
             const Optional<uint32_t>& aByteLength,
             ErrorResult& aRv);
@@ -114,10 +116,30 @@ public:
               const SocketOptions& aOptions,
               ErrorResult& aRv);
 
+  // Perform a send operation that's asssociated with a sequence number. Used in
+  // IPC scenarios to track the number of bytes buffered at any given time.
+  void SendWithTrackingNumber(const nsACString& aData,
+                              const uint32_t& aTrackingNumber,
+                              ErrorResult& aRv);
+  void SendWithTrackingNumber(JSContext* aCx,
+                              const ArrayBuffer& aData,
+                              uint32_t aByteOffset,
+                              const Optional<uint32_t>& aByteLength,
+                              const uint32_t& aTrackingNumber,
+                              ErrorResult& aRv);
   // Create a TCPSocket object from an existing low-level socket connection.
   // Used by the TCPServerSocket implementation when a new connection is accepted.
   static already_AddRefed<TCPSocket>
   CreateAcceptedSocket(nsIGlobalObject* aGlobal, nsISocketTransport* aTransport, bool aUseArrayBuffers);
+  // Create a TCPSocket object from an existing child-side IPC actor.
+  // Used by the TCPServerSocketChild implementation when a new connection is accepted.
+  static already_AddRefed<TCPSocket>
+  CreateAcceptedSocket(nsIGlobalObject* aGlobal, TCPSocketChild* aSocketBridge, bool aUseArrayBuffers);
+
+  // Initialize this socket's associated app and browser information.
+  void SetAppIdAndBrowser(uint32_t aAppId, bool aInBrowser);
+  // Initialize this socket's associated IPC actor in the parent process.
+  void SetSocketBridgeParent(TCPSocketParent* aBridgeParent);
 
   static bool SocketEnabled();
 
@@ -132,9 +154,23 @@ public:
   // Inform this socket that a buffered send() has completed sending.
   void NotifyCopyComplete(nsresult aStatus);
 
+  // Set this child socket's number of buffered bytes, based on the count from the parent
+  // process associated with the given sequence id.
+  void UpdateBufferedAmount(uint32_t aAmount, uint32_t aTrackingNumber);
+  // Set this child socket's ready state, based on the state in the parent process.
+  void UpdateReadyState(uint32_t aReadyState);
+  // Dispatch an "error" event at this object.
+  void FireErrorEvent(const nsAString& aName, const nsAString& aMessage);
+  // Dispatch an event of the given type at this object.
+  void FireEvent(const nsAString& aType);
+  // Dispatch a "data" event at this object.
+  void FireDataEvent(JSContext* aCx, const nsAString& aType, JS::Handle<JS::Value> aData);
+
 private:
   ~TCPSocket();
 
+  // Initialize this socket with an existing IPC actor.
+  void InitWithSocketChild(TCPSocketChild* aBridge);
   // Initialize this socket from an existing low-level connection.
   nsresult InitWithTransport(nsISocketTransport* aTransport);
   // Initialize the input/output streams for this socket object.
@@ -148,12 +184,6 @@ private:
   nsresult EnsureCopying();
   // Enable TLS on this socket.
   void ActivateTLS();
-  // Dispatch an "error" event at this object.
-  void FireErrorEvent(const nsAString& aName, const nsAString& aMessage);
-  // Dispatch an event of the given type at this object.
-  void FireEvent(const nsAString& aType);
-  // Dispatch a "data" event at this object.
-  void FireDataEvent(JSContext* aCx, const nsAString& aType, JS::Handle<JS::Value> aData);
   // Dispatch an error event if necessary, then dispatch a "close" event.
   nsresult MaybeReportErrorAndCloseIfOpen(nsresult status);
 #ifdef MOZ_WIDGET_GONK
@@ -168,6 +198,11 @@ private:
   uint16_t mPort;
   // Whether this socket is using a secure transport.
   bool mSsl;
+
+  // The associated IPC actor in a child process.
+  nsRefPtr<TCPSocketChild> mSocketBridgeChild;
+  // The associated IPC actor in a parent process.
+  nsRefPtr<TCPSocketParent> mSocketBridgeParent;
 
   // Raw socket streams
   nsCOMPtr<nsISocketTransport> mTransport;
@@ -191,8 +226,16 @@ private:
   // The id of the window that created this socket.
   uint64_t mInnerWindowID;
 
+  // The current number of buffered bytes. Only used in content processes when IPC is enabled.
+  uint64_t mBufferedAmount;
+
   // The number of times this socket has had `Suspend` called without a corresponding `Resume`.
   uint32_t mSuspendCount;
+
+  // The current sequence number (ie. number of send operations) that have been processed.
+  // This is used in the IPC scenario by the child process to filter out outdated notifications
+  // about the amount of buffered data present in the parent process.
+  uint32_t mTrackingNumber;
 
   // True if this socket has been upgraded to secure after the initial connection,
   // but the actual upgrade is waiting for an in-progress copy operation to complete.

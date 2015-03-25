@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_TCPSocketParent_h
 #define mozilla_dom_TCPSocketParent_h
 
+#include "mozilla/dom/TCPSocketBinding.h"
 #include "mozilla/net/PTCPSocketParent.h"
 #include "nsITCPSocketParent.h"
 #include "nsCycleCollectionParticipant.h"
@@ -21,11 +22,13 @@
 namespace mozilla {
 namespace dom {
 
-class TCPSocketParentBase : public nsITCPSocketParent
+class TCPSocket;
+
+class TCPSocketParentBase : public nsISupports
                           , public mozilla::net::DisconnectableParent
 {
 public:
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(TCPSocketParentBase)
+  NS_DECL_CYCLE_COLLECTION_CLASS(TCPSocketParentBase)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   void AddIPDLReference();
@@ -35,9 +38,7 @@ protected:
   TCPSocketParentBase();
   virtual ~TCPSocketParentBase();
 
-  JS::Heap<JSObject*> mIntermediaryObj;
-  nsCOMPtr<nsITCPSocketIntermediary> mIntermediary;
-  nsCOMPtr<nsIDOMTCPSocket> mSocket;
+  nsRefPtr<TCPSocket> mSocket;
   nsRefPtr<mozilla::net::OfflineObserver> mObserver;
   bool mIPCOpen;
 };
@@ -46,13 +47,12 @@ class TCPSocketParent : public mozilla::net::PTCPSocketParent
                       , public TCPSocketParentBase
 {
 public:
-  NS_DECL_NSITCPSOCKETPARENT
   NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
   TCPSocketParent() {}
 
   virtual bool RecvOpen(const nsString& aHost, const uint16_t& aPort,
-                        const bool& useSSL, const nsString& aBinaryType) override;
+                        const bool& useSSL, const bool& aUseArrayBuffers) override;
 
   virtual bool RecvStartTLS() override;
   virtual bool RecvSuspend() override;
@@ -65,8 +65,18 @@ public:
   virtual uint32_t GetAppId() override;
   bool GetInBrowser();
 
+  void FireErrorEvent(const nsAString& aName, const nsAString& aType, TCPReadyState aReadyState);
+  void FireEvent(const nsAString& aType, TCPReadyState aReadyState);
+  void FireArrayBufferDataEvent(nsTArray<uint8_t>& aBuffer, TCPReadyState aReadyState);
+  void FireStringDataEvent(const nsACString& aData, TCPReadyState aReadyState);
+
+  void SetSocket(TCPSocket *socket);
+  nsresult GetHost(nsAString& aHost);
+  nsresult GetPort(uint16_t* aPort);
+
 private:
   virtual void ActorDestroy(ActorDestroyReason why) override;
+  void SendEvent(const nsAString& aType, CallbackData aData, TCPReadyState aReadyState);
 };
 
 } // namespace dom

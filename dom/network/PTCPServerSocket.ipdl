@@ -24,8 +24,6 @@ parent:
 
 child:
   CallbackAccept(PTCPSocket socket);
-  CallbackError(nsString message, nsString filename,
-                uint32_t lineNumber, uint32_t columnNumber);
   __delete__();
 };
 

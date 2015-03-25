@@ -6,6 +6,8 @@
 #include "mozilla/dom/TCPServerSocketBinding.h"
 #include "mozilla/dom/TCPServerSocketEvent.h"
 #include "mozilla/dom/TCPSocketBinding.h"
+#include "TCPServerSocketParent.h"
+#include "TCPServerSocketChild.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/ErrorResult.h"
 #include "TCPServerSocket.h"
@@ -22,11 +24,15 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(TCPServerSocket,
                                                   DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServerSocket)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServerBridgeChild)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServerBridgeParent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(TCPServerSocket,
                                                 DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mServerSocket)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mServerBridgeChild)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mServerBridgeParent)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(TCPServerSocket, DOMEventTargetHelper)
@@ -52,8 +58,14 @@ TCPServerSocket::~TCPServerSocket()
 nsresult
 TCPServerSocket::Init()
 {
-  if (mServerSocket) {
+  if (mServerSocket || mServerBridgeChild) {
+    NS_WARNING("Child TCPServerSocket is already listening.");
     return NS_ERROR_FAILURE;
+  }
+
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    mServerBridgeChild = new TCPServerSocketChild(this, mPort, mBacklog, mUseArrayBuffers);
+    return NS_OK;
   }
 
   nsresult rv;
@@ -99,6 +111,9 @@ TCPServerSocket::LocalPort()
 void
 TCPServerSocket::Close()
 {
+  if (mServerBridgeChild) {
+    mServerBridgeChild->Close();
+  }
   if (mServerSocket) {
     mServerSocket->Close();
   }
@@ -120,14 +135,21 @@ TCPServerSocket::FireEvent(const nsAString& aType, TCPSocket* aSocket)
   event->SetTrusted(true);
   bool dummy;
   DispatchEvent(event, &dummy);
+
+  if (mServerBridgeParent) {
+    mServerBridgeParent->OnConnect(event);
+  }
 }
 
 NS_IMETHODIMP
 TCPServerSocket::OnSocketAccepted(nsIServerSocket* aServer, nsISocketTransport* aTransport)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
-  NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
   nsRefPtr<TCPSocket> socket = TCPSocket::CreateAcceptedSocket(global, aTransport, mUseArrayBuffers);
+  if (mServerBridgeParent) {
+    socket->SetAppIdAndBrowser(mServerBridgeParent->GetAppId(),
+                               mServerBridgeParent->GetInBrowser());
+  }
   FireEvent(NS_LITERAL_STRING("connect"), socket);
   return NS_OK;
 }
@@ -148,6 +170,23 @@ TCPServerSocket::OnStopListening(nsIServerSocket* aServer, nsresult aStatus)
   }
   mServerSocket = nullptr;
   return NS_OK;
+}
+
+nsresult
+TCPServerSocket::AcceptChildSocket(TCPSocketChild* aSocketChild)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
+  NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
+  nsRefPtr<TCPSocket> socket = TCPSocket::CreateAcceptedSocket(global, aSocketChild, mUseArrayBuffers);
+  NS_ENSURE_TRUE(socket, NS_ERROR_FAILURE);
+  FireEvent(NS_LITERAL_STRING("connect"), socket);
+  return NS_OK;
+}
+
+void
+TCPServerSocket::SetServerBridgeParent(TCPServerSocketParent* aBridgeParent)
+{
+  mServerBridgeParent = aBridgeParent;
 }
 
 JSObject*
