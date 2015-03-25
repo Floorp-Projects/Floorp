@@ -23,17 +23,17 @@ class X11TextureSourceBasic
 public:
   X11TextureSourceBasic(BasicCompositor* aCompositor, gfxXlibSurface* aSurface);
 
-  virtual X11TextureSourceBasic* AsSourceBasic() MOZ_OVERRIDE { return this; }
+  virtual X11TextureSourceBasic* AsSourceBasic() override { return this; }
 
-  virtual gfx::IntSize GetSize() const MOZ_OVERRIDE;
+  virtual gfx::IntSize GetSize() const override;
 
-  virtual gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE;
+  virtual gfx::SurfaceFormat GetFormat() const override;
 
-  virtual gfx::SourceSurface* GetSurface(gfx::DrawTarget* aTarget) MOZ_OVERRIDE;
+  virtual gfx::SourceSurface* GetSurface(gfx::DrawTarget* aTarget) override;
 
-  virtual void DeallocateDeviceData() MOZ_OVERRIDE { }
+  virtual void DeallocateDeviceData() override { }
 
-  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+  virtual void SetCompositor(Compositor* aCompositor) override;
 
   static gfx::SurfaceFormat ContentTypeToSurfaceFormat(gfxContentType aType);
 

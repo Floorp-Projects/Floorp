@@ -46,19 +46,19 @@ public:
   nsTextEditRules();
 
   // nsIEditRules methods
-  NS_IMETHOD Init(nsPlaintextEditor *aEditor) MOZ_OVERRIDE;
-  NS_IMETHOD SetInitialValue(const nsAString& aValue) MOZ_OVERRIDE;
-  NS_IMETHOD DetachEditor() MOZ_OVERRIDE;
+  NS_IMETHOD Init(nsPlaintextEditor *aEditor) override;
+  NS_IMETHOD SetInitialValue(const nsAString& aValue) override;
+  NS_IMETHOD DetachEditor() override;
   NS_IMETHOD BeforeEdit(EditAction action,
-                        nsIEditor::EDirection aDirection) MOZ_OVERRIDE;
+                        nsIEditor::EDirection aDirection) override;
   NS_IMETHOD AfterEdit(EditAction action,
-                       nsIEditor::EDirection aDirection) MOZ_OVERRIDE;
+                       nsIEditor::EDirection aDirection) override;
   NS_IMETHOD WillDoAction(mozilla::dom::Selection* aSelection,
-                          nsRulesInfo* aInfo, bool* aCancel, bool* aHandled) MOZ_OVERRIDE;
+                          nsRulesInfo* aInfo, bool* aCancel, bool* aHandled) override;
   NS_IMETHOD DidDoAction(mozilla::dom::Selection* aSelection,
-                         nsRulesInfo* aInfo, nsresult aResult) MOZ_OVERRIDE;
-  NS_IMETHOD DocumentIsEmpty(bool *aDocumentIsEmpty) MOZ_OVERRIDE;
-  NS_IMETHOD DocumentModified() MOZ_OVERRIDE;
+                         nsRulesInfo* aInfo, nsresult aResult) override;
+  NS_IMETHOD DocumentIsEmpty(bool *aDocumentIsEmpty) override;
+  NS_IMETHOD DocumentModified() override;
 
 protected:
   virtual ~nsTextEditRules();

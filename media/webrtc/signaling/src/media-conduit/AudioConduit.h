@@ -56,18 +56,18 @@ public:
    * APIs used by the registered external transport to this Conduit to
    * feed in received RTP Frames to the VoiceEngine for decoding
    */
-  virtual MediaConduitErrorCode ReceivedRTPPacket(const void *data, int len) MOZ_OVERRIDE;
+  virtual MediaConduitErrorCode ReceivedRTPPacket(const void *data, int len) override;
 
   /**
    * APIs used by the registered external transport to this Conduit to
    * feed in received RTCP Frames to the VoiceEngine for decoding
    */
-  virtual MediaConduitErrorCode ReceivedRTCPPacket(const void *data, int len) MOZ_OVERRIDE;
+  virtual MediaConduitErrorCode ReceivedRTCPPacket(const void *data, int len) override;
 
-  virtual MediaConduitErrorCode StopTransmitting() MOZ_OVERRIDE;
-  virtual MediaConduitErrorCode StartTransmitting() MOZ_OVERRIDE;
-  virtual MediaConduitErrorCode StopReceiving() MOZ_OVERRIDE;
-  virtual MediaConduitErrorCode StartReceiving() MOZ_OVERRIDE;
+  virtual MediaConduitErrorCode StopTransmitting() override;
+  virtual MediaConduitErrorCode StartTransmitting() override;
+  virtual MediaConduitErrorCode StopReceiving() override;
+  virtual MediaConduitErrorCode StartReceiving() override;
 
   /**
    * Function to configure send codec for the audio session
@@ -77,7 +77,7 @@ public:
    * NOTE: This API can be invoked multiple time. Invoking this API may involve restarting
    *        transmission sub-system on the engine.
    */
-  virtual MediaConduitErrorCode ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig) MOZ_OVERRIDE;
+  virtual MediaConduitErrorCode ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig) override;
   /**
    * Function to configure list of receive codecs for the audio session
    * @param sendSessionConfig: CodecConfiguration
@@ -88,20 +88,20 @@ public:
    *        transmission sub-system on the engine.
    */
   virtual MediaConduitErrorCode ConfigureRecvMediaCodecs(
-    const std::vector<AudioCodecConfig* >& codecConfigList) MOZ_OVERRIDE;
+    const std::vector<AudioCodecConfig* >& codecConfigList) override;
   /**
    * Function to enable the audio level extension
    * @param enabled: enable extension
    */
-  virtual MediaConduitErrorCode EnableAudioLevelExtension(bool enabled, uint8_t id) MOZ_OVERRIDE;
+  virtual MediaConduitErrorCode EnableAudioLevelExtension(bool enabled, uint8_t id) override;
 
   /**
    * Register External Transport to this Conduit. RTP and RTCP frames from the VoiceEngine
    * shall be passed to the registered transport for transporting externally.
    */
-  virtual MediaConduitErrorCode SetTransmitterTransport(mozilla::RefPtr<TransportInterface> aTransport) MOZ_OVERRIDE;
+  virtual MediaConduitErrorCode SetTransmitterTransport(mozilla::RefPtr<TransportInterface> aTransport) override;
 
-  virtual MediaConduitErrorCode SetReceiverTransport(mozilla::RefPtr<TransportInterface> aTransport) MOZ_OVERRIDE;
+  virtual MediaConduitErrorCode SetReceiverTransport(mozilla::RefPtr<TransportInterface> aTransport) override;
 
   /**
    * Function to deliver externally captured audio sample for encoding and transport
@@ -122,7 +122,7 @@ public:
   virtual MediaConduitErrorCode SendAudioFrame(const int16_t speechData[],
                                                int32_t lengthSamples,
                                                int32_t samplingFreqHz,
-                                               int32_t capture_time) MOZ_OVERRIDE;
+                                               int32_t capture_time) override;
 
   /**
    * Function to grab a decoded audio-sample from the media engine for rendering
@@ -143,23 +143,23 @@ public:
    virtual MediaConduitErrorCode GetAudioFrame(int16_t speechData[],
                                               int32_t samplingFreqHz,
                                               int32_t capture_delay,
-                                              int& lengthSamples) MOZ_OVERRIDE;
+                                              int& lengthSamples) override;
 
 
   /**
    * Webrtc transport implementation to send and receive RTP packet.
    * AudioConduit registers itself as ExternalTransport to the VoiceEngine
    */
-  virtual int SendPacket(int channel, const void *data, int len) MOZ_OVERRIDE;
+  virtual int SendPacket(int channel, const void *data, int len) override;
 
   /**
    * Webrtc transport implementation to send and receive RTCP packet.
    * AudioConduit registers itself as ExternalTransport to the VoiceEngine
    */
-  virtual int SendRTCPPacket(int channel, const void *data, int len) MOZ_OVERRIDE;
+  virtual int SendRTCPPacket(int channel, const void *data, int len) override;
 
 
-  virtual uint64_t CodecPluginID() MOZ_OVERRIDE { return 0; }
+  virtual uint64_t CodecPluginID() override { return 0; }
 
   WebrtcAudioConduit():
                       mVoiceEngine(nullptr),
@@ -185,15 +185,15 @@ public:
 
   int GetChannel() { return mChannel; }
   webrtc::VoiceEngine* GetVoiceEngine() { return mVoiceEngine; }
-  bool SetLocalSSRC(unsigned int ssrc) MOZ_OVERRIDE;
-  bool GetLocalSSRC(unsigned int* ssrc) MOZ_OVERRIDE;
-  bool GetRemoteSSRC(unsigned int* ssrc) MOZ_OVERRIDE;
-  bool SetLocalCNAME(const char* cname) MOZ_OVERRIDE;
+  bool SetLocalSSRC(unsigned int ssrc) override;
+  bool GetLocalSSRC(unsigned int* ssrc) override;
+  bool GetRemoteSSRC(unsigned int* ssrc) override;
+  bool SetLocalCNAME(const char* cname) override;
   bool GetVideoEncoderStats(double* framerateMean,
                             double* framerateStdDev,
                             double* bitrateMean,
                             double* bitrateStdDev,
-                            uint32_t* droppedFrames) MOZ_OVERRIDE
+                            uint32_t* droppedFrames) override
   {
     return false;
   }
@@ -201,23 +201,23 @@ public:
                             double* framerateStdDev,
                             double* bitrateMean,
                             double* bitrateStdDev,
-                            uint32_t* discardedPackets) MOZ_OVERRIDE
+                            uint32_t* discardedPackets) override
   {
     return false;
   }
   bool GetAVStats(int32_t* jitterBufferDelayMs,
                   int32_t* playoutBufferDelayMs,
-                  int32_t* avSyncOffsetMs) MOZ_OVERRIDE;
-  bool GetRTPStats(unsigned int* jitterMs, unsigned int* cumulativeLost) MOZ_OVERRIDE;
+                  int32_t* avSyncOffsetMs) override;
+  bool GetRTPStats(unsigned int* jitterMs, unsigned int* cumulativeLost) override;
   bool GetRTCPReceiverReport(DOMHighResTimeStamp* timestamp,
                              uint32_t* jitterMs,
                              uint32_t* packetsReceived,
                              uint64_t* bytesReceived,
                              uint32_t *cumulativeLost,
-                             int32_t* rttMs) MOZ_OVERRIDE;
+                             int32_t* rttMs) override;
   bool GetRTCPSenderReport(DOMHighResTimeStamp* timestamp,
                            unsigned int* packetsSent,
-                           uint64_t* bytesSent) MOZ_OVERRIDE;
+                           uint64_t* bytesSent) override;
 
 private:
   WebrtcAudioConduit(const WebrtcAudioConduit& other) = delete;

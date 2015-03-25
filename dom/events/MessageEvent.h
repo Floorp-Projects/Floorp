@@ -27,7 +27,7 @@ class OwningWindowProxyOrMessagePort;
  * See http://www.whatwg.org/specs/web-apps/current-work/#messageevent for
  * further details.
  */
-class MessageEvent MOZ_FINAL : public Event,
+class MessageEvent final : public Event,
                                public nsIDOMMessageEvent
 {
 public:
@@ -43,7 +43,7 @@ public:
   // Forward to base class
   NS_FORWARD_TO_EVENT
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObjectInternal(JSContext* aCx) override;
 
   void GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aData,
                ErrorResult& aRv);

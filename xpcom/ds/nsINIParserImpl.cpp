@@ -9,7 +9,7 @@
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"
 
-class nsINIParserImpl MOZ_FINAL
+class nsINIParserImpl final
   : public nsIINIParser
 {
   ~nsINIParserImpl() {}

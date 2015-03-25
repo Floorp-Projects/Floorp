@@ -20,7 +20,7 @@
 class nsDiskCacheMap;
 
 
-class nsDiskCacheDevice MOZ_FINAL : public nsCacheDevice {
+class nsDiskCacheDevice final : public nsCacheDevice {
 public:
     nsDiskCacheDevice();
     virtual ~nsDiskCacheDevice();

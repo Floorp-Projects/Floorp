@@ -5,7 +5,7 @@
 #include "nsIDeviceContextSpec.h"
 #include "nsCOMPtr.h"
 
-class nsDeviceContextSpecAndroid MOZ_FINAL : public nsIDeviceContextSpec
+class nsDeviceContextSpecAndroid final : public nsIDeviceContextSpec
 {
 private:
     ~nsDeviceContextSpecAndroid() {}

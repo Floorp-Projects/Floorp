@@ -44,7 +44,7 @@ protected:
   nsCOMPtr<nsIXPConnectJSObjectHolder> mHolder;
 };
 
-class StatementParamsHolder MOZ_FINAL: public StatementJSObjectHolder {
+class StatementParamsHolder final: public StatementJSObjectHolder {
 public:
   explicit StatementParamsHolder(nsIXPConnectJSObjectHolder* aHolder)
     : StatementJSObjectHolder(aHolder) {
@@ -54,7 +54,7 @@ private:
   virtual ~StatementParamsHolder();
 };
 
-class StatementRowHolder MOZ_FINAL: public StatementJSObjectHolder {
+class StatementRowHolder final: public StatementJSObjectHolder {
 public:
   explicit StatementRowHolder(nsIXPConnectJSObjectHolder* aHolder)
     : StatementJSObjectHolder(aHolder) {

@@ -29,14 +29,14 @@ public:
   OmxVideoTrackEncoder();
   ~OmxVideoTrackEncoder();
 
-  already_AddRefed<TrackMetadataBase> GetMetadata() MOZ_OVERRIDE;
+  already_AddRefed<TrackMetadataBase> GetMetadata() override;
 
-  nsresult GetEncodedTrack(EncodedFrameContainer& aData) MOZ_OVERRIDE;
+  nsresult GetEncodedTrack(EncodedFrameContainer& aData) override;
 
 protected:
   nsresult Init(int aWidth, int aHeight,
                 int aDisplayWidth, int aDisplayHeight,
-                TrackRate aTrackRate) MOZ_OVERRIDE;
+                TrackRate aTrackRate) override;
 
 private:
   nsAutoPtr<android::OMXVideoEncoder> mEncoder;
@@ -50,7 +50,7 @@ public:
 
   already_AddRefed<TrackMetadataBase> GetMetadata() = 0;
 
-  nsresult GetEncodedTrack(EncodedFrameContainer& aData) MOZ_OVERRIDE;
+  nsresult GetEncodedTrack(EncodedFrameContainer& aData) override;
 
 protected:
   nsresult Init(int aChannels, int aSamplingRate) = 0;
@@ -61,20 +61,20 @@ protected:
   nsAutoPtr<android::OMXAudioEncoder> mEncoder;
 };
 
-class OmxAACAudioTrackEncoder MOZ_FINAL : public OmxAudioTrackEncoder
+class OmxAACAudioTrackEncoder final : public OmxAudioTrackEncoder
 {
 public:
   OmxAACAudioTrackEncoder()
     : OmxAudioTrackEncoder()
   {}
 
-  already_AddRefed<TrackMetadataBase> GetMetadata() MOZ_OVERRIDE;
+  already_AddRefed<TrackMetadataBase> GetMetadata() override;
 
 protected:
-  nsresult Init(int aChannels, int aSamplingRate) MOZ_OVERRIDE;
+  nsresult Init(int aChannels, int aSamplingRate) override;
 };
 
-class OmxAMRAudioTrackEncoder MOZ_FINAL : public OmxAudioTrackEncoder
+class OmxAMRAudioTrackEncoder final : public OmxAudioTrackEncoder
 {
 public:
   OmxAMRAudioTrackEncoder()
@@ -84,10 +84,10 @@ public:
   enum {
     AMR_NB_SAMPLERATE = 8000,
   };
-  already_AddRefed<TrackMetadataBase> GetMetadata() MOZ_OVERRIDE;
+  already_AddRefed<TrackMetadataBase> GetMetadata() override;
 
 protected:
-  nsresult Init(int aChannels, int aSamplingRate) MOZ_OVERRIDE;
+  nsresult Init(int aChannels, int aSamplingRate) override;
 };
 
 }

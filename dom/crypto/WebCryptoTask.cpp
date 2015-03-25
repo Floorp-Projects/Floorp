@@ -355,7 +355,7 @@ protected:
 
 private:
   // Returns mResult as an ArrayBufferView, or an error
-  virtual void Resolve() MOZ_OVERRIDE
+  virtual void Resolve() override
   {
     TypedArrayCreator<ArrayBuffer> ret(mResult);
     mResultPromise->MaybeResolve(ret);
@@ -502,7 +502,7 @@ private:
   uint8_t mCounterLength;
   bool mEncrypt;
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     nsresult rv;
 
@@ -635,7 +635,7 @@ private:
   CryptoBuffer mSymKey;
   bool mEncrypt;
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     nsresult rv;
 
@@ -805,7 +805,7 @@ private:
   uint32_t mStrength;
   bool mEncrypt;
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     nsresult rv;
 
@@ -902,7 +902,7 @@ private:
   CryptoBuffer mResult;
   bool mSign;
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     // Initialize the output buffer
     if (!mResult.SetLength(HASH_LENGTH_MAX)) {
@@ -946,7 +946,7 @@ private:
   }
 
   // Returns mResult as an ArrayBufferView, or an error
-  virtual void Resolve() MOZ_OVERRIDE
+  virtual void Resolve() override
   {
     if (mSign) {
       // Return the computed MAC
@@ -1077,7 +1077,7 @@ private:
   bool mVerified;
   bool mEcdsa;
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     nsresult rv;
     if (mSign) {
@@ -1132,7 +1132,7 @@ private:
     return NS_OK;
   }
 
-  virtual void Resolve() MOZ_OVERRIDE
+  virtual void Resolve() override
   {
     if (mSign) {
       TypedArrayCreator<ArrayBuffer> ret(mSignature);
@@ -1183,7 +1183,7 @@ private:
   SECOidTag mOidTag;
   CryptoBuffer mData;
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     // Resize the result buffer
     uint32_t hashLen = HASH_ResultLenByOidTag(mOidTag);
@@ -1326,12 +1326,12 @@ protected:
   nsString mAlgName;
 
 private:
-  virtual void Resolve() MOZ_OVERRIDE
+  virtual void Resolve() override
   {
     mResultPromise->MaybeResolve(mKey);
   }
 
-  virtual void Cleanup() MOZ_OVERRIDE
+  virtual void Cleanup() override
   {
     mKey = nullptr;
   }
@@ -1393,7 +1393,7 @@ public:
     }
   }
 
-  virtual nsresult BeforeCrypto() MOZ_OVERRIDE
+  virtual nsresult BeforeCrypto() override
   {
     nsresult rv;
 
@@ -1555,7 +1555,7 @@ private:
   uint32_t mModulusLength;
   CryptoBuffer mPublicExponent;
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     nsNSSShutDownPreventionLock locker;
 
@@ -1610,7 +1610,7 @@ private:
     return NS_OK;
   }
 
-  virtual nsresult AfterCrypto() MOZ_OVERRIDE
+  virtual nsresult AfterCrypto() override
   {
     // Check permissions for the requested operation
     if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_RSA_OAEP)) {
@@ -1668,7 +1668,7 @@ public:
 private:
   nsString mNamedCurve;
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     // Import the key data itself
     ScopedSECKEYPublicKey pubKey;
@@ -1730,7 +1730,7 @@ private:
     return NS_OK;
   }
 
-  virtual nsresult AfterCrypto() MOZ_OVERRIDE
+  virtual nsresult AfterCrypto() override
   {
     uint32_t privateAllowedUsages = 0, publicAllowedUsages = 0;
     if (mAlgName.EqualsLiteral(WEBCRYPTO_ALG_ECDH)) {
@@ -1810,7 +1810,7 @@ private:
   CryptoBuffer mPrime;
   CryptoBuffer mGenerator;
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     // Import the key data itself
     ScopedSECKEYPublicKey pubKey;
@@ -1845,7 +1845,7 @@ private:
     return NS_OK;
   }
 
-  virtual nsresult AfterCrypto() MOZ_OVERRIDE
+  virtual nsresult AfterCrypto() override
   {
     // Check permissions for the requested operation
     if (mKey->HasUsageOtherThan(CryptoKey::DERIVEBITS | CryptoKey::DERIVEKEY)) {
@@ -1886,13 +1886,13 @@ protected:
   JsonWebKey mJwk;
 
 private:
-  virtual void ReleaseNSSResources() MOZ_OVERRIDE
+  virtual void ReleaseNSSResources() override
   {
     mPrivateKey.dispose();
     mPublicKey.dispose();
   }
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     nsNSSShutDownPreventionLock locker;
 
@@ -1976,7 +1976,7 @@ private:
   }
 
   // Returns mResult as an ArrayBufferView or JWK, as appropriate
-  virtual void Resolve() MOZ_OVERRIDE
+  virtual void Resolve() override
   {
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
       mResultPromise->MaybeResolve(mJwk);
@@ -2081,7 +2081,7 @@ private:
   CK_MECHANISM_TYPE mMechanism;
   CryptoBuffer mKeyData;
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
     MOZ_ASSERT(slot.get());
@@ -2104,13 +2104,13 @@ private:
     return NS_OK;
   }
 
-  virtual void Resolve() MOZ_OVERRIDE
+  virtual void Resolve() override
   {
     mKey->SetSymKey(mKeyData);
     mResultPromise->MaybeResolve(mKey);
   }
 
-  virtual void Cleanup() MOZ_OVERRIDE
+  virtual void Cleanup() override
   {
     mKey = nullptr;
   }
@@ -2289,13 +2289,13 @@ private:
   ScopedSECKEYPrivateKey mPrivateKey;
   nsString mNamedCurve;
 
-  virtual void ReleaseNSSResources() MOZ_OVERRIDE
+  virtual void ReleaseNSSResources() override
   {
     mPublicKey.dispose();
     mPrivateKey.dispose();
   }
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     ScopedPK11SlotInfo slot(PK11_GetInternalSlot());
     MOZ_ASSERT(slot.get());
@@ -2332,7 +2332,7 @@ private:
     return NS_OK;
   }
 
-  virtual void Resolve() MOZ_OVERRIDE
+  virtual void Resolve() override
   {
     mResultPromise->MaybeResolve(mKeyPair);
   }
@@ -2415,7 +2415,7 @@ private:
   CryptoBuffer mSymKey;
   SECOidTag mHashOidTag;
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     ScopedPLArenaPool arena(PORT_NewArena(DER_DEFAULT_CHUNKSIZE));
     if (!arena) {
@@ -2488,13 +2488,13 @@ protected:
   bool mResolved;
 
 private:
-  virtual void Resolve() MOZ_OVERRIDE {
+  virtual void Resolve() override {
     mTask->SetKeyData(this->mResult);
     mTask->DispatchWithPromise(this->mResultPromise);
     mResolved = true;
   }
 
-  virtual void Cleanup() MOZ_OVERRIDE
+  virtual void Cleanup() override
   {
     if (mTask && !mResolved) {
       mTask->Skip();
@@ -2575,7 +2575,7 @@ private:
   ScopedSECKEYPrivateKey mPrivKey;
   ScopedSECKEYPublicKey mPubKey;
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     // CKM_SHA512_HMAC and CKA_SIGN are key type and usage attributes of the
     // derived symmetric key and don't matter because we ignore them anyway.
@@ -2674,7 +2674,7 @@ private:
   ScopedSECKEYPrivateKey mPrivKey;
   ScopedSECKEYPublicKey mPubKey;
 
-  virtual nsresult DoCrypto() MOZ_OVERRIDE
+  virtual nsresult DoCrypto() override
   {
     // CKM_SHA512_HMAC and CKA_SIGN are key type and usage attributes of the
     // derived symmetric key and don't matter because we ignore them anyway.
@@ -2731,7 +2731,7 @@ private:
   nsRefPtr<KeyEncryptTask> mTask;
   bool mResolved;
 
-  virtual nsresult AfterCrypto() MOZ_OVERRIDE {
+  virtual nsresult AfterCrypto() override {
     // If wrapping JWK, stringify the JSON
     if (mFormat.EqualsLiteral(WEBCRYPTO_KEY_FORMAT_JWK)) {
       nsAutoString json;
@@ -2746,14 +2746,14 @@ private:
     return NS_OK;
   }
 
-  virtual void Resolve() MOZ_OVERRIDE
+  virtual void Resolve() override
   {
     mTask->SetData(mResult);
     mTask->DispatchWithPromise(mResultPromise);
     mResolved = true;
   }
 
-  virtual void Cleanup() MOZ_OVERRIDE
+  virtual void Cleanup() override
   {
     if (mTask && !mResolved) {
       mTask->Skip();
@@ -2780,14 +2780,14 @@ private:
   nsRefPtr<ImportKeyTask> mTask;
   bool mResolved;
 
-  virtual void Resolve() MOZ_OVERRIDE
+  virtual void Resolve() override
   {
     mTask->SetKeyData(KeyEncryptTask::mResult);
     mTask->DispatchWithPromise(KeyEncryptTask::mResultPromise);
     mResolved = true;
   }
 
-  virtual void Cleanup() MOZ_OVERRIDE
+  virtual void Cleanup() override
   {
     if (mTask && !mResolved) {
       mTask->Skip();

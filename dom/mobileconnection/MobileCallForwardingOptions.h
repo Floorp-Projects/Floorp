@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 namespace mobileconnection {
 
-class MobileCallForwardingOptions MOZ_FINAL : public nsIMobileCallForwardingOptions
+class MobileCallForwardingOptions final : public nsIMobileCallForwardingOptions
 {
 public:
   NS_DECL_ISUPPORTS

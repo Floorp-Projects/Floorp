@@ -14,7 +14,7 @@ namespace dom {
 class IccManager;
 class Icc;
 
-class IccListener MOZ_FINAL : public nsIIccListener
+class IccListener final : public nsIIccListener
 {
 public:
   NS_DECL_ISUPPORTS

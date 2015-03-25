@@ -68,10 +68,10 @@ public:
   // The following functions are inherited from BluetoothSocketObserver
   void ReceiveSocketData(
     BluetoothSocket* aSocket,
-    nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage) MOZ_OVERRIDE;
-  virtual void OnSocketConnectSuccess(BluetoothSocket* aSocket) MOZ_OVERRIDE;
-  virtual void OnSocketConnectError(BluetoothSocket* aSocket) MOZ_OVERRIDE;
-  virtual void OnSocketDisconnect(BluetoothSocket* aSocket) MOZ_OVERRIDE;
+    nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage) override;
+  virtual void OnSocketConnectSuccess(BluetoothSocket* aSocket) override;
+  virtual void OnSocketConnectError(BluetoothSocket* aSocket) override;
+  virtual void OnSocketDisconnect(BluetoothSocket* aSocket) override;
 
 private:
   class CloseSocketTask;

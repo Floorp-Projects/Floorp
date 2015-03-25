@@ -114,7 +114,7 @@ NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener *aListener)
 
 typedef nsTArray<nsMainThreadPtrHandle<nsIWifiListener> > WifiListenerArray;
 
-class nsPassErrorToWifiListeners MOZ_FINAL : public nsIRunnable
+class nsPassErrorToWifiListeners final : public nsIRunnable
 {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -175,7 +175,7 @@ NS_IMETHODIMP nsWifiMonitor::Run()
   return NS_OK;
 }
 
-class nsCallWifiListeners MOZ_FINAL : public nsIRunnable
+class nsCallWifiListeners final : public nsIRunnable
 {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS

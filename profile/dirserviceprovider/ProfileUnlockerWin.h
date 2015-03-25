@@ -16,7 +16,7 @@
 
 namespace mozilla {
 
-class ProfileUnlockerWin MOZ_FINAL : public nsIProfileUnlocker
+class ProfileUnlockerWin final : public nsIProfileUnlocker
 {
 public:
   NS_DECL_ISUPPORTS

@@ -68,7 +68,7 @@ class nsDisplayItemGenericGeometry : public nsDisplayItemGeometry
 public:
   nsDisplayItemGenericGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder);
 
-  virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
+  virtual void MoveBy(const nsPoint& aOffset) override;
 
   nsRect mBorderRect;
 };
@@ -174,7 +174,7 @@ class nsDisplayBorderGeometry : public nsDisplayItemGeometry
 public:
   nsDisplayBorderGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder);
 
-  virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
+  virtual void MoveBy(const nsPoint& aOffset) override;
 
   nsRect mContentRect;
 };
@@ -186,7 +186,7 @@ class nsDisplayBackgroundGeometry
 public:
   nsDisplayBackgroundGeometry(nsDisplayBackgroundImage* aItem, nsDisplayListBuilder* aBuilder);
 
-  virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
+  virtual void MoveBy(const nsPoint& aOffset) override;
 
   nsRect mPositioningArea;
 };
@@ -196,7 +196,7 @@ class nsDisplayThemedBackgroundGeometry : public nsDisplayItemGeometry
 public:
   nsDisplayThemedBackgroundGeometry(nsDisplayThemedBackground* aItem, nsDisplayListBuilder* aBuilder);
 
-  virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
+  virtual void MoveBy(const nsPoint& aOffset) override;
 
   nsRect mPositioningArea;
   bool mWindowIsActive;
@@ -207,7 +207,7 @@ class nsDisplayBoxShadowInnerGeometry : public nsDisplayItemGeometry
 public:
   nsDisplayBoxShadowInnerGeometry(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder);
   
-  virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
+  virtual void MoveBy(const nsPoint& aOffset) override;
 
   nsRect mPaddingRect;
 };
@@ -240,7 +240,7 @@ class nsDisplaySVGEffectsGeometry : public nsDisplayItemGeometry
 public:
   nsDisplaySVGEffectsGeometry(nsDisplaySVGEffects* aItem, nsDisplayListBuilder* aBuilder);
 
-  virtual void MoveBy(const nsPoint& aOffset) MOZ_OVERRIDE;
+  virtual void MoveBy(const nsPoint& aOffset) override;
 
   gfxRect mBBox;
   gfxPoint mUserSpaceOffset;

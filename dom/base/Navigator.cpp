@@ -950,7 +950,7 @@ Navigator::GetGeolocation(ErrorResult& aRv)
   return mGeolocation;
 }
 
-class BeaconStreamListener MOZ_FINAL : public nsIStreamListener
+class BeaconStreamListener final : public nsIStreamListener
 {
     ~BeaconStreamListener() {}
 
@@ -2331,7 +2331,7 @@ Navigator::HasDataStoreSupport(nsIPrincipal* aPrincipal)
 
 // A WorkerMainThreadRunnable to synchronously dispatch the call of
 // HasDataStoreSupport() from the worker thread to the main thread.
-class HasDataStoreSupportRunnable MOZ_FINAL
+class HasDataStoreSupportRunnable final
   : public workers::WorkerMainThreadRunnable
 {
 public:
@@ -2347,7 +2347,7 @@ public:
 
 protected:
   virtual bool
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     workers::AssertIsOnMainThread();
 

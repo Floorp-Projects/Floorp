@@ -13,7 +13,7 @@
 
 namespace mozilla {
 
-class WifiProxyService MOZ_FINAL : public nsIWifiProxyService
+class WifiProxyService final : public nsIWifiProxyService
 {
 private:
   struct EventThreadListEntry

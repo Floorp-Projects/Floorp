@@ -113,7 +113,7 @@ public:
                      aInitData,
                      aInitData + aInitDataSize);
   }
-  virtual void Run() MOZ_OVERRIDE {
+  virtual void Run() override {
     mTarget->CreateSession(mCreateSessionToken,
                            mPromiseId,
                            "cenc",
@@ -122,7 +122,7 @@ public:
                            mInitData.size(),
                            mSessionType);
   }
-  virtual void Destroy() MOZ_OVERRIDE {
+  virtual void Destroy() override {
     delete this;
   }
 private:
@@ -166,12 +166,12 @@ public:
     , mSessionId(aSessionId, aSessionId + aSessionIdLength)
   {
   }
-  virtual void Run() MOZ_OVERRIDE {
+  virtual void Run() override {
     mTarget->LoadSession(mPromiseId,
                          mSessionId.c_str(),
                          mSessionId.size());
   }
-  virtual void Destroy() MOZ_OVERRIDE {
+  virtual void Destroy() override {
     delete this;
   }
 private:
@@ -216,7 +216,7 @@ public:
 
   virtual void ReadComplete(GMPErr aStatus,
                             const uint8_t* aData,
-                            uint32_t aLength) MOZ_OVERRIDE
+                            uint32_t aLength) override
   {
     mTarget->PersistentSessionDataLoaded(aStatus, mPromiseId, mSessionId, aData, aLength);
   }

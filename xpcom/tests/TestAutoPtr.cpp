@@ -54,7 +54,7 @@ class TestRefObjectBaseB {
         virtual nsrefcnt Release() = 0;
 };
 
-class TestRefObject MOZ_FINAL : public TestRefObjectBaseA, public TestRefObjectBaseB {
+class TestRefObject final : public TestRefObjectBaseA, public TestRefObjectBaseB {
     public:
         TestRefObject()
             : mRefCount(0)

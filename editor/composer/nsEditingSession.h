@@ -43,7 +43,7 @@ class nsIDocShell;
 class nsIEditor;
 class nsIWebProgress;
 
-class nsEditingSession MOZ_FINAL : public nsIEditingSession,
+class nsEditingSession final : public nsIEditingSession,
                                    public nsIWebProgressListener,
                                    public nsSupportsWeakReference
 {

@@ -20,7 +20,7 @@ class PendingDBLookup;
 class PendingLookup;
 struct PRLogModuleInfo;
 
-class ApplicationReputationService MOZ_FINAL :
+class ApplicationReputationService final :
   public nsIApplicationReputationService {
 public:
   NS_DECL_ISUPPORTS

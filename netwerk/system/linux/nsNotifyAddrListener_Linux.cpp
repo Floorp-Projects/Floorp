@@ -237,7 +237,7 @@ nsNotifyAddrListener::Observe(nsISupports *subject,
 #ifdef MOZ_NUWA_PROCESS
 class NuwaMarkLinkMonitorThreadRunner : public nsRunnable
 {
-    NS_IMETHODIMP Run() MOZ_OVERRIDE
+    NS_IMETHODIMP Run() override
     {
         if (IsNuwaProcess()) {
             NuwaMarkCurrentThread(nullptr, nullptr);

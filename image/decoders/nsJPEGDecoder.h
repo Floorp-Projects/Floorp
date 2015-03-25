@@ -56,13 +56,13 @@ public:
   nsJPEGDecoder(RasterImage* aImage, Decoder::DecodeStyle aDecodeStyle);
   virtual ~nsJPEGDecoder();
 
-  virtual nsresult SetTargetSize(const nsIntSize& aSize) MOZ_OVERRIDE;
+  virtual nsresult SetTargetSize(const nsIntSize& aSize) override;
 
-  virtual void InitInternal() MOZ_OVERRIDE;
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) MOZ_OVERRIDE;
-  virtual void FinishInternal() MOZ_OVERRIDE;
+  virtual void InitInternal() override;
+  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
+  virtual void FinishInternal() override;
 
-  virtual Telemetry::ID SpeedHistogram() MOZ_OVERRIDE;
+  virtual Telemetry::ID SpeedHistogram() override;
   void NotifyDone();
 
 protected:

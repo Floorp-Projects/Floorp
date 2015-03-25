@@ -19,17 +19,17 @@ public:
 
   static nsCaseConversionImp2* GetInstance();
 
-  NS_IMETHOD ToUpper(char16_t aChar, char16_t* aReturn) MOZ_OVERRIDE;
+  NS_IMETHOD ToUpper(char16_t aChar, char16_t* aReturn) override;
 
-  NS_IMETHOD ToLower(char16_t aChar, char16_t* aReturn) MOZ_OVERRIDE;
+  NS_IMETHOD ToLower(char16_t aChar, char16_t* aReturn) override;
 
-  NS_IMETHOD ToTitle(char16_t aChar, char16_t* aReturn) MOZ_OVERRIDE;
+  NS_IMETHOD ToTitle(char16_t aChar, char16_t* aReturn) override;
 
-  NS_IMETHOD ToUpper(const char16_t* anArray, char16_t* aReturn, uint32_t aLen) MOZ_OVERRIDE;
+  NS_IMETHOD ToUpper(const char16_t* anArray, char16_t* aReturn, uint32_t aLen) override;
 
-  NS_IMETHOD ToLower(const char16_t* anArray, char16_t* aReturn, uint32_t aLen) MOZ_OVERRIDE;
+  NS_IMETHOD ToLower(const char16_t* anArray, char16_t* aReturn, uint32_t aLen) override;
 
-  NS_IMETHOD CaseInsensitiveCompare(const char16_t* aLeft, const char16_t* aRight, uint32_t aLength, int32_t *aResult) MOZ_OVERRIDE;
+  NS_IMETHOD CaseInsensitiveCompare(const char16_t* aLeft, const char16_t* aRight, uint32_t aLength, int32_t *aResult) override;
 };
 
 #endif

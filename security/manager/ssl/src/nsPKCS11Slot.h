@@ -34,7 +34,7 @@ private:
   nsString mSlotDesc, mSlotManID, mSlotHWVersion, mSlotFWVersion;
   int mSeries;
 
-  virtual void virtualDestroyNSSReference() MOZ_OVERRIDE;
+  virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
   void refreshSlotInfo();
 };
@@ -54,7 +54,7 @@ protected:
 private:
   SECMODModule *mModule;
 
-  virtual void virtualDestroyNSSReference() MOZ_OVERRIDE;
+  virtual void virtualDestroyNSSReference() override;
   void destructorSafeDestroyNSSReference();
 };
 

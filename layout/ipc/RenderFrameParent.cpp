@@ -91,7 +91,7 @@ public:
     , mHaveZoomConstraints(false)
   { }
 
-  virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) MOZ_OVERRIDE
+  virtual void RequestContentRepaint(const FrameMetrics& aFrameMetrics) override
   {
     MOZ_ASSERT(NS_IsMainThread());
     if (mRenderFrame) {
@@ -101,7 +101,7 @@ public:
   }
 
   virtual void AcknowledgeScrollUpdate(const FrameMetrics::ViewID& aScrollId,
-                                       const uint32_t& aScrollGeneration) MOZ_OVERRIDE
+                                       const uint32_t& aScrollGeneration) override
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -120,7 +120,7 @@ public:
 
   virtual void HandleDoubleTap(const CSSPoint& aPoint,
                                int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE
+                               const ScrollableLayerGuid& aGuid) override
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -139,7 +139,7 @@ public:
 
   virtual void HandleSingleTap(const CSSPoint& aPoint,
                                int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE
+                               const ScrollableLayerGuid& aGuid) override
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -160,7 +160,7 @@ public:
   virtual void HandleLongTap(const CSSPoint& aPoint,
                              int32_t aModifiers,
                              const ScrollableLayerGuid& aGuid,
-                             uint64_t aInputBlockId) MOZ_OVERRIDE
+                             uint64_t aInputBlockId) override
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -179,7 +179,7 @@ public:
 
   virtual void HandleLongTapUp(const CSSPoint& aPoint,
                                int32_t aModifiers,
-                               const ScrollableLayerGuid& aGuid) MOZ_OVERRIDE
+                               const ScrollableLayerGuid& aGuid) override
   {
     if (MessageLoop::current() != mUILoop) {
       // We have to send this message from the "UI thread" (main
@@ -200,7 +200,7 @@ public:
 
   virtual void SendAsyncScrollDOMEvent(bool aIsRoot,
                                        const CSSRect& aContentRect,
-                                       const CSSSize& aContentSize) MOZ_OVERRIDE
+                                       const CSSSize& aContentSize) override
   {
     if (MessageLoop::current() != mUILoop) {
       mUILoop->PostTask(
@@ -217,12 +217,12 @@ public:
     }
   }
 
-  virtual void PostDelayedTask(Task* aTask, int aDelayMs) MOZ_OVERRIDE
+  virtual void PostDelayedTask(Task* aTask, int aDelayMs) override
   {
     MessageLoop::current()->PostDelayedTask(FROM_HERE, aTask, aDelayMs);
   }
 
-  virtual bool GetRootZoomConstraints(ZoomConstraints* aOutConstraints) MOZ_OVERRIDE
+  virtual bool GetRootZoomConstraints(ZoomConstraints* aOutConstraints) override
   {
     if (mHaveZoomConstraints && aOutConstraints) {
       *aOutConstraints = mZoomConstraints;
@@ -230,7 +230,7 @@ public:
     return mHaveZoomConstraints;
   }
 
-  virtual bool GetTouchSensitiveRegion(CSSRect* aOutRegion) MOZ_OVERRIDE
+  virtual bool GetTouchSensitiveRegion(CSSRect* aOutRegion) override
   {
     if (mTouchSensitiveRegion.IsEmpty())
       return false;
@@ -241,7 +241,7 @@ public:
 
   virtual void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                                     APZStateChange aChange,
-                                    int aArg) MOZ_OVERRIDE
+                                    int aArg) override
   {
     if (MessageLoop::current() != mUILoop) {
       mUILoop->PostTask(

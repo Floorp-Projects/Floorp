@@ -36,7 +36,7 @@ namespace ipc {
 namespace dom {
 namespace gonk {
 
-class SystemWorkerManager MOZ_FINAL : public nsIObserver,
+class SystemWorkerManager final : public nsIObserver,
                                       public nsIInterfaceRequestor,
                                       public nsISystemWorkerManager
 {

@@ -21,7 +21,7 @@
 
 class nsIContent;
 
-class nsXULTooltipListener MOZ_FINAL : public nsIDOMEventListener
+class nsXULTooltipListener final : public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS

@@ -178,7 +178,7 @@ class nsIScrollableFrame;
  * or they may cause other objects to be deleted.
  */
 
-class nsFrameSelection MOZ_FINAL {
+class nsFrameSelection final {
 public:
   typedef mozilla::CaretAssociationHint CaretAssociateHint;
 

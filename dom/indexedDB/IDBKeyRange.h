@@ -31,7 +31,7 @@ namespace indexedDB {
 
 class SerializedKeyRange;
 
-class IDBKeyRange MOZ_FINAL
+class IDBKeyRange final
   : public nsISupports
 {
   nsCOMPtr<nsISupports> mGlobal;

@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace reflect {
 
-class Module MOZ_FINAL : public nsIXPCScriptable
+class Module final : public nsIXPCScriptable
 {
 public:
   NS_DECL_ISUPPORTS

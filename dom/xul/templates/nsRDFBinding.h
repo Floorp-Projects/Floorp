@@ -61,7 +61,7 @@ private:
  * a collection of <binding> descriptors. This object is refcounted by
  * nsBindingValues objects and the query processor.
  */
-class RDFBindingSet MOZ_FINAL
+class RDFBindingSet final
 {
 private:
     // Private destructor, to discourage deletion outside of Release():

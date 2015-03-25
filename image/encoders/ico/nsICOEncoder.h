@@ -25,7 +25,7 @@ class nsPNGEncoder;
 // Provides ICO encoding functionality. Use InitFromData() to do the
 // encoding. See that function definition for encoding options.
 
-class nsICOEncoder MOZ_FINAL : public imgIEncoder
+class nsICOEncoder final : public imgIEncoder
 {
   typedef mozilla::ReentrantMonitor ReentrantMonitor;
 public:

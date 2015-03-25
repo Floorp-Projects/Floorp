@@ -27,7 +27,7 @@ namespace storage {
 class StatementJSHelper;
 class Connection;
 
-class Statement MOZ_FINAL : public mozIStorageStatement
+class Statement final : public mozIStorageStatement
                           , public mozIStorageValueArray
                           , public StorageBaseStatementInternal
 {

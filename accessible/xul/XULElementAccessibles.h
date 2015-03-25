@@ -23,17 +23,17 @@ public:
   XULLabelAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual void Shutdown() MOZ_OVERRIDE;
-  virtual a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
-  virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
+  virtual void Shutdown() override;
+  virtual a11y::role NativeRole() override;
+  virtual uint64_t NativeState() override;
+  virtual Relation RelationByType(RelationType aType) override;
 
   void UpdateLabelValue(const nsString& aValue);
 
 protected:
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
-  virtual void CacheChildren() MOZ_OVERRIDE;
+  virtual ENameValueFlag NativeName(nsString& aName) override;
+  virtual void CacheChildren() override;
 
 private:
   nsRefPtr<XULLabelTextLeafAccessible> mValueTextLeaf;
@@ -50,7 +50,7 @@ Accessible::AsXULLabel()
  * Used to implement text interface on XUL label accessible in case when text
  * is provided by @value attribute (no underlying text frame).
  */
-class XULLabelTextLeafAccessible MOZ_FINAL : public TextLeafAccessibleWrap
+class XULLabelTextLeafAccessible final : public TextLeafAccessibleWrap
 {
 public:
   XULLabelTextLeafAccessible(nsIContent* aContent, DocAccessible* aDoc) :
@@ -60,8 +60,8 @@ public:
   virtual ~XULLabelTextLeafAccessible() { }
 
   // Accessible
-  virtual a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual a11y::role NativeRole() override;
+  virtual uint64_t NativeState() override;
 };
 
 
@@ -75,8 +75,8 @@ public:
   XULTooltipAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual a11y::role NativeRole() override;
+  virtual uint64_t NativeState() override;
 };
 
 class XULLinkAccessible : public XULLabelAccessible
@@ -86,26 +86,26 @@ public:
   XULLinkAccessible(nsIContent* aContent, DocAccessible* aDoc);
 
   // Accessible
-  virtual void Value(nsString& aValue) MOZ_OVERRIDE;
-  virtual a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeLinkState() const MOZ_OVERRIDE;
+  virtual void Value(nsString& aValue) override;
+  virtual a11y::role NativeRole() override;
+  virtual uint64_t NativeLinkState() const override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() MOZ_OVERRIDE;
-  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
-  virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
+  virtual uint8_t ActionCount() override;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  virtual bool DoAction(uint8_t aIndex) override;
 
   // HyperLinkAccessible
-  virtual bool IsLink() MOZ_OVERRIDE;
-  virtual uint32_t StartOffset() MOZ_OVERRIDE;
-  virtual uint32_t EndOffset() MOZ_OVERRIDE;
-  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) MOZ_OVERRIDE;
+  virtual bool IsLink() override;
+  virtual uint32_t StartOffset() override;
+  virtual uint32_t EndOffset() override;
+  virtual already_AddRefed<nsIURI> AnchorURIAt(uint32_t aAnchorIndex) override;
 
 protected:
   virtual ~XULLinkAccessible();
 
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
+  virtual ENameValueFlag NativeName(nsString& aName) override;
 
   enum { eAction_Jump = 0 };
 

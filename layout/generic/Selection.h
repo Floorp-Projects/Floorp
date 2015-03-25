@@ -48,7 +48,7 @@ struct RangeData
 namespace mozilla {
 namespace dom {
 
-class Selection MOZ_FINAL : public nsISelectionPrivate,
+class Selection final : public nsISelectionPrivate,
                             public nsWrapperCache,
                             public nsSupportsWeakReference
 {
@@ -142,7 +142,7 @@ public:
 
   nsresult     StopAutoScrollTimer();
 
-  JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  JSObject* WrapObject(JSContext* aCx) override;
 
   // WebIDL methods
   nsINode*     GetAnchorNode();
@@ -315,7 +315,7 @@ private:
 };
 
 // Stack-class to turn on/off selection batching.
-class MOZ_STACK_CLASS SelectionBatcher MOZ_FINAL
+class MOZ_STACK_CLASS SelectionBatcher final
 {
 private:
   nsRefPtr<Selection> mSelection;

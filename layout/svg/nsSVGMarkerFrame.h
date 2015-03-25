@@ -50,31 +50,31 @@ public:
 #ifdef DEBUG
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
+                    nsIFrame*         aPrevInFlow) override;
 #endif
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE {}
+                                const nsDisplayListSet& aLists) override {}
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
                                     nsIAtom*        aAttribute,
-                                    int32_t         aModType) MOZ_OVERRIDE;
+                                    int32_t         aModType) override;
   /**
    * Get the "type" of the frame
    *
    * @see nsGkAtoms::svgMarkerFrame
    */
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
+  virtual nsresult GetFrameName(nsAString& aResult) const override
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGMarker"), aResult);
   }
 #endif
 
-  virtual nsContainerFrame* GetContentInsertionFrame() MOZ_OVERRIDE {
+  virtual nsContainerFrame* GetContentInsertionFrame() override {
     // Any children must be added to our single anonymous inner frame kid.
     MOZ_ASSERT(GetFirstPrincipalChild() &&
                GetFirstPrincipalChild()->GetType() ==
@@ -103,7 +103,7 @@ private:
   bool mIsStart;  // whether the callback is for a marker-start marker
 
   // nsSVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM() MOZ_OVERRIDE;
+  virtual gfxMatrix GetCanvasTM() override;
 
   // A helper class to allow us to paint markers safely. The helper
   // automatically sets and clears the mInUse flag on the marker frame (to
@@ -156,11 +156,11 @@ public:
 #ifdef DEBUG
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
+                    nsIFrame*         aPrevInFlow) override;
 #endif
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE {
+  virtual nsresult GetFrameName(nsAString& aResult) const override {
     return MakeFrameName(NS_LITERAL_STRING("SVGMarkerAnonChild"), aResult);
   }
 #endif
@@ -170,10 +170,10 @@ public:
    *
    * @see nsGkAtoms::svgMarkerAnonChildFrame
    */
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
 
   // nsSVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM() MOZ_OVERRIDE
+  virtual gfxMatrix GetCanvasTM() override
   {
     return static_cast<nsSVGMarkerFrame*>(GetParent())->GetCanvasTM();
   }

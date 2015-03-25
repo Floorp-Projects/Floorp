@@ -2292,7 +2292,7 @@ public:
     eNullableArray
   };
 
-  virtual void trace(JSTracer *trc) MOZ_OVERRIDE
+  virtual void trace(JSTracer *trc) override
   {
     if (mSequenceType == eFallibleArray) {
       DoTraceSequence(trc, *mFallibleArray);
@@ -2342,7 +2342,7 @@ private:
     eNullableMozMap
   };
 
-  virtual void trace(JSTracer *trc) MOZ_OVERRIDE
+  virtual void trace(JSTracer *trc) override
   {
     if (mMozMapType == eMozMap) {
       TraceMozMap(trc, *mMozMap);
@@ -2373,7 +2373,7 @@ public:
   {
   }
 
-  virtual void trace(JSTracer *trc) MOZ_OVERRIDE
+  virtual void trace(JSTracer *trc) override
   {
     this->TraceUnion(trc);
   }
@@ -2390,7 +2390,7 @@ public:
   {
   }
 
-  virtual void trace(JSTracer *trc) MOZ_OVERRIDE
+  virtual void trace(JSTracer *trc) override
   {
     if (!this->IsNull()) {
       this->Value().TraceUnion(trc);

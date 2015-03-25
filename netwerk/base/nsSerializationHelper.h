@@ -27,7 +27,7 @@ nsresult NS_SerializeToString(nsISerializable* obj,
 nsresult NS_DeserializeObject(const nsCSubstring& str,
                               nsISupports** obj);
 
-class nsSerializationHelper MOZ_FINAL : public nsISerializationHelper
+class nsSerializationHelper final : public nsISerializationHelper
 {
   ~nsSerializationHelper() {}
 

@@ -14,8 +14,8 @@ class AppleDecoder : public MediaDecoder
 public:
   AppleDecoder();
 
-  virtual MediaDecoder* Clone() MOZ_OVERRIDE;
-  virtual MediaDecoderStateMachine* CreateStateMachine() MOZ_OVERRIDE;
+  virtual MediaDecoder* Clone() override;
+  virtual MediaDecoderStateMachine* CreateStateMachine() override;
 
 };
 

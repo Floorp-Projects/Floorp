@@ -20,7 +20,7 @@
  { 0x8d, 0x70, 0x7c, 0xe6, 0x3c, 0x51, 0xc9, 0x58 } }
 
 
-class nsWindowDataSource MOZ_FINAL : public nsIRDFDataSource,
+class nsWindowDataSource final : public nsIRDFDataSource,
                                      public nsIObserver,
                                      public nsIWindowMediatorListener,
                                      public nsIWindowDataSource

@@ -25,43 +25,43 @@ public:
 
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
+                    nsIFrame*         aPrevInFlow) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
   // nsIFormControlFrame
-  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) MOZ_OVERRIDE;
-  virtual void SetFocus(bool aOn, bool aRepaint) MOZ_OVERRIDE;
+  virtual nsresult SetFormProperty(nsIAtom* aName, const nsAString& aValue) override;
+  virtual void SetFocus(bool aOn, bool aRepaint) override;
 
-  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) MOZ_OVERRIDE;
+  virtual nscoord GetMinISize(nsRenderingContext *aRenderingContext) override;
 
-  virtual void DestroyFrom(nsIFrame* aDestructRoot) MOZ_OVERRIDE;
+  virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
                                     nsIAtom*        aAttribute,
-                                    int32_t         aModType) MOZ_OVERRIDE;
-  virtual void ContentStatesChanged(mozilla::EventStates aStates) MOZ_OVERRIDE;
-  virtual bool IsLeaf() const MOZ_OVERRIDE
+                                    int32_t         aModType) override;
+  virtual void ContentStatesChanged(mozilla::EventStates aStates) override;
+  virtual bool IsLeaf() const override
   {
     return true;
   }
 
   // nsIAnonymousContentCreator
-  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) MOZ_OVERRIDE;
+  virtual nsresult CreateAnonymousContent(nsTArray<ContentInfo>& aElements) override;
   virtual void AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements,
-                                        uint32_t aFilter) MOZ_OVERRIDE;
+                                        uint32_t aFilter) override;
 
 #ifdef ACCESSIBILITY
-  virtual mozilla::a11y::AccType AccessibleType() MOZ_OVERRIDE;
+  virtual mozilla::a11y::AccType AccessibleType() override;
 #endif
 
   typedef bool (*AcceptAttrCallback)(const nsAString&, void*);
@@ -97,7 +97,7 @@ protected:
       : mFrame(aFrame)
     {}
 
-    NS_IMETHOD Run() MOZ_OVERRIDE {
+    NS_IMETHOD Run() override {
       nsFileControlFrame* frame = static_cast<nsFileControlFrame*>(mFrame.GetFrame());
       NS_ENSURE_STATE(frame);
 
@@ -121,7 +121,7 @@ protected:
     static bool CanDropTheseFiles(nsIDOMDataTransfer* aDOMDataTransfer, bool aSupportsMultiple);
   };
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
+  virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsBlockFrame::IsFrameOfType(aFlags &
       ~(nsIFrame::eReplaced | nsIFrame::eReplacedContainsBlock));

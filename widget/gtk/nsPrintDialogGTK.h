@@ -29,11 +29,11 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHODIMP Init() MOZ_OVERRIDE;
+  NS_IMETHODIMP Init() override;
   NS_IMETHODIMP Show(nsIDOMWindow *aParent, nsIPrintSettings *aSettings,
-                     nsIWebBrowserPrint *aWebBrowserPrint) MOZ_OVERRIDE;
+                     nsIWebBrowserPrint *aWebBrowserPrint) override;
   NS_IMETHODIMP ShowPageSetup(nsIDOMWindow *aParent,
-                              nsIPrintSettings *aSettings) MOZ_OVERRIDE;
+                              nsIPrintSettings *aSettings) override;
 };
 
 #endif

@@ -203,7 +203,7 @@ protected:
 
   // Overrides PFileSystemRequestChild
   virtual bool
-  Recv__delete__(const FileSystemResponseValue& value) MOZ_OVERRIDE;
+  Recv__delete__(const FileSystemResponseValue& value) override;
 
   BlobParent*
   GetBlobParent(nsIDOMFile* aFile) const;

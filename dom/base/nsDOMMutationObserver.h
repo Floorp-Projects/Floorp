@@ -28,7 +28,7 @@
 class nsDOMMutationObserver;
 using mozilla::dom::MutationObservingInfo;
 
-class nsDOMMutationRecord MOZ_FINAL : public nsISupports,
+class nsDOMMutationRecord final : public nsISupports,
                                       public nsWrapperCache
 {
   virtual ~nsDOMMutationRecord() {}
@@ -44,7 +44,7 @@ public:
     return mOwner;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx) override
   {
     return mozilla::dom::MutationRecordBinding::Wrap(aCx, this);
   }
@@ -325,7 +325,7 @@ public:
   virtual void AttributeSetToCurrentValue(nsIDocument* aDocument,
                                           mozilla::dom::Element* aElement,
                                           int32_t aNameSpaceID,
-                                          nsIAtom* aAttribute) MOZ_OVERRIDE
+                                          nsIAtom* aAttribute) override
   {
     // We can reuse AttributeWillChange implementation.
     AttributeWillChange(aDocument, aElement, aNameSpaceID, aAttribute,
@@ -337,7 +337,7 @@ public:
 { 0x0c3b91f8, 0xcc3b, 0x4b08, \
   { 0x9e, 0xab, 0x07, 0x47, 0xa9, 0xe4, 0x65, 0xb4 } }
 
-class nsDOMMutationObserver MOZ_FINAL : public nsISupports,
+class nsDOMMutationObserver final : public nsISupports,
                                         public nsWrapperCache
 {
 public:
@@ -356,7 +356,7 @@ public:
               mozilla::dom::MutationCallback& aCb,
               mozilla::ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObject(JSContext* aCx) override
   {
     return mozilla::dom::MutationObserverBinding::Wrap(aCx, this);
   }

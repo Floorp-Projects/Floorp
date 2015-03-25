@@ -643,15 +643,15 @@ public:
 
 } /* namespace detail */
 
-class LittleEndian MOZ_FINAL : public detail::EndianReadWrite<detail::Little>
+class LittleEndian final : public detail::EndianReadWrite<detail::Little>
 {};
 
-class BigEndian MOZ_FINAL : public detail::EndianReadWrite<detail::Big>
+class BigEndian final : public detail::EndianReadWrite<detail::Big>
 {};
 
 typedef BigEndian NetworkEndian;
 
-class NativeEndian MOZ_FINAL : public detail::Endian<MOZ_NATIVE_ENDIANNESS>
+class NativeEndian final : public detail::Endian<MOZ_NATIVE_ENDIANNESS>
 {
 private:
   typedef detail::Endian<MOZ_NATIVE_ENDIANNESS> super;

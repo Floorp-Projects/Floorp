@@ -9,7 +9,7 @@
 #include "nsIProtocolHandler.h"
 #include "mozilla/Attributes.h"
 
-class nsViewSourceHandler MOZ_FINAL : public nsIProtocolHandler
+class nsViewSourceHandler final : public nsIProtocolHandler
 {
 public:
     NS_DECL_ISUPPORTS

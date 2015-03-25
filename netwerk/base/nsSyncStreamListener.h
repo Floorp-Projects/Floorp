@@ -13,7 +13,7 @@
 
 //-----------------------------------------------------------------------------
 
-class nsSyncStreamListener MOZ_FINAL : public nsISyncStreamListener
+class nsSyncStreamListener final : public nsISyncStreamListener
                                      , public nsIInputStream
 {
 public:

@@ -40,7 +40,7 @@ WorkerThreadFriendKey::~WorkerThreadFriendKey()
   MOZ_COUNT_DTOR(WorkerThreadFriendKey);
 }
 
-class WorkerThread::Observer MOZ_FINAL
+class WorkerThread::Observer final
   : public nsIThreadObserver
 {
   WorkerPrivate* mWorkerPrivate;

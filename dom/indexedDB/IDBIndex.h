@@ -34,7 +34,7 @@ class IndexMetadata;
 class Key;
 class KeyPath;
 
-class IDBIndex MOZ_FINAL
+class IDBIndex final
   : public nsISupports
   , public nsWrapperCache
 {
@@ -178,7 +178,7 @@ public:
 
   // nsWrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx) override;
 
 private:
   IDBIndex(IDBObjectStore* aObjectStore, const IndexMetadata* aMetadata);

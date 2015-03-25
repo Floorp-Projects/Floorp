@@ -149,7 +149,7 @@ public:
     virtual void DrawWindowUnderlay(LayerManagerComposite* aManager, nsIntRect aRect);
     virtual void DrawWindowOverlay(LayerManagerComposite* aManager, nsIntRect aRect);
 
-    virtual mozilla::layers::CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight) MOZ_OVERRIDE;
+    virtual mozilla::layers::CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight) override;
 
     static void SetCompositor(mozilla::layers::LayerManager* aLayerManager,
                               mozilla::layers::CompositorParent* aCompositorParent,
@@ -172,8 +172,8 @@ protected:
     void PostFlushIMEChanges();
     void FlushIMEChanges();
 
-    void ConfigureAPZCTreeManager() MOZ_OVERRIDE;
-    already_AddRefed<GeckoContentController> CreateRootContentController() MOZ_OVERRIDE;
+    void ConfigureAPZCTreeManager() override;
+    already_AddRefed<GeckoContentController> CreateRootContentController() override;
 
     // Call this function when the users activity is the direct cause of an
     // event (like a keypress or mouse click).
@@ -227,7 +227,7 @@ protected:
     InputContext mInputContext;
 
     virtual nsresult NotifyIMEInternal(
-                         const IMENotification& aIMENotification) MOZ_OVERRIDE;
+                         const IMENotification& aIMENotification) override;
 
     static void DumpWindows();
     static void DumpWindows(const nsTArray<nsWindow*>& wins, int indent = 0);

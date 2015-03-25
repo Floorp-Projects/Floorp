@@ -18,7 +18,7 @@
 namespace mozilla {
 namespace gmp {
 
-class GMPProcessParent MOZ_FINAL : public mozilla::ipc::GeckoChildProcessHost
+class GMPProcessParent final : public mozilla::ipc::GeckoChildProcessHost
 {
 public:
   explicit GMPProcessParent(const std::string& aGMPPath);
@@ -30,7 +30,7 @@ public:
 
   void Delete();
 
-  virtual bool CanShutdown() MOZ_OVERRIDE { return true; }
+  virtual bool CanShutdown() override { return true; }
   const std::string& GetPluginFilePath() { return mGMPPath; }
 
   using mozilla::ipc::GeckoChildProcessHost::GetShutDownEvent;

@@ -34,37 +34,37 @@ class nsXMLContentSerializer : public nsIContentSerializer {
 
   NS_IMETHOD Init(uint32_t flags, uint32_t aWrapColumn,
                   const char* aCharSet, bool aIsCopying,
-                  bool aRewriteEncodingDeclaration) MOZ_OVERRIDE;
+                  bool aRewriteEncodingDeclaration) override;
 
   NS_IMETHOD AppendText(nsIContent* aText, int32_t aStartOffset,
-                        int32_t aEndOffset, nsAString& aStr) MOZ_OVERRIDE;
+                        int32_t aEndOffset, nsAString& aStr) override;
 
   NS_IMETHOD AppendCDATASection(nsIContent* aCDATASection,
                                 int32_t aStartOffset, int32_t aEndOffset,
-                                nsAString& aStr) MOZ_OVERRIDE;
+                                nsAString& aStr) override;
 
   NS_IMETHOD AppendProcessingInstruction(nsIContent* aPI,
                                          int32_t aStartOffset,
                                          int32_t aEndOffset,
-                                         nsAString& aStr) MOZ_OVERRIDE;
+                                         nsAString& aStr) override;
 
   NS_IMETHOD AppendComment(nsIContent* aComment, int32_t aStartOffset,
-                           int32_t aEndOffset, nsAString& aStr) MOZ_OVERRIDE;
+                           int32_t aEndOffset, nsAString& aStr) override;
   
   NS_IMETHOD AppendDoctype(nsIContent *aDoctype,
-                           nsAString& aStr) MOZ_OVERRIDE;
+                           nsAString& aStr) override;
 
   NS_IMETHOD AppendElementStart(mozilla::dom::Element* aElement,
                                 mozilla::dom::Element* aOriginalElement,
-                                nsAString& aStr) MOZ_OVERRIDE;
+                                nsAString& aStr) override;
 
   NS_IMETHOD AppendElementEnd(mozilla::dom::Element* aElement,
-                              nsAString& aStr) MOZ_OVERRIDE;
+                              nsAString& aStr) override;
 
-  NS_IMETHOD Flush(nsAString& aStr) MOZ_OVERRIDE { return NS_OK; }
+  NS_IMETHOD Flush(nsAString& aStr) override { return NS_OK; }
 
   NS_IMETHOD AppendDocumentStart(nsIDocument *aDocument,
-                                 nsAString& aStr) MOZ_OVERRIDE;
+                                 nsAString& aStr) override;
 
  protected:
   virtual ~nsXMLContentSerializer();

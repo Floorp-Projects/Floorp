@@ -1247,7 +1247,7 @@ static void AddTrackAndListener(MediaStream* source,
         listener_(listener),
         completed_(completed) {}
 
-    virtual void Run() MOZ_OVERRIDE {
+    virtual void Run() override {
       StreamTime current_end = mStream->GetBufferEnd();
       TrackTicks current_ticks =
         mStream->TimeToTicksRoundUp(track_rate_, current_end);

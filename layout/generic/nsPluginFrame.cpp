@@ -840,20 +840,20 @@ public:
 #endif
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) MOZ_OVERRIDE;
+                           bool* aSnap) override;
 
   NS_DISPLAY_DECL_NAME("PluginReadback", TYPE_PLUGIN_READBACK)
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
-                                             const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE
+                                             const ContainerLayerParameters& aContainerParameters) override
   {
     return static_cast<nsPluginFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this, aContainerParameters);
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE
+                                   const ContainerLayerParameters& aParameters) override
   {
     return LAYER_ACTIVE;
   }
@@ -889,20 +889,20 @@ public:
 #endif
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) MOZ_OVERRIDE;
+                           bool* aSnap) override;
 
   NS_DISPLAY_DECL_NAME("PluginVideo", TYPE_PLUGIN_VIDEO)
 
   virtual already_AddRefed<Layer> BuildLayer(nsDisplayListBuilder* aBuilder,
                                              LayerManager* aManager,
-                                             const ContainerLayerParameters& aContainerParameters) MOZ_OVERRIDE
+                                             const ContainerLayerParameters& aContainerParameters) override
   {
     return static_cast<nsPluginFrame*>(mFrame)->BuildLayer(aBuilder, aManager, this, aContainerParameters);
   }
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,
-                                   const ContainerLayerParameters& aParameters) MOZ_OVERRIDE
+                                   const ContainerLayerParameters& aParameters) override
   {
     return LAYER_ACTIVE;
   }

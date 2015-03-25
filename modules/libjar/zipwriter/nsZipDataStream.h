@@ -12,7 +12,7 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 
-class nsZipDataStream MOZ_FINAL : public nsIStreamListener
+class nsZipDataStream final : public nsIStreamListener
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

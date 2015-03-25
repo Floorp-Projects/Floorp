@@ -49,7 +49,7 @@ public:
   virtual ~nsXBLMouseEventHandler();
 
 private:
-  bool EventMatched(nsIDOMEvent* aEvent) MOZ_OVERRIDE;
+  bool EventMatched(nsIDOMEvent* aEvent) override;
 };
 
 class nsXBLKeyEventHandler : public nsIDOMEventListener

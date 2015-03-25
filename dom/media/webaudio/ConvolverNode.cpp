@@ -41,7 +41,7 @@ public:
     SAMPLE_RATE,
     NORMALIZE
   };
-  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam) MOZ_OVERRIDE
+  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aParam) override
   {
     switch (aIndex) {
     case BUFFER_LENGTH:
@@ -62,7 +62,7 @@ public:
       NS_ERROR("Bad ConvolverNodeEngine Int32Parameter");
     }
   }
-  virtual void SetDoubleParameter(uint32_t aIndex, double aParam) MOZ_OVERRIDE
+  virtual void SetDoubleParameter(uint32_t aIndex, double aParam) override
   {
     switch (aIndex) {
     case SAMPLE_RATE:
@@ -73,7 +73,7 @@ public:
       NS_ERROR("Bad ConvolverNodeEngine DoubleParameter");
     }
   }
-  virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) MOZ_OVERRIDE
+  virtual void SetBuffer(already_AddRefed<ThreadSharedFloatArrayBufferList> aBuffer) override
   {
     mBuffer = aBuffer;
     AdjustReverb();
@@ -104,7 +104,7 @@ public:
   virtual void ProcessBlock(AudioNodeStream* aStream,
                             const AudioChunk& aInput,
                             AudioChunk* aOutput,
-                            bool* aFinished) MOZ_OVERRIDE
+                            bool* aFinished) override
   {
     if (!mReverb) {
       *aOutput = aInput;
@@ -154,7 +154,7 @@ public:
     mReverb->process(&input, aOutput, WEBAUDIO_BLOCK_SIZE);
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
     if (mBuffer && !mBuffer->IsShared()) {
@@ -168,7 +168,7 @@ public:
     return amount;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

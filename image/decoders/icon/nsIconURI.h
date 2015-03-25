@@ -12,7 +12,7 @@
 #include "nsString.h"
 #include "nsIIPCSerializableURI.h"
 
-class nsMozIconURI MOZ_FINAL : public nsIMozIconURI
+class nsMozIconURI final : public nsIMozIconURI
                              , public nsIIPCSerializableURI
 {
 public:

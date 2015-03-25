@@ -69,9 +69,9 @@ public:
 
   MOZ_LAYER_DECL_NAME("ImageLayer", TYPE_IMAGE)
 
-  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) MOZ_OVERRIDE;
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override;
 
-  virtual const gfx::Matrix4x4& GetEffectiveTransformForBuffer() const MOZ_OVERRIDE
+  virtual const gfx::Matrix4x4& GetEffectiveTransformForBuffer() const override
   {
     return mEffectiveTransformForBuffer;
   }
@@ -91,8 +91,8 @@ public:
 protected:
   ImageLayer(LayerManager* aManager, void* aImplData);
   ~ImageLayer();
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;
-  virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) MOZ_OVERRIDE;
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
+  virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) override;
 
   nsRefPtr<ImageContainer> mContainer;
   GraphicsFilter mFilter;

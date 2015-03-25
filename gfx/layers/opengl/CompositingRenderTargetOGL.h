@@ -9,7 +9,7 @@
 #include "GLContextTypes.h"             // for GLContext
 #include "GLDefs.h"                     // for GLenum, LOCAL_GL_FRAMEBUFFER, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/RefPtr.h"             // for RefPtr, TemporaryRef
 #include "mozilla/gfx/Point.h"          // for IntSize, IntSizeTyped
 #include "mozilla/gfx/Types.h"          // for SurfaceFormat, etc
@@ -127,18 +127,18 @@ public:
   }
 
   // TextureSourceOGL
-  TextureSourceOGL* AsSourceOGL() MOZ_OVERRIDE
+  TextureSourceOGL* AsSourceOGL() override
   {
     // XXX - Bug 900770
     MOZ_ASSERT(false, "CompositingRenderTargetOGL should not be used as a TextureSource");
     return nullptr;
   }
-  gfx::IntSize GetSize() const MOZ_OVERRIDE
+  gfx::IntSize GetSize() const override
   {
     return mInitParams.mSize;
   }
 
-  gfx::SurfaceFormat GetFormat() const MOZ_OVERRIDE
+  gfx::SurfaceFormat GetFormat() const override
   {
     // XXX - Should it be implemented ? is the above assert true ?
     MOZ_ASSERT(false, "Not implemented");
@@ -146,7 +146,7 @@ public:
   }
 
 #ifdef MOZ_DUMP_PAINTING
-  virtual TemporaryRef<gfx::DataSourceSurface> Dump(Compositor* aCompositor) MOZ_OVERRIDE;
+  virtual TemporaryRef<gfx::DataSourceSurface> Dump(Compositor* aCompositor) override;
 #endif
 
   const gfx::IntSize& GetInitSize() const {

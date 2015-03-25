@@ -33,8 +33,8 @@ private:
 public:
   NS_DECL_EDITTXN
 
-  NS_IMETHOD RedoTransaction() MOZ_OVERRIDE;
-  NS_IMETHOD GetIsTransient(bool *aIsTransient) MOZ_OVERRIDE;
+  NS_IMETHOD RedoTransaction() override;
+  NS_IMETHOD GetIsTransient(bool *aIsTransient) override;
 
 protected:
 

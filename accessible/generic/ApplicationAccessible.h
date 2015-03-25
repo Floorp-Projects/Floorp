@@ -35,27 +35,27 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual void Shutdown() MOZ_OVERRIDE;
-  virtual nsIntRect Bounds() const MOZ_OVERRIDE;
-  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
-  virtual GroupPos GroupPosition() MOZ_OVERRIDE;
-  virtual ENameValueFlag Name(nsString& aName) MOZ_OVERRIDE;
-  virtual void ApplyARIAState(uint64_t* aState) const MOZ_OVERRIDE;
-  virtual void Description(nsString& aDescription) MOZ_OVERRIDE;
-  virtual void Value(nsString& aValue) MOZ_OVERRIDE;
-  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t State() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
-  virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
+  virtual void Shutdown() override;
+  virtual nsIntRect Bounds() const override;
+  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
+  virtual GroupPos GroupPosition() override;
+  virtual ENameValueFlag Name(nsString& aName) override;
+  virtual void ApplyARIAState(uint64_t* aState) const override;
+  virtual void Description(nsString& aDescription) override;
+  virtual void Value(nsString& aValue) override;
+  virtual mozilla::a11y::role NativeRole() override;
+  virtual uint64_t State() override;
+  virtual uint64_t NativeState() override;
+  virtual Relation RelationByType(RelationType aType) override;
 
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
-                                   EWhichChildAtPoint aWhichChild) MOZ_OVERRIDE;
-  virtual Accessible* FocusedChild() MOZ_OVERRIDE;
+                                   EWhichChildAtPoint aWhichChild) override;
+  virtual Accessible* FocusedChild() override;
 
-  virtual void InvalidateChildren() MOZ_OVERRIDE;
+  virtual void InvalidateChildren() override;
 
   // ActionAccessible
-  virtual KeyBinding AccessKey() const MOZ_OVERRIDE;
+  virtual KeyBinding AccessKey() const override;
 
   // ApplicationAccessible
   void AppName(nsAString& aName) const
@@ -88,9 +88,9 @@ protected:
   virtual ~ApplicationAccessible() {}
 
   // Accessible
-  virtual void CacheChildren() MOZ_OVERRIDE;
+  virtual void CacheChildren() override;
   virtual Accessible* GetSiblingAtOffset(int32_t aOffset,
-                                         nsresult *aError = nullptr) const MOZ_OVERRIDE;
+                                         nsresult *aError = nullptr) const override;
 
 private:
   nsCOMPtr<nsIXULAppInfo> mAppInfo;

@@ -107,7 +107,7 @@ AssertIsOnMainThread()
 // ParentImpl Declaration
 // -----------------------------------------------------------------------------
 
-class ParentImpl MOZ_FINAL : public BackgroundParentImpl
+class ParentImpl final : public BackgroundParentImpl
 {
   friend class mozilla::ipc::BackgroundParent;
 
@@ -301,17 +301,17 @@ private:
   virtual IToplevelProtocol*
   CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds,
                 ProcessHandle aPeerProcess,
-                ProtocolCloneContext* aCtx) MOZ_OVERRIDE;
+                ProtocolCloneContext* aCtx) override;
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 };
 
 // -----------------------------------------------------------------------------
 // ChildImpl Declaration
 // -----------------------------------------------------------------------------
 
-class ChildImpl MOZ_FINAL : public BackgroundChildImpl
+class ChildImpl final : public BackgroundChildImpl
 {
   friend class mozilla::ipc::BackgroundChild;
   friend class mozilla::ipc::BackgroundChildImpl;
@@ -477,7 +477,7 @@ private:
 
   // Only called by IPDL.
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   static already_AddRefed<nsIIPCBackgroundChildCreateCallback>
   GetNextCallback();
@@ -487,7 +487,7 @@ private:
 // ParentImpl Helper Declarations
 // -----------------------------------------------------------------------------
 
-class ParentImpl::ShutdownObserver MOZ_FINAL : public nsIObserver
+class ParentImpl::ShutdownObserver final : public nsIObserver
 {
 public:
   ShutdownObserver()
@@ -505,7 +505,7 @@ private:
   }
 };
 
-class ParentImpl::RequestMessageLoopRunnable MOZ_FINAL :
+class ParentImpl::RequestMessageLoopRunnable final :
   public nsRunnable
 {
   nsCOMPtr<nsIThread> mTargetThread;
@@ -529,7 +529,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class ParentImpl::ShutdownBackgroundThreadRunnable MOZ_FINAL : public nsRunnable
+class ParentImpl::ShutdownBackgroundThreadRunnable final : public nsRunnable
 {
 public:
   ShutdownBackgroundThreadRunnable()
@@ -547,7 +547,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class ParentImpl::ForceCloseBackgroundActorsRunnable MOZ_FINAL : public nsRunnable
+class ParentImpl::ForceCloseBackgroundActorsRunnable final : public nsRunnable
 {
   nsTArray<ParentImpl*>* mActorArray;
 
@@ -569,7 +569,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class ParentImpl::CreateCallbackRunnable MOZ_FINAL : public nsRunnable
+class ParentImpl::CreateCallbackRunnable final : public nsRunnable
 {
   nsRefPtr<CreateCallback> mCallback;
 
@@ -591,7 +591,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class ParentImpl::ConnectActorRunnable MOZ_FINAL : public nsRunnable
+class ParentImpl::ConnectActorRunnable final : public nsRunnable
 {
   nsRefPtr<ParentImpl> mActor;
   Transport* mTransport;
@@ -644,7 +644,7 @@ protected:
 // ChildImpl Helper Declarations
 // -----------------------------------------------------------------------------
 
-class ChildImpl::ShutdownObserver MOZ_FINAL : public nsIObserver
+class ChildImpl::ShutdownObserver final : public nsIObserver
 {
 public:
   ShutdownObserver()
@@ -662,7 +662,7 @@ private:
   }
 };
 
-class ChildImpl::CreateActorRunnable MOZ_FINAL : public nsRunnable
+class ChildImpl::CreateActorRunnable final : public nsRunnable
 {
   nsCOMPtr<nsIEventTarget> mEventTarget;
 
@@ -682,7 +682,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class ChildImpl::ParentCreateCallback MOZ_FINAL :
+class ChildImpl::ParentCreateCallback final :
   public ParentImpl::CreateCallback
 {
   nsCOMPtr<nsIEventTarget> mEventTarget;
@@ -702,14 +702,14 @@ private:
 
   virtual void
   Success(already_AddRefed<ParentImpl> aActor, MessageLoop* aMessageLoop)
-          MOZ_OVERRIDE;
+          override;
 
   virtual void
-  Failure() MOZ_OVERRIDE;
+  Failure() override;
 };
 
 // Must be cancelable in order to dispatch on active worker threads
-class ChildImpl::AlreadyCreatedCallbackRunnable MOZ_FINAL :
+class ChildImpl::AlreadyCreatedCallbackRunnable final :
   public nsCancelableRunnable
 {
 public:
@@ -728,7 +728,7 @@ protected:
   NS_DECL_NSICANCELABLERUNNABLE
 };
 
-class ChildImpl::FailedCreateCallbackRunnable MOZ_FINAL : public nsRunnable
+class ChildImpl::FailedCreateCallbackRunnable final : public nsRunnable
 {
 public:
   FailedCreateCallbackRunnable()
@@ -745,7 +745,7 @@ protected:
   NS_DECL_NSIRUNNABLE
 };
 
-class ChildImpl::OpenChildProcessActorRunnable MOZ_FINAL : public nsRunnable
+class ChildImpl::OpenChildProcessActorRunnable final : public nsRunnable
 {
   nsRefPtr<ChildImpl> mActor;
   nsAutoPtr<Transport> mTransport;
@@ -777,7 +777,7 @@ private:
   NS_DECL_NSIRUNNABLE
 };
 
-class ChildImpl::OpenMainProcessActorRunnable MOZ_FINAL : public nsRunnable
+class ChildImpl::OpenMainProcessActorRunnable final : public nsRunnable
 {
   nsRefPtr<ChildImpl> mActor;
   nsRefPtr<ParentImpl> mParentActor;

@@ -24,7 +24,7 @@ template<typename> class Optional;
 
 BEGIN_WORKERS_NAMESPACE
 
-class FileReaderSync MOZ_FINAL
+class FileReaderSync final
 {
   NS_INLINE_DECL_REFCOUNTING(FileReaderSync)
 

@@ -14,7 +14,7 @@
 namespace mozilla {
 namespace storage {
 
-class Error MOZ_FINAL : public mozIStorageError
+class Error final : public mozIStorageError
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

@@ -15,7 +15,7 @@ class nsIURI;
 class nsIChannel;
 class nsIDOMWindow;
 
-class ThirdPartyUtil MOZ_FINAL : public mozIThirdPartyUtil
+class ThirdPartyUtil final : public mozIThirdPartyUtil
 {
 public:
   NS_DECL_ISUPPORTS

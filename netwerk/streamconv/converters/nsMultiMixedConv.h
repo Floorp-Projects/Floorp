@@ -34,7 +34,7 @@ using mozilla::net::nsHttpResponseHead;
 // Instances on this channel are passed out to the consumer through the
 // nsIStreamListener interface.
 //
-class nsPartChannel MOZ_FINAL : public nsIChannel,
+class nsPartChannel final : public nsIChannel,
                                 public nsIByteRangeRequest,
                                 public nsIResponseHeadProvider,
                                 public nsIMultiPartChannel

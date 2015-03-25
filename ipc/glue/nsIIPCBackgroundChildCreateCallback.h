@@ -47,24 +47,24 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCBackgroundChildCreateCallback,
 
 #define NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK                            \
   virtual void                                                                 \
-  ActorCreated(mozilla::ipc::PBackgroundChild*) MOZ_OVERRIDE;                  \
+  ActorCreated(mozilla::ipc::PBackgroundChild*) override;                  \
   virtual void                                                                 \
-  ActorFailed() MOZ_OVERRIDE;
+  ActorFailed() override;
 
 #define NS_FORWARD_NSIIPCBACKGROUNDCHILDCREATECALLBACK(_to)                    \
   virtual void                                                                 \
-  ActorCreated(mozilla::ipc::PBackgroundChild* aActor) MOZ_OVERRIDE            \
+  ActorCreated(mozilla::ipc::PBackgroundChild* aActor) override            \
   { _to ActorCreated(aActor); }                                                \
   virtual void                                                                 \
-  ActorFailed() MOZ_OVERRIDE                                                   \
+  ActorFailed() override                                                   \
   { _to ActorFailed(); }
 
 #define NS_FORWARD_SAFE_NSIIPCBACKGROUNDCHILDCREATECALLBACK(_to)               \
   virtual void                                                                 \
-  ActorCreated(mozilla::ipc::PBackgroundChild* aActor) MOZ_OVERRIDE            \
+  ActorCreated(mozilla::ipc::PBackgroundChild* aActor) override            \
   { if (_to) { _to->ActorCreated(aActor); } }                                  \
   virtual void                                                                 \
-  ActorFailed() MOZ_OVERRIDE                                                   \
+  ActorFailed() override                                                   \
   { if (_to) { _to->ActorFailed(); } }
 
 #endif // mozilla_ipc_nsiipcbackgroundchildcreatecallback_h

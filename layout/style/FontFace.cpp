@@ -80,7 +80,7 @@ public:
   void SetSource(const ArrayBuffer& aArrayBuffer);
   void SetSource(const ArrayBufferView& aArrayBufferView);
 
-  NS_IMETHOD Run() MOZ_OVERRIDE;
+  NS_IMETHOD Run() override;
   void TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength);
 
   nsRefPtr<FontFace> mFontFace;
@@ -156,7 +156,7 @@ public:
     : mFontFace(aFontFace)
     , mStatus(aStatus) {}
 
-  NS_IMETHOD Run() MOZ_OVERRIDE;
+  NS_IMETHOD Run() override;
 
 protected:
   virtual ~FontFaceStatusSetter() {}

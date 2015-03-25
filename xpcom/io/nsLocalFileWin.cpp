@@ -864,7 +864,7 @@ CloseDir(nsDir*& aDir)
 // nsDirEnumerator
 //-----------------------------------------------------------------------------
 
-class nsDirEnumerator MOZ_FINAL
+class nsDirEnumerator final
   : public nsISimpleEnumerator
   , public nsIDirectoryEnumerator
 {

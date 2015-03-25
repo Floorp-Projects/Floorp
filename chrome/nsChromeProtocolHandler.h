@@ -18,7 +18,7 @@
     {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-class nsChromeProtocolHandler MOZ_FINAL : public nsIProtocolHandler,
+class nsChromeProtocolHandler final : public nsIProtocolHandler,
                                           public nsSupportsWeakReference
 {
 public:

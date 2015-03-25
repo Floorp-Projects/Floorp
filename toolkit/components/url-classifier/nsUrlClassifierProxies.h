@@ -18,7 +18,7 @@
 /**
  * Thread proxy from the main thread to the worker thread.
  */
-class UrlClassifierDBServiceWorkerProxy MOZ_FINAL :
+class UrlClassifierDBServiceWorkerProxy final :
   public nsIUrlClassifierDBServiceWorker
 {
 public:
@@ -186,7 +186,7 @@ private:
 
 // The remaining classes here are all proxies to the main thread
 
-class UrlClassifierLookupCallbackProxy MOZ_FINAL :
+class UrlClassifierLookupCallbackProxy final :
   public nsIUrlClassifierLookupCallback
 {
 public:
@@ -219,7 +219,7 @@ private:
   nsMainThreadPtrHandle<nsIUrlClassifierLookupCallback> mTarget;
 };
 
-class UrlClassifierCallbackProxy MOZ_FINAL : public nsIUrlClassifierCallback
+class UrlClassifierCallbackProxy final : public nsIUrlClassifierCallback
 {
 public:
   explicit UrlClassifierCallbackProxy(nsIUrlClassifierCallback* aTarget)
@@ -251,7 +251,7 @@ private:
   nsMainThreadPtrHandle<nsIUrlClassifierCallback> mTarget;
 };
 
-class UrlClassifierUpdateObserverProxy MOZ_FINAL :
+class UrlClassifierUpdateObserverProxy final :
   public nsIUrlClassifierUpdateObserver
 {
 public:

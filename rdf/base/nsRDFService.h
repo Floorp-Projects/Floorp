@@ -33,7 +33,7 @@ class nsIRDFInt;
 class nsIRDFDate;
 class BlobImpl;
 
-class RDFServiceImpl MOZ_FINAL : public nsIRDFService,
+class RDFServiceImpl final : public nsIRDFService,
                                  public nsSupportsWeakReference
 {
 protected:

@@ -8,7 +8,7 @@
 
 #include "Layers.h"                     // for Layer (ptr only), etc
 #include "gfxRect.h"                    // for gfxRect
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/LayerManagerComposite.h"  // for LayerComposite, etc
 #include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
@@ -43,31 +43,31 @@ protected:
   virtual ~PaintedLayerComposite();
 
 public:
-  virtual void Disconnect() MOZ_OVERRIDE;
+  virtual void Disconnect() override;
 
-  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE;
+  virtual LayerRenderState GetRenderState() override;
 
-  CompositableHost* GetCompositableHost() MOZ_OVERRIDE;
+  CompositableHost* GetCompositableHost() override;
 
-  virtual void Destroy() MOZ_OVERRIDE;
+  virtual void Destroy() override;
 
-  virtual Layer* GetLayer() MOZ_OVERRIDE;
+  virtual Layer* GetLayer() override;
 
-  virtual void SetLayerManager(LayerManagerComposite* aManager) MOZ_OVERRIDE;
+  virtual void SetLayerManager(LayerManagerComposite* aManager) override;
 
-  virtual TiledLayerComposer* GetTiledLayerComposer() MOZ_OVERRIDE;
+  virtual TiledLayerComposer* GetTiledLayerComposer() override;
 
-  virtual void RenderLayer(const nsIntRect& aClipRect) MOZ_OVERRIDE;
+  virtual void RenderLayer(const nsIntRect& aClipRect) override;
 
-  virtual void CleanupResources() MOZ_OVERRIDE;
+  virtual void CleanupResources() override;
 
-  virtual void GenEffectChain(EffectChain& aEffect) MOZ_OVERRIDE;
+  virtual void GenEffectChain(EffectChain& aEffect) override;
 
-  virtual bool SetCompositableHost(CompositableHost* aHost) MOZ_OVERRIDE;
+  virtual bool SetCompositableHost(CompositableHost* aHost) override;
 
-  virtual LayerComposite* AsLayerComposite() MOZ_OVERRIDE { return this; }
+  virtual LayerComposite* AsLayerComposite() override { return this; }
 
-  virtual void InvalidateRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
+  virtual void InvalidateRegion(const nsIntRegion& aRegion) override
   {
     NS_RUNTIMEABORT("PaintedLayerComposites can't fill invalidated regions");
   }
@@ -83,7 +83,7 @@ public:
 
 protected:
 
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
 private:
   gfx::Filter GetEffectFilter() { return gfx::Filter::LINEAR; }

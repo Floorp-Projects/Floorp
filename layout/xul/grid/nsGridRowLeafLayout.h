@@ -22,32 +22,32 @@
  */
 // XXXldb This needs a better name that indicates that it's for any grid
 // row.
-class nsGridRowLeafLayout MOZ_FINAL : public nsGridRowLayout
+class nsGridRowLeafLayout final : public nsGridRowLayout
 {
 public:
 
   friend already_AddRefed<nsBoxLayout> NS_NewGridRowLeafLayout();
 
-  virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual void ChildAddedOrRemoved(nsIFrame* aBox, nsBoxLayoutState& aState) MOZ_OVERRIDE;
-  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount) MOZ_OVERRIDE;
-  virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) MOZ_OVERRIDE;
-  virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows) MOZ_OVERRIDE;
-  virtual Type GetType() MOZ_OVERRIDE { return eRowLeaf; }
+  virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  virtual void ChildAddedOrRemoved(nsIFrame* aBox, nsBoxLayoutState& aState) override;
+  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  virtual void CountRowsColumns(nsIFrame* aBox, int32_t& aRowCount, int32_t& aComputedColumnCount) override;
+  virtual void DirtyRows(nsIFrame* aBox, nsBoxLayoutState& aState) override;
+  virtual int32_t BuildRows(nsIFrame* aBox, nsGridRow* aRows) override;
+  virtual Type GetType() override { return eRowLeaf; }
 
 protected:
 
   virtual void PopulateBoxSizes(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState,
                                 nsBoxSize*& aBoxSizes, nscoord& aMinSize,
-                                nscoord& aMaxSize, int32_t& aFlexes) MOZ_OVERRIDE;
+                                nscoord& aMaxSize, int32_t& aFlexes) override;
   virtual void ComputeChildSizes(nsIFrame* aBox,
                                  nsBoxLayoutState& aState,
                                  nscoord& aGivenSize,
                                  nsBoxSize* aBoxSizes,
-                                 nsComputedBoxSize*& aComputedBoxSizes) MOZ_OVERRIDE;
+                                 nsComputedBoxSize*& aComputedBoxSizes) override;
 
 
   nsGridRowLeafLayout();

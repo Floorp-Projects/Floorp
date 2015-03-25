@@ -20,7 +20,7 @@ namespace mozilla {
  * path run into the read() here, it reads un-decoded frame data from mResource
  * and construct a MediaBuffer for output to OMX decoder.
  * */
-class RtspMediaSource MOZ_FINAL : public MediaSource {
+class RtspMediaSource final : public MediaSource {
 public:
   RtspMediaSource(RtspMediaResource* aRtspMediaResource,
                   ssize_t aTrackIdx,
@@ -35,14 +35,14 @@ public:
   , mBuffer(nullptr)
   , mFrameMaxSize(aFrameMaxSize) {}
   virtual ~RtspMediaSource() {}
-  virtual status_t start(MetaData* params = nullptr) MOZ_OVERRIDE;
-  virtual status_t stop() MOZ_OVERRIDE;
-  virtual sp<MetaData> getFormat() MOZ_OVERRIDE {
+  virtual status_t start(MetaData* params = nullptr) override;
+  virtual status_t stop() override;
+  virtual sp<MetaData> getFormat() override {
     ReentrantMonitorAutoEnter mon(mMonitor);
     return mFormat;
   }
   virtual status_t read(MediaBuffer** buffer,
-                        const ReadOptions* options = nullptr) MOZ_OVERRIDE ;
+                        const ReadOptions* options = nullptr) override ;
 private:
   nsRefPtr<RtspMediaResource> mRtspResource;
   sp<MetaData> mFormat;

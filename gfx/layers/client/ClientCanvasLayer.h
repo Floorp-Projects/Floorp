@@ -10,7 +10,7 @@
 #include "ClientLayerManager.h"         // for ClientLayerManager, etc
 #include "CopyableCanvasLayer.h"        // for CopyableCanvasLayer
 #include "Layers.h"                     // for CanvasLayer, etc
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/layers/LayersMessages.h"  // for CanvasLayerAttributes, etc
 #include "mozilla/mozalloc.h"           // for operator delete
@@ -45,39 +45,39 @@ protected:
   virtual ~ClientCanvasLayer();
 
 public:
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion) override
   {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     CanvasLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void Initialize(const Data& aData) MOZ_OVERRIDE;
+  virtual void Initialize(const Data& aData) override;
 
-  virtual void RenderLayer() MOZ_OVERRIDE;
+  virtual void RenderLayer() override;
 
-  virtual void ClearCachedResources() MOZ_OVERRIDE
+  virtual void ClearCachedResources() override
   {
     if (mCanvasClient) {
       mCanvasClient->Clear();
     }
   }
 
-  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) MOZ_OVERRIDE
+  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override
   {
     aAttrs = CanvasLayerAttributes(mFilter, mBounds);
   }
 
-  virtual Layer* AsLayer()  MOZ_OVERRIDE { return this; }
-  virtual ShadowableLayer* AsShadowableLayer()  MOZ_OVERRIDE { return this; }
+  virtual Layer* AsLayer()  override { return this; }
+  virtual ShadowableLayer* AsShadowableLayer()  override { return this; }
 
-  virtual void Disconnect() MOZ_OVERRIDE
+  virtual void Disconnect() override
   {
     mCanvasClient = nullptr;
     ClientLayer::Disconnect();
   }
 
-  virtual CompositableClient* GetCompositableClient() MOZ_OVERRIDE
+  virtual CompositableClient* GetCompositableClient() override
   {
     return mCanvasClient;
   }

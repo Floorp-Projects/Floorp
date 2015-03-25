@@ -141,9 +141,9 @@ public:
                                       const InputContextAction& aAction);
     NS_IMETHOD_(InputContext) GetInputContext();
 
-    virtual uint32_t GetGLFrameBufferFormat() MOZ_OVERRIDE;
+    virtual uint32_t GetGLFrameBufferFormat() override;
 
-    mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() MOZ_OVERRIDE;
+    mozilla::TemporaryRef<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
 
     // Widget notifications
     virtual void OnPaint();

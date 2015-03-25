@@ -24,7 +24,7 @@ namespace mobileconnection {
  * - non-OOP mode: MobileConnectionService
  * The reference should be released after Notify*Success/Error is called.
  */
-class MobileConnectionCallback MOZ_FINAL : public nsIMobileConnectionCallback
+class MobileConnectionCallback final : public nsIMobileConnectionCallback
 {
 public:
   NS_DECL_ISUPPORTS

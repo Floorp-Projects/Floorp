@@ -32,7 +32,7 @@ struct ContentProcessInfo
   std::map<TabId, RemoteFrameInfo> mRemoteFrames;
 };
 
-class ContentProcessManager MOZ_FINAL
+class ContentProcessManager final
 {
 public:
   static ContentProcessManager* GetSingleton();

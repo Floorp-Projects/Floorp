@@ -25,12 +25,12 @@ namespace mozilla {
 class RtspExtractor: public android::MediaExtractor
 {
 public:
-  virtual size_t countTracks() MOZ_FINAL MOZ_OVERRIDE;
+  virtual size_t countTracks() final override;
   virtual android::sp<android::MediaSource> getTrack(size_t index)
-    MOZ_FINAL MOZ_OVERRIDE;
+    final override;
   virtual android::sp<android::MetaData> getTrackMetaData(
-    size_t index, uint32_t flag = 0) MOZ_FINAL MOZ_OVERRIDE;
-  virtual uint32_t flags() const MOZ_FINAL MOZ_OVERRIDE;
+    size_t index, uint32_t flag = 0) final override;
+  virtual uint32_t flags() const final override;
 
   RtspExtractor(RtspMediaResource* aResource)
     : mRtspResource(aResource) {
@@ -38,7 +38,7 @@ public:
     mController = mRtspResource->GetMediaStreamController();
     MOZ_ASSERT(mController);
   }
-  virtual ~RtspExtractor() MOZ_OVERRIDE {}
+  virtual ~RtspExtractor() override {}
 private:
   // mRtspResource is a pointer to RtspMediaResource. When |getTrack| is called
   // we use mRtspResource to construct a RtspMediaSource.

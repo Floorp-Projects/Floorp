@@ -50,7 +50,7 @@ public:
   }
 
   virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx) override;
 
   static uint8_t*
   GetRandomValues(uint32_t aLength);

@@ -115,7 +115,7 @@ protected:
       : mQueue(aQueue)
     {
     }
-    NS_METHOD Run() MOZ_OVERRIDE;
+    NS_METHOD Run() override;
   private:
     RefPtr<MediaTaskQueue> mQueue;
   };

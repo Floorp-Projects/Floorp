@@ -128,7 +128,7 @@ public:
   }
 
 protected:
-  AsyncPanZoomController* MakeAPZCInstance(uint64_t aLayersId, GeckoContentController* aController) MOZ_OVERRIDE;
+  AsyncPanZoomController* MakeAPZCInstance(uint64_t aLayersId, GeckoContentController* aController) override;
 };
 
 class TestAsyncPanZoomController : public AsyncPanZoomController {

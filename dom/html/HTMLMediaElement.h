@@ -118,7 +118,7 @@ public:
   virtual bool ParseAttribute(int32_t aNamespaceID,
                               nsIAtom* aAttribute,
                               const nsAString& aValue,
-                              nsAttrValue& aResult) MOZ_OVERRIDE;
+                              nsAttrValue& aResult) override;
   // SetAttr override.  C++ is stupid, so have to override both
   // overloaded methods.
   nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
@@ -128,20 +128,20 @@ public:
   }
   virtual nsresult SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
-                           bool aNotify) MOZ_OVERRIDE;
+                           bool aNotify) override;
   virtual nsresult UnsetAttr(int32_t aNameSpaceID, nsIAtom* aAttr,
-                             bool aNotify) MOZ_OVERRIDE;
+                             bool aNotify) override;
 
   virtual nsresult BindToTree(nsIDocument* aDocument, nsIContent* aParent,
                               nsIContent* aBindingParent,
-                              bool aCompileEventHandlers) MOZ_OVERRIDE;
+                              bool aCompileEventHandlers) override;
   virtual void UnbindFromTree(bool aDeep = true,
-                              bool aNullParent = true) MOZ_OVERRIDE;
-  virtual void DoneCreatingElement() MOZ_OVERRIDE;
+                              bool aNullParent = true) override;
+  virtual void DoneCreatingElement() override;
 
   virtual bool IsHTMLFocusable(bool aWithMouse, bool *aIsFocusable,
-                               int32_t *aTabIndex) MOZ_OVERRIDE;
-  virtual int32_t TabIndexDefault() MOZ_OVERRIDE;
+                               int32_t *aTabIndex) override;
+  virtual int32_t TabIndexDefault() override;
 
   /**
    * Call this to reevaluate whether we should start/stop due to our owner
@@ -153,40 +153,40 @@ public:
   // when it has read the metadata containing video dimensions,
   // etc.
   virtual void MetadataLoaded(const MediaInfo* aInfo,
-                              nsAutoPtr<const MetadataTags> aTags) MOZ_FINAL MOZ_OVERRIDE;
+                              nsAutoPtr<const MetadataTags> aTags) final override;
 
   // Called by the decoder object, on the main thread,
   // when it has read the first frame of the video or audio.
-  virtual void FirstFrameLoaded() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void FirstFrameLoaded() final override;
 
   // Called by the video decoder object, on the main thread,
   // when the resource has a network error during loading.
-  virtual void NetworkError() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void NetworkError() final override;
 
   // Called by the video decoder object, on the main thread, when the
   // resource has a decode error during metadata loading or decoding.
-  virtual void DecodeError() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void DecodeError() final override;
 
   // Called by the video decoder object, on the main thread, when the
   // resource load has been cancelled.
-  virtual void LoadAborted() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void LoadAborted() final override;
 
   // Called by the video decoder object, on the main thread,
   // when the video playback has ended.
-  virtual void PlaybackEnded() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void PlaybackEnded() final override;
 
   // Called by the video decoder object, on the main thread,
   // when the resource has started seeking.
-  virtual void SeekStarted() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void SeekStarted() final override;
 
   // Called by the video decoder object, on the main thread,
   // when the resource has completed seeking.
-  virtual void SeekCompleted() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void SeekCompleted() final override;
 
   // Called by the media stream, on the main thread, when the download
   // has been suspended by the cache or because the element itself
   // asked the decoder to suspend the download.
-  virtual void DownloadSuspended() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void DownloadSuspended() final override;
 
   // Called by the media stream, on the main thread, when the download
   // has been resumed by the cache or because the element itself
@@ -195,26 +195,26 @@ public:
   // previously finished. We are downloading the middle of the media after
   // having downloaded the end, we need to notify the element a download in
   // ongoing.
-  virtual void DownloadResumed(bool aForceNetworkLoading = false) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void DownloadResumed(bool aForceNetworkLoading = false) final override;
 
   // Called to indicate the download is progressing.
-  virtual void DownloadProgressed() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void DownloadProgressed() final override;
 
   // Called by the media decoder to indicate whether the media cache has
   // suspended the channel.
-  virtual void NotifySuspendedByCache(bool aIsSuspended) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void NotifySuspendedByCache(bool aIsSuspended) final override;
 
-  virtual bool IsActive() MOZ_FINAL MOZ_OVERRIDE;
+  virtual bool IsActive() final override;
 
-  virtual bool IsHidden() MOZ_FINAL MOZ_OVERRIDE;
+  virtual bool IsHidden() final override;
 
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
-  virtual VideoFrameContainer* GetVideoFrameContainer() MOZ_FINAL MOZ_OVERRIDE;
+  virtual VideoFrameContainer* GetVideoFrameContainer() final override;
   layers::ImageContainer* GetImageContainer();
 
   // Dispatch events
-  virtual nsresult DispatchAsyncEvent(const nsAString& aName) MOZ_FINAL MOZ_OVERRIDE;
+  virtual nsresult DispatchAsyncEvent(const nsAString& aName) final override;
 
   // Dispatch events that were raised while in the bfcache
   nsresult DispatchPendingMediaEvents();
@@ -224,7 +224,7 @@ public:
   // the data for the next frame is available. This method will
   // decide whether to set the ready state to HAVE_CURRENT_DATA,
   // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
-  virtual void UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatus aNextFrame) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatus aNextFrame) final override;
 
   // Return true if we can activate autoplay assuming enough data has arrived.
   bool CanActivateAutoplay();
@@ -256,7 +256,7 @@ public:
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
   // called to notify that the principal of the decoder's media resource has changed.
-  virtual void NotifyDecoderPrincipalChanged() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void NotifyDecoderPrincipalChanged() final override;
 
   // Update the visual size of the media. Called from the decoder on the
   // main thread when/if the size changes.
@@ -285,7 +285,7 @@ public:
    */
   void NotifyMediaStreamTracksAvailable(DOMMediaStream* aStream);
 
-  virtual bool IsNodeOfType(uint32_t aFlags) const MOZ_OVERRIDE;
+  virtual bool IsNodeOfType(uint32_t aFlags) const override;
 
   /**
    * Returns the current load ID. Asynchronous events store the ID that was
@@ -333,7 +333,7 @@ public:
    * last 250ms, as required by the spec when the current time is periodically
    * increasing during playback.
    */
-  virtual void FireTimeUpdate(bool aPeriodic) MOZ_FINAL MOZ_OVERRIDE;
+  virtual void FireTimeUpdate(bool aPeriodic) final override;
 
   MediaStream* GetSrcMediaStream() const
   {
@@ -379,7 +379,7 @@ public:
 
   // Called by the media decoder object, on the main thread,
   // when the connection between Rtsp server and client gets lost.
-  virtual void ResetConnectionState() MOZ_FINAL MOZ_OVERRIDE;
+  virtual void ResetConnectionState() final override;
 
   // XPCOM GetPreload() is OK
   void SetPreload(const nsAString& aValue, ErrorResult& aRv)
@@ -559,10 +559,10 @@ public:
   void SetOnencrypted(mozilla::dom::EventHandlerNonNull* listener);
 
   void DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
-                         const nsAString& aInitDataType) MOZ_OVERRIDE;
+                         const nsAString& aInitDataType) override;
 
 
-  bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
+  bool IsEventAttributeName(nsIAtom* aName) override;
 
   // Returns the principal of the "top level" document; the origin displayed
   // in the URL bar of the browser window.
@@ -642,8 +642,8 @@ protected:
   class MediaStreamTracksAvailableCallback;
   class StreamListener;
 
-  virtual void GetItemValueText(DOMString& text) MOZ_OVERRIDE;
-  virtual void SetItemValueText(const nsAString& text) MOZ_OVERRIDE;
+  virtual void GetItemValueText(DOMString& text) override;
+  virtual void SetItemValueText(const nsAString& text) override;
 
   class WakeLockBoolWrapper {
   public:
@@ -965,13 +965,13 @@ protected:
 
   // Get the HTMLMediaElement object if the decoder is being used from an
   // HTML media element, and null otherwise.
-  virtual HTMLMediaElement* GetMediaElement() MOZ_FINAL MOZ_OVERRIDE
+  virtual HTMLMediaElement* GetMediaElement() final override
   {
     return this;
   }
 
   // Return true if decoding should be paused
-  virtual bool GetPaused() MOZ_FINAL MOZ_OVERRIDE
+  virtual bool GetPaused() final override
   {
     bool isPaused = false;
     GetPaused(&isPaused);

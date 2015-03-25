@@ -54,13 +54,13 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // Accessible
-  virtual int32_t GetLevelInternal() MOZ_OVERRIDE;
-  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() MOZ_OVERRIDE;
-  virtual mozilla::a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual int32_t GetLevelInternal() override;
+  virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
+  virtual mozilla::a11y::role NativeRole() override;
+  virtual uint64_t NativeState() override;
 
-  virtual void InvalidateChildren() MOZ_OVERRIDE;
-  virtual bool RemoveChild(Accessible* aAccessible) MOZ_OVERRIDE;
+  virtual void InvalidateChildren() override;
+  virtual bool RemoveChild(Accessible* aAccessible) override;
 
   // HyperTextAccessible (static helper method)
 
@@ -428,8 +428,8 @@ protected:
   virtual ~HyperTextAccessible() { }
 
   // Accessible
-  virtual ENameValueFlag NativeName(nsString& aName) MOZ_OVERRIDE;
-  virtual void CacheChildren() MOZ_OVERRIDE;
+  virtual ENameValueFlag NativeName(nsString& aName) override;
+  virtual void CacheChildren() override;
 
   // HyperTextAccessible
 

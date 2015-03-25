@@ -28,7 +28,7 @@
 BEGIN_WORKERS_NAMESPACE
 using mozilla::dom::GlobalObject;
 
-class URLProxy MOZ_FINAL
+class URLProxy final
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(URLProxy)

@@ -66,7 +66,7 @@ using namespace mozilla::dom;
 // Per-request data structure
 //////////////////////////////////////////////////////////////
 
-class nsScriptLoadRequest MOZ_FINAL : public nsISupports {
+class nsScriptLoadRequest final : public nsISupports {
   ~nsScriptLoadRequest()
   {
     js_free(mScriptTextBuf);

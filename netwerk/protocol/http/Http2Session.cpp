@@ -2034,7 +2034,7 @@ UpdateAltSvcEvent(const nsCString &header,
   {
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

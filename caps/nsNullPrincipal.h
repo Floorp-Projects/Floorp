@@ -27,7 +27,7 @@ class nsIURI;
 
 #define NS_NULLPRINCIPAL_SCHEME "moz-nullprincipal"
 
-class nsNullPrincipal MOZ_FINAL : public nsJSPrincipals
+class nsNullPrincipal final : public nsJSPrincipals
 {
 public:
   nsNullPrincipal();
@@ -47,10 +47,10 @@ public:
   nsresult Init(uint32_t aAppId = nsIScriptSecurityManager::NO_APP_ID,
                 bool aInMozBrowser = false);
 
-  virtual void GetScriptLocation(nsACString &aStr) MOZ_OVERRIDE;
+  virtual void GetScriptLocation(nsACString &aStr) override;
 
 #ifdef DEBUG
-  virtual void dumpImpl() MOZ_OVERRIDE;
+  virtual void dumpImpl() override;
 #endif 
 
  protected:

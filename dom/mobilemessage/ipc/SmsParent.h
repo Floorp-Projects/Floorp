@@ -32,10 +32,10 @@ public:
 
 protected:
   virtual bool
-  RecvAddSilentNumber(const nsString& aNumber) MOZ_OVERRIDE;
+  RecvAddSilentNumber(const nsString& aNumber) override;
 
   virtual bool
-  RecvRemoveSilentNumber(const nsString& aNumber) MOZ_OVERRIDE;
+  RecvRemoveSilentNumber(const nsString& aNumber) override;
 
   SmsParent();
   virtual ~SmsParent()
@@ -44,27 +44,27 @@ protected:
   }
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
   RecvPSmsRequestConstructor(PSmsRequestParent* aActor,
-                             const IPCSmsRequest& aRequest) MOZ_OVERRIDE;
+                             const IPCSmsRequest& aRequest) override;
 
   virtual PSmsRequestParent*
-  AllocPSmsRequestParent(const IPCSmsRequest& aRequest) MOZ_OVERRIDE;
+  AllocPSmsRequestParent(const IPCSmsRequest& aRequest) override;
 
   virtual bool
-  DeallocPSmsRequestParent(PSmsRequestParent* aActor) MOZ_OVERRIDE;
+  DeallocPSmsRequestParent(PSmsRequestParent* aActor) override;
 
   virtual bool
   RecvPMobileMessageCursorConstructor(PMobileMessageCursorParent* aActor,
-                                      const IPCMobileMessageCursor& aCursor) MOZ_OVERRIDE;
+                                      const IPCMobileMessageCursor& aCursor) override;
 
   virtual PMobileMessageCursorParent*
-  AllocPMobileMessageCursorParent(const IPCMobileMessageCursor& aCursor) MOZ_OVERRIDE;
+  AllocPMobileMessageCursorParent(const IPCMobileMessageCursor& aCursor) override;
 
   virtual bool
-  DeallocPMobileMessageCursorParent(PMobileMessageCursorParent* aActor) MOZ_OVERRIDE;
+  DeallocPMobileMessageCursorParent(PMobileMessageCursorParent* aActor) override;
 
 private:
   nsTArray<nsString> mSilentNumbers;
@@ -94,7 +94,7 @@ protected:
   }
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   bool
   DoRequest(const SendMessageRequest& aRequest);
@@ -144,10 +144,10 @@ protected:
   }
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
-  RecvContinue() MOZ_OVERRIDE;
+  RecvContinue() override;
 
   bool
   DoRequest(const CreateMessageCursorRequest& aRequest);

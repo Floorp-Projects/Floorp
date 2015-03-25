@@ -28,7 +28,7 @@ public:
     : nsSVGElement(aNodeInfo) {}
   virtual ~SVGTransformableElement() {}
 
-  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const MOZ_OVERRIDE = 0;
+  virtual nsresult Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const override = 0;
 
   // WebIDL
   already_AddRefed<SVGAnimatedTransformList> Transform();
@@ -42,28 +42,28 @@ public:
                                                     ErrorResult& rv);
 
   // nsIContent interface
-  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const MOZ_OVERRIDE;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsIAtom* aAttribute) const override;
 
   nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                      int32_t aModType) const MOZ_OVERRIDE;
+                                      int32_t aModType) const override;
 
 
   // nsSVGElement overrides
-  virtual bool IsEventAttributeName(nsIAtom* aName) MOZ_OVERRIDE;
+  virtual bool IsEventAttributeName(nsIAtom* aName) override;
 
 
   virtual gfxMatrix PrependLocalTransformsTo(const gfxMatrix &aMatrix,
-                      TransformTypes aWhich = eAllTransforms) const MOZ_OVERRIDE;
-  virtual const gfx::Matrix* GetAnimateMotionTransform() const MOZ_OVERRIDE;
-  virtual void SetAnimateMotionTransform(const gfx::Matrix* aMatrix) MOZ_OVERRIDE;
+                      TransformTypes aWhich = eAllTransforms) const override;
+  virtual const gfx::Matrix* GetAnimateMotionTransform() const override;
+  virtual void SetAnimateMotionTransform(const gfx::Matrix* aMatrix) override;
 
   virtual nsSVGAnimatedTransformList*
-    GetAnimatedTransformList(uint32_t aFlags = 0) MOZ_OVERRIDE;
-  virtual nsIAtom* GetTransformListAttrName() const MOZ_OVERRIDE {
+    GetAnimatedTransformList(uint32_t aFlags = 0) override;
+  virtual nsIAtom* GetTransformListAttrName() const override {
     return nsGkAtoms::transform;
   }
 
-  virtual bool IsTransformable() MOZ_OVERRIDE { return true; }
+  virtual bool IsTransformable() override { return true; }
 
 protected:
   nsAutoPtr<nsSVGAnimatedTransformList> mTransforms;

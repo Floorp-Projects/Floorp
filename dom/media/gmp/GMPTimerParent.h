@@ -27,8 +27,8 @@ public:
 
 protected:
   virtual bool RecvSetTimer(const uint32_t& aTimerId,
-                            const uint32_t& aTimeoutMs) MOZ_OVERRIDE;
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+                            const uint32_t& aTimeoutMs) override;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
 private:
   ~GMPTimerParent() {}

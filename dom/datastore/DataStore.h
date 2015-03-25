@@ -19,7 +19,7 @@ class DataStoreImpl;
 class StringOrUnsignedLong;
 class OwningStringOrUnsignedLong;
 
-class DataStore MOZ_FINAL : public DOMEventTargetHelper
+class DataStore final : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -33,7 +33,7 @@ public:
   static already_AddRefed<DataStore> Constructor(GlobalObject& aGlobal,
                                                  ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext *aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext *aCx) override;
 
   static bool EnabledForScope(JSContext* aCx, JS::Handle<JSObject*> aObj);
 

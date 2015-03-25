@@ -21,7 +21,7 @@
 namespace mozilla {
 namespace dom {
 
-class ImageData MOZ_FINAL : public nsISupports
+class ImageData final : public nsISupports
 {
   ~ImageData()
   {

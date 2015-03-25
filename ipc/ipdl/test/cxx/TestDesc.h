@@ -30,13 +30,13 @@ public:
 
     void Main();
 
-    virtual bool RecvOk(PTestDescSubsubParent* a) MOZ_OVERRIDE;
+    virtual bool RecvOk(PTestDescSubsubParent* a) override;
 
 protected:
-    virtual PTestDescSubParent* AllocPTestDescSubParent(PTestDescSubsubParent*) MOZ_OVERRIDE;
-    virtual bool DeallocPTestDescSubParent(PTestDescSubParent* actor) MOZ_OVERRIDE;
+    virtual PTestDescSubParent* AllocPTestDescSubParent(PTestDescSubsubParent*) override;
+    virtual bool DeallocPTestDescSubParent(PTestDescSubParent* actor) override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");
@@ -54,13 +54,13 @@ public:
     virtual ~TestDescChild() { }
 
 protected:
-    virtual PTestDescSubChild* AllocPTestDescSubChild(PTestDescSubsubChild*) MOZ_OVERRIDE;
+    virtual PTestDescSubChild* AllocPTestDescSubChild(PTestDescSubsubChild*) override;
 
-    virtual bool DeallocPTestDescSubChild(PTestDescSubChild* actor) MOZ_OVERRIDE;
+    virtual bool DeallocPTestDescSubChild(PTestDescSubChild* actor) override;
 
-    virtual bool RecvTest(PTestDescSubsubChild* a) MOZ_OVERRIDE;
+    virtual bool RecvTest(PTestDescSubsubChild* a) override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");
@@ -80,9 +80,9 @@ public:
     virtual ~TestDescSubParent() { }
 
 protected:
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE {}
-    virtual PTestDescSubsubParent* AllocPTestDescSubsubParent() MOZ_OVERRIDE;
-    virtual bool DeallocPTestDescSubsubParent(PTestDescSubsubParent* actor) MOZ_OVERRIDE;
+    virtual void ActorDestroy(ActorDestroyReason why) override {}
+    virtual PTestDescSubsubParent* AllocPTestDescSubsubParent() override;
+    virtual bool DeallocPTestDescSubsubParent(PTestDescSubsubParent* actor) override;
 };
 
 
@@ -94,8 +94,8 @@ public:
     virtual ~TestDescSubChild() { }
 
 protected:
-    virtual PTestDescSubsubChild* AllocPTestDescSubsubChild() MOZ_OVERRIDE;
-    virtual bool DeallocPTestDescSubsubChild(PTestDescSubsubChild* actor) MOZ_OVERRIDE;
+    virtual PTestDescSubsubChild* AllocPTestDescSubsubChild() override;
+    virtual bool DeallocPTestDescSubsubChild(PTestDescSubsubChild* actor) override;
 };
 
 
@@ -110,7 +110,7 @@ public:
     virtual ~TestDescSubsubParent() { }
 
 protected:
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE {}
+    virtual void ActorDestroy(ActorDestroyReason why) override {}
 };
 
 class TestDescSubsubChild :

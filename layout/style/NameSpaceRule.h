@@ -24,7 +24,7 @@ class nsIAtom;
 namespace mozilla {
 namespace css {
 
-class NameSpaceRule MOZ_FINAL : public Rule,
+class NameSpaceRule final : public Rule,
                                 public nsIDOMCSSRule
 {
 public:
@@ -43,19 +43,19 @@ public:
 
   // nsIStyleRule methods
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const MOZ_OVERRIDE;
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
 
   // Rule methods
-  virtual int32_t GetType() const MOZ_OVERRIDE;
-  virtual already_AddRefed<Rule> Clone() const MOZ_OVERRIDE;
+  virtual int32_t GetType() const override;
+  virtual already_AddRefed<Rule> Clone() const override;
 
   nsIAtom* GetPrefix() const { return mPrefix; }
 
   void GetURLSpec(nsString& aURLSpec) const { aURLSpec = mURLSpec; }
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
-    MOZ_OVERRIDE MOZ_MUST_OVERRIDE;
+    override MOZ_MUST_OVERRIDE;
 
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE

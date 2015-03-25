@@ -40,7 +40,7 @@ public:
   friend nsTableColFrame* NS_NewTableColFrame(nsIPresShell* aPresShell,
                                               nsStyleContext*  aContext);
   /** @see nsIFrame::DidSetStyleContext */
-  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) MOZ_OVERRIDE;
+  virtual void DidSetStyleContext(nsStyleContext* aOldStyleContext) override;
   
   int32_t GetColIndex() const;
   
@@ -51,27 +51,27 @@ public:
   virtual void Reflow(nsPresContext*           aPresContext,
                       nsHTMLReflowMetrics&     aDesiredSize,
                       const nsHTMLReflowState& aReflowState,
-                      nsReflowStatus&          aStatus) MOZ_OVERRIDE;
+                      nsReflowStatus&          aStatus) override;
 
   /**
    * Table columns never paint anything, nor receive events.
    */
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE {}
+                                const nsDisplayListSet& aLists) override {}
 
   /**
    * Get the "type" of the frame
    *
    * @see nsGkAtoms::tableColFrame
    */
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
   
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE;
+  virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
 
-  virtual nsSplittableType GetSplittableType() const MOZ_OVERRIDE;
+  virtual nsSplittableType GetSplittableType() const override;
 
   /** return the number of the columns the col represents.  always >= 1 */
   int32_t GetSpan();
@@ -264,14 +264,14 @@ public:
     return mFinalWidth;
   }
 
-  virtual bool IsFrameOfType(uint32_t aFlags) const MOZ_OVERRIDE
+  virtual bool IsFrameOfType(uint32_t aFlags) const override
   {
     return nsSplittableFrame::IsFrameOfType(aFlags & ~(nsIFrame::eTablePart));
   }
   
-  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0) MOZ_OVERRIDE;
-  virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0) MOZ_OVERRIDE;
-  virtual void InvalidateFrameForRemoval() MOZ_OVERRIDE { InvalidateFrameSubtree(); }
+  virtual void InvalidateFrame(uint32_t aDisplayItemKey = 0) override;
+  virtual void InvalidateFrameWithRect(const nsRect& aRect, uint32_t aDisplayItemKey = 0) override;
+  virtual void InvalidateFrameForRemoval() override { InvalidateFrameSubtree(); }
 
 protected:
 

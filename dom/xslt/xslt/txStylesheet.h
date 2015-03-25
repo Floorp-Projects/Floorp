@@ -22,7 +22,7 @@ class txDecimalFormat;
 class txStripSpaceTest;
 class txXSLKey;
 
-class txStylesheet MOZ_FINAL
+class txStylesheet final
 {
 public:
     class ImportFrame;

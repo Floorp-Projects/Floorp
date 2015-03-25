@@ -23,11 +23,11 @@ public:
     void Main();
 
 protected:    
-    virtual bool RecvA_() MOZ_OVERRIDE;
+    virtual bool RecvA_() override;
 
-    virtual bool Answer_R(int* replyNum) MOZ_OVERRIDE;
+    virtual bool Answer_R(int* replyNum) override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");  
@@ -48,13 +48,13 @@ public:
     virtual ~TestRacyInterruptRepliesChild();
 
 protected:
-    virtual bool AnswerR_(int* replyNum) MOZ_OVERRIDE;
+    virtual bool AnswerR_(int* replyNum) override;
 
-    virtual bool RecvChildTest() MOZ_OVERRIDE;
+    virtual bool RecvChildTest() override;
 
-    virtual bool Recv_A() MOZ_OVERRIDE;
+    virtual bool Recv_A() override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");

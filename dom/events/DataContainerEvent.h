@@ -31,7 +31,7 @@ public:
   NS_DECL_NSIDOMDATACONTAINEREVENT
 
   virtual JSObject*
-  WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  WrapObjectInternal(JSContext* aCx) override
   {
     return DataContainerEventBinding::Wrap(aCx, this);
   }

@@ -30,10 +30,10 @@ public:
     MOZ_COUNT_DTOR(RtspOmxDecoder);
   }
 
-  virtual MediaDecoder* Clone() MOZ_OVERRIDE MOZ_FINAL;
-  virtual MediaDecoderStateMachine* CreateStateMachine() MOZ_OVERRIDE MOZ_FINAL;
+  virtual MediaDecoder* Clone() override final;
+  virtual MediaDecoderStateMachine* CreateStateMachine() override final;
   virtual void ApplyStateToStateMachine(PlayState aState)
-                                        MOZ_OVERRIDE MOZ_FINAL;
+                                        override final;
 };
 
 } // namespace mozilla

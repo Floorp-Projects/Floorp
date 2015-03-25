@@ -22,7 +22,7 @@ public:
   : mURI(aURI)
   {}
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   bool OpenSendCloseDelete();
 

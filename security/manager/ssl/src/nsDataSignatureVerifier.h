@@ -19,7 +19,7 @@ typedef struct CERTCertificateStr CERTCertificate;
 #define NS_DATASIGNATUREVERIFIER_CONTRACTID \
     "@mozilla.org/security/datasignatureverifier;1"
 
-class nsDataSignatureVerifier MOZ_FINAL : public nsIDataSignatureVerifier
+class nsDataSignatureVerifier final : public nsIDataSignatureVerifier
 {
 public:
   NS_DECL_ISUPPORTS

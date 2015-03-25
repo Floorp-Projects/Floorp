@@ -23,7 +23,7 @@ public:
   // The Comment Header of OggOpus.
   nsTArray<uint8_t> mCommentHeader;
 
-  MetadataKind GetKind() const MOZ_OVERRIDE { return METADATA_OPUS; }
+  MetadataKind GetKind() const override { return METADATA_OPUS; }
 };
 
 class OpusTrackEncoder : public AudioTrackEncoder
@@ -32,14 +32,14 @@ public:
   OpusTrackEncoder();
   virtual ~OpusTrackEncoder();
 
-  already_AddRefed<TrackMetadataBase> GetMetadata() MOZ_OVERRIDE;
+  already_AddRefed<TrackMetadataBase> GetMetadata() override;
 
-  nsresult GetEncodedTrack(EncodedFrameContainer& aData) MOZ_OVERRIDE;
+  nsresult GetEncodedTrack(EncodedFrameContainer& aData) override;
 
 protected:
-  int GetPacketDuration() MOZ_OVERRIDE;
+  int GetPacketDuration() override;
 
-  nsresult Init(int aChannels, int aSamplingRate) MOZ_OVERRIDE;
+  nsresult Init(int aChannels, int aSamplingRate) override;
 
   /**
    * Get the samplerate of the data to be fed to the Opus encoder. This might be

@@ -35,18 +35,18 @@ class UDPSocketChild : public mozilla::net::PUDPSocketChild
 {
 public:
   NS_DECL_NSIUDPSOCKETCHILD
-  NS_IMETHOD_(MozExternalRefCountType) Release() MOZ_OVERRIDE;
+  NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
   UDPSocketChild();
   virtual ~UDPSocketChild();
 
-  virtual bool RecvCallbackOpened(const UDPAddressInfo& aAddressInfo) MOZ_OVERRIDE;
-  virtual bool RecvCallbackClosed() MOZ_OVERRIDE;
+  virtual bool RecvCallbackOpened(const UDPAddressInfo& aAddressInfo) override;
+  virtual bool RecvCallbackClosed() override;
   virtual bool RecvCallbackReceivedData(const UDPAddressInfo& aAddressInfo,
-                                        InfallibleTArray<uint8_t>&& aData) MOZ_OVERRIDE;
+                                        InfallibleTArray<uint8_t>&& aData) override;
   virtual bool RecvCallbackError(const nsCString& aMessage,
                                  const nsCString& aFilename,
-                                 const uint32_t& aLineNumber) MOZ_OVERRIDE;
+                                 const uint32_t& aLineNumber) override;
 
 private:
   nsresult SendDataInternal(const UDPSocketAddr& aAddr,

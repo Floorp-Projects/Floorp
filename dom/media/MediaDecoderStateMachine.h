@@ -445,7 +445,7 @@ protected:
   public:
     explicit WakeDecoderRunnable(MediaDecoderStateMachine* aSM)
       : mMutex("WakeDecoderRunnable"), mStateMachine(aSM) {}
-    NS_IMETHOD Run() MOZ_OVERRIDE
+    NS_IMETHOD Run() override
     {
       nsRefPtr<MediaDecoderStateMachine> stateMachine;
       {

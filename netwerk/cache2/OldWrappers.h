@@ -30,7 +30,7 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   // nsICacheEntryDescriptor
-  NS_IMETHOD SetExpirationTime(uint32_t expirationTime) MOZ_OVERRIDE
+  NS_IMETHOD SetExpirationTime(uint32_t expirationTime) override
   {
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->SetExpirationTime(expirationTime);
@@ -45,27 +45,27 @@ public:
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->OpenOutputStream(offset, _retval);
   }
-  NS_IMETHOD GetPredictedDataSize(int64_t *aPredictedDataSize) MOZ_OVERRIDE
+  NS_IMETHOD GetPredictedDataSize(int64_t *aPredictedDataSize) override
   {
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->GetPredictedDataSize(aPredictedDataSize);
   }
-  NS_IMETHOD SetPredictedDataSize(int64_t aPredictedDataSize) MOZ_OVERRIDE
+  NS_IMETHOD SetPredictedDataSize(int64_t aPredictedDataSize) override
   {
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->SetPredictedDataSize(aPredictedDataSize);
   }
-  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) MOZ_OVERRIDE
+  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) override
   {
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->GetSecurityInfo(aSecurityInfo);
   }
-  NS_IMETHOD SetSecurityInfo(nsISupports *aSecurityInfo) MOZ_OVERRIDE
+  NS_IMETHOD SetSecurityInfo(nsISupports *aSecurityInfo) override
   {
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->SetSecurityInfo(aSecurityInfo);
   }
-  NS_IMETHOD GetStorageDataSize(uint32_t *aStorageDataSize) MOZ_OVERRIDE
+  NS_IMETHOD GetStorageDataSize(uint32_t *aStorageDataSize) override
   {
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->GetStorageDataSize(aStorageDataSize);
@@ -75,45 +75,45 @@ public:
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->AsyncDoom(listener);
   }
-  NS_IMETHOD MarkValid(void) MOZ_OVERRIDE
+  NS_IMETHOD MarkValid(void) override
   {
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->MarkValid();
   }
-  NS_IMETHOD Close(void) MOZ_OVERRIDE
+  NS_IMETHOD Close(void) override
   {
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->Close();
   }
-  NS_IMETHOD GetMetaDataElement(const char * key, char * *_retval) MOZ_OVERRIDE
+  NS_IMETHOD GetMetaDataElement(const char * key, char * *_retval) override
   {
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->GetMetaDataElement(key, _retval);
   }
-  NS_IMETHOD SetMetaDataElement(const char * key, const char * value) MOZ_OVERRIDE
+  NS_IMETHOD SetMetaDataElement(const char * key, const char * value) override
   {
     return !mOldDesc ? NS_ERROR_NULL_POINTER :
                        mOldDesc->SetMetaDataElement(key, value);
   }
 
   // nsICacheEntryInfo
-  NS_IMETHOD GetKey(nsACString & aKey) MOZ_OVERRIDE
+  NS_IMETHOD GetKey(nsACString & aKey) override
   {
     return mOldInfo->GetKey(aKey);
   }
-  NS_IMETHOD GetFetchCount(int32_t *aFetchCount) MOZ_OVERRIDE
+  NS_IMETHOD GetFetchCount(int32_t *aFetchCount) override
   {
     return mOldInfo->GetFetchCount(aFetchCount);
   }
-  NS_IMETHOD GetLastFetched(uint32_t *aLastFetched) MOZ_OVERRIDE
+  NS_IMETHOD GetLastFetched(uint32_t *aLastFetched) override
   {
     return mOldInfo->GetLastFetched(aLastFetched);
   }
-  NS_IMETHOD GetLastModified(uint32_t *aLastModified) MOZ_OVERRIDE
+  NS_IMETHOD GetLastModified(uint32_t *aLastModified) override
   {
     return mOldInfo->GetLastModified(aLastModified);
   }
-  NS_IMETHOD GetExpirationTime(uint32_t *aExpirationTime) MOZ_OVERRIDE
+  NS_IMETHOD GetExpirationTime(uint32_t *aExpirationTime) override
   {
     return mOldInfo->GetExpirationTime(aExpirationTime);
   }
@@ -122,19 +122,19 @@ public:
     return mOldInfo->GetDataSize(aDataSize);
   }
 
-  NS_IMETHOD AsyncDoom(nsICacheEntryDoomCallback* listener) MOZ_OVERRIDE;
-  NS_IMETHOD GetPersistent(bool *aPersistToDisk) MOZ_OVERRIDE;
-  NS_IMETHOD GetIsForcedValid(bool *aIsForcedValid) MOZ_OVERRIDE;
-  NS_IMETHOD ForceValidFor(uint32_t aSecondsToTheFuture) MOZ_OVERRIDE;
-  NS_IMETHOD SetValid() MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD MetaDataReady() MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD Recreate(bool, nsICacheEntry**) MOZ_OVERRIDE;
-  NS_IMETHOD GetDataSize(int64_t *size) MOZ_OVERRIDE;
-  NS_IMETHOD OpenInputStream(int64_t offset, nsIInputStream * *_retval) MOZ_OVERRIDE;
-  NS_IMETHOD OpenOutputStream(int64_t offset, nsIOutputStream * *_retval) MOZ_OVERRIDE;
-  NS_IMETHOD MaybeMarkValid() MOZ_OVERRIDE;
-  NS_IMETHOD HasWriteAccess(bool aWriteOnly, bool *aWriteAccess) MOZ_OVERRIDE;
-  NS_IMETHOD VisitMetaData(nsICacheEntryMetaDataVisitor*) MOZ_OVERRIDE;
+  NS_IMETHOD AsyncDoom(nsICacheEntryDoomCallback* listener) override;
+  NS_IMETHOD GetPersistent(bool *aPersistToDisk) override;
+  NS_IMETHOD GetIsForcedValid(bool *aIsForcedValid) override;
+  NS_IMETHOD ForceValidFor(uint32_t aSecondsToTheFuture) override;
+  NS_IMETHOD SetValid() override { return NS_OK; }
+  NS_IMETHOD MetaDataReady() override { return NS_OK; }
+  NS_IMETHOD Recreate(bool, nsICacheEntry**) override;
+  NS_IMETHOD GetDataSize(int64_t *size) override;
+  NS_IMETHOD OpenInputStream(int64_t offset, nsIInputStream * *_retval) override;
+  NS_IMETHOD OpenOutputStream(int64_t offset, nsIOutputStream * *_retval) override;
+  NS_IMETHOD MaybeMarkValid() override;
+  NS_IMETHOD HasWriteAccess(bool aWriteOnly, bool *aWriteAccess) override;
+  NS_IMETHOD VisitMetaData(nsICacheEntryMetaDataVisitor*) override;
 
   explicit _OldCacheEntryWrapper(nsICacheEntryDescriptor* desc);
   explicit _OldCacheEntryWrapper(nsICacheEntryInfo* info);

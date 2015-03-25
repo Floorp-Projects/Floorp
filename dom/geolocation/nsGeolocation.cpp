@@ -64,7 +64,7 @@ using mozilla::unused;          // <snicker>
 using namespace mozilla;
 using namespace mozilla::dom;
 
-class nsGeolocationRequest MOZ_FINAL
+class nsGeolocationRequest final
  : public nsIContentPermissionRequest
  , public nsITimerCallback
  , public nsIGeolocationUpdate
@@ -137,7 +137,7 @@ public:
     MOZ_COUNT_CTOR(GeolocationSettingsCallback);
   }
 
-  NS_IMETHOD Handle(const nsAString& aName, JS::Handle<JS::Value> aResult) MOZ_OVERRIDE
+  NS_IMETHOD Handle(const nsAString& aName, JS::Handle<JS::Value> aResult) override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -163,7 +163,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD HandleError(const nsAString& aName) MOZ_OVERRIDE
+  NS_IMETHOD HandleError(const nsAString& aName) override
   {
     if (aName.EqualsASCII(GEO_SETTINGS_ENABLED)) {
       GPSLOG("Unable to get value for '" GEO_SETTINGS_ENABLED "'");

@@ -34,7 +34,7 @@ namespace {
  * This singleton class implements the static methods on
  * PreallocatedProcessManager.
  */
-class PreallocatedProcessManagerImpl MOZ_FINAL
+class PreallocatedProcessManagerImpl final
   : public nsIObserver
 {
 public:

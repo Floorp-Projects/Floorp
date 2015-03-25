@@ -36,123 +36,123 @@ public:
   virtual void
   RegisterBluetoothSignalHandler(const nsAString& aNodeName,
                                  BluetoothSignalObserver* aMsgHandler)
-                                 MOZ_OVERRIDE;
+                                 override;
 
   virtual void
   UnregisterBluetoothSignalHandler(const nsAString& aNodeName,
                                    BluetoothSignalObserver* aMsgHandler)
-                                   MOZ_OVERRIDE;
+                                   override;
 
   virtual nsresult
-  GetDefaultAdapterPathInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  GetDefaultAdapterPathInternal(BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult
   GetPairedDevicePropertiesInternal(const nsTArray<nsString>& aDeviceAddresses,
                                     BluetoothReplyRunnable* aRunnable)
-                                    MOZ_OVERRIDE;
+                                    override;
 
   virtual nsresult
   GetConnectedDevicePropertiesInternal(uint16_t aServiceUuid,
                                        BluetoothReplyRunnable* aRunnable)
-                                       MOZ_OVERRIDE;
+                                       override;
   virtual nsresult
-  StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  StopDiscoveryInternal(BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult
-  StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult
   SetProperty(BluetoothObjectType aType,
               const BluetoothNamedValue& aValue,
-              BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+              BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult
   CreatePairedDeviceInternal(const nsAString& aAddress,
                              int aTimeout,
-                             BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                             BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult
   RemoveDeviceInternal(const nsAString& aObjectPath,
-                       BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                       BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult
   GetServiceChannel(const nsAString& aDeviceAddress,
                     const nsAString& aServiceUuid,
-                    BluetoothProfileManagerBase* aManager) MOZ_OVERRIDE;
+                    BluetoothProfileManagerBase* aManager) override;
 
   virtual bool
   UpdateSdpRecords(const nsAString& aDeviceAddress,
-                   BluetoothProfileManagerBase* aManager) MOZ_OVERRIDE;
+                   BluetoothProfileManagerBase* aManager) override;
 
   virtual bool
   SetPinCodeInternal(const nsAString& aDeviceAddress,
                      const nsAString& aPinCode,
-                     BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                     BluetoothReplyRunnable* aRunnable) override;
 
   virtual bool
   SetPasskeyInternal(const nsAString& aDeviceAddress,
                      uint32_t aPasskey,
-                     BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                     BluetoothReplyRunnable* aRunnable) override;
 
   virtual bool
   SetPairingConfirmationInternal(const nsAString& aDeviceAddress,
                                  bool aConfirm,
                                  BluetoothReplyRunnable* aRunnable)
-                                 MOZ_OVERRIDE;
+                                 override;
 
   virtual void
   Connect(const nsAString& aDeviceAddress,
           uint32_t aCod,
           uint16_t aServiceUuid,
-          BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+          BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   Disconnect(const nsAString& aDeviceAddress,
              uint16_t aServiceUuid,
-             BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+             BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   IsConnected(const uint16_t aServiceUuid,
-              BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+              BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   SendFile(const nsAString& aDeviceAddress,
            BlobParent* aBlobParent,
            BlobChild* aBlobChild,
-           BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+           BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   SendFile(const nsAString& aDeviceAddress,
            nsIDOMBlob* aBlob,
-           BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+           BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   StopSendingFile(const nsAString& aDeviceAddress,
-                  BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                  BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   ConfirmReceivingFile(const nsAString& aDeviceAddress,
                        bool aConfirm,
-                       BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                       BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  ConnectSco(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  ConnectSco(BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  DisconnectSco(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  DisconnectSco(BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  IsScoConnected(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  IsScoConnected(BluetoothReplyRunnable* aRunnable) override;
 
 #ifdef MOZ_B2G_RIL
   virtual void
-  AnswerWaitingCall(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  AnswerWaitingCall(BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  IgnoreWaitingCall(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  IgnoreWaitingCall(BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  ToggleCalls(BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+  ToggleCalls(BluetoothReplyRunnable* aRunnable) override;
 #endif
 
   virtual void
@@ -162,26 +162,26 @@ public:
                int64_t aMediaNumber,
                int64_t aTotalMediaCount,
                int64_t aDuration,
-               BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+               BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   SendPlayStatus(int64_t aDuration,
                  int64_t aPosition,
                  const nsAString& aPlayStatus,
-                 BluetoothReplyRunnable* aRunnable) MOZ_OVERRIDE;
+                 BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   UpdatePlayStatus(uint32_t aDuration,
                    uint32_t aPosition,
-                   ControlPlayStatus aPlayStatus) MOZ_OVERRIDE;
+                   ControlPlayStatus aPlayStatus) override;
 
   virtual nsresult
   SendSinkMessage(const nsAString& aDeviceAddresses,
-                  const nsAString& aMessage) MOZ_OVERRIDE;
+                  const nsAString& aMessage) override;
 
   virtual nsresult
   SendInputMessage(const nsAString& aDeviceAddresses,
-                   const nsAString& aMessage) MOZ_OVERRIDE;
+                   const nsAString& aMessage) override;
 
 protected:
   BluetoothServiceChildProcess();
@@ -194,19 +194,19 @@ protected:
   NoteShutdownInitiated();
 
   virtual nsresult
-  HandleStartup() MOZ_OVERRIDE;
+  HandleStartup() override;
 
   virtual nsresult
-  HandleShutdown() MOZ_OVERRIDE;
+  HandleShutdown() override;
 
 private:
   // This method should never be called.
   virtual nsresult
-  StartInternal() MOZ_OVERRIDE;
+  StartInternal() override;
 
   // This method should never be called.
   virtual nsresult
-  StopInternal() MOZ_OVERRIDE;
+  StopInternal() override;
 
   bool
   IsSignalRegistered(const nsAString& aNodeName) {

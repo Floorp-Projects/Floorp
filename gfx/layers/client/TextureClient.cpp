@@ -77,7 +77,7 @@ using namespace mozilla::gfx;
  * TextureClient's data until the compositor side confirmed that it is safe to
  * deallocte or recycle the it.
  */
-class TextureChild MOZ_FINAL : public PTextureChild
+class TextureChild final : public PTextureChild
 {
   ~TextureChild() {}
 public:
@@ -90,9 +90,9 @@ public:
   {
   }
 
-  bool Recv__delete__() MOZ_OVERRIDE;
+  bool Recv__delete__() override;
 
-  bool RecvCompositorRecycle() MOZ_OVERRIDE
+  bool RecvCompositorRecycle() override
   {
     RECYCLE_LOG("Receive recycle %p (%p)\n", mTextureClient, mWaitForRecycle.get());
     mWaitForRecycle = nullptr;
@@ -110,7 +110,7 @@ public:
 
   ISurfaceAllocator* GetAllocator() { return mForwarder; }
 
-  void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  void ActorDestroy(ActorDestroyReason why) override;
 
   bool IPCOpen() const { return mIPCOpen; }
 

@@ -43,33 +43,33 @@ public:
   explicit GStreamerReader(AbstractMediaDecoder* aDecoder);
   virtual ~GStreamerReader();
 
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor) MOZ_OVERRIDE;
-  virtual nsRefPtr<ShutdownPromise> Shutdown() MOZ_OVERRIDE;
-  virtual nsresult ResetDecode() MOZ_OVERRIDE;
-  virtual bool DecodeAudioData() MOZ_OVERRIDE;
+  virtual nsresult Init(MediaDecoderReader* aCloneDonor) override;
+  virtual nsRefPtr<ShutdownPromise> Shutdown() override;
+  virtual nsresult ResetDecode() override;
+  virtual bool DecodeAudioData() override;
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                int64_t aTimeThreshold) MOZ_OVERRIDE;
+                                int64_t aTimeThreshold) override;
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags) MOZ_OVERRIDE;
+                                MetadataTags** aTags) override;
   virtual nsRefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aEndTime) MOZ_OVERRIDE;
-  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) MOZ_OVERRIDE;
+  Seek(int64_t aTime, int64_t aEndTime) override;
+  virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) override;
 
   virtual void NotifyDataArrived(const char *aBuffer,
                                  uint32_t aLength,
-                                 int64_t aOffset) MOZ_OVERRIDE;
+                                 int64_t aOffset) override;
 
-  virtual bool HasAudio() MOZ_OVERRIDE {
+  virtual bool HasAudio() override {
     return mInfo.HasAudio();
   }
 
-  virtual bool HasVideo() MOZ_OVERRIDE {
+  virtual bool HasVideo() override {
     return mInfo.HasVideo();
   }
 
   layers::ImageContainer* GetImageContainer() { return mDecoder->GetImageContainer(); }
 
-  virtual bool IsMediaSeekable() MOZ_OVERRIDE;
+  virtual bool IsMediaSeekable() override;
 
 private:
 

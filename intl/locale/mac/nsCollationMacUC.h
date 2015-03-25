@@ -20,7 +20,7 @@ const uint32_t kCacheSize = 128;
 // at least 5 * textLength, but 6* would be safer.
 const uint32_t kCollationValueSizeFactor = 6;
 
-class nsCollationMacUC MOZ_FINAL : public nsICollation {
+class nsCollationMacUC final : public nsICollation {
 
 public: 
   nsCollationMacUC();

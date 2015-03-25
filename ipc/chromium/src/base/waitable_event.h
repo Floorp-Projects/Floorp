@@ -141,7 +141,7 @@ class WaitableEvent {
   // so we have a kernel of the WaitableEvent, which is reference counted.
   // WaitableEventWatchers may then take a reference and thus match the Windows
   // behaviour.
-  struct WaitableEventKernel MOZ_FINAL {
+  struct WaitableEventKernel final {
    public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WaitableEventKernel)
     WaitableEventKernel(bool manual_reset, bool initially_signaled)

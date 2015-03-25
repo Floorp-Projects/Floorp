@@ -34,19 +34,19 @@ public:
 
   // From base::MessagePump.
   virtual void
-  Run(base::MessagePump::Delegate* aDelegate) MOZ_OVERRIDE;
+  Run(base::MessagePump::Delegate* aDelegate) override;
 
   // From base::MessagePump.
   virtual void
-  ScheduleWork() MOZ_OVERRIDE;
+  ScheduleWork() override;
 
   // From base::MessagePump.
   virtual void
-  ScheduleWorkForNestedLoop() MOZ_OVERRIDE;
+  ScheduleWorkForNestedLoop() override;
 
   // From base::MessagePump.
   virtual void
-  ScheduleDelayedWork(const base::TimeTicks& aDelayedWorkTime) MOZ_OVERRIDE;
+  ScheduleDelayedWork(const base::TimeTicks& aDelayedWorkTime) override;
 
 protected:
   virtual ~MessagePump();
@@ -66,14 +66,14 @@ private:
   nsRefPtr<DoWorkRunnable> mDoWorkEvent;
 };
 
-class MessagePumpForChildProcess MOZ_FINAL: public MessagePump
+class MessagePumpForChildProcess final: public MessagePump
 {
 public:
   MessagePumpForChildProcess()
   : mFirstRun(true)
   { }
 
-  virtual void Run(base::MessagePump::Delegate* aDelegate) MOZ_OVERRIDE;
+  virtual void Run(base::MessagePump::Delegate* aDelegate) override;
 
 private:
   ~MessagePumpForChildProcess()
@@ -82,13 +82,13 @@ private:
   bool mFirstRun;
 };
 
-class MessagePumpForNonMainThreads MOZ_FINAL : public MessagePump
+class MessagePumpForNonMainThreads final : public MessagePump
 {
 public:
   MessagePumpForNonMainThreads()
   { }
 
-  virtual void Run(base::MessagePump::Delegate* aDelegate) MOZ_OVERRIDE;
+  virtual void Run(base::MessagePump::Delegate* aDelegate) override;
 
 private:
   ~MessagePumpForNonMainThreads()
@@ -98,7 +98,7 @@ private:
 #if defined(XP_WIN)
 // Extends the TYPE_UI message pump to process xpcom events. Currently only
 // implemented for Win.
-class MessagePumpForNonMainUIThreads MOZ_FINAL:
+class MessagePumpForNonMainUIThreads final:
   public base::MessagePumpForUI,
   public nsIThreadObserver
 {

@@ -47,7 +47,7 @@ public:
 
   virtual ~UnixSocketWatcher();
 
-  virtual void Close() MOZ_OVERRIDE;
+  virtual void Close() override;
 
   ConnectionStatus GetConnectionStatus() const
   {
@@ -83,8 +83,8 @@ protected:
   void SetSocket(int aFd, ConnectionStatus aConnectionStatus);
 
 private:
-  void OnFileCanReadWithoutBlocking(int aFd) MOZ_OVERRIDE;
-  void OnFileCanWriteWithoutBlocking(int aFd) MOZ_OVERRIDE;
+  void OnFileCanReadWithoutBlocking(int aFd) override;
+  void OnFileCanWriteWithoutBlocking(int aFd) override;
 
   ConnectionStatus mConnectionStatus;
 };

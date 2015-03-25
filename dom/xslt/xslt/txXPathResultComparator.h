@@ -47,9 +47,9 @@ public:
     txResultStringComparator(bool aAscending, bool aUpperFirst,
                              const nsAFlatString& aLanguage);
 
-    int compareValues(txObject* aVal1, txObject* aVal2) MOZ_OVERRIDE;
+    int compareValues(txObject* aVal1, txObject* aVal2) override;
     nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,
-                                 txObject *&aResult) MOZ_OVERRIDE;
+                                 txObject *&aResult) override;
 private:
     nsCOMPtr<nsICollation> mCollation;
     nsresult init(const nsAFlatString& aLanguage);
@@ -79,9 +79,9 @@ class txResultNumberComparator : public txXPathResultComparator
 public:
     explicit txResultNumberComparator(bool aAscending);
 
-    int compareValues(txObject* aVal1, txObject* aVal2) MOZ_OVERRIDE;
+    int compareValues(txObject* aVal1, txObject* aVal2) override;
     nsresult createSortableValue(Expr *aExpr, txIEvalContext *aContext,
-                                 txObject *&aResult) MOZ_OVERRIDE;
+                                 txObject *&aResult) override;
 
 private:
     int mAscending;

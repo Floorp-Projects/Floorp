@@ -28,8 +28,8 @@ public:
   bool Init(PNeckoParent* neckoParent, const uint16_t& aLocalPort, const uint16_t& aBacklog,
             const nsString& aBinaryType);
 
-  virtual bool RecvClose() MOZ_OVERRIDE;
-  virtual bool RecvRequestDelete() MOZ_OVERRIDE;
+  virtual bool RecvClose() override;
+  virtual bool RecvRequestDelete() override;
 
   uint32_t GetAppId();
   bool GetInBrowser();
@@ -40,7 +40,7 @@ public:
 private:
   ~TCPServerSocketParent() {}
 
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason why) override;
 
   PNeckoParent* mNeckoParent;
   nsCOMPtr<nsITCPSocketIntermediary> mIntermediary;

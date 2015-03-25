@@ -23,7 +23,7 @@
 // Combine file type attributes with unix style permissions
 #define ZIP_ATTRS(p, a) ((p & 0xfff) << 16) | a
 
-class nsZipHeader MOZ_FINAL : public nsIZipEntry
+class nsZipHeader final : public nsIZipEntry
 {
     ~nsZipHeader()
     {

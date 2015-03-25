@@ -22,7 +22,7 @@ class DocAccessible;
 /**
  * This class is used to walk the DOM tree to create accessible tree.
  */
-class TreeWalker MOZ_FINAL
+class TreeWalker final
 {
 public:
   enum {

@@ -46,23 +46,23 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
 #define NS_DECL_NSIIPCSERIALIZABLEINPUTSTREAM                                  \
   virtual void                                                                 \
   Serialize(mozilla::ipc::InputStreamParams&,                                  \
-            FileDescriptorArray&) MOZ_OVERRIDE;                                \
+            FileDescriptorArray&) override;                                \
                                                                                \
   virtual bool                                                                 \
   Deserialize(const mozilla::ipc::InputStreamParams&,                          \
-              const FileDescriptorArray&) MOZ_OVERRIDE;
+              const FileDescriptorArray&) override;
 
 #define NS_FORWARD_NSIIPCSERIALIZABLEINPUTSTREAM(_to)                          \
   virtual void                                                                 \
   Serialize(mozilla::ipc::InputStreamParams& aParams,                          \
-            FileDescriptorArray& aFileDescriptors) MOZ_OVERRIDE                \
+            FileDescriptorArray& aFileDescriptors) override                \
   {                                                                            \
     _to Serialize(aParams, aFileDescriptors);                                  \
   }                                                                            \
                                                                                \
   virtual bool                                                                 \
   Deserialize(const mozilla::ipc::InputStreamParams& aParams,                  \
-              const FileDescriptorArray& aFileDescriptors) MOZ_OVERRIDE        \
+              const FileDescriptorArray& aFileDescriptors) override        \
   {                                                                            \
     return _to Deserialize(aParams, aFileDescriptors);                         \
   }
@@ -70,7 +70,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
 #define NS_FORWARD_SAFE_NSIIPCSERIALIZABLEINPUTSTREAM(_to)                     \
   virtual void                                                                 \
   Serialize(mozilla::ipc::InputStreamParams& aParams,                          \
-            FileDescriptorArray& aFileDescriptors) MOZ_OVERRIDE                \
+            FileDescriptorArray& aFileDescriptors) override                \
   {                                                                            \
     if (_to) {                                                                 \
       _to->Serialize(aParams, aFileDescriptors);                               \
@@ -79,7 +79,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIIPCSerializableInputStream,
                                                                                \
   virtual bool                                                                 \
   Deserialize(const mozilla::ipc::InputStreamParams& aParams,                  \
-              const FileDescriptorArray& aFileDescriptors) MOZ_OVERRIDE        \
+              const FileDescriptorArray& aFileDescriptors) override        \
   {                                                                            \
     return _to ? _to->Deserialize(aParams, aFileDescriptors) : false;          \
   }

@@ -56,7 +56,7 @@ namespace places {
  * @param aSearchBehavior
  *        A bitfield dictating the search behavior.
  */
-class MatchAutoCompleteFunction MOZ_FINAL : public mozIStorageFunction
+class MatchAutoCompleteFunction final : public mozIStorageFunction
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -195,7 +195,7 @@ private:
  * @param [optional] isBookmarked
  *        Whether the page is bookmarked. Default is false.
  */
-class CalculateFrecencyFunction MOZ_FINAL : public mozIStorageFunction
+class CalculateFrecencyFunction final : public mozIStorageFunction
 {
   ~CalculateFrecencyFunction();
 public:
@@ -217,7 +217,7 @@ public:
  *
  * @return a guid for the item.
  */
-class GenerateGUIDFunction MOZ_FINAL : public mozIStorageFunction
+class GenerateGUIDFunction final : public mozIStorageFunction
 {
   ~GenerateGUIDFunction();
 public:
@@ -241,7 +241,7 @@ public:
  *
  * @return the unreversed host of the page.
  */
-class GetUnreversedHostFunction MOZ_FINAL : public mozIStorageFunction
+class GetUnreversedHostFunction final : public mozIStorageFunction
 {
   ~GetUnreversedHostFunction();
 public:
@@ -270,7 +270,7 @@ public:
  * @return
  *        The same URL, with redundant parts removed.
  */
-class FixupURLFunction MOZ_FINAL : public mozIStorageFunction
+class FixupURLFunction final : public mozIStorageFunction
 {
   ~FixupURLFunction();
 public:
@@ -307,7 +307,7 @@ public:
  *        The place's last visit date.
  * @return newFrecency
  */
-class FrecencyNotificationFunction MOZ_FINAL : public mozIStorageFunction
+class FrecencyNotificationFunction final : public mozIStorageFunction
 {
   ~FrecencyNotificationFunction();
 public:

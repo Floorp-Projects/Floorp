@@ -27,7 +27,7 @@ class nsIStyleSheet;
 #define NS_STYLESHEETSERVICE_CONTRACTID \
   "@mozilla.org/content/style-sheet-service;1"
 
-class nsStyleSheetService MOZ_FINAL
+class nsStyleSheetService final
   : public nsIStyleSheetService
   , public nsIMemoryReporter
 {

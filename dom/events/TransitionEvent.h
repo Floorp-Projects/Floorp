@@ -33,7 +33,7 @@ public:
               const TransitionEventInit& aParam,
               ErrorResult& aRv);
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx) override
   {
     return TransitionEventBinding::Wrap(aCx, this);
   }

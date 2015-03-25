@@ -31,7 +31,7 @@ private:
   ~nsHyphenationManager();
 
 protected:
-  class MemoryPressureObserver MOZ_FINAL : public nsIObserver
+  class MemoryPressureObserver final : public nsIObserver
   {
       ~MemoryPressureObserver() {}
 

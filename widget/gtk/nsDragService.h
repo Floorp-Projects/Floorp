@@ -48,7 +48,7 @@ class nsAutoRefTraits<GdkDragContext> :
  * Native GTK DragService wrapper
  */
 
-class nsDragService MOZ_FINAL : public nsBaseDragService,
+class nsDragService final : public nsBaseDragService,
                                 public nsIObserver
 {
 public:
@@ -62,18 +62,18 @@ public:
     NS_IMETHOD InvokeDragSession (nsIDOMNode *aDOMNode,
                                   nsISupportsArray * anArrayTransferables,
                                   nsIScriptableRegion * aRegion,
-                                  uint32_t aActionType) MOZ_OVERRIDE;
-    NS_IMETHOD StartDragSession() MOZ_OVERRIDE;
-    NS_IMETHOD EndDragSession(bool aDoneDrag) MOZ_OVERRIDE;
+                                  uint32_t aActionType) override;
+    NS_IMETHOD StartDragSession() override;
+    NS_IMETHOD EndDragSession(bool aDoneDrag) override;
 
     // nsIDragSession
-    NS_IMETHOD SetCanDrop            (bool             aCanDrop) MOZ_OVERRIDE;
-    NS_IMETHOD GetCanDrop            (bool            *aCanDrop) MOZ_OVERRIDE;
-    NS_IMETHOD GetNumDropItems       (uint32_t * aNumItems) MOZ_OVERRIDE;
+    NS_IMETHOD SetCanDrop            (bool             aCanDrop) override;
+    NS_IMETHOD GetCanDrop            (bool            *aCanDrop) override;
+    NS_IMETHOD GetNumDropItems       (uint32_t * aNumItems) override;
     NS_IMETHOD GetData               (nsITransferable * aTransferable,
-                                      uint32_t aItemIndex) MOZ_OVERRIDE;
+                                      uint32_t aItemIndex) override;
     NS_IMETHOD IsDataFlavorSupported (const char *aDataFlavor,
-                                      bool *_retval) MOZ_OVERRIDE;
+                                      bool *_retval) override;
 
     // Methods called from nsWindow to handle responding to GTK drag
     // destination signals

@@ -59,7 +59,7 @@ class DataStoreAddEventListenerRunnable : public WorkerMainThreadRunnable
 
 protected:
   virtual bool
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
 
@@ -202,7 +202,7 @@ static const JSStructuredCloneCallbacks kGetDataStoresStructuredCloneCallbacks =
 
 // A WorkerMainThreadRunnable to run WorkerNavigator::GetDataStores(...) on the
 // main thread.
-class NavigatorGetDataStoresRunnable MOZ_FINAL : public WorkerMainThreadRunnable
+class NavigatorGetDataStoresRunnable final : public WorkerMainThreadRunnable
 {
   nsRefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
   const nsString mName;
@@ -245,7 +245,7 @@ public:
 
 protected:
   virtual bool
-  MainThreadRun() MOZ_OVERRIDE
+  MainThreadRun() override
   {
     AssertIsOnMainThread();
 
@@ -343,7 +343,7 @@ WorkerNavigator::GetPlatform(nsString& aPlatform) const
 
 namespace {
 
-class GetUserAgentRunnable MOZ_FINAL : public WorkerMainThreadRunnable
+class GetUserAgentRunnable final : public WorkerMainThreadRunnable
 {
   nsString& mUA;
 
@@ -356,7 +356,7 @@ public:
     aWorkerPrivate->AssertIsOnWorkerThread();
   }
 
-  virtual bool MainThreadRun() MOZ_OVERRIDE
+  virtual bool MainThreadRun() override
   {
     AssertIsOnMainThread();
 

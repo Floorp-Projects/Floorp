@@ -68,7 +68,7 @@ PRLogModuleInfo* nsURILoader::mLog = nullptr;
  * Each instance remains alive until its target URL has been loaded
  * (or aborted).
  */
-class nsDocumentOpenInfo MOZ_FINAL : public nsIStreamListener
+class nsDocumentOpenInfo final : public nsIStreamListener
                                    , public nsIThreadRetargetableStreamListener
 {
 public:

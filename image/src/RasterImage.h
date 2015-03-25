@@ -144,7 +144,7 @@ DecodeFlags(uint32_t aFlags)
                    imgIContainer::FLAG_DECODE_NO_COLORSPACE_CONVERSION);
 }
 
-class RasterImage MOZ_FINAL : public ImageResource
+class RasterImage final : public ImageResource
                             , public nsIProperties
                             , public SupportsWeakPtr<RasterImage>
 #ifdef DEBUG
@@ -163,14 +163,14 @@ public:
   NS_DECL_IMGICONTAINERDEBUG
 #endif
 
-  virtual nsresult StartAnimation() MOZ_OVERRIDE;
-  virtual nsresult StopAnimation() MOZ_OVERRIDE;
+  virtual nsresult StartAnimation() override;
+  virtual nsresult StopAnimation() override;
 
   // Methods inherited from Image
   nsresult Init(const char* aMimeType,
-                uint32_t aFlags) MOZ_OVERRIDE;
+                uint32_t aFlags) override;
 
-  virtual void OnSurfaceDiscarded() MOZ_OVERRIDE;
+  virtual void OnSurfaceDiscarded() override;
 
   // Raster-specific methods
   static NS_METHOD WriteToSourceBuffer(nsIInputStream* aIn, void* aClosure,
@@ -181,9 +181,9 @@ public:
   /* The total number of frames in this image. */
   uint32_t GetNumFrames() const { return mFrameCount; }
 
-  virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+  virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const override;
   virtual size_t SizeOfDecoded(gfxMemoryLocation aLocation,
-                               MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+                               MallocSizeOf aMallocSizeOf) const override;
 
   /* Triggers discarding. */
   void Discard();
@@ -241,11 +241,11 @@ public:
                                         nsISupports* aContext,
                                         nsIInputStream* aInStr,
                                         uint64_t aSourceOffset,
-                                        uint32_t aCount) MOZ_OVERRIDE;
+                                        uint32_t aCount) override;
   virtual nsresult OnImageDataComplete(nsIRequest* aRequest,
                                        nsISupports* aContext,
                                        nsresult aStatus,
-                                       bool aLastPart) MOZ_OVERRIDE;
+                                       bool aLastPart) override;
 
   void NotifyForDecodeOnDrawOnly();
 
@@ -466,7 +466,7 @@ protected:
   explicit RasterImage(ProgressTracker* aProgressTracker = nullptr,
                        ImageURL* aURI = nullptr);
 
-  bool ShouldAnimate() MOZ_OVERRIDE;
+  bool ShouldAnimate() override;
 
   friend class ImageFactory;
 };

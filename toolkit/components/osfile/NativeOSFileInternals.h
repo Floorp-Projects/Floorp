@@ -10,7 +10,7 @@
 
 namespace mozilla {
 
-class NativeOSFileInternalsService MOZ_FINAL : public nsINativeOSFileInternalsService {
+class NativeOSFileInternalsService final : public nsINativeOSFileInternalsService {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSINATIVEOSFILEINTERNALSSERVICE

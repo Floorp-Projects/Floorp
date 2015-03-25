@@ -23,7 +23,7 @@ public:
   AsyncColorChooser(COLORREF aInitialColor,
                     nsIWidget* aParentWidget,
                     nsIColorPickerShownCallback* aCallback);
-  NS_IMETHOD Run() MOZ_OVERRIDE;
+  NS_IMETHOD Run() override;
 
 private:
   void Update(COLORREF aColor);

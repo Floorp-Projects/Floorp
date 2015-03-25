@@ -27,10 +27,10 @@ public:
   virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
                                         StreamTime aTrackOffset,
                                         uint32_t aTrackEvents,
-                                        const MediaSegment& aQueuedMedia) MOZ_OVERRIDE;
+                                        const MediaSegment& aQueuedMedia) override;
 
   virtual void NotifyEvent(MediaStreamGraph* aGraph,
-                           MediaStreamListener::MediaStreamGraphEvent event) MOZ_OVERRIDE;
+                           MediaStreamListener::MediaStreamGraphEvent event) override;
 
 private:
   template<typename SampleFormatType>

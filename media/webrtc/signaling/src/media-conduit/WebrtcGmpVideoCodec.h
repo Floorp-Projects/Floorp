@@ -43,37 +43,37 @@ public:
   virtual ~WebrtcGmpVideoEncoder();
 
   // Implement VideoEncoder interface.
-  virtual const uint64_t PluginID() MOZ_OVERRIDE
+  virtual const uint64_t PluginID() override
   {
     return mGMP ? mGMP->ParentID() : mCachedPluginId;
   }
 
-  virtual void Terminated() MOZ_OVERRIDE;
+  virtual void Terminated() override;
 
   virtual int32_t InitEncode(const webrtc::VideoCodec* aCodecSettings,
                              int32_t aNumberOfCores,
-                             uint32_t aMaxPayloadSize) MOZ_OVERRIDE;
+                             uint32_t aMaxPayloadSize) override;
 
   virtual int32_t Encode(const webrtc::I420VideoFrame& aInputImage,
                          const webrtc::CodecSpecificInfo* aCodecSpecificInfo,
-                         const std::vector<webrtc::VideoFrameType>* aFrameTypes) MOZ_OVERRIDE;
+                         const std::vector<webrtc::VideoFrameType>* aFrameTypes) override;
 
   virtual int32_t RegisterEncodeCompleteCallback(
-    webrtc::EncodedImageCallback* aCallback) MOZ_OVERRIDE;
+    webrtc::EncodedImageCallback* aCallback) override;
 
-  virtual int32_t Release() MOZ_OVERRIDE;
+  virtual int32_t Release() override;
 
   virtual int32_t SetChannelParameters(uint32_t aPacketLoss,
-                                       int aRTT) MOZ_OVERRIDE;
+                                       int aRTT) override;
 
   virtual int32_t SetRates(uint32_t aNewBitRate,
-                           uint32_t aFrameRate) MOZ_OVERRIDE;
+                           uint32_t aFrameRate) override;
 
   // GMPVideoEncoderCallback virtual functions.
   virtual void Encoded(GMPVideoEncodedFrame* aEncodedFrame,
-                       const nsTArray<uint8_t>& aCodecSpecificInfo) MOZ_OVERRIDE;
+                       const nsTArray<uint8_t>& aCodecSpecificInfo) override;
 
-  virtual void Error(GMPErr aError) MOZ_OVERRIDE {
+  virtual void Error(GMPErr aError) override {
   }
 
 private:
@@ -107,46 +107,46 @@ public:
   virtual ~WebrtcGmpVideoDecoder();
 
   // Implement VideoDecoder interface.
-  virtual const uint64_t PluginID() MOZ_OVERRIDE
+  virtual const uint64_t PluginID() override
   {
     return mGMP ? mGMP->ParentID() : mCachedPluginId;
   }
 
-  virtual void Terminated() MOZ_OVERRIDE;
+  virtual void Terminated() override;
 
   virtual int32_t InitDecode(const webrtc::VideoCodec* aCodecSettings,
-                             int32_t aNumberOfCores) MOZ_OVERRIDE;
+                             int32_t aNumberOfCores) override;
   virtual int32_t Decode(const webrtc::EncodedImage& aInputImage,
                          bool aMissingFrames,
                          const webrtc::RTPFragmentationHeader* aFragmentation,
                          const webrtc::CodecSpecificInfo* aCodecSpecificInfo = nullptr,
-                         int64_t aRenderTimeMs = -1) MOZ_OVERRIDE;
-  virtual int32_t RegisterDecodeCompleteCallback(webrtc::DecodedImageCallback* aCallback) MOZ_OVERRIDE;
+                         int64_t aRenderTimeMs = -1) override;
+  virtual int32_t RegisterDecodeCompleteCallback(webrtc::DecodedImageCallback* aCallback) override;
 
-  virtual int32_t Release() MOZ_OVERRIDE;
+  virtual int32_t Release() override;
 
-  virtual int32_t Reset() MOZ_OVERRIDE;
+  virtual int32_t Reset() override;
 
-  virtual void Decoded(GMPVideoi420Frame* aDecodedFrame) MOZ_OVERRIDE;
+  virtual void Decoded(GMPVideoi420Frame* aDecodedFrame) override;
 
-  virtual void ReceivedDecodedReferenceFrame(const uint64_t aPictureId) MOZ_OVERRIDE {
+  virtual void ReceivedDecodedReferenceFrame(const uint64_t aPictureId) override {
     MOZ_CRASH();
   }
 
-  virtual void ReceivedDecodedFrame(const uint64_t aPictureId) MOZ_OVERRIDE {
+  virtual void ReceivedDecodedFrame(const uint64_t aPictureId) override {
     MOZ_CRASH();
   }
 
-  virtual void InputDataExhausted() MOZ_OVERRIDE {
+  virtual void InputDataExhausted() override {
   }
 
-  virtual void DrainComplete() MOZ_OVERRIDE {
+  virtual void DrainComplete() override {
   }
 
-  virtual void ResetComplete() MOZ_OVERRIDE {
+  virtual void ResetComplete() override {
   }
 
-  virtual void Error(GMPErr aError) MOZ_OVERRIDE {
+  virtual void Error(GMPErr aError) override {
      mDecoderStatus = aError;
   }
 

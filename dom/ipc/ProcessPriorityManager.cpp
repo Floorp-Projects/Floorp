@@ -107,7 +107,7 @@ class ParticularProcessPriorityManager;
  * any process, are handled separately, by the ProcessPriorityManagerChild
  * class.
  */
-class ProcessPriorityManagerImpl MOZ_FINAL
+class ProcessPriorityManagerImpl final
   : public nsIObserver
   , public WakeLockObserver
 {
@@ -162,7 +162,7 @@ public:
    * Implements WakeLockObserver, used to monitor wake lock changes in the
    * main process.
    */
-  virtual void Notify(const WakeLockInformation& aInfo) MOZ_OVERRIDE;
+  virtual void Notify(const WakeLockInformation& aInfo) override;
 
 private:
   static bool sPrefListenersRegistered;
@@ -195,7 +195,7 @@ private:
  * This singleton class implements the parts of the process priority manager
  * that are available from all processes.
  */
-class ProcessPriorityManagerChild MOZ_FINAL
+class ProcessPriorityManagerChild final
   : public nsIObserver
 {
 public:
@@ -224,7 +224,7 @@ private:
  * This class manages the priority of one particular process.  It is
  * main-process only.
  */
-class ParticularProcessPriorityManager MOZ_FINAL
+class ParticularProcessPriorityManager final
   : public WakeLockObserver
   , public nsIObserver
   , public nsITimerCallback
@@ -238,7 +238,7 @@ public:
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
 
-  virtual void Notify(const WakeLockInformation& aInfo) MOZ_OVERRIDE;
+  virtual void Notify(const WakeLockInformation& aInfo) override;
   void Init();
 
   int32_t Pid() const;
@@ -311,7 +311,7 @@ private:
   nsCOMPtr<nsITimer> mResetPriorityTimer;
 };
 
-class BackgroundProcessLRUPool MOZ_FINAL
+class BackgroundProcessLRUPool final
 {
 public:
   static BackgroundProcessLRUPool* Singleton();

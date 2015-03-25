@@ -184,7 +184,7 @@ const float kMaxStdDeviation = 500;
 // The Get*() methods assert that they're called for the same type that the
 // attribute was Set() with.
 // AttributeMaps can be nested because AttributeMap is a valid attribute type.
-class AttributeMap MOZ_FINAL {
+class AttributeMap final {
 public:
   AttributeMap();
   AttributeMap(const AttributeMap& aOther);
@@ -296,7 +296,7 @@ enum class PrimitiveType {
  * functionality.
  * Used as part of a FilterDescription.
  */
-class FilterPrimitiveDescription MOZ_FINAL {
+class FilterPrimitiveDescription final {
 public:
   enum {
     kPrimitiveIndexSourceGraphic = -1,
@@ -388,7 +388,7 @@ private:
  * Designed to be serializable via IPDL, so it must not contain complex
  * functionality.
  */
-struct FilterDescription MOZ_FINAL {
+struct FilterDescription final {
   FilterDescription() {}
   explicit FilterDescription(const nsTArray<FilterPrimitiveDescription>& aPrimitives)
    : mPrimitives(aPrimitives)

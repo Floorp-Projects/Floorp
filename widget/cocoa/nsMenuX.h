@@ -50,9 +50,9 @@ public:
   NS_DECL_CHANGEOBSERVER
 
   // nsMenuObjectX
-  void*             NativeData() MOZ_OVERRIDE {return (void*)mNativeMenu;}
-  nsMenuObjectTypeX MenuObjectType() MOZ_OVERRIDE {return eSubmenuObjectType;}
-  void              IconUpdated() MOZ_OVERRIDE { mParent->IconUpdated(); }
+  void*             NativeData() override {return (void*)mNativeMenu;}
+  nsMenuObjectTypeX MenuObjectType() override {return eSubmenuObjectType;}
+  void              IconUpdated() override { mParent->IconUpdated(); }
 
   // nsMenuX
   nsresult       Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode);

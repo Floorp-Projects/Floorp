@@ -44,7 +44,7 @@ public:
 
   NS_DECL_EDITTXN
 
-  NS_IMETHOD RedoTransaction() MOZ_OVERRIDE;
+  NS_IMETHOD RedoTransaction() override;
 
   already_AddRefed<Element> GetNewNode();
 

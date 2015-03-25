@@ -49,7 +49,7 @@ APZEventState::APZEventState(nsIWidget* aWidget,
 APZEventState::~APZEventState()
 {}
 
-class DelayedFireSingleTapEvent MOZ_FINAL : public nsITimerCallback
+class DelayedFireSingleTapEvent final : public nsITimerCallback
 {
 public:
   NS_DECL_ISUPPORTS
@@ -64,7 +64,7 @@ public:
   {
   }
 
-  NS_IMETHODIMP Notify(nsITimer*) MOZ_OVERRIDE
+  NS_IMETHODIMP Notify(nsITimer*) override
   {
     if (nsCOMPtr<nsIWidget> widget = do_QueryReferent(mWidget)) {
       APZCCallbackHelper::FireSingleTapEvent(mPoint, widget);

@@ -15,7 +15,7 @@
 #include "nsIIOUtil.h"
 #include "mozilla/Attributes.h"
 
-class nsIOUtil MOZ_FINAL : public nsIIOUtil
+class nsIOUtil final : public nsIIOUtil
 {
   ~nsIOUtil() {}
 

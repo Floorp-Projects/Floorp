@@ -36,10 +36,10 @@ protected:
 
 public:
   // nsIContent interface methods
-  virtual mozilla::css::StyleRule* GetInlineStyleRule() MOZ_OVERRIDE;
+  virtual mozilla::css::StyleRule* GetInlineStyleRule() override;
   virtual nsresult SetInlineStyleRule(mozilla::css::StyleRule* aStyleRule,
                                       const nsAString* aSerialized,
-                                      bool aNotify) MOZ_OVERRIDE;
+                                      bool aNotify) override;
 
   nsICSSDeclaration* Style();
 
@@ -57,7 +57,7 @@ protected:
                            bool aForceInDataDoc);
 
   virtual bool ParseAttribute(int32_t aNamespaceID, nsIAtom* aAttribute,
-                                const nsAString& aValue, nsAttrValue& aResult) MOZ_OVERRIDE;
+                                const nsAString& aValue, nsAttrValue& aResult) override;
 
   friend class mozilla::dom::Element;
 

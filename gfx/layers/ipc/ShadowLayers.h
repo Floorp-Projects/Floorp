@@ -11,7 +11,7 @@
 #include <stddef.h>                     // for size_t
 #include <stdint.h>                     // for uint64_t
 #include "gfxTypes.h"
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/WidgetUtils.h"        // for ScreenRotation
 #include "mozilla/dom/ScreenOrientation.h"  // for ScreenOrientation
 #include "mozilla/ipc/SharedMemory.h"   // for SharedMemory, etc
@@ -143,14 +143,14 @@ public:
    * Setup the IPDL actor for aCompositable to be part of layers
    * transactions.
    */
-  void Connect(CompositableClient* aCompositable) MOZ_OVERRIDE;
+  void Connect(CompositableClient* aCompositable) override;
 
   virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
-                                       TextureFlags aFlags) MOZ_OVERRIDE;
+                                       TextureFlags aFlags) override;
 
   virtual void CreatedIncrementalBuffer(CompositableClient* aCompositable,
                                         const TextureInfo& aTextureInfo,
-                                        const nsIntRect& aBufferRect) MOZ_OVERRIDE;
+                                        const nsIntRect& aBufferRect) override;
 
   /**
    * Adds an edit in the layers transaction in order to attach
@@ -233,7 +233,7 @@ public:
    * See CompositableForwarder::UseTiledLayerBuffer
    */
   virtual void UseTiledLayerBuffer(CompositableClient* aCompositable,
-                                   const SurfaceDescriptorTiles& aTileLayerDescriptor) MOZ_OVERRIDE;
+                                   const SurfaceDescriptorTiles& aTileLayerDescriptor) override;
 
   /**
    * Notify the compositor that a compositable will be updated asynchronously
@@ -243,13 +243,13 @@ public:
   void AttachAsyncCompositable(PLayerTransactionChild* aLayer, uint64_t aID);
 
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
-                                             TextureClient* aTexture) MOZ_OVERRIDE;
+                                             TextureClient* aTexture) override;
 
   virtual void RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aAsyncTransactionTracker,
                                                   CompositableClient* aCompositable,
-                                                  TextureClient* aTexture) MOZ_OVERRIDE;
+                                                  TextureClient* aTexture) override;
 
-  virtual void RemoveTexture(TextureClient* aTexture) MOZ_OVERRIDE;
+  virtual void RemoveTexture(TextureClient* aTexture) override;
 
   /**
    * Communicate to the compositor that aRegion in the texture identified by aLayer
@@ -257,43 +257,43 @@ public:
    */
   virtual void UpdateTextureRegion(CompositableClient* aCompositable,
                                    const ThebesBufferData& aThebesBufferData,
-                                   const nsIntRegion& aUpdatedRegion) MOZ_OVERRIDE;
+                                   const nsIntRegion& aUpdatedRegion) override;
 
   virtual void UpdateTextureIncremental(CompositableClient* aCompositable,
                                         TextureIdentifier aTextureId,
                                         SurfaceDescriptor& aDescriptor,
                                         const nsIntRegion& aUpdatedRegion,
                                         const nsIntRect& aBufferRect,
-                                        const nsIntPoint& aBufferRotation) MOZ_OVERRIDE;
+                                        const nsIntPoint& aBufferRotation) override;
 
   /**
    * Communicate the picture rect of an image to the compositor
    */
   void UpdatePictureRect(CompositableClient* aCompositable,
-                         const nsIntRect& aRect) MOZ_OVERRIDE;
+                         const nsIntRect& aRect) override;
 
   /**
    * See CompositableForwarder::UpdatedTexture
    */
   virtual void UpdatedTexture(CompositableClient* aCompositable,
                               TextureClient* aTexture,
-                              nsIntRegion* aRegion) MOZ_OVERRIDE;
+                              nsIntRegion* aRegion) override;
 
   /**
    * See CompositableForwarder::UseTexture
    */
   virtual void UseTexture(CompositableClient* aCompositable,
-                          TextureClient* aClient) MOZ_OVERRIDE;
+                          TextureClient* aClient) override;
   virtual void UseComponentAlphaTextures(CompositableClient* aCompositable,
                                          TextureClient* aClientOnBlack,
-                                         TextureClient* aClientOnWhite) MOZ_OVERRIDE;
+                                         TextureClient* aClientOnWhite) override;
 #ifdef MOZ_WIDGET_GONK
   virtual void UseOverlaySource(CompositableClient* aCompositable,
-                                const OverlaySource& aOverlay) MOZ_OVERRIDE;
+                                const OverlaySource& aOverlay) override;
 #endif
   virtual void SendFenceHandle(AsyncTransactionTracker* aTracker,
                                PTextureChild* aTexture,
-                               const FenceHandle& aFence) MOZ_OVERRIDE;
+                               const FenceHandle& aFence) override;
 
   /**
    * End the current transaction and forward it to LayerManagerComposite.
@@ -328,7 +328,7 @@ public:
 
   void Composite();
 
-  virtual void SendPendingAsyncMessges() MOZ_OVERRIDE;
+  virtual void SendPendingAsyncMessges() override;
 
   /**
    * True if this is forwarding to a LayerManagerComposite.
@@ -374,14 +374,14 @@ public:
   // ISurfaceAllocator
   virtual bool AllocUnsafeShmem(size_t aSize,
                                 mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                                mozilla::ipc::Shmem* aShmem) MOZ_OVERRIDE;
+                                mozilla::ipc::Shmem* aShmem) override;
   virtual bool AllocShmem(size_t aSize,
                           mozilla::ipc::SharedMemory::SharedMemoryType aType,
-                          mozilla::ipc::Shmem* aShmem) MOZ_OVERRIDE;
-  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) MOZ_OVERRIDE;
+                          mozilla::ipc::Shmem* aShmem) override;
+  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
 
-  virtual bool IPCOpen() const MOZ_OVERRIDE;
-  virtual bool IsSameProcess() const MOZ_OVERRIDE;
+  virtual bool IPCOpen() const override;
+  virtual bool IsSameProcess() const override;
 
   /**
    * Construct a shadow of |aLayer| on the "other side", at the

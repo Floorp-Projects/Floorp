@@ -11,7 +11,7 @@
 #include "mozilla-config.h"             // for MOZ_DUMP_PAINTING
 #include "CompositableHost.h"           // for CompositableHost, etc
 #include "RotatedBuffer.h"              // for RotatedContentBuffer, etc
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/gfx/Point.h"          // for Point
@@ -125,23 +125,23 @@ public:
                          const gfx::Matrix4x4& aTransform,
                          const gfx::Filter& aFilter,
                          const gfx::Rect& aClipRect,
-                         const nsIntRegion* aVisibleRegion = nullptr) MOZ_OVERRIDE;
+                         const nsIntRegion* aVisibleRegion = nullptr) override;
 
-  virtual void SetCompositor(Compositor* aCompositor) MOZ_OVERRIDE;
+  virtual void SetCompositor(Compositor* aCompositor) override;
 
-  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() MOZ_OVERRIDE;
+  virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override;
 
   virtual void Dump(std::stringstream& aStream,
                     const char* aPrefix="",
-                    bool aDumpHtml=false) MOZ_OVERRIDE;
+                    bool aDumpHtml=false) override;
 
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
-  virtual void UseTextureHost(TextureHost* aTexture) MOZ_OVERRIDE;
+  virtual void UseTextureHost(TextureHost* aTexture) override;
   virtual void UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
-                                         TextureHost* aTextureOnWhite) MOZ_OVERRIDE;
+                                         TextureHost* aTextureOnWhite) override;
 
-  virtual bool Lock() MOZ_OVERRIDE {
+  virtual bool Lock() override {
     MOZ_ASSERT(!mLocked);
     if (!mTextureHost) {
       return false;
@@ -157,7 +157,7 @@ public:
     mLocked = true;
     return true;
   }
-  virtual void Unlock() MOZ_OVERRIDE {
+  virtual void Unlock() override {
     MOZ_ASSERT(mLocked);
     mTextureHost->Unlock();
     if (mTextureHostOnWhite) {
@@ -166,9 +166,9 @@ public:
     mLocked = false;
   }
 
-  LayerRenderState GetRenderState() MOZ_OVERRIDE;
+  LayerRenderState GetRenderState() override;
 
-  virtual TemporaryRef<TexturedEffect> GenEffect(const gfx::Filter& aFilter) MOZ_OVERRIDE;
+  virtual TemporaryRef<TexturedEffect> GenEffect(const gfx::Filter& aFilter) override;
 
 protected:
   CompositableTextureHostRef mTextureHost;
@@ -239,24 +239,24 @@ public:
   explicit ContentHostIncremental(const TextureInfo& aTextureInfo);
   ~ContentHostIncremental();
 
-  virtual CompositableType GetType() MOZ_OVERRIDE { return CompositableType::CONTENT_INC; }
+  virtual CompositableType GetType() override { return CompositableType::CONTENT_INC; }
 
-  virtual LayerRenderState GetRenderState() MOZ_OVERRIDE { return LayerRenderState(); }
+  virtual LayerRenderState GetRenderState() override { return LayerRenderState(); }
 
   virtual bool CreatedIncrementalTexture(ISurfaceAllocator* aAllocator,
                                          const TextureInfo& aTextureInfo,
-                                         const nsIntRect& aBufferRect) MOZ_OVERRIDE;
+                                         const nsIntRect& aBufferRect) override;
 
   virtual void UpdateIncremental(TextureIdentifier aTextureId,
                                  SurfaceDescriptor& aSurface,
                                  const nsIntRegion& aUpdated,
                                  const nsIntRect& aBufferRect,
-                                 const nsIntPoint& aBufferRotation) MOZ_OVERRIDE;
+                                 const nsIntPoint& aBufferRotation) override;
 
   virtual bool UpdateThebes(const ThebesBufferData& aData,
                             const nsIntRegion& aUpdated,
                             const nsIntRegion& aOldValidRegionBack,
-                            nsIntRegion* aUpdatedRegionBack) MOZ_OVERRIDE
+                            nsIntRegion* aUpdatedRegionBack) override
   {
     NS_ERROR("Shouldn't call this");
     return false;
@@ -267,24 +267,24 @@ public:
                          const gfx::Matrix4x4& aTransform,
                          const gfx::Filter& aFilter,
                          const gfx::Rect& aClipRect,
-                         const nsIntRegion* aVisibleRegion = nullptr) MOZ_OVERRIDE;
+                         const nsIntRegion* aVisibleRegion = nullptr) override;
 
-  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) MOZ_OVERRIDE;
+  virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
-  virtual bool Lock() MOZ_OVERRIDE {
+  virtual bool Lock() override {
     MOZ_ASSERT(!mLocked);
     ProcessTextureUpdates();
     mLocked = true;
     return true;
   }
 
-  virtual void Unlock() MOZ_OVERRIDE {
+  virtual void Unlock() override {
     MOZ_ASSERT(mLocked);
     mLocked = false;
   }
 
   virtual TemporaryRef<TexturedEffect>
-  GenEffect(const gfx::Filter& aFilter) MOZ_OVERRIDE;
+  GenEffect(const gfx::Filter& aFilter) override;
 
 private:
 

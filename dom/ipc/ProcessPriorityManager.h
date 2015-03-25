@@ -27,7 +27,7 @@ class ContentParent;
  * set their initial priority.  The ProcessPriorityManager takes care of the
  * rest.
  */
-class ProcessPriorityManager MOZ_FINAL
+class ProcessPriorityManager final
 {
 public:
   /**

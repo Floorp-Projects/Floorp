@@ -35,7 +35,7 @@ public:
   void Init();
 
   // Implement WakeLockObserver
-  void Notify(const hal::WakeLockInformation& aWakeLockInfo) MOZ_OVERRIDE;
+  void Notify(const hal::WakeLockInformation& aWakeLockInfo) override;
 
   /**
    * Acquire a wake lock on behalf of a given process (aContentParent).

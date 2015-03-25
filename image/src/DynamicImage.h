@@ -31,39 +31,39 @@ public:
   }
 
   // Inherited methods from Image.
-  virtual nsresult Init(const char* aMimeType, uint32_t aFlags) MOZ_OVERRIDE;
+  virtual nsresult Init(const char* aMimeType, uint32_t aFlags) override;
 
-  virtual already_AddRefed<ProgressTracker> GetProgressTracker() MOZ_OVERRIDE;
+  virtual already_AddRefed<ProgressTracker> GetProgressTracker() override;
   virtual size_t SizeOfSourceWithComputedFallback(
-                                 MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+                                 MallocSizeOf aMallocSizeOf) const override;
   virtual size_t SizeOfDecoded(gfxMemoryLocation aLocation,
-                               MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE;
+                               MallocSizeOf aMallocSizeOf) const override;
 
-  virtual void IncrementAnimationConsumers() MOZ_OVERRIDE;
-  virtual void DecrementAnimationConsumers() MOZ_OVERRIDE;
+  virtual void IncrementAnimationConsumers() override;
+  virtual void DecrementAnimationConsumers() override;
 #ifdef DEBUG
-  virtual uint32_t GetAnimationConsumers() MOZ_OVERRIDE;
+  virtual uint32_t GetAnimationConsumers() override;
 #endif
 
   virtual nsresult OnImageDataAvailable(nsIRequest* aRequest,
                                         nsISupports* aContext,
                                         nsIInputStream* aInStr,
                                         uint64_t aSourceOffset,
-                                        uint32_t aCount) MOZ_OVERRIDE;
+                                        uint32_t aCount) override;
   virtual nsresult OnImageDataComplete(nsIRequest* aRequest,
                                        nsISupports* aContext,
                                        nsresult aStatus,
-                                       bool aLastPart) MOZ_OVERRIDE;
+                                       bool aLastPart) override;
 
-  virtual void OnSurfaceDiscarded() MOZ_OVERRIDE;
+  virtual void OnSurfaceDiscarded() override;
 
-  virtual void SetInnerWindowID(uint64_t aInnerWindowId) MOZ_OVERRIDE;
-  virtual uint64_t InnerWindowID() const MOZ_OVERRIDE;
+  virtual void SetInnerWindowID(uint64_t aInnerWindowId) override;
+  virtual uint64_t InnerWindowID() const override;
 
-  virtual bool HasError() MOZ_OVERRIDE;
-  virtual void SetHasError() MOZ_OVERRIDE;
+  virtual bool HasError() override;
+  virtual void SetHasError() override;
 
-  virtual ImageURL* GetURI() MOZ_OVERRIDE;
+  virtual ImageURL* GetURI() override;
 
 private:
   virtual ~DynamicImage() { }

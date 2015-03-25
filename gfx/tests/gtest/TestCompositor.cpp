@@ -33,13 +33,13 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD              GetClientBounds(nsIntRect &aRect) MOZ_OVERRIDE {
+  NS_IMETHOD              GetClientBounds(nsIntRect &aRect) override {
     aRect = nsIntRect(0, 0, gCompWidth, gCompHeight);
     return NS_OK;
   }
-  NS_IMETHOD              GetBounds(nsIntRect &aRect) MOZ_OVERRIDE { return GetClientBounds(aRect); }
+  NS_IMETHOD              GetBounds(nsIntRect &aRect) override { return GetClientBounds(aRect); }
 
-  void* GetNativeData(uint32_t aDataType) MOZ_OVERRIDE {
+  void* GetNativeData(uint32_t aDataType) override {
     if (aDataType == NS_NATIVE_OPENGL_CONTEXT) {
       mozilla::gl::SurfaceCaps caps = mozilla::gl::SurfaceCaps::ForRGB();
       caps.preserve = false;
@@ -54,30 +54,30 @@ public:
   NS_IMETHOD              Create(nsIWidget *aParent,
                                  nsNativeWidget aNativeParent,
                                  const nsIntRect &aRect,
-                                 nsWidgetInitData *aInitData = nullptr) MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD              Show(bool aState) MOZ_OVERRIDE { return NS_OK; }
-  virtual bool            IsVisible() const MOZ_OVERRIDE { return true; }
+                                 nsWidgetInitData *aInitData = nullptr) override { return NS_OK; }
+  NS_IMETHOD              Show(bool aState) override { return NS_OK; }
+  virtual bool            IsVisible() const override { return true; }
   NS_IMETHOD              ConstrainPosition(bool aAllowSlop,
-                                            int32_t *aX, int32_t *aY) MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD              Move(double aX, double aY) MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) MOZ_OVERRIDE { return NS_OK; }
+                                            int32_t *aX, int32_t *aY) override { return NS_OK; }
+  NS_IMETHOD              Move(double aX, double aY) override { return NS_OK; }
+  NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override { return NS_OK; }
   NS_IMETHOD              Resize(double aX, double aY,
-                                 double aWidth, double aHeight, bool aRepaint) MOZ_OVERRIDE { return NS_OK; }
+                                 double aWidth, double aHeight, bool aRepaint) override { return NS_OK; }
 
-  NS_IMETHOD              Enable(bool aState) MOZ_OVERRIDE { return NS_OK; }
-  virtual bool            IsEnabled() const MOZ_OVERRIDE { return true; }
-  NS_IMETHOD              SetFocus(bool aRaise) MOZ_OVERRIDE { return NS_OK; }
-  virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations) MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD              Invalidate(const nsIntRect &aRect) MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD              SetTitle(const nsAString& title) MOZ_OVERRIDE { return NS_OK; }
-  virtual LayoutDeviceIntPoint WidgetToScreenOffset() MOZ_OVERRIDE { return LayoutDeviceIntPoint(0, 0); }
+  NS_IMETHOD              Enable(bool aState) override { return NS_OK; }
+  virtual bool            IsEnabled() const override { return true; }
+  NS_IMETHOD              SetFocus(bool aRaise) override { return NS_OK; }
+  virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override { return NS_OK; }
+  NS_IMETHOD              Invalidate(const nsIntRect &aRect) override { return NS_OK; }
+  NS_IMETHOD              SetTitle(const nsAString& title) override { return NS_OK; }
+  virtual LayoutDeviceIntPoint WidgetToScreenOffset() override { return LayoutDeviceIntPoint(0, 0); }
   NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
-                                        nsEventStatus& aStatus) MOZ_OVERRIDE { return NS_OK; }
-  NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture) MOZ_OVERRIDE { return NS_OK; }
+                                        nsEventStatus& aStatus) override { return NS_OK; }
+  NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, bool aDoCapture) override { return NS_OK; }
   NS_IMETHOD_(void)       SetInputContext(const InputContext& aContext,
-                                          const InputContextAction& aAction) MOZ_OVERRIDE {}
-  NS_IMETHOD_(InputContext) GetInputContext() MOZ_OVERRIDE { abort(); }
-  NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent) MOZ_OVERRIDE { return NS_OK; }
+                                          const InputContextAction& aAction) override {}
+  NS_IMETHOD_(InputContext) GetInputContext() override { abort(); }
+  NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent) override { return NS_OK; }
 private:
   ~MockWidget() {}
 };

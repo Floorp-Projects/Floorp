@@ -20,7 +20,7 @@ public:
   {
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) override;
 
   // WebIDL
   nsSVGElement* GetParentObject() const

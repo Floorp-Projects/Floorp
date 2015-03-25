@@ -62,7 +62,7 @@ nsresult ProcessUpdates(nsIFile *greDir, nsIFile *appDir,
 // updater application for staging an update.
 // XXX ehsan this is living in this file in order to make use of the existing
 // stuff here, we might want to move it elsewhere in the future.
-class nsUpdateProcessor MOZ_FINAL : public nsIUpdateProcessor
+class nsUpdateProcessor final : public nsIUpdateProcessor
 {
 public:
   nsUpdateProcessor();

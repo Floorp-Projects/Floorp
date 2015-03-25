@@ -445,7 +445,7 @@ static void LoadNativeMenus(nsIDOMDocument *aDOMDoc, nsIWidget *aParentWindow)
 
 namespace mozilla {
 
-class WebShellWindowTimerCallback MOZ_FINAL : public nsITimerCallback
+class WebShellWindowTimerCallback final : public nsITimerCallback
 {
 public:
   explicit WebShellWindowTimerCallback(nsWebShellWindow* aWindow)
@@ -454,7 +454,7 @@ public:
 
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  NS_IMETHOD Notify(nsITimer* aTimer) MOZ_OVERRIDE
+  NS_IMETHOD Notify(nsITimer* aTimer) override
   {
     // Although this object participates in a refcount cycle (this -> mWindow
     // -> mSPTimer -> this), mSPTimer is a one-shot timer and releases this

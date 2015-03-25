@@ -25,11 +25,11 @@ public:
                  MediaDataDecoderCallback* aCallback);
   virtual ~AppleATDecoder();
 
-  virtual nsresult Init() MOZ_OVERRIDE;
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) MOZ_OVERRIDE;
-  virtual nsresult Flush() MOZ_OVERRIDE;
-  virtual nsresult Drain() MOZ_OVERRIDE;
-  virtual nsresult Shutdown() MOZ_OVERRIDE;
+  virtual nsresult Init() override;
+  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override;
+  virtual nsresult Flush() override;
+  virtual nsresult Drain() override;
+  virtual nsresult Shutdown() override;
 
   // Callbacks also need access to the config.
   const mp4_demuxer::AudioDecoderConfig& mConfig;

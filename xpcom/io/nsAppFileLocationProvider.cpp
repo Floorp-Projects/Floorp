@@ -420,7 +420,7 @@ public:
   {
   }
 
-  NS_IMETHOD HasMoreElements(bool* aResult) MOZ_OVERRIDE
+  NS_IMETHOD HasMoreElements(bool* aResult) override
   {
     while (!mNext && *mCurrentKey) {
       bool dontCare;
@@ -436,7 +436,7 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD GetNext(nsISupports** aResult) MOZ_OVERRIDE
+  NS_IMETHOD GetNext(nsISupports** aResult) override
   {
     if (NS_WARN_IF(!aResult)) {
       return NS_ERROR_INVALID_ARG;
@@ -479,7 +479,7 @@ NS_IMPL_ISUPPORTS(nsAppDirectoryEnumerator, nsISimpleEnumerator)
 #define PATH_SEPARATOR ':'
 #endif
 
-class nsPathsDirectoryEnumerator MOZ_FINAL
+class nsPathsDirectoryEnumerator final
   : public nsAppDirectoryEnumerator
 {
   ~nsPathsDirectoryEnumerator() {}

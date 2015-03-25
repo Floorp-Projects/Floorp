@@ -22,7 +22,7 @@
 #define NS_NAVHISTORYQUERY_IID \
 { 0xb10185e0, 0x86eb, 0x4612, { 0x95, 0x7c, 0x09, 0x34, 0xf2, 0xb1, 0xce, 0xd7 } }
 
-class nsNavHistoryQuery MOZ_FINAL : public nsINavHistoryQuery
+class nsNavHistoryQuery final : public nsINavHistoryQuery
 {
 public:
   nsNavHistoryQuery();
@@ -99,7 +99,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryQuery, NS_NAVHISTORYQUERY_IID)
 #define NS_NAVHISTORYQUERYOPTIONS_IID \
 {0x95f8ba3b, 0xd681, 0x4d89, {0xab, 0xd1, 0xfd, 0xae, 0xf2, 0xa3, 0xde, 0x18}}
 
-class nsNavHistoryQueryOptions MOZ_FINAL : public nsINavHistoryQueryOptions
+class nsNavHistoryQueryOptions final : public nsINavHistoryQueryOptions
 {
 public:
   nsNavHistoryQueryOptions()

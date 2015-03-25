@@ -14,7 +14,7 @@ namespace gmp {
 
 class GMPLoader;
 
-class GMPProcessChild MOZ_FINAL : public mozilla::ipc::ProcessChild {
+class GMPProcessChild final : public mozilla::ipc::ProcessChild {
 protected:
   typedef mozilla::ipc::ProcessChild ProcessChild;
 
@@ -22,8 +22,8 @@ public:
   explicit GMPProcessChild(ProcessHandle parentHandle);
   ~GMPProcessChild();
 
-  virtual bool Init() MOZ_OVERRIDE;
-  virtual void CleanUp() MOZ_OVERRIDE;
+  virtual bool Init() override;
+  virtual void CleanUp() override;
 
   // Set/get the GMPLoader singleton for this child process.
   // Note: The GMPLoader is not deleted by this object, the caller of

@@ -26,13 +26,13 @@ public:
   NS_DECL_NSISERVERSOCKET
 
   // nsASocketHandler methods:
-  virtual void OnSocketReady(PRFileDesc *fd, int16_t outFlags) MOZ_OVERRIDE;
-  virtual void OnSocketDetached(PRFileDesc *fd) MOZ_OVERRIDE;
-  virtual void IsLocal(bool *aIsLocal) MOZ_OVERRIDE;
-  virtual void KeepWhenOffline(bool *aKeepWhenOffline) MOZ_OVERRIDE;
+  virtual void OnSocketReady(PRFileDesc *fd, int16_t outFlags) override;
+  virtual void OnSocketDetached(PRFileDesc *fd) override;
+  virtual void IsLocal(bool *aIsLocal) override;
+  virtual void KeepWhenOffline(bool *aKeepWhenOffline) override;
 
-  virtual uint64_t ByteCountSent() MOZ_OVERRIDE { return 0; }
-  virtual uint64_t ByteCountReceived() MOZ_OVERRIDE { return 0; }
+  virtual uint64_t ByteCountSent() override { return 0; }
+  virtual uint64_t ByteCountReceived() override { return 0; }
   nsServerSocket();
 
   virtual void CreateClientTransport(PRFileDesc* clientFD,

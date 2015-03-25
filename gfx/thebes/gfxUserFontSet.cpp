@@ -183,7 +183,7 @@ public:
     explicit gfxOTSContext(gfxUserFontEntry* aUserFontEntry)
         : mUserFontEntry(aUserFontEntry) {}
 
-    virtual ots::TableAction GetTableAction(uint32_t aTag) MOZ_OVERRIDE {
+    virtual ots::TableAction GetTableAction(uint32_t aTag) override {
         // preserve Graphite, color glyph and SVG tables
         if (aTag == TRUETYPE_TAG('S', 'i', 'l', 'f') ||
             aTag == TRUETYPE_TAG('S', 'i', 'l', 'l') ||
@@ -199,7 +199,7 @@ public:
     }
 
     virtual void Message(int level, const char* format,
-                         ...) MSGFUNC_FMT_ATTR MOZ_OVERRIDE {
+                         ...) MSGFUNC_FMT_ATTR override {
         va_list va;
         va_start(va, format);
 

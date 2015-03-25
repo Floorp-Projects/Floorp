@@ -14,13 +14,13 @@ namespace dom {
 
 class KeyboardEvent;
 
-class MenuBoxObject MOZ_FINAL : public BoxObject
+class MenuBoxObject final : public BoxObject
 {
 public:
 
   MenuBoxObject();
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) override;
 
   void OpenMenu(bool aOpenFlag);
   already_AddRefed<Element> GetActiveChild();

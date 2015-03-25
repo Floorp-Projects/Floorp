@@ -10,7 +10,7 @@
 #include "Layers.h"                     // for Layer (ptr only), etc
 #include "gfxTypes.h"
 #include "gfxContext.h"                 // for gfxContext
-#include "mozilla/Attributes.h"         // for MOZ_OVERRIDE
+#include "mozilla/Attributes.h"         // for override
 #include "mozilla/WidgetUtils.h"        // for ScreenRotation
 #include "mozilla/layers/LayersTypes.h"  // for BufferMode, LayersBackend, etc
 #include "nsAString.h"
@@ -41,7 +41,7 @@ class ReadbackProcessor;
  * context (with appropriate clipping and Push/PopGroups performed
  * between layers).
  */
-class BasicLayerManager MOZ_FINAL :
+class BasicLayerManager final :
     public LayerManager
 {
 public:
@@ -96,31 +96,31 @@ public:
   nsIWidget* GetRetainerWidget() { return mWidget; }
   void ClearRetainerWidget() { mWidget = nullptr; }
 
-  virtual bool IsWidgetLayerManager() MOZ_OVERRIDE { return mWidget != nullptr; }
-  virtual bool IsInactiveLayerManager() MOZ_OVERRIDE { return mType == BLM_INACTIVE; }
+  virtual bool IsWidgetLayerManager() override { return mWidget != nullptr; }
+  virtual bool IsInactiveLayerManager() override { return mType == BLM_INACTIVE; }
 
-  virtual void BeginTransaction() MOZ_OVERRIDE;
-  virtual void BeginTransactionWithTarget(gfxContext* aTarget) MOZ_OVERRIDE;
-  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) MOZ_OVERRIDE;
+  virtual void BeginTransaction() override;
+  virtual void BeginTransactionWithTarget(gfxContext* aTarget) override;
+  virtual bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override;
   virtual void EndTransaction(DrawPaintedLayerCallback aCallback,
                               void* aCallbackData,
-                              EndTransactionFlags aFlags = END_DEFAULT) MOZ_OVERRIDE;
-  virtual bool ShouldAvoidComponentAlphaLayers() MOZ_OVERRIDE { return IsWidgetLayerManager(); }
+                              EndTransactionFlags aFlags = END_DEFAULT) override;
+  virtual bool ShouldAvoidComponentAlphaLayers() override { return IsWidgetLayerManager(); }
 
   void AbortTransaction();
 
-  virtual void SetRoot(Layer* aLayer) MOZ_OVERRIDE;
+  virtual void SetRoot(Layer* aLayer) override;
 
-  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<ContainerLayer> CreateContainerLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<ImageLayer> CreateImageLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<ColorLayer> CreateColorLayer() MOZ_OVERRIDE;
-  virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer() MOZ_OVERRIDE;
+  virtual already_AddRefed<PaintedLayer> CreatePaintedLayer() override;
+  virtual already_AddRefed<ContainerLayer> CreateContainerLayer() override;
+  virtual already_AddRefed<ImageLayer> CreateImageLayer() override;
+  virtual already_AddRefed<CanvasLayer> CreateCanvasLayer() override;
+  virtual already_AddRefed<ColorLayer> CreateColorLayer() override;
+  virtual already_AddRefed<ReadbackLayer> CreateReadbackLayer() override;
   virtual ImageFactory *GetImageFactory();
 
-  virtual LayersBackend GetBackendType() MOZ_OVERRIDE { return LayersBackend::LAYERS_BASIC; }
-  virtual void GetBackendName(nsAString& name) MOZ_OVERRIDE { name.AssignLiteral("Basic"); }
+  virtual LayersBackend GetBackendType() override { return LayersBackend::LAYERS_BASIC; }
+  virtual void GetBackendName(nsAString& name) override { name.AssignLiteral("Basic"); }
 
   bool InConstruction() { return mPhase == PHASE_CONSTRUCTION; }
 #ifdef DEBUG
@@ -133,10 +133,10 @@ public:
   void SetTarget(gfxContext* aTarget) { mUsingDefaultTarget = false; mTarget = aTarget; }
   bool IsRetained() { return mWidget != nullptr; }
 
-  virtual const char* Name() const MOZ_OVERRIDE { return "Basic"; }
+  virtual const char* Name() const override { return "Basic"; }
 
   // Clear the cached contents of this layer tree.
-  virtual void ClearCachedResources(Layer* aSubtree = nullptr) MOZ_OVERRIDE;
+  virtual void ClearCachedResources(Layer* aSubtree = nullptr) override;
 
   void SetTransactionIncomplete() { mTransactionIncomplete = true; }
   bool IsTransactionIncomplete() { return mTransactionIncomplete; }
@@ -145,11 +145,11 @@ public:
                                                  const nsIntRegion& aRegion,
                                                  bool* aNeedsClipToVisibleRegion);
 
-  virtual bool IsCompositingCheap() MOZ_OVERRIDE { return false; }
-  virtual int32_t GetMaxTextureSize() const MOZ_OVERRIDE { return INT32_MAX; }
+  virtual bool IsCompositingCheap() override { return false; }
+  virtual int32_t GetMaxTextureSize() const override { return INT32_MAX; }
   bool CompositorMightResample() { return mCompositorMightResample; }
 
-  virtual bool SupportsMixBlendModes(EnumSet<gfx::CompositionOp>& aMixBlendModes) MOZ_OVERRIDE { return true; }
+  virtual bool SupportsMixBlendModes(EnumSet<gfx::CompositionOp>& aMixBlendModes) override { return true; }
 
 protected:
   enum TransactionPhase {

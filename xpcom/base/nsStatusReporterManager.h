@@ -9,7 +9,7 @@
 #include "nsCOMArray.h"
 #include "nsString.h"
 
-class nsStatusReporter MOZ_FINAL : public nsIStatusReporter
+class nsStatusReporter final : public nsIStatusReporter
 {
 public:
   NS_DECL_ISUPPORTS

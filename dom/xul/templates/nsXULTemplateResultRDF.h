@@ -18,7 +18,7 @@
 /**
  * A single result of a query on an RDF graph
  */
-class nsXULTemplateResultRDF MOZ_FINAL : public nsIXULTemplateResult
+class nsXULTemplateResultRDF final : public nsIXULTemplateResult
 {
 public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS

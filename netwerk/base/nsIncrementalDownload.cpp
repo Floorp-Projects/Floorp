@@ -103,7 +103,7 @@ MakeRangeSpec(const int64_t &size, const int64_t &maxSize, int32_t chunkSize,
 
 //-----------------------------------------------------------------------------
 
-class nsIncrementalDownload MOZ_FINAL
+class nsIncrementalDownload final
   : public nsIIncrementalDownload
   , public nsIStreamListener
   , public nsIObserver

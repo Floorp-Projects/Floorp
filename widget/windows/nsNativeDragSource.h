@@ -18,7 +18,7 @@
  * nsNativeDragSource implements the IDropSource interface and gets
  * most of its behavior from the associated adapter (m_dragDrop).
  */
-class nsNativeDragSource MOZ_FINAL : public IDropSource
+class nsNativeDragSource final : public IDropSource
 {
 public:
 

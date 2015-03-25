@@ -22,12 +22,12 @@ public:
 
     void Main();
 
-    bool RecvMsg1() MOZ_OVERRIDE;
-    bool RecvMsg2() MOZ_OVERRIDE;
-    bool RecvMsg3() MOZ_OVERRIDE;
-    bool RecvMsg4() MOZ_OVERRIDE;
+    bool RecvMsg1() override;
+    bool RecvMsg2() override;
+    bool RecvMsg3() override;
+    bool RecvMsg4() override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");
@@ -49,10 +49,10 @@ public:
     TestHighestPrioChild();
     virtual ~TestHighestPrioChild();
 
-    bool RecvStart() MOZ_OVERRIDE;
-    bool RecvStartInner() MOZ_OVERRIDE;
+    bool RecvStart() override;
+    bool RecvStartInner() override;
 
-    virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE
+    virtual void ActorDestroy(ActorDestroyReason why) override
     {
         if (NormalShutdown != why)
             fail("unexpected destruction!");

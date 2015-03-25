@@ -49,7 +49,7 @@ struct nsXMLBinding {
  * a collection of <binding> descriptors. This object is refcounted by
  * nsXMLBindingValues objects and the query processor.
  */
-class nsXMLBindingSet MOZ_FINAL
+class nsXMLBindingSet final
 {
   ~nsXMLBindingSet();
 

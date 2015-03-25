@@ -35,23 +35,23 @@ public:
   nsStyleLinkElement();
   virtual ~nsStyleLinkElement();
 
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) MOZ_OVERRIDE = 0;
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override = 0;
 
   mozilla::CSSStyleSheet* GetSheet() const { return mStyleSheet; }
 
   // nsIStyleSheetLinkingElement  
-  NS_IMETHOD SetStyleSheet(mozilla::CSSStyleSheet* aStyleSheet) MOZ_OVERRIDE;
-  NS_IMETHOD_(mozilla::CSSStyleSheet*) GetStyleSheet() MOZ_OVERRIDE;
-  NS_IMETHOD InitStyleLinkElement(bool aDontLoadStyle) MOZ_OVERRIDE;
+  NS_IMETHOD SetStyleSheet(mozilla::CSSStyleSheet* aStyleSheet) override;
+  NS_IMETHOD_(mozilla::CSSStyleSheet*) GetStyleSheet() override;
+  NS_IMETHOD InitStyleLinkElement(bool aDontLoadStyle) override;
   NS_IMETHOD UpdateStyleSheet(nsICSSLoaderObserver* aObserver,
                               bool* aWillNotify,
                               bool* aIsAlternate,
-                              bool aForceReload) MOZ_OVERRIDE;
-  NS_IMETHOD SetEnableUpdates(bool aEnableUpdates) MOZ_OVERRIDE;
-  NS_IMETHOD GetCharset(nsAString& aCharset) MOZ_OVERRIDE;
+                              bool aForceReload) override;
+  NS_IMETHOD SetEnableUpdates(bool aEnableUpdates) override;
+  NS_IMETHOD GetCharset(nsAString& aCharset) override;
 
-  virtual void OverrideBaseURI(nsIURI* aNewBaseURI) MOZ_OVERRIDE;
-  virtual void SetLineNumber(uint32_t aLineNumber) MOZ_OVERRIDE;
+  virtual void OverrideBaseURI(nsIURI* aNewBaseURI) override;
+  virtual void SetLineNumber(uint32_t aLineNumber) override;
 
   enum RelValue {
     ePREFETCH =     0x00000001,

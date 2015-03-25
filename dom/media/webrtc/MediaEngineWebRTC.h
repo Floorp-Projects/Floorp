@@ -64,19 +64,19 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   // ViEExternalRenderer.
-  virtual int FrameSizeChange(unsigned int w, unsigned int h, unsigned int streams) MOZ_OVERRIDE;
+  virtual int FrameSizeChange(unsigned int w, unsigned int h, unsigned int streams) override;
   virtual int DeliverFrame(unsigned char* buffer,
                            int size,
                            uint32_t time_stamp,
                            int64_t ntp_time_ms,
                            int64_t render_time,
-                           void *handle) MOZ_OVERRIDE;
+                           void *handle) override;
   /**
    * Does DeliverFrame() support a null buffer and non-null handle
    * (video texture)?
    * XXX Investigate!  Especially for Android/B2G
    */
-  virtual bool IsTextureSupported() MOZ_OVERRIDE { return false; }
+  virtual bool IsTextureSupported() override { return false; }
 
   MediaEngineWebRTCVideoSource(webrtc::VideoEngine* aVideoEnginePtr, int aIndex,
                                dom::MediaSourceEnum aMediaSource = dom::MediaSourceEnum::Camera)
@@ -90,19 +90,19 @@ public:
   }
 
   virtual nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
-                            const MediaEnginePrefs& aPrefs) MOZ_OVERRIDE;
-  virtual nsresult Deallocate() MOZ_OVERRIDE;
-  virtual nsresult Start(SourceMediaStream*, TrackID) MOZ_OVERRIDE;
-  virtual nsresult Stop(SourceMediaStream*, TrackID) MOZ_OVERRIDE;
+                            const MediaEnginePrefs& aPrefs) override;
+  virtual nsresult Deallocate() override;
+  virtual nsresult Start(SourceMediaStream*, TrackID) override;
+  virtual nsresult Stop(SourceMediaStream*, TrackID) override;
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream* aSource,
                           TrackID aId,
-                          StreamTime aDesiredTime) MOZ_OVERRIDE;
+                          StreamTime aDesiredTime) override;
 
-  virtual const dom::MediaSourceEnum GetMediaSource() MOZ_OVERRIDE {
+  virtual const dom::MediaSourceEnum GetMediaSource() override {
     return mMediaSource;
   }
-  virtual nsresult TakePhoto(PhotoCallback* aCallback) MOZ_OVERRIDE
+  virtual nsresult TakePhoto(PhotoCallback* aCallback) override
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -126,8 +126,8 @@ private:
   int mMinFps; // Min rate we want to accept
   dom::MediaSourceEnum mMediaSource; // source of media (camera | application | screen)
 
-  size_t NumCapabilities() MOZ_OVERRIDE;
-  void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut) MOZ_OVERRIDE;
+  size_t NumCapabilities() override;
+  void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut) override;
 };
 
 class MediaEngineWebRTCAudioSource : public MediaEngineAudioSource,
@@ -157,34 +157,34 @@ public:
     Init();
   }
 
-  virtual void GetName(nsAString& aName) MOZ_OVERRIDE;
-  virtual void GetUUID(nsAString& aUUID) MOZ_OVERRIDE;
+  virtual void GetName(nsAString& aName) override;
+  virtual void GetUUID(nsAString& aUUID) override;
 
   virtual nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
-                            const MediaEnginePrefs& aPrefs) MOZ_OVERRIDE;
-  virtual nsresult Deallocate() MOZ_OVERRIDE;
-  virtual nsresult Start(SourceMediaStream* aStream, TrackID aID) MOZ_OVERRIDE;
-  virtual nsresult Stop(SourceMediaStream* aSource, TrackID aID) MOZ_OVERRIDE;
-  virtual void SetDirectListeners(bool aHasDirectListeners) MOZ_OVERRIDE {};
+                            const MediaEnginePrefs& aPrefs) override;
+  virtual nsresult Deallocate() override;
+  virtual nsresult Start(SourceMediaStream* aStream, TrackID aID) override;
+  virtual nsresult Stop(SourceMediaStream* aSource, TrackID aID) override;
+  virtual void SetDirectListeners(bool aHasDirectListeners) override {};
   virtual nsresult Config(bool aEchoOn, uint32_t aEcho,
                           bool aAgcOn, uint32_t aAGC,
                           bool aNoiseOn, uint32_t aNoise,
-                          int32_t aPlayoutDelay) MOZ_OVERRIDE;
+                          int32_t aPlayoutDelay) override;
 
   virtual void NotifyPull(MediaStreamGraph* aGraph,
                           SourceMediaStream* aSource,
                           TrackID aId,
-                          StreamTime aDesiredTime) MOZ_OVERRIDE;
+                          StreamTime aDesiredTime) override;
 
-  virtual bool IsFake() MOZ_OVERRIDE {
+  virtual bool IsFake() override {
     return false;
   }
 
-  virtual const dom::MediaSourceEnum GetMediaSource() MOZ_OVERRIDE {
+  virtual const dom::MediaSourceEnum GetMediaSource() override {
     return dom::MediaSourceEnum::Microphone;
   }
 
-  virtual nsresult TakePhoto(PhotoCallback* aCallback) MOZ_OVERRIDE
+  virtual nsresult TakePhoto(PhotoCallback* aCallback) override
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -192,7 +192,7 @@ public:
   // VoEMediaProcess.
   void Process(int channel, webrtc::ProcessingTypes type,
                int16_t audio10ms[], int length,
-               int samplingFreq, bool isStereo) MOZ_OVERRIDE;
+               int samplingFreq, bool isStereo) override;
 
   NS_DECL_THREADSAFE_ISUPPORTS
 

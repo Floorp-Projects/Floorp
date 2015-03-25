@@ -2773,7 +2773,7 @@ nsTreeBodyFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-class nsDisplayTreeBody MOZ_FINAL : public nsDisplayItem {
+class nsDisplayTreeBody final : public nsDisplayItem {
 public:
   nsDisplayTreeBody(nsDisplayListBuilder* aBuilder, nsFrame* aFrame) :
     nsDisplayItem(aBuilder, aFrame),
@@ -2787,7 +2787,7 @@ public:
 #endif
 
   virtual void Paint(nsDisplayListBuilder* aBuilder,
-                     nsRenderingContext* aCtx) MOZ_OVERRIDE
+                     nsRenderingContext* aCtx) override
   {
     gfxContext* ctx = aCtx->ThebesContext();
     gfxContextAutoDisableSubpixelAntialiasing disable(ctx, mDisableSubpixelAA);
@@ -2796,12 +2796,12 @@ public:
   }
   NS_DISPLAY_DECL_NAME("XULTreeBody", TYPE_XUL_TREE_BODY)
 
-  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) MOZ_OVERRIDE
+  virtual nsRect GetComponentAlphaBounds(nsDisplayListBuilder* aBuilder) override
   {
     bool snap;
     return GetBounds(aBuilder, &snap);
   }
-  virtual void DisableComponentAlpha() MOZ_OVERRIDE {
+  virtual void DisableComponentAlpha() override {
     mDisableSubpixelAA = true;
   }
 
@@ -4721,7 +4721,7 @@ class nsOverflowChecker : public nsRunnable
 {
 public:
   explicit nsOverflowChecker(nsTreeBodyFrame* aFrame) : mFrame(aFrame) {}
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     if (mFrame.IsAlive()) {
       nsTreeBodyFrame* tree = static_cast<nsTreeBodyFrame*>(mFrame.GetFrame());

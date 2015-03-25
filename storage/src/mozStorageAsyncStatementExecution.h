@@ -29,7 +29,7 @@ class Connection;
 class ResultSet;
 class StatementData;
 
-class AsyncExecuteStatements MOZ_FINAL : public nsIRunnable
+class AsyncExecuteStatements final : public nsIRunnable
                                        , public mozIStoragePendingStatement
 {
 public:

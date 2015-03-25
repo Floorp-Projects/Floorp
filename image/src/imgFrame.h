@@ -384,7 +384,7 @@ private: // data
  * allowing drawing. If you have a DrawableFrameRef |ref| and |if (ref)| returns
  * true, then calls to Draw() and GetSurface() are guaranteed to succeed.
  */
-class DrawableFrameRef MOZ_FINAL
+class DrawableFrameRef final
 {
 public:
   DrawableFrameRef() { }
@@ -452,7 +452,7 @@ private:
  * so only use this when you need to read or write the raw underlying image data
  * that the imgFrame holds.
  */
-class RawAccessFrameRef MOZ_FINAL
+class RawAccessFrameRef final
 {
 public:
   RawAccessFrameRef() { }

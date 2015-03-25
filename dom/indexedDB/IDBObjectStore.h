@@ -44,7 +44,7 @@ class ObjectStoreSpec;
 struct StructuredCloneFile;
 struct StructuredCloneReadInfo;
 
-class IDBObjectStore MOZ_FINAL
+class IDBObjectStore final
   : public nsISupports
   , public nsWrapperCache
 {
@@ -277,7 +277,7 @@ public:
 
   // nsWrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx) override;
 
 private:
   IDBObjectStore(IDBTransaction* aTransaction, const ObjectStoreSpec* aSpec);

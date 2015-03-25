@@ -76,7 +76,7 @@ protected:
 
 class Http2Compressor;
 
-class Http2Decompressor MOZ_FINAL : public Http2BaseCompressor
+class Http2Decompressor final : public Http2BaseCompressor
 {
 public:
   Http2Decompressor() { };
@@ -131,7 +131,7 @@ private:
 };
 
 
-class Http2Compressor MOZ_FINAL : public Http2BaseCompressor
+class Http2Compressor final : public Http2BaseCompressor
 {
 public:
   Http2Compressor() : mParsedContentLength(-1),

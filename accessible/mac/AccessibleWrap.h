@@ -36,7 +36,7 @@ public: // construction, destruction
   /**
    * Get the native Obj-C object (mozAccessible).
    */
-  virtual void GetNativeInterface(void** aOutAccessible) MOZ_OVERRIDE;
+  virtual void GetNativeInterface(void** aOutAccessible) override;
 
   /**
    * The objective-c |Class| type that this accessible's native object
@@ -45,13 +45,13 @@ public: // construction, destruction
    */
   virtual Class GetNativeType ();
 
-  virtual void Shutdown () MOZ_OVERRIDE;
-  virtual void InvalidateChildren() MOZ_OVERRIDE;
+  virtual void Shutdown () override;
+  virtual void InvalidateChildren() override;
 
-  virtual bool InsertChildAt(uint32_t aIdx, Accessible* aChild) MOZ_OVERRIDE;
-  virtual bool RemoveChild(Accessible* aAccessible) MOZ_OVERRIDE;
+  virtual bool InsertChildAt(uint32_t aIdx, Accessible* aChild) override;
+  virtual bool RemoveChild(Accessible* aAccessible) override;
 
-  virtual nsresult HandleAccEvent(AccEvent* aEvent) MOZ_OVERRIDE;
+  virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
 
   /**
    * Ignored means that the accessible might still have children, but is not

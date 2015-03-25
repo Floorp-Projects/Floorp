@@ -33,7 +33,7 @@ namespace dom {
   class Element;
 } // namespace dom
 
-class RestyleManager MOZ_FINAL
+class RestyleManager final
 {
 public:
   friend class ::nsRefreshDriver;
@@ -167,7 +167,7 @@ public:
    */
   typedef nsRefPtrHashtable<nsRefPtrHashKey<nsIContent>, nsStyleContext>
             ReframingStyleContextTable;
-  class MOZ_STACK_CLASS ReframingStyleContexts MOZ_FINAL {
+  class MOZ_STACK_CLASS ReframingStyleContexts final {
   public:
     /**
      * Construct a ReframingStyleContexts object.  The caller must
@@ -495,7 +495,7 @@ private:
  * An ElementRestyler is created for *each* element in a subtree that we
  * recompute styles for.
  */
-class ElementRestyler MOZ_FINAL
+class ElementRestyler final
 {
 public:
   typedef mozilla::dom::Element Element;
@@ -744,7 +744,7 @@ private:
  * (and further ancestors) may be display:contents nodes which have
  * not yet been pushed onto TreeMatchContext.
  */
-class MOZ_STACK_CLASS AutoDisplayContentsAncestorPusher MOZ_FINAL
+class MOZ_STACK_CLASS AutoDisplayContentsAncestorPusher final
 {
  public:
   typedef mozilla::dom::Element Element;

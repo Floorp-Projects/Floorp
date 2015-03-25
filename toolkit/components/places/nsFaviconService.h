@@ -51,7 +51,7 @@ public:
   PRTime created;
 };
 
-class nsFaviconService MOZ_FINAL : public nsIFaviconService
+class nsFaviconService final : public nsIFaviconService
                                  , public mozIAsyncFavicons
                                  , public nsITimerCallback
 {

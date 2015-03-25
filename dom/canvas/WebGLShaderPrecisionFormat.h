@@ -12,7 +12,7 @@ namespace mozilla {
 
 class WebGLBuffer;
 
-class WebGLShaderPrecisionFormat MOZ_FINAL
+class WebGLShaderPrecisionFormat final
     : public WebGLContextBoundObject
 {
 public:

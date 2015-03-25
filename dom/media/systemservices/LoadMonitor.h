@@ -25,7 +25,7 @@ public:
     virtual void LoadChanged(float aSystemLoad, float aProcessLoad) = 0;
 };
 
-class LoadMonitor MOZ_FINAL : public nsIObserver
+class LoadMonitor final : public nsIObserver
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

@@ -33,7 +33,7 @@ public:
                                           nsStyleContext* aContext);
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
+  virtual nsresult GetFrameName(nsAString& aResult) const override
   {
       return MakeFrameName(NS_LITERAL_STRING("nsGridRowLeaf"), aResult);
   }
@@ -44,7 +44,7 @@ public:
                      nsBoxLayout* aLayoutManager):
     nsBoxFrame(aContext, aIsRoot, aLayoutManager) {}
 
-  virtual nsresult GetBorderAndPadding(nsMargin& aBorderAndPadding) MOZ_OVERRIDE;
+  virtual nsresult GetBorderAndPadding(nsMargin& aBorderAndPadding) override;
 
 }; // class nsGridRowLeafFrame
 

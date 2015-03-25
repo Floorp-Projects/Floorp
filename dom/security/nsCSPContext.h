@@ -98,7 +98,7 @@ class CSPViolationReportListener : public nsIStreamListener
 // The POST of the violation report (if it happens) should not follow
 // redirects, per the spec. hence, we implement an nsIChannelEventSink
 // with an object so we can tell XHR to abort if a redirect happens.
-class CSPReportRedirectSink MOZ_FINAL : public nsIChannelEventSink,
+class CSPReportRedirectSink final : public nsIChannelEventSink,
                                         public nsIInterfaceRequestor
 {
   public:

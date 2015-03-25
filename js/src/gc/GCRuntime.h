@@ -87,7 +87,7 @@ class BackgroundAllocTask : public GCParallelTask
     bool enabled() const { return enabled_; }
 
   protected:
-    virtual void run() MOZ_OVERRIDE;
+    virtual void run() override;
 };
 
 /*

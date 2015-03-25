@@ -139,28 +139,28 @@ public:
 
 #ifdef TX_TO_STRING
 #define TX_DECL_TOSTRING \
-    void toString(nsAString& aDest) MOZ_OVERRIDE;
+    void toString(nsAString& aDest) override;
 #define TX_DECL_GETNAMEATOM \
-    nsresult getNameAtom(nsIAtom** aAtom) MOZ_OVERRIDE;
+    nsresult getNameAtom(nsIAtom** aAtom) override;
 #else
 #define TX_DECL_TOSTRING
 #define TX_DECL_GETNAMEATOM
 #endif
 
 #define TX_DECL_EXPR_BASE \
-    nsresult evaluate(txIEvalContext* aContext, txAExprResult** aResult) MOZ_OVERRIDE; \
-    ResultType getReturnType() MOZ_OVERRIDE; \
-    bool isSensitiveTo(ContextSensitivity aContexts) MOZ_OVERRIDE;
+    nsresult evaluate(txIEvalContext* aContext, txAExprResult** aResult) override; \
+    ResultType getReturnType() override; \
+    bool isSensitiveTo(ContextSensitivity aContexts) override;
 
 #define TX_DECL_EXPR \
     TX_DECL_EXPR_BASE \
     TX_DECL_TOSTRING \
-    Expr* getSubExprAt(uint32_t aPos) MOZ_OVERRIDE; \
-    void setSubExprAt(uint32_t aPos, Expr* aExpr) MOZ_OVERRIDE;
+    Expr* getSubExprAt(uint32_t aPos) override; \
+    void setSubExprAt(uint32_t aPos, Expr* aExpr) override;
 
 #define TX_DECL_OPTIMIZABLE_EXPR \
     TX_DECL_EXPR \
-    ExprType getType() MOZ_OVERRIDE;
+    ExprType getType() override;
 
 #define TX_DECL_FUNCTION \
     TX_DECL_GETNAMEATOM \
@@ -285,8 +285,8 @@ public:
                                  txIEvalContext* aContext);
 
     TX_DECL_TOSTRING
-    Expr* getSubExprAt(uint32_t aPos) MOZ_OVERRIDE;
-    void setSubExprAt(uint32_t aPos, Expr* aExpr) MOZ_OVERRIDE;
+    Expr* getSubExprAt(uint32_t aPos) override;
+    void setSubExprAt(uint32_t aPos, Expr* aExpr) override;
 
 protected:
 
@@ -425,9 +425,9 @@ public:
 
 #define TX_DECL_NODE_TEST \
     TX_DECL_TOSTRING \
-    bool matches(const txXPathNode& aNode, txIMatchContext* aContext) MOZ_OVERRIDE; \
-    double getDefaultPriority() MOZ_OVERRIDE; \
-    bool isSensitiveTo(Expr::ContextSensitivity aContext) MOZ_OVERRIDE;
+    bool matches(const txXPathNode& aNode, txIMatchContext* aContext) override; \
+    double getDefaultPriority() override; \
+    bool isSensitiveTo(Expr::ContextSensitivity aContext) override;
 
 /*
  * This class represents a NameTest as defined by the XPath spec
@@ -442,7 +442,7 @@ public:
     txNameTest(nsIAtom* aPrefix, nsIAtom* aLocalName, int32_t aNSID,
                uint16_t aNodeType);
 
-    NodeTestType getType() MOZ_OVERRIDE;
+    NodeTestType getType() override;
 
     TX_DECL_NODE_TEST
 
@@ -487,7 +487,7 @@ public:
         return mNodeType;
     }
 
-    NodeTestType getType() MOZ_OVERRIDE;
+    NodeTestType getType() override;
 
     TX_DECL_NODE_TEST
 

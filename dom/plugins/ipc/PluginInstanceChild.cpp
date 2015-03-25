@@ -2338,7 +2338,7 @@ public:
     {
     }
 
-    void Run() MOZ_OVERRIDE
+    void Run() override
     {
         RemoveFromAsyncList();
 

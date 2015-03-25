@@ -39,35 +39,35 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XULTreeAccessible, Accessible)
 
   // Accessible
-  virtual void Shutdown() MOZ_OVERRIDE;
-  virtual void Value(nsString& aValue) MOZ_OVERRIDE;
-  virtual a11y::role NativeRole() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
+  virtual void Shutdown() override;
+  virtual void Value(nsString& aValue) override;
+  virtual a11y::role NativeRole() override;
+  virtual uint64_t NativeState() override;
   virtual Accessible* ChildAtPoint(int32_t aX, int32_t aY,
-                                   EWhichChildAtPoint aWhichChild) MOZ_OVERRIDE;
+                                   EWhichChildAtPoint aWhichChild) override;
 
-  virtual Accessible* GetChildAt(uint32_t aIndex) const MOZ_OVERRIDE;
-  virtual uint32_t ChildCount() const MOZ_OVERRIDE;
-  virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
+  virtual Accessible* GetChildAt(uint32_t aIndex) const override;
+  virtual uint32_t ChildCount() const override;
+  virtual Relation RelationByType(RelationType aType) override;
 
   // SelectAccessible
-  virtual void SelectedItems(nsTArray<Accessible*>* aItems) MOZ_OVERRIDE;
-  virtual uint32_t SelectedItemCount() MOZ_OVERRIDE;
-  virtual Accessible* GetSelectedItem(uint32_t aIndex) MOZ_OVERRIDE;
-  virtual bool IsItemSelected(uint32_t aIndex) MOZ_OVERRIDE;
-  virtual bool AddItemToSelection(uint32_t aIndex) MOZ_OVERRIDE;
-  virtual bool RemoveItemFromSelection(uint32_t aIndex) MOZ_OVERRIDE;
-  virtual bool SelectAll() MOZ_OVERRIDE;
-  virtual bool UnselectAll() MOZ_OVERRIDE;
+  virtual void SelectedItems(nsTArray<Accessible*>* aItems) override;
+  virtual uint32_t SelectedItemCount() override;
+  virtual Accessible* GetSelectedItem(uint32_t aIndex) override;
+  virtual bool IsItemSelected(uint32_t aIndex) override;
+  virtual bool AddItemToSelection(uint32_t aIndex) override;
+  virtual bool RemoveItemFromSelection(uint32_t aIndex) override;
+  virtual bool SelectAll() override;
+  virtual bool UnselectAll() override;
 
   // Widgets
-  virtual bool IsWidget() const MOZ_OVERRIDE;
-  virtual bool IsActiveWidget() const MOZ_OVERRIDE;
-  virtual bool AreItemsOperable() const MOZ_OVERRIDE;
-  virtual Accessible* CurrentItem() MOZ_OVERRIDE;
-  virtual void SetCurrentItem(Accessible* aItem) MOZ_OVERRIDE;
+  virtual bool IsWidget() const override;
+  virtual bool IsActiveWidget() const override;
+  virtual bool AreItemsOperable() const override;
+  virtual Accessible* CurrentItem() override;
+  virtual void SetCurrentItem(Accessible* aItem) override;
 
-  virtual Accessible* ContainerWidget() const MOZ_OVERRIDE;
+  virtual Accessible* ContainerWidget() const override;
 
   // XULTreeAccessible
 
@@ -145,24 +145,24 @@ public:
                                            AccessibleWrap)
 
   // Accessible
-  virtual void Shutdown() MOZ_OVERRIDE;
-  virtual nsIntRect Bounds() const MOZ_OVERRIDE;
-  virtual GroupPos GroupPosition() MOZ_OVERRIDE;
-  virtual uint64_t NativeState() MOZ_OVERRIDE;
-  virtual uint64_t NativeInteractiveState() const MOZ_OVERRIDE;
-  virtual int32_t IndexInParent() const MOZ_OVERRIDE;
-  virtual Relation RelationByType(RelationType aType) MOZ_OVERRIDE;
-  virtual Accessible* FocusedChild() MOZ_OVERRIDE;
-  virtual void SetSelected(bool aSelect) MOZ_OVERRIDE;
-  virtual void TakeFocus() MOZ_OVERRIDE;
+  virtual void Shutdown() override;
+  virtual nsIntRect Bounds() const override;
+  virtual GroupPos GroupPosition() override;
+  virtual uint64_t NativeState() override;
+  virtual uint64_t NativeInteractiveState() const override;
+  virtual int32_t IndexInParent() const override;
+  virtual Relation RelationByType(RelationType aType) override;
+  virtual Accessible* FocusedChild() override;
+  virtual void SetSelected(bool aSelect) override;
+  virtual void TakeFocus() override;
 
   // ActionAccessible
-  virtual uint8_t ActionCount() MOZ_OVERRIDE;
-  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) MOZ_OVERRIDE;
-  virtual bool DoAction(uint8_t aIndex) MOZ_OVERRIDE;
+  virtual uint8_t ActionCount() override;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  virtual bool DoAction(uint8_t aIndex) override;
 
   // Widgets
-  virtual Accessible* ContainerWidget() const MOZ_OVERRIDE;
+  virtual Accessible* ContainerWidget() const override;
 
   // XULTreeItemAccessibleBase
   NS_DECLARE_STATIC_IID_ACCESSOR(XULTREEITEMBASEACCESSIBLE_IMPL_CID)
@@ -190,9 +190,9 @@ protected:
   enum { eAction_Click = 0, eAction_Expand = 1 };
 
   // Accessible
-  virtual void DispatchClickEvent(nsIContent *aContent, uint32_t aActionIndex) MOZ_OVERRIDE;
+  virtual void DispatchClickEvent(nsIContent *aContent, uint32_t aActionIndex) override;
   virtual Accessible* GetSiblingAtOffset(int32_t aOffset,
-                                         nsresult *aError = nullptr) const MOZ_OVERRIDE;
+                                         nsresult *aError = nullptr) const override;
 
   // XULTreeItemAccessibleBase
 
@@ -231,18 +231,18 @@ public:
                                            XULTreeItemAccessibleBase)
 
   // Accessible
-  virtual void Shutdown() MOZ_OVERRIDE;
-  virtual ENameValueFlag Name(nsString& aName) MOZ_OVERRIDE;
-  virtual a11y::role NativeRole() MOZ_OVERRIDE;
+  virtual void Shutdown() override;
+  virtual ENameValueFlag Name(nsString& aName) override;
+  virtual a11y::role NativeRole() override;
 
   // XULTreeItemAccessibleBase
-  virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx) MOZ_OVERRIDE;
+  virtual void RowInvalidated(int32_t aStartColIdx, int32_t aEndColIdx) override;
 
 protected:
   virtual ~XULTreeItemAccessible();
 
   // Accessible
-  virtual void CacheChildren() MOZ_OVERRIDE;
+  virtual void CacheChildren() override;
 
   // XULTreeItemAccessible
   nsCOMPtr<nsITreeColumn> mColumn;
@@ -263,7 +263,7 @@ protected:
   // Accessible
   virtual Accessible* GetSiblingAtOffset(int32_t aOffset,
                                          nsresult* aError = nullptr) const
-    MOZ_OVERRIDE;
+    override;
 };
 
 

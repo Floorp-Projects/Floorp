@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace dom {
 
-class TVSourceListener MOZ_FINAL : public nsITVSourceListener
+class TVSourceListener final : public nsITVSourceListener
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

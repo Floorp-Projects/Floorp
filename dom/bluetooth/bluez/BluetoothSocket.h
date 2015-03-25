@@ -29,11 +29,11 @@ public:
     CloseSocket();
   }
 
-  virtual void OnConnectSuccess() MOZ_OVERRIDE;
-  virtual void OnConnectError() MOZ_OVERRIDE;
-  virtual void OnDisconnect() MOZ_OVERRIDE;
+  virtual void OnConnectSuccess() override;
+  virtual void OnConnectError() override;
+  virtual void OnDisconnect() override;
   virtual void ReceiveSocketData(
-    nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage) MOZ_OVERRIDE;
+    nsAutoPtr<mozilla::ipc::UnixSocketRawData>& aMessage) override;
 
   inline void GetAddress(nsAString& aDeviceAddress)
   {

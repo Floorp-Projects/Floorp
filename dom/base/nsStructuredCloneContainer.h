@@ -21,7 +21,7 @@
   {0xb8, 0x5f, 0x13, 0xce, 0xd8, 0x89, 0xee, 0xec} \
 }
 
-class nsStructuredCloneContainer MOZ_FINAL : public nsIStructuredCloneContainer
+class nsStructuredCloneContainer final : public nsIStructuredCloneContainer
 {
   public:
     nsStructuredCloneContainer();

@@ -17,7 +17,7 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 
-class TelephonyCall MOZ_FINAL : public DOMEventTargetHelper
+class TelephonyCall final : public DOMEventTargetHelper
 {
   nsRefPtr<Telephony> mTelephony;
   nsRefPtr<TelephonyCallGroup> mGroup;
@@ -51,7 +51,7 @@ public:
 
   // WrapperCache
   virtual JSObject*
-  WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  WrapObject(JSContext* aCx) override;
 
   // WebIDL
   already_AddRefed<TelephonyCallId>

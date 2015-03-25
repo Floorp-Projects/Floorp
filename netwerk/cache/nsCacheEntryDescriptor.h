@@ -19,7 +19,7 @@
 /******************************************************************************
 * nsCacheEntryDescriptor
 *******************************************************************************/
-class nsCacheEntryDescriptor MOZ_FINAL :
+class nsCacheEntryDescriptor final :
     public PRCList,
     public nsICacheEntryDescriptor
 {
@@ -127,8 +127,8 @@ private:
           , mStreamEnded(false)
          {
          }
-         NS_IMETHOD Read(char* buf, uint32_t count, uint32_t * result) MOZ_OVERRIDE;
-         NS_IMETHOD Close() MOZ_OVERRIDE;
+         NS_IMETHOD Read(char* buf, uint32_t count, uint32_t * result) override;
+         NS_IMETHOD Close() override;
      private:
          virtual ~nsDecompressInputStreamWrapper()
          {
@@ -208,8 +208,8 @@ private:
           , mUncompressedCount(0)
          {
          }
-         NS_IMETHOD Write(const char* buf, uint32_t count, uint32_t * result) MOZ_OVERRIDE;
-         NS_IMETHOD Close() MOZ_OVERRIDE;
+         NS_IMETHOD Write(const char* buf, uint32_t count, uint32_t * result) override;
+         NS_IMETHOD Close() override;
      private:
          virtual ~nsCompressOutputStreamWrapper()
          { 

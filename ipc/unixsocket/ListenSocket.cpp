@@ -20,7 +20,7 @@ namespace ipc {
 // ListenSocketIO
 //
 
-class ListenSocketIO MOZ_FINAL : public UnixSocketWatcher
+class ListenSocketIO final : public UnixSocketWatcher
                                , protected SocketIOBase
 {
 public:
@@ -57,10 +57,10 @@ public:
   //
 
   void OnAccepted(int aFd, const sockaddr_any* aAddr,
-                  socklen_t aAddrLen) MOZ_OVERRIDE;
-  void OnConnected() MOZ_OVERRIDE;
-  void OnError(const char* aFunction, int aErrno) MOZ_OVERRIDE;
-  void OnListening() MOZ_OVERRIDE;
+                  socklen_t aAddrLen) override;
+  void OnConnected() override;
+  void OnError(const char* aFunction, int aErrno) override;
+  void OnListening() override;
 
 private:
   void FireSocketError();
@@ -321,7 +321,7 @@ ListenSocketIO::SetSocketFlags(int aFd)
 // Socket tasks
 //
 
-class ListenSocketIO::ListenTask MOZ_FINAL
+class ListenSocketIO::ListenTask final
   : public SocketIOTask<ListenSocketIO>
 {
 public:
@@ -332,7 +332,7 @@ public:
     MOZ_ASSERT(mCOSocketIO);
   }
 
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(!NS_IsMainThread());
 

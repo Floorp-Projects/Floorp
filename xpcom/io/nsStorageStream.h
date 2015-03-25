@@ -32,7 +32,7 @@
 
 class nsSegmentedBuffer;
 
-class nsStorageStream MOZ_FINAL
+class nsStorageStream final
   : public nsIStorageStream
   , public nsIOutputStream
 {

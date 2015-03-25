@@ -76,18 +76,18 @@ public:
   }
 
   bool ReadAt(int64_t offset, void* data, size_t size, size_t* bytes_read)
-    MOZ_OVERRIDE
+    override
   {
     return mStream->ReadAt(offset, data, size, bytes_read);
   }
 
   bool CachedReadAt(int64_t offset, void* data, size_t size, size_t* bytes_read)
-    MOZ_OVERRIDE
+    override
   {
     return mStream->ReadAt(offset, data, size, bytes_read);
   }
 
-  virtual bool Length(int64_t* size) MOZ_OVERRIDE
+  virtual bool Length(int64_t* size) override
   {
     return mStream->Length(size);
   }

@@ -21,7 +21,7 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/Attributes.h"
 
-class nsDNSService MOZ_FINAL : public nsPIDNSService
+class nsDNSService final : public nsPIDNSService
                              , public nsIObserver
                              , public nsIMemoryReporter
 {

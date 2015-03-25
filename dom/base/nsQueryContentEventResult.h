@@ -14,7 +14,7 @@
 
 class nsIWidget;
 
-class nsQueryContentEventResult MOZ_FINAL : public nsIQueryContentEventResult
+class nsQueryContentEventResult final : public nsIQueryContentEventResult
 {
 public:
   nsQueryContentEventResult();

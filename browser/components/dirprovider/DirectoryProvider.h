@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace browser {
 
-class DirectoryProvider MOZ_FINAL : public nsIDirectoryServiceProvider2
+class DirectoryProvider final : public nsIDirectoryServiceProvider2
 {
 public:
   NS_DECL_ISUPPORTS
@@ -27,7 +27,7 @@ public:
 private:
   ~DirectoryProvider() {}
 
-  class AppendingEnumerator MOZ_FINAL : public nsISimpleEnumerator
+  class AppendingEnumerator final : public nsISimpleEnumerator
   {
   public:
     NS_DECL_ISUPPORTS

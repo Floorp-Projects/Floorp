@@ -19,7 +19,7 @@ public:
   RenderFrameChild() : mWasDestroyed(false) {}
   virtual ~RenderFrameChild() {}
 
-  void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  void ActorDestroy(ActorDestroyReason why) override;
 
   void Destroy();
 

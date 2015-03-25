@@ -73,7 +73,7 @@ namespace system {
 *
 ***************************************************************************/
 
-class VolumeManager MOZ_FINAL : public MessageLoopForIO::LineWatcher
+class VolumeManager final : public MessageLoopForIO::LineWatcher
 {
   virtual ~VolumeManager();
 

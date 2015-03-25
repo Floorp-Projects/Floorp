@@ -25,81 +25,81 @@ public:
   // nsIMathMLFrame ---
 
   virtual bool
-  IsSpaceLike() MOZ_OVERRIDE {
+  IsSpaceLike() override {
     return NS_MATHML_IS_SPACE_LIKE(mPresentationData.flags);
   }
 
   NS_IMETHOD
-  GetBoundingMetrics(nsBoundingMetrics& aBoundingMetrics) MOZ_OVERRIDE {
+  GetBoundingMetrics(nsBoundingMetrics& aBoundingMetrics) override {
     aBoundingMetrics = mBoundingMetrics;
     return NS_OK;
   }
 
   NS_IMETHOD
-  SetBoundingMetrics(const nsBoundingMetrics& aBoundingMetrics) MOZ_OVERRIDE {
+  SetBoundingMetrics(const nsBoundingMetrics& aBoundingMetrics) override {
     mBoundingMetrics = aBoundingMetrics;
     return NS_OK;
   }
 
   NS_IMETHOD
-  SetReference(const nsPoint& aReference) MOZ_OVERRIDE {
+  SetReference(const nsPoint& aReference) override {
     mReference = aReference;
     return NS_OK;
   }
 
-  virtual eMathMLFrameType GetMathMLFrameType() MOZ_OVERRIDE;
+  virtual eMathMLFrameType GetMathMLFrameType() override;
 
   NS_IMETHOD
   Stretch(nsRenderingContext& aRenderingContext,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
-          nsHTMLReflowMetrics& aDesiredStretchSize) MOZ_OVERRIDE
+          nsHTMLReflowMetrics& aDesiredStretchSize) override
   {
     return NS_OK;
   }
 
   NS_IMETHOD
-  GetEmbellishData(nsEmbellishData& aEmbellishData) MOZ_OVERRIDE {
+  GetEmbellishData(nsEmbellishData& aEmbellishData) override {
     aEmbellishData = mEmbellishData;
     return NS_OK;
   }
 
   NS_IMETHOD
-  GetPresentationData(nsPresentationData& aPresentationData) MOZ_OVERRIDE {
+  GetPresentationData(nsPresentationData& aPresentationData) override {
     aPresentationData = mPresentationData;
     return NS_OK;
   }
 
   NS_IMETHOD
-  InheritAutomaticData(nsIFrame* aParent) MOZ_OVERRIDE;
+  InheritAutomaticData(nsIFrame* aParent) override;
 
   NS_IMETHOD
-  TransmitAutomaticData() MOZ_OVERRIDE
+  TransmitAutomaticData() override
   {
     return NS_OK;
   }
 
   NS_IMETHOD
   UpdatePresentationData(uint32_t        aFlagsValues,
-                         uint32_t        aFlagsToUpdate) MOZ_OVERRIDE;
+                         uint32_t        aFlagsToUpdate) override;
 
   NS_IMETHOD
   UpdatePresentationDataFromChildAt(int32_t         aFirstIndex,
                                     int32_t         aLastIndex,
                                     uint32_t        aFlagsValues,
-                                    uint32_t        aFlagsToUpdate) MOZ_OVERRIDE
+                                    uint32_t        aFlagsToUpdate) override
   {
     return NS_OK;
   }
 
   uint8_t
-  ScriptIncrement(nsIFrame* aFrame) MOZ_OVERRIDE
+  ScriptIncrement(nsIFrame* aFrame) override
   {
     return 0;
   }
 
   bool
-  IsMrowLike() MOZ_OVERRIDE
+  IsMrowLike() override
   {
     return false;
   }

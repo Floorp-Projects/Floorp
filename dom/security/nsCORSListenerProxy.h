@@ -29,7 +29,7 @@ NS_StartCORSPreflight(nsIChannel* aRequestChannel,
                       nsTArray<nsCString>& aACUnsafeHeaders,
                       nsIChannel** aPreflightChannel);
 
-class nsCORSListenerProxy MOZ_FINAL : public nsIStreamListener,
+class nsCORSListenerProxy final : public nsIStreamListener,
                                       public nsIInterfaceRequestor,
                                       public nsIChannelEventSink,
                                       public nsIAsyncVerifyRedirectCallback

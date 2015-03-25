@@ -34,7 +34,7 @@ class nsIScreenManager;
 class nsIWidget;
 struct nsRect;
 
-class nsDeviceContext MOZ_FINAL
+class nsDeviceContext final
 {
 public:
     nsDeviceContext();

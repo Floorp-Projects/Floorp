@@ -43,21 +43,21 @@ public:
 
     // override gfxFontEntry table access function to bypass table cache,
     // use CGFontRef API to get direct access to system font data
-    virtual hb_blob_t *GetFontTable(uint32_t aTag) MOZ_OVERRIDE;
+    virtual hb_blob_t *GetFontTable(uint32_t aTag) override;
 
     virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                        FontListSizes* aSizes) const MOZ_OVERRIDE;
+                                        FontListSizes* aSizes) const override;
 
-    nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr) MOZ_OVERRIDE;
+    nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr) override;
 
     bool RequiresAATLayout() const { return mRequiresAAT; }
 
     bool IsCFF();
 
 protected:
-    virtual gfxFont* CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold) MOZ_OVERRIDE;
+    virtual gfxFont* CreateFontInstance(const gfxFontStyle *aFontStyle, bool aNeedsBold) override;
 
-    virtual bool HasFontTable(uint32_t aTableTag) MOZ_OVERRIDE;
+    virtual bool HasFontTable(uint32_t aTableTag) override;
 
     static void DestroyBlobFunc(void* aUserData);
 

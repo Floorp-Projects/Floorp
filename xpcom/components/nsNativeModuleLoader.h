@@ -14,7 +14,7 @@ namespace mozilla {
 class FileLocation;
 }
 
-class nsNativeModuleLoader MOZ_FINAL
+class nsNativeModuleLoader final
 {
 public:
   const mozilla::Module* LoadModule(mozilla::FileLocation& aFile);

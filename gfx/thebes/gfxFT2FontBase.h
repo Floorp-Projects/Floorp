@@ -21,21 +21,21 @@ public:
     uint32_t GetGlyph(uint32_t aCharCode);
     void GetGlyphExtents(uint32_t aGlyph,
                          cairo_text_extents_t* aExtents);
-    virtual uint32_t GetSpaceGlyph() MOZ_OVERRIDE;
-    virtual bool ProvidesGetGlyph() const MOZ_OVERRIDE { return true; }
+    virtual uint32_t GetSpaceGlyph() override;
+    virtual bool ProvidesGetGlyph() const override { return true; }
     virtual uint32_t GetGlyph(uint32_t unicode,
-                              uint32_t variation_selector) MOZ_OVERRIDE;
-    virtual bool ProvidesGlyphWidths() const MOZ_OVERRIDE { return true; }
+                              uint32_t variation_selector) override;
+    virtual bool ProvidesGlyphWidths() const override { return true; }
     virtual int32_t GetGlyphWidth(DrawTarget& aDrawTarget,
-                                  uint16_t aGID) MOZ_OVERRIDE;
+                                  uint16_t aGID) override;
 
     cairo_scaled_font_t *CairoScaledFont() { return mScaledFont; };
-    virtual bool SetupCairoFont(gfxContext *aContext) MOZ_OVERRIDE;
+    virtual bool SetupCairoFont(gfxContext *aContext) override;
 
-    virtual FontType GetType() const MOZ_OVERRIDE { return FONT_TYPE_FT2; }
+    virtual FontType GetType() const override { return FONT_TYPE_FT2; }
 
 protected:
-    virtual const Metrics& GetHorizontalMetrics() MOZ_OVERRIDE;
+    virtual const Metrics& GetHorizontalMetrics() override;
 
     uint32_t mSpaceGlyph;
     bool mHasMetrics;

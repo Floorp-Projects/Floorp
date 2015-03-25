@@ -35,7 +35,7 @@ bool AppleDecoderModule::sForceVDA = false;
 
 class LinkTask : public nsRunnable {
 public:
-  NS_IMETHOD Run() MOZ_OVERRIDE {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
     MOZ_ASSERT(AppleDecoderModule::sInitialized);
     if (AppleDecoderModule::sIsVDAAvailable) {
@@ -51,7 +51,7 @@ public:
 
 class UnlinkTask : public nsRunnable {
 public:
-  NS_IMETHOD Run() MOZ_OVERRIDE {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
     MOZ_ASSERT(AppleDecoderModule::sInitialized);
     if (AppleDecoderModule::sIsVDAAvailable) {
@@ -112,7 +112,7 @@ AppleDecoderModule::Init()
 
 class InitTask : public nsRunnable {
 public:
-  NS_IMETHOD Run() MOZ_OVERRIDE {
+  NS_IMETHOD Run() override {
     MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
     AppleDecoderModule::Init();
     return NS_OK;

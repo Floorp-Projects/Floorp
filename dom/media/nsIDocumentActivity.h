@@ -24,6 +24,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentActivity, NS_IDOCUMENTACTIVITY_IID)
 
 /* Use this macro when declaring classes that implement this interface. */
 #define NS_DECL_NSIDOCUMENTACTIVITY \
-  virtual void NotifyOwnerDocumentActivityChanged() MOZ_OVERRIDE;
+  virtual void NotifyOwnerDocumentActivityChanged() override;
 
 #endif /* nsIDocumentActivity_h__ */

@@ -19,10 +19,10 @@ public:
   nsListBoxLayout();
 
   // nsBoxLayout
-  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aState) MOZ_OVERRIDE;
-  virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
-  virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) MOZ_OVERRIDE;
+  NS_IMETHOD Layout(nsIFrame* aBox, nsBoxLayoutState& aState) override;
+  virtual nsSize GetPrefSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetMinSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
+  virtual nsSize GetMaxSize(nsIFrame* aBox, nsBoxLayoutState& aBoxLayoutState) override;
 
 protected:
   NS_IMETHOD LayoutInternal(nsIFrame* aBox, nsBoxLayoutState& aState);

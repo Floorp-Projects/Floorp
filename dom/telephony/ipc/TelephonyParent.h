@@ -26,43 +26,43 @@ protected:
   virtual ~TelephonyParent() {}
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
-  RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActor, const IPCTelephonyRequest& aRequest) MOZ_OVERRIDE;
+  RecvPTelephonyRequestConstructor(PTelephonyRequestParent* aActor, const IPCTelephonyRequest& aRequest) override;
 
   virtual PTelephonyRequestParent*
-  AllocPTelephonyRequestParent(const IPCTelephonyRequest& aRequest) MOZ_OVERRIDE;
+  AllocPTelephonyRequestParent(const IPCTelephonyRequest& aRequest) override;
 
   virtual bool
-  DeallocPTelephonyRequestParent(PTelephonyRequestParent* aActor) MOZ_OVERRIDE;
+  DeallocPTelephonyRequestParent(PTelephonyRequestParent* aActor) override;
 
   virtual bool
-  Recv__delete__() MOZ_OVERRIDE;
+  Recv__delete__() override;
 
   virtual bool
-  RecvRegisterListener() MOZ_OVERRIDE;
+  RecvRegisterListener() override;
 
   virtual bool
-  RecvUnregisterListener() MOZ_OVERRIDE;
+  RecvUnregisterListener() override;
 
   virtual bool
-  RecvStartTone(const uint32_t& aClientId, const nsString& aTone) MOZ_OVERRIDE;
+  RecvStartTone(const uint32_t& aClientId, const nsString& aTone) override;
 
   virtual bool
-  RecvStopTone(const uint32_t& aClientId) MOZ_OVERRIDE;
+  RecvStopTone(const uint32_t& aClientId) override;
 
   virtual bool
-  RecvGetMicrophoneMuted(bool* aMuted) MOZ_OVERRIDE;
+  RecvGetMicrophoneMuted(bool* aMuted) override;
 
   virtual bool
-  RecvSetMicrophoneMuted(const bool& aMuted) MOZ_OVERRIDE;
+  RecvSetMicrophoneMuted(const bool& aMuted) override;
 
   virtual bool
-  RecvGetSpeakerEnabled(bool* aEnabled) MOZ_OVERRIDE;
+  RecvGetSpeakerEnabled(bool* aEnabled) override;
 
   virtual bool
-  RecvSetSpeakerEnabled(const bool& aEnabled) MOZ_OVERRIDE;
+  RecvSetSpeakerEnabled(const bool& aEnabled) override;
 
 private:
   bool mActorDestroyed;
@@ -86,7 +86,7 @@ protected:
   virtual ~TelephonyRequestParent() {}
 
   virtual void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
   nsresult
   SendResponse(const IPCTelephonyResponse& aResponse);

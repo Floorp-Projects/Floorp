@@ -12,12 +12,12 @@
 namespace mozilla {
 namespace dom {
 
-class ContainerBoxObject MOZ_FINAL : public BoxObject
+class ContainerBoxObject final : public BoxObject
 {
 public:
   ContainerBoxObject();
 
-  virtual JSObject* WrapObject(JSContext* aCx) MOZ_OVERRIDE;
+  virtual JSObject* WrapObject(JSContext* aCx) override;
 
   already_AddRefed<nsIDocShell> GetDocShell();
 

@@ -97,7 +97,7 @@
  */
 
 template<typename Details>
-class StrongGLenum MOZ_FINAL
+class StrongGLenum final
 {
 private:
     static const GLenum NonexistantGLenum = 0xdeaddead;

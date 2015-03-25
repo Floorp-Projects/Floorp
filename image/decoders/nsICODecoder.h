@@ -38,13 +38,13 @@ public:
     return mDirEntry.mHeight == 0 ? 256 : mDirEntry.mHeight;
   }
 
-  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) MOZ_OVERRIDE;
-  virtual void FinishInternal() MOZ_OVERRIDE;
+  virtual void WriteInternal(const char* aBuffer, uint32_t aCount) override;
+  virtual void FinishInternal() override;
   virtual nsresult AllocateFrame(const nsIntSize& aTargetSize
-                                   /* = nsIntSize() */) MOZ_OVERRIDE;
+                                   /* = nsIntSize() */) override;
 
 protected:
-  virtual bool NeedsNewFrame() const MOZ_OVERRIDE;
+  virtual bool NeedsNewFrame() const override;
 
 private:
   // Writes to the contained decoder and sets the appropriate errors

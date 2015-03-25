@@ -20,7 +20,7 @@ namespace dom {
 
 class RTCIdentityProvider;
 
-class RTCIdentityProviderRegistrar MOZ_FINAL : public nsISupports,
+class RTCIdentityProviderRegistrar final : public nsISupports,
                                                public nsWrapperCache
 {
 public:

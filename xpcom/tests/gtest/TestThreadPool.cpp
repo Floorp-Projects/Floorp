@@ -15,14 +15,14 @@
 #include "mozilla/Atomics.h"
 #include "gtest/gtest.h"
 
-class Task MOZ_FINAL : public nsIRunnable
+class Task final : public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   explicit Task(int i) : mIndex(i) {}
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     printf("###(%d) running from thread: %p\n", mIndex, (void *) PR_GetCurrentThread());
     int r = (int) ((float) rand() * 200 / RAND_MAX);

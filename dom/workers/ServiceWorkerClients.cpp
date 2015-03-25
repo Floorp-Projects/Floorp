@@ -42,7 +42,7 @@ namespace {
 
 // Helper class used for passing the promise between threads while
 // keeping the worker alive.
-class PromiseHolder MOZ_FINAL : public WorkerFeature
+class PromiseHolder final : public WorkerFeature
 {
   friend class MatchAllRunnable;
 
@@ -119,7 +119,7 @@ private:
   bool mClean;
 };
 
-class ResolvePromiseWorkerRunnable MOZ_FINAL : public WorkerRunnable
+class ResolvePromiseWorkerRunnable final : public WorkerRunnable
 {
   nsRefPtr<PromiseHolder> mPromiseHolder;
   nsAutoPtr<nsTArray<uint64_t>> mValue;
@@ -159,7 +159,7 @@ public:
   }
 };
 
-class ReleasePromiseRunnable MOZ_FINAL : public MainThreadWorkerControlRunnable
+class ReleasePromiseRunnable final : public MainThreadWorkerControlRunnable
 {
   nsRefPtr<PromiseHolder> mPromiseHolder;
 
@@ -187,7 +187,7 @@ private:
 
 };
 
-class MatchAllRunnable MOZ_FINAL : public nsRunnable
+class MatchAllRunnable final : public nsRunnable
 {
   WorkerPrivate* mWorkerPrivate;
   nsRefPtr<PromiseHolder> mPromiseHolder;
@@ -205,7 +205,7 @@ public:
   }
 
   NS_IMETHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     AssertIsOnMainThread();
 

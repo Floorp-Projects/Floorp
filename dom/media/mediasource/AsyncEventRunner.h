@@ -20,7 +20,7 @@ public:
     , mName(aName)
   {}
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     mTarget->DispatchSimpleEvent(mName);
     return NS_OK;

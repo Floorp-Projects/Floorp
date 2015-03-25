@@ -29,13 +29,13 @@ protected:
   virtual ~BasicContainerLayer();
 
 public:
-  virtual void SetVisibleRegion(const nsIntRegion& aRegion) MOZ_OVERRIDE
+  virtual void SetVisibleRegion(const nsIntRegion& aRegion) override
   {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
     ContainerLayer::SetVisibleRegion(aRegion);
   }
-  virtual bool InsertAfter(Layer* aChild, Layer* aAfter) MOZ_OVERRIDE
+  virtual bool InsertAfter(Layer* aChild, Layer* aAfter) override
   {
     if (!BasicManager()->InConstruction()) {
       NS_ERROR("Can only set properties in construction phase");
@@ -44,7 +44,7 @@ public:
     return ContainerLayer::InsertAfter(aChild, aAfter);
   }
 
-  virtual bool RemoveChild(Layer* aChild) MOZ_OVERRIDE
+  virtual bool RemoveChild(Layer* aChild) override
   { 
     if (!BasicManager()->InConstruction()) {
       NS_ERROR("Can only set properties in construction phase");
@@ -53,7 +53,7 @@ public:
     return ContainerLayer::RemoveChild(aChild);
   }
 
-  virtual bool RepositionChild(Layer* aChild, Layer* aAfter) MOZ_OVERRIDE
+  virtual bool RepositionChild(Layer* aChild, Layer* aAfter) override
   {
     if (!BasicManager()->InConstruction()) {
       NS_ERROR("Can only set properties in construction phase");
@@ -62,7 +62,7 @@ public:
     return ContainerLayer::RepositionChild(aChild, aAfter);
   }
 
-  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) MOZ_OVERRIDE;
+  virtual void ComputeEffectiveTransforms(const gfx::Matrix4x4& aTransformToSurface) override;
 
   /**
    * Returns true when:
@@ -85,13 +85,13 @@ public:
 
   virtual void Validate(LayerManager::DrawPaintedLayerCallback aCallback,
                         void* aCallbackData,
-                        ReadbackProcessor* aReadback) MOZ_OVERRIDE;
+                        ReadbackProcessor* aReadback) override;
 
   /**
    * We don't really have a hard restriction for max layer size, but we pick
    * 4096 to avoid excessive memory usage.
    */
-  virtual int32_t GetMaxLayerSize() MOZ_OVERRIDE { return 4096; }
+  virtual int32_t GetMaxLayerSize() override { return 4096; }
 
 protected:
   BasicLayerManager* BasicManager()

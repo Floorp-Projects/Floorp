@@ -22,7 +22,7 @@ class nsIDOMNode;
 namespace mozilla {
 namespace dom {
 
-class NodeIterator MOZ_FINAL : public nsIDOMNodeIterator,
+class NodeIterator final : public nsIDOMNodeIterator,
                                public nsTraversal,
                                public nsStubMutationObserver
 {

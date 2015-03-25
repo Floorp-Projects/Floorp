@@ -18,7 +18,7 @@ namespace widget {
 typedef nsDataHashtable<nsPtrHashKey<struct objc_selector>, CommandInt>
   SelectorCommandHashtable;
 
-class NativeKeyBindings MOZ_FINAL
+class NativeKeyBindings final
 {
   typedef nsIWidget::NativeKeyBindingsType NativeKeyBindingsType;
   typedef nsIWidget::DoCommandCallback DoCommandCallback;

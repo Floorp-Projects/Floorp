@@ -22,7 +22,7 @@
 #include "nsIContentPolicy.h"
 #include "mozilla/Attributes.h"
 
-class nsDataDocumentContentPolicy MOZ_FINAL : public nsIContentPolicy
+class nsDataDocumentContentPolicy final : public nsIContentPolicy
 {
   ~nsDataDocumentContentPolicy()
   {}

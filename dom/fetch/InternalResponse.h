@@ -16,7 +16,7 @@ namespace dom {
 
 class InternalHeaders;
 
-class InternalResponse MOZ_FINAL
+class InternalResponse final
 {
   friend class FetchDriver;
 

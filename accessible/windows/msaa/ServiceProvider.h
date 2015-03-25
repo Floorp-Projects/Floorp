@@ -15,7 +15,7 @@
 namespace mozilla {
 namespace a11y {
 
-class ServiceProvider MOZ_FINAL : public IServiceProvider
+class ServiceProvider final : public IServiceProvider
 {
 public:
   ServiceProvider(AccessibleWrap* aAcc) : mAccessible(aAcc) {}

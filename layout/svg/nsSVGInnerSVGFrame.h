@@ -31,7 +31,7 @@ public:
 #ifdef DEBUG
   virtual void Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
-                    nsIFrame*         aPrevInFlow) MOZ_OVERRIDE;
+                    nsIFrame*         aPrevInFlow) override;
 #endif
 
   /**
@@ -39,10 +39,10 @@ public:
    *
    * @see nsGkAtoms::svgInnerSVGFrame
    */
-  virtual nsIAtom* GetType() const MOZ_OVERRIDE;
+  virtual nsIAtom* GetType() const override;
 
 #ifdef DEBUG_FRAME_DUMP
-  virtual nsresult GetFrameName(nsAString& aResult) const MOZ_OVERRIDE
+  virtual nsresult GetFrameName(nsAString& aResult) const override
   {
     return MakeFrameName(NS_LITERAL_STRING("SVGInnerSVG"), aResult);
   }
@@ -50,24 +50,24 @@ public:
 
   virtual nsresult  AttributeChanged(int32_t         aNameSpaceID,
                                      nsIAtom*        aAttribute,
-                                     int32_t         aModType) MOZ_OVERRIDE;
+                                     int32_t         aModType) override;
 
   // nsISVGChildFrame interface:
   virtual nsresult PaintSVG(gfxContext& aContext,
                             const gfxMatrix& aTransform,
-                            const nsIntRect *aDirtyRect = nullptr) MOZ_OVERRIDE;
-  virtual nsRect GetCoveredRegion() MOZ_OVERRIDE;
-  virtual void ReflowSVG() MOZ_OVERRIDE;
-  virtual void NotifySVGChanged(uint32_t aFlags) MOZ_OVERRIDE;
-  virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) MOZ_OVERRIDE;
+                            const nsIntRect *aDirtyRect = nullptr) override;
+  virtual nsRect GetCoveredRegion() override;
+  virtual void ReflowSVG() override;
+  virtual void NotifySVGChanged(uint32_t aFlags) override;
+  virtual nsIFrame* GetFrameForPoint(const gfxPoint& aPoint) override;
 
   // nsSVGContainerFrame methods:
-  virtual gfxMatrix GetCanvasTM() MOZ_OVERRIDE;
+  virtual gfxMatrix GetCanvasTM() override;
 
-  virtual bool HasChildrenOnlyTransform(Matrix *aTransform) const MOZ_OVERRIDE;
+  virtual bool HasChildrenOnlyTransform(Matrix *aTransform) const override;
 
   // nsISVGSVGFrame interface:
-  virtual void NotifyViewportOrTransformChanged(uint32_t aFlags) MOZ_OVERRIDE;
+  virtual void NotifyViewportOrTransformChanged(uint32_t aFlags) override;
 
 protected:
 

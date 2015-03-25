@@ -200,7 +200,7 @@ public:
 
 protected:
   virtual void
-  streamPayload(JSStreamWriter& b) MOZ_OVERRIDE { return streamPayloadImp(b); }
+  streamPayload(JSStreamWriter& b) override { return streamPayloadImp(b); }
 
 private:
   void streamPayloadImp(JSStreamWriter& b);

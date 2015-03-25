@@ -28,25 +28,25 @@ public:
   // Overrides FileSystemBase
 
   virtual void
-  Shutdown() MOZ_OVERRIDE;
+  Shutdown() override;
 
   virtual nsPIDOMWindow*
-  GetWindow() const MOZ_OVERRIDE;
+  GetWindow() const override;
 
   virtual already_AddRefed<nsIFile>
-  GetLocalFile(const nsAString& aRealPath) const MOZ_OVERRIDE;
+  GetLocalFile(const nsAString& aRealPath) const override;
 
   virtual bool
-  GetRealPath(FileImpl* aFile, nsAString& aRealPath) const MOZ_OVERRIDE;
+  GetRealPath(FileImpl* aFile, nsAString& aRealPath) const override;
 
   virtual const nsAString&
-  GetRootName() const MOZ_OVERRIDE;
+  GetRootName() const override;
 
   virtual bool
-  IsSafeFile(nsIFile* aFile) const MOZ_OVERRIDE;
+  IsSafeFile(nsIFile* aFile) const override;
 
   virtual bool
-  IsSafeDirectory(Directory* aDir) const MOZ_OVERRIDE;
+  IsSafeDirectory(Directory* aDir) const override;
 private:
   virtual
   ~DeviceStorageFileSystem();

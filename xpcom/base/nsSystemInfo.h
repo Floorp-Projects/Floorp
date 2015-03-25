@@ -12,7 +12,7 @@
 #include "nsIObserver.h"
 #endif // defined(XP_WIN)
 
-class nsSystemInfo MOZ_FINAL
+class nsSystemInfo final
   : public nsHashPropertyBag
 #if defined(XP_WIN)
   , public nsIObserver

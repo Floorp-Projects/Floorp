@@ -19,7 +19,7 @@ namespace dom {
 
 class FileSystemTaskBase;
 
-class FileSystemPermissionRequest MOZ_FINAL
+class FileSystemPermissionRequest final
   : public nsIContentPermissionRequest
   , public nsIRunnable
 {

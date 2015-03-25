@@ -88,19 +88,19 @@ public:
 };
 
 #define TX_DECL_PATTERN_BASE \
-    bool matches(const txXPathNode& aNode, txIMatchContext* aContext) MOZ_OVERRIDE; \
-    double getDefaultPriority() MOZ_OVERRIDE; \
-    virtual Expr* getSubExprAt(uint32_t aPos) MOZ_OVERRIDE; \
-    virtual void setSubExprAt(uint32_t aPos, Expr* aExpr) MOZ_OVERRIDE; \
-    virtual txPattern* getSubPatternAt(uint32_t aPos) MOZ_OVERRIDE; \
-    virtual void setSubPatternAt(uint32_t aPos, txPattern* aPattern) MOZ_OVERRIDE
+    bool matches(const txXPathNode& aNode, txIMatchContext* aContext) override; \
+    double getDefaultPriority() override; \
+    virtual Expr* getSubExprAt(uint32_t aPos) override; \
+    virtual void setSubExprAt(uint32_t aPos, Expr* aExpr) override; \
+    virtual txPattern* getSubPatternAt(uint32_t aPos) override; \
+    virtual void setSubPatternAt(uint32_t aPos, txPattern* aPattern) override
 
 #ifndef TX_TO_STRING
 #define TX_DECL_PATTERN TX_DECL_PATTERN_BASE
 #else
 #define TX_DECL_PATTERN \
     TX_DECL_PATTERN_BASE; \
-    void toString(nsAString& aDest) MOZ_OVERRIDE
+    void toString(nsAString& aDest) override
 #endif
 
 #define TX_IMPL_PATTERN_STUBS_NO_SUB_EXPR(_class)             \
@@ -137,7 +137,7 @@ public:
     }
 
     TX_DECL_PATTERN;
-    Type getType() MOZ_OVERRIDE;
+    Type getType() override;
 
 private:
     txOwningArray<txPattern> mLocPathPatterns;
@@ -229,7 +229,7 @@ public:
     }
 
     TX_DECL_PATTERN;
-    Type getType() MOZ_OVERRIDE;
+    Type getType() override;
 
     txNodeTest* getNodeTest()
     {

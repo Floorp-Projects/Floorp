@@ -17,7 +17,7 @@ class DrawTarget;
 }
 }
 
-class MOZ_STACK_CLASS nsRenderingContext MOZ_FINAL
+class MOZ_STACK_CLASS nsRenderingContext final
 {
     typedef mozilla::gfx::DrawTarget DrawTarget;
 

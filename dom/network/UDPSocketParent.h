@@ -29,23 +29,23 @@ public:
   bool Init(const nsACString& aFilter);
 
   virtual bool RecvBind(const UDPAddressInfo& aAddressInfo,
-                        const bool& aAddressReuse, const bool& aLoopback) MOZ_OVERRIDE;
+                        const bool& aAddressReuse, const bool& aLoopback) override;
 
-  virtual bool RecvOutgoingData(const UDPData& aData, const UDPSocketAddr& aAddr) MOZ_OVERRIDE;
+  virtual bool RecvOutgoingData(const UDPData& aData, const UDPSocketAddr& aAddr) override;
 
-  virtual bool RecvClose() MOZ_OVERRIDE;
-  virtual bool RecvRequestDelete() MOZ_OVERRIDE;
+  virtual bool RecvClose() override;
+  virtual bool RecvRequestDelete() override;
   virtual bool RecvJoinMulticast(const nsCString& aMulticastAddress,
-                                 const nsCString& aInterface) MOZ_OVERRIDE;
+                                 const nsCString& aInterface) override;
   virtual bool RecvLeaveMulticast(const nsCString& aMulticastAddress,
-                                  const nsCString& aInterface) MOZ_OVERRIDE;
-  virtual nsresult OfflineNotification(nsISupports *) MOZ_OVERRIDE;
-  virtual uint32_t GetAppId() MOZ_OVERRIDE;
+                                  const nsCString& aInterface) override;
+  virtual nsresult OfflineNotification(nsISupports *) override;
+  virtual uint32_t GetAppId() override;
 
 private:
   virtual ~UDPSocketParent();
 
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason why) override;
   void Send(const InfallibleTArray<uint8_t>& aData, const UDPSocketAddr& aAddr);
   void Send(const InputStreamParams& aStream, const UDPSocketAddr& aAddr);
   nsresult BindInternal(const nsCString& aHost, const uint16_t& aPort,

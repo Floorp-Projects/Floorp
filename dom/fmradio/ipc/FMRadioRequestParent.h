@@ -13,14 +13,14 @@
 
 BEGIN_FMRADIO_NAMESPACE
 
-class FMRadioRequestParent MOZ_FINAL : public PFMRadioRequestParent
+class FMRadioRequestParent final : public PFMRadioRequestParent
                                      , public FMRadioReplyRunnable
 {
 public:
   FMRadioRequestParent();
   ~FMRadioRequestParent();
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   NS_IMETHOD Run();
 

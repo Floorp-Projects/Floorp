@@ -32,7 +32,7 @@ public:
   }
 
   NS_IMETHODIMP
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -63,7 +63,7 @@ public:
   }
 
   virtual void
-  OnHardwareStateChange(HardwareState aState, nsresult aReason) MOZ_OVERRIDE
+  OnHardwareStateChange(HardwareState aState, nsresult aReason) override
   {
     if (aState != kHardwareClosed) {
       return;

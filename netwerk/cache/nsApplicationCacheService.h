@@ -10,7 +10,7 @@
 
 class nsCacheService;
 
-class nsApplicationCacheService MOZ_FINAL : public nsIApplicationCacheService
+class nsApplicationCacheService final : public nsIApplicationCacheService
 {
 public:
     nsApplicationCacheService();

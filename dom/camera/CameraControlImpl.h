@@ -29,23 +29,23 @@ class CameraControlImpl : public ICameraControl
 {
 public:
   explicit CameraControlImpl();
-  virtual void AddListener(CameraControlListener* aListener) MOZ_OVERRIDE;
-  virtual void RemoveListener(CameraControlListener* aListener) MOZ_OVERRIDE;
+  virtual void AddListener(CameraControlListener* aListener) override;
+  virtual void RemoveListener(CameraControlListener* aListener) override;
 
   // See ICameraControl.h for these methods' return values.
-  virtual nsresult Start(const Configuration* aConfig = nullptr) MOZ_OVERRIDE;
-  virtual nsresult Stop() MOZ_OVERRIDE;
-  virtual nsresult SetConfiguration(const Configuration& aConfig) MOZ_OVERRIDE;
-  virtual nsresult StartPreview() MOZ_OVERRIDE;
-  virtual nsresult StopPreview() MOZ_OVERRIDE;
-  virtual nsresult AutoFocus() MOZ_OVERRIDE;
-  virtual nsresult StartFaceDetection() MOZ_OVERRIDE;
-  virtual nsresult StopFaceDetection() MOZ_OVERRIDE;
-  virtual nsresult TakePicture() MOZ_OVERRIDE;
+  virtual nsresult Start(const Configuration* aConfig = nullptr) override;
+  virtual nsresult Stop() override;
+  virtual nsresult SetConfiguration(const Configuration& aConfig) override;
+  virtual nsresult StartPreview() override;
+  virtual nsresult StopPreview() override;
+  virtual nsresult AutoFocus() override;
+  virtual nsresult StartFaceDetection() override;
+  virtual nsresult StopFaceDetection() override;
+  virtual nsresult TakePicture() override;
   virtual nsresult StartRecording(DeviceStorageFileDescriptor* aFileDescriptor,
-                                  const StartRecordingOptions* aOptions) MOZ_OVERRIDE;
-  virtual nsresult StopRecording() MOZ_OVERRIDE;
-  virtual nsresult ResumeContinuousFocus() MOZ_OVERRIDE;
+                                  const StartRecordingOptions* aOptions) override;
+  virtual nsresult StopRecording() override;
+  virtual nsresult ResumeContinuousFocus() override;
 
   // Event handlers called directly from outside this class.
   void OnShutter();
@@ -78,8 +78,8 @@ protected:
 
   virtual ~CameraControlImpl();
 
-  virtual void BeginBatchParameterSet() MOZ_OVERRIDE { }
-  virtual void EndBatchParameterSet() MOZ_OVERRIDE { }
+  virtual void BeginBatchParameterSet() override { }
+  virtual void EndBatchParameterSet() override { }
 
   // Manage camera event listeners.
   void AddListenerImpl(already_AddRefed<CameraControlListener> aListener);

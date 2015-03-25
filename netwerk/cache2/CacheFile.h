@@ -59,22 +59,22 @@ public:
                 bool aPriority,
                 CacheFileListener *aCallback);
 
-  NS_IMETHOD OnChunkRead(nsresult aResult, CacheFileChunk *aChunk) MOZ_OVERRIDE;
-  NS_IMETHOD OnChunkWritten(nsresult aResult, CacheFileChunk *aChunk) MOZ_OVERRIDE;
+  NS_IMETHOD OnChunkRead(nsresult aResult, CacheFileChunk *aChunk) override;
+  NS_IMETHOD OnChunkWritten(nsresult aResult, CacheFileChunk *aChunk) override;
   NS_IMETHOD OnChunkAvailable(nsresult aResult, uint32_t aChunkIdx,
-                              CacheFileChunk *aChunk) MOZ_OVERRIDE;
-  NS_IMETHOD OnChunkUpdated(CacheFileChunk *aChunk) MOZ_OVERRIDE;
+                              CacheFileChunk *aChunk) override;
+  NS_IMETHOD OnChunkUpdated(CacheFileChunk *aChunk) override;
 
-  NS_IMETHOD OnFileOpened(CacheFileHandle *aHandle, nsresult aResult) MOZ_OVERRIDE;
+  NS_IMETHOD OnFileOpened(CacheFileHandle *aHandle, nsresult aResult) override;
   NS_IMETHOD OnDataWritten(CacheFileHandle *aHandle, const char *aBuf,
-                           nsresult aResult) MOZ_OVERRIDE;
-  NS_IMETHOD OnDataRead(CacheFileHandle *aHandle, char *aBuf, nsresult aResult) MOZ_OVERRIDE;
-  NS_IMETHOD OnFileDoomed(CacheFileHandle *aHandle, nsresult aResult) MOZ_OVERRIDE;
-  NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult) MOZ_OVERRIDE;
-  NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult) MOZ_OVERRIDE;
+                           nsresult aResult) override;
+  NS_IMETHOD OnDataRead(CacheFileHandle *aHandle, char *aBuf, nsresult aResult) override;
+  NS_IMETHOD OnFileDoomed(CacheFileHandle *aHandle, nsresult aResult) override;
+  NS_IMETHOD OnEOFSet(CacheFileHandle *aHandle, nsresult aResult) override;
+  NS_IMETHOD OnFileRenamed(CacheFileHandle *aHandle, nsresult aResult) override;
 
-  NS_IMETHOD OnMetadataRead(nsresult aResult) MOZ_OVERRIDE;
-  NS_IMETHOD OnMetadataWritten(nsresult aResult) MOZ_OVERRIDE;
+  NS_IMETHOD OnMetadataRead(nsresult aResult) override;
+  NS_IMETHOD OnMetadataWritten(nsresult aResult) override;
 
   NS_IMETHOD OpenInputStream(nsIInputStream **_retval);
   NS_IMETHOD OpenOutputStream(CacheOutputCloseListener *aCloseListener, nsIOutputStream **_retval);

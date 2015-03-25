@@ -31,7 +31,7 @@ struct nsDelayedBlurOrFocusEvent;
  * which receives key events.
  */
 
-class nsFocusManager MOZ_FINAL : public nsIFocusManager,
+class nsFocusManager final : public nsIFocusManager,
                                  public nsIObserver,
                                  public nsSupportsWeakReference
 {

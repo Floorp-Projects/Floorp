@@ -19,7 +19,7 @@ public:
                            nsPresContext* aPresContext,
                            InternalBeforeAfterKeyboardEvent* aEvent);
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx) MOZ_OVERRIDE
+  virtual JSObject* WrapObjectInternal(JSContext* aCx) override
   {
     return BeforeAfterKeyboardEventBinding::Wrap(aCx, this);
   }

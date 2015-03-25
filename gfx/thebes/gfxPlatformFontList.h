@@ -194,7 +194,7 @@ public:
     static const gfxFontEntry::ScriptRange sComplexScriptRanges[];
 
 protected:
-    class MemoryReporter MOZ_FINAL : public nsIMemoryReporter
+    class MemoryReporter final : public nsIMemoryReporter
     {
         ~MemoryReporter() {}
     public:

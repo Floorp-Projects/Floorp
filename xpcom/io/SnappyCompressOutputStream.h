@@ -16,7 +16,7 @@
 
 namespace mozilla {
 
-class SnappyCompressOutputStream MOZ_FINAL : public nsIOutputStream
+class SnappyCompressOutputStream final : public nsIOutputStream
                                            , protected detail::SnappyFrameUtils
 {
 public:

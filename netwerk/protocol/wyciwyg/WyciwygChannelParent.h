@@ -39,21 +39,21 @@ protected:
                         const ipc::PrincipalInfo& aRequestingPrincipalInfo,
                         const ipc::PrincipalInfo& aTriggeringPrincipalInfo,
                         const uint32_t&           aSecurityFlags,
-                        const uint32_t&           aContentPolicyType) MOZ_OVERRIDE;
+                        const uint32_t&           aContentPolicyType) override;
   virtual bool RecvAsyncOpen(const URIParams& original,
                              const uint32_t& loadFlags,
                              const IPC::SerializedLoadContext& loadContext,
-                             const PBrowserOrId &parent) MOZ_OVERRIDE;
-  virtual bool RecvWriteToCacheEntry(const nsString& data) MOZ_OVERRIDE;
-  virtual bool RecvCloseCacheEntry(const nsresult& reason) MOZ_OVERRIDE;
+                             const PBrowserOrId &parent) override;
+  virtual bool RecvWriteToCacheEntry(const nsString& data) override;
+  virtual bool RecvCloseCacheEntry(const nsresult& reason) override;
   virtual bool RecvSetCharsetAndSource(const int32_t& source,
-                                       const nsCString& charset) MOZ_OVERRIDE;
-  virtual bool RecvSetSecurityInfo(const nsCString& securityInfo) MOZ_OVERRIDE;
-  virtual bool RecvCancel(const nsresult& statusCode) MOZ_OVERRIDE;
+                                       const nsCString& charset) override;
+  virtual bool RecvSetSecurityInfo(const nsCString& securityInfo) override;
+  virtual bool RecvCancel(const nsresult& statusCode) override;
   virtual bool RecvAppData(const IPC::SerializedLoadContext& loadContext,
-                           const PBrowserOrId &parent) MOZ_OVERRIDE;
+                           const PBrowserOrId &parent) override;
 
-  virtual void ActorDestroy(ActorDestroyReason why) MOZ_OVERRIDE;
+  virtual void ActorDestroy(ActorDestroyReason why) override;
 
   bool SetupAppData(const IPC::SerializedLoadContext& loadContext,
                     const PBrowserOrId &aParent);

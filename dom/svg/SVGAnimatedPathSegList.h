@@ -36,7 +36,7 @@ class SVGAnimationElement;
  * DOMSVGPathSegList::InternalListWillChangeTo) and frees consumers from having
  * to know or worry about wrappers (or forget about them!) for the most part.
  */
-class SVGAnimatedPathSegList MOZ_FINAL
+class SVGAnimatedPathSegList final
 {
   // friends so that they can get write access to mBaseVal and mAnimVal
   friend class DOMSVGPathSeg;
@@ -120,10 +120,10 @@ private:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const dom::SVGAnimationElement* aSrcElement,
                                      nsSMILValue& aValue,
-                                     bool& aPreventCachingOfSandwich) const MOZ_OVERRIDE;
-    virtual nsSMILValue GetBaseValue() const MOZ_OVERRIDE;
-    virtual void ClearAnimValue() MOZ_OVERRIDE;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) MOZ_OVERRIDE;
+                                     bool& aPreventCachingOfSandwich) const override;
+    virtual nsSMILValue GetBaseValue() const override;
+    virtual void ClearAnimValue() override;
+    virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
 

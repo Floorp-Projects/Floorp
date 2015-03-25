@@ -13,40 +13,40 @@
 namespace mozilla {
 namespace widget {
 
-class GfxInfo MOZ_FINAL : public GfxInfoBase
+class GfxInfo final : public GfxInfoBase
 {
 public:
 
   // We only declare the subset of nsIGfxInfo that we actually implement. The
   // rest is brought forward from GfxInfoBase.
-  NS_IMETHOD GetD2DEnabled(bool *aD2DEnabled) MOZ_OVERRIDE;
-  NS_IMETHOD GetDWriteEnabled(bool *aDWriteEnabled) MOZ_OVERRIDE;
-  NS_IMETHOD GetDWriteVersion(nsAString & aDwriteVersion) MOZ_OVERRIDE;
-  NS_IMETHOD GetCleartypeParameters(nsAString & aCleartypeParams) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterDescription(nsAString & aAdapterDescription) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterDriver(nsAString & aAdapterDriver) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterVendorID(nsAString & aAdapterVendorID) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterDeviceID(nsAString & aAdapterDeviceID) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterSubsysID(nsAString & aAdapterSubsysID) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterRAM(nsAString & aAdapterRAM) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterDriverVersion(nsAString & aAdapterDriverVersion) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterDriverDate(nsAString & aAdapterDriverDate) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterDescription2(nsAString & aAdapterDescription) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterDriver2(nsAString & aAdapterDriver) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterVendorID2(nsAString & aAdapterVendorID) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterDeviceID2(nsAString & aAdapterDeviceID) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterSubsysID2(nsAString & aAdapterSubsysID) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterRAM2(nsAString & aAdapterRAM) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterDriverVersion2(nsAString & aAdapterDriverVersion) MOZ_OVERRIDE;
-  NS_IMETHOD GetAdapterDriverDate2(nsAString & aAdapterDriverDate) MOZ_OVERRIDE;
-  NS_IMETHOD GetIsGPU2Active(bool *aIsGPU2Active) MOZ_OVERRIDE;
+  NS_IMETHOD GetD2DEnabled(bool *aD2DEnabled) override;
+  NS_IMETHOD GetDWriteEnabled(bool *aDWriteEnabled) override;
+  NS_IMETHOD GetDWriteVersion(nsAString & aDwriteVersion) override;
+  NS_IMETHOD GetCleartypeParameters(nsAString & aCleartypeParams) override;
+  NS_IMETHOD GetAdapterDescription(nsAString & aAdapterDescription) override;
+  NS_IMETHOD GetAdapterDriver(nsAString & aAdapterDriver) override;
+  NS_IMETHOD GetAdapterVendorID(nsAString & aAdapterVendorID) override;
+  NS_IMETHOD GetAdapterDeviceID(nsAString & aAdapterDeviceID) override;
+  NS_IMETHOD GetAdapterSubsysID(nsAString & aAdapterSubsysID) override;
+  NS_IMETHOD GetAdapterRAM(nsAString & aAdapterRAM) override;
+  NS_IMETHOD GetAdapterDriverVersion(nsAString & aAdapterDriverVersion) override;
+  NS_IMETHOD GetAdapterDriverDate(nsAString & aAdapterDriverDate) override;
+  NS_IMETHOD GetAdapterDescription2(nsAString & aAdapterDescription) override;
+  NS_IMETHOD GetAdapterDriver2(nsAString & aAdapterDriver) override;
+  NS_IMETHOD GetAdapterVendorID2(nsAString & aAdapterVendorID) override;
+  NS_IMETHOD GetAdapterDeviceID2(nsAString & aAdapterDeviceID) override;
+  NS_IMETHOD GetAdapterSubsysID2(nsAString & aAdapterSubsysID) override;
+  NS_IMETHOD GetAdapterRAM2(nsAString & aAdapterRAM) override;
+  NS_IMETHOD GetAdapterDriverVersion2(nsAString & aAdapterDriverVersion) override;
+  NS_IMETHOD GetAdapterDriverDate2(nsAString & aAdapterDriverDate) override;
+  NS_IMETHOD GetIsGPU2Active(bool *aIsGPU2Active) override;
   using GfxInfoBase::GetFeatureStatus;
   using GfxInfoBase::GetFeatureSuggestedDriverVersion;
   using GfxInfoBase::GetWebGLParameter;
 
-  virtual nsresult Init() MOZ_OVERRIDE;
+  virtual nsresult Init() override;
   
-  NS_IMETHOD_(void) GetData() MOZ_OVERRIDE;
+  NS_IMETHOD_(void) GetData() override;
 
 #ifdef DEBUG
   NS_DECL_ISUPPORTS_INHERITED
@@ -60,8 +60,8 @@ protected:
                                         int32_t *aStatus, 
                                         nsAString & aSuggestedDriverVersion, 
                                         const nsTArray<GfxDriverInfo>& aDriverInfo, 
-                                        OperatingSystem* aOS = nullptr) MOZ_OVERRIDE;
-  virtual const nsTArray<GfxDriverInfo>& GetGfxDriverInfo() MOZ_OVERRIDE;
+                                        OperatingSystem* aOS = nullptr) override;
+  virtual const nsTArray<GfxDriverInfo>& GetGfxDriverInfo() override;
 
 private:
   nsCString mVendor;

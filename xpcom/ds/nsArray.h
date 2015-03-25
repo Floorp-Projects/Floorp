@@ -41,7 +41,7 @@ protected:
   nsCOMArray_base mArray;
 };
 
-class nsArray MOZ_FINAL : public nsArrayBase
+class nsArray final : public nsArrayBase
 {
   friend class nsArrayBase;
 
@@ -55,7 +55,7 @@ private:
   ~nsArray() {}
 };
 
-class nsArrayCC MOZ_FINAL : public nsArrayBase
+class nsArrayCC final : public nsArrayBase
 {
   friend class nsArrayBase;
 

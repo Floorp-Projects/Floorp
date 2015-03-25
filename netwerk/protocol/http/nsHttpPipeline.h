@@ -16,7 +16,7 @@ class nsIOutputStream;
 
 namespace mozilla { namespace net {
 
-class nsHttpPipeline MOZ_FINAL : public nsAHttpConnection
+class nsHttpPipeline final : public nsAHttpConnection
                                , public nsAHttpTransaction
                                , public nsAHttpSegmentReader
 {
@@ -28,7 +28,7 @@ public:
 
     nsHttpPipeline();
 
-  bool ResponseTimeoutEnabled() const MOZ_OVERRIDE MOZ_FINAL {
+  bool ResponseTimeoutEnabled() const override final {
     return true;
   }
 
@@ -57,7 +57,7 @@ private:
     }
 
     // overload of nsAHttpTransaction::QueryPipeline()
-    nsHttpPipeline *QueryPipeline() MOZ_OVERRIDE;
+    nsHttpPipeline *QueryPipeline() override;
 
     nsRefPtr<nsAHttpConnection>   mConnection;
     nsTArray<nsAHttpTransaction*> mRequestQ;  // array of transactions

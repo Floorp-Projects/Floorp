@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 namespace voicemail {
 
-class VoicemailParent MOZ_FINAL : public PVoicemailParent
+class VoicemailParent final : public PVoicemailParent
                                 , public nsIVoicemailListener
 {
 public:
@@ -37,13 +37,13 @@ public:
                     bool* aHasMessages,
                     int32_t* aMessageCount,
                     nsString* aReturnNumber,
-                    nsString* aReturnMessage) MOZ_OVERRIDE;
+                    nsString* aReturnMessage) override;
 
   void
-  ActorDestroy(ActorDestroyReason aWhy) MOZ_OVERRIDE;
+  ActorDestroy(ActorDestroyReason aWhy) override;
 
 private:
-  // MOZ_FINAL suppresses -Werror,-Wdelete-non-virtual-dtor
+  // final suppresses -Werror,-Wdelete-non-virtual-dtor
   ~VoicemailParent() { MOZ_COUNT_DTOR(VoicemailParent); }
 
 private:

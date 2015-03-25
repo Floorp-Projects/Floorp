@@ -15,7 +15,7 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothReplyRunnable;
 
-class BluetoothGattManager MOZ_FINAL : public nsIObserver
+class BluetoothGattManager final : public nsIObserver
                                      , public BluetoothGattNotificationHandler
 {
 public:
@@ -53,81 +53,81 @@ private:
 
   void RegisterClientNotification(int aStatus,
                                   int aClientIf,
-                                  const BluetoothUuid& aAppUuid) MOZ_OVERRIDE;
+                                  const BluetoothUuid& aAppUuid) override;
 
   void ScanResultNotification(
     const nsAString& aBdAddr, int aRssi,
-    const BluetoothGattAdvData& aAdvData) MOZ_OVERRIDE;
+    const BluetoothGattAdvData& aAdvData) override;
 
   void ConnectNotification(int aConnId,
                            int aStatus,
                            int aClientIf,
-                           const nsAString& aBdAddr) MOZ_OVERRIDE;
+                           const nsAString& aBdAddr) override;
 
   void DisconnectNotification(int aConnId,
                               int aStatus,
                               int aClientIf,
-                              const nsAString& aBdAddr) MOZ_OVERRIDE;
+                              const nsAString& aBdAddr) override;
 
-  void SearchCompleteNotification(int aConnId, int aStatus) MOZ_OVERRIDE;
+  void SearchCompleteNotification(int aConnId, int aStatus) override;
 
   void SearchResultNotification(int aConnId,
                                 const BluetoothGattServiceId& aServiceId)
-                                MOZ_OVERRIDE;
+                                override;
 
   void GetCharacteristicNotification(
     int aConnId, int aStatus,
     const BluetoothGattServiceId& aServiceId,
     const BluetoothGattId& aCharId,
-    int aCharProperty) MOZ_OVERRIDE;
+    int aCharProperty) override;
 
   void GetDescriptorNotification(
     int aConnId, int aStatus,
     const BluetoothGattServiceId& aServiceId,
     const BluetoothGattId& aCharId,
-    const BluetoothGattId& aDescriptorId) MOZ_OVERRIDE;
+    const BluetoothGattId& aDescriptorId) override;
 
   void GetIncludedServiceNotification(
     int aConnId, int aStatus,
     const BluetoothGattServiceId& aServiceId,
-    const BluetoothGattServiceId& aIncludedServId) MOZ_OVERRIDE;
+    const BluetoothGattServiceId& aIncludedServId) override;
 
   void RegisterNotificationNotification(
     int aConnId, int aIsRegister, int aStatus,
     const BluetoothGattServiceId& aServiceId,
-    const BluetoothGattId& aCharId) MOZ_OVERRIDE;
+    const BluetoothGattId& aCharId) override;
 
   void NotifyNotification(int aConnId,
                           const BluetoothGattNotifyParam& aNotifyParam)
-                          MOZ_OVERRIDE;
+                          override;
 
   void ReadCharacteristicNotification(int aConnId,
                                       int aStatus,
                                       const BluetoothGattReadParam& aReadParam)
-                                      MOZ_OVERRIDE;
+                                      override;
 
   void WriteCharacteristicNotification(
     int aConnId, int aStatus,
-    const BluetoothGattWriteParam& aWriteParam) MOZ_OVERRIDE;
+    const BluetoothGattWriteParam& aWriteParam) override;
 
   void ReadDescriptorNotification(int aConnId,
                                   int aStatus,
                                   const BluetoothGattReadParam& aReadParam)
-                                  MOZ_OVERRIDE;
+                                  override;
 
   void WriteDescriptorNotification(int aConnId,
                                    int aStatus,
                                    const BluetoothGattWriteParam& aWriteParam)
-                                   MOZ_OVERRIDE;
+                                   override;
 
-  void ExecuteWriteNotification(int aConnId, int aStatus) MOZ_OVERRIDE;
+  void ExecuteWriteNotification(int aConnId, int aStatus) override;
 
   void ReadRemoteRssiNotification(int aClientIf,
                                   const nsAString& aBdAddr,
                                   int aRssi,
-                                  int aStatus) MOZ_OVERRIDE;
+                                  int aStatus) override;
 
-  void ListenNotification(int aStatus, int aServerIf) MOZ_OVERRIDE;
+  void ListenNotification(int aStatus, int aServerIf) override;
 
   static bool mInShutdown;
 };

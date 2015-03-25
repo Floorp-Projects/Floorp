@@ -154,7 +154,7 @@ public:
 
   // AccEvent
   static const EventGroup kEventGroup = eStateChangeEvent;
-  virtual unsigned int GetEventGroups() const MOZ_OVERRIDE
+  virtual unsigned int GetEventGroups() const override
   {
     return AccEvent::GetEventGroups() | (1U << eStateChangeEvent);
   }
@@ -183,7 +183,7 @@ public:
 
   // AccEvent
   static const EventGroup kEventGroup = eTextChangeEvent;
-  virtual unsigned int GetEventGroups() const MOZ_OVERRIDE
+  virtual unsigned int GetEventGroups() const override
   {
     return AccEvent::GetEventGroups() | (1U << eTextChangeEvent);
   }
@@ -223,7 +223,7 @@ public:
 
   // Event
   static const EventGroup kEventGroup = eMutationEvent;
-  virtual unsigned int GetEventGroups() const MOZ_OVERRIDE
+  virtual unsigned int GetEventGroups() const override
   {
     return AccEvent::GetEventGroups() | (1U << eMutationEvent);
   }
@@ -253,7 +253,7 @@ public:
 
   // Event
   static const EventGroup kEventGroup = eHideEvent;
-  virtual unsigned int GetEventGroups() const MOZ_OVERRIDE
+  virtual unsigned int GetEventGroups() const override
   {
     return AccMutationEvent::GetEventGroups() | (1U << eHideEvent);
   }
@@ -281,7 +281,7 @@ public:
 
   // Event
   static const EventGroup kEventGroup = eShowEvent;
-  virtual unsigned int GetEventGroups() const MOZ_OVERRIDE
+  virtual unsigned int GetEventGroups() const override
   {
     return AccMutationEvent::GetEventGroups() | (1U << eShowEvent);
   }
@@ -301,7 +301,7 @@ public:
 
   // Event
   static const EventGroup kEventGroup = eReorderEvent;
-  virtual unsigned int GetEventGroups() const MOZ_OVERRIDE
+  virtual unsigned int GetEventGroups() const override
   {
     return AccEvent::GetEventGroups() | (1U << eReorderEvent);
   }
@@ -354,7 +354,7 @@ public:
 
   // AccEvent
   static const EventGroup kEventGroup = eCaretMoveEvent;
-  virtual unsigned int GetEventGroups() const MOZ_OVERRIDE
+  virtual unsigned int GetEventGroups() const override
   {
     return AccEvent::GetEventGroups() | (1U << eCaretMoveEvent);
   }
@@ -380,7 +380,7 @@ public:
 
   // AccEvent
   static const EventGroup kEventGroup = eTextSelChangeEvent;
-  virtual unsigned int GetEventGroups() const MOZ_OVERRIDE
+  virtual unsigned int GetEventGroups() const override
   {
     return AccEvent::GetEventGroups() | (1U << eTextSelChangeEvent);
   }
@@ -419,7 +419,7 @@ public:
 
   // AccEvent
   static const EventGroup kEventGroup = eSelectionChangeEvent;
-  virtual unsigned int GetEventGroups() const MOZ_OVERRIDE
+  virtual unsigned int GetEventGroups() const override
   {
     return AccEvent::GetEventGroups() | (1U << eSelectionChangeEvent);
   }
@@ -449,7 +449,7 @@ public:
 
   // AccEvent
   static const EventGroup kEventGroup = eTableChangeEvent;
-  virtual unsigned int GetEventGroups() const MOZ_OVERRIDE
+  virtual unsigned int GetEventGroups() const override
   {
     return AccEvent::GetEventGroups() | (1U << eTableChangeEvent);
   }
@@ -479,7 +479,7 @@ public:
 
   // AccEvent
   static const EventGroup kEventGroup = eVirtualCursorChangeEvent;
-  virtual unsigned int GetEventGroups() const MOZ_OVERRIDE
+  virtual unsigned int GetEventGroups() const override
   {
     return AccEvent::GetEventGroups() | (1U << eVirtualCursorChangeEvent);
   }
@@ -509,7 +509,7 @@ public:
 
   // AccEvent
   static const EventGroup kEventGroup = eObjectAttrChangedEvent;
-  virtual unsigned int GetEventGroups() const MOZ_OVERRIDE
+  virtual unsigned int GetEventGroups() const override
   {
     return AccEvent::GetEventGroups() | (1U << eObjectAttrChangedEvent);
   }

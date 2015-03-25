@@ -1422,7 +1422,7 @@ const double kCurrentVelocityWeighting = 0.25;
 const double kStopDecelerationWeighting = 0.4;
 
 // AsyncSmoothMSDScroll has ref counting.
-class ScrollFrameHelper::AsyncSmoothMSDScroll MOZ_FINAL : public nsARefreshObserver {
+class ScrollFrameHelper::AsyncSmoothMSDScroll final : public nsARefreshObserver {
 public:
   AsyncSmoothMSDScroll(const nsPoint &aInitialPosition,
                        const nsPoint &aInitialDestination,
@@ -1443,7 +1443,7 @@ public:
   {
   }
 
-  NS_INLINE_DECL_REFCOUNTING(AsyncSmoothMSDScroll, MOZ_OVERRIDE)
+  NS_INLINE_DECL_REFCOUNTING(AsyncSmoothMSDScroll, override)
 
   nsSize GetVelocity() {
     // In nscoords per second
@@ -1499,7 +1499,7 @@ public:
     return mXAxisModel.IsFinished() && mYAxisModel.IsFinished();
   }
 
-  virtual void WillRefresh(mozilla::TimeStamp aTime) MOZ_OVERRIDE {
+  virtual void WillRefresh(mozilla::TimeStamp aTime) override {
     mozilla::TimeDuration deltaTime = aTime - mLastRefreshTime;
     mLastRefreshTime = aTime;
 
@@ -1552,7 +1552,7 @@ private:
 };
 
 // AsyncScroll has ref counting.
-class ScrollFrameHelper::AsyncScroll MOZ_FINAL : public nsARefreshObserver {
+class ScrollFrameHelper::AsyncScroll final : public nsARefreshObserver {
 public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
@@ -1635,7 +1635,7 @@ protected:
 // The next section is observer/callback management
 // Bodies of WillRefresh and RefreshDriver contain ScrollFrameHelper specific code.
 public:
-  NS_INLINE_DECL_REFCOUNTING(AsyncScroll, MOZ_OVERRIDE)
+  NS_INLINE_DECL_REFCOUNTING(AsyncScroll, override)
 
   /*
    * Set a refresh observer for smooth scroll iterations (and start observing).
@@ -1653,7 +1653,7 @@ public:
     return true;
   }
 
-  virtual void WillRefresh(mozilla::TimeStamp aTime) MOZ_OVERRIDE {
+  virtual void WillRefresh(mozilla::TimeStamp aTime) override {
     // The callback may release "this".
     // We don't access members after returning, so no need for KungFuDeathGrip.
     ScrollFrameHelper::AsyncScrollCallback(mCallee, aTime);
@@ -1842,7 +1842,7 @@ ScrollFrameHelper::IsSmoothScrollingEnabled()
   return Preferences::GetBool(SMOOTH_SCROLL_PREF_NAME, false);
 }
 
-class ScrollFrameActivityTracker MOZ_FINAL : public nsExpirationTracker<ScrollFrameHelper,4> {
+class ScrollFrameActivityTracker final : public nsExpirationTracker<ScrollFrameHelper,4> {
 public:
   // Wait for 3-4s between scrolls before we remove our layers.
   // That's 4 generations of 1s each.
@@ -2709,13 +2709,13 @@ public:
 
   virtual nsDisplayItem* WrapList(nsDisplayListBuilder* aBuilder,
                                   nsIFrame* aFrame,
-                                  nsDisplayList* aList) MOZ_OVERRIDE {
+                                  nsDisplayList* aList) override {
     SetCount(++mCount);
     return new (aBuilder) nsDisplayScrollLayer(aBuilder, aList, mScrolledFrame, mScrolledFrame, mScrollFrame);
   }
 
   virtual nsDisplayItem* WrapItem(nsDisplayListBuilder* aBuilder,
-                                  nsDisplayItem* aItem) MOZ_OVERRIDE {
+                                  nsDisplayItem* aItem) override {
 
     SetCount(++mCount);
     return new (aBuilder) nsDisplayScrollLayer(aBuilder, aItem, aItem->Frame(), mScrolledFrame, mScrollFrame);

@@ -71,7 +71,7 @@ FetchEvent::Constructor(const GlobalObject& aGlobal,
 
 namespace {
 
-class CancelChannelRunnable MOZ_FINAL : public nsRunnable
+class CancelChannelRunnable final : public nsRunnable
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
 public:
@@ -89,7 +89,7 @@ public:
   }
 };
 
-class FinishResponse MOZ_FINAL : public nsRunnable
+class FinishResponse final : public nsRunnable
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
 public:
@@ -108,7 +108,7 @@ public:
   }
 };
 
-class RespondWithHandler MOZ_FINAL : public PromiseNativeHandler
+class RespondWithHandler final : public PromiseNativeHandler
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mInterceptedChannel;
   nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
@@ -120,9 +120,9 @@ public:
   {
   }
 
-  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
-  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) MOZ_OVERRIDE;
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
   void CancelRequest();
 };

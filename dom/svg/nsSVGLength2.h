@@ -47,7 +47,7 @@ class UserSpaceMetricsWithSize : public UserSpaceMetrics
 {
 public:
   virtual gfx::Size GetSize() const = 0;
-  virtual float GetAxisLength(uint8_t aCtxType) const MOZ_OVERRIDE;
+  virtual float GetAxisLength(uint8_t aCtxType) const override;
 };
 
 class SVGElementMetrics : public UserSpaceMetrics
@@ -56,9 +56,9 @@ public:
   explicit SVGElementMetrics(nsSVGElement* aSVGElement,
                              mozilla::dom::SVGSVGElement* aCtx = nullptr);
 
-  virtual float GetEmLength() const MOZ_OVERRIDE;
-  virtual float GetExLength() const MOZ_OVERRIDE;
-  virtual float GetAxisLength(uint8_t aCtxType) const MOZ_OVERRIDE;
+  virtual float GetEmLength() const override;
+  virtual float GetExLength() const override;
+  virtual float GetAxisLength(uint8_t aCtxType) const override;
 
 private:
   bool EnsureCtx() const;
@@ -72,9 +72,9 @@ class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize
 public:
   explicit NonSVGFrameUserSpaceMetrics(nsIFrame* aFrame);
 
-  virtual float GetEmLength() const MOZ_OVERRIDE;
-  virtual float GetExLength() const MOZ_OVERRIDE;
-  virtual gfx::Size GetSize() const MOZ_OVERRIDE;
+  virtual float GetEmLength() const override;
+  virtual float GetExLength() const override;
+  virtual gfx::Size GetSize() const override;
 
 private:
   nsIFrame* mFrame;
@@ -199,10 +199,10 @@ public:
     virtual nsresult ValueFromString(const nsAString& aStr,
                                      const mozilla::dom::SVGAnimationElement* aSrcElement,
                                      nsSMILValue &aValue,
-                                     bool& aPreventCachingOfSandwich) const MOZ_OVERRIDE;
-    virtual nsSMILValue GetBaseValue() const MOZ_OVERRIDE;
-    virtual void ClearAnimValue() MOZ_OVERRIDE;
-    virtual nsresult SetAnimValue(const nsSMILValue& aValue) MOZ_OVERRIDE;
+                                     bool& aPreventCachingOfSandwich) const override;
+    virtual nsSMILValue GetBaseValue() const override;
+    virtual void ClearAnimValue() override;
+    virtual nsresult SetAnimValue(const nsSMILValue& aValue) override;
   };
 };
 

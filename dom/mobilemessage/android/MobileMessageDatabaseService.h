@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 namespace mobilemessage {
 
-class MobileMessageDatabaseService MOZ_FINAL : public nsIMobileMessageDatabaseService
+class MobileMessageDatabaseService final : public nsIMobileMessageDatabaseService
 {
 private:
   ~MobileMessageDatabaseService() {}

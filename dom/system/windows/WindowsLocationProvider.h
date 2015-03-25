@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace dom {
 
-class WindowsLocationProvider MOZ_FINAL : public nsIGeolocationProvider
+class WindowsLocationProvider final : public nsIGeolocationProvider
 {
 public:
   NS_DECL_ISUPPORTS

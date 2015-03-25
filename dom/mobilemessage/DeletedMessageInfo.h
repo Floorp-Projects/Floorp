@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 namespace mobilemessage {
 
-class DeletedMessageInfo MOZ_FINAL : public nsIDeletedMessageInfo
+class DeletedMessageInfo final : public nsIDeletedMessageInfo
 {
 public:
   NS_DECL_ISUPPORTS

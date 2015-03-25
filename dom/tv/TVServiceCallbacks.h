@@ -20,7 +20,7 @@ class TVManager;
 class TVTuner;
 class TVSource;
 
-class TVServiceSourceSetterCallback MOZ_FINAL : public nsITVServiceCallback
+class TVServiceSourceSetterCallback final : public nsITVServiceCallback
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -39,7 +39,7 @@ private:
   TVSourceType mSourceType;
 };
 
-class TVServiceChannelScanCallback MOZ_FINAL : public nsITVServiceCallback
+class TVServiceChannelScanCallback final : public nsITVServiceCallback
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -58,7 +58,7 @@ private:
   bool mIsScanning;
 };
 
-class TVServiceChannelSetterCallback MOZ_FINAL : public nsITVServiceCallback
+class TVServiceChannelSetterCallback final : public nsITVServiceCallback
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -77,7 +77,7 @@ private:
   nsString mChannelNumber;
 };
 
-class TVServiceTunerGetterCallback MOZ_FINAL : public nsITVServiceCallback
+class TVServiceTunerGetterCallback final : public nsITVServiceCallback
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -92,7 +92,7 @@ private:
   nsRefPtr<TVManager> mManager;
 };
 
-class TVServiceChannelGetterCallback MOZ_FINAL : public nsITVServiceCallback
+class TVServiceChannelGetterCallback final : public nsITVServiceCallback
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -109,7 +109,7 @@ private:
   nsRefPtr<Promise> mPromise;
 };
 
-class TVServiceProgramGetterCallback MOZ_FINAL : public nsITVServiceCallback
+class TVServiceProgramGetterCallback final : public nsITVServiceCallback
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

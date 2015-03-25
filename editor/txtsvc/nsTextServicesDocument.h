@@ -32,7 +32,7 @@ class nsString;
 /** implementation of a text services object.
  *
  */
-class nsTextServicesDocument MOZ_FINAL : public nsITextServicesDocument,
+class nsTextServicesDocument final : public nsITextServicesDocument,
                                          public nsIEditActionListener
 {
 private:
@@ -107,57 +107,57 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsTextServicesDocument, nsITextServicesDocument)
 
   /* nsITextServicesDocument method implementations. */
-  NS_IMETHOD InitWithEditor(nsIEditor *aEditor) MOZ_OVERRIDE;
-  NS_IMETHOD GetDocument(nsIDOMDocument **aDoc) MOZ_OVERRIDE;
-  NS_IMETHOD SetExtent(nsIDOMRange* aDOMRange) MOZ_OVERRIDE;
-  NS_IMETHOD ExpandRangeToWordBoundaries(nsIDOMRange *aRange) MOZ_OVERRIDE;
-  NS_IMETHOD SetFilter(nsITextServicesFilter *aFilter) MOZ_OVERRIDE;
-  NS_IMETHOD GetCurrentTextBlock(nsString *aStr) MOZ_OVERRIDE;
-  NS_IMETHOD FirstBlock() MOZ_OVERRIDE;
-  NS_IMETHOD LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, int32_t *aSelOffset, int32_t *aSelLength) MOZ_OVERRIDE;
-  NS_IMETHOD PrevBlock() MOZ_OVERRIDE;
-  NS_IMETHOD NextBlock() MOZ_OVERRIDE;
-  NS_IMETHOD IsDone(bool *aIsDone) MOZ_OVERRIDE;
-  NS_IMETHOD SetSelection(int32_t aOffset, int32_t aLength) MOZ_OVERRIDE;
-  NS_IMETHOD ScrollSelectionIntoView() MOZ_OVERRIDE;
-  NS_IMETHOD DeleteSelection() MOZ_OVERRIDE;
-  NS_IMETHOD InsertText(const nsString *aText) MOZ_OVERRIDE;
+  NS_IMETHOD InitWithEditor(nsIEditor *aEditor) override;
+  NS_IMETHOD GetDocument(nsIDOMDocument **aDoc) override;
+  NS_IMETHOD SetExtent(nsIDOMRange* aDOMRange) override;
+  NS_IMETHOD ExpandRangeToWordBoundaries(nsIDOMRange *aRange) override;
+  NS_IMETHOD SetFilter(nsITextServicesFilter *aFilter) override;
+  NS_IMETHOD GetCurrentTextBlock(nsString *aStr) override;
+  NS_IMETHOD FirstBlock() override;
+  NS_IMETHOD LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus, int32_t *aSelOffset, int32_t *aSelLength) override;
+  NS_IMETHOD PrevBlock() override;
+  NS_IMETHOD NextBlock() override;
+  NS_IMETHOD IsDone(bool *aIsDone) override;
+  NS_IMETHOD SetSelection(int32_t aOffset, int32_t aLength) override;
+  NS_IMETHOD ScrollSelectionIntoView() override;
+  NS_IMETHOD DeleteSelection() override;
+  NS_IMETHOD InsertText(const nsString *aText) override;
 
   /* nsIEditActionListener method implementations. */
   NS_IMETHOD WillInsertNode(nsIDOMNode *aNode,
                             nsIDOMNode *aParent,
-                            int32_t      aPosition) MOZ_OVERRIDE;
+                            int32_t      aPosition) override;
   NS_IMETHOD DidInsertNode(nsIDOMNode *aNode,
                            nsIDOMNode *aParent,
                            int32_t     aPosition,
-                           nsresult    aResult) MOZ_OVERRIDE;
+                           nsresult    aResult) override;
 
-  NS_IMETHOD WillDeleteNode(nsIDOMNode *aChild) MOZ_OVERRIDE;
-  NS_IMETHOD DidDeleteNode(nsIDOMNode *aChild, nsresult aResult) MOZ_OVERRIDE;
+  NS_IMETHOD WillDeleteNode(nsIDOMNode *aChild) override;
+  NS_IMETHOD DidDeleteNode(nsIDOMNode *aChild, nsresult aResult) override;
 
   NS_IMETHOD WillSplitNode(nsIDOMNode * aExistingRightNode,
-                           int32_t      aOffset) MOZ_OVERRIDE;
+                           int32_t      aOffset) override;
   NS_IMETHOD DidSplitNode(nsIDOMNode *aExistingRightNode,
                           int32_t     aOffset,
                           nsIDOMNode *aNewLeftNode,
-                          nsresult    aResult) MOZ_OVERRIDE;
+                          nsresult    aResult) override;
 
   NS_IMETHOD WillJoinNodes(nsIDOMNode  *aLeftNode,
                            nsIDOMNode  *aRightNode,
-                           nsIDOMNode  *aParent) MOZ_OVERRIDE;
+                           nsIDOMNode  *aParent) override;
   NS_IMETHOD DidJoinNodes(nsIDOMNode  *aLeftNode,
                           nsIDOMNode  *aRightNode,
                           nsIDOMNode  *aParent,
-                          nsresult     aResult) MOZ_OVERRIDE;
+                          nsresult     aResult) override;
   // these listen methods are unused:
-  NS_IMETHOD WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, int32_t aPosition) MOZ_OVERRIDE;
-  NS_IMETHOD DidCreateNode(const nsAString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aPosition, nsresult aResult) MOZ_OVERRIDE;
-  NS_IMETHOD WillInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString) MOZ_OVERRIDE;
-  NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString, nsresult aResult) MOZ_OVERRIDE;
-  NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength) MOZ_OVERRIDE;
-  NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength, nsresult aResult) MOZ_OVERRIDE;
-  NS_IMETHOD WillDeleteSelection(nsISelection *aSelection) MOZ_OVERRIDE;
-  NS_IMETHOD DidDeleteSelection(nsISelection *aSelection) MOZ_OVERRIDE;
+  NS_IMETHOD WillCreateNode(const nsAString& aTag, nsIDOMNode *aParent, int32_t aPosition) override;
+  NS_IMETHOD DidCreateNode(const nsAString& aTag, nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aPosition, nsresult aResult) override;
+  NS_IMETHOD WillInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString) override;
+  NS_IMETHOD DidInsertText(nsIDOMCharacterData *aTextNode, int32_t aOffset, const nsAString &aString, nsresult aResult) override;
+  NS_IMETHOD WillDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength) override;
+  NS_IMETHOD DidDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength, nsresult aResult) override;
+  NS_IMETHOD WillDeleteSelection(nsISelection *aSelection) override;
+  NS_IMETHOD DidDeleteSelection(nsISelection *aSelection) override;
 
   /* Helper functions */
   static nsresult GetRangeEndPoints(nsRange* aRange, nsIDOMNode** aParent1,

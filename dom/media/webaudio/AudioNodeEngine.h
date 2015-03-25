@@ -91,7 +91,7 @@ public:
    */
   void Clear() { mContents.Clear(); }
 
-  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = ThreadSharedObject::SizeOfExcludingThis(aMallocSizeOf);
     amount += mContents.SizeOfExcludingThis(aMallocSizeOf);
@@ -102,7 +102,7 @@ public:
     return amount;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const MOZ_OVERRIDE
+  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

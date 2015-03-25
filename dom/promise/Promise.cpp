@@ -38,7 +38,7 @@ using namespace workers;
 NS_IMPL_ISUPPORTS0(PromiseNativeHandler)
 
 // This class processes the promise's callbacks with promise's result.
-class PromiseCallbackTask MOZ_FINAL : public nsRunnable
+class PromiseCallbackTask final : public nsRunnable
 {
 public:
   PromiseCallbackTask(Promise* aPromise,
@@ -62,7 +62,7 @@ public:
 
 protected:
   NS_IMETHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     NS_ASSERT_OWNINGTHREAD(PromiseCallbackTask);
     ThreadsafeAutoJSContext cx;
@@ -152,7 +152,7 @@ GetPromise(JSContext* aCx, JS::Handle<JSObject*> aFunc)
 
 // Main thread runnable to resolve thenables.
 // Equivalent to the specification's ResolvePromiseViaThenableTask.
-class ThenableResolverTask MOZ_FINAL : public nsRunnable
+class ThenableResolverTask final : public nsRunnable
 {
 public:
   ThenableResolverTask(Promise* aPromise,
@@ -175,7 +175,7 @@ public:
 
 protected:
   NS_IMETHOD
-  Run() MOZ_OVERRIDE
+  Run() override
   {
     NS_ASSERT_OWNINGTHREAD(ThenableResolverTask);
     ThreadsafeAutoJSContext cx;
@@ -720,7 +720,7 @@ Promise::Catch(JSContext* aCx, AnyCallback* aRejectCallback, ErrorResult& aRv)
  * the countdown holder parts of the Promises spec. It maintains the result
  * array and AllResolveHandlers use SetValue() to set the array indices.
  */
-class CountdownHolder MOZ_FINAL : public nsISupports
+class CountdownHolder final : public nsISupports
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -810,7 +810,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
  * Every Promise in the handler is handed an instance of this as a resolution
  * handler and it sets the relevant index in the CountdownHolder.
  */
-class AllResolveHandler MOZ_FINAL : public PromiseNativeHandler
+class AllResolveHandler final : public PromiseNativeHandler
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -823,13 +823,13 @@ public:
   }
 
   void
-  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) MOZ_OVERRIDE
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
   {
     mCountdownHolder->SetValue(mIndex, aValue);
   }
 
   void
-  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) MOZ_OVERRIDE
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override
   {
     // Should never be attached to Promise as a reject handler.
     MOZ_ASSERT(false, "AllResolveHandler should never be attached to a Promise's reject handler!");
@@ -1002,7 +1002,7 @@ Promise::AppendCallbacks(PromiseCallback* aResolveCallback,
   }
 }
 
-class WrappedWorkerRunnable MOZ_FINAL : public WorkerSameThreadRunnable
+class WrappedWorkerRunnable final : public WorkerSameThreadRunnable
 {
 public:
   WrappedWorkerRunnable(WorkerPrivate* aWorkerPrivate, nsIRunnable* aRunnable)
@@ -1014,7 +1014,7 @@ public:
   }
 
   bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     NS_ASSERT_OWNINGTHREAD(WrappedWorkerRunnable);
     mRunnable->Run();
@@ -1417,7 +1417,7 @@ PromiseWorkerProxy::StoreISupports(nsISupports* aSupports)
 
 namespace {
 
-class PromiseWorkerProxyControlRunnable MOZ_FINAL
+class PromiseWorkerProxyControlRunnable final
   : public WorkerControlRunnable
 {
   nsRefPtr<PromiseWorkerProxy> mProxy;
@@ -1432,7 +1432,7 @@ public:
   }
 
   virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) MOZ_OVERRIDE
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     mProxy->CleanUp(aCx);
     return true;

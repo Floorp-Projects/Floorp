@@ -312,7 +312,7 @@ private:
    * Whenever "memory-pressure" is observed, it calls AgeAllGenerations()
    * to minimize memory usage.
    */
-  class ExpirationTrackerObserver MOZ_FINAL : public nsIObserver
+  class ExpirationTrackerObserver final : public nsIObserver
   {
   public:
     void Init(nsExpirationTracker<T, K>* aObj)

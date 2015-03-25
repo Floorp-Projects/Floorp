@@ -16,7 +16,7 @@ class nsIDOMWindow;
 namespace mozilla {
 namespace embedding {
 
-class PrintingParent MOZ_FINAL : public PPrintingParent
+class PrintingParent final : public PPrintingParent
 {
 public:
     virtual bool

@@ -55,27 +55,27 @@ public:
 
   friend nsIFrame* NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
-  virtual eMathMLFrameType GetMathMLFrameType() MOZ_OVERRIDE;
+  virtual eMathMLFrameType GetMathMLFrameType() override;
 
   virtual nsresult
   MeasureForWidth(nsRenderingContext& aRenderingContext,
-                  nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
+                  nsHTMLReflowMetrics& aDesiredSize) override;
 
   virtual nsresult
   Place(nsRenderingContext& aRenderingContext,
         bool                 aPlaceOrigin,
-        nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
+        nsHTMLReflowMetrics& aDesiredSize) override;
 
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
                                 const nsRect&           aDirtyRect,
-                                const nsDisplayListSet& aLists) MOZ_OVERRIDE;
+                                const nsDisplayListSet& aLists) override;
 
   NS_IMETHOD
-  TransmitAutomaticData() MOZ_OVERRIDE;
+  TransmitAutomaticData() override;
 
   // override the base method so that we can deal with the fraction line
   virtual nscoord
-  FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize) MOZ_OVERRIDE;
+  FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize) override;
 
   // helper to translate the thickness attribute into a usable form
   static nscoord 
@@ -87,7 +87,7 @@ public:
                     float            aFontSizeInflation);
 
   uint8_t
-  ScriptIncrement(nsIFrame* aFrame) MOZ_OVERRIDE;
+  ScriptIncrement(nsIFrame* aFrame) override;
 
 protected:
   explicit nsMathMLmfracFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}

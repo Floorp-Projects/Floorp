@@ -420,7 +420,7 @@ nsServerSocket::Close()
 
 namespace {
 
-class ServerSocketListenerProxy MOZ_FINAL : public nsIServerSocketListener
+class ServerSocketListenerProxy final : public nsIServerSocketListener
 {
   ~ServerSocketListenerProxy() {}
 

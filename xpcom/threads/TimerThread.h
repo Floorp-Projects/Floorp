@@ -24,7 +24,7 @@ namespace mozilla {
 class TimeStamp;
 }
 
-class TimerThread MOZ_FINAL
+class TimerThread final
   : public nsIRunnable
   , public nsIObserver
 {

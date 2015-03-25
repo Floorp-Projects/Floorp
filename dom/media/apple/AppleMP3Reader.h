@@ -17,24 +17,24 @@ class AppleMP3Reader : public MediaDecoderReader
 {
 public:
   explicit AppleMP3Reader(AbstractMediaDecoder *aDecoder);
-  virtual ~AppleMP3Reader() MOZ_OVERRIDE;
+  virtual ~AppleMP3Reader() override;
 
-  virtual nsresult Init(MediaDecoderReader* aCloneDonor) MOZ_OVERRIDE;
+  virtual nsresult Init(MediaDecoderReader* aCloneDonor) override;
 
   nsresult PushDataToDemuxer();
 
-  virtual bool DecodeAudioData() MOZ_OVERRIDE;
+  virtual bool DecodeAudioData() override;
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                int64_t aTimeThreshold) MOZ_OVERRIDE;
+                                int64_t aTimeThreshold) override;
 
-  virtual bool HasAudio() MOZ_OVERRIDE;
-  virtual bool HasVideo() MOZ_OVERRIDE;
+  virtual bool HasAudio() override;
+  virtual bool HasVideo() override;
 
   virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags) MOZ_OVERRIDE;
+                                MetadataTags** aTags) override;
 
   virtual nsRefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aEndTime) MOZ_OVERRIDE;
+  Seek(int64_t aTime, int64_t aEndTime) override;
 
   void AudioSampleCallback(UInt32 aNumBytes,
                            UInt32 aNumPackets,
@@ -47,9 +47,9 @@ public:
 
   virtual void NotifyDataArrived(const char* aBuffer,
                                  uint32_t aLength,
-                                 int64_t aOffset) MOZ_OVERRIDE;
+                                 int64_t aOffset) override;
 
-  virtual bool IsMediaSeekable() MOZ_OVERRIDE;
+  virtual bool IsMediaSeekable() override;
 
 private:
   void SetupDecoder();

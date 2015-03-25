@@ -82,7 +82,7 @@ public:
     , mFailed(false)
   {}
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     nsresult rv = NS_OK;
     MOZ_ASSERT(NS_IsMainThread());
@@ -190,7 +190,7 @@ public:
     return rv;
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE
+  NS_IMETHOD Run() override
   {
     uint64_t imgSize;
     void* imgData = nullptr;

@@ -18,7 +18,7 @@ namespace dom {
 
 class MetadataHelper;
 
-class MetadataParameters MOZ_FINAL
+class MetadataParameters final
 {
   friend class MetadataHelper;
 
@@ -84,11 +84,11 @@ public:
   { }
 
   nsresult
-  DoAsyncRun(nsISupports* aStream) MOZ_OVERRIDE;
+  DoAsyncRun(nsISupports* aStream) override;
 
   nsresult
   GetSuccessResult(JSContext* aCx,
-                   JS::MutableHandle<JS::Value> aVal) MOZ_OVERRIDE;
+                   JS::MutableHandle<JS::Value> aVal) override;
 
 protected:
   class AsyncMetadataGetter : public AsyncHelper
@@ -102,7 +102,7 @@ protected:
 
   protected:
     nsresult
-    DoStreamWork(nsISupports* aStream) MOZ_OVERRIDE;
+    DoStreamWork(nsISupports* aStream) override;
 
   private:
     nsRefPtr<MetadataParameters> mParams;

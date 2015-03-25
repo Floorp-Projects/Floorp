@@ -392,7 +392,7 @@ ReverseString(const nsCSubstring& aSource, nsCSubstring& aResult);
 
 namespace { // anon
 
-class nsReverseStringSQLFunction MOZ_FINAL : public mozIStorageFunction
+class nsReverseStringSQLFunction final : public mozIStorageFunction
 {
   ~nsReverseStringSQLFunction() {}
 

@@ -36,16 +36,16 @@ class TCPServerSocketChild : public mozilla::net::PTCPServerSocketChild
 {
 public:
   NS_DECL_NSITCPSERVERSOCKETCHILD
-  NS_IMETHOD_(MozExternalRefCountType) Release() MOZ_OVERRIDE;
+  NS_IMETHOD_(MozExternalRefCountType) Release() override;
 
   TCPServerSocketChild();
   ~TCPServerSocketChild();
 
-  virtual bool RecvCallbackAccept(PTCPSocketChild *socket)  MOZ_OVERRIDE;
+  virtual bool RecvCallbackAccept(PTCPSocketChild *socket)  override;
   virtual bool RecvCallbackError(const nsString& aMessage,
                                  const nsString& aFilename,
                                  const uint32_t& aLineNumber,
-                                 const uint32_t& aColumnNumber) MOZ_OVERRIDE;
+                                 const uint32_t& aColumnNumber) override;
 };
 
 } // namespace dom

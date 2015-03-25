@@ -38,7 +38,7 @@ public:
 typedef mozilla::ObserverList<Volume*> VolumeObserverList;
 #endif
 
-class Volume MOZ_FINAL
+class Volume final
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(Volume)

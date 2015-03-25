@@ -170,7 +170,7 @@ public:
     MOZ_ASSERT(aSocket);
   }
 
-  void Run() MOZ_OVERRIDE
+  void Run() override
   {
     MOZ_ASSERT(NS_IsMainThread());
 

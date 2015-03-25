@@ -33,7 +33,7 @@ public:
 class TextTrack;
 class TextTrackCue;
 
-class TextTrackManager MOZ_FINAL : public nsIDOMEventListener
+class TextTrackManager final : public nsIDOMEventListener
 {
   ~TextTrackManager();
 

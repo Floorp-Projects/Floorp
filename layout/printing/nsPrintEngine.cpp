@@ -3601,7 +3601,7 @@ public:
     NS_ASSERTION(mDocViewerPrint, "mDocViewerPrint is null.");
   }
 
-  NS_IMETHOD Run() MOZ_OVERRIDE {
+  NS_IMETHOD Run() override {
     if (mDocViewerPrint)
       mDocViewerPrint->OnDonePrinting();
     return NS_OK;

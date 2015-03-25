@@ -23,7 +23,7 @@ class nsIDOMNode;
 namespace mozilla {
 namespace dom {
 
-class TreeWalker MOZ_FINAL : public nsIDOMTreeWalker, public nsTraversal
+class TreeWalker final : public nsIDOMTreeWalker, public nsTraversal
 {
     virtual ~TreeWalker();
 

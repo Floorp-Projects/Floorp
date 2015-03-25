@@ -20,7 +20,7 @@ class nsHttpChannel;
 namespace mozilla {
 namespace net {
 
-class NullHttpChannel MOZ_FINAL
+class NullHttpChannel final
   : public nsINullChannel
   , public nsIHttpChannel
   , public nsITimedChannel

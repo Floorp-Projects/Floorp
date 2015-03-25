@@ -55,57 +55,57 @@ public:
 
 
   virtual bool
-  AnswerInvalidate() MOZ_OVERRIDE;
+  AnswerInvalidate() override;
 
   virtual bool
   AnswerHasMethod(const PluginIdentifier& aId,
-                  bool* aHasMethod) MOZ_OVERRIDE;
+                  bool* aHasMethod) override;
 
   virtual bool
   AnswerInvoke(const PluginIdentifier& aId,
                InfallibleTArray<Variant>&& aArgs,
                Variant* aResult,
-               bool* aSuccess) MOZ_OVERRIDE;
+               bool* aSuccess) override;
 
   virtual bool
   AnswerInvokeDefault(InfallibleTArray<Variant>&& aArgs,
                       Variant* aResult,
-                      bool* aSuccess) MOZ_OVERRIDE;
+                      bool* aSuccess) override;
 
   virtual bool
   AnswerHasProperty(const PluginIdentifier& aId,
-                    bool* aHasProperty) MOZ_OVERRIDE;
+                    bool* aHasProperty) override;
 
   virtual bool
   AnswerGetChildProperty(const PluginIdentifier& aId,
                          bool* aHasProperty,
                          bool* aHasMethod,
                          Variant* aResult,
-                         bool* aSuccess) MOZ_OVERRIDE;
+                         bool* aSuccess) override;
 
   virtual bool
   AnswerSetProperty(const PluginIdentifier& aId,
                     const Variant& aValue,
-                    bool* aSuccess) MOZ_OVERRIDE;
+                    bool* aSuccess) override;
 
   virtual bool
   AnswerRemoveProperty(const PluginIdentifier& aId,
-                       bool* aSuccess) MOZ_OVERRIDE;
+                       bool* aSuccess) override;
 
   virtual bool
   AnswerEnumerate(InfallibleTArray<PluginIdentifier>* aProperties,
-                  bool* aSuccess) MOZ_OVERRIDE;
+                  bool* aSuccess) override;
 
   virtual bool
   AnswerConstruct(InfallibleTArray<Variant>&& aArgs,
                   Variant* aResult,
-                  bool* aSuccess) MOZ_OVERRIDE;
+                  bool* aSuccess) override;
 
   virtual bool
-  RecvProtect() MOZ_OVERRIDE;
+  RecvProtect() override;
 
   virtual bool
-  RecvUnprotect() MOZ_OVERRIDE;
+  RecvUnprotect() override;
 
   NPObject*
   GetObject(bool aCanResurrect);

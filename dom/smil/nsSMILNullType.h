@@ -23,23 +23,23 @@ public:
 protected:
   // nsISMILType Methods
   // -------------------
-  virtual void Init(nsSMILValue& aValue) const MOZ_OVERRIDE {}
-  virtual void Destroy(nsSMILValue& aValue) const MOZ_OVERRIDE {}
-  virtual nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const MOZ_OVERRIDE;
+  virtual void Init(nsSMILValue& aValue) const override {}
+  virtual void Destroy(nsSMILValue& aValue) const override {}
+  virtual nsresult Assign(nsSMILValue& aDest, const nsSMILValue& aSrc) const override;
 
   // The remaining methods should never be called, so although they're very
   // simple they don't need to be inline.
   virtual bool     IsEqual(const nsSMILValue& aLeft,
-                           const nsSMILValue& aRight) const MOZ_OVERRIDE;
+                           const nsSMILValue& aRight) const override;
   virtual nsresult Add(nsSMILValue& aDest, const nsSMILValue& aValueToAdd,
-                       uint32_t aCount) const MOZ_OVERRIDE;
+                       uint32_t aCount) const override;
   virtual nsresult ComputeDistance(const nsSMILValue& aFrom,
                                    const nsSMILValue& aTo,
-                                   double& aDistance) const MOZ_OVERRIDE;
+                                   double& aDistance) const override;
   virtual nsresult Interpolate(const nsSMILValue& aStartVal,
                                const nsSMILValue& aEndVal,
                                double aUnitDistance,
-                               nsSMILValue& aResult) const MOZ_OVERRIDE;
+                               nsSMILValue& aResult) const override;
 
 private:
   // Private constructor: prevent instances beyond my singleton.
