@@ -904,26 +904,28 @@ JsepSessionImpl::GetRtpExtensions(SdpMediaSection::MediaType type) const
   }
 }
 
-void
-JsepSessionImpl::AddCommonCodecs(const SdpMediaSection& remoteMsection,
-                                 SdpMediaSection* msection)
+static bool
+CompareCodec(const UniquePtr<JsepCodecDescription>& lhs,
+             const UniquePtr<JsepCodecDescription>& rhs)
 {
-  const std::vector<std::string>& formats = remoteMsection.GetFormats();
+  return lhs->mStronglyPreferred && !rhs->mStronglyPreferred;
+}
 
-  for (auto fmt = formats.begin(); fmt != formats.end(); ++fmt) {
-    JsepCodecDescription* codec = FindMatchingCodec(*fmt, remoteMsection);
+std::vector<UniquePtr<JsepCodecDescription>>
+JsepSessionImpl::GetCommonCodecs(const SdpMediaSection& remoteMsection)
+{
+  std::vector<UniquePtr<JsepCodecDescription>> matchingCodecs;
+  for (const std::string& fmt : remoteMsection.GetFormats()) {
+    JsepCodecDescription* codec = FindMatchingCodec(fmt, remoteMsection);
     if (codec) {
-      UniquePtr<JsepCodecDescription> negotiated(
-          codec->MakeNegotiatedCodec(*fmt, remoteMsection));
-      if (negotiated) {
-        negotiated->AddToMediaSection(*msection);
-        codec->mDefaultPt = *fmt; // Remember the other side's PT
-      }
-      // TODO(bug 1099351): Once bug 1073475 is fixed on all supported
-      // versions, we can remove this limitation.
-      break;
+      codec->mDefaultPt = fmt; // Remember the other side's PT
+      matchingCodecs.push_back(UniquePtr<JsepCodecDescription>(codec->Clone()));
     }
   }
+
+  std::stable_sort(matchingCodecs.begin(), matchingCodecs.end(), CompareCodec);
+
+  return matchingCodecs;
 }
 
 void
@@ -1177,7 +1179,19 @@ JsepSessionImpl::CreateAnswerMSection(const JsepAnswerOptions& options,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Now add the codecs.
-  AddCommonCodecs(remoteMsection, msection);
+  std::vector<UniquePtr<JsepCodecDescription>> matchingCodecs(
+      GetCommonCodecs(remoteMsection));
+
+  for (const UniquePtr<JsepCodecDescription>& codec : matchingCodecs) {
+    UniquePtr<JsepCodecDescription> negotiated(
+        codec->MakeNegotiatedCodec(remoteMsection));
+    if (negotiated) {
+      negotiated->AddToMediaSection(*msection);
+      // TODO(bug 1099351): Once bug 1073475 is fixed on all supported
+      // versions, we can remove this limitation.
+      break;
+    }
+  }
 
   // Add extmap attributes.
   AddCommonExtmaps(remoteMsection, msection);
@@ -1668,15 +1682,10 @@ JsepSessionImpl::NegotiateTrack(const SdpMediaSection& remoteMsection,
   negotiatedDetails->mProtocol = remoteMsection.GetProtocol();
 
   // Insert all the codecs we jointly support.
-  const std::vector<std::string>& formats = remoteMsection.GetFormats();
+  std::vector<UniquePtr<JsepCodecDescription>> commonCodecs(
+      GetCommonCodecs(remoteMsection));
 
-  for (auto fmt = formats.begin(); fmt != formats.end(); ++fmt) {
-    JsepCodecDescription* codec = FindMatchingCodec(*fmt, remoteMsection);
-
-    if (!codec) {
-      continue;
-    }
-
+  for (const UniquePtr<JsepCodecDescription>& codec : commonCodecs) {
     bool sending = (direction == JsepTrack::kJsepTrackSending);
 
     // Everywhere else in JsepSessionImpl, a JsepCodecDescription describes
@@ -1690,11 +1699,9 @@ JsepSessionImpl::NegotiateTrack(const SdpMediaSection& remoteMsection,
     UniquePtr<JsepCodecDescription> sendOrReceiveCodec;
 
     if (sending) {
-      sendOrReceiveCodec =
-        Move(codec->MakeSendCodec(remoteMsection, *fmt));
+      sendOrReceiveCodec = Move(codec->MakeSendCodec(remoteMsection));
     } else {
-      sendOrReceiveCodec =
-        Move(codec->MakeRecvCodec(remoteMsection, *fmt));
+      sendOrReceiveCodec = Move(codec->MakeRecvCodec(remoteMsection));
     }
 
     if (!sendOrReceiveCodec) {
@@ -1708,7 +1715,7 @@ JsepSessionImpl::NegotiateTrack(const SdpMediaSection& remoteMsection,
       if (!sendOrReceiveCodec->GetPtAsInt(&payloadType) ||
           payloadType > UINT8_MAX) {
         JSEP_SET_ERROR("audio/video payload type is not an 8 bit unsigned int: "
-                       << *fmt);
+                       << codec->mDefaultPt);
         return NS_ERROR_INVALID_ARG;
       }
     }
