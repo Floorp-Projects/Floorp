@@ -252,7 +252,8 @@ describe("loop.store.ConversationStore", function () {
         sinon.assert.calledWithExactly(sdkDriver.connectSession, {
           apiKey: "fakeKey",
           sessionId: "321456",
-          sessionToken: "341256"
+          sessionToken: "341256",
+          sendTwoWayMediaTelemetry: true
         });
       });
 
@@ -580,7 +581,7 @@ describe("loop.store.ConversationStore", function () {
       expect(store.getStoreState("callState")).eql(CALL_STATES.ONGOING);
     });
 
-    it("should connect the session", function() {
+    it("should connect the session with sendTwoWayMediaTelemetry set as falsy", function() {
       store.setStoreState(fakeSessionData);
 
       store.acceptCall(
@@ -590,7 +591,8 @@ describe("loop.store.ConversationStore", function () {
       sinon.assert.calledWithExactly(sdkDriver.connectSession, {
         apiKey: "fakeKey",
         sessionId: "321456",
-        sessionToken: "341256"
+        sessionToken: "341256",
+        sendTwoWayMediaTelemetry: undefined
       });
     });
 

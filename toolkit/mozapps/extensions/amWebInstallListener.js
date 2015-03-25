@@ -19,6 +19,7 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PromptUtils", "resource://gre/modules/SharedPromptUtils.jsm");
 
@@ -164,6 +165,11 @@ Installer.prototype = {
         return;
       }
       catch (e) {}
+    }
+
+    if (Preferences.get("xpinstall.customConfirmationUI", false)) {
+      notifyObservers("addon-install-confirmation", this.browser, this.url, this.downloads);
+      return;
     }
 
     let args = {};

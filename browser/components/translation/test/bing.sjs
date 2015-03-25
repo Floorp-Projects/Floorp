@@ -151,7 +151,7 @@ function reallyHandleRequest(req, res) {
   let contentType = req.hasHeader("Content-Type") ? req.getHeader("Content-Type") : null;
   log("contentType: " + contentType);
 
-  if (contentType == "text/xml") {
+  if (contentType.startsWith("text/xml")) {
     try {
       // For all these requests the client needs to supply the correct
       // authentication headers.

@@ -5,14 +5,20 @@
 
 <merge xmlns:android="http://schemas.android.com/apk/res/android">
     <ImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:paddingLeft="15dp"
-        android:id="@+id/overlaybtn_icon"/>
+        android:layout_width="60dp"
+        android:layout_height="match_parent"
+        android:id="@+id/overlaybtn_icon"
+        android:padding="30dp"
+        android:scaleType="center"/>
 
     <TextView
-        style="@style/ShareOverlayButton.Text"
+        android:textAppearance="@style/ShareOverlayTextAppearance"
         android:id="@+id/overlaybtn_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:clickable="false"
-        android:enabled="false"/>
+        android:enabled="false"
+        android:maxLines="1"
+        android:textSize="14sp"
+        android:textColor="@color/primary_text_selector"/>
 </merge>
