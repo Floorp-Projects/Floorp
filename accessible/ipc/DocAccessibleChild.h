@@ -322,10 +322,40 @@ public:
                                     const uint32_t& aRow) override;
   virtual bool RecvTableIsProbablyForLayout(const uint64_t& aID,
                                             bool* aForLayout) override;
+
+  virtual bool RecvSelectedItems(const uint64_t& aID,
+                                 nsTArray<uint64_t>* aSelectedItemIDs) override;
+
+  virtual bool RecvSelectedItemCount(const uint64_t& aID,
+                                     uint32_t* aCount) override;
+
+  virtual bool RecvGetSelectedItem(const uint64_t& aID,
+                                   const uint32_t& aIndex,
+                                   uint64_t* aSelected,
+                                   bool* aOk) override;
+
+  virtual bool RecvIsItemSelected(const uint64_t& aID,
+                                  const uint32_t& aIndex,
+                                  bool* aSelected) override;
+
+  virtual bool RecvAddItemToSelection(const uint64_t& aID,
+                                      const uint32_t& aIndex,
+                                      bool* aSuccess) override;
+
+  virtual bool RecvRemoveItemFromSelection(const uint64_t& aID,
+                                           const uint32_t& aIndex,
+                                           bool* aSuccess) override;
+
+  virtual bool RecvSelectAll(const uint64_t& aID,
+                             bool* aSuccess) override;
+
+  virtual bool RecvUnselectAll(const uint64_t& aID,
+                               bool* aSuccess) override;
 private:
 
   Accessible* IdToAccessible(const uint64_t& aID) const;
   Accessible* IdToAccessibleLink(const uint64_t& aID) const;
+  Accessible* IdToAccessibleSelect(const uint64_t& aID) const;
   HyperTextAccessible* IdToHyperTextAccessible(const uint64_t& aID) const;
   ImageAccessible* IdToImageAccessible(const uint64_t& aID) const;
   TableCellAccessible* IdToTableCellAccessible(const uint64_t& aID) const;
