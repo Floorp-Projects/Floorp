@@ -25,6 +25,7 @@ import org.mozilla.gecko.background.fxa.oauth.FxAccountOAuthClient10.Authorizati
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.JSONWebTokenUtils;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine;
 import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.LoginStateMachineDelegate;
@@ -48,8 +49,6 @@ import android.os.Bundle;
 
 public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
   public static final String PREF_LOCAL_NAME = "device.localname";
-  public static final String OAUTH_CLIENT_ID_FENNEC = "3332a18d142636cb";
-  public static final String OAUTH_SCOPE_READINGLIST = "readinglist";
 
   private static final String LOG_TAG = ReadingListSyncAdapter.class.getSimpleName();
   private static final long TIMEOUT_SECONDS = 60;
@@ -145,7 +144,7 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
         return;
       }
 
-      final String oauthServerUri = ReadingListConstants.OAUTH_ENDPOINT_PROD;
+      final String oauthServerUri = FxAccountConstants.STAGE_OAUTH_SERVER_ENDPOINT;
       final String authServerEndpoint = fxAccount.getAccountServerURI();
       final String audience = FxAccountUtils.getAudienceForURL(oauthServerUri); // The assertion gets traded in for an oauth bearer token.
 
@@ -195,8 +194,8 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
             final String assertion = married.generateAssertion(audience, JSONWebTokenUtils.DEFAULT_ASSERTION_ISSUER);
             JSONWebTokenUtils.dumpAssertion(assertion);
 
-            final String clientID = OAUTH_CLIENT_ID_FENNEC;
-            final String scope = OAUTH_SCOPE_READINGLIST;
+            final String clientID = FxAccountConstants.OAUTH_CLIENT_ID_FENNEC;
+            final String scope = ReadingListConstants.OAUTH_SCOPE_READINGLIST;
             syncWithAssertion(clientID, scope, assertion, sharedPrefs, extras);
           } catch (Exception e) {
             syncDelegate.handleError(e);
