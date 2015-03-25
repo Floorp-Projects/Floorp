@@ -178,16 +178,20 @@ static MOZ_CONSTEXPR_VAR Register OsrFrameReg = IntArgReg3;
 
 static MOZ_CONSTEXPR_VAR Register PreBarrierReg = rdx;
 
-static const uint32_t ABIStackAlignment = 16;
-static const uint32_t CodeAlignment = 16;
-static const uint32_t JitStackAlignment = 16;
+static MOZ_CONSTEXPR_VAR uint32_t ABIStackAlignment = 16;
+static MOZ_CONSTEXPR_VAR uint32_t CodeAlignment = 16;
+static MOZ_CONSTEXPR_VAR uint32_t JitStackAlignment = 16;
+
+static MOZ_CONSTEXPR_VAR uint32_t JitStackValueAlignment = JitStackAlignment / sizeof(Value);
+static_assert(JitStackAlignment % sizeof(Value) == 0 && JitStackValueAlignment >= 1,
+  "Stack alignment should be a non-zero multiple of sizeof(Value)");
 
 // This boolean indicates whether we support SIMD instructions flavoured for
 // this architecture or not. Rather than a method in the LIRGenerator, it is
 // here such that it is accessible from the entire codebase. Once full support
 // for SIMD is reached on all tier-1 platforms, this constant can be deleted.
-static const bool SupportsSimd = true;
-static const uint32_t SimdMemoryAlignment = 16;
+static MOZ_CONSTEXPR_VAR bool SupportsSimd = true;
+static MOZ_CONSTEXPR_VAR uint32_t SimdMemoryAlignment = 16;
 
 static_assert(CodeAlignment % SimdMemoryAlignment == 0,
   "Code alignment should be larger than any of the alignments which are used for "
