@@ -694,6 +694,17 @@ function getRuleViewLinkByIndex(view, index) {
 }
 
 /**
+ * Get rule-link text from the rule-view given its index
+ * @param {CssRuleView} view The instance of the rule-view panel
+ * @param {Number} index The index of the link to get
+ * @return {String} The string at this index
+ */
+function getRuleViewLinkTextByIndex(view, index) {
+  let link = getRuleViewLinkByIndex(view, index);
+  return link.querySelector(".source-link-label").value;
+}
+
+/**
  * Get the rule editor from the rule-view given its index
  * @param {CssRuleView} view The instance of the rule-view panel
  * @param {Number} childrenIndex The children index of the element to get

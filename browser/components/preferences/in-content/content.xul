@@ -90,7 +90,7 @@
   <hbox align="center">
     <label control="defaultFont" accesskey="&defaultFont.accesskey;">&defaultFont.label;</label>
     <menulist id="defaultFont" flex="1"/>
-    <label control="defaultFontSize" accesskey="&defaultSize.accesskey;">&defaultSize.label;</label>
+    <label id="defaultFontSizeLabel" control="defaultFontSize" accesskey="&defaultSize.accesskey;">&defaultSize.label;</label>
     <menulist id="defaultFontSize">
       <menupopup>
         <menuitem value="9" label="9"/>

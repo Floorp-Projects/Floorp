@@ -1491,11 +1491,16 @@ exports.testShowHideRawWindowArg = function*(assert) {
   const { Sidebar } = require('sdk/ui/sidebar');
 
   let testName = 'testShowHideRawWindowArg';
+
+  assert.pass("Creating sidebar");
+
   let sidebar = Sidebar({
     id: testName,
     title: testName,
     url: 'data:text/html;charset=utf-8,' + testName
   });
+
+  assert.pass("Created sidebar");
 
   let mainWindow = getMostRecentBrowserWindow();
   let newWindow = yield windowPromise(mainWindow.OpenBrowserWindow(), 'load');
@@ -1504,21 +1509,26 @@ exports.testShowHideRawWindowArg = function*(assert) {
   yield focus(newWindow);
   assert.pass("Focused the new window");
 
-  yield focus(mainWindow);
-  assert.pass("Focused the old window");
+  let newWindow2 = yield windowPromise(mainWindow.OpenBrowserWindow(), 'load');
+  assert.pass("Created the second new window");
+
+  yield focus(newWindow2);
+  assert.pass("Focused the second new window");
 
   yield sidebar.show(newWindow);
 
   assert.pass('the sidebar was shown');
   assert.equal(isSidebarShowing(mainWindow), false, 'sidebar is not showing in main window');
+  assert.equal(isSidebarShowing(newWindow2), false, 'sidebar is not showing in second window');
   assert.equal(isSidebarShowing(newWindow), true, 'sidebar is showing in new window');
 
-  assert.ok(isFocused(mainWindow), 'main window is still focused');
+  assert.ok(isFocused(newWindow2), 'main window is still focused');
 
   yield sidebar.hide(newWindow);
 
-  assert.equal(isFocused(mainWindow), true, 'main window is still focused');
+  assert.equal(isFocused(newWindow2), true, 'second window is still focused');
   assert.equal(isSidebarShowing(mainWindow), false, 'sidebar is not showing in main window');
+  assert.equal(isSidebarShowing(newWindow2), false, 'sidebar is not showing in second window');
   assert.equal(isSidebarShowing(newWindow), false, 'sidebar is not showing in new window');
 
   sidebar.destroy();

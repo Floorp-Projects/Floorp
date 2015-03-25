@@ -286,8 +286,42 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   return NS_OK;
 }
 
+/* This version of ShouldLoad() is non-static and called by the Content Policy
+ * API and AsyncOnChannelRedirect().  See nsIContentPolicy::ShouldLoad()
+ * for detailed description of the parameters.
+ */
 NS_IMETHODIMP
 nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
+                                  nsIURI* aContentLocation,
+                                  nsIURI* aRequestingLocation,
+                                  nsISupports* aRequestingContext,
+                                  const nsACString& aMimeGuess,
+                                  nsISupports* aExtra,
+                                  nsIPrincipal* aRequestPrincipal,
+                                  int16_t* aDecision)
+{
+  // We pass in false as the first parameter to ShouldLoad(), because the
+  // callers of this method don't know whether the load went through cached
+  // image redirects.  This is handled by direct callers of the static
+  // ShouldLoad.
+  nsresult rv = ShouldLoad(false,   //aHadInsecureImageRedirect
+                           aContentType,
+                           aContentLocation,
+                           aRequestingLocation,
+                           aRequestingContext,
+                           aMimeGuess,
+                           aExtra,
+                           aRequestPrincipal,
+                           aDecision);
+  return rv;
+}
+
+/* Static version of ShouldLoad() that contains all the Mixed Content Blocker
+ * logic.  Called from non-static ShouldLoad().
+ */
+nsresult
+nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
+                                  uint32_t aContentType,
                                   nsIURI* aContentLocation,
                                   nsIURI* aRequestingLocation,
                                   nsISupports* aRequestingContext,
@@ -442,8 +476,12 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
     *aDecision = REJECT_REQUEST;
     return NS_ERROR_FAILURE;
   }
-
-  if (schemeLocal || schemeNoReturnData || schemeInherits || schemeSecure) {
+  // TYPE_IMAGE redirects are cached based on the original URI, not the final
+  // destination and hence cache hits for images may not have the correct
+  // aContentLocation.  Check if the cached hit went through an http redirect,
+  // and if it did, we can't treat this as a secure subresource.
+  if (!aHadInsecureImageRedirect &&
+      (schemeLocal || schemeNoReturnData || schemeInherits || schemeSecure)) {
     *aDecision = ACCEPT;
      return NS_OK;
   }
@@ -544,7 +582,7 @@ nsMixedContentBlocker::ShouldLoad(uint32_t aContentType,
   rv = docShell->GetAllowMixedContentAndConnectionData(&rootHasSecureConnection, &allowMixedContent, &isRootDocShell);
   if (NS_FAILED(rv)) {
     *aDecision = REJECT_REQUEST;
-     return rv;
+    return rv;
   }
 
 

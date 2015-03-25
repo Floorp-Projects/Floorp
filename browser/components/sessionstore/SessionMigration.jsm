@@ -72,14 +72,9 @@ let SessionMigrationInternal = {
       win._closedTabs = [];
       return win;
     });
-    let wrappedState = {
-      url: "about:welcomeback",
-      formdata: {
-        id: {"sessionData": state},
-        xpath: {}
-      }
-    };
-    return {windows: [{tabs: [{entries: [wrappedState]}]}]};
+    let url = "about:welcomeback";
+    let formdata = {id: {sessionData: state}, url};
+    return {windows: [{tabs: [{entries: [{url}], formdata}]}]};
   },
   /**
    * Asynchronously read session restore state (JSON) from a path

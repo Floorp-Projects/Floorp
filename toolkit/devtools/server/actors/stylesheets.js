@@ -744,7 +744,7 @@ let StyleSheetActor = protocol.ActorClass({
         source: this.href,
         line: line,
         column: column
-      }
+      };
     });
   }, {
     request: {

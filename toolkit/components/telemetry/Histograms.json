@@ -345,7 +345,7 @@
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 10,
-    "description": "Use of SpiderMonkey's deprecated language extensions in web content: ForEach=0, DestructuringForIn=1, LegacyGenerator=2, ExpressionClosure=3, LetBlock=4, LetExpression=5, NoSuchMethod=6"
+    "description": "Use of SpiderMonkey's deprecated language extensions in web content: ForEach=0, DestructuringForIn=1, LegacyGenerator=2, ExpressionClosure=3, LetBlock=4, LetExpression=5, NoSuchMethod=6, FlagsArgument=7"
   },
   "TELEMETRY_PING": {
     "expires_in_version": "default",
@@ -7625,6 +7625,11 @@
     "high": 750,
     "n_buckets" : 40,
     "description": "Time in days each saved login was last used"
+  },
+  "PWMGR_PASSWORD_INPUT_IN_FORM": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether an <input type=password> is associated with a <form> when it is added to a document"
   },
   "PWMGR_PROMPT_REMEMBER_ACTION" : {
     "expires_in_version": "never",

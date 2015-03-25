@@ -478,7 +478,7 @@ public:
     return *this * Point4D(aPoint.x, aPoint.y, z, 1);
   }
 
-  Rect ProjectRectBounds(const Rect& aRect) const;
+  Rect ProjectRectBounds(const Rect& aRect, const Rect &aClip) const;
 
   static Matrix4x4 From2D(const Matrix &aMatrix) {
     Matrix4x4 matrix;

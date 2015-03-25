@@ -2504,7 +2504,15 @@ nsLayoutUtils::TransformRect(nsIFrame* aFromFrame, nsIFrame* aToFrame,
       gfx::Rect(aRect.x * devPixelsPerAppUnitFromFrame,
                 aRect.y * devPixelsPerAppUnitFromFrame,
                 aRect.width * devPixelsPerAppUnitFromFrame,
-                aRect.height * devPixelsPerAppUnitFromFrame)));
+                aRect.height * devPixelsPerAppUnitFromFrame),
+      Rect(-std::numeric_limits<Float>::max() * 0.5f,
+           -std::numeric_limits<Float>::max() * 0.5f,
+           std::numeric_limits<Float>::max(),
+           std::numeric_limits<Float>::max())),
+    Rect(-std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame * 0.5f,
+         -std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame * 0.5f,
+         std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame,
+         std::numeric_limits<Float>::max() * devPixelsPerAppUnitFromFrame));
   aRect.x = toDevPixels.x / devPixelsPerAppUnitToFrame;
   aRect.y = toDevPixels.y / devPixelsPerAppUnitToFrame;
   aRect.width = toDevPixels.width / devPixelsPerAppUnitToFrame;
@@ -8004,4 +8012,51 @@ nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(nsIPresShell* aShell)
     }
   }
   return false;
+}
+
+/* static */ uint32_t
+nsLayoutUtils::GetTouchActionFromFrame(nsIFrame* aFrame)
+{
+  // If aFrame is null then return default value
+  if (!aFrame) {
+    return NS_STYLE_TOUCH_ACTION_AUTO;
+  }
+
+  // The touch-action CSS property applies to: all elements except:
+  // non-replaced inline elements, table rows, row groups, table columns, and column groups
+  bool isNonReplacedInlineElement = aFrame->IsFrameOfType(nsIFrame::eLineParticipant);
+  if (isNonReplacedInlineElement) {
+    return NS_STYLE_TOUCH_ACTION_AUTO;
+  }
+
+  const nsStyleDisplay* disp = aFrame->StyleDisplay();
+  bool isTableElement = disp->IsInnerTableStyle() &&
+    disp->mDisplay != NS_STYLE_DISPLAY_TABLE_CELL &&
+    disp->mDisplay != NS_STYLE_DISPLAY_TABLE_CAPTION;
+  if (isTableElement) {
+    return NS_STYLE_TOUCH_ACTION_AUTO;
+  }
+
+  return disp->mTouchAction;
+}
+
+/* static */  void
+nsLayoutUtils::TransformToAncestorAndCombineRegions(
+  const nsRect& aBounds,
+  nsIFrame* aFrame,
+  const nsIFrame* aAncestorFrame,
+  nsRegion* aPreciseTargetDest,
+  nsRegion* aImpreciseTargetDest)
+{
+  if (aBounds.IsEmpty()) {
+    return;
+  }
+  Matrix4x4 matrix = GetTransformToAncestor(aFrame, aAncestorFrame);
+  Matrix matrix2D;
+  bool isPrecise = (matrix.Is2D(&matrix2D)
+    && !matrix2D.HasNonAxisAlignedTransform());
+  nsRect transformed = TransformFrameRectToAncestor(
+    aFrame, aBounds, aAncestorFrame);
+  nsRegion* dest = isPrecise ? aPreciseTargetDest : aImpreciseTargetDest;
+  dest->OrWith(transformed);
 }
