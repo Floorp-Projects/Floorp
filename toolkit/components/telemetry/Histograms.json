@@ -7131,6 +7131,14 @@
     "kind": "boolean",
     "description": "Stores 1 every time the URL is copied or shared."
   },
+  "LOOP_SHARING_STATE_CHANGE": {
+    "alert_emails": ["firefox-dev@mozilla.org", "mdeboer@mozilla.com"],
+    "expires_in_version": "43",
+    "kind": "count",
+    "keyed": true,
+    "releaseChannelCollection": "opt-in",
+    "description": "Number of times the sharing feature has been enabled and disabled"
+  },
   "E10S_AUTOSTART": {
     "expires_in_version": "never",
     "kind": "boolean",

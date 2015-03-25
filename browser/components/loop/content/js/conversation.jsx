@@ -121,7 +121,8 @@ loop.conversation = (function(mozL10n) {
     var sdkDriver = new loop.OTSdkDriver({
       isDesktop: true,
       dispatcher: dispatcher,
-      sdk: OT
+      sdk: OT,
+      mozLoop: navigator.mozLoop
     });
     var appVersionInfo = navigator.mozLoop.appVersionInfo;
     var feedbackClient = new loop.FeedbackAPIClient(

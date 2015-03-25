@@ -27,6 +27,10 @@ loop.OTSdkDriver = (function() {
       this.dispatcher = options.dispatcher;
       this.sdk = options.sdk;
 
+      if (options.mozLoop) {
+        this.mozLoop = options.mozLoop;
+      }
+
       this.connections = {};
 
       this.dispatcher.register(this, [
@@ -148,6 +152,8 @@ loop.OTSdkDriver = (function() {
         config);
       this.screenshare.on("accessAllowed", this._onScreenShareGranted.bind(this));
       this.screenshare.on("accessDenied", this._onScreenShareDenied.bind(this));
+
+      this._noteSharingState(options.videoSource, true);
     },
 
     /**
@@ -179,6 +185,7 @@ loop.OTSdkDriver = (function() {
       this.screenshare.off("accessAllowed accessDenied");
       this.screenshare.destroy();
       delete this.screenshare;
+      this._noteSharingState(this._windowId ? "browser" : "window", false);
       delete this._windowId;
       return true;
     },
@@ -544,6 +551,31 @@ loop.OTSdkDriver = (function() {
       this.dispatcher.dispatch(new sharedActions.ScreenSharingState({
         state: SCREEN_SHARE_STATES.INACTIVE
       }));
+    },
+
+    /**
+     * Note the sharing state. If this.mozLoop is not defined, we're assumed to
+     * be running in the standalone client and return immediately.
+     *
+     * @param  {String}  type    Type of sharing that was flipped. May be 'window'
+     *                           or 'tab'.
+     * @param  {Boolean} enabled Flag that tells us if the feature was flipped on
+     *                           or off.
+     * @private
+     */
+    _noteSharingState: function(type, enabled) {
+      if (!this.mozLoop) {
+        return;
+      }
+
+      var bucket = this.mozLoop.SHARING_STATE_CHANGE[type.toUpperCase() + "_" +
+        (enabled ? "ENABLED" : "DISABLED")];
+      if (!bucket) {
+        console.error("No sharing state bucket found for '" + type + "'");
+        return;
+      }
+
+      this.mozLoop.telemetryAddKeyedValue("LOOP_SHARING_STATE_CHANGE", bucket);
     }
   };
 
