@@ -8,7 +8,7 @@
 namespace mozilla {
 
 #define NFCD_MAJOR_VERSION 1
-#define NFCD_MINOR_VERSION 21
+#define NFCD_MINOR_VERSION 22
 
 enum NfcTechlogy {
   NDEF = 0,
