@@ -3084,7 +3084,7 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
     mDecoder->SetFragmentEndTime(mFragmentEnd);
   }
   if (mIsEncrypted) {
-    if (!mMediaSource) {
+    if (!mMediaSource && Preferences::GetBool("media.eme.mse-only", true)) {
       DecodeError();
       return;
     }
