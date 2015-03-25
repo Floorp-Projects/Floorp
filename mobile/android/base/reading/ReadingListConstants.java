@@ -12,7 +12,8 @@ public class ReadingListConstants {
   public static final String DEFAULT_DEV_ENDPOINT = "https://readinglist.dev.mozaws.net/v1/";
   public static final String DEFAULT_PROD_ENDPOINT = "https://readinglist.services.mozilla.com/v1/";
 
-  public static final String OAUTH_ENDPOINT_PROD = "https://oauth.accounts.firefox.com/v1";
+  public static final String OAUTH_SCOPE_READINGLIST = "readinglist";
+  public static final String AUTH_TOKEN_TYPE = "oauth::" + OAUTH_SCOPE_READINGLIST;
 
   public static boolean DEBUG = false;
 }
