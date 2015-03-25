@@ -886,6 +886,12 @@ IonBuilder::build()
     // Discard unreferenced & pre-allocated resume points.
     replaceMaybeFallbackFunctionGetter(nullptr);
 
+    if (script_->hasBaselineScript() &&
+        inlinedBytecodeLength_ > script_->baselineScript()->inlinedBytecodeLength())
+    {
+        script_->baselineScript()->setInlinedBytecodeLength(inlinedBytecodeLength_);
+    }
+
     if (!maybeAddOsrTypeBarriers())
         return false;
 
@@ -4874,6 +4880,14 @@ IonBuilder::makeInliningDecision(JSObject *targetArg, CallInfo &callInfo)
         JitSpew(JitSpew_Inlining, "Cannot inline %s:%" PRIuSIZE ": callee is insufficiently hot.",
                 targetScript->filename(), targetScript->lineno());
         return InliningDecision_WarmUpCountTooLow;
+    }
+
+    // Don't inline if the callee is known to inline a lot of code, to avoid
+    // huge MIR graphs.
+    uint32_t inlinedBytecodeLength = targetScript->baselineScript()->inlinedBytecodeLength();
+    if (inlinedBytecodeLength > optimizationInfo().inlineMaxCalleeInlinedBytecodeLength()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineBigCalleeInlinedBytecodeLength);
+        return DontInline(targetScript, "Vetoed: callee inlinedBytecodeLength is too big");
     }
 
     IonBuilder *outerBuilder = outermostBuilder();
