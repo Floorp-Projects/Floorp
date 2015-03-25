@@ -1435,7 +1435,8 @@ bool
 MAssertRecoveredOnBailout::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
-    MOZ_ASSERT(input()->canRecoverOnBailout());
+    MOZ_RELEASE_ASSERT(input()->isRecoveredOnBailout() == mustBeRecovered_,
+        "assertRecoveredOnBailout failed during compilation");
     writer.writeUnsigned(uint32_t(RInstruction::Recover_AssertRecoveredOnBailout));
     return true;
 }

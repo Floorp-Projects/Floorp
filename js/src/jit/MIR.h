@@ -3907,8 +3907,10 @@ class MAssertRecoveredOnBailout
     public NoTypePolicy::Data
 {
   protected:
-    MAssertRecoveredOnBailout(MDefinition *ins)
-      : MUnaryInstruction(ins)
+    bool mustBeRecovered_;
+
+    MAssertRecoveredOnBailout(MDefinition *ins, bool mustBeRecovered)
+      : MUnaryInstruction(ins), mustBeRecovered_(mustBeRecovered)
     {
         setResultType(MIRType_Value);
         setRecoveredOnBailout();
@@ -3918,8 +3920,10 @@ class MAssertRecoveredOnBailout
   public:
     INSTRUCTION_HEADER(AssertRecoveredOnBailout)
 
-    static MAssertRecoveredOnBailout *New(TempAllocator &alloc, MDefinition *ins) {
-        return new(alloc) MAssertRecoveredOnBailout(ins);
+    static MAssertRecoveredOnBailout *New(TempAllocator &alloc, MDefinition *ins,
+                                          bool mustBeRecovered)
+    {
+        return new(alloc) MAssertRecoveredOnBailout(ins, mustBeRecovered);
     }
 
     // Needed to assert that float32 instructions are correctly recovered.
