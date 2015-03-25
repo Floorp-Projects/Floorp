@@ -38,6 +38,10 @@ task:
         type: directory
         path: '/home/worker/artifacts/'
         expires: '{{#from_now}}1 year{{/from_now}}'
+      'public/build':
+        type: directory
+        path: '/home/worker/artifacts-public/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
 
 
     env:

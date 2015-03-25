@@ -9,10 +9,15 @@ task:
 
   payload:
     cache:
-      build-flame-kk-opt: /home/worker/object-folder
+      build-flame-kk-opt: /home/worker/workspace
     env:
       TARGET: 'flame-kk'
       DEBUG: 0
+    command:
+      - >
+        checkout-gecko workspace &&
+        cd ./workspace/gecko/testing/taskcluster/scripts/phone-builder &&
+        buildbot_step 'Build' ./build-phone.sh $HOME/workspace
   extra:
     treeherder:
       symbol: B
