@@ -30,8 +30,8 @@ public class OverlayDialogButton extends LinearLayout {
     private static final String LOGTAG = "GeckoOverlayDialogButton";
 
     // The views making up this button.
-    private ImageView icon;
-    private TextView label;
+    private final ImageView icon;
+    private final TextView label;
 
     // Label/icon used when enabled.
     private String enabledLabel;
@@ -49,26 +49,16 @@ public class OverlayDialogButton extends LinearLayout {
     private boolean isEnabled = true;
 
     public OverlayDialogButton(Context context) {
-        super(context);
-        init(context);
+        this(context, null);
     }
 
     public OverlayDialogButton(Context context, AttributeSet attrs) {
         super(context, attrs);
-        init(context);
-    }
 
-    public OverlayDialogButton(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs, defStyle);
-        init(context);
-    }
-
-    private void init(Context context) {
-        setOrientation(HORIZONTAL);
-        setPadding(0, 0, 0, 0);
-        setBackgroundResource(R.drawable.overlay_share_button_background);
+        setOrientation(LinearLayout.HORIZONTAL);
 
         LayoutInflater.from(context).inflate(R.layout.overlay_share_button, this);
+
         icon = (ImageView) findViewById(R.id.overlaybtn_icon);
         label = (TextView) findViewById(R.id.overlaybtn_label);
     }

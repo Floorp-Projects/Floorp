@@ -60,13 +60,15 @@ function* runURLBarSearchTest(valueToOpen, expectSearch, expectNotification, aWi
 }
 
 add_task(function* test_navigate_full_domain() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   yield* runURLBarSearchTest("www.mozilla.org", false, false);
   gBrowser.removeTab(tab);
 });
 
 add_task(function* test_navigate_numbers() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   yield* runURLBarSearchTest("1234", true, false);
   gBrowser.removeTab(tab);
 });
@@ -84,7 +86,8 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
       win = window;
     }
     let browser = win.gBrowser;
-    let tab = browser.selectedTab = browser.addTab();
+    let tab = browser.selectedTab = browser.addTab("about:blank");
+    yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
     Services.prefs.setBoolPref(pref, false);
     yield* runURLBarSearchTest(hostName, true, true, win);
@@ -102,7 +105,8 @@ function get_test_function_for_localhost_with_hostname(hostName, isPrivate) {
     browser.removeTab(tab);
 
     // Now try again with the pref set.
-    tab = browser.selectedTab = browser.addTab();
+    tab = browser.selectedTab = browser.addTab("about:blank");
+    yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
     // In a private window, the notification should appear again.
     yield* runURLBarSearchTest(hostName, isPrivate, isPrivate, win);
     browser.removeTab(tab);
@@ -122,7 +126,8 @@ add_task(get_test_function_for_localhost_with_hostname("localhost."));
 add_task(get_test_function_for_localhost_with_hostname("localhost", true));
 
 add_task(function* test_navigate_invalid_url() {
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   yield* runURLBarSearchTest("mozilla is awesome", true, false);
   gBrowser.removeTab(tab);
 });

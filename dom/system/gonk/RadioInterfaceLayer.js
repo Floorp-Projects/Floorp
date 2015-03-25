@@ -1852,20 +1852,11 @@ RadioInterface.prototype = {
   handleUnsolicitedWorkerMessage: function(message) {
     let connHandler = gDataConnectionManager.getConnectionHandler(this.clientId);
     switch (message.rilMessageType) {
-      case "audioStateChanged":
-        gTelephonyService.notifyAudioStateChanged(this.clientId, message.state);
-        break;
       case "callRing":
         gTelephonyService.notifyCallRing();
         break;
-      case "callStateChange":
-        gTelephonyService.notifyCallStateChanged(this.clientId, message.call);
-        break;
-      case "callDisconnected":
-        gTelephonyService.notifyCallDisconnected(this.clientId, message.call);
-        break;
-      case "conferenceCallStateChanged":
-        gTelephonyService.notifyConferenceCallStateChanged(message.state);
+      case "currentCalls":
+        gTelephonyService.notifyCurrentCalls(this.clientId, message.calls);
         break;
       case "cdmaCallWaiting":
         gTelephonyService.notifyCdmaCallWaiting(this.clientId,
@@ -1873,7 +1864,7 @@ RadioInterface.prototype = {
         break;
       case "suppSvcNotification":
         gTelephonyService.notifySupplementaryService(this.clientId,
-                                                     message.callIndex,
+                                                     message.number,
                                                      message.notification);
         break;
       case "ussdreceived":

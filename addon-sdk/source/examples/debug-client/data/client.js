@@ -202,7 +202,7 @@ var Connection = Class({
   },
   poolFor: function(id) {
     for (let pool of this.pools.values()) {
-      if pool.has(id)
+      if (pool.has(id))
         return pool;
     }
   },
@@ -797,7 +797,7 @@ var Tab = Client.from({
     "storageActor": "storage",
     "gcliActor": "gcli",
     "memoryActor": "memory",
-    "eventLoopLag": "eventLoopLag"
+    "eventLoopLag": "eventLoopLag",
 
     "trace": "trace", // missing
   }

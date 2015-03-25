@@ -5,10 +5,8 @@
 package org.mozilla.gecko.overlays.ui;
 
 import android.content.Context;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -22,18 +20,14 @@ import org.mozilla.gecko.R;
  * picture of some description to educate the user on how to use the feature) TODO: Bug 1048645.
  */
 public class OverlayToastHelper {
+
     /**
      * Show a toast indicating a failure to share.
      * @param context Context in which to inflate the toast.
      * @param failureMessage String to display in the toast.
-     * @param isTransient Should a retry button be presented?
-     * @param retryListener Listener to fire when the retry button is pressed.
      */
-    public static void showFailureToast(Context context, String failureMessage, View.OnClickListener retryListener) {
-        showToast(context, failureMessage, false, retryListener);
-    }
     public static void showFailureToast(Context context, String failureMessage) {
-        showFailureToast(context, failureMessage, null);
+        showToast(context, failureMessage, false);
     }
 
     /**
@@ -41,10 +35,10 @@ public class OverlayToastHelper {
      * @param successMessage Message to show in the toast.
      */
     public static void showSuccessToast(Context context, String successMessage) {
-        showToast(context, successMessage, true, null);
+        showToast(context, successMessage, true);
     }
 
-    private static void showToast(Context context, String message, boolean success, View.OnClickListener retryListener) {
+    private static void showToast(Context context, String message, boolean success) {
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
         View layout = inflater.inflate(R.layout.overlay_share_toast, null);
@@ -52,23 +46,12 @@ public class OverlayToastHelper {
         TextView text = (TextView) layout.findViewById(R.id.overlay_toast_message);
         text.setText(message);
 
-        if (retryListener == null) {
-            // Hide the retry button.
-            layout.findViewById(R.id.overlay_toast_separator).setVisibility(View.GONE);
-            layout.findViewById(R.id.overlay_toast_retry_btn).setVisibility(View.GONE);
-        } else {
-            // Set up the button to perform a retry.
-            Button retryBtn = (Button) layout.findViewById(R.id.overlay_toast_retry_btn);
-            retryBtn.setOnClickListener(retryListener);
-        }
-
         if (!success) {
             // Hide the happy green tick.
             text.setCompoundDrawables(null, null, null, null);
         }
 
         Toast toast = new Toast(context);
-        toast.setGravity(Gravity.CENTER_VERTICAL | Gravity.BOTTOM, 0, 0);
         toast.setDuration(Toast.LENGTH_SHORT);
         toast.setView(layout);
         toast.show();

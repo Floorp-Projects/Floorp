@@ -5,112 +5,71 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!-- Serves to position the content on the screen (bottom, centered) and provide the drop-shadow -->
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/sharedialog"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:layout_marginLeft="15dp"
     android:layout_marginRight="15dp"
-    android:layout_marginBottom="-12dp"
-    android:paddingTop="30dp"
-    android:layout_gravity="bottom|center"
     android:clipChildren="false"
     android:clipToPadding="false">
 
     <LinearLayout
-        android:id="@+id/share_overlay_content"
-        android:layout_width="wrap_content"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center"
         android:paddingTop="8dp"
-        android:orientation="vertical"
-        android:background="@drawable/share_overlay_background">
+        android:orientation="vertical">
 
-        <!-- Header -->
-        <LinearLayout
-            android:id="@+id/share_overlay_top_bar"
+        <!-- Title -->
+        <TextView
+            android:id="@+id/title"
+            style="@style/ShareOverlayTitle"
+            android:textAppearance="@style/ShareOverlayTextAppearance.Header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="0dp"
-            android:background="@color/overlay_share_header_background"
-            android:orientation="vertical"
-            android:paddingTop="10dp"
-            android:paddingBottom="15dp"
-            android:paddingLeft="15dp"
-            android:paddingRight="15dp"
-            android:layout_gravity="center">
+            android:layout_marginBottom="8dp"
+            android:maxLines="2"
+            android:textSize="20sp"
+            android:ellipsize="end"/>
 
-            <!-- Title -->
-            <TextView
-                android:id="@+id/title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingBottom="7dp"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:scrollHorizontally="true"
-                android:textColor="@color/placeholder_active_grey"
-                android:textSize="17sp"/>
+        <!-- Subtitle (url) -->
+        <TextView
+            android:id="@+id/subtitle"
+            style="@style/ShareOverlayTitle"
+            android:textAppearance="@style/ShareOverlayTextAppearance.Header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:textSize="12sp"
+            android:scrollHorizontally="true"/>
 
-            <!-- Subtitle (url) -->
-            <TextView
-                android:id="@+id/subtitle"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:textColor="@color/placeholder_grey"/>
-
-        </LinearLayout>
-
+        <!-- TODO: Add back drop shadow (bug 1146488)? -->
         <!-- Buttons -->
-        <LinearLayout
+        <!-- "Send to Firefox Sync" -->
+        <org.mozilla.gecko.overlays.ui.SendTabList
+            android:id="@+id/overlay_send_tab_btn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/overlay_share_background"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:divider="@null"/>
 
-            <!-- TODO: Once API 11 is available, stick "showDividers=middle" into the parent and get rid
-                       of these evil separator views. -->
+        <!-- "Add to reading list" -->
+        <org.mozilla.gecko.overlays.ui.OverlayDialogButton
+            style="@style/ShareOverlayRow"
+            android:id="@+id/overlay_share_reading_list_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="false"/>
 
-            <!-- "Send to Firefox Sync" -->
-            <org.mozilla.gecko.overlays.ui.SendTabList
-                style="@style/ShareOverlayButton"
-                android:id="@+id/overlay_send_tab_btn"
-                android:padding="0dp"/>
+        <!-- "Add bookmark" -->
+        <org.mozilla.gecko.overlays.ui.OverlayDialogButton
+            style="@style/ShareOverlayRow"
+            android:id="@+id/overlay_share_bookmark_btn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:enabled="false"/>
 
-            <!-- Evil separator -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/background_light"/>
-
-            <!-- "Add to reading list" -->
-            <org.mozilla.gecko.overlays.ui.OverlayDialogButton
-                style="@style/ShareOverlayButton.Text"
-                android:id="@+id/overlay_share_reading_list_btn"
-                android:enabled="false"/>
-
-            <!-- Evil separator -->
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/background_light"/>
-
-            <!-- "Add bookmark" -->
-            <org.mozilla.gecko.overlays.ui.OverlayDialogButton
-                style="@style/ShareOverlayButton.Text"
-                android:id="@+id/overlay_share_bookmark_btn"
-                android:enabled="false"/>
-
-        </LinearLayout>
     </LinearLayout>
 
-    <!-- Firefox logo (has to appear higher in the z-order than the content. -->
-    <ImageView
-        android:id="@+id/share_overlay_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/share_overlay_content"
-        android:scaleType="center"
-        android:layout_centerHorizontal="true"
-        android:src="@drawable/icon"
-        android:layout_marginBottom="-6dp"/>
-</RelativeLayout>
+</FrameLayout>

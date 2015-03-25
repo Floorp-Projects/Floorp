@@ -45,16 +45,17 @@ add_test(function test_notification() {
     1: new Call(1, '11111')
   };
 
-  function testNotification(calls, code, number, resultNotification,
-                            resultCallIndex) {
+  function testNotification(calls, code, number, resultNotification) {
 
     let testInfo = {calls: calls, code: code, number: number,
-                    resultNotification: resultNotification,
-                    resultCallIndex: resultCallIndex};
+                    resultNotification: resultNotification};
     do_print('Test case info: ' + JSON.stringify(testInfo));
 
     // Set current calls.
-    context.RIL._processCalls(calls);
+    context.RIL.sendChromeMessage({
+      rilMessageType: "currentCalls",
+      calls: calls
+    });
 
     let notificationInfo = {
       notificationType: 1,  // MT
@@ -68,33 +69,36 @@ add_test(function test_notification() {
 
     let postedMessage = workerHelper.postedMessage;
     equal(postedMessage.rilMessageType, 'suppSvcNotification');
+    equal(postedMessage.number, number);
     equal(postedMessage.notification, resultNotification);
-    equal(postedMessage.callIndex, resultCallIndex);
 
     // Clear all existed calls.
-    context.RIL._processCalls({});
+    context.RIL.sendChromeMessage({
+      rilMessageType: "currentCalls",
+      calls: {}
+    });
   }
 
   testNotification(oneCall, SUPP_SVC_NOTIFICATION_CODE2_PUT_ON_HOLD, null,
-                   GECKO_SUPP_SVC_NOTIFICATION_REMOTE_HELD, 0);
+                   GECKO_SUPP_SVC_NOTIFICATION_REMOTE_HELD);
 
   testNotification(oneCall, SUPP_SVC_NOTIFICATION_CODE2_RETRIEVED, null,
-                   GECKO_SUPP_SVC_NOTIFICATION_REMOTE_RESUMED, 0);
+                   GECKO_SUPP_SVC_NOTIFICATION_REMOTE_RESUMED);
 
   testNotification(twoCalls, SUPP_SVC_NOTIFICATION_CODE2_PUT_ON_HOLD, null,
-                   GECKO_SUPP_SVC_NOTIFICATION_REMOTE_HELD, -1);
+                   GECKO_SUPP_SVC_NOTIFICATION_REMOTE_HELD);
 
   testNotification(twoCalls, SUPP_SVC_NOTIFICATION_CODE2_RETRIEVED, null,
-                   GECKO_SUPP_SVC_NOTIFICATION_REMOTE_RESUMED, -1);
+                   GECKO_SUPP_SVC_NOTIFICATION_REMOTE_RESUMED);
 
   testNotification(twoCalls, SUPP_SVC_NOTIFICATION_CODE2_PUT_ON_HOLD, '00000',
-                   GECKO_SUPP_SVC_NOTIFICATION_REMOTE_HELD, 0);
+                   GECKO_SUPP_SVC_NOTIFICATION_REMOTE_HELD);
 
   testNotification(twoCalls, SUPP_SVC_NOTIFICATION_CODE2_PUT_ON_HOLD, '11111',
-                   GECKO_SUPP_SVC_NOTIFICATION_REMOTE_HELD, 1);
+                   GECKO_SUPP_SVC_NOTIFICATION_REMOTE_HELD);
 
   testNotification(twoCalls, SUPP_SVC_NOTIFICATION_CODE2_PUT_ON_HOLD, '22222',
-                   GECKO_SUPP_SVC_NOTIFICATION_REMOTE_HELD, -1);
+                   GECKO_SUPP_SVC_NOTIFICATION_REMOTE_HELD);
 
   run_next_test();
 });

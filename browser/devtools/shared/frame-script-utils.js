@@ -134,6 +134,36 @@ addMessageListener("devtools:test:setStyle", function(msg) {
 });
 
 /**
+ * Get information about a DOM element, identified by a selector.
+ * @param {Object} data
+ * - {String} selector The CSS selector to get the node (can be a "super"
+ *   selector).
+ * @return {Object} data Null if selector didn't match any node, otherwise:
+ * - {String} tagName.
+ * - {String} namespaceURI.
+ * - {Number} numChildren The number of children in the element.
+ * - {Array} attributes An array of {name, value, namespaceURI} objects.
+ */
+addMessageListener("devtools:test:getDomElementInfo", function(msg) {
+  let {selector} = msg.data;
+  let node = superQuerySelector(selector);
+
+  let info = null;
+  if (node) {
+    info = {
+      tagName: node.tagName,
+      namespaceURI: node.namespaceURI,
+      numChildren: node.children.length,
+      attributes: [...node.attributes].map(({name, value, namespaceURI}) => {
+        return {name, value, namespaceURI};
+      })
+    };
+  }
+
+  sendAsyncMessage("devtools:test:getDomElementInfo", info);
+});
+
+/**
  * Set a given attribute value on a node.
  * @param {Object} data
  * - {String} selector The CSS selector to get the node (can be a "super"
