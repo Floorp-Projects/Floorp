@@ -193,6 +193,14 @@ public:
 
   ProxyAccessible* AnchorAt(uint32_t aIndex);
 
+  uint32_t LinkCount();
+
+  ProxyAccessible* LinkAt(const uint32_t& aIndex);
+
+  int32_t LinkIndexOf(ProxyAccessible* aLink);
+
+  int32_t LinkIndexAtOffset(uint32_t aOffset);
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */
