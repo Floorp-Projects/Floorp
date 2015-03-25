@@ -17,8 +17,7 @@ loop.store.StandaloneAppStore = (function() {
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
 
-  var OLD_STYLE_CALL_REGEXP = /\#call\/(.*)/;
-  var NEW_STYLE_CALL_REGEXP = /\/c\/([\w\-]+)$/;
+  var CALL_REGEXP = /\/c\/([\w\-]+)$/;
   var ROOM_REGEXP = /\/([\w\-]+)$/;
 
   /**
@@ -80,9 +79,7 @@ loop.store.StandaloneAppStore = (function() {
       }
 
       if (windowPath) {
-        // Is this a call url (the hash is a backwards-compatible url)?
-        match = extractId(windowPath, OLD_STYLE_CALL_REGEXP) ||
-                extractId(windowPath, NEW_STYLE_CALL_REGEXP);
+        match = extractId(windowPath, CALL_REGEXP);
 
         if (match) {
           windowType = "outgoing";
