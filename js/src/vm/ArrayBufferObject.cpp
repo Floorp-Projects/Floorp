@@ -234,7 +234,7 @@ ArrayBufferObject::fun_isView(JSContext *cx, unsigned argc, Value *vp)
     return true;
 }
 
-#ifdef JS_CPU_X64
+#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 static void
 ReleaseAsmJSMappedData(void *base)
 {
@@ -256,12 +256,12 @@ ReleaseAsmJSMappedData(void *base)
 static void
 ReleaseAsmJSMappedData(void *base)
 {
-    MOZ_CRASH("Only x64 has asm.js mapped buffers");
+    MOZ_CRASH("asm.js only uses mapped buffers when using signal-handler OOB checking");
 }
 #endif
 
 #ifdef NIGHTLY_BUILD
-# ifdef JS_CPU_X64
+# if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 static bool
 TransferAsmJSMappedBuffer(JSContext *cx, CallArgs args, Handle<ArrayBufferObject*> oldBuffer,
                           size_t newByteLength)
@@ -329,7 +329,7 @@ TransferAsmJSMappedBuffer(JSContext *cx, CallArgs args, Handle<ArrayBufferObject
     args.rval().setObject(*newBuffer);
     return true;
 }
-# endif  // defined(JS_CPU_X64)
+# endif  // defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 
 /*
  * Experimental implementation of ArrayBuffer.transfer:
@@ -393,7 +393,7 @@ ArrayBufferObject::fun_transfer(JSContext *cx, unsigned argc, Value *vp)
         if (!ArrayBufferObject::neuter(cx, oldBuffer, oldBuffer->contents()))
             return false;
     } else {
-# ifdef JS_CPU_X64
+# if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
         // With a 4gb mapped asm.js buffer, we can simply enable/disable access
         // to the delta as long as the requested length is page-sized.
         if (oldBuffer->isAsmJSMapped() && (newByteLength % AsmJSPageSize) == 0)
@@ -619,7 +619,7 @@ ArrayBufferObject::prepareForAsmJSNoSignals(JSContext *cx, Handle<ArrayBufferObj
     return true;
 }
 
-#ifdef JS_CODEGEN_X64
+#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 /* static */ bool
 ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer,
                                    bool usesSignalHandlers)
@@ -685,13 +685,12 @@ ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buf
 
     return true;
 }
-#else // JS_CODEGEN_X64
+#else // ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
 bool
 ArrayBufferObject::prepareForAsmJS(JSContext *cx, Handle<ArrayBufferObject*> buffer,
                                    bool usesSignalHandlers)
 {
-    // Platforms other than x64 don't use signalling for bounds checking, so
-    // just use the variant with no signals.
+    // Just use the variant with no signals.
     MOZ_ASSERT(!usesSignalHandlers);
     return prepareForAsmJSNoSignals(cx, buffer);
 }
