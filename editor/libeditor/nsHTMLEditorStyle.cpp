@@ -1527,10 +1527,10 @@ nsHTMLEditor::RelativeFontChange( int32_t aSizeChange)
     int32_t offset;
     nsCOMPtr<nsINode> selectedNode;
     GetStartNodeAndOffset(selection, getter_AddRefs(selectedNode), &offset);
-    if (selectedNode && IsTextNode(selectedNode)) {
+    NS_ENSURE_TRUE(selectedNode, NS_OK);
+    if (IsTextNode(selectedNode)) {
       selectedNode = selectedNode->GetParentNode();
     }
-    NS_ENSURE_TRUE(selectedNode, NS_OK);
     if (!CanContainTag(*selectedNode, *atom)) {
       return NS_OK;
     }
