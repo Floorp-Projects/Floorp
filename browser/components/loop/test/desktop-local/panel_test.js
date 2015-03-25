@@ -651,7 +651,8 @@ describe("loop.panel", function() {
         React.createElement(loop.panel.RoomList, {
           store: roomStore,
           dispatcher: dispatcher,
-          userDisplayName: fakeEmail
+          userDisplayName: fakeEmail,
+          mozLoop: fakeMozLoop
         }));
     }
 
@@ -708,6 +709,49 @@ describe("loop.panel", function() {
         var buttonNode = view.getDOMNode().querySelector("button[disabled]");
         expect(buttonNode).to.not.equal(null);
       });
+
+    it("should show context information when a URL is available",
+      function() {
+        navigator.mozLoop.getLoopPref = function() {
+          return true;
+        }
+
+        var view = TestUtils.renderIntoDocument(
+          React.createElement(loop.panel.ContextInfo, {
+            mozLoop: navigator.mozLoop
+          })
+        );
+        view.setState({
+          previews: [""],
+          description: "fake description",
+          url: "https://www.example.com"
+        });
+
+        var contextEnabledCheckbox = view.getDOMNode().querySelector(".context-enabled");
+        expect(contextEnabledCheckbox).to.not.equal(null);
+      });
+
+    it("should not show context information when a URL is unavailable",
+      function() {
+        navigator.mozLoop.getLoopPref = function() {
+          return true;
+        }
+
+        var view = TestUtils.renderIntoDocument(
+          React.createElement(loop.panel.ContextInfo, {
+            mozLoop: navigator.mozLoop
+          })
+        );
+        view.setState({
+          previews: [""],
+          description: "fake description",
+          url: ""
+        });
+
+        var contextInfo = view.getDOMNode();
+        expect(contextInfo).to.equal(null);
+      });
+
   });
 
   describe('loop.panel.ToSView', function() {
