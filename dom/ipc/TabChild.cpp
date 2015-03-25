@@ -2392,7 +2392,8 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
     return true;
   }
 
-  mAPZEventState->ProcessTouchEvent(localEvent, aGuid, aInputBlockId);
+  mAPZEventState->ProcessTouchEvent(localEvent, aGuid, aInputBlockId,
+                                    nsEventStatus_eIgnore);
   return true;
 }
 
