@@ -151,8 +151,9 @@ struct BluetoothCallback
 
   typedef BluetoothNotificationHALRunnable5<NotificationHandlerWrapper, void,
                                             nsString, nsString, uint32_t,
-                                            BluetoothSspVariant, uint32_t,
-                                            const nsAString&, const nsAString&>
+                                            nsString, uint32_t,
+                                            const nsAString&, const nsAString&,
+                                            uint32_t, const nsAString&>
     SspRequestNotification;
 
   typedef BluetoothNotificationHALRunnable3<NotificationHandlerWrapper, void,
