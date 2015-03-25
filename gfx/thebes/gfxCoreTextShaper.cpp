@@ -17,17 +17,19 @@ using namespace mozilla;
 // standard font descriptors that we construct the first time they're needed
 CTFontDescriptorRef gfxCoreTextShaper::sDefaultFeaturesDescriptor = nullptr;
 CTFontDescriptorRef gfxCoreTextShaper::sDisableLigaturesDescriptor = nullptr;
+CTFontDescriptorRef gfxCoreTextShaper::sIndicFeaturesDescriptor = nullptr;
+CTFontDescriptorRef gfxCoreTextShaper::sIndicDisableLigaturesDescriptor = nullptr;
 
 gfxCoreTextShaper::gfxCoreTextShaper(gfxMacFont *aFont)
     : gfxFontShaper(aFont)
 {
     // Create our CTFontRef
-    mCTFont = ::CTFontCreateWithGraphicsFont(aFont->GetCGFontRef(),
-                                             aFont->GetAdjustedSize(),
-                                             nullptr,
-                                             GetDefaultFeaturesDescriptor());
+    mCTFont = CreateCTFontWithFeatures(aFont->GetAdjustedSize(),
+                                       GetDefaultFeaturesDescriptor());
 
-    // Set up the default attribute dictionary that we will need each time we create a CFAttributedString
+    // Set up the default attribute dictionary that we will need each time we
+    // create a CFAttributedString (unless we need to use custom features,
+    // in which case a new dictionary will be created on the fly).
     mAttributesDict = ::CFDictionaryCreate(kCFAllocatorDefault,
                                            (const void**) &kCTFontAttributeName,
                                            (const void**) &mCTFont,
@@ -44,6 +46,12 @@ gfxCoreTextShaper::~gfxCoreTextShaper()
     if (mCTFont) {
         ::CFRelease(mCTFont);
     }
+}
+
+static bool
+IsBuggyIndicScript(int32_t aScript)
+{
+    return aScript == MOZ_SCRIPT_BENGALI || aScript == MOZ_SCRIPT_KANNADA;
 }
 
 bool
@@ -102,22 +110,40 @@ gfxCoreTextShaper::ShapeText(gfxContext      *aContext,
     }
 
     CFDictionaryRef attrObj;
-    if (aShapedText->DisableLigatures()) {
-        // For letterspacing (or maybe other situations) we need to make a copy of the CTFont
-        // with the ligature feature disabled
-        CTFontRef ctFont =
-            CreateCTFontWithDisabledLigatures(::CTFontGetSize(mCTFont));
+    CTFontRef tempCTFont = nullptr;
 
+    if (IsBuggyIndicScript(aScript)) {
+        // To work around buggy Indic AAT fonts shipped with OS X,
+        // we re-enable the Line Initial Smart Swashes feature that is needed
+        // for "split vowels" to work in at least Bengali and Kannada fonts.
+        // Affected fonts include Bangla MN, Bangla Sangam MN, Kannada MN,
+        // Kannada Sangam MN. See bugs 686225, 728557, 953231, 1145515.
+        tempCTFont =
+            CreateCTFontWithFeatures(::CTFontGetSize(mCTFont),
+                                     aShapedText->DisableLigatures()
+                                         ? GetIndicDisableLigaturesDescriptor()
+                                         : GetIndicFeaturesDescriptor());
+    } else if (aShapedText->DisableLigatures()) {
+        // For letterspacing (or maybe other situations) we need to make
+        // a copy of the CTFont with the ligature feature disabled.
+        tempCTFont =
+            CreateCTFontWithFeatures(::CTFontGetSize(mCTFont),
+                                     GetDisableLigaturesDescriptor());
+    }
+
+    if (tempCTFont) {
         attrObj =
             ::CFDictionaryCreate(kCFAllocatorDefault,
                                  (const void**) &kCTFontAttributeName,
-                                 (const void**) &ctFont,
+                                 (const void**) &tempCTFont,
                                  1, // count of attributes
                                  &kCFTypeDictionaryKeyCallBacks,
                                  &kCFTypeDictionaryValueCallBacks);
-        // Having created the dict, we're finished with our ligature-disabled CTFontRef
-        ::CFRelease(ctFont);
+        // Having created the dict, we're finished with our temporary
+        // Indic and/or ligature-disabled CTFontRef.
+        ::CFRelease(tempCTFont);
     } else {
+        // The default case is to use our preallocated attr dict
         attrObj = mAttributesDict;
         ::CFRetain(attrObj);
     }
@@ -514,64 +540,57 @@ gfxCoreTextShaper::SetGlyphsFromRun(gfxShapedText *aShapedText,
 
 #undef SMALL_GLYPH_RUN
 
-// Construct the font attribute descriptor that we'll apply by default when creating a CTFontRef.
-// This will turn off line-edge swashes by default, because we don't know the actual line breaks
-// when doing glyph shaping.
-void
-gfxCoreTextShaper::CreateDefaultFeaturesDescriptor()
+// Construct the font attribute descriptor that we'll apply by default when
+// creating a CTFontRef. This will turn off line-edge swashes by default,
+// because we don't know the actual line breaks when doing glyph shaping.
+
+// We also cache feature descriptors for shaping with disabled ligatures, and
+// for buggy Indic AAT font workarounds, created on an as-needed basis.
+
+#define MAX_FEATURES  3 // max used by any of our Get*Descriptor functions
+
+CTFontDescriptorRef
+gfxCoreTextShaper::CreateFontFeaturesDescriptor(
+    const std::pair<SInt16,SInt16> aFeatures[],
+    size_t aCount)
 {
-    if (sDefaultFeaturesDescriptor != nullptr) {
-        return;
+    MOZ_ASSERT(aCount <= MAX_FEATURES);
+
+    CFDictionaryRef featureSettings[MAX_FEATURES];
+
+    for (size_t i = 0; i < aCount; i++) {
+        CFNumberRef type = ::CFNumberCreate(kCFAllocatorDefault,
+                                            kCFNumberSInt16Type,
+                                            &aFeatures[i].first);
+        CFNumberRef selector = ::CFNumberCreate(kCFAllocatorDefault,
+                                                kCFNumberSInt16Type,
+                                                &aFeatures[i].second);
+
+        CFTypeRef keys[]   = { kCTFontFeatureTypeIdentifierKey,
+                               kCTFontFeatureSelectorIdentifierKey };
+        CFTypeRef values[] = { type, selector };
+        featureSettings[i] =
+            ::CFDictionaryCreate(kCFAllocatorDefault,
+                                 (const void **) keys,
+                                 (const void **) values,
+                                 ArrayLength(keys),
+                                 &kCFTypeDictionaryKeyCallBacks,
+                                 &kCFTypeDictionaryValueCallBacks);
+
+        ::CFRelease(selector);
+        ::CFRelease(type);
     }
-
-    SInt16 val = kSmartSwashType;
-    CFNumberRef swashesType =
-        ::CFNumberCreate(kCFAllocatorDefault,
-                         kCFNumberSInt16Type,
-                         &val);
-    val = kLineInitialSwashesOffSelector;
-    CFNumberRef lineInitialsOffSelector =
-        ::CFNumberCreate(kCFAllocatorDefault,
-                         kCFNumberSInt16Type,
-                         &val);
-
-    CFTypeRef keys[]   = { kCTFontFeatureTypeIdentifierKey,
-                           kCTFontFeatureSelectorIdentifierKey };
-    CFTypeRef values[] = { swashesType,
-                           lineInitialsOffSelector };
-    CFDictionaryRef featureSettings[2];
-    featureSettings[0] =
-        ::CFDictionaryCreate(kCFAllocatorDefault,
-                             (const void **) keys,
-                             (const void **) values,
-                             ArrayLength(keys),
-                             &kCFTypeDictionaryKeyCallBacks,
-                             &kCFTypeDictionaryValueCallBacks);
-    ::CFRelease(lineInitialsOffSelector);
-
-    val = kLineFinalSwashesOffSelector;
-    CFNumberRef lineFinalsOffSelector =
-        ::CFNumberCreate(kCFAllocatorDefault,
-                         kCFNumberSInt16Type,
-                         &val);
-    values[1] = lineFinalsOffSelector;
-    featureSettings[1] =
-        ::CFDictionaryCreate(kCFAllocatorDefault,
-                             (const void **) keys,
-                             (const void **) values,
-                             ArrayLength(keys),
-                             &kCFTypeDictionaryKeyCallBacks,
-                             &kCFTypeDictionaryValueCallBacks);
-    ::CFRelease(lineFinalsOffSelector);
-    ::CFRelease(swashesType);
 
     CFArrayRef featuresArray =
         ::CFArrayCreate(kCFAllocatorDefault,
                         (const void **) featureSettings,
-                        ArrayLength(featureSettings),
+                        aCount, // not ArrayLength(featureSettings), as we
+                                // may not have used all the allocated slots
                         &kCFTypeArrayCallBacks);
-    ::CFRelease(featureSettings[0]);
-    ::CFRelease(featureSettings[1]);
+
+    for (size_t i = 0; i < aCount; i++) {
+        ::CFRelease(featureSettings[i]);
+    }
 
     const CFTypeRef attrKeys[]   = { kCTFontFeatureSettingsAttribute };
     const CFTypeRef attrValues[] = { featuresArray };
@@ -584,76 +603,97 @@ gfxCoreTextShaper::CreateDefaultFeaturesDescriptor()
                              &kCFTypeDictionaryValueCallBacks);
     ::CFRelease(featuresArray);
 
-    sDefaultFeaturesDescriptor =
+    CTFontDescriptorRef descriptor =
         ::CTFontDescriptorCreateWithAttributes(attributesDict);
     ::CFRelease(attributesDict);
+
+    return descriptor;
 }
 
-// Create a CTFontRef, with the Common Ligatures feature disabled
-CTFontRef
-gfxCoreTextShaper::CreateCTFontWithDisabledLigatures(CGFloat aSize)
+CTFontDescriptorRef
+gfxCoreTextShaper::GetDefaultFeaturesDescriptor()
+{
+    if (sDefaultFeaturesDescriptor == nullptr) {
+        const std::pair<SInt16,SInt16> kDefaultFeatures[] = {
+            { kSmartSwashType, kLineInitialSwashesOffSelector },
+            { kSmartSwashType, kLineFinalSwashesOffSelector }
+        };
+        sDefaultFeaturesDescriptor =
+            CreateFontFeaturesDescriptor(kDefaultFeatures,
+                                         ArrayLength(kDefaultFeatures));
+    }
+    return sDefaultFeaturesDescriptor;
+}
+
+CTFontDescriptorRef
+gfxCoreTextShaper::GetDisableLigaturesDescriptor()
 {
     if (sDisableLigaturesDescriptor == nullptr) {
-        // initialize cached descriptor to turn off the Common Ligatures feature
-        SInt16 val = kLigaturesType;
-        CFNumberRef ligaturesType =
-            ::CFNumberCreate(kCFAllocatorDefault,
-                             kCFNumberSInt16Type,
-                             &val);
-        val = kCommonLigaturesOffSelector;
-        CFNumberRef commonLigaturesOffSelector =
-            ::CFNumberCreate(kCFAllocatorDefault,
-                             kCFNumberSInt16Type,
-                             &val);
-
-        const CFTypeRef keys[]   = { kCTFontFeatureTypeIdentifierKey,
-                                     kCTFontFeatureSelectorIdentifierKey };
-        const CFTypeRef values[] = { ligaturesType,
-                                     commonLigaturesOffSelector };
-        CFDictionaryRef featureSettingDict =
-            ::CFDictionaryCreate(kCFAllocatorDefault,
-                                 (const void **) keys,
-                                 (const void **) values,
-                                 ArrayLength(keys),
-                                 &kCFTypeDictionaryKeyCallBacks,
-                                 &kCFTypeDictionaryValueCallBacks);
-        ::CFRelease(ligaturesType);
-        ::CFRelease(commonLigaturesOffSelector);
-
-        CFArrayRef featuresArray =
-            ::CFArrayCreate(kCFAllocatorDefault,
-                            (const void **) &featureSettingDict,
-                            1,
-                            &kCFTypeArrayCallBacks);
-        ::CFRelease(featureSettingDict);
-
-        CFDictionaryRef attributesDict =
-            ::CFDictionaryCreate(kCFAllocatorDefault,
-                                 (const void **) &kCTFontFeatureSettingsAttribute,
-                                 (const void **) &featuresArray,
-                                 1, // count of keys & values
-                                 &kCFTypeDictionaryKeyCallBacks,
-                                 &kCFTypeDictionaryValueCallBacks);
-        ::CFRelease(featuresArray);
-
+        const std::pair<SInt16,SInt16> kDisableLigatures[] = {
+            { kSmartSwashType, kLineInitialSwashesOffSelector },
+            { kSmartSwashType, kLineFinalSwashesOffSelector },
+            { kLigaturesType, kCommonLigaturesOffSelector }
+        };
         sDisableLigaturesDescriptor =
-            ::CTFontDescriptorCreateCopyWithAttributes(GetDefaultFeaturesDescriptor(),
-                                                       attributesDict);
-        ::CFRelease(attributesDict);
+            CreateFontFeaturesDescriptor(kDisableLigatures,
+                                         ArrayLength(kDisableLigatures));
     }
+    return sDisableLigaturesDescriptor;
+}
 
+CTFontDescriptorRef
+gfxCoreTextShaper::GetIndicFeaturesDescriptor()
+{
+    if (sIndicFeaturesDescriptor == nullptr) {
+        const std::pair<SInt16,SInt16> kIndicFeatures[] = {
+            { kSmartSwashType, kLineFinalSwashesOffSelector }
+        };
+        sIndicFeaturesDescriptor =
+            CreateFontFeaturesDescriptor(kIndicFeatures,
+                                         ArrayLength(kIndicFeatures));
+    }
+    return sIndicFeaturesDescriptor;
+}
+
+CTFontDescriptorRef
+gfxCoreTextShaper::GetIndicDisableLigaturesDescriptor()
+{
+    if (sIndicDisableLigaturesDescriptor == nullptr) {
+        const std::pair<SInt16,SInt16> kIndicDisableLigatures[] = {
+            { kSmartSwashType, kLineFinalSwashesOffSelector },
+            { kLigaturesType, kCommonLigaturesOffSelector }
+        };
+        sIndicDisableLigaturesDescriptor =
+            CreateFontFeaturesDescriptor(kIndicDisableLigatures,
+                                         ArrayLength(kIndicDisableLigatures));
+    }
+    return sIndicDisableLigaturesDescriptor;
+}
+
+CTFontRef
+gfxCoreTextShaper::CreateCTFontWithFeatures(CGFloat aSize,
+                                            CTFontDescriptorRef aDescriptor)
+{
     gfxMacFont *f = static_cast<gfxMacFont*>(mFont);
     return ::CTFontCreateWithGraphicsFont(f->GetCGFontRef(), aSize, nullptr,
-                                          sDisableLigaturesDescriptor);
+                                          aDescriptor);
 }
 
 void
 gfxCoreTextShaper::Shutdown() // [static]
 {
+    if (sIndicDisableLigaturesDescriptor != nullptr) {
+        ::CFRelease(sIndicDisableLigaturesDescriptor);
+        sIndicDisableLigaturesDescriptor = nullptr;
+    }
+    if (sIndicFeaturesDescriptor != nullptr) {
+        ::CFRelease(sIndicFeaturesDescriptor);
+        sIndicFeaturesDescriptor = nullptr;
+    }
     if (sDisableLigaturesDescriptor != nullptr) {
         ::CFRelease(sDisableLigaturesDescriptor);
         sDisableLigaturesDescriptor = nullptr;
-    }        
+    }
     if (sDefaultFeaturesDescriptor != nullptr) {
         ::CFRelease(sDefaultFeaturesDescriptor);
         sDefaultFeaturesDescriptor = nullptr;
