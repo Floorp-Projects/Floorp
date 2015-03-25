@@ -126,10 +126,14 @@
         <Preference android:key="debug_refresh" />
         <Preference android:key="debug_dump" />
         <Preference android:key="debug_force_sync" />
+        <Preference android:key="debug_invalidate_certificate" />
+        <Preference android:key="debug_forget_reading_list_oauth_token" />
         <Preference android:key="debug_forget_certificate" />
         <Preference android:key="debug_require_password" />
         <Preference android:key="debug_require_upgrade" />
         <Preference android:key="debug_migrated_from_sync11" />
-    </PreferenceCategory>
+        <Preference android:key="debug_make_account_stage" />
+        <Preference android:key="debug_make_account_default" />
+	</PreferenceCategory>
 
 </PreferenceScreen>
