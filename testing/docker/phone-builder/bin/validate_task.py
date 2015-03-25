@@ -36,12 +36,11 @@ def check_task(task):
         print('Invalid base repository', repo, file=sys.stderr)
         return -1
 
-    if 'artifacts' in payload:
-        artifacts = payload['artifacts']
-        # If any of the artifacts makes reference to 'public',
-        # abort the task
-        if any(map(lambda a: 'public' in a, artifacts)):
-            print('Cannot upload to public', file=sys.stderr)
+    locations = task["extra"]["locations"]
+    if "img" in locations:
+        img = locations["img"]
+        if img.startswith("public"):
+            print('Cannot upload images to public', file=sys.stderr)
             return -1
 
     return 0
