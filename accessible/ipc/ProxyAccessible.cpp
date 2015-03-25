@@ -523,5 +523,213 @@ ProxyAccessible::IsCellSelected()
   return selected;
 }
 
+ProxyAccessible*
+ProxyAccessible::TableCaption()
+{
+  uint64_t captionID = 0;
+  bool ok = false;
+  unused << mDoc->SendTableCaption(mID, &captionID, &ok);
+  return ok ? mDoc->GetAccessible(captionID) : nullptr;
+}
+
+void
+ProxyAccessible::TableSummary(nsString& aSummary)
+{
+  unused << mDoc->SendTableSummary(mID, &aSummary);
+}
+
+uint32_t
+ProxyAccessible::TableColumnCount()
+{
+  uint32_t count = 0;
+  unused << mDoc->SendTableColumnCount(mID, &count);
+  return count;
+}
+
+uint32_t
+ProxyAccessible::TableRowCount()
+{
+  uint32_t count = 0;
+  unused << mDoc->SendTableRowCount(mID, &count);
+  return count;
+}
+
+ProxyAccessible*
+ProxyAccessible::TableCellAt(uint32_t aRow, uint32_t aCol)
+{
+  uint64_t cellID = 0;
+  bool ok = false;
+  unused << mDoc->SendTableCellAt(mID, aRow, aCol, &cellID, &ok);
+  return ok ? mDoc->GetAccessible(cellID) : nullptr;
+}
+
+int32_t
+ProxyAccessible::TableCellIndexAt(uint32_t aRow, uint32_t aCol)
+{
+  int32_t index = 0;
+  unused << mDoc->SendTableCellIndexAt(mID, aRow, aCol, &index);
+  return index;
+}
+
+int32_t
+ProxyAccessible::TableColumnIndexAt(uint32_t aCellIndex)
+{
+  int32_t index = 0;
+  unused << mDoc->SendTableColumnIndexAt(mID, aCellIndex, &index);
+  return index;
+}
+
+int32_t
+ProxyAccessible::TableRowIndexAt(uint32_t aCellIndex)
+{
+  int32_t index = 0;
+  unused << mDoc->SendTableRowIndexAt(mID, aCellIndex, &index);
+  return index;
+}
+
+void
+ProxyAccessible::TableRowAndColumnIndicesAt(uint32_t aCellIndex,
+                                            int32_t* aRow, int32_t* aCol)
+{
+  unused << mDoc->SendTableRowAndColumnIndicesAt(mID, aCellIndex, aRow, aCol);
+}
+
+uint32_t
+ProxyAccessible::TableColumnExtentAt(uint32_t aRow, uint32_t aCol)
+{
+  uint32_t extent = 0;
+  unused << mDoc->SendTableColumnExtentAt(mID, aRow, aCol, &extent);
+  return extent;
+}
+
+uint32_t
+ProxyAccessible::TableRowExtentAt(uint32_t aRow, uint32_t aCol)
+{
+  uint32_t extent = 0;
+  unused << mDoc->SendTableRowExtentAt(mID, aRow, aCol, &extent);
+  return extent;
+}
+
+void
+ProxyAccessible::TableColumnDescription(uint32_t aCol, nsString& aDescription)
+{
+  unused << mDoc->SendTableColumnDescription(mID, aCol, &aDescription);
+}
+
+void
+ProxyAccessible::TableRowDescription(uint32_t aRow, nsString& aDescription)
+{
+  unused << mDoc->SendTableRowDescription(mID, aRow, &aDescription);
+}
+
+bool
+ProxyAccessible::TableColumnSelected(uint32_t aCol)
+{
+  bool selected = false;
+  unused << mDoc->SendTableColumnSelected(mID, aCol, &selected);
+  return selected;
+}
+
+bool
+ProxyAccessible::TableRowSelected(uint32_t aRow)
+{
+  bool selected = false;
+  unused << mDoc->SendTableRowSelected(mID, aRow, &selected);
+  return selected;
+}
+
+bool
+ProxyAccessible::TableCellSelected(uint32_t aRow, uint32_t aCol)
+{
+  bool selected = false;
+  unused << mDoc->SendTableCellSelected(mID, aRow, aCol, &selected);
+  return selected;
+}
+
+uint32_t
+ProxyAccessible::TableSelectedCellCount()
+{
+  uint32_t count = 0;
+  unused << mDoc->SendTableSelectedCellCount(mID, &count);
+  return count;
+}
+
+uint32_t
+ProxyAccessible::TableSelectedColumnCount()
+{
+  uint32_t count = 0;
+  unused << mDoc->SendTableSelectedColumnCount(mID, &count);
+  return count;
+}
+
+uint32_t
+ProxyAccessible::TableSelectedRowCount()
+{
+  uint32_t count = 0;
+  unused << mDoc->SendTableSelectedRowCount(mID, &count);
+  return count;
+}
+
+void
+ProxyAccessible::TableSelectedCells(nsTArray<ProxyAccessible*>* aCellIDs)
+{
+  nsAutoTArray<uint64_t, 30> cellIDs;
+  unused << mDoc->SendTableSelectedCells(mID, &cellIDs);
+  aCellIDs->SetCapacity(cellIDs.Length());
+  for (uint32_t i = 0; i < cellIDs.Length(); ++i) {
+    aCellIDs->AppendElement(mDoc->GetAccessible(cellIDs[i]));
+  }
+}
+
+void
+ProxyAccessible::TableSelectedCellIndices(nsTArray<uint32_t>* aCellIndices)
+{
+  unused << mDoc->SendTableSelectedCellIndices(mID, aCellIndices);
+}
+
+void
+ProxyAccessible::TableSelectedColumnIndices(nsTArray<uint32_t>* aColumnIndices)
+{
+  unused << mDoc->SendTableSelectedColumnIndices(mID, aColumnIndices);
+}
+
+void
+ProxyAccessible::TableSelectedRowIndices(nsTArray<uint32_t>* aRowIndices)
+{
+  unused << mDoc->SendTableSelectedRowIndices(mID, aRowIndices);
+}
+
+void
+ProxyAccessible::TableSelectColumn(uint32_t aCol)
+{
+  unused << mDoc->SendTableSelectColumn(mID, aCol);
+}
+
+void
+ProxyAccessible::TableSelectRow(uint32_t aRow)
+{
+  unused << mDoc->SendTableSelectRow(mID, aRow);
+}
+
+void
+ProxyAccessible::TableUnselectColumn(uint32_t aCol)
+{
+  unused << mDoc->SendTableUnselectColumn(mID, aCol);
+}
+
+void
+ProxyAccessible::TableUnselectRow(uint32_t aRow)
+{
+  unused << mDoc->SendTableUnselectRow(mID, aRow);
+}
+
+bool
+ProxyAccessible::TableIsProbablyForLayout()
+{
+  bool forLayout = false;
+  unused << mDoc->SendTableIsProbablyForLayout(mID, &forLayout);
+  return forLayout;
+}
+
 }
 }
