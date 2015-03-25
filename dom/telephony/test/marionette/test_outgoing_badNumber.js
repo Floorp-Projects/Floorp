@@ -16,7 +16,7 @@ function testDialOutInvalidNumber() {
   return telephony.dial(number).then(call => {
     outCall = call;
     ok(outCall);
-    is(outCall.id.number, number);
+    is(outCall.id.number, "");  // Emulator returns empty number for this call.
     is(outCall.state, "dialing");
 
     is(outCall, telephony.active);
