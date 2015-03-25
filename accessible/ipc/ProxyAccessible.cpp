@@ -731,5 +731,73 @@ ProxyAccessible::TableIsProbablyForLayout()
   return forLayout;
 }
 
+void
+ProxyAccessible::SelectedItems(nsTArray<ProxyAccessible*>* aSelectedItems)
+{
+  nsAutoTArray<uint64_t, 10> itemIDs;
+  unused << mDoc->SendSelectedItems(mID, &itemIDs);
+  aSelectedItems->SetCapacity(itemIDs.Length());
+  for (size_t i = 0; i < itemIDs.Length(); ++i) {
+    aSelectedItems->AppendElement(mDoc->GetAccessible(itemIDs[i]));
+  }
+}
+
+uint32_t
+ProxyAccessible::SelectedItemCount()
+{
+  uint32_t count = 0;
+  unused << mDoc->SendSelectedItemCount(mID, &count);
+  return count;
+}
+
+ProxyAccessible*
+ProxyAccessible::GetSelectedItem(uint32_t aIndex)
+{
+  uint64_t selectedItemID = 0;
+  bool ok = false;
+  unused << mDoc->SendGetSelectedItem(mID, aIndex, &selectedItemID, &ok);
+  return ok ? mDoc->GetAccessible(selectedItemID) : nullptr;
+}
+
+bool
+ProxyAccessible::IsItemSelected(uint32_t aIndex)
+{
+  bool selected = false;
+  unused << mDoc->SendIsItemSelected(mID, aIndex, &selected);
+  return selected;
+}
+ 
+bool
+ProxyAccessible::AddItemToSelection(uint32_t aIndex)
+{
+  bool success = false;
+  unused << mDoc->SendAddItemToSelection(mID, aIndex, &success);
+  return success;
+}
+
+bool
+ProxyAccessible::RemoveItemFromSelection(uint32_t aIndex)
+{
+  bool success = false;
+  unused << mDoc->SendRemoveItemFromSelection(mID, aIndex, &success);
+  return success;
+}
+
+bool
+ProxyAccessible::SelectAll()
+{
+  bool success = false;
+  unused << mDoc->SendSelectAll(mID, &success);
+  return success;
+}
+
+bool
+ProxyAccessible::UnselectAll()
+{
+  bool success = false;
+  unused << mDoc->SendUnselectAll(mID, &success);
+  return success;
+}
+
 }
 }

@@ -61,6 +61,13 @@ DocAccessibleChild::IdToAccessibleLink(const uint64_t& aID) const
   return acc && acc->IsLink() ? acc : nullptr;
 }
 
+Accessible*
+DocAccessibleChild::IdToAccessibleSelect(const uint64_t& aID) const
+{
+  Accessible* acc = IdToAccessible(aID);
+  return acc && acc->IsSelect() ? acc : nullptr;
+}
+
 HyperTextAccessible*
 DocAccessibleChild::IdToHyperTextAccessible(const uint64_t& aID) const
 {
@@ -1299,6 +1306,125 @@ DocAccessibleChild::RecvTableIsProbablyForLayout(const uint64_t& aID,
   TableAccessible* acc = IdToTableAccessible(aID);
   if (acc) {
     *aForLayout = acc->IsProbablyLayoutTable();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvSelectedItems(const uint64_t& aID,
+                                      nsTArray<uint64_t>* aSelectedItemIDs)
+{
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    nsAutoTArray<Accessible*, 10> selectedItems;
+    acc->SelectedItems(&selectedItems);
+    aSelectedItemIDs->SetCapacity(selectedItems.Length());
+    for (size_t i = 0; i < selectedItems.Length(); ++i) {
+      aSelectedItemIDs->AppendElement(
+        reinterpret_cast<uint64_t>(selectedItems[i]->UniqueID()));
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvSelectedItemCount(const uint64_t& aID,
+                                          uint32_t* aCount)
+{
+  *aCount = 0;
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    *aCount = acc->SelectedItemCount();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvGetSelectedItem(const uint64_t& aID,
+                                        const uint32_t& aIndex,
+                                        uint64_t* aSelected,
+                                        bool* aOk)
+{
+  *aSelected = 0;
+  *aOk = false;
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    Accessible* item = acc->GetSelectedItem(aIndex);
+    if (item) {
+      *aSelected = reinterpret_cast<uint64_t>(item->UniqueID());
+      *aOk = true;
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvIsItemSelected(const uint64_t& aID,
+                                       const uint32_t& aIndex,
+                                       bool* aSelected)
+{
+  *aSelected = false;
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    *aSelected = acc->IsItemSelected(aIndex);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAddItemToSelection(const uint64_t& aID,
+                                           const uint32_t& aIndex,
+                                           bool* aSuccess)
+{
+  *aSuccess = false;
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    *aSuccess = acc->AddItemToSelection(aIndex);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvRemoveItemFromSelection(const uint64_t& aID,
+                                                const uint32_t& aIndex,
+                                                bool* aSuccess)
+{
+  *aSuccess = false;
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    *aSuccess = acc->RemoveItemFromSelection(aIndex);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvSelectAll(const uint64_t& aID,
+                                  bool* aSuccess)
+{
+  *aSuccess = false;
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    *aSuccess = acc->SelectAll();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvUnselectAll(const uint64_t& aID,
+                                    bool* aSuccess)
+{
+  *aSuccess = false;
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    *aSuccess = acc->UnselectAll();
   }
 
   return true;
