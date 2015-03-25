@@ -886,8 +886,8 @@ class AsmJSModule
         return pod.usesSignalHandlers_;
     }
     bool usesSignalHandlersForOOB() const {
-#ifdef JS_CODEGEN_X64
-        return usesSignalHandlersForInterrupt();
+#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
+        return pod.usesSignalHandlers_;
 #else
         return false;
 #endif

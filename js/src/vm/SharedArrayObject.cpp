@@ -67,7 +67,7 @@ MarkValidRegion(void *addr, size_t len)
 #endif
 }
 
-#ifdef JS_CODEGEN_X64
+#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 // Since this SharedArrayBuffer will likely be used for asm.js code, prepare it
 // for asm.js by mapping the 4gb protected zone described in AsmJSValidate.h.
 // Since we want to put the SharedArrayBuffer header immediately before the
@@ -97,7 +97,7 @@ SharedArrayRawBuffer::New(JSContext *cx, uint32_t length)
     uint32_t allocSize = (length + 2*AsmJSPageSize - 1) & ~(AsmJSPageSize - 1);
     if (allocSize <= length)
         return nullptr;
-#ifdef JS_CODEGEN_X64
+#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     // Test >= to guard against the case where multiple extant runtimes
     // race to allocate.
     if (++numLive >= maxLive) {
@@ -153,7 +153,7 @@ SharedArrayRawBuffer::dropReference()
     if (refcount == 0) {
         uint8_t *p = this->dataPointer() - AsmJSPageSize;
         MOZ_ASSERT(uintptr_t(p) % AsmJSPageSize == 0);
-#ifdef JS_CODEGEN_X64
+#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
         numLive--;
         UnmapMemory(p, SharedArrayMappedSize);
 #       if defined(MOZ_VALGRIND) \

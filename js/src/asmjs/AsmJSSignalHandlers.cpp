@@ -313,7 +313,7 @@ enum { REG_EIP = 14 };
 // the same as CONTEXT, but on Mac we use a different structure since we call
 // into the emulator code from a Mach exception handler rather than a
 // sigaction-style signal handler.
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 # if defined(JS_CODEGEN_X64)
 struct macos_x64_context {
     x86_thread_state64_t thread;
@@ -350,6 +350,8 @@ ContextToPC(CONTEXT *context)
      return reinterpret_cast<uint8_t**>(&PC_sig(context));
 #endif
 }
+
+#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 
 #if defined(JS_CODEGEN_X64)
 MOZ_COLD static void
@@ -520,6 +522,7 @@ AddressOfGPRegisterSlot(EMULATOR_CONTEXT *context, Registers::Code code)
     MOZ_CRASH();
 }
 # endif  // !XP_MACOSX
+#endif // JS_CODEGEN_X64
 
 MOZ_COLD static void
 SetRegisterToCoercedUndefined(EMULATOR_CONTEXT *context, size_t size,
@@ -714,8 +717,6 @@ EmulateHeapAccess(EMULATOR_CONTEXT *context, uint8_t *pc, uint8_t *faultingAddre
     return end;
 }
 
-#endif // JS_CODEGEN_X64
-
 #if defined(XP_WIN)
 
 static bool
@@ -743,7 +744,6 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!activation)
         return false;
 
-# if defined(JS_CODEGEN_X64)
     const AsmJSModule &module = activation->module();
 
     // These checks aren't necessary, but, since we can, check anyway to make
@@ -780,11 +780,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
         return false;
 
     *ppc = EmulateHeapAccess(context, pc, faultingAddress, heapAccess, module);
-
     return true;
-# else
-    return false;
-# endif
 }
 
 static LONG WINAPI
@@ -886,7 +882,6 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
     if (!module.containsFunctionPC(pc))
         return false;
 
-# if defined(JS_CODEGEN_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
     uint8_t *faultingAddress = reinterpret_cast<uint8_t *>(request.body.code[1]);
@@ -912,9 +907,6 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
         return false;
 
     return true;
-# else
-    return false;
-# endif
 }
 
 // Taken from mach_exc in /usr/include/mach/mach_exc.defs.
@@ -1100,7 +1092,6 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
     if (!module.containsFunctionPC(pc))
         return false;
 
-# if defined(JS_CODEGEN_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
     uint8_t *faultingAddress = reinterpret_cast<uint8_t *>(info->si_addr);
@@ -1118,9 +1109,6 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
     *ppc = EmulateHeapAccess(context, pc, faultingAddress, heapAccess, module);
 
     return true;
-# else
-    return false;
-# endif
 }
 
 static struct sigaction sPrevSEGVHandler;
@@ -1151,6 +1139,8 @@ AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
         sPrevSEGVHandler.sa_handler(signum);
 }
 #endif
+
+#endif // defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 
 static void
 RedirectIonBackedgesToInterruptCheck(JSRuntime *rt)
@@ -1209,7 +1199,7 @@ JitInterruptHandler(int signum, siginfo_t *info, void *context)
 bool
 js::EnsureSignalHandlersInstalled(JSRuntime *rt)
 {
-#if defined(XP_MACOSX)
+#if defined(XP_MACOSX) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     // On OSX, each JSRuntime gets its own handler thread.
     if (!rt->asmJSMachExceptionHandler.installed() && !rt->asmJSMachExceptionHandler.install(rt))
         return false;
@@ -1243,14 +1233,11 @@ js::EnsureSignalHandlersInstalled(JSRuntime *rt)
 # endif
 #endif
 
-#if defined(XP_WIN)
-    // Windows uses SuspendThread to stop the main thread from another thread,
-    // so the only handler we need is for asm.js out-of-bound faults.
-    if (!AddVectoredExceptionHandler(/* FirstHandler = */ true, AsmJSFaultHandler))
-        return false;
-#else
     // The interrupt handler allows the main thread to be paused from another
     // thread (see InterruptRunningJitCode).
+#if defined(XP_WIN)
+    // Windows uses SuspendThread to stop the main thread from another thread.
+#else
     struct sigaction interruptHandler;
     interruptHandler.sa_flags = SA_SIGINFO;
     interruptHandler.sa_sigaction = &JitInterruptHandler;
@@ -1267,11 +1254,18 @@ js::EnsureSignalHandlersInstalled(JSRuntime *rt)
     {
         MOZ_CRASH("contention for interrupt signal");
     }
+#endif // defined(XP_WIN)
 
-    // Lastly, install a SIGSEGV handler to handle safely-out-of-bounds asm.js
-    // heap access. OSX handles seg faults via the Mach exception handler above,
-    // so don't install AsmJSFaultHandler.
-# if !defined(XP_MACOSX)
+#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
+    // Install a SIGSEGV handler to handle safely-out-of-bounds asm.js heap
+    // access.
+# if defined(XP_WIN)
+    if (!AddVectoredExceptionHandler(/* FirstHandler = */ true, AsmJSFaultHandler))
+        return false;
+# elif defined(XP_MACOSX)
+    // OSX handles seg faults via the Mach exception handler above, so don't
+    // install AsmJSFaultHandler.
+# else
     // SA_NODEFER allows us to reenter the signal handler if we crash while
     // handling the signal, and fall through to the Breakpad handler by testing
     // handlingSignal.
@@ -1281,8 +1275,8 @@ js::EnsureSignalHandlersInstalled(JSRuntime *rt)
     sigemptyset(&faultHandler.sa_mask);
     if (sigaction(SIGSEGV, &faultHandler, &sPrevSEGVHandler))
         MOZ_CRASH("unable to install segv handler");
-# endif // defined(XP_MACOSX)
-#endif // defined(XP_WIN)
+# endif
+#endif // defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 
     sResult = true;
     return true;
