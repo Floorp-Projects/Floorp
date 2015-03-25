@@ -82,19 +82,19 @@ Convert(int aIn, int32_t& aOut)
 }
 
 nsresult
-Convert(int32_t aIn, BluetoothDeviceType& aOut)
+Convert(int32_t aIn, BluetoothTypeOfDevice& aOut)
 {
-  static const BluetoothDeviceType sDeviceType[] = {
-    CONVERT(0x00, static_cast<BluetoothDeviceType>(0)), // invalid, required by gcc
-    CONVERT(0x01, DEVICE_TYPE_BREDR),
-    CONVERT(0x02, DEVICE_TYPE_BLE),
-    CONVERT(0x03, DEVICE_TYPE_DUAL)
+  static const BluetoothTypeOfDevice sTypeOfDevice[] = {
+    CONVERT(0x00, static_cast<BluetoothTypeOfDevice>(0)), // invalid, required by gcc
+    CONVERT(0x01, TYPE_OF_DEVICE_BREDR),
+    CONVERT(0x02, TYPE_OF_DEVICE_BLE),
+    CONVERT(0x03, TYPE_OF_DEVICE_DUAL)
   };
   if (NS_WARN_IF(!aIn) ||
-      NS_WARN_IF(static_cast<size_t>(aIn) >= MOZ_ARRAY_LENGTH(sDeviceType))) {
+      NS_WARN_IF(static_cast<size_t>(aIn) >= MOZ_ARRAY_LENGTH(sTypeOfDevice))) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  aOut = sDeviceType[aIn];
+  aOut = sTypeOfDevice[aIn];
   return NS_OK;
 }
 
@@ -1460,10 +1460,10 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothBondState& aOut)
 }
 
 nsresult
-UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothDeviceType& aOut)
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothTypeOfDevice& aOut)
 {
   return UnpackPDU(
-    aPDU, UnpackConversion<int32_t, BluetoothDeviceType>(aOut));
+    aPDU, UnpackConversion<int32_t, BluetoothTypeOfDevice>(aOut));
 }
 
 nsresult
@@ -1553,7 +1553,7 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothProperty& aOut)
       rv = UnpackPDU(aPDU, aOut.mUint32);
       break;
     case PROPERTY_TYPE_OF_DEVICE:
-      rv = UnpackPDU(aPDU, aOut.mDeviceType);
+      rv = UnpackPDU(aPDU, aOut.mTypeOfDevice);
       break;
     case PROPERTY_SERVICE_RECORD:
       rv = UnpackPDU(aPDU, aOut.mServiceRecord);
