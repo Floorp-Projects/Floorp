@@ -13,8 +13,6 @@
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-                                  "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
@@ -22,36 +20,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promise",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
-const BackgroundFileSaverOutputStream = Components.Constructor(
-      "@mozilla.org/network/background-file-saver;1?mode=outputstream",
-      "nsIBackgroundFileSaver");
-
-const StringInputStream = Components.Constructor(
-      "@mozilla.org/io/string-input-stream;1",
-      "nsIStringInputStream",
-      "setData");
-
-const TEST_FILE_NAME_1 = "test-backgroundfilesaver-1.txt";
-
 const gAppRep = Cc["@mozilla.org/downloads/application-reputation-service;1"].
                   getService(Ci.nsIApplicationReputationService);
 let gStillRunning = true;
 let gTables = {};
 let gHttpServer = null;
-
-/**
- * Returns a reference to a temporary file.  If the file is then created, it
- * will be removed when tests in this file finish.
- */
-function getTempFile(aLeafName) {
-  let file = FileUtils.getFile("TmpD", [aLeafName]);
-  do_register_cleanup(function GTF_cleanup() {
-    if (file.exists()) {
-      file.remove(false);
-    }
-  });
-  return file;
-}
 
 function readFileToString(aFilename) {
   let f = do_get_file(aFilename);
@@ -62,75 +35,6 @@ function readFileToString(aFilename) {
   return buf;
 }
 
-/**
- * Waits for the given saver object to complete.
- *
- * @param aSaver
- *        The saver, with the output stream or a stream listener implementation.
- * @param aOnTargetChangeFn
- *        Optional callback invoked with the target file name when it changes.
- *
- * @return {Promise}
- * @resolves When onSaveComplete is called with a success code.
- * @rejects With an exception, if onSaveComplete is called with a failure code.
- */
-function promiseSaverComplete(aSaver, aOnTargetChangeFn) {
-  let deferred = Promise.defer();
-  aSaver.observer = {
-    onTargetChange: function BFSO_onSaveComplete(aSaver, aTarget)
-    {
-      if (aOnTargetChangeFn) {
-        aOnTargetChangeFn(aTarget);
-      }
-    },
-    onSaveComplete: function BFSO_onSaveComplete(aSaver, aStatus)
-    {
-      if (Components.isSuccessCode(aStatus)) {
-        deferred.resolve();
-      } else {
-        deferred.reject(new Components.Exception("Saver failed.", aStatus));
-      }
-    },
-  };
-  return deferred.promise;
-}
-
-/**
- * Feeds a string to a BackgroundFileSaverOutputStream.
- *
- * @param aSourceString
- *        The source data to copy.
- * @param aSaverOutputStream
- *        The BackgroundFileSaverOutputStream to feed.
- * @param aCloseWhenDone
- *        If true, the output stream will be closed when the copy finishes.
- *
- * @return {Promise}
- * @resolves When the copy completes with a success code.
- * @rejects With an exception, if the copy fails.
- */
-function promiseCopyToSaver(aSourceString, aSaverOutputStream, aCloseWhenDone) {
-  let deferred = Promise.defer();
-  let inputStream = new StringInputStream(aSourceString, aSourceString.length);
-  let copier = Cc["@mozilla.org/network/async-stream-copier;1"]
-               .createInstance(Ci.nsIAsyncStreamCopier);
-  copier.init(inputStream, aSaverOutputStream, null, false, true, 0x8000, true,
-              aCloseWhenDone);
-  copier.asyncCopy({
-    onStartRequest: function () { },
-    onStopRequest: function (aRequest, aContext, aStatusCode)
-    {
-      if (Components.isSuccessCode(aStatusCode)) {
-        deferred.resolve();
-      } else {
-        deferred.reject(new Components.Exception(aResult));
-      }
-    },
-  }, null);
-  return deferred.promise;
-}
-
-// Registers a table for which to serve update chunks.
 function registerTableUpdate(aTable, aFilename) {
   // If we haven't been given an update for this table yet, add it to the map
   if (!(aTable in gTables)) {
@@ -180,12 +84,9 @@ add_task(function test_setup()
   // doesn't have it enabled.
   Services.prefs.setBoolPref("browser.safebrowsing.malware.enabled", true);
   Services.prefs.setBoolPref("browser.safebrowsing.downloads.enabled", true);
-  // Set block and allow tables explicitly, since the allowlist is normally
-  // disabled on comm-central.
+  // Set block table explicitly, no need for the allow table though
   Services.prefs.setCharPref("urlclassifier.downloadBlockTable",
                              "goog-badbinurl-shavar");
-  Services.prefs.setCharPref("urlclassifier.downloadAllowTable",
-                             "goog-downloadwhite-digest256");
   // SendRemoteQueryInternal needs locale preference.
   let locale = Services.prefs.getCharPref("general.useragent.locale");
   Services.prefs.setCharPref("general.useragent.locale", "en-US");
@@ -194,7 +95,6 @@ add_task(function test_setup()
     Services.prefs.clearUserPref("browser.safebrowsing.malware.enabled");
     Services.prefs.clearUserPref("browser.safebrowsing.downloads.enabled");
     Services.prefs.clearUserPref("urlclassifier.downloadBlockTable");
-    Services.prefs.clearUserPref("urlclassifier.downloadAllowTable");
     Services.prefs.setCharPref("general.useragent.locale", locale);
   });
 
@@ -314,37 +214,6 @@ add_task(function()
 {
   // Wait for Safebrowsing local list updates to complete.
   yield waitForUpdates();
-});
-
-add_task(function test_signature_whitelists()
-{
-  // We should never get to the remote server.
-  Services.prefs.setBoolPref("browser.safebrowsing.downloads.remote.enabled",
-                             true);
-  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
-                             "http://localhost:4444/throw");
-
-  // Use BackgroundFileSaver to extract the signature on Windows.
-  let destFile = getTempFile(TEST_FILE_NAME_1);
-
-  let data = readFileToString("data/signed_win.exe");
-  let saver = new BackgroundFileSaverOutputStream();
-  let completionPromise = promiseSaverComplete(saver);
-  saver.enableSignatureInfo();
-  saver.setTarget(destFile, false);
-  yield promiseCopyToSaver(data, saver, true);
-
-  saver.finish(Cr.NS_OK);
-  yield completionPromise;
-
-  // Clean up.
-  destFile.remove(false);
-
-  // evil.com is not on the allowlist, but this binary is signed by an entity
-  // whose certificate information is on the allowlist.
-  yield promiseQueryReputation({sourceURI: createURI("http://evil.com"),
-                                signatureInfo: saver.signatureInfo,
-                                fileSize: 12}, false);
 });
 
 add_task(function test_blocked_binary()
