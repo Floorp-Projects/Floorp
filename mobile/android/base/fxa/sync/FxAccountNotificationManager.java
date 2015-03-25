@@ -65,7 +65,7 @@ public class FxAccountNotificationManager {
    * @param fxAccount
    *          Firefox Account to reflect to the notification manager.
    */
-  protected void update(Context context, AndroidFxAccount fxAccount) {
+  public void update(Context context, AndroidFxAccount fxAccount) {
     final NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
     final State state = fxAccount.getState();

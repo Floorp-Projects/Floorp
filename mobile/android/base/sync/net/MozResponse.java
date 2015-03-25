@@ -19,6 +19,7 @@ import org.mozilla.gecko.sync.NonObjectJSONException;
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.HttpStatus;
 import ch.boye.httpclientandroidlib.impl.cookie.DateParseException;
 import ch.boye.httpclientandroidlib.impl.cookie.DateUtils;
 
@@ -40,6 +41,10 @@ public class MozResponse {
 
   public boolean wasSuccessful() {
     return this.getStatusCode() == 200;
+  }
+
+  public boolean isInvalidAuthentication() {
+    return this.getStatusCode() == HttpStatus.SC_UNAUTHORIZED;
   }
 
   /**

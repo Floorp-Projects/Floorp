@@ -6,7 +6,6 @@ package org.mozilla.gecko.fxa.sync;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -15,24 +14,19 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.background.fxa.FxAccountClient;
-import org.mozilla.gecko.background.fxa.FxAccountClient20;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.fxa.SkewHandler;
-import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.JSONWebTokenUtils;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AccountPickler;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
+import org.mozilla.gecko.fxa.authenticator.FxADefaultLoginStateMachineDelegate;
 import org.mozilla.gecko.fxa.authenticator.FxAccountAuthenticator;
 import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine;
-import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.LoginStateMachineDelegate;
-import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.Transition;
 import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
-import org.mozilla.gecko.fxa.login.StateFactory;
 import org.mozilla.gecko.sync.BackoffHandler;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.PrefsBackoffHandler;
@@ -456,38 +450,17 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       // and extend the background delay even further into the future.
       schedulePolicy.configureBackoffMillisBeforeSyncing(rateLimitBackoffHandler, backgroundBackoffHandler);
 
-      final String authServerEndpoint = fxAccount.getAccountServerURI();
       final String tokenServerEndpoint = fxAccount.getTokenServerURI();
       final URI tokenServerEndpointURI = new URI(tokenServerEndpoint);
       final String audience = FxAccountUtils.getAudienceForURL(tokenServerEndpoint);
 
-      // TODO: why doesn't the loginPolicy extract the audience from the account?
-      final FxAccountClient client = new FxAccountClient20(authServerEndpoint, executor);
       final FxAccountLoginStateMachine stateMachine = new FxAccountLoginStateMachine();
-      stateMachine.advance(state, StateLabel.Married, new LoginStateMachineDelegate() {
+      stateMachine.advance(state, StateLabel.Married, new FxADefaultLoginStateMachineDelegate(context, fxAccount) {
         @Override
-        public FxAccountClient getClient() {
-          return client;
-        }
-
-        @Override
-        public long getCertificateDurationInMilliseconds() {
-          return 12 * 60 * 60 * 1000;
-        }
-
-        @Override
-        public long getAssertionDurationInMilliseconds() {
-          return 15 * 60 * 1000;
-        }
-
-        @Override
-        public BrowserIDKeyPair generateKeyPair() throws NoSuchAlgorithmException {
-          return StateFactory.generateKeyPair();
-        }
-
-        @Override
-        public void handleTransition(Transition transition, State state) {
-          Logger.info(LOG_TAG, "handleTransition: " + transition + " to " + state.getStateLabel());
+        public void handleNotMarried(State notMarried) {
+          Logger.info(LOG_TAG, "handleNotMarried: in " + notMarried.getStateLabel());
+          schedulePolicy.onHandleFinal(notMarried.getNeededAction());
+          syncDelegate.handleCannotSync(notMarried);
         }
 
         private boolean shouldRequestToken(final BackoffHandler tokenBackoffHandler, final Bundle extras) {
@@ -495,18 +468,11 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         }
 
         @Override
-        public void handleFinal(State state) {
-          Logger.info(LOG_TAG, "handleFinal: in " + state.getStateLabel());
-          fxAccount.setState(state);
-          schedulePolicy.onHandleFinal(state.getNeededAction());
-          notificationManager.update(context, fxAccount);
-          try {
-            if (state.getStateLabel() != StateLabel.Married) {
-              syncDelegate.handleCannotSync(state);
-              return;
-            }
+        public void handleMarried(Married married) {
+          schedulePolicy.onHandleFinal(married.getNeededAction());
+          Logger.info(LOG_TAG, "handleMarried: in " + married.getStateLabel());
 
-            final Married married = (Married) state;
+          try {
             final String assertion = married.generateAssertion(audience, JSONWebTokenUtils.DEFAULT_ASSERTION_ISSUER);
 
             /*

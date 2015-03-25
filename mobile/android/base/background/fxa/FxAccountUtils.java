@@ -14,7 +14,6 @@ import java.security.NoSuchAlgorithmException;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.R.string;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.nativecode.NativeCrypto;
 import org.mozilla.gecko.sync.Utils;
@@ -23,7 +22,6 @@ import org.mozilla.gecko.sync.crypto.KeyBundle;
 import org.mozilla.gecko.sync.crypto.PBKDF2;
 
 import android.content.Context;
-import android.os.Build;
 
 public class FxAccountUtils {
   private static final String LOG_TAG = FxAccountUtils.class.getSimpleName();
