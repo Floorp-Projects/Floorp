@@ -6,7 +6,7 @@ from __future__ import unicode_literals
 
 import argparse
 import logging
-import mozpack.path
+import mozpack.path as mozpath
 import mozpack.executables
 import os
 import sys
@@ -165,12 +165,12 @@ class MochitestRunner(MozbuildObject):
 
         if test_path:
             if chrome:
-                test_root_file = mozpack.path.join(
+                test_root_file = mozpath.join(
                     self.mochitest_dir,
                     'chrome',
                     test_path)
             else:
-                test_root_file = mozpack.path.join(
+                test_root_file = mozpath.join(
                     self.mochitest_dir,
                     'tests',
                     test_path)

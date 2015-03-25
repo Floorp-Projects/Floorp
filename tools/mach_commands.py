@@ -174,7 +174,7 @@ class UUIDProvider(object):
         import os
         import xpidl
         from mozpack.files import FileFinder
-        import mozpack.path
+        import mozpack.path as mozpath
         from tempfile import mkdtemp
 
         finder = FileFinder(path, find_executables=False)
@@ -184,7 +184,7 @@ class UUIDProvider(object):
             parser = xpidl.IDLParser(outputdir=tmpdir)
             registry = InterfaceRegistry()
             for p, f in finder.find('**/*.idl'):
-                p = mozpack.path.join(path, p)
+                p = mozpath.join(path, p)
                 try:
                     content = f.open().read()
                     idl = parser.parse(content, filename=p)
