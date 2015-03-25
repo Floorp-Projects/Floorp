@@ -302,12 +302,12 @@ IonBuilder::CFGState::IfElse(jsbytecode *trueEnd, jsbytecode *falseEnd, MTest *t
 }
 
 IonBuilder::CFGState
-IonBuilder::CFGState::AndOr(jsbytecode *join, MBasicBlock *lhs)
+IonBuilder::CFGState::AndOr(jsbytecode *join, MBasicBlock *joinStart)
 {
     CFGState state;
     state.state = AND_OR;
     state.stopAt = join;
-    state.branch.ifFalse = lhs;
+    state.branch.ifFalse = joinStart;
     state.branch.test = nullptr;
     return state;
 }
@@ -2695,25 +2695,16 @@ IonBuilder::processNextTableSwitchCase(CFGState &state)
 IonBuilder::ControlStatus
 IonBuilder::processAndOrEnd(CFGState &state)
 {
-    MOZ_ASSERT(current);
-    MBasicBlock *lhs = state.branch.ifFalse;
+    // We just processed the RHS of an && or || expression.
+    // Now jump to the join point (the false block).
+    current->end(MGoto::New(alloc(), state.branch.ifFalse));
 
-    // Create a new block to represent the join.
-    MBasicBlock *join = newBlock(current, state.stopAt);
-    if (!join)
+    if (!state.branch.ifFalse->addPredecessor(alloc(), current))
         return ControlStatus_Error;
 
-    // End the rhs.
-    current->end(MGoto::New(alloc(), join));
-
-    // End the lhs.
-    lhs->end(MGoto::New(alloc(), join));
-    if (!join->addPredecessor(alloc(), state.branch.ifFalse))
+    if (!setCurrentAndSpecializePhis(state.branch.ifFalse))
         return ControlStatus_Error;
-
-    // Set the join path as current path.
-    if (!setCurrentAndSpecializePhis(join))
-        return ControlStatus_Error;
+    graph().moveBlockToEnd(current);
     pc = current->pc();
     return ControlStatus_Joined;
 }
@@ -4126,34 +4117,20 @@ IonBuilder::jsop_andor(JSOp op)
     // We have to leave the LHS on the stack.
     MDefinition *lhs = current->peek(-1);
 
-    MBasicBlock *evalLhs = newBlock(current, joinStart);
     MBasicBlock *evalRhs = newBlock(current, rhsStart);
-    if (!evalLhs || !evalRhs)
+    MBasicBlock *join = newBlock(current, joinStart);
+    if (!evalRhs || !join)
         return false;
 
     MTest *test = (op == JSOP_AND)
-                  ? newTest(lhs, evalRhs, evalLhs)
-                  : newTest(lhs, evalLhs, evalRhs);
+                  ? newTest(lhs, evalRhs, join)
+                  : newTest(lhs, join, evalRhs);
     current->end(test);
 
-    // Create the lhs block and specialize.
-    if (!setCurrentAndSpecializePhis(evalLhs))
+    if (!cfgStack_.append(CFGState::AndOr(joinStart, join)))
         return false;
 
-    if (!improveTypesAtTest(test->getOperand(0), test->ifTrue() == current, test))
-        return false;
-
-    // Create the rhs block.
-    if (!cfgStack_.append(CFGState::AndOr(joinStart, evalLhs)))
-        return false;
-
-    if (!setCurrentAndSpecializePhis(evalRhs))
-        return false;
-
-    if (!improveTypesAtTest(test->getOperand(0), test->ifTrue() == current, test))
-        return false;
-
-    return true;
+    return setCurrentAndSpecializePhis(evalRhs);
 }
 
 bool
@@ -7499,6 +7476,36 @@ IonBuilder::getStaticName(JSObject *staticObject, PropertyName *name, bool *psuc
 
     return loadSlot(obj, property.maybeTypes()->definiteSlot(), NumFixedSlots(staticObject),
                     rvalType, barrier, types);
+}
+
+// Whether 'types' includes all possible values represented by input/inputTypes.
+bool
+jit::TypeSetIncludes(TypeSet *types, MIRType input, TypeSet *inputTypes)
+{
+    if (!types)
+        return inputTypes && inputTypes->empty();
+
+    switch (input) {
+      case MIRType_Undefined:
+      case MIRType_Null:
+      case MIRType_Boolean:
+      case MIRType_Int32:
+      case MIRType_Double:
+      case MIRType_Float32:
+      case MIRType_String:
+      case MIRType_Symbol:
+      case MIRType_MagicOptimizedArguments:
+        return types->hasType(TypeSet::PrimitiveType(ValueTypeFromMIRType(input)));
+
+      case MIRType_Object:
+        return types->unknownObject() || (inputTypes && inputTypes->isSubset(types));
+
+      case MIRType_Value:
+        return types->unknown() || (inputTypes && inputTypes->isSubset(types));
+
+      default:
+        MOZ_CRASH("Bad input type");
+    }
 }
 
 // Whether a write of the given value may need a post-write barrier for GC purposes.
