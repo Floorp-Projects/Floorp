@@ -818,10 +818,6 @@ class CompareCodecPriority {
       mPreferredCodec = os.str();
     }
 
-    void AddHardwareCodec(const std::string& codec) {
-      mHardwareCodecs.insert(codec);
-    }
-
     bool operator()(JsepCodecDescription* lhs,
                     JsepCodecDescription* rhs) const {
       if (!mPreferredCodec.empty() &&
@@ -830,8 +826,7 @@ class CompareCodecPriority {
         return true;
       }
 
-      if (mHardwareCodecs.count(lhs->mDefaultPt) &&
-          !mHardwareCodecs.count(rhs->mDefaultPt)) {
+      if (lhs->mStronglyPreferred && !rhs->mStronglyPreferred) {
         return true;
       }
 
@@ -840,7 +835,6 @@ class CompareCodecPriority {
 
   private:
     std::string mPreferredCodec;
-    std::set<std::string> mHardwareCodecs;
 };
 
 nsresult
@@ -907,7 +901,7 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
   bool vp9Enabled = false;
   branch->GetBoolPref("media.peerconnection.video.vp9_enabled",
                       &vp9Enabled);
-  
+
   auto& codecs = mJsepSession->Codecs();
 
   // We use this to sort the list of codecs once everything is configured
@@ -955,7 +949,7 @@ PeerConnectionImpl::ConfigureJsepSessionCodecs() {
             }
 
             if (hardwareH264Supported) {
-              comparator.AddHardwareCodec(videoCodec.mDefaultPt);
+              videoCodec.mStronglyPreferred = true;
             }
           } else if (codec.mName == "VP8" || codec.mName == "VP9") {
             if (videoCodec.mName == "VP9" && !vp9Enabled) {
