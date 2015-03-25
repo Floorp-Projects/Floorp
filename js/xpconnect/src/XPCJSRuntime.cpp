@@ -594,6 +594,13 @@ AddonWindowOrNull(JSObject* aObj)
     return WindowOrNull(mainGlobal);
 }
 
+nsGlobalWindow*
+CurrentWindowOrNull(JSContext* cx)
+{
+    JSObject* glob = JS::CurrentGlobalOrNull(cx);
+    return glob ? WindowOrNull(glob) : nullptr;
+}
+
 }
 
 static void
