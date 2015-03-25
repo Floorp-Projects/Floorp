@@ -10,6 +10,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/JitCompartment.h"
 #include "jit/JitFrames.h"
+#include "jit/MacroAssembler.h"
 #include "jit/MoveEmitter.h"
 
 using namespace js;
@@ -288,7 +289,7 @@ MacroAssemblerX64::callWithABIPre(uint32_t *stackAdjust)
         if (!enoughMemory_)
             return;
 
-        MoveEmitter emitter(*this);
+        MoveEmitter emitter(asMasm());
         emitter.emit(moveResolver_);
         emitter.finish();
     }
@@ -505,6 +506,15 @@ MacroAssemblerX64::storeUnboxedValue(ConstantOrRegister value, MIRType valueType
                                      MIRType slotType);
 
 void
+MacroAssemblerX64::callWithExitFrame(JitCode *target, Register dynStack)
+{
+    addPtr(Imm32(framePushed()), dynStack);
+    makeFrameDescriptor(dynStack, JitFrame_IonJS);
+    asMasm().Push(dynStack);
+    call(target);
+}
+
+void
 MacroAssemblerX64::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label *label)
 {
     MOZ_ASSERT(cond == Assembler::Equal || cond == Assembler::NotEqual);
@@ -547,4 +557,16 @@ void
 MacroAssemblerX64::profilerExitFrame()
 {
     jmp(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
+}
+
+MacroAssembler &
+MacroAssemblerX64::asMasm()
+{
+    return *static_cast<MacroAssembler *>(this);
+}
+
+const MacroAssembler &
+MacroAssemblerX64::asMasm() const
+{
+    return *static_cast<const MacroAssembler *>(this);
 }

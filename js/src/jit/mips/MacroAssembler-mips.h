@@ -333,8 +333,16 @@ class MacroAssemblerMIPS : public Assembler
     void ma_cmp_set_float32(Register dst, FloatRegister lhs, FloatRegister rhs, DoubleCondition c);
 };
 
+class MacroAssembler;
+
 class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 {
+  private:
+    // Perform a downcast. Should be removed by Bug 996602.
+    MacroAssembler &asMasm();
+    const MacroAssembler &asMasm() const;
+
+  private:
     // Number of bytes the stack is adjusted inside a call to C. Calls to C may
     // not be nested.
     bool inCall_;
@@ -943,14 +951,7 @@ public:
         ma_push(reg);
     }
     void pushValue(const Address &addr);
-    void Push(const ValueOperand &val) {
-        pushValue(val);
-        framePushed_ += sizeof(Value);
-    }
-    void Pop(const ValueOperand &val) {
-        popValue(val);
-        framePushed_ -= sizeof(Value);
-    }
+
     void storePayload(const Value &val, Address dest);
     void storePayload(Register src, Address dest);
     void storePayload(const Value &val, const BaseIndex &dest);
@@ -1159,33 +1160,6 @@ public:
         MOZ_CRASH("NYI");
     }
 
-    void Push(Register reg) {
-        ma_push(reg);
-        adjustFrame(sizeof(intptr_t));
-    }
-    void Push(const Imm32 imm) {
-        ma_li(ScratchRegister, imm);
-        ma_push(ScratchRegister);
-        adjustFrame(sizeof(intptr_t));
-    }
-    void Push(const ImmWord imm) {
-        ma_li(ScratchRegister, Imm32(imm.value));
-        ma_push(ScratchRegister);
-        adjustFrame(sizeof(intptr_t));
-    }
-    void Push(const ImmPtr imm) {
-        Push(ImmWord(uintptr_t(imm.value)));
-    }
-    void Push(const ImmGCPtr ptr) {
-        ma_li(ScratchRegister, ptr);
-        ma_push(ScratchRegister);
-        adjustFrame(sizeof(intptr_t));
-    }
-    void Push(FloatRegister f) {
-        ma_push(f);
-        adjustFrame(sizeof(double));
-    }
-
     CodeOffsetLabel PushWithPatch(ImmWord word) {
         framePushed_ += sizeof(word.value);
         return pushWithPatch(word);
@@ -1194,10 +1168,6 @@ public:
         return PushWithPatch(ImmWord(uintptr_t(imm.value)));
     }
 
-    void Pop(Register reg) {
-        ma_pop(reg);
-        adjustFrame(-sizeof(intptr_t));
-    }
     void implicitPop(uint32_t args) {
         MOZ_ASSERT(args % sizeof(intptr_t) == 0);
         adjustFrame(-args);
