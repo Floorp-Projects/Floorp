@@ -6,7 +6,7 @@ from __future__ import print_function, unicode_literals
 
 import json
 import logging
-import mozpack.path
+import mozpack.path as mozpath
 import multiprocessing
 import os
 import subprocess
@@ -706,12 +706,12 @@ class PathArgument(object):
         # path relative to that base directory.
         for base_dir in [self.topobjdir, self.topsrcdir]:
             if abspath.startswith(os.path.abspath(base_dir)):
-                return mozpack.path.relpath(abspath, base_dir)
+                return mozpath.relpath(abspath, base_dir)
 
-        return mozpack.path.normsep(self.arg)
+        return mozpath.normsep(self.arg)
 
     def srcdir_path(self):
-        return mozpack.path.join(self.topsrcdir, self.relpath())
+        return mozpath.join(self.topsrcdir, self.relpath())
 
     def objdir_path(self):
-        return mozpack.path.join(self.topobjdir, self.relpath())
+        return mozpath.join(self.topobjdir, self.relpath())

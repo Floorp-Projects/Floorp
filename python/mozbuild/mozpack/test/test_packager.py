@@ -23,7 +23,7 @@ from mozpack.errors import (
     errors,
     ErrorMessage,
 )
-import mozpack.path
+import mozpack.path as mozpath
 
 MANIFEST = '''
 bar/*
@@ -99,7 +99,7 @@ class MockFinder(object):
     def find(self, path):
         self.log.append(path)
         for f in sorted(self.files):
-            if mozpack.path.match(f, path):
+            if mozpath.match(f, path):
                 yield f, self.files[f]
 
     def __iter__(self):
