@@ -320,22 +320,47 @@ describe("loop.store.ActiveRoomStore", function () {
   });
 
   describe("#fetchServerData", function() {
-    it("should save the token", function() {
-      store.fetchServerData(new sharedActions.FetchServerData({
+    var fetchServerAction;
+
+    beforeEach(function() {
+      fetchServerAction = new sharedActions.FetchServerData({
         windowType: "room",
         token: "fakeToken"
-      }));
+      });
+    });
+
+    it("should save the token", function() {
+      store.fetchServerData(fetchServerAction);
 
       expect(store.getStoreState().roomToken).eql("fakeToken");
     });
 
     it("should set the state to `READY`", function() {
-      store.fetchServerData(new sharedActions.FetchServerData({
-        windowType: "room",
-        token: "fakeToken"
-      }));
+      store.fetchServerData(fetchServerAction);
 
       expect(store.getStoreState().roomState).eql(ROOM_STATES.READY);
+    });
+
+    it("should call mozLoop.rooms.get to get the room data", function() {
+      store.fetchServerData(fetchServerAction);
+
+      sinon.assert.calledOnce(fakeMozLoop.rooms.get);
+    });
+
+    it("should dispatch UpdateRoomInfo if mozLoop.rooms.get is successful", function() {
+      var roomDetails = {
+        roomName: "fakeName",
+        roomUrl: "http://invalid",
+        roomOwner: "gavin"
+      };
+
+      fakeMozLoop.rooms.get.callsArgWith(1, null, roomDetails);
+
+      store.fetchServerData(fetchServerAction);
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.UpdateRoomInfo(roomDetails));
     });
   });
 
@@ -577,34 +602,6 @@ describe("loop.store.ActiveRoomStore", function () {
       sinon.assert.calledWithExactly(fakeMozLoop.addConversationContext,
                                      "42", "15263748", "");
     });
-
-    it("should call mozLoop.rooms.get to get the room data if the roomName" +
-      "is not known", function() {
-        store.setStoreState({roomName: undefined});
-
-        store.joinedRoom(new sharedActions.JoinedRoom(fakeJoinedData));
-
-        sinon.assert.calledOnce(fakeMozLoop.rooms.get);
-      });
-
-    it("should dispatch UpdateRoomInfo if mozLoop.rooms.get is successful",
-      function() {
-        var roomDetails = {
-          roomName: "fakeName",
-          roomUrl: "http://invalid",
-          roomOwner: "gavin"
-        };
-
-        fakeMozLoop.rooms.get.callsArgWith(1, null, roomDetails);
-
-        store.setStoreState({roomName: undefined});
-
-        store.joinedRoom(new sharedActions.JoinedRoom(fakeJoinedData));
-
-        sinon.assert.calledOnce(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.UpdateRoomInfo(roomDetails));
-      });
 
     it("should call mozLoop.rooms.refreshMembership before the expiresTime",
       function() {
