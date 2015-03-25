@@ -50,8 +50,6 @@
  * don't indicate support for them here, due to
  * http://stackoverflow.com/questions/20498142/visual-studio-2013-explicit-keyword-bug
  */
-#  define MOZ_HAVE_CXX11_FINAL         final
-#  define MOZ_HAVE_CXX11_OVERRIDE
 #  define MOZ_HAVE_NEVER_INLINE          __declspec(noinline)
 #  define MOZ_HAVE_NORETURN              __declspec(noreturn)
 #  ifdef __clang__
@@ -78,10 +76,6 @@
 #  if __has_extension(cxx_explicit_conversions)
 #    define MOZ_HAVE_EXPLICIT_CONVERSION
 #  endif
-#  if __has_extension(cxx_override_control)
-#    define MOZ_HAVE_CXX11_OVERRIDE
-#    define MOZ_HAVE_CXX11_FINAL         final
-#  endif
 #  if __has_attribute(noinline)
 #    define MOZ_HAVE_NEVER_INLINE        __attribute__((noinline))
 #  endif
@@ -90,17 +84,8 @@
 #  endif
 #elif defined(__GNUC__)
 #  if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
-#    if MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
-#      define MOZ_HAVE_CXX11_OVERRIDE
-#      define MOZ_HAVE_CXX11_FINAL       final
-#    endif
 #      define MOZ_HAVE_CXX11_CONSTEXPR
 #      define MOZ_HAVE_EXPLICIT_CONVERSION
-#  else
-     /* __final is a non-C++11 GCC synonym for 'final', per GCC r176655. */
-#    if MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
-#      define MOZ_HAVE_CXX11_FINAL       __final
-#    endif
 #  endif
 #  define MOZ_HAVE_NEVER_INLINE          __attribute__((noinline))
 #  define MOZ_HAVE_NORETURN              __attribute__((noreturn))
@@ -291,116 +276,6 @@
 
 #ifdef __cplusplus
 
-/*
- * MOZ_OVERRIDE explicitly indicates that a virtual member function in a class
- * overrides a member function of a base class, rather than potentially being a
- * new member function.  MOZ_OVERRIDE should be placed immediately before the
- * ';' terminating the member function's declaration, or before '= 0;' if the
- * member function is pure.  If the member function is defined in the class
- * definition, it should appear before the opening brace of the function body.
- *
- *   class Base
- *   {
- *   public:
- *     virtual void f() = 0;
- *   };
- *   class Derived1 : public Base
- *   {
- *   public:
- *     virtual void f() MOZ_OVERRIDE;
- *   };
- *   class Derived2 : public Base
- *   {
- *   public:
- *     virtual void f() MOZ_OVERRIDE = 0;
- *   };
- *   class Derived3 : public Base
- *   {
- *   public:
- *     virtual void f() MOZ_OVERRIDE { }
- *   };
- *
- * In compilers supporting C++11 override controls, MOZ_OVERRIDE *requires* that
- * the function marked with it override a member function of a base class: it
- * is a compile error if it does not.  Otherwise MOZ_OVERRIDE does not affect
- * semantics and merely documents the override relationship to the reader (but
- * of course must still be used correctly to not break C++11 compilers).
- */
-#if defined(MOZ_HAVE_CXX11_OVERRIDE)
-#  define MOZ_OVERRIDE          override
-#else
-#  define MOZ_OVERRIDE          /* no support */
-#endif
-
-/*
- * MOZ_FINAL indicates that some functionality cannot be overridden through
- * inheritance.  It can be used to annotate either classes/structs or virtual
- * member functions.
- *
- * To annotate a class/struct with MOZ_FINAL, place MOZ_FINAL immediately after
- * the name of the class, before the list of classes from which it derives (if
- * any) and before its opening brace.  MOZ_FINAL must not be used to annotate
- * unnamed classes or structs.  (With some compilers, and with C++11 proper, the
- * underlying expansion is ambiguous with specifying a class name.)
- *
- *   class Base MOZ_FINAL
- *   {
- *   public:
- *     Base();
- *     ~Base();
- *     virtual void f() { }
- *   };
- *   // This will be an error in some compilers:
- *   class Derived : public Base
- *   {
- *   public:
- *     ~Derived() { }
- *   };
- *
- * One particularly common reason to specify MOZ_FINAL upon a class is to tell
- * the compiler that it's not dangerous for it to have a non-virtual destructor
- * yet have one or more virtual functions, silencing the warning it might emit
- * in this case.  Suppose Base above weren't annotated with MOZ_FINAL.  Because
- * ~Base() is non-virtual, an attempt to delete a Derived* through a Base*
- * wouldn't call ~Derived(), so any cleanup ~Derived() might do wouldn't happen.
- * (Formally C++ says behavior is undefined, but compilers will likely just call
- * ~Base() and not ~Derived().)  Specifying MOZ_FINAL tells the compiler that
- * it's safe for the destructor to be non-virtual.
- *
- * In compilers implementing final controls, it is an error to inherit from a
- * class annotated with MOZ_FINAL.  In other compilers it serves only as
- * documentation.
- *
- * To annotate a virtual member function with MOZ_FINAL, place MOZ_FINAL
- * immediately before the ';' terminating the member function's declaration, or
- * before '= 0;' if the member function is pure.  If the member function is
- * defined in the class definition, it should appear before the opening brace of
- * the function body.  (This placement is identical to that for MOZ_OVERRIDE.
- * If both are used, they should appear in the order 'MOZ_FINAL MOZ_OVERRIDE'
- * for consistency.)
- *
- *   class Base
- *   {
- *   public:
- *     virtual void f() MOZ_FINAL;
- *   };
- *   class Derived
- *   {
- *   public:
- *     // This will be an error in some compilers:
- *     virtual void f();
- *   };
- *
- * In compilers implementing final controls, it is an error for a derived class
- * to override a method annotated with MOZ_FINAL.  In other compilers it serves
- * only as documentation.
- */
-#if defined(MOZ_HAVE_CXX11_FINAL)
-#  define MOZ_FINAL             MOZ_HAVE_CXX11_FINAL
-#else
-#  define MOZ_FINAL             /* no support */
-#endif
-
 /**
  * MOZ_WARN_UNUSED_RESULT tells the compiler to emit a warning if a function's
  * return value is not used by the caller.
@@ -428,17 +303,17 @@
  * following is a guide on where to place the attributes.
  *
  * Attributes that apply to a struct or class precede the name of the class:
- * (Note that this is different from the placement of MOZ_FINAL for classes!)
+ * (Note that this is different from the placement of final for classes!)
  *
  *   class MOZ_CLASS_ATTRIBUTE SomeClass {};
  *
  * Attributes that apply to functions follow the parentheses and const
- * qualifiers but precede MOZ_FINAL, MOZ_OVERRIDE and the function body:
+ * qualifiers but precede final, override and the function body:
  *
  *   void DeclaredFunction() MOZ_FUNCTION_ATTRIBUTE;
  *   void SomeFunction() MOZ_FUNCTION_ATTRIBUTE {}
  *   void PureFunction() const MOZ_FUNCTION_ATTRIBUTE = 0;
- *   void OverriddenFunction() MOZ_FUNCTION_ATTIRBUTE MOZ_OVERRIDE;
+ *   void OverriddenFunction() MOZ_FUNCTION_ATTIRBUTE override;
  *
  * Attributes that apply to variables or parameters follow the variable's name:
  *
