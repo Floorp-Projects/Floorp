@@ -718,6 +718,11 @@ protected:
   // Called by the AudioSink to signal errors.
   void OnAudioSinkError();
 
+  void DispatchOnAudioSinkError()
+  {
+    TaskQueue()->Dispatch(NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnAudioSinkError));
+  }
+
   // Return true if the video decoder's decode speed can not catch up the
   // play time.
   bool NeedToSkipToNextKeyframe();
