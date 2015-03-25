@@ -138,7 +138,7 @@ class CxxCodeGen(CodePrinter, Visitor):
             self.write(' /*NS_ABSTRACT_CLASS*/')
         self.write(' '+ c.name)
         if c.final:
-            self.write(' MOZ_FINAL')
+            self.write(' final')
 
         if c.specializes is not None:
             self.write(' <')
