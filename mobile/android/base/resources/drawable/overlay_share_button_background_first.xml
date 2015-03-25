@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  - This Source Code Form is subject to the terms of the Mozilla Public
+  - License, v. 2.0. If a copy of the MPL was not distributed with this
+  - file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<!-- Should be kept in sync with overlay_share_button_background.xml
+
+     This first item in the list has rounded corners. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:state_pressed="true">
+        <shape>
+            <solid android:color="@color/toolbar_grey_pressed"/>
+            <corners android:topLeftRadius="@dimen/button_corner_radius"
+                     android:topRightRadius="@dimen/button_corner_radius"/>
+        </shape>
+    </item>
+
+    <item>
+        <shape>
+            <solid android:color="@color/toolbar_grey"/>
+            <corners android:topLeftRadius="@dimen/button_corner_radius"
+                     android:topRightRadius="@dimen/button_corner_radius"/>
+        </shape>
+    </item>
+
+</selector>

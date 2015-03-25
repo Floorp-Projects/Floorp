@@ -10,7 +10,6 @@
 body {
   margin: 0;
   font: message-box;
-  background: #F8F7F8;
   color: #333333;
   -moz-user-select: none;
   overflow: hidden;

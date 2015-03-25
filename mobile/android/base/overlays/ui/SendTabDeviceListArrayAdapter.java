@@ -14,10 +14,12 @@ import org.mozilla.gecko.overlays.ui.SendTabList.State;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClientRecord> {
@@ -39,7 +41,7 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClient
     private AlertDialog dialog;
 
     public SendTabDeviceListArrayAdapter(Context context, SendTabTargetSelectedListener aListener) {
-        super(context, R.layout.overlay_share_send_tab_item);
+        super(context, R.layout.overlay_share_send_tab_item, R.id.overlaybtn_label);
 
         listener = aListener;
 
@@ -88,15 +90,22 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClient
         final Context context = getContext();
 
         // Reuse View objects if they exist.
-        TextView row = (TextView) convertView;
+        OverlayDialogButton row = (OverlayDialogButton) convertView;
         if (row == null) {
-            row = (TextView) View.inflate(context, R.layout.overlay_share_send_tab_item, null);
+            row = (OverlayDialogButton) View.inflate(context, R.layout.overlay_share_send_tab_item, null);
+        }
+
+        // The first view in the list has a unique style.
+        if (position == 0) {
+            row.setBackgroundResource(R.drawable.overlay_share_button_background_first);
+        } else {
+            row.setBackgroundResource(R.drawable.overlay_share_button_background);
         }
 
         if (currentState != State.LIST) {
             // If we're in a special "Button-like" state, use the override string and a generic icon.
-            row.setText(dummyRecordName);
-            row.setCompoundDrawablesWithIntrinsicBounds(R.drawable.overlay_send_tab_icon, 0, 0, 0);
+            final Drawable sendTabIcon = context.getResources().getDrawable(R.drawable.overlay_send_tab_icon);
+            row.setEnabledLabelAndIcon(dummyRecordName, sendTabIcon);
         }
 
         // If we're just a button to launch the dialog, set the listener and abort.
@@ -114,8 +123,8 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClient
         // The remaining states delegate to the SentTabTargetSelectedListener.
         final ParcelableClientRecord clientRecord = getItem(position);
         if (currentState == State.LIST) {
-            row.setText(clientRecord.name);
-            row.setCompoundDrawablesWithIntrinsicBounds(getImage(clientRecord), 0, 0, 0);
+            final Drawable clientIcon = context.getResources().getDrawable(getImage(clientRecord));
+            row.setEnabledLabelAndIcon(clientRecord.name, clientIcon);
 
             final String listenerGUID = clientRecord.guid;
 
