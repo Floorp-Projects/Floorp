@@ -1282,7 +1282,8 @@ static const char* const gMachineStateStr[] = {
   "SEEKING",
   "BUFFERING",
   "COMPLETED",
-  "SHUTDOWN"
+  "SHUTDOWN",
+  "ERROR"
 };
 
 void MediaDecoderStateMachine::SetState(State aState)
