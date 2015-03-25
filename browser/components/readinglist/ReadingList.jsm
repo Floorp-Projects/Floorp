@@ -19,6 +19,12 @@ Cu.import("resource://gre/modules/Log.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SQLiteStore",
   "resource:///modules/readinglist/SQLiteStore.jsm");
 
+// We use Sync's "Utils" module for the device name, which is unfortunate,
+// but let's give it a better name here.
+XPCOMUtils.defineLazyGetter(this, 'SyncUtils', function() {
+  const {Utils} = Cu.import('resource://services-sync/util.js"', {});
+  return Utils;
+});
 
 { // Prevent the parent log setup from leaking into the global scope.
   let parentLog = Log.repository.getLogger("readinglist");
@@ -312,12 +318,10 @@ ReadingListImpl.prototype = {
       record.addedOn = Date.now();
     }
     if (!("addedBy" in record)) {
-      let pref = "services.sync.client.name";
-      if (Services.prefs.prefHasUserValue(pref)) {
-        record.addedBy = Services.prefs.getCharPref(pref);
-      }
-      if (!record.addedBy) {
-        record.addedBy = "Firefox";
+      try {
+        record.addedBy = Services.prefs.getCharPref("services.sync.client.name");
+      } catch (ex) {
+        record.addedBy = SyncUtils.getDefaultDeviceName();
       }
     }
     if (!("syncStatus" in record)) {
