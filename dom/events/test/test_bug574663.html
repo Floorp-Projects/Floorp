@@ -20,7 +20,37 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=574663
 
 /** Test for Bug 574663 **/
 
-function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum) {
+// SimpleTest's paint_listener does not work on other windows, so we inline
+// a smaller version here.
+function waitForPaint(win, utils, callback) {
+  win.document.documentElement.getBoundingClientRect();
+  if (!utils.isMozAfterPaintPending) {
+    callback();
+    return;
+  }
+
+  var onpaint = function() {
+    if (!utils.isMozAfterPaintPending) {
+      win.removeEventListener("MozAfterPaint", onpaint);
+      callback();
+      return;
+    }
+  }
+  win.addEventListener("MozAfterPaint", onpaint);
+  if (utils.isTestControllingRefreshes) {
+    utils.advanceTimeAndRefresh(0);
+  }
+}
+
+function forceScrollAndWait(scrollbox, callback) {
+  let win = scrollbox.ownerDocument.defaultView;
+  let utils = SpecialPowers.getDOMWindowUtils(win);
+
+  utils.advanceTimeAndRefresh(1000);
+  waitForPaint(win, utils, callback);
+}
+
+function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum, callback) {
   var win = scrollbox.ownerDocument.defaultView;
   let event = {
     deltaMode: WheelEvent.DOM_DELTA_PIXEL,
@@ -29,10 +59,26 @@ function sendTouchpadScrollMotion(scrollbox, direction, ctrl, momentum) {
     ctrlKey: ctrl,
     isMomentum: momentum
   };
+
+  let kExtraEvents = 5;
+
+  var received = 0;
+  var onwheel = function() {
+    if (++received == 1 + kExtraEvents) {
+      // We have captured all the outstanding wheel events. Wait for the
+      // animation to add itself to the refresh driver.
+      scrollbox.removeEventListener("wheel", onwheel);
+      setTimeout(function() {
+        forceScrollAndWait(scrollbox, callback);
+      }, 0);
+    }
+  };
+  scrollbox.addEventListener("wheel", onwheel);
+
   synthesizeWheel(scrollbox, 10, 10, event, win);
   // then 5 additional pixel scrolls
   event.lineOrPageDeltaY = 0;
-  for (let i = 0; i < 5; ++i) {
+  for (let i = 1; i <= kExtraEvents; ++i) {
     synthesizeWheel(scrollbox, 10, 10, event, win);
   }
 }
@@ -57,21 +103,11 @@ function runTest() {
     winUtils.advanceTimeAndRefresh(1000);
 
     function nextTest() {
-      if (!outstandingTests.length) {
-        winUtils.restoreNormalRefresh();
-        win.close();
-        SimpleTest.finish();
-        return;
-      }
-
       let [ctrlKey, isMomentum] = outstandingTests.shift();
       let scrollTopBefore = scrollbox.scrollTop;
       let zoomFactorBefore = winUtils.fullZoom;
 
-      sendTouchpadScrollMotion(scrollbox, 1, ctrlKey, isMomentum);
-      winUtils.advanceTimeAndRefresh(1000); // force scrolling to happen
-
-      setTimeout(function () {
+      let check = function() {
         if (!ctrlKey) {
           let postfix = isMomentum ? ", even after releasing the touchpad" : "";
           // Normal scroll: scroll
@@ -86,12 +122,21 @@ function runTest() {
             isnot(scrollbox.scrollTop, scrollTopBefore, "Momentum scrolling should scroll, even when pressing Ctrl");
           }
         }
-        // Revert the effect.
-        sendTouchpadScrollMotion(scrollbox, -1, ctrlKey, isMomentum);
-        winUtils.advanceTimeAndRefresh(1000); // force scrolling to happen
 
-        setTimeout(nextTest, 20);
-      }, 20);
+        if (!outstandingTests.length) {
+          winUtils.restoreNormalRefresh();
+          win.close();
+          SimpleTest.finish();
+          return;
+        }
+
+        // Revert the effect for the next test.
+        sendTouchpadScrollMotion(scrollbox, -1, ctrlKey, isMomentum, function() {
+          setTimeout(nextTest, 0);
+        });
+      }
+
+      sendTouchpadScrollMotion(scrollbox, 1, ctrlKey, isMomentum, check);
     }
     nextTest();
   }, win);
@@ -106,7 +151,6 @@ window.onload = function() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("untriaged");
 
 </script>
 </pre>
