@@ -1168,6 +1168,11 @@ TabActor.prototype = {
       this._tabActorPool = null;
     }
 
+    Object.defineProperty(this, "docShell", {
+      value: null,
+      configurable: true
+    });
+
     this._attached = false;
     return true;
   },
@@ -1636,23 +1641,16 @@ function BrowserTabActor(aConnection, aBrowser, aTabBrowser)
   TabActor.call(this, aConnection, aBrowser);
   this._browser = aBrowser;
   this._tabbrowser = aTabBrowser;
+
+  Object.defineProperty(this, "docShell", {
+    value: this._browser.docShell,
+    configurable: true
+  });
 }
 
 BrowserTabActor.prototype = Object.create(TabActor.prototype);
 
 BrowserTabActor.prototype.constructor = BrowserTabActor;
-
-Object.defineProperty(BrowserTabActor.prototype, "docShell", {
-  get: function() {
-    if (this._browser) {
-      return this._browser.docShell;
-    }
-    // The tab is closed.
-    return null;
-  },
-  enumerable: true,
-  configurable: true
-});
 
 Object.defineProperty(BrowserTabActor.prototype, "title", {
   get: function() {
