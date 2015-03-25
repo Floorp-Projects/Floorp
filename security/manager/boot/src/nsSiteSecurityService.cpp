@@ -704,7 +704,13 @@ nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
     return RemoveState(aType, aSourceURI, aFlags);
   }
 
-  if (!PublicKeyPinningService::ChainMatchesPinset(certList, sha256keys)) {
+  bool chainMatchesPinset;
+  rv = PublicKeyPinningService::ChainMatchesPinset(certList, sha256keys,
+                                                   chainMatchesPinset);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  if (!chainMatchesPinset) {
     // is invalid
     SSSLOG(("SSS: Pins provided by %s are invalid no match with certList\n", host.get()));
     return NS_ERROR_FAILURE;
@@ -717,8 +723,12 @@ nsSiteSecurityService::ProcessPKPHeader(nsIURI* aSourceURI,
   for (uint32_t i = 0; i < sha256keys.Length(); i++) {
     nsTArray<nsCString> singlePin;
     singlePin.AppendElement(sha256keys[i]);
-    if (!PublicKeyPinningService::
-           ChainMatchesPinset(certList, singlePin)) {
+    rv = PublicKeyPinningService::ChainMatchesPinset(certList, singlePin,
+                                                     chainMatchesPinset);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    if (!chainMatchesPinset) {
       hasBackupPin = true;
     }
   }
@@ -798,8 +808,12 @@ NS_IMETHODIMP
 nsSiteSecurityService::IsSecureURI(uint32_t aType, nsIURI* aURI,
                                    uint32_t aFlags, bool* aResult)
 {
-  // Only HSTS is supported at the moment.
-  NS_ENSURE_TRUE(aType == nsISiteSecurityService::HEADER_HSTS,
+  NS_ENSURE_ARG(aURI);
+  NS_ENSURE_ARG(aResult);
+
+  // Only HSTS and HPKP are supported at the moment.
+  NS_ENSURE_TRUE(aType == nsISiteSecurityService::HEADER_HSTS ||
+                 aType == nsISiteSecurityService::HEADER_HPKP,
                  NS_ERROR_NOT_IMPLEMENTED);
 
   nsAutoCString hostname;
@@ -843,6 +857,9 @@ NS_IMETHODIMP
 nsSiteSecurityService::IsSecureHost(uint32_t aType, const char* aHost,
                                     uint32_t aFlags, bool* aResult)
 {
+  NS_ENSURE_ARG(aHost);
+  NS_ENSURE_ARG(aResult);
+
   // Only HSTS and HPKP are supported at the moment.
   NS_ENSURE_TRUE(aType == nsISiteSecurityService::HEADER_HSTS ||
                  aType == nsISiteSecurityService::HEADER_HPKP,
@@ -857,17 +874,18 @@ nsSiteSecurityService::IsSecureHost(uint32_t aType, const char* aHost,
   }
 
   if (aType == nsISiteSecurityService::HEADER_HPKP) {
-    ScopedCERTCertList certList(CERT_NewCertList());
-    if (!certList) {
+    RefPtr<SharedCertVerifier> certVerifier(GetDefaultCertVerifier());
+    if (!certVerifier) {
       return NS_ERROR_FAILURE;
     }
-    // Todo: we need to update ChainHasValidPins to distinguish between there
-    // are no pins or there was an internal failure.
-    *aResult = !PublicKeyPinningService::ChainHasValidPins(certList,
-                                                           aHost,
-                                                           mozilla::pkix::Now(),
-                                                           false);
-    return NS_OK;
+    if (certVerifier->mPinningMode ==
+        CertVerifier::PinningMode::pinningDisabled) {
+      return NS_OK;
+    }
+    bool enforceTestMode = certVerifier->mPinningMode ==
+                           CertVerifier::PinningMode::pinningEnforceTestMode;
+    return PublicKeyPinningService::HostHasPins(aHost, mozilla::pkix::Now(),
+                                                enforceTestMode, *aResult);
   }
 
   // Holepunch chart.apis.google.com and subdomains.

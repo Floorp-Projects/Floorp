@@ -27,17 +27,29 @@ public:
    * Note: if an alt name is a wildcard, it won't necessarily find a pinset
    * that would otherwise be valid for it
    */
-  static bool ChainHasValidPins(const CERTCertList* certList,
-                                const char* hostname,
-                                mozilla::pkix::Time time,
-                                bool enforceTestMode);
+  static nsresult ChainHasValidPins(const CERTCertList* certList,
+                                    const char* hostname,
+                                    mozilla::pkix::Time time,
+                                    bool enforceTestMode,
+                            /*out*/ bool& chainHasValidPins);
   /**
    * Returns true if there is any intersection between the certificate list
    * and the pins specified in the aSHA256key array. Values passed in are
    * assumed to be in base64 encoded form
    */
-  static bool ChainMatchesPinset(const CERTCertList* certList,
-                                 const nsTArray<nsCString>& aSHA256keys);
+  static nsresult ChainMatchesPinset(const CERTCertList* certList,
+                                     const nsTArray<nsCString>& aSHA256keys,
+                             /*out*/ bool& chainMatchesPinset);
+
+  /**
+   * Returns true via the output parameter hostHasPins if there is pinning
+   * information for the given host that is valid at the given time, and false
+   * otherwise.
+   */
+  static nsresult HostHasPins(const char* hostname,
+                              mozilla::pkix::Time time,
+                              bool enforceTestMode,
+                      /*out*/ bool& hostHasPins);
 
   /**
    * Given a hostname of potentially mixed case with potentially multiple

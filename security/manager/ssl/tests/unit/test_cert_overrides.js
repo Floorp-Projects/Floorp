@@ -12,27 +12,6 @@
 // 3. Connect again. This should succeed.
 
 do_get_profile();
-let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
-                            .getService(Ci.nsICertOverrideService);
-
-function add_cert_override(aHost, aExpectedBits, aSecurityInfo) {
-  let sslstatus = aSecurityInfo.QueryInterface(Ci.nsISSLStatusProvider)
-                               .SSLStatus;
-  let bits =
-    (sslstatus.isUntrusted ? Ci.nsICertOverrideService.ERROR_UNTRUSTED : 0) |
-    (sslstatus.isDomainMismatch ? Ci.nsICertOverrideService.ERROR_MISMATCH : 0) |
-    (sslstatus.isNotValidAtThisTime ? Ci.nsICertOverrideService.ERROR_TIME : 0);
-  do_check_eq(bits, aExpectedBits);
-  let cert = sslstatus.serverCert;
-  certOverrideService.rememberValidityOverride(aHost, 8443, cert, aExpectedBits,
-                                               true);
-}
-
-function add_cert_override_test(aHost, aExpectedBits, aExpectedError) {
-  add_connection_test(aHost, aExpectedError, null,
-                      add_cert_override.bind(this, aHost, aExpectedBits));
-  add_connection_test(aHost, PRErrorCodeSuccess);
-}
 
 function add_non_overridable_test(aHost, aExpectedError) {
   add_connection_test(
@@ -176,6 +155,8 @@ function add_simple_tests() {
                          MOZILLA_PKIX_ERROR_V1_CERT_USED_AS_CA);
   // If we make that certificate a trust anchor, the connection will succeed.
   add_test(function() {
+    let certOverrideService = Cc["@mozilla.org/security/certoverride;1"]
+                                .getService(Ci.nsICertOverrideService);
     certOverrideService.clearValidityOverride("end-entity-issued-by-v1-cert.example.com", 8443);
     let v1Cert = constructCertFromFile("tlsserver/v1Cert.der");
     setCertTrust(v1Cert, "CTu,,");
