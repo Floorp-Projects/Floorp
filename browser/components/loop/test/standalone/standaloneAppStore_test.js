@@ -124,16 +124,7 @@ describe("loop.store.StandaloneAppStore", function () {
         expect(store.getStoreState().windowType).eql("unsupportedBrowser");
       });
 
-    it("should set windowType to `outgoing` for old style call hashes", function() {
-      fakeGetWindowData.windowPath = "#call/faketoken";
-
-      store.extractTokenInfo(
-        new sharedActions.ExtractTokenInfo(fakeGetWindowData));
-
-      expect(store.getStoreState().windowType).eql("outgoing");
-    });
-
-    it("should set windowType to `outgoing` for new style call paths", function() {
+    it("should set windowType to `outgoing` for call paths", function() {
       fakeGetWindowData.windowPath = "/c/fakecalltoken";
 
       store.extractTokenInfo(
@@ -160,20 +151,7 @@ describe("loop.store.StandaloneAppStore", function () {
       expect(store.getStoreState().windowType).eql("home");
     });
 
-    it("should set the loopToken on the conversation for old style call hashes",
-      function() {
-        fakeGetWindowData.windowPath = "#call/faketoken";
-
-        store.extractTokenInfo(
-          new sharedActions.ExtractTokenInfo(fakeGetWindowData));
-
-        sinon.assert.calledOnce(fakeConversation.set);
-        sinon.assert.calledWithExactly(fakeConversation.set, {
-          loopToken: "faketoken"
-        });
-      });
-
-    it("should set the loopToken on the conversation for new style call paths",
+    it("should set the loopToken on the conversation for call paths",
       function() {
         fakeGetWindowData.windowPath = "/c/fakecalltoken";
 
@@ -199,22 +177,7 @@ describe("loop.store.StandaloneAppStore", function () {
         });
       });
 
-    it("should dispatch a SetupWindowData action for old style call hashes",
-      function() {
-        fakeGetWindowData.windowPath = "#call/faketoken";
-
-        store.extractTokenInfo(
-          new sharedActions.ExtractTokenInfo(fakeGetWindowData));
-
-        sinon.assert.calledOnce(dispatcher.dispatch);
-        sinon.assert.calledWithExactly(dispatcher.dispatch,
-          new sharedActions.FetchServerData({
-            windowType: "outgoing",
-            token: "faketoken"
-          }));
-      });
-
-    it("should set the loopToken on the conversation for new style call paths",
+    it("should set the loopToken on the conversation for call paths",
       function() {
         fakeGetWindowData.windowPath = "/c/fakecalltoken";
 
