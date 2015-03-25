@@ -314,7 +314,7 @@ APZEventState::ProcessAPZStateChange(const nsCOMPtr<nsIDocument>& aDocument,
       nsCOMPtr<nsIDocShell> docshell(aDocument->GetDocShell());
       if (docshell && sf) {
         nsDocShell* nsdocshell = static_cast<nsDocShell*>(docshell.get());
-        nsdocshell->NotifyAsyncPanZoomStarted(sf->GetScrollPositionCSSPixels());
+        nsdocshell->NotifyAsyncPanZoomStarted();
       }
     }
     mActiveAPZTransforms++;
@@ -336,7 +336,7 @@ APZEventState::ProcessAPZStateChange(const nsCOMPtr<nsIDocument>& aDocument,
       nsCOMPtr<nsIDocShell> docshell(aDocument->GetDocShell());
       if (docshell && sf) {
         nsDocShell* nsdocshell = static_cast<nsDocShell*>(docshell.get());
-        nsdocshell->NotifyAsyncPanZoomStopped(sf->GetScrollPositionCSSPixels());
+        nsdocshell->NotifyAsyncPanZoomStopped();
       }
     }
     break;
