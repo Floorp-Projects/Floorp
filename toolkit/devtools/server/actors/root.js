@@ -268,6 +268,33 @@ RootActor.prototype = {
     });
   },
 
+  onGetTab: function (options) {
+    let tabList = this._parameters.tabList;
+    if (!tabList) {
+      return { error: "noTabs",
+               message: "This root actor has no browser tabs." };
+    }
+    if (!this._tabActorPool) {
+      this._tabActorPool = new ActorPool(this.conn);
+      this.conn.addActorPool(this._tabActorPool);
+    }
+    return tabList.getTab(options)
+                  .then(tabActor => {
+      tabActor.parentID = this.actorID;
+      this._tabActorPool.addActor(tabActor);
+
+      return { tab: tabActor.form() };
+    }, error => {
+      if (error.error) {
+        // Pipe expected errors as-is to the client
+        return error;
+      } else {
+        return { error: "noTab",
+                 message: "Unexpected error while calling getTab(): " + error };
+      }
+    });
+  },
+
   onTabListChanged: function () {
     this.conn.send({ from: this.actorID, type:"tabListChanged" });
     /* It's a one-shot notification; no need to watch any more. */
@@ -391,6 +418,7 @@ RootActor.prototype = {
 
 RootActor.prototype.requestTypes = {
   "listTabs": RootActor.prototype.onListTabs,
+  "getTab": RootActor.prototype.onGetTab,
   "listAddons": RootActor.prototype.onListAddons,
   "listProcesses": RootActor.prototype.onListProcesses,
   "attachProcess": RootActor.prototype.onAttachProcess,

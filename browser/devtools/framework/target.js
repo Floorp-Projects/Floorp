@@ -426,26 +426,9 @@ TabTarget.prototype = {
 
     if (this.isLocalTab) {
       this._client.connect((aType, aTraits) => {
-        this._client.listTabs(aResponse => {
-          this._root = aResponse;
-
-          if (this.window) {
-            let windowUtils = this.window
-              .QueryInterface(Ci.nsIInterfaceRequestor)
-              .getInterface(Ci.nsIDOMWindowUtils);
-            let outerWindow = windowUtils.outerWindowID;
-            aResponse.tabs.some((tab) => {
-              if (tab.outerWindowID === outerWindow) {
-                this._form = tab;
-                return true;
-              }
-              return false;
-            });
-          }
-
-          if (!this._form) {
-            this._form = aResponse.tabs[aResponse.selected];
-          }
+        this._client.getTab({ tab: this.tab })
+            .then(aResponse => {
+          this._form = aResponse.tab;
           attachTab();
         });
       });
