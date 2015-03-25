@@ -3271,25 +3271,31 @@ SetPropertyIC::update(JSContext *cx, HandleScript outerScript, size_t cacheIndex
     if (!SetProperty(cx, obj, name, value, cache.strict(), cache.pc()))
         return false;
 
-    // The property did not exist before, now we can try to inline the property add.
-    bool checkTypeset;
-    if (!addedSetterStub && canCache == MaybeCanAttachAddSlot &&
-        IsPropertyAddInlineable(&obj->as<NativeObject>(), id, cache.value(), oldShape,
-                                cache.needsTypeBarrier(), &checkTypeset))
-    {
-        if (!cache.attachAddSlot(cx, outerScript, ion, obj, oldShape, oldGroup, checkTypeset))
-            return false;
-        addedSetterStub = true;
-    }
+    // A GC may have caused cache.value() to become stale as it is not traced.
+    // In this case the IonScript will have been invalidated, so check for that.
+    // Assert no further GC is possible past this point.
+    JS::AutoAssertNoAlloc nogc;
+    if (!ion->invalidated()) {
+        // The property did not exist before, now we can try to inline the property add.
+        bool checkTypeset;
+        if (!addedSetterStub && canCache == MaybeCanAttachAddSlot &&
+            IsPropertyAddInlineable(&obj->as<NativeObject>(), id, cache.value(), oldShape,
+                                    cache.needsTypeBarrier(), &checkTypeset))
+        {
+            if (!cache.attachAddSlot(cx, outerScript, ion, obj, oldShape, oldGroup, checkTypeset))
+                return false;
+            addedSetterStub = true;
+        }
 
-    checkTypeset = false;
-    if (!addedSetterStub && cache.canAttachStub() &&
-        CanAttachAddUnboxedExpando(cx, obj, oldShape, id, cache.value(),
-                                   cache.needsTypeBarrier(), &checkTypeset))
-    {
-        if (!cache.attachAddSlot(cx, outerScript, ion, obj, oldShape, oldGroup, checkTypeset))
-            return false;
-        addedSetterStub = true;
+        checkTypeset = false;
+        if (!addedSetterStub && cache.canAttachStub() &&
+            CanAttachAddUnboxedExpando(cx, obj, oldShape, id, cache.value(),
+                                       cache.needsTypeBarrier(), &checkTypeset))
+        {
+            if (!cache.attachAddSlot(cx, outerScript, ion, obj, oldShape, oldGroup, checkTypeset))
+                return false;
+            addedSetterStub = true;
+        }
     }
 
     if (!addedSetterStub)
