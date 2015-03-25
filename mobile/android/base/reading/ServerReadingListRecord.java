@@ -28,4 +28,8 @@ public class ServerReadingListRecord extends ReadingListRecord {
   public String getAddedBy() {
     return this.fields.getString("added_by");
   }
+
+  public String getExcerpt() {
+    return this.fields.getString("excerpt");
+  }
 }
