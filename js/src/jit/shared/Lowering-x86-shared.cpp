@@ -434,16 +434,13 @@ LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
     //
     // We'll emit a single instruction: LOCK ADD, LOCK SUB, LOCK AND,
     // LOCK OR, or LOCK XOR.  We can do this even for the Uint32 case.
-    //
-    // If the operand is 8-bit we shall need to use an 8-bit register
-    // for it on x86 systems.
 
     if (!ins->hasUses()) {
         LAllocation value;
-        if (useI386ByteRegisters && ins->isByteArray())
+        if (useI386ByteRegisters && ins->isByteArray() && !ins->value()->isConstant())
             value = useFixed(ins->value(), ebx);
         else
-            value = useRegister(ins->value());
+            value = useRegisterOrConstant(ins->value());
 
         LAtomicTypedArrayElementBinopForEffect *lir =
             new(alloc()) LAtomicTypedArrayElementBinopForEffect(elements, index, value);
@@ -459,8 +456,7 @@ LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
     //    movl       src, output
     //    lock xaddl output, mem
     //
-    // For the 8-bit variants XADD needs a byte register for the
-    // output only.
+    // For the 8-bit variants XADD needs a byte register for the output.
     //
     // For AND/OR/XOR we need to use a CMPXCHG loop:
     //
@@ -484,23 +480,18 @@ LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
     //  - eax is the first temp
     //  - we also need a second temp
     //
-    // For simplicity we force the 'value' into a byte register if the
-    // array has 1-byte elements, though that could be worked around.
-    //
-    // For simplicity we also choose fixed byte registers even when
-    // any available byte register would have been OK.
-    //
     // There are optimization opportunities:
-    //  - better register allocation and instruction selection, Bug #1077036.
+    //  - better register allocation in the x86 8-bit case, Bug #1077036.
 
     bool bitOp = !(ins->operation() == AtomicFetchAddOp || ins->operation() == AtomicFetchSubOp);
     bool fixedOutput = true;
+    bool reuseInput = false;
     LDefinition tempDef1 = LDefinition::BogusTemp();
     LDefinition tempDef2 = LDefinition::BogusTemp();
     LAllocation value;
 
     if (ins->arrayType() == Scalar::Uint32 && IsFloatingPointType(ins->type())) {
-        value = useRegister(ins->value());
+        value = useRegisterOrConstant(ins->value());
         fixedOutput = false;
         if (bitOp) {
             tempDef1 = tempFixed(eax);
@@ -509,13 +500,22 @@ LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
             tempDef1 = temp();
         }
     } else if (useI386ByteRegisters && ins->isByteArray()) {
-        value = useFixed(ins->value(), ebx);
+        if (ins->value()->isConstant())
+            value = useRegisterOrConstant(ins->value());
+        else
+            value = useFixed(ins->value(), ebx);
         if (bitOp)
             tempDef1 = tempFixed(ecx);
+    } else if (bitOp) {
+        value = useRegisterOrConstant(ins->value());
+        tempDef1 = temp();
+    } else if (ins->value()->isConstant()) {
+        fixedOutput = false;
+        value = useRegisterOrConstant(ins->value());
     } else {
-        value = useRegister(ins->value());
-        if (bitOp)
-            tempDef1 = temp();
+        fixedOutput = false;
+        reuseInput = true;
+        value = useRegisterAtStart(ins->value());
     }
 
     LAtomicTypedArrayElementBinop *lir =
@@ -523,6 +523,8 @@ LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
 
     if (fixedOutput)
         defineFixed(lir, ins, LAllocation(AnyRegister(eax)));
+    else if (reuseInput)
+        defineReuseInput(lir, ins, LAtomicTypedArrayElementBinop::valueOp);
     else
         define(lir, ins);
 }

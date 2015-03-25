@@ -28,8 +28,8 @@ class HTMLContentElement;
 class HTMLShadowElement;
 class ShadowRootStyleSheetList;
 
-class ShadowRoot : public DocumentFragment,
-                   public nsStubMutationObserver
+class ShadowRoot final : public DocumentFragment,
+                         public nsStubMutationObserver
 {
   friend class ShadowRootStyleSheetList;
 public:

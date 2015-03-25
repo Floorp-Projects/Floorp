@@ -698,7 +698,6 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
    * https://bugzilla.mozilla.org/show_bug.cgi?id=339610
    */
   if (!mRequest) {
-    nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(aRequest);
     MOZ_ASSERT(multiPartChannel, "Should have mRequest unless we're multipart");
     nsCOMPtr<nsIChannel> baseChannel;
     multiPartChannel->GetBaseChannel(getter_AddRefs(baseChannel));

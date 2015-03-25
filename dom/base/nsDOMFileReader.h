@@ -30,10 +30,10 @@ class File;
 }
 }
 
-class nsDOMFileReader : public mozilla::dom::FileIOObject,
-                        public nsIDOMFileReader,
-                        public nsIInterfaceRequestor,
-                        public nsSupportsWeakReference
+class nsDOMFileReader final : public mozilla::dom::FileIOObject,
+                              public nsIDOMFileReader,
+                              public nsIInterfaceRequestor,
+                              public nsSupportsWeakReference
 {
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::GlobalObject GlobalObject;

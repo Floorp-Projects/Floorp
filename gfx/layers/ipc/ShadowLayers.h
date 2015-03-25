@@ -131,7 +131,7 @@ class Transaction;
  * from the content thread. (See CompositableForwarder.h and ImageBridgeChild.h)
  */
 
-class ShadowLayerForwarder : public CompositableForwarder
+class ShadowLayerForwarder final : public CompositableForwarder
 {
   friend class ClientLayerManager;
 

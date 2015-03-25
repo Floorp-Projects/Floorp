@@ -140,12 +140,12 @@ void
 CheckHashTablesAfterMovingGC(JSRuntime *rt);
 #endif
 
-struct MovingTracer : JSTracer {
-    explicit MovingTracer(JSRuntime *rt) : JSTracer(rt, Visit, TraceWeakMapKeysValues) {}
+struct MovingTracer : JS::CallbackTracer {
+    explicit MovingTracer(JSRuntime *rt) : CallbackTracer(rt, Visit, TraceWeakMapKeysValues) {}
 
-    static void Visit(JSTracer *jstrc, void **thingp, JSGCTraceKind kind);
+    static void Visit(JS::CallbackTracer *jstrc, void **thingp, JSGCTraceKind kind);
     static bool IsMovingTracer(JSTracer *trc) {
-        return trc->callback == Visit;
+        return trc->isCallbackTracer() && trc->asCallbackTracer()->hasCallback(Visit);
     }
 };
 

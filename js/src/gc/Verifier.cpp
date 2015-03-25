@@ -84,7 +84,7 @@ typedef HashMap<void *, VerifyNode *, DefaultHasher<void *>, SystemAllocPolicy> 
  * The nodemap field is a hashtable that maps from the address of the GC thing
  * to the VerifyNode that represents it.
  */
-struct VerifyPreTracer : JSTracer
+struct VerifyPreTracer : JS::CallbackTracer
 {
     JS::AutoDisableGenerationalGC noggc;
 
@@ -102,7 +102,8 @@ struct VerifyPreTracer : JSTracer
     NodeMap nodemap;
 
     VerifyPreTracer(JSRuntime *rt, JSTraceCallback callback)
-      : JSTracer(rt, callback), noggc(rt), number(rt->gc.gcNumber()), count(0), root(nullptr)
+      : JS::CallbackTracer(rt, callback), noggc(rt), number(rt->gc.gcNumber()), count(0),
+        root(nullptr)
     {}
 
     ~VerifyPreTracer() {
@@ -115,7 +116,7 @@ struct VerifyPreTracer : JSTracer
  * node.
  */
 static void
-AccumulateEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
+AccumulateEdge(JS::CallbackTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     VerifyPreTracer *trc = (VerifyPreTracer *)jstrc;
 
@@ -280,7 +281,7 @@ static const uint32_t MAX_VERIFIER_EDGES = 1000;
  * been modified) must point to marked objects.
  */
 static void
-CheckEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
+CheckEdge(JS::CallbackTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     VerifyPreTracer *trc = (VerifyPreTracer *)jstrc;
     VerifyNode *node = trc->curnode;
@@ -379,7 +380,7 @@ gc::GCRuntime::endVerifyPreBarriers()
 
 /*** Post-Barrier Verifyier ***/
 
-struct VerifyPostTracer : JSTracer
+struct VerifyPostTracer : JS::CallbackTracer
 {
     /* The gcNumber when the verification began. */
     uint64_t number;
@@ -392,7 +393,7 @@ struct VerifyPostTracer : JSTracer
     EdgeSet *edges;
 
     VerifyPostTracer(JSRuntime *rt, JSTraceCallback callback)
-      : JSTracer(rt, callback), number(rt->gc.gcNumber()), count(0)
+      : JS::CallbackTracer(rt, callback), number(rt->gc.gcNumber()), count(0)
     {}
 };
 
@@ -419,7 +420,7 @@ gc::GCRuntime::startVerifyPostBarriers()
 }
 
 void
-PostVerifierCollectStoreBufferEdges(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
+PostVerifierCollectStoreBufferEdges(JS::CallbackTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     VerifyPostTracer *trc = (VerifyPostTracer *)jstrc;
 
@@ -456,7 +457,7 @@ AssertStoreBufferContainsEdge(VerifyPostTracer::EdgeSet *edges, void **loc, JSOb
 }
 
 void
-PostVerifierVisitEdge(JSTracer *jstrc, void **thingp, JSGCTraceKind kind)
+PostVerifierVisitEdge(JS::CallbackTracer *jstrc, void **thingp, JSGCTraceKind kind)
 {
     VerifyPostTracer *trc = (VerifyPostTracer *)jstrc;
 

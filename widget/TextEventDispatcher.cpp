@@ -124,7 +124,16 @@ TextEventDispatcher::DispatchEvent(nsIWidget* aWidget,
   nsRefPtr<TextEventDispatcher> kungFuDeathGrip(this);
   nsCOMPtr<nsIWidget> widget(aWidget);
   mDispatchingEvent++;
-  nsresult rv = widget->DispatchEvent(&aEvent, aStatus);
+
+  nsresult rv = NS_OK;
+  if (aEvent.AsInputEvent() &&
+      (!aEvent.mFlags.mIsSynthesizedForTests || gfxPrefs::TestEventsAsyncEnabled()))
+  {
+    aStatus = widget->DispatchInputEvent(aEvent.AsInputEvent());
+  } else {
+    rv = widget->DispatchEvent(&aEvent, aStatus);
+  }
+
   mDispatchingEvent--;
   return rv;
 }

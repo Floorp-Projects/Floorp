@@ -49,7 +49,7 @@ class GradientStopsCairo : public GradientStops
     ExtendMode mExtendMode;
 };
 
-class DrawTargetCairo : public DrawTarget
+class DrawTargetCairo final : public DrawTarget
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawTargetCairo, override)

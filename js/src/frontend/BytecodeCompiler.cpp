@@ -527,7 +527,7 @@ frontend::CompileLazyFunction(JSContext *cx, Handle<LazyScript*> lazy, const cha
     if (!bce.init())
         return false;
 
-    return EmitFunctionScript(cx, &bce, pn->pn_body);
+    return bce.emitFunctionScript(pn->pn_body);
 }
 
 // Compile a JS function body, which might appear as the value of an event
@@ -652,7 +652,7 @@ CompileFunctionBody(JSContext *cx, MutableHandleFunction fun, const ReadOnlyComp
         if (!funbce.init())
             return false;
 
-        if (!EmitFunctionScript(cx, &funbce, fn->pn_body))
+        if (!funbce.emitFunctionScript(fn->pn_body))
             return false;
     } else {
         fun.set(fn->pn_funbox->function());
