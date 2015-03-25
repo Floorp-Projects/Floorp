@@ -42,9 +42,9 @@ function run_test() {
 function add_tests()
 {
   add_connection_test("ocsp-stapling-none.example.com",
-                      SEC_ERROR_OCSP_BAD_SIGNATURE);
+                      getXPCOMStatusFromNSS(SEC_ERROR_OCSP_BAD_SIGNATURE));
   add_connection_test("ocsp-stapling-none.example.com",
-                      SEC_ERROR_OCSP_BAD_SIGNATURE);
+                      getXPCOMStatusFromNSS(SEC_ERROR_OCSP_BAD_SIGNATURE));
   add_test(function () {
     do_check_eq(gOCSPRequestCount, 1);
     gOCSPRequestCount = 0;
