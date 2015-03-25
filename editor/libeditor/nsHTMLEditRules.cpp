@@ -2226,6 +2226,7 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
 
       if (bDeletedBR) {
         // Put selection at edge of block and we are done.
+        NS_ENSURE_STATE(leafNode);
         ::DOMPoint newSel = GetGoodSelPointForNode(*leafNode, aAction);
         NS_ENSURE_STATE(newSel.node);
         aSelection->Collapse(newSel.node, newSel.offset);

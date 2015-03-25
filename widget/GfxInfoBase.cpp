@@ -604,23 +604,34 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
 {
   int32_t status = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
 
-  nsAutoString adapterVendorID;
-  nsAutoString adapterDeviceID;
-  nsAutoString adapterDriverVersionString;
-  if (NS_FAILED(GetAdapterVendorID(adapterVendorID)) ||
-      NS_FAILED(GetAdapterDeviceID(adapterDeviceID)) ||
-      NS_FAILED(GetAdapterDriverVersion(adapterDriverVersionString)))
-  {
-    return 0;
-  }
-
-#if defined(XP_WIN) || defined(ANDROID)
-  uint64_t driverVersion;
-  ParseDriverVersion(adapterDriverVersionString, &driverVersion);
-#endif
-
   uint32_t i = 0;
   for (; i < info.Length(); i++) {
+    // XXX: it would be better not to do this everytime round the loop
+    nsAutoString adapterVendorID;
+    nsAutoString adapterDeviceID;
+    nsAutoString adapterDriverVersionString;
+    if (info[i].mGpu2) {
+      if (NS_FAILED(GetAdapterVendorID2(adapterVendorID)) ||
+          NS_FAILED(GetAdapterDeviceID2(adapterDeviceID)) ||
+          NS_FAILED(GetAdapterDriverVersion2(adapterDriverVersionString)))
+      {
+        return 0;
+      }
+    } else {
+      if (NS_FAILED(GetAdapterVendorID(adapterVendorID)) ||
+          NS_FAILED(GetAdapterDeviceID(adapterDeviceID)) ||
+          NS_FAILED(GetAdapterDriverVersion(adapterDriverVersionString)))
+      {
+        return 0;
+      }
+    }
+
+#if defined(XP_WIN) || defined(ANDROID)
+    uint64_t driverVersion;
+    ParseDriverVersion(adapterDriverVersionString, &driverVersion);
+#endif
+
+
     if (info[i].mOperatingSystem != DRIVER_OS_ALL &&
         info[i].mOperatingSystem != os)
     {
