@@ -266,8 +266,9 @@ public class LocalReadingListStorage implements ReadingListStorage {
       ReadingListItems.RESOLVED_TITLE,
       ReadingListItems.RESOLVED_URL,
       ReadingListItems.EXCERPT,
+      // TODO: ReadingListItems.IS_ARTICLE,
+      // TODO: ReadingListItems.WORD_COUNT,
     };
-
 
     try {
       return client.query(URI_WITHOUT_DELETED, projection, selection, null, null);
@@ -275,6 +276,7 @@ public class LocalReadingListStorage implements ReadingListStorage {
       throw new IllegalStateException(e);
     }
   }
+
   @Override
   public Cursor getModified() {
     final String selection = ReadingListItems.SYNC_STATUS + " = " + ReadingListItems.SYNC_STATUS_MODIFIED;
