@@ -144,7 +144,15 @@ child:
   prio(high) sync LinkAt(uint64_t aID, uint32_t aIndex) returns(uint64_t aIDOfLink, bool aOk);
   prio(high) sync LinkIndexOf(uint64_t aID, uint64_t aLinkID) returns(int32_t aIndex);
   prio(high) sync LinkIndexAtOffset(uint64_t aID, uint32_t aOffset) returns(int32_t aIndex);
-  
+
+  prio(high) sync TableOfACell(uint64_t aID) returns(uint64_t aTableID, bool aOk);
+  prio(high) sync ColIdx(uint64_t aID) returns(uint32_t aIndex);
+  prio(high) sync RowIdx(uint64_t aID) returns(uint32_t aIndex);
+  prio(high) sync ColExtent(uint64_t aID) returns(uint32_t aExtent);
+  prio(high) sync RowExtent(uint64_t aID) returns(uint32_t aExtent);
+  prio(high) sync ColHeaderCells(uint64_t aID) returns(uint64_t[] aCells);
+  prio(high) sync RowHeaderCells(uint64_t aID) returns(uint64_t[] aCells);
+  prio(high) sync IsCellSelected(uint64_t aID) returns(bool aSelected);
 };
 
 }

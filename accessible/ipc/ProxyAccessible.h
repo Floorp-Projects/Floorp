@@ -201,6 +201,22 @@ public:
 
   int32_t LinkIndexAtOffset(uint32_t aOffset);
 
+  ProxyAccessible* TableOfACell();
+
+  uint32_t ColIdx();
+
+  uint32_t RowIdx();
+
+  uint32_t ColExtent();
+
+  uint32_t RowExtent();
+
+  void ColHeaderCells(nsTArray<uint64_t>* aCells);
+
+  void RowHeaderCells(nsTArray<uint64_t>* aCells);
+
+  bool IsCellSelected();
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */
