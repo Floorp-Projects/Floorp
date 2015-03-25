@@ -124,25 +124,47 @@ Matrix4x4::TransformBounds(const Rect& aRect) const
 Point4D ComputePerspectivePlaneIntercept(const Point4D& aFirst,
                                          const Point4D& aSecond)
 {
-  // FIXME: See bug 1035611
-  // Since we can't easily deal with points as w=0 (since we divide by w), we
-  // approximate this by finding a point with w just greater than 0. Unfortunately
-  // this is a tradeoff between accuracy and floating point precision.
+  // This function will always return a point with a w value of 0.
+  // The X, Y, and Z components will point towards an infinite vanishing
+  // point.
 
-  // We want to interpolate aFirst and aSecond to find a point as close to
-  // the positive side of the w=0 plane as possible.
+  // We want to interpolate aFirst and aSecond to find the point intersecting
+  // with the w=0 plane.
 
   // Since we know what we want the w component to be, we can rearrange the
   // interpolation equation and solve for t.
-  float w = 0.00001f;
-  float t = (w - aFirst.w) / (aSecond.w - aFirst.w);
+  float t = -aFirst.w / (aSecond.w - aFirst.w);
 
   // Use t to find the remainder of the components
   return aFirst + (aSecond - aFirst) * t;
 }
 
-Rect Matrix4x4::ProjectRectBounds(const Rect& aRect) const
+Rect Matrix4x4::ProjectRectBounds(const Rect& aRect, const Rect &aClip) const
 {
+  // This function must never return std::numeric_limits<Float>::max() or any
+  // other arbitrary large value in place of inifinity.  This often occurs when
+  // aRect is an inversed projection matrix or when aRect is transformed to be
+  // partly behind and in front of the camera (w=0 plane in homogenous
+  // coordinates) - See Bug 1035611
+
+  // Some call-sites will call RoundGfxRectToAppRect which clips both the
+  // extents and dimensions of the rect to be bounded by nscoord_MAX.
+  // If we return a Rect that, when converted to nscoords, has a width or height
+  // greater than nscoord_MAX, RoundGfxRectToAppRect will clip the overflow
+  // off both the min and max end of the rect after clipping the extents of the
+  // rect, resulting in a translation of the rect towards the infinite end.
+
+  // The bounds returned by ProjectRectBounds are expected to be clipped only on
+  // the edges beyond the bounds of the coordinate system; otherwise, the
+  // clipped bounding box would be smaller than the correct one and result
+  // bugs such as incorrect culling (eg. Bug 1073056)
+
+  // To address this without requiring all code to work in homogenous
+  // coordinates or interpret infinite values correctly, a specialized
+  // clipping function is integrated into ProjectRectBounds.
+
+  // Callers should pass an aClip value that represents the extents to clip
+  // the result to, in the same coordinate system as aRect.
   Point4D points[4];
 
   points[0] = ProjectPoint(aRect.TopLeft());
@@ -155,33 +177,38 @@ Rect Matrix4x4::ProjectRectBounds(const Rect& aRect) const
   Float max_x = -std::numeric_limits<Float>::max();
   Float max_y = -std::numeric_limits<Float>::max();
 
-  bool foundPoint = false;
   for (int i=0; i<4; i++) {
     // Only use points that exist above the w=0 plane
     if (points[i].HasPositiveWCoord()) {
-      foundPoint = true;
-      Point point2d = points[i].As2DPoint();
-      min_x = min<Float>(point2d.x, min_x);
-      max_x = max<Float>(point2d.x, max_x);
-      min_y = min<Float>(point2d.y, min_y);
-      max_y = max<Float>(point2d.y, max_y);
+      Point point2d = aClip.ClampPoint(points[i].As2DPoint());
+      min_x = std::min<Float>(point2d.x, min_x);
+      max_x = std::max<Float>(point2d.x, max_x);
+      min_y = std::min<Float>(point2d.y, min_y);
+      max_y = std::max<Float>(point2d.y, max_y);
     }
 
     int next = (i == 3) ? 0 : i + 1;
     if (points[i].HasPositiveWCoord() != points[next].HasPositiveWCoord()) {
-      // If the line between two points crosses the w=0 plane, then interpolate a point
-      // as close to the w=0 plane as possible and use that instead.
+      // If the line between two points crosses the w=0 plane, then interpolate
+      // to find the point of intersection with the w=0 plane and use that
+      // instead.
       Point4D intercept = ComputePerspectivePlaneIntercept(points[i], points[next]);
-
-      Point point2d = intercept.As2DPoint();
-      min_x = min<Float>(point2d.x, min_x);
-      max_x = max<Float>(point2d.x, max_x);
-      min_y = min<Float>(point2d.y, min_y);
-      max_y = max<Float>(point2d.y, max_y);
+      // Since intercept.w will always be 0 here, we interpret x,y,z as a
+      // direction towards an infinite vanishing point.
+      if (intercept.x < 0.0f) {
+        min_x = aClip.x;
+      } else if (intercept.x > 0.0f) {
+        max_x = aClip.XMost();
+      }
+      if (intercept.y < 0.0f) {
+        min_y = aClip.y;
+      } else if (intercept.y > 0.0f) {
+        max_y = aClip.YMost();
+      }
     }
   }
 
-  if (!foundPoint) {
+  if (max_x <= min_x || max_y <= min_y) {
     return Rect(0, 0, 0, 0);
   }
 

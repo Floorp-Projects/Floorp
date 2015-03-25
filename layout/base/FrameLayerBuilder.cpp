@@ -385,6 +385,9 @@ public:
     mHitRegion.Or(mHitRegion, aEventRegions->HitRegion());
     mMaybeHitRegion.Or(mMaybeHitRegion, aEventRegions->MaybeHitRegion());
     mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, aEventRegions->DispatchToContentHitRegion());
+    mNoActionRegion.Or(mNoActionRegion, aEventRegions->NoActionRegion());
+    mHorizontalPanRegion.Or(mHorizontalPanRegion, aEventRegions->HorizontalPanRegion());
+    mVerticalPanRegion.Or(mVerticalPanRegion, aEventRegions->VerticalPanRegion());
   }
 
   /**
@@ -433,6 +436,27 @@ public:
    * The dispatch-to-content hit region for this PaintedLayer.
    */
   nsRegion  mDispatchToContentHitRegion;
+  /**
+   * The region for this PaintedLayer that is sensitive to events
+   * but disallows panning and zooming. This is an approximation
+   * and any deviation from the true region will be part of the
+   * mDispatchToContentHitRegion.
+   */
+  nsRegion mNoActionRegion;
+  /**
+   * The region for this PaintedLayer that is sensitive to events and
+   * allows horizontal panning but not zooming. This is an approximation
+   * and any deviation from the true region will be part of the
+   * mDispatchToContentHitRegion.
+   */
+  nsRegion mHorizontalPanRegion;
+  /**
+   * The region for this PaintedLayer that is sensitive to events and
+   * allows vertical panning but not zooming. This is an approximation
+   * and any deviation from the true region will be part of the
+   * mDispatchToContentHitRegion.
+   */
+  nsRegion mVerticalPanRegion;
   /**
    * The "active scrolled root" for all content in the layer. Must
    * be non-null; all content in a PaintedLayer must have the same
@@ -1963,7 +1987,9 @@ SetOuterVisibleRegion(Layer* aLayer, nsIntRegion* aOuterVisibleRegion,
     // for the layer, so it doesn't really matter what we do here
     Rect outerVisible(outerRect.x, outerRect.y, outerRect.width, outerRect.height);
     transform.Invert();
-    gfxRect layerVisible = ThebesRect(transform.ProjectRectBounds(outerVisible));
+
+    Rect layerContentsVisible(-float(INT32_MAX) / 2, -float(INT32_MAX) / 2,
+                              float(INT32_MAX), float(INT32_MAX));
     if (aLayerContentsVisibleRect) {
       NS_ASSERTION(aLayerContentsVisibleRect->width >= 0 &&
                    aLayerContentsVisibleRect->height >= 0,
@@ -1971,11 +1997,11 @@ SetOuterVisibleRegion(Layer* aLayer, nsIntRegion* aOuterVisibleRegion,
       // restrict to aLayerContentsVisibleRect before call GfxRectToIntRect,
       // in case layerVisible is extremely large (as it can be when
       // projecting through the inverse of a 3D transform)
-      gfxRect layerContentsVisible(
+      layerContentsVisible = Rect(
           aLayerContentsVisibleRect->x, aLayerContentsVisibleRect->y,
           aLayerContentsVisibleRect->width, aLayerContentsVisibleRect->height);
-      layerVisible.IntersectRect(layerVisible, layerContentsVisible);
     }
+    gfxRect layerVisible = ThebesRect(transform.ProjectRectBounds(outerVisible, layerContentsVisible));
     layerVisible.RoundOut();
     nsIntRect visRect;
     if (gfxUtils::GfxRectToIntRect(layerVisible, &visRect)) {
@@ -2409,24 +2435,38 @@ ContainerState::PopPaintedLayerData()
       containingPaintedLayerData->mMaybeHitRegion.Or(
         containingPaintedLayerData->mMaybeHitRegion, rect);
     }
-    if (!data->mHitRegion.GetBounds().IsEmpty()) {
-      // Our definitely-hit region must go to the maybe-hit-region since
-      // this function is an approximation.
-      Matrix4x4 matrix = nsLayoutUtils::GetTransformToAncestor(
-        mContainerReferenceFrame, containingPaintedLayerData->mReferenceFrame);
-      Matrix matrix2D;
-      bool isPrecise = matrix.Is2D(&matrix2D) && !matrix2D.HasNonAxisAlignedTransform();
-      nsRect rect = nsLayoutUtils::TransformFrameRectToAncestor(
-        mContainerReferenceFrame,
-        data->mHitRegion.GetBounds(),
-        containingPaintedLayerData->mReferenceFrame);
-      nsRegion* dest = isPrecise ? &containingPaintedLayerData->mHitRegion
-                                 : &containingPaintedLayerData->mMaybeHitRegion;
-      dest->Or(*dest, rect);
-    }
+    nsLayoutUtils::TransformToAncestorAndCombineRegions(
+      data->mHitRegion.GetBounds(),
+      mContainerReferenceFrame,
+      containingPaintedLayerData->mReferenceFrame,
+      &containingPaintedLayerData->mHitRegion,
+      &containingPaintedLayerData->mMaybeHitRegion);
+    nsLayoutUtils::TransformToAncestorAndCombineRegions(
+      data->mNoActionRegion.GetBounds(),
+      mContainerReferenceFrame,
+      containingPaintedLayerData->mReferenceFrame,
+      &containingPaintedLayerData->mNoActionRegion,
+      &containingPaintedLayerData->mDispatchToContentHitRegion);
+    nsLayoutUtils::TransformToAncestorAndCombineRegions(
+      data->mHorizontalPanRegion.GetBounds(),
+      mContainerReferenceFrame,
+      containingPaintedLayerData->mReferenceFrame,
+      &containingPaintedLayerData->mHorizontalPanRegion,
+      &containingPaintedLayerData->mDispatchToContentHitRegion);
+    nsLayoutUtils::TransformToAncestorAndCombineRegions(
+      data->mVerticalPanRegion.GetBounds(),
+      mContainerReferenceFrame,
+      containingPaintedLayerData->mReferenceFrame,
+      &containingPaintedLayerData->mVerticalPanRegion,
+      &containingPaintedLayerData->mDispatchToContentHitRegion);
+
   } else {
     EventRegions regions;
     regions.mHitRegion = ScaleRegionToOutsidePixels(data->mHitRegion);
+    regions.mNoActionRegion = ScaleRegionToOutsidePixels(data->mNoActionRegion);
+    regions.mHorizontalPanRegion = ScaleRegionToOutsidePixels(data->mHorizontalPanRegion);
+    regions.mVerticalPanRegion = ScaleRegionToOutsidePixels(data->mVerticalPanRegion);
+
     // Points whose hit-region status we're not sure about need to be dispatched
     // to the content thread. If a point is in both maybeHitRegion and hitRegion
     // then it's not a "maybe" any more, and doesn't go into the dispatch-to-
@@ -2440,6 +2480,9 @@ ContainerState::PopPaintedLayerData()
     nsIntPoint translation = -GetTranslationForPaintedLayer(data->mLayer);
     regions.mHitRegion.MoveBy(translation);
     regions.mDispatchToContentHitRegion.MoveBy(translation);
+    regions.mNoActionRegion.MoveBy(translation);
+    regions.mHorizontalPanRegion.MoveBy(translation);
+    regions.mVerticalPanRegion.MoveBy(translation);
 
     layer->SetEventRegions(regions);
   }
