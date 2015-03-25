@@ -21,8 +21,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "SQLiteStore",
 
 // We use Sync's "Utils" module for the device name, which is unfortunate,
 // but let's give it a better name here.
-XPCOMUtils.defineLazyGetter(this, 'SyncUtils', function() {
-  const {Utils} = Cu.import('resource://services-sync/util.js"', {});
+XPCOMUtils.defineLazyGetter(this, "SyncUtils", function() {
+  const {Utils} = Cu.import("resource://services-sync/util.js", {});
   return Utils;
 });
 
