@@ -469,6 +469,13 @@ WindowGlobalOrNull(JSObject *aObj);
 nsGlobalWindow*
 AddonWindowOrNull(JSObject *aObj);
 
+/**
+ * If |cx| is in a compartment whose global is a window, returns the associated
+ * nsGlobalWindow. Otherwise, returns null.
+ */
+nsGlobalWindow*
+CurrentWindowOrNull(JSContext *cx);
+
 // Error reporter used when there is no associated DOM window on to which to
 // report errors and warnings.
 //
