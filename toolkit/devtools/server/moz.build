@@ -81,6 +81,7 @@ EXTRA_JS_MODULES.devtools.server.actors.utils += [
     'actors/utils/map-uri-to-addon-id.js',
     'actors/utils/ScriptStore.js',
     'actors/utils/stack.js',
+    'actors/utils/TabSources.js'
 ]
 
 FAIL_ON_WARNINGS = True

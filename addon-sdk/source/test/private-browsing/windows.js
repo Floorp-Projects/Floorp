@@ -10,6 +10,7 @@ const { getMode } = require('sdk/private-browsing/utils');
 const { browserWindows: windows } = require('sdk/windows');
 const { defer } = require('sdk/core/promise');
 const tabs = require('sdk/tabs');
+const { getMostRecentBrowserWindow } = require('sdk/window/utils');
 
 // test openDialog() from window/utils with private option
 // test isActive state in pwpb case
@@ -80,27 +81,22 @@ exports.testIsPrivateOnWindowOpenFromPrivate = function(assert, done) {
 };
 
 exports.testOpenTabWithPrivateWindow = function*(assert) {
-  let { promise, resolve } = defer();
+  let window = getMostRecentBrowserWindow().OpenBrowserWindow({ private: true });
 
-  let window = yield openPromise(null, {
-    features: {
-      private: true,
-      toolbar: true
-    }
-  });
-  yield focus(window);
+  assert.pass("loading new private window");
+
+  yield promise(window, 'load').then(focus);
 
   assert.equal(isPrivate(window), true, 'the focused window is private');
 
-  tabs.open({
+  yield new Promise(resolve => tabs.open({
     url: 'about:blank',
     onOpen: (tab) => {
       assert.equal(isPrivate(tab), false, 'the opened tab is not private');
       tab.close(resolve);
     }
-  });
+  }));
 
-  yield promise;
   yield close(window);
 };
 

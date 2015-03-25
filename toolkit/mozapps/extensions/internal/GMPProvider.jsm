@@ -338,14 +338,7 @@ GMPWrapper.prototype = {
     AddonManagerPrivate.callAddonListeners("onPropertyChanged", this,
                                            ["appDisabled"]);
     if (this.appDisabled) {
-      AddonManagerPrivate.callAddonListeners("onUninstalling", this, false);
-      if (this._gmpPath) {
-        this._log.info("onPrefEMEGlobalEnabledChanged() - unregistering gmp " +
-                       "directory " + this._gmpPath);
-        gmpService.removeAndDeletePluginDirectory(this._gmpPath);
-      }
-      GMPPrefs.reset(GMPPrefs.KEY_PLUGIN_VERSION, this.id);
-      AddonManagerPrivate.callAddonListeners("onUninstalled", this);
+      this.uninstallPlugin();
     } else {
       AddonManagerPrivate.callInstallListeners("onExternalInstall", null, this,
                                                null, false);
@@ -405,6 +398,17 @@ GMPWrapper.prototype = {
     AddonManagerPrivate.callAddonListeners("onInstalled", this);
   },
 
+  uninstallPlugin: function() {
+    AddonManagerPrivate.callAddonListeners("onUninstalling", this, false);
+    if (this.gmpPath) {
+      this._log.info("uninstallPlugin() - unregistering gmp directory " +
+                     this.gmpPath);
+      gmpService.removeAndDeletePluginDirectory(this.gmpPath);
+    }
+    GMPPrefs.reset(GMPPrefs.KEY_PLUGIN_VERSION, this.id);
+    AddonManagerPrivate.callAddonListeners("onUninstalled", this);
+  },
+
   shutdown: function() {
     Preferences.ignore(GMPPrefs.getPrefKey(GMPPrefs.KEY_PLUGIN_ENABLED,
                                            this._plugin.id),
@@ -431,6 +435,7 @@ let GMPProvider = {
                                                           "GMPProvider.");
     let telemetry = {};
     this.buildPluginList();
+    this.ensureProperCDMInstallState();
 
     Preferences.observe(GMPPrefs.KEY_LOG_BASE, configureLogging);
 
@@ -561,6 +566,17 @@ let GMPProvider = {
       plugin.fullDescription = this.generateFullDescription(aPlugin);
       plugin.wrapper = new GMPWrapper(plugin);
       this._plugins.set(plugin.id, plugin);
+    }
+  },
+
+  ensureProperCDMInstallState: function() {
+    if (!GMPPrefs.get(GMPPrefs.KEY_EME_ENABLED, true)) {
+      for (let [id, plugin] of this._plugins) {
+        if (plugin.isEME && plugin.wrapper.isInstalled) {
+          gmpService.addPluginDirectory(plugin.wrapper.gmpPath);
+          plugin.wrapper.uninstallPlugin();
+        }
+      }
     }
   },
 };

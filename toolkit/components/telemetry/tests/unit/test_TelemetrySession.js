@@ -31,6 +31,7 @@ const PING_FORMAT_VERSION = 4;
 const PING_TYPE_MAIN = "main";
 const PING_TYPE_SAVED_SESSION = "saved-session";
 
+const REASON_ABORTED_SESSION = "aborted-session";
 const REASON_SAVED_SESSION = "saved-session";
 const REASON_SHUTDOWN = "shutdown";
 const REASON_TEST_PING = "test-ping";
@@ -65,6 +66,7 @@ const MS_IN_ONE_DAY   = SEC_IN_ONE_DAY * 1000;
 
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
+const PREF_SERVER = PREF_BRANCH + "server";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_FHR_SERVICE_ENABLED = "datareporting.healthreport.service.enabled";
 
@@ -72,7 +74,15 @@ const HAS_DATAREPORTINGSERVICE = "@mozilla.org/datareporting/service;1" in Cc;
 const SESSION_RECORDER_EXPECTED = HAS_DATAREPORTINGSERVICE &&
                                   Preferences.get(PREF_FHR_SERVICE_ENABLED, true);
 
+const DATAREPORTING_DIR = "datareporting";
+const ABORTED_PING_FILE_NAME = "aborted-session-ping";
+const ABORTED_SESSION_UPDATE_INTERVAL_MS = 5 * 60 * 1000;
+
 const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry);
+
+XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
+  return OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
+});
 
 let gHttpServer = new HttpServer();
 let gServerStarted = false;
@@ -578,6 +588,7 @@ add_task(function* test_simplePing() {
   gHttpServer.start(-1);
   gServerStarted = true;
   gRequestIterator = Iterator(new Request());
+  Preferences.set(PREF_SERVER, "http://localhost:" + gHttpServer.identity.primaryPort);
 
   let now = new Date(2020, 1, 1, 12, 0, 0);
   let expectedDate = new Date(2020, 1, 1, 0, 0, 0);
@@ -849,28 +860,18 @@ add_task(function* test_dailyCollection() {
 
   let now = new Date(2030, 1, 1, 12, 0, 0);
   let nowDay = new Date(2030, 1, 1, 0, 0, 0);
-  let timerCallback = null;
-  let timerDelay = null;
+  let schedulerTickCallback = null;
 
   gRequestIterator = Iterator(new Request());
 
   fakeNow(now);
-  fakeDailyTimers((callback, timeout) => {
-    dump("fake setDailyTimeout(" + callback + ", " + timeout + ")\n");
-    timerCallback = callback;
-    timerDelay = timeout;
-    return 1;
-  }, () => {});
+
+  // Fake scheduler functions to control daily collection flow in tests.
+  fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
 
   // Init and check timer.
   yield TelemetrySession.setup();
   TelemetryPing.setServer("http://localhost:" + gHttpServer.identity.primaryPort);
-
-  Assert.ok(!!timerCallback);
-  Assert.ok(Number.isFinite(timerDelay));
-  let timerDate = futureDate(now, timerDelay);
-  let expectedDate = futureDate(nowDay, MS_IN_ONE_DAY);
-  Assert.equal(timerDate.toISOString(), expectedDate.toISOString());
 
   // Set histograms to expected state.
   const COUNT_ID = "TELEMETRY_TEST_COUNT";
@@ -885,8 +886,16 @@ add_task(function* test_dailyCollection() {
   keyed.add("b", 1);
   keyed.add("b", 1);
 
-  // Trigger and collect daily ping.
-  yield timerCallback();
+  // Make sure the daily ping gets triggered.
+  let expectedDate = nowDay;
+  now = futureDate(nowDay, MS_IN_ONE_DAY);
+  fakeNow(now);
+
+  Assert.ok(!!schedulerTickCallback);
+  // Run a scheduler tick: it should trigger the daily ping.
+  yield schedulerTickCallback();
+
+  // Collect the daily ping.
   let request = yield gRequestIterator.next();
   Assert.ok(!!request);
   let ping = decodeRequestPayload(request);
@@ -894,14 +903,20 @@ add_task(function* test_dailyCollection() {
   Assert.equal(ping.type, PING_TYPE_MAIN);
   Assert.equal(ping.payload.info.reason, REASON_DAILY);
   let subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
-  Assert.equal(subsessionStartDate.toISOString(), nowDay.toISOString());
+  Assert.equal(subsessionStartDate.toISOString(), expectedDate.toISOString());
 
   Assert.equal(ping.payload.histograms[COUNT_ID].sum, 1);
   Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["a"].sum, 1);
   Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["b"].sum, 2);
 
-  // Trigger and collect another ping. The histograms should be reset.
-  yield timerCallback();
+  // The daily ping is rescheduled for "tomorrow".
+  expectedDate = futureDate(expectedDate, MS_IN_ONE_DAY);
+  now = futureDate(now, MS_IN_ONE_DAY);
+  fakeNow(now);
+
+  // Run a scheduler tick. Trigger and collect another ping. The histograms should be reset.
+  yield schedulerTickCallback();
+
   request = yield gRequestIterator.next();
   Assert.ok(!!request);
   ping = decodeRequestPayload(request);
@@ -909,7 +924,7 @@ add_task(function* test_dailyCollection() {
   Assert.equal(ping.type, PING_TYPE_MAIN);
   Assert.equal(ping.payload.info.reason, REASON_DAILY);
   subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
-  Assert.equal(subsessionStartDate.toISOString(), nowDay.toISOString());
+  Assert.equal(subsessionStartDate.toISOString(), expectedDate.toISOString());
 
   Assert.equal(ping.payload.histograms[COUNT_ID].sum, 0);
   Assert.deepEqual(ping.payload.keyedHistograms[KEYED_ID], {});
@@ -919,7 +934,12 @@ add_task(function* test_dailyCollection() {
   keyed.add("a", 1);
   keyed.add("b", 1);
 
-  yield timerCallback();
+  // The daily ping is rescheduled for "tomorrow".
+  expectedDate = futureDate(expectedDate, MS_IN_ONE_DAY);
+  now = futureDate(now, MS_IN_ONE_DAY);
+  fakeNow(now);
+
+  yield schedulerTickCallback();
   request = yield gRequestIterator.next();
   Assert.ok(!!request);
   ping = decodeRequestPayload(request);
@@ -927,11 +947,115 @@ add_task(function* test_dailyCollection() {
   Assert.equal(ping.type, PING_TYPE_MAIN);
   Assert.equal(ping.payload.info.reason, REASON_DAILY);
   subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
-  Assert.equal(subsessionStartDate.toISOString(), nowDay.toISOString());
+  Assert.equal(subsessionStartDate.toISOString(), expectedDate.toISOString());
 
   Assert.equal(ping.payload.histograms[COUNT_ID].sum, 1);
   Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["a"].sum, 1);
   Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["b"].sum, 1);
+
+  // Shutdown to cleanup the aborted-session if it gets created.
+  yield TelemetrySession.shutdown();
+});
+
+add_task(function* test_dailyDuplication() {
+  if (gIsAndroid) {
+    // We don't do daily collections yet on Android.
+    return;
+  }
+
+  gRequestIterator = Iterator(new Request());
+
+  let schedulerTickCallback = null;
+  let now = new Date(2030, 1, 1, 0, 0, 0);
+  fakeNow(now);
+  // Fake scheduler functions to control daily collection flow in tests.
+  fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  yield TelemetrySession.setup();
+
+  // Make sure the daily ping gets triggered just before midnight.
+  let firstDailyDue = new Date(2030, 1, 1, 23, 45, 0);
+  fakeNow(firstDailyDue);
+
+  // Run a scheduler tick: it should trigger the daily ping.
+  Assert.ok(!!schedulerTickCallback);
+  yield schedulerTickCallback();
+
+  // Get the first daily ping.
+  let request = yield gRequestIterator.next();
+  Assert.ok(!!request);
+  let ping = decodeRequestPayload(request);
+
+  Assert.equal(ping.type, PING_TYPE_MAIN);
+  Assert.equal(ping.payload.info.reason, REASON_DAILY);
+
+  // We don't expect to receive any other daily ping in this test, so assert if we do.
+  registerPingHandler((req, res) => {
+    Assert.ok(false, "No more daily pings should be sent/received in this test.");
+  });
+
+  // Set the current time to a bit after midnight.
+  let secondDailyDue = new Date(firstDailyDue);
+  secondDailyDue.setDate(firstDailyDue.getDate() + 1);
+  secondDailyDue.setHours(0);
+  secondDailyDue.setMinutes(15);
+  fakeNow(secondDailyDue);
+
+  // Run a scheduler tick: it should NOT trigger the daily ping.
+  Assert.ok(!!schedulerTickCallback);
+  yield schedulerTickCallback();
+
+  // Shutdown to cleanup the aborted-session if it gets created.
+  yield TelemetrySession.shutdown();
+});
+
+add_task(function* test_dailyOverdue() {
+  if (gIsAndroid) {
+    // We don't do daily collections yet on Android.
+    return;
+  }
+
+  let schedulerTickCallback = null;
+  let now = new Date(2030, 1, 1, 11, 0, 0);
+  fakeNow(now);
+  // Fake scheduler functions to control daily collection flow in tests.
+  fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  yield TelemetrySession.setup();
+
+  // Skip one hour ahead: nothing should be due.
+  now.setHours(now.getHours() + 1);
+  fakeNow(now);
+
+  // Assert if we receive something!
+  registerPingHandler((req, res) => {
+    Assert.ok(false, "No daily ping should be received if not overdue!.");
+  });
+
+  // This tick should not trigger any daily ping.
+  Assert.ok(!!schedulerTickCallback);
+  yield schedulerTickCallback();
+
+  // Restore the non asserting ping handler. This is done by the Request() constructor.
+  gRequestIterator = Iterator(new Request());
+
+  // Simulate an overdue ping: we're not close to midnight, but the last daily ping
+  // time is too long ago.
+  let dailyOverdue = new Date(2030, 1, 2, 13, 00, 0);
+  fakeNow(dailyOverdue);
+
+  // Run a scheduler tick: it should trigger the daily ping.
+  Assert.ok(!!schedulerTickCallback);
+  yield schedulerTickCallback();
+
+  // Get the first daily ping.
+  let request = yield gRequestIterator.next();
+  Assert.ok(!!request);
+  let ping = decodeRequestPayload(request);
+
+  Assert.equal(ping.type, PING_TYPE_MAIN);
+  Assert.equal(ping.payload.info.reason, REASON_DAILY);
+
+  // Shutdown to cleanup the aborted-session if it gets created.
+  yield TelemetrySession.shutdown();
 });
 
 add_task(function* test_environmentChange() {
@@ -948,7 +1072,6 @@ add_task(function* test_environmentChange() {
   gRequestIterator = Iterator(new Request());
 
   fakeNow(now);
-  fakeDailyTimers(() => {}, () => {});
 
   const PREF_TEST = "toolkit.telemetry.test.pref1";
   Preferences.reset(PREF_TEST);
@@ -1046,11 +1169,10 @@ add_task(function* test_savedPingsOnShutdown() {
 add_task(function* test_savedSessionData() {
   // Create the directory which will contain the data file, if it doesn't already
   // exist.
-  const dataDir  = OS.Path.join(OS.Constants.Path.profileDir, "datareporting");
-  yield OS.File.makeDir(dataDir);
+  yield OS.File.makeDir(DATAREPORTING_PATH);
 
   // Write test data to the session data file.
-  const dataFilePath = OS.Path.join(dataDir, "session-state.json");
+  const dataFilePath = OS.Path.join(DATAREPORTING_PATH, "session-state.json");
   const sessionState = {
     previousSubsessionId: null,
     profileSubsessionCounter: 3785,
@@ -1096,11 +1218,10 @@ add_task(function* test_savedSessionData() {
 add_task(function* test_invalidSessionData() {
   // Create the directory which will contain the data file, if it doesn't already
   // exist.
-  const dataDir  = OS.Path.join(OS.Constants.Path.profileDir, "datareporting");
-  yield OS.File.makeDir(dataDir);
+  yield OS.File.makeDir(DATAREPORTING_PATH);
 
   // Write test data to the session data file.
-  const dataFilePath = OS.Path.join(dataDir, "session-state.json");
+  const dataFilePath = OS.Path.join(DATAREPORTING_PATH, "session-state.json");
   const sessionState = {
     profileSubsessionCounter: "not-a-number?",
     someOtherField: 12,
@@ -1121,6 +1242,265 @@ add_task(function* test_invalidSessionData() {
   let data = yield CommonUtils.readJSON(dataFilePath);
   Assert.equal(data.profileSubsessionCounter, expectedSubsessions);
   Assert.equal(data.previousSubsessionId, null);
+});
+
+add_task(function* test_abortedSession() {
+  if (gIsAndroid || gIsGonk) {
+    // We don't have the aborted session ping here.
+    return;
+  }
+
+  const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
+
+  // Make sure the aborted sessions directory does not exist to test its creation.
+  yield OS.File.removeDir(DATAREPORTING_PATH, { ignoreAbsent: true });
+
+  let schedulerTickCallback = null;
+  let now = new Date(2040, 1, 1, 0, 0, 0);
+  fakeNow(now);
+  // Fake scheduler functions to control aborted-session flow in tests.
+  fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  yield TelemetrySession.reset();
+
+  Assert.ok((yield OS.File.exists(DATAREPORTING_PATH)),
+            "Telemetry must create the aborted session directory when starting.");
+
+  // Fake now again so that the scheduled aborted-session save takes place.
+  now = futureDate(now, ABORTED_SESSION_UPDATE_INTERVAL_MS);
+  fakeNow(now);
+  // The first aborted session checkpoint must take place right after the initialisation.
+  Assert.ok(!!schedulerTickCallback);
+  // Execute one scheduler tick.
+  yield schedulerTickCallback();
+  // Check that the aborted session is due at the correct time.
+  Assert.ok((yield OS.File.exists(ABORTED_FILE)),
+            "There must be an aborted session ping.");
+
+  // This ping is not yet in the pending pings folder, so we can't access it using
+  // TelemetryFile.popPendingPings().
+  let pingContent = yield OS.File.read(ABORTED_FILE, { encoding: "utf-8" });
+  let abortedSessionPing = JSON.parse(pingContent);
+
+  // Validate the ping.
+  checkPingFormat(abortedSessionPing, PING_TYPE_MAIN, true, true);
+  Assert.equal(abortedSessionPing.payload.info.reason, REASON_ABORTED_SESSION);
+
+  // Trigger a another aborted-session ping and check that it overwrites the previous one.
+  now = futureDate(now, ABORTED_SESSION_UPDATE_INTERVAL_MS);
+  fakeNow(now);
+  yield schedulerTickCallback();
+
+  pingContent = yield OS.File.read(ABORTED_FILE, { encoding: "utf-8" });
+  let updatedAbortedSessionPing = JSON.parse(pingContent);
+  checkPingFormat(updatedAbortedSessionPing, PING_TYPE_MAIN, true, true);
+  Assert.equal(updatedAbortedSessionPing.payload.info.reason, REASON_ABORTED_SESSION);
+  Assert.notEqual(abortedSessionPing.id, updatedAbortedSessionPing.id);
+  Assert.notEqual(abortedSessionPing.creationDate, updatedAbortedSessionPing.creationDate);
+
+  yield TelemetrySession.shutdown();
+  Assert.ok(!(yield OS.File.exists(ABORTED_FILE)),
+            "No aborted session ping must be available after a shutdown.");
+
+  // Write the ping to the aborted-session file. TelemetrySession will add it to the
+  // saved pings directory when it starts.
+  yield TelemetryFile.savePingToFile(abortedSessionPing, ABORTED_FILE, false);
+
+  gRequestIterator = Iterator(new Request());
+  yield TelemetrySession.reset();
+
+  Assert.ok(!(yield OS.File.exists(ABORTED_FILE)),
+            "The aborted session ping must be removed from the aborted session ping directory.");
+
+  // TelemetryFile requires all the pings to have their ID as filename. When appending
+  // the aborted-session ping to the pending pings, we must verify that it exists.
+  const PENDING_PING_FILE =
+    OS.Path.join(TelemetryFile.pingDirectoryPath, abortedSessionPing.id);
+  Assert.ok((yield OS.File.exists(PENDING_PING_FILE)),
+            "The aborted session ping must exist in the saved pings directory.");
+
+  // Trick: make the aborted ping file overdue so that it gets sent immediately when
+  // resetting TelemetryPing.
+  const OVERDUE_PING_FILE_AGE = TelemetryFile.OVERDUE_PING_FILE_AGE + 60 * 1000;
+  yield OS.File.setDates(PENDING_PING_FILE, null, Date.now() - OVERDUE_PING_FILE_AGE);
+  yield TelemetryPing.reset();
+
+  // Wait for the aborted-session ping.
+  let request = yield gRequestIterator.next();
+  let receivedPing = decodeRequestPayload(request);
+  Assert.equal(receivedPing.payload.info.reason, REASON_ABORTED_SESSION);
+  Assert.equal(receivedPing.id, abortedSessionPing.id);
+
+  yield TelemetrySession.shutdown();
+});
+
+add_task(function* test_abortedDailyCoalescing() {
+  if (gIsAndroid || gIsGonk) {
+    // We don't have the aborted session or the daily ping here.
+    return;
+  }
+
+  const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
+
+  // Make sure the aborted sessions directory does not exist to test its creation.
+  yield OS.File.removeDir(DATAREPORTING_PATH, { ignoreAbsent: true });
+
+  let schedulerTickCallback = null;
+  gRequestIterator = Iterator(new Request());
+
+  let nowDate = new Date(2009, 10, 18, 00, 00, 0);
+  fakeNow(nowDate);
+
+  // Fake scheduler functions to control aborted-session flow in tests.
+  fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  yield TelemetrySession.reset();
+
+  Assert.ok((yield OS.File.exists(DATAREPORTING_PATH)),
+            "Telemetry must create the aborted session directory when starting.");
+
+  // Delay the callback around midnight so that the aborted-session ping gets merged with the
+  // daily ping.
+  let dailyDueDate = futureDate(nowDate, MS_IN_ONE_DAY);
+  fakeNow(dailyDueDate);
+  // Trigger both the daily ping and the saved-session.
+  Assert.ok(!!schedulerTickCallback);
+  // Execute one scheduler tick.
+  yield schedulerTickCallback();
+
+  // Wait for the daily ping.
+  let request = yield gRequestIterator.next();
+  let dailyPing = decodeRequestPayload(request);
+  Assert.equal(dailyPing.payload.info.reason, REASON_DAILY);
+
+  // Check that an aborted session ping was also written to disk.
+  Assert.ok((yield OS.File.exists(ABORTED_FILE)),
+            "There must be an aborted session ping.");
+
+  // Read aborted session ping and check that the session/subsession ids equal the
+  // ones in the daily ping.
+  let pingContent = yield OS.File.read(ABORTED_FILE, { encoding: "utf-8" });
+  let abortedSessionPing = JSON.parse(pingContent);
+  Assert.equal(abortedSessionPing.payload.info.sessionId, dailyPing.payload.info.sessionId);
+  Assert.equal(abortedSessionPing.payload.info.subsessionId, dailyPing.payload.info.subsessionId);
+
+  yield TelemetrySession.shutdown();
+});
+
+add_task(function* test_schedulerComputerSleep() {
+  if (gIsAndroid || gIsGonk) {
+    // We don't have the aborted session or the daily ping here.
+    return;
+  }
+
+  const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
+
+  gRequestIterator = Iterator(new Request());
+
+  // Remove any aborted-session ping from the previous tests.
+  yield OS.File.removeDir(DATAREPORTING_PATH, { ignoreAbsent: true });
+
+  // Set a fake current date and start Telemetry.
+  let nowDate = new Date(2009, 10, 18, 0, 00, 0);
+  fakeNow(nowDate);
+  let schedulerTickCallback = null;
+  fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  yield TelemetrySession.reset();
+
+  // Set the current time 3 days in the future at midnight, before running the callback.
+  let future = futureDate(nowDate, MS_IN_ONE_DAY * 3);
+  fakeNow(future);
+  Assert.ok(!!schedulerTickCallback);
+  // Execute one scheduler tick.
+  yield schedulerTickCallback();
+
+  let request = yield gRequestIterator.next();
+  let dailyPing = decodeRequestPayload(request);
+  Assert.equal(dailyPing.payload.info.reason, REASON_DAILY);
+
+  Assert.ok((yield OS.File.exists(ABORTED_FILE)),
+            "There must be an aborted session ping.");
+
+  yield TelemetrySession.shutdown();
+});
+
+add_task(function* test_schedulerEnvironmentReschedules() {
+  if (gIsAndroid || gIsGonk) {
+    // We don't have the aborted session or the daily ping here.
+    return;
+  }
+
+  // Reset the test preference.
+  const PREF_TEST = "toolkit.telemetry.test.pref1";
+  Preferences.reset(PREF_TEST);
+  let prefsToWatch = {};
+  prefsToWatch[PREF_TEST] = TelemetryEnvironment.RECORD_PREF_VALUE;
+
+  gRequestIterator = Iterator(new Request());
+
+  // Set a fake current date and start Telemetry.
+  let nowDate = new Date(2009, 10, 18, 0, 00, 0);
+  fakeNow(nowDate);
+  let schedulerTickCallback = null;
+  fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  yield TelemetrySession.reset();
+  TelemetryEnvironment._watchPreferences(prefsToWatch);
+
+  // Set the current time at midnight.
+  let future = futureDate(nowDate, MS_IN_ONE_DAY);
+  fakeNow(future);
+
+  // Trigger the environment change.
+  Preferences.set(PREF_TEST, 1);
+
+  // Wait for the environment-changed ping.
+  yield gRequestIterator.next();
+
+  // We don't expect to receive any daily ping in this test, so assert if we do.
+  registerPingHandler((req, res) => {
+    Assert.ok(false, "No ping should be sent/received in this test.");
+  });
+
+  // Execute one scheduler tick. It should not trigger a daily ping.
+  Assert.ok(!!schedulerTickCallback);
+  yield schedulerTickCallback();
+
+  yield TelemetrySession.shutdown();
+});
+
+add_task(function* test_schedulerNothingDue() {
+  if (gIsAndroid || gIsGonk) {
+    // We don't have the aborted session or the daily ping here.
+    return;
+  }
+
+  const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
+
+  // Remove any aborted-session ping from the previous tests.
+  yield OS.File.removeDir(DATAREPORTING_PATH, { ignoreAbsent: true });
+
+  // We don't expect to receive any ping in this test, so assert if we do.
+  registerPingHandler((req, res) => {
+    Assert.ok(false, "No ping should be sent/received in this test.");
+  });
+
+  // Set a current date/time away from midnight, so that the daily ping doesn't get
+  // sent.
+  let nowDate = new Date(2009, 10, 18, 11, 0, 0);
+  fakeNow(nowDate);
+  let schedulerTickCallback = null;
+  fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  yield TelemetrySession.reset();
+
+  // Delay the callback execution to a time when no ping should be due.
+  let nothingDueDate = futureDate(nowDate, ABORTED_SESSION_UPDATE_INTERVAL_MS / 2);
+  fakeNow(nothingDueDate);
+  Assert.ok(!!schedulerTickCallback);
+  // Execute one scheduler tick.
+  yield schedulerTickCallback();
+
+  // Check that no aborted session ping was written to disk.
+  Assert.ok(!(yield OS.File.exists(ABORTED_FILE)));
+
+  yield TelemetrySession.shutdown();
 });
 
 add_task(function* stopServer(){

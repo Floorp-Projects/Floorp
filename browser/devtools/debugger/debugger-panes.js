@@ -451,6 +451,19 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   /**
+   * Display the message thrown on breakpoint condition
+   */
+  showBreakpointConditionThrownMessage: function(aLocation, aMessage = "") {
+    let breakpointItem = this.getBreakpoint(aLocation);
+    if (!breakpointItem) {
+      return;
+    }
+    let attachment = breakpointItem.attachment;
+    attachment.view.container.classList.add("dbg-breakpoint-condition-thrown");
+    attachment.view.message.setAttribute("value", aMessage);
+  },
+
+  /**
    * Update the checked/unchecked and enabled/disabled states of the buttons in
    * the sources toolbar based on the currently selected source's state.
    */
@@ -689,12 +702,13 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    *          - location: the breakpoint's source location and line number
    *          - disabled: the breakpoint's disabled state, boolean
    *          - text: the breakpoint's line text to be displayed
+   *          - message: thrown string when the breakpoint condition throws,
    * @return object
    *         An object containing the breakpoint container, checkbox,
    *         line number and line text nodes.
    */
   _createBreakpointView: function(aOptions) {
-    let { location, disabled, text } = aOptions;
+    let { location, disabled, text, message } = aOptions;
     let identifier = DebuggerController.Breakpoints.getIdentifier(location);
 
     let checkbox = document.createElement("checkbox");
@@ -714,6 +728,26 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     let tooltip = text ? text.substr(0, BREAKPOINT_LINE_TOOLTIP_MAX_LENGTH) : "";
     lineTextNode.setAttribute("tooltiptext", tooltip);
 
+    let thrownNode = document.createElement("label");
+    thrownNode.className = "plain dbg-breakpoint-condition-thrown-message dbg-breakpoint-text";
+    thrownNode.setAttribute("value", message);
+    thrownNode.setAttribute("crop", "end");
+    thrownNode.setAttribute("flex", "1");
+
+    let bpLineContainer = document.createElement("hbox");
+    bpLineContainer.className = "plain dbg-breakpoint-line-container";
+    bpLineContainer.setAttribute("flex", "1");
+
+    bpLineContainer.appendChild(lineNumberNode);
+    bpLineContainer.appendChild(lineTextNode);
+
+    let bpDetailContainer = document.createElement("vbox");
+    bpDetailContainer.className = "plain dbg-breakpoint-detail-container";
+    bpDetailContainer.setAttribute("flex", "1");
+
+    bpDetailContainer.appendChild(bpLineContainer);
+    bpDetailContainer.appendChild(thrownNode);
+
     let container = document.createElement("hbox");
     container.id = "breakpoint-" + identifier;
     container.className = "dbg-breakpoint side-menu-widget-item-other";
@@ -725,14 +759,14 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     checkbox.addEventListener("click", this._onBreakpointCheckboxClick, false);
 
     container.appendChild(checkbox);
-    container.appendChild(lineNumberNode);
-    container.appendChild(lineTextNode);
+    container.appendChild(bpDetailContainer);
 
     return {
       container: container,
       checkbox: checkbox,
       lineNumber: lineNumberNode,
-      lineText: lineTextNode
+      lineText: lineTextNode,
+      message: thrownNode
     };
   },
 

@@ -25,6 +25,14 @@ function getSelectionHandler() {
     this._selectionHandler;
 }
 
+function getClipboard() {
+  return Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
+}
+
+function getTextValue(aElement) {
+  return aElement.value || aElement.textContent;
+}
+
 function todo(result, msg) {
   return Messaging.sendRequestForResult({
     type: TYPE_NAME,
