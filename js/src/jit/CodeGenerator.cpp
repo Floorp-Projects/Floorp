@@ -3383,6 +3383,12 @@ CodeGenerator::visitUnreachable(LUnreachable *lir)
 }
 
 void
+CodeGenerator::visitEncodeSnapshot(LEncodeSnapshot *lir)
+{
+    encode(lir->snapshot());
+}
+
+void
 CodeGenerator::visitGetDynamicName(LGetDynamicName *lir)
 {
     Register scopeChain = ToRegister(lir->getScopeChain());

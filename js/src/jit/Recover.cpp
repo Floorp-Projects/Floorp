@@ -1432,6 +1432,26 @@ RArrayState::recover(JSContext *cx, SnapshotIterator &iter) const
 }
 
 bool
+MAssertRecoveredOnBailout::writeRecoverData(CompactBufferWriter &writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    MOZ_ASSERT(input()->canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_AssertRecoveredOnBailout));
+    return true;
+}
+
+RAssertRecoveredOnBailout::RAssertRecoveredOnBailout(CompactBufferReader &reader)
+{ }
+
+bool RAssertRecoveredOnBailout::recover(JSContext *cx, SnapshotIterator &iter) const
+{
+    RootedValue result(cx);
+    result.setUndefined();
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MStringReplace::writeRecoverData(CompactBufferWriter &writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());

@@ -1568,6 +1568,16 @@ TestingFunc_assertJitStackInvariants(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
+bool
+js::testingFunc_assertRecoveredOnBailout(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    // NOP when not in IonMonkey
+    args.rval().setUndefined();
+    return true;
+}
+
 static bool
 SetJitCompilerOption(JSContext *cx, unsigned argc, jsval *vp)
 {

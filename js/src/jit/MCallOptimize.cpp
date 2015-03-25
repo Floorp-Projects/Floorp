@@ -250,6 +250,8 @@ IonBuilder::inlineNativeCall(CallInfo &callInfo, JSFunction *target)
         return inlineBailout(callInfo);
     if (native == testingFunc_assertFloat32)
         return inlineAssertFloat32(callInfo);
+    if (native == testingFunc_assertRecoveredOnBailout)
+        return inlineAssertRecoveredOnBailout(callInfo);
     if (native == testingFunc_inIon || native == testingFunc_inJit)
         return inlineTrue(callInfo);
 
@@ -2595,6 +2597,38 @@ IonBuilder::inlineAssertFloat32(CallInfo &callInfo)
     MConstant *undefined = MConstant::New(alloc(), UndefinedValue());
     current->add(undefined);
     current->push(undefined);
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineAssertRecoveredOnBailout(CallInfo &callInfo)
+{
+    if (js_JitOptions.checkRangeAnalysis) {
+        // If we are checking the range of all instructions, then the guards
+        // inserted by Range Analysis prevent the use of recover
+        // instruction. Thus, we just disable these checks.
+        current->push(constant(UndefinedValue()));
+        callInfo.setImplicitlyUsedUnchecked();
+        return InliningStatus_Inlined;
+    }
+
+    MAssertRecoveredOnBailout *assert =
+        MAssertRecoveredOnBailout::New(alloc(), callInfo.getArg(0));
+    current->add(assert);
+    current->push(assert);
+
+    // Create an instruction sequence which implies that the argument of the
+    // assertRecoveredOnBailout function would be encoded at least in one
+    // Snapshot.
+    MNop *nop = MNop::New(alloc());
+    current->add(nop);
+    if (!resumeAfter(nop))
+        return InliningStatus_Error;
+    current->add(MEncodeSnapshot::New(alloc()));
+
+    current->pop();
+    current->push(constant(UndefinedValue()));
+    callInfo.setImplicitlyUsedUnchecked();
     return InliningStatus_Inlined;
 }
 
