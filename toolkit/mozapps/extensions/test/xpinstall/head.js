@@ -8,6 +8,7 @@ const ADDONS_URL = "chrome://mozapps/content/extensions/extensions.xul";
 const PREF_LOGGING_ENABLED = "extensions.logging.enabled";
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
 const PREF_INSTALL_REQUIRESECUREORIGIN = "extensions.install.requireSecureOrigin";
+const PREF_CUSTOM_CONFIRMATION_UI = "xpinstall.customConfirmationUI";
 const CHROME_NAME = "mochikit";
 
 function getChromeRoot(path) {
@@ -26,6 +27,11 @@ function extractChromeRoot(path) {
   }
   return chromeRootPath;
 }
+
+Services.prefs.setBoolPref(PREF_CUSTOM_CONFIRMATION_UI, false);
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref(PREF_CUSTOM_CONFIRMATION_UI);
+});
 
 /**
  * This is a test harness designed to handle responding to UI during the process

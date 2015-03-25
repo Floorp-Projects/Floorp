@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    style="@style/ShareOverlayButton.Text"
-    android:background="@drawable/overlay_share_button_background"
-    android:clickable="true"/>
+
+<!-- The first item's background is unique and these views are reused
+     so the background is set dynamically. -->
+<org.mozilla.gecko.overlays.ui.OverlayDialogButton
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/ShareOverlayRow"
+    android:id="@+id/overlay_send_tab_item"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"/>
