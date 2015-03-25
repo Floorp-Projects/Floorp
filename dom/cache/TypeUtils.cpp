@@ -224,7 +224,8 @@ TypeUtils::ToPCacheRequest(PCacheRequest& aOut, InternalRequest* aIn,
   aOut.headersGuard() = headers->Guard();
   aOut.mode() = aIn->Mode();
   aOut.credentials() = aIn->GetCredentialsMode();
-  aOut.context() = aIn->ContentPolicyType();
+  aOut.contentPolicyType() = aIn->ContentPolicyType();
+  aOut.context() = aIn->Context();
   aOut.requestCache() = aIn->GetCacheMode();
 
   if (aBodyAction == IgnoreBody) {
@@ -367,7 +368,11 @@ TypeUtils::ToInternalRequest(const PCacheRequest& aIn)
   internalRequest->SetReferrer(aIn.referrer());
   internalRequest->SetMode(aIn.mode());
   internalRequest->SetCredentialsMode(aIn.credentials());
-  internalRequest->SetContentPolicyType(aIn.context());
+  internalRequest->SetContentPolicyType(aIn.contentPolicyType());
+  DebugOnly<RequestContext> contextAfterSetContentPolicyType = internalRequest->Context();
+  internalRequest->SetContext(aIn.context());
+  MOZ_ASSERT(contextAfterSetContentPolicyType.value == internalRequest->Context(),
+             "The RequestContext and nsContentPolicyType values should not get out of sync");
   internalRequest->SetCacheMode(aIn.requestCache());
 
   nsRefPtr<InternalHeaders> internalHeaders =
