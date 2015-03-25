@@ -475,8 +475,16 @@ private:
     }
 };
 
+class MacroAssembler;
+
 class MacroAssemblerARMCompat : public MacroAssemblerARM
 {
+  private:
+    // Perform a downcast. Should be removed by Bug 996602.
+    MacroAssembler &asMasm();
+    const MacroAssembler &asMasm() const;
+
+  private:
     bool inCall_;
     // Number of bytes the stack is adjusted inside a call to C. Calls to C may
     // not be nested.
@@ -1228,14 +1236,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         ma_push(reg);
     }
     void pushValue(const Address &addr);
-    void Push(const ValueOperand &val) {
-        pushValue(val);
-        framePushed_ += sizeof(Value);
-    }
-    void Pop(const ValueOperand &val) {
-        popValue(val);
-        framePushed_ -= sizeof(Value);
-    }
+
     void storePayload(const Value &val, Operand dest);
     void storePayload(Register src, Operand dest);
     void storePayload(const Value &val, const BaseIndex &dest);
@@ -1255,30 +1256,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     /////////////////////////////////////////////////////////////////
   public:
     // The following functions are exposed for use in platform-shared code.
-    void Push(Register reg) {
-        ma_push(reg);
-        adjustFrame(sizeof(intptr_t));
-    }
-    void Push(const Imm32 imm) {
-        push(imm);
-        adjustFrame(sizeof(intptr_t));
-    }
-    void Push(const ImmWord imm) {
-        push(imm);
-        adjustFrame(sizeof(intptr_t));
-    }
-    void Push(const ImmPtr imm) {
-        Push(ImmWord(uintptr_t(imm.value)));
-    }
-    void Push(const ImmGCPtr ptr) {
-        push(ptr);
-        adjustFrame(sizeof(intptr_t));
-    }
-    void Push(FloatRegister t) {
-        VFPRegister r = VFPRegister(t);
-        ma_vpush(VFPRegister(t));
-        adjustFrame(r.size());
-    }
 
     CodeOffsetLabel PushWithPatch(ImmWord word) {
         framePushed_ += sizeof(word.value);
@@ -1297,10 +1274,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         adjustFrame(sizeof(intptr_t) + extraSpace.value);
     }
 
-    void Pop(Register reg) {
-        ma_pop(reg);
-        adjustFrame(-sizeof(intptr_t));
-    }
     void implicitPop(uint32_t args) {
         MOZ_ASSERT(args % sizeof(intptr_t) == 0);
         adjustFrame(-args);

@@ -9,7 +9,7 @@
 using namespace js;
 using namespace js::jit;
 
-MoveEmitterX86::MoveEmitterX86(MacroAssemblerSpecific &masm)
+MoveEmitterX86::MoveEmitterX86(MacroAssembler &masm)
   : inCycle_(false),
     masm(masm),
     pushedAtCycle_(-1)
