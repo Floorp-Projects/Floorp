@@ -48,15 +48,18 @@ BottomHost.prototype = {
 
     let gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
     let ownerDocument = gBrowser.ownerDocument;
+    this._nbox = gBrowser.getNotificationBox(this.hostTab.linkedBrowser);
 
     this._splitter = ownerDocument.createElement("splitter");
     this._splitter.setAttribute("class", "devtools-horizontal-splitter");
 
     this.frame = ownerDocument.createElement("iframe");
     this.frame.className = "devtools-toolbox-bottom-iframe";
-    this.frame.height = Services.prefs.getIntPref(this.heightPref);
+    this.frame.height = Math.min(
+      Services.prefs.getIntPref(this.heightPref),
+      this._nbox.clientHeight - 10 // Always show at least some page content
+    );
 
-    this._nbox = gBrowser.getNotificationBox(this.hostTab.linkedBrowser);
     this._nbox.appendChild(this._splitter);
     this._nbox.appendChild(this.frame);
 
@@ -131,15 +134,19 @@ SidebarHost.prototype = {
 
     let gBrowser = this.hostTab.ownerDocument.defaultView.gBrowser;
     let ownerDocument = gBrowser.ownerDocument;
+    this._sidebar = gBrowser.getSidebarContainer(this.hostTab.linkedBrowser);
 
     this._splitter = ownerDocument.createElement("splitter");
     this._splitter.setAttribute("class", "devtools-side-splitter");
 
     this.frame = ownerDocument.createElement("iframe");
     this.frame.className = "devtools-toolbox-side-iframe";
-    this.frame.width = Services.prefs.getIntPref(this.widthPref);
 
-    this._sidebar = gBrowser.getSidebarContainer(this.hostTab.linkedBrowser);
+    this.frame.width = Math.min(
+      Services.prefs.getIntPref(this.widthPref),
+      this._sidebar.clientWidth - 10 // Always show at least some page content
+    );
+
     this._sidebar.appendChild(this._splitter);
     this._sidebar.appendChild(this.frame);
 
