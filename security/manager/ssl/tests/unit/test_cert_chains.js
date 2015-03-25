@@ -74,7 +74,7 @@ function run_test() {
   // Test successful connection (failedCertChain should be null)
   add_connection_test(
     // re-use pinning certs (keeler)
-    "good.include-subdomains.pinning.example.com", PRErrorCodeSuccess, null,
+    "good.include-subdomains.pinning.example.com", Cr.NS_OK, null,
     function withSecurityInfo(aTransportSecurityInfo) {
       aTransportSecurityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
       test_security_info_serialization(aTransportSecurityInfo, 0);
@@ -85,7 +85,7 @@ function run_test() {
   // Test overrideable connection failure (failedCertChain should be non-null)
   add_connection_test(
     "expired.example.com",
-    SEC_ERROR_EXPIRED_CERTIFICATE,
+    getXPCOMStatusFromNSS(SEC_ERROR_EXPIRED_CERTIFICATE),
     null,
     function withSecurityInfo(securityInfo) {
       securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
@@ -99,7 +99,7 @@ function run_test() {
   // Test non-overrideable error (failedCertChain should be non-null)
   add_connection_test(
     "inadequatekeyusage.example.com",
-    SEC_ERROR_INADEQUATE_KEY_USAGE,
+    getXPCOMStatusFromNSS(SEC_ERROR_INADEQUATE_KEY_USAGE),
     null,
     function withSecurityInfo(securityInfo) {
       securityInfo.QueryInterface(Ci.nsITransportSecurityInfo);
