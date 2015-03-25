@@ -6,7 +6,7 @@ $inherits:
 task:
   scopes:
       - 'docker-worker:cache:workspace-b2g-desktop-objects-opt'
-
+  workerType: b2g-desktop-opt
   payload:
     cache:
       workspace-b2g-desktop-objects-opt: '/home/worker/workspace'
