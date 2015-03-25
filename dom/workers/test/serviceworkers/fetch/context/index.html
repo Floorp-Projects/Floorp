@@ -32,9 +32,37 @@
     });
   }
 
+  function testImageSrcSet() {
+    return new Promise(function(resolve, reject) {
+      var img = document.createElement("img");
+      img.srcset = "responsive.jpg 100w";
+      // The service worker will respond with an existing image only if the
+      // Request has the correct context, otherwise the Promise will get
+      // rejected and the test will fail.
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+  }
+
+  function testPicture() {
+    return new Promise(function(resolve, reject) {
+      var pic = document.createElement("picture");
+      var img = document.createElement("img");
+      pic.appendChild(img);
+      img.src = "responsive.jpg?picture";
+      // The service worker will respond with an existing image only if the
+      // Request has the correct context, otherwise the Promise will get
+      // rejected and the test will fail.
+      img.onload = resolve;
+      img.onerror = reject;
+    });
+  }
+
   Promise.all([
     testFetch(),
     testImage(),
+    testImageSrcSet(),
+    testPicture(),
   ])
   .then(function() {
     finish();
