@@ -11,6 +11,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/EnumeratedRange.h"
 #include "mozilla/PodOperations.h"
 
 #include <stddef.h>
@@ -112,11 +113,17 @@ enum class AllocKind {
 static_assert(uint8_t(AllocKind::OBJECT0) == 0, "Please check AllocKind iterations and comparisons"
     " of the form |kind <= AllocKind::OBJECT_LAST| to ensure their range is still valid!");
 
-#define ALL_ALLOC_KINDS(i) AllocKind i = AllocKind::FIRST;\
-    i < AllocKind::LIMIT; i = AllocKind(uint8_t(i) + 1)
+inline decltype(mozilla::MakeEnumeratedRange<int>(AllocKind::FIRST, AllocKind::LIMIT))
+AllAllocKinds()
+{
+    return mozilla::MakeEnumeratedRange<int>(AllocKind::FIRST, AllocKind::LIMIT);
+}
 
-#define OBJECT_ALLOC_KINDS(i) AllocKind i = AllocKind::OBJECT0;\
-    i < AllocKind::OBJECT_LIMIT; i = AllocKind(uint8_t(i) + 1)
+inline decltype(mozilla::MakeEnumeratedRange<int>(AllocKind::OBJECT0, AllocKind::OBJECT_LIMIT))
+ObjectAllocKinds()
+{
+    return mozilla::MakeEnumeratedRange<int>(AllocKind::OBJECT0, AllocKind::OBJECT_LIMIT);
+}
 
 template<typename ValueType> using AllAllocKindArray =
     mozilla::EnumeratedArray<AllocKind, AllocKind::LIMIT, ValueType>;

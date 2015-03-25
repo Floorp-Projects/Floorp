@@ -1220,7 +1220,7 @@ public:
     // Makes a call using the only two methods that it is sane for indep code
     // to make a call.
     void callJit(Register callee);
-    void callJitFromAsmJS(Register callee) { call(callee); }
+    void callJitFromAsmJS(Register callee) { callJit(callee); }
 
     void reserveStack(uint32_t amount);
     void freeStack(uint32_t amount);
@@ -1335,7 +1335,7 @@ public:
     void loadFloat32x3(const Address &src, FloatRegister dest) { MOZ_CRASH("NYI"); }
     void loadFloat32x3(const BaseIndex &src, FloatRegister dest) { MOZ_CRASH("NYI"); }
     void storeFloat32x3(FloatRegister src, const Address &dest) { MOZ_CRASH("NYI"); }
-    void storeFloat32x(FloatRegister src, const BaseIndex &dest) { MOZ_CRASH("NYI"); }
+    void storeFloat32x3(FloatRegister src, const BaseIndex &dest) { MOZ_CRASH("NYI"); }
     void loadAlignedFloat32x4(const Address &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
     void storeAlignedFloat32x4(FloatRegister src, Address addr) { MOZ_CRASH("NYI"); }
     void loadUnalignedFloat32x4(const Address &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }

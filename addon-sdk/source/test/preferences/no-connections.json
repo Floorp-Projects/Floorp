@@ -13,6 +13,7 @@
   "browser.aboutHomeSnippets.updateUrl": "https://localhost/snippet-dummy",
   "browser.newtab.url": "about:blank",
   "browser.search.update": false,
+  "browser.search.suggest.enabled": false,
   "browser.safebrowsing.enabled": false,
   "browser.safebrowsing.updateURL": "http://localhost/safebrowsing-dummy/update",
   "browser.safebrowsing.gethashURL": "http://localhost/safebrowsing-dummy/gethash",

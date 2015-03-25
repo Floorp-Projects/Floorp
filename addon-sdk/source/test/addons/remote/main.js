@@ -5,7 +5,7 @@
 "use strict";
 
 const LOCAL_URI = "about:robots";
-const REMOTE_URI = "about:home";
+const REMOTE_URI = "data:text/html;charset=utf-8,remote";
 
 const { Loader } = require('sdk/test/loader');
 const { getTabs, openTab, closeTab, setTabURL, getBrowserForTab, getURI } = require('sdk/tabs/utils');
@@ -20,6 +20,19 @@ const { processID } = require('sdk/system/runtime');
 const { set } = require('sdk/preferences/service');
 // The hidden preload browser messes up our frame counts
 set('browser.newtab.preload', false);
+
+function promiseTabFrameAttach(frames) {
+  return new Promise(resolve => {
+    let listener = function(frame, ...args) {
+      if (!frame.isTab)
+        return;
+      frames.off("attach", listener);
+      resolve([frame, ...args]);
+    }
+
+    frames.on("attach", listener);
+  });
+}
 
 // Check that we see a process stop and start
 exports["test process restart"] = function*(assert) {
@@ -44,7 +57,7 @@ exports["test process restart"] = function*(assert) {
   // Switch the remote tab to a local URI which should kill the remote process
 
   let frameDetach = promiseEventOnItemAndContainer(assert, remoteFrame, frames, 'detach');
-  let frameAttach = promiseEvent(frames, 'attach');
+  let frameAttach = promiseTabFrameAttach(frames);
   let processDetach = promiseEventOnItemAndContainer(assert, remoteProcess, processes, 'detach');
   setTabURL(tab, LOCAL_URI);
   // The load should kill the remote frame
@@ -57,7 +70,7 @@ exports["test process restart"] = function*(assert) {
 
   frameDetach = promiseEventOnItemAndContainer(assert, newFrame, frames, 'detach');
   let processAttach = promiseEvent(processes, 'attach');
-  frameAttach = promiseEvent(frames, 'attach');
+  frameAttach = promiseTabFrameAttach(frames);
   setTabURL(tab, REMOTE_URI);
   // The load should kill the remote frame
   yield frameDetach;
@@ -149,7 +162,7 @@ exports["test frame list"] = function*(assert) {
   assert.equal(browserFrames(frames), getTabs(window).length, "Should be the right number of browser frames.");
   assert.equal((yield getChildFrameCount(processes)), frames.length, "Child processes should have the right number of frames");
 
-  let promise = promiseEvent(frames, 'attach');
+  let promise = promiseTabFrameAttach(frames);
   let tab1 = openTab(window, LOCAL_URI);
   let [frame1] = yield promise;
   assert.ok(!!frame1, "Should have seen the new frame");
@@ -158,7 +171,7 @@ exports["test frame list"] = function*(assert) {
   assert.equal(browserFrames(frames), getTabs(window).length, "Should be the right number of browser frames.");
   assert.equal((yield getChildFrameCount(processes)), frames.length, "Child processes should have the right number of frames");
 
-  promise = promiseEvent(frames, 'attach');
+  promise = promiseTabFrameAttach(frames);
   let tab2 = openTab(window, REMOTE_URI);
   let [frame2] = yield promise;
   assert.ok(!!frame2, "Should have seen the new frame");
@@ -256,7 +269,7 @@ exports["test unload"] = function*(assert) {
   let loader = new Loader(module);
   let { frames } = yield waitForProcesses(loader);
 
-  let promise = promiseEvent(frames, 'attach');
+  let promise = promiseTabFrameAttach(frames);
   let tab = openTab(window, "data:,<html/>");
   let browser = getBrowserForTab(tab);
   yield promiseDOMEvent(browser, "load", true);
@@ -280,7 +293,7 @@ exports["test frame detach on unload"] = function*(assert) {
   let loader = new Loader(module);
   let { frames } = yield waitForProcesses(loader);
 
-  let promise = promiseEvent(frames, 'attach');
+  let promise = promiseTabFrameAttach(frames);
   let tab = openTab(window, "data:,<html/>");
   let browser = getBrowserForTab(tab);
   yield promiseDOMEvent(browser, "load", true);
@@ -304,7 +317,7 @@ exports["test frame event listeners"] = function*(assert) {
   let loader = new Loader(module);
   let { frames } = yield waitForProcesses(loader);
 
-  let promise = promiseEvent(frames, 'attach');
+  let promise = promiseTabFrameAttach(frames);
   let tab = openTab(window, "data:text/html,<html></html>");
   let browser = getBrowserForTab(tab);
   yield promiseDOMEvent(browser, "load", true);
@@ -339,7 +352,7 @@ exports["test frames event listeners"] = function*(assert) {
   let loader = new Loader(module);
   let { frames } = yield waitForProcesses(loader);
 
-  let promise = promiseEvent(frames, 'attach');
+  let promise = promiseTabFrameAttach(frames);
   let tab = openTab(window, "data:text/html,<html></html>");
   let browser = getBrowserForTab(tab);
   yield promiseDOMEvent(browser, "load", true);
@@ -377,8 +390,8 @@ exports["test unload removes frame event listeners"] = function*(assert) {
   let loader2 = new Loader(module);
   let { frames: frames2 } = yield waitForProcesses(loader2);
 
-  let promise = promiseEvent(frames, 'attach');
-  let promise2 = promiseEvent(frames2, 'attach');
+  let promise = promiseTabFrameAttach(frames);
+  let promise2 = promiseTabFrameAttach(frames2);
   let tab = openTab(window, "data:text/html,<html></html>");
   let browser = getBrowserForTab(tab);
   yield promiseDOMEvent(browser, "load", true);
@@ -418,8 +431,8 @@ exports["test unload removes frames event listeners"] = function*(assert) {
   let loader2 = new Loader(module);
   let { frames: frames2 } = yield waitForProcesses(loader2);
 
-  let promise = promiseEvent(frames, 'attach');
-  let promise2 = promiseEvent(frames2, 'attach');
+  let promise = promiseTabFrameAttach(frames);
+  let promise2 = promiseTabFrameAttach(frames2);
   let tab = openTab(window, "data:text/html,<html></html>");
   let browser = getBrowserForTab(tab);
   yield promiseDOMEvent(browser, "load", true);

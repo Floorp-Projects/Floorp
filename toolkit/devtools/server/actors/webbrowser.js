@@ -13,6 +13,7 @@ let { RootActor } = require("devtools/server/actors/root");
 let { DebuggerServer } = require("devtools/server/main");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { dbg_assert } = DevToolsUtils;
+let { TabSources, isHiddenSource } = require("./utils/TabSources");
 let makeDebugger = require("./utils/make-debugger");
 let mapURIToAddonID = require("./utils/map-uri-to-addon-id");
 
@@ -598,6 +599,7 @@ function TabActor(aConnection)
   // A map of actor names to actor instances provided by extensions.
   this._extraActors = {};
   this._exited = false;
+  this._sources = null;
 
   // Map of DOM stylesheets to StyleSheetActors
   this._styleSheetActors = new Map();
@@ -765,6 +767,14 @@ TabActor.prototype = {
     // Abrupt closing of the browser window may leave callbacks without a
     // currentURI.
     return null;
+  },
+
+  get sources() {
+    if (!this._sources) {
+      dbg_assert(this.threadActor, "threadActor should exist when creating sources.");
+      this._sources = new TabSources(this.threadActor);
+    }
+    return this._sources;
   },
 
   /**
@@ -1118,6 +1128,7 @@ TabActor.prototype = {
     this._contextPool = null;
     this.threadActor.exit();
     this.threadActor = null;
+    this._sources = null;
   },
 
   /**
@@ -1402,12 +1413,11 @@ TabActor.prototype = {
 
     // TODO bug 997119: move that code to ThreadActor by listening to window-ready
     let threadActor = this.threadActor;
-    if (isTopLevel) {
+    if (isTopLevel && threadActor.state != "detached") {
+      this.sources.reset({ sourceMaps: true });
       threadActor.clearDebuggees();
-      if (threadActor.dbg) {
-        threadActor.dbg.enabled = true;
-        threadActor.maybePauseOnExceptions();
-      }
+      threadActor.dbg.enabled = true;
+      threadActor.maybePauseOnExceptions();
       // Update the global no matter if the debugger is on or off,
       // otherwise the global will be wrong when enabled later.
       threadActor.global = window;
@@ -1851,6 +1861,15 @@ BrowserAddonActor.prototype = {
     return this._global;
   },
 
+  get sources() {
+    if (!this._sources) {
+      dbg_assert(this.threadActor, "threadActor should exist when creating sources.");
+      this._sources = new TabSources(this._threadActor, this._allowSource);
+    }
+    return this._sources;
+  },
+
+
   form: function BAA_form() {
     dbg_assert(this.actorID, "addon should have an actorID.");
     if (!this._consoleActor) {
@@ -1931,6 +1950,7 @@ BrowserAddonActor.prototype = {
     this._contextPool.removeActor(this._threadActor);
 
     this._threadActor = null;
+    this._sources = null;
 
     return { type: "detached" };
   },
@@ -2002,6 +2022,20 @@ BrowserAddonActor.prototype = {
     }
 
     return false;
+  },
+
+  /**
+   * Override the eligibility check for scripts and sources to make
+   * sure every script and source with a URL is stored when debugging
+   * add-ons.
+   */
+  _allowSource: function(aSource) {
+    // XPIProvider.jsm evals some code in every add-on's bootstrap.js. Hide it.
+    if (aSource.url === "resource://gre/modules/addons/XPIProvider.jsm") {
+      return false;
+    }
+
+    return true;
   },
 
   /**
