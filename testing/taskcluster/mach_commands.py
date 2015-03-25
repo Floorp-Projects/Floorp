@@ -210,6 +210,9 @@ class Graph(object):
     @CommandArgument('--mozharness-rev',
         default='default',
         help='Commit revision to use from mozharness repository')
+    @CommandArgument('--mozharness-ref',
+        default='master',
+        help='Commit ref to use from mozharness repository')
     @CommandArgument('--message',
         help='Commit message to be parsed. Example: "try: -b do -p all -u all"')
     @CommandArgument('--revision-hash',
@@ -255,6 +258,7 @@ class Graph(object):
             'now': datetime.datetime.now().isoformat(),
             'mozharness_repository': params['mozharness_repository'],
             'mozharness_rev': params['mozharness_rev'],
+            'mozharness_ref': params['mozharness_ref'],
             'revision_hash': params['revision_hash']
         }.items())
 
@@ -424,6 +428,9 @@ class CIBuild(object):
     @CommandArgument('--mozharness-rev',
         default='tip',
         help='Commit revision to use from mozharness repository')
+    @CommandArgument('--mozharness-ref',
+        default='master',
+        help='Commit ref to use from mozharness repository')
     @CommandArgument('--owner',
         required=True,
         help='email address of who owns this graph')
@@ -452,6 +459,7 @@ class CIBuild(object):
             'head_rev': head_rev,
             'head_ref': head_ref,
             'mozharness_repository': params['mozharness_repository'],
+            'mozharness_ref': params['mozharness_ref'],
             'mozharness_rev': params['mozharness_rev']
         }
 
