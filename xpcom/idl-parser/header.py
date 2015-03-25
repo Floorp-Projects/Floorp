@@ -402,11 +402,11 @@ def write_interface(iface, fd):
         if isinstance(member, xpidl.Attribute):
             if member.infallible:
                 fd.write("\\\n  using %s::%s; " % (iface.name, attributeNativeName(member, True)))
-            fd.write("\\\n  %s MOZ_OVERRIDE; " % attributeAsNative(member, True))
+            fd.write("\\\n  %s override; " % attributeAsNative(member, True))
             if not member.readonly:
-                fd.write("\\\n  %s MOZ_OVERRIDE; " % attributeAsNative(member, False))
+                fd.write("\\\n  %s override; " % attributeAsNative(member, False))
         elif isinstance(member, xpidl.Method):
-            fd.write("\\\n  %s MOZ_OVERRIDE; " % methodAsNative(member))
+            fd.write("\\\n  %s override; " % methodAsNative(member))
     if len(iface.members) == 0:
         fd.write('\\\n  /* no methods! */')
     elif not member.kind in ('attribute', 'method'):
@@ -443,7 +443,7 @@ def write_interface(iface, fd):
             fd.write('\\')
 
     emitTemplate(True,
-                 "\\\n  %(asNative)s MOZ_OVERRIDE { return _to %(nativeName)s(%(paramList)s); } ")
+                 "\\\n  %(asNative)s override { return _to %(nativeName)s(%(paramList)s); } ")
 
     fd.write(iface_forward_safe % names)
 
@@ -451,8 +451,8 @@ def write_interface(iface, fd):
     # sensible default error return.  Instead, the caller will have to
     # implement them.
     emitTemplate(False,
-                 "\\\n  %(asNative)s MOZ_OVERRIDE { return !_to ? NS_ERROR_NULL_POINTER : _to->%(nativeName)s(%(paramList)s); } ",
-                 "\\\n  %(asNative)s MOZ_OVERRIDE; ")
+                 "\\\n  %(asNative)s override { return !_to ? NS_ERROR_NULL_POINTER : _to->%(nativeName)s(%(paramList)s); } ",
+                 "\\\n  %(asNative)s override; ")
 
     fd.write(iface_template_prolog % names)
 
