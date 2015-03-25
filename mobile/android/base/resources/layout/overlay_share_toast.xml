@@ -11,33 +11,16 @@
     android:background="@drawable/dropshadow"
     android:padding="3dp">
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/overlay_toast_message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:padding="20dp"
         android:background="@drawable/toolbar_grey_round"
-        android:orientation="horizontal"
-        android:padding="20dp">
+        android:textColor="@color/text_and_tabs_tray_grey"
+        android:textSize="14sp"
+        android:drawablePadding="15dp"
+        android:drawableLeft="@drawable/overlay_check"/>
 
-        <TextView
-            android:id="@+id/overlay_toast_message"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="2"
-            android:layout_marginRight="10dp"
-            android:textColor="@color/text_and_tabs_tray_grey"
-            android:textSize="14sp"
-            android:drawablePadding="15dp"
-            android:drawableLeft="@drawable/overlay_check"/>
-
-        <!-- Retry button -->
-        <Button
-            android:id="@+id/overlay_toast_retry_btn"
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/overlay_share_retry"
-            android:onClick="selfDestruct" />
-
-    </LinearLayout>
 </FrameLayout>
