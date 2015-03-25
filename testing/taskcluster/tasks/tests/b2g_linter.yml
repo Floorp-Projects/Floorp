@@ -3,7 +3,7 @@ $inherits:
   from: 'tasks/test.yml'
 task:
   metadata:
-    name: '[TC] Gaia Linter'
+    name: '[TC] - Gaia Linter'
     description: Linter Test
 
   payload:
@@ -27,6 +27,10 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
+      groupSymbol: "?"
       symbol: 'Li'
       productName: 'b2g'

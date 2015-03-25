@@ -2,7 +2,7 @@ $inherits:
   from: 'tasks/build.yml'
 task:
   metadata:
-    name: "[TC] B2G Desktop {{build_type}}"
+    name: "[TC] B2G Desktop ( {{build_type}} )"
     description: B2G Desktop {{build_type}}
 
   workerType: b2gbuild-desktop
@@ -21,8 +21,11 @@ task:
         buildbot_step 'Build' ./build-b2g-desktop.sh $HOME/workspace
 
   extra:
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
-      groupSymbol: tc
+      groupSymbol: "?"
       groupName: Submitted by taskcluster
       machine:
         platform: b2g-linux64
