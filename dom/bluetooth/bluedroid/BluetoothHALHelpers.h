@@ -19,6 +19,16 @@
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "nsThreadUtils.h"
 
+#if MOZ_IS_GCC && MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
+/* use designated array initializers if supported */
+#define CONVERT(in_, out_) \
+  [in_] = out_
+#else
+/* otherwise init array element by position */
+#define CONVERT(in_, out_) \
+  out_
+#endif
+
 BEGIN_BLUETOOTH_NAMESPACE
 
 //
@@ -111,20 +121,18 @@ nsresult
 Convert(const nsAString& aIn, bt_ssp_variant_t& aOut);
 
 inline nsresult
-Convert(const bt_ssp_variant_t& aIn, BluetoothSspVariant& aOut)
+Convert(const bt_ssp_variant_t& aIn, nsAString& aOut)
 {
-  static const BluetoothSspVariant sSspVariant[] = {
-    CONVERT(BT_SSP_VARIANT_PASSKEY_CONFIRMATION,
-      SSP_VARIANT_PASSKEY_CONFIRMATION),
-    CONVERT(BT_SSP_VARIANT_PASSKEY_ENTRY, SSP_VARIANT_PASSKEY_ENTRY),
-    CONVERT(BT_SSP_VARIANT_CONSENT, SSP_VARIANT_CONSENT),
-    CONVERT(BT_SSP_VARIANT_PASSKEY_NOTIFICATION,
-      SSP_VARIANT_PASSKEY_NOTIFICATION)
+  static const char * const sSspVariant[] = {
+    CONVERT(BT_SSP_VARIANT_PASSKEY_CONFIRMATION, "PasskeyConfirmation"),
+    CONVERT(BT_SSP_VARIANT_PASSKEY_ENTRY, "PasskeyEntry"),
+    CONVERT(BT_SSP_VARIANT_CONSENT, "Consent"),
+    CONVERT(BT_SSP_VARIANT_PASSKEY_NOTIFICATION, "PasskeyNotification")
   };
   if (aIn >= MOZ_ARRAY_LENGTH(sSspVariant)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  aOut = sSspVariant[aIn];
+  aOut = NS_ConvertUTF8toUTF16(sSspVariant[aIn]);
   return NS_OK;
 }
 
@@ -286,18 +294,18 @@ Convert(bt_acl_state_t aIn, bool& aOut)
 }
 
 inline nsresult
-Convert(bt_device_type_t aIn, BluetoothTypeOfDevice& aOut)
+Convert(bt_device_type_t aIn, BluetoothDeviceType& aOut)
 {
-  static const BluetoothTypeOfDevice sTypeOfDevice[] = {
-    CONVERT(0, static_cast<BluetoothTypeOfDevice>(0)), // invalid, required by gcc
-    CONVERT(BT_DEVICE_DEVTYPE_BREDR, TYPE_OF_DEVICE_BREDR),
-    CONVERT(BT_DEVICE_DEVTYPE_BLE, TYPE_OF_DEVICE_BLE),
-    CONVERT(BT_DEVICE_DEVTYPE_DUAL, TYPE_OF_DEVICE_DUAL)
+  static const BluetoothDeviceType sDeviceType[] = {
+    CONVERT(0, static_cast<BluetoothDeviceType>(0)), // invalid, required by gcc
+    CONVERT(BT_DEVICE_DEVTYPE_BREDR, DEVICE_TYPE_BREDR),
+    CONVERT(BT_DEVICE_DEVTYPE_BLE, DEVICE_TYPE_BLE),
+    CONVERT(BT_DEVICE_DEVTYPE_DUAL, DEVICE_TYPE_DUAL)
   };
-  if (aIn >= MOZ_ARRAY_LENGTH(sTypeOfDevice)) {
+  if (aIn >= MOZ_ARRAY_LENGTH(sDeviceType)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  aOut = sTypeOfDevice[aIn];
+  aOut = sDeviceType[aIn];
   return NS_OK;
 }
 

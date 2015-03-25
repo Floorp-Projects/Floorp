@@ -13,6 +13,19 @@
 #include "mozilla/ipc/BluetoothDaemonConnection.h"
 #include "nsThreadUtils.h"
 
+#if MOZ_IS_GCC && MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
+/* use designated array initializers if supported */
+#define INIT_ARRAY_AT(in_, out_) \
+  [in_] = out_
+#else
+/* otherwise init array element by position */
+#define INIT_ARRAY_AT(in_, out_) \
+  out_
+#endif
+
+#define CONVERT(in_, out_) \
+  INIT_ARRAY_AT(in_, out_)
+
 using namespace mozilla::ipc;
 
 BEGIN_BLUETOOTH_NAMESPACE
@@ -24,6 +37,13 @@ BEGIN_BLUETOOTH_NAMESPACE
 enum BluetoothAclState {
   ACL_STATE_CONNECTED,
   ACL_STATE_DISCONNECTED
+};
+
+enum BluetoothSspPairingVariant {
+  SSP_VARIANT_PASSKEY_CONFIRMATION,
+  SSP_VARIANT_PASSKEY_ENTRY,
+  SSP_VARIANT_CONSENT,
+  SSP_VARIANT_PASSKEY_NOTIFICATION
 };
 
 struct BluetoothAddress {
@@ -163,7 +183,7 @@ nsresult
 Convert(int aIn, int32_t& aOut);
 
 nsresult
-Convert(int32_t aIn, BluetoothTypeOfDevice& aOut);
+Convert(int32_t aIn, BluetoothDeviceType& aOut);
 
 nsresult
 Convert(int32_t aIn, BluetoothScanMode& aOut);
@@ -226,7 +246,7 @@ nsresult
 Convert(uint8_t aIn, BluetoothBondState& aOut);
 
 nsresult
-Convert(uint8_t aIn, BluetoothTypeOfDevice& aOut);
+Convert(uint8_t aIn, BluetoothDeviceType& aOut);
 
 nsresult
 Convert(uint8_t aIn, BluetoothPropertyType& aOut);
@@ -235,7 +255,7 @@ nsresult
 Convert(uint8_t aIn, BluetoothScanMode& aOut);
 
 nsresult
-Convert(uint8_t aIn, BluetoothSspVariant& aOut);
+Convert(uint8_t aIn, BluetoothSspPairingVariant& aOut);
 
 nsresult
 Convert(uint8_t aIn, BluetoothStatus& aOut);
@@ -262,7 +282,7 @@ nsresult
 Convert(const nsAString& aIn, BluetoothServiceName& aOut);
 
 nsresult
-Convert(const nsAString& aIn, BluetoothSspVariant& aOut);
+Convert(const nsAString& aIn, BluetoothSspPairingVariant& aOut);
 
 nsresult
 Convert(BluetoothAclState aIn, bool& aOut);
@@ -328,10 +348,10 @@ nsresult
 Convert(BluetoothSocketType aIn, uint8_t& aOut);
 
 nsresult
-Convert(BluetoothSspVariant aIn, uint8_t& aOut);
+Convert(BluetoothSspPairingVariant aIn, uint8_t& aOut);
 
 nsresult
-Convert(BluetoothSspVariant aIn, nsAString& aOut);
+Convert(BluetoothSspPairingVariant aIn, nsAString& aOut);
 
 nsresult
 Convert(ControlPlayStatus aIn, uint8_t& aOut);
@@ -453,7 +473,7 @@ nsresult
 PackPDU(BluetoothSocketType aIn, BluetoothDaemonPDU& aPDU);
 
 nsresult
-PackPDU(BluetoothSspVariant aIn, BluetoothDaemonPDU& aPDU);
+PackPDU(BluetoothSspPairingVariant aIn, BluetoothDaemonPDU& aPDU);
 
 nsresult
 PackPDU(BluetoothScanMode aIn, BluetoothDaemonPDU& aPDU);
@@ -793,7 +813,7 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothDaemonPDUHeader& aOut)
 }
 
 nsresult
-UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothTypeOfDevice& aOut);
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothDeviceType& aOut);
 
 nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothHandsfreeAudioState& aOut);
@@ -836,7 +856,7 @@ nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothServiceRecord& aOut);
 
 nsresult
-UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothSspVariant& aOut);
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothSspPairingVariant& aOut);
 
 nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothStatus& aOut);
