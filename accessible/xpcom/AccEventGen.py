@@ -61,7 +61,7 @@ def print_header_file(fd, conf):
             classname = ("xpcAcc%s" % e)
             baseinterfaces = interfaces(iface)
 
-            fd.write("\nclass %s MOZ_FINAL : public %s\n" % (classname, iface.name))
+            fd.write("\nclass %s final : public %s\n" % (classname, iface.name))
             fd.write("{\n")
             fd.write("public:\n")
 
