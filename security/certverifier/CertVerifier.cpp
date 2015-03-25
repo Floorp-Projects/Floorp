@@ -114,12 +114,20 @@ CertListContainsExpectedKeys(const CERTCertList* certList,
   }
 
   bool enforceTestMode = (pinningMode == CertVerifier::pinningEnforceTestMode);
-  if (PublicKeyPinningService::ChainHasValidPins(certList, hostname, time,
-                                                 enforceTestMode)) {
-    return Success;
+  bool chainHasValidPins;
+  nsresult rv = PublicKeyPinningService::ChainHasValidPins(certList,
+                                                           hostname,
+                                                           time,
+                                                           enforceTestMode,
+                                                           chainHasValidPins);
+  if (NS_FAILED(rv)) {
+    return Result::FATAL_ERROR_LIBRARY_FAILURE;
+  }
+  if (!chainHasValidPins) {
+    return Result::ERROR_KEY_PINNING_FAILURE;
   }
 
-  return Result::ERROR_KEY_PINNING_FAILURE;
+  return Success;
 }
 
 static Result
@@ -448,27 +456,6 @@ CertVerifier::VerifyCert(CERTCertificate* cert, SECCertificateUsage usage,
   }
 
   if (rv != Success) {
-    if (rv != Result::ERROR_KEY_PINNING_FAILURE &&
-        usage == certificateUsageSSLServer) {
-      ScopedCERTCertificate certCopy(CERT_DupCertificate(cert));
-      if (!certCopy) {
-        return SECFailure;
-      }
-      ScopedCERTCertList certList(CERT_NewCertList());
-      if (!certList) {
-        return SECFailure;
-      }
-      SECStatus srv = CERT_AddCertToListTail(certList.get(), certCopy.get());
-      if (srv != SECSuccess) {
-        return SECFailure;
-      }
-      certCopy.forget(); // now owned by certList
-      Result pinningResult = CertListContainsExpectedKeys(certList, hostname,
-                                                          time, mPinningMode);
-      if (pinningResult != Success) {
-        rv = pinningResult;
-      }
-    }
     PR_SetError(MapResultToPRErrorCode(rv), 0);
     return SECFailure;
   }
