@@ -182,10 +182,10 @@ loop.store.ActiveRoomStore = (function() {
     },
 
     /**
-     * Execute fetchServerData event action from the dispatcher. Although
-     * this is to fetch the server data - for rooms on the standalone client,
-     * we don't actually need to get any data. Therefore we just save the
-     * data that is given to us for when the user chooses to join the room.
+     * Execute fetchServerData event action from the dispatcher. For rooms
+     * we need to get the room context information from the server. We don't
+     * need other data until the user decides to join the room.
+     * This action is only used for the standalone UI.
      *
      * @param {sharedActions.FetchServerData} actionData
      */
@@ -206,6 +206,18 @@ loop.store.ActiveRoomStore = (function() {
         this._handleRoomUpdate.bind(this));
       this._mozLoop.rooms.on("delete:" + actionData.roomToken,
         this._handleRoomDelete.bind(this));
+
+      this._mozLoop.rooms.get(this._storeState.roomToken,
+        function(err, result) {
+          if (err) {
+            // XXX Bug 1110937 will want to handle the error results here
+            // e.g. room expired/invalid.
+            console.error("Failed to get room data:", err);
+            return;
+          }
+
+          this.dispatcher.dispatch(new sharedActions.UpdateRoomInfo(result));
+        }.bind(this));
     },
 
     /**
@@ -341,21 +353,6 @@ loop.store.ActiveRoomStore = (function() {
 
       this._mozLoop.addConversationContext(this._storeState.windowId,
                                            actionData.sessionId, "");
-
-      // If we haven't got a room name yet, go and get one. We typically
-      // need to do this in the case of the standalone window.
-      // XXX When bug 1103331 lands this can be moved to earlier.
-      if (!this._storeState.roomName) {
-        this._mozLoop.rooms.get(this._storeState.roomToken,
-          function(err, result) {
-            if (err) {
-              console.error("Failed to get room data:", err);
-              return;
-            }
-
-            this.dispatcher.dispatch(new sharedActions.UpdateRoomInfo(result));
-        }.bind(this));
-      }
     },
 
     /**
