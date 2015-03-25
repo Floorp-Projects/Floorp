@@ -405,10 +405,9 @@ JitRuntime::generateArgumentsRectifier(JSContext *cx, void **returnAddrOut)
     static_assert(JitStackAlignment % sizeof(Value) == 0,
       "Ensure that we can pad the stack by pushing extra UndefinedValue");
 
-    const uint32_t alignment = JitStackAlignment / sizeof(Value);
-    MOZ_ASSERT(IsPowerOfTwo(alignment));
-    masm.addl(Imm32(alignment - 1 /* for padding */ + 1 /* for |this| */), rcx);
-    masm.andl(Imm32(~(alignment - 1)), rcx);
+    MOZ_ASSERT(IsPowerOfTwo(JitStackValueAlignment));
+    masm.addl(Imm32(JitStackValueAlignment - 1 /* for padding */ + 1 /* for |this| */), rcx);
+    masm.andl(Imm32(~(JitStackValueAlignment - 1)), rcx);
 
     // Load the number of |undefined|s to push into %rcx.
     masm.subq(r8, rcx);
