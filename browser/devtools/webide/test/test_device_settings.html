@@ -51,8 +51,6 @@
 
           yield lazyIframeIsLoaded(settingIframe);
 
-          yield nextTick();
-
           yield settingIframe.contentWindow.getAllSettings;
 
           setDocument(settingIframe);
