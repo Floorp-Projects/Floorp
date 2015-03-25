@@ -290,7 +290,7 @@ Convert(const bt_property_t& aIn, BluetoothProperty& aOut)
       break;
     case PROPERTY_TYPE_OF_DEVICE:
       rv = Convert(*static_cast<bt_device_type_t*>(aIn.val),
-                   aOut.mDeviceType);
+                   aOut.mTypeOfDevice);
       break;
     case PROPERTY_SERVICE_RECORD:
       rv = Convert(*static_cast<bt_service_record_t*>(aIn.val),

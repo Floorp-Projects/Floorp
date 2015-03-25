@@ -170,7 +170,7 @@ nsresult
 Convert(int aIn, int32_t& aOut);
 
 nsresult
-Convert(int32_t aIn, BluetoothDeviceType& aOut);
+Convert(int32_t aIn, BluetoothTypeOfDevice& aOut);
 
 nsresult
 Convert(int32_t aIn, BluetoothScanMode& aOut);
@@ -233,7 +233,7 @@ nsresult
 Convert(uint8_t aIn, BluetoothBondState& aOut);
 
 nsresult
-Convert(uint8_t aIn, BluetoothDeviceType& aOut);
+Convert(uint8_t aIn, BluetoothTypeOfDevice& aOut);
 
 nsresult
 Convert(uint8_t aIn, BluetoothPropertyType& aOut);
@@ -800,7 +800,7 @@ UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothDaemonPDUHeader& aOut)
 }
 
 nsresult
-UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothDeviceType& aOut);
+UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothTypeOfDevice& aOut);
 
 nsresult
 UnpackPDU(BluetoothDaemonPDU& aPDU, BluetoothHandsfreeAudioState& aOut);
