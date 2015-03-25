@@ -15,7 +15,7 @@ from mozpack.executables import (
 from mozpack.mozjar import JarReader
 from mozpack.errors import errors
 from tempfile import mkstemp
-import mozpack.path
+import mozpack.path as mozpath
 import struct
 import os
 import subprocess
@@ -83,7 +83,7 @@ class UnifiedFinder(BaseFinder):
         one of the two trees and not the other. It will also error out if
         matches can be found on both ends but their contents are not identical.
 
-        The sorted argument gives a list of mozpack.path.match patterns. File
+        The sorted argument gives a list of mozpath.match patterns. File
         paths matching one of these patterns will have their contents compared
         with their lines sorted.
         '''
@@ -146,7 +146,7 @@ class UnifiedFinder(BaseFinder):
         if content1 == content2:
             return file1
         for pattern in self._sorted:
-            if mozpack.path.match(path, pattern):
+            if mozpath.match(path, pattern):
                 if sorted(content1) == sorted(content2):
                     return file1
                 break
@@ -167,7 +167,7 @@ class UnifiedBuildFinder(UnifiedFinder):
         '''
         Unify buildconfig.html contents, or defer to UnifiedFinder.unify_file.
         '''
-        if mozpack.path.basename(path) == 'buildconfig.html':
+        if mozpath.basename(path) == 'buildconfig.html':
             content1 = file1.open().readlines()
             content2 = file2.open().readlines()
             # Copy everything from the first file up to the end of its <body>,

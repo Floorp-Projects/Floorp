@@ -4,7 +4,7 @@
 
 from __future__ import unicode_literals
 
-import mozpack.path
+import mozpack.path as mozpath
 import os
 import re
 import sys
@@ -105,13 +105,13 @@ class ReftestRunner(MozbuildObject):
         relpath = path_arg.relpath()
 
         if os.path.isdir(path_arg.srcdir_path()):
-            return (mozpack.path.join(relpath, self._manifest_file(suite)), None)
+            return (mozpath.join(relpath, self._manifest_file(suite)), None)
 
         if relpath.endswith('.list'):
             return (relpath, None)
 
-        return (self._find_manifest(suite, mozpack.path.dirname(test_file))[0],
-                mozpack.path.basename(test_file))
+        return (self._find_manifest(suite, mozpath.dirname(test_file))[0],
+                mozpath.basename(test_file))
 
     def _make_shell_string(self, s):
         return "'%s'" % re.sub("'", r"'\''", s)
@@ -136,16 +136,16 @@ class ReftestRunner(MozbuildObject):
         # Find the manifest file
         if not test_file:
             if suite == 'reftest':
-                test_file = mozpack.path.join('layout', 'reftests')
+                test_file = mozpath.join('layout', 'reftests')
             elif suite == 'crashtest':
-                test_file = mozpack.path.join('testing', 'crashtest')
+                test_file = mozpath.join('testing', 'crashtest')
 
         if not os.path.exists(os.path.join(self.topsrcdir, test_file)):
-            test_file = mozpack.path.relpath(os.path.abspath(test_file),
+            test_file = mozpath.relpath(os.path.abspath(test_file),
                                              self.topsrcdir)
 
         (manifest, single_file_filter) = self._find_manifest(suite, test_file)
-        if not os.path.exists(mozpack.path.join(self.topsrcdir, manifest)):
+        if not os.path.exists(mozpath.join(self.topsrcdir, manifest)):
             raise Exception('No manifest file was found at %s.' % manifest)
         if single_file_filter:
             if filter:
@@ -261,7 +261,7 @@ class ReftestRunner(MozbuildObject):
 
         if test_file:
             (path, single_file_filter) = self._find_manifest(suite, test_file)
-            if not os.path.exists(mozpack.path.join(self.topsrcdir, path)):
+            if not os.path.exists(mozpath.join(self.topsrcdir, path)):
                 raise Exception('No manifest file was found at %s.' % path)
             if single_file_filter:
                 if filter:
