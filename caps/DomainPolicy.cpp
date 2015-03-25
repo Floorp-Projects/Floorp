@@ -5,17 +5,50 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DomainPolicy.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/ipc/URIUtils.h"
+#include "mozilla/unused.h"
+#include "nsIMessageManager.h"
 #include "nsScriptSecurityManager.h"
 
 namespace mozilla {
 
+using namespace ipc;
+using namespace dom;
+
 NS_IMPL_ISUPPORTS(DomainPolicy, nsIDomainPolicy)
 
-DomainPolicy::DomainPolicy() : mBlacklist(new DomainSet())
-                             , mSuperBlacklist(new DomainSet())
-                             , mWhitelist(new DomainSet())
-                             , mSuperWhitelist(new DomainSet())
-{}
+static nsresult
+BroadcastDomainSetChange(DomainSetType aSetType, DomainSetChangeType aChangeType,
+                         nsIURI* aDomain = nullptr)
+{
+    MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default,
+               "DomainPolicy should only be exposed to the chrome process.");
+
+    nsTArray<ContentParent*> parents;
+    ContentParent::GetAll(parents);
+    if (!parents.Length()) {
+       return NS_OK;
+    }
+
+    OptionalURIParams uri;
+    SerializeURI(aDomain, uri);
+
+    for (uint32_t i = 0; i < parents.Length(); i++) {
+        unused << parents[i]->SendDomainSetChanged(aSetType, aChangeType, uri);
+    }
+    return NS_OK;
+}
+
+DomainPolicy::DomainPolicy() : mBlacklist(new DomainSet(BLACKLIST))
+                             , mSuperBlacklist(new DomainSet(SUPER_BLACKLIST))
+                             , mWhitelist(new DomainSet(WHITELIST))
+                             , mSuperWhitelist(new DomainSet(SUPER_WHITELIST))
+{
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        BroadcastDomainSetChange(NO_TYPE, ACTIVATE_POLICY);
+    }
+}
 
 DomainPolicy::~DomainPolicy()
 {
@@ -75,8 +108,45 @@ DomainPolicy::Deactivate()
     mSuperWhitelist = nullptr;
 
     // Inform the SSM.
-    nsScriptSecurityManager::GetScriptSecurityManager()->DeactivateDomainPolicy();
+    nsScriptSecurityManager* ssm = nsScriptSecurityManager::GetScriptSecurityManager();
+    if (ssm) {
+        ssm->DeactivateDomainPolicy();
+    }
+    if (XRE_GetProcessType() == GeckoProcessType_Default) {
+        BroadcastDomainSetChange(NO_TYPE, DEACTIVATE_POLICY);
+    }
     return NS_OK;
+}
+
+void
+DomainPolicy::CloneDomainPolicy(DomainPolicyClone* aClone)
+{
+    aClone->active() = true;
+    static_cast<DomainSet*>(mBlacklist.get())->CloneSet(&aClone->blacklist());
+    static_cast<DomainSet*>(mSuperBlacklist.get())->CloneSet(&aClone->superBlacklist());
+    static_cast<DomainSet*>(mWhitelist.get())->CloneSet(&aClone->whitelist());
+    static_cast<DomainSet*>(mSuperWhitelist.get())->CloneSet(&aClone->superWhitelist());
+}
+
+static
+void
+CopyURIs(const InfallibleTArray<URIParams>& aDomains, nsIDomainSet* aSet)
+{
+    for (uint32_t i = 0; i < aDomains.Length(); i++) {
+        nsCOMPtr<nsIURI> uri = DeserializeURI(aDomains[i]);
+        aSet->Add(uri);
+    }
+}
+
+void
+DomainPolicy::ApplyClone(DomainPolicyClone* aClone)
+{
+    nsCOMPtr<nsIDomainSet> list;
+
+    CopyURIs(aClone->blacklist(), mBlacklist);
+    CopyURIs(aClone->whitelist(), mWhitelist);
+    CopyURIs(aClone->superBlacklist(), mSuperBlacklist);
+    CopyURIs(aClone->superWhitelist(), mSuperWhitelist);
 }
 
 static already_AddRefed<nsIURI>
@@ -100,6 +170,9 @@ DomainSet::Add(nsIURI* aDomain)
     nsCOMPtr<nsIURI> clone = GetCanonicalClone(aDomain);
     NS_ENSURE_TRUE(clone, NS_ERROR_FAILURE);
     mHashTable.PutEntry(clone);
+    if (XRE_GetProcessType() == GeckoProcessType_Default)
+        return BroadcastDomainSetChange(mType, ADD_DOMAIN, aDomain);
+
     return NS_OK;
 }
 
@@ -109,6 +182,9 @@ DomainSet::Remove(nsIURI* aDomain)
     nsCOMPtr<nsIURI> clone = GetCanonicalClone(aDomain);
     NS_ENSURE_TRUE(clone, NS_ERROR_FAILURE);
     mHashTable.RemoveEntry(clone);
+    if (XRE_GetProcessType() == GeckoProcessType_Default)
+        return BroadcastDomainSetChange(mType, REMOVE_DOMAIN, aDomain);
+
     return NS_OK;
 }
 
@@ -116,6 +192,9 @@ NS_IMETHODIMP
 DomainSet::Clear()
 {
     mHashTable.Clear();
+    if (XRE_GetProcessType() == GeckoProcessType_Default)
+        return BroadcastDomainSetChange(mType, CLEAR_DOMAINS);
+
     return NS_OK;
 }
 
@@ -158,6 +237,33 @@ DomainSet::ContainsSuperDomain(nsIURI* aDomain, bool* aContains)
     // No match.
     return NS_OK;
 
+}
+
+NS_IMETHODIMP
+DomainSet::GetType(uint32_t* aType)
+{
+    *aType = mType;
+    return NS_OK;
+}
+
+static
+PLDHashOperator
+DomainEnumerator(nsURIHashKey* aEntry, void* aUserArg)
+{
+    InfallibleTArray<URIParams>* uris = static_cast<InfallibleTArray<URIParams>*>(aUserArg);
+    nsIURI* key = aEntry->GetKey();
+
+    URIParams uri;
+    SerializeURI(key, uri);
+
+    uris->AppendElement(uri);
+    return PL_DHASH_NEXT;
+}
+
+void
+DomainSet::CloneSet(InfallibleTArray<URIParams>* aDomains)
+{
+    mHashTable.EnumerateEntries(DomainEnumerator, aDomains);
 }
 
 } /* namespace mozilla */

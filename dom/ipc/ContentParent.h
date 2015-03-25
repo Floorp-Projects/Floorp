@@ -511,7 +511,8 @@ private:
                                           bool* aIsForBrowser) override;
     virtual bool RecvGetXPCOMProcessAttributes(bool* aIsOffline,
                                                InfallibleTArray<nsString>* dictionaries,
-                                               ClipboardCapabilities* clipboardCaps)
+                                               ClipboardCapabilities* clipboardCaps,
+                                               DomainPolicyClone* domainPolicy)
         override;
 
     virtual bool DeallocPJavaScriptParent(mozilla::jsipc::PJavaScriptParent*) override;

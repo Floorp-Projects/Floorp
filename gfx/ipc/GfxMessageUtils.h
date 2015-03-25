@@ -912,12 +912,18 @@ struct ParamTraits<mozilla::layers::EventRegions>
   {
     WriteParam(aMsg, aParam.mHitRegion);
     WriteParam(aMsg, aParam.mDispatchToContentHitRegion);
+    WriteParam(aMsg, aParam.mNoActionRegion);
+    WriteParam(aMsg, aParam.mHorizontalPanRegion);
+    WriteParam(aMsg, aParam.mVerticalPanRegion);
   }
 
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     return (ReadParam(aMsg, aIter, &aResult->mHitRegion) &&
-            ReadParam(aMsg, aIter, &aResult->mDispatchToContentHitRegion));
+            ReadParam(aMsg, aIter, &aResult->mDispatchToContentHitRegion) &&
+            ReadParam(aMsg, aIter, &aResult->mNoActionRegion) &&
+            ReadParam(aMsg, aIter, &aResult->mHorizontalPanRegion) &&
+            ReadParam(aMsg, aIter, &aResult->mVerticalPanRegion));
   }
 };
 

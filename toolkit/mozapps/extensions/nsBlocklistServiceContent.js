@@ -1,0 +1,80 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+"use strict";
+
+const Cc = Components.classes;
+const Ci = Components.interfaces;
+const Cr = Components.results;
+
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm");
+
+const kMissingAPIMessage = "Unsupported blocklist call in the child process."
+
+/*
+ * A lightweight blocklist proxy for the content process that traps plugin
+ * related blocklist checks and forwards them to the parent. This interface is
+ * primarily designed to insure overlays work.. it does not control plugin
+ * or addon loading.
+ */
+
+function Blocklist() {
+}
+
+Blocklist.prototype = {
+  classID: Components.ID("{e0a106ed-6ad4-47a4-b6af-2f1c8aa4712d}"),
+
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIBlocklistService]),
+
+  /*
+    * A helper that queries key data from a plugin or addon object
+    * and generates a simple data wrapper suitable for ipc. We hand
+    * these directly to the nsBlockListService in the parent which
+    * doesn't query for much.. allowing us to get away with this.
+    */
+  flattenObject: function (aTag) {
+    // Based on debugging the nsBlocklistService, these are the props the
+    // parent side will check on our objects.
+    let props = ["name", "description", "filename", "version"];
+    let dataWrapper = {};
+    for (let prop of props) {
+      dataWrapper[prop] = aTag[prop];
+    }
+    return dataWrapper;
+  },
+
+  // We support the addon methods here for completeness, but content currently
+  // only calls getPluginBlocklistState.
+
+  isAddonBlocklisted: function (aAddon, aAppVersion, aToolkitVersion) {
+    throw new Error(kMissingAPIMessage);
+  },
+
+  getAddonBlocklistState: function (aAddon, aAppVersion, aToolkitVersion) {
+    throw new Error(kMissingAPIMessage);
+  },
+
+  getPluginBlocklistState: function (aPluginTag, aAppVersion, aToolkitVersion) {
+    return Services.cpmm.sendSyncMessage("Blocklist::getPluginBlocklistState", {
+      addonData: this.flattenObject(aPluginTag),
+      appVersion: aAppVersion,
+      toolkitVersion: aToolkitVersion
+    })[0];
+  },
+
+  getAddonBlocklistURL: function (aAddon, aAppVersion, aToolkitVersion) {
+    throw new Error(kMissingAPIMessage);
+  },
+
+  getPluginBlocklistURL: function (aPluginTag) {
+    throw new Error(kMissingAPIMessage);
+  },
+
+  getPluginInfoURL: function (aPluginTag) {
+    throw new Error(kMissingAPIMessage);
+  }
+};
+
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([Blocklist]);

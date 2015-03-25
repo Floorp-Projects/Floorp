@@ -501,7 +501,7 @@ js::gc::GCRuntime::endVerifyPostBarriers()
     /* Walk the heap to find any edges not the the |edges| set. */
     trc->setTraceCallback(PostVerifierVisitEdge);
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
-        for (ALL_ALLOC_KINDS(kind)) {
+        for (auto kind : AllAllocKinds()) {
             for (ZoneCellIterUnderGC cells(zone, kind); !cells.done(); cells.next()) {
                 Cell *src = cells.getCell();
                 JS_TraceChildren(trc, src, MapAllocToTraceKind(kind));
