@@ -58,11 +58,25 @@
     });
   }
 
+  function testAudio() {
+    return new Promise(function(resolve, reject) {
+      var audio = document.createElement("audio");
+      audio.src = "audio.ogg";
+      audio.preload = "metadata";
+      // The service worker will respond with an existing audio only if the
+      // Request has the correct context, otherwise the Promise will get
+      // rejected and the test will fail.
+      audio.onloadedmetadata = resolve;
+      audio.onerror = reject;
+    });
+  }
+
   Promise.all([
     testFetch(),
     testImage(),
     testImageSrcSet(),
     testPicture(),
+    testAudio(),
   ])
   .then(function() {
     finish();

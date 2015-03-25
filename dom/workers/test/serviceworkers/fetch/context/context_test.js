@@ -16,6 +16,10 @@ self.addEventListener("fetch", function(event) {
     if (event.request.context == "imageset") {
       event.respondWith(fetch("realimg.jpg"));
     }
+  } else if (event.request.url.indexOf("audio.ogg") >= 0) {
+    if (event.request.context == "audio") {
+      event.respondWith(fetch("realaudio.ogg"));
+    }
   }
   // Fail any request that we don't know about.
   try {
