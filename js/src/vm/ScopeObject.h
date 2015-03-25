@@ -778,7 +778,7 @@ class ScopeIter
 // static scope objects are read-only, and we never use their parent links, so
 // they don't need to be distinct.
 //
-// That is, completely optimized out scopes have can't be distinguished by
+// That is, completely optimized out scopes can't be distinguished by
 // frame. Note that even if the frame corresponding to the static scope is
 // live on the stack, it is unsound to synthesize a scope from that live
 // frame. In other words, the provenance of the scope chain is from allocated
