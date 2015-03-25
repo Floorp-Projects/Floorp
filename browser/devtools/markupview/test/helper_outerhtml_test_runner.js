@@ -50,8 +50,8 @@ function* runEditOuterHTMLTest(test, inspector) {
                                              test.newHTML, test.oldHTML);
   yield onReselected;
 
-  // Typically selectedNode will === pageNode, but if a new element has been injected in front
-  // of it, this will not be the case.  If this happens.
+  // Typically selectedNode will === pageNode, but if a new element has been
+  // injected in front of it, this will not be the case. If this happens.
   let selectedNodeFront = inspector.selection.nodeFront;
   let pageNodeFront = yield inspector.walker.querySelector(inspector.walker.rootNode, test.selector);
   let pageNode = getNode(test.selector);
@@ -60,7 +60,8 @@ function* runEditOuterHTMLTest(test, inspector) {
     yield test.validate(pageNode, pageNodeFront, selectedNodeFront, inspector);
   } else {
     is(pageNodeFront, selectedNodeFront, "Original node (grabbed by selector) is selected");
-    is(pageNode.outerHTML, test.newHTML, "Outer HTML has been updated");
+    let {outerHTML} = yield getNodeInfo(test.selector);
+    is(outerHTML, test.newHTML, "Outer HTML has been updated");
   }
 
   // Wait for the inspector to be fully updated to avoid causing errors by
