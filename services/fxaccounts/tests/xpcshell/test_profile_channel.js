@@ -23,11 +23,11 @@ add_test(function () {
 
 add_test(function () {
   var mockMessage = {
-    command: "profile:change",
+    command: "profile:image:change",
     data: { uid: "foo" }
   };
 
-  makeObserver(ON_PROFILE_CHANGE_NOTIFICATION, function (subject, topic, data) {
+  makeObserver(ONPROFILE_IMAGE_CHANGE_NOTIFICATION, function (subject, topic, data) {
     do_check_eq(data, "foo");
     run_next_test();
   });
