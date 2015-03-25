@@ -579,7 +579,12 @@ AboutReader.prototype = {
 
     if (article && article.url == url) {
       this._showContent(article);
+    } else if (this._articlePromise) {
+      // If we were promised an article, show an error message if there's a failure.
+      this._showError();
     } else {
+      // Otherwise, just load the original URL. We can encounter this case when
+      // loading an about:reader URL directly (e.g. opening a reading list item).
       this._win.location.href = url;
     }
   }),
@@ -671,14 +676,17 @@ AboutReader.prototype = {
     this._headerElement.setAttribute("dir", article.dir);
   },
 
-  _showError: function Reader_showError(error) {
+  _showError: function() {
     this._headerElement.style.display = "none";
     this._contentElement.style.display = "none";
 
-    this._messageElement.innerHTML = error;
+    let errorMessage = gStrings.GetStringFromName("aboutReader.loadError");
+    this._messageElement.textContent = errorMessage;
     this._messageElement.style.display = "block";
 
-    this._doc.title = error;
+    this._doc.title = errorMessage;
+
+    this._error = true;
   },
 
   // This function is the JS version of Java's StringUtils.stripCommonSubdomains.
@@ -737,15 +745,16 @@ AboutReader.prototype = {
   _showProgressDelayed: function Reader_showProgressDelayed() {
     this._win.setTimeout(function() {
       // No need to show progress if the article has been loaded,
-      // or if the window has been unloaded.
-      if (this._article || this._windowUnloaded) {
+      // if the window has been unloaded, or if there was an error
+      // trying to load the article.
+      if (this._article || this._windowUnloaded || this._error) {
         return;
       }
 
       this._headerElement.style.display = "none";
       this._contentElement.style.display = "none";
 
-      this._messageElement.innerHTML = gStrings.GetStringFromName("aboutReader.loading");
+      this._messageElement.textContent = gStrings.GetStringFromName("aboutReader.loading");
       this._messageElement.style.display = "block";
     }.bind(this), 300);
   },
