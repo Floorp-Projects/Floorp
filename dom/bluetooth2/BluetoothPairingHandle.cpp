@@ -121,7 +121,8 @@ BluetoothPairingHandle::SetPairingConfirmation(bool aConfirm, ErrorResult& aRv)
 }
 
 JSObject*
-BluetoothPairingHandle::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+BluetoothPairingHandle::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto)
 {
   return BluetoothPairingHandleBinding::Wrap(aCx, this, aGivenProto);
 }

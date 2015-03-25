@@ -8,10 +8,7 @@
   "license": "MPL 2.0",
   "unpack": true,
   "scripts": {
-    "test": "node ./bin/jpm-test.js",
-    "modules": "node ./bin/jpm-test.js --type modules",
-    "addons": "node ./bin/jpm-test.js --type addons",
-    "examples": "node ./bin/jpm-test.js --type examples"
+    "test": "gulp test"
   },
   "homepage": "https://github.com/mozilla/addon-sdk",
   "repository": {
@@ -25,6 +22,7 @@
     "async": "0.9.0",
     "chai": "2.1.1",
     "glob": "4.4.2",
+    "gulp": "3.8.11",
     "jpm": "0.0.29",
     "lodash": "3.3.1",
     "mocha": "2.1.0",

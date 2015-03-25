@@ -21,8 +21,8 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothDevice;
 
-class BluetoothPairingHandle final : public nsISupports,
-                                         public nsWrapperCache
+class BluetoothPairingHandle final : public nsISupports
+                                   , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -39,7 +39,8 @@ public:
     return mOwner;
   }
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx,
+                               JS::Handle<JSObject*> aGivenProto) override;
 
   void GetPasskey(nsString& aPasskey) const
   {

@@ -95,7 +95,8 @@ BluetoothClassOfDevice::Create(nsPIDOMWindow* aOwner)
 }
 
 JSObject*
-BluetoothClassOfDevice::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+BluetoothClassOfDevice::WrapObject(JSContext* aCx,
+                                   JS::Handle<JSObject*> aGivenProto)
 {
   return BluetoothClassOfDeviceBinding::Wrap(aCx, this, aGivenProto);
 }

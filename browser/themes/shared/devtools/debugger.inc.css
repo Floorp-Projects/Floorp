@@ -45,6 +45,16 @@
   margin: 2px;
 }
 
+.dbg-breakpoint-condition-thrown-message {
+  display: none;
+  color: var(--theme-highlight-red);
+}
+
+.dbg-breakpoint.dbg-breakpoint-condition-thrown .dbg-breakpoint-condition-thrown-message {
+  display: block;
+  -moz-padding-start: 0;
+}
+
 /* Sources toolbar */
 
 #sources-toolbar > .devtools-toolbarbutton,

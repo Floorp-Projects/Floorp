@@ -115,6 +115,11 @@ this.Keyboard = {
         // The application has been closed unexpectingly. Let's tell the
         // keyboard app that the focus has been lost.
         this.sendToKeyboard('Keyboard:FocusChange', { 'type': 'blur' });
+        // Notify system app to hide keyboard.
+        SystemAppProxy.dispatchEvent({
+          type: 'inputmethod-contextchange',
+          inputType: 'blur'
+        });
       }
     } else {
       // Ignore notifications that aren't from a BrowserOrApp

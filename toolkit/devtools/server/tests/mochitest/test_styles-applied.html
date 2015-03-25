@@ -122,7 +122,7 @@ addTest(function testMediaQuery() {
   }).then(applied => {
     is(applied[1].rule.type, 1, "Entry 1 is a rule style");
     is(applied[1].rule.parentRule.type, 4, "Entry 1's parent rule is a media rule");
-    is(applied[1].rule.parentRule.media[0], "screen", "Entry 1's parent rule has the expected medium");
+    is(applied[1].rule.media[0], "screen", "Entry 1's rule has the expected medium");
   }).then(runNextTest));
 });
 

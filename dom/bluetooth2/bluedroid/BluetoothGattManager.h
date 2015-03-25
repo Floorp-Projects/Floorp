@@ -17,7 +17,7 @@ class BluetoothGattClient;
 class BluetoothReplyRunnable;
 
 class BluetoothGattManager final : public nsIObserver
-                                     , public BluetoothGattNotificationHandler
+                                 , public BluetoothGattNotificationHandler
 {
 public:
   NS_DECL_ISUPPORTS
