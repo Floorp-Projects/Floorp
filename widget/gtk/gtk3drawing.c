@@ -870,19 +870,8 @@ moz_gtk_button_paint(cairo_t *cr, GdkRectangle* rect,
     GtkStyleContext* style = gtk_widget_get_style_context(widget);    
     gint x = rect->x, y=rect->y, width=rect->width, height=rect->height;
 
-    gboolean interior_focus;
-    gint focus_width, focus_pad;
-
-    moz_gtk_widget_get_focus(widget, &interior_focus, &focus_width, &focus_pad);
     gtk_widget_set_direction(widget, direction);
-
-    if (!interior_focus && state->focused) {
-        x += focus_width + focus_pad;
-        y += focus_width + focus_pad;
-        width -= 2 * (focus_width + focus_pad);
-        height -= 2 * (focus_width + focus_pad);
-    }
-  
+ 
     gtk_style_context_save(style);
     gtk_style_context_set_state(style, state_flags);
 
@@ -915,20 +904,12 @@ moz_gtk_button_paint(cairo_t *cr, GdkRectangle* rect,
     }
 
     if (state->focused) {
-        if (interior_focus) {
-            GtkBorder border;
-            gtk_style_context_get_border(style, state_flags, &border);
-            x += border.left + focus_pad;
-            y += border.top + focus_pad;
-            width -= 2 * (border.left + focus_pad);
-            height -= 2 * (border.top + focus_pad);
-        } else {
-            x -= focus_width + focus_pad;
-            y -= focus_width + focus_pad;
-            width += 2 * (focus_width + focus_pad);
-            height += 2 * (focus_width + focus_pad);
-        }
-
+        GtkBorder border;
+        gtk_style_context_get_border(style, state_flags, &border);
+        x += border.left;
+        y += border.top;
+        width -= (border.left + border.right);
+        height -= (border.top + border.bottom);
         gtk_render_focus(style, cr, x, y, width, height);
     }
     gtk_style_context_restore(style);
