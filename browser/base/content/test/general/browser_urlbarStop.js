@@ -1,40 +1,69 @@
+"use strict";
+
 const goodURL = "http://mochi.test:8888/";
 const badURL = "http://mochi.test:8888/whatever.html";
 
-function test() {
-  waitForExplicitFinish();
-
+add_task(function* () {
   gBrowser.selectedTab = gBrowser.addTab(goodURL);
-  gBrowser.selectedBrowser.addEventListener("load", onload, true);
-}
-
-function onload() {
-  gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-
+  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   is(gURLBar.textValue, gURLBar.trimValue(goodURL), "location bar reflects loaded page");
 
-  typeAndSubmit(badURL);
-  is(gURLBar.textValue, gURLBar.trimValue(badURL), "location bar reflects loading page");
-
-  gBrowser.contentWindow.stop();
+  yield typeAndSubmitAndStop(badURL);
   is(gURLBar.textValue, gURLBar.trimValue(goodURL), "location bar reflects loaded page after stop()");
   gBrowser.removeCurrentTab();
 
   gBrowser.selectedTab = gBrowser.addTab("about:blank");
   is(gURLBar.textValue, "", "location bar is empty");
 
-  typeAndSubmit(badURL);
-  is(gURLBar.textValue, gURLBar.trimValue(badURL), "location bar reflects loading page");
-
-  gBrowser.contentWindow.stop();
+  yield typeAndSubmitAndStop(badURL);
   is(gURLBar.textValue, gURLBar.trimValue(badURL), "location bar reflects stopped page in an empty tab");
   gBrowser.removeCurrentTab();
+});
 
-  finish();
+function typeAndSubmitAndStop(url) {
+  gBrowser.userTypedValue = url;
+  URLBarSetURI();
+  is(gURLBar.textValue, gURLBar.trimValue(url), "location bar reflects loading page");
+
+  let promise = waitForDocLoadAndStopIt();
+  gURLBar.handleCommand();
+  return promise;
 }
 
-function typeAndSubmit(value) {
-  gBrowser.userTypedValue = value;
-  URLBarSetURI();
-  gURLBar.handleCommand();
+function waitForDocLoadAndStopIt() {
+  function content_script() {
+    const {interfaces: Ci, utils: Cu} = Components;
+    Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+    let progressListener = {
+      onStateChange(webProgress, req, flags, status) {
+        if (flags & Ci.nsIWebProgressListener.STATE_START) {
+          wp.removeProgressListener(progressListener);
+
+          /* Hammer time. */
+          content.stop();
+
+          /* Let the parent know we're done. */
+          sendAsyncMessage("{MSG}");
+        }
+      },
+
+      QueryInterface: XPCOMUtils.generateQI(["nsISupportsWeakReference"])
+    };
+
+    let wp = docShell.QueryInterface(Ci.nsIWebProgress);
+    wp.addProgressListener(progressListener, wp.NOTIFY_ALL);
+  }
+
+  return new Promise(resolve => {
+    const MSG = "test:waitForDocLoadAndStopIt";
+    const SCRIPT = content_script.toString().replace("{MSG}", MSG);
+
+    let mm = gBrowser.selectedBrowser.messageManager;
+    mm.loadFrameScript("data:,(" + SCRIPT + ")();", true);
+    mm.addMessageListener(MSG, function onComplete() {
+      mm.removeMessageListener(MSG, onComplete);
+      resolve();
+    });
+  });
 }

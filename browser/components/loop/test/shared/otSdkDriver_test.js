@@ -104,14 +104,6 @@ describe("loop.OTSdkDriver", function () {
         new loop.OTSdkDriver({dispatcher: dispatcher});
       }).to.Throw(/sdk/);
     });
-
-    it("should set the two-way media start time to 'uninitialized'", function() {
-      var driver = new loop.OTSdkDriver(
-        {sdk: sdk, dispatcher: dispatcher, mozLoop: mozLoop, isDesktop: true});
-
-      expect(driver._getTwoWayMediaStartTime()).to.
-        eql(driver.CONNECTION_START_TIME_UNINITIALIZED);
-    });
   });
 
   describe("#setupStreamElements", function() {
@@ -352,6 +344,15 @@ describe("loop.OTSdkDriver", function () {
       sinon.assert.calledWith(session.connect, "1234567890", "1357924680");
     });
 
+    it("should set the two-way media start time to 'uninitialized' " +
+       "when sessionData.sendTwoWayMediaTelemetry is true'", function() {
+      driver.connectSession(_.extend(sessionData,
+                                     {sendTwoWayMediaTelemetry: true}));
+
+      expect(driver._getTwoWayMediaStartTime()).to.
+        eql(driver.CONNECTION_START_TIME_UNINITIALIZED);
+    });
+
     describe("On connection complete", function() {
       it("should publish the stream if the publisher is ready", function() {
         driver._publisherReady = true;
@@ -398,6 +399,7 @@ describe("loop.OTSdkDriver", function () {
       driver.session = session;
       var startTime = 1;
       var endTime = 3;
+      driver._sendTwoWayMediaTelemetry = true;
       driver._setTwoWayMediaStartTime(startTime);
       sandbox.stub(performance, "now").returns(endTime);
       sandbox.stub(driver, "_noteConnectionLengthIfNeeded");
@@ -411,6 +413,7 @@ describe("loop.OTSdkDriver", function () {
     it("should reset the two-way media connection start time", function() {
       driver.session = session;
       var startTime = 1;
+      driver._sendTwoWayMediaTelemetry = true;
       driver._setTwoWayMediaStartTime(startTime);
       sandbox.stub(performance, "now");
       sandbox.stub(driver, "_noteConnectionLengthIfNeeded");
@@ -426,6 +429,7 @@ describe("loop.OTSdkDriver", function () {
     var startTimeMS;
     beforeEach(function() {
       startTimeMS = 1;
+      driver._sendTwoWayMediaTelemetry = true;
       driver._setTwoWayMediaStartTime(startTimeMS);
     });
 
@@ -483,11 +487,11 @@ describe("loop.OTSdkDriver", function () {
         mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.MORE_THAN_5M);
     });
 
-    it("should not call mozLoop.noteConnectionLength if driver._isDesktop " +
-       "is false",
+    it("should not call mozLoop.noteConnectionLength if" +
+       " driver._sendTwoWayMediaTelemetry is false",
       function() {
         var endTimeMS = 10 * 60 * 1000;
-        driver._isDesktop = false;
+        driver._sendTwoWayMediaTelemetry = false;
 
         driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
 
@@ -616,6 +620,7 @@ describe("loop.OTSdkDriver", function () {
         driver.session = session;
         var startTime = 1;
         var endTime = 3;
+        driver._sendTwoWayMediaTelemetry = true;
         driver._setTwoWayMediaStartTime(startTime);
         sandbox.stub(performance, "now").returns(endTime);
         sandbox.stub(driver, "_noteConnectionLengthIfNeeded");
@@ -660,6 +665,7 @@ describe("loop.OTSdkDriver", function () {
         driver.session = session;
         var startTime = 1;
         var endTime = 3;
+        driver._sendTwoWayMediaTelemetry = true;
         driver._setTwoWayMediaStartTime(startTime);
         sandbox.stub(performance, "now").returns(endTime);
         sandbox.stub(driver, "_noteConnectionLengthIfNeeded");
@@ -747,7 +753,8 @@ describe("loop.OTSdkDriver", function () {
       });
 
       it("should store the start time when both streams are up and" +
-      " driver._isDesktop is true", function() {
+      " driver._sendTwoWayMediaTelemetry is true", function() {
+        driver._sendTwoWayMediaTelemetry = true;
         driver._publishedLocalStream = true;
         var startTime = 1;
         sandbox.stub(performance, "now").returns(startTime);
