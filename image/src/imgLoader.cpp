@@ -1622,27 +1622,6 @@ bool imgLoader::ValidateRequestWithNewChannel(imgRequest *request,
   }
 }
 
-static bool
-IsURICacheable(nsIURI* aURI, imgRequest* aRequest)
-{
-  bool isHttp = false;
-  bool isHttps = false;
-  bool isViewSource = false;
-
-  if (NS_FAILED(aURI->SchemeIs("http", &isHttp)) ||
-      NS_FAILED(aURI->SchemeIs("https", &isHttps)) ||
-      NS_FAILED(aURI->SchemeIs("view-source", &isViewSource)) ||
-      !(isHttp || isHttps || isViewSource)) {
-    PR_LOG(GetImgLog(), PR_LOG_DEBUG,
-           ("imgLoader::IsURICacheable - Can't use cached imgRequest "
-            "[request=%p] because we need to validate but the scheme "
-            "indicates a non-cacheable channel type\n", aRequest));
-    return false;
-  }
-
-  return true;
-}
-
 bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
                                 nsIURI *aURI,
                                 nsIURI *aInitialDocumentURI,
@@ -1762,21 +1741,15 @@ bool imgLoader::ValidateEntry(imgCacheEntry *aEntry,
     return false;
   }
 
-  if (validateRequest) {
-    if (!IsURICacheable(aURI, request)) {
-      return false;
-    }
+  if (validateRequest && aCanMakeNewChannel) {
+    LOG_SCOPE(GetImgLog(), "imgLoader::ValidateRequest |cache hit| must validate");
 
-    if (aCanMakeNewChannel) {
-      LOG_SCOPE(GetImgLog(), "imgLoader::ValidateRequest |cache hit| must validate");
-
-      return ValidateRequestWithNewChannel(request, aURI, aInitialDocumentURI,
-                                           aReferrerURI, aReferrerPolicy,
-                                           aLoadGroup, aObserver,
-                                           aCX, aLoadFlags, aLoadPolicyType,
-                                           aProxyRequest, aLoadingPrincipal,
-                                           aCORSMode);
-    }
+    return ValidateRequestWithNewChannel(request, aURI, aInitialDocumentURI,
+                                         aReferrerURI, aReferrerPolicy,
+                                         aLoadGroup, aObserver,
+                                         aCX, aLoadFlags, aLoadPolicyType,
+                                         aProxyRequest, aLoadingPrincipal,
+                                         aCORSMode);
   }
 
   return !validateRequest;
