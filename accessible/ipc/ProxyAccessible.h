@@ -217,6 +217,36 @@ public:
 
   bool IsCellSelected();
 
+  ProxyAccessible* TableCaption();
+  void TableSummary(nsString& aSummary);
+  uint32_t TableColumnCount();
+  uint32_t TableRowCount();
+  ProxyAccessible* TableCellAt(uint32_t aRow, uint32_t aCol);
+  int32_t TableCellIndexAt(uint32_t aRow, uint32_t aCol);
+  int32_t TableColumnIndexAt(uint32_t aCellIndex);
+  int32_t TableRowIndexAt(uint32_t aCellIndex);
+  void TableRowAndColumnIndicesAt(uint32_t aCellIndex,
+                                  int32_t* aRow, int32_t* aCol);
+  uint32_t TableColumnExtentAt(uint32_t aRow, uint32_t aCol);
+  uint32_t TableRowExtentAt(uint32_t aRow, uint32_t aCol);
+  void TableColumnDescription(uint32_t aCol, nsString& aDescription);
+  void TableRowDescription(uint32_t aRow, nsString& aDescription);
+  bool TableColumnSelected(uint32_t aCol);
+  bool TableRowSelected(uint32_t aRow);
+  bool TableCellSelected(uint32_t aRow, uint32_t aCol);
+  uint32_t TableSelectedCellCount();
+  uint32_t TableSelectedColumnCount();
+  uint32_t TableSelectedRowCount();
+  void TableSelectedCells(nsTArray<ProxyAccessible*>* aCellIDs);
+  void TableSelectedCellIndices(nsTArray<uint32_t>* aCellIndices);
+  void TableSelectedColumnIndices(nsTArray<uint32_t>* aColumnIndices);
+  void TableSelectedRowIndices(nsTArray<uint32_t>* aRowIndices);
+  void TableSelectColumn(uint32_t aCol);
+  void TableSelectRow(uint32_t aRow);
+  void TableUnselectColumn(uint32_t aCol);
+  void TableUnselectRow(uint32_t aRow);
+  bool TableIsProbablyForLayout();
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */

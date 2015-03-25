@@ -16,7 +16,8 @@ namespace a11y {
 class Accessible;
 class HyperTextAccessible;
 class ImageAccessible;
-
+class TableAccessible;
+class TableCellAccessible;
 class AccShowEvent;
 
   /*
@@ -245,6 +246,82 @@ public:
   virtual bool RecvIsCellSelected(const uint64_t& aID,
                                   bool* aSelected) override;
 
+  virtual bool RecvTableCaption(const uint64_t& aID,
+                                uint64_t* aCaptionID,
+                                bool* aOk) override;
+  virtual bool RecvTableSummary(const uint64_t& aID,
+                                nsString* aSummary) override;
+  virtual bool RecvTableColumnCount(const uint64_t& aID,
+                                    uint32_t* aColCount) override;
+  virtual bool RecvTableRowCount(const uint64_t& aID,
+                                 uint32_t* aRowCount) override;
+  virtual bool RecvTableCellAt(const uint64_t& aID,
+                               const uint32_t& aRow,
+                               const uint32_t& aCol,
+                               uint64_t* aCellID,
+                               bool* aOk) override;
+  virtual bool RecvTableCellIndexAt(const uint64_t& aID,
+                                    const uint32_t& aRow,
+                                    const uint32_t& aCol,
+                                    int32_t* aIndex) override;
+  virtual bool RecvTableColumnIndexAt(const uint64_t& aID,
+                                      const uint32_t& aCellIndex,
+                                      int32_t* aCol) override;
+  virtual bool RecvTableRowIndexAt(const uint64_t& aID,
+                                   const uint32_t& aCellIndex,
+                                   int32_t* aRow) override;
+  virtual bool RecvTableRowAndColumnIndicesAt(const uint64_t& aID,
+                                             const uint32_t& aCellIndex,
+                                             int32_t* aRow,
+                                             int32_t* aCol) override;
+  virtual bool RecvTableColumnExtentAt(const uint64_t& aID,
+                                       const uint32_t& aRow,
+                                       const uint32_t& aCol,
+                                       uint32_t* aExtent) override;
+  virtual bool RecvTableRowExtentAt(const uint64_t& aID,
+                                    const uint32_t& aRow,
+                                    const uint32_t& aCol,
+                                    uint32_t* aExtent) override;
+  virtual bool RecvTableColumnDescription(const uint64_t& aID,
+                                          const uint32_t& aCol,
+                                          nsString* aDescription) override;
+  virtual bool RecvTableRowDescription(const uint64_t& aID,
+                                       const uint32_t& aRow,
+                                       nsString* aDescription) override;
+  virtual bool RecvTableColumnSelected(const uint64_t& aID,
+                                       const uint32_t& aCol,
+                                       bool* aSelected) override;
+  virtual bool RecvTableRowSelected(const uint64_t& aID,
+                                    const uint32_t& aRow,
+                                    bool* aSelected) override;
+  virtual bool RecvTableCellSelected(const uint64_t& aID,
+                                     const uint32_t& aRow,
+                                     const uint32_t& aCol,
+                                     bool* aSelected) override;
+  virtual bool RecvTableSelectedCellCount(const uint64_t& aID,
+                                          uint32_t* aSelectedCells) override;
+  virtual bool RecvTableSelectedColumnCount(const uint64_t& aID,
+                                            uint32_t* aSelectedColumns) override;
+  virtual bool RecvTableSelectedRowCount(const uint64_t& aID,
+                                         uint32_t* aSelectedRows) override;
+  virtual bool RecvTableSelectedCells(const uint64_t& aID,
+                                      nsTArray<uint64_t>* aCellIDs) override;
+  virtual bool RecvTableSelectedCellIndices(const uint64_t& aID,
+                                            nsTArray<uint32_t>* aCellIndices) override;
+  virtual bool RecvTableSelectedColumnIndices(const uint64_t& aID,
+                                              nsTArray<uint32_t>* aColumnIndices) override;
+  virtual bool RecvTableSelectedRowIndices(const uint64_t& aID,
+                                           nsTArray<uint32_t>* aRowIndices) override;
+  virtual bool RecvTableSelectColumn(const uint64_t& aID,
+                                     const uint32_t& aCol) override;
+  virtual bool RecvTableSelectRow(const uint64_t& aID,
+                                  const uint32_t& aRow) override;
+  virtual bool RecvTableUnselectColumn(const uint64_t& aID,
+                                       const uint32_t& aCol) override;
+  virtual bool RecvTableUnselectRow(const uint64_t& aID,
+                                    const uint32_t& aRow) override;
+  virtual bool RecvTableIsProbablyForLayout(const uint64_t& aID,
+                                            bool* aForLayout) override;
 private:
 
   Accessible* IdToAccessible(const uint64_t& aID) const;
@@ -252,6 +329,7 @@ private:
   HyperTextAccessible* IdToHyperTextAccessible(const uint64_t& aID) const;
   ImageAccessible* IdToImageAccessible(const uint64_t& aID) const;
   TableCellAccessible* IdToTableCellAccessible(const uint64_t& aID) const;
+  TableAccessible* IdToTableAccessible(const uint64_t& aID) const;
 
   bool PersistentPropertiesToArray(nsIPersistentProperties* aProps,
                                    nsTArray<Attribute>* aAttributes);
