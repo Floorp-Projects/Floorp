@@ -518,7 +518,7 @@ public:
 
     nsresult rv = PackPDU(
       PackConversion<nsAString, BluetoothAddress>(aBdAddr),
-      PackConversion<nsAString, BluetoothSspPairingVariant>(aVariant),
+      PackConversion<nsAString, BluetoothSspVariant>(aVariant),
       aAccept, aPasskey, *pdu);
     if (NS_FAILED(rv)) {
       return rv;
@@ -1176,7 +1176,7 @@ private:
 
       /* Read pairing variant */
       rv = UnpackPDU(
-        pdu, UnpackConversion<BluetoothSspPairingVariant, nsAString>(aArg4));
+        pdu, UnpackConversion<BluetoothSspVariant, nsAString>(aArg4));
       if (NS_FAILED(rv)) {
         return rv;
       }
