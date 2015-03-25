@@ -53,14 +53,14 @@ function add_tests() {
   // Get an Unknown response for the *.exmaple.com cert and put it in the
   // OCSP cache.
   add_connection_test("ocsp-stapling-unknown.example.com",
-                      getXPCOMStatusFromNSS(SEC_ERROR_OCSP_UNKNOWN_CERT),
+                      SEC_ERROR_OCSP_UNKNOWN_CERT,
                       clearSessionCache);
   add_test(function() { do_check_eq(gFetchCount, 0); run_next_test(); });
 
   // A failure to retrieve an OCSP response must result in the cached Unkown
   // response being recognized and honored.
   add_connection_test("ocsp-stapling-none.example.com",
-                      getXPCOMStatusFromNSS(SEC_ERROR_OCSP_UNKNOWN_CERT),
+                      SEC_ERROR_OCSP_UNKNOWN_CERT,
                       clearSessionCache);
   add_test(function() { do_check_eq(gFetchCount, 1); run_next_test(); });
 
@@ -81,14 +81,14 @@ function add_tests() {
     gGoodOCSPResponse = generateGoodOCSPResponse();
     run_next_test();
   });
-  add_connection_test("ocsp-stapling-none.example.com", Cr.NS_OK,
+  add_connection_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess,
                       clearSessionCache);
   add_test(function() { do_check_eq(gFetchCount, 2); run_next_test(); });
 
   // The Good response retrieved from the previous fetch must have replaced
   // the Unknown response in the cache, resulting in the catched Good response
   // being returned and no fetch.
-  add_connection_test("ocsp-stapling-none.example.com", Cr.NS_OK,
+  add_connection_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess,
                       clearSessionCache);
   add_test(function() { do_check_eq(gFetchCount, 2); run_next_test(); });
 
@@ -100,19 +100,19 @@ function add_tests() {
 
   // A failure to retrieve an OCSP response will result in an error entry being
   // added to the cache.
-  add_connection_test("ocsp-stapling-none.example.com", Cr.NS_OK,
+  add_connection_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess,
                       clearSessionCache);
   add_test(function() { do_check_eq(gFetchCount, 1); run_next_test(); });
 
   // The error entry will prevent a fetch from happening for a while.
-  add_connection_test("ocsp-stapling-none.example.com", Cr.NS_OK,
+  add_connection_test("ocsp-stapling-none.example.com", PRErrorCodeSuccess,
                       clearSessionCache);
   add_test(function() { do_check_eq(gFetchCount, 1); run_next_test(); });
 
   // The error entry must not prevent a stapled OCSP response from being
   // honored.
   add_connection_test("ocsp-stapling-revoked.example.com",
-                      getXPCOMStatusFromNSS(SEC_ERROR_REVOKED_CERTIFICATE),
+                      SEC_ERROR_REVOKED_CERTIFICATE,
                       clearSessionCache);
   add_test(function() { do_check_eq(gFetchCount, 1); run_next_test(); });
 
