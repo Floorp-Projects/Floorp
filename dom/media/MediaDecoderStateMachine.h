@@ -146,8 +146,7 @@ public:
     DECODER_STATE_SEEKING,
     DECODER_STATE_BUFFERING,
     DECODER_STATE_COMPLETED,
-    DECODER_STATE_SHUTDOWN,
-    DECODER_STATE_ERROR
+    DECODER_STATE_SHUTDOWN
   };
 
   State GetState() {
@@ -410,6 +409,9 @@ public:
   // Resets all state related to decoding and playback, emptying all buffers
   // and aborting all pending operations on the decode task queue.
   void Reset();
+
+private:
+  void AcquireMonitorAndInvokeDecodeError();
 
 protected:
   virtual ~MediaDecoderStateMachine();
