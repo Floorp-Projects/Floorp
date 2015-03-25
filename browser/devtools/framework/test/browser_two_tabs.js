@@ -54,9 +54,62 @@ function connect() {
       gTabActor1 = response.tabs.filter(a => a.url === TAB_URL_1)[0];
       gTabActor2 = response.tabs.filter(a => a.url === TAB_URL_2)[0];
 
-      checkSelectedTabActor();
+      checkGetTab();
     });
   });
+}
+
+function checkGetTab() {
+  gClient.getTab({tab: gTab1})
+         .then(response => {
+           is(JSON.stringify(gTabActor1), JSON.stringify(response.tab),
+              "getTab returns the same tab grip for first tab");
+         })
+         .then(() => {
+           let filter = {};
+           // Filter either by tabId or outerWindowID,
+           // if we are running tests OOP or not.
+           if (gTab1.linkedBrowser.frameLoader.tabParent) {
+             filter.tabId = gTab1.linkedBrowser.frameLoader.tabParent.tabId;
+           } else {
+             let windowUtils = gTab1.linkedBrowser.contentWindow
+               .QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIDOMWindowUtils);
+             filter.outerWindowID = windowUtils.outerWindowID;
+           }
+           return gClient.getTab(filter);
+         })
+         .then(response => {
+           is(JSON.stringify(gTabActor1), JSON.stringify(response.tab),
+              "getTab returns the same tab grip when filtering by tabId/outerWindowID");
+         })
+         .then(() => gClient.getTab({tab: gTab2}))
+         .then(response => {
+           is(JSON.stringify(gTabActor2), JSON.stringify(response.tab),
+              "getTab returns the same tab grip for second tab");
+         })
+         .then(checkGetTabFailures);
+}
+
+function checkGetTabFailures() {
+  gClient.getTab({ tabId: -999 })
+    .then(
+      response => ok(false, "getTab unexpectedly succeed with a wrong tabId"),
+      response => {
+        is(response.error, "noTab");
+        is(response.message, "Unable to find tab with tabId '-999'");
+      }
+    )
+    .then(() => gClient.getTab({ outerWindowID: -999 }))
+    .then(
+      response => ok(false, "getTab unexpectedly succeed with a wrong outerWindowID"),
+      response => {
+        is(response.error, "noTab");
+        is(response.message, "Unable to find tab with outerWindowID '-999'");
+      }
+    )
+    .then(checkSelectedTabActor);
+
 }
 
 function checkSelectedTabActor() {
