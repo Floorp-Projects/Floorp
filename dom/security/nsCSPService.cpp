@@ -159,7 +159,7 @@ CSPService::ShouldLoad(uint32_t aContentType,
 
   if (status == nsIPrincipal::APP_STATUS_CERTIFIED) {
     // The CSP for certified apps is :
-    // "default-src *; script-src 'self'; object-src 'none'; style-src 'self' app://theme.gaiamobile.org:*"
+    // "default-src * data: blob:; script-src 'self'; object-src 'none'; style-src 'self' app://theme.gaiamobile.org:*"
     // That means we can optimize for this case by:
     // - loading same origin scripts and stylesheets, and stylesheets from the
     //   theme url space.
