@@ -7,229 +7,253 @@ var testGenerator = testSteps();
 
 function testSteps()
 {
-  const name = this.window ? window.location.pathname : "Splendid Test";
+  const name = this.window ?
+               window.location.pathname :
+               "test_temporary_storage.js";
+  const finalVersion = 2;
 
-  const urls = [
-    { url: "http://www.alpha.com",        flags: [true, true, true, true] },
-    { url: "http://www.beta.com",         flags: [true, false, false, false] },
-    { url: "http://www.gamma.com",        flags: [true, true, false, false] },
-    { url: "http://www.delta.com",        flags: [true, true, false, false] },
-    { url: "http://www.epsilon.com",      flags: [true, true, false, false] },
-    { url: "http://www2.alpha.com",       flags: [true, true, false, false] },
-    { url: "http://www2.beta.com",        flags: [true, true, false, false] },
-    { url: "http://www2.gamma.com",       flags: [true, true, false, false] },
-    { url: "http://www2.delta.com",       flags: [true, true, true, false] },
-    { url: "http://www2.epsilon.com",     flags: [true, true, true, true] },
-    { url: "http://joe.blog.alpha.com",   flags: [true, true, true, true] },
-    { url: "http://joe.blog.beta.com",    flags: [true, true, true, true] },
-    { url: "http://joe.blog.gamma.com",   flags: [true, true, true, true] },
-    { url: "http://joe.blog.delta.com",   flags: [true, true, true, true] },
-    { url: "http://joe.blog.epsilon.com", flags: [true, true, true, true] },
-    { url: "http://www.rudolf.org",       flags: [true, true, true, true] },
-    { url: "http://www.pauline.org",      flags: [true, true, true, true] },
-    { url: "http://www.marie.org",        flags: [true, true, true, true] },
-    { url: "http://www.john.org",         flags: [true, true, true, true] },
-    { url: "http://www.ema.org",          flags: [true, true, true, true] },
-    { url: "http://www.trigger.com",      flags: [false, true, true, true] }
-  ];
-  const lastIndex = urls.length - 1;
-  const lastUrl = urls[lastIndex].url;
-
-  const openDBOptions = [
-    { version: 1, storage: "temporary" },
-    { version: 1 }
-  ];
-
-  let quotaManager =
-    Components.classes["@mozilla.org/dom/quota/manager;1"]
-              .getService(Components.interfaces.nsIQuotaManager);
-
-  let ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                            .getService(Components.interfaces.nsIIOService);
-
-  let dbSize = 0;
+  const tempStorageLimitKB = 1024;
+  const checkpointSleepTimeSec = 5;
 
   function setLimit(limit) {
+    const pref = "dom.quotaManager.temporaryStorage.fixedLimit";
     if (limit) {
-      SpecialPowers.setIntPref("dom.quotaManager.temporaryStorage.fixedLimit",
-                               limit);
-      return;
+      info("Setting temporary storage limit to " + limit);
+      SpecialPowers.setIntPref(pref, limit);
+    } else {
+      info("Removing temporary storage limit");
+      SpecialPowers.clearUserPref(pref);
     }
-    SpecialPowers.clearUserPref("dom.quotaManager.temporaryStorage.fixedLimit");
+  }
+
+  function getSpec(index) {
+    return "http://foo" + index + ".com";
   }
 
   function getPrincipal(url) {
-    let uri = ioService.newURI(url, null, null);
-    return Components.classes["@mozilla.org/scriptsecuritymanager;1"]
-                     .getService(Components.interfaces.nsIScriptSecurityManager)
-                     .getNoAppCodebasePrincipal(uri);
+    let uri = Cc["@mozilla.org/network/io-service;1"]
+                .getService(Ci.nsIIOService)
+                .newURI(url, null, null);
+    return Cc["@mozilla.org/scriptsecuritymanager;1"]
+             .getService(Ci.nsIScriptSecurityManager)
+             .getNoAppCodebasePrincipal(uri);
   }
 
-  function getUsageForUrl(url, usageHandler) {
-    let uri = ioService.newURI(url, null, null);
-    function callback(uri, usage, fileUsage) {
-      usageHandler(usage, fileUsage);
-    }
-    quotaManager.getUsageForURI(uri, callback);
-  }
+  for (let temporary of [true, false]) {
+    info("Testing '" + (temporary ? "temporary" : "default") + "' storage");
 
-  function grabUsageAndContinueHandler(usage, fileUsage) {
-    testGenerator.send(usage);
-  }
+    setLimit(tempStorageLimitKB);
 
-  function checkUsage(stageIndex) {
-    let handledIndex = 0;
-
-    function usageHandler(usage, fileUsage) {
-      let data = urls[handledIndex++];
-      if (data.flags[stageIndex - 1]) {
-        ok(usage > 0, "Non-zero usage for '" + data.url + "'");
-      }
-      else {
-        ok(usage == 0, "Zero usage for '" + data.url + "'");
-      }
-      if (handledIndex == urls.length) {
-        continueToNextStep();
-      }
-    }
-
-    for (let i = 0; i < urls.length; i++) {
-      getUsageForUrl(urls[i].url, usageHandler);
-    }
-  }
-
-  // Enable clear() and test()
-  let testingEnabled =
-    SpecialPowers.getBoolPref("dom.quotaManager.testing");
-  SpecialPowers.setBoolPref("dom.quotaManager.testing", true)
-
-  // Calibration
-  let request = indexedDB.openForPrincipal(getPrincipal(lastUrl), name,
-                                           { storage: "temporary" });
-  request.onerror = errorHandler;
-  request.onsuccess = grabEventAndContinueHandler;
-  let event = yield undefined;
-
-  getUsageForUrl(lastUrl, grabUsageAndContinueHandler);
-  dbSize = yield undefined;
-
-  for (let options of openDBOptions) {
-    setLimit(lastIndex * dbSize / 1024);
-    quotaManager.clear();
-
-    info("Stage 1");
-
-    let databases = [];
-    for (let i = 0; i < lastIndex; i++) {
-      let data = urls[i];
-
-      info("Opening database for " + data.url);
-
-      request = indexedDB.openForPrincipal(getPrincipal(data.url), name,
-                                           options);
-      request.onerror = errorHandler;
-      request.onupgradeneeded = grabEventAndContinueHandler;
-      request.onsuccess = grabEventAndContinueHandler;
-      event = yield undefined;
-
-      is(event.type, "upgradeneeded", "Got correct event type");
-
-      let db = event.target.result;
-      db.createObjectStore("foo", { });
-
-      event = yield undefined;
-
-      is(event.type, "success", "Got correct event type");
-
-      databases.push(event.target.result);
-    }
-
-    request = indexedDB.openForPrincipal(getPrincipal(lastUrl), name, options);
-    request.addEventListener("error", new ExpectError("QuotaExceededError"));
-    request.onsuccess = unexpectedSuccessHandler;
-    event = yield undefined;
-
-    checkUsage(1);
+    clearAllDatabases(continueToNextStepSync);
     yield undefined;
 
-    info("Stage 2");
+    info("Stage 1 - Creating empty databases until we reach the quota limit");
 
-    for (let i = 1; i < urls.length; i++) {
-      databases[i] = null;
-
-      scheduleGC();
-      yield undefined;
-
-      // The origin access time is set to the current system time when the first
-      // database for an origin is registered or the last one is unregistered.
-      // The registration happens when the database object is being created and
-      // the unregistration when it is unlinked/garbage collected.
-      // Some older windows systems have the system time limited to a maximum
-      // resolution of 10 or 15 milliseconds, so without a pause here we would
-      // end up with origins with the same access time which would cause random
-      // failures.
-      setTimeout(function() { testGenerator.next(); }, 20);
-      yield undefined;
+    let databases = [];
+    let options = { version: finalVersion };
+    if (temporary) {
+      options.storage = "temporary";
     }
 
-    request = indexedDB.openForPrincipal(getPrincipal(lastUrl), name, options);
+    while (true) {
+      let spec = getSpec(databases.length);
+
+      info("Opening database for " + spec + " with version " + options.version);
+
+      let gotUpgradeNeeded = false;
+
+      let request =
+        indexedDB.openForPrincipal(getPrincipal(spec), name, options);
+      request.onerror = function(event) {
+        is(request.error.name, "QuotaExceededError", "Reached quota limit");
+        event.preventDefault();
+        testGenerator.send(false);
+      }
+      request.onupgradeneeded = function(event) {
+        gotUpgradeNeeded = true;
+      }
+      request.onsuccess = function(event) {
+        let db = event.target.result;
+        is(db.version, finalVersion, "Correct version " + finalVersion);
+        databases.push(db);
+        testGenerator.send(true);
+      }
+
+      let shouldContinue = yield undefined;
+      if (shouldContinue) {
+        is(gotUpgradeNeeded, true, "Got upgradeneeded event");
+        ok(true, "Got success event");
+      } else {
+        break;
+      }
+    }
+
+    while (true) {
+      info("Sleeping for " + checkpointSleepTimeSec + " seconds to let all " +
+           "checkpoints finish so that we know we have reached quota limit");
+      setTimeout(continueToNextStepSync, checkpointSleepTimeSec * 1000);
+      yield undefined;
+
+      let spec = getSpec(databases.length);
+
+      info("Opening database for " + spec + " with version " + options.version);
+
+      let gotUpgradeNeeded = false;
+
+      let request =
+        indexedDB.openForPrincipal(getPrincipal(spec), name, options);
+      request.onerror = function(event) {
+        is(request.error.name, "QuotaExceededError", "Reached quota limit");
+        event.preventDefault();
+        testGenerator.send(false);
+      }
+      request.onupgradeneeded = function(event) {
+        gotUpgradeNeeded = true;
+      }
+      request.onsuccess = function(event) {
+        let db = event.target.result;
+        is(db.version, finalVersion, "Correct version " + finalVersion);
+        databases.push(db);
+        testGenerator.send(true);
+      }
+
+      let shouldContinue = yield undefined;
+      if (shouldContinue) {
+        is(gotUpgradeNeeded, true, "Got upgradeneeded event");
+        ok(true, "Got success event");
+      } else {
+        break;
+      }
+    }
+
+    let databaseCount = databases.length;
+    info("Created " + databaseCount + " databases before quota limit reached");
+
+    info("Stage 2 - " +
+         "Closing all databases and then attempting to create one more, then " +
+         "verifying that the oldest origin was cleared");
+
+    for (let i = 0; i < databases.length; i++) {
+      info("Closing database for " + getSpec(i));
+      databases[i].close();
+
+      // Timer resolution on Windows is low so wait for 40ms just to be safe.
+      setTimeout(continueToNextStepSync, 40);
+      yield undefined;
+    }
+    databases = null;
+
+    let spec = getSpec(databaseCount);
+    info("Opening database for " + spec + " with version " + options.version);
+
+    let request = indexedDB.openForPrincipal(getPrincipal(spec), name, options);
     request.onerror = errorHandler;
     request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = unexpectedSuccessHandler;
+    let event = yield undefined;
+
+    is(event.type, "upgradeneeded", "Got upgradeneeded event");
+
+    request.onupgradeneeded = unexpectedSuccessHandler;
     request.onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
 
-    is(event.type, "upgradeneeded", "Got correct event type");
+    is(event.type, "success", "Got success event");
 
     let db = event.target.result;
-    db.createObjectStore("foo", { });
+    is(db.version, finalVersion, "Correct version " + finalVersion);
+    db.close();
+    db = null;
 
-    event = yield undefined;
+    setLimit(tempStorageLimitKB * 2);
 
-    is(event.type, "success", "Got correct event type");
-
-    checkUsage(2);
+    resetAllDatabases(continueToNextStepSync);
     yield undefined;
 
-    info("Stage 3");
+    delete options.version;
 
-    setLimit(14 * dbSize / 1024);
-    quotaManager.reset();
+    spec = getSpec(0);
+    info("Opening database for " + spec + " with unspecified version");
 
-    request = indexedDB.openForPrincipal(getPrincipal(lastUrl), name, options);
+    request = indexedDB.openForPrincipal(getPrincipal(spec), name, options);
     request.onerror = errorHandler;
+    request.onupgradeneeded = grabEventAndContinueHandler;
+    request.onsuccess = unexpectedSuccessHandler;
+    event = yield undefined;
+
+    is(event.type, "upgradeneeded", "Got upgradeneeded event");
+
+    request.onupgradeneeded = unexpectedSuccessHandler;
+    request.onsuccess = grabEventAndContinueHandler;
+    event = yield undefined;
+
+    is(event.type, "success", "Got success event");
+
+    db = event.target.result;
+    is(db.version, 1, "Correct version 1 (database was recreated)");
+    db.close();
+    db = null;
+
+    info("Stage 3 - " +
+         "Cutting storage limit in half to force deletion of some databases");
+
+    setLimit(tempStorageLimitKB / 2);
+
+    resetAllDatabases(continueToNextStepSync);
+    yield undefined;
+
+    info("Opening database for " + spec + " with unspecified version");
+
+    // Open the same db again to force QM to delete others. The first origin (0)
+    // should be the most recent so it should not be deleted and we should not
+    // get an upgradeneeded event here.
+    request = indexedDB.openForPrincipal(getPrincipal(spec), name, options);
+    request.onerror = errorHandler;
+    request.onupgradeneeded = unexpectedSuccessHandler;
     request.onsuccess = grabEventAndContinueHandler;
     event = yield undefined;
 
     is(event.type, "success", "Got correct event type");
 
     db = event.target.result;
+    is(db.version, 1, "Correct version 1");
+    db.close();
+    db = null;
 
-    checkUsage(3);
+    setLimit(tempStorageLimitKB * 2);
+
+    resetAllDatabases(continueToNextStepSync);
     yield undefined;
 
-    info("Stage 4");
+    options.version = finalVersion;
 
-    let trans = db.transaction(["foo"], "readwrite");
+    let newDatabaseCount = 0;
+    for (let i = 0; i < databaseCount; i++) {
+      let spec = getSpec(i);
+      info("Opening database for " + spec + " with version " + options.version);
 
-    let blob = new Blob(["bar"]);
-    request = trans.objectStore("foo").add(blob, 42);
-    request.onerror = errorHandler;
-    request.onsuccess = grabEventAndContinueHandler;
-    event = yield undefined;
+      let request =
+        indexedDB.openForPrincipal(getPrincipal(spec), name, options);
+      request.onerror = errorHandler;
+      request.onupgradeneeded = function(event) {
+        if (!event.oldVersion) {
+          newDatabaseCount++;
+        }
+      }
+      request.onsuccess = grabEventAndContinueHandler;
+      let event = yield undefined;
 
-    trans.oncomplete = grabEventAndContinueHandler;
-    event = yield undefined;
+      is(event.type, "success", "Got correct event type");
 
-    checkUsage(4);
-    yield undefined;
+      let db = request.result;
+      is(db.version, finalVersion, "Correct version " + finalVersion);
+      db.close();
+    }
+
+    info("Needed to recreate " + newDatabaseCount + " databases");
+    ok(newDatabaseCount, "Created some new databases");
+    ok(newDatabaseCount < databaseCount, "Didn't recreate all databases");
   }
-
-  info("Cleanup");
-
-  setLimit();
-  quotaManager.reset();
-
-  SpecialPowers.setBoolPref("dom.quotaManager.testing", testingEnabled);
 
   finishTest();
   yield undefined;
