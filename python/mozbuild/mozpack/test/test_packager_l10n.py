@@ -65,7 +65,7 @@ class TestL10NRepack(unittest.TestCase):
         l10n_finder = MockFinder({
             'chrome/qux-l10n/qux.properties': qux_l10n,
             'chrome/qux-l10n/baz/baz.properties': baz_l10n,
-            'chrome/chrome.manifest': ManifestFile(' chrome', [
+            'chrome/chrome.manifest': ManifestFile('chrome', [
                 ManifestLocale('chrome', 'qux', 'x-test', 'qux-l10n/'),
             ]),
             'chrome.manifest':
