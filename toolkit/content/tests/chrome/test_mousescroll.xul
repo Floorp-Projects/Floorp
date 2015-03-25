@@ -8,6 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=378028
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js"/>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
@@ -138,46 +139,47 @@ function testRichListbox(id, andThen)
   var winUtils = SpecialPowers.getDOMWindowUtils(window);
   winUtils.advanceTimeAndRefresh(100);
 
-  function helper()
-  {
-    var [aStart, aDelta, aIntDelta, aDeltaMode] = tests[0];
-    tests.shift();
+  function nextTest() {
+    var [aStart, aDelta, aIntDelta, aDeltaMode] = tests.shift();
     listbox.scrollToIndex(aStart);
 
-    synthesizeWheel(listbox, 10, 10,
-                    { deltaMode: aDeltaMode, deltaY: aDelta,
-                      lineOrPageDeltaY: aIntDelta });
-
-    winUtils.advanceTimeAndRefresh(100);
-
-    var change = listbox.getIndexOfFirstVisibleRow() - aStart;
-    var direction = (change > 0) - (change < 0);
-    var expected = (aDelta > 0) - (aDelta < 0);
-    is(direction, expected,
-     "testRichListbox(" + id +  "): vertical, starting " + aStart +
-       " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
-       " aDeltaMode " + aDeltaMode);
-
-    // Check that horizontal scrolling has no effect
-    listbox.scrollToIndex(aStart);
-    synthesizeWheel(listbox, 10, 10,
-                    { deltaMode: aDeltaMode, deltaX: aDelta,
-                      lineOrPageDeltaX: aIntDelta });
-
-    winUtils.advanceTimeAndRefresh(100);
-
-    is(listbox.getIndexOfFirstVisibleRow(), aStart,
-       "testRichListbox(" + id +  "): horizontal, starting " + aStart +
-         " delta " + aDelta + " lineOrPageDelta " + aIntDelta +
+    let event = {
+      deltaMode: aDeltaMode,
+      deltaY: aDelta,
+      lineOrPageDeltaY: aIntDelta
+    };
+    sendWheelAndPaint(listbox, 10, 10, event, function() {
+      var change = listbox.getIndexOfFirstVisibleRow() - aStart;
+      var direction = (change > 0) - (change < 0);
+      var expected = (aDelta > 0) - (aDelta < 0);
+      is(direction, expected,
+       "testRichListbox(" + id +  "): vertical, starting " + aStart +
+         " delta " + aDelta + " lineOrPageDeltaY " + aIntDelta +
          " aDeltaMode " + aDeltaMode);
 
-    if (tests.length) {
-      winUtils.advanceTimeAndRefresh(100);
-      helper();
-    } else {
-      winUtils.restoreNormalRefresh();
-      andThen();
-    }
+      // Check that horizontal scrolling has no effect
+      let event = {
+        deltaMode: aDeltaMode,
+        deltaX: aDelta,
+        lineOrPageDeltaX: aIntDelta
+      };
+
+      listbox.scrollToIndex(aStart);
+      sendWheelAndPaint(listbox, 10, 10, event, function() {
+        is(listbox.getIndexOfFirstVisibleRow(), aStart,
+           "testRichListbox(" + id +  "): horizontal, starting " + aStart +
+             " delta " + aDelta + " lineOrPageDeltaX " + aIntDelta +
+             " aDeltaMode " + aDeltaMode);
+
+        if (!tests.length) {
+          winUtils.restoreNormalRefresh();
+          andThen();
+          return;
+        }
+
+        nextTest();
+      });
+    });
   }
 
   // richlistbox currently uses native XUL scrolling, so the "line"
@@ -190,7 +192,8 @@ function testRichListbox(id, andThen)
     tests.push([5,  delta,  1, aDeltaMode]);
     tests.push([5,  delta,  0, aDeltaMode]);
   });
-  helper();
+
+  nextTest();
 }
 
 function testArrowScrollbox(id)
