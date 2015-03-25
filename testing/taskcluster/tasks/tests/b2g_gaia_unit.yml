@@ -29,6 +29,10 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
       symbol: 'Gu'
+      groupSymbol: "?"
       productName: b2g

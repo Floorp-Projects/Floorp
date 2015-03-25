@@ -3,7 +3,7 @@ $inherits:
   from: 'tasks/test.yml'
 task:
   metadata:
-    name: '[TC] Gaia Python Functional Integration Tests'
+    name: '[TC] - Gaia Python Functional Integration Tests'
     description: Gaia Python Functional Integration Tests run {{chunk}}
 
   payload:
@@ -34,9 +34,11 @@ task:
   extra:
     chunks:
       total: 3
-
+    treeherderEnv:
+      - production
+      - staging
     treeherder:
       groupName: Gaia Python Integration Tests
-      groupSymbol: tc-Gip
+      groupSymbol: Gip
       symbol: 'f{{chunk}}'
       productName: b2g
