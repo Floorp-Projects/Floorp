@@ -177,11 +177,6 @@ public:
   virtual bool AddTextureClient(TextureClient* aClient);
 
   /**
-   * A hook for the Compositable to execute whatever it held off for next transaction.
-   */
-  virtual void OnTransaction();
-
-  /**
    * A hook for the when the Compositable is detached from it's layer.
    */
   virtual void OnDetach() {}
