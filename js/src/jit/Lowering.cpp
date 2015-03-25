@@ -522,6 +522,14 @@ LIRGenerator::visitUnreachable(MUnreachable *unreachable)
 }
 
 void
+LIRGenerator::visitEncodeSnapshot(MEncodeSnapshot *mir)
+{
+    LEncodeSnapshot *lir = new(alloc()) LEncodeSnapshot();
+    assignSnapshot(lir, Bailout_Inevitable);
+    add(lir, mir);
+}
+
+void
 LIRGenerator::visitAssertFloat32(MAssertFloat32 *assertion)
 {
     MIRType type = assertion->input()->type();
@@ -531,6 +539,12 @@ LIRGenerator::visitAssertFloat32(MAssertFloat32 *assertion)
         MOZ_ASSERT_IF(checkIsFloat32, type == MIRType_Float32);
         MOZ_ASSERT_IF(!checkIsFloat32, type != MIRType_Float32);
     }
+}
+
+void
+LIRGenerator::visitAssertRecoveredOnBailout(MAssertRecoveredOnBailout *assertion)
+{
+    MOZ_CRASH("AssertRecoveredOnBailout nodes are always recovered on bailouts.");
 }
 
 void
