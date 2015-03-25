@@ -224,12 +224,34 @@ public:
                                      const uint32_t& aOffset,
                                      int32_t* aIndex) override;
 
+  virtual bool RecvTableOfACell(const uint64_t& aID,
+                                uint64_t* aTableID,
+                                bool* aOk) override;
+
+  virtual bool RecvColIdx(const uint64_t& aID, uint32_t* aIndex) override;
+
+  virtual bool RecvRowIdx(const uint64_t& aID, uint32_t* aIndex) override;
+
+  virtual bool RecvColExtent(const uint64_t& aID, uint32_t* aExtent) override;
+
+  virtual bool RecvRowExtent(const uint64_t& aID, uint32_t* aExtent) override;
+
+  virtual bool RecvColHeaderCells(const uint64_t& aID,
+                                  nsTArray<uint64_t>* aCells) override;
+
+  virtual bool RecvRowHeaderCells(const uint64_t& aID,
+                                  nsTArray<uint64_t>* aCells) override;
+
+  virtual bool RecvIsCellSelected(const uint64_t& aID,
+                                  bool* aSelected) override;
+
 private:
 
   Accessible* IdToAccessible(const uint64_t& aID) const;
   Accessible* IdToAccessibleLink(const uint64_t& aID) const;
   HyperTextAccessible* IdToHyperTextAccessible(const uint64_t& aID) const;
   ImageAccessible* IdToImageAccessible(const uint64_t& aID) const;
+  TableCellAccessible* IdToTableCellAccessible(const uint64_t& aID) const;
 
   bool PersistentPropertiesToArray(nsIPersistentProperties* aProps,
                                    nsTArray<Attribute>* aAttributes);

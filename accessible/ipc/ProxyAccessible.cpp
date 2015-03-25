@@ -462,5 +462,66 @@ ProxyAccessible::LinkIndexAtOffset(uint32_t aOffset)
   return retVal;
 }
 
+ProxyAccessible*
+ProxyAccessible::TableOfACell()
+{
+  uint64_t tableID = 0;
+  bool ok = false;
+  unused << mDoc->SendTableOfACell(mID, &tableID, &ok);
+  return ok ? mDoc->GetAccessible(tableID) : nullptr;
+}
+
+uint32_t
+ProxyAccessible::ColIdx()
+{
+  uint32_t index = 0;
+  unused << mDoc->SendColIdx(mID, &index);
+  return index;
+}
+
+uint32_t
+ProxyAccessible::RowIdx()
+{
+  uint32_t index = 0;
+  unused << mDoc->SendRowIdx(mID, &index);
+  return index;
+}
+
+uint32_t
+ProxyAccessible::ColExtent()
+{
+  uint32_t extent = 0;
+  unused << mDoc->SendColExtent(mID, &extent);
+  return extent;
+}
+
+uint32_t
+ProxyAccessible::RowExtent()
+{
+  uint32_t extent = 0;
+  unused << mDoc->SendRowExtent(mID, &extent);
+  return extent;
+}
+
+void
+ProxyAccessible::ColHeaderCells(nsTArray<uint64_t>* aCells)
+{
+  unused << mDoc->SendColHeaderCells(mID, aCells);
+}
+
+void
+ProxyAccessible::RowHeaderCells(nsTArray<uint64_t>* aCells)
+{
+  unused << mDoc->SendRowHeaderCells(mID, aCells);
+}
+
+bool
+ProxyAccessible::IsCellSelected()
+{
+  bool selected = false;
+  unused << mDoc->SendIsCellSelected(mID, &selected);
+  return selected;
+}
+
 }
 }
