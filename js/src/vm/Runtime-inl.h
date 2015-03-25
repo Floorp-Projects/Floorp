@@ -15,6 +15,8 @@
 #include "gc/GCTrace.h"
 #include "vm/Probes.h"
 
+#include "jsobjinlines.h"
+
 namespace js {
 
 inline bool
@@ -41,9 +43,6 @@ NewObjectCache::fillGlobal(EntryIndex entry, const Class *clasp, GlobalObject *g
 inline NativeObject *
 NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entryIndex, gc::InitialHeap heap)
 {
-    // The new object cache does not account for metadata attached via callbacks.
-    MOZ_ASSERT(!cx->compartment()->hasObjectMetadataCallback());
-
     MOZ_ASSERT(unsigned(entryIndex) < mozilla::ArrayLength(entries));
     Entry *entry = &entries[entryIndex];
 
@@ -65,6 +64,9 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entryIndex, gc::Initi
         return nullptr;
 
     copyCachedToObject(obj, templateObj, entry->kind);
+
+    SetNewObjectMetadata(cx, obj);
+
     probes::CreateObject(cx, obj);
     gc::TraceCreateObject(obj);
     return obj;

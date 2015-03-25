@@ -169,13 +169,8 @@ ArgumentsObject::create(JSContext *cx, HandleScript script, HandleFunction calle
     if (!group)
         return nullptr;
 
-    JSObject *metadata = nullptr;
-    if (!NewObjectMetadata(cx, &metadata))
-        return nullptr;
-
     RootedShape shape(cx, EmptyShape::getInitialShape(cx, clasp, TaggedProto(proto),
-                                                      metadata, FINALIZE_KIND,
-                                                      BaseShape::INDEXED));
+                                                      FINALIZE_KIND, BaseShape::INDEXED));
     if (!shape)
         return nullptr;
 

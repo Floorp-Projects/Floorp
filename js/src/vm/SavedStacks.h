@@ -125,7 +125,7 @@ struct SavedFrame::HashPolicy
 };
 
 class SavedStacks {
-    friend bool SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata);
+    friend JSObject *SavedStacksMetadataCallback(JSContext *cx);
 
   public:
     SavedStacks()
@@ -243,7 +243,7 @@ class SavedStacks {
     bool getLocation(JSContext *cx, const FrameIter &iter, MutableHandleLocationValue locationp);
 };
 
-bool SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata);
+JSObject *SavedStacksMetadataCallback(JSContext *cx);
 
 } /* namespace js */
 
