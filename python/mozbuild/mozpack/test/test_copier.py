@@ -13,7 +13,7 @@ from mozpack.files import (
     ExistingFile,
 )
 from mozpack.mozjar import JarReader
-import mozpack.path
+import mozpack.path as mozpath
 import unittest
 import mozunit
 import os
@@ -152,7 +152,7 @@ class TestFileCopier(TestWithTmpDir):
         all_dirs = set()
         for root, dirs, files in os.walk(base):
             if not dirs:
-                all_dirs.add(mozpack.path.relpath(root, base))
+                all_dirs.add(mozpath.relpath(root, base))
         return all_dirs
 
     def all_files(self, base):
@@ -160,7 +160,7 @@ class TestFileCopier(TestWithTmpDir):
         for root, dirs, files in os.walk(base):
             for f in files:
                 all_files.add(
-                    mozpack.path.join(mozpack.path.relpath(root, base), f))
+                    mozpath.join(mozpath.relpath(root, base), f))
         return all_files
 
     def test_file_copier(self):

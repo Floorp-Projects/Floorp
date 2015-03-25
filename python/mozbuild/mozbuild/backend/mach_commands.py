@@ -7,7 +7,6 @@ from __future__ import print_function, unicode_literals
 import argparse
 import glob
 import logging
-import mozpack.path
 import os
 import sys
 import subprocess

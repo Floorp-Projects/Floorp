@@ -5,7 +5,7 @@
 from __future__ import unicode_literals
 
 import logging
-import mozpack.path
+import mozpack.path as mozpath
 import os
 import sys
 import warnings
@@ -31,7 +31,6 @@ from sys import argv
 from sys import exit
 from tempfile import mkdtemp
 
-import mozpack.path as mozpath
 
 
 DEFAULT_PORT = 8080

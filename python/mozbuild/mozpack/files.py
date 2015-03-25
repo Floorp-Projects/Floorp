@@ -26,7 +26,7 @@ from mozpack.errors import (
     errors,
 )
 from mozpack.mozjar import JarReader
-import mozpack.path
+import mozpack.path as mozpath
 from collections import OrderedDict
 from jsmin import JavascriptMinify
 from tempfile import (
@@ -412,7 +412,7 @@ class PreprocessedFile(BaseFile):
         # If a dependency file was specified, and it exists, add any
         # dependencies from that file to our list.
         if self.depfile and os.path.exists(self.depfile):
-            target = mozpack.path.normpath(dest.name)
+            target = mozpath.normpath(dest.name)
             with open(self.depfile, 'rb') as fileobj:
                 for rule in makeutil.read_dep_makefile(fileobj):
                     if target in rule.targets():
@@ -755,7 +755,7 @@ class FileFinder(BaseFinder):
 
         ``ignore`` accepts an iterable of patterns to ignore. Entries are
         strings that match paths relative to ``base`` using
-        ``mozpack.path.match()``. This means if an entry corresponds
+        ``mozpath.match()``. This means if an entry corresponds
         to a directory, all files under that directory will be ignored. If
         an entry corresponds to a file, that particular file will be ignored.
         '''
@@ -771,7 +771,7 @@ class FileFinder(BaseFinder):
         scanning directories, but are not ignored when explicitely requested.
         '''
         if '*' in pattern:
-            return self._find_glob('', mozpack.path.split(pattern))
+            return self._find_glob('', mozpath.split(pattern))
         elif os.path.isdir(os.path.join(self.base, pattern)):
             return self._find_dir(pattern)
         else:
@@ -785,7 +785,7 @@ class FileFinder(BaseFinder):
         path itself has leafs starting with a '.', they are not ignored.
         '''
         for p in self.ignore:
-            if mozpack.path.match(path, p):
+            if mozpath.match(path, p):
                 return
 
         # The sorted makes the output idempotent. Otherwise, we are
@@ -794,7 +794,7 @@ class FileFinder(BaseFinder):
         for p in sorted(os.listdir(os.path.join(self.base, path))):
             if p.startswith('.'):
                 continue
-            for p_, f in self._find(mozpack.path.join(path, p)):
+            for p_, f in self._find(mozpath.join(path, p)):
                 yield p_, f
 
     def _find_file(self, path):
@@ -807,7 +807,7 @@ class FileFinder(BaseFinder):
             return
 
         for p in self.ignore:
-            if mozpack.path.match(path, p):
+            if mozpath.match(path, p):
                 return
 
         if self.find_executables and is_executable(srcpath):
@@ -821,7 +821,7 @@ class FileFinder(BaseFinder):
         contains globbing patterns ('*' or '**'). This is meant to be an
         equivalent of:
             for p, f in self:
-                if mozpack.path.match(p, pattern):
+                if mozpath.match(p, pattern):
                     yield p, f
         but avoids scanning the entire tree.
         '''
@@ -830,26 +830,26 @@ class FileFinder(BaseFinder):
                 yield p, f
         elif pattern[0] == '**':
             for p, f in self._find(base):
-                if mozpack.path.match(p, mozpack.path.join(*pattern)):
+                if mozpath.match(p, mozpath.join(*pattern)):
                     yield p, f
         elif '*' in pattern[0]:
             if not os.path.exists(os.path.join(self.base, base)):
                 return
 
             for p in self.ignore:
-                if mozpack.path.match(base, p):
+                if mozpath.match(base, p):
                     return
 
             # See above comment w.r.t. sorted() and idempotent behavior.
             for p in sorted(os.listdir(os.path.join(self.base, base))):
                 if p.startswith('.') and not pattern[0].startswith('.'):
                     continue
-                if mozpack.path.match(p, pattern[0]):
-                    for p_, f in self._find_glob(mozpack.path.join(base, p),
+                if mozpath.match(p, pattern[0]):
+                    for p_, f in self._find_glob(mozpath.join(base, p),
                                                  pattern[1:]):
                         yield p_, f
         else:
-            for p, f in self._find_glob(mozpack.path.join(base, pattern[0]),
+            for p, f in self._find_glob(mozpath.join(base, pattern[0]),
                                         pattern[1:]):
                 yield p, f
 
@@ -874,7 +874,7 @@ class JarFinder(BaseFinder):
         '''
         if '*' in pattern:
             for p in self._files:
-                if mozpack.path.match(p, pattern):
+                if mozpath.match(p, pattern):
                     yield p, DeflatedFile(self._files[p])
         elif pattern == '':
             for p in self._files:
@@ -883,5 +883,5 @@ class JarFinder(BaseFinder):
             yield pattern, DeflatedFile(self._files[pattern])
         else:
             for p in self._files:
-                if mozpack.path.basedir(p, [pattern]) == pattern:
+                if mozpath.basedir(p, [pattern]) == pattern:
                     yield p, DeflatedFile(self._files[p])

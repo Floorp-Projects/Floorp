@@ -17,7 +17,7 @@ import unittest
 import mozunit
 from cStringIO import StringIO
 from urllib import pathname2url
-import mozpack.path
+import mozpack.path as mozpath
 import os
 
 
@@ -288,7 +288,7 @@ class TestJarLog(unittest.TestCase):
         ]))
         log = JarLog(fileobj=s)
         canonicalize = lambda p: \
-            mozpack.path.normsep(os.path.normcase(os.path.realpath(p)))
+            mozpath.normsep(os.path.normcase(os.path.realpath(p)))
         baz_jar = canonicalize('bar/baz.jar')
         qux_zip = canonicalize('qux.zip')
         self.assertEqual(set(log.keys()), set([
