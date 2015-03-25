@@ -5,6 +5,7 @@
 
 #include "mozilla/ErrorResult.h"
 #include "TCPSocket.h"
+#include "TCPServerSocket.h"
 #include "mozilla/dom/DOMError.h"
 #include "mozilla/dom/TCPSocketBinding.h"
 #include "mozilla/dom/TCPSocketErrorEvent.h"
@@ -71,6 +72,20 @@ LegacyMozTCPSocket::Open(const nsAString& aHost,
   }
   GlobalObject globalObj(api.cx(), mGlobal->GetGlobalJSObject());
   return TCPSocket::Constructor(globalObj, aHost, aPort, aOptions, aRv);
+}
+
+already_AddRefed<TCPServerSocket>
+LegacyMozTCPSocket::Listen(uint16_t aPort,
+                           const ServerSocketOptions& aOptions,
+                           uint16_t aBacklog,
+                           mozilla::ErrorResult& aRv)
+{
+  AutoJSAPI api;
+  if (NS_WARN_IF(!api.Init(mGlobal))) {
+    return nullptr;
+  }
+  GlobalObject globalObj(api.cx(), mGlobal->GetGlobalJSObject());
+  return TCPServerSocket::Constructor(globalObj, aPort, aOptions, aBacklog, aRv);
 }
 
 bool
@@ -159,6 +174,60 @@ TCPSocket::~TCPSocket()
 }
 
 nsresult
+TCPSocket::CreateStream()
+{
+  nsresult rv = mTransport->OpenInputStream(0, 0, 0, getter_AddRefs(mSocketInputStream));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = mTransport->OpenOutputStream(nsITransport::OPEN_UNBUFFERED, 0, 0, getter_AddRefs(mSocketOutputStream));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // If the other side is not listening, we will
+  // get an onInputStreamReady callback where available
+  // raises to indicate the connection was refused.
+  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(mSocketInputStream);
+  NS_ENSURE_TRUE(asyncStream, NS_ERROR_NOT_AVAILABLE);
+
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
+
+  rv = asyncStream->AsyncWait(this, nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0, mainThread);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (mUseArrayBuffers) {
+    mInputStreamBinary = do_CreateInstance("@mozilla.org/binaryinputstream;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mInputStreamBinary->SetInputStream(mSocketInputStream);
+    NS_ENSURE_SUCCESS(rv, rv);
+  } else {
+    mInputStreamScriptable = do_CreateInstance("@mozilla.org/scriptableinputstream;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = mInputStreamScriptable->Init(mSocketInputStream);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  mMultiplexStream = do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  mMultiplexStreamCopier = do_CreateInstance("@mozilla.org/network/async-stream-copier;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISocketTransportService> sts =
+      do_GetService("@mozilla.org/network/socket-transport-service;1");
+
+  nsCOMPtr<nsIEventTarget> target = do_QueryInterface(sts);
+  rv = mMultiplexStreamCopier->Init(mMultiplexStream,
+                                    mSocketOutputStream,
+                                    target,
+                                    true, /* source buffered */
+                                    false, /* sink buffered */
+                                    BUFFER_SIZE,
+                                    false, /* close source */
+                                    false); /* close sink */
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+nsresult
 TCPSocket::Init()
 {
   nsCOMPtr<nsIObserverService> obs = do_GetService("@mozilla.org/observer-service;1");
@@ -186,47 +255,29 @@ TCPSocket::Init()
 
   mTransport->SetEventSink(this, mainThread);
 
-  rv = mTransport->OpenInputStream(0, 0, 0, getter_AddRefs(mSocketInputStream));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = mTransport->OpenOutputStream(nsITransport::OPEN_UNBUFFERED, 0, 0, getter_AddRefs(mSocketOutputStream));
+  rv = CreateStream();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // If the other side is not listening, we will
-  // get an onInputStreamReady callback where available
-  // raises to indicate the connection was refused.
-  nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(mSocketInputStream);
-  NS_ENSURE_TRUE(asyncStream, NS_ERROR_NOT_AVAILABLE);
-  rv = asyncStream->AsyncWait(this, nsIAsyncInputStream::WAIT_CLOSURE_ONLY, 0, mainThread);
+  return NS_OK;
+}
+
+nsresult
+TCPSocket::InitWithTransport(nsISocketTransport* aTransport)
+{
+  mTransport = aTransport;
+  nsresult rv = CreateStream();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mUseArrayBuffers) {
-    mInputStreamBinary = do_CreateInstance("@mozilla.org/binaryinputstream;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mInputStreamBinary->SetInputStream(mSocketInputStream);
-    NS_ENSURE_SUCCESS(rv, rv);
-  } else {
-    mInputStreamScriptable = do_CreateInstance("@mozilla.org/scriptableinputstream;1", &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = mInputStreamScriptable->Init(mSocketInputStream);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  mMultiplexStream = do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1", &rv);
+  mReadyState = TCPReadyState::Open;
+  rv = CreateInputStreamPump();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mMultiplexStreamCopier = do_CreateInstance("@mozilla.org/network/async-stream-copier;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIEventTarget> target = do_QueryInterface(sts);
-  rv = mMultiplexStreamCopier->Init(mMultiplexStream,
-                                    mSocketOutputStream,
-                                    target,
-                                    true, /* source buffered */
-                                    false, /* sink buffered */
-                                    BUFFER_SIZE,
-                                    false, /* close source */
-                                    false); /* close sink */
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString host;
+  mTransport->GetHost(host);
+  mHost = NS_ConvertUTF8toUTF16(host);
+  int32_t port;
+  mTransport->GetPort(&port);
+  mPort = port;
 
 #ifdef MOZ_WIDGET_GONK
   nsCOMPtr<nsINetworkManager> networkManager = do_GetService("@mozilla.org/network/manager;1");
@@ -705,6 +756,17 @@ TCPSocket::BinaryType()
 }
 
 already_AddRefed<TCPSocket>
+TCPSocket::CreateAcceptedSocket(nsIGlobalObject* aGlobal,
+                                nsISocketTransport* aTransport,
+                                bool aUseArrayBuffers)
+{
+  nsRefPtr<TCPSocket> socket = new TCPSocket(aGlobal, EmptyString(), 0, false, aUseArrayBuffers);
+  nsresult rv = socket->InitWithTransport(aTransport);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  return socket.forget();
+}
+
+already_AddRefed<TCPSocket>
 TCPSocket::Constructor(const GlobalObject& aGlobal,
                        const nsAString& aHost,
                        uint16_t aPort,
@@ -724,17 +786,9 @@ TCPSocket::Constructor(const GlobalObject& aGlobal,
   return socket.forget();
 }
 
-NS_IMETHODIMP
-TCPSocket::OnTransportStatus(nsITransport* aTransport, nsresult aStatus,
-                             int64_t aProgress, int64_t aProgressMax)
+nsresult
+TCPSocket::CreateInputStreamPump()
 {
-  if (static_cast<uint32_t>(aStatus) != nsISocketTransport::STATUS_CONNECTED_TO) {
-    return NS_OK;
-  }
-
-  mReadyState = TCPReadyState::Open;
-  FireEvent(NS_LITERAL_STRING("open"));
-
   nsresult rv;
   mInputStreamPump = do_CreateInstance("@mozilla.org/network/input-stream-pump;1", &rv);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -748,6 +802,22 @@ TCPSocket::OnTransportStatus(nsITransport* aTransport, nsresult aStatus,
   }
 
   rv = mInputStreamPump->AsyncRead(this, nullptr);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+TCPSocket::OnTransportStatus(nsITransport* aTransport, nsresult aStatus,
+                             int64_t aProgress, int64_t aProgressMax)
+{
+  if (static_cast<uint32_t>(aStatus) != nsISocketTransport::STATUS_CONNECTED_TO) {
+    return NS_OK;
+  }
+
+  mReadyState = TCPReadyState::Open;
+  FireEvent(NS_LITERAL_STRING("open"));
+
+  nsresult rv = CreateInputStreamPump();
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }

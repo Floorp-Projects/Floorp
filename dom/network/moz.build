@@ -17,6 +17,7 @@ if CONFIG['MOZ_B2G_RIL']:
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
 EXPORTS.mozilla.dom += [
+    'TCPServerSocket.h',
     'TCPSocket.h',
     'UDPSocket.h',
 ]
@@ -35,6 +36,7 @@ EXPORTS.mozilla.dom.network += [
 
 UNIFIED_SOURCES += [
     'Connection.cpp',
+    'TCPServerSocket.cpp',
     'TCPServerSocketChild.cpp',
     'TCPServerSocketParent.cpp',
     'TCPSocket.cpp',
