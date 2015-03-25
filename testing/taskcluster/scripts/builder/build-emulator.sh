@@ -13,6 +13,7 @@ test $GECKO_BASE_REPOSITORY # Should be an hg repository url to clone from
 test $GECKO_HEAD_REV # Should be an hg revision to pull down
 test $MOZHARNESS_REPOSITORY # mozharness repository
 test $MOZHARNESS_REV # mozharness revision
+test $MOZHARNESS_REF # mozharness ref
 test $TARGET
 
 . setup-ccache.sh
@@ -23,7 +24,7 @@ test $TARGET
 #   $ docker -v your_mozharness:/home/worker/mozharness ...
 #
 if [ ! -d mozharness ]; then
-  tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV
+  tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV $MOZHARNESS_REF
 fi
 
 # Figure out where the remote manifest is so we can use caches for it.
