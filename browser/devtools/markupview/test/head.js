@@ -210,6 +210,18 @@ function getNodeInfo(selector) {
 }
 
 /**
+ * Set the value of an attribute of a DOM element, identified by its selector.
+ * @param {String} selector.
+ * @param {String} attributeName.
+ * @param {String} attributeValue.
+ * @param {Promise} resolves when done.
+ */
+function setNodeAttribute(selector, attributeName, attributeValue) {
+  return executeInContent("devtools:test:setAttribute",
+                          {selector, attributeName, attributeValue});
+}
+
+/**
  * Highlight a node and set the inspector's current selection to the node or
  * the first match of the given css selector.
  * @param {String|DOMNode} nodeOrSelector
