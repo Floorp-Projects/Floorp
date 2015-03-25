@@ -426,5 +426,41 @@ ProxyAccessible::AnchorAt(uint32_t aIndex)
   return ok ? mDoc->GetAccessible(id) : nullptr;
 }
 
+uint32_t
+ProxyAccessible::LinkCount()
+{
+  uint32_t retVal = 0;
+  unused << mDoc->SendLinkCount(mID, &retVal);
+  return retVal;
+}
+
+ProxyAccessible*
+ProxyAccessible::LinkAt(const uint32_t& aIndex)
+{
+  uint64_t linkID = 0;
+  bool ok = false;
+  unused << mDoc->SendLinkAt(mID, aIndex, &linkID, &ok);
+  return ok ? mDoc->GetAccessible(linkID) : nullptr;
+}
+
+int32_t
+ProxyAccessible::LinkIndexOf(ProxyAccessible* aLink)
+{
+  int32_t retVal = -1;
+  if (aLink) {
+    unused << mDoc->SendLinkIndexOf(mID, aLink->ID(), &retVal);
+  }
+
+  return retVal;
+}
+
+int32_t
+ProxyAccessible::LinkIndexAtOffset(uint32_t aOffset)
+{
+  int32_t retVal = -1;
+  unused << mDoc->SendLinkIndexAtOffset(mID, aOffset, &retVal);
+  return retVal;
+}
+
 }
 }

@@ -63,8 +63,7 @@ HyperTextAccessible*
 DocAccessibleChild::IdToHyperTextAccessible(const uint64_t& aID) const
 {
   Accessible* acc = IdToAccessible(aID);
-  MOZ_ASSERT(!acc || acc->IsHyperText());
-  return acc ? acc->AsHyperText() : nullptr;
+  return acc && acc->IsHyperText() ? acc->AsHyperText() : nullptr;
 }
 
 ImageAccessible*
@@ -726,6 +725,60 @@ DocAccessibleChild::RecvAnchorAt(const uint64_t& aID,
     }
   }
 
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvLinkCount(const uint64_t& aID,
+                                  uint32_t* aCount)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  *aCount = acc ? acc->LinkCount() : 0;
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvLinkAt(const uint64_t& aID,
+                               const uint32_t& aIndex,
+                               uint64_t* aIDOfLink,
+                               bool* aOk)
+{
+  *aIDOfLink = 0;
+  *aOk = false;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc) {
+    Accessible* link = acc->LinkAt(aIndex);
+    if (link) {
+      *aIDOfLink = reinterpret_cast<uint64_t>(link->UniqueID());
+      *aOk = true;
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvLinkIndexOf(const uint64_t& aID,
+                                    const uint64_t& aLinkID,
+                                    int32_t* aIndex)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  Accessible* link = IdToAccessible(aLinkID);
+  *aIndex = -1;
+  if (acc && link) {
+    *aIndex = acc->LinkIndexOf(link);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvLinkIndexAtOffset(const uint64_t& aID,
+                                          const uint32_t& aOffset,
+                                          int32_t* aIndex)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  *aIndex = acc ? acc->LinkIndexAtOffset(aOffset) : -1;
   return true;
 }
 
