@@ -264,8 +264,7 @@ nsSliderFrame::AttributeChanged(int32_t aNameSpaceID,
           nsIScrollbarMediator* mediator = scrollbarFrame->GetScrollbarMediator();
           scrollbarFrame->SetIncrementToWhole(direction);
           if (mediator) {
-            mediator->ScrollByWhole(scrollbarFrame, direction,
-                                    nsIScrollbarMediator::ENABLE_SNAP);
+            mediator->ScrollByWhole(scrollbarFrame, direction);
           }
         }
         // 'this' might be destroyed here
@@ -1154,14 +1153,6 @@ nsSliderFrame::HandleRelease(nsPresContext* aPresContext,
 {
   StopRepeat();
 
-  nsIFrame* scrollbar = GetScrollbar();
-  nsScrollbarFrame* sb = do_QueryFrame(scrollbar);
-  if (sb) {
-    nsIScrollbarMediator* m = sb->GetScrollbarMediator();
-    if (m) {
-      m->ScrollbarReleased(sb);
-    }
-  }
   return NS_OK;
 }
 
@@ -1270,7 +1261,7 @@ nsSliderFrame::PageScroll(nscoord aChange)
     nsIScrollbarMediator* m = sb->GetScrollbarMediator();
     sb->SetIncrementToPage(aChange);
     if (m) {
-      m->ScrollByPage(sb, aChange, nsIScrollbarMediator::ENABLE_SNAP);
+      m->ScrollByPage(sb, aChange);
       return;
     }
   }
