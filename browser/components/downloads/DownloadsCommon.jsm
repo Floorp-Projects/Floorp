@@ -551,7 +551,8 @@ this.DownloadsCommon = {
     let s = DownloadsCommon.strings;
     let title = s.unblockHeader;
     let buttonFlags = (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_0) +
-                      (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1);
+                      (Ci.nsIPrompt.BUTTON_TITLE_IS_STRING * Ci.nsIPrompt.BUTTON_POS_1) +
+                      Ci.nsIPrompt.BUTTON_POS_1_DEFAULT;
     let type = "";
     let message = s.unblockTip;
     let okButton = s.unblockButtonContinue;
@@ -592,9 +593,11 @@ this.DownloadsCommon = {
       }
     });
 
+    // The ordering of the ok/cancel buttons is used this way to allow "cancel"
+    // to have the same result as hitting the ESC or Close button (see bug 345067).
     let rv = Services.prompt.confirmEx(aOwnerWindow, title, message, buttonFlags,
-                                       cancelButton, okButton, null, null, {});
-    return (rv == 1);
+                                       okButton, cancelButton, null, null, {});
+    return (rv == 0);
   }),
 };
 
