@@ -484,6 +484,14 @@ const kEventConstructors = {
                                                          return e;
                                                        },
                                              },
+  TCPSocketErrorEvent:                       { create: function(aName, aProps) {
+                                                         return new TCPSocketErrorEvent(aName, aProps);
+                                                       },
+                                             },
+  TCPSocketEvent:                            { create: function(aName, aProps) {
+                                                         return new TCPSocketEvent(aName, aProps);
+                                                       },
+                                             },
   TimeEvent:                                 { create: function (aName, aProps) {
                                                          var e = document.createEvent("timeevent");
                                                          e.initTimeEvent(aName, aProps.view, aProps.detail);

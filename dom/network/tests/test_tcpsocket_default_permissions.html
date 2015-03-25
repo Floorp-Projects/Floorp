@@ -14,12 +14,23 @@
 
 /** Test to ensure TCPSocket permission is disabled by default **/
 
+var caught = false;
 try {
-  navigator.mozTCPSocket;
-  throw new Error("Error: navigator.mozTCPSocket should not exist by default");
+  new TCPSocket("localhost", 80, {})
 } catch (e) {
-  ok(true, "navigator.mozTCPSocket should not exist by default");  
+  caught = true;
 }
+
+ok(caught, "TCPSocket should not exist by default");
+
+var caught = false;
+try {
+  navigator.mozTCPSocket.open("localhost", 80, {})
+} catch (e) {
+  caught = true;
+}
+
+ok(caught, "navigator.mozTCPSocket.open should not exist by default");
 
 </script>
 </pre>
