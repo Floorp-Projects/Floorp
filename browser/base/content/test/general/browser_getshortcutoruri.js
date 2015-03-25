@@ -100,8 +100,7 @@ add_task(function* test_getshortcutoruri() {
     let query = data.keyword;
     if (data.searchWord)
       query += " " + data.searchWord;
-    let returnedData = yield new Promise(
-      resolve => getShortcutOrURIAndPostData(query, resolve));
+    let returnedData = yield getShortcutOrURIAndPostData(query);
     // null result.url means we should expect the same query we sent in
     let expected = result.url || query;
     is(returnedData.url, expected, "got correct URL for " + data.keyword);

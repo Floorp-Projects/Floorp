@@ -2100,53 +2100,81 @@ function loadURI(uri, referrer, postData, allowThirdPartyFixup, referrerPolicy) 
   } catch (e) {}
 }
 
-function getShortcutOrURIAndPostData(aURL, aCallback) {
-  let mayInheritPrincipal = false;
-  let postData = null;
-  let shortcutURL = null;
-  let keyword = aURL;
-  let param = "";
-
-  // XXX Bug 1100294 will remove this little hack by using an async version of
-  // PlacesUtils.getURLAndPostDataForKeyword(). For now we simulate an async
-  // execution with at least a setTimeout(fn, 0).
-  let originalCallback = aCallback;
-  aCallback = data => setTimeout(() => originalCallback(data));
-
-  let offset = aURL.indexOf(" ");
-  if (offset > 0) {
-    keyword = aURL.substr(0, offset);
-    param = aURL.substr(offset + 1);
+/**
+ * Given a urlbar value, discerns between URIs, keywords and aliases.
+ *
+ * @param url
+ *        The urlbar value.
+ * @param callback (optional, deprecated)
+ *        The callback function invoked when done. This parameter is
+ *        deprecated, please use the Promise that is returned.
+ *
+ * @return Promise<{ postData, url, mayInheritPrincipal }>
+ */
+function getShortcutOrURIAndPostData(url, callback = null) {
+  if (callback) {
+    Deprecated.warning("Please use the Promise returned by " +
+                       "getShortcutOrURIAndPostData() instead of passing a " +
+                       "callback",
+                       "https://bugzilla.mozilla.org/show_bug.cgi?id=1100294");
   }
 
-  let engine = Services.search.getEngineByAlias(keyword);
-  if (engine) {
-    let submission = engine.getSubmission(param, null, "keyword");
-    postData = submission.postData;
-    aCallback({ postData: submission.postData, url: submission.uri.spec,
-                mayInheritPrincipal: mayInheritPrincipal });
-    return;
-  }
+  return Task.spawn(function* () {
+    let mayInheritPrincipal = false;
+    let postData = null;
+    let shortcutURL = null;
+    let keyword = url;
+    let param = "";
 
-  [shortcutURL, postData] =
-    PlacesUtils.getURLAndPostDataForKeyword(keyword);
+    let offset = url.indexOf(" ");
+    if (offset > 0) {
+      keyword = url.substr(0, offset);
+      param = url.substr(offset + 1);
+    }
 
-  if (!shortcutURL) {
-    aCallback({ postData: postData, url: aURL,
-                mayInheritPrincipal: mayInheritPrincipal });
-    return;
-  }
+    let engine = Services.search.getEngineByAlias(keyword);
+    if (engine) {
+      let submission = engine.getSubmission(param, null, "keyword");
+      postData = submission.postData;
+      return { postData: submission.postData, url: submission.uri.spec,
+               mayInheritPrincipal };
+    }
 
-  let escapedPostData = "";
-  if (postData)
-    escapedPostData = unescape(postData);
+    let entry = yield PlacesUtils.keywords.fetch(keyword);
+    if (entry) {
+      shortcutURL = entry.url.href;
+      postData = entry.postData;
+    }
 
-  if (/%s/i.test(shortcutURL) || /%s/i.test(escapedPostData)) {
-    let charset = "";
-    const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/;
-    let matches = shortcutURL.match(re);
+    if (!shortcutURL) {
+      return { postData, url, mayInheritPrincipal };
+    }
 
-    let continueOperation = function () {
+    let escapedPostData = "";
+    if (postData)
+      escapedPostData = unescape(postData);
+
+    if (/%s/i.test(shortcutURL) || /%s/i.test(escapedPostData)) {
+      let charset = "";
+      const re = /^(.*)\&mozcharset=([a-zA-Z][_\-a-zA-Z0-9]+)\s*$/;
+      let matches = shortcutURL.match(re);
+
+      if (matches) {
+        [, shortcutURL, charset] = matches;
+      } else {
+        let uri;
+        try {
+          // makeURI() throws if URI is invalid.
+          uri = makeURI(shortcutURL);
+        } catch (ex) {}
+
+        if (uri) {
+          // Try to get the saved character-set.
+          // Will return an empty string if character-set is not found.
+          charset = yield PlacesUtils.getCharsetForURI(uri);
+        }
+      }
+
       // encodeURIComponent produces UTF-8, and cannot be used for other charsets.
       // escape() works in those cases, but it doesn't uri-encode +, @, and /.
       // Therefore we need to manually replace these ASCII characters by their
@@ -2169,40 +2197,29 @@ function getShortcutOrURIAndPostData(aURL, aCallback) {
       // document's principal.
       mayInheritPrincipal = true;
 
-      aCallback({ postData: postData, url: shortcutURL,
-                  mayInheritPrincipal: mayInheritPrincipal });
+      return { postData, url: shortcutURL, mayInheritPrincipal };
     }
 
-    if (matches) {
-      [, shortcutURL, charset] = matches;
-      continueOperation();
-    } else {
-      // Try to get the saved character-set.
-      // makeURI throws if URI is invalid.
-      // Will return an empty string if character-set is not found.
-      try {
-        PlacesUtils.getCharsetForURI(makeURI(shortcutURL))
-                   .then(c => { charset = c; continueOperation(); });
-      } catch (ex) {
-        continueOperation();
-      }
-    }
-  }
-  else if (param) {
-    // This keyword doesn't take a parameter, but one was provided. Just return
-    // the original URL.
-    postData = null;
+    if (param) {
+      // This keyword doesn't take a parameter, but one was provided. Just return
+      // the original URL.
+      postData = null;
 
-    aCallback({ postData: postData, url: aURL,
-                mayInheritPrincipal: mayInheritPrincipal });
-  } else {
+      return { postData, url, mayInheritPrincipal };
+    }
+
     // This URL came from a bookmark, so it's safe to let it inherit the current
     // document's principal.
     mayInheritPrincipal = true;
 
-    aCallback({ postData: postData, url: shortcutURL,
-                mayInheritPrincipal: mayInheritPrincipal });
-  }
+    return { postData, url: shortcutURL, mayInheritPrincipal };
+  }).then(data => {
+    if (callback) {
+      callback(data);
+    }
+
+    return data;
+  });
 }
 
 function getPostDataStream(aStringData, aKeyword, aEncKeyword, aType) {
@@ -3252,7 +3269,7 @@ var newTabButtonObserver = {
   onDrop: function (aEvent)
   {
     let url = browserDragAndDrop.drop(aEvent, { });
-    getShortcutOrURIAndPostData(url, data => {
+    getShortcutOrURIAndPostData(url).then(data => {
       if (data.url) {
         // allow third-party services to fixup this URL
         openNewTabWith(data.url, null, data.postData, aEvent, true);
@@ -3272,7 +3289,7 @@ var newWindowButtonObserver = {
   onDrop: function (aEvent)
   {
     let url = browserDragAndDrop.drop(aEvent, { });
-    getShortcutOrURIAndPostData(url, data => {
+    getShortcutOrURIAndPostData(url).then(data => {
       if (data.url) {
         // allow third-party services to fixup this URL
         openNewWindowWith(data.url, null, data.postData, true);
@@ -5608,7 +5625,7 @@ function middleMousePaste(event) {
     lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
   }
 
-  getShortcutOrURIAndPostData(clipboard, data => {
+  getShortcutOrURIAndPostData(clipboard).then(data => {
     try {
       makeURI(data.url);
     } catch (ex) {
@@ -5645,7 +5662,7 @@ function handleDroppedLink(event, url, name)
 {
   let lastLocationChange = gBrowser.selectedBrowser.lastLocationChange;
 
-  getShortcutOrURIAndPostData(url, data => {
+  getShortcutOrURIAndPostData(url).then(data => {
     if (data.url &&
         lastLocationChange == gBrowser.selectedBrowser.lastLocationChange)
       loadURI(data.url, null, data.postData, false);
