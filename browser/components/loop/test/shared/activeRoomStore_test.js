@@ -541,6 +541,28 @@ describe("loop.store.ActiveRoomStore", function () {
         actionData);
     });
 
+    it("should pass 'sendTwoWayMediaTelemetry' as true to connectSession if " +
+       "store._isDesktop is true", function() {
+      store._isDesktop = true;
+
+      store.joinedRoom(new sharedActions.JoinedRoom(fakeJoinedData));
+
+      sinon.assert.calledOnce(fakeSdkDriver.connectSession);
+      sinon.assert.calledWithMatch(fakeSdkDriver.connectSession,
+        sinon.match.has("sendTwoWayMediaTelemetry", true));
+    });
+
+    it("should pass 'sendTwoWayTelemetry' as false to connectionSession if " +
+       "store._isDesktop is false", function() {
+      store._isDesktop = false;
+
+      store.joinedRoom(new sharedActions.JoinedRoom(fakeJoinedData));
+
+      sinon.assert.calledOnce(fakeSdkDriver.connectSession);
+      sinon.assert.calledWithMatch(fakeSdkDriver.connectSession,
+        sinon.match.has("sendTwoWayMediaTelemetry", false));
+    });
+
     it("should call mozLoop.addConversationContext", function() {
       var actionData = new sharedActions.JoinedRoom(fakeJoinedData);
 

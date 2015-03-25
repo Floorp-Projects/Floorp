@@ -39,7 +39,8 @@ add_task(function* test_healthreport_search_recording() {
     }
   }
 
-  let tab = gBrowser.addTab();
+  let tab = gBrowser.addTab("about:blank");
+  yield BrowserTestUtils.browserLoaded(tab.linkedBrowser);
   gBrowser.selectedTab = tab;
 
   let searchStr = "firefox health report";

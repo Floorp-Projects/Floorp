@@ -1223,6 +1223,7 @@ var gBrowserInit = {
     Services.obs.addObserver(gXPInstallObserver, "addon-install-started", false);
     Services.obs.addObserver(gXPInstallObserver, "addon-install-blocked", false);
     Services.obs.addObserver(gXPInstallObserver, "addon-install-failed", false);
+    Services.obs.addObserver(gXPInstallObserver, "addon-install-confirmation", false);
     Services.obs.addObserver(gXPInstallObserver, "addon-install-complete", false);
     window.messageManager.addMessageListener("Browser:URIFixup", gKeywordURIFixup);
 
@@ -1534,6 +1535,7 @@ var gBrowserInit = {
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-started");
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-blocked");
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-failed");
+      Services.obs.removeObserver(gXPInstallObserver, "addon-install-confirmation");
       Services.obs.removeObserver(gXPInstallObserver, "addon-install-complete");
       window.messageManager.removeMessageListener("Browser:URIFixup", gKeywordURIFixup);
       window.messageManager.removeMessageListener("Browser:LoadURI", RedirectLoad);
@@ -2102,6 +2104,12 @@ function getShortcutOrURIAndPostData(aURL, aCallback) {
   let shortcutURL = null;
   let keyword = aURL;
   let param = "";
+
+  // XXX Bug 1100294 will remove this little hack by using an async version of
+  // PlacesUtils.getURLAndPostDataForKeyword(). For now we simulate an async
+  // execution with at least a setTimeout(fn, 0).
+  let originalCallback = aCallback;
+  aCallback = data => setTimeout(() => originalCallback(data));
 
   let offset = aURL.indexOf(" ");
   if (offset > 0) {
@@ -4551,8 +4559,12 @@ var TabsProgressListener = {
                               aFlags) {
     // Filter out location changes caused by anchor navigation
     // or history.push/pop/replaceState.
-    if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)
+    if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT) {
+      // Reader mode actually cares about these:
+      let mm = gBrowser.selectedBrowser.messageManager;
+      mm.sendAsyncMessage("Reader:PushState");
       return;
+    }
 
     // Filter out location changes in sub documents.
     if (!aWebProgress.isTopLevel)

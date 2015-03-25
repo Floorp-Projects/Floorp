@@ -5059,6 +5059,8 @@ class LAtomicTypedArrayElementBinop : public LInstructionHelper<1, 3, 2>
   public:
     LIR_HEADER(AtomicTypedArrayElementBinop)
 
+    static const int32_t valueOp = 2;
+
     LAtomicTypedArrayElementBinop(const LAllocation &elements, const LAllocation &index,
                                   const LAllocation &value, const LDefinition &temp1,
                                   const LDefinition &temp2)
@@ -5077,6 +5079,7 @@ class LAtomicTypedArrayElementBinop : public LInstructionHelper<1, 3, 2>
         return getOperand(1);
     }
     const LAllocation *value() {
+        MOZ_ASSERT(valueOp == 2);
         return getOperand(2);
     }
     const LDefinition *temp1() {
@@ -6491,6 +6494,9 @@ class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 2>
 {
   public:
     LIR_HEADER(AsmJSAtomicBinopHeap);
+
+    static const int32_t valueOp = 1;
+
     LAsmJSAtomicBinopHeap(const LAllocation &ptr, const LAllocation &value,
                           const LDefinition &temp)
     {
@@ -6503,6 +6509,7 @@ class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 2>
         return getOperand(0);
     }
     const LAllocation *value() {
+        MOZ_ASSERT(valueOp == 1);
         return getOperand(1);
     }
     const LDefinition *temp() {

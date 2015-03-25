@@ -20,7 +20,7 @@ using namespace js::gc;
 void
 js::TraceRuntime(JSTracer *trc)
 {
-    MOZ_ASSERT(!IsMarkingTracer(trc));
+    MOZ_ASSERT(!trc->isMarkingTracer());
 
     JSRuntime *rt = trc->runtime();
     rt->gc.evictNursery();

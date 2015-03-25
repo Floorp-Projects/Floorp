@@ -489,6 +489,7 @@ let AboutReaderListener = {
     addEventListener("pageshow", this, false);
     addEventListener("pagehide", this, false);
     addMessageListener("Reader:ParseDocument", this);
+    addMessageListener("Reader:PushState", this);
   },
 
   receiveMessage: function(message) {
@@ -496,6 +497,10 @@ let AboutReaderListener = {
       case "Reader:ParseDocument":
         this._articlePromise = ReaderMode.parseDocument(content.document).catch(Cu.reportError);
         content.document.location = "about:reader?url=" + encodeURIComponent(message.data.url);
+        break;
+
+      case "Reader:PushState":
+        this.updateReaderButton();
         break;
     }
   },
@@ -519,6 +524,7 @@ let AboutReaderListener = {
           // Update the toolbar icon to show the "reader active" icon.
           sendAsyncMessage("Reader:UpdateReaderButton");
           new AboutReader(global, content, this._articlePromise);
+          this._articlePromise = null;
         }
         break;
 
@@ -529,19 +535,23 @@ let AboutReaderListener = {
       case "pageshow":
         // If a page is loaded from the bfcache, we won't get a "DOMContentLoaded"
         // event, so we need to rely on "pageshow" in this case.
-        if (!aEvent.persisted) {
-          break;
+        if (aEvent.persisted) {
+          this.updateReaderButton();
         }
-        // Fall through.
+        break;
       case "DOMContentLoaded":
-        if (!ReaderMode.isEnabledForParseOnLoad || this.isAboutReader) {
-          return;
-        }
+        this.updateReaderButton();
+        break;
 
-        let isArticle = ReaderMode.isProbablyReaderable(content.document);
-        sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: isArticle });
     }
-  }
+  },
+  updateReaderButton: function() {
+    if (!ReaderMode.isEnabledForParseOnLoad || this.isAboutReader) {
+      return;
+    }
+    let isArticle = ReaderMode.isProbablyReaderable(content.document);
+    sendAsyncMessage("Reader:UpdateReaderButton", { isArticle: isArticle });
+  },
 };
 AboutReaderListener.init();
 

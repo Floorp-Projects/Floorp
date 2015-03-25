@@ -333,6 +333,10 @@ loop.store.ActiveRoomStore = (function() {
       });
 
       this._setRefreshTimeout(actionData.expires);
+
+      // Only send media telemetry on one side of the call: the desktop side.
+      actionData["sendTwoWayMediaTelemetry"] = this._isDesktop;
+
       this._sdkDriver.connectSession(actionData);
 
       this._mozLoop.addConversationContext(this._storeState.windowId,

@@ -267,7 +267,7 @@ CreateVoidVariant()
 //
 // We also use the same machinery for |returnValue|, which needs similar origin
 // checks.
-class DialogValueHolder : public nsISupports
+class DialogValueHolder final : public nsISupports
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

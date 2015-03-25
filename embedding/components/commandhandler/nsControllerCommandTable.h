@@ -13,8 +13,8 @@
 
 class nsIControllerCommand;
 
-class  nsControllerCommandTable : public nsIControllerCommandTable,
-                                  public nsSupportsWeakReference
+class  nsControllerCommandTable final : public nsIControllerCommandTable,
+                                        public nsSupportsWeakReference
 {
 public:
 

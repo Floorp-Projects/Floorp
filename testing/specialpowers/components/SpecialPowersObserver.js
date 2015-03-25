@@ -128,7 +128,32 @@ SpecialPowersObserver.prototype = new SpecialPowersObserverAPI();
     var obs = Services.obs;
     obs.removeObserver(this, "chrome-document-global-created");
     obs.removeObserver(this, "http-on-modify-request");
+    obs.removeObserver(this, "xpcom-shutdown");
     this._removeProcessCrashObservers();
+
+    if (this._isFrameScriptLoaded) {
+      this._messageManager.removeMessageListener("SPPrefService", this);
+      this._messageManager.removeMessageListener("SPProcessCrashService", this);
+      this._messageManager.removeMessageListener("SPPingService", this);
+      this._messageManager.removeMessageListener("SpecialPowers.Quit", this);
+      this._messageManager.removeMessageListener("SpecialPowers.Focus", this);
+      this._messageManager.removeMessageListener("SPPermissionManager", this);
+      this._messageManager.removeMessageListener("SPWebAppService", this);
+      this._messageManager.removeMessageListener("SPObserverService", this);
+      this._messageManager.removeMessageListener("SPLoadChromeScript", this);
+      this._messageManager.removeMessageListener("SPChromeScriptMessage", this);
+      this._messageManager.removeMessageListener("SPQuotaManager", this);
+      this._messageManager.removeMessageListener("SPSetTestPluginEnabledState", this);
+
+      this._messageManager.removeDelayedFrameScript(CHILD_LOGGER_SCRIPT);
+      this._messageManager.removeDelayedFrameScript(CHILD_SCRIPT_API);
+      this._messageManager.removeDelayedFrameScript(CHILD_SCRIPT);
+      this._isFrameScriptLoaded = false;
+    }
+
+    this._mmIsGlobal = true;
+    this._messageManager = Cc["@mozilla.org/globalmessagemanager;1"].
+      getService(Ci.nsIMessageBroadcaster);
   };
 
   SpecialPowersObserver.prototype._addProcessCrashObservers = function() {

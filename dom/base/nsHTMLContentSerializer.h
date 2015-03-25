@@ -20,7 +20,7 @@
 class nsIContent;
 class nsIAtom;
 
-class nsHTMLContentSerializer : public nsXHTMLContentSerializer {
+class nsHTMLContentSerializer final : public nsXHTMLContentSerializer {
  public:
   nsHTMLContentSerializer();
   virtual ~nsHTMLContentSerializer();

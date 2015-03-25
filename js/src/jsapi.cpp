@@ -1415,12 +1415,6 @@ JS_RemoveExtraGCRootsTracer(JSRuntime *rt, JSTraceDataOp traceOp, void *data)
     return rt->gc.removeBlackRootsTracer(traceOp, data);
 }
 
-extern JS_PUBLIC_API(bool)
-JS_IsGCMarkingTracer(JSTracer *trc)
-{
-    return js::IsMarkingTracer(trc);
-}
-
 JS_PUBLIC_API(void)
 JS_GC(JSRuntime *rt)
 {

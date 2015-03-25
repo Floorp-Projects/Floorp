@@ -5515,9 +5515,25 @@ EventStateManager::WheelPrefs::NeedToComputeLineOrPageDelta(
 }
 
 bool
+EventStateManager::WheelPrefs::HasUserPrefsForDelta(WidgetWheelEvent* aEvent)
+{
+  Index index = GetIndexFor(aEvent);
+  Init(index);
+
+  return mMultiplierX[index] != 1.0 ||
+         mMultiplierY[index] != 1.0;
+}
+
+bool
 EventStateManager::WheelEventIsScrollAction(WidgetWheelEvent* aEvent)
 {
   return WheelPrefs::GetInstance()->ComputeActionFor(aEvent) == WheelPrefs::ACTION_SCROLL;
+}
+
+bool
+EventStateManager::WheelEventNeedsDeltaMultipliers(WidgetWheelEvent* aEvent)
+{
+  return WheelPrefs::GetInstance()->HasUserPrefsForDelta(aEvent);
 }
 
 bool

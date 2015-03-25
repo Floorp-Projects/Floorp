@@ -526,15 +526,15 @@ AllocateProtoAndIfaceCache(JSObject* obj, ProtoAndIfaceCache::Kind aKind)
 
 #ifdef DEBUG
 void
-VerifyTraceProtoAndIfaceCacheCalled(JSTracer *trc, void **thingp,
+VerifyTraceProtoAndIfaceCacheCalled(JS::CallbackTracer *trc, void **thingp,
                                     JSGCTraceKind kind);
 
-struct VerifyTraceProtoAndIfaceCacheCalledTracer : public JSTracer
+struct VerifyTraceProtoAndIfaceCacheCalledTracer : public JS::CallbackTracer
 {
     bool ok;
 
     explicit VerifyTraceProtoAndIfaceCacheCalledTracer(JSRuntime *rt)
-      : JSTracer(rt, VerifyTraceProtoAndIfaceCacheCalled), ok(false)
+      : JS::CallbackTracer(rt, VerifyTraceProtoAndIfaceCacheCalled), ok(false)
     {}
 };
 #endif
@@ -545,7 +545,9 @@ TraceProtoAndIfaceCache(JSTracer* trc, JSObject* obj)
   MOZ_ASSERT(js::GetObjectClass(obj)->flags & JSCLASS_DOM_GLOBAL);
 
 #ifdef DEBUG
-  if (trc->callback == VerifyTraceProtoAndIfaceCacheCalled) {
+  if (trc->isCallbackTracer() &&
+      trc->asCallbackTracer()->hasCallback(
+        VerifyTraceProtoAndIfaceCacheCalled)) {
     // We don't do anything here, we only want to verify that
     // TraceProtoAndIfaceCache was called.
     static_cast<VerifyTraceProtoAndIfaceCacheCalledTracer*>(trc)->ok = true;

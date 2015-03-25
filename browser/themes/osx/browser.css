@@ -4150,22 +4150,19 @@ notification[value="loop-sharing-notification"] .messageImage {
 
 .popup-notification-icon[popupid="xpinstall-disabled"],
 .popup-notification-icon[popupid="addon-progress"],
-.popup-notification-icon[popupid="addon-install-cancelled"],
 .popup-notification-icon[popupid="addon-install-blocked"],
 .popup-notification-icon[popupid="addon-install-failed"],
+.popup-notification-icon[popupid="addon-install-confirmation"],
 .popup-notification-icon[popupid="addon-install-complete"] {
   list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
   width: 32px;
   height: 32px;
 }
 
-.popup-notification-icon[popupid="click-to-play-plugins"] {
-  list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked-64.png);
-}
-
-.addon-progress-description {
-  width: 350px;
-  max-width: 350px;
+.popup-notification-description[popupid="addon-progress"],
+.popup-notification-description[popupid="addon-install-confirmation"] {
+  width: 27em;
+  max-width: 27em;
 }
 
 .popup-progress-label,
@@ -4174,24 +4171,18 @@ notification[value="loop-sharing-notification"] .messageImage {
   -moz-margin-end: 0;
 }
 
-.popup-progress-cancel {
-  -moz-appearance: none;
-  min-height: 16px;
-  min-width: 16px;
-  max-height: 16px;
-  max-width: 16px;
-  padding: 0;
-  margin: 0 1px 0 1px;
-  list-style-image: url(chrome://mozapps/skin/downloads/buttons.png);
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+.popup-progress-meter,
+#addon-install-confirmation-content {
+  margin-top: 1em;
 }
 
-.popup-progress-cancel:hover {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
+.addon-install-confirmation-name {
+  font-weight: bold;
+  -moz-margin-start: 0 !important; /* override default label margin to match description margin */
 }
 
-.popup-progress-cancel:active {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
+.popup-notification-icon[popupid="click-to-play-plugins"] {
+  list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked-64.png);
 }
 
 .popup-notification-icon[popupid="indexedDB-permissions-prompt"],

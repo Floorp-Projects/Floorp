@@ -16,15 +16,65 @@
 #include "nsTArray.h"
 #include "nsCRT.h"
 #include "nsHttp.h"
+#include "mozilla/dom/HeadersBinding.h"
+#include "mozilla/dom/RequestBinding.h"
+#include "mozilla/dom/ResponseBinding.h"
+#include "Types.h"
 
 namespace mozilla {
 namespace dom {
 namespace cache {
 
-
 const int32_t DBSchema::kMaxWipeSchemaVersion = 4;
 const int32_t DBSchema::kLatestSchemaVersion = 4;
 const int32_t DBSchema::kMaxEntriesPerStatement = 255;
+
+// If any of the static_asserts below fail, it means that you have changed
+// the corresponding WebIDL enum in a way that may be incompatible with the
+// existing data stored in the DOM Cache.  You would need to update the Cache
+// database schema accordingly and adjust the failing static_assert.
+static_assert(int(HeadersGuardEnum::None) == 0 &&
+              int(HeadersGuardEnum::Request) == 1 &&
+              int(HeadersGuardEnum::Request_no_cors) == 2 &&
+              int(HeadersGuardEnum::Response) == 3 &&
+              int(HeadersGuardEnum::Immutable) == 4 &&
+              int(HeadersGuardEnum::EndGuard_) == 5,
+              "HeadersGuardEnum values are as expected");
+static_assert(int(RequestMode::Same_origin) == 0 &&
+              int(RequestMode::No_cors) == 1 &&
+              int(RequestMode::Cors) == 2 &&
+              int(RequestMode::Cors_with_forced_preflight) == 3 &&
+              int(RequestMode::EndGuard_) == 4,
+              "RequestMode values are as expected");
+static_assert(int(RequestCredentials::Omit) == 0 &&
+              int(RequestCredentials::Same_origin) == 1 &&
+              int(RequestCredentials::Include) == 2 &&
+              int(RequestCredentials::EndGuard_) == 3,
+              "RequestCredentials values are as expected");
+static_assert(int(RequestCache::Default) == 0 &&
+              int(RequestCache::No_store) == 1 &&
+              int(RequestCache::Reload) == 2 &&
+              int(RequestCache::No_cache) == 3 &&
+              int(RequestCache::Force_cache) == 4 &&
+              int(RequestCache::Only_if_cached) == 5 &&
+              int(RequestCache::EndGuard_) == 6,
+              "RequestCache values are as expected");
+static_assert(int(ResponseType::Basic) == 0 &&
+              int(ResponseType::Cors) == 1 &&
+              int(ResponseType::Default) == 2 &&
+              int(ResponseType::Error) == 3 &&
+              int(ResponseType::Opaque) == 4 &&
+              int(ResponseType::EndGuard_) == 5,
+              "ResponseType values are as expected");
+
+// If the static_asserts below fails, it means that you have changed the
+// Namespace enum in a way that may be incompatible with the existing data
+// stored in the DOM Cache.  You would need to update the Cache database schema
+// accordingly and adjust the failing static_assert.
+static_assert(DEFAULT_NAMESPACE == 0 &&
+              CHROME_ONLY_NAMESPACE == 1 &&
+              NUMBER_OF_NAMESPACES == 2,
+              "Namespace values are as expected");
 
 using mozilla::void_t;
 
