@@ -132,6 +132,13 @@ child:
 
   prio(high) sync ImagePosition(uint64_t aID, uint32_t aCoordType) returns(nsIntPoint aRetVal);
   prio(high) sync ImageSize(uint64_t aID) returns(nsIntSize aRetVal);
+
+  prio(high) sync StartOffset(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
+  prio(high) sync EndOffset(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
+  prio(high) sync IsLinkValid(uint64_t aID) returns(bool aRetVal);
+  prio(high) sync AnchorCount(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
+  prio(high) sync AnchorURIAt(uint64_t aID, uint32_t aIndex) returns(nsCString aURI, bool aOk);
+  prio(high) sync AnchorAt(uint64_t aID, uint32_t aIndex) returns(uint64_t aIDOfAnchor, bool aOk);
 };
 
 }
