@@ -1131,7 +1131,7 @@ SelectionCarets::NotifySelectionChanged(nsIDOMDocument* aDoc,
 }
 
 static void
-DispatchScrollViewChangeEvent(nsIPresShell *aPresShell, const dom::ScrollState aState, const mozilla::CSSIntPoint aScrollPos)
+DispatchScrollViewChangeEvent(nsIPresShell *aPresShell, const dom::ScrollState aState)
 {
   nsCOMPtr<nsIDocument> doc = aPresShell->GetDocument();
   if (doc) {
@@ -1140,8 +1140,6 @@ DispatchScrollViewChangeEvent(nsIPresShell *aPresShell, const dom::ScrollState a
     detail.mBubbles = true;
     detail.mCancelable = false;
     detail.mState = aState;
-    detail.mScrollX = aScrollPos.x;
-    detail.mScrollY = aScrollPos.y;
     nsRefPtr<ScrollViewChangeEvent> event =
       ScrollViewChangeEvent::Constructor(doc, NS_LITERAL_STRING("scrollviewchange"), detail);
 
@@ -1152,26 +1150,25 @@ DispatchScrollViewChangeEvent(nsIPresShell *aPresShell, const dom::ScrollState a
 }
 
 void
-SelectionCarets::AsyncPanZoomStarted(const mozilla::CSSIntPoint aScrollPos)
+SelectionCarets::AsyncPanZoomStarted()
 {
   if (mVisible) {
     mInAsyncPanZoomGesture = true;
     SetVisibility(false);
 
-    SELECTIONCARETS_LOG("Dispatch scroll started with position x=%d, y=%d",
-                        aScrollPos.x, aScrollPos.y);
-    DispatchScrollViewChangeEvent(mPresShell, dom::ScrollState::Started, aScrollPos);
+    SELECTIONCARETS_LOG("Dispatch scroll started");
+    DispatchScrollViewChangeEvent(mPresShell, dom::ScrollState::Started);
   } else {
     nsRefPtr<dom::Selection> selection = GetSelection();
     if (selection && selection->RangeCount() && selection->IsCollapsed()) {
       mInAsyncPanZoomGesture = true;
-      DispatchScrollViewChangeEvent(mPresShell, dom::ScrollState::Started, aScrollPos);
+      DispatchScrollViewChangeEvent(mPresShell, dom::ScrollState::Started);
     }
   }
 }
 
 void
-SelectionCarets::AsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos)
+SelectionCarets::AsyncPanZoomStopped()
 {
   if (mInAsyncPanZoomGesture) {
     mInAsyncPanZoomGesture = false;
@@ -1182,10 +1179,9 @@ SelectionCarets::AsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos)
     DispatchSelectionStateChangedEvent(GetSelection(),
                                        SelectionState::Updateposition);
 
-    SELECTIONCARETS_LOG("Dispatch scroll stopped with position x=%d, y=%d",
-                        aScrollPos.x, aScrollPos.y);
+    SELECTIONCARETS_LOG("Dispatch scroll stopped");
 
-    DispatchScrollViewChangeEvent(mPresShell, dom::ScrollState::Stopped, aScrollPos);
+    DispatchScrollViewChangeEvent(mPresShell, dom::ScrollState::Stopped);
   }
 }
 
@@ -1199,8 +1195,7 @@ SelectionCarets::ScrollPositionChanged()
       // Dispatch event to notify gaia to hide selection bubble.
       // Positions will be updated when scroll is end, so no need to calculate
       // and keep scroll positions here. An arbitrary (0, 0) is sent instead.
-      DispatchScrollViewChangeEvent(mPresShell, dom::ScrollState::Started,
-                                    mozilla::CSSIntPoint(0, 0));
+      DispatchScrollViewChangeEvent(mPresShell, dom::ScrollState::Started);
 
       SELECTIONCARETS_LOG("Launch scroll end detector");
       LaunchScrollEndDetector();
