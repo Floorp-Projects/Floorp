@@ -2656,7 +2656,23 @@ MarionetteServerConnection.prototype = {
       this.sendError("Could not delete session", 500, e.name + ": " + e.message, command_id);
       return;
     }
+
+    if (specialpowers.hasOwnProperty('specialPowersObserver')) {
+      specialpowers.specialPowersObserver.uninit();
+      specialpowers = {};
+    }
+
     this.sendOk(command_id);
+
+    let prefTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    prefTimer.initWithCallback(function() {
+      prefTimer.cancel();
+      if (this.enabled_security_pref) {
+        Services.prefs.clearUserPref(SECURITY_PREF);
+        this.enabled_security_pref = false;
+      }
+    }, 0, Ci.nsITimer.TYPE_ONE_SHOT);
+
   },
 
   /**

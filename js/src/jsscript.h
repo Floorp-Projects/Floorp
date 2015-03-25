@@ -1582,6 +1582,7 @@ class JSScript : public js::gc::TenuredCell
     JSObject *getObject(size_t index) {
         js::ObjectArray *arr = objects();
         MOZ_ASSERT(index < arr->length);
+        MOZ_ASSERT(arr->vector[index]->isTenured());
         return arr->vector[index];
     }
 

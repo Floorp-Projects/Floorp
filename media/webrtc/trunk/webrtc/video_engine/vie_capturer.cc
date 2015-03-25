@@ -207,6 +207,7 @@ int32_t ViECapturer::Start(const CaptureCapability& capture_capability) {
   int frame_rate;
   VideoCaptureCapability capability;
   requested_capability_ = capture_capability;
+  CaptureDeviceType type = config_.Get<CaptureDeviceInfo>().type;
 
   if (!CaptureCapabilityFixed()) {
     // Ask the observers for best size.
@@ -218,7 +219,11 @@ int32_t ViECapturer::Start(const CaptureCapability& capture_capability) {
       height = kViECaptureDefaultHeight;
     }
     if (frame_rate == 0) {
-      frame_rate = kViECaptureDefaultFramerate;
+      if (type == Screen || type == Window || type == Application) {
+        frame_rate = kViEScreenCaptureDefaultFramerate;
+      } else {
+        frame_rate = kViECaptureDefaultFramerate;
+      }
     }
     capability.height = height;
     capability.width = width;

@@ -162,8 +162,7 @@ AudioSink::AudioLoop()
 
   if (NS_FAILED(InitializeAudioStream())) {
     NS_WARNING("Initializing AudioStream failed.");
-    ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
-    mStateMachine->OnAudioSinkError();
+    mStateMachine->DispatchOnAudioSinkError();
     return;
   }
 

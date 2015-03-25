@@ -152,8 +152,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=964646
       background-color: white;
     }
 
-    #visitedLink:link { background-color: yellow }
-    #visitedLink:visited { background-color: blue }
+    .visitedLink:link { background-color: yellow }
+    .visitedLink:visited { background-color: blue }
 
     @keyframes opacitymid {
       0% { opacity: 0.2 }
@@ -2022,38 +2022,43 @@ addAsyncAnimTest(function *() {
 // Bug 996796 patch 12 - test for correct visited styles during
 // animation-only style flush.
 addAsyncAnimTest(function *() {
+  var isb2g = SpecialPowers.Services.appinfo.name == "B2G";
+  if (isb2g) {
+    todo(false, "no global history on B2G; can't run test");
+    return;
+  }
+
   var div1 = document.createElement("div");
   div1.classList.add("target");
   div1.style.height = "10px";
   div1.style.animation = "anim2 linear 1s";
 
   var visitedLink = document.createElement("a");
-  visitedLink.setAttribute("href", "");
-  visitedLink.setAttribute("id", "visitedLink");
+  visitedLink.setAttribute("href", window.top.location.href);
+  visitedLink.classList.add("visitedLink");
   visitedLink.classList.add("target");
   visitedLink.style.display = "block";
   visitedLink.style.height = "10px";
   visitedLink.style.animation = "anim2 linear 1s";
 
+  var refVisitedLink = document.createElement("a");
+  refVisitedLink.setAttribute("href", window.top.location.href);
+  refVisitedLink.classList.add("visitedLink");
+
   gDisplay.appendChild(div1);
   gDisplay.appendChild(visitedLink);
+  gDisplay.appendChild(refVisitedLink);
 
-  // Wait for animations to start and for visited link coloring.
+  // Wait for visited link coloring.
+  yield waitForVisitedLinkColoring(refVisitedLink,
+                                   "background-color", "rgb(0, 0, 255)");
+
+  // Wait for animations to start.
   yield waitForPaintsFlushed();
 
   var bgColor = SpecialPowers.DOMWindowUtils
     .getVisitedDependentComputedStyle(visitedLink, "", "background-color");
-  var isb2g = SpecialPowers.Services.appinfo.name == "B2G";
-  // No global history in B2G.
-  (isb2g ? todo_is : is)(bgColor, "rgb(0, 0, 255)",
-                         "initial visited link background color");
-
-  if (isb2g) {
-    // The above failure makes the rest of the test pointless.
-    div1.remove();
-    visitedLink.remove();
-    return;
-  }
+  is(bgColor, "rgb(0, 0, 255)", "initial visited link background color");
 
   advance_clock(250);
 
@@ -2070,6 +2075,7 @@ addAsyncAnimTest(function *() {
 
   div1.remove();
   visitedLink.remove();
+  refVisitedLink.remove();
 });
 
 /*

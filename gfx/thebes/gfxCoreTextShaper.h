@@ -39,22 +39,27 @@ protected:
                               CTRunRef       aCTRun,
                               int32_t        aStringOffset);
 
-    CTFontRef CreateCTFontWithDisabledLigatures(CGFloat aSize);
+    CTFontRef CreateCTFontWithFeatures(CGFloat aSize,
+                                       CTFontDescriptorRef aDescriptor);
 
-    static void CreateDefaultFeaturesDescriptor();
+    static CTFontDescriptorRef
+    CreateFontFeaturesDescriptor(const std::pair<SInt16,SInt16> aFeatures[],
+                                 size_t aCount);
 
-    static CTFontDescriptorRef GetDefaultFeaturesDescriptor() {
-        if (sDefaultFeaturesDescriptor == nullptr) {
-            CreateDefaultFeaturesDescriptor();
-        }
-        return sDefaultFeaturesDescriptor;
-    }
+    static CTFontDescriptorRef GetDefaultFeaturesDescriptor();
+    static CTFontDescriptorRef GetDisableLigaturesDescriptor();
+    static CTFontDescriptorRef GetIndicFeaturesDescriptor();
+    static CTFontDescriptorRef GetIndicDisableLigaturesDescriptor();
 
     // cached font descriptor, created the first time it's needed
     static CTFontDescriptorRef    sDefaultFeaturesDescriptor;
 
     // cached descriptor for adding disable-ligatures setting to a font
     static CTFontDescriptorRef    sDisableLigaturesDescriptor;
+
+    // feature descriptors for buggy Indic AAT font workaround
+    static CTFontDescriptorRef    sIndicFeaturesDescriptor;
+    static CTFontDescriptorRef    sIndicDisableLigaturesDescriptor;
 };
 
 #endif /* GFX_CORETEXTSHAPER_H */

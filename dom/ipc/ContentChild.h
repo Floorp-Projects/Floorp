@@ -52,8 +52,8 @@ class PStorageChild;
 class ClonedMessageData;
 class TabChild;
 
-class ContentChild : public PContentChild
-                   , public nsIContentChild
+class ContentChild final : public PContentChild
+                         , public nsIContentChild
 {
     typedef mozilla::dom::ClonedMessageData ClonedMessageData;
     typedef mozilla::ipc::OptionalURIParams OptionalURIParams;

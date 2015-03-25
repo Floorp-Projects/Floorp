@@ -146,7 +146,8 @@ public:
     DECODER_STATE_SEEKING,
     DECODER_STATE_BUFFERING,
     DECODER_STATE_COMPLETED,
-    DECODER_STATE_SHUTDOWN
+    DECODER_STATE_SHUTDOWN,
+    DECODER_STATE_ERROR
   };
 
   State GetState() {
@@ -409,9 +410,6 @@ public:
   // Resets all state related to decoding and playback, emptying all buffers
   // and aborting all pending operations on the decode task queue.
   void Reset();
-
-private:
-  void AcquireMonitorAndInvokeDecodeError();
 
 protected:
   virtual ~MediaDecoderStateMachine();
@@ -717,6 +715,11 @@ protected:
 
   // Called by the AudioSink to signal errors.
   void OnAudioSinkError();
+
+  void DispatchOnAudioSinkError()
+  {
+    TaskQueue()->Dispatch(NS_NewRunnableMethod(this, &MediaDecoderStateMachine::OnAudioSinkError));
+  }
 
   // Return true if the video decoder's decode speed can not catch up the
   // play time.

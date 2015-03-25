@@ -329,7 +329,7 @@ InterpreterFrame::mark(JSTracer *trc)
     } else {
         gc::MarkScriptUnbarriered(trc, &exec.script, "script");
     }
-    if (IsMarkingTracer(trc))
+    if (trc->isMarkingTracer())
         script()->compartment()->zone()->active = true;
     if (hasReturnValue())
         gc::MarkValueUnbarriered(trc, &rval_, "rval");
@@ -1862,7 +1862,7 @@ JS::ProfilingFrameIterator::extractStack(Frame *frames, uint32_t offset, uint32_
         frames[offset].returnAddress = nullptr;
         frames[offset].activation = activation_;
         frames[offset].label = asmJSIter().label();
-        frames[offset].hasTrackedOptimizations = false;
+        frames[offset].mightHaveTrackedOptimizations = false;
         return 1;
     }
 
@@ -1898,21 +1898,16 @@ JS::ProfilingFrameIterator::extractStack(Frame *frames, uint32_t offset, uint32_
         frames[offset + i].returnAddress = returnAddr;
         frames[offset + i].activation = activation_;
         frames[offset + i].label = labels[i];
-        frames[offset + i].hasTrackedOptimizations = false;
+        frames[offset + i].mightHaveTrackedOptimizations = false;
     }
 
-    // Extract the index into the side table of optimization information and
-    // store it on the youngest frame. All inlined frames will have the same
-    // optimization information by virtue of sharing the JitcodeGlobalEntry,
-    // but such information is only interpretable on the youngest frame.
+    // A particular return address might have tracked optimizations only if
+    // there are any optimizations at all.
     //
-    // FIXMEshu: disabled until we can ensure the optimization info is live
-    // when we write out the JSON stream of the profile.
-    if (false && entry.hasTrackedOptimizations()) {
-        uint32_t dummy;
-        mozilla::Maybe<uint8_t> index = entry.trackedOptimizationIndexAtAddr(returnAddr, &dummy);
-        frames[offset].hasTrackedOptimizations = index.isSome();
-    }
+    // All inlined Ion frames will have the same optimization information by
+    // virtue of sharing the JitcodeGlobalEntry, but such information is only
+    // interpretable on the youngest frame.
+    frames[offset].mightHaveTrackedOptimizations = entry.hasTrackedOptimizations();
 
     return depth;
 }

@@ -931,13 +931,6 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
 }
 
 void
-MediaDecoderStateMachine::AcquireMonitorAndInvokeDecodeError()
-{
-  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-  DecodeError();
-}
-
-void
 MediaDecoderStateMachine::MaybeFinishDecodeFirstFrame()
 {
   MOZ_ASSERT(OnStateMachineThread());
@@ -1114,7 +1107,7 @@ void
 MediaDecoderStateMachine::CheckIfDecodeComplete()
 {
   AssertCurrentThreadInMonitor();
-  if (mState == DECODER_STATE_SHUTDOWN ||
+  if (IsShutdown() ||
       mState == DECODER_STATE_SEEKING ||
       mState == DECODER_STATE_COMPLETED) {
     // Don't change our state if we've already been shutdown, or we're seeking,
@@ -1459,7 +1452,7 @@ void MediaDecoderStateMachine::SetDormant(bool aDormant)
   MOZ_ASSERT(OnStateMachineThread(), "Should be on state machine thread.");
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
 
-  if (mState == DECODER_STATE_SHUTDOWN) {
+  if (IsShutdown()) {
     return;
   }
 
@@ -1663,7 +1656,7 @@ MediaDecoderStateMachine::Seek(SeekTarget aTarget)
 
   mDecodingFrozenAtStateDecoding = false;
 
-  if (mState == DECODER_STATE_SHUTDOWN) {
+  if (IsShutdown()) {
     return MediaDecoder::SeekPromise::CreateAndReject(/* aIgnored = */ true, __func__);
   }
 
@@ -1806,7 +1799,7 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
     RefPtr<nsIRunnable> event = NS_NewRunnableMethod(
         this, &MediaDecoderStateMachine::SetReaderIdle);
     nsresult rv = DecodeTaskQueue()->Dispatch(event.forget());
-    if (NS_FAILED(rv) && mState != DECODER_STATE_SHUTDOWN) {
+    if (NS_FAILED(rv) && !IsShutdown()) {
       DECODER_WARN("Failed to dispatch event to set decoder idle state");
     }
   }
@@ -2096,45 +2089,28 @@ bool MediaDecoderStateMachine::HasLowUndecodedData(int64_t aUsecs)
 void
 MediaDecoderStateMachine::DecodeError()
 {
-  AssertCurrentThreadInMonitor();
-  if (mState == DECODER_STATE_SHUTDOWN) {
+  MOZ_ASSERT(OnStateMachineThread());
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  if (IsShutdown()) {
     // Already shutdown.
     return;
   }
 
-  // DecodeError should probably be redesigned so that it doesn't need to run
-  // on the Decode Task Queue, but this does the trick for now.
-  if (!OnDecodeThread()) {
-    RefPtr<nsIRunnable> task(
-      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::AcquireMonitorAndInvokeDecodeError));
-    nsresult rv = DecodeTaskQueue()->Dispatch(task);
-
-    if (NS_FAILED(rv)) {
-      DECODER_WARN("Failed to dispatch AcquireMonitorAndInvokeDecodeError");
-    }
-    return;
-  }
-
-  // Change state to shutdown before sending error report to MediaDecoder
-  // and the HTMLMediaElement, so that our pipeline can start exiting
-  // cleanly during the sync dispatch below.
+  // Change state to error, which will cause the state machine to wait until
+  // the MediaDecoder shuts it down.
+  SetState(DECODER_STATE_ERROR);
   ScheduleStateMachine();
-  SetState(DECODER_STATE_SHUTDOWN);
-  DECODER_WARN("Decode error, changed state to SHUTDOWN due to error");
+  DECODER_WARN("Decode error, changed state to ERROR");
+
+  // XXXbholley - Is anybody actually waiting on this monitor, or is it just
+  // a leftover from when we used to do sync dispatch for the below?
   mDecoder->GetReentrantMonitor().NotifyAll();
 
-  // Dispatch the event to call DecodeError synchronously. This ensures
-  // we're in shutdown state by the time we exit the decode thread.
-  // If we just moved to shutdown state here on the decode thread, we may
-  // cause the state machine to shutdown/free memory without closing its
-  // media stream properly, and we'll get callbacks from the media stream
-  // causing a crash.
- {
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(mDecoder, &MediaDecoder::DecodeError);
-    ReentrantMonitorAutoExit exitMon(mDecoder->GetReentrantMonitor());
-    NS_DispatchToMainThread(event, NS_DISPATCH_SYNC);
-  }
+  // MediaDecoder::DecodeError notifies the owner, and then shuts down the state
+  // machine.
+  nsCOMPtr<nsIRunnable> event =
+    NS_NewRunnableMethod(mDecoder, &MediaDecoder::DecodeError);
+  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
 }
 
 void
@@ -2294,7 +2270,7 @@ MediaDecoderStateMachine::FinishDecodeFirstFrame()
   MOZ_ASSERT(OnStateMachineThread());
   DECODER_LOG("FinishDecodeFirstFrame");
 
-  if (mState == DECODER_STATE_SHUTDOWN) {
+  if (IsShutdown()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2395,7 +2371,7 @@ MediaDecoderStateMachine::SeekCompleted()
 
   if (mState != DECODER_STATE_SEEKING) {
     MOZ_DIAGNOSTIC_ASSERT(mState == DECODER_STATE_DORMANT ||
-                          mState == DECODER_STATE_SHUTDOWN);
+                          IsShutdown());
     // It would be nice to assert mCurrent.Exists() here, but it's possible that
     // we've transitioned to DECODER_STATE_SHUTDOWN but not yet gone through
     // RunStateMachine in that state, which is where this promise gets rejected.
@@ -2565,6 +2541,11 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
   NS_ENSURE_TRUE(resource, NS_ERROR_NULL_POINTER);
 
   switch (mState) {
+    case DECODER_STATE_ERROR: {
+      // Just wait for MediaDecoder::DecodeError to shut us down.
+      return NS_OK;
+    }
+
     case DECODER_STATE_SHUTDOWN: {
       mQueuedSeek.RejectIfExists(__func__);
       mPendingSeek.RejectIfExists(__func__);
@@ -2756,8 +2737,8 @@ MediaDecoderStateMachine::Reset()
   // dormant state. We could also be in the process of going dormant, and have
   // just switched to exiting dormant before we finished entering dormant,
   // hence the DECODING_NONE case below.
-  MOZ_ASSERT(mState == DECODER_STATE_SEEKING ||
-             mState == DECODER_STATE_SHUTDOWN ||
+  MOZ_ASSERT(IsShutdown() ||
+             mState == DECODER_STATE_SEEKING ||
              mState == DECODER_STATE_DORMANT ||
              mState == DECODER_STATE_DECODING_NONE);
 
@@ -3412,7 +3393,8 @@ MediaDecoderStateMachine::SetMinimizePrerollUntilPlaybackStarts()
 bool MediaDecoderStateMachine::IsShutdown()
 {
   AssertCurrentThreadInMonitor();
-  return GetState() == DECODER_STATE_SHUTDOWN;
+  return mState == DECODER_STATE_ERROR ||
+         mState == DECODER_STATE_SHUTDOWN;
 }
 
 void MediaDecoderStateMachine::QueueMetadata(int64_t aPublishTime,
@@ -3455,7 +3437,8 @@ void MediaDecoderStateMachine::OnAudioSinkComplete()
 
 void MediaDecoderStateMachine::OnAudioSinkError()
 {
-  AssertCurrentThreadInMonitor();
+  MOZ_ASSERT(OnStateMachineThread());
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   // AudioSink not used with captured streams, so ignore errors in this case.
   if (mAudioCaptured) {
     return;

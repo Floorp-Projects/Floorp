@@ -336,7 +336,7 @@ public:
   }
 };
 
-class ThreadStackHelper::ThreadContext
+class ThreadStackHelper::ThreadContext final
   : public google_breakpad::MemoryRegion
 {
 public:
