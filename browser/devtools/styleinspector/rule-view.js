@@ -435,11 +435,8 @@ function Rule(aElementStyle, aOptions) {
   this.keyframes = aOptions.keyframes || null;
   this._modificationDepth = 0;
 
-  if (this.domRule) {
-    let parentRule = this.domRule.parentRule;
-    if (parentRule && parentRule.type == Ci.nsIDOMCSSRule.MEDIA_RULE) {
-      this.mediaText = parentRule.mediaText;
-    }
+  if (this.domRule && this.domRule.mediaText) {
+    this.mediaText = this.domRule.mediaText;
   }
 
   // Populate the text properties with the style's current cssText
@@ -507,7 +504,7 @@ Rule.prototype = {
    * The rule's line within a stylesheet
    */
   get ruleLine() {
-    return this.domRule ? this.domRule.line : null;
+    return this.domRule ? this.domRule.line : "";
   },
 
   /**
@@ -529,10 +526,12 @@ Rule.prototype = {
     if (this._originalSourceStrings) {
       return promise.resolve(this._originalSourceStrings);
     }
-    return this.domRule.getOriginalLocation().then(({href, line}) => {
+    return this.domRule.getOriginalLocation().then(({href, line, mediaText}) => {
+      let mediaString = mediaText ? " @" + mediaText : "";
+
       let sourceStrings = {
-        full: href + ":" + line,
-        short: CssLogic.shortSource({href: href}) + ":" + line
+        full: (href || CssLogic.l10n("rule.sourceInline")) + ":" + line + mediaString,
+        short: CssLogic.shortSource({href: href}) + ":" + line + mediaString
       };
 
       this._originalSourceStrings = sourceStrings;

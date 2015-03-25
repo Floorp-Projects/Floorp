@@ -5,6 +5,7 @@ const { ActorPool, appendExtraActors, createExtraActors } = require("devtools/se
 const { RootActor } = require("devtools/server/actors/root");
 const { ThreadActor } = require("devtools/server/actors/script");
 const { DebuggerServer } = require("devtools/server/main");
+const { TabSources } = require("devtools/server/actors/utils/TabSources");
 const promise = require("promise");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 
@@ -91,6 +92,13 @@ TestTabActor.prototype = {
     return this._global.__name;
   },
 
+  get sources() {
+    if (!this._sources) {
+      this._sources = new TabSources(this.threadActor);
+    }
+    return this._sources;
+  },
+
   form: function() {
     let response = { actor: this.actorID, title: this._global.__name };
 
@@ -124,6 +132,7 @@ TestTabActor.prototype = {
   },
 
   onReload: function(aRequest) {
+    this.sources.reset({ sourceMaps: true });
     this.threadActor.clearDebuggees();
     this.threadActor.dbg.addDebuggees();
     return {};

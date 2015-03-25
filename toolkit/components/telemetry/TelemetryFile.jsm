@@ -124,6 +124,28 @@ this.TelemetryFile = {
   },
 
   /**
+   * Add a ping to the saved pings directory so that it gets along with other pings. Note
+   * that the original ping file will not be modified.
+   *
+   * @param {String} aFilePath The path to the ping file that needs to be added to the
+   *                           saved pings directory.
+   * @return {Promise} A promise resolved when the ping is saved to the pings directory.
+   */
+  addPendingPing: function(aPingPath) {
+    // Pings in the saved ping directory need to have the ping id or slug (old format) as
+    // the file name. We load the ping content, check that it is valid, and use it to save
+    // the ping file with the correct file name.
+    return loadPingFile(aPingPath).then(ping => {
+        // Append the ping to the pending list.
+        pendingPings.push(ping);
+        // Since we read a ping successfully, update the related histogram.
+        Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS").add(1);
+        // Save the ping to the saved pings directory.
+        return this.savePing(ping, false);
+      });
+  },
+
+  /**
    * Remove the file for a ping
    *
    * @param {object} ping The ping.
@@ -277,29 +299,37 @@ function getPingDirectory() {
   });
 }
 
+/**
+ * Loads a ping file.
+ * @param {String} aFilePath The path of the ping file.
+ * @return {Promise<Object>} A promise resolved with the ping content or rejected if the
+ *                           ping contains invalid data.
+ */
+let loadPingFile = Task.async(function* (aFilePath) {
+  let array = yield OS.File.read(aFilePath);
+  let decoder = new TextDecoder();
+  let string = decoder.decode(array);
+
+  let ping = JSON.parse(string);
+  // The ping's payload used to be stringified JSON.  Deal with that.
+  if (typeof(ping.payload) == "string") {
+    ping.payload = JSON.parse(ping.payload);
+  }
+  return ping;
+});
+
 function addToPendingPings(file) {
   function onLoad(success) {
     let success_histogram = Telemetry.getHistogramById("READ_SAVED_PING_SUCCESS");
     success_histogram.add(success);
   }
 
-  return Task.spawn(function*() {
-    try {
-      let array = yield OS.File.read(file);
-      let decoder = new TextDecoder();
-      let string = decoder.decode(array);
-
-      let ping = JSON.parse(string);
-      // The ping's payload used to be stringified JSON.  Deal with that.
-      if (typeof(ping.payload) == "string") {
-        ping.payload = JSON.parse(ping.payload);
-      }
-
+  return loadPingFile(file).then(ping => {
       pendingPings.push(ping);
       onLoad(true);
-    } catch (e) {
+    },
+    () => {
       onLoad(false);
-      yield OS.File.remove(file);
-    }
-  });
+      return OS.File.remove(file);
+    });
 }

@@ -169,6 +169,15 @@ function serializeStack(frames) {
 Loader.serializeStack = serializeStack;
 
 function readURI(uri) {
+  let nsURI = NetUtil.newURI(uri);
+  if (nsURI.scheme == "resource") {
+    // Resolve to a real URI, this will catch any obvious bad paths without
+    // logging assertions in debug builds, see bug 1135219
+    let proto = Cc["@mozilla.org/network/protocol;1?name=resource"].
+                getService(Ci.nsIResProtocolHandler);
+    uri = proto.resolveURI(nsURI);
+  }
+
   let stream = NetUtil.newChannel2(uri,
                                    'UTF-8',
                                    null,
@@ -420,6 +429,10 @@ const nodeResolve = iced(function nodeResolve(id, requirer, { rootURI }) {
   // Resolve again
   id = Loader.resolve(id, requirer);
 
+  // If this is already an absolute URI then there is no resolution to do
+  if (isAbsoluteURI(id))
+    return void 0;
+
   // we assume that extensions are correct, i.e., a directory doesnt't have '.js'
   // and a js file isn't named 'file.json.js'
   let fullId = join(rootURI, id);
@@ -431,9 +444,14 @@ const nodeResolve = iced(function nodeResolve(id, requirer, { rootURI }) {
   if ((resolvedPath = loadAsDirectory(fullId)))
     return stripBase(rootURI, resolvedPath);
 
+  // If the requirer is an absolute URI then the node module resolution below
+  // won't work correctly as we prefix everything with rootURI
+  if (isAbsoluteURI(requirer))
+    return void 0;
+
   // If manifest has dependencies, attempt to look up node modules
   // in the `dependencies` list
-  let dirs = getNodeModulePaths(dirname(join(rootURI, requirer))).map(dir => join(dir, id));
+  let dirs = getNodeModulePaths(dirname(requirer)).map(dir => join(rootURI, dir, id));
   for (let i = 0; i < dirs.length; i++) {
     if ((resolvedPath = loadAsFile(dirs[i])))
       return stripBase(rootURI, resolvedPath);
@@ -509,6 +527,7 @@ function getNodeModulePaths (start) {
     let dir = join(parts.slice(0, i + 1).join('/'), moduleDir);
     dirs.push(dir);
   }
+  dirs.push(moduleDir);
   return dirs;
 }
 
