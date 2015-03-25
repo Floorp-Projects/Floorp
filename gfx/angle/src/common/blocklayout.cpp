@@ -33,6 +33,18 @@ BlockMemberInfo BlockLayoutEncoder::encodeType(GLenum type, unsigned int arraySi
     return memberInfo;
 }
 
+// static
+size_t BlockLayoutEncoder::getBlockRegister(const BlockMemberInfo &info)
+{
+    return (info.offset / BytesPerComponent) / ComponentsPerRegister;
+}
+
+// static
+size_t BlockLayoutEncoder::getBlockRegisterElement(const BlockMemberInfo &info)
+{
+    return (info.offset / BytesPerComponent) % ComponentsPerRegister;
+}
+
 void BlockLayoutEncoder::nextRegister()
 {
     mCurrentOffset = rx::roundUp<size_t>(mCurrentOffset, ComponentsPerRegister);
