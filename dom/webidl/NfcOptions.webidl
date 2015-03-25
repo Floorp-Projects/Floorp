@@ -39,7 +39,8 @@ enum NfcNotificationType {
   "initialized",
   "techDiscovered",
   "techLost",
-  "hciEventTransaction"
+  "hciEventTransaction",
+  "ndefReceived",
 };
 
 /**
