@@ -111,6 +111,7 @@ const gXPInstallObserver = {
       notificationID = "addon-progress";
       messageString = gNavigatorBundle.getString("addonDownloadingAndVerifying");
       messageString = PluralForm.get(installInfo.installs.length, messageString);
+      messageString = messageString.replace("#1", installInfo.installs.length);
       options.installs = installInfo.installs;
       options.contentWindow = browser.contentWindow;
       options.sourceURI = browser.currentURI;
