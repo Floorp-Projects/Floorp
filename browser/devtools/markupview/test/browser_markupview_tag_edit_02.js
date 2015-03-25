@@ -16,7 +16,7 @@ add_task(function*() {
   yield selectNode("#test-div", inspector);
 
   info("Verify attributes, only ID should be there for now");
-  assertAttributes("#test-div", {
+  yield assertAttributes("#test-div", {
     id: "test-div"
   });
 
@@ -29,7 +29,7 @@ add_task(function*() {
   yield mutated;
 
   info("Verify attributes, should have ID, class and style");
-  assertAttributes("#test-div", {
+  yield assertAttributes("#test-div", {
     id: "test-div",
     class: "newclass",
     style: "color:green"
@@ -37,7 +37,7 @@ add_task(function*() {
 
   info("Trying to undo the change");
   yield undoChange(inspector);
-  assertAttributes("#test-div", {
+  yield assertAttributes("#test-div", {
     id: "test-div"
   });
 
