@@ -66,6 +66,7 @@ BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
 #endif
     postDebugPrologueOffset_(postDebugPrologueOffset),
     flags_(0),
+    inlinedBytecodeLength_(0),
     maxInliningDepth_(UINT8_MAX)
 { }
 
