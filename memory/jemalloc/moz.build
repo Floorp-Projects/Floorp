@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-SOURCES += [
+UNIFIED_SOURCES += [
     'src/src/arena.c',
     'src/src/atomic.c',
     'src/src/base.c',
@@ -13,7 +13,6 @@ SOURCES += [
     'src/src/chunk_dss.c',
     'src/src/chunk_mmap.c',
     'src/src/ckh.c',
-    'src/src/ctl.c',
     'src/src/extent.c',
     'src/src/hash.c',
     'src/src/huge.c',
@@ -31,10 +30,15 @@ SOURCES += [
     # 'src/src/valgrind.c',
 ]
 
+SOURCES += [
+    # This file cannot be built in unified mode because of symbol clash on arena_purge.
+    'src/src/ctl.c',
+]
+
 # Only OSX needs the zone allocation implementation,
 # but only if replace-malloc is not enabled.
 if CONFIG['OS_TARGET'] == 'Darwin' and not CONFIG['MOZ_REPLACE_MALLOC']:
-    SOURCES += [
+    UNIFIED_SOURCES += [
         'src/src/zone.c',
     ]
 
