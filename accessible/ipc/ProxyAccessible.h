@@ -181,6 +181,18 @@ public:
 
   nsIntSize ImageSize();
 
+  uint32_t StartOffset(bool* aOk);
+
+  uint32_t EndOffset(bool* aOk);
+
+  bool IsLinkValid();
+
+  uint32_t AnchorCount(bool* aOk);
+
+  void AnchorURIAt(uint32_t aIndex, nsCString& aURI, bool* aOk);
+
+  ProxyAccessible* AnchorAt(uint32_t aIndex);
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */

@@ -189,9 +189,29 @@ public:
   virtual bool RecvImageSize(const uint64_t& aID,
                              nsIntSize* aRetVal) override;
 
+  virtual bool RecvStartOffset(const uint64_t& aID,
+                               uint32_t* aRetVal,
+                               bool* aOk) override;
+  virtual bool RecvEndOffset(const uint64_t& aID,
+                             uint32_t* aRetVal,
+                             bool* aOk) override;
+  virtual bool RecvIsLinkValid(const uint64_t& aID,
+                               bool* aRetVal) override;
+  virtual bool RecvAnchorCount(const uint64_t& aID,
+                               uint32_t* aRetVal, bool* aOk) override;
+  virtual bool RecvAnchorURIAt(const uint64_t& aID,
+                               const uint32_t& aIndex,
+                               nsCString* aURI,
+                               bool* aOk) override;
+  virtual bool RecvAnchorAt(const uint64_t& aID,
+                            const uint32_t& aIndex,
+                            uint64_t* aIDOfAnchor,
+                            bool* aOk) override;
+
 private:
 
   Accessible* IdToAccessible(const uint64_t& aID) const;
+  Accessible* IdToAccessibleLink(const uint64_t& aID) const;
   HyperTextAccessible* IdToHyperTextAccessible(const uint64_t& aID) const;
   ImageAccessible* IdToImageAccessible(const uint64_t& aID) const;
 

@@ -52,6 +52,13 @@ DocAccessibleChild::IdToAccessible(const uint64_t& aID) const
   return mDoc->GetAccessibleByUniqueID(reinterpret_cast<void*>(aID));
 }
 
+Accessible*
+DocAccessibleChild::IdToAccessibleLink(const uint64_t& aID) const
+{
+  Accessible* acc = IdToAccessible(aID);
+  return acc && acc->IsLink() ? acc : nullptr;
+}
+
 HyperTextAccessible*
 DocAccessibleChild::IdToHyperTextAccessible(const uint64_t& aID) const
 {
@@ -613,6 +620,110 @@ DocAccessibleChild::RecvImageSize(const uint64_t& aID,
   ImageAccessible* acc = IdToImageAccessible(aID);
   if (acc) {
     *aRetVal = acc->Size();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvStartOffset(const uint64_t& aID,
+                                    uint32_t* aRetVal,
+                                    bool* aOk)
+{
+  Accessible* acc = IdToAccessibleLink(aID);
+  if (acc) {
+    *aRetVal = acc->StartOffset();
+    *aOk = true;
+  } else {
+    *aRetVal = 0;
+    *aOk = false;
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvEndOffset(const uint64_t& aID,
+                                  uint32_t* aRetVal,
+                                  bool* aOk)
+{
+  Accessible* acc = IdToAccessibleLink(aID);
+  if (acc) {
+    *aRetVal = acc->EndOffset();
+    *aOk = true;
+  } else {
+    *aRetVal = 0;
+    *aOk = false;
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvIsLinkValid(const uint64_t& aID,
+                                    bool* aRetVal)
+{
+  Accessible* acc = IdToAccessibleLink(aID);
+  if (acc) {
+    *aRetVal = acc->IsLinkValid();
+  } else {
+    *aRetVal = false;
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAnchorCount(const uint64_t& aID,
+                                    uint32_t* aRetVal,
+                                    bool* aOk)
+{
+  Accessible* acc = IdToAccessibleLink(aID);
+  if (acc) {
+    *aRetVal = acc->AnchorCount();
+    *aOk = true;
+  } else {
+    *aRetVal = 0;
+    *aOk = false;
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAnchorURIAt(const uint64_t& aID,
+                                    const uint32_t& aIndex,
+                                    nsCString* aURI,
+                                    bool* aOk)
+{
+  Accessible* acc = IdToAccessibleLink(aID);
+  *aOk = false;
+  if (acc) {
+    nsCOMPtr<nsIURI> uri = acc->AnchorURIAt(aIndex);
+    if (uri) {
+      uri->GetSpec(*aURI);
+      *aOk = true;
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAnchorAt(const uint64_t& aID,
+                                 const uint32_t& aIndex,
+                                 uint64_t* aIDOfAnchor,
+                                 bool* aOk)
+{
+  *aIDOfAnchor = 0;
+  *aOk = false;
+  Accessible* acc = IdToAccessibleLink(aID);
+  if (acc) {
+    Accessible* anchor = acc->AnchorAt(aIndex);
+    if (anchor) {
+      *aIDOfAnchor = reinterpret_cast<uint64_t>(anchor->UniqueID());
+      *aOk = true;
+    }
   }
 
   return true;

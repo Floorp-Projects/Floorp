@@ -379,5 +379,52 @@ ProxyAccessible::ImageSize()
   return retVal;
 }
 
+uint32_t
+ProxyAccessible::StartOffset(bool* aOk)
+{
+  uint32_t retVal = 0;
+  unused << mDoc->SendStartOffset(mID, &retVal, aOk);
+  return retVal;
+}
+
+uint32_t
+ProxyAccessible::EndOffset(bool* aOk)
+{
+  uint32_t retVal = 0;
+  unused << mDoc->SendEndOffset(mID, &retVal, aOk);
+  return retVal;
+}
+
+bool
+ProxyAccessible::IsLinkValid()
+{
+  bool retVal = false;
+  unused << mDoc->SendIsLinkValid(mID, &retVal);
+  return retVal;
+}
+
+uint32_t
+ProxyAccessible::AnchorCount(bool* aOk)
+{
+  uint32_t retVal = 0;
+  unused << mDoc->SendAnchorCount(mID, &retVal, aOk);
+  return retVal;
+}
+
+void
+ProxyAccessible::AnchorURIAt(uint32_t aIndex, nsCString& aURI, bool* aOk)
+{
+  unused << mDoc->SendAnchorURIAt(mID, aIndex, &aURI, aOk);
+}
+
+ProxyAccessible*
+ProxyAccessible::AnchorAt(uint32_t aIndex)
+{
+  uint64_t id = 0;
+  bool ok = false;
+  unused << mDoc->SendAnchorAt(mID, aIndex, &id, &ok);
+  return ok ? mDoc->GetAccessible(id) : nullptr;
+}
+
 }
 }
