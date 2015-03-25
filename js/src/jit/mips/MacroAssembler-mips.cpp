@@ -13,6 +13,7 @@
 #include "jit/BaselineFrame.h"
 #include "jit/BaselineRegisters.h"
 #include "jit/JitFrames.h"
+#include "jit/MacroAssembler.h"
 #include "jit/mips/Simulator-mips.h"
 #include "jit/MoveEmitter.h"
 
@@ -1497,8 +1498,8 @@ MacroAssemblerMIPSCompat::buildFakeExitFrame(Register scratch, uint32_t *offset)
     ma_li(scratch, cl.dest());
 
     uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
-    Push(Imm32(descriptor));
-    Push(scratch);
+    asMasm().Push(Imm32(descriptor));
+    asMasm().Push(scratch);
 
     bind(cl.src());
     *offset = currentOffset();
@@ -1512,8 +1513,8 @@ MacroAssemblerMIPSCompat::buildOOLFakeExitFrame(void *fakeReturnAddr)
 {
     uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
 
-    Push(Imm32(descriptor)); // descriptor_
-    Push(ImmPtr(fakeReturnAddr));
+    asMasm().Push(Imm32(descriptor)); // descriptor_
+    asMasm().Push(ImmPtr(fakeReturnAddr));
 
     return true;
 }
@@ -1522,7 +1523,7 @@ void
 MacroAssemblerMIPSCompat::callWithExitFrame(Label *target)
 {
     uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
-    Push(Imm32(descriptor)); // descriptor
+    asMasm().Push(Imm32(descriptor)); // descriptor
 
     ma_callJitHalfPush(target);
 }
@@ -1531,7 +1532,7 @@ void
 MacroAssemblerMIPSCompat::callWithExitFrame(JitCode *target)
 {
     uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
-    Push(Imm32(descriptor)); // descriptor
+    asMasm().Push(Imm32(descriptor)); // descriptor
 
     addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
     ma_liPatchable(ScratchRegister, ImmPtr(target->raw()));
@@ -1543,7 +1544,7 @@ MacroAssemblerMIPSCompat::callWithExitFrame(JitCode *target, Register dynStack)
 {
     ma_addu(dynStack, dynStack, Imm32(framePushed()));
     makeFrameDescriptor(dynStack, JitFrame_IonJS);
-    Push(dynStack); // descriptor
+    asMasm().Push(dynStack); // descriptor
 
     addPendingJump(m_buffer.nextOffset(), ImmPtr(target->raw()), Relocation::JITCODE);
     ma_liPatchable(ScratchRegister, ImmPtr(target->raw()));
@@ -1583,65 +1584,6 @@ void
 MacroAssemblerMIPSCompat::freeStack(Register amount)
 {
     as_addu(StackPointer, StackPointer, amount);
-}
-
-void
-MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
-{
-    MOZ_ASSERT(!SupportsSimd() && simdSet.size() == 0);
-    int32_t diffF = set.fpus().getPushSizeInBytes();
-    int32_t diffG = set.gprs().size() * sizeof(intptr_t);
-
-    reserveStack(diffG);
-    for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
-        diffG -= sizeof(intptr_t);
-        storePtr(*iter, Address(StackPointer, diffG));
-    }
-    MOZ_ASSERT(diffG == 0);
-
-    // Double values have to be aligned. We reserve extra space so that we can
-    // start writing from the first aligned location.
-    // We reserve a whole extra double so that the buffer has even size.
-    ma_and(SecondScratchReg, sp, Imm32(~(ABIStackAlignment - 1)));
-    reserveStack(diffF + sizeof(double));
-
-    for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); iter++) {
-        if ((*iter).code() % 2 == 0)
-            as_sd(*iter, SecondScratchReg, -diffF);
-        diffF -= sizeof(double);
-    }
-    MOZ_ASSERT(diffF == 0);
-}
-
-void
-MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRegisterSet simdSet)
-{
-    MOZ_ASSERT(!SupportsSimd() && simdSet.size() == 0);
-    int32_t diffG = set.gprs().size() * sizeof(intptr_t);
-    int32_t diffF = set.fpus().getPushSizeInBytes();
-    const int32_t reservedG = diffG;
-    const int32_t reservedF = diffF;
-
-    // Read the buffer form the first aligned location.
-    ma_addu(SecondScratchReg, sp, Imm32(reservedF + sizeof(double)));
-    ma_and(SecondScratchReg, SecondScratchReg, Imm32(~(ABIStackAlignment - 1)));
-
-    for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); iter++) {
-        if (!ignore.has(*iter) && ((*iter).code() % 2 == 0))
-            // Use assembly l.d because we have alligned the stack.
-            as_ld(*iter, SecondScratchReg, -diffF);
-        diffF -= sizeof(double);
-    }
-    freeStack(reservedF + sizeof(double));
-    MOZ_ASSERT(diffF == 0);
-
-    for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
-        diffG -= sizeof(intptr_t);
-        if (!ignore.has(*iter))
-            loadPtr(Address(StackPointer, diffG), *iter);
-    }
-    freeStack(reservedG);
-    MOZ_ASSERT(diffG == 0);
 }
 
 void
@@ -3427,7 +3369,7 @@ MacroAssemblerMIPSCompat::callWithABIPre(uint32_t *stackAdjust, bool callFromAsm
         if (!enoughMemory_)
             return;
 
-        MoveEmitter emitter(*this);
+        MoveEmitter emitter(asMasm());
         emitter.emit(moveResolver_);
         emitter.finish();
     }
@@ -3708,4 +3650,136 @@ void
 MacroAssemblerMIPSCompat::profilerExitFrame()
 {
     branch(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
+}
+
+MacroAssembler &
+MacroAssemblerMIPSCompat::asMasm()
+{
+    return *static_cast<MacroAssembler *>(this);
+}
+
+const MacroAssembler &
+MacroAssemblerMIPSCompat::asMasm() const
+{
+    return *static_cast<const MacroAssembler *>(this);
+}
+
+// ===============================================================
+// Stack manipulation functions.
+
+void
+MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
+{
+    MOZ_ASSERT(!SupportsSimd() && simdSet.size() == 0);
+    int32_t diffF = set.fpus().getPushSizeInBytes();
+    int32_t diffG = set.gprs().size() * sizeof(intptr_t);
+
+    reserveStack(diffG);
+    for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        diffG -= sizeof(intptr_t);
+        storePtr(*iter, Address(StackPointer, diffG));
+    }
+    MOZ_ASSERT(diffG == 0);
+
+    // Double values have to be aligned. We reserve extra space so that we can
+    // start writing from the first aligned location.
+    // We reserve a whole extra double so that the buffer has even size.
+    ma_and(SecondScratchReg, sp, Imm32(~(ABIStackAlignment - 1)));
+    reserveStack(diffF + sizeof(double));
+
+    for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); iter++) {
+        if ((*iter).code() % 2 == 0)
+            as_sd(*iter, SecondScratchReg, -diffF);
+        diffF -= sizeof(double);
+    }
+    MOZ_ASSERT(diffF == 0);
+}
+
+void
+MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRegisterSet simdSet)
+{
+    MOZ_ASSERT(!SupportsSimd() && simdSet.size() == 0);
+    int32_t diffG = set.gprs().size() * sizeof(intptr_t);
+    int32_t diffF = set.fpus().getPushSizeInBytes();
+    const int32_t reservedG = diffG;
+    const int32_t reservedF = diffF;
+
+    // Read the buffer form the first aligned location.
+    ma_addu(SecondScratchReg, sp, Imm32(reservedF + sizeof(double)));
+    ma_and(SecondScratchReg, SecondScratchReg, Imm32(~(ABIStackAlignment - 1)));
+
+    for (FloatRegisterForwardIterator iter(set.fpus().reduceSetForPush()); iter.more(); iter++) {
+        if (!ignore.has(*iter) && ((*iter).code() % 2 == 0))
+            // Use assembly l.d because we have alligned the stack.
+            as_ld(*iter, SecondScratchReg, -diffF);
+        diffF -= sizeof(double);
+    }
+    freeStack(reservedF + sizeof(double));
+    MOZ_ASSERT(diffF == 0);
+
+    for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
+        diffG -= sizeof(intptr_t);
+        if (!ignore.has(*iter))
+            loadPtr(Address(StackPointer, diffG), *iter);
+    }
+    freeStack(reservedG);
+    MOZ_ASSERT(diffG == 0);
+}
+
+void
+MacroAssembler::Push(Register reg)
+{
+    ma_push(reg);
+    adjustFrame(sizeof(intptr_t));
+}
+
+void
+MacroAssembler::Push(const Imm32 imm)
+{
+    ma_li(ScratchRegister, imm);
+    ma_push(ScratchRegister);
+    adjustFrame(sizeof(intptr_t));
+}
+
+void
+MacroAssembler::Push(const ImmWord imm)
+{
+    ma_li(ScratchRegister, Imm32(imm.value));
+    ma_push(ScratchRegister);
+    adjustFrame(sizeof(intptr_t));
+}
+
+void
+MacroAssembler::Push(const ImmPtr imm)
+{
+    Push(ImmWord(uintptr_t(imm.value)));
+}
+
+void
+MacroAssembler::Push(const ImmGCPtr ptr)
+{
+    ma_li(ScratchRegister, ptr);
+    ma_push(ScratchRegister);
+    adjustFrame(sizeof(intptr_t));
+}
+
+void
+MacroAssembler::Push(FloatRegister f)
+{
+    ma_push(f);
+    adjustFrame(sizeof(double));
+}
+
+void
+MacroAssembler::Pop(Register reg)
+{
+    ma_pop(reg);
+    adjustFrame(-sizeof(intptr_t));
+}
+
+void
+MacroAssembler::Pop(const ValueOperand &val)
+{
+    popValue(val);
+    framePushed_ -= sizeof(Value);
 }
