@@ -247,6 +247,15 @@ public:
   void TableUnselectRow(uint32_t aRow);
   bool TableIsProbablyForLayout();
 
+  void SelectedItems(nsTArray<ProxyAccessible*>* aSelectedItems);
+  uint32_t SelectedItemCount();
+  ProxyAccessible* GetSelectedItem(uint32_t aIndex);
+  bool IsItemSelected(uint32_t aIndex);
+  bool AddItemToSelection(uint32_t aIndex);
+  bool RemoveItemFromSelection(uint32_t aIndex);
+  bool SelectAll();
+  bool UnselectAll();
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */
