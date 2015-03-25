@@ -71,12 +71,26 @@
     });
   }
 
+  function testVideo() {
+    return new Promise(function(resolve, reject) {
+      var video = document.createElement("video");
+      video.src = "video.ogg";
+      video.preload = "metadata";
+      // The service worker will respond with an existing video only if the
+      // Request has the correct context, otherwise the Promise will get
+      // rejected and the test will fail.
+      video.onloadedmetadata = resolve;
+      video.onerror = reject;
+    });
+  }
+
   Promise.all([
     testFetch(),
     testImage(),
     testImageSrcSet(),
     testPicture(),
     testAudio(),
+    testVideo(),
   ])
   .then(function() {
     finish();
