@@ -16,6 +16,9 @@ namespace dom {
 struct ServerSocketOptions;
 class GlobalObject;
 class TCPSocket;
+class TCPSocketChild;
+class TCPServerSocketChild;
+class TCPServerSocketParent;
 
 class TCPServerSocket final : public DOMEventTargetHelper
                             , public nsIServerSocketListener
@@ -35,6 +38,8 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
+  nsresult Init();
+
   uint16_t LocalPort();
   void Close();
 
@@ -48,14 +53,24 @@ public:
   IMPL_EVENT_HANDLER(connect);
   IMPL_EVENT_HANDLER(error);
 
+  // Relay an accepted socket notification from the parent process and
+  // initialize this object with an existing child actor for the new socket.
+  nsresult AcceptChildSocket(TCPSocketChild* aSocketChild);
+  // Associate this object with an IPC actor in the parent process to relay
+  // notifications to content processes.
+  void SetServerBridgeParent(TCPServerSocketParent* aBridgeParent);
+
 private:
   ~TCPServerSocket();
-  nsresult Init();
   // Dispatch a TCPServerSocketEvent event of a given type at this object.
   void FireEvent(const nsAString& aType, TCPSocket* aSocket);
 
   // The server socket associated with this object.
   nsCOMPtr<nsIServerSocket> mServerSocket;
+  // The IPC actor in the content process.
+  nsRefPtr<TCPServerSocketChild> mServerBridgeChild;
+  // The IPC actor in the parent process.
+  nsRefPtr<TCPServerSocketParent> mServerBridgeParent;
   int32_t mPort;
   uint16_t mBacklog;
   // True if any accepted sockets should use array buffers for received messages.
