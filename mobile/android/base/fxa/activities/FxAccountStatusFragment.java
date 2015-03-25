@@ -4,6 +4,13 @@
 
 package org.mozilla.gecko.fxa.activities;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
@@ -17,12 +24,14 @@ import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncStatusHelper;
 import org.mozilla.gecko.fxa.tasks.FxAccountCodeResender;
+import org.mozilla.gecko.reading.ReadingListConstants;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.SharedPreferencesClientsDataDelegate;
 import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.util.HardwareUtils;
 
 import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -38,13 +47,7 @@ import android.preference.PreferenceCategory;
 import android.preference.PreferenceScreen;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
-
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import android.widget.Toast;
 
 
 /**
@@ -58,15 +61,16 @@ public class FxAccountStatusFragment
     implements OnPreferenceClickListener, OnPreferenceChangeListener {
   private static final String LOG_TAG = FxAccountStatusFragment.class.getSimpleName();
 
-    /**
-     * If a device claims to have synced before this date, we will assume it has never synced.
-     */
-    private static final Date EARLIEST_VALID_SYNCED_DATE;
-    static {
-        final Calendar c = GregorianCalendar.getInstance();
-        c.set(2000, Calendar.JANUARY, 1, 0, 0, 0);
-        EARLIEST_VALID_SYNCED_DATE = c.getTime();
-    }
+  /**
+   * If a device claims to have synced before this date, we will assume it has never synced.
+   */
+  private static final Date EARLIEST_VALID_SYNCED_DATE;
+  static {
+    final Calendar c = GregorianCalendar.getInstance();
+    c.set(2000, Calendar.JANUARY, 1, 0, 0, 0);
+    EARLIEST_VALID_SYNCED_DATE = c.getTime();
+  }
+
   // When a checkbox is toggled, wait 5 seconds (for other checkbox actions)
   // before trying to sync. Should we kill off the fragment before the sync
   // request happens, that's okay: the runnable will run if the UI thread is
@@ -83,6 +87,15 @@ public class FxAccountStatusFragment
   // By default, the Sync server preference is only shown when the account is
   // configured to use a custom Sync server. In debug mode, this is set.
   private static boolean ALWAYS_SHOW_SYNC_SERVER = false;
+
+  // If the user clicks the email field this many times, the debug / personal
+  // information logging setting will toggle. The setting is not permanent: it
+  // lasts until this process is killed. We don't want to dump PII to the log
+  // for a long time!
+  private final int NUMBER_OF_CLICKS_TO_TOGGLE_DEBUG =
+      // !defined(MOZILLA_OFFICIAL) || defined(NIGHTLY_BUILD) || defined(MOZ_DEBUG)
+      (!AppConstants.MOZILLA_OFFICIAL || AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG_BUILD) ? 5 : -1 /* infinite */;
+  private int debugClickCount = 0;
 
   protected PreferenceCategory accountCategory;
   protected Preference emailPreference;
@@ -177,6 +190,8 @@ public class FxAccountStatusFragment
       ALWAYS_SHOW_SYNC_SERVER = true;
     }
 
+    emailPreference.setOnPreferenceClickListener(this);
+
     needsPasswordPreference.setOnPreferenceClickListener(this);
     needsVerificationPreference.setOnPreferenceClickListener(this);
     needsFinishMigratingPreference.setOnPreferenceClickListener(this);
@@ -214,6 +229,17 @@ public class FxAccountStatusFragment
 
   @Override
   public boolean onPreferenceClick(Preference preference) {
+    if (preference == emailPreference) {
+      debugClickCount += 1;
+      if (NUMBER_OF_CLICKS_TO_TOGGLE_DEBUG > 0 && debugClickCount >= NUMBER_OF_CLICKS_TO_TOGGLE_DEBUG) {
+        debugClickCount = 0;
+        FxAccountUtils.LOG_PERSONAL_INFORMATION = !FxAccountUtils.LOG_PERSONAL_INFORMATION;
+        Toast.makeText(getActivity(), "Toggled logging Firefox Account personal information!", Toast.LENGTH_LONG).show();
+        hardRefresh(); // Display or hide debug options.
+      }
+      return true;
+    }
+
     if (preference == needsPasswordPreference) {
       Intent intent = new Intent(getActivity(), FxAccountUpdateCredentialsActivity.class);
       final Bundle extras = getExtrasForAccount();
@@ -764,6 +790,16 @@ public class FxAccountStatusFragment
         Logger.info(LOG_TAG, "Force syncing.");
         fxAccount.requestSync(FirefoxAccounts.FORCE);
         // No sense refreshing, since the sync will complete in the future.
+      } else if ("debug_forget_reading_list_oauth_token".equals(key)) {
+        final Account account = fxAccount.getAndroidAccount();
+        final AccountManager accountManager = AccountManager.get(getActivity());
+        final String authToken = accountManager.peekAuthToken(account, ReadingListConstants.AUTH_TOKEN_TYPE);
+        if (authToken != null) {
+          Logger.info(LOG_TAG, "Forgetting reading list oauth token: " + authToken);
+          accountManager.invalidateAuthToken(account.type, authToken);
+        } else {
+          Logger.warn(LOG_TAG, "No reading list oauth token to forget!");
+        }
       } else if ("debug_forget_certificate".equals(key)) {
         State state = fxAccount.getState();
         try {
@@ -773,6 +809,17 @@ public class FxAccountStatusFragment
           refresh();
         } catch (ClassCastException e) {
           Logger.info(LOG_TAG, "Not in Married state; can't forget certificate.");
+          // Ignore.
+        }
+      } else if ("debug_invalidate_certificate".equals(key)) {
+        State state = fxAccount.getState();
+        try {
+          Married married = (Married) state;
+          Logger.info(LOG_TAG, "Invalidating certificate.");
+          fxAccount.setState(married.makeCohabitingState().withCertificate("INVALID CERTIFICATE"));
+          refresh();
+        } catch (ClassCastException e) {
+          Logger.info(LOG_TAG, "Not in Married state; can't invalidate certificate.");
           // Ignore.
         }
       } else if ("debug_require_password".equals(key)) {
@@ -789,6 +836,14 @@ public class FxAccountStatusFragment
         Logger.info(LOG_TAG, "Moving to MigratedFromSync11 state: Requiring password.");
         State state = fxAccount.getState();
         fxAccount.setState(state.makeMigratedFromSync11State(null));
+        refresh();
+      } else if ("debug_make_account_stage".equals(key)) {
+        Logger.info(LOG_TAG, "Moving Account endpoints, in place, to stage.  Deleting Sync and RL prefs and requiring password.");
+        fxAccount.unsafeTransitionToStageEndpoints();
+        refresh();
+      } else if ("debug_make_account_default".equals(key)) {
+        Logger.info(LOG_TAG, "Moving Account endpoints, in place, to default (production).  Deleting Sync and RL prefs and requiring password.");
+        fxAccount.unsafeTransitionToDefaultEndpoints();
         refresh();
       } else {
         return false;
@@ -807,20 +862,12 @@ public class FxAccountStatusFragment
 
     // We don't want to use Android resource strings for debug UI, so we just
     // use the keys throughout.
-    final Preference debugCategory = ensureFindPreference("debug_category");
+    final PreferenceCategory debugCategory = (PreferenceCategory) ensureFindPreference("debug_category");
     debugCategory.setTitle(debugCategory.getKey());
 
-    String[] debugKeys = new String[] {
-        "debug_refresh",
-        "debug_dump",
-        "debug_force_sync",
-        "debug_forget_certificate",
-        "debug_require_password",
-        "debug_require_upgrade",
-        "debug_migrated_from_sync11" };
-    for (String debugKey : debugKeys) {
-      final Preference button = ensureFindPreference(debugKey);
-      button.setTitle(debugKey); // Not very friendly, but this is for debugging only!
+    for (int i = 0; i < debugCategory.getPreferenceCount(); i++) {
+      final Preference button = debugCategory.getPreference(i);
+      button.setTitle(button.getKey()); // Not very friendly, but this is for debugging only!
       button.setOnPreferenceClickListener(listener);
     }
   }
