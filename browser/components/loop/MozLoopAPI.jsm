@@ -632,6 +632,13 @@ function injectLoopAPI(targetWindow) {
       }
     },
 
+    SHARING_STATE_CHANGE: {
+      enumerable: true,
+      get: function() {
+        return Cu.cloneInto(SHARING_STATE_CHANGE, targetWindow);
+      }
+    },
+
     fxAEnabled: {
       enumerable: true,
       get: function() {
@@ -740,6 +747,20 @@ function injectLoopAPI(targetWindow) {
                         "?subject=" + encodeURIComponent(subject) +
                         "&body=" + encodeURIComponent(body);
         extProtocolSvc.loadURI(CommonUtils.makeURI(mailtoURL));
+      }
+    },
+
+    /**
+     * Adds a value to a telemetry histogram.
+     *
+     * @param  {string} histogramId Name of the telemetry histogram to update.
+     * @param  {string} value       Label of bucket to increment in the histogram.
+     */
+    telemetryAddKeyedValue: {
+      enumerable: true,
+      writable: true,
+      value: function(histogramId, value) {
+        Services.telemetry.getKeyedHistogramById(histogramId).add(value);
       }
     },
 
