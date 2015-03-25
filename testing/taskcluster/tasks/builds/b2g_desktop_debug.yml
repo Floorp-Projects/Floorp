@@ -6,7 +6,7 @@ $inherits:
 task:
   scopes:
       - 'docker-worker:cache:workspace-b2g-desktop-objects-debug'
-
+  workerType: b2g-desktop-debug
   extra:
     treeherder:
       collection:
