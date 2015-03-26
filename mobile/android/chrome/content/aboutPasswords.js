@@ -136,7 +136,8 @@ let Passwords = {
       let menuItems = [
         { label: gStringBundle.GetStringFromName("passwordsMenu.copyPassword") },
         { label: gStringBundle.GetStringFromName("passwordsMenu.copyUsername") },
-        { label: gStringBundle.GetStringFromName("passwordsMenu.details") } ];
+        { label: gStringBundle.GetStringFromName("passwordsMenu.details") },
+        { label: gStringBundle.GetStringFromName("passwordsMenu.delete") } ];
 
       prompt.setSingleChoiceItems(menuItems);
       prompt.show((data) => {
@@ -152,6 +153,21 @@ let Passwords = {
             this._showDetails(loginItem);
             history.pushState({ id: login.guid }, document.title);
             break;
+          case 3:
+            let confirmPrompt = new Prompt({
+              window: window,
+              message: gStringBundle.GetStringFromName("passwordsDialog.confirmDelete"),
+              buttons: [
+                gStringBundle.GetStringFromName("passwordsDialog.confirm"),
+                gStringBundle.GetStringFromName("passwordsDialog.cancel") ]
+            });
+            confirmPrompt.show((data) => {
+              switch (data.button) {
+                case 0:
+                  // Corresponds to "confirm" button.
+                  Services.logins.removeLogin(login);
+              }
+            });
         }
       });
 
