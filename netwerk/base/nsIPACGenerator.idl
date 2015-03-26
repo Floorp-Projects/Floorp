@@ -1,0 +1,15 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(4b3eeeea-1108-4aa0-8f26-e3ebdeb0454c)]
+interface nsIPACGenerator : nsISupports
+{
+  /**
+   * Returns a PAC string based on proxy settings in the preference.
+   * Only effective when the network.proxy.pac_generator preference is true.
+   */
+  DOMString generate();
+};
