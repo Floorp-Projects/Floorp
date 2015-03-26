@@ -90,18 +90,12 @@ MFBT_API void* moz_realloc(void* ptr, size_t size)
 MFBT_API char* moz_xstrdup(const char* str)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 
-MFBT_API char* moz_strdup(const char* str)
-    NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
-
 MFBT_API size_t moz_malloc_usable_size(void *ptr);
 
 MFBT_API size_t moz_malloc_size_of(const void *ptr);
 
 #if defined(HAVE_STRNDUP)
 MFBT_API char* moz_xstrndup(const char* str, size_t strsize)
-    NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
-
-MFBT_API char* moz_strndup(const char* str, size_t strsize)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 #endif /* if defined(HAVE_STRNDUP) */
 
