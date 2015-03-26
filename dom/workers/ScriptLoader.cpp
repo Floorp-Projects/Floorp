@@ -607,7 +607,7 @@ private:
     for (uint32_t index = 0; index < mLoadInfos.Length(); index++) {
       ScriptLoadInfo& loadInfo = mLoadInfos[index];
 
-      // If promise or channel is non-null, there failures will lead to
+      // If promise or channel is non-null, their failures will lead to
       // LoadingFinished being called.
       bool callLoadingFinished = true;
 
@@ -812,7 +812,7 @@ private:
                                       loadInfo.mFullURL.Length());
 
       ErrorResult error;
-      loadInfo.mCachePromise =
+      nsRefPtr<Promise> cachePromise =
         mCacheCreator->Cache_()->Put(request, *response, error);
       if (NS_WARN_IF(error.Failed())) {
         channel->Cancel(error.ErrorCode());
@@ -821,8 +821,9 @@ private:
 
       nsRefPtr<CachePromiseHandler> promiseHandler =
         new CachePromiseHandler(this, loadInfo, aIndex);
-      loadInfo.mCachePromise->AppendNativeHandler(promiseHandler);
+      cachePromise->AppendNativeHandler(promiseHandler);
 
+      loadInfo.mCachePromise.swap(cachePromise);
       loadInfo.mCacheStatus = ScriptLoadInfo::WritingToCache;
     }
 
@@ -1093,10 +1094,14 @@ CachePromiseHandler::ResolvedCallback(JSContext* aCx,
                                       JS::Handle<JS::Value> aValue)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(mLoadInfo.mCacheStatus == ScriptLoadInfo::WritingToCache);
-  mLoadInfo.mCacheStatus = ScriptLoadInfo::Cached;
+  // May already have been canceled by CacheScriptLoader::Fail from
+  // CancelMainThread.
+  MOZ_ASSERT(mLoadInfo.mCacheStatus == ScriptLoadInfo::WritingToCache ||
+             mLoadInfo.mCacheStatus == ScriptLoadInfo::Cancel);
+  MOZ_ASSERT_IF(mLoadInfo.mCacheStatus == ScriptLoadInfo::Cancel, !mLoadInfo.mCachePromise);
 
   if (mLoadInfo.mCachePromise) {
+    mLoadInfo.mCacheStatus = ScriptLoadInfo::Cached;
     mLoadInfo.mCachePromise = nullptr;
     mRunnable->MaybeExecuteFinishedScripts(mIndex);
   }
@@ -1107,7 +1112,10 @@ CachePromiseHandler::RejectedCallback(JSContext* aCx,
                                       JS::Handle<JS::Value> aValue)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(mLoadInfo.mCacheStatus == ScriptLoadInfo::WritingToCache);
+  // May already have been canceled by CacheScriptLoader::Fail from
+  // CancelMainThread.
+  MOZ_ASSERT(mLoadInfo.mCacheStatus == ScriptLoadInfo::WritingToCache ||
+             mLoadInfo.mCacheStatus == ScriptLoadInfo::Cancel);
   mLoadInfo.mCacheStatus = ScriptLoadInfo::Cancel;
 
   mLoadInfo.mCachePromise = nullptr;
@@ -1252,7 +1260,12 @@ CacheScriptLoader::Fail(nsresult aRv)
   mLoadInfo.mCacheStatus = ScriptLoadInfo::Cancel;
 
   // Stop if the load was aborted on the main thread.
-  if (mLoadInfo.Finished()) {
+  // Can't use Finished() because mCachePromise may still be true.
+  if (mLoadInfo.mLoadingFinished) {
+    MOZ_ASSERT(!mLoadInfo.mChannel);
+    MOZ_ASSERT_IF(mLoadInfo.mCachePromise,
+                  mLoadInfo.mCacheStatus == ScriptLoadInfo::WritingToCache ||
+                  mLoadInfo.mCacheStatus == ScriptLoadInfo::Cancel);
     return;
   }
 
