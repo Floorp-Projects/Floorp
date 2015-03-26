@@ -34,6 +34,10 @@ public:
               nsReflowStatus&          aStatus) override;
   virtual nsIAtom* GetType() const override;
 
+  void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                        const nsRect&           aDirtyRect,
+                        const nsDisplayListSet& aLists) override;
+
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif

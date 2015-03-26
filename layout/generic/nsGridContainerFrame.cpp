@@ -13,6 +13,7 @@
 #include "nsAlgorithm.h" // for clamped()
 #include "nsCSSAnonBoxes.h"
 #include "nsDataHashtable.h"
+#include "nsDisplayList.h"
 #include "nsHashKeys.h"
 #include "nsIFrameInlines.h"
 #include "nsPresContext.h"
@@ -160,6 +161,26 @@ GridLinePosition(uint32_t aLine, const nsTArray<TrackSize>& aTrackSizes)
     pos += aTrackSizes[i].mBase;
   }
   return pos;
+}
+
+/**
+ * (XXX share this utility function with nsFlexContainerFrame at some point)
+ *
+ * Helper for BuildDisplayList, to implement this special-case for grid
+ * items from the spec:
+ *   The painting order of grid items is exactly the same as inline blocks,
+ *   except that [...] 'z-index' values other than 'auto' create a stacking
+ *   context even if 'position' is 'static'.
+ * http://dev.w3.org/csswg/css-grid/#z-order
+ */
+static uint32_t
+GetDisplayFlagsForGridItem(nsIFrame* aFrame)
+{
+  const nsStylePosition* pos = aFrame->StylePosition();
+  if (pos->mZIndex.GetUnit() == eStyleUnit_Integer) {
+    return nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT;
+  }
+  return nsIFrame::DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT;
 }
 
 //----------------------------------------------------------------------
@@ -1106,6 +1127,24 @@ nsIAtom*
 nsGridContainerFrame::GetType() const
 {
   return nsGkAtoms::gridContainerFrame;
+}
+
+void
+nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                       const nsRect&           aDirtyRect,
+                                       const nsDisplayListSet& aLists)
+{
+  DisplayBorderBackgroundOutline(aBuilder, aLists);
+
+  // Our children are all grid-level boxes, which behave the same as
+  // inline-blocks in painting, so their borders/backgrounds all go on
+  // the BlockBorderBackgrounds list.
+  nsDisplayListSet childLists(aLists, aLists.BlockBorderBackgrounds());
+  for (nsFrameList::Enumerator e(PrincipalChildList()); !e.AtEnd(); e.Next()) {
+    nsIFrame* child = e.get();
+    BuildDisplayListForChild(aBuilder, child, aDirtyRect, childLists,
+                             ::GetDisplayFlagsForGridItem(child));
+  }
 }
 
 #ifdef DEBUG_FRAME_DUMP
