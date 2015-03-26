@@ -270,12 +270,6 @@ bool
 IsSlotMarked(HeapSlot *s);
 
 void
-MarkSlot(JSTracer *trc, HeapSlot *s, const char *name);
-
-void
-MarkArraySlots(JSTracer *trc, size_t len, HeapSlot *vec, const char *name);
-
-void
 MarkObjectSlots(JSTracer *trc, NativeObject *obj, uint32_t start, uint32_t nslots);
 
 /*** Special Cases ***/
