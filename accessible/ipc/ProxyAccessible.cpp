@@ -885,5 +885,31 @@ ProxyAccessible::Step()
   return step;
 }
 
+void
+ProxyAccessible::TakeFocus()
+{
+  unused << mDoc->SendTakeFocus(mID);
+}
+
+ProxyAccessible*
+ProxyAccessible::ChildAtPoint(int32_t aX, int32_t aY,
+                              Accessible::EWhichChildAtPoint aWhichChild)
+{
+  uint64_t childID = 0;
+  bool ok = false;
+  unused << mDoc->SendChildAtPoint(mID, aX, aY,
+                                   static_cast<uint32_t>(aWhichChild),
+                                   &childID, &ok);
+  return ok ? mDoc->GetAccessible(childID) : nullptr;
+}
+
+nsIntRect
+ProxyAccessible::Bounds()
+{
+  nsIntRect rect;
+  unused << mDoc->SendBounds(mID, &rect);
+  return rect;
+}
+
 }
 }
