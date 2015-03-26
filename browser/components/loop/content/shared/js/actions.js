@@ -373,7 +373,7 @@ loop.shared.actions = (function() {
      * @see https://wiki.mozilla.org/Loop/Architecture/Rooms#GET_.2Frooms.2F.7Btoken.7D
      */
     SetupRoomInfo: Action.define("setupRoomInfo", {
-      roomName: String,
+      // roomName: String - Optional.
       roomOwner: String,
       roomToken: String,
       roomUrl: String
@@ -386,7 +386,7 @@ loop.shared.actions = (function() {
      * @see https://wiki.mozilla.org/Loop/Architecture/Rooms#GET_.2Frooms.2F.7Btoken.7D
      */
     UpdateRoomInfo: Action.define("updateRoomInfo", {
-      roomName: String,
+      // roomName: String - Optional.
       roomOwner: String,
       roomUrl: String
     }),

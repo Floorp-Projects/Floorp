@@ -1117,7 +1117,8 @@ this.MozLoopService = {
       if (window) {
         window.LoopUI.showNotification({
           sound: "room-joined",
-          title: room.roomName,
+          // Fallback to the brand short name if the roomName isn't available.
+          title: room.roomName || MozLoopServiceInternal.localizedStrings.get("clientShortname2"),
           message: MozLoopServiceInternal.localizedStrings.get("rooms_room_joined_label"),
           selectTab: "rooms"
         });
