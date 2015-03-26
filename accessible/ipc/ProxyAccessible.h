@@ -9,6 +9,7 @@
 
 #include "mozilla/a11y/Role.h"
 #include "nsIAccessibleText.h"
+#include "Accessible.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsRect.h"
@@ -255,6 +256,13 @@ public:
   bool RemoveItemFromSelection(uint32_t aIndex);
   bool SelectAll();
   bool UnselectAll();
+
+  bool DoAction(uint8_t aIndex);
+  uint8_t ActionCount();
+  void ActionDescriptionAt(uint8_t aIndex, nsString& aDescription);
+  void ActionNameAt(uint8_t aIndex, nsString& aName);
+  KeyBinding AccessKey();
+  KeyBinding KeyboardShortcut();
 
   /**
    * Allow the platform to store a pointers worth of data on us.
