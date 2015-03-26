@@ -132,6 +132,66 @@ child:
 
   prio(high) sync ImagePosition(uint64_t aID, uint32_t aCoordType) returns(nsIntPoint aRetVal);
   prio(high) sync ImageSize(uint64_t aID) returns(nsIntSize aRetVal);
+
+  prio(high) sync StartOffset(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
+  prio(high) sync EndOffset(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
+  prio(high) sync IsLinkValid(uint64_t aID) returns(bool aRetVal);
+  prio(high) sync AnchorCount(uint64_t aID) returns(uint32_t aRetVal, bool aOk);
+  prio(high) sync AnchorURIAt(uint64_t aID, uint32_t aIndex) returns(nsCString aURI, bool aOk);
+  prio(high) sync AnchorAt(uint64_t aID, uint32_t aIndex) returns(uint64_t aIDOfAnchor, bool aOk);
+
+  prio(high) sync LinkCount(uint64_t aID) returns(uint32_t aCount);
+  prio(high) sync LinkAt(uint64_t aID, uint32_t aIndex) returns(uint64_t aIDOfLink, bool aOk);
+  prio(high) sync LinkIndexOf(uint64_t aID, uint64_t aLinkID) returns(int32_t aIndex);
+  prio(high) sync LinkIndexAtOffset(uint64_t aID, uint32_t aOffset) returns(int32_t aIndex);
+
+  prio(high) sync TableOfACell(uint64_t aID) returns(uint64_t aTableID, bool aOk);
+  prio(high) sync ColIdx(uint64_t aID) returns(uint32_t aIndex);
+  prio(high) sync RowIdx(uint64_t aID) returns(uint32_t aIndex);
+  prio(high) sync ColExtent(uint64_t aID) returns(uint32_t aExtent);
+  prio(high) sync RowExtent(uint64_t aID) returns(uint32_t aExtent);
+  prio(high) sync ColHeaderCells(uint64_t aID) returns(uint64_t[] aCells);
+  prio(high) sync RowHeaderCells(uint64_t aID) returns(uint64_t[] aCells);
+  prio(high) sync IsCellSelected(uint64_t aID) returns(bool aSelected);
+
+  prio(high) sync TableCaption(uint64_t aID) returns(uint64_t aCaptionID, bool aOk);
+  prio(high) sync TableSummary(uint64_t aID) returns(nsString aSummary);
+  prio(high) sync TableColumnCount(uint64_t aID) returns(uint32_t aColCount);
+  prio(high) sync TableRowCount(uint64_t aID) returns(uint32_t aRowCount);
+  prio(high) sync TableCellAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(uint64_t aCellID, bool aOk);
+  prio(high) sync TableCellIndexAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(int32_t aIndex);
+  prio(high) sync TableColumnIndexAt(uint64_t aID, uint32_t aCellIndex) returns(int32_t aCol);
+  prio(high) sync TableRowIndexAt(uint64_t aID, uint32_t aCellIndex) returns(int32_t aRow);
+  prio(high) sync TableRowAndColumnIndicesAt(uint64_t aID, uint32_t aCellIndex) returns(int32_t aRow, int32_t aCol);
+  prio(high) sync TableColumnExtentAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(uint32_t aExtent);
+  prio(high) sync TableRowExtentAt(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(uint32_t aExtent);
+  prio(high) sync TableColumnDescription(uint64_t aID, uint32_t aCol) returns(nsString aDescription);
+  prio(high) sync TableRowDescription(uint64_t aID, uint32_t aRow) returns(nsString aDescription);
+  prio(high) sync TableColumnSelected(uint64_t aID, uint32_t aCol) returns(bool aSelected);
+  prio(high) sync TableRowSelected(uint64_t aID, uint32_t aRow) returns(bool aSelected);
+  prio(high) sync TableCellSelected(uint64_t aID, uint32_t aRow, uint32_t aCol) returns(bool aSelected);
+  prio(high) sync TableSelectedCellCount(uint64_t aID) returns(uint32_t aSelectedCells);
+  prio(high) sync TableSelectedColumnCount(uint64_t aID) returns(uint32_t aSelectedColumns);
+  prio(high) sync TableSelectedRowCount(uint64_t aID) returns(uint32_t aSelectedRows);
+  prio(high) sync TableSelectedCells(uint64_t aID) returns(uint64_t[] aCellIDs);
+  prio(high) sync TableSelectedCellIndices(uint64_t aID) returns(uint32_t[] aCellIndeces);
+  prio(high) sync TableSelectedColumnIndices(uint64_t aID) returns(uint32_t[] aColumnIndeces);
+  prio(high) sync TableSelectedRowIndices(uint64_t aID) returns(uint32_t[] aRowIndeces);
+  prio(high) sync TableSelectColumn(uint64_t aID, uint32_t aCol);
+  prio(high) sync TableSelectRow(uint64_t aID, uint32_t aRow);
+  prio(high) sync TableUnselectColumn(uint64_t aID, uint32_t aCol);
+  prio(high) sync TableUnselectRow(uint64_t aID, uint32_t aRow);
+  prio(high) sync TableIsProbablyForLayout(uint64_t aID) returns(bool aForLayout);
+
+  prio(high) sync SelectedItems(uint64_t aID) returns(uint64_t[] aSelectedItemIDs);
+  prio(high) sync SelectedItemCount(uint64_t aID) returns(uint32_t aCount);
+  prio(high) sync GetSelectedItem(uint64_t aID, uint32_t aIndex) returns(uint64_t aSelected, bool aOk);
+  prio(high) sync IsItemSelected(uint64_t aID, uint32_t aIndex) returns(bool aSelected);
+  prio(high) sync AddItemToSelection(uint64_t aID, uint32_t aIndex) returns(bool aSuccess);
+  prio(high) sync RemoveItemFromSelection(uint64_t aID, uint32_t aIndex) returns(bool aSuccess);
+  prio(high) sync SelectAll(uint64_t aID) returns(bool aSuccess);
+  prio(high) sync UnselectAll(uint64_t aID) returns(bool aSuccess);
+  
 };
 
 }

@@ -2,7 +2,6 @@
 --enable-debug
 --enable-stdcxx-compat
 --disable-shared-js
---enable-threadsafe
 --enable-arm-simulator
 --target=i686-pc-linux
 --host=i686-pc-linux

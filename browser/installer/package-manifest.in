@@ -618,6 +618,9 @@
 @RESPATH@/components/TestInterfaceJS.manifest
 #endif
 
+@RESPATH@/components/PACGenerator.js
+@RESPATH@/components/PACGenerator.manifest
+
 ; Modules
 @RESPATH@/browser/modules/*
 @RESPATH@/modules/*

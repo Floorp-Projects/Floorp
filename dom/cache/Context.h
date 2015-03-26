@@ -177,6 +177,7 @@ private:
   nsRefPtr<Manager> mManager;
   State mState;
   QuotaInfo mQuotaInfo;
+  nsRefPtr<QuotaInitRunnable> mInitRunnable;
   nsTArray<PendingAction> mPendingActions;
 
   // Weak refs since activites must remove themselves from this list before

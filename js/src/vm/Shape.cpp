@@ -323,8 +323,7 @@ Shape::replaceLastProperty(ExclusiveContext *cx, StackBaseShape &base,
     if (!shape->parent) {
         /* Treat as resetting the initial property of the shape hierarchy. */
         AllocKind kind = gc::GetGCObjectKind(shape->numFixedSlots());
-        return EmptyShape::getInitialShape(cx, base.clasp, proto,
-                                           base.metadata, kind,
+        return EmptyShape::getInitialShape(cx, base.clasp, proto, kind,
                                            base.flags & BaseShape::OBJECT_FLAG_MASK);
     }
 
@@ -624,8 +623,7 @@ js::ReshapeForAllocKind(JSContext *cx, Shape *shape, TaggedProto proto,
     // Construct the new shape, without updating type information.
     RootedId id(cx);
     RootedShape newShape(cx, EmptyShape::getInitialShape(cx, shape->getObjectClass(),
-                                                         proto, shape->getObjectMetadata(),
-                                                         nfixed, shape->getObjectFlags()));
+                                                         proto, nfixed, shape->getObjectFlags()));
     for (unsigned i = 0; i < ids.length(); i++) {
         id = ids[i];
 
@@ -1130,45 +1128,6 @@ NativeObject::shadowingShapeChange(ExclusiveContext *cx, const Shape &shape)
     return generateOwnShape(cx);
 }
 
-/* static */ bool
-JSObject::setMetadata(JSContext *cx, HandleObject obj, HandleObject metadata)
-{
-    if (obj->isNative() && obj->as<NativeObject>().inDictionaryMode()) {
-        StackBaseShape base(obj->as<NativeObject>().lastProperty());
-        base.metadata = metadata;
-        UnownedBaseShape *nbase = BaseShape::getUnowned(cx, base);
-        if (!nbase)
-            return false;
-
-        obj->as<NativeObject>().lastProperty()->base()->adoptUnowned(nbase);
-        return true;
-    }
-
-    Shape *existingShape = obj->ensureShape(cx);
-    if (!existingShape)
-        return false;
-
-    Shape *newShape = Shape::setObjectMetadata(cx, metadata, obj->getTaggedProto(), existingShape);
-    if (!newShape)
-        return false;
-
-    obj->setShapeMaybeNonNative(newShape);
-    return true;
-}
-
-/* static */ Shape *
-Shape::setObjectMetadata(JSContext *cx, JSObject *metadata, TaggedProto proto, Shape *last)
-{
-    if (last->getObjectMetadata() == metadata)
-        return last;
-
-    StackBaseShape base(last);
-    base.metadata = metadata;
-
-    RootedShape lastRoot(cx, last);
-    return replaceLastProperty(cx, base, proto, lastRoot);
-}
-
 bool
 JSObject::setFlags(ExclusiveContext *cx, BaseShape::Flag flags, GenerateShape generateShape)
 {
@@ -1238,74 +1197,13 @@ StackBaseShape::hash(const Lookup& lookup)
 {
     HashNumber hash = lookup.flags;
     hash = RotateLeft(hash, 4) ^ (uintptr_t(lookup.clasp) >> 3);
-    hash = RotateLeft(hash, 4) ^ (uintptr_t(lookup.hashMetadata) >> 3);
     return hash;
 }
 
 /* static */ inline bool
 StackBaseShape::match(UnownedBaseShape *key, const Lookup& lookup)
 {
-    return key->flags == lookup.flags
-        && key->clasp_ == lookup.clasp
-        && key->metadata == lookup.matchMetadata;
-}
-
-void
-StackBaseShape::trace(JSTracer *trc)
-{
-    // No need to trace the global, since our compartment had better
-    // have been entered.
-    MOZ_ASSERT(compartment->hasBeenEntered());
-    if (metadata)
-        gc::MarkObjectRoot(trc, (JSObject**)&metadata, "StackBaseShape metadata");
-}
-
-/*
- * This class is used to add a post barrier on the baseShapes set, as the key is
- * calculated based on objects which may be moved by generational GC.
- */
-class BaseShapeSetRef : public BufferableRef
-{
-    BaseShapeSet *set;
-    UnownedBaseShape *base;
-    JSObject *metadataPrior;
-
-  public:
-    BaseShapeSetRef(BaseShapeSet *set, UnownedBaseShape *base)
-      : set(set),
-        base(base),
-        metadataPrior(base->getObjectMetadata())
-    {
-        MOZ_ASSERT(!base->isOwned());
-    }
-
-    void mark(JSTracer *trc) {
-        JSObject *metadata = metadataPrior;
-        if (metadata)
-            Mark(trc, &metadata, "baseShapes set metadata");
-        if (metadata == metadataPrior)
-            return;
-
-        StackBaseShape::Lookup lookupPrior(base->getObjectFlags(),
-                                           base->clasp(),
-                                           metadataPrior, metadata);
-        ReadBarriered<UnownedBaseShape *> b(base);
-        MOZ_ALWAYS_TRUE(set->rekeyAs(lookupPrior, base, b));
-    }
-};
-
-static void
-BaseShapesTablePostBarrier(ExclusiveContext *cx, BaseShapeSet *table, UnownedBaseShape *base)
-{
-    if (!cx->isJSContext()) {
-        MOZ_ASSERT(!IsInsideNursery(base->getObjectMetadata()));
-        return;
-    }
-
-    if (IsInsideNursery(base->getObjectMetadata())) {
-        StoreBuffer &sb = cx->asJSContext()->runtime()->gc.storeBuffer;
-        sb.putGeneric(BaseShapeSetRef(table, base));
-    }
+    return key->flags == lookup.flags && key->clasp_ == lookup.clasp;
 }
 
 /* static */ UnownedBaseShape*
@@ -1320,8 +1218,6 @@ BaseShape::getUnowned(ExclusiveContext *cx, StackBaseShape &base)
     if (p)
         return *p;
 
-    RootedGeneric<StackBaseShape*> root(cx, &base);
-
     BaseShape *nbase_ = Allocate<BaseShape>(cx);
     if (!nbase_)
         return nullptr;
@@ -1333,8 +1229,6 @@ BaseShape::getUnowned(ExclusiveContext *cx, StackBaseShape &base)
     if (!p.add(cx, table, base, nbase))
         return nullptr;
 
-    BaseShapesTablePostBarrier(cx, &table, nbase);
-
     return nbase;
 }
 
@@ -1344,35 +1238,9 @@ BaseShape::assertConsistency()
 #ifdef DEBUG
     if (isOwned()) {
         UnownedBaseShape *unowned = baseUnowned();
-        MOZ_ASSERT(getObjectMetadata() == unowned->getObjectMetadata());
         MOZ_ASSERT(getObjectFlags() == unowned->getObjectFlags());
     }
 #endif
-}
-
-bool
-BaseShape::fixupBaseShapeTableEntry()
-{
-    if (metadata && IsForwarded(metadata.get())) {
-        metadata = Forwarded(metadata.get());
-        return true;
-    }
-    return false;
-}
-
-void
-JSCompartment::fixupBaseShapeTable()
-{
-    if (!baseShapes.initialized())
-        return;
-
-    for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
-        UnownedBaseShape *base = e.front().unbarrieredGet();
-        if (base->fixupBaseShapeTableEntry()) {
-            ReadBarriered<UnownedBaseShape *> b(base);
-            e.rekeyFront(base, b);
-        }
-    }
 }
 
 void
@@ -1383,7 +1251,6 @@ JSCompartment::sweepBaseShapeTable()
 
     for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
         UnownedBaseShape *base = e.front().unbarrieredGet();
-        MOZ_ASSERT_IF(base->getObjectMetadata(), !IsForwarded(base->getObjectMetadata()));
         if (IsBaseShapeAboutToBeFinalizedFromAnyThread(&base)) {
             e.removeFront();
         } else if (base != e.front().unbarrieredGet()) {
@@ -1404,8 +1271,6 @@ JSCompartment::checkBaseShapeTableAfterMovingGC()
     for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
         UnownedBaseShape *base = e.front().unbarrieredGet();
         CheckGCThingAfterMovingGC(base);
-        if (base->getObjectMetadata())
-            CheckGCThingAfterMovingGC(base->getObjectMetadata());
 
         BaseShapeSet::Ptr ptr = baseShapes.lookup(base);
         MOZ_ASSERT(ptr.found() && &*ptr == &e.front());
@@ -1437,8 +1302,7 @@ InitialShapeEntry::InitialShapeEntry(const ReadBarrieredShape &shape, TaggedProt
 inline InitialShapeEntry::Lookup
 InitialShapeEntry::getLookup() const
 {
-    return Lookup(shape->getObjectClass(), proto, shape->getObjectMetadata(),
-                  shape->numFixedSlots(), shape->getObjectFlags());
+    return Lookup(shape->getObjectClass(), proto, shape->numFixedSlots(), shape->getObjectFlags());
 }
 
 /* static */ inline HashNumber
@@ -1447,8 +1311,6 @@ InitialShapeEntry::hash(const Lookup &lookup)
     HashNumber hash = uintptr_t(lookup.clasp) >> 3;
     hash = RotateLeft(hash, 4) ^
         (uintptr_t(lookup.hashProto.toWord()) >> 3);
-    hash = RotateLeft(hash, 4) ^
-        (uintptr_t(lookup.hashMetadata) >> 3);
     return hash + lookup.nfixed;
 }
 
@@ -1458,21 +1320,19 @@ InitialShapeEntry::match(const InitialShapeEntry &key, const Lookup &lookup)
     const Shape *shape = *key.shape.unsafeGet();
     return lookup.clasp == shape->getObjectClass()
         && lookup.matchProto.toWord() == key.proto.toWord()
-        && lookup.matchMetadata == shape->getObjectMetadata()
         && lookup.nfixed == shape->numFixedSlots()
         && lookup.baseFlags == shape->getObjectFlags();
 }
 
 /*
  * This class is used to add a post barrier on the initialShapes set, as the key
- * is calculated based on several objects which may be moved by generational GC.
+ * is calculated based on objects which may be moved by generational GC.
  */
 class InitialShapeSetRef : public BufferableRef
 {
     InitialShapeSet *set;
     const Class *clasp;
     TaggedProto proto;
-    JSObject *metadata;
     size_t nfixed;
     uint32_t objectFlags;
 
@@ -1480,31 +1340,24 @@ class InitialShapeSetRef : public BufferableRef
     InitialShapeSetRef(InitialShapeSet *set,
                        const Class *clasp,
                        TaggedProto proto,
-                       JSObject *metadata,
                        size_t nfixed,
                        uint32_t objectFlags)
         : set(set),
           clasp(clasp),
           proto(proto),
-          metadata(metadata),
           nfixed(nfixed),
           objectFlags(objectFlags)
     {}
 
     void mark(JSTracer *trc) {
         TaggedProto priorProto = proto;
-        JSObject *priorMetadata = metadata;
         if (proto.isObject())
             Mark(trc, reinterpret_cast<JSObject**>(&proto), "initialShapes set proto");
-        if (metadata)
-            Mark(trc, &metadata, "initialShapes set metadata");
-        if (proto == priorProto && metadata == priorMetadata)
+        if (proto == priorProto)
             return;
 
         /* Find the original entry, which must still be present. */
-        InitialShapeEntry::Lookup lookup(clasp, priorProto,
-                                         priorMetadata, metadata,
-                                         nfixed, objectFlags);
+        InitialShapeEntry::Lookup lookup(clasp, priorProto, nfixed, objectFlags);
         InitialShapeSet::Ptr p = set->lookup(lookup);
         MOZ_ASSERT(p);
 
@@ -1515,7 +1368,7 @@ class InitialShapeSetRef : public BufferableRef
 
         /* Rekey the entry. */
         set->rekeyAs(lookup,
-                     InitialShapeEntry::Lookup(clasp, proto, metadata, nfixed, objectFlags),
+                     InitialShapeEntry::Lookup(clasp, proto, nfixed, objectFlags),
                      *p);
     }
 };
@@ -1540,12 +1393,9 @@ JSCompartment::checkInitialShapesTableAfterMovingGC()
 
         if (proto.isObject())
             CheckGCThingAfterMovingGC(proto.toObject());
-        if (shape->getObjectMetadata())
-            CheckGCThingAfterMovingGC(shape->getObjectMetadata());
 
         InitialShapeEntry::Lookup lookup(shape->getObjectClass(),
                                          proto,
-                                         shape->getObjectMetadata(),
                                          shape->numFixedSlots(),
                                          shape->getObjectFlags());
         InitialShapeSet::Ptr ptr = initialShapes.lookup(lookup);
@@ -1570,7 +1420,7 @@ EmptyShape::new_(ExclusiveContext *cx, Handle<UnownedBaseShape *> base, uint32_t
 
 /* static */ Shape *
 EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProto proto,
-                            JSObject *metadata, size_t nfixed, uint32_t objectFlags)
+                            size_t nfixed, uint32_t objectFlags)
 {
     MOZ_ASSERT_IF(proto.isObject(), cx->isInsideCurrentCompartment(proto.toObject()));
 
@@ -1581,14 +1431,13 @@ EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProt
 
     typedef InitialShapeEntry::Lookup Lookup;
     DependentAddPtr<InitialShapeSet>
-        p(cx, table, Lookup(clasp, proto, metadata, nfixed, objectFlags));
+        p(cx, table, Lookup(clasp, proto, nfixed, objectFlags));
     if (p)
         return p->shape;
 
     Rooted<TaggedProto> protoRoot(cx, proto);
-    RootedObject metadataRoot(cx, metadata);
 
-    StackBaseShape base(cx, clasp, metadata, objectFlags);
+    StackBaseShape base(cx, clasp, objectFlags);
     Rooted<UnownedBaseShape*> nbase(cx, BaseShape::getUnowned(cx, base));
     if (!nbase)
         return nullptr;
@@ -1597,17 +1446,14 @@ EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProt
     if (!shape)
         return nullptr;
 
-    Lookup lookup(clasp, protoRoot, metadataRoot, nfixed, objectFlags);
+    Lookup lookup(clasp, protoRoot, nfixed, objectFlags);
     if (!p.add(cx, table, lookup, InitialShapeEntry(ReadBarrieredShape(shape), protoRoot)))
         return nullptr;
 
     // Post-barrier for the initial shape table update.
     if (cx->isJSContext()) {
-        if ((protoRoot.isObject() && IsInsideNursery(protoRoot.toObject())) ||
-            IsInsideNursery(metadataRoot.get()))
-        {
-            InitialShapeSetRef ref(
-                &table, clasp, protoRoot, metadataRoot, nfixed, objectFlags);
+        if (protoRoot.isObject() && IsInsideNursery(protoRoot.toObject())) {
+            InitialShapeSetRef ref(&table, clasp, protoRoot, nfixed, objectFlags);
             cx->asJSContext()->runtime()->gc.storeBuffer.putGeneric(ref);
         }
     }
@@ -1617,9 +1463,9 @@ EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProt
 
 /* static */ Shape *
 EmptyShape::getInitialShape(ExclusiveContext *cx, const Class *clasp, TaggedProto proto,
-                            JSObject *metadata, AllocKind kind, uint32_t objectFlags)
+                            AllocKind kind, uint32_t objectFlags)
 {
-    return getInitialShape(cx, clasp, proto, metadata, GetGCKindSlots(kind, clasp), objectFlags);
+    return getInitialShape(cx, clasp, proto, GetGCKindSlots(kind, clasp), objectFlags);
 }
 
 void
@@ -1647,7 +1493,6 @@ NewObjectCache::invalidateEntriesForShape(JSContext *cx, HandleShape shape, Hand
 EmptyShape::insertInitialShape(ExclusiveContext *cx, HandleShape shape, HandleObject proto)
 {
     InitialShapeEntry::Lookup lookup(shape->getObjectClass(), TaggedProto(proto),
-                                     shape->getObjectMetadata(),
                                      shape->numFixedSlots(), shape->getObjectFlags());
 
     InitialShapeSet::Ptr p = cx->compartment()->initialShapes.lookup(lookup);
@@ -1721,15 +1566,9 @@ JSCompartment::fixupInitialShapeTable()
             entry.proto = TaggedProto(Forwarded(entry.proto.toObject()));
             needRekey = true;
         }
-        JSObject *metadata = entry.shape->getObjectMetadata();
-        if (metadata) {
-            metadata = MaybeForwarded(metadata);
-            needRekey = true;
-        }
         if (needRekey) {
             InitialShapeEntry::Lookup relookup(entry.shape->getObjectClass(),
                                                entry.proto,
-                                               metadata,
                                                entry.shape->numFixedSlots(),
                                                entry.shape->getObjectFlags());
             e.rekeyFront(relookup, entry);

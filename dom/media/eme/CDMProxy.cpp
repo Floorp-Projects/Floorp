@@ -134,7 +134,12 @@ CDMProxy::OnCDMCreated(uint32_t aPromiseId)
     return;
   }
   MOZ_ASSERT(!GetNodeId().IsEmpty());
-  mKeys->OnCDMCreated(aPromiseId, GetNodeId());
+  if (mCDM) {
+    mKeys->OnCDMCreated(aPromiseId, GetNodeId(), mCDM->GetPluginId());
+  } else {
+    // No CDM? Just reject the promise.
+    mKeys->RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
 void
@@ -396,7 +401,9 @@ CDMProxy::OnSetSessionId(uint32_t aCreateSessionToken,
   }
 
   nsRefPtr<dom::MediaKeySession> session(mKeys->GetPendingSession(aCreateSessionToken));
-  session->SetSessionId(aSessionId);
+  if (session) {
+    session->SetSessionId(aSessionId);
+  }
 }
 
 void
@@ -582,6 +589,14 @@ CDMProxy::gmp_Decrypted(uint32_t aId,
     }
   }
   NS_WARNING("GMPDecryptorChild returned incorrect job ID");
+}
+
+void
+CDMProxy::GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
+                                nsTArray<nsCString>& aSessionIds)
+{
+  CDMCaps::AutoLock caps(Capabilites());
+  caps.GetSessionIdsForKeyId(aKeyId, aSessionIds);
 }
 
 void

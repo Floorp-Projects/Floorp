@@ -8,14 +8,10 @@ enum ScrollState {"started", "stopped"};
 
 dictionary ScrollViewChangeEventInit : EventInit {
   ScrollState state = "started";
-  float scrollX = 0;
-  float scrollY = 0;
 };
 
 [Constructor(DOMString type, optional ScrollViewChangeEventInit eventInit),
  ChromeOnly]
 interface ScrollViewChangeEvent : Event {
   readonly attribute ScrollState state;
-  readonly attribute float scrollX;
-  readonly attribute float scrollY;
 };

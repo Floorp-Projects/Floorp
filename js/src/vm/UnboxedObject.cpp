@@ -460,8 +460,7 @@ UnboxedLayout::makeNativeGroup(JSContext *cx, ObjectGroup *group)
     }
 
     size_t nfixed = gc::GetGCKindSlots(layout.getAllocKind());
-    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &PlainObject::class_, proto,
-                                                      nullptr, nfixed, 0));
+    RootedShape shape(cx, EmptyShape::getInitialShape(cx, &PlainObject::class_, proto, nfixed, 0));
     if (!shape)
         return false;
 
@@ -681,16 +680,16 @@ UnboxedPlainObject::obj_lookupProperty(JSContext *cx, HandleObject obj,
 }
 
 /* static */ bool
-UnboxedPlainObject::obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                                       GetterOp getter, SetterOp setter, unsigned attrs,
+UnboxedPlainObject::obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id,
+                                       Handle<JSPropertyDescriptor> desc,
                                        ObjectOpResult &result)
 {
     const UnboxedLayout &layout = obj->as<UnboxedPlainObject>().layout();
 
     if (const UnboxedLayout::Property *property = layout.lookup(id)) {
-        if (!getter && !setter && attrs == JSPROP_ENUMERATE) {
+        if (!desc.getter() && !desc.setter() && desc.attributes() == JSPROP_ENUMERATE) {
             // This define is equivalent to setting an existing property.
-            if (obj->as<UnboxedPlainObject>().setValue(cx, *property, v))
+            if (obj->as<UnboxedPlainObject>().setValue(cx, *property, desc.value()))
                 return true;
         }
 
@@ -699,7 +698,8 @@ UnboxedPlainObject::obj_defineProperty(JSContext *cx, HandleObject obj, HandleId
         if (!convertToNative(cx, obj))
             return false;
 
-        return DefineProperty(cx, obj, id, v, getter, setter, attrs);
+        return DefineProperty(cx, obj, id, desc, result) &&
+               result.checkStrict(cx, obj, id);
     }
 
     // Define the property on the expando object.
@@ -708,9 +708,9 @@ UnboxedPlainObject::obj_defineProperty(JSContext *cx, HandleObject obj, HandleId
         return false;
 
     // Update property types on the unboxed object as well.
-    AddTypePropertyId(cx, obj, id, v);
+    AddTypePropertyId(cx, obj, id, desc.value());
 
-    return DefineProperty(cx, expando, id, v, getter, setter, attrs, result);
+    return DefineProperty(cx, expando, id, desc, result);
 }
 
 /* static */ bool
@@ -1119,7 +1119,6 @@ js::TryConvertToUnboxedLayout(ExclusiveContext *cx, Shape *templateShape,
     // Get an empty shape which we can use for the preliminary objects.
     Shape *newShape = EmptyShape::getInitialShape(cx, &UnboxedPlainObject::class_,
                                                   group->proto(),
-                                                  templateShape->getObjectMetadata(),
                                                   templateShape->getObjectFlags());
     if (!newShape) {
         cx->recoverFromOutOfMemory();

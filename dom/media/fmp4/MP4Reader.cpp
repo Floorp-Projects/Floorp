@@ -248,10 +248,10 @@ MP4Reader::Init(MediaDecoderReader* aCloneDonor)
 
   InitLayersBackendType();
 
-  mAudio.mTaskQueue = new FlushableMediaTaskQueue(GetMediaDecodeThreadPool());
+  mAudio.mTaskQueue = new FlushableMediaTaskQueue(GetMediaThreadPool());
   NS_ENSURE_TRUE(mAudio.mTaskQueue, NS_ERROR_FAILURE);
 
-  mVideo.mTaskQueue = new FlushableMediaTaskQueue(GetMediaDecodeThreadPool());
+  mVideo.mTaskQueue = new FlushableMediaTaskQueue(GetMediaThreadPool());
   NS_ENSURE_TRUE(mVideo.mTaskQueue, NS_ERROR_FAILURE);
 
   static bool sSetupPrefCache = false;
@@ -747,6 +747,18 @@ MP4Reader::Update(TrackType aTrack)
     if (!mFoundSPSForTelemetry && sample && AnnexB::HasSPS(sample->mMp4Sample)) {
       nsRefPtr<ByteBuffer> extradata = AnnexB::ExtractExtraData(sample->mMp4Sample);
       mFoundSPSForTelemetry = AccumulateSPSTelemetry(extradata);
+    }
+
+    if (sample && sample->mMp4Sample && sample->mMp4Sample->crypto.valid) {
+      CryptoSample& crypto = sample->mMp4Sample->crypto;
+      MOZ_ASSERT(crypto.session_ids.IsEmpty());
+
+      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+
+      nsRefPtr<CDMProxy> proxy = mDecoder->GetCDMProxy();
+      MOZ_ASSERT(proxy);
+
+      proxy->GetSessionIdsForKeyId(crypto.key, crypto.session_ids);
     }
 
     if (sample) {

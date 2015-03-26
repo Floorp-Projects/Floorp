@@ -12,6 +12,7 @@ function usage() {
 
 clean=""
 platform=""
+TIMEOUT=7200
 while [ $# -gt 1 ]; do
     case "$1" in
         --clobber)
@@ -21,6 +22,11 @@ while [ $# -gt 1 ]; do
         --platform)
             shift
             platform="$1"
+            shift
+            ;;
+        --timeout)
+            shift
+            TIMEOUT="$1"
             shift
             ;;
         *)
@@ -45,7 +51,7 @@ if [ ! -f "$ABSDIR/variants/$VARIANT" ]; then
     exit 1
 fi
 
-(cd "$SOURCE/js/src"; autoconf-2.13 || autoconf2.13)
+(cd "$SOURCE/js/src"; autoconf-2.13 || autoconf2.13 || autoconf213)
 
 TRY_OVERRIDE=$SOURCE/js/src/config.try
 if [ -r $TRY_OVERRIDE ]; then
@@ -70,6 +76,9 @@ USE_64BIT=false
 
 if [[ "$OSTYPE" == darwin* ]]; then
   USE_64BIT=true
+  if [ "$VARIANT" = "arm-sim-osx" ]; then
+    USE_64BIT=false
+  fi
 elif [ "$OSTYPE" = "linux-gnu" ]; then
   if [ -n "$AUTOMATION" ]; then
       GCCDIR="${GCCDIR:-/tools/gcc-4.7.2-0moz1}"
@@ -126,6 +135,12 @@ if type setarch >/dev/null 2>&1; then
 fi
 
 RUN_JSTESTS=true
+
+PARENT=$$
+sh -c "sleep $TIMEOUT; kill $PARENT" <&- >&- 2>&- &
+KILLER=$!
+disown %1
+trap "kill $KILLER" EXIT
 
 if [[ "$VARIANT" = "rootanalysis" ]]; then
     export JS_GC_ZEAL=7

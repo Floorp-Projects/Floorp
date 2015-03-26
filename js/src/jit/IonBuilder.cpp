@@ -886,6 +886,12 @@ IonBuilder::build()
     // Discard unreferenced & pre-allocated resume points.
     replaceMaybeFallbackFunctionGetter(nullptr);
 
+    if (script_->hasBaselineScript() &&
+        inlinedBytecodeLength_ > script_->baselineScript()->inlinedBytecodeLength())
+    {
+        script_->baselineScript()->setInlinedBytecodeLength(inlinedBytecodeLength_);
+    }
+
     if (!maybeAddOsrTypeBarriers())
         return false;
 
@@ -3653,15 +3659,16 @@ IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
       case MDefinition::Op_Not:
         return improveTypesAtTest(ins->toNot()->getOperand(0), !trueBranch, test);
       case MDefinition::Op_IsObject: {
-        TemporaryTypeSet *oldType = ins->getOperand(0)->resultTypeSet();
+        MDefinition *subject = ins->getOperand(0);
+        TemporaryTypeSet *oldType = subject->resultTypeSet();
 
         // Create temporary typeset equal to the type if there is no resultTypeSet.
         TemporaryTypeSet tmp;
         if (!oldType) {
-            if (ins->type() == MIRType_Value)
+            if (subject->type() == MIRType_Value)
                 return true;
             oldType = &tmp;
-            tmp.addType(TypeSet::PrimitiveType(ValueTypeFromMIRType(ins->type())), alloc_->lifoAlloc());
+            tmp.addType(TypeSet::PrimitiveType(ValueTypeFromMIRType(subject->type())), alloc_->lifoAlloc());
         }
 
         if (oldType->unknown())
@@ -3676,7 +3683,7 @@ IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
         if (!type)
             return false;
 
-        return replaceTypeSet(ins->getOperand(0), type, test);
+        return replaceTypeSet(subject, type, test);
       }
       case MDefinition::Op_Phi: {
         bool branchIsAnd = true;
@@ -4874,6 +4881,14 @@ IonBuilder::makeInliningDecision(JSObject *targetArg, CallInfo &callInfo)
         JitSpew(JitSpew_Inlining, "Cannot inline %s:%" PRIuSIZE ": callee is insufficiently hot.",
                 targetScript->filename(), targetScript->lineno());
         return InliningDecision_WarmUpCountTooLow;
+    }
+
+    // Don't inline if the callee is known to inline a lot of code, to avoid
+    // huge MIR graphs.
+    uint32_t inlinedBytecodeLength = targetScript->baselineScript()->inlinedBytecodeLength();
+    if (inlinedBytecodeLength > optimizationInfo().inlineMaxCalleeInlinedBytecodeLength()) {
+        trackOptimizationOutcome(TrackedOutcome::CantInlineBigCalleeInlinedBytecodeLength);
+        return DontInline(targetScript, "Vetoed: callee inlinedBytecodeLength is too big");
     }
 
     IonBuilder *outerBuilder = outermostBuilder();

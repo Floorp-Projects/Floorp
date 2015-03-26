@@ -34,7 +34,7 @@ let gTests = [
           content_uri: HTTP_PATH,
         });
 
-        makeObserver(FxAccountsCommon.ONPROFILE_IMAGE_CHANGE_NOTIFICATION, function (subject, topic, data) {
+        makeObserver(FxAccountsCommon.ON_PROFILE_CHANGE_NOTIFICATION, function (subject, topic, data) {
           Assert.ok(tabOpened);
           Assert.equal(data, "abc123");
           resolve();
