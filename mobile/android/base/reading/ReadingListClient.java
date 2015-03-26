@@ -482,7 +482,7 @@ public class ReadingListClient {
     if (ReadingListConstants.DEBUG) {
       Logger.info(LOG_TAG, "Patching record " + guid + ": " + body.toJSONString());
     }
-    r.post(body);
+    r.patch(body);
   }
 
   /**
