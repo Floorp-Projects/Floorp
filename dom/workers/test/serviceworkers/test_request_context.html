@@ -40,6 +40,8 @@
   onload = function() {
     SpecialPowers.pushPrefEnv({"set": [
       ["beacon.enabled", true],
+      ["browser.send_pings", true],
+      ["browser.send_pings.max_per_link", -1],
       ["dom.image.picture.enabled", true],
       ["dom.image.srcset.enabled", true],
       ["dom.serviceWorkers.exemptFromPerDomainMax", true],
