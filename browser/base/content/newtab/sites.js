@@ -132,6 +132,7 @@ Site.prototype = {
     this.node.setAttribute("type", this.link.type);
 
     if (this.link.targetedSite) {
+      this.node.setAttribute("suggested", true);
       let targetedSite = `<strong> ${this.link.targetedSite} </strong>`;
       this._querySelector(".newtab-suggested").innerHTML =
         `<div class='newtab-suggested-bounds'>Suggested for ${targetedSite} visitors</div>`;
@@ -248,7 +249,7 @@ Site.prototype = {
 
       let link = '<a href="' + TILES_EXPLAIN_LINK + '">' +
                  newTabString("learn.link") + "</a>";
-      let type = this.node.getAttribute("type");
+      let type = this.node.getAttribute("suggested") ? "suggested" : this.node.getAttribute("type");
       let icon = '<input type="button" class="newtab-control newtab-' +
                  (type == "enhanced" ? "customize" : "control-block") + '"/>';
 
