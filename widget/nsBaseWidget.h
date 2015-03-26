@@ -331,6 +331,7 @@ protected:
                              nsWidgetInitData *aInitData);
 
   virtual void ConfigureAPZCTreeManager();
+  virtual void ConfigureAPZControllerThread();
   virtual already_AddRefed<GeckoContentController> CreateRootContentController();
 
   // Dispatch an event that has already been routed through APZ.
