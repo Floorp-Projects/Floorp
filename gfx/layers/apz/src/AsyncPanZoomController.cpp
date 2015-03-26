@@ -1442,6 +1442,18 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent,
       MOZ_ASSERT_UNREACHABLE("unexpected scroll delta type");
   }
 
+  if (gfxPrefs::MouseWheelHasRootScrollDeltaOverride()) {
+    // Only apply delta multipliers if we're increasing the delta.
+    double hfactor = double(gfxPrefs::MouseWheelRootHScrollDeltaFactor()) / 100;
+    double vfactor = double(gfxPrefs::MouseWheelRootVScrollDeltaFactor()) / 100;
+    if (vfactor > 1.0) {
+      aOutDeltaX *= hfactor;
+    }
+    if (hfactor > 1.0) {
+      aOutDeltaY *= vfactor;
+    }
+  }
+
   LayoutDeviceIntSize pageScrollSize = mFrameMetrics.GetPageScrollAmount();
   if (Abs(aOutDeltaX) > pageScrollSize.width) {
     aOutDeltaX = (aOutDeltaX >= 0)

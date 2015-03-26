@@ -2335,7 +2335,6 @@ gfxPlatform::GetApzSupportInfo(mozilla::widget::InfoObject& aObj)
 {
   if (SupportsApzWheelInput()) {
     static const char *sBadPrefs[] = {
-      "mousewheel.system_scroll_override_on_root_content.enabled",
       "mousewheel.default.delta_multiplier_x",
       "mousewheel.with_alt.delta_multiplier_x",
       "mousewheel.with_alt.delta_multiplier_x",
