@@ -12,7 +12,7 @@
         android:scaleType="center"/>
 
     <TextView
-        android:textAppearance="@style/ShareOverlayTextAppearance"
+        android:textAppearance="@style/TextAppearance.ShareOverlay"
         android:id="@+id/overlaybtn_label"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
