@@ -78,12 +78,12 @@ public class testClearPrivateData extends PixelTest {
     }
 
     public void clearPassword(){
-        String passwordStrings[] = {"Save password", "Save", "Don't save"};
+        String passwordStrings[] = { StringHelper.LOGIN_MESSAGE, StringHelper.LOGIN_ALLOW, StringHelper.LOGIN_DENY };
         String title = StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE;
-        String loginUrl = getAbsoluteUrl(StringHelper.ROBOCOP_LOGIN_URL);
+        String loginUrl = getAbsoluteUrl(StringHelper.ROBOCOP_LOGIN_01_URL);
 
         loadCheckDismiss(passwordStrings[1], loginUrl, passwordStrings[0]);
-        checkOption(passwordStrings[1], "Clear");
+        checkOption(StringHelper.CONTEXT_MENU_SITE_SETTINGS_SAVE_PASSWORD, "Clear");
         loadCheckDismiss(passwordStrings[2], loginUrl, passwordStrings[0]);
         checkDevice(title, getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL));
     }
