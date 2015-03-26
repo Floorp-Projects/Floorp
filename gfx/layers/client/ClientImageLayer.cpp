@@ -108,15 +108,15 @@ protected:
     AutoLockImage autoLock(mContainer);
 
 #ifdef MOZ_WIDGET_GONK
-    if (autoLock.GetImage()->GetFormat() == ImageFormat::OVERLAY_IMAGE) {
+    if (autoLock.HasImage() &&
+        autoLock.GetImage()->GetFormat() == ImageFormat::OVERLAY_IMAGE) {
       mImageClientTypeContainer = CompositableType::IMAGE_OVERLAY;
       return mImageClientTypeContainer;
     }
 #endif
 
-  	mImageClientTypeContainer = autoLock.GetImage()
-							  ? CompositableType::IMAGE
-							  : CompositableType::UNKNOWN;
+    mImageClientTypeContainer = autoLock.HasImage()
+        ? CompositableType::IMAGE : CompositableType::UNKNOWN;
     return mImageClientTypeContainer;
   }
 

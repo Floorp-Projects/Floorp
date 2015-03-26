@@ -282,47 +282,14 @@ ImageContainer::HasCurrentImage()
   return !!mActiveImage.get();
 }
 
-already_AddRefed<Image>
-ImageContainer::LockCurrentImage()
-{
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-  nsRefPtr<Image> retval = mActiveImage;
-  return retval.forget();
-}
-
-already_AddRefed<gfx::SourceSurface>
-ImageContainer::LockCurrentAsSourceSurface(gfx::IntSize *aSize, Image** aCurrentImage)
-{
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-  if (aCurrentImage) {
-    nsRefPtr<Image> activeImage(mActiveImage);
-    activeImage.forget(aCurrentImage);
-  }
-
-  if (!mActiveImage) {
-    return nullptr;
-  }
-
-  *aSize = mActiveImage->GetSize();
-  return mActiveImage->GetAsSourceSurface();
-}
-
 void
-ImageContainer::UnlockCurrentImage()
-{
-}
-
-already_AddRefed<gfx::SourceSurface>
-ImageContainer::GetCurrentAsSourceSurface(gfx::IntSize *aSize)
+ImageContainer::GetCurrentImages(nsTArray<OwningImage>* aImages)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
-  if (!mActiveImage)
-    return nullptr;
-  *aSize = mActiveImage->GetSize();
-  return mActiveImage->GetAsSourceSurface();
+  if (mActiveImage) {
+    aImages->AppendElement()->mImage = mActiveImage;
+  }
 }
 
 gfx::IntSize
