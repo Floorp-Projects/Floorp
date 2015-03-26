@@ -1,7 +1,8 @@
 self.addEventListener("fetch", function(event) {
   if (event.request.url.indexOf("index.html") >= 0 ||
       event.request.url.indexOf("register.html") >= 0 ||
-      event.request.url.indexOf("unregister.html") >= 0) {
+      event.request.url.indexOf("unregister.html") >= 0 ||
+      event.request.url.indexOf("csp-violate.sjs") >= 0) {
     // Handle pass-through requests
     event.respondWith(fetch(event.request));
   } else if (event.request.url.indexOf("fetch.txt") >= 0) {
@@ -31,6 +32,14 @@ self.addEventListener("fetch", function(event) {
     } else {
       event.respondWith(fetch(event.request));
     }
+  } else if (event.request.url.indexOf("csp-report.sjs") >= 0) {
+    event.respondWith(clients.matchAll()
+                      .then(function(clients) {
+                        clients.forEach(function(c) {
+                          c.postMessage({data: "csp-report", context: event.request.context});
+                        });
+                        return new Response("ack");
+                      }));
   }
   // Fail any request that we don't know about.
   try {

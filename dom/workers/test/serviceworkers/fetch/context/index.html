@@ -95,6 +95,21 @@
       });
   }
 
+  function testCSPReport() {
+    return new Promise(function(resolve, reject) {
+      var iframe = document.createElement("iframe");
+      iframe.src = "csp-violate.sjs";
+      document.documentElement.appendChild(iframe);
+      navigator.serviceWorker.addEventListener("message", function onMessage(e) {
+        if (e.data.data == "csp-report") {
+          is(e.data.context, "cspreport", "Expected the cspreport context on a CSP violation report");
+          navigator.serviceWorker.removeEventListener("message", onMessage);
+          resolve();
+        }
+      }, false);
+    });
+  }
+
   Promise.all([
     testFetch(),
     testImage(),
@@ -103,6 +118,7 @@
     testAudio(),
     testVideo(),
     testBeacon(),
+    testCSPReport(),
   ])
   .then(function() {
     finish();
