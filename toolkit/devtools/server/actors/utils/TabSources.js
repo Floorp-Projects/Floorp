@@ -590,6 +590,17 @@ TabSources.prototype = {
     });
   },
 
+  getAllGeneratedLocations: function (originalLocation) {
+    return this.getGeneratedLocation(originalLocation)
+               .then((generatedLocation) => {
+      if (generatedLocation.generatedLine === null &&
+          generatedLocation.generatedColumn === null) {
+        return [];
+      }
+      return [generatedLocation];
+    });
+  },
+
   /**
    * Returns a promise of the location in the generated source corresponding to
    * the original source and line given.
