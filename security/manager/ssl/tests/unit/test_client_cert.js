@@ -43,10 +43,10 @@ function run_test() {
 
   add_tls_server_setup("ClientAuthServer");
 
-  add_connection_test("noclientauth.example.com", Cr.NS_OK);
+  add_connection_test("noclientauth.example.com", PRErrorCodeSuccess);
 
-  add_connection_test("requestclientauth.example.com", Cr.NS_OK);
-  add_connection_test("requestclientauth.example.com", Cr.NS_OK,
+  add_connection_test("requestclientauth.example.com", PRErrorCodeSuccess);
+  add_connection_test("requestclientauth.example.com", PRErrorCodeSuccess,
                       null, null, transport => {
     do_print("Setting client cert on transport");
     let sslSocketControl = transport.securityInfo
@@ -55,8 +55,8 @@ function run_test() {
   });
 
   add_connection_test("requireclientauth.example.com",
-                      getXPCOMStatusFromNSS(SSL_ERROR_BAD_CERT_ALERT));
-  add_connection_test("requireclientauth.example.com", Cr.NS_OK,
+                      SSL_ERROR_BAD_CERT_ALERT);
+  add_connection_test("requireclientauth.example.com", PRErrorCodeSuccess,
                       null, null, transport => {
     do_print("Setting client cert on transport");
     let sslSocketControl =
