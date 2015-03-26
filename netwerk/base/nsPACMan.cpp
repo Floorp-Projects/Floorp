@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsPACMan.h"
+#include "mozIApplication.h"
+#include "nsIAppsService.h"
 #include "nsThreadUtils.h"
 #include "nsIAuthPrompt.h"
 #include "nsIPromptFactory.h"
@@ -231,9 +233,12 @@ private:
 //-----------------------------------------------------------------------------
 
 PendingPACQuery::PendingPACQuery(nsPACMan *pacMan, nsIURI *uri,
+                                 uint32_t appId, bool isInBrowser,
                                  nsPACManCallback *callback,
                                  bool mainThreadResponse)
   : mPACMan(pacMan)
+  , mAppId(appId)
+  , mIsInBrowser(isInBrowser)
   , mCallback(callback)
   , mOnMainThreadOnly(mainThreadResponse)
 {
@@ -241,6 +246,18 @@ PendingPACQuery::PendingPACQuery(nsPACMan *pacMan, nsIURI *uri,
   uri->GetAsciiHost(mHost);
   uri->GetScheme(mScheme);
   uri->GetPort(&mPort);
+
+  nsCOMPtr<nsIAppsService> appsService =
+      do_GetService(APPS_SERVICE_CONTRACTID);
+  if (!appsService) {
+    return;
+  }
+  nsCOMPtr<mozIApplication> mozApp;
+  nsresult rv = appsService->GetAppByLocalId(appId, getter_AddRefs(mozApp));
+  if (NS_FAILED(rv) || !mozApp) {
+      return;
+  }
+  mozApp->GetOrigin(mAppOrigin);
 }
 
 void
@@ -329,7 +346,8 @@ nsPACMan::Shutdown()
 }
 
 nsresult
-nsPACMan::AsyncGetProxyForURI(nsIURI *uri, nsPACManCallback *callback,
+nsPACMan::AsyncGetProxyForURI(nsIURI *uri, uint32_t appId,
+                              bool isInBrowser, nsPACManCallback *callback,
                               bool mainThreadResponse)
 {
   MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
@@ -342,7 +360,8 @@ nsPACMan::AsyncGetProxyForURI(nsIURI *uri, nsPACManCallback *callback,
     LoadPACFromURI(EmptyCString());
 
   nsRefPtr<PendingPACQuery> query =
-    new PendingPACQuery(this, uri, callback, mainThreadResponse);
+    new PendingPACQuery(this, uri, appId, isInBrowser, callback,
+                        mainThreadResponse);
 
   if (IsPACURI(uri)) {
     // deal with this directly instead of queueing it
@@ -595,7 +614,10 @@ nsPACMan::ProcessPending()
 
   // the systemproxysettings didn't complete the resolution. try via PAC
   if (!completed) {
-    nsresult status = mPAC.GetProxyForURI(query->mSpec, query->mHost, pacString);
+    nsresult status = mPAC.GetProxyForURI(query->mSpec, query->mHost,
+                                          query->mAppId, query->mAppOrigin,
+                                          query->mIsInBrowser,
+                                          pacString);
     query->Complete(status, pacString);
   }
 
