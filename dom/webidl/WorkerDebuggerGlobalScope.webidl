@@ -10,6 +10,8 @@ interface WorkerDebuggerGlobalScope : EventTarget {
   void postMessage(DOMString message);
 
   attribute EventHandler onmessage;
+
+  void reportError(DOMString message);
 };
 
 // So you can debug while you debug

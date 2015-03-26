@@ -2,10 +2,13 @@
 
 interface nsIDOMWindow;
 
-[scriptable, uuid(ead45621-22a7-48ef-b7db-c4252ae3e6cb)]
+[scriptable, uuid(55d54034-1573-4889-b1d9-93ba12fc33c7)]
 interface nsIWorkerDebuggerListener : nsISupports
 {
   void onClose();
+
+  void onError(in DOMString filename, in unsigned long lineno,
+               in DOMString message);
 
   void onMessage(in DOMString message);
 };
