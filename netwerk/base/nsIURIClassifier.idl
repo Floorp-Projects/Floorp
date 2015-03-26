@@ -30,7 +30,7 @@ interface nsIURIClassifierCallback : nsISupports
  * The URI classifier service checks a URI against lists of phishing
  * and malware sites.
  */
-[scriptable, uuid(03d26681-0ef5-4718-9777-33c9e1ee3e32)]
+[scriptable, uuid(750c4313-f689-4a4c-87c2-a04710a2395b)]
 interface nsIURIClassifier : nsISupports
 {
   /**
@@ -62,4 +62,12 @@ interface nsIURIClassifier : nsISupports
    */
   nsresult classifyLocal(in nsIPrincipal aPrincipal,
                          in boolean aTrackingProtectionEnabled);
+
+  /**
+   * Synchronously classify a Principal locally using its URI with a
+   * comma-separated string containing the given tables. This does not make
+   * network requests. The result is a comma-separated string of tables that match.
+   */
+  ACString classifyLocalWithTables(in nsIPrincipal aPrincipal,
+                                   in ACString aTables);
 };
