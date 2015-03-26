@@ -10,12 +10,15 @@ function is_selected(index) {
 
 add_task(function*() {
   // This test is only relevant if UnifiedComplete is enabled.
-  if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete")) {
-    todo(false, "Stop supporting old autocomplete components.");
-    return;
-  }
+  let ucpref = Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete");
+  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
+  registerCleanupFunction(() => {
+    Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", ucpref);
+  });
 
-  registerCleanupFunction(() => PlacesTestUtils.clearHistory());
+  registerCleanupFunction(function* () {
+    yield PlacesTestUtils.clearHistory();
+  });
 
   let visits = [];
   repeat(10, i => {
