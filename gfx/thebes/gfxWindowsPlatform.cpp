@@ -2135,7 +2135,7 @@ public:
           if (SUCCEEDED(hr)) {
             QueryPerformanceCounter(&qpcNow);
             QPC_TIME adjust = qpcNow.QuadPart - vblankTime.qpcVBlank;
-            MOZ_ASSERT(adjust > 0);
+            MOZ_ASSERT(adjust >= 0);
             uint64_t usAdjust = (adjust * microseconds) / frequency.QuadPart;
             vsync -= TimeDuration::FromMicroseconds((double) usAdjust);
           }
