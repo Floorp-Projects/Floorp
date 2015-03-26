@@ -374,6 +374,22 @@ public:
   virtual bool RecvKeyboardShortcut(const uint64_t& aID,
                                     uint32_t* aKey,
                                     uint32_t* aModifierMask) override;
+
+  virtual bool RecvCurValue(const uint64_t& aID,
+                            double* aValue);
+
+  virtual bool RecvSetCurValue(const uint64_t& aID,
+                               const double& aValue,
+                               bool* aRetVal);
+
+  virtual bool RecvMinValue(const uint64_t& aID,
+                            double* aValue);
+
+  virtual bool RecvMaxValue(const uint64_t& aID,
+                            double* aValue);
+
+  virtual bool RecvStep(const uint64_t& aID,
+                        double* aStep);
 private:
 
   Accessible* IdToAccessible(const uint64_t& aID) const;
