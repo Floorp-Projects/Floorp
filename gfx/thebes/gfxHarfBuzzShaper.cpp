@@ -389,8 +389,11 @@ gfxHarfBuzzShaper::GetGlyphVOrigin(hb_codepoint_t aGlyph,
             reinterpret_cast<const MetricsHeader*>(hb_blob_get_data(hheaTable,
                                                                     &len));
         if (len >= sizeof(MetricsHeader)) {
-            *aY = -FloatToFixed(GetFont()->FUnitsToDevUnitsFactor() *
-                                int16_t(hhea->ascender));
+            // divide up the default advance we're using (1em) in proportion
+            // to ascender:descender from the hhea table
+            int16_t a = int16_t(hhea->ascender);
+            int16_t d = int16_t(hhea->descender);
+            *aY = -FloatToFixed(GetFont()->GetAdjustedSize() * a / (a - d));
             return;
         }
     }
