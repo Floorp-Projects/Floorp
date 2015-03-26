@@ -235,6 +235,7 @@ class MochitestRunner(MozbuildObject):
             run_until_failure=False,
             slow=False,
             chunk_by_dir=0,
+            chunk_by_runtime=False,
             total_chunks=None,
             this_chunk=None,
             extraPrefs=[],
@@ -375,6 +376,7 @@ class MochitestRunner(MozbuildObject):
             self.distdir,
             'crashreporter-symbols')
         options.chunkByDir = chunk_by_dir
+        options.chunkByRuntime = chunk_by_runtime
         options.totalChunks = total_chunks
         options.thisChunk = this_chunk
         options.jsdebugger = jsdebugger
@@ -593,6 +595,12 @@ def MochitestCommand(func):
         type=int,
         help='Group tests together in chunks by this many top directories.')
     func = chunk_dir(func)
+
+    chunk_runtime = CommandArgument(
+        '--chunk-by-runtime',
+        action='store_true',
+        help="Group tests such that each chunk has roughly the same runtime.")
+    func = chunk_runtime(func)
 
     chunk_total = CommandArgument(
         '--total-chunks',
