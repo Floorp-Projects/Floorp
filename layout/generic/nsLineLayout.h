@@ -17,12 +17,12 @@
 #ifndef nsLineLayout_h___
 #define nsLineLayout_h___
 
-#include "nsLineBox.h"
-#include "nsBlockReflowState.h"
-#include "plarena.h"
 #include "gfxTypes.h"
-#include "WritingModes.h"
 #include "JustificationUtils.h"
+#include "mozilla/WritingModes.h"
+#include "nsBlockReflowState.h"
+#include "nsLineBox.h"
+#include "plarena.h"
 
 class nsFloatManager;
 struct nsStyleText;
