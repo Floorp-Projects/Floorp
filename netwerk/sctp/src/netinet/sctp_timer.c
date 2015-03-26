@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_timer.c 277380 2015-01-19 11:52:08Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_timer.c 279841 2015-03-10 09:16:31Z tuexen $");
 #endif
 
 #define _IP_VHL
@@ -162,7 +162,7 @@ sctp_threshold_management(struct sctp_inpcb *inp, struct sctp_tcb *stcb,
 		struct mbuf *op_err;
 
 		op_err = sctp_generate_cause(SCTP_CAUSE_PROTOCOL_VIOLATION,
-		                             "Association error couter exceeded");
+		                             "Association error counter exceeded");
 		inp->last_abort_code = SCTP_FROM_SCTP_TIMER+SCTP_LOC_1;
 		sctp_abort_an_association(inp, stcb, op_err, SCTP_SO_NOT_LOCKED);
 		return (1);
