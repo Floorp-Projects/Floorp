@@ -553,6 +553,13 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY bookmarkhistory_import_wait "Please wait...">
 
 <!ENTITY suggestions_prompt3 "Would you like to turn on search suggestions?">
+<!--  Localization note (search_bar_item_desc): When the user clicks the url bar
+      and starts typing, a list of icons of search engines appears at the bottom
+      of the screen. When a user clicks an icon, the entered text will be searched
+      via the search engine that uses the icon they clicked. This text is used
+      for screen reader users when they hover each icon - &formatS; will be
+      replaced with the name of the currently highlighted icon. -->
+<!ENTITY search_bar_item_desc "Search with &formatS;">
 
 <!-- Localization note (suggestion_for_engine): The placeholder &formatS1; will be
      replaced with the name of the search engine. The placeholder &formatS2; will be
