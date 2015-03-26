@@ -20,7 +20,7 @@
                   android:focusable="true"
                   android:layout_width="match_parent"
                   android:layout_height="wrap_content"
-                  android:textAppearance="@style/TextAppearance.Widget.DoorHanger.Medium"/>
+                  android:textAppearance="@style/TextAppearance.DoorHanger.Medium"/>
 
     </LinearLayout>
 

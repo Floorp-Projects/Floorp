@@ -115,8 +115,8 @@ public class DoorHangerPopup extends AnchoredPopup
         config.setButtons(json.getJSONArray("buttons"));
         config.setOptions(json.getJSONObject("options"));
         final String typeString = json.optString("category");
-        if (DoorHanger.Type.PASSWORD.toString().equals(typeString)) {
-            config.setType(DoorHanger.Type.PASSWORD);
+        if (DoorHanger.Type.LOGIN.toString().equals(typeString)) {
+            config.setType(DoorHanger.Type.LOGIN);
         }
 
         return config;
