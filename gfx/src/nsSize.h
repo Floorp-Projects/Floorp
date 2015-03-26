@@ -32,7 +32,7 @@ struct nsSize : public mozilla::gfx::BaseSize<nscoord, nsSize> {
    * @param aToAPP the APP to scale to
    */
   MOZ_WARN_UNUSED_RESULT inline nsSize
-    ConvertAppUnits(int32_t aFromAPP, int32_t aToAPP) const;
+    ScaleToOtherAppUnits(int32_t aFromAPP, int32_t aToAPP) const;
 };
 
 struct nsIntSize : public mozilla::gfx::BaseSize<int32_t, nsIntSize> {
@@ -64,7 +64,7 @@ nsSize::ToNearestPixels(nscoord aAppUnitsPerPixel) const
 }
 
 inline nsSize
-nsSize::ConvertAppUnits(int32_t aFromAPP, int32_t aToAPP) const {
+nsSize::ScaleToOtherAppUnits(int32_t aFromAPP, int32_t aToAPP) const {
   if (aFromAPP != aToAPP) {
     nsSize size;
     size.width = NSToCoordRound(NSCoordScale(width, aFromAPP, aToAPP));

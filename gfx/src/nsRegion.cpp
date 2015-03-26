@@ -639,7 +639,7 @@ nsRegion& nsRegion::Transform (const gfx3DMatrix &aTransform)
 }
 
 
-nsRegion nsRegion::ConvertAppUnitsRoundOut (int32_t aFromAPP, int32_t aToAPP) const
+nsRegion nsRegion::ScaleToOtherAppUnitsRoundOut (int32_t aFromAPP, int32_t aToAPP) const
 {
   if (aFromAPP == aToAPP) {
     return *this;
@@ -650,7 +650,7 @@ nsRegion nsRegion::ConvertAppUnitsRoundOut (int32_t aFromAPP, int32_t aToAPP) co
   pixman_box32_t *boxes = pixman_region32_rectangles(&region.mImpl, &n);
   for (int i=0; i<n; i++) {
     nsRect rect = BoxToRect(boxes[i]);
-    rect = rect.ConvertAppUnitsRoundOut(aFromAPP, aToAPP);
+    rect = rect.ScaleToOtherAppUnitsRoundOut(aFromAPP, aToAPP);
     boxes[i] = RectToBox(rect);
   }
 
@@ -663,7 +663,7 @@ nsRegion nsRegion::ConvertAppUnitsRoundOut (int32_t aFromAPP, int32_t aToAPP) co
   return region;
 }
 
-nsRegion nsRegion::ConvertAppUnitsRoundIn (int32_t aFromAPP, int32_t aToAPP) const
+nsRegion nsRegion::ScaleToOtherAppUnitsRoundIn (int32_t aFromAPP, int32_t aToAPP) const
 {
   if (aFromAPP == aToAPP) {
     return *this;
@@ -674,7 +674,7 @@ nsRegion nsRegion::ConvertAppUnitsRoundIn (int32_t aFromAPP, int32_t aToAPP) con
   pixman_box32_t *boxes = pixman_region32_rectangles(&region.mImpl, &n);
   for (int i=0; i<n; i++) {
     nsRect rect = BoxToRect(boxes[i]);
-    rect = rect.ConvertAppUnitsRoundIn(aFromAPP, aToAPP);
+    rect = rect.ScaleToOtherAppUnitsRoundIn(aFromAPP, aToAPP);
     boxes[i] = RectToBox(rect);
   }
 
