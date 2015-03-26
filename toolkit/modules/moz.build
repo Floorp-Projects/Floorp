@@ -74,6 +74,7 @@ EXTRA_PP_JS_MODULES += [
     'ResetProfile.jsm',
     'secondscreen/RokuApp.jsm',
     'Services.jsm',
+    'SessionRecorder.jsm',
     'Troubleshoot.jsm',
     'UpdateChannel.jsm',
     'WindowDraggingUtils.jsm',
