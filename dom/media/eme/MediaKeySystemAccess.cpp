@@ -104,6 +104,10 @@ EnsureMinCDMVersion(mozIGeckoMediaPluginService* aGMPService,
   nsAutoCString versionStr;
   if (NS_FAILED(aGMPService->GetPluginVersionForAPI(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
                                                     &tags,
+                                                    versionStr)) &&
+      // XXX to be removed later in bug 1147692
+      NS_FAILED(aGMPService->GetPluginVersionForAPI(NS_LITERAL_CSTRING(GMP_API_DECRYPTOR_COMPAT),
+                                                    &tags,
                                                     versionStr))) {
     return MediaKeySystemStatus::Error;
   }
@@ -153,7 +157,11 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
     }
     if (!HaveGMPFor(mps,
                     NS_ConvertUTF16toUTF8(aKeySystem),
-                    NS_LITERAL_CSTRING(GMP_API_DECRYPTOR))) {
+                    NS_LITERAL_CSTRING(GMP_API_DECRYPTOR)) &&
+        // XXX to be removed later in bug 1147692
+        !HaveGMPFor(mps,
+                    NS_ConvertUTF16toUTF8(aKeySystem),
+                    NS_LITERAL_CSTRING(GMP_API_DECRYPTOR_COMPAT))) {
       return MediaKeySystemStatus::Cdm_not_installed;
     }
     return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion);
@@ -197,14 +205,26 @@ IsPlayableWithGMP(mozIGeckoMediaPluginService* aGMPS,
       hasMP3) {
     return false;
   }
-  return (!hasAAC || !HaveGMPFor(aGMPS,
-                                 NS_ConvertUTF16toUTF8(aKeySystem),
-                                 NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
-                                 NS_LITERAL_CSTRING("aac"))) &&
-         (!hasH264 || !HaveGMPFor(aGMPS,
-                                  NS_ConvertUTF16toUTF8(aKeySystem),
-                                  NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
-                                  NS_LITERAL_CSTRING("h264")));
+  return (!hasAAC ||
+          !(HaveGMPFor(aGMPS,
+                       NS_ConvertUTF16toUTF8(aKeySystem),
+                       NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
+                       NS_LITERAL_CSTRING("aac")) ||
+            // XXX remove later in bug 1147692
+            HaveGMPFor(aGMPS,
+                       NS_ConvertUTF16toUTF8(aKeySystem),
+                       NS_LITERAL_CSTRING(GMP_API_DECRYPTOR_COMPAT),
+                       NS_LITERAL_CSTRING("aac")))) &&
+         (!hasH264 ||
+          !(HaveGMPFor(aGMPS,
+                       NS_ConvertUTF16toUTF8(aKeySystem),
+                       NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
+                       NS_LITERAL_CSTRING("h264")) ||
+            // XXX remove later in bug 1147692
+            HaveGMPFor(aGMPS,
+                       NS_ConvertUTF16toUTF8(aKeySystem),
+                       NS_LITERAL_CSTRING(GMP_API_DECRYPTOR_COMPAT),
+                       NS_LITERAL_CSTRING("h264"))));
 #else
   return false;
 #endif
