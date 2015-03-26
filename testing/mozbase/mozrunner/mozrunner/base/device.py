@@ -96,21 +96,31 @@ class DeviceRunner(BaseRunner):
             raise Exception("Failed to get a network connection")
 
     def stop(self, sig=None):
-        remote_pid = self.is_running()
-        if remote_pid:
-            self.app_ctx.stop_application()
-            self.app_ctx.dm.killProcess(
-                self.app_ctx.remote_process, sig=sig)
-            timeout = 10  # seconds
+        def _wait_for_shutdown(pid, timeout=10):
             start_time = datetime.datetime.now()
             end_time = datetime.timedelta(seconds=timeout)
             while datetime.datetime.now() - start_time < end_time:
-                if not self.is_running() == remote_pid:
-                    break
+                if self.is_running() != pid:
+                    return True
                 time.sleep(1)
-            else:
-                print("timed out waiting for '%s' process to exit" %
-                      self.app_ctx.remote_process)
+            return False
+
+        remote_pid = self.is_running()
+        if remote_pid:
+            self.app_ctx.dm.killProcess(
+                self.app_ctx.remote_process, sig=sig)
+            if not _wait_for_shutdown(remote_pid) and sig is not None:
+                print("timed out waiting for '%s' process to exit, trying "
+                      "without signal {}".format(
+                          self.app_ctx.remote_process, sig))
+
+            # need to call adb stop otherwise the system will attempt to
+            # restart the process
+            remote_pid = self.is_running() or remote_pid
+            self.app_ctx.stop_application()
+            if not _wait_for_shutdown(remote_pid):
+                print("timed out waiting for '%s' process to exit".format(
+                    self.app_ctx.remote_process))
 
     def is_running(self):
         return self.app_ctx.dm.processExist(self.app_ctx.remote_process)
