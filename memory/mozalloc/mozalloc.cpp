@@ -77,12 +77,6 @@ extern "C" MOZ_MEMORY_API char *strndup_impl(const char *, size_t);
 #define UNLIKELY(x)  (x)
 #endif
 
-void
-moz_free(void* ptr)
-{
-    free_impl(ptr);
-}
-
 void*
 moz_xmalloc(size_t size)
 {
@@ -92,11 +86,6 @@ moz_xmalloc(size_t size)
         return moz_xmalloc(size);
     }
     return ptr;
-}
-void*
-moz_malloc(size_t size)
-{
-    return malloc_impl(size);
 }
 
 void*
@@ -109,11 +98,6 @@ moz_xcalloc(size_t nmemb, size_t size)
     }
     return ptr;
 }
-void*
-moz_calloc(size_t nmemb, size_t size)
-{
-    return calloc_impl(nmemb, size);
-}
 
 void*
 moz_xrealloc(void* ptr, size_t size)
@@ -124,11 +108,6 @@ moz_xrealloc(void* ptr, size_t size)
         return moz_xrealloc(ptr, size);
     }
     return newptr;
-}
-void*
-moz_realloc(void* ptr, size_t size)
-{
-    return realloc_impl(ptr, size);
 }
 
 char*
