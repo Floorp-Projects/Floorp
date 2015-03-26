@@ -4,9 +4,31 @@
 
 package org.mozilla.gecko.fxa.authenticator;
 
+import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.fxa.FxAccountClient;
+import org.mozilla.gecko.background.fxa.FxAccountClient20;
+import org.mozilla.gecko.background.fxa.FxAccountUtils;
+import org.mozilla.gecko.background.fxa.oauth.FxAccountAbstractClient.RequestDelegate;
+import org.mozilla.gecko.background.fxa.oauth.FxAccountAbstractClientException.FxAccountAbstractClientRemoteException;
+import org.mozilla.gecko.background.fxa.oauth.FxAccountOAuthClient10;
+import org.mozilla.gecko.background.fxa.oauth.FxAccountOAuthClient10.AuthorizationResponse;
+import org.mozilla.gecko.browserid.BrowserIDKeyPair;
+import org.mozilla.gecko.browserid.JSONWebTokenUtils;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.activities.FxAccountGetStartedActivity;
+import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine;
+import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.LoginStateMachineDelegate;
+import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.Transition;
+import org.mozilla.gecko.fxa.login.Married;
+import org.mozilla.gecko.fxa.login.State;
+import org.mozilla.gecko.fxa.login.State.StateLabel;
+import org.mozilla.gecko.fxa.login.StateFactory;
+import org.mozilla.gecko.fxa.sync.FxAccountNotificationManager;
+import org.mozilla.gecko.fxa.sync.FxAccountSyncAdapter;
 
 import android.accounts.AbstractAccountAuthenticator;
 import android.accounts.Account;
@@ -19,6 +41,7 @@ import android.os.Bundle;
 
 public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
   public static final String LOG_TAG = FxAccountAuthenticator.class.getSimpleName();
+  public static final int UNKNOWN_ERROR_CODE = 999;
 
   protected final Context context;
   protected final AccountManager accountManager;
@@ -68,12 +91,190 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
     return null;
   }
 
+  protected static class Responder {
+    final AccountAuthenticatorResponse response;
+    final Account account;
+
+    public Responder(AccountAuthenticatorResponse response, Account account) {
+      this.response = response;
+      this.account = account;
+    }
+
+    public void fail(Exception e) {
+      Logger.warn(LOG_TAG, "Responding with error!", e);
+      final Bundle result = new Bundle();
+      result.putInt(AccountManager.KEY_ERROR_CODE, UNKNOWN_ERROR_CODE);
+      result.putString(AccountManager.KEY_ERROR_MESSAGE, e.toString());
+      response.onResult(result);
+    }
+
+    public void succeed(String authToken) {
+      Logger.info(LOG_TAG, "Responding with success!");
+      final Bundle result = new Bundle();
+      result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
+      result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
+      result.putString(AccountManager.KEY_AUTHTOKEN, authToken);
+      response.onResult(result);
+    }
+  }
+
+  public abstract static class FxADefaultLoginStateMachineDelegate implements LoginStateMachineDelegate {
+    protected final Context context;
+    protected final AndroidFxAccount fxAccount;
+    protected final Executor executor;
+    protected final FxAccountClient client;
+
+    public FxADefaultLoginStateMachineDelegate(Context context, AndroidFxAccount fxAccount) {
+      this.context = context;
+      this.fxAccount = fxAccount;
+      this.executor = Executors.newSingleThreadExecutor();
+      this.client = new FxAccountClient20(fxAccount.getAccountServerURI(), executor);
+    }
+
+    @Override
+    public FxAccountClient getClient() {
+      return client;
+    }
+
+    @Override
+    public long getCertificateDurationInMilliseconds() {
+      return 12 * 60 * 60 * 1000;
+    }
+
+    @Override
+    public long getAssertionDurationInMilliseconds() {
+      return 15 * 60 * 1000;
+    }
+
+    @Override
+    public BrowserIDKeyPair generateKeyPair() throws NoSuchAlgorithmException {
+      return StateFactory.generateKeyPair();
+    }
+
+    @Override
+    public void handleTransition(Transition transition, State state) {
+      Logger.info(LOG_TAG, "handleTransition: " + transition + " to " + state.getStateLabel());
+    }
+
+    abstract public void handleNotMarried(State notMarried);
+    abstract public void handleMarried(Married married);
+
+    @Override
+    public void handleFinal(State state) {
+      Logger.info(LOG_TAG, "handleFinal: in " + state.getStateLabel());
+      fxAccount.setState(state);
+      // Update any notifications displayed.
+      final FxAccountNotificationManager notificationManager = new FxAccountNotificationManager(FxAccountSyncAdapter.NOTIFICATION_ID);
+      notificationManager.update(context, fxAccount);
+
+      if (state.getStateLabel() != StateLabel.Married) {
+        handleNotMarried(state);
+        return;
+      } else {
+        handleMarried((Married) state);
+      }
+    }
+  }
+
+  protected void getOAuthToken(final AccountAuthenticatorResponse response, final AndroidFxAccount fxAccount, final String scope) throws NetworkErrorException {
+    Logger.info(LOG_TAG, "Fetching oauth token with scope: " + scope);
+
+    final Responder responder = new Responder(response, fxAccount.getAndroidAccount());
+
+    final String oauthServerUri = FxAccountConstants.DEFAULT_OAUTH_SERVER_ENDPOINT;
+    final String audience;
+    try {
+      audience = FxAccountUtils.getAudienceForURL(oauthServerUri); // The assertion gets traded in for an oauth bearer token.
+    } catch (Exception e) {
+      Logger.warn(LOG_TAG, "Got exception fetching oauth token.", e);
+      responder.fail(e);
+      return;
+    }
+
+    final FxAccountLoginStateMachine stateMachine = new FxAccountLoginStateMachine();
+
+    stateMachine.advance(fxAccount.getState(), StateLabel.Married, new FxADefaultLoginStateMachineDelegate(context, fxAccount) {
+      @Override
+      public void handleNotMarried(State state) {
+        final String message = "Cannot fetch oauth token from state: " + state.getStateLabel();
+        Logger.warn(LOG_TAG, message);
+        responder.fail(new RuntimeException(message));
+      }
+
+      @Override
+      public void handleMarried(final Married married) {
+        final String assertion;
+        try {
+          assertion = married.generateAssertion(audience, JSONWebTokenUtils.DEFAULT_ASSERTION_ISSUER);
+          if (FxAccountUtils.LOG_PERSONAL_INFORMATION) {
+            JSONWebTokenUtils.dumpAssertion(assertion);
+          }
+        } catch (Exception e) {
+          Logger.warn(LOG_TAG, "Got exception fetching oauth token.", e);
+          responder.fail(e);
+          return;
+        }
+
+        final FxAccountOAuthClient10 oauthClient = new FxAccountOAuthClient10(oauthServerUri, executor);
+        Logger.debug(LOG_TAG, "OAuth fetch for scope: " + scope);
+        oauthClient.authorization(FxAccountConstants.OAUTH_CLIENT_ID_FENNEC, assertion, null, scope, new RequestDelegate<FxAccountOAuthClient10.AuthorizationResponse>() {
+          @Override
+          public void handleSuccess(AuthorizationResponse result) {
+            Logger.debug(LOG_TAG, "OAuth success.");
+            FxAccountUtils.pii(LOG_TAG, "Fetched oauth token: " + result.access_token);
+            responder.succeed(result.access_token);
+          }
+
+          @Override
+          public void handleFailure(FxAccountAbstractClientRemoteException e) {
+            Logger.error(LOG_TAG, "OAuth failure.", e);
+            if (e.isInvalidAuthentication()) {
+              // We were married, generated an assertion, and our assertion was rejected by the
+              // oauth client. If it's a 401, we probably have a stale certificate.  If instead of
+              // a stale certificate we have bad credentials, the state machine will fail to sign
+              // our public key and drive us back to Separated.
+              fxAccount.setState(married.makeCohabitingState());
+            }
+            responder.fail(e);
+          }
+
+          @Override
+          public void handleError(Exception e) {
+            Logger.error(LOG_TAG, "OAuth error.", e);
+            responder.fail(e);
+          }
+        });
+      }
+    });
+  }
+
   @Override
   public Bundle getAuthToken(final AccountAuthenticatorResponse response,
       final Account account, final String authTokenType, final Bundle options)
           throws NetworkErrorException {
-    Logger.debug(LOG_TAG, "getAuthToken");
+    Logger.debug(LOG_TAG, "getAuthToken: " + authTokenType);
 
+    // If we have a cached authToken, hand it over.
+    final String cachedAuthToken = AccountManager.get(context).peekAuthToken(account, authTokenType);
+    if (cachedAuthToken != null && !cachedAuthToken.isEmpty()) {
+      Logger.info(LOG_TAG, "Return cached token.");
+      final Bundle result = new Bundle();
+      result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
+      result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
+      result.putString(AccountManager.KEY_AUTHTOKEN, cachedAuthToken);
+      return result;
+    }
+
+    // If we're asked for an oauth::scope token, try to generate one.
+    final String oauthPrefix = "oauth::";
+    if (authTokenType != null && authTokenType.startsWith(oauthPrefix)) {
+      final String scope = authTokenType.substring(oauthPrefix.length());
+      final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+      getOAuthToken(response, fxAccount, scope);
+      return null;
+    }
+
+    // Otherwise, fail.
     Logger.warn(LOG_TAG, "Returning null bundle for getAuthToken.");
 
     return null;
