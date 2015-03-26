@@ -44,8 +44,8 @@ GetFlexContainerLog()
 #endif /* PR_LOGGING */
 
 // XXXdholbert Some of this helper-stuff should be separated out into a general
-// "LogicalAxisUtils.h" helper.  Should that be a class, or a namespace (under
-// what super-namespace?), or what?
+// "main/cross-axis utils" header, shared by grid & flexbox?
+// (Particularly when grid gets support for align-*/justify-* properties.)
 
 // Helper enums
 // ============
@@ -137,22 +137,24 @@ GetSizePropertyForAxis(const nsIFrame* aFrame, AxisOrientationType aAxis)
 }
 
 /**
- * Converts a logical position in a given axis into a position in the
- * corresponding physical (x or y) axis. If the logical axis already maps
- * directly onto one of our physical axes (i.e. LTR or TTB), then the logical
- * and physical positions are equal; otherwise, we subtract the logical
- * position from the container-size in that axis, to flip the polarity.
- * (so e.g. a logical position of 2px in a RTL 20px-wide container
- * would correspond to a physical position of 18px.)
+ * Converts a "flex-relative" coordinate in a single axis (a main- or cross-axis
+ * coordinate) into a coordinate in the corresponding physical (x or y) axis. If
+ * the flex-relative axis in question already maps *directly* to a physical
+ * axis (i.e. if it's LTR or TTB), then the physical coordinate has the same
+ * numeric value as the provided flex-relative coordinate. Otherwise, we have to
+ * subtract the flex-relative coordinate from the flex container's size in that
+ * axis, to flip the polarity. (So e.g. a main-axis position of 2px in a RTL
+ * 20px-wide container would correspond to a physical coordinate (x-value) of
+ * 18px.)
  */
 static nscoord
-PhysicalPosFromLogicalPos(nscoord aLogicalPosn,
-                          nscoord aLogicalContainerSize,
-                          AxisOrientationType aAxis) {
+PhysicalCoordFromFlexRelativeCoord(nscoord aFlexRelativeCoord,
+                                   nscoord aContainerSize,
+                                   AxisOrientationType aAxis) {
   if (AxisGrowsInPositiveDirection(aAxis)) {
-    return aLogicalPosn;
+    return aFlexRelativeCoord;
   }
-  return aLogicalContainerSize - aLogicalPosn;
+  return aContainerSize - aFlexRelativeCoord;
 }
 
 // Helper-macro to let us pick one of two expressions to evaluate
@@ -204,34 +206,39 @@ public:
   }
 
   /**
-   * Converts a logical point into a "physical" x,y point.
+   * Converts a "flex-relative" point (a main-axis & cross-axis coordinate)
+   * into a "physical" x,y point.
    *
    * In the simplest case where the main-axis is left-to-right and the
    * cross-axis is top-to-bottom, this just returns
-   * nsPoint(aMainPosn, aCrossPosn).
+   * nsPoint(aMainCoord, aCrossCoord).
    *
-   *  @arg aMainPosn  The main-axis position -- i.e an offset from the
-   *                  main-start edge of the container's content box.
-   *  @arg aCrossPosn The cross-axis position -- i.e an offset from the
-   *                  cross-start edge of the container's content box.
+   *  @arg aMainCoord  The main-axis coordinate -- i.e an offset from the
+   *                   main-start edge of the container's content box.
+   *  @arg aCrossCoord The cross-axis coordinate -- i.e an offset from the
+   *                   cross-start edge of the container's content box.
    *  @return A nsPoint representing the same position (in coordinates
    *          relative to the container's content box).
    */
-  nsPoint PhysicalPointFromLogicalPoint(nscoord aMainPosn,
-                                        nscoord aCrossPosn,
-                                        nscoord aContainerMainSize,
-                                        nscoord aContainerCrossSize) const {
-    nscoord physicalPosnInMainAxis =
-      PhysicalPosFromLogicalPos(aMainPosn, aContainerMainSize, mMainAxis);
-    nscoord physicalPosnInCrossAxis =
-      PhysicalPosFromLogicalPos(aCrossPosn, aContainerCrossSize, mCrossAxis);
+  nsPoint PhysicalPointFromFlexRelativePoint(nscoord aMainCoord,
+                                             nscoord aCrossCoord,
+                                             nscoord aContainerMainSize,
+                                             nscoord aContainerCrossSize) const {
+    nscoord physicalCoordInMainAxis =
+      PhysicalCoordFromFlexRelativeCoord(aMainCoord, aContainerMainSize,
+                                         mMainAxis);
+    nscoord physicalCoordInCrossAxis =
+      PhysicalCoordFromFlexRelativeCoord(aCrossCoord, aContainerCrossSize,
+                                         mCrossAxis);
 
     return IsAxisHorizontal(mMainAxis) ?
-      nsPoint(physicalPosnInMainAxis, physicalPosnInCrossAxis) :
-      nsPoint(physicalPosnInCrossAxis, physicalPosnInMainAxis);
+      nsPoint(physicalCoordInMainAxis, physicalCoordInCrossAxis) :
+      nsPoint(physicalCoordInCrossAxis, physicalCoordInMainAxis);
   }
-  nsSize PhysicalSizeFromLogicalSizes(nscoord aMainSize,
-                                      nscoord aCrossSize) const {
+
+
+  nsSize PhysicalSizeFromFlexRelativeSizes(nscoord aMainSize,
+                                           nscoord aCrossSize) const {
     return IsAxisHorizontal(mMainAxis) ?
       nsSize(aMainSize, aCrossSize) :
       nsSize(aCrossSize, aMainSize);
@@ -3252,20 +3259,22 @@ FlexLine::PositionItemsInMainAxis(uint8_t aJustifyContent,
 }
 
 /**
- * Given the flex container's "logical ascent" (i.e. distance from the
+ * Given the flex container's "flex-relative ascent" (i.e. distance from the
  * flex container's content-box cross-start edge to its baseline), returns
  * its actual physical ascent value (the distance from the *border-box* top
  * edge to its baseline).
  */
 static nscoord
-ComputePhysicalAscentFromLogicalAscent(nscoord aLogicalAscent,
-                                       nscoord aContentBoxCrossSize,
-                                       const nsHTMLReflowState& aReflowState,
-                                       const FlexboxAxisTracker& aAxisTracker)
+ComputePhysicalAscentFromFlexRelativeAscent(
+  nscoord aFlexRelativeAscent,
+  nscoord aContentBoxCrossSize,
+  const nsHTMLReflowState& aReflowState,
+  const FlexboxAxisTracker& aAxisTracker)
 {
   return aReflowState.ComputedPhysicalBorderPadding().top +
-    PhysicalPosFromLogicalPos(aLogicalAscent, aContentBoxCrossSize,
-                              aAxisTracker.GetCrossAxis());
+    PhysicalCoordFromFlexRelativeCoord(aFlexRelativeAscent,
+                                       aContentBoxCrossSize,
+                                       aAxisTracker.GetCrossAxis());
 }
 
 void
@@ -3609,7 +3618,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       flexContainerAscent = nscoord_MIN;
     } else  {
       flexContainerAscent =
-        ComputePhysicalAscentFromLogicalAscent(
+        ComputePhysicalAscentFromFlexRelativeAscent(
           crossAxisPosnTracker.GetPosition() + firstLineBaselineOffset,
           contentBoxCrossSize, aReflowState, aAxisTracker);
     }
@@ -3643,7 +3652,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       flexContainerAscent = nscoord_MIN;
     } else {
       flexContainerAscent =
-        ComputePhysicalAscentFromLogicalAscent(
+        ComputePhysicalAscentFromFlexRelativeAscent(
           crossAxisPosnTracker.GetPosition() - lastLineBaselineOffset,
           contentBoxCrossSize, aReflowState, aAxisTracker);
     }
@@ -3665,7 +3674,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   for (const FlexLine* line = lines.getFirst(); line; line = line->getNext()) {
     for (const FlexItem* item = line->GetFirstItem(); item;
          item = item->getNext()) {
-      nsPoint physicalPosn = aAxisTracker.PhysicalPointFromLogicalPoint(
+      nsPoint physicalPosn = aAxisTracker.PhysicalPointFromFlexRelativePoint(
                                item->GetMainPosition(),
                                item->GetCrossPosition(),
                                aContentBoxMainSize,
@@ -3677,8 +3686,8 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       //XXX Can we calculate the logical position more directly instead
       //    of this double conversion?
       nsSize finalFlexedPhysicalSize =
-        aAxisTracker.PhysicalSizeFromLogicalSizes(item->GetMainSize(),
-                                                  item->GetCrossSize());
+        aAxisTracker.PhysicalSizeFromFlexRelativeSizes(item->GetMainSize(),
+                                                       item->GetCrossSize());
       LogicalPoint framePos(outerWM, physicalPosn,
                             containerWidth - finalFlexedPhysicalSize.width -
                               item->GetBorderPadding().LeftRight());
@@ -3726,8 +3735,8 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   }
 
   nsSize desiredContentBoxSize =
-    aAxisTracker.PhysicalSizeFromLogicalSizes(aContentBoxMainSize,
-                                              contentBoxCrossSize);
+    aAxisTracker.PhysicalSizeFromFlexRelativeSizes(aContentBoxMainSize,
+                                                   contentBoxCrossSize);
 
   aDesiredSize.Width() = desiredContentBoxSize.width +
     containerBorderPadding.LeftRight();
