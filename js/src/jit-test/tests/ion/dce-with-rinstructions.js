@@ -419,9 +419,8 @@ var uceFault_ceil_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_c
 function rceil_number(i) {
     var x = Math.ceil(-i - 0.12010799100);
     if (uceFault_ceil_number(i) || uceFault_ceil_number(i))
-        assertEq(x, - i);
-    // NYI: uses MMathFunction and not MCeil.
-    // assertRecoveredOnBailout(x, true);
+        assertEq(x, -i);
+    assertRecoveredOnBailout(x, true);
     return i;
 }
 
