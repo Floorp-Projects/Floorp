@@ -2074,7 +2074,9 @@ HttpChannelChild::DivertToParent(ChannelDiverterChild **aChild)
 void
 HttpChannelChild::ResetInterception()
 {
-  mInterceptListener->Cleanup();
+  if (mInterceptListener) {
+    mInterceptListener->Cleanup();
+  }
   mInterceptListener = nullptr;
 
   // Continue with the original cross-process request
