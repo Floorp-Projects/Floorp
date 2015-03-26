@@ -1936,6 +1936,14 @@ JsepSessionImpl::ParseSdp(const std::string& sdp, UniquePtr<Sdp>* parsedp)
       return NS_ERROR_INVALID_ARG;
     }
 
+    const SdpFingerprintAttributeList& fingerprints(
+        mediaAttrs.GetFingerprint());
+    if (fingerprints.mFingerprints.empty()) {
+      JSEP_SET_ERROR("Invalid description, no supported fingerprint algorithms "
+                     "present");
+      return NS_ERROR_INVALID_ARG;
+    }
+
     if (mediaAttrs.HasAttribute(SdpAttribute::kSetupAttribute) &&
         mediaAttrs.GetSetup().mRole == SdpSetupAttribute::kHoldconn) {
       JSEP_SET_ERROR("Description has illegal setup attribute "
