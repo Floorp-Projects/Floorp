@@ -534,7 +534,7 @@ JSCompartment::sweepSavedStacks()
 void
 JSCompartment::sweepGlobalObject(FreeOp *fop)
 {
-    if (global_.unbarrieredGet() && IsObjectAboutToBeFinalizedFromAnyThread(global_.unsafeGet())) {
+    if (global_.unbarrieredGet() && IsObjectAboutToBeFinalized(global_.unsafeGet())) {
         if (isDebuggee())
             Debugger::detachAllDebuggersFromGlobal(fop, global_);
         global_.set(nullptr);
@@ -545,7 +545,7 @@ void
 JSCompartment::sweepSelfHostingScriptSource()
 {
     if (selfHostingScriptSource.unbarrieredGet() &&
-        IsObjectAboutToBeFinalizedFromAnyThread((JSObject **) selfHostingScriptSource.unsafeGet()))
+        IsObjectAboutToBeFinalized((JSObject **) selfHostingScriptSource.unsafeGet()))
     {
         selfHostingScriptSource.set(nullptr);
     }
@@ -592,7 +592,7 @@ JSCompartment::sweepNativeIterators()
     while (ni != enumerators) {
         JSObject *iterObj = ni->iterObj();
         NativeIterator *next = ni->next();
-        if (gc::IsObjectAboutToBeFinalizedFromAnyThread(&iterObj))
+        if (gc::IsObjectAboutToBeFinalized(&iterObj))
             ni->unlink();
         ni = next;
     }
@@ -617,24 +617,24 @@ JSCompartment::sweepCrossCompartmentWrappers()
           case CrossCompartmentKey::DebuggerSource:
               MOZ_ASSERT(IsInsideNursery(key.wrapped) ||
                          key.wrapped->asTenured().getTraceKind() == JSTRACE_OBJECT);
-              keyDying = IsObjectAboutToBeFinalizedFromAnyThread(
+              keyDying = IsObjectAboutToBeFinalized(
                   reinterpret_cast<JSObject**>(&key.wrapped));
               break;
           case CrossCompartmentKey::StringWrapper:
               MOZ_ASSERT(key.wrapped->asTenured().getTraceKind() == JSTRACE_STRING);
-              keyDying = IsStringAboutToBeFinalizedFromAnyThread(
+              keyDying = IsStringAboutToBeFinalized(
                   reinterpret_cast<JSString**>(&key.wrapped));
               break;
           case CrossCompartmentKey::DebuggerScript:
               MOZ_ASSERT(key.wrapped->asTenured().getTraceKind() == JSTRACE_SCRIPT);
-              keyDying = IsScriptAboutToBeFinalizedFromAnyThread(
+              keyDying = IsScriptAboutToBeFinalized(
                   reinterpret_cast<JSScript**>(&key.wrapped));
               break;
           default:
               MOZ_CRASH("Unknown key kind");
         }
-        bool valDying = IsValueAboutToBeFinalizedFromAnyThread(e.front().value().unsafeGet());
-        bool dbgDying = key.debugger && IsObjectAboutToBeFinalizedFromAnyThread(&key.debugger);
+        bool valDying = IsValueAboutToBeFinalized(e.front().value().unsafeGet());
+        bool dbgDying = key.debugger && IsObjectAboutToBeFinalized(&key.debugger);
         if (keyDying || valDying || dbgDying) {
             MOZ_ASSERT(key.kind != CrossCompartmentKey::StringWrapper);
             e.removeFront();
