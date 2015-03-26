@@ -33,13 +33,11 @@ self.addEventListener("fetch", function(event) {
       event.respondWith(fetch(event.request));
     }
   } else if (event.request.url.indexOf("csp-report.sjs") >= 0) {
-    event.respondWith(clients.matchAll()
-                      .then(function(clients) {
-                        clients.forEach(function(c) {
-                          c.postMessage({data: "csp-report", context: event.request.context});
-                        });
-                        return new Response("ack");
-                      }));
+    respondToServiceWorker(event, "csp-report");
+  } else if (event.request.url.indexOf("embed") >= 0) {
+    respondToServiceWorker(event, "embed");
+  } else if (event.request.url.indexOf("object") >= 0) {
+    respondToServiceWorker(event, "object");
   }
   // Fail any request that we don't know about.
   try {
@@ -49,3 +47,13 @@ self.addEventListener("fetch", function(event) {
     // code above has called respondWith too.
   }
 });
+
+function respondToServiceWorker(event, data) {
+  event.respondWith(clients.matchAll()
+                    .then(function(clients) {
+                      clients.forEach(function(c) {
+                        c.postMessage({data: data, context: event.request.context});
+                      });
+                      return new Response("ack");
+                    }));
+}
