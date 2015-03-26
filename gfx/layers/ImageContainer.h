@@ -335,12 +335,6 @@ public:
   void ClearAllImages();
 
   /**
-   * Clear all images except current one.
-   * Let ImageClient release all TextureClients except front one.
-   */
-  void ClearAllImagesExceptFront();
-
-  /**
    * Clear the current image.
    * This function is expect to be called only from a CompositableClient
    * that belongs to ImageBridgeChild. Created to prevent dead lock.

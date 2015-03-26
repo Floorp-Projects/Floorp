@@ -110,15 +110,12 @@ TextureInfo ImageClientSingle::GetTextureInfo() const
 }
 
 void
-ImageClientSingle::FlushAllImages(bool aExceptFront,
-                                  AsyncTransactionWaiter* aAsyncTransactionWaiter)
+ImageClientSingle::FlushAllImages(AsyncTransactionWaiter* aAsyncTransactionWaiter)
 {
-  if (!aExceptFront) {
-    for (auto& b : mBuffers) {
-      RemoveTextureWithWaiter(b.mTextureClient, aAsyncTransactionWaiter);
-    }
-    mBuffers.Clear();
+  for (auto& b : mBuffers) {
+    RemoveTextureWithWaiter(b.mTextureClient, aAsyncTransactionWaiter);
   }
+  mBuffers.Clear();
 }
 
 bool
