@@ -450,7 +450,7 @@
             }
           }
 
-          getShortcutOrURIAndPostData(url).then(data => {
+          getShortcutOrURIAndPostData(url, data => {
             aCallback([data.url, data.postData, data.mayInheritPrincipal]);
           });
         ]]></body>
