@@ -17,7 +17,7 @@ namespace gmp {
 class GMPStringListImpl : public GMPStringList
 {
 public:
-  GMPStringListImpl(const nsTArray<nsCString>& aStrings);
+  explicit GMPStringListImpl(const nsTArray<nsCString>& aStrings);
   virtual const uint32_t Size() const override;
   virtual void StringAt(uint32_t aIndex,
                         const char** aOutString, uint32_t *aOutLength) const override;
