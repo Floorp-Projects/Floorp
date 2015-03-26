@@ -71,3 +71,9 @@
 #TabsToolbar:not([collapsed="true"]) + #nav-bar {
   border-top-width: 0 !important;
 }
+
+/* Prevent devedition foreground color from seeping into the sidebar-box (since
+ * its background colors aren't affected by the devedition theme) */
+#sidebar-box {
+  color: initial;
+}

@@ -32,6 +32,26 @@
 #include "vm/Shape.h"
 #include "vm/UnboxedObject.h"
 
+// This Macro is only a hint for code readers that the function is defined in a
+// specific macro assembler, and not in the generic macro assembler.  Thus, when
+// looking for the implementation one might find if the function is implemented
+// and where it is supposed to be implemented.
+# define PER_ARCH
+
+#if defined(JS_CODEGEN_X86)
+# define ONLY_X86_X64
+#elif defined(JS_CODEGEN_X64)
+# define ONLY_X86_X64
+#elif defined(JS_CODEGEN_ARM)
+# define ONLY_X86_X64 = delete
+#elif defined(JS_CODEGEN_MIPS)
+# define ONLY_X86_X64 = delete
+#elif defined(JS_CODEGEN_NONE)
+# define ONLY_X86_X64 = delete
+#else
+# error "Unknown architecture!"
+#endif
+
 #ifdef IS_LITTLE_ENDIAN
 #define IMM32_16ADJ(X) X << 16
 #else
@@ -271,6 +291,47 @@ class MacroAssembler : public MacroAssemblerSpecific
     size_t instructionsSize() const {
         return size();
     }
+
+  public:
+    // ===============================================================
+    // Stack manipulation functions.
+
+    void PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet) PER_ARCH;
+    void PushRegsInMask(RegisterSet set);
+    void PushRegsInMask(GeneralRegisterSet set);
+
+    void PopRegsInMask(RegisterSet set);
+    void PopRegsInMask(RegisterSet set, FloatRegisterSet simdSet);
+    void PopRegsInMask(GeneralRegisterSet set);
+    void PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore,
+                             FloatRegisterSet simdSet) PER_ARCH;
+    void PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore);
+
+    void Push(const Operand op) PER_ARCH ONLY_X86_X64;
+    void Push(Register reg) PER_ARCH;
+    void Push(const Imm32 imm) PER_ARCH;
+    void Push(const ImmWord imm) PER_ARCH;
+    void Push(const ImmPtr imm) PER_ARCH;
+    void Push(const ImmGCPtr ptr) PER_ARCH;
+    void Push(FloatRegister reg) PER_ARCH;
+    void Push(jsid id, Register scratchReg);
+    void Push(TypedOrValueRegister v);
+    void Push(ConstantOrRegister v);
+    void Push(const ValueOperand &val);
+    void Push(const Value &val);
+    void Push(JSValueType type, Register reg);
+    void PushValue(const Address &addr);
+    void PushEmptyRooted(VMFunction::RootType rootType);
+
+    void Pop(const Operand op) PER_ARCH ONLY_X86_X64;
+    void Pop(Register reg) PER_ARCH;
+    void Pop(FloatRegister t) PER_ARCH ONLY_X86_X64;
+    void Pop(const ValueOperand &val) PER_ARCH;
+    void popRooted(VMFunction::RootType rootType, Register cellReg, const ValueOperand &valueReg);
+
+    void adjustStack(int amount);
+
+  public:
 
     // Emits a test of a value against all types in a TypeSet. A scratch
     // register is required.
@@ -515,27 +576,6 @@ class MacroAssembler : public MacroAssemblerSpecific
         return extractObject(source, scratch);
     }
 
-    void PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet);
-    void PushRegsInMask(RegisterSet set) {
-        PushRegsInMask(set, FloatRegisterSet());
-    }
-    void PushRegsInMask(GeneralRegisterSet set) {
-        PushRegsInMask(RegisterSet(set, FloatRegisterSet()));
-    }
-    void PopRegsInMask(RegisterSet set) {
-        PopRegsInMaskIgnore(set, RegisterSet());
-    }
-    void PopRegsInMask(RegisterSet set, FloatRegisterSet simdSet) {
-        PopRegsInMaskIgnore(set, RegisterSet(), simdSet);
-    }
-    void PopRegsInMask(GeneralRegisterSet set) {
-        PopRegsInMask(RegisterSet(set, FloatRegisterSet()));
-    }
-    void PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRegisterSet simdSet);
-    void PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore) {
-        PopRegsInMaskIgnore(set, ignore, FloatRegisterSet());
-    }
-
     void branchIfFunctionHasNoScript(Register fun, Label *label) {
         // 16-bit loads are slow and unaligned 32-bit loads may be too so
         // perform an aligned 32-bit load and adjust the bitmask accordingly.
@@ -556,86 +596,6 @@ class MacroAssembler : public MacroAssemblerSpecific
     }
 
     void branchIfNotInterpretedConstructor(Register fun, Register scratch, Label *label);
-
-    using MacroAssemblerSpecific::Push;
-    using MacroAssemblerSpecific::Pop;
-
-    void Push(jsid id, Register scratchReg) {
-        if (JSID_IS_GCTHING(id)) {
-            // If we're pushing a gcthing, then we can't just push the tagged jsid
-            // value since the GC won't have any idea that the push instruction
-            // carries a reference to a gcthing.  Need to unpack the pointer,
-            // push it using ImmGCPtr, and then rematerialize the id at runtime.
-
-            if (JSID_IS_STRING(id)) {
-                JSString *str = JSID_TO_STRING(id);
-                MOZ_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
-                MOZ_ASSERT(JSID_TYPE_STRING == 0x0);
-                Push(ImmGCPtr(str));
-            } else {
-                MOZ_ASSERT(JSID_IS_SYMBOL(id));
-                JS::Symbol *sym = JSID_TO_SYMBOL(id);
-                movePtr(ImmGCPtr(sym), scratchReg);
-                orPtr(Imm32(JSID_TYPE_SYMBOL), scratchReg);
-                Push(scratchReg);
-            }
-        } else {
-            Push(ImmWord(JSID_BITS(id)));
-        }
-    }
-
-    void Push(TypedOrValueRegister v) {
-        if (v.hasValue()) {
-            Push(v.valueReg());
-        } else if (IsFloatingPointType(v.type())) {
-            FloatRegister reg = v.typedReg().fpu();
-            if (v.type() == MIRType_Float32) {
-                convertFloat32ToDouble(reg, ScratchDoubleReg);
-                reg = ScratchDoubleReg;
-            }
-            Push(reg);
-        } else {
-            Push(ValueTypeFromMIRType(v.type()), v.typedReg().gpr());
-        }
-    }
-
-    void Push(ConstantOrRegister v) {
-        if (v.constant())
-            Push(v.value());
-        else
-            Push(v.reg());
-    }
-
-    void Push(const ValueOperand &val) {
-        pushValue(val);
-        framePushed_ += sizeof(Value);
-    }
-
-    void Push(const Value &val) {
-        pushValue(val);
-        framePushed_ += sizeof(Value);
-    }
-
-    void Push(JSValueType type, Register reg) {
-        pushValue(type, reg);
-        framePushed_ += sizeof(Value);
-    }
-
-    void PushValue(const Address &addr) {
-        MOZ_ASSERT(addr.base != StackPointer);
-        pushValue(addr);
-        framePushed_ += sizeof(Value);
-    }
-
-    void PushEmptyRooted(VMFunction::RootType rootType);
-    void popRooted(VMFunction::RootType rootType, Register cellReg, const ValueOperand &valueReg);
-
-    void adjustStack(int amount) {
-        if (amount > 0)
-            freeStack(amount);
-        else if (amount < 0)
-            reserveStack(-amount);
-    }
 
     void bumpKey(Int32Key *key, int diff) {
         if (key->isRegister())

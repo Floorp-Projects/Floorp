@@ -97,13 +97,22 @@ MediaSourceReader::IsWaitingOnCDMResource()
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   MOZ_ASSERT(!IsWaitingMediaResources());
 
-  for (auto& trackBuffer : mTrackBuffers) {
-    if (trackBuffer->IsWaitingOnCDMResource()) {
-      return true;
-    }
+  if (!mInfo.IsEncrypted()) {
+    return false;
   }
 
-  return mInfo.IsEncrypted() && !mCDMProxy;
+  // We'll need to wait on the CDMProxy being added, and it having received
+  // notification from the child GMP of its capabilities; whether it can
+  // decode, or whether we need to decode on our side.
+  if (!mCDMProxy) {
+    return true;
+  }
+
+  {
+    CDMCaps::AutoLock caps(mCDMProxy->Capabilites());
+    return !caps.AreCapsKnown();
+  }
+
 #else
   return false;
 #endif

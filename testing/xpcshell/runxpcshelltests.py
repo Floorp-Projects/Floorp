@@ -60,10 +60,11 @@ if os.path.isdir(mozbase):
     for package in os.listdir(mozbase):
         sys.path.append(os.path.join(mozbase, package))
 
-import manifestparser
+from manifestparser import TestManifest
+from manifestparser.filters import chunk_by_slice
+from mozlog import structured
 import mozcrash
 import mozinfo
-from mozlog import structured
 
 # --------------------------------------------------------------
 
@@ -758,10 +759,10 @@ class XPCShellTests(object):
 
           if we are chunking tests, it will be done here as well
         """
-        if isinstance(self.manifest, manifestparser.TestManifest):
+        if isinstance(self.manifest, TestManifest):
             mp = self.manifest
         else:
-            mp = manifestparser.TestManifest(strict=True)
+            mp = TestManifest(strict=True)
             if self.manifest is None:
                 for testdir in self.testdirs:
                     if testdir:
@@ -771,28 +772,15 @@ class XPCShellTests(object):
 
         self.buildTestPath()
 
+        filters = []
+        if self.singleFile is None and self.totalChunks > 1:
+            filters.append(chunk_by_slice(self.thisChunk, self.totalChunks))
+
         try:
-            self.alltests = mp.active_tests(**mozinfo.info)
+            self.alltests = mp.active_tests(filters=filters, **mozinfo.info)
         except TypeError:
             sys.stderr.write("*** offending mozinfo.info: %s\n" % repr(mozinfo.info))
             raise
-
-        if self.singleFile is None and self.totalChunks > 1:
-            self.chunkTests()
-
-    def chunkTests(self):
-        """
-          Split the list of tests up into [totalChunks] pieces and filter the
-          self.alltests based on thisChunk, so we only run a subset.
-        """
-        totalTests = len(self.alltests)
-        testsPerChunk = math.ceil(totalTests / float(self.totalChunks))
-        start = int(round((self.thisChunk-1) * testsPerChunk))
-        end = int(start + testsPerChunk)
-        if end > totalTests:
-            end = totalTests
-        self.log.info("Running tests %d-%d/%d" % (start + 1, end, totalTests))
-        self.alltests = self.alltests[start:end]
 
     def setAbsPath(self):
         """

@@ -117,7 +117,7 @@ class JS_FRIEND_API(CrossCompartmentWrapper) : public Wrapper
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id,
                                           MutableHandle<JSPropertyDescriptor> desc) const override;
     virtual bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                                MutableHandle<JSPropertyDescriptor> desc,
+                                Handle<JSPropertyDescriptor> desc,
                                 ObjectOpResult &result) const override;
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject wrapper,
                                  AutoIdVector &props) const override;
@@ -185,7 +185,7 @@ class JS_FRIEND_API(SecurityWrapper) : public Base
                        bool *bp) const override;
 
     virtual bool defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
-                                MutableHandle<JSPropertyDescriptor> desc,
+                                Handle<JSPropertyDescriptor> desc,
                                 ObjectOpResult &result) const override;
     virtual bool isExtensible(JSContext *cx, HandleObject wrapper, bool *extensible) const override;
     virtual bool preventExtensions(JSContext *cx, HandleObject wrapper,

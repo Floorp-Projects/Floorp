@@ -170,6 +170,65 @@ GeckoMediaPluginService::AsyncShutdownTimeoutMs()
   return sMaxAsyncShutdownWaitMs;
 }
 
+void
+GeckoMediaPluginService::RemoveObsoletePluginCrashCallbacks()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  for (size_t i = mPluginCrashCallbacks.Length(); i != 0; --i) {
+    nsRefPtr<PluginCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
+    if (!callback->IsStillValid()) {
+      LOGD(("%s::%s - Removing obsolete callback for pluginId %s",
+            __CLASS__, __FUNCTION__,
+            PromiseFlatCString(callback->PluginId()).get()));
+      mPluginCrashCallbacks.RemoveElementAt(i - 1);
+    }
+  }
+}
+
+void
+GeckoMediaPluginService::AddPluginCrashCallback(
+  nsRefPtr<PluginCrashCallback> aPluginCrashCallback)
+{
+  RemoveObsoletePluginCrashCallbacks();
+  mPluginCrashCallbacks.AppendElement(aPluginCrashCallback);
+}
+
+void
+GeckoMediaPluginService::RemovePluginCrashCallbacks(const nsACString& aPluginId)
+{
+  RemoveObsoletePluginCrashCallbacks();
+  for (size_t i = mPluginCrashCallbacks.Length(); i != 0; --i) {
+    nsRefPtr<PluginCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
+    if (callback->PluginId() == aPluginId) {
+      mPluginCrashCallbacks.RemoveElementAt(i - 1);
+    }
+  }
+}
+
+void
+GeckoMediaPluginService::RunPluginCrashCallbacks(const nsACString& aPluginId,
+                                                 const nsACString& aPluginName,
+                                                 const nsAString& aPluginDumpId)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  LOGD(("%s::%s(%s)", __CLASS__, __FUNCTION__, aPluginId.Data()));
+  for (size_t i = mPluginCrashCallbacks.Length(); i != 0; --i) {
+    nsRefPtr<PluginCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
+    const nsACString& callbackPluginId = callback->PluginId();
+    if (!callback->IsStillValid()) {
+      LOGD(("%s::%s(%s) - Removing obsolete callback for pluginId %s",
+            __CLASS__, __FUNCTION__, aPluginId.Data(),
+            PromiseFlatCString(callback->PluginId()).get()));
+      mPluginCrashCallbacks.RemoveElementAt(i - 1);
+    } else if (callbackPluginId == aPluginId) {
+      LOGD(("%s::%s(%s) - Running #%u",
+          __CLASS__, __FUNCTION__, aPluginId.Data(), i - 1));
+      callback->Run(aPluginName, aPluginDumpId);
+      mPluginCrashCallbacks.RemoveElementAt(i - 1);
+    }
+  }
+}
+
 nsresult
 GeckoMediaPluginService::Init()
 {
@@ -543,6 +602,14 @@ GeckoMediaPluginService::GetGMPDecryptor(nsTArray<nsCString>* aTags,
   nsRefPtr<GMPParent> gmp = SelectPluginForAPI(aNodeId,
                                                NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
                                                *aTags);
+
+  if (!gmp) {
+    // XXX to remove in bug 1147692
+    gmp = SelectPluginForAPI(aNodeId,
+                             NS_LITERAL_CSTRING(GMP_API_DECRYPTOR_COMPAT),
+                             *aTags);
+  }
+
   if (!gmp) {
     return NS_ERROR_FAILURE;
   }

@@ -316,7 +316,8 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
 
   nsReflowStatus contentsReflowStatus;
   nsHTMLReflowMetrics contentsDesiredSize(aButtonReflowState);
-  childPos.B(wm) = focusPadding.BStart(wm) + clbp.BStart(wm);
+  childPos.B(wm) = 0; // This will be set properly later, after reflowing the
+                      // child to determine its size.
 
   // We just pass 0 for containerWidth here, as the child will be repositioned
   // later by FinishReflowChild.
@@ -327,15 +328,15 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
              "We gave button-contents frame unconstrained available height, "
              "so it should be complete");
 
-  // Compute the button's content-box height:
-  nscoord buttonContentBoxBSize = 0;
+  // Compute the button's content-box size:
+  LogicalSize buttonContentBox(wm);
   if (aButtonReflowState.ComputedBSize() != NS_INTRINSICSIZE) {
     // Button has a fixed block-size -- that's its content-box bSize.
-    buttonContentBoxBSize = aButtonReflowState.ComputedBSize();
+    buttonContentBox.BSize(wm) = aButtonReflowState.ComputedBSize();
   } else {
     // Button is intrinsically sized -- it should shrinkwrap the
     // button-contents' bSize, plus any focus-padding space:
-    buttonContentBoxBSize =
+    buttonContentBox.BSize(wm) =
       contentsDesiredSize.BSize(wm) + focusPadding.BStartEnd(wm);
 
     // Make sure we obey min/max-bSize in the case when we're doing intrinsic
@@ -343,16 +344,26 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
     // aButtonReflowState.ComputedBSize()).  Note that we do this before
     // adjusting for borderpadding, since mComputedMaxBSize and
     // mComputedMinBSize are content bSizes.
-    buttonContentBoxBSize =
-      NS_CSS_MINMAX(buttonContentBoxBSize,
+    buttonContentBox.BSize(wm) =
+      NS_CSS_MINMAX(buttonContentBox.BSize(wm),
                     aButtonReflowState.ComputedMinBSize(),
                     aButtonReflowState.ComputedMaxBSize());
+  }
+  if (aButtonReflowState.ComputedISize() != NS_INTRINSICSIZE) {
+    buttonContentBox.ISize(wm) = aButtonReflowState.ComputedISize();
+  } else {
+    buttonContentBox.ISize(wm) =
+      contentsDesiredSize.ISize(wm) + focusPadding.IStartEnd(wm);
+    buttonContentBox.ISize(wm) =
+      NS_CSS_MINMAX(buttonContentBox.ISize(wm),
+                    aButtonReflowState.ComputedMinISize(),
+                    aButtonReflowState.ComputedMaxISize());
   }
 
   // Center child in the block-direction in the button
   // (technically, inside of the button's focus-padding area)
   nscoord extraSpace =
-    buttonContentBoxBSize - focusPadding.BStartEnd(wm) -
+    buttonContentBox.BSize(wm) - focusPadding.BStartEnd(wm) -
     contentsDesiredSize.BSize(wm);
 
   childPos.B(wm) = std::max(0, extraSpace / 2);
@@ -361,8 +372,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   // its focus-padding rect:
   childPos.B(wm) += focusPadding.BStart(wm) + clbp.BStart(wm);
 
-  nscoord containerWidth = contentsDesiredSize.Width() +
-    clbp.LeftRight(wm) + focusPadding.LeftRight(wm);
+  nscoord containerWidth = buttonContentBox.Width(wm) + clbp.LeftRight(wm);
 
   // Place the child
   FinishReflowChild(aFirstKid, aPresContext,
@@ -381,7 +391,7 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsPresContext* aPresContext,
   //  * Button's height & width are content-box size + border-box contribution:
   aButtonDesiredSize.SetSize(wm,
     LogicalSize(wm, aButtonReflowState.ComputedISize() + clbp.IStartEnd(wm),
-                    buttonContentBoxBSize + clbp.BStartEnd(wm)));
+                    buttonContentBox.BSize(wm) + clbp.BStartEnd(wm)));
 
   //  * Button's ascent is its child's ascent, plus the child's block-offset
   // within our frame... unless it's orthogonal, in which case we'll use the

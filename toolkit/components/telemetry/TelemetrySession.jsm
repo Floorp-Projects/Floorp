@@ -838,16 +838,14 @@ let Impl = {
       Cu.import("resource://gre/modules/TelemetryTimestamps.jsm", o);
       appTimestamps = o.TelemetryTimestamps.get();
     } catch (ex) {}
-    try {
-      if (!IS_CONTENT_PROCESS) {
+
+    // Only submit this if the extended set is enabled.
+    if (!IS_CONTENT_PROCESS && Telemetry.canRecordExtended) {
+      try {
         ret.addonManager = AddonManagerPrivate.getSimpleMeasures();
-      }
-    } catch (ex) {}
-    try {
-      if (!IS_CONTENT_PROCESS) {
         ret.UITelemetry = UITelemetry.getSimpleMeasures();
-      }
-    } catch (ex) {}
+      } catch (ex) {}
+    }
 
     if (si.process) {
       for each (let field in Object.keys(si)) {
@@ -984,11 +982,20 @@ let Impl = {
     return retgram;
   },
 
+  /**
+   * Get the type of the dataset that needs to be collected, based on the preferences.
+   * @return {Integer} A value from nsITelemetry.DATASET_*.
+   */
+  getDatasetType: function() {
+    return Telemetry.canRecordExtended ? Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN
+                                       : Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
+  },
+
   getHistograms: function getHistograms(subsession, clearSubsession) {
     this._log.trace("getHistograms - subsession: " + subsession + ", clearSubsession: " + clearSubsession);
 
     let registered =
-      Telemetry.registeredHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, []);
+      Telemetry.registeredHistograms(this.getDatasetType(), []);
     let hls = subsession ? Telemetry.snapshotSubsessionHistograms(clearSubsession)
                          : Telemetry.histogramSnapshots;
     let ret = {};
@@ -1027,7 +1034,7 @@ let Impl = {
     this._log.trace("getKeyedHistograms - subsession: " + subsession + ", clearSubsession: " + clearSubsession);
 
     let registered =
-      Telemetry.registeredKeyedHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, []);
+      Telemetry.registeredKeyedHistograms(this.getDatasetType(), []);
     let ret = {};
 
     for (let id of registered) {
@@ -1115,6 +1122,11 @@ let Impl = {
    * Pull values from about:memory into corresponding histograms
    */
   gatherMemory: function gatherMemory() {
+    if (!Telemetry.canRecordExtended) {
+      this._log.trace("gatherMemory - Extended data recording disabled, skipping.");
+      return;
+    }
+
     this._log.trace("gatherMemory");
 
     let mgr;
@@ -1242,7 +1254,7 @@ let Impl = {
     this._log.trace("gatherStartupHistograms");
 
     let info =
-      Telemetry.registeredHistograms(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, []);
+      Telemetry.registeredHistograms(this.getDatasetType(), []);
     let snapshots = Telemetry.histogramSnapshots;
     for (let name of info) {
       // Only duplicate histograms with actual data.
@@ -1274,10 +1286,14 @@ let Impl = {
       simpleMeasurements: simpleMeasurements,
       histograms: this.getHistograms(isSubsession, clearSubsession),
       keyedHistograms: this.getKeyedHistograms(isSubsession, clearSubsession),
-      chromeHangs: Telemetry.chromeHangs,
-      threadHangStats: this.getThreadHangStats(Telemetry.threadHangStats),
-      log: TelemetryLog.entries(),
     };
+
+    // Add extended set measurements common to chrome & content processes
+    if (Telemetry.canRecordExtended) {
+      payloadObj.chromeHangs = Telemetry.chromeHangs;
+      payloadObj.threadHangStats = this.getThreadHangStats(Telemetry.threadHangStats);
+      payloadObj.log = TelemetryLog.entries();
+    }
 
     if (IS_CONTENT_PROCESS) {
       return payloadObj;
@@ -1285,17 +1301,21 @@ let Impl = {
 
     // Additional payload for chrome process.
     payloadObj.info = info;
-    payloadObj.slowSQL = Telemetry.slowSQL;
-    payloadObj.fileIOReports = Telemetry.fileIOReports;
-    payloadObj.lateWrites = Telemetry.lateWrites;
-    payloadObj.addonHistograms = this.getAddonHistograms();
-    payloadObj.addonDetails = AddonManagerPrivate.getTelemetryDetails();
-    payloadObj.UIMeasurements = UITelemetry.getUIMeasurements();
 
-    if (Object.keys(this._slowSQLStartup).length != 0 &&
-        (Object.keys(this._slowSQLStartup.mainThread).length ||
-         Object.keys(this._slowSQLStartup.otherThreads).length)) {
-      payloadObj.slowSQLStartup = this._slowSQLStartup;
+    // Add extended set measurements for chrome process.
+    if (Telemetry.canRecordExtended) {
+      payloadObj.slowSQL = Telemetry.slowSQL;
+      payloadObj.fileIOReports = Telemetry.fileIOReports;
+      payloadObj.lateWrites = Telemetry.lateWrites;
+      payloadObj.addonHistograms = this.getAddonHistograms();
+      payloadObj.addonDetails = AddonManagerPrivate.getTelemetryDetails();
+      payloadObj.UIMeasurements = UITelemetry.getUIMeasurements();
+
+      if (Object.keys(this._slowSQLStartup).length != 0 &&
+          (Object.keys(this._slowSQLStartup.mainThread).length ||
+           Object.keys(this._slowSQLStartup.otherThreads).length)) {
+        payloadObj.slowSQLStartup = this._slowSQLStartup;
+      }
     }
 
     if (this._childTelemetry.length) {
@@ -1378,22 +1398,14 @@ let Impl = {
   enableTelemetryRecording: function enableTelemetryRecording(testing) {
 
 #ifdef MOZILLA_OFFICIAL
-    if (!Telemetry.canSend && !testing) {
-      // We can't send data; no point in initializing observers etc.
-      // Only do this for official builds so that e.g. developer builds
-      // still enable Telemetry based on prefs.
-      Telemetry.canRecord = false;
+    if (!Telemetry.isOfficialTelemetry && !testing) {
       this._log.config("enableTelemetryRecording - Can't send data, disabling Telemetry recording.");
       return false;
     }
 #endif
 
     let enabled = Preferences.get(PREF_ENABLED, false);
-    this._server = Preferences.get(PREF_SERVER, undefined);
     if (!enabled) {
-      // Turn off local telemetry if telemetry is disabled.
-      // This may change once about:telemetry is added.
-      Telemetry.canRecord = false;
       this._log.config("enableTelemetryRecording - Telemetry is disabled, turning off Telemetry recording.");
       return false;
     }
@@ -1709,7 +1721,7 @@ let Impl = {
     }
     if (aTest) {
       return this.send(REASON_TEST_PING);
-    } else if (Telemetry.canSend) {
+    } else if (Telemetry.isOfficialTelemetry) {
       return this.send(REASON_IDLE_DAILY);
     }
   },
@@ -1740,7 +1752,7 @@ let Impl = {
       Services.obs.removeObserver(this, "content-child-shutdown");
       this.uninstall();
 
-      if (Telemetry.canSend) {
+      if (Telemetry.isOfficialTelemetry) {
         this.sendContentProcessPing(REASON_SAVED_SESSION);
       }
       break;
@@ -1801,7 +1813,7 @@ let Impl = {
     //    backgrounding), or not (in which case we will delete it on submit, or overwrite
     //    it on the next backgrounding). Not deleting it is faster, so that's what we do.
     case "application-background":
-      if (Telemetry.canSend) {
+      if (Telemetry.isOfficialTelemetry) {
         let payload = this.getSessionPayload(REASON_SAVED_SESSION, false);
         let options = {
           retentionDays: RETENTION_DAYS,
@@ -1836,7 +1848,7 @@ let Impl = {
         this._initialized = false;
       };
 
-      if (Telemetry.canSend || testing) {
+      if (Telemetry.isOfficialTelemetry || testing) {
         return this.savePendingPings()
                 .then(() => this._stateSaveSerializer.flushTasks())
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)

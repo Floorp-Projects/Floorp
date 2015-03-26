@@ -50,8 +50,8 @@ function add_tests_in_mode(useHardFail) {
   });
 
   add_connection_test("ocsp-stapling-none.example.com", useHardFail
-                      ? getXPCOMStatusFromNSS(SEC_ERROR_OCSP_SERVER_ERROR)
-                      : Cr.NS_OK, clearSessionCache);
+                      ? SEC_ERROR_OCSP_SERVER_ERROR
+                      : PRErrorCodeSuccess, clearSessionCache);
 
   // Reset state
   add_test(function() {

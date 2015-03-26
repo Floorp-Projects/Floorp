@@ -11,6 +11,8 @@
 #include "Relation.h"
 #include "HyperTextAccessible-inl.h"
 #include "ImageAccessible.h"
+#include "TableAccessible.h"
+#include "TableCellAccessible.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
 
@@ -52,12 +54,25 @@ DocAccessibleChild::IdToAccessible(const uint64_t& aID) const
   return mDoc->GetAccessibleByUniqueID(reinterpret_cast<void*>(aID));
 }
 
+Accessible*
+DocAccessibleChild::IdToAccessibleLink(const uint64_t& aID) const
+{
+  Accessible* acc = IdToAccessible(aID);
+  return acc && acc->IsLink() ? acc : nullptr;
+}
+
+Accessible*
+DocAccessibleChild::IdToAccessibleSelect(const uint64_t& aID) const
+{
+  Accessible* acc = IdToAccessible(aID);
+  return acc && acc->IsSelect() ? acc : nullptr;
+}
+
 HyperTextAccessible*
 DocAccessibleChild::IdToHyperTextAccessible(const uint64_t& aID) const
 {
   Accessible* acc = IdToAccessible(aID);
-  MOZ_ASSERT(!acc || acc->IsHyperText());
-  return acc ? acc->AsHyperText() : nullptr;
+  return acc && acc->IsHyperText() ? acc->AsHyperText() : nullptr;
 }
 
 ImageAccessible*
@@ -65,6 +80,20 @@ DocAccessibleChild::IdToImageAccessible(const uint64_t& aID) const
 {
   Accessible* acc = IdToAccessible(aID);
   return (acc && acc->IsImage()) ? acc->AsImage() : nullptr;
+}
+
+TableCellAccessible*
+DocAccessibleChild::IdToTableCellAccessible(const uint64_t& aID) const
+{
+  Accessible* acc = IdToAccessible(aID);
+  return (acc && acc->IsTableCell()) ? acc->AsTableCell() : nullptr;
+}
+
+TableAccessible*
+DocAccessibleChild::IdToTableAccessible(const uint64_t& aID) const
+{
+  Accessible* acc = IdToAccessible(aID);
+  return (acc && acc->IsTable()) ? acc->AsTable() : nullptr;
 }
 
 void
@@ -613,6 +642,789 @@ DocAccessibleChild::RecvImageSize(const uint64_t& aID,
   ImageAccessible* acc = IdToImageAccessible(aID);
   if (acc) {
     *aRetVal = acc->Size();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvStartOffset(const uint64_t& aID,
+                                    uint32_t* aRetVal,
+                                    bool* aOk)
+{
+  Accessible* acc = IdToAccessibleLink(aID);
+  if (acc) {
+    *aRetVal = acc->StartOffset();
+    *aOk = true;
+  } else {
+    *aRetVal = 0;
+    *aOk = false;
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvEndOffset(const uint64_t& aID,
+                                  uint32_t* aRetVal,
+                                  bool* aOk)
+{
+  Accessible* acc = IdToAccessibleLink(aID);
+  if (acc) {
+    *aRetVal = acc->EndOffset();
+    *aOk = true;
+  } else {
+    *aRetVal = 0;
+    *aOk = false;
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvIsLinkValid(const uint64_t& aID,
+                                    bool* aRetVal)
+{
+  Accessible* acc = IdToAccessibleLink(aID);
+  if (acc) {
+    *aRetVal = acc->IsLinkValid();
+  } else {
+    *aRetVal = false;
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAnchorCount(const uint64_t& aID,
+                                    uint32_t* aRetVal,
+                                    bool* aOk)
+{
+  Accessible* acc = IdToAccessibleLink(aID);
+  if (acc) {
+    *aRetVal = acc->AnchorCount();
+    *aOk = true;
+  } else {
+    *aRetVal = 0;
+    *aOk = false;
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAnchorURIAt(const uint64_t& aID,
+                                    const uint32_t& aIndex,
+                                    nsCString* aURI,
+                                    bool* aOk)
+{
+  Accessible* acc = IdToAccessibleLink(aID);
+  *aOk = false;
+  if (acc) {
+    nsCOMPtr<nsIURI> uri = acc->AnchorURIAt(aIndex);
+    if (uri) {
+      uri->GetSpec(*aURI);
+      *aOk = true;
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAnchorAt(const uint64_t& aID,
+                                 const uint32_t& aIndex,
+                                 uint64_t* aIDOfAnchor,
+                                 bool* aOk)
+{
+  *aIDOfAnchor = 0;
+  *aOk = false;
+  Accessible* acc = IdToAccessibleLink(aID);
+  if (acc) {
+    Accessible* anchor = acc->AnchorAt(aIndex);
+    if (anchor) {
+      *aIDOfAnchor = reinterpret_cast<uint64_t>(anchor->UniqueID());
+      *aOk = true;
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvLinkCount(const uint64_t& aID,
+                                  uint32_t* aCount)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  *aCount = acc ? acc->LinkCount() : 0;
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvLinkAt(const uint64_t& aID,
+                               const uint32_t& aIndex,
+                               uint64_t* aIDOfLink,
+                               bool* aOk)
+{
+  *aIDOfLink = 0;
+  *aOk = false;
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  if (acc) {
+    Accessible* link = acc->LinkAt(aIndex);
+    if (link) {
+      *aIDOfLink = reinterpret_cast<uint64_t>(link->UniqueID());
+      *aOk = true;
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvLinkIndexOf(const uint64_t& aID,
+                                    const uint64_t& aLinkID,
+                                    int32_t* aIndex)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  Accessible* link = IdToAccessible(aLinkID);
+  *aIndex = -1;
+  if (acc && link) {
+    *aIndex = acc->LinkIndexOf(link);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvLinkIndexAtOffset(const uint64_t& aID,
+                                          const uint32_t& aOffset,
+                                          int32_t* aIndex)
+{
+  HyperTextAccessible* acc = IdToHyperTextAccessible(aID);
+  *aIndex = acc ? acc->LinkIndexAtOffset(aOffset) : -1;
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableOfACell(const uint64_t& aID,
+                                     uint64_t* aTableID,
+                                     bool* aOk)
+{
+  *aTableID = 0;
+  *aOk = false;
+  TableCellAccessible* acc = IdToTableCellAccessible(aID);
+  if (acc) {
+    TableAccessible* table = acc->Table();
+    if (table) {
+      *aTableID = reinterpret_cast<uint64_t>(table->AsAccessible()->UniqueID());
+      *aOk = true;
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvColIdx(const uint64_t& aID,
+                               uint32_t* aIndex)
+{
+  *aIndex = 0;
+  TableCellAccessible* acc = IdToTableCellAccessible(aID);
+  if (acc) {
+    *aIndex = acc->ColIdx();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvRowIdx(const uint64_t& aID,
+                               uint32_t* aIndex)
+{
+  *aIndex = 0;
+  TableCellAccessible* acc = IdToTableCellAccessible(aID);
+  if (acc) {
+    *aIndex = acc->RowIdx();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvColExtent(const uint64_t& aID,
+                                  uint32_t* aExtent)
+{
+  *aExtent = 0;
+  TableCellAccessible* acc = IdToTableCellAccessible(aID);
+  if (acc) {
+    *aExtent = acc->ColExtent();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvRowExtent(const uint64_t& aID,
+                                  uint32_t* aExtent)
+{
+  *aExtent = 0;
+  TableCellAccessible* acc = IdToTableCellAccessible(aID);
+  if (acc) {
+    *aExtent = acc->RowExtent();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvColHeaderCells(const uint64_t& aID,
+                                       nsTArray<uint64_t>* aCells)
+{
+  TableCellAccessible* acc = IdToTableCellAccessible(aID);
+  if (acc) {
+    nsAutoTArray<Accessible*, 10> headerCells;
+    acc->ColHeaderCells(&headerCells);
+    aCells->SetCapacity(headerCells.Length());
+    for (uint32_t i = 0; i < headerCells.Length(); ++i) {
+      aCells->AppendElement(
+        reinterpret_cast<uint64_t>(headerCells[i]->UniqueID()));
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvRowHeaderCells(const uint64_t& aID,
+                                       nsTArray<uint64_t>* aCells)
+{
+  TableCellAccessible* acc = IdToTableCellAccessible(aID);
+  if (acc) {
+    nsAutoTArray<Accessible*, 10> headerCells;
+    acc->RowHeaderCells(&headerCells);
+    aCells->SetCapacity(headerCells.Length());
+    for (uint32_t i = 0; i < headerCells.Length(); ++i) {
+      aCells->AppendElement(
+        reinterpret_cast<uint64_t>(headerCells[i]->UniqueID()));
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvIsCellSelected(const uint64_t& aID,
+                                       bool* aSelected)
+{
+  TableCellAccessible* acc = IdToTableCellAccessible(aID);
+  *aSelected = acc && acc->Selected();
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableCaption(const uint64_t& aID,
+                                     uint64_t* aCaptionID,
+                                     bool* aOk)
+{
+  *aCaptionID = 0;
+  *aOk = false;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    Accessible* caption = acc->Caption();
+    if (caption) {
+      *aCaptionID = reinterpret_cast<uint64_t>(caption->UniqueID());
+      *aOk = true;
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableSummary(const uint64_t& aID,
+                                     nsString* aSummary)
+{
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    acc->Summary(*aSummary);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableColumnCount(const uint64_t& aID,
+                                         uint32_t* aColCount)
+{
+  *aColCount = 0;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    *aColCount = acc->ColCount();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableRowCount(const uint64_t& aID,
+                                      uint32_t* aRowCount)
+{
+  *aRowCount = 0;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    *aRowCount = acc->RowCount();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableCellAt(const uint64_t& aID,
+                                    const uint32_t& aRow,
+                                    const uint32_t& aCol,
+                                    uint64_t* aCellID,
+                                    bool* aOk)
+{
+  *aCellID = 0;
+  *aOk = false;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    Accessible* cell = acc->CellAt(aRow, aCol);
+    if (cell) {
+      *aCellID = reinterpret_cast<uint64_t>(cell->UniqueID());
+      *aOk = true;
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableCellIndexAt(const uint64_t& aID,
+                                         const uint32_t& aRow,
+                                         const uint32_t& aCol,
+                                         int32_t* aIndex)
+{
+  *aIndex = -1;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    *aIndex = acc->CellIndexAt(aRow, aCol);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableColumnIndexAt(const uint64_t& aID,
+                                           const uint32_t& aCellIndex,
+                                           int32_t* aCol)
+{
+  *aCol = -1;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    *aCol = acc->ColIndexAt(aCellIndex);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableRowIndexAt(const uint64_t& aID,
+                                        const uint32_t& aCellIndex,
+                                        int32_t* aRow)
+{
+  *aRow = -1;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    *aRow = acc->RowIndexAt(aCellIndex);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableRowAndColumnIndicesAt(const uint64_t& aID,
+                                                  const uint32_t& aCellIndex,
+                                                  int32_t* aRow,
+                                                  int32_t* aCol)
+{
+  *aRow = -1;
+  *aCol = -1;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    acc->RowAndColIndicesAt(aCellIndex, aRow, aCol);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableColumnExtentAt(const uint64_t& aID,
+                                            const uint32_t& aRow,
+                                            const uint32_t& aCol,
+                                            uint32_t* aExtent)
+{
+  *aExtent = 0;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    *aExtent = acc->ColExtentAt(aRow, aCol);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableRowExtentAt(const uint64_t& aID,
+                                         const uint32_t& aRow,
+                                         const uint32_t& aCol,
+                                         uint32_t* aExtent)
+{
+  *aExtent = 0;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    *aExtent = acc->RowExtentAt(aRow, aCol);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableColumnDescription(const uint64_t& aID,
+                                               const uint32_t& aCol,
+                                               nsString* aDescription)
+{
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    acc->ColDescription(aCol, *aDescription);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableRowDescription(const uint64_t& aID,
+                                            const uint32_t& aRow,
+                                            nsString* aDescription)
+{
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    acc->RowDescription(aRow, *aDescription);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableColumnSelected(const uint64_t& aID,
+                                            const uint32_t& aCol,
+                                            bool* aSelected)
+{
+  *aSelected = false;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    *aSelected = acc->IsColSelected(aCol);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableRowSelected(const uint64_t& aID,
+                                         const uint32_t& aRow,
+                                         bool* aSelected)
+{
+  *aSelected = false;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    *aSelected = acc->IsRowSelected(aRow);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableCellSelected(const uint64_t& aID,
+                                          const uint32_t& aRow,
+                                          const uint32_t& aCol,
+                                          bool* aSelected)
+{
+  *aSelected = false;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    *aSelected = acc->IsCellSelected(aRow, aCol);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableSelectedCellCount(const uint64_t& aID,
+                                               uint32_t* aSelectedCells)
+{
+  *aSelectedCells = 0;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    *aSelectedCells = acc->SelectedCellCount();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableSelectedColumnCount(const uint64_t& aID,
+                                                 uint32_t* aSelectedColumns)
+{
+  *aSelectedColumns = 0;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    *aSelectedColumns = acc->SelectedColCount();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableSelectedRowCount(const uint64_t& aID,
+                                              uint32_t* aSelectedRows)
+{
+  *aSelectedRows = 0;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    *aSelectedRows = acc->SelectedRowCount();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableSelectedCells(const uint64_t& aID,
+                                           nsTArray<uint64_t>* aCellIDs)
+{
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    nsAutoTArray<Accessible*, 30> cells;
+    acc->SelectedCells(&cells);
+    aCellIDs->SetCapacity(cells.Length());
+    for (uint32_t i = 0; i < cells.Length(); ++i) {
+      aCellIDs->AppendElement(
+        reinterpret_cast<uint64_t>(cells[i]->UniqueID()));
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableSelectedCellIndices(const uint64_t& aID,
+                                                 nsTArray<uint32_t>* aCellIndices)
+{
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    acc->SelectedCellIndices(aCellIndices);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableSelectedColumnIndices(const uint64_t& aID,
+                                                   nsTArray<uint32_t>* aColumnIndices)
+{
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    acc->SelectedColIndices(aColumnIndices);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableSelectedRowIndices(const uint64_t& aID,
+                                                nsTArray<uint32_t>* aRowIndices)
+{
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    acc->SelectedRowIndices(aRowIndices);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableSelectColumn(const uint64_t& aID,
+                                          const uint32_t& aCol)
+{
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    acc->SelectCol(aCol);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableSelectRow(const uint64_t& aID,
+                                       const uint32_t& aRow)
+{
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    acc->SelectRow(aRow);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableUnselectColumn(const uint64_t& aID,
+                                            const uint32_t& aCol)
+{
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    acc->UnselectCol(aCol);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableUnselectRow(const uint64_t& aID,
+                                         const uint32_t& aRow)
+{
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    acc->UnselectRow(aRow);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvTableIsProbablyForLayout(const uint64_t& aID,
+                                                 bool* aForLayout)
+{
+  *aForLayout = false;
+  TableAccessible* acc = IdToTableAccessible(aID);
+  if (acc) {
+    *aForLayout = acc->IsProbablyLayoutTable();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvSelectedItems(const uint64_t& aID,
+                                      nsTArray<uint64_t>* aSelectedItemIDs)
+{
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    nsAutoTArray<Accessible*, 10> selectedItems;
+    acc->SelectedItems(&selectedItems);
+    aSelectedItemIDs->SetCapacity(selectedItems.Length());
+    for (size_t i = 0; i < selectedItems.Length(); ++i) {
+      aSelectedItemIDs->AppendElement(
+        reinterpret_cast<uint64_t>(selectedItems[i]->UniqueID()));
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvSelectedItemCount(const uint64_t& aID,
+                                          uint32_t* aCount)
+{
+  *aCount = 0;
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    *aCount = acc->SelectedItemCount();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvGetSelectedItem(const uint64_t& aID,
+                                        const uint32_t& aIndex,
+                                        uint64_t* aSelected,
+                                        bool* aOk)
+{
+  *aSelected = 0;
+  *aOk = false;
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    Accessible* item = acc->GetSelectedItem(aIndex);
+    if (item) {
+      *aSelected = reinterpret_cast<uint64_t>(item->UniqueID());
+      *aOk = true;
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvIsItemSelected(const uint64_t& aID,
+                                       const uint32_t& aIndex,
+                                       bool* aSelected)
+{
+  *aSelected = false;
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    *aSelected = acc->IsItemSelected(aIndex);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAddItemToSelection(const uint64_t& aID,
+                                           const uint32_t& aIndex,
+                                           bool* aSuccess)
+{
+  *aSuccess = false;
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    *aSuccess = acc->AddItemToSelection(aIndex);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvRemoveItemFromSelection(const uint64_t& aID,
+                                                const uint32_t& aIndex,
+                                                bool* aSuccess)
+{
+  *aSuccess = false;
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    *aSuccess = acc->RemoveItemFromSelection(aIndex);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvSelectAll(const uint64_t& aID,
+                                  bool* aSuccess)
+{
+  *aSuccess = false;
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    *aSuccess = acc->SelectAll();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvUnselectAll(const uint64_t& aID,
+                                    bool* aSuccess)
+{
+  *aSuccess = false;
+  Accessible* acc = IdToAccessibleSelect(aID);
+  if (acc) {
+    *aSuccess = acc->UnselectAll();
   }
 
   return true;

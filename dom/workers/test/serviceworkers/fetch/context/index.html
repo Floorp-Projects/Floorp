@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<script>
+  function ok(v, msg) {
+    window.parent.postMessage({status: "ok", result: !!v, message: msg}, "*");
+  }
+
+  function is(a, b, msg) {
+    ok(a === b, msg + ", expected '" + b + "', got '" + a + "'");
+  }
+
+  function finish() {
+    window.parent.postMessage({status: "done"}, "*");
+  }
+
+  function testFetch() {
+    return fetch("fetch.txt").then(function(r) {
+      return r.text();
+    }).then(function(body) {
+      is(body, "so fetch", "A fetch() Request should have the 'fetch' context");
+    });
+  }
+
+  testFetch()
+  .then(function() {
+    finish();
+  });
+</script>

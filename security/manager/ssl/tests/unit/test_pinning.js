@@ -41,33 +41,38 @@ function test_strict() {
   // errors) like 'unknown issuer' are encountered, the pinning error takes
   // precedence. This prevents overrides for such hosts.
   add_connection_test("unknownissuer.include-subdomains.pinning.example.com",
-    getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE));
+                      MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE);
 
   // Issued by otherCA, which is not in the pinset for pinning.example.com.
   add_connection_test("bad.include-subdomains.pinning.example.com",
-    getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE));
+                      MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE);
 
   // Check that using a FQDN doesn't bypass pinning.
   add_connection_test("bad.include-subdomains.pinning.example.com.",
-    getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE));
+                      MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE);
   // For some reason this is also navigable (see bug 1118522).
   add_connection_test("bad.include-subdomains.pinning.example.com..",
-    getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE));
+                      MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE);
 
   // These domains serve certs that match the pinset.
-  add_connection_test("include-subdomains.pinning.example.com", Cr.NS_OK);
-  add_connection_test("good.include-subdomains.pinning.example.com", Cr.NS_OK);
-  add_connection_test("exclude-subdomains.pinning.example.com", Cr.NS_OK);
+  add_connection_test("include-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
+  add_connection_test("good.include-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
+  add_connection_test("exclude-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
 
   // This domain serves a cert that doesn't match the pinset, but subdomains
   // are excluded.
-  add_connection_test("sub.exclude-subdomains.pinning.example.com", Cr.NS_OK);
+  add_connection_test("sub.exclude-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
 
   // This domain's pinset is exactly the same as
   // include-subdomains.pinning.example.com, serves the same cert as
   // bad.include-subdomains.pinning.example.com, but it should pass because
   // it's in test_mode.
-  add_connection_test("test-mode.pinning.example.com", Cr.NS_OK);
+  add_connection_test("test-mode.pinning.example.com",
+                      PRErrorCodeSuccess);
 }
 
 function test_mitm() {
@@ -78,19 +83,24 @@ function test_mitm() {
     run_next_test();
   });
 
-  add_connection_test("include-subdomains.pinning.example.com", Cr.NS_OK);
-  add_connection_test("good.include-subdomains.pinning.example.com", Cr.NS_OK);
+  add_connection_test("include-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
+  add_connection_test("good.include-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
 
   add_connection_test("unknownissuer.include-subdomains.pinning.example.com",
-    getXPCOMStatusFromNSS(SEC_ERROR_UNKNOWN_ISSUER));
+                      SEC_ERROR_UNKNOWN_ISSUER);
 
   // In this case, even though otherCA is not in the pinset, it is a
   // user-specified trust anchor and the pinning check succeeds.
-  add_connection_test("bad.include-subdomains.pinning.example.com", Cr.NS_OK);
+  add_connection_test("bad.include-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
 
-  add_connection_test("exclude-subdomains.pinning.example.com", Cr.NS_OK);
-  add_connection_test("sub.exclude-subdomains.pinning.example.com", Cr.NS_OK);
-  add_connection_test("test-mode.pinning.example.com", Cr.NS_OK);
+  add_connection_test("exclude-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
+  add_connection_test("sub.exclude-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
+  add_connection_test("test-mode.pinning.example.com", PRErrorCodeSuccess);
 };
 
 function test_disabled() {
@@ -100,15 +110,20 @@ function test_disabled() {
     run_next_test();
   });
 
-  add_connection_test("include-subdomains.pinning.example.com", Cr.NS_OK);
-  add_connection_test("good.include-subdomains.pinning.example.com", Cr.NS_OK);
-  add_connection_test("bad.include-subdomains.pinning.example.com", Cr.NS_OK);
-  add_connection_test("exclude-subdomains.pinning.example.com", Cr.NS_OK);
-  add_connection_test("sub.exclude-subdomains.pinning.example.com", Cr.NS_OK);
-  add_connection_test("test-mode.pinning.example.com", Cr.NS_OK);
+  add_connection_test("include-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
+  add_connection_test("good.include-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
+  add_connection_test("bad.include-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
+  add_connection_test("exclude-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
+  add_connection_test("sub.exclude-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
+  add_connection_test("test-mode.pinning.example.com", PRErrorCodeSuccess);
 
   add_connection_test("unknownissuer.include-subdomains.pinning.example.com",
-    getXPCOMStatusFromNSS(SEC_ERROR_UNKNOWN_ISSUER));
+                      SEC_ERROR_UNKNOWN_ISSUER);
 }
 
 function test_enforce_test_mode() {
@@ -119,27 +134,31 @@ function test_enforce_test_mode() {
   });
 
   add_connection_test("unknownissuer.include-subdomains.pinning.example.com",
-    getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE));
+                      MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE);
 
   // Issued by otherCA, which is not in the pinset for pinning.example.com.
   add_connection_test("bad.include-subdomains.pinning.example.com",
-    getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE));
+                      MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE);
 
   // These domains serve certs that match the pinset.
-  add_connection_test("include-subdomains.pinning.example.com", Cr.NS_OK);
-  add_connection_test("good.include-subdomains.pinning.example.com", Cr.NS_OK);
-  add_connection_test("exclude-subdomains.pinning.example.com", Cr.NS_OK);
+  add_connection_test("include-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
+  add_connection_test("good.include-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
+  add_connection_test("exclude-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
 
   // This domain serves a cert that doesn't match the pinset, but subdomains
   // are excluded.
-  add_connection_test("sub.exclude-subdomains.pinning.example.com", Cr.NS_OK);
+  add_connection_test("sub.exclude-subdomains.pinning.example.com",
+                      PRErrorCodeSuccess);
 
   // This domain's pinset is exactly the same as
   // include-subdomains.pinning.example.com, serves the same cert as
   // bad.include-subdomains.pinning.example.com, is in test-mode, but we are
   // enforcing test mode pins.
   add_connection_test("test-mode.pinning.example.com",
-    getXPCOMStatusFromNSS(MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE));
+                      MOZILLA_PKIX_ERROR_KEY_PINNING_FAILURE);
 }
 
 function check_pinning_telemetry() {

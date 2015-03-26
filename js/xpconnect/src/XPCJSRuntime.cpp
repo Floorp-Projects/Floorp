@@ -2336,6 +2336,10 @@ ReportCompartmentStats(const JS::CompartmentStats &cStats,
         cStats.lazyArrayBuffersTable,
         "The table for typed object lazy array buffers.");
 
+    ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("object-metadata"),
+        cStats.objectMetadataTable,
+        "The table used by debugging tools for tracking object metadata");
+
     ZCREPORT_BYTES(cJSPathPrefix + NS_LITERAL_CSTRING("cross-compartment-wrapper-table"),
         cStats.crossCompartmentWrappersTable,
         "The cross-compartment wrapper table.");

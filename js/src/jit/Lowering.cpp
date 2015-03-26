@@ -393,9 +393,8 @@ LIRGenerator::lowerCallArguments(MCall *call)
     // Align the arguments of a call such that the callee would keep the same
     // alignment as the caller.
     uint32_t baseSlot = 0;
-    static const uint32_t alignment = JitStackAlignment / sizeof(Value);
-    if (alignment > 1)
-        baseSlot = AlignBytes(argc, alignment);
+    if (JitStackValueAlignment > 1)
+        baseSlot = AlignBytes(argc, JitStackValueAlignment);
     else
         baseSlot = argc;
 
@@ -522,6 +521,14 @@ LIRGenerator::visitUnreachable(MUnreachable *unreachable)
 }
 
 void
+LIRGenerator::visitEncodeSnapshot(MEncodeSnapshot *mir)
+{
+    LEncodeSnapshot *lir = new(alloc()) LEncodeSnapshot();
+    assignSnapshot(lir, Bailout_Inevitable);
+    add(lir, mir);
+}
+
+void
 LIRGenerator::visitAssertFloat32(MAssertFloat32 *assertion)
 {
     MIRType type = assertion->input()->type();
@@ -531,6 +538,12 @@ LIRGenerator::visitAssertFloat32(MAssertFloat32 *assertion)
         MOZ_ASSERT_IF(checkIsFloat32, type == MIRType_Float32);
         MOZ_ASSERT_IF(!checkIsFloat32, type != MIRType_Float32);
     }
+}
+
+void
+LIRGenerator::visitAssertRecoveredOnBailout(MAssertRecoveredOnBailout *assertion)
+{
+    MOZ_CRASH("AssertRecoveredOnBailout nodes are always recovered on bailouts.");
 }
 
 void

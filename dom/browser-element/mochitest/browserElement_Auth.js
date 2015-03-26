@@ -66,16 +66,85 @@ function testHttpAuth(e) {
     iframe.removeEventListener("mozbrowsertitlechange", onTitleChange);
     iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFail);
     is(e.detail, 'http auth success', 'expect authentication to succeed');
-    SimpleTest.executeSoon(testAuthJarNoInterfere);
+    SimpleTest.executeSoon(testProxyAuth);
   });
 
   is(e.detail.realm, 'http_realm', 'expected realm matches');
   is(e.detail.host, 'http://test', 'expected host matches');
+  is(e.detail.isProxy, false, 'expected isProxy is false');
   e.preventDefault();
 
   SimpleTest.executeSoon(function() {
     e.detail.authenticate("httpuser", "httppass");
   });
+}
+
+function testProxyAuth(e) {
+  // The testingSJS simulates the 407 proxy authentication required response
+  // for proxy server, which will trigger the browser element to send prompt
+  // event with proxy infomation.
+  var testingSJS = 'http://test/tests/dom/browser-element/mochitest/file_http_407_response.sjs';
+  var mozproxy;
+
+  function onUserNameAndPasswordRequired(e) {
+    iframe.removeEventListener("mozbrowserusernameandpasswordrequired",
+                               onUserNameAndPasswordRequired);
+    iframe.addEventListener("mozbrowsertitlechange", function onTitleChange(e) {
+      iframe.removeEventListener("mozbrowsertitlechange", onTitleChange);
+      iframe.removeEventListener("mozbrowserusernameandpasswordrequired", testFail);
+      is(e.detail, 'http auth success', 'expect authentication to succeed');
+      SimpleTest.executeSoon(testAuthJarNoInterfere);
+    });
+
+    is(e.detail.realm, 'http_realm', 'expected realm matches');
+    is(e.detail.host, mozproxy, 'expected host matches');
+    is(e.detail.isProxy, true, 'expected isProxy is true');
+    e.preventDefault();
+
+    SimpleTest.executeSoon(function() {
+      e.detail.authenticate("proxyuser", "proxypass");
+    });
+  }
+
+  // Resolve proxy information used by the test suite, we need it to validate
+  // whether the proxy information delivered with the prompt event is correct.
+  var resolveCallback = SpecialPowers.wrapCallbackObject({
+    QueryInterface: function (iid) {
+      const interfaces = [Ci.nsIProtocolProxyCallback, Ci.nsISupports];
+
+      if (!interfaces.some( function(v) { return iid.equals(v) } )) {
+        throw SpecialPowers.Cr.NS_ERROR_NO_INTERFACE;
+      }
+      return this;
+    },
+
+    onProxyAvailable: function (req, channel, pi, status) {
+      isnot(pi, null, 'expected proxy information available');
+      if (pi) {
+        mozproxy = "moz-proxy://" + pi.host + ":" + pi.port;
+      }
+      iframe.addEventListener("mozbrowserusernameandpasswordrequired",
+                              onUserNameAndPasswordRequired);
+
+      iframe.src = testingSJS;
+    }
+  });
+
+  var ioService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+                  .getService(SpecialPowers.Ci.nsIIOService);
+  var pps = SpecialPowers.Cc["@mozilla.org/network/protocol-proxy-service;1"]
+            .getService();
+  var systemPrincipal = SpecialPowers.Services.scriptSecurityManager
+                                     .getSystemPrincipal();
+  var channel = ioService.newChannel2(testingSJS,
+                                      null,
+                                      null,
+                                      null,
+                                      systemPrincipal,
+                                      null,
+                                      SpecialPowers.Ci.nsILoadInfo.SEC_NORMAL,
+                                      SpecialPowers.Ci.nsIContentPolicy.TYPE_OTHER);
+  pps.asyncResolve(channel, 0, resolveCallback);
 }
 
 function testAuthJarNoInterfere(e) {

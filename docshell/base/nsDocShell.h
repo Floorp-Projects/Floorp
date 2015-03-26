@@ -262,10 +262,10 @@ public:
 
   // Notify Scroll observers when an async panning/zooming transform
   // has started being applied
-  void NotifyAsyncPanZoomStarted(const mozilla::CSSIntPoint aScrollPos);
+  void NotifyAsyncPanZoomStarted();
   // Notify Scroll observers when an async panning/zooming transform
   // is no longer applied
-  void NotifyAsyncPanZoomStopped(const mozilla::CSSIntPoint aScrollPos);
+  void NotifyAsyncPanZoomStopped();
 
   // Add new profile timeline markers to this docShell. This will only add
   // markers if the docShell is currently recording profile timeline markers.

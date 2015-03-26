@@ -174,11 +174,15 @@ private:
 };
 
 /**
- * Indicates whether Telemetry recording is turned on.  This is intended
- * to guard calls to Accumulate when the statistic being recorded is
- * expensive to compute.
+ * Indicates whether Telemetry base data recording is turned on. Added for future uses.
  */
-bool CanRecord();
+bool CanRecordBase();
+
+/**
+ * Indicates whether Telemetry extended data recording is turned on.  This is intended
+ * to guard calls to Accumulate when the statistic being recorded is expensive to compute.
+ */
+bool CanRecordExtended();
 
 /**
  * Records slow SQL statements for Telemetry reporting.

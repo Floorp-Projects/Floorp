@@ -6,7 +6,8 @@ MARIONETTE_HEAD_JS = "head.js";
 
 const HTTP_PROXY = "10.0.2.200";
 const HTTP_PROXY_PORT = "8080";
-const MANUAL_PROXY_CONFIGURATION = 1;
+const PROXY_TYPE_MANUAL = Ci.nsIProtocolProxyService.PROXYCONFIG_MANUAL;
+const PROXY_TYPE_PAC = Ci.nsIProtocolProxyService.PROXYCONFIG_PAC;
 
 // Test initial State
 function verifyInitialState() {
@@ -38,6 +39,7 @@ function waitForHttpProxyVerified(aShouldBeSet) {
   return new Promise(function(aResolve, aReject) {
     try {
       waitFor(aResolve, () => {
+        let usePAC = SpecialPowers.getBoolPref("network.proxy.pac_generator");
         let proxyType = SpecialPowers.getIntPref("network.proxy.type");
         let httpProxy = SpecialPowers.getCharPref("network.proxy.http");
         let sslProxy = SpecialPowers.getCharPref("network.proxy.ssl");
@@ -45,13 +47,16 @@ function waitForHttpProxyVerified(aShouldBeSet) {
         let sslProxyPort = SpecialPowers.getIntPref("network.proxy.ssl_port");
 
         if ((aShouldBeSet &&
-             proxyType == MANUAL_PROXY_CONFIGURATION &&
+             (usePAC ? proxyType == PROXY_TYPE_PAC :
+                       proxyType == PROXY_TYPE_MANUAL) &&
              httpProxy == HTTP_PROXY &&
              sslProxy == HTTP_PROXY &&
              httpProxyPort == HTTP_PROXY_PORT &&
              sslProxyPort == HTTP_PROXY_PORT) ||
-            (!aShouldBeSet && proxyType != MANUAL_PROXY_CONFIGURATION &&
-             !httpProxy && !sslProxy && !httpProxyPort && !sslProxyPort)) {
+             (!aShouldBeSet &&
+              (usePAC ? proxyType == PROXY_TYPE_PAC :
+                        proxyType != PROXY_TYPE_MANUAL) &&
+              !httpProxy && !sslProxy && !httpProxyPort && !sslProxyPort)) {
           return true;
         }
 

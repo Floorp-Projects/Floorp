@@ -181,8 +181,9 @@ public:
   void SetResolution(float aResolution);
   void SetResolutionAndScaleTo(float aResolution);
   void FlingSnap(const mozilla::CSSPoint& aDestination);
-  void ScrollSnap();
-  void ScrollSnap(const nsPoint &aDestination);
+  void ScrollSnap(nsIScrollableFrame::ScrollMode aMode = nsIScrollableFrame::SMOOTH_MSD);
+  void ScrollSnap(const nsPoint &aDestination,
+                  nsIScrollableFrame::ScrollMode aMode = nsIScrollableFrame::SMOOTH_MSD);
 
 protected:
   nsRect GetScrollRangeForClamping() const;
@@ -200,7 +201,8 @@ public:
    */
   void ScrollTo(nsPoint aScrollPosition, nsIScrollableFrame::ScrollMode aMode,
                 const nsRect* aRange = nullptr,
-                nsIScrollableFrame::ScrollSnapMode aSnap = nsIScrollableFrame::DISABLE_SNAP) {
+                nsIScrollbarMediator::ScrollSnapMode aSnap
+                  = nsIScrollbarMediator::DISABLE_SNAP) {
     ScrollToWithOrigin(aScrollPosition, aMode, nsGkAtoms::other, aRange,
                        aSnap);
   }
@@ -229,7 +231,8 @@ public:
                 nsIScrollableFrame::ScrollMode aMode, nsIntPoint* aOverflow,
                 nsIAtom* aOrigin = nullptr,
                 nsIScrollableFrame::ScrollMomentum aMomentum = nsIScrollableFrame::NOT_MOMENTUM,
-                nsIScrollableFrame::ScrollSnapMode aSnap = nsIScrollableFrame::DISABLE_SNAP);
+                nsIScrollbarMediator::ScrollSnapMode aSnap
+                  = nsIScrollbarMediator::DISABLE_SNAP);
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
@@ -380,17 +383,26 @@ public:
                            nsTArray<FrameMetrics>* aOutput) const;
 
   // nsIScrollbarMediator
-  void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection);
-  void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection);
-  void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection);
+  void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                    nsIScrollbarMediator::ScrollSnapMode aSnap
+                      = nsIScrollbarMediator::DISABLE_SNAP);
+  void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                     nsIScrollbarMediator::ScrollSnapMode aSnap
+                       = nsIScrollbarMediator::DISABLE_SNAP);
+  void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                    nsIScrollbarMediator::ScrollSnapMode aSnap
+                      = nsIScrollbarMediator::DISABLE_SNAP);
   void RepeatButtonScroll(nsScrollbarFrame* aScrollbar);
   void ThumbMoved(nsScrollbarFrame* aScrollbar,
                   nscoord aOldPos,
                   nscoord aNewPos);
+  void ScrollbarReleased(nsScrollbarFrame* aScrollbar);
   void ScrollByUnit(nsScrollbarFrame* aScrollbar,
                     nsIScrollableFrame::ScrollMode aMode,
                     int32_t aDirection,
-                    nsIScrollableFrame::ScrollUnit aUnit);
+                    nsIScrollableFrame::ScrollUnit aUnit,
+                    nsIScrollbarMediator::ScrollSnapMode aSnap
+                      = nsIScrollbarMediator::DISABLE_SNAP);
 
   // owning references to the nsIAnonymousContentCreator-built content
   nsCOMPtr<nsIContent> mHScrollbarContent;
@@ -520,7 +532,8 @@ protected:
                           nsIScrollableFrame::ScrollMode aMode,
                           nsIAtom *aOrigin, // nullptr indicates "other" origin
                           const nsRect* aRange,
-                          nsIScrollableFrame::ScrollSnapMode aSnap = nsIScrollableFrame::DISABLE_SNAP);
+                          nsIScrollbarMediator::ScrollSnapMode aSnap
+                            = nsIScrollbarMediator::DISABLE_SNAP);
 
   void CompleteAsyncScroll(const nsRect &aRange, nsIAtom* aOrigin = nullptr);
 
@@ -709,7 +722,8 @@ public:
    */
   virtual void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
                         const nsRect* aRange = nullptr,
-                        nsIScrollableFrame::ScrollSnapMode aSnap = nsIScrollableFrame::DISABLE_SNAP)
+                        nsIScrollbarMediator::ScrollSnapMode aSnap
+                          = nsIScrollbarMediator::DISABLE_SNAP)
                         override {
     mHelper.ScrollTo(aScrollPosition, aMode, aRange, aSnap);
   }
@@ -737,7 +751,8 @@ public:
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
                         nsIntPoint* aOverflow, nsIAtom* aOrigin = nullptr,
                         nsIScrollableFrame::ScrollMomentum aMomentum = nsIScrollableFrame::NOT_MOMENTUM,
-                        nsIScrollableFrame::ScrollSnapMode aSnap = nsIScrollableFrame::DISABLE_SNAP)
+                        nsIScrollbarMediator::ScrollSnapMode aSnap
+                          = nsIScrollbarMediator::DISABLE_SNAP)
                         override {
     mHelper.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin, aMomentum, aSnap);
   }
@@ -845,14 +860,20 @@ public:
   virtual nsIAtom* GetType() const override;
 
   // nsIScrollbarMediator
-  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection) override {
-    mHelper.ScrollByPage(aScrollbar, aDirection);
+  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                            nsIScrollbarMediator::ScrollSnapMode aSnap
+                              = nsIScrollbarMediator::DISABLE_SNAP) override {
+    mHelper.ScrollByPage(aScrollbar, aDirection, aSnap);
   }
-  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection) override {
-    mHelper.ScrollByWhole(aScrollbar, aDirection);
+  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                             nsIScrollbarMediator::ScrollSnapMode aSnap
+                               = nsIScrollbarMediator::DISABLE_SNAP) override {
+    mHelper.ScrollByWhole(aScrollbar, aDirection, aSnap);
   }
-  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection) override {
-    mHelper.ScrollByLine(aScrollbar, aDirection);
+  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                            nsIScrollbarMediator::ScrollSnapMode aSnap
+                              = nsIScrollbarMediator::DISABLE_SNAP) override {
+    mHelper.ScrollByLine(aScrollbar, aDirection, aSnap);
   }
   virtual void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) override {
     mHelper.RepeatButtonScroll(aScrollbar);
@@ -861,6 +882,9 @@ public:
                           nscoord aOldPos,
                           nscoord aNewPos) override {
     mHelper.ThumbMoved(aScrollbar, aOldPos, aNewPos);
+  }
+  virtual void ScrollbarReleased(nsScrollbarFrame* aScrollbar) override {
+    mHelper.ScrollbarReleased(aScrollbar);
   }
   virtual void VisibilityChanged(bool aVisible) override {}
   virtual nsIFrame* GetScrollbarBox(bool aVertical) override {
@@ -1090,7 +1114,8 @@ public:
    */
   virtual void ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
                         const nsRect* aRange = nullptr,
-                        ScrollSnapMode aSnap = nsIScrollableFrame::DISABLE_SNAP) override {
+                        ScrollSnapMode aSnap = nsIScrollbarMediator::DISABLE_SNAP)
+                        override {
     mHelper.ScrollTo(aScrollPosition, aMode, aRange, aSnap);
   }
   /**
@@ -1114,7 +1139,8 @@ public:
   virtual void ScrollBy(nsIntPoint aDelta, ScrollUnit aUnit, ScrollMode aMode,
                         nsIntPoint* aOverflow, nsIAtom* aOrigin = nullptr,
                         nsIScrollableFrame::ScrollMomentum aMomentum = nsIScrollableFrame::NOT_MOMENTUM,
-                        nsIScrollableFrame::ScrollSnapMode aSnap = nsIScrollableFrame::DISABLE_SNAP)
+                        nsIScrollbarMediator::ScrollSnapMode aSnap
+                          = nsIScrollbarMediator::DISABLE_SNAP)
                         override {
     mHelper.ScrollBy(aDelta, aUnit, aMode, aOverflow, aOrigin, aMomentum, aSnap);
   }
@@ -1229,14 +1255,20 @@ public:
     return nsBoxFrame::IsFrameOfType(aFlags);
   }
 
-  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection) override {
-    mHelper.ScrollByPage(aScrollbar, aDirection);
+  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                            nsIScrollbarMediator::ScrollSnapMode aSnap
+                              = nsIScrollbarMediator::DISABLE_SNAP) override {
+    mHelper.ScrollByPage(aScrollbar, aDirection, aSnap);
   }
-  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection) override {
-    mHelper.ScrollByWhole(aScrollbar, aDirection);
+  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                             nsIScrollbarMediator::ScrollSnapMode aSnap
+                               = nsIScrollbarMediator::DISABLE_SNAP) override {
+    mHelper.ScrollByWhole(aScrollbar, aDirection, aSnap);
   }
-  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection) override {
-    mHelper.ScrollByLine(aScrollbar, aDirection);
+  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                            nsIScrollbarMediator::ScrollSnapMode aSnap
+                              = nsIScrollbarMediator::DISABLE_SNAP) override {
+    mHelper.ScrollByLine(aScrollbar, aDirection, aSnap);
   }
   virtual void RepeatButtonScroll(nsScrollbarFrame* aScrollbar) override {
     mHelper.RepeatButtonScroll(aScrollbar);
@@ -1245,6 +1277,9 @@ public:
                           nscoord aOldPos,
                           nscoord aNewPos) override {
     mHelper.ThumbMoved(aScrollbar, aOldPos, aNewPos);
+  }
+  virtual void ScrollbarReleased(nsScrollbarFrame* aScrollbar) override {
+    mHelper.ScrollbarReleased(aScrollbar);
   }
   virtual void VisibilityChanged(bool aVisible) override {}
   virtual nsIFrame* GetScrollbarBox(bool aVertical) override {

@@ -34,6 +34,12 @@ struct ImmTag : public Imm32
 
 class MacroAssemblerX64 : public MacroAssemblerX86Shared
 {
+  private:
+    // Perform a downcast. Should be removed by Bug 996602.
+    MacroAssembler &asMasm();
+    const MacroAssembler &asMasm() const;
+
+  private:
     // Number of bytes the stack is adjusted inside a call to C. Calls to C may
     // not be nested.
     bool inCall_;
@@ -84,8 +90,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
 
   public:
     using MacroAssemblerX86Shared::call;
-    using MacroAssemblerX86Shared::Push;
-    using MacroAssemblerX86Shared::Pop;
     using MacroAssemblerX86Shared::callWithExitFrame;
     using MacroAssemblerX86Shared::branch32;
     using MacroAssemblerX86Shared::branchTest32;
@@ -215,10 +219,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void pushValue(ValueOperand val) {
         push(val.valueReg());
     }
-    void Push(const ValueOperand &val) {
-        pushValue(val);
-        framePushed_ += sizeof(Value);
-    }
     void popValue(ValueOperand val) {
         pop(val.valueReg());
     }
@@ -238,10 +238,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     }
     void pushValue(const Address &addr) {
         push(Operand(addr));
-    }
-    void Pop(const ValueOperand &val) {
-        popValue(val);
-        framePushed_ -= sizeof(Value);
     }
 
     void moveValue(const Value &val, Register dest) {
@@ -1449,12 +1445,7 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         orq(Imm32(type), frameSizeReg);
     }
 
-    void callWithExitFrame(JitCode *target, Register dynStack) {
-        addPtr(Imm32(framePushed()), dynStack);
-        makeFrameDescriptor(dynStack, JitFrame_IonJS);
-        Push(dynStack);
-        call(target);
-    }
+    void callWithExitFrame(JitCode *target, Register dynStack);
 
     // See CodeGeneratorX64 calls to noteAsmJSGlobalAccess.
     void patchAsmJSGlobalAccess(CodeOffsetLabel patchAt, uint8_t *code, uint8_t *globalData,
