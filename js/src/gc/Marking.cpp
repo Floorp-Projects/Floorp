@@ -1177,40 +1177,6 @@ MarkValueInternal(JSTracer *trc, Value *v)
     }
 }
 
-void
-gc::MarkValue(JSTracer *trc, BarrieredBase<Value> *v, const char *name)
-{
-    trc->setTracingName(name);
-    MarkValueInternal(trc, v->unsafeGet());
-}
-
-void
-gc::MarkValueRoot(JSTracer *trc, Value *v, const char *name)
-{
-    JS_ROOT_MARKING_ASSERT(trc);
-    trc->setTracingName(name);
-    MarkValueInternal(trc, v);
-}
-
-void
-gc::MarkValueRange(JSTracer *trc, size_t len, BarrieredBase<Value> *vec, const char *name)
-{
-    for (size_t i = 0; i < len; ++i) {
-        trc->setTracingIndex(name, i);
-        MarkValueInternal(trc, vec[i].unsafeGet());
-    }
-}
-
-void
-gc::MarkValueRootRange(JSTracer *trc, size_t len, Value *vec, const char *name)
-{
-    JS_ROOT_MARKING_ASSERT(trc);
-    for (size_t i = 0; i < len; ++i) {
-        trc->setTracingIndex(name, i);
-        MarkValueInternal(trc, &vec[i]);
-    }
-}
-
 bool
 gc::IsValueMarked(Value *v)
 {
@@ -1372,10 +1338,10 @@ ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Value val)
 /*** Special Marking ***/
 
 void
-gc::MarkValueUnbarriered(JSTracer *trc, Value *v, const char *name)
+gc::MarkValueForBarrier(JSTracer *trc, Value *v, const char *name)
 {
-    trc->setTracingName(name);
-    MarkValueInternal(trc, v);
+    MOZ_ASSERT(!trc->runtime()->isHeapBusy());
+    TraceManuallyBarrieredEdge(trc, v, name);
 }
 
 /*** Push Mark Stack ***/

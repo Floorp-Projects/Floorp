@@ -233,7 +233,7 @@ template <> struct MapTypeToTraceKind<ObjectGroup>      { static const JSGCTrace
 
 // Direct value access used by the write barriers and the jits.
 void
-MarkValueUnbarriered(JSTracer *trc, Value *v, const char *name);
+MarkValueForBarrier(JSTracer *trc, Value *v, const char *name);
 
 // These three declarations are also present in gc/Marking.h, via the DeclMarker
 // macro.  Not great, but hard to avoid.
@@ -345,7 +345,7 @@ struct InternalGCMethods<Value>
         if (shadowZone->needsIncrementalBarrier()) {
             MOZ_ASSERT_IF(v.isMarkable(), shadowRuntimeFromMainThread(v)->needsIncrementalBarrier());
             Value tmp(v);
-            js::gc::MarkValueUnbarriered(shadowZone->barrierTracer(), &tmp, "write barrier");
+            js::gc::MarkValueForBarrier(shadowZone->barrierTracer(), &tmp, "write barrier");
             MOZ_ASSERT(tmp == v);
         }
     }

@@ -228,33 +228,6 @@ MarkIdRootRange(JSTracer *trc, size_t len, jsid *vec, const char *name);
 
 /*** Value Marking ***/
 
-void
-MarkValue(JSTracer *trc, BarrieredBase<Value> *v, const char *name);
-
-void
-MarkValueRange(JSTracer *trc, size_t len, BarrieredBase<Value> *vec, const char *name);
-
-inline void
-MarkValueRange(JSTracer *trc, HeapValue *begin, HeapValue *end, const char *name)
-{
-    return MarkValueRange(trc, end - begin, begin, name);
-}
-
-void
-MarkValueRoot(JSTracer *trc, Value *v, const char *name);
-
-void
-MarkThingOrValueUnbarriered(JSTracer *trc, uintptr_t *word, const char *name);
-
-void
-MarkValueRootRange(JSTracer *trc, size_t len, Value *vec, const char *name);
-
-inline void
-MarkValueRootRange(JSTracer *trc, Value *begin, Value *end, const char *name)
-{
-    MarkValueRootRange(trc, end - begin, begin, name);
-}
-
 bool
 IsValueMarked(Value *v);
 

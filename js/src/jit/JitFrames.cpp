@@ -1007,11 +1007,11 @@ MarkThisAndArguments(JSTracer *trc, JitFrameLayout *layout)
     Value *argv = layout->argv();
 
     // Trace |this|.
-    gc::MarkValueRoot(trc, argv, "ion-thisv");
+    TraceRoot(trc, argv, "ion-thisv");
 
     // Trace actual arguments beyond the formals. Note + 1 for thisv.
     for (size_t i = nformals + 1; i < nargs + 1; i++)
-        gc::MarkValueRoot(trc, &argv[i], "ion-argv");
+        TraceRoot(trc, &argv[i], "ion-argv");
 }
 
 static void
@@ -1068,7 +1068,7 @@ MarkIonJSFrame(JSTracer *trc, const JitFrameIterator &frame)
 
     while (safepoint.getValueSlot(&entry)) {
         Value *v = (Value *)layout->slotRef(entry);
-        gc::MarkValueRoot(trc, v, "ion-gc-slot");
+        TraceRoot(trc, v, "ion-gc-slot");
     }
 
     uintptr_t *spill = frame.spillBase();
@@ -1079,7 +1079,7 @@ MarkIonJSFrame(JSTracer *trc, const JitFrameIterator &frame)
         if (gcRegs.has(*iter))
             gc::MarkGCThingRoot(trc, reinterpret_cast<void **>(spill), "ion-gc-spill");
         else if (valueRegs.has(*iter))
-            gc::MarkValueRoot(trc, reinterpret_cast<Value *>(spill), "ion-value-spill");
+            TraceRoot(trc, reinterpret_cast<Value *>(spill), "ion-value-spill");
     }
 
 #ifdef JS_NUNBOX32
@@ -1090,7 +1090,7 @@ MarkIonJSFrame(JSTracer *trc, const JitFrameIterator &frame)
         layout.s.payload.uintptr = ReadAllocation(frame, &payload);
 
         Value v = IMPL_TO_JSVAL(layout);
-        gc::MarkValueRoot(trc, &v, "ion-torn-value");
+        TraceRoot(trc, &v, "ion-torn-value");
 
         if (v != IMPL_TO_JSVAL(layout)) {
             // GC moved the value, replace the stored payload.
@@ -1265,7 +1265,7 @@ MarkJitExitFrameCopiedArguments(JSTracer *trc, const VMFunction *f, ExitFooterFr
         if (f->argProperties(explicitArg) == VMFunction::DoubleByRef) {
             // Arguments with double size can only have RootValue type.
             if (f->argRootType(explicitArg) == VMFunction::RootValue)
-                gc::MarkValueRoot(trc, reinterpret_cast<Value*>(doubleArgs), "ion-vm-args");
+                TraceRoot(trc, reinterpret_cast<Value*>(doubleArgs), "ion-vm-args");
             else
                 MOZ_ASSERT(f->argRootType(explicitArg) == VMFunction::RootNone);
             doubleArgs += sizeof(double);
@@ -1303,7 +1303,7 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
         NativeExitFrameLayout *native = frame.exitFrame()->as<NativeExitFrameLayout>();
         size_t len = native->argc() + 2;
         Value *vp = native->vp();
-        gc::MarkValueRootRange(trc, len, vp, "ion-native-args");
+        TraceRootRange(trc, len, vp, "ion-native-args");
         return;
     }
 
@@ -1311,9 +1311,9 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
         IonOOLNativeExitFrameLayout *oolnative =
             frame.exitFrame()->as<IonOOLNativeExitFrameLayout>();
         gc::MarkJitCodeRoot(trc, oolnative->stubCode(), "ion-ool-native-code");
-        gc::MarkValueRoot(trc, oolnative->vp(), "iol-ool-native-vp");
+        TraceRoot(trc, oolnative->vp(), "iol-ool-native-vp");
         size_t len = oolnative->argc() + 1;
-        gc::MarkValueRootRange(trc, len, oolnative->thisp(), "ion-ool-native-thisargs");
+        TraceRootRange(trc, len, oolnative->thisp(), "ion-ool-native-thisargs");
         return;
     }
 
@@ -1328,7 +1328,7 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
             ? frame.exitFrame()->as<IonOOLPropertyOpExitFrameLayout>()
             : frame.exitFrame()->as<IonOOLSetterOpExitFrameLayout>();
         gc::MarkJitCodeRoot(trc, oolgetter->stubCode(), "ion-ool-property-op-code");
-        gc::MarkValueRoot(trc, oolgetter->vp(), "ion-ool-property-op-vp");
+        TraceRoot(trc, oolgetter->vp(), "ion-ool-property-op-vp");
         gc::MarkIdRoot(trc, oolgetter->id(), "ion-ool-property-op-id");
         gc::MarkObjectRoot(trc, oolgetter->obj(), "ion-ool-property-op-obj");
         return;
@@ -1337,7 +1337,7 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
     if (frame.isExitFrameLayout<IonOOLProxyExitFrameLayout>()) {
         IonOOLProxyExitFrameLayout *oolproxy = frame.exitFrame()->as<IonOOLProxyExitFrameLayout>();
         gc::MarkJitCodeRoot(trc, oolproxy->stubCode(), "ion-ool-proxy-code");
-        gc::MarkValueRoot(trc, oolproxy->vp(), "ion-ool-proxy-vp");
+        TraceRoot(trc, oolproxy->vp(), "ion-ool-proxy-vp");
         gc::MarkIdRoot(trc, oolproxy->id(), "ion-ool-proxy-id");
         gc::MarkObjectRoot(trc, oolproxy->proxy(), "ion-ool-proxy-proxy");
         gc::MarkObjectRoot(trc, oolproxy->receiver(), "ion-ool-proxy-receiver");
@@ -1352,9 +1352,9 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
                 reinterpret_cast<IonDOMMethodExitFrameLayout *>(dom);
             size_t len = method->argc() + 2;
             Value *vp = method->vp();
-            gc::MarkValueRootRange(trc, len, vp, "ion-dom-args");
+            TraceRootRange(trc, len, vp, "ion-dom-args");
         } else {
-            gc::MarkValueRoot(trc, dom->vp(), "ion-dom-args");
+            TraceRoot(trc, dom->vp(), "ion-dom-args");
         }
         return;
     }
@@ -1402,7 +1402,7 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
             gc::MarkObjectRoot(trc, reinterpret_cast<JSFunction**>(argBase), "ion-vm-args");
             break;
           case VMFunction::RootValue:
-            gc::MarkValueRoot(trc, reinterpret_cast<Value*>(argBase), "ion-vm-args");
+            TraceRoot(trc, reinterpret_cast<Value*>(argBase), "ion-vm-args");
             break;
           case VMFunction::RootCell:
             gc::MarkGCThingRoot(trc, reinterpret_cast<void **>(argBase), "ion-vm-args");
@@ -1436,7 +1436,7 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
             gc::MarkObjectRoot(trc, footer->outParam<JSFunction *>(), "ion-vm-out");
             break;
           case VMFunction::RootValue:
-            gc::MarkValueRoot(trc, footer->outParam<Value>(), "ion-vm-outvp");
+            TraceRoot(trc, footer->outParam<Value>(), "ion-vm-outvp");
             break;
           case VMFunction::RootCell:
             gc::MarkGCThingRoot(trc, footer->outParam<void *>(), "ion-vm-out");
@@ -1455,7 +1455,7 @@ MarkRectifierFrame(JSTracer *trc, const JitFrameIterator &frame)
     // Baseline JIT code generated as part of the ICCall_Fallback stub may use
     // it if we're calling a constructor that returns a primitive value.
     RectifierFrameLayout *layout = (RectifierFrameLayout *)frame.fp();
-    gc::MarkValueRoot(trc, &layout->argv()[0], "ion-thisv");
+    TraceRoot(trc, &layout->argv()[0], "ion-thisv");
 }
 
 static void
@@ -1705,7 +1705,7 @@ RInstructionResults::trace(JSTracer *trc)
 {
     // Note: The vector necessary exists, otherwise this object would not have
     // been stored on the activation from where the trace function is called.
-    gc::MarkValueRange(trc, results_->length(), results_->begin(), "ion-recover-results");
+    TraceRange(trc, results_->length(), results_->begin(), "ion-recover-results");
 }
 
 
@@ -2083,7 +2083,7 @@ SnapshotIterator::traceAllocation(JSTracer *trc)
         return;
 
     Value copy = v;
-    gc::MarkValueRoot(trc, &v, "ion-typed-reg");
+    TraceRoot(trc, &v, "ion-typed-reg");
     if (v != copy) {
         MOZ_ASSERT(SameType(v, copy));
         writeAllocationValuePayload(alloc, v);
