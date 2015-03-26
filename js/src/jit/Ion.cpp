@@ -866,7 +866,7 @@ IonScript::trace(JSTracer *trc)
         MarkJitCode(trc, &deoptTable_, "deoptimizationTable");
 
     for (size_t i = 0; i < numConstants(); i++)
-        gc::MarkValue(trc, &getConstant(i), "constant");
+        TraceEdge(trc, &getConstant(i), "constant");
 }
 
 /* static */ void

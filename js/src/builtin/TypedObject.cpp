@@ -2952,15 +2952,14 @@ MemoryTracingVisitor::visitReference(ReferenceTypeDescr &descr, uint8_t *mem)
     switch (descr.type()) {
       case ReferenceTypeDescr::TYPE_ANY:
       {
-        js::HeapValue *heapValue = reinterpret_cast<js::HeapValue *>(mem);
-        gc::MarkValue(trace_, heapValue, "reference-val");
+        HeapValue *heapValue = reinterpret_cast<js::HeapValue *>(mem);
+        TraceEdge(trace_, heapValue, "reference-val");
         return;
       }
 
       case ReferenceTypeDescr::TYPE_OBJECT:
       {
-        js::HeapPtrObject *objectPtr =
-            reinterpret_cast<js::HeapPtrObject *>(mem);
+        HeapPtrObject *objectPtr = reinterpret_cast<js::HeapPtrObject *>(mem);
         if (*objectPtr)
             gc::MarkObject(trace_, objectPtr, "reference-obj");
         return;
@@ -2968,8 +2967,7 @@ MemoryTracingVisitor::visitReference(ReferenceTypeDescr &descr, uint8_t *mem)
 
       case ReferenceTypeDescr::TYPE_STRING:
       {
-        js::HeapPtrString *stringPtr =
-            reinterpret_cast<js::HeapPtrString *>(mem);
+        HeapPtrString *stringPtr = reinterpret_cast<js::HeapPtrString *>(mem);
         if (*stringPtr)
             gc::MarkString(trace_, stringPtr, "reference-str");
         return;
