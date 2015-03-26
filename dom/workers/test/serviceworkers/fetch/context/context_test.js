@@ -49,6 +49,8 @@ self.addEventListener("fetch", function(event) {
     if (event.request.context == "iframe") {
       event.respondWith(fetch("context_test.js"));
     }
+  } else if (event.request.url.indexOf("newwindow") >= 0) {
+    respondToServiceWorker(event, "newwindow");
   }
   // Fail any request that we don't know about.
   try {
