@@ -1163,6 +1163,7 @@ const std::string kBasicAudioVideoOffer =
 "a=ssrc:5150" CRLF
 "m=video 9 RTP/SAVPF 120 121" CRLF
 "c=IN IP6 ::1" CRLF
+"a=fingerprint:sha-1 DF:FA:FB:08:3B:3C:54:1D:D7:D4:05:77:A0:72:9B:14:08:6D:0F:4C:2E:AC:8A:FD:0A:8E:99:BF:5D:E8:3C:E7" CRLF
 "a=mid:second" CRLF
 "a=rtpmap:120 VP8/90000" CRLF
 "a=fmtp:120 max-fs=3600;max-fr=30" CRLF
@@ -1269,6 +1270,40 @@ TEST_P(NewSdpTest, CheckFingerprint) {
     << "Wrong hash function";
   ASSERT_EQ("DF:2E:AC:8A:FD:0A:8E:99:BF:5D:E8:3C:E7:FA:FB:08:"
             "3B:3C:54:1D:D7:D4:05:77:A0:72:9B:14:08:6D:0F:4C",
+            SdpFingerprintAttributeList::FormatFingerprint(
+                fingerprints.mFingerprints[0].fingerprint))
+    << "Wrong fingerprint";
+  ASSERT_EQ(0xdfU, fingerprints.mFingerprints[0].fingerprint[0])
+      << "first fingerprint element is iffy";
+
+  ASSERT_EQ(3U, mSdp->GetMediaSectionCount());
+
+  // Fallback to session level
+  ASSERT_TRUE(mSdp->GetMediaSection(0).GetAttributeList().HasAttribute(
+        SdpAttribute::kFingerprintAttribute));
+  fingerprints = mSdp->GetMediaSection(0).GetAttributeList().GetFingerprint();
+  ASSERT_EQ(1U, fingerprints.mFingerprints.size());
+  ASSERT_EQ(SdpFingerprintAttributeList::kSha256,
+      fingerprints.mFingerprints[0].hashFunc)
+    << "Wrong hash function";
+  ASSERT_EQ("DF:2E:AC:8A:FD:0A:8E:99:BF:5D:E8:3C:E7:FA:FB:08:"
+            "3B:3C:54:1D:D7:D4:05:77:A0:72:9B:14:08:6D:0F:4C",
+            SdpFingerprintAttributeList::FormatFingerprint(
+                fingerprints.mFingerprints[0].fingerprint))
+    << "Wrong fingerprint";
+  ASSERT_EQ(0xdfU, fingerprints.mFingerprints[0].fingerprint[0])
+      << "first fingerprint element is iffy";
+
+  // Media level
+  ASSERT_TRUE(mSdp->GetMediaSection(1).GetAttributeList().HasAttribute(
+        SdpAttribute::kFingerprintAttribute));
+  fingerprints = mSdp->GetMediaSection(1).GetAttributeList().GetFingerprint();
+  ASSERT_EQ(1U, fingerprints.mFingerprints.size());
+  ASSERT_EQ(SdpFingerprintAttributeList::kSha1,
+      fingerprints.mFingerprints[0].hashFunc)
+    << "Wrong hash function";
+  ASSERT_EQ("DF:FA:FB:08:3B:3C:54:1D:D7:D4:05:77:A0:72:9B:14:"
+            "08:6D:0F:4C:2E:AC:8A:FD:0A:8E:99:BF:5D:E8:3C:E7",
             SdpFingerprintAttributeList::FormatFingerprint(
                 fingerprints.mFingerprints[0].fingerprint))
     << "Wrong fingerprint";
