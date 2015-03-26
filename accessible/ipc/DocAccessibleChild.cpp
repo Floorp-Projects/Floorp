@@ -1430,5 +1430,92 @@ DocAccessibleChild::RecvUnselectAll(const uint64_t& aID,
   return true;
 }
 
+bool
+DocAccessibleChild::RecvDoAction(const uint64_t& aID,
+                                 const uint8_t& aIndex,
+                                 bool* aSuccess)
+{
+  *aSuccess = false;
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    *aSuccess = acc->DoAction(aIndex);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvActionCount(const uint64_t& aID,
+                                    uint8_t* aCount)
+{
+  *aCount = 0;
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    *aCount = acc->ActionCount();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvActionDescriptionAt(const uint64_t& aID,
+                                            const uint8_t& aIndex,
+                                            nsString* aDescription)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->ActionDescriptionAt(aIndex, *aDescription);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvActionNameAt(const uint64_t& aID,
+                                     const uint8_t& aIndex,
+                                     nsString* aName)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->ActionNameAt(aIndex, *aName);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvAccessKey(const uint64_t& aID,
+                                  uint32_t* aKey,
+                                  uint32_t* aModifierMask)
+{
+  *aKey = 0;
+  *aModifierMask = 0;
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    KeyBinding kb = acc->AccessKey();
+    *aKey = kb.Key();
+    *aModifierMask = kb.ModifierMask();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvKeyboardShortcut(const uint64_t& aID,
+                                         uint32_t* aKey,
+                                         uint32_t* aModifierMask)
+{
+  *aKey = 0;
+  *aModifierMask = 0;
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    KeyBinding kb = acc->KeyboardShortcut();
+    *aKey = kb.Key();
+    *aModifierMask = kb.ModifierMask();
+  }
+
+  return true;
+}
+
 }
 }
