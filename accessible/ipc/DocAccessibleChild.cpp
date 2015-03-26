@@ -15,6 +15,7 @@
 #include "TableCellAccessible.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
+#include "nsAccUtils.h"
 
 namespace mozilla {
 namespace a11y {
@@ -1581,6 +1582,53 @@ DocAccessibleChild::RecvStep(const uint64_t& aID,
   }
 
   return true;
+}
+
+bool
+DocAccessibleChild::RecvTakeFocus(const uint64_t& aID)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->TakeFocus();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvChildAtPoint(const uint64_t& aID,
+                                     const int32_t& aX,
+                                     const int32_t& aY,
+                                     const uint32_t& aWhich,
+                                     uint64_t* aChild,
+                                     bool* aOk)
+{
+  *aChild = 0;
+  *aOk = false;
+  Accessible* acc = IdToAccessible(aID);
+  if (acc && !acc->IsDefunct() && !nsAccUtils::MustPrune(acc)) {
+    Accessible* child =
+      acc->ChildAtPoint(aX, aY,
+                        static_cast<Accessible::EWhichChildAtPoint>(aWhich));
+    if (child) {
+      *aChild = reinterpret_cast<uint64_t>(child->UniqueID());
+      *aOk = true;
+    }
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvBounds(const uint64_t& aID,
+                               nsIntRect* aRect)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc && !acc->IsDefunct()) {
+    *aRect = acc->Bounds();
+  }
+
+  return false;
 }
 
 }

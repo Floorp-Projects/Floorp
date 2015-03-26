@@ -390,6 +390,17 @@ public:
 
   virtual bool RecvStep(const uint64_t& aID,
                         double* aStep);
+
+  virtual bool RecvTakeFocus(const uint64_t& aID) override;
+
+  virtual bool RecvChildAtPoint(const uint64_t& aID,
+                                const int32_t& aX,
+                                const int32_t& aY,
+                                const uint32_t& aWhich,
+                                uint64_t* aChild,
+                                bool* aOk) override;
+
+  virtual bool RecvBounds(const uint64_t& aID, nsIntRect* aRect) override;
 private:
 
   Accessible* IdToAccessible(const uint64_t& aID) const;
