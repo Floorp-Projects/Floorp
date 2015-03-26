@@ -204,6 +204,11 @@ child:
   prio(high) sync MinValue(uint64_t aID) returns(double aValue);
   prio(high) sync MaxValue(uint64_t aID) returns(double aValue);
   prio(high) sync Step(uint64_t aID) returns(double aStep);
+
+  prio(high) sync TakeFocus(uint64_t aID);
+  prio(high) sync ChildAtPoint(uint64_t aID, int32_t aX, int32_t aY, uint32_t aWhich)
+    returns(uint64_t aChild, bool aOk);
+  prio(high) sync Bounds(uint64_t aID) returns(nsIntRect aRect);
 };
 
 }

@@ -13,6 +13,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsRect.h"
+#include "Accessible.h"
 
 namespace mozilla {
 namespace a11y {
@@ -269,6 +270,11 @@ public:
   double MinValue();
   double MaxValue();
   double Step();
+
+  void TakeFocus();
+  ProxyAccessible* ChildAtPoint(int32_t aX, int32_t aY,
+                                Accessible::EWhichChildAtPoint aWhichChild);
+  nsIntRect Bounds();
 
   /**
    * Allow the platform to store a pointers worth of data on us.
