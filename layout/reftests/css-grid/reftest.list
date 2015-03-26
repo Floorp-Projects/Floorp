@@ -12,3 +12,6 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-track-sizing-001.html grid-track-sizing-001-ref.html
 == grid-abspos-items-001.html grid-abspos-items-001-ref.html
 == grid-abspos-items-002.html grid-abspos-items-002-ref.html
+== grid-order-abspos-items-001.html grid-order-abspos-items-001-ref.html
+== grid-order-placement-auto-001.html grid-order-placement-auto-001-ref.html
+== grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
