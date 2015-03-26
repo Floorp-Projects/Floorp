@@ -1329,7 +1329,7 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
             : frame.exitFrame()->as<IonOOLSetterOpExitFrameLayout>();
         gc::MarkJitCodeRoot(trc, oolgetter->stubCode(), "ion-ool-property-op-code");
         TraceRoot(trc, oolgetter->vp(), "ion-ool-property-op-vp");
-        gc::MarkIdRoot(trc, oolgetter->id(), "ion-ool-property-op-id");
+        TraceRoot(trc, oolgetter->id(), "ion-ool-property-op-id");
         gc::MarkObjectRoot(trc, oolgetter->obj(), "ion-ool-property-op-obj");
         return;
     }
@@ -1338,7 +1338,7 @@ MarkJitExitFrame(JSTracer *trc, const JitFrameIterator &frame)
         IonOOLProxyExitFrameLayout *oolproxy = frame.exitFrame()->as<IonOOLProxyExitFrameLayout>();
         gc::MarkJitCodeRoot(trc, oolproxy->stubCode(), "ion-ool-proxy-code");
         TraceRoot(trc, oolproxy->vp(), "ion-ool-proxy-vp");
-        gc::MarkIdRoot(trc, oolproxy->id(), "ion-ool-proxy-id");
+        TraceRoot(trc, oolproxy->id(), "ion-ool-proxy-id");
         gc::MarkObjectRoot(trc, oolproxy->proxy(), "ion-ool-proxy-proxy");
         gc::MarkObjectRoot(trc, oolproxy->receiver(), "ion-ool-proxy-receiver");
         return;
