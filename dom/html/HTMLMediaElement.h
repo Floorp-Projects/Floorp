@@ -1414,6 +1414,8 @@ protected:
 
   ElementInTreeState mElementInTreeState;
 
+  bool mHaveDispatchedInterruptBeginEvent;
+
 public:
   // Helper class to measure times for MSE telemetry stats
   class TimeDurationAccumulator {
