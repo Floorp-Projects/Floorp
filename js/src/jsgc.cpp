@@ -2303,7 +2303,7 @@ struct ArenasToUpdate
     bool initialized;
     KindsToUpdate kinds;
     Zone *zone;          // Zone to process
-    unsigned kind;       // Current alloc kind to process
+    AllocKind kind;      // Current alloc kind to process
     ArenaHeader *arena;  // Next arena to process
 
     bool shouldProcessKind(AllocKind kind);
@@ -2349,32 +2349,36 @@ ArenasToUpdate::next(AutoLockHelperThreadState& lock)
 {
     // Find the next arena to update.
     //
-    // Note that this uses a generator-like arrangement. The first time this is
-    // called, |initialized| is false and the for-loops below are entered in the
-    // normal way, returning the first arena found. In subsequent invocations we
-    // jump directly into the body of the for loops just after the previous
-    // return. All state is stored in class members and so preserved between
-    // invocations.
+    // The first time this is called, we initialize the kind and arena and loop
+    // over all alloc kinds, returning the first arena found. In subsequent
+    // invocations we go through the remaining arenas first, then increment the
+    // kind manually before looping over the remaining kinds.
 
     if (initialized) {
         MOZ_ASSERT(arena);
-        MOZ_ASSERT(shouldProcessKind(AllocKind(kind)));
+        MOZ_ASSERT(shouldProcessKind(kind));
         MOZ_ASSERT(zone);
-        goto resumePoint;
+        arena = arena->next;
+        if (arena)
+            return arena;
+        kind = AllocKind(uint8_t(kind) + 1);
+    } else {
+        initialized = true;
+        arena = nullptr;
+        kind = AllocKind::FIRST;
     }
 
-    initialized = true;
-    for (kind = 0; kind < size_t(AllocKind::LIMIT); ++kind) {
-        if (shouldProcessKind(AllocKind(kind))) {
-            for (arena = zone->arenas.getFirstArena(AllocKind(kind));
-                 arena;
-                 arena = arena->next)
-            {
+    for (auto i : SomeAllocKinds(kind)) {
+        if (shouldProcessKind(i)) {
+            arena = zone->arenas.getFirstArena(i);
+            if (arena) {
+                kind = i;
                 return arena;
-              resumePoint:;
             }
         }
     }
+
+    kind = AllocKind::LIMIT;
     zone = nullptr;
     return nullptr;
 }
