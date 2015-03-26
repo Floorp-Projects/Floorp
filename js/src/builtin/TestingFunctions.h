@@ -21,6 +21,9 @@ bool
 testingFunc_assertFloat32(JSContext *cx, unsigned argc, Value *vp);
 
 bool
+testingFunc_assertRecoveredOnBailout(JSContext *cx, unsigned argc, Value *vp);
+
+bool
 testingFunc_inJit(JSContext *cx, unsigned argc, Value *vp);
 
 bool

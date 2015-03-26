@@ -9,7 +9,7 @@
 using namespace js;
 using namespace js::jit;
 
-MoveEmitterARM::MoveEmitterARM(MacroAssemblerARMCompat &masm)
+MoveEmitterARM::MoveEmitterARM(MacroAssembler &masm)
   : inCycle_(0),
     masm(masm),
     pushedAtCycle_(-1),

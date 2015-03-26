@@ -21,10 +21,17 @@ GMPDecryptorParent::GMPDecryptorParent(GMPParent* aPlugin)
 #endif
 {
   MOZ_ASSERT(mPlugin && mGMPThread);
+  mPluginId = aPlugin->GetPluginId();
 }
 
 GMPDecryptorParent::~GMPDecryptorParent()
 {
+}
+
+const nsACString&
+GMPDecryptorParent::GetPluginId() const
+{
+  return mPluginId;
 }
 
 nsresult
@@ -140,7 +147,8 @@ GMPDecryptorParent::Decrypt(uint32_t aId,
   GMPDecryptionData data(aCrypto.key,
                          aCrypto.iv,
                          aCrypto.plain_sizes,
-                         aCrypto.encrypted_sizes);
+                         aCrypto.encrypted_sizes,
+                         aCrypto.session_ids);
 
   unused << SendDecrypt(aId, aBuffer, data);
 }

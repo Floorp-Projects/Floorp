@@ -714,9 +714,9 @@ function testHeaderCells(aHeaderInfoMap)
         var rowHeaderCell = getAccessible(rowHeaderCells[idx]);
         var actualRowHeaderCell =
           actualRowHeaderCells.queryElementAt(idx, nsIAccessible);
-        ok(actualRowHeaderCell, rowHeaderCell,
-           "Wrong row header cell at index " + idx + " for the cell " +
-           prettyName(rowHeaderCells[idx]));
+        isObject(actualRowHeaderCell, rowHeaderCell,
+                 "Wrong row header cell at index " + idx + " for the cell " +
+                 dataCellIdentifier);
       }
     }
 
@@ -735,9 +735,9 @@ function testHeaderCells(aHeaderInfoMap)
         var colHeaderCell = getAccessible(colHeaderCells[idx]);
         var actualColHeaderCell =
           actualColHeaderCells.queryElementAt(idx, nsIAccessible);
-        ok(actualColHeaderCell, colHeaderCell,
-           "Wrong column header cell at index " + idx + " for the cell " +
-           prettyName(colHeaderCells[idx]));
+        isObject(actualColHeaderCell, colHeaderCell,
+                 "Wrong column header cell at index " + idx + " for the cell " +
+                 dataCellIdentifier);
       }
     }
   }

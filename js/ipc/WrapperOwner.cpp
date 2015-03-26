@@ -97,7 +97,7 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                           MutableHandle<JSPropertyDescriptor> desc) const override;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                MutableHandle<JSPropertyDescriptor> desc,
+                                Handle<JSPropertyDescriptor> desc,
                                 ObjectOpResult &result) const override;
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const override;
@@ -213,7 +213,7 @@ WrapperOwner::getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, Handle
 
 bool
 CPOWProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                 MutableHandle<JSPropertyDescriptor> desc,
+                                 Handle<JSPropertyDescriptor> desc,
                                  ObjectOpResult &result) const
 {
     FORWARD(defineProperty, (cx, proxy, id, desc, result));
@@ -221,7 +221,7 @@ CPOWProxyHandler::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
 
 bool
 WrapperOwner::defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                             MutableHandle<JSPropertyDescriptor> desc,
+                             Handle<JSPropertyDescriptor> desc,
                              ObjectOpResult &result)
 {
     ObjectId objId = idOf(proxy);

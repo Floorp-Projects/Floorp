@@ -88,15 +88,17 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
 
     // The rest is factored out into a separate function with a weird name.
     // This algorithm continues just below.
-    return SetPropertyIgnoringNamedGetter(cx, proxy, id, vp, receiver, &ownDesc, result);
+    return SetPropertyIgnoringNamedGetter(cx, proxy, id, vp, receiver, ownDesc, result);
 }
 
 bool
 js::SetPropertyIgnoringNamedGetter(JSContext *cx, HandleObject obj, HandleId id,
                                    MutableHandleValue vp, HandleObject receiver,
-                                   MutableHandle<PropertyDescriptor> ownDesc,
+                                   Handle<PropertyDescriptor> ownDesc_,
                                    ObjectOpResult &result)
 {
+    Rooted<PropertyDescriptor> ownDesc(cx, ownDesc_);
+
     // Step 4.
     if (!ownDesc.object()) {
         // The spec calls this variable "parent", but that word has weird
@@ -107,16 +109,13 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, HandleObject obj, HandleId id,
         if (proto)
             return SetProperty(cx, proto, receiver, id, vp, result);
 
-        // Change ownDesc to be a complete descriptor for a configurable,
-        // writable, enumerable data property. Then fall through to step 5.
-        ownDesc.clear();
-        ownDesc.setAttributes(JSPROP_ENUMERATE);
+        // Step 4.d.
+        ownDesc.setDataDescriptor(UndefinedHandleValue, JSPROP_ENUMERATE);
     }
 
     // Step 5.
     if (ownDesc.isDataDescriptor()) {
-        // Steps 5.a-b, adapted to our nonstandard implementation of ES6
-        // [[Set]] return values.
+        // Steps 5.a-b.
         if (!ownDesc.writable())
             return result.fail(JSMSG_READ_ONLY);
 

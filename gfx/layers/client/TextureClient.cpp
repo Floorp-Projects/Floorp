@@ -66,6 +66,17 @@ using namespace mozilla::ipc;
 using namespace mozilla::gl;
 using namespace mozilla::gfx;
 
+struct ReleaseKeepAlive : public nsRunnable
+{
+  NS_IMETHOD Run()
+  {
+    mKeep = nullptr;
+    return NS_OK;
+  }
+
+  UniquePtr<KeepAlive> mKeep;
+};
+
 /**
  * TextureChild is the content-side incarnation of the PTexture IPDL actor.
  *
@@ -79,13 +90,21 @@ using namespace mozilla::gfx;
  */
 class TextureChild final : public PTextureChild
 {
-  ~TextureChild() {}
+  ~TextureChild()
+  {
+    if (mKeep && mMainThreadOnly && !NS_IsMainThread()) {
+      nsRefPtr<ReleaseKeepAlive> release = new ReleaseKeepAlive();
+      release->mKeep = Move(mKeep);
+      NS_DispatchToMainThread(release);
+    }
+  }
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureChild)
 
   TextureChild()
   : mForwarder(nullptr)
   , mTextureClient(nullptr)
+  , mMainThreadOnly(false)
   , mIPCOpen(false)
   {
   }
@@ -135,6 +154,7 @@ private:
   RefPtr<TextureClient> mWaitForRecycle;
   TextureClient* mTextureClient;
   UniquePtr<KeepAlive> mKeep;
+  bool mMainThreadOnly;
   bool mIPCOpen;
 
   friend class TextureClient;
@@ -495,11 +515,12 @@ TextureClient::~TextureClient()
 }
 
 void
-TextureClient::KeepUntilFullDeallocation(UniquePtr<KeepAlive> aKeep)
+TextureClient::KeepUntilFullDeallocation(UniquePtr<KeepAlive> aKeep, bool aMainThreadOnly)
 {
   MOZ_ASSERT(mActor);
   MOZ_ASSERT(!mActor->mKeep);
   mActor->mKeep = Move(aKeep);
+  mActor->mMainThreadOnly = aMainThreadOnly;
 }
 
 void TextureClient::ForceRemove(bool sync)

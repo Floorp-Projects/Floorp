@@ -210,6 +210,18 @@ function getNodeInfo(selector) {
 }
 
 /**
+ * Set the value of an attribute of a DOM element, identified by its selector.
+ * @param {String} selector.
+ * @param {String} attributeName.
+ * @param {String} attributeValue.
+ * @param {Promise} resolves when done.
+ */
+function setNodeAttribute(selector, attributeName, attributeValue) {
+  return executeInContent("devtools:test:setAttribute",
+                          {selector, attributeName, attributeValue});
+}
+
+/**
  * Highlight a node and set the inspector's current selection to the node or
  * the first match of the given css selector.
  * @param {String|DOMNode} nodeOrSelector
@@ -362,25 +374,28 @@ let addNewAttributes = Task.async(function*(selector, text, inspector) {
 });
 
 /**
- * Checks that a node has the given attributes
+ * Checks that a node has the given attributes.
  *
- * @param {String} selector The node or node selector to check.
- * @param {Object} attrs An object containing the attributes to check.
+ * @param {String} selector The selector for the node to check.
+ * @param {Object} expected An object containing the attributes to check.
  *        e.g. {id: "id1", class: "someclass"}
  *
  * Note that node.getAttribute() returns attribute values provided by the HTML
  * parser. The parser only provides unescaped entities so &amp; will return &.
  */
-function assertAttributes(selector, attrs) {
-  let node = getNode(selector);
+let assertAttributes = Task.async(function*(selector, expected) {
+  let {attributes: actual} = yield getNodeInfo(selector);
 
-  is(node.attributes.length, Object.keys(attrs).length,
-    "Node has the correct number of attributes.");
-  for (let attr in attrs) {
-    is(node.getAttribute(attr), attrs[attr],
-      "Node has the correct " + attr + " attribute.");
+  is(actual.length, Object.keys(expected).length,
+    "The node " + selector + " has the expected number of attributes.");
+  for (let attr in expected) {
+    let foundAttr = actual.find(({name, value}) => name === attr);
+    let foundValue = foundAttr ? foundAttr.value : undefined;
+    ok(foundAttr, "The node " + selector + " has the attribute " + attr);
+    is(foundValue, expected[attr],
+      "The node " + selector + " has the correct " + attr + " attribute value");
   }
-}
+});
 
 /**
  * Undo the last markup-view action and wait for the corresponding mutation to

@@ -181,6 +181,81 @@ public:
 
   nsIntSize ImageSize();
 
+  uint32_t StartOffset(bool* aOk);
+
+  uint32_t EndOffset(bool* aOk);
+
+  bool IsLinkValid();
+
+  uint32_t AnchorCount(bool* aOk);
+
+  void AnchorURIAt(uint32_t aIndex, nsCString& aURI, bool* aOk);
+
+  ProxyAccessible* AnchorAt(uint32_t aIndex);
+
+  uint32_t LinkCount();
+
+  ProxyAccessible* LinkAt(const uint32_t& aIndex);
+
+  int32_t LinkIndexOf(ProxyAccessible* aLink);
+
+  int32_t LinkIndexAtOffset(uint32_t aOffset);
+
+  ProxyAccessible* TableOfACell();
+
+  uint32_t ColIdx();
+
+  uint32_t RowIdx();
+
+  uint32_t ColExtent();
+
+  uint32_t RowExtent();
+
+  void ColHeaderCells(nsTArray<uint64_t>* aCells);
+
+  void RowHeaderCells(nsTArray<uint64_t>* aCells);
+
+  bool IsCellSelected();
+
+  ProxyAccessible* TableCaption();
+  void TableSummary(nsString& aSummary);
+  uint32_t TableColumnCount();
+  uint32_t TableRowCount();
+  ProxyAccessible* TableCellAt(uint32_t aRow, uint32_t aCol);
+  int32_t TableCellIndexAt(uint32_t aRow, uint32_t aCol);
+  int32_t TableColumnIndexAt(uint32_t aCellIndex);
+  int32_t TableRowIndexAt(uint32_t aCellIndex);
+  void TableRowAndColumnIndicesAt(uint32_t aCellIndex,
+                                  int32_t* aRow, int32_t* aCol);
+  uint32_t TableColumnExtentAt(uint32_t aRow, uint32_t aCol);
+  uint32_t TableRowExtentAt(uint32_t aRow, uint32_t aCol);
+  void TableColumnDescription(uint32_t aCol, nsString& aDescription);
+  void TableRowDescription(uint32_t aRow, nsString& aDescription);
+  bool TableColumnSelected(uint32_t aCol);
+  bool TableRowSelected(uint32_t aRow);
+  bool TableCellSelected(uint32_t aRow, uint32_t aCol);
+  uint32_t TableSelectedCellCount();
+  uint32_t TableSelectedColumnCount();
+  uint32_t TableSelectedRowCount();
+  void TableSelectedCells(nsTArray<ProxyAccessible*>* aCellIDs);
+  void TableSelectedCellIndices(nsTArray<uint32_t>* aCellIndices);
+  void TableSelectedColumnIndices(nsTArray<uint32_t>* aColumnIndices);
+  void TableSelectedRowIndices(nsTArray<uint32_t>* aRowIndices);
+  void TableSelectColumn(uint32_t aCol);
+  void TableSelectRow(uint32_t aRow);
+  void TableUnselectColumn(uint32_t aCol);
+  void TableUnselectRow(uint32_t aRow);
+  bool TableIsProbablyForLayout();
+
+  void SelectedItems(nsTArray<ProxyAccessible*>* aSelectedItems);
+  uint32_t SelectedItemCount();
+  ProxyAccessible* GetSelectedItem(uint32_t aIndex);
+  bool IsItemSelected(uint32_t aIndex);
+  bool AddItemToSelection(uint32_t aIndex);
+  bool RemoveItemFromSelection(uint32_t aIndex);
+  bool SelectAll();
+  bool UnselectAll();
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */

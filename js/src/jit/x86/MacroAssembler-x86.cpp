@@ -11,6 +11,7 @@
 #include "jit/Bailouts.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitFrames.h"
+#include "jit/MacroAssembler.h"
 #include "jit/MoveEmitter.h"
 
 #include "jsscriptinlines.h"
@@ -282,7 +283,7 @@ MacroAssemblerX86::callWithABIPre(uint32_t *stackAdjust)
         if (!enoughMemory_)
             return;
 
-        MoveEmitter emitter(*this);
+        MoveEmitter emitter(asMasm());
         emitter.emit(moveResolver_);
         emitter.finish();
     }
@@ -499,6 +500,15 @@ MacroAssemblerX86::storeUnboxedValue(ConstantOrRegister value, MIRType valueType
                                      MIRType slotType);
 
 void
+MacroAssemblerX86::callWithExitFrame(JitCode *target, Register dynStack)
+{
+    addPtr(ImmWord(framePushed()), dynStack);
+    makeFrameDescriptor(dynStack, JitFrame_IonJS);
+    asMasm().Push(dynStack);
+    call(target);
+}
+
+void
 MacroAssemblerX86::branchPtrInNurseryRange(Condition cond, Register ptr, Register temp,
                                            Label *label)
 {
@@ -540,4 +550,16 @@ void
 MacroAssemblerX86::profilerExitFrame()
 {
     jmp(GetJitContext()->runtime->jitRuntime()->getProfilerExitFrameTail());
+}
+
+MacroAssembler &
+MacroAssemblerX86::asMasm()
+{
+    return *static_cast<MacroAssembler *>(this);
+}
+
+const MacroAssembler &
+MacroAssemblerX86::asMasm() const
+{
+    return *static_cast<const MacroAssembler *>(this);
 }

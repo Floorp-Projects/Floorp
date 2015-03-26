@@ -24,6 +24,7 @@
 #include "js/HashTable.h"
 #include "vm/Debugger.h"
 #include "vm/JSONParser.h"
+#include "vm/WeakMapObject.h"
 
 #include "jsgcinlines.h"
 #include "jsobjinlines.h"
@@ -515,6 +516,9 @@ js::gc::GCRuntime::markRuntime(JSTracer *trc,
 
         if (c->lazyArrayBuffers)
             c->lazyArrayBuffers->trace(trc);
+
+        if (c->objectMetadataTable)
+            c->objectMetadataTable->trace(trc);
     }
 
     MarkInterpreterActivations(rt, trc);

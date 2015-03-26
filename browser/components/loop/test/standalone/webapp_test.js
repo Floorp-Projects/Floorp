@@ -71,22 +71,7 @@ describe("loop.webapp", function() {
       }));
     });
 
-    it("should dispatch a ExtractTokenInfo action with the hash", function() {
-      sandbox.stub(loop.shared.utils, "locationData").returns({
-        hash: "#call/faketoken",
-        pathname: "invalid"
-      });
-
-      loop.webapp.init();
-
-      sinon.assert.calledOnce(loop.Dispatcher.prototype.dispatch);
-      sinon.assert.calledWithExactly(loop.Dispatcher.prototype.dispatch,
-        new sharedActions.ExtractTokenInfo({
-          windowPath: "#call/faketoken"
-        }));
-    });
-
-    it("should dispatch a ExtractTokenInfo action with the path if there is no hash",
+    it("should dispatch a ExtractTokenInfo action with the path",
       function() {
         sandbox.stub(loop.shared.utils, "locationData").returns({
           hash: "",

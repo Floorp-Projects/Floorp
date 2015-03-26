@@ -1394,16 +1394,16 @@ DisplayName(JSContext *cx, unsigned argc, jsval *vp)
     return true;
 }
 
-static bool
-ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
+static JSObject *
+ShellObjectMetadataCallback(JSContext *cx)
 {
     RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj)
-        return false;
+        CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
 
     RootedObject stack(cx, NewDenseEmptyArray(cx));
     if (!stack)
-        return false;
+        CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
 
     static int createdIndex = 0;
     createdIndex++;
@@ -1411,13 +1411,13 @@ ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
     if (!JS_DefineProperty(cx, obj, "index", createdIndex, 0,
                            JS_STUBGETTER, JS_STUBSETTER))
     {
-        return false;
+        CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
     }
 
     if (!JS_DefineProperty(cx, obj, "stack", stack, 0,
                            JS_STUBGETTER, JS_STUBSETTER))
     {
-        return false;
+        CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
     }
 
     int stackIndex = 0;
@@ -1430,14 +1430,13 @@ ShellObjectMetadataCallback(JSContext *cx, JSObject **pmetadata)
             if (!JS_DefinePropertyById(cx, stack, id, callee, 0,
                                        JS_STUBGETTER, JS_STUBSETTER))
             {
-                return false;
+                CrashAtUnhandlableOOM("ShellObjectMetadataCallback");
             }
             stackIndex++;
         }
     }
 
-    *pmetadata = obj;
-    return true;
+    return obj;
 }
 
 static bool
@@ -1450,22 +1449,6 @@ SetObjectMetadataCallback(JSContext *cx, unsigned argc, jsval *vp)
 
     args.rval().setUndefined();
     return true;
-}
-
-static bool
-SetObjectMetadata(JSContext *cx, unsigned argc, jsval *vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() != 2 || !args[0].isObject() || !args[1].isObject()) {
-        JS_ReportError(cx, "Both arguments must be objects");
-        return false;
-    }
-
-    args.rval().setUndefined();
-
-    RootedObject obj(cx, &args[0].toObject());
-    RootedObject metadata(cx, &args[1].toObject());
-    return SetObjectMetadata(cx, obj, metadata);
 }
 
 static bool
@@ -1552,6 +1535,10 @@ bool
 js::testingFunc_assertFloat32(JSContext *cx, unsigned argc, jsval *vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 2) {
+        JS_ReportError(cx, "Expects only 2 arguments");
+        return false;
+    }
 
     // NOP when not in IonMonkey
     args.rval().setUndefined();
@@ -1564,6 +1551,20 @@ TestingFunc_assertJitStackInvariants(JSContext *cx, unsigned argc, jsval *vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     jit::AssertJitStackInvariants(cx);
+    args.rval().setUndefined();
+    return true;
+}
+
+bool
+js::testingFunc_assertRecoveredOnBailout(JSContext *cx, unsigned argc, jsval *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() != 2) {
+        JS_ReportError(cx, "Expects only 2 arguments");
+        return false;
+    }
+
+    // NOP when not in IonMonkey
     args.rval().setUndefined();
     return true;
 }
@@ -2757,10 +2758,6 @@ gc::ZealModeHelpText),
     JS_FN_HELP("setObjectMetadataCallback", SetObjectMetadataCallback, 1, 0,
 "setObjectMetadataCallback(fn)",
 "  Specify function to supply metadata for all newly created objects."),
-
-    JS_FN_HELP("setObjectMetadata", SetObjectMetadata, 2, 0,
-"setObjectMetadata(obj, metadataObj)",
-"  Change the metadata for an object."),
 
     JS_FN_HELP("getObjectMetadata", GetObjectMetadata, 1, 0,
 "getObjectMetadata(obj)",

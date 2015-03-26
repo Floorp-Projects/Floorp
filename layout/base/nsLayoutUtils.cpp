@@ -5878,7 +5878,7 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
   }
 
   gfxSize destScale = didSnap ? gfxSize(currentMatrix._11, currentMatrix._22)
-                              : gfxSize(1.0, 1.0);
+                              : currentMatrix.ScaleFactors(true);
   gfxSize appUnitScaledDest(dest.width * destScale.width,
                             dest.height * destScale.height);
   gfxSize scaledDest = appUnitScaledDest / aAppUnitsPerDevPixel;

@@ -894,8 +894,7 @@ let MozLoopServiceInternal = {
             switch(pc.iceConnectionState) {
               case "failed":
               case "disconnected":
-                if (Services.telemetry.canSend ||
-                    Services.prefs.getBoolPref("toolkit.telemetry.test")) {
+                if (Services.telemetry.canRecordExtended) {
                   this.stageForTelemetryUpload(window, pc);
                 }
                 break;

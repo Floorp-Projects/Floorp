@@ -15,7 +15,7 @@
         android:id="@+id/overlay_toast_message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
+        android:gravity="center"
         android:padding="20dp"
         android:background="@drawable/toolbar_grey_round"
         android:textColor="@color/text_and_tabs_tray_grey"

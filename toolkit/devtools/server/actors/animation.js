@@ -208,6 +208,7 @@ let AnimationPlayerActor = ActorClass({
       startTime: this.player.startTime,
       currentTime: this.player.currentTime,
       playState: this.player.playState,
+      playbackRate: this.player.playbackRate,
       name: this.player.source.effect.name,
       duration: this.getDuration(),
       delay: this.getDelay(),
@@ -296,6 +297,18 @@ let AnimationPlayerActor = ActorClass({
       currentTime: Arg(0, "number")
     },
     response: {}
+  }),
+
+  /**
+   * Set the playback rate of the animation player.
+   */
+  setPlaybackRate: method(function(playbackRate) {
+    this.player.playbackRate = playbackRate;
+  }, {
+    request: {
+      currentTime: Arg(0, "number")
+    },
+    response: {}
   })
 });
 
@@ -332,6 +345,7 @@ let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
       startTime: this._form.startTime,
       currentTime: this._form.currentTime,
       playState: this._form.playState,
+      playbackRate: this._form.playbackRate,
       name: this._form.name,
       duration: this._form.duration,
       delay: this._form.delay,

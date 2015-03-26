@@ -305,6 +305,18 @@ MediaSourceDecoder::SetCDMProxy(CDMProxy* aProxy)
   rv = mReader->SetCDMProxy(aProxy);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  {
+    // The sub readers can't decrypt EME content until they have a CDMProxy,
+    // and the CDMProxy knows the capabilities of the CDM. The MediaSourceReader
+    // remains in "waiting for resources" state until then. We need to kick the
+    // reader out of waiting if the CDM gets added with known capabilities.
+    CDMCaps::AutoLock caps(aProxy->Capabilites());
+    if (!caps.AreCapsKnown()) {
+      nsCOMPtr<nsIRunnable> task(
+        NS_NewRunnableMethod(this, &MediaDecoder::NotifyWaitingForResourcesStatusChanged));
+      caps.CallOnMainThreadWhenCapsAvailable(task);
+    }
+  }
   return NS_OK;
 }
 #endif
