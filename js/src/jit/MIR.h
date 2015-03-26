@@ -7053,6 +7053,7 @@ class MLexicalCheck
         setResultType(MIRType_Value);
         setResultTypeSet(input->resultTypeSet());
         setMovable();
+        setGuard();
     }
 
   public:
