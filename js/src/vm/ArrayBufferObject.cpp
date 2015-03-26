@@ -1177,7 +1177,7 @@ ArrayBufferViewObject::trace(JSTracer *trc, JSObject *objArg)
 {
     NativeObject *obj = &objArg->as<NativeObject>();
     HeapSlot &bufSlot = obj->getReservedSlotRef(TypedArrayLayout::BUFFER_SLOT);
-    MarkSlot(trc, &bufSlot, "typedarray.buffer");
+    TraceEdge(trc, &bufSlot, "typedarray.buffer");
 
     // Update obj's data pointer if it moved.
     if (bufSlot.isObject()) {
