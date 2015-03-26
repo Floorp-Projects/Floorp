@@ -335,12 +335,12 @@ public:
   void ClearAllImages();
 
   /**
-   * Clear the current image.
+   * Clear the current images.
    * This function is expect to be called only from a CompositableClient
    * that belongs to ImageBridgeChild. Created to prevent dead lock.
    * See Bug 901224.
    */
-  void ClearCurrentImage();
+  void ClearImagesFromImageBridge();
 
   /**
    * Set an Image as the current image to display. The Image must have
