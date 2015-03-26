@@ -206,6 +206,23 @@
     });
   }
 
+  function testPing() {
+    // FIXME: Temporarily disabled until bug 1148064 gets fixed.
+    return Promise.resolve();
+    return new Promise(function(resolve, reject) {
+      var iframe = document.createElement("iframe");
+      iframe.src = "ping.html";
+      document.documentElement.appendChild(iframe);
+      navigator.serviceWorker.addEventListener("message", function onMessage(e) {
+        if (e.data.data == "ping") {
+          is(e.data.context, "ping", "Expected the ping context on an anchor ping");
+          navigator.serviceWorker.removeEventListener("message", onMessage);
+          resolve();
+        }
+      }, false);
+    });
+  }
+
   Promise.all([
     testFetch(),
     testImage(),
@@ -221,6 +238,7 @@
     testIFrame(),
     testFrame(),
     testInternal(),
+    testPing(),
   ])
   .then(function() {
     finish();
