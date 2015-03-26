@@ -9,14 +9,15 @@
  */
 
 #include "nsCSSDataBlock.h"
-#include "mozilla/MemoryReporting.h"
+
 #include "mozilla/css/Declaration.h"
 #include "mozilla/css/ImageLoader.h"
-#include "nsRuleData.h"
-#include "nsStyleSet.h"
-#include "nsStyleContext.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/WritingModes.h"
 #include "nsIDocument.h"
-#include "WritingModes.h"
+#include "nsRuleData.h"
+#include "nsStyleContext.h"
+#include "nsStyleSet.h"
 
 using namespace mozilla;
 

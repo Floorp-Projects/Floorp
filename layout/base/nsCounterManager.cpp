@@ -7,12 +7,13 @@
 /* implementation of CSS counters (for numbering things) */
 
 #include "nsCounterManager.h"
+
+#include "mozilla/Likely.h"
+#include "mozilla/WritingModes.h"
 #include "nsBulletFrame.h" // legacy location for list style type to text code
 #include "nsContentUtils.h"
-#include "nsTArray.h"
-#include "mozilla/Likely.h"
 #include "nsIContent.h"
-#include "WritingModes.h"
+#include "nsTArray.h"
 
 using namespace mozilla;
 

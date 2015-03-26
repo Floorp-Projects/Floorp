@@ -8,9 +8,9 @@
 #ifndef nsHTMLReflowMetrics_h___
 #define nsHTMLReflowMetrics_h___
 
-#include "nsRect.h"
+#include "mozilla/WritingModes.h"
 #include "nsBoundingMetrics.h"
-#include "WritingModes.h"
+#include "nsRect.h"
 
 //----------------------------------------------------------------------
 
