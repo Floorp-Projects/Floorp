@@ -14,6 +14,7 @@ struct GMPDecryptionData {
   uint8_t[] mIV;
   uint16_t[] mClearBytes;
   uint32_t[] mCipherBytes;
+  nsCString[] mSessionIds;
 };
 
 struct GMPVideoEncodedFrameData
