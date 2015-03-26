@@ -91,6 +91,13 @@
 #endif
 #endif // XP_WIN
 
+#ifdef XP_MACOSX
+// HandlePluginCrashed() and HandlePluginInstantiated() needed from here to
+// fix bug 1147521.  Should later be replaced by proper interface methods,
+// maybe on nsIObjectLoadingContext.
+#include "mozilla/dom/HTMLObjectElement.h"
+#endif
+
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 static const char *kPrefJavaMIME = "plugin.java.mime";
@@ -878,6 +885,10 @@ nsObjectLoadingContent::InstantiatePluginInstance(bool aIsLoading)
                             doc,
                             NS_LITERAL_STRING("PluginInstantiated"));
   NS_DispatchToCurrentThread(ev);
+
+#ifdef XP_MACOSX
+  HTMLObjectElement::HandlePluginInstantiated(thisContent->AsElement());
+#endif
 
   return NS_OK;
 }
@@ -2730,14 +2741,19 @@ nsObjectLoadingContent::PluginCrashed(nsIPluginTag* aPluginTag,
   LOG(("OBJLC [%p]: Plugin Crashed, queuing crash event", this));
   NS_ASSERTION(mType == eType_Plugin, "PluginCrashed at non-plugin type");
 
+  nsCOMPtr<nsIContent> thisContent =
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+
+#ifdef XP_MACOSX
+  HTMLObjectElement::HandlePluginCrashed(thisContent->AsElement());
+#endif
+
   PluginDestroyed();
 
   // Switch to fallback/crashed state, notify
   LoadFallback(eFallbackCrashed, true);
 
   // send nsPluginCrashedEvent
-  nsCOMPtr<nsIContent> thisContent =
-    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
 
   // Note that aPluginTag in invalidated after we're called, so copy 
   // out any data we need now.
