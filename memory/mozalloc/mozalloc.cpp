@@ -202,11 +202,6 @@ moz_xmemalign(size_t boundary, size_t size)
     // non-NULL ptr or errno == EINVAL
     return ptr;
 }
-void*
-moz_memalign(size_t boundary, size_t size)
-{
-    return memalign_impl(boundary, size);
-}
 #endif // if defined(HAVE_MEMALIGN)
 
 #if defined(HAVE_VALLOC)
@@ -219,11 +214,6 @@ moz_xvalloc(size_t size)
         return moz_xvalloc(size);
     }
     return ptr;
-}
-void*
-moz_valloc(size_t size)
-{
-    return valloc_impl(size);
 }
 #endif // if defined(HAVE_VALLOC)
 
