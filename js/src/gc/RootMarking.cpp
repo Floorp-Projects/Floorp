@@ -104,7 +104,7 @@ MarkExactStackRootsAcrossTypes(T context, JSTracer *trc)
     MarkExactStackRootList<jit::JitCode *, MarkJitCodeRoot>(trc, context, "exact-jitcode");
     MarkExactStackRootList<JSScript *, MarkScriptRoot>(trc, context, "exact-script");
     MarkExactStackRootList<LazyScript *, MarkLazyScriptRoot>(trc, context, "exact-lazy-script");
-    MarkExactStackRootList<jsid, MarkIdRoot>(trc, context, "exact-id");
+    MarkExactStackRootList<jsid, TraceRoot>(trc, context, "exact-id");
     MarkExactStackRootList<Value, TraceRoot>(trc, context, "exact-value");
     MarkExactStackRootList<TypeSet::Type, TypeSet::MarkTypeRoot>(trc, context, "TypeSet::Type");
     MarkExactStackRootList<Bindings, MarkBindingsRoot>(trc, context, "Bindings");
@@ -124,7 +124,7 @@ void
 JS::AutoIdArray::trace(JSTracer *trc)
 {
     MOZ_ASSERT(tag_ == IDARRAY);
-    gc::MarkIdRange(trc, idArray->length, idArray->vector, "JSAutoIdArray.idArray");
+    TraceRange(trc, idArray->length, idArray->begin(), "JSAutoIdArray.idArray");
 }
 
 inline void
@@ -137,7 +137,7 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case IDARRAY: {
         JSIdArray *ida = static_cast<AutoIdArray *>(this)->idArray;
-        MarkIdRange(trc, ida->length, ida->vector, "JS::AutoIdArray.idArray");
+        TraceRange(trc, ida->length, ida->begin(), "JS::AutoIdArray.idArray");
         return;
       }
 
@@ -157,14 +157,14 @@ AutoGCRooter::trace(JSTracer *trc)
 
       case IDVECTOR: {
         AutoIdVector::VectorImpl &vector = static_cast<AutoIdVector *>(this)->vector;
-        MarkIdRootRange(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
+        TraceRootRange(trc, vector.length(), vector.begin(), "js::AutoIdVector.vector");
         return;
       }
 
       case IDVALVECTOR: {
         AutoIdValueVector::VectorImpl &vector = static_cast<AutoIdValueVector *>(this)->vector;
         for (size_t i = 0; i < vector.length(); i++) {
-            MarkIdRoot(trc, &vector[i].id, "js::AutoIdValueVector id");
+            TraceRoot(trc, &vector[i].id, "js::AutoIdValueVector id");
             TraceRoot(trc, &vector[i].value, "js::AutoIdValueVector value");
         }
         return;
@@ -332,7 +332,7 @@ StackShape::trace(JSTracer *trc)
     if (base)
         MarkBaseShapeRoot(trc, (BaseShape**) &base, "StackShape base");
 
-    MarkIdRoot(trc, (jsid*) &propid, "StackShape id");
+    TraceRoot(trc, (jsid*) &propid, "StackShape id");
 
     if ((attrs & JSPROP_GETTER) && rawGetter)
         MarkObjectRoot(trc, (JSObject**)&rawGetter, "StackShape getter");
@@ -406,8 +406,8 @@ js::gc::MarkPersistentRootedChains(JSTracer *trc)
         trc, rt->stringPersistentRooteds, "PersistentRooted<JSString *>");
 
     // Mark the PersistentRooted chains of types that are never null.
-    PersistentRootedMarker<jsid>::markChain<MarkIdRoot>(trc, rt->idPersistentRooteds,
-                                                        "PersistentRooted<jsid>");
+    PersistentRootedMarker<jsid>::markChain<TraceRoot>(trc, rt->idPersistentRooteds,
+                                                       "PersistentRooted<jsid>");
     PersistentRootedMarker<Value>::markChain<TraceRoot>(trc, rt->valuePersistentRooteds,
                                                         "PersistentRooted<Value>");
 }
