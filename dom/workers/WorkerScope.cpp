@@ -520,6 +520,17 @@ WorkerDebuggerGlobalScope::PostMessage(const nsAString& aMessage)
 }
 
 void
+WorkerDebuggerGlobalScope::ReportError(JSContext* aCx,
+                                       const nsAString& aMessage)
+{
+  JS::AutoFilename afn;
+  uint32_t lineno = 0;
+  JS::DescribeScriptedCaller(aCx, &afn, &lineno);
+  nsString filename(NS_ConvertUTF8toUTF16(afn.get()));
+  mWorkerPrivate->ReportErrorToDebugger(filename, lineno, aMessage);
+}
+
+void
 WorkerDebuggerGlobalScope::Dump(JSContext* aCx,
                                 const Optional<nsAString>& aString) const
 {

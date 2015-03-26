@@ -270,6 +270,9 @@ public:
   IMPL_EVENT_HANDLER(message)
 
   void
+  ReportError(JSContext* aCx, const nsAString& aMessage);
+
+  void
   Dump(JSContext* aCx, const Optional<nsAString>& aString) const;
 
 private:

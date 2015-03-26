@@ -57,7 +57,7 @@
            "unregistered");
 
         info("Terminate the worker and the child worker, and wait for their " +
-             "debuggers to be unregistered");
+             "debuggers to be unregistered.");
         promise = waitForMultiple([
           waitForUnregister(CHILD_WORKER_URL),
           waitForUnregister(WORKER_URL),
