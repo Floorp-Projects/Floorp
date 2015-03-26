@@ -2760,6 +2760,7 @@ var gCSSProperties = {
     subproperties: [ "list-style-type", "list-style-position", "list-style-image" ],
     initial_values: [ "outside", "disc", "disc outside", "outside disc", "disc none", "none disc", "none disc outside", "none outside disc", "disc none outside", "disc outside none", "outside none disc", "outside disc none" ],
     other_values: [ "inside none", "none inside", "none none inside", "square", "none", "none none", "outside none none", "none outside none", "none none outside", "none outside", "outside none", "outside outside", "outside inside", "\\32 style", "\\32 style inside",
+      '"-"', "'-'", "inside '-'", "'-' outside", "none '-'", "inside none '-'",
       "symbols(\"*\" \"\\2020\" \"\\2021\" \"\\A7\")",
       "symbols(cyclic \"*\" \"\\2020\" \"\\2021\" \"\\A7\")",
       "inside symbols(\"*\" \"\\2020\" \"\\2021\" \"\\A7\")",
@@ -2837,6 +2838,7 @@ var gCSSProperties = {
       "-moz-ethiopic-halehame-am",
       "-moz-ethiopic-halehame-ti-er", "-moz-ethiopic-halehame-ti-et",
       "other-style", "inside", "outside", "\\32 style",
+      '"-"', "'-'",
       "symbols(\"*\" \"\\2020\" \"\\2021\" \"\\A7\")",
       "symbols(cyclic '*' '\\2020' '\\2021' '\\A7')"
     ],
