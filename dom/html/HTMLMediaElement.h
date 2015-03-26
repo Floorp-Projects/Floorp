@@ -978,6 +978,9 @@ protected:
     return isPaused;
   }
 
+#ifdef MOZ_EME
+  void ReportEMETelemetry();
+#endif
   void ReportMSETelemetry();
 
   // Check the permissions for audiochannel.
