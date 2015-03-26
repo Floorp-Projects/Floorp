@@ -799,5 +799,51 @@ ProxyAccessible::UnselectAll()
   return success;
 }
 
+bool
+ProxyAccessible::DoAction(uint8_t aIndex)
+{
+  bool success = false;
+  unused << mDoc->SendDoAction(mID, aIndex, &success);
+  return success;
+}
+
+uint8_t
+ProxyAccessible::ActionCount()
+{
+  uint8_t count = 0;
+  unused << mDoc->SendActionCount(mID, &count);
+  return count;
+}
+
+void
+ProxyAccessible::ActionDescriptionAt(uint8_t aIndex, nsString& aDescription)
+{
+  unused << mDoc->SendActionDescriptionAt(mID, aIndex, &aDescription);
+}
+
+void
+ProxyAccessible::ActionNameAt(uint8_t aIndex, nsString& aName)
+{
+  unused << mDoc->SendActionNameAt(mID, aIndex, &aName);
+}
+
+KeyBinding
+ProxyAccessible::AccessKey()
+{
+  uint32_t key = 0;
+  uint32_t modifierMask = 0;
+  unused << mDoc->SendAccessKey(mID, &key, &modifierMask);
+  return KeyBinding(key, modifierMask);
+}
+
+KeyBinding
+ProxyAccessible::KeyboardShortcut()
+{
+  uint32_t key = 0;
+  uint32_t modifierMask = 0;
+  unused << mDoc->SendKeyboardShortcut(mID, &key, &modifierMask);
+  return KeyBinding(key, modifierMask);
+}
+
 }
 }

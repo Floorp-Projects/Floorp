@@ -351,6 +351,29 @@ public:
 
   virtual bool RecvUnselectAll(const uint64_t& aID,
                                bool* aSuccess) override;
+
+  virtual bool RecvDoAction(const uint64_t& aID,
+                            const uint8_t& aIndex,
+                            bool* aSuccess) override;
+
+  virtual bool RecvActionCount(const uint64_t& aID,
+                               uint8_t* aCount) override;
+
+  virtual bool RecvActionDescriptionAt(const uint64_t& aID,
+                                       const uint8_t& aIndex,
+                                       nsString* aDescription) override;
+
+  virtual bool RecvActionNameAt(const uint64_t& aID,
+                                const uint8_t& aIndex,
+                                nsString* aName) override;
+
+  virtual bool RecvAccessKey(const uint64_t& aID,
+                             uint32_t* aKey,
+                             uint32_t* aModifierMask) override;
+
+  virtual bool RecvKeyboardShortcut(const uint64_t& aID,
+                                    uint32_t* aKey,
+                                    uint32_t* aModifierMask) override;
 private:
 
   Accessible* IdToAccessible(const uint64_t& aID) const;
