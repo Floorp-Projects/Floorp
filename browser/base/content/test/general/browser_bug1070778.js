@@ -7,32 +7,29 @@ function is_selected(index) {
 
 add_task(function*() {
   // This test is only relevant if UnifiedComplete is enabled.
-  let ucpref = Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete");
-  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
+  if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete")) {
+    todo(false, "Stop supporting old autocomplete components.");
+    return;
+  }
+
   registerCleanupFunction(() => {
-    Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", ucpref);
+    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
   });
 
-  let bookmarks = [];
-  bookmarks.push((yield PlacesUtils.bookmarks
-                                   .insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                             url: "http://example.com/?q=%s",
-                                             title: "test" })));
-  yield PlacesUtils.keywords.insert({ keyword: "keyword",
-                                      url: "http://example.com/?q=%s" });
+  let itemId =
+    PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                         NetUtil.newURI("http://example.com/?q=%s"),
+                                         PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                         "test");
+  PlacesUtils.bookmarks.setKeywordForBookmark(itemId, "keyword");
 
   // This item only needed so we can select the keyword item, select something
   // else, then select the keyword item again.
-  bookmarks.push((yield PlacesUtils.bookmarks
-                                   .insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
-                                             url: "http://example.com/keyword",
-                                             title: "keyword abc" })));
-
-  registerCleanupFunction(function* () {
-    for (let bm of bookmarks) {
-      yield PlacesUtils.bookmarks.remove(bm);
-    }
-  });
+  itemId =
+    PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                         NetUtil.newURI("http://example.com/keyword"),
+                                         PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                         "keyword abc");
 
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla", {animate: false});
   yield promiseTabLoaded(tab);
