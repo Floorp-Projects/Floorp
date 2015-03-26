@@ -3,15 +3,16 @@ add_task(function*() {
   Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
 
   registerCleanupFunction(() => {
+    PlacesUtils.bookmarks.removeFolderChildren(PlacesUtils.unfiledBookmarksFolderId);
     Services.prefs.clearUserPref("browser.urlbar.unifiedcomplete");
-    yield PlacesUtils.bookmarks.remove(bm);
   });
 
-  let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.unfiledGuid,
-                                                url: "http://example.com/?q=%s",
-                                                title: "test" });
-  yield PlacesUtils.keywords.insert({ keyword: "keyword",
-                                      url: "http://example.com/?q=%s" });
+  let itemId =
+    PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
+                                         NetUtil.newURI("http://example.com/?q=%s"),
+                                         PlacesUtils.bookmarks.DEFAULT_INDEX,
+                                         "test");
+  PlacesUtils.bookmarks.setKeywordForBookmark(itemId, "keyword");
 
   yield new Promise(resolve => waitForFocus(resolve, window));
 
