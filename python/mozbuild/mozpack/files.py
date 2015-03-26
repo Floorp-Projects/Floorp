@@ -885,3 +885,30 @@ class JarFinder(BaseFinder):
             for p in self._files:
                 if mozpath.basedir(p, [pattern]) == pattern:
                     yield p, DeflatedFile(self._files[p])
+
+
+class ComposedFinder(BaseFinder):
+    '''
+    Composes multiple File Finders in some sort of virtual file system.
+
+    A ComposedFinder is initialized from a dictionary associating paths to
+    *Finder instances.
+
+    Note this could be optimized to be smarter than getting all the files
+    in advance.
+    '''
+    def __init__(self, finders):
+        # Can't import globally, because of the dependency of mozpack.copier
+        # on this module.
+        from mozpack.copier import FileRegistry
+        self.files = FileRegistry()
+
+        for base, finder in sorted(finders.iteritems()):
+            if self.files.contains(base):
+                self.files.remove(base)
+            for p, f in finder.find(''):
+                self.files.add(mozpath.join(base, p), f)
+
+    def find(self, pattern):
+        for p in self.files.match(pattern):
+            yield p, self.files[p]
