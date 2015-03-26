@@ -1685,6 +1685,13 @@ public:
    * ancestor of some elements, then we lose performance but not correctness
    */
   void SortByContentOrder(nsDisplayListBuilder* aBuilder, nsIContent* aCommonAncestor);
+  /**
+   * Stable sort this list by CSS 'order' property order.
+   * http://dev.w3.org/csswg/css-flexbox-1/#order-property
+   * (also applies to CSS Grid although it's in the Flexbox spec ATM)
+   * It is assumed that the list is already in document content order.
+   */
+  void SortByCSSOrder(nsDisplayListBuilder* aBuilder);
 
   /**
    * Generic stable sort. Take care, because some of the items might be nsDisplayLists
