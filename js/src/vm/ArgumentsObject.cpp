@@ -543,8 +543,8 @@ ArgumentsObject::trace(JSTracer *trc, JSObject *obj)
 {
     ArgumentsObject &argsobj = obj->as<ArgumentsObject>();
     ArgumentsData *data = argsobj.data();
-    MarkValue(trc, &data->callee, js_callee_str);
-    MarkValueRange(trc, data->numArgs, data->args, js_arguments_str);
+    TraceEdge(trc, &data->callee, js_callee_str);
+    TraceRange(trc, data->numArgs, data->begin(), js_arguments_str);
     MarkScriptUnbarriered(trc, &data->script, "script");
 }
 

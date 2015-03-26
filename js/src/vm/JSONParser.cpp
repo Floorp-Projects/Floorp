@@ -47,11 +47,11 @@ JSONParserBase::trace(JSTracer *trc)
         if (stack[i].state == FinishArrayElement) {
             ElementVector &elements = stack[i].elements();
             for (size_t j = 0; j < elements.length(); j++)
-                gc::MarkValueRoot(trc, &elements[j], "JSONParser element");
+                TraceRoot(trc, &elements[j], "JSONParser element");
         } else {
             PropertyVector &properties = stack[i].properties();
             for (size_t j = 0; j < properties.length(); j++) {
-                gc::MarkValueRoot(trc, &properties[j].value, "JSONParser property value");
+                TraceRoot(trc, &properties[j].value, "JSONParser property value");
                 gc::MarkIdRoot(trc, &properties[j].id, "JSONParser property id");
             }
         }

@@ -78,7 +78,7 @@ StoreBuffer::ValueEdge::mark(JSTracer *trc) const
     if (!deref())
         return;
 
-    MarkValueRoot(trc, edge, "store buffer edge");
+    TraceRoot(trc, edge, "store buffer edge");
 }
 
 /*** MonoTypeBuffer ***/

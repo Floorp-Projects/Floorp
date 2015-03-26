@@ -32,7 +32,7 @@ using mozilla::DebugOnly;
 JS_PUBLIC_API(void)
 JS_CallUnbarrieredValueTracer(JSTracer *trc, Value *valuep, const char *name)
 {
-    MarkValueUnbarriered(trc, valuep, name);
+    TraceManuallyBarrieredEdge(trc, valuep, name);
 }
 
 JS_PUBLIC_API(void)
@@ -62,7 +62,7 @@ JS_CallUnbarrieredScriptTracer(JSTracer *trc, JSScript **scriptp, const char *na
 JS_PUBLIC_API(void)
 JS_CallValueTracer(JSTracer *trc, JS::Heap<JS::Value> *valuep, const char *name)
 {
-    MarkValueUnbarriered(trc, valuep->unsafeGet(), name);
+    TraceManuallyBarrieredEdge(trc, valuep->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)

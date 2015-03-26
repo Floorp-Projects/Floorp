@@ -837,7 +837,7 @@ HashableValue::mark(JSTracer *trc) const
 {
     HashableValue hv(*this);
     trc->setTracingLocation((void *)this);
-    gc::MarkValue(trc, &hv.value, "key");
+    TraceEdge(trc, &hv.value, "key");
     return hv;
 }
 
@@ -1106,7 +1106,7 @@ MapObject::mark(JSTracer *trc, JSObject *obj)
     if (ValueMap *map = obj->as<MapObject>().getData()) {
         for (ValueMap::Range r = map->all(); !r.empty(); r.popFront()) {
             MarkKey(r, r.front().key, trc);
-            gc::MarkValue(trc, &r.front().value, "value");
+            TraceEdge(trc, &r.front().value, "value");
         }
     }
 }
@@ -1132,7 +1132,7 @@ class OrderedHashTableRef : public gc::BufferableRef
         MOZ_ASSERT(UnbarrieredHashPolicy::hash(key) ==
                    HashableValue::Hasher::hash(*reinterpret_cast<HashableValue*>(&key)));
         Value prior = key;
-        gc::MarkValueUnbarriered(trc, &key, "ordered hash table key");
+        TraceManuallyBarrieredEdge(trc, &key, "ordered hash table key");
         table->rekeyOneEntry(prior, key);
     }
 };
