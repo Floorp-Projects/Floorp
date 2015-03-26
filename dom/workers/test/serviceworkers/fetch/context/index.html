@@ -208,8 +208,6 @@
   }
 
   function testPing() {
-    // FIXME: Temporarily disabled until bug 1148064 gets fixed.
-    return Promise.resolve();
     return new Promise(function(resolve, reject) {
       var iframe = document.createElement("iframe");
       iframe.src = "ping.html";
