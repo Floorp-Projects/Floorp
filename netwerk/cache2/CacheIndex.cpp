@@ -1670,7 +1670,7 @@ CacheIndex::WriteRecords()
   }
 
   rv = CacheFileIOManager::Write(mIndexHandle, fileOffset, mRWBuf, mRWBufPos,
-                                 mSkipEntries == mProcessEntries, this);
+                                 mSkipEntries == mProcessEntries, false, this);
   if (NS_FAILED(rv)) {
     LOG(("CacheIndex::WriteRecords() - CacheFileIOManager::Write() failed "
          "synchronously [rv=0x%08x]", rv));
@@ -2131,7 +2131,8 @@ CacheIndex::ParseRecords()
       // synchronously.
       rv = CacheFileIOManager::Write(mIndexHandle, 0,
                                      reinterpret_cast<char *>(hdr),
-                                     sizeof(CacheIndexHeader), true, nullptr);
+                                     sizeof(CacheIndexHeader), true, false,
+                                     nullptr);
       if (NS_FAILED(rv)) {
         // This is not fatal, just free the memory
         free(hdr);

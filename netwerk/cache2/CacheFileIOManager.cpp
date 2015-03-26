@@ -666,12 +666,14 @@ protected:
 class WriteEvent : public nsRunnable {
 public:
   WriteEvent(CacheFileHandle *aHandle, int64_t aOffset, const char *aBuf,
-             int32_t aCount, bool aValidate, CacheFileIOListener *aCallback)
+             int32_t aCount, bool aValidate, bool aTruncate,
+             CacheFileIOListener *aCallback)
     : mHandle(aHandle)
     , mOffset(aOffset)
     , mBuf(aBuf)
     , mCount(aCount)
     , mValidate(aValidate)
+    , mTruncate(aTruncate)
     , mCallback(aCallback)
   {
     MOZ_COUNT_CTOR(WriteEvent);
@@ -700,7 +702,7 @@ public:
       rv = NS_ERROR_NOT_INITIALIZED;
     } else {
       rv = CacheFileIOManager::gInstance->WriteInternal(
-          mHandle, mOffset, mBuf, mCount, mValidate);
+          mHandle, mOffset, mBuf, mCount, mValidate, mTruncate);
       if (NS_FAILED(rv) && !mCallback) {
         // No listener is going to handle the error, doom the file
         CacheFileIOManager::gInstance->DoomFileInternal(mHandle);
@@ -725,7 +727,8 @@ protected:
   int64_t                       mOffset;
   const char                   *mBuf;
   int32_t                       mCount;
-  bool                          mValidate;
+  bool                          mValidate : 1;
+  bool                          mTruncate : 1;
   nsCOMPtr<CacheFileIOListener> mCallback;
 };
 
@@ -1856,11 +1859,11 @@ CacheFileIOManager::ReadInternal(CacheFileHandle *aHandle, int64_t aOffset,
 nsresult
 CacheFileIOManager::Write(CacheFileHandle *aHandle, int64_t aOffset,
                           const char *aBuf, int32_t aCount, bool aValidate,
-                          CacheFileIOListener *aCallback)
+                          bool aTruncate, CacheFileIOListener *aCallback)
 {
   LOG(("CacheFileIOManager::Write() [handle=%p, offset=%lld, count=%d, "
-       "validate=%d, listener=%p]", aHandle, aOffset, aCount, aValidate,
-       aCallback));
+       "validate=%d, truncate=%d, listener=%p]", aHandle, aOffset, aCount,
+       aValidate, aTruncate, aCallback));
 
   nsresult rv;
   nsRefPtr<CacheFileIOManager> ioMan = gInstance;
@@ -1875,9 +1878,34 @@ CacheFileIOManager::Write(CacheFileHandle *aHandle, int64_t aOffset,
   }
 
   nsRefPtr<WriteEvent> ev = new WriteEvent(aHandle, aOffset, aBuf, aCount,
-                                           aValidate, aCallback);
+                                           aValidate, aTruncate, aCallback);
   rv = ioMan->mIOThread->Dispatch(ev, CacheIOThread::WRITE);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+static nsresult
+TruncFile(PRFileDesc *aFD, int64_t aEOF)
+{
+#if defined(XP_UNIX)
+  if (ftruncate(PR_FileDesc2NativeHandle(aFD), aEOF) != 0) {
+    NS_ERROR("ftruncate failed");
+    return NS_ERROR_FAILURE;
+  }
+#elif defined(XP_WIN)
+  int64_t cnt = PR_Seek64(aFD, aEOF, PR_SEEK_SET);
+  if (cnt == -1) {
+    return NS_ERROR_FAILURE;
+  }
+  if (!SetEndOfFile((HANDLE) PR_FileDesc2NativeHandle(aFD))) {
+    NS_ERROR("SetEndOfFile failed");
+    return NS_ERROR_FAILURE;
+  }
+#else
+  MOZ_ASSERT(false, "Not implemented!");
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
 
   return NS_OK;
 }
@@ -1885,10 +1913,11 @@ CacheFileIOManager::Write(CacheFileHandle *aHandle, int64_t aOffset,
 nsresult
 CacheFileIOManager::WriteInternal(CacheFileHandle *aHandle, int64_t aOffset,
                                   const char *aBuf, int32_t aCount,
-                                  bool aValidate)
+                                  bool aValidate, bool aTruncate)
 {
   LOG(("CacheFileIOManager::WriteInternal() [handle=%p, offset=%lld, count=%d, "
-       "validate=%d]", aHandle, aOffset, aCount, aValidate));
+       "validate=%d, truncate=%d]", aHandle, aOffset, aCount, aValidate,
+       aTruncate));
 
   nsresult rv;
 
@@ -1936,13 +1965,30 @@ CacheFileIOManager::WriteInternal(CacheFileHandle *aHandle, int64_t aOffset,
 
   int32_t bytesWritten = PR_Write(aHandle->mFD, aBuf, aCount);
 
-  if (bytesWritten != -1 && aHandle->mFileSize < aOffset+bytesWritten) {
-    aHandle->mFileSize = aOffset+bytesWritten;
+  if (bytesWritten != -1) {
+    uint32_t oldSizeInK = aHandle->FileSizeInK();
+    int64_t writeEnd = aOffset + bytesWritten;
 
-    if (!aHandle->IsDoomed() && !aHandle->IsSpecialFile()) {
-      uint32_t size = aHandle->FileSizeInK();
-      CacheIndex::UpdateEntry(aHandle->Hash(), nullptr, nullptr, &size);
-      EvictIfOverLimitInternal();
+    if (aTruncate) {
+      rv = TruncFile(aHandle->mFD, writeEnd);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      aHandle->mFileSize = writeEnd;
+    } else {
+      if (aHandle->mFileSize < writeEnd) {
+        aHandle->mFileSize = writeEnd;
+      }
+    }
+
+    uint32_t newSizeInK = aHandle->FileSizeInK();
+
+    if (oldSizeInK != newSizeInK && !aHandle->IsDoomed() &&
+        !aHandle->IsSpecialFile()) {
+      CacheIndex::UpdateEntry(aHandle->Hash(), nullptr, nullptr, &newSizeInK);
+
+      if (oldSizeInK < newSizeInK) {
+        EvictIfOverLimitInternal();
+      }
     }
   }
 
@@ -2302,30 +2348,6 @@ CacheFileIOManager::GetEntryInfo(const SHA1Sum::Hash *aHash,
   return NS_OK;
 }
 
-static nsresult
-TruncFile(PRFileDesc *aFD, uint32_t aEOF)
-{
-#if defined(XP_UNIX)
-  if (ftruncate(PR_FileDesc2NativeHandle(aFD), aEOF) != 0) {
-    NS_ERROR("ftruncate failed");
-    return NS_ERROR_FAILURE;
-  }
-#elif defined(XP_WIN)
-  int32_t cnt = PR_Seek(aFD, aEOF, PR_SEEK_SET);
-  if (cnt == -1) {
-    return NS_ERROR_FAILURE;
-  }
-  if (!SetEndOfFile((HANDLE) PR_FileDesc2NativeHandle(aFD))) {
-    NS_ERROR("SetEndOfFile failed");
-    return NS_ERROR_FAILURE;
-  }
-#else
-  MOZ_ASSERT(false, "Not implemented!");
-#endif
-
-  return NS_OK;
-}
-
 nsresult
 CacheFileIOManager::TruncateSeekSetEOFInternal(CacheFileHandle *aHandle,
                                                int64_t aTruncatePos,
@@ -2353,14 +2375,47 @@ CacheFileIOManager::TruncateSeekSetEOFInternal(CacheFileHandle *aHandle,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  // Check whether this operation would cause critical low disk space.
+  if (aHandle->mFileSize < aEOFPos) {
+    int64_t freeSpace = -1;
+    rv = mCacheDirectory->GetDiskSpaceAvailable(&freeSpace);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      LOG(("CacheFileIOManager::TruncateSeekSetEOFInternal() - "
+           "GetDiskSpaceAvailable() failed! [rv=0x%08x]", rv));
+    } else {
+      uint32_t limit = CacheObserver::DiskFreeSpaceHardLimit();
+      if (freeSpace - aEOFPos + aHandle->mFileSize < limit) {
+        LOG(("CacheFileIOManager::TruncateSeekSetEOFInternal() - Low free space"
+             ", refusing to write! [freeSpace=%lld, limit=%u]", freeSpace,
+             limit));
+        return NS_ERROR_FILE_DISK_FULL;
+      }
+    }
+  }
+
   // This operation always invalidates the entry
   aHandle->mInvalid = true;
 
-  rv = TruncFile(aHandle->mFD, static_cast<uint32_t>(aTruncatePos));
+  rv = TruncFile(aHandle->mFD, aTruncatePos);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = TruncFile(aHandle->mFD, static_cast<uint32_t>(aEOFPos));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (aTruncatePos != aEOFPos) {
+    rv = TruncFile(aHandle->mFD, aEOFPos);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  uint32_t oldSizeInK = aHandle->FileSizeInK();
+  aHandle->mFileSize = aEOFPos;
+  uint32_t newSizeInK = aHandle->FileSizeInK();
+
+  if (oldSizeInK != newSizeInK && !aHandle->IsDoomed() &&
+      !aHandle->IsSpecialFile()) {
+    CacheIndex::UpdateEntry(aHandle->Hash(), nullptr, nullptr, &newSizeInK);
+
+    if (oldSizeInK < newSizeInK) {
+      EvictIfOverLimitInternal();
+    }
+  }
 
   return NS_OK;
 }
