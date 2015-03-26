@@ -104,6 +104,7 @@ HHOOK gDeferredGetMsgHook = nullptr;
 HHOOK gDeferredCallWndProcHook = nullptr;
 
 DWORD gUIThreadId = 0;
+HWND gCOMWindow = 0;
 
 // WM_GETOBJECT id pulled from uia headers
 #define MOZOBJID_UIAROOT -25
@@ -340,13 +341,15 @@ ProcessOrDeferMessage(HWND hwnd,
    case WM_GETOBJECT: {
       if (!::GetPropW(hwnd, k3rdPartyWindowProp)) {
         DWORD objId = static_cast<DWORD>(lParam);
-        WNDPROC oldWndProc = (WNDPROC)GetProp(hwnd, kOldWndProcProp);
-        if ((objId == OBJID_CLIENT || objId == MOZOBJID_UIAROOT) && oldWndProc) {
-          return CallWindowProcW(oldWndProc, hwnd, uMsg, wParam, lParam);
+        if ((objId == OBJID_CLIENT || objId == MOZOBJID_UIAROOT)) {
+          WNDPROC oldWndProc = (WNDPROC)GetProp(hwnd, kOldWndProcProp);
+          if (oldWndProc) {
+            return CallWindowProcW(oldWndProc, hwnd, uMsg, wParam, lParam);
+          }
         }
       }
-      break;
-    }
+      return DefWindowProc(hwnd, uMsg, wParam, lParam);
+   }
 #endif // ACCESSIBILITY
 
     default: {
@@ -647,7 +650,10 @@ InitUIThread()
   // on startup.
   if (!gUIThreadId) {
     gUIThreadId = GetCurrentThreadId();
+
+    CoInitialize(nullptr);
   }
+
   MOZ_ASSERT(gUIThreadId);
   MOZ_ASSERT(gUIThreadId == GetCurrentThreadId(),
              "Called InitUIThread multiple times on different threads!");
@@ -804,6 +810,21 @@ IsTimeoutExpired(PRIntervalTime aStart, PRIntervalTime aTimeout)
     (aTimeout <= (PR_IntervalNow() - aStart));
 }
 
+HWND
+FindCOMWindow()
+{
+  MOZ_ASSERT(gUIThreadId);
+
+  HWND last = 0;
+  while ((last = FindWindowExW(HWND_MESSAGE, last, L"OleMainThreadWndClass", NULL))) {
+    if (GetWindowThreadProcessId(last, NULL) == gUIThreadId) {
+      return last;
+    }
+  }
+
+  return (HWND)0;
+}
+
 bool
 MessageChannel::WaitForSyncNotify()
 {
@@ -843,6 +864,12 @@ MessageChannel::WaitForSyncNotify()
                "Top frame is not a sync frame!");
 
   MonitorAutoUnlock unlock(*mMonitor);
+
+  MOZ_ASSERT_IF(gCOMWindow, FindCOMWindow() == gCOMWindow);
+
+  if (!gCOMWindow) {
+    gCOMWindow = FindCOMWindow();
+  }
 
   bool timedout = false;
 
@@ -912,11 +939,20 @@ MessageChannel::WaitForSyncNotify()
       bool haveSentMessagesPending =
         (HIWORD(GetQueueStatus(QS_SENDMESSAGE)) & QS_SENDMESSAGE) != 0;
 
-      // This PeekMessage call will actually process all "nonqueued" messages
-      // that are pending before returning. If we have "nonqueued" messages
-      // pending then we should have switched out all the window procedures
-      // above. In that case this PeekMessage call won't actually cause any
-      // mozilla code (or plugin code) to run.
+      // Either of the PeekMessage calls below will actually process all
+      // "nonqueued" messages that are pending before returning. If we have
+      // "nonqueued" messages pending then we should have switched out all the
+      // window procedures above. In that case this PeekMessage call won't
+      // actually cause any mozilla code (or plugin code) to run.
+
+      // We have to manually pump all COM messages *after* looking at the queue
+      // queue status but before yielding our thread below.
+      if (gCOMWindow) {
+        if (PeekMessageW(&msg, gCOMWindow, 0, 0, PM_REMOVE)) {
+          TranslateMessage(&msg);
+          ::DispatchMessageW(&msg);
+        }
+      }
 
       // If the following PeekMessage call fails to return a message for us (and
       // returns false) and we didn't run any "nonqueued" messages then we must
@@ -977,6 +1013,12 @@ MessageChannel::WaitForInterruptNotify()
                "Top frame is not a sync frame!");
 
   MonitorAutoUnlock unlock(*mMonitor);
+
+  MOZ_ASSERT_IF(gCOMWindow, FindCOMWindow() == gCOMWindow);
+
+  if (!gCOMWindow) {
+    gCOMWindow = FindCOMWindow();
+  }
 
   bool timedout = false;
 
@@ -1066,6 +1108,14 @@ MessageChannel::WaitForInterruptNotify()
     // See MessageChannel's WaitFor*Notify for details.
     bool haveSentMessagesPending =
       (HIWORD(GetQueueStatus(QS_SENDMESSAGE)) & QS_SENDMESSAGE) != 0;
+
+    // Run all COM messages *after* looking at the queue status.
+    if (gCOMWindow) {
+        if (PeekMessageW(&msg, gCOMWindow, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&msg);
+            ::DispatchMessageW(&msg);
+        }
+    }
 
     // PeekMessage markes the messages as "old" so that they don't wake up
     // MsgWaitForMultipleObjects every time.
