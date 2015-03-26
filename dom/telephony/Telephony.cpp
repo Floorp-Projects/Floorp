@@ -685,7 +685,9 @@ Telephony::NotifyError(uint32_t aServiceId,
   }
 
   // Set the call state to 'disconnected' and remove it from the calls list.
+  callToNotify->UpdateDisconnectedReason(aError);
   callToNotify->NotifyError(aError);
+  callToNotify->ChangeState(nsITelephonyService::CALL_STATE_DISCONNECTED);
 
   return NS_OK;
 }
