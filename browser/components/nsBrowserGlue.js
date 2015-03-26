@@ -1661,7 +1661,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 28;
+    const UI_VERSION = 29;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
     let currentUIVersion = 0;
     try {
@@ -2014,6 +2014,21 @@ BrowserGlue.prototype = {
       // Not clearing browser.devedition.theme.enabled, to preserve user's pref
       // if for some reason this function runs again (even though it shouldn't)
       Services.prefs.clearUserPref("browser.devedition.showCustomizeButton");
+    }
+
+    if (currentUIVersion < 29) {
+      let group = null;
+      try {
+        group = Services.prefs.getComplexValue("font.language.group",
+                                               Ci.nsIPrefLocalizedString);
+      } catch (ex) {}
+      if (group &&
+          ["tr", "x-baltic", "x-central-euro"].some(g => g == group.data)) {
+        // Latin groups were consolidated.
+        group.data = "x-western";
+        Services.prefs.setComplexValue("font.language.group",
+                                       Ci.nsIPrefLocalizedString, group);
+      }
     }
 
     // Update the migration version.
