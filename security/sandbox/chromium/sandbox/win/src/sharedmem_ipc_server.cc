@@ -59,6 +59,9 @@ SharedMemIPCServer::~SharedMemIPCServer() {
     ::CloseHandle(context->pong_event);
     delete context;
   }
+
+  if (client_control_)
+    ::UnmapViewOfFile(client_control_);
 }
 
 bool SharedMemIPCServer::Init(void* shared_mem, uint32 shared_size,
@@ -230,7 +233,7 @@ bool SharedMemIPCServer::InvokeCallback(const ServerControl* service_context,
     return false;
 
   uint32 tag = params->GetTag();
-  COMPILE_ASSERT(0 == INVALID_TYPE, Incorrect_type_enum);
+  static_assert(0 == INVALID_TYPE, "incorrect type enum");
   IPCParams ipc_params = {0};
   ipc_params.ipc_tag = tag;
 
