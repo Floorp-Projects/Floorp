@@ -396,6 +396,8 @@ template <typename T> struct PtrBaseGCType<T *> { typedef typename BaseGCType<T>
 template <typename T> void DispatchToTracer(JSTracer *trc, T *thingp, const char *name, size_t i);
 template <typename T> void DoTracing(JS::CallbackTracer *trc, T *thingp, const char *name, size_t i);
 template <typename T> void DoMarking(GCMarker *gcmarker, T thing);
+static bool ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Cell *cell);
+static bool ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Value val);
 
 template <typename T>
 void
@@ -452,6 +454,29 @@ js::TraceRootRange(JSTracer *trc, size_t len, T *thingp, const char *name)
     template void js::TraceRootRange<type>(JSTracer *, size_t, type *, const char *);
 FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS)
 #undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
+
+template <typename T>
+void
+js::TraceManuallyBarrieredCrossCompartmentEdge(JSTracer *trc, JSObject *src, T *dst,
+                                               const char *name)
+{
+    if (ShouldMarkCrossCompartment(trc, src, *dst))
+        DispatchToTracer(trc, dst, name, -1);
+}
+template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSObject*>(JSTracer *, JSObject *,
+                                                                        JSObject **, const char *);
+template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSScript*>(JSTracer *, JSObject *,
+                                                                        JSScript **, const char *);
+
+template <typename T>
+void
+js::TraceCrossCompartmentEdge(JSTracer *trc, JSObject *src, BarrieredBase<T> *dst, const char *name)
+{
+    if (ShouldMarkCrossCompartment(trc, src, dst->get()))
+        DispatchToTracer(trc, dst->unsafeGet(), name, -1);
+}
+template void js::TraceCrossCompartmentEdge<Value>(JSTracer *, JSObject *, BarrieredBase<Value> *,
+                                                   const char *);
 
 // This method is responsible for dynamic dispatch to the real tracer
 // implementation. Consider replacing this choke point with virtual dispatch:
@@ -1354,26 +1379,10 @@ ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Cell *cell)
     }
 }
 
-void
-gc::MarkCrossCompartmentObjectUnbarriered(JSTracer *trc, JSObject *src, JSObject **dst, const char *name)
+static bool
+ShouldMarkCrossCompartment(JSTracer *trc, JSObject *src, Value val)
 {
-    if (ShouldMarkCrossCompartment(trc, src, *dst))
-        MarkObjectUnbarriered(trc, dst, name);
-}
-
-void
-gc::MarkCrossCompartmentScriptUnbarriered(JSTracer *trc, JSObject *src, JSScript **dst,
-                                          const char *name)
-{
-    if (ShouldMarkCrossCompartment(trc, src, *dst))
-        MarkScriptUnbarriered(trc, dst, name);
-}
-
-void
-gc::MarkCrossCompartmentSlot(JSTracer *trc, JSObject *src, HeapValue *dst, const char *name)
-{
-    if (dst->isMarkable() && ShouldMarkCrossCompartment(trc, src, (Cell *)dst->toGCThing()))
-        MarkValue(trc, dst, name);
+    return val.isMarkable() && ShouldMarkCrossCompartment(trc, src, (Cell *)val.toGCThing());
 }
 
 /*** Special Marking ***/

@@ -633,7 +633,7 @@ ProxyObject::trace(JSTracer *trc, JSObject *obj)
 
     // Note: If you add new slots here, make sure to change
     // nuke() to cope.
-    MarkCrossCompartmentSlot(trc, obj, proxy->slotOfPrivate(), "private");
+    TraceCrossCompartmentEdge(trc, obj, proxy->slotOfPrivate(), "private");
     MarkValue(trc, proxy->slotOfExtra(0), "extra0");
 
     /*

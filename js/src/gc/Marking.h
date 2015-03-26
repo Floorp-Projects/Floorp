@@ -39,25 +39,48 @@ struct VMFunction;
 
 /*** Tracing ***/
 
+// Trace through an edge in the live object graph on behalf of tracing. The
+// effect of tracing the edge depends on the JSTracer being used.
 template <typename T>
 void
 TraceEdge(JSTracer *trc, BarrieredBase<T> *thingp, const char *name);
 
+// Trace through a "root" edge. These edges are the initial edges in the object
+// graph traversal. Root edges are asserted to only be traversed in the initial
+// phase of a GC.
 template <typename T>
 void
 TraceRoot(JSTracer *trc, T *thingp, const char *name);
 
+// Like TraceEdge, but for edges that do not use one of the automatic barrier
+// classes and, thus, must be treated specially for moving GC. This method is
+// separate from TraceEdge to make accidental use of such edges more obvious.
 template <typename T>
 void
 TraceManuallyBarrieredEdge(JSTracer *trc, T *thingp, const char *name);
 
+// Trace all edges contained in the given array.
 template <typename T>
 void
 TraceRange(JSTracer *trc, size_t len, BarrieredBase<T> *thingp, const char *name);
 
+// Trace all root edges in the given array.
 template <typename T>
 void
 TraceRootRange(JSTracer *trc, size_t len, T *thingp, const char *name);
+
+// Trace an edge that crosses compartment boundaries. If the compartment of the
+// destination thing is not being GC'd, then the edge will not be traced.
+template <typename T>
+void
+TraceCrossCompartmentEdge(JSTracer *trc, JSObject *src, BarrieredBase<T> *dst,
+                          const char *name);
+
+// As above but with manual barriers.
+template <typename T>
+void
+TraceManuallyBarrieredCrossCompartmentEdge(JSTracer *trc, JSObject *src, T *dst,
+                                           const char *name);
 
 namespace gc {
 
@@ -254,22 +277,6 @@ MarkArraySlots(JSTracer *trc, size_t len, HeapSlot *vec, const char *name);
 
 void
 MarkObjectSlots(JSTracer *trc, NativeObject *obj, uint32_t start, uint32_t nslots);
-
-void
-MarkCrossCompartmentObjectUnbarriered(JSTracer *trc, JSObject *src, JSObject **dst_obj,
-                                      const char *name);
-
-void
-MarkCrossCompartmentScriptUnbarriered(JSTracer *trc, JSObject *src, JSScript **dst_script,
-                                      const char *name);
-
-/*
- * Mark a value that may be in a different compartment from the compartment
- * being GC'd. (Although it won't be marked if it's in the wrong compartment.)
- */
-void
-MarkCrossCompartmentSlot(JSTracer *trc, JSObject *src, HeapValue *dst_slot, const char *name);
-
 
 /*** Special Cases ***/
 
