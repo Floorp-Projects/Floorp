@@ -401,7 +401,9 @@ CDMProxy::OnSetSessionId(uint32_t aCreateSessionToken,
   }
 
   nsRefPtr<dom::MediaKeySession> session(mKeys->GetPendingSession(aCreateSessionToken));
-  session->SetSessionId(aSessionId);
+  if (session) {
+    session->SetSessionId(aSessionId);
+  }
 }
 
 void
