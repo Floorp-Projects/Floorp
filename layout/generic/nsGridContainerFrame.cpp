@@ -8,9 +8,12 @@
 
 #include "nsGridContainerFrame.h"
 
+#include <algorithm> // for std::stable_sort
+#include <limits>
 #include "mozilla/Maybe.h"
 #include "nsAbsoluteContainingBlock.h"
 #include "nsAlgorithm.h" // for clamped()
+#include "nsAutoPtr.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsDataHashtable.h"
 #include "nsDisplayList.h"
@@ -23,6 +26,106 @@
 
 using namespace mozilla;
 typedef nsGridContainerFrame::TrackSize TrackSize;
+
+class nsGridContainerFrame::GridItemCSSOrderIterator
+{
+public:
+  enum OrderState { eUnknownOrder, eKnownOrdered, eKnownUnordered };
+  GridItemCSSOrderIterator(nsIFrame* aGridContainer,
+                           nsIFrame::ChildListID aListID,
+                           OrderState aState = eUnknownOrder)
+    : mChildren(aGridContainer->GetChildList(aListID))
+    , mArrayIndex(0)
+#ifdef DEBUG
+    , mGridContainer(aGridContainer)
+    , mListID(aListID)
+#endif
+  {
+    size_t count = 0;
+    bool isOrdered = aState != eKnownUnordered;
+    if (aState == eUnknownOrder) {
+      auto maxOrder = std::numeric_limits<int32_t>::min();
+      for (nsFrameList::Enumerator e(mChildren); !e.AtEnd(); e.Next()) {
+        ++count;
+        int32_t order = e.get()->StylePosition()->mOrder;
+        if (order < maxOrder) {
+          isOrdered = false;
+          break;
+        }
+        maxOrder = order;
+      }
+    }
+    if (isOrdered) {
+      mEnumerator.emplace(mChildren);
+    } else {
+      count *= 2; // XXX somewhat arbitrary estimate for now...
+      mArray.emplace(count);
+      for (nsFrameList::Enumerator e(mChildren); !e.AtEnd(); e.Next()) {
+        mArray->AppendElement(e.get());
+      }
+      // XXX replace this with nsTArray::StableSort when bug 1147091 is fixed.
+      std::stable_sort(mArray->begin(), mArray->end(), IsCSSOrderLessThan);
+    }
+  }
+
+  nsIFrame* operator*() const
+  {
+    MOZ_ASSERT(!AtEnd());
+    if (mEnumerator) {
+      return mEnumerator->get();
+    }
+    return (*mArray)[mArrayIndex];
+  }
+
+  bool AtEnd() const
+  {
+    MOZ_ASSERT(mEnumerator || mArrayIndex <= mArray->Length());
+    return mEnumerator ? mEnumerator->AtEnd() : mArrayIndex >= mArray->Length();
+  }
+
+  void Next()
+  {
+#ifdef DEBUG
+    nsFrameList list = mGridContainer->GetChildList(mListID);
+    MOZ_ASSERT(list.FirstChild() == mChildren.FirstChild() &&
+               list.LastChild() == mChildren.LastChild(),
+               "the list of child frames must not change while iterating!");
+#endif
+    if (mEnumerator) {
+      mEnumerator->Next();
+    } else {
+      MOZ_ASSERT(mArrayIndex < mArray->Length(), "iterating past end");
+      ++mArrayIndex;
+    }
+  }
+
+  void Reset()
+  {
+    if (mEnumerator) {
+      mEnumerator.reset();
+      mEnumerator.emplace(mChildren);
+    } else {
+      mArrayIndex = 0;
+    }
+  }
+
+  bool ItemsAreAlreadyInOrder() const { return mEnumerator.isSome(); }
+
+private:
+  static bool IsCSSOrderLessThan(nsIFrame* const& a, nsIFrame* const& b)
+    { return a->StylePosition()->mOrder < b->StylePosition()->mOrder; }
+
+  nsFrameList mChildren;
+  // Used if child list is already in ascending 'order'.
+  Maybe<nsFrameList::Enumerator> mEnumerator;
+  // Used if child list is *not* in ascending 'order'.
+  Maybe<nsTArray<nsIFrame*>> mArray;
+  size_t mArrayIndex;
+#ifdef DEBUG
+  nsIFrame* mGridContainer;
+  nsIFrame::ChildListID mListID;
+#endif
+};
 
 /**
  * Search for the aNth occurrence of aName in aNameList (forward), starting at
@@ -690,15 +793,16 @@ nsGridContainerFrame::InitializeGridBounds(const nsStylePosition* aStyle)
 }
 
 void
-nsGridContainerFrame::PlaceGridItems(const nsStylePosition* aStyle)
+nsGridContainerFrame::PlaceGridItems(GridItemCSSOrderIterator& aIter,
+                                     const nsStylePosition*    aStyle)
 {
   mCellMap.ClearOccupied();
   InitializeGridBounds(aStyle);
 
   // http://dev.w3.org/csswg/css-grid/#line-placement
   // Resolve definite positions per spec chap 9.2.
-  for (nsFrameList::Enumerator e(PrincipalChildList()); !e.AtEnd(); e.Next()) {
-    nsIFrame* child = e.get();
+  for (; !aIter.AtEnd(); aIter.Next()) {
+    nsIFrame* child = *aIter;
     const GridArea& area = PlaceDefinite(child, aStyle);
     GridArea* prop = GetGridAreaForChild(child);
     if (prop) {
@@ -726,8 +830,9 @@ nsGridContainerFrame::PlaceGridItems(const nsStylePosition* aStyle)
     }
     auto placeAutoMinorFunc = isRowOrder ? &nsGridContainerFrame::PlaceAutoCol
                                          : &nsGridContainerFrame::PlaceAutoRow;
-    for (nsFrameList::Enumerator e(PrincipalChildList()); !e.AtEnd(); e.Next()) {
-      nsIFrame* child = e.get();
+    aIter.Reset();
+    for (; !aIter.AtEnd(); aIter.Next()) {
+      nsIFrame* child = *aIter;
       GridArea* area = GetGridAreaForChild(child);
       LineRange& major = isRowOrder ? area->mRows : area->mCols;
       LineRange& minor = isRowOrder ? area->mCols : area->mRows;
@@ -760,8 +865,9 @@ nsGridContainerFrame::PlaceGridItems(const nsStylePosition* aStyle)
   uint32_t cursorMinor = 1;
   auto placeAutoMajorFunc = isRowOrder ? &nsGridContainerFrame::PlaceAutoRow
                                        : &nsGridContainerFrame::PlaceAutoCol;
-  for (nsFrameList::Enumerator e(PrincipalChildList()); !e.AtEnd(); e.Next()) {
-    nsIFrame* child = e.get();
+  aIter.Reset();
+  for (; !aIter.AtEnd(); aIter.Next()) {
+    nsIFrame* child = *aIter;
     GridArea* area = GetGridAreaForChild(child);
     LineRange& major = isRowOrder ? area->mRows : area->mCols;
     LineRange& minor = isRowOrder ? area->mCols : area->mRows;
@@ -988,7 +1094,8 @@ nsGridContainerFrame::ContainingBlockForAbsPos(
 }
 
 void
-nsGridContainerFrame::ReflowChildren(const LogicalRect&         aContentArea,
+nsGridContainerFrame::ReflowChildren(GridItemCSSOrderIterator&  aIter,
+                                     const LogicalRect&         aContentArea,
                                      const nsTArray<TrackSize>& aColSizes,
                                      const nsTArray<TrackSize>& aRowSizes,
                                      nsHTMLReflowMetrics&       aDesiredSize,
@@ -999,8 +1106,8 @@ nsGridContainerFrame::ReflowChildren(const LogicalRect&         aContentArea,
   const LogicalPoint gridOrigin(aContentArea.Origin(wm));
   const nscoord gridWidth = aContentArea.Width(wm);
   nsPresContext* pc = PresContext();
-  for (nsFrameList::Enumerator e(PrincipalChildList()); !e.AtEnd(); e.Next()) {
-    nsIFrame* child = e.get();
+  for (; !aIter.AtEnd(); aIter.Next()) {
+    nsIFrame* child = *aIter;
     GridArea* area = GetGridAreaForChild(child);
     MOZ_ASSERT(area && area->IsDefinite());
     LogicalRect cb = ContainingBlockFor(wm, *area, aColSizes, aRowSizes);
@@ -1088,7 +1195,9 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   bp.ApplySkipSides(GetLogicalSkipSides());
   const nsStylePosition* stylePos = aReflowState.mStylePosition;
   InitImplicitNamedAreas(stylePos);
-  PlaceGridItems(stylePos);
+  GridItemCSSOrderIterator normalFlowIter(this, kPrincipalList);
+  mIsNormalFlowInCSSOrder = normalFlowIter.ItemsAreAlreadyInOrder();
+  PlaceGridItems(normalFlowIter, stylePos);
 
   nsAutoTArray<TrackSize, 32> colSizes;
   nsAutoTArray<TrackSize, 32> rowSizes;
@@ -1115,7 +1224,8 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   LogicalRect contentArea(wm, bp.IStart(wm), bp.BStart(wm),
                           computedISize, bSize);
-  ReflowChildren(contentArea, colSizes, rowSizes, aDesiredSize,
+  normalFlowIter.Reset();
+  ReflowChildren(normalFlowIter, contentArea, colSizes, rowSizes, aDesiredSize,
                  aReflowState, aStatus);
 
   FinishAndStoreOverflow(&aDesiredSize);
@@ -1140,8 +1250,12 @@ nsGridContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // inline-blocks in painting, so their borders/backgrounds all go on
   // the BlockBorderBackgrounds list.
   nsDisplayListSet childLists(aLists, aLists.BlockBorderBackgrounds());
-  for (nsFrameList::Enumerator e(PrincipalChildList()); !e.AtEnd(); e.Next()) {
-    nsIFrame* child = e.get();
+  typedef GridItemCSSOrderIterator::OrderState OrderState;
+  OrderState order = mIsNormalFlowInCSSOrder ? OrderState::eKnownOrdered
+                                             : OrderState::eKnownUnordered;
+  GridItemCSSOrderIterator iter(this, kPrincipalList, order);
+  for (; !iter.AtEnd(); iter.Next()) {
+    nsIFrame* child = *iter;
     BuildDisplayListForChild(aBuilder, child, aDirtyRect, childLists,
                              ::GetDisplayFlagsForGridItem(child));
   }

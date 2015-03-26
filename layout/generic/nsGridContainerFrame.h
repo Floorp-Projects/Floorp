@@ -64,6 +64,7 @@ protected:
   typedef mozilla::LogicalRect LogicalRect;
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::css::GridNamedArea GridNamedArea;
+  class GridItemCSSOrderIterator;
   friend nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                                     nsStyleContext* aContext);
   explicit nsGridContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
@@ -303,9 +304,11 @@ protected:
    * Place all child frames into the grid and expand the (implicit) grid as
    * needed.  The allocated GridAreas are stored in the GridAreaProperty
    * frame property on the child frame.
+   * @param aIter a grid item iterator
    * @param aStyle the StylePosition() for the grid container
    */
-  void PlaceGridItems(const nsStylePosition* aStyle);
+  void PlaceGridItems(GridItemCSSOrderIterator& aIter,
+                      const nsStylePosition* aStyle);
 
   /**
    * Initialize the end lines of the Explicit Grid (mExplicitGridCol[Row]End).
@@ -405,7 +408,8 @@ protected:
   /**
    * Reflow and place our children.
    */
-  void ReflowChildren(const LogicalRect&          aContentArea,
+  void ReflowChildren(GridItemCSSOrderIterator&   aIter,
+                      const LogicalRect&          aContentArea,
                       const nsTArray<TrackSize>&  aColSizes,
                       const nsTArray<TrackSize>&  aRowSizes,
                       nsHTMLReflowMetrics&        aDesiredSize,
@@ -435,6 +439,11 @@ private:
   // Same for the implicit grid
   uint32_t mGridColEnd; // always >= mExplicitGridColEnd
   uint32_t mGridRowEnd; // always >= mExplicitGridRowEnd
+  /**
+   * True iff the normal flow children are already in CSS 'order' in the
+   * order they occur in the child frame list.
+   */
+  bool mIsNormalFlowInCSSOrder : 1;
 };
 
 #endif /* nsGridContainerFrame_h___ */
