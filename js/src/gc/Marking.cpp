@@ -1310,22 +1310,6 @@ gc::IsSlotMarked(HeapSlot *s)
 }
 
 void
-gc::MarkSlot(JSTracer *trc, HeapSlot *s, const char *name)
-{
-    trc->setTracingName(name);
-    MarkValueInternal(trc, s->unsafeGet());
-}
-
-void
-gc::MarkArraySlots(JSTracer *trc, size_t len, HeapSlot *vec, const char *name)
-{
-    for (size_t i = 0; i < len; ++i) {
-        trc->setTracingIndex(name, i);
-        MarkValueInternal(trc, vec[i].unsafeGet());
-    }
-}
-
-void
 gc::MarkObjectSlots(JSTracer *trc, NativeObject *obj, uint32_t start, uint32_t nslots)
 {
     MOZ_ASSERT(obj->isNative());
