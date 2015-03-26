@@ -3385,6 +3385,9 @@ public class BrowserApp extends GeckoApp
             // Dismiss editing mode if the user is loading a URL from an external app.
             mBrowserToolbar.cancelEdit();
 
+            // Hide firstrun-pane if the user is loading a URL from an external app.
+            hideFirstrunPager();
+
             // GeckoApp.ACTION_HOMESCREEN_SHORTCUT means we're opening a bookmark that
             // was added to Android's homescreen.
             final TelemetryContract.Method method =

@@ -98,6 +98,8 @@ browser.jar:
         content/browser/defaultthemes/5.header.png    (content/defaultthemes/5.header.png)
         content/browser/defaultthemes/5.icon.jpg      (content/defaultthemes/5.icon.jpg)
         content/browser/defaultthemes/5.preview.jpg   (content/defaultthemes/5.preview.jpg)
+        content/browser/defaultthemes/devedition.header.png   (content/defaultthemes/devedition.header.png)
+        content/browser/defaultthemes/devedition.icon.png     (content/defaultthemes/devedition.icon.png)
         content/browser/newtab/newTab.xul             (content/newtab/newTab.xul)
 *       content/browser/newtab/newTab.js              (content/newtab/newTab.js)
         content/browser/newtab/newTab.css             (content/newtab/newTab.css)

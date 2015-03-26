@@ -151,9 +151,9 @@ public class GeckoActionProvider {
             final int order;
             if (shareDialogClassName.equals(activity.activityInfo.name) &&
                     sendTabLabel.equals(activityLabel)) {
-                order = i;
+                order = Menu.FIRST + i;
             } else {
-                order = i | Menu.CATEGORY_SECONDARY;
+                order = Menu.FIRST + (i | Menu.CATEGORY_SECONDARY);
             }
 
             subMenu.add(0, i, order, activityLabel)

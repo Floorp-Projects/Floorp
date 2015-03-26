@@ -37,7 +37,7 @@ function* testWellformedMixedCase(inspector) {
   EventUtils.sendKey("return", inspector.panelWin);
   yield onMutated;
 
-  assertAttributes("svg", {
+  yield assertAttributes("svg", {
     "viewBox": "0 0 1 1",
     "width": "200",
     "height": "200"
@@ -63,7 +63,7 @@ function* testMalformedMixedCase(inspector) {
   EventUtils.sendKey("return", inspector.panelWin);
   yield onMutated;
 
-  assertAttributes("svg", {
+  yield assertAttributes("svg", {
     "viewBox": "<>",
     "width": "200",
     "height": "200"

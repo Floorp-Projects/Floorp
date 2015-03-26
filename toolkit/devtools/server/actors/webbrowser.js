@@ -9,19 +9,19 @@
 let { Ci, Cu } = require("chrome");
 let Services = require("Services");
 let { ActorPool, createExtraActors, appendExtraActors } = require("devtools/server/actors/common");
-let { RootActor } = require("devtools/server/actors/root");
 let { DebuggerServer } = require("devtools/server/main");
 let DevToolsUtils = require("devtools/toolkit/DevToolsUtils");
 let { dbg_assert } = DevToolsUtils;
 let { TabSources, isHiddenSource } = require("./utils/TabSources");
 let makeDebugger = require("./utils/make-debugger");
-let mapURIToAddonID = require("./utils/map-uri-to-addon-id");
 
 let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true);
 loader.lazyRequireGetter(this, "AddonThreadActor", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/script", true);
+loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 // Assumptions on events module:
@@ -1168,6 +1168,11 @@ TabActor.prototype = {
       this._tabActorPool = null;
     }
 
+    Object.defineProperty(this, "docShell", {
+      value: null,
+      configurable: true
+    });
+
     this._attached = false;
     return true;
   },
@@ -1636,23 +1641,16 @@ function BrowserTabActor(aConnection, aBrowser, aTabBrowser)
   TabActor.call(this, aConnection, aBrowser);
   this._browser = aBrowser;
   this._tabbrowser = aTabBrowser;
+
+  Object.defineProperty(this, "docShell", {
+    value: this._browser.docShell,
+    configurable: true
+  });
 }
 
 BrowserTabActor.prototype = Object.create(TabActor.prototype);
 
 BrowserTabActor.prototype.constructor = BrowserTabActor;
-
-Object.defineProperty(BrowserTabActor.prototype, "docShell", {
-  get: function() {
-    if (this._browser) {
-      return this._browser.docShell;
-    }
-    // The tab is closed.
-    return null;
-  },
-  enumerable: true,
-  configurable: true
-});
 
 Object.defineProperty(BrowserTabActor.prototype, "title", {
   get: function() {
