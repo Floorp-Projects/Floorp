@@ -239,7 +239,7 @@ class SimplePackager(object):
         # All manifest paths imported.
         self._manifests = set()
         # All manifest paths included from some other manifest.
-        self._included_manifests = set()
+        self._included_manifests = {}
         self._closed = False
 
     def add(self, path, file):
@@ -280,7 +280,7 @@ class SimplePackager(object):
                 if e.flags:
                     errors.fatal('Flags are not supported on ' +
                                  '"manifest" entries')
-                self._included_manifests.add(e.path)
+                self._included_manifests[e.path] = path
 
     def get_bases(self, addons=True):
         '''
@@ -289,9 +289,14 @@ class SimplePackager(object):
         `addons` indicates whether to include addon bases as well.
         '''
         all_bases = set(mozpath.dirname(m)
-                        for m in self._manifests - self._included_manifests)
+                        for m in self._manifests
+                                 - set(self._included_manifests))
         if not addons:
             all_bases -= self._addons
+        else:
+            # If for some reason some detected addon doesn't have a
+            # non-included manifest.
+            all_bases |= self._addons
         return all_bases
 
     def close(self):
@@ -299,14 +304,16 @@ class SimplePackager(object):
         Push all instructions to the formatter.
         '''
         self._closed = True
-        broken_addons = sorted(m for m in self._included_manifests
-                               if mozpath.dirname(m) in self._addons)
-        if broken_addons:
-            errors.fatal(
-                'Addon base manifest (%s) is included in some other manifest' %
-                ', '.join(broken_addons)
-            )
-        for base in self.get_bases():
+
+        bases = self.get_bases()
+        broken_bases = sorted(
+            m for m, includer in self._included_manifests.iteritems()
+            if mozpath.basedir(m, bases) != mozpath.basedir(includer, bases))
+        for m in broken_bases:
+            errors.fatal('"%s" is included from "%s", which is outside "%s"' %
+                         (m, self._included_manifests[m],
+                          mozpath.basedir(m, bases)))
+        for base in bases:
             if base:
                 self.formatter.add_base(base, base in self._addons)
         self._chrome_queue.execute()
