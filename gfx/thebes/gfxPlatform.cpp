@@ -2330,33 +2330,43 @@ gfxPlatform::IsInLayoutAsapMode()
   return Preferences::GetInt("layout.frame_rate", -1) == 0;
 }
 
+static nsString
+DetectBadApzWheelInputPrefs()
+{
+  static const char *sBadMultiplierPrefs[] = {
+    "mousewheel.default.delta_multiplier_x",
+    "mousewheel.with_alt.delta_multiplier_x",
+    "mousewheel.with_control.delta_multiplier_x",
+    "mousewheel.with_meta.delta_multiplier_x",
+    "mousewheel.with_shift.delta_multiplier_x",
+    "mousewheel.with_win.delta_multiplier_x",
+    "mousewheel.with_alt.delta_multiplier_y",
+    "mousewheel.with_control.delta_multiplier_y",
+    "mousewheel.with_meta.delta_multiplier_y",
+    "mousewheel.with_shift.delta_multiplier_y",
+    "mousewheel.with_win.delta_multiplier_y",
+  };
+
+  nsString badPref;
+  for (size_t i = 0; i < MOZ_ARRAY_LENGTH(sBadMultiplierPrefs); i++) {
+    if (Preferences::GetInt(sBadMultiplierPrefs[i], 100) != 100) {
+      badPref.AssignASCII(sBadMultiplierPrefs[i]);
+      break;
+    }
+  }
+
+  return badPref;
+}
+
 void
 gfxPlatform::GetApzSupportInfo(mozilla::widget::InfoObject& aObj)
 {
-  if (SupportsApzWheelInput()) {
-    static const char *sBadPrefs[] = {
-      "mousewheel.system_scroll_override_on_root_content.enabled",
-      "mousewheel.default.delta_multiplier_x",
-      "mousewheel.with_alt.delta_multiplier_x",
-      "mousewheel.with_alt.delta_multiplier_x",
-      "mousewheel.with_control.delta_multiplier_x",
-      "mousewheel.with_meta.delta_multiplier_x",
-      "mousewheel.with_shift.delta_multiplier_x",
-      "mousewheel.with_win.delta_multiplier_x",
-      "mousewheel.with_alt.delta_multiplier_y",
-      "mousewheel.with_control.delta_multiplier_y",
-      "mousewheel.with_meta.delta_multiplier_y",
-      "mousewheel.with_shift.delta_multiplier_y",
-      "mousewheel.with_win.delta_multiplier_y",
-    };
+  if (!gfxPrefs::AsyncPanZoomEnabled()) {
+    return;
+  }
 
-    nsString badPref;
-    for (size_t i = 0; i < MOZ_ARRAY_LENGTH(sBadPrefs); i++) {
-      if (Preferences::HasUserValue(sBadPrefs[i])) {
-        badPref.AssignASCII(sBadPrefs[i]);
-        break;
-      }
-    }
+  if (SupportsApzWheelInput()) {
+    nsString badPref = DetectBadApzWheelInputPrefs();
 
     aObj.DefineProperty("ApzWheelInput", 1);
     if (badPref.Length()) {

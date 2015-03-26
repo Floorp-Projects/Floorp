@@ -3140,11 +3140,10 @@ CodeGenerator::emitPushArguments(LApplyArgsGeneric *apply, Register extraStackSp
     masm.movePtr(argcreg, extraStackSpace);
 
     // Align the JitFrameLayout on the JitStackAlignment.
-    const uint32_t alignment = JitStackAlignment / sizeof(Value);
-    if (alignment > 1) {
+    if (JitStackValueAlignment > 1) {
         MOZ_ASSERT(frameSize() % JitStackAlignment == 0,
             "Stack padding assumes that the frameSize is correct");
-        MOZ_ASSERT(alignment == 2);
+        MOZ_ASSERT(JitStackValueAlignment == 2);
         Label noPaddingNeeded;
         // if the number of arguments is odd, then we do not need any padding.
         masm.branchTestPtr(Assembler::NonZero, argcreg, Imm32(1), &noPaddingNeeded);
@@ -3161,8 +3160,8 @@ CodeGenerator::emitPushArguments(LApplyArgsGeneric *apply, Register extraStackSp
     // Put a magic value in the space reserved for padding. Note, this code
     // cannot be merged with the previous test, as not all architectures can
     // write below their stack pointers.
-    if (alignment > 1) {
-        MOZ_ASSERT(alignment == 2);
+    if (JitStackValueAlignment > 1) {
+        MOZ_ASSERT(JitStackValueAlignment == 2);
         Label noPaddingNeeded;
         // if the number of arguments is odd, then we do not need any padding.
         masm.branchTestPtr(Assembler::NonZero, argcreg, Imm32(1), &noPaddingNeeded);
@@ -3380,6 +3379,12 @@ void
 CodeGenerator::visitUnreachable(LUnreachable *lir)
 {
     masm.assumeUnreachable("end-of-block assumed unreachable");
+}
+
+void
+CodeGenerator::visitEncodeSnapshot(LEncodeSnapshot *lir)
+{
+    encode(lir->snapshot());
 }
 
 void

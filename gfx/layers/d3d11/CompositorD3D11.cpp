@@ -1345,16 +1345,20 @@ CompositorD3D11::UpdateConstantBuffers()
 {
   HRESULT hr;
   D3D11_MAPPED_SUBRESOURCE resource;
+  resource.pData = nullptr;
 
   hr = mContext->Map(mAttachments->mVSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
-  if (Failed(hr)) {
+  if (Failed(hr) || !resource.pData) {
+    gfxCriticalError() << "Failed to map VSConstantBuffer. Result: " << hr;
     return false;
   }
   *(VertexShaderConstants*)resource.pData = mVSConstants;
   mContext->Unmap(mAttachments->mVSConstantBuffer, 0);
+  resource.pData = nullptr;
 
   hr = mContext->Map(mAttachments->mPSConstantBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &resource);
-  if (Failed(hr)) {
+  if (Failed(hr) || !resource.pData) {
+    gfxCriticalError() << "Failed to map PSConstantBuffer. Result: " << hr;
     return false;
   }
   *(PixelShaderConstants*)resource.pData = mPSConstants;

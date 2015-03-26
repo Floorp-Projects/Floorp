@@ -462,6 +462,63 @@ bool PACMyIpAddress(JSContext *cx, unsigned int argc, JS::Value *vp)
   return GetRunning()->MyIPAddress(args);
 }
 
+// myAppId() javascript implementation
+static
+bool PACMyAppId(JSContext *cx, unsigned int argc, JS::Value *vp)
+{
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (NS_IsMainThread()) {
+    NS_WARNING("PACMyAppId on Main Thread. How did that happen?");
+    return false;
+  }
+
+  if (!GetRunning()) {
+    NS_WARNING("PACMyAppId without a running ProxyAutoConfig object");
+    return false;
+  }
+
+  return GetRunning()->MyAppId(args);
+}
+
+// myAppOrigin() javascript implementation
+static
+bool PACMyAppOrigin(JSContext *cx, unsigned int argc, JS::Value *vp)
+{
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (NS_IsMainThread()) {
+    NS_WARNING("PACMyAppOrigin on Main Thread. How did that happen?");
+    return false;
+  }
+
+  if (!GetRunning()) {
+    NS_WARNING("PACMyAppOrigin without a running ProxyAutoConfig object");
+    return false;
+  }
+
+  return GetRunning()->MyAppOrigin(args);
+}
+
+// IsInBrowser() javascript implementation
+static
+bool PACIsInBrowser(JSContext *cx, unsigned int argc, JS::Value *vp)
+{
+  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
+
+  if (NS_IsMainThread()) {
+    NS_WARNING("PACIsInBrowser on Main Thread. How did that happen?");
+    return false;
+  }
+
+  if (!GetRunning()) {
+    NS_WARNING("PACIsInBrowser without a running ProxyAutoConfig object");
+    return false;
+  }
+
+  return GetRunning()->IsInBrowser(args);
+}
+
 // proxyAlert(msg) javascript implementation
 static
 bool PACProxyAlert(JSContext *cx, unsigned int argc, JS::Value *vp)
@@ -495,7 +552,9 @@ static const JSFunctionSpec PACGlobalFunctions[] = {
   // a global "var pacUseMultihomedDNS = true;" will change behavior
   // of myIpAddress to actively use DNS
   JS_FS("myIpAddress", PACMyIpAddress, 0, 0),
-
+  JS_FS("myAppId", PACMyAppId, 0, 0),
+  JS_FS("myAppOrigin", PACMyAppOrigin, 0, 0),
+  JS_FS("isInBrowser", PACIsInBrowser, 0, 0),
   JS_FS("alert", PACProxyAlert, 1, 0),
   JS_FS_END
 };
@@ -703,6 +762,9 @@ ProxyAutoConfig::SetupJS()
 nsresult
 ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
                                 const nsCString &aTestHost,
+                                uint32_t aAppId,
+                                const nsString &aAppOrigin,
+                                bool aIsInBrowser,
                                 nsACString &result)
 {
   if (mJSNeedsSetup)
@@ -719,6 +781,9 @@ ProxyAutoConfig::GetProxyForURI(const nsCString &aTestURI,
   // while the event loop is spinning on a DNS function. Don't early return.
   SetRunning(this);
   mRunningHost = aTestHost;
+  mRunningAppId = aAppId;
+  mRunningAppOrigin = aAppOrigin;
+  mRunningIsInBrowser = aIsInBrowser;
 
   nsresult rv = NS_ERROR_FAILURE;
   JS::RootedString uriString(cx, JS_NewStringCopyZ(cx, aTestURI.get()));
@@ -925,6 +990,34 @@ ProxyAutoConfig::MyIPAddress(const JS::CallArgs &aArgs)
   }
 
   aArgs.rval().setString(dottedDecimalString);
+  return true;
+}
+
+bool
+ProxyAutoConfig::MyAppId(const JS::CallArgs &aArgs)
+{
+  aArgs.rval().setNumber(mRunningAppId);
+  return true;
+}
+
+bool
+ProxyAutoConfig::MyAppOrigin(const JS::CallArgs &aArgs)
+{
+  JSContext *cx = mJSRuntime->Context();
+  JSString *origin =
+    JS_NewStringCopyZ(cx, NS_ConvertUTF16toUTF8(mRunningAppOrigin).get());
+  if (!origin) {
+    return false;
+  }
+
+  aArgs.rval().setString(origin);
+  return true;
+}
+
+bool
+ProxyAutoConfig::IsInBrowser(const JS::CallArgs &aArgs)
+{
+  aArgs.rval().setBoolean(mRunningIsInBrowser);
   return true;
 }
 

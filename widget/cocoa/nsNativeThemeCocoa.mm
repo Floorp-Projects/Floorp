@@ -2936,15 +2936,16 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
 }
 
 nsIntMargin
-nsNativeThemeCocoa::RTLAwareMargin(const nsIntMargin& aMargin, nsIFrame* aFrame)
+nsNativeThemeCocoa::DirectionAwareMargin(const nsIntMargin& aMargin,
+                                         nsIFrame* aFrame)
 {
-  if (IsFrameRTL(aFrame)) {
-    // Return a copy of aMargin w/ right & left reversed:
-    return nsIntMargin(aMargin.top, aMargin.left,
-                       aMargin.bottom, aMargin.right);
-  }
-
-  return aMargin;
+  // Assuming aMargin was originally specified for a horizontal LTR context,
+  // reinterpret the values as logical, and then map to physical coords
+  // according to aFrame's actual writing mode.
+  WritingMode wm = aFrame->GetWritingMode();
+  nsMargin m = LogicalMargin(wm, aMargin.top, aMargin.right, aMargin.bottom,
+                             aMargin.left).GetPhysicalMargin(wm);
+  return nsIntMargin(m.top, m.right, m.bottom, m.left);
 }
 
 static const nsIntMargin kAquaDropdownBorder(1, 22, 2, 5);
@@ -2965,16 +2966,16 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
     case NS_THEME_BUTTON:
     {
       if (IsButtonTypeMenu(aFrame)) {
-        *aResult = RTLAwareMargin(kAquaDropdownBorder, aFrame);
+        *aResult = DirectionAwareMargin(kAquaDropdownBorder, aFrame);
       } else {
-        aResult->SizeTo(1, 7, 3, 7);
+        *aResult = DirectionAwareMargin(nsIntMargin(1, 7, 3, 7), aFrame);
       }
       break;
     }
 
     case NS_THEME_TOOLBAR_BUTTON:
     {
-      aResult->SizeTo(1, 4, 1, 4);
+      *aResult = DirectionAwareMargin(nsIntMargin(1, 4, 1, 4), aFrame);
       break;
     }
 
@@ -2989,11 +2990,11 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
 
     case NS_THEME_DROPDOWN:
     case NS_THEME_DROPDOWN_BUTTON:
-      *aResult = RTLAwareMargin(kAquaDropdownBorder, aFrame);
+      *aResult = DirectionAwareMargin(kAquaDropdownBorder, aFrame);
       break;
 
     case NS_THEME_DROPDOWN_TEXTFIELD:
-      *aResult = RTLAwareMargin(kAquaComboboxBorder, aFrame);
+      *aResult = DirectionAwareMargin(kAquaComboboxBorder, aFrame);
       break;
 
     case NS_THEME_NUMBER_INPUT:
@@ -3016,7 +3017,7 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
       break;
 
     case NS_THEME_SEARCHFIELD:
-      *aResult = RTLAwareMargin(kAquaSearchfieldBorder, aFrame);
+      *aResult = DirectionAwareMargin(kAquaSearchfieldBorder, aFrame);
       break;
 
     case NS_THEME_LISTBOX:

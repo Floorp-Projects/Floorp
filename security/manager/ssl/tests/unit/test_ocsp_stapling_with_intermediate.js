@@ -33,7 +33,8 @@ function run_test() {
 
   add_tls_server_setup("OCSPStaplingServer");
 
-  add_ocsp_test("ocsp-stapling-with-intermediate.example.com", Cr.NS_OK);
+  add_ocsp_test("ocsp-stapling-with-intermediate.example.com",
+                PRErrorCodeSuccess);
 
   add_test(function () { ocspResponder.stop(run_next_test); });
   add_test(function() {

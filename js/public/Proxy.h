@@ -18,6 +18,7 @@ namespace js {
 
 using JS::AutoIdVector;
 using JS::CallArgs;
+using JS::Handle;
 using JS::HandleId;
 using JS::HandleObject;
 using JS::HandleValue;
@@ -252,7 +253,7 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                           MutableHandle<JSPropertyDescriptor> desc) const = 0;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                MutableHandle<JSPropertyDescriptor> desc,
+                                Handle<JSPropertyDescriptor> desc,
                                 ObjectOpResult &result) const = 0;
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const = 0;
@@ -373,7 +374,7 @@ class JS_FRIEND_API(DirectProxyHandler) : public BaseProxyHandler
     virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
                                           MutableHandle<JSPropertyDescriptor> desc) const override;
     virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
-                                MutableHandle<JSPropertyDescriptor> desc,
+                                Handle<JSPropertyDescriptor> desc,
                                 ObjectOpResult &result) const override;
     virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
                                  AutoIdVector &props) const override;

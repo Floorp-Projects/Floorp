@@ -4200,23 +4200,29 @@ nsTreeBodyFrame::ScrollHorzInternal(const ScrollParts& aParts, int32_t aPosition
 }
 
 void
-nsTreeBodyFrame::ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection)
+nsTreeBodyFrame::ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                              nsIScrollbarMediator::ScrollSnapMode aSnap)
 {
+  // CSS Scroll Snapping is not enabled for XUL, aSnap is ignored
   MOZ_ASSERT(aScrollbar != nullptr);
   ScrollByPages(aDirection);
 }
 
 void
-nsTreeBodyFrame::ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection)
+nsTreeBodyFrame::ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                               nsIScrollbarMediator::ScrollSnapMode aSnap)
 {
+  // CSS Scroll Snapping is not enabled for XUL, aSnap is ignored
   MOZ_ASSERT(aScrollbar != nullptr); 
   int32_t newIndex = aDirection < 0 ? 0 : mTopRowIndex;
   ScrollToRow(newIndex);
 }
 
 void
-nsTreeBodyFrame::ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection)
+nsTreeBodyFrame::ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                              nsIScrollbarMediator::ScrollSnapMode aSnap)
 {
+  // CSS Scroll Snapping is not enabled for XUL, aSnap is ignored
   MOZ_ASSERT(aScrollbar != nullptr);
   ScrollByLines(aDirection);
 }

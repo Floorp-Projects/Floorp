@@ -896,7 +896,7 @@ class MOZ_STACK_CLASS SourceBufferHolder final
                                            set of the same-named property in an
                                            object that delegates to a prototype
                                            containing this property */
-#define JSPROP_INDEX            0x80    /* name is actually (int) index */
+#define JSPROP_INTERNAL_USE_BIT 0x80    /* internal JS engine use only */
 #define JSPROP_DEFINE_LATE     0x100    /* Don't define property when initially creating
                                            the constructor. Some objects like Function/Object
                                            have self-hosted functions that can only be defined
@@ -2019,9 +2019,9 @@ typedef struct JSNativeWrapper {
 #define JSNATIVE_WRAPPER(native) { {native, nullptr} }
 
 /*
- * To define an array element rather than a named property member, cast the
- * element's index to (const char *) and initialize name with it, and set the
- * JSPROP_INDEX bit in flags.
+ * Description of a property. JS_DefineProperties and JS_InitClass take arrays
+ * of these and define many properties at once. JS_PSG, JS_PSGS and JS_PS_END
+ * are helper macros for defining such arrays.
  */
 struct JSPropertySpec {
     struct SelfHostedWrapper {
@@ -2595,6 +2595,18 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
         setGetter(nullptr);
         setSetter(nullptr);
         value().setUndefined();
+    }
+
+    void initFields(HandleObject obj, HandleValue v, unsigned attrs,
+                    JSGetterOp getterOp, JSSetterOp setterOp) {
+        MOZ_ASSERT(getterOp != JS_PropertyStub);
+        MOZ_ASSERT(setterOp != JS_StrictPropertyStub);
+
+        object().set(obj);
+        value().set(v);
+        setAttributes(attrs);
+        setGetter(getterOp);
+        setSetter(setterOp);
     }
 
     void assign(JSPropertyDescriptor &other) {

@@ -103,9 +103,6 @@ public class TopSitesPanel extends HomeFragment {
     // Max number of entries shown in the grid from the cursor.
     private int mMaxGridEntries;
 
-    // Fields used for tiles metrics recording.
-    private TilesRecorder mTilesRecorder;
-
     // Time in ms until the Gecko thread is reset to normal priority.
     private static final long PRIORITY_RESET_TIMEOUT = 10000;
 
@@ -133,8 +130,6 @@ public class TopSitesPanel extends HomeFragment {
         super.onAttach(activity);
 
         mMaxGridEntries = activity.getResources().getInteger(R.integer.number_of_top_sites);
-
-        mTilesRecorder = new TilesRecorder();
     }
 
     @Override
@@ -229,7 +224,7 @@ public class TopSitesPanel extends HomeFragment {
                         if (!tab.isPrivate()) {
                             final Locale locale = Locale.getDefault();
                             final String localeTag = Locales.getLanguageTag(locale);
-                            mTilesRecorder.recordAction(tab, TilesRecorder.ACTION_CLICK, position, getTilesSnapshot(), localeTag);
+                            TilesRecorder.recordAction(tab, TilesRecorder.ACTION_CLICK, position, getTilesSnapshot(), localeTag);
                         }
 
                         mUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(OnUrlOpenListener.Flags.class));

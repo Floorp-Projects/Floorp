@@ -10,7 +10,9 @@
 #include "HyperTextAccessible.h"
 #include "nsMai.h"
 #include "nsMaiHyperlink.h"
+#include "ProxyAccessible.h"
 #include "mozilla/Likely.h"
+
 
 using namespace mozilla::a11y;
 
@@ -20,49 +22,69 @@ static AtkHyperlink*
 getLinkCB(AtkHypertext *aText, gint aLinkIndex)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
+  if (accWrap) {
+    HyperTextAccessible* hyperText = accWrap->AsHyperText();
+    NS_ENSURE_TRUE(hyperText, nullptr);
+
+    Accessible* hyperLink = hyperText->LinkAt(aLinkIndex);
+    if (!hyperLink) {
+      return nullptr;
+    }
+
+    AtkObject* hyperLinkAtkObj = AccessibleWrap::GetAtkObject(hyperLink);
+    AccessibleWrap* accChild = GetAccessibleWrap(hyperLinkAtkObj);
+    NS_ENSURE_TRUE(accChild, nullptr);
+
+    MaiHyperlink* maiHyperlink = accChild->GetMaiHyperlink();
+    NS_ENSURE_TRUE(maiHyperlink, nullptr);
+    return maiHyperlink->GetAtkHyperlink();
+  }
+
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    ProxyAccessible* proxyLink = proxy->LinkAt(aLinkIndex);
+    if (proxyLink) {
+      NS_WARNING("IMPLEMENT ME! See bug 1146518.");
+      // We should somehow get from ProxyAccessible* to AtkHyperlink*.
+    }
     return nullptr;
+  }
 
-  HyperTextAccessible* hyperText = accWrap->AsHyperText();
-  NS_ENSURE_TRUE(hyperText, nullptr);
-
-  Accessible* hyperLink = hyperText->LinkAt(aLinkIndex);
-  if (!hyperLink)
-    return nullptr;
-
-  AtkObject* hyperLinkAtkObj = AccessibleWrap::GetAtkObject(hyperLink);
-  AccessibleWrap* accChild = GetAccessibleWrap(hyperLinkAtkObj);
-  NS_ENSURE_TRUE(accChild, nullptr);
-
-  MaiHyperlink *maiHyperlink = accChild->GetMaiHyperlink();
-  NS_ENSURE_TRUE(maiHyperlink, nullptr);
-  return maiHyperlink->GetAtkHyperlink();
+  return nullptr;
 }
 
 static gint
 getLinkCountCB(AtkHypertext *aText)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return -1;
+  if (accWrap) {
+    HyperTextAccessible* hyperText = accWrap->AsHyperText();
+    NS_ENSURE_TRUE(hyperText, -1);
+    return hyperText->LinkCount();
+  }
 
-  HyperTextAccessible* hyperText = accWrap->AsHyperText();
-  NS_ENSURE_TRUE(hyperText, -1);
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    return proxy->LinkCount();
+  }
 
-  return hyperText->LinkCount();
+  return -1;
 }
 
 static gint
 getLinkIndexCB(AtkHypertext *aText, gint aCharIndex)
 {
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aText));
-  if (!accWrap)
-    return -1;
+  if (accWrap) {
+    HyperTextAccessible* hyperText = accWrap->AsHyperText();
+    NS_ENSURE_TRUE(hyperText, -1);
 
-  HyperTextAccessible* hyperText = accWrap->AsHyperText();
-  NS_ENSURE_TRUE(hyperText, -1);
+    return hyperText->LinkIndexAtOffset(aCharIndex);
+  }
 
-  return hyperText->LinkIndexAtOffset(aCharIndex);
+  if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aText))) {
+    return proxy->LinkIndexAtOffset(aCharIndex);
+  }
+
+  return -1;
 }
 }
 

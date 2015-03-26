@@ -1109,9 +1109,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
     var locationData = sharedUtils.locationData();
 
     dispatcher.dispatch(new sharedActions.ExtractTokenInfo({
-      // We pass the hash or the pathname - the hash was used for the original
-      // urls, the pathname for later ones.
-      windowPath: locationData.hash || locationData.pathname
+      windowPath: locationData.pathname
     }));
   }
 

@@ -14,6 +14,20 @@
 namespace mozilla {
 namespace gmp {
 
+class GMPStringListImpl : public GMPStringList
+{
+public:
+  explicit GMPStringListImpl(const nsTArray<nsCString>& aStrings);
+  virtual const uint32_t Size() const override;
+  virtual void StringAt(uint32_t aIndex,
+                        const char** aOutString, uint32_t *aOutLength) const override;
+  virtual ~GMPStringListImpl() override;
+  void RelinquishData(nsTArray<nsCString>& aStrings);
+
+private:
+  nsTArray<nsCString> mStrings;
+};
+
 class GMPEncryptedBufferDataImpl : public GMPEncryptedBufferMetadata {
 private:
   typedef mp4_demuxer::CryptoSample CryptoSample;
@@ -31,12 +45,15 @@ public:
   virtual uint32_t NumSubsamples() const override;
   virtual const uint16_t* ClearBytes() const override;
   virtual const uint32_t* CipherBytes() const override;
+  virtual const GMPStringList* SessionIds() const override;
 
 private:
   nsTArray<uint8_t> mKeyId;
   nsTArray<uint8_t> mIV;
   nsTArray<uint16_t> mClearBytes;
   nsTArray<uint32_t> mCipherBytes;
+
+  GMPStringListImpl mSessionIdList;
 };
 
 class GMPBufferImpl : public GMPBuffer {

@@ -11,7 +11,6 @@ webide.jar:
   skin/throbber.svg            (throbber.svg)
   skin/deck.css                (deck.css)
   skin/addons.css              (addons.css)
-  skin/prefs.css               (prefs.css)
   skin/runtimedetails.css      (runtimedetails.css)
   skin/permissionstable.css    (permissionstable.css)
   skin/monitor.css             (monitor.css)
