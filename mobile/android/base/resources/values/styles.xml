@@ -784,11 +784,11 @@
         <item name="android:paddingRight">15dp</item>
     </style>
 
-    <style name="ShareOverlayTextAppearance">
+    <style name="TextAppearance.ShareOverlay">
         <item name="android:fontFamily">sans-serif</item>
     </style>
 
-    <style name="ShareOverlayTextAppearance.Header">
+    <style name="TextAppearance.ShareOverlay.Header">
         <item name="android:textColor">@android:color/white</item>
     </style>
 
