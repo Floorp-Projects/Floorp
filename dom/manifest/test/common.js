@@ -16,5 +16,5 @@ const bsp = SpecialPowers.Cu.import('resource://gre/modules/ManifestProcessor.js
   data = {
     jsonText: '{}',
     manifestURL: manifestURL,
-    docURL: docLocation
+    docLocation: docLocation
   };
