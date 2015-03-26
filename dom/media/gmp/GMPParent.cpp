@@ -60,6 +60,9 @@ GMPParent::GMPParent()
 #endif
 {
   LOGD("GMPParent ctor");
+  // Use the parent address to identify it.
+  // We could use any unique-to-the-parent value.
+  mPluginId.AppendInt(reinterpret_cast<uint64_t>(this));
 }
 
 GMPParent::~GMPParent()
@@ -634,6 +637,9 @@ GMPParent::GetCrashID(nsString& aResult)
   TakeMinidump(getter_AddRefs(dumpFile), nullptr);
   if (!dumpFile) {
     NS_WARNING("GMP crash without crash report");
+    aResult = mName;
+    aResult += '-';
+    AppendUTF8toUTF16(mVersion, aResult);
     return;
   }
   GetIDFromMinidump(dumpFile, aResult);
@@ -641,12 +647,23 @@ GMPParent::GetCrashID(nsString& aResult)
 }
 
 static void
-GMPNotifyObservers(nsAString& aData)
+GMPNotifyObservers(const nsACString& aPluginId, const nsACString& aPluginName, const nsAString& aPluginDumpId)
 {
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
-    nsString temp(aData);
-    obs->NotifyObservers(nullptr, "gmp-plugin-crash", temp.get());
+    nsString id;
+    AppendUTF8toUTF16(aPluginId, id);
+    id.Append(NS_LITERAL_STRING(" "));
+    AppendUTF8toUTF16(aPluginName, id);
+    id.Append(NS_LITERAL_STRING(" "));
+    id.Append(aPluginDumpId);
+    obs->NotifyObservers(nullptr, "gmp-plugin-crash", id.Data());
+  }
+
+  nsRefPtr<gmp::GeckoMediaPluginService> service =
+    gmp::GeckoMediaPluginService::GetGeckoMediaPluginService();
+  if (service) {
+    service->RunPluginCrashCallbacks(aPluginId, aPluginName, aPluginDumpId);
   }
 }
 #endif
@@ -660,17 +677,10 @@ GMPParent::ActorDestroy(ActorDestroyReason aWhy)
                           NS_LITERAL_CSTRING("gmplugin"), 1);
     nsString dumpID;
     GetCrashID(dumpID);
-    nsString id;
-    // use the parent address to identify it
-    // We could use any unique-to-the-parent value
-    id.AppendInt(reinterpret_cast<uint64_t>(this));
-    id.Append(NS_LITERAL_STRING(" "));
-    AppendUTF8toUTF16(mDisplayName, id);
-    id.Append(NS_LITERAL_STRING(" "));
-    id.Append(dumpID);
 
     // NotifyObservers is mainthread-only
-    NS_DispatchToMainThread(WrapRunnableNM(&GMPNotifyObservers, id),
+    NS_DispatchToMainThread(WrapRunnableNM(&GMPNotifyObservers,
+                                           mPluginId, mDisplayName, dumpID),
                             NS_DISPATCH_NORMAL);
   }
 #endif
@@ -1011,6 +1021,12 @@ const nsCString&
 GMPParent::GetVersion() const
 {
   return mVersion;
+}
+
+const nsACString&
+GMPParent::GetPluginId() const
+{
+  return mPluginId;
 }
 
 bool

@@ -21,10 +21,17 @@ GMPDecryptorParent::GMPDecryptorParent(GMPParent* aPlugin)
 #endif
 {
   MOZ_ASSERT(mPlugin && mGMPThread);
+  mPluginId = aPlugin->GetPluginId();
 }
 
 GMPDecryptorParent::~GMPDecryptorParent()
 {
+}
+
+const nsACString&
+GMPDecryptorParent::GetPluginId() const
+{
+  return mPluginId;
 }
 
 nsresult
