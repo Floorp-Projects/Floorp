@@ -112,17 +112,11 @@ MFBT_API int moz_posix_memalign(void **ptr, size_t alignment, size_t size)
 #if defined(HAVE_MEMALIGN)
 MFBT_API void* moz_xmemalign(size_t boundary, size_t size)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
-
-MFBT_API void* moz_memalign(size_t boundary, size_t size)
-    NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 #endif /* if defined(HAVE_MEMALIGN) */
 
 
 #if defined(HAVE_VALLOC)
 MFBT_API void* moz_xvalloc(size_t size)
-    NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
-
-MFBT_API void* moz_valloc(size_t size)
     NS_ATTR_MALLOC NS_WARN_UNUSED_RESULT;
 #endif /* if defined(HAVE_VALLOC) */
 
