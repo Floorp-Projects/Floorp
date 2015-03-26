@@ -27,6 +27,7 @@ function testDialOutInvalidNumber() {
       is(event.call, outCall);
       ok(event.call.error);
       is(event.call.error.name, "BadNumberError");
+      is(event.call.disconnectedReason, "BadNumber");
     })
     .then(() => gCheckAll(null, [], "", [], []));
   });
