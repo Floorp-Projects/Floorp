@@ -328,7 +328,7 @@ int32_t DummyPrSocket::Recv(void *buf, int32_t buflen) {
   }
 
   Packet *front = input_.front();
-  if (buflen < front->len()) {
+  if (static_cast<size_t>(buflen) < front->len()) {
     PR_ASSERT(false);
     PR_SetError(PR_BUFFER_OVERFLOW_ERROR, 0);
     return -1;
@@ -344,33 +344,23 @@ int32_t DummyPrSocket::Recv(void *buf, int32_t buflen) {
 }
 
 int32_t DummyPrSocket::Write(const void *buf, int32_t length) {
-  DataBuffer packet(static_cast<const uint8_t*>(buf),
-                    static_cast<size_t>(length));
-  if (filter_) {
-    DataBuffer filtered;
-    if (filter_->Filter(packet, &filtered)) {
-      if (WriteDirect(filtered) != filtered.len()) {
-        PR_SetError(PR_IO_ERROR, 0);
-        return -1;
-      }
-      LOG("Wrote: " << packet);
-      // libssl can't handle if this reports something other than the length of
-      // what was passed in (or less, but we're not doing partial writes).
-      return packet.len();
-    }
-  }
-
-  return WriteDirect(packet);
-}
-
-int32_t DummyPrSocket::WriteDirect(const DataBuffer& packet) {
   if (!peer_) {
     PR_SetError(PR_IO_ERROR, 0);
     return -1;
   }
 
-  peer_->PacketReceived(packet);
-  return static_cast<int32_t>(packet.len()); // ignore truncation
+  DataBuffer packet(static_cast<const uint8_t*>(buf),
+                    static_cast<size_t>(length));
+  DataBuffer filtered;
+  if (filter_ && filter_->Filter(packet, &filtered)) {
+    LOG("Filtered packet: " << filtered);
+    peer_->PacketReceived(filtered);
+  } else {
+    peer_->PacketReceived(packet);
+  }
+  // libssl can't handle it if this reports something other than the length
+  // of what was passed in (or less, but we're not doing partial writes).
+  return static_cast<int32_t>(packet.len());
 }
 
 Poller *Poller::instance;
