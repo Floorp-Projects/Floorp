@@ -296,6 +296,7 @@ private:
     bool mD3D11DeviceInitialized;
     mozilla::RefPtr<mozilla::layers::ReadbackManagerD3D11> mD3D11ReadbackManager;
     bool mIsWARP;
+    bool mCanInitMediaDevice;
 
     virtual void GetPlatformCMSOutputProfile(void* &mem, size_t &size);
 };
