@@ -39,6 +39,7 @@
   SimpleTest.waitForExplicitFinish();
   onload = function() {
     SpecialPowers.pushPrefEnv({"set": [
+      ["beacon.enabled", true],
       ["dom.image.picture.enabled", true],
       ["dom.image.srcset.enabled", true],
       ["dom.serviceWorkers.exemptFromPerDomainMax", true],
