@@ -141,6 +141,23 @@
     });
   }
 
+  function testFont() {
+    return new Promise(function(resolve, reject) {
+      var css = '@font-face { font-family: "sw-font"; src: url("font"); }';
+      css += '* { font-family: "sw-font"; }';
+      var style = document.createElement("style");
+      style.appendChild(document.createTextNode(css));
+      document.documentElement.appendChild(style);
+      navigator.serviceWorker.addEventListener("message", function onMessage(e) {
+        if (e.data.data == "font") {
+          is(e.data.context, "font", "Expected the font context on an font");
+          navigator.serviceWorker.removeEventListener("message", onMessage);
+          resolve();
+        }
+      }, false);
+    });
+  }
+
   Promise.all([
     testFetch(),
     testImage(),
@@ -152,6 +169,7 @@
     testCSPReport(),
     testEmbed(),
     testObject(),
+    testFont(),
   ])
   .then(function() {
     finish();

@@ -38,6 +38,8 @@ self.addEventListener("fetch", function(event) {
     respondToServiceWorker(event, "embed");
   } else if (event.request.url.indexOf("object") >= 0) {
     respondToServiceWorker(event, "object");
+  } else if (event.request.url.indexOf("font") >= 0) {
+    respondToServiceWorker(event, "font");
   }
   // Fail any request that we don't know about.
   try {
