@@ -262,7 +262,7 @@ input[type=button] {
   display: block;
 }
 
-.newtab-site[type=suggested] .newtab-suggested {
+.newtab-site[suggested] .newtab-suggested {
   display: table;
 }
 
