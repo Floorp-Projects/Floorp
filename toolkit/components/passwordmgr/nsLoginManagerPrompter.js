@@ -797,17 +797,15 @@ LoginManagerPrompter.prototype = {
     let { browser } = this._getNotifyWindow();
 
     let saveMsgNames = {
-      prompt: "rememberPasswordMsgNoUsername",
-      buttonLabel: "notifyBarRememberPasswordButtonText",
-      buttonAccessKey: "notifyBarRememberPasswordButtonAccessKey",
+      prompt: "rememberLoginMsg",
+      buttonLabel: "rememberLoginButtonText",
+      buttonAccessKey: "rememberLoginButtonAccessKey",
     };
 
     let changeMsgNames = {
-      // We reuse the existing message, even if it expects a username, until we
-      // switch to the final terminology in bug 1144856.
-      prompt: "updatePasswordMsg",
-      buttonLabel: "notifyBarUpdateButtonText",
-      buttonAccessKey: "notifyBarUpdateButtonAccessKey",
+      prompt: "updateLoginMsg",
+      buttonLabel: "updateLoginButtonText",
+      buttonAccessKey: "updateLoginButtonAccessKey",
     };
 
     let initialMsgNames = type == "password-save" ? saveMsgNames
