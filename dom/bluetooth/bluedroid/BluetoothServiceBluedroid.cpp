@@ -1493,7 +1493,7 @@ BluetoothServiceBluedroid::PinRequestNotification(const nsAString& aRemoteBdAddr
 void
 BluetoothServiceBluedroid::SspRequestNotification(
   const nsAString& aRemoteBdAddr, const nsAString& aBdName, uint32_t aCod,
-  const nsAString& aPairingaVariant, uint32_t aPassKey)
+  BluetoothSspVariant aPairingVariant, uint32_t aPassKey)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
