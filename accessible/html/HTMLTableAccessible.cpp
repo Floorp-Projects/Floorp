@@ -314,34 +314,28 @@ HTMLTableHeaderCellAccessible::NativeRole()
       return roles::ROWHEADER;
   }
 
-  // Assume it's columnheader if there are headers in siblings, otherwise
-  // rowheader.
-  // This should iterate the flattened tree
-  nsIContent* parentContent = mContent->GetParent();
-  if (!parentContent) {
-    NS_ERROR("Deattached content on alive accessible?");
+  TableAccessible* table = Table();
+  if (!table)
     return roles::NOTHING;
-  }
 
-  for (nsIContent* siblingContent = mContent->GetPreviousSibling(); siblingContent;
-       siblingContent = siblingContent->GetPreviousSibling()) {
-    if (siblingContent->IsElement()) {
-      return nsCoreUtils::IsHTMLTableHeader(siblingContent) ?
-        roles::COLUMNHEADER : roles::ROWHEADER;
-    }
-  }
+  // If the cell next to this one is not a header cell then assume this cell is
+  // a row header for it.
+  uint32_t rowIdx = RowIdx(), colIdx = ColIdx();
+  Accessible* cell = table->CellAt(rowIdx, colIdx + ColExtent());
+  if (cell && !nsCoreUtils::IsHTMLTableHeader(cell->GetContent()))
+    return roles::ROWHEADER;
 
-  for (nsIContent* siblingContent = mContent->GetNextSibling(); siblingContent;
-       siblingContent = siblingContent->GetNextSibling()) {
-    if (siblingContent->IsElement()) {
-      return nsCoreUtils::IsHTMLTableHeader(siblingContent) ?
-       roles::COLUMNHEADER : roles::ROWHEADER;
-    }
-  }
+  // If the cell below this one is not a header cell then assume this cell is
+  // a column header for it.
+  uint32_t rowExtent = RowExtent();
+  cell = table->CellAt(rowIdx + rowExtent, colIdx);
+  if (cell && !nsCoreUtils::IsHTMLTableHeader(cell->GetContent()))
+    return roles::COLUMNHEADER;
 
-  // No elements in siblings what means the table has one column only. Therefore
-  // it should be column header.
-  return roles::COLUMNHEADER;
+  // Otherwise if this cell is surrounded by header cells only then make a guess
+  // based on its cell spanning. In other words if it is row spanned then assume
+  // it's a row header, otherwise it's a column header.
+  return rowExtent > 1 ? roles::ROWHEADER : roles::COLUMNHEADER;
 }
 
 
