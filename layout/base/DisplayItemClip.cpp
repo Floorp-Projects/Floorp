@@ -327,7 +327,7 @@ DisplayItemClip::ApplyNonRoundedIntersection(const nsRect& aRect) const
   nsRect result = aRect.Intersect(mClipRect);
   for (uint32_t i = 0, iEnd = mRoundedClipRects.Length();
        i < iEnd; ++i) {
-    result.Intersect(mRoundedClipRects[i].mRect);
+    result = result.Intersect(mRoundedClipRects[i].mRect);
   }
   return result;
 }
