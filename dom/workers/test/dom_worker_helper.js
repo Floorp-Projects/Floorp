@@ -104,6 +104,17 @@ function waitForDebuggerClose(dbg) {
   });
 }
 
+function waitForDebuggerError(dbg) {
+  return new Promise(function (resolve) {
+    dbg.addListener({
+      onError: function (filename, lineno, message) {
+        dbg.removeListener(this);
+        resolve(new Error(message, filename, lineno));
+      }
+    });
+  });
+}
+
 function waitForDebuggerMessage(dbg, message) {
   return new Promise(function (resolve) {
     dbg.addListener({
