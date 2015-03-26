@@ -194,4 +194,15 @@ CDMCaps::AutoLock::GetKeyStatusesForSession(const nsAString& aSessionId,
   }
 }
 
+void
+CDMCaps::AutoLock::GetSessionIdsForKeyId(const CencKeyId& aKeyId,
+                                         nsTArray<nsCString>& aOutSessionIds)
+{
+  for (const auto& keyStatus : mData.mKeyStatuses) {
+    if (keyStatus.mId == aKeyId) {
+      aOutSessionIds.AppendElement(NS_ConvertUTF16toUTF8(keyStatus.mSessionId));
+    }
+  }
+}
+
 } // namespace mozilla
