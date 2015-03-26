@@ -4887,7 +4887,7 @@ nsRect nsDisplayZoom::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
   nsRect bounds = nsDisplaySubDocument::GetBounds(aBuilder, aSnap);
   *aSnap = false;
-  return bounds.ConvertAppUnitsRoundOut(mAPD, mParentAPD);
+  return bounds.ScaleToOtherAppUnitsRoundOut(mAPD, mParentAPD);
 }
 
 void nsDisplayZoom::HitTest(nsDisplayListBuilder *aBuilder,
@@ -4899,10 +4899,10 @@ void nsDisplayZoom::HitTest(nsDisplayListBuilder *aBuilder,
   // A 1x1 rect indicates we are just hit testing a point, so pass down a 1x1
   // rect as well instead of possibly rounding the width or height to zero.
   if (aRect.width == 1 && aRect.height == 1) {
-    rect.MoveTo(aRect.TopLeft().ConvertAppUnits(mParentAPD, mAPD));
+    rect.MoveTo(aRect.TopLeft().ScaleToOtherAppUnits(mParentAPD, mAPD));
     rect.width = rect.height = 1;
   } else {
-    rect = aRect.ConvertAppUnitsRoundOut(mParentAPD, mAPD);
+    rect = aRect.ScaleToOtherAppUnitsRoundOut(mParentAPD, mAPD);
   }
   mList.HitTest(aBuilder, rect, aState, aOutFrames);
 }
@@ -4914,11 +4914,11 @@ bool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,
   nsRegion visibleRegion;
   // mVisibleRect has been clipped to GetClippedBounds
   visibleRegion.And(*aVisibleRegion, mVisibleRect);
-  visibleRegion = visibleRegion.ConvertAppUnitsRoundOut(mParentAPD, mAPD);
+  visibleRegion = visibleRegion.ScaleToOtherAppUnitsRoundOut(mParentAPD, mAPD);
   nsRegion originalVisibleRegion = visibleRegion;
 
   nsRect transformedVisibleRect =
-    mVisibleRect.ConvertAppUnitsRoundOut(mParentAPD, mAPD);
+    mVisibleRect.ScaleToOtherAppUnitsRoundOut(mParentAPD, mAPD);
   bool retval;
   // If we are to generate a scrollable layer we call
   // nsDisplaySubDocument::ComputeVisibility to make the necessary adjustments
@@ -4937,7 +4937,7 @@ bool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,
   // removed = originalVisibleRegion - visibleRegion
   removed.Sub(originalVisibleRegion, visibleRegion);
   // Convert removed region to parent appunits.
-  removed = removed.ConvertAppUnitsRoundIn(mAPD, mParentAPD);
+  removed = removed.ScaleToOtherAppUnitsRoundIn(mAPD, mParentAPD);
   // aVisibleRegion = aVisibleRegion - removed (modulo any simplifications
   // SubtractFromVisibleRegion does)
   aBuilder->SubtractFromVisibleRegion(aVisibleRegion, removed);

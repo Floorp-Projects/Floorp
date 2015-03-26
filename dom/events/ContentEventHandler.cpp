@@ -1176,7 +1176,7 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
   nsPoint ptInTarget = ptInRoot + rootFrame->GetOffsetToCrossDoc(targetFrame);
   int32_t rootAPD = rootFrame->PresContext()->AppUnitsPerDevPixel();
   int32_t targetAPD = targetFrame->PresContext()->AppUnitsPerDevPixel();
-  ptInTarget = ptInTarget.ConvertAppUnits(rootAPD, targetAPD);
+  ptInTarget = ptInTarget.ScaleToOtherAppUnits(rootAPD, targetAPD);
 
   nsTextFrame* textframe = static_cast<nsTextFrame*>(targetFrame);
   nsIFrame::ContentOffsets contentOffsets =

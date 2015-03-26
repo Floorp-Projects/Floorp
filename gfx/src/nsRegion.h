@@ -288,15 +288,15 @@ public:
 
   /**
    * Return this region scaled to a different appunits per pixel (APP) ratio.
-   * This applies nsRect::ConvertAppUnitsRoundOut/In to each rect of the region.
+   * This applies nsRect::ScaleToOtherAppUnitsRoundOut/In to each rect of the region.
    * @param aFromAPP the APP to scale from
    * @param aToAPP the APP to scale to
    * @note this can turn an empty region into a non-empty region
    */
   MOZ_WARN_UNUSED_RESULT nsRegion
-    ConvertAppUnitsRoundOut (int32_t aFromAPP, int32_t aToAPP) const;
+    ScaleToOtherAppUnitsRoundOut (int32_t aFromAPP, int32_t aToAPP) const;
   MOZ_WARN_UNUSED_RESULT nsRegion
-    ConvertAppUnitsRoundIn (int32_t aFromAPP, int32_t aToAPP) const;
+    ScaleToOtherAppUnitsRoundIn (int32_t aFromAPP, int32_t aToAPP) const;
   nsRegion& ScaleRoundOut(float aXScale, float aYScale);
   nsRegion& ScaleInverseRoundOut(float aXScale, float aYScale);
   nsRegion& Transform (const gfx3DMatrix &aTransform);

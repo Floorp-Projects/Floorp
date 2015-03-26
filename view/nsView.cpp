@@ -819,7 +819,7 @@ nsPoint nsView::GetOffsetTo(const nsView* aOther, const int32_t aAPD) const
     if (newVM != currVM) {
       int32_t newAPD = newVM->AppUnitsPerDevPixel();
       if (newAPD != currAPD) {
-        offset += docOffset.ConvertAppUnits(currAPD, aAPD);
+        offset += docOffset.ScaleToOtherAppUnits(currAPD, aAPD);
         docOffset.x = docOffset.y = 0;
         currAPD = newAPD;
       }
@@ -827,7 +827,7 @@ nsPoint nsView::GetOffsetTo(const nsView* aOther, const int32_t aAPD) const
     }
     docOffset += v->GetPosition();
   }
-  offset += docOffset.ConvertAppUnits(currAPD, aAPD);
+  offset += docOffset.ScaleToOtherAppUnits(currAPD, aAPD);
 
   if (v != aOther) {
     // Looks like aOther wasn't an ancestor of |this|.  So now we have
@@ -863,7 +863,7 @@ nsPoint nsView::GetOffsetToWidget(nsIWidget* aWidget) const
   // Convert to our appunits.
   int32_t widgetAPD = widgetView->GetViewManager()->AppUnitsPerDevPixel();
   int32_t ourAPD = GetViewManager()->AppUnitsPerDevPixel();
-  pt = pt.ConvertAppUnits(widgetAPD, ourAPD);
+  pt = pt.ScaleToOtherAppUnits(widgetAPD, ourAPD);
   return pt;
 }
 
@@ -889,7 +889,7 @@ nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset, const int32_t aAPD) const
     if (newVM != currVM) {
       int32_t newAPD = newVM->AppUnitsPerDevPixel();
       if (newAPD != currAPD) {
-        pt += docPt.ConvertAppUnits(currAPD, aAPD);
+        pt += docPt.ScaleToOtherAppUnits(currAPD, aAPD);
         docPt.x = docPt.y = 0;
         currAPD = newAPD;
       }
@@ -899,7 +899,7 @@ nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset, const int32_t aAPD) const
   }
   if (!v) {
     if (aOffset) {
-      pt += docPt.ConvertAppUnits(currAPD, aAPD);
+      pt += docPt.ScaleToOtherAppUnits(currAPD, aAPD);
       *aOffset = pt;
     }
     return nullptr;
@@ -909,7 +909,7 @@ nsIWidget* nsView::GetNearestWidget(nsPoint* aOffset, const int32_t aAPD) const
   // We add the ViewToWidgetOffset to get the offset to the widget.
   if (aOffset) {
     docPt += v->ViewToWidgetOffset();
-    pt += docPt.ConvertAppUnits(currAPD, aAPD);
+    pt += docPt.ScaleToOtherAppUnits(currAPD, aAPD);
     *aOffset = pt;
   }
   return v->GetWidget();
@@ -931,7 +931,7 @@ nsView::GetBoundsInParentUnits() const
   }
   int32_t ourAPD = VM->AppUnitsPerDevPixel();
   int32_t parentAPD = parent->GetViewManager()->AppUnitsPerDevPixel();
-  return mDimBounds.ConvertAppUnitsRoundOut(ourAPD, parentAPD);
+  return mDimBounds.ScaleToOtherAppUnitsRoundOut(ourAPD, parentAPD);
 }
 
 nsPoint
@@ -939,8 +939,9 @@ nsView::ConvertFromParentCoords(nsPoint aPt) const
 {
   const nsView* parent = GetParent();
   if (parent) {
-    aPt = aPt.ConvertAppUnits(parent->GetViewManager()->AppUnitsPerDevPixel(),
-                              GetViewManager()->AppUnitsPerDevPixel());
+    aPt = aPt.ScaleToOtherAppUnits(
+      parent->GetViewManager()->AppUnitsPerDevPixel(),
+      GetViewManager()->AppUnitsPerDevPixel());
   }
   aPt -= GetPosition();
   return aPt;

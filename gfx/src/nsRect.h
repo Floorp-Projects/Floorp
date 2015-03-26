@@ -144,9 +144,9 @@ struct NS_GFX nsRect :
    * @note this can turn an empty rectangle into a non-empty rectangle
    */
   MOZ_WARN_UNUSED_RESULT inline nsRect
-    ConvertAppUnitsRoundOut(int32_t aFromAPP, int32_t aToAPP) const;
+    ScaleToOtherAppUnitsRoundOut(int32_t aFromAPP, int32_t aToAPP) const;
   MOZ_WARN_UNUSED_RESULT inline nsRect
-    ConvertAppUnitsRoundIn(int32_t aFromAPP, int32_t aToAPP) const;
+    ScaleToOtherAppUnitsRoundIn(int32_t aFromAPP, int32_t aToAPP) const;
 
   inline nsIntRect ScaleToNearestPixels(float aXScale, float aYScale,
                                         nscoord aAppUnitsPerPixel) const;
@@ -207,7 +207,7 @@ struct NS_GFX nsIntRect :
  */
 
 inline nsRect
-nsRect::ConvertAppUnitsRoundOut(int32_t aFromAPP, int32_t aToAPP) const
+nsRect::ScaleToOtherAppUnitsRoundOut(int32_t aFromAPP, int32_t aToAPP) const
 {
   if (aFromAPP == aToAPP) {
     return *this;
@@ -225,7 +225,7 @@ nsRect::ConvertAppUnitsRoundOut(int32_t aFromAPP, int32_t aToAPP) const
 }
 
 inline nsRect
-nsRect::ConvertAppUnitsRoundIn(int32_t aFromAPP, int32_t aToAPP) const
+nsRect::ScaleToOtherAppUnitsRoundIn(int32_t aFromAPP, int32_t aToAPP) const
 {
   if (aFromAPP == aToAPP) {
     return *this;

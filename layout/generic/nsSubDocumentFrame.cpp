@@ -411,7 +411,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // get the dirty rect relative to the root frame of the subdoc
     dirty = aDirtyRect + GetOffsetToCrossDoc(subdocRootFrame);
     // and convert into the appunits of the subdoc
-    dirty = dirty.ConvertAppUnitsRoundOut(parentAPD, subdocAPD);
+    dirty = dirty.ScaleToOtherAppUnitsRoundOut(parentAPD, subdocAPD);
 
     if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
       if (gfxPrefs::LayoutUseContainersForRootFrames()) {
@@ -500,7 +500,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       nsRect bounds = GetContentRectRelativeToSelf() +
         aBuilder->ToReferenceFrame(this);
       if (subdocRootFrame) {
-        bounds = bounds.ConvertAppUnitsRoundOut(parentAPD, subdocAPD);
+        bounds = bounds.ScaleToOtherAppUnitsRoundOut(parentAPD, subdocAPD);
       }
 
       // If we are in print preview/page layout we want to paint the grey
