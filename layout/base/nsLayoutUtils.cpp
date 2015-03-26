@@ -5877,25 +5877,18 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
     fill = devPixelFill;
   }
 
-  // Apply the context's scale to the dest rect.
   gfxSize destScale = didSnap ? gfxSize(currentMatrix._11, currentMatrix._22)
                               : currentMatrix.ScaleFactors(true);
   gfxSize appUnitScaledDest(dest.width * destScale.width,
                             dest.height * destScale.height);
   gfxSize scaledDest = appUnitScaledDest / aAppUnitsPerDevPixel;
-  if (scaledDest.IsEmpty()) {
-    return SnappedImageDrawingParameters();
-  }
-
-  // Compute a snapped version of the scaled dest rect, which we'll use to
-  // determine the optimal image size to draw with. We need to be sure that
-  // this rect is at least one pixel in width and height, or we'll end up
-  // drawing nothing even if we have a nonempty fill.
   gfxSize snappedScaledDest =
     gfxSize(NSAppUnitsToIntPixels(appUnitScaledDest.width, aAppUnitsPerDevPixel),
             NSAppUnitsToIntPixels(appUnitScaledDest.height, aAppUnitsPerDevPixel));
-  snappedScaledDest.width = std::max(snappedScaledDest.width, 1.0);
-  snappedScaledDest.height = std::max(snappedScaledDest.height, 1.0);
+
+  if (scaledDest.IsEmpty() || snappedScaledDest.IsEmpty()) {
+    return SnappedImageDrawingParameters();
+  }
 
   nsIntSize intImageSize =
     aImage->OptimalImageSizeForDest(snappedScaledDest,
