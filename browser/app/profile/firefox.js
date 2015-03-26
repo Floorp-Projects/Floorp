@@ -1873,11 +1873,6 @@ pref("dom.ipc.reportProcessHangs", false);
 pref("dom.ipc.reportProcessHangs", true);
 #endif
 
-#ifndef NIGHTLY_BUILD
-// Disable reader mode by default.
-pref("reader.parse-on-load.enabled", false);
-#endif
-
 // Enable ReadingList browser UI by default.
 pref("browser.readinglist.enabled", true);
 pref("browser.readinglist.sidebarEverOpened", false);
