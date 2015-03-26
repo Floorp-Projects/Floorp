@@ -419,7 +419,7 @@ LIRGeneratorMIPS::lowerUDiv(MDiv *div)
     MDefinition *lhs = div->getOperand(0);
     MDefinition *rhs = div->getOperand(1);
 
-    LUDiv *lir = new(alloc()) LUDiv;
+    LUDivOrMod *lir = new(alloc()) LUDivOrMod;
     lir->setOperand(0, useRegister(lhs));
     lir->setOperand(1, useRegister(rhs));
     if (div->fallible())
@@ -434,7 +434,7 @@ LIRGeneratorMIPS::lowerUMod(MMod *mod)
     MDefinition *lhs = mod->getOperand(0);
     MDefinition *rhs = mod->getOperand(1);
 
-    LUMod *lir = new(alloc()) LUMod;
+    LUDivOrMod *lir = new(alloc()) LUDivOrMod;
     lir->setOperand(0, useRegister(lhs));
     lir->setOperand(1, useRegister(rhs));
     if (mod->fallible())
