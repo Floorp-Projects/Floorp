@@ -63,9 +63,9 @@ let gLastRequestPath;
 
 let relatedTile1 = {
   url: "http://turbotax.com",
-  type: "related",
+  type: "suggested",
   lastVisitDate: 4,
-  related: [
+  suggested: [
     "taxact.com",
     "hrblock.com",
     "1040.com",
@@ -74,9 +74,9 @@ let relatedTile1 = {
 };
 let relatedTile2 = {
   url: "http://irs.gov",
-  type: "related",
+  type: "suggested",
   lastVisitDate: 3,
-  related: [
+  suggested: [
     "taxact.com",
     "hrblock.com",
     "freetaxusa.com",
@@ -85,9 +85,9 @@ let relatedTile2 = {
 };
 let relatedTile3 = {
   url: "http://hrblock.com",
-  type: "related",
+  type: "suggested",
   lastVisitDate: 2,
-  related: [
+  suggested: [
     "taxact.com",
     "freetaxusa.com",
     "1040.com",
@@ -248,7 +248,7 @@ add_task(function test_updateRelatedTile() {
         isIdentical([...DirectoryLinksProvider._topSitesWithRelatedLinks], ["hrblock.com", "1040.com", "freetaxusa.com"]);
         do_check_true(possibleLinks.indexOf(link.url) > -1);
         do_check_eq(link.frecency, Infinity);
-        do_check_eq(link.type, "related");
+        do_check_eq(link.type, "suggested");
         resolve();
       };
     });
@@ -262,7 +262,7 @@ add_task(function test_updateRelatedTile() {
         let possibleLinks = [relatedTile1.url, relatedTile2.url, relatedTile3.url];
 
         do_check_true(possibleLinks.indexOf(link.url) > -1);
-        do_check_eq(link.type, "related");
+        do_check_eq(link.type, "suggested");
         do_check_true(this.count <= 2);
 
         if (this.count == 1) {
@@ -285,7 +285,7 @@ add_task(function test_updateRelatedTile() {
       this.onLinkChanged = (directoryLinksProvider, link) => {
         this.count++;
 
-        do_check_eq(link.type, "related");
+        do_check_eq(link.type, "suggested");
         do_check_eq(this.count, 1);
         do_check_eq(link.frecency, 0);
         do_check_eq(link.url, links.shift().url);
