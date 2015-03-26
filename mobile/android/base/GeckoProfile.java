@@ -20,6 +20,7 @@ import org.mozilla.gecko.GeckoProfileDirectories.NoSuchProfileException;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.distribution.Distribution;
+import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.util.INIParser;
 import org.mozilla.gecko.util.INISection;
@@ -95,7 +96,7 @@ public final class GeckoProfile {
 
         final String args;
         if (context instanceof Activity) {
-            args = ((Activity) context).getIntent().getStringExtra("args");
+            args = ContextUtils.getStringExtra(((Activity) context).getIntent(), "args");
         } else {
             args = null;
         }
