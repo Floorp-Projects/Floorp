@@ -43,6 +43,7 @@ Features to add:
 
   #itemlist > table { border-collapse: collapse; }
   #itemlist > table > tbody > tr > td { border: 1px solid; padding: 1px; }
+  #itemlist td.activeitem { background-color: yellow; }
 
   /*
   #itemlist > table > tbody > tr.pass > td.url { background: lime; }
@@ -295,6 +296,7 @@ function build_viewer() {
     tr.appendChild(td);
 
     td = document.createElement("td");
+    td.id = "item" + i;
     td.className = "url";
     // Only display part of URL after "/mozilla/".
     var match = item.url.match(/\/mozilla\/(.*)/);
@@ -344,6 +346,13 @@ function show_images(i) {
   var item = gTestItems[i];
   var cell = ID("images");
 
+  // Remove activeitem class from any existing elements
+  var activeItems = document.querySelectorAll(".activeitem");
+  for (var activeItemIdx = activeItems.length; activeItemIdx-- != 0;) {
+    activeItems[activeItemIdx].classList.remove("activeitem");
+  }
+
+  ID("item" + i).classList.add("activeitem");
   ID("image1").style.display = "";
   ID("image2").style.display = "none";
   ID("diffrect").style.display = "none";
