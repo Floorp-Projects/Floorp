@@ -7,10 +7,30 @@
 #ifndef mozilla_dom_bluetooth_bluetoothcommon_h__
 #define mozilla_dom_bluetooth_bluetoothcommon_h__
 
+#include "mozilla/Compiler.h"
 #include "mozilla/Observer.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
 #include "nsTArray.h"
+
+#if MOZ_IS_GCC
+# if MOZ_GCC_VERSION_AT_LEAST(4, 7, 0)
+/* use designated array initializers if supported */
+# define INIT_ARRAY_AT(in_, out_) \
+    [in_] = out_
+# else
+/* otherwise init array element by position */
+# define INIT_ARRAY_AT(in_, out_) \
+    out_
+# endif
+#else
+/* otherwise init array element by position */
+#define INIT_ARRAY_AT(in_, out_) \
+  out_
+#endif
+
+#define CONVERT(in_, out_) \
+  INIT_ARRAY_AT(in_, out_)
 
 extern bool gBluetoothDebugFlag;
 
