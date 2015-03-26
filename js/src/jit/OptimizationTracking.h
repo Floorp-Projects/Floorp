@@ -107,6 +107,12 @@ class TrackedOptimizations : public TempObject
         currentAttempt_(UINT32_MAX)
     { }
 
+    void clear() {
+        types_.clear();
+        attempts_.clear();
+        currentAttempt_ = UINT32_MAX;
+    }
+
     bool trackTypeInfo(OptimizationTypeInfo &&ty);
 
     bool trackAttempt(JS::TrackedStrategy strategy);
