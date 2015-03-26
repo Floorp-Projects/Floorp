@@ -127,7 +127,7 @@ skip-if(B2G||Mulet) == img-fragment-2a.html  img-fragment-2-ref.html # bug 77348
 skip-if(B2G||Mulet) == img-fragment-2b.html  img-fragment-2-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == img-fragment-2c.html  img-fragment-2-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 
-fuzzy-if(B2G,68,4) random == list-simple-1.html list-simple-1-ref.html
+fuzzy-if(B2G,68,4) == list-simple-1.html list-simple-1-ref.html
 
 == svg-image-simple-1.svg lime100x100.svg
 == svg-image-simple-2.svg lime100x100.svg
