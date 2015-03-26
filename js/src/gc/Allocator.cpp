@@ -99,7 +99,7 @@ js::Allocate(ExclusiveContext *cx, AllocKind kind, size_t nDynamicSlots, Initial
              const Class *clasp)
 {
     static_assert(mozilla::IsConvertible<T *, JSObject *>::value, "must be JSObject derived");
-    MOZ_ASSERT(kind <= AllocKind::OBJECT_LAST);
+    MOZ_ASSERT(IsObjectAllocKind(kind));
     size_t thingSize = Arena::thingSize(kind);
 
     MOZ_ASSERT(thingSize == Arena::thingSize(kind));

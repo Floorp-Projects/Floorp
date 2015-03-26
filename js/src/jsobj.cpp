@@ -1385,7 +1385,7 @@ JSObject *
 js::NewObjectWithGroupCommon(ExclusiveContext *cx, HandleObjectGroup group,
                              gc::AllocKind allocKind, NewObjectKind newKind)
 {
-    MOZ_ASSERT(allocKind <= gc::AllocKind::OBJECT_LAST);
+    MOZ_ASSERT(gc::IsObjectAllocKind(allocKind));
     if (CanBeFinalizedInBackground(allocKind, group->clasp()))
         allocKind = GetBackgroundAllocKind(allocKind);
 

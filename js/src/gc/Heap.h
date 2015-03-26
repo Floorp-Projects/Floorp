@@ -110,8 +110,27 @@ enum class AllocKind {
     LAST = LIMIT - 1
 };
 
-static_assert(uint8_t(AllocKind::OBJECT0) == 0, "Please check AllocKind iterations and comparisons"
-    " of the form |kind <= AllocKind::OBJECT_LAST| to ensure their range is still valid!");
+static_assert(int(AllocKind::FIRST) == 0, "Various places depend on AllocKind starting at 0, "
+                                          "please audit them carefully!");
+static_assert(int(AllocKind::OBJECT0) == 0, "Various places depend on AllocKind::OBJECT0 being 0, "
+                                            "please audit them carefully!");
+
+inline bool
+IsObjectAllocKind(AllocKind kind)
+{
+    return kind >= AllocKind::OBJECT0 && kind <= AllocKind::OBJECT_LAST;
+}
+
+inline bool
+IsValidAllocKind(AllocKind kind)
+{
+    return kind >= AllocKind::FIRST && kind <= AllocKind::LAST;
+}
+
+inline bool IsAllocKind(AllocKind kind)
+{
+    return kind >= AllocKind::FIRST && kind <= AllocKind::LIMIT;
+}
 
 // Returns a sequence for use in a range-based for loop,
 // to iterate over all alloc kinds.
@@ -134,8 +153,8 @@ ObjectAllocKinds()
 inline decltype(mozilla::MakeEnumeratedRange<int>(AllocKind::FIRST, AllocKind::LIMIT))
 SomeAllocKinds(AllocKind first = AllocKind::FIRST, AllocKind limit = AllocKind::LIMIT)
 {
-    MOZ_ASSERT(limit <= AllocKind::LIMIT);
-    MOZ_ASSERT(first <= limit);
+    MOZ_ASSERT(IsAllocKind(first), "|first| is not a valid AllocKind!");
+    MOZ_ASSERT(IsAllocKind(limit), "|limit| is not a valid AllocKind!");
     return mozilla::MakeEnumeratedRange<int>(first, limit);
 }
 
@@ -615,8 +634,8 @@ struct ArenaHeader
     inline Chunk *chunk() const;
 
     bool allocated() const {
-        MOZ_ASSERT(allocKind <= size_t(AllocKind::LIMIT));
-        return allocKind < size_t(AllocKind::LIMIT);
+        MOZ_ASSERT(IsAllocKind(AllocKind(allocKind)));
+        return IsValidAllocKind(AllocKind(allocKind));
     }
 
     void init(JS::Zone *zoneArg, AllocKind kind) {
