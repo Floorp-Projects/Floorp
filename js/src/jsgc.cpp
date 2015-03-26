@@ -1833,7 +1833,7 @@ CanRelocateZone(JSRuntime *rt, Zone *zone)
 static bool
 CanRelocateAllocKind(AllocKind kind)
 {
-    return kind <= AllocKind::OBJECT_LAST;
+    return IsObjectAllocKind(kind);
 }
 
 size_t ArenaHeader::countFreeCells()
@@ -1959,7 +1959,7 @@ RelocateCell(Zone *zone, TenuredCell *src, AllocKind thingKind, size_t thingSize
     // Copy source cell contents to destination.
     memcpy(dst, src, thingSize);
 
-    if (thingKind <= AllocKind::OBJECT_LAST) {
+    if (IsObjectAllocKind(thingKind)) {
         JSObject *srcObj = static_cast<JSObject *>(static_cast<Cell *>(src));
         JSObject *dstObj = static_cast<JSObject *>(static_cast<Cell *>(dst));
 
@@ -2311,7 +2311,7 @@ struct ArenasToUpdate
 
 bool ArenasToUpdate::shouldProcessKind(AllocKind kind)
 {
-    MOZ_ASSERT(kind < AllocKind::LIMIT);
+    MOZ_ASSERT(IsValidAllocKind(kind));
 
     // GC things that do not contain JSObject pointers don't need updating.
     if (kind == AllocKind::FAT_INLINE_STRING ||
