@@ -54,7 +54,7 @@ function onLoad() {
       content.appendChild(AboutWebRTC.render());
     }).catch(error => {
       let msg = document.createElement("h3");
-      msg.textContent = getString("cannot_retieve_log");
+      msg.textContent = getString("cannot_retrieve_log");
       content.appendChild(msg);
       msg = document.createElement("p");
       msg.innerHTML = `${error.name}: ${error.message}`;
