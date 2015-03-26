@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <script>
+  var isAndroid = navigator.userAgent.contains("Android");
+  var isB2G = !isAndroid && /Mobile|Tablet/.test(navigator.userAgent);
+
   function ok(v, msg) {
     window.parent.postMessage({status: "ok", result: !!v, message: msg}, "*");
   }
@@ -185,8 +188,6 @@
   }
 
   function testInternal() {
-    var isB2G = !navigator.userAgent.contains("Android") &&
-                /Mobile|Tablet/.test(navigator.userAgent);
     if (isB2G) {
       // We can't open new windows on b2g, so skip this part of the test there.
       return Promise.resolve();
@@ -223,6 +224,129 @@
     });
   }
 
+  function testPlugin() {
+    var isMobile = /Mobile|Tablet/.test(navigator.userAgent);
+    if (isMobile) {
+      // We can't use plugins on mobile, so skip this part of the test there.
+      return Promise.resolve();
+    }
+    return new Promise(function(resolve, reject) {
+      var embed = document.createElement("embed");
+      embed.type = "application/x-test";
+      embed.setAttribute("posturl", "plugin");
+      embed.setAttribute("postmode", "stream");
+      embed.setAttribute("streammode", "normal");
+      embed.setAttribute("src", "fetch.txt");
+      document.documentElement.appendChild(embed);
+      navigator.serviceWorker.addEventListener("message", function onMessage(e) {
+        if (e.data.data == "plugin") {
+          is(e.data.context, "plugin", "Expected the plugin context on a request coming from a plugin");
+          navigator.serviceWorker.removeEventListener("message", onMessage);
+          resolve();
+        }
+      }, false);
+    });
+  }
+
+  function testScript() {
+    return new Promise(function(resolve, reject) {
+      var script = document.createElement("script");
+      script.src = "script.js";
+      document.documentElement.appendChild(script);
+      // The service worker will respond with an existing script only if the
+      // Request has the correct context, otherwise the Promise will get
+      // rejected and the test will fail.
+      script.onload = resolve;
+      script.onerror = reject;
+    });
+  }
+
+  function testStyle() {
+    return new Promise(function(resolve, reject) {
+      var link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "style.css";
+      document.documentElement.appendChild(link);
+      navigator.serviceWorker.addEventListener("message", function onMessage(e) {
+        if (e.data.data == "style") {
+          is(e.data.context, "style", "Expected the style context on a request coming from a stylesheet");
+          navigator.serviceWorker.removeEventListener("message", onMessage);
+          resolve();
+        }
+      }, false);
+    });
+  }
+
+  function testTrack() {
+    return new Promise(function(resolve, reject) {
+      var video = document.createElement("video");
+      var track = document.createElement("track");
+      track.src = "track";
+      video.appendChild(track);
+      document.documentElement.appendChild(video);
+      navigator.serviceWorker.addEventListener("message", function onMessage(e) {
+        if (e.data.data == "track") {
+          // FIXME: Bug 1147668: This should be "track".
+          is(e.data.context, "audio", "Expected the audio context on a request coming from a track");
+          navigator.serviceWorker.removeEventListener("message", onMessage);
+          resolve();
+        }
+      }, false);
+    });
+  }
+
+  function testXHR() {
+    return new Promise(function(resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open("get", "xhr", true);
+      xhr.send();
+      // The service worker will respond with an existing resource only if the
+      // Request has the correct context, otherwise the Promise will get
+      // rejected and the test will fail.
+      xhr.onload = resolve;
+      xhr.onerror = reject;
+    });
+  }
+
+  function testXSLT() {
+    return new Promise(function(resolve, reject) {
+      var iframe = document.createElement("iframe");
+      iframe.src = "xml.xml";
+      document.documentElement.appendChild(iframe);
+      navigator.serviceWorker.addEventListener("message", function onMessage(e) {
+        if (e.data.data == "xslt") {
+          is(e.data.context, "xslt", "Expected the xslt context on an XSLT stylesheet");
+          navigator.serviceWorker.removeEventListener("message", onMessage);
+          resolve();
+        }
+      }, false);
+    });
+  }
+
+  function testCache() {
+    if (isAndroid) {
+      // FIXME: Re-enable this test on Android once bug 1148818 gets fixed.
+      return Promise.resolve();
+    }
+    return new Promise(function(resolve, reject) {
+      // Issue an XHR that will be intercepted by the SW in order to start off
+      // the test with a RequestContext value that is not the default ("fetch").
+      // This needs to run inside a fetch event handler because synthesized
+      // RequestContext objects can only have the "fetch" context, and we'd
+      // prefer to test the more general case of some other RequestContext value.
+      var xhr = new XMLHttpRequest();
+      xhr.open("get", "cache", true);
+      xhr.send();
+      navigator.serviceWorker.addEventListener("message", function onMessage(e) {
+        if (e.data.data == "cache") {
+          ok(e.data.success, "The RequestContext can be persisted in the cache.");
+          navigator.serviceWorker.removeEventListener("message", onMessage);
+          resolve();
+        }
+      }, false);
+    });
+  }
+
   Promise.all([
     testFetch(),
     testImage(),
@@ -239,6 +363,15 @@
     testFrame(),
     testInternal(),
     testPing(),
+    testPlugin(),
+    testScript(),
+    testStyle(),
+    testTrack(),
+    testXHR(),
+    testXSLT(),
+
+    // Also, test to see if the type of the request can be persisted in the database.
+    testCache(),
   ])
   .then(function() {
     finish();
