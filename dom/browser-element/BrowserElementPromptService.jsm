@@ -383,17 +383,46 @@ BrowserElementAuthPrompt.prototype = {
       host:             hostname,
       realm:            httpRealm,
       username:         authInfo.username,
+      isProxy:          !!(authInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY),
       isOnlyPassword:   !!(authInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD)
     };
   },
 
+  // The code is taken from nsLoginManagerPrompter.js, with slight
+  // modification for parameter name consistency here.
   _getAuthTarget : function (channel, authInfo) {
-    let hostname = this._getFormattedHostname(channel.URI);
+    let hostname, realm;
+
+    // If our proxy is demanding authentication, don't use the
+    // channel's actual destination.
+    if (authInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY) {
+      if (!(channel instanceof Ci.nsIProxiedChannel))
+        throw new Error("proxy auth needs nsIProxiedChannel");
+
+      let info = channel.proxyInfo;
+      if (!info)
+        throw new Error("proxy auth needs nsIProxyInfo");
+
+      // Proxies don't have a scheme, but we'll use "moz-proxy://"
+      // so that it's more obvious what the login is for.
+      var idnService = Cc["@mozilla.org/network/idn-service;1"].
+                       getService(Ci.nsIIDNService);
+      hostname = "moz-proxy://" +
+                  idnService.convertUTF8toACE(info.host) +
+                  ":" + info.port;
+      realm = authInfo.realm;
+      if (!realm)
+        realm = hostname;
+
+      return [hostname, realm];
+    }
+
+    hostname = this._getFormattedHostname(channel.URI);
 
     // If a HTTP WWW-Authenticate header specified a realm, that value
     // will be available here. If it wasn't set or wasn't HTTP, we'll use
     // the formatted hostname instead.
-    let realm = authInfo.realm;
+    realm = authInfo.realm;
     if (!realm)
       realm = hostname;
 

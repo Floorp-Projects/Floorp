@@ -12,6 +12,172 @@
 using namespace js;
 using namespace js::jit;
 
+// Note: this function clobbers the input register.
+void
+MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
+{
+    MOZ_ASSERT(input != ScratchDoubleReg);
+    Label positive, done;
+
+    // <= 0 or NaN --> 0
+    zeroDouble(ScratchDoubleReg);
+    branchDouble(DoubleGreaterThan, input, ScratchDoubleReg, &positive);
+    {
+        move32(Imm32(0), output);
+        jump(&done);
+    }
+
+    bind(&positive);
+
+    // Add 0.5 and truncate.
+    loadConstantDouble(0.5, ScratchDoubleReg);
+    addDouble(ScratchDoubleReg, input);
+
+    Label outOfRange;
+
+    // Truncate to int32 and ensure the result <= 255. This relies on the
+    // processor setting output to a value > 255 for doubles outside the int32
+    // range (for instance 0x80000000).
+    vcvttsd2si(input, output);
+    branch32(Assembler::Above, output, Imm32(255), &outOfRange);
+    {
+        // Check if we had a tie.
+        convertInt32ToDouble(output, ScratchDoubleReg);
+        branchDouble(DoubleNotEqual, input, ScratchDoubleReg, &done);
+
+        // It was a tie. Mask out the ones bit to get an even value.
+        // See also js_TypedArray_uint8_clamp_double.
+        and32(Imm32(~1), output);
+        jump(&done);
+    }
+
+    // > 255 --> 255
+    bind(&outOfRange);
+    {
+        move32(Imm32(255), output);
+    }
+
+    bind(&done);
+}
+
+// Builds an exit frame on the stack, with a return address to an internal
+// non-function. Returns offset to be passed to markSafepointAt().
+void
+MacroAssemblerX86Shared::buildFakeExitFrame(Register scratch, uint32_t *offset)
+{
+    mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
+
+    CodeLabel cl;
+    mov(cl.dest(), scratch);
+
+    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    asMasm().Push(Imm32(descriptor));
+    asMasm().Push(scratch);
+
+    bind(cl.src());
+    *offset = currentOffset();
+
+    MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());
+    addCodeLabel(cl);
+}
+
+void
+MacroAssemblerX86Shared::callWithExitFrame(Label *target)
+{
+    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    asMasm().Push(Imm32(descriptor));
+    call(target);
+}
+
+void
+MacroAssemblerX86Shared::callWithExitFrame(JitCode *target)
+{
+    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    asMasm().Push(Imm32(descriptor));
+    call(target);
+}
+
+void
+MacroAssembler::alignFrameForICArguments(AfterICSaveLive &aic)
+{
+    // Exists for MIPS compatibility.
+}
+
+void
+MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive &aic)
+{
+    // Exists for MIPS compatibility.
+}
+
+bool
+MacroAssemblerX86Shared::buildOOLFakeExitFrame(void *fakeReturnAddr)
+{
+    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
+    asMasm().Push(Imm32(descriptor));
+    asMasm().Push(ImmPtr(fakeReturnAddr));
+    return true;
+}
+
+void
+MacroAssemblerX86Shared::branchNegativeZero(FloatRegister reg,
+                                            Register scratch,
+                                            Label *label,
+                                            bool maybeNonZero)
+{
+    // Determines whether the low double contained in the XMM register reg
+    // is equal to -0.0.
+
+#if defined(JS_CODEGEN_X86)
+    Label nonZero;
+
+    // if not already compared to zero
+    if (maybeNonZero) {
+        // Compare to zero. Lets through {0, -0}.
+        zeroDouble(ScratchDoubleReg);
+
+        // If reg is non-zero, jump to nonZero.
+        branchDouble(DoubleNotEqual, reg, ScratchDoubleReg, &nonZero);
+    }
+    // Input register is either zero or negative zero. Retrieve sign of input.
+    vmovmskpd(reg, scratch);
+
+    // If reg is 1 or 3, input is negative zero.
+    // If reg is 0 or 2, input is a normal zero.
+    branchTest32(NonZero, scratch, Imm32(1), label);
+
+    bind(&nonZero);
+#elif defined(JS_CODEGEN_X64)
+    vmovq(reg, scratch);
+    cmpq(Imm32(1), scratch);
+    j(Overflow, label);
+#endif
+}
+
+void
+MacroAssemblerX86Shared::branchNegativeZeroFloat32(FloatRegister reg,
+                                                   Register scratch,
+                                                   Label *label)
+{
+    vmovd(reg, scratch);
+    cmp32(scratch, Imm32(1));
+    j(Overflow, label);
+}
+
+MacroAssembler &
+MacroAssemblerX86Shared::asMasm()
+{
+    return *static_cast<MacroAssembler *>(this);
+}
+
+const MacroAssembler &
+MacroAssemblerX86Shared::asMasm() const
+{
+    return *static_cast<const MacroAssembler *>(this);
+}
+
+// ===============================================================
+// Stack manipulation functions.
+
 void
 MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
 {
@@ -128,153 +294,78 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRe
     MOZ_ASSERT(diffG == 0);
 }
 
-// Note: this function clobbers the input register.
 void
-MacroAssembler::clampDoubleToUint8(FloatRegister input, Register output)
+MacroAssembler::Push(const Operand op)
 {
-    MOZ_ASSERT(input != ScratchDoubleReg);
-    Label positive, done;
-
-    // <= 0 or NaN --> 0
-    zeroDouble(ScratchDoubleReg);
-    branchDouble(DoubleGreaterThan, input, ScratchDoubleReg, &positive);
-    {
-        move32(Imm32(0), output);
-        jump(&done);
-    }
-
-    bind(&positive);
-
-    // Add 0.5 and truncate.
-    loadConstantDouble(0.5, ScratchDoubleReg);
-    addDouble(ScratchDoubleReg, input);
-
-    Label outOfRange;
-
-    // Truncate to int32 and ensure the result <= 255. This relies on the
-    // processor setting output to a value > 255 for doubles outside the int32
-    // range (for instance 0x80000000).
-    vcvttsd2si(input, output);
-    branch32(Assembler::Above, output, Imm32(255), &outOfRange);
-    {
-        // Check if we had a tie.
-        convertInt32ToDouble(output, ScratchDoubleReg);
-        branchDouble(DoubleNotEqual, input, ScratchDoubleReg, &done);
-
-        // It was a tie. Mask out the ones bit to get an even value.
-        // See also js_TypedArray_uint8_clamp_double.
-        and32(Imm32(~1), output);
-        jump(&done);
-    }
-
-    // > 255 --> 255
-    bind(&outOfRange);
-    {
-        move32(Imm32(255), output);
-    }
-
-    bind(&done);
-}
-
-// Builds an exit frame on the stack, with a return address to an internal
-// non-function. Returns offset to be passed to markSafepointAt().
-void
-MacroAssemblerX86Shared::buildFakeExitFrame(Register scratch, uint32_t *offset)
-{
-    mozilla::DebugOnly<uint32_t> initialDepth = framePushed();
-
-    CodeLabel cl;
-    mov(cl.dest(), scratch);
-
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
-    Push(Imm32(descriptor));
-    Push(scratch);
-
-    bind(cl.src());
-    *offset = currentOffset();
-
-    MOZ_ASSERT(framePushed() == initialDepth + ExitFrameLayout::Size());
-    addCodeLabel(cl);
+    push(op);
+    framePushed_ += sizeof(intptr_t);
 }
 
 void
-MacroAssemblerX86Shared::callWithExitFrame(Label *target)
+MacroAssembler::Push(Register reg)
 {
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
-    Push(Imm32(descriptor));
-    call(target);
+    push(reg);
+    framePushed_ += sizeof(intptr_t);
 }
 
 void
-MacroAssemblerX86Shared::callWithExitFrame(JitCode *target)
+MacroAssembler::Push(const Imm32 imm)
 {
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
-    Push(Imm32(descriptor));
-    call(target);
+    push(imm);
+    framePushed_ += sizeof(intptr_t);
 }
 
 void
-MacroAssembler::alignFrameForICArguments(AfterICSaveLive &aic)
+MacroAssembler::Push(const ImmWord imm)
 {
-    // Exists for MIPS compatibility.
+    push(imm);
+    framePushed_ += sizeof(intptr_t);
 }
 
 void
-MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive &aic)
+MacroAssembler::Push(const ImmPtr imm)
 {
-    // Exists for MIPS compatibility.
-}
-
-bool
-MacroAssemblerX86Shared::buildOOLFakeExitFrame(void *fakeReturnAddr)
-{
-    uint32_t descriptor = MakeFrameDescriptor(framePushed(), JitFrame_IonJS);
-    Push(Imm32(descriptor));
-    Push(ImmPtr(fakeReturnAddr));
-    return true;
+    Push(ImmWord(uintptr_t(imm.value)));
 }
 
 void
-MacroAssemblerX86Shared::branchNegativeZero(FloatRegister reg,
-                                            Register scratch,
-                                            Label *label,
-                                            bool maybeNonZero)
+MacroAssembler::Push(const ImmGCPtr ptr)
 {
-    // Determines whether the low double contained in the XMM register reg
-    // is equal to -0.0.
-
-#if defined(JS_CODEGEN_X86)
-    Label nonZero;
-
-    // if not already compared to zero
-    if (maybeNonZero) {
-        // Compare to zero. Lets through {0, -0}.
-        zeroDouble(ScratchDoubleReg);
-
-        // If reg is non-zero, jump to nonZero.
-        branchDouble(DoubleNotEqual, reg, ScratchDoubleReg, &nonZero);
-    }
-    // Input register is either zero or negative zero. Retrieve sign of input.
-    vmovmskpd(reg, scratch);
-
-    // If reg is 1 or 3, input is negative zero.
-    // If reg is 0 or 2, input is a normal zero.
-    branchTest32(NonZero, scratch, Imm32(1), label);
-
-    bind(&nonZero);
-#elif defined(JS_CODEGEN_X64)
-    vmovq(reg, scratch);
-    cmpq(Imm32(1), scratch);
-    j(Overflow, label);
-#endif
+    push(ptr);
+    framePushed_ += sizeof(intptr_t);
 }
 
 void
-MacroAssemblerX86Shared::branchNegativeZeroFloat32(FloatRegister reg,
-                                                   Register scratch,
-                                                   Label *label)
+MacroAssembler::Push(FloatRegister t)
 {
-    vmovd(reg, scratch);
-    cmp32(scratch, Imm32(1));
-    j(Overflow, label);
+    push(t);
+    framePushed_ += sizeof(double);
+}
+
+void
+MacroAssembler::Pop(const Operand op)
+{
+    pop(op);
+    framePushed_ -= sizeof(intptr_t);
+}
+
+void
+MacroAssembler::Pop(Register reg)
+{
+    pop(reg);
+    framePushed_ -= sizeof(intptr_t);
+}
+
+void
+MacroAssembler::Pop(FloatRegister reg)
+{
+    pop(reg);
+    framePushed_ -= sizeof(double);
+}
+
+void
+MacroAssembler::Pop(const ValueOperand &val)
+{
+    popValue(val);
+    framePushed_ -= sizeof(Value);
 }

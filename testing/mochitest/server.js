@@ -44,19 +44,21 @@ function makeTagFunc(tagName)
   {
     var startChildren = 0;
     var response = "";
-    
+
     // write the start tag and attributes
     response += "<" + tagName;
     // if attr is an object, write attributes
     if (attrs && typeof attrs == 'object') {
       startChildren = 1;
-      for (var [key,value] in attrs) {
+
+      for (let key in attrs) {
+        const value = attrs[key];
         var val = "" + value;
         response += " " + key + '="' + val.replace('"','&quot;') + '"';
       }
     }
     response += ">";
-    
+
     // iterate through the rest of the args
     for (var i = startChildren; i < arguments.length; i++) {
       if (typeof arguments[i] == 'function') {
@@ -313,7 +315,6 @@ function processLocations(server)
   while (more);
 }
 
-
 // PATH HANDLERS
 
 // /server/shutdown
@@ -463,7 +464,8 @@ function linksToListItems(links)
 {
   var response = "";
   var children = "";
-  for (var [link, value] in links) {
+  for (let link in links) {
+    const value = links[link];
     var classVal = (!isTest(link) && !(value instanceof Object))
       ? "non-test invisible"
       : "test";
@@ -496,7 +498,8 @@ function linksToListItems(links)
 function linksToTableRows(links, recursionLevel)
 {
   var response = "";
-  for (var [link, value] in links) {
+  for (let link in links) {
+    const value = links[link];
     var classVal = (!isTest(link) && ((value instanceof Object) && ('test' in value)))
       ? "non-test invisible"
       : "";
@@ -538,7 +541,8 @@ function linksToTableRows(links, recursionLevel)
 }
 
 function arrayOfTestFiles(linkArray, fileArray, testPattern) {
-  for (var [link, value] in Iterator(linkArray)) {
+  for (let link in linkArray) {
+    const value = linkArray[link];
     if ((value instanceof Object) && !('test' in value)) {
       arrayOfTestFiles(value, fileArray, testPattern);
     } else if (isTest(link, testPattern) && (value instanceof Object)) {

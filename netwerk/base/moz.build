@@ -66,6 +66,7 @@ XPIDL_SOURCES += [
     'nsINetworkProperties.idl',
     'nsINSSErrorsService.idl',
     'nsINullChannel.idl',
+    'nsIPACGenerator.idl',
     'nsIParentChannel.idl',
     'nsIParentRedirectingChannel.idl',
     'nsIPermission.idl',
@@ -260,6 +261,11 @@ if CONFIG['MOZ_ENABLE_QTNETWORK']:
     SOURCES += [
         'nsAutodialQt.cpp',
     ]
+
+EXTRA_COMPONENTS += [
+    'PACGenerator.js',
+    'PACGenerator.manifest'
+]
 
 EXTRA_JS_MODULES += [
     'NetUtil.jsm',

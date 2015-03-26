@@ -36,8 +36,15 @@
 namespace js {
 namespace jit {
 
+class MacroAssembler;
+
 class MacroAssemblerX86Shared : public Assembler
 {
+  private:
+    // Perform a downcast. Should be removed by Bug 996602.
+    MacroAssembler &asMasm();
+    const MacroAssembler &asMasm() const;
+
   protected:
     // Bytes pushed onto the frame by the callee; includes frameDepth_. This is
     // needed to compute offsets to stack slots while temporary space has been
@@ -628,15 +635,6 @@ class MacroAssemblerX86Shared : public Assembler
     }
 
     // The following functions are exposed for use in platform-shared code.
-    template <typename T>
-    void Push(const T &t) {
-        push(t);
-        framePushed_ += sizeof(intptr_t);
-    }
-    void Push(FloatRegister t) {
-        push(t);
-        framePushed_ += sizeof(double);
-    }
     CodeOffsetLabel PushWithPatch(ImmWord word) {
         framePushed_ += sizeof(word.value);
         return pushWithPatch(word);
@@ -645,15 +643,6 @@ class MacroAssemblerX86Shared : public Assembler
         return PushWithPatch(ImmWord(uintptr_t(imm.value)));
     }
 
-    template <typename T>
-    void Pop(const T &t) {
-        pop(t);
-        framePushed_ -= sizeof(intptr_t);
-    }
-    void Pop(FloatRegister t) {
-        pop(t);
-        framePushed_ -= sizeof(double);
-    }
     void implicitPop(uint32_t args) {
         MOZ_ASSERT(args % sizeof(intptr_t) == 0);
         framePushed_ -= args;

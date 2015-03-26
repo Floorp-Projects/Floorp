@@ -28,7 +28,7 @@ class AddonWrapper : public Base {
                                           JS::Handle<jsid> id,
                                           JS::MutableHandle<JSPropertyDescriptor> desc) const override;
     virtual bool defineProperty(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
-                                JS::MutableHandle<JSPropertyDescriptor> desc,
+                                JS::Handle<JSPropertyDescriptor> desc,
                                 JS::ObjectOpResult &result) const override;
     virtual bool delete_(JSContext *cx, JS::HandleObject proxy, JS::HandleId id,
                          JS::ObjectOpResult &result) const override;

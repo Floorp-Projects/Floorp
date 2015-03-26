@@ -338,6 +338,7 @@ StatsCompartmentCallback(JSRuntime *rt, void *data, JSCompartment *compartment)
                                         &cStats.compartmentTables,
                                         &cStats.innerViewsTable,
                                         &cStats.lazyArrayBuffersTable,
+                                        &cStats.objectMetadataTable,
                                         &cStats.crossCompartmentWrappersTable,
                                         &cStats.regexpCompartment,
                                         &cStats.savedStacksSet);

@@ -186,6 +186,7 @@ private:
 
   DECL_GFX_PREF(Once, "dom.vr.enabled",                        VREnabled, bool, false);
   DECL_GFX_PREF(Once, "dom.vr.add-test-devices",               VRAddTestDevices, int32_t, 1);
+  DECL_GFX_PREF(Live, "dom.w3c_pointer_events.enabled",        PointerEventsEnabled, bool, false);
 
   DECL_GFX_PREF(Once, "gfx.android.rgb16.force",               AndroidRGB16Force, bool, false);
 #if defined(ANDROID)
@@ -335,8 +336,12 @@ private:
   DECL_GFX_PREF(Once, "layout.scroll.root-frame-containers",   LayoutUseContainersForRootFrames, bool, true);
 
   // This affects whether events will be routed through APZ or not.
-  DECL_GFX_PREF(Once, "mousewheel.system_scroll_override_on_root_content.enabled",
-                                                               MouseWheelHasScrollDeltaOverride, bool, false);
+  DECL_GFX_PREF(Live, "mousewheel.system_scroll_override_on_root_content.enabled",
+                                                               MouseWheelHasRootScrollDeltaOverride, bool, false);
+  DECL_GFX_PREF(Live, "mousewheel.system_scroll_override_on_root_content.horizontal.factor",
+                                                               MouseWheelRootHScrollDeltaFactor, int32_t, 100);
+  DECL_GFX_PREF(Live, "mousewheel.system_scroll_override_on_root_content.vertical.factor",
+                                                               MouseWheelRootVScrollDeltaFactor, int32_t, 100);
   DECL_GFX_PREF(Live, "mousewheel.transaction.ignoremovedelay",MouseWheelIgnoreMoveDelayMs, int32_t, (int32_t)100);
   DECL_GFX_PREF(Live, "mousewheel.transaction.timeout",        MouseWheelTransactionTimeoutMs, int32_t, (int32_t)1500);
 

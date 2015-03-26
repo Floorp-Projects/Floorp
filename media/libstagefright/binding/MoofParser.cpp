@@ -241,7 +241,7 @@ MoofParser::ParseEncrypted(Box& aBox)
 
 Moof::Moof(Box& aBox, Trex& aTrex, Mdhd& aMdhd, Edts& aEdts, Sinf& aSinf, bool aIsAudio)
   : mRange(aBox.Range())
-  , mMaxRoundingError(0)
+  , mMaxRoundingError(35000)
 {
   for (Box box = aBox.FirstChild(); box.IsAvailable(); box = box.Next()) {
     if (box.IsType("traf")) {
@@ -672,7 +672,6 @@ Edts::Edts(Box& aBox)
     segment_duration = reader->ReadU32();
     mMediaStart = reader->Read32();
   }
-  NS_ASSERTION(segment_duration == 0, "Can't handle edits with fixed durations");
   reader->DiscardRemaining();
 }
 

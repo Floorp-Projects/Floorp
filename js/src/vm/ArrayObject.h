@@ -60,7 +60,6 @@ class ArrayObject : public NativeObject
     static inline ArrayObject *
     createCopyOnWriteArray(ExclusiveContext *cx,
                            gc::InitialHeap heap,
-                           HandleShape shape,
                            HandleArrayObject sharedElementsOwner);
 
   private:

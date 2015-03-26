@@ -103,8 +103,8 @@ SecurityWrapper<Base>::boxedValue_unbox(JSContext *cx, HandleObject obj, Mutable
 
 template <class Base>
 bool
-SecurityWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper,
-                                      HandleId id, MutableHandle<PropertyDescriptor> desc,
+SecurityWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
+                                      Handle<PropertyDescriptor> desc,
                                       ObjectOpResult &result) const
 {
     if (desc.getter() || desc.setter()) {

@@ -3881,6 +3881,60 @@ class MUnreachable
     }
 };
 
+// This class serve as a way to force the encoding of a snapshot, even if there
+// is no resume point using it.  This is useful to run MAssertRecoveredOnBailout
+// assertions.
+class MEncodeSnapshot : public MNullaryInstruction
+{
+  protected:
+    MEncodeSnapshot()
+      : MNullaryInstruction()
+    {
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(EncodeSnapshot)
+
+    static MEncodeSnapshot *
+    New(TempAllocator &alloc) {
+        return new(alloc) MEncodeSnapshot();
+    }
+};
+
+class MAssertRecoveredOnBailout
+  : public MUnaryInstruction,
+    public NoTypePolicy::Data
+{
+  protected:
+    bool mustBeRecovered_;
+
+    MAssertRecoveredOnBailout(MDefinition *ins, bool mustBeRecovered)
+      : MUnaryInstruction(ins), mustBeRecovered_(mustBeRecovered)
+    {
+        setResultType(MIRType_Value);
+        setRecoveredOnBailout();
+        setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(AssertRecoveredOnBailout)
+
+    static MAssertRecoveredOnBailout *New(TempAllocator &alloc, MDefinition *ins,
+                                          bool mustBeRecovered)
+    {
+        return new(alloc) MAssertRecoveredOnBailout(ins, mustBeRecovered);
+    }
+
+    // Needed to assert that float32 instructions are correctly recovered.
+    bool canConsumeFloat32(MUse *use) const override { return true; }
+
+    bool writeRecoverData(CompactBufferWriter &writer) const override;
+    bool canRecoverOnBailout() const override {
+        return true;
+    }
+};
+
 class MAssertFloat32
   : public MUnaryInstruction,
     public NoTypePolicy::Data

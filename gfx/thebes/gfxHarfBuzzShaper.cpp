@@ -355,15 +355,22 @@ gfxHarfBuzzShaper::GetGlyphVOrigin(hb_codepoint_t aGlyph,
                 return;
             }
 
-            if (aGlyph >= uint32_t(mNumLongVMetrics)) {
-                aGlyph = mNumLongVMetrics - 1;
-            }
             const GlyphMetrics* metrics =
                 reinterpret_cast<const GlyphMetrics*>
                     (hb_blob_get_data(mVmtxTable, nullptr));
+            int16_t lsb;
+            if (aGlyph < hb_codepoint_t(mNumLongVMetrics)) {
+                // Glyph is covered by the first (advance & sidebearing) array
+                lsb = int16_t(metrics->metrics[aGlyph].lsb);
+            } else {
+                // Glyph is covered by the second (sidebearing-only) array
+                const AutoSwap_PRInt16* sidebearings =
+                    reinterpret_cast<const AutoSwap_PRInt16*>
+                        (&metrics->metrics[mNumLongVMetrics]);
+                lsb = int16_t(sidebearings[aGlyph - mNumLongVMetrics]);
+            }
             *aY = -FloatToFixed(mFont->FUnitsToDevUnitsFactor() *
-                                (int16_t(metrics->metrics[aGlyph].lsb) +
-                                 int16_t(glyf->yMax)));
+                                (lsb + int16_t(glyf->yMax)));
             return;
         } else {
             // XXX TODO: not a truetype font; need to get glyph extents
@@ -382,8 +389,11 @@ gfxHarfBuzzShaper::GetGlyphVOrigin(hb_codepoint_t aGlyph,
             reinterpret_cast<const MetricsHeader*>(hb_blob_get_data(hheaTable,
                                                                     &len));
         if (len >= sizeof(MetricsHeader)) {
-            *aY = -FloatToFixed(GetFont()->FUnitsToDevUnitsFactor() *
-                                int16_t(hhea->ascender));
+            // divide up the default advance we're using (1em) in proportion
+            // to ascender:descender from the hhea table
+            int16_t a = int16_t(hhea->ascender);
+            int16_t d = int16_t(hhea->descender);
+            *aY = -FloatToFixed(GetFont()->GetAdjustedSize() * a / (a - d));
             return;
         }
     }
@@ -1271,11 +1281,22 @@ gfxHarfBuzzShaper::InitializeVertical()
             (hb_blob_get_data(vheaTable, &len));
         if (len >= sizeof(MetricsHeader)) {
             mNumLongVMetrics = vhea->numOfLongMetrics;
-            if (mNumLongVMetrics > 0 &&
+            gfxFontEntry::AutoTable
+                maxpTable(entry, TRUETYPE_TAG('m','a','x','p'));
+            int numGlyphs = -1; // invalid if we fail to read 'maxp'
+            if (maxpTable &&
+                hb_blob_get_length(maxpTable) >= sizeof(MaxpTableHeader)) {
+                const MaxpTableHeader* maxp =
+                    reinterpret_cast<const MaxpTableHeader*>
+                    (hb_blob_get_data(maxpTable, nullptr));
+                numGlyphs = uint16_t(maxp->numGlyphs);
+            }
+            if (mNumLongVMetrics > 0 && mNumLongVMetrics <= numGlyphs &&
                 int16_t(vhea->metricDataFormat) == 0) {
                 mVmtxTable = entry->GetFontTable(TRUETYPE_TAG('v','m','t','x'));
                 if (mVmtxTable && hb_blob_get_length(mVmtxTable) <
-                    mNumLongVMetrics * sizeof(LongMetric)) {
+                    mNumLongVMetrics * sizeof(LongMetric) +
+                    (numGlyphs - mNumLongVMetrics) * sizeof(int16_t)) {
                     // metrics table is not large enough for the claimed
                     // number of entries: invalid, do not use.
                     hb_blob_destroy(mVmtxTable);

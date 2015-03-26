@@ -2034,45 +2034,6 @@ MacroAssembler::convertValueToFloatingPoint(JSContext *cx, const Value &v, Float
     return true;
 }
 
-void
-MacroAssembler::PushEmptyRooted(VMFunction::RootType rootType)
-{
-    switch (rootType) {
-      case VMFunction::RootNone:
-        MOZ_CRASH("Handle must have root type");
-      case VMFunction::RootObject:
-      case VMFunction::RootString:
-      case VMFunction::RootPropertyName:
-      case VMFunction::RootFunction:
-      case VMFunction::RootCell:
-        Push(ImmPtr(nullptr));
-        break;
-      case VMFunction::RootValue:
-        Push(UndefinedValue());
-        break;
-    }
-}
-
-void
-MacroAssembler::popRooted(VMFunction::RootType rootType, Register cellReg,
-                          const ValueOperand &valueReg)
-{
-    switch (rootType) {
-      case VMFunction::RootNone:
-        MOZ_CRASH("Handle must have root type");
-      case VMFunction::RootObject:
-      case VMFunction::RootString:
-      case VMFunction::RootPropertyName:
-      case VMFunction::RootFunction:
-      case VMFunction::RootCell:
-        Pop(cellReg);
-        break;
-      case VMFunction::RootValue:
-        Pop(valueReg);
-        break;
-    }
-}
-
 bool
 MacroAssembler::convertConstantOrRegisterToFloatingPoint(JSContext *cx, ConstantOrRegister src,
                                                          FloatRegister output, Label *fail,
@@ -2486,8 +2447,7 @@ MacroAssembler::profilerPreCallImpl(Register reg, Register reg2)
 void
 MacroAssembler::alignJitStackBasedOnNArgs(Register nargs)
 {
-    const uint32_t alignment = JitStackAlignment / sizeof(Value);
-    if (alignment == 1)
+    if (JitStackValueAlignment == 1)
         return;
 
     // A JitFrameLayout is composed of the following:
@@ -2500,7 +2460,7 @@ MacroAssembler::alignJitStackBasedOnNArgs(Register nargs)
 
     // Which implies that |argN| is aligned if |nargs| is even, and offset by
     // |sizeof(Value)| if |nargs| is odd.
-    MOZ_ASSERT(alignment == 2);
+    MOZ_ASSERT(JitStackValueAlignment == 2);
 
     // Thus the |padding| is offset by |sizeof(Value)| if |nargs| is even, and
     // aligned if |nargs| is odd.
@@ -2535,8 +2495,7 @@ MacroAssembler::alignJitStackBasedOnNArgs(Register nargs)
 void
 MacroAssembler::alignJitStackBasedOnNArgs(uint32_t nargs)
 {
-    const uint32_t alignment = JitStackAlignment / sizeof(Value);
-    if (alignment == 1)
+    if (JitStackValueAlignment == 1)
         return;
 
     // A JitFrameLayout is composed of the following:
@@ -2549,7 +2508,7 @@ MacroAssembler::alignJitStackBasedOnNArgs(uint32_t nargs)
 
     // Which implies that |argN| is aligned if |nargs| is even, and offset by
     // |sizeof(Value)| if |nargs| is odd.
-    MOZ_ASSERT(alignment == 2);
+    MOZ_ASSERT(JitStackValueAlignment == 2);
 
     // Thus the |padding| is offset by |sizeof(Value)| if |nargs| is even, and
     // aligned if |nargs| is odd.
@@ -2564,4 +2523,172 @@ MacroAssembler::alignJitStackBasedOnNArgs(uint32_t nargs)
     } else {
         andPtr(Imm32(~(JitStackAlignment - 1)), StackPointer);
     }
+}
+
+// ===============================================================
+// Stack manipulation functions.
+
+void
+MacroAssembler::PushRegsInMask(RegisterSet set)
+{
+    PushRegsInMask(set, FloatRegisterSet());
+}
+
+void
+MacroAssembler::PushRegsInMask(GeneralRegisterSet set)
+{
+    PushRegsInMask(RegisterSet(set, FloatRegisterSet()));
+}
+
+void
+MacroAssembler::PopRegsInMask(RegisterSet set)
+{
+    PopRegsInMaskIgnore(set, RegisterSet());
+}
+
+void
+MacroAssembler::PopRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
+{
+    PopRegsInMaskIgnore(set, RegisterSet(), simdSet);
+}
+
+void
+MacroAssembler::PopRegsInMask(GeneralRegisterSet set)
+{
+    PopRegsInMask(RegisterSet(set, FloatRegisterSet()));
+}
+
+void
+MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
+{
+    PopRegsInMaskIgnore(set, ignore, FloatRegisterSet());
+}
+
+void
+MacroAssembler::Push(jsid id, Register scratchReg)
+{
+    if (JSID_IS_GCTHING(id)) {
+        // If we're pushing a gcthing, then we can't just push the tagged jsid
+        // value since the GC won't have any idea that the push instruction
+        // carries a reference to a gcthing.  Need to unpack the pointer,
+        // push it using ImmGCPtr, and then rematerialize the id at runtime.
+
+        if (JSID_IS_STRING(id)) {
+            JSString *str = JSID_TO_STRING(id);
+            MOZ_ASSERT(((size_t)str & JSID_TYPE_MASK) == 0);
+            MOZ_ASSERT(JSID_TYPE_STRING == 0x0);
+            Push(ImmGCPtr(str));
+        } else {
+            MOZ_ASSERT(JSID_IS_SYMBOL(id));
+            JS::Symbol *sym = JSID_TO_SYMBOL(id);
+            movePtr(ImmGCPtr(sym), scratchReg);
+            orPtr(Imm32(JSID_TYPE_SYMBOL), scratchReg);
+            Push(scratchReg);
+        }
+    } else {
+        Push(ImmWord(JSID_BITS(id)));
+    }
+}
+
+void
+MacroAssembler::Push(TypedOrValueRegister v)
+{
+    if (v.hasValue()) {
+        Push(v.valueReg());
+    } else if (IsFloatingPointType(v.type())) {
+        FloatRegister reg = v.typedReg().fpu();
+        if (v.type() == MIRType_Float32) {
+            convertFloat32ToDouble(reg, ScratchDoubleReg);
+            reg = ScratchDoubleReg;
+        }
+        Push(reg);
+    } else {
+        Push(ValueTypeFromMIRType(v.type()), v.typedReg().gpr());
+    }
+}
+
+void
+MacroAssembler::Push(ConstantOrRegister v)
+{
+    if (v.constant())
+        Push(v.value());
+    else
+        Push(v.reg());
+}
+
+void
+MacroAssembler::Push(const ValueOperand &val)
+{
+    pushValue(val);
+    framePushed_ += sizeof(Value);
+}
+
+void
+MacroAssembler::Push(const Value &val)
+{
+    pushValue(val);
+    framePushed_ += sizeof(Value);
+}
+
+void
+MacroAssembler::Push(JSValueType type, Register reg)
+{
+    pushValue(type, reg);
+    framePushed_ += sizeof(Value);
+}
+
+void
+MacroAssembler::PushValue(const Address &addr)
+{
+    MOZ_ASSERT(addr.base != StackPointer);
+    pushValue(addr);
+    framePushed_ += sizeof(Value);
+}
+
+void
+MacroAssembler::PushEmptyRooted(VMFunction::RootType rootType)
+{
+    switch (rootType) {
+      case VMFunction::RootNone:
+        MOZ_CRASH("Handle must have root type");
+      case VMFunction::RootObject:
+      case VMFunction::RootString:
+      case VMFunction::RootPropertyName:
+      case VMFunction::RootFunction:
+      case VMFunction::RootCell:
+        Push(ImmPtr(nullptr));
+        break;
+      case VMFunction::RootValue:
+        Push(UndefinedValue());
+        break;
+    }
+}
+
+void
+MacroAssembler::popRooted(VMFunction::RootType rootType, Register cellReg,
+                          const ValueOperand &valueReg)
+{
+    switch (rootType) {
+      case VMFunction::RootNone:
+        MOZ_CRASH("Handle must have root type");
+      case VMFunction::RootObject:
+      case VMFunction::RootString:
+      case VMFunction::RootPropertyName:
+      case VMFunction::RootFunction:
+      case VMFunction::RootCell:
+        Pop(cellReg);
+        break;
+      case VMFunction::RootValue:
+        Pop(valueReg);
+        break;
+    }
+}
+
+void
+MacroAssembler::adjustStack(int amount)
+{
+    if (amount > 0)
+        freeStack(amount);
+    else if (amount < 0)
+        reserveStack(-amount);
 }

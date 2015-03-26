@@ -629,6 +629,12 @@ GMPChild::RecvPGMPDecryptorConstructor(PGMPDecryptorChild* aActor)
 
   void* session = nullptr;
   GMPErr err = GetAPI(GMP_API_DECRYPTOR, host, &session);
+
+  if (err != GMPNoErr && !session) {
+    // XXX to remove in bug 1147692
+    err = GetAPI(GMP_API_DECRYPTOR_COMPAT, host, &session);
+  }
+
   if (err != GMPNoErr || !session) {
     return false;
   }

@@ -117,6 +117,7 @@ namespace JS {
     _(CantInlineExceededTotalBytecodeLength)                            \
     _(CantInlineBigCaller)                                              \
     _(CantInlineBigCallee)                                              \
+    _(CantInlineBigCalleeInlinedBytecodeLength)                         \
     _(CantInlineNotHot)                                                 \
     _(CantInlineNotInDispatch)                                          \
     _(CantInlineUnreachable)                                            \

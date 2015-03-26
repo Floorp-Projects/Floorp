@@ -94,6 +94,10 @@ class OptimizationInfo
     uint32_t inlineMaxBytecodePerCallSiteOffThread_;
     uint32_t inlineMaxBytecodePerCallSiteMainThread_;
 
+    // The maximum value we allow for baselineScript->inlinedBytecodeLength_
+    // when inlining.
+    uint16_t inlineMaxCalleeInlinedBytecodeLength_;
+
     // The maximum bytecode length we'll inline in a single compilation.
     uint32_t inlineMaxTotalBytecodeLength_;
 
@@ -219,6 +223,10 @@ class OptimizationInfo
         return (offThread || !js_JitOptions.limitScriptSize)
                ? inlineMaxBytecodePerCallSiteOffThread_
                : inlineMaxBytecodePerCallSiteMainThread_;
+    }
+
+    uint16_t inlineMaxCalleeInlinedBytecodeLength() const {
+        return inlineMaxCalleeInlinedBytecodeLength_;
     }
 
     uint32_t inlineMaxTotalBytecodeLength() const {

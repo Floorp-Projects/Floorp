@@ -236,7 +236,8 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIDOMWindowUtils>& aUtils,
 void
 APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                                  const ScrollableLayerGuid& aGuid,
-                                 uint64_t aInputBlockId)
+                                 uint64_t aInputBlockId,
+                                 nsEventStatus aApzResponse)
 {
   if (aEvent.message == NS_TOUCH_START && aEvent.touches.Length() > 0) {
     mActiveElementManager->SetTargetElement(aEvent.touches[0]->GetTarget());
@@ -244,6 +245,7 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
 
   bool isTouchPrevented = TouchManager::gPreventMouseEvents ||
       aEvent.mFlags.mMultipleActionsPrevented;
+  bool sentContentResponse = false;
   switch (aEvent.message) {
   case NS_TOUCH_START: {
     mTouchEndCancelled = false;
@@ -252,10 +254,12 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
       // respond to the first one. Respond to it now.
       mContentReceivedInputBlockCallback->Run(mPendingTouchPreventedGuid,
           mPendingTouchPreventedBlockId, false);
+      sentContentResponse = true;
       mPendingTouchPreventedResponse = false;
     }
     if (isTouchPrevented) {
       mContentReceivedInputBlockCallback->Run(aGuid, aInputBlockId, isTouchPrevented);
+      sentContentResponse = true;
     } else {
       mPendingTouchPreventedResponse = true;
       mPendingTouchPreventedGuid = aGuid;
@@ -274,12 +278,27 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
     mActiveElementManager->HandleTouchEndEvent(mEndTouchIsClick);
     // fall through
   case NS_TOUCH_MOVE: {
-    SendPendingTouchPreventedResponse(isTouchPrevented, aGuid);
+    sentContentResponse = SendPendingTouchPreventedResponse(isTouchPrevented, aGuid);
     break;
   }
 
   default:
     NS_WARNING("Unknown touch event type");
+  }
+
+  if (sentContentResponse &&
+        aApzResponse == nsEventStatus_eConsumeDoDefault &&
+        gfxPrefs::PointerEventsEnabled()) {
+    WidgetTouchEvent cancelEvent(aEvent);
+    cancelEvent.message = NS_TOUCH_CANCEL;
+    cancelEvent.mFlags.mCancelable = false; // message != NS_TOUCH_CANCEL;
+    for (uint32_t i = 0; i < cancelEvent.touches.Length(); ++i) {
+      if (mozilla::dom::Touch* touch = cancelEvent.touches[i]) {
+        touch->convertToPointer = true;
+      }
+    }
+    nsEventStatus status;
+    cancelEvent.widget->DispatchEvent(&cancelEvent, status);
   }
 }
 
@@ -314,7 +333,7 @@ APZEventState::ProcessAPZStateChange(const nsCOMPtr<nsIDocument>& aDocument,
       nsCOMPtr<nsIDocShell> docshell(aDocument->GetDocShell());
       if (docshell && sf) {
         nsDocShell* nsdocshell = static_cast<nsDocShell*>(docshell.get());
-        nsdocshell->NotifyAsyncPanZoomStarted(sf->GetScrollPositionCSSPixels());
+        nsdocshell->NotifyAsyncPanZoomStarted();
       }
     }
     mActiveAPZTransforms++;
@@ -336,7 +355,7 @@ APZEventState::ProcessAPZStateChange(const nsCOMPtr<nsIDocument>& aDocument,
       nsCOMPtr<nsIDocShell> docshell(aDocument->GetDocShell());
       if (docshell && sf) {
         nsDocShell* nsdocshell = static_cast<nsDocShell*>(docshell.get());
-        nsdocshell->NotifyAsyncPanZoomStopped(sf->GetScrollPositionCSSPixels());
+        nsdocshell->NotifyAsyncPanZoomStopped();
       }
     }
     break;
@@ -364,7 +383,7 @@ APZEventState::ProcessAPZStateChange(const nsCOMPtr<nsIDocument>& aDocument,
   }
 }
 
-void
+bool
 APZEventState::SendPendingTouchPreventedResponse(bool aPreventDefault,
                                                  const ScrollableLayerGuid& aGuid)
 {
@@ -373,7 +392,9 @@ APZEventState::SendPendingTouchPreventedResponse(bool aPreventDefault,
     mContentReceivedInputBlockCallback->Run(mPendingTouchPreventedGuid,
         mPendingTouchPreventedBlockId, aPreventDefault);
     mPendingTouchPreventedResponse = false;
+    return true;
   }
+  return false;
 }
 
 already_AddRefed<nsIWidget>

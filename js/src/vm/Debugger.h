@@ -187,7 +187,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     friend class mozilla::LinkedListElement<Debugger>;
     friend bool (::JS_DefineDebuggerObject)(JSContext *cx, JS::HandleObject obj);
     friend bool (::JS::dbg::IsDebugger)(JS::Value val);
-    friend bool SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata);
+    friend JSObject *SavedStacksMetadataCallback(JSContext *cx);
     friend void JS::dbg::onNewPromise(JSContext *cx, HandleObject promise);
     friend void JS::dbg::onPromiseSettled(JSContext *cx, HandleObject promise);
 

@@ -14,6 +14,7 @@
 #include "gc/Barrier.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/ProxyObject.h"
+#include "vm/WeakMapObject.h"
 
 namespace js {
 
@@ -913,10 +914,7 @@ class DebugScopeObject : public ProxyObject
 class DebugScopes
 {
     /* The map from (non-debug) scopes to debug scopes. */
-    typedef WeakMap<PreBarrieredObject, RelocatablePtrObject> ObjectWeakMap;
     ObjectWeakMap proxiedScopes;
-    static MOZ_ALWAYS_INLINE void proxiedScopesPostWriteBarrier(JSRuntime *rt, ObjectWeakMap *map,
-                                                               const PreBarrieredObject &key);
 
     /*
      * The map from live frames which have optimized-away scopes to the

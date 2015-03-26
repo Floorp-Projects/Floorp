@@ -30,6 +30,10 @@ const SEC_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SEC_ERROR_BASE;
 const SSL_ERROR_BASE = Ci.nsINSSErrorsService.NSS_SSL_ERROR_BASE;
 const MOZILLA_PKIX_ERROR_BASE = Ci.nsINSSErrorsService.MOZILLA_PKIX_ERROR_BASE;
 
+// This isn't really a valid PRErrorCode, but is useful for signalling that
+// a test is expected to succeed.
+const PRErrorCodeSuccess = 0;
+
 // Sort in numerical order
 const SEC_ERROR_INVALID_ARGS                            = SEC_ERROR_BASE +   5; // -8187
 const SEC_ERROR_INVALID_TIME                            = SEC_ERROR_BASE +   8;
@@ -216,12 +220,12 @@ function run_test() {
   add_tls_server_setup("<test-server-name>");
 
   add_connection_test("<test-name-1>.example.com",
-                      getXPCOMStatusFromNSS(SEC_ERROR_xxx),
+                      SEC_ERROR_xxx,
                       function() { ... },
                       function(aTransportSecurityInfo) { ... },
                       function(aTransport) { ... });
   [...]
-  add_connection_test("<test-name-n>.example.com", Cr.NS_OK);
+  add_connection_test("<test-name-n>.example.com", PRErrorCodeSuccess);
 
   run_next_test();
 }
@@ -233,15 +237,25 @@ function add_tls_server_setup(serverBinName) {
   });
 }
 
-// Add a TLS connection test case. aHost is the hostname to pass in the SNI TLS
-// extension; this should unambiguously identifiy which test is being run.
-// aExpectedResult is the expected nsresult of the connection.
-// aBeforeConnect is a callback function that takes no arguments that will be
-// called before the connection is attempted.
-// aWithSecurityInfo is a callback function that takes an
-// nsITransportSecurityInfo, which is called after the TLS handshake succeeds.
-// aAfterStreamOpen is a callback function that is called with the
-// nsISocketTransport once the output stream is ready.
+/**
+ * Add a TLS connection test case.
+ *
+ * @param {String} aHost
+ *   The hostname to pass in the SNI TLS extension; this should unambiguously
+ *   identify which test is being run.
+ * @param {PRErrorCode} aExpectedResult
+ *   The expected result of the connection. If an error is not expected, pass
+ *   in PRErrorCodeSuccess.
+ * @param {Function} aBeforeConnect
+ *   A callback function that takes no arguments that will be called before the
+ *   connection is attempted.
+ * @param {Function} aWithSecurityInfo
+ *   A callback function that takes an nsITransportSecurityInfo, which is called
+ *   after the TLS handshake succeeds.
+ * @param {Function} aAfterStreamOpen
+ *   A callback function that is called with the nsISocketTransport once the
+ *   output stream is ready.
+ */
 function add_connection_test(aHost, aExpectedResult,
                              aBeforeConnect, aWithSecurityInfo,
                              aAfterStreamOpen) {
@@ -325,7 +339,9 @@ function add_connection_test(aHost, aExpectedResult,
     }
     connectTo(aHost).then(function(conn) {
       do_print("handling " + aHost);
-      do_check_eq(conn.result, aExpectedResult);
+      do_check_eq(conn.result, aExpectedResult == PRErrorCodeSuccess
+                               ? Cr.NS_OK
+                               : getXPCOMStatusFromNSS(aExpectedResult));
       if (aWithSecurityInfo) {
         aWithSecurityInfo(conn.transport.securityInfo
                               .QueryInterface(Ci.nsITransportSecurityInfo));
