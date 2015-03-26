@@ -11,9 +11,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/AsyncEventDispatcher.h"
-#ifdef MOZ_EME
 #include "mozilla/dom/MediaEncryptedEvent.h"
-#endif
 
 #include "base/basictypes.h"
 #include "nsIDOMHTMLMediaElement.h"
@@ -694,6 +692,8 @@ void HTMLMediaElement::AbortExistingLoads()
   mSuspendedForPreloadNone = false;
   mDownloadSuspendedByCache = false;
   mMediaInfo = MediaInfo();
+  mIsEncrypted = false;
+  mPendingEncryptedInitData.mInitDatas.Clear();
   mSourcePointer = nullptr;
   mLastNextFrameStatus = NEXT_FRAME_UNINITIALIZED;
 
@@ -3085,7 +3085,7 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
                                       nsAutoPtr<const MetadataTags> aTags)
 {
   mMediaInfo = *aInfo;
-  mIsEncrypted = aInfo->IsEncrypted();
+  mIsEncrypted = aInfo->IsEncrypted() | mPendingEncryptedInitData.IsEncrypted();
   mTags = aTags.forget();
   mLoadedDataFired = false;
   ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_METADATA);
@@ -3111,9 +3111,11 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
       return;
     }
 
-#ifdef MOZ_EME
-    DispatchEncrypted(aInfo->mCrypto.mInitData, aInfo->mCrypto.mType);
-#endif
+    // Dispatch a distinct 'encrypted' event for each initData we have.
+    for (const auto& initData : mPendingEncryptedInitData.mInitDatas) {
+      DispatchEncrypted(initData.mInitData, initData.mType);
+    }
+    mPendingEncryptedInitData.mInitDatas.Clear();
   }
 
   // Expose the tracks to JS directly.
@@ -4471,11 +4473,19 @@ HTMLMediaElement::SetOnencrypted(EventHandlerNonNull* handler)
     elm->SetEventHandler(nsGkAtoms::onencrypted, EmptyString(), handler);
   }
 }
+#endif // MOZ_EME
 
 void
 HTMLMediaElement::DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
                                     const nsAString& aInitDataType)
 {
+  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
+    // Ready state not HAVE_METADATA (yet), don't dispatch encrypted now.
+    // Queueing for later dispatch in MetadataLoaded.
+    mPendingEncryptedInitData.AddInitData(aInitDataType, aInitData);
+    return;
+  }
+
   nsRefPtr<MediaEncryptedEvent> event;
   if (IsCORSSameOrigin()) {
     event = MediaEncryptedEvent::Constructor(this, aInitDataType, aInitData);
@@ -4488,6 +4498,7 @@ HTMLMediaElement::DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
   asyncDispatcher->PostDOMEvent();
 }
 
+#ifdef MOZ_EME
 bool
 HTMLMediaElement::IsEventAttributeName(nsIAtom* aName)
 {
