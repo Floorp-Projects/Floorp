@@ -181,14 +181,12 @@ function test_open_from_chrome() {
       title: "test_open_from_chrome",
       param: "",
     },
-    finalizeFn: function () {},
-    timeout: 10000,
+    finalizeFn: function () {}
   });
 }
 
 function waitForTabOpen(aOptions) {
   let start = Date.now();
-  let timeout = aOptions.timeout || 5000;
   let message = aOptions.message;
 
   if (!message.title) {
@@ -207,7 +205,6 @@ function waitForTabOpen(aOptions) {
     tab.linkedBrowser.addEventListener("load", function onLoad(ev){
       let browser = ev.currentTarget;
       browser.removeEventListener("load", onLoad, true, true);
-      clearTimeout(onTimeout);
 
       is(browser.contentWindow.document.title, message.title,
          "Opened Tab is expected: " + message.title);
@@ -228,14 +225,6 @@ function waitForTabOpen(aOptions) {
     runNextTest();
   };
 
-  let onTimeout = setTimeout(function(){
-    gBrowser.tabContainer.removeEventListener("TabOpen", onTabOpen, true);
-
-    ok(false, "Timeout: '"+message.title + "'.");
-    finalize();
-  }, timeout);
-
-
   const URI = "data:text/html;charset=utf-8,<!DOCTYPE html><html><head><title>"+
               message.title +
               "<%2Ftitle><%2Fhead><body><%2Fbody><%2Fhtml>";
@@ -250,7 +239,6 @@ function waitForTabOpen(aOptions) {
 
 function waitForWindowOpen(aOptions) {
   let start = Date.now();
-  let timeout = aOptions.timeout || 10000;
   let message = aOptions.message;
   let url = aOptions.url || getBrowserURL();
 
@@ -270,16 +258,8 @@ function waitForWindowOpen(aOptions) {
     runNextTest();
   };
 
-  let onTimeout = setTimeout(function(){
-    Services.wm.removeListener(listener);
-    ok(false, "Fail: '"+message.title + "'.");
-
-    onFinalize();
-  }, timeout);
-
   let listener = new WindowListener(message.title, url, {
     onSuccess: aOptions.successFn,
-    onTimeout: onTimeout,
     onFinalize: onFinalize,
   });
   Services.wm.addListener(listener);
@@ -303,7 +283,6 @@ function executeWindowOpenInContent(aParam) {
 
 function waitForWindowOpenFromChrome(aOptions) {
   let start = Date.now();
-  let timeout = aOptions.timeout || 10000;
   let message = aOptions.message;
   let url = aOptions.url || getBrowserURL();
 
@@ -323,17 +302,8 @@ function waitForWindowOpenFromChrome(aOptions) {
     runNextTest();
   };
 
-  let onTimeout = setTimeout(function(){
-    Services.wm.removeListener(listener);
-    ok(false, "Fail: '"+message.title + "'.");
-
-    testWindow.close();
-    onFinalize();
-  }, timeout);
-
   let listener = new WindowListener(message.title, url, {
     onSuccess: aOptions.successFn,
-    onTimeout: onTimeout,
     onFinalize: onFinalize,
   });
   Services.wm.addListener(listener);
@@ -348,7 +318,6 @@ function WindowListener(aTitle, aUrl, aCallBackObj) {
   this.test_title = aTitle;
   this.test_url = aUrl;
   this.callback_onSuccess = aCallBackObj.onSuccess;
-  this.callBack_onTimeout = aCallBackObj.onTimeout;
   this.callBack_onFinalize = aCallBackObj.onFinalize;
 }
 WindowListener.prototype = {
@@ -356,7 +325,6 @@ WindowListener.prototype = {
   test_title: null,
   test_url: null,
   callback_onSuccess: null,
-  callBack_onTimeout: null,
   callBack_onFinalize: null,
 
   onOpenWindow: function(aXULWindow) {
@@ -372,7 +340,6 @@ WindowListener.prototype = {
       }
 
       domwindow.removeEventListener("load", onLoad, true);
-      clearTimeout(this.callBack_onTimeout);
 
       // wait for trasition to fullscreen on OSX Lion later
       if (isOSX) {
