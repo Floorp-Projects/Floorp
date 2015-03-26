@@ -17,6 +17,7 @@ startTest(function() {
         .then(event => {
           is(event.call, outCall);
           is(event.call.error.name, "BusyError");
+          is(event.call.disconnectedReason, "Busy");
         });
       let p2 = emulator.runCmd("gsm busy " + outNumber);
       return Promise.all([p1, p2]);
