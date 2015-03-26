@@ -641,53 +641,53 @@ ConstraintTypeSet::addType(ExclusiveContext *cxArg, Type type)
 }
 
 void
-TypeSet::print()
+TypeSet::print(FILE *fp)
 {
     if (flags & TYPE_FLAG_NON_DATA_PROPERTY)
-        fprintf(stderr, " [non-data]");
+        fprintf(fp, " [non-data]");
 
     if (flags & TYPE_FLAG_NON_WRITABLE_PROPERTY)
-        fprintf(stderr, " [non-writable]");
+        fprintf(fp, " [non-writable]");
 
     if (definiteProperty())
-        fprintf(stderr, " [definite:%d]", definiteSlot());
+        fprintf(fp, " [definite:%d]", definiteSlot());
 
     if (baseFlags() == 0 && !baseObjectCount()) {
-        fprintf(stderr, " missing");
+        fprintf(fp, " missing");
         return;
     }
 
     if (flags & TYPE_FLAG_UNKNOWN)
-        fprintf(stderr, " unknown");
+        fprintf(fp, " unknown");
     if (flags & TYPE_FLAG_ANYOBJECT)
-        fprintf(stderr, " object");
+        fprintf(fp, " object");
 
     if (flags & TYPE_FLAG_UNDEFINED)
-        fprintf(stderr, " void");
+        fprintf(fp, " void");
     if (flags & TYPE_FLAG_NULL)
-        fprintf(stderr, " null");
+        fprintf(fp, " null");
     if (flags & TYPE_FLAG_BOOLEAN)
-        fprintf(stderr, " bool");
+        fprintf(fp, " bool");
     if (flags & TYPE_FLAG_INT32)
-        fprintf(stderr, " int");
+        fprintf(fp, " int");
     if (flags & TYPE_FLAG_DOUBLE)
-        fprintf(stderr, " float");
+        fprintf(fp, " float");
     if (flags & TYPE_FLAG_STRING)
-        fprintf(stderr, " string");
+        fprintf(fp, " string");
     if (flags & TYPE_FLAG_SYMBOL)
-        fprintf(stderr, " symbol");
+        fprintf(fp, " symbol");
     if (flags & TYPE_FLAG_LAZYARGS)
-        fprintf(stderr, " lazyargs");
+        fprintf(fp, " lazyargs");
 
     uint32_t objectCount = baseObjectCount();
     if (objectCount) {
-        fprintf(stderr, " object[%u]", objectCount);
+        fprintf(fp, " object[%u]", objectCount);
 
         unsigned count = getObjectCount();
         for (unsigned i = 0; i < count; i++) {
             ObjectKey *key = getObject(i);
             if (key)
-                fprintf(stderr, " %s", TypeString(ObjectType(key)));
+                fprintf(fp, " %s", TypeString(ObjectType(key)));
         }
     }
 }
