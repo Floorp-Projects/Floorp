@@ -681,6 +681,16 @@ private:
 
   // Whether or not the frame can be vertically scrolled with a mouse wheel.
   bool mAllowVerticalScrollWithWheel;
+
+  // WARNING!!!!
+  //
+  // When adding new fields to FrameMetrics, the following places should be
+  // updated to include them (as needed):
+  //    FrameMetrics::operator ==
+  //    AsyncPanZoomController::NotifyLayersUpdated
+  //    The ParamTraits specialization in GfxMessageUtils.h
+  //
+  // Please add new fields above this comment.
 };
 
 /**
