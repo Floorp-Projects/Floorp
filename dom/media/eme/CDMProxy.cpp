@@ -585,6 +585,14 @@ CDMProxy::gmp_Decrypted(uint32_t aId,
 }
 
 void
+CDMProxy::GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
+                                nsTArray<nsCString>& aSessionIds)
+{
+  CDMCaps::AutoLock caps(Capabilites());
+  caps.GetSessionIdsForKeyId(aKeyId, aSessionIds);
+}
+
+void
 CDMProxy::Terminated()
 {
   MOZ_ASSERT(NS_IsMainThread());

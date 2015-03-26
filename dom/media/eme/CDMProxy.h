@@ -166,6 +166,9 @@ public:
   // Main thread only.
   void OnKeyStatusesChange(const nsAString& aSessionId);
 
+  void GetSessionIdsForKeyId(const nsTArray<uint8_t>& aKeyId,
+                             nsTArray<nsCString>& aSessionIds);
+
 #ifdef DEBUG
   bool IsOnGMPThread();
 #endif
