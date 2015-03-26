@@ -59,6 +59,8 @@ class GMPDecryptorProxy {
 public:
   ~GMPDecryptorProxy() {}
 
+  virtual const nsACString& GetPluginId() const = 0;
+
   virtual nsresult Init(GMPDecryptorProxyCallback* aCallback) = 0;
 
   virtual void CreateSession(uint32_t aCreateSessionToken,

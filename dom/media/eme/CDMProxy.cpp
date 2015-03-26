@@ -134,7 +134,12 @@ CDMProxy::OnCDMCreated(uint32_t aPromiseId)
     return;
   }
   MOZ_ASSERT(!GetNodeId().IsEmpty());
-  mKeys->OnCDMCreated(aPromiseId, GetNodeId());
+  if (mCDM) {
+    mKeys->OnCDMCreated(aPromiseId, GetNodeId(), mCDM->GetPluginId());
+  } else {
+    // No CDM? Just reject the promise.
+    mKeys->RejectPromise(aPromiseId, NS_ERROR_DOM_INVALID_STATE_ERR);
+  }
 }
 
 void
