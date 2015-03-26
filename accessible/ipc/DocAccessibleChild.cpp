@@ -1517,5 +1517,71 @@ DocAccessibleChild::RecvKeyboardShortcut(const uint64_t& aID,
   return true;
 }
 
+bool
+DocAccessibleChild::RecvCurValue(const uint64_t& aID,
+                                 double* aValue)
+{
+  *aValue = UnspecifiedNaN<double>();
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    *aValue = acc->CurValue();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvSetCurValue(const uint64_t& aID,
+                                    const double& aValue,
+                                    bool* aRetVal)
+{
+  *aRetVal = false;
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    *aRetVal = acc->SetCurValue(aValue);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvMinValue(const uint64_t& aID,
+                                 double* aValue)
+{
+  *aValue = UnspecifiedNaN<double>();
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    *aValue = acc->MinValue();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvMaxValue(const uint64_t& aID,
+                                 double* aValue)
+{
+  *aValue = UnspecifiedNaN<double>();
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    *aValue = acc->MaxValue();
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvStep(const uint64_t& aID,
+                             double* aStep)
+{
+  *aStep = UnspecifiedNaN<double>();
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    *aStep = acc->Step();
+  }
+
+  return true;
+}
+
 }
 }

@@ -264,6 +264,12 @@ public:
   KeyBinding AccessKey();
   KeyBinding KeyboardShortcut();
 
+  double CurValue();
+  bool SetCurValue(double aValue);
+  double MinValue();
+  double MaxValue();
+  double Step();
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */

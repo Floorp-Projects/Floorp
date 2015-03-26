@@ -845,5 +845,45 @@ ProxyAccessible::KeyboardShortcut()
   return KeyBinding(key, modifierMask);
 }
 
+double
+ProxyAccessible::CurValue()
+{
+  double val = UnspecifiedNaN<double>();
+  unused << mDoc->SendCurValue(mID, &val);
+  return val;
+}
+
+bool
+ProxyAccessible::SetCurValue(double aValue)
+{
+  bool success = false;
+  unused << mDoc->SendSetCurValue(mID, aValue, &success);
+  return success;
+}
+
+double
+ProxyAccessible::MinValue()
+{
+  double val = UnspecifiedNaN<double>();
+  unused << mDoc->SendMinValue(mID, &val);
+  return val;
+}
+
+double
+ProxyAccessible::MaxValue()
+{
+  double val = UnspecifiedNaN<double>();
+  unused << mDoc->SendMaxValue(mID, &val);
+  return val;
+}
+
+double
+ProxyAccessible::Step()
+{
+  double step = UnspecifiedNaN<double>();
+  unused << mDoc->SendStep(mID, &step);
+  return step;
+}
+
 }
 }
