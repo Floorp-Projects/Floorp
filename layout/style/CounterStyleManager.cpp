@@ -6,18 +6,18 @@
 
 #include "CounterStyleManager.h"
 
-#include "mozilla/Types.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/ArrayUtils.h"
-#include "prprf.h"
+#include "mozilla/Types.h"
+#include "mozilla/WritingModes.h"
+#include "nsCSSRules.h"
 #include "nsString.h"
 #include "nsStyleSet.h"
-#include "nsCSSRules.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsUnicodeProperties.h"
-#include "WritingModes.h"
+#include "prprf.h"
 
 namespace mozilla {
 

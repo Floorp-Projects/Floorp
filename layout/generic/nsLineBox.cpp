@@ -7,15 +7,16 @@
 /* representation of one line within a block frame, a CSS line box */
 
 #include "nsLineBox.h"
-#include "prprf.h"
-#include "nsFrame.h"
-#include "nsPresArena.h"
-#include "nsBidiPresUtils.h"
-#include "nsIFrameInlines.h"
-#include "WritingModes.h"
+
 #include "mozilla/Assertions.h"
 #include "mozilla/Likely.h"
+#include "mozilla/WritingModes.h"
+#include "nsBidiPresUtils.h"
+#include "nsFrame.h"
+#include "nsIFrameInlines.h"
+#include "nsPresArena.h"
 #include "nsPrintfCString.h"
+#include "prprf.h"
 
 #ifdef DEBUG
 static int32_t ctorCount;
