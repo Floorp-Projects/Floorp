@@ -3097,15 +3097,17 @@ nsComputedDOMStyle::DoGetListStyleType()
   nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
   CounterStyle* style = StyleList()->GetCounterStyle();
   AnonymousCounterStyle* anonymous = style->AsAnonymous();
+  nsString tmp;
   if (!anonymous) {
     // want SetIdent
     nsString type;
     StyleList()->GetListStyleType(type);
-    nsString value;
-    nsStyleUtil::AppendEscapedCSSIdent(type, value);
-    val->SetString(value);
+    nsStyleUtil::AppendEscapedCSSIdent(type, tmp);
+  } else if (anonymous->IsSingleString()) {
+    const nsTArray<nsString>& symbols = anonymous->GetSymbols();
+    MOZ_ASSERT(symbols.Length() == 1);
+    nsStyleUtil::AppendEscapedCSSString(symbols[0], tmp);
   } else {
-    nsAutoString tmp;
     tmp.AppendLiteral("symbols(");
 
     uint8_t system = anonymous->GetSystem();
@@ -3129,8 +3131,8 @@ nsComputedDOMStyle::DoGetListStyleType()
       tmp.Append(' ');
     }
     tmp.Replace(tmp.Length() - 1, 1, char16_t(')'));
-    val->SetString(tmp);
   }
+  val->SetString(tmp);
   return val;
 }
 
