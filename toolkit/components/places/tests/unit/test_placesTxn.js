@@ -717,25 +717,45 @@ add_test(function test_sort_folder_by_name() {
 });
 
 add_test(function test_edit_postData() {
-  const POST_DATA_ANNO = "bookmarkProperties/POSTData";
-  let postData = "post-test_edit_postData";
-  let testURI = NetUtil.newURI("http://test_edit_postData.com");
-  let testBkmId = bmsvc.insertBookmark(root, testURI, bmsvc.DEFAULT_INDEX, "Test edit Post Data");
-  PlacesUtils.bookmarks.setKeywordForBookmark(testBkmId, "kw");
-  let txn = new PlacesEditBookmarkPostDataTransaction(testBkmId, postData);
+  function* promiseKeyword(keyword, href, postData) {
+    while (true) {
+      let entry = yield PlacesUtils.keywords.fetch(keyword);
+      if (entry && entry.url.href == href && entry.postData == postData) {
+        break;
+      }
 
-  txn.doTransaction();
-  let [url, post_data] = PlacesUtils.getURLAndPostDataForKeyword("kw");
-  Assert.equal(url, testURI.spec);
-  Assert.equal(postData, post_data);
+      yield new Promise(resolve => do_timeout(100, resolve));
+    }
+  }
 
-  txn.undoTransaction();
-  [url, post_data] = PlacesUtils.getURLAndPostDataForKeyword("kw");
-  Assert.equal(url, testURI.spec);
-  // We don't allow anymore to set a null post data.
-  //Assert.equal(null, post_data);
+  Task.spawn(function* () {
+    const POST_DATA_ANNO = "bookmarkProperties/POSTData";
+    let postData = "post-test_edit_postData";
+    let testURI = NetUtil.newURI("http://test_edit_postData.com");
 
-  run_next_test();
+    let testBkm = yield PlacesUtils.bookmarks.insert({
+      parentGuid: PlacesUtils.bookmarks.menuGuid,
+      url: "http://test_edit_postData.com",
+      title: "Test edit Post Data"
+    });
+
+    yield PlacesUtils.keywords.insert({
+      keyword: "kw",
+      url: "http://test_edit_postData.com"
+    });
+
+    let testBkmId = yield PlacesUtils.promiseItemId(testBkm.guid);
+    let txn = new PlacesEditBookmarkPostDataTransaction(testBkmId, postData);
+
+    txn.doTransaction();
+    yield promiseKeyword("kw", testURI.spec, postData);
+
+    txn.undoTransaction();
+    entry = yield PlacesUtils.keywords.fetch("kw");
+    Assert.equal(entry.url.href, testURI.spec);
+    // We don't allow anymore to set a null post data.
+    //Assert.equal(null, post_data);
+  }).then(run_next_test);
 });
 
 add_test(function test_tagURI_untagURI() {
