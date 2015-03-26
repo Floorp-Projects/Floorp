@@ -134,13 +134,19 @@ struct NS_GFX nsRect :
     *this = aRect1.SaturatingUnionEdges(aRect2);
   }
 
-  // Converts this rect from aFromAPP, an appunits per pixel ratio, to aToAPP.
-  // In the RoundOut version we make the rect the smallest rect containing the
-  // unrounded result. In the RoundIn version we make the rect the largest rect
-  // contained in the unrounded result.
-  // Note: this can turn an empty rectangle into a non-empty rectangle
-  inline nsRect ConvertAppUnitsRoundOut(int32_t aFromAPP, int32_t aToAPP) const;
-  inline nsRect ConvertAppUnitsRoundIn(int32_t aFromAPP, int32_t aToAPP) const;
+  /**
+   * Return this rect scaled to a different appunits per pixel (APP) ratio.
+   * In the RoundOut version we make the rect the smallest rect containing the
+   * unrounded result. In the RoundIn version we make the rect the largest rect
+   * contained in the unrounded result.
+   * @param aFromAPP the APP to scale from
+   * @param aToAPP the APP to scale to
+   * @note this can turn an empty rectangle into a non-empty rectangle
+   */
+  MOZ_WARN_UNUSED_RESULT inline nsRect
+    ConvertAppUnitsRoundOut(int32_t aFromAPP, int32_t aToAPP) const;
+  MOZ_WARN_UNUSED_RESULT inline nsRect
+    ConvertAppUnitsRoundIn(int32_t aFromAPP, int32_t aToAPP) const;
 
   inline nsIntRect ScaleToNearestPixels(float aXScale, float aYScale,
                                         nscoord aAppUnitsPerPixel) const;
