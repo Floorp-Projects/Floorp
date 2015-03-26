@@ -141,11 +141,6 @@ moz_xstrdup(const char* str)
     }
     return dup;
 }
-char*
-moz_strdup(const char* str)
-{
-    return strdup_impl(str);
-}
 
 #if defined(HAVE_STRNDUP)
 char*
@@ -157,11 +152,6 @@ moz_xstrndup(const char* str, size_t strsize)
         return moz_xstrndup(str, strsize);
     }
     return dup;
-}
-char*
-moz_strndup(const char* str, size_t strsize)
-{
-    return strndup_impl(str, strsize);
 }
 #endif  // if defined(HAVE_STRNDUP)
 
