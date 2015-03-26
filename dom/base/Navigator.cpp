@@ -70,6 +70,7 @@
 #include "mozIApplication.h"
 #include "WidgetUtils.h"
 #include "mozIThirdPartyUtil.h"
+#include "nsINetworkInterceptController.h"
 
 #ifdef MOZ_MEDIA_NAVIGATOR
 #include "mozilla/dom/MediaDevices.h"
@@ -1071,9 +1072,9 @@ Navigator::SendBeacon(const nsAString& aUrl,
     return false;
   }
 
+  nsIDocShell* docShell = mWindow->GetDocShell();
   nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
   if (pbChannel) {
-    nsIDocShell* docShell = mWindow->GetDocShell();
     nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
     if (loadContext) {
       rv = pbChannel->SetPrivate(loadContext->UsePrivateBrowsing());
@@ -1206,6 +1207,9 @@ Navigator::SendBeacon(const nsAString& aUrl,
 
   rv = cors->Init(channel, true);
   NS_ENSURE_SUCCESS(rv, false);
+
+  nsCOMPtr<nsINetworkInterceptController> interceptController = do_QueryInterface(docShell);
+  cors->SetInterceptController(interceptController);
 
   // Start a preflight if cross-origin and content type is not whitelisted
   rv = secMan->CheckSameOriginURI(documentURI, uri, false);
