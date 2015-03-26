@@ -7218,9 +7218,9 @@ nsRuleNode::ComputeListData(void* aStartStruct,
       break;
     }
     case eCSSUnit_Symbols:
-      list->SetListStyleType(NS_LITERAL_STRING(""),
-                             mPresContext->CounterStyleManager()->
-                               BuildCounterStyle(typeValue->GetArrayValue()));
+      list->SetListStyleType(
+        NS_LITERAL_STRING(""),
+        new AnonymousCounterStyle(typeValue->GetArrayValue()));
       break;
     case eCSSUnit_Null:
       break;
