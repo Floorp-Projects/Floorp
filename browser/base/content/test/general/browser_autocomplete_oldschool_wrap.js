@@ -15,8 +15,7 @@ add_task(function*() {
     return;
   }
 
-  registerCleanupFunction(() => PlacesTestUtils.clearHistory());
-
+  yield PlacesTestUtils.clearHistory();
   let visits = [];
   repeat(10, i => {
     visits.push({
@@ -25,13 +24,18 @@ add_task(function*() {
   });
   yield PlacesTestUtils.addVisits(visits);
 
+  registerCleanupFunction(function* () {
+    yield PlacesTestUtils.clearHistory();
+  });
+
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla", {animate: false});
   yield promiseTabLoaded(tab);
   yield promiseAutocompleteResultPopup("example.com/autocomplete");
 
   let popup = gURLBar.popup;
-  let results = popup.richlistbox.children;
-  is(results.length, 10, "Should get 11 results");
+  let results = popup.richlistbox.children.filter(is_visible);
+
+  is(results.length, 10, "Should get 10 results");
   is_selected(-1);
 
   info("Key Down to select the next item");
