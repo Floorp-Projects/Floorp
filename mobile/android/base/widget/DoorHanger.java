@@ -32,7 +32,8 @@ public abstract class DoorHanger extends LinearLayout {
         final Type type = config.getType();
         if (type != null) {
             switch (type) {
-                case PASSWORD:
+                case LOGIN:
+                    return new LoginDoorHanger(context, config);
                 case SITE:
                     return new DefaultDoorHanger(context, config, type);
             }
@@ -41,7 +42,7 @@ public abstract class DoorHanger extends LinearLayout {
         return new DefaultDoorHanger(context, config);
     }
 
-    public static enum Type { DEFAULT, PASSWORD, SITE }
+    public static enum Type { DEFAULT, LOGIN, SITE }
 
     public interface OnButtonClickListener {
         public void onButtonClick(DoorHanger dh, String tag);
@@ -84,9 +85,8 @@ public abstract class DoorHanger extends LinearLayout {
 
         int resource;
         switch (type) {
-            case PASSWORD:
-                // TODO: switch to R.layout.password
-                resource = R.layout.doorhanger;
+            case LOGIN:
+                resource = R.layout.login_doorhanger;
                 break;
             default:
                 resource = R.layout.doorhanger;
@@ -97,7 +97,7 @@ public abstract class DoorHanger extends LinearLayout {
         mIcon = (ImageView) findViewById(R.id.doorhanger_icon);
         mMessage = (TextView) findViewById(R.id.doorhanger_message);
         if (type == Type.SITE) {
-            mMessage.setTextAppearance(getContext(), R.style.TextAppearance_Widget_DoorHanger_Small);
+            mMessage.setTextAppearance(getContext(), R.style.TextAppearance_DoorHanger_Small);
         }
         mButtonsContainer = (LinearLayout) findViewById(R.id.doorhanger_buttons);
 
