@@ -1,0 +1,18 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test for https://bugzilla.mozilla.org/show_bug.cgi?id=947079
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 947079</title>
+</head>
+<body>
+  <p>Test for Bug 947079</p>
+  <script>
+    window.addEventListener('unload', function() {
+        new Image().src = 'http://mochi.test:8888/tests/image/test/mochitest/blue.png';
+    });
+  </script>
+</body>
+</html>
