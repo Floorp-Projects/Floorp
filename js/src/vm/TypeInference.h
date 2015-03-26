@@ -530,7 +530,7 @@ class TypeSet
 
     static void MarkTypeRoot(JSTracer *trc, Type *v, const char *name);
     static void MarkTypeUnbarriered(JSTracer *trc, Type *v, const char *name);
-    static bool IsTypeMarkedFromAnyThread(Type *v);
+    static bool IsTypeMarked(Type *v);
     static bool IsTypeAllocatedDuringIncremental(Type v);
     static bool IsTypeAboutToBeFinalized(Type *v);
 };

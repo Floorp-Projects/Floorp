@@ -366,7 +366,7 @@ struct JSCompartment
 
     bool putWrapper(JSContext *cx, const js::CrossCompartmentKey& wrapped, const js::Value& wrapper);
 
-    js::WrapperMap::Ptr lookupWrapper(const js::Value& wrapped) {
+    js::WrapperMap::Ptr lookupWrapper(const js::Value& wrapped) const {
         return crossCompartmentWrappers.lookup(js::CrossCompartmentKey(wrapped));
     }
 
