@@ -180,7 +180,7 @@ public class testMasterPassword extends PixelTest {
     }
 
     public void verifyLoginPage(String password, String badPassword) {
-        String LOGIN_URL = getAbsoluteUrl("/robocop/robocop_login.html");
+        String LOGIN_URL = getAbsoluteUrl(StringHelper.ROBOCOP_LOGIN_01_URL);
         String option [] = {"Save", "Don't save"};
 
         doorhangerDisplayed(LOGIN_URL);// Check that the doorhanger is displayed
