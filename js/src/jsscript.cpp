@@ -3183,8 +3183,6 @@ bool
 js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone,
                         PollutedGlobalScopeOption polluted, NewObjectKind newKind)
 {
-    MOZ_ASSERT(clone->isInterpreted());
-
     RootedScript script(cx, clone->nonLazyScript());
     MOZ_ASSERT(script);
     MOZ_ASSERT(script->compartment() == original->compartment());
@@ -3201,7 +3199,7 @@ js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction c
             return false;
     }
 
-    clone->mutableScript().init(nullptr);
+    clone->initScript(nullptr);
 
     JSScript *cscript = CloneScript(cx, scope, clone, script, polluted, newKind);
     if (!cscript)
@@ -3881,7 +3879,7 @@ LazyScript::hasUncompiledEnclosingScript() const
         return false;
 
     JSFunction &fun = enclosingScope()->as<JSFunction>();
-    return fun.isInterpreted() && (!fun.mutableScript() || !fun.nonLazyScript()->code());
+    return fun.isInterpreted() && (!fun.hasScript() || !fun.nonLazyScript()->code());
 }
 
 uint32_t
