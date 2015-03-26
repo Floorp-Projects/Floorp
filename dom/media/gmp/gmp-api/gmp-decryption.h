@@ -19,6 +19,16 @@
 
 #include "gmp-platform.h"
 
+class GMPStringList {
+public:
+  virtual const uint32_t Size() const = 0;
+
+  virtual void StringAt(uint32_t aIndex,
+                        const char** aOutString, uint32_t* aOutLength) const = 0;
+
+  virtual ~GMPStringList() { }
+};
+
 class GMPEncryptedBufferMetadata {
 public:
   // Key ID to identify the decryption key.
@@ -41,6 +51,10 @@ public:
   virtual const uint32_t* CipherBytes() const = 0;
 
   virtual ~GMPEncryptedBufferMetadata() {}
+
+  // The set of MediaKeySession IDs associated with this decryption key in
+  // the current stream.
+  virtual const GMPStringList* SessionIds() const = 0;
 };
 
 class GMPBuffer {
