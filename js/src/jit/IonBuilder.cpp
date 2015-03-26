@@ -3659,15 +3659,16 @@ IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
       case MDefinition::Op_Not:
         return improveTypesAtTest(ins->toNot()->getOperand(0), !trueBranch, test);
       case MDefinition::Op_IsObject: {
-        TemporaryTypeSet *oldType = ins->getOperand(0)->resultTypeSet();
+        MDefinition *subject = ins->getOperand(0);
+        TemporaryTypeSet *oldType = subject->resultTypeSet();
 
         // Create temporary typeset equal to the type if there is no resultTypeSet.
         TemporaryTypeSet tmp;
         if (!oldType) {
-            if (ins->type() == MIRType_Value)
+            if (subject->type() == MIRType_Value)
                 return true;
             oldType = &tmp;
-            tmp.addType(TypeSet::PrimitiveType(ValueTypeFromMIRType(ins->type())), alloc_->lifoAlloc());
+            tmp.addType(TypeSet::PrimitiveType(ValueTypeFromMIRType(subject->type())), alloc_->lifoAlloc());
         }
 
         if (oldType->unknown())
@@ -3682,7 +3683,7 @@ IonBuilder::improveTypesAtTest(MDefinition *ins, bool trueBranch, MTest *test)
         if (!type)
             return false;
 
-        return replaceTypeSet(ins->getOperand(0), type, test);
+        return replaceTypeSet(subject, type, test);
       }
       case MDefinition::Op_Phi: {
         bool branchIsAnd = true;
