@@ -5153,9 +5153,23 @@ nsRect
 ScrollFrameHelper::GetScrolledRectInternal(const nsRect& aScrolledFrameOverflowArea,
                                                const nsSize& aScrollPortSize) const
 {
+  uint8_t frameDir = IsLTR() ? NS_STYLE_DIRECTION_LTR : NS_STYLE_DIRECTION_RTL;
+
+  // If the scrolled frame has unicode-bidi: plaintext, the paragraph
+  // direction set by the text content overrides the direction of the frame
+  if (mScrolledFrame->StyleTextReset()->mUnicodeBidi &
+      NS_STYLE_UNICODE_BIDI_PLAINTEXT) {
+    nsIFrame* childFrame = mScrolledFrame->GetFirstPrincipalChild();
+    if (childFrame) {
+      frameDir =
+        (nsBidiPresUtils::ParagraphDirection(childFrame) == NSBIDI_LTR)
+          ? NS_STYLE_DIRECTION_LTR : NS_STYLE_DIRECTION_RTL;
+    }
+  }
+
   return nsLayoutUtils::GetScrolledRect(mScrolledFrame,
-      aScrolledFrameOverflowArea, aScrollPortSize,
-      IsLTR() ? NS_STYLE_DIRECTION_LTR : NS_STYLE_DIRECTION_RTL);
+                                        aScrolledFrameOverflowArea,
+                                        aScrollPortSize, frameDir);
 }
 
 nsMargin
