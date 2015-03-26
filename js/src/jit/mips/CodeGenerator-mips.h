@@ -273,8 +273,7 @@ class CodeGeneratorMIPS : public CodeGeneratorShared
 
   protected:
     void visitEffectiveAddress(LEffectiveAddress *ins);
-    void visitUDiv(LUDiv *ins);
-    void visitUMod(LUMod *ins);
+    void visitUDivOrMod(LUDivOrMod *ins);
 
   public:
     // Unimplemented SIMD instructions
