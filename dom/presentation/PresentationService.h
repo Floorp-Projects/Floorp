@@ -32,7 +32,7 @@ private:
   void NotifyAvailableChange(bool aIsAvailable);
 
   nsClassHashtable<nsStringHashKey, PresentationSessionInfo> mSessionInfo;
-  nsTObserverArray<nsCOMPtr<nsIPresentationListener> > mListeners;
+  nsTObserverArray<nsCOMPtr<nsIPresentationListener>> mListeners;
 };
 
 } // namespace dom
