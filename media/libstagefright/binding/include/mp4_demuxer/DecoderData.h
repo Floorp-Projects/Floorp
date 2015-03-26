@@ -10,6 +10,7 @@
 #include "nsTArray.h"
 #include "nsAutoPtr.h"
 #include "nsRefPtr.h"
+#include "nsString.h"
 
 namespace stagefright
 {
@@ -76,6 +77,7 @@ public:
   nsTArray<uint16_t> plain_sizes;
   nsTArray<uint32_t> encrypted_sizes;
   nsTArray<uint8_t> iv;
+  nsTArray<nsCString> session_ids;
 };
 
 class TrackConfig

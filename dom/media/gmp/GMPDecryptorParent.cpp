@@ -140,7 +140,8 @@ GMPDecryptorParent::Decrypt(uint32_t aId,
   GMPDecryptionData data(aCrypto.key,
                          aCrypto.iv,
                          aCrypto.plain_sizes,
-                         aCrypto.encrypted_sizes);
+                         aCrypto.encrypted_sizes,
+                         aCrypto.session_ids);
 
   unused << SendDecrypt(aId, aBuffer, data);
 }
