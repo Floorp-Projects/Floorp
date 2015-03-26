@@ -3,6 +3,7 @@ self.addEventListener("fetch", function(event) {
       event.request.url.indexOf("register.html") >= 0 ||
       event.request.url.indexOf("unregister.html") >= 0 ||
       event.request.url.indexOf("ping.html") >= 0 ||
+      event.request.url.indexOf("xml.xml") >= 0 ||
       event.request.url.indexOf("csp-violate.sjs") >= 0) {
     // Handle pass-through requests
     event.respondWith(fetch(event.request));
@@ -54,6 +55,49 @@ self.addEventListener("fetch", function(event) {
     respondToServiceWorker(event, "newwindow");
   } else if (event.request.url.indexOf("ping") >= 0) {
     respondToServiceWorker(event, "ping");
+  } else if (event.request.url.indexOf("plugin") >= 0) {
+    respondToServiceWorker(event, "plugin");
+  } else if (event.request.url.indexOf("script.js") >= 0) {
+    if (event.request.context == "script") {
+      event.respondWith(new Response(""));
+    }
+  } else if (event.request.url.indexOf("style.css") >= 0) {
+    respondToServiceWorker(event, "style");
+  } else if (event.request.url.indexOf("track") >= 0) {
+    respondToServiceWorker(event, "track");
+  } else if (event.request.url.indexOf("xhr") >= 0) {
+    if (event.request.context == "xmlhttprequest") {
+      event.respondWith(new Response(""));
+    }
+  } else if (event.request.url.indexOf("xslt") >= 0) {
+    respondToServiceWorker(event, "xslt");
+  } else if (event.request.url.indexOf("cache") >= 0) {
+    var cache;
+    var origContext = event.request.context;
+    event.respondWith(caches.open("cache")
+      .then(function(c) {
+        cache = c;
+        // Store the Request in the cache.
+        return cache.put(event.request, new Response("fake"));
+      }).then(function() {
+        // Read it back.
+        return cache.keys(event.request);
+      }).then(function(res) {
+        var req = res[0];
+        // Check to see if the context remained the same.
+        var success = req.context === origContext;
+        return clients.matchAll()
+               .then(function(clients) {
+                 // Report it back to the main page.
+                 clients.forEach(function(c) {
+                   c.postMessage({data: "cache", success: success});
+                 });
+      })}).then(function() {
+        // Cleanup.
+        return caches.delete("cache");
+      }).then(function() {
+        return new Response("ack");
+      }));
   }
   // Fail any request that we don't know about.
   try {
