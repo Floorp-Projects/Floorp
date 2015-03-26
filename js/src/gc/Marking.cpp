@@ -10,6 +10,7 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/TypeTraits.h"
 
+#include "jsgc.h"
 #include "jsprf.h"
 
 #include "gc/GCInternals.h"
@@ -795,25 +796,29 @@ namespace js {
 namespace gc {
 
 template <typename T>
-static bool
-IsMarked(T **thingp)
+static inline void
+CheckIsMarkedThing(T **thingp)
 {
+#ifdef DEBUG
+    MOZ_ASSERT(thingp);
+    MOZ_ASSERT(*thingp);
+    JSRuntime *rt = (*thingp)->runtimeFromAnyThread();
     MOZ_ASSERT_IF(!ThingIsPermanentAtomOrWellKnownSymbol(*thingp),
-                  CurrentThreadCanAccessRuntime((*thingp)->runtimeFromMainThread()));
-    return IsMarkedFromAnyThread(thingp);
+                  CurrentThreadCanAccessRuntime(rt) ||
+                  (rt->isHeapCollecting() && rt->gc.state() == SWEEP));
+#endif
 }
 
 template <typename T>
 static bool
-IsMarkedFromAnyThread(T **thingp)
+IsMarked(T **thingp)
 {
-    MOZ_ASSERT(thingp);
-    MOZ_ASSERT(*thingp);
+    CheckIsMarkedThing(thingp);
     JSRuntime* rt = (*thingp)->runtimeFromAnyThread();
 
     if (IsInsideNursery(*thingp)) {
-        Nursery &nursery = rt->gc.nursery;
-        return nursery.getForwardedPointer(thingp);
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+        return rt->gc.nursery.getForwardedPointer(thingp);
     }
 
     Zone *zone = (*thingp)->asTenured().zoneFromAnyThread();
@@ -828,18 +833,7 @@ template <typename T>
 static bool
 IsAboutToBeFinalized(T **thingp)
 {
-    MOZ_ASSERT_IF(!ThingIsPermanentAtomOrWellKnownSymbol(*thingp),
-                  CurrentThreadCanAccessRuntime((*thingp)->runtimeFromMainThread()));
-    return IsAboutToBeFinalizedFromAnyThread(thingp);
-}
-
-template <typename T>
-static bool
-IsAboutToBeFinalizedFromAnyThread(T **thingp)
-{
-    MOZ_ASSERT(thingp);
-    MOZ_ASSERT(*thingp);
-
+    CheckIsMarkedThing(thingp);
     T *thing = *thingp;
     JSRuntime *rt = thing->runtimeFromAnyThread();
 
@@ -926,21 +920,9 @@ Mark##base##RootRange(JSTracer *trc, size_t len, type **vec, const char *name)  
 }                                                                                                 \
                                                                                                   \
 bool                                                                                              \
-Is##base##MarkedFromAnyThread(type **thingp)                                                      \
-{                                                                                                 \
-    return IsMarkedFromAnyThread<type>(thingp);                                                   \
-}                                                                                                 \
-                                                                                                  \
-bool                                                                                              \
 Is##base##Marked(type **thingp)                                                                   \
 {                                                                                                 \
     return IsMarked<type>(thingp);                                                                \
-}                                                                                                 \
-                                                                                                  \
-bool                                                                                              \
-Is##base##MarkedFromAnyThread(BarrieredBase<type*> *thingp)                                       \
-{                                                                                                 \
-    return IsMarkedFromAnyThread<type>(thingp->unsafeGet());                                      \
 }                                                                                                 \
                                                                                                   \
 bool                                                                                              \
@@ -953,12 +935,6 @@ bool                                                                            
 Is##base##AboutToBeFinalized(type **thingp)                                                       \
 {                                                                                                 \
     return IsAboutToBeFinalized<type>(thingp);                                                    \
-}                                                                                                 \
-                                                                                                  \
-bool                                                                                              \
-Is##base##AboutToBeFinalizedFromAnyThread(type **thingp)                                          \
-{                                                                                                 \
-    return IsAboutToBeFinalizedFromAnyThread<type>(thingp);                                       \
 }                                                                                                 \
                                                                                                   \
 bool                                                                                              \
@@ -1150,28 +1126,6 @@ gc::IsValueAboutToBeFinalized(Value *v)
         MOZ_ASSERT(v->isSymbol());
         JS::Symbol *sym = v->toSymbol();
         rv = IsAboutToBeFinalized<JS::Symbol>(&sym);
-        v->setSymbol(sym);
-    }
-    return rv;
-}
-
-bool
-gc::IsValueAboutToBeFinalizedFromAnyThread(Value *v)
-{
-    MOZ_ASSERT(v->isMarkable());
-    bool rv;
-    if (v->isString()) {
-        JSString *str = (JSString *)v->toGCThing();
-        rv = IsAboutToBeFinalizedFromAnyThread<JSString>(&str);
-        v->setString(str);
-    } else if (v->isObject()) {
-        JSObject *obj = (JSObject *)v->toGCThing();
-        rv = IsAboutToBeFinalizedFromAnyThread<JSObject>(&obj);
-        v->setObject(*obj);
-    } else {
-        MOZ_ASSERT(v->isSymbol());
-        JS::Symbol *sym = v->toSymbol();
-        rv = IsAboutToBeFinalizedFromAnyThread<JS::Symbol>(&sym);
         v->setSymbol(sym);
     }
     return rv;

@@ -1405,17 +1405,17 @@ ObjectGroupCompartment::sweep(FreeOp *fop)
             bool remove = false;
             if (!key.type.isUnknown() && key.type.isGroup()) {
                 ObjectGroup *group = key.type.groupNoBarrier();
-                if (IsObjectGroupAboutToBeFinalizedFromAnyThread(&group))
+                if (IsObjectGroupAboutToBeFinalized(&group))
                     remove = true;
                 else
                     key.type = TypeSet::ObjectType(group);
             }
             if (key.proto && key.proto != TaggedProto::LazyProto &&
-                IsObjectAboutToBeFinalizedFromAnyThread(&key.proto))
+                IsObjectAboutToBeFinalized(&key.proto))
             {
                 remove = true;
             }
-            if (IsObjectGroupAboutToBeFinalizedFromAnyThread(e.front().value().unsafeGet()))
+            if (IsObjectGroupAboutToBeFinalized(e.front().value().unsafeGet()))
                 remove = true;
 
             if (remove)
@@ -1431,19 +1431,19 @@ ObjectGroupCompartment::sweep(FreeOp *fop)
             PlainObjectEntry &entry = e.front().value();
 
             bool remove = false;
-            if (IsObjectGroupAboutToBeFinalizedFromAnyThread(entry.group.unsafeGet()))
+            if (IsObjectGroupAboutToBeFinalized(entry.group.unsafeGet()))
                 remove = true;
-            if (IsShapeAboutToBeFinalizedFromAnyThread(entry.shape.unsafeGet()))
+            if (IsShapeAboutToBeFinalized(entry.shape.unsafeGet()))
                 remove = true;
             for (unsigned i = 0; !remove && i < key.nproperties; i++) {
                 if (JSID_IS_STRING(key.properties[i])) {
                     JSString *str = JSID_TO_STRING(key.properties[i]);
-                    if (IsStringAboutToBeFinalizedFromAnyThread(&str))
+                    if (IsStringAboutToBeFinalized(&str))
                         remove = true;
                     MOZ_ASSERT(AtomToId((JSAtom *)str) == key.properties[i]);
                 } else if (JSID_IS_SYMBOL(key.properties[i])) {
                     JS::Symbol *sym = JSID_TO_SYMBOL(key.properties[i]);
-                    if (IsSymbolAboutToBeFinalizedFromAnyThread(&sym))
+                    if (IsSymbolAboutToBeFinalized(&sym))
                         remove = true;
                 }
 
@@ -1451,7 +1451,7 @@ ObjectGroupCompartment::sweep(FreeOp *fop)
                 ObjectGroup *group = nullptr;
                 if (entry.types[i].isGroup()) {
                     group = entry.types[i].groupNoBarrier();
-                    if (IsObjectGroupAboutToBeFinalizedFromAnyThread(&group))
+                    if (IsObjectGroupAboutToBeFinalized(&group))
                         remove = true;
                     else if (group != entry.types[i].groupNoBarrier())
                         entry.types[i] = TypeSet::ObjectType(group);
@@ -1469,8 +1469,8 @@ ObjectGroupCompartment::sweep(FreeOp *fop)
     if (allocationSiteTable) {
         for (AllocationSiteTable::Enum e(*allocationSiteTable); !e.empty(); e.popFront()) {
             AllocationSiteKey key = e.front().key();
-            bool keyDying = IsScriptAboutToBeFinalizedFromAnyThread(&key.script);
-            bool valDying = IsObjectGroupAboutToBeFinalizedFromAnyThread(e.front().value().unsafeGet());
+            bool keyDying = IsScriptAboutToBeFinalized(&key.script);
+            bool valDying = IsObjectGroupAboutToBeFinalized(e.front().value().unsafeGet());
             if (keyDying || valDying)
                 e.removeFront();
             else if (key.script != e.front().key().script)
@@ -1488,8 +1488,8 @@ ObjectGroupCompartment::sweepNewTable(NewTable *table)
     if (table && table->initialized()) {
         for (NewTable::Enum e(*table); !e.empty(); e.popFront()) {
             NewEntry entry = e.front();
-            if (IsObjectGroupAboutToBeFinalizedFromAnyThread(entry.group.unsafeGet()) ||
-                (entry.associated && IsObjectAboutToBeFinalizedFromAnyThread(&entry.associated)))
+            if (IsObjectGroupAboutToBeFinalized(entry.group.unsafeGet()) ||
+                (entry.associated && IsObjectAboutToBeFinalized(&entry.associated)))
             {
                 e.removeFront();
             } else {

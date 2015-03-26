@@ -1090,12 +1090,12 @@ InnerViewTable::removeViews(ArrayBufferObject *obj)
 bool
 InnerViewTable::sweepEntry(JSObject **pkey, ViewVector &views)
 {
-    if (IsObjectAboutToBeFinalizedFromAnyThread(pkey))
+    if (IsObjectAboutToBeFinalized(pkey))
         return true;
 
     MOZ_ASSERT(!views.empty());
     for (size_t i = 0; i < views.length(); i++) {
-        if (IsObjectAboutToBeFinalizedFromAnyThread(&views[i])) {
+        if (IsObjectAboutToBeFinalized(&views[i])) {
             views[i--] = views.back();
             views.popBack();
         }

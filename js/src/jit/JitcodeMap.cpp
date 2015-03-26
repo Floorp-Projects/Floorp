@@ -806,7 +806,7 @@ JitcodeGlobalTable::sweep(JSRuntime *rt)
 bool
 JitcodeGlobalEntry::BaseEntry::markJitcodeIfUnmarked(JSTracer *trc)
 {
-    if (!IsJitCodeMarkedFromAnyThread(&jitcode_)) {
+    if (!IsJitCodeMarked(&jitcode_)) {
         MarkJitCodeUnbarriered(trc, &jitcode_, "jitcodglobaltable-baseentry-jitcode");
         return true;
     }
@@ -816,7 +816,7 @@ JitcodeGlobalEntry::BaseEntry::markJitcodeIfUnmarked(JSTracer *trc)
 bool
 JitcodeGlobalEntry::BaseEntry::isJitcodeMarkedFromAnyThread()
 {
-    return IsJitCodeMarkedFromAnyThread(&jitcode_) ||
+    return IsJitCodeMarked(&jitcode_) ||
            jitcode_->arenaHeader()->allocatedDuringIncremental;
 }
 
@@ -829,7 +829,7 @@ JitcodeGlobalEntry::BaseEntry::isJitcodeAboutToBeFinalized()
 bool
 JitcodeGlobalEntry::BaselineEntry::markIfUnmarked(JSTracer *trc)
 {
-    if (!IsScriptMarkedFromAnyThread(&script_)) {
+    if (!IsScriptMarked(&script_)) {
         MarkScriptUnbarriered(trc, &script_, "jitcodeglobaltable-baselineentry-script");
         return true;
     }
@@ -845,7 +845,7 @@ JitcodeGlobalEntry::BaselineEntry::sweep()
 bool
 JitcodeGlobalEntry::BaselineEntry::isMarkedFromAnyThread()
 {
-    return IsScriptMarkedFromAnyThread(&script_) ||
+    return IsScriptMarked(&script_) ||
            script_->arenaHeader()->allocatedDuringIncremental;
 }
 
@@ -855,7 +855,7 @@ JitcodeGlobalEntry::IonEntry::markIfUnmarked(JSTracer *trc)
     bool markedAny = false;
 
     for (unsigned i = 0; i < numScripts(); i++) {
-        if (!IsScriptMarkedFromAnyThread(&sizedScriptList()->pairs[i].script)) {
+        if (!IsScriptMarked(&sizedScriptList()->pairs[i].script)) {
             MarkScriptUnbarriered(trc, &sizedScriptList()->pairs[i].script,
                                   "jitcodeglobaltable-ionentry-script");
             markedAny = true;
@@ -868,15 +868,15 @@ JitcodeGlobalEntry::IonEntry::markIfUnmarked(JSTracer *trc)
     for (IonTrackedTypeWithAddendum *iter = optsAllTypes_->begin();
          iter != optsAllTypes_->end(); iter++)
     {
-        if (!TypeSet::IsTypeMarkedFromAnyThread(&iter->type)) {
+        if (!TypeSet::IsTypeMarked(&iter->type)) {
             TypeSet::MarkTypeUnbarriered(trc, &iter->type, "jitcodeglobaltable-ionentry-type");
             markedAny = true;
         }
-        if (iter->hasAllocationSite() && !IsScriptMarkedFromAnyThread(&iter->script)) {
+        if (iter->hasAllocationSite() && !IsScriptMarked(&iter->script)) {
             MarkScriptUnbarriered(trc, &iter->script,
                                   "jitcodeglobaltable-ionentry-type-addendum-script");
             markedAny = true;
-        } else if (iter->hasConstructor() && !IsObjectMarkedFromAnyThread(&iter->constructor)) {
+        } else if (iter->hasConstructor() && !IsObjectMarked(&iter->constructor)) {
             MarkObjectUnbarriered(trc, &iter->constructor,
                                   "jitcodeglobaltable-ionentry-type-addendum-constructor");
             markedAny = true;
@@ -912,7 +912,7 @@ bool
 JitcodeGlobalEntry::IonEntry::isMarkedFromAnyThread()
 {
     for (unsigned i = 0; i < numScripts(); i++) {
-        if (!IsScriptMarkedFromAnyThread(&sizedScriptList()->pairs[i].script) &&
+        if (!IsScriptMarked(&sizedScriptList()->pairs[i].script) &&
             !sizedScriptList()->pairs[i].script->arenaHeader()->allocatedDuringIncremental)
         {
             return false;
@@ -925,7 +925,7 @@ JitcodeGlobalEntry::IonEntry::isMarkedFromAnyThread()
     for (IonTrackedTypeWithAddendum *iter = optsAllTypes_->begin();
          iter != optsAllTypes_->end(); iter++)
     {
-        if (!TypeSet::IsTypeMarkedFromAnyThread(&iter->type) &&
+        if (!TypeSet::IsTypeMarked(&iter->type) &&
             !TypeSet::IsTypeAllocatedDuringIncremental(iter->type))
         {
             return false;
