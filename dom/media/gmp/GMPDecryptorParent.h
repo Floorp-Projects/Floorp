@@ -28,6 +28,8 @@ public:
   explicit GMPDecryptorParent(GMPParent *aPlugin);
 
   // GMPDecryptorProxy
+  virtual const nsACString& GetPluginId() const override;
+
   virtual nsresult Init(GMPDecryptorProxyCallback* aCallback) override;
 
   virtual void CreateSession(uint32_t aCreateSessionToken,
@@ -107,6 +109,7 @@ private:
   bool mIsOpen;
   bool mShuttingDown;
   nsRefPtr<GMPParent> mPlugin;
+  nsCString mPluginId;
   GMPDecryptorProxyCallback* mCallback;
 #ifdef DEBUG
   nsIThread* const mGMPThread;
