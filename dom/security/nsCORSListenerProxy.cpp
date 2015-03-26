@@ -34,6 +34,7 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMWindowUtils.h"
 #include "nsIDOMWindow.h"
+#include "nsINetworkInterceptController.h"
 #include <algorithm>
 
 using namespace mozilla;
@@ -677,12 +678,26 @@ nsCORSListenerProxy::OnDataAvailable(nsIRequest* aRequest,
                                          aOffset, aCount);
 }
 
+void
+nsCORSListenerProxy::SetInterceptController(nsINetworkInterceptController* aInterceptController)
+{
+  mInterceptController = aInterceptController;
+}
+
 NS_IMETHODIMP
 nsCORSListenerProxy::GetInterface(const nsIID & aIID, void **aResult)
 {
   if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
     *aResult = static_cast<nsIChannelEventSink*>(this);
     NS_ADDREF_THIS();
+
+    return NS_OK;
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsINetworkInterceptController)) &&
+      mInterceptController) {
+    nsCOMPtr<nsINetworkInterceptController> copy(mInterceptController);
+    *aResult = copy.forget().take();
 
     return NS_OK;
   }

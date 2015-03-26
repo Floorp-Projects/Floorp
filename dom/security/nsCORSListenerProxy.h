@@ -20,6 +20,7 @@
 class nsIURI;
 class nsIParser;
 class nsIPrincipal;
+class nsINetworkInterceptController;
 
 nsresult
 NS_StartCORSPreflight(nsIChannel* aRequestChannel,
@@ -58,6 +59,8 @@ public:
 
   nsresult Init(nsIChannel* aChannel, bool aAllowDataURI = false);
 
+  void SetInterceptController(nsINetworkInterceptController* aInterceptController);
+
 private:
   ~nsCORSListenerProxy();
 
@@ -71,6 +74,7 @@ private:
   // This can get changed during redirects, unlike mRequestingPrincipal.
   nsCOMPtr<nsIPrincipal> mOriginHeaderPrincipal;
   nsCOMPtr<nsIInterfaceRequestor> mOuterNotificationCallbacks;
+  nsCOMPtr<nsINetworkInterceptController> mInterceptController;
   bool mWithCredentials;
   bool mRequestApproved;
   bool mHasBeenCrossSite;
