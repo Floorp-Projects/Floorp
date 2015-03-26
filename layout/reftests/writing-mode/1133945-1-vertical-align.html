@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Test for bug 1133945</title>
+    <style>
+      body { writing-mode: vertical-rl; line-height: 60px; }
+      div { display: inline-block; width: 20px; height: 10px; background: blue; }
+      .a { vertical-align: initial; }
+      .b { vertical-align: middle; }
+      .c { vertical-align: 0; }
+      .d { vertical-align: -20px; }
+      .e { vertical-align: 20px; }
+    </style>
+  </head>
+  <body>
+    a <div class="a"></div> b <div class="b"></div> c <div class="c"></div>
+    d <div class="d"></div> e <div class="e"></div>
+  </body>
+</html>
