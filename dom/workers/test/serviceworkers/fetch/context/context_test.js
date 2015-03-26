@@ -25,6 +25,12 @@ self.addEventListener("fetch", function(event) {
     if (event.request.context == "audio") {
       event.respondWith(fetch("realaudio.ogg"));
     }
+  } else if (event.request.url.indexOf("beacon.sjs") >= 0) {
+    if (event.request.url.indexOf("queryContext") == -1) {
+      event.respondWith(fetch("beacon.sjs?" + event.request.context));
+    } else {
+      event.respondWith(fetch(event.request));
+    }
   }
   // Fail any request that we don't know about.
   try {
