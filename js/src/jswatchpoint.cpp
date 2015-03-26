@@ -172,7 +172,7 @@ WatchpointMap::markIteratively(JSTracer *trc)
             MOZ_ASSERT(JSID_IS_STRING(priorKeyId) ||
                        JSID_IS_INT(priorKeyId) ||
                        JSID_IS_SYMBOL(priorKeyId));
-            MarkId(trc, const_cast<PreBarrieredId *>(&entry.key().id), "WatchKey::id");
+            TraceEdge(trc, const_cast<PreBarrieredId *>(&entry.key().id), "WatchKey::id");
 
             if (entry.value().closure && !IsObjectMarked(&entry.value().closure)) {
                 MarkObject(trc, &entry.value().closure, "Watchpoint::closure");
@@ -198,7 +198,7 @@ WatchpointMap::markAll(JSTracer *trc)
 
         MarkObject(trc, const_cast<PreBarrieredObject *>(&key.object),
                    "held Watchpoint object");
-        MarkId(trc, const_cast<PreBarrieredId *>(&key.id), "WatchKey::id");
+        TraceEdge(trc, const_cast<PreBarrieredId *>(&key.id), "WatchKey::id");
         MarkObject(trc, &entry.value().closure, "Watchpoint::closure");
 
         if (prior.object != key.object || prior.id != key.id)

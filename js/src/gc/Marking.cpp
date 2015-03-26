@@ -1079,72 +1079,6 @@ gc::MarkGCThingUnbarriered(JSTracer *trc, void **thingp, const char *name)
     MarkGCThingInternal(trc, thingp, name);
 }
 
-/*** ID Marking ***/
-
-static inline void
-MarkIdInternal(JSTracer *trc, jsid *id)
-{
-    if (JSID_IS_STRING(*id)) {
-        JSString *str = JSID_TO_STRING(*id);
-        JSString *prior = str;
-        trc->setTracingLocation((void *)id);
-        MarkInternal(trc, &str);
-        if (str != prior)
-            *id = NON_INTEGER_ATOM_TO_JSID(reinterpret_cast<JSAtom *>(str));
-    } else if (JSID_IS_SYMBOL(*id)) {
-        JS::Symbol *sym = JSID_TO_SYMBOL(*id);
-        JS::Symbol *prior = sym;
-        trc->setTracingLocation((void *)id);
-        MarkInternal(trc, &sym);
-        if (sym != prior)
-            *id = SYMBOL_TO_JSID(sym);
-    } else {
-        /* Unset realLocation manually if we do not call MarkInternal. */
-        trc->unsetTracingLocation();
-    }
-}
-
-void
-gc::MarkId(JSTracer *trc, BarrieredBase<jsid> *id, const char *name)
-{
-    trc->setTracingName(name);
-    MarkIdInternal(trc, id->unsafeGet());
-}
-
-void
-gc::MarkIdRoot(JSTracer *trc, jsid *id, const char *name)
-{
-    JS_ROOT_MARKING_ASSERT(trc);
-    trc->setTracingName(name);
-    MarkIdInternal(trc, id);
-}
-
-void
-gc::MarkIdUnbarriered(JSTracer *trc, jsid *id, const char *name)
-{
-    trc->setTracingName(name);
-    MarkIdInternal(trc, id);
-}
-
-void
-gc::MarkIdRange(JSTracer *trc, size_t len, HeapId *vec, const char *name)
-{
-    for (size_t i = 0; i < len; ++i) {
-        trc->setTracingIndex(name, i);
-        MarkIdInternal(trc, vec[i].unsafeGet());
-    }
-}
-
-void
-gc::MarkIdRootRange(JSTracer *trc, size_t len, jsid *vec, const char *name)
-{
-    JS_ROOT_MARKING_ASSERT(trc);
-    for (size_t i = 0; i < len; ++i) {
-        trc->setTracingIndex(name, i);
-        MarkIdInternal(trc, &vec[i]);
-    }
-}
-
 /*** Value Marking ***/
 
 static inline void
@@ -1596,7 +1530,7 @@ gc::MarkCycleCollectorChildren(JSTracer *trc, Shape *shape)
         MOZ_ASSERT(shape->base());
         shape->base()->assertConsistency();
 
-        MarkId(trc, &shape->propidRef(), "propid");
+        TraceEdge(trc, &shape->propidRef(), "propid");
 
         if (shape->hasGetterObject()) {
             JSObject *tmp = shape->getterObject();
@@ -1620,7 +1554,7 @@ ScanObjectGroup(GCMarker *gcmarker, ObjectGroup *group)
     unsigned count = group->getPropertyCount();
     for (unsigned i = 0; i < count; i++) {
         if (ObjectGroup::Property *prop = group->getProperty(i))
-            MarkId(gcmarker, &prop->id, "ObjectGroup property id");
+            DoMarking(gcmarker, prop->id.get());
     }
 
     if (group->proto().isObject())
@@ -1656,7 +1590,7 @@ gc::MarkChildren(JSTracer *trc, ObjectGroup *group)
     unsigned count = group->getPropertyCount();
     for (unsigned i = 0; i < count; i++) {
         if (ObjectGroup::Property *prop = group->getProperty(i))
-            MarkId(trc, &prop->id, "group_property");
+            TraceEdge(trc, &prop->id, "group_property");
     }
 
     if (group->proto().isObject())
