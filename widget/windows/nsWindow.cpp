@@ -4147,8 +4147,8 @@ nsWindow::IsAsyncResponseEvent(UINT aMsg, LRESULT& aResult)
 void
 nsWindow::IPCWindowProcHandler(UINT& msg, WPARAM& wParam, LPARAM& lParam)
 {
-  NS_ASSERTION(!mozilla::ipc::MessageChannel::IsPumpingMessages(),
-               "Failed to prevent a nonqueued message from running!");
+  MOZ_ASSERT_IF(msg != WM_GETOBJECT,
+                !mozilla::ipc::MessageChannel::IsPumpingMessages());
 
   // Modal UI being displayed in windowless plugins.
   if (mozilla::ipc::MessageChannel::IsSpinLoopActive() &&
