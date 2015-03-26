@@ -1054,14 +1054,6 @@ MediaCodecReader::Seek(int64_t aTime, int64_t aEndTime)
     mVideoTrack.mOutputEndOfStream = false;
     mVideoTrack.mFlushed = false;
 
-    VideoFrameContainer* videoframe = mDecoder->GetVideoFrameContainer();
-    if (videoframe) {
-      layers::ImageContainer* image = videoframe->GetImageContainer();
-      if (image) {
-        image->ClearAllImagesExceptFront();
-      }
-    }
-
     MediaBuffer* source_buffer = nullptr;
     MediaSource::ReadOptions options;
     options.setSeekTo(aTime, MediaSource::ReadOptions::SEEK_PREVIOUS_SYNC);

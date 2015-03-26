@@ -65,8 +65,7 @@ public:
    * asynchronously remove all the textures used by the image client.
    *
    */
-  virtual void FlushAllImages(bool aExceptFront,
-                              AsyncTransactionWaiter* aAsyncTransactionWaiter) {}
+  virtual void FlushAllImages(AsyncTransactionWaiter* aAsyncTransactionWaiter) {}
 
   virtual void RemoveTexture(TextureClient* aTexture) override;
 
@@ -102,8 +101,7 @@ public:
 
   virtual already_AddRefed<Image> CreateImage(ImageFormat aFormat) override;
 
-  virtual void FlushAllImages(bool aExceptFront,
-                              AsyncTransactionWaiter* aAsyncTransactionWaiter) override;
+  virtual void FlushAllImages(AsyncTransactionWaiter* aAsyncTransactionWaiter) override;
 
 protected:
   struct Buffer {

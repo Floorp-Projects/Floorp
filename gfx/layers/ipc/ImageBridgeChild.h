@@ -219,7 +219,7 @@ public:
   /**
    * Flush all Images sent to CompositableHost.
    */
-  static void FlushAllImages(ImageClient* aClient, ImageContainer* aContainer, bool aExceptFront);
+  static void FlushAllImages(ImageClient* aClient, ImageContainer* aContainer);
 
   // CompositableForwarder
 
