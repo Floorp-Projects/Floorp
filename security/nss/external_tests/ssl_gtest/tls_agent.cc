@@ -58,8 +58,12 @@ bool TlsAgent::EnsureTlsSetup() {
     if (rv != SECSuccess) return false;
   }
 
-  SECStatus rv = SSL_AuthCertificateHook(ssl_fd_, AuthCertificateHook,
-                                         reinterpret_cast<void*>(this));
+  SECStatus rv = SSL_VersionRangeSet(ssl_fd_, &vrange_);
+  EXPECT_EQ(SECSuccess, rv);
+  if (rv != SECSuccess) return false;
+
+  rv = SSL_AuthCertificateHook(ssl_fd_, AuthCertificateHook,
+                               reinterpret_cast<void*>(this));
   EXPECT_EQ(SECSuccess, rv);
   if (rv != SECSuccess) return false;
 
@@ -104,8 +108,13 @@ void TlsAgent::SetSessionCacheEnabled(bool en) {
 }
 
 void TlsAgent::SetVersionRange(uint16_t minver, uint16_t maxver) {
-  SSLVersionRange range = {minver, maxver};
-  ASSERT_EQ(SECSuccess, SSL_VersionRangeSet(ssl_fd_, &range));
+   vrange_.min = minver;
+   vrange_.max = maxver;
+
+   if (ssl_fd_) {
+     SECStatus rv = SSL_VersionRangeSet(ssl_fd_, &vrange_);
+     ASSERT_EQ(SECSuccess, rv);
+   }
 }
 
 void TlsAgent::CheckKEAType(SSLKEAType type) const {

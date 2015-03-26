@@ -192,6 +192,8 @@ bool TlsAlertRecorder::FilterRecord(uint8_t content_type, uint16_t version,
     return false;
   }
 
+  std::cerr << "Alert: " << input << std::endl;
+
   TlsParser parser(input);
   uint8_t lvl;
   if (!parser.Read(&lvl)) {
