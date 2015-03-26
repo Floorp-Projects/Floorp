@@ -662,6 +662,10 @@ private:
     virtual PFMRadioParent* AllocPFMRadioParent() override;
     virtual bool DeallocPFMRadioParent(PFMRadioParent* aActor) override;
 
+    virtual PPresentationParent* AllocPPresentationParent() override;
+    virtual bool DeallocPPresentationParent(PPresentationParent* aActor) override;
+    virtual bool RecvPPresentationConstructor(PPresentationParent* aActor) override;
+
     virtual PAsmJSCacheEntryParent* AllocPAsmJSCacheEntryParent(
                                  const asmjscache::OpenMode& aOpenMode,
                                  const asmjscache::WriteParams& aWriteParams,
