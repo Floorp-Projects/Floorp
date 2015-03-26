@@ -11,32 +11,38 @@ let inCall;
 function incoming() {
   return gRemoteDial(inNumber)
     .then(call => inCall = call)
-    .then(() => gCheckAll(null, [inCall], "", [], [inInfo.incoming]));
+    .then(() => gCheckAll(null, [inCall], "", [], [inInfo.incoming]))
+    .then(() => is(inCall.disconnectedReason, null));
 }
 
 function answer() {
   return gAnswer(inCall)
-    .then(() => gCheckAll(inCall, [inCall], "", [], [inInfo.active]));
+    .then(() => gCheckAll(inCall, [inCall], "", [], [inInfo.active]))
+    .then(() => is(inCall.disconnectedReason, null));
 }
 
 function hold() {
   return gHold(inCall)
-    .then(() => gCheckAll(null, [inCall], "", [], [inInfo.held]));
+    .then(() => gCheckAll(null, [inCall], "", [], [inInfo.held]))
+    .then(() => is(inCall.disconnectedReason, null));
 }
 
 function resume() {
   return gResume(inCall)
-    .then(() => gCheckAll(inCall, [inCall], "", [], [inInfo.active]));
+    .then(() => gCheckAll(inCall, [inCall], "", [], [inInfo.active]))
+    .then(() => is(inCall.disconnectedReason, null));
 }
 
 function hangUp() {
   return gHangUp(inCall)
-    .then(() => gCheckAll(null, [], "", [], []));
+    .then(() => gCheckAll(null, [], "", [], []))
+    .then(() => is(inCall.disconnectedReason, "NormalCallClearing"));
 }
 
 function remoteHangUp() {
   return gRemoteHangUp(inCall)
-    .then(() => gCheckAll(null, [], "", [], []));
+    .then(() => gCheckAll(null, [], "", [], []))
+    .then(() => is(inCall.disconnectedReason, "NormalCallClearing"));
 }
 
 // Test cases.
