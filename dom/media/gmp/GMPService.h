@@ -49,6 +49,34 @@ public:
 
   int32_t AsyncShutdownTimeoutMs();
 
+  class PluginCrashCallback
+  {
+  public:
+    NS_INLINE_DECL_REFCOUNTING(PluginCrashCallback)
+
+    PluginCrashCallback(const nsACString& aPluginId)
+      : mPluginId(aPluginId)
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+    }
+    const nsACString& PluginId() const { return mPluginId; }
+    virtual void Run(const nsACString& aPluginName, const nsAString& aPluginDumpId) = 0;
+    virtual bool IsStillValid() = 0; // False if callback has become useless.
+  protected:
+    virtual ~PluginCrashCallback()
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+    }
+  private:
+    const nsCString mPluginId;
+  };
+  void RemoveObsoletePluginCrashCallbacks(); // Called from add/remove/run.
+  void AddPluginCrashCallback(nsRefPtr<PluginCrashCallback> aPluginCrashCallback);
+  void RemovePluginCrashCallbacks(const nsACString& aPluginId);
+  void RunPluginCrashCallbacks(const nsACString& aPluginId,
+                               const nsACString& aPluginName,
+                               const nsAString& aPluginDumpId);
+
 private:
   ~GeckoMediaPluginService();
 
@@ -122,6 +150,8 @@ private:
   nsCOMPtr<nsIThread> mGMPThread;
   bool mShuttingDown;
   bool mShuttingDownOnGMPThread;
+
+  nsTArray<nsRefPtr<PluginCrashCallback>> mPluginCrashCallbacks;
 
   // True if we've inspected MOZ_GMP_PATH on the GMP thread and loaded any
   // plugins found there into mPlugins.
