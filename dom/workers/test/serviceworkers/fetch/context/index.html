@@ -84,6 +84,17 @@
     });
   }
 
+  function testBeacon() {
+    ok(navigator.sendBeacon("beacon.sjs"), "Sending the beacon should succeed");
+    // query the context from beacon.sjs
+    return fetch("beacon.sjs?queryContext")
+      .then(function(r) {
+        return r.text();
+      }).then(function(body) {
+        is(body, "beacon", "The context for the intercepted beacon should be correct");
+      });
+  }
+
   Promise.all([
     testFetch(),
     testImage(),
@@ -91,6 +102,7 @@
     testPicture(),
     testAudio(),
     testVideo(),
+    testBeacon(),
   ])
   .then(function() {
     finish();
