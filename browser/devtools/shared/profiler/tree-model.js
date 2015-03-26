@@ -13,8 +13,8 @@ loader.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
 loader.lazyRequireGetter(this, "CATEGORY_JIT",
   "devtools/shared/profiler/global", true);
 
-const CHROME_SCHEMES = ["chrome://", "resource://"];
-const CONTENT_SCHEMES = ["http://", "https://", "file://"];
+const CHROME_SCHEMES = ["chrome://", "resource://", "jar:file://"];
+const CONTENT_SCHEMES = ["http://", "https://", "file://", "app://"];
 
 exports.ThreadNode = ThreadNode;
 exports.FrameNode = FrameNode;
