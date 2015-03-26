@@ -16,6 +16,7 @@
 #include "nsHTMLReflowState.h"
 #include "nsPresContext.h"
 #include "nsCSSFrameConstructor.h"
+#include "nsGridContainerFrame.h"
 
 #ifdef DEBUG
 #include "nsBlockFrame.h"
@@ -119,6 +120,14 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
 
   bool reflowAll = aReflowState.ShouldReflowAllKids();
 
+  // The 'width' check below is an optimization to avoid the virtual GetType()
+  // call in most cases.  'aContainingBlock' isn't used for grid items,
+  // each item has its own CB on a frame property instead.
+  // @see nsGridContainerFrame::ReflowChildren
+  const bool isGrid =
+    aContainingBlock.width == nsGridContainerFrame::VERY_LIKELY_A_GRID_CONTAINER &&
+    aDelegatingFrame->GetType() == nsGkAtoms::gridContainerFrame;
+
   nsIFrame* kidFrame;
   nsOverflowContinuationTracker tracker(aDelegatingFrame, true);
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
@@ -127,8 +136,9 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
     if (kidNeedsReflow && !aPresContext->HasPendingInterrupt()) {
       // Reflow the frame
       nsReflowStatus  kidStatus = NS_FRAME_COMPLETE;
-      ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState,
-                          aContainingBlock,
+      const nsRect& cb = isGrid ? nsGridContainerFrame::GridItemCB(kidFrame)
+                                : aContainingBlock;
+      ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, aReflowState, cb,
                           aConstrainHeight, kidFrame, kidStatus,
                           aOverflowAreas);
       nsIFrame* nextFrame = kidFrame->GetNextInFlow();
