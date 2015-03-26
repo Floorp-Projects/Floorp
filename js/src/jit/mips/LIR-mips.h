@@ -355,23 +355,20 @@ class LMulI : public LBinaryMath<0>
     }
 };
 
-class LUDiv : public LBinaryMath<0>
+class LUDivOrMod : public LBinaryMath<0>
 {
   public:
-    LIR_HEADER(UDiv);
+    LIR_HEADER(UDivOrMod);
 
-    MDiv *mir() {
-        return mir_->toDiv();
+    MBinaryArithInstruction *mir() const {
+        MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+        return static_cast<MBinaryArithInstruction *>(mir_);
     }
-};
 
-class LUMod : public LBinaryMath<0>
-{
-  public:
-    LIR_HEADER(UMod);
-
-    MMod *mir() {
-        return mir_->toMod();
+    bool canBeDivideByZero() const {
+        if (mir_->isMod())
+            return mir_->toMod()->canBeDivideByZero();
+        return mir_->toDiv()->canBeDivideByZero();
     }
 };
 
