@@ -26,6 +26,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "jwcrypto",
 XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsOAuthGrantClient",
   "resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "FxAccountsProfile",
+  "resource://gre/modules/FxAccountsProfile.jsm");
+
 // All properties exposed by the public FxAccounts API.
 let publicProperties = [
   "accountStatus",
@@ -36,6 +39,7 @@ let publicProperties = [
   "getKeys",
   "getSignedInUser",
   "getOAuthToken",
+  "getSignedInUserProfile",
   "loadAndPoll",
   "localtimeOffsetMsec",
   "now",
@@ -75,6 +79,7 @@ AccountState.prototype = {
   signedInUser: null,
   whenVerifiedDeferred: null,
   whenKeysReadyDeferred: null,
+  profile: null,
 
   get isCurrent() this.fxaInternal && this.fxaInternal.currentAccountState === this,
 
@@ -90,10 +95,17 @@ AccountState.prototype = {
         new Error("Verification aborted; Another user signing in"));
       this.whenKeysReadyDeferred = null;
     }
+
     this.cert = null;
     this.keyPair = null;
     this.signedInUser = null;
     this.fxaInternal = null;
+    this.initProfilePromise = null;
+
+    if (this.profile) {
+      this.profile.tearDown();
+      this.profile = null;
+    }
   },
 
   getUserAccountData: function() {
@@ -204,6 +216,41 @@ AccountState.prototype = {
     return d.promise.then(result => this.resolve(result));
   },
 
+  // Get the account's profile image URL from the profile server
+  getProfile: function () {
+    return this.initProfile()
+      .then(() => this.profile.getProfile());
+  },
+
+  // Instantiate a FxAccountsProfile with a fresh OAuth token if needed
+  initProfile: function () {
+
+    let profileServerUrl = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.profile.uri");
+
+    let oAuthOptions = {
+      scope: "profile"
+    };
+
+    if (this.initProfilePromise) {
+      return this.initProfilePromise;
+    }
+
+    this.initProfilePromise = this.fxaInternal.getOAuthToken(oAuthOptions)
+      .then(token => {
+        this.profile = new FxAccountsProfile(this, {
+          profileServerUrl: profileServerUrl,
+          token: token
+        });
+        this.initProfilePromise = null;
+      })
+      .then(null, err => {
+        this.initProfilePromise = null;
+        throw err;
+      });
+
+    return this.initProfilePromise;
+  },
+
   resolve: function(result) {
     if (!this.isCurrent) {
       log.info("An accountState promise was resolved, but was actually rejected" +
@@ -228,7 +275,7 @@ AccountState.prototype = {
     return Promise.reject(error);
   },
 
-}
+};
 
 /**
  * Copies properties from a given object to another object.
@@ -989,9 +1036,9 @@ FxAccountsInternal.prototype = {
       let error = SERVER_ERRNO_TO_ERROR[aError.errno];
       return this._error(ERROR_TO_GENERAL_ERROR_CLASS[error] || ERROR_UNKNOWN, aError);
     } else if (aError.message &&
-        aError.message === "INVALID_PARAMETER" ||
+        (aError.message === "INVALID_PARAMETER" ||
         aError.message === "NO_ACCOUNT" ||
-        aError.message === "UNVERIFIED_ACCOUNT") {
+        aError.message === "UNVERIFIED_ACCOUNT")) {
       return Promise.reject(aError);
     }
     return this._error(ERROR_UNKNOWN, aError);
@@ -1004,7 +1051,60 @@ FxAccountsInternal.prototype = {
       reason.details = aDetails;
     }
     return Promise.reject(reason);
-  }
+  },
+
+  /**
+   * Get the user's account and profile data
+   *
+   * @param options
+   *        {
+   *          contentUrl: (string) Used by the FxAccountsProfileChannel.
+   *            Defaults to pref identity.fxaccounts.settings.uri
+   *          profileServerUrl: (string) Used by the FxAccountsProfileChannel.
+   *            Defaults to pref identity.fxaccounts.remote.profile.uri
+   *        }
+   *
+   * @return Promise.<object | Error>
+   *        The promise resolves to an accountData object with extra profile
+   *        information such as profileImageUrl, or rejects with
+   *        an error object ({error: ERROR, details: {}}) of the following:
+   *          INVALID_PARAMETER
+   *          NO_ACCOUNT
+   *          UNVERIFIED_ACCOUNT
+   *          NETWORK_ERROR
+   *          AUTH_ERROR
+   *          UNKNOWN_ERROR
+   */
+  getSignedInUserProfile: function () {
+    let accountState = this.currentAccountState;
+    return accountState.getProfile()
+      .then(
+        (profileData) => {
+          let profile = JSON.parse(JSON.stringify(profileData));
+          // profileData doesn't include "verified", but it must be true
+          // if we've gotten this far.
+          profile.verified = true;
+          return accountState.resolve(profile);
+        },
+        (error) => {
+          log.error("Could not retrieve profile data", error);
+
+          return this.getSignedInUser().then(data => {
+            let profile = null;
+            if (data) {
+              // If we fail to fetch the profile and have no profile cached
+              // we resort to using the account data for basic profile data.
+              profile = {
+                email: data.email,
+                uid: data.uid,
+                verified: data.verified
+              };
+            }
+            return accountState.resolve(profile);
+          });
+      })
+      .then(null, err => this._errorToErrorClass(err));
+  },
 };
 
 /**

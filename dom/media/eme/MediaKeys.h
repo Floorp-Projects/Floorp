@@ -43,7 +43,7 @@ CopyArrayBufferViewOrArrayBufferData(const ArrayBufferViewOrArrayBuffer& aBuffer
 // This class is used on the main thread only.
 // Note: it's addref/release is not (and can't be) thread safe!
 class MediaKeys final : public nsISupports,
-                            public nsWrapperCache
+                        public nsWrapperCache
 {
   ~MediaKeys();
 
@@ -80,7 +80,8 @@ public:
   already_AddRefed<MediaKeySession> GetPendingSession(uint32_t aToken);
 
   // Called once a Init() operation succeeds.
-  void OnCDMCreated(PromiseId aId, const nsACString& aNodeId);
+  void OnCDMCreated(PromiseId aId,
+                    const nsACString& aNodeId, const nsACString& aPluginId);
 
   // Called once the CDM generates a sessionId while servicing a
   // MediaKeySession.generateRequest() or MediaKeySession.load() call,

@@ -528,8 +528,8 @@ class TypedObject : public JSObject
     static bool obj_lookupElement(JSContext *cx, HandleObject obj, uint32_t index,
                                   MutableHandleObject objp, MutableHandleShape propp);
 
-    static bool obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                                   GetterOp getter, SetterOp setter, unsigned attrs,
+    static bool obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id,
+                                   Handle<JSPropertyDescriptor> desc,
                                    ObjectOpResult &result);
 
     static bool obj_hasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp);
@@ -1020,30 +1020,6 @@ TypedObject::opaque() const
 {
     return IsOpaqueTypedObjectClass(getClass());
 }
-
-// Inline transparent typed objects do not initially have an array buffer, but
-// can have that buffer created lazily if it is accessed later. This table
-// manages references from such typed objects to their buffers.
-class LazyArrayBufferTable
-{
-  private:
-    // The map from transparent typed objects to their lazily created buffer.
-    // Keys in this map are InlineTransparentTypedObjects and values are
-    // ArrayBufferObjects, but we don't enforce this in the type system due to
-    // the extra marking code goop that requires.
-    typedef WeakMap<PreBarrieredObject, RelocatablePtrObject> Map;
-    Map map;
-
-  public:
-    explicit LazyArrayBufferTable(JSContext *cx);
-    ~LazyArrayBufferTable();
-
-    ArrayBufferObject *maybeBuffer(InlineTransparentTypedObject *obj);
-    bool addBuffer(JSContext *cx, InlineTransparentTypedObject *obj, ArrayBufferObject *buffer);
-
-    void trace(JSTracer *trc);
-    size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
-};
 
 JSObject *
 InitTypedObjectModuleObject(JSContext *cx, JS::HandleObject obj);

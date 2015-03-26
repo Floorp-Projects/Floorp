@@ -673,3 +673,65 @@ js::InitBareWeakMapCtor(JSContext *cx, HandleObject obj)
     return InitWeakMapClass(cx, obj, false);
 }
 
+ObjectWeakMap::ObjectWeakMap(JSContext *cx)
+  : map(cx, nullptr)
+{
+    if (!map.init())
+        CrashAtUnhandlableOOM("ObjectWeakMap");
+}
+
+ObjectWeakMap::~ObjectWeakMap()
+{
+    WeakMapBase::removeWeakMapFromList(&map);
+}
+
+JSObject *
+ObjectWeakMap::lookup(const JSObject *obj)
+{
+    if (ObjectValueMap::Ptr p = map.lookup(const_cast<JSObject *>(obj)))
+        return &p->value().toObject();
+    return nullptr;
+}
+
+bool
+ObjectWeakMap::add(JSContext *cx, JSObject *obj, JSObject *target)
+{
+    MOZ_ASSERT(obj && target);
+
+    MOZ_ASSERT(!map.has(obj));
+    if (!map.put(obj, ObjectValue(*target))) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
+}
+
+void
+ObjectWeakMap::clear()
+{
+    map.clear();
+}
+
+void
+ObjectWeakMap::trace(JSTracer *trc)
+{
+    map.trace(trc);
+}
+
+size_t
+ObjectWeakMap::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf)
+{
+    return map.sizeOfExcludingThis(mallocSizeOf);
+}
+
+#ifdef JSGC_HASH_TABLE_CHECKS
+void
+ObjectWeakMap::checkAfterMovingGC()
+{
+    for (ObjectValueMap::Range r = map.all(); !r.empty(); r.popFront()) {
+        CheckGCThingAfterMovingGC(r.front().key().get());
+        CheckGCThingAfterMovingGC(&r.front().value().toObject());
+    }
+}
+#endif // JSGC_HASH_TABLE_CHECKS

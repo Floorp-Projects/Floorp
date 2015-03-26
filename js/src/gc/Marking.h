@@ -307,7 +307,7 @@ Mark(JSTracer *trc, NativeObject **obj, const char *name)
     MarkObjectUnbarriered(trc, obj, name);
 }
 
-/* For use by Debugger::WeakMap's proxiedScopes HashKeyRef instantiation. */
+/* For use by Debugger::WeakMap's liveScopes HashKeyRef instantiation. */
 inline void
 Mark(JSTracer *trc, ScopeObject **obj, const char *name)
 {

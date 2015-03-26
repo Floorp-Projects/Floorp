@@ -234,7 +234,7 @@ CrossOriginXrayWrapper::ownPropertyKeys(JSContext *cx, JS::Handle<JSObject*> wra
 bool
 CrossOriginXrayWrapper::defineProperty(JSContext *cx, JS::Handle<JSObject*> wrapper,
                                        JS::Handle<jsid> id,
-                                       JS::MutableHandle<JSPropertyDescriptor> desc,
+                                       JS::Handle<JSPropertyDescriptor> desc,
                                        JS::ObjectOpResult &result) const
 {
     JS_ReportError(cx, "Permission denied to define property on cross-origin object");

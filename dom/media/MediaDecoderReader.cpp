@@ -356,10 +356,9 @@ MediaDecoderReader::EnsureTaskQueue()
 {
   if (!mTaskQueue) {
     MOZ_ASSERT(!mTaskQueueIsBorrowed);
-    RefPtr<SharedThreadPool> decodePool(GetMediaDecodeThreadPool());
-    NS_ENSURE_TRUE(decodePool, nullptr);
-
-    mTaskQueue = new MediaTaskQueue(decodePool.forget());
+    RefPtr<SharedThreadPool> pool(GetMediaThreadPool());
+    MOZ_DIAGNOSTIC_ASSERT(pool);
+    mTaskQueue = new MediaTaskQueue(pool.forget());
   }
 
   return mTaskQueue;

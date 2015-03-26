@@ -274,6 +274,7 @@ function testOpenFailed() {
 
   return socket.opened.then(function() {
     ok(false, 'should not resolve openedPromise while fail to bind socket');
+    socket.close();
   }).catch(function(reason) {
     is(reason.name, 'NetworkError', 'expected openedPromise to be rejected while fail to bind socket');
   });
@@ -291,7 +292,9 @@ function testSendBeforeOpen() {
     ok(true, 'expected send fail before openedPromise is resolved');
   }
 
-  return socket.opened;
+  return socket.opened.then(function() {
+    socket.close();
+  });
 }
 
 function testCloseBeforeOpened() {

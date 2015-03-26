@@ -1256,6 +1256,11 @@ IsObjectValueInCompartment(Value v, JSCompartment *comp)
  */
 
 extern bool
+NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
+                     Handle<PropertyDescriptor> desc,
+                     ObjectOpResult &result);
+
+extern bool
 NativeDefineProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id, HandleValue value,
                      JSGetterOp getter, JSSetterOp setter, unsigned attrs,
                      ObjectOpResult &result);

@@ -25,13 +25,24 @@ public:
    */
 
   /**
+   * When set to ENABLE_SNAP, additional scrolling will be performed after the
+   * scroll operation to maintain the constraints set by CSS Scroll snapping.
+   * The additional scrolling may include asynchronous smooth scrolls that
+   * continue to animate after the initial scroll position has been set.
+   */
+  enum ScrollSnapMode { DISABLE_SNAP, ENABLE_SNAP };
+
+  /**
    * One of the following three methods is called when the scrollbar's button is
    * clicked.
    * @note These methods might destroy the frame, pres shell, and other objects.
    */
-  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection) = 0;
-  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection) = 0;
-  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection) = 0;
+  virtual void ScrollByPage(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                            ScrollSnapMode aSnap = DISABLE_SNAP) = 0;
+  virtual void ScrollByWhole(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                            ScrollSnapMode aSnap = DISABLE_SNAP) = 0;
+  virtual void ScrollByLine(nsScrollbarFrame* aScrollbar, int32_t aDirection,
+                            ScrollSnapMode aSnap = DISABLE_SNAP) = 0;
   /**
    * RepeatButtonScroll is called when the scrollbar's button is held down. When the
    * button is first clicked the increment is set; RepeatButtonScroll adds this
@@ -49,6 +60,11 @@ public:
   virtual void ThumbMoved(nsScrollbarFrame* aScrollbar,
                           nscoord aOldPos,
                           nscoord aNewPos) = 0;
+  /**
+   * Called when the scroll bar thumb, slider, or any other component is
+   * released.
+   */
+  virtual void ScrollbarReleased(nsScrollbarFrame* aScrollbar) = 0;
   virtual void VisibilityChanged(bool aVisible) = 0;
 
   /**

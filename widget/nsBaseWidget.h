@@ -336,7 +336,8 @@ protected:
   // Dispatch an event that has already been routed through APZ.
   nsEventStatus ProcessUntransformedAPZEvent(mozilla::WidgetInputEvent* aEvent,
                                              const ScrollableLayerGuid& aGuid,
-                                             uint64_t aInputBlockId);
+                                             uint64_t aInputBlockId,
+                                             nsEventStatus aApzResponse);
 
   const nsIntRegion RegionFromArray(const nsTArray<nsIntRect>& aRects);
   void ArrayFromRegion(const nsIntRegion& aRegion, nsTArray<nsIntRect>& aRects);

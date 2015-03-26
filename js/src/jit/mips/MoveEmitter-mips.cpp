@@ -9,7 +9,7 @@
 using namespace js;
 using namespace js::jit;
 
-MoveEmitterMIPS::MoveEmitterMIPS(MacroAssemblerMIPSCompat &masm)
+MoveEmitterMIPS::MoveEmitterMIPS(MacroAssembler &masm)
   : inCycle_(0),
     masm(masm),
     pushedAtCycle_(-1),

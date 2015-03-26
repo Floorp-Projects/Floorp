@@ -249,9 +249,9 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
 
   // Set up our task queue.
-  RefPtr<SharedThreadPool> threadPool(
-      SharedThreadPool::Get(NS_LITERAL_CSTRING("Media State Machine"), 1));
-  mTaskQueue = new MediaTaskQueue(threadPool.forget());
+  RefPtr<SharedThreadPool> pool(GetMediaThreadPool());
+  MOZ_DIAGNOSTIC_ASSERT(pool);
+  mTaskQueue = new MediaTaskQueue(pool.forget());
 
   static bool sPrefCacheInit = false;
   if (!sPrefCacheInit) {
@@ -1282,7 +1282,8 @@ static const char* const gMachineStateStr[] = {
   "SEEKING",
   "BUFFERING",
   "COMPLETED",
-  "SHUTDOWN"
+  "SHUTDOWN",
+  "ERROR"
 };
 
 void MediaDecoderStateMachine::SetState(State aState)
