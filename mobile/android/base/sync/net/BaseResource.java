@@ -30,6 +30,7 @@ import ch.boye.httpclientandroidlib.client.AuthCache;
 import ch.boye.httpclientandroidlib.client.ClientProtocolException;
 import ch.boye.httpclientandroidlib.client.methods.HttpDelete;
 import ch.boye.httpclientandroidlib.client.methods.HttpGet;
+import ch.boye.httpclientandroidlib.client.methods.HttpPatch;
 import ch.boye.httpclientandroidlib.client.methods.HttpPost;
 import ch.boye.httpclientandroidlib.client.methods.HttpPut;
 import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
@@ -342,6 +343,14 @@ public class BaseResource implements Resource {
   }
 
   @Override
+  public void patch(HttpEntity body) {
+    Logger.debug(LOG_TAG, "HTTP PATCH " + this.uri.toASCIIString());
+    HttpPatch request = new HttpPatch(this.uri);
+    request.setEntity(body);
+    this.go(request);
+  }
+
+  @Override
   public void put(HttpEntity body) {
     Logger.debug(LOG_TAG, "HTTP PUT " + this.uri.toASCIIString());
     HttpPut request = new HttpPut(this.uri);
@@ -462,5 +471,17 @@ public class BaseResource implements Resource {
 
   public void post(JSONObject jsonObject) throws UnsupportedEncodingException {
     post(jsonEntity(jsonObject));
+  }
+
+  public void patch(JSONArray jsonArray) throws UnsupportedEncodingException {
+    patch(jsonEntity(jsonArray));
+  }
+
+  public void patch(ExtendedJSONObject o) {
+    patch(jsonEntity(o));
+  }
+
+  public void patch(JSONObject jsonObject) throws UnsupportedEncodingException {
+    patch(jsonEntity(jsonObject));
   }
 }

@@ -191,6 +191,11 @@ public class SyncStorageRequest implements Resource {
   }
 
   @Override
+  public void patch(HttpEntity body) {
+    this.resource.patch(body);
+  }
+
+  @Override
   public void put(HttpEntity body) {
     this.resource.put(body);
   }

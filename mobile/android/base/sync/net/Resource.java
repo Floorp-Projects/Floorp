@@ -15,5 +15,6 @@ public interface Resource {
   public abstract void get();
   public abstract void delete();
   public abstract void post(HttpEntity body);
+  public abstract void patch(HttpEntity body);
   public abstract void put(HttpEntity body);
 }
