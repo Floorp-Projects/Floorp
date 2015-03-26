@@ -529,7 +529,7 @@ protected:
 DXGIYCbCrTextureClient::~DXGIYCbCrTextureClient()
 {
   if (mHoldRefs[0] && mActor) {
-    KeepUntilFullDeallocation(MakeUnique<YCbCrKeepAliveD3D11>(mHoldRefs));
+    KeepUntilFullDeallocation(MakeUnique<YCbCrKeepAliveD3D11>(mHoldRefs), true);
   }
   MOZ_COUNT_DTOR(DXGIYCbCrTextureClient);
 }
