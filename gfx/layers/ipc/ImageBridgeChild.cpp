@@ -430,14 +430,14 @@ void ImageBridgeChild::DispatchImageClientUpdate(ImageClient* aClient,
 }
 
 static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer,
-                               bool aExceptFront, AsyncTransactionWaiter* aWaiter)
+                               AsyncTransactionWaiter* aWaiter)
 {
   MOZ_ASSERT(aClient);
   sImageBridgeChildSingleton->BeginTransaction();
-  if (aContainer && !aExceptFront) {
+  if (aContainer) {
     aContainer->ClearCurrentImage();
   }
-  aClient->FlushAllImages(aExceptFront, aWaiter);
+  aClient->FlushAllImages(aWaiter);
   sImageBridgeChildSingleton->EndTransaction();
   // This decrement is balanced by the increment in FlushAllImages.
   // If any AsyncTransactionTrackers were created by FlushAllImages and attached
@@ -448,7 +448,7 @@ static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer,
 
 //static
 void ImageBridgeChild::FlushAllImages(ImageClient* aClient,
-                                      ImageContainer* aContainer, bool aExceptFront)
+                                      ImageContainer* aContainer)
 {
   if (!IsCreated()) {
     return;
@@ -467,7 +467,7 @@ void ImageBridgeChild::FlushAllImages(ImageClient* aClient,
 
   sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
     FROM_HERE,
-    NewRunnableFunction(&FlushAllImagesSync, aClient, aContainer, aExceptFront, waiter));
+    NewRunnableFunction(&FlushAllImagesSync, aClient, aContainer, waiter));
 
   waiter->WaitComplete();
 }
