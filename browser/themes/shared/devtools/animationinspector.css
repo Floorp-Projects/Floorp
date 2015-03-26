@@ -28,7 +28,7 @@ body {
 }
 
 #toggle-all {
-  border-width: 0px 1px;
+  border-width: 0 0 0 1px;
   min-height: 20px;
 }
 
