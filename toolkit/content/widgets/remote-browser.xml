@@ -387,27 +387,6 @@
         ]]></body>
       </method>
 
-      <!--
-        For out-of-process code, event.screen[XY] is relative to the
-        left/top of the content view. For in-process code,
-        event.screen[XY] is relative to the left/top of the screen. We
-        use this method to map screen coordinates received from a
-        (possibly out-of-process) <browser> element to coordinates
-        that are relative to the screen. This code handles the
-        out-of-process case, where we need to translate by the screen
-        position of the <browser> element.
-      -->
-      <method name="mapScreenCoordinatesFromContent">
-        <parameter name="aScreenX"/>
-        <parameter name="aScreenY"/>
-        <body>
-        <![CDATA[
-          return { x: aScreenX + this.boxObject.screenX,
-                   y: aScreenY + this.boxObject.screenY };
-        ]]>
-        </body>
-      </method>
-
       <method name="enableDisableCommands">
         <parameter name="aAction"/>
         <parameter name="aEnabledLength"/>

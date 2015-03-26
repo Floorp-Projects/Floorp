@@ -884,8 +884,7 @@ nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
 
     // Don't show remote iframe if we are waiting for the completion of reflow.
     if (!aFrame || !(aFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-      nsIntPoint chromeDisp = aFrame->GetChromeDisplacement();
-      mRemoteBrowser->UpdateDimensions(dimensions, size, chromeDisp);
+      mRemoteBrowser->UpdateDimensions(dimensions, size);
     }
   }
 
@@ -1381,6 +1380,12 @@ nsFrameLoader::StartDestroy()
     if (mRemoteBrowser) {
       mRemoteBrowser->CacheFrameLoader(this);
     }
+  }
+
+  // If the TabParent has installed any event listeners on the window, this is
+  // its last chance to remove them while we're still in the document.
+  if (mRemoteBrowser) {
+    mRemoteBrowser->RemoveWindowListeners();
   }
 
   nsCOMPtr<nsIDocument> doc;
@@ -2058,8 +2063,7 @@ nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame *aIFrame)
       ScreenIntSize size = aIFrame->GetSubdocumentSize();
       nsIntRect dimensions;
       NS_ENSURE_SUCCESS(GetWindowDimensions(dimensions), NS_ERROR_FAILURE);
-      nsIntPoint chromeDisp = aIFrame->GetChromeDisplacement();
-      mRemoteBrowser->UpdateDimensions(dimensions, size, chromeDisp);
+      mRemoteBrowser->UpdateDimensions(dimensions, size);
     }
     return NS_OK;
   }

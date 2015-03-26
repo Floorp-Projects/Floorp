@@ -81,9 +81,8 @@ this.AutoCompleteE10S = {
     this.popup.hidden = false;
     this.popup.setAttribute("width", rect.width);
 
-    let {x, y} = this.browser.mapScreenCoordinatesFromContent(rect.left, rect.top + rect.height);
-    this.x = x;
-    this.y = y;
+    this.x = rect.left;
+    this.y = rect.top + rect.height;
   },
 
   _showPopup: function(results) {
