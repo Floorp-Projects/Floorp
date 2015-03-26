@@ -24,6 +24,8 @@
 { 0x09d9ed1a, 0xe5d4, 0x4004, \
   { 0xbf, 0xe0, 0x27, 0xce, 0xb9, 0x23, 0xd9, 0xac } }
 
+class nsINetworkInterceptController;
+
 class nsCSPContext : public nsIContentSecurityPolicy
 {
   public:
@@ -109,8 +111,13 @@ class CSPReportRedirectSink final : public nsIChannelEventSink,
   public:
     CSPReportRedirectSink();
 
+    void SetInterceptController(nsINetworkInterceptController* aInterceptController);
+
   protected:
     virtual ~CSPReportRedirectSink();
+
+  private:
+    nsCOMPtr<nsINetworkInterceptController> mInterceptController;
 };
 
 #endif /* nsCSPContext_h___ */
