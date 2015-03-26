@@ -1143,6 +1143,27 @@ gfxWindowsPlatform::IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlag
     return true;
 }
 
+static DeviceResetReason HResultToResetReason(HRESULT hr)
+{
+  switch (hr) {
+  case DXGI_ERROR_DEVICE_HUNG:
+    return DeviceResetReason::HUNG;
+  case DXGI_ERROR_DEVICE_REMOVED:
+    return DeviceResetReason::REMOVED;
+  case DXGI_ERROR_DEVICE_RESET:
+    return DeviceResetReason::RESET;
+  case DXGI_ERROR_DRIVER_INTERNAL_ERROR:
+    return DeviceResetReason::DRIVER_ERROR;
+  case DXGI_ERROR_INVALID_CALL:
+    return DeviceResetReason::INVALID_CALL;
+  case E_OUTOFMEMORY:
+    return DeviceResetReason::OUT_OF_MEMORY;
+  default:
+    MOZ_ASSERT(false);
+  }
+  return DeviceResetReason::UNKNOWN;
+}
+
 bool
 gfxWindowsPlatform::DidRenderingDeviceReset(DeviceResetReason* aResetReason)
 {
@@ -1154,39 +1175,26 @@ gfxWindowsPlatform::DidRenderingDeviceReset(DeviceResetReason* aResetReason)
     HRESULT hr = mD3D11Device->GetDeviceRemovedReason();
     if (hr != S_OK) {
       if (aResetReason) {
-        switch (hr) {
-        case DXGI_ERROR_DEVICE_HUNG:
-          *aResetReason = DeviceResetReason::HUNG;
-          break;
-        case DXGI_ERROR_DEVICE_REMOVED:
-          *aResetReason = DeviceResetReason::REMOVED;
-          break;
-        case DXGI_ERROR_DEVICE_RESET:
-          *aResetReason = DeviceResetReason::RESET;
-          break;
-        case DXGI_ERROR_DRIVER_INTERNAL_ERROR:
-          *aResetReason = DeviceResetReason::DRIVER_ERROR;
-          break;
-        case DXGI_ERROR_INVALID_CALL:
-          *aResetReason = DeviceResetReason::INVALID_CALL;
-          break;
-        case E_OUTOFMEMORY:
-          *aResetReason = DeviceResetReason::OUT_OF_MEMORY;
-          break;
-        default:
-          MOZ_ASSERT(false);
-        }
+        *aResetReason = HResultToResetReason(hr);
       }
       return true;
     }
   }
   if (mD3D11ContentDevice) {
-    if (mD3D11ContentDevice->GetDeviceRemovedReason() != S_OK) {
+    HRESULT hr = mD3D11ContentDevice->GetDeviceRemovedReason();
+    if (hr != S_OK) {
+      if (aResetReason) {
+        *aResetReason = HResultToResetReason(hr);
+      }
       return true;
     }
   }
   if (GetD3D10Device()) {
-    if (GetD3D10Device()->GetDeviceRemovedReason() != S_OK) {
+    HRESULT hr = GetD3D10Device()->GetDeviceRemovedReason();
+    if (hr != S_OK) {
+      if (aResetReason) {
+        *aResetReason = HResultToResetReason(hr);
+      }
       return true;
     }
   }
