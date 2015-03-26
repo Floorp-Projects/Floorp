@@ -110,6 +110,37 @@
     });
   }
 
+  function testEmbed() {
+    return new Promise(function(resolve, reject) {
+      var embed = document.createElement("embed");
+      embed.src = "embed";
+      document.documentElement.appendChild(embed);
+      navigator.serviceWorker.addEventListener("message", function onMessage(e) {
+        if (e.data.data == "embed") {
+          // FIXME: Bug 1148030: This should be "embed".
+          is(e.data.context, "object", "Expected the object context on an embed");
+          navigator.serviceWorker.removeEventListener("message", onMessage);
+          resolve();
+        }
+      }, false);
+    });
+  }
+
+  function testObject() {
+    return new Promise(function(resolve, reject) {
+      var object = document.createElement("object");
+      object.data = "object";
+      document.documentElement.appendChild(object);
+      navigator.serviceWorker.addEventListener("message", function onMessage(e) {
+        if (e.data.data == "object") {
+          is(e.data.context, "object", "Expected the object context on an object");
+          navigator.serviceWorker.removeEventListener("message", onMessage);
+          resolve();
+        }
+      }, false);
+    });
+  }
+
   Promise.all([
     testFetch(),
     testImage(),
@@ -119,6 +150,8 @@
     testVideo(),
     testBeacon(),
     testCSPReport(),
+    testEmbed(),
+    testObject(),
   ])
   .then(function() {
     finish();
