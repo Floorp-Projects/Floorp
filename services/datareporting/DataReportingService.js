@@ -341,6 +341,6 @@ this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DataReportingService]);
 ;
 #include policy.jsm
 ;
-#include sessions.jsm
+#include ../../toolkit/modules/SessionRecorder.jsm
 ;
 

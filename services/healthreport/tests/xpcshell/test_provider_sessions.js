@@ -10,7 +10,7 @@ Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Metrics.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/services-common/utils.js");
-Cu.import("resource://gre/modules/services/datareporting/sessions.jsm");
+Cu.import("resource://gre/modules/SessionRecorder.jsm");
 Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 
 
