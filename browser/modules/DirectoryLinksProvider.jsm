@@ -57,8 +57,8 @@ const ALLOWED_IMAGE_SCHEMES = new Set(["https", "data"]);
 // The frecency of a directory link
 const DIRECTORY_FRECENCY = 1000;
 
-// The frecency of a related link
-const RELATED_FRECENCY = Infinity;
+// The frecency of a suggested link
+const SUGGESTED_FRECENCY = Infinity;
 
 // Divide frecency by this amount for pings
 const PING_SCORE_DIVISOR = 10000;
@@ -89,14 +89,14 @@ let DirectoryLinksProvider = {
   _enhancedLinks: new Map(),
 
   /**
-   * A mapping from site to a list of related link objects
+   * A mapping from site to a list of suggested link objects
    */
-  _relatedLinks: new Map(),
+  _suggestedLinks: new Map(),
 
   /**
-   * A set of top sites that we can provide related links for
+   * A set of top sites that we can provide suggested links for
    */
-  _topSitesWithRelatedLinks: new Set(),
+  _topSitesWithSuggestedLinks: new Set(),
 
   get _observedPrefs() Object.freeze({
     enhanced: PREF_NEWTAB_ENHANCED,
@@ -201,11 +201,11 @@ let DirectoryLinksProvider = {
     }
   },
 
-  _cacheRelatedLinks: function(link) {
-    for (let relatedSite of link.frecent_sites) {
-      let relatedMap = this._relatedLinks.get(relatedSite) || new Map();
-      relatedMap.set(link.url, link);
-      this._relatedLinks.set(relatedSite, relatedMap);
+  _cacheSuggestedLinks: function(link) {
+    for (let suggestedSite of link.frecent_sites) {
+      let suggestedMap = this._suggestedLinks.get(suggestedSite) || new Map();
+      suggestedMap.set(link.url, link);
+      this._suggestedLinks.set(suggestedSite, suggestedMap);
     }
   },
 
@@ -413,9 +413,9 @@ let DirectoryLinksProvider = {
    */
   getLinks: function DirectoryLinksProvider_getLinks(aCallback) {
     this._readDirectoryLinksFile().then(rawLinks => {
-      // Reset the cache of related tiles and enhanced images for this new set of links
+      // Reset the cache of suggested tiles and enhanced images for this new set of links
       this._enhancedLinks.clear();
-      this._relatedLinks.clear();
+      this._suggestedLinks.clear();
 
       let validityFilter = function(link) {
         // Make sure the link url is allowed and images too if they exist
@@ -435,9 +435,9 @@ let DirectoryLinksProvider = {
       rawLinks.suggested.filter(validityFilter).forEach((link, position) => {
         setCommonProperties(link, rawLinks.suggested.length, position);
 
-        // We cache related tiles here but do not push any of them in the links list yet.
-        // The decision for which related tile to include will be made separately.
-        this._cacheRelatedLinks(link);
+        // We cache suggested tiles here but do not push any of them in the links list yet.
+        // The decision for which suggested tile to include will be made separately.
+        this._cacheSuggestedLinks(link);
       });
 
       return rawLinks.directory.filter(validityFilter).map((link, position) => {
@@ -476,32 +476,32 @@ let DirectoryLinksProvider = {
   },
 
   _handleManyLinksChanged: function() {
-    this._topSitesWithRelatedLinks.clear();
-    this._relatedLinks.forEach((relatedLinks, site) => {
+    this._topSitesWithSuggestedLinks.clear();
+    this._suggestedLinks.forEach((suggestedLinks, site) => {
       if (NewTabUtils.isTopPlacesSite(site)) {
-        this._topSitesWithRelatedLinks.add(site);
+        this._topSitesWithSuggestedLinks.add(site);
       }
     });
-    this._updateRelatedTile();
+    this._updateSuggestedTile();
   },
 
   /**
-   * Updates _topSitesWithRelatedLinks based on the link that was changed.
+   * Updates _topSitesWithSuggestedLinks based on the link that was changed.
    *
-   * @return true if _topSitesWithRelatedLinks was modified, false otherwise.
+   * @return true if _topSitesWithSuggestedLinks was modified, false otherwise.
    */
   _handleLinkChanged: function(aLink) {
     let changedLinkSite = NewTabUtils.extractSite(aLink.url);
-    let linkStored = this._topSitesWithRelatedLinks.has(changedLinkSite);
+    let linkStored = this._topSitesWithSuggestedLinks.has(changedLinkSite);
 
     if (!NewTabUtils.isTopPlacesSite(changedLinkSite) && linkStored) {
-      this._topSitesWithRelatedLinks.delete(changedLinkSite);
+      this._topSitesWithSuggestedLinks.delete(changedLinkSite);
       return true;
     }
 
-    if (this._relatedLinks.has(changedLinkSite) &&
+    if (this._suggestedLinks.has(changedLinkSite) &&
         NewTabUtils.isTopPlacesSite(changedLinkSite) && !linkStored) {
-      this._topSitesWithRelatedLinks.add(changedLinkSite);
+      this._topSitesWithSuggestedLinks.add(changedLinkSite);
       return true;
     }
     return false;
@@ -517,7 +517,7 @@ let DirectoryLinksProvider = {
     // Make sure NewTabUtils.links handles the notification first.
     setTimeout(() => {
       if (this._handleLinkChanged(aLink)) {
-        this._updateRelatedTile();
+        this._updateSuggestedTile();
       }
     }, 0);
   },
@@ -530,12 +530,12 @@ let DirectoryLinksProvider = {
   },
 
   /**
-   * Chooses and returns a related tile based on a user's top sites
-   * that we have an available related tile for.
+   * Chooses and returns a suggested tile based on a user's top sites
+   * that we have an available suggested tile for.
    *
-   * @return the chosen related tile, or undefined if there isn't one
+   * @return the chosen suggested tile, or undefined if there isn't one
    */
-  _updateRelatedTile: function() {
+  _updateSuggestedTile: function() {
     let sortedLinks = NewTabUtils.getProviderLinks(this);
 
     if (!sortedLinks) {
@@ -544,7 +544,7 @@ let DirectoryLinksProvider = {
       return;
     }
 
-    // Delete the current related tile, if one exists.
+    // Delete the current suggested tile, if one exists.
     let initialLength = sortedLinks.length;
     this.maxNumLinks = initialLength;
     if (initialLength) {
@@ -559,52 +559,52 @@ let DirectoryLinksProvider = {
       }
     }
 
-    if (this._topSitesWithRelatedLinks.size == 0) {
-      // There are no potential related links we can show.
+    if (this._topSitesWithSuggestedLinks.size == 0) {
+      // There are no potential suggested links we can show.
       return;
     }
 
-    // Create a flat list of all possible links we can show as related.
-    // Note that many top sites may map to the same related links, but we only
-    // want to count each related link once (based on url), thus possibleLinks is a map
-    // from url to relatedLink. Thus, each link has an equal chance of being chosen at
+    // Create a flat list of all possible links we can show as suggested.
+    // Note that many top sites may map to the same suggested links, but we only
+    // want to count each suggested link once (based on url), thus possibleLinks is a map
+    // from url to suggestedLink. Thus, each link has an equal chance of being chosen at
     // random from flattenedLinks if it appears only once.
     let possibleLinks = new Map();
     let targetedSites = new Map();
-    this._topSitesWithRelatedLinks.forEach(topSiteWithRelatedLink => {
-      let relatedLinksMap = this._relatedLinks.get(topSiteWithRelatedLink);
-      relatedLinksMap.forEach((relatedLink, url) => {
-        possibleLinks.set(url, relatedLink);
+    this._topSitesWithSuggestedLinks.forEach(topSiteWithSuggestedLink => {
+      let suggestedLinksMap = this._suggestedLinks.get(topSiteWithSuggestedLink);
+      suggestedLinksMap.forEach((suggestedLink, url) => {
+        possibleLinks.set(url, suggestedLink);
 
         // Keep a map of URL to targeted sites. We later use this to show the user
         // what site they visited to trigger this suggestion.
         if (!targetedSites.get(url)) {
           targetedSites.set(url, []);
         }
-        targetedSites.get(url).push(topSiteWithRelatedLink);
+        targetedSites.get(url).push(topSiteWithSuggestedLink);
       })
     });
     let flattenedLinks = [...possibleLinks.values()];
 
-    // Choose our related link at random
-    let relatedIndex = Math.floor(Math.random() * flattenedLinks.length);
-    let chosenRelatedLink = flattenedLinks[relatedIndex];
+    // Choose our suggested link at random
+    let suggestedIndex = Math.floor(Math.random() * flattenedLinks.length);
+    let chosenSuggestedLink = flattenedLinks[suggestedIndex];
 
     // Show the new directory tile.
     this._callObservers("onLinkChanged", {
-      url: chosenRelatedLink.url,
-      title: chosenRelatedLink.title,
-      frecency: RELATED_FRECENCY,
-      lastVisitDate: chosenRelatedLink.lastVisitDate,
-      type: chosenRelatedLink.type,
+      url: chosenSuggestedLink.url,
+      title: chosenSuggestedLink.title,
+      frecency: SUGGESTED_FRECENCY,
+      lastVisitDate: chosenSuggestedLink.lastVisitDate,
+      type: chosenSuggestedLink.type,
 
       // Choose the first site a user has visited as the target. In the future,
       // this should be the site with the highest frecency. However, we currently
       // store frecency by URL not by site.
-      targetedSite: targetedSites.get(chosenRelatedLink.url).length ?
-        targetedSites.get(chosenRelatedLink.url)[0] : null
+      targetedSite: targetedSites.get(chosenSuggestedLink.url).length ?
+        targetedSites.get(chosenSuggestedLink.url)[0] : null
     });
-    return chosenRelatedLink;
+    return chosenSuggestedLink;
    },
 
   /**
