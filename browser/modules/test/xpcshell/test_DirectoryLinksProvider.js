@@ -26,7 +26,7 @@ do_get_profile();
 
 const DIRECTORY_LINKS_FILE = "directoryLinks.json";
 const DIRECTORY_FRECENCY = 1000;
-const kURLData = {"en-US": [{"url":"http://example.com","title":"LocalSource"}]};
+const kURLData = {"directory": [{"url":"http://example.com","title":"LocalSource"}]};
 const kTestURL = 'data:application/json,' + JSON.stringify(kURLData);
 
 // DirectoryLinksProvider preferences
@@ -53,7 +53,7 @@ Services.prefs.setCharPref(kPingUrlPref, kPingUrl);
 Services.prefs.setBoolPref(kNewtabEnhancedPref, true);
 
 const kHttpHandlerData = {};
-kHttpHandlerData[kExamplePath] = {"en-US": [{"url":"http://example.com","title":"RemoteSource"}]};
+kHttpHandlerData[kExamplePath] = {"directory": [{"url":"http://example.com","title":"RemoteSource"}]};
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
                               "nsIBinaryInputStream",
@@ -63,9 +63,9 @@ let gLastRequestPath;
 
 let relatedTile1 = {
   url: "http://turbotax.com",
-  type: "suggested",
-  lastVisitDate: 4,
-  suggested: [
+  type: "affiliate",
+  lastVisitDate: 3,
+  frecent_sites: [
     "taxact.com",
     "hrblock.com",
     "1040.com",
@@ -74,9 +74,9 @@ let relatedTile1 = {
 };
 let relatedTile2 = {
   url: "http://irs.gov",
-  type: "suggested",
-  lastVisitDate: 3,
-  suggested: [
+  type: "affiliate",
+  lastVisitDate: 2,
+  frecent_sites: [
     "taxact.com",
     "hrblock.com",
     "freetaxusa.com",
@@ -85,9 +85,9 @@ let relatedTile2 = {
 };
 let relatedTile3 = {
   url: "http://hrblock.com",
-  type: "suggested",
-  lastVisitDate: 2,
-  suggested: [
+  type: "affiliate",
+  lastVisitDate: 1,
+  frecent_sites: [
     "taxact.com",
     "freetaxusa.com",
     "1040.com",
@@ -218,7 +218,7 @@ add_task(function test_updateRelatedTile() {
   let topSites = ["site0.com", "1040.com", "site2.com", "hrblock.com", "site4.com", "freetaxusa.com", "site6.com"];
 
   // Initial setup
-  let data = {"en-US": [relatedTile1, relatedTile2, relatedTile3, someOtherSite]};
+  let data = {"suggested": [relatedTile1, relatedTile2, relatedTile3], "directory": [someOtherSite]};
   let dataURI = 'data:application/json,' + JSON.stringify(data);
 
   let testObserver = new TestFirstRun();
@@ -248,7 +248,7 @@ add_task(function test_updateRelatedTile() {
         isIdentical([...DirectoryLinksProvider._topSitesWithRelatedLinks], ["hrblock.com", "1040.com", "freetaxusa.com"]);
         do_check_true(possibleLinks.indexOf(link.url) > -1);
         do_check_eq(link.frecency, Infinity);
-        do_check_eq(link.type, "suggested");
+        do_check_eq(link.type, "affiliate");
         resolve();
       };
     });
@@ -262,7 +262,7 @@ add_task(function test_updateRelatedTile() {
         let possibleLinks = [relatedTile1.url, relatedTile2.url, relatedTile3.url];
 
         do_check_true(possibleLinks.indexOf(link.url) > -1);
-        do_check_eq(link.type, "suggested");
+        do_check_eq(link.type, "affiliate");
         do_check_true(this.count <= 2);
 
         if (this.count == 1) {
@@ -285,7 +285,7 @@ add_task(function test_updateRelatedTile() {
       this.onLinkChanged = (directoryLinksProvider, link) => {
         this.count++;
 
-        do_check_eq(link.type, "suggested");
+        do_check_eq(link.type, "affiliate");
         do_check_eq(this.count, 1);
         do_check_eq(link.frecency, 0);
         do_check_eq(link.url, links.shift().url);
@@ -340,7 +340,7 @@ add_task(function test_updateRelatedTile() {
 });
 
 add_task(function test_relatedLinksMap() {
-  let data = {"en-US": [relatedTile1, relatedTile2, relatedTile3, someOtherSite]};
+  let data = {"suggested": [relatedTile1, relatedTile2, relatedTile3], "directory": [someOtherSite]};
   let dataURI = 'data:application/json,' + JSON.stringify(data);
 
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
@@ -386,7 +386,7 @@ add_task(function test_topSitesWithRelatedLinks() {
   // We start off with no top sites with related links.
   do_check_eq(DirectoryLinksProvider._topSitesWithRelatedLinks.size, 0);
 
-  let data = {"en-US": [relatedTile1, relatedTile2, relatedTile3, someOtherSite]};
+  let data = {"suggested": [relatedTile1, relatedTile2, relatedTile3], "directory": [someOtherSite]};
   let dataURI = 'data:application/json,' + JSON.stringify(data);
 
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
@@ -605,39 +605,6 @@ add_task(function test_DirectoryLinksProvider__linkObservers() {
   yield promiseCleanDirectoryLinksProvider();
 });
 
-add_task(function test_linksURL_locale() {
-  let data = {
-    "en-US": [{url: "http://example.com", title: "US"}],
-    "zh-CN": [
-              {url: "http://example.net", title: "CN"},
-              {url:"http://example.net/2", title: "CN2"}
-    ],
-  };
-  let dataURI = 'data:application/json,' + JSON.stringify(data);
-
-  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
-
-  let links;
-  let expected_data;
-
-  links = yield fetchData();
-  do_check_eq(links.length, 1);
-  expected_data = [{url: "http://example.com", title: "US", frecency: DIRECTORY_FRECENCY, lastVisitDate: 1}];
-  isIdentical(links, expected_data);
-
-  yield promiseDirectoryDownloadOnPrefChange("general.useragent.locale", "zh-CN");
-
-  links = yield fetchData();
-  do_check_eq(links.length, 2)
-  expected_data = [
-    {url: "http://example.net", title: "CN", frecency: DIRECTORY_FRECENCY, lastVisitDate: 2},
-    {url: "http://example.net/2", title: "CN2", frecency: DIRECTORY_FRECENCY, lastVisitDate: 1}
-  ];
-  isIdentical(links, expected_data);
-
-  yield promiseCleanDirectoryLinksProvider();
-});
-
 add_task(function test_DirectoryLinksProvider__prefObserver_url() {
   yield promiseSetupDirectoryLinksProvider({linksURL: kTestURL});
 
@@ -667,8 +634,13 @@ add_task(function test_DirectoryLinksProvider__prefObserver_url() {
   yield promiseCleanDirectoryLinksProvider();
 });
 
-add_task(function test_DirectoryLinksProvider_getLinks_noLocaleData() {
-  yield promiseSetupDirectoryLinksProvider({locale: 'zh-CN'});
+add_task(function test_DirectoryLinksProvider_getLinks_noDirectoryData() {
+  let data = {
+    "directory": [],
+  };
+  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+
   let links = yield fetchData();
   do_check_eq(links.length, 0);
   yield promiseCleanDirectoryLinksProvider();
@@ -804,7 +776,7 @@ add_task(function test_DirectoryLinksProvider_getLinksFromCorruptedFile() {
 });
 
 add_task(function test_DirectoryLinksProvider_getAllowedLinks() {
-  let data = {"en-US": [
+  let data = {"directory": [
     {url: "ftp://example.com"},
     {url: "http://example.net"},
     {url: "javascript:5"},
@@ -820,12 +792,12 @@ add_task(function test_DirectoryLinksProvider_getAllowedLinks() {
   do_check_eq(links.length, 2);
 
   // The only remaining url should be http and https
-  do_check_eq(links[0].url, data["en-US"][1].url);
-  do_check_eq(links[1].url, data["en-US"][3].url);
+  do_check_eq(links[0].url, data["directory"][1].url);
+  do_check_eq(links[1].url, data["directory"][3].url);
 });
 
 add_task(function test_DirectoryLinksProvider_getAllowedImages() {
-  let data = {"en-US": [
+  let data = {"directory": [
     {url: "http://example.com", imageURI: "ftp://example.com"},
     {url: "http://example.com", imageURI: "http://example.net"},
     {url: "http://example.com", imageURI: "javascript:5"},
@@ -841,12 +813,12 @@ add_task(function test_DirectoryLinksProvider_getAllowedImages() {
   do_check_eq(links.length, 2);
 
   // The only remaining images should be https and data
-  do_check_eq(links[0].imageURI, data["en-US"][3].imageURI);
-  do_check_eq(links[1].imageURI, data["en-US"][5].imageURI);
+  do_check_eq(links[0].imageURI, data["directory"][3].imageURI);
+  do_check_eq(links[1].imageURI, data["directory"][5].imageURI);
 });
 
 add_task(function test_DirectoryLinksProvider_getAllowedEnhancedImages() {
-  let data = {"en-US": [
+  let data = {"directory": [
     {url: "http://example.com", enhancedImageURI: "ftp://example.com"},
     {url: "http://example.com", enhancedImageURI: "http://example.net"},
     {url: "http://example.com", enhancedImageURI: "javascript:5"},
@@ -862,12 +834,12 @@ add_task(function test_DirectoryLinksProvider_getAllowedEnhancedImages() {
   do_check_eq(links.length, 2);
 
   // The only remaining enhancedImages should be http and https and data
-  do_check_eq(links[0].enhancedImageURI, data["en-US"][3].enhancedImageURI);
-  do_check_eq(links[1].enhancedImageURI, data["en-US"][5].enhancedImageURI);
+  do_check_eq(links[0].enhancedImageURI, data["directory"][3].enhancedImageURI);
+  do_check_eq(links[1].enhancedImageURI, data["directory"][5].enhancedImageURI);
 });
 
 add_task(function test_DirectoryLinksProvider_getEnhancedLink() {
-  let data = {"en-US": [
+  let data = {"directory": [
     {url: "http://example.net", enhancedImageURI: "data:,net1"},
     {url: "http://example.com", enhancedImageURI: "data:,com1"},
     {url: "http://example.com", enhancedImageURI: "data:,com2"},
@@ -907,7 +879,7 @@ add_task(function test_DirectoryLinksProvider_getEnhancedLink() {
   checkEnhanced("http://127.0.0.1", undefined);
 
   // Make sure old data is not cached
-  data = {"en-US": [
+  data = {"directory": [
     {url: "http://example.com", enhancedImageURI: "data:,fresh"},
   ]};
   dataURI = 'data:application/json,' + JSON.stringify(data);
