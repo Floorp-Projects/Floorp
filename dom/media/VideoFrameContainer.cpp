@@ -52,9 +52,8 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   //  composite it can then block on |mImageContainer|'s lock, causing a
   //  deadlock. We use this hack to defer the destruction of the current image
   //  until it is safe.
-  nsRefPtr<Image> kungFuDeathGrip;
-  kungFuDeathGrip = mImageContainer->LockCurrentImage();
-  mImageContainer->UnlockCurrentImage();
+  nsTArray<ImageContainer::OwningImage> kungFuDeathGrip;
+  mImageContainer->GetCurrentImages(&kungFuDeathGrip);
 
   mImageContainer->SetCurrentImage(aImage);
   gfx::IntSize newFrameSize = mImageContainer->GetCurrentSize();
@@ -71,9 +70,8 @@ void VideoFrameContainer::ClearCurrentFrame()
 
   // See comment in SetCurrentFrame for the reasoning behind
   // using a kungFuDeathGrip here.
-  nsRefPtr<Image> kungFuDeathGrip;
-  kungFuDeathGrip = mImageContainer->LockCurrentImage();
-  mImageContainer->UnlockCurrentImage();
+  nsTArray<ImageContainer::OwningImage> kungFuDeathGrip;
+  mImageContainer->GetCurrentImages(&kungFuDeathGrip);
 
   mImageContainer->ClearAllImages();
   mImageSizeChanged = false;
