@@ -284,18 +284,18 @@ Convert(bt_acl_state_t aIn, bool& aOut)
 }
 
 inline nsresult
-Convert(bt_device_type_t aIn, BluetoothDeviceType& aOut)
+Convert(bt_device_type_t aIn, BluetoothTypeOfDevice& aOut)
 {
-  static const BluetoothDeviceType sDeviceType[] = {
-    CONVERT(0, static_cast<BluetoothDeviceType>(0)), // invalid, required by gcc
-    CONVERT(BT_DEVICE_DEVTYPE_BREDR, DEVICE_TYPE_BREDR),
-    CONVERT(BT_DEVICE_DEVTYPE_BLE, DEVICE_TYPE_BLE),
-    CONVERT(BT_DEVICE_DEVTYPE_DUAL, DEVICE_TYPE_DUAL)
+  static const BluetoothTypeOfDevice sTypeOfDevice[] = {
+    CONVERT(0, static_cast<BluetoothTypeOfDevice>(0)), // invalid, required by gcc
+    CONVERT(BT_DEVICE_DEVTYPE_BREDR, TYPE_OF_DEVICE_BREDR),
+    CONVERT(BT_DEVICE_DEVTYPE_BLE, TYPE_OF_DEVICE_BLE),
+    CONVERT(BT_DEVICE_DEVTYPE_DUAL, TYPE_OF_DEVICE_DUAL)
   };
-  if (aIn >= MOZ_ARRAY_LENGTH(sDeviceType)) {
+  if (aIn >= MOZ_ARRAY_LENGTH(sTypeOfDevice)) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  aOut = sDeviceType[aIn];
+  aOut = sTypeOfDevice[aIn];
   return NS_OK;
 }
 
