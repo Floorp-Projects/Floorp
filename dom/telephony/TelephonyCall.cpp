@@ -15,6 +15,25 @@
 #include "Telephony.h"
 #include "TelephonyCallGroup.h"
 
+#ifdef CONVERT_STRING_TO_NULLABLE_ENUM
+#undef CONVERT_STRING_TO_NULLABLE_ENUM
+#endif
+
+#define CONVERT_STRING_TO_NULLABLE_ENUM(_string, _enumType, _enum)      \
+{                                                                       \
+  _enum.SetNull();                                                      \
+                                                                        \
+  uint32_t i = 0;                                                       \
+  for (const EnumEntry* entry = _enumType##Values::strings;             \
+       entry->value;                                                    \
+       ++entry, ++i) {                                                  \
+    if (_string.EqualsASCII(entry->value)) {                            \
+      _enum.SetValue(static_cast<_enumType>(i));                        \
+      break;                                                            \
+    }                                                                   \
+  }                                                                     \
+}
+
 using namespace mozilla::dom;
 using namespace mozilla::dom::telephony;
 using mozilla::ErrorResult;
@@ -115,6 +134,7 @@ TelephonyCall::ChangeStateInternal(uint16_t aCallState, bool aFireEvents)
     } else {
       mTelephony->RemoveCall(this);
     }
+    UpdateDisconnectedReason(NS_LITERAL_STRING("NormalCallClearingError"));
   } else if (!mLive) {
     mLive = true;
     if (mGroup) {
@@ -182,12 +202,25 @@ TelephonyCall::NotifyError(const nsAString& aError)
 
   mError = new DOMError(GetOwner(), aError);
 
-  // Do the state transitions
-  ChangeStateInternal(nsITelephonyService::CALL_STATE_DISCONNECTED, true);
-
   nsresult rv = DispatchCallEvent(NS_LITERAL_STRING("error"), this);
   if (NS_FAILED(rv)) {
     NS_WARNING("Failed to dispatch error event!");
+  }
+}
+
+void
+TelephonyCall::UpdateDisconnectedReason(const nsAString& aDisconnectedReason)
+{
+  NS_ASSERTION(Substring(aDisconnectedReason, aDisconnectedReason.Length() - 5).EqualsLiteral("Error"),
+               "Disconnected reason should end with 'Error'");
+
+  if (mDisconnectedReason.IsNull()) {
+    // There is no 'Error' suffix in the corresponding enum. We should skip
+    // that part for comparison.
+    CONVERT_STRING_TO_NULLABLE_ENUM(
+        Substring(aDisconnectedReason, 0, aDisconnectedReason.Length() - 5),
+        TelephonyCallDisconnectedReason,
+        mDisconnectedReason);
   }
 }
 
