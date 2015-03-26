@@ -120,7 +120,7 @@ LateWriteObserver::Observe(IOInterposeObserver::Observation& aOb)
   }
 
   // If we have shutdown mode SCM_NOTHING or we can't record then abort
-  if (gShutdownChecks == SCM_NOTHING || !Telemetry::CanRecord()) {
+  if (gShutdownChecks == SCM_NOTHING || !Telemetry::CanRecordExtended()) {
     return;
   }
 

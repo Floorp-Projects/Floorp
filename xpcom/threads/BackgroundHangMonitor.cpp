@@ -605,7 +605,7 @@ BackgroundHangMonitor::NotifyActivity()
     return;
   }
 
-  if (Telemetry::CanRecord()) {
+  if (Telemetry::CanRecordExtended()) {
     mThread->NotifyActivity();
   }
 #endif
@@ -622,7 +622,7 @@ BackgroundHangMonitor::NotifyWait()
     return;
   }
 
-  if (Telemetry::CanRecord()) {
+  if (Telemetry::CanRecordExtended()) {
     mThread->NotifyWait();
   }
 #endif

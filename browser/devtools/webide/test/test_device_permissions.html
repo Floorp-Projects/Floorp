@@ -45,8 +45,6 @@
 
           yield lazyIframeIsLoaded(permIframe);
 
-          yield nextTick();
-
           yield permIframe.contentWindow.getRawPermissionsTablePromise;
 
           doc = permIframe.contentWindow.document;

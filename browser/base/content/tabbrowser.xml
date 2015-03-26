@@ -4454,7 +4454,7 @@
         <body>
         <![CDATA[
           // Animation-smoothness telemetry/logging
-          if (Services.telemetry.canRecord || this._tabAnimationLoggingEnabled) {
+          if (Services.telemetry.canRecordExtended || this._tabAnimationLoggingEnabled) {
             if (aURI == "about:newtab" && (aTab._tPos == 1 || aTab._tPos == 2)) {
               // Indicate newtab page animation where other tabs are unaffected
               // (for which case, the 2nd or 3rd tabs are good representatives, even if not absolute)

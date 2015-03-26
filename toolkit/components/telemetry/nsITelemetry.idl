@@ -12,7 +12,7 @@ interface nsIFetchTelemetryDataCallback : nsISupports
   void complete();
 };
 
-[scriptable, uuid(1cd31579-2a81-4b99-900b-e89eea2e461c)]
+[scriptable, uuid(68e82b42-cad2-411f-857b-b64ea9377929)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -251,14 +251,31 @@ interface nsITelemetry : nsISupports
   jsval getKeyedHistogramById(in ACString id);
 
   /**
-   * Set this to false to disable gathering of telemetry statistics.
+   * A flag indicating if Telemetry can record base data (FHR data). This is true if the
+   * FHR data reporting service or self-support are enabled.
+   *
+   * In the unlikely event that adding a new base probe is needed, please check the data
+   * collection wiki at https://wiki.mozilla.org/Firefox/Data_Collection and talk to the
+   * Telemetry team.
    */
-  attribute boolean canRecord;
+  attribute boolean canRecordBase;
 
   /**
-   * A flag indicating whether Telemetry can submit official results.
+   * A flag indicating if Telemetry is allowed to record extended data. Returns false if
+   * the user hasn't opted into "extended Telemetry" on the Release channel, when the
+   * user has explicitly opted out of Telemetry on Nightly/Aurora/Beta or if manually
+   * set to false during tests.
+   *
+   * Set this to false in tests to disable gathering of extended telemetry statistics.
    */
-  readonly attribute boolean canSend;
+  attribute boolean canRecordExtended;
+
+  /**
+   * A flag indicating whether Telemetry can submit official results (for base or extended
+   * data). This is true on official builds with built in support for Mozilla Telemetry
+   * reporting.
+   */
+  readonly attribute boolean isOfficialTelemetry;
 
   /** Addon telemetry hooks */
 
