@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.c 277350 2015-01-18 22:00:39Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_output.c 280371 2015-03-23 15:12:02Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -9735,8 +9735,6 @@ sctp_send_asconf_ack(struct sctp_tcb *stcb)
 			atomic_add_int(&chk->whoTo->ref_count, 1);
 		}
 		chk->data = m_ack;
-		chk->send_size = 0;
-		/* Get size */
 		chk->send_size = ack->len;
 		chk->sent = SCTP_DATAGRAM_UNSENT;
 		chk->snd_count = 0;
