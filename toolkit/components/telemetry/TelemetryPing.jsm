@@ -613,13 +613,22 @@ let Impl = {
    * Perform telemetry initialization for either chrome or content process.
    */
   enableTelemetryRecording: function enableTelemetryRecording(testing) {
+    // Enable base Telemetry recording, if needed.
+#if !defined(MOZ_WIDGET_ANDROID)
+    Telemetry.canRecordBase =
+      Preferences.get("datareporting.healthreport.service.enabled", false) ||
+      Preferences.get("browser.selfsupport.enabled", false);
+#else
+    // FHR recording is always "enabled" on Android (data upload is not).
+    Telemetry.canRecordBase = true;
+#endif
 
 #ifdef MOZILLA_OFFICIAL
-    if (!Telemetry.canSend && !testing) {
+    if (!Telemetry.isOfficialTelemetry && !testing) {
       // We can't send data; no point in initializing observers etc.
       // Only do this for official builds so that e.g. developer builds
       // still enable Telemetry based on prefs.
-      Telemetry.canRecord = false;
+      Telemetry.canRecordExtended = false;
       this._log.config("enableTelemetryRecording - Can't send data, disabling Telemetry recording.");
       return false;
     }
@@ -627,10 +636,10 @@ let Impl = {
 
     let enabled = Preferences.get(PREF_ENABLED, false);
     this._server = Preferences.get(PREF_SERVER, undefined);
-    if (!enabled) {
-      // Turn off local telemetry if telemetry is disabled.
-      // This may change once about:telemetry is added.
-      Telemetry.canRecord = false;
+    if (!enabled || !Telemetry.canRecordBase) {
+      // Turn off extended telemetry recording if disabled by preferences or if base/telemetry
+      // telemetry recording is off.
+      Telemetry.canRecordExtended = false;
       this._log.config("enableTelemetryRecording - Telemetry is disabled, turning off Telemetry recording.");
       return false;
     }

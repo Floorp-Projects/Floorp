@@ -22,7 +22,11 @@ public class TilesRecorder {
     private static final String LOG_TAG = "GeckoTilesRecorder";
     private static final String EVENT_TILES_CLICK = "Tiles:Click";
 
-    public void recordAction(Tab tab, String action, int index, List<Tile> tiles, String locale) {
+    private TilesRecorder() {
+        // Empty private constructor to prevent construction
+    }
+
+    public static void recordAction(Tab tab, String action, int index, List<Tile> tiles, String locale) {
         final Tile clickedTile = tiles.get(index);
 
         if (tab == null || clickedTile == null) {
@@ -79,7 +83,7 @@ public class TilesRecorder {
         }
     }
 
-    private JSONObject jsonForTile(Tile tile, int tileIndex, int viewIndex) throws JSONException {
+    private static JSONObject jsonForTile(Tile tile, int tileIndex, int viewIndex) throws JSONException {
         final JSONObject tileJSON = new JSONObject();
 
         // Set the ID only if it is a distribution tile with a tracking ID.
