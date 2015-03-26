@@ -184,6 +184,28 @@
     });
   }
 
+  function testInternal() {
+    var isB2G = !navigator.userAgent.contains("Android") &&
+                /Mobile|Tablet/.test(navigator.userAgent);
+    if (isB2G) {
+      // We can't open new windows on b2g, so skip this part of the test there.
+      return Promise.resolve();
+    }
+    return new Promise(function(resolve, reject) {
+      // Test this with a new window opened through script.  There are of course
+      // other possible ways of testing this too.
+      var win = window.open("newwindow", "_blank", "width=100,height=100");
+      navigator.serviceWorker.addEventListener("message", function onMessage(e) {
+        if (e.data.data == "newwindow") {
+          is(e.data.context, "internal", "Expected the internal context on a newly opened window");
+          navigator.serviceWorker.removeEventListener("message", onMessage);
+          win.close();
+          resolve();
+        }
+      }, false);
+    });
+  }
+
   Promise.all([
     testFetch(),
     testImage(),
@@ -198,6 +220,7 @@
     testFont(),
     testIFrame(),
     testFrame(),
+    testInternal(),
   ])
   .then(function() {
     finish();
