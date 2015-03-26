@@ -1,0 +1,21 @@
+<html>
+<script>
+function login(){
+document.login.username.value="Test2";
+document.login.password.value="Test2";
+document.getElementById('submit').click();
+}
+</script>
+<head>
+  <title>Robocop Login</title>
+  <meta charset="utf-8">
+</head>
+<body onload="login()">
+  <h2>User Login </h2>
+  <form name="login" method="post" action="robocop_blank_02.html">
+   Username: <input type="text" name="username" id="username"><br>
+   Password: <input type="password" name="password" id="password"><br>
+   <input type="submit" id="submit" name="submit" value="Login!">
+  </form>
+</body>
+</html>

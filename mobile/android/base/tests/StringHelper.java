@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko.tests;
 
-
 public class StringHelper {
     private StringHelper() {}
 
@@ -55,6 +54,7 @@ public class StringHelper {
     public static final String CONTEXT_MENU_REMOVE = "Remove";
     public static final String CONTEXT_MENU_COPY_ADDRESS = "Copy Address";
     public static final String CONTEXT_MENU_EDIT_SITE_SETTINGS = "Edit Site Settings";
+    public static final String CONTEXT_MENU_SITE_SETTINGS_SAVE_PASSWORD = "Save Password";
     public static final String CONTEXT_MENU_ADD_TO_HOME_SCREEN = "Add to Home Screen";
     public static final String CONTEXT_MENU_PIN_SITE = "Pin Site";
     public static final String CONTEXT_MENU_UNPIN_SITE = "Unpin Site";
@@ -105,7 +105,8 @@ public class StringHelper {
     public static final String ROBOCOP_BLANK_PAGE_05_URL = "/robocop/robocop_blank_05.html";
     public static final String ROBOCOP_BOXES_URL = "/robocop/robocop_boxes.html";
     public static final String ROBOCOP_GEOLOCATION_URL = "/robocop/robocop_geolocation.html";
-    public static final String ROBOCOP_LOGIN_URL = "/robocop/robocop_login.html";
+    public static final String ROBOCOP_LOGIN_01_URL= "/robocop/robocop_login_01.html";
+    public static final String ROBOCOP_LOGIN_02_URL= "/robocop/robocop_login_02.html";
     public static final String ROBOCOP_POPUP_URL = "/robocop/robocop_popup.html";
     public static final String ROBOCOP_OFFLINE_STORAGE_URL = "/robocop/robocop_offline_storage.html";
     public static final String ROBOCOP_PICTURE_LINK_URL = "/robocop/robocop_picture_link.html";
@@ -263,9 +264,9 @@ public class StringHelper {
     public static final String OFFLINE_ALLOW = "Allow";
     public static final String OFFLINE_DENY = "Don't allow";
 
-    public static final String LOGIN_MESSAGE = "Save password";
-    public static final String LOGIN_ALLOW = "Save";
-    public static final String LOGIN_DENY = "Don't save";
+    public static final String LOGIN_MESSAGE = "Would you like " + BRAND_NAME + " to remember this login?";
+    public static final String LOGIN_ALLOW = "Remember";
+    public static final String LOGIN_DENY = "Never";
 
     public static final String POPUP_MESSAGE = "prevented this site from opening";
     public static final String POPUP_ALLOW = "Show";
