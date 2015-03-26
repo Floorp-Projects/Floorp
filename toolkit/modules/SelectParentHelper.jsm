@@ -28,8 +28,7 @@ this.SelectParentHelper = {
     currentBrowser = browser;
     this._registerListeners(menulist.menupopup);
 
-    let {x, y} = browser.mapScreenCoordinatesFromContent(rect.left, rect.top + rect.height);
-    menulist.menupopup.openPopupAtScreen(x, y);
+    menulist.menupopup.openPopupAtScreen(rect.left, rect.top + rect.height);
     menulist.selectedItem.scrollIntoView();
   },
 
