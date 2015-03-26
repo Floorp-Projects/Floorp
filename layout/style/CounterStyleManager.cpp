@@ -1696,10 +1696,20 @@ CustomCounterStyle::GetExtendsRoot()
   return mExtendsRoot;
 }
 
+AnonymousCounterStyle::AnonymousCounterStyle(const nsSubstring& aContent)
+  : CounterStyle(NS_STYLE_LIST_STYLE_CUSTOM)
+  , mSingleString(true)
+  , mSystem(NS_STYLE_COUNTER_SYSTEM_CYCLIC)
+{
+  mSymbols.SetCapacity(1);
+  mSymbols.AppendElement(aContent);
+}
+
 AnonymousCounterStyle::AnonymousCounterStyle(const nsCSSValue::Array* aParams)
   : CounterStyle(NS_STYLE_LIST_STYLE_CUSTOM)
+  , mSingleString(false)
+  , mSystem(aParams->Item(0).GetIntValue())
 {
-  mSystem = aParams->Item(0).GetIntValue();
   for (const nsCSSValueList* item = aParams->Item(1).GetListValue();
        item; item = item->mNext) {
     item->mValue.GetStringValue(*mSymbols.AppendElement());
@@ -1716,7 +1726,11 @@ AnonymousCounterStyle::GetPrefix(nsAString& aResult)
 /* virtual */ void
 AnonymousCounterStyle::GetSuffix(nsAString& aResult)
 {
-  aResult = ' ';
+  if (IsSingleString()) {
+    aResult.Truncate();
+  } else {
+    aResult = ' ';
+  }
 }
 
 /* virtual */ bool
