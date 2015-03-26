@@ -219,10 +219,6 @@ const gXPInstallObserver = {
       acceptButton.accessKey = gNavigatorBundle.getString("addonInstall.acceptButton.accesskey");
 
       let showNotification = () => {
-        // The download may have been cancelled during the security delay
-        if (!PopupNotifications.getNotification("addon-progress", browser))
-          return;
-
         let tab = gBrowser.getTabForBrowser(browser);
         if (tab)
           gBrowser.selectedTab = tab;
@@ -243,15 +239,20 @@ const gXPInstallObserver = {
                 .add(Ci.nsISecurityUITelemetry.WARNING_CONFIRM_ADDON_INSTALL);
       };
 
-      let downloadDuration = 0;
       let progressNotification = PopupNotifications.getNotification("addon-progress", browser);
-      if (progressNotification)
-        downloadDuration = Date.now() - progressNotification._startTime;
-      let securityDelay = Services.prefs.getIntPref("security.dialog_enable_delay") - downloadDuration;
-      if (securityDelay > 0)
-        setTimeout(showNotification, securityDelay);
-      else
-        showNotification();
+      if (progressNotification) {
+        let downloadDuration = Date.now() - progressNotification._startTime;
+        let securityDelay = Services.prefs.getIntPref("security.dialog_enable_delay") - downloadDuration;
+        if (securityDelay > 0) {
+          setTimeout(() => {
+            // The download may have been cancelled during the security delay
+            if (PopupNotifications.getNotification("addon-progress", browser))
+              showNotification();
+          }, securityDelay);
+          break;
+        }
+      }
+      showNotification();
       break; }
     case "addon-install-complete": {
       let needsRestart = installInfo.installs.some(function(i) {
