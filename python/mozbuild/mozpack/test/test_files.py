@@ -4,7 +4,10 @@
 
 from mozbuild.util import ensureParentDir
 
-from mozpack.errors import ErrorMessage
+from mozpack.errors import (
+    ErrorMessage,
+    errors,
+)
 from mozpack.files import (
     AbsoluteSymlinkFile,
     DeflatedFile,
@@ -40,6 +43,7 @@ import sys
 import mozpack.path as mozpath
 from tempfile import mkdtemp
 from io import BytesIO
+from StringIO import StringIO
 from xpt import Typelib
 
 
@@ -795,10 +799,16 @@ class TestMinifiedJavaScript(TestWithTmpDir):
 
     def test_minified_verify_failure(self):
         orig_f = GeneratedFile('\n'.join(self.orig_lines))
+        errors.out = StringIO()
         min_f = MinifiedJavaScript(orig_f,
             verify_command=self._verify_command('1'))
 
         mini_lines = min_f.open().readlines()
+        output = errors.out.getvalue()
+        errors.out = sys.stderr
+        self.assertEqual(output,
+            'Warning: JS minification verification failed for <unknown>:\n'
+            'Warning: Error message\n')
         self.assertEqual(mini_lines, orig_f.open().readlines())
 
 
