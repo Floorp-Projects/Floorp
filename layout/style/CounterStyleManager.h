@@ -157,7 +157,6 @@ public:
   }
 
   CounterStyle* BuildCounterStyle(const nsSubstring& aName);
-  CounterStyle* BuildCounterStyle(const nsCSSValue::Array* aParams);
 
   static CounterStyle* GetBuiltinStyle(int32_t aStyle);
   static CounterStyle* GetNoneStyle()

@@ -2028,12 +2028,6 @@ CounterStyleManager::BuildCounterStyle(const nsSubstring& aName)
   return data;
 }
 
-CounterStyle*
-CounterStyleManager::BuildCounterStyle(const nsCSSValue::Array* aParams)
-{
-  return new AnonymousCounterStyle(aParams);
-}
-
 /* static */ CounterStyle*
 CounterStyleManager::GetBuiltinStyle(int32_t aStyle)
 {
