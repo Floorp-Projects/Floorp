@@ -629,7 +629,52 @@ function run_pac3_test() {
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
   prefs.setBoolPref("network.proxy.proxy_over_tls", false);
 
-  var req = pps.asyncResolve(channel, 0, new TestResolveCallback(null, finish_pac_test));
+  var req = pps.asyncResolve(channel, 0, new TestResolveCallback(null, run_pac4_test));
+}
+
+function run_pac4_test() {
+  var appId = 10;
+  var isInBrowser = true;
+  var appOrigin = "apps://browser.gaiamobile.com";
+
+  // We have to setup a profile, otherwise indexed db used by webapps
+  // will throw random exception when trying to get profile folder.
+  do_get_profile();
+
+  // We also need a valid nsIXulAppInfo service as Webapps.jsm is querying it.
+  Cu.import("resource://testing-common/AppInfo.jsm");
+  updateAppInfo();
+
+  // Mock getAppByLocalId() to return testing app origin.
+  Cu.import("resource://gre/modules/AppsUtils.jsm");
+  AppsUtils.getAppByLocalId = function(aAppId) {
+    var app = { origin: appOrigin };
+    return app;
+  };
+
+  var pac = 'data:text/plain,' +
+            'function FindProxyForURL(url, host) {' +
+            ' if (myAppId() == ' + appId +
+            ' && isInBrowser() == ' + isInBrowser +
+            ' && myAppOrigin() == "' + appOrigin + '")' +
+            '   return "PROXY foopy:8080; DIRECT";' +
+            '}';
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
+  channel.notificationCallbacks =
+    AppsUtils.createLoadContext(appId, isInBrowser);
+
+  // Configure PAC
+  prefs.setIntPref("network.proxy.type", 2);
+  prefs.setCharPref("network.proxy.autoconfig_url", pac);
+
+  var req = pps.asyncResolve(channel, 0, new TestResolveCallback("http", finish_pac_test));
 }
 
 function finish_pac_test() {

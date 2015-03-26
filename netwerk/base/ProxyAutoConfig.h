@@ -35,6 +35,9 @@ public:
   void     Shutdown();
   void     GC();
   bool     MyIPAddress(const JS::CallArgs &aArgs);
+  bool     MyAppId(const JS::CallArgs &aArgs);
+  bool     MyAppOrigin(const JS::CallArgs &aArgs);
+  bool     IsInBrowser(const JS::CallArgs &aArgs);
   bool     ResolveAddress(const nsCString &aHostName,
                           NetAddr *aNetAddr, unsigned int aTimeout);
 
@@ -68,12 +71,21 @@ public:
    *        The URI as an ASCII string to test.
    * @param aTestHost
    *        The ASCII hostname to test.
+   * @param aAppId
+   *        The id of the app requesting connection.
+   * @param aAppOrigin
+   *        The origin of the app requesting connection.
+   * @param aIsInBrowser
+   *        True if the iframe has mozbrowser but has no mozapp attribute.
    *
    * @param result
    *        result string as defined above.
    */
   nsresult GetProxyForURI(const nsCString &aTestURI,
                           const nsCString &aTestHost,
+                          uint32_t aAppId,
+                          const nsString &aAppOrigin,
+                          bool aIsInBrowser,
                           nsACString &result);
 
 private:
@@ -93,6 +105,9 @@ private:
   nsCString         mPACScript;
   nsCString         mPACURI;
   nsCString         mRunningHost;
+  uint32_t          mRunningAppId;
+  nsString          mRunningAppOrigin;
+  bool              mRunningIsInBrowser;
   nsCOMPtr<nsITimer> mTimer;
 };
 
