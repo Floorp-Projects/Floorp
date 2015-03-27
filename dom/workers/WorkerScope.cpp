@@ -514,6 +514,18 @@ WorkerDebuggerGlobalScope::GetGlobal(JSContext* aCx,
 }
 
 void
+WorkerDebuggerGlobalScope::EnterEventLoop()
+{
+  mWorkerPrivate->EnterDebuggerEventLoop();
+}
+
+void
+WorkerDebuggerGlobalScope::LeaveEventLoop()
+{
+  mWorkerPrivate->LeaveDebuggerEventLoop();
+}
+
+void
 WorkerDebuggerGlobalScope::PostMessage(const nsAString& aMessage)
 {
   mWorkerPrivate->PostMessageToDebugger(aMessage);

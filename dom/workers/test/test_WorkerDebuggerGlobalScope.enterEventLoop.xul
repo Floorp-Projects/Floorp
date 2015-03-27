@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Test for WorkerDebuggerGlobalScope.enterEventLoop"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    const WORKER_URL = "WorkerDebuggerGlobalScope.enterEventLoop_worker.js";
+    const CHILD_WORKER_URL = "WorkerDebuggerGlobalScope.enterEventLoop_childWorker.js";
+    const DEBUGGER_URL = BASE_URL + "WorkerDebuggerGlobalScope.enterEventLoop_debugger.js";
+
+    function test() {
+      Task.spawn(function* () {
+        SimpleTest.waitForExplicitFinish();
+
+        info("Create a worker that creates a child worker, wait for their " +
+             "debuggers to be registered, and initialize them.");
+        let promise = waitForMultiple([
+          waitForRegister(WORKER_URL, DEBUGGER_URL),
+          waitForRegister(CHILD_WORKER_URL, DEBUGGER_URL)
+        ]);
+        let worker = new Worker(WORKER_URL);
+        let [dbg, childDbg] = yield promise;
+
+        info("Send a request to the child worker. This should cause a nested " +
+             "event loop to be entered.");
+        promise = waitForDebuggerMessage(childDbg, "paused");
+        worker.postMessage("child:ping");
+        yield promise;
+
+        info("Send a request to the child worker debugger. This should cause " +
+             "a second nested event loop to be entered.");
+        promise = waitForDebuggerMessage(childDbg, "paused");
+        childDbg.postMessage("eval");
+        yield promise;
+
+        info("Send a request to the child worker debugger. This should cause " +
+             "the second nested event loop to be left. Check that a response " +
+             "for the previous request is not received from the child worker " +
+             "debugger until after the event loop is left.");
+        promise = waitForMultiple([
+          waitForDebuggerMessage(childDbg, "resumed"),
+          waitForDebuggerMessage(childDbg, "evalled")
+        ]);
+        childDbg.postMessage("resume");
+        yield promise;
+
+        info("Send a request to the child worker debugger. This should cause " +
+             "the first nested event loop to be left. Check that a response " +
+             "for the previous request is not received from the child worker " +
+             "until after the event loop is left.");
+        promise = waitForMultiple([
+          waitForDebuggerMessage(childDbg, "resumed"),
+          waitForWorkerMessage(worker, "child:pong")
+        ]);
+        childDbg.postMessage("resume");
+        yield promise;
+
+        info("Send a request to the worker. This should cause a nested event " +
+             "loop to be entered.");
+        promise = waitForDebuggerMessage(dbg, "paused");
+        worker.postMessage("ping");
+        yield promise;
+
+        info("Terminate the worker. This should not cause the worker " +
+             "debugger to stop running.");
+        worker.terminate();
+
+        worker.onmessage = function () {
+          ok(false, "Worker should have been terminated.");
+        };
+
+        info("Send a request to the worker debugger. This should cause a " +
+             "second nested event loop to be entered.");
+        promise = waitForDebuggerMessage(dbg, "paused");
+        dbg.postMessage("eval");
+        yield promise;
+
+        info("Send a request to the worker debugger. This should cause the " +
+             "second nested event loop to be left. Check that a response for " +
+             "the previous request is not received from the worker " +
+             "debugger until after the event loop is left.");
+        promise = waitForMultiple([
+          waitForDebuggerMessage(dbg, "resumed"),
+          waitForDebuggerMessage(dbg, "evalled")
+        ]);
+        dbg.postMessage("resume");
+        yield promise;
+
+        info("Send a request to the child worker debugger. This should cause " +
+             "the first nested event loop to be left. No response for the " +
+             "previous request should be received from the worker debugger, " +
+             "since it has been terminated.");
+        promise = waitForMultiple([
+          waitForDebuggerMessage(dbg, "resumed"),
+        ]);
+        dbg.postMessage("resume");
+        yield promise;
+
+        SimpleTest.finish();
+      });
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>
