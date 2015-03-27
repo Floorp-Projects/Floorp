@@ -13,51 +13,51 @@ using namespace js::jit;
 using namespace js::jit::X86Encoding;
 using namespace js::jit::Disassembler;
 
-static bool REX_W(uint8_t rex) { return (rex >> 3) & 0x1; }
-static bool REX_R(uint8_t rex) { return (rex >> 2) & 0x1; }
-static bool REX_X(uint8_t rex) { return (rex >> 1) & 0x1; }
-static bool REX_B(uint8_t rex) { return (rex >> 0) & 0x1; }
+MOZ_COLD static bool REX_W(uint8_t rex) { return (rex >> 3) & 0x1; }
+MOZ_COLD static bool REX_R(uint8_t rex) { return (rex >> 2) & 0x1; }
+MOZ_COLD static bool REX_X(uint8_t rex) { return (rex >> 1) & 0x1; }
+MOZ_COLD static bool REX_B(uint8_t rex) { return (rex >> 0) & 0x1; }
 
-static uint8_t
+MOZ_COLD static uint8_t
 MakeREXFlags(bool w, bool r, bool x, bool b)
 {
     uint8_t rex = (w << 3) | (r << 2) | (x << 1) | (b << 0);
-    MOZ_ASSERT(REX_W(rex) == w);
-    MOZ_ASSERT(REX_R(rex) == r);
-    MOZ_ASSERT(REX_X(rex) == x);
-    MOZ_ASSERT(REX_B(rex) == b);
+    MOZ_RELEASE_ASSERT(REX_W(rex) == w);
+    MOZ_RELEASE_ASSERT(REX_R(rex) == r);
+    MOZ_RELEASE_ASSERT(REX_X(rex) == x);
+    MOZ_RELEASE_ASSERT(REX_B(rex) == b);
     return rex;
 }
 
-static ModRmMode
+MOZ_COLD static ModRmMode
 ModRM_Mode(uint8_t modrm)
 {
     return ModRmMode((modrm >> 6) & 0x3);
 }
 
-static uint8_t
+MOZ_COLD static uint8_t
 ModRM_Reg(uint8_t modrm)
 {
     return (modrm >> 3) & 0x7;
 }
 
-static uint8_t
+MOZ_COLD static uint8_t
 ModRM_RM(uint8_t modrm)
 {
     return (modrm >> 0) & 0x7;
 }
 
-static bool
+MOZ_COLD static bool
 ModRM_hasSIB(uint8_t modrm)
 {
     return ModRM_Mode(modrm) != ModRmRegister && ModRM_RM(modrm) == hasSib;
 }
-static bool
+MOZ_COLD static bool
 ModRM_hasDisp8(uint8_t modrm)
 {
     return ModRM_Mode(modrm) == ModRmMemoryDisp8;
 }
-static bool
+MOZ_COLD static bool
 ModRM_hasRIP(uint8_t modrm)
 {
 #ifdef JS_CODEGEN_X64
@@ -66,50 +66,50 @@ ModRM_hasRIP(uint8_t modrm)
     return false;
 #endif
 }
-static bool
+MOZ_COLD static bool
 ModRM_hasDisp32(uint8_t modrm)
 {
     return ModRM_Mode(modrm) == ModRmMemoryDisp32 ||
            ModRM_hasRIP(modrm);
 }
 
-static uint8_t
+MOZ_COLD static uint8_t
 SIB_SS(uint8_t sib)
 {
     return (sib >> 6) & 0x3;
 }
 
-static uint8_t
+MOZ_COLD static uint8_t
 SIB_Index(uint8_t sib)
 {
     return (sib >> 3) & 0x7;
 }
 
-static uint8_t
+MOZ_COLD static uint8_t
 SIB_Base(uint8_t sib)
 {
     return (sib >> 0) & 0x7;
 }
 
-static bool
+MOZ_COLD static bool
 SIB_hasRIP(uint8_t sib)
 {
     return SIB_Base(sib) == noBase && SIB_Index(sib) == noIndex;
 }
 
-static bool
+MOZ_COLD static bool
 HasRIP(uint8_t modrm, uint8_t sib, uint8_t rex)
 {
     return ModRM_hasRIP(modrm) && SIB_hasRIP(sib);
 }
 
-static bool
+MOZ_COLD static bool
 HasDisp8(uint8_t modrm)
 {
     return ModRM_hasDisp8(modrm);
 }
 
-static bool
+MOZ_COLD static bool
 HasDisp32(uint8_t modrm, uint8_t sib)
 {
     return ModRM_hasDisp32(modrm) ||
@@ -118,13 +118,13 @@ HasDisp32(uint8_t modrm, uint8_t sib)
             ModRM_Mode(modrm) == ModRmMemoryNoDisp);
 }
 
-static uint32_t
+MOZ_COLD static uint32_t
 Reg(uint8_t modrm, uint8_t sib, uint8_t rex)
 {
     return ModRM_Reg(modrm) | (REX_R(rex) << 3);
 }
 
-static bool
+MOZ_COLD static bool
 HasBase(uint8_t modrm, uint8_t sib)
 {
     return !ModRM_hasSIB(modrm) ||
@@ -133,7 +133,7 @@ HasBase(uint8_t modrm, uint8_t sib)
            ModRM_Mode(modrm) != ModRmMemoryNoDisp;
 }
 
-static RegisterID
+MOZ_COLD static RegisterID
 DecodeBase(uint8_t modrm, uint8_t sib, uint8_t rex)
 {
     return HasBase(modrm, sib)
@@ -141,14 +141,14 @@ DecodeBase(uint8_t modrm, uint8_t sib, uint8_t rex)
            : invalid_reg;
 }
 
-static RegisterID
+MOZ_COLD static RegisterID
 DecodeIndex(uint8_t modrm, uint8_t sib, uint8_t rex)
 {
     RegisterID index = RegisterID(SIB_Index(sib) | (REX_X(rex) << 3));
     return ModRM_hasSIB(modrm) && index != noIndex ? index : invalid_reg;
 }
 
-static uint32_t
+MOZ_COLD static uint32_t
 DecodeScale(uint8_t modrm, uint8_t sib, uint8_t rex)
 {
     return ModRM_hasSIB(modrm) ? SIB_SS(sib) : 0;
@@ -377,25 +377,25 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t *ptr, HeapAccess *access)
       case OP_GROUP11_EvIb:
         if (gpr != RegisterID(GROUP11_MOV))
             MOZ_CRASH("Unable to disassemble instruction");
-        MOZ_ASSERT(haveImm);
+        MOZ_RELEASE_ASSERT(haveImm);
         memSize = 1;
         kind = HeapAccess::Store;
         break;
       case OP_GROUP11_EvIz:
         if (gpr != RegisterID(GROUP11_MOV))
             MOZ_CRASH("Unable to disassemble instruction");
-        MOZ_ASSERT(haveImm);
+        MOZ_RELEASE_ASSERT(haveImm);
         memSize = opsize;
         kind = HeapAccess::Store;
         break;
       case OP_MOV_GvEv:
-        MOZ_ASSERT(!haveImm);
+        MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(gpr);
         memSize = opsize;
         kind = HeapAccess::Load;
         break;
       case OP_MOV_GvEb:
-        MOZ_ASSERT(!haveImm);
+        MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(gpr);
         memSize = 1;
         kind = HeapAccess::Load;
@@ -413,38 +413,38 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t *ptr, HeapAccess *access)
         kind = HeapAccess::Store;
         break;
       case Pack2ByteOpcode(OP2_MOVZX_GvEb):
-        MOZ_ASSERT(!haveImm);
+        MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(gpr);
         memSize = 1;
         kind = HeapAccess::Load;
         break;
       case Pack2ByteOpcode(OP2_MOVZX_GvEw):
-        MOZ_ASSERT(!haveImm);
+        MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(gpr);
         memSize = 2;
         kind = HeapAccess::Load;
         break;
       case Pack2ByteOpcode(OP2_MOVSX_GvEb):
-        MOZ_ASSERT(!haveImm);
+        MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(gpr);
         memSize = 1;
         kind = HeapAccess::LoadSext32;
         break;
       case Pack2ByteOpcode(OP2_MOVSX_GvEw):
-        MOZ_ASSERT(!haveImm);
+        MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(gpr);
         memSize = 2;
         kind = HeapAccess::LoadSext32;
         break;
       case Pack2ByteOpcode(OP2_MOVDQ_VdqWdq): // aka OP2_MOVDQ_VsdWsd
       case Pack2ByteOpcode(OP2_MOVAPS_VsdWsd):
-        MOZ_ASSERT(!haveImm);
+        MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(xmm);
         memSize = 16;
         kind = HeapAccess::Load;
         break;
       case Pack2ByteOpcode(OP2_MOVSD_VsdWsd): // aka OP2_MOVPS_VpsWps
-        MOZ_ASSERT(!haveImm);
+        MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(xmm);
         switch (type) {
           case VEX_SS: memSize = 4; break;
@@ -456,13 +456,13 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t *ptr, HeapAccess *access)
         kind = HeapAccess::Load;
         break;
       case Pack2ByteOpcode(OP2_MOVDQ_WdqVdq):
-        MOZ_ASSERT(!haveImm);
+        MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(xmm);
         memSize = 16;
         kind = HeapAccess::Store;
         break;
       case Pack2ByteOpcode(OP2_MOVSD_WsdVsd): // aka OP2_MOVPS_WpsVps
-        MOZ_ASSERT(!haveImm);
+        MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(xmm);
         switch (type) {
           case VEX_SS: memSize = 4; break;
@@ -474,7 +474,7 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t *ptr, HeapAccess *access)
         kind = HeapAccess::Store;
         break;
       case Pack2ByteOpcode(OP2_MOVD_VdEd):
-        MOZ_ASSERT(!haveImm);
+        MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(xmm);
         switch (type) {
           case VEX_PD: memSize = 4; break;
@@ -483,7 +483,7 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t *ptr, HeapAccess *access)
         kind = HeapAccess::Load;
         break;
       case Pack2ByteOpcode(OP2_MOVQ_WdVd):
-        MOZ_ASSERT(!haveImm);
+        MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(xmm);
         switch (type) {
           case VEX_PD: memSize = 8; break;
@@ -492,7 +492,7 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t *ptr, HeapAccess *access)
         kind = HeapAccess::Store;
         break;
       case Pack2ByteOpcode(OP2_MOVD_EdVd): // aka OP2_MOVQ_VdWd
-        MOZ_ASSERT(!haveImm);
+        MOZ_RELEASE_ASSERT(!haveImm);
         otherOperand = OtherOperand(xmm);
         switch (type) {
           case VEX_SS: memSize = 8; kind = HeapAccess::Load; break;
