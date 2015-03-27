@@ -133,6 +133,7 @@ class BaselineFrame
 
     inline void pushOnScopeChain(ScopeObject &scope);
     inline void popOffScopeChain();
+    inline void replaceInnermostScope(ScopeObject &scope);
 
     inline void popWith(JSContext *cx);
 
@@ -249,6 +250,7 @@ class BaselineFrame
 
     inline bool pushBlock(JSContext *cx, Handle<StaticBlockObject *> block);
     inline void popBlock(JSContext *cx);
+    inline bool freshenBlock(JSContext *cx);
 
     bool strictEvalPrologue(JSContext *cx);
     bool heavyweightFunPrologue(JSContext *cx);
