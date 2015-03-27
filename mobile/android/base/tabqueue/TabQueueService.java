@@ -8,6 +8,7 @@ package org.mozilla.gecko.tabqueue;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.PixelFormat;
 import android.os.Handler;
@@ -22,6 +23,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.mozglue.ContextUtils;
 
@@ -165,6 +167,13 @@ public class TabQueueService extends Service {
                 final GeckoProfile profile = GeckoProfile.get(applicationContext);
                 int tabsQueued = TabQueueHelper.queueURL(profile, intentData, filename);
                 TabQueueHelper.showNotification(applicationContext, tabsQueued);
+
+                // Store the number of URLs queued so that we don't have to read and process the file to see if we have
+                // any urls to open.
+                // TODO: Use profile shared prefs when bug 1147925 gets fixed.
+                final SharedPreferences prefs = GeckoSharedPrefs.forApp(applicationContext);
+
+                prefs.edit().putInt(TabQueueHelper.PREF_TAB_QUEUE_COUNT, tabsQueued).apply();
             }
         });
     }
