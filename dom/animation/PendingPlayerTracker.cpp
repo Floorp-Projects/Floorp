@@ -48,8 +48,8 @@ PendingPlayerTracker::IsWaiting(const dom::AnimationPlayer& aPlayer,
 }
 
 PLDHashOperator
-StartPlayerAtTime(nsRefPtrHashKey<dom::AnimationPlayer>* aKey,
-                  void* aReadyTime)
+TriggerPlayerAtTime(nsRefPtrHashKey<dom::AnimationPlayer>* aKey,
+                    void* aReadyTime)
 {
   dom::AnimationPlayer* player = aKey->GetKey();
   dom::AnimationTimeline* timeline = player->Timeline();
@@ -57,7 +57,7 @@ StartPlayerAtTime(nsRefPtrHashKey<dom::AnimationPlayer>* aKey,
   // When the timeline's refresh driver is under test control, its values
   // have no correspondance to wallclock times so we shouldn't try to convert
   // aReadyTime (which is a wallclock time) to a timeline value. Instead, the
-  // animation player will be started when the refresh driver is next
+  // animation player will be started/paused when the refresh driver is next
   // advanced since this will trigger a call to TriggerPendingPlayersNow.
   if (timeline->IsUnderTestControl()) {
     return PL_DHASH_NEXT;
@@ -65,7 +65,7 @@ StartPlayerAtTime(nsRefPtrHashKey<dom::AnimationPlayer>* aKey,
 
   Nullable<TimeDuration> readyTime =
     timeline->ToTimelineTime(*static_cast<const TimeStamp*>(aReadyTime));
-  player->StartOnNextTick(readyTime);
+  player->TriggerOnNextTick(readyTime);
 
   return PL_DHASH_REMOVE;
 }
@@ -74,21 +74,21 @@ void
 PendingPlayerTracker::TriggerPendingPlayersOnNextTick(const TimeStamp&
                                                         aReadyTime)
 {
-  mPlayPendingSet.EnumerateEntries(StartPlayerAtTime,
+  mPlayPendingSet.EnumerateEntries(TriggerPlayerAtTime,
                                    const_cast<TimeStamp*>(&aReadyTime));
 }
 
 PLDHashOperator
-StartPlayerNow(nsRefPtrHashKey<dom::AnimationPlayer>* aKey, void*)
+TriggerPlayerNow(nsRefPtrHashKey<dom::AnimationPlayer>* aKey, void*)
 {
-  aKey->GetKey()->StartNow();
+  aKey->GetKey()->TriggerNow();
   return PL_DHASH_NEXT;
 }
 
 void
 PendingPlayerTracker::TriggerPendingPlayersNow()
 {
-  mPlayPendingSet.EnumerateEntries(StartPlayerNow, nullptr);
+  mPlayPendingSet.EnumerateEntries(TriggerPlayerNow, nullptr);
   mPlayPendingSet.Clear();
 }
 

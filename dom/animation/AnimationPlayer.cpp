@@ -284,12 +284,11 @@ AnimationPlayer::Tick()
 }
 
 void
-AnimationPlayer::StartOnNextTick(const Nullable<TimeDuration>& aReadyTime)
+AnimationPlayer::TriggerOnNextTick(const Nullable<TimeDuration>& aReadyTime)
 {
   // Normally we expect the play state to be pending but it's possible that,
-  // due to the handling of possibly orphaned players in Tick() [coming
-  // in a later patch in this series], this player got started whilst still
-  // being in another document's pending player map.
+  // due to the handling of possibly orphaned players in Tick(), this player got
+  // started whilst still being in another document's pending player map.
   if (PlayState() != AnimationPlayState::Pending) {
     return;
   }
@@ -300,7 +299,7 @@ AnimationPlayer::StartOnNextTick(const Nullable<TimeDuration>& aReadyTime)
 }
 
 void
-AnimationPlayer::StartNow()
+AnimationPlayer::TriggerNow()
 {
   MOZ_ASSERT(PlayState() == AnimationPlayState::Pending,
              "Expected to start a pending player");
@@ -449,7 +448,7 @@ AnimationPlayer::DoPlay()
 
   nsIDocument* doc = GetRenderedDocument();
   if (!doc) {
-    StartOnNextTick(Nullable<TimeDuration>());
+    TriggerOnNextTick(Nullable<TimeDuration>());
     return;
   }
 
