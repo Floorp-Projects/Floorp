@@ -4524,6 +4524,7 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *viewName, ParseNode *indexExpr,
         if (!pointerType.isIntish())
             return f.failf(indexExpr, "%s is not a subtype of int", pointerType.toChars());
     } else {
+        // For legacy compatibility, accept Int8/Uint8 accesses with no shift.
         if (TypedArrayShift(*viewType) != 0)
             return f.fail(indexExpr, "index expression isn't shifted; must be an Int8/Uint8 access");
 
