@@ -124,6 +124,31 @@ nsVolumeService::Callback(const nsAString& aTopic, const nsAString& aState)
   return NS_OK;
 }
 
+void nsVolumeService::DumpNoLock(const char* aLabel)
+{
+  mArrayMonitor.AssertCurrentThreadOwns();
+
+  nsVolume::Array::size_type numVolumes = mVolumeArray.Length();
+
+  if (numVolumes == 0) {
+    LOG("%s: No Volumes!", aLabel);
+    return;
+  }
+  nsVolume::Array::index_type volIndex;
+  for (volIndex = 0; volIndex < numVolumes; volIndex++) {
+    nsRefPtr<nsVolume> vol = mVolumeArray[volIndex];
+    vol->Dump(aLabel);
+  }
+}
+
+NS_IMETHODIMP
+nsVolumeService::Dump(const nsAString& aLabel)
+{
+  MonitorAutoLock autoLock(mArrayMonitor);
+  DumpNoLock(NS_LossyConvertUTF16toASCII(aLabel).get());
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsVolumeService::GetVolumeByName(const nsAString& aVolName, nsIVolume **aResult)
 {
   MonitorAutoLock autoLock(mArrayMonitor);
@@ -282,6 +307,7 @@ nsVolumeService::RecvVolumesFromParent(const nsTArray<VolumeInfo>& aVolumes)
     // We've already done this, no need to do it again.
     return;
   }
+
   for (uint32_t i = 0; i < aVolumes.Length(); i++) {
     const VolumeInfo& volInfo(aVolumes[i]);
     nsRefPtr<nsVolume> vol = new nsVolume(volInfo.name(),
