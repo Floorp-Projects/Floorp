@@ -93,10 +93,27 @@ function fakeSchedulerTimer(set, clear) {
 
 // Fake the current date.
 function fakeNow(date) {
-  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
-  session.Policy.now = () => date;
-  let environment = Cu.import("resource://gre/modules/TelemetryEnvironment.jsm");
-  environment.Policy.now = () => date;
+  const modules = [
+    Components.utils.import("resource://gre/modules/TelemetrySession.jsm"),
+    Components.utils.import("resource://gre/modules/TelemetryEnvironment.jsm"),
+    Components.utils.import("resource://gre/modules/TelemetryPing.jsm"),
+  ];
+
+  for (let m of modules) {
+    m.Policy.now = () => date;
+  }
+}
+
+// Fake the timeout functions for TelemetryPing sending.
+function fakePingSendTimer(set, clear) {
+  let ping = Components.utils.import("resource://gre/modules/TelemetryPing.jsm");
+  ping.Policy.setPingSendTimeout = set;
+  ping.Policy.clearPingSendTimeout = clear;
+}
+
+function fakeMidnightPingFuzzingDelay(delayMs) {
+  let ping = Components.utils.import("resource://gre/modules/TelemetryPing.jsm");
+  ping.Policy.midnightPingFuzzingDelay = () => delayMs;
 }
 
 // Return a date that is |offset| ms in the future from |date|.
@@ -115,3 +132,7 @@ TelemetryPing.initLogging();
 
 // Avoid timers interrupting test behavior.
 fakeSchedulerTimer(() => {}, () => {});
+fakePingSendTimer(() => {}, () => {});
+// Make pind sending predictable.
+fakeMidnightPingFuzzingDelay(0);
+
