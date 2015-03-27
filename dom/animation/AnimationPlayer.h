@@ -205,7 +205,7 @@ public:
 
   bool HasCurrentSource() const
   {
-    return GetSource() && GetSource()->IsCurrent();
+    return GetSource() && GetSource()->IsCurrent(*this);
   }
   bool HasInEffectSource() const
   {
