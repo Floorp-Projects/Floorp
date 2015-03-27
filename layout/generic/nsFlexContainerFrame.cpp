@@ -95,13 +95,6 @@ AxisGrowsInPositiveDirection(AxisOrientationType aAxis)
   return eAxis_LR == aAxis || eAxis_TB == aAxis;
 }
 
-// Indicates whether the given axis is horizontal.
-static inline bool
-IsAxisHorizontal(AxisOrientationType aAxis)
-{
-  return eAxis_LR == aAxis || eAxis_RL == aAxis;
-}
-
 // Given an AxisOrientationType, returns the "reverse" AxisOrientationType
 // (in the same dimension, but the opposite direction)
 static inline AxisOrientationType
@@ -255,6 +248,14 @@ public:
   }
 
 private:
+  // Indicates whether the given AxisOrientationType is horizontal.
+  // XXXdholbert This is private so that callers outside of FlexboxAxisTracker
+  // don't depend on it. This lets us move away from AxisOrientationType to a
+  // logical-axis-relative representation more seamlessly.
+  static inline bool IsAxisHorizontal(AxisOrientationType aAxis) {
+    return eAxis_LR == aAxis || eAxis_RL == aAxis;
+  }
+
   AxisOrientationType mMainAxis;
   AxisOrientationType mCrossAxis;
   bool mAreAxesInternallyReversed;
