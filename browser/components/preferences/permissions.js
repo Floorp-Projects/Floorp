@@ -1,4 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 4 -*- */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -231,6 +230,20 @@ var gPermissionManager = {
 
     var urlLabel = document.getElementById("urlLabel");
     urlLabel.hidden = !urlFieldVisible;
+
+    let treecols = document.getElementsByTagName("treecols")[0];
+    treecols.addEventListener("click", event => {
+      if (event.target.nodeName != "treecol" || event.button != 0) {
+        return;
+      }
+
+      let sortField = event.target.getAttribute("data-field-name");
+      if (!sortField) {
+        return;
+      }
+
+      gPermissionManager.onPermissionSort(sortField);
+    });
 
     Services.obs.notifyObservers(null, NOTIFICATION_FLUSH_PERMISSIONS, this._type);
     Services.obs.addObserver(this, "perm-changed", false);
