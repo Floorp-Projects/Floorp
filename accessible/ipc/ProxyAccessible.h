@@ -276,6 +276,13 @@ public:
                                 Accessible::EWhichChildAtPoint aWhichChild);
   nsIntRect Bounds();
 
+  void Language(nsString& aLocale);
+  void DocType(nsString& aType);
+  void URL(nsString& aURL);
+  void MimeType(nsString aMime);
+  void URLDocTypeMimeType(nsString& aURL, nsString& aDocType,
+                          nsString& aMimeType);
+
   /**
    * Allow the platform to store a pointers worth of data on us.
    */

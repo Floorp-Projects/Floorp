@@ -401,6 +401,15 @@ public:
                                 bool* aOk) override;
 
   virtual bool RecvBounds(const uint64_t& aID, nsIntRect* aRect) override;
+
+  virtual bool RecvLanguage(const uint64_t& aID, nsString* aLocale) override;
+  virtual bool RecvDocType(const uint64_t& aID, nsString* aType) override;
+  virtual bool RecvURL(const uint64_t& aID, nsString* aURL) override;
+  virtual bool RecvMimeType(const uint64_t& aID, nsString* aMime) override;
+  virtual bool RecvURLDocTypeMimeType(const uint64_t& aID,
+                                      nsString* aURL,
+                                      nsString* aDocType,
+                                      nsString* aMimeType) override;
 private:
 
   Accessible* IdToAccessible(const uint64_t& aID) const;
