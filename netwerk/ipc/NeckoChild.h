@@ -62,6 +62,8 @@ protected:
                               const URIParams&,
                               const OptionalURIParams&) override;
   virtual bool DeallocPRemoteOpenFileChild(PRemoteOpenFileChild*) override;
+  virtual PDataChannelChild* AllocPDataChannelChild(const uint32_t& channelId) override;
+  virtual bool DeallocPDataChannelChild(PDataChannelChild* child) override;
   virtual PRtspControllerChild* AllocPRtspControllerChild() override;
   virtual bool DeallocPRtspControllerChild(PRtspControllerChild*) override;
   virtual PRtspChannelChild*
