@@ -34,19 +34,37 @@ public:
               nsReflowStatus&          aStatus) override;
   virtual nsIAtom* GetType() const override;
 
+  void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                        const nsRect&           aDirtyRect,
+                        const nsDisplayListSet& aLists) override;
+
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
 #endif
+
+  /**
+   * Return the containing block for aChild which MUST be an abs.pos. child
+   * of a grid container.  This is just a helper method for
+   * nsAbsoluteContainingBlock::Reflow - it's not meant to be used elsewhere.
+   */
+  static const nsRect& GridItemCB(nsIFrame* aChild);
 
   struct TrackSize {
     nscoord mBase;
     nscoord mLimit;
   };
 
+  // @see nsAbsoluteContainingBlock::Reflow about this magic number
+  static const nscoord VERY_LIKELY_A_GRID_CONTAINER = -123456789;
+
+  NS_DECLARE_FRAME_PROPERTY(GridItemContainingBlockRect, DeleteValue<nsRect>)
+
 protected:
+  typedef mozilla::LogicalPoint LogicalPoint;
   typedef mozilla::LogicalRect LogicalRect;
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::css::GridNamedArea GridNamedArea;
+  class GridItemCSSOrderIterator;
   friend nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                                     nsStyleContext* aContext);
   explicit nsGridContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
@@ -57,7 +75,12 @@ protected:
    * (both 1-based) where mStart < mEnd.  Before it's definite it can also
    * represent an auto position with a span, where mStart == 0 and mEnd is
    * the (non-zero positive) span.
-   * In both states the invariant mEnd > mStart holds.
+   * In both states the invariant mEnd > mStart holds (for normal flow items).
+   *
+   * For abs.pos. grid items, mStart and mEnd may both be zero, meaning
+   * "attach this side to the grid container containing block edge".
+   * Additionally, mEnd >= mStart holds when both are definite (non-zero),
+   * i.e. the invariant is slightly relaxed compared to normal flow items.
    */
   struct LineRange {
    LineRange(uint32_t aStart, uint32_t aEnd)
@@ -88,6 +111,15 @@ protected:
      */
     void ToPositionAndLength(const nsTArray<TrackSize>& aTrackSizes,
                              nscoord* aPos, nscoord* aLength) const;
+    /**
+     * Given an array of track sizes and a grid origin coordinate, adjust the
+     * abs.pos. containing block along an axis given by aPos and aLength.
+     * aPos and aLength should already be initialized to the grid container
+     * containing block for this axis before calling this method.
+     */
+    void ToPositionAndLengthForAbsPos(const nsTArray<TrackSize>& aTrackSizes,
+                                      nscoord aGridOrigin,
+                                      nscoord* aPos, nscoord* aLength) const;
 
     uint32_t mStart;  // the start line, or zero for 'auto'
     uint32_t mEnd;    // the end line, or the span length for 'auto'
@@ -182,6 +214,21 @@ protected:
                              const nsStylePosition* aStyle);
 
   /**
+   * As above but for an abs.pos. child.  Any 'auto' lines will be represented
+   * by zero in the LineRange result.
+   * @param aGridEnd the last line in the (final) implicit grid
+   */
+  LineRange
+  ResolveAbsPosLineRange(const nsStyleGridLine& aStart,
+                         const nsStyleGridLine& aEnd,
+                         const nsTArray<nsTArray<nsString>>& aLineNameList,
+                         uint32_t GridNamedArea::* aAreaStart,
+                         uint32_t GridNamedArea::* aAreaEnd,
+                         uint32_t aExplicitGridEnd,
+                         uint32_t aGridEnd,
+                         const nsStylePosition* aStyle);
+
+  /**
    * Return a GridArea with non-auto lines placed at a definite line number
    * and with placement errors resolved.  One or both positions may still be
    * 'auto'.
@@ -245,12 +292,23 @@ protected:
                                GridArea* aArea) const;
 
   /**
+   * Place an abs.pos. child and return its grid area.
+   * @note the resulting area may still have 'auto' lines in one or both
+   * dimensions (represented as zero).
+   * @param aChild the abs.pos. grid item to place
+   * @param aStyle the StylePosition() for the grid container
+   */
+  GridArea PlaceAbsPos(nsIFrame* aChild, const nsStylePosition* aStyle);
+
+  /**
    * Place all child frames into the grid and expand the (implicit) grid as
    * needed.  The allocated GridAreas are stored in the GridAreaProperty
    * frame property on the child frame.
+   * @param aIter a grid item iterator
    * @param aStyle the StylePosition() for the grid container
    */
-  void PlaceGridItems(const nsStylePosition* aStyle);
+  void PlaceGridItems(GridItemCSSOrderIterator& aIter,
+                      const nsStylePosition* aStyle);
 
   /**
    * Initialize the end lines of the Explicit Grid (mExplicitGridCol[Row]End).
@@ -332,9 +390,26 @@ protected:
                                  const nsTArray<TrackSize>& aRowSizes) const;
 
   /**
+   * Return the containing block for an abs.pos. grid item occupying aArea.
+   * Any 'auto' lines in the grid area will be aligned with grid container
+   * containing block on that side.
+   * @param aColSizes column track sizes
+   * @param aRowSizes row track sizes
+   * @param aGridOrigin the origin of the grid
+   * @param aGridCB the grid container containing block (its padding area)
+   */
+  LogicalRect ContainingBlockForAbsPos(const WritingMode& aWM,
+                                       const GridArea& aArea,
+                                       const nsTArray<TrackSize>& aColSizes,
+                                       const nsTArray<TrackSize>& aRowSizes,
+                                       const LogicalPoint& aGridOrigin,
+                                       const LogicalRect& aGridCB) const;
+
+  /**
    * Reflow and place our children.
    */
-  void ReflowChildren(const LogicalRect&          aContentArea,
+  void ReflowChildren(GridItemCSSOrderIterator&   aIter,
+                      const LogicalRect&          aContentArea,
                       const nsTArray<TrackSize>&  aColSizes,
                       const nsTArray<TrackSize>&  aRowSizes,
                       nsHTMLReflowMetrics&        aDesiredSize,
@@ -364,6 +439,11 @@ private:
   // Same for the implicit grid
   uint32_t mGridColEnd; // always >= mExplicitGridColEnd
   uint32_t mGridRowEnd; // always >= mExplicitGridRowEnd
+  /**
+   * True iff the normal flow children are already in CSS 'order' in the
+   * order they occur in the child frame list.
+   */
+  bool mIsNormalFlowInCSSOrder : 1;
 };
 
 #endif /* nsGridContainerFrame_h___ */

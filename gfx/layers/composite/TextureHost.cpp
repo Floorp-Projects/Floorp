@@ -147,13 +147,6 @@ TextureHost::GetIPDLActor()
   return mActor;
 }
 
-bool
-TextureHost::BindTextureSource(CompositableTextureSourceRef& texture)
-{
-  texture = GetTextureSources();
-  return !!texture;
-}
-
 FenceHandle
 TextureHost::GetAndResetReleaseFenceHandle()
 {
@@ -409,6 +402,7 @@ BufferTextureHost::Updated(const nsIntRegion* aRegion)
 void
 BufferTextureHost::SetCompositor(Compositor* aCompositor)
 {
+  MOZ_ASSERT(aCompositor);
   if (mCompositor == aCompositor) {
     return;
   }
@@ -449,12 +443,13 @@ BufferTextureHost::Unlock()
   mLocked = false;
 }
 
-TextureSource*
-BufferTextureHost::GetTextureSources()
+bool
+BufferTextureHost::BindTextureSource(CompositableTextureSourceRef& aTexture)
 {
   MOZ_ASSERT(mLocked);
   MOZ_ASSERT(mFirstSource);
-  return mFirstSource;
+  aTexture = mFirstSource;
+  return !!aTexture;
 }
 
 gfx::SurfaceFormat

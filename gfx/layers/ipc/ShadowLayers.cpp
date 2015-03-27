@@ -362,28 +362,6 @@ ShadowLayerForwarder::UpdatePictureRect(CompositableClient* aCompositable,
 }
 
 void
-ShadowLayerForwarder::UpdatedTexture(CompositableClient* aCompositable,
-                                     TextureClient* aTexture,
-                                     nsIntRegion* aRegion)
-{
-  MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aTexture);
-  MOZ_ASSERT(aCompositable->GetIPDLActor());
-  MOZ_ASSERT(aTexture->GetIPDLActor());
-  MaybeRegion region = aRegion ? MaybeRegion(*aRegion)
-                               : MaybeRegion(null_t());
-  if (aTexture->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD) {
-    mTxn->AddPaint(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
-                                   nullptr, aTexture->GetIPDLActor(),
-                                   region));
-  } else {
-    mTxn->AddNoSwapPaint(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
-                                         nullptr, aTexture->GetIPDLActor(),
-                                         region));
-  }
-}
-
-void
 ShadowLayerForwarder::UseTexture(CompositableClient* aCompositable,
                                  TextureClient* aTexture)
 {
@@ -400,6 +378,13 @@ ShadowLayerForwarder::UseTexture(CompositableClient* aCompositable,
 #endif
   mTxn->AddEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
                              nullptr, aTexture->GetIPDLActor()));
+  if (aTexture->GetFlags() & TextureFlags::IMMEDIATE_UPLOAD
+      && aTexture->HasInternalBuffer()) {
+    // We use IMMEDIATE_UPLOAD when we want to be sure that the upload cannot
+    // race with updates on the main thread. In this case we want the transaction
+    // to be synchronous.
+    mTxn->MarkSyncTransaction();
+  }
 }
 
 void

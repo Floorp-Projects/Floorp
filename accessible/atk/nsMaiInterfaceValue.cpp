@@ -8,7 +8,7 @@
 
 #include "AccessibleWrap.h"
 #include "nsMai.h"
-
+#include "ProxyAccessible.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Likely.h"
 
@@ -20,12 +20,17 @@ extern "C" {
 static void
 getCurrentValueCB(AtkValue *obj, GValue *value)
 {
+  ProxyAccessible* proxy = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
-  if (!accWrap)
-    return;
+  if (!accWrap) {
+    proxy = GetProxy(ATK_OBJECT(obj));
+    if (!proxy) {
+      return;
+    }
+  }
 
   memset (value,  0, sizeof (GValue));
-  double accValue = accWrap->CurValue();
+  double accValue = accWrap ? accWrap->CurValue() : proxy->CurValue();
   if (IsNaN(accValue))
     return;
 
@@ -36,12 +41,17 @@ getCurrentValueCB(AtkValue *obj, GValue *value)
 static void
 getMaximumValueCB(AtkValue *obj, GValue *value)
 {
+  ProxyAccessible* proxy = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
-  if (!accWrap)
-    return;
+  if (!accWrap) {
+    proxy = GetProxy(ATK_OBJECT(obj));
+    if (!proxy) {
+      return;
+    }
+  }
 
   memset(value,  0, sizeof (GValue));
-  double accValue = accWrap->MaxValue();
+  double accValue = accWrap ? accWrap->MaxValue() : proxy->MaxValue();
   if (IsNaN(accValue))
     return;
 
@@ -52,12 +62,17 @@ getMaximumValueCB(AtkValue *obj, GValue *value)
 static void
 getMinimumValueCB(AtkValue *obj, GValue *value)
 {
+  ProxyAccessible* proxy = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
-  if (!accWrap)
-    return;
+  if (!accWrap) {
+    proxy = GetProxy(ATK_OBJECT(obj));
+    if (!proxy) {
+      return;
+    }
+  }
 
   memset(value,  0, sizeof (GValue));
-  double accValue = accWrap->MinValue();
+  double accValue = accWrap ? accWrap->MinValue() : proxy->MinValue();
   if (IsNaN(accValue))
     return;
 
@@ -68,12 +83,17 @@ getMinimumValueCB(AtkValue *obj, GValue *value)
 static void
 getMinimumIncrementCB(AtkValue *obj, GValue *minimumIncrement)
 {
+  ProxyAccessible* proxy = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
-  if (!accWrap)
-    return;
+  if (!accWrap) {
+    proxy = GetProxy(ATK_OBJECT(obj));
+    if (!proxy) {
+      return;
+    }
+  }
 
   memset(minimumIncrement,  0, sizeof (GValue));
-  double accValue = accWrap->Step();
+  double accValue = accWrap ? accWrap->Step() : proxy->Step();
   if (IsNaN(accValue))
     accValue = 0; // zero if the minimum increment is undefined
 
@@ -84,12 +104,17 @@ getMinimumIncrementCB(AtkValue *obj, GValue *minimumIncrement)
 static gboolean
 setCurrentValueCB(AtkValue *obj, const GValue *value)
 {
+  ProxyAccessible* proxy = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(obj));
-  if (!accWrap)
-    return FALSE;
+  if (!accWrap) {
+    proxy = GetProxy(ATK_OBJECT(obj));
+    if (!proxy) {
+      return FALSE;
+    }
+  }
 
   double accValue =g_value_get_double(value);
-  return accWrap->SetCurValue(accValue);
+  return accWrap ? accWrap->SetCurValue(accValue) : proxy->SetCurValue(accValue);
 }
 }
 

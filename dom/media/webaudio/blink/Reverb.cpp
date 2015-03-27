@@ -189,7 +189,7 @@ void Reverb::process(const AudioChunk* sourceBus, AudioChunk* destinationBus, si
 
         // simply copy L -> R
         float* destinationChannelR = static_cast<float*>(const_cast<void*>(destinationBus->mChannelData[1]));
-        bool isCopySafe = destinationChannelL && destinationChannelR && size_t(destinationBus->mDuration) >= framesToProcess && size_t(destinationBus->mDuration) >= framesToProcess;
+        bool isCopySafe = destinationChannelL && destinationChannelR && size_t(destinationBus->mDuration) >= framesToProcess;
         MOZ_ASSERT(isCopySafe);
         if (!isCopySafe)
             return;

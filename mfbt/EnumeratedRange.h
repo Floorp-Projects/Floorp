@@ -199,7 +199,9 @@ template<typename IntType, typename EnumType>
 inline detail::EnumeratedRange<IntType, EnumType>
 MakeEnumeratedRange(EnumType aBegin, EnumType aEnd)
 {
+#ifdef DEBUG
   typedef typename MakeUnsigned<IntType>::Type UnsignedType;
+#endif
   static_assert(sizeof(IntType) >= sizeof(EnumType),
                 "IntType should be at least as big as EnumType!");
   MOZ_ASSERT(aBegin <= aEnd, "Cannot generate invalid, unbounded range!");

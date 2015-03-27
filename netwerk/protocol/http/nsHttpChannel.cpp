@@ -114,7 +114,7 @@ AccumulateCacheHitTelemetry(CacheDisposition hitOrMiss)
 
         int32_t experiment = CacheObserver::HalfLifeExperiment();
         if (experiment > 0 && hitOrMiss == kCacheMissed) {
-            Telemetry::Accumulate(Telemetry::HTTP_CACHE_MISS_HALFLIFE_EXPERIMENT,
+            Telemetry::Accumulate(Telemetry::HTTP_CACHE_MISS_HALFLIFE_EXPERIMENT_2,
                                   experiment - 1);
         }
     }

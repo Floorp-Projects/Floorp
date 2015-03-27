@@ -238,7 +238,7 @@ CacheFileChunk::Write(CacheFileHandle *aHandle,
   mBufSize = 0;
 
   rv = CacheFileIOManager::Write(aHandle, mIndex * kChunkSize, mRWBuf,
-                                 mDataSize, false, this);
+                                 mDataSize, false, false, this);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     SetError(rv);
   } else {

@@ -191,7 +191,24 @@ child:
   prio(high) sync RemoveItemFromSelection(uint64_t aID, uint32_t aIndex) returns(bool aSuccess);
   prio(high) sync SelectAll(uint64_t aID) returns(bool aSuccess);
   prio(high) sync UnselectAll(uint64_t aID) returns(bool aSuccess);
-  
+
+  prio(high) sync DoAction(uint64_t aID, uint8_t aIndex) returns(bool aSuccess);
+  prio(high) sync ActionCount(uint64_t aID) returns(uint8_t aCount);
+  prio(high) sync ActionDescriptionAt(uint64_t aID, uint8_t aIndex) returns(nsString aDescription);
+  prio(high) sync ActionNameAt(uint64_t aID, uint8_t aIndex) returns(nsString aName);
+  prio(high) sync AccessKey(uint64_t aID) returns(uint32_t aKey, uint32_t aModifierMask);
+  prio(high) sync KeyboardShortcut(uint64_t aID) returns(uint32_t aKey, uint32_t aModifierMask);
+
+  prio(high) sync CurValue(uint64_t aID) returns(double aValue);
+  prio(high) sync SetCurValue(uint64_t aID, double aValue) returns(bool aRetVal);
+  prio(high) sync MinValue(uint64_t aID) returns(double aValue);
+  prio(high) sync MaxValue(uint64_t aID) returns(double aValue);
+  prio(high) sync Step(uint64_t aID) returns(double aStep);
+
+  prio(high) sync TakeFocus(uint64_t aID);
+  prio(high) sync ChildAtPoint(uint64_t aID, int32_t aX, int32_t aY, uint32_t aWhich)
+    returns(uint64_t aChild, bool aOk);
+  prio(high) sync Bounds(uint64_t aID) returns(nsIntRect aRect);
 };
 
 }

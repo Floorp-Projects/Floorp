@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_peeloff.c 269858 2014-08-12 11:30:16Z tuexen $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_peeloff.c 279859 2015-03-10 19:49:25Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -134,6 +134,7 @@ sctp_do_peeloff(struct socket *head, struct socket *so, sctp_assoc_t assoc_id)
 	n_inp->pktdrop_supported = inp->pktdrop_supported;
 	n_inp->partial_delivery_point = inp->partial_delivery_point;
 	n_inp->sctp_context = inp->sctp_context;
+	n_inp->max_cwnd = inp->max_cwnd;
 	n_inp->local_strreset_support = inp->local_strreset_support;
 	n_inp->inp_starting_point_for_iterator = NULL;
 	/* copy in the authentication parameters from the original endpoint */
@@ -249,6 +250,7 @@ sctp_get_peeloff(struct socket *head, sctp_assoc_t assoc_id, int *error)
 	n_inp->pktdrop_supported = inp->pktdrop_supported;
 	n_inp->partial_delivery_point = inp->partial_delivery_point;
 	n_inp->sctp_context = inp->sctp_context;
+	n_inp->max_cwnd = inp->max_cwnd;
 	n_inp->local_strreset_support = inp->local_strreset_support;
 	n_inp->inp_starting_point_for_iterator = NULL;
 #if defined(__Userspace__)

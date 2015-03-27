@@ -1176,9 +1176,6 @@ js::AsmJSModuleToString(JSContext *cx, HandleFunction fun, bool addParenToLambda
     ScriptSource *source = module.scriptSource();
     StringBuffer out(cx);
 
-    // Whether the function has been created with a Function ctor
-    bool funCtor = begin == 0 && end == source->length() && source->argumentsNotIncluded();
-
     if (addParenToLambda && fun->isLambda() && !out.append("("))
         return nullptr;
 
@@ -1188,42 +1185,53 @@ js::AsmJSModuleToString(JSContext *cx, HandleFunction fun, bool addParenToLambda
     if (fun->atom() && !out.append(fun->atom()))
         return nullptr;
 
-    if (funCtor) {
-        // Functions created with the function constructor don't have arguments in their source.
-        if (!out.append("("))
-            return nullptr;
-
-        if (PropertyName *argName = module.globalArgumentName()) {
-            if (!out.append(argName))
-                return nullptr;
-        }
-        if (PropertyName *argName = module.importArgumentName()) {
-            if (!out.append(", ") || !out.append(argName))
-                return nullptr;
-        }
-        if (PropertyName *argName = module.bufferArgumentName()) {
-            if (!out.append(", ") || !out.append(argName))
-                return nullptr;
-        }
-
-        if (!out.append(") {\n"))
-            return nullptr;
-    }
-
-    Rooted<JSFlatString*> src(cx, source->substring(cx, begin, end));
-    if (!src)
+    bool haveSource = source->hasSourceData();
+    if (!haveSource && !JSScript::loadSource(cx, source, &haveSource))
         return nullptr;
 
-    if (module.strict()) {
-        if (!AppendUseStrictSource(cx, fun, src, out))
+    if (!haveSource) {
+        if (!out.append("() {\n    [sourceless code]\n}"))
             return nullptr;
     } else {
-        if (!out.append(src))
+        // Whether the function has been created with a Function ctor
+        bool funCtor = begin == 0 && end == source->length() && source->argumentsNotIncluded();
+        if (funCtor) {
+            // Functions created with the function constructor don't have arguments in their source.
+            if (!out.append("("))
+                return nullptr;
+
+            if (PropertyName *argName = module.globalArgumentName()) {
+                if (!out.append(argName))
+                    return nullptr;
+            }
+            if (PropertyName *argName = module.importArgumentName()) {
+                if (!out.append(", ") || !out.append(argName))
+                    return nullptr;
+            }
+            if (PropertyName *argName = module.bufferArgumentName()) {
+                if (!out.append(", ") || !out.append(argName))
+                    return nullptr;
+            }
+
+            if (!out.append(") {\n"))
+                return nullptr;
+        }
+
+        Rooted<JSFlatString*> src(cx, source->substring(cx, begin, end));
+        if (!src)
+            return nullptr;
+
+        if (module.strict()) {
+            if (!AppendUseStrictSource(cx, fun, src, out))
+                return nullptr;
+        } else {
+            if (!out.append(src))
+                return nullptr;
+        }
+
+        if (funCtor && !out.append("\n}"))
             return nullptr;
     }
-
-    if (funCtor && !out.append("\n}"))
-        return nullptr;
 
     if (addParenToLambda && fun->isLambda() && !out.append(")"))
         return nullptr;
@@ -1276,33 +1284,46 @@ js::AsmJSFunctionToString(JSContext *cx, HandleFunction fun)
     ScriptSource *source = module.scriptSource();
     StringBuffer out(cx);
 
-    // asm.js functions cannot have been created with a Function constructor
-    // as they belong within a module.
-    MOZ_ASSERT(!(begin == 0 && end == source->length() && source->argumentsNotIncluded()));
-
     if (!out.append("function "))
         return nullptr;
 
-    if (module.strict()) {
-        // AppendUseStrictSource expects its input to start right after the
-        // function name, so split the source chars from the src into two parts:
-        // the function name and the rest (arguments + body).
+    bool haveSource = source->hasSourceData();
+    if (!haveSource && !JSScript::loadSource(cx, source, &haveSource))
+        return nullptr;
 
+    if (!haveSource) {
         // asm.js functions can't be anonymous
         MOZ_ASSERT(fun->atom());
         if (!out.append(fun->atom()))
             return nullptr;
-
-        size_t nameEnd = begin + fun->atom()->length();
-        Rooted<JSFlatString*> src(cx, source->substring(cx, nameEnd, end));
-        if (!AppendUseStrictSource(cx, fun, src, out))
+        if (!out.append("() {\n    [sourceless code]\n}"))
             return nullptr;
     } else {
-        Rooted<JSFlatString*> src(cx, source->substring(cx, begin, end));
-        if (!src)
-            return nullptr;
-        if (!out.append(src))
-            return nullptr;
+        // asm.js functions cannot have been created with a Function constructor
+        // as they belong within a module.
+        MOZ_ASSERT(!(begin == 0 && end == source->length() && source->argumentsNotIncluded()));
+
+        if (module.strict()) {
+            // AppendUseStrictSource expects its input to start right after the
+            // function name, so split the source chars from the src into two parts:
+            // the function name and the rest (arguments + body).
+
+            // asm.js functions can't be anonymous
+            MOZ_ASSERT(fun->atom());
+            if (!out.append(fun->atom()))
+                return nullptr;
+
+            size_t nameEnd = begin + fun->atom()->length();
+            Rooted<JSFlatString*> src(cx, source->substring(cx, nameEnd, end));
+            if (!AppendUseStrictSource(cx, fun, src, out))
+                return nullptr;
+        } else {
+            Rooted<JSFlatString*> src(cx, source->substring(cx, begin, end));
+            if (!src)
+                return nullptr;
+            if (!out.append(src))
+                return nullptr;
+        }
     }
 
     return out.finishString();

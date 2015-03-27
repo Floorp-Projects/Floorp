@@ -192,16 +192,21 @@ function runTest() {
     is(new FontFace("test", "url(x)").status, "unloaded", "initial value of FontFace.status when a url() source is used (TEST 6)");
 
     // (TEST 7) Test initial value of FontFace.status when an invalid
-    // ArrayBuffer source is used.
-    is(new FontFace("test", new ArrayBuffer(0)).status, "unloaded", "initial value of FontFace.status when an invalid ArrayBuffer source is used (TEST 7)");
+    // ArrayBuffer source is used.  Because it has an implicit initial
+    // load() call, it should either be "loading" if the browser is
+    // asynchronously parsing the font data, or "error" if it parsed
+    // it immediately.
+    var status = new FontFace("test", new ArrayBuffer(0)).status;
+    ok(status == "loading" || status == "error", "initial value of FontFace.status when an invalid ArrayBuffer source is used (TEST 7)");
 
     // (TEST 8) Test initial value of FontFace.status when a valid ArrayBuffer
-    // source is used.
-    is(new FontFace("test", fontData).status, "unloaded", "initial value of FontFace.status when a valid ArrayBuffer source is used (TEST 8)");
+    // source is used.  Because it has an implicit initial load() call, it
+    // should either be "loading" if the browser is asynchronously parsing the
+    // font data, or "loaded" if it parsed it immediately.
+    status = new FontFace("test", fontData).status;
+    ok(status == "loading" || status == "loaded", "initial value of FontFace.status when a valid ArrayBuffer source is used (TEST 8)");
 
-    // (TEST 9) Test initial value of FontFace.loaded when an invalid url()
-    // source is used.
-    return is_pending(new FontFace("test", "").loaded, "initial value of FontFace.loaded when an invalid url() source is used", "(TEST 9)");
+    // (TEST 9) (old test became redundant with TEST 19)
 
   }).then(function() {
 
@@ -211,15 +216,11 @@ function runTest() {
 
   }).then(function() {
 
-    // (TEST 11) Test initial value of FontFace.loaded when an invalid
-    // ArrayBuffer source is used.
-    return is_pending(new FontFace("test", new ArrayBuffer(0)).loaded, "initial value of FontFace.loaded when an invalid ArrayBuffer source is used", "(TEST 11)");
+    // (TEST 11) (old test became redundant with TEST 21)
 
   }).then(function() {
 
-    // (TEST 12) Test initial value of FontFace.loaded when a valid ArrayBuffer
-    // source is used.
-    return is_pending(new FontFace("test", fontData).loaded, "initial value of FontFace.loaded when a valid ArrayBuffer source is used", "(TEST 12)");
+    // (TEST 12) (old test became redundant with TEST 20)
 
   }).then(function() {
 
@@ -332,10 +333,11 @@ function runTest() {
     gCSSFontFaceDescriptors.src.invalid_values.forEach(function(aSrc) {
       srcTests = srcTests.then(function() {
         var face = new FontFace("test", aSrc);
-        return face.load().then(function() {
+        is(face.status, "error", "FontFace.status should be \"error\" when constructed with an invalid url() src " + aSrc + " (TEST 19");
+        return face.loaded.then(function() {
           ok(false, "FontFace should not load with invalid url() src " + aSrc + " (TEST 19)");
         }, function(aError) {
-          is(aError.name, "SyntaxError", "FontFace.ready should have been rejected with a SyntaxError when loaded with an invalid url() src " + aSrc + " (TEST 19)");
+          is(aError.name, "SyntaxError", "FontFace.ready should have been rejected with a SyntaxError when constructed with an invalid url() src " + aSrc + " (TEST 19)");
         });
       });
     });
@@ -346,8 +348,9 @@ function runTest() {
     // (TEST 20) Test that the status of a FontFace constructed with a valid
     // ArrayBuffer source eventually becomes "loaded".
     var face = new FontFace("test", fontData);
-    return face.loaded.then(function() {
+    return face.loaded.then(function(aFace) {
       is(face.status, "loaded", "status of FontFace constructed with a valid ArrayBuffer source should eventually be \"loaded\" (TEST 20)");
+      is(face, aFace, "FontFace.loaded was resolved with the FontFace object once loaded (TEST 20)");
     }, function(aError) {
       ok(false, "FontFace constructed with a valid ArrayBuffer should eventually load (TEST 20)");
     });
@@ -705,7 +708,7 @@ function runTest() {
       };
     });
 
-    face = new FontFace("test", "url(BitPattern.woff)");
+    face = new FontFace("test", "url(BitPattern.woff?test30)");
     face.load();
     is(face.status, "loading", "FontFace should have status \"loading\" (TEST 30)");
     document.fonts.add(face);
@@ -749,7 +752,7 @@ function runTest() {
       };
     });
 
-    face = new FontFace("test", "url(BitPattern.woff)");
+    face = new FontFace("test", "url(BitPattern.woff?test31)");
     is(face.status, "unloaded", "FontFace should have status \"unloaded\" (TEST 31)");
     document.fonts.add(face);
 
@@ -929,11 +932,177 @@ function runTest() {
 
   }).then(function() {
 
+    // (TEST 37) Test that a FontFace only has one loadingdone event dispatched
+    // at the FontFaceSet containing it.
+
+    var events = [], face, face2;
+
+    document.fonts.onloadingdone = function(e) {
+      events.push(e);
+    };
+    document.fonts.onloadingerror = function(e) {
+      events.push(e);
+    };
+
+    is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" (TEST 37)");
+
+    face = new FontFace("test", "url(BitPattern.woff?test37a)");
+    face.load();
+    document.fonts.add(face);
+    is(document.fonts.status, "loading", "document.fonts.status should have status \"loading\" after first font added (TEST 37)");
+
+    return document.fonts.ready
+      .then(function() {
+        is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" after first font loaded (TEST 37)");
+        is(face.status, "loaded", "first FontFace should have status \"loaded\" (TEST 37)");
+
+        face2 = new FontFace("test2", "url(BitPattern.woff?test37b)");
+        face2.load();
+        document.fonts.add(face2);
+        is(document.fonts.status, "loading", "document.fonts.status should have status \"loading\" after second font added (TEST 37)");
+
+        return document.fonts.ready;
+      }).then(function() {
+        is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" after second font loaded (TEST 37)");
+        is(face2.status, "loaded", "second FontFace should have status \"loaded\" (TEST 37)");
+
+        is(events.length, 2, "should receive two events (TEST 37)");
+
+        is(events[0].type, "loadingdone", "first event should be \"loadingdone\" (TEST 37)");
+        is(events[0].fontfaces.length, 1, "first event should have 1 FontFace (TEST 37)");
+        is(events[0].fontfaces[0], face, "first event should have the first FontFace");
+
+        is(events[1].type, "loadingdone", "second event should be \"loadingdone\" (TEST 37)");
+        is(events[1].fontfaces.length, 1, "second event should only have 1 FontFace (TEST 37)");
+        is(events[1].fontfaces[0], face2, "second event should have the second FontFace (TEST 37)");
+
+        document.fonts.onloadingdone = null;
+        document.fonts.onloadingerror = null;
+        document.fonts.clear();
+        return document.fonts.ready;
+      });
+
+  }).then(function() {
+
+    // (TEST 38) Test that a FontFace only has one loadingerror event dispatched
+    // at the FontFaceSet containing it.
+
+    var events = [], face, face2;
+
+    document.fonts.onloadingdone = function(e) {
+      events.push(e);
+    };
+    document.fonts.onloadingerror = function(e) {
+      events.push(e);
+    };
+
+    is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" (TEST 38)");
+
+    face = new FontFace("test", "url(x)");
+    face.load();
+    document.fonts.add(face);
+    is(document.fonts.status, "loading", "document.fonts.status should have status \"loading\" after first font added (TEST 38)");
+
+    return document.fonts.ready
+      .then(function() {
+        is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" after first font failed to load (TEST 38)");
+        is(face.status, "error", "first FontFace should have status \"error\" (TEST 38)");
+
+        face2 = new FontFace("test2", "url(x)");
+        face2.load();
+        document.fonts.add(face2);
+        is(document.fonts.status, "loading", "document.fonts.status should have status \"loading\" after second font added (TEST 38)");
+
+        return document.fonts.ready;
+      }).then(function() {
+        is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" after second font failed to load (TEST 38)");
+        is(face2.status, "error", "second FontFace should have status \"error\" (TEST 38)");
+
+        is(events.length, 4, "should receive four events (TEST 38)");
+
+        is(events[0].type, "loadingdone", "first event should be \"loadingdone\" (TEST 38)");
+        is(events[0].fontfaces.length, 0, "first event should have no FontFaces (TEST 38)");
+
+        is(events[1].type, "loadingerror", "second event should be \"loadingerror\" (TEST 38)");
+        is(events[1].fontfaces.length, 1, "second event should have 1 FontFace (TEST 38)");
+        is(events[1].fontfaces[0], face, "second event should have the first FontFace");
+
+        is(events[2].type, "loadingdone", "third event should be \"loadingdone\" (TEST 38)");
+        is(events[2].fontfaces.length, 0, "third event should have no FontFaces (TEST 38)");
+
+        is(events[3].type, "loadingerror", "third event should be \"loadingerror\" (TEST 38)");
+        is(events[3].fontfaces.length, 1, "third event should only have 1 FontFace (TEST 38)");
+        is(events[3].fontfaces[0], face2, "third event should have the second FontFace");
+
+        document.fonts.onloadingdone = null;
+        document.fonts.onloadingerror = null;
+        document.fonts.clear();
+        return document.fonts.ready;
+      });
+
+  }).then(function() {
+
+    // (TEST 39) Test that a FontFace for an @font-face rule only has one
+    // loadingdone event dispatched at the FontFaceSet containing it.
+
+    var style = document.querySelector("style");
+    var ruleText = "@font-face { font-family: test; src: url(BitPattern.woff?test39a); } " +
+                   "@font-face { font-family: test2; src: url(BitPattern.woff?test39b); }";
+
+    style.textContent = ruleText;
+
+    var all = Array.from(document.fonts);
+    var events = [];
+
+    document.fonts.onloadingdone = function(e) {
+      events.push(e);
+    };
+    document.fonts.onloadingerror = function(e) {
+      events.push(e);
+    };
+
+    is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" (TEST 39)");
+
+    all[0].load();
+    is(document.fonts.status, "loading", "document.fonts.status should have status \"loading\" after first font loading (TEST 39)");
+
+    return document.fonts.ready
+      .then(function() {
+        is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" after first font loaded (TEST 39)");
+        is(all[0].status, "loaded", "first FontFace should have status \"loaded\" (TEST 39)");
+        is(all[1].status, "unloaded", "second FontFace should have status \"unloaded\" (TEST 39)");
+
+        all[1].load();
+        is(document.fonts.status, "loading", "document.fonts.status should have status \"loading\" after second font loading (TEST 39)");
+
+        return document.fonts.ready;
+      }).then(function() {
+        is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" after second font loaded (TEST 39)");
+        is(all[1].status, "loaded", "second FontFace should have status \"loaded\" (TEST 39)");
+
+        is(events.length, 2, "should receive two events (TEST 39)");
+
+        is(events[0].type, "loadingdone", "first event should be \"loadingdone\" (TEST 39)");
+        is(events[0].fontfaces.length, 1, "first event should have 1 FontFace (TEST 39)");
+        is(events[0].fontfaces[0], all[0], "first event should have the first FontFace");
+
+        is(events[1].type, "loadingdone", "second event should be \"loadingdone\" (TEST 39)");
+        is(events[1].fontfaces.length, 1, "second event should only have 1 FontFace (TEST 39)");
+        is(events[1].fontfaces[0], all[1], "second event should have the second FontFace (TEST 39)");
+
+        document.fonts.onloadingdone = null;
+        document.fonts.onloadingerror = null;
+        document.fonts.clear();
+        return document.fonts.ready;
+      });
+
+  }).then(function() {
+
     // (TEST LAST) Test that a pending style sheet load prevents
     // document.fonts.status from being set to "loaded".
 
     // First, add a FontFace to document.fonts that will load soon.
-    var face = new FontFace("test", "url(BitPattern.woff)");
+    var face = new FontFace("test", "url(BitPattern.woff?testlast)");
     face.load();
     document.fonts.add(face);
 

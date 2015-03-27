@@ -201,6 +201,7 @@ void TraceJitScripts(JSTracer* trc, JSScript *script);
 
 bool JitSupportsFloatingPoint();
 bool JitSupportsSimd();
+bool JitSupportsAtomics();
 
 } // namespace jit
 } // namespace js

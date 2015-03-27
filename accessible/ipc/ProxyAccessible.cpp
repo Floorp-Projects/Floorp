@@ -799,5 +799,117 @@ ProxyAccessible::UnselectAll()
   return success;
 }
 
+bool
+ProxyAccessible::DoAction(uint8_t aIndex)
+{
+  bool success = false;
+  unused << mDoc->SendDoAction(mID, aIndex, &success);
+  return success;
+}
+
+uint8_t
+ProxyAccessible::ActionCount()
+{
+  uint8_t count = 0;
+  unused << mDoc->SendActionCount(mID, &count);
+  return count;
+}
+
+void
+ProxyAccessible::ActionDescriptionAt(uint8_t aIndex, nsString& aDescription)
+{
+  unused << mDoc->SendActionDescriptionAt(mID, aIndex, &aDescription);
+}
+
+void
+ProxyAccessible::ActionNameAt(uint8_t aIndex, nsString& aName)
+{
+  unused << mDoc->SendActionNameAt(mID, aIndex, &aName);
+}
+
+KeyBinding
+ProxyAccessible::AccessKey()
+{
+  uint32_t key = 0;
+  uint32_t modifierMask = 0;
+  unused << mDoc->SendAccessKey(mID, &key, &modifierMask);
+  return KeyBinding(key, modifierMask);
+}
+
+KeyBinding
+ProxyAccessible::KeyboardShortcut()
+{
+  uint32_t key = 0;
+  uint32_t modifierMask = 0;
+  unused << mDoc->SendKeyboardShortcut(mID, &key, &modifierMask);
+  return KeyBinding(key, modifierMask);
+}
+
+double
+ProxyAccessible::CurValue()
+{
+  double val = UnspecifiedNaN<double>();
+  unused << mDoc->SendCurValue(mID, &val);
+  return val;
+}
+
+bool
+ProxyAccessible::SetCurValue(double aValue)
+{
+  bool success = false;
+  unused << mDoc->SendSetCurValue(mID, aValue, &success);
+  return success;
+}
+
+double
+ProxyAccessible::MinValue()
+{
+  double val = UnspecifiedNaN<double>();
+  unused << mDoc->SendMinValue(mID, &val);
+  return val;
+}
+
+double
+ProxyAccessible::MaxValue()
+{
+  double val = UnspecifiedNaN<double>();
+  unused << mDoc->SendMaxValue(mID, &val);
+  return val;
+}
+
+double
+ProxyAccessible::Step()
+{
+  double step = UnspecifiedNaN<double>();
+  unused << mDoc->SendStep(mID, &step);
+  return step;
+}
+
+void
+ProxyAccessible::TakeFocus()
+{
+  unused << mDoc->SendTakeFocus(mID);
+}
+
+ProxyAccessible*
+ProxyAccessible::ChildAtPoint(int32_t aX, int32_t aY,
+                              Accessible::EWhichChildAtPoint aWhichChild)
+{
+  uint64_t childID = 0;
+  bool ok = false;
+  unused << mDoc->SendChildAtPoint(mID, aX, aY,
+                                   static_cast<uint32_t>(aWhichChild),
+                                   &childID, &ok);
+  return ok ? mDoc->GetAccessible(childID) : nullptr;
+}
+
+nsIntRect
+ProxyAccessible::Bounds()
+{
+  nsIntRect rect;
+  unused << mDoc->SendBounds(mID, &rect);
+  return rect;
+}
+
 }
 }
