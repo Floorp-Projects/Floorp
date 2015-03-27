@@ -39,8 +39,7 @@ ParseInteger(const nsAString& aString, int32_t& aInt)
   return !(parseResult &
            ( nsContentUtils::eParseHTMLInteger_Error |
              nsContentUtils::eParseHTMLInteger_DidNotConsumeAllInput |
-             nsContentUtils::eParseHTMLInteger_IsPercent |
-             nsContentUtils::eParseHTMLInteger_NonStandard ));
+             nsContentUtils::eParseHTMLInteger_IsPercent ));
 }
 
 ResponsiveImageSelector::ResponsiveImageSelector(nsIContent *aContent)
@@ -621,13 +620,11 @@ ResponsiveImageCandidate::ConsumeDescriptors(nsAString::const_iterator& aIter,
         // End of current descriptor, consume it, skip spaces
         // ("After descriptor" state in spec) before continuing
         descriptors.AddDescriptor(Substring(currentDescriptor, iter));
-        for (; iter != end && nsContentUtils::IsHTMLWhitespace(*iter); ++iter);
+        for (; iter != end && *iter == char16_t(' '); ++iter);
         if (iter == end) {
           break;
         }
         currentDescriptor = iter;
-        // Leave one whitespace so the loop advances to this position next iteration
-        iter--;
       } else if (*iter == char16_t('(')) {
         inParens = true;
       }
