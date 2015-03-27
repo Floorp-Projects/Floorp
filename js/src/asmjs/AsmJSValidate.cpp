@@ -3841,7 +3841,7 @@ CheckTypeAnnotation(ModuleCompiler &m, ParseNode *coercionNode, AsmJSCoercion *c
       default:;
     }
 
-    return m.fail(coercionNode, "must be of the form +x, fround(x), simdType(x) or x|0");
+    return m.fail(coercionNode, "must be of the form +x, x|0, fround(x), or a SIMD check(x)");
 }
 
 static bool
