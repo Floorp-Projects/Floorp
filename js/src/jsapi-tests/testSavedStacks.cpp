@@ -57,7 +57,7 @@ BEGIN_TEST(testSavedStacks_ApiDefaultValues)
     CHECK(parent.get() == nullptr);
 
     // Stack string
-    CHECK(JS::StringifySavedFrameStack(cx, savedFrame, &str));
+    CHECK(JS::BuildStackString(cx, savedFrame, &str));
     CHECK(str.get() == cx->runtime()->emptyString);
 
     return true;
