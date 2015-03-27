@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=756984
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 756984</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=756984">Mozilla Bug 756984</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+
+<div id="div1">123<br>45678<br></div>
+<div id="div2"><font face="Arial">123</font><br><i>45678</i><br></div>
+<div id="div3"><font face="Courier"><i><strong>123</strong></i></font><br><i>45678</i><br></div>
+<div id="div4"><br>45678<br></div>
+
+<pre id="test">
+
+ <script type="application/javascript">
+
+    /** Test for Bug 756984 **/
+    /** We test that clicking beyond the end of a line terminated with <br> selects the preceding text, if any **/
+
+    SimpleTest.waitForExplicitFinish();
+
+    SimpleTest.waitForFocus(function() {
+
+    var sel = window.getSelection();
+    
+    for (i = 1; i <= 3; i++) {
+        // click beyond the first line (100px to the left and 2px down), expect text
+        var theDiv = document.getElementById("div" + i.toString());
+        theDiv.focus();
+        sel.collapse(theDiv, 0);
+        synthesizeMouse(theDiv, 100, 2, {});
+        var selRange = sel.getRangeAt(0);
+        is(selRange.endContainer.nodeName, "#text", "selection should be in text node");
+        is(selRange.endOffset, 3, "offset should be 3");
+      }
+
+      // click beyond the first line (100px to the left and 2px down), expect DIV.
+      // This is the previous behaviour which hasn't changed since the line is empty.
+      // If the processing were wrong, the selection would end up in some other non-empty line.
+      theDiv = document.getElementById("div4");
+      theDiv.focus();
+      sel.collapse(theDiv, 0);
+      synthesizeMouse(theDiv, 100, 2, {});
+      selRange = sel.getRangeAt(0);
+      is(selRange.endContainer.nodeName, "DIV", "selection should be in DIV");
+      is(selRange.endOffset, 0, "offset should be 0");
+
+      SimpleTest.finish();
+    });
+
+  </script>
+
+</pre>
+</body>
+</html>
