@@ -13,6 +13,136 @@
 #include "js/HashTable.h"
 #include "vm/Stack.h"
 
+// # Saved Stacks
+//
+// The `SavedStacks` class provides a compact way to capture and save JS stacks
+// as `SavedFrame` `JSObject` subclasses. A single `SavedFrame` object
+// represents one frame that was on the stack, and has a strong reference to its
+// parent `SavedFrame` (the next youngest frame). This reference is null when
+// the `SavedFrame` object is the oldest frame that was on the stack.
+//
+// This comment documents implementation. For usage documentation, see the
+// `js/src/doc/SavedFrame/SavedFrame.md` file and relevant `SavedFrame`
+// functions in `js/src/jsapi.h`.
+//
+// ## Compact
+//
+// Older saved stack frame tails are shared via hash consing, to deduplicate
+// structurally identical data. `SavedStacks` contains a hash table of weakly
+// held `SavedFrame` objects, and when the owning compartment is swept, it
+// removes entries from this table that aren't held alive in any other way. When
+// saving new stacks, we use this table to find pre-existing `SavedFrame`
+// objects. If such an object is already extant, it is reused; otherwise a new
+// `SavedFrame` is allocated and inserted into the table.
+//
+//    Naive         |   Hash Consing
+//    --------------+------------------
+//    c -> b -> a   |   c -> b -> a
+//                  |        ^
+//    d -> b -> a   |   d ---|
+//                  |        |
+//    e -> b -> a   |   e ---'
+//
+// This technique is effective because of the nature of the events that trigger
+// capturing the stack. Currently, these events consist primarily of `JSObject`
+// allocation (when an observing `Debugger` has such tracking), `Promise`
+// settlement, and `Error` object creation. While these events may occur many
+// times, they tend to occur only at a few locations in the JS source. For
+// example, if we enable Object allocation tracking and run the esprima
+// JavaScript parser on its own JavaScript source, there are approximately 54700
+// total `Object` allocations, but just ~1400 unique JS stacks at allocation
+// time. There's only ~200 allocation sites if we capture only the youngest
+// stack frame.
+//
+// ## Security and Wrappers
+//
+// We save every frame on the stack, regardless of whether the `SavedStack`'s
+// compartment's principals subsume the frame's compartment's principals or
+// not. This gives us maximum flexibility down the line when accessing and
+// presenting captured stacks, but at the price of some complication involved in
+// preventing the leakage of privileged stack frames to unprivileged callers.
+//
+// When a `SavedFrame` method or accessor is called, we compare the caller's
+// compartment's principals to each `SavedFrame`'s captured principals. We avoid
+// using the usual `CallNonGenericMethod` and `nativeCall` machinery which
+// enters the `SavedFrame` object's compartment before we can check these
+// principals, because we need access to the original caller's compartment's
+// principals (unlike other `CallNonGenericMethod` users) to determine what view
+// of the stack to present. Instead, we take a similar approach to that used by
+// DOM methods, and manually unwrap wrappers until we get the underlying
+// `SavedFrame` object, find the first `SavedFrame` in its stack whose captured
+// principals are subsumed by the caller's principals, access the reserved slots
+// we care about, and then rewrap return values as necessary.
+//
+// Consider the following diagram:
+//
+//                                              Content Compartment
+//                                    +---------------------------------------+
+//                                    |                                       |
+//                                    |           +------------------------+  |
+//      Chrome Compartment            |           |                        |  |
+//    +--------------------+          |           | SavedFrame C (content) |  |
+//    |                    |          |           |                        |  |
+//    |                  +--------------+         +------------------------+  |
+//    |                  |              |                    ^                |
+//    |     var x -----> | Xray Wrapper |-----.              |                |
+//    |                  |              |     |              |                |
+//    |                  +--------------+     |   +------------------------+  |
+//    |                    |          |       |   |                        |  |
+//    |                  +--------------+     |   | SavedFrame B (content) |  |
+//    |                  |              |     |   |                        |  |
+//    |     var y -----> | CCW (waived) |--.  |   +------------------------+  |
+//    |                  |              |  |  |              ^                |
+//    |                  +--------------+  |  |              |                |
+//    |                    |          |    |  |              |                |
+//    +--------------------+          |    |  |   +------------------------+  |
+//                                    |    |  '-> |                        |  |
+//                                    |    |      | SavedFrame A (chrome)  |  |
+//                                    |    '----> |                        |  |
+//                                    |           +------------------------+  |
+//                                    |                      ^                |
+//                                    |                      |                |
+//                                    |           var z -----'                |
+//                                    |                                       |
+//                                    +---------------------------------------+
+//
+// CCW is a plain cross-compartment wrapper, yielded by waiving Xray vision. A
+// is the youngest `SavedFrame` and represents a frame that was from the chrome
+// compartment, while B and C are from frames from the content compartment. C is
+// the oldest frame.
+//
+// Note that it is always safe to waive an Xray around a SavedFrame object,
+// because SavedFrame objects and the SavedFrame prototype are always frozen you
+// will never run untrusted code.
+//
+// Depending on who the caller is, the view of the stack will be different, and
+// is summarized in the table below.
+//
+//    Var  | View
+//    -----+------------
+//    x    | A -> B -> C
+//    y, z | B -> C
+//
+// In the case of x, the `SavedFrame` accessors are called with an Xray wrapper
+// around the `SavedFrame` object as the `this` value, and the chrome
+// compartment as the cx's current principals. Because the chrome compartment's
+// principals subsume both itself and the content compartment's principals, x
+// has the complete view of the stack.
+//
+// In the case of y, the cross-compartment machinery automatically enters the
+// content compartment, and calls the `SavedFrame` accessors with the wrapped
+// `SavedFrame` object as the `this` value. Because the cx's current compartment
+// is the content compartment, and the content compartment's principals do not
+// subsume the chrome compartment's principals, it can only see the B and C
+// frames.
+//
+// In the case of z, the `SavedFrame` accessors are called with the `SavedFrame`
+// object in the `this` value, and the content compartment as the cx's current
+// compartment. Similar to the case of y, only the B and C frames are exposed
+// because the cx's current compartment's principals do not subsume A's captured
+// principals.
+
+
 namespace js {
 
 class SavedFrame;
