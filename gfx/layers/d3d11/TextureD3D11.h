@@ -244,7 +244,7 @@ public:
   DXGITextureHostD3D11(TextureFlags aFlags,
                        const SurfaceDescriptorD3D10& aDescriptor);
 
-  virtual TextureSource* GetTextureSources() override;
+  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
 
   virtual void DeallocateDeviceData() override {}
 
@@ -283,7 +283,7 @@ public:
   DXGIYCbCrTextureHostD3D11(TextureFlags aFlags,
                             const SurfaceDescriptorDXGIYCbCr& aDescriptor);
 
-  virtual TextureSource* GetTextureSources() override;
+  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
 
   virtual void DeallocateDeviceData() override{}
 

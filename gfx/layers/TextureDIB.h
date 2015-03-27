@@ -72,7 +72,7 @@ public:
   DIBTextureHost(TextureFlags aFlags,
                  const SurfaceDescriptorDIB& aDescriptor);
 
-  virtual TextureSource* GetTextureSources() override;
+  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
 
   virtual void DeallocateDeviceData() override;
 
