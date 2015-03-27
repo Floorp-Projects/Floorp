@@ -824,7 +824,7 @@
     </style>
 
     <!-- Make the share overlay activity appear like an overlay. -->
-    <style name="ShareOverlayActivity">
+    <style name="ShareOverlayActivity" parent="Gecko">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsTranslucent">true</item>
