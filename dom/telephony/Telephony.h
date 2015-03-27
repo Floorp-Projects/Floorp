@@ -31,7 +31,7 @@ class TelephonyDialCallback;
 class OwningTelephonyCallOrTelephonyCallGroup;
 
 class Telephony final : public DOMEventTargetHelper,
-                            private nsITelephonyListener
+                        private nsITelephonyListener
 {
   /**
    * Class Telephony doesn't actually expose nsITelephonyListener.

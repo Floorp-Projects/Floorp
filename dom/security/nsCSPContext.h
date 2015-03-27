@@ -99,7 +99,7 @@ class CSPViolationReportListener : public nsIStreamListener
 // redirects, per the spec. hence, we implement an nsIChannelEventSink
 // with an object so we can tell XHR to abort if a redirect happens.
 class CSPReportRedirectSink final : public nsIChannelEventSink,
-                                        public nsIInterfaceRequestor
+                                    public nsIInterfaceRequestor
 {
   public:
     NS_DECL_NSICHANNELEVENTSINK

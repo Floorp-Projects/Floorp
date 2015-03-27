@@ -23,10 +23,10 @@ class nsXULWindow;
 class nsSiteWindow;
 
 class nsContentTreeOwner final : public nsIDocShellTreeOwner,
-                                     public nsIBaseWindow,
-                                     public nsIInterfaceRequestor,
-                                     public nsIWebBrowserChrome3,
-                                     public nsIWindowProvider
+                                 public nsIBaseWindow,
+                                 public nsIInterfaceRequestor,
+                                 public nsIWebBrowserChrome3,
+                                 public nsIWindowProvider
 {
 friend class nsXULWindow;
 friend class nsSiteWindow;

@@ -26,8 +26,8 @@ class nsIDocShellLoadInfo;
 //*****************************************************************************
 
 class nsLocation final : public nsIDOMLocation
-                           , public nsWrapperCache
-                           , public mozilla::dom::URLSearchParamsObserver
+                       , public nsWrapperCache
+                       , public mozilla::dom::URLSearchParamsObserver
 {
   typedef mozilla::ErrorResult ErrorResult;
 

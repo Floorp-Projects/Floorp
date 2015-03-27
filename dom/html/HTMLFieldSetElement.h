@@ -18,8 +18,8 @@ class EventChainPreVisitor;
 namespace dom {
 
 class HTMLFieldSetElement final : public nsGenericHTMLFormElement,
-                                      public nsIDOMHTMLFieldSetElement,
-                                      public nsIConstraintValidation
+                                  public nsIDOMHTMLFieldSetElement,
+                                  public nsIConstraintValidation
 {
 public:
   using nsGenericHTMLFormElement::GetForm;

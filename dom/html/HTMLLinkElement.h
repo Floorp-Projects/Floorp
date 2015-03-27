@@ -19,9 +19,9 @@ class EventChainPreVisitor;
 namespace dom {
 
 class HTMLLinkElement final : public nsGenericHTMLElement,
-                                  public nsIDOMHTMLLinkElement,
-                                  public nsStyleLinkElement,
-                                  public Link
+                              public nsIDOMHTMLLinkElement,
+                              public nsStyleLinkElement,
+                              public Link
 {
 public:
   explicit HTMLLinkElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

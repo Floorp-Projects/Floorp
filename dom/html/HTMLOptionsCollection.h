@@ -31,8 +31,8 @@ class HTMLSelectElement;
  * select.options in DOM)
  */
 class HTMLOptionsCollection final : public nsIHTMLCollection
-                                      , public nsIDOMHTMLOptionsCollection
-                                      , public nsWrapperCache
+                                  , public nsIDOMHTMLOptionsCollection
+                                  , public nsWrapperCache
 {
   typedef HTMLOptionElementOrHTMLOptGroupElement HTMLOptionOrOptGroupElement;
 public:

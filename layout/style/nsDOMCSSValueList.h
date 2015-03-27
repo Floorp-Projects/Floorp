@@ -12,7 +12,7 @@
 #include "nsTArray.h"
 
 class nsDOMCSSValueList final : public mozilla::dom::CSSValue,
-  public nsIDOMCSSValueList
+                                public nsIDOMCSSValueList
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

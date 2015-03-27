@@ -37,12 +37,12 @@ class ASpdySession;
 //-----------------------------------------------------------------------------
 
 class nsHttpConnection final : public nsAHttpSegmentReader
-                                 , public nsAHttpSegmentWriter
-                                 , public nsIInputStreamCallback
-                                 , public nsIOutputStreamCallback
-                                 , public nsITransportEventSink
-                                 , public nsIInterfaceRequestor
-                                 , public NudgeTunnelCallback
+                             , public nsAHttpSegmentWriter
+                             , public nsIInputStreamCallback
+                             , public nsIOutputStreamCallback
+                             , public nsITransportEventSink
+                             , public nsIInterfaceRequestor
+                             , public NudgeTunnelCallback
 {
     virtual ~nsHttpConnection();
 

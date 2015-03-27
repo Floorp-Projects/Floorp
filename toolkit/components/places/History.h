@@ -37,10 +37,10 @@ class ConcurrentStatementsHolder;
 #define RECENTLY_VISITED_URI_SIZE 8
 
 class History final : public IHistory
-                        , public nsIDownloadHistory
-                        , public mozIAsyncHistory
-                        , public nsIObserver
-                        , public nsIMemoryReporter
+                    , public nsIDownloadHistory
+                    , public mozIAsyncHistory
+                    , public nsIObserver
+                    , public nsIMemoryReporter
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

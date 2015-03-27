@@ -51,7 +51,7 @@ public:
 };
 
 class PendingPACQuery final : public nsRunnable,
-                                  public mozilla::LinkedListElement<PendingPACQuery>
+                              public mozilla::LinkedListElement<PendingPACQuery>
 {
 public:
   PendingPACQuery(nsPACMan *pacMan, nsIURI *uri, uint32_t appId,
@@ -88,8 +88,8 @@ private:
  */
 
 class nsPACMan final : public nsIStreamLoaderObserver
-                         , public nsIInterfaceRequestor
-                         , public nsIChannelEventSink
+                     , public nsIInterfaceRequestor
+                     , public nsIChannelEventSink
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

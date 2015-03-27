@@ -19,8 +19,8 @@ class EventChainPreVisitor;
 namespace dom {
 
 class HTMLAnchorElement final : public nsGenericHTMLElement,
-                                    public nsIDOMHTMLAnchorElement,
-                                    public Link
+                                public nsIDOMHTMLAnchorElement,
+                                public Link
 {
 public:
   using Element::GetText;

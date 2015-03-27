@@ -33,8 +33,8 @@ class ClassInfoData;
 { 0xba, 0x18, 0x00, 0x60, 0xb0, 0xf1, 0x99, 0xa2 }}
 
 class nsScriptSecurityManager final : public nsIScriptSecurityManager,
-                                          public nsIChannelEventSink,
-                                          public nsIObserver
+                                      public nsIChannelEventSink,
+                                      public nsIObserver
 {
 public:
     static void Shutdown();

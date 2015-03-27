@@ -16,7 +16,7 @@ namespace dom {
 namespace cellbroadcast {
 
 class CellBroadcastIPCService final : public PCellBroadcastChild
-                                        , public nsICellBroadcastService
+                                    , public nsICellBroadcastService
 
 {
 public:

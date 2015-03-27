@@ -222,8 +222,8 @@ private:
 };
 
 class ScriptLoaderRunnable final : public WorkerFeature,
-                                       public nsIRunnable,
-                                       public nsIStreamLoaderObserver
+                                   public nsIRunnable,
+                                   public nsIStreamLoaderObserver
 {
   friend class ScriptExecutorRunnable;
 

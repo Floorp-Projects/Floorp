@@ -187,7 +187,7 @@ struct txStylesheetAttr
 };
 
 class txStylesheetCompiler final : private txStylesheetCompilerState,
-                                       public txACompileObserver
+                                   public txACompileObserver
 {
 public:
     friend class txStylesheetCompilerState;

@@ -12,7 +12,7 @@
 namespace mozilla { namespace net {
 
 class SpdyStream31 : public nsAHttpSegmentReader
-  , public nsAHttpSegmentWriter
+                   , public nsAHttpSegmentWriter
 {
 public:
   NS_DECL_NSAHTTPSEGMENTREADER

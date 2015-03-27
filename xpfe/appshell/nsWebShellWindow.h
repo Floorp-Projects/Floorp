@@ -24,8 +24,8 @@ class WebShellWindowTimerCallback;
 } // namespace mozilla
 
 class nsWebShellWindow final : public nsXULWindow,
-                                   public nsIWebProgressListener,
-                                   public nsIWidgetListener
+                               public nsIWebProgressListener,
+                               public nsIWidgetListener
 {
 public:
   explicit nsWebShellWindow(uint32_t aChromeFlags);

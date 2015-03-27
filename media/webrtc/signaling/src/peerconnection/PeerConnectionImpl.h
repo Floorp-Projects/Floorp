@@ -229,11 +229,11 @@ class RTCStatsQuery {
 
 class PeerConnectionImpl final : public nsISupports,
 #ifdef MOZILLA_INTERNAL_API
-                                     public mozilla::DataChannelConnection::DataConnectionListener,
-                                     public nsNSSShutDownObject,
-                                     public DOMMediaStream::PrincipalChangeObserver,
+                                 public mozilla::DataChannelConnection::DataConnectionListener,
+                                 public nsNSSShutDownObject,
+                                 public DOMMediaStream::PrincipalChangeObserver,
 #endif
-                                     public sigslot::has_slots<>
+                                 public sigslot::has_slots<>
 {
   struct Internal; // Avoid exposing c includes to bindings
 

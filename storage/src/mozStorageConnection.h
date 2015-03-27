@@ -37,7 +37,7 @@ namespace mozilla {
 namespace storage {
 
 class Connection final : public mozIStorageConnection
-                           , public nsIInterfaceRequestor
+                       , public nsIInterfaceRequestor
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

@@ -189,7 +189,7 @@ private:
 };
 
 class nsMediaList final : public nsIDOMMediaList
-                            , public nsWrapperCache
+                        , public nsWrapperCache
 {
 public:
   typedef mozilla::ErrorResult ErrorResult;

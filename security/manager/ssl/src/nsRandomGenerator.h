@@ -16,7 +16,7 @@
   "@mozilla.org/security/random-generator;1"
 
 class nsRandomGenerator final : public nsIRandomGenerator
-                                  , public nsNSSShutDownObject
+                              , public nsNSSShutDownObject
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

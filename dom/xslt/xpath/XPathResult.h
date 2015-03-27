@@ -45,8 +45,8 @@ namespace dom {
  * A class for evaluating an XPath expression string
  */
 class XPathResult final : public nsIXPathResult,
-                              public nsStubMutationObserver,
-                              public nsWrapperCache
+                          public nsStubMutationObserver,
+                          public nsWrapperCache
 {
     ~XPathResult();
 

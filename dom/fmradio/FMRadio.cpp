@@ -33,7 +33,7 @@ using mozilla::Preferences;
 BEGIN_FMRADIO_NAMESPACE
 
 class FMRadioRequest final : public FMRadioReplyRunnable
-                               , public DOMRequest
+                           , public DOMRequest
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

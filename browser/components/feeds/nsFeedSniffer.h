@@ -10,7 +10,7 @@
 #include "mozilla/Attributes.h"
 
 class nsFeedSniffer final : public nsIContentSniffer,
-                                       nsIStreamListener
+                                   nsIStreamListener
 {
 public:
   NS_DECL_ISUPPORTS

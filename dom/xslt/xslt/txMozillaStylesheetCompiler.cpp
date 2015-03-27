@@ -65,9 +65,9 @@ getSpec(nsIChannel* aChannel, nsAString& aSpec)
 }
 
 class txStylesheetSink final : public nsIXMLContentSink,
-                                   public nsIExpatSink,
-                                   public nsIStreamListener,
-                                   public nsIInterfaceRequestor
+                               public nsIExpatSink,
+                               public nsIStreamListener,
+                               public nsIInterfaceRequestor
 {
 public:
     txStylesheetSink(txStylesheetCompiler* aCompiler, nsIParser* aParser);

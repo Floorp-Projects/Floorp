@@ -18,7 +18,7 @@ namespace dom {
 class DOMRect;
 
 class PaintRequest final : public nsIDOMPaintRequest
-                             , public nsWrapperCache
+                         , public nsWrapperCache
 {
 public:
   explicit PaintRequest(nsIDOMEvent* aParent)
@@ -55,7 +55,7 @@ private:
 };
 
 class PaintRequestList final : public nsISupports,
-                                   public nsWrapperCache
+                               public nsWrapperCache
 {
 public:
   explicit PaintRequestList(nsIDOMEvent *aParent) : mParent(aParent)

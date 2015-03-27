@@ -46,7 +46,7 @@ using namespace mozilla::gfx;
 static FT_Library gPlatformFTLibrary = nullptr;
 
 class FreetypeReporter final : public nsIMemoryReporter,
-                                   public CountingAllocatorBase<FreetypeReporter>
+                               public CountingAllocatorBase<FreetypeReporter>
 {
 private:
     ~FreetypeReporter() {}

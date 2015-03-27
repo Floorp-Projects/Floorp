@@ -214,12 +214,12 @@ private:
 
 //-------------------------------------------------------------
 class nsDocumentViewer final : public nsIContentViewer,
-                                   public nsIContentViewerEdit,
-                                   public nsIContentViewerFile,
-                                   public nsIDocumentViewerPrint
+                               public nsIContentViewerEdit,
+                               public nsIContentViewerFile,
+                               public nsIDocumentViewerPrint
 
 #ifdef NS_PRINTING
-                                 , public nsIWebBrowserPrint
+                             , public nsIWebBrowserPrint
 #endif
 
 {

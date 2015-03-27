@@ -20,7 +20,7 @@ namespace dom {
 class CellBroadcastEtwsInfo;
 
 class CellBroadcastMessage final : public nsISupports
-                                     , public nsWrapperCache
+                                 , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -92,7 +92,7 @@ private:
 };
 
 class CellBroadcastEtwsInfo final : public nsISupports
-                                      , public nsWrapperCache
+                                  , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

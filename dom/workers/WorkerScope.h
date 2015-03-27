@@ -236,7 +236,7 @@ public:
 };
 
 class WorkerDebuggerGlobalScope final : public DOMEventTargetHelper,
-                                            public nsIGlobalObject
+                                        public nsIGlobalObject
 {
   WorkerPrivate* mWorkerPrivate;
 

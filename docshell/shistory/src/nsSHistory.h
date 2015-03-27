@@ -28,9 +28,9 @@ class nsISHEntry;
 class nsISHTransaction;
 
 class nsSHistory final : public PRCList,
-                             public nsISHistory,
-                             public nsISHistoryInternal,
-                             public nsIWebNavigation
+                         public nsISHistory,
+                         public nsISHistoryInternal,
+                         public nsIWebNavigation
 {
 public:
   nsSHistory();

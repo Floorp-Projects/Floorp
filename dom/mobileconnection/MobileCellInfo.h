@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class MobileCellInfo final : public nsIMobileCellInfo
-                               , public nsWrapperCache
+                           , public nsWrapperCache
 {
 public:
   NS_DECL_NSIMOBILECELLINFO

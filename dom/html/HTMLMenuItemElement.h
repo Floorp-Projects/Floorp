@@ -19,7 +19,7 @@ namespace dom {
 class Visitor;
 
 class HTMLMenuItemElement final : public nsGenericHTMLElement,
-                                      public nsIDOMHTMLMenuItemElement
+                                  public nsIDOMHTMLMenuItemElement
 {
 public:
   using mozilla::dom::Element::GetText;

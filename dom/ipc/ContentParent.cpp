@@ -241,7 +241,7 @@ using namespace mozilla::widget;
 #ifdef ENABLE_TESTS
 
 class BackgroundTester final : public nsIIPCBackgroundChildCreateCallback,
-                                   public nsIObserver
+                               public nsIObserver
 {
     static uint32_t sCallbackCount;
 

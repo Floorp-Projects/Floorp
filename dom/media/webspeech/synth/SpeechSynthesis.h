@@ -24,7 +24,7 @@ namespace dom {
 class nsSpeechTask;
 
 class SpeechSynthesis final : public nsISupports,
-                                  public nsWrapperCache
+                              public nsWrapperCache
 {
 public:
   explicit SpeechSynthesis(nsPIDOMWindow* aParent);

@@ -21,11 +21,11 @@
 class nsIURI;
 
 class nsUrlClassifierStreamUpdater final : public nsIUrlClassifierStreamUpdater,
-                                               public nsIUrlClassifierUpdateObserver,
-                                               public nsIStreamListener,
-                                               public nsIObserver,
-                                               public nsIInterfaceRequestor,
-                                               public nsITimerCallback
+                                           public nsIUrlClassifierUpdateObserver,
+                                           public nsIStreamListener,
+                                           public nsIObserver,
+                                           public nsIInterfaceRequestor,
+                                           public nsITimerCallback
 {
 public:
   nsUrlClassifierStreamUpdater();

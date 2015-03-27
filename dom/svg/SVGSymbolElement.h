@@ -20,7 +20,7 @@ namespace dom {
 typedef nsSVGElement SVGSymbolElementBase;
 
 class SVGSymbolElement final : public SVGSymbolElementBase,
-                                   public SVGTests
+                               public SVGTests
 {
 protected:
   friend nsresult (::NS_NewSVGSymbolElement(nsIContent **aResult,

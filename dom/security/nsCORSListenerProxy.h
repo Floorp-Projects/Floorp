@@ -30,9 +30,9 @@ NS_StartCORSPreflight(nsIChannel* aRequestChannel,
                       nsIChannel** aPreflightChannel);
 
 class nsCORSListenerProxy final : public nsIStreamListener,
-                                      public nsIInterfaceRequestor,
-                                      public nsIChannelEventSink,
-                                      public nsIAsyncVerifyRedirectCallback
+                                  public nsIInterfaceRequestor,
+                                  public nsIChannelEventSink,
+                                  public nsIAsyncVerifyRedirectCallback
 {
 public:
   nsCORSListenerProxy(nsIStreamListener* aOuter,

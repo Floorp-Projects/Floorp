@@ -65,7 +65,7 @@ class PeriodicWave;
 class Promise;
 
 class AudioContext final : public DOMEventTargetHelper,
-                               public nsIMemoryReporter
+                           public nsIMemoryReporter
 {
   AudioContext(nsPIDOMWindow* aParentWindow,
                bool aIsOffline,

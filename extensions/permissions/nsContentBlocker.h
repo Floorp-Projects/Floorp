@@ -16,8 +16,8 @@ class nsIPrefBranch;
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsContentBlocker final : public nsIContentPolicy,
-                                   public nsIObserver,
-                                   public nsSupportsWeakReference
+                               public nsIObserver,
+                               public nsSupportsWeakReference
 {
 public:
 

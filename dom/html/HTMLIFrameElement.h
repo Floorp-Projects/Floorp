@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class HTMLIFrameElement final : public nsGenericHTMLFrameElement
-                                  , public nsIDOMHTMLIFrameElement
+                              , public nsIDOMHTMLIFrameElement
 {
 public:
   explicit HTMLIFrameElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,

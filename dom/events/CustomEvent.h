@@ -14,7 +14,7 @@ namespace dom {
 struct CustomEventInit;
 
 class CustomEvent final : public Event,
-                              public nsIDOMCustomEvent
+                          public nsIDOMCustomEvent
 {
 private:
   virtual ~CustomEvent();
