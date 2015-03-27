@@ -61,8 +61,8 @@ const RW_OWNER = parseInt("0600", 8);
 const NUMBER_OF_THREADS_TO_LAUNCH = 30;
 let gNumberOfThreadsLaunched = 0;
 
-const SEC_IN_ONE_DAY  = 24 * 60 * 60;
-const MS_IN_ONE_DAY   = SEC_IN_ONE_DAY * 1000;
+const MS_IN_ONE_HOUR  = 60 * 60 * 1000;
+const MS_IN_ONE_DAY   = 24 * MS_IN_ONE_HOUR;
 
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
@@ -139,7 +139,7 @@ function fakeGenerateUUID(sessionFunc, subsessionFunc) {
 
 function fakeIdleNotification(topic) {
   let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
-  session.TelemetryScheduler.observe(null, topic, null);
+  return session.TelemetryScheduler.observe(null, topic, null);
 }
 
 function registerPingHandler(handler) {
@@ -1024,8 +1024,10 @@ add_task(function* test_dailyDuplication() {
   fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
   yield TelemetrySession.setup();
 
-  // Make sure the daily ping gets triggered just before midnight.
-  let firstDailyDue = new Date(2030, 1, 1, 23, 45, 0);
+  // Make sure the daily ping gets triggered at midnight.
+  // We need to make sure that we trigger this after the period where we wait for
+  // the user to become idle.
+  let firstDailyDue = new Date(2030, 1, 2, 0, 0, 0);
   fakeNow(firstDailyDue);
 
   // Run a scheduler tick: it should trigger the daily ping.
@@ -1047,7 +1049,6 @@ add_task(function* test_dailyDuplication() {
 
   // Set the current time to a bit after midnight.
   let secondDailyDue = new Date(firstDailyDue);
-  secondDailyDue.setDate(firstDailyDue.getDate() + 1);
   secondDailyDue.setHours(0);
   secondDailyDue.setMinutes(15);
   fakeNow(secondDailyDue);
@@ -1629,11 +1630,15 @@ add_task(function* test_schedulerUserIdle() {
   const SCHEDULER_TICK_INTERVAL_MS = 5 * 60 * 1000;
   const SCHEDULER_TICK_IDLE_INTERVAL_MS = 60 * 60 * 1000;
 
+  let now = new Date(2010, 1, 1, 11, 0, 0);
+  fakeNow(now);
+
   let schedulerTimeout = 0;
   fakeSchedulerTimer((callback, timeout) => {
     schedulerTimeout = timeout;
   }, () => {});
   yield TelemetrySession.reset();
+  gRequestIterator = Iterator(new Request());
 
   // When not idle, the scheduler should have a 5 minutes tick interval.
   Assert.equal(schedulerTimeout, SCHEDULER_TICK_INTERVAL_MS);
@@ -1649,6 +1654,65 @@ add_task(function* test_schedulerUserIdle() {
 
   // When user is back active, the scheduler tick should be 5 minutes again.
   Assert.equal(schedulerTimeout, SCHEDULER_TICK_INTERVAL_MS);
+
+  // We should not miss midnight when going to idle.
+  now.setHours(23);
+  now.setMinutes(50);
+  fakeIdleNotification("idle");
+  Assert.equal(schedulerTimeout, 10 * 60 * 1000);
+
+  yield TelemetrySession.shutdown();
+});
+
+add_task(function* test_sendDailyOnIdle() {
+  if (gIsAndroid || gIsGonk) {
+    // We don't have the aborted session or the daily ping here.
+    return;
+  }
+
+  let now = new Date(2040, 1, 1, 11, 0, 0);
+  fakeNow(now);
+
+  let schedulerTickCallback = 0;
+  fakeSchedulerTimer((callback, timeout) => {
+    schedulerTickCallback = callback;
+  }, () => {});
+  yield TelemetrySession.reset();
+
+  // Make sure we are not sending a daily before midnight when active.
+  now = new Date(2040, 1, 1, 23, 55, 0);
+  fakeNow(now);
+  registerPingHandler((req, res) => {
+    Assert.ok(false, "No daily ping should be received yet when the user is active.");
+  });
+  yield fakeIdleNotification("active");
+
+  // The Request constructor restores the previous ping handler.
+  gRequestIterator = Iterator(new Request());
+
+  // We should receive a daily ping after midnight.
+  now = new Date(2040, 1, 2, 0, 05, 0);
+  fakeNow(now);
+  yield schedulerTickCallback();
+
+  let request = yield gRequestIterator.next();
+  Assert.ok(!!request);
+  let ping = decodeRequestPayload(request);
+
+  Assert.equal(ping.type, PING_TYPE_MAIN);
+  Assert.equal(ping.payload.info.reason, REASON_DAILY);
+
+  // We should also trigger a ping when going idle shortly before next midnight.
+  now = new Date(2040, 1, 2, 23, 55, 0);
+  fakeNow(now);
+  yield fakeIdleNotification("idle");
+
+  request = yield gRequestIterator.next();
+  Assert.ok(!!request);
+  ping = decodeRequestPayload(request);
+
+  Assert.equal(ping.type, PING_TYPE_MAIN);
+  Assert.equal(ping.payload.info.reason, REASON_DAILY);
 
   yield TelemetrySession.shutdown();
 });
