@@ -160,7 +160,7 @@ AnimationPlayer::SilentlySetPlaybackRate(double aPlaybackRate)
 AnimationPlayState
 AnimationPlayer::PlayState() const
 {
-  if (mIsPending) {
+  if (mPendingState != PendingState::NotPending) {
     return AnimationPlayState::Pending;
   }
 
@@ -267,7 +267,7 @@ AnimationPlayer::Tick()
   // it's possible that mPendingReadyTime is set to a time in the future.
   // In that case, we should wait until the next refresh driver tick before
   // resuming.
-  if (mIsPending &&
+  if (mPendingState != PendingState::NotPending &&
       !mPendingReadyTime.IsNull() &&
       mPendingReadyTime.Value() <= mTimeline->GetCurrentTime().Value()) {
     ResumeAt(mPendingReadyTime.Value());
@@ -333,7 +333,7 @@ AnimationPlayer::GetCurrentOrPendingStartTime() const
 void
 AnimationPlayer::Cancel()
 {
-  if (mIsPending) {
+  if (mPendingState != PendingState::NotPending) {
     CancelPendingPlay();
     if (mReady) {
       mReady->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
@@ -444,7 +444,7 @@ AnimationPlayer::DoPlay()
   // Clear the start time until we resolve a new one
   mStartTime.SetNull();
 
-  mIsPending = true;
+  mPendingState = PendingState::PlayPending;
 
   nsIDocument* doc = GetRenderedDocument();
   if (!doc) {
@@ -463,7 +463,7 @@ AnimationPlayer::DoPlay()
 void
 AnimationPlayer::DoPause()
 {
-  if (mIsPending) {
+  if (mPendingState == PendingState::PlayPending) {
     CancelPendingPlay();
     // Resolve the ready promise since we currently only use it for
     // players that are waiting to play. Later (in bug 1109390), we will
@@ -490,10 +490,11 @@ AnimationPlayer::ResumeAt(const TimeDuration& aResumeTime)
   // This method is only expected to be called for a player that is
   // waiting to play. We can easily adapt it to handle other states
   // but it's currently not necessary.
-  MOZ_ASSERT(PlayState() == AnimationPlayState::Pending,
-             "Expected to resume a pending player");
+  MOZ_ASSERT(mPendingState == PendingState::PlayPending,
+             "Expected to resume a play-pending player");
   MOZ_ASSERT(!mHoldTime.IsNull(),
-             "A player in the pending state should have a resolved hold time");
+             "A player in the play-pending state should have a resolved"
+             " hold time");
 
   if (mPlaybackRate != 0) {
     mStartTime.SetValue(aResumeTime - (mHoldTime.Value() / mPlaybackRate));
@@ -501,7 +502,7 @@ AnimationPlayer::ResumeAt(const TimeDuration& aResumeTime)
   } else {
     mStartTime.SetValue(aResumeTime);
   }
-  mIsPending = false;
+  mPendingState = PendingState::NotPending;
 
   UpdateSourceContent();
 
@@ -540,7 +541,7 @@ AnimationPlayer::PostUpdate()
 void
 AnimationPlayer::CancelPendingPlay()
 {
-  if (!mIsPending) {
+  if (mPendingState == PendingState::NotPending) {
     return;
   }
 
@@ -552,7 +553,7 @@ AnimationPlayer::CancelPendingPlay()
     }
   }
 
-  mIsPending = false;
+  mPendingState = PendingState::NotPending;
   mPendingReadyTime.SetNull();
 }
 
@@ -573,11 +574,11 @@ AnimationPlayer::IsPossiblyOrphanedPendingPlayer() const
   //   when we have been painted.
   // * When we started playing we couldn't find a PendingPlayerTracker to
   //   register with (perhaps the source content had no document) so we simply
-  //   set mIsPending in DoPlay and relied on this method to catch us on the
+  //   set mPendingState in DoPlay and relied on this method to catch us on the
   //   next tick.
 
   // If we're not pending we're ok.
-  if (!mIsPending) {
+  if (mPendingState == PendingState::NotPending) {
     return false;
   }
 
