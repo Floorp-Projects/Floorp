@@ -123,7 +123,12 @@ AnimationPlayer::SetCurrentTime(const TimeDuration& aSeekTime)
 {
   SilentlySetCurrentTime(aSeekTime);
 
-  // Once pending pause tasks are supported, cancel that here.
+  if (mPendingState == PendingState::PausePending) {
+    CancelPendingTasks();
+    if (mReady) {
+      mReady->MaybeResolve(this);
+    }
+  }
 
   UpdateSourceContent();
   PostUpdate();
