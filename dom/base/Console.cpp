@@ -934,13 +934,13 @@ public:
     }
   }
 
-  virtual bool Equals(const TimelineMarker* aOther) override
+  virtual bool Equals(const TimelineMarker& aOther) override
   {
     if (!TimelineMarker::Equals(aOther)) {
       return false;
     }
     // Console markers must have matching causes as well.
-    return GetCause() == aOther->GetCause();
+    return GetCause() == aOther.GetCause();
   }
 
   virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker) override
