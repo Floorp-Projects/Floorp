@@ -100,5 +100,18 @@ config = {
                 "--total-chunks=3",
             ],
         },
+        "cppunittest": {
+            "run_filename": "remotecppunittests.py",
+            "testsdir": "cppunittests",
+            "options": [
+                "--symbols-path=%(symbols_path)s",
+                "--xre-path=%(xre_path)s",
+                "--dm_trans=adb",
+                "--localBinDir=../bin",
+                "--apk=%(installer_path)s",
+                ".",
+            ],
+        },
+
     }, # end suite_definitions
 }
