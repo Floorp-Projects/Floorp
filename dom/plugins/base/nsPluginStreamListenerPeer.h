@@ -131,7 +131,9 @@ public:
   // Called by nsNPAPIPluginStreamListener
   void OnStreamTypeSet(const int32_t aStreamType);
 
-  static const int32_t STREAM_TYPE_UNKNOWN;
+  enum {
+    STREAM_TYPE_UNKNOWN = UINT16_MAX
+  };
 
 private:
   nsresult SetUpStreamListener(nsIRequest* request, nsIURI* aURL);

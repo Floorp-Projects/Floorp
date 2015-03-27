@@ -24,7 +24,7 @@ from mozpack.copier import (
 )
 from mozpack.errors import errors
 from mozpack.unify import UnifiedBuildFinder
-import mozpack.path
+import mozpack.path as mozpath
 import buildconfig
 from argparse import ArgumentParser
 import os
@@ -220,7 +220,7 @@ class NoPkgFilesRemover(object):
         self._formatter.add_base(base, *args)
 
     def add(self, path, content):
-        if not any(mozpack.path.match(path, spec) for spec in self._files):
+        if not any(mozpath.match(path, spec) for spec in self._files):
             self._formatter.add(path, content)
         else:
             self._error(self._msg % path)
@@ -305,7 +305,7 @@ def main():
     if args.unify:
         def is_native(path):
             path = os.path.abspath(path)
-            return platform.machine() in mozpack.path.split(path)
+            return platform.machine() in mozpath.split(path)
 
         # Invert args.unify and args.source if args.unify points to the
         # native architecture.
@@ -350,13 +350,13 @@ def main():
             removals_in.name = args.removals
             removals = RemovedFiles(copier)
             preprocess(removals_in, removals, defines)
-            copier.add(mozpack.path.join(respath, 'removed-files'), removals)
+            copier.add(mozpath.join(respath, 'removed-files'), removals)
 
     # shlibsign libraries
     if launcher.can_launch():
         if not mozinfo.isMac:
             for lib in SIGN_LIBS:
-                libbase = mozpack.path.join(respath, '%s%s') \
+                libbase = mozpath.join(respath, '%s%s') \
                     % (buildconfig.substs['DLL_PREFIX'], lib)
                 libname = '%s%s' % (libbase, buildconfig.substs['DLL_SUFFIX'])
                 if copier.contains(libname):
@@ -379,13 +379,13 @@ def main():
     if isinstance(formatter, OmniJarFormatter) and launcher.can_launch() \
       and buildconfig.substs['MOZ_DISABLE_STARTUPCACHE'] != '1':
         if buildconfig.substs.get('LIBXUL_SDK'):
-            gre_path = mozpack.path.join(buildconfig.substs['LIBXUL_DIST'],
+            gre_path = mozpath.join(buildconfig.substs['LIBXUL_DIST'],
                                          'bin')
         else:
             gre_path = None
         def get_bases():
             for b in sink.packager.get_bases(addons=False):
-                for p in (mozpack.path.join('bin', b), b):
+                for p in (mozpath.join('bin', b), b):
                     if os.path.exists(os.path.join(args.source, p)):
                         yield p
                         break

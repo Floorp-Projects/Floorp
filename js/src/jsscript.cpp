@@ -484,7 +484,7 @@ XDRLazyFreeVariables(XDRState<mode> *xdr, MutableHandle<LazyScript *> lazy)
 template<XDRMode mode>
 static bool
 XDRRelazificationInfo(XDRState<mode> *xdr, HandleFunction fun, HandleScript script,
-                      MutableHandle<LazyScript *> lazy)
+                      HandleObject enclosingScope, MutableHandle<LazyScript *> lazy)
 {
     MOZ_ASSERT_IF(mode == XDR_ENCODE, script->isRelazifiable() && script->maybeLazyScript());
     MOZ_ASSERT_IF(mode == XDR_ENCODE, !lazy->numInnerFunctions());
@@ -516,6 +516,9 @@ XDRRelazificationInfo(XDRState<mode> *xdr, HandleFunction fun, HandleScript scri
             // of the script, as we are trying to match the fact this function
             // has already been parsed and that it would need to be re-lazified.
             lazy->initRuntimeFields(packedFields);
+
+            MOZ_ASSERT(!lazy->sourceObject());
+            lazy->setParent(enclosingScope, &script->scriptSourceUnwrap());
         }
     }
 
@@ -1081,7 +1084,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         if (mode == XDR_ENCODE)
             lazy = script->maybeLazyScript();
 
-        if (!XDRRelazificationInfo(xdr, fun, script, &lazy))
+        if (!XDRRelazificationInfo(xdr, fun, script, enclosingScope, &lazy))
             return false;
 
         if (mode == XDR_DECODE)
@@ -3183,8 +3186,6 @@ bool
 js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction clone,
                         PollutedGlobalScopeOption polluted, NewObjectKind newKind)
 {
-    MOZ_ASSERT(clone->isInterpreted());
-
     RootedScript script(cx, clone->nonLazyScript());
     MOZ_ASSERT(script);
     MOZ_ASSERT(script->compartment() == original->compartment());
@@ -3201,7 +3202,7 @@ js::CloneFunctionScript(JSContext *cx, HandleFunction original, HandleFunction c
             return false;
     }
 
-    clone->mutableScript().init(nullptr);
+    clone->initScript(nullptr);
 
     JSScript *cscript = CloneScript(cx, scope, clone, script, polluted, newKind);
     if (!cscript)
@@ -3881,7 +3882,7 @@ LazyScript::hasUncompiledEnclosingScript() const
         return false;
 
     JSFunction &fun = enclosingScope()->as<JSFunction>();
-    return fun.isInterpreted() && (!fun.mutableScript() || !fun.nonLazyScript()->code());
+    return fun.isInterpreted() && (!fun.hasScript() || !fun.nonLazyScript()->code());
 }
 
 uint32_t

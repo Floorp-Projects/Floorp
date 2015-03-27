@@ -1514,10 +1514,16 @@
     "description": "HTTP Disk Cache Hit, Reval, Failed-Reval, Miss"
   },
   "HTTP_CACHE_MISS_HALFLIFE_EXPERIMENT": {
-    "expires_in_version": "never",
+    "expires_in_version": "40",
     "kind": "enumerated",
     "n_values": 4,
     "description": "HTTP Cache v2 Miss by half-life value (6h, 1d, 7d, 50d)"
+  },
+  "HTTP_CACHE_MISS_HALFLIFE_EXPERIMENT_2": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 4,
+    "description": "HTTP Cache v2 Miss by half-life value (5 min, 15 min, 1 hour, 6 hours)"
   },
   "HTTP_CACHE_ENTRY_RELOAD_TIME": {
     "expires_in_version": "never",
@@ -7691,5 +7697,20 @@
     "expires_in_version": "never",
     "kind": "count",
     "description": "Count plugin hang notices in e10s"
+  },
+  "SERVICE_WORKER_SPAWN_ATTEMPTS": {
+    "expires_in_version": "50",
+    "kind": "count",
+    "description": "Count attempts to spawn a ServiceWorker for a domain"
+  },
+  "SERVICE_WORKER_WAS_SPAWNED": {
+    "expires_in_version": "50",
+    "kind": "count",
+    "description": "Count ServiceWorkers that really did get a thread created for them"
+  },
+  "SERVICE_WORKER_SPAWN_GETS_QUEUED": {
+    "expires_in_version": "50",
+    "kind": "count",
+    "description": "Tracking whether a ServiceWorker spawn gets queued due to hitting max workers per domain limit"
   }
 }

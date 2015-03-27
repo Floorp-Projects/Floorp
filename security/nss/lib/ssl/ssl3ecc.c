@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * SSL3 Protocol
  *
@@ -1184,8 +1185,7 @@ ssl3_HandleSupportedPointFormatsXtn(sslSocket *ss, PRUint16 ex_type,
 
     if (data->len < 2 || data->len > 255 || !data->data ||
         data->len != (unsigned int)data->data[0] + 1) {
-        /* malformed */
-        goto loser;
+        return ssl3_DecodeError(ss);
     }
     for (i = data->len; --i > 0; ) {
         if (data->data[i] == 0) {
@@ -1196,10 +1196,10 @@ ssl3_HandleSupportedPointFormatsXtn(sslSocket *ss, PRUint16 ex_type,
             return rv;
         }
     }
-loser:
+
     /* evil client doesn't support uncompressed */
     ssl3_DisableECCSuites(ss, ecSuites);
-    return SECFailure;
+    return SECSuccess;
 }
 
 
@@ -1220,7 +1220,7 @@ ECName ssl3_GetSvrCertCurveName(sslSocket *ss)
     return ec_curve;
 }
 
-/* Ensure that the curve in our server cert is one of the ones suppored
+/* Ensure that the curve in our server cert is one of the ones supported
  * by the remote client, and disable all ECC cipher suites if not.
  */
 SECStatus
@@ -1231,26 +1231,34 @@ ssl3_HandleSupportedCurvesXtn(sslSocket *ss, PRUint16 ex_type, SECItem *data)
     PRUint32 mutualCurves = 0;
     PRUint16 svrCertCurveName;
 
-    if (!data->data || data->len < 4 || data->len > 65535)
-        goto loser;
+    if (!data->data || data->len < 4) {
+        (void)ssl3_DecodeError(ss);
+        return SECFailure;
+    }
+
     /* get the length of elliptic_curve_list */
     list_len = ssl3_ConsumeHandshakeNumber(ss, 2, &data->data, &data->len);
     if (list_len < 0 || data->len != list_len || (data->len % 2) != 0) {
-        /* malformed */
-        goto loser;
+        (void)ssl3_DecodeError(ss);
+        return SECFailure;
     }
     /* build bit vector of peer's supported curve names */
     while (data->len) {
-        PRInt32  curve_name =
-                 ssl3_ConsumeHandshakeNumber(ss, 2, &data->data, &data->len);
+        PRInt32 curve_name =
+                ssl3_ConsumeHandshakeNumber(ss, 2, &data->data, &data->len);
+        if (curve_name < 0) {
+            return SECFailure; /* fatal alert already sent */
+        }
         if (curve_name > ec_noName && curve_name < ec_pastLastName) {
             peerCurves |= (1U << curve_name);
         }
     }
     /* What curves do we support in common? */
     mutualCurves = ss->ssl3.hs.negotiatedECCurves &= peerCurves;
-    if (!mutualCurves) { /* no mutually supported EC Curves */
-        goto loser;
+    if (!mutualCurves) {
+        /* no mutually supported EC Curves, disable ECC */
+        ssl3_DisableECCSuites(ss, ecSuites);
+        return SECSuccess;
     }
 
     /* if our ECC cert doesn't use one of these supported curves,
@@ -1266,12 +1274,7 @@ ssl3_HandleSupportedCurvesXtn(sslSocket *ss, PRUint16 ex_type, SECItem *data)
      */
     ssl3_DisableECCSuites(ss, ecdh_ecdsa_suites);
     ssl3_DisableECCSuites(ss, ecdhe_ecdsa_suites);
-    return SECFailure;
-
-loser:
-    /* no common curve supported */
-    ssl3_DisableECCSuites(ss, ecSuites);
-    return SECFailure;
+    return SECSuccess;
 }
 
 #endif /* NSS_DISABLE_ECC */

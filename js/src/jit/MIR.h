@@ -1491,8 +1491,8 @@ class MSimdConstant
   protected:
     MSimdConstant(const SimdConstant &v, MIRType type) : value_(v) {
         MOZ_ASSERT(IsSimdType(type));
-        setResultType(type);
         setMovable();
+        setResultType(type);
     }
 
   public:
@@ -1527,6 +1527,7 @@ class MSimdConvert
       : MUnaryInstruction(obj)
     {
         MOZ_ASSERT(IsSimdType(toType));
+        setMovable();
         setResultType(toType);
         specialization_ = fromType; // expects fromType as input
     }
@@ -1564,6 +1565,7 @@ class MSimdReinterpretCast
       : MUnaryInstruction(obj)
     {
         MOZ_ASSERT(IsSimdType(toType));
+        setMovable();
         setResultType(toType);
         specialization_ = fromType; // expects fromType as input
     }
@@ -1608,6 +1610,7 @@ class MSimdExtractElement
         MOZ_ASSERT(!IsSimdType(scalarType));
         MOZ_ASSERT(SimdTypeToScalarType(vecType) == scalarType);
 
+        setMovable();
         specialization_ = vecType;
         setResultType(scalarType);
     }
@@ -7053,6 +7056,7 @@ class MLexicalCheck
         setResultType(MIRType_Value);
         setResultTypeSet(input->resultTypeSet());
         setMovable();
+        setGuard();
     }
 
   public:
@@ -12635,6 +12639,10 @@ class MAsmJSLoadHeap
 
     bool congruentTo(const MDefinition *ins) const override;
     AliasSet getAliasSet() const override {
+        // When a barrier is needed make the instruction effectful by
+        // giving it a "store" effect.
+        if (barrierBefore_|barrierAfter_)
+            return AliasSet::Store(AliasSet::AsmJSHeap);
         return AliasSet::Load(AliasSet::AsmJSHeap);
     }
     bool mightAlias(const MDefinition *def) const override;

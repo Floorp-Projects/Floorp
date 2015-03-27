@@ -309,6 +309,7 @@ TextureImageTextureSourceOGL::CopyTo(const nsIntRect& aSourceRect,
 void
 TextureImageTextureSourceOGL::SetCompositor(Compositor* aCompositor)
 {
+  MOZ_ASSERT(aCompositor);
   CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
 
   if (!glCompositor || (mCompositor != glCompositor)) {
@@ -414,6 +415,7 @@ GLTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
 void
 GLTextureSource::SetCompositor(Compositor* aCompositor)
 {
+  MOZ_ASSERT(aCompositor);
   mCompositor = static_cast<CompositorOGL*>(aCompositor);
 }
 
@@ -472,6 +474,7 @@ SurfaceTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
 void
 SurfaceTextureSource::SetCompositor(Compositor* aCompositor)
 {
+  MOZ_ASSERT(aCompositor);
   if (mCompositor != aCompositor) {
     DeallocateDeviceData();
   }
@@ -553,6 +556,7 @@ SurfaceTextureHost::Unlock()
 void
 SurfaceTextureHost::SetCompositor(Compositor* aCompositor)
 {
+  MOZ_ASSERT(aCompositor);
   CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
   mCompositor = glCompositor;
   if (mTextureSource) {
@@ -613,6 +617,7 @@ EGLImageTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
 void
 EGLImageTextureSource::SetCompositor(Compositor* aCompositor)
 {
+  MOZ_ASSERT(aCompositor);
   mCompositor = static_cast<CompositorOGL*>(aCompositor);
 }
 
@@ -694,6 +699,7 @@ EGLImageTextureHost::Unlock()
 void
 EGLImageTextureHost::SetCompositor(Compositor* aCompositor)
 {
+  MOZ_ASSERT(aCompositor);
   CompositorOGL* glCompositor = static_cast<CompositorOGL*>(aCompositor);
   mCompositor = glCompositor;
   if (mTextureSource) {

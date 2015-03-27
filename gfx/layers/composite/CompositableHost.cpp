@@ -119,8 +119,10 @@ CompositableHost::UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
                                             TextureHost* aTextureOnWhite)
 {
   MOZ_ASSERT(aTextureOnBlack && aTextureOnWhite);
-  aTextureOnBlack->SetCompositor(GetCompositor());
-  aTextureOnWhite->SetCompositor(GetCompositor());
+  if (GetCompositor()) {
+    aTextureOnBlack->SetCompositor(GetCompositor());
+    aTextureOnWhite->SetCompositor(GetCompositor());
+  }
 }
 
 void
@@ -130,6 +132,7 @@ CompositableHost::RemoveTextureHost(TextureHost* aTexture)
 void
 CompositableHost::SetCompositor(Compositor* aCompositor)
 {
+  MOZ_ASSERT(aCompositor);
   mCompositor = aCompositor;
 }
 

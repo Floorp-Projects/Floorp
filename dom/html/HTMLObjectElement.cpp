@@ -23,6 +23,7 @@
 #ifdef XP_MACOSX
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/dom/Event.h"
+#include "nsFocusManager.h"
 #endif
 
 namespace mozilla {
@@ -151,6 +152,22 @@ private:
 void
 HTMLObjectElement::OnFocusBlurPlugin(Element* aElement, bool aFocus)
 {
+  // In general we don't want to call nsIWidget::SetPluginFocused() for any
+  // Element that doesn't have a plugin running.  But if SetPluginFocused(true)
+  // was just called for aElement while it had a plugin running, we want to
+  // make sure nsIWidget::SetPluginFocused(false) gets called for it now, even
+  // if aFocus is true.
+  if (aFocus) {
+    nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(aElement);
+    bool hasRunningPlugin = false;
+    if (olc) {
+      olc->GetHasRunningPlugin(&hasRunningPlugin);
+    }
+    if (!hasRunningPlugin) {
+      aFocus = false;
+    }
+  }
+
   if (aFocus || aElement == sLastFocused) {
     if (!aFocus) {
       sLastFocused = nullptr;
@@ -160,6 +177,29 @@ HTMLObjectElement::OnFocusBlurPlugin(Element* aElement, bool aFocus)
       nsContentUtils::AddScriptRunner(
         new PluginFocusSetter(widget, aFocus ? aElement : nullptr));
     }
+  }
+}
+
+void
+HTMLObjectElement::HandlePluginCrashed(Element* aElement)
+{
+  OnFocusBlurPlugin(aElement, false);
+}
+
+void
+HTMLObjectElement::HandlePluginInstantiated(Element* aElement)
+{
+  // If aElement is already focused when a plugin is instantiated, we need
+  // to initiate a call to nsIWidget::SetPluginFocused(true).  Otherwise
+  // keyboard input won't work in a click-to-play plugin until aElement
+  // loses focus and regains it.
+  nsIContent* focusedContent = nullptr;
+  nsFocusManager *fm = nsFocusManager::GetFocusManager();
+  if (fm) {
+    focusedContent = fm->GetFocusedContent();
+  }
+  if (SameCOMIdentity(focusedContent, aElement)) {
+    OnFocusBlurPlugin(aElement, true);
   }
 }
 

@@ -1040,6 +1040,11 @@ IonBuilder::startTrackingOptimizations()
             // OOMs are handled as if optimization tracking were turned off.
             if (!trackedOptimizationSites_.append(site))
                 site = nullptr;
+        } else {
+            // The same bytecode may be visited multiple times (see
+            // restartLoop). Only the last time matters, so clear any previous
+            // tracked optimizations.
+            site->optimizations()->clear();
         }
 
         if (site)

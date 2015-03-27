@@ -106,6 +106,7 @@ protected:
 class AnonymousCounterStyle final : public CounterStyle
 {
 public:
+  explicit AnonymousCounterStyle(const nsSubstring& aContent);
   explicit AnonymousCounterStyle(const nsCSSValue::Array* aValue);
 
   virtual void GetPrefix(nsAString& aResult) override;
@@ -127,6 +128,7 @@ public:
 
   virtual AnonymousCounterStyle* AsAnonymous() override { return this; }
 
+  bool IsSingleString() const { return mSingleString; }
   uint8_t GetSystem() const { return mSystem; }
   const nsTArray<nsString>& GetSymbols() const { return mSymbols; }
 
@@ -135,6 +137,7 @@ public:
 private:
   ~AnonymousCounterStyle() {}
 
+  bool mSingleString;
   uint8_t mSystem;
   nsTArray<nsString> mSymbols;
 };
@@ -157,7 +160,6 @@ public:
   }
 
   CounterStyle* BuildCounterStyle(const nsSubstring& aName);
-  CounterStyle* BuildCounterStyle(const nsCSSValue::Array* aParams);
 
   static CounterStyle* GetBuiltinStyle(int32_t aStyle);
   static CounterStyle* GetNoneStyle()

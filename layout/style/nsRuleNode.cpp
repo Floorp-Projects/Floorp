@@ -7191,6 +7191,13 @@ nsRuleNode::ComputeListData(void* aStartStruct,
       list->SetListStyleType(typeIdent, mPresContext);
       break;
     }
+    case eCSSUnit_String: {
+      nsString str;
+      typeValue->GetStringValue(str);
+      list->SetListStyleType(NS_LITERAL_STRING(""),
+                             new AnonymousCounterStyle(str));
+      break;
+    }
     case eCSSUnit_Enumerated: {
       // For compatibility with html attribute map.
       // This branch should never be called for value from CSS.
@@ -7218,9 +7225,9 @@ nsRuleNode::ComputeListData(void* aStartStruct,
       break;
     }
     case eCSSUnit_Symbols:
-      list->SetListStyleType(NS_LITERAL_STRING(""),
-                             mPresContext->CounterStyleManager()->
-                               BuildCounterStyle(typeValue->GetArrayValue()));
+      list->SetListStyleType(
+        NS_LITERAL_STRING(""),
+        new AnonymousCounterStyle(typeValue->GetArrayValue()));
       break;
     case eCSSUnit_Null:
       break;
