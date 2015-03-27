@@ -66,6 +66,23 @@ nsVolume::nsVolume(const Volume* aVolume)
 {
 }
 
+void nsVolume::Dump(const char* aLabel) const
+{
+  LOG("%s: Volume: %s is %s and %s @ %s gen %d locked %d",
+      aLabel,
+      NameStr().get(),
+      StateStr(),
+      IsMediaPresent() ? "inserted" : "missing",
+      MountPointStr().get(),
+      MountGeneration(),
+      (int)IsMountLocked());
+  LOG("%s:   IsSharing %s IsFormating %s IsUnmounting %s",
+      aLabel,
+      (IsSharing() ? "y" : "n"),
+      (IsFormatting() ? "y" : "n"),
+      (IsUnmounting() ? "y" : "n"));
+}
+
 bool nsVolume::Equals(nsIVolume* aVolume)
 {
   nsString volName;
