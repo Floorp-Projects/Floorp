@@ -246,7 +246,6 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
   }
 
   mFrontBuffer = texture;
-  GetForwarder()->UpdatedTexture(this, texture, nullptr);
   GetForwarder()->UseTexture(this, texture);
 
   UpdatePictureRect(image->GetPictureRect());
