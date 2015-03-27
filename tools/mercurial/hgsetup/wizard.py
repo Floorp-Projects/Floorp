@@ -390,7 +390,7 @@ class MercurialSetupWizard(object):
              '--config', 'extensions.testmodule=%s' % path,
              '--config', 'ui.traceback=true'],
             stderr=subprocess.STDOUT)
-        return "Traceback" not in result
+        return b"Traceback" not in result
 
     def prompt_external_extension(self, c, name, prompt_text, path=None):
         # Ask the user if the specified extension should be enabled. Defaults

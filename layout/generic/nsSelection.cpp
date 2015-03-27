@@ -1855,29 +1855,21 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
       theNode = childNode;
     }
 
-#ifdef DONT_DO_THIS_YET
-    // XXX: We can't use this code yet because the hinting
-    //      can cause us to attach to the wrong line frame.
-
     // Now that we have the child node, check if it too
     // can contain children. If so, call this method again!
-
-    if (theNode->IsElement())
+    if (theNode->IsElement() &&
+        theNode->GetChildCount() &&
+        !theNode->HasIndependentSelection())
     {
       int32_t newOffset = 0;
 
-      if (aOffset > childIndex)
-      {
+      if (aOffset > childIndex) {
         numChildren = theNode->GetChildCount();
-
         newOffset = numChildren;
       }
 
       return GetFrameForNodeOffset(theNode, newOffset, aHint, aReturnOffset);
-    }
-    else
-#endif // DONT_DO_THIS_YET
-    {
+    } else {
       // Check to see if theNode is a text node. If it is, translate
       // aOffset into an offset into the text node.
 
@@ -1899,13 +1891,25 @@ nsFrameSelection::GetFrameForNodeOffset(nsIContent*        aNode,
           }
           else
             *aReturnOffset = 0;
-        }
-        else
-        {
-          // If we're at a collapsed whitespace content node (which
-          // does not have a primary frame), just use the original node
-          // to get the frame on which we should put the caret.
-          theNode = aNode;
+        } else {
+          int32_t numChildren = aNode->GetChildCount();
+          int32_t newChildIndex =
+            aHint == CARET_ASSOCIATE_BEFORE ? childIndex - 1 : childIndex + 1;
+
+          if (newChildIndex >= 0 && newChildIndex < numChildren) {
+            nsCOMPtr<nsIContent> newChildNode = aNode->GetChildAt(newChildIndex);
+            if (!newChildNode)
+              return nullptr;
+
+            theNode = newChildNode;
+            int32_t newOffset =
+              aHint == CARET_ASSOCIATE_BEFORE ? theNode->GetChildCount() : 0;
+            return GetFrameForNodeOffset(theNode, newOffset, aHint, aReturnOffset);
+          } else {
+            // newChildIndex is illegal which means we're at first or last
+            // child. Just use original node to get the frame.
+            theNode = aNode;
+          }
         }
       }
     }

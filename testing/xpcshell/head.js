@@ -401,7 +401,7 @@ function _setupDebuggerServer(breakpointFiles, callback) {
           let threadActor = subject.wrappedJSObject;
           for (let file of breakpointFiles) {
             let sourceActor = threadActor.sources.source({originalUrl: file});
-            sourceActor._setBreakpoint(new OriginalLocation(sourceActor, 1));
+            sourceActor._getOrCreateBreakpointActor(new OriginalLocation(sourceActor, 1));
           }
         } catch (ex) {
           do_print("Failed to initialize breakpoints: " + ex + "\n" + ex.stack);

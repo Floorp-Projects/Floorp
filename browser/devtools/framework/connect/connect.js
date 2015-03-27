@@ -129,13 +129,13 @@ let onConnectionReady = Task.async(function*(aType, aTraits) {
   let gParent = document.getElementById("globalActors");
 
   // Build the Remote Process button
-  // If Fx<37, tab actors were used to be exposed on RootActor
-  // but in Fx>=37, chrome is debuggable via attachProcess() and ChromeActor
+  // If Fx<39, tab actors were used to be exposed on RootActor
+  // but in Fx>=39, chrome is debuggable via getProcess() and ChromeActor
   if (globals.consoleActor || gClient.mainRoot.traits.allowChromeProcess) {
     let a = document.createElement("a");
     a.onclick = function() {
       if (gClient.mainRoot.traits.allowChromeProcess) {
-        gClient.attachProcess()
+        gClient.getProcess()
                .then(aResponse => {
                  openToolbox(aResponse.form, true);
                });

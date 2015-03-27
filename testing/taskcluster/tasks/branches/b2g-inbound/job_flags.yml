@@ -19,7 +19,10 @@ builds:
       opt:
         task: tasks/builds/b2g_flame_kk_eng.yml
 
+tests:
   gaia-ui-test-sanity:
+    allowed_build_tasks:
+      tasks/builds/b2g_flame_kk_eng.yml:
         task: tasks/tests/flame_kk_gaia_ui_test_sanity.yml
   gaia-ui-test-functional:
     allowed_build_tasks:
