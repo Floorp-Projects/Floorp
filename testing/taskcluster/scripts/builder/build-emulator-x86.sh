@@ -13,7 +13,6 @@ test $GECKO_BASE_REPOSITORY # Should be an hg repository url to clone from
 test $GECKO_HEAD_REV # Should be an hg revision to pull down
 test $MOZHARNESS_REPOSITORY # mozharness repository
 test $MOZHARNESS_REV # mozharness revision
-test $MOZHARNESS_REF # mozharness ref
 test $TARGET
 
 . setup-ccache.sh
@@ -24,7 +23,7 @@ test $TARGET
 #   $ docker -v your_mozharness:/home/worker/mozharness ...
 #
 if [ ! -d mozharness ]; then
-  tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV $MOZHARNESS_REF
+  tc-vcs checkout mozharness $MOZHARNESS_REPOSITORY $MOZHARNESS_REPOSITORY $MOZHARNESS_REV
 fi
 
 # Figure out where the remote manifest is so we can use caches for it.
@@ -63,9 +62,10 @@ ls -lah $WORKSPACE/B2G/out
 ls -lah $WORKSPACE/B2G/objdir-gecko/dist/
 
 mv $WORKSPACE/B2G/sources.xml $HOME/artifacts/sources.xml
-mv $WORKSPACE/B2G/out/target/product/generic/tests/gaia-tests.zip $HOME/artifacts/gaia-tests.zip
-mv $WORKSPACE/B2G/out/target/product/generic/tests/b2g-*.zip $HOME/artifacts/b2g-tests.zip
+mv $WORKSPACE/B2G/out/target/product/generic_x86/tests/gaia-tests.zip $HOME/artifacts/gaia-tests.zip
+mv $WORKSPACE/B2G/out/target/product/generic_x86/tests/b2g-*.zip $HOME/artifacts/b2g-tests.zip
 mv $WORKSPACE/B2G/out/emulator.tar.gz $HOME/artifacts/emulator.tar.gz
 mv $WORKSPACE/B2G/objdir-gecko/dist/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
 
 ccache -s
+

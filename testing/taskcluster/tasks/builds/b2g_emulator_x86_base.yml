@@ -1,0 +1,34 @@
+$inherits:
+  from: 'tasks/build.yml'
+task:
+  metadata:
+    description: |
+      Android emulators + b2g environment used in full stack testing.
+  payload:
+    env:
+      TARGET: 'emulator'
+      B2G_DEBUG: 0
+
+    # Emulators can take a very long time to build!
+    maxRunTime: 14400
+
+    command:
+      - /bin/bash
+      - -c
+      - >
+        checkout-gecko workspace &&
+        cd ./workspace/gecko/testing/taskcluster/scripts/builder &&
+        buildbot_step 'Build' ./build-emulator-x86.sh $HOME/workspace
+
+  extra:
+    treeherder:
+      groupSymbol: x86
+    # Rather then enforcing particular conventions we require that all build
+    # tasks provide the "build" extra field to specify where the build and tests
+    # files are located.
+    locations:
+      build: 'public/build/emulator.tar.gz'
+      tests: 'public/build/b2g-tests.zip'
+      symbols: 'public/build/b2g-crashreporter-symbols.zip'
+      sources: 'public/build/sources.xml'
+
