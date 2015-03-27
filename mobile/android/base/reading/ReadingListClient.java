@@ -11,6 +11,7 @@ import java.security.GeneralSecurityException;
 import java.util.Queue;
 import java.util.concurrent.Executor;
 
+import org.mozilla.gecko.background.ReadingListConstants;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.reading.ReadingListResponse.ResponseFactory;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
