@@ -101,18 +101,18 @@ void* ProfileEntry::get_tagPtr() {
 ////////////////////////////////////////////////////////////////////////
 // BEGIN ProfileBuffer
 
-ProfileBuffer::ProfileBuffer(int aEntrySize)
+ProfileBuffer::ProfileBuffer(int aEntrySize, uint32_t aGeneration)
   : mEntries(MakeUnique<ProfileEntry[]>(aEntrySize))
   , mWritePos(0)
   , mReadPos(0)
   , mEntrySize(aEntrySize)
-  , mGeneration(0)
+  , mGeneration(aGeneration)
 {
 }
 
 ProfileBuffer::~ProfileBuffer()
 {
-  mGeneration = INT_MAX;
+  mGeneration = UINT32_MAX;
   deleteExpiredStoredMarkers();
 }
 
@@ -121,6 +121,11 @@ void ProfileBuffer::addTag(const ProfileEntry& aTag)
 {
   mEntries[mWritePos++] = aTag;
   if (mWritePos == mEntrySize) {
+    // Wrapping around may result in things referenced in the buffer (e.g.,
+    // JIT code addresses and markers) being incorrectly collected. 2 is
+    // subtracted to assert that we do not leak stored markers in
+    // ~ProfileBuffer.
+    MOZ_ASSERT(mGeneration != UINT32_MAX - 2);
     mGeneration++;
     mWritePos = 0;
   }
