@@ -183,7 +183,15 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
 
     final Responder responder = new Responder(response, fxAccount);
 
-    final String oauthServerUri = FxAccountConstants.DEFAULT_OAUTH_SERVER_ENDPOINT;
+    // Allow testing against stage.
+    final boolean usingStageAuthServer = FxAccountConstants.STAGE_AUTH_SERVER_ENDPOINT.equals(fxAccount.getAccountServerURI());
+    final String oauthServerUri;
+    if (usingStageAuthServer) {
+      oauthServerUri = FxAccountConstants.STAGE_OAUTH_SERVER_ENDPOINT;
+    } else {
+      oauthServerUri = FxAccountConstants.DEFAULT_OAUTH_SERVER_ENDPOINT;
+    }
+
     final String audience;
     try {
       audience = FxAccountUtils.getAudienceForURL(oauthServerUri); // The assertion gets traded in for an oauth bearer token.

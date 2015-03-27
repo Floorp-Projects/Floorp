@@ -652,6 +652,7 @@ public class AndroidFxAccount {
     setState(state.makeSeparatedState());
     accountManager.setUserData(account, ACCOUNT_KEY_IDP_SERVER, authServerEndpoint);
     accountManager.setUserData(account, ACCOUNT_KEY_TOKEN_SERVER, tokenServerEndpoint);
+    ContentResolver.setIsSyncable(account, BrowserContract.READING_LIST_AUTHORITY, 1);
   }
 
   /**
