@@ -74,7 +74,7 @@ function expectBookmarkNotifications() {
 add_task(function* test_invalid_input() {
   Assert.throws(() => PlacesUtils.keywords.fetch(null),
                 /Invalid keyword/);
-  Assert.throws(() => PlacesUtils.keywords.fetch(""),
+  Assert.throws(() => PlacesUtils.keywords.fetch({}),
                 /Invalid keyword/);
   Assert.throws(() => PlacesUtils.keywords.fetch(5),
                 /Invalid keyword/);
