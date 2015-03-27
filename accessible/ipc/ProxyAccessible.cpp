@@ -911,5 +911,36 @@ ProxyAccessible::Bounds()
   return rect;
 }
 
+void
+ProxyAccessible::Language(nsString& aLocale)
+{
+  unused << mDoc->SendLanguage(mID, &aLocale);
+}
+
+void
+ProxyAccessible::DocType(nsString& aType)
+{
+  unused << mDoc->SendDocType(mID, &aType);
+}
+
+void
+ProxyAccessible::URL(nsString& aURL)
+{
+  unused << mDoc->SendURL(mID, &aURL);
+}
+
+void
+ProxyAccessible::MimeType(nsString aMime)
+{
+  unused << mDoc->SendMimeType(mID, &aMime);
+}
+
+void
+ProxyAccessible::URLDocTypeMimeType(nsString& aURL, nsString& aDocType,
+                                    nsString& aMimeType)
+{
+  unused << mDoc->SendURLDocTypeMimeType(mID, &aURL, &aDocType, &aMimeType);
+}
+
 }
 }
