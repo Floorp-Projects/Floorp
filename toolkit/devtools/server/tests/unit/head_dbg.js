@@ -24,6 +24,21 @@ const DevToolsUtils = devtools.require("devtools/toolkit/DevToolsUtils.js");
 const { DebuggerServer } = devtools.require("devtools/server/main");
 const { DebuggerServer: WorkerDebuggerServer } = worker.require("devtools/server/main");
 
+function getSources(threadClient) {
+  dump("Getting sources.\n");
+  return rdpRequest(threadClient, threadClient.getSources);
+}
+
+function findSource(sources, url) {
+  dump("Finding source with url '" + url + "'.\n");
+  for (let source of sources) {
+    if (source.url === url) {
+      return source;
+    }
+  }
+  return null;
+}
+
 function dumpn(msg) {
   dump("DBG-TEST: " + msg + "\n");
 }
@@ -553,17 +568,6 @@ function interrupt(threadClient) {
 function resumeAndWaitForPause(client, threadClient) {
   const paused = waitForPause(client);
   return resume(threadClient).then(() => paused);
-}
-
-/**
- * Get the list of sources for the specified thread.
- *
- * @param ThreadClient threadClient
- * @returns Promise
- */
-function getSources(threadClient) {
-  dumpn("Getting sources.");
-  return rdpRequest(threadClient, threadClient.getSources);
 }
 
 /**
