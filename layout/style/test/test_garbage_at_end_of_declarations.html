@@ -36,6 +36,7 @@
 
 var gElement = document.getElementById("testnode");
 var gDeclaration = gElement.style;
+var gUnsetValueEnabled = SpecialPowers.getBoolPref("layout.css.unset-value.enabled");
 
 /*
  * This lists properties where garbage identifiers are allowed at the
@@ -119,7 +120,7 @@ function test_property(property)
   var idx;
   test_value("inherit");
   test_value("initial");
-  if (SpecialPowers.getBoolPref("layout.css.unset-value.enabled"))
+  if (gUnsetValueEnabled)
     test_value("unset");
   for (idx in info.initial_values)
     test_value(info.initial_values[idx]);
