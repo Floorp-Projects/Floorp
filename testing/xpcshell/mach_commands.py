@@ -67,7 +67,7 @@ class XPCShellRunner(MozbuildObject):
                  debugger=None, debuggerArgs=None, debuggerInteractive=None,
                  jsDebugger=False, jsDebuggerPort=None,
                  rerun_failures=False, test_objects=None, verbose=False,
-                 log=None, test_tags=None,
+                 log=None,
                  # ignore parameters from other platforms' options
                  **kwargs):
         """Runs an individual xpcshell test."""
@@ -89,7 +89,7 @@ class XPCShellRunner(MozbuildObject):
                            debuggerInteractive=debuggerInteractive,
                            jsDebugger=jsDebugger, jsDebuggerPort=jsDebuggerPort,
                            rerun_failures=rerun_failures,
-                           verbose=verbose, log=log, test_tags=test_tags)
+                           verbose=verbose, log=log)
             return
         elif test_paths:
             test_paths = [self._wrap_path_argument(p).relpath() for p in test_paths]
@@ -124,7 +124,6 @@ class XPCShellRunner(MozbuildObject):
             'manifest': manifest,
             'verbose': verbose,
             'log': log,
-            'test_tags': test_tags,
         }
 
         return self._run_xpcshell_harness(**args)
@@ -134,7 +133,7 @@ class XPCShellRunner(MozbuildObject):
                               keep_going=False, sequential=False,
                               debugger=None, debuggerArgs=None, debuggerInteractive=None,
                               jsDebugger=False, jsDebuggerPort=None,
-                              rerun_failures=False, verbose=False, log=None, test_tags=None):
+                              rerun_failures=False, verbose=False, log=None):
 
         # Obtain a reference to the xpcshell test runner.
         import runxpcshelltests
@@ -172,7 +171,6 @@ class XPCShellRunner(MozbuildObject):
             'debuggerInteractive': debuggerInteractive,
             'jsDebugger': jsDebugger,
             'jsDebuggerPort': jsDebuggerPort,
-            'test_tags': test_tags,
         }
 
         if test_path is not None:
@@ -440,10 +438,6 @@ class MachCommands(MachCommandBase):
         help='Randomize the execution order of tests.')
     @CommandArgument('--rerun-failures', action='store_true',
         help='Reruns failures from last time.')
-    @CommandArgument('--tag', action='append', dest='test_tags',
-        help='Filter out tests that don\'t have the given tag. Can be used '
-             'multiple times in which case the test must contain at least one '
-             'of the given tags.')
     @CommandArgument('--devicemanager', default='adb', type=str,
         help='(Android) Type of devicemanager to use for communication: adb or sut')
     @CommandArgument('--ip', type=str, default=None,

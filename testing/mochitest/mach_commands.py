@@ -737,14 +737,6 @@ def MochitestCommand(func):
         help='The maximum number of timeouts permitted before halting testing')
     func = max_timeouts(func)
 
-    tags = CommandArgument(
-        "--tag",
-        dest='test_tags', action='append',
-        help="Filter out tests that don't have the given tag. Can be used "
-             "multiple times in which case the test must contain at least one "
-             "of the given tags.")
-    func = tags(func)
-
     return func
 
 
@@ -821,14 +813,6 @@ def B2GCommand(func):
         'Default cap is 30 runs, which can be overwritten '
         'with the --repeat parameter.')
     func = runUntilFailure(func)
-
-    tags = CommandArgument(
-        "--tag",
-        dest='test_tags', action='append',
-        help="Filter out tests that don't have the given tag. Can be used "
-             "multiple times in which case the test must contain at least one "
-             "of the given tags.")
-    func = tags(func)
 
     return func
 
