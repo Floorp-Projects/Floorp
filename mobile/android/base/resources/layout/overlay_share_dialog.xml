@@ -9,8 +9,6 @@
     android:id="@+id/sharedialog"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_marginLeft="15dp"
-    android:layout_marginRight="15dp"
     android:clipChildren="false"
     android:clipToPadding="false">
 
@@ -18,6 +16,8 @@
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|center"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
         android:paddingTop="8dp"
         android:orientation="vertical">
 
