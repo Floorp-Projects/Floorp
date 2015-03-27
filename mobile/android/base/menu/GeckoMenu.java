@@ -257,8 +257,7 @@ public class GeckoMenu extends ListView
             ((MenuItemActionBar) actionView).setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    handleMenuItemLongClick(menuItem);
-                    return true;
+                    return handleMenuItemLongClick(menuItem);
                 }
             });
         } else if (actionView instanceof MenuItemActionView) {
@@ -271,8 +270,7 @@ public class GeckoMenu extends ListView
             ((MenuItemActionView) actionView).setMenuItemLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View view) {
-                    handleMenuItemLongClick(menuItem);
-                    return true;
+                    return handleMenuItemLongClick(menuItem);
                 }
             });
         }
@@ -645,14 +643,15 @@ public class GeckoMenu extends ListView
         }
     }
 
-    void handleMenuItemLongClick(GeckoMenuItem item) {
+    boolean handleMenuItemLongClick(GeckoMenuItem item) {
         if(!item.isEnabled()) {
-            return;
+            return false;
         }
 
         if(mCallback != null) {
-            mCallback.onMenuItemLongClick(item);
+            return mCallback.onMenuItemLongClick(item);
         }
+        return false;
     }
 
     public Callback getCallback() {
