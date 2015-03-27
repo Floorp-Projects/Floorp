@@ -57,7 +57,7 @@ public:
   // until one with a granulepos has been captured, to ensure that all packets
   // read have valid time info.
   virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                  int64_t aTimeThreshold) override;
+                                int64_t aTimeThreshold) override;
 
   virtual bool HasAudio() override {
     return (mVorbisState != 0 && mVorbisState->mActive) ||
