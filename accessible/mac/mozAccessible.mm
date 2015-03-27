@@ -540,8 +540,7 @@ struct RoleDescrComparator
 
   nsAutoString value;
   mGeckoAccessible->Value(value);
-  return value.IsEmpty() ? nil : [NSString stringWithCharacters:reinterpret_cast<const unichar*>(value.BeginReading())
-                                                         length:value.Length()];
+  return nsCocoaUtils::ToNSString(value);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
@@ -585,8 +584,7 @@ struct RoleDescrComparator
 
   nsAutoString helpText;
   mGeckoAccessible->Help(helpText);
-  return helpText.IsEmpty() ? nil : [NSString stringWithCharacters:reinterpret_cast<const unichar*>(helpText.BeginReading())
-                                                            length:helpText.Length()];
+  return nsCocoaUtils::ToNSString(helpText);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
