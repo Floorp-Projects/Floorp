@@ -60,6 +60,9 @@ FetchDriver::Fetch(FetchDriverObserver* aObserver)
   workers::AssertIsOnMainThread();
   mObserver = aObserver;
 
+  Telemetry::Accumulate(Telemetry::SERVICE_WORKER_REQUEST_PASSTHROUGH,
+                        mRequest->WasCreatedByFetchEvent());
+
   return Fetch(false /* CORS flag */);
 }
 
