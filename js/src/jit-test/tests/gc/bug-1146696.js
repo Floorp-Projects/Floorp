@@ -1,4 +1,3 @@
-// |jit-test| error: out of memory
 dbg1 = new Debugger();
 root2 = newGlobal();
 dbg1.memory.onGarbageCollection = function(){}
@@ -9,10 +8,12 @@ for (var j = 0; j < 9999; ++j) {
     } catch (e) {}
 }
 gcparam("maxBytes", gcparam("gcBytes") + 1);
-g();
-function g() {
+function g(i) {
+    if (i == 0)
+        return;
     var x = "";
     function f() {}
     eval('');
-    g();
+    g(i - 1);
 }
+g(8000);
