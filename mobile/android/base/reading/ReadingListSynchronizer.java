@@ -774,11 +774,7 @@ public class ReadingListSynchronizer {
         final int statusCode = response.getStatusCode();
         Logger.error(LOG_TAG, "Download failed. since = " + since + ". Response: " + statusCode);
         response.logResponseBody(LOG_TAG);
-        if (response.isInvalidAuthentication()) {
-          delegate.fail(new ReadingListInvalidAuthenticationException(response));
-        } else {
-          delegate.fail();
-        }
+        delegate.fail();
       }
 
       @Override
