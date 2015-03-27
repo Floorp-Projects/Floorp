@@ -61,7 +61,7 @@ AnimationPlayer::SetStartTime(const Nullable<TimeDuration>& aNewStartTime)
     mHoldTime = previousCurrentTime;
   }
 
-  CancelPendingPlay();
+  CancelPendingTasks();
   if (mReady) {
     // We may have already resolved mReady, but in that case calling
     // MaybeResolve is a no-op, so that's okay.
@@ -334,7 +334,7 @@ void
 AnimationPlayer::Cancel()
 {
   if (mPendingState != PendingState::NotPending) {
-    CancelPendingPlay();
+    CancelPendingTasks();
     if (mReady) {
       mReady->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
     }
@@ -466,7 +466,7 @@ void
 AnimationPlayer::DoPause()
 {
   if (mPendingState == PendingState::PlayPending) {
-    CancelPendingPlay();
+    CancelPendingTasks();
     // Resolve the ready promise since we currently only use it for
     // players that are waiting to play. Later (in bug 1109390), we will
     // use this for players waiting to pause as well and then we won't
@@ -541,7 +541,7 @@ AnimationPlayer::PostUpdate()
 }
 
 void
-AnimationPlayer::CancelPendingPlay()
+AnimationPlayer::CancelPendingTasks()
 {
   if (mPendingState == PendingState::NotPending) {
     return;
@@ -551,7 +551,11 @@ AnimationPlayer::CancelPendingPlay()
   if (doc) {
     PendingPlayerTracker* tracker = doc->GetPendingPlayerTracker();
     if (tracker) {
-      tracker->RemovePlayPending(*this);
+      if (mPendingState == PendingState::PlayPending) {
+        tracker->RemovePlayPending(*this);
+      } else {
+        tracker->RemovePausePending(*this);
+      }
     }
   }
 
