@@ -124,18 +124,6 @@ GetReverseAxis(AxisOrientationType aAxis)
   return reversedAxis;
 }
 
-// Returns aFrame's computed value for 'height' or 'width' -- whichever is in
-// the same dimension as aAxis.
-static inline const nsStyleCoord&
-GetSizePropertyForAxis(const nsIFrame* aFrame, AxisOrientationType aAxis)
-{
-  const nsStylePosition* stylePos = aFrame->StylePosition();
-
-  return IsAxisHorizontal(aAxis) ?
-    stylePos->mWidth :
-    stylePos->mHeight;
-}
-
 /**
  * Converts a "flex-relative" coordinate in a single axis (a main- or cross-axis
  * coordinate) into a coordinate in the corresponding physical (x or y) axis. If
@@ -206,6 +194,17 @@ public:
     return IsCrossAxisHorizontal() ?
       aMargin.LeftRight() :
       aMargin.TopBottom();
+  }
+
+  // Returns aFrame's computed value for 'height' or 'width' -- whichever is in
+  // the cross-axis. (NOTE: This is cross-axis-specific for now. If we need a
+  // main-axis version as well, we could generalize or clone this function.)
+  const nsStyleCoord& ComputedCrossSize(const nsIFrame* aFrame) const {
+    const nsStylePosition* stylePos = aFrame->StylePosition();
+
+    return IsCrossAxisHorizontal() ?
+      stylePos->mWidth :
+      stylePos->mHeight;
   }
 
   /**
@@ -2742,7 +2741,7 @@ FlexItem::ResolveStretchedCrossSize(nscoord aLineCrossSize,
   // conditions don't hold up, we won't stretch.
   if (mAlignSelf != NS_STYLE_ALIGN_ITEMS_STRETCH ||
       GetNumAutoMarginsInAxis(crossAxis) != 0 ||
-      eStyleUnit_Auto != GetSizePropertyForAxis(mFrame, crossAxis).GetUnit()) {
+      eStyleUnit_Auto != aAxisTracker.ComputedCrossSize(mFrame).GetUnit()) {
     return;
   }
 
