@@ -1103,6 +1103,10 @@ SavedStacks::getLocation(JSContext *cx, const FrameIter &iter, MutableHandleLoca
             return false;
 
         locationp->line = iter.computeLine(&locationp->column);
+        // XXX: Make the column 1-based as in other browsers, instead of 0-based
+        // which is how SpiderMonkey stores it internally. This will be
+        // unnecessary once bug 1144340 is fixed.
+        locationp->column++;
         return true;
     }
 
@@ -1126,7 +1130,8 @@ SavedStacks::getLocation(JSContext *cx, const FrameIter &iter, MutableHandleLoca
         uint32_t column;
         uint32_t line = PCToLineNumber(script, pc, &column);
 
-        LocationValue value(source, line, column);
+        // Make the column 1-based. See comment above.
+        LocationValue value(source, line, column + 1);
         if (!pcLocationMap.add(p, key, value))
             return false;
     }
