@@ -185,8 +185,9 @@ const Class SimdTypeDescr::class_ = {
     call
 };
 
+namespace {
+
 // These classes just exist to group together various properties and so on.
-namespace js {
 class Int32x4Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::TYPE_INT32;
@@ -211,16 +212,17 @@ class Float64x2Defn {
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
-} // namespace js
 
-const JSFunctionSpec js::Float32x4Defn::TypeDescriptorMethods[] = {
+}
+
+const JSFunctionSpec Float32x4Defn::TypeDescriptorMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
     JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
     JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
     JS_FS_END
 };
 
-const JSPropertySpec js::Float32x4Defn::TypedObjectProperties[] = {
+const JSPropertySpec Float32x4Defn::TypedObjectProperties[] = {
     JS_PSG("x", Float32x4Lane0, JSPROP_PERMANENT),
     JS_PSG("y", Float32x4Lane1, JSPROP_PERMANENT),
     JS_PSG("z", Float32x4Lane2, JSPROP_PERMANENT),
@@ -229,12 +231,12 @@ const JSPropertySpec js::Float32x4Defn::TypedObjectProperties[] = {
     JS_PS_END
 };
 
-const JSFunctionSpec js::Float32x4Defn::TypedObjectMethods[] = {
+const JSFunctionSpec Float32x4Defn::TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
 };
 
-const JSFunctionSpec js::Float32x4Defn::Methods[] = {
+const JSFunctionSpec Float32x4Defn::Methods[] = {
 #define SIMD_FLOAT32X4_FUNCTION_ITEM(Name, Func, Operands) \
     JS_FN(#Name, js::simd_float32x4_##Name, Operands, 0),
     FLOAT32X4_FUNCTION_LIST(SIMD_FLOAT32X4_FUNCTION_ITEM)
@@ -242,26 +244,26 @@ const JSFunctionSpec js::Float32x4Defn::Methods[] = {
     JS_FS_END
 };
 
-const JSFunctionSpec js::Float64x2Defn::TypeDescriptorMethods[] = {
+const JSFunctionSpec Float64x2Defn::TypeDescriptorMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
     JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
     JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
     JS_FS_END
 };
 
-const JSPropertySpec js::Float64x2Defn::TypedObjectProperties[] = {
+const JSPropertySpec Float64x2Defn::TypedObjectProperties[] = {
     JS_PSG("x", Float64x2Lane0, JSPROP_PERMANENT),
     JS_PSG("y", Float64x2Lane1, JSPROP_PERMANENT),
     JS_PSG("signMask", Float64x2SignMask, JSPROP_PERMANENT),
     JS_PS_END
 };
 
-const JSFunctionSpec js::Float64x2Defn::TypedObjectMethods[] = {
+const JSFunctionSpec Float64x2Defn::TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
 };
 
-const JSFunctionSpec js::Float64x2Defn::Methods[]  = {
+const JSFunctionSpec Float64x2Defn::Methods[]  = {
 #define SIMD_FLOAT64X2_FUNCTION_ITEM(Name, Func, Operands) \
     JS_FN(#Name, js::simd_float64x2_##Name, Operands, 0),
     FLOAT64X2_FUNCTION_LIST(SIMD_FLOAT64X2_FUNCTION_ITEM)
@@ -269,14 +271,14 @@ const JSFunctionSpec js::Float64x2Defn::Methods[]  = {
     JS_FS_END
 };
 
-const JSFunctionSpec js::Int32x4Defn::TypeDescriptorMethods[] = {
+const JSFunctionSpec Int32x4Defn::TypeDescriptorMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
     JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
     JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
     JS_FS_END,
 };
 
-const JSPropertySpec js::Int32x4Defn::TypedObjectProperties[] = {
+const JSPropertySpec Int32x4Defn::TypedObjectProperties[] = {
     JS_PSG("x", Int32x4Lane0, JSPROP_PERMANENT),
     JS_PSG("y", Int32x4Lane1, JSPROP_PERMANENT),
     JS_PSG("z", Int32x4Lane2, JSPROP_PERMANENT),
@@ -285,12 +287,12 @@ const JSPropertySpec js::Int32x4Defn::TypedObjectProperties[] = {
     JS_PS_END
 };
 
-const JSFunctionSpec js::Int32x4Defn::TypedObjectMethods[] = {
+const JSFunctionSpec Int32x4Defn::TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
 };
 
-const JSFunctionSpec js::Int32x4Defn::Methods[] = {
+const JSFunctionSpec Int32x4Defn::Methods[] = {
 #define SIMD_INT32X4_FUNCTION_ITEM(Name, Func, Operands) \
     JS_FN(#Name, js::simd_int32x4_##Name, Operands, 0),
     INT32X4_FUNCTION_LIST(SIMD_INT32X4_FUNCTION_ITEM)
