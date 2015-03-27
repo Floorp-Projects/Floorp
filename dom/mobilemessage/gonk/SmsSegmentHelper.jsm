@@ -122,10 +122,9 @@ this.SmsSegmentHelper = {
    *
    * |enabledGsmTableTuples|:
    *   List of tuples of national language identifier pairs.
-   *   TODO: Support static/runtime settings, see bug 733331.
    * |segmentRef16Bit|:
    *   Use 16-bit reference number for concatenated outgoint messages.
-   *   TODO: Support static/runtime settings, see bug 733331.
+   *   TODO: Support static/runtime settings, see bug 1019443.
    */
   enabledGsmTableTuples: [
     [RIL.PDU_NL_IDENTIFIER_DEFAULT, RIL.PDU_NL_IDENTIFIER_DEFAULT],
@@ -162,8 +161,8 @@ this.SmsSegmentHelper = {
       if ((bodySeptets + headerSeptets) > segmentSeptets) {
         headerLen += this.segmentRef16Bit ? 6 : 5;
         headerSeptets = Math.ceil((headerLen + 1) * 8 / 7);
-        segmentSeptets -= headerSeptets;
       }
+      segmentSeptets -= headerSeptets;
 
       let segments = Math.ceil(bodySeptets / segmentSeptets);
       let userDataSeptets = bodySeptets + headerSeptets * segments;
