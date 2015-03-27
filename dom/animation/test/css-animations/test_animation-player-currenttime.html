@@ -588,28 +588,25 @@ async_test(function(t) {
   div.style.animation = 'anim 100s';
 
   var player = div.getAnimationPlayers()[0];
+  var pauseTime;
 
   player.ready.then(t.step_func(function() {
-    var savedCurrentTime = player.currentTime;
-
     assert_not_equals(player.currentTime, null,
       'AnimationPlayer.currentTime not null on ready Promise resolve');
-
-    var prePauseCurrentTime = player.currentTime;
-
     player.pause();
-    // After bug 1109390 we will need to wait here for the ready promise again
-
-    assert_equals(player.currentTime, prePauseCurrentTime,
-      'AnimationPlayer.currentTime is unchanged after AnimationPlayer.pause()');
-    assert_equals(player.playState, 'paused',
-      'AnimationPlayer.playState is "paused" after pause() call');
+    return player.ready;
+  })).then(t.step_func(function() {
+    pauseTime = player.currentTime;
+    return waitForFrame();
+  })).then(t.step_func(function() {
+    assert_equals(player.currentTime, pauseTime,
+      'AnimationPlayer.currentTime is unchanged after pausing');
   })).catch(t.step_func(function(reason) {
     assert_unreached(reason);
   })).then(function() {
     t.done();
   });
-}, 'AnimationPlayer.currentTime after paused');
+}, 'AnimationPlayer.currentTime after pausing');
 
     </script>
   </body>

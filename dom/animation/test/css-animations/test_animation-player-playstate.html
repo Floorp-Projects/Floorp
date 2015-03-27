@@ -24,23 +24,37 @@ async_test(function(t) {
   }));
 }, 'Player returns correct playState when running');
 
-test(function(t) {
+async_test(function(t) {
   var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
 
   var player = div.getAnimationPlayers()[0];
-  assert_equals(player.playState, 'paused');
+  // FIXME: When we turn on async pausing later in this patch series, enable
+  // this
+  //   assert_equals(player.playState, 'pending');
+
+  player.ready.then(t.step_func(function() {
+    assert_equals(player.playState, 'paused');
+    t.done();
+  }));
 }, 'Player returns correct playState when paused');
 
-test(function(t) {
+async_test(function(t) {
   var div = addDiv(t);
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s';
 
   var player = div.getAnimationPlayers()[0];
   player.pause();
-  assert_equals(player.playState, 'paused');
+  // FIXME: When we turn on async pausing later in this patch series, enable
+  // this
+  //   assert_equals(player.playState, 'pending');
+
+  player.ready.then(t.step_func(function() {
+    assert_equals(player.playState, 'paused');
+    t.done();
+  }));
 }, 'Player.playState updates when paused by script');
 
 test(function(t) {
