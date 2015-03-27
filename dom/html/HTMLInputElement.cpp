@@ -2339,9 +2339,14 @@ HTMLInputElement::MozGetFileNameArray(uint32_t* aLength, char16_t*** aFileNames)
 void
 HTMLInputElement::MozSetFileArray(const Sequence<OwningNonNull<File>>& aFiles)
 {
+  nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
+  MOZ_ASSERT(global);
+  if (!global) {
+    return;
+  }
   nsTArray<nsRefPtr<File>> files;
   for (uint32_t i = 0; i < aFiles.Length(); ++i) {
-    files.AppendElement(aFiles[i]);
+    files.AppendElement(new File(global, aFiles[i].get()->Impl()));
   }
   SetFiles(files, true);
 }
