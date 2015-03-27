@@ -98,7 +98,7 @@ class ProfileBuffer {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProfileBuffer)
 
-  explicit ProfileBuffer(int aEntrySize);
+  explicit ProfileBuffer(int aEntrySize, uint32_t aGeneration = 0);
 
   void addTag(const ProfileEntry& aTag);
   void IterateTagsForThread(IterateTagsCallback aCallback, int aThreadId);
@@ -131,7 +131,7 @@ public:
   int mEntrySize;
 
   // How many times mWritePos has wrapped around.
-  int mGeneration;
+  uint32_t mGeneration;
 
   // Markers that marker entries in the buffer might refer to.
   ProfilerMarkerLinkedList mStoredMarkers;
@@ -178,7 +178,6 @@ public:
   }
 
   uint32_t bufferGeneration() const {
-    MOZ_ASSERT(mBuffer->mGeneration >= 0);
     return mBuffer->mGeneration;
   }
 

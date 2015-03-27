@@ -635,14 +635,13 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
     nativeIndex--;
   }
 
-  MOZ_ASSERT(aProfile.bufferGeneration() >= startBufferGen);
-  uint32_t lapCount = aProfile.bufferGeneration() - startBufferGen;
-
   // Update the JS runtime with the current profile sample buffer generation.
   //
   // Do not do this for synchronous sampling, which create their own
   // ProfileBuffers.
   if (!aSample->isSamplingCurrentThread && pseudoStack->mRuntime) {
+    MOZ_ASSERT(aProfile.bufferGeneration() >= startBufferGen);
+    uint32_t lapCount = aProfile.bufferGeneration() - startBufferGen;
     JS::UpdateJSRuntimeProfilerSampleBufferGen(pseudoStack->mRuntime,
                                                aProfile.bufferGeneration(),
                                                lapCount);
