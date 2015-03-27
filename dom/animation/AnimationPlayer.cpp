@@ -351,19 +351,6 @@ AnimationPlayer::Cancel()
   UpdateSourceContent();
 }
 
-bool
-AnimationPlayer::IsRunning() const
-{
-  if (IsPausedOrPausing() ||
-      !GetSource() ||
-      GetSource()->IsFinishedTransition()) {
-    return false;
-  }
-
-  ComputedTiming computedTiming = GetSource()->GetComputedTiming();
-  return computedTiming.mPhase == ComputedTiming::AnimationPhase_Active;
-}
-
 void
 AnimationPlayer::UpdateRelevance()
 {

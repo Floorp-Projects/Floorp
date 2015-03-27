@@ -557,10 +557,13 @@ AnimationPlayerCollection::CanPerformOnCompositorThread(
 
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
     const AnimationPlayer* player = mPlayers[playerIdx];
-    if (!player->IsRunning() || !player->GetSource()) {
+    if (!player->IsPlaying()) {
       continue;
     }
+
     const Animation* anim = player->GetSource();
+    MOZ_ASSERT(anim, "A playing player should have a source animation");
+
     for (size_t propIdx = 0, propEnd = anim->Properties().Length();
          propIdx != propEnd; ++propIdx) {
       if (IsGeometricProperty(anim->Properties()[propIdx].mProperty)) {
@@ -573,11 +576,13 @@ AnimationPlayerCollection::CanPerformOnCompositorThread(
   bool existsProperty = false;
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
     const AnimationPlayer* player = mPlayers[playerIdx];
-    if (!player->IsRunning() || !player->GetSource()) {
+    if (!player->IsPlaying()) {
       continue;
     }
 
     const Animation* anim = player->GetSource();
+    MOZ_ASSERT(anim, "A playing player should have a source animation");
+
     existsProperty = existsProperty || anim->Properties().Length() > 0;
 
     for (size_t propIdx = 0, propEnd = anim->Properties().Length();
