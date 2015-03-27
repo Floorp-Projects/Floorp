@@ -83,7 +83,7 @@ function attachConsole(aListeners, aCallback, aAttachToTab)
                                        _onAttachConsole.bind(null, aState));
       });
     } else {
-      aState.dbgClient.attachProcess().then(response => {
+      aState.dbgClient.getProcess().then(response => {
         let consoleActor = response.form.consoleActor;
         aState.actor = consoleActor;
         aState.dbgClient.attachConsole(consoleActor, aListeners,

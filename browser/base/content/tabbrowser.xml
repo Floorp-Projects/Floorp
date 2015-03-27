@@ -5522,8 +5522,6 @@
           if (this._selectedPanel != panel) {
             var event = document.createEvent("Events");
             event.initEvent("select", true, true);
-            event.fromTab = fromTab;
-            event.toTab = toTab;
             this.dispatchEvent(event);
 
             this._selectedIndex = val;

@@ -19,6 +19,7 @@ RUN apt-get install -y python-pip && pip install virtualenv;
 RUN mkdir Documents; mkdir Pictures; mkdir Music; mkdir Videos; mkdir artifacts
 RUN chown -R worker:worker /home/worker/* /home/worker/.*
 RUN npm install -g taskcluster-vcs@2.3.4
+RUN rm -Rf .cache && mkdir -p .cache
 ENV PATH $PATH:/home/worker/bin
 
 # TODO Re-enable worker when bug 1093833 lands

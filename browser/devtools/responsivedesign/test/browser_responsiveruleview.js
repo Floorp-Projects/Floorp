@@ -64,8 +64,8 @@ function test() {
 
     is(numberOfRules(), 2, "Should have two rules initially.");
 
-    ruleView.element.addEventListener("CssRuleViewRefreshed", function refresh() {
-      ruleView.element.removeEventListener("CssRuleViewRefreshed", refresh, false);
+    ruleView.on("ruleview-refreshed", function refresh() {
+      ruleView.off("ruleview-refreshed", refresh, false);
       is(numberOfRules(), 3, "Should have three rules after shrinking.");
       testGrow();
     }, false);
@@ -74,8 +74,8 @@ function test() {
   }
 
   function testGrow() {
-    ruleView.element.addEventListener("CssRuleViewRefreshed", function refresh() {
-      ruleView.element.removeEventListener("CssRuleViewRefreshed", refresh, false);
+    ruleView.on("ruleview-refreshed", function refresh() {
+      ruleView.off("ruleview-refreshed", refresh, false);
       is(numberOfRules(), 2, "Should have two rules after growing.");
       testEscapeOpensSplitConsole();
     }, false);

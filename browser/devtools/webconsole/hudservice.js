@@ -191,7 +191,7 @@ HUD_SERVICE.prototype =
 
       let client = new DebuggerClient(DebuggerServer.connectPipe());
       client.connect(() => {
-        client.attachProcess().then(aResponse => {
+        client.getProcess().then(aResponse => {
           // Set chrome:false in order to attach to the target
           // (i.e. send an `attach` request to the chrome actor)
           deferred.resolve({ form: aResponse.form, client: client, chrome: false });
