@@ -18,6 +18,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <limits.h>
+#include "vp8/common/pragmas.h"
 #include "vpx/vpx_encoder.h"
 #include "vpx_mem/vpx_mem.h"
 #include "bitstream.h"

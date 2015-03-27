@@ -15,45 +15,41 @@
 ;  (unsigned char  *frame1,           |  0
 ;   unsigned int    stride,           |  1
 ;   unsigned char  *frame2,           |  2
-;   unsigned int    block_width,      |  3
-;   unsigned int    block_height,     |  4
-;   int             strength,         |  5
-;   int             filter_weight,    |  6
-;   unsigned int   *accumulator,      |  7
-;   unsigned short *count)            |  8
+;   unsigned int    block_size,       |  3
+;   int             strength,         |  4
+;   int             filter_weight,    |  5
+;   unsigned int   *accumulator,      |  6
+;   unsigned short *count)            |  7
 global sym(vp9_temporal_filter_apply_sse2) PRIVATE
 sym(vp9_temporal_filter_apply_sse2):
 
     push        rbp
     mov         rbp, rsp
-    SHADOW_ARGS_TO_STACK 9
+    SHADOW_ARGS_TO_STACK 8
     SAVE_XMM 7
     GET_GOT     rbx
     push        rsi
     push        rdi
     ALIGN_STACK 16, rax
-    %define block_width    0
-    %define block_height  16
-    %define strength      32
-    %define filter_weight 48
-    %define rounding_bit  64
-    %define rbp_backup    80
-    %define stack_size    96
+    %define block_size    0
+    %define strength      16
+    %define filter_weight 32
+    %define rounding_bit  48
+    %define rbp_backup    64
+    %define stack_size    80
     sub         rsp,           stack_size
     mov         [rsp + rbp_backup], rbp
     ; end prolog
 
-        mov         edx,            arg(3)
-        mov         [rsp + block_width], rdx
-        mov         edx,            arg(4)
-        mov         [rsp + block_height], rdx
-        movd        xmm6,           arg(5)
+        mov         rdx,            arg(3)
+        mov         [rsp + block_size], rdx
+        movd        xmm6,            arg(4)
         movdqa      [rsp + strength], xmm6 ; where strength is used, all 16 bytes are read
 
         ; calculate the rounding bit outside the loop
         ; 0x8000 >> (16 - strength)
         mov         rdx,            16
-        sub         rdx,            arg(5) ; 16 - strength
+        sub         rdx,            arg(4) ; 16 - strength
         movq        xmm4,           rdx    ; can't use rdx w/ shift
         movdqa      xmm5,           [GLOBAL(_const_top_bit)]
         psrlw       xmm5,           xmm4
@@ -61,11 +57,11 @@ sym(vp9_temporal_filter_apply_sse2):
 
         mov         rsi,            arg(0) ; src/frame1
         mov         rdx,            arg(2) ; predictor frame
-        mov         rdi,            arg(7) ; accumulator
-        mov         rax,            arg(8) ; count
+        mov         rdi,            arg(6) ; accumulator
+        mov         rax,            arg(7) ; count
 
         ; dup the filter weight and store for later
-        movd        xmm0,           arg(6) ; filter_weight
+        movd        xmm0,           arg(5) ; filter_weight
         pshuflw     xmm0,           xmm0, 0
         punpcklwd   xmm0,           xmm0
         movdqa      [rsp + filter_weight], xmm0
@@ -73,11 +69,10 @@ sym(vp9_temporal_filter_apply_sse2):
         mov         rbp,            arg(1) ; stride
         pxor        xmm7,           xmm7   ; zero for extraction
 
-        mov         rcx,            [rsp + block_width]
-        imul        rcx,            [rsp + block_height]
-        add         rcx,            rdx
-        cmp         dword ptr [rsp + block_width], 8
+        lea         rcx,            [rdx + 16*16*1]
+        cmp         dword ptr [rsp + block_size], 8
         jne         .temporal_filter_apply_load_16
+        lea         rcx,            [rdx + 8*8*1]
 
 .temporal_filter_apply_load_8:
         movq        xmm0,           [rsi]  ; first row
@@ -183,7 +178,7 @@ sym(vp9_temporal_filter_apply_sse2):
         cmp         rdx,            rcx
         je          .temporal_filter_apply_epilog
         pxor        xmm7,           xmm7   ; zero for extraction
-        cmp         dword ptr [rsp + block_width], 16
+        cmp         dword ptr [rsp + block_size], 16
         je          .temporal_filter_apply_load_16
         jmp         .temporal_filter_apply_load_8
 

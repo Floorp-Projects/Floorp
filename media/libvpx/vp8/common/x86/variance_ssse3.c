@@ -10,6 +10,7 @@
 
 #include "vpx_config.h"
 #include "vp8/common/variance.h"
+#include "vp8/common/pragmas.h"
 #include "vpx_ports/mem.h"
 
 extern unsigned int vp8_get16x16var_sse2

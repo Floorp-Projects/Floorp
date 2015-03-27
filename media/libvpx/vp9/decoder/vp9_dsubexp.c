@@ -26,6 +26,22 @@ static int decode_uniform(vp9_reader *r) {
   return v < m ?  v : (v << 1) - m + vp9_read_bit(r);
 }
 
+
+static int merge_index(int v, int n, int modulus) {
+  int max1 = (n - 1 - modulus / 2) / modulus + 1;
+  if (v < max1) {
+    v = v * modulus + modulus / 2;
+  } else {
+    int w;
+    v -= max1;
+    w = v;
+    v += (v + modulus - modulus / 2) / modulus;
+    while (v % modulus == modulus / 2 ||
+           w != v - (v + modulus - modulus / 2) / modulus) v++;
+  }
+  return v;
+}
+
 static int inv_remap_prob(int v, int m) {
   static int inv_map_table[MAX_PROB - 1] = {
       6,  19,  32,  45,  58,  71,  84,  97, 110, 123, 136, 149, 162, 175, 188,

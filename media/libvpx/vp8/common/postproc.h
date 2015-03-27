@@ -39,8 +39,7 @@ void vp8_de_noise(struct VP8Common           *oci,
                   YV12_BUFFER_CONFIG         *post,
                   int                         q,
                   int                         low_var_thresh,
-                  int                         flag,
-                  int                         uvfilter);
+                  int                         flag);
 
 void vp8_deblock(struct VP8Common           *oci,
                  YV12_BUFFER_CONFIG         *source,

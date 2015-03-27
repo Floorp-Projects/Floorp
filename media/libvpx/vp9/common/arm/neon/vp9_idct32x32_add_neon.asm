@@ -72,7 +72,7 @@ cospi_31_64 EQU   804
     ;   reg1 = output[first_offset]
     ;   reg2 = output[second_offset]
     ;   for proper address calculation, the last offset used when manipulating
-    ;   output, whether reading or storing) must be passed in. use 0 for first
+    ;   output, wethere reading or storing) must be passed in. use 0 for first
     ;   use.
     MACRO
     LOAD_FROM_OUTPUT $prev_offset, $first_offset, $second_offset, $reg1, $reg2
@@ -88,7 +88,7 @@ cospi_31_64 EQU   804
     ;   output[first_offset] = reg1
     ;   output[second_offset] = reg2
     ;   for proper address calculation, the last offset used when manipulating
-    ;   output, whether reading or storing) must be passed in. use 0 for first
+    ;   output, wethere reading or storing) must be passed in. use 0 for first
     ;   use.
     MACRO
     STORE_IN_OUTPUT $prev_offset, $first_offset, $second_offset, $reg1, $reg2
@@ -242,7 +242,7 @@ cospi_31_64 EQU   804
     ; TODO(cd): have special case to re-use constants when they are similar for
     ;           consecutive butterflies
     ; TODO(cd): have special case when both constants are the same, do the
-    ;           additions/subtractions before the multiplies.
+    ;           additions/substractions before the multiplies.
     ; generate the constants
     ;   generate scalar constants
     mov             r8,  #$first_constant  & 0xFF00
@@ -260,7 +260,7 @@ cospi_31_64 EQU   804
     vmull.s16 q11, $regB, d31
     vmull.s16 q12, $regC, d31
     ; (used) five for intermediate (q8-q12), one for constants (q15)
-    ; do some addition/subtractions (to get back two register)
+    ; do some addition/substractions (to get back two register)
     vsub.s32  q8, q8, q10
     vsub.s32  q9, q9, q11
     ; do more multiplications (ordered for maximum latency hiding)
@@ -268,7 +268,7 @@ cospi_31_64 EQU   804
     vmull.s16 q11, $regA, d30
     vmull.s16 q15, $regB, d30
     ; (used) six for intermediate (q8-q12, q15)
-    ; do more addition/subtractions
+    ; do more addition/substractions
     vadd.s32  q11, q12, q11
     vadd.s32  q10, q10, q15
     ; (used) four for intermediate (q8-q11)

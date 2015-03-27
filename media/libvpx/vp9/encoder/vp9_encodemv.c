@@ -13,9 +13,11 @@
 #include "vp9/common/vp9_common.h"
 #include "vp9/common/vp9_entropymode.h"
 #include "vp9/common/vp9_systemdependent.h"
-
-#include "vp9/encoder/vp9_cost.h"
 #include "vp9/encoder/vp9_encodemv.h"
+
+#ifdef ENTROPY_STATS
+extern unsigned int active_section;
+#endif
 
 static struct vp9_token mv_joint_encodings[MV_JOINTS];
 static struct vp9_token mv_class_encodings[MV_CLASSES];
@@ -158,7 +160,7 @@ static void write_mv_update(const vp9_tree_index *tree,
 
   vp9_tree_probs_from_distribution(tree, branch_ct, counts);
   for (i = 0; i < n - 1; ++i)
-    update_mv(w, branch_ct[i], &probs[i], MV_UPDATE_PROB);
+    update_mv(w, branch_ct[i], &probs[i], NMV_UPDATE_PROB);
 }
 
 void vp9_write_nmv_probs(VP9_COMMON *cm, int usehp, vp9_writer *w) {
@@ -172,13 +174,13 @@ void vp9_write_nmv_probs(VP9_COMMON *cm, int usehp, vp9_writer *w) {
     nmv_component *comp = &mvc->comps[i];
     nmv_component_counts *comp_counts = &counts->comps[i];
 
-    update_mv(w, comp_counts->sign, &comp->sign, MV_UPDATE_PROB);
+    update_mv(w, comp_counts->sign, &comp->sign, NMV_UPDATE_PROB);
     write_mv_update(vp9_mv_class_tree, comp->classes, comp_counts->classes,
                     MV_CLASSES, w);
     write_mv_update(vp9_mv_class0_tree, comp->class0, comp_counts->class0,
                     CLASS0_SIZE, w);
     for (j = 0; j < MV_OFFSET_BITS; ++j)
-      update_mv(w, comp_counts->bits[j], &comp->bits[j], MV_UPDATE_PROB);
+      update_mv(w, comp_counts->bits[j], &comp->bits[j], NMV_UPDATE_PROB);
   }
 
   for (i = 0; i < 2; ++i) {
@@ -193,8 +195,8 @@ void vp9_write_nmv_probs(VP9_COMMON *cm, int usehp, vp9_writer *w) {
   if (usehp) {
     for (i = 0; i < 2; ++i) {
       update_mv(w, counts->comps[i].class0_hp, &mvc->comps[i].class0_hp,
-                MV_UPDATE_PROB);
-      update_mv(w, counts->comps[i].hp, &mvc->comps[i].hp, MV_UPDATE_PROB);
+                NMV_UPDATE_PROB);
+      update_mv(w, counts->comps[i].hp, &mvc->comps[i].hp, NMV_UPDATE_PROB);
     }
   }
 }
@@ -216,34 +218,41 @@ void vp9_encode_mv(VP9_COMP* cpi, vp9_writer* w,
 
   // If auto_mv_step_size is enabled then keep track of the largest
   // motion vector component used.
-  if (cpi->sf.mv.auto_mv_step_size) {
+  if (!cpi->dummy_packing && cpi->sf.auto_mv_step_size) {
     unsigned int maxv = MAX(abs(mv->row), abs(mv->col)) >> 3;
     cpi->max_mv_magnitude = MAX(maxv, cpi->max_mv_magnitude);
   }
 }
 
-void vp9_build_nmv_cost_table(int *mvjoint, int *mvcost[2],
-                              const nmv_context* ctx, int usehp) {
-  vp9_cost_tokens(mvjoint, ctx->joints, vp9_mv_joint_tree);
-  build_nmv_component_cost_table(mvcost[0], &ctx->comps[0], usehp);
-  build_nmv_component_cost_table(mvcost[1], &ctx->comps[1], usehp);
+void vp9_build_nmv_cost_table(int *mvjoint,
+                              int *mvcost[2],
+                              const nmv_context* const mvctx,
+                              int usehp,
+                              int mvc_flag_v,
+                              int mvc_flag_h) {
+  vp9_clear_system_state();
+  vp9_cost_tokens(mvjoint, mvctx->joints, vp9_mv_joint_tree);
+  if (mvc_flag_v)
+    build_nmv_component_cost_table(mvcost[0], &mvctx->comps[0], usehp);
+  if (mvc_flag_h)
+    build_nmv_component_cost_table(mvcost[1], &mvctx->comps[1], usehp);
 }
 
-static void inc_mvs(const MB_MODE_INFO *mbmi, const int_mv mvs[2],
+static void inc_mvs(int_mv mv[2], int_mv ref[2], int is_compound,
                     nmv_context_counts *counts) {
   int i;
-
-  for (i = 0; i < 1 + has_second_ref(mbmi); ++i) {
-    const MV *ref = &mbmi->ref_mvs[mbmi->ref_frame[i]][0].as_mv;
-    const MV diff = {mvs[i].as_mv.row - ref->row,
-                     mvs[i].as_mv.col - ref->col};
+  for (i = 0; i < 1 + is_compound; ++i) {
+    const MV diff = { mv[i].as_mv.row - ref[i].as_mv.row,
+                      mv[i].as_mv.col - ref[i].as_mv.col };
     vp9_inc_mv(&diff, counts);
   }
 }
 
-void vp9_update_mv_count(VP9_COMMON *cm, const MACROBLOCKD *xd) {
-  const MODE_INFO *mi = xd->mi[0].src_mi;
-  const MB_MODE_INFO *const mbmi = &mi->mbmi;
+void vp9_update_mv_count(VP9_COMP *cpi, MACROBLOCK *x, int_mv best_ref_mv[2]) {
+  MODE_INFO *mi = x->e_mbd.mi_8x8[0];
+  MB_MODE_INFO *const mbmi = &mi->mbmi;
+  const int is_compound = has_second_ref(mbmi);
+  nmv_context_counts *counts = &cpi->common.counts.mv;
 
   if (mbmi->sb_type < BLOCK_8X8) {
     const int num_4x4_w = num_4x4_blocks_wide_lookup[mbmi->sb_type];
@@ -254,12 +263,11 @@ void vp9_update_mv_count(VP9_COMMON *cm, const MACROBLOCKD *xd) {
       for (idx = 0; idx < 2; idx += num_4x4_w) {
         const int i = idy * 2 + idx;
         if (mi->bmi[i].as_mode == NEWMV)
-          inc_mvs(mbmi, mi->bmi[i].as_mv, &cm->counts.mv);
+          inc_mvs(mi->bmi[i].as_mv, best_ref_mv, is_compound, counts);
       }
     }
-  } else {
-    if (mbmi->mode == NEWMV)
-      inc_mvs(mbmi, mbmi->mv, &cm->counts.mv);
+  } else if (mbmi->mode == NEWMV) {
+    inc_mvs(mbmi->mv, best_ref_mv, is_compound, counts);
   }
 }
 
