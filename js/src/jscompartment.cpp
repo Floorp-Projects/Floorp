@@ -633,7 +633,7 @@ JSCompartment::sweepCrossCompartmentWrappers()
           default:
               MOZ_CRASH("Unknown key kind");
         }
-        bool valDying = IsValueAboutToBeFinalized(e.front().value().unsafeGet());
+        bool valDying = IsAboutToBeFinalized(&e.front().value());
         bool dbgDying = key.debugger && IsObjectAboutToBeFinalized(&key.debugger);
         if (keyDying || valDying || dbgDying) {
             MOZ_ASSERT(key.kind != CrossCompartmentKey::StringWrapper);
