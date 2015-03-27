@@ -537,6 +537,13 @@ PluginModuleChromeParent::OnProcessLaunched(const bool aSucceeded)
         OnInitFailure();
         return;
     }
+    CrashReporterParent* crashReporter = CrashReporter();
+    if (crashReporter) {
+        crashReporter->AnnotateCrashReport(NS_LITERAL_CSTRING("AsyncPluginInit"),
+                                           mIsStartingAsync ?
+                                               NS_LITERAL_CSTRING("1") :
+                                               NS_LITERAL_CSTRING("0"));
+    }
 #ifdef XP_WIN
     { // Scope for lock
         mozilla::MutexAutoLock lock(mCrashReporterMutex);
@@ -607,6 +614,12 @@ PluginModuleParent::PluginModuleParent(bool aIsChrome)
 {
 #if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
     mIsStartingAsync = Preferences::GetBool(kAsyncInitPref, false);
+#if defined(MOZ_CRASHREPORTER)
+    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("AsyncPluginInit"),
+                                       mIsStartingAsync ?
+                                           NS_LITERAL_CSTRING("1") :
+                                           NS_LITERAL_CSTRING("0"));
+#endif
 #endif
 }
 

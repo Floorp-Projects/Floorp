@@ -483,7 +483,7 @@ WarningOnlyErrorReporter(JSContext* aCx, const char* aMessage, JSErrorReport* aR
 {
   MOZ_ASSERT(JSREPORT_IS_WARNING(aRep->flags));
   nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
-  nsPIDOMWindow* win = xpc::WindowGlobalOrNull(JS::CurrentGlobalOrNull(aCx));
+  nsPIDOMWindow* win = xpc::CurrentWindowOrNull(aCx);
   xpcReport->Init(aRep, aMessage, nsContentUtils::IsCallerChrome(),
                   win ? win->WindowID() : 0);
   xpcReport->LogToConsole();

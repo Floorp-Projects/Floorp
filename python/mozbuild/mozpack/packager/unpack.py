@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import mozpack.path
+import mozpack.path as mozpath
 from mozpack.files import (
     FileFinder,
     DeflatedFile,
@@ -50,18 +50,18 @@ class UnpackFinder(FileFinder):
             # Skip the precomplete file, which is generated at packaging time.
             if p == 'precomplete':
                 continue
-            base = mozpack.path.dirname(p)
+            base = mozpath.dirname(p)
             # If the file is a zip/jar that is not a .xpi, and contains a
             # chrome.manifest, it is an omnijar. All the files it contains
             # go in the directory containing the omnijar. Manifests are merged
             # if there is a corresponding manifest in the directory.
             if not p.endswith('.xpi') and self._maybe_zip(f) and \
-                    (mozpack.path.basename(p) == self.omnijar or
+                    (mozpath.basename(p) == self.omnijar or
                      not self.omnijar):
                 jar = self._open_jar(p, f)
                 if 'chrome.manifest' in jar:
                     self.kind = 'omni'
-                    self.omnijar = mozpack.path.basename(p)
+                    self.omnijar = mozpath.basename(p)
                     self._fill_with_omnijar(base, jar)
                     continue
             # If the file is a manifest, scan its entries for some referencing
@@ -80,10 +80,10 @@ class UnpackFinder(FileFinder):
 
     def _fill_with_omnijar(self, base, jar):
         for j in jar:
-            path = mozpack.path.join(base, j.filename)
+            path = mozpath.join(base, j.filename)
             if is_manifest(j.filename):
                 m = self.files[path] if self.files.contains(path) \
-                    else ManifestFile(mozpack.path.dirname(path))
+                    else ManifestFile(mozpath.dirname(path))
                 for e in parse_manifest(None, path, j):
                     m.add(e)
                 if not self.files.contains(path):
@@ -112,9 +112,9 @@ class UnpackFinder(FileFinder):
                 assert len(jar) == 1
                 jar = jar[0]
             if not jarpath in jars:
-                base = mozpack.path.splitext(jarpath)[0]
+                base = mozpath.splitext(jarpath)[0]
                 for j in self._open_jar(jarpath, jar):
-                    self.files.add(mozpack.path.join(base,
+                    self.files.add(mozpath.join(base,
                                                      j.filename),
                                    DeflatedFile(j))
             jars.add(jarpath)
@@ -154,10 +154,10 @@ class UnpackFinder(FileFinder):
         '''
         base = entry.base
         jar, relpath = urlparse(relpath).path.split('!', 1)
-        entry = entry.rebase(mozpack.path.join(base, 'jar:%s!' % jar)) \
-            .move(mozpack.path.join(base, mozpack.path.splitext(jar)[0])) \
+        entry = entry.rebase(mozpath.join(base, 'jar:%s!' % jar)) \
+            .move(mozpath.join(base, mozpath.splitext(jar)[0])) \
             .rebase(base)
-        return mozpack.path.join(base, jar), entry
+        return mozpath.join(base, jar), entry
 
 
 def unpack_to_registry(source, registry):
@@ -169,7 +169,7 @@ def unpack_to_registry(source, registry):
     finder = UnpackFinder(source)
     packager = SimplePackager(FlatFormatter(registry))
     for p, f in finder.find('*'):
-        if mozpack.path.split(p)[0] not in STARTUP_CACHE_PATHS:
+        if mozpath.split(p)[0] not in STARTUP_CACHE_PATHS:
             packager.add(p, f)
     packager.close()
 

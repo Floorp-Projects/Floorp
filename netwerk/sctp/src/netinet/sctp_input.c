@@ -32,7 +32,7 @@
 
 #ifdef __FreeBSD__
 #include <sys/cdefs.h>
-__FBSDID("$FreeBSD: head/sys/netinet/sctp_input.c 277805 2015-01-27 19:35:38Z delphij $");
+__FBSDID("$FreeBSD: head/sys/netinet/sctp_input.c 279859 2015-03-10 19:49:25Z tuexen $");
 #endif
 
 #include <netinet/sctp_os.h>
@@ -2897,6 +2897,7 @@ sctp_handle_cookie_echo(struct mbuf *m, int iphlen, int offset,
 			inp->sctp_mobility_features = (*inp_p)->sctp_mobility_features;
 			inp->sctp_socket = so;
 			inp->sctp_frag_point = (*inp_p)->sctp_frag_point;
+			inp->max_cwnd = (*inp_p)->max_cwnd;
 			inp->sctp_cmt_on_off = (*inp_p)->sctp_cmt_on_off;
 			inp->ecn_supported = (*inp_p)->ecn_supported;
 			inp->prsctp_supported = (*inp_p)->prsctp_supported;

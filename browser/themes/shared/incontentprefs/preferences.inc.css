@@ -216,6 +216,22 @@ description > html|a {
   cursor: pointer;
 }
 
+#fxaProfileImage {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border-width: 5px;
+  border-color: red;
+  background-image: url(chrome://browser/skin/preferences/in-content/default-profile-image.svg);
+  background-size: contain;
+  cursor: pointer;
+  -moz-margin-end: 15px;
+}
+
+#fxaProfileImage:hover {
+  border-color: blue;
+}
+
 #noFxaAccount {
   /* Overriding the margins from the base preferences.css theme file.
      These overrides can be simplified by fixing bug 1027174 */

@@ -186,7 +186,7 @@ add_task(function test_setup()
                              "goog-badbinurl-shavar");
   Services.prefs.setCharPref("urlclassifier.downloadAllowTable",
                              "goog-downloadwhite-digest256");
-  // On Windows SendRemoteQueryInternal needs locale preference.
+  // SendRemoteQueryInternal needs locale preference.
   let locale = Services.prefs.getCharPref("general.useragent.locale");
   Services.prefs.setCharPref("general.useragent.locale", "en-US");
 

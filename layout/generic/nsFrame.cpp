@@ -4750,7 +4750,7 @@ nsIFrame::GetOffsetToCrossDoc(const nsIFrame* aOther, const int32_t aAPD) const
       int32_t newAPD = f ? f->PresContext()->AppUnitsPerDevPixel() : 0;
       if (!f || newAPD != currAPD) {
         // Convert docOffset to the right APD and add it to offset.
-        offset += docOffset.ConvertAppUnits(currAPD, aAPD);
+        offset += docOffset.ScaleToOtherAppUnits(currAPD, aAPD);
         docOffset.x = docOffset.y = 0;
       }
       currAPD = newAPD;
@@ -4758,7 +4758,7 @@ nsIFrame::GetOffsetToCrossDoc(const nsIFrame* aOther, const int32_t aAPD) const
     }
   }
   if (f == aOther) {
-    offset += docOffset.ConvertAppUnits(currAPD, aAPD);
+    offset += docOffset.ScaleToOtherAppUnits(currAPD, aAPD);
   } else {
     // Looks like aOther wasn't an ancestor of |this|.  So now we have
     // the root-document-relative position of |this| in |offset|. Subtract the

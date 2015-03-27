@@ -156,15 +156,6 @@ public:
                                          TextureClient* aClientOnBlack,
                                          TextureClient* aClientOnWhite) = 0;
 
-  /**
-   * Tell the compositor side that the shared data has been modified so that
-   * it can react accordingly (upload textures, etc.).
-   */
-  virtual void UpdatedTexture(CompositableClient* aCompositable,
-                              TextureClient* aTexture,
-                              nsIntRegion* aRegion) = 0;
-
-
   virtual void SendFenceHandle(AsyncTransactionTracker* aTracker,
                                PTextureChild* aTexture,
                                const FenceHandle& aFence) = 0;

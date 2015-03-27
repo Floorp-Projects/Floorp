@@ -28,6 +28,9 @@ include flexbox/reftest.list
 # Image Values and Replaced Content Level 3
 include images3/reftest.list
 
+# Lists and Counters Level 3
+include lists-3/reftest.list
+
 # Media Queries Level 3
 # include mediaqueries3/reftest.list
 

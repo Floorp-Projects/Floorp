@@ -13,7 +13,11 @@ let test = Task.async(function*() {
   let firstTarget = TargetFactory.forTab(firstTab);
   yield firstTarget.makeRemote();
 
-  yield gDevTools.showToolbox(firstTarget, "webconsole");
+  let toolboxFirstTab;
+  yield gDevTools.showToolbox(firstTarget, "webconsole").then((aToolbox) => {
+    toolboxFirstTab = aToolbox;
+  });
+
   is(gProfilerConnections, 1,
     "A shared profiler connection should have been created.");
 
@@ -25,14 +29,21 @@ let test = Task.async(function*() {
   let secondTarget = TargetFactory.forTab(secondTab);
   yield secondTarget.makeRemote();
 
-  yield gDevTools.showToolbox(secondTarget, "jsprofiler");
+  let toolboxSecondTab;
+  yield gDevTools.showToolbox(secondTarget, "jsprofiler").then((aToolbox) => {
+    toolboxSecondTab = aToolbox;
+  });
+
   is(gProfilerConnections, 2,
     "Only one new profiler connection should have been created.");
 
-  yield removeTab(firstTab);
-  yield removeTab(secondTab);
-
-  finish();
+  yield toolboxFirstTab.destroy().then(() => {
+    removeTab(firstTab);
+  });
+  yield toolboxSecondTab.destroy().then(() => {
+    removeTab(secondTab);
+    finish();
+  });
 });
 
 function profilerConnectionObserver(subject, topic, data) {

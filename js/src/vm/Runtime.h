@@ -1090,7 +1090,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Client opaque pointers */
     void                *data;
 
-#ifdef XP_MACOSX
+#if defined(XP_MACOSX) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     js::AsmJSMachExceptionHandler asmJSMachExceptionHandler;
 #endif
 

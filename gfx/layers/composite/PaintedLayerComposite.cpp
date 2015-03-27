@@ -89,7 +89,7 @@ PaintedLayerComposite::SetLayerManager(LayerManagerComposite* aManager)
 {
   LayerComposite::SetLayerManager(aManager);
   mManager = aManager;
-  if (mBuffer) {
+  if (mBuffer && mCompositor) {
     mBuffer->SetCompositor(mCompositor);
   }
 }

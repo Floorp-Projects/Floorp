@@ -55,7 +55,7 @@ using mozilla::CSSToScreenScale from "Units.h";
 using mozilla::CommandInt from "mozilla/EventForwards.h";
 using mozilla::Modifiers from "mozilla/EventForwards.h";
 using mozilla::layers::GeckoContentController::APZStateChange from "mozilla/layers/GeckoContentController.h";
-using mozilla::WritingMode from "WritingModes.h";
+using mozilla::WritingMode from "mozilla/WritingModes.h";
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
 
 namespace mozilla {

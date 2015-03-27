@@ -89,6 +89,9 @@ EXPORTS += [
     'nsSubDocumentFrame.h',
     'nsTextRunTransformations.h',
     'ScrollbarActivity.h',
+]
+
+EXPORTS.mozilla += [
     'WritingModes.h',
 ]
 

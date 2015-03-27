@@ -969,12 +969,7 @@ pref("gecko.handlerService.allowRegisterFromDifferentHost", false);
 pref("browser.safebrowsing.enabled", true);
 pref("browser.safebrowsing.malware.enabled", true);
 pref("browser.safebrowsing.downloads.enabled", true);
-// Remote lookups are only enabled for Windows in Nightly and Aurora
-#if defined(XP_WIN)
 pref("browser.safebrowsing.downloads.remote.enabled", true);
-#else
-pref("browser.safebrowsing.downloads.remote.enabled", false);
-#endif
 pref("browser.safebrowsing.debug", false);
 
 pref("browser.safebrowsing.updateURL", "https://safebrowsing.google.com/safebrowsing/downloads?client=SAFEBROWSING_ID&appver=%VERSION%&pver=2.2&key=%GOOGLE_API_KEY%");
@@ -1015,7 +1010,7 @@ pref("urlclassifier.downloadBlockTable", "goog-badbinurl-shavar");
 #ifdef XP_WIN
 // Only download the whitelist on Windows, since the whitelist is
 // only useful for suppressing remote lookups for signed binaries which we can
-// only verify on Windows (Bug 974579).
+// only verify on Windows (Bug 974579). Other platforms always do remote lookups.
 pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-digest256");
 #endif
 #endif
@@ -1449,6 +1444,9 @@ pref("devtools.performance.ui.enable-framerate", true);
 
 // The default cache UI setting
 pref("devtools.cache.disabled", false);
+
+// The default service workers UI setting
+pref("devtools.serviceWorkers.testing.enabled", false);
 
 // Enable the Network Monitor
 pref("devtools.netmonitor.enabled", true);

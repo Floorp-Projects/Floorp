@@ -42,7 +42,9 @@ MIRGenerator::MIRGenerator(CompileCompartment *compartment, const JitCompileOpti
     instrumentedProfilingIsCached_(false),
     nurseryObjects_(*alloc),
     outOfBoundsLabel_(outOfBoundsLabel),
+#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     usesSignalHandlersForAsmJSOOB_(usesSignalHandlersForAsmJSOOB),
+#endif
     options(options)
 { }
 

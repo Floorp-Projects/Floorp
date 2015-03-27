@@ -891,6 +891,7 @@ nsDisplayScrollLayer::ComputeFrameMetrics(nsIFrame* aForFrame,
       if (widget) {
         nsIntRect widgetBounds;
         widget->GetBounds(widgetBounds);
+        widgetBounds.MoveTo(0,0);
         metrics.mCompositionBounds = ParentLayerRect(ViewAs<ParentLayerPixel>(widgetBounds));
 #ifdef MOZ_WIDGET_ANDROID
         if (frameBounds.height < metrics.mCompositionBounds.height) {
@@ -1547,7 +1548,7 @@ nsDisplayList::ComputeVisibilityForSublist(nsDisplayListBuilder* aBuilder,
 }
 
 static bool
-StartPendingAnimationsOnSubDocuments(nsIDocument* aDocument, void* aReadyTime)
+TriggerPendingAnimationsOnSubDocuments(nsIDocument* aDocument, void* aReadyTime)
 {
   PendingPlayerTracker* tracker = aDocument->GetPendingPlayerTracker();
   if (tracker) {
@@ -1556,22 +1557,22 @@ StartPendingAnimationsOnSubDocuments(nsIDocument* aDocument, void* aReadyTime)
     // this document yet so we shouldn't start animations
     if (!shell || !shell->IsPaintingSuppressed()) {
       const TimeStamp& readyTime = *static_cast<TimeStamp*>(aReadyTime);
-      tracker->StartPendingPlayersOnNextTick(readyTime);
+      tracker->TriggerPendingPlayersOnNextTick(readyTime);
     }
   }
-  aDocument->EnumerateSubDocuments(StartPendingAnimationsOnSubDocuments,
+  aDocument->EnumerateSubDocuments(TriggerPendingAnimationsOnSubDocuments,
                                    aReadyTime);
   return true;
 }
 
 static void
-StartPendingAnimations(nsIDocument* aDocument,
+TriggerPendingAnimations(nsIDocument* aDocument,
                        const TimeStamp& aReadyTime) {
   MOZ_ASSERT(!aReadyTime.IsNull(),
              "Animation ready time is not set. Perhaps we're using a layer"
              " manager that doesn't update it");
-  StartPendingAnimationsOnSubDocuments(aDocument,
-                                       const_cast<TimeStamp*>(&aReadyTime));
+  TriggerPendingAnimationsOnSubDocuments(aDocument,
+                                         const_cast<TimeStamp*>(&aReadyTime));
 }
 
 /**
@@ -1770,7 +1771,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   layerBuilder->DidEndTransaction();
 
   if (document && widgetTransaction) {
-    StartPendingAnimations(document, layerManager->GetAnimationReadyTime());
+    TriggerPendingAnimations(document, layerManager->GetAnimationReadyTime());
   }
 
   nsIntRegion invalid;
@@ -2027,6 +2028,14 @@ static bool IsContentLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
   return nsLayoutUtils::CompareTreePosition(content1, content2, commonAncestor) <= 0;
 }
 
+static bool IsCSSOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2, void*) {
+  nsIFrame* frame1 = aItem1->Frame();
+  nsIFrame* frame2 = aItem2->Frame();
+  int32_t order1 = frame1 ? frame1->StylePosition()->mOrder : 0;
+  int32_t order2 = frame2 ? frame2->StylePosition()->mOrder : 0;
+  return order1 <= order2;
+}
+
 static bool IsZOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
                         void* aClosure) {
   // Note that we can't just take the difference of the two
@@ -2042,6 +2051,10 @@ void nsDisplayList::SortByZOrder(nsDisplayListBuilder* aBuilder,
 void nsDisplayList::SortByContentOrder(nsDisplayListBuilder* aBuilder,
                                        nsIContent* aCommonAncestor) {
   Sort(aBuilder, IsContentLEQ, aCommonAncestor);
+}
+
+void nsDisplayList::SortByCSSOrder(nsDisplayListBuilder* aBuilder) {
+  Sort(aBuilder, IsCSSOrderLEQ, nullptr);
 }
 
 void nsDisplayList::Sort(nsDisplayListBuilder* aBuilder,
@@ -4874,7 +4887,7 @@ nsRect nsDisplayZoom::GetBounds(nsDisplayListBuilder* aBuilder, bool* aSnap)
 {
   nsRect bounds = nsDisplaySubDocument::GetBounds(aBuilder, aSnap);
   *aSnap = false;
-  return bounds.ConvertAppUnitsRoundOut(mAPD, mParentAPD);
+  return bounds.ScaleToOtherAppUnitsRoundOut(mAPD, mParentAPD);
 }
 
 void nsDisplayZoom::HitTest(nsDisplayListBuilder *aBuilder,
@@ -4886,10 +4899,10 @@ void nsDisplayZoom::HitTest(nsDisplayListBuilder *aBuilder,
   // A 1x1 rect indicates we are just hit testing a point, so pass down a 1x1
   // rect as well instead of possibly rounding the width or height to zero.
   if (aRect.width == 1 && aRect.height == 1) {
-    rect.MoveTo(aRect.TopLeft().ConvertAppUnits(mParentAPD, mAPD));
+    rect.MoveTo(aRect.TopLeft().ScaleToOtherAppUnits(mParentAPD, mAPD));
     rect.width = rect.height = 1;
   } else {
-    rect = aRect.ConvertAppUnitsRoundOut(mParentAPD, mAPD);
+    rect = aRect.ScaleToOtherAppUnitsRoundOut(mParentAPD, mAPD);
   }
   mList.HitTest(aBuilder, rect, aState, aOutFrames);
 }
@@ -4901,11 +4914,11 @@ bool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,
   nsRegion visibleRegion;
   // mVisibleRect has been clipped to GetClippedBounds
   visibleRegion.And(*aVisibleRegion, mVisibleRect);
-  visibleRegion = visibleRegion.ConvertAppUnitsRoundOut(mParentAPD, mAPD);
+  visibleRegion = visibleRegion.ScaleToOtherAppUnitsRoundOut(mParentAPD, mAPD);
   nsRegion originalVisibleRegion = visibleRegion;
 
   nsRect transformedVisibleRect =
-    mVisibleRect.ConvertAppUnitsRoundOut(mParentAPD, mAPD);
+    mVisibleRect.ScaleToOtherAppUnitsRoundOut(mParentAPD, mAPD);
   bool retval;
   // If we are to generate a scrollable layer we call
   // nsDisplaySubDocument::ComputeVisibility to make the necessary adjustments
@@ -4924,7 +4937,7 @@ bool nsDisplayZoom::ComputeVisibility(nsDisplayListBuilder *aBuilder,
   // removed = originalVisibleRegion - visibleRegion
   removed.Sub(originalVisibleRegion, visibleRegion);
   // Convert removed region to parent appunits.
-  removed = removed.ConvertAppUnitsRoundIn(mAPD, mParentAPD);
+  removed = removed.ScaleToOtherAppUnitsRoundIn(mAPD, mParentAPD);
   // aVisibleRegion = aVisibleRegion - removed (modulo any simplifications
   // SubtractFromVisibleRegion does)
   aBuilder->SubtractFromVisibleRegion(aVisibleRegion, removed);

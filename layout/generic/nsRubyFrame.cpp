@@ -5,15 +5,17 @@
  * http://mozilla.org/MPL/2.0/. */
 
 /* rendering object for CSS "display: ruby" */
+
 #include "nsRubyFrame.h"
+
+#include "RubyUtils.h"
+#include "mozilla/Maybe.h"
+#include "mozilla/WritingModes.h"
 #include "nsLineLayout.h"
 #include "nsPresContext.h"
-#include "nsStyleContext.h"
-#include "WritingModes.h"
-#include "RubyUtils.h"
 #include "nsRubyBaseContainerFrame.h"
 #include "nsRubyTextContainerFrame.h"
-#include "mozilla/Maybe.h"
+#include "nsStyleContext.h"
 
 using namespace mozilla;
 

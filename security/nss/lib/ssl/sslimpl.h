@@ -981,6 +981,7 @@ struct ssl3StateStr {
     PRUint16             dtlsSRTPCiphers[MAX_DTLS_SRTP_CIPHER_SUITES];
     PRUint16             dtlsSRTPCipherCount;
     PRUint16             dtlsSRTPCipherSuite;	/* 0 if not selected */
+    PRBool               fatalAlertSent;
 };
 
 #define DTLS_MAX_MTU  1500      /* Ethernet MTU but without subtracting the
