@@ -1125,7 +1125,7 @@ DataChannelConnection::SendDeferredMessages()
                                     nullptr, 0,
                                     (void *)spa, (socklen_t)sizeof(struct sctp_sendv_spa),
                                     SCTP_SENDV_SPA,
-                                    0) < 0)) {
+                                    0)) < 0) {
           if (errno == EAGAIN || errno == EWOULDBLOCK) {
             // leave queued for resend
             failed_send = true;
