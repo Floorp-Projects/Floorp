@@ -93,15 +93,16 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
 
   protected static class Responder {
     final AccountAuthenticatorResponse response;
-    final Account account;
+    final AndroidFxAccount fxAccount;
 
-    public Responder(AccountAuthenticatorResponse response, Account account) {
+    public Responder(AccountAuthenticatorResponse response, AndroidFxAccount fxAccount) {
       this.response = response;
-      this.account = account;
+      this.fxAccount = fxAccount;
     }
 
     public void fail(Exception e) {
       Logger.warn(LOG_TAG, "Responding with error!", e);
+      fxAccount.releaseSharedAccountStateLock();
       final Bundle result = new Bundle();
       result.putInt(AccountManager.KEY_ERROR_CODE, UNKNOWN_ERROR_CODE);
       result.putString(AccountManager.KEY_ERROR_MESSAGE, e.toString());
@@ -110,9 +111,10 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
 
     public void succeed(String authToken) {
       Logger.info(LOG_TAG, "Responding with success!");
+      fxAccount.releaseSharedAccountStateLock();
       final Bundle result = new Bundle();
-      result.putString(AccountManager.KEY_ACCOUNT_NAME, account.name);
-      result.putString(AccountManager.KEY_ACCOUNT_TYPE, account.type);
+      result.putString(AccountManager.KEY_ACCOUNT_NAME, fxAccount.account.name);
+      result.putString(AccountManager.KEY_ACCOUNT_TYPE, fxAccount.account.type);
       result.putString(AccountManager.KEY_AUTHTOKEN, authToken);
       response.onResult(result);
     }
@@ -179,7 +181,7 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
   protected void getOAuthToken(final AccountAuthenticatorResponse response, final AndroidFxAccount fxAccount, final String scope) throws NetworkErrorException {
     Logger.info(LOG_TAG, "Fetching oauth token with scope: " + scope);
 
-    final Responder responder = new Responder(response, fxAccount.getAndroidAccount());
+    final Responder responder = new Responder(response, fxAccount);
 
     final String oauthServerUri = FxAccountConstants.DEFAULT_OAUTH_SERVER_ENDPOINT;
     final String audience;
@@ -270,14 +272,25 @@ public class FxAccountAuthenticator extends AbstractAccountAuthenticator {
     if (authTokenType != null && authTokenType.startsWith(oauthPrefix)) {
       final String scope = authTokenType.substring(oauthPrefix.length());
       final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+      try {
+        fxAccount.acquireSharedAccountStateLock(LOG_TAG);
+      } catch (InterruptedException e) {
+        Logger.warn(LOG_TAG, "Could not acquire account state lock; return error bundle.");
+        final Bundle bundle = new Bundle();
+        bundle.putInt(AccountManager.KEY_ERROR_CODE, 1);
+        bundle.putString(AccountManager.KEY_ERROR_MESSAGE, "Could not acquire account state lock.");
+        return bundle;
+      }
       getOAuthToken(response, fxAccount, scope);
       return null;
     }
 
     // Otherwise, fail.
-    Logger.warn(LOG_TAG, "Returning null bundle for getAuthToken.");
-
-    return null;
+    Logger.warn(LOG_TAG, "Returning error bundle for getAuthToken with unknown token type.");
+    final Bundle bundle = new Bundle();
+    bundle.putInt(AccountManager.KEY_ERROR_CODE, 2);
+    bundle.putString(AccountManager.KEY_ERROR_MESSAGE, "Unknown token type: " + authTokenType);
+    return bundle;
   }
 
   @Override
