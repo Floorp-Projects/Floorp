@@ -47,7 +47,7 @@ let TEST_DATA = [{
   },
   validate: (element, container, inspector) => {
     let editor = container.editor;
-    let visibleAttrText = editor.attrs["style"].querySelector(".attr-value").textContent;
+    let visibleAttrText = editor.attrElements.get("style").querySelector(".attr-value").textContent;
     is (visibleAttrText, DATA_URL_INLINE_STYLE_COLLAPSED);
   }
 }, {
@@ -58,7 +58,7 @@ let TEST_DATA = [{
   },
   validate: (element, container, inspector) => {
     let editor = container.editor;
-    let visibleAttrText = editor.attrs["data-long"].querySelector(".attr-value").textContent;
+    let visibleAttrText = editor.attrElements.get("data-long").querySelector(".attr-value").textContent;
     is (visibleAttrText, LONG_ATTRIBUTE_COLLAPSED)
   }
 }, {
@@ -69,7 +69,7 @@ let TEST_DATA = [{
   },
   validate: (element, container, inspector) => {
     let editor = container.editor;
-    let visibleAttrText = editor.attrs["src"].querySelector(".attr-value").textContent;
+    let visibleAttrText = editor.attrElements.get("src").querySelector(".attr-value").textContent;
     is (visibleAttrText, DATA_URL_ATTRIBUTE_COLLAPSED);
   }
 }];
