@@ -55,8 +55,8 @@ public:
     return IsWaiting(aPlayer, mPausePendingSet);
   }
 
-  void StartPendingPlayersOnNextTick(const TimeStamp& aReadyTime);
-  void StartPendingPlayersNow();
+  void TriggerPendingPlayersOnNextTick(const TimeStamp& aReadyTime);
+  void TriggerPendingPlayersNow();
   bool HasPendingPlayers() const {
     return mPlayPendingSet.Count() > 0 || mPausePendingSet.Count() > 0;
   }

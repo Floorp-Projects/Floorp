@@ -58,7 +58,7 @@ StartPlayerAtTime(nsRefPtrHashKey<dom::AnimationPlayer>* aKey,
   // have no correspondance to wallclock times so we shouldn't try to convert
   // aReadyTime (which is a wallclock time) to a timeline value. Instead, the
   // animation player will be started when the refresh driver is next
-  // advanced since this will trigger a call to StartPendingPlayersNow.
+  // advanced since this will trigger a call to TriggerPendingPlayersNow.
   if (timeline->IsUnderTestControl()) {
     return PL_DHASH_NEXT;
   }
@@ -71,7 +71,8 @@ StartPlayerAtTime(nsRefPtrHashKey<dom::AnimationPlayer>* aKey,
 }
 
 void
-PendingPlayerTracker::StartPendingPlayersOnNextTick(const TimeStamp& aReadyTime)
+PendingPlayerTracker::TriggerPendingPlayersOnNextTick(const TimeStamp&
+                                                        aReadyTime)
 {
   mPlayPendingSet.EnumerateEntries(StartPlayerAtTime,
                                    const_cast<TimeStamp*>(&aReadyTime));
@@ -85,7 +86,7 @@ StartPlayerNow(nsRefPtrHashKey<dom::AnimationPlayer>* aKey, void*)
 }
 
 void
-PendingPlayerTracker::StartPendingPlayersNow()
+PendingPlayerTracker::TriggerPendingPlayersNow()
 {
   mPlayPendingSet.EnumerateEntries(StartPlayerNow, nullptr);
   mPlayPendingSet.Clear();
