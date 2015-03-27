@@ -680,6 +680,14 @@ public final class GeckoProfile {
         }
     }
 
+    public boolean deleteFileFromProfileDir(String fileName) throws IllegalArgumentException {
+        if (TextUtils.isEmpty(fileName)) {
+            throw new IllegalArgumentException("Filename cannot be empty.");
+        }
+        File file = new File(getDir(), fileName);
+        return file.delete();
+    }
+
     private boolean remove() {
         try {
             synchronized (this) {

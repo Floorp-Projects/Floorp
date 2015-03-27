@@ -5,17 +5,22 @@
 
 package org.mozilla.gecko.tabqueue;
 
+import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.GeckoProfile;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.util.ThreadUtils;
+
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 import org.json.JSONArray;
-import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.util.ThreadUtils;
 
 public class TabQueueHelper {
     private static final String LOGTAG = "Gecko" + TabQueueHelper.class.getSimpleName();
@@ -23,6 +28,8 @@ public class TabQueueHelper {
     public static final String FILE_NAME = "tab_queue_url_list.json";
     public static final String LOAD_URLS_ACTION = "TAB_QUEUE_LOAD_URLS_ACTION";
     public static final int TAB_QUEUE_NOTIFICATION_ID = R.id.tabQueueNotification;
+
+    public static final String PREF_TAB_QUEUE_COUNT = "tab_queue_count";
 
     /**
      * Reads file and converts any content to JSON, adds passed in URL to the data and writes back to the file,
@@ -52,7 +59,9 @@ public class TabQueueHelper {
      * @param context
      * @param tabsQueued
      */
-    static public void showNotification(Context context, int tabsQueued) {
+    public static void showNotification(final Context context, final int tabsQueued) {
+        ThreadUtils.assertNotOnUiThread();
+
         Intent resultIntent = new Intent(context, BrowserApp.class);
         resultIntent.setAction(TabQueueHelper.LOAD_URLS_ACTION);
 
@@ -60,7 +69,7 @@ public class TabQueueHelper {
 
         String title, text;
         final Resources resources = context.getResources();
-        if(tabsQueued == 1) {
+        if (tabsQueued == 1) {
             title = resources.getString(R.string.tab_queue_notification_title_singular);
             text = resources.getString(R.string.tab_queue_notification_text_singular);
         } else {
@@ -69,12 +78,59 @@ public class TabQueueHelper {
         }
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
-                                                                   .setSmallIcon(R.drawable.ic_status_logo)
-                                                                   .setContentTitle(title)
-                                                                   .setContentText(text)
-                                                                   .setContentIntent(pendingIntent);
+                                                     .setSmallIcon(R.drawable.ic_status_logo)
+                                                     .setContentTitle(title)
+                                                     .setContentText(text)
+                                                     .setContentIntent(pendingIntent);
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(TabQueueHelper.TAB_QUEUE_NOTIFICATION_ID, builder.build());
+    }
+
+    public static boolean shouldOpenTabQueueUrls(final Context context) {
+        ThreadUtils.assertNotOnUiThread();
+
+        // TODO: Use profile shared prefs when bug 1147925 gets fixed.
+        final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
+
+        boolean tabQueueEnabled = prefs.getBoolean(GeckoPreferences.PREFS_TAB_QUEUE, false);
+        int tabsQueued = prefs.getInt(PREF_TAB_QUEUE_COUNT, 0);
+
+        return tabQueueEnabled && tabsQueued > 0;
+    }
+
+    private static int getTabQueueLength(final Context context) {
+        ThreadUtils.assertNotOnUiThread();
+
+        // TODO: Use profile shared prefs when bug 1147925 gets fixed.
+        final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
+        return prefs.getInt(PREF_TAB_QUEUE_COUNT, 0);
+    }
+
+    public static void openQueuedUrls(final Context context, final GeckoProfile profile, final String filename) {
+        ThreadUtils.assertNotOnUiThread();
+
+        // Remove the notification.
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(TAB_QUEUE_NOTIFICATION_ID);
+
+        // exit early if we don't have any tabs queued
+        if (getTabQueueLength(context) < 1) {
+            return;
+        }
+
+        JSONArray jsonArray = profile.readJSONArrayFromFile(filename);
+
+        // TODO: Convert data to required format for gecko to process and send to Gecko - Bug 1146325
+
+        try {
+            profile.deleteFileFromProfileDir(filename);
+        } catch (IllegalArgumentException e) {
+            Log.e(LOGTAG, "Error deleting Tab Queue data file.", e);
+        }
+
+        // TODO: Use profile shared prefs when bug 1147925 gets fixed.
+        final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
+        prefs.edit().remove(PREF_TAB_QUEUE_COUNT).apply();
     }
 }
