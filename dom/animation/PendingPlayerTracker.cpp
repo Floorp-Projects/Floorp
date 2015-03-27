@@ -76,6 +76,8 @@ PendingPlayerTracker::TriggerPendingPlayersOnNextTick(const TimeStamp&
 {
   mPlayPendingSet.EnumerateEntries(TriggerPlayerAtTime,
                                    const_cast<TimeStamp*>(&aReadyTime));
+  mPausePendingSet.EnumerateEntries(TriggerPlayerAtTime,
+                                    const_cast<TimeStamp*>(&aReadyTime));
 }
 
 PLDHashOperator
@@ -90,6 +92,8 @@ PendingPlayerTracker::TriggerPendingPlayersNow()
 {
   mPlayPendingSet.EnumerateEntries(TriggerPlayerNow, nullptr);
   mPlayPendingSet.Clear();
+  mPausePendingSet.EnumerateEntries(TriggerPlayerNow, nullptr);
+  mPausePendingSet.Clear();
 }
 
 void
