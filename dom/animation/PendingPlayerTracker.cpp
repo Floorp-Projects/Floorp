@@ -13,15 +13,19 @@ using namespace mozilla;
 
 namespace mozilla {
 
-NS_IMPL_CYCLE_COLLECTION(PendingPlayerTracker, mPlayPendingSet, mDocument)
+NS_IMPL_CYCLE_COLLECTION(PendingPlayerTracker,
+                         mPlayPendingSet,
+                         mPausePendingSet,
+                         mDocument)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PendingPlayerTracker, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PendingPlayerTracker, Release)
 
 void
-PendingPlayerTracker::AddPlayPending(dom::AnimationPlayer& aPlayer)
+PendingPlayerTracker::AddPending(dom::AnimationPlayer& aPlayer,
+                                 AnimationPlayerSet& aSet)
 {
-  mPlayPendingSet.PutEntry(&aPlayer);
+  aSet.PutEntry(&aPlayer);
 
   // Schedule a paint. Otherwise animations that don't trigger a paint by
   // themselves (e.g. CSS animations with an empty keyframes rule) won't
@@ -30,15 +34,17 @@ PendingPlayerTracker::AddPlayPending(dom::AnimationPlayer& aPlayer)
 }
 
 void
-PendingPlayerTracker::RemovePlayPending(dom::AnimationPlayer& aPlayer)
+PendingPlayerTracker::RemovePending(dom::AnimationPlayer& aPlayer,
+                                    AnimationPlayerSet& aSet)
 {
-  mPlayPendingSet.RemoveEntry(&aPlayer);
+  aSet.RemoveEntry(&aPlayer);
 }
 
 bool
-PendingPlayerTracker::IsWaitingToPlay(dom::AnimationPlayer const& aPlayer) const
+PendingPlayerTracker::IsWaiting(const dom::AnimationPlayer& aPlayer,
+                                const AnimationPlayerSet& aSet) const
 {
-  return mPlayPendingSet.Contains(const_cast<dom::AnimationPlayer*>(&aPlayer));
+  return aSet.Contains(const_cast<dom::AnimationPlayer*>(&aPlayer));
 }
 
 PLDHashOperator
