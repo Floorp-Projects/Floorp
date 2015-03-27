@@ -415,6 +415,7 @@ ContainsHoistedDeclaration(ExclusiveContext *cx, ParseNode *node, bool *result)
       case PNK_FORIN:
       case PNK_FOROF:
       case PNK_FORHEAD:
+      case PNK_FRESHENBLOCK:
       case PNK_CLASSMETHOD:
       case PNK_CLASSMETHODLIST:
       case PNK_CLASSNAMES:
