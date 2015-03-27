@@ -4522,7 +4522,7 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *viewName, ParseNode *indexExpr,
         f.leaveHeapExpression();
 
         if (!pointerType.isIntish())
-            return f.failf(indexExpr, "%s is not a subtype of int", pointerType.toChars());
+            return f.failf(pointerNode, "%s is not a subtype of int", pointerType.toChars());
     } else {
         // For legacy compatibility, accept Int8/Uint8 accesses with no shift.
         if (TypedArrayShift(*viewType) != 0)
@@ -4531,23 +4531,25 @@ CheckArrayAccess(FunctionCompiler &f, ParseNode *viewName, ParseNode *indexExpr,
         MOZ_ASSERT(mask == -1);
         bool folded = false;
 
-        if (indexExpr->isKind(PNK_BITAND))
-            folded = FoldMaskedArrayIndex(f, &indexExpr, &mask, needsBoundsCheck);
+        ParseNode *pointerNode = indexExpr;
+
+        if (pointerNode->isKind(PNK_BITAND))
+            folded = FoldMaskedArrayIndex(f, &pointerNode, &mask, needsBoundsCheck);
 
         f.enterHeapExpression();
 
         Type pointerType;
-        if (!CheckExpr(f, indexExpr, &pointerDef, &pointerType))
+        if (!CheckExpr(f, pointerNode, &pointerDef, &pointerType))
             return false;
 
         f.leaveHeapExpression();
 
         if (folded) {
             if (!pointerType.isIntish())
-                return f.failf(indexExpr, "%s is not a subtype of intish", pointerType.toChars());
+                return f.failf(pointerNode, "%s is not a subtype of intish", pointerType.toChars());
         } else {
             if (!pointerType.isInt())
-                return f.failf(indexExpr, "%s is not a subtype of int", pointerType.toChars());
+                return f.failf(pointerNode, "%s is not a subtype of int", pointerType.toChars());
         }
     }
 
