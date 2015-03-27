@@ -10,7 +10,7 @@
  *
  * @see nsIFile
  */
-[scriptable, builtinclass, uuid(ce4ef184-7660-445e-9e59-6731bdc65505)]
+[scriptable, builtinclass, uuid(7ba8c6ba-2ce2-48b1-bd60-4c32aac35f9c)]
 interface nsILocalFile : nsIFile
 {
 };

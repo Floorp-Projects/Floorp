@@ -33,8 +33,8 @@ static int32_t sAutoDeleteCacheVersion = kAutoDeleteCacheVersion;
 static int32_t const kDefaultHalfLifeExperiment = -1; // Disabled
 int32_t CacheObserver::sHalfLifeExperiment = kDefaultHalfLifeExperiment;
 
-static uint32_t const kDefaultHalfLifeHours = 6; // 6 hours
-uint32_t CacheObserver::sHalfLifeHours = kDefaultHalfLifeHours;
+static float const kDefaultHalfLifeHours = 1.0F; // 1 hour
+float CacheObserver::sHalfLifeHours = kDefaultHalfLifeHours;
 
 static bool const kDefaultUseDiskCache = true;
 bool CacheObserver::sUseDiskCache = kDefaultUseDiskCache;
@@ -211,22 +211,22 @@ CacheObserver::AttachToPreferences()
 
   switch (sHalfLifeExperiment) {
   case 1: // The experiment is engaged
-    sHalfLifeHours = 6;
+    sHalfLifeHours = 0.083F; // ~5 mintues
     break;
   case 2:
-    sHalfLifeHours = 24;
+    sHalfLifeHours = 0.25F; // 15 mintues
     break;
   case 3:
-    sHalfLifeHours = 7 * 24;
+    sHalfLifeHours = 1.0F;
     break;
   case 4:
-    sHalfLifeHours = 50 * 24;
+    sHalfLifeHours = 6.0F;
     break;
 
   case -1:
   default: // The experiment is off or broken
     sHalfLifeExperiment = -1;
-    sHalfLifeHours = std::max(1U, std::min(1440U, mozilla::Preferences::GetUint(
+    sHalfLifeHours = std::max(0.01F, std::min(1440.0F, mozilla::Preferences::GetFloat(
       "browser.cache.frecency_half_life_hours", kDefaultHalfLifeHours)));
     break;
   }

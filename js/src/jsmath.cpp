@@ -313,7 +313,7 @@ js::math_ceil_handle(JSContext *cx, HandleValue v, MutableHandleValue res)
         return false;
 
     double result = math_ceil_impl(d);
-    res.setDouble(result);
+    res.setNumber(result);
     return true;
 }
 

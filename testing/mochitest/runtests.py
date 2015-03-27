@@ -1880,38 +1880,10 @@ class Mochitest(MochitestUtilsMixin):
                     return (t for t in tests
                             if 'imptests/failures' not in t['path'])
 
-                # filter that implements old-style JSON manifests, remove
-                # once everything is using .ini
-                def apply_json_manifest(tests, values):
-                    m = os.path.join(SCRIPT_DIR, options.testManifest)
-                    with open(m, 'r') as f:
-                        m = json.loads(f.read())
-
-                    runtests = m.get('runtests')
-                    exctests = m.get('excludetests')
-                    if runtests is None and exctests is None:
-                        if options.runOnly:
-                            runtests = m
-                        else:
-                            exctests = m
-
-                    disabled = 'disabled by {}'.format(options.testManifest)
-                    for t in tests:
-                        if runtests and not any(t['relpath'].startswith(r)
-                                                for r in runtests):
-                            t['disabled'] = disabled
-                        if exctests and any(t['relpath'].startswith(r)
-                                            for r in exctests):
-                            t['disabled'] = disabled
-                        yield t
-
                 filters = [
                     remove_imptest_failure_expectations,
                     subsuite(options.subsuite),
                 ]
-
-                if options.testManifest:
-                    filters.append(apply_json_manifest)
 
                 # Add chunking filters if specified
                 if options.chunkByDir:

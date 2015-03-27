@@ -26,8 +26,13 @@ struct nsPoint : public mozilla::gfx::BasePoint<nscoord, nsPoint> {
                                          nscoord aAppUnitsPerPixel) const;
   inline nsIntPoint ToNearestPixels(nscoord aAppUnitsPerPixel) const;
 
-  // Converts this point from aFromAPP, an appunits per pixel ratio, to aToAPP.
-  inline nsPoint ConvertAppUnits(int32_t aFromAPP, int32_t aToAPP) const;
+  /**
+   * Return this point scaled to a different appunits per pixel (APP) ratio.
+   * @param aFromAPP the APP to scale from
+   * @param aToAPP the APP to scale to
+   */
+  MOZ_WARN_UNUSED_RESULT inline nsPoint
+    ScaleToOtherAppUnits(int32_t aFromAPP, int32_t aToAPP) const;
 };
 
 // nsIntPoint represents a point in one of the types of pixels.
@@ -60,7 +65,7 @@ nsPoint::ToNearestPixels(nscoord aAppUnitsPerPixel) const
 }
 
 inline nsPoint
-nsPoint::ConvertAppUnits(int32_t aFromAPP, int32_t aToAPP) const
+nsPoint::ScaleToOtherAppUnits(int32_t aFromAPP, int32_t aToAPP) const
 {
   if (aFromAPP != aToAPP) {
     nsPoint point;

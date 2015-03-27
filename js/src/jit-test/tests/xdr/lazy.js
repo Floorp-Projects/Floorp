@@ -138,3 +138,23 @@ evalWithCache(test, {
   checkAfter: checkAfter   // Check that relazifying the restored function works
                            // if the original was relazifiable.
 });
+
+// Ensure that if a function is encoded when non-lazy but relazifiable, then
+// decoded, relazified, and then delazified, the result actually works.
+test = `
+  function f() { return true; };
+  var canBeLazy = isRelazifiableFunction(f) || isLazyFunction(f);
+  relazifyFunctions();
+  assertEq(isLazyFunction(f), canBeLazy);
+  f()`
+evalWithCache(test, { assertEqBytecode: true, assertEqResult: true });
+
+// And more of the same, in a slightly different way
+var g1 = newGlobal();
+var g2 = newGlobal();
+var res = "function f(){}";
+var code = cacheEntry(res + "; f();");
+evaluate(code, {global:g1, compileAndGo: true, saveBytecode: {value: true}});
+evaluate(code, {global:g2, loadBytecode: true});
+gc();
+assertEq(g2.f.toString(), res);

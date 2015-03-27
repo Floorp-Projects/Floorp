@@ -153,22 +153,6 @@ ImageBridgeChild::UseOverlaySource(CompositableClient* aCompositable,
 #endif
 
 void
-ImageBridgeChild::UpdatedTexture(CompositableClient* aCompositable,
-                                 TextureClient* aTexture,
-                                 nsIntRegion* aRegion)
-{
-  MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aTexture);
-  MOZ_ASSERT(aCompositable->GetIPDLActor());
-  MOZ_ASSERT(aTexture->GetIPDLActor());
-  MaybeRegion region = aRegion ? MaybeRegion(*aRegion)
-                               : MaybeRegion(null_t());
-  mTxn->AddNoSwapEdit(OpUpdateTexture(nullptr, aCompositable->GetIPDLActor(),
-                                      nullptr, aTexture->GetIPDLActor(),
-                                      region));
-}
-
-void
 ImageBridgeChild::SendFenceHandle(AsyncTransactionTracker* aTracker,
                                   PTextureChild* aTexture,
                                   const FenceHandle& aFence)

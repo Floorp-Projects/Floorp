@@ -132,6 +132,8 @@ public:
 
     virtual Composer2D* GetComposer2D() override;
 
+    void ConfigureAPZControllerThread() override;
+
 protected:
     nsWindow* mParent;
     bool mVisible;

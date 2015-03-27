@@ -848,7 +848,8 @@ class Interface(object):
 
     def __init__(self, name, iid=UNRESOLVED_IID, namespace="",
                  resolved=False, parent=None, methods=[], constants=[],
-                 scriptable=False, function=False, builtinclass=False):
+                 scriptable=False, function=False, builtinclass=False,
+                 main_process_scriptable_only=False):
         self.resolved = resolved
         #TODO: should validate IIDs!
         self.iid = iid
@@ -861,6 +862,7 @@ class Interface(object):
         self.scriptable = scriptable
         self.function = function
         self.builtinclass = builtinclass
+        self.main_process_scriptable_only = main_process_scriptable_only
         # For sanity, if someone constructs an Interface and passes
         # in methods or constants, then it's resolved.
         if self.methods or self.constants:
@@ -930,13 +932,15 @@ class Interface(object):
         (flags, ) = struct.unpack_from(">B", map, start)
         offset = offset + struct.calcsize(">B")
         # only the first two bits are flags
-        flags &= 0xE0
+        flags &= 0xf0
         if flags & 0x80:
             self.scriptable = True
         if flags & 0x40:
             self.function = True
         if flags & 0x20:
             self.builtinclass = True
+        if flags & 0x10:
+            self.main_process_scriptable_only = True
         self.resolved = True
 
     def write_directory_entry(self, file):
@@ -977,6 +981,8 @@ class Interface(object):
             flags |= 0x40
         if self.builtinclass:
             flags |= 0x20
+        if self.main_process_scriptable_only:
+            flags |= 0x10
         file.write(struct.pack(">B", flags))
 
     def write_names(self, file, data_pool_offset):

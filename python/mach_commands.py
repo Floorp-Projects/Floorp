@@ -7,7 +7,7 @@ from __future__ import print_function, unicode_literals
 import argparse
 import glob
 import logging
-import mozpack.path
+import mozpack.path as mozpath
 import os
 import sys
 
@@ -71,7 +71,7 @@ class MachCommands(MachCommandBase):
         last_search_dir = search_dirs[-1]
         for t in tests:
             for d in search_dirs:
-                test = mozpack.path.join(d, t)
+                test = mozpath.join(d, t)
                 if test.endswith('.py') and os.path.isfile(test):
                     files.append(test)
                     break
@@ -79,8 +79,8 @@ class MachCommands(MachCommandBase):
                     files.append(test + '.py')
                     break
                 elif os.path.isdir(test):
-                    files += glob.glob(mozpack.path.join(test, 'test*.py'))
-                    files += glob.glob(mozpack.path.join(test, 'unit*.py'))
+                    files += glob.glob(mozpath.join(test, 'test*.py'))
+                    files += glob.glob(mozpath.join(test, 'unit*.py'))
                     break
                 elif d == last_search_dir:
                     self.log(logging.WARN, 'python-test',

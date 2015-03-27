@@ -7,18 +7,26 @@
         onload="boom();">
 <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 <script type="text/javascript">
+<![CDATA[
 
 SimpleTest.waitForExplicitFinish();
 function boom()
 {
+  const RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].
+                         getService(Components.interfaces.nsIRDFService);
+  var src = window.location.href.replace(/test_bug330010.xul/, "file_bug330010.rdf");
+
+  var ds = RDF.GetDataSourceBlocking(src);
+
   var x = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "hbox");
-  generatedShape = document.getElementById("s").childNodes[3];
+  var generatedShape = document.getElementById("s").childNodes[3];
   generatedShape.appendChild(x);
   document.documentElement.removeChild(document.getElementById("s"));
   ok(true, "Didn't crash");
   SimpleTest.finish();
 }
 
+]]>
 </script>
 
   <html:div datasources="file_bug330010.rdf" ref="urn:root" flex="1" id="s">

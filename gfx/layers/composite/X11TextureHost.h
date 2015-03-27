@@ -30,9 +30,10 @@ public:
 
   virtual gfx::IntSize GetSize() const override;
 
-  virtual TextureSource* GetTextureSources() override
+  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override
   {
-    return mTextureSource;
+    aTexture = mTextureSource;
+    return !!aTexture;
   }
 
   virtual TemporaryRef<gfx::DataSourceSurface> GetAsSurface() override

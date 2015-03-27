@@ -610,6 +610,8 @@ VRHMDManagerOculusImpl::Init()
 
   for (int i = 0; i < count; ++i) {
     ovrHmd hmd = ovrHmd_Create(i);
+    if (!hmd)
+      continue;
     nsRefPtr<HMDInfoOculus> oc = new HMDInfoOculus(hmd);
     mOculusHMDs.AppendElement(oc);
   }
@@ -620,8 +622,10 @@ VRHMDManagerOculusImpl::Init()
       (gfxPrefs::VRAddTestDevices() == 2))
   {
     ovrHmd hmd = ovrHmd_CreateDebug(ovrHmd_DK2);
-    nsRefPtr<HMDInfoOculus> oc = new HMDInfoOculus(hmd);
-    mOculusHMDs.AppendElement(oc);
+    if (hmd) {
+      nsRefPtr<HMDInfoOculus> oc = new HMDInfoOculus(hmd);
+      mOculusHMDs.AppendElement(oc);
+    }
   }
 
   mOculusInitialized = true;

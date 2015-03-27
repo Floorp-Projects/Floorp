@@ -12,6 +12,7 @@
 #include <memory>
 #include <queue>
 #include <string>
+#include <ostream>
 
 #include "prio.h"
 
@@ -36,6 +37,10 @@ class PacketFilter {
 
 enum Mode { STREAM, DGRAM };
 
+inline std::ostream& operator<<(std::ostream& os, Mode m) {
+  return os << ((m == STREAM) ? "TLS" : "DTLS");
+}
+
 class DummyPrSocket {
  public:
   ~DummyPrSocket();
@@ -52,7 +57,6 @@ class DummyPrSocket {
   int32_t Read(void* data, int32_t len);
   int32_t Recv(void* buf, int32_t buflen);
   int32_t Write(const void* buf, int32_t length);
-  int32_t WriteDirect(const DataBuffer& data);
 
   Mode mode() const { return mode_; }
   bool readable() const { return !input_.empty(); }
