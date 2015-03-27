@@ -115,6 +115,7 @@ navigator.mozLoop = {
       // Ensure we skip FTE completely.
       case "gettingStarted.seen":
       case "contacts.gravatars.promo":
+      case "screenshare.enabled":
         return true;
       case "contacts.gravatars.show":
         return false;
