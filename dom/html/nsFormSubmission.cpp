@@ -360,7 +360,7 @@ nsFSURLEncoded::URLEncode(const nsAString& aStr, nsCString& aEncoded)
 
   nsAutoCString encodedBuf;
   nsresult rv = EncodeVal(nsDependentString(convertedBuf), encodedBuf, false);
-  nsMemory::Free(convertedBuf);
+  free(convertedBuf);
   NS_ENSURE_SUCCESS(rv, rv);
 
   char* escapedBuf = nsEscape(encodedBuf.get(), url_XPAlphas);

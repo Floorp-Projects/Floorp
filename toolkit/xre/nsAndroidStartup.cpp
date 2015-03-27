@@ -78,6 +78,6 @@ GeckoStart(void *data, const nsXREAppData *appData)
     mozilla::widget::GeckoAppShell::NotifyXreExit();
 
     free(targs[0]);
-    nsMemory::Free(data);
+    free(data);
     return;
 }

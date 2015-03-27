@@ -138,7 +138,7 @@ NS_IMETHODIMP                                                                 \
 NS_CI_INTERFACE_GETTER_NAME(_class)(uint32_t *count, nsIID ***array)          \
 {                                                                             \
     *count = _c;                                                              \
-    *array = (nsIID **)nsMemory::Alloc(sizeof (nsIID *) * _c);                \
+    *array = (nsIID **)moz_xmalloc(sizeof (nsIID *) * _c);                \
     uint32_t i = 0;
 
 #define NS_CLASSINFO_HELPER_ENTRY(_interface)                                 \

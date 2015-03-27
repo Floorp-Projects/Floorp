@@ -62,7 +62,7 @@ NS_IMETHODIMP mozEnglishWordUtils::GetRootForm(const char16_t *aWord, uint32_t t
     {
     case HuhCap:
     case NoCap: 
-      tmpPtr = (char16_t **)nsMemory::Alloc(sizeof(char16_t *));
+      tmpPtr = (char16_t **)moz_xmalloc(sizeof(char16_t *));
       if (!tmpPtr)
         return NS_ERROR_OUT_OF_MEMORY;
       tmpPtr[0] = ToNewUnicode(word);
@@ -76,7 +76,7 @@ NS_IMETHODIMP mozEnglishWordUtils::GetRootForm(const char16_t *aWord, uint32_t t
     
 
     case AllCap:
-      tmpPtr = (char16_t **)nsMemory::Alloc(sizeof(char16_t *) * 3);
+      tmpPtr = (char16_t **)moz_xmalloc(sizeof(char16_t *) * 3);
       if (!tmpPtr)
         return NS_ERROR_OUT_OF_MEMORY;
       tmpPtr[0] = ToNewUnicode(word);
@@ -105,7 +105,7 @@ NS_IMETHODIMP mozEnglishWordUtils::GetRootForm(const char16_t *aWord, uint32_t t
       break;
  
     case InitCap:  
-      tmpPtr = (char16_t **)nsMemory::Alloc(sizeof(char16_t *) * 2);
+      tmpPtr = (char16_t **)moz_xmalloc(sizeof(char16_t *) * 2);
       if (!tmpPtr)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -214,21 +214,21 @@ mozEnglishWordUtils::captype(const nsString &word)
   char16_t* lword=ToNewUnicode(word);  
   ToUpperCase(lword,lword,word.Length());
   if(word.Equals(lword)){
-    nsMemory::Free(lword);
+    free(lword);
     return AllCap;
   }
 
   ToLowerCase(lword,lword,word.Length());
   if(word.Equals(lword)){
-    nsMemory::Free(lword);
+    free(lword);
     return NoCap;
   }
   int32_t length=word.Length();
   if(Substring(word,1,length-1).Equals(lword+1)){
-    nsMemory::Free(lword);
+    free(lword);
     return InitCap;
   }
-  nsMemory::Free(lword);
+  free(lword);
   return HuhCap;
 }
 
@@ -240,14 +240,14 @@ NS_IMETHODIMP mozEnglishWordUtils::FromRootForm(const char16_t *aWord, const cha
   nsresult rv = NS_OK;
 
   int32_t length;
-  char16_t **tmpPtr  = (char16_t **)nsMemory::Alloc(sizeof(char16_t *)*icount);
+  char16_t **tmpPtr  = (char16_t **)moz_xmalloc(sizeof(char16_t *)*icount);
   if (!tmpPtr)
     return NS_ERROR_OUT_OF_MEMORY;
 
   mozEnglishWordUtils::myspCapitalization ct = captype(word);
   for(uint32_t i = 0; i < icount; ++i) {
     length = NS_strlen(iwords[i]);
-    tmpPtr[i] = (char16_t *) nsMemory::Alloc(sizeof(char16_t) * (length + 1));
+    tmpPtr[i] = (char16_t *) moz_xmalloc(sizeof(char16_t) * (length + 1));
     if (MOZ_UNLIKELY(!tmpPtr[i])) {
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, tmpPtr);
       return NS_ERROR_OUT_OF_MEMORY;

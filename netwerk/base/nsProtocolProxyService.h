@@ -331,7 +331,7 @@ protected:
             { /* other members intentionally uninitialized */ }
        ~HostInfo() {
             if (!is_ipaddr && name.host)
-                nsMemory::Free(name.host);
+                free(name.host);
         }
     };
 

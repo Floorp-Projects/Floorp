@@ -131,7 +131,7 @@ TEST(Strings, findinreadable)
   // Should match the first "!/" but not the last
   EXPECT_NE(delim_end, end);
   EXPECT_STREQ(r, "!/");
-  nsMemory::Free(r);
+  free(r);
 
   delim_begin = begin;
   delim_end = end;
@@ -143,7 +143,7 @@ TEST(Strings, findinreadable)
   // Should not match the first jar:, but the second one
   EXPECT_EQ(delim_begin, begin);
   EXPECT_STREQ(r, "jar:");
-  nsMemory::Free(r);
+  free(r);
 
   // Search for jar: in a Substring
   delim_begin = begin; delim_begin++;
@@ -154,7 +154,7 @@ TEST(Strings, findinreadable)
   // Should not match the first jar:, but the second one
   EXPECT_NE(delim_begin, begin);
   EXPECT_STREQ(r, "jar:");
-  nsMemory::Free(r);
+  free(r);
 
   // Should not find a match
   EXPECT_FALSE(FindInReadable(NS_LITERAL_CSTRING("gecko"), delim_begin, delim_end));
@@ -196,7 +196,7 @@ TEST(Strings, rfindinreadable)
   // Should match the last "!/"
   EXPECT_EQ(delim_end, end);
   EXPECT_STREQ(r, "!/");
-  nsMemory::Free(r);
+  free(r);
 
   delim_begin = begin;
   delim_end = end;
@@ -208,7 +208,7 @@ TEST(Strings, rfindinreadable)
   // Should not match the first jar:, but the second one
   EXPECT_NE(delim_begin, begin);
   EXPECT_STREQ(r, "jar:");
-  nsMemory::Free(r);
+  free(r);
 
   // Search for jar: in a Substring
   delim_begin = begin;
@@ -219,7 +219,7 @@ TEST(Strings, rfindinreadable)
   // Should not match the first jar:, but the second one
   EXPECT_EQ(delim_begin, begin);
   EXPECT_STREQ(r, "jar:");
-  nsMemory::Free(r);
+  free(r);
 
   // Should not find a match
   delim_begin = begin;
@@ -472,7 +472,7 @@ TEST(Strings, xpidl_string)
   a.EndReading(end);
   char *r = ToNewCString(Substring(begin, end));
   EXPECT_STREQ(r, "");
-  nsMemory::Free(r);
+  free(r);
 
   a.Adopt(0);
   EXPECT_TRUE(a.IsVoid());

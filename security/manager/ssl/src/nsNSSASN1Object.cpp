@@ -336,7 +336,7 @@ nsNSSASN1PrintableItem::~nsNSSASN1PrintableItem()
 {
   /* destructor code */
   if (mData)
-    nsMemory::Free(mData);
+    free(mData);
 }
 
 /* readonly attribute wstring value; */
@@ -387,7 +387,7 @@ nsNSSASN1PrintableItem::SetData(char *data, uint32_t len)
 {
   if (len > 0) {
     if (mLen < len) {
-      unsigned char* newData = (unsigned char*)nsMemory::Realloc(mData, len);
+      unsigned char* newData = (unsigned char*)moz_xrealloc(mData, len);
       if (!newData)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -397,7 +397,7 @@ nsNSSASN1PrintableItem::SetData(char *data, uint32_t len)
     memcpy(mData, data, len);
   } else if (len == 0) {
     if (mData) {
-      nsMemory::Free(mData);
+      free(mData);
       mData = nullptr;
     }
   }

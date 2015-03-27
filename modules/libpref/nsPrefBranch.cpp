@@ -570,7 +570,7 @@ NS_IMETHODIMP nsPrefBranch::GetChildList(const char *aStartingAt, uint32_t *aCou
   numPrefs = prefArray.Length();
 
   if (numPrefs) {
-    outArray = (char **)nsMemory::Alloc(numPrefs * sizeof(char *));
+    outArray = (char **)moz_xmalloc(numPrefs * sizeof(char *));
     if (!outArray)
       return NS_ERROR_OUT_OF_MEMORY;
 

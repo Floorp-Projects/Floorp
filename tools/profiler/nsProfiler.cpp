@@ -236,7 +236,7 @@ nsProfiler::GetFeatures(uint32_t *aCount, char ***aFeatures)
   }
 
   char **featureList = static_cast<char **>
-                       (nsMemory::Alloc(len * sizeof(char*)));
+                       (moz_xmalloc(len * sizeof(char*)));
 
   for (size_t i = 0; i < len; i++) {
     size_t strLen = strlen(features[i]);

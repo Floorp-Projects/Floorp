@@ -1971,7 +1971,7 @@ nsGetUserCertChoice(SSM_UserCertChoice* certChoice)
 
 loser:
   if (mode) {
-    nsMemory::Free(mode);
+    free(mode);
   }
   return ret;
 }
@@ -2342,13 +2342,13 @@ ClientAuthDataRunnable::RunOnTargetThread()
       if (cissuer) PORT_Free(cissuer);
 
       certNicknameList =
-        (char16_t**)nsMemory::Alloc(sizeof(char16_t*)* nicknames->numnicknames);
+        (char16_t**)moz_xmalloc(sizeof(char16_t*)* nicknames->numnicknames);
       if (!certNicknameList)
         goto loser;
       certDetailsList =
-        (char16_t**)nsMemory::Alloc(sizeof(char16_t*)* nicknames->numnicknames);
+        (char16_t**)moz_xmalloc(sizeof(char16_t*)* nicknames->numnicknames);
       if (!certDetailsList) {
-        nsMemory::Free(certNicknameList);
+        free(certNicknameList);
         goto loser;
       }
 
@@ -2373,7 +2373,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
           continue;
         certDetailsList[CertsToUse] = ToNewUnicode(details);
         if (!certDetailsList[CertsToUse]) {
-          nsMemory::Free(certNicknameList[CertsToUse]);
+          free(certNicknameList[CertsToUse]);
           continue;
         }
 

@@ -253,7 +253,7 @@ nsNativeDragTarget::DragEnter(LPDATAOBJECT pIDataSource,
       pIDataSource, 0, ::RegisterClipboardFormat(CFSTR_PREFERREDDROPEFFECT), nullptr, &tempOutData, &tempDataLen);
   if (NS_SUCCEEDED(loadResult) && tempOutData) {
     mEffectsPreferred = *((DWORD*)tempOutData);
-    nsMemory::Free(tempOutData);
+    free(tempOutData);
   } else {
     // We have no preference if we can't obtain it
     mEffectsPreferred = DROPEFFECT_NONE;

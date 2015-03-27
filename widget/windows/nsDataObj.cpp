@@ -1292,18 +1292,18 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
     // Someone is asking for text/plain; convert the unicode (assuming it's present)
     // to text with the correct platform encoding.
     size_t bufferSize = sizeof(char)*(len + 2);
-    char* plainTextData = static_cast<char*>(nsMemory::Alloc(bufferSize));
+    char* plainTextData = static_cast<char*>(moz_xmalloc(bufferSize));
     char16_t* castedUnicode = reinterpret_cast<char16_t*>(data);
     int32_t plainTextLen = WideCharToMultiByte(CP_ACP, 0, (LPCWSTR)castedUnicode, len / 2 + 1, plainTextData, bufferSize, NULL, NULL);
     // replace the unicode data with our plaintext data. Recall that |plainTextLen| doesn't include
     // the null in the length.
-    nsMemory::Free(data);
+    free(data);
     if ( plainTextLen ) {
       data = plainTextData;
       allocLen = plainTextLen;
     }
     else {
-      nsMemory::Free(plainTextData);
+      free(plainTextData);
       NS_WARNING ( "Oh no, couldn't convert unicode to plain text" );
       return S_OK;
     }
@@ -1315,7 +1315,7 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
     char* utf8HTML = nullptr;
     nsresult rv = BuildPlatformHTML ( converter.get(), &utf8HTML );      // null terminates
     
-    nsMemory::Free(data);
+    free(data);
     if ( NS_SUCCEEDED(rv) && utf8HTML ) {
       // replace the unicode data with our HTML data. Don't forget the null.
       data = utf8HTML;
@@ -1344,7 +1344,7 @@ HRESULT nsDataObj::GetText(const nsACString & aDataFlavor, FORMATETC& aFE, STGME
   aSTG.hGlobal = hGlobalMemory;
 
   // Now, delete the memory that was created by CreateDataFromPrimitive (or our text/plain data)
-  nsMemory::Free(data);
+  free(data);
 
   return S_OK;
 }

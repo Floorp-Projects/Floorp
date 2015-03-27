@@ -152,7 +152,7 @@ EventListenerService::GetListenerInfoFor(nsIDOMEventTarget* aEventTarget,
 
   *aOutArray =
     static_cast<nsIEventListenerInfo**>(
-      nsMemory::Alloc(sizeof(nsIEventListenerInfo*) * count));
+      moz_xmalloc(sizeof(nsIEventListenerInfo*) * count));
   NS_ENSURE_TRUE(*aOutArray, NS_ERROR_OUT_OF_MEMORY);
 
   for (int32_t i = 0; i < count; ++i) {
@@ -182,7 +182,7 @@ EventListenerService::GetEventTargetChainFor(nsIDOMEventTarget* aEventTarget,
 
   *aOutArray =
     static_cast<nsIDOMEventTarget**>(
-      nsMemory::Alloc(sizeof(nsIDOMEventTarget*) * count));
+      moz_xmalloc(sizeof(nsIDOMEventTarget*) * count));
   NS_ENSURE_TRUE(*aOutArray, NS_ERROR_OUT_OF_MEMORY);
 
   for (int32_t i = 0; i < count; ++i) {

@@ -599,7 +599,7 @@ nsJSCID::NewID(const char* str)
         if (NS_FAILED(registrar->ContractIDToCID(str, &cid)))
             return nullptr;
         bool success = idObj->mDetails->InitWithName(*cid, str);
-        nsMemory::Free(cid);
+        free(cid);
         if (!success)
             return nullptr;
     }

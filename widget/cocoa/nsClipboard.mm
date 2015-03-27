@@ -439,7 +439,7 @@ nsClipboard::PasteboardDictFromTransferable(nsITransferable* aTransferable)
 
       [pasteboardOutputDict setObject:nativeString forKey:pboardType];
       
-      nsMemory::Free(data);
+      free(data);
     }
     else if (flavorStr.EqualsLiteral(kPNGImageMime) || flavorStr.EqualsLiteral(kJPEGImageMime) ||
              flavorStr.EqualsLiteral(kJPGImageMime) || flavorStr.EqualsLiteral(kGIFImageMime) ||

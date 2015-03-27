@@ -57,10 +57,10 @@ main(int argc, char* argv[])
         while (i++ < cycles) {
             rv = ServiceMakeAbsolute(uri, rel, &absURLString);
             if (NS_FAILED(rv)) return rv;
-            nsMemory::Free(absURLString);
+            free(absURLString);
 
             rv = URLMakeAbsolute(uri, rel, &absURLString);
-            nsMemory::Free(absURLString);
+            free(absURLString);
         }
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM

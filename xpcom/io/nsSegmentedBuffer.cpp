@@ -32,7 +32,7 @@ nsSegmentedBuffer::AppendNewSegment()
 
   if (!mSegmentArray) {
     uint32_t bytes = mSegmentArrayCount * sizeof(char*);
-    mSegmentArray = (char**)nsMemory::Alloc(bytes);
+    mSegmentArray = (char**)moz_xmalloc(bytes);
     if (!mSegmentArray) {
       return nullptr;
     }
@@ -42,7 +42,7 @@ nsSegmentedBuffer::AppendNewSegment()
   if (IsFull()) {
     uint32_t newArraySize = mSegmentArrayCount * 2;
     uint32_t bytes = newArraySize * sizeof(char*);
-    char** newSegArray = (char**)nsMemory::Realloc(mSegmentArray, bytes);
+    char** newSegArray = (char**)moz_xrealloc(mSegmentArray, bytes);
     if (!newSegArray) {
       return nullptr;
     }
@@ -122,7 +122,7 @@ nsSegmentedBuffer::Empty()
         free(mSegmentArray[i]);
       }
     }
-    nsMemory::Free(mSegmentArray);
+    free(mSegmentArray);
     mSegmentArray = nullptr;
   }
   mSegmentArrayCount = NS_SEGMENTARRAY_INITIAL_COUNT;

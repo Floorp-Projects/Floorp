@@ -30,7 +30,7 @@ AndroidCameraInputStream::AndroidCameraInputStream() :
 AndroidCameraInputStream::~AndroidCameraInputStream() {
   // clear the frame queue
   while (mFrameQueue->GetSize() > 0) {
-    nsMemory::Free(mFrameQueue->PopFront());
+    free(mFrameQueue->PopFront());
   }
   delete mFrameQueue;
 }
@@ -61,14 +61,14 @@ void AndroidCameraInputStream::ReceiveFrame(char* frame, uint32_t length) {
   {
     mozilla::ReentrantMonitorAutoEnter autoMonitor(mMonitor);
     if (mFrameQueue->GetSize() > MAX_FRAMES_QUEUED) {
-      nsMemory::Free(mFrameQueue->PopFront());
+      free(mFrameQueue->PopFront());
       mAvailable -= mFrameSize;
     }
   }
   
   mFrameSize = sizeof(RawPacketHeader) + length;
   
-  char* fullFrame = (char*)nsMemory::Alloc(mFrameSize);
+  char* fullFrame = (char*)moz_xmalloc(mFrameSize);
 
   if (!fullFrame)
     return;
@@ -177,7 +177,7 @@ NS_IMETHODIMP AndroidCameraInputStream::ReadSegments(nsWriteSegmentFun aWriter, 
       }
   
       // RawReader does a copy when calling VideoData::Create()
-      nsMemory::Free(frame);
+      free(frame);
   
       if (NS_FAILED(rv))
         return NS_OK;

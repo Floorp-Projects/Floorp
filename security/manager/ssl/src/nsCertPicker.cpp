@@ -71,12 +71,12 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  certNicknameList = (char16_t **)nsMemory::Alloc(sizeof(char16_t *) * nicknames->numnicknames);
-  certDetailsList = (char16_t **)nsMemory::Alloc(sizeof(char16_t *) * nicknames->numnicknames);
+  certNicknameList = (char16_t **)moz_xmalloc(sizeof(char16_t *) * nicknames->numnicknames);
+  certDetailsList = (char16_t **)moz_xmalloc(sizeof(char16_t *) * nicknames->numnicknames);
 
   if (!certNicknameList || !certDetailsList) {
-    nsMemory::Free(certNicknameList);
-    nsMemory::Free(certDetailsList);
+    free(certNicknameList);
+    free(certDetailsList);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -147,11 +147,11 @@ NS_IMETHODIMP nsCertPicker::PickByUsage(nsIInterfaceRequestor *ctx,
 
   int32_t i;
   for (i = 0; i < CertsToUse; ++i) {
-    nsMemory::Free(certNicknameList[i]);
-    nsMemory::Free(certDetailsList[i]);
+    free(certNicknameList[i]);
+    free(certDetailsList[i]);
   }
-  nsMemory::Free(certNicknameList);
-  nsMemory::Free(certDetailsList);
+  free(certNicknameList);
+  free(certDetailsList);
   
   if (!CertsToUse) {
     return NS_ERROR_NOT_AVAILABLE;

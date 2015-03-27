@@ -865,7 +865,7 @@ void nsJAR::ReportError(const nsACString &aFilename, int16_t errorCode)
   char* messageCstr = ToNewCString(message);
   if (!messageCstr) return;
   fprintf(stderr, "%s\n", messageCstr);
-  nsMemory::Free(messageCstr);
+  free(messageCstr);
 #endif
 }
 

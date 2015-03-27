@@ -456,7 +456,7 @@ inDOMUtils::GetCSSPropertyNames(uint32_t aFlags, uint32_t* aCount,
   }
 
   char16_t** props =
-    static_cast<char16_t**>(nsMemory::Alloc(maxCount * sizeof(char16_t*)));
+    static_cast<char16_t**>(moz_xmalloc(maxCount * sizeof(char16_t*)));
 
 #define DO_PROP(_prop)                                                  \
   PR_BEGIN_MACRO                                                        \
@@ -616,7 +616,7 @@ inDOMUtils::GetSubpropertiesForCSSProperty(const nsAString& aProperty,
 
   nsTArray<nsString> array;
   if (!nsCSSProps::IsShorthand(propertyID)) {
-    *aValues = static_cast<char16_t**>(nsMemory::Alloc(sizeof(char16_t*)));
+    *aValues = static_cast<char16_t**>(moz_xmalloc(sizeof(char16_t*)));
     (*aValues)[0] = ToNewUnicode(nsCSSProps::GetStringValue(propertyID));
     *aLength = 1;
     return NS_OK;
@@ -630,7 +630,7 @@ inDOMUtils::GetSubpropertiesForCSSProperty(const nsAString& aProperty,
   }
 
   *aValues =
-    static_cast<char16_t**>(nsMemory::Alloc(subpropCount * sizeof(char16_t*)));
+    static_cast<char16_t**>(moz_xmalloc(subpropCount * sizeof(char16_t*)));
   *aLength = subpropCount;
   for (const nsCSSProperty *props = nsCSSProps::SubpropertyEntryFor(propertyID),
                            *props_start = props;

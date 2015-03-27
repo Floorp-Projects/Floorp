@@ -112,7 +112,7 @@ ReleaseData(void* aData, uint32_t aFlags)
   if (aFlags & nsSubstring::F_SHARED) {
     nsStringBuffer::FromData(aData)->Release();
   } else if (aFlags & nsSubstring::F_OWNED) {
-    nsMemory::Free(aData);
+    free(aData);
     STRING_STAT_INCREMENT(AdoptFree);
 #ifdef NS_BUILD_REFCNT_LOGGING
     // Treat this as destruction of a "StringAdopt" object for leak

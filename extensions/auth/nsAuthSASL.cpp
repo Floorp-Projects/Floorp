@@ -100,11 +100,11 @@ nsAuthSASL::GetNextToken(const void *inToken,
         // If we were doing security layers then we'd care what the
         // server had sent us. We're not, so all we had to do was make
         // sure that the signature was correct with the above unwrap()
-        nsMemory::Free(unwrappedToken);
+        free(unwrappedToken);
         
         NS_CopyUnicodeToNative(mUsername, userbuf);
         messageLen = userbuf.Length() + 4 + 1;
-        message = (char *)nsMemory::Alloc(messageLen);
+        message = (char *)moz_xmalloc(messageLen);
         if (!message) {
           Reset();
           return NS_ERROR_OUT_OF_MEMORY;
@@ -118,7 +118,7 @@ nsAuthSASL::GetNextToken(const void *inToken,
         // when wrapping the message
         rv = mInnerModule->Wrap((void *) message, messageLen-1, false, 
                                 outToken, outTokenLen);
-        nsMemory::Free(message);
+        free(message);
         Reset(); // All done
         return NS_SUCCEEDED(rv) ? NS_SUCCESS_AUTH_FINISHED : rv;
     }

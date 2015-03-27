@@ -65,7 +65,7 @@ nsScriptableInputStream::Read(uint32_t aCount, char** aResult)
 
   rv = ReadHelper(buffer, count);
   if (NS_FAILED(rv)) {
-    nsMemory::Free(buffer);
+    free(buffer);
     return rv;
   }
 

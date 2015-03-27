@@ -62,7 +62,7 @@ nsXBLProtoImplField::~nsXBLProtoImplField()
 {
   MOZ_COUNT_DTOR(nsXBLProtoImplField);
   if (mFieldText)
-    nsMemory::Free(mFieldText);
+    free(mFieldText);
   NS_Free(mName);
   NS_CONTENT_DELETE_LIST_MEMBER(nsXBLProtoImplField, this, mNext);
 }
@@ -76,7 +76,7 @@ nsXBLProtoImplField::AppendFieldText(const nsAString& aText)
     char16_t* temp = mFieldText;
     mFieldText = ToNewUnicode(newFieldText);
     mFieldTextLength = newFieldText.Length();
-    nsMemory::Free(temp);
+    free(temp);
   }
   else {
     mFieldText = ToNewUnicode(aText);

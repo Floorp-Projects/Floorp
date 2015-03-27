@@ -919,7 +919,7 @@ GfxInfoBase::LogFailure(const nsACString &failure)
 }
 
 /* void getFailures (out unsigned long failureCount, [optional, array, size_is (failureCount)] out long indices, [array, size_is (failureCount), retval] out string failures); */
-/* XPConnect method of returning arrays is very ugly. Would not recommend. Fallable nsMemory::Alloc makes things worse */
+/* XPConnect method of returning arrays is very ugly. Would not recommend. */
 NS_IMETHODIMP GfxInfoBase::GetFailures(uint32_t* failureCount,
 				       int32_t** indices,
 				       char ***failures)
@@ -950,14 +950,14 @@ NS_IMETHODIMP GfxInfoBase::GetFailures(uint32_t* failureCount,
   *failureCount = loggedStrings.size();
 
   if (*failureCount != 0) {
-    *failures = (char**)nsMemory::Alloc(*failureCount * sizeof(char*));
+    *failures = (char**)moz_xmalloc(*failureCount * sizeof(char*));
     if (!(*failures)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     if (indices) {
-      *indices = (int32_t*)nsMemory::Alloc(*failureCount * sizeof(int32_t));
+      *indices = (int32_t*)moz_xmalloc(*failureCount * sizeof(int32_t));
       if (!(*indices)) {
-        nsMemory::Free(*failures);
+        free(*failures);
         *failures = nullptr;
         return NS_ERROR_OUT_OF_MEMORY;
       }

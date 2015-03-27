@@ -502,7 +502,7 @@ nsNSSCertificate::GetDbKey(char** aDbKey)
   NS_ENSURE_ARG(aDbKey);
   *aDbKey = nullptr;
   key.len = NS_NSS_LONG*4+mCert->serialNumber.len+mCert->derIssuer.len;
-  key.data = (unsigned char*) nsMemory::Alloc(key.len);
+  key.data = (unsigned char*) moz_xmalloc(key.len);
   if (!key.data)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_NSS_PUT_LONG(0,key.data); // later put moduleID
@@ -515,7 +515,7 @@ nsNSSCertificate::GetDbKey(char** aDbKey)
          mCert->derIssuer.data, mCert->derIssuer.len);
 
   *aDbKey = NSSBase64_EncodeItem(nullptr, nullptr, 0, &key);
-  nsMemory::Free(key.data); // SECItem is a 'c' type without a destrutor
+  free(key.data); // SECItem is a 'c' type without a destructor
   return (*aDbKey) ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -622,7 +622,7 @@ nsNSSCertificate::GetEmailAddresses(uint32_t* aLength, char16_t*** aAddresses)
     ++(*aLength);
   }
 
-  *aAddresses = (char16_t**) nsMemory::Alloc(sizeof(char16_t*) * (*aLength));
+  *aAddresses = (char16_t**) moz_xmalloc(sizeof(char16_t*) * (*aLength));
   if (!*aAddresses)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -939,7 +939,7 @@ nsNSSCertificate::GetAllTokenNames(uint32_t* aLength, char16_t*** aTokenNames)
     ++(*aLength);
   }
 
-  *aTokenNames = (char16_t**) nsMemory::Alloc(sizeof(char16_t*) * (*aLength));
+  *aTokenNames = (char16_t**) moz_xmalloc(sizeof(char16_t*) * (*aLength));
   if (!*aTokenNames) {
     *aLength = 0;
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1114,7 +1114,7 @@ nsNSSCertificate::GetRawDER(uint32_t* aLength, uint8_t** aArray)
     return NS_ERROR_NOT_AVAILABLE;
 
   if (mCert) {
-    *aArray = (uint8_t*)nsMemory::Alloc(mCert->derCert.len);
+    *aArray = (uint8_t*)moz_xmalloc(mCert->derCert.len);
     if (*aArray) {
       memcpy(*aArray, mCert->derCert.data, mCert->derCert.len);
       *aLength = mCert->derCert.len;
@@ -1240,7 +1240,7 @@ nsNSSCertificate::ExportAsCMS(uint32_t chainMode,
     return NS_ERROR_FAILURE;
   }
 
-  *aArray = (uint8_t*)nsMemory::Alloc(certP7.len);
+  *aArray = (uint8_t*)moz_xmalloc(certP7.len);
   if (!*aArray)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1294,7 +1294,7 @@ nsNSSCertificate::GetUsagesArray(bool localOnly,
                           tmpUsages);
   NS_ENSURE_SUCCESS(rv,rv);
   if (tmpCount > 0) {
-    *_usages = (char16_t**) nsMemory::Alloc(sizeof(char16_t*) * tmpCount);
+    *_usages = (char16_t**) moz_xmalloc(sizeof(char16_t*) * tmpCount);
     if (!*_usages)
       return NS_ERROR_OUT_OF_MEMORY;
     for (uint32_t i=0; i<tmpCount; i++) {
@@ -1303,7 +1303,7 @@ nsNSSCertificate::GetUsagesArray(bool localOnly,
     *_count = tmpCount;
     return NS_OK;
   }
-  *_usages = (char16_t**) nsMemory::Alloc(sizeof(char16_t*));
+  *_usages = (char16_t**) moz_xmalloc(sizeof(char16_t*));
   if (!*_usages)
     return NS_ERROR_OUT_OF_MEMORY;
   *_count = 0;
@@ -1353,7 +1353,7 @@ nsNSSCertificate::GetUsagesString(bool localOnly, uint32_t* _verified,
   for (uint32_t i=0; i<tmpCount; i++) {
     if (i>0) _usages.Append(',');
     _usages.Append(tmpUsages[i]);
-    nsMemory::Free(tmpUsages[i]);
+    free(tmpUsages[i]);
   }
   return NS_OK;
 }
@@ -1943,7 +1943,7 @@ nsNSSCertificate::GetClassDescription(char** aClassDescription)
 NS_IMETHODIMP
 nsNSSCertificate::GetClassID(nsCID** aClassID)
 {
-  *aClassID = (nsCID*) nsMemory::Alloc(sizeof(nsCID));
+  *aClassID = (nsCID*) moz_xmalloc(sizeof(nsCID));
   if (!*aClassID)
     return NS_ERROR_OUT_OF_MEMORY;
   return GetClassIDNoAlloc(*aClassID);

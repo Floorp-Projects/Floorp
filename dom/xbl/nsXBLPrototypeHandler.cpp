@@ -124,7 +124,7 @@ nsXBLPrototypeHandler::~nsXBLPrototypeHandler()
   if (mType & NS_HANDLER_TYPE_XUL) {
     NS_IF_RELEASE(mHandlerElement);
   } else if (mHandlerText) {
-    nsMemory::Free(mHandlerText);
+    free(mHandlerText);
   }
 
   // We own the next handler in the chain, so delete it now.
@@ -149,7 +149,7 @@ nsXBLPrototypeHandler::AppendHandlerText(const nsAString& aText)
     // Append our text to the existing text.
     char16_t* temp = mHandlerText;
     mHandlerText = ToNewUnicode(nsDependentString(temp) + aText);
-    nsMemory::Free(temp);
+    free(temp);
   }
   else {
     mHandlerText = ToNewUnicode(aText);
@@ -834,7 +834,7 @@ nsXBLPrototypeHandler::ConstructPrototype(nsIContent* aKeyElement,
       token = nsCRT::strtok( newStr, ", \t", &newStr );
     }
 
-    nsMemory::Free(str);
+    free(str);
   }
 
   nsAutoString key(aCharCode);

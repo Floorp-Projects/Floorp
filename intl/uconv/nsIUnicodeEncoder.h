@@ -62,7 +62,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicharEncoder, NS_IUNICHARENCODER_IID)
     if (e                                                 \
         && NS_SUCCEEDED((e)->GetMaxLength((s), (l), &(al)))\
         && ((al) > (int32_t)(sbl))                        \
-        && (nullptr!=((p)=(char*)nsMemory::Alloc((al)+1))) \
+        && (nullptr!=((p)=(char*)moz_xmalloc((al)+1)))    \
         ) {                                               \
     }                                                     \
     else {                                                \
@@ -77,7 +77,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIUnicharEncoder, NS_IUNICHARENCODER_IID)
 #define ENCODER_BUFFER_FREE_IF_NEEDED(p,sb) \
   PR_BEGIN_MACRO                            \
     if ((p) != (char*)(sb))                 \
-      nsMemory::Free(p);                    \
+      free(p);                              \
   PR_END_MACRO 
 
 /**
