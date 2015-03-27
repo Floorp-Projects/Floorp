@@ -21,6 +21,7 @@
 #include <algorithm>
 #include "mozilla/LinkedList.h"
 #include "mozilla/FloatingPoint.h"
+#include "WritingModes.h"
 
 using namespace mozilla;
 using namespace mozilla::layout;
@@ -155,7 +156,8 @@ PhysicalCoordFromFlexRelativeCoord(nscoord aFlexRelativeCoord,
 // Encapsulates our flex container's main & cross axes.
 class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
 public:
-  explicit FlexboxAxisTracker(nsFlexContainerFrame* aFlexContainerFrame);
+  FlexboxAxisTracker(const nsStylePosition* aStylePosition,
+                     const WritingMode& aWM);
 
   // Accessors:
   AxisOrientationType GetMainAxis() const  { return mMainAxis;  }
@@ -983,7 +985,7 @@ IsOrderLEQ(nsIFrame* aFrame1,
 bool
 nsFlexContainerFrame::IsHorizontal()
 {
-  const FlexboxAxisTracker axisTracker(this);
+  const FlexboxAxisTracker axisTracker(StylePosition(), GetWritingMode());
   return axisTracker.IsMainAxisHorizontal();
 }
 
@@ -2886,36 +2888,57 @@ SingleLineCrossAxisPositionTracker::
   }
 }
 
-FlexboxAxisTracker::FlexboxAxisTracker(
-  nsFlexContainerFrame* aFlexContainerFrame)
+// Utility function to convert an InlineDir to an AxisOrientationType
+static inline AxisOrientationType
+InlineDirToAxisOrientation(WritingMode::InlineDir aInlineDir)
+{
+  switch (aInlineDir) {
+    case WritingMode::eInlineLTR:
+      return eAxis_LR;
+    case WritingMode::eInlineRTL:
+      return eAxis_RL;
+    case WritingMode::eInlineTTB:
+      return eAxis_TB;
+    case WritingMode::eInlineBTT:
+      return eAxis_BT;
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Unhandled InlineDir");
+  return eAxis_LR; // in case of unforseen error, assume English LTR text flow.
+}
+
+// Utility function to convert a BlockDir to an AxisOrientationType
+static inline AxisOrientationType
+BlockDirToAxisOrientation(WritingMode::BlockDir aBlockDir)
+{
+  switch (aBlockDir) {
+    case WritingMode::eBlockLR:
+      return eAxis_LR;
+    case WritingMode::eBlockRL:
+      return eAxis_RL;
+    case WritingMode::eBlockTB:
+      return eAxis_TB;
+    // NOTE: WritingMode::eBlockBT (bottom-to-top) does not exist.
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Unhandled BlockDir");
+  return eAxis_TB; // in case of unforseen error, assume English TTB block-flow
+}
+
+FlexboxAxisTracker::FlexboxAxisTracker(const nsStylePosition* aStylePosition,
+                                       const WritingMode& aWM)
   : mAreAxesInternallyReversed(false)
 {
-  const nsStylePosition* pos = aFlexContainerFrame->StylePosition();
-  uint32_t flexDirection = pos->mFlexDirection;
-  uint32_t cssDirection =
-    aFlexContainerFrame->StyleVisibility()->mDirection;
-
-  MOZ_ASSERT(cssDirection == NS_STYLE_DIRECTION_LTR ||
-             cssDirection == NS_STYLE_DIRECTION_RTL,
-             "Unexpected computed value for 'direction' property");
-  // (Not asserting for flexDirection here; it's checked by the switch below.)
-
-  // These are defined according to writing-modes' definitions of
-  // start/end (for the inline dimension) and before/after (for the block
-  // dimension), here:
-  //   http://www.w3.org/TR/css3-writing-modes/#logical-directions
-  // (NOTE: I'm intentionally not calling this "inlineAxis"/"blockAxis", since
-  // those terms have explicit definition in the writing-modes spec, which are
-  // the opposite of how I'd be using them here.)
-  // XXXdholbert Once we support the 'writing-mode' property, use its value
-  // here to further customize inlineDimension & blockDimension.
+  uint32_t flexDirection = aStylePosition->mFlexDirection;
 
   // Inline dimension ("start-to-end"):
+  // (NOTE: I'm intentionally not calling these "inlineAxis"/"blockAxis", since
+  // those terms have explicit definition in the writing-modes spec, which are
+  // the opposite of how I'd be using them here.)
   AxisOrientationType inlineDimension =
-    cssDirection == NS_STYLE_DIRECTION_RTL ? eAxis_RL : eAxis_LR;
-
-  // Block dimension ("before-to-after"):
-  AxisOrientationType blockDimension = eAxis_TB;
+    InlineDirToAxisOrientation(aWM.GetInlineDir());
+  AxisOrientationType blockDimension =
+    BlockDirToAxisOrientation(aWM.GetBlockDir());
 
   // Determine main axis:
   switch (flexDirection) {
@@ -2946,7 +2969,7 @@ FlexboxAxisTracker::FlexboxAxisTracker(
   }
 
   // "flex-wrap: wrap-reverse" reverses our cross axis.
-  if (pos->mFlexWrap == NS_STYLE_FLEX_WRAP_WRAP_REVERSE) {
+  if (aStylePosition->mFlexWrap == NS_STYLE_FLEX_WRAP_WRAP_REVERSE) {
     mCrossAxis = GetReverseAxis(mCrossAxis);
   }
 
@@ -3451,7 +3474,8 @@ nsFlexContainerFrame::Reflow(nsPresContext*           aPresContext,
     SortChildrenIfNeeded<IsOrderLEQWithDOMFallback>();
   }
 
-  const FlexboxAxisTracker axisTracker(this);
+  const FlexboxAxisTracker axisTracker(aReflowState.mStylePosition,
+                                       aReflowState.GetWritingMode());
 
   // If we're being fragmented into a constrained height, subtract off
   // borderpadding-top from it, to get the available height for our
@@ -3934,7 +3958,8 @@ nsFlexContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
   nscoord minWidth = 0;
   DISPLAY_MIN_WIDTH(this, minWidth);
 
-  FlexboxAxisTracker axisTracker(this);
+  const nsStylePosition* stylePos = StylePosition();
+  const FlexboxAxisTracker axisTracker(stylePos, GetWritingMode());
 
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
     nscoord childMinWidth =
@@ -3945,7 +3970,7 @@ nsFlexContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
     // For a vertical flex container, or for a multi-line horizontal flex
     // container, the intrinsic min width is the max of its items' min widths.
     if (axisTracker.IsMainAxisHorizontal() &&
-        NS_STYLE_FLEX_WRAP_NOWRAP == StylePosition()->mFlexWrap) {
+        NS_STYLE_FLEX_WRAP_NOWRAP == stylePos->mFlexWrap) {
       minWidth += childMinWidth;
     } else {
       minWidth = std::max(minWidth, childMinWidth);
@@ -3965,7 +3990,7 @@ nsFlexContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
   // Whenever anything happens that might change it, set it to
   // NS_INTRINSIC_WIDTH_UNKNOWN (like nsBlockFrame::MarkIntrinsicISizesDirty
   // does)
-  FlexboxAxisTracker axisTracker(this);
+  const FlexboxAxisTracker axisTracker(StylePosition(), GetWritingMode());
 
   for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
     nscoord childPrefWidth =
