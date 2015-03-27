@@ -242,10 +242,12 @@ protected:
   void UpdateSourceContent();
   void FlushStyle() const;
   void PostUpdate();
-  // Remove this player from the pending player tracker and reset
-  // mPendingState as necessary. The caller is responsible for resolving or
-  // aborting the mReady promise as necessary.
-  void CancelPendingPlay();
+  /**
+   * Remove this player from the pending player tracker and reset
+   * mPendingState as necessary. The caller is responsible for resolving or
+   * aborting the mReady promise as necessary.
+   */
+  void CancelPendingTasks();
 
   bool IsPossiblyOrphanedPendingPlayer() const;
   StickyTimeDuration SourceContentEnd() const;
