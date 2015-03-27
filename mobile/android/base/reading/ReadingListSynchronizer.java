@@ -176,6 +176,80 @@ public class ReadingListSynchronizer {
     }
   }
 
+  private static class DeletionUploadDelegate implements ReadingListDeleteDelegate {
+    private final ReadingListChangeAccumulator acc;
+    private final StageDelegate next;
+
+    DeletionUploadDelegate(ReadingListChangeAccumulator acc, StageDelegate next) {
+      this.acc = acc;
+      this.next = next;
+    }
+
+    @Override
+    public void onBatchDone() {
+      try {
+        acc.finish();
+      } catch (Exception e) {
+        next.fail(e);
+        return;
+      }
+
+      next.next();
+    }
+
+    @Override
+    public void onSuccess(ReadingListRecordResponse response,
+                          ReadingListRecord record) {
+      Logger.debug(LOG_TAG, "Tracking uploaded deletion " + record.getGUID());
+      acc.addDeletion(record.getGUID());
+    }
+
+    @Override
+    public void onPreconditionFailed(String guid, MozResponse response) {
+      // Should never happen.
+    }
+
+    @Override
+    public void onRecordMissingOrDeleted(String guid, MozResponse response) {
+      // Great!
+      Logger.debug(LOG_TAG, "Tracking redundant deletion " + guid);
+      acc.addDeletion(guid);
+    }
+
+    @Override
+    public void onFailure(Exception e) {
+      // Ignore.
+    }
+
+    @Override
+    public void onFailure(MozResponse response) {
+      // Ignore.
+    }
+  }
+
+
+  private Queue<String> collectDeletedIDsFromCursor(Cursor cursor) {
+    try {
+      final Queue<String> toDelete = new LinkedList<>();
+
+      final int columnGUID = cursor.getColumnIndexOrThrow(ReadingListItems.GUID);
+
+      while (cursor.moveToNext()) {
+        final String guid = cursor.getString(columnGUID);
+        if (guid == null) {
+          // Nothing we can do here.
+          continue;
+        }
+
+        toDelete.add(guid);
+      }
+
+      return toDelete;
+    } finally {
+      cursor.close();
+    }
+  }
+
   private static class StatusUploadDelegate implements ReadingListRecordUploadDelegate {
     private final ReadingListChangeAccumulator acc;
 
@@ -462,6 +536,36 @@ public class ReadingListSynchronizer {
     }
   }
 
+  protected void uploadDeletions(final StageDelegate delegate) {
+    try {
+      final Cursor cursor = local.getDeletedItems();
+
+      if (cursor == null) {
+        delegate.fail(new RuntimeException("Unable to get unread item cursor."));
+        return;
+      }
+
+      final Queue<String> toDelete = collectDeletedIDsFromCursor(cursor);
+
+      // Nothing to do.
+      if (toDelete.isEmpty()) {
+        Logger.debug(LOG_TAG, "No new deletions to upload. Skipping.");
+        delegate.next();
+        return;
+      } else {
+        Logger.debug(LOG_TAG, "Deleting " + toDelete.size() + " records from the server.");
+      }
+
+      final ReadingListChangeAccumulator acc = this.local.getChangeAccumulator();
+      final DeletionUploadDelegate deleteDelegate = new DeletionUploadDelegate(acc, delegate);
+
+      // Don't send I-U-S; we're happy for the client to win, because this is a one-way state change.
+      this.remote.delete(toDelete, executor, deleteDelegate);
+    } catch (Exception e) {
+      delegate.fail(e);
+    }
+  }
+
   // N.B., status changes for items that haven't been uploaded yet are dealt with in
   // uploadNewItems.
   protected void uploadUnreadChanges(final StageDelegate delegate) {
@@ -697,13 +801,13 @@ public class ReadingListSynchronizer {
   }
 
   /**
-   * Upload unread changes, then upload new items, then call `done`.
+   * Upload deletions and unread changes, then upload new items, then call `done`.
    * Substantially modified records are uploaded last.
    *
    * @param syncDelegate only used for status callbacks.
    */
   private void syncUp(final ReadingListSynchronizerDelegate syncDelegate, final StageDelegate done) {
-    // Second.
+    // Third.
     final StageDelegate onNewItemsUploaded = new NextDelegate(executor) {
       @Override
       public void doNext() {
@@ -717,7 +821,7 @@ public class ReadingListSynchronizer {
       }
     };
 
-    // First.
+    // Second.
     final StageDelegate onUnreadChangesUploaded = new NextDelegate(executor) {
       @Override
       public void doNext() {
@@ -732,8 +836,23 @@ public class ReadingListSynchronizer {
       }
     };
 
+    // First.
+    final StageDelegate onDeletionsUploaded = new NextDelegate(executor) {
+      @Override
+      public void doNext() {
+        syncDelegate.onDeletionsUploadComplete();
+        uploadUnreadChanges(onUnreadChangesUploaded);
+      }
+
+      @Override
+      public void doFail(Exception e) {
+        Logger.warn(LOG_TAG, "Uploading deletions failed.", e);
+        done.fail(e);
+      }
+    };
+
     try {
-      uploadUnreadChanges(onUnreadChangesUploaded);
+      uploadDeletions(onDeletionsUploaded);
     } catch (Exception ee) {
       done.fail(ee);
     }
