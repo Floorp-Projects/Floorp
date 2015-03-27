@@ -484,7 +484,7 @@ XDRLazyFreeVariables(XDRState<mode> *xdr, MutableHandle<LazyScript *> lazy)
 template<XDRMode mode>
 static bool
 XDRRelazificationInfo(XDRState<mode> *xdr, HandleFunction fun, HandleScript script,
-                      MutableHandle<LazyScript *> lazy)
+                      HandleObject enclosingScope, MutableHandle<LazyScript *> lazy)
 {
     MOZ_ASSERT_IF(mode == XDR_ENCODE, script->isRelazifiable() && script->maybeLazyScript());
     MOZ_ASSERT_IF(mode == XDR_ENCODE, !lazy->numInnerFunctions());
@@ -516,6 +516,9 @@ XDRRelazificationInfo(XDRState<mode> *xdr, HandleFunction fun, HandleScript scri
             // of the script, as we are trying to match the fact this function
             // has already been parsed and that it would need to be re-lazified.
             lazy->initRuntimeFields(packedFields);
+
+            MOZ_ASSERT(!lazy->sourceObject());
+            lazy->setParent(enclosingScope, &script->scriptSourceUnwrap());
         }
     }
 
@@ -1081,7 +1084,7 @@ js::XDRScript(XDRState<mode> *xdr, HandleObject enclosingScope, HandleScript enc
         if (mode == XDR_ENCODE)
             lazy = script->maybeLazyScript();
 
-        if (!XDRRelazificationInfo(xdr, fun, script, &lazy))
+        if (!XDRRelazificationInfo(xdr, fun, script, enclosingScope, &lazy))
             return false;
 
         if (mode == XDR_DECODE)
