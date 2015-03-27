@@ -10,6 +10,7 @@ import glob
 
 from mozboot.base import BaseBootstrapper
 
+
 class ArchlinuxBootstrapper(BaseBootstrapper):
     '''Archlinux experimental bootstrapper.'''
 
@@ -74,7 +75,7 @@ class ArchlinuxBootstrapper(BaseBootstrapper):
 
     def install_mobile_android_packages(self):
         raise NotImplementedError('Bootstrap support for mobile-android is '
-                'not yet available for Archlinux')
+                                  'not yet available for Archlinux')
 
     def _update_package_manager(self):
         self.pacman_update
@@ -125,9 +126,9 @@ class ArchlinuxBootstrapper(BaseBootstrapper):
     def aur_install(self, *packages):
         path = tempfile.mkdtemp()
         print('WARNING! This script requires to install packages from the AUR '
-                'This is potentially unsecure so I recommend that you carefully '
-                'read each package description and check the sources.'
-                'These packages will be built in ' + path + '.')
+              'This is potentially unsecure so I recommend that you carefully '
+              'read each package description and check the sources.'
+              'These packages will be built in ' + path + '.')
         choice = raw_input('Do you want to continue? (yes/no) [no]')
         if choice != 'yes':
             sys.exit(1)

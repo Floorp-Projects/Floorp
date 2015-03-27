@@ -9,6 +9,7 @@ import errno
 import os
 import subprocess
 
+
 # These are the platform and build-tools versions for building
 # mobile/android, respectively. Try to keep these in synch with the
 # build system and Mozilla's automation.
@@ -82,6 +83,7 @@ def check_output(*args, **kwargs):
 
     return fn(*args, **kwargs)
 
+
 def list_missing_android_packages(android_tool, packages):
     '''
     Use the given |android| tool to return the sub-list of Android
@@ -93,7 +95,7 @@ def list_missing_android_packages(android_tool, packages):
     # but packages that are installed don't appear in the list of
     # available packages.
     lines = check_output([android_tool,
-        'list', 'sdk', '--no-ui', '--extended']).splitlines()
+                          'list', 'sdk', '--no-ui', '--extended']).splitlines()
 
     # Lines look like: 'id: 59 or "extra-google-simulators"'
     for line in lines:
@@ -112,6 +114,7 @@ def list_missing_android_packages(android_tool, packages):
                 missing.append(package)
 
     return missing
+
 
 def install_mobile_android_sdk_or_ndk(url, path):
     '''
@@ -158,6 +161,7 @@ def install_mobile_android_sdk_or_ndk(url, path):
     finally:
         os.chdir(old_path)
 
+
 def ensure_android_sdk_and_ndk(path, sdk_path, sdk_url, ndk_path, ndk_url):
     '''
     Ensure the Android SDK and NDK are found at the given paths.  If not, fetch
@@ -180,6 +184,7 @@ def ensure_android_sdk_and_ndk(path, sdk_path, sdk_url, ndk_path, ndk_url):
     else:
         install_mobile_android_sdk_or_ndk(sdk_url, path)
 
+
 def ensure_android_packages(android_tool, packages=None):
     '''
     Use the given android tool (like 'android') to install required Android
@@ -198,13 +203,14 @@ def ensure_android_packages(android_tool, packages=None):
     # may be prompted to agree to the Android license.
     print(INSTALLING_ANDROID_PACKAGES % ', '.join(missing))
     subprocess.check_call([android_tool,
-        'update', 'sdk', '--no-ui',
-        '--filter', ','.join(missing)])
+                           'update', 'sdk', '--no-ui',
+                           '--filter', ','.join(missing)])
 
     # Let's verify.
     failing = list_missing_android_packages(android_tool, packages=packages)
     if failing:
         raise Exception(MISSING_ANDROID_PACKAGES % (', '.join(missing), ', '.join(failing)))
+
 
 def suggest_mozconfig(sdk_path=None, ndk_path=None):
     print(MOBILE_ANDROID_MOZCONFIG_TEMPLATE % (sdk_path, ndk_path))

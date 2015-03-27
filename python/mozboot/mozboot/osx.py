@@ -26,7 +26,7 @@ HOMEBREW_AUTOCONF213 = 'https://raw.github.com/Homebrew/homebrew-versions/master
 MACPORTS_URL = {'9': 'https://distfiles.macports.org/MacPorts/MacPorts-2.2.1-10.9-Mavericks.pkg',
                 '8': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.8-MountainLion.pkg',
                 '7': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.7-Lion.pkg',
-                '6': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.6-SnowLeopard.pkg',}
+                '6': 'https://distfiles.macports.org/MacPorts/MacPorts-2.1.3-10.6-SnowLeopard.pkg', }
 
 MACPORTS_CLANG_PACKAGE = 'clang-3.3'
 
@@ -166,6 +166,7 @@ license for you by downloading the JDK. If this is unacceptable you should
 uninstall.
 '''
 
+
 class OSXBootstrapper(BaseBootstrapper):
     def __init__(self, version):
         BaseBootstrapper.__init__(self)
@@ -210,14 +211,14 @@ class OSXBootstrapper(BaseBootstrapper):
             select = self.which('xcode-select')
             try:
                 output = self.check_output([select, '--print-path'],
-                    stderr=subprocess.STDOUT)
+                                           stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as e:
                 # This seems to appear on fresh OS X machines before any Xcode
                 # has been installed. It may only occur on OS X 10.9 and later.
                 if 'unable to get active developer directory' in e.output:
                     print(XCODE_NO_DEVELOPER_DIRECTORY)
                     self._install_xcode_app_store()
-                    assert False # Above should exit.
+                    assert False  # Above should exit.
 
                 output = e.output
 
@@ -227,19 +228,19 @@ class OSXBootstrapper(BaseBootstrapper):
             if '.app/' not in output:
                 print(XCODE_REQUIRED)
                 self._install_xcode_app_store()
-                assert False # Above should exit.
+                assert False  # Above should exit.
 
         # Once Xcode is installed, you need to agree to the license before you can
         # use it.
         try:
             output = self.check_output(['/usr/bin/xcrun', 'clang'],
-                stderr=subprocess.STDOUT)
+                                       stderr=subprocess.STDOUT)
         except subprocess.CalledProcessError as e:
             if 'license' in e.output:
                 xcodebuild = self.which('xcodebuild')
                 try:
                     subprocess.check_call([xcodebuild, '-license'],
-                        stderr=subprocess.STDOUT)
+                                          stderr=subprocess.STDOUT)
                 except subprocess.CalledProcessError as e:
                     if 'requires admin privileges' in e.output:
                         self.run_as_root([xcodebuild, '-license'])
@@ -319,7 +320,7 @@ class OSXBootstrapper(BaseBootstrapper):
             print(PACKAGE_MANAGER_OLD_CLANG % ('Homebrew',))
 
             subprocess.check_call([self.brew, '-v', 'install', 'llvm',
-                '--with-clang', '--all-targets'])
+                                   '--with-clang', '--all-targets'])
 
     def ensure_homebrew_mobile_android_packages(self):
         import android
@@ -333,9 +334,9 @@ class OSXBootstrapper(BaseBootstrapper):
         # packages.  If we used the android.py module, we'd need wget.
         packages = [
             ('android-sdk', 'android-sdk'),
-            ('android-ndk', os.path.join(path_to_android, 'android-ndk.rb')), # This is a locally provided brew formula!
+            ('android-ndk', os.path.join(path_to_android, 'android-ndk.rb')),  # This is a locally provided brew formula!
             ('ant', 'ant'),
-            ('brew-cask', 'caskroom/cask/brew-cask'), # For installing Java later.
+            ('brew-cask', 'caskroom/cask/brew-cask'),  # For installing Java later.
         ]
         self._ensure_homebrew_packages(packages)
 
@@ -344,7 +345,7 @@ class OSXBootstrapper(BaseBootstrapper):
         ]
         installed = self._ensure_homebrew_casks(casks)
         if installed:
-            print(JAVA_LICENSE_NOTICE) # We accepted a license agreement for the user.
+            print(JAVA_LICENSE_NOTICE)  # We accepted a license agreement for the user.
 
         # We could probably fish this path from |brew info android-sdk|.
         android_tool = '/usr/local/opt/android-sdk/tools/android'
@@ -461,7 +462,7 @@ class OSXBootstrapper(BaseBootstrapper):
         url = MACPORTS_URL.get(self.minor_version, None)
         if not url:
             raise Exception('We do not have a MacPorts install URL for your '
-                'OS X version. You will need to install MacPorts manually.')
+                            'OS X version. You will need to install MacPorts manually.')
 
         print(PACKAGE_MANAGER_INSTALL % ('MacPorts', 'MacPorts', 'MacPorts', 'port'))
         pkg = urlopen(url=url, timeout=300).read()
@@ -484,7 +485,7 @@ class OSXBootstrapper(BaseBootstrapper):
         if self.package_manager == 'homebrew':
             try:
                 subprocess.check_output([self.brew, '-v', 'upgrade', package],
-                    stderr=subprocess.STDOUT)
+                                        stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as e:
                 if 'already installed' not in e.output:
                     raise
@@ -501,4 +502,3 @@ class OSXBootstrapper(BaseBootstrapper):
             self._upgrade_package('python')
         else:
             self._upgrade_package('python27')
-

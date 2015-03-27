@@ -45,14 +45,11 @@
         <body><![CDATA[
           let target = aEvent.target;
 
-          // Don't draw the drop indicator outside of markers.
-          // The markers are hidden, since otherwise sometimes popups acquire
-          // scrollboxes on OS X, so we can't use them directly.
-          let firstChildTop = this._startMarker.nextSibling.boxObject.y;
-          let lastChildBottom = this._endMarker.previousSibling.boxObject.y +
-                                this._endMarker.previousSibling.boxObject.height;
-          let betweenMarkers = target.boxObject.y >= firstChildTop ||
-                               target.boxObject.y <= lastChildBottom;
+          // Don't draw the drop indicator outside of markers or if current
+          // node is not a Places node.
+          let betweenMarkers =
+            (this._startMarker.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_FOLLOWING) &&
+            (this._endMarker.compareDocumentPosition(target) & Node.DOCUMENT_POSITION_PRECEDING);
 
           // Hide the dropmarker if current node is not a Places node.
           return !(target && target._placesNode && betweenMarkers);
