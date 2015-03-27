@@ -2487,10 +2487,6 @@ void MediaDecoderStateMachine::RenderVideoFrame(VideoData* aData,
   MOZ_ASSERT(OnTaskQueue());
   mDecoder->GetReentrantMonitor().AssertNotCurrentThreadIn();
 
-  if (aData->mDuplicate) {
-    return;
-  }
-
   VERBOSE_LOG("playing video frame %lld (queued=%i, state-machine=%i, decoder-queued=%i)",
               aData->mTime, VideoQueue().GetSize() + mReader->SizeOfVideoQueueInFrames(),
               VideoQueue().GetSize(), mReader->SizeOfVideoQueueInFrames());
@@ -2732,26 +2728,10 @@ MediaDecoderStateMachine::DropVideoUpToSeekTarget(VideoData* aSample)
   MOZ_ASSERT(OnTaskQueue());
   nsRefPtr<VideoData> video(aSample);
   MOZ_ASSERT(video);
-  DECODER_LOG("DropVideoUpToSeekTarget() frame [%lld, %lld] dup=%d",
-              video->mTime, video->GetEndTime(), video->mDuplicate);
+  DECODER_LOG("DropVideoUpToSeekTarget() frame [%lld, %lld]",
+              video->mTime, video->GetEndTime());
   MOZ_ASSERT(mCurrentSeek.Exists());
   const int64_t target = mCurrentSeek.mTarget.mTime;
-
-  // Duplicate handling: if we're dropping frames up the seek target, we must
-  // be wary of Theora duplicate frames. They don't have an image, so if the
-  // target frame is in a run of duplicates, we won't have an image to draw
-  // after the seek. So store the last frame encountered while dropping, and
-  // copy its Image forward onto duplicate frames, so that every frame has
-  // an Image.
-  if (video->mDuplicate &&
-      mFirstVideoFrameAfterSeek &&
-      !mFirstVideoFrameAfterSeek->mDuplicate) {
-    nsRefPtr<VideoData> temp =
-      VideoData::ShallowCopyUpdateTimestampAndDuration(mFirstVideoFrameAfterSeek,
-                                                       video->mTime,
-                                                       video->mDuration);
-    video = temp;
-  }
 
   // If the frame end time is less than the seek target, we won't want
   // to display this frame after the seek, so discard it.
