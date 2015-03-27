@@ -31,10 +31,11 @@ async_test(function(t) {
   player.ready.then(waitForFrame).then(t.step_func(function() {
     assert_true(getMarginLeft(cs) > previousAnimVal,
                 'margin-left is initially increasing');
-    previousAnimVal = getMarginLeft(cs);
-
     player.pause();
-    return player.ready.then(waitForFrame);
+    return player.ready;
+  })).then(t.step_func(function() {
+    previousAnimVal = getMarginLeft(cs);
+    return waitForFrame();
   })).then(t.step_func(function() {
     assert_equals(getMarginLeft(cs), previousAnimVal,
                   'margin-left does not increase after calling pause()');
@@ -102,13 +103,14 @@ async_test(function(t) {
   }).then(t.step_func(function() {
     assert_equals(cs.animationPlayState, 'running',
                   'animation-play-state is running');
-    previousAnimVal = getMarginLeft(cs);
     div.style.animationPlayState = 'paused';
-    cs.animationPlayState; // Trigger style resolution
-    return waitForFrame();
+    return player.ready;
   })).then(t.step_func(function() {
     assert_equals(cs.animationPlayState, 'paused',
                   'animation-play-state is paused');
+    previousAnimVal = getMarginLeft(cs);
+    return waitForFrame();
+  })).then(t.step_func(function() {
     assert_equals(getMarginLeft(cs), previousAnimVal,
                   'Animated value of margin-left does not change when'
                   + ' paused by style');
@@ -152,7 +154,7 @@ async_test(function(t) {
 
   // Unlike the previous test for play(), since calling pause() is sticky,
   // we'll apply it even if the underlying style also says we're paused.
-  // 
+  //
   // We would like to test that implementations flush styles before running
   // pause() but actually there's no style we can currently set that will
   // change the behavior of pause(). That may change in the future
@@ -164,9 +166,9 @@ async_test(function(t) {
   player.pause();
   var previousAnimVal = getMarginLeft(cs);
 
-  waitForFrame().then(t.step_func(function() {
+  player.ready.then(waitForFrame).then(t.step_func(function() {
     assert_equals(cs.animationPlayState, 'running',
-                  'animation-play-state is paused');
+                  'animation-play-state is running');
     assert_equals(getMarginLeft(cs), previousAnimVal,
                   'Paused value of margin-left does not change');
     t.done();
