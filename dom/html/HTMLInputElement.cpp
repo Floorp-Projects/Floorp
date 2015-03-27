@@ -1,4 +1,5 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=2 sw=2 sts=2 et tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1692,12 +1693,18 @@ HTMLInputElement::GetValueInternal(nsAString& aValue) const
 
     case VALUE_MODE_FILENAME:
       if (nsContentUtils::IsCallerChrome()) {
+#ifndef MOZ_CHILD_PERMISSIONS
+        aValue.Assign(mFirstFilePath);
+#else
+        // XXX We'd love to assert that this can't happen, but some mochitests
+        // use SpecialPowers to circumvent our more sane security model.
         if (!mFiles.IsEmpty()) {
           return mFiles[0]->GetMozFullPath(aValue);
         }
         else {
           aValue.Truncate();
         }
+#endif
       } else {
         // Just return the leaf name
         if (mFiles.IsEmpty() || NS_FAILED(mFiles[0]->GetName(aValue))) {
@@ -2646,6 +2653,19 @@ HTMLInputElement::AfterSetFiles(bool aSetValueChanged)
     GetDisplayFileName(readableValue);
     formControlFrame->SetFormProperty(nsGkAtoms::value, readableValue);
   }
+
+#ifndef MOZ_CHILD_PERMISSIONS
+  // Grab the full path here for any chrome callers who access our .value via a
+  // CPOW. This path won't be called from a CPOW meaning the potential sync IPC
+  // call under GetMozFullPath won't be rejected for not being urgent.
+  // XXX Protected by the ifndef because the blob code doesn't allow us to send
+  // this message in b2g.
+  if (mFiles.IsEmpty()) {
+    mFirstFilePath.Truncate();
+  } else {
+    mFiles[0]->GetMozFullPath(mFirstFilePath);
+  }
+#endif
 
   UpdateFileList();
 
