@@ -2486,6 +2486,8 @@ nsWindow::ConfigureAPZCTreeManager()
 already_AddRefed<GeckoContentController>
 nsWindow::CreateRootContentController()
 {
+    widget::android::APZCCallbackHandler::Initialize(this, mAPZEventState);
+
     nsRefPtr<widget::android::APZCCallbackHandler> controller =
         widget::android::APZCCallbackHandler::GetInstance();
     return controller.forget();
