@@ -14,7 +14,7 @@ const makeDebugger = require("./utils/make-debugger");
  * Creates a TabActor for debugging all the chrome content in the
  * current process. Most of the implementation is inherited from TabActor.
  * ChromeActor is a child of RootActor, it can be instanciated via
- * RootActor.attachProcess request.
+ * RootActor.getProcess request.
  * ChromeActor exposes all tab actors via its form() request, like TabActor.
  *
  * History lecture:
