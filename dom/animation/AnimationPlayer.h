@@ -191,17 +191,24 @@ public:
 
   void Cancel();
 
-  const nsString& Name() const {
+  const nsString& Name() const
+  {
     return mSource ? mSource->Name() : EmptyString();
   }
 
-  bool IsPaused() const { return PlayState() == AnimationPlayState::Paused; }
+  bool IsPausedOrPausing() const
+  {
+    return PlayState() == AnimationPlayState::Paused ||
+           mPendingState == PendingState::PausePending;
+  }
   bool IsRunning() const;
 
-  bool HasCurrentSource() const {
+  bool HasCurrentSource() const
+  {
     return GetSource() && GetSource()->IsCurrent();
   }
-  bool HasInEffectSource() const {
+  bool HasInEffectSource() const
+  {
     return GetSource() && GetSource()->IsInEffect();
   }
 
