@@ -202,15 +202,10 @@ add_task(function* asyncSetup() {
 
 // Ensure that not overwriting an existing file fails silently
 add_task(function* test_overwritePing() {
-  let ping = {id: "foo"}
+  let ping = {id: "foo"};
   yield TelemetryFile.savePing(ping, true);
   yield TelemetryFile.savePing(ping, false);
   yield TelemetryFile.cleanupPingFile(ping);
-});
-
-// Sends a ping to a non existing server.
-add_task(function* test_noServerPing() {
-  yield sendPing(false, false);
 });
 
 // Checks that a sent ping is correctly received by a dummy http server.
@@ -272,6 +267,70 @@ add_task(function* test_pingHasEnvironmentAndClientId() {
     Assert.equal(ping.clientId, gDataReportingClientID,
                  "The correct clientId must be reported.");
   }
+});
+
+// Test that we fuzz the submission time around midnight properly
+// to avoid overloading the telemetry servers.
+add_task(function* test_midnightPingSendFuzzing() {
+  const fuzzingDelay = 60 * 60 * 1000;
+  fakeMidnightPingFuzzingDelay(fuzzingDelay);
+  let now = new Date(2030, 5, 1, 11, 00, 0);
+  fakeNow(now);
+
+  let pingSendTimerCallback = null;
+  let pingSendTimeout = null;
+  fakePingSendTimer((callback, timeout) => {
+    pingSendTimerCallback = callback;
+    pingSendTimeout = timeout;
+  }, () => {});
+
+  gRequestIterator = Iterator(new Request());
+  yield TelemetryPing.reset();
+
+  // A ping submitted shortly before midnight should not get sent yet.
+  now = new Date(2030, 5, 1, 23, 55, 0);
+  fakeNow(now);
+  registerPingHandler((req, res) => {
+    Assert.ok(false, "No ping should be received yet.");
+  });
+  yield sendPing(true, true);
+
+  Assert.ok(!!pingSendTimerCallback);
+  Assert.deepEqual(futureDate(now, pingSendTimeout), new Date(2030, 5, 2, 1, 0, 0));
+
+  // A ping after midnight within the fuzzing delay should also not get sent.
+  now = new Date(2030, 5, 2, 0, 40, 0);
+  fakeNow(now);
+  pingSendTimeout = null;
+  yield sendPing(true, true);
+  Assert.deepEqual(futureDate(now, pingSendTimeout), new Date(2030, 5, 2, 1, 0, 0));
+
+  // The Request constructor restores the previous ping handler.
+  gRequestIterator = Iterator(new Request());
+
+  // Setting the clock to after the fuzzing delay, we should trigger the two ping sends
+  // with the timer callback.
+  now = futureDate(now, pingSendTimeout);
+  fakeNow(now);
+  yield pingSendTimerCallback();
+  let requests = [];
+  requests.push(yield gRequestIterator.next());
+  requests.push(yield gRequestIterator.next());
+  for (let req of requests) {
+    let ping = decodeRequestPayload(req);
+    checkPingFormat(ping, TEST_PING_TYPE, true, true);
+  }
+
+  // Moving the clock further we should still send pings immediately.
+  now = futureDate(now, 5 * 60 * 1000);
+  yield sendPing(true, true);
+  let request = yield gRequestIterator.next();
+  let ping = decodeRequestPayload(request);
+  checkPingFormat(ping, TEST_PING_TYPE, true, true);
+
+  // Clean-up.
+  fakeMidnightPingFuzzingDelay(0);
+  fakePingSendTimer(() => {}, () => {});
 });
 
 add_task(function* stopServer(){

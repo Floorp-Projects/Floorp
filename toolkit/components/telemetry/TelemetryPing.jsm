@@ -21,6 +21,7 @@ Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Timer.jsm");
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryPing::";
@@ -44,6 +45,14 @@ const TELEMETRY_TEST_DELAY = 100;
 const DEFAULT_RETENTION_DAYS = 14;
 // Timeout after which we consider a ping submission failed.
 const PING_SUBMIT_TIMEOUT_MS = 2 * 60 * 1000;
+
+// We treat pings before midnight as happening "at midnight" with this tolerance.
+const MIDNIGHT_TOLERANCE_MS = 15 * 60 * 1000;
+// For midnight fuzzing we want to affect pings around midnight with this tolerance.
+const MIDNIGHT_TOLERANCE_FUZZ_MS = 5 * 60 * 1000;
+// We try to spread "midnight" pings out over this interval.
+const MIDNIGHT_FUZZING_INTERVAL_MS = 60 * 60 * 1000;
+const MIDNIGHT_FUZZING_DELAY_MS = Math.random() * MIDNIGHT_FUZZING_INTERVAL_MS;
 
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
                                    "@mozilla.org/base/telemetry;1",
@@ -101,11 +110,79 @@ function generateUUID() {
 }
 
 /**
+ * This is a policy object used to override behavior for testing.
+ */
+let Policy = {
+  now: () => new Date(),
+  midnightPingFuzzingDelay: () => MIDNIGHT_FUZZING_DELAY_MS,
+  setPingSendTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
+  clearPingSendTimeout: (id) => clearTimeout(id),
+};
+
+/**
  * Determine if the ping has new ping format or a legacy one.
  */
 function isNewPingFormat(aPing) {
   return ("id" in aPing) && ("application" in aPing) &&
          ("version" in aPing) && (aPing.version >= 2);
+}
+
+/**
+ * Takes a date and returns it trunctated to a date with daily precision.
+ */
+function truncateToDays(date) {
+  return new Date(date.getFullYear(),
+                  date.getMonth(),
+                  date.getDate(),
+                  0, 0, 0, 0);
+}
+
+function tomorrow(date) {
+  let d = new Date(date);
+  d.setDate(d.getDate() + 1);
+  return d;
+}
+
+/**
+ * Check if the difference between the times is within the provided tolerance.
+ * @param {Number} t1 A time in milliseconds.
+ * @param {Number} t2 A time in milliseconds.
+ * @param {Number} tolerance The tolerance, in milliseconds.
+ * @return {Boolean} True if the absolute time difference is within the tolerance, false
+ *                   otherwise.
+ */
+function areTimesClose(t1, t2, tolerance) {
+  return Math.abs(t1 - t2) <= tolerance;
+}
+
+/**
+ * Get the next midnight for a date.
+ * @param {Object} date The date object to check.
+ * @return {Object} The Date object representing the next midnight.
+ */
+function getNextMidnight(date) {
+  let nextMidnight = new Date(truncateToDays(date));
+  nextMidnight.setDate(nextMidnight.getDate() + 1);
+  return nextMidnight;
+}
+
+/**
+ * Get the midnight which is closer to the provided date.
+ * @param {Object} date The date object to check.
+ * @return {Object} The Date object representing the closes midnight, or null if midnight
+ *                  is not within the midnight tolerance.
+ */
+function getNearestMidnight(date, tolerance) {
+  let lastMidnight = truncateToDays(date);
+  if (areTimesClose(date.getTime(), lastMidnight.getTime(), tolerance)) {
+    return lastMidnight;
+  }
+
+  const nextMidnightDate = getNextMidnight(date);
+  if (areTimesClose(date.getTime(), nextMidnightDate.getTime(), tolerance)) {
+    return nextMidnightDate;
+  }
+  return null;
 }
 
 this.EXPORTED_SYMBOLS = ["TelemetryPing"];
@@ -273,6 +350,8 @@ let Impl = {
   _delayedInitTask: null,
   // The deferred promise resolved when the initialization task completes.
   _delayedInitTaskDeferred: null,
+  // Timer for scheduled ping sends.
+  _pingSendTimer: null,
 
   // This is a public barrier Telemetry clients can use to add blockers to the shutdown
   // of TelemetryPing.
@@ -398,11 +477,66 @@ let Impl = {
    * @return {Promise} Resolved when the ping is correctly moved to the saved pings directory.
    */
   addPendingPing: function(aPingPath, aRemoveOriginal) {
-    return TelemetryFile.addPendingPing(aPingPath).then(() => {
+    return TelemetryFile.addPendingPingFromFile(aPingPath).then(() => {
         if (aRemoveOriginal) {
           return OS.File.remove(aPingPath);
         }
       }, error => this._log.error("addPendingPing - Unable to add the pending ping", error));
+  },
+
+  /**
+   * This helper calculates the next time that we can send pings at.
+   * Currently this mostly redistributes ping sends around midnight to avoid submission
+   * spikes around local midnight for daily pings.
+   *
+   * @param now Date The current time.
+   * @return Number The next time (ms from UNIX epoch) when we can send pings.
+   */
+  _getNextPingSendTime: function(now) {
+    const midnight = getNearestMidnight(now, MIDNIGHT_FUZZING_INTERVAL_MS);
+
+    // Don't delay ping if we are not close to midnight.
+    if (!midnight) {
+      return now.getTime();
+    }
+
+    // Delay ping send if we are within the midnight fuzzing range.
+    // This is from: |midnight - MIDNIGHT_TOLERANCE_FUZZ_MS|
+    // to: |midnight + MIDNIGHT_FUZZING_INTERVAL_MS|
+    const midnightRangeStart = midnight.getTime() - MIDNIGHT_TOLERANCE_FUZZ_MS;
+    if (now.getTime() >= midnightRangeStart) {
+      // We spread those ping sends out between |midnight| and |midnight + midnightPingFuzzingDelay|.
+      return midnight.getTime() + Policy.midnightPingFuzzingDelay();
+    }
+
+    return now.getTime();
+  },
+
+  /**
+   * Try to send |ping| (and possibly other pending pings) if we can send now.
+   * If we can not send now, add |ping| to the pending pings for later sending.
+   *
+   * @param ping Object The ping data.
+   * @return Promise Promise that is resolved when the ping is sent or persisted as pending.
+   */
+  _maybeSendPing: function(ping) {
+    // Check if we can send pings now - otherwise schedule a later send.
+    const now = Policy.now();
+    const nextPingSendTime = this._getNextPingSendTime(now);
+    if (nextPingSendTime > now.getTime()) {
+      this._log.trace("_maybeSendPing - delaying ping send to " + new Date(nextPingSendTime));
+      this._reschedulePingSendTimer(nextPingSendTime);
+      return TelemetryFile.addPendingPing(ping);
+    }
+
+    // Once ping is assembled, send it along with the persisted ping in the backlog.
+    let p = [
+      // Persist the ping if sending it fails.
+      this.doPing(ping, false)
+          .catch(() => TelemetryFile.savePing(ping, true)),
+      this.sendPersistedPings(),
+    ];
+    return Promise.all(p);
   },
 
   /**
@@ -427,17 +561,7 @@ let Impl = {
                     ", aOptions " + JSON.stringify(aOptions));
 
     let pingData = this.assemblePing(aType, aPayload, aOptions);
-    // Once ping is assembled, send it along with the persisted pings in the backlog.
-    let p = [
-      // Persist the ping if sending it fails.
-      this.doPing(pingData, false)
-          .catch(() => TelemetryFile.savePing(pingData, true)),
-      this.sendPersistedPings(),
-    ];
-
-    let promise = Promise.all(p);
-    this._trackPendingPingTask(promise);
-    return promise;
+    return this._maybeSendPing(pingData);
   },
 
   /**
@@ -448,6 +572,16 @@ let Impl = {
   sendPersistedPings: function sendPersistedPings() {
     this._log.trace("sendPersistedPings");
 
+    // Check if we can send pings now - otherwise schedule a later send.
+    const now = Policy.now();
+    const nextPingSendTime = this._getNextPingSendTime(now);
+    if (nextPingSendTime > now.getTime()) {
+      this._log.trace("sendPersistedPings - delaying ping send to " + new Date(nextPingSendTime));
+      this._reschedulePingSendTimer(nextPingSendTime);
+      return Promise.resolve();
+    }
+
+    // We can send now.
     let pingsIterator = Iterator(this.popPayloads());
     let p = [for (data of pingsIterator) this.doPing(data, true).catch((e) => {
       this._log.error("sendPersistedPings - doPing rejected", e);
@@ -833,7 +967,11 @@ let Impl = {
     try {
       // First wait for clients processing shutdown.
       yield this._shutdownBarrier.wait();
-      // Then wait for any outstanding async ping activity.
+
+      // Then clear scheduled ping sends...
+      this._clearPingSendTimer();
+
+      // ... and wait for any outstanding async ping activity.
       yield this._connectionsBarrier.wait();
     } finally {
       // Reset state.
@@ -912,5 +1050,18 @@ let Impl = {
       shutdownBarrier: this._shutdownBarrier.state,
       connectionsBarrier: this._connectionsBarrier.state,
     };
+  },
+
+  _reschedulePingSendTimer: function(timestamp) {
+    this._clearPingSendTimer();
+    const interval = timestamp - Policy.now();
+    this._pingSendTimer = Policy.setPingSendTimeout(() => this.sendPersistedPings(), interval);
+  },
+
+  _clearPingSendTimer: function() {
+    if (this._pingSendTimer) {
+      Policy.clearPingSendTimeout(this._pingSendTimer);
+      this._pingSendTimer = null;
+    }
   },
 };
