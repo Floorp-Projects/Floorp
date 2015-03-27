@@ -2623,17 +2623,22 @@ PeerConnectionImpl::BuildStatsQuery_m(
     RTCStatsQuery *query) {
 
   if (!HasMedia()) {
-    return NS_OK;
+    return NS_ERROR_UNEXPECTED;
   }
 
-  if (!mMedia->ice_ctx() || !mThread) {
-    CSFLogError(logTag, "Could not build stats query, critical components of "
-                        "PeerConnectionImpl not set.");
+  // Note: mMedia->ice_ctx() is deleted on STS thread; so make sure we grab and hold
+  // a ref instead of making multiple calls.  NrIceCtx uses threadsafe refcounting.
+  query->iceCtx = mMedia->ice_ctx();
+  if (!query->iceCtx) {
+    CSFLogError(logTag, "Could not build stats query, no ice_ctx");
+    return NS_ERROR_UNEXPECTED;
+  }
+  if (!mThread) {
+    CSFLogError(logTag, "Could not build stats query, no MainThread");
     return NS_ERROR_UNEXPECTED;
   }
 
   nsresult rv = GetTimeSinceEpoch(&(query->now));
-
   if (NS_FAILED(rv)) {
     CSFLogError(logTag, "Could not build stats query, could not get timestamp");
     return rv;
@@ -2697,8 +2702,6 @@ PeerConnectionImpl::BuildStatsQuery_m(
       }
     }
   }
-
-  query->iceCtx = mMedia->ice_ctx();
 
   // From the list of MediaPipelines, determine the set of NrIceMediaStreams
   // we are interested in.
