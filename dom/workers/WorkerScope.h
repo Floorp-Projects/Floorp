@@ -265,6 +265,12 @@ public:
   GetGlobal(JSContext* aCx, JS::MutableHandle<JSObject*> aGlobal);
 
   void
+  EnterEventLoop();
+
+  void
+  LeaveEventLoop();
+
+  void
   PostMessage(const nsAString& aMessage);
 
   IMPL_EVENT_HANDLER(message)
