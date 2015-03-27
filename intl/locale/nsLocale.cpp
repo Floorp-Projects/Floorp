@@ -60,13 +60,13 @@ nsLocale::AddCategory(const nsAString &category, const nsAString &value)
 
   char16_t* newValue = ToNewUnicode(value);
   if (!newValue) {
-    nsMemory::Free(newKey);
+    free(newKey);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (!PL_HashTableAdd(fHashtable, newKey, newValue)) {
-    nsMemory::Free(newKey);
-    nsMemory::Free(newValue);
+    free(newKey);
+    free(newValue);
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -100,8 +100,8 @@ int
 nsLocale::Hash_EnumerateDelete(PLHashEntry *he, int hashIndex, void *arg)
 {
   // delete an entry
-  nsMemory::Free((char16_t *)he->key);
-  nsMemory::Free((char16_t *)he->value);
+  free((char16_t *)he->key);
+  free((char16_t *)he->value);
 
   return (HT_ENUMERATE_NEXT | HT_ENUMERATE_REMOVE);
 }

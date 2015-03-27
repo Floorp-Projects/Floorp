@@ -108,7 +108,7 @@ nsHtml5TreeOperation::~nsHtml5TreeOperation()
       delete[] mOne.charPtr;
       break;
     case eTreeOpProcessOfflineManifest:
-      nsMemory::Free(mOne.unicharPtr);
+      free(mOne.unicharPtr);
       break;
     default: // keep the compiler happy
       break;

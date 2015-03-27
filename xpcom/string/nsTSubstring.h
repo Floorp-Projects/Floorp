@@ -1106,7 +1106,7 @@ public:
   //                         buffer length.  See nsStringHeader.
   //
   //   "adopted buffer"      An adopted buffer is a raw string buffer
-  //                         allocated on the heap (using nsMemory::Alloc)
+  //                         allocated on the heap (using moz_xmalloc)
   //                         of which the string class subsumes ownership.
   //
   // Some comments about the string flags:

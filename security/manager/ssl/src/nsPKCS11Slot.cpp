@@ -320,11 +320,11 @@ nsPKCS11Module::FindSlotByName(const char16_t *aName,
       slotinfo = PK11_ReferenceSlot(mModule->slots[0]);
     } else {
       // give up
-      nsMemory::Free(asciiname);
+      free(asciiname);
       return NS_ERROR_FAILURE;
     }
   } 
-  nsMemory::Free(asciiname);
+  free(asciiname);
   nsCOMPtr<nsIPKCS11Slot> slot = new nsPKCS11Slot(slotinfo);
   PK11_FreeSlot(slotinfo);
   *_retval = slot;

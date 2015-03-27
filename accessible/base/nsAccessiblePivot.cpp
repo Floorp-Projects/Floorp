@@ -24,7 +24,7 @@ public:
                                                           mAcceptRoles(nullptr) { }
   ~RuleCache () {
     if (mAcceptRoles)
-      nsMemory::Free(mAcceptRoles);
+      free(mAcceptRoles);
   }
 
   nsresult ApplyFilter(Accessible* aAccessible, uint16_t* aResult);

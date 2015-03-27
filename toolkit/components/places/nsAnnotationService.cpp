@@ -972,7 +972,7 @@ nsAnnotationService::GetPagesWithAnnotation(const nsACString& aName,
     return NS_OK;
 
   *_results = static_cast<nsIURI**>
-                         (nsMemory::Alloc(results.Count() * sizeof(nsIURI*)));
+                         (moz_xmalloc(results.Count() * sizeof(nsIURI*)));
   NS_ENSURE_TRUE(*_results, NS_ERROR_OUT_OF_MEMORY);
 
   *_resultCount = results.Count();
@@ -1045,7 +1045,7 @@ nsAnnotationService::GetItemsWithAnnotation(const nsACString& aName,
     return NS_OK;
 
   *_results = static_cast<int64_t*>
-                         (nsMemory::Alloc(results.Length() * sizeof(int64_t)));
+                         (moz_xmalloc(results.Length() * sizeof(int64_t)));
   NS_ENSURE_TRUE(*_results, NS_ERROR_OUT_OF_MEMORY);
 
   *_resultCount = results.Length();
@@ -1150,7 +1150,7 @@ nsAnnotationService::GetAnnotationsWithName(const nsACString& aName,
     return NS_OK;
 
   *_annotations = static_cast<mozIAnnotatedResult**>
-    (nsMemory::Alloc(annotations.Count() * sizeof(mozIAnnotatedResult*)));
+    (moz_xmalloc(annotations.Count() * sizeof(mozIAnnotatedResult*)));
   NS_ENSURE_TRUE(*_annotations, NS_ERROR_OUT_OF_MEMORY);
 
   *_count = annotations.Count();
@@ -1209,7 +1209,7 @@ nsAnnotationService::GetPageAnnotationNames(nsIURI* aURI,
     return NS_OK;
 
   *_result = static_cast<nsIVariant**>
-                        (nsMemory::Alloc(sizeof(nsIVariant*) * names.Length()));
+                        (moz_xmalloc(sizeof(nsIVariant*) * names.Length()));
   NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
 
   for (uint32_t i = 0; i < names.Length(); i ++) {
@@ -1218,7 +1218,7 @@ nsAnnotationService::GetPageAnnotationNames(nsIURI* aURI,
       // need to release all the variants we've already created
       for (uint32_t j = 0; j < i; j ++)
         NS_RELEASE((*_result)[j]);
-      nsMemory::Free(*_result);
+      free(*_result);
       *_result = nullptr;
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -1301,7 +1301,7 @@ nsAnnotationService::GetItemAnnotationNames(int64_t aItemId,
     return NS_OK;
 
   *_result = static_cast<nsIVariant**>
-                        (nsMemory::Alloc(sizeof(nsIVariant*) * names.Length()));
+                        (moz_xmalloc(sizeof(nsIVariant*) * names.Length()));
   NS_ENSURE_TRUE(*_result, NS_ERROR_OUT_OF_MEMORY);
 
   for (uint32_t i = 0; i < names.Length(); i ++) {
@@ -1310,7 +1310,7 @@ nsAnnotationService::GetItemAnnotationNames(int64_t aItemId,
       // need to release all the variants we've already created
       for (uint32_t j = 0; j < i; j ++)
         NS_RELEASE((*_result)[j]);
-      nsMemory::Free(*_result);
+      free(*_result);
       *_result = nullptr;
       return NS_ERROR_OUT_OF_MEMORY;
     }

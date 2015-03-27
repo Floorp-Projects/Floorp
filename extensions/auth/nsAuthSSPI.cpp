@@ -167,7 +167,7 @@ nsAuthSSPI::Reset()
     mIsFirst = true;
 
     if (mCertDERData){
-        nsMemory::Free(mCertDERData);
+        free(mCertDERData);
         mCertDERData = nullptr;
         mCertDERLength = 0;   
     }
@@ -334,7 +334,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
             // the token represents the server certificate.
             mIsFirst = false;
             mCertDERLength = inTokenLen;
-            mCertDERData = nsMemory::Alloc(inTokenLen);
+            mCertDERData = moz_xmalloc(inTokenLen);
             if (!mCertDERData)
                 return NS_ERROR_OUT_OF_MEMORY;
             memcpy(mCertDERData, inToken, inTokenLen);
@@ -378,7 +378,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                         pendpoint_binding.cbApplicationDataLength
                         + pendpoint_binding.dwApplicationDataOffset;
           
-                sspi_cbt = (char *) nsMemory::Alloc(ib[ibd.cBuffers].cbBuffer);
+                sspi_cbt = (char *) moz_xmalloc(ib[ibd.cBuffers].cbBuffer);
                 if (!sspi_cbt){
                     return NS_ERROR_OUT_OF_MEMORY;
                 }
@@ -410,10 +410,10 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                 if (NS_SUCCEEDED(rv))
                     rv = crypto->Finish(false, hashString);
                 if (NS_FAILED(rv)) {
-                    nsMemory::Free(mCertDERData);
+                    free(mCertDERData);
                     mCertDERData = nullptr;
                     mCertDERLength = 0;
-                    nsMemory::Free(sspi_cbt);
+                    free(sspi_cbt);
                     return rv;
                 }
           
@@ -423,7 +423,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
                 memcpy(sspi_cbt_ptr, hashString.get(), hash_size);
           
                 // Free memory used to store the server certificate
-                nsMemory::Free(mCertDERData);
+                free(mCertDERData);
                 mCertDERData = nullptr;
                 mCertDERLength = 0;
             } // End of CBT computation.
@@ -453,10 +453,10 @@ nsAuthSSPI::GetNextToken(const void *inToken,
     obd.pBuffers = &ob;
     ob.BufferType = SECBUFFER_TOKEN;
     ob.cbBuffer = mMaxTokenLen;
-    ob.pvBuffer = nsMemory::Alloc(ob.cbBuffer);
+    ob.pvBuffer = moz_xmalloc(ob.cbBuffer);
     if (!ob.pvBuffer){
         if (sspi_cbt)
-            nsMemory::Free(sspi_cbt);
+            free(sspi_cbt);
         return NS_ERROR_OUT_OF_MEMORY;
     }
     memset(ob.pvBuffer, 0, ob.cbBuffer);
@@ -485,10 +485,10 @@ nsAuthSSPI::GetNextToken(const void *inToken,
             LOG(("InitializeSecurityContext: continue.\n"));
 #endif
         if (sspi_cbt)
-            nsMemory::Free(sspi_cbt);
+            free(sspi_cbt);
             
         if (!ob.cbBuffer) {
-            nsMemory::Free(ob.pvBuffer);
+            free(ob.pvBuffer);
             ob.pvBuffer = nullptr;
         }
         *outToken = ob.pvBuffer;
@@ -502,7 +502,7 @@ nsAuthSSPI::GetNextToken(const void *inToken,
 
     LOG(("InitializeSecurityContext failed [rc=%d:%s]\n", rc, MapErrorCode(rc)));
     Reset();
-    nsMemory::Free(ob.pvBuffer);
+    free(ob.pvBuffer);
     return NS_ERROR_FAILURE;
 }
 
@@ -523,7 +523,7 @@ nsAuthSSPI::Unwrap(const void *inToken,
     // SSPI Buf
     ib[0].BufferType = SECBUFFER_STREAM;
     ib[0].cbBuffer = inTokenLen;
-    ib[0].pvBuffer = nsMemory::Alloc(ib[0].cbBuffer);
+    ib[0].pvBuffer = moz_xmalloc(ib[0].cbBuffer);
     if (!ib[0].pvBuffer)
         return NS_ERROR_OUT_OF_MEMORY;
     
@@ -550,14 +550,14 @@ nsAuthSSPI::Unwrap(const void *inToken,
         }
         else {
             *outToken = nsMemory::Clone(ib[1].pvBuffer, ib[1].cbBuffer);
-            nsMemory::Free(ib[0].pvBuffer);
+            free(ib[0].pvBuffer);
             if (!*outToken)
                 return NS_ERROR_OUT_OF_MEMORY;
         }
         *outTokenLen = ib[1].cbBuffer;
     }
     else
-        nsMemory::Free(ib[0].pvBuffer);
+        free(ib[0].pvBuffer);
 
     if (!SEC_SUCCESS(rc))
         return NS_ERROR_FAILURE;
@@ -577,13 +577,13 @@ public:
     ~secBuffers() 
     {
         if (ib[0].pvBuffer)
-            nsMemory::Free(ib[0].pvBuffer);
+            free(ib[0].pvBuffer);
 
         if (ib[1].pvBuffer)
-            nsMemory::Free(ib[1].pvBuffer);
+            free(ib[1].pvBuffer);
 
         if (ib[2].pvBuffer)
-            nsMemory::Free(ib[2].pvBuffer);
+            free(ib[2].pvBuffer);
     }
 };
 
@@ -615,14 +615,14 @@ nsAuthSSPI::Wrap(const void *inToken,
     // SSPI
     bufs.ib[0].cbBuffer = sizes.cbSecurityTrailer;
     bufs.ib[0].BufferType = SECBUFFER_TOKEN;
-    bufs.ib[0].pvBuffer = nsMemory::Alloc(sizes.cbSecurityTrailer);
+    bufs.ib[0].pvBuffer = moz_xmalloc(sizes.cbSecurityTrailer);
 
     if (!bufs.ib[0].pvBuffer)
         return NS_ERROR_OUT_OF_MEMORY;
 
     // APP Data
     bufs.ib[1].BufferType = SECBUFFER_DATA;
-    bufs.ib[1].pvBuffer = nsMemory::Alloc(inTokenLen);
+    bufs.ib[1].pvBuffer = moz_xmalloc(inTokenLen);
     bufs.ib[1].cbBuffer = inTokenLen;
     
     if (!bufs.ib[1].pvBuffer)
@@ -633,7 +633,7 @@ nsAuthSSPI::Wrap(const void *inToken,
     // SSPI
     bufs.ib[2].BufferType = SECBUFFER_PADDING;
     bufs.ib[2].cbBuffer = sizes.cbBlockSize;
-    bufs.ib[2].pvBuffer = nsMemory::Alloc(bufs.ib[2].cbBuffer);
+    bufs.ib[2].pvBuffer = moz_xmalloc(bufs.ib[2].cbBuffer);
 
     if (!bufs.ib[2].pvBuffer)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -644,7 +644,7 @@ nsAuthSSPI::Wrap(const void *inToken,
 
     if (SEC_SUCCESS(rc)) {
         int len  = bufs.ib[0].cbBuffer + bufs.ib[1].cbBuffer + bufs.ib[2].cbBuffer;
-        char *p = (char *) nsMemory::Alloc(len);
+        char *p = (char *) moz_xmalloc(len);
 
         if (!p)
             return NS_ERROR_OUT_OF_MEMORY;

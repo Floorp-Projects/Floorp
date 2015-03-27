@@ -110,7 +110,7 @@ nsAboutCache::NewChannel(nsIURI* aURI,
         mBuffer.AppendLiteral("<a href=\"about:cache?storage=&amp;context=");
         char* escapedContext = nsEscapeHTML(mContextString.get());
         mBuffer.Append(escapedContext);
-        nsMemory::Free(escapedContext);
+        free(escapedContext);
         mBuffer.AppendLiteral("\">Back to overview</a>");
     }
 
@@ -195,13 +195,13 @@ nsAboutCache::FireVisitStorage()
             mBuffer.Append(
                 nsPrintfCString("<p>Unrecognized storage name '%s' in about:cache URL</p>",
                                 escaped));
-            nsMemory::Free(escaped);
+            free(escaped);
         } else {
             char* escaped = nsEscapeHTML(mContextString.get());
             mBuffer.Append(
                 nsPrintfCString("<p>Unrecognized context key '%s' in about:cache URL</p>",
                                 escaped));
-            nsMemory::Free(escaped);
+            free(escaped);
         }
 
         FlushBuffer();
@@ -319,7 +319,7 @@ nsAboutCache::OnCacheStorageInfo(uint32_t aEntryCount, uint64_t aConsumption,
             mBuffer.AppendLiteral("&amp;context=");
             char* escapedContext = nsEscapeHTML(mContextString.get());
             mBuffer.Append(escapedContext);
-            nsMemory::Free(escapedContext);
+            free(escapedContext);
             mBuffer.AppendLiteral("\">List Cache Entries</a></th>\n"
                                   "  </tr>\n");
         }
@@ -383,12 +383,12 @@ nsAboutCache::OnCacheEntryInfo(nsIURI *aURI, const nsACString & aIdEnhance,
     url.AppendLiteral("&amp;context=");
     char* escapedContext = nsEscapeHTML(mContextString.get());
     url += escapedContext;
-    nsMemory::Free(escapedContext);
+    free(escapedContext);
 
     url.AppendLiteral("&amp;eid=");
     char* escapedEID = nsEscapeHTML(aIdEnhance.BeginReading());
     url += escapedEID;
-    nsMemory::Free(escapedEID);
+    free(escapedEID);
 
     nsAutoCString cacheUriSpec;
     aURI->GetAsciiSpec(cacheUriSpec);
@@ -410,7 +410,7 @@ nsAboutCache::OnCacheEntryInfo(nsIURI *aURI, const nsACString & aIdEnhance,
     mBuffer.Append(escapedCacheURI);
     mBuffer.AppendLiteral("</a></td>\n");
 
-    nsMemory::Free(escapedCacheURI);
+    free(escapedCacheURI);
 
     // Content length
     mBuffer.AppendLiteral("    <td>");

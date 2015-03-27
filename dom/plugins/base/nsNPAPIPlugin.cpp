@@ -1112,7 +1112,7 @@ _memfree (void *ptr)
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY, ("NPN_MemFree: ptr=%p\n", ptr));
 
   if (ptr)
-    nsMemory::Free(ptr);
+    free(ptr);
 }
 
 uint32_t
@@ -2539,7 +2539,7 @@ _memalloc (uint32_t size)
     NPN_PLUGIN_LOG(PLUGIN_LOG_NORMAL,("NPN_memalloc called from the wrong thread\n"));
   }
   NPN_PLUGIN_LOG(PLUGIN_LOG_NOISY, ("NPN_MemAlloc: size=%d\n", size));
-  return nsMemory::Alloc(size);
+  return moz_xmalloc(size);
 }
 
 // Deprecated, only stubbed out

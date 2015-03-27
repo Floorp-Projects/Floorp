@@ -39,9 +39,9 @@ nsBinHexDecoder::nsBinHexDecoder() :
 nsBinHexDecoder::~nsBinHexDecoder()
 {
   if (mDataBuffer)
-    nsMemory::Free(mDataBuffer);
+    free(mDataBuffer);
   if (mOutgoingBuffer)
-    nsMemory::Free(mOutgoingBuffer);
+    free(mOutgoingBuffer);
 }
 
 NS_IMPL_ADDREF(nsBinHexDecoder)

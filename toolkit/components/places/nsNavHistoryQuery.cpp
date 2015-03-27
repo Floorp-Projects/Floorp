@@ -275,7 +275,7 @@ nsNavHistory::QueryStringToQueries(const nsACString& aQueryString,
   if (queries.Count() > 0) {
     // convert COM array to raw
     *aQueries = static_cast<nsINavHistoryQuery**>
-                           (nsMemory::Alloc(sizeof(nsINavHistoryQuery*) * queries.Count()));
+                           (moz_xmalloc(sizeof(nsINavHistoryQuery*) * queries.Count()));
     NS_ENSURE_TRUE(*aQueries, NS_ERROR_OUT_OF_MEMORY);
     for (int32_t i = 0; i < queries.Count(); i ++) {
       (*aQueries)[i] = queries[i];
@@ -471,7 +471,7 @@ nsNavHistory::QueriesToQueryString(nsINavHistoryQuery **aQueries,
       nsresult rv = PlacesFolderConversion::AppendFolder(queryString, folders[i]);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    nsMemory::Free(folders);
+    free(folders);
 
     // tags
     const nsTArray<nsString> &tags = query->Tags();
@@ -1274,7 +1274,7 @@ NS_IMETHODIMP nsNavHistoryQuery::GetFolders(uint32_t *aCount,
   int64_t *folders = nullptr;
   if (count > 0) {
     folders = static_cast<int64_t*>
-                         (nsMemory::Alloc(count * sizeof(int64_t)));
+                         (moz_xmalloc(count * sizeof(int64_t)));
     NS_ENSURE_TRUE(folders, NS_ERROR_OUT_OF_MEMORY);
 
     for (uint32_t i = 0; i < count; ++i) {

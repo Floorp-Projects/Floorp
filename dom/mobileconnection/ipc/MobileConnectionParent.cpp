@@ -147,7 +147,7 @@ MobileConnectionParent::RecvInit(nsMobileConnectionInfo* aVoice,
     aSupportedNetworkTypes->AppendElement(types[i]);
   }
 
-  nsMemory::Free(types);
+  free(types);
 
   return true;
 }
