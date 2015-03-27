@@ -60,9 +60,9 @@ function runTests() {
   setPinnedLinks("-1");
   yield addNewTabPageTab();
   ({type, enhanced, title} = getData(0));
-  is(type, "enhanced", "pinned history link is enhanced");
-  isnot(enhanced, "", "pinned history link has enhanced image");
-  is(title, "title");
+  is(type, "history", "pinned history link is not enhanced");
+  is(enhanced, "", "pinned history link doesn't have enhanced image");
+  is(title, "site#-1");
 
   is(getData(1), null, "directory link pushed out by pinned history link");
 
