@@ -1167,6 +1167,7 @@ reading_list_service_java_files = [
     'reading/ClientReadingListRecord.java',
     'reading/FetchSpec.java',
     'reading/LocalReadingListStorage.java',
+    'reading/ReadingListBackoffObserver.java',
     'reading/ReadingListChangeAccumulator.java',
     'reading/ReadingListClient.java',
     'reading/ReadingListClientContentValuesFactory.java',
