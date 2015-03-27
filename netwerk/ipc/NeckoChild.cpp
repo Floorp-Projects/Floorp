@@ -167,6 +167,20 @@ NeckoChild::DeallocPWebSocketChild(PWebSocketChild* child)
   return true;
 }
 
+PDataChannelChild*
+NeckoChild::AllocPDataChannelChild(const uint32_t& channelId)
+{
+  MOZ_ASSERT_UNREACHABLE("Should never get here");
+  return nullptr;
+}
+
+bool
+NeckoChild::DeallocPDataChannelChild(PDataChannelChild* child)
+{
+  // NB: See DataChannelChild::ActorDestroy.
+  return true;
+}
+
 PRtspControllerChild*
 NeckoChild::AllocPRtspControllerChild()
 {
