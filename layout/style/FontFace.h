@@ -22,8 +22,6 @@ namespace dom {
 class FontFaceBufferSource;
 struct FontFaceDescriptors;
 class FontFaceSet;
-class FontFaceInitializer;
-class FontFaceStatusSetter;
 class Promise;
 class StringOrArrayBufferOrArrayBufferView;
 }
@@ -36,8 +34,6 @@ class FontFace final : public nsISupports,
                            public nsWrapperCache
 {
   friend class mozilla::dom::FontFaceBufferSource;
-  friend class mozilla::dom::FontFaceInitializer;
-  friend class mozilla::dom::FontFaceStatusSetter;
   friend class Entry;
 
 public:
@@ -98,14 +94,6 @@ public:
                "use DisconnectFromRule instead");
     mInFontFaceSet = aInFontFaceSet;
   }
-
-  /**
-   * Returns whether this FontFace is initialized.  A rule backed
-   * FontFace is considered initialized at construction time.  For
-   * FontFace objects created using the FontFace JS constructor, it
-   * is once all the descriptors have been parsed.
-   */
-  bool IsInitialized() const { return mInitialized; }
 
   FontFaceSet* GetFontFaceSet() const { return mFontFaceSet; }
 
@@ -176,13 +164,7 @@ private:
   FontFace(nsISupports* aParent, nsPresContext* aPresContext);
   ~FontFace();
 
-  /**
-   * Initializes the source and descriptors on this object based on values that
-   * were passed in to the JS constructor.  If the source was specified as
-   * an ArrayBuffer or ArrayBufferView, parsing of the font data in there
-   * will be started.
-   */
-  void Initialize(FontFaceInitializer* aInitializer);
+  void InitializeSource(const StringOrArrayBufferOrArrayBufferView& aSource);
 
   // Helper function for Load.
   void DoLoad();
@@ -205,12 +187,6 @@ private:
    */
   bool SetDescriptors(const nsAString& aFamily,
                       const FontFaceDescriptors& aDescriptors);
-
-  /**
-   * Marks the FontFace as initialized and informs the FontFaceSet it is in,
-   * if any.
-   */
-  void OnInitialized();
 
   /**
    * Sets the current loading status.
@@ -273,16 +249,6 @@ private:
 
   // Whether this FontFace appears in the FontFaceSet.
   bool mInFontFaceSet;
-
-  // Whether the FontFace has been fully initialized.  This takes at least one
-  // run around the event loop, as the parsing of the src descriptor is done
-  // off an event queue task.
-  bool mInitialized;
-
-  // Records whether Load() was called on this FontFace before it was
-  // initialized.  When the FontFace eventually does become initialized,
-  // mLoadPending is checked and Load() is called if needed.
-  bool mLoadWhenInitialized;
 };
 
 } // namespace dom
