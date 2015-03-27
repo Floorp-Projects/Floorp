@@ -103,7 +103,7 @@ public class TabQueueHelper {
         return tabQueueEnabled && tabsQueued > 0;
     }
 
-    private static int getTabQueueLength(final Context context) {
+    public static int getTabQueueLength(final Context context) {
         ThreadUtils.assertNotOnUiThread();
 
         // TODO: Use profile shared prefs when bug 1147925 gets fixed.
