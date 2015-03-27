@@ -815,6 +815,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   nsTArray<ParentType*> mChildWorkers;
   nsTArray<WorkerFeature*> mFeatures;
   nsTArray<nsAutoPtr<TimeoutInfo>> mTimeouts;
+  uint32_t mDebuggerEventLoopLevel;
 
   struct SyncLoopInfo
   {
@@ -974,6 +975,12 @@ public:
                              JS::Handle<JS::Value> aMessage,
                              const Optional<Sequence<JS::Value>>& aTransferable,
                              ErrorResult& aRv);
+
+  void
+  EnterDebuggerEventLoop();
+
+  void
+  LeaveDebuggerEventLoop();
 
   void
   PostMessageToDebugger(const nsAString& aMessage);
