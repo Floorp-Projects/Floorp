@@ -215,7 +215,7 @@ char *combineContinuations(nsTArray<Continuation>& aArray)
   }
 
   // Allocate
-  char *result = (char *) nsMemory::Alloc(length + 1);
+  char *result = (char *) moz_xmalloc(length + 1);
 
   // Concatenate
   if (result) {
@@ -237,7 +237,7 @@ char *combineContinuations(nsTArray<Continuation>& aArray)
 
     // return null if empty value
     if (*result == '\0') {
-      nsMemory::Free(result);
+      free(result);
       result = nullptr;
     }
   } else {
@@ -704,9 +704,9 @@ increment_str:
   }
 
   // free unused stuff
-  nsMemory::Free(caseAResult);
-  nsMemory::Free(caseBResult);
-  nsMemory::Free(caseCDResult);
+  free(caseAResult);
+  free(caseBResult);
+  free(caseCDResult);
 
   // if we have a result
   if (*aResult) {
@@ -798,7 +798,7 @@ bool IsRFC5987AttrChar(char aChar)
 // returns false on failure
 bool PercentDecode(nsACString& aValue)
 {
-  char *c = (char *) nsMemory::Alloc(aValue.Length() + 1);
+  char *c = (char *) moz_xmalloc(aValue.Length() + 1);
   if (!c) {
     return false;
   }
@@ -806,7 +806,7 @@ bool PercentDecode(nsACString& aValue)
   strcpy(c, PromiseFlatCString(aValue).get());
   nsUnescape(c);
   aValue.Assign(c);
-  nsMemory::Free(c);
+  free(c);
 
   return true;
 }

@@ -82,13 +82,13 @@ inline void AppendUTF16toUTF8(char16ptr_t aSource, nsACString& aDest)
 /**
  * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
  *
- * Allocates and returns a new |char| buffer which you must free with |nsMemory::Free|.
+ * Allocates and returns a new |char| buffer which you must free with |free|.
  * Performs a lossy encoding conversion by chopping 16-bit wide characters down to 8-bits wide while copying |aSource| to your new buffer.
  * This conversion is not well defined; but it reproduces legacy string behavior.
  * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
  *
  * @param aSource a 16-bit wide string
- * @return a new |char| buffer you must free with |nsMemory::Free|.
+ * @return a new |char| buffer you must free with |free|.
  */
 char* ToNewCString(const nsAString& aSource);
 
@@ -96,11 +96,11 @@ char* ToNewCString(const nsAString& aSource);
 /**
  * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
  *
- * Allocates and returns a new |char| buffer which you must free with |nsMemory::Free|.
+ * Allocates and returns a new |char| buffer which you must free with |free|.
  * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
  *
  * @param aSource an 8-bit wide string
- * @return a new |char| buffer you must free with |nsMemory::Free|.
+ * @return a new |char| buffer you must free with |free|.
  */
 char* ToNewCString(const nsACString& aSource);
 
@@ -108,7 +108,7 @@ char* ToNewCString(const nsACString& aSource);
  * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
  *
  * Allocates and returns a new |char| buffer which you must free with
- * |nsMemory::Free|.
+ * |free|.
  * Performs an encoding conversion from a UTF-16 string to a UTF-8 string
  * copying |aSource| to your new buffer.
  * The new buffer is zero-terminated, but that may not help you if |aSource|
@@ -116,7 +116,7 @@ char* ToNewCString(const nsACString& aSource);
  *
  * @param aSource a UTF-16 string (made of char16_t's)
  * @param aUTF8Count the number of 8-bit units that was returned
- * @return a new |char| buffer you must free with |nsMemory::Free|.
+ * @return a new |char| buffer you must free with |free|.
  */
 
 char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count = nullptr);
@@ -127,12 +127,12 @@ char* ToNewUTF8String(const nsAString& aSource, uint32_t* aUTF8Count = nullptr);
  * |aSource|.
  *
  * Allocates and returns a new |char16_t| buffer which you must free with
- * |nsMemory::Free|.
+ * |free|.
  * The new buffer is zero-terminated, but that may not help you if |aSource|
  * contains embedded nulls.
  *
  * @param aSource a UTF-16 string
- * @return a new |char16_t| buffer you must free with |nsMemory::Free|.
+ * @return a new |char16_t| buffer you must free with |free|.
  */
 char16_t* ToNewUnicode(const nsAString& aSource);
 
@@ -140,13 +140,13 @@ char16_t* ToNewUnicode(const nsAString& aSource);
 /**
  * Returns a new |char16_t| buffer containing a zero-terminated copy of |aSource|.
  *
- * Allocates and returns a new |char16_t| buffer which you must free with |nsMemory::Free|.
+ * Allocates and returns a new |char16_t| buffer which you must free with |free|.
  * Performs an encoding conversion by 0-padding 8-bit wide characters up to 16-bits wide while copying |aSource| to your new buffer.
  * This conversion is not well defined; but it reproduces legacy string behavior.
  * The new buffer is zero-terminated, but that may not help you if |aSource| contains embedded nulls.
  *
  * @param aSource an 8-bit wide string (a C-string, NOT UTF-8)
- * @return a new |char16_t| buffer you must free with |nsMemory::Free|.
+ * @return a new |char16_t| buffer you must free with |free|.
  */
 char16_t* ToNewUnicode(const nsACString& aSource);
 
@@ -187,14 +187,14 @@ char16_t* UTF8ToUnicodeBuffer(const nsACString& aSource,
  * of |aSource|.
  *
  * Allocates and returns a new |char| buffer which you must free with
- * |nsMemory::Free|.  Performs an encoding conversion from UTF-8 to UTF-16
+ * |free|.  Performs an encoding conversion from UTF-8 to UTF-16
  * while copying |aSource| to your new buffer.  This conversion is well defined
  * for a valid UTF-8 string.  The new buffer is zero-terminated, but that
  * may not help you if |aSource| contains embedded nulls.
  *
  * @param aSource an 8-bit wide string, UTF-8 encoded
  * @param aUTF16Count the number of 16-bit units that was returned
- * @return a new |char16_t| buffer you must free with |nsMemory::Free|.
+ * @return a new |char16_t| buffer you must free with |free|.
  *         (UTF-16 encoded)
  */
 char16_t* UTF8ToNewUnicode(const nsACString& aSource,

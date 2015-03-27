@@ -173,7 +173,7 @@ public:
     ~ClassInfoData()
     {
         if (mMustFreeName)
-            nsMemory::Free(mName);
+            free(mName);
     }
 
     uint32_t GetFlags()

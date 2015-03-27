@@ -858,7 +858,7 @@ main(void)
 exit:
 
         if (currentDirPath)
-            nsMemory::Free(currentDirPath);
+            free(currentDirPath);
     } // this scopes the nsCOMPtrs
     // no nsCOMPtrs are allowed to be alive when you call NS_ShutdownXPCOM
     if (NS_FAILED(rv))

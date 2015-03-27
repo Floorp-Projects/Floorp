@@ -299,7 +299,7 @@ nsDirectoryIndexStream::Read(char* aBuf, uint32_t aCount, uint32_t* aReadCount)
             if (escaped) {
                 mBuf += escaped;
                 mBuf.Append(' ');
-                nsMemory::Free(escaped);
+                free(escaped);
             }
 
             // The "content-length" field

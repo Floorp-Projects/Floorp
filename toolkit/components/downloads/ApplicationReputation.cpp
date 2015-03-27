@@ -779,7 +779,7 @@ PendingLookup::ParseCertificates(nsIArray* aSigArray)
 
       // Add this certificate to the protobuf to send remotely.
       certChain->add_element()->set_certificate(data, len);
-      nsMemory::Free(data);
+      free(data);
 
       rv = chainElt->HasMoreElements(&hasMoreCerts);
       NS_ENSURE_SUCCESS(rv, rv);

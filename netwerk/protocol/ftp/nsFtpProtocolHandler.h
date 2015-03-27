@@ -52,7 +52,7 @@ private:
             if (timer)
                 timer->Cancel();
             if (key)
-                nsMemory::Free(key);
+                free(key);
             if (conn) {
                 conn->Disconnect(NS_ERROR_ABORT);
                 NS_RELEASE(conn);

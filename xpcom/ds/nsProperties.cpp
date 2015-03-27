@@ -94,7 +94,7 @@ nsProperties::GetKeys(uint32_t* aCount, char*** aKeys)
   }
 
   uint32_t n = Count();
-  char** k = (char**)nsMemory::Alloc(n * sizeof(char*));
+  char** k = (char**)moz_xmalloc(n * sizeof(char*));
 
   GetKeysEnumData gked;
   gked.keys = k;
@@ -107,9 +107,9 @@ nsProperties::GetKeys(uint32_t* aCount, char*** aKeys)
   if (NS_FAILED(rv)) {
     // Free 'em all
     for (uint32_t i = 0; i < gked.next; i++) {
-      nsMemory::Free(k[i]);
+      free(k[i]);
     }
-    nsMemory::Free(k);
+    free(k);
     return rv;
   }
 

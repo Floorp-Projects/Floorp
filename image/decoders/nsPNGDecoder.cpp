@@ -126,10 +126,10 @@ nsPNGDecoder::~nsPNGDecoder()
     png_destroy_read_struct(&mPNG, mInfo ? &mInfo : nullptr, nullptr);
   }
   if (mCMSLine) {
-    nsMemory::Free(mCMSLine);
+    free(mCMSLine);
   }
   if (interlacebuf) {
-    nsMemory::Free(interlacebuf);
+    free(interlacebuf);
   }
   if (mInProfile) {
     qcms_profile_release(mInProfile);

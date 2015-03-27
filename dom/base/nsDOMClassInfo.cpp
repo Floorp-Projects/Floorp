@@ -517,7 +517,7 @@ nsDOMClassInfo::RegisterExternalClasses()
     }
 
     rv = nameSpaceManager->RegisterExternalClassName(categoryEntry.get(), *cid);
-    nsMemory::Free(cid);
+    free(cid);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -808,7 +808,7 @@ nsDOMClassInfo::GetInterfaces(uint32_t *aCount, nsIID ***aArray)
     return NS_OK;
   }
 
-  *aArray = static_cast<nsIID **>(nsMemory::Alloc(count * sizeof(nsIID *)));
+  *aArray = static_cast<nsIID **>(moz_xmalloc(count * sizeof(nsIID *)));
   NS_ENSURE_TRUE(*aArray, NS_ERROR_OUT_OF_MEMORY);
 
   uint32_t i;

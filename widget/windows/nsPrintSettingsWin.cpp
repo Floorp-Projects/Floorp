@@ -40,8 +40,8 @@ nsPrintSettingsWin::nsPrintSettingsWin(const nsPrintSettingsWin& aPS) :
  */
 nsPrintSettingsWin::~nsPrintSettingsWin()
 {
-  if (mDeviceName) nsMemory::Free(mDeviceName);
-  if (mDriverName) nsMemory::Free(mDriverName);
+  if (mDeviceName) free(mDeviceName);
+  if (mDriverName) free(mDriverName);
   if (mDevMode) ::HeapFree(::GetProcessHeap(), 0, mDevMode);
 }
 
@@ -49,7 +49,7 @@ nsPrintSettingsWin::~nsPrintSettingsWin()
 NS_IMETHODIMP nsPrintSettingsWin::SetDeviceName(const char16_t * aDeviceName)
 {
   if (mDeviceName) {
-    nsMemory::Free(mDeviceName);
+    free(mDeviceName);
   }
   mDeviceName = aDeviceName?wcsdup(char16ptr_t(aDeviceName)):nullptr;
   return NS_OK;
@@ -65,7 +65,7 @@ NS_IMETHODIMP nsPrintSettingsWin::GetDeviceName(char16_t **aDeviceName)
 NS_IMETHODIMP nsPrintSettingsWin::SetDriverName(const char16_t * aDriverName)
 {
   if (mDriverName) {
-    nsMemory::Free(mDriverName);
+    free(mDriverName);
   }
   mDriverName = aDriverName?wcsdup(char16ptr_t(aDriverName)):nullptr;
   return NS_OK;

@@ -947,7 +947,7 @@ nsFtpState::R_syst() {
             nsXPIDLString formattedString;
             rv = bundle->FormatStringFromName(name.get(), formatStrings, 1,
                                               getter_Copies(formattedString));
-            nsMemory::Free(ucs2Response);
+            free(ucs2Response);
             if (NS_FAILED(rv))
                 return FTP_ERROR;
 

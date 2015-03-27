@@ -2013,7 +2013,7 @@ nsNavHistoryQueryResultNode::GetQueries(uint32_t* queryCount,
   NS_ASSERTION(mQueries.Count() > 0, "Must have >= 1 query");
 
   *queries = static_cast<nsINavHistoryQuery**>
-                        (nsMemory::Alloc(mQueries.Count() * sizeof(nsINavHistoryQuery*)));
+                        (moz_xmalloc(mQueries.Count() * sizeof(nsINavHistoryQuery*)));
   NS_ENSURE_TRUE(*queries, NS_ERROR_OUT_OF_MEMORY);
 
   for (int32_t i = 0; i < mQueries.Count(); ++i)
@@ -3108,7 +3108,7 @@ nsNavHistoryFolderResultNode::GetUri(nsACString& aURI)
   for (uint32_t queryIndex = 0; queryIndex < queryCount; ++queryIndex) {
     NS_RELEASE(queries[queryIndex]);
   }
-  nsMemory::Free(queries);
+  free(queries);
   return rv;
 }
 
@@ -3133,7 +3133,7 @@ nsNavHistoryFolderResultNode::GetQueries(uint32_t* queryCount,
 
   // make array of our 1 query
   *queries = static_cast<nsINavHistoryQuery**>
-                        (nsMemory::Alloc(sizeof(nsINavHistoryQuery*)));
+                        (moz_xmalloc(sizeof(nsINavHistoryQuery*)));
   if (!*queries)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF((*queries)[0] = query);

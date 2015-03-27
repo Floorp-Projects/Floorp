@@ -507,7 +507,7 @@ static void TestEntityConversion(uint32_t version)
     res = entityConv->ConvertToEntity(data[i], version, &entity);
     if (NS_SUCCEEDED(res) && entity) {
       printf("%c %s\n", data[i], entity);
-      nsMemory::Free(entity);
+      free(entity);
     }
   }
 
@@ -520,7 +520,7 @@ static void TestEntityConversion(uint32_t version)
       if (';' == (char) *centity)
         printf("\n");
     }
-    nsMemory::Free(entities);
+    free(entities);
   }
 
   printf("==============================\n");
@@ -560,7 +560,7 @@ static void TestSaveAsCharset()
   res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   if (!outString) {printf("\tFailed!! output null\n");}
-  else {printf("%s\n", outString); nsMemory::Free(outString);}
+  else {printf("%s\n", outString); free(outString);}
 
   printf("ISO-2022-JP attr_plainTextDefault entityNone\n");
   res = saveAsCharset->Init("ISO-2022-JP", 
@@ -570,11 +570,11 @@ static void TestSaveAsCharset()
   res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   if (!outString) {printf("\tFailed!! output null\n");}
-  else {printf("%s\n", outString); nsMemory::Free(outString);}
+  else {printf("%s\n", outString); free(outString);}
   if (NS_ERROR_UENC_NOMAPPING == res) {
     outString = ToNewUTF8String(inString);
     if (!outString) {printf("\tFailed!! output null\n");}
-    else {printf("Fall back to UTF-8: %s\n", outString); nsMemory::Free(outString);}
+    else {printf("Fall back to UTF-8: %s\n", outString); free(outString);}
   }
 
   printf("ISO-2022-JP attr_FallbackQuestionMark entityNone\n");
@@ -585,7 +585,7 @@ static void TestSaveAsCharset()
   res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   if (!outString) {printf("\tFailed!! output null\n");}
-  else {printf("%s\n", outString); nsMemory::Free(outString);}
+  else {printf("%s\n", outString); free(outString);}
 
   printf("ISO-2022-JP attr_FallbackEscapeU entityNone\n");
   res = saveAsCharset->Init("ISO-2022-JP", 
@@ -595,7 +595,7 @@ static void TestSaveAsCharset()
   res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   if (!outString) {printf("\tFailed!! output null\n");}
-  else {printf("%s\n", outString); nsMemory::Free(outString);}
+  else {printf("%s\n", outString); free(outString);}
 
   printf("ISO-8859-1 attr_htmlTextDefault html40Latin1\n");
   res = saveAsCharset->Init("ISO-8859-1", 
@@ -605,7 +605,7 @@ static void TestSaveAsCharset()
   res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_ERROR_UENC_NOMAPPING != res && NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   if (!outString) {printf("\tFailed!! output null\n");}
-  else {printf("%s\n", outString); nsMemory::Free(outString);}
+  else {printf("%s\n", outString); free(outString);}
 
   printf("ISO-8859-1 attr_FallbackHexNCR+attr_EntityAfterCharsetConv html40Latin1 \n");
   res = saveAsCharset->Init("ISO-8859-1", 
@@ -616,7 +616,7 @@ static void TestSaveAsCharset()
   res = saveAsCharset->Convert(inString.get(), &outString);
   if (NS_ERROR_UENC_NOMAPPING != res && NS_FAILED(res)) {printf("\tFailed!! return value != NS_OK\n");}
   if (!outString) {printf("\tFailed!! output null\n");}
-  else {printf("%s\n", outString); nsMemory::Free(outString);}
+  else {printf("%s\n", outString); free(outString);}
 
 
   printf("==============================\n");

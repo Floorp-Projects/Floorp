@@ -172,7 +172,7 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass()
         mRuntime->GetWrappedJSClassMap()->Remove(this);
 
     if (mName)
-        nsMemory::Free(mName);
+        free(mName);
 }
 
 JSObject*
@@ -690,7 +690,7 @@ nsXPCWrappedJSClass::CleanupPointerArray(const nsXPTType& datum_type,
         void** pp = (void**) arrayp;
         for (uint32_t k = 0; k < array_count; k++) {
             void* p = pp[k];
-            if (p) nsMemory::Free(p);
+            if (p) free(p);
         }
     }
 }
@@ -705,7 +705,7 @@ nsXPCWrappedJSClass::CleanupPointerTypeObject(const nsXPTType& type,
         if (p) p->Release();
     } else {
         void* p = *((void**)pp);
-        if (p) nsMemory::Free(p);
+        if (p) free(p);
     }
 }
 
@@ -1178,7 +1178,7 @@ pre_call_clean_up:
                     }
 
                     // always release the array if it is inout
-                    nsMemory::Free(pp);
+                    free(pp);
                 }
             } else
                 CleanupPointerTypeObject(type, (void**)p);
@@ -1418,7 +1418,7 @@ pre_call_clean_up:
 
                         CleanupPointerArray(datum_type, array_count, pp);
                     }
-                    nsMemory::Free(pp);
+                    free(pp);
                 }
             } else
                 CleanupPointerTypeObject(type, (void**)p);
@@ -1486,7 +1486,7 @@ nsXPCWrappedJSClass::DebugDump(int16_t depth)
         mInfo->GetName(&name);
         XPC_LOG_ALWAYS(("interface name is %s", name));
         if (name)
-            nsMemory::Free(name);
+            free(name);
         char * iid = mIID.ToString();
         XPC_LOG_ALWAYS(("IID number is %s", iid ? iid : "invalid"));
         if (iid)

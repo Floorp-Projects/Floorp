@@ -37,7 +37,7 @@ interface nsIStringInputStream : nsIInputStream
 
     /**
      * AdoptData - assign data to the input stream.  the input stream takes
-     * ownership of the given data buffer and will nsMemory::Free it when
+     * ownership of the given data buffer and will free it when
      * the input stream is destroyed.
      *
      * @param data      - stream data

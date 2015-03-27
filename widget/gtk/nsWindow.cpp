@@ -3925,7 +3925,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
   if (GDK_IS_X11_DISPLAY(display)) {
       XClassHint *class_hint = XAllocClassHint();
       if (!class_hint) {
-        nsMemory::Free(res_name);
+        free(res_name);
         return NS_ERROR_OUT_OF_MEMORY;
       }
       class_hint->res_name = res_name;
@@ -3940,7 +3940,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
   }
 #endif /* MOZ_X11 */
 
-  nsMemory::Free(res_name);
+  free(res_name);
 
   return NS_OK;
 }

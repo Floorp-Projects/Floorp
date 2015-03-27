@@ -152,7 +152,7 @@ DataStruct::WriteCache(nsISupports* aData, uint32_t aDataLen)
     if ( buff ) {
       uint32_t ignored;
       outStr->Write(reinterpret_cast<char*>(buff), aDataLen, &ignored);
-      nsMemory::Free(buff);
+      free(buff);
       return NS_OK;
     }
   }

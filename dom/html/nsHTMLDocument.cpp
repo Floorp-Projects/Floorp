@@ -3469,7 +3469,7 @@ nsHTMLDocument::QueryCommandState(const nsAString& commandID, ErrorResult& rv)
       retval = paramToCheck.Equals(actualAlignmentType);
     }
     if (actualAlignmentType) {
-      nsMemory::Free(actualAlignmentType);
+      free(actualAlignmentType);
     }
     return retval;
   }

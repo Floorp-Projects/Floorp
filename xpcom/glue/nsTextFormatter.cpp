@@ -603,7 +603,7 @@ BuildArgArray(const char16_t* aFmt, va_list aAp, int* aRv,
   }
 
   if (number > NAS_DEFAULT_NUM) {
-    nas = (struct NumArgState*)nsMemory::Alloc(number * sizeof(struct NumArgState));
+    nas = (struct NumArgState*)moz_xmalloc(number * sizeof(struct NumArgState));
     if (!nas) {
       *aRv = -1;
       return nullptr;
@@ -1203,10 +1203,10 @@ GrowStuff(SprintfState* aState, const char16_t* aStr, uint32_t aLen)
     /* Grow the buffer */
     newlen = aState->maxlen + ((aLen > 32) ? aLen : 32);
     if (aState->base) {
-      newbase = (char16_t*)nsMemory::Realloc(aState->base,
-                                             newlen * sizeof(char16_t));
+      newbase = (char16_t*)moz_xrealloc(aState->base,
+                                        newlen * sizeof(char16_t));
     } else {
-      newbase = (char16_t*)nsMemory::Alloc(newlen * sizeof(char16_t));
+      newbase = (char16_t*)moz_xmalloc(newlen * sizeof(char16_t));
     }
     if (!newbase) {
       /* Ran out of memory */
@@ -1361,6 +1361,6 @@ nsTextFormatter::vsnprintf(char16_t* aOut, uint32_t aOutLen,
 void
 nsTextFormatter::smprintf_free(char16_t* aMem)
 {
-  nsMemory::Free(aMem);
+  free(aMem);
 }
 
