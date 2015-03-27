@@ -33,6 +33,9 @@ struct AuxCPOWData
     // however they see fit.
     nsCString objectTag;
 
+    // The class name for WrapperOwner::className, below.
+    nsCString className;
+
     AuxCPOWData(ObjectId id,
                 bool isCallable,
                 bool isConstructor,
@@ -750,15 +753,17 @@ CPOWProxyHandler::className(JSContext *cx, HandleObject proxy) const
 const char *
 WrapperOwner::className(JSContext *cx, HandleObject proxy)
 {
-    ObjectId objId = idOf(proxy);
+    AuxCPOWData *data = AuxCPOWDataOf(proxy);
+    if (data->className.IsEmpty()) {
+        ObjectId objId = idOf(proxy);
 
-    nsString name;
-    if (!SendClassName(objId, &name))
-        return "<error>";
+        if (!SendClassName(objId, &data->className))
+            return "<error>";
 
-    LOG_STACK();
+        LOG_STACK();
+    }
 
-    return ToNewCString(name);
+    return data->className.get();
 }
 
 bool
