@@ -660,35 +660,6 @@ ClonedBlockObject::copyUnaliasedValues(AbstractFramePtr frame)
     }
 }
 
-/* static */ ClonedBlockObject *
-ClonedBlockObject::clone(ExclusiveContext *cx, Handle<ClonedBlockObject*> block)
-{
-    RootedObject enclosing(cx, &block->enclosingScope());
-
-    MOZ_ASSERT(block->getClass() == &BlockObject::class_);
-
-    RootedObjectGroup cloneGroup(cx, block->group());
-    RootedShape cloneShape(cx, block->lastProperty());
-
-    JSObject *obj = JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, cloneShape, cloneGroup);
-    if (!obj)
-        return nullptr;
-
-    ClonedBlockObject &copy = obj->as<ClonedBlockObject>();
-
-    MOZ_ASSERT(!copy.inDictionaryMode());
-    MOZ_ASSERT(copy.isDelegate());
-    MOZ_ASSERT(block->slotSpan() == copy.slotSpan());
-    MOZ_ASSERT(copy.slotSpan() >= copy.numVariables() + RESERVED_SLOTS);
-
-    copy.setReservedSlot(SCOPE_CHAIN_SLOT, block->getReservedSlot(SCOPE_CHAIN_SLOT));
-
-    for (uint32_t i = 0, count = copy.numVariables(); i < count; i++)
-        copy.setVar(i, block->var(i, DONT_CHECK_ALIASING), DONT_CHECK_ALIASING);
-
-    return &copy;
-}
-
 StaticBlockObject *
 StaticBlockObject::create(ExclusiveContext *cx)
 {

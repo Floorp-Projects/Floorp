@@ -3011,27 +3011,13 @@ static const VMFunction PopBlockScopeInfo = FunctionInfo<PopBlockScopeFn>(jit::P
 bool
 BaselineCompiler::emit_JSOP_POPBLOCKSCOPE()
 {
+    // Call a stub to pop the block from the block chain.
     prepareVMCall();
 
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
     pushArg(R0.scratchReg());
 
     return callVM(PopBlockScopeInfo);
-}
-
-typedef bool (*FreshenBlockScopeFn)(JSContext *, BaselineFrame *);
-static const VMFunction FreshenBlockScopeInfo =
-    FunctionInfo<FreshenBlockScopeFn>(jit::FreshenBlockScope);
-
-bool
-BaselineCompiler::emit_JSOP_FRESHENBLOCKSCOPE()
-{
-    prepareVMCall();
-
-    masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
-    pushArg(R0.scratchReg());
-
-    return callVM(FreshenBlockScopeInfo);
 }
 
 typedef bool (*DebugLeaveBlockFn)(JSContext *, BaselineFrame *, jsbytecode *);

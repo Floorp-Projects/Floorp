@@ -2005,17 +2005,6 @@ IonBuilder::inspectOpcode(JSOp op)
         // Just fall through to the unsupported bytecode case.
         break;
 
-#ifdef DEBUG
-      case JSOP_PUSHBLOCKSCOPE:
-      case JSOP_FRESHENBLOCKSCOPE:
-      case JSOP_POPBLOCKSCOPE:
-        // These opcodes are currently unhandled by Ion, but in principle
-        // there's no reason they couldn't be.  Whenever this happens, OSR will
-        // have to consider that JSOP_FRESHENBLOCK mutates the scope chain --
-        // right now it caches the scope chain in MBasicBlock::scopeChain().
-        // That stale value will have to be updated when JSOP_FRESHENBLOCK is
-        // encountered.
-#endif
       default:
         break;
     }
@@ -3161,7 +3150,6 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
     // body:
     //    ; [body]
     // [increment:]
-    //   [FRESHENBLOCKSCOPE, if needed by a cloned block]
     //    ; [increment]
     // [cond:]
     //   LOOPENTRY
@@ -3169,10 +3157,6 @@ IonBuilder::forLoop(JSOp op, jssrcnote *sn)
     //
     // If there is a condition (condpc != ifne), this acts similar to a while
     // loop otherwise, it acts like a do-while loop.
-    //
-    // Note that currently Ion does not compile pushblockscope/popblockscope as
-    // necessary prerequisites to freshenblockscope.  So the code below doesn't
-    // and needn't consider the implications of freshenblockscope.
     jsbytecode *bodyStart = pc;
     jsbytecode *bodyEnd = updatepc;
     jsbytecode *loopEntry = condpc;

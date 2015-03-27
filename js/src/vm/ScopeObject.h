@@ -669,12 +669,6 @@ class ClonedBlockObject : public BlockObject
 
     /* Copy in all the unaliased formals and locals. */
     void copyUnaliasedValues(AbstractFramePtr frame);
-
-    /*
-     * Create a new ClonedBlockObject with the same enclosing scope and
-     * variable values as this.
-     */
-    static ClonedBlockObject *clone(ExclusiveContext *cx, Handle<ClonedBlockObject*> block);
 };
 
 // Internal scope object used by JSOP_BINDNAME upon encountering an
