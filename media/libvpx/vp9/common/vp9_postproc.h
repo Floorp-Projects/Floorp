@@ -13,7 +13,6 @@
 #define VP9_COMMON_VP9_POSTPROC_H_
 
 #include "vpx_ports/mem.h"
-#include "vpx_scale/yv12config.h"
 #include "vp9/common/vp9_ppflags.h"
 
 #ifdef __cplusplus

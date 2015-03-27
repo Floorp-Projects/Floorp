@@ -527,7 +527,7 @@ sym(vp8_loop_filter_vertical_edge_mmx):
         pxor        mm7,        [GLOBAL(t80)]       ; unoffset
         ; mm7 = q1
 
-        ; transpose and write back
+        ; tranpose and write back
         ; mm1 =    72 62 52 42 32 22 12 02
         ; mm6 =    73 63 53 43 33 23 13 03
         ; mm3 =    74 64 54 44 34 24 14 04
@@ -1289,7 +1289,7 @@ sym(vp8_mbloop_filter_vertical_edge_mmx):
         pxor        mm6, [GLOBAL(t80)]          ; mm6 = 71 61 51 41 31 21 11 01
         pxor        mm3, [GLOBAL(t80)]          ; mm3 = 76 66 56 46 36 26 15 06
 
-        ; transpose and write back
+        ; tranpose and write back
         movq        mm0,    [rdx]               ; mm0 = 70 60 50 40 30 20 10 00
         movq        mm1,    mm0                 ; mm0 = 70 60 50 40 30 20 10 00
 

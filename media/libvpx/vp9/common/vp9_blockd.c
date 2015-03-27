@@ -10,26 +10,28 @@
 
 #include "vp9/common/vp9_blockd.h"
 
-PREDICTION_MODE vp9_left_block_mode(const MODE_INFO *cur_mi,
-                                    const MODE_INFO *left_mi, int b) {
+MB_PREDICTION_MODE vp9_left_block_mode(const MODE_INFO *cur_mi,
+                                       const MODE_INFO *left_mi, int b) {
   if (b == 0 || b == 2) {
     if (!left_mi || is_inter_block(&left_mi->mbmi))
       return DC_PRED;
 
-    return get_y_mode(left_mi, b + 1);
+    return left_mi->mbmi.sb_type < BLOCK_8X8 ? left_mi->bmi[b + 1].as_mode
+                                             : left_mi->mbmi.mode;
   } else {
     assert(b == 1 || b == 3);
     return cur_mi->bmi[b - 1].as_mode;
   }
 }
 
-PREDICTION_MODE vp9_above_block_mode(const MODE_INFO *cur_mi,
-                                     const MODE_INFO *above_mi, int b) {
+MB_PREDICTION_MODE vp9_above_block_mode(const MODE_INFO *cur_mi,
+                                        const MODE_INFO *above_mi, int b) {
   if (b == 0 || b == 1) {
     if (!above_mi || is_inter_block(&above_mi->mbmi))
       return DC_PRED;
 
-    return get_y_mode(above_mi, b + 2);
+    return above_mi->mbmi.sb_type < BLOCK_8X8 ? above_mi->bmi[b + 2].as_mode
+                                              : above_mi->mbmi.mode;
   } else {
     assert(b == 2 || b == 3);
     return cur_mi->bmi[b - 2].as_mode;
@@ -40,11 +42,11 @@ void vp9_foreach_transformed_block_in_plane(
     const MACROBLOCKD *const xd, BLOCK_SIZE bsize, int plane,
     foreach_transformed_block_visitor visit, void *arg) {
   const struct macroblockd_plane *const pd = &xd->plane[plane];
-  const MB_MODE_INFO* mbmi = &xd->mi[0].src_mi->mbmi;
+  const MB_MODE_INFO* mbmi = &xd->mi_8x8[0]->mbmi;
   // block and transform sizes, in number of 4x4 blocks log 2 ("*_b")
   // 4x4=0, 8x8=2, 16x16=4, 32x32=6, 64x64=8
   // transform size varies per plane, look it up in a common way.
-  const TX_SIZE tx_size = plane ? get_uv_tx_size(mbmi, pd)
+  const TX_SIZE tx_size = plane ? get_uv_tx_size(mbmi)
                                 : mbmi->tx_size;
   const BLOCK_SIZE plane_bsize = get_plane_block_size(bsize, pd);
   const int num_4x4_w = num_4x4_blocks_wide_lookup[plane_bsize];
@@ -146,4 +148,10 @@ void vp9_setup_block_planes(MACROBLOCKD *xd, int ss_x, int ss_y) {
     xd->plane[i].subsampling_x = i ? ss_x : 0;
     xd->plane[i].subsampling_y = i ? ss_y : 0;
   }
+#if CONFIG_ALPHA
+  // TODO(jkoleszar): Using the Y w/h for now
+  xd->plane[3].plane_type = PLANE_TYPE_Y;
+  xd->plane[3].subsampling_x = 0;
+  xd->plane[3].subsampling_y = 0;
+#endif
 }

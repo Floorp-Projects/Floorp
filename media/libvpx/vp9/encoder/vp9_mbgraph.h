@@ -20,7 +20,7 @@ typedef struct {
     int err;
     union {
       int_mv mv;
-      PREDICTION_MODE mode;
+      MB_PREDICTION_MODE mode;
     } m;
   } ref[MAX_REF_FRAMES];
 } MBGRAPH_MB_STATS;

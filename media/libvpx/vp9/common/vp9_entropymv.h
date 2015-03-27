@@ -26,7 +26,7 @@ void vp9_init_mv_probs(struct VP9Common *cm);
 void vp9_adapt_mv_probs(struct VP9Common *cm, int usehp);
 int vp9_use_mv_hp(const MV *ref);
 
-#define MV_UPDATE_PROB 252
+#define NMV_UPDATE_PROB  252
 
 /* Symbols for coding which components are zero jointly */
 #define MV_JOINTS     4

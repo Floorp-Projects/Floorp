@@ -16,6 +16,7 @@
 #include "vp8/common/alloccommon.h"
 #include "mcomp.h"
 #include "firstpass.h"
+#include "psnr.h"
 #include "vpx_scale/vpx_scale.h"
 #include "vp8/common/extend.h"
 #include "ratectrl.h"
@@ -98,7 +99,6 @@ void vp8_temporal_filter_apply_c
     unsigned int i, j, k;
     int modifier;
     int byte = 0;
-    const int rounding = strength > 0 ? 1 << (strength - 1) : 0;
 
     for (i = 0,k = 0; i < block_size; i++)
     {
@@ -115,7 +115,7 @@ void vp8_temporal_filter_apply_c
              */
             modifier  *= modifier;
             modifier  *= 3;
-            modifier  += rounding;
+            modifier  += 1 << (strength - 1);
             modifier >>= strength;
 
             if (modifier > 16)

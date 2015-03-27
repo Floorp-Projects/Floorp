@@ -2444,10 +2444,10 @@ void vp8_second_pass(VP8_COMP *cpi)
         find_next_key_frame(cpi, &this_frame_copy);
 
         /* Special case: Error error_resilient_mode mode does not make much
-         * sense for two pass but with its current meaning this code is
+         * sense for two pass but with its current meaning but this code is
          * designed to stop outlandish behaviour if someone does set it when
          * using two pass. It effectively disables GF groups. This is
-         * temporary code until we decide what should really happen in this
+         * temporary code till we decide what should really happen in this
          * case.
          */
         if (cpi->oxcf.error_resilient_mode)
@@ -2773,7 +2773,7 @@ static void find_next_key_frame(VP8_COMP *cpi, FIRSTPASS_STATS *this_frame)
         kf_group_intra_err += this_frame->intra_error;
         kf_group_coded_err += this_frame->coded_error;
 
-        /* Load the next frame's stats. */
+        /* load a the next frame's stats */
         vpx_memcpy(&last_frame, this_frame, sizeof(*this_frame));
         input_stats(cpi, this_frame);
 

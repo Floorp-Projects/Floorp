@@ -527,7 +527,7 @@ sym(vp9_lpf_vertical_4_mmx):
         pxor        mm7,        [GLOBAL(t80)]       ; unoffset
         ; mm7 = q1
 
-        ; transpose and write back
+        ; tranpose and write back
         ; mm1 =    72 62 52 42 32 22 12 02
         ; mm6 =    73 63 53 43 33 23 13 03
         ; mm3 =    74 64 54 44 34 24 14 04
