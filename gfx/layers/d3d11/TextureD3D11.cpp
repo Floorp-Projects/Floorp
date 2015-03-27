@@ -605,6 +605,7 @@ DXGITextureHostD3D11::GetDevice()
 void
 DXGITextureHostD3D11::SetCompositor(Compositor* aCompositor)
 {
+  MOZ_ASSERT(aCompositor);
   mCompositor = static_cast<CompositorD3D11*>(aCompositor);
 }
 
@@ -699,6 +700,7 @@ DXGIYCbCrTextureHostD3D11::GetDevice()
 void
 DXGIYCbCrTextureHostD3D11::SetCompositor(Compositor* aCompositor)
 {
+  MOZ_ASSERT(aCompositor);
   mCompositor = static_cast<CompositorD3D11*>(aCompositor);
 }
 
@@ -886,6 +888,7 @@ DataTextureSourceD3D11::GetTileRect()
 void
 DataTextureSourceD3D11::SetCompositor(Compositor* aCompositor)
 {
+  MOZ_ASSERT(aCompositor);
   CompositorD3D11* d3dCompositor = static_cast<CompositorD3D11*>(aCompositor);
   if (mCompositor && mCompositor != d3dCompositor) {
     Reset();
