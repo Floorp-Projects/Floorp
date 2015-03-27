@@ -1330,12 +1330,12 @@ CacheScriptLoader::ResolvedCallback(JSContext* aCx,
                                     JS::Handle<JS::Value> aValue)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(mLoadInfo.mCacheStatus == ScriptLoadInfo::Uncached);
-
   // If we have already called 'Fail', we should not proceed.
   if (mFailed) {
     return;
   }
+
+  MOZ_ASSERT(mLoadInfo.mCacheStatus == ScriptLoadInfo::Uncached);
 
   if (aValue.isUndefined()) {
     mLoadInfo.mCacheStatus = ScriptLoadInfo::ToBeCached;
