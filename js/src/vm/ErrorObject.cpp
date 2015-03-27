@@ -210,7 +210,7 @@ js::ErrorObject::getStack(JSContext *cx, unsigned argc, Value *vp)
 
     RootedObject savedFrameObj(cx, error->stack());
     RootedString stackString(cx);
-    if (!StringifySavedFrameStack(cx, savedFrameObj, &stackString))
+    if (!BuildStackString(cx, savedFrameObj, &stackString))
         return false;
     args.rval().setString(stackString);
     return true;

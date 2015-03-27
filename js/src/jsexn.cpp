@@ -292,7 +292,7 @@ js::ComputeStackString(JSContext *cx)
         return nullptr;
 
     RootedString str(cx);
-    if (!StringifySavedFrameStack(cx, stack, &str))
+    if (!BuildStackString(cx, stack, &str))
         return nullptr;
 
     return str.get();
