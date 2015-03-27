@@ -394,6 +394,13 @@ template <> struct PtrBaseGCType<Value> { typedef Value type; };
 template <> struct PtrBaseGCType<jsid> { typedef jsid type; };
 template <typename T> struct PtrBaseGCType<T*> { typedef typename BaseGCType<T>::type* type; };
 
+template <typename T>
+typename PtrBaseGCType<T>::type*
+ConvertToBase(T* thingp)
+{
+    return reinterpret_cast<typename PtrBaseGCType<T>::type*>(thingp);
+}
+
 template <typename T> void DispatchToTracer(JSTracer* trc, T* thingp, const char* name, size_t i);
 template <typename T> void DoTracing(JS::CallbackTracer* trc, T* thingp, const char* name, size_t i);
 template <typename T> void DoMarking(GCMarker* gcmarker, T thing);
@@ -404,16 +411,14 @@ template <typename T>
 void
 js::TraceEdge(JSTracer* trc, BarrieredBase<T>* thingp, const char* name)
 {
-    auto layout = reinterpret_cast<typename PtrBaseGCType<T>::type*>(thingp->unsafeGet());
-    DispatchToTracer(trc, layout, name, JSTracer::InvalidIndex);
+    DispatchToTracer(trc, ConvertToBase(thingp->unsafeGet()), name, JSTracer::InvalidIndex);
 }
 
 template <typename T>
 void
 js::TraceManuallyBarrieredEdge(JSTracer* trc, T* thingp, const char* name)
 {
-    auto layout = reinterpret_cast<typename PtrBaseGCType<T>::type*>(thingp);
-    DispatchToTracer(trc, layout, name, JSTracer::InvalidIndex);
+    DispatchToTracer(trc, ConvertToBase(thingp), name, JSTracer::InvalidIndex);
 }
 
 template <typename T>
@@ -421,18 +426,15 @@ void
 js::TraceRoot(JSTracer* trc, T* thingp, const char* name)
 {
     JS_ROOT_MARKING_ASSERT(trc);
-    auto layout = reinterpret_cast<typename PtrBaseGCType<T>::type*>(thingp);
-    DispatchToTracer(trc, layout, name, JSTracer::InvalidIndex);
+    DispatchToTracer(trc, ConvertToBase(thingp), name, JSTracer::InvalidIndex);
 }
 
 template <typename T>
 void
 js::TraceRange(JSTracer* trc, size_t len, BarrieredBase<T>* thingp, const char* name)
 {
-    for (auto i : MakeRange(len)) {
-        auto layout = reinterpret_cast<typename PtrBaseGCType<T>::type*>(&thingp[i]);
-        DispatchToTracer(trc, layout, name, i);
-    }
+    for (auto i : MakeRange(len))
+        DispatchToTracer(trc, ConvertToBase(thingp[i].unsafeGet()), name, i);
 }
 
 template <typename T>
@@ -440,10 +442,8 @@ void
 js::TraceRootRange(JSTracer* trc, size_t len, T* thingp, const char* name)
 {
     JS_ROOT_MARKING_ASSERT(trc);
-    for (auto i : MakeRange(len)) {
-        auto layout = reinterpret_cast<typename PtrBaseGCType<T>::type*>(&thingp[i]);
-        DispatchToTracer(trc, layout, name, i);
-    }
+    for (auto i : MakeRange(len))
+        DispatchToTracer(trc, ConvertToBase(&thingp[i]), name, i);
 }
 
 // Instantiate a copy of the Tracing templates for each derived type.
@@ -797,8 +797,14 @@ namespace gc {
 
 template <typename T>
 static inline void
-CheckIsMarkedThing(T** thingp)
+CheckIsMarkedThing(T* thingp)
 {
+#define IS_SAME_TYPE_OR(name, type) mozilla::IsSame<type*, T>::value ||
+    static_assert(
+            FOR_EACH_GC_LAYOUT(IS_SAME_TYPE_OR)
+            false, "Only the base cell layout types are allowed into marking/tracing internals");
+#undef IS_SAME_TYPE_OR
+
 #ifdef DEBUG
     MOZ_ASSERT(thingp);
     MOZ_ASSERT(*thingp);
@@ -811,7 +817,7 @@ CheckIsMarkedThing(T** thingp)
 
 template <typename T>
 static bool
-IsMarked(T** thingp)
+IsMarkedInternal(T* thingp)
 {
     CheckIsMarkedThing(thingp);
     JSRuntime* rt = (*thingp)->runtimeFromAnyThread();
@@ -829,12 +835,50 @@ IsMarked(T** thingp)
     return (*thingp)->asTenured().isMarked();
 }
 
+template <>
+bool
+IsMarkedInternal<Value>(Value* valuep)
+{
+    bool rv = true;  // Non-markable types are always live.
+    if (valuep->isString()) {
+        JSString* str = valuep->toString();
+        rv = IsMarkedInternal(&str);
+        valuep->setString(str);
+    } else if (valuep->isObject()) {
+        JSObject* obj = &valuep->toObject();
+        rv = IsMarkedInternal(&obj);
+        valuep->setObject(*obj);
+    } else if (valuep->isSymbol()) {
+        JS::Symbol* sym = valuep->toSymbol();
+        rv = IsMarkedInternal(&sym);
+        valuep->setSymbol(sym);
+    }
+    return rv;
+}
+
+template <>
+bool
+IsMarkedInternal<jsid>(jsid* idp)
+{
+    bool rv = true;  // Non-markable types are always live.
+    if (JSID_IS_STRING(*idp)) {
+        JSString* str = JSID_TO_STRING(*idp);
+        rv = IsMarkedInternal(&str);
+        *idp = NON_INTEGER_ATOM_TO_JSID(reinterpret_cast<JSAtom*>(str));
+    } else if (JSID_IS_SYMBOL(*idp)) {
+        JS::Symbol* sym = JSID_TO_SYMBOL(*idp);
+        rv = IsMarkedInternal(&sym);
+        *idp = SYMBOL_TO_JSID(sym);
+    }
+    return rv;
+}
+
 template <typename T>
 static bool
-IsAboutToBeFinalized(T** thingp)
+IsAboutToBeFinalizedInternal(T* thingp)
 {
     CheckIsMarkedThing(thingp);
-    T* thing = *thingp;
+    T thing = *thingp;
     JSRuntime* rt = thing->runtimeFromAnyThread();
 
     /* Permanent atoms are never finalized by non-owning runtimes. */
@@ -862,6 +906,97 @@ IsAboutToBeFinalized(T** thingp)
 
     return false;
 }
+
+template <>
+bool
+IsAboutToBeFinalizedInternal<Value>(Value* valuep)
+{
+    bool rv = false;  // Non-markable types are always live.
+    if (valuep->isString()) {
+        JSString* str = (JSString*)valuep->toGCThing();
+        rv = IsAboutToBeFinalizedInternal(&str);
+        valuep->setString(str);
+    } else if (valuep->isObject()) {
+        JSObject* obj = (JSObject*)valuep->toGCThing();
+        rv = IsAboutToBeFinalizedInternal(&obj);
+        valuep->setObject(*obj);
+    } else if (valuep->isSymbol()) {
+        JS::Symbol* sym = valuep->toSymbol();
+        rv = IsAboutToBeFinalizedInternal(&sym);
+        valuep->setSymbol(sym);
+    }
+    return rv;
+}
+
+template <>
+bool
+IsAboutToBeFinalizedInternal<jsid>(jsid* idp)
+{
+    bool rv = false;  // Non-markable types are always live.
+    if (JSID_IS_STRING(*idp)) {
+        JSString* str = JSID_TO_STRING(*idp);
+        rv = IsAboutToBeFinalizedInternal(&str);
+        *idp = NON_INTEGER_ATOM_TO_JSID(reinterpret_cast<JSAtom*>(str));
+    } else if (JSID_IS_SYMBOL(*idp)) {
+        JS::Symbol* sym = JSID_TO_SYMBOL(*idp);
+        rv = IsAboutToBeFinalizedInternal(&sym);
+        *idp = SYMBOL_TO_JSID(sym);
+    }
+    return rv;
+}
+
+template <typename T>
+bool
+IsMarkedUnbarriered(T* thingp)
+{
+    return IsMarkedInternal(ConvertToBase(thingp));
+}
+
+template <typename T>
+bool
+IsMarked(BarrieredBase<T>* thingp)
+{
+    return IsMarkedInternal(ConvertToBase(thingp->unsafeGet()));
+}
+
+template <typename T>
+bool
+IsMarked(ReadBarriered<T>* thingp)
+{
+    return IsMarkedInternal(ConvertToBase(thingp->unsafeGet()));
+}
+
+template <typename T>
+bool
+IsAboutToBeFinalizedUnbarriered(T* thingp)
+{
+    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp));
+}
+
+template <typename T>
+bool
+IsAboutToBeFinalized(BarrieredBase<T>* thingp)
+{
+    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeGet()));
+}
+
+template <typename T>
+bool
+IsAboutToBeFinalized(ReadBarriered<T>* thingp)
+{
+    return IsAboutToBeFinalizedInternal(ConvertToBase(thingp->unsafeGet()));
+}
+
+// Instantiate a copy of the Tracing templates for each derived type.
+#define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(type) \
+    template bool IsMarkedUnbarriered<type>(type*); \
+    template bool IsMarked<type>(BarrieredBase<type>*); \
+    template bool IsMarked<type>(ReadBarriered<type>*); \
+    template bool IsAboutToBeFinalizedUnbarriered<type>(type*); \
+    template bool IsAboutToBeFinalized<type>(BarrieredBase<type>*); \
+    template bool IsAboutToBeFinalized<type>(ReadBarriered<type>*);
+FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS)
+#undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS
 
 template <typename T>
 T*
@@ -922,25 +1057,25 @@ Mark##base##RootRange(JSTracer* trc, size_t len, type** vec, const char* name)  
 bool                                                                                              \
 Is##base##Marked(type** thingp)                                                                   \
 {                                                                                                 \
-    return IsMarked<type>(thingp);                                                                \
+    return IsMarkedUnbarriered<type*>(thingp);                                                    \
 }                                                                                                 \
                                                                                                   \
 bool                                                                                              \
 Is##base##Marked(BarrieredBase<type*>* thingp)                                                    \
 {                                                                                                 \
-    return IsMarked<type>(thingp->unsafeGet());                                                   \
+    return IsMarked<type*>(thingp);                                                               \
 }                                                                                                 \
                                                                                                   \
 bool                                                                                              \
 Is##base##AboutToBeFinalized(type** thingp)                                                       \
 {                                                                                                 \
-    return IsAboutToBeFinalized<type>(thingp);                                                    \
+    return IsAboutToBeFinalizedUnbarriered<type*>(thingp);                                        \
 }                                                                                                 \
                                                                                                   \
 bool                                                                                              \
 Is##base##AboutToBeFinalized(BarrieredBase<type*>* thingp)                                        \
 {                                                                                                 \
-    return IsAboutToBeFinalized<type>(thingp->unsafeGet());                                       \
+    return IsAboutToBeFinalized<type*>(thingp);                                                   \
 }                                                                                                 \
                                                                                                   \
 type *                                                                                            \
@@ -1087,50 +1222,6 @@ MarkValueInternal(JSTracer* trc, Value* v)
     }
 }
 
-bool
-gc::IsValueMarked(Value* v)
-{
-    MOZ_ASSERT(v->isMarkable());
-    bool rv;
-    if (v->isString()) {
-        JSString* str = (JSString*)v->toGCThing();
-        rv = IsMarked<JSString>(&str);
-        v->setString(str);
-    } else if (v->isObject()) {
-        JSObject* obj = (JSObject*)v->toGCThing();
-        rv = IsMarked<JSObject>(&obj);
-        v->setObject(*obj);
-    } else {
-        MOZ_ASSERT(v->isSymbol());
-        JS::Symbol* sym = v->toSymbol();
-        rv = IsMarked<JS::Symbol>(&sym);
-        v->setSymbol(sym);
-    }
-    return rv;
-}
-
-bool
-gc::IsValueAboutToBeFinalized(Value* v)
-{
-    MOZ_ASSERT(v->isMarkable());
-    bool rv;
-    if (v->isString()) {
-        JSString* str = (JSString*)v->toGCThing();
-        rv = IsAboutToBeFinalized<JSString>(&str);
-        v->setString(str);
-    } else if (v->isObject()) {
-        JSObject* obj = (JSObject*)v->toGCThing();
-        rv = IsAboutToBeFinalized<JSObject>(&obj);
-        v->setObject(*obj);
-    } else {
-        MOZ_ASSERT(v->isSymbol());
-        JS::Symbol* sym = v->toSymbol();
-        rv = IsAboutToBeFinalized<JS::Symbol>(&sym);
-        v->setSymbol(sym);
-    }
-    return rv;
-}
-
 /*** Type Marking ***/
 
 void
@@ -1156,12 +1247,6 @@ TypeSet::MarkTypeUnbarriered(JSTracer* trc, TypeSet::Type* v, const char* name)
 }
 
 /*** Slot Marking ***/
-
-bool
-gc::IsSlotMarked(HeapSlot* s)
-{
-    return IsMarked(s);
-}
 
 void
 gc::MarkObjectSlots(JSTracer* trc, NativeObject* obj, uint32_t start, uint32_t nslots)
