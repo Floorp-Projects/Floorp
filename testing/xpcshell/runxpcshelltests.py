@@ -752,7 +752,7 @@ class XPCShellTests(object):
         self.harness_timeout = HARNESS_TIMEOUT
         self.nodeProc = {}
 
-    def buildTestList(self, test_tags):
+    def buildTestList(self, test_tags=None):
         """
           read the xpcshell.ini manifest and set self.alltests to be
           an array of test objects.
