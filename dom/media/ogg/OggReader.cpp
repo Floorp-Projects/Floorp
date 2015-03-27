@@ -895,7 +895,7 @@ nsresult OggReader::DecodeTheora(ogg_packet* aPacket, int64_t aTimeThreshold)
 }
 
 bool OggReader::DecodeVideoFrame(bool &aKeyframeSkip,
-                                     int64_t aTimeThreshold)
+                                 int64_t aTimeThreshold)
 {
   MOZ_ASSERT(OnTaskQueue());
 
