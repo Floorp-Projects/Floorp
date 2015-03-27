@@ -664,14 +664,6 @@ void
 FontFaceSet::InsertNonRuleFontFace(FontFace* aFontFace,
                                    bool& aFontSetModified)
 {
-  if (!aFontFace->IsInitialized()) {
-    // The FontFace is still waiting to be initialized, so don't create a
-    // user font entry for it yet.  Once it has been initialized, it will
-    // call OnFontFaceInitialized on us, which will end rebuild the user
-    // font set and end up back in here.
-    return;
-  }
-
   nsAutoString fontfamily;
   if (!aFontFace->GetFamilyName(fontfamily)) {
     // If there is no family name, this rule cannot contribute a
@@ -817,7 +809,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(const nsAString& aFamilyName,
                                                    uint8_t aSheetType)
 {
   nsCSSValue val;
-  uint32_t unit;
+  nsCSSUnit unit;
 
   uint32_t weight = NS_STYLE_FONT_WEIGHT_NORMAL;
   int32_t stretch = NS_STYLE_FONT_STRETCH_NORMAL;
@@ -1322,16 +1314,6 @@ FontFaceSet::RemoveUnavailableFontFace(FontFace* aFontFace)
   mUnavailableFaces.RemoveElement(aFontFace);
 
   MOZ_ASSERT(!mUnavailableFaces.Contains(aFontFace));
-}
-
-void
-FontFaceSet::OnFontFaceInitialized(FontFace* aFontFace)
-{
-  MOZ_ASSERT(HasAvailableFontFace(aFontFace));
-  MOZ_ASSERT(!aFontFace->HasRule());
-  MOZ_ASSERT(aFontFace->IsInitialized());
-
-  mPresContext->RebuildUserFontSet();
 }
 
 void
