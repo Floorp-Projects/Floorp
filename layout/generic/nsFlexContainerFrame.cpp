@@ -334,11 +334,11 @@ public:
 
   // Returns the distance between this FlexItem's baseline and the cross-start
   // edge of its margin-box. Used in baseline alignment.
-  // (This function needs to be told what cross axis is & which edge we're
-  // measuring the baseline from, so that it can look up the appropriate
-  // components from mMargin.)
-  nscoord GetBaselineOffsetFromOuterCrossEdge(AxisOrientationType aCrossAxis,
-                                              AxisEdgeType aEdge) const;
+  // (This function needs to be told which edge we're measuring the baseline
+  // from, so that it can look up the appropriate components from mMargin.)
+  nscoord GetBaselineOffsetFromOuterCrossEdge(
+    AxisEdgeType aEdge,
+    const FlexboxAxisTracker& aAxisTracker) const;
 
   float GetShareOfWeightSoFar() const { return mShareOfWeightSoFar; }
 
@@ -1613,19 +1613,21 @@ FlexItem::CheckForMinSizeAuto(const nsHTMLReflowState& aFlexItemReflowState,
 }
 
 nscoord
-FlexItem::GetBaselineOffsetFromOuterCrossEdge(AxisOrientationType aCrossAxis,
-                                              AxisEdgeType aEdge) const
+FlexItem::GetBaselineOffsetFromOuterCrossEdge(
+  AxisEdgeType aEdge,
+  const FlexboxAxisTracker& aAxisTracker) const
 {
   // NOTE: Currently, 'mAscent' (taken from reflow) is an inherently vertical
   // measurement -- it's the distance from the border-top edge of this FlexItem
   // to its baseline. So, we can really only do baseline alignment when the
   // cross axis is vertical. (The FlexItem constructor enforces this when
   // resolving the item's "mAlignSelf" value).
-  MOZ_ASSERT(!IsAxisHorizontal(aCrossAxis),
+  MOZ_ASSERT(!aAxisTracker.IsCrossAxisHorizontal(),
              "Only expecting to be doing baseline computations when the "
              "cross axis is vertical");
 
-  mozilla::Side sideToMeasureFrom = kAxisOrientationToSidesMap[aCrossAxis][aEdge];
+  AxisOrientationType crossAxis = aAxisTracker.GetCrossAxis();
+  mozilla::Side sideToMeasureFrom = kAxisOrientationToSidesMap[crossAxis][aEdge];
 
   nscoord marginTopToBaseline = ResolvedAscent() + mMargin.top;
 
@@ -1642,7 +1644,7 @@ FlexItem::GetBaselineOffsetFromOuterCrossEdge(AxisOrientationType aCrossAxis,
   // Measuring from bottom: The distance from the margin-box bottom edge to the
   // baseline is just the margin-box cross size (i.e. outer cross size), minus
   // the already-computed distance from margin-top to baseline.
-  return GetOuterCrossSize(aCrossAxis) - marginTopToBaseline;
+  return GetOuterCrossSize(crossAxis) - marginTopToBaseline;
 }
 
 uint32_t
@@ -2698,8 +2700,8 @@ FlexLine::ComputeCrossSizeAndBaseline(const FlexboxAxisTracker& aAxisTracker)
       //   crossEndToBaseline.
 
       nscoord crossStartToBaseline =
-        item->GetBaselineOffsetFromOuterCrossEdge(aAxisTracker.GetCrossAxis(),
-                                                  eAxisEdge_Start);
+        item->GetBaselineOffsetFromOuterCrossEdge(eAxisEdge_Start,
+                                                  aAxisTracker);
       nscoord crossEndToBaseline = curOuterCrossSize - crossStartToBaseline;
 
       // Now, update our "largest" values for these (across all the flex items
@@ -2848,10 +2850,13 @@ SingleLineCrossAxisPositionTracker::
       // Normally, baseline-aligned items are collectively aligned with the
       // line's cross-start edge; however, if our cross axis is (internally)
       // reversed, we instead align them with the cross-end edge.
+      AxisEdgeType baselineAlignEdge =
+        aAxisTracker.AreAxesInternallyReversed() ?
+        eAxisEdge_End : eAxisEdge_Start;
+
       nscoord itemBaselineOffset =
-        aItem.GetBaselineOffsetFromOuterCrossEdge(mAxis,
-          aAxisTracker.AreAxesInternallyReversed() ?
-          eAxisEdge_End : eAxisEdge_Start);
+        aItem.GetBaselineOffsetFromOuterCrossEdge(baselineAlignEdge,
+                                                  aAxisTracker);
 
       nscoord lineBaselineOffset = aLine.GetBaselineOffset();
 
