@@ -208,17 +208,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       break;
     }
 #endif
-    case CompositableOperation::TOpUpdateTexture: {
-      const OpUpdateTexture& op = aEdit.get_OpUpdateTexture();
-      RefPtr<TextureHost> texture = TextureHost::AsTextureHost(op.textureParent());
-      MOZ_ASSERT(texture);
-
-      texture->Updated(op.region().type() == MaybeRegion::TnsIntRegion
-                       ? &op.region().get_nsIntRegion()
-                       : nullptr); // no region means invalidate the entire surface
-      break;
-    }
-
     default: {
       MOZ_ASSERT(false, "bad type");
     }

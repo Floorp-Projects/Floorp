@@ -43,6 +43,7 @@ ImageHost::UseTextureHost(TextureHost* aTexture)
   CompositableHost::UseTextureHost(aTexture);
   mFrontBuffer = aTexture;
   if (mFrontBuffer) {
+    mFrontBuffer->Updated();
     mFrontBuffer->PrepareTextureSource(mTextureSource);
   }
 }
