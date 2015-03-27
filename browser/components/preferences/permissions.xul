@@ -53,10 +53,10 @@
           onselect="gPermissionManager.onPermissionSelected();">
       <treecols>
         <treecol id="siteCol" label="&treehead.sitename.label;" flex="3"
-                onclick="gPermissionManager.onPermissionSort('rawHost');" persist="width"/>
+                 data-field-name="rawHost" persist="width"/>
         <splitter class="tree-splitter"/>
         <treecol id="statusCol" label="&treehead.status.label;" flex="1"
-                onclick="gPermissionManager.onPermissionSort('capability');" persist="width"/>
+                 data-field-name="capability" persist="width"/>
       </treecols>
       <treechildren/>
     </tree>
