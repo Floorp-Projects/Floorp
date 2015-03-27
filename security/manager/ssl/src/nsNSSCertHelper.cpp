@@ -364,8 +364,20 @@ GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsAString &text)
   case SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST:
     bundlekey = "CertDumpAnsiX9DsaSignatureWithSha1";
     break;
-  case SEC_OID_ANSIX962_ECDSA_SIGNATURE_WITH_SHA1_DIGEST:
+  case SEC_OID_ANSIX962_ECDSA_SHA1_SIGNATURE:
     bundlekey = "CertDumpAnsiX962ECDsaSignatureWithSha1";
+    break;
+  case SEC_OID_ANSIX962_ECDSA_SHA224_SIGNATURE:
+    bundlekey = "CertDumpAnsiX962ECDsaSignatureWithSha224";
+    break;
+  case SEC_OID_ANSIX962_ECDSA_SHA256_SIGNATURE:
+    bundlekey = "CertDumpAnsiX962ECDsaSignatureWithSha256";
+    break;
+  case SEC_OID_ANSIX962_ECDSA_SHA384_SIGNATURE:
+    bundlekey = "CertDumpAnsiX962ECDsaSignatureWithSha384";
+    break;
+  case SEC_OID_ANSIX962_ECDSA_SHA512_SIGNATURE:
+    bundlekey = "CertDumpAnsiX962ECDsaSignatureWithSha512";
     break;
   case SEC_OID_RFC1274_UID:
     bundlekey = "CertDumpUserID";
