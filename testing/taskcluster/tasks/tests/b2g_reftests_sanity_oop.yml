@@ -3,7 +3,7 @@ $inherits:
   from: 'tasks/test.yml'
 task:
   metadata:
-    name: '[TC] Reftest Sanity ( OOP )'
+    name: '[TC] Reftest Sanity OOP'
     description: Reftest Sanity OOP test run {{chunk}}
 
   payload:
@@ -29,11 +29,8 @@ task:
         expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
-    treeherderEnv:
-      - production
-      - staging
     treeherder:
       groupName: Reftest Sanity OOP
-      groupSymbol: Rs-oop
+      groupSymbol: tc-Rs-oop
       symbol: 'Rs-oop'
       productName: b2g
