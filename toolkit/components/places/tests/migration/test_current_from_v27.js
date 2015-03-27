@@ -65,13 +65,13 @@ add_task(function* database_is_valid() {
 add_task(function* test_keywords() {
   // When 2 urls have the same keyword, if one has postData it will be
   // preferred.
-  let [ url1, postData1 ] = PlacesUtils.getURLAndPostDataForKeyword("kw1");
-  Assert.equal(url1, "http://test2.com/");
-  Assert.equal(postData1, "postData1");
-  let [ url2, postData2 ] = PlacesUtils.getURLAndPostDataForKeyword("kw2");
-  Assert.equal(url2, "http://test2.com/");
-  Assert.equal(postData2, "postData2");
-  let [ url3, postData3 ] = PlacesUtils.getURLAndPostDataForKeyword("kw3");
-  Assert.equal(url3, "http://test1.com/");
-  Assert.equal(postData3, null);
+  let entry1 = yield PlacesUtils.keywords.fetch("kw1");
+  Assert.equal(entry1.url.href, "http://test2.com/");
+  Assert.equal(entry1.postData, "postData1");
+  let entry2 = yield PlacesUtils.keywords.fetch("kw2");
+  Assert.equal(entry2.url.href, "http://test2.com/");
+  Assert.equal(entry2.postData, "postData2");
+  let entry3 = yield PlacesUtils.keywords.fetch("kw3");
+  Assert.equal(entry3.url.href, "http://test1.com/");
+  Assert.equal(entry3.postData, null);
 });
