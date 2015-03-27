@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import io
 import os
 import unittest
@@ -63,6 +64,28 @@ class ProcTestOutput(proctest.ProcTest):
                               p.didTimeout,
                               False,
                               ())
+
+    def test_stdout_stderr_mixing(self):
+        """
+        Test that stdout and stderr don't get intermingled within a line.
+        """
+        got_output = [False]
+        def processOutput(line):
+            got_output[0] = True
+            self.assertTrue(len(line) == 100 and
+                            (all(c == 'O' for c in line) or
+                            all(c == 'X' for c in line)),
+                            "stdout and stderr should not be mixed")
+
+        test_script = os.path.join(here, "gen_stdout_stderr.py")
+        proc = processhandler.ProcessHandler(
+            [sys.executable, test_script],
+            processOutputLine=[processOutput]
+        )
+        proc.run()
+        proc.wait()
+        self.assertTrue(got_output[0], "Saw output from process")
+
 
 if __name__ == '__main__':
     unittest.main()
