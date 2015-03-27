@@ -298,20 +298,24 @@ CompositorD3D11::Initialize()
       return false;
     }
 
-    CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1,
-                                D3D11_BIND_SHADER_RESOURCE |
-                                D3D11_BIND_RENDER_TARGET);
-    desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+    if (!gfxWindowsPlatform::GetPlatform()->IsWARP()) {
+      // It's okay to do this on Windows 8. But for now we'll just bail
+      // whenever we're using WARP.
+      CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, 1, 1, 1, 1,
+                                 D3D11_BIND_SHADER_RESOURCE |
+                                 D3D11_BIND_RENDER_TARGET);
+      desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
 
-    RefPtr<ID3D11Texture2D> texture;
-    hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
-    if (FAILED(hr)) {
-      return false;
-    }
+      RefPtr<ID3D11Texture2D> texture;
+      hr = mDevice->CreateTexture2D(&desc, nullptr, byRef(texture));
+      if (FAILED(hr)) {
+        return false;
+      }
 
-    hr = texture->QueryInterface((IDXGIResource**)byRef(mAttachments->mSyncTexture));
-    if (FAILED(hr)) {
-      return false;
+      hr = texture->QueryInterface((IDXGIResource**)byRef(mAttachments->mSyncTexture));
+      if (FAILED(hr)) {
+        return false;
+      }
     }
     
     //
@@ -1101,16 +1105,18 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   // ClearRect will set the correct blend state for us.
   ClearRect(Rect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height));
 
-  RefPtr<IDXGIKeyedMutex> mutex;
-  mAttachments->mSyncTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
+  if (mAttachments->mSyncTexture) {
+    RefPtr<IDXGIKeyedMutex> mutex;
+    mAttachments->mSyncTexture->QueryInterface((IDXGIKeyedMutex**)byRef(mutex));
 
-  MOZ_ASSERT(mutex);
-  HRESULT hr = mutex->AcquireSync(0, 10000);
-  if (hr == WAIT_TIMEOUT) {
-    MOZ_CRASH();
+    MOZ_ASSERT(mutex);
+    HRESULT hr = mutex->AcquireSync(0, 10000);
+    if (hr == WAIT_TIMEOUT) {
+      MOZ_CRASH();
+    }
+
+    mutex->ReleaseSync(0);
   }
-
-  mutex->ReleaseSync(0);
 }
 
 void
