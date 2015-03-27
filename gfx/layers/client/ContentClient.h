@@ -129,7 +129,7 @@ public:
 
 // thin wrapper around RotatedContentBuffer, for on-mtc
 class ContentClientBasic final : public ContentClient
-                                   , protected RotatedContentBuffer
+                               , protected RotatedContentBuffer
 {
 public:
   ContentClientBasic();

@@ -52,8 +52,8 @@ namespace dom {
 // from NS_NewByteInputStream is held alive as long as the
 // stream is.  We do that by passing back this class instead.
 class DataOwnerAdapter final : public nsIInputStream,
-                                   public nsISeekableStream,
-                                   public nsIIPCSerializableInputStream
+                               public nsISeekableStream,
+                               public nsIIPCSerializableInputStream
 {
   typedef FileImplMemory::DataOwner DataOwner;
 public:

@@ -21,7 +21,7 @@ namespace dom {
 class SpeechRecognition;
 
 class SpeechRecognitionAlternative final : public nsISupports,
-                                               public nsWrapperCache
+                                           public nsWrapperCache
 {
 public:
   explicit SpeechRecognitionAlternative(SpeechRecognition* aParent);

@@ -61,12 +61,12 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsICDocShellTreeOwner,
                               NS_ICDOCSHELLTREEOWNER_IID)
 
 class nsDocShellTreeOwner final : public nsIDocShellTreeOwner,
-                                      public nsIBaseWindow,
-                                      public nsIInterfaceRequestor,
-                                      public nsIWebProgressListener,
-                                      public nsIDOMEventListener,
-                                      public nsICDocShellTreeOwner,
-                                      public nsSupportsWeakReference
+                                  public nsIBaseWindow,
+                                  public nsIInterfaceRequestor,
+                                  public nsIWebProgressListener,
+                                  public nsIDOMEventListener,
+                                  public nsICDocShellTreeOwner,
+                                  public nsSupportsWeakReference
 {
 friend class nsWebBrowser;
 friend class nsCommandHandler;

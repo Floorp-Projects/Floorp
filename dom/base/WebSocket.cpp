@@ -62,11 +62,11 @@ namespace mozilla {
 namespace dom {
 
 class WebSocketImpl final : public nsIInterfaceRequestor
-                              , public nsIWebSocketListener
-                              , public nsIObserver
-                              , public nsSupportsWeakReference
-                              , public nsIRequest
-                              , public nsIEventTarget
+                          , public nsIWebSocketListener
+                          , public nsIObserver
+                          , public nsSupportsWeakReference
+                          , public nsIRequest
+                          , public nsIEventTarget
 {
 public:
   NS_DECL_NSIINTERFACEREQUESTOR

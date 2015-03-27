@@ -55,8 +55,8 @@ class QX11EmbedContainer;
 #endif
 
 class nsFrameLoader final : public nsIFrameLoader,
-                                public nsStubMutationObserver,
-                                public mozilla::dom::ipc::MessageManagerCallback
+                            public nsStubMutationObserver,
+                            public mozilla::dom::ipc::MessageManagerCallback
 {
   friend class AutoResetInShow;
   typedef mozilla::dom::PBrowserParent PBrowserParent;

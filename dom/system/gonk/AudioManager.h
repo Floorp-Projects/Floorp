@@ -39,7 +39,7 @@ namespace gonk {
 class RecoverTask;
 class AudioChannelVolInitCallback;
 class AudioManager final : public nsIAudioManager
-                             , public nsIObserver
+                         , public nsIObserver
 {
 public:
   static already_AddRefed<AudioManager> GetInstance();

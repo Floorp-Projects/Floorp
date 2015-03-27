@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 
 class HTMLHeadingElement final : public nsGenericHTMLElement,
-				     public nsIDOMHTMLHeadingElement
+			         public nsIDOMHTMLHeadingElement
 {
 public:
   explicit HTMLHeadingElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)

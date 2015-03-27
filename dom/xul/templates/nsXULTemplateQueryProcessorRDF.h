@@ -41,7 +41,7 @@ class nsXULTemplateResultRDF;
  * An object that generates results from a query on an RDF graph
  */
 class nsXULTemplateQueryProcessorRDF final : public nsIXULTemplateQueryProcessor,
-                                                 public nsIRDFObserver
+                                             public nsIRDFObserver
 {
 public:
     typedef nsTArray<nsRefPtr<nsXULTemplateResultRDF> > ResultArray;

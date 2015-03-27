@@ -23,7 +23,7 @@ class DOMLocalStorageManager;
 // and expects asynchronous answers. Those are then transparently
 // forwarded back to consumers on the child process.
 class DOMStorageDBChild final : public DOMStorageDBBridge
-                                  , public PStorageChild
+                              , public PStorageChild
 {
   virtual ~DOMStorageDBChild();
 
@@ -107,7 +107,7 @@ private:
 // Also responsible for forwardning all chrome operation notifications
 // such as cookie cleaning etc to the child process.
 class DOMStorageDBParent final : public PStorageParent
-                                   , public DOMStorageObserverSink
+                               , public DOMStorageObserverSink
 {
   virtual ~DOMStorageDBParent();
 

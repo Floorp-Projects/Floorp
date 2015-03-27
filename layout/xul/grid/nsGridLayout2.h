@@ -24,7 +24,7 @@ class nsGridCell;
  * The nsBoxLayout implementation for a grid.
  */
 class nsGridLayout2 final : public nsStackLayout, 
-                                public nsIGridPart
+                            public nsIGridPart
 {
 public:
 

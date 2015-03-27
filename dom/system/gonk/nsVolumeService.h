@@ -32,7 +32,7 @@ class Volume;
 */
 
 class nsVolumeService final : public nsIVolumeService,
-                                  public nsIDOMMozWakeLockListener
+                              public nsIDOMMozWakeLockListener
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 
 class ListBoxObject final : public BoxObject,
-                                public nsPIListBoxObject
+                            public nsPIListBoxObject
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

@@ -71,9 +71,9 @@ public:
 };
 
 class nsPluginHost final : public nsIPluginHost,
-                               public nsIObserver,
-                               public nsITimerCallback,
-                               public nsSupportsWeakReference
+                           public nsIObserver,
+                           public nsITimerCallback,
+                           public nsSupportsWeakReference
 {
   friend class nsPluginTag;
   virtual ~nsPluginHost();

@@ -86,7 +86,7 @@ private:
  * Used to process notifications from core for the document accessible.
  */
 class NotificationController final : public EventQueue,
-                                         public nsARefreshObserver
+                                     public nsARefreshObserver
 {
 public:
   NotificationController(DocAccessible* aDocument, nsIPresShell* aPresShell);

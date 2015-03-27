@@ -26,7 +26,7 @@ class OwningLongOrMozSmsMessageOrMozMmsMessage;
 struct SmsSendParameters;
 
 class MobileMessageManager final : public DOMEventTargetHelper
-                                     , public nsIObserver
+                                 , public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

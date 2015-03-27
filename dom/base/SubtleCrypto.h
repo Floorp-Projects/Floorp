@@ -22,7 +22,7 @@ class Promise;
 typedef ArrayBufferViewOrArrayBuffer CryptoOperationData;
 
 class SubtleCrypto final : public nsISupports,
-                               public nsWrapperCache
+                           public nsWrapperCache
 {
   ~SubtleCrypto() {}
 

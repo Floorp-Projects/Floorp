@@ -21,7 +21,7 @@
 using namespace mozilla;
 
 class nsGenConImageContent final : public nsXMLElement,
-                                       public nsImageLoadingContent
+                                   public nsImageLoadingContent
 {
 public:
   explicit nsGenConImageContent(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)

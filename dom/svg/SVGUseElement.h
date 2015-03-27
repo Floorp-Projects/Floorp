@@ -30,7 +30,7 @@ namespace dom {
 typedef SVGGraphicsElement SVGUseElementBase;
 
 class SVGUseElement final : public SVGUseElementBase,
-                                public nsStubMutationObserver
+                            public nsStubMutationObserver
 {
   friend class ::nsSVGUseFrame;
 protected:

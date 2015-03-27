@@ -35,7 +35,7 @@ class nsDOMCSSRGBColor;
  * computed style.
  */
 class nsROCSSPrimitiveValue final : public mozilla::dom::CSSValue,
-  public nsIDOMCSSPrimitiveValue
+                                    public nsIDOMCSSPrimitiveValue
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

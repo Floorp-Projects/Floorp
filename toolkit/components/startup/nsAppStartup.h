@@ -30,9 +30,9 @@ struct PLEvent;
 
 
 class nsAppStartup final : public nsIAppStartup,
-                               public nsIWindowCreator2,
-                               public nsIObserver,
-                               public nsSupportsWeakReference
+                           public nsIWindowCreator2,
+                           public nsIObserver,
+                           public nsSupportsWeakReference
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

@@ -15,8 +15,8 @@ namespace mozilla {
 namespace dom {
 
 class HTMLOutputElement final : public nsGenericHTMLFormElement,
-                                    public nsStubMutationObserver,
-                                    public nsIConstraintValidation
+                                public nsStubMutationObserver,
+                                public nsIConstraintValidation
 {
 public:
   using nsIConstraintValidation::GetValidationMessage;

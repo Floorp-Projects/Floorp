@@ -34,7 +34,7 @@ class OwningHeadersOrByteStringSequenceSequenceOrByteStringMozMap;
  * InternalHeaders object.
  */
 class Headers final : public nsISupports
-                        , public nsWrapperCache
+                    , public nsWrapperCache
 {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Headers)

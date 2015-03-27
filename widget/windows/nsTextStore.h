@@ -54,8 +54,8 @@ struct MSGResult;
  */
 
 class nsTextStore final : public ITextStoreACP
-                            , public ITfContextOwnerCompositionSink
-                            , public ITfMouseTrackerACP
+                        , public ITfContextOwnerCompositionSink
+                        , public ITfMouseTrackerACP
 {
 public: /*IUnknown*/
   STDMETHODIMP          QueryInterface(REFIID, void**);

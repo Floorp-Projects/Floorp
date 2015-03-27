@@ -44,7 +44,7 @@ class SVGStringList;
  * string each time any given item is requested.
  */
 class DOMSVGStringList final : public nsISupports
-                                 , public nsWrapperCache
+                             , public nsWrapperCache
 {
   friend class AutoChangeStringListNotifier;
 

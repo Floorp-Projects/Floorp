@@ -146,10 +146,10 @@ DecodeFlags(uint32_t aFlags)
 }
 
 class RasterImage final : public ImageResource
-                            , public nsIProperties
-                            , public SupportsWeakPtr<RasterImage>
+                        , public nsIProperties
+                        , public SupportsWeakPtr<RasterImage>
 #ifdef DEBUG
-                            , public imgIContainerDebug
+                        , public imgIContainerDebug
 #endif
 {
   // (no public constructor - use ImageFactory)

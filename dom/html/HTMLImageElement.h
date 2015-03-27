@@ -23,8 +23,8 @@ namespace dom {
 
 class ResponsiveImageSelector;
 class HTMLImageElement final : public nsGenericHTMLElement,
-                                   public nsImageLoadingContent,
-                                   public nsIDOMHTMLImageElement
+                               public nsImageLoadingContent,
+                               public nsIDOMHTMLImageElement
 {
   friend class HTMLSourceElement;
   friend class HTMLPictureElement;

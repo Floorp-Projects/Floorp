@@ -17,8 +17,8 @@ class IPCTelephonyRequest;
 class PTelephonyChild;
 
 class TelephonyIPCService final : public nsITelephonyService
-                                     , public nsITelephonyListener
-                                     , public nsIObserver
+                                , public nsITelephonyListener
+                                , public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS

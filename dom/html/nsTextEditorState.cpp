@@ -199,7 +199,7 @@ private:
 };
 
 class nsTextInputSelectionImpl final : public nsSupportsWeakReference
-                                         , public nsISelectionController
+                                     , public nsISelectionController
 {
   ~nsTextInputSelectionImpl(){}
 

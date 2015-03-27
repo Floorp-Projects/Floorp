@@ -29,7 +29,7 @@ class nsIDocument;
 class nsINode;
 
 class txTransformNotifier final : public nsIScriptLoaderObserver,
-                                      public nsICSSLoaderObserver
+                                  public nsICSSLoaderObserver
 {
 public:
     txTransformNotifier();

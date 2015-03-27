@@ -44,8 +44,8 @@ private:
 } // namespace mozilla
 
 class nsAnnotationService final : public nsIAnnotationService
-                                    , public nsIObserver
-                                    , public nsSupportsWeakReference
+                                , public nsIObserver
+                                , public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS

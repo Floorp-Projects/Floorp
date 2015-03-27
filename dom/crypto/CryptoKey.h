@@ -59,8 +59,8 @@ Thus, internally, a key has the following fields:
 struct JsonWebKey;
 
 class CryptoKey final : public nsISupports,
-                            public nsWrapperCache,
-                            public nsNSSShutDownObject
+                        public nsWrapperCache,
+                        public nsNSSShutDownObject
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

@@ -48,7 +48,7 @@ class SVGAnimatedPointList;
  * Our DOM items are created lazily on demand as and when script requests them.
  */
 class DOMSVGPointList final : public nsISupports,
-                                  public nsWrapperCache
+                              public nsWrapperCache
 {
   friend class AutoChangePointListNotifier;
   friend class nsISVGPoint;

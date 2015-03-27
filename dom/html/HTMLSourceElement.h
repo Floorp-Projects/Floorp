@@ -19,7 +19,7 @@ namespace dom {
 
 class ResponsiveImageSelector;
 class HTMLSourceElement final : public nsGenericHTMLElement,
-                                    public nsIDOMHTMLSourceElement
+                                public nsIDOMHTMLSourceElement
 {
 public:
   explicit HTMLSourceElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

@@ -89,13 +89,13 @@ public:
 };
 
 class HTMLInputElement final : public nsGenericHTMLFormElementWithState,
-                                   public nsImageLoadingContent,
-                                   public nsIDOMHTMLInputElement,
-                                   public nsITextControlElement,
-                                   public nsIPhonetic,
-                                   public nsIDOMNSEditableElement,
-                                   public nsITimerCallback,
-                                   public nsIConstraintValidation
+                               public nsImageLoadingContent,
+                               public nsIDOMHTMLInputElement,
+                               public nsITextControlElement,
+                               public nsIPhonetic,
+                               public nsIDOMNSEditableElement,
+                               public nsITimerCallback,
+                               public nsIConstraintValidation
 {
   friend class DirPickerFileListBuilderTask;
 

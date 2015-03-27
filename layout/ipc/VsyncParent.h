@@ -25,7 +25,7 @@ namespace layout {
 // content process. This actor will be released when its parent protocol calls
 // DeallocPVsyncParent().
 class VsyncParent final : public PVsyncParent,
-                              public VsyncObserver
+                          public VsyncObserver
 {
   friend class mozilla::ipc::BackgroundParentImpl;
 

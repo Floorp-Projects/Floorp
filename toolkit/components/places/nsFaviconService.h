@@ -52,8 +52,8 @@ public:
 };
 
 class nsFaviconService final : public nsIFaviconService
-                                 , public mozIAsyncFavicons
-                                 , public nsITimerCallback
+                             , public mozIAsyncFavicons
+                             , public nsITimerCallback
 {
 public:
   nsFaviconService();

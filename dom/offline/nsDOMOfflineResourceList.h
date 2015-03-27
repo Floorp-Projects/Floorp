@@ -35,10 +35,10 @@ class DOMStringList;
 } // namespace mozilla
 
 class nsDOMOfflineResourceList final : public mozilla::DOMEventTargetHelper,
-                                           public nsIDOMOfflineResourceList,
-                                           public nsIObserver,
-                                           public nsIOfflineCacheUpdateObserver,
-                                           public nsSupportsWeakReference
+                                       public nsIDOMOfflineResourceList,
+                                       public nsIObserver,
+                                       public nsIOfflineCacheUpdateObserver,
+                                       public nsSupportsWeakReference
 {
   typedef mozilla::ErrorResult ErrorResult;
 

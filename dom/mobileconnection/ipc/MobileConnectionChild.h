@@ -26,7 +26,7 @@ namespace mobileconnection {
  * be created and each instance represents a sim slot.
  */
 class MobileConnectionChild final : public PMobileConnectionChild
-                                      , public nsIMobileConnection
+                                  , public nsIMobileConnection
 {
 public:
   NS_DECL_ISUPPORTS

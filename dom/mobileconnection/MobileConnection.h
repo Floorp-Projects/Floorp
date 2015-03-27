@@ -22,9 +22,9 @@ namespace mozilla {
 namespace dom {
 
 class MobileConnection final : public DOMEventTargetHelper
-                                 , private nsIMobileConnectionListener
+                             , private nsIMobileConnectionListener
 #ifdef MOZ_B2G_RIL
-                                 , private nsIIccListener
+                             , private nsIIccListener
 #endif // MOZ_B2G_RIL
 {
   /**

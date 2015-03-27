@@ -11,7 +11,7 @@
 #include "mozilla/dom/PColorPickerChild.h"
 
 class nsColorPickerProxy final : public nsIColorPicker,
-                                     public mozilla::dom::PColorPickerChild
+                                 public mozilla::dom::PColorPickerChild
 {
 public:
   NS_DECL_ISUPPORTS

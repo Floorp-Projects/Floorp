@@ -21,7 +21,7 @@ USING_ARCHIVEREADER_NAMESPACE
  * Input stream object for zip files
  */
 class ArchiveInputStream final : public nsIInputStream,
-                                     public nsISeekableStream
+                                 public nsISeekableStream
 {
 public:
   ArchiveInputStream(uint64_t aParentSize,

@@ -26,7 +26,7 @@ class ConsoleCallData;
 struct ConsoleStackEntry;
 
 class Console final : public nsIObserver
-                        , public nsWrapperCache
+                    , public nsWrapperCache
 {
   ~Console();
 

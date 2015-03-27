@@ -39,16 +39,16 @@ class InterceptedChannelContent;
 class InterceptStreamListener;
 
 class HttpChannelChild final : public PHttpChannelChild
-                                 , public HttpBaseChannel
-                                 , public HttpAsyncAborter<HttpChannelChild>
-                                 , public nsICacheInfoChannel
-                                 , public nsIProxiedChannel
-                                 , public nsIApplicationCacheChannel
-                                 , public nsIAsyncVerifyRedirectCallback
-                                 , public nsIAssociatedContentSecurity
-                                 , public nsIChildChannel
-                                 , public nsIHttpChannelChild
-                                 , public nsIDivertableChannel
+                             , public HttpBaseChannel
+                             , public HttpAsyncAborter<HttpChannelChild>
+                             , public nsICacheInfoChannel
+                             , public nsIProxiedChannel
+                             , public nsIApplicationCacheChannel
+                             , public nsIAsyncVerifyRedirectCallback
+                             , public nsIAssociatedContentSecurity
+                             , public nsIChildChannel
+                             , public nsIHttpChannelChild
+                             , public nsIDivertableChannel
 {
   virtual ~HttpChannelChild();
 public:

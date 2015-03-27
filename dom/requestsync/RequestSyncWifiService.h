@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class RequestSyncWifiService final : public nsISupports
-                                       , public NetworkObserver
+                                   , public NetworkObserver
 {
 public:
   NS_DECL_ISUPPORTS

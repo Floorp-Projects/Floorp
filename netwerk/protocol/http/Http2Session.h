@@ -28,9 +28,9 @@ class Http2Stream;
 class nsHttpTransaction;
 
 class Http2Session final : public ASpdySession
-  , public nsAHttpConnection
-  , public nsAHttpSegmentReader
-  , public nsAHttpSegmentWriter
+                         , public nsAHttpConnection
+                         , public nsAHttpSegmentReader
+                         , public nsAHttpSegmentWriter
 {
   ~Http2Session();
 

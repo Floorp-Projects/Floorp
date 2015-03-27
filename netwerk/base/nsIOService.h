@@ -45,10 +45,10 @@ namespace net {
 } // namespace mozilla
 
 class nsIOService final : public nsIIOService2
-                            , public nsIObserver
-                            , public nsINetUtil
-                            , public nsISpeculativeConnect
-                            , public nsSupportsWeakReference
+                        , public nsIObserver
+                        , public nsINetUtil
+                        , public nsISpeculativeConnect
+                        , public nsSupportsWeakReference
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

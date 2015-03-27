@@ -17,7 +17,7 @@ namespace dom {
 class HTMLTableElement;
 
 class HTMLTableCellElement final : public nsGenericHTMLElement,
-                                       public nsIDOMHTMLTableCellElement
+                                   public nsIDOMHTMLTableCellElement
 {
 public:
   explicit HTMLTableCellElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)

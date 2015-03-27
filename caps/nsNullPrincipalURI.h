@@ -25,8 +25,8 @@
     {0xb9, 0x1b, 0x6b, 0x54, 0x10, 0x22, 0x36, 0xe6} }
 
 class nsNullPrincipalURI final : public nsIURI
-                                   , public nsISizeOf
-                                   , public nsIIPCSerializableURI
+                               , public nsISizeOf
+                               , public nsIIPCSerializableURI
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

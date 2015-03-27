@@ -55,7 +55,7 @@ private:
 };
 
 class nsDOMWindowUtils final : public nsIDOMWindowUtils,
-                                   public nsSupportsWeakReference
+                               public nsSupportsWeakReference
 {
   typedef mozilla::widget::TextEventDispatcher
     TextEventDispatcher;

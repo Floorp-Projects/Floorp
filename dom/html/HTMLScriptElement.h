@@ -16,8 +16,8 @@ namespace mozilla {
 namespace dom {
 
 class HTMLScriptElement final : public nsGenericHTMLElement,
-                                    public nsIDOMHTMLScriptElement,
-                                    public nsScriptElement
+                                public nsIDOMHTMLScriptElement,
+                                public nsScriptElement
 {
 public:
   using Element::GetText;
