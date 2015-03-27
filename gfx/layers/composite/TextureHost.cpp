@@ -497,8 +497,10 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     return false;
   }
   if (!mCompositor) {
-    // This can happen if we send textures to a compositable that isn't yet
-    // attached to a layer.
+    NS_WARNING("Tried to upload without a compositor. Skipping texture upload...");
+    // If we are in this situation it means we should have called SetCompositor
+    // earlier. It is conceivable that on certain rare conditions with async-video
+    // we may end up here for the first frame, but this should not happen repeatedly.
     return false;
   }
   if (mFormat == gfx::SurfaceFormat::UNKNOWN) {
