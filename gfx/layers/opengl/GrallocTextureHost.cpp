@@ -244,12 +244,6 @@ GrallocTextureHostOGL::GetAsSurface() {
   return surf.forget();
 }
 
-TextureSource*
-GrallocTextureHostOGL::GetTextureSources()
-{
-  return nullptr;
-}
-
 void
 GrallocTextureHostOGL::UnbindTextureSource()
 {

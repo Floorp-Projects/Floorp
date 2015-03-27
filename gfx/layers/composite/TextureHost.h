@@ -204,19 +204,6 @@ public:
     return *this;
   }
 
-  CompositableTextureRef& operator=(const TemporaryRef<T>& aOther)
-  {
-    RefPtr<T> temp = aOther;
-    if (temp) {
-      temp->AddCompositableRef();
-    }
-    if (mRef) {
-      mRef->ReleaseCompositableRef();
-    }
-    mRef = temp;
-    return *this;
-  }
-
   CompositableTextureRef& operator=(T* aOther)
   {
     if (aOther) {
@@ -379,15 +366,6 @@ public:
   virtual gfx::SurfaceFormat GetFormat() const = 0;
 
   /**
-   * Return a list of TextureSources for use with a Compositor.
-   *
-   * This can trigger texture uploads, so do not call it inside transactions
-   * so as to not upload textures while the main thread is blocked.
-   * Must not be called while this TextureHost is not sucessfully Locked.
-   */
-  virtual TextureSource* GetTextureSources() = 0;
-
-  /**
    * Called during the transaction. The TextureSource may or may not be composited.
    *
    * Note that this is called outside of lock/unlock.
@@ -399,7 +377,7 @@ public:
    *
    * Note that this is called only withing lock/unlock.
    */
-  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture);
+  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) = 0;
 
   /**
    * Called when another TextureHost will take over.
@@ -586,7 +564,7 @@ public:
 
   virtual void Unlock() override;
 
-  virtual TextureSource* GetTextureSources() override;
+  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
 
   virtual void DeallocateDeviceData() override;
 
@@ -594,7 +572,7 @@ public:
 
   /**
    * Return the format that is exposed to the compositor when calling
-   * GetTextureSources.
+   * BindTextureSource.
    *
    * If the shared format is YCbCr and the compositor does not support it,
    * GetFormat will be RGB32 (even though mFormat is SurfaceFormat::YUV).
@@ -723,10 +701,11 @@ public:
   virtual bool Lock() override;
   virtual void Unlock() override;
 
-  virtual TextureSource* GetTextureSources() override {
+  virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override {
     MOZ_ASSERT(mIsLocked);
     MOZ_ASSERT(mTexSource);
-    return mTexSource;
+    aTexture = mTexSource;
+    return !!aTexture;
   }
 
   virtual gfx::SurfaceFormat GetFormat() const override;
