@@ -265,7 +265,10 @@ MockClient.prototype = {
       return new MockResponse(200, item);
     },
 
-    delete(body, routeMatch) {
+    // There's a bug in pre-39's ES strict mode around forbidding the
+    // redefinition of reserved keywords that flags defining `delete` on an
+    // object as a syntax error.  This weird syntax works around that.
+    ["delete"](body, routeMatch) {
       let id = routeMatch[1];
       let item = this.itemByID(id);
       if (!item) {
