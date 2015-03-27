@@ -572,14 +572,6 @@ FileUpdateDispatcher::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
-  if (nsDOMDeviceStorage::InstanceCount() == 0) {
-    // This process doesn't have any nsDOMDeviceStorage instances, so no
-    // need to send out notifications (since there are no nsDOMDeviceStorage
-    // instances, we can't create a DeviceStorageFile object).
-
-    return NS_OK;
-  }
-
   // Multiple storage types may match the same files. So walk through each of
   // the storage types, and if the extension matches, tell them about it.
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -3344,8 +3336,6 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 NS_IMPL_ADDREF_INHERITED(nsDOMDeviceStorage, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(nsDOMDeviceStorage, DOMEventTargetHelper)
 
-int nsDOMDeviceStorage::sInstanceCount = 0;
-
 nsDOMDeviceStorage::nsDOMDeviceStorage(nsPIDOMWindow* aWindow)
   : DOMEventTargetHelper(aWindow)
   , mIsShareable(false)
@@ -3353,8 +3343,6 @@ nsDOMDeviceStorage::nsDOMDeviceStorage(nsPIDOMWindow* aWindow)
   , mIsWatchingFile(false)
   , mAllowedToWatchFile(false)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  sInstanceCount++;
 }
 
 /* virtual */ JSObject*
@@ -3438,8 +3426,6 @@ nsDOMDeviceStorage::Init(nsPIDOMWindow* aWindow, const nsAString &aType,
 
 nsDOMDeviceStorage::~nsDOMDeviceStorage()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  sInstanceCount--;
 }
 
 void
