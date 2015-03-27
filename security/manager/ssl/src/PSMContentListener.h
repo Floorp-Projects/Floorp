@@ -17,7 +17,8 @@
 namespace mozilla { namespace psm {
 
 class PSMContentListener : public nsIURIContentListener,
-                            public nsSupportsWeakReference {
+                           public nsSupportsWeakReference
+{
 public:
   PSMContentListener();
   nsresult init();

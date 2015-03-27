@@ -28,9 +28,9 @@ class nsPrefetchNode;
 //-----------------------------------------------------------------------------
 
 class nsPrefetchService final : public nsIPrefetchService
-                                  , public nsIWebProgressListener
-                                  , public nsIObserver
-                                  , public nsSupportsWeakReference
+                              , public nsIWebProgressListener
+                              , public nsIObserver
+                              , public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
@@ -82,9 +82,9 @@ private:
 //-----------------------------------------------------------------------------
 
 class nsPrefetchNode final : public nsIStreamListener
-                               , public nsIInterfaceRequestor
-                               , public nsIChannelEventSink
-                               , public nsIRedirectResultListener
+                           , public nsIInterfaceRequestor
+                           , public nsIChannelEventSink
+                           , public nsIRedirectResultListener
 {
 public:
     NS_DECL_ISUPPORTS

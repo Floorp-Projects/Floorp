@@ -23,7 +23,7 @@ namespace dom {
 class SpeechRecognition;
 
 class SpeechRecognitionResultList final : public nsISupports,
-                                              public nsWrapperCache
+                                          public nsWrapperCache
 {
 public:
   explicit SpeechRecognitionResultList(SpeechRecognition* aParent);

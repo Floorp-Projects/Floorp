@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 
 class HTMLDivElement final : public nsGenericHTMLElement,
-                                 public nsIDOMHTMLDivElement
+                             public nsIDOMHTMLDivElement
 {
 public:
   explicit HTMLDivElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)

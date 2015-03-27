@@ -38,8 +38,8 @@ namespace docshell {
   NS_IMETHOD Cancel() override { return !_to ? NS_ERROR_NULL_POINTER : _to->Cancel(); }
 
 class OfflineCacheUpdateGlue final : public nsSupportsWeakReference
-                                       , public nsIOfflineCacheUpdate
-                                       , public nsIOfflineCacheUpdateObserver
+                                   , public nsIOfflineCacheUpdate
+                                   , public nsIOfflineCacheUpdateObserver
 {
 public:
     NS_DECL_ISUPPORTS

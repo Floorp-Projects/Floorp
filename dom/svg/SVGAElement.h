@@ -23,7 +23,7 @@ namespace dom {
 typedef SVGGraphicsElement SVGAElementBase;
 
 class SVGAElement final : public SVGAElementBase,
-                              public Link
+                          public Link
 {
 protected:
   explicit SVGAElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

@@ -63,7 +63,7 @@ private:
  ******************************************************************************/
 
 class nsCacheService final : public nsICacheServiceInternal,
-                                 public nsIMemoryReporter
+                             public nsIMemoryReporter
 {
     virtual ~nsCacheService();
 

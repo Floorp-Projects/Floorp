@@ -31,7 +31,7 @@ class nsDOMMutationObserver;
 using mozilla::dom::MutationObservingInfo;
 
 class nsDOMMutationRecord final : public nsISupports,
-                                      public nsWrapperCache
+                                  public nsWrapperCache
 {
   virtual ~nsDOMMutationRecord() {}
 
@@ -443,7 +443,7 @@ private:
   { 0x9e, 0xab, 0x07, 0x47, 0xa9, 0xe4, 0x65, 0xb4 } }
 
 class nsDOMMutationObserver final : public nsISupports,
-                                        public nsWrapperCache
+                                    public nsWrapperCache
 {
 public:
   nsDOMMutationObserver(already_AddRefed<nsPIDOMWindow>&& aOwner,

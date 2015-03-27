@@ -28,7 +28,7 @@ class ShadowableLayer;
 class SpecificLayerAttributes;
 
 class ClientPaintedLayer : public PaintedLayer,
-                          public ClientLayer {
+                           public ClientLayer {
 public:
   typedef RotatedContentBuffer::PaintState PaintState;
   typedef RotatedContentBuffer::ContentType ContentType;

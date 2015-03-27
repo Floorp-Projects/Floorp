@@ -315,7 +315,7 @@ private:
 };
 
 class LoadStartDetectionRunnable final : public nsRunnable,
-                                             public nsIDOMEventListener
+                                         public nsIDOMEventListener
 {
   WorkerPrivate* mWorkerPrivate;
   nsRefPtr<Proxy> mProxy;

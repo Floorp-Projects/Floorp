@@ -20,7 +20,7 @@
 //-----------------------------------------------------------------------------
 
 class FetchObserver final : public nsIRequestObserver
-                              , public nsIProgressEventSink
+                          , public nsIProgressEventSink
 {
   ~FetchObserver() {}
 public:

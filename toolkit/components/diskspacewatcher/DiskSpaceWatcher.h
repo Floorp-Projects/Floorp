@@ -9,7 +9,7 @@
 #include "nsCOMPtr.h"
 
 class DiskSpaceWatcher final : public nsIDiskSpaceWatcher,
-                                   public nsIObserver
+                               public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS

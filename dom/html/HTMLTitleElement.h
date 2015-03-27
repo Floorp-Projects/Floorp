@@ -17,8 +17,8 @@ class ErrorResult;
 namespace dom {
 
 class HTMLTitleElement final : public nsGenericHTMLElement,
-                                   public nsIDOMHTMLTitleElement,
-                                   public nsStubMutationObserver
+                               public nsIDOMHTMLTitleElement,
+                               public nsStubMutationObserver
 {
 public:
   using Element::GetText;

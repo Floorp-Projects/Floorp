@@ -259,7 +259,7 @@ static void SetRunning(ProxyAutoConfig *arg)
 
 // The PACResolver is used for dnsResolve()
 class PACResolver final : public nsIDNSListener
-                            , public nsITimerCallback
+                        , public nsITimerCallback
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

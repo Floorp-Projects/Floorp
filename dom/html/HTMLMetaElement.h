@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 
 class HTMLMetaElement final : public nsGenericHTMLElement,
-                                  public nsIDOMHTMLMetaElement
+                              public nsIDOMHTMLMetaElement
 {
 public:
   explicit HTMLMetaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

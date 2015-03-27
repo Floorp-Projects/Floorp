@@ -32,7 +32,7 @@ const int kRightStickXAxis = 2;
 const int kRightStickYAxis = 3;
 
 class Gamepad final : public nsISupports,
-                          public nsWrapperCache
+                      public nsWrapperCache
 {
 public:
   Gamepad(nsISupports* aParent,

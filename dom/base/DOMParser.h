@@ -21,8 +21,8 @@ namespace mozilla {
 namespace dom {
 
 class DOMParser final : public nsIDOMParser,
-                            public nsSupportsWeakReference,
-                            public nsWrapperCache
+                        public nsSupportsWeakReference,
+                        public nsWrapperCache
 {
   typedef mozilla::dom::GlobalObject GlobalObject;
 

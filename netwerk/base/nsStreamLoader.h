@@ -15,7 +15,7 @@
 class nsIRequest;
 
 class nsStreamLoader final : public nsIStreamLoader
-                               , public nsIThreadRetargetableStreamListener
+                           , public nsIThreadRetargetableStreamListener
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

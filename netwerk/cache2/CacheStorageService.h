@@ -65,8 +65,8 @@ protected:
 };
 
 class CacheStorageService final : public nsICacheStorageService
-                                    , public nsIMemoryReporter
-                                    , public nsITimerCallback
+                                , public nsIMemoryReporter
+                                , public nsITimerCallback
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

@@ -39,7 +39,7 @@ class DOMSVGNumber;
  * Our DOM items are created lazily on demand as and when script requests them.
  */
 class DOMSVGNumberList final : public nsISupports,
-                                   public nsWrapperCache
+                               public nsWrapperCache
 {
   friend class AutoChangeNumberListNotifier;
   friend class DOMSVGNumber;

@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 
 class MobileConnectionInfo final : public nsIMobileConnectionInfo
-                                     , public nsWrapperCache
+                                 , public nsWrapperCache
 {
 public:
   NS_DECL_NSIMOBILECONNECTIONINFO

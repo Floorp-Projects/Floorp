@@ -20,7 +20,7 @@ namespace ipc {
 //
 
 class UnixSocketConsumerIO final : public UnixSocketWatcher
-                                     , protected SocketIOBase
+                                 , protected SocketIOBase
 {
 public:
   UnixSocketConsumerIO(MessageLoop* mIOLoop,

@@ -42,9 +42,9 @@ protected:
 };
 
 class FetchDriver final : public nsIStreamListener,
-                              public nsIChannelEventSink,
-                              public nsIInterfaceRequestor,
-                              public nsIAsyncVerifyRedirectCallback
+                          public nsIChannelEventSink,
+                          public nsIInterfaceRequestor,
+                          public nsIAsyncVerifyRedirectCallback
 {
 public:
   NS_DECL_ISUPPORTS

@@ -36,8 +36,8 @@ class SVGSVGElement;
 namespace image {
 
 class SVGDocumentWrapper final : public nsIStreamListener,
-                                     public nsIObserver,
-                                     nsSupportsWeakReference
+                                 public nsIObserver,
+                                 nsSupportsWeakReference
 {
 public:
   SVGDocumentWrapper();

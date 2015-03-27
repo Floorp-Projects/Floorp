@@ -37,7 +37,7 @@ public:
 };
 
 class nsZipWriter final : public nsIZipWriter,
-                              public nsIRequestObserver
+                          public nsIRequestObserver
 {
 public:
     NS_DECL_ISUPPORTS

@@ -35,7 +35,7 @@ public:
 };
 
 class HTMLBodyElement final : public nsGenericHTMLElement,
-                                  public nsIDOMHTMLBodyElement
+                              public nsIDOMHTMLBodyElement
 {
 public:
   using Element::GetText;

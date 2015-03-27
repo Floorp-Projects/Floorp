@@ -209,7 +209,7 @@ public:
   // data arrival. The Revoke function releases the reference when
   // RtspMediaResource::OnDisconnected is called.
   class Listener final : public nsIInterfaceRequestor,
-                             public nsIStreamingProtocolListener
+                         public nsIStreamingProtocolListener
   {
     ~Listener() {}
   public:

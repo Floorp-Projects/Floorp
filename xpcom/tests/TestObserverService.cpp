@@ -31,7 +31,7 @@ void printString(nsString &str) {
 }
 
 class TestObserver final : public nsIObserver,
-                               public nsSupportsWeakReference
+                           public nsSupportsWeakReference
 {
 public:
     explicit TestObserver( const nsAString &name )

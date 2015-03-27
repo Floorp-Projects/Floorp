@@ -22,7 +22,7 @@ class ErrorResult;
 namespace dom {
 
 class PowerManager final : public nsIDOMMozWakeLockListener
-                             , public nsWrapperCache
+                         , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

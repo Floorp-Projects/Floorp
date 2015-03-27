@@ -76,7 +76,7 @@ protected:
 };
 
 class DOMRect final : public DOMRectReadOnly
-                        , public nsIDOMClientRect
+                    , public nsIDOMClientRect
 {
 public:
   explicit DOMRect(nsISupports* aParent, double aX = 0, double aY = 0,
@@ -147,7 +147,7 @@ private:
 };
 
 class DOMRectList final : public nsIDOMClientRectList,
-                              public nsWrapperCache
+                          public nsWrapperCache
 {
   ~DOMRectList() {}
 

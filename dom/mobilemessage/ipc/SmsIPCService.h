@@ -19,9 +19,9 @@ namespace mobilemessage {
 class PSmsChild;
 
 class SmsIPCService final : public nsISmsService
-                              , public nsIMmsService
-                              , public nsIMobileMessageDatabaseService
-                              , public nsIObserver
+                          , public nsIMmsService
+                          , public nsIMobileMessageDatabaseService
+                          , public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS

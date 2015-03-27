@@ -25,8 +25,8 @@ class InternalHeaders;
 class Promise;
 
 class Response final : public nsISupports
-                         , public FetchBody<Response>
-                         , public nsWrapperCache
+                     , public FetchBody<Response>
+                     , public nsWrapperCache
 {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Response)

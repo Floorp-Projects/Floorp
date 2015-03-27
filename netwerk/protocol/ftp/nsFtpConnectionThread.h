@@ -73,11 +73,11 @@ class nsIStreamListener;
 // control connection and the data connection.
 
 class nsFtpState final : public nsBaseContentStream,
-                             public nsIInputStreamCallback,
-                             public nsITransportEventSink,
-                             public nsIRequestObserver,
-                             public nsFtpControlConnectionListener,
-                             public nsIProtocolProxyCallback
+                         public nsIInputStreamCallback,
+                         public nsITransportEventSink,
+                         public nsIRequestObserver,
+                         public nsFtpControlConnectionListener,
+                         public nsIProtocolProxyCallback
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED

@@ -52,10 +52,10 @@ class FileImpl;
 class OwningArrayBufferOrArrayBufferViewOrBlobOrString;
 
 class File final : public nsIDOMFile
-                     , public nsIXHRSendable
-                     , public nsIMutable
-                     , public nsSupportsWeakReference
-                     , public nsWrapperCache
+                 , public nsIXHRSendable
+                 , public nsIMutable
+                 , public nsSupportsWeakReference
+                 , public nsWrapperCache
 {
 public:
   NS_DECL_NSIDOMBLOB
@@ -524,7 +524,8 @@ public:
     return true;
   }
 
-  class DataOwner final : public mozilla::LinkedListElement<DataOwner> {
+  class DataOwner final : public mozilla::LinkedListElement<DataOwner>
+  {
   public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataOwner)
     DataOwner(void* aMemoryBuffer, uint64_t aLength)
@@ -814,7 +815,7 @@ private:
 };
 
 class FileList final : public nsIDOMFileList,
-                           public nsWrapperCache
+                       public nsWrapperCache
 {
   ~FileList() {}
 

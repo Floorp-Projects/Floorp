@@ -23,7 +23,7 @@ BEGIN_FMRADIO_NAMESPACE
  *     IPC channel to transfer the requests.
  */
 class FMRadioChild final : public IFMRadioService
-                             , public PFMRadioChild
+                         , public PFMRadioChild
 {
 public:
   static FMRadioChild* Singleton();

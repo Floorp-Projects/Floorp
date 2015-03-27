@@ -31,7 +31,7 @@ class nsISupportsArray;
 //
 // nsSHEntryShared is the vehicle for this sharing.
 class nsSHEntryShared final : public nsIBFCacheEntry,
-                                  public nsIMutationObserver
+                              public nsIMutationObserver
 {
   public:
     static void EnsureHistoryTracker();

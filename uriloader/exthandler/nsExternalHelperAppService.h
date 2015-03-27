@@ -202,9 +202,9 @@ private:
  * data using a helper app.
  */
 class nsExternalAppHandler final : public nsIStreamListener,
-                                       public nsIHelperAppLauncher,
-                                       public nsITimerCallback,
-                                       public nsIBackgroundFileSaverObserver
+                                   public nsIHelperAppLauncher,
+                                   public nsITimerCallback,
+                                   public nsIBackgroundFileSaverObserver
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

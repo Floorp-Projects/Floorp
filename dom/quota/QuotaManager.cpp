@@ -263,8 +263,8 @@ private:
 // thread. When on the main thread the runnable will call the callback and then
 // notify the QuotaManager that the job has been completed.
 class AsyncUsageRunnable final : public UsageInfo,
-                                     public nsRunnable,
-                                     public nsIQuotaRequest
+                                 public nsRunnable,
+                                 public nsIQuotaRequest
 {
   enum CallbackState {
     // Not yet run.

@@ -59,9 +59,10 @@ class EventDispatchingCallback;
 #define PAINTLOCK_EVENT_DELAY 250
 
 class PresShell final : public nsIPresShell,
-                            public nsStubDocumentObserver,
-                            public nsISelectionController, public nsIObserver,
-                            public nsSupportsWeakReference
+                        public nsStubDocumentObserver,
+                        public nsISelectionController,
+                        public nsIObserver,
+                        public nsSupportsWeakReference
 {
 public:
   PresShell();

@@ -21,8 +21,8 @@ namespace dom {
 class EventTarget;
 
 class Touch final : public nsISupports
-                      , public nsWrapperCache
-                      , public WidgetPointerHelper
+                  , public nsWrapperCache
+                  , public WidgetPointerHelper
 {
 public:
   static bool PrefEnabled(JSContext* aCx, JSObject* aGlobal);

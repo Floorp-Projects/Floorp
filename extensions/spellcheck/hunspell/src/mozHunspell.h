@@ -82,9 +82,9 @@
   { 0xa6, 0x89, 0x88, 0x66, 0x92, 0xa9, 0x7f, 0xe7 } }
 
 class mozHunspell final : public mozISpellCheckingEngine,
-                              public nsIObserver,
-                              public nsSupportsWeakReference,
-                              public nsIMemoryReporter
+                          public nsIObserver,
+                          public nsSupportsWeakReference,
+                          public nsIMemoryReporter
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

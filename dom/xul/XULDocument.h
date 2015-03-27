@@ -87,11 +87,11 @@ namespace mozilla {
 namespace dom {
 
 class XULDocument final : public XMLDocument,
-                              public nsIXULDocument,
-                              public nsIDOMXULDocument,
-                              public nsIStreamLoaderObserver,
-                              public nsICSSLoaderObserver,
-                              public nsIOffThreadScriptReceiver
+                          public nsIXULDocument,
+                          public nsIDOMXULDocument,
+                          public nsIStreamLoaderObserver,
+                          public nsICSSLoaderObserver,
+                          public nsIOffThreadScriptReceiver
 {
 public:
     XULDocument();

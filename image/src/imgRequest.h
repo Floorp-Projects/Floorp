@@ -43,10 +43,10 @@ class ProgressTracker;
 struct NewPartResult;
 
 class imgRequest final : public nsIStreamListener,
-                             public nsIThreadRetargetableStreamListener,
-                             public nsIChannelEventSink,
-                             public nsIInterfaceRequestor,
-                             public nsIAsyncVerifyRedirectCallback
+                         public nsIThreadRetargetableStreamListener,
+                         public nsIChannelEventSink,
+                         public nsIInterfaceRequestor,
+                         public nsIAsyncVerifyRedirectCallback
 {
   typedef mozilla::image::Image Image;
   typedef mozilla::image::ImageURL ImageURL;

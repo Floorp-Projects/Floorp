@@ -31,8 +31,8 @@ namespace mozilla {
 namespace dom {
 
 class FontFaceSet final : public DOMEventTargetHelper
-                            , public nsIDOMEventListener
-                            , public nsICSSLoaderObserver
+                        , public nsIDOMEventListener
+                        , public nsICSSLoaderObserver
 {
   friend class UserFontSet;
 

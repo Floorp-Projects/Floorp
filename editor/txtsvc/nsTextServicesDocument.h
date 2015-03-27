@@ -33,7 +33,7 @@ class nsString;
  *
  */
 class nsTextServicesDocument final : public nsITextServicesDocument,
-                                         public nsIEditActionListener
+                                     public nsIEditActionListener
 {
 private:
   static nsIAtom *sAAtom;

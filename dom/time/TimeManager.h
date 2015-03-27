@@ -18,7 +18,7 @@ class Date;
 namespace time {
 
 class TimeManager final : public nsISupports
-                            , public nsWrapperCache
+                        , public nsWrapperCache
 {
 public:
   static bool PrefEnabled(JSContext* aCx, JSObject* aGlobal)

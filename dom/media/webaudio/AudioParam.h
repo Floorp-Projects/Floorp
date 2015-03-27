@@ -21,7 +21,7 @@ namespace mozilla {
 namespace dom {
 
 class AudioParam final : public nsWrapperCache,
-                             public AudioParamTimeline
+                         public AudioParamTimeline
 {
   virtual ~AudioParam();
 

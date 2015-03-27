@@ -168,7 +168,7 @@ public:
 // asynchronous parsing of URLs
 /* Header file */
 class nsXBLStreamListener final : public nsIStreamListener,
-                                      public nsIDOMEventListener
+                                  public nsIDOMEventListener
 {
 public:
   NS_DECL_ISUPPORTS

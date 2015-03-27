@@ -431,9 +431,9 @@ private:
     // while we wait for it to establish and bind it to a connection
 
     class nsHalfOpenSocket final : public nsIOutputStreamCallback,
-                                       public nsITransportEventSink,
-                                       public nsIInterfaceRequestor,
-                                       public nsITimerCallback
+                                   public nsITransportEventSink,
+                                   public nsIInterfaceRequestor,
+                                   public nsITimerCallback
     {
         ~nsHalfOpenSocket();
 

@@ -21,8 +21,8 @@ nsIFrame* NS_NewListBoxBodyFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
 
 class nsListBoxBodyFrame final : public nsBoxFrame,
-                                     public nsIScrollbarMediator,
-                                     public nsIReflowCallback
+                                 public nsIScrollbarMediator,
+                                 public nsIReflowCallback
 {
   nsListBoxBodyFrame(nsStyleContext* aContext,
                      nsBoxLayout* aLayoutManager);

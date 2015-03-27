@@ -50,7 +50,7 @@
 namespace mozilla {
 
 class TransportFlow final : public nsISupports,
-                                public sigslot::has_slots<> {
+                            public sigslot::has_slots<> {
  public:
   TransportFlow()
     : id_("(anonymous)"),

@@ -12,7 +12,7 @@ namespace mozilla {
 namespace dom {
 
 class HTMLShadowElement final : public nsGenericHTMLElement,
-                                    public nsStubMutationObserver
+                                public nsStubMutationObserver
 {
 public:
   explicit HTMLShadowElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

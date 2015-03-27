@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class CallsList final : public nsISupports,
-                            public nsWrapperCache
+                        public nsWrapperCache
 {
   nsRefPtr<Telephony> mTelephony;
   nsRefPtr<TelephonyCallGroup> mGroup;

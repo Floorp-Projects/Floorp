@@ -106,9 +106,9 @@ private:
   { 0x455d1d40, 0x1b9b, 0x40e6, { 0xa6, 0x41, 0x8b, 0xb7, 0xe8, 0x82, 0x23, 0x87 } }
 
 class nsNavHistoryResult final : public nsSupportsWeakReference,
-                                     public nsINavHistoryResult,
-                                     public nsINavBookmarkObserver,
-                                     public nsINavHistoryObserver
+                                 public nsINavHistoryResult,
+                                 public nsINavBookmarkObserver,
+                                 public nsINavHistoryObserver
 {
 public:
   static nsresult NewHistoryResult(nsINavHistoryQuery** aQueries,
@@ -612,8 +612,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsNavHistoryContainerResultNode,
 //    bookmark notifications.
 
 class nsNavHistoryQueryResultNode final : public nsNavHistoryContainerResultNode,
-                                              public nsINavHistoryQueryResultNode,
-                                              public nsINavBookmarkObserver
+                                          public nsINavHistoryQueryResultNode,
+                                          public nsINavBookmarkObserver
 {
 public:
   nsNavHistoryQueryResultNode(const nsACString& aTitle,
@@ -693,9 +693,9 @@ protected:
 //    of the folder in sync with the bookmark service.
 
 class nsNavHistoryFolderResultNode final : public nsNavHistoryContainerResultNode,
-                                               public nsINavHistoryQueryResultNode,
-                                               public nsINavBookmarkObserver,
-                                               public mozilla::places::AsyncStatementCallback
+                                           public nsINavHistoryQueryResultNode,
+                                           public nsINavBookmarkObserver,
+                                           public mozilla::places::AsyncStatementCallback
 {
 public:
   nsNavHistoryFolderResultNode(const nsACString& aTitle,

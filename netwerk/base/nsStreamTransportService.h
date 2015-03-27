@@ -13,8 +13,8 @@
 class nsIThreadPool;
 
 class nsStreamTransportService final : public nsIStreamTransportService
-                                         , public nsIEventTarget
-                                         , public nsIObserver
+                                     , public nsIEventTarget
+                                     , public nsIObserver
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

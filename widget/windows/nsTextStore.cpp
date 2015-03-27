@@ -704,7 +704,7 @@ private:
 /******************************************************************/
 
 class TSFStaticSink final : public ITfActiveLanguageProfileNotifySink
-                              , public ITfInputProcessorProfileActivationSink
+                          , public ITfInputProcessorProfileActivationSink
 {
 public:
   static TSFStaticSink* GetInstance()

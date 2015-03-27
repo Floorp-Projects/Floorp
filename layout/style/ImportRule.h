@@ -24,7 +24,7 @@ class CSSStyleSheet;
 namespace css {
 
 class ImportRule final : public Rule,
-                             public nsIDOMCSSImportRule
+                         public nsIDOMCSSImportRule
 {
 public:
   ImportRule(nsMediaList* aMedia, const nsString& aURLSpec,

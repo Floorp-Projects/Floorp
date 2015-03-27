@@ -44,12 +44,12 @@ class DrawTarget;
 }
 
 class nsComboboxControlFrame final : public nsBlockFrame,
-                                         public nsIFormControlFrame,
-                                         public nsIComboboxControlFrame,
-                                         public nsIAnonymousContentCreator,
-                                         public nsISelectControlFrame,
-                                         public nsIRollupListener,
-                                         public nsIStatefulFrame
+                                     public nsIFormControlFrame,
+                                     public nsIComboboxControlFrame,
+                                     public nsIAnonymousContentCreator,
+                                     public nsISelectControlFrame,
+                                     public nsIRollupListener,
+                                     public nsIStatefulFrame
 {
   typedef mozilla::gfx::DrawTarget DrawTarget;
 

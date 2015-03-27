@@ -17,7 +17,7 @@ namespace mozilla {
 namespace net {
 
 class RtspController final : public nsIStreamingProtocolController
-                               , public nsIStreamingProtocolListener
+                           , public nsIStreamingProtocolListener
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

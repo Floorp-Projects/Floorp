@@ -15,7 +15,7 @@ typedef nsHTMLButtonControlFrame nsColorControlFrameSuper;
 // Class which implements the input type=color
 
 class nsColorControlFrame final : public nsColorControlFrameSuper,
-                                      public nsIAnonymousContentCreator
+                                  public nsIAnonymousContentCreator
 {
   typedef mozilla::dom::Element Element;
 

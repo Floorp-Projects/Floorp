@@ -14,7 +14,7 @@
 //-----------------------------------------------------------------------------
 
 class nsSyncStreamListener final : public nsISyncStreamListener
-                                     , public nsIInputStream
+                                 , public nsIInputStream
 {
 public:
     NS_DECL_ISUPPORTS

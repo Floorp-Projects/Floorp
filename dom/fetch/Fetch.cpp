@@ -45,7 +45,7 @@ namespace dom {
 using namespace workers;
 
 class WorkerFetchResolver final : public FetchDriverObserver,
-                                      public WorkerFeature
+                                  public WorkerFeature
 {
   friend class MainThreadFetchRunnable;
   friend class WorkerFetchResponseEndRunnable;

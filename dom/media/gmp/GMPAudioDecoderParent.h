@@ -19,7 +19,7 @@ namespace gmp {
 class GMPParent;
 
 class GMPAudioDecoderParent final : public GMPAudioDecoderProxy
-                                      , public PGMPAudioDecoderParent
+                                  , public PGMPAudioDecoderParent
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPAudioDecoderParent)

@@ -65,14 +65,14 @@ struct IMEState;
  * Use to edit HTML document represented as a DOM tree. 
  */
 class nsHTMLEditor final : public nsPlaintextEditor,
-                               public nsIHTMLEditor,
-                               public nsIHTMLObjectResizer,
-                               public nsIHTMLAbsPosEditor,
-                               public nsITableEditor,
-                               public nsIHTMLInlineTableEditor,
-                               public nsIEditorStyleSheets,
-                               public nsICSSLoaderObserver,
-                               public nsStubMutationObserver
+                           public nsIHTMLEditor,
+                           public nsIHTMLObjectResizer,
+                           public nsIHTMLAbsPosEditor,
+                           public nsITableEditor,
+                           public nsIHTMLInlineTableEditor,
+                           public nsIEditorStyleSheets,
+                           public nsICSSLoaderObserver,
+                           public nsStubMutationObserver
 {
   typedef enum {eNoOp, eReplaceParent=1, eInsertParent=2} BlockTransformationType;
 

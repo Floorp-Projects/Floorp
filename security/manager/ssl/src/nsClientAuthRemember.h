@@ -107,7 +107,7 @@ class nsClientAuthRememberEntry final : public PLDHashEntryHdr
 };
 
 class nsClientAuthRememberService final : public nsIObserver,
-                                              public nsSupportsWeakReference
+                                          public nsSupportsWeakReference
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

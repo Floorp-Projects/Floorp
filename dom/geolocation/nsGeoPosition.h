@@ -77,7 +77,7 @@ namespace dom {
 class Coordinates;
 
 class Position final : public nsISupports,
-                           public nsWrapperCache
+                       public nsWrapperCache
 {
   ~Position();
 
@@ -105,7 +105,7 @@ private:
 };
 
 class Coordinates final : public nsISupports,
-                              public nsWrapperCache
+                          public nsWrapperCache
 {
   ~Coordinates();
 
