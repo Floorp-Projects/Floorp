@@ -166,10 +166,10 @@ PhysicalCoordFromFlexRelativeCoord(nscoord aFlexRelativeCoord,
 // evaluate), these macros will ensure that only the expression for the correct
 // axis gets evaluated.
 #define GET_MAIN_COMPONENT(axisTracker_, width_, height_)  \
-  IsAxisHorizontal((axisTracker_).GetMainAxis()) ? (width_) : (height_)
+  (axisTracker_).IsMainAxisHorizontal() ? (width_) : (height_)
 
 #define GET_CROSS_COMPONENT(axisTracker_, width_, height_)  \
-  IsAxisHorizontal((axisTracker_).GetCrossAxis()) ? (width_) : (height_)
+  (axisTracker_).IsCrossAxisHorizontal() ? (width_) : (height_)
 
 // Encapsulates our flex container's main & cross axes.
 class MOZ_STACK_CLASS nsFlexContainerFrame::FlexboxAxisTracker {
@@ -179,6 +179,9 @@ public:
   // Accessors:
   AxisOrientationType GetMainAxis() const  { return mMainAxis;  }
   AxisOrientationType GetCrossAxis() const { return mCrossAxis; }
+
+  bool IsMainAxisHorizontal() const { return IsAxisHorizontal(mMainAxis); }
+  bool IsCrossAxisHorizontal() const { return IsAxisHorizontal(mCrossAxis); }
 
   nscoord GetMainComponent(const nsSize& aSize) const {
     return GET_MAIN_COMPONENT(*this, aSize.width, aSize.height);
@@ -195,12 +198,12 @@ public:
   }
 
   nscoord GetMarginSizeInMainAxis(const nsMargin& aMargin) const {
-    return IsAxisHorizontal(mMainAxis) ?
+    return IsMainAxisHorizontal() ?
       aMargin.LeftRight() :
       aMargin.TopBottom();
   }
   nscoord GetMarginSizeInCrossAxis(const nsMargin& aMargin) const {
-    return IsAxisHorizontal(mCrossAxis) ?
+    return IsCrossAxisHorizontal() ?
       aMargin.LeftRight() :
       aMargin.TopBottom();
   }
@@ -231,7 +234,7 @@ public:
       PhysicalCoordFromFlexRelativeCoord(aCrossCoord, aContainerCrossSize,
                                          mCrossAxis);
 
-    return IsAxisHorizontal(mMainAxis) ?
+    return IsMainAxisHorizontal() ?
       nsPoint(physicalCoordInMainAxis, physicalCoordInCrossAxis) :
       nsPoint(physicalCoordInCrossAxis, physicalCoordInMainAxis);
   }
@@ -239,7 +242,7 @@ public:
 
   nsSize PhysicalSizeFromFlexRelativeSizes(nscoord aMainSize,
                                            nscoord aCrossSize) const {
-    return IsAxisHorizontal(mMainAxis) ?
+    return IsMainAxisHorizontal() ?
       nsSize(aMainSize, aCrossSize) :
       nsSize(aCrossSize, aMainSize);
   }
@@ -981,7 +984,7 @@ bool
 nsFlexContainerFrame::IsHorizontal()
 {
   const FlexboxAxisTracker axisTracker(this);
-  return IsAxisHorizontal(axisTracker.GetMainAxis());
+  return axisTracker.IsMainAxisHorizontal();
 }
 
 FlexItem*
@@ -1115,7 +1118,7 @@ IsCrossSizeDefinite(const nsHTMLReflowState& aItemReflowState,
                     const FlexboxAxisTracker& aAxisTracker)
 {
   const nsStylePosition* pos = aItemReflowState.mStylePosition;
-  if (IsAxisHorizontal(aAxisTracker.GetCrossAxis())) {
+  if (aAxisTracker.IsCrossAxisHorizontal()) {
     return pos->mWidth.GetUnit() != eStyleUnit_Auto;
   }
   // else, vertical. (We need to use IsAutoHeight() to catch e.g. %-height
@@ -1178,7 +1181,7 @@ MainSizeFromAspectRatio(nscoord aCrossSize,
   MOZ_ASSERT(aAxisTracker.GetCrossComponent(aIntrinsicRatio) != 0,
              "Invalid ratio; will divide by 0! Caller should've checked...");
 
-  if (IsAxisHorizontal(aAxisTracker.GetCrossAxis())) {
+  if (aAxisTracker.IsCrossAxisHorizontal()) {
     // cross axis horiz --> aCrossSize is a width. Converting to height.
     return NSCoordMulDiv(aCrossSize, aIntrinsicRatio.height, aIntrinsicRatio.width);
   }
@@ -1297,7 +1300,7 @@ nsFlexContainerFrame::
 {
   // (Note: We should never have a used flex-basis of "auto" if our main axis
   // is horizontal; width values should always be resolvable without reflow.)
-  const bool isMainSizeAuto = (!IsAxisHorizontal(aAxisTracker.GetMainAxis()) &&
+  const bool isMainSizeAuto = (!aAxisTracker.IsMainAxisHorizontal() &&
                                NS_AUTOHEIGHT == aFlexItem.GetFlexBaseSize());
 
   const bool isMainMinSizeAuto = aFlexItem.NeedsMinSizeAutoResolution();
@@ -1330,7 +1333,7 @@ nsFlexContainerFrame::
     // Is container's cross size "definite"?
     // (Container's cross size is definite if cross-axis is horizontal, or if
     // cross-axis is vertical and the cross-size is not NS_AUTOHEIGHT.)
-    if (IsAxisHorizontal(aAxisTracker.GetCrossAxis()) ||
+    if (aAxisTracker.IsCrossAxisHorizontal() ||
         containerCrossSize != NS_AUTOHEIGHT) {
       aFlexItem.ResolveStretchedCrossSize(containerCrossSize, aAxisTracker);
     }
@@ -1368,7 +1371,7 @@ nsFlexContainerFrame::
 
   // Measure content, if needed (w/ intrinsic-width method or a reflow)
   if (minSizeNeedsToMeasureContent || flexBasisNeedsToMeasureContent) {
-    if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
+    if (aAxisTracker.IsMainAxisHorizontal()) {
       nsRenderingContext rctx(
         aPresContext->PresShell()->CreateReferenceRenderingContext());
       if (minSizeNeedsToMeasureContent) {
@@ -1538,11 +1541,11 @@ FlexItem::FlexItem(nsHTMLReflowState& aFlexItemReflowState,
   // Moreover: for the time being (until we support writing-modes),
   // all inline axes are horizontal -- so we can just check if the cross axis
   // is horizontal.
-  // FIXME: Once we support writing-mode (vertical text), this IsAxisHorizontal
-  // check won't be sufficient anymore -- we'll actually need to compare our
-  // inline axis vs. the cross axis.
+  // FIXME: Once we support writing-mode (vertical text), this
+  // IsCrossAxisHorizontal check won't be sufficient anymore -- we'll actually
+  // need to compare our inline axis vs. the cross axis.
   if (mAlignSelf == NS_STYLE_ALIGN_ITEMS_BASELINE &&
-      IsAxisHorizontal(aAxisTracker.GetCrossAxis())) {
+      aAxisTracker.IsCrossAxisHorizontal()) {
     mAlignSelf = NS_STYLE_ALIGN_ITEMS_FLEX_START;
   }
 }
@@ -2958,7 +2961,7 @@ FlexboxAxisTracker::FlexboxAxisTracker(
     }
   }
 
-  MOZ_ASSERT(IsAxisHorizontal(mMainAxis) != IsAxisHorizontal(mCrossAxis),
+  MOZ_ASSERT(IsMainAxisHorizontal() != IsCrossAxisHorizontal(),
              "main & cross axes should be in different dimensions");
 }
 
@@ -3026,7 +3029,7 @@ nsFlexContainerFrame::GenerateFlexLines(
 
     // Also: if we're vertical and paginating, we may need to wrap sooner
     // (before we run off the end of the page)
-    if (!IsAxisHorizontal(aAxisTracker.GetMainAxis()) &&
+    if (!aAxisTracker.IsMainAxisHorizontal() &&
         aAvailableHeightForContent != NS_UNCONSTRAINEDSIZE) {
       wrapThreshold = std::min(wrapThreshold, aAvailableHeightForContent);
     }
@@ -3098,7 +3101,7 @@ nsFlexContainerFrame::GetMainSizeFromReflowState(
   const nsHTMLReflowState& aReflowState,
   const FlexboxAxisTracker& aAxisTracker)
 {
-  if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
+  if (aAxisTracker.IsMainAxisHorizontal()) {
     // Horizontal case is easy -- our main size is our computed width
     // (which is already resolved).
     return aReflowState.ComputedISize();
@@ -3132,7 +3135,7 @@ ClampFlexContainerMainSize(const nsHTMLReflowState& aReflowState,
 {
   MOZ_ASSERT(aFirstLine, "null first line pointer");
 
-  if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
+  if (aAxisTracker.IsMainAxisHorizontal()) {
     // Horizontal case is easy -- our main size should already be resolved
     // before we get a call to Reflow. We don't have to worry about doing
     // page-breaking or shrinkwrapping in the horizontal axis.
@@ -3186,7 +3189,7 @@ nsFlexContainerFrame::ComputeCrossSize(const nsHTMLReflowState& aReflowState,
 {
   MOZ_ASSERT(aIsDefinite, "outparam pointer must be non-null");
 
-  if (IsAxisHorizontal(aAxisTracker.GetCrossAxis())) {
+  if (aAxisTracker.IsCrossAxisHorizontal()) {
     // Cross axis is horizontal: our cross size is our computed width
     // (which is already resolved).
     *aIsDefinite = true;
@@ -3284,9 +3287,9 @@ nsFlexContainerFrame::SizeItemInCrossAxis(
   nsHTMLReflowState& aChildReflowState,
   FlexItem& aItem)
 {
-  if (IsAxisHorizontal(aAxisTracker.GetCrossAxis())) {
+  if (aAxisTracker.IsCrossAxisHorizontal()) {
     // XXXdholbert NOTE: For now, we should never hit this case, due to a
-    // !IsAxisHorizontal(aAxisTracker.GetCrossAxis()) check that guards this
+    // !aAxisTracker.IsCrossAxisHorizontal() check that guards this
     // call in the caller. BUT, when we add support for vertical writing-modes,
     // (in bug 1079155 or a dependency), we'll relax that check, and we'll need
     // to be able to measure the baseline & width (given our resolved height)
@@ -3554,18 +3557,18 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
       //     height.)
       if (!item->IsStretched() && // !A
           !item->IsStrut() &&     // !B
-          !IsAxisHorizontal(aAxisTracker.GetCrossAxis())) { // !C
+          !aAxisTracker.IsCrossAxisHorizontal()) { // !C
         WritingMode wm = item->Frame()->GetWritingMode();
         LogicalSize availSize = aReflowState.ComputedSize(wm);
         availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
         nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                            item->Frame(), availSize);
         // Override computed main-size
-        if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
+        if (aAxisTracker.IsMainAxisHorizontal()) {
           childReflowState.SetComputedWidth(item->GetMainSize());
         } else {
           // XXXdholbert NOTE: For now, we'll never hit this case, due to the
-          // !IsAxisHorizontal(aAxisTracker.GetCrossAxis()) check above. But
+          // !aAxisTracker.IsCrossAxisHorizontal() check above. But
           // when we add support for vertical writing modes, we'll relax that
           // check and be able to hit this code.
           childReflowState.SetComputedHeight(item->GetMainSize());
@@ -3666,7 +3669,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
   const nsPoint containerContentBoxOrigin(containerBorderPadding.left,
                                           containerBorderPadding.top);
   WritingMode outerWM = aReflowState.GetWritingMode();
-  nscoord containerWidth = IsAxisHorizontal(aAxisTracker.GetMainAxis()) ?
+  nscoord containerWidth = aAxisTracker.IsMainAxisHorizontal() ?
                              aContentBoxMainSize : contentBoxCrossSize;
 
   // FINAL REFLOW: Give each child frame another chance to reflow, now that
@@ -3843,7 +3846,7 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
   bool didOverrideComputedHeight = false;
 
   // Override computed main-size
-  if (IsAxisHorizontal(aAxisTracker.GetMainAxis())) {
+  if (aAxisTracker.IsMainAxisHorizontal()) {
     childReflowState.SetComputedWidth(aItem.GetMainSize());
     didOverrideComputedWidth = true;
   } else {
@@ -3855,7 +3858,7 @@ nsFlexContainerFrame::ReflowFlexItem(nsPresContext* aPresContext,
   if (aItem.IsStretched()) {
     MOZ_ASSERT(aItem.GetAlignSelf() == NS_STYLE_ALIGN_ITEMS_STRETCH,
                "stretched item w/o 'align-self: stretch'?");
-    if (IsAxisHorizontal(aAxisTracker.GetCrossAxis())) {
+    if (aAxisTracker.IsCrossAxisHorizontal()) {
       childReflowState.SetComputedWidth(aItem.GetCrossSize());
       didOverrideComputedWidth = true;
     } else {
@@ -3936,7 +3939,7 @@ nsFlexContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
     // the sum of its items' min widths.
     // For a vertical flex container, or for a multi-line horizontal flex
     // container, the intrinsic min width is the max of its items' min widths.
-    if (IsAxisHorizontal(axisTracker.GetMainAxis()) &&
+    if (axisTracker.IsMainAxisHorizontal() &&
         NS_STYLE_FLEX_WRAP_NOWRAP == StylePosition()->mFlexWrap) {
       minWidth += childMinWidth;
     } else {
@@ -3963,7 +3966,7 @@ nsFlexContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
     nscoord childPrefWidth =
       nsLayoutUtils::IntrinsicForContainer(aRenderingContext, e.get(),
                                            nsLayoutUtils::PREF_ISIZE);
-    if (IsAxisHorizontal(axisTracker.GetMainAxis())) {
+    if (axisTracker.IsMainAxisHorizontal()) {
       prefWidth += childPrefWidth;
     } else {
       prefWidth = std::max(prefWidth, childPrefWidth);
