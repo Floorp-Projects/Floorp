@@ -233,7 +233,11 @@
         <!-- logged in and verified and all is good -->
         <hbox id="fxaLoginVerified"
               align="center">
-          <label id="fxaEmailAddress1"/>
+          <hbox align="center">
+            <image id="fxaProfileImage"
+              onclick="gSyncPane.openChangeProfileImage();" hidden="true"/>
+            <label id="fxaEmailAddress1"/>
+          </hbox>
           <spacer flex="1"/>
           <button id="verifiedManage"
                   label="&manage.label;"/>

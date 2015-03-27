@@ -923,7 +923,6 @@ add_test(function test_getSignedInUserProfile_ok() {
     fxa.getSignedInUserProfile()
       .then(result => {
          do_check_eq(result.avatar, "image");
-         do_check_true(result.verified);
          run_next_test();
       });
   });
@@ -946,9 +945,24 @@ add_test(function test_getSignedInUserProfile_error_uses_account_data() {
     };
 
     fxa.getSignedInUserProfile()
-      .then(result => {
-         do_check_eq(typeof result.avatar, "undefined");
-         do_check_eq(result.email, "foo@bar.com");
+      .catch(error => {
+         do_check_eq(error.message, "UNKNOWN_ERROR");
+         run_next_test();
+      });
+  });
+
+});
+
+add_test(function test_getSignedInUserProfile_unverified_account() {
+  let fxa = new MockFxAccounts();
+  let alice = getTestUser("alice");
+
+  fxa.setSignedInUser(alice).then(() => {
+    let accountState = fxa.internal.currentAccountState;
+
+    fxa.getSignedInUserProfile()
+      .catch(error => {
+         do_check_eq(error.message, "UNVERIFIED_ACCOUNT");
          run_next_test();
       });
   });
@@ -959,21 +973,12 @@ add_test(function test_getSignedInUserProfile_no_account_data() {
   let fxa = new MockFxAccounts();
 
   fxa.internal.getSignedInUser = function () {
-    return Promise.resolve({ email: "foo@bar.com" });
-  };
-
-  let accountState = fxa.internal.currentAccountState;
-  accountState.getProfile = function () {
-    return Promise.reject("boom");
-  };
-
-  fxa.internal.getSignedInUser = function () {
     return Promise.resolve(null);
   };
 
   fxa.getSignedInUserProfile()
-    .then(result => {
-       do_check_eq(result, null);
+    .catch(error => {
+       do_check_eq(error.message, "NO_ACCOUNT");
        run_next_test();
     });
 
