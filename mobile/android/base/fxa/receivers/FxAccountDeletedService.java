@@ -68,6 +68,10 @@ public class FxAccountDeletedService extends IntentService {
 
     // Remove any displayed notifications.
     new FxAccountNotificationManager(FxAccountSyncAdapter.NOTIFICATION_ID).clear(context);
+
+    // Bug 1147275: Delete cached oauth tokens. There's no way to query all
+    // oauth tokens from Android, so this is tricky to do comprehensively. We
+    // can query, individually, for specific oauth tokens to delete, however.
   }
 
   public static void deletePickle(final Context context) {
