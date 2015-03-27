@@ -7,6 +7,7 @@
 #include "mozilla/Endian.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/HoldDropJSObjects.h"
+#include "mozilla/Telemetry.h"
 
 #include "nsSocketTransport2.h"
 #include "nsUDPSocket.h"
@@ -84,6 +85,191 @@ private:
   nsRefPtr<nsUDPSocket> mSocket;
   PRSocketOptionData    mOpt;
 };
+
+//-----------------------------------------------------------------------------
+// nsUDPSocketCloseThread
+//-----------------------------------------------------------------------------
+
+// A helper class carrying call to PR_Close on nsUDPSocket's FD to a separate
+// thread.  This may be a workaround for shutdown blocks that are caused by
+// serial calls to close on UDP sockets.
+// It starts an NSPR thread for each socket and also adds itself as an observer
+// to "xpcom-shutdown-threads" notification where we join the thread (if not
+// already done). During worktime of the thread the class is also
+// self-referenced, since observer service might throw the reference away
+// sooner than the thread is actually done.
+class nsUDPSocketCloseThread : public nsIObserver
+{
+public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  static bool Close(PRFileDesc *aFd);
+
+private:
+  explicit nsUDPSocketCloseThread(PRFileDesc *aFd);
+  virtual ~nsUDPSocketCloseThread() { }
+
+  bool Begin();
+  void ThreadFunc();
+  void AddObserver();
+  void JoinAndRemove();
+
+  static void ThreadFunc(void *aClosure)
+    { static_cast<nsUDPSocketCloseThread*>(aClosure)->ThreadFunc(); }
+
+  // Socket to close.
+  PRFileDesc *mFd;
+  PRThread *mThread;
+
+  // Self reference, added before we create the thread, dropped
+  // after the thread is done (from the thread).  No races, since
+  // mSelf is assigned bofore the thread func is executed and
+  // released only on the thread func.
+  nsRefPtr<nsUDPSocketCloseThread> mSelf;
+
+  // Telemetry probes.
+  TimeStamp mBeforeClose;
+  TimeStamp mAfterClose;
+
+  // Active threads (roughly) counter, modified only on the main thread
+  // and used only for telemetry reports.
+  static uint32_t sActiveThreadsCount;
+
+  // Switches to true on "xpcom-shutdown-threads" notification and since
+  // then it makes the code fallback to a direct call to PR_Close().
+  static bool sPastShutdown;
+};
+
+uint32_t nsUDPSocketCloseThread::sActiveThreadsCount = 0;
+bool nsUDPSocketCloseThread::sPastShutdown = false;
+
+NS_IMPL_ISUPPORTS(nsUDPSocketCloseThread, nsIObserver);
+
+bool
+nsUDPSocketCloseThread::Close(PRFileDesc *aFd)
+{
+  if (sPastShutdown) {
+    return false;
+  }
+
+  nsRefPtr<nsUDPSocketCloseThread> t = new nsUDPSocketCloseThread(aFd);
+  return t->Begin();
+}
+
+nsUDPSocketCloseThread::nsUDPSocketCloseThread(PRFileDesc *aFd)
+  : mFd(aFd)
+  , mThread(nullptr)
+{
+}
+
+bool
+nsUDPSocketCloseThread::Begin()
+{
+  // Observer service must be worked with on the main thread only.
+  // This method is called usually on the socket thread.
+  // Register us before the thread starts.  It may happen the thread is
+  // done and posts removal event sooner then we would post this event
+  // after the thread creation.
+  nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(
+    this, &nsUDPSocketCloseThread::AddObserver);
+  if (event) {
+    NS_DispatchToMainThread(event);
+  }
+
+  // Keep us self-referenced during lifetime of the thread.
+  // Released after the thread is done.
+  mSelf = this;
+  mThread = PR_CreateThread(PR_USER_THREAD, ThreadFunc, this,
+                            PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
+                            PR_JOINABLE_THREAD, 4 * 4096);
+  if (!mThread) {
+    // This doesn't join since there is no thread, just removes
+    // this class as an observer.
+    JoinAndRemove();
+    mSelf = nullptr;
+    return false;
+  }
+
+  return true;
+}
+
+void
+nsUDPSocketCloseThread::AddObserver()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ++sActiveThreadsCount;
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->AddObserver(this, "xpcom-shutdown-threads", false);
+  }
+}
+
+void
+nsUDPSocketCloseThread::JoinAndRemove()
+{
+  // Posted from the particular (this) UDP close socket when it's done
+  // or from "xpcom-shutdown-threads" notification.
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mThread) {
+    PR_JoinThread(mThread);
+    mThread = nullptr;
+
+    Telemetry::Accumulate(Telemetry::UDP_SOCKET_PARALLEL_CLOSE_COUNT, sActiveThreadsCount);
+    Telemetry::AccumulateTimeDelta(Telemetry::UDP_SOCKET_CLOSE_TIME, mBeforeClose, mAfterClose);
+
+    MOZ_ASSERT(sActiveThreadsCount > 0);
+    --sActiveThreadsCount;
+  }
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, "xpcom-shutdown-threads");
+  }
+}
+
+NS_IMETHODIMP
+nsUDPSocketCloseThread::Observe(nsISupports *aSubject,
+                                const char *aTopic,
+                                const char16_t *aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!strcmp(aTopic, "xpcom-shutdown-threads")) {
+    sPastShutdown = true;
+    JoinAndRemove();
+    return NS_OK;
+  }
+
+  MOZ_CRASH("Unexpected observer topic");
+  return NS_OK;
+}
+
+void
+nsUDPSocketCloseThread::ThreadFunc()
+{
+  PR_SetCurrentThreadName("UDP socket close");
+
+  mBeforeClose = TimeStamp::Now();
+
+  PR_Close(mFd);
+  mFd = nullptr;
+
+  mAfterClose = TimeStamp::Now();
+
+  // Join and remove the observer on the main thread.
+  nsCOMPtr<nsIRunnable> event = NS_NewRunnableMethod(
+    this, &nsUDPSocketCloseThread::JoinAndRemove);
+  if (event) {
+    NS_DispatchToMainThread(event);
+  }
+
+  // Thread's done, release the self-reference.
+  mSelf = nullptr;
+}
 
 //-----------------------------------------------------------------------------
 // nsUDPOutputStream impl
@@ -275,7 +461,9 @@ nsUDPSocket::nsUDPSocket()
 nsUDPSocket::~nsUDPSocket()
 {
   if (mFD) {
-    PR_Close(mFD);
+    if (!nsUDPSocketCloseThread::Close(mFD)) {
+      PR_Close(mFD);
+    }
     mFD = nullptr;
   }
 
@@ -517,7 +705,9 @@ nsUDPSocket::OnSocketDetached(PRFileDesc *fd)
   if (mFD)
   {
     NS_ASSERTION(mFD == fd, "wrong file descriptor");
-    PR_Close(mFD);
+    if (!nsUDPSocketCloseThread::Close(mFD)) {
+      PR_Close(mFD);
+    }
     mFD = nullptr;
   }
 
@@ -655,6 +845,8 @@ nsUDPSocket::Close()
     {
       if (mFD)
       {
+        // Here we want to go directly with closing the socket since some tests
+        // expects this happen synchronously.
         PR_Close(mFD);
         mFD = nullptr;
       }
