@@ -39,7 +39,7 @@ function checkEVStatus(cert, usage, isEVExpected) {
   let error = certDB.verifyCertNow(cert, usage, NO_FLAGS, verifiedChain,
                                    hasEVPolicy);
   equal(hasEVPolicy.value, isEVExpected);
-  equal(0, error);
+  equal(error, PRErrorCodeSuccess);
 }
 
 /**
