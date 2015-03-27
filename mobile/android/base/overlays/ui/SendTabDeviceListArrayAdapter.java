@@ -148,10 +148,10 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<ParcelableClient
 
     private static int getImage(ParcelableClientRecord record) {
         if ("mobile".equals(record.type)) {
-            return R.drawable.sync_mobile_inactive;
+            return R.drawable.device_mobile;
         }
 
-        return R.drawable.sync_desktop_inactive;
+        return R.drawable.device_pc;
     }
 
     public void switchState(State newState) {
