@@ -425,6 +425,12 @@ AnimationPlayer::DoPlay()
   // need to pass a flag so that when we start playing due to a change in
   // animation-play-state we *don't* trigger finishing behavior.
 
+  bool reuseReadyPromise = false;
+  if (mPendingState != PendingState::NotPending) {
+    CancelPendingTasks();
+    reuseReadyPromise = true;
+  }
+
   Nullable<TimeDuration> currentTime = GetCurrentTime();
   if (mPlaybackRate > 0.0 &&
       (currentTime.IsNull())) {
@@ -440,11 +446,13 @@ AnimationPlayer::DoPlay()
     return;
   }
 
-  // Clear ready promise. We'll create a new one lazily.
-  mReady = nullptr;
-
   // Clear the start time until we resolve a new one
   mStartTime.SetNull();
+
+  if (!reuseReadyPromise) {
+    // Clear ready promise. We'll create a new one lazily.
+    mReady = nullptr;
+  }
 
   mPendingState = PendingState::PlayPending;
 
