@@ -1151,7 +1151,7 @@ add_task(function* test_environmentChange() {
   let ping = decodeRequestPayload(request);
 
   Assert.equal(ping.type, PING_TYPE_MAIN);
-  Assert.equal(ping.environment.settings.userPrefs[PREF_TEST], undefined);
+  Assert.equal(ping.environment.settings.userPrefs[PREF_TEST], 1);
   Assert.equal(ping.payload.info.reason, REASON_ENVIRONMENT_CHANGE);
   let subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
   Assert.equal(subsessionStartDate.toISOString(), nowDay.toISOString());
@@ -1166,7 +1166,7 @@ add_task(function* test_environmentChange() {
   ping = decodeRequestPayload(request);
 
   Assert.equal(ping.type, PING_TYPE_MAIN);
-  Assert.equal(ping.environment.settings.userPrefs[PREF_TEST], 1);
+  Assert.equal(ping.environment.settings.userPrefs[PREF_TEST], 2);
   Assert.equal(ping.payload.info.reason, REASON_ENVIRONMENT_CHANGE);
   subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
   Assert.equal(subsessionStartDate.toISOString(), nowDay.toISOString());
@@ -1235,7 +1235,7 @@ add_task(function* test_savedSessionData() {
 
   // We expect one new subsession when starting TelemetrySession and one after triggering
   // an environment change.
-  const expectedSubsessions = sessionState.profileSubsessionCounter + 2;
+  const expectedSubsessions = sessionState.profileSubsessionCounter + 3;
   const expectedUUID = "009fd1ad-b85e-4817-b3e5-000000003785";
   fakeGenerateUUID(generateUUID, () => expectedUUID);
 
