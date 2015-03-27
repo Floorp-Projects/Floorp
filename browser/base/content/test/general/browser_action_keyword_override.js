@@ -1,19 +1,19 @@
 add_task(function*() {
   // This test is only relevant if UnifiedComplete is enabled.
-  if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete")) {
-    todo(false, "Stop supporting old autocomplete components.");
-    return;
-  }
-
-  let itemId =
-    PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                         NetUtil.newURI("http://example.com/?q=%s"),
-                                         PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                         "test");
-  PlacesUtils.bookmarks.setKeywordForBookmark(itemId, "keyword");
-
+  let ucpref = Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete");
+  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
   registerCleanupFunction(() => {
-    PlacesUtils.bookmarks.removeItem(itemId);
+    Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", ucpref);
+  });
+
+  let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                url: "http://example.com/?q=%s",
+                                                title: "test" });
+  yield PlacesUtils.keywords.insert({ keyword: "keyword",
+                                      url: "http://example.com/?q=%s" })
+
+  registerCleanupFunction(function* () {
+    yield PlacesUtils.bookmarks.remove(bm);
   });
 
   yield promiseAutocompleteResultPopup("keyword search");
@@ -21,12 +21,12 @@ add_task(function*() {
 
   info("Before override");
   is_element_hidden(result._url, "URL element should be hidden");
-  is_element_visible(result._extra, "Extra element should be visible");
+  is_element_visible(result._extraBox, "Extra element should be visible");
 
   info("During override");
   EventUtils.synthesizeKey("VK_SHIFT" , { type: "keydown" });
   is_element_hidden(result._url, "URL element should be hidden");
-  is_element_visible(result._extra, "Extra element should be visible");
+  is_element_visible(result._extraBox, "Extra element should be visible");
 
   EventUtils.synthesizeKey("VK_SHIFT" , { type: "keyup" });
 
