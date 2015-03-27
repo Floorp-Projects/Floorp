@@ -1,6 +1,7 @@
 ---
 $inherits:
   from: 'tasks/test.yml'
+reruns: 2
 task:
   metadata:
     name: '[TC] Gaia Unit Test'

@@ -14,6 +14,9 @@ task:
       TARGET: 'flame-kk'
       DEBUG: 0
       VARIANT: eng
+      GAIA_OPTIMIZE: '1'
+      B2G_SYSTEM_APPS: '1'
+      B2G_UPDATER: '1'
     command:
       - >
         checkout-gecko workspace &&
@@ -28,8 +31,3 @@ task:
         platform: b2g-device-image
     locations:
       img: 'private/build/flame-kk.zip'
-
-      GAIA_OPTIMIZE: '1'
-      B2G_SYSTEM_APPS: '1'
-      B2G_UPDATER: '1'
-

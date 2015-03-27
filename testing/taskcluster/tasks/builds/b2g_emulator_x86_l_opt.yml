@@ -1,0 +1,34 @@
+$inherits:
+  from: 'tasks/builds/b2g_emulator_base.yml'
+task:
+  workerType: emulator-l
+  scopes:
+    - 'docker-worker:cache:workspace-emulator-l-x86-opt'
+  metadata:
+    name: '[TC] B2G X86 L Emulator (Opt)'
+
+  extra:
+    treeherderEnv:
+      - staging
+    treeherder:
+      # Disable "TC" prefix...
+      groupSymbol: "X86"
+      machine:
+        platform: b2g-emu-l
+
+  payload:
+    command:
+      - /bin/bash
+      - -c
+      - >
+        checkout-gecko workspace &&
+        cd ./workspace/gecko/testing/taskcluster/scripts/builder &&
+        buildbot_step 'Build' ./build-emulator-x86.sh $HOME/workspace
+
+    cache:
+      workspace-emulator-l-x86-opt: /home/worker/workspace
+    env:
+      TARGET: 'emulator-x86-l'
+
+
+
