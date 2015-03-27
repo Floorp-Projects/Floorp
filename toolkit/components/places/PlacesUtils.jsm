@@ -932,8 +932,14 @@ this.PlacesUtils = {
    * Get the URI (and any associated POST data) for a given keyword.
    * @param aKeyword string keyword
    * @returns an array containing a string URL and a string of POST data
+   *
+   * @deprecated
    */
   getURLAndPostDataForKeyword(aKeyword) {
+    Deprecated.warning("getURLAndPostDataForKeyword() is deprecated, please " +
+                       "use PlacesUtils.keywords.fetch() instead",
+                       "https://bugzilla.mozilla.org/show_bug.cgi?id=1100294");
+
     let stmt = PlacesUtils.history.DBConnection.createStatement(
       `SELECT h.url, k.post_data
        FROM moz_keywords k
@@ -2019,7 +2025,7 @@ let Keywords = {
    *           or null if a keyword was not found.
    */
   fetch(keyword) {
-    if (!keyword || typeof(keyword) != "string")
+    if (typeof(keyword) != "string")
       throw new Error("Invalid keyword");
     keyword = keyword.trim().toLowerCase();
     return gKeywordsCachePromise.then(cache => cache.get(keyword) || null);

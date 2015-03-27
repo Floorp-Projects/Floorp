@@ -22,6 +22,7 @@ import android.content.Context;
 import android.util.Log;
 import android.view.View;
 import android.widget.CheckBox;
+import org.mozilla.gecko.widget.DoorhangerConfig;
 
 public class DoorHangerPopup extends AnchoredPopup
                              implements GeckoEventListener,
@@ -76,16 +77,12 @@ public class DoorHangerPopup extends AnchoredPopup
     public void handleMessage(String event, JSONObject geckoObject) {
         try {
             if (event.equals("Doorhanger:Add")) {
-                final int tabId = geckoObject.getInt("tabID");
-                final String value = geckoObject.getString("value");
-                final String message = geckoObject.getString("message");
-                final JSONArray buttons = geckoObject.getJSONArray("buttons");
-                final JSONObject options = geckoObject.getJSONObject("options");
+                final DoorhangerConfig config = makeConfigFromJSON(geckoObject);
 
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        addDoorHanger(tabId, value, message, buttons, options);
+                        addDoorHanger(config);
                     }
                 });
             } else if (event.equals("Doorhanger:Remove")) {
@@ -107,6 +104,22 @@ public class DoorHangerPopup extends AnchoredPopup
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
         }
+    }
+
+    private DoorhangerConfig makeConfigFromJSON(JSONObject json) throws JSONException {
+        final int tabId = json.getInt("tabID");
+        final String id = json.getString("value");
+        final DoorhangerConfig config = new DoorhangerConfig(tabId, id);
+
+        config.setMessage(json.getString("message"));
+        config.setButtons(json.getJSONArray("buttons"));
+        config.setOptions(json.getJSONObject("options"));
+        final String typeString = json.optString("category");
+        if (DoorHanger.Type.LOGIN.toString().equals(typeString)) {
+            config.setType(DoorHanger.Type.LOGIN);
+        }
+
+        return config;
     }
 
     // This callback is automatically executed on the UI thread.
@@ -149,15 +162,15 @@ public class DoorHangerPopup extends AnchoredPopup
      *
      * This method must be called on the UI thread.
      */
-    void addDoorHanger(final int tabId, final String value, final String message,
-                       final JSONArray buttons, final JSONObject options) {
+    void addDoorHanger(DoorhangerConfig config) {
+        final int tabId = config.getTabId();
         // Don't add a doorhanger for a tab that doesn't exist
         if (Tabs.getInstance().getTab(tabId) == null) {
             return;
         }
 
         // Replace the doorhanger if it already exists
-        DoorHanger oldDoorHanger = getDoorHanger(tabId, value);
+        DoorHanger oldDoorHanger = getDoorHanger(tabId, config.getId());
         if (oldDoorHanger != null) {
             removeDoorHanger(oldDoorHanger);
         }
@@ -166,10 +179,9 @@ public class DoorHangerPopup extends AnchoredPopup
             init();
         }
 
-        final DoorHanger newDoorHanger = new DoorHanger(mContext, tabId, value);
-        newDoorHanger.setMessage(message);
-        newDoorHanger.setOptions(options);
+        final DoorHanger newDoorHanger = DoorHanger.Get(mContext, config);
 
+        final JSONArray buttons = config.getButtons();
         for (int i = 0; i < buttons.length(); i++) {
             try {
                 JSONObject buttonObject = buttons.getJSONObject(i);
@@ -230,7 +242,7 @@ public class DoorHangerPopup extends AnchoredPopup
      */
     DoorHanger getDoorHanger(int tabId, String value) {
         for (DoorHanger dh : mDoorHangers) {
-            if (dh.getTabId() == tabId && dh.getValue().equals(value))
+            if (dh.getTabId() == tabId && dh.getIdentifier().equals(value))
                 return dh;
         }
 
