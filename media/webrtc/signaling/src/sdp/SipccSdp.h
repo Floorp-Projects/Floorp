@@ -10,7 +10,6 @@
 #include <map>
 #include <vector>
 #include "mozilla/Attributes.h"
-#include "mozilla/UniquePtr.h"
 
 #include "signaling/src/sdp/Sdp.h"
 #include "signaling/src/sdp/SipccSdpMediaSection.h"
@@ -18,6 +17,8 @@
 extern "C" {
 #include "signaling/src/sdp/sipcc/sdp.h"
 }
+
+#include "signaling/src/common/PtrVector.h"
 
 namespace mozilla
 {
@@ -34,7 +35,6 @@ public:
       : mOrigin(origin), mAttributeList(nullptr)
   {
   }
-  ~SipccSdp();
 
   virtual const SdpOrigin& GetOrigin() const override;
 
@@ -44,7 +44,7 @@ public:
   virtual size_t
   GetMediaSectionCount() const override
   {
-    return mMediaSections.size();
+    return mMediaSections.values.size();
   }
 
   virtual const SdpAttributeList&
@@ -80,7 +80,7 @@ private:
   SdpOrigin mOrigin;
   SipccSdpBandwidths mBandwidths;
   SipccSdpAttributeList mAttributeList;
-  std::vector<SipccSdpMediaSection*> mMediaSections;
+  PtrVector<SipccSdpMediaSection> mMediaSections;
 };
 
 } // namespace mozilla

@@ -37,13 +37,6 @@ MOZ_MTLOG_MODULE("jsep")
     MOZ_MTLOG(ML_ERROR, mLastError);                                           \
   } while (0);
 
-JsepSessionImpl::~JsepSessionImpl()
-{
-  for (auto i = mCodecs.begin(); i != mCodecs.end(); ++i) {
-    delete *i;
-  }
-}
-
 nsresult
 JsepSessionImpl::Init()
 {
@@ -816,8 +809,8 @@ void
 JsepSessionImpl::AddCodecs(SdpMediaSection* msection) const
 {
   msection->ClearCodecs();
-  for (auto c = mCodecs.begin(); c != mCodecs.end(); ++c) {
-    (*c)->AddToMediaSection(*msection);
+  for (const JsepCodecDescription* codec : mCodecs.values) {
+    codec->AddToMediaSection(*msection);
   }
 }
 
@@ -881,8 +874,7 @@ JsepCodecDescription*
 JsepSessionImpl::FindMatchingCodec(const std::string& fmt,
                                    const SdpMediaSection& msection) const
 {
-  for (auto c = mCodecs.begin(); c != mCodecs.end(); ++c) {
-    auto codec = *c;
+  for (JsepCodecDescription* codec : mCodecs.values) {
     if (codec->mEnabled && codec->Matches(fmt, msection)) {
       return codec;
     }
@@ -905,25 +897,26 @@ JsepSessionImpl::GetRtpExtensions(SdpMediaSection::MediaType type) const
 }
 
 static bool
-CompareCodec(const UniquePtr<JsepCodecDescription>& lhs,
-             const UniquePtr<JsepCodecDescription>& rhs)
+CompareCodec(const JsepCodecDescription* lhs, const JsepCodecDescription* rhs)
 {
   return lhs->mStronglyPreferred && !rhs->mStronglyPreferred;
 }
 
-std::vector<UniquePtr<JsepCodecDescription>>
+PtrVector<JsepCodecDescription>
 JsepSessionImpl::GetCommonCodecs(const SdpMediaSection& remoteMsection)
 {
-  std::vector<UniquePtr<JsepCodecDescription>> matchingCodecs;
+  PtrVector<JsepCodecDescription> matchingCodecs;
   for (const std::string& fmt : remoteMsection.GetFormats()) {
     JsepCodecDescription* codec = FindMatchingCodec(fmt, remoteMsection);
     if (codec) {
       codec->mDefaultPt = fmt; // Remember the other side's PT
-      matchingCodecs.push_back(UniquePtr<JsepCodecDescription>(codec->Clone()));
+      matchingCodecs.values.push_back(codec->Clone());
     }
   }
 
-  std::stable_sort(matchingCodecs.begin(), matchingCodecs.end(), CompareCodec);
+  std::stable_sort(matchingCodecs.values.begin(),
+                   matchingCodecs.values.end(),
+                   CompareCodec);
 
   return matchingCodecs;
 }
@@ -1179,10 +1172,10 @@ JsepSessionImpl::CreateAnswerMSection(const JsepAnswerOptions& options,
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Now add the codecs.
-  std::vector<UniquePtr<JsepCodecDescription>> matchingCodecs(
+  PtrVector<JsepCodecDescription> matchingCodecs(
       GetCommonCodecs(remoteMsection));
 
-  for (const UniquePtr<JsepCodecDescription>& codec : matchingCodecs) {
+  for (const JsepCodecDescription* codec : matchingCodecs.values) {
     UniquePtr<JsepCodecDescription> negotiated(
         codec->MakeNegotiatedCodec(remoteMsection));
     if (negotiated) {
@@ -1682,10 +1675,10 @@ JsepSessionImpl::NegotiateTrack(const SdpMediaSection& remoteMsection,
   negotiatedDetails->mProtocol = remoteMsection.GetProtocol();
 
   // Insert all the codecs we jointly support.
-  std::vector<UniquePtr<JsepCodecDescription>> commonCodecs(
+  PtrVector<JsepCodecDescription> commonCodecs(
       GetCommonCodecs(remoteMsection));
 
-  for (const UniquePtr<JsepCodecDescription>& codec : commonCodecs) {
+  for (const JsepCodecDescription* codec : commonCodecs.values) {
     bool sending = (direction == JsepTrack::kJsepTrackSending);
 
     // Everywhere else in JsepSessionImpl, a JsepCodecDescription describes
@@ -1720,11 +1713,11 @@ JsepSessionImpl::NegotiateTrack(const SdpMediaSection& remoteMsection,
       }
     }
 
-    negotiatedDetails->mCodecs.push_back(sendOrReceiveCodec.release());
+    negotiatedDetails->mCodecs.values.push_back(sendOrReceiveCodec.release());
     break;
   }
 
-  if (negotiatedDetails->mCodecs.empty()) {
+  if (negotiatedDetails->mCodecs.values.empty()) {
     JSEP_SET_ERROR("Failed to negotiate codec details for all codecs");
     return NS_ERROR_INVALID_ARG;
   }
@@ -2359,7 +2352,7 @@ void
 JsepSessionImpl::SetupDefaultCodecs()
 {
   // Supported audio codecs.
-  mCodecs.push_back(new JsepAudioCodecDescription(
+  mCodecs.values.push_back(new JsepAudioCodecDescription(
       "109",
       "opus",
       48000,
@@ -2367,7 +2360,7 @@ JsepSessionImpl::SetupDefaultCodecs()
       960,
       16000));
 
-  mCodecs.push_back(new JsepAudioCodecDescription(
+  mCodecs.values.push_back(new JsepAudioCodecDescription(
       "9",
       "G722",
       8000,
@@ -2377,7 +2370,7 @@ JsepSessionImpl::SetupDefaultCodecs()
 
   // packet size and bitrate values below copied from sipcc.
   // May need reevaluation from a media expert.
-  mCodecs.push_back(
+  mCodecs.values.push_back(
       new JsepAudioCodecDescription("0",
                                     "PCMU",
                                     8000,
@@ -2386,7 +2379,7 @@ JsepSessionImpl::SetupDefaultCodecs()
                                     8 * 8000 * 1 // 8 * frequency * channels
                                     ));
 
-  mCodecs.push_back(
+  mCodecs.values.push_back(
       new JsepAudioCodecDescription("8",
                                     "PCMA",
                                     8000,
@@ -2404,7 +2397,7 @@ JsepSessionImpl::SetupDefaultCodecs()
   // Defaults for mandatory params
   vp8->mMaxFs = 12288;
   vp8->mMaxFr = 60;
-  mCodecs.push_back(vp8);
+  mCodecs.values.push_back(vp8);
 
   JsepVideoCodecDescription* vp9 = new JsepVideoCodecDescription(
       "121",
@@ -2414,7 +2407,7 @@ JsepSessionImpl::SetupDefaultCodecs()
   // Defaults for mandatory params
   vp9->mMaxFs = 12288;
   vp9->mMaxFr = 60;
-  mCodecs.push_back(vp9);
+  mCodecs.values.push_back(vp9);
 
   JsepVideoCodecDescription* h264_1 = new JsepVideoCodecDescription(
       "126",
@@ -2424,7 +2417,7 @@ JsepSessionImpl::SetupDefaultCodecs()
   h264_1->mPacketizationMode = 1;
   // Defaults for mandatory params
   h264_1->mProfileLevelId = 0x42E00D;
-  mCodecs.push_back(h264_1);
+  mCodecs.values.push_back(h264_1);
 
   JsepVideoCodecDescription* h264_0 = new JsepVideoCodecDescription(
       "97",
@@ -2434,9 +2427,9 @@ JsepSessionImpl::SetupDefaultCodecs()
   h264_0->mPacketizationMode = 0;
   // Defaults for mandatory params
   h264_0->mProfileLevelId = 0x42E00D;
-  mCodecs.push_back(h264_0);
+  mCodecs.values.push_back(h264_0);
 
-  mCodecs.push_back(new JsepApplicationCodecDescription(
+  mCodecs.values.push_back(new JsepApplicationCodecDescription(
       "5000",
       "webrtc-datachannel",
       16

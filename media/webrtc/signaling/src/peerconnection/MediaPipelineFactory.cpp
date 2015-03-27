@@ -14,6 +14,7 @@
 
 #include "signaling/src/jsep/JsepTrack.h"
 #include "signaling/src/jsep/JsepTransport.h"
+#include "signaling/src/common/PtrVector.h"
 
 #ifdef MOZILLA_INTERNAL_API
 #include "MediaStreamTrack.h"
@@ -34,20 +35,6 @@
 namespace mozilla {
 
 MOZ_MTLOG_MODULE("MediaPipelineFactory")
-
-// Trivial wrapper class around a vector of ptrs.
-template <class T> class PtrVector
-{
-public:
-  ~PtrVector()
-  {
-    for (auto it = values.begin(); it != values.end(); ++it) {
-      delete *it;
-    }
-  }
-
-  std::vector<T*> values;
-};
 
 static nsresult
 JsepCodecDescToCodecConfig(const JsepCodecDescription& aCodec,

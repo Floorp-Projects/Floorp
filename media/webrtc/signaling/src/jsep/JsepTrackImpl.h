@@ -14,6 +14,7 @@
 #include "signaling/src/jsep/JsepTrack.h"
 #include "signaling/src/sdp/Sdp.h"
 #include "signaling/src/sdp/SdpMediaSection.h"
+#include "signaling/src/common/PtrVector.h"
 
 namespace mozilla {
 
@@ -21,11 +22,7 @@ class JsepTrackNegotiatedDetailsImpl : public JsepTrackNegotiatedDetails
 {
 public:
   virtual ~JsepTrackNegotiatedDetailsImpl()
-  {
-    for (auto c = mCodecs.begin(); c != mCodecs.end(); ++c) {
-      delete *c;
-    }
-  }
+  {}
 
   // Implement JsepTrackNegotiatedDetails.
   virtual mozilla::SdpMediaSection::Protocol
@@ -41,15 +38,15 @@ public:
   virtual size_t
   GetCodecCount() const override
   {
-    return mCodecs.size();
+    return mCodecs.values.size();
   }
   virtual nsresult
   GetCodec(size_t index, const JsepCodecDescription** config) const override
   {
-    if (index >= mCodecs.size()) {
+    if (index >= mCodecs.values.size()) {
       return NS_ERROR_INVALID_ARG;
     }
-    *config = mCodecs[index];
+    *config = mCodecs.values[index];
     return NS_OK;
   }
 
@@ -85,7 +82,7 @@ private:
 
   mozilla::SdpMediaSection::Protocol mProtocol;
   Maybe<std::string> mBandwidth;
-  std::vector<JsepCodecDescription*> mCodecs;
+  PtrVector<JsepCodecDescription> mCodecs;
   std::map<std::string, SdpExtmapAttributeList::Extmap> mExtmap;
   std::vector<uint8_t> mUniquePayloadTypes;
 };
