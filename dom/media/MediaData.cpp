@@ -111,23 +111,11 @@ IsInEmulator()
 VideoData::VideoData(int64_t aOffset,
                      int64_t aTime,
                      int64_t aDuration,
-                     int64_t aTimecode)
-  : MediaData(sType, aOffset, aTime, aDuration)
-  , mDuplicate(true)
-{
-  NS_ASSERTION(mDuration >= 0, "Frame must have non-negative duration.");
-  mTimecode = aTimecode;
-}
-
-VideoData::VideoData(int64_t aOffset,
-                     int64_t aTime,
-                     int64_t aDuration,
                      bool aKeyframe,
                      int64_t aTimecode,
                      IntSize aDisplay)
-  : MediaData(sType, aOffset, aTime, aDuration)
+  : MediaData(VIDEO_DATA, aOffset, aTime, aDuration)
   , mDisplay(aDisplay)
-  , mDuplicate(false)
 {
   NS_ASSERTION(mDuration >= 0, "Frame must have non-negative duration.");
   mKeyframe = aKeyframe;
