@@ -33,21 +33,6 @@ class nsIMemory;
 class nsMemory
 {
 public:
-  static NS_HIDDEN_(void*) Alloc(size_t aSize)
-  {
-    return NS_Alloc(aSize);
-  }
-
-  static NS_HIDDEN_(void*) Realloc(void* aPtr, size_t aSize)
-  {
-    return NS_Realloc(aPtr, aSize);
-  }
-
-  static NS_HIDDEN_(void) Free(void* aPtr)
-  {
-    NS_Free(aPtr);
-  }
-
   static nsresult   HeapMinimize(bool aImmediate);
   static void*      Clone(const void* aPtr, size_t aSize);
   static nsIMemory* GetGlobalMemoryService();       // AddRefs

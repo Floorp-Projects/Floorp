@@ -47,43 +47,9 @@
  * realloc() has failed.
  */
 
-[scriptable, uuid(6aef11c4-8615-44a6-9711-98f43805693d)]
+[scriptable, uuid(1e004834-6d8f-425a-bc9c-a2812ed43bb7)]
 interface nsIMemory : nsISupports
 {
-    /**
-     * Allocates a block of memory of a particular size. If the memory 
-     * cannot be allocated (because of an out-of-memory condition), the
-     * process aborts.
-     *
-     * @param size - the size of the block to allocate
-     * @result the block of memory
-     */
-    [noscript, notxpcom] voidPtr alloc(in size_t size);
-
-    /**
-     * Reallocates a block of memory to a new size.
-     *
-     * @param ptr - the block of memory to reallocate
-     * @param size - the new size
-     * @result the reallocated block of memory
-     *
-     * If ptr is null, this function behaves like malloc.
-     * If s is the size of the block to which ptr points, the first
-     * min(s, size) bytes of ptr's block are copied to the new block.
-     * If the allocation succeeds, ptr is freed and a pointer to the 
-     * new block returned.  If the allocation fails, the process aborts.
-     */
-    [noscript, notxpcom] voidPtr realloc(in voidPtr ptr,
-                                         in size_t newSize);
-
-    /**
-     * Frees a block of memory. Null is a permissible value, in which case
-     * nothing happens. 
-     *
-     * @param ptr - the block of memory to free
-     */
-    [noscript, notxpcom] void free(in voidPtr ptr);
-
     /**
      * Attempts to shrink the heap.
      * @param immediate - if true, heap minimization will occur
