@@ -31,15 +31,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
 
-const CHANGE_THROTTLE_INTERVAL_MS = 5 * 60 * 1000;
-
-/**
- * This is a policy object used to override behavior for testing.
- */
-let Policy = {
-  now: () => new Date(),
-};
-
 var gGlobalEnvironment;
 function getGlobal() {
   if (!gGlobalEnvironment) {
@@ -637,9 +628,6 @@ function EnvironmentCache() {
   // A map of listeners that will be called on environment changes.
   this._changeListeners = new Map();
 
-  // The last change date for the environment, used to throttle environment changes.
-  this._lastEnvironmentChangeDate = null;
-
   // A map of watched preferences which trigger an Environment change when
   // modified. Every entry contains a recording policy (RECORD_PREF_*).
   this._watchedPrefs = DEFAULT_ENVIRONMENT_PREFS;
@@ -1077,16 +1065,7 @@ EnvironmentCache.prototype = {
     }
 
     // We are already skipping change events in _checkChanges if there is a pending change task running.
-    let now = Policy.now();
-    if (this._lastEnvironmentChangeDate &&
-        (CHANGE_THROTTLE_INTERVAL_MS >=
-         (now.getTime() - this._lastEnvironmentChangeDate.getTime()))) {
-      this._log.trace("_onEnvironmentChange - throttling changes, now: " + now +
-                      ", last change: " + this._lastEnvironmentChangeDate);
-      return;
-    }
-
-    this._lastEnvironmentChangeDate = now;
+    // Further throttling is coming in bug 1143714.
 
     for (let [name, listener] of this._changeListeners) {
       try {
