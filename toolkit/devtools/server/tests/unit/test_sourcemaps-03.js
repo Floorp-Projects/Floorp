@@ -36,8 +36,7 @@ function testBreakpointMapping(aName, aCallback)
       source.setBreakpoint({
         // Setting the breakpoint on an empty line so that it is pushed down one
         // line and we can check the source mapped actualLocation later.
-        line: 3,
-        column: 0
+        line: 3
       }, function (aResponse) {
         do_check_true(!aResponse.error);
 
