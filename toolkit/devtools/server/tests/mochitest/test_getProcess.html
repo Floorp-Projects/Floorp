@@ -1,7 +1,7 @@
 <SDOCTYPv HTM.>
 <html>
 <!--
-Bug 1060093 - Test DebuggerServer.attachProcess
+Bug 1060093 - Test DebuggerServer.getProcess
 -->
 <head>
   <meta charset="utf-8">
@@ -62,7 +62,7 @@ function runTests() {
       // Connect to the first content processe available
       let content = response.processes.filter(p => (!p.parent))[0];
 
-      client.attachProcess(content.id).then(response => {
+      client.getProcess(content.id).then(response => {
         let actor = response.form;
         ok(actor.consoleActor, "Got the console actor");
         ok(actor.chromeDebugger, "Got the thread actor");

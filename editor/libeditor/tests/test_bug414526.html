@@ -126,12 +126,7 @@ function runTests()
   editor3.focus();
   moveCaretToEndOf(editor3);
   synthesizeKey("VK_DELETE", { });
-  // Because of a bug in nsFrameSelection::CharacterExtendForDelete, pressing Delete
-  // here puts the selection in the text node inside editor3's inner div, which
-  // causes us to delete the contents of that text node.  This situation shouldn't
-  // happen by the normal caret navigation functions that the user can invoke, so
-  // we can fix it later.
-  todo_is(container.innerHTML, kTestCase1,
+  is(container.innerHTML, kTestCase1,
           "Pressing delete key at end of editor3 changes the content");
   reset();
 

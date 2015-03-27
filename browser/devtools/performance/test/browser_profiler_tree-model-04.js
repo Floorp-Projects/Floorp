@@ -37,8 +37,11 @@ function test() {
   is(Object.keys(root.calls["http://A"].calls["https://E"].calls)[0], "file://F",
     "The '.A.E' node's only child call is correct.");
 
-  is(Object.keys(root.calls["http://A"].calls["https://E"].calls["file://F"].calls).length, 0,
+  is(Object.keys(root.calls["http://A"].calls["https://E"].calls["file://F"].calls).length, 1,
     "The correct number of child calls were calculated for the '.A.E.F' node.");
+  is(Object.keys(root.calls["http://A"].calls["https://E"].calls["file://F"].calls)[0], "app://H",
+    "The '.A.E.F' node's only child call is correct.");
+
   is(Object.keys(root.calls["http://D"].calls).length, 0,
     "The correct number of child calls were calculated for the '.D' node.");
 
@@ -59,6 +62,7 @@ let gSamples = [{
     { location: "(root)" },
     { location: "chrome://A" },
     { location: "resource://B" },
+    { location: "jar:file://G" },
     { location: "http://D" }
   ]
 }, {
@@ -67,7 +71,8 @@ let gSamples = [{
     { location: "(root)" },
     { location: "http://A" },
     { location: "https://E" },
-    { location: "file://F" }
+    { location: "file://F" },
+    { location: "app://H" },
   ]
 }, {
   time: 5 + 6 + 7 + 8,

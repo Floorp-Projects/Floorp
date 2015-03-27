@@ -232,3 +232,19 @@
 .ruleview-selector-separator, .ruleview-selector-unmatched {
   color: #888;
 }
+
+.ruleview-selectorhighlighter {
+  background: url("chrome://browser/skin/devtools/vview-open-inspector.png") no-repeat 0 0;
+  padding-left: 16px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.ruleview-selectorhighlighter:hover {
+  background-position: -32px 0;
+}
+
+.ruleview-selectorhighlighter:active,
+.ruleview-selectorhighlighter.highlighted {
+  background-position: -16px 0;
+}

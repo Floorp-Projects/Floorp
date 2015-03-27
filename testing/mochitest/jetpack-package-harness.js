@@ -230,6 +230,9 @@ function testInit() {
           if (config.closeWhenDone) {
             require("sdk/system").exit(failed == 0 ? 0 : 1);
           }
+          else {
+            loaderModule.unload(loader, "shutdown");
+          }
         }
 
         function testNextModule() {
