@@ -6,6 +6,8 @@
 package org.mozilla.gecko.tabqueue;
 
 import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
@@ -21,6 +23,8 @@ import android.content.res.Resources;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class TabQueueHelper {
     private static final String LOGTAG = "Gecko" + TabQueueHelper.class.getSimpleName();
@@ -121,7 +125,16 @@ public class TabQueueHelper {
 
         JSONArray jsonArray = profile.readJSONArrayFromFile(filename);
 
-        // TODO: Convert data to required format for gecko to process and send to Gecko - Bug 1146325
+        if (jsonArray.length() > 0) {
+            JSONObject data = new JSONObject();
+            try {
+                data.put("urls", jsonArray);
+                GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Tabs:OpenMultiple", data.toString()));
+            } catch (JSONException e) {
+                // Don't exit early as we perform cleanup at the end of this function.
+                Log.e(LOGTAG, "Error sending tab queue data", e);
+            }
+        }
 
         try {
             profile.deleteFileFromProfileDir(filename);
