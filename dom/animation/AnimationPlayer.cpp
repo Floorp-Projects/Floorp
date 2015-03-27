@@ -349,7 +349,9 @@ AnimationPlayer::Cancel()
 bool
 AnimationPlayer::IsRunning() const
 {
-  if (IsPaused() || !GetSource() || GetSource()->IsFinishedTransition()) {
+  if (IsPausedOrPausing() ||
+      !GetSource() ||
+      GetSource()->IsFinishedTransition()) {
     return false;
   }
 
