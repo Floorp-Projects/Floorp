@@ -166,7 +166,7 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
     final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
 
     final CountDownLatch latch = new CountDownLatch(1);
-    final FxAccountSyncDelegate syncDelegate = new FxAccountSyncDelegate(latch, syncResult, fxAccount);
+    final FxAccountSyncDelegate syncDelegate = new FxAccountSyncDelegate(latch, syncResult);
 
     final AccountManager accountManager = AccountManager.get(context);
     // If we have an auth failure that requires user intervention, FxA will show system
