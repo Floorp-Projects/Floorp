@@ -66,7 +66,7 @@ CanvasLayerComposite::SetLayerManager(LayerManagerComposite* aManager)
 {
   LayerComposite::SetLayerManager(aManager);
   mManager = aManager;
-  if (mImageHost) {
+  if (mImageHost && mCompositor) {
     mImageHost->SetCompositor(mCompositor);
   }
 }

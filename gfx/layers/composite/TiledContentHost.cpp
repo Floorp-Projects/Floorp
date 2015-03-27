@@ -212,6 +212,7 @@ TiledLayerBufferComposite::ValidateTile(TileHost aTile,
 void
 TiledLayerBufferComposite::SetCompositor(Compositor* aCompositor)
 {
+  MOZ_ASSERT(aCompositor);
   if (!IsValid()) {
     return;
   }
@@ -391,6 +392,7 @@ TiledContentHost::Composite(EffectChain& aEffectChain,
                             const gfx::Rect& aClipRect,
                             const nsIntRegion* aVisibleRegion /* = nullptr */)
 {
+  MOZ_ASSERT(mCompositor);
   if (mPendingUpload) {
     mTiledBuffer.SetCompositor(mCompositor);
     mTiledBuffer.Upload();
