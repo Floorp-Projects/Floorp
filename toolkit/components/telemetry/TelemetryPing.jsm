@@ -18,7 +18,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
-Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 
@@ -271,12 +270,7 @@ let Impl = {
   // The deferred promise resolved when the initialization task completes.
   _delayedInitTaskDeferred: null,
 
-  // This is a public barrier Telemetry clients can use to add blockers to the shutdown
-  // of TelemetryPing.
-  // After this barrier, clients can not submit Telemetry pings anymore.
   _shutdownBarrier: new AsyncShutdown.Barrier("TelemetryPing: Waiting for clients."),
-  // This is a private barrier blocked by pending async ping activity (sending & saving).
-  _connectionsBarrier: new AsyncShutdown.Barrier("TelemetryPing: Waiting for pending ping activity"),
 
   /**
    * Get the data for the "application" section of the ping.
@@ -380,14 +374,6 @@ let Impl = {
   },
 
   /**
-   * Track any pending ping send and save tasks through the promise passed here.
-   * This is needed to block shutdown on any outstanding ping activity.
-   */
-  _trackPendingPingTask: function (aPromise) {
-    this._connectionsBarrier.client.addBlocker("Waiting for ping task", aPromise);
-  },
-
-  /**
    * Adds a ping to the pending ping list by moving it to the saved pings directory
    * and adding it to the pending ping list.
    *
@@ -424,7 +410,7 @@ let Impl = {
     this._log.trace("send - Type " + aType + ", Server " + this._server +
                     ", aOptions " + JSON.stringify(aOptions));
 
-    let promise = this.assemblePing(aType, aPayload, aOptions)
+    return this.assemblePing(aType, aPayload, aOptions)
         .then(pingData => {
           // Once ping is assembled, send it along with the persisted ping in the backlog.
           let p = [
@@ -436,27 +422,16 @@ let Impl = {
           return Promise.all(p);
         },
         error => this._log.error("send - Rejection", error));
-
-    this._trackPendingPingTask(promise);
-    return promise;
   },
 
   /**
    * Send the persisted pings to the server.
-   *
-   * @return Promise A promise that is resolved when all pings finished sending or failed.
    */
   sendPersistedPings: function sendPersistedPings() {
     this._log.trace("sendPersistedPings");
-
     let pingsIterator = Iterator(this.popPayloads());
-    let p = [for (data of pingsIterator) this.doPing(data, true).catch((e) => {
-      this._log.error("sendPersistedPings - doPing rejected", e);
-    })];
-
-    let promise = Promise.all(p);
-    this._trackPendingPingTask(promise);
-    return promise;
+    let p = [data for (data in pingsIterator)].map(data => this.doPing(data, true));
+    return Promise.all(p);
   },
 
   /**
@@ -813,33 +788,20 @@ let Impl = {
     return this._delayedInitTaskDeferred.promise;
   },
 
-  // Do proper shutdown waiting and cleanup.
-  _cleanupOnShutdown: Task.async(function*() {
-    if (!this._initialized) {
-      return;
-    }
-
-    try {
-      // First wait for clients processing shutdown.
-      yield this._shutdownBarrier.wait();
-      // Then wait for any outstanding async ping activity.
-      yield this._connectionsBarrier.wait();
-
-      // Should down dependent components.
-      try {
-        yield TelemetryEnvironment.shutdown();
-      } catch (e) {
-        this._log.error("shutdown - environment shutdown failure", e);
-      }
-    } finally {
-      // Reset state.
-      this._initialized = false;
-      this._initStarted = false;
-    }
-  }),
-
   shutdown: function() {
     this._log.trace("shutdown");
+
+    let cleanup = () => {
+      if (!this._initialized) {
+        return;
+      }
+      let reset = () => {
+        this._initialized = false;
+        this._initStarted = false;
+      };
+      return this._shutdownBarrier.wait().then(
+               () => TelemetryEnvironment.shutdown().then(reset, reset));
+    };
 
     // We can be in one the following states here:
     // 1) setupTelemetry was never called
@@ -856,11 +818,11 @@ let Impl = {
     // This handles 4).
     if (!this._delayedInitTask) {
       // We already ran the delayed initialization.
-      return this._cleanupOnShutdown();
+      return cleanup();
     }
 
     // This handles 2) and 3).
-    return this._delayedInitTask.finalize().then(() => this._cleanupOnShutdown());
+    return this._delayedInitTask.finalize().then(cleanup);
   },
 
   /**
@@ -905,8 +867,6 @@ let Impl = {
       initialized: this._initialized,
       initStarted: this._initStarted,
       haveDelayedInitTask: !!this._delayedInitTask,
-      shutdownBarrier: this._shutdownBarrier.state,
-      connectionsBarrier: this._connectionsBarrier.state,
     };
   },
 };
