@@ -172,6 +172,7 @@ namespace jit {
     _(JSOP_RETSUB)             \
     _(JSOP_PUSHBLOCKSCOPE)     \
     _(JSOP_POPBLOCKSCOPE)      \
+    _(JSOP_FRESHENBLOCKSCOPE)  \
     _(JSOP_DEBUGLEAVEBLOCK)    \
     _(JSOP_EXCEPTION)          \
     _(JSOP_DEBUGGER)           \

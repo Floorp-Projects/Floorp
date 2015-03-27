@@ -293,6 +293,19 @@ InterpreterFrame::pushBlock(JSContext *cx, StaticBlockObject &block)
     return true;
 }
 
+bool
+InterpreterFrame::freshenBlock(JSContext *cx)
+{
+    MOZ_ASSERT(flags_ & HAS_SCOPECHAIN);
+    Rooted<ClonedBlockObject*> block(cx, &scopeChain_->as<ClonedBlockObject>());
+    ClonedBlockObject *fresh = ClonedBlockObject::clone(cx, block);
+    if (!fresh)
+        return false;
+
+    replaceInnermostScope(*fresh);
+    return true;
+}
+
 void
 InterpreterFrame::popBlock(JSContext *cx)
 {
