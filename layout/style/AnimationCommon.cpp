@@ -854,8 +854,11 @@ AnimationPlayerCollection::HasCurrentAnimationsForProperty(nsCSSProperty
                                                              aProperty) const
 {
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-    const Animation* anim = mPlayers[playerIdx]->GetSource();
-    if (anim && anim->IsCurrent() && anim->HasAnimationOfProperty(aProperty)) {
+    const AnimationPlayer& player = *mPlayers[playerIdx];
+    const Animation* anim = player.GetSource();
+    if (anim &&
+        anim->IsCurrent(player) &&
+        anim->HasAnimationOfProperty(aProperty)) {
       return true;
     }
   }
