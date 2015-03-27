@@ -140,7 +140,7 @@ class WrapperOwner : public virtual JavaScriptShared
                                  ReturnStatus *rs, bool *bp) = 0;
     virtual bool SendObjectClassIs(const ObjectId &objId, const uint32_t &classValue,
                                    bool *result) = 0;
-    virtual bool SendClassName(const ObjectId &objId, nsString *result) = 0;
+    virtual bool SendClassName(const ObjectId &objId, nsCString *result) = 0;
     virtual bool SendGetPrototype(const ObjectId &objId, ReturnStatus *rs, ObjectOrNullVariant *result) = 0;
     virtual bool SendRegExpToShared(const ObjectId &objId, ReturnStatus *rs, nsString *source,
                                     uint32_t *flags) = 0;
