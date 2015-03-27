@@ -203,6 +203,10 @@ public:
   }
   bool IsRunning() const;
 
+  bool HasInPlaySource() const
+  {
+    return GetSource() && GetSource()->IsInPlay(*this);
+  }
   bool HasCurrentSource() const
   {
     return GetSource() && GetSource()->IsCurrent(*this);
