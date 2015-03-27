@@ -17,4 +17,4 @@ global.log = '';
 global.eval("function f(n){var o={a:1,b:2,c:3}} debugger;");
 global.f(3);
 // Should hit each property in the object.
-assertEq(global.log, "18 21 25 29 19 ");
+assertEq(global.log, "18 21 25 29 33 ");
