@@ -598,12 +598,17 @@ AnimationPlayer::IsPossiblyOrphanedPendingPlayer() const
   // PendingPlayerTracker then there's a good chance no one is tracking us.
   //
   // If we're wrong and another document is tracking us then, at worst, we'll
-  // simply start the animation one tick too soon. That's better than never
-  // starting the animation and is unlikely.
+  // simply start/pause the animation one tick too soon. That's better than
+  // never starting/pausing the animation and is unlikely.
   nsIDocument* doc = GetRenderedDocument();
-  return !doc ||
-         !doc->GetPendingPlayerTracker() ||
-         !doc->GetPendingPlayerTracker()->IsWaitingToPlay(*this);
+  if (!doc) {
+    return false;
+  }
+
+  PendingPlayerTracker* tracker = doc->GetPendingPlayerTracker();
+  return !tracker ||
+         (!tracker->IsWaitingToPlay(*this) &&
+          !tracker->IsWaitingToPause(*this));
 }
 
 StickyTimeDuration
