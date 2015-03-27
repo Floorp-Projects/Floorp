@@ -8,7 +8,8 @@ import org.mozilla.gecko.sync.net.MozResponse;
 
 /**
  * Response delegate for a server DELETE.
- * Only one of these methods will be called, and it will be called precisely once.
+ * Only one of these methods will be called, and it will be called precisely once,
+ * unless batching is used.
  */
 public interface ReadingListDeleteDelegate {
   void onSuccess(ReadingListRecordResponse response, ReadingListRecord record);
@@ -16,4 +17,5 @@ public interface ReadingListDeleteDelegate {
   void onRecordMissingOrDeleted(String guid, MozResponse response);
   void onFailure(Exception e);
   void onFailure(MozResponse response);
+  void onBatchDone();
 }

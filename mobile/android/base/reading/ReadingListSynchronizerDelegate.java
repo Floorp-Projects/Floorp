@@ -12,6 +12,7 @@ public interface ReadingListSynchronizerDelegate {
 
   // These are called sequentially, or not at all
   // if a failure occurs.
+  void onDeletionsUploadComplete();
   void onStatusUploadComplete(Collection<String> uploaded, Collection<String> failed);
   void onNewItemUploadComplete(Collection<String> uploaded, Collection<String> failed);
   void onDownloadComplete();

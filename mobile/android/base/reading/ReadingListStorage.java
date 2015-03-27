@@ -8,6 +8,7 @@ import android.database.Cursor;
 
 public interface ReadingListStorage {
   Cursor getModified();
+  Cursor getDeletedItems();
   Cursor getStatusChanges();
   Cursor getNew();
   Cursor getAll();

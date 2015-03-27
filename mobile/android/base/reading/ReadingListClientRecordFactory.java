@@ -10,9 +10,9 @@ import org.mozilla.gecko.reading.ReadingListRecord.ServerMetadata;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 
 import android.annotation.TargetApi;
+import android.database.AbstractWindowedCursor;
 import android.database.Cursor;
 import android.database.CursorWindow;
-import android.database.sqlite.SQLiteCursor;
 import android.os.Build;
 
 /**
@@ -132,11 +132,11 @@ public class ReadingListClientRecordFactory {
 
   @SuppressWarnings("deprecation")
   private final void fillGingerbread(ExtendedJSONObject o, Cursor c, String f, int i) {
-    if (!(c instanceof SQLiteCursor)) {
+    if (!(c instanceof AbstractWindowedCursor)) {
       throw new IllegalStateException("Unable to handle cursors that don't have a CursorWindow!");
     }
 
-    final SQLiteCursor sqc = (SQLiteCursor) c;
+    final AbstractWindowedCursor sqc = (AbstractWindowedCursor) c;
     final CursorWindow w = sqc.getWindow();
     final int pos = c.getPosition();
     if (w.isNull(pos, i)) {
