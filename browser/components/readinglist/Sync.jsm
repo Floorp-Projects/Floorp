@@ -278,8 +278,13 @@ SyncImpl.prototype = {
       }
       // Note that the server seems to return a 200 if an identical item already
       // exists, but we shouldn't be uploading identical items in this phase in
-      // normal usage, so treat 200 as an unexpected response.
-      if (response.status != 201) {
+      // normal usage. But if something goes wrong locally (eg, we upload but
+      // get some error even though the upload worked) we will see this.
+      // So allow 200 but log a warning.
+      if (response.status == 200) {
+        log.debug("Attempting to upload a new item found the server already had it", response);
+        // but we still process it.
+      } else if (response.status != 201) {
         this._handleUnexpectedResponse("uploading a new item", response);
         continue;
       }
@@ -404,7 +409,13 @@ SyncImpl.prototype = {
         continue;
       }
       // new item
-      yield this.list.addItem(localRecordFromServerRecord(serverRecord));
+      let localRecord = localRecordFromServerRecord(serverRecord);
+      try {
+        yield this.list.addItem(localRecord);
+      } catch (ex) {
+        log.warn("Failed to add a new item from server record ${serverRecord}: ${ex}",
+                 {serverRecord, ex});
+      }
     }
   }),
 
@@ -442,7 +453,12 @@ SyncImpl.prototype = {
       throw new Error("Item should exist");
     }
     localItem._record = localRecordFromServerRecord(serverRecord);
-    yield this.list.updateItem(localItem);
+    try {
+      yield this.list.updateItem(localItem);
+    } catch (ex) {
+      log.warn("Failed to update an item from server record ${serverRecord}: ${ex}",
+               {serverRecord, ex});
+    }
   }),
 
   /**
@@ -458,7 +474,12 @@ SyncImpl.prototype = {
       // consumers are notified properly.  Set the syncStatus to NEW so that the
       // list truly deletes the item.
       item._record.syncStatus = ReadingList.SyncStatus.NEW;
-      yield this.list.deleteItem(item);
+      try {
+        yield this.list.deleteItem(item);
+      } catch (ex) {
+        log.warn("Failed delete local item with id ${guid}: ${ex}",
+                 {guid, ex});
+      }
       return;
     }
     // If item is null, then it may not actually exist locally, or it may have
@@ -466,7 +487,12 @@ SyncImpl.prototype = {
     // that case, try to delete it directly from the store.  As far as the list
     // is concerned, the item has already been deleted.
     log.debug("Item not present in list, deleting it by GUID instead");
-    this.list._store.deleteItemByGUID(guid);
+    try {
+      this.list._store.deleteItemByGUID(guid);
+    } catch (ex) {
+      log.warn("Failed to delete local item with id ${guid}: ${ex}",
+               {guid, ex});
+    }
   }),
 
   /**

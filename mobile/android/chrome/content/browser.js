@@ -2213,11 +2213,24 @@ var NativeWindow = {
    *                     persist across location changes.
    *        timeout:     A time in milliseconds. The notification will not
    *                     automatically dismiss before this time.
+   *
    *        checkbox:    A string to appear next to a checkbox under the notification
    *                     message. The button callback functions will be called with
    *                     the checked state as an argument.                   
+   *
+   *        title:       An object that specifies text to display as the title, and
+   *                     optionally a resource, such as a favicon cache url that can be
+   *                     used to fetch a favicon from the FaviconCache. (This can be
+   *                     generalized to other resources if the situation arises.)
+   *                     { text: <title>,
+   *                       resource: <resource_url> }
+   *
+   *        subtext:     A string to appear below the doorhanger message.
+   *
+   * @param aCategory
+   *        Doorhanger type to display (e.g., LOGIN)
    */
-    show: function(aMessage, aValue, aButtons, aTabID, aOptions) {
+    show: function(aMessage, aValue, aButtons, aTabID, aOptions, aCategory) {
       if (aButtons == null) {
         aButtons = [];
       }
@@ -2236,7 +2249,8 @@ var NativeWindow = {
         buttons: aButtons,
         // use the current tab if none is provided
         tabID: aTabID || BrowserApp.selectedTab.id,
-        options: aOptions || {}
+        options: aOptions || {},
+        category: aCategory
       };
       Messaging.sendRequest(json);
     },
