@@ -10,6 +10,7 @@
 #include "AccessibleWrap.h"
 #include "DocAccessible.h"
 #include "nsMai.h"
+#include "ProxyAccessible.h"
 #include "mozilla/Likely.h"
 
 using namespace mozilla::a11y;
@@ -46,12 +47,14 @@ documentInterfaceInitCB(AtkDocumentIface *aIface)
 const gchar *
 getDocumentLocaleCB(AtkDocument *aDocument)
 {
-  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
-  if (!accWrap)
-    return nullptr;
-
   nsAutoString locale;
-  accWrap->Language(locale);
+  AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
+  if (accWrap) {
+    accWrap->Language(locale);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aDocument))) {
+    proxy->Language(locale);
+  }
+
   return locale.IsEmpty() ? nullptr : AccessibleWrap::ReturnString(locale);
 }
 
@@ -71,24 +74,30 @@ prependToList(GSList *aList, const char *const aName, const nsAutoString &aValue
 AtkAttributeSet *
 getDocumentAttributesCB(AtkDocument *aDocument)
 {
+  nsAutoString url;
+  nsAutoString w3cDocType;
+  nsAutoString mimeType;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
-  if (!accWrap || !accWrap->IsDoc())
+  if (accWrap) {
+    if (!accWrap->IsDoc()) {
+      return nullptr;
+    }
+
+    DocAccessible* document = accWrap->AsDoc();
+    document->URL(url);
+    document->DocType(w3cDocType);
+    document->MimeType(mimeType);
+  } else if (ProxyAccessible* proxy = GetProxy(ATK_OBJECT(aDocument))) {
+    proxy->URLDocTypeMimeType(url, w3cDocType, mimeType);
+  } else {
     return nullptr;
+  }
 
   // according to atkobject.h, AtkAttributeSet is a GSList
   GSList* attributes = nullptr;
-  DocAccessible* document = accWrap->AsDoc();
-  nsAutoString aURL;
-  document->URL(aURL);
-  attributes = prependToList(attributes, kDocUrlName, aURL);
-
-  nsAutoString aW3CDocType;
-  document->DocType(aW3CDocType);
-  attributes = prependToList(attributes, kDocTypeName, aW3CDocType);
-
-  nsAutoString aMimeType;
-  document->MimeType(aMimeType);
-  attributes = prependToList(attributes, kMimeTypeName, aMimeType);
+  attributes = prependToList(attributes, kDocUrlName, url);
+  attributes = prependToList(attributes, kDocTypeName, w3cDocType);
+  attributes = prependToList(attributes, kMimeTypeName, mimeType);
 
   return attributes;
 }
@@ -97,20 +106,44 @@ const gchar *
 getDocumentAttributeValueCB(AtkDocument *aDocument,
                             const gchar *aAttrName)
 {
+  ProxyAccessible* proxy = nullptr;
+  DocAccessible* document = nullptr;
   AccessibleWrap* accWrap = GetAccessibleWrap(ATK_OBJECT(aDocument));
-  if (!accWrap || !accWrap->IsDoc())
-    return nullptr;
+  if (accWrap) {
+    if (!accWrap->IsDoc()) {
+      return nullptr;
+    }
 
-  DocAccessible* document = accWrap->AsDoc();
+    document = accWrap->AsDoc();
+  } else {
+    proxy = GetProxy(ATK_OBJECT(aDocument));
+    if (!proxy) {
+      return nullptr;
+    }
+  }
+
   nsAutoString attrValue;
-  if (!strcasecmp(aAttrName, kDocTypeName))
-    document->DocType(attrValue);
-  else if (!strcasecmp(aAttrName, kDocUrlName))
-    document->URL(attrValue);
-  else if (!strcasecmp(aAttrName, kMimeTypeName))
-    document->MimeType(attrValue);
-  else
+  if (!strcasecmp(aAttrName, kDocTypeName)) {
+    if (document) {
+      document->DocType(attrValue);
+    } else {
+      proxy->DocType(attrValue);
+    }
+  } else if (!strcasecmp(aAttrName, kDocUrlName)) {
+    if (document) {
+      document->URL(attrValue);
+    } else {
+      proxy->URL(attrValue);
+    }
+  } else if (!strcasecmp(aAttrName, kMimeTypeName)) {
+    if (document) {
+      document->MimeType(attrValue);
+    } else {
+      proxy->MimeType(attrValue);
+    }
+  } else {
     return nullptr;
+  }
 
   return attrValue.IsEmpty() ? nullptr : AccessibleWrap::ReturnString(attrValue);
 }
