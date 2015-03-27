@@ -9,6 +9,7 @@
 
 #include "jscntxt.h"
 #include "jsmath.h"
+#include "jswrapper.h"
 #include "js/HashTable.h"
 #include "vm/Stack.h"
 
@@ -124,6 +125,10 @@ struct SavedFrame::HashPolicy
     static void rekey(Key &key, const Key &newKey);
 };
 
+// Assert that if the given object is not null, that it must be either a
+// SavedFrame object or wrapper (Xray or CCW) around a SavedFrame object.
+inline void AssertObjectIsSavedFrameOrWrapper(JSContext *cx, HandleObject stack);
+
 class SavedStacks {
     friend JSObject *SavedStacksMetadataCallback(JSContext *cx);
 
@@ -132,7 +137,8 @@ class SavedStacks {
       : frames(),
         allocationSamplingProbability(1.0),
         allocationSkipCount(0),
-        rngState(0)
+        rngState(0),
+        creatingSavedFrame(false)
     { }
 
     bool     init();
@@ -147,10 +153,31 @@ class SavedStacks {
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
   private:
-    SavedFrame::Set     frames;
-    double              allocationSamplingProbability;
-    uint32_t            allocationSkipCount;
-    uint64_t            rngState;
+    SavedFrame::Set frames;
+    double          allocationSamplingProbability;
+    uint32_t        allocationSkipCount;
+    uint64_t        rngState;
+    bool            creatingSavedFrame;
+
+    // Similar to mozilla::ReentrancyGuard, but instead of asserting against
+    // reentrancy, just change the behavior of SavedStacks::saveCurrentStack to
+    // return a nullptr SavedFrame.
+    struct MOZ_STACK_CLASS AutoReentrancyGuard {
+        MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
+        SavedStacks &stacks;
+
+        explicit AutoReentrancyGuard(SavedStacks &stacks MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+            : stacks(stacks)
+        {
+            MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+            stacks.creatingSavedFrame = true;
+        }
+
+        ~AutoReentrancyGuard()
+        {
+            stacks.creatingSavedFrame = false;
+        }
+    };
 
     bool       insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFrame frame,
                             unsigned maxFrameCount = 0);

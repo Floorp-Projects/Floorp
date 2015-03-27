@@ -4553,7 +4553,7 @@ JS_SetErrorReporter(JSRuntime *rt, JSErrorReporter er);
 namespace JS {
 
 extern JS_PUBLIC_API(bool)
-CreateError(JSContext *cx, JSExnType type, HandleString stack,
+CreateError(JSContext *cx, JSExnType type, HandleObject stack,
             HandleString fileName, uint32_t lineNumber, uint32_t columnNumber,
             JSErrorReport *report, HandleString message, MutableHandleValue rval);
 

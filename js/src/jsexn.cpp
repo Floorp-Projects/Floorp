@@ -29,11 +29,13 @@
 #include "gc/Marking.h"
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
+#include "vm/SavedStacks.h"
 #include "vm/StringBuffer.h"
 
 #include "jsobjinlines.h"
 
 #include "vm/ErrorObject-inl.h"
+#include "vm/SavedStacks-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -49,6 +51,11 @@ Error(JSContext *cx, unsigned argc, Value *vp);
 
 static bool
 exn_toSource(JSContext *cx, unsigned argc, Value *vp);
+
+static const JSPropertySpec exception_properties[] = {
+    JS_PSGS("stack", ErrorObject::getStack, ErrorObject::setStack, 0),
+    JS_PS_END
+};
 
 static const JSFunctionSpec exception_methods[] = {
 #if JS_HAS_TOSOURCE
@@ -82,7 +89,7 @@ static const JSFunctionSpec exception_methods[] = {
             nullptr, \
             nullptr, \
             exception_methods, \
-            nullptr, \
+            exception_properties, \
             nullptr, \
             JSProto_Error \
         } \
@@ -113,7 +120,8 @@ ErrorObject::classes[JSEXN_LIMIT] = {
             nullptr,
             nullptr,
             exception_methods,
-            0
+            exception_properties,
+            nullptr
         }
     },
     IMPLEMENT_ERROR_SUBCLASS(InternalError),
@@ -352,6 +360,16 @@ js::ErrorFromException(JSContext *cx, HandleObject objArg)
     return obj->as<ErrorObject>().getOrCreateErrorReport(cx);
 }
 
+// Cut off the stack if it gets too deep (most commonly for infinite recursion
+// errors).
+static const size_t MAX_REPORTED_STACK_DEPTH = 1u << 7;
+
+static bool
+CaptureStack(JSContext *cx, MutableHandleObject stack)
+{
+    return CaptureCurrentStack(cx, stack, MAX_REPORTED_STACK_DEPTH);
+}
+
 bool
 Error(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -391,8 +409,8 @@ Error(JSContext *cx, unsigned argc, Value *vp)
         lineNumber = iter.done() ? 0 : iter.computeLine(&columnNumber);
     }
 
-    Rooted<JSString*> stack(cx, ComputeStackString(cx));
-    if (!stack)
+    RootedObject stack(cx);
+    if (!CaptureStack(cx, &stack))
         return false;
 
     /*
@@ -502,7 +520,7 @@ ErrorObject::createProto(JSContext *cx, JSProtoKey key)
     Rooted<ErrorObject*> err(cx, &errorProto->as<ErrorObject>());
     RootedString emptyStr(cx, cx->names().empty);
     JSExnType type = ExnTypeFromProtoKey(key);
-    if (!ErrorObject::init(cx, err, type, nullptr, emptyStr, emptyStr, 0, 0, emptyStr))
+    if (!ErrorObject::init(cx, err, type, nullptr, emptyStr, NullPtr(), 0, 0, emptyStr))
         return nullptr;
 
     // The various prototypes also have .name in addition to the normal error
@@ -583,8 +601,8 @@ js::ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
     uint32_t lineNumber = reportp->lineno;
     uint32_t columnNumber = reportp->column;
 
-    RootedString stack(cx, ComputeStackString(cx));
-    if (!stack)
+    RootedObject stack(cx);
+    if (!CaptureStack(cx, &stack))
         return cx->isExceptionPending();
 
     js::ScopedJSFreePtr<JSErrorReport> report(CopyErrorReport(cx, reportp));
@@ -922,7 +940,7 @@ js::CopyErrorObject(JSContext *cx, Handle<ErrorObject*> err)
     RootedString fileName(cx, err->fileName(cx));
     if (!cx->compartment()->wrap(cx, &fileName))
         return nullptr;
-    RootedString stack(cx, err->stack(cx));
+    RootedObject stack(cx, err->stack());
     if (!cx->compartment()->wrap(cx, &stack))
         return nullptr;
     uint32_t lineNumber = err->lineNumber();
@@ -935,11 +953,13 @@ js::CopyErrorObject(JSContext *cx, Handle<ErrorObject*> err)
 }
 
 JS_PUBLIC_API(bool)
-JS::CreateError(JSContext *cx, JSExnType type, HandleString stack, HandleString fileName,
+JS::CreateError(JSContext *cx, JSExnType type, HandleObject stack, HandleString fileName,
                     uint32_t lineNumber, uint32_t columnNumber, JSErrorReport *report,
                     HandleString message, MutableHandleValue rval)
 {
     assertSameCompartment(cx, stack, fileName, message);
+    AssertObjectIsSavedFrameOrWrapper(cx, stack);
+
     js::ScopedJSFreePtr<JSErrorReport> rep;
     if (report)
         rep = CopyErrorReport(cx, report);

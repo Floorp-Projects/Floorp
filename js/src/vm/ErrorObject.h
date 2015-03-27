@@ -10,6 +10,7 @@
 #include "mozilla/ArrayUtils.h"
 
 #include "vm/NativeObject.h"
+#include "vm/SavedStacks.h"
 #include "vm/Shape.h"
 
 struct JSExnPrivate;
@@ -36,17 +37,20 @@ class ErrorObject : public NativeObject
 
     static bool
     init(JSContext *cx, Handle<ErrorObject*> obj, JSExnType type,
-         ScopedJSFreePtr<JSErrorReport> *errorReport, HandleString fileName, HandleString stack,
+         ScopedJSFreePtr<JSErrorReport> *errorReport, HandleString fileName, HandleObject stack,
          uint32_t lineNumber, uint32_t columnNumber, HandleString message);
 
+    static bool checkAndUnwrapThis(JSContext *cx, CallArgs &args, const char *fnName,
+                                   MutableHandle<ErrorObject*> error);
+
   protected:
-    static const uint32_t EXNTYPE_SLOT      = 0;
-    static const uint32_t ERROR_REPORT_SLOT = EXNTYPE_SLOT + 1;
-    static const uint32_t FILENAME_SLOT     = ERROR_REPORT_SLOT + 1;
-    static const uint32_t LINENUMBER_SLOT   = FILENAME_SLOT + 1;
-    static const uint32_t COLUMNNUMBER_SLOT = LINENUMBER_SLOT + 1;
-    static const uint32_t STACK_SLOT        = COLUMNNUMBER_SLOT + 1;
-    static const uint32_t MESSAGE_SLOT      = STACK_SLOT + 1;
+    static const uint32_t EXNTYPE_SLOT          = 0;
+    static const uint32_t STACK_SLOT            = EXNTYPE_SLOT + 1;
+    static const uint32_t ERROR_REPORT_SLOT     = STACK_SLOT + 1;
+    static const uint32_t FILENAME_SLOT         = ERROR_REPORT_SLOT + 1;
+    static const uint32_t LINENUMBER_SLOT       = FILENAME_SLOT + 1;
+    static const uint32_t COLUMNNUMBER_SLOT     = LINENUMBER_SLOT + 1;
+    static const uint32_t MESSAGE_SLOT          = COLUMNNUMBER_SLOT + 1;
 
     static const uint32_t RESERVED_SLOTS = MESSAGE_SLOT + 1;
 
@@ -68,7 +72,7 @@ class ErrorObject : public NativeObject
     // property with that value; otherwise the error will have no .message
     // property.
     static ErrorObject *
-    create(JSContext *cx, JSExnType type, HandleString stack, HandleString fileName,
+    create(JSContext *cx, JSExnType type, HandleObject stack, HandleString fileName,
            uint32_t lineNumber, uint32_t columnNumber, ScopedJSFreePtr<JSErrorReport> *report,
            HandleString message);
 
@@ -96,12 +100,17 @@ class ErrorObject : public NativeObject
     inline JSString * fileName(JSContext *cx) const;
     inline uint32_t lineNumber() const;
     inline uint32_t columnNumber() const;
-    inline JSString * stack(JSContext *cx) const;
+    inline JSObject * stack() const;
 
     JSString * getMessage() const {
         const HeapSlot &slot = getReservedSlotRef(MESSAGE_SLOT);
         return slot.isString() ? slot.toString() : nullptr;
     }
+
+    // Getter and setter for the Error.prototype.stack accessor.
+    static bool getStack(JSContext *cx, unsigned argc, Value *vp);
+    static bool setStack(JSContext *cx, unsigned argc, Value *vp);
+    static bool setStack_impl(JSContext *cx, CallArgs args);
 };
 
 } // namespace js
