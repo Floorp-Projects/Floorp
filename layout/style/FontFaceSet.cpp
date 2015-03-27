@@ -82,6 +82,7 @@ FontFaceSet::FontFaceSet(nsPIDOMWindow* aWindow, nsPresContext* aPresContext)
   , mNonRuleFacesDirty(false)
   , mHasLoadingFontFaces(false)
   , mHasLoadingFontFacesIsDirty(false)
+  , mDelayedLoadCheck(false)
 {
   MOZ_COUNT_CTOR(FontFaceSet);
 
@@ -1345,13 +1346,32 @@ FontFaceSet::OnFontFaceStatusChanged(FontFace* aFontFace)
   } else {
     MOZ_ASSERT(aFontFace->Status() == FontFaceLoadStatus::Loaded ||
                aFontFace->Status() == FontFaceLoadStatus::Error);
-    CheckLoadingFinished();
+    // When a font finishes downloading, nsPresContext::UserFontSetUpdated
+    // will be called immediately afterwards to request a reflow of the
+    // relevant elements in the document.  We want to wait until the reflow
+    // request has been done before the FontFaceSet is marked as Loaded so
+    // that we don't briefly set the FontFaceSet to Loaded and then Loading
+    // again once the reflow is pending.  So we go around the event loop
+    // and call CheckLoadingFinished() after the reflow has been queued.
+    if (!mDelayedLoadCheck) {
+      mDelayedLoadCheck = true;
+      nsCOMPtr<nsIRunnable> checkTask =
+        NS_NewRunnableMethod(this, &FontFaceSet::CheckLoadingFinishedAfterDelay);
+      NS_DispatchToMainThread(checkTask);
+    }
   }
 }
 
 void
 FontFaceSet::DidRefresh()
 {
+  CheckLoadingFinished();
+}
+
+void
+FontFaceSet::CheckLoadingFinishedAfterDelay()
+{
+  mDelayedLoadCheck = false;
   CheckLoadingFinished();
 }
 
@@ -1447,6 +1467,11 @@ FontFaceSet::MightHavePendingFontLoads()
 void
 FontFaceSet::CheckLoadingFinished()
 {
+  if (mDelayedLoadCheck) {
+    // Wait until the runnable posted in OnFontFaceStatusChanged calls us.
+    return;
+  }
+
   if (mStatus == FontFaceSetLoadStatus::Loaded) {
     // We've already resolved mReady and dispatched the loadingdone/loadingerror
     // events.

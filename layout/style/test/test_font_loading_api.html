@@ -948,7 +948,7 @@ function runTest() {
     document.fonts.add(face);
     is(document.fonts.status, "loading", "document.fonts.status should have status \"loading\" after first font added (TEST 37)");
 
-    return face.loaded
+    return document.fonts.ready
       .then(function() {
         is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" after first font loaded (TEST 37)");
         is(face.status, "loaded", "first FontFace should have status \"loaded\" (TEST 37)");
@@ -958,7 +958,7 @@ function runTest() {
         document.fonts.add(face2);
         is(document.fonts.status, "loading", "document.fonts.status should have status \"loading\" after second font added (TEST 37)");
 
-        return face2.loaded;
+        return document.fonts.ready;
       }).then(function() {
         is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" after second font loaded (TEST 37)");
         is(face2.status, "loaded", "second FontFace should have status \"loaded\" (TEST 37)");
@@ -1000,10 +1000,8 @@ function runTest() {
     document.fonts.add(face);
     is(document.fonts.status, "loading", "document.fonts.status should have status \"loading\" after first font added (TEST 38)");
 
-    return face.loaded
+    return document.fonts.ready
       .then(function() {
-        ok(false, "first FontFace should not load (TEST 38)");
-      }, function() {
         is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" after first font failed to load (TEST 38)");
         is(face.status, "error", "first FontFace should have status \"error\" (TEST 38)");
 
@@ -1012,10 +1010,8 @@ function runTest() {
         document.fonts.add(face2);
         is(document.fonts.status, "loading", "document.fonts.status should have status \"loading\" after second font added (TEST 38)");
 
-        return face2.loaded;
+        return document.fonts.ready;
       }).then(function() {
-        ok(false, "second FontFace should not load (TEST 38)");
-      }, function() {
         is(document.fonts.status, "loaded", "document.fonts.status should have status \"loaded\" after second font failed to load (TEST 38)");
         is(face2.status, "error", "second FontFace should have status \"error\" (TEST 38)");
 
