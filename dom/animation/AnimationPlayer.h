@@ -54,7 +54,7 @@ public:
   explicit AnimationPlayer(AnimationTimeline* aTimeline)
     : mTimeline(aTimeline)
     , mPlaybackRate(1.0)
-    , mIsPending(false)
+    , mPendingState(PendingState::NotPending)
     , mIsRunningOnCompositor(false)
     , mIsPreviousStateFinished(false)
     , mIsRelevant(false)
@@ -235,9 +235,9 @@ protected:
   void UpdateSourceContent();
   void FlushStyle() const;
   void PostUpdate();
-  // Remove this player from the pending player tracker and resets mIsPending
-  // as necessary. The caller is responsible for resolving or aborting the
-  // mReady promise as necessary.
+  // Remove this player from the pending player tracker and reset
+  // mPendingState as necessary. The caller is responsible for resolving or
+  // aborting the mReady promise as necessary.
   void CancelPendingPlay();
 
   bool IsPossiblyOrphanedPendingPlayer() const;
@@ -261,12 +261,15 @@ protected:
   // This object is lazily created by GetReady.
   nsRefPtr<Promise> mReady;
 
-  // Indicates if the player is in the pending state. We use this rather
-  // than checking if this player is tracked by a PendingPlayerTracker.
-  // This is because the PendingPlayerTracker is associated with the source
-  // content's document but we need to know if we're pending even if the
-  // source content loses association with its document.
-  bool mIsPending;
+  // Indicates if the player is in the pending state (and what state it is
+  // waiting to enter when it finished pending). We use this rather than
+  // checking if this player is tracked by a PendingPlayerTracker because the
+  // player will continue to be pending even after it has been removed from the
+  // PendingPlayerTracker while it is waiting for the next tick
+  // (see TriggerOnNextTick for details).
+  enum class PendingState { NotPending, PlayPending, PausePending };
+  PendingState mPendingState;
+
   bool mIsRunningOnCompositor;
   // Indicates whether we were in the finished state during our
   // most recent unthrottled sample (our last ComposeStyle call).
