@@ -1342,6 +1342,16 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
             return false;
     }
 
+    // From this point, the step numbers refer to
+    // 9.1.6.3, ValidateAndApplyPropertyDescriptor.
+    // Step 1 is a redundant assertion.
+
+    // Step 2.a.
+    if (!shape) {
+        if (!obj->nonProxyIsExtensible())
+            return result.fail(JSMSG_OBJECT_NOT_EXTENSIBLE);
+    }
+
     Rooted<PropertyDescriptor> desc(cx, desc_);
 
     // If defining a getter or setter, we must check for its counterpart and
@@ -2023,17 +2033,6 @@ js::SetPropertyByDefining(JSContext* cx, HandleObject obj, HandleId id, HandleVa
     } else {
         if (!HasOwnProperty(cx, receiver, id, &existing))
             return false;
-    }
-
-    // If the property doesn't already exist, check for an inextensible
-    // receiver. (According to the specification, this is supposed to be
-    // enforced by [[DefineOwnProperty]], but we haven't implemented that yet.)
-    if (!existing) {
-        bool extensible;
-        if (!IsExtensible(cx, receiver, &extensible))
-            return false;
-        if (!extensible)
-            return result.fail(JSMSG_OBJECT_NOT_EXTENSIBLE);
     }
 
     // Invalidate SpiderMonkey-specific caches or bail.
