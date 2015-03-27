@@ -123,7 +123,7 @@ function* assertNodeFlashing(nodeFront, inspector) {
 function* assertAttributeFlashing(nodeFront, attribute, inspector) {
   let container = getContainerForNodeFront(nodeFront, inspector);
   ok(container, "Markup container for node found");
-  ok(container.editor.attrs[attribute], "Attribute exists on editor");
+  ok(container.editor.attrElements.get(attribute), "Attribute exists on editor");
 
   let attributeElement = container.editor.getAttributeElement(attribute);
 
