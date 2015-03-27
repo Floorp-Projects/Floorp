@@ -36,6 +36,18 @@ builds:
         task: tasks/builds/b2g_emulator_kk_opt.yml
       debug:
         task: tasks/builds/b2g_emulator_kk_debug.yml
+  emulator-x86-l:
+    platfoms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_emulator_x86_l_opt.yml
+  emulator-x86-kk:
+    platfoms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_emulator_x86_kk_opt.yml
   emulator-jb:
     platfoms:
       - b2g
@@ -134,6 +146,10 @@ tests:
         task: tasks/tests/b2g_emulator_mochitest.yml
       tasks/builds/b2g_emulator_kk_opt.yml:
         task: tasks/tests/b2g_emulator_mochitest.yml
+      tasks/builds/b2g_emulator_x86_l_opt.yml:
+        task: tasks/tests/b2g_emulator_mochitest.yml
+      tasks/builds/b2g_emulator_x86_kk_opt.yml:
+        task: tasks/tests/b2g_emulator_mochitest.yml
       tasks/builds/b2g_emulator_ics_opt.yml:
         task: tasks/tests/b2g_emulator_mochitest.yml
       tasks/builds/b2g_emulator_ics_debug.yml:
@@ -150,6 +166,10 @@ tests:
         task: tasks/tests/mulet_reftests.yml
       tasks/builds/b2g_emulator_kk_opt.yml:
         task: tasks/tests/b2g_emulator_reftest.yml
+      tasks/builds/b2g_emulator_x86_l_opt.yml:
+        task: tasks/tests/b2g_emulator_reftest.yml
+      tasks/builds/b2g_emulator_x86_kk_opt.yml:
+        task: tasks/tests/b2g_emulator_reftest.yml
       tasks/builds/b2g_emulator_ics_opt.yml:
         task: tasks/tests/b2g_emulator_reftest.yml
   reftest-sanity-oop:
@@ -158,6 +178,8 @@ tests:
         task: tasks/tests/b2g_reftests_sanity_oop.yml
   xpcshell:
     allowed_build_tasks:
+      tasks/builds/b2g_emulator_x86_kk_opt.yml:
+        task: tasks/tests/b2g_emulator_xpcshell_chunked.yml
       tasks/builds/b2g_emulator_kk_opt.yml:
         task: tasks/tests/b2g_emulator_xpcshell_chunked.yml
       tasks/builds/b2g_emulator_ics_opt.yml:
