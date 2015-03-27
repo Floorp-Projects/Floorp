@@ -278,8 +278,13 @@ SyncImpl.prototype = {
       }
       // Note that the server seems to return a 200 if an identical item already
       // exists, but we shouldn't be uploading identical items in this phase in
-      // normal usage, so treat 200 as an unexpected response.
-      if (response.status != 201) {
+      // normal usage. But if something goes wrong locally (eg, we upload but
+      // get some error even though the upload worked) we will see this.
+      // So allow 200 but log a warning.
+      if (response.status == 200) {
+        log.debug("Attempting to upload a new item found the server already had it", response);
+        // but we still process it.
+      } else if (response.status != 201) {
         this._handleUnexpectedResponse("uploading a new item", response);
         continue;
       }
