@@ -27,6 +27,7 @@ import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.db.StubBrowserDB;
 import org.mozilla.gecko.distribution.Distribution;
+import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.mozglue.RobocopTarget;
 import org.mozilla.gecko.firstrun.FirstrunPane;
 import org.mozilla.gecko.util.INIParser;
@@ -153,7 +154,7 @@ public final class GeckoProfile {
 
         final String args;
         if (context instanceof Activity) {
-            args = ((Activity) context).getIntent().getStringExtra("args");
+            args = ContextUtils.getStringExtra(((Activity) context).getIntent(), "args");
         } else {
             args = null;
         }
@@ -677,6 +678,14 @@ public final class GeckoProfile {
         } finally {
             fr.close();
         }
+    }
+
+    public boolean deleteFileFromProfileDir(String fileName) throws IllegalArgumentException {
+        if (TextUtils.isEmpty(fileName)) {
+            throw new IllegalArgumentException("Filename cannot be empty.");
+        }
+        File file = new File(getDir(), fileName);
+        return file.delete();
     }
 
     private boolean remove() {

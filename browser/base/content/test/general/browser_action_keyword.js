@@ -13,34 +13,34 @@ function* promise_first_result(inputText) {
 
 add_task(function*() {
   // This test is only relevant if UnifiedComplete is enabled.
-  if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete")) {
-    todo(false, "Stop supporting old autocomplete components.");
-    return;
-  }
+  let ucpref = Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete");
+  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
+  registerCleanupFunction(() => {
+    Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", ucpref);
+  });
 
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:mozilla");
   let tabs = [tab];
-  registerCleanupFunction(() => {
+  registerCleanupFunction(function* () {
     for (let tab of tabs)
       gBrowser.removeTab(tab);
-    PlacesUtils.bookmarks.removeItem(itemId);
+    yield PlacesUtils.bookmarks.remove(bm);
   });
 
   yield promiseTabLoadEvent(tab);
 
-  let itemId =
-    PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
-                                         NetUtil.newURI("http://example.com/?q=%s"),
-                                         PlacesUtils.bookmarks.DEFAULT_INDEX,
-                                         "test");
-  PlacesUtils.bookmarks.setKeywordForBookmark(itemId, "keyword");
+  let bm = yield PlacesUtils.bookmarks.insert({ parentGuid: PlacesUtils.bookmarks.unfiledGuid,
+                                                url: "http://example.com/?q=%s",
+                                                title: "test" });
+  yield PlacesUtils.keywords.insert({ keyword: "keyword",
+                                      url: "http://example.com/?q=%s" });
 
   let result = yield promise_first_result("keyword something");
   isnot(result, null, "Expect a keyword result");
 
   is(result.getAttribute("type"), "action keyword", "Expect correct  `type` attribute");
   is(result.getAttribute("actiontype"), "keyword", "Expect correct `actiontype` attribute");
-  is(result.getAttribute("title"), "test", "Expect correct title");
+  is(result.getAttribute("title"), "example.com", "Expect correct title");
 
   // We need to make a real URI out of this to ensure it's normalised for
   // comparison.
@@ -50,9 +50,9 @@ add_task(function*() {
   is_element_visible(result._title, "Title element should be visible");
   is(result._title.childNodes.length, 1, "Title element should have 1 child");
   is(result._title.childNodes[0].nodeName, "#text", "That child should be a text node");
-  is(result._title.childNodes[0].data, "test", "Node should contain the name of the bookmark");
+  is(result._title.childNodes[0].data, "example.com", "Node should contain the name of the bookmark");
 
-  is_element_visible(result._extra, "Extra element should be visible");
+  is_element_visible(result._extraBox, "Extra element should be visible");
   is(result._extra.childNodes.length, 1, "Title element should have 1 child");
   is(result._extra.childNodes[0].nodeName, "span", "That child should be a span node");
   let span = result._extra.childNodes[0];

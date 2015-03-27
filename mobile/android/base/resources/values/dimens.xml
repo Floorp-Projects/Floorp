@@ -100,6 +100,10 @@
     <dimen name="doorhanger_padding">15dp</dimen>
     <dimen name="doorhanger_offsetX">10dp</dimen>
     <dimen name="doorhanger_offsetY">7dp</dimen>
+    <dimen name="doorhanger_drawable_padding">5dp</dimen>
+    <dimen name="doorhanger_section_padding_small">20dp</dimen>
+    <dimen name="doorhanger_section_padding_large">30dp</dimen>
+    <dimen name="doorhanger_icon_size">60dp</dimen>
 
     <dimen name="flow_layout_spacing">6dp</dimen>
     <dimen name="menu_item_icon">21dp</dimen>

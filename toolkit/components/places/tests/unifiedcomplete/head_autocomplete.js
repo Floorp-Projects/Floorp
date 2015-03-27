@@ -226,7 +226,8 @@ let addBookmark = Task.async(function* (aBookmarkObj) {
   let itemId = yield PlacesUtils.promiseItemId(bm.guid);
 
   if (aBookmarkObj.keyword) {
-    PlacesUtils.bookmarks.setKeywordForBookmark(itemId, aBookmarkObj.keyword);
+    yield PlacesUtils.keywords.insert({ keyword: aBookmarkObj.keyword,
+                                        url: aBookmarkObj.uri.spec });
   }
 
   if (aBookmarkObj.tags) {
