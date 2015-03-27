@@ -32,13 +32,10 @@ js::ErrorObject::columnNumber() const
     return slot.isInt32() ? slot.toInt32() : 0;
 }
 
-inline JSString *
-js::ErrorObject::stack(JSContext *cx) const
+inline JSObject *
+js::ErrorObject::stack() const
 {
-    const HeapSlot &slot = getReservedSlotRef(STACK_SLOT);
-    if (slot.isString())
-        return slot.toString();
-    return cx->names().empty;
+    return getReservedSlotRef(STACK_SLOT).toObjectOrNull();
 }
 
 #endif /* vm_ErrorObject_inl_h */

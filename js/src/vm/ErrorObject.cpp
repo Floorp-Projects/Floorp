@@ -9,11 +9,13 @@
 
 #include "jsexn.h"
 
+#include "js/CallArgs.h"
 #include "vm/GlobalObject.h"
 
 #include "jsobjinlines.h"
 
 #include "vm/NativeObject-inl.h"
+#include "vm/SavedStacks-inl.h"
 #include "vm/Shape-inl.h"
 
 using namespace js;
@@ -27,17 +29,18 @@ js::ErrorObject::assignInitialShape(ExclusiveContext *cx, Handle<ErrorObject*> o
         return nullptr;
     if (!obj->addDataProperty(cx, cx->names().lineNumber, LINENUMBER_SLOT, 0))
         return nullptr;
-    if (!obj->addDataProperty(cx, cx->names().columnNumber, COLUMNNUMBER_SLOT, 0))
-        return nullptr;
-    return obj->addDataProperty(cx, cx->names().stack, STACK_SLOT, 0);
+    return obj->addDataProperty(cx, cx->names().columnNumber, COLUMNNUMBER_SLOT, 0);
 }
 
 /* static */ bool
 js::ErrorObject::init(JSContext *cx, Handle<ErrorObject*> obj, JSExnType type,
                       ScopedJSFreePtr<JSErrorReport> *errorReport, HandleString fileName,
-                      HandleString stack, uint32_t lineNumber, uint32_t columnNumber,
+                      HandleObject stack, uint32_t lineNumber, uint32_t columnNumber,
                       HandleString message)
 {
+    AssertObjectIsSavedFrameOrWrapper(cx, stack);
+    assertSameCompartment(cx, obj, stack);
+
     // Null out early in case of error, for exn_finalize's sake.
     obj->initReservedSlot(ERROR_REPORT_SLOT, PrivateValue(nullptr));
 
@@ -60,7 +63,6 @@ js::ErrorObject::init(JSContext *cx, Handle<ErrorObject*> obj, JSExnType type,
     MOZ_ASSERT(obj->lookupPure(NameToId(cx->names().lineNumber))->slot() == LINENUMBER_SLOT);
     MOZ_ASSERT(obj->lookupPure(NameToId(cx->names().columnNumber))->slot() ==
                COLUMNNUMBER_SLOT);
-    MOZ_ASSERT(obj->lookupPure(NameToId(cx->names().stack))->slot() == STACK_SLOT);
     MOZ_ASSERT_IF(message,
                   obj->lookupPure(NameToId(cx->names().message))->slot() == MESSAGE_SLOT);
 
@@ -68,11 +70,11 @@ js::ErrorObject::init(JSContext *cx, Handle<ErrorObject*> obj, JSExnType type,
 
     JSErrorReport *report = errorReport ? errorReport->forget() : nullptr;
     obj->initReservedSlot(EXNTYPE_SLOT, Int32Value(type));
+    obj->initReservedSlot(STACK_SLOT, ObjectOrNullValue(stack));
     obj->setReservedSlot(ERROR_REPORT_SLOT, PrivateValue(report));
     obj->initReservedSlot(FILENAME_SLOT, StringValue(fileName));
     obj->initReservedSlot(LINENUMBER_SLOT, Int32Value(lineNumber));
     obj->initReservedSlot(COLUMNNUMBER_SLOT, Int32Value(columnNumber));
-    obj->initReservedSlot(STACK_SLOT, StringValue(stack));
     if (message)
         obj->setSlotWithType(cx, messageShape, StringValue(message));
 
@@ -80,10 +82,12 @@ js::ErrorObject::init(JSContext *cx, Handle<ErrorObject*> obj, JSExnType type,
 }
 
 /* static */ ErrorObject *
-js::ErrorObject::create(JSContext *cx, JSExnType errorType, HandleString stack,
+js::ErrorObject::create(JSContext *cx, JSExnType errorType, HandleObject stack,
                         HandleString fileName, uint32_t lineNumber, uint32_t columnNumber,
                         ScopedJSFreePtr<JSErrorReport> *report, HandleString message)
 {
+    AssertObjectIsSavedFrameOrWrapper(cx, stack);
+
     Rooted<JSObject*> proto(cx, GlobalObject::getOrCreateCustomErrorPrototype(cx, cx->global(), errorType));
     if (!proto)
         return nullptr;
@@ -148,4 +152,94 @@ js::ErrorObject::getOrCreateErrorReport(JSContext *cx)
         return nullptr;
     setReservedSlot(ERROR_REPORT_SLOT, PrivateValue(copy));
     return copy;
+}
+
+/* static */ bool
+js::ErrorObject::checkAndUnwrapThis(JSContext *cx, CallArgs &args, const char *fnName,
+                                    MutableHandle<ErrorObject*> error)
+{
+    const Value &thisValue = args.thisv();
+
+    if (!thisValue.isObject()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
+                             InformalValueTypeName(thisValue));
+        return false;
+    }
+
+    // Walk up the prototype chain until we find the first ErrorObject that has
+    // the slots we need. This allows us to support the poor-man's subclassing
+    // of error: Object.create(Error.prototype).
+
+    RootedObject target(cx, CheckedUnwrap(&thisValue.toObject()));
+    if (!target) {
+        JS_ReportError(cx, "Permission denied to access object");
+        return false;
+    }
+
+    RootedObject proto(cx);
+    while (!target->is<ErrorObject>()) {
+        if (!GetPrototype(cx, target, &proto))
+            return false;
+
+        if (!proto) {
+            // We walked the whole prototype chain and did not find an Error
+            // object.
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
+                                 js_Error_str, fnName, thisValue.toObject().getClass()->name);
+            return false;
+        }
+
+        target = CheckedUnwrap(proto);
+        if (!target) {
+            JS_ReportError(cx, "Permission denied to access object");
+            return false;
+        }
+    }
+
+    error.set(&target->as<ErrorObject>());
+    return true;
+}
+
+/* static */ bool
+js::ErrorObject::getStack(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    Rooted<ErrorObject*> error(cx);
+    if (!checkAndUnwrapThis(cx, args, "(get stack)", &error))
+        return false;
+
+    RootedObject savedFrameObj(cx, error->stack());
+    RootedString stackString(cx);
+    if (!StringifySavedFrameStack(cx, savedFrameObj, &stackString))
+        return false;
+    args.rval().setString(stackString);
+    return true;
+}
+
+static MOZ_ALWAYS_INLINE bool
+IsObject(HandleValue v)
+{
+    return v.isObject();
+}
+
+/* static */ bool
+js::ErrorObject::setStack(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    // We accept any object here, because of poor-man's subclassing of Error.
+    return CallNonGenericMethod<IsObject, setStack_impl>(cx, args);
+}
+
+/* static */ bool
+js::ErrorObject::setStack_impl(JSContext *cx, CallArgs args)
+{
+    const Value &thisValue = args.thisv();
+    MOZ_ASSERT(thisValue.isObject());
+    RootedObject thisObj(cx, &thisValue.toObject());
+
+    if (!args.requireAtLeast(cx, "(set stack)", 1))
+        return false;
+    RootedValue val(cx, args[0]);
+
+    return DefineProperty(cx, thisObj, cx->names().stack, val);
 }
