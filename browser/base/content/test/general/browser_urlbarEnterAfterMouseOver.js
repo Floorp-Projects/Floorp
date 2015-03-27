@@ -16,7 +16,9 @@ function is_selected(index) {
 }
 
 add_task(function*() {
-  registerCleanupFunction(() => PlacesTestUtils.clearHistory());
+  registerCleanupFunction(function* () {
+    yield PlacesTestUtils.clearHistory();
+  });
 
   yield PlacesTestUtils.clearHistory();
   let tabCount = gBrowser.tabs.length;

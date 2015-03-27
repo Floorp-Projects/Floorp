@@ -38,18 +38,20 @@ let kURIs = [
 let kTitles = [
   "Generic page title",
   "Keyword title",
+  "abc",
+  "xyz"
 ];
 
 // Add the keyword bookmark
 addPageBook(0, 0, 1, [], keyKey);
 // Add in the "fake pages" for keyword searches
-gPages[1] = [1,0];
-gPages[2] = [2,0];
-gPages[3] = [3,0];
-gPages[4] = [4,0];
+gPages[1] = [1,2];
+gPages[2] = [2,2];
+gPages[3] = [3,2];
+gPages[4] = [4,2];
 // Add a page into history
-addPageBook(5, 0);
-gPages[6] = [6,0];
+addPageBook(5, 2);
+gPages[6] = [6,2];
 
 // Provide for each test: description; search terms; array of gPages indices of
 // pages that should match; optional function to be run before the test
