@@ -8,7 +8,7 @@
 #include "UnwinderThread2.h"
 
 SyncProfile::SyncProfile(ThreadInfo* aInfo, int aEntrySize)
-  : ThreadProfile(aInfo, new ProfileBuffer(aEntrySize))
+  : ThreadProfile(aInfo, new ProfileBuffer(aEntrySize, /* aGeneration = */ UINT32_MAX))
   , mOwnerState(REFERENCED)
   , mUtb(nullptr)
 {
