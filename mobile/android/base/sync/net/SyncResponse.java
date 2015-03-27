@@ -22,6 +22,14 @@ public class SyncResponse extends MozResponse {
   }
 
   /**
+   * @return A number of seconds, or -1 if the 'X-Backoff' header was not
+   *         present.
+   */
+  public int xBackoffInSeconds() throws NumberFormatException {
+    return this.getIntegerHeader("x-backoff");
+  }
+
+  /**
    * Extract a number of seconds, or -1 if none of the specified headers were present.
    *
    * @param includeRetryAfter
@@ -47,7 +55,7 @@ public class SyncResponse extends MozResponse {
 
     int backoffInSeconds = -1;
     try {
-      backoffInSeconds = backoffInSeconds();
+      backoffInSeconds = xBackoffInSeconds();
     } catch (NumberFormatException e) {
     }
 
