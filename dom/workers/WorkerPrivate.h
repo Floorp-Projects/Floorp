@@ -56,6 +56,8 @@ class PrincipalInfo;
 
 struct PRThread;
 
+class ReportDebuggerErrorRunnable;
+
 BEGIN_WORKERS_NAMESPACE
 
 class AutoSyncLoopHolder;
@@ -721,6 +723,8 @@ public:
 };
 
 class WorkerDebugger : public nsIWorkerDebugger {
+  friend class ::ReportDebuggerErrorRunnable;
+
   mozilla::Mutex mMutex;
   mozilla::CondVar mCondVar;
 
@@ -753,6 +757,10 @@ public:
   void
   PostMessageToDebugger(const nsAString& aMessage);
 
+  void
+  ReportErrorToDebugger(const nsAString& aFilename, uint32_t aLineno,
+                        const nsAString& aMessage);
+
 private:
   virtual
   ~WorkerDebugger();
@@ -762,6 +770,11 @@ private:
 
   void
   PostMessageToDebuggerOnMainThread(const nsAString& aMessage);
+
+  void
+  ReportErrorToDebuggerOnMainThread(const nsAString& aFilename,
+                                    uint32_t aLineno,
+                                    const nsAString& aMessage);
 };
 
 class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
@@ -802,6 +815,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   nsTArray<ParentType*> mChildWorkers;
   nsTArray<WorkerFeature*> mFeatures;
   nsTArray<nsAutoPtr<TimeoutInfo>> mTimeouts;
+  uint32_t mDebuggerEventLoopLevel;
 
   struct SyncLoopInfo
   {
@@ -963,7 +977,17 @@ public:
                              ErrorResult& aRv);
 
   void
+  EnterDebuggerEventLoop();
+
+  void
+  LeaveDebuggerEventLoop();
+
+  void
   PostMessageToDebugger(const nsAString& aMessage);
+
+  void
+  ReportErrorToDebugger(const nsAString& aFilename, uint32_t aLineno,
+                        const nsAString& aMessage);
 
   bool
   NotifyInternal(JSContext* aCx, Status aStatus);

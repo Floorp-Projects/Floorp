@@ -23,6 +23,11 @@ public:
   static bool GetThreadAssertionsEnabled();
 
   /**
+   * Set the controller thread.
+   */
+  static void SetControllerThread(MessageLoop* aLoop);
+
+  /**
    * This can be used to assert that the current thread is the
    * controller/UI thread (on which input events are received).
    * This does nothing if thread assertions are disabled.

@@ -247,7 +247,7 @@ public:
                        CacheFileIOListener *aCallback);
   static nsresult Write(CacheFileHandle *aHandle, int64_t aOffset,
                         const char *aBuf, int32_t aCount, bool aValidate,
-                        CacheFileIOListener *aCallback);
+                        bool aTruncate, CacheFileIOListener *aCallback);
   static nsresult DoomFile(CacheFileHandle *aHandle,
                            CacheFileIOListener *aCallback);
   static nsresult DoomFileByKey(const nsACString &aKey,
@@ -328,7 +328,8 @@ private:
   nsresult ReadInternal(CacheFileHandle *aHandle, int64_t aOffset,
                         char *aBuf, int32_t aCount);
   nsresult WriteInternal(CacheFileHandle *aHandle, int64_t aOffset,
-                         const char *aBuf, int32_t aCount, bool aValidate);
+                         const char *aBuf, int32_t aCount, bool aValidate,
+                         bool aTruncate);
   nsresult DoomFileInternal(CacheFileHandle *aHandle);
   nsresult DoomFileByKeyInternal(const SHA1Sum::Hash *aHash);
   nsresult ReleaseNSPRHandleInternal(CacheFileHandle *aHandle);

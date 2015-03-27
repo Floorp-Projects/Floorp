@@ -131,14 +131,15 @@ DIBTextureHost::DIBTextureHost(TextureFlags aFlags,
     gfxPlatform::GetPlatform()->OptimalFormatForContent(mSurface->GetContentType()));
 }
 
-TextureSource*
-DIBTextureHost::GetTextureSources()
+bool
+DIBTextureHost::BindTextureSource(CompositableTextureSourceRef& aTexture)
 {
   if (!mTextureSource) {
     Updated();
   }
 
-  return mTextureSource;
+  aTexture = mTextureSource;
+  return !!aTexture;
 }
 
 void

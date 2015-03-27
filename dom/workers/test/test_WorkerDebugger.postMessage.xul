@@ -33,14 +33,14 @@
         let worker = new Worker(WORKER_URL);
         let [dbg, childDbg] = yield promise;
 
-        info("Check that posting a ping message to the worker debugger " +
-             "results in a pong message being received.");
+        info("Send a request to the worker debugger. This should cause a " +
+             "response to be received from the worker debugger.");
         promise = waitForDebuggerMessage(dbg, "pong");
         dbg.postMessage("ping");
         yield promise;
 
-        info("Check that posting a ping message to the child worker " +
-             "debugger results in a pong message being received.");
+        info("Send a request to the child worker debugger. This should cause " +
+             "a response to be received from the child worker debugger.");
         promise = waitForDebuggerMessage(childDbg, "pong");
         childDbg.postMessage("ping");
         yield promise;

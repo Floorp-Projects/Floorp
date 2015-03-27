@@ -170,6 +170,8 @@ XPTInterfaceInfoManager::VerifyAndAddEntryIfNew(XPTInterfaceDirectoryEntry* ifac
     //XXX  We should SetHeader too as part of the validation, no?
     entry->SetScriptableFlag(XPT_ID_IS_SCRIPTABLE(iface->interface_descriptor->flags));
     entry->SetBuiltinClassFlag(XPT_ID_IS_BUILTINCLASS(iface->interface_descriptor->flags));
+    entry->SetMainProcessScriptableOnlyFlag(
+      XPT_ID_IS_MAIN_PROCESS_SCRIPTABLE_ONLY(iface->interface_descriptor->flags));
 
     mWorkingSet.mIIDTable.Put(entry->IID(), entry);
     mWorkingSet.mNameTable.Put(entry->GetTheName(), entry);

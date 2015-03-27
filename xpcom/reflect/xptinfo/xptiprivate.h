@@ -180,21 +180,26 @@ public:
     };
     
     // Additional bit flags...
-    enum {SCRIPTABLE = 4, BUILTINCLASS = 8, HASNOTXPCOM = 16};
+    enum {SCRIPTABLE = 4, BUILTINCLASS = 8, HASNOTXPCOM = 16,
+          MAIN_PROCESS_SCRIPTABLE_ONLY = 32};
 
     uint8_t GetResolveState() const {return mFlags.GetState();}
     
     bool IsFullyResolved() const 
         {return GetResolveState() == (uint8_t) FULLY_RESOLVED;}
 
-    void   SetScriptableFlag(bool on)
+    void SetScriptableFlag(bool on)
                 {mFlags.SetFlagBit(uint8_t(SCRIPTABLE),on);}
     bool GetScriptableFlag() const
                 {return mFlags.GetFlagBit(uint8_t(SCRIPTABLE));}
-    void   SetBuiltinClassFlag(bool on)
+    void SetBuiltinClassFlag(bool on)
                 {mFlags.SetFlagBit(uint8_t(BUILTINCLASS),on);}
     bool GetBuiltinClassFlag() const
                 {return mFlags.GetFlagBit(uint8_t(BUILTINCLASS));}
+    void SetMainProcessScriptableOnlyFlag(bool on)
+                {mFlags.SetFlagBit(uint8_t(MAIN_PROCESS_SCRIPTABLE_ONLY),on);}
+    bool GetMainProcessScriptableOnlyFlag() const
+                {return mFlags.GetFlagBit(uint8_t(MAIN_PROCESS_SCRIPTABLE_ONLY));}
 
 
     // AddRef/Release are special and are not considered for the NOTXPCOM flag.
@@ -235,6 +240,10 @@ public:
     nsresult IsScriptable(bool *_retval);
     nsresult IsBuiltinClass(bool *_retval) {
         *_retval = GetBuiltinClassFlag();
+        return NS_OK;
+    }
+    nsresult IsMainProcessScriptableOnly(bool *_retval) {
+        *_retval = GetMainProcessScriptableOnlyFlag();
         return NS_OK;
     }
     // Except this one.
@@ -321,6 +330,7 @@ public:
     NS_IMETHOD GetInterfaceIID(nsIID * *aIID) override { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->GetIID(aIID); }
     NS_IMETHOD IsScriptable(bool *_retval) override { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->IsScriptable(_retval); }
     NS_IMETHOD IsBuiltinClass(bool *_retval) override { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->IsBuiltinClass(_retval); }
+    NS_IMETHOD IsMainProcessScriptableOnly(bool *_retval) override { return !mEntry ? NS_ERROR_UNEXPECTED : mEntry->IsMainProcessScriptableOnly(_retval); }
     // Except this one.
     NS_IMETHOD GetParent(nsIInterfaceInfo * *aParent) override
     {

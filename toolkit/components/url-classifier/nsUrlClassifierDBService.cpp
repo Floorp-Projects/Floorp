@@ -175,31 +175,24 @@ nsUrlClassifierDBServiceWorker::DoLocalLookup(const nsACString& spec,
 }
 
 static nsresult
-TablesToResponse(const nsACString& tables,
-                 bool checkMalware,
-                 bool checkPhishing,
-                 bool checkTracking)
+TablesToResponse(const nsACString& tables)
 {
-  if (checkMalware &&
-      FindInReadable(NS_LITERAL_CSTRING("-malware-"), tables)) {
+  // We don't check mCheckMalware and friends because BuildTables never
+  // includes a table that is not enabled.
+  if (FindInReadable(NS_LITERAL_CSTRING("-malware-"), tables)) {
     return NS_ERROR_MALWARE_URI;
   }
-  if (checkPhishing &&
-    FindInReadable(NS_LITERAL_CSTRING("-phish-"), tables)) {
+  if (FindInReadable(NS_LITERAL_CSTRING("-phish-"), tables)) {
     return NS_ERROR_PHISHING_URI;
   }
-  if (checkTracking &&
-    FindInReadable(NS_LITERAL_CSTRING("-track-"), tables)) {
+  if (FindInReadable(NS_LITERAL_CSTRING("-track-"), tables)) {
     return NS_ERROR_TRACKING_URI;
   }
   return NS_OK;
 }
 
-static nsresult
-ProcessLookupResults(LookupResultArray* results,
-                     bool checkMalware,
-                     bool checkPhishing,
-                     bool checkTracking)
+static nsCString
+ProcessLookupResults(LookupResultArray* results)
 {
   // Build a stringified list of result tables.
   nsTArray<nsCString> tables;
@@ -217,7 +210,7 @@ ProcessLookupResults(LookupResultArray* results,
       tableStr.Append(',');
     tableStr.Append(tables[i]);
   }
-  return TablesToResponse(tableStr, checkMalware, checkPhishing, checkTracking);
+  return tableStr;
 }
 
 /**
@@ -984,18 +977,12 @@ public:
                                   bool checkPhishing,
                                   bool checkTracking)
     : mCallback(c)
-    , mCheckMalware(checkMalware)
-    , mCheckPhishing(checkPhishing)
-    , mCheckTracking(checkTracking)
     {}
 
 private:
   ~nsUrlClassifierClassifyCallback() {}
 
   nsCOMPtr<nsIURIClassifierCallback> mCallback;
-  bool mCheckMalware;
-  bool mCheckPhishing;
-  bool mCheckTracking;
 };
 
 NS_IMPL_ISUPPORTS(nsUrlClassifierClassifyCallback,
@@ -1004,8 +991,7 @@ NS_IMPL_ISUPPORTS(nsUrlClassifierClassifyCallback,
 NS_IMETHODIMP
 nsUrlClassifierClassifyCallback::HandleEvent(const nsACString& tables)
 {
-  nsresult response = TablesToResponse(tables, mCheckMalware,
-                                       mCheckPhishing, mCheckTracking);
+  nsresult response = TablesToResponse(tables);
   mCallback->OnClassifyComplete(response);
   return NS_OK;
 }
@@ -1260,6 +1246,19 @@ nsUrlClassifierDBService::ClassifyLocal(nsIPrincipal* aPrincipal,
   *aResponse = NS_OK;
   nsAutoCString tables;
   BuildTables(aTrackingProtectionEnabled, tables);
+  nsAutoCString results;
+  nsresult rv = ClassifyLocalWithTables(aPrincipal, tables, results);
+  NS_ENSURE_SUCCESS(rv, rv);
+  *aResponse = TablesToResponse(results);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsUrlClassifierDBService::ClassifyLocalWithTables(nsIPrincipal *aPrincipal,
+                                                  const nsACString & aTables,
+                                                  nsACString & aTableResults)
+{
+  MOZ_ASSERT(NS_IsMainThread(), "ClassifyLocalWithTables must be on main thread");
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = aPrincipal->GetURI(getter_AddRefs(uri));
@@ -1282,11 +1281,9 @@ nsUrlClassifierDBService::ClassifyLocal(nsIPrincipal* aPrincipal,
   }
 
   // In unittests, we may not have been initalized, so don't crash.
-  rv = mWorkerProxy->DoLocalLookup(key, tables, results);
+  rv = mWorkerProxy->DoLocalLookup(key, aTables, results);
   if (NS_SUCCEEDED(rv)) {
-    rv = ProcessLookupResults(results, mCheckMalware, mCheckPhishing,
-                              mCheckTracking);
-    *aResponse = rv;
+    aTableResults = ProcessLookupResults(results);
   }
   return NS_OK;
 }

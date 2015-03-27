@@ -10,12 +10,11 @@
 #define nsFloatManager_h_
 
 #include "mozilla/Attributes.h"
-
-#include "nsIntervalSet.h"
+#include "mozilla/WritingModes.h"
 #include "nsCoord.h"
-#include "WritingModes.h"
-#include "nsTArray.h"
 #include "nsFrameList.h" // for DEBUG_FRAME_DUMP
+#include "nsIntervalSet.h"
+#include "nsTArray.h"
 
 class nsIPresShell;
 class nsIFrame;

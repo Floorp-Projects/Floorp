@@ -2050,7 +2050,14 @@ js::NewFunctionWithProto(ExclusiveContext *cx, Native native,
         newKind = SingletonObject;
 #ifdef DEBUG
     RootedObject nonScopeParent(cx, SkipScopeParent(enclosingDynamicScope));
-    MOZ_ASSERT(!nonScopeParent || nonScopeParent == cx->global());
+    // We'd like to assert that nonScopeParent is null-or-global, but
+    // js::ExecuteInGlobalAndReturnScope and debugger eval bits mess that up.
+    // Assert that it's one of those or a debug scope proxy or the unqualified
+    // var obj, since it should still be ok to parent to the global in that
+    // case.
+    MOZ_ASSERT(!nonScopeParent || nonScopeParent == cx->global() ||
+               nonScopeParent->is<DebugScopeObject>() ||
+               nonScopeParent->isUnqualifiedVarObj());
 #endif
     funobj = NewObjectWithClassProto(cx, &JSFunction::class_, proto, allocKind,
                                      newKind);
@@ -2067,7 +2074,10 @@ js::NewFunctionWithProto(ExclusiveContext *cx, Native native,
     fun->setFlags(flags);
     if (fun->isInterpreted()) {
         MOZ_ASSERT(!native);
-        fun->mutableScript().init(nullptr);
+        if (fun->isInterpretedLazy())
+            fun->initLazyScript(nullptr);
+        else
+            fun->initScript(nullptr);
         fun->initEnvironment(enclosingDynamicScope);
     } else {
         MOZ_ASSERT(fun->isNative());
@@ -2138,10 +2148,12 @@ js::CloneFunctionObject(JSContext *cx, HandleFunction fun, HandleObject parent,
 #ifdef DEBUG
     RootedObject realParent(cx, SkipScopeParent(parent));
     // We'd like to assert that realParent is null-or-global, but
-    // js::ExecuteInGlobalAndReturnScope messes that up.  Assert that it's one
-    // of those or the unqualified var obj, since it should still be ok to
-    // parent to the global in that case.
+    // js::ExecuteInGlobalAndReturnScope and debugger eval bits mess that up.
+    // Assert that it's one of those or a debug scope proxy or the unqualified
+    // var obj, since it should still be ok to parent to the global in that
+    // case.
     MOZ_ASSERT(!realParent || realParent == cx->global() ||
+               realParent->is<DebugScopeObject>() ||
                realParent->isUnqualifiedVarObj());
 #endif
     JSObject *cloneobj = NewObjectWithClassProto(cx, &JSFunction::class_, cloneProto,

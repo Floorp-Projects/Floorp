@@ -12,7 +12,7 @@ from zipfile import (
 )
 from collections import OrderedDict
 from urlparse import urlparse, ParseResult
-import mozpack.path
+import mozpack.path as mozpath
 
 JAR_STORED = ZIP_STORED
 JAR_DEFLATED = ZIP_DEFLATED
@@ -580,7 +580,7 @@ class JarWriter(object):
         JarFileReader instance. The latter two allow to avoid uncompressing
         data to recompress it.
         '''
-        name = mozpack.path.normsep(name)
+        name = mozpath.normsep(name)
 
         if name in self._contents:
             raise JarWriterError("File %s already in JarWriter" % name)
@@ -803,4 +803,4 @@ class JarLog(dict):
             if os.path.isabs(path[1:]):
                 path = path[1:]
             path = os.path.realpath(path)
-            return mozpack.path.normsep(os.path.normcase(path))
+            return mozpath.normsep(os.path.normcase(path))
