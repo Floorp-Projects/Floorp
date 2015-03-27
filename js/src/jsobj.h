@@ -147,7 +147,7 @@ class JSObject : public js::gc::Cell
     }
 
     /*
-     * Whether this is the only object which has its specified group. This
+     * Whether this is the only object which has its specified gbroup. This
      * object will have its group constructed lazily as needed by analysis.
      */
     bool isSingleton() const {
@@ -180,7 +180,7 @@ class JSObject : public js::gc::Cell
                                    js::HandleObjectGroup group);
 
     // Set the shape of an object. This pointer is valid for native objects and
-    // some non-native objects. After creating an object, the objects for which
+    // some non-native objects. After creating an object, tobjects for which
     // the shape pointer is invalid need to overwrite this pointer before a GC
     // can occur.
     inline void setInitialShapeMaybeNonNative(js::Shape *shape);

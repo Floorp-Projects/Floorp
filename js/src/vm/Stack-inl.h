@@ -207,14 +207,6 @@ InterpreterFrame::popOffScopeChain()
     scopeChain_ = &scopeChain_->as<ScopeObject>().enclosingScope();
 }
 
-inline void
-InterpreterFrame::replaceInnermostScope(ScopeObject &scope)
-{
-    MOZ_ASSERT(flags_ & HAS_SCOPECHAIN);
-    MOZ_ASSERT(scope.enclosingScope() == scopeChain_->as<ScopeObject>().enclosingScope());
-    scopeChain_ = &scope;
-}
-
 bool
 InterpreterFrame::hasCallObj() const
 {
@@ -805,14 +797,6 @@ AbstractFramePtr::thisValue() const
     if (isBaselineFrame())
         return asBaselineFrame()->thisValue();
     return asRematerializedFrame()->thisValue();
-}
-
-inline bool
-AbstractFramePtr::freshenBlock(JSContext *cx) const
-{
-    if (isInterpreterFrame())
-        return asInterpreterFrame()->freshenBlock(cx);
-    return asBaselineFrame()->freshenBlock(cx);
 }
 
 inline void

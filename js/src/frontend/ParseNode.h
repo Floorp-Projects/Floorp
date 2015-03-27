@@ -146,7 +146,6 @@ class UpvarCookie
     F(FORIN) \
     F(FOROF) \
     F(FORHEAD) \
-    F(FRESHENBLOCK) \
     F(ARGSBODY) \
     F(SPREAD) \
     F(MUTATEPROTO) \
