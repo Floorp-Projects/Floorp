@@ -918,12 +918,13 @@ TextureHostD3D9::SetCompositor(Compositor* aCompositor)
   }
 }
 
-TextureSource*
-TextureHostD3D9::GetTextureSources()
+bool
+TextureHostD3D9::BindTextureSource(CompositableTextureSourceRef& aTexture)
 {
   MOZ_ASSERT(mIsLocked);
   MOZ_ASSERT(mTextureSource);
-  return mTextureSource;
+  aTexture = mTextureSource;
+  return !!aTexture;
 }
 
 bool
@@ -994,12 +995,13 @@ DXGITextureHostD3D9::OpenSharedHandle()
   return;
 }
 
-TextureSource*
-DXGITextureHostD3D9::GetTextureSources()
+bool
+DXGITextureHostD3D9::BindTextureSource(CompositableTextureSourceRef& aTexture)
 {
   MOZ_ASSERT(mIsLocked);
   MOZ_ASSERT(mTextureSource);
-  return mTextureSource;
+  aTexture = mTextureSource;
+  return !!aTexture;
 }
 
 bool
@@ -1112,13 +1114,14 @@ DXGIYCbCrTextureHostD3D9::Unlock()
   mIsLocked = false;
 }
 
-TextureSource*
-DXGIYCbCrTextureHostD3D9::GetTextureSources()
+bool
+DXGIYCbCrTextureHostD3D9::BindTextureSource(CompositableTextureSourceRef& aTexture)
 {
   MOZ_ASSERT(mIsLocked);
   // If Lock was successful we must have a valid TextureSource.
   MOZ_ASSERT(mTextureSources[0] && mTextureSources[1] && mTextureSources[2]);
-  return mTextureSources[0].get();
+  aTexture = mTextureSources[0].get();
+  return !!aTexture;
 }
 
 }
