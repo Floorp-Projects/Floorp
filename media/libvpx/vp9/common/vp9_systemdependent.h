@@ -12,11 +12,11 @@
 #define VP9_COMMON_VP9_SYSTEMDEPENDENT_H_
 
 #ifdef _MSC_VER
-# include <math.h>  // the ceil() definition must precede intrin.h
 # if _MSC_VER > 1310 && (defined(_M_X64) || defined(_M_IX86))
 #  include <intrin.h>
 #  define USE_MSC_INTRIN
 # endif
+# include <math.h>
 # if _MSC_VER < 1900
 #  define snprintf _snprintf
 # endif
@@ -77,6 +77,9 @@ static INLINE int get_msb(unsigned int n) {
   return log;
 }
 #endif
+
+struct VP9Common;
+void vp9_machine_specific_config(struct VP9Common *cm);
 
 #ifdef __cplusplus
 }  // extern "C"

@@ -315,8 +315,8 @@ loop_h
     vdup.u16            q2, r2
     vadd.s16            q1, q1, q3
     vadd.s16            q2, q2, q3
-    vqmovun.s16         d0, q1
-    vqmovun.s16         d1, q2
+    vqshrun.s16         d0, q1, #0
+    vqshrun.s16         d1, q2, #0
     vst1.32             {d0[0]}, [r0], r1
     vst1.32             {d1[0]}, [r0], r1
 
@@ -327,8 +327,8 @@ loop_h
     vdup.u16            q2, r2
     vadd.s16            q1, q1, q3
     vadd.s16            q2, q2, q3
-    vqmovun.s16         d0, q1
-    vqmovun.s16         d1, q2
+    vqshrun.s16         d0, q1, #0
+    vqshrun.s16         d1, q2, #0
     vst1.32             {d0[0]}, [r0], r1
     vst1.32             {d1[0]}, [r0], r1
     bx                  lr
@@ -372,10 +372,10 @@ loop_h
     vadd.s16            q8, q3, q8
     vadd.s16            q9, q3, q9
 
-    vqmovun.s16         d0, q0
-    vqmovun.s16         d1, q1
-    vqmovun.s16         d2, q8
-    vqmovun.s16         d3, q9
+    vqshrun.s16         d0, q0, #0
+    vqshrun.s16         d1, q1, #0
+    vqshrun.s16         d2, q8, #0
+    vqshrun.s16         d3, q9, #0
 
     vst1.64             {d0}, [r0], r1
     vst1.64             {d1}, [r0], r1
@@ -394,10 +394,10 @@ loop_h
     vadd.s16            q8, q3, q8
     vadd.s16            q9, q3, q9
 
-    vqmovun.s16         d0, q0
-    vqmovun.s16         d1, q1
-    vqmovun.s16         d2, q8
-    vqmovun.s16         d3, q9
+    vqshrun.s16         d0, q0, #0
+    vqshrun.s16         d1, q1, #0
+    vqshrun.s16         d2, q8, #0
+    vqshrun.s16         d3, q9, #0
 
     vst1.64             {d0}, [r0], r1
     vst1.64             {d1}, [r0], r1
@@ -445,10 +445,10 @@ loop_16x16_neon
     vadd.s16            q0, q0, q3
     vadd.s16            q11, q8, q2
     vadd.s16            q8, q8, q3
-    vqmovun.s16         d2, q1
-    vqmovun.s16         d3, q0
-    vqmovun.s16         d22, q11
-    vqmovun.s16         d23, q8
+    vqshrun.s16         d2, q1, #0
+    vqshrun.s16         d3, q0, #0
+    vqshrun.s16         d22, q11, #0
+    vqshrun.s16         d23, q8, #0
     vdup.16             q0, d20[2]                  ; proload next 2 rows data
     vdup.16             q8, d20[3]
     vst1.64             {d2,d3}, [r0], r1
@@ -459,10 +459,10 @@ loop_16x16_neon
     vadd.s16            q0, q0, q3
     vadd.s16            q11, q8, q2
     vadd.s16            q8, q8, q3
-    vqmovun.s16         d2, q1
-    vqmovun.s16         d3, q0
-    vqmovun.s16         d22, q11
-    vqmovun.s16         d23, q8
+    vqshrun.s16         d2, q1, #0
+    vqshrun.s16         d3, q0, #0
+    vqshrun.s16         d22, q11, #0
+    vqshrun.s16         d23, q8, #0
     vdup.16             q0, d21[0]                  ; proload next 2 rows data
     vdup.16             q8, d21[1]
     vst1.64             {d2,d3}, [r0], r1
@@ -472,10 +472,10 @@ loop_16x16_neon
     vadd.s16            q0, q0, q3
     vadd.s16            q11, q8, q2
     vadd.s16            q8, q8, q3
-    vqmovun.s16         d2, q1
-    vqmovun.s16         d3, q0
-    vqmovun.s16         d22, q11
-    vqmovun.s16         d23, q8
+    vqshrun.s16         d2, q1, #0
+    vqshrun.s16         d3, q0, #0
+    vqshrun.s16         d22, q11, #0
+    vqshrun.s16         d23, q8, #0
     vdup.16             q0, d21[2]                  ; proload next 2 rows data
     vdup.16             q8, d21[3]
     vst1.64             {d2,d3}, [r0], r1
@@ -486,10 +486,12 @@ loop_16x16_neon
     vadd.s16            q0, q0, q3
     vadd.s16            q11, q8, q2
     vadd.s16            q8, q8, q3
-    vqmovun.s16         d2, q1
-    vqmovun.s16         d3, q0
-    vqmovun.s16         d22, q11
-    vqmovun.s16         d23, q8
+    vqshrun.s16         d2, q1, #0
+    vqshrun.s16         d3, q0, #0
+    vqshrun.s16         d22, q11, #0
+    vqshrun.s16         d23, q8, #0
+    vdup.16             q0, d20[2]
+    vdup.16             q8, d20[3]
     vld1.8              {d18}, [r3]!                  ; preload 8 left into r12
     vmovl.u8            q10, d18
     vst1.64             {d2,d3}, [r0], r1
@@ -542,19 +544,19 @@ loop_32x32_neon
     vadd.s16            q13, q0, q9
     vadd.s16            q14, q0, q10
     vadd.s16            q15, q0, q11
-    vqmovun.s16         d0, q12
-    vqmovun.s16         d1, q13
+    vqshrun.s16         d0, q12, #0
+    vqshrun.s16         d1, q13, #0
     vadd.s16            q12, q2, q8
     vadd.s16            q13, q2, q9
-    vqmovun.s16         d2, q14
-    vqmovun.s16         d3, q15
+    vqshrun.s16         d2, q14, #0
+    vqshrun.s16         d3, q15, #0
     vadd.s16            q14, q2, q10
     vadd.s16            q15, q2, q11
     vst1.64             {d0-d3}, [r0], r1
-    vqmovun.s16         d24, q12
-    vqmovun.s16         d25, q13
-    vqmovun.s16         d26, q14
-    vqmovun.s16         d27, q15
+    vqshrun.s16         d24, q12, #0
+    vqshrun.s16         d25, q13, #0
+    vqshrun.s16         d26, q14, #0
+    vqshrun.s16         d27, q15, #0
     vdup.16             q1, d6[2]
     vdup.16             q2, d6[3]
     vst1.64             {d24-d27}, [r0], r1
@@ -564,19 +566,19 @@ loop_32x32_neon
     vadd.s16            q13, q1, q9
     vadd.s16            q14, q1, q10
     vadd.s16            q15, q1, q11
-    vqmovun.s16         d0, q12
-    vqmovun.s16         d1, q13
+    vqshrun.s16         d0, q12, #0
+    vqshrun.s16         d1, q13, #0
     vadd.s16            q12, q2, q8
     vadd.s16            q13, q2, q9
-    vqmovun.s16         d2, q14
-    vqmovun.s16         d3, q15
+    vqshrun.s16         d2, q14, #0
+    vqshrun.s16         d3, q15, #0
     vadd.s16            q14, q2, q10
     vadd.s16            q15, q2, q11
     vst1.64             {d0-d3}, [r0], r1
-    vqmovun.s16         d24, q12
-    vqmovun.s16         d25, q13
-    vqmovun.s16         d26, q14
-    vqmovun.s16         d27, q15
+    vqshrun.s16         d24, q12, #0
+    vqshrun.s16         d25, q13, #0
+    vqshrun.s16         d26, q14, #0
+    vqshrun.s16         d27, q15, #0
     vdup.16             q0, d7[0]
     vdup.16             q2, d7[1]
     vst1.64             {d24-d27}, [r0], r1
@@ -586,19 +588,19 @@ loop_32x32_neon
     vadd.s16            q13, q0, q9
     vadd.s16            q14, q0, q10
     vadd.s16            q15, q0, q11
-    vqmovun.s16         d0, q12
-    vqmovun.s16         d1, q13
+    vqshrun.s16         d0, q12, #0
+    vqshrun.s16         d1, q13, #0
     vadd.s16            q12, q2, q8
     vadd.s16            q13, q2, q9
-    vqmovun.s16         d2, q14
-    vqmovun.s16         d3, q15
+    vqshrun.s16         d2, q14, #0
+    vqshrun.s16         d3, q15, #0
     vadd.s16            q14, q2, q10
     vadd.s16            q15, q2, q11
     vst1.64             {d0-d3}, [r0], r1
-    vqmovun.s16         d24, q12
-    vqmovun.s16         d25, q13
-    vqmovun.s16         d26, q14
-    vqmovun.s16         d27, q15
+    vqshrun.s16         d24, q12, #0
+    vqshrun.s16         d25, q13, #0
+    vqshrun.s16         d26, q14, #0
+    vqshrun.s16         d27, q15, #0
     vdup.16             q0, d7[2]
     vdup.16             q2, d7[3]
     vst1.64             {d24-d27}, [r0], r1
@@ -608,20 +610,20 @@ loop_32x32_neon
     vadd.s16            q13, q0, q9
     vadd.s16            q14, q0, q10
     vadd.s16            q15, q0, q11
-    vqmovun.s16         d0, q12
-    vqmovun.s16         d1, q13
+    vqshrun.s16         d0, q12, #0
+    vqshrun.s16         d1, q13, #0
     vadd.s16            q12, q2, q8
     vadd.s16            q13, q2, q9
-    vqmovun.s16         d2, q14
-    vqmovun.s16         d3, q15
+    vqshrun.s16         d2, q14, #0
+    vqshrun.s16         d3, q15, #0
     vadd.s16            q14, q2, q10
     vadd.s16            q15, q2, q11
     vst1.64             {d0-d3}, [r0], r1
-    vqmovun.s16         d24, q12
-    vqmovun.s16         d25, q13
+    vqshrun.s16         d24, q12, #0
+    vqshrun.s16         d25, q13, #0
     vld1.8              {d0}, [r3]!                   ; preload 8 left pixels
-    vqmovun.s16         d26, q14
-    vqmovun.s16         d27, q15
+    vqshrun.s16         d26, q14, #0
+    vqshrun.s16         d27, q15, #0
     vmovl.u8            q3, d0
     vst1.64             {d24-d27}, [r0], r1
 

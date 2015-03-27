@@ -17,6 +17,35 @@
 extern "C" {
 #endif
 
+#define vp9_cost_zero(prob) (vp9_prob_cost[prob])
+
+#define vp9_cost_one(prob) vp9_cost_zero(vp9_complement(prob))
+
+#define vp9_cost_bit(prob, bit) vp9_cost_zero((bit) ? vp9_complement(prob) \
+                                                    : (prob))
+
+static INLINE unsigned int cost_branch256(const unsigned int ct[2],
+                                          vp9_prob p) {
+  return ct[0] * vp9_cost_zero(p) + ct[1] * vp9_cost_one(p);
+}
+
+static INLINE int treed_cost(vp9_tree tree, const vp9_prob *probs,
+                             int bits, int len) {
+  int cost = 0;
+  vp9_tree_index i = 0;
+
+  do {
+    const int bit = (bits >> --len) & 1;
+    cost += vp9_cost_bit(probs[i >> 1], bit);
+    i = tree[i + bit];
+  } while (len);
+
+  return cost;
+}
+
+void vp9_cost_tokens(int *costs, const vp9_prob *probs, vp9_tree tree);
+void vp9_cost_tokens_skip(int *costs, const vp9_prob *probs, vp9_tree tree);
+
 void vp9_tree_probs_from_distribution(vp9_tree tree,
                                       unsigned int branch_ct[ /* n - 1 */ ][2],
                                       const unsigned int num_events[ /* n */ ]);

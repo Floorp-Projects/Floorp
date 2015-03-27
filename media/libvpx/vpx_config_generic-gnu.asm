@@ -10,10 +10,8 @@
 .equ HAVE_EDSP ,  0
 .equ HAVE_MEDIA ,  0
 .equ HAVE_NEON ,  0
-.equ HAVE_NEON_ASM ,  0
 .equ HAVE_MIPS32 ,  0
 .equ HAVE_DSPR2 ,  0
-.equ HAVE_MIPS64 ,  0
 .equ HAVE_MMX ,  0
 .equ HAVE_SSE ,  0
 .equ HAVE_SSE2 ,  0
@@ -75,20 +73,14 @@
 .equ CONFIG_POSTPROC_VISUALIZER ,  0
 .equ CONFIG_OS_SUPPORT ,  1
 .equ CONFIG_UNIT_TESTS ,  1
-.equ CONFIG_WEBM_IO ,  1
-.equ CONFIG_LIBYUV ,  1
 .equ CONFIG_DECODE_PERF_TESTS ,  0
-.equ CONFIG_ENCODE_PERF_TESTS ,  0
 .equ CONFIG_MULTI_RES_ENCODING ,  1
 .equ CONFIG_TEMPORAL_DENOISING ,  1
-.equ CONFIG_COEFFICIENT_RANGE_CHECKING ,  0
-.equ CONFIG_VP9_HIGHBITDEPTH ,  0
 .equ CONFIG_EXPERIMENTAL ,  0
-.equ CONFIG_SIZE_LIMIT ,  0
-.equ CONFIG_SPATIAL_SVC ,  0
-.equ CONFIG_VP9_TEMPORAL_DENOISING ,  0
-.equ CONFIG_FP_MB_STATS ,  0
-.equ CONFIG_EMULATE_HARDWARE_HIGHBITDEPTH ,  0
+.equ CONFIG_DECRYPT ,  0
+.equ CONFIG_MULTIPLE_ARF ,  0
+.equ CONFIG_NON420 ,  0
+.equ CONFIG_ALPHA ,  0
 	.section	.note.GNU-stack,"",%progbits
 @ This file was created from a .asm file
 @  using the ads2gas.pl script.

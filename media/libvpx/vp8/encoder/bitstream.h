@@ -18,18 +18,18 @@ extern "C" {
 
 #if HAVE_EDSP
 void vp8cx_pack_tokens_armv5(vp8_writer *w, const TOKENEXTRA *p, int xcount,
-                             vp8_token *,
+                             const vp8_token *,
                              const vp8_extra_bit_struct *,
                              const vp8_tree_index *);
 void vp8cx_pack_tokens_into_partitions_armv5(VP8_COMP *,
                                              unsigned char * cx_data,
                                              const unsigned char *cx_data_end,
                                              int num_parts,
-                                             vp8_token *,
+                                             const vp8_token *,
                                              const vp8_extra_bit_struct *,
                                              const vp8_tree_index *);
 void vp8cx_pack_mb_row_tokens_armv5(VP8_COMP *cpi, vp8_writer *w,
-                                    vp8_token *,
+                                    const vp8_token *,
                                     const vp8_extra_bit_struct *,
                                     const vp8_tree_index *);
 # define pack_tokens(a,b,c)                  \

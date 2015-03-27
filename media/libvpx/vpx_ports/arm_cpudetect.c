@@ -10,15 +10,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "vpx_ports/arm.h"
-#include "./vpx_config.h"
-
-#ifdef WINAPI_FAMILY
-#include <winapifamily.h>
-#if !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
-#define getenv(x) NULL
-#endif
-#endif
+#include "arm.h"
 
 static int arm_cpu_env_flags(int *flags) {
   char *env;
@@ -55,9 +47,9 @@ int arm_cpu_caps(void) {
 #if HAVE_MEDIA
   flags |= HAS_MEDIA;
 #endif /* HAVE_MEDIA */
-#if HAVE_NEON || HAVE_NEON_ASM
+#if HAVE_NEON
   flags |= HAS_NEON;
-#endif /* HAVE_NEON  || HAVE_NEON_ASM */
+#endif /* HAVE_NEON */
   return flags & mask;
 }
 
@@ -88,7 +80,6 @@ int arm_cpu_caps(void) {
       /*Ignore exception.*/
     }
   }
-#endif /* HAVE_EDSP */
 #if HAVE_MEDIA
   if (mask & HAS_MEDIA)
     __try {
@@ -99,8 +90,7 @@ int arm_cpu_caps(void) {
     /*Ignore exception.*/
   }
 }
-#endif /* HAVE_MEDIA */
-#if HAVE_NEON || HAVE_NEON_ASM
+#if HAVE_NEON
 if (mask &HAS_NEON) {
   __try {
     /*VORR q0,q0,q0*/
@@ -110,7 +100,9 @@ if (mask &HAS_NEON) {
     /*Ignore exception.*/
   }
 }
-#endif /* HAVE_NEON || HAVE_NEON_ASM */
+#endif /* HAVE_NEON */
+#endif /* HAVE_MEDIA */
+#endif /* HAVE_EDSP */
 return flags & mask;
 }
 
@@ -133,10 +125,10 @@ int arm_cpu_caps(void) {
 #if HAVE_MEDIA
   flags |= HAS_MEDIA;
 #endif /* HAVE_MEDIA */
-#if HAVE_NEON || HAVE_NEON_ASM
+#if HAVE_NEON
   if (features & ANDROID_CPU_ARM_FEATURE_NEON)
     flags |= HAS_NEON;
-#endif /* HAVE_NEON || HAVE_NEON_ASM */
+#endif /* HAVE_NEON */
   return flags & mask;
 }
 
@@ -163,7 +155,7 @@ int arm_cpu_caps(void) {
      */
     char buf[512];
     while (fgets(buf, 511, fin) != NULL) {
-#if HAVE_EDSP || HAVE_NEON || HAVE_NEON_ASM
+#if HAVE_EDSP || HAVE_NEON
       if (memcmp(buf, "Features", 8) == 0) {
         char *p;
 #if HAVE_EDSP
@@ -171,15 +163,15 @@ int arm_cpu_caps(void) {
         if (p != NULL && (p[5] == ' ' || p[5] == '\n')) {
           flags |= HAS_EDSP;
         }
-#endif /* HAVE_EDSP */
-#if HAVE_NEON || HAVE_NEON_ASM
+#if HAVE_NEON
         p = strstr(buf, " neon");
         if (p != NULL && (p[5] == ' ' || p[5] == '\n')) {
           flags |= HAS_NEON;
         }
-#endif /* HAVE_NEON || HAVE_NEON_ASM */
+#endif /* HAVE_NEON */
+#endif /* HAVE_EDSP */
       }
-#endif /* HAVE_EDSP || HAVE_NEON || HAVE_NEON_ASM */
+#endif /* HAVE_EDSP || HAVE_NEON */
 #if HAVE_MEDIA
       if (memcmp(buf, "CPU architecture:", 17) == 0) {
         int version;

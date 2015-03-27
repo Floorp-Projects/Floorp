@@ -35,6 +35,10 @@ typedef struct
     unsigned char *buffer;
     unsigned char *buffer_end;
     struct vpx_internal_error_info *error;
+
+    /* Variables used to track bit costs without outputing to the bitstream */
+    unsigned int  measure_cost;
+    unsigned long bit_counter;
 } BOOL_CODER;
 
 extern void vp8_start_encode(BOOL_CODER *bc, unsigned char *buffer, unsigned char *buffer_end);

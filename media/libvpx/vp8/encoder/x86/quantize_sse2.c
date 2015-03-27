@@ -26,10 +26,11 @@
         int cmp = (x[z] < boost) | (y[z] == 0); \
         zbin_boost_ptr++; \
         if (cmp) \
-            break; \
+            goto select_eob_end_##i; \
         qcoeff_ptr[z] = y[z]; \
         eob = i; \
         zbin_boost_ptr = b->zrun_zbin_boost; \
+        select_eob_end_##i:; \
     } while (0)
 
 void vp8_regular_quantize_b_sse2(BLOCK *b, BLOCKD *d)

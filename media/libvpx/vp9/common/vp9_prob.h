@@ -44,12 +44,21 @@ typedef int8_t vp9_tree_index;
 typedef const vp9_tree_index vp9_tree[];
 
 static INLINE vp9_prob clip_prob(int p) {
-  return (p > 255) ? 255 : (p < 1) ? 1 : p;
+  return (p > 255) ? 255u : (p < 1) ? 1u : p;
 }
 
+// int64 is not needed for normal frame level calculations.
+// However when outputting entropy stats accumulated over many frames
+// or even clips we can overflow int math.
+#ifdef ENTROPY_STATS
 static INLINE vp9_prob get_prob(int num, int den) {
   return (den == 0) ? 128u : clip_prob(((int64_t)num * 256 + (den >> 1)) / den);
 }
+#else
+static INLINE vp9_prob get_prob(int num, int den) {
+  return (den == 0) ? 128u : clip_prob((num * 256 + (den >> 1)) / den);
+}
+#endif
 
 static INLINE vp9_prob get_binary_prob(int n0, int n1) {
   return get_prob(n0, n0 + n1);
