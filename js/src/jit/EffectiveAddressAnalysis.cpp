@@ -17,6 +17,9 @@ AnalyzeLsh(TempAllocator &alloc, MLsh *lsh)
     if (lsh->specialization() != MIRType_Int32)
         return;
 
+    if (lsh->isRecoveredOnBailout())
+        return;
+
     MDefinition *index = lsh->lhs();
     MOZ_ASSERT(index->type() == MIRType_Int32);
 
@@ -56,6 +59,8 @@ AnalyzeLsh(TempAllocator &alloc, MLsh *lsh)
         }
 
         last = add;
+        if (last->isRecoveredOnBailout())
+            return;
     }
 
     if (!base) {
@@ -71,6 +76,9 @@ AnalyzeLsh(TempAllocator &alloc, MLsh *lsh)
             return;
 
         MBitAnd *bitAnd = use->consumer()->toDefinition()->toBitAnd();
+        if (bitAnd->isRecoveredOnBailout())
+            return;
+
         MDefinition *other = bitAnd->getOperand(1 - bitAnd->indexOf(*use));
         if (!other->isConstantValue() || !other->constantValue().isInt32())
             return;
@@ -83,6 +91,9 @@ AnalyzeLsh(TempAllocator &alloc, MLsh *lsh)
         bitAnd->replaceAllUsesWith(last);
         return;
     }
+
+    if (base->isRecoveredOnBailout())
+        return;
 
     MEffectiveAddress *eaddr = MEffectiveAddress::New(alloc, base, index, scale, displacement);
     last->replaceAllUsesWith(eaddr);
