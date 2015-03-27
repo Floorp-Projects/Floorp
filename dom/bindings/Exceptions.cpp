@@ -758,7 +758,7 @@ NS_IMETHODIMP JSStackFrame::GetFormattedStack(nsAString& aStack)
   JS::Rooted<JSObject*> stack(cx, mStack);
 
   JS::Rooted<JSString*> formattedStack(cx);
-  if (!JS::StringifySavedFrameStack(cx, stack, &formattedStack)) {
+  if (!JS::BuildStackString(cx, stack, &formattedStack)) {
     JS_ClearPendingException(cx);
     aStack.Truncate();
     return NS_OK;

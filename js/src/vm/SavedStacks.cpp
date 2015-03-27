@@ -631,7 +631,7 @@ GetSavedFrameParent(JSContext *cx, HandleObject savedFrame, MutableHandleObject 
 }
 
 JS_PUBLIC_API(bool)
-StringifySavedFrameStack(JSContext *cx, HandleObject stack, MutableHandleString stringp)
+BuildStackString(JSContext *cx, HandleObject stack, MutableHandleString stringp)
 {
     js::StringBuffer sb(cx);
 
@@ -779,7 +779,7 @@ SavedFrame::toStringMethod(JSContext *cx, unsigned argc, Value *vp)
 {
     THIS_SAVEDFRAME(cx, argc, vp, "toString", args, frame);
     RootedString string(cx);
-    if (!JS::StringifySavedFrameStack(cx, frame, &string))
+    if (!JS::BuildStackString(cx, frame, &string))
         return false;
     args.rval().setString(string);
     return true;
