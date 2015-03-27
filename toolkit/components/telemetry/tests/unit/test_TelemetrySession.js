@@ -137,6 +137,11 @@ function fakeGenerateUUID(sessionFunc, subsessionFunc) {
   session.Policy.generateSubsessionUUID = subsessionFunc;
 }
 
+function fakeIdleNotification(topic) {
+  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
+  session.TelemetryScheduler.observe(null, topic, null);
+}
+
 function registerPingHandler(handler) {
   gHttpServer.registerPrefixHandler("/submit/telemetry/",
 				   wrapWithExceptionHandler(handler));
@@ -1613,6 +1618,39 @@ add_task(function* test_pingExtendedStats() {
             "addonManager must be sent if the extended set is on.");
   Assert.ok("UITelemetry" in ping.payload.simpleMeasurements,
             "UITelemetry must be sent if the extended set is on.");
+});
+
+add_task(function* test_schedulerUserIdle() {
+  if (gIsAndroid || gIsGonk) {
+    // We don't have the aborted session or the daily ping here.
+    return;
+  }
+
+  const SCHEDULER_TICK_INTERVAL_MS = 5 * 60 * 1000;
+  const SCHEDULER_TICK_IDLE_INTERVAL_MS = 60 * 60 * 1000;
+
+  let schedulerTimeout = 0;
+  fakeSchedulerTimer((callback, timeout) => {
+    schedulerTimeout = timeout;
+  }, () => {});
+  yield TelemetrySession.reset();
+
+  // When not idle, the scheduler should have a 5 minutes tick interval.
+  Assert.equal(schedulerTimeout, SCHEDULER_TICK_INTERVAL_MS);
+
+  // Send an "idle" notification to the scheduler.
+  fakeIdleNotification("idle");
+
+  // When idle, the scheduler should have a 1hr tick interval.
+  Assert.equal(schedulerTimeout, SCHEDULER_TICK_IDLE_INTERVAL_MS);
+
+  // Send an "active" notification to the scheduler.
+  fakeIdleNotification("active");
+
+  // When user is back active, the scheduler tick should be 5 minutes again.
+  Assert.equal(schedulerTimeout, SCHEDULER_TICK_INTERVAL_MS);
+
+  yield TelemetrySession.shutdown();
 });
 
 add_task(function* stopServer(){
