@@ -1505,19 +1505,22 @@ public:
         nsIScriptGlobalObject* sgo;
 
         if (aWorkerPrivate) {
-          nsIDOMEventTarget* target = nullptr;
           WorkerGlobalScope* globalScope = nullptr;
           UNWRAP_WORKER_OBJECT(WorkerGlobalScope, global, globalScope);
-          if (globalScope) {
-            MOZ_ASSERT(global == globalScope->GetWrapperPreserveColor());
-            target = static_cast<nsIDOMEventTarget*>(globalScope);
-          } else {
+
+          if (!globalScope) {
             WorkerDebuggerGlobalScope* globalScope = nullptr;
             UNWRAP_OBJECT(WorkerDebuggerGlobalScope, global, globalScope);
             MOZ_ASSERT(globalScope);
             MOZ_ASSERT(global == globalScope->GetWrapperPreserveColor());
-            target = static_cast<nsIDOMEventTarget*>(globalScope);
+
+            aWorkerPrivate->ReportErrorToDebugger(aFilename, aLineNumber,
+                                                  aMessage);
+            return true;
           }
+
+          MOZ_ASSERT(global == globalScope->GetWrapperPreserveColor());
+          nsIDOMEventTarget* target = static_cast<nsIDOMEventTarget*>(globalScope);
 
           nsRefPtr<ErrorEvent> event =
             ErrorEvent::Constructor(aTarget, NS_LITERAL_STRING("error"), init);
@@ -4214,6 +4217,41 @@ WorkerPrivateParent<Derived>::AssertInnerWindowIsCorrect() const
 
 #endif
 
+class ReportDebuggerErrorRunnable final : public nsIRunnable
+{
+  nsRefPtr<WorkerDebugger> mDebugger;
+  nsString mFilename;
+  uint32_t mLineno;
+  nsString mMessage;
+
+public:
+  ReportDebuggerErrorRunnable(WorkerDebugger* aDebugger,
+                                const nsAString& aFilename, uint32_t aLineno,
+                                const nsAString& aMessage)
+  : mDebugger(aDebugger),
+    mFilename(aFilename),
+    mLineno(aLineno),
+    mMessage(aMessage)
+  {
+  }
+
+  NS_DECL_THREADSAFE_ISUPPORTS
+
+private:
+  ~ReportDebuggerErrorRunnable()
+  { }
+
+  NS_IMETHOD
+  Run() override
+  {
+    mDebugger->ReportErrorToDebuggerOnMainThread(mFilename, mLineno, mMessage);
+
+    return NS_OK;
+  }
+};
+
+NS_IMPL_ISUPPORTS(ReportDebuggerErrorRunnable, nsIRunnable)
+
 WorkerDebugger::WorkerDebugger(WorkerPrivate* aWorkerPrivate)
 : mMutex("WorkerDebugger::mMutex"),
   mCondVar(mMutex, "WorkerDebugger::mCondVar"),
@@ -4499,6 +4537,41 @@ WorkerDebugger::PostMessageToDebuggerOnMainThread(const nsAString& aMessage)
   }
 }
 
+void
+WorkerDebugger::ReportErrorToDebugger(const nsAString& aFilename,
+                                      uint32_t aLineno,
+                                      const nsAString& aMessage)
+{
+  mWorkerPrivate->AssertIsOnWorkerThread();
+
+  nsCOMPtr<nsIRunnable> runnable =
+    new ReportDebuggerErrorRunnable(this, aFilename, aLineno, aMessage);
+  if (NS_FAILED(NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL))) {
+    NS_WARNING("Failed to report error to debugger on main thread!");
+  }
+}
+
+void
+WorkerDebugger::ReportErrorToDebuggerOnMainThread(const nsAString& aFilename,
+                                                  uint32_t aLineno,
+                                                  const nsAString& aMessage)
+{
+  AssertIsOnMainThread();
+
+  nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> listeners;
+  {
+    MutexAutoLock lock(mMutex);
+
+    listeners.AppendElements(mListeners);
+  }
+
+  for (size_t index = 0; index < listeners.Length(); ++index) {
+    listeners[index]->OnError(aFilename, aLineno, aMessage);
+  }
+
+  LogErrorToConsole(aMessage, aFilename, nsString(), aLineno, 0, 0, 0);
+}
+
 WorkerPrivate::WorkerPrivate(JSContext* aCx,
                              WorkerPrivate* aParent,
                              const nsAString& aScriptURL,
@@ -4510,6 +4583,7 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
                                        aSharedWorkerName, aLoadInfo)
   , mJSContext(nullptr)
   , mPRThread(nullptr)
+  , mDebuggerEventLoopLevel(0)
   , mErrorHandlerRecursionCount(0)
   , mNextTimeoutId(1)
   , mStatus(Pending)
@@ -6114,9 +6188,87 @@ WorkerPrivate::PostMessageToParentMessagePort(
 }
 
 void
+WorkerPrivate::EnterDebuggerEventLoop()
+{
+  AssertIsOnWorkerThread();
+
+  JSContext* cx = GetJSContext();
+  MOZ_ASSERT(cx);
+
+  uint32_t currentEventLoopLevel = ++mDebuggerEventLoopLevel;
+
+  while (currentEventLoopLevel <= mDebuggerEventLoopLevel) {
+    bool debuggerRunnablesPending = false;
+
+    {
+      MutexAutoLock lock(mMutex);
+
+      debuggerRunnablesPending = !mDebuggerQueue.IsEmpty();
+    }
+
+    // Don't block with the periodic GC timer running.
+    if (!debuggerRunnablesPending) {
+      SetGCTimerMode(IdleTimer);
+    }
+
+    // Wait for something to do
+    {
+      MutexAutoLock lock(mMutex);
+
+      while (mControlQueue.IsEmpty() &&
+             !(debuggerRunnablesPending = !mDebuggerQueue.IsEmpty())) {
+        WaitForWorkerEvents();
+      }
+
+      ProcessAllControlRunnablesLocked();
+    }
+
+    if (debuggerRunnablesPending) {
+      // Start the periodic GC timer if it is not already running.
+      SetGCTimerMode(PeriodicTimer);
+
+      WorkerRunnable* runnable;
+
+      {
+        MutexAutoLock lock(mMutex);
+
+        mDebuggerQueue.Pop(runnable);
+      }
+
+      MOZ_ASSERT(runnable);
+      static_cast<nsIRunnable*>(runnable)->Run();
+      runnable->Release();
+
+      // Now *might* be a good time to GC. Let the JS engine make the decision.
+      JS_MaybeGC(cx);
+    }
+  }
+}
+
+void
+WorkerPrivate::LeaveDebuggerEventLoop()
+{
+  AssertIsOnWorkerThread();
+
+  MutexAutoLock lock(mMutex);
+
+  if (mDebuggerEventLoopLevel > 0) {
+    --mDebuggerEventLoopLevel;
+  }
+}
+
+void
 WorkerPrivate::PostMessageToDebugger(const nsAString& aMessage)
 {
   mDebugger->PostMessageToDebugger(aMessage);
+}
+
+void
+WorkerPrivate::ReportErrorToDebugger(const nsAString& aFilename,
+                                     uint32_t aLineno,
+                                     const nsAString& aMessage)
+{
+  mDebugger->ReportErrorToDebugger(aFilename, aLineno, aMessage);
 }
 
 bool

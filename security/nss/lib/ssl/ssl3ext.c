@@ -1,3 +1,4 @@
+/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /*
  * SSL3 Protocol
  *
@@ -64,10 +65,14 @@ static PRInt32 ssl3_ClientSendAppProtoXtn(sslSocket *ss, PRBool append,
                                           PRUint32 maxBytes);
 static PRInt32 ssl3_ServerSendAppProtoXtn(sslSocket *ss, PRBool append,
                                           PRUint32 maxBytes);
-static PRInt32 ssl3_SendUseSRTPXtn(sslSocket *ss, PRBool append,
-    PRUint32 maxBytes);
-static SECStatus ssl3_HandleUseSRTPXtn(sslSocket * ss, PRUint16 ex_type,
-    SECItem *data);
+static PRInt32 ssl3_ClientSendUseSRTPXtn(sslSocket *ss, PRBool append,
+                                         PRUint32 maxBytes);
+static PRInt32 ssl3_ServerSendUseSRTPXtn(sslSocket *ss, PRBool append,
+                                         PRUint32 maxBytes);
+static SECStatus ssl3_ClientHandleUseSRTPXtn(sslSocket * ss, PRUint16 ex_type,
+                                             SECItem *data);
+static SECStatus ssl3_ServerHandleUseSRTPXtn(sslSocket * ss, PRUint16 ex_type,
+                                             SECItem *data);
 static PRInt32 ssl3_ServerSendStatusRequestXtn(sslSocket * ss,
     PRBool append, PRUint32 maxBytes);
 static SECStatus ssl3_ServerHandleStatusRequestXtn(sslSocket *ss,
@@ -247,7 +252,7 @@ static const ssl3HelloExtensionHandler clientHelloHandlers[] = {
     { ssl_renegotiation_info_xtn, &ssl3_HandleRenegotiationInfoXtn },
     { ssl_next_proto_nego_xtn,    &ssl3_ServerHandleNextProtoNegoXtn },
     { ssl_app_layer_protocol_xtn, &ssl3_ServerHandleAppProtoXtn },
-    { ssl_use_srtp_xtn,           &ssl3_HandleUseSRTPXtn },
+    { ssl_use_srtp_xtn,           &ssl3_ServerHandleUseSRTPXtn },
     { ssl_cert_status_xtn,        &ssl3_ServerHandleStatusRequestXtn },
     { ssl_signature_algorithms_xtn, &ssl3_ServerHandleSigAlgsXtn },
     { ssl_tls13_draft_version_xtn, &ssl3_ServerHandleDraftVersionXtn },
@@ -263,7 +268,7 @@ static const ssl3HelloExtensionHandler serverHelloHandlersTLS[] = {
     { ssl_renegotiation_info_xtn, &ssl3_HandleRenegotiationInfoXtn },
     { ssl_next_proto_nego_xtn,    &ssl3_ClientHandleNextProtoNegoXtn },
     { ssl_app_layer_protocol_xtn, &ssl3_ClientHandleAppProtoXtn },
-    { ssl_use_srtp_xtn,           &ssl3_HandleUseSRTPXtn },
+    { ssl_use_srtp_xtn,           &ssl3_ClientHandleUseSRTPXtn },
     { ssl_cert_status_xtn,        &ssl3_ClientHandleStatusRequestXtn },
     { -1, NULL }
 };
@@ -290,7 +295,7 @@ ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] = {
     { ssl_session_ticket_xtn,     &ssl3_SendSessionTicketXtn },
     { ssl_next_proto_nego_xtn,    &ssl3_ClientSendNextProtoNegoXtn },
     { ssl_app_layer_protocol_xtn, &ssl3_ClientSendAppProtoXtn },
-    { ssl_use_srtp_xtn,           &ssl3_SendUseSRTPXtn },
+    { ssl_use_srtp_xtn,           &ssl3_ClientSendUseSRTPXtn },
     { ssl_cert_status_xtn,        &ssl3_ClientSendStatusRequestXtn },
     { ssl_signature_algorithms_xtn, &ssl3_ClientSendSigAlgsXtn },
     { ssl_tls13_draft_version_xtn, &ssl3_ClientSendDraftVersionXtn },
@@ -398,13 +403,7 @@ ssl3_HandleServerNameXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
     PRInt32  listLenBytes = 0;
 
     if (!ss->sec.isServer) {
-        /* Verify extension_data is empty. */
-        if (data->data || data->len ||
-            !ssl3_ExtensionNegotiated(ss, ssl_server_name_xtn)) {
-            /* malformed or was not initiated by the client.*/
-            return SECFailure;
-        }
-        return SECSuccess;
+        return SECSuccess; /* ignore extension */
     }
 
     /* Server side - consume client data and register server sender. */
@@ -414,33 +413,38 @@ ssl3_HandleServerNameXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
     }
     /* length of server_name_list */
     listLenBytes = ssl3_ConsumeHandshakeNumber(ss, 2, &data->data, &data->len);
-    if (listLenBytes == 0 || listLenBytes != data->len) {
+    if (listLenBytes < 0 || listLenBytes != data->len) {
+        (void)ssl3_DecodeError(ss);
         return SECFailure;
+    }
+    if (listLenBytes == 0) {
+        return SECSuccess; /* ignore an empty extension */
     }
     ldata = *data;
     /* Calculate the size of the array.*/
     while (listLenBytes > 0) {
         SECItem litem;
         SECStatus rv;
-        PRInt32  type;
-        /* Name Type (sni_host_name) */
+        PRInt32 type;
+        /* Skip Name Type (sni_host_name); checks are on the second pass */
         type = ssl3_ConsumeHandshakeNumber(ss, 1, &ldata.data, &ldata.len);
-        if (!ldata.len) {
+        if (type < 0) { /* i.e., SECFailure cast to PRint32 */
             return SECFailure;
         }
         rv = ssl3_ConsumeHandshakeVariable(ss, &litem, 2, &ldata.data, &ldata.len);
         if (rv != SECSuccess) {
-            return SECFailure;
+            return rv;
         }
-        /* Adjust total length for cunsumed item, item len and type.*/
+        /* Adjust total length for consumed item, item len and type.*/
         listLenBytes -= litem.len + 3;
         if (listLenBytes > 0 && !ldata.len) {
+            (void)ssl3_DecodeError(ss);
             return SECFailure;
         }
         listCount += 1;
     }
     if (!listCount) {
-        return SECFailure;
+        return SECFailure;  /* nothing we can act on */
     }
     names = PORT_ZNewArray(SECItem, listCount);
     if (!names) {
@@ -455,6 +459,7 @@ ssl3_HandleServerNameXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
         type = ssl3_ConsumeHandshakeNumber(ss, 1, &data->data, &data->len);
         /* Check if we have such type in the list */
         for (j = 0;j < listCount && names[j].data;j++) {
+            /* TODO bug 998524: .type is not assigned a value */
             if (names[j].type == type) {
                 nametypePresent = PR_TRUE;
                 break;
@@ -464,7 +469,10 @@ ssl3_HandleServerNameXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
         rv = ssl3_ConsumeHandshakeVariable(ss, &names[namesPos], 2,
                                            &data->data, &data->len);
         if (rv != SECSuccess) {
-            goto loser;
+            PORT_Assert(0);
+            PORT_Free(names);
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            return rv;
         }
         if (nametypePresent == PR_FALSE) {
             namesPos += 1;
@@ -479,10 +487,6 @@ ssl3_HandleServerNameXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
     xtnData->negotiated[xtnData->numNegotiated++] = ssl_server_name_xtn;
 
     return SECSuccess;
-
-loser:
-    PORT_Free(names);
-    return SECFailure;
 }
 
 /* Called by both clients and servers.
@@ -603,15 +607,9 @@ ssl3_ValidateNextProtoNego(const unsigned char* data, unsigned int length)
          * store protocol identifiers in null-terminated strings.
          */
         if (newOffset > length || data[offset] == 0) {
-            PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID);
             return SECFailure;
         }
         offset = newOffset;
-    }
-
-    if (offset > length) {
-        PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID);
-        return SECFailure;
     }
 
     return SECSuccess;
@@ -626,34 +624,41 @@ ssl3_SelectAppProtocol(sslSocket *ss, PRUint16 ex_type, SECItem *data)
     SECItem result = { siBuffer, resultBuffer, 0 };
 
     rv = ssl3_ValidateNextProtoNego(data->data, data->len);
-    if (rv != SECSuccess)
+    if (rv != SECSuccess) {
+        PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID);
+        (void)SSL3_SendAlert(ss, alert_fatal, decode_error);
         return rv;
+    }
 
     PORT_Assert(ss->nextProtoCallback);
     rv = ss->nextProtoCallback(ss->nextProtoArg, ss->fd, data->data, data->len,
-                               result.data, &result.len, sizeof resultBuffer);
-    if (rv != SECSuccess)
-        return rv;
-    /* If the callback wrote more than allowed to |result| it has corrupted our
-     * stack. */
-    if (result.len > sizeof resultBuffer) {
-        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+                               result.data, &result.len, sizeof(resultBuffer));
+    if (rv != SECSuccess) {
+        /* Expect callback to call PORT_SetError() */
+        (void)SSL3_SendAlert(ss, alert_fatal, internal_error);
         return SECFailure;
     }
 
+    /* If the callback wrote more than allowed to |result| it has corrupted our
+     * stack. */
+    if (result.len > sizeof(resultBuffer)) {
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        /* TODO: crash */
+        return SECFailure;
+    }
+
+    SECITEM_FreeItem(&ss->ssl3.nextProto, PR_FALSE);
+
     if (ex_type == ssl_app_layer_protocol_xtn &&
         ss->ssl3.nextProtoState != SSL_NEXT_PROTO_NEGOTIATED) {
-        /* The callback might say OK, but then it's picked a default.
-         * That's OK for NPN, but not ALPN. */
-        SECITEM_FreeItem(&ss->ssl3.nextProto, PR_FALSE);
+        /* The callback might say OK, but then it picks a default value - one
+         * that was not listed.  That's OK for NPN, but not ALPN. */
         PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_NO_PROTOCOL);
         (void)SSL3_SendAlert(ss, alert_fatal, no_application_protocol);
         return SECFailure;
     }
 
     ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ex_type;
-
-    SECITEM_FreeItem(&ss->ssl3.nextProto, PR_FALSE);
     return SECITEM_CopyItem(NULL, &ss->ssl3.nextProto, &result);
 }
 
@@ -669,17 +674,16 @@ ssl3_ServerHandleAppProtoXtn(sslSocket *ss, PRUint16 ex_type, SECItem *data)
     if (ss->firstHsDone || data->len == 0) {
         /* Clients MUST send a non-empty ALPN extension. */
         PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID);
+        (void)SSL3_SendAlert(ss, alert_fatal, illegal_parameter);
         return SECFailure;
     }
 
-    /* unlike NPN, ALPN has extra redundant length information so that
-     * the extension is the same in both ClientHello and ServerHello */
+    /* Unlike NPN, ALPN has extra redundant length information so that
+     * the extension is the same in both ClientHello and ServerHello. */
     count = ssl3_ConsumeHandshakeNumber(ss, 2, &data->data, &data->len);
-    if (count < 0) {
-        return SECFailure; /* fatal alert was sent */
-    }
     if (count != data->len) {
-        return ssl3_DecodeError(ss);
+        (void)ssl3_DecodeError(ss);
+        return SECFailure;
     }
 
     if (!ss->nextProtoCallback) {
@@ -694,8 +698,13 @@ ssl3_ServerHandleAppProtoXtn(sslSocket *ss, PRUint16 ex_type, SECItem *data)
 
     /* prepare to send back a response, if we negotiated */
     if (ss->ssl3.nextProtoState == SSL_NEXT_PROTO_NEGOTIATED) {
-        return ssl3_RegisterServerHelloExtensionSender(
+        rv = ssl3_RegisterServerHelloExtensionSender(
             ss, ex_type, ssl3_ServerSendAppProtoXtn);
+        if (rv != SECSuccess) {
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            (void)SSL3_SendAlert(ss, alert_fatal, internal_error);
+            return rv;
+        }
     }
     return SECSuccess;
 }
@@ -713,7 +722,8 @@ ssl3_ClientHandleNextProtoNegoXtn(sslSocket *ss, PRUint16 ex_type,
          * we've negotiated NPN then we're required to send the NPN handshake
          * message. Thus, these two extensions cannot both be negotiated on the
          * same connection. */
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+        PORT_SetError(SSL_ERROR_BAD_SERVER);
+        (void)SSL3_SendAlert(ss, alert_fatal, illegal_parameter);
         return SECFailure;
     }
 
@@ -722,7 +732,9 @@ ssl3_ClientHandleNextProtoNegoXtn(sslSocket *ss, PRUint16 ex_type,
      * that an application erroneously cleared the callback between the time
      * we sent the ClientHello and now. */
     if (!ss->nextProtoCallback) {
+        PORT_Assert(0);
         PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_NO_CALLBACK);
+        (void)SSL3_SendAlert(ss, alert_fatal, internal_error);
         return SECFailure;
     }
 
@@ -732,8 +744,8 @@ ssl3_ClientHandleNextProtoNegoXtn(sslSocket *ss, PRUint16 ex_type,
 static SECStatus
 ssl3_ClientHandleAppProtoXtn(sslSocket *ss, PRUint16 ex_type, SECItem *data)
 {
-    const unsigned char* d = data->data;
-    PRUint16 name_list_len;
+    SECStatus rv;
+    PRInt32 list_len;
     SECItem protocol_name;
 
     if (ssl3_ExtensionNegotiated(ss, ssl_next_proto_nego_xtn)) {
@@ -743,22 +755,30 @@ ssl3_ClientHandleAppProtoXtn(sslSocket *ss, PRUint16 ex_type, SECItem *data)
 
     /* The extension data from the server has the following format:
      *   uint16 name_list_len;
-     *   uint8 len;
+     *   uint8 len;  // where len >= 1
      *   uint8 protocol_name[len]; */
     if (data->len < 4 || data->len > 2 + 1 + 255) {
         PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID);
+        (void)SSL3_SendAlert(ss, alert_fatal, decode_error);
         return SECFailure;
     }
 
-    name_list_len = ((PRUint16) d[0]) << 8 |
-                    ((PRUint16) d[1]);
-    if (name_list_len != data->len - 2 || d[2] != data->len - 3) {
+    list_len = ssl3_ConsumeHandshakeNumber(ss, 2, &data->data, &data->len);
+    /* The list has to be the entire extension. */
+    if (list_len != data->len) {
         PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID);
+        (void)SSL3_SendAlert(ss, alert_fatal, decode_error);
         return SECFailure;
     }
 
-    protocol_name.data = data->data + 3;
-    protocol_name.len = data->len - 3;
+    rv = ssl3_ConsumeHandshakeVariable(ss, &protocol_name, 1,
+                                       &data->data, &data->len);
+    /* The list must have exactly one value. */
+    if (rv != SECSuccess || data->len != 0) {
+        PORT_SetError(SSL_ERROR_NEXT_PROTOCOL_DATA_INVALID);
+        (void)SSL3_SendAlert(ss, alert_fatal, decode_error);
+        return SECFailure;
+    }
 
     SECITEM_FreeItem(&ss->ssl3.nextProto, PR_FALSE);
     ss->ssl3.nextProtoState = SSL_NEXT_PROTO_SELECTED;
@@ -1386,8 +1406,9 @@ ssl3_ServerHandleSessionTicketXtn(sslSocket *ss, PRUint16 ex_type,
     SSL3Statistics *ssl3stats;
 
     /* Ignore the SessionTicket extension if processing is disabled. */
-    if (!ss->opt.enableSessionTickets)
+    if (!ss->opt.enableSessionTickets) {
         return SECSuccess;
+    }
 
     /* Keep track of negotiated extensions. */
     ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ex_type;
@@ -1445,8 +1466,9 @@ ssl3_ServerHandleSessionTicketXtn(sslSocket *ss, PRUint16 ex_type,
         extension_data.len = data->len;
 
         if (ssl3_ParseEncryptedSessionTicket(ss, data, &enc_session_ticket)
-            != SECSuccess)
-            return SECFailure;
+            != SECSuccess) {
+            return SECSuccess; /* Pretend it isn't there */
+        }
 
         /* Get session ticket keys. */
 #ifndef NO_PKCS11_BYPASS
@@ -1874,18 +1896,22 @@ ssl3_HandleHelloExtensions(sslSocket *ss, SSL3Opaque **b, PRUint32 *length)
         /* get the data for this extension, so we can pass it or skip it. */
         rv = ssl3_ConsumeHandshakeVariable(ss, &extension_data, 2, b, length);
         if (rv != SECSuccess)
-            return rv;
+            return rv; /* alert already sent */
 
         /* Check whether the server sent an extension which was not advertised
          * in the ClientHello.
          */
         if (!ss->sec.isServer &&
-            !ssl3_ClientExtensionAdvertised(ss, extension_type))
-            return SECFailure;  /* TODO: send unsupported_extension alert */
+            !ssl3_ClientExtensionAdvertised(ss, extension_type)) {
+            (void)SSL3_SendAlert(ss, alert_fatal, unsupported_extension);
+            return SECFailure;
+        }
 
         /* Check whether an extension has been sent multiple times. */
-        if (ssl3_ExtensionNegotiated(ss, extension_type))
+        if (ssl3_ExtensionNegotiated(ss, extension_type)) {
+            (void)SSL3_SendAlert(ss, alert_fatal, illegal_parameter);
             return SECFailure;
+        }
 
         /* find extension_type in table of Hello Extension Handlers */
         for (handler = handlers; handler->ex_type >= 0; handler++) {
@@ -1893,9 +1919,13 @@ ssl3_HandleHelloExtensions(sslSocket *ss, SSL3Opaque **b, PRUint32 *length)
             if (handler->ex_type == extension_type) {
                 rv = (*handler->ex_handler)(ss, (PRUint16)extension_type,
                                                         &extension_data);
-                /* Ignore this result */
-                /* Treat all bad extensions as unrecognized types. */
-                break;
+                if (rv != SECSuccess) {
+                    if (!ss->ssl3.fatalAlertSent) {
+                        /* send a generic alert if the handler didn't already */
+                        (void)SSL3_SendAlert(ss, alert_fatal, handshake_failure);
+                    }
+                    return SECFailure;
+                }
             }
         }
     }
@@ -2027,13 +2057,14 @@ ssl3_HandleRenegotiationInfoXtn(sslSocket *ss, PRUint16 ex_type, SECItem *data)
         len = ss->sec.isServer ? ss->ssl3.hs.finishedBytes
                                : ss->ssl3.hs.finishedBytes * 2;
     }
-    if (data->len != 1 + len  ||
-        data->data[0] != len  || (len &&
-        NSS_SecureMemcmp(ss->ssl3.hs.finishedMsgs.data,
-                         data->data + 1, len))) {
-        /* Can we do this here? Or, must we arrange for the caller to do it? */
-        (void)SSL3_SendAlert(ss, alert_fatal, handshake_failure);
+    if (data->len != 1 + len || data->data[0] != len ) {
+        (void)ssl3_DecodeError(ss);
+        return SECFailure;
+    }
+    if (len && NSS_SecureMemcmp(ss->ssl3.hs.finishedMsgs.data,
+                                data->data + 1, len)) {
         PORT_SetError(SSL_ERROR_BAD_HANDSHAKE_HASH_VALUE);
+        (void)SSL3_SendAlert(ss, alert_fatal, handshake_failure);
         return SECFailure;
     }
     /* remember that we got this extension and it was correct. */
@@ -2042,13 +2073,13 @@ ssl3_HandleRenegotiationInfoXtn(sslSocket *ss, PRUint16 ex_type, SECItem *data)
     if (ss->sec.isServer) {
         /* prepare to send back the appropriate response */
         rv = ssl3_RegisterServerHelloExtensionSender(ss, ex_type,
-                                             ssl3_SendRenegotiationInfoXtn);
+                                                     ssl3_SendRenegotiationInfoXtn);
     }
     return rv;
 }
 
 static PRInt32
-ssl3_SendUseSRTPXtn(sslSocket *ss, PRBool append, PRUint32 maxBytes)
+ssl3_ClientSendUseSRTPXtn(sslSocket *ss, PRBool append, PRUint32 maxBytes)
 {
     PRUint32 ext_data_len;
     PRInt16 i;
@@ -2057,65 +2088,139 @@ ssl3_SendUseSRTPXtn(sslSocket *ss, PRBool append, PRUint32 maxBytes)
     if (!ss)
         return 0;
 
-    if (!ss->sec.isServer) {
-        /* Client side */
+    if (!IS_DTLS(ss) || !ss->ssl3.dtlsSRTPCipherCount)
+        return 0;  /* Not relevant */
 
-        if (!IS_DTLS(ss) || !ss->ssl3.dtlsSRTPCipherCount)
-            return 0;  /* Not relevant */
+    ext_data_len = 2 + 2 * ss->ssl3.dtlsSRTPCipherCount + 1;
 
-        ext_data_len = 2 + 2 * ss->ssl3.dtlsSRTPCipherCount + 1;
-
-        if (append && maxBytes >= 4 + ext_data_len) {
-            /* Extension type */
-            rv = ssl3_AppendHandshakeNumber(ss, ssl_use_srtp_xtn, 2);
-            if (rv != SECSuccess) return -1;
-            /* Length of extension data */
-            rv = ssl3_AppendHandshakeNumber(ss, ext_data_len, 2);
-            if (rv != SECSuccess) return -1;
-            /* Length of the SRTP cipher list */
-            rv = ssl3_AppendHandshakeNumber(ss,
-                                            2 * ss->ssl3.dtlsSRTPCipherCount,
-                                            2);
-            if (rv != SECSuccess) return -1;
-            /* The SRTP ciphers */
-            for (i = 0; i < ss->ssl3.dtlsSRTPCipherCount; i++) {
-                rv = ssl3_AppendHandshakeNumber(ss,
-                                                ss->ssl3.dtlsSRTPCiphers[i],
-                                                2);
-            }
-            /* Empty MKI value */
-            ssl3_AppendHandshakeVariable(ss, NULL, 0, 1);
-
-            ss->xtnData.advertised[ss->xtnData.numAdvertised++] =
-                ssl_use_srtp_xtn;
-        }
-
-        return 4 + ext_data_len;
-    }
-
-    /* Server side */
-    if (append && maxBytes >= 9) {
+    if (append && maxBytes >= 4 + ext_data_len) {
         /* Extension type */
         rv = ssl3_AppendHandshakeNumber(ss, ssl_use_srtp_xtn, 2);
         if (rv != SECSuccess) return -1;
         /* Length of extension data */
-        rv = ssl3_AppendHandshakeNumber(ss, 5, 2);
+        rv = ssl3_AppendHandshakeNumber(ss, ext_data_len, 2);
         if (rv != SECSuccess) return -1;
         /* Length of the SRTP cipher list */
-        rv = ssl3_AppendHandshakeNumber(ss, 2, 2);
+        rv = ssl3_AppendHandshakeNumber(ss,
+                                        2 * ss->ssl3.dtlsSRTPCipherCount,
+                                        2);
         if (rv != SECSuccess) return -1;
-        /* The selected cipher */
-        rv = ssl3_AppendHandshakeNumber(ss, ss->ssl3.dtlsSRTPCipherSuite, 2);
-        if (rv != SECSuccess) return -1;
+        /* The SRTP ciphers */
+        for (i = 0; i < ss->ssl3.dtlsSRTPCipherCount; i++) {
+            rv = ssl3_AppendHandshakeNumber(ss,
+                                            ss->ssl3.dtlsSRTPCiphers[i],
+                                            2);
+        }
         /* Empty MKI value */
         ssl3_AppendHandshakeVariable(ss, NULL, 0, 1);
+
+        ss->xtnData.advertised[ss->xtnData.numAdvertised++] =
+                ssl_use_srtp_xtn;
     }
+
+    return 4 + ext_data_len;
+}
+
+static PRInt32
+ssl3_ServerSendUseSRTPXtn(sslSocket *ss, PRBool append, PRUint32 maxBytes)
+{
+    SECStatus rv;
+
+    /* Server side */
+    if (!append || maxBytes < 9) {
+        return 9;
+    }
+
+    /* Extension type */
+    rv = ssl3_AppendHandshakeNumber(ss, ssl_use_srtp_xtn, 2);
+    if (rv != SECSuccess) return -1;
+    /* Length of extension data */
+    rv = ssl3_AppendHandshakeNumber(ss, 5, 2);
+    if (rv != SECSuccess) return -1;
+    /* Length of the SRTP cipher list */
+    rv = ssl3_AppendHandshakeNumber(ss, 2, 2);
+    if (rv != SECSuccess) return -1;
+    /* The selected cipher */
+    rv = ssl3_AppendHandshakeNumber(ss, ss->ssl3.dtlsSRTPCipherSuite, 2);
+    if (rv != SECSuccess) return -1;
+    /* Empty MKI value */
+    ssl3_AppendHandshakeVariable(ss, NULL, 0, 1);
 
     return 9;
 }
 
 static SECStatus
-ssl3_HandleUseSRTPXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
+ssl3_ClientHandleUseSRTPXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
+{
+    SECStatus rv;
+    SECItem ciphers = {siBuffer, NULL, 0};
+    PRUint16 i;
+    PRUint16 cipher = 0;
+    PRBool found = PR_FALSE;
+    SECItem litem;
+
+    if (!data->data || !data->len) {
+        (void)ssl3_DecodeError(ss);
+        return SECFailure;
+    }
+
+    /* Get the cipher list */
+    rv = ssl3_ConsumeHandshakeVariable(ss, &ciphers, 2,
+                                       &data->data, &data->len);
+    if (rv != SECSuccess) {
+        return SECFailure;  /* fatal alert already sent */
+    }
+    /* Now check that the server has picked just 1 (i.e., len = 2) */
+    if (ciphers.len != 2) {
+        (void)ssl3_DecodeError(ss);
+        return SECFailure;
+    }
+
+    /* Get the selected cipher */
+    cipher = (ciphers.data[0] << 8) | ciphers.data[1];
+
+    /* Now check that this is one of the ciphers we offered */
+    for (i = 0; i < ss->ssl3.dtlsSRTPCipherCount; i++) {
+        if (cipher == ss->ssl3.dtlsSRTPCiphers[i]) {
+            found = PR_TRUE;
+            break;
+        }
+    }
+
+    if (!found) {
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
+        (void)SSL3_SendAlert(ss, alert_fatal, illegal_parameter);
+        return SECFailure;
+    }
+
+    /* Get the srtp_mki value */
+    rv = ssl3_ConsumeHandshakeVariable(ss, &litem, 1,
+                                       &data->data, &data->len);
+    if (rv != SECSuccess) {
+        return SECFailure; /* alert already sent */
+    }
+
+    /* We didn't offer an MKI, so this must be 0 length */
+    if (litem.len != 0) {
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_SERVER_HELLO);
+        (void)SSL3_SendAlert(ss, alert_fatal, illegal_parameter);
+        return SECFailure;
+    }
+
+    /* extra trailing bytes */
+    if (data->len != 0) {
+        (void)ssl3_DecodeError(ss);
+        return SECFailure;
+    }
+
+    /* OK, this looks fine. */
+    ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ssl_use_srtp_xtn;
+    ss->ssl3.dtlsSRTPCipherSuite = cipher;
+    return SECSuccess;
+}
+
+static SECStatus
+ssl3_ServerHandleUseSRTPXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
 {
     SECStatus rv;
     SECItem ciphers = {siBuffer, NULL, 0};
@@ -2125,74 +2230,6 @@ ssl3_HandleUseSRTPXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
     PRBool found = PR_FALSE;
     SECItem litem;
 
-    if (!ss->sec.isServer) {
-        /* Client side */
-        if (!data->data || !data->len) {
-            /* malformed */
-            return SECFailure;
-        }
-
-        /* Get the cipher list */
-        rv = ssl3_ConsumeHandshakeVariable(ss, &ciphers, 2,
-                                           &data->data, &data->len);
-        if (rv != SECSuccess) {
-            return SECFailure;
-        }
-        /* Now check that the number of ciphers listed is 1 (len = 2) */
-        if (ciphers.len != 2) {
-            return SECFailure;
-        }
-
-        /* Get the selected cipher */
-        cipher = (ciphers.data[0] << 8) | ciphers.data[1];
-
-        /* Now check that this is one of the ciphers we offered */
-        for (i = 0; i < ss->ssl3.dtlsSRTPCipherCount; i++) {
-            if (cipher == ss->ssl3.dtlsSRTPCiphers[i]) {
-                found = PR_TRUE;
-                break;
-            }
-        }
-
-        if (!found) {
-            return SECFailure;
-        }
-
-        /* Get the srtp_mki value */
-        rv = ssl3_ConsumeHandshakeVariable(ss, &litem, 1,
-                                           &data->data, &data->len);
-        if (rv != SECSuccess) {
-            return SECFailure;
-        }
-
-        /* We didn't offer an MKI, so this must be 0 length */
-        /* XXX RFC 5764 Section 4.1.3 says:
-         *   If the client detects a nonzero-length MKI in the server's
-         *   response that is different than the one the client offered,
-         *   then the client MUST abort the handshake and SHOULD send an
-         *   invalid_parameter alert.
-         *
-         * Due to a limitation of the ssl3_HandleHelloExtensions function,
-         * returning SECFailure here won't abort the handshake.  It will
-         * merely cause the use_srtp extension to be not negotiated.  We
-         * should fix this.  See NSS bug 753136.
-         */
-        if (litem.len != 0) {
-            return SECFailure;
-        }
-
-        if (data->len != 0) {
-            /* malformed */
-            return SECFailure;
-        }
-
-        /* OK, this looks fine. */
-        ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ssl_use_srtp_xtn;
-        ss->ssl3.dtlsSRTPCipherSuite = cipher;
-        return SECSuccess;
-    }
-
-    /* Server side */
     if (!IS_DTLS(ss) || !ss->ssl3.dtlsSRTPCipherCount) {
         /* Ignore the extension if we aren't doing DTLS or no DTLS-SRTP
          * preferences have been set. */
@@ -2200,7 +2237,7 @@ ssl3_HandleUseSRTPXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
     }
 
     if (!data->data || data->len < 5) {
-        /* malformed */
+        (void)ssl3_DecodeError(ss);
         return SECFailure;
     }
 
@@ -2208,10 +2245,11 @@ ssl3_HandleUseSRTPXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
     rv = ssl3_ConsumeHandshakeVariable(ss, &ciphers, 2,
                                        &data->data, &data->len);
     if (rv != SECSuccess) {
-        return SECFailure;
+        return SECFailure; /* alert already sent */
     }
     /* Check that the list is even length */
     if (ciphers.len % 2) {
+        (void)ssl3_DecodeError(ss);
         return SECFailure;
     }
 
@@ -2234,12 +2272,13 @@ ssl3_HandleUseSRTPXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
     }
 
     if (data->len != 0) {
-        return SECFailure; /* Malformed */
+        (void)ssl3_DecodeError(ss); /* trailing bytes */
+        return SECFailure;
     }
 
     /* Now figure out what to do */
     if (!found) {
-        /* No matching ciphers */
+        /* No matching ciphers, pretend we don't support use_srtp */
         return SECSuccess;
     }
 
@@ -2248,7 +2287,7 @@ ssl3_HandleUseSRTPXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
     ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ssl_use_srtp_xtn;
 
     return ssl3_RegisterServerHelloExtensionSender(ss, ssl_use_srtp_xtn,
-                                                   ssl3_SendUseSRTPXtn);
+                                                   ssl3_ServerSendUseSRTPXtn);
 }
 
 /* ssl3_ServerHandleSigAlgsXtn handles the signature_algorithms extension
@@ -2267,9 +2306,6 @@ ssl3_ServerHandleSigAlgsXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
         return SECSuccess;
     }
 
-    /* Keep track of negotiated extensions. */
-    ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ex_type;
-
     rv = ssl3_ConsumeHandshakeVariable(ss, &algorithms, 2, &data->data,
                                        &data->len);
     if (rv != SECSuccess) {
@@ -2278,6 +2314,7 @@ ssl3_ServerHandleSigAlgsXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
     /* Trailing data, empty value, or odd-length value is invalid. */
     if (data->len != 0 || algorithms.len == 0 || (algorithms.len & 1) != 0) {
         PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+        (void)SSL3_SendAlert(ss, alert_fatal, decode_error);
         return SECFailure;
     }
 
@@ -2291,6 +2328,8 @@ ssl3_ServerHandleSigAlgsXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
     ss->ssl3.hs.clientSigAndHash =
             PORT_NewArray(SSL3SignatureAndHashAlgorithm, numAlgorithms);
     if (!ss->ssl3.hs.clientSigAndHash) {
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_CLIENT_HELLO);
+        (void)SSL3_SendAlert(ss, alert_fatal, internal_error);
         return SECFailure;
     }
     ss->ssl3.hs.numClientSigAndHash = 0;
@@ -2320,6 +2359,8 @@ ssl3_ServerHandleSigAlgsXtn(sslSocket * ss, PRUint16 ex_type, SECItem *data)
         ss->ssl3.hs.clientSigAndHash = NULL;
     }
 
+    /* Keep track of negotiated extensions. */
+    ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ex_type;
     return SECSuccess;
 }
 
@@ -2483,41 +2524,32 @@ ssl3_ServerHandleDraftVersionXtn(sslSocket * ss, PRUint16 ex_type,
         return SECSuccess;
     }
 
-    if (data->len != 2)
-        goto loser;
+    if (data->len != 2) {
+        (void)ssl3_DecodeError(ss);
+        return SECFailure;
+    }
 
     /* Get the draft version out of the handshake */
     draft_version = ssl3_ConsumeHandshakeNumber(ss, 2,
                                                 &data->data, &data->len);
     if (draft_version < 0) {
-        goto loser;
+        return SECFailure;
     }
 
     /*  Keep track of negotiated extensions. */
     ss->xtnData.negotiated[ss->xtnData.numNegotiated++] = ex_type;
 
-    /* Compare the version */
     if (draft_version != TLS_1_3_DRAFT_VERSION) {
+        /*
+         * Incompatible/broken TLS 1.3 implementation. Fall back to TLS 1.2.
+         * TODO(ekr@rtfm.com): It's not entirely clear it's safe to roll back
+         * here. Need to double-check.
+         */
         SSL_TRC(30, ("%d: SSL3[%d]: Incompatible version of TLS 1.3 (%d), "
                      "expected %d",
                      SSL_GETPID(), ss->fd, draft_version, TLS_1_3_DRAFT_VERSION));
-        goto loser;
+        ss->version = SSL_LIBRARY_VERSION_TLS_1_2;
     }
 
     return SECSuccess;
-
-loser:
-    /*
-     * Incompatible/broken TLS 1.3 implementation. Fall back to TLS 1.2.
-     * TODO(ekr@rtfm.com): It's not entirely clear it's safe to roll back
-     * here. Need to double-check.
-     * TODO(ekr@rtfm.com): Currently we fall back even on broken extensions.
-     * because SECFailure does not cause handshake failures. See bug
-     * 753136.
-     */
-    SSL_TRC(30, ("%d: SSL3[%d]: Rolling back to TLS 1.2", SSL_GETPID(), ss->fd));
-    ss->version = SSL_LIBRARY_VERSION_TLS_1_2;
-
-    return SECSuccess;
 }
-

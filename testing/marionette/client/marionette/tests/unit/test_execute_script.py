@@ -4,14 +4,16 @@
 
 import urllib
 
-from marionette_driver.by import By
-from marionette_driver.errors import JavascriptException
-from marionette import MarionetteTestCase
+from marionette_driver import By, errors
+from marionette.marionette_test import MarionetteTestCase, skip_if_b2g
+
 
 def inline(doc):
     return "data:text/html;charset=utf-8,%s" % urllib.quote(doc)
 
+
 elements = inline("<p>foo</p> <p>bar</p>")
+
 
 class TestExecuteContent(MarionetteTestCase):
     def test_stack_trace(self):
@@ -21,7 +23,7 @@ class TestExecuteContent(MarionetteTestCase):
                 return b;
                 """)
             self.assertFalse(True)
-        except JavascriptException, inst:
+        except errors.JavascriptException as inst:
             self.assertTrue('return b' in inst.stacktrace)
 
     def test_execute_simple(self):
@@ -34,11 +36,11 @@ class TestExecuteContent(MarionetteTestCase):
         self.assertEqual(self.marionette.execute_script("1;"), None)
 
     def test_execute_js_exception(self):
-        self.assertRaises(JavascriptException,
+        self.assertRaises(errors.JavascriptException,
             self.marionette.execute_script, "return foo(bar);")
 
     def test_execute_permission(self):
-        self.assertRaises(JavascriptException,
+        self.assertRaises(errors.JavascriptException,
                           self.marionette.execute_script,
                           """
 let prefs = Components.classes["@mozilla.org/preferences-service;1"]
@@ -96,6 +98,8 @@ let prefs = Components.classes["@mozilla.org/preferences-service;1"]
                                                 [None])
         self.assertIs(result, None)
 
+
+@skip_if_b2g
 class TestExecuteChrome(TestExecuteContent):
     def setUp(self):
         super(TestExecuteChrome, self).setUp()
@@ -121,3 +125,10 @@ class TestExecuteChrome(TestExecuteContent):
         actual = self.marionette.execute_script(
             "return document.querySelectorAll('textbox')")
         self.assertEqual(expected, actual)
+
+    def test_async_script_timeout(self):
+        with self.assertRaises(errors.ScriptTimeoutException):
+            self.marionette.execute_async_script("""
+                var cb = arguments[arguments.length - 1];
+                setTimeout(function() { cb() }, 250);
+                """, script_timeout=100)

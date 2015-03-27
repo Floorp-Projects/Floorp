@@ -233,51 +233,6 @@ else
     MOZ_ANDROID_NDK
 fi
 
-dnl ==============================================================
-dnl Get mozilla version from central milestone file
-dnl ==============================================================
-MOZILLA_VERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir`
-MOZILLA_UAVERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir --uaversion`
-MOZILLA_SYMBOLVERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir --symbolversion`
-
-AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
-AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
-AC_DEFINE_UNQUOTED(MOZILLA_UAVERSION,"$MOZILLA_UAVERSION")
-AC_SUBST(MOZILLA_SYMBOLVERSION)
-
-# Separate version into components for use in shared object naming etc
-changequote(,)
-MOZJS_MAJOR_VERSION=`echo $MOZILLA_VERSION | sed "s|\(^[0-9]*\)\.[0-9]*.*|\1|"`
-MOZJS_MINOR_VERSION=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.\([0-9]*\).*|\1|"`
-MOZJS_PATCH_VERSION=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.[0-9]*[^0-9]*||"`
-IS_ALPHA=`echo $MOZILLA_VERSION | grep '[ab]'`
-
-dnl XXX in a temporary bid to avoid developer anger at renaming files
-dnl XXX before "js" symlinks exist, don't change names.
-dnl
-dnl if test -n "$JS_STANDALONE"; then
-dnl JS_SHELL_NAME=js$MOZJS_MAJOR_VERSION
-dnl JS_CONFIG_NAME=js$MOZJS_MAJOR_VERSION-config
-dnl else
-JS_SHELL_NAME=js
-JS_CONFIG_NAME=js-config
-dnl fi
-
-changequote([,])
-if test -n "$IS_ALPHA"; then
-  changequote(,)
-  MOZJS_ALPHA=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.[0-9\.]*\([^0-9]\).*|\1|"`
-  changequote([,])
-fi
-AC_DEFINE_UNQUOTED(MOZJS_MAJOR_VERSION,$MOZJS_MAJOR_VERSION)
-AC_DEFINE_UNQUOTED(MOZJS_MINOR_VERSION,$MOZJS_MINOR_VERSION)
-AC_SUBST(JS_SHELL_NAME)
-AC_SUBST(JS_CONFIG_NAME)
-AC_SUBST(MOZJS_MAJOR_VERSION)
-AC_SUBST(MOZJS_MINOR_VERSION)
-AC_SUBST(MOZJS_PATCH_VERSION)
-AC_SUBST(MOZJS_ALPHA)
-
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
@@ -737,6 +692,52 @@ AC_PATH_XTRA
 XCFLAGS="$X_CFLAGS"
 
 fi # COMPILE_ENVIRONMENT
+
+dnl ==============================================================
+dnl Get mozilla version from central milestone file
+dnl ==============================================================
+MOZILLA_VERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir`
+MOZILLA_UAVERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir --uaversion`
+MOZILLA_SYMBOLVERSION=`$PYTHON $srcdir/python/mozbuild/mozbuild/milestone.py --topsrcdir $srcdir --symbolversion`
+
+AC_DEFINE_UNQUOTED(MOZILLA_VERSION,"$MOZILLA_VERSION")
+AC_DEFINE_UNQUOTED(MOZILLA_VERSION_U,$MOZILLA_VERSION)
+AC_DEFINE_UNQUOTED(MOZILLA_UAVERSION,"$MOZILLA_UAVERSION")
+AC_SUBST(MOZILLA_SYMBOLVERSION)
+
+# Separate version into components for use in shared object naming etc
+changequote(,)
+MOZJS_MAJOR_VERSION=`echo $MOZILLA_VERSION | sed "s|\(^[0-9]*\)\.[0-9]*.*|\1|"`
+MOZJS_MINOR_VERSION=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.\([0-9]*\).*|\1|"`
+MOZJS_PATCH_VERSION=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.[0-9]*[^0-9]*||"`
+IS_ALPHA=`echo $MOZILLA_VERSION | grep '[ab]'`
+
+dnl XXX in a temporary bid to avoid developer anger at renaming files
+dnl XXX before "js" symlinks exist, don't change names.
+dnl
+dnl if test -n "$JS_STANDALONE"; then
+dnl JS_SHELL_NAME=js$MOZJS_MAJOR_VERSION
+dnl JS_CONFIG_NAME=js$MOZJS_MAJOR_VERSION-config
+dnl else
+JS_SHELL_NAME=js
+JS_CONFIG_NAME=js-config
+dnl fi
+
+changequote([,])
+if test -n "$IS_ALPHA"; then
+  changequote(,)
+  MOZJS_ALPHA=`echo $MOZILLA_VERSION | sed "s|^[0-9]*\.[0-9\.]*\([^0-9]\).*|\1|"`
+  changequote([,])
+fi
+AC_DEFINE_UNQUOTED(MOZJS_MAJOR_VERSION,$MOZJS_MAJOR_VERSION)
+AC_DEFINE_UNQUOTED(MOZJS_MINOR_VERSION,$MOZJS_MINOR_VERSION)
+AC_SUBST(JS_SHELL_NAME)
+AC_SUBST(JS_CONFIG_NAME)
+AC_SUBST(MOZJS_MAJOR_VERSION)
+AC_SUBST(MOZJS_MINOR_VERSION)
+AC_SUBST(MOZJS_PATCH_VERSION)
+AC_SUBST(MOZJS_ALPHA)
+
 
 dnl ========================================================
 dnl set the defaults first
@@ -3161,6 +3162,11 @@ elif test "$CPU_ARCH" = "x86"; then
 elif test "$CPU_ARCH" = "x86_64"; then
     AC_DEFINE(JS_CODEGEN_X64)
     JS_CODEGEN_X64=1
+
+    dnl Signal-handler OOM checking requires large mprotected guard regions, so
+    dnl currently it is only implemented on x64.
+    AC_DEFINE(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
+    ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB=1
 elif test "$CPU_ARCH" = "arm"; then
     AC_DEFINE(JS_CODEGEN_ARM)
     JS_CODEGEN_ARM=1
@@ -3176,6 +3182,7 @@ AC_SUBST(JS_CODEGEN_MIPS)
 AC_SUBST(JS_CODEGEN_X86)
 AC_SUBST(JS_CODEGEN_X64)
 AC_SUBST(JS_CODEGEN_NONE)
+AC_SUBST(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 
 dnl ========================================================
 dnl jprof

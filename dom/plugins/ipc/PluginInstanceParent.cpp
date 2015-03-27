@@ -1395,7 +1395,7 @@ PluginInstanceParent::NPP_NewStream(NPMIMEType type, NPStream* stream,
         MOZ_ASSERT(mSurrogate);
         mSurrogate->AsyncCallDeparting();
         if (SendAsyncNPP_NewStream(bs, NullableString(type), seekable)) {
-            *stype = UINT16_MAX;
+            *stype = nsPluginStreamListenerPeer::STREAM_TYPE_UNKNOWN;
         } else {
             err = NPERR_GENERIC_ERROR;
         }

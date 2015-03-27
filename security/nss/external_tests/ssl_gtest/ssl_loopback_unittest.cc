@@ -44,13 +44,7 @@ TEST_P(TlsConnectGeneric, SetupOnly) {}
 
 TEST_P(TlsConnectGeneric, Connect) {
   Connect();
-
-  // Check that we negotiated the expected version.
-  if (mode_ == STREAM) {
-    client_->CheckVersion(SSL_LIBRARY_VERSION_TLS_1_0);
-  } else {
-    client_->CheckVersion(SSL_LIBRARY_VERSION_TLS_1_1);
-  }
+  client_->CheckVersion(SSL_LIBRARY_VERSION_TLS_1_2);
 }
 
 TEST_P(TlsConnectGeneric, ConnectResumed) {
@@ -152,29 +146,6 @@ TEST_P(TlsConnectGeneric, ConnectClientNoneServerBoth) {
   CheckResumption(RESUME_NONE);
 }
 
-TEST_P(TlsConnectGeneric, ConnectTLS_1_1_Only) {
-  EnsureTlsSetup();
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_1);
-
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
-                           SSL_LIBRARY_VERSION_TLS_1_1);
-
-  Connect();
-
-  client_->CheckVersion(SSL_LIBRARY_VERSION_TLS_1_1);
-}
-
-TEST_P(TlsConnectGeneric, ConnectTLS_1_2_Only) {
-  EnsureTlsSetup();
-  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
-                           SSL_LIBRARY_VERSION_TLS_1_2);
-  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_2,
-                           SSL_LIBRARY_VERSION_TLS_1_2);
-  Connect();
-  client_->CheckVersion(SSL_LIBRARY_VERSION_TLS_1_2);
-}
-
 TEST_P(TlsConnectGeneric, ConnectAlpn) {
   EnableAlpn();
   Connect();
@@ -182,19 +153,19 @@ TEST_P(TlsConnectGeneric, ConnectAlpn) {
   server_->CheckAlpn(SSL_NEXT_PROTO_NEGOTIATED, "a");
 }
 
-TEST_F(DtlsConnectTest, ConnectSrtp) {
+TEST_P(TlsConnectDatagram, ConnectSrtp) {
   EnableSrtp();
   Connect();
   CheckSrtp();
 }
 
-TEST_F(TlsConnectTest, ConnectECDHE) {
+TEST_P(TlsConnectStream, ConnectECDHE) {
   EnableSomeECDHECiphers();
   Connect();
   client_->CheckKEAType(ssl_kea_ecdh);
 }
 
-TEST_F(TlsConnectTest, ConnectECDHETwiceReuseKey) {
+TEST_P(TlsConnectStream, ConnectECDHETwiceReuseKey) {
   EnableSomeECDHECiphers();
   TlsInspectorRecordHandshakeMessage* i1 =
       new TlsInspectorRecordHandshakeMessage(kTlsHandshakeServerKeyExchange);
@@ -223,7 +194,7 @@ TEST_F(TlsConnectTest, ConnectECDHETwiceReuseKey) {
                       dhe1.public_key_.len()));
 }
 
-TEST_F(TlsConnectTest, ConnectECDHETwiceNewKey) {
+TEST_P(TlsConnectStream, ConnectECDHETwiceNewKey) {
   EnableSomeECDHECiphers();
   SECStatus rv =
       SSL_OptionSet(server_->ssl_fd(), SSL_REUSE_SERVER_ECDHE_KEY, PR_FALSE);
@@ -257,7 +228,17 @@ TEST_F(TlsConnectTest, ConnectECDHETwiceNewKey) {
                         dhe1.public_key_.len())));
 }
 
-INSTANTIATE_TEST_CASE_P(Variants, TlsConnectGeneric,
-                        ::testing::Values("TLS", "DTLS"));
+INSTANTIATE_TEST_CASE_P(VariantsStream10, TlsConnectGeneric,
+                        ::testing::Combine(
+                          TlsConnectTestBase::kTlsModesStream,
+                          TlsConnectTestBase::kTlsV10));
+INSTANTIATE_TEST_CASE_P(VariantsAll, TlsConnectGeneric,
+                        ::testing::Combine(
+                          TlsConnectTestBase::kTlsModesAll,
+                          TlsConnectTestBase::kTlsV11V12));
+INSTANTIATE_TEST_CASE_P(VersionsDatagram, TlsConnectDatagram,
+                        TlsConnectTestBase::kTlsV11V12);
+INSTANTIATE_TEST_CASE_P(VersionsDatagram, TlsConnectStream,
+                        TlsConnectTestBase::kTlsV11V12);
 
 }  // namespace nspr_test

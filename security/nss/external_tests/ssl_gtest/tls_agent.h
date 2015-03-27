@@ -14,6 +14,9 @@
 
 #include "test_io.h"
 
+#define GTEST_HAS_RTTI 0
+#include "gtest/gtest.h"
+
 namespace nss_test {
 
 #define LOG(msg) std::cerr << name_ << ": " << msg << std::endl
@@ -40,6 +43,10 @@ class TlsAgent : public PollTarget {
         state_(INIT) {
       memset(&info_, 0, sizeof(info_));
       memset(&csinfo_, 0, sizeof(csinfo_));
+      SECStatus rv = SSL_VersionRangeGetDefault(mode_ == STREAM ?
+                                                ssl_variant_stream : ssl_variant_datagram,
+                                                &vrange_);
+      EXPECT_EQ(SECSuccess, rv);
   }
 
   ~TlsAgent() {
@@ -95,12 +102,21 @@ class TlsAgent : public PollTarget {
 
   PRFileDesc* ssl_fd() { return ssl_fd_; }
 
+  uint16_t min_version() const { return vrange_.min; }
+  uint16_t max_version() const { return vrange_.max; }
+
   bool version(uint16_t* version) const {
     if (state_ != CONNECTED) return false;
 
     *version = info_.protocolVersion;
 
     return true;
+  }
+
+  uint16_t version() const {
+    EXPECT_EQ(CONNECTED, state_);
+
+    return info_.protocolVersion;
   }
 
   bool cipher_suite(int16_t* cipher_suite) const {
@@ -163,6 +179,7 @@ class TlsAgent : public PollTarget {
   State state_;
   SSLChannelInfo info_;
   SSLCipherSuiteInfo csinfo_;
+  SSLVersionRange vrange_;
 };
 
 }  // namespace nss_test

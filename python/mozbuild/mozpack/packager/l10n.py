@@ -8,7 +8,7 @@ directory.
 '''
 
 import os
-import mozpack.path
+import mozpack.path as mozpath
 from mozpack.packager.formats import (
     FlatFormatter,
     JarFormatter,
@@ -45,10 +45,10 @@ class LocaleManifestFinder(object):
         self.locales = list(set(e.id for e in self.entries
                                 if isinstance(e, ManifestLocale)))
         # Find all paths whose manifest are included by no other manifest.
-        includes = set(mozpack.path.join(e.base, e.relpath)
+        includes = set(mozpath.join(e.base, e.relpath)
                        for m in manifests.itervalues()
                        for e in m if isinstance(e, Manifest))
-        self.bases = [mozpack.path.dirname(p)
+        self.bases = [mozpath.dirname(p)
                       for p in set(manifests.keys()) - includes]
 
 
@@ -72,20 +72,30 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
     l10n_paths = {}
     for e in l10n.entries:
         if isinstance(e, ManifestChrome):
-            base = mozpack.path.basedir(e.path, app.bases)
+            base = mozpath.basedir(e.path, app.bases)
             l10n_paths.setdefault(base, {})
             l10n_paths[base][e.name] = e.path
 
     # For chrome and non chrome files or directories, store what langpack path
     # corresponds to a package path.
-    paths = dict((e.path,
-                  l10n_paths[mozpack.path.basedir(e.path, app.bases)][e.name])
-                 for e in app.entries
-                 if isinstance(e, ManifestEntryWithRelPath))
+    paths = {}
+    for e in app.entries:
+        if isinstance(e, ManifestEntryWithRelPath):
+            base = mozpath.basedir(e.path, app.bases)
+            if base not in l10n_paths:
+                errors.fatal("Locale doesn't contain %s/" % base)
+                # Allow errors to accumulate
+                continue
+            if e.name not in l10n_paths[base]:
+                errors.fatal("Locale doesn't have a manifest entry for '%s'" %
+                    e.name)
+                # Allow errors to accumulate
+                continue
+            paths[e.path] = l10n_paths[base][e.name]
 
     for pattern in non_chrome:
         for base in app.bases:
-            path = mozpack.path.join(base, pattern)
+            path = mozpath.join(base, pattern)
             left = set(p for p, f in app_finder.find(path))
             right = set(p for p, f in l10n_finder.find(path))
             for p in right:
@@ -109,10 +119,10 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
             if not path:
                 continue
         else:
-            base = mozpack.path.basedir(p, paths.keys())
+            base = mozpath.basedir(p, paths.keys())
             if base:
-                subpath = mozpack.path.relpath(p, base)
-                path = mozpack.path.normpath(mozpack.path.join(paths[base],
+                subpath = mozpath.relpath(p, base)
+                path = mozpath.normpath(mozpath.join(paths[base],
                                                                subpath))
         if path:
             files = [f for p, f in l10n_finder.find(path)]
@@ -129,23 +139,23 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
     l10n_manifests = []
     for base in set(e.base for e in l10n.entries):
         m = ManifestFile(base, [e for e in l10n.entries if e.base == base])
-        path = mozpack.path.join(base, 'chrome.%s.manifest' % l10n_locale)
+        path = mozpath.join(base, 'chrome.%s.manifest' % l10n_locale)
         l10n_manifests.append((path, m))
     bases = packager.get_bases()
     for path, m in l10n_manifests:
-        base = mozpack.path.basedir(path, bases)
+        base = mozpath.basedir(path, bases)
         packager.add(path, m)
         # Add a "manifest $path" entry in the top manifest under that base.
         m = ManifestFile(base)
-        m.add(Manifest(base, mozpack.path.relpath(path, base)))
-        packager.add(mozpack.path.join(base, 'chrome.manifest'), m)
+        m.add(Manifest(base, mozpath.relpath(path, base)))
+        packager.add(mozpath.join(base, 'chrome.manifest'), m)
 
     packager.close()
 
     # Add any remaining non chrome files.
     for pattern in non_chrome:
         for base in bases:
-            for p, f in l10n_finder.find(mozpack.path.join(base, pattern)):
+            for p, f in l10n_finder.find(mozpath.join(base, pattern)):
                 if not formatter.contains(p):
                     formatter.add(p, f)
 

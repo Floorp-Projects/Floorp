@@ -123,8 +123,8 @@ function sendSingleKey (keyToSend, modifiers, document) {
   utils.synthesizeKey(keyCode, modifiers, document);
 }
 
-function sendKeysToElement (document, element, keysToSend, successCallback, errorCallback, command_id, context) {
-  if (context == "chrome" || checkVisible(element)) {
+function sendKeysToElement (document, element, keysToSend, successCallback, errorCallback, command_id, ignoreVisibility) {
+  if (ignoreVisibility || checkVisible(element)) {
     element.focus();
     let modifiers = {
       shiftKey: false,

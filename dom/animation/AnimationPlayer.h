@@ -54,7 +54,7 @@ public:
   explicit AnimationPlayer(AnimationTimeline* aTimeline)
     : mTimeline(aTimeline)
     , mPlaybackRate(1.0)
-    , mIsPending(false)
+    , mPendingState(PendingState::NotPending)
     , mIsRunningOnCompositor(false)
     , mIsPreviousStateFinished(false)
     , mIsRelevant(false)
@@ -107,6 +107,8 @@ public:
   void Tick();
 
   /**
+   * Set the time to use for starting or pausing a pending player.
+   *
    * Typically, when a player is played, it does not start immediately but is
    * added to a table of pending players on the document of its source content.
    * In the meantime it sets its hold time to the time from which playback
@@ -119,9 +121,9 @@ public:
    * players do start, they can be timed from the point when painting
    * completed.
    *
-   * After calling StartOnNextTick, players remain in the pending state until
+   * After calling TriggerOnNextTick, players remain in the pending state until
    * the next refresh driver tick. At that time they transition out of the
-   * pending state using the time passed to StartOnNextTick as the effective
+   * pending state using the time passed to TriggerOnNextTick as the effective
    * time at which they resumed.
    *
    * This approach means that any setup time required for performing the
@@ -145,20 +147,27 @@ public:
    *   between triggering an animation and its effective start is unacceptably
    *   long.
    *
+   * For pausing, we apply the same asynchronous approach. This is so that we
+   * synchronize with animations that are running on the compositor. Otherwise
+   * if the main thread lags behind the compositor there will be a noticeable
+   * jump backwards when the main thread takes over. Even though main thread
+   * animations could be paused immediately, we do it asynchronously for
+   * consistency and so that animations paused together end up in step.
+   *
    * Note that the caller of this method is responsible for removing the player
    * from any PendingPlayerTracker it may have been added to.
    */
-  void StartOnNextTick(const Nullable<TimeDuration>& aReadyTime);
+  void TriggerOnNextTick(const Nullable<TimeDuration>& aReadyTime);
 
-  // Testing only: Start a pending player using the current timeline time.
-  // This is used to support existing tests that expect animations to begin
-  // immediately. Ideally we would rewrite the those tests and get rid of this
-  // method, but there are a lot of them.
+  // Testing only: Start or pause a pending player using the current timeline
+  // time. This is used to support existing tests that expect animations to
+  // begin immediately. Ideally we would rewrite the those tests and get rid of
+  // this method, but there are a lot of them.
   //
-  // As with StartOnNextTick, the caller of this method is responsible for
+  // As with TriggerOnNextTick, the caller of this method is responsible for
   // removing the player from any PendingPlayerTracker it may have been added
   // to.
-  void StartNow();
+  void TriggerNow();
 
   /**
    * When StartOnNextTick is called, we store the ready time but we don't apply
@@ -182,17 +191,24 @@ public:
 
   void Cancel();
 
-  const nsString& Name() const {
+  const nsString& Name() const
+  {
     return mSource ? mSource->Name() : EmptyString();
   }
 
-  bool IsPaused() const { return PlayState() == AnimationPlayState::Paused; }
+  bool IsPausedOrPausing() const
+  {
+    return PlayState() == AnimationPlayState::Paused ||
+           mPendingState == PendingState::PausePending;
+  }
   bool IsRunning() const;
 
-  bool HasCurrentSource() const {
+  bool HasCurrentSource() const
+  {
     return GetSource() && GetSource()->IsCurrent();
   }
-  bool HasInEffectSource() const {
+  bool HasInEffectSource() const
+  {
     return GetSource() && GetSource()->IsInEffect();
   }
 
@@ -226,10 +242,12 @@ protected:
   void UpdateSourceContent();
   void FlushStyle() const;
   void PostUpdate();
-  // Remove this player from the pending player tracker and resets mIsPending
-  // as necessary. The caller is responsible for resolving or aborting the
-  // mReady promise as necessary.
-  void CancelPendingPlay();
+  /**
+   * Remove this player from the pending player tracker and reset
+   * mPendingState as necessary. The caller is responsible for resolving or
+   * aborting the mReady promise as necessary.
+   */
+  void CancelPendingTasks();
 
   bool IsPossiblyOrphanedPendingPlayer() const;
   StickyTimeDuration SourceContentEnd() const;
@@ -252,12 +270,15 @@ protected:
   // This object is lazily created by GetReady.
   nsRefPtr<Promise> mReady;
 
-  // Indicates if the player is in the pending state. We use this rather
-  // than checking if this player is tracked by a PendingPlayerTracker.
-  // This is because the PendingPlayerTracker is associated with the source
-  // content's document but we need to know if we're pending even if the
-  // source content loses association with its document.
-  bool mIsPending;
+  // Indicates if the player is in the pending state (and what state it is
+  // waiting to enter when it finished pending). We use this rather than
+  // checking if this player is tracked by a PendingPlayerTracker because the
+  // player will continue to be pending even after it has been removed from the
+  // PendingPlayerTracker while it is waiting for the next tick
+  // (see TriggerOnNextTick for details).
+  enum class PendingState { NotPending, PlayPending, PausePending };
+  PendingState mPendingState;
+
   bool mIsRunningOnCompositor;
   // Indicates whether we were in the finished state during our
   // most recent unthrottled sample (our last ComposeStyle call).

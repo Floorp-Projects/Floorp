@@ -127,6 +127,7 @@ GrallocTextureHostOGL::~GrallocTextureHostOGL()
 void
 GrallocTextureHostOGL::SetCompositor(Compositor* aCompositor)
 {
+  MOZ_ASSERT(aCompositor);
   mCompositor = static_cast<CompositorOGL*>(aCompositor);
   if (mGLTextureSource) {
     mGLTextureSource->SetCompositor(mCompositor);
@@ -241,12 +242,6 @@ GrallocTextureHostOGL::GetAsSurface() {
   graphicBuffer->unlock();
 
   return surf.forget();
-}
-
-TextureSource*
-GrallocTextureHostOGL::GetTextureSources()
-{
-  return nullptr;
 }
 
 void

@@ -13,15 +13,19 @@ using namespace mozilla;
 
 namespace mozilla {
 
-NS_IMPL_CYCLE_COLLECTION(PendingPlayerTracker, mPlayPendingSet, mDocument)
+NS_IMPL_CYCLE_COLLECTION(PendingPlayerTracker,
+                         mPlayPendingSet,
+                         mPausePendingSet,
+                         mDocument)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PendingPlayerTracker, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PendingPlayerTracker, Release)
 
 void
-PendingPlayerTracker::AddPlayPending(dom::AnimationPlayer& aPlayer)
+PendingPlayerTracker::AddPending(dom::AnimationPlayer& aPlayer,
+                                 AnimationPlayerSet& aSet)
 {
-  mPlayPendingSet.PutEntry(&aPlayer);
+  aSet.PutEntry(&aPlayer);
 
   // Schedule a paint. Otherwise animations that don't trigger a paint by
   // themselves (e.g. CSS animations with an empty keyframes rule) won't
@@ -30,20 +34,22 @@ PendingPlayerTracker::AddPlayPending(dom::AnimationPlayer& aPlayer)
 }
 
 void
-PendingPlayerTracker::RemovePlayPending(dom::AnimationPlayer& aPlayer)
+PendingPlayerTracker::RemovePending(dom::AnimationPlayer& aPlayer,
+                                    AnimationPlayerSet& aSet)
 {
-  mPlayPendingSet.RemoveEntry(&aPlayer);
+  aSet.RemoveEntry(&aPlayer);
 }
 
 bool
-PendingPlayerTracker::IsWaitingToPlay(dom::AnimationPlayer const& aPlayer) const
+PendingPlayerTracker::IsWaiting(const dom::AnimationPlayer& aPlayer,
+                                const AnimationPlayerSet& aSet) const
 {
-  return mPlayPendingSet.Contains(const_cast<dom::AnimationPlayer*>(&aPlayer));
+  return aSet.Contains(const_cast<dom::AnimationPlayer*>(&aPlayer));
 }
 
 PLDHashOperator
-StartPlayerAtTime(nsRefPtrHashKey<dom::AnimationPlayer>* aKey,
-                  void* aReadyTime)
+TriggerPlayerAtTime(nsRefPtrHashKey<dom::AnimationPlayer>* aKey,
+                    void* aReadyTime)
 {
   dom::AnimationPlayer* player = aKey->GetKey();
   dom::AnimationTimeline* timeline = player->Timeline();
@@ -51,38 +57,43 @@ StartPlayerAtTime(nsRefPtrHashKey<dom::AnimationPlayer>* aKey,
   // When the timeline's refresh driver is under test control, its values
   // have no correspondance to wallclock times so we shouldn't try to convert
   // aReadyTime (which is a wallclock time) to a timeline value. Instead, the
-  // animation player will be started when the refresh driver is next
-  // advanced since this will trigger a call to StartPendingPlayersNow.
+  // animation player will be started/paused when the refresh driver is next
+  // advanced since this will trigger a call to TriggerPendingPlayersNow.
   if (timeline->IsUnderTestControl()) {
     return PL_DHASH_NEXT;
   }
 
   Nullable<TimeDuration> readyTime =
     timeline->ToTimelineTime(*static_cast<const TimeStamp*>(aReadyTime));
-  player->StartOnNextTick(readyTime);
+  player->TriggerOnNextTick(readyTime);
 
   return PL_DHASH_REMOVE;
 }
 
 void
-PendingPlayerTracker::StartPendingPlayersOnNextTick(const TimeStamp& aReadyTime)
+PendingPlayerTracker::TriggerPendingPlayersOnNextTick(const TimeStamp&
+                                                        aReadyTime)
 {
-  mPlayPendingSet.EnumerateEntries(StartPlayerAtTime,
+  mPlayPendingSet.EnumerateEntries(TriggerPlayerAtTime,
                                    const_cast<TimeStamp*>(&aReadyTime));
+  mPausePendingSet.EnumerateEntries(TriggerPlayerAtTime,
+                                    const_cast<TimeStamp*>(&aReadyTime));
 }
 
 PLDHashOperator
-StartPlayerNow(nsRefPtrHashKey<dom::AnimationPlayer>* aKey, void*)
+TriggerPlayerNow(nsRefPtrHashKey<dom::AnimationPlayer>* aKey, void*)
 {
-  aKey->GetKey()->StartNow();
+  aKey->GetKey()->TriggerNow();
   return PL_DHASH_NEXT;
 }
 
 void
-PendingPlayerTracker::StartPendingPlayersNow()
+PendingPlayerTracker::TriggerPendingPlayersNow()
 {
-  mPlayPendingSet.EnumerateEntries(StartPlayerNow, nullptr);
+  mPlayPendingSet.EnumerateEntries(TriggerPlayerNow, nullptr);
   mPlayPendingSet.Clear();
+  mPausePendingSet.EnumerateEntries(TriggerPlayerNow, nullptr);
+  mPausePendingSet.Clear();
 }
 
 void

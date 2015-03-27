@@ -7,9 +7,15 @@
 interface WorkerDebuggerGlobalScope : EventTarget {
   readonly attribute object global;
 
+  void enterEventLoop();
+
+  void leaveEventLoop();
+
   void postMessage(DOMString message);
 
   attribute EventHandler onmessage;
+
+  void reportError(DOMString message);
 };
 
 // So you can debug while you debug

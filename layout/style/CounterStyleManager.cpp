@@ -6,18 +6,18 @@
 
 #include "CounterStyleManager.h"
 
-#include "mozilla/Types.h"
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/ArrayUtils.h"
-#include "prprf.h"
+#include "mozilla/Types.h"
+#include "mozilla/WritingModes.h"
+#include "nsCSSRules.h"
 #include "nsString.h"
 #include "nsStyleSet.h"
-#include "nsCSSRules.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"
 #include "nsUnicodeProperties.h"
-#include "WritingModes.h"
+#include "prprf.h"
 
 namespace mozilla {
 
@@ -1696,10 +1696,20 @@ CustomCounterStyle::GetExtendsRoot()
   return mExtendsRoot;
 }
 
+AnonymousCounterStyle::AnonymousCounterStyle(const nsSubstring& aContent)
+  : CounterStyle(NS_STYLE_LIST_STYLE_CUSTOM)
+  , mSingleString(true)
+  , mSystem(NS_STYLE_COUNTER_SYSTEM_CYCLIC)
+{
+  mSymbols.SetCapacity(1);
+  mSymbols.AppendElement(aContent);
+}
+
 AnonymousCounterStyle::AnonymousCounterStyle(const nsCSSValue::Array* aParams)
   : CounterStyle(NS_STYLE_LIST_STYLE_CUSTOM)
+  , mSingleString(false)
+  , mSystem(aParams->Item(0).GetIntValue())
 {
-  mSystem = aParams->Item(0).GetIntValue();
   for (const nsCSSValueList* item = aParams->Item(1).GetListValue();
        item; item = item->mNext) {
     item->mValue.GetStringValue(*mSymbols.AppendElement());
@@ -1716,7 +1726,11 @@ AnonymousCounterStyle::GetPrefix(nsAString& aResult)
 /* virtual */ void
 AnonymousCounterStyle::GetSuffix(nsAString& aResult)
 {
-  aResult = ' ';
+  if (IsSingleString()) {
+    aResult.Truncate();
+  } else {
+    aResult = ' ';
+  }
 }
 
 /* virtual */ bool
@@ -2026,12 +2040,6 @@ CounterStyleManager::BuildCounterStyle(const nsSubstring& aName)
   }
   mCacheTable.Put(aName, data);
   return data;
-}
-
-CounterStyle*
-CounterStyleManager::BuildCounterStyle(const nsCSSValue::Array* aParams)
-{
-  return new AnonymousCounterStyle(aParams);
 }
 
 /* static */ CounterStyle*

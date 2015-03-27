@@ -12,6 +12,7 @@
 #include "nsIFilePicker.h"
 #include "nsCOMArray.h"
 #include "nsThreadUtils.h"
+#include "mozilla/dom/File.h"
 #include "mozilla/dom/PFilePickerParent.h"
 
 namespace mozilla {
@@ -29,7 +30,7 @@ class FilePickerParent : public PFilePickerParent
   virtual ~FilePickerParent();
 
   void Done(int16_t aResult);
-  void SendFiles(const nsCOMArray<nsIDOMFile>& aDomfiles);
+  void SendFiles(const nsTArray<nsRefPtr<FileImpl>>& aDomfiles);
 
   virtual bool RecvOpen(const int16_t& aSelectedType,
                         const bool& aAddToRecentDocs,
@@ -64,11 +65,11 @@ class FilePickerParent : public PFilePickerParent
   class FileSizeAndDateRunnable : public nsRunnable
   {
     FilePickerParent* mFilePickerParent;
-    nsCOMArray<nsIDOMFile> mDomfiles;
+    nsTArray<nsRefPtr<FileImpl>> mFiles;
     nsCOMPtr<nsIEventTarget> mEventTarget;
 
   public:
-    FileSizeAndDateRunnable(FilePickerParent *aFPParent, nsCOMArray<nsIDOMFile>& aDomfiles);
+    FileSizeAndDateRunnable(FilePickerParent *aFPParent, nsTArray<nsRefPtr<FileImpl>>& aFiles);
     bool Dispatch();
     NS_IMETHOD Run();
     void Destroy();

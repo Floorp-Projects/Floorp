@@ -8,6 +8,7 @@
 #define mozilla_JustificationUtils_h_
 
 #include "mozilla/Attributes.h"
+#include "nsCoord.h"
 
 namespace mozilla {
 
