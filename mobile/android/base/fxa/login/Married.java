@@ -112,7 +112,7 @@ public class Married extends TokensAndKeysState {
     return this.clientState;
   }
 
-  public Cohabiting makeCohabitingState() {
+  public State makeCohabitingState() {
     return new Cohabiting(email, uid, sessionToken, kA, kB, keyPair);
   }
 }
