@@ -48,6 +48,7 @@ public class LocalReadingListStorage implements ReadingListStorage {
      * These are not common: they should only occur if a conflict occurs.
      */
     private final Queue<ClientReadingListRecord> deletions;
+    private final Queue<String> deletedGUIDs;
 
     /**
      * These are additions or changes fetched from the server.
@@ -63,16 +64,17 @@ public class LocalReadingListStorage implements ReadingListStorage {
     LocalReadingListChangeAccumulator() {
       this.changes = new ConcurrentLinkedQueue<>();
       this.deletions = new ConcurrentLinkedQueue<>();
+      this.deletedGUIDs = new ConcurrentLinkedQueue<>();
       this.additionsOrChanges = new ConcurrentLinkedQueue<>();
     }
 
     public boolean flushDeletions() throws RemoteException {
-      if (deletions.isEmpty()) {
+      if (deletions.isEmpty() && deletedGUIDs.isEmpty()) {
         return true;
       }
 
       long[] ids = new long[deletions.size()];
-      String[] guids = new String[deletions.size()];
+      String[] guids = new String[deletions.size() + deletedGUIDs.size()];
       int iID = 0;
       int iGUID = 0;
       for (ClientReadingListRecord record : deletions) {
@@ -86,6 +88,9 @@ public class LocalReadingListStorage implements ReadingListStorage {
           guids[iGUID++] = guid;
         }
       }
+      for (String guid : deletedGUIDs) {
+        guids[iGUID++] = guid;
+      }
 
       if (iID > 0) {
         client.delete(URI_WITH_DELETED, RepoUtils.computeSQLLongInClause(ids, ReadingListItems._ID), null);
@@ -96,6 +101,7 @@ public class LocalReadingListStorage implements ReadingListStorage {
       }
 
       deletions.clear();
+      deletedGUIDs.clear();
       return true;
     }
 
@@ -212,6 +218,11 @@ public class LocalReadingListStorage implements ReadingListStorage {
     }
 
     @Override
+    public void addDeletion(String guid) {
+      deletedGUIDs.add(guid);
+    }
+
+    @Override
     public void addChangedRecord(ClientReadingListRecord record) {
       changes.add(record);
     }
@@ -313,6 +324,20 @@ public class LocalReadingListStorage implements ReadingListStorage {
 
     try {
       return client.query(URI_WITHOUT_DELETED, projection, selection, null, null);
+    } catch (RemoteException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  @Override
+  public Cursor getDeletedItems() {
+    final String[] projection = new String[] {
+      ReadingListItems.GUID,
+    };
+
+    final String selection = "(" + ReadingListItems.IS_DELETED + " = 1) AND (" + ReadingListItems.GUID + " IS NOT NULL)";
+    try {
+      return client.query(URI_WITH_DELETED, projection, selection, null, null);
     } catch (RemoteException e) {
       throw new IllegalStateException(e);
     }

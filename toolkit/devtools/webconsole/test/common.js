@@ -8,6 +8,10 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
 Cu.import("resource://gre/modules/Services.jsm");
+const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+
+// This gives logging to stdout for tests
+var {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 
 let devtools = Cu.import("resource://gre/modules/devtools/Loader.jsm", {}).devtools;
 let WebConsoleUtils = devtools.require("devtools/toolkit/webconsole/utils").Utils;

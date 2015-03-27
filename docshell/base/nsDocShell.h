@@ -272,7 +272,7 @@ public:
   // See nsIDocShell::recordProfileTimelineMarkers
   void AddProfileTimelineMarker(const char* aName,
                                 TracingMetadata aMetaData);
-  void AddProfileTimelineMarker(mozilla::UniquePtr<TimelineMarker>& aMarker);
+  void AddProfileTimelineMarker(mozilla::UniquePtr<TimelineMarker>&& aMarker);
 
   // Global counter for how many docShells are currently recording profile
   // timeline markers
@@ -984,7 +984,7 @@ private:
   // True if recording profiles.
   bool mProfileTimelineRecording;
 
-  nsTArray<TimelineMarker*> mProfileTimelineMarkers;
+  nsTArray<mozilla::UniquePtr<TimelineMarker>> mProfileTimelineMarkers;
 
   // Get rid of all the timeline markers accumulated so far
   void ClearProfileTimelineMarkers();
