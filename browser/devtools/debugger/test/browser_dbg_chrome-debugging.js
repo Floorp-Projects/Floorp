@@ -43,7 +43,7 @@ function test() {
 }
 
 function testChromeActor() {
-  gClient.attachProcess().then(aResponse => {
+  gClient.getProcess().then(aResponse => {
     gClient.addListener("newGlobal", onNewGlobal);
     gClient.addListener("newSource", onNewSource);
 
