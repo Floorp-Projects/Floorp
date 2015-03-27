@@ -16,7 +16,9 @@ import org.mozilla.gecko.background.ReadingListConstants;
 import org.mozilla.gecko.background.common.PrefsBranch;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
+import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncDelegate;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
@@ -110,7 +112,7 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
   }
 
   private void syncWithAuthorization(final Context context,
-                                     final Account account,
+                                     final String endpointString,
                                      final SyncResult syncResult,
                                      final FxAccountSyncDelegate syncDelegate,
                                      final String authToken,
@@ -118,7 +120,6 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
                                      final Bundle extras) {
     final AuthHeaderProvider auth = new BearerAuthHeaderProvider(authToken);
 
-    final String endpointString = ReadingListConstants.DEFAULT_PROD_ENDPOINT;
     final URI endpoint;
     Logger.info(LOG_TAG, "Syncing reading list against " + endpointString);
     try {
@@ -152,7 +153,7 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
         // time through, we'll request a new one, which will drive the login
         // state machine, produce a new assertion, and eventually a fresh token.
         Logger.info(LOG_TAG, "Invalidating oauth token after 401!");
-        AccountManager.get(context).invalidateAuthToken(account.type, authToken);
+        AccountManager.get(context).invalidateAuthToken(FxAccountConstants.ACCOUNT_TYPE, authToken);
       }
     });
     // TODO: backoffs, and everything else handled by a SessionCallback.
@@ -165,6 +166,35 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
 
     final Context context = getContext();
     final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
+
+    // Don't sync Reading List if we're in a non-default configuration, but allow testing against stage.
+    final String accountServerURI = fxAccount.getAccountServerURI();
+    final boolean usingDefaultAuthServer = FxAccountConstants.DEFAULT_AUTH_SERVER_ENDPOINT.equals(accountServerURI);
+    final boolean usingStageAuthServer = FxAccountConstants.STAGE_AUTH_SERVER_ENDPOINT.equals(accountServerURI);
+    if (!usingDefaultAuthServer && !usingStageAuthServer) {
+      Logger.error(LOG_TAG, "Skipping Reading List sync because Firefox Account is not using prod or stage auth server.");
+      // Stop syncing the Reading List entirely.
+      ContentResolver.setIsSyncable(account, BrowserContract.READING_LIST_AUTHORITY, 0);
+      return;
+    }
+    final String tokenServerURI = fxAccount.getTokenServerURI();
+    final boolean usingDefaultSyncServer = FxAccountConstants.DEFAULT_TOKEN_SERVER_ENDPOINT.equals(tokenServerURI);
+    final boolean usingStageSyncServer = FxAccountConstants.STAGE_TOKEN_SERVER_ENDPOINT.equals(tokenServerURI);
+    if (!usingDefaultSyncServer && !usingStageSyncServer) {
+      Logger.error(LOG_TAG, "Skipping Reading List sync because Sync is not using the prod or stage Sync (token) server.");
+      Logger.debug(LOG_TAG, "If the user has chosen to not store Sync data with Mozilla, we shouldn't store Reading List data with Mozilla .");
+      // Stop syncing the Reading List entirely.
+      ContentResolver.setIsSyncable(account, BrowserContract.READING_LIST_AUTHORITY, 0);
+      return;
+    }
+
+    // Allow testing against stage.
+    final String endpointString;
+    if (usingStageAuthServer) {
+      endpointString = ReadingListConstants.DEFAULT_DEV_ENDPOINT;
+    } else {
+      endpointString = ReadingListConstants.DEFAULT_PROD_ENDPOINT;
+    }
 
     final CountDownLatch latch = new CountDownLatch(1);
     final FxAccountSyncDelegate syncDelegate = new FxAccountSyncDelegate(latch, syncResult);
@@ -181,7 +211,7 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
         throw new RuntimeException("Couldn't get oauth token!  Aborting sync.");
       }
       final SharedPreferences sharedPrefs = fxAccount.getReadingListPrefs();
-      syncWithAuthorization(context, account, syncResult, syncDelegate, authToken, sharedPrefs, extras);
+      syncWithAuthorization(context, endpointString, syncResult, syncDelegate, authToken, sharedPrefs, extras);
 
       latch.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
       Logger.info(LOG_TAG, "Reading list sync done.");
