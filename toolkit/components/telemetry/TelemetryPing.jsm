@@ -176,6 +176,7 @@ this.TelemetryPing = Object.freeze({
    *                  id, false otherwise.
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
+   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    * @returns {Promise} A promise that resolves when the ping is sent.
    */
   send: function(aType, aPayload, aOptions = {}) {
@@ -199,6 +200,7 @@ this.TelemetryPing = Object.freeze({
    *                  id, false otherwise.
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
+   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    * @returns {Promise} A promise that resolves when the pings are saved.
    */
   savePendingPings: function(aType, aPayload, aOptions = {}) {
@@ -224,6 +226,7 @@ this.TelemetryPing = Object.freeze({
    *                  environment data.
    * @param {Boolean} [aOptions.overwrite=false] true overwrites a ping with the same name,
    *                  if found.
+   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    * @param {String} [aOptions.filePath] The path to save the ping to. Will save to default
    *                 ping location if not provided.
    *
@@ -320,6 +323,7 @@ let Impl = {
    *                  id, false otherwise.
    * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
    *                  environment data.
+   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    *
    * @returns Promise<Object> A promise that resolves when the ping is completely assembled.
    */
@@ -347,7 +351,7 @@ let Impl = {
     }
 
     if (aOptions.addEnvironment) {
-      pingData.environment = TelemetryEnvironment.currentEnvironment;
+      pingData.environment = aOptions.overrideEnvironment || TelemetryEnvironment.currentEnvironment;
     }
 
     return pingData;
@@ -411,6 +415,7 @@ let Impl = {
    *                  false otherwise.
    * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
    *                  environment data.
+   * @param {Object}  aOptions.overrideEnvironment set to override the environment data.
    *
    * @returns {Promise} A promise that resolves when the ping is sent.
    */
@@ -462,6 +467,7 @@ let Impl = {
    *                  false otherwise.
    * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
    *                  environment data.
+   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    *
    * @returns {Promise} A promise that resolves when all the pings are saved to disk.
    */
@@ -488,6 +494,7 @@ let Impl = {
    * @param {Boolean} aOptions.overwrite true overwrites a ping with the same name, if found.
    * @param {String} [aOptions.filePath] The path to save the ping to. Will save to default
    *                 ping location if not provided.
+   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    *
    * @returns {Promise} A promise that resolves with the ping id when the ping is saved to
    *                    disk.
