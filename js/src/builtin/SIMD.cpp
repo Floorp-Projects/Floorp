@@ -361,6 +361,22 @@ CreateAndBindSimdClass(JSContext *cx, Handle<GlobalObject*> global, HandleObject
     return typeDescr;
 }
 
+template <typename T>
+static bool
+FillLanes(JSContext *cx, Handle<TypedObject*> result, const CallArgs &args)
+{
+    typedef typename T::Elem Elem;
+    InternalHandle<Elem *> mem(result, reinterpret_cast<Elem *>(result->typedMem()));
+    Elem tmp;
+    for (unsigned i = 0; i < T::lanes; i++) {
+        if (!T::toType(cx, args.get(i), &tmp))
+            return false;
+        mem.get()[i] = tmp;
+    }
+    args.rval().setObject(*result);
+    return true;
+}
+
 bool
 SimdTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
 {
@@ -375,39 +391,13 @@ SimdTypeDescr::call(JSContext *cx, unsigned argc, Value *vp)
         return false;
 
     switch (descr->type()) {
-      case SimdTypeDescr::TYPE_INT32: {
-        InternalHandle<int32_t *> mem(result, reinterpret_cast<int32_t*>(result->typedMem()));
-        int32_t tmp;
-        for (unsigned i = 0; i < 4; i++) {
-            if (!ToInt32(cx, args.get(i), &tmp))
-                return false;
-            mem.get()[i] = tmp;
-        }
-        break;
-      }
-      case SimdTypeDescr::TYPE_FLOAT32: {
-        InternalHandle<float *> mem(result, reinterpret_cast<float*>(result->typedMem()));
-        float tmp;
-        for (unsigned i = 0; i < 4; i++) {
-            if (!RoundFloat32(cx, args.get(i), &tmp))
-                return false;
-            mem.get()[i] = tmp;
-        }
-        break;
-      }
-      case SimdTypeDescr::TYPE_FLOAT64: {
-        InternalHandle<double *> mem(result, reinterpret_cast<double*>(result->typedMem()));
-        double tmp;
-        for (unsigned i = 0; i < 2; i++) {
-            if (!ToNumber(cx, args.get(i), &tmp))
-                return false;
-            mem.get()[i] = tmp;
-        }
-        break;
-      }
+      case SimdTypeDescr::TYPE_INT32:   return FillLanes<Int32x4>(cx, result, args);
+      case SimdTypeDescr::TYPE_FLOAT32: return FillLanes<Float32x4>(cx, result, args);
+      case SimdTypeDescr::TYPE_FLOAT64: return FillLanes<Float64x2>(cx, result, args);
     }
-    args.rval().setObject(*result);
-    return true;
+
+    MOZ_CRASH("unexpected SIMD descriptor");
+    return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////
