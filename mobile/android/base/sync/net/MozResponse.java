@@ -177,11 +177,11 @@ public class MozResponse {
   }
 
   /**
-   * @return A number of seconds, or -1 if the 'X-Backoff' header was not
+   * @return A number of seconds, or -1 if the 'Backoff' header was not
    *         present.
    */
   public int backoffInSeconds() throws NumberFormatException {
-    return this.getIntegerHeader("x-backoff");
+    return this.getIntegerHeader("backoff");
   }
 
   public void logResponseBody(final String logTag) {
