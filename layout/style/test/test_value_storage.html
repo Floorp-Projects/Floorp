@@ -93,7 +93,6 @@ var gPrereqDeclaration =
 
 function test_property(property)
 {
-  ok(SpecialPowers.getBoolPref("layout.css.variables.enabled"), "pref not set #2");
   var info = gCSSProperties[property];
 
   var test_computed = !("backend_only" in info);
