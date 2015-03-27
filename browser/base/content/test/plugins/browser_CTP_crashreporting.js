@@ -2,85 +2,44 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-Cu.import("resource://gre/modules/Services.jsm");
-
 const SERVER_URL = "http://example.com/browser/toolkit/crashreporter/test/browser/crashreport.sjs";
-const gTestRoot = getRootDirectory(gTestPath);
-var gTestBrowser = null;
+const PLUGIN_PAGE = getRootDirectory(gTestPath) + "plugin_big.html";
 
 /**
- * Frame script that will be injected into the test browser
- * to cause the crash, and then manipulate the crashed plugin
- * UI. Specifically, after the crash, we ensure that the
- * crashed plugin UI is using the right style rules and that
- * the submit URL opt-in defaults to checked. Then, we fill in
- * a comment with the crash report, uncheck the submit URL
- * opt-in, and send the crash reports.
+ * Takes an nsIPropertyBag and converts it into a JavaScript Object. It
+ * will also convert any nsIPropertyBag's within the nsIPropertyBag
+ * recursively.
+ *
+ * @param aBag
+ *        The nsIPropertyBag to convert.
+ * @return Object
+ *        Keyed on the names of the nsIProperty's within the nsIPropertyBag,
+ *        and mapping to their values.
  */
-function frameScript() {
-  function fail(reason) {
-    sendAsyncMessage("test:crash-plugin:fail", {
-      reason: `Failure from frameScript: ${reason}`,
-    });
-  }
-
-  addMessageListener("test:crash-plugin", () => {
-    let doc = content.document;
-
-    addEventListener("PluginCrashed", (event) => {
-      let plugin = doc.getElementById("test");
-      if (!plugin) {
-        fail("Could not find plugin element");
-        return;
-      }
-
-      let getUI = (anonid) => {
-        return doc.getAnonymousElementByAttribute(plugin, "anonid", anonid);
-      };
-
-      let style = content.getComputedStyle(getUI("pleaseSubmit"));
-      if (style.display != "block") {
-        fail("Submission UI visibility is not correct. Expected block, "
-             + " got " + style.display);
-        return;
-      }
-
-      getUI("submitComment").value = "a test comment";
-      if (!getUI("submitURLOptIn").checked) {
-        fail("URL opt-in should default to true.");
-        return;
-      }
-
-      getUI("submitURLOptIn").click();
-      getUI("submitButton").click();
-    });
-
-    let plugin = doc.getElementById("test");
-    try {
-      plugin.crash()
-    } catch(e) {
+function convertPropertyBag(aBag) {
+  let result = {};
+  let enumerator = aBag.enumerator;
+  while(enumerator.hasMoreElements()) {
+    let { name, value } = enumerator.getNext().QueryInterface(Ci.nsIProperty);
+    if (value instanceof Ci.nsIPropertyBag) {
+      value = convertPropertyBag(value);
     }
-  });
+    result[name] = value;
+  }
+  return result;
+}
 
-  addMessageListener("test:plugin-submit-status", () => {
-    let doc = content.document;
-    let plugin = doc.getElementById("test");
-    let submitStatusEl =
-      doc.getAnonymousElementByAttribute(plugin, "anonid", "submitStatus");
-    let submitStatus = submitStatusEl.getAttribute("status");
-    sendAsyncMessage("test:plugin-submit-status:result", {
-      submitStatus: submitStatus,
-    });
+function promisePopupNotificationShown(notificationID) {
+  return new Promise((resolve) => {
+    waitForNotificationShown(notificationID, resolve);
   });
 }
 
-// Test that plugin crash submissions still work properly after
-// click-to-play activation.
-
-function test() {
-  // Crashing the plugin takes up a lot of time, so extend the test timeout.
-  requestLongerTimeout(2);
-  waitForExplicitFinish();
+/**
+ * Test that plugin crash submissions still work properly after
+ * click-to-play activation.
+ */
+add_task(function*() {
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_CLICKTOPLAY);
 
   // The test harness sets MOZ_CRASHREPORTER_NO_REPORT, which disables plugin
@@ -95,113 +54,113 @@ function test() {
   env.set("MOZ_CRASHREPORTER_NO_REPORT", "");
   env.set("MOZ_CRASHREPORTER_URL", SERVER_URL);
 
-  let tab = gBrowser.loadOneTab("about:blank", { inBackground: false });
-  gTestBrowser = gBrowser.getBrowserForTab(tab);
-  let mm = gTestBrowser.messageManager;
-  mm.loadFrameScript("data:,(" + frameScript.toString() + ")();", false);
-  mm.addMessageListener("test:crash-plugin:fail", (message) => {
-    ok(false, message.data.reason);
-  });
-
-  gTestBrowser.addEventListener("load", onPageLoad, true);
-  Services.obs.addObserver(onSubmitStatus, "crash-report-status", false);
-
   registerCleanupFunction(function cleanUp() {
     env.set("MOZ_CRASHREPORTER_NO_REPORT", noReport);
     env.set("MOZ_CRASHREPORTER_URL", serverURL);
-    gTestBrowser.removeEventListener("load", onPageLoad, true);
-    Services.obs.removeObserver(onSubmitStatus, "crash-report-status");
-    gBrowser.removeCurrentTab();
   });
 
-  gTestBrowser.contentWindow.location = gTestRoot + "plugin_big.html";
-}
-function onPageLoad() {
-  // Force the plugins binding to attach as layout is async.
-  let plugin = gTestBrowser.contentDocument.getElementById("test");
-  plugin.clientTop;
-  executeSoon(afterBindingAttached);
-}
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: PLUGIN_PAGE,
+  }, function* (browser) {
+    let activated = yield ContentTask.spawn(browser, null, function*() {
+      let plugin = content.document.getElementById("test");
+      return plugin.QueryInterface(Ci.nsIObjectLoadingContent).activated;
+    });
+    ok(!activated, "Plugin should not be activated");
 
-function afterBindingAttached() {
-  let popupNotification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
-  ok(popupNotification, "Should have a click-to-play notification");
+    // Open up the click-to-play notification popup...
+    let popupNotification = PopupNotifications.getNotification("click-to-play-plugins",
+                                                               browser);
+    ok(popupNotification, "Should have a click-to-play notification");
 
-  let plugin = gTestBrowser.contentDocument.getElementById("test");
-  let objLoadingContent = plugin.QueryInterface(Ci.nsIObjectLoadingContent);
-  ok(!objLoadingContent.activated, "Plugin should not be activated");
+    yield promisePopupNotificationShown(popupNotification);
 
-  // Simulate clicking the "Allow Always" button.
-  waitForNotificationShown(popupNotification, function() {
+    // The primary button in the popup should activate the plugin.
     PopupNotifications.panel.firstChild._primaryButton.click();
-    let condition = function() objLoadingContent.activated;
-    waitForCondition(condition, pluginActivated, "Waited too long for plugin to activate");
-  });
-}
 
-function pluginActivated() {
-  let mm = gTestBrowser.messageManager;
-  mm.sendAsyncMessage("test:crash-plugin");
-}
+    // Prepare a crash report topic observer that only returns when
+    // the crash report has been successfully sent.
+    let crashReportChecker = (subject, data) => {
+      return (data == "success");
+    };
+    let crashReportPromise = TestUtils.topicObserved("crash-report-status",
+                                                     crashReportChecker);
 
-function onSubmitStatus(subj, topic, data) {
-  try {
-    // Wait for success or failed, doesn't matter which.
-    if (data != "success" && data != "failed")
-      return;
+    yield ContentTask.spawn(browser, null, function*() {
+      let plugin = content.document.getElementById("test");
+      plugin.QueryInterface(Ci.nsIObjectLoadingContent);
 
-    let propBag = subj.QueryInterface(Ci.nsIPropertyBag);
-    if (data == "success") {
-      let remoteID = getPropertyBagValue(propBag, "serverCrashID");
-      ok(!!remoteID, "serverCrashID should be set");
+      yield ContentTaskUtils.waitForCondition(() => {
+        return plugin.activated;
+      }, "Waited too long for plugin to activate.");
 
-      // Remove the submitted report file.
-      let file = Cc["@mozilla.org/file/local;1"]
-                   .createInstance(Ci.nsILocalFile);
-      file.initWithPath(Services.crashmanager._submittedDumpsDir);
-      file.append(remoteID + ".txt");
-      ok(file.exists(), "Submitted report file should exist");
-      file.remove(false);
-    }
+      try {
+        plugin.crash();
+      } catch(e) {}
 
-    let extra = getPropertyBagValue(propBag, "extra");
-    ok(extra instanceof Ci.nsIPropertyBag, "Extra data should be property bag");
+      let doc = plugin.ownerDocument;
 
-    let val = getPropertyBagValue(extra, "PluginUserComment");
-    is(val, "a test comment",
-       "Comment in extra data should match comment in textbox");
+      let getUI = (anonid) => {
+        return doc.getAnonymousElementByAttribute(plugin, "anonid", anonid);
+      };
 
-    val = getPropertyBagValue(extra, "PluginContentURL");
-    ok(val === undefined,
-       "URL should be absent from extra data when opt-in not checked");
+      // Now wait until the plugin crash report UI shows itself, which is
+      // asynchronous.
+      let statusDiv;
 
-    let submitStatus = null;
-    let mm = gTestBrowser.messageManager;
-    mm.addMessageListener("test:plugin-submit-status:result", (message) => {
-      submitStatus = message.data.submitStatus;
+      yield ContentTaskUtils.waitForCondition(() => {
+        statusDiv = getUI("submitStatus");
+        return statusDiv.getAttribute("status") == "please";
+      }, "Waited too long for plugin to show crash report UI");
+
+      // Make sure the UI matches our expectations...
+      let style = content.getComputedStyle(getUI("pleaseSubmit"));
+      if (style.display != "block") {
+        return Promise.reject(`Submission UI visibility is not correct. ` +
+                              `Expected block style, got ${style.display}.`);
+      }
+
+      // Fill the crash report in with some test values that we'll test for in
+      // the parent.
+      getUI("submitComment").value = "a test comment";
+      let optIn = getUI("submitURLOptIn");
+      if (!optIn.checked) {
+        return Promise.reject("URL opt-in should default to true.");
+      }
+
+      // Submit the report.
+      optIn.click();
+      getUI("submitButton").click();
+
+      // And wait for the parent to say that the crash report was submitted
+      // successfully.
+      yield ContentTaskUtils.waitForCondition(() => {
+        return statusDiv.getAttribute("status") == "success";
+      }, "Timed out waiting for plugin binding to be in success state");
     });
 
-    mm.sendAsyncMessage("test:plugin-submit-status");
+    let [subject, data] = yield crashReportPromise;
 
-    let condition = () => submitStatus;
-    waitForCondition(condition, () => {
-      is(submitStatus, data, "submitStatus data should match");
-      finish();
-    }, "Waiting for submitStatus to be reported from frame script");
-  }
-  catch (err) {
-    failWithException(err);
-  }
-}
+    ok(subject instanceof Ci.nsIPropertyBag,
+       "The crash report subject should be an nsIPropertyBag.");
 
-function getPropertyBagValue(bag, key) {
-  try {
-    var val = bag.getProperty(key);
-  }
-  catch (e if e.result == Cr.NS_ERROR_FAILURE) {}
-  return val;
-}
+    let crashData = convertPropertyBag(subject);
+    ok(crashData.serverCrashID, "Should have a serverCrashID set.");
 
-function failWithException(err) {
-  ok(false, "Uncaught exception: " + err + "\n" + err.stack);
-}
+    // Remove the submitted report file after ensuring it exists.
+    let file = Cc["@mozilla.org/file/local;1"]
+                 .createInstance(Ci.nsILocalFile);
+    file.initWithPath(Services.crashmanager._submittedDumpsDir);
+    file.append(crashData.serverCrashID + ".txt");
+    ok(file.exists(), "Submitted report file should exist");
+    file.remove(false);
+
+    ok(crashData.extra, "Extra data should exist");
+    is(crashData.extra.PluginUserComment, "a test comment",
+       "Comment in extra data should match comment in textbox");
+
+    is(crashData.extra.PluginContentURL, undefined,
+       "URL should be absent from extra data when opt-in not checked");
+  });
+});
