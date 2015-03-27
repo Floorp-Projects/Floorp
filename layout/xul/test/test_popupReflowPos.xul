@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+<window title="XUL Panel reflow placement test"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+
+    function openPopup()
+    {
+      synthesizeMouseAtCenter(document.getElementById("thebutton"), {}, window);
+    }
+
+    function popupShown(event)
+    {
+      document.getElementById("parent").className = "";
+
+      var buttonbcr = document.getElementById("thebutton").getBoundingClientRect();
+      var popupbcr = document.getElementById("thepopup").getOuterScreenRect();
+
+      ok(Math.abs(popupbcr.x - window.mozInnerScreenX - buttonbcr.x) < 3, "x pos is correct");
+      ok(Math.abs(popupbcr.y - window.mozInnerScreenY - buttonbcr.bottom) < 3, "y pos is correct");
+
+      event.target.hidePopup();
+    }
+
+    SimpleTest.waitForFocus(openPopup);
+   ]]></script>
+
+    <html:style>
+      .mbox {
+        display: inline-block;
+        width: 33%;
+        height: 50px;
+        background: green;
+        vertical-align: middle;
+      }
+      .orange {
+        background: orange;
+      }
+      .change > .mbox {
+        width: 60px;
+      }
+    </html:style>
+
+  <html:div style="width: 300px; height: 200px;">
+    <html:div id="parent" class="change" style="background: red; border: 1px solid black; width: 300px; height: 200px;">
+      <html:div class="mbox"></html:div>
+      <html:div class="mbox"></html:div>
+      <html:div class="mbox"></html:div>
+      <html:div class="mbox orange">
+
+          <button label="Show" type="menu" id="thebutton">
+            <menupopup id="thepopup" onpopupshown="popupShown(event)" onpopuphidden="SimpleTest.finish()">
+              <menuitem label="New"/>
+              <menuitem label="Open"/>
+              <menuitem label="Save"/>
+              <menuseparator/>
+              <menuitem label="Exit"/>
+            </menupopup>
+          </button>
+
+      </html:div>
+    </html:div>
+  </html:div>
+
+</window>
