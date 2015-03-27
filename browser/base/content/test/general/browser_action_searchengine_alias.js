@@ -4,7 +4,12 @@
  **/
 
 add_task(function* () {
+  // This test is only relevant if UnifiedComplete is enabled.
+  let ucpref = Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete");
   Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
+  registerCleanupFunction(() => {
+    Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", ucpref);
+  });
 
   let iconURI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAABGklEQVQoz2NgGB6AnZ1dUlJSXl4eSDIyMhLW4Ovr%2B%2Fr168uXL69Zs4YoG%2BLi4i5dusTExMTGxsbNzd3f37937976%2BnpmZmagbHR09J49e5YvX66kpATVEBYW9ubNm2nTphkbG7e2tp44cQLIuHfvXm5urpaWFlDKysqqu7v73LlzECMYIiIiHj58mJCQoKKicvXq1bS0NKBgW1vbjh074uPjgeqAXE1NzSdPnvDz84M0AEUvXLgAsW379u1z5swBen3jxo2zZ892cHB4%2BvQp0KlAfwI1cHJyghQFBwfv2rULokFXV%2FfixYu7d%2B8GGqGgoMDKyrpu3br9%2B%2FcDuXl5eVA%2FAEWBfoWHAdAYoNuAYQ0XAeoUERFhGDYAAPoUaT2dfWJuAAAAAElFTkSuQmCC";
   Services.search.addEngineWithDetails("MozSearch", iconURI, "moz", "", "GET",
@@ -20,7 +25,6 @@ add_task(function* () {
     Services.search.currentEngine = originalEngine;
     let engine = Services.search.getEngineByName("MozSearch");
     Services.search.removeEngine(engine);
-    Services.prefs.clearUserPref("browser.urlbar.unifiedcomplete");
 
     try {
       gBrowser.removeTab(tab);
