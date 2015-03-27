@@ -3086,7 +3086,7 @@ nsDocShell::AddProfileTimelineMarker(const char* aName,
 }
 
 void
-nsDocShell::AddProfileTimelineMarker(UniquePtr<TimelineMarker>& aMarker)
+nsDocShell::AddProfileTimelineMarker(UniquePtr<TimelineMarker>&& aMarker)
 {
   if (mProfileTimelineRecording) {
     mProfileTimelineMarkers.AppendElement(aMarker.release());
