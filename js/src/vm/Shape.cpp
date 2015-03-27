@@ -1252,7 +1252,7 @@ JSCompartment::sweepBaseShapeTable()
 
     for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
         UnownedBaseShape* base = e.front().unbarrieredGet();
-        if (IsBaseShapeAboutToBeFinalized(&base)) {
+        if (IsAboutToBeFinalizedUnbarriered(&base)) {
             e.removeFront();
         } else if (base != e.front().unbarrieredGet()) {
             ReadBarriered<UnownedBaseShape*> b(base);
