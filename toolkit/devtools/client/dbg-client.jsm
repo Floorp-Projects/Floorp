@@ -468,6 +468,8 @@ DebuggerClient.prototype = {
    */
   listAddons: function (aOnResponse) { return this.mainRoot.listAddons(aOnResponse); },
 
+  getTab: function (aFilter) { return this.mainRoot.getTab(aFilter); },
+
   /**
    * Attach to a tab actor.
    *
@@ -622,16 +624,17 @@ DebuggerClient.prototype = {
   },
 
   /**
-   * Attach to a process in order to get the form of a ChildProcessActor.
+   * Fetch the ChromeActor for the main process or ChildProcessActor for a
+   * a given child process ID.
    *
    * @param number aId
    *        The ID for the process to attach (returned by `listProcesses`).
    *        Connected to the main process if omitted, or is 0.
    */
-  attachProcess: function (aId) {
+  getProcess: function (aId) {
     let packet = {
       to: "root",
-      type: "attachProcess"
+      type: "getProcess"
     }
     if (typeof(aId) == "number") {
       packet.id = aId;
@@ -1405,6 +1408,51 @@ RootClient.prototype = {
    */
   listProcesses: DebuggerClient.requester({ type: "listProcesses" },
                                        { telemetry: "LISTPROCESSES" }),
+
+  /**
+   * Fetch the TabActor for the currently selected tab, or for a specific
+   * tab given as first parameter.
+   *
+   * @param [optional] object aFilter
+   *        A dictionary object with following optional attributes:
+   *         - outerWindowID: used to match tabs in parent process
+   *         - tabId: used to match tabs in child processes
+   *         - tab: a reference to xul:tab element
+   *        If nothing is specified, returns the actor for the currently
+   *        selected tab.
+   */
+  getTab: function (aFilter) {
+    let packet = {
+      to: this.actor,
+      type: "getTab"
+    };
+
+    if (aFilter) {
+      if (typeof(aFilter.outerWindowID) == "number") {
+        packet.outerWindowID = aFilter.outerWindowID;
+      } else if (typeof(aFilter.tabId) == "number") {
+        packet.tabId = aFilter.tabId;
+      } else if ("tab" in aFilter) {
+        let browser = aFilter.tab.linkedBrowser;
+        if (browser.frameLoader.tabParent) {
+          // Tabs in child process
+          packet.tabId = browser.frameLoader.tabParent.tabId;
+        } else {
+          // Tabs in parent process
+          let windowUtils = browser.contentWindow
+            .QueryInterface(Ci.nsIInterfaceRequestor)
+            .getInterface(Ci.nsIDOMWindowUtils);
+          packet.outerWindowID = windowUtils.outerWindowID;
+        }
+      } else {
+        // Throw if a filter object have been passed but without
+        // any clearly idenfified filter.
+        throw new Error("Unsupported argument given to getTab request");
+      }
+    }
+
+    return this.request(packet);
+  },
 
   /**
    * Description of protocol's actors and methods.

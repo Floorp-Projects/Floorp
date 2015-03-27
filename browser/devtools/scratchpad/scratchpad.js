@@ -2156,7 +2156,7 @@ ScratchpadWindow.prototype = Heritage.extend(ScratchpadTab.prototype, {
 
     let client = new DebuggerClient(DebuggerServer.connectPipe());
     client.connect(() => {
-      client.attachProcess().then(aResponse => {
+      client.getProcess().then(aResponse => {
         if (aResponse.error) {
           reportError("listTabs", aResponse);
           deferred.reject(aResponse);

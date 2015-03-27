@@ -57,7 +57,7 @@ function* runTestData(inspector, view, data) {
   ok(!view.menuitemAddRule.hidden, "Add rule is visible");
 
   info("Waiting for rule view to change");
-  let onRuleViewChanged = once(view.element, "CssRuleViewChanged");
+  let onRuleViewChanged = once(view, "ruleview-changed");
 
   info("Adding the new rule");
   view.menuitemAddRule.click();

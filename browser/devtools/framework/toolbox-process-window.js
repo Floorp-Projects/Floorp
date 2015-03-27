@@ -41,7 +41,7 @@ let connect = Task.async(function*() {
         openToolbox({ form: addonActor, chrome: true, isTabActor: false });
       });
     } else {
-      gClient.attachProcess().then(aResponse => {
+      gClient.getProcess().then(aResponse => {
         openToolbox({ form: aResponse.form, chrome: true });
       });
     }

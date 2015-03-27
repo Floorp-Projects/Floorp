@@ -749,7 +749,7 @@ let gDevToolsBrowser = {
           return;
         }
         // Otherwise, arbitrary connect to the unique content process.
-        client.attachProcess(contentProcesses[0].id)
+        client.getProcess(contentProcesses[0].id)
               .then(response => {
                 let options = {
                   form: response.form,
