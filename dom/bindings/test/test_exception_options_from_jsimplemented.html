@@ -45,13 +45,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
       ise(e.code, DOMException.NOT_SUPPORTED_ERR,
           "Should have the right 'code'");
       ise(e.stack,
-          "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:38:6\n",
+          "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html:38:7\n",
           "Exception stack should still only show our code");
       ise(e.filename,
           "http://mochi.test:8888/tests/dom/bindings/test/test_exception_options_from_jsimplemented.html",
           "Should still have the right file name");
       ise(e.lineNumber, 38, "Should still have the right line number");
-      todo_is(e.columnNumber, 6,
+      todo_is(e.columnNumber, 7,
               "No column number support for DOMException yet");
     }
     SimpleTest.finish();
