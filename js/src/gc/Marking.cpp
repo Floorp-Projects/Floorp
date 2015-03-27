@@ -1095,8 +1095,6 @@ Update##base##IfRelocated(JSRuntime* rt, type** thingp)                         
 }
 
 
-DeclMarkerImpl(BaseShape, BaseShape)
-DeclMarkerImpl(BaseShape, UnownedBaseShape)
 DeclMarkerImpl(JitCode, jit::JitCode)
 DeclMarkerImpl(Object, NativeObject)
 DeclMarkerImpl(Object, ArrayObject)
@@ -1360,7 +1358,7 @@ void
 BaseShape::markChildren(JSTracer* trc)
 {
     if (isOwned())
-        gc::MarkBaseShape(trc, &unowned_, "base");
+        TraceEdge(trc, &unowned_, "base");
 
     JSObject* global = compartment()->unsafeUnbarrieredMaybeGlobal();
     if (global)

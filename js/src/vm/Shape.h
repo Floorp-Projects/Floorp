@@ -1360,7 +1360,7 @@ Shape::searchLinear(jsid id)
 inline void
 Shape::markChildren(JSTracer* trc)
 {
-    MarkBaseShape(trc, &base_, "base");
+    TraceEdge(trc, &base_, "base");
     TraceEdge(trc, &propidRef(), "propid");
     if (parent)
         MarkShape(trc, &parent, "parent");
