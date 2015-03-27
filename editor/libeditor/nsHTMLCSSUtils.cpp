@@ -436,8 +436,7 @@ nsHTMLCSSUtils::IsCSSEditableProperty(nsIContent* aNode,
                                    nsGkAtoms::dd,
                                    nsGkAtoms::dt,
                                    nsGkAtoms::address,
-                                   nsGkAtoms::pre,
-                                   nsGkAtoms::ul)) {
+                                   nsGkAtoms::pre)) {
     return true;
   }
 
