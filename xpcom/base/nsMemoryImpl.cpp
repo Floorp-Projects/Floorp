@@ -28,24 +28,6 @@ static nsMemoryImpl sGlobalMemory;
 
 NS_IMPL_QUERY_INTERFACE(nsMemoryImpl, nsIMemory)
 
-NS_IMETHODIMP_(void*)
-nsMemoryImpl::Alloc(size_t aSize)
-{
-  return NS_Alloc(aSize);
-}
-
-NS_IMETHODIMP_(void*)
-nsMemoryImpl::Realloc(void* aPtr, size_t aSize)
-{
-  return NS_Realloc(aPtr, aSize);
-}
-
-NS_IMETHODIMP_(void)
-nsMemoryImpl::Free(void* aPtr)
-{
-  NS_Free(aPtr);
-}
-
 NS_IMETHODIMP
 nsMemoryImpl::HeapMinimize(bool aImmediate)
 {
