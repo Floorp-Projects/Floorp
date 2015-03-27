@@ -5704,12 +5704,18 @@ MOZ_ARG_DISABLE_BOOL(permissions,
     MOZ_PERMISSIONS=1
 )
 
+AC_SUBST(MOZ_PERMISSIONS)
+if test -n "$MOZ_PERMISSIONS"; then
+    AC_DEFINE(MOZ_PERMISSIONS)
+fi
+
 dnl ========================================================
 dnl Child permissions, currently only used for b2g
 dnl ========================================================
 if test -n "$MOZ_B2G"; then
     if test -n "$MOZ_PERMISSIONS"; then
         MOZ_CHILD_PERMISSIONS=1
+        AC_DEFINE(MOZ_CHILD_PERMISSIONS)
     else
         AC_MSG_ERROR([You need to enable MOZ_PERMISSIONS for MOZ_CHILD_PERMISSIONS])
     fi
@@ -8429,7 +8435,6 @@ AC_SUBST(BIN_FLAGS)
 AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MOZ_AUTH_EXTENSION)
-AC_SUBST(MOZ_PERMISSIONS)
 AC_SUBST(MOZ_PREF_EXTENSIONS)
 AC_SUBST(MOZ_DEBUG)
 AC_SUBST(MOZ_DEBUG_SYMBOLS)
