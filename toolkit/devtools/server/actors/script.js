@@ -2821,7 +2821,7 @@ SourceActor.prototype = {
    */
   _setBreakpoint: function (actor) {
     let { originalLocation } = actor;
-    let { originalColumn } = originalLocation;
+    let { originalSourceActor, originalLine, originalColumn } = originalLocation;
 
     return this._setBreakpointAtOriginalLocation(actor, originalLocation)
                .then((actualLocation) => {
@@ -2867,12 +2867,6 @@ SourceActor.prototype = {
             }
           }
 
-          let {
-            originalSourceActor,
-            originalLine,
-            originalColumn
-          } = originalLocation;
-
           // Now that we have a map from line numbers to a list of entry points
           // for each line, we can use it to perform breakpoint sliding. Start
           // at the original line of the breakpoint actor, and keep incrementing
@@ -2882,7 +2876,7 @@ SourceActor.prototype = {
           // Note that by computing the entire map up front, and implementing it
           // as a sparse array, we can easily tell when we went past the last line
           // in the map.
-          let actualLine = originalLine;
+          let actualLine = originalLine + 1;
           while (actualLine < lineToEntryPointsMap.length) {
             let entryPoints = lineToEntryPointsMap[actualLine];
             if (entryPoints) {
@@ -2908,15 +2902,41 @@ SourceActor.prototype = {
           return originalLocation;
         }
       } else {
-        // TODO: Refactor breakpoint sliding for source mapped sources.
-        return this.threadActor.sources.getGeneratedLocation(originalLocation)
-                                       .then((generatedLocation) => {
-          return generatedLocation.generatedSourceActor
-                                  ._setBreakpointAtLocationWithSliding(
-            actor,
-            generatedLocation
-          );
-        });
+        if (originalColumn === undefined) {
+          let loop = (actualLocation) => {
+            let {
+              originalLine: actualLine,
+              originalColumn: actualColumn
+            } = actualLocation;
+
+            return this.threadActor.sources.getAllGeneratedLocations(actualLocation)
+                                           .then((generatedLocations) => {
+              // Because getAllGeneratedLocations will always return the list of
+              // generated locations for the closest line that is greater than
+              // the one we are searching for if no exact match can be found, if
+              // the list of generated locations is empty, we've reached the end
+              // of the original source, and breakpoint sliding failed.
+              if (generatedLocations.length === 0) {
+                return originalLocation;
+              }
+
+              // If at least one script has an offset that matches one of the
+              // generated locations in the list, then breakpoint sliding
+              // succeeded.
+              if (this._setBreakpointAtAllGeneratedLocations(actor, generatedLocations)) {
+                return this.threadActor.sources.getOriginalLocation(generatedLocations[0]);
+              }
+
+              // Try the next line in the original source.
+              return loop(new OriginalLocation(this, actualLine + 1));
+            });
+          };
+
+          return loop(new OriginalLocation(this, originalLine + 1));
+        } else {
+          // TODO: Implement breakpoint sliding for column breakpoints
+          return originalLocation;
+        }
       }
     }).then((actualLocation) => {
       // If the actual location on which the BreakpointActor ended up being
@@ -2993,11 +3013,16 @@ SourceActor.prototype = {
    *          breakpoint handler on at least one script, and false otherwise.
    */
   _setBreakpointAtGeneratedLocation: function (actor, generatedLocation) {
-    let { generatedLine, generatedColumn } = generatedLocation;
+    let {
+      generatedSourceActor,
+      generatedLine,
+      generatedColumn,
+      generatedLastColumn
+    } = generatedLocation;
 
     // Find all scripts that match the given source actor and line number.
     let scripts = this.scripts.getScriptsBySourceActorAndLine(
-      this,
+      generatedSourceActor,
       generatedLine
     ).filter((script) => !actor.hasScript(script));
 
@@ -3023,7 +3048,7 @@ SourceActor.prototype = {
         for (let { columnNumber: column, offset } of columnToOffsetMap) {
           // TODO: What we are actually interested in here is a range of
           // columns, rather than a single one.
-          if (column == generatedColumn) {
+          if (column >= generatedColumn && column <= generatedLastColumn) {
             entryPoints.push({ script, offsets: [offset] });
           }
         }
@@ -3035,241 +3060,6 @@ SourceActor.prototype = {
     }
     setBreakpointAtEntryPoints(actor, entryPoints);
     return true;
-  },
-
-  /*
-   * Ensure the given BreakpointActor is set as breakpoint handler on all
-   * scripts that match the given location in the generated source.
-   *
-   * TODO: This method is bugged, because it performs breakpoint sliding on
-   * generated locations. Breakpoint sliding should be performed on original
-   * locations, because there is no guarantee that the next line in the
-   * generated source corresponds to the next line in an original source.
-   *
-   * The only place this method is still used is from setBreakpoint
-   * when called for a source mapped source. Once that code has been refactored,
-   * this method can be removed.
-   *
-   * @param BreakpointActor actor
-   *        The BreakpointActor to be set as a breakpoint handler.
-   * @param GeneratedLocation generatedLocation
-   *        A GeneratedLocation representing the location in the generated
-   *        source for which the given BreakpointActor is to be set as a
-   *        breakpoint handler.
-   *
-   * @returns A Boolean that is true if the BreakpointActor was set as a
-   *          breakpoint handler on at least one script, and false otherwise.
-   */
-  _setBreakpointAtLocationWithSliding: function (actor, generatedLocation) {
-    let originalLocation = actor.originalLocation;
-    let { generatedLine, generatedColumn } = generatedLocation;
-
-    // Find all scripts matching the given location. We will almost always have
-    // a `source` object to query, but multiple inline HTML scripts are all
-    // represented by a single SourceActor even though they have separate source
-    // objects, so we need to query based on the url of the page for them.
-    let scripts = this.scripts.getScriptsBySourceActorAndLine(this, generatedLine);
-    if (scripts.length === 0) {
-      // Since we did not find any scripts to set the breakpoint on now, return
-      // early. When a new script that matches this breakpoint location is
-      // introduced, the breakpoint actor will already be in the breakpoint
-      // store and the breakpoint will be set at that time. This is similar to
-      // GDB's "pending" breakpoints for shared libraries that aren't loaded
-      // yet.
-      return actor;
-    }
-
-    // Ignore scripts for which the BreakpointActor is already a breakpoint
-    // handler.
-    scripts = scripts.filter((script) => !actor.hasScript(script));
-
-    let actualGeneratedLocation;
-
-    // If generatedColumn is something other than 0, assume this is a column
-    // breakpoint and do not perform breakpoint sliding.
-    if (generatedColumn) {
-      this._setBreakpointAtColumn(scripts, generatedLocation, actor);
-      actualGeneratedLocation = generatedLocation;
-    } else {
-      let result;
-      if (actor.scripts.size === 0) {
-        // If the BreakpointActor is not a breakpoint handler for any script, its
-        // location is not yet fixed. Use breakpoint sliding to select the first
-        // line greater than or equal to the requested line that has one or more
-        // offsets.
-        result = this._findNextLineWithOffsets(scripts, generatedLine);
-      } else {
-        // If the BreakpointActor is a breakpoint handler for at least one script,
-        // breakpoint sliding has already been carried out, so select the
-        // requested line, even if it does not have any offsets.
-        let entryPoints = findEntryPointsForLine(scripts, generatedLine)
-        if (entryPoints) {
-          result = {
-            line: generatedLine,
-            entryPoints: entryPoints
-          };
-        }
-      }
-
-      if (!result) {
-        return actor;
-      }
-
-      if (result.line !== generatedLine) {
-        actualGeneratedLocation = new GeneratedLocation(
-          generatedLocation.generatedSourceActor,
-          result.line,
-          generatedLocation.generatedColumn
-        );
-      } else {
-        actualGeneratedLocation = generatedLocation;
-      }
-
-      setBreakpointAtEntryPoints(actor, result.entryPoints);
-    }
-
-    return Promise.resolve().then(() => {
-      if (actualGeneratedLocation.generatedSourceActor.source) {
-        return this.threadActor.sources.getOriginalLocation(actualGeneratedLocation);
-      } else {
-        return OriginalLocation.fromGeneratedLocation(actualGeneratedLocation);
-      }
-    });
-  },
-
-  /**
-   * Set breakpoints at the offsets closest to our target location's column.
-   *
-   * @param Array scripts
-   *        The set of Debugger.Script instances to consider.
-   * @param Object location
-   *        The target location.
-   * @param BreakpointActor actor
-   *        The BreakpointActor to handle hitting the breakpoints we set.
-   * @returns Object
-   *          The RDP response.
-   */
-  _setBreakpointAtColumn: function (scripts, generatedLocation, actor) {
-    // Debugger.Script -> array of offset mappings
-    const scriptsAndOffsetMappings = new Map();
-
-    for (let script of scripts) {
-      this._findClosestOffsetMappings(generatedLocation,
-                                      script,
-                                      scriptsAndOffsetMappings);
-    }
-
-    for (let [script, mappings] of scriptsAndOffsetMappings) {
-      for (let offsetMapping of mappings) {
-        script.setBreakpoint(offsetMapping.offset, actor);
-      }
-      actor.addScript(script, this.threadActor);
-    }
-  },
-
-  /**
-   * Find the first line that is associated with bytecode offsets, and is
-   * greater than or equal to the given start line.
-   *
-   * @param Array scripts
-   *        The set of Debugger.Script instances to consider.
-   * @param Number startLine
-   *        The target line.
-   * @return Object|null
-   *         If we can't find a line matching our constraints, return
-   *         null. Otherwise, return an object of the form:
-   *           {
-   *             line: Number,
-   *             entryPoints: [
-   *               { script: Debugger.Script, offsets: [offset, ...] },
-   *               ...
-   *             ]
-   *           }
-   */
-  _findNextLineWithOffsets: function (scripts, startLine) {
-    const maxLine = Math.max(...scripts.map(s => s.startLine + s.lineCount));
-
-    for (let line = startLine; line < maxLine; line++) {
-      const entryPoints = findEntryPointsForLine(scripts, line);
-      if (entryPoints.length) {
-        return { line, entryPoints };
-      }
-    }
-
-    return null;
-  },
-
-  /**
-   * Find all of the offset mappings associated with `aScript` that are closest
-   * to `aTargetLocation`. If new offset mappings are found that are closer to
-   * `aTargetOffset` than the existing offset mappings inside
-   * `aScriptsAndOffsetMappings`, we empty that map and only consider the
-   * closest offset mappings.
-   *
-   * In many cases, but not all, this method finds only one closest offset.
-   * Consider the following case, where multiple offsets will be found:
-   *
-   *     0         1         2         3
-   *     0123456789012345678901234567890
-   *    +-------------------------------
-   *   1|function f() {
-   *   2|  return g() + h();
-   *   3|}
-   *
-   * The Debugger reports three offsets on line 2 upon which we could set a
-   * breakpoint: the `return` statement at column 2, the call expression `g()`
-   * at column 9, and the call expression `h()` at column 15. (Careful readers
-   * will note that complete source location information isn't saved by
-   * SpiderMonkey's frontend, and we don't get an offset associated specifically
-   * with the `+` operation.)
-   *
-   * If our target location is line 2 column 12, the offset for the call to `g`
-   * is 3 columns to the left and the offset for the call to `h` is 3 columns to
-   * the right. Because they are equally close, we will return both offsets to
-   * have breakpoints set upon them.
-   *
-   * @param Object aTargetLocation
-   *        An object of the form { url, line[, column] }.
-   * @param Debugger.Script aScript
-   *        The script in which we are searching for offsets.
-   * @param Map aScriptsAndOffsetMappings
-   *        A Map object which maps Debugger.Script instances to arrays of
-   *        offset mappings. This is an out param.
-   */
-  _findClosestOffsetMappings: function (aTargetLocation,
-                                aScript,
-                                aScriptsAndOffsetMappings) {
-    let offsetMappings = aScript.getAllColumnOffsets()
-      .filter(({ lineNumber }) => lineNumber === aTargetLocation.generatedLine);
-
-    // Attempt to find the current closest offset distance from the target
-    // location by grabbing any offset mapping in the map by doing one iteration
-    // and then breaking (they all have the same distance from the target
-    // location).
-    let closestDistance = Infinity;
-    if (aScriptsAndOffsetMappings.size) {
-      for (let mappings of aScriptsAndOffsetMappings.values()) {
-        closestDistance = Math.abs(aTargetLocation.generatedColumn - mappings[0].columnNumber);
-        break;
-      }
-    }
-
-    for (let mapping of offsetMappings) {
-      let currentDistance = Math.abs(aTargetLocation.generatedColumn - mapping.columnNumber);
-
-      if (currentDistance > closestDistance) {
-        continue;
-      } else if (currentDistance < closestDistance) {
-        closestDistance = currentDistance;
-        aScriptsAndOffsetMappings.clear();
-        aScriptsAndOffsetMappings.set(aScript, [mapping]);
-      } else {
-        if (!aScriptsAndOffsetMappings.has(aScript)) {
-          aScriptsAndOffsetMappings.set(aScript, []);
-        }
-        aScriptsAndOffsetMappings.get(aScript).push(mapping);
-      }
-    }
   }
 };
 
