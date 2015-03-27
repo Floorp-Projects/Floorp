@@ -7533,5 +7533,19 @@
     "expires_in_version": "never",
     "kind": "count",
     "description": "Count plugin hang notices in e10s"
+  },
+  "UDP_SOCKET_PARALLEL_CLOSE_COUNT": {
+    "expires_in_version": "41",
+    "kind": "linear",
+    "high": "20",
+    "n_buckets": 19,
+    "description": "Number of concurrent UDP socket closing threads"
+  },
+  "UDP_SOCKET_CLOSE_TIME": {
+    "expires_in_version": "45",
+    "kind": "exponential",
+    "high": "60000",
+    "n_buckets": 30,
+    "description": "Time PR_Close of a UDP socket taken (ms)"
   }
 }
