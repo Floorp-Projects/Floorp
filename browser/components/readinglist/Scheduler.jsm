@@ -33,6 +33,12 @@ XPCOMUtils.defineLazyModuleGetter(this, 'ReadingList',
 XPCOMUtils.defineLazyModuleGetter(this, 'Sync',
   'resource:///modules/readinglist/Sync.jsm');
 
+// FxAccountsCommon.js doesn't use a "namespace", so create one here.
+XPCOMUtils.defineLazyGetter(this, "fxAccountsCommon", function() {
+  let namespace = {};
+  Cu.import("resource://gre/modules/FxAccountsCommon.js", namespace);
+  return namespace;
+});
 
 this.EXPORTED_SYMBOLS = ["ReadingListScheduler"];
 
@@ -75,6 +81,7 @@ function InternalScheduler(readingList = null) {
     "browserwindow.syncui",
     "FirefoxAccounts",
     "readinglist.api",
+    "readinglist.scheduler",
     "readinglist.serverclient",
     "readinglist.sync",
   ];
@@ -175,6 +182,8 @@ InternalScheduler.prototype = {
         if (this.state == this.STATE_ERROR_AUTHENTICATION) {
           this.state = this.STATE_OK;
         }
+        // and sync now.
+        this._syncNow();
         break;
 
       // The rest just indicate that now is probably a good time to check if
@@ -285,10 +294,24 @@ InternalScheduler.prototype = {
       Services.obs.notifyObservers(null, "readinglist:sync:finish", null);
       return intervals.schedule;
     }).catch(err => {
-      this.log.error("Sync failed", err);
-      // XXX - how to detect an auth error?
-      this.state = err == this._engine.ERROR_AUTHENTICATION ?
+      // This isn't ideal - we really should have _canSync() check this - but
+      // that requires a refactor to turn _canSync() into a promise-based
+      // function.
+      if (err.message == fxAccountsCommon.ERROR_NO_ACCOUNT ||
+          err.message == fxAccountsCommon.ERROR_UNVERIFIED_ACCOUNT) {
+        // make everything look like success.
+        this.log.info("Can't sync due to FxA account state " + err.message);
+        this.state = this.STATE_OK;
+        this._logManager.resetFileLog(this._logManager.REASON_SUCCESS);
+        Services.obs.notifyObservers(null, "readinglist:sync:finish", null);
+        // it's unfortunate that we are probably going to hit this every
+        // 2 hours, but it should be invisible to the user.
+        return intervals.schedule;
+      }
+      this.state = err.message == fxAccountsCommon.ERROR_AUTH_ERROR ?
                    this.STATE_ERROR_AUTHENTICATION : this.STATE_ERROR_OTHER;
+      this.log.error("Sync failed, now in state '${state}': ${err}",
+                     {state: this.state, err});
       this._logManager.resetFileLog(this._logManager.REASON_ERROR);
       Services.obs.notifyObservers(null, "readinglist:sync:error", null);
       return intervals.retry;
