@@ -272,69 +272,30 @@ struct SuppressErrorsGuard
     }
 };
 
+// Cut off the stack if it gets too deep (most commonly for infinite recursion
+// errors).
+static const size_t MAX_REPORTED_STACK_DEPTH = 1u << 7;
+
+static bool
+CaptureStack(JSContext *cx, MutableHandleObject stack)
+{
+    return CaptureCurrentStack(cx, stack, MAX_REPORTED_STACK_DEPTH);
+}
+
 JSString *
 js::ComputeStackString(JSContext *cx)
 {
-    StringBuffer sb(cx);
+    SuppressErrorsGuard seg(cx);
 
-    {
-        RootedAtom atom(cx);
-        SuppressErrorsGuard seg(cx);
-        for (NonBuiltinFrameIter i(cx, FrameIter::ALL_CONTEXTS, FrameIter::GO_THROUGH_SAVED,
-                                   cx->compartment()->principals);
-             !i.done();
-             ++i)
-        {
-            /* First append the function name, if any. */
-            if (i.isNonEvalFunctionFrame())
-                atom = i.functionDisplayAtom();
-            else
-                atom = nullptr;
-            if (atom && !sb.append(atom))
-                return nullptr;
+    RootedObject stack(cx);
+    if (!CaptureStack(cx, &stack))
+        return nullptr;
 
-            /* Next a @ separating function name from source location. */
-            if (!sb.append('@'))
-                return nullptr;
+    RootedString str(cx);
+    if (!StringifySavedFrameStack(cx, stack, &str))
+        return nullptr;
 
-            /* Now the filename. */
-
-            /* First, try the `//# sourceURL=some-display-url.js` directive. */
-            if (const char16_t *display = i.scriptDisplayURL()) {
-                if (!sb.append(display, js_strlen(display)))
-                    return nullptr;
-            }
-            /* Second, try the actual filename. */
-            else if (const char *filename = i.scriptFilename()) {
-                if (!sb.append(filename, strlen(filename)))
-                    return nullptr;
-            }
-
-            uint32_t column = 0;
-            uint32_t line = i.computeLine(&column);
-            // Now the line number
-            if (!sb.append(':') || !NumberValueToStringBuffer(cx, NumberValue(line), sb))
-                return nullptr;
-
-            // Finally, : followed by the column number (1-based, as in other browsers)
-            // and a newline.
-            if (!sb.append(':') || !NumberValueToStringBuffer(cx, NumberValue(column + 1), sb) ||
-                !sb.append('\n'))
-            {
-                return nullptr;
-            }
-
-            /*
-             * Cut off the stack if it gets too deep (most commonly for
-             * infinite recursion errors).
-             */
-            const size_t MaxReportedStackDepth = 1u << 20;
-            if (sb.length() > MaxReportedStackDepth)
-                break;
-        }
-    }
-
-    return sb.finishString();
+    return str.get();
 }
 
 static void
@@ -358,16 +319,6 @@ js::ErrorFromException(JSContext *cx, HandleObject objArg)
         return nullptr;
 
     return obj->as<ErrorObject>().getOrCreateErrorReport(cx);
-}
-
-// Cut off the stack if it gets too deep (most commonly for infinite recursion
-// errors).
-static const size_t MAX_REPORTED_STACK_DEPTH = 1u << 7;
-
-static bool
-CaptureStack(JSContext *cx, MutableHandleObject stack)
-{
-    return CaptureCurrentStack(cx, stack, MAX_REPORTED_STACK_DEPTH);
 }
 
 bool
