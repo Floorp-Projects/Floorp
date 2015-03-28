@@ -2,8 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_MediaDevices_h
-#define mozilla_dom_MediaDevices_h
+#ifndef MediaDevices_h__
+#define MediaDevices_h__
 
 #include "mozilla/ErrorResult.h"
 #include "nsISupportsImpl.h"
@@ -35,12 +35,8 @@ public:
   already_AddRefed<Promise>
   GetUserMedia(const MediaStreamConstraints& aConstraints, ErrorResult &aRv);
 
-  already_AddRefed<Promise>
-  EnumerateDevices(ErrorResult &aRv);
-
 private:
   class GumResolver;
-  class EnumDevResolver;
   class GumRejecter;
 
   virtual ~MediaDevices() {}
@@ -52,4 +48,4 @@ NS_DEFINE_STATIC_IID_ACCESSOR(MediaDevices,
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_MediaDevices_h
+#endif // MediaDevices_h__
