@@ -128,7 +128,7 @@ static inline bool
 IsCompilingAsmJS()
 {
     // asm.js compilation pushes a JitContext with a null JSCompartment.
-    JitContext *jctx = MaybeGetJitContext();
+    JitContext* jctx = MaybeGetJitContext();
     return jctx && jctx->compartment == nullptr;
 }
 
@@ -140,7 +140,7 @@ CanUsePointerImmediates()
 
     // Pointer immediates can still be used with asm.js when the resulting code
     // is being profiled; the module will not be serialized in this case.
-    JitContext *jctx = MaybeGetJitContext();
+    JitContext* jctx = MaybeGetJitContext();
     if (jctx && jctx->runtime->profilingScripts())
         return true;
 
@@ -151,9 +151,9 @@ CanUsePointerImmediates()
 // Pointer to be embedded as an immediate in an instruction.
 struct ImmPtr
 {
-    void *value;
+    void* value;
 
-    explicit ImmPtr(const void *value) : value(const_cast<void*>(value))
+    explicit ImmPtr(const void* value) : value(const_cast<void*>(value))
     {
         // To make code serialization-safe, asm.js compilation should only
         // compile pointer immediates using AsmJSImmPtr.
@@ -162,35 +162,35 @@ struct ImmPtr
 
     template <class R>
     explicit ImmPtr(R (*pf)())
-      : value(JS_FUNC_TO_DATA_PTR(void *, pf))
+      : value(JS_FUNC_TO_DATA_PTR(void*, pf))
     {
         MOZ_ASSERT(CanUsePointerImmediates());
     }
 
     template <class R, class A1>
     explicit ImmPtr(R (*pf)(A1))
-      : value(JS_FUNC_TO_DATA_PTR(void *, pf))
+      : value(JS_FUNC_TO_DATA_PTR(void*, pf))
     {
         MOZ_ASSERT(CanUsePointerImmediates());
     }
 
     template <class R, class A1, class A2>
     explicit ImmPtr(R (*pf)(A1, A2))
-      : value(JS_FUNC_TO_DATA_PTR(void *, pf))
+      : value(JS_FUNC_TO_DATA_PTR(void*, pf))
     {
         MOZ_ASSERT(CanUsePointerImmediates());
     }
 
     template <class R, class A1, class A2, class A3>
     explicit ImmPtr(R (*pf)(A1, A2, A3))
-      : value(JS_FUNC_TO_DATA_PTR(void *, pf))
+      : value(JS_FUNC_TO_DATA_PTR(void*, pf))
     {
         MOZ_ASSERT(CanUsePointerImmediates());
     }
 
     template <class R, class A1, class A2, class A3, class A4>
     explicit ImmPtr(R (*pf)(A1, A2, A3, A4))
-      : value(JS_FUNC_TO_DATA_PTR(void *, pf))
+      : value(JS_FUNC_TO_DATA_PTR(void*, pf))
     {
         MOZ_ASSERT(CanUsePointerImmediates());
     }
@@ -201,12 +201,12 @@ struct ImmPtr
 // instruction. The initial value of the immediate is 'addr' and this value is
 // either clobbered or used in the patching process.
 struct PatchedImmPtr {
-    void *value;
+    void* value;
 
     explicit PatchedImmPtr()
       : value(nullptr)
     { }
-    explicit PatchedImmPtr(const void *value)
+    explicit PatchedImmPtr(const void* value)
       : value(const_cast<void*>(value))
     { }
 };
@@ -219,12 +219,12 @@ class ImmMaybeNurseryPtr
 {
     friend class AssemblerShared;
     friend class ImmGCPtr;
-    const gc::Cell *value;
+    const gc::Cell* value;
 
     ImmMaybeNurseryPtr() : value(0) {}
 
   public:
-    explicit ImmMaybeNurseryPtr(const gc::Cell *ptr) : value(ptr)
+    explicit ImmMaybeNurseryPtr(const gc::Cell* ptr) : value(ptr)
     {
         // asm.js shouldn't be creating GC things
         MOZ_ASSERT(!IsCompilingAsmJS());
@@ -235,12 +235,12 @@ class ImmMaybeNurseryPtr
 // LNurseryObject.
 class IonNurseryPtr
 {
-    const gc::Cell *ptr;
+    const gc::Cell* ptr;
 
   public:
     friend class ImmGCPtr;
 
-    explicit IonNurseryPtr(const gc::Cell *ptr) : ptr(ptr)
+    explicit IonNurseryPtr(const gc::Cell* ptr) : ptr(ptr)
     {
         MOZ_ASSERT(ptr);
         MOZ_ASSERT(uintptr_t(ptr) & 0x1);
@@ -251,9 +251,9 @@ class IonNurseryPtr
 class ImmGCPtr
 {
   public:
-    const gc::Cell *value;
+    const gc::Cell* value;
 
-    explicit ImmGCPtr(const gc::Cell *ptr) : value(ptr)
+    explicit ImmGCPtr(const gc::Cell* ptr) : value(ptr)
     {
         MOZ_ASSERT_IF(ptr, ptr->isTenured());
 
@@ -284,16 +284,16 @@ class ImmGCPtr
 // instruction.
 struct AbsoluteAddress
 {
-    void *addr;
+    void* addr;
 
-    explicit AbsoluteAddress(const void *addr)
+    explicit AbsoluteAddress(const void* addr)
       : addr(const_cast<void*>(addr))
     {
         MOZ_ASSERT(CanUsePointerImmediates());
     }
 
     AbsoluteAddress offset(ptrdiff_t delta) {
-        return AbsoluteAddress(((uint8_t *) addr) + delta);
+        return AbsoluteAddress(((uint8_t*) addr) + delta);
     }
 };
 
@@ -302,12 +302,12 @@ struct AbsoluteAddress
 // either clobbered or used in the patching process.
 struct PatchedAbsoluteAddress
 {
-    void *addr;
+    void* addr;
 
     explicit PatchedAbsoluteAddress()
       : addr(nullptr)
     { }
-    explicit PatchedAbsoluteAddress(const void *addr)
+    explicit PatchedAbsoluteAddress(const void* addr)
       : addr(const_cast<void*>(addr))
     { }
     explicit PatchedAbsoluteAddress(uintptr_t addr)
@@ -437,7 +437,7 @@ struct AbsoluteLabel : public LabelBase
   public:
     AbsoluteLabel()
     { }
-    AbsoluteLabel(const AbsoluteLabel &label) : LabelBase(label)
+    AbsoluteLabel(const AbsoluteLabel& label) : LabelBase(label)
     { }
     int32_t prev() const {
         MOZ_ASSERT(!bound());
@@ -470,13 +470,13 @@ class CodeLabel
   public:
     CodeLabel()
     { }
-    explicit CodeLabel(const AbsoluteLabel &dest)
+    explicit CodeLabel(const AbsoluteLabel& dest)
        : dest_(dest)
     { }
-    AbsoluteLabel *dest() {
+    AbsoluteLabel* dest() {
         return &dest_;
     }
-    Label *src() {
+    Label* src() {
         return &src_;
     }
 };
@@ -512,7 +512,7 @@ class CodeOffsetJump
     size_t offset() const {
         return offset_;
     }
-    void fixup(MacroAssembler *masm);
+    void fixup(MacroAssembler* masm);
 };
 
 class CodeOffsetLabel
@@ -526,7 +526,7 @@ class CodeOffsetLabel
     size_t offset() const {
         return offset_;
     }
-    void fixup(MacroAssembler *masm);
+    void fixup(MacroAssembler* masm);
 
 };
 
@@ -537,7 +537,7 @@ class CodeOffsetLabel
 
 class CodeLocationJump
 {
-    uint8_t *raw_;
+    uint8_t* raw_;
 #ifdef DEBUG
     enum State { Uninitialized, Absolute, Relative };
     State state_;
@@ -560,7 +560,7 @@ class CodeLocationJump
 #endif
 
 #ifdef JS_SMALL_BRANCH
-    uint8_t *jumpTableEntry_;
+    uint8_t* jumpTableEntry_;
 #endif
 
   public:
@@ -568,35 +568,35 @@ class CodeLocationJump
         raw_ = nullptr;
         setUninitialized();
 #ifdef JS_SMALL_BRANCH
-        jumpTableEntry_ = (uint8_t *) 0xdeadab1e;
+        jumpTableEntry_ = (uint8_t*) 0xdeadab1e;
 #endif
     }
-    CodeLocationJump(JitCode *code, CodeOffsetJump base) {
+    CodeLocationJump(JitCode* code, CodeOffsetJump base) {
         *this = base;
         repoint(code);
     }
 
     void operator = (CodeOffsetJump base) {
-        raw_ = (uint8_t *) base.offset();
+        raw_ = (uint8_t*) base.offset();
         setRelative();
 #ifdef JS_SMALL_BRANCH
-        jumpTableEntry_ = (uint8_t *) base.jumpTableIndex();
+        jumpTableEntry_ = (uint8_t*) base.jumpTableIndex();
 #endif
     }
 
-    void repoint(JitCode *code, MacroAssembler* masm = nullptr);
+    void repoint(JitCode* code, MacroAssembler* masm = nullptr);
 
-    uint8_t *raw() const {
+    uint8_t* raw() const {
         MOZ_ASSERT(state_ == Absolute);
         return raw_;
     }
-    uint8_t *offset() const {
+    uint8_t* offset() const {
         MOZ_ASSERT(state_ == Relative);
         return raw_;
     }
 
 #ifdef JS_SMALL_BRANCH
-    uint8_t *jumpTableEntry() const {
+    uint8_t* jumpTableEntry() const {
         MOZ_ASSERT(state_ == Absolute);
         return jumpTableEntry_;
     }
@@ -605,7 +605,7 @@ class CodeLocationJump
 
 class CodeLocationLabel
 {
-    uint8_t *raw_;
+    uint8_t* raw_;
 #ifdef DEBUG
     enum State { Uninitialized, Absolute, Relative };
     State state_;
@@ -632,28 +632,28 @@ class CodeLocationLabel
         raw_ = nullptr;
         setUninitialized();
     }
-    CodeLocationLabel(JitCode *code, CodeOffsetLabel base) {
+    CodeLocationLabel(JitCode* code, CodeOffsetLabel base) {
         *this = base;
         repoint(code);
     }
-    explicit CodeLocationLabel(JitCode *code) {
+    explicit CodeLocationLabel(JitCode* code) {
         raw_ = code->raw();
         setAbsolute();
     }
-    explicit CodeLocationLabel(uint8_t *raw) {
+    explicit CodeLocationLabel(uint8_t* raw) {
         raw_ = raw;
         setAbsolute();
     }
 
     void operator = (CodeOffsetLabel base) {
-        raw_ = (uint8_t *)base.offset();
+        raw_ = (uint8_t*)base.offset();
         setRelative();
     }
-    ptrdiff_t operator - (const CodeLocationLabel &other) {
+    ptrdiff_t operator - (const CodeLocationLabel& other) {
         return raw_ - other.raw_;
     }
 
-    void repoint(JitCode *code, MacroAssembler *masm = nullptr);
+    void repoint(JitCode* code, MacroAssembler* masm = nullptr);
 
 #ifdef DEBUG
     bool isSet() const {
@@ -661,11 +661,11 @@ class CodeLocationLabel
     }
 #endif
 
-    uint8_t *raw() const {
+    uint8_t* raw() const {
         MOZ_ASSERT(state_ == Absolute);
         return raw_;
     }
-    uint8_t *offset() const {
+    uint8_t* offset() const {
         MOZ_ASSERT(state_ == Relative);
         return raw_;
     }
@@ -738,11 +738,11 @@ struct AsmJSFrame
     // asm.js-to-asm.js calls don't update fp and thus don't save the caller's
     // frame pointer; the space is reserved, however, so that profiling mode can
     // reuse the same function body without recompiling.
-    uint8_t *callerFP;
+    uint8_t* callerFP;
 
     // The return address pushed by the call (in the case of ARM/MIPS the return
     // address is pushed by the first instruction of the prologue).
-    void *returnAddress;
+    void* returnAddress;
 };
 static_assert(sizeof(AsmJSFrame) == 2 * sizeof(void*), "?!");
 static const uint32_t AsmJSFrameBytesAfterReturnAddress = sizeof(void*);
@@ -820,7 +820,7 @@ class AsmJSHeapAccess
     uint32_t insnOffset() const { return insnOffset_; }
     void setInsnOffset(uint32_t insnOffset) { insnOffset_ = insnOffset; }
 #if defined(JS_CODEGEN_X86)
-    void *patchHeapPtrImmAt(uint8_t *code) const { return code + (insnOffset_ + opLength_); }
+    void* patchHeapPtrImmAt(uint8_t* code) const { return code + (insnOffset_ + opLength_); }
 #endif
 #if defined(JS_CODEGEN_X64)
     bool throwOnOOB() const { return throwOnOOB_; }
@@ -828,7 +828,7 @@ class AsmJSHeapAccess
 #endif
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     bool hasLengthCheck() const { return cmpDelta_ > 0; }
-    void *patchLengthAt(uint8_t *code) const {
+    void* patchLengthAt(uint8_t* code) const {
         MOZ_ASSERT(hasLengthCheck());
         return code + (insnOffset_ - cmpDelta_);
     }
@@ -894,7 +894,7 @@ BuiltinToImmKind(AsmJSExit::BuiltinKind builtin)
 }
 
 static inline bool
-ImmKindIsBuiltin(AsmJSImmKind imm, AsmJSExit::BuiltinKind *builtin)
+ImmKindIsBuiltin(AsmJSImmKind imm, AsmJSExit::BuiltinKind* builtin)
 {
     if (unsigned(imm) >= unsigned(AsmJSExit::Builtin_Limit))
         return false;
@@ -986,16 +986,16 @@ class AssemblerShared
         return ImmGCPtr(ptr);
     }
 
-    void append(const CallSiteDesc &desc, size_t currentOffset, size_t framePushed) {
+    void append(const CallSiteDesc& desc, size_t currentOffset, size_t framePushed) {
         // framePushed does not include sizeof(AsmJSFrame), so add it in here (see
         // CallSite::stackDepth).
         CallSite callsite(desc, currentOffset, framePushed + sizeof(AsmJSFrame));
         enoughMemory_ &= callsites_.append(callsite);
     }
-    CallSiteVector &&extractCallSites() { return Move(callsites_); }
+    CallSiteVector&& extractCallSites() { return Move(callsites_); }
 
     void append(AsmJSHeapAccess access) { enoughMemory_ &= asmJSHeapAccesses_.append(access); }
-    AsmJSHeapAccessVector &&extractAsmJSHeapAccesses() { return Move(asmJSHeapAccesses_); }
+    AsmJSHeapAccessVector&& extractAsmJSHeapAccesses() { return Move(asmJSHeapAccesses_); }
 
     void append(AsmJSGlobalAccess access) { enoughMemory_ &= asmJSGlobalAccesses_.append(access); }
     size_t numAsmJSGlobalAccesses() const { return asmJSGlobalAccesses_.length(); }

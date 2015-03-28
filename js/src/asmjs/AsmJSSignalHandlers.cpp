@@ -42,10 +42,10 @@ extern "C" MFBT_API bool IsSignalHandlingBroken();
 // For platforms where the signal/exception handler runs on the same
 // thread/stack as the victim (Unix and Windows), we can use TLS to find any
 // currently executing asm.js code.
-static JSRuntime *
+static JSRuntime*
 RuntimeForCurrentThread()
 {
-    PerThreadData *threadData = TlsPerThreadData.get();
+    PerThreadData* threadData = TlsPerThreadData.get();
     if (!threadData)
         return nullptr;
 
@@ -59,10 +59,10 @@ RuntimeForCurrentThread()
 // trying to handle it.
 class AutoSetHandlingSignal
 {
-    JSRuntime *rt;
+    JSRuntime* rt;
 
   public:
-    explicit AutoSetHandlingSignal(JSRuntime *rt)
+    explicit AutoSetHandlingSignal(JSRuntime* rt)
       : rt(rt)
     {
         MOZ_ASSERT(!rt->handlingSignal);
@@ -151,7 +151,7 @@ class AutoSetHandlingSignal
 #  define RFP_sig(p) ((p)->uc_mcontext.gregs[30])
 # endif
 #elif defined(__NetBSD__)
-# define XMM_sig(p,i) (((struct fxsave64 *)(p)->uc_mcontext.__fpregs)->fx_xmm[i])
+# define XMM_sig(p,i) (((struct fxsave64*)(p)->uc_mcontext.__fpregs)->fx_xmm[i])
 # define EIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EIP])
 # define RIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_RIP])
 # define RAX_sig(p) ((p)->uc_mcontext.__gregs[_REG_RAX])
@@ -172,9 +172,9 @@ class AutoSetHandlingSignal
 # define R15_sig(p) ((p)->uc_mcontext.__gregs[_REG_R15])
 #elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 # if defined(__DragonFly__)
-#  define XMM_sig(p,i) (((union savefpu *)(p)->uc_mcontext.mc_fpregs)->sv_xmm.sv_xmm[i])
+#  define XMM_sig(p,i) (((union savefpu*)(p)->uc_mcontext.mc_fpregs)->sv_xmm.sv_xmm[i])
 # else
-#  define XMM_sig(p,i) (((struct savefpu *)(p)->uc_mcontext.mc_fpstate)->sv_xmm[i])
+#  define XMM_sig(p,i) (((struct savefpu*)(p)->uc_mcontext.mc_fpstate)->sv_xmm[i])
 # endif
 # define EIP_sig(p) ((p)->uc_mcontext.mc_eip)
 # define RIP_sig(p) ((p)->uc_mcontext.mc_rip)
@@ -341,8 +341,8 @@ struct macos_x86_context {
 # define PC_sig(p) EPC_sig(p)
 #endif
 
-static uint8_t **
-ContextToPC(CONTEXT *context)
+static uint8_t**
+ContextToPC(CONTEXT* context)
 {
 #ifdef JS_CODEGEN_NONE
     MOZ_CRASH();
@@ -355,13 +355,13 @@ ContextToPC(CONTEXT *context)
 
 #if defined(JS_CODEGEN_X64)
 MOZ_COLD static void
-SetFPRegToNaN(size_t size, void *fp_reg)
+SetFPRegToNaN(size_t size, void* fp_reg)
 {
     MOZ_RELEASE_ASSERT(size <= Simd128DataSize);
     memset(fp_reg, 0, Simd128DataSize);
     switch (size) {
-      case 4: *static_cast<float *>(fp_reg) = GenericNaN(); break;
-      case 8: *static_cast<double *>(fp_reg) = GenericNaN(); break;
+      case 4: *static_cast<float*>(fp_reg) = GenericNaN(); break;
+      case 8: *static_cast<double*>(fp_reg) = GenericNaN(); break;
       default:
         // All SIMD accesses throw on OOB.
         MOZ_CRASH("unexpected size in SetFPRegToNaN");
@@ -369,13 +369,13 @@ SetFPRegToNaN(size_t size, void *fp_reg)
 }
 
 MOZ_COLD static void
-SetGPRegToZero(void *gp_reg)
+SetGPRegToZero(void* gp_reg)
 {
     memset(gp_reg, 0, sizeof(intptr_t));
 }
 
 MOZ_COLD static void
-SetFPRegToLoadedValue(const void *addr, size_t size, void *fp_reg)
+SetFPRegToLoadedValue(const void* addr, size_t size, void* fp_reg)
 {
     MOZ_RELEASE_ASSERT(size <= Simd128DataSize);
     memset(fp_reg, 0, Simd128DataSize);
@@ -383,47 +383,47 @@ SetFPRegToLoadedValue(const void *addr, size_t size, void *fp_reg)
 }
 
 MOZ_COLD static void
-SetGPRegToLoadedValue(const void *addr, size_t size, void *gp_reg)
+SetGPRegToLoadedValue(const void* addr, size_t size, void* gp_reg)
 {
-    MOZ_RELEASE_ASSERT(size <= sizeof(void *));
-    memset(gp_reg, 0, sizeof(void *));
+    MOZ_RELEASE_ASSERT(size <= sizeof(void*));
+    memset(gp_reg, 0, sizeof(void*));
     memcpy(gp_reg, addr, size);
 }
 
 MOZ_COLD static void
-SetGPRegToLoadedValueSext32(const void *addr, size_t size, void *gp_reg)
+SetGPRegToLoadedValueSext32(const void* addr, size_t size, void* gp_reg)
 {
     MOZ_RELEASE_ASSERT(size <= sizeof(int32_t));
-    int8_t msb = static_cast<const int8_t *>(addr)[size - 1];
-    memset(gp_reg, 0, sizeof(void *));
+    int8_t msb = static_cast<const int8_t*>(addr)[size - 1];
+    memset(gp_reg, 0, sizeof(void*));
     memset(gp_reg, msb >> 7, sizeof(int32_t));
     memcpy(gp_reg, addr, size);
 }
 
 MOZ_COLD static void
-StoreValueFromFPReg(void *addr, size_t size, const void *fp_reg)
+StoreValueFromFPReg(void* addr, size_t size, const void* fp_reg)
 {
     MOZ_RELEASE_ASSERT(size <= Simd128DataSize);
     memcpy(addr, fp_reg, size);
 }
 
 MOZ_COLD static void
-StoreValueFromGPReg(void *addr, size_t size, const void *gp_reg)
+StoreValueFromGPReg(void* addr, size_t size, const void* gp_reg)
 {
-    MOZ_RELEASE_ASSERT(size <= sizeof(void *));
+    MOZ_RELEASE_ASSERT(size <= sizeof(void*));
     memcpy(addr, gp_reg, size);
 }
 
 MOZ_COLD static void
-StoreValueFromGPImm(void *addr, size_t size, int32_t imm)
+StoreValueFromGPImm(void* addr, size_t size, int32_t imm)
 {
     MOZ_RELEASE_ASSERT(size <= sizeof(imm));
     memcpy(addr, &imm, size);
 }
 
 # if !defined(XP_MACOSX)
-MOZ_COLD static void *
-AddressOfFPRegisterSlot(CONTEXT *context, FloatRegisters::Encoding encoding)
+MOZ_COLD static void*
+AddressOfFPRegisterSlot(CONTEXT* context, FloatRegisters::Encoding encoding)
 {
     switch (encoding) {
       case X86Encoding::xmm0:  return &XMM_sig(context, 0);
@@ -447,8 +447,8 @@ AddressOfFPRegisterSlot(CONTEXT *context, FloatRegisters::Encoding encoding)
     MOZ_CRASH();
 }
 
-MOZ_COLD static void *
-AddressOfGPRegisterSlot(EMULATOR_CONTEXT *context, Registers::Code code)
+MOZ_COLD static void*
+AddressOfGPRegisterSlot(EMULATOR_CONTEXT* context, Registers::Code code)
 {
     switch (code) {
       case X86Encoding::rax: return &RAX_sig(context);
@@ -472,8 +472,8 @@ AddressOfGPRegisterSlot(EMULATOR_CONTEXT *context, Registers::Code code)
     MOZ_CRASH();
 }
 # else
-MOZ_COLD static void *
-AddressOfFPRegisterSlot(EMULATOR_CONTEXT *context, FloatRegisters::Encoding encoding)
+MOZ_COLD static void*
+AddressOfFPRegisterSlot(EMULATOR_CONTEXT* context, FloatRegisters::Encoding encoding)
 {
     switch (encoding) {
       case X86Encoding::xmm0:  return &context->float_.__fpu_xmm0;
@@ -497,8 +497,8 @@ AddressOfFPRegisterSlot(EMULATOR_CONTEXT *context, FloatRegisters::Encoding enco
     MOZ_CRASH();
 }
 
-MOZ_COLD static void *
-AddressOfGPRegisterSlot(EMULATOR_CONTEXT *context, Registers::Code code)
+MOZ_COLD static void*
+AddressOfGPRegisterSlot(EMULATOR_CONTEXT* context, Registers::Code code)
 {
     switch (code) {
       case X86Encoding::rax: return &context->thread.__rax;
@@ -525,8 +525,8 @@ AddressOfGPRegisterSlot(EMULATOR_CONTEXT *context, Registers::Code code)
 #endif // JS_CODEGEN_X64
 
 MOZ_COLD static void
-SetRegisterToCoercedUndefined(EMULATOR_CONTEXT *context, size_t size,
-                              const Disassembler::OtherOperand &value)
+SetRegisterToCoercedUndefined(EMULATOR_CONTEXT* context, size_t size,
+                              const Disassembler::OtherOperand& value)
 {
     if (value.kind() == Disassembler::OtherOperand::FPR)
         SetFPRegToNaN(size, AddressOfFPRegisterSlot(context, value.fpr()));
@@ -535,8 +535,8 @@ SetRegisterToCoercedUndefined(EMULATOR_CONTEXT *context, size_t size,
 }
 
 MOZ_COLD static void
-SetRegisterToLoadedValue(EMULATOR_CONTEXT *context, const void *addr, size_t size,
-                         const Disassembler::OtherOperand &value)
+SetRegisterToLoadedValue(EMULATOR_CONTEXT* context, const void* addr, size_t size,
+                         const Disassembler::OtherOperand& value)
 {
     if (value.kind() == Disassembler::OtherOperand::FPR)
         SetFPRegToLoadedValue(addr, size, AddressOfFPRegisterSlot(context, value.fpr()));
@@ -545,15 +545,15 @@ SetRegisterToLoadedValue(EMULATOR_CONTEXT *context, const void *addr, size_t siz
 }
 
 MOZ_COLD static void
-SetRegisterToLoadedValueSext32(EMULATOR_CONTEXT *context, const void *addr, size_t size,
-                               const Disassembler::OtherOperand &value)
+SetRegisterToLoadedValueSext32(EMULATOR_CONTEXT* context, const void* addr, size_t size,
+                               const Disassembler::OtherOperand& value)
 {
     SetGPRegToLoadedValueSext32(addr, size, AddressOfGPRegisterSlot(context, value.gpr()));
 }
 
 MOZ_COLD static void
-StoreValueFromRegister(EMULATOR_CONTEXT *context, void *addr, size_t size,
-                       const Disassembler::OtherOperand &value)
+StoreValueFromRegister(EMULATOR_CONTEXT* context, void* addr, size_t size,
+                       const Disassembler::OtherOperand& value)
 {
     if (value.kind() == Disassembler::OtherOperand::FPR)
         StoreValueFromFPReg(addr, size, AddressOfFPRegisterSlot(context, value.fpr()));
@@ -563,8 +563,8 @@ StoreValueFromRegister(EMULATOR_CONTEXT *context, void *addr, size_t size,
         StoreValueFromGPImm(addr, size, value.imm());
 }
 
-MOZ_COLD static uint8_t *
-ComputeAccessAddress(EMULATOR_CONTEXT *context, const Disassembler::ComplexAddress &address)
+MOZ_COLD static uint8_t*
+ComputeAccessAddress(EMULATOR_CONTEXT* context, const Disassembler::ComplexAddress& address)
 {
     MOZ_RELEASE_ASSERT(!address.isPCRelative(), "PC-relative addresses not supported yet");
 
@@ -584,12 +584,12 @@ ComputeAccessAddress(EMULATOR_CONTEXT *context, const Disassembler::ComplexAddre
         result += index * (1 << address.scale());
     }
 
-    return reinterpret_cast<uint8_t *>(result);
+    return reinterpret_cast<uint8_t*>(result);
 }
 
-MOZ_COLD static uint8_t *
-EmulateHeapAccess(EMULATOR_CONTEXT *context, uint8_t *pc, uint8_t *faultingAddress,
-                  const AsmJSHeapAccess *heapAccess, const AsmJSModule &module)
+MOZ_COLD static uint8_t*
+EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
+                  const AsmJSHeapAccess* heapAccess, const AsmJSModule& module)
 {
     MOZ_RELEASE_ASSERT(module.containsFunctionPC(pc));
     MOZ_RELEASE_ASSERT(module.usesSignalHandlersForOOB());
@@ -599,8 +599,8 @@ EmulateHeapAccess(EMULATOR_CONTEXT *context, uint8_t *pc, uint8_t *faultingAddre
     // Disassemble the instruction which caused the trap so that we can extract
     // information about it and decide what to do.
     Disassembler::HeapAccess access;
-    uint8_t *end = Disassembler::DisassembleHeapAccess(pc, &access);
-    const Disassembler::ComplexAddress &address = access.address();
+    uint8_t* end = Disassembler::DisassembleHeapAccess(pc, &access);
+    const Disassembler::ComplexAddress& address = access.address();
     MOZ_RELEASE_ASSERT(end > pc);
     MOZ_RELEASE_ASSERT(module.containsFunctionPC(end));
 
@@ -614,7 +614,7 @@ EmulateHeapAccess(EMULATOR_CONTEXT *context, uint8_t *pc, uint8_t *faultingAddre
         uintptr_t base;
         StoreValueFromGPReg(&base, sizeof(uintptr_t),
                             AddressOfGPRegisterSlot(context, address.base()));
-        MOZ_RELEASE_ASSERT(reinterpret_cast<uint8_t *>(base) == module.maybeHeap());
+        MOZ_RELEASE_ASSERT(reinterpret_cast<uint8_t*>(base) == module.maybeHeap());
     }
     if (address.index() != Registers::Invalid) {
         uintptr_t index;
@@ -628,7 +628,7 @@ EmulateHeapAccess(EMULATOR_CONTEXT *context, uint8_t *pc, uint8_t *faultingAddre
     // rely on the faultingAddress given to us by the OS, because we need the
     // address of the start of the access, and the OS may sometimes give us an
     // address somewhere in the middle of the heap access.
-    uint8_t *accessAddress = ComputeAccessAddress(context, address);
+    uint8_t* accessAddress = ComputeAccessAddress(context, address);
     MOZ_RELEASE_ASSERT(size_t(faultingAddress - accessAddress) < access.size(),
                        "Given faulting address does not appear to be within computed "
                        "faulting address range");
@@ -671,7 +671,7 @@ EmulateHeapAccess(EMULATOR_CONTEXT *context, uint8_t *pc, uint8_t *faultingAddre
         // We now know that this is an access that is actually in bounds when
         // properly wrapped. Complete the load or store with the wrapped
         // address.
-        uint8_t *wrappedAddress = module.maybeHeap() + wrappedOffset;
+        uint8_t* wrappedAddress = module.maybeHeap() + wrappedOffset;
         MOZ_RELEASE_ASSERT(wrappedAddress >= module.maybeHeap());
         MOZ_RELEASE_ASSERT(wrappedAddress + size > wrappedAddress);
         MOZ_RELEASE_ASSERT(wrappedAddress + size <= module.maybeHeap() + module.heapLength());
@@ -722,33 +722,33 @@ EmulateHeapAccess(EMULATOR_CONTEXT *context, uint8_t *pc, uint8_t *faultingAddre
 static bool
 HandleFault(PEXCEPTION_POINTERS exception)
 {
-    EXCEPTION_RECORD *record = exception->ExceptionRecord;
-    CONTEXT *context = exception->ContextRecord;
+    EXCEPTION_RECORD* record = exception->ExceptionRecord;
+    CONTEXT* context = exception->ContextRecord;
 
     if (record->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
         return false;
 
-    uint8_t **ppc = ContextToPC(context);
-    uint8_t *pc = *ppc;
+    uint8_t** ppc = ContextToPC(context);
+    uint8_t* pc = *ppc;
 
     if (record->NumberParameters < 2)
         return false;
 
     // Don't allow recursive handling of signals, see AutoSetHandlingSignal.
-    JSRuntime *rt = RuntimeForCurrentThread();
+    JSRuntime* rt = RuntimeForCurrentThread();
     if (!rt || rt->handlingSignal)
         return false;
     AutoSetHandlingSignal handling(rt);
 
-    AsmJSActivation *activation = rt->asmJSActivationStack();
+    AsmJSActivation* activation = rt->asmJSActivationStack();
     if (!activation)
         return false;
 
-    const AsmJSModule &module = activation->module();
+    const AsmJSModule& module = activation->module();
 
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    uint8_t *faultingAddress = reinterpret_cast<uint8_t *>(record->ExceptionInformation[1]);
+    uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(record->ExceptionInformation[1]);
     if (!module.maybeHeap() ||
         faultingAddress < module.maybeHeap() ||
         faultingAddress >= module.maybeHeap() + AsmJSMappedSize)
@@ -775,7 +775,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
         return false;
     }
 
-    const AsmJSHeapAccess *heapAccess = module.lookupHeapAccess(pc);
+    const AsmJSHeapAccess* heapAccess = module.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 
@@ -796,8 +796,8 @@ AsmJSFaultHandler(LPEXCEPTION_POINTERS exception)
 #elif defined(XP_MACOSX)
 # include <mach/exc.h>
 
-static uint8_t **
-ContextToPC(EMULATOR_CONTEXT *context)
+static uint8_t**
+ContextToPC(EMULATOR_CONTEXT* context)
 {
 # if defined(JS_CPU_X64)
     static_assert(sizeof(context->thread.__rip) == sizeof(void*),
@@ -835,7 +835,7 @@ struct ExceptionRequest
 };
 
 static bool
-HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
+HandleMachException(JSRuntime* rt, const ExceptionRequest& request)
 {
     // Don't allow recursive handling of signals, see AutoSetHandlingSignal.
     if (rt->handlingSignal)
@@ -868,23 +868,23 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
     if (kret != KERN_SUCCESS)
         return false;
 
-    uint8_t **ppc = ContextToPC(&context);
-    uint8_t *pc = *ppc;
+    uint8_t** ppc = ContextToPC(&context);
+    uint8_t* pc = *ppc;
 
     if (request.body.exception != EXC_BAD_ACCESS || request.body.codeCnt != 2)
         return false;
 
-    AsmJSActivation *activation = rt->asmJSActivationStack();
+    AsmJSActivation* activation = rt->asmJSActivationStack();
     if (!activation)
         return false;
 
-    const AsmJSModule &module = activation->module();
+    const AsmJSModule& module = activation->module();
     if (!module.containsFunctionPC(pc))
         return false;
 
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    uint8_t *faultingAddress = reinterpret_cast<uint8_t *>(request.body.code[1]);
+    uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(request.body.code[1]);
     if (!module.maybeHeap() ||
         faultingAddress < module.maybeHeap() ||
         faultingAddress >= module.maybeHeap() + AsmJSMappedSize)
@@ -892,7 +892,7 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
         return false;
     }
 
-    const AsmJSHeapAccess *heapAccess = module.lookupHeapAccess(pc);
+    const AsmJSHeapAccess* heapAccess = module.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 
@@ -916,9 +916,9 @@ static const mach_msg_id_t sExceptionId = 2405;
 static const mach_msg_id_t sQuitId = 42;
 
 void
-AsmJSMachExceptionHandlerThread(void *threadArg)
+AsmJSMachExceptionHandlerThread(void* threadArg)
 {
-    JSRuntime *rt = reinterpret_cast<JSRuntime*>(threadArg);
+    JSRuntime* rt = reinterpret_cast<JSRuntime*>(threadArg);
     mach_port_t port = rt->asmJSMachExceptionHandler.port();
     kern_return_t kret;
 
@@ -1017,7 +1017,7 @@ AsmJSMachExceptionHandler::uninstall()
 }
 
 bool
-AsmJSMachExceptionHandler::install(JSRuntime *rt)
+AsmJSMachExceptionHandler::install(JSRuntime* rt)
 {
     MOZ_ASSERT(!installed());
     kern_return_t kret;
@@ -1065,7 +1065,7 @@ AsmJSMachExceptionHandler::install(JSRuntime *rt)
 // Be very cautious and default to not handling; we don't want to accidentally
 // silence real crashes from real bugs.
 static bool
-HandleFault(int signum, siginfo_t *info, void *ctx)
+HandleFault(int signum, siginfo_t* info, void* ctx)
 {
     // The signals we're expecting come from access violations, accessing
     // mprotected memory. If the signal originates anywhere else, don't try
@@ -1074,27 +1074,27 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
     if (info->si_code != SEGV_ACCERR)
         return false;
 
-    CONTEXT *context = (CONTEXT *)ctx;
-    uint8_t **ppc = ContextToPC(context);
-    uint8_t *pc = *ppc;
+    CONTEXT* context = (CONTEXT*)ctx;
+    uint8_t** ppc = ContextToPC(context);
+    uint8_t* pc = *ppc;
 
     // Don't allow recursive handling of signals, see AutoSetHandlingSignal.
-    JSRuntime *rt = RuntimeForCurrentThread();
+    JSRuntime* rt = RuntimeForCurrentThread();
     if (!rt || rt->handlingSignal)
         return false;
     AutoSetHandlingSignal handling(rt);
 
-    AsmJSActivation *activation = rt->asmJSActivationStack();
+    AsmJSActivation* activation = rt->asmJSActivationStack();
     if (!activation)
         return false;
 
-    const AsmJSModule &module = activation->module();
+    const AsmJSModule& module = activation->module();
     if (!module.containsFunctionPC(pc))
         return false;
 
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    uint8_t *faultingAddress = reinterpret_cast<uint8_t *>(info->si_addr);
+    uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(info->si_addr);
     if (!module.maybeHeap() ||
         faultingAddress < module.maybeHeap() ||
         faultingAddress >= module.maybeHeap() + AsmJSMappedSize)
@@ -1102,7 +1102,7 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
         return false;
     }
 
-    const AsmJSHeapAccess *heapAccess = module.lookupHeapAccess(pc);
+    const AsmJSHeapAccess* heapAccess = module.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 
@@ -1114,7 +1114,7 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
 static struct sigaction sPrevSEGVHandler;
 
 static void
-AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
+AsmJSFaultHandler(int signum, siginfo_t* info, void* context)
 {
     if (HandleFault(signum, info, context))
         return;
@@ -1143,9 +1143,9 @@ AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
 #endif // defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 
 static void
-RedirectIonBackedgesToInterruptCheck(JSRuntime *rt)
+RedirectIonBackedgesToInterruptCheck(JSRuntime* rt)
 {
-    if (jit::JitRuntime *jitRuntime = rt->jitRuntime()) {
+    if (jit::JitRuntime* jitRuntime = rt->jitRuntime()) {
         // If the backedge list is being mutated, the pc must be in C++ code and
         // thus not in a JIT iloop. We assume that the interrupt flag will be
         // checked at least once before entering JIT code (if not, no big deal;
@@ -1156,20 +1156,20 @@ RedirectIonBackedgesToInterruptCheck(JSRuntime *rt)
 }
 
 static bool
-RedirectJitCodeToInterruptCheck(JSRuntime *rt, CONTEXT *context)
+RedirectJitCodeToInterruptCheck(JSRuntime* rt, CONTEXT* context)
 {
     RedirectIonBackedgesToInterruptCheck(rt);
 
-    if (AsmJSActivation *activation = rt->asmJSActivationStack()) {
-        const AsmJSModule &module = activation->module();
+    if (AsmJSActivation* activation = rt->asmJSActivationStack()) {
+        const AsmJSModule& module = activation->module();
 
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
         if (module.containsFunctionPC((void*)rt->simulator()->get_pc()))
             rt->simulator()->set_resume_pc(int32_t(module.interruptExit()));
 #endif
 
-        uint8_t **ppc = ContextToPC(context);
-        uint8_t *pc = *ppc;
+        uint8_t** ppc = ContextToPC(context);
+        uint8_t* pc = *ppc;
         if (module.containsFunctionPC(pc)) {
             activation->setResumePC(pc);
             *ppc = module.interruptExit();
@@ -1189,15 +1189,15 @@ RedirectJitCodeToInterruptCheck(JSRuntime *rt, CONTEXT *context)
 static const int sInterruptSignal = SIGVTALRM;
 
 static void
-JitInterruptHandler(int signum, siginfo_t *info, void *context)
+JitInterruptHandler(int signum, siginfo_t* info, void* context)
 {
-    if (JSRuntime *rt = RuntimeForCurrentThread())
+    if (JSRuntime* rt = RuntimeForCurrentThread())
         RedirectJitCodeToInterruptCheck(rt, (CONTEXT*)context);
 }
 #endif
 
 bool
-js::EnsureSignalHandlersInstalled(JSRuntime *rt)
+js::EnsureSignalHandlersInstalled(JSRuntime* rt)
 {
 #if defined(XP_MACOSX) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     // On OSX, each JSRuntime gets its own handler thread.
@@ -1292,7 +1292,7 @@ js::EnsureSignalHandlersInstalled(JSRuntime *rt)
 //  2. if the main thread's pc is inside asm.js code, the pc is updated to point
 //     to a stub that handles the interrupt.
 void
-js::InterruptRunningJitCode(JSRuntime *rt)
+js::InterruptRunningJitCode(JSRuntime* rt)
 {
     // If signal handlers weren't installed, then Ion and asm.js emit normal
     // interrupt checks and don't need asynchronous interruption.

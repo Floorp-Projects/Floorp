@@ -15,50 +15,50 @@ namespace jit {
 class LIRGeneratorX86Shared : public LIRGeneratorShared
 {
   protected:
-    LIRGeneratorX86Shared(MIRGenerator *gen, MIRGraph &graph, LIRGraph &lirGraph)
+    LIRGeneratorX86Shared(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
       : LIRGeneratorShared(gen, graph, lirGraph)
     {}
 
-    LTableSwitch *newLTableSwitch(const LAllocation &in, const LDefinition &inputCopy,
-                                  MTableSwitch *ins);
-    LTableSwitchV *newLTableSwitchV(MTableSwitch *ins);
+    LTableSwitch* newLTableSwitch(const LAllocation& in, const LDefinition& inputCopy,
+                                  MTableSwitch* ins);
+    LTableSwitchV* newLTableSwitchV(MTableSwitch* ins);
 
-    void visitGuardShape(MGuardShape *ins);
-    void visitGuardObjectGroup(MGuardObjectGroup *ins);
-    void visitPowHalf(MPowHalf *ins);
-    void lowerForShift(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
-                       MDefinition *rhs);
-    void lowerForALU(LInstructionHelper<1, 1, 0> *ins, MDefinition *mir, MDefinition *input);
-    void lowerForALU(LInstructionHelper<1, 2, 0> *ins, MDefinition *mir, MDefinition *lhs,
-                     MDefinition *rhs);
+    void visitGuardShape(MGuardShape* ins);
+    void visitGuardObjectGroup(MGuardObjectGroup* ins);
+    void visitPowHalf(MPowHalf* ins);
+    void lowerForShift(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir, MDefinition* lhs,
+                       MDefinition* rhs);
+    void lowerForALU(LInstructionHelper<1, 1, 0>* ins, MDefinition* mir, MDefinition* input);
+    void lowerForALU(LInstructionHelper<1, 2, 0>* ins, MDefinition* mir, MDefinition* lhs,
+                     MDefinition* rhs);
     template<size_t Temps>
-    void lowerForFPU(LInstructionHelper<1, 2, Temps> *ins, MDefinition *mir, MDefinition *lhs,
-                     MDefinition *rhs);
-    void lowerForCompIx4(LSimdBinaryCompIx4 *ins, MSimdBinaryComp *mir,
-                         MDefinition *lhs, MDefinition *rhs);
-    void lowerForCompFx4(LSimdBinaryCompFx4 *ins, MSimdBinaryComp *mir,
-                         MDefinition *lhs, MDefinition *rhs);
-    void lowerForBitAndAndBranch(LBitAndAndBranch *baab, MInstruction *mir,
-                                 MDefinition *lhs, MDefinition *rhs);
-    void visitConstant(MConstant *ins);
-    void visitAsmJSNeg(MAsmJSNeg *ins);
-    void lowerMulI(MMul *mul, MDefinition *lhs, MDefinition *rhs);
-    void lowerDivI(MDiv *div);
-    void lowerModI(MMod *mod);
-    void lowerUDiv(MDiv *div);
-    void lowerUMod(MMod *mod);
-    void lowerUrshD(MUrsh *mir);
-    void lowerConstantDouble(double d, MInstruction *ins);
-    void lowerConstantFloat32(float d, MInstruction *ins);
-    void lowerTruncateDToInt32(MTruncateToInt32 *ins);
-    void lowerTruncateFToInt32(MTruncateToInt32 *ins);
-    void visitSimdBinaryArith(MSimdBinaryArith *ins);
-    void visitSimdSelect(MSimdSelect *ins);
-    void visitSimdSplatX4(MSimdSplatX4 *ins);
-    void visitSimdValueX4(MSimdValueX4 *ins);
-    void lowerCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins,
+    void lowerForFPU(LInstructionHelper<1, 2, Temps>* ins, MDefinition* mir, MDefinition* lhs,
+                     MDefinition* rhs);
+    void lowerForCompIx4(LSimdBinaryCompIx4* ins, MSimdBinaryComp* mir,
+                         MDefinition* lhs, MDefinition* rhs);
+    void lowerForCompFx4(LSimdBinaryCompFx4* ins, MSimdBinaryComp* mir,
+                         MDefinition* lhs, MDefinition* rhs);
+    void lowerForBitAndAndBranch(LBitAndAndBranch* baab, MInstruction* mir,
+                                 MDefinition* lhs, MDefinition* rhs);
+    void visitConstant(MConstant* ins);
+    void visitAsmJSNeg(MAsmJSNeg* ins);
+    void lowerMulI(MMul* mul, MDefinition* lhs, MDefinition* rhs);
+    void lowerDivI(MDiv* div);
+    void lowerModI(MMod* mod);
+    void lowerUDiv(MDiv* div);
+    void lowerUMod(MMod* mod);
+    void lowerUrshD(MUrsh* mir);
+    void lowerConstantDouble(double d, MInstruction* ins);
+    void lowerConstantFloat32(float d, MInstruction* ins);
+    void lowerTruncateDToInt32(MTruncateToInt32* ins);
+    void lowerTruncateFToInt32(MTruncateToInt32* ins);
+    void visitSimdBinaryArith(MSimdBinaryArith* ins);
+    void visitSimdSelect(MSimdSelect* ins);
+    void visitSimdSplatX4(MSimdSplatX4* ins);
+    void visitSimdValueX4(MSimdValueX4* ins);
+    void lowerCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins,
                                                bool useI386ByteRegisters);
-    void lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop *ins,
+    void lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins,
                                            bool useI386ByteRegisters);
 };
 

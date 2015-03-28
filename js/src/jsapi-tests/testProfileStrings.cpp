@@ -16,7 +16,7 @@ static uint32_t psize = 0;
 static uint32_t max_stack = 0;
 
 static void
-reset(JSContext *cx)
+reset(JSContext* cx)
 {
     psize = max_stack = 0;
     memset(pstack, 0, sizeof(pstack));
@@ -30,14 +30,14 @@ static const JSClass ptestClass = {
 };
 
 static bool
-test_fn(JSContext *cx, unsigned argc, jsval *vp)
+test_fn(JSContext* cx, unsigned argc, jsval* vp)
 {
     max_stack = psize;
     return true;
 }
 
 static bool
-test_fn2(JSContext *cx, unsigned argc, jsval *vp)
+test_fn2(JSContext* cx, unsigned argc, jsval* vp)
 {
     JS::RootedValue r(cx);
     JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
@@ -45,24 +45,24 @@ test_fn2(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-enable(JSContext *cx, unsigned argc, jsval *vp)
+enable(JSContext* cx, unsigned argc, jsval* vp)
 {
     js::EnableRuntimeProfilingStack(cx->runtime(), true);
     return true;
 }
 
 static bool
-disable(JSContext *cx, unsigned argc, jsval *vp)
+disable(JSContext* cx, unsigned argc, jsval* vp)
 {
     js::EnableRuntimeProfilingStack(cx->runtime(), false);
     return true;
 }
 
 static bool
-Prof(JSContext* cx, unsigned argc, jsval *vp)
+Prof(JSContext* cx, unsigned argc, jsval* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-    JSObject *obj = JS_NewObjectForConstructor(cx, &ptestClass, args);
+    JSObject* obj = JS_NewObjectForConstructor(cx, &ptestClass, args);
     if (!obj)
         return false;
     args.rval().setObject(*obj);
@@ -78,7 +78,7 @@ static const JSFunctionSpec ptestFunctions[] = {
 };
 
 static JSObject*
-initialize(JSContext *cx)
+initialize(JSContext* cx)
 {
     js::SetRuntimeProfilingStack(cx->runtime(), pstack, &psize, 10);
     JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));

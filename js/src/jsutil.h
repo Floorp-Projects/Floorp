@@ -30,11 +30,11 @@
 # define JS_DIAGNOSTICS_ASSERT(expr) ((void) 0)
 #endif
 
-static MOZ_ALWAYS_INLINE void *
-js_memcpy(void *dst_, const void *src_, size_t len)
+static MOZ_ALWAYS_INLINE void*
+js_memcpy(void* dst_, const void* src_, size_t len)
 {
-    char *dst = (char *) dst_;
-    const char *src = (const char *) src_;
+    char* dst = (char*) dst_;
+    const char* src = (const char*) src_;
     MOZ_ASSERT_IF(dst >= src, (size_t) (dst - src) >= len);
     MOZ_ASSERT_IF(src >= dst, (size_t) (src - dst) >= len);
 
@@ -44,7 +44,7 @@ js_memcpy(void *dst_, const void *src_, size_t len)
 namespace js {
 
 MOZ_NORETURN MOZ_COLD void
-CrashAtUnhandlableOOM(const char *reason);
+CrashAtUnhandlableOOM(const char* reason);
 
 template <class T>
 struct AlignmentTestStruct
@@ -63,20 +63,20 @@ class AlignedPtrAndFlag
     uintptr_t bits;
 
   public:
-    AlignedPtrAndFlag(T *t, bool aFlag) {
+    AlignedPtrAndFlag(T* t, bool aFlag) {
         MOZ_ASSERT((uintptr_t(t) & 1) == 0);
         bits = uintptr_t(t) | uintptr_t(aFlag);
     }
 
-    T *ptr() const {
-        return (T *)(bits & ~uintptr_t(1));
+    T* ptr() const {
+        return (T*)(bits & ~uintptr_t(1));
     }
 
     bool flag() const {
         return (bits & 1) != 0;
     }
 
-    void setPtr(T *t) {
+    void setPtr(T* t) {
         MOZ_ASSERT((uintptr_t(t) & 1) == 0);
         bits = uintptr_t(t) | uintptr_t(flag());
     }
@@ -89,7 +89,7 @@ class AlignedPtrAndFlag
         bits &= ~uintptr_t(1);
     }
 
-    void set(T *t, bool aFlag) {
+    void set(T* t, bool aFlag) {
         MOZ_ASSERT((uintptr_t(t) & 1) == 0);
         bits = uintptr_t(t) | aFlag;
     }
@@ -97,7 +97,7 @@ class AlignedPtrAndFlag
 
 template <class T>
 static inline void
-Reverse(T *beg, T *end)
+Reverse(T* beg, T* end)
 {
     while (beg != end) {
         if (--end == beg)
@@ -110,10 +110,10 @@ Reverse(T *beg, T *end)
 }
 
 template <class T>
-static inline T *
-Find(T *beg, T *end, const T &v)
+static inline T*
+Find(T* beg, T* end, const T& v)
 {
-    for (T *p = beg; p != end; ++p) {
+    for (T* p = beg; p != end; ++p) {
         if (*p == v)
             return p;
     }
@@ -121,8 +121,8 @@ Find(T *beg, T *end, const T &v)
 }
 
 template <class Container>
-static inline typename Container::ElementType *
-Find(Container &c, const typename Container::ElementType &v)
+static inline typename Container::ElementType*
+Find(Container& c, const typename Container::ElementType& v)
 {
     return Find(c.begin(), c.end(), v);
 }
@@ -152,16 +152,16 @@ Max(T t1, T t2)
 /* Allows a const variable to be initialized after its declaration. */
 template <class T>
 static T&
-InitConst(const T &t)
+InitConst(const T& t)
 {
-    return const_cast<T &>(t);
+    return const_cast<T&>(t);
 }
 
 template <class T, class U>
-MOZ_ALWAYS_INLINE T &
-ImplicitCast(U &u)
+MOZ_ALWAYS_INLINE T&
+ImplicitCast(U& u)
 {
-    T &t = u;
+    T& t = u;
     return t;
 }
 
@@ -169,7 +169,7 @@ template<typename T>
 class AutoScopedAssign
 {
   public:
-    AutoScopedAssign(T *addr, const T &value
+    AutoScopedAssign(T* addr, const T& value
                      MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
         : addr_(addr), old(*addr_)
     {
@@ -181,7 +181,7 @@ class AutoScopedAssign
 
   private:
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-    T *addr_;
+    T* addr_;
     T old;
 };
 
@@ -208,7 +208,7 @@ AlignBytes(T bytes, U alignment)
 }
 
 static MOZ_ALWAYS_INLINE size_t
-UnsignedPtrDiff(const void *bigger, const void *smaller)
+UnsignedPtrDiff(const void* bigger, const void* smaller)
 {
     return size_t(bigger) - size_t(smaller);
 }
@@ -240,13 +240,13 @@ BitArrayIndexToWordMask(size_t i)
 }
 
 static inline bool
-IsBitArrayElementSet(size_t *array, size_t length, size_t i)
+IsBitArrayElementSet(size_t* array, size_t length, size_t i)
 {
     return array[BitArrayIndexToWordIndex(length, i)] & BitArrayIndexToWordMask(i);
 }
 
 static inline bool
-IsAnyBitArrayElementSet(size_t *array, size_t length)
+IsAnyBitArrayElementSet(size_t* array, size_t length)
 {
     unsigned numWords = NumWordsForBitArrayOfLength(length);
     for (unsigned i = 0; i < numWords; ++i) {
@@ -257,19 +257,19 @@ IsAnyBitArrayElementSet(size_t *array, size_t length)
 }
 
 static inline void
-SetBitArrayElement(size_t *array, size_t length, size_t i)
+SetBitArrayElement(size_t* array, size_t length, size_t i)
 {
     array[BitArrayIndexToWordIndex(length, i)] |= BitArrayIndexToWordMask(i);
 }
 
 static inline void
-ClearBitArrayElement(size_t *array, size_t length, size_t i)
+ClearBitArrayElement(size_t* array, size_t length, size_t i)
 {
     array[BitArrayIndexToWordIndex(length, i)] &= ~BitArrayIndexToWordMask(i);
 }
 
 static inline void
-ClearAllBitArrayElements(size_t *array, size_t length)
+ClearAllBitArrayElements(size_t* array, size_t length)
 {
     for (unsigned i = 0; i < length; ++i)
         array[i] = 0;
@@ -277,13 +277,13 @@ ClearAllBitArrayElements(size_t *array, size_t length)
 
 }  /* namespace js */
 
-static inline void *
-Poison(void *ptr, int value, size_t num)
+static inline void*
+Poison(void* ptr, int value, size_t num)
 {
     static bool inited = false;
     static bool poison = true;
     if (!inited) {
-        char *env = getenv("JSGC_DISABLE_POISONING");
+        char* env = getenv("JSGC_DISABLE_POISONING");
         if (env)
             poison = false;
         inited = true;
@@ -329,13 +329,13 @@ typedef struct JSBasicStats {
 # define JS_MeanAndStdDevBS(bs,sigma)                                         \
     JS_MeanAndStdDev((bs)->num, (bs)->sum, (bs)->sqsum, sigma)
 extern void
-JS_BasicStatsAccum(JSBasicStats *bs, uint32_t val);
+JS_BasicStatsAccum(JSBasicStats* bs, uint32_t val);
 extern double
-JS_MeanAndStdDev(uint32_t num, double sum, double sqsum, double *sigma);
+JS_MeanAndStdDev(uint32_t num, double sum, double sqsum, double* sigma);
 extern void
-JS_DumpBasicStats(JSBasicStats *bs, const char *title, FILE *fp);
+JS_DumpBasicStats(JSBasicStats* bs, const char* title, FILE* fp);
 extern void
-JS_DumpHistogram(JSBasicStats *bs, FILE *fp);
+JS_DumpHistogram(JSBasicStats* bs, FILE* fp);
 #else
 # define JS_BASIC_STATS_ACCUM(bs,val)
 #endif

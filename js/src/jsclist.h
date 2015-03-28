@@ -13,8 +13,8 @@
 ** Circular linked list
 */
 typedef struct JSCListStr {
-    struct JSCListStr *next;
-    struct JSCListStr *prev;
+    struct JSCListStr* next;
+    struct JSCListStr* prev;
 } JSCList;
 
 /*

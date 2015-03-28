@@ -45,7 +45,7 @@ class Registers {
     static uint32_t LastBit(SetType x) {
         return 31 - mozilla::CountLeadingZeroes32(x);
     }
-    static const char *GetName(Code code) {
+    static const char* GetName(Code code) {
         static const char * const Names[] = { "rax", "rcx", "rdx", "rbx",
                                               "rsp", "rbp", "rsi", "rdi",
                                               "r8",  "r9",  "r10", "r11",
@@ -53,7 +53,7 @@ class Registers {
         return Names[code];
     }
 
-    static Code FromName(const char *name) {
+    static Code FromName(const char* name) {
         for (size_t i = 0; i < Total; i++) {
             if (strcmp(GetName(Code(i)), name) == 0)
                 return Code(i);
@@ -150,11 +150,11 @@ class FloatRegisters {
         float s4[4];
     };
 
-    static const char *GetName(Encoding code) {
+    static const char* GetName(Encoding code) {
         return X86Encoding::XMMRegName(code);
     }
 
-    static Encoding FromName(const char *name) {
+    static Encoding FromName(const char* name) {
         for (size_t i = 0; i < Total; i++) {
             if (strcmp(GetName(Encoding(i)), name) == 0)
                 return Encoding(i);
@@ -300,7 +300,7 @@ struct FloatRegister {
         return reg_;
     }
     // defined in Assembler-x86-shared.cpp
-    const char *name() const;
+    const char* name() const;
     bool volatile_() const {
         return !!((SetType(1) << code()) & FloatRegisters::VolatileMask);
     }
@@ -327,11 +327,11 @@ struct FloatRegister {
 
     // N.B. FloatRegister is an explicit outparam here because msvc-2010
     // miscompiled it on win64 when the value was simply returned
-    void aliased(uint32_t aliasIdx, FloatRegister *ret) const {
+    void aliased(uint32_t aliasIdx, FloatRegister* ret) const {
         MOZ_ASSERT(aliasIdx < Codes::NumTypes);
         *ret = FloatRegister(reg_, Codes::ContentType((aliasIdx + type_) % Codes::NumTypes));
     }
-    void alignedAliased(uint32_t aliasIdx, FloatRegister *ret) const {
+    void alignedAliased(uint32_t aliasIdx, FloatRegister* ret) const {
         aliased(aliasIdx, ret);
     }
 
@@ -339,8 +339,8 @@ struct FloatRegister {
         return Codes::Spread << reg_;
     }
 
-    static TypedRegisterSet<FloatRegister> ReduceSetForPush(const TypedRegisterSet<FloatRegister> &s);
-    static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister> &s);
+    static TypedRegisterSet<FloatRegister> ReduceSetForPush(const TypedRegisterSet<FloatRegister>& s);
+    static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister>& s);
     uint32_t getRegisterDumpOffsetInBytes();
 };
 

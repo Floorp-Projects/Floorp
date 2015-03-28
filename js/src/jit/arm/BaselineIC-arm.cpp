@@ -19,7 +19,7 @@ namespace jit {
 // ICCompare_Int32
 
 bool
-ICCompare_Int32::Compiler::generateStubCode(MacroAssembler &masm)
+ICCompare_Int32::Compiler::generateStubCode(MacroAssembler& masm)
 {
     // Guard that R0 is an integer and R1 is an integer.
     Label failure;
@@ -44,7 +44,7 @@ ICCompare_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 bool
-ICCompare_Double::Compiler::generateStubCode(MacroAssembler &masm)
+ICCompare_Double::Compiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure, isNaN;
     masm.ensureDouble(R0, FloatReg0, &failure);
@@ -75,7 +75,7 @@ extern "C" {
 }
 
 bool
-ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
+ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
 {
     // Guard that R0 is an integer and R1 is an integer.
     Label failure;
@@ -140,7 +140,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
         masm.setupAlignedABICall(2);
         masm.passABIArg(R0.payloadReg());
         masm.passABIArg(R1.payloadReg());
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, __aeabi_idivmod));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, __aeabi_idivmod));
 
         // idivmod returns the quotient in r0, and the remainder in r1.
         if (op_ == JSOP_DIV) {
@@ -231,7 +231,7 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
 }
 
 bool
-ICUnaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
+ICUnaryArith_Int32::Compiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure;
     masm.branchTestInt32(Assembler::NotEqual, R0, &failure);

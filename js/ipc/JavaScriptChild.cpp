@@ -21,12 +21,12 @@ using namespace mozilla::jsipc;
 using mozilla::AutoSafeJSContext;
 
 static void
-UpdateChildWeakPointersAfterGC(JSRuntime *rt, void *data)
+UpdateChildWeakPointersAfterGC(JSRuntime* rt, void* data)
 {
-    static_cast<JavaScriptChild *>(data)->updateWeakPointers();
+    static_cast<JavaScriptChild*>(data)->updateWeakPointers();
 }
 
-JavaScriptChild::JavaScriptChild(JSRuntime *rt)
+JavaScriptChild::JavaScriptChild(JSRuntime* rt)
   : JavaScriptShared(rt),
     JavaScriptBase<PJavaScriptChild>(rt)
 {
@@ -57,7 +57,7 @@ JavaScriptChild::updateWeakPointers()
     waivedObjectIds_.sweep();
 }
 
-JSObject *
+JSObject*
 JavaScriptChild::scopeForTargetObjects()
 {
     // CPOWs from the parent need to point into the child's privileged junk
@@ -65,10 +65,10 @@ JavaScriptChild::scopeForTargetObjects()
     return xpc::PrivilegedJunkScope();
 }
 
-PJavaScriptChild *
-mozilla::jsipc::NewJavaScriptChild(JSRuntime *rt)
+PJavaScriptChild*
+mozilla::jsipc::NewJavaScriptChild(JSRuntime* rt)
 {
-    JavaScriptChild *child = new JavaScriptChild(rt);
+    JavaScriptChild* child = new JavaScriptChild(rt);
     if (!child->init()) {
         delete child;
         return nullptr;
@@ -77,7 +77,7 @@ mozilla::jsipc::NewJavaScriptChild(JSRuntime *rt)
 }
 
 void
-mozilla::jsipc::ReleaseJavaScriptChild(PJavaScriptChild *child)
+mozilla::jsipc::ReleaseJavaScriptChild(PJavaScriptChild* child)
 {
-    static_cast<JavaScriptChild *>(child)->decref();
+    static_cast<JavaScriptChild*>(child)->decref();
 }

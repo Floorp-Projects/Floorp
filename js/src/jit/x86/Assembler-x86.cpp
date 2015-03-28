@@ -52,12 +52,12 @@ const Register ABIArgGenerator::NonArg_VolatileReg = eax;
 const Register ABIArgGenerator::NonReturn_VolatileReg0 = ecx;
 
 void
-Assembler::executableCopy(uint8_t *buffer)
+Assembler::executableCopy(uint8_t* buffer)
 {
     AssemblerX86Shared::executableCopy(buffer);
 
     for (size_t i = 0; i < jumps_.length(); i++) {
-        RelativePatch &rp = jumps_[i];
+        RelativePatch& rp = jumps_[i];
         X86Encoding::SetRel32(buffer + rp.offset, rp.target);
     }
 }
@@ -68,7 +68,7 @@ class RelocationIterator
     uint32_t offset_;
 
   public:
-    RelocationIterator(CompactBufferReader &reader)
+    RelocationIterator(CompactBufferReader& reader)
       : reader_(reader)
     { }
 
@@ -84,26 +84,26 @@ class RelocationIterator
     }
 };
 
-static inline JitCode *
-CodeFromJump(uint8_t *jump)
+static inline JitCode*
+CodeFromJump(uint8_t* jump)
 {
-    uint8_t *target = (uint8_t *)X86Encoding::GetRel32Target(jump);
+    uint8_t* target = (uint8_t*)X86Encoding::GetRel32Target(jump);
     return JitCode::FromExecutable(target);
 }
 
 void
-Assembler::TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader)
+Assembler::TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader)
 {
     RelocationIterator iter(reader);
     while (iter.read()) {
-        JitCode *child = CodeFromJump(code->raw() + iter.offset());
+        JitCode* child = CodeFromJump(code->raw() + iter.offset());
         MarkJitCodeUnbarriered(trc, &child, "rel32");
         MOZ_ASSERT(child == CodeFromJump(code->raw() + iter.offset()));
     }
 }
 
 FloatRegisterSet
-FloatRegister::ReduceSetForPush(const FloatRegisterSet &s)
+FloatRegister::ReduceSetForPush(const FloatRegisterSet& s)
 {
     SetType bits = s.bits();
 
@@ -122,7 +122,7 @@ FloatRegister::ReduceSetForPush(const FloatRegisterSet &s)
 }
 
 uint32_t
-FloatRegister::GetPushSizeInBytes(const FloatRegisterSet &s)
+FloatRegister::GetPushSizeInBytes(const FloatRegisterSet& s)
 {
     SetType all = s.bits();
     SetType float32x4Set =

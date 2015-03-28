@@ -57,36 +57,36 @@ extern const char anonymousName[];
  * to decide whether they can optimize in a way that would prevent probes from
  * firing.
  */
-bool CallTrackingActive(JSContext *);
+bool CallTrackingActive(JSContext*);
 
 /*
  * Test whether anything is looking for JIT native code registration events.
  * This information will not be collected otherwise.
  */
-bool WantNativeAddressInfo(JSContext *);
+bool WantNativeAddressInfo(JSContext*);
 
 /* Entering a JS function */
-bool EnterScript(JSContext *, JSScript *, JSFunction *, InterpreterFrame *);
+bool EnterScript(JSContext*, JSScript*, JSFunction*, InterpreterFrame*);
 
 /* About to leave a JS function */
-void ExitScript(JSContext *, JSScript *, JSFunction *, bool popSPSFrame);
+void ExitScript(JSContext*, JSScript*, JSFunction*, bool popSPSFrame);
 
 /* Executing a script */
-bool StartExecution(JSScript *script);
+bool StartExecution(JSScript* script);
 
 /* Script has completed execution */
-bool StopExecution(JSScript *script);
+bool StopExecution(JSScript* script);
 
 /*
  * Object has been created. |obj| must exist (its class and size are read)
  */
-bool CreateObject(ExclusiveContext *cx, JSObject *obj);
+bool CreateObject(ExclusiveContext* cx, JSObject* obj);
 
 /*
  * Object is about to be finalized. |obj| must still exist (its class is
  * read)
  */
-bool FinalizeObject(JSObject *obj);
+bool FinalizeObject(JSObject* obj);
 
 /* JIT code observation */
 
@@ -101,14 +101,14 @@ enum JITReportGranularity {
  * Finest granularity of JIT information desired by all watchers.
  */
 JITReportGranularity
-JITGranularityRequested(JSContext *cx);
+JITGranularityRequested(JSContext* cx);
 
 /*
  * A whole region of code has been deallocated, containing any number of ICs.
  * (ICs are unregistered in a batch, so individual ICs are not registered.)
  */
 void
-DiscardExecutableRegion(void *start, size_t size);
+DiscardExecutableRegion(void* start, size_t size);
 
 /*
  * Internal: DTrace-specific functions to be called during probes::EnterScript
@@ -116,19 +116,19 @@ DiscardExecutableRegion(void *start, size_t size);
  * marshalling required for these probe points is expensive enough that it
  * shouldn't really matter.
  */
-void DTraceEnterJSFun(JSContext *cx, JSFunction *fun, JSScript *script);
-void DTraceExitJSFun(JSContext *cx, JSFunction *fun, JSScript *script);
+void DTraceEnterJSFun(JSContext* cx, JSFunction* fun, JSScript* script);
+void DTraceExitJSFun(JSContext* cx, JSFunction* fun, JSScript* script);
 
 } /* namespace Probes */
 
 #ifdef INCLUDE_MOZILLA_DTRACE
-static const char *ObjectClassname(JSObject *obj) {
+static const char* ObjectClassname(JSObject* obj) {
     if (!obj)
         return "(null object)";
-    const Class *clasp = obj->getClass();
+    const Class* clasp = obj->getClass();
     if (!clasp)
         return "(null)";
-    const char *class_name = clasp->name;
+    const char* class_name = clasp->name;
     if (!class_name)
         return "(null class name)";
     return class_name;
@@ -136,7 +136,7 @@ static const char *ObjectClassname(JSObject *obj) {
 #endif
 
 inline bool
-probes::CreateObject(ExclusiveContext *cx, JSObject *obj)
+probes::CreateObject(ExclusiveContext* cx, JSObject* obj)
 {
     bool ok = true;
 
@@ -149,16 +149,16 @@ probes::CreateObject(ExclusiveContext *cx, JSObject *obj)
 }
 
 inline bool
-probes::FinalizeObject(JSObject *obj)
+probes::FinalizeObject(JSObject* obj)
 {
     bool ok = true;
 
 #ifdef INCLUDE_MOZILLA_DTRACE
     if (JAVASCRIPT_OBJECT_FINALIZE_ENABLED()) {
-        const Class *clasp = obj->getClass();
+        const Class* clasp = obj->getClass();
 
         /* the first arg is nullptr - reserved for future use (filename?) */
-        JAVASCRIPT_OBJECT_FINALIZE(nullptr, (char *)clasp->name, (uintptr_t)obj);
+        JAVASCRIPT_OBJECT_FINALIZE(nullptr, (char*)clasp->name, (uintptr_t)obj);
     }
 #endif
 

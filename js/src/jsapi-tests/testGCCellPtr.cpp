@@ -26,7 +26,7 @@ BEGIN_TEST(testGCCellPtr)
     JS::RootedString str(cx, JS_NewStringCopyZ(cx, "probably foobar"));
     CHECK(str);
 
-    const char *code = "function foo() { return 'bar'; }";
+    const char* code = "function foo() { return 'bar'; }";
     JS::CompileOptions opts(cx);
     JS::RootedScript script(cx);
     CHECK(JS_CompileScript(cx, code, strlen(code), opts, &script));

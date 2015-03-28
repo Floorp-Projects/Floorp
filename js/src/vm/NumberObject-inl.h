@@ -13,13 +13,13 @@
 
 namespace js {
 
-inline NumberObject *
-NumberObject::create(JSContext *cx, double d)
+inline NumberObject*
+NumberObject::create(JSContext* cx, double d)
 {
-    JSObject *obj = NewBuiltinClassInstance(cx, &class_);
+    JSObject* obj = NewBuiltinClassInstance(cx, &class_);
     if (!obj)
         return nullptr;
-    NumberObject &numobj = obj->as<NumberObject>();
+    NumberObject& numobj = obj->as<NumberObject>();
     numobj.setPrimitiveValue(d);
     return &numobj;
 }

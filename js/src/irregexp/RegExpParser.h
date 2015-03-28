@@ -42,12 +42,12 @@ namespace frontend {
 namespace irregexp {
 
 bool
-ParsePattern(frontend::TokenStream &ts, LifoAlloc &alloc, JSAtom *str,
+ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str,
              bool multiline, bool match_only,
-             RegExpCompileData *data);
+             RegExpCompileData* data);
 
 bool
-ParsePatternSyntax(frontend::TokenStream &ts, LifoAlloc &alloc, JSAtom *str);
+ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str);
 
 // A BufferedVector is an automatically growing list, just like (and backed
 // by) a Vector, that is optimized for the case of adding and removing
@@ -66,7 +66,7 @@ class BufferedVector
     // Adds element at end of list. This element is buffered and can
     // be read using last() or removed using RemoveLast until a new Add or until
     // RemoveLast or GetList has been called.
-    void Add(LifoAlloc *alloc, T* value) {
+    void Add(LifoAlloc* alloc, T* value) {
         if (last_ != nullptr) {
             if (list_ == nullptr) {
                 list_ = alloc->newInfallible<VectorType>(*alloc);
@@ -117,7 +117,7 @@ class BufferedVector
         return length + ((last_ == nullptr) ? 0 : 1);
     }
 
-    VectorType *GetList(LifoAlloc *alloc) {
+    VectorType* GetList(LifoAlloc* alloc) {
         if (list_ == nullptr)
             list_ = alloc->newInfallible<VectorType>(*alloc);
         if (last_ != nullptr) {
@@ -128,7 +128,7 @@ class BufferedVector
     }
 
   private:
-    VectorType *list_;
+    VectorType* list_;
     T* last_;
 };
 
@@ -137,7 +137,7 @@ class BufferedVector
 class RegExpBuilder
 {
   public:
-    explicit RegExpBuilder(LifoAlloc *alloc);
+    explicit RegExpBuilder(LifoAlloc* alloc);
     void AddCharacter(char16_t character);
     // "Adds" an empty expression. Does nothing except consume a
     // following quantifier
@@ -153,9 +153,9 @@ class RegExpBuilder
     void FlushText();
     void FlushTerms();
 
-    LifoAlloc *alloc;
+    LifoAlloc* alloc;
     bool pending_empty_;
-    CharacterVector *characters_;
+    CharacterVector* characters_;
     BufferedVector<RegExpTree, 2> terms_;
     BufferedVector<RegExpTree, 2> text_;
     BufferedVector<RegExpTree, 2> alternatives_;
@@ -173,8 +173,8 @@ template <typename CharT>
 class RegExpParser
 {
   public:
-    RegExpParser(frontend::TokenStream &ts, LifoAlloc *alloc,
-                 const CharT *chars, const CharT *end, bool multiline_mode);
+    RegExpParser(frontend::TokenStream& ts, LifoAlloc* alloc,
+                 const CharT* chars, const CharT* end, bool multiline_mode);
 
     RegExpTree* ParsePattern();
     RegExpTree* ParseDisjunction();
@@ -201,7 +201,7 @@ class RegExpParser
     // can be reparsed.
     bool ParseBackReferenceIndex(int* index_out);
 
-    bool ParseClassAtom(char16_t* char_class, CharacterRange *char_range);
+    bool ParseClassAtom(char16_t* char_class, CharacterRange* char_range);
     RegExpTree* ReportError(unsigned errorNumber);
     void Advance();
     void Advance(int dist) {
@@ -209,7 +209,7 @@ class RegExpParser
         Advance();
     }
 
-    void Reset(const CharT *pos) {
+    void Reset(const CharT* pos) {
         next_pos_ = pos;
         has_more_ = (pos < end_);
         Advance();
@@ -221,7 +221,7 @@ class RegExpParser
     bool contains_anchor() { return contains_anchor_; }
     void set_contains_anchor() { contains_anchor_ = true; }
     int captures_started() { return captures_ == nullptr ? 0 : captures_->length(); }
-    const CharT *position() { return next_pos_ - 1; }
+    const CharT* position() { return next_pos_ - 1; }
 
     static const int kMaxCaptures = 1 << 16;
     static const widechar kEndMarker = (1 << 21);
@@ -237,7 +237,7 @@ class RegExpParser
 
     class RegExpParserState {
       public:
-        RegExpParserState(LifoAlloc *alloc,
+        RegExpParserState(LifoAlloc* alloc,
                           RegExpParserState* previous_state,
                           SubexpressionType group_type,
                           int disjunction_capture_index)
@@ -279,10 +279,10 @@ class RegExpParser
     }
     void ScanForCaptures();
 
-    frontend::TokenStream &ts;
-    LifoAlloc *alloc;
-    RegExpCaptureVector *captures_;
-    const CharT *next_pos_, *end_;
+    frontend::TokenStream& ts;
+    LifoAlloc* alloc;
+    RegExpCaptureVector* captures_;
+    const CharT* next_pos_, *end_;
     widechar current_;
     // The capture count is only valid after we have scanned for captures.
     int capture_count_;

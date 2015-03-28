@@ -12,7 +12,7 @@
 using namespace js;
 using namespace js::jit;
 
-EdgeCaseAnalysis::EdgeCaseAnalysis(MIRGenerator *mir, MIRGraph &graph)
+EdgeCaseAnalysis::EdgeCaseAnalysis(MIRGenerator* mir, MIRGraph& graph)
   : mir(mir), graph(graph)
 {
 }

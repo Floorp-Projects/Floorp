@@ -62,7 +62,7 @@ using JS::ForOfIterator;
 
 template <bool Eq>
 static MOZ_ALWAYS_INLINE bool
-LooseEqualityOp(JSContext *cx, InterpreterRegs &regs)
+LooseEqualityOp(JSContext* cx, InterpreterRegs& regs)
 {
     HandleValue rval = regs.stackHandleAt(-1);
     HandleValue lval = regs.stackHandleAt(-2);
@@ -75,8 +75,8 @@ LooseEqualityOp(JSContext *cx, InterpreterRegs &regs)
     return true;
 }
 
-JSObject *
-js::BoxNonStrictThis(JSContext *cx, HandleValue thisv)
+JSObject*
+js::BoxNonStrictThis(JSContext* cx, HandleValue thisv)
 {
     /*
      * Check for SynthesizeFrame poisoning and fast constructors which
@@ -111,7 +111,7 @@ js::BoxNonStrictThis(JSContext *cx, HandleValue thisv)
  * The alert should display "true".
  */
 bool
-js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
+js::BoxNonStrictThis(JSContext* cx, const CallReceiver& call)
 {
     /*
      * Check for SynthesizeFrame poisoning and fast constructors which
@@ -120,11 +120,11 @@ js::BoxNonStrictThis(JSContext *cx, const CallReceiver &call)
     MOZ_ASSERT(!call.thisv().isMagic());
 
 #ifdef DEBUG
-    JSFunction *fun = call.callee().is<JSFunction>() ? &call.callee().as<JSFunction>() : nullptr;
+    JSFunction* fun = call.callee().is<JSFunction>() ? &call.callee().as<JSFunction>() : nullptr;
     MOZ_ASSERT_IF(fun && fun->isInterpreted(), !fun->strict());
 #endif
 
-    JSObject *thisObj = BoxNonStrictThis(cx, call.thisv());
+    JSObject* thisObj = BoxNonStrictThis(cx, call.thisv());
     if (!thisObj)
         return false;
 
@@ -157,7 +157,7 @@ static const Class js_NoSuchMethodClass = {
  * parameters.
  */
 bool
-js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandleValue vp)
+js::OnUnknownMethod(JSContext* cx, HandleObject obj, Value idval_, MutableHandleValue vp)
 {
     RootedValue idval(cx, idval_);
 
@@ -166,7 +166,7 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandle
         return false;
 
     if (value.isObject()) {
-        NativeObject *obj = NewNativeObjectWithClassProto(cx, &js_NoSuchMethodClass, NullPtr());
+        NativeObject* obj = NewNativeObjectWithClassProto(cx, &js_NoSuchMethodClass, NullPtr());
         if (!obj)
             return false;
 
@@ -178,10 +178,10 @@ js::OnUnknownMethod(JSContext *cx, HandleObject obj, Value idval_, MutableHandle
 }
 
 static bool
-NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
+NoSuchMethod(JSContext* cx, unsigned argc, Value* vp)
 {
-    if (JSScript *script = cx->currentScript()) {
-        const char *filename = script->filename();
+    if (JSScript* script = cx->currentScript()) {
+        const char* filename = script->filename();
         cx->compartment()->addTelemetry(filename, JSCompartment::DeprecatedNoSuchMethod);
     }
 
@@ -197,13 +197,13 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
 
     MOZ_ASSERT(vp[0].isObject());
     MOZ_ASSERT(vp[1].isObject());
-    NativeObject *obj = &vp[0].toObject().as<NativeObject>();
+    NativeObject* obj = &vp[0].toObject().as<NativeObject>();
     MOZ_ASSERT(obj->getClass() == &js_NoSuchMethodClass);
 
     args.setCallee(obj->getReservedSlot(JSSLOT_FOUND_FUNCTION));
     args.setThis(vp[1]);
     args[0].set(obj->getReservedSlot(JSSLOT_SAVED_ID));
-    JSObject *argsobj = NewDenseCopiedArray(cx, argc, vp + 2);
+    JSObject* argsobj = NewDenseCopiedArray(cx, argc, vp + 2);
     if (!argsobj)
         return false;
     args[1].setObject(*argsobj);
@@ -215,7 +215,7 @@ NoSuchMethod(JSContext *cx, unsigned argc, Value *vp)
 #endif /* JS_HAS_NO_SUCH_METHOD */
 
 static inline bool
-GetPropertyOperation(JSContext *cx, InterpreterFrame *fp, HandleScript script, jsbytecode *pc,
+GetPropertyOperation(JSContext* cx, InterpreterFrame* fp, HandleScript script, jsbytecode* pc,
                      MutableHandleValue lval, MutableHandleValue vp)
 {
     JSOp op = JSOp(*pc);
@@ -242,7 +242,7 @@ GetPropertyOperation(JSContext *cx, InterpreterFrame *fp, HandleScript script, j
 
     /* Optimize (.1).toString(). */
     if (lval.isNumber() && id == NameToId(cx->names().toString)) {
-        NativeObject *proto = GlobalObject::getOrCreateNumberPrototype(cx, global);
+        NativeObject* proto = GlobalObject::getOrCreateNumberPrototype(cx, global);
         if (!proto)
             return false;
         if (ClassMethodIsNative(cx, proto, &NumberObject::class_, id, num_toString))
@@ -274,10 +274,10 @@ GetPropertyOperation(JSContext *cx, InterpreterFrame *fp, HandleScript script, j
 }
 
 static inline bool
-GetNameOperation(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc, MutableHandleValue vp)
+GetNameOperation(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc, MutableHandleValue vp)
 {
-    JSObject *obj = fp->scopeChain();
-    PropertyName *name = fp->script()->getName(pc);
+    JSObject* obj = fp->scopeChain();
+    PropertyName* name = fp->script()->getName(pc);
 
     /*
      * Skip along the scope chain to the enclosing global object. This is
@@ -291,8 +291,8 @@ GetNameOperation(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc, MutableHan
     if (IsGlobalOp(JSOp(*pc)) && !fp->script()->hasPollutedGlobalScope())
         obj = &obj->global();
 
-    Shape *shape = nullptr;
-    JSObject *scope = nullptr, *pobj = nullptr;
+    Shape* shape = nullptr;
+    JSObject* scope = nullptr, *pobj = nullptr;
     if (LookupNameNoGC(cx, name, obj, &scope, &pobj, &shape)) {
         if (FetchNameNoGC(pobj, shape, vp))
             return CheckUninitializedLexical(cx, name, vp);
@@ -313,7 +313,7 @@ GetNameOperation(JSContext *cx, InterpreterFrame *fp, jsbytecode *pc, MutableHan
 }
 
 static bool
-SetPropertyOperation(JSContext *cx, JSOp op, HandleValue lval, HandleId id, HandleValue rval)
+SetPropertyOperation(JSContext* cx, JSOp op, HandleValue lval, HandleId id, HandleValue rval)
 {
     MOZ_ASSERT(op == JSOP_SETPROP || op == JSOP_STRICTSETPROP);
 
@@ -330,7 +330,7 @@ SetPropertyOperation(JSContext *cx, JSOp op, HandleValue lval, HandleId id, Hand
 }
 
 bool
-js::ReportIsNotFunction(JSContext *cx, HandleValue v, int numToSkip, MaybeConstruct construct)
+js::ReportIsNotFunction(JSContext* cx, HandleValue v, int numToSkip, MaybeConstruct construct)
 {
     unsigned error = construct ? JSMSG_NOT_CONSTRUCTOR : JSMSG_NOT_FUNCTION;
     int spIndex = numToSkip >= 0 ? -(numToSkip + 1) : JSDVG_SEARCH_STACK;
@@ -339,8 +339,8 @@ js::ReportIsNotFunction(JSContext *cx, HandleValue v, int numToSkip, MaybeConstr
     return false;
 }
 
-JSObject *
-js::ValueToCallable(JSContext *cx, HandleValue v, int numToSkip, MaybeConstruct construct)
+JSObject*
+js::ValueToCallable(JSContext* cx, HandleValue v, int numToSkip, MaybeConstruct construct)
 {
     if (v.isObject() && v.toObject().isCallable()) {
         return &v.toObject();
@@ -351,14 +351,14 @@ js::ValueToCallable(JSContext *cx, HandleValue v, int numToSkip, MaybeConstruct 
 }
 
 bool
-RunState::maybeCreateThisForConstructor(JSContext *cx)
+RunState::maybeCreateThisForConstructor(JSContext* cx)
 {
     if (isInvoke()) {
-        InvokeState &invoke = *asInvoke();
+        InvokeState& invoke = *asInvoke();
         if (invoke.constructing() && invoke.args().thisv().isPrimitive()) {
             RootedObject callee(cx, &invoke.args().callee());
             NewObjectKind newKind = invoke.createSingleton() ? SingletonObject : GenericObject;
-            JSObject *obj = CreateThisForFunction(cx, callee, newKind);
+            JSObject* obj = CreateThisForFunction(cx, callee, newKind);
             if (!obj)
                 return false;
             invoke.args().setThis(ObjectValue(*obj));
@@ -368,23 +368,23 @@ RunState::maybeCreateThisForConstructor(JSContext *cx)
 }
 
 static MOZ_NEVER_INLINE bool
-Interpret(JSContext *cx, RunState &state);
+Interpret(JSContext* cx, RunState& state);
 
-InterpreterFrame *
-InvokeState::pushInterpreterFrame(JSContext *cx)
+InterpreterFrame*
+InvokeState::pushInterpreterFrame(JSContext* cx)
 {
     return cx->runtime()->interpreterStack().pushInvokeFrame(cx, args_, initial_);
 }
 
-InterpreterFrame *
-ExecuteState::pushInterpreterFrame(JSContext *cx)
+InterpreterFrame*
+ExecuteState::pushInterpreterFrame(JSContext* cx)
 {
     return cx->runtime()->interpreterStack().pushExecuteFrame(cx, script_, thisv_, scopeChain_,
                                                               type_, evalInFrame_);
 }
 
 bool
-js::RunScript(JSContext *cx, RunState &state)
+js::RunScript(JSContext* cx, RunState& state)
 {
     JS_CHECK_RECURSION(cx, return false);
 
@@ -413,7 +413,7 @@ js::RunScript(JSContext *cx, RunState &state)
     }
 
     if (state.isInvoke()) {
-        InvokeState &invoke = *state.asInvoke();
+        InvokeState& invoke = *state.asInvoke();
         TypeMonitorCall(cx, invoke.args(), invoke.constructing());
     }
 
@@ -422,8 +422,8 @@ js::RunScript(JSContext *cx, RunState &state)
 
 struct AutoGCIfRequested
 {
-    JSRuntime *runtime;
-    explicit AutoGCIfRequested(JSRuntime *rt) : runtime(rt) {}
+    JSRuntime* runtime;
+    explicit AutoGCIfRequested(JSRuntime* rt) : runtime(rt) {}
     ~AutoGCIfRequested() { runtime->gc.gcIfRequested(); }
 };
 
@@ -434,7 +434,7 @@ struct AutoGCIfRequested
  * when done.  Then push the return value.
  */
 bool
-js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
+js::Invoke(JSContext* cx, CallArgs args, MaybeConstruct construct)
 {
     MOZ_ASSERT(args.length() <= ARGS_LENGTH_MAX);
     MOZ_ASSERT(!cx->zone()->types.activeAnalysis);
@@ -448,7 +448,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
     if (args.calleev().isPrimitive())
         return ReportIsNotFunction(cx, args.calleev(), args.length() + 1, construct);
 
-    const Class *clasp = args.callee().getClass();
+    const Class* clasp = args.callee().getClass();
 
     /* Invoke non-functions. */
     if (MOZ_UNLIKELY(clasp != &JSFunction::class_)) {
@@ -464,7 +464,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
     }
 
     /* Invoke native functions. */
-    JSFunction *fun = &args.callee().as<JSFunction>();
+    JSFunction* fun = &args.callee().as<JSFunction>();
     MOZ_ASSERT_IF(construct, !fun->isNativeConstructor());
     if (fun->isNative())
         return CallJSNative(cx, fun->native(), args);
@@ -479,8 +479,8 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
     if (construct) {
         FrameIter iter(cx);
         if (!iter.done() && iter.hasScript()) {
-            JSScript *script = iter.script();
-            jsbytecode *pc = iter.pc();
+            JSScript* script = iter.script();
+            jsbytecode* pc = iter.pc();
             if (ObjectGroup::useSingletonForNewObject(cx, script, pc))
                 state.setCreateSingleton();
         }
@@ -493,7 +493,7 @@ js::Invoke(JSContext *cx, CallArgs args, MaybeConstruct construct)
 }
 
 bool
-js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, const Value *argv,
+js::Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, const Value* argv,
            MutableHandleValue rval)
 {
     InvokeArgs args(cx);
@@ -516,7 +516,7 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, 
             fval.toObject().as<JSFunction>().jitInfo()->needsOuterizedThisObject())
         {
             RootedObject thisObj(cx, &args.thisv().toObject());
-            JSObject *thisp = GetThisObject(cx, thisObj);
+            JSObject* thisp = GetThisObject(cx, thisObj);
             if (!thisp)
                 return false;
             args.setThis(ObjectValue(*thisp));
@@ -531,7 +531,7 @@ js::Invoke(JSContext *cx, const Value &thisv, const Value &fval, unsigned argc, 
 }
 
 bool
-js::InvokeConstructor(JSContext *cx, CallArgs args)
+js::InvokeConstructor(JSContext* cx, CallArgs args)
 {
     MOZ_ASSERT(!JSFunction::class_.construct);
 
@@ -540,7 +540,7 @@ js::InvokeConstructor(JSContext *cx, CallArgs args)
     if (!args.calleev().isObject())
         return ReportIsNotFunction(cx, args.calleev(), args.length() + 1, CONSTRUCT);
 
-    JSObject &callee = args.callee();
+    JSObject& callee = args.callee();
     if (callee.is<JSFunction>()) {
         RootedFunction fun(cx, &callee.as<JSFunction>());
 
@@ -565,7 +565,7 @@ js::InvokeConstructor(JSContext *cx, CallArgs args)
 }
 
 bool
-js::InvokeConstructor(JSContext *cx, Value fval, unsigned argc, const Value *argv,
+js::InvokeConstructor(JSContext* cx, Value fval, unsigned argc, const Value* argv,
                       MutableHandleValue rval)
 {
     InvokeArgs args(cx);
@@ -584,7 +584,7 @@ js::InvokeConstructor(JSContext *cx, Value fval, unsigned argc, const Value *arg
 }
 
 bool
-js::InvokeGetter(JSContext *cx, JSObject *obj, Value fval, MutableHandleValue rval)
+js::InvokeGetter(JSContext* cx, JSObject* obj, Value fval, MutableHandleValue rval)
 {
     /*
      * Invoke could result in another try to get or set the same id again, see
@@ -596,7 +596,7 @@ js::InvokeGetter(JSContext *cx, JSObject *obj, Value fval, MutableHandleValue rv
 }
 
 bool
-js::InvokeSetter(JSContext *cx, const Value &thisv, Value fval, HandleValue v)
+js::InvokeSetter(JSContext* cx, const Value& thisv, Value fval, HandleValue v)
 {
     JS_CHECK_RECURSION(cx, return false);
 
@@ -605,8 +605,8 @@ js::InvokeSetter(JSContext *cx, const Value &thisv, Value fval, HandleValue v)
 }
 
 bool
-js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, const Value &thisv,
-                  ExecuteType type, AbstractFramePtr evalInFrame, Value *result)
+js::ExecuteKernel(JSContext* cx, HandleScript script, JSObject& scopeChainArg, const Value& thisv,
+                  ExecuteType type, AbstractFramePtr evalInFrame, Value* result)
 {
     MOZ_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
     MOZ_ASSERT_IF(type == EXECUTE_GLOBAL, !IsSyntacticScope(&scopeChainArg));
@@ -640,7 +640,7 @@ js::ExecuteKernel(JSContext *cx, HandleScript script, JSObject &scopeChainArg, c
 }
 
 bool
-js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *rval)
+js::Execute(JSContext* cx, HandleScript script, JSObject& scopeChainArg, Value* rval)
 {
     /* The scope chain is something we control, so we know it can't
        have any outer objects on it. */
@@ -656,7 +656,7 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
 
     /* Ensure the scope chain is all same-compartment and terminates in a global. */
 #ifdef DEBUG
-    JSObject *s = scopeChain;
+    JSObject* s = scopeChain;
     do {
         assertSameCompartment(cx, s);
         MOZ_ASSERT_IF(!s->enclosingScope(), s->is<GlobalObject>());
@@ -670,7 +670,7 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
     }
 
     /* Use the scope chain as 'this', modulo outerization. */
-    JSObject *thisObj = GetThisObject(cx, scopeChain);
+    JSObject* thisObj = GetThisObject(cx, scopeChain);
     if (!thisObj)
         return false;
     Value thisv = ObjectValue(*thisObj);
@@ -680,9 +680,9 @@ js::Execute(JSContext *cx, HandleScript script, JSObject &scopeChainArg, Value *
 }
 
 bool
-js::HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp)
+js::HasInstance(JSContext* cx, HandleObject obj, HandleValue v, bool* bp)
 {
-    const Class *clasp = obj->getClass();
+    const Class* clasp = obj->getClass();
     RootedValue local(cx, v);
     if (clasp->hasInstance)
         return clasp->hasInstance(cx, obj, &local, bp);
@@ -694,7 +694,7 @@ js::HasInstance(JSContext *cx, HandleObject obj, HandleValue v, bool *bp)
 }
 
 static inline bool
-EqualGivenSameType(JSContext *cx, HandleValue lval, HandleValue rval, bool *equal)
+EqualGivenSameType(JSContext* cx, HandleValue lval, HandleValue rval, bool* equal)
 {
     MOZ_ASSERT(SameType(lval, rval));
 
@@ -714,7 +714,7 @@ EqualGivenSameType(JSContext *cx, HandleValue lval, HandleValue rval, bool *equa
 }
 
 static inline bool
-LooselyEqualBooleanAndOther(JSContext *cx, HandleValue lval, HandleValue rval, bool *result)
+LooselyEqualBooleanAndOther(JSContext* cx, HandleValue lval, HandleValue rval, bool* result)
 {
     MOZ_ASSERT(!rval.isBoolean());
     RootedValue lvalue(cx, Int32Value(lval.toBoolean() ? 1 : 0));
@@ -738,7 +738,7 @@ LooselyEqualBooleanAndOther(JSContext *cx, HandleValue lval, HandleValue rval, b
 
 // ES6 draft rev32 7.2.12 Abstract Equality Comparison
 bool
-js::LooselyEqual(JSContext *cx, HandleValue lval, HandleValue rval, bool *result)
+js::LooselyEqual(JSContext* cx, HandleValue lval, HandleValue rval, bool* result)
 {
     // Step 3.
     if (SameType(lval, rval))
@@ -813,7 +813,7 @@ js::LooselyEqual(JSContext *cx, HandleValue lval, HandleValue rval, bool *result
 }
 
 bool
-js::StrictlyEqual(JSContext *cx, HandleValue lval, HandleValue rval, bool *equal)
+js::StrictlyEqual(JSContext* cx, HandleValue lval, HandleValue rval, bool* equal)
 {
     if (SameType(lval, rval))
         return EqualGivenSameType(cx, lval, rval, equal);
@@ -828,19 +828,19 @@ js::StrictlyEqual(JSContext *cx, HandleValue lval, HandleValue rval, bool *equal
 }
 
 static inline bool
-IsNegativeZero(const Value &v)
+IsNegativeZero(const Value& v)
 {
     return v.isDouble() && mozilla::IsNegativeZero(v.toDouble());
 }
 
 static inline bool
-IsNaN(const Value &v)
+IsNaN(const Value& v)
 {
     return v.isDouble() && mozilla::IsNaN(v.toDouble());
 }
 
 bool
-js::SameValue(JSContext *cx, HandleValue v1, HandleValue v2, bool *same)
+js::SameValue(JSContext* cx, HandleValue v1, HandleValue v2, bool* same)
 {
     if (IsNegativeZero(v1)) {
         *same = IsNegativeZero(v2);
@@ -858,7 +858,7 @@ js::SameValue(JSContext *cx, HandleValue v1, HandleValue v2, bool *same)
 }
 
 JSType
-js::TypeOfObject(JSObject *obj)
+js::TypeOfObject(JSObject* obj)
 {
     if (EmulatesUndefined(obj))
         return JSTYPE_VOID;
@@ -868,7 +868,7 @@ js::TypeOfObject(JSObject *obj)
 }
 
 JSType
-js::TypeOfValue(const Value &v)
+js::TypeOfValue(const Value& v)
 {
     if (v.isNumber())
         return JSTYPE_NUMBER;
@@ -891,7 +891,7 @@ js::TypeOfValue(const Value &v)
  * of the with block with sp + stackIndex.
  */
 bool
-js::EnterWithOperation(JSContext *cx, AbstractFramePtr frame, HandleValue val,
+js::EnterWithOperation(JSContext* cx, AbstractFramePtr frame, HandleValue val,
                        HandleObject staticWith)
 {
     MOZ_ASSERT(staticWith->is<StaticWithObject>());
@@ -905,7 +905,7 @@ js::EnterWithOperation(JSContext *cx, AbstractFramePtr frame, HandleValue val,
     }
 
     RootedObject scopeChain(cx, frame.scopeChain());
-    DynamicWithObject *withobj = DynamicWithObject::create(cx, obj, scopeChain, staticWith);
+    DynamicWithObject* withobj = DynamicWithObject::create(cx, obj, scopeChain, staticWith);
     if (!withobj)
         return false;
 
@@ -914,7 +914,7 @@ js::EnterWithOperation(JSContext *cx, AbstractFramePtr frame, HandleValue val,
 }
 
 static void
-PopScope(JSContext *cx, ScopeIter &si)
+PopScope(JSContext* cx, ScopeIter& si)
 {
     switch (si.type()) {
       case ScopeIter::Block:
@@ -935,7 +935,7 @@ PopScope(JSContext *cx, ScopeIter &si)
 // Unwind scope chain and iterator to match the static scope corresponding to
 // the given bytecode position.
 void
-js::UnwindScope(JSContext *cx, ScopeIter &si, jsbytecode *pc)
+js::UnwindScope(JSContext* cx, ScopeIter& si, jsbytecode* pc)
 {
     if (!si.withinInitialFrame())
         return;
@@ -953,7 +953,7 @@ js::UnwindScope(JSContext *cx, ScopeIter &si, jsbytecode *pc)
 // will have no pc location distinguishing the first block scope from the
 // outermost function scope.
 void
-js::UnwindAllScopesInFrame(JSContext *cx, ScopeIter &si)
+js::UnwindAllScopesInFrame(JSContext* cx, ScopeIter& si)
 {
     for (; si.withinInitialFrame(); ++si)
         PopScope(cx, si);
@@ -967,40 +967,40 @@ js::UnwindAllScopesInFrame(JSContext *cx, ScopeIter &si)
 //
 // will have no pc location distinguishing the try block scope from the inner
 // let block scope.
-jsbytecode *
-js::UnwindScopeToTryPc(JSScript *script, JSTryNote *tn)
+jsbytecode*
+js::UnwindScopeToTryPc(JSScript* script, JSTryNote* tn)
 {
     return script->main() + tn->start - js_CodeSpec[JSOP_TRY].length;
 }
 
 static void
-ForcedReturn(JSContext *cx, ScopeIter &si, InterpreterRegs &regs)
+ForcedReturn(JSContext* cx, ScopeIter& si, InterpreterRegs& regs)
 {
     UnwindAllScopesInFrame(cx, si);
     regs.setToEndOfScript();
 }
 
 static void
-ForcedReturn(JSContext *cx, InterpreterRegs &regs)
+ForcedReturn(JSContext* cx, InterpreterRegs& regs)
 {
     ScopeIter si(cx, regs.fp(), regs.pc);
     ForcedReturn(cx, si, regs);
 }
 
 void
-js::UnwindForUncatchableException(JSContext *cx, const InterpreterRegs &regs)
+js::UnwindForUncatchableException(JSContext* cx, const InterpreterRegs& regs)
 {
     /* c.f. the regular (catchable) TryNoteIter loop in HandleError. */
     for (TryNoteIter tni(cx, regs); !tni.done(); ++tni) {
-        JSTryNote *tn = *tni;
+        JSTryNote* tn = *tni;
         if (tn->kind == JSTRY_FOR_IN) {
-            Value *sp = regs.spForStackDepth(tn->stackDepth);
+            Value* sp = regs.spForStackDepth(tn->stackDepth);
             UnwindIteratorForUncatchableException(cx, &sp[-1].toObject());
         }
     }
 }
 
-TryNoteIter::TryNoteIter(JSContext *cx, const InterpreterRegs &regs)
+TryNoteIter::TryNoteIter(JSContext* cx, const InterpreterRegs& regs)
   : regs(regs),
     script(cx, regs.fp()->script()),
     pcOffset(regs.pc - script->main())
@@ -1068,7 +1068,7 @@ enum HandleErrorContinuation
 };
 
 static HandleErrorContinuation
-HandleError(JSContext *cx, InterpreterRegs &regs)
+HandleError(JSContext* cx, InterpreterRegs& regs)
 {
     MOZ_ASSERT(regs.fp()->script()->containsPC(regs.pc));
 
@@ -1102,7 +1102,7 @@ HandleError(JSContext *cx, InterpreterRegs &regs)
         }
 
         for (TryNoteIter tni(cx, regs); !tni.done(); ++tni) {
-            JSTryNote *tn = *tni;
+            JSTryNote* tn = *tni;
 
             // Unwind the scope to the beginning of the JSOP_TRY.
             UnwindScope(cx, si, UnwindScopeToTryPc(regs.fp()->script(), tn));
@@ -1237,7 +1237,7 @@ JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
  * common and future-friendly cases.
  */
 static inline bool
-ComputeImplicitThis(JSContext *cx, HandleObject obj, MutableHandleValue vp)
+ComputeImplicitThis(JSContext* cx, HandleObject obj, MutableHandleValue vp)
 {
     vp.setUndefined();
 
@@ -1247,7 +1247,7 @@ ComputeImplicitThis(JSContext *cx, HandleObject obj, MutableHandleValue vp)
     if (IsCacheableNonGlobalScope(obj))
         return true;
 
-    JSObject *nobj = GetThisObject(cx, obj);
+    JSObject* nobj = GetThisObject(cx, obj);
     if (!nobj)
         return false;
 
@@ -1256,7 +1256,7 @@ ComputeImplicitThis(JSContext *cx, HandleObject obj, MutableHandleValue vp)
 }
 
 static MOZ_ALWAYS_INLINE bool
-AddOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
+AddOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
     if (lhs.isInt32() && rhs.isInt32()) {
         int32_t l = lhs.toInt32(), r = rhs.toInt32();
@@ -1274,7 +1274,7 @@ AddOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Muta
 
     bool lIsString, rIsString;
     if ((lIsString = lhs.isString()) | (rIsString = rhs.isString())) {
-        JSString *lstr, *rstr;
+        JSString* lstr, *rstr;
         if (lIsString) {
             lstr = lhs.toString();
         } else {
@@ -1292,7 +1292,7 @@ AddOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Muta
                 return false;
             lstr = lhs.toString();
         }
-        JSString *str = ConcatStrings<NoGC>(cx, lstr, rstr);
+        JSString* str = ConcatStrings<NoGC>(cx, lstr, rstr);
         if (!str) {
             RootedString nlstr(cx, lstr), nrstr(cx, rstr);
             str = ConcatStrings<CanGC>(cx, nlstr, nrstr);
@@ -1311,7 +1311,7 @@ AddOperation(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, Muta
 }
 
 static MOZ_ALWAYS_INLINE bool
-SubOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
+SubOperation(JSContext* cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
     double d1, d2;
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
@@ -1321,7 +1321,7 @@ SubOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue
 }
 
 static MOZ_ALWAYS_INLINE bool
-MulOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
+MulOperation(JSContext* cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
     double d1, d2;
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
@@ -1331,7 +1331,7 @@ MulOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue
 }
 
 static MOZ_ALWAYS_INLINE bool
-DivOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
+DivOperation(JSContext* cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
     double d1, d2;
     if (!ToNumber(cx, lhs, &d1) || !ToNumber(cx, rhs, &d2))
@@ -1341,7 +1341,7 @@ DivOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue
 }
 
 static MOZ_ALWAYS_INLINE bool
-ModOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
+ModOperation(JSContext* cx, HandleValue lhs, HandleValue rhs, MutableHandleValue res)
 {
     int32_t l, r;
     if (lhs.isInt32() && rhs.isInt32() &&
@@ -1360,8 +1360,8 @@ ModOperation(JSContext *cx, HandleValue lhs, HandleValue rhs, MutableHandleValue
 }
 
 static MOZ_ALWAYS_INLINE bool
-SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, const Value &value,
-                          bool strict, JSScript *script = nullptr, jsbytecode *pc = nullptr)
+SetObjectElementOperation(JSContext* cx, Handle<JSObject*> obj, HandleId id, const Value& value,
+                          bool strict, JSScript* script = nullptr, jsbytecode* pc = nullptr)
 {
     TypeScript::MonitorAssign(cx, obj, id);
 
@@ -1383,7 +1383,7 @@ SetObjectElementOperation(JSContext *cx, Handle<JSObject*> obj, HandleId id, con
 }
 
 static MOZ_NEVER_INLINE bool
-Interpret(JSContext *cx, RunState &state)
+Interpret(JSContext* cx, RunState& state)
 {
 /*
  * Define macros for an interpreter loop. Opcode dispatch may be either by a
@@ -1401,13 +1401,13 @@ Interpret(JSContext *cx, RunState &state)
 # define INTERPRETER_LOOP()
 # define CASE(OP)                 label_##OP:
 # define DEFAULT()                label_default:
-# define DISPATCH_TO(OP)          goto *addresses[(OP)]
+# define DISPATCH_TO(OP)          goto* addresses[(OP)]
 
 # define LABEL(X)                 (&&label_##X)
 
     // Use addresses instead of offsets to optimize for runtime speed over
     // load-time relocation overhead.
-    static const void *const addresses[EnableInterruptsPseudoOpcode + 1] = {
+    static const void* const addresses[EnableInterruptsPseudoOpcode + 1] = {
 # define OPCODE_LABEL(op, ...)  LABEL(op),
         FOR_EACH_OPCODE(OPCODE_LABEL)
 # undef OPCODE_LABEL
@@ -1504,7 +1504,7 @@ Interpret(JSContext *cx, RunState &state)
     gc::MaybeVerifyBarriers(cx, true);
     MOZ_ASSERT(!cx->zone()->types.activeAnalysis);
 
-    InterpreterFrame *entryFrame = state.pushInterpreterFrame(cx);
+    InterpreterFrame* entryFrame = state.pushInterpreterFrame(cx);
     if (!entryFrame)
         return false;
 
@@ -1514,7 +1514,7 @@ Interpret(JSContext *cx, RunState &state)
     RootedScript script(cx);
     SET_SCRIPT(REGS.fp()->script());
 
-    TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
+    TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
     TraceLoggerEvent scriptEvent(logger, TraceLogger_Scripts, script);
     TraceLogStartEvent(logger, scriptEvent);
     TraceLogStartEvent(logger, TraceLogger_Interpreter);
@@ -1761,7 +1761,7 @@ CASE(JSOP_DUPAT)
 {
     MOZ_ASSERT(GET_UINT24(REGS.pc) < REGS.stackDepth());
     unsigned i = GET_UINT24(REGS.pc);
-    const Value &rref = REGS.sp[-int(i + 1)];
+    const Value& rref = REGS.sp[-int(i + 1)];
     PUSH_COPY(rref);
 }
 END_CASE(JSOP_DUPAT)
@@ -1772,8 +1772,8 @@ END_CASE(JSOP_SETRVAL)
 
 CASE(JSOP_ENTERWITH)
 {
-    RootedValue &val = rootValue0;
-    RootedObject &staticWith = rootObject0;
+    RootedValue& val = rootValue0;
+    RootedObject& staticWith = rootObject0;
     val = REGS.sp[-1];
     REGS.sp--;
     staticWith = script->getObject(REGS.pc);
@@ -1906,9 +1906,9 @@ CASE(JSOP_IN)
         ReportValueError(cx, JSMSG_IN_NOT_OBJECT, -1, rref, js::NullPtr());
         goto error;
     }
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     obj = &rref.toObject();
-    RootedId &id = rootId0;
+    RootedId& id = rootId0;
     FETCH_ELEMENT_ID(-2, id);
     bool found;
     if (!HasProperty(cx, obj, id, &found))
@@ -1935,7 +1935,7 @@ CASE(JSOP_MOREITER)
     MOZ_ASSERT(REGS.stackDepth() >= 1);
     MOZ_ASSERT(REGS.sp[-1].isObject());
     PUSH_NULL();
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     obj = &REGS.sp[-2].toObject();
     if (!IteratorMore(cx, obj, REGS.stackHandleAt(-1)))
         goto error;
@@ -1952,7 +1952,7 @@ END_CASE(JSOP_ISNOITER)
 CASE(JSOP_ENDITER)
 {
     MOZ_ASSERT(REGS.stackDepth() >= 1);
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     obj = &REGS.sp[-1].toObject();
     bool ok = CloseIterator(cx, obj);
     REGS.sp--;
@@ -1964,7 +1964,7 @@ END_CASE(JSOP_ENDITER)
 CASE(JSOP_DUP)
 {
     MOZ_ASSERT(REGS.stackDepth() >= 1);
-    const Value &rref = REGS.sp[-1];
+    const Value& rref = REGS.sp[-1];
     PUSH_COPY(rref);
 }
 END_CASE(JSOP_DUP)
@@ -1972,8 +1972,8 @@ END_CASE(JSOP_DUP)
 CASE(JSOP_DUP2)
 {
     MOZ_ASSERT(REGS.stackDepth() >= 2);
-    const Value &lref = REGS.sp[-2];
-    const Value &rref = REGS.sp[-1];
+    const Value& lref = REGS.sp[-2];
+    const Value& rref = REGS.sp[-1];
     PUSH_COPY(lref);
     PUSH_COPY(rref);
 }
@@ -1982,8 +1982,8 @@ END_CASE(JSOP_DUP2)
 CASE(JSOP_SWAP)
 {
     MOZ_ASSERT(REGS.stackDepth() >= 2);
-    Value &lref = REGS.sp[-2];
-    Value &rref = REGS.sp[-1];
+    Value& lref = REGS.sp[-2];
+    Value& rref = REGS.sp[-1];
     lref.swap(rref);
 }
 END_CASE(JSOP_SWAP)
@@ -2000,13 +2000,13 @@ END_CASE(JSOP_PICK)
 
 CASE(JSOP_SETCONST)
 {
-    RootedPropertyName &name = rootName0;
+    RootedPropertyName& name = rootName0;
     name = script->getName(REGS.pc);
 
-    RootedValue &rval = rootValue0;
+    RootedValue& rval = rootValue0;
     rval = REGS.sp[-1];
 
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     obj = &REGS.fp()->varObj();
 
     if (!SetConstOperation(cx, obj, name, rval))
@@ -2023,14 +2023,14 @@ CASE(JSOP_BINDNAME)
 {
     JSOp op = JSOp(*REGS.pc);
     if (op == JSOP_BINDNAME || script->hasPollutedGlobalScope()) {
-        RootedObject &scopeChain = rootObject0;
+        RootedObject& scopeChain = rootObject0;
         scopeChain = REGS.fp()->scopeChain();
 
-        RootedPropertyName &name = rootName0;
+        RootedPropertyName& name = rootName0;
         name = script->getName(REGS.pc);
 
         /* Assigning to an undeclared name adds a property to the global object. */
-        RootedObject &scope = rootObject1;
+        RootedObject& scope = rootObject1;
         if (!LookupNameUnqualified(cx, name, scopeChain, &scope))
             goto error;
 
@@ -2218,7 +2218,7 @@ END_CASE(JSOP_ADD)
 
 CASE(JSOP_SUB)
 {
-    RootedValue &lval = rootValue0, &rval = rootValue1;
+    RootedValue& lval = rootValue0, &rval = rootValue1;
     lval = REGS.sp[-2];
     rval = REGS.sp[-1];
     MutableHandleValue res = REGS.stackHandleAt(-2);
@@ -2230,7 +2230,7 @@ END_CASE(JSOP_SUB)
 
 CASE(JSOP_MUL)
 {
-    RootedValue &lval = rootValue0, &rval = rootValue1;
+    RootedValue& lval = rootValue0, &rval = rootValue1;
     lval = REGS.sp[-2];
     rval = REGS.sp[-1];
     MutableHandleValue res = REGS.stackHandleAt(-2);
@@ -2242,7 +2242,7 @@ END_CASE(JSOP_MUL)
 
 CASE(JSOP_DIV)
 {
-    RootedValue &lval = rootValue0, &rval = rootValue1;
+    RootedValue& lval = rootValue0, &rval = rootValue1;
     lval = REGS.sp[-2];
     rval = REGS.sp[-1];
     MutableHandleValue res = REGS.stackHandleAt(-2);
@@ -2254,7 +2254,7 @@ END_CASE(JSOP_DIV)
 
 CASE(JSOP_MOD)
 {
-    RootedValue &lval = rootValue0, &rval = rootValue1;
+    RootedValue& lval = rootValue0, &rval = rootValue1;
     lval = REGS.sp[-2];
     rval = REGS.sp[-1];
     MutableHandleValue res = REGS.stackHandleAt(-2);
@@ -2284,7 +2284,7 @@ END_CASE(JSOP_BITNOT)
 
 CASE(JSOP_NEG)
 {
-    RootedValue &val = rootValue0;
+    RootedValue& val = rootValue0;
     val = REGS.sp[-1];
     MutableHandleValue res = REGS.stackHandleAt(-1);
     if (!NegOperation(cx, script, REGS.pc, val, res))
@@ -2299,10 +2299,10 @@ END_CASE(JSOP_POS)
 
 CASE(JSOP_DELNAME)
 {
-    RootedPropertyName &name = rootName0;
+    RootedPropertyName& name = rootName0;
     name = script->getName(REGS.pc);
 
-    RootedObject &scopeObj = rootObject0;
+    RootedObject& scopeObj = rootObject0;
     scopeObj = REGS.fp()->scopeChain();
 
     PUSH_BOOLEAN(true);
@@ -2317,10 +2317,10 @@ CASE(JSOP_STRICTDELPROP)
 {
     static_assert(JSOP_DELPROP_LENGTH == JSOP_STRICTDELPROP_LENGTH,
                   "delprop and strictdelprop must be the same size");
-    RootedId &id = rootId0;
+    RootedId& id = rootId0;
     id = NameToId(script->getName(REGS.pc));
 
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     FETCH_OBJECT(cx, -1, obj);
 
     ObjectOpResult result;
@@ -2341,14 +2341,14 @@ CASE(JSOP_STRICTDELELEM)
     static_assert(JSOP_DELELEM_LENGTH == JSOP_STRICTDELELEM_LENGTH,
                   "delelem and strictdelelem must be the same size");
     /* Fetch the left part and resolve it to a non-null object. */
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     FETCH_OBJECT(cx, -2, obj);
 
-    RootedValue &propval = rootValue0;
+    RootedValue& propval = rootValue0;
     propval = REGS.sp[-1];
 
     ObjectOpResult result;
-    RootedId &id = rootId0;
+    RootedId& id = rootId0;
     if (!ValueToId<CanGC>(cx, propval, &id))
         goto error;
     if (!DeleteProperty(cx, obj, id, result))
@@ -2371,7 +2371,7 @@ CASE(JSOP_TOID)
      * but we need to avoid the observable stringification the second time.
      * There must be an object value below the id, which will not be popped.
      */
-    RootedValue &objval = rootValue0, &idval = rootValue1;
+    RootedValue& objval = rootValue0, &idval = rootValue1;
     objval = REGS.sp[-2];
     idval = REGS.sp[-1];
 
@@ -2413,9 +2413,9 @@ END_CASE(JSOP_GETPROP)
 
 CASE(JSOP_GETXPROP)
 {
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     obj = &REGS.sp[-1].toObject();
-    RootedId &id = rootId0;
+    RootedId& id = rootId0;
     id = NameToId(script->getName(REGS.pc));
     MutableHandleValue rval = REGS.stackHandleAt(-1);
     if (!GetPropertyForNameLookup(cx, obj, id, rval))
@@ -2450,7 +2450,7 @@ CASE(JSOP_STRICTSETNAME)
     static_assert(JSOP_SETNAME_LENGTH == JSOP_SETGNAME_LENGTH,
                   "We're sharing the END_CASE so the lengths better match");
 
-    RootedObject &scope = rootObject0;
+    RootedObject& scope = rootObject0;
     scope = &REGS.sp[-2].toObject();
     HandleValue value = REGS.stackHandleAt(-1);
 
@@ -2470,7 +2470,7 @@ CASE(JSOP_STRICTSETPROP)
     HandleValue lval = REGS.stackHandleAt(-2);
     HandleValue rval = REGS.stackHandleAt(-1);
 
-    RootedId &id = rootId0;
+    RootedId& id = rootId0;
     id = NameToId(script->getName(REGS.pc));
     if (!SetPropertyOperation(cx, JSOp(*REGS.pc), lval, id, rval))
         goto error;
@@ -2506,11 +2506,11 @@ CASE(JSOP_STRICTSETELEM)
 {
     static_assert(JSOP_SETELEM_LENGTH == JSOP_STRICTSETELEM_LENGTH,
                   "setelem and strictsetelem must be the same size");
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     FETCH_OBJECT(cx, -3, obj);
-    RootedId &id = rootId0;
+    RootedId& id = rootId0;
     FETCH_ELEMENT_ID(-2, id);
-    Value &value = REGS.sp[-1];
+    Value& value = REGS.sp[-1];
     if (!SetObjectElementOperation(cx, obj, id, value, *REGS.pc == JSOP_STRICTSETELEM))
         goto error;
     REGS.sp[-3] = value;
@@ -2580,7 +2580,7 @@ CASE(JSOP_FUNCALL)
 
     bool construct = (*REGS.pc == JSOP_NEW);
 
-    RootedFunction &fun = rootFunction0;
+    RootedFunction& fun = rootFunction0;
     bool isFunction = IsFunctionObject(args.calleev(), fun.address());
 
     /* Don't bother trying to fast-path calls to scripted non-constructors. */
@@ -2592,13 +2592,13 @@ CASE(JSOP_FUNCALL)
             if (!Invoke(cx, args))
                 goto error;
         }
-        Value *newsp = args.spAfterCall();
+        Value* newsp = args.spAfterCall();
         TypeScript::Monitor(cx, script, REGS.pc, newsp[-1]);
         REGS.sp = newsp;
         ADVANCE_AND_DISPATCH(JSOP_CALL_LENGTH);
     }
 
-    RootedScript &funScript = rootScript0;
+    RootedScript& funScript = rootScript0;
     funScript = fun->getOrCreateScript(cx);
     if (!funScript)
         goto error;
@@ -2687,17 +2687,17 @@ CASE(JSOP_GIMPLICITTHIS)
 {
     JSOp op = JSOp(*REGS.pc);
     if (op == JSOP_IMPLICITTHIS || script->hasPollutedGlobalScope()) {
-        RootedPropertyName &name = rootName0;
+        RootedPropertyName& name = rootName0;
         name = script->getName(REGS.pc);
 
-        RootedObject &scopeObj = rootObject0;
+        RootedObject& scopeObj = rootObject0;
         scopeObj = REGS.fp()->scopeChain();
 
-        RootedObject &scope = rootObject1;
+        RootedObject& scope = rootObject1;
         if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &scope))
             goto error;
 
-        RootedValue &v = rootValue0;
+        RootedValue& v = rootValue0;
         if (!ComputeImplicitThis(cx, scope, &v))
             goto error;
         PUSH_COPY(v);
@@ -2713,7 +2713,7 @@ END_CASE(JSOP_IMPLICITTHIS)
 CASE(JSOP_GETGNAME)
 CASE(JSOP_GETNAME)
 {
-    RootedValue &rval = rootValue0;
+    RootedValue& rval = rootValue0;
 
     if (!GetNameOperation(cx, REGS.fp(), REGS.pc, &rval))
         goto error;
@@ -2727,7 +2727,7 @@ END_CASE(JSOP_GETNAME)
 
 CASE(JSOP_GETINTRINSIC)
 {
-    RootedValue &rval = rootValue0;
+    RootedValue& rval = rootValue0;
 
     if (!GetIntrinsicOperation(cx, REGS.pc, &rval))
         goto error;
@@ -2770,7 +2770,7 @@ CASE(JSOP_TOSTRING)
     MutableHandleValue oper = REGS.stackHandleAt(-1);
 
     if (!oper.isString()) {
-        JSString *operString = ToString<CanGC>(cx, oper);
+        JSString* operString = ToString<CanGC>(cx, oper);
         if (!operString)
             goto error;
         oper.setString(operString);
@@ -2784,10 +2784,10 @@ END_CASE(JSOP_SYMBOL)
 
 CASE(JSOP_OBJECT)
 {
-    RootedObject &ref = rootObject0;
+    RootedObject& ref = rootObject0;
     ref = script->getObject(REGS.pc);
     if (JS::CompartmentOptionsRef(cx).cloneSingletons()) {
-        JSObject *obj = DeepCloneObjectLiteral(cx, ref, js::MaybeSingletonObject);
+        JSObject* obj = DeepCloneObjectLiteral(cx, ref, js::MaybeSingletonObject);
         if (!obj)
             goto error;
         PUSH_OBJECT(*obj);
@@ -2801,11 +2801,11 @@ END_CASE(JSOP_OBJECT)
 CASE(JSOP_CALLSITEOBJ)
 {
 
-    RootedObject &cso = rootObject0;
+    RootedObject& cso = rootObject0;
     cso = script->getObject(REGS.pc);
-    RootedObject &raw = rootObject1;
+    RootedObject& raw = rootObject1;
     raw = script->getObject(GET_UINT32_INDEX(REGS.pc) + 1);
-    RootedValue &rawValue = rootValue0;
+    RootedValue& rawValue = rootValue0;
     rawValue.setObject(*raw);
 
     if (!ProcessCallSiteObjOperation(cx, cso, raw, rawValue))
@@ -2821,7 +2821,7 @@ CASE(JSOP_REGEXP)
      * Push a regexp object cloned from the regexp literal object mapped by the
      * bytecode at pc.
      */
-    JSObject *obj = CloneRegExpObject(cx, script->getRegExp(REGS.pc));
+    JSObject* obj = CloneRegExpObject(cx, script->getRegExp(REGS.pc));
     if (!obj)
         goto error;
     PUSH_OBJECT(*obj);
@@ -2850,7 +2850,7 @@ END_CASE(JSOP_TRUE)
 
 CASE(JSOP_TABLESWITCH)
 {
-    jsbytecode *pc2 = REGS.pc;
+    jsbytecode* pc2 = REGS.pc;
     int32_t len = GET_JUMP_OFFSET(pc2);
 
     /*
@@ -2858,7 +2858,7 @@ CASE(JSOP_TABLESWITCH)
      * default case if the discriminant isn't already an int jsval.  (This
      * opcode is emitted only for dense int-domain switches.)
      */
-    const Value &rref = *--REGS.sp;
+    const Value& rref = *--REGS.sp;
     int32_t i;
     if (rref.isInt32()) {
         i = rref.toInt32();
@@ -2888,7 +2888,7 @@ CASE(JSOP_ARGUMENTS)
     if (!script->ensureHasAnalyzedArgsUsage(cx))
         goto error;
     if (script->needsArgsObj()) {
-        ArgumentsObject *obj = ArgumentsObject::createExpected(cx, REGS.fp());
+        ArgumentsObject* obj = ArgumentsObject::createExpected(cx, REGS.fp());
         if (!obj)
             goto error;
         PUSH_COPY(ObjectValue(*obj));
@@ -2906,7 +2906,7 @@ END_CASE(JSOP_RUNONCE)
 
 CASE(JSOP_REST)
 {
-    RootedObject &rest = rootObject0;
+    RootedObject& rest = rootObject0;
     rest = REGS.fp()->createRestParameter(cx);
     if (!rest)
         goto error;
@@ -2917,7 +2917,7 @@ END_CASE(JSOP_REST)
 CASE(JSOP_GETALIASEDVAR)
 {
     ScopeCoordinate sc = ScopeCoordinate(REGS.pc);
-    RootedValue &val = rootValue0;
+    RootedValue& val = rootValue0;
     val = REGS.fp()->aliasedVarScope(sc).aliasedVar(sc);
     MOZ_ASSERT(!IsUninitializedLexical(val));
     PUSH_COPY(val);
@@ -2928,7 +2928,7 @@ END_CASE(JSOP_GETALIASEDVAR)
 CASE(JSOP_SETALIASEDVAR)
 {
     ScopeCoordinate sc = ScopeCoordinate(REGS.pc);
-    ScopeObject &obj = REGS.fp()->aliasedVarScope(sc);
+    ScopeObject& obj = REGS.fp()->aliasedVarScope(sc);
     SetAliasedVarOperation(cx, script, REGS.pc, obj, sc, REGS.sp[-1], CheckLexical);
 }
 END_CASE(JSOP_SETALIASEDVAR)
@@ -2936,7 +2936,7 @@ END_CASE(JSOP_SETALIASEDVAR)
 CASE(JSOP_CHECKLEXICAL)
 {
     uint32_t i = GET_LOCALNO(REGS.pc);
-    RootedValue &val = rootValue0;
+    RootedValue& val = rootValue0;
     val = REGS.fp()->unaliasedLocal(i);
     if (!CheckUninitializedLexical(cx, script, REGS.pc, val))
         goto error;
@@ -2953,7 +2953,7 @@ END_CASE(JSOP_INITLEXICAL)
 CASE(JSOP_CHECKALIASEDLEXICAL)
 {
     ScopeCoordinate sc = ScopeCoordinate(REGS.pc);
-    RootedValue &val = rootValue0;
+    RootedValue& val = rootValue0;
     val = REGS.fp()->aliasedVarScope(sc).aliasedVar(sc);
     if (!CheckUninitializedLexical(cx, script, REGS.pc, val))
         goto error;
@@ -2963,7 +2963,7 @@ END_CASE(JSOP_CHECKALIASEDLEXICAL)
 CASE(JSOP_INITALIASEDLEXICAL)
 {
     ScopeCoordinate sc = ScopeCoordinate(REGS.pc);
-    ScopeObject &obj = REGS.fp()->aliasedVarScope(sc);
+    ScopeObject& obj = REGS.fp()->aliasedVarScope(sc);
     SetAliasedVarOperation(cx, script, REGS.pc, obj, sc, REGS.sp[-1], DontCheckLexical);
 }
 END_CASE(JSOP_INITALIASEDLEXICAL)
@@ -3028,10 +3028,10 @@ CASE(JSOP_DEFVAR)
         attrs |= JSPROP_PERMANENT;
 
     /* Step 8b. */
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     obj = &REGS.fp()->varObj();
 
-    RootedPropertyName &name = rootName0;
+    RootedPropertyName& name = rootName0;
     name = script->getName(REGS.pc);
 
     if (!DefVarOrConstOperation(cx, obj, name, attrs))
@@ -3047,7 +3047,7 @@ CASE(JSOP_DEFFUN)
      * a compound statement (not at the top statement level of global code, or
      * at the top level of a function body).
      */
-    RootedFunction &fun = rootFunction0;
+    RootedFunction& fun = rootFunction0;
     fun = script->getFunction(GET_UINT32_INDEX(REGS.pc));
 
     if (!DefFunOperation(cx, script, REGS.fp()->scopeChain(), fun))
@@ -3058,10 +3058,10 @@ END_CASE(JSOP_DEFFUN)
 CASE(JSOP_LAMBDA)
 {
     /* Load the specified function object literal. */
-    RootedFunction &fun = rootFunction0;
+    RootedFunction& fun = rootFunction0;
     fun = script->getFunction(GET_UINT32_INDEX(REGS.pc));
 
-    JSObject *obj = Lambda(cx, fun, REGS.fp()->scopeChain());
+    JSObject* obj = Lambda(cx, fun, REGS.fp()->scopeChain());
     if (!obj)
         goto error;
     MOZ_ASSERT(obj->getProto());
@@ -3072,11 +3072,11 @@ END_CASE(JSOP_LAMBDA)
 CASE(JSOP_LAMBDA_ARROW)
 {
     /* Load the specified function object literal. */
-    RootedFunction &fun = rootFunction0;
+    RootedFunction& fun = rootFunction0;
     fun = script->getFunction(GET_UINT32_INDEX(REGS.pc));
-    RootedValue &thisv = rootValue0;
+    RootedValue& thisv = rootValue0;
     thisv = REGS.sp[-1];
-    JSObject *obj = LambdaArrow(cx, fun, REGS.fp()->scopeChain(), thisv);
+    JSObject* obj = LambdaArrow(cx, fun, REGS.fp()->scopeChain(), thisv);
     if (!obj)
         goto error;
     MOZ_ASSERT(obj->getProto());
@@ -3092,9 +3092,9 @@ END_CASE(JSOP_CALLEE)
 CASE(JSOP_INITPROP_GETTER)
 CASE(JSOP_INITPROP_SETTER)
 {
-    RootedObject &obj = rootObject0;
-    RootedPropertyName &name = rootName0;
-    RootedObject &val = rootObject1;
+    RootedObject& obj = rootObject0;
+    RootedPropertyName& name = rootName0;
+    RootedObject& val = rootObject1;
 
     MOZ_ASSERT(REGS.stackDepth() >= 2);
     obj = &REGS.sp[-2].toObject();
@@ -3111,9 +3111,9 @@ END_CASE(JSOP_INITPROP_GETTER)
 CASE(JSOP_INITELEM_GETTER)
 CASE(JSOP_INITELEM_SETTER)
 {
-    RootedObject &obj = rootObject0;
-    RootedValue &idval = rootValue0;
-    RootedObject &val = rootObject1;
+    RootedObject& obj = rootObject0;
+    RootedValue& idval = rootValue0;
+    RootedObject& val = rootObject1;
 
     MOZ_ASSERT(REGS.stackDepth() >= 3);
     obj = &REGS.sp[-3].toObject();
@@ -3135,7 +3135,7 @@ CASE(JSOP_NEWINIT)
 {
     uint8_t i = GET_UINT8(REGS.pc);
     MOZ_ASSERT(i == JSProto_Array || i == JSProto_Object);
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
 
     if (i == JSProto_Array) {
         NewObjectKind newKind = GenericObject;
@@ -3159,7 +3159,7 @@ END_CASE(JSOP_NEWINIT)
 CASE(JSOP_NEWARRAY)
 {
     unsigned count = GET_UINT24(REGS.pc);
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     NewObjectKind newKind = GenericObject;
     if (ObjectGroup::useSingletonForAllocationSite(script, REGS.pc, &ArrayObject::class_))
         newKind = SingletonObject;
@@ -3176,12 +3176,12 @@ END_CASE(JSOP_NEWARRAY)
 
 CASE(JSOP_NEWARRAY_COPYONWRITE)
 {
-    RootedObject &baseobj = rootObject0;
+    RootedObject& baseobj = rootObject0;
     baseobj = ObjectGroup::getOrFixupCopyOnWriteObject(cx, script, REGS.pc);
     if (!baseobj)
         goto error;
 
-    RootedObject &obj = rootObject1;
+    RootedObject& obj = rootObject1;
     obj = NewDenseCopyOnWriteArray(cx, baseobj.as<ArrayObject>(), gc::DefaultHeap);
     if (!obj)
         goto error;
@@ -3192,7 +3192,7 @@ END_CASE(JSOP_NEWARRAY_COPYONWRITE)
 
 CASE(JSOP_NEWOBJECT)
 {
-    JSObject *obj = NewObjectOperation(cx, script, REGS.pc);
+    JSObject* obj = NewObjectOperation(cx, script, REGS.pc);
     if (!obj)
         goto error;
     PUSH_OBJECT(*obj);
@@ -3204,10 +3204,10 @@ CASE(JSOP_MUTATEPROTO)
     MOZ_ASSERT(REGS.stackDepth() >= 2);
 
     if (REGS.sp[-1].isObjectOrNull()) {
-        RootedObject &newProto = rootObject1;
+        RootedObject& newProto = rootObject1;
         rootObject1 = REGS.sp[-1].toObjectOrNull();
 
-        RootedObject &obj = rootObject0;
+        RootedObject& obj = rootObject0;
         obj = &REGS.sp[-2].toObject();
         MOZ_ASSERT(obj->is<PlainObject>());
 
@@ -3229,16 +3229,16 @@ CASE(JSOP_INITHIDDENPROP)
                   "initprop and inithiddenprop must be the same size");
     /* Load the property's initial value into rval. */
     MOZ_ASSERT(REGS.stackDepth() >= 2);
-    RootedValue &rval = rootValue0;
+    RootedValue& rval = rootValue0;
     rval = REGS.sp[-1];
 
     /* Load the object being initialized into lval/obj. */
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     obj = &REGS.sp[-2].toObject();
 
-    PropertyName *name = script->getName(REGS.pc);
+    PropertyName* name = script->getName(REGS.pc);
 
-    RootedId &id = rootId0;
+    RootedId& id = rootId0;
     id = NameToId(name);
 
     if (!InitPropertyOperation(cx, JSOp(*REGS.pc), obj, id, rval))
@@ -3254,7 +3254,7 @@ CASE(JSOP_INITELEM)
     HandleValue val = REGS.stackHandleAt(-1);
     HandleValue id = REGS.stackHandleAt(-2);
 
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     obj = &REGS.sp[-3].toObject();
 
     if (!InitElemOperation(cx, obj, id, val))
@@ -3269,7 +3269,7 @@ CASE(JSOP_INITELEM_ARRAY)
     MOZ_ASSERT(REGS.stackDepth() >= 2);
     HandleValue val = REGS.stackHandleAt(-1);
 
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     obj = &REGS.sp[-2].toObject();
 
     MOZ_ASSERT(obj->is<ArrayObject>());
@@ -3287,7 +3287,7 @@ CASE(JSOP_INITELEM_INC)
     MOZ_ASSERT(REGS.stackDepth() >= 3);
     HandleValue val = REGS.stackHandleAt(-1);
 
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     obj = &REGS.sp[-3].toObject();
 
     uint32_t index = REGS.sp[-2].toInt32();
@@ -3347,7 +3347,7 @@ END_CASE(JSOP_FINALLY)
 
 CASE(JSOP_THROWING)
 {
-    RootedValue &v = rootValue0;
+    RootedValue& v = rootValue0;
     POP_COPY_TO(v);
     MOZ_ALWAYS_TRUE(ThrowingOperation(cx, v));
 }
@@ -3356,7 +3356,7 @@ END_CASE(JSOP_THROWING)
 CASE(JSOP_THROW)
 {
     CHECK_BRANCH();
-    RootedValue &v = rootValue0;
+    RootedValue& v = rootValue0;
     POP_COPY_TO(v);
     JS_ALWAYS_FALSE(Throw(cx, v));
     /* let the code at error try to catch the exception. */
@@ -3365,13 +3365,13 @@ CASE(JSOP_THROW)
 
 CASE(JSOP_INSTANCEOF)
 {
-    RootedValue &rref = rootValue0;
+    RootedValue& rref = rootValue0;
     rref = REGS.sp[-1];
     if (rref.isPrimitive()) {
         ReportValueError(cx, JSMSG_BAD_INSTANCEOF_RHS, -1, rref, js::NullPtr());
         goto error;
     }
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     obj = &rref.toObject();
     bool cond = false;
     if (!HasInstance(cx, obj, REGS.stackHandleAt(-2), &cond))
@@ -3401,7 +3401,7 @@ END_CASE(JSOP_DEBUGGER)
 
 CASE(JSOP_PUSHBLOCKSCOPE)
 {
-    StaticBlockObject &blockObj = script->getObject(REGS.pc)->as<StaticBlockObject>();
+    StaticBlockObject& blockObj = script->getObject(REGS.pc)->as<StaticBlockObject>();
 
     MOZ_ASSERT(blockObj.needsClone());
     // Clone block and push on scope chain.
@@ -3415,9 +3415,9 @@ CASE(JSOP_POPBLOCKSCOPE)
 #ifdef DEBUG
     // Pop block from scope chain.
     MOZ_ASSERT(*(REGS.pc - JSOP_DEBUGLEAVEBLOCK_LENGTH) == JSOP_DEBUGLEAVEBLOCK);
-    NestedScopeObject *scope = script->getStaticBlockScope(REGS.pc - JSOP_DEBUGLEAVEBLOCK_LENGTH);
+    NestedScopeObject* scope = script->getStaticBlockScope(REGS.pc - JSOP_DEBUGLEAVEBLOCK_LENGTH);
     MOZ_ASSERT(scope && scope->is<StaticBlockObject>());
-    StaticBlockObject &blockObj = scope->as<StaticBlockObject>();
+    StaticBlockObject& blockObj = scope->as<StaticBlockObject>();
     MOZ_ASSERT(blockObj.needsClone());
 #endif
 
@@ -3450,7 +3450,7 @@ CASE(JSOP_GENERATOR)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
     MOZ_ASSERT(REGS.stackDepth() == 0);
-    JSObject *obj = GeneratorObject::create(cx, REGS.fp());
+    JSObject* obj = GeneratorObject::create(cx, REGS.fp());
     if (!obj)
         goto error;
     PUSH_OBJECT(*obj);
@@ -3461,7 +3461,7 @@ CASE(JSOP_INITIALYIELD)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
     MOZ_ASSERT(REGS.fp()->isNonEvalFunctionFrame());
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     obj = &REGS.sp[-1].toObject();
     POP_RETURN_VALUE();
     MOZ_ASSERT(REGS.stackDepth() == 0);
@@ -3474,7 +3474,7 @@ CASE(JSOP_YIELD)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
     MOZ_ASSERT(REGS.fp()->isNonEvalFunctionFrame());
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     obj = &REGS.sp[-1].toObject();
     if (!GeneratorObject::normalSuspend(cx, obj, REGS.fp(), REGS.pc,
                                         REGS.spForStackDepth(0), REGS.stackDepth() - 2))
@@ -3490,8 +3490,8 @@ CASE(JSOP_YIELD)
 
 CASE(JSOP_RESUME)
 {
-    RootedObject &gen = rootObject0;
-    RootedValue &val = rootValue0;
+    RootedObject& gen = rootObject0;
+    RootedValue& val = rootValue0;
     val = REGS.sp[-1];
     gen = &REGS.sp[-2].toObject();
     // popInlineFrame expects there to be an additional value on the stack to
@@ -3516,7 +3516,7 @@ END_CASE(JSOP_DEBUGAFTERYIELD)
 
 CASE(JSOP_FINALYIELDRVAL)
 {
-    RootedObject &gen = rootObject0;
+    RootedObject& gen = rootObject0;
     gen = &REGS.sp[-1].toObject();
     REGS.sp--;
 
@@ -3530,7 +3530,7 @@ CASE(JSOP_FINALYIELDRVAL)
 
 CASE(JSOP_ARRAYPUSH)
 {
-    RootedObject &obj = rootObject0;
+    RootedObject& obj = rootObject0;
     obj = &REGS.sp[-1].toObject();
     if (!NewbornArrayPush(cx, obj, REGS.sp[-2]))
         goto error;
@@ -3540,11 +3540,11 @@ END_CASE(JSOP_ARRAYPUSH)
 
 CASE(JSOP_CLASSHERITAGE)
 {
-    RootedValue &val = rootValue0;
+    RootedValue& val = rootValue0;
     val = REGS.sp[-1];
 
-    RootedValue &objProto = rootValue1;
-    RootedObject &funcProto = rootObject0;
+    RootedValue& objProto = rootValue1;
+    RootedObject& funcProto = rootObject0;
     if (val.isNull()) {
         objProto.setNull();
         if (!GetBuiltinPrototype(cx, JSProto_Function, &funcProto))
@@ -3573,14 +3573,14 @@ END_CASE(JSOP_CLASSHERITAGE)
 
 CASE(JSOP_FUNWITHPROTO)
 {
-    RootedObject &proto = rootObject1;
+    RootedObject& proto = rootObject1;
     proto = &REGS.sp[-1].toObject();
 
     /* Load the specified function object literal. */
-    RootedFunction &fun = rootFunction0;
+    RootedFunction& fun = rootFunction0;
     fun = script->getFunction(GET_UINT32_INDEX(REGS.pc));
 
-    JSObject *obj = CloneFunctionObjectIfNotSingleton(cx, fun, REGS.fp()->scopeChain(),
+    JSObject* obj = CloneFunctionObjectIfNotSingleton(cx, fun, REGS.fp()->scopeChain(),
                                                       proto, GenericObject);
     if (!obj)
         goto error;
@@ -3591,10 +3591,10 @@ END_CASE(JSOP_FUNWITHPROTO)
 
 CASE(JSOP_OBJWITHPROTO)
 {
-    RootedObject &proto = rootObject0;
+    RootedObject& proto = rootObject0;
     proto = REGS.sp[-1].toObjectOrNull();
 
-    JSObject *obj = NewObjectWithGivenProto<PlainObject>(cx, proto);
+    JSObject* obj = NewObjectWithGivenProto<PlainObject>(cx, proto);
     if (!obj)
         goto error;
 
@@ -3632,7 +3632,7 @@ DEFAULT()
          * Push (true, exception) pair for finally to indicate that [retsub]
          * should rethrow the exception.
          */
-        RootedValue &exception = rootValue0;
+        RootedValue& exception = rootValue0;
         if (!cx->getPendingException(&exception)) {
             interpReturnOK = false;
             goto return_continuation;
@@ -3668,7 +3668,7 @@ DEFAULT()
 }
 
 bool
-js::Throw(JSContext *cx, HandleValue v)
+js::Throw(JSContext* cx, HandleValue v)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
     cx->setPendingException(v);
@@ -3676,7 +3676,7 @@ js::Throw(JSContext *cx, HandleValue v)
 }
 
 bool
-js::ThrowingOperation(JSContext *cx, HandleValue v)
+js::ThrowingOperation(JSContext* cx, HandleValue v)
 {
     // Like js::Throw, but returns |true| instead of |false| to continue
     // execution instead of calling the (JIT) exception handler.
@@ -3687,7 +3687,7 @@ js::ThrowingOperation(JSContext *cx, HandleValue v)
 }
 
 bool
-js::GetProperty(JSContext *cx, HandleValue v, HandlePropertyName name, MutableHandleValue vp)
+js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name, MutableHandleValue vp)
 {
     if (name == cx->names().length) {
         // Fast path for strings, arrays and arguments.
@@ -3702,7 +3702,7 @@ js::GetProperty(JSContext *cx, HandleValue v, HandlePropertyName name, MutableHa
 }
 
 bool
-js::CallProperty(JSContext *cx, HandleValue v, HandlePropertyName name, MutableHandleValue vp)
+js::CallProperty(JSContext* cx, HandleValue v, HandlePropertyName name, MutableHandleValue vp)
 {
     if (!GetProperty(cx, v, name, vp))
         return false;
@@ -3720,7 +3720,7 @@ js::CallProperty(JSContext *cx, HandleValue v, HandlePropertyName name, MutableH
 }
 
 bool
-js::GetScopeName(JSContext *cx, HandleObject scopeChain, HandlePropertyName name, MutableHandleValue vp)
+js::GetScopeName(JSContext* cx, HandleObject scopeChain, HandlePropertyName name, MutableHandleValue vp)
 {
     RootedShape shape(cx);
     RootedObject obj(cx), pobj(cx);
@@ -3742,7 +3742,7 @@ js::GetScopeName(JSContext *cx, HandleObject scopeChain, HandlePropertyName name
  * which do not report an exception on (typeof foo == "undefined") tests.
  */
 bool
-js::GetScopeNameForTypeOf(JSContext *cx, HandleObject scopeChain, HandlePropertyName name,
+js::GetScopeNameForTypeOf(JSContext* cx, HandleObject scopeChain, HandlePropertyName name,
                           MutableHandleValue vp)
 {
     RootedShape shape(cx);
@@ -3762,8 +3762,8 @@ js::GetScopeNameForTypeOf(JSContext *cx, HandleObject scopeChain, HandleProperty
     return CheckUninitializedLexical(cx, name, vp);
 }
 
-JSObject *
-js::Lambda(JSContext *cx, HandleFunction fun, HandleObject parent)
+JSObject*
+js::Lambda(JSContext* cx, HandleFunction fun, HandleObject parent)
 {
     MOZ_ASSERT(!fun->isArrow());
 
@@ -3775,8 +3775,8 @@ js::Lambda(JSContext *cx, HandleFunction fun, HandleObject parent)
     return clone;
 }
 
-JSObject *
-js::LambdaArrow(JSContext *cx, HandleFunction fun, HandleObject parent, HandleValue thisv)
+JSObject*
+js::LambdaArrow(JSContext* cx, HandleFunction fun, HandleObject parent, HandleValue thisv)
 {
     MOZ_ASSERT(fun->isArrow());
 
@@ -3793,7 +3793,7 @@ js::LambdaArrow(JSContext *cx, HandleFunction fun, HandleObject parent, HandleVa
 }
 
 bool
-js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
+js::DefFunOperation(JSContext* cx, HandleScript script, HandleObject scopeChain,
                     HandleFunction funArg)
 {
     /*
@@ -3884,14 +3884,14 @@ js::DefFunOperation(JSContext *cx, HandleScript script, HandleObject scopeChain,
 }
 
 bool
-js::SetCallOperation(JSContext *cx)
+js::SetCallOperation(JSContext* cx)
 {
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_LEFTSIDE_OF_ASS);
     return false;
 }
 
 bool
-js::GetAndClearException(JSContext *cx, MutableHandleValue res)
+js::GetAndClearException(JSContext* cx, MutableHandleValue res)
 {
     bool status = cx->getPendingException(res);
     cx->clearPendingException();
@@ -3904,7 +3904,7 @@ js::GetAndClearException(JSContext *cx, MutableHandleValue res)
 
 template <bool strict>
 bool
-js::DeletePropertyJit(JSContext *cx, HandleValue v, HandlePropertyName name, bool *bp)
+js::DeletePropertyJit(JSContext* cx, HandleValue v, HandlePropertyName name, bool* bp)
 {
     RootedObject obj(cx, ToObjectFromStack(cx, v));
     if (!obj)
@@ -3925,14 +3925,14 @@ js::DeletePropertyJit(JSContext *cx, HandleValue v, HandlePropertyName name, boo
     return true;
 }
 
-template bool js::DeletePropertyJit<true> (JSContext *cx, HandleValue val, HandlePropertyName name,
-                                           bool *bp);
-template bool js::DeletePropertyJit<false>(JSContext *cx, HandleValue val, HandlePropertyName name,
-                                           bool *bp);
+template bool js::DeletePropertyJit<true> (JSContext* cx, HandleValue val, HandlePropertyName name,
+                                           bool* bp);
+template bool js::DeletePropertyJit<false>(JSContext* cx, HandleValue val, HandlePropertyName name,
+                                           bool* bp);
 
 template <bool strict>
 bool
-js::DeleteElementJit(JSContext *cx, HandleValue val, HandleValue index, bool *bp)
+js::DeleteElementJit(JSContext* cx, HandleValue val, HandleValue index, bool* bp)
 {
     RootedObject obj(cx, ToObjectFromStack(cx, val));
     if (!obj)
@@ -3955,23 +3955,23 @@ js::DeleteElementJit(JSContext *cx, HandleValue val, HandleValue index, bool *bp
     return true;
 }
 
-template bool js::DeleteElementJit<true> (JSContext *, HandleValue, HandleValue, bool *succeeded);
-template bool js::DeleteElementJit<false>(JSContext *, HandleValue, HandleValue, bool *succeeded);
+template bool js::DeleteElementJit<true> (JSContext*, HandleValue, HandleValue, bool* succeeded);
+template bool js::DeleteElementJit<false>(JSContext*, HandleValue, HandleValue, bool* succeeded);
 
 bool
-js::GetElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue vp)
+js::GetElement(JSContext* cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue vp)
 {
     return GetElementOperation(cx, JSOP_GETELEM, lref, rref, vp);
 }
 
 bool
-js::CallElement(JSContext *cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue res)
+js::CallElement(JSContext* cx, MutableHandleValue lref, HandleValue rref, MutableHandleValue res)
 {
     return GetElementOperation(cx, JSOP_CALLELEM, lref, rref, res);
 }
 
 bool
-js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,
+js::SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index, HandleValue value,
                      bool strict)
 {
     RootedId id(cx);
@@ -3981,8 +3981,8 @@ js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleV
 }
 
 bool
-js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleValue value,
-                     bool strict, HandleScript script, jsbytecode *pc)
+js::SetObjectElement(JSContext* cx, HandleObject obj, HandleValue index, HandleValue value,
+                     bool strict, HandleScript script, jsbytecode* pc)
 {
     MOZ_ASSERT(pc);
     RootedId id(cx);
@@ -3992,49 +3992,49 @@ js::SetObjectElement(JSContext *cx, HandleObject obj, HandleValue index, HandleV
 }
 
 bool
-js::InitElementArray(JSContext *cx, jsbytecode *pc, HandleObject obj, uint32_t index, HandleValue value)
+js::InitElementArray(JSContext* cx, jsbytecode* pc, HandleObject obj, uint32_t index, HandleValue value)
 {
     return InitArrayElemOperation(cx, pc, obj, index, value);
 }
 
 bool
-js::AddValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
+js::AddValues(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
     return AddOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::SubValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
+js::SubValues(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
     return SubOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::MulValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
+js::MulValues(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
     return MulOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::DivValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
+js::DivValues(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
     return DivOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::ModValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
+js::ModValues(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
     return ModOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::UrshValues(JSContext *cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
+js::UrshValues(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, MutableHandleValue res)
 {
     return UrshOperation(cx, lhs, rhs, res);
 }
 
 bool
-js::DeleteNameOperation(JSContext *cx, HandlePropertyName name, HandleObject scopeObj,
+js::DeleteNameOperation(JSContext* cx, HandlePropertyName name, HandleObject scopeObj,
                         MutableHandleValue res)
 {
     RootedObject scope(cx), pobj(cx);
@@ -4064,7 +4064,7 @@ js::DeleteNameOperation(JSContext *cx, HandlePropertyName name, HandleObject sco
 }
 
 bool
-js::ImplicitThisOperation(JSContext *cx, HandleObject scopeObj, HandlePropertyName name,
+js::ImplicitThisOperation(JSContext* cx, HandleObject scopeObj, HandlePropertyName name,
                           MutableHandleValue res)
 {
     RootedObject obj(cx);
@@ -4075,7 +4075,7 @@ js::ImplicitThisOperation(JSContext *cx, HandleObject scopeObj, HandlePropertyNa
 }
 
 bool
-js::RunOnceScriptPrologue(JSContext *cx, HandleScript script)
+js::RunOnceScriptPrologue(JSContext* cx, HandleScript script)
 {
     MOZ_ASSERT(script->treatAsRunOnce());
 
@@ -4110,7 +4110,7 @@ js::GetInitDataPropAttrs(JSOp op)
 }
 
 bool
-js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandleId id,
+js::InitGetterSetterOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, HandleId id,
                               HandleObject val)
 {
     MOZ_ASSERT(val->isCallable());
@@ -4136,7 +4136,7 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
 }
 
 bool
-js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj,
+js::InitGetterSetterOperation(JSContext* cx, jsbytecode* pc, HandleObject obj,
                               HandlePropertyName name, HandleObject val)
 {
     RootedId id(cx, NameToId(name));
@@ -4144,7 +4144,7 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj,
 }
 
 bool
-js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, HandleValue idval,
+js::InitGetterSetterOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, HandleValue idval,
                               HandleObject val)
 {
     RootedId id(cx);
@@ -4155,7 +4155,7 @@ js::InitGetterSetterOperation(JSContext *cx, jsbytecode *pc, HandleObject obj, H
 }
 
 bool
-js::SpreadCallOperation(JSContext *cx, HandleScript script, jsbytecode *pc, HandleValue thisv,
+js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, HandleValue thisv,
                         HandleValue callee, HandleValue arr, MutableHandleValue res)
 {
     RootedArrayObject aobj(cx, &arr.toObject().as<ArrayObject>());
@@ -4217,8 +4217,8 @@ js::SpreadCallOperation(JSContext *cx, HandleScript script, jsbytecode *pc, Hand
     return true;
 }
 
-JSObject *
-js::NewObjectOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
+JSObject*
+js::NewObjectOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
                        NewObjectKind newKind /* = GenericObject */)
 {
     MOZ_ASSERT(newKind != SingletonObject);
@@ -4260,7 +4260,7 @@ js::NewObjectOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
     } else {
         obj->setGroup(group);
 
-        if (PreliminaryObjectArray *preliminaryObjects = group->maybePreliminaryObjects())
+        if (PreliminaryObjectArray* preliminaryObjects = group->maybePreliminaryObjects())
             preliminaryObjects->registerNewObject(obj);
     }
 
@@ -4268,7 +4268,7 @@ js::NewObjectOperation(JSContext *cx, HandleScript script, jsbytecode *pc,
 }
 
 JSObject*
-js::NewObjectOperationWithTemplate(JSContext *cx, HandleObject templateObject)
+js::NewObjectOperationWithTemplate(JSContext* cx, HandleObject templateObject)
 {
     // This is an optimized version of NewObjectOperation for use when the
     // object is not a singleton and has had its preliminary objects analyzed,
@@ -4279,13 +4279,13 @@ js::NewObjectOperationWithTemplate(JSContext *cx, HandleObject templateObject)
 
     if (templateObject->group()->maybeUnboxedLayout()) {
         RootedObjectGroup group(cx, templateObject->group());
-        JSObject *obj = UnboxedPlainObject::create(cx, group, newKind);
+        JSObject* obj = UnboxedPlainObject::create(cx, group, newKind);
         if (!obj)
             return nullptr;
         return obj;
     }
 
-    JSObject *obj = CopyInitializerObject(cx, templateObject.as<PlainObject>(), newKind);
+    JSObject* obj = CopyInitializerObject(cx, templateObject.as<PlainObject>(), newKind);
     if (!obj)
         return nullptr;
 
@@ -4294,7 +4294,7 @@ js::NewObjectOperationWithTemplate(JSContext *cx, HandleObject templateObject)
 }
 
 void
-js::ReportUninitializedLexical(JSContext *cx, HandlePropertyName name)
+js::ReportUninitializedLexical(JSContext* cx, HandlePropertyName name)
 {
     JSAutoByteString printable;
     if (AtomToPrintableString(cx, name, &printable)) {
@@ -4304,7 +4304,7 @@ js::ReportUninitializedLexical(JSContext *cx, HandlePropertyName name)
 }
 
 void
-js::ReportUninitializedLexical(JSContext *cx, HandleScript script, jsbytecode *pc)
+js::ReportUninitializedLexical(JSContext* cx, HandleScript script, jsbytecode* pc)
 {
     RootedPropertyName name(cx);
 
@@ -4322,9 +4322,9 @@ js::ReportUninitializedLexical(JSContext *cx, HandleScript script, jsbytecode *p
         // Failing that, it must be a block-local let.
         if (!name) {
             // Skip to the right scope.
-            Rooted<NestedScopeObject *> scope(cx, script->getStaticBlockScope(pc));
+            Rooted<NestedScopeObject*> scope(cx, script->getStaticBlockScope(pc));
             MOZ_ASSERT(scope && scope->is<StaticBlockObject>());
-            Rooted<StaticBlockObject *> block(cx, &scope->as<StaticBlockObject>());
+            Rooted<StaticBlockObject*> block(cx, &scope->as<StaticBlockObject>());
             while (slot < block->localOffset())
                 block = &block->enclosingNestedScope()->as<StaticBlockObject>();
 
@@ -4348,7 +4348,7 @@ js::ReportUninitializedLexical(JSContext *cx, HandleScript script, jsbytecode *p
 }
 
 void
-js::ReportUninitializedLexical(JSContext *cx, HandleScript script, jsbytecode *pc, ScopeCoordinate sc)
+js::ReportUninitializedLexical(JSContext* cx, HandleScript script, jsbytecode* pc, ScopeCoordinate sc)
 {
     RootedPropertyName name(cx, ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache,
                                                     script, pc));

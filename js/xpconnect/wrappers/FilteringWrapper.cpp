@@ -18,7 +18,7 @@ namespace xpc {
 
 template <typename Policy>
 static bool
-Filter(JSContext *cx, HandleObject wrapper, AutoIdVector &props)
+Filter(JSContext* cx, HandleObject wrapper, AutoIdVector& props)
 {
     size_t w = 0;
     RootedId id(cx);
@@ -35,7 +35,7 @@ Filter(JSContext *cx, HandleObject wrapper, AutoIdVector &props)
 
 template <typename Policy>
 static bool
-FilterPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc)
+FilterPropertyDescriptor(JSContext* cx, HandleObject wrapper, HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc)
 {
     MOZ_ASSERT(!JS_IsExceptionPending(cx));
     bool getAllowed = Policy::check(cx, wrapper, id, Wrapper::GET);
@@ -66,7 +66,7 @@ FilterPropertyDescriptor(JSContext *cx, HandleObject wrapper, HandleId id, JS::M
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, HandleObject wrapper,
+FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext* cx, HandleObject wrapper,
                                                       HandleId id,
                                                       JS::MutableHandle<JSPropertyDescriptor> desc) const
 {
@@ -79,7 +79,7 @@ FilteringWrapper<Base, Policy>::getPropertyDescriptor(JSContext *cx, HandleObjec
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper,
+FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext* cx, HandleObject wrapper,
                                                          HandleId id,
                                                          JS::MutableHandle<JSPropertyDescriptor> desc) const
 {
@@ -92,8 +92,8 @@ FilteringWrapper<Base, Policy>::getOwnPropertyDescriptor(JSContext *cx, HandleOb
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::ownPropertyKeys(JSContext *cx, HandleObject wrapper,
-                                                AutoIdVector &props) const
+FilteringWrapper<Base, Policy>::ownPropertyKeys(JSContext* cx, HandleObject wrapper,
+                                                AutoIdVector& props) const
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
     return Base::ownPropertyKeys(cx, wrapper, props) &&
@@ -102,9 +102,9 @@ FilteringWrapper<Base, Policy>::ownPropertyKeys(JSContext *cx, HandleObject wrap
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::getOwnEnumerablePropertyKeys(JSContext *cx,
+FilteringWrapper<Base, Policy>::getOwnEnumerablePropertyKeys(JSContext* cx,
                                                              HandleObject wrapper,
-                                                             AutoIdVector &props) const
+                                                             AutoIdVector& props) const
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
     return Base::getOwnEnumerablePropertyKeys(cx, wrapper, props) &&
@@ -113,7 +113,7 @@ FilteringWrapper<Base, Policy>::getOwnEnumerablePropertyKeys(JSContext *cx,
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::enumerate(JSContext *cx, HandleObject wrapper,
+FilteringWrapper<Base, Policy>::enumerate(JSContext* cx, HandleObject wrapper,
                                           MutableHandleObject objp) const
 {
     assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
@@ -126,8 +126,8 @@ FilteringWrapper<Base, Policy>::enumerate(JSContext *cx, HandleObject wrapper,
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::call(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                                    const JS::CallArgs &args) const
+FilteringWrapper<Base, Policy>::call(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                                    const JS::CallArgs& args) const
 {
     if (!Policy::checkCall(cx, wrapper, args))
         return false;
@@ -136,8 +136,8 @@ FilteringWrapper<Base, Policy>::call(JSContext *cx, JS::Handle<JSObject*> wrappe
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::construct(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                                          const JS::CallArgs &args) const
+FilteringWrapper<Base, Policy>::construct(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                                          const JS::CallArgs& args) const
 {
     if (!Policy::checkCall(cx, wrapper, args))
         return false;
@@ -146,7 +146,7 @@ FilteringWrapper<Base, Policy>::construct(JSContext *cx, JS::Handle<JSObject*> w
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::nativeCall(JSContext *cx, JS::IsAcceptableThis test,
+FilteringWrapper<Base, Policy>::nativeCall(JSContext* cx, JS::IsAcceptableThis test,
                                            JS::NativeImpl impl, JS::CallArgs args) const
 {
     if (Policy::allowNativeCall(cx, test, impl))
@@ -156,7 +156,7 @@ FilteringWrapper<Base, Policy>::nativeCall(JSContext *cx, JS::IsAcceptableThis t
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::defaultValue(JSContext *cx, HandleObject obj,
+FilteringWrapper<Base, Policy>::defaultValue(JSContext* cx, HandleObject obj,
                                              JSType hint, MutableHandleValue vp) const
 {
     return Base::defaultValue(cx, obj, hint, vp);
@@ -164,7 +164,7 @@ FilteringWrapper<Base, Policy>::defaultValue(JSContext *cx, HandleObject obj,
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::getPrototype(JSContext *cx, JS::HandleObject wrapper,
+FilteringWrapper<Base, Policy>::getPrototype(JSContext* cx, JS::HandleObject wrapper,
                                              JS::MutableHandleObject protop) const
 {
     // Filtering wrappers do not allow access to the prototype.
@@ -174,8 +174,8 @@ FilteringWrapper<Base, Policy>::getPrototype(JSContext *cx, JS::HandleObject wra
 
 template <typename Base, typename Policy>
 bool
-FilteringWrapper<Base, Policy>::enter(JSContext *cx, HandleObject wrapper,
-                                      HandleId id, Wrapper::Action act, bool *bp) const
+FilteringWrapper<Base, Policy>::enter(JSContext* cx, HandleObject wrapper,
+                                      HandleId id, Wrapper::Action act, bool* bp) const
 {
     if (!Policy::check(cx, wrapper, id, act)) {
         *bp = JS_IsExceptionPending(cx) ? false : Policy::deny(act, id);
@@ -190,7 +190,7 @@ CrossOriginXrayWrapper::CrossOriginXrayWrapper(unsigned flags) : SecurityXrayDOM
 }
 
 bool
-CrossOriginXrayWrapper::getPropertyDescriptor(JSContext *cx,
+CrossOriginXrayWrapper::getPropertyDescriptor(JSContext* cx,
                                               JS::Handle<JSObject*> wrapper,
                                               JS::Handle<jsid> id,
                                               JS::MutableHandle<JSPropertyDescriptor> desc) const
@@ -212,7 +212,7 @@ CrossOriginXrayWrapper::getPropertyDescriptor(JSContext *cx,
 }
 
 bool
-CrossOriginXrayWrapper::getOwnPropertyDescriptor(JSContext *cx,
+CrossOriginXrayWrapper::getOwnPropertyDescriptor(JSContext* cx,
                                                  JS::Handle<JSObject*> wrapper,
                                                  JS::Handle<jsid> id,
                                                  JS::MutableHandle<JSPropertyDescriptor> desc) const
@@ -222,8 +222,8 @@ CrossOriginXrayWrapper::getOwnPropertyDescriptor(JSContext *cx,
 }
 
 bool
-CrossOriginXrayWrapper::ownPropertyKeys(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                                        JS::AutoIdVector &props) const
+CrossOriginXrayWrapper::ownPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                                        JS::AutoIdVector& props) const
 {
     // All properties on cross-origin objects are supposed |own|, despite what
     // the underlying native object may report. Override the inherited trap to
@@ -232,18 +232,18 @@ CrossOriginXrayWrapper::ownPropertyKeys(JSContext *cx, JS::Handle<JSObject*> wra
 }
 
 bool
-CrossOriginXrayWrapper::defineProperty(JSContext *cx, JS::Handle<JSObject*> wrapper,
+CrossOriginXrayWrapper::defineProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                        JS::Handle<jsid> id,
                                        JS::Handle<JSPropertyDescriptor> desc,
-                                       JS::ObjectOpResult &result) const
+                                       JS::ObjectOpResult& result) const
 {
     JS_ReportError(cx, "Permission denied to define property on cross-origin object");
     return false;
 }
 
 bool
-CrossOriginXrayWrapper::delete_(JSContext *cx, JS::Handle<JSObject*> wrapper,
-                                JS::Handle<jsid> id, JS::ObjectOpResult &result) const
+CrossOriginXrayWrapper::delete_(JSContext* cx, JS::Handle<JSObject*> wrapper,
+                                JS::Handle<jsid> id, JS::ObjectOpResult& result) const
 {
     JS_ReportError(cx, "Permission denied to delete property on cross-origin object");
     return false;

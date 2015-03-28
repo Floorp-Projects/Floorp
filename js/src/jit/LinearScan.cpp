@@ -28,7 +28,7 @@ LinearScanAllocator::enqueueVirtualRegisterIntervals()
 
     // Start position is non-monotonically increasing by virtual register number.
     for (size_t i = 1; i < graph.numVirtualRegisters(); i++) {
-        LiveInterval *live = vregs[i].getInterval(0);
+        LiveInterval* live = vregs[i].getInterval(0);
         if (live->numRanges() > 0) {
             setIntervalRequirement(live);
 
@@ -91,8 +91,8 @@ LinearScanAllocator::allocateRegisters()
             return false;
 
         CodePosition position = current->start();
-        const Requirement *req = current->requirement();
-        const Requirement *hint = current->hint();
+        const Requirement* req = current->requirement();
+        const Requirement* hint = current->hint();
 
         JitSpew(JitSpew_RegAlloc, "Processing %d = [%u, %u] (pri=%d)",
                 current->hasVreg() ? current->vreg() : 0, current->start().bits(),
@@ -104,7 +104,7 @@ LinearScanAllocator::allocateRegisters()
             prevPosition = position;
 
             for (IntervalIterator i(active.begin()); i != active.end(); ) {
-                LiveInterval *it = *i++;
+                LiveInterval* it = *i++;
                 MOZ_ASSERT(it->numRanges() > 0);
 
                 if (it->end() <= position) {
@@ -118,7 +118,7 @@ LinearScanAllocator::allocateRegisters()
 
             // Shift inactive intervals to the active or handled sets as appropriate
             for (IntervalIterator i(inactive.begin()); i != inactive.end(); ) {
-                LiveInterval *it = *i++;
+                LiveInterval* it = *i++;
                 MOZ_ASSERT(it->numRanges() > 0);
 
                 if (it->end() <= position) {
@@ -220,26 +220,26 @@ LinearScanAllocator::resolveControlFlow()
         if (mir->shouldCancel("LSRA Resolve Control Flow (main loop)"))
             return false;
 
-        LBlock *successor = graph.getBlock(i);
-        MBasicBlock *mSuccessor = successor->mir();
+        LBlock* successor = graph.getBlock(i);
+        MBasicBlock* mSuccessor = successor->mir();
         if (mSuccessor->numPredecessors() < 1)
             continue;
 
         // Resolve phis to moves
         for (size_t j = 0; j < successor->numPhis(); j++) {
-            LPhi *phi = successor->getPhi(j);
+            LPhi* phi = successor->getPhi(j);
             MOZ_ASSERT(phi->numDefs() == 1);
-            LDefinition *def = phi->getDef(0);
-            LinearScanVirtualRegister *vreg = &vregs[def];
-            LiveInterval *to = vreg->intervalFor(entryOf(successor));
+            LDefinition* def = phi->getDef(0);
+            LinearScanVirtualRegister* vreg = &vregs[def];
+            LiveInterval* to = vreg->intervalFor(entryOf(successor));
             MOZ_ASSERT(to);
 
             for (size_t k = 0; k < mSuccessor->numPredecessors(); k++) {
-                LBlock *predecessor = mSuccessor->getPredecessor(k)->lir();
+                LBlock* predecessor = mSuccessor->getPredecessor(k)->lir();
                 MOZ_ASSERT(predecessor->mir()->numSuccessors() == 1);
 
-                LAllocation *input = phi->getOperand(k);
-                LiveInterval *from = vregs[input].intervalFor(exitOf(predecessor));
+                LAllocation* input = phi->getOperand(k);
+                LiveInterval* from = vregs[input].intervalFor(exitOf(predecessor));
                 MOZ_ASSERT(from);
 
                 if (!moveAtExit(predecessor, from, to, def->type()))
@@ -248,7 +248,7 @@ LinearScanAllocator::resolveControlFlow()
 
             if (vreg->mustSpillAtDefinition() && !to->isSpill()) {
                 // Make sure this phi is spilled at the loop header.
-                LMoveGroup *moves = successor->getEntryMoveGroup(alloc());
+                LMoveGroup* moves = successor->getEntryMoveGroup(alloc());
                 if (!moves->add(to->getAllocation(), vregs[to->vreg()].canonicalSpill(),
                                 def->type()))
                     return false;
@@ -256,16 +256,16 @@ LinearScanAllocator::resolveControlFlow()
         }
 
         // Resolve split intervals with moves
-        BitSet &live = liveIn[mSuccessor->id()];
+        BitSet& live = liveIn[mSuccessor->id()];
 
         for (BitSet::Iterator liveRegId(live); liveRegId; ++liveRegId) {
-            LinearScanVirtualRegister *vreg = &vregs[*liveRegId];
-            LiveInterval *to = vreg->intervalFor(entryOf(successor));
+            LinearScanVirtualRegister* vreg = &vregs[*liveRegId];
+            LiveInterval* to = vreg->intervalFor(entryOf(successor));
             MOZ_ASSERT(to);
 
             for (size_t j = 0; j < mSuccessor->numPredecessors(); j++) {
-                LBlock *predecessor = mSuccessor->getPredecessor(j)->lir();
-                LiveInterval *from = vregs[*liveRegId].intervalFor(exitOf(predecessor));
+                LBlock* predecessor = mSuccessor->getPredecessor(j)->lir();
+                LiveInterval* from = vregs[*liveRegId].intervalFor(exitOf(predecessor));
                 MOZ_ASSERT(from);
 
                 if (*from->getAllocation() == *to->getAllocation())
@@ -295,17 +295,17 @@ LinearScanAllocator::resolveControlFlow()
 }
 
 bool
-LinearScanAllocator::moveInputAlloc(LInstruction *ins, LAllocation *from, LAllocation *to,
+LinearScanAllocator::moveInputAlloc(LInstruction* ins, LAllocation* from, LAllocation* to,
                                     LDefinition::Type type)
 {
     if (*from == *to)
         return true;
-    LMoveGroup *moves = getInputMoveGroup(ins);
+    LMoveGroup* moves = getInputMoveGroup(ins);
     return moves->add(from, to, type);
 }
 
 static inline void
-SetOsiPointUses(LiveInterval *interval, CodePosition defEnd, const LAllocation &allocation)
+SetOsiPointUses(LiveInterval* interval, CodePosition defEnd, const LAllocation& allocation)
 {
     // Moves are inserted after OsiPoint instructions. This function sets
     // any OsiPoint uses of this interval to the allocation of the value
@@ -319,7 +319,7 @@ SetOsiPointUses(LiveInterval *interval, CodePosition defEnd, const LAllocation &
     {
         if (usePos->pos > defEnd)
             break;
-        *static_cast<LAllocation *>(usePos->use) = allocation;
+        *static_cast<LAllocation*>(usePos->use) = allocation;
     }
 }
 
@@ -333,12 +333,12 @@ LinearScanAllocator::reifyAllocations()
 {
     // Iterate over each interval, ensuring that definitions are visited before uses.
     for (size_t j = 1; j < graph.numVirtualRegisters(); j++) {
-        LinearScanVirtualRegister *reg = &vregs[j];
+        LinearScanVirtualRegister* reg = &vregs[j];
         if (mir->shouldCancel("LSRA Reification (main loop)"))
             return false;
 
     for (size_t k = 0; k < reg->numIntervals(); k++) {
-        LiveInterval *interval = reg->getInterval(k);
+        LiveInterval* interval = reg->getInterval(k);
         MOZ_ASSERT(reg == &vregs[interval->vreg()]);
         if (!interval->numRanges())
             continue;
@@ -346,22 +346,22 @@ LinearScanAllocator::reifyAllocations()
         UsePositionIterator usePos(interval->usesBegin());
         for (; usePos != interval->usesEnd(); usePos++) {
             if (usePos->use->isFixedRegister()) {
-                LiveInterval *to = fixedIntervals[GetFixedRegister(reg->def(), usePos->use).code()];
+                LiveInterval* to = fixedIntervals[GetFixedRegister(reg->def(), usePos->use).code()];
 
-                *static_cast<LAllocation *>(usePos->use) = *to->getAllocation();
+                *static_cast<LAllocation*>(usePos->use) = *to->getAllocation();
                 if (!moveInput(insData[usePos->pos]->toInstruction(), interval, to, reg->type()))
                     return false;
             } else {
                 MOZ_ASSERT(UseCompatibleWith(usePos->use, *interval->getAllocation()));
-                *static_cast<LAllocation *>(usePos->use) = *interval->getAllocation();
+                *static_cast<LAllocation*>(usePos->use) = *interval->getAllocation();
             }
         }
 
         // Erase the def of this interval if it's the first one
         if (interval->index() == 0)
         {
-            LDefinition *def = reg->def();
-            LAllocation *spillFrom;
+            LDefinition* def = reg->def();
+            LAllocation* spillFrom;
 
             // Insert the moves after any OsiPoint or Nop instructions
             // following this one. See minimalDefEnd for more info.
@@ -369,7 +369,7 @@ LinearScanAllocator::reifyAllocations()
 
             if (def->policy() == LDefinition::FIXED && def->output()->isRegister()) {
                 AnyRegister fixedReg = def->output()->toRegister();
-                LiveInterval *from = fixedIntervals[fixedReg.code()];
+                LiveInterval* from = fixedIntervals[fixedReg.code()];
 
                 // If we insert the move after an OsiPoint that uses this vreg,
                 // it should use the fixed register instead.
@@ -380,8 +380,8 @@ LinearScanAllocator::reifyAllocations()
                 spillFrom = from->getAllocation();
             } else {
                 if (def->policy() == LDefinition::MUST_REUSE_INPUT) {
-                    LAllocation *inputAlloc = reg->ins()->getOperand(def->getReusedInput());
-                    LAllocation *origAlloc = LAllocation::New(alloc(), *inputAlloc);
+                    LAllocation* inputAlloc = reg->ins()->getOperand(def->getReusedInput());
+                    LAllocation* origAlloc = LAllocation::New(alloc(), *inputAlloc);
 
                     MOZ_ASSERT(!inputAlloc->isUse());
 
@@ -397,9 +397,9 @@ LinearScanAllocator::reifyAllocations()
             }
 
             if (reg->ins()->recoversInput()) {
-                LSnapshot *snapshot = reg->ins()->toInstruction()->snapshot();
+                LSnapshot* snapshot = reg->ins()->toInstruction()->snapshot();
                 for (size_t i = 0; i < snapshot->numEntries(); i++) {
-                    LAllocation *entry = snapshot->getEntry(i);
+                    LAllocation* entry = snapshot->getEntry(i);
                     if (entry->isUse() && entry->toUse()->policy() == LUse::RECOVERED_INPUT)
                         *entry = *def->output();
                 }
@@ -415,7 +415,7 @@ LinearScanAllocator::reifyAllocations()
                 // Insert a spill after this instruction (or after any OsiPoint
                 // or Nop instructions). Note that we explicitly ignore phis,
                 // which should have been handled in resolveControlFlow().
-                LMoveGroup *moves = getMoveGroupAfter(insData[defEnd]->toInstruction());
+                LMoveGroup* moves = getMoveGroupAfter(insData[defEnd]->toInstruction());
                 if (!moves->add(spillFrom, reg->canonicalSpill(), def->type()))
                     return false;
             }
@@ -435,9 +435,9 @@ LinearScanAllocator::reifyAllocations()
             // If the interval starts at the output half of an instruction, we have to
             // emit the move *after* this instruction, to prevent clobbering an input
             // register.
-            LiveInterval *prevInterval = reg->getInterval(interval->index() - 1);
+            LiveInterval* prevInterval = reg->getInterval(interval->index() - 1);
             CodePosition start = interval->start();
-            LInstruction *ins = insData[start]->toInstruction();
+            LInstruction* ins = insData[start]->toInstruction();
 
             MOZ_ASSERT(start == inputOf(ins) || start == outputOf(ins));
 
@@ -467,9 +467,9 @@ LinearScanAllocator::reifyAllocations()
 }
 
 inline bool
-LinearScanAllocator::isSpilledAt(LiveInterval *interval, CodePosition pos)
+LinearScanAllocator::isSpilledAt(LiveInterval* interval, CodePosition pos)
 {
-    LinearScanVirtualRegister *reg = &vregs[interval->vreg()];
+    LinearScanVirtualRegister* reg = &vregs[interval->vreg()];
     if (!reg->canonicalSpill() || !reg->canonicalSpill()->isStackSlot())
         return false;
 
@@ -488,7 +488,7 @@ LinearScanAllocator::populateSafepoints()
     // by the allocator and are not necessarily populated by the code below.
     size_t nargs = graph.getBlock(0)->mir()->info().nargs();
     for (size_t i = 0; i < graph.numSafepoints(); i++) {
-        LSafepoint *safepoint = graph.getSafepoint(i)->safepoint();
+        LSafepoint* safepoint = graph.getSafepoint(i)->safepoint();
         for (size_t j = 0; j < nargs; j++) {
             if (!safepoint->addValueSlot(/* stack = */ false, (j + 1) * sizeof(Value)))
                 return false;
@@ -498,7 +498,7 @@ LinearScanAllocator::populateSafepoints()
     size_t firstSafepoint = 0;
 
     for (uint32_t i = 0; i < vregs.numVirtualRegisters(); i++) {
-        LinearScanVirtualRegister *reg = &vregs[i];
+        LinearScanVirtualRegister* reg = &vregs[i];
 
         if (!reg->def() || (!IsTraceable(reg) && !IsSlotsOrElements(reg) && !IsNunbox(reg)))
             continue;
@@ -512,7 +512,7 @@ LinearScanAllocator::populateSafepoints()
         CodePosition end = reg->getInterval(lastInterval)->end();
 
         for (size_t j = firstSafepoint; j < graph.numSafepoints(); j++) {
-            LInstruction *ins = graph.getSafepoint(j);
+            LInstruction* ins = graph.getSafepoint(j);
 
             // Stop processing safepoints if we know we're out of this virtual
             // register's range.
@@ -532,14 +532,14 @@ LinearScanAllocator::populateSafepoints()
                 continue;
             }
 
-            LSafepoint *safepoint = ins->safepoint();
+            LSafepoint* safepoint = ins->safepoint();
 
             if (IsSlotsOrElements(reg)) {
-                LiveInterval *interval = reg->intervalFor(inputOf(ins));
+                LiveInterval* interval = reg->intervalFor(inputOf(ins));
                 if (!interval)
                     continue;
 
-                LAllocation *a = interval->getAllocation();
+                LAllocation* a = interval->getAllocation();
                 if (a->isGeneralReg() && !ins->isCall())
                     safepoint->addSlotsOrElementsRegister(a->toGeneralReg()->reg());
 
@@ -550,11 +550,11 @@ LinearScanAllocator::populateSafepoints()
             } else if (!IsNunbox(reg)) {
                 MOZ_ASSERT(IsTraceable(reg));
 
-                LiveInterval *interval = reg->intervalFor(inputOf(ins));
+                LiveInterval* interval = reg->intervalFor(inputOf(ins));
                 if (!interval)
                     continue;
 
-                LAllocation *a = interval->getAllocation();
+                LAllocation* a = interval->getAllocation();
                 if (a->isGeneralReg() && !ins->isCall()) {
 #ifdef JS_PUNBOX64
                     if (reg->type() == LDefinition::BOX) {
@@ -580,17 +580,17 @@ LinearScanAllocator::populateSafepoints()
                 }
 #ifdef JS_NUNBOX32
             } else {
-                LinearScanVirtualRegister *other = otherHalfOfNunbox(reg);
-                LinearScanVirtualRegister *type = (reg->type() == LDefinition::TYPE) ? reg : other;
-                LinearScanVirtualRegister *payload = (reg->type() == LDefinition::PAYLOAD) ? reg : other;
-                LiveInterval *typeInterval = type->intervalFor(inputOf(ins));
-                LiveInterval *payloadInterval = payload->intervalFor(inputOf(ins));
+                LinearScanVirtualRegister* other = otherHalfOfNunbox(reg);
+                LinearScanVirtualRegister* type = (reg->type() == LDefinition::TYPE) ? reg : other;
+                LinearScanVirtualRegister* payload = (reg->type() == LDefinition::PAYLOAD) ? reg : other;
+                LiveInterval* typeInterval = type->intervalFor(inputOf(ins));
+                LiveInterval* payloadInterval = payload->intervalFor(inputOf(ins));
 
                 if (!typeInterval && !payloadInterval)
                     continue;
 
-                LAllocation *typeAlloc = typeInterval->getAllocation();
-                LAllocation *payloadAlloc = payloadInterval->getAllocation();
+                LAllocation* typeAlloc = typeInterval->getAllocation();
+                LAllocation* payloadAlloc = payloadInterval->getAllocation();
 
                 // If the payload is an argument, we'll scan that explicitly as
                 // part of the frame. It is therefore safe to not add any
@@ -656,19 +656,19 @@ LinearScanAllocator::populateSafepoints()
  * interval to the unhandled queue.
  */
 bool
-LinearScanAllocator::splitInterval(LiveInterval *interval, CodePosition pos)
+LinearScanAllocator::splitInterval(LiveInterval* interval, CodePosition pos)
 {
     // Make sure we're actually splitting this interval, not some other
     // interval in the same virtual register.
     MOZ_ASSERT(interval->start() < pos && pos < interval->end());
 
-    LinearScanVirtualRegister *reg = &vregs[interval->vreg()];
+    LinearScanVirtualRegister* reg = &vregs[interval->vreg()];
 
     // "Bogus" intervals cannot be split.
     MOZ_ASSERT(reg);
 
     // Do the split.
-    LiveInterval *newInterval = LiveInterval::New(alloc(), interval->vreg(), interval->index() + 1);
+    LiveInterval* newInterval = LiveInterval::New(alloc(), interval->vreg(), interval->index() + 1);
     if (!interval->splitFrom(pos, newInterval))
         return false;
 
@@ -701,7 +701,7 @@ LinearScanAllocator::splitBlockingIntervals(AnyRegister allocatedReg)
 {
 
     // Split current before the next fixed use.
-    LiveInterval *fixed = fixedIntervals[allocatedReg.code()];
+    LiveInterval* fixed = fixedIntervals[allocatedReg.code()];
     if (fixed->numRanges() > 0) {
         CodePosition fixedPos = current->intersect(fixed);
         if (fixedPos != CodePosition::MIN) {
@@ -715,7 +715,7 @@ LinearScanAllocator::splitBlockingIntervals(AnyRegister allocatedReg)
     // Split the blocking interval if it exists.
 
     for (IntervalIterator i(active.begin()); i != active.end();) {
-        LiveInterval *it = *i++;
+        LiveInterval* it = *i++;
         if (it->getAllocation()->isRegister() &&
             it->getAllocation()->toRegister().aliases(allocatedReg))
         {
@@ -740,7 +740,7 @@ LinearScanAllocator::splitBlockingIntervals(AnyRegister allocatedReg)
     }
     // Split any inactive intervals at the next live point.
     for (IntervalIterator i(inactive.begin()); i != inactive.end(); ) {
-        LiveInterval *it = *i++;
+        LiveInterval* it = *i++;
         if (it->getAllocation()->isRegister() &&
             it->getAllocation()->toRegister().aliases(allocatedReg))
         {
@@ -772,7 +772,7 @@ LinearScanAllocator::assign(LAllocation allocation)
     current->setAllocation(allocation);
 
     // Split this interval at the next incompatible one
-    LinearScanVirtualRegister *reg = &vregs[current->vreg()];
+    LinearScanVirtualRegister* reg = &vregs[current->vreg()];
     if (reg) {
         CodePosition splitPos = current->firstIncompatibleUse(allocation);
         if (splitPos != CodePosition::MAX) {
@@ -804,7 +804,7 @@ LinearScanAllocator::assign(LAllocation allocation)
 
             // If this spill is inside a loop, and the definition is outside
             // the loop, instead move the spill to outside the loop.
-            LNode *other = insData[current->start()];
+            LNode* other = insData[current->start()];
             uint32_t loopDepthAtDef = reg->block()->mir()->loopDepth();
             uint32_t loopDepthAtSpill = other->block()->mir()->loopDepth();
             if (loopDepthAtSpill > loopDepthAtDef)
@@ -818,11 +818,11 @@ LinearScanAllocator::assign(LAllocation allocation)
 }
 
 uint32_t
-LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
+LinearScanAllocator::allocateSlotFor(const LiveInterval* interval)
 {
-    LinearScanVirtualRegister *reg = &vregs[interval->vreg()];
+    LinearScanVirtualRegister* reg = &vregs[interval->vreg()];
 
-    SlotList *freed;
+    SlotList* freed;
     if (reg->def()->isSimdType())
         freed = &finishedQuadSlots_;
     else if (reg->type() == LDefinition::DOUBLE)
@@ -845,7 +845,7 @@ LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
         freed = &finishedSlots_;
 
     if (!freed->empty()) {
-        LiveInterval *maybeDead = freed->back();
+        LiveInterval* maybeDead = freed->back();
         if (maybeDead->end() < reg->getInterval(0)->start()) {
             // This spill slot is dead before the start of the interval trying
             // to reuse the slot, so reuse is safe. Otherwise, we could
@@ -857,7 +857,7 @@ LinearScanAllocator::allocateSlotFor(const LiveInterval *interval)
             // before the current interval, to avoid conflicting slot -> reg and
             // reg -> slot moves in the same movegroup.
             freed->popBack();
-            LinearScanVirtualRegister *dead = &vregs[maybeDead->vreg()];
+            LinearScanVirtualRegister* dead = &vregs[maybeDead->vreg()];
 #ifdef JS_NUNBOX32
             if (IsNunbox(dead))
                 return BaseOfNunboxSlot(dead->type(), dead->canonicalSpillSlot());
@@ -877,7 +877,7 @@ LinearScanAllocator::spill()
     // We can't spill bogus intervals
     MOZ_ASSERT(current->hasVreg());
 
-    LinearScanVirtualRegister *reg = &vregs[current->vreg()];
+    LinearScanVirtualRegister* reg = &vregs[current->vreg()];
 
     if (reg->canonicalSpill()) {
         JitSpew(JitSpew_RegAlloc, "  Allocating canonical spill location");
@@ -888,7 +888,7 @@ LinearScanAllocator::spill()
     uint32_t stackSlot;
 #if defined JS_NUNBOX32
     if (IsNunbox(reg)) {
-        LinearScanVirtualRegister *other = otherHalfOfNunbox(reg);
+        LinearScanVirtualRegister* other = otherHalfOfNunbox(reg);
 
         if (other->canonicalSpill()) {
             // The other half of this nunbox already has a spill slot. To
@@ -913,9 +913,9 @@ LinearScanAllocator::spill()
 }
 
 void
-LinearScanAllocator::freeAllocation(LiveInterval *interval, LAllocation *alloc)
+LinearScanAllocator::freeAllocation(LiveInterval* interval, LAllocation* alloc)
 {
-    LinearScanVirtualRegister *mine = &vregs[interval->vreg()];
+    LinearScanVirtualRegister* mine = &vregs[interval->vreg()];
     if (!IsNunbox(mine)) {
         if (alloc->isStackSlot()) {
             if (mine->def()->isSimdType())
@@ -941,7 +941,7 @@ LinearScanAllocator::freeAllocation(LiveInterval *interval, LAllocation *alloc)
 #ifdef JS_NUNBOX32
     // Special handling for nunboxes. We can only free the stack slot once we
     // know both intervals have been finished.
-    LinearScanVirtualRegister *other = otherHalfOfNunbox(mine);
+    LinearScanVirtualRegister* other = otherHalfOfNunbox(mine);
     if (other->finished()) {
         if (!mine->canonicalSpill() && !other->canonicalSpill())
             return;
@@ -949,7 +949,7 @@ LinearScanAllocator::freeAllocation(LiveInterval *interval, LAllocation *alloc)
         MOZ_ASSERT_IF(mine->canonicalSpill() && other->canonicalSpill(),
                       mine->canonicalSpill()->isStackSlot() == other->canonicalSpill()->isStackSlot());
 
-        LinearScanVirtualRegister *candidate = mine->canonicalSpill() ? mine : other;
+        LinearScanVirtualRegister* candidate = mine->canonicalSpill() ? mine : other;
         if (!candidate->canonicalSpill()->isStackSlot())
             return;
 
@@ -959,16 +959,16 @@ LinearScanAllocator::freeAllocation(LiveInterval *interval, LAllocation *alloc)
 }
 
 void
-LinearScanAllocator::finishInterval(LiveInterval *interval)
+LinearScanAllocator::finishInterval(LiveInterval* interval)
 {
-    LAllocation *alloc = interval->getAllocation();
+    LAllocation* alloc = interval->getAllocation();
     MOZ_ASSERT(!alloc->isUse());
 
     // Toss out the bogus interval now that it's run its course
     if (!interval->hasVreg())
         return;
 
-    LinearScanVirtualRegister *reg = &vregs[interval->vreg()];
+    LinearScanVirtualRegister* reg = &vregs[interval->vreg()];
 
     // All spills should be equal to the canonical spill location.
     MOZ_ASSERT_IF(alloc->isStackSlot(), *alloc == *reg->canonicalSpill());
@@ -988,7 +988,7 @@ LinearScanAllocator::finishInterval(LiveInterval *interval)
  * for the longest period of time is then returned.
  */
 AnyRegister::Code
-LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
+LinearScanAllocator::findBestFreeRegister(CodePosition* freeUntil)
 {
     JitSpew(JitSpew_RegAlloc, "  Computing freeUntilPos");
 
@@ -1008,7 +1008,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
         }
     }
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
-        LAllocation *alloc = i->getAllocation();
+        LAllocation* alloc = i->getAllocation();
         if (alloc->isRegister(needFloat)) {
             AnyRegister reg = alloc->toRegister();
             for (size_t a = 0; a < reg.numAliased(); a++) {
@@ -1018,7 +1018,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
         }
     }
     for (IntervalIterator i(inactive.begin()); i != inactive.end(); i++) {
-        LAllocation *alloc = i->getAllocation();
+        LAllocation* alloc = i->getAllocation();
         if (alloc->isRegister(needFloat)) {
             AnyRegister reg = alloc->toRegister();
             CodePosition pos = current->intersect(*i);
@@ -1052,8 +1052,8 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
     if (current->index()) {
         // As an optimization, use the allocation from the previous interval if
         // it is available.
-        LiveInterval *previous = vregs[current->vreg()].getInterval(current->index() - 1);
-        LAllocation *alloc = previous->getAllocation();
+        LiveInterval* previous = vregs[current->vreg()].getInterval(current->index() - 1);
+        LAllocation* alloc = previous->getAllocation();
         if (alloc->isRegister(needFloat)) {
             AnyRegister prevReg = alloc->toRegister();
             bool useit = true;
@@ -1070,7 +1070,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
     }
 
     // Assign the register suggested by the hint if it's free.
-    const Requirement *hint = current->hint();
+    const Requirement* hint = current->hint();
     if (hint->kind() == Requirement::FIXED && hint->allocation().isRegister()) {
         AnyRegister hintReg = hint->allocation().toRegister();
         bool useit = true;
@@ -1084,7 +1084,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
             bestCode = hintReg.code();
 
     } else if (hint->kind() == Requirement::MUST_REUSE_INPUT) {
-        LiveInterval *other = vregs[hint->virtualRegister()].intervalFor(hint->pos());
+        LiveInterval* other = vregs[hint->virtualRegister()].intervalFor(hint->pos());
         if (other && other->getAllocation()->isRegister()) {
             AnyRegister hintReg = other->getAllocation()->toRegister();
             bool useit = true;
@@ -1124,7 +1124,7 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
  * intervals for use elsewhere in the algorithm.
  */
 AnyRegister::Code
-LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
+LinearScanAllocator::findBestBlockedRegister(CodePosition* nextUsed)
 {
     JitSpew(JitSpew_RegAlloc, "  Computing nextUsePos");
 
@@ -1143,7 +1143,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
         }
     }
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
-        LAllocation *alloc = i->getAllocation();
+        LAllocation* alloc = i->getAllocation();
         if (alloc->isRegister(needFloat)) {
             AnyRegister fullreg = alloc->toRegister();
             for (size_t a = 0; a < fullreg.numAliased(); a++) {
@@ -1160,7 +1160,7 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
         }
     }
     for (IntervalIterator i(inactive.begin()); i != inactive.end(); i++) {
-        LAllocation *alloc = i->getAllocation();
+        LAllocation* alloc = i->getAllocation();
         if (alloc->isRegister(needFloat)) {
             AnyRegister reg = alloc->toRegister();
             CodePosition pos = i->nextUsePosAfter(current->start());
@@ -1220,10 +1220,10 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
  * coexist.
  */
 bool
-LinearScanAllocator::canCoexist(LiveInterval *a, LiveInterval *b)
+LinearScanAllocator::canCoexist(LiveInterval* a, LiveInterval* b)
 {
-    LAllocation *aa = a->getAllocation();
-    LAllocation *ba = b->getAllocation();
+    LAllocation* aa = a->getAllocation();
+    LAllocation* ba = b->getAllocation();
     if (aa->isRegister() && ba->isRegister() && aa->toRegister().aliases(ba->toRegister()))
         return a->intersect(b) == CodePosition::MIN;
     return true;
@@ -1293,7 +1293,7 @@ LinearScanAllocator::validateAllocations()
             MOZ_ASSERT(*i != *j);
             MOZ_ASSERT(canCoexist(*i, *j));
         }
-        LinearScanVirtualRegister *reg = &vregs[i->vreg()];
+        LinearScanVirtualRegister* reg = &vregs[i->vreg()];
         bool found = false;
         for (size_t j = 0; j < reg->numIntervals(); j++) {
             if (reg->getInterval(j) == *i) {
@@ -1362,14 +1362,14 @@ LinearScanAllocator::go()
 }
 
 void
-LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
+LinearScanAllocator::setIntervalRequirement(LiveInterval* interval)
 {
     MOZ_ASSERT(interval->requirement()->kind() == Requirement::NONE);
     MOZ_ASSERT(interval->hint()->kind() == Requirement::NONE);
 
     // This function computes requirement by virtual register, other types of
     // interval should have requirements set manually
-    LinearScanVirtualRegister *reg = &vregs[interval->vreg()];
+    LinearScanVirtualRegister* reg = &vregs[interval->vreg()];
 
     if (interval->index() == 0) {
         // The first interval is the definition, so deal with any definition
@@ -1383,7 +1383,7 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
                 interval->setRequirement(Requirement(*reg->def()->output()));
         } else if (reg->def()->policy() == LDefinition::MUST_REUSE_INPUT) {
             // Reuse policies get either a FIXED requirement or a SAME_AS hint.
-            LUse *use = reg->ins()->getOperand(reg->def()->getReusedInput())->toUse();
+            LUse* use = reg->ins()->getOperand(reg->def()->getReusedInput())->toUse();
             interval->setRequirement(Requirement(Requirement::REGISTER));
             interval->setHint(Requirement(use->virtualRegister(), interval->start().previous()));
         } else if (reg->ins()->isPhi()) {
@@ -1391,8 +1391,8 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
             // their input allocations, so they get a SAME_AS hint of the
             // first input
             if (reg->ins()->toPhi()->numOperands() != 0) {
-                LUse *use = reg->ins()->toPhi()->getOperand(0)->toUse();
-                LBlock *predecessor = reg->block()->mir()->getPredecessor(0)->lir();
+                LUse* use = reg->ins()->toPhi()->getOperand(0)->toUse();
+                LBlock* predecessor = reg->block()->mir()->getPredecessor(0)->lir();
                 CodePosition predEnd = exitOf(predecessor);
                 interval->setHint(Requirement(use->virtualRegister(), predEnd));
             }
@@ -1402,8 +1402,8 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
         }
     }
 
-    UsePosition *fixedOp = nullptr;
-    UsePosition *registerOp = nullptr;
+    UsePosition* fixedOp = nullptr;
+    UsePosition* registerOp = nullptr;
 
     // Search uses at the start of the interval for requirements.
     UsePositionIterator usePos(interval->usesBegin());
@@ -1462,7 +1462,7 @@ LinearScanAllocator::setIntervalRequirement(LiveInterval *interval)
  * requirements are handled first.
  */
 void
-LinearScanAllocator::UnhandledQueue::enqueueBackward(LiveInterval *interval)
+LinearScanAllocator::UnhandledQueue::enqueueBackward(LiveInterval* interval)
 {
     IntervalReverseIterator i(rbegin());
 
@@ -1483,7 +1483,7 @@ LinearScanAllocator::UnhandledQueue::enqueueBackward(LiveInterval *interval)
  * after a provided node.
  */
 void
-LinearScanAllocator::UnhandledQueue::enqueueForward(LiveInterval *after, LiveInterval *interval)
+LinearScanAllocator::UnhandledQueue::enqueueForward(LiveInterval* after, LiveInterval* interval)
 {
     IntervalIterator i(begin(after));
     i++; // Skip the initial node.
@@ -1504,7 +1504,7 @@ void
 LinearScanAllocator::UnhandledQueue::assertSorted()
 {
 #ifdef DEBUG
-    LiveInterval *prev = nullptr;
+    LiveInterval* prev = nullptr;
     for (IntervalIterator i(begin()); i != end(); i++) {
         if (prev) {
             MOZ_ASSERT(prev->start() >= i->start());
@@ -1516,13 +1516,13 @@ LinearScanAllocator::UnhandledQueue::assertSorted()
 #endif
 }
 
-LiveInterval *
+LiveInterval*
 LinearScanAllocator::UnhandledQueue::dequeue()
 {
     if (rbegin() == rend())
         return nullptr;
 
-    LiveInterval *result = *rbegin();
+    LiveInterval* result = *rbegin();
     remove(result);
     return result;
 }

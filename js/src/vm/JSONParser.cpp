@@ -41,15 +41,15 @@ JSONParserBase::~JSONParserBase()
 }
 
 void
-JSONParserBase::trace(JSTracer *trc)
+JSONParserBase::trace(JSTracer* trc)
 {
     for (size_t i = 0; i < stack.length(); i++) {
         if (stack[i].state == FinishArrayElement) {
-            ElementVector &elements = stack[i].elements();
+            ElementVector& elements = stack[i].elements();
             for (size_t j = 0; j < elements.length(); j++)
                 gc::MarkValueRoot(trc, &elements[j], "JSONParser element");
         } else {
-            PropertyVector &properties = stack[i].properties();
+            PropertyVector& properties = stack[i].properties();
             for (size_t j = 0; j < properties.length(); j++) {
                 gc::MarkValueRoot(trc, &properties[j].value, "JSONParser property value");
                 gc::MarkIdRoot(trc, &properties[j].id, "JSONParser property id");
@@ -60,7 +60,7 @@ JSONParserBase::trace(JSTracer *trc)
 
 template <typename CharT>
 void
-JSONParser<CharT>::getTextPosition(uint32_t *column, uint32_t *line)
+JSONParser<CharT>::getTextPosition(uint32_t* column, uint32_t* line)
 {
     CharPtr ptr = begin;
     uint32_t col = 1;
@@ -82,7 +82,7 @@ JSONParser<CharT>::getTextPosition(uint32_t *column, uint32_t *line)
 
 template <typename CharT>
 void
-JSONParser<CharT>::error(const char *msg)
+JSONParser<CharT>::error(const char* msg)
 {
     if (errorHandling == RaiseError) {
         uint32_t column = 1, line = 1;
@@ -132,7 +132,7 @@ JSONParser<CharT>::readString()
         if (*current == '"') {
             size_t length = current - start;
             current++;
-            JSFlatString *str = (ST == JSONParser::PropertyName)
+            JSFlatString* str = (ST == JSONParser::PropertyName)
                                 ? AtomizeChars(cx, start.get(), length)
                                 : NewStringCopyN<CanGC>(cx, start.get(), length);
             if (!str)
@@ -164,7 +164,7 @@ JSONParser<CharT>::readString()
 
         char16_t c = *current++;
         if (c == '"') {
-            JSFlatString *str = (ST == JSONParser::PropertyName)
+            JSFlatString* str = (ST == JSONParser::PropertyName)
                                 ? buffer.finishAtom()
                                 : buffer.finishString();
             if (!str)
@@ -287,7 +287,7 @@ JSONParser<CharT>::readNumber()
         }
 
         double d;
-        const CharT *dummy;
+        const CharT* dummy;
         if (!GetPrefixInteger(cx, digitStart.get(), current.get(), 10, &dummy, &d))
             return token(OOM);
         MOZ_ASSERT(current == dummy);
@@ -333,7 +333,7 @@ JSONParser<CharT>::readNumber()
     }
 
     double d;
-    const CharT *finish;
+    const CharT* finish;
     if (!js_strtod(cx, digitStart.get(), current.get(), &finish, &d))
         return token(OOM);
     MOZ_ASSERT(current == finish);
@@ -578,11 +578,11 @@ JSONParser<CharT>::advanceAfterProperty()
 }
 
 inline bool
-JSONParserBase::finishObject(MutableHandleValue vp, PropertyVector &properties)
+JSONParserBase::finishObject(MutableHandleValue vp, PropertyVector& properties)
 {
     MOZ_ASSERT(&properties == &stack.back().properties());
 
-    JSObject *obj = ObjectGroup::newPlainObject(cx, properties.begin(), properties.length(), GenericObject);
+    JSObject* obj = ObjectGroup::newPlainObject(cx, properties.begin(), properties.length(), GenericObject);
     if (!obj)
         return false;
 
@@ -594,11 +594,11 @@ JSONParserBase::finishObject(MutableHandleValue vp, PropertyVector &properties)
 }
 
 inline bool
-JSONParserBase::finishArray(MutableHandleValue vp, ElementVector &elements)
+JSONParserBase::finishArray(MutableHandleValue vp, ElementVector& elements)
 {
     MOZ_ASSERT(&elements == &stack.back().elements());
 
-    ArrayObject *obj = NewDenseCopiedArray(cx, elements.length(), elements.begin());
+    ArrayObject* obj = NewDenseCopiedArray(cx, elements.length(), elements.begin());
     if (!obj)
         return false;
 
@@ -626,7 +626,7 @@ JSONParser<CharT>::parse(MutableHandleValue vp)
     while (true) {
         switch (state) {
           case FinishObjectMember: {
-            PropertyVector &properties = stack.back().properties();
+            PropertyVector& properties = stack.back().properties();
             properties.back().value = value;
 
             token = advanceAfterProperty();
@@ -649,7 +649,7 @@ JSONParser<CharT>::parse(MutableHandleValue vp)
           JSONMember:
             if (token == String) {
                 jsid id = AtomToId(atomValue());
-                PropertyVector &properties = stack.back().properties();
+                PropertyVector& properties = stack.back().properties();
                 if (!properties.append(IdValuePair(id)))
                     return false;
                 token = advancePropertyColon();
@@ -666,7 +666,7 @@ JSONParser<CharT>::parse(MutableHandleValue vp)
             return errorReturn();
 
           case FinishArrayElement: {
-            ElementVector &elements = stack.back().elements();
+            ElementVector& elements = stack.back().elements();
             if (!elements.append(value.get()))
                 return false;
             token = advanceAfterArrayElement();
@@ -703,7 +703,7 @@ JSONParser<CharT>::parse(MutableHandleValue vp)
                 break;
 
               case ArrayOpen: {
-                ElementVector *elements;
+                ElementVector* elements;
                 if (!freeElements.empty()) {
                     elements = freeElements.popCopy();
                     elements->clear();
@@ -725,7 +725,7 @@ JSONParser<CharT>::parse(MutableHandleValue vp)
               }
 
               case ObjectOpen: {
-                PropertyVector *properties;
+                PropertyVector* properties;
                 if (!freeProperties.empty()) {
                     properties = freeProperties.popCopy();
                     properties->clear();

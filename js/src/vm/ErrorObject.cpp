@@ -20,8 +20,8 @@
 
 using namespace js;
 
-/* static */ Shape *
-js::ErrorObject::assignInitialShape(ExclusiveContext *cx, Handle<ErrorObject*> obj)
+/* static */ Shape*
+js::ErrorObject::assignInitialShape(ExclusiveContext* cx, Handle<ErrorObject*> obj)
 {
     MOZ_ASSERT(obj->empty());
 
@@ -33,8 +33,8 @@ js::ErrorObject::assignInitialShape(ExclusiveContext *cx, Handle<ErrorObject*> o
 }
 
 /* static */ bool
-js::ErrorObject::init(JSContext *cx, Handle<ErrorObject*> obj, JSExnType type,
-                      ScopedJSFreePtr<JSErrorReport> *errorReport, HandleString fileName,
+js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj, JSExnType type,
+                      ScopedJSFreePtr<JSErrorReport>* errorReport, HandleString fileName,
                       HandleObject stack, uint32_t lineNumber, uint32_t columnNumber,
                       HandleString message)
 {
@@ -68,7 +68,7 @@ js::ErrorObject::init(JSContext *cx, Handle<ErrorObject*> obj, JSExnType type,
 
     MOZ_ASSERT(JSEXN_ERR <= type && type < JSEXN_LIMIT);
 
-    JSErrorReport *report = errorReport ? errorReport->forget() : nullptr;
+    JSErrorReport* report = errorReport ? errorReport->forget() : nullptr;
     obj->initReservedSlot(EXNTYPE_SLOT, Int32Value(type));
     obj->initReservedSlot(STACK_SLOT, ObjectOrNullValue(stack));
     obj->setReservedSlot(ERROR_REPORT_SLOT, PrivateValue(report));
@@ -81,10 +81,10 @@ js::ErrorObject::init(JSContext *cx, Handle<ErrorObject*> obj, JSExnType type,
     return true;
 }
 
-/* static */ ErrorObject *
-js::ErrorObject::create(JSContext *cx, JSExnType errorType, HandleObject stack,
+/* static */ ErrorObject*
+js::ErrorObject::create(JSContext* cx, JSExnType errorType, HandleObject stack,
                         HandleString fileName, uint32_t lineNumber, uint32_t columnNumber,
-                        ScopedJSFreePtr<JSErrorReport> *report, HandleString message)
+                        ScopedJSFreePtr<JSErrorReport>* report, HandleString message)
 {
     AssertObjectIsSavedFrameOrWrapper(cx, stack);
 
@@ -94,7 +94,7 @@ js::ErrorObject::create(JSContext *cx, JSExnType errorType, HandleObject stack,
 
     Rooted<ErrorObject*> errObject(cx);
     {
-        const Class *clasp = ErrorObject::classForType(errorType);
+        const Class* clasp = ErrorObject::classForType(errorType);
         JSObject* obj = NewObjectWithGivenProto(cx, clasp, proto);
         if (!obj)
             return nullptr;
@@ -110,10 +110,10 @@ js::ErrorObject::create(JSContext *cx, JSExnType errorType, HandleObject stack,
     return errObject;
 }
 
-JSErrorReport *
-js::ErrorObject::getOrCreateErrorReport(JSContext *cx)
+JSErrorReport*
+js::ErrorObject::getOrCreateErrorReport(JSContext* cx)
 {
-    if (JSErrorReport *r = getErrorReport())
+    if (JSErrorReport* r = getErrorReport())
         return r;
 
     // We build an error report on the stack and then use CopyErrorReport to do
@@ -147,7 +147,7 @@ js::ErrorObject::getOrCreateErrorReport(JSContext *cx)
     report.ucmessage = chars.twoByteRange().start().get();
 
     // Cache and return.
-    JSErrorReport *copy = CopyErrorReport(cx, &report);
+    JSErrorReport* copy = CopyErrorReport(cx, &report);
     if (!copy)
         return nullptr;
     setReservedSlot(ERROR_REPORT_SLOT, PrivateValue(copy));
@@ -155,10 +155,10 @@ js::ErrorObject::getOrCreateErrorReport(JSContext *cx)
 }
 
 /* static */ bool
-js::ErrorObject::checkAndUnwrapThis(JSContext *cx, CallArgs &args, const char *fnName,
+js::ErrorObject::checkAndUnwrapThis(JSContext* cx, CallArgs& args, const char* fnName,
                                     MutableHandle<ErrorObject*> error)
 {
-    const Value &thisValue = args.thisv();
+    const Value& thisValue = args.thisv();
 
     if (!thisValue.isObject()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT,
@@ -201,7 +201,7 @@ js::ErrorObject::checkAndUnwrapThis(JSContext *cx, CallArgs &args, const char *f
 }
 
 /* static */ bool
-js::ErrorObject::getStack(JSContext *cx, unsigned argc, Value *vp)
+js::ErrorObject::getStack(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     Rooted<ErrorObject*> error(cx);
@@ -223,7 +223,7 @@ IsObject(HandleValue v)
 }
 
 /* static */ bool
-js::ErrorObject::setStack(JSContext *cx, unsigned argc, Value *vp)
+js::ErrorObject::setStack(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     // We accept any object here, because of poor-man's subclassing of Error.
@@ -231,9 +231,9 @@ js::ErrorObject::setStack(JSContext *cx, unsigned argc, Value *vp)
 }
 
 /* static */ bool
-js::ErrorObject::setStack_impl(JSContext *cx, CallArgs args)
+js::ErrorObject::setStack_impl(JSContext* cx, CallArgs args)
 {
-    const Value &thisValue = args.thisv();
+    const Value& thisValue = args.thisv();
     MOZ_ASSERT(thisValue.isObject());
     RootedObject thisObj(cx, &thisValue.toObject());
 

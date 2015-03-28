@@ -21,7 +21,7 @@ enum LibrarySlot {
 
 namespace Library
 {
-  bool Name(JSContext* cx, unsigned argc, JS::Value *vp);
+  bool Name(JSContext* cx, unsigned argc, JS::Value* vp);
 
   JSObject* Create(JSContext* cx, JS::Value path, const JSCTypesCallbacks* callbacks);
 

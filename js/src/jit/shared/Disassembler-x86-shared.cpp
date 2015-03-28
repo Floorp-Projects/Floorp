@@ -158,8 +158,8 @@ DecodeScale(uint8_t modrm, uint8_t sib, uint8_t rex)
 #define Pack2ByteOpcode(op1) PackOpcode(OP_2BYTE_ESCAPE, op1, 0)
 #define Pack3ByteOpcode(op1, op2) PackOpcode(OP_2BYTE_ESCAPE, op1, op2)
 
-uint8_t *
-js::jit::Disassembler::DisassembleHeapAccess(uint8_t *ptr, HeapAccess *access)
+uint8_t*
+js::jit::Disassembler::DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access)
 {
     VexOperandType type = VEX_PS;
     uint32_t opcode = OP_HLT;
@@ -510,7 +510,7 @@ js::jit::Disassembler::DisassembleHeapAccess(uint8_t *ptr, HeapAccess *access)
 
 #ifdef DEBUG
 void
-js::jit::Disassembler::DumpHeapAccess(const HeapAccess &access)
+js::jit::Disassembler::DumpHeapAccess(const HeapAccess& access)
 {
     switch (access.kind()) {
       case HeapAccess::Store:      fprintf(stderr, "store"); break;

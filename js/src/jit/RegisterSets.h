@@ -57,7 +57,7 @@ struct AnyRegister {
     bool operator !=(AnyRegister other) const {
         return code_ != other.code_;
     }
-    const char *name() const {
+    const char* name() const {
         return isFloat() ? fpu().name() : gpr().name();
     }
     Code code() const {
@@ -85,7 +85,7 @@ struct AnyRegister {
             return fpu().numAliased();
         return gpr().numAliased();
     }
-    bool aliases(const AnyRegister &other) const {
+    bool aliases(const AnyRegister& other) const {
         if (isFloat() && other.isFloat())
             return fpu().aliases(other.fpu());
         if (!isFloat() && !other.isFloat())
@@ -126,10 +126,10 @@ class ValueOperand
     Register scratchReg() const {
         return payloadReg();
     }
-    bool operator==(const ValueOperand &o) const {
+    bool operator==(const ValueOperand& o) const {
         return type_ == o.type_ && payload_ == o.payload_;
     }
-    bool operator!=(const ValueOperand &o) const {
+    bool operator!=(const ValueOperand& o) const {
         return !(*this == o);
     }
 
@@ -148,10 +148,10 @@ class ValueOperand
     Register scratchReg() const {
         return valueReg();
     }
-    bool operator==(const ValueOperand &o) const {
+    bool operator==(const ValueOperand& o) const {
         return value_ == o.value_;
     }
-    bool operator!=(const ValueOperand &o) const {
+    bool operator!=(const ValueOperand& o) const {
         return !(*this == o);
     }
 #endif
@@ -171,11 +171,11 @@ class TypedOrValueRegister
         mozilla::AlignedStorage2<ValueOperand> value;
     } data;
 
-    AnyRegister &dataTyped() {
+    AnyRegister& dataTyped() {
         MOZ_ASSERT(hasTyped());
         return *data.typed.addr();
     }
-    ValueOperand &dataValue() {
+    ValueOperand& dataValue() {
         MOZ_ASSERT(hasValue());
         return *data.value.addr();
     }
@@ -184,7 +184,7 @@ class TypedOrValueRegister
         MOZ_ASSERT(hasTyped());
         return *data.typed.addr();
     }
-    const ValueOperand &dataValue() const {
+    const ValueOperand& dataValue() const {
         MOZ_ASSERT(hasValue());
         return *data.value.addr();
     }
@@ -246,11 +246,11 @@ class ConstantOrRegister
         mozilla::AlignedStorage2<TypedOrValueRegister> reg;
     } data;
 
-    Value &dataValue() {
+    Value& dataValue() {
         MOZ_ASSERT(constant());
         return *data.constant.addr();
     }
-    TypedOrValueRegister &dataReg() {
+    TypedOrValueRegister& dataReg() {
         MOZ_ASSERT(!constant());
         return *data.reg.addr();
     }
@@ -337,29 +337,29 @@ class TypedRegisterSet
 
     MOZ_CONSTEXPR TypedRegisterSet() : bits_(0)
     { }
-    MOZ_CONSTEXPR TypedRegisterSet(const TypedRegisterSet<T> &set) : bits_(set.bits_)
+    MOZ_CONSTEXPR TypedRegisterSet(const TypedRegisterSet<T>& set) : bits_(set.bits_)
     { }
 
     static inline TypedRegisterSet All() {
         return TypedRegisterSet(T::Codes::AllocatableMask);
     }
-    static inline TypedRegisterSet Intersect(const TypedRegisterSet &lhs,
-                                             const TypedRegisterSet &rhs) {
+    static inline TypedRegisterSet Intersect(const TypedRegisterSet& lhs,
+                                             const TypedRegisterSet& rhs) {
         return TypedRegisterSet(lhs.bits_ & rhs.bits_);
     }
-    static inline TypedRegisterSet Union(const TypedRegisterSet &lhs,
-                                         const TypedRegisterSet &rhs) {
+    static inline TypedRegisterSet Union(const TypedRegisterSet& lhs,
+                                         const TypedRegisterSet& rhs) {
         return TypedRegisterSet(lhs.bits_ | rhs.bits_);
     }
-    static inline TypedRegisterSet Not(const TypedRegisterSet &in) {
+    static inline TypedRegisterSet Not(const TypedRegisterSet& in) {
         return TypedRegisterSet(~in.bits_ & T::Codes::AllocatableMask);
     }
-    static inline TypedRegisterSet Subtract(const TypedRegisterSet &lhs,
-                                            const TypedRegisterSet &rhs)
+    static inline TypedRegisterSet Subtract(const TypedRegisterSet& lhs,
+                                            const TypedRegisterSet& rhs)
     {
         return TypedRegisterSet(lhs.bits_ & ~rhs.bits_);
     }
-    static inline TypedRegisterSet VolatileNot(const TypedRegisterSet &in) {
+    static inline TypedRegisterSet VolatileNot(const TypedRegisterSet& in) {
         const SetType allocatableVolatile =
             T::Codes::AllocatableMask & T::Codes::VolatileMask;
         return TypedRegisterSet(~in.bits_ & allocatableVolatile);
@@ -421,7 +421,7 @@ class TypedRegisterSet
     uint32_t size() const {
         return T::SetSize(bits_);
     }
-    bool operator ==(const TypedRegisterSet<T> &other) const {
+    bool operator ==(const TypedRegisterSet<T>& other) const {
         return other.bits_ == bits_;
     }
     TypedRegisterSet<T> reduceSetForPush() const {
@@ -446,26 +446,26 @@ class RegisterSet {
   public:
     RegisterSet()
     { }
-    MOZ_CONSTEXPR RegisterSet(const GeneralRegisterSet &gpr, const FloatRegisterSet &fpu)
+    MOZ_CONSTEXPR RegisterSet(const GeneralRegisterSet& gpr, const FloatRegisterSet& fpu)
       : gpr_(gpr),
         fpu_(fpu)
     { }
     static inline RegisterSet All() {
         return RegisterSet(GeneralRegisterSet::All(), FloatRegisterSet::All());
     }
-    static inline RegisterSet Intersect(const RegisterSet &lhs, const RegisterSet &rhs) {
+    static inline RegisterSet Intersect(const RegisterSet& lhs, const RegisterSet& rhs) {
         return RegisterSet(GeneralRegisterSet::Intersect(lhs.gpr_, rhs.gpr_),
                            FloatRegisterSet::Intersect(lhs.fpu_, rhs.fpu_));
     }
-    static inline RegisterSet Union(const RegisterSet &lhs, const RegisterSet &rhs) {
+    static inline RegisterSet Union(const RegisterSet& lhs, const RegisterSet& rhs) {
         return RegisterSet(GeneralRegisterSet::Union(lhs.gpr_, rhs.gpr_),
                            FloatRegisterSet::Union(lhs.fpu_, rhs.fpu_));
     }
-    static inline RegisterSet Not(const RegisterSet &in) {
+    static inline RegisterSet Not(const RegisterSet& in) {
         return RegisterSet(GeneralRegisterSet::Not(in.gpr_),
                            FloatRegisterSet::Not(in.fpu_));
     }
-    static inline RegisterSet VolatileNot(const RegisterSet &in) {
+    static inline RegisterSet VolatileNot(const RegisterSet& in) {
         return RegisterSet(GeneralRegisterSet::VolatileNot(in.gpr_),
                            FloatRegisterSet::VolatileNot(in.fpu_));
     }
@@ -485,16 +485,16 @@ class RegisterSet {
     MOZ_CONSTEXPR GeneralRegisterSet gprs() const {
         return gpr_;
     }
-    GeneralRegisterSet &gprs() {
+    GeneralRegisterSet& gprs() {
         return gpr_;
     }
     MOZ_CONSTEXPR FloatRegisterSet fpus() const {
         return fpu_;
     }
-    FloatRegisterSet &fpus() {
+    FloatRegisterSet& fpus() {
         return fpu_;
     }
-    bool operator ==(const RegisterSet &other) const {
+    bool operator ==(const RegisterSet& other) const {
         return other.gpr_ == gpr_ && other.fpu_ == fpu_;
     }
 
@@ -817,13 +817,13 @@ class SpecializedRegSet<Accessors, RegisterSet> : public Accessors
     GeneralRegisterSet gprs() const {
         return this->Parent::set_.gprs();
     }
-    GeneralRegisterSet &gprs() {
+    GeneralRegisterSet& gprs() {
         return this->Parent::set_.gprs();
     }
     FloatRegisterSet fpus() const {
         return this->Parent::set_.fpus();
     }
-    FloatRegisterSet &fpus() {
+    FloatRegisterSet& fpus() {
         return this->Parent::set_.fpus();
     }
 
@@ -930,7 +930,7 @@ class CommonRegSet : public SpecializedRegSet<Accessors, Set>
     RegSet set() const {
         return this->Parent::set_;
     }
-    RegSet &set() {
+    RegSet& set() {
         return this->Parent::set_;
     }
 
@@ -1088,7 +1088,7 @@ class TypedRegisterIterator
     { }
     explicit TypedRegisterIterator(LiveSet<TypedRegisterSet<T>> regset) : regset_(regset)
     { }
-    TypedRegisterIterator(const TypedRegisterIterator &other) : regset_(other.regset_)
+    TypedRegisterIterator(const TypedRegisterIterator& other) : regset_(other.regset_)
     { }
 
     bool more() const {
@@ -1103,7 +1103,7 @@ class TypedRegisterIterator
         regset_.takeAny();
         return *this;
     }
-    T operator *() const {
+    T operator*() const {
         return regset_.getAny();
     }
 };
@@ -1119,7 +1119,7 @@ class TypedRegisterBackwardIterator
     { }
     explicit TypedRegisterBackwardIterator(LiveSet<TypedRegisterSet<T>> regset) : regset_(regset)
     { }
-    TypedRegisterBackwardIterator(const TypedRegisterBackwardIterator &other)
+    TypedRegisterBackwardIterator(const TypedRegisterBackwardIterator& other)
       : regset_(other.regset_)
     { }
 
@@ -1135,7 +1135,7 @@ class TypedRegisterBackwardIterator
         regset_.takeLast();
         return *this;
     }
-    T operator *() const {
+    T operator*() const {
         return regset_.getLast();
     }
 };
@@ -1151,7 +1151,7 @@ class TypedRegisterForwardIterator
     { }
     explicit TypedRegisterForwardIterator(LiveSet<TypedRegisterSet<T>> regset) : regset_(regset)
     { }
-    TypedRegisterForwardIterator(const TypedRegisterForwardIterator &other) : regset_(other.regset_)
+    TypedRegisterForwardIterator(const TypedRegisterForwardIterator& other) : regset_(other.regset_)
     { }
 
     bool more() const {
@@ -1166,7 +1166,7 @@ class TypedRegisterForwardIterator
         regset_.takeFirst();
         return *this;
     }
-    T operator *() const {
+    T operator*() const {
         return regset_.getFirst();
     }
 };
@@ -1190,13 +1190,13 @@ class AnyRegisterIterator
     AnyRegisterIterator(GeneralRegisterSet genset, FloatRegisterSet floatset)
       : geniter_(genset), floatiter_(floatset)
     { }
-    explicit AnyRegisterIterator(const RegisterSet &set)
+    explicit AnyRegisterIterator(const RegisterSet& set)
       : geniter_(set.gpr_), floatiter_(set.fpu_)
     { }
-    explicit AnyRegisterIterator(const LiveSet<RegisterSet> &set)
+    explicit AnyRegisterIterator(const LiveSet<RegisterSet>& set)
       : geniter_(set.gprs()), floatiter_(set.fpus())
     { }
-    AnyRegisterIterator(const AnyRegisterIterator &other)
+    AnyRegisterIterator(const AnyRegisterIterator& other)
       : geniter_(other.geniter_), floatiter_(other.floatiter_)
     { }
     bool more() const {
@@ -1210,7 +1210,7 @@ class AnyRegisterIterator
             floatiter_++;
         return old;
     }
-    AnyRegister operator *() const {
+    AnyRegister operator*() const {
         if (geniter_.more())
             return AnyRegister(*geniter_);
         return AnyRegister(*floatiter_);

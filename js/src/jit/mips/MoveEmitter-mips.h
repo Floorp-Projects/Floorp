@@ -18,7 +18,7 @@ class CodeGenerator;
 class MoveEmitterMIPS
 {
     uint32_t inCycle_;
-    MacroAssembler &masm;
+    MacroAssembler& masm;
 
     // Original stack push value.
     uint32_t pushedAtStart_;
@@ -39,22 +39,22 @@ class MoveEmitterMIPS
     Register tempReg();
     FloatRegister tempFloatReg();
     Address cycleSlot(uint32_t slot, uint32_t subslot) const;
-    int32_t getAdjustedOffset(const MoveOperand &operand);
-    Address getAdjustedAddress(const MoveOperand &operand);
+    int32_t getAdjustedOffset(const MoveOperand& operand);
+    Address getAdjustedAddress(const MoveOperand& operand);
 
-    void emitMove(const MoveOperand &from, const MoveOperand &to);
-    void emitFloat32Move(const MoveOperand &from, const MoveOperand &to);
-    void emitDoubleMove(const MoveOperand &from, const MoveOperand &to);
-    void breakCycle(const MoveOperand &from, const MoveOperand &to,
+    void emitMove(const MoveOperand& from, const MoveOperand& to);
+    void emitFloat32Move(const MoveOperand& from, const MoveOperand& to);
+    void emitDoubleMove(const MoveOperand& from, const MoveOperand& to);
+    void breakCycle(const MoveOperand& from, const MoveOperand& to,
                     MoveOp::Type type, uint32_t slot);
-    void completeCycle(const MoveOperand &from, const MoveOperand &to,
+    void completeCycle(const MoveOperand& from, const MoveOperand& to,
                        MoveOp::Type type, uint32_t slot);
-    void emit(const MoveOp &move);
+    void emit(const MoveOp& move);
 
   public:
-    MoveEmitterMIPS(MacroAssembler &masm);
+    MoveEmitterMIPS(MacroAssembler& masm);
     ~MoveEmitterMIPS();
-    void emit(const MoveResolver &moves);
+    void emit(const MoveResolver& moves);
     void finish();
 
     void setScratchRegister(Register reg) {}

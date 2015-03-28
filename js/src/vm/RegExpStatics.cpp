@@ -20,18 +20,18 @@ using namespace js;
  */
 
 static void
-resc_finalize(FreeOp *fop, JSObject *obj)
+resc_finalize(FreeOp* fop, JSObject* obj)
 {
-    RegExpStatics *res = static_cast<RegExpStatics *>(obj->as<RegExpStaticsObject>().getPrivate());
+    RegExpStatics* res = static_cast<RegExpStatics*>(obj->as<RegExpStaticsObject>().getPrivate());
     fop->delete_(res);
 }
 
 static void
-resc_trace(JSTracer *trc, JSObject *obj)
+resc_trace(JSTracer* trc, JSObject* obj)
 {
-    void *pdata = obj->as<RegExpStaticsObject>().getPrivate();
+    void* pdata = obj->as<RegExpStaticsObject>().getPrivate();
     MOZ_ASSERT(pdata);
-    RegExpStatics *res = static_cast<RegExpStatics *>(pdata);
+    RegExpStatics* res = static_cast<RegExpStatics*>(pdata);
     res->mark(trc);
 }
 
@@ -52,21 +52,21 @@ const Class RegExpStaticsObject::class_ = {
     resc_trace
 };
 
-RegExpStaticsObject *
-RegExpStatics::create(ExclusiveContext *cx, Handle<GlobalObject*> parent)
+RegExpStaticsObject*
+RegExpStatics::create(ExclusiveContext* cx, Handle<GlobalObject*> parent)
 {
-    RegExpStaticsObject *obj = NewObjectWithGivenProto<RegExpStaticsObject>(cx, NullPtr());
+    RegExpStaticsObject* obj = NewObjectWithGivenProto<RegExpStaticsObject>(cx, NullPtr());
     if (!obj)
         return nullptr;
-    RegExpStatics *res = cx->new_<RegExpStatics>();
+    RegExpStatics* res = cx->new_<RegExpStatics>();
     if (!res)
         return nullptr;
-    obj->setPrivate(static_cast<void *>(res));
+    obj->setPrivate(static_cast<void*>(res));
     return obj;
 }
 
 void
-RegExpStatics::markFlagsSet(JSContext *cx)
+RegExpStatics::markFlagsSet(JSContext* cx)
 {
     // Flags set on the RegExp function get propagated to constructed RegExp
     // objects, which interferes with optimizations that inline RegExp cloning
@@ -80,7 +80,7 @@ RegExpStatics::markFlagsSet(JSContext *cx)
 }
 
 bool
-RegExpStatics::executeLazy(JSContext *cx)
+RegExpStatics::executeLazy(JSContext* cx)
 {
     if (!pendingLazyEvaluation)
         return true;

@@ -20,43 +20,43 @@ class ScriptedIndirectProxyHandler : public BaseProxyHandler
     { }
 
     /* Standard internal methods. */
-    virtual bool getOwnPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
+    virtual bool getOwnPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
                                           MutableHandle<JSPropertyDescriptor> desc) const override;
-    virtual bool defineProperty(JSContext *cx, HandleObject proxy, HandleId id,
+    virtual bool defineProperty(JSContext* cx, HandleObject proxy, HandleId id,
                                 Handle<JSPropertyDescriptor> desc,
-                                ObjectOpResult &result) const override;
-    virtual bool ownPropertyKeys(JSContext *cx, HandleObject proxy,
-                                 AutoIdVector &props) const override;
-    virtual bool delete_(JSContext *cx, HandleObject proxy, HandleId id,
-                         ObjectOpResult &result) const override;
-    virtual bool enumerate(JSContext *cx, HandleObject proxy,
+                                ObjectOpResult& result) const override;
+    virtual bool ownPropertyKeys(JSContext* cx, HandleObject proxy,
+                                 AutoIdVector& props) const override;
+    virtual bool delete_(JSContext* cx, HandleObject proxy, HandleId id,
+                         ObjectOpResult& result) const override;
+    virtual bool enumerate(JSContext* cx, HandleObject proxy,
                            MutableHandleObject objp) const override;
-    virtual bool preventExtensions(JSContext *cx, HandleObject proxy,
-                                   ObjectOpResult &result) const override;
-    virtual bool isExtensible(JSContext *cx, HandleObject proxy, bool *extensible) const override;
-    virtual bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const override;
-    virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
+    virtual bool preventExtensions(JSContext* cx, HandleObject proxy,
+                                   ObjectOpResult& result) const override;
+    virtual bool isExtensible(JSContext* cx, HandleObject proxy, bool* extensible) const override;
+    virtual bool has(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const override;
+    virtual bool get(JSContext* cx, HandleObject proxy, HandleObject receiver, HandleId id,
                      MutableHandleValue vp) const override;
-    virtual bool set(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
-                     HandleValue receiver, ObjectOpResult &result) const override;
+    virtual bool set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v,
+                     HandleValue receiver, ObjectOpResult& result) const override;
 
     /* SpiderMonkey extensions. */
-    virtual bool getPropertyDescriptor(JSContext *cx, HandleObject proxy, HandleId id,
+    virtual bool getPropertyDescriptor(JSContext* cx, HandleObject proxy, HandleId id,
                                        MutableHandle<JSPropertyDescriptor> desc) const override;
-    virtual bool hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const override;
-    virtual bool getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
-                                              AutoIdVector &props) const override;
-    virtual bool nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
+    virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const override;
+    virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
+                                              AutoIdVector& props) const override;
+    virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
                             CallArgs args) const override;
-    virtual JSString *fun_toString(JSContext *cx, HandleObject proxy, unsigned indent) const override;
+    virtual JSString* fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const override;
     virtual bool isScripted() const override { return true; }
 
     static const char family;
     static const ScriptedIndirectProxyHandler singleton;
 
 private:
-    bool derivedSet(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
-                    HandleValue receiver, ObjectOpResult &result) const;
+    bool derivedSet(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v,
+                    HandleValue receiver, ObjectOpResult& result) const;
 };
 
 /* Derived class to handle Proxy.createFunction() */
@@ -64,13 +64,13 @@ class CallableScriptedIndirectProxyHandler : public ScriptedIndirectProxyHandler
 {
   public:
     CallableScriptedIndirectProxyHandler() : ScriptedIndirectProxyHandler() { }
-    virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) const override;
-    virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const override;
+    virtual bool call(JSContext* cx, HandleObject proxy, const CallArgs& args) const override;
+    virtual bool construct(JSContext* cx, HandleObject proxy, const CallArgs& args) const override;
 
-    virtual bool isCallable(JSObject *obj) const override {
+    virtual bool isCallable(JSObject* obj) const override {
         return true;
     }
-    virtual bool isConstructor(JSObject *obj) const override {
+    virtual bool isConstructor(JSObject* obj) const override {
         return true;
     }
 
@@ -78,10 +78,10 @@ class CallableScriptedIndirectProxyHandler : public ScriptedIndirectProxyHandler
 };
 
 bool
-proxy_create(JSContext *cx, unsigned argc, Value *vp);
+proxy_create(JSContext* cx, unsigned argc, Value* vp);
 
 bool
-proxy_createFunction(JSContext *cx, unsigned argc, Value *vp);
+proxy_createFunction(JSContext* cx, unsigned argc, Value* vp);
 
 } /* namespace js */
 

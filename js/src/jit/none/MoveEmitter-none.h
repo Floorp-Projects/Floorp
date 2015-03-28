@@ -16,8 +16,8 @@ namespace jit {
 class MoveEmitterNone
 {
   public:
-    MoveEmitterNone(MacroAssemblerNone &) { MOZ_CRASH(); }
-    void emit(const MoveResolver &) { MOZ_CRASH(); }
+    MoveEmitterNone(MacroAssemblerNone&) { MOZ_CRASH(); }
+    void emit(const MoveResolver&) { MOZ_CRASH(); }
     void finish() { MOZ_CRASH(); }
     void setScratchRegister(Register) { MOZ_CRASH(); }
 };

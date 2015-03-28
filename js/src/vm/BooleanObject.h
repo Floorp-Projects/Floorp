@@ -27,7 +27,7 @@ class BooleanObject : public NativeObject
      * Creates a new Boolean object boxing the given primitive bool.  The
      * object's [[Prototype]] is determined from context.
      */
-    static inline BooleanObject *create(JSContext *cx, bool b);
+    static inline BooleanObject* create(JSContext* cx, bool b);
 
     bool unbox() const {
         return getFixedSlot(PRIMITIVE_VALUE_SLOT).toBoolean();
@@ -39,8 +39,8 @@ class BooleanObject : public NativeObject
     }
 
     /* For access to init, as Boolean.prototype is special. */
-    friend JSObject *
-    js::InitBooleanClass(JSContext *cx, js::HandleObject global);
+    friend JSObject*
+    js::InitBooleanClass(JSContext* cx, js::HandleObject global);
 };
 
 } // namespace js

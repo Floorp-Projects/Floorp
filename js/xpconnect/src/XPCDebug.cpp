@@ -52,7 +52,7 @@ xpc_PrintJSStack(JSContext* cx, bool showArgs, bool showLocals,
 {
     JS::AutoSaveExceptionState state(cx);
 
-    char *buf = JS::FormatStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
+    char* buf = JS::FormatStackDump(cx, nullptr, showArgs, showLocals, showThisProps);
     if (!buf)
         DebugDump("%s", "Failed to format JavaScript stack for dump\n");
 

@@ -20,7 +20,7 @@ static const char * const keyword_list[] = {
 };
 
 struct gen_opt {
-    FILE *output;                       /* output file for generated source */
+    FILE* output;                       /* output file for generated source */
     unsigned use_if_threshold;          /* max number of choices to generate
                                            "if" selector instead of "switch" */
     unsigned char_tail_test_threshold;  /* max number of unprocessed columns
@@ -33,18 +33,18 @@ struct gen_opt {
 static unsigned column_to_compare;
 
 static int
-length_comparator(const void *a, const void *b)
+length_comparator(const void* a, const void* b)
 {
-    const char *str1 = keyword_list[*(unsigned *)a];
-    const char *str2 = keyword_list[*(unsigned *)b];
+    const char* str1 = keyword_list[*(unsigned*)a];
+    const char* str2 = keyword_list[*(unsigned*)b];
     return (int)strlen(str1) - (int)strlen(str2);
 }
 
 static int
-column_comparator(const void *a, const void *b)
+column_comparator(const void* a, const void* b)
 {
-    const char *str1 = keyword_list[*(unsigned *)a];
-    const char *str2 = keyword_list[*(unsigned *)b];
+    const char* str1 = keyword_list[*(unsigned*)a];
+    const char* str2 = keyword_list[*(unsigned*)b];
     return (int)str1[column_to_compare] - (int)str2[column_to_compare];
 }
 
@@ -68,7 +68,7 @@ count_different_lengths(unsigned indexes[], unsigned nelem)
 
 static void
 find_char_span_and_count(unsigned indexes[], unsigned nelem, unsigned column,
-                         unsigned *span_result, unsigned *count_result)
+                         unsigned* span_result, unsigned* count_result)
 {
     unsigned i, count;
     unsigned char c, prev, minc, maxc;
@@ -94,10 +94,10 @@ find_char_span_and_count(unsigned indexes[], unsigned nelem, unsigned column,
 }
 
 static unsigned
-find_optimal_switch_column(struct gen_opt *opt,
+find_optimal_switch_column(struct gen_opt* opt,
                            unsigned indexes[], unsigned nelem,
                            unsigned columns[], unsigned unprocessed_columns,
-                           int *use_if_result)
+                           int* use_if_result)
 {
     unsigned i;
     unsigned span, min_span, min_span_index;
@@ -151,7 +151,7 @@ find_optimal_switch_column(struct gen_opt *opt,
 
 
 static void
-p(struct gen_opt *opt, const char *format, ...)
+p(struct gen_opt* opt, const char* format, ...)
 {
     va_list ap;
 
@@ -163,10 +163,10 @@ p(struct gen_opt *opt, const char *format, ...)
 /* Size for '\xxx' where xxx is octal escape */
 #define MIN_QUOTED_CHAR_BUFFER 7
 
-static char *
-qchar(char c, char *quoted_buffer)
+static char*
+qchar(char c, char* quoted_buffer)
 {
-    char *s;
+    char* s;
 
     s = quoted_buffer;
     *s++ = '\'';
@@ -196,13 +196,13 @@ qchar(char c, char *quoted_buffer)
 }
 
 static void
-nl(struct gen_opt *opt)
+nl(struct gen_opt* opt)
 {
     putc('\n', opt->output);
 }
 
 static void
-indent(struct gen_opt *opt)
+indent(struct gen_opt* opt)
 {
     unsigned n = opt->indent_level;
     while (n != 0) {
@@ -212,7 +212,7 @@ indent(struct gen_opt *opt)
 }
 
 static void
-line(struct gen_opt *opt, const char *format, ...)
+line(struct gen_opt* opt, const char* format, ...)
 {
     va_list ap;
 
@@ -224,7 +224,7 @@ line(struct gen_opt *opt, const char *format, ...)
 }
 
 static void
-generate_letter_switch_r(struct gen_opt *opt,
+generate_letter_switch_r(struct gen_opt* opt,
                          unsigned indexes[], unsigned nelem,
                          unsigned columns[], unsigned unprocessed_columns)
 {
@@ -233,7 +233,7 @@ generate_letter_switch_r(struct gen_opt *opt,
     assert(nelem != 0);
     if (nelem == 1) {
         unsigned kw_index = indexes[0];
-        const char *keyword = keyword_list[kw_index];
+        const char* keyword = keyword_list[kw_index];
 
         if (unprocessed_columns == 0) {
             line(opt, "JSKW_GOT_MATCH(%u) /* %s */", kw_index, keyword);
@@ -311,14 +311,14 @@ generate_letter_switch_r(struct gen_opt *opt,
 }
 
 static void
-generate_letter_switch(struct gen_opt *opt,
+generate_letter_switch(struct gen_opt* opt,
                        unsigned indexes[], unsigned nelem,
                        unsigned current_length)
 {
-    unsigned *columns;
+    unsigned* columns;
     unsigned i;
 
-    columns = (unsigned *) malloc(sizeof(columns[0]) * current_length);
+    columns = (unsigned*) malloc(sizeof(columns[0]) * current_length);
     if (!columns) {
         perror("malloc");
         exit(EXIT_FAILURE);
@@ -332,9 +332,9 @@ generate_letter_switch(struct gen_opt *opt,
 
 
 static void
-generate_switch(struct gen_opt *opt)
+generate_switch(struct gen_opt* opt)
 {
-    unsigned *indexes;
+    unsigned* indexes;
     unsigned nlength;
     unsigned i, current;
     int use_if;
@@ -349,7 +349,7 @@ generate_switch(struct gen_opt *opt)
     }
     line(opt, " */");
 
-    indexes = (unsigned *) malloc(sizeof(indexes[0]) * nelem);
+    indexes = (unsigned*) malloc(sizeof(indexes[0]) * nelem);
     if (!indexes) {
         perror("malloc");
         exit(EXIT_FAILURE);
@@ -395,7 +395,7 @@ generate_switch(struct gen_opt *opt)
     free(indexes);
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     struct gen_opt opt;
 

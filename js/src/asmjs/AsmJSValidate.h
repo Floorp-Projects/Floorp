@@ -48,8 +48,8 @@ typedef frontend::ParseContext<frontend::FullParseHandler> AsmJSParseContext;
 // In this case, the parser.tokenStream has been advanced an indeterminate
 // amount and the entire function should be reparsed from the beginning.
 extern bool
-ValidateAsmJS(ExclusiveContext *cx, AsmJSParser &parser, frontend::ParseNode *stmtList,
-             bool *validated);
+ValidateAsmJS(ExclusiveContext* cx, AsmJSParser& parser, frontend::ParseNode* stmtList,
+             bool* validated);
 
 // The assumed page size; dynamically checked in ValidateAsmJS.
 const size_t AsmJSPageSize = 4096;
@@ -120,7 +120,7 @@ IsDeprecatedAsmJSHeapLength(uint32_t length)
 // Return whether asm.js optimization is inhibited by the platform or
 // dynamically disabled:
 extern bool
-IsAsmJSCompilationAvailable(JSContext *cx, unsigned argc, JS::Value *vp);
+IsAsmJSCompilationAvailable(JSContext* cx, unsigned argc, JS::Value* vp);
 
 } // namespace js
 

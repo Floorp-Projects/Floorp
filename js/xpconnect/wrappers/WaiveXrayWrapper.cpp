@@ -13,7 +13,7 @@ using namespace JS;
 namespace xpc {
 
 static bool
-WaiveAccessors(JSContext *cx, JS::MutableHandle<JSPropertyDescriptor> desc)
+WaiveAccessors(JSContext* cx, JS::MutableHandle<JSPropertyDescriptor> desc)
 {
     if (desc.hasGetterObject() && desc.getterObject()) {
         RootedValue v(cx, JS::ObjectValue(*desc.getterObject()));
@@ -32,7 +32,7 @@ WaiveAccessors(JSContext *cx, JS::MutableHandle<JSPropertyDescriptor> desc)
 }
 
 bool
-WaiveXrayWrapper::getPropertyDescriptor(JSContext *cx, HandleObject wrapper,
+WaiveXrayWrapper::getPropertyDescriptor(JSContext* cx, HandleObject wrapper,
                                         HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc)
                                         const
 {
@@ -41,7 +41,7 @@ WaiveXrayWrapper::getPropertyDescriptor(JSContext *cx, HandleObject wrapper,
 }
 
 bool
-WaiveXrayWrapper::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper,
+WaiveXrayWrapper::getOwnPropertyDescriptor(JSContext* cx, HandleObject wrapper,
                                            HandleId id, JS::MutableHandle<JSPropertyDescriptor> desc)
                                            const
 {
@@ -50,7 +50,7 @@ WaiveXrayWrapper::getOwnPropertyDescriptor(JSContext *cx, HandleObject wrapper,
 }
 
 bool
-WaiveXrayWrapper::get(JSContext *cx, HandleObject wrapper,
+WaiveXrayWrapper::get(JSContext* cx, HandleObject wrapper,
                       HandleObject receiver, HandleId id,
                       MutableHandleValue vp) const
 {
@@ -59,7 +59,7 @@ WaiveXrayWrapper::get(JSContext *cx, HandleObject wrapper,
 }
 
 bool
-WaiveXrayWrapper::enumerate(JSContext *cx, HandleObject proxy,
+WaiveXrayWrapper::enumerate(JSContext* cx, HandleObject proxy,
                             MutableHandleObject objp) const
 {
     return CrossCompartmentWrapper::enumerate(cx, proxy, objp) &&
@@ -67,14 +67,14 @@ WaiveXrayWrapper::enumerate(JSContext *cx, HandleObject proxy,
 }
 
 bool
-WaiveXrayWrapper::call(JSContext *cx, HandleObject wrapper, const JS::CallArgs &args) const
+WaiveXrayWrapper::call(JSContext* cx, HandleObject wrapper, const JS::CallArgs& args) const
 {
     return CrossCompartmentWrapper::call(cx, wrapper, args) &&
            WrapperFactory::WaiveXrayAndWrap(cx, args.rval());
 }
 
 bool
-WaiveXrayWrapper::construct(JSContext *cx, HandleObject wrapper, const JS::CallArgs &args) const
+WaiveXrayWrapper::construct(JSContext* cx, HandleObject wrapper, const JS::CallArgs& args) const
 {
     return CrossCompartmentWrapper::construct(cx, wrapper, args) &&
            WrapperFactory::WaiveXrayAndWrap(cx, args.rval());
@@ -83,7 +83,7 @@ WaiveXrayWrapper::construct(JSContext *cx, HandleObject wrapper, const JS::CallA
 // NB: This is important as the other side of a handshake with FieldGetter. See
 // nsXBLProtoImplField.cpp.
 bool
-WaiveXrayWrapper::nativeCall(JSContext *cx, JS::IsAcceptableThis test,
+WaiveXrayWrapper::nativeCall(JSContext* cx, JS::IsAcceptableThis test,
                              JS::NativeImpl impl, JS::CallArgs args) const
 {
     return CrossCompartmentWrapper::nativeCall(cx, test, impl, args) &&
@@ -91,7 +91,7 @@ WaiveXrayWrapper::nativeCall(JSContext *cx, JS::IsAcceptableThis test,
 }
 
 bool
-WaiveXrayWrapper::getPrototype(JSContext *cx, HandleObject wrapper, MutableHandleObject protop) const
+WaiveXrayWrapper::getPrototype(JSContext* cx, HandleObject wrapper, MutableHandleObject protop) const
 {
     return CrossCompartmentWrapper::getPrototype(cx, wrapper, protop) &&
            (!protop || WrapperFactory::WaiveXrayAndWrap(cx, protop));

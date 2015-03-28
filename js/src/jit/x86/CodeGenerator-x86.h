@@ -19,62 +19,62 @@ class OutOfLineTruncateFloat32;
 class CodeGeneratorX86 : public CodeGeneratorX86Shared
 {
   private:
-    CodeGeneratorX86 *thisFromCtor() {
+    CodeGeneratorX86* thisFromCtor() {
         return this;
     }
 
   protected:
-    ValueOperand ToValue(LInstruction *ins, size_t pos);
-    ValueOperand ToOutValue(LInstruction *ins);
-    ValueOperand ToTempValue(LInstruction *ins, size_t pos);
+    ValueOperand ToValue(LInstruction* ins, size_t pos);
+    ValueOperand ToOutValue(LInstruction* ins);
+    ValueOperand ToTempValue(LInstruction* ins, size_t pos);
 
-    void load(Scalar::Type vt, const Operand &srcAddr, const LDefinition *out);
-    void store(Scalar::Type vt, const LAllocation *value, const Operand &dstAddr);
+    void load(Scalar::Type vt, const Operand& srcAddr, const LDefinition* out);
+    void store(Scalar::Type vt, const LAllocation* value, const Operand& dstAddr);
 
-    void loadSimd(Scalar::Type type, unsigned numElems, const Operand &srcAddr, FloatRegister out);
-    void emitSimdLoad(LAsmJSLoadHeap *ins);
+    void loadSimd(Scalar::Type type, unsigned numElems, const Operand& srcAddr, FloatRegister out);
+    void emitSimdLoad(LAsmJSLoadHeap* ins);
 
-    void storeSimd(Scalar::Type type, unsigned numElems, FloatRegister in, const Operand &dstAddr);
-    void emitSimdStore(LAsmJSStoreHeap *ins);
+    void storeSimd(Scalar::Type type, unsigned numElems, FloatRegister in, const Operand& dstAddr);
+    void emitSimdStore(LAsmJSStoreHeap* ins);
 
     void memoryBarrier(MemoryBarrierBits barrier);
 
   public:
-    CodeGeneratorX86(MIRGenerator *gen, LIRGraph *graph, MacroAssembler *masm);
+    CodeGeneratorX86(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm);
 
   public:
-    void visitBox(LBox *box);
-    void visitBoxFloatingPoint(LBoxFloatingPoint *box);
-    void visitUnbox(LUnbox *unbox);
-    void visitValue(LValue *value);
-    void visitCompareB(LCompareB *lir);
-    void visitCompareBAndBranch(LCompareBAndBranch *lir);
-    void visitCompareV(LCompareV *lir);
-    void visitCompareVAndBranch(LCompareVAndBranch *lir);
-    void visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble *lir);
-    void visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32 *lir);
-    void visitTruncateDToInt32(LTruncateDToInt32 *ins);
-    void visitTruncateFToInt32(LTruncateFToInt32 *ins);
-    void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic *ins);
-    void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic *ins);
-    void visitAsmJSCall(LAsmJSCall *ins);
-    void visitAsmJSLoadHeap(LAsmJSLoadHeap *ins);
-    void visitAsmJSStoreHeap(LAsmJSStoreHeap *ins);
-    void visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap *ins);
-    void visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap *ins);
-    void visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect *ins);
-    void visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar *ins);
-    void visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar *ins);
-    void visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr *ins);
-    void visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc *ins);
+    void visitBox(LBox* box);
+    void visitBoxFloatingPoint(LBoxFloatingPoint* box);
+    void visitUnbox(LUnbox* unbox);
+    void visitValue(LValue* value);
+    void visitCompareB(LCompareB* lir);
+    void visitCompareBAndBranch(LCompareBAndBranch* lir);
+    void visitCompareV(LCompareV* lir);
+    void visitCompareVAndBranch(LCompareVAndBranch* lir);
+    void visitAsmJSUInt32ToDouble(LAsmJSUInt32ToDouble* lir);
+    void visitAsmJSUInt32ToFloat32(LAsmJSUInt32ToFloat32* lir);
+    void visitTruncateDToInt32(LTruncateDToInt32* ins);
+    void visitTruncateFToInt32(LTruncateFToInt32* ins);
+    void visitLoadTypedArrayElementStatic(LLoadTypedArrayElementStatic* ins);
+    void visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStatic* ins);
+    void visitAsmJSCall(LAsmJSCall* ins);
+    void visitAsmJSLoadHeap(LAsmJSLoadHeap* ins);
+    void visitAsmJSStoreHeap(LAsmJSStoreHeap* ins);
+    void visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins);
+    void visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins);
+    void visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEffect* ins);
+    void visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar* ins);
+    void visitAsmJSStoreGlobalVar(LAsmJSStoreGlobalVar* ins);
+    void visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins);
+    void visitAsmJSLoadFFIFunc(LAsmJSLoadFFIFunc* ins);
 
-    void visitOutOfLineTruncate(OutOfLineTruncate *ool);
-    void visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32 *ool);
+    void visitOutOfLineTruncate(OutOfLineTruncate* ool);
+    void visitOutOfLineTruncateFloat32(OutOfLineTruncateFloat32* ool);
 
   private:
     void asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg, bool boundsCheck,
                                    int32_t offset, int32_t endOffset, Register out,
-                                   Label &rejoin);
+                                   Label& rejoin);
 };
 
 typedef CodeGeneratorX86 CodeGeneratorSpecific;

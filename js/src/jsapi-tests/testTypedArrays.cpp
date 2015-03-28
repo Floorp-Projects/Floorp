@@ -54,11 +54,11 @@ BEGIN_TEST(testTypedArrays)
     return ok;
 }
 
-template<JSObject *Create(JSContext *, uint32_t),
+template<JSObject* Create(JSContext*, uint32_t),
          typename Element,
-         Element *GetData(JSObject *, const JS::AutoCheckCannotGC&)>
+         Element* GetData(JSObject*, const JS::AutoCheckCannotGC&)>
 bool
-TestPlainTypedArray(JSContext *cx)
+TestPlainTypedArray(JSContext* cx)
 {
     {
         RootedObject notArray(cx, Create(cx, UINT32_MAX));
@@ -77,7 +77,7 @@ TestPlainTypedArray(JSContext *cx)
 
     {
         JS::AutoCheckCannotGC nogc;
-        Element *data;
+        Element* data;
         CHECK(data = GetData(array, nogc));
         *data = 13;
     }
@@ -88,12 +88,12 @@ TestPlainTypedArray(JSContext *cx)
     return true;
 }
 
-template<JSObject *CreateWithBuffer(JSContext *, JS::HandleObject, uint32_t, int32_t),
-         JSObject *CreateFromArray(JSContext *, JS::HandleObject),
+template<JSObject* CreateWithBuffer(JSContext*, JS::HandleObject, uint32_t, int32_t),
+         JSObject* CreateFromArray(JSContext*, JS::HandleObject),
          typename Element,
-         Element *GetData(JSObject *, const JS::AutoCheckCannotGC&)>
+         Element* GetData(JSObject*, const JS::AutoCheckCannotGC&)>
 bool
-TestArrayFromBuffer(JSContext *cx)
+TestArrayFromBuffer(JSContext* cx)
 {
     size_t elts = 8;
     size_t nbytes = elts * sizeof(Element);
@@ -116,7 +116,7 @@ TestArrayFromBuffer(JSContext *cx)
 
     {
         JS::AutoCheckCannotGC nogc;
-        Element *data;
+        Element* data;
         CHECK(data = GetData(array, nogc));
         CHECK_EQUAL((void*) data, (void*) JS_GetArrayBufferData(buffer, nogc));
 
@@ -144,7 +144,7 @@ TestArrayFromBuffer(JSContext *cx)
     CHECK_SAME(v, v2);
     {
         JS::AutoCheckCannotGC nogc;
-        Element *data;
+        Element* data;
         CHECK(data = GetData(array, nogc));
         CHECK_EQUAL(long(v.toInt32()), long(reinterpret_cast<Element*>(data)[0]));
     }
@@ -157,7 +157,7 @@ TestArrayFromBuffer(JSContext *cx)
     CHECK_SAME(v, v2);
     {
         JS::AutoCheckCannotGC nogc;
-        Element *data;
+        Element* data;
         CHECK(data = GetData(array, nogc));
         CHECK_EQUAL(long(v.toInt32()), long(reinterpret_cast<Element*>(data)[elts / 2]));
     }
@@ -170,7 +170,7 @@ TestArrayFromBuffer(JSContext *cx)
     CHECK_SAME(v, v2);
     {
         JS::AutoCheckCannotGC nogc;
-        Element *data;
+        Element* data;
         CHECK(data = GetData(array, nogc));
         CHECK_EQUAL(long(v.toInt32()), long(reinterpret_cast<Element*>(data)[elts - 1]));
     }
