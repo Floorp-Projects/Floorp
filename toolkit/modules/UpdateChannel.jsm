@@ -1,3 +1,5 @@
+#filter substitution
+
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,7 +9,6 @@ this.EXPORTED_SYMBOLS = ["UpdateChannel"];
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
 
 this.UpdateChannel = {
   /**
@@ -19,7 +20,7 @@ this.UpdateChannel = {
    *        Whether or not to include the partner bits. Default: true.
    */
   get: function UpdateChannel_get(aIncludePartners = true) {
-    let channel = AppConstants.MOZ_UPDATE_CHANNEL;
+    let channel = "@MOZ_UPDATE_CHANNEL@";
     let defaults = Services.prefs.getDefaultBranch(null);
     try {
       channel = defaults.getCharPref("app.update.channel");
