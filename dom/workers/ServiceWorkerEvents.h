@@ -19,6 +19,7 @@ class nsIInterceptedChannel;
 namespace mozilla {
 namespace dom {
   class Request;
+  class ResponseOrPromise;
 } // namespace dom
 } // namespace mozilla
 
@@ -82,10 +83,7 @@ public:
   }
 
   void
-  RespondWith(Promise& aPromise, ErrorResult& aRv);
-
-  void
-  RespondWith(Response& aResponse, ErrorResult& aRv);
+  RespondWith(const ResponseOrPromise& aArg, ErrorResult& aRv);
 
   already_AddRefed<Promise>
   ForwardTo(const nsAString& aUrl);

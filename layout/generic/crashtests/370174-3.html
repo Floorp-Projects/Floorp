@@ -16,9 +16,7 @@ document.getElementsByTagName('span')[0].setAttribute('style', 'display: table-r
 setTimeout(doe2,100);
 
 function tripleclick(){
-netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-var wu = window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-                .getInterface(Components.interfaces.nsIDOMWindowUtils);
+var wu = SpecialPowers.DOMWindowUtils;
 wu.sendMouseEvent('mousedown',  500, 500, 0, 3, 0);
 setTimeout(tripleclick,20);
 setTimeout(function(){window.location.reload()}, 200);

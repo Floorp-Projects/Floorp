@@ -20,8 +20,7 @@
     _(PowHalfD)                 \
     _(AsmJSUInt32ToDouble)      \
     _(AsmJSUInt32ToFloat32)     \
-    _(UDiv)                     \
-    _(UMod)                     \
+    _(UDivOrMod)                \
     _(AsmJSLoadFuncPtr)
 
 #endif // jit_mips_LOpcodes_mips_h__

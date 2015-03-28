@@ -7637,7 +7637,7 @@ DebuggerEnv_setVariable(JSContext *cx, unsigned argc, Value *vp)
         }
 
         /* Just set the property. */
-        if (!SetProperty(cx, env, env, id, &v))
+        if (!SetProperty(cx, env, id, v))
             return false;
     }
 

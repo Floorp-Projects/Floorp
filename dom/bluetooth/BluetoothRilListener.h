@@ -11,7 +11,7 @@
 
 #include "nsAutoPtr.h"
 
-#include "nsIIccProvider.h"
+#include "nsIIccService.h"
 #include "nsIMobileConnectionService.h"
 #include "nsITelephonyCallInfo.h"
 #include "nsITelephonyService.h"

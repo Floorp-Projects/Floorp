@@ -158,6 +158,6 @@
 
 /* Tab styling - make sure to use an inverted icon for the selected tab
    (brighttext only covers the unselected tabs) */
-.tab-close-button[selected=true]:not(:hover) {
+.tab-close-button[visuallyselected=true]:not(:hover) {
   -moz-image-region: rect(0, 64px, 16px, 48px);
 }

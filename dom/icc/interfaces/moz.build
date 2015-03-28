@@ -6,11 +6,13 @@
 
 XPIDL_SOURCES += [
     'nsIIccInfo.idl',
-    'nsIIccProvider.idl',
+    'nsIIccProvider.idl', # TODO: Bug 815526, deprecate RILContentHelper.
+    'nsIIccService.idl',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['MOZ_B2G_RIL']:
     XPIDL_SOURCES += [
+        'nsIGonkIccService.idl',
         'nsIIccMessenger.idl',
     ]
 
