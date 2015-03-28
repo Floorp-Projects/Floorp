@@ -2622,6 +2622,14 @@ void imgCacheValidator::AddProxy(imgRequestProxy *aProxy)
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
 NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt)
 {
+  // If for some reason we don't still have an existing request (probably
+  // because OnStartRequest got delivered more than once), just bail.
+  if (!mRequest) {
+    MOZ_ASSERT_UNREACHABLE("OnStartRequest delivered more than once?");
+    aRequest->Cancel(NS_BINDING_ABORTED);
+    return NS_ERROR_FAILURE;
+  }
+
   // If this request is coming from cache and has the same URI as our
   // imgRequest, the request all our proxies are pointing at is valid, and all
   // we have to do is tell them to notify their listeners.
