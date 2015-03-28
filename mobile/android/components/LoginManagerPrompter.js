@@ -148,11 +148,11 @@ LoginManagerPrompter.prototype = {
      *        String message to be displayed in the doorhanger
      * @param aButtons
      *        Buttons to display with the doorhanger
-     * @param aSubtext
-     *        String to be displayed below the aBody message
+     * @param aActionText
+     *        Object with text to be displayed as clickable, along with a bundle to create an action
      *
      */
-    _showLoginNotification : function (aName, aTitle, aBody, aButtons, aSubtext) {
+    _showLoginNotification : function (aName, aTitle, aBody, aButtons, aActionText) {
         this.log("Adding new " + aName + " notification bar");
         let notifyWin = this._window.top;
         let chromeWin = this._getChromeWindow(notifyWin).wrappedJSObject;
@@ -171,7 +171,7 @@ LoginManagerPrompter.prototype = {
             persistWhileVisible: true,
             timeout: Date.now() + 10000,
             title: aTitle,
-            subtext: aSubtext
+            actionText: aActionText
         }
 
         var nativeWindow = this._getNativeWindow();
@@ -194,11 +194,16 @@ LoginManagerPrompter.prototype = {
 
         let displayHost = this._getShortDisplayHost(aLogin.hostname);
         let title = { text: displayHost, resource: aLogin.hostname };
-        let subtext = null;
 
-        if (aLogin.username) {
-          subtext = this._sanitizeUsername(aLogin.username);
-        }
+        let username = aLogin.username ? this._sanitizeUsername(aLogin.username) : "";
+
+        let actionText = {
+            text: username,
+            type: "EDIT",
+            bundle: { username: username,
+                       password: aLogin.password }
+        };
+
         // The callbacks in |buttons| have a closure to access the variables
         // in scope here; set one to |this._pwmgr| so we can get back to pwmgr
         // without a getService() call.
@@ -222,7 +227,7 @@ LoginManagerPrompter.prototype = {
             }
         ];
 
-        this._showLoginNotification("password-save", title, notificationText, buttons, subtext);
+        this._showLoginNotification("password-save", title, notificationText, buttons, actionText);
     },
 
     /*

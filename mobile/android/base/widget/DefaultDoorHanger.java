@@ -29,7 +29,6 @@ import java.util.List;
 public class DefaultDoorHanger extends DoorHanger {
     private static final String LOGTAG = "GeckoDefaultDoorHanger";
 
-    private final Resources mResources;
     private static int sSpinnerTextColor = -1;
 
     private List<PromptInput> mInputs;
@@ -38,10 +37,8 @@ public class DefaultDoorHanger extends DoorHanger {
     public DefaultDoorHanger(Context context, DoorhangerConfig config, Type type) {
         super(context, config, type);
 
-        mResources = getResources();
-
         if (sSpinnerTextColor == -1) {
-            sSpinnerTextColor = getResources().getColor(R.color.text_color_primary_disable_only);
+            sSpinnerTextColor = mResources.getColor(R.color.text_color_primary_disable_only);
         }
         loadConfig(config);
     }
