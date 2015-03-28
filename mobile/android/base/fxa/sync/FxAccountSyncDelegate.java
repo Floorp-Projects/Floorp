@@ -4,17 +4,24 @@
 
 package org.mozilla.gecko.fxa.sync;
 
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.BlockingQueue;
 
 import org.mozilla.gecko.fxa.login.State;
 
 import android.content.SyncResult;
 
 public class FxAccountSyncDelegate {
-  protected final CountDownLatch latch;
+  public enum Result {
+    Success,
+    Error,
+    Postponed,
+    Rejected,
+  }
+
+  protected final BlockingQueue<Result> latch;
   protected final SyncResult syncResult;
 
-  public FxAccountSyncDelegate(CountDownLatch latch, SyncResult syncResult) {
+  public FxAccountSyncDelegate(BlockingQueue<Result> latch, SyncResult syncResult) {
     if (latch == null) {
       throw new IllegalArgumentException("latch must not be null");
     }
@@ -51,12 +58,12 @@ public class FxAccountSyncDelegate {
 
   public void handleSuccess() {
     setSyncResultSuccess();
-    latch.countDown();
+    latch.offer(Result.Success);
   }
 
   public void handleError(Exception e) {
     setSyncResultSoftError();
-    latch.countDown();
+    latch.offer(Result.Error);
   }
 
   /**
@@ -75,7 +82,7 @@ public class FxAccountSyncDelegate {
    */
   public void handleCannotSync(State finalState) {
     setSyncResultSoftError();
-    latch.countDown();
+    latch.offer(Result.Error);
   }
 
   public void postponeSync(long millis) {
@@ -89,7 +96,7 @@ public class FxAccountSyncDelegate {
        */
     }
     setSyncResultSoftError();
-    latch.countDown();
+    latch.offer(Result.Postponed);
   }
 
   /**
@@ -98,6 +105,6 @@ public class FxAccountSyncDelegate {
    * been met.
    */
   public void rejectSync() {
-    latch.countDown();
+    latch.offer(Result.Rejected);
   }
 }
