@@ -486,16 +486,7 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
   // like the native stack, the JS stack is iterated youngest-to-oldest and we
   // need to iterate oldest-to-youngest when adding entries to aProfile.
 
-  // Synchronous sampling reports an invalid buffer generation to
-  // ProfilingFrameIterator to avoid incorrectly resetting the generation of
-  // sampled JIT entries inside the JS engine. See note below concerning 'J'
-  // entries.
-  uint32_t startBufferGen;
-  if (aSample->isSamplingCurrentThread) {
-    startBufferGen = UINT32_MAX;
-  } else {
-    startBufferGen = aProfile.bufferGeneration();
-  }
+  uint32_t startBufferGen = aProfile.bufferGeneration();
   uint32_t jsCount = 0;
   JS::ProfilingFrameIterator::Frame jsFrames[1000];
   // Only walk jit stack if profiling frame iterator is turned on.
@@ -644,13 +635,14 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
     nativeIndex--;
   }
 
+  MOZ_ASSERT(aProfile.bufferGeneration() >= startBufferGen);
+  uint32_t lapCount = aProfile.bufferGeneration() - startBufferGen;
+
   // Update the JS runtime with the current profile sample buffer generation.
   //
   // Do not do this for synchronous sampling, which create their own
   // ProfileBuffers.
   if (!aSample->isSamplingCurrentThread && pseudoStack->mRuntime) {
-    MOZ_ASSERT(aProfile.bufferGeneration() >= startBufferGen);
-    uint32_t lapCount = aProfile.bufferGeneration() - startBufferGen;
     JS::UpdateJSRuntimeProfilerSampleBufferGen(pseudoStack->mRuntime,
                                                aProfile.bufferGeneration(),
                                                lapCount);
