@@ -50,6 +50,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'PluginSurfaceParent.h',
     ]
     UNIFIED_SOURCES += [
+        'COMMessageFilter.cpp',
         'PluginHangUIParent.cpp',
         'PluginSurfaceParent.cpp',
     ]
