@@ -1243,7 +1243,7 @@ ObjectIsCallable(JSObject *obj)
 void
 MarkValueFromIon(JSRuntime *rt, Value *vp)
 {
-    TraceManuallyBarrieredEdge(&rt->gc.marker, vp, "write barrier");
+    gc::MarkValueUnbarriered(&rt->gc.marker, vp, "write barrier");
 }
 
 void

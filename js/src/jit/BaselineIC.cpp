@@ -336,7 +336,7 @@ ICStub::trace(JSTracer *trc)
         break;
       case ICStub::GetIntrinsic_Constant: {
         ICGetIntrinsic_Constant *constantStub = toGetIntrinsic_Constant();
-        TraceEdge(trc, &constantStub->value(), "baseline-getintrinsic-constant-value");
+        gc::MarkValue(trc, &constantStub->value(), "baseline-getintrinsic-constant-value");
         break;
       }
       case ICStub::GetProp_Primitive: {

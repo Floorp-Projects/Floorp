@@ -4250,7 +4250,7 @@ DebuggerScript_trace(JSTracer *trc, JSObject *obj)
 {
     /* This comes from a private pointer, so no barrier needed. */
     if (JSScript *script = GetScriptReferent(obj)) {
-        TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &script, "Debugger.Script referent");
+        MarkCrossCompartmentScriptUnbarriered(trc, obj, &script, "Debugger.Script referent");
         obj->as<NativeObject>().setPrivateUnbarriered(script);
     }
 }
@@ -5272,8 +5272,7 @@ DebuggerSource_trace(JSTracer *trc, JSObject *obj)
      * is okay.
      */
     if (JSObject *referent = GetSourceReferent(obj)) {
-        TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &referent,
-                                                   "Debugger.Source referent");
+        MarkCrossCompartmentObjectUnbarriered(trc, obj, &referent, "Debugger.Source referent");
         obj->as<NativeObject>().setPrivateUnbarriered(referent);
     }
 }
@@ -6389,8 +6388,7 @@ DebuggerObject_trace(JSTracer *trc, JSObject *obj)
      * is okay.
      */
     if (JSObject *referent = (JSObject *) obj->as<NativeObject>().getPrivate()) {
-        TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &referent,
-                                                   "Debugger.Object referent");
+        MarkCrossCompartmentObjectUnbarriered(trc, obj, &referent, "Debugger.Object referent");
         obj->as<NativeObject>().setPrivateUnbarriered(referent);
     }
 }
@@ -7299,8 +7297,7 @@ DebuggerEnv_trace(JSTracer *trc, JSObject *obj)
      * is okay.
      */
     if (Env *referent = (JSObject *) obj->as<NativeObject>().getPrivate()) {
-        TraceManuallyBarrieredCrossCompartmentEdge(trc, obj, &referent,
-                                                   "Debugger.Environment referent");
+        MarkCrossCompartmentObjectUnbarriered(trc, obj, &referent, "Debugger.Environment referent");
         obj->as<NativeObject>().setPrivateUnbarriered(referent);
     }
 }

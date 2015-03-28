@@ -4090,10 +4090,10 @@ JSObject::markChildren(JSTracer *trc)
                 }
             }
 
-            TraceRange(trc,
-                       nobj->getDenseInitializedLength(),
-                       static_cast<HeapSlot*>(nobj->getDenseElementsAllowCopyOnWrite()),
-                       "objectElements");
+            gc::MarkArraySlots(trc,
+                               nobj->getDenseInitializedLength(),
+                               nobj->getDenseElementsAllowCopyOnWrite(),
+                               "objectElements");
         } while (false);
     }
 }
