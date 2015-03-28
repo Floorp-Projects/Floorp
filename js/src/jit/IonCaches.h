@@ -544,7 +544,7 @@ class GetPropertyIC : public RepatchIonCache
   protected:
     // Registers live after the cache, excluding output registers. The initial
     // value of these registers must be preserved by the cache.
-    RegisterSet liveRegs_;
+    LiveRegisterSet liveRegs_;
 
     Register object_;
     PropertyName *name_;
@@ -562,7 +562,7 @@ class GetPropertyIC : public RepatchIonCache
     bool hasGenericProxyStub_ : 1;
 
   public:
-    GetPropertyIC(RegisterSet liveRegs,
+    GetPropertyIC(LiveRegisterSet liveRegs,
                   Register object, PropertyName *name,
                   TypedOrValueRegister output,
                   bool monitoredResult)
@@ -689,7 +689,7 @@ class SetPropertyIC : public RepatchIonCache
   protected:
     // Registers live after the cache, excluding output registers. The initial
     // value of these registers must be preserved by the cache.
-    RegisterSet liveRegs_;
+    LiveRegisterSet liveRegs_;
 
     Register object_;
     PropertyName *name_;
@@ -700,7 +700,7 @@ class SetPropertyIC : public RepatchIonCache
     bool hasGenericProxyStub_;
 
   public:
-    SetPropertyIC(RegisterSet liveRegs, Register object, PropertyName *name,
+    SetPropertyIC(LiveRegisterSet liveRegs, Register object, PropertyName *name,
                   ConstantOrRegister value, bool strict, bool needsTypeBarrier)
       : liveRegs_(liveRegs),
         object_(object),
@@ -774,7 +774,7 @@ class SetPropertyIC : public RepatchIonCache
 class GetElementIC : public RepatchIonCache
 {
   protected:
-    RegisterSet liveRegs_;
+    LiveRegisterSet liveRegs_;
 
     Register object_;
     ConstantOrRegister index_;
@@ -791,7 +791,7 @@ class GetElementIC : public RepatchIonCache
     static const size_t MAX_FAILED_UPDATES;
 
   public:
-    GetElementIC(RegisterSet liveRegs, Register object, ConstantOrRegister index,
+    GetElementIC(LiveRegisterSet liveRegs, Register object, ConstantOrRegister index,
                  TypedOrValueRegister output, bool monitoredResult, bool allowDoubleResult)
       : liveRegs_(liveRegs),
         object_(object),
@@ -1008,7 +1008,7 @@ class NameIC : public RepatchIonCache
   protected:
     // Registers live after the cache, excluding output registers. The initial
     // value of these registers must be preserved by the cache.
-    RegisterSet liveRegs_;
+    LiveRegisterSet liveRegs_;
 
     bool typeOf_;
     Register scopeChain_;
@@ -1016,7 +1016,7 @@ class NameIC : public RepatchIonCache
     TypedOrValueRegister output_;
 
   public:
-    NameIC(RegisterSet liveRegs, bool typeOf,
+    NameIC(LiveRegisterSet liveRegs, bool typeOf,
            Register scopeChain, PropertyName *name,
            TypedOrValueRegister output)
       : liveRegs_(liveRegs),

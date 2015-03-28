@@ -296,16 +296,16 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ===============================================================
     // Stack manipulation functions.
 
-    void PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet) PER_ARCH;
-    void PushRegsInMask(RegisterSet set);
-    void PushRegsInMask(GeneralRegisterSet set);
+    void PushRegsInMask(LiveRegisterSet set, LiveFloatRegisterSet simdSet) PER_ARCH;
+    void PushRegsInMask(LiveRegisterSet set);
+    void PushRegsInMask(LiveGeneralRegisterSet set);
 
-    void PopRegsInMask(RegisterSet set);
-    void PopRegsInMask(RegisterSet set, FloatRegisterSet simdSet);
-    void PopRegsInMask(GeneralRegisterSet set);
-    void PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore,
-                             FloatRegisterSet simdSet) PER_ARCH;
-    void PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore);
+    void PopRegsInMask(LiveRegisterSet set);
+    void PopRegsInMask(LiveRegisterSet set, LiveFloatRegisterSet simdSet);
+    void PopRegsInMask(LiveGeneralRegisterSet set);
+    void PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore,
+                             LiveFloatRegisterSet simdSet) PER_ARCH;
+    void PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore);
 
     void Push(const Operand op) PER_ARCH ONLY_X86_X64;
     void Push(Register reg) PER_ARCH;
@@ -1231,7 +1231,7 @@ class MacroAssembler : public MacroAssemblerSpecific
     void alignFrameForICArguments(AfterICSaveLive &aic);
     void restoreFrameAlignmentForICArguments(AfterICSaveLive &aic);
 
-    AfterICSaveLive icSaveLive(RegisterSet &liveRegs) {
+    AfterICSaveLive icSaveLive(LiveRegisterSet &liveRegs) {
         PushRegsInMask(liveRegs);
         AfterICSaveLive aic(framePushed());
         alignFrameForICArguments(aic);
@@ -1242,7 +1242,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         return buildOOLFakeExitFrame(fakeReturnAddr);
     }
 
-    void icRestoreLive(RegisterSet &liveRegs, AfterICSaveLive &aic) {
+    void icRestoreLive(LiveRegisterSet &liveRegs, AfterICSaveLive &aic) {
         restoreFrameAlignmentForICArguments(aic);
         MOZ_ASSERT(framePushed() == aic.initialStack);
         PopRegsInMask(liveRegs);

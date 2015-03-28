@@ -105,12 +105,22 @@ Assembler::TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReade
 FloatRegisterSet
 FloatRegister::ReduceSetForPush(const FloatRegisterSet &s)
 {
-    if (JitSupportsSimd())
-        return s;
+    SetType bits = s.bits();
 
-    // Ignore all SIMD register.
-    return FloatRegisterSet(s.bits() & (Codes::AllPhysMask * Codes::SpreadScalar));
+    // Ignore all SIMD register, if not supported.
+    if (!JitSupportsSimd())
+        bits &= Codes::AllPhysMask * Codes::SpreadScalar;
+
+    // Exclude registers which are already pushed with a larger type. High bits
+    // are associated with larger register types. Thus we keep the set of
+    // registers which are not included in larger type.
+    bits &= ~(bits >> (1 * Codes::TotalPhys));
+    bits &= ~(bits >> (2 * Codes::TotalPhys));
+    bits &= ~(bits >> (3 * Codes::TotalPhys));
+
+    return FloatRegisterSet(bits);
 }
+
 uint32_t
 FloatRegister::GetPushSizeInBytes(const FloatRegisterSet &s)
 {

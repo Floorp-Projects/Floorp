@@ -59,9 +59,8 @@ JitCode *JitRuntime::generateProfilerExitFrameTailStub(JSContext *) { MOZ_CRASH(
 // ===============================================================
 // Stack manipulation functions.
 
-void MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet) { MOZ_CRASH(); }
-void MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore,
-                                         FloatRegisterSet simdSet)
+void MacroAssembler::PushRegsInMask(LiveRegisterSet, LiveFloatRegisterSet) { MOZ_CRASH(); }
+void MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet, LiveRegisterSet, LiveFloatRegisterSet)
 {
     MOZ_CRASH();
 }
