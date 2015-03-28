@@ -122,6 +122,13 @@ XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
 #endif
 
+#ifdef MOZ_CRASHREPORTER
+XPCOMUtils.defineLazyModuleGetter(this, "TabCrashReporter",
+                                  "resource:///modules/ContentCrashReporters.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PluginCrashReporter",
+                                  "resource:///modules/ContentCrashReporters.jsm");
+#endif
+
 XPCOMUtils.defineLazyGetter(this, "ShellService", function() {
   try {
     return Cc["@mozilla.org/browser/shell-service;1"].
@@ -731,6 +738,11 @@ BrowserGlue.prototype = {
       iconURL: "resource:///chrome/browser/content/browser/defaultthemes/devedition.icon.png",
       author: vendorShortName,
     });
+#endif
+
+#ifdef MOZ_CRASHREPORTER
+    TabCrashReporter.init();
+    PluginCrashReporter.init();
 #endif
 
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
