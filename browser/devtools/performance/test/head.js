@@ -48,13 +48,17 @@ let DEFAULT_PREFS = [
   "devtools.performance.ui.show-idle-blocks",
   "devtools.performance.ui.enable-memory",
   "devtools.performance.ui.enable-framerate",
+
+  // remove after bug 1075567 is resolved.
+  "devtools.performance_dev.enabled"
 ].reduce((prefs, pref) => {
   prefs[pref] = Services.prefs.getBoolPref(pref);
   return prefs;
 }, {});
 
-// Enable the new performance panel for all tests.
-Services.prefs.setBoolPref("devtools.performance.enabled", true);
+// Enable the new performance panel for all tests. Remove this after
+// bug 1075567 is resolved.
+Services.prefs.setBoolPref("devtools.performance_dev.enabled", true);
 // Enable logging for all the tests. Both the debugger server and frontend will
 // be affected by this pref.
 Services.prefs.setBoolPref("devtools.debugger.log", false);

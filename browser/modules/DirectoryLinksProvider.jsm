@@ -410,7 +410,8 @@ let DirectoryLinksProvider = {
    */
   getEnhancedLink: function DirectoryLinksProvider_getEnhancedLink(link) {
     // Use the provided link if it's already enhanced
-    return link.enhancedImageURI && link ||
+    return link.type == "history" ? null :
+           link.enhancedImageURI && link ? link :
            this._enhancedLinks.get(NewTabUtils.extractSite(link.url));
   },
 

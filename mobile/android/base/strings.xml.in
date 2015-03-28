@@ -339,6 +339,12 @@
   <string name="contextmenu_top_sites_unpin">&contextmenu_top_sites_unpin;</string>
   <string name="contextmenu_add_search_engine">&contextmenu_add_search_engine;</string>
 
+  <string name="doorhanger_login_no_username">&doorhanger_login_no_username;</string>
+  <string name="doorhanger_login_edit_title">&doorhanger_login_edit_title;</string>
+  <string name="doorhanger_login_edit_username_hint">&doorhanger_login_edit_username_hint;</string>
+  <string name="doorhanger_login_edit_password_hint">&doorhanger_login_edit_password_hint;</string>
+  <string name="doorhanger_login_edit_toggle">&doorhanger_login_edit_toggle;</string>
+
   <string name="pref_titlebar_mode">&pref_titlebar_mode;</string>
   <string name="pref_titlebar_mode_title">&pref_titlebar_mode_title;</string>
   <string name="pref_titlebar_mode_url">&pref_titlebar_mode_url;</string>
@@ -366,6 +372,7 @@
   <string name="button_clear">&button_clear;</string>
   <string name="button_yes">&button_yes;</string>
   <string name="button_no">&button_no;</string>
+  <string name="button_remember">&button_remember;</string>
 
   <string name="home_title">&home_title;</string>
   <string name="home_top_sites_title">&home_top_sites_title;</string>

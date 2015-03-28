@@ -1159,10 +1159,6 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   max-width: 27em;
 }
 
-.popup-progress-meter {
-  margin-top: .5em;
-}
-
 .addon-install-confirmation-name {
   font-weight: bold;
 }

@@ -48,13 +48,7 @@ function testViewSource()
     let toolbox = gDevTools.getToolbox(target);
     toolbox.once("styleeditor-selected", (event, panel) => {
       StyleEditorUI = panel.UI;
-
-      let count = 0;
-      StyleEditorUI.on("editor-added", function() {
-        if (++count == 2) {
-          deferred.resolve(panel);
-        }
-      });
+      deferred.resolve(panel);
     });
 
     EventUtils.sendMouseEvent({ type: "click" }, nodes[0]);

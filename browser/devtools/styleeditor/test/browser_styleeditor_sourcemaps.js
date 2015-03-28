@@ -69,28 +69,28 @@ const origNames = ["sourcemaps.scss", "contained.scss", "test-stylus.styl"];
 waitForExplicitFinish();
 
 add_task(function*() {
-  let {UI} = yield addTabAndOpenStyleEditors(7, null, TESTCASE_URI);
+  let {ui} = yield openStyleEditorForURL(TESTCASE_URI);
 
-  is(UI.editors.length, 4,
+  is(ui.editors.length, 4,
     "correct number of editors with source maps enabled");
 
   // Test first plain css editor
-  testFirstEditor(UI.editors[0]);
+  testFirstEditor(ui.editors[0]);
 
   // Test Scss editors
-  yield testEditor(UI.editors[1], origNames);
-  yield testEditor(UI.editors[2], origNames);
-  yield testEditor(UI.editors[3], origNames);
+  yield testEditor(ui.editors[1], origNames);
+  yield testEditor(ui.editors[2], origNames);
+  yield testEditor(ui.editors[3], origNames);
 
   // Test disabling original sources
-  yield togglePref(UI);
+  yield togglePref(ui);
 
-  is(UI.editors.length, 4, "correct number of editors after pref toggled");
+  is(ui.editors.length, 4, "correct number of editors after pref toggled");
 
   // Test CSS editors
-  yield testEditor(UI.editors[1], cssNames);
-  yield testEditor(UI.editors[2], cssNames);
-  yield testEditor(UI.editors[3], cssNames);
+  yield testEditor(ui.editors[1], cssNames);
+  yield testEditor(ui.editors[2], cssNames);
+  yield testEditor(ui.editors[3], cssNames);
 
   Services.prefs.clearUserPref(PREF);
 });
@@ -116,16 +116,7 @@ function testEditor(editor, possibleNames) {
 /* Helpers */
 
 function togglePref(UI) {
-  let deferred = promise.defer();
-  let count = 0;
-
-  UI.on("editor-added", (event, editor) => {
-    if (++count == 3) {
-      deferred.resolve();
-    }
-  })
-  let editorsPromise = deferred.promise;
-
+  let editorsPromise = UI.once("stylesheets-reset");
   let selectedPromise = UI.once("editor-selected");
 
   Services.prefs.setBoolPref(PREF, false);
