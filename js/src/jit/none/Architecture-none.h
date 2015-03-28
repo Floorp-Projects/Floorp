@@ -123,6 +123,7 @@ struct FloatRegister
     uint32_t size() const { MOZ_CRASH(); }
     uint32_t numAlignedAliased() const { MOZ_CRASH(); }
     void alignedAliased(uint32_t, FloatRegister *) { MOZ_CRASH(); }
+    SetType alignedOrDominatedAliasedSet() const { MOZ_CRASH(); }
     template <typename T> static T ReduceSetForPush(T) { MOZ_CRASH(); }
     uint32_t getRegisterDumpOffsetInBytes() { MOZ_CRASH(); }
     static uint32_t SetSize(SetType x) { MOZ_CRASH(); }
