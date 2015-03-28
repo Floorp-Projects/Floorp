@@ -372,6 +372,15 @@ size. -->
 <!ENTITY contextmenu_top_sites_unpin "Unpin Site">
 <!ENTITY contextmenu_add_search_engine "Add a Search Engine">
 
+<!-- Localization note (doorhanger_login_no_username): This string is used in the save-login doorhanger
+     where normally a username would be displayed. In this case, no username was found, and this placeholder
+     contains brackets to indicate this is not actually a username, but rather a placeholder -->
+<!ENTITY doorhanger_login_no_username "[No username]">
+<!ENTITY doorhanger_login_edit_title "Edit login">
+<!ENTITY doorhanger_login_edit_username_hint "Username">
+<!ENTITY doorhanger_login_edit_password_hint "Password">
+<!ENTITY doorhanger_login_edit_toggle "Show password">
+
 <!ENTITY pref_titlebar_mode "Title bar">
 <!ENTITY pref_titlebar_mode_title "Show page title">
 <!ENTITY pref_titlebar_mode_url "Show page address">
@@ -430,6 +439,7 @@ size. -->
 <!ENTITY button_clear_data "Clear data">
 <!ENTITY button_set "Set">
 <!ENTITY button_clear "Clear">
+<!ENTITY button_remember "Remember">
 
 <!ENTITY home_top_sites_title "Top Sites">
 <!-- Localization note (home_top_sites_add): This string is used as placeholder

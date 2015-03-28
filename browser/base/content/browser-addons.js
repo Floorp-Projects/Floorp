@@ -179,17 +179,10 @@ const gXPInstallObserver = {
               addonList.firstChild.remove();
 
             for (let install of installInfo.installs) {
-              let container = document.createElement("hbox");
               let name = document.createElement("label");
-              let author = document.createElement("label");
               name.setAttribute("value", install.addon.name);
-              author.setAttribute("value", !install.addon.creator ? "" :
-                gNavigatorBundle.getFormattedString("addonConfirmInstall.author", [install.addon.creator]));
               name.setAttribute("class", "addon-install-confirmation-name");
-              author.setAttribute("class", "addon-install-confirmation-author");
-              container.appendChild(name);
-              container.appendChild(author);
-              addonList.appendChild(container);
+              addonList.appendChild(name);
             }
 
             this.acceptInstallation = () => {
