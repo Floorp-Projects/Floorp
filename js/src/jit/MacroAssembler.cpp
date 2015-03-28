@@ -2532,12 +2532,6 @@ MacroAssembler::alignJitStackBasedOnNArgs(uint32_t nargs)
 // Stack manipulation functions.
 
 void
-MacroAssembler::PushRegsInMask(LiveRegisterSet set)
-{
-    PushRegsInMask(set, LiveFloatRegisterSet());
-}
-
-void
 MacroAssembler::PushRegsInMask(LiveGeneralRegisterSet set)
 {
     PushRegsInMask(LiveRegisterSet(set.set(), FloatRegisterSet()));
@@ -2550,21 +2544,9 @@ MacroAssembler::PopRegsInMask(LiveRegisterSet set)
 }
 
 void
-MacroAssembler::PopRegsInMask(LiveRegisterSet set, LiveFloatRegisterSet simdSet)
-{
-    PopRegsInMaskIgnore(set, LiveRegisterSet(), simdSet);
-}
-
-void
 MacroAssembler::PopRegsInMask(LiveGeneralRegisterSet set)
 {
     PopRegsInMask(LiveRegisterSet(set.set(), FloatRegisterSet()));
-}
-
-void
-MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
-{
-    PopRegsInMaskIgnore(set, ignore, LiveFloatRegisterSet());
 }
 
 void

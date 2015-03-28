@@ -296,16 +296,12 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ===============================================================
     // Stack manipulation functions.
 
-    void PushRegsInMask(LiveRegisterSet set, LiveFloatRegisterSet simdSet) PER_ARCH;
-    void PushRegsInMask(LiveRegisterSet set);
+    void PushRegsInMask(LiveRegisterSet set) PER_ARCH;
     void PushRegsInMask(LiveGeneralRegisterSet set);
 
     void PopRegsInMask(LiveRegisterSet set);
-    void PopRegsInMask(LiveRegisterSet set, LiveFloatRegisterSet simdSet);
     void PopRegsInMask(LiveGeneralRegisterSet set);
-    void PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore,
-                             LiveFloatRegisterSet simdSet) PER_ARCH;
-    void PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore);
+    void PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore) PER_ARCH;
 
     void Push(const Operand op) PER_ARCH ONLY_X86_X64;
     void Push(Register reg) PER_ARCH;

@@ -8240,8 +8240,6 @@ static const LiveRegisterSet NonVolatileRegs =
     LiveRegisterSet(GeneralRegisterSet(Registers::NonVolatileMask),
                     FloatRegisterSet(FloatRegisters::NonVolatileMask));
 #endif
-static const LiveFloatRegisterSet NonVolatileSimdRegs(
-    SupportsSimd ? NonVolatileRegs.fpus() : FloatRegisterSet());
 
 #if defined(JS_CODEGEN_MIPS)
 // Mips is using one more double slot due to stack alignment for double values.
@@ -8252,11 +8250,8 @@ static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * siz
 #elif defined(JS_CODEGEN_NONE)
 static const unsigned FramePushedAfterSave = 0;
 #else
-static const unsigned FramePushedAfterSave =
-   SupportsSimd ? NonVolatileRegs.gprs().size() * sizeof(intptr_t) +
-                  NonVolatileRegs.fpus().size() * Simd128DataSize
-                : NonVolatileRegs.gprs().size() * sizeof(intptr_t) +
-                  NonVolatileRegs.fpus().getPushSizeInBytes();
+static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * sizeof(intptr_t)
+                                           + NonVolatileRegs.fpus().getPushSizeInBytes();
 #endif
 static const unsigned FramePushedForEntrySP = FramePushedAfterSave + sizeof(void*);
 
@@ -8281,7 +8276,7 @@ GenerateEntry(ModuleCompiler &m, unsigned exportIndex)
     // Save all caller non-volatile registers before we clobber them here and in
     // the asm.js callee (which does not preserve non-volatile registers).
     masm.setFramePushed(0);
-    masm.PushRegsInMask(NonVolatileRegs, NonVolatileSimdRegs);
+    masm.PushRegsInMask(NonVolatileRegs);
     MOZ_ASSERT(masm.framePushed() == FramePushedAfterSave);
 
     // ARM and MIPS have a globally-pinned GlobalReg (x64 uses RIP-relative
@@ -8428,7 +8423,7 @@ GenerateEntry(ModuleCompiler &m, unsigned exportIndex)
     }
 
     // Restore clobbered non-volatile registers of the caller.
-    masm.PopRegsInMask(NonVolatileRegs, NonVolatileSimdRegs);
+    masm.PopRegsInMask(NonVolatileRegs);
     MOZ_ASSERT(masm.framePushed() == 0);
 
     masm.move32(Imm32(true), ReturnReg);
@@ -9034,7 +9029,7 @@ GenerateOnOutOfBoundsLabelExit(ModuleCompiler &m, Label *throwLabel)
 static const LiveRegisterSet AllRegsExceptSP(
     GeneralRegisterSet(Registers::AllMask &
                        ~(uint32_t(1) << Registers::StackPointer)),
-    FloatRegisterSet(FloatRegisters::AllDoubleMask));
+    FloatRegisterSet(FloatRegisters::AllMask));
 
 // The async interrupt-callback exit is called from arbitrarily-interrupted asm.js
 // code. That means we must first save *all* registers and restore *all*
@@ -9058,8 +9053,7 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     masm.push(Imm32(0));            // space for resumePC
     masm.pushFlags();               // after this we are safe to use sub
     masm.setFramePushed(0);         // set to zero so we can use masm.framePushed() below
-    LiveFloatRegisterSet simdSet(AllRegsExceptSP.fpus());
-    masm.PushRegsInMask(AllRegsExceptSP, simdSet); // save all GP/FP registers (except SP)
+    masm.PushRegsInMask(AllRegsExceptSP); // save all GP/FP registers (except SP)
 
     Register scratch = ABIArgGenerator::NonArgReturnReg0;
 
@@ -9084,7 +9078,7 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     masm.mov(ABIArgGenerator::NonVolatileReg, StackPointer);
 
     // Restore the machine state to before the interrupt.
-    masm.PopRegsInMask(AllRegsExceptSP, simdSet); // restore all GP/FP registers (except SP)
+    masm.PopRegsInMask(AllRegsExceptSP); // restore all GP/FP registers (except SP)
     masm.popFlags();              // after this, nothing that sets conditions
     masm.ret();                   // pop resumePC into PC
 #elif defined(JS_CODEGEN_MIPS)
@@ -9154,7 +9148,7 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
     // Save all FP registers
     JS_STATIC_ASSERT(!SupportsSimd);
     masm.PushRegsInMask(LiveRegisterSet(GeneralRegisterSet(0),
-                                             FloatRegisterSet(FloatRegisters::AllDoubleMask)));
+                                        FloatRegisterSet(FloatRegisters::AllDoubleMask)));
 
     masm.assertStackAlignment(ABIStackAlignment);
     masm.call(AsmJSImm_HandleExecutionInterrupt);
@@ -9165,7 +9159,7 @@ GenerateAsyncInterruptExit(ModuleCompiler &m, Label *throwLabel)
 
     // Restore all FP registers
     masm.PopRegsInMask(LiveRegisterSet(GeneralRegisterSet(0),
-                                            FloatRegisterSet(FloatRegisters::AllDoubleMask)));
+                                       FloatRegisterSet(FloatRegisters::AllDoubleMask)));
     masm.mov(r6,sp);
     masm.as_vmsr(r5);
     masm.as_msr(r4);
@@ -9238,7 +9232,7 @@ GenerateThrowStub(ModuleCompiler &m, Label *throwLabel)
     masm.setFramePushed(FramePushedForEntrySP);
     masm.loadPtr(Address(scratch, AsmJSActivation::offsetOfEntrySP()), StackPointer);
     masm.Pop(scratch);
-    masm.PopRegsInMask(NonVolatileRegs, NonVolatileSimdRegs);
+    masm.PopRegsInMask(NonVolatileRegs);
     MOZ_ASSERT(masm.framePushed() == 0);
 
     masm.mov(ImmWord(0), ReturnReg);
