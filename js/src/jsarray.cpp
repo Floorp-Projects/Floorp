@@ -749,7 +749,7 @@ js::WouldDefinePastNonwritableLength(HandleNativeObject obj, uint32_t index)
 }
 
 static bool
-array_addProperty(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
+array_addProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
 {
     Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
 

@@ -413,7 +413,7 @@ DefinePropertyIfFound(XPCCallContext& ccx,
 /***************************************************************************/
 
 static bool
-XPC_WN_OnlyIWrite_AddPropertyStub(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
+XPC_WN_OnlyIWrite_AddPropertyStub(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
 {
     XPCCallContext ccx(JS_CALLER, cx, obj, NullPtr(), id);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
@@ -428,7 +428,7 @@ XPC_WN_OnlyIWrite_AddPropertyStub(JSContext* cx, HandleObject obj, HandleId id, 
 
 static bool
 XPC_WN_CannotModifyPropertyStub(JSContext* cx, HandleObject obj, HandleId id,
-                                MutableHandleValue vp)
+                                HandleValue v)
 {
     return Throw(NS_ERROR_XPC_CANT_MODIFY_PROP_ON_WN, cx);
 }
@@ -688,7 +688,7 @@ const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
 /***************************************************************************/
 
 static bool
-XPC_WN_MaybeResolvingPropertyStub(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
+XPC_WN_MaybeResolvingPropertyStub(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
 {
     XPCCallContext ccx(JS_CALLER, cx, obj);
     XPCWrappedNative* wrapper = ccx.GetWrapper();
@@ -748,10 +748,10 @@ XPC_WN_MaybeResolvingDeletePropertyStub(JSContext* cx, HandleObject obj, HandleI
 
 static bool
 XPC_WN_Helper_AddProperty(JSContext* cx, HandleObject obj, HandleId id,
-                          MutableHandleValue vp)
+                          HandleValue v)
 {
     PRE_HELPER_STUB
-    AddProperty(wrapper, cx, obj, id, vp.address(), &retval);
+    AddProperty(wrapper, cx, obj, id, v, &retval);
     POST_HELPER_STUB
 }
 
@@ -1331,7 +1331,7 @@ const js::Class XPC_WN_ModsAllowed_NoCall_Proto_JSClass = {
 
 static bool
 XPC_WN_OnlyIWrite_Proto_AddPropertyStub(JSContext* cx, HandleObject obj, HandleId id,
-                                        MutableHandleValue vp)
+                                        HandleValue v)
 {
     MOZ_ASSERT(js::GetObjectClass(obj) == &XPC_WN_NoMods_WithCall_Proto_JSClass ||
                js::GetObjectClass(obj) == &XPC_WN_NoMods_NoCall_Proto_JSClass,

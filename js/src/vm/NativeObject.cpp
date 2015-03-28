@@ -1034,35 +1034,18 @@ js::NativeLookupElement(JSContext* cx, HandleNativeObject obj, uint32_t index,
 
 /*** [[DefineOwnProperty]] ***********************************************************************/
 
-/*
- * Backward compatibility requires allowing addProperty hooks to mutate the
- * nominal initial value of a slotful property, while GC safety wants that
- * value to be stored before the call-out through the hook.  Optimize to do
- * both while saving cycles for classes that stub their addProperty hook.
- */
 static inline bool
 CallAddPropertyHook(ExclusiveContext* cx, HandleNativeObject obj, HandleShape shape,
-                    HandleValue nominal)
+                    HandleValue value)
 {
     if (JSAddPropertyOp addProperty = obj->getClass()->addProperty) {
-        MOZ_ASSERT(addProperty != JS_PropertyStub);
-
         if (!cx->shouldBeJSContext())
             return false;
 
-        // Make a local copy of value so addProperty can mutate its inout parameter.
-        RootedValue value(cx, nominal);
-
-        // Use CallJSGetterOp, since JSGetterOp and JSAddPropertyOp happen to
-        // have all the same argument types.
-        Rooted<jsid> id(cx, shape->propid());
-        if (!CallJSGetterOp(cx->asJSContext(), addProperty, obj, id, &value)) {
+        RootedId id(cx, shape->propid());
+        if (!CallJSAddPropertyOp(cx->asJSContext(), addProperty, obj, id, value)) {
             obj->removeProperty(cx, shape->propid());
             return false;
-        }
-        if (value.get() != nominal) {
-            if (shape->hasSlot())
-                obj->setSlotWithType(cx, shape, value);
         }
     }
     return true;
@@ -1070,7 +1053,7 @@ CallAddPropertyHook(ExclusiveContext* cx, HandleNativeObject obj, HandleShape sh
 
 static inline bool
 CallAddPropertyHookDense(ExclusiveContext* cx, HandleNativeObject obj, uint32_t index,
-                         HandleValue nominal)
+                         HandleValue value)
 {
     // Inline addProperty for array objects.
     if (obj->is<ArrayObject>()) {
@@ -1082,28 +1065,18 @@ CallAddPropertyHookDense(ExclusiveContext* cx, HandleNativeObject obj, uint32_t 
     }
 
     if (JSAddPropertyOp addProperty = obj->getClass()->addProperty) {
-        MOZ_ASSERT(addProperty != JS_PropertyStub);
-
         if (!cx->shouldBeJSContext())
             return false;
 
         if (!obj->maybeCopyElementsForWrite(cx))
             return false;
 
-        // Make a local copy of value so addProperty can mutate its inout parameter.
-        RootedValue value(cx, nominal);
-
-        // Use CallJSGetterOp, since JSGetterOp and JSAddPropertyOp happen to
-        // have all the same argument types.
-        Rooted<jsid> id(cx, INT_TO_JSID(index));
-        if (!CallJSGetterOp(cx->asJSContext(), addProperty, obj, id, &value)) {
+        RootedId id(cx, INT_TO_JSID(index));
+        if (!CallJSAddPropertyOp(cx->asJSContext(), addProperty, obj, id, value)) {
             obj->setDenseElementHole(cx, index);
             return false;
         }
-        if (value.get() != nominal)
-            obj->setDenseElementWithType(cx, index, value);
     }
-
     return true;
 }
 
