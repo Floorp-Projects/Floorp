@@ -15,7 +15,7 @@ namespace jit {
 class BaselineCompilerNone : public BaselineCompilerShared
 {
   protected:
-    BaselineCompilerNone(JSContext *cx, TempAllocator &alloc, JSScript *script)
+    BaselineCompilerNone(JSContext* cx, TempAllocator& alloc, JSScript* script)
       : BaselineCompilerShared(cx, alloc, script)
     {
         MOZ_CRASH();

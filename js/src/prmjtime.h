@@ -54,6 +54,6 @@ PRMJ_NowShutdown() {}
 
 /* Format a time value into a buffer. Same semantics as strftime() */
 extern size_t
-PRMJ_FormatTime(char *buf, int buflen, const char *fmt, PRMJTime *tm);
+PRMJ_FormatTime(char* buf, int buflen, const char* fmt, PRMJTime* tm);
 
 #endif /* prmjtime_h */

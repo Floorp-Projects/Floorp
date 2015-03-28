@@ -16,7 +16,7 @@ using namespace js::jit;
 // be encoded and decoded correctly.  We iterate on all registers and on many
 // fake stack locations (Fibonacci).
 static RValueAllocation
-Read(const RValueAllocation &slot)
+Read(const RValueAllocation& slot)
 {
     CompactBufferWriter writer;
     slot.write(writer);

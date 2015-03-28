@@ -45,7 +45,7 @@ namespace jit {
 // Parse the Linux kernel cpuinfo features. This is also used to parse the
 // override features which has some extensions: 'armv7', 'align' and 'hardfp'.
 static uint32_t
-ParseARMCpuFeatures(const char *features, bool override = false)
+ParseARMCpuFeatures(const char* features, bool override = false)
 {
     uint32_t flags = 0;
 
@@ -61,7 +61,7 @@ ParseARMCpuFeatures(const char *features, bool override = false)
             continue;
         }
         // Find the end of the token.
-        const char *end = features + 1;
+        const char* end = features + 1;
         for (; ; end++) {
             ch = *end;
             if (!ch || ch == ' ' || ch == ',')
@@ -131,7 +131,7 @@ CanonicalizeARMHwCapFlags(uint32_t flags)
 volatile uint32_t armHwCapFlags = HWCAP_UNINITIALIZED;
 
 bool
-ParseARMHwCapFlags(const char *armHwCap)
+ParseARMHwCapFlags(const char* armHwCap)
 {
     uint32_t flags = 0;
 
@@ -182,7 +182,7 @@ InitARMFlags()
     if (armHwCapFlags != HWCAP_UNINITIALIZED)
         return;
 
-    const char *env = getenv("ARMHWCAP");
+    const char* env = getenv("ARMHWCAP");
     if (ParseARMHwCapFlags(env))
         return;
 
@@ -208,16 +208,16 @@ InitARMFlags()
 
     if (!readAuxv) {
         // Read the cpuinfo Features if the auxv is not available.
-        FILE *fp = fopen("/proc/cpuinfo", "r");
+        FILE* fp = fopen("/proc/cpuinfo", "r");
         if (fp) {
             char buf[1024];
             memset(buf, 0, sizeof(buf));
             size_t len = fread(buf, sizeof(char), sizeof(buf) - 1, fp);
             fclose(fp);
             buf[len] = '\0';
-            char *featureList = strstr(buf, "Features");
+            char* featureList = strstr(buf, "Features");
             if (featureList) {
-                if (char *featuresEnd = strstr(featureList, "\n"))
+                if (char* featuresEnd = strstr(featureList, "\n"))
                     *featuresEnd = '\0';
                 flags = ParseARMCpuFeatures(featureList + 8);
             }
@@ -313,7 +313,7 @@ bool UseHardFpABI()
 #endif
 
 Registers::Code
-Registers::FromName(const char *name)
+Registers::FromName(const char* name)
 {
     // Check for some register aliases first.
     if (strcmp(name, "ip") == 0)
@@ -334,7 +334,7 @@ Registers::FromName(const char *name)
 }
 
 FloatRegisters::Code
-FloatRegisters::FromName(const char *name)
+FloatRegisters::FromName(const char* name)
 {
     for (size_t i = 0; i < Total; i++) {
         if (strcmp(GetName(i), name) == 0)
@@ -345,7 +345,7 @@ FloatRegisters::FromName(const char *name)
 }
 
 FloatRegisterSet
-VFPRegister::ReduceSetForPush(const FloatRegisterSet &s)
+VFPRegister::ReduceSetForPush(const FloatRegisterSet& s)
 {
     LiveFloatRegisterSet mod;
     for (FloatRegisterIterator iter(s); iter.more(); iter++) {
@@ -365,7 +365,7 @@ VFPRegister::ReduceSetForPush(const FloatRegisterSet &s)
 }
 
 uint32_t
-VFPRegister::GetPushSizeInBytes(const FloatRegisterSet &s)
+VFPRegister::GetPushSizeInBytes(const FloatRegisterSet& s)
 {
     FloatRegisterSet ss = s.reduceSetForPush();
     uint64_t bits = ss.bits();

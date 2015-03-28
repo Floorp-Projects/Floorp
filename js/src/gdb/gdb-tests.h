@@ -32,21 +32,21 @@ struct GDBFragment {
 
     // The name of this fragment. gdb-tests.cpp runs the fragments whose names
     // are passed to it on the command line.
-    virtual const char *name() = 0;
+    virtual const char* name() = 0;
 
     // Run the fragment code. |argv| is a reference to the pointer into the
     // command-line argument vector, referring to the argument immediately
     // following this fragment's name. The fragment can consume arguments and
     // advance argv if it wishes.
-    virtual void run(JSContext *cx, const char **&argv) = 0;
+    virtual void run(JSContext* cx, const char**& argv) = 0;
 
     // We declare one instance of this type for each fragment to run. The
     // constructor adds each instance to a linked list, of which this is
     // the head.
-    static GDBFragment *allFragments;
+    static GDBFragment* allFragments;
 
     // The link in the list of all instances.
-    GDBFragment *next;
+    GDBFragment* next;
 };
 
 // Macro for declaring a C++ fragment for some Python unit test to call. Usage:
@@ -57,16 +57,16 @@ struct GDBFragment {
 // takes a series of fragment names as command-line arguments and runs them in
 // turn; each fragment is named <category>.<name> on the command line.
 //
-// The body runs in a scope where 'cx' is a usable JSContext *.
+// The body runs in a scope where 'cx' is a usable JSContext*.
 
 #define FRAGMENT(category, subname)                                                             \
 class FRAGMENT_CLASS_NAME(category, subname): public GDBFragment {                              \
-    void run(JSContext *cx, const char **&argv);                                                \
-    const char *name() { return FRAGMENT_STRING_NAME(category, subname); }                      \
+    void run(JSContext* cx, const char**& argv);                                                \
+    const char* name() { return FRAGMENT_STRING_NAME(category, subname); }                      \
     static FRAGMENT_CLASS_NAME(category, subname) singleton;                                    \
 };                                                                                              \
 FRAGMENT_CLASS_NAME(category, subname) FRAGMENT_CLASS_NAME(category, subname)::singleton;       \
-void FRAGMENT_CLASS_NAME(category, subname)::run(JSContext *cx, const char **&argv)
+void FRAGMENT_CLASS_NAME(category, subname)::run(JSContext* cx, const char**& argv)
 
 #define FRAGMENT_STRING_NAME(category, subname) (#category "." #subname)
 #define FRAGMENT_CLASS_NAME(category, subname) Fragment_ ## category ## _ ## subname

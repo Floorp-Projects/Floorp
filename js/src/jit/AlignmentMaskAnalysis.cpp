@@ -19,7 +19,7 @@ IsAlignmentMask(uint32_t m)
 }
 
 static void
-AnalyzeAsmHeapAddress(MDefinition *ptr, MIRGraph &graph)
+AnalyzeAsmHeapAddress(MDefinition* ptr, MIRGraph& graph)
 {
     // Fold (a+i)&m to (a&m)+i, provided that this doesn't change the result,
     // since the users of the BitAnd include heap accesses. This will expose
@@ -43,15 +43,15 @@ AnalyzeAsmHeapAddress(MDefinition *ptr, MIRGraph &graph)
     if (!ptr->isBitAnd())
         return;
 
-    MDefinition *lhs = ptr->toBitAnd()->getOperand(0);
-    MDefinition *rhs = ptr->toBitAnd()->getOperand(1);
+    MDefinition* lhs = ptr->toBitAnd()->getOperand(0);
+    MDefinition* rhs = ptr->toBitAnd()->getOperand(1);
     if (lhs->isConstantValue())
         mozilla::Swap(lhs, rhs);
     if (!lhs->isAdd() || !rhs->isConstantValue())
         return;
 
-    MDefinition *op0 = lhs->toAdd()->getOperand(0);
-    MDefinition *op1 = lhs->toAdd()->getOperand(1);
+    MDefinition* op0 = lhs->toAdd()->getOperand(0);
+    MDefinition* op1 = lhs->toAdd()->getOperand(1);
     if (op0->isConstantValue())
         mozilla::Swap(op0, op1);
     if (!op1->isConstantValue())
@@ -63,9 +63,9 @@ AnalyzeAsmHeapAddress(MDefinition *ptr, MIRGraph &graph)
         return;
 
     // The pattern was matched! Produce the replacement expression.
-    MInstruction *and_ = MBitAnd::NewAsmJS(graph.alloc(), op0, rhs);
+    MInstruction* and_ = MBitAnd::NewAsmJS(graph.alloc(), op0, rhs);
     ptr->block()->insertBefore(ptr->toBitAnd(), and_);
-    MInstruction *add = MAdd::NewAsmJS(graph.alloc(), and_, op1, MIRType_Int32);
+    MInstruction* add = MAdd::NewAsmJS(graph.alloc(), and_, op1, MIRType_Int32);
     ptr->block()->insertBefore(ptr->toBitAnd(), add);
     ptr->replaceAllUsesWith(add);
     ptr->block()->discard(ptr->toBitAnd());

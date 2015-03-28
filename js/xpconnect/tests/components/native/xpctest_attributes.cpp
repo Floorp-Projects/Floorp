@@ -29,27 +29,27 @@ NS_IMETHODIMP xpcTestObjectReadOnly :: GetStrReadOnly(char * *aStrReadOnly){
     return *aStrReadOnly ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMETHODIMP xpcTestObjectReadOnly :: GetBoolReadOnly(bool *aBoolReadOnly) {
+NS_IMETHODIMP xpcTestObjectReadOnly :: GetBoolReadOnly(bool* aBoolReadOnly) {
     *aBoolReadOnly = boolProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadOnly :: GetShortReadOnly(int16_t *aShortReadOnly){
+NS_IMETHODIMP xpcTestObjectReadOnly :: GetShortReadOnly(int16_t* aShortReadOnly){
     *aShortReadOnly = shortProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadOnly :: GetLongReadOnly(int32_t *aLongReadOnly){
+NS_IMETHODIMP xpcTestObjectReadOnly :: GetLongReadOnly(int32_t* aLongReadOnly){
     *aLongReadOnly = longProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadOnly :: GetFloatReadOnly(float *aFloatReadOnly){
+NS_IMETHODIMP xpcTestObjectReadOnly :: GetFloatReadOnly(float* aFloatReadOnly){
     *aFloatReadOnly = floatProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadOnly :: GetCharReadOnly(char *aCharReadOnly){
+NS_IMETHODIMP xpcTestObjectReadOnly :: GetCharReadOnly(char* aCharReadOnly){
     *aCharReadOnly = charProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadOnly :: GetTimeReadOnly(PRTime *aTimeReadOnly){
+NS_IMETHODIMP xpcTestObjectReadOnly :: GetTimeReadOnly(PRTime* aTimeReadOnly){
     *aTimeReadOnly = timeProperty;
     return NS_OK;
 }
@@ -89,7 +89,7 @@ NS_IMETHODIMP xpcTestObjectReadWrite :: SetStringProperty(const char * aStringPr
     return NS_OK;
 }
 
-NS_IMETHODIMP xpcTestObjectReadWrite :: GetBooleanProperty(bool *aBooleanProperty) {
+NS_IMETHODIMP xpcTestObjectReadWrite :: GetBooleanProperty(bool* aBooleanProperty) {
     *aBooleanProperty = boolProperty;
     return NS_OK;
 }
@@ -97,7 +97,7 @@ NS_IMETHODIMP xpcTestObjectReadWrite :: SetBooleanProperty(bool aBooleanProperty
     boolProperty = aBooleanProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadWrite :: GetShortProperty(int16_t *aShortProperty) {
+NS_IMETHODIMP xpcTestObjectReadWrite :: GetShortProperty(int16_t* aShortProperty) {
     *aShortProperty = shortProperty;
     return NS_OK;
 }
@@ -105,7 +105,7 @@ NS_IMETHODIMP xpcTestObjectReadWrite :: SetShortProperty(int16_t aShortProperty)
     shortProperty = aShortProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadWrite :: GetLongProperty(int32_t *aLongProperty) {
+NS_IMETHODIMP xpcTestObjectReadWrite :: GetLongProperty(int32_t* aLongProperty) {
     *aLongProperty = longProperty;
     return NS_OK;
 }
@@ -113,7 +113,7 @@ NS_IMETHODIMP xpcTestObjectReadWrite :: SetLongProperty(int32_t aLongProperty) {
     longProperty = aLongProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadWrite :: GetFloatProperty(float *aFloatProperty) {
+NS_IMETHODIMP xpcTestObjectReadWrite :: GetFloatProperty(float* aFloatProperty) {
     *aFloatProperty = floatProperty;
     return NS_OK;
 }
@@ -121,7 +121,7 @@ NS_IMETHODIMP xpcTestObjectReadWrite :: SetFloatProperty(float aFloatProperty) {
     floatProperty = aFloatProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadWrite :: GetCharProperty(char *aCharProperty) {
+NS_IMETHODIMP xpcTestObjectReadWrite :: GetCharProperty(char* aCharProperty) {
     *aCharProperty = charProperty;
     return NS_OK;
 }
@@ -129,7 +129,7 @@ NS_IMETHODIMP xpcTestObjectReadWrite :: SetCharProperty(char aCharProperty) {
     charProperty = aCharProperty;
     return NS_OK;
 }
-NS_IMETHODIMP xpcTestObjectReadWrite :: GetTimeProperty(PRTime *aTimeProperty) {
+NS_IMETHODIMP xpcTestObjectReadWrite :: GetTimeProperty(PRTime* aTimeProperty) {
     *aTimeProperty = timeProperty;
     return NS_OK;
 }

@@ -18,10 +18,10 @@ namespace js {
 // Whether the current thread is permitted access to any part of the specified
 // runtime or zone.
 JS_FRIEND_API(bool)
-CurrentThreadCanAccessRuntime(JSRuntime *rt);
+CurrentThreadCanAccessRuntime(JSRuntime* rt);
 
 JS_FRIEND_API(bool)
-CurrentThreadCanAccessZone(JS::Zone *zone);
+CurrentThreadCanAccessZone(JS::Zone* zone);
 
 namespace gc {
 
@@ -81,13 +81,13 @@ const uintptr_t ChunkLocationAnyNursery = ChunkLocationBitNursery;
 #ifdef JS_DEBUG
 /* When downcasting, ensure we are actually the right type. */
 extern JS_FRIEND_API(void)
-AssertGCThingHasType(js::gc::Cell *cell, JSGCTraceKind kind);
+AssertGCThingHasType(js::gc::Cell* cell, JSGCTraceKind kind);
 #else
 inline void
-AssertGCThingHasType(js::gc::Cell *cell, JSGCTraceKind kind) {}
+AssertGCThingHasType(js::gc::Cell* cell, JSGCTraceKind kind) {}
 #endif
 
-MOZ_ALWAYS_INLINE bool IsInsideNursery(const js::gc::Cell *cell);
+MOZ_ALWAYS_INLINE bool IsInsideNursery(const js::gc::Cell* cell);
 
 } /* namespace gc */
 } /* namespace js */
@@ -106,13 +106,13 @@ namespace shadow {
 struct Zone
 {
   protected:
-    JSRuntime *const runtime_;
-    JSTracer *const barrierTracer_;     // A pointer to the JSRuntime's |gcMarker|.
+    JSRuntime* const runtime_;
+    JSTracer* const barrierTracer_;     // A pointer to the JSRuntime's |gcMarker|.
 
   public:
     bool needsIncrementalBarrier_;
 
-    Zone(JSRuntime *runtime, JSTracer *barrierTracerArg)
+    Zone(JSRuntime* runtime, JSTracer* barrierTracerArg)
       : runtime_(runtime),
         barrierTracer_(barrierTracerArg),
         needsIncrementalBarrier_(false)
@@ -122,24 +122,24 @@ struct Zone
         return needsIncrementalBarrier_;
     }
 
-    JSTracer *barrierTracer() {
+    JSTracer* barrierTracer() {
         MOZ_ASSERT(needsIncrementalBarrier_);
         MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
         return barrierTracer_;
     }
 
-    JSRuntime *runtimeFromMainThread() const {
+    JSRuntime* runtimeFromMainThread() const {
         MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(runtime_));
         return runtime_;
     }
 
     // Note: Unrestricted access to the zone's runtime from an arbitrary
     // thread can easily lead to races. Use this method very carefully.
-    JSRuntime *runtimeFromAnyThread() const {
+    JSRuntime* runtimeFromAnyThread() const {
         return runtime_;
     }
 
-    static JS::shadow::Zone *asShadowZone(JS::Zone *zone) {
+    static JS::shadow::Zone* asShadowZone(JS::Zone* zone) {
         return reinterpret_cast<JS::shadow::Zone*>(zone);
     }
 };
@@ -155,15 +155,15 @@ class JS_FRIEND_API(GCCellPtr)
 {
   public:
     // Construction from a void* and trace kind.
-    GCCellPtr(void *gcthing, JSGCTraceKind traceKind) : ptr(checkedCast(gcthing, traceKind)) {}
+    GCCellPtr(void* gcthing, JSGCTraceKind traceKind) : ptr(checkedCast(gcthing, traceKind)) {}
 
     // Construction from an explicit type.
-    explicit GCCellPtr(JSObject *obj) : ptr(checkedCast(obj, JSTRACE_OBJECT)) { }
-    explicit GCCellPtr(JSFunction *fun) : ptr(checkedCast(fun, JSTRACE_OBJECT)) { }
-    explicit GCCellPtr(JSString *str) : ptr(checkedCast(str, JSTRACE_STRING)) { }
-    explicit GCCellPtr(JSFlatString *str) : ptr(checkedCast(str, JSTRACE_STRING)) { }
-    explicit GCCellPtr(JSScript *script) : ptr(checkedCast(script, JSTRACE_SCRIPT)) { }
-    explicit GCCellPtr(const Value &v);
+    explicit GCCellPtr(JSObject* obj) : ptr(checkedCast(obj, JSTRACE_OBJECT)) { }
+    explicit GCCellPtr(JSFunction* fun) : ptr(checkedCast(fun, JSTRACE_OBJECT)) { }
+    explicit GCCellPtr(JSString* str) : ptr(checkedCast(str, JSTRACE_STRING)) { }
+    explicit GCCellPtr(JSFlatString* str) : ptr(checkedCast(str, JSTRACE_STRING)) { }
+    explicit GCCellPtr(JSScript* script) : ptr(checkedCast(script, JSTRACE_SCRIPT)) { }
+    explicit GCCellPtr(const Value& v);
 
     // Not all compilers have nullptr_t yet, so use this instead of GCCellPtr(nullptr).
     static GCCellPtr NullPtr() { return GCCellPtr(nullptr, JSTRACE_NULL); }
@@ -190,24 +190,24 @@ class JS_FRIEND_API(GCCellPtr)
 
     // Conversions to more specific types must match the kind. Access to
     // further refined types is not allowed directly from a GCCellPtr.
-    JSObject *toObject() const {
+    JSObject* toObject() const {
         MOZ_ASSERT(kind() == JSTRACE_OBJECT);
-        return reinterpret_cast<JSObject *>(asCell());
+        return reinterpret_cast<JSObject*>(asCell());
     }
-    JSString *toString() const {
+    JSString* toString() const {
         MOZ_ASSERT(kind() == JSTRACE_STRING);
-        return reinterpret_cast<JSString *>(asCell());
+        return reinterpret_cast<JSString*>(asCell());
     }
-    JSScript *toScript() const {
+    JSScript* toScript() const {
         MOZ_ASSERT(kind() == JSTRACE_SCRIPT);
-        return reinterpret_cast<JSScript *>(asCell());
+        return reinterpret_cast<JSScript*>(asCell());
     }
-    Symbol *toSymbol() const {
+    Symbol* toSymbol() const {
         MOZ_ASSERT(kind() == JSTRACE_SYMBOL);
-        return reinterpret_cast<Symbol *>(asCell());
+        return reinterpret_cast<Symbol*>(asCell());
     }
-    js::gc::Cell *asCell() const {
-        return reinterpret_cast<js::gc::Cell *>(ptr & ~JSTRACE_OUTOFLINE);
+    js::gc::Cell* asCell() const {
+        return reinterpret_cast<js::gc::Cell*>(ptr & ~JSTRACE_OUTOFLINE);
     }
 
     // The CC's trace logger needs an identity that is XPIDL serializable.
@@ -222,8 +222,8 @@ class JS_FRIEND_API(GCCellPtr)
     }
 
   private:
-    uintptr_t checkedCast(void *p, JSGCTraceKind traceKind) {
-        js::gc::Cell *cell = static_cast<js::gc::Cell *>(p);
+    uintptr_t checkedCast(void* p, JSGCTraceKind traceKind) {
+        js::gc::Cell* cell = static_cast<js::gc::Cell*>(p);
         MOZ_ASSERT((uintptr_t(p) & JSTRACE_OUTOFLINE) == 0);
         AssertGCThingHasType(cell, traceKind);
         // Note: the JSTRACE_OUTOFLINE bits are set on all out-of-line kinds
@@ -239,13 +239,13 @@ class JS_FRIEND_API(GCCellPtr)
 };
 
 inline bool
-operator==(const GCCellPtr &ptr1, const GCCellPtr &ptr2)
+operator==(const GCCellPtr& ptr1, const GCCellPtr& ptr2)
 {
     return ptr1.asCell() == ptr2.asCell();
 }
 
 inline bool
-operator!=(const GCCellPtr &ptr1, const GCCellPtr &ptr2)
+operator!=(const GCCellPtr& ptr1, const GCCellPtr& ptr2)
 {
     return !(ptr1 == ptr2);
 }
@@ -256,50 +256,50 @@ namespace js {
 namespace gc {
 namespace detail {
 
-static MOZ_ALWAYS_INLINE uintptr_t *
+static MOZ_ALWAYS_INLINE uintptr_t*
 GetGCThingMarkBitmap(const uintptr_t addr)
 {
     MOZ_ASSERT(addr);
     const uintptr_t bmap_addr = (addr & ~ChunkMask) | ChunkMarkBitmapOffset;
-    return reinterpret_cast<uintptr_t *>(bmap_addr);
+    return reinterpret_cast<uintptr_t*>(bmap_addr);
 }
 
-static MOZ_ALWAYS_INLINE JS::shadow::Runtime *
+static MOZ_ALWAYS_INLINE JS::shadow::Runtime*
 GetGCThingRuntime(const uintptr_t addr)
 {
     MOZ_ASSERT(addr);
     const uintptr_t rt_addr = (addr & ~ChunkMask) | ChunkRuntimeOffset;
-    return *reinterpret_cast<JS::shadow::Runtime **>(rt_addr);
+    return *reinterpret_cast<JS::shadow::Runtime**>(rt_addr);
 }
 
 static MOZ_ALWAYS_INLINE void
 GetGCThingMarkWordAndMask(const uintptr_t addr, uint32_t color,
-                          uintptr_t **wordp, uintptr_t *maskp)
+                          uintptr_t** wordp, uintptr_t* maskp)
 {
     MOZ_ASSERT(addr);
     const size_t bit = (addr & js::gc::ChunkMask) / js::gc::CellSize + color;
     MOZ_ASSERT(bit < js::gc::ChunkMarkBitmapBits);
-    uintptr_t *bitmap = GetGCThingMarkBitmap(addr);
+    uintptr_t* bitmap = GetGCThingMarkBitmap(addr);
     const uintptr_t nbits = sizeof(*bitmap) * CHAR_BIT;
     *maskp = uintptr_t(1) << (bit % nbits);
     *wordp = &bitmap[bit / nbits];
 }
 
-static MOZ_ALWAYS_INLINE JS::Zone *
+static MOZ_ALWAYS_INLINE JS::Zone*
 GetGCThingZone(const uintptr_t addr)
 {
     MOZ_ASSERT(addr);
     const uintptr_t zone_addr = (addr & ~ArenaMask) | ArenaZoneOffset;
-    return *reinterpret_cast<JS::Zone **>(zone_addr);
+    return *reinterpret_cast<JS::Zone**>(zone_addr);
 
 }
 
 static MOZ_ALWAYS_INLINE bool
-CellIsMarkedGray(const Cell *cell)
+CellIsMarkedGray(const Cell* cell)
 {
     MOZ_ASSERT(cell);
     MOZ_ASSERT(!js::gc::IsInsideNursery(cell));
-    uintptr_t *word, mask;
+    uintptr_t* word, mask;
     js::gc::detail::GetGCThingMarkWordAndMask(uintptr_t(cell), js::gc::GRAY, &word, &mask);
     return *word & mask;
 }
@@ -307,14 +307,14 @@ CellIsMarkedGray(const Cell *cell)
 } /* namespace detail */
 
 MOZ_ALWAYS_INLINE bool
-IsInsideNursery(const js::gc::Cell *cell)
+IsInsideNursery(const js::gc::Cell* cell)
 {
     if (!cell)
         return false;
     uintptr_t addr = uintptr_t(cell);
     addr &= ~js::gc::ChunkMask;
     addr |= js::gc::ChunkLocationOffset;
-    uint32_t location = *reinterpret_cast<uint32_t *>(addr);
+    uint32_t location = *reinterpret_cast<uint32_t*>(addr);
     MOZ_ASSERT(location != 0);
     return location & ChunkLocationAnyNursery;
 }
@@ -324,39 +324,39 @@ IsInsideNursery(const js::gc::Cell *cell)
 
 namespace JS {
 
-static MOZ_ALWAYS_INLINE Zone *
-GetTenuredGCThingZone(void *thing)
+static MOZ_ALWAYS_INLINE Zone*
+GetTenuredGCThingZone(void* thing)
 {
-    MOZ_ASSERT(!js::gc::IsInsideNursery((js::gc::Cell *)thing));
+    MOZ_ASSERT(!js::gc::IsInsideNursery((js::gc::Cell*)thing));
     return js::gc::detail::GetGCThingZone(uintptr_t(thing));
 }
 
-extern JS_PUBLIC_API(Zone *)
-GetObjectZone(JSObject *obj);
+extern JS_PUBLIC_API(Zone*)
+GetObjectZone(JSObject* obj);
 
 static MOZ_ALWAYS_INLINE bool
-ObjectIsTenured(JSObject *obj)
+ObjectIsTenured(JSObject* obj)
 {
-    return !js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell *>(obj));
+    return !js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell*>(obj));
 }
 
 static MOZ_ALWAYS_INLINE bool
-ObjectIsMarkedGray(JSObject *obj)
+ObjectIsMarkedGray(JSObject* obj)
 {
     /*
      * GC things residing in the nursery cannot be gray: they have no mark bits.
      * All live objects in the nursery are moved to tenured at the beginning of
      * each GC slice, so the gray marker never sees nursery things.
      */
-    if (js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell *>(obj)))
+    if (js::gc::IsInsideNursery(reinterpret_cast<js::gc::Cell*>(obj)))
         return false;
-    return js::gc::detail::CellIsMarkedGray(reinterpret_cast<js::gc::Cell *>(obj));
+    return js::gc::detail::CellIsMarkedGray(reinterpret_cast<js::gc::Cell*>(obj));
 }
 
 static MOZ_ALWAYS_INLINE bool
-ScriptIsMarkedGray(JSScript *script)
+ScriptIsMarkedGray(JSScript* script)
 {
-    return js::gc::detail::CellIsMarkedGray(reinterpret_cast<js::gc::Cell *>(script));
+    return js::gc::detail::CellIsMarkedGray(reinterpret_cast<js::gc::Cell*>(script));
 }
 
 static MOZ_ALWAYS_INLINE bool
@@ -373,13 +373,13 @@ namespace js {
 namespace gc {
 
 static MOZ_ALWAYS_INLINE bool
-IsIncrementalBarrierNeededOnTenuredGCThing(JS::shadow::Runtime *rt, const JS::GCCellPtr thing)
+IsIncrementalBarrierNeededOnTenuredGCThing(JS::shadow::Runtime* rt, const JS::GCCellPtr thing)
 {
     MOZ_ASSERT(thing);
     MOZ_ASSERT(!js::gc::IsInsideNursery(thing.asCell()));
     if (!rt->needsIncrementalBarrier())
         return false;
-    JS::Zone *zone = JS::GetTenuredGCThingZone(thing.asCell());
+    JS::Zone* zone = JS::GetTenuredGCThingZone(thing.asCell());
     return JS::shadow::Zone::asShadowZone(zone)->needsIncrementalBarrier();
 }
 
@@ -388,8 +388,8 @@ IsIncrementalBarrierNeededOnTenuredGCThing(JS::shadow::Runtime *rt, const JS::GC
  * of the current state of memory (both GC heap memory and GCthing-controlled
  * malloc memory.
  */
-extern JS_PUBLIC_API(JSObject *)
-NewMemoryInfoObject(JSContext *cx);
+extern JS_PUBLIC_API(JSObject*)
+NewMemoryInfoObject(JSContext* cx);
 
 } /* namespace gc */
 } /* namespace js */

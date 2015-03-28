@@ -21,26 +21,26 @@
 class nspr::Thread
 {
     pthread_t pthread_;
-    void (*start)(void *arg);
-    void *arg;
+    void (*start)(void* arg);
+    void* arg;
     bool joinable;
 
   public:
-    Thread(void (*start)(void *arg), void *arg, bool joinable)
+    Thread(void (*start)(void* arg), void* arg, bool joinable)
       : start(start), arg(arg), joinable(joinable) {}
 
-    static void *ThreadRoutine(void *arg);
+    static void* ThreadRoutine(void* arg);
 
-    pthread_t &pthread() { return pthread_; }
+    pthread_t& pthread() { return pthread_; }
 };
 
 static pthread_key_t gSelfThreadIndex;
 static nspr::Thread gMainThread(nullptr, nullptr, false);
 
-void *
-nspr::Thread::ThreadRoutine(void *arg)
+void*
+nspr::Thread::ThreadRoutine(void* arg)
 {
-    Thread *self = static_cast<Thread *>(arg);
+    Thread* self = static_cast<Thread*>(arg);
     pthread_setspecific(gSelfThreadIndex, self);
     self->start(self->arg);
     if (!self->joinable)
@@ -51,7 +51,7 @@ nspr::Thread::ThreadRoutine(void *arg)
 static bool gInitialized;
 
 void
-DummyDestructor(void *)
+DummyDestructor(void*)
 {
 }
 
@@ -69,10 +69,10 @@ Initialize()
     pthread_setspecific(gSelfThreadIndex, &gMainThread);
 }
 
-PRThread *
+PRThread*
 PR_CreateThread(PRThreadType type,
-                void (*start)(void *arg),
-                void *arg,
+                void (*start)(void* arg),
+                void* arg,
                 PRThreadPriority priority,
                 PRThreadScope scope,
                 PRThreadState state,
@@ -98,7 +98,7 @@ PR_CreateThread(PRThreadType type,
         return nullptr;
     }
 
-    nspr::Thread *t = js_new<nspr::Thread>(start, arg,
+    nspr::Thread* t = js_new<nspr::Thread>(start, arg,
                                            state != PR_UNJOINABLE_THREAD);
     if (!t) {
         pthread_attr_destroy(&attr);
@@ -125,7 +125,7 @@ PR_CreateThread(PRThreadType type,
 }
 
 PRStatus
-PR_JoinThread(PRThread *thread)
+PR_JoinThread(PRThread* thread)
 {
     if (pthread_join(thread->pthread(), nullptr))
         return PR_FAILURE;
@@ -135,17 +135,17 @@ PR_JoinThread(PRThread *thread)
     return PR_SUCCESS;
 }
 
-PRThread *
+PRThread*
 PR_GetCurrentThread()
 {
     if (!gInitialized)
         Initialize();
 
-    return (PRThread *)pthread_getspecific(gSelfThreadIndex);
+    return (PRThread*)pthread_getspecific(gSelfThreadIndex);
 }
 
 PRStatus
-PR_SetCurrentThreadName(const char *name)
+PR_SetCurrentThreadName(const char* name)
 {
     int result;
 #ifdef XP_MACOSX
@@ -154,7 +154,7 @@ PR_SetCurrentThreadName(const char *name)
     pthread_set_name_np(pthread_self(), name);
     result = 0;
 #elif defined(__NetBSD__)
-    result = pthread_setname_np(pthread_self(), "%s", (void *)name);
+    result = pthread_setname_np(pthread_self(), "%s", (void*)name);
 #else
     result = pthread_setname_np(pthread_self(), name);
 #endif
@@ -168,7 +168,7 @@ static size_t gTLSKeyCount;
 static pthread_key_t gTLSKeys[MaxTLSKeyCount];
 
 PRStatus
-PR_NewThreadPrivateIndex(unsigned *newIndex, PRThreadPrivateDTOR destructor)
+PR_NewThreadPrivateIndex(unsigned* newIndex, PRThreadPrivateDTOR destructor)
 {
     /*
      * We only call PR_NewThreadPrivateIndex from the main thread, so there's no
@@ -190,7 +190,7 @@ PR_NewThreadPrivateIndex(unsigned *newIndex, PRThreadPrivateDTOR destructor)
 }
 
 PRStatus
-PR_SetThreadPrivate(unsigned index, void *priv)
+PR_SetThreadPrivate(unsigned index, void* priv)
 {
     if (index >= gTLSKeyCount)
         return PR_FAILURE;
@@ -199,7 +199,7 @@ PR_SetThreadPrivate(unsigned index, void *priv)
     return PR_SUCCESS;
 }
 
-void *
+void*
 PR_GetThreadPrivate(unsigned index)
 {
     if (index >= gTLSKeyCount)
@@ -208,13 +208,13 @@ PR_GetThreadPrivate(unsigned index)
 }
 
 PRStatus
-PR_CallOnce(PRCallOnceType *once, PRCallOnceFN func)
+PR_CallOnce(PRCallOnceType* once, PRCallOnceFN func)
 {
     MOZ_CRASH("PR_CallOnce unimplemented");
 }
 
 PRStatus
-PR_CallOnceWithArg(PRCallOnceType *once, PRCallOnceWithArgFN func, void *arg)
+PR_CallOnceWithArg(PRCallOnceType* once, PRCallOnceWithArgFN func, void* arg)
 {
     MOZ_CRASH("PR_CallOnceWithArg unimplemented");
 }
@@ -225,13 +225,13 @@ class nspr::Lock
 
   public:
     Lock() {}
-    pthread_mutex_t &mutex() { return mutex_; }
+    pthread_mutex_t& mutex() { return mutex_; }
 };
 
-PRLock *
+PRLock*
 PR_NewLock()
 {
-    nspr::Lock *lock = js_new<nspr::Lock>();
+    nspr::Lock* lock = js_new<nspr::Lock>();
     if (!lock)
         return nullptr;
 
@@ -244,20 +244,20 @@ PR_NewLock()
 }
 
 void
-PR_DestroyLock(PRLock *lock)
+PR_DestroyLock(PRLock* lock)
 {
     pthread_mutex_destroy(&lock->mutex());
     js_delete(lock);
 }
 
 void
-PR_Lock(PRLock *lock)
+PR_Lock(PRLock* lock)
 {
     pthread_mutex_lock(&lock->mutex());
 }
 
 PRStatus
-PR_Unlock(PRLock *lock)
+PR_Unlock(PRLock* lock)
 {
     if (pthread_mutex_unlock(&lock->mutex()))
         return PR_FAILURE;
@@ -267,18 +267,18 @@ PR_Unlock(PRLock *lock)
 class nspr::CondVar
 {
     pthread_cond_t cond_;
-    nspr::Lock *lock_;
+    nspr::Lock* lock_;
 
   public:
-    CondVar(nspr::Lock *lock) : lock_(lock) {}
-    pthread_cond_t &cond() { return cond_; }
-    nspr::Lock *lock() { return lock_; }
+    CondVar(nspr::Lock* lock) : lock_(lock) {}
+    pthread_cond_t& cond() { return cond_; }
+    nspr::Lock* lock() { return lock_; }
 };
 
-PRCondVar *
-PR_NewCondVar(PRLock *lock)
+PRCondVar*
+PR_NewCondVar(PRLock* lock)
 {
-    nspr::CondVar *cvar = js_new<nspr::CondVar>(lock);
+    nspr::CondVar* cvar = js_new<nspr::CondVar>(lock);
     if (!cvar)
         return nullptr;
 
@@ -291,14 +291,14 @@ PR_NewCondVar(PRLock *lock)
 }
 
 void
-PR_DestroyCondVar(PRCondVar *cvar)
+PR_DestroyCondVar(PRCondVar* cvar)
 {
     pthread_cond_destroy(&cvar->cond());
     js_delete(cvar);
 }
 
 PRStatus
-PR_NotifyCondVar(PRCondVar *cvar)
+PR_NotifyCondVar(PRCondVar* cvar)
 {
     if (pthread_cond_signal(&cvar->cond()))
         return PR_FAILURE;
@@ -306,7 +306,7 @@ PR_NotifyCondVar(PRCondVar *cvar)
 }
 
 PRStatus
-PR_NotifyAllCondVar(PRCondVar *cvar)
+PR_NotifyAllCondVar(PRCondVar* cvar)
 {
     if (pthread_cond_broadcast(&cvar->cond()))
         return PR_FAILURE;
@@ -336,7 +336,7 @@ PR_TicksPerSecond()
 }
 
 PRStatus
-PR_WaitCondVar(PRCondVar *cvar, uint32_t timeout)
+PR_WaitCondVar(PRCondVar* cvar, uint32_t timeout)
 {
     if (timeout == PR_INTERVAL_NO_TIMEOUT) {
         if (pthread_cond_wait(&cvar->cond(), &cvar->lock()->mutex()))

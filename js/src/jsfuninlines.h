@@ -13,17 +13,17 @@
 
 namespace js {
 
-inline const char *
-GetFunctionNameBytes(JSContext *cx, JSFunction *fun, JSAutoByteString *bytes)
+inline const char*
+GetFunctionNameBytes(JSContext* cx, JSFunction* fun, JSAutoByteString* bytes)
 {
-    JSAtom *atom = fun->atom();
+    JSAtom* atom = fun->atom();
     if (atom)
         return bytes->encodeLatin1(cx, atom);
     return js_anonymous_str;
 }
 
-static inline JSObject *
-SkipScopeParent(JSObject *parent)
+static inline JSObject*
+SkipScopeParent(JSObject* parent)
 {
     if (!parent)
         return nullptr;
@@ -33,17 +33,17 @@ SkipScopeParent(JSObject *parent)
 }
 
 inline bool
-CanReuseFunctionForClone(JSContext *cx, HandleFunction fun)
+CanReuseFunctionForClone(JSContext* cx, HandleFunction fun)
 {
     if (!fun->isSingleton())
         return false;
     if (fun->isInterpretedLazy()) {
-        LazyScript *lazy = fun->lazyScript();
+        LazyScript* lazy = fun->lazyScript();
         if (lazy->hasBeenCloned())
             return false;
         lazy->setHasBeenCloned();
     } else {
-        JSScript *script = fun->nonLazyScript();
+        JSScript* script = fun->nonLazyScript();
         if (script->hasBeenCloned())
             return false;
         script->setHasBeenCloned();
@@ -51,8 +51,8 @@ CanReuseFunctionForClone(JSContext *cx, HandleFunction fun)
     return true;
 }
 
-inline JSFunction *
-CloneFunctionObjectIfNotSingleton(JSContext *cx, HandleFunction fun, HandleObject parent,
+inline JSFunction*
+CloneFunctionObjectIfNotSingleton(JSContext* cx, HandleFunction fun, HandleObject parent,
                                   HandleObject proto = NullPtr(),
                                   NewObjectKind newKind = GenericObject)
 {

@@ -37,18 +37,18 @@ class GeneratorObject : public NativeObject
     enum ResumeKind { NEXT, THROW, CLOSE };
 
   private:
-    static bool suspend(JSContext *cx, HandleObject obj, AbstractFramePtr frame, jsbytecode *pc,
-                        Value *vp, unsigned nvalues);
+    static bool suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame, jsbytecode* pc,
+                        Value* vp, unsigned nvalues);
 
   public:
-    static inline ResumeKind getResumeKind(jsbytecode *pc) {
+    static inline ResumeKind getResumeKind(jsbytecode* pc) {
         MOZ_ASSERT(*pc == JSOP_RESUME);
         unsigned arg = GET_UINT16(pc);
         MOZ_ASSERT(arg <= CLOSE);
         return static_cast<ResumeKind>(arg);
     }
 
-    static inline ResumeKind getResumeKind(ExclusiveContext *cx, JSAtom *atom) {
+    static inline ResumeKind getResumeKind(ExclusiveContext* cx, JSAtom* atom) {
         if (atom == cx->names().next)
             return NEXT;
         if (atom == cx->names().throw_)
@@ -57,60 +57,60 @@ class GeneratorObject : public NativeObject
         return CLOSE;
     }
 
-    static JSObject *create(JSContext *cx, AbstractFramePtr frame);
+    static JSObject* create(JSContext* cx, AbstractFramePtr frame);
 
-    static bool resume(JSContext *cx, InterpreterActivation &activation,
+    static bool resume(JSContext* cx, InterpreterActivation& activation,
                        HandleObject obj, HandleValue arg, ResumeKind resumeKind);
 
-    static bool initialSuspend(JSContext *cx, HandleObject obj, AbstractFramePtr frame, jsbytecode *pc) {
+    static bool initialSuspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame, jsbytecode* pc) {
         return suspend(cx, obj, frame, pc, nullptr, 0);
     }
 
-    static bool normalSuspend(JSContext *cx, HandleObject obj, AbstractFramePtr frame, jsbytecode *pc,
-                              Value *vp, unsigned nvalues) {
+    static bool normalSuspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame, jsbytecode* pc,
+                              Value* vp, unsigned nvalues) {
         return suspend(cx, obj, frame, pc, vp, nvalues);
     }
 
-    static bool finalSuspend(JSContext *cx, HandleObject obj);
+    static bool finalSuspend(JSContext* cx, HandleObject obj);
 
-    JSFunction &callee() const {
+    JSFunction& callee() const {
         return getFixedSlot(CALLEE_SLOT).toObject().as<JSFunction>();
     }
-    void setCallee(JSFunction &callee) {
+    void setCallee(JSFunction& callee) {
         setFixedSlot(CALLEE_SLOT, ObjectValue(callee));
     }
 
-    const Value &thisValue() const {
+    const Value& thisValue() const {
         return getFixedSlot(THIS_SLOT);
     }
-    void setThisValue(Value &thisv) {
+    void setThisValue(Value& thisv) {
         setFixedSlot(THIS_SLOT, thisv);
     }
 
-    JSObject &scopeChain() const {
+    JSObject& scopeChain() const {
         return getFixedSlot(SCOPE_CHAIN_SLOT).toObject();
     }
-    void setScopeChain(JSObject &scopeChain) {
+    void setScopeChain(JSObject& scopeChain) {
         setFixedSlot(SCOPE_CHAIN_SLOT, ObjectValue(scopeChain));
     }
 
     bool hasArgsObj() const {
         return getFixedSlot(ARGS_OBJ_SLOT).isObject();
     }
-    ArgumentsObject &argsObj() const {
+    ArgumentsObject& argsObj() const {
         return getFixedSlot(ARGS_OBJ_SLOT).toObject().as<ArgumentsObject>();
     }
-    void setArgsObj(ArgumentsObject &argsObj) {
+    void setArgsObj(ArgumentsObject& argsObj) {
         setFixedSlot(ARGS_OBJ_SLOT, ObjectValue(argsObj));
     }
 
     bool hasExpressionStack() const {
         return getFixedSlot(EXPRESSION_STACK_SLOT).isObject();
     }
-    ArrayObject &expressionStack() const {
+    ArrayObject& expressionStack() const {
         return getFixedSlot(EXPRESSION_STACK_SLOT).toObject().as<ArrayObject>();
     }
-    void setExpressionStack(ArrayObject &expressionStack) {
+    void setExpressionStack(ArrayObject& expressionStack) {
         setFixedSlot(EXPRESSION_STACK_SLOT, ObjectValue(expressionStack));
     }
     void clearExpressionStack() {
@@ -199,7 +199,7 @@ class LegacyGeneratorObject : public GeneratorObject
   public:
     static const Class class_;
 
-    static bool close(JSContext *cx, HandleObject obj);
+    static bool close(JSContext* cx, HandleObject obj);
 };
 
 class StarGeneratorObject : public GeneratorObject
@@ -208,9 +208,9 @@ class StarGeneratorObject : public GeneratorObject
     static const Class class_;
 };
 
-bool GeneratorThrowOrClose(JSContext *cx, AbstractFramePtr frame, Handle<GeneratorObject*> obj,
+bool GeneratorThrowOrClose(JSContext* cx, AbstractFramePtr frame, Handle<GeneratorObject*> obj,
                            HandleValue val, uint32_t resumeKind);
-void SetReturnValueForClosingGenerator(JSContext *cx, AbstractFramePtr frame);
+void SetReturnValueForClosingGenerator(JSContext* cx, AbstractFramePtr frame);
 
 } // namespace js
 

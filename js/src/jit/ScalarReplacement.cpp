@@ -24,32 +24,32 @@ class EmulateStateOf
   private:
     typedef typename MemoryView::BlockState BlockState;
 
-    MIRGenerator *mir_;
-    MIRGraph &graph_;
+    MIRGenerator* mir_;
+    MIRGraph& graph_;
 
     // Block state at the entrance of all basic blocks.
-    Vector<BlockState *, 8, SystemAllocPolicy> states_;
+    Vector<BlockState*, 8, SystemAllocPolicy> states_;
 
   public:
-    EmulateStateOf(MIRGenerator *mir, MIRGraph &graph)
+    EmulateStateOf(MIRGenerator* mir, MIRGraph& graph)
       : mir_(mir),
         graph_(graph)
     {
     }
 
-    bool run(MemoryView &view);
+    bool run(MemoryView& view);
 };
 
 template <typename MemoryView>
 bool
-EmulateStateOf<MemoryView>::run(MemoryView &view)
+EmulateStateOf<MemoryView>::run(MemoryView& view)
 {
     // Initialize the current block state of each block to an unknown state.
     if (!states_.appendN(nullptr, graph_.numBlocks()))
         return false;
 
     // Initialize the first block which needs to be traversed in RPO.
-    MBasicBlock *startBlock = view.startingBlock();
+    MBasicBlock* startBlock = view.startingBlock();
     if (!view.initStartingState(&states_[startBlock->id()]))
         return false;
 
@@ -62,7 +62,7 @@ EmulateStateOf<MemoryView>::run(MemoryView &view)
         // Get the block state as the result of the merge of all predecessors
         // which have already been visited in RPO.  This means that backedges
         // are not yet merged into the loop.
-        BlockState *state = states_[block->id()];
+        BlockState* state = states_[block->id()];
         if (!state)
             continue;
         view.setEntryBlockState(state);
@@ -71,7 +71,7 @@ EmulateStateOf<MemoryView>::run(MemoryView &view)
         for (MNodeIterator iter(*block); iter; ) {
             // Increment the iterator before visiting the instruction, as the
             // visit function might discard itself from the basic block.
-            MNode *ins = *iter++;
+            MNode* ins = *iter++;
             if (ins->isDefinition())
                 ins->toDefinition()->accept(&view);
             else
@@ -81,7 +81,7 @@ EmulateStateOf<MemoryView>::run(MemoryView &view)
         // For each successor, merge the current state into the state of the
         // successors.
         for (size_t s = 0; s < block->numSuccessors(); s++) {
-            MBasicBlock *succ = block->getSuccessor(s);
+            MBasicBlock* succ = block->getSuccessor(s);
             if (!view.mergeIntoSuccessorState(*block, succ, &states_[succ->id()]))
                 return false;
         }
@@ -97,13 +97,13 @@ EmulateStateOf<MemoryView>::run(MemoryView &view)
 // For the moment, this code is dumb as it only supports objects which are not
 // changing shape, and which are known by TI at the object creation.
 static bool
-IsObjectEscaped(MInstruction *ins, JSObject *objDefault = nullptr)
+IsObjectEscaped(MInstruction* ins, JSObject* objDefault = nullptr)
 {
     MOZ_ASSERT(ins->type() == MIRType_Object);
     MOZ_ASSERT(ins->isNewObject() || ins->isGuardShape() || ins->isCreateThisWithTemplate() ||
                ins->isNewCallObject() || ins->isFunctionEnvironment());
 
-    JSObject *obj = nullptr;
+    JSObject* obj = nullptr;
     if (ins->isNewObject())
         obj = ins->toNewObject()->templateObject();
     else if (ins->isCreateThisWithTemplate())
@@ -124,7 +124,7 @@ IsObjectEscaped(MInstruction *ins, JSObject *objDefault = nullptr)
     // of either a known Store / Load, then we consider it as escaped. This is a
     // cheap and conservative escape analysis.
     for (MUseIterator i(ins->usesBegin()); i != ins->usesEnd(); i++) {
-        MNode *consumer = (*i)->consumer();
+        MNode* consumer = (*i)->consumer();
         if (!consumer->isDefinition()) {
             // Cannot optimize if it is observable from fun.arguments or others.
             if (!consumer->toResumePoint()->isRecoverableOperand(*i)) {
@@ -134,7 +134,7 @@ IsObjectEscaped(MInstruction *ins, JSObject *objDefault = nullptr)
             continue;
         }
 
-        MDefinition *def = consumer->toDefinition();
+        MDefinition* def = consumer->toDefinition();
         switch (def->op()) {
           case MDefinition::Op_StoreFixedSlot:
           case MDefinition::Op_LoadFixedSlot:
@@ -152,12 +152,12 @@ IsObjectEscaped(MInstruction *ins, JSObject *objDefault = nullptr)
           case MDefinition::Op_Slots: {
 #ifdef DEBUG
             // Assert that MSlots are only used by MStoreSlot and MLoadSlot.
-            MSlots *ins = def->toSlots();
+            MSlots* ins = def->toSlots();
             MOZ_ASSERT(ins->object() != 0);
             for (MUseIterator i(ins->usesBegin()); i != ins->usesEnd(); i++) {
                 // toDefinition should normally never fail, since they don't get
                 // captured by resume points.
-                MDefinition *def = (*i)->consumer()->toDefinition();
+                MDefinition* def = (*i)->consumer()->toDefinition();
                 MOZ_ASSERT(def->op() == MDefinition::Op_StoreSlot ||
                            def->op() == MDefinition::Op_LoadSlot);
             }
@@ -166,7 +166,7 @@ IsObjectEscaped(MInstruction *ins, JSObject *objDefault = nullptr)
           }
 
           case MDefinition::Op_GuardShape: {
-            MGuardShape *guard = def->toGuardShape();
+            MGuardShape* guard = def->toGuardShape();
             MOZ_ASSERT(!ins->isGuardShape());
             if (obj->as<NativeObject>().lastProperty() != guard->shape()) {
                 JitSpewDef(JitSpew_Escape, "Object ", ins);
@@ -179,11 +179,11 @@ IsObjectEscaped(MInstruction *ins, JSObject *objDefault = nullptr)
           }
 
           case MDefinition::Op_Lambda: {
-            MLambda *lambda = def->toLambda();
+            MLambda* lambda = def->toLambda();
             // The scope chain is not escaped if none of the Lambdas which are
             // capturing it are escaped.
             for (MUseIterator i(lambda->usesBegin()); i != lambda->usesEnd(); i++) {
-                MNode *consumer = (*i)->consumer();
+                MNode* consumer = (*i)->consumer();
                 if (!consumer->isDefinition()) {
                     // Cannot optimize if it is observable from fun.arguments or others.
                     if (!consumer->toResumePoint()->isRecoverableOperand(*i)) {
@@ -193,7 +193,7 @@ IsObjectEscaped(MInstruction *ins, JSObject *objDefault = nullptr)
                     continue;
                 }
 
-                MDefinition *def = consumer->toDefinition();
+                MDefinition* def = consumer->toDefinition();
                 if (!def->isFunctionEnvironment() || IsObjectEscaped(def->toInstruction(), obj)) {
                     JitSpewDef(JitSpew_Escape, "Object ", ins);
                     JitSpewDef(JitSpew_Escape, "  is escaped through a lambda by\n", def);
@@ -219,26 +219,26 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop
 {
   public:
     typedef MObjectState BlockState;
-    static const char *phaseName;
+    static const char* phaseName;
 
   private:
-    TempAllocator &alloc_;
-    MConstant *undefinedVal_;
-    MInstruction *obj_;
-    MBasicBlock *startBlock_;
-    BlockState *state_;
+    TempAllocator& alloc_;
+    MConstant* undefinedVal_;
+    MInstruction* obj_;
+    MBasicBlock* startBlock_;
+    BlockState* state_;
 
     // Used to improve the memory usage by sharing common modification.
-    const MResumePoint *lastResumePoint_;
+    const MResumePoint* lastResumePoint_;
 
   public:
-    ObjectMemoryView(TempAllocator &alloc, MInstruction *obj);
+    ObjectMemoryView(TempAllocator& alloc, MInstruction* obj);
 
-    MBasicBlock *startingBlock();
-    bool initStartingState(BlockState **pState);
+    MBasicBlock* startingBlock();
+    bool initStartingState(BlockState** pState);
 
-    void setEntryBlockState(BlockState *state);
-    bool mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ, BlockState **pSuccState);
+    void setEntryBlockState(BlockState* state);
+    bool mergeIntoSuccessorState(MBasicBlock* curr, MBasicBlock* succ, BlockState** pSuccState);
 
 #ifdef DEBUG
     void assertSuccess();
@@ -247,21 +247,21 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop
 #endif
 
   public:
-    void visitResumePoint(MResumePoint *rp);
-    void visitObjectState(MObjectState *ins);
-    void visitStoreFixedSlot(MStoreFixedSlot *ins);
-    void visitLoadFixedSlot(MLoadFixedSlot *ins);
-    void visitPostWriteBarrier(MPostWriteBarrier *ins);
-    void visitStoreSlot(MStoreSlot *ins);
-    void visitLoadSlot(MLoadSlot *ins);
-    void visitGuardShape(MGuardShape *ins);
-    void visitFunctionEnvironment(MFunctionEnvironment *ins);
-    void visitLambda(MLambda *ins);
+    void visitResumePoint(MResumePoint* rp);
+    void visitObjectState(MObjectState* ins);
+    void visitStoreFixedSlot(MStoreFixedSlot* ins);
+    void visitLoadFixedSlot(MLoadFixedSlot* ins);
+    void visitPostWriteBarrier(MPostWriteBarrier* ins);
+    void visitStoreSlot(MStoreSlot* ins);
+    void visitLoadSlot(MLoadSlot* ins);
+    void visitGuardShape(MGuardShape* ins);
+    void visitFunctionEnvironment(MFunctionEnvironment* ins);
+    void visitLambda(MLambda* ins);
 };
 
-const char *ObjectMemoryView::phaseName = "Scalar Replacement of Object";
+const char* ObjectMemoryView::phaseName = "Scalar Replacement of Object";
 
-ObjectMemoryView::ObjectMemoryView(TempAllocator &alloc, MInstruction *obj)
+ObjectMemoryView::ObjectMemoryView(TempAllocator& alloc, MInstruction* obj)
   : alloc_(alloc),
     obj_(obj),
     startBlock_(obj->block()),
@@ -276,21 +276,21 @@ ObjectMemoryView::ObjectMemoryView(TempAllocator &alloc, MInstruction *obj)
     obj_->setImplicitlyUsedUnchecked();
 }
 
-MBasicBlock *
+MBasicBlock*
 ObjectMemoryView::startingBlock()
 {
     return startBlock_;
 }
 
 bool
-ObjectMemoryView::initStartingState(BlockState **pState)
+ObjectMemoryView::initStartingState(BlockState** pState)
 {
     // Uninitialized slots have an "undefined" value.
     undefinedVal_ = MConstant::New(alloc_, UndefinedValue());
     startBlock_->insertBefore(obj_, undefinedVal_);
 
     // Create a new block state and insert at it at the location of the new object.
-    BlockState *state = BlockState::New(alloc_, obj_, undefinedVal_);
+    BlockState* state = BlockState::New(alloc_, obj_, undefinedVal_);
     startBlock_->insertAfter(obj_, state);
 
     // Hold out of resume point until it is visited.
@@ -301,16 +301,16 @@ ObjectMemoryView::initStartingState(BlockState **pState)
 }
 
 void
-ObjectMemoryView::setEntryBlockState(BlockState *state)
+ObjectMemoryView::setEntryBlockState(BlockState* state)
 {
     state_ = state;
 }
 
 bool
-ObjectMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
-                                          BlockState **pSuccState)
+ObjectMemoryView::mergeIntoSuccessorState(MBasicBlock* curr, MBasicBlock* succ,
+                                          BlockState** pSuccState)
 {
-    BlockState *succState = *pSuccState;
+    BlockState* succState = *pSuccState;
 
     // When a block has no state yet, create an empty one for the
     // successor.
@@ -340,7 +340,7 @@ ObjectMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
         succState = BlockState::Copy(alloc_, state_);
         size_t numPreds = succ->numPredecessors();
         for (size_t slot = 0; slot < state_->numSlots(); slot++) {
-            MPhi *phi = MPhi::New(alloc_);
+            MPhi* phi = MPhi::New(alloc_);
             if (!phi->reserveLength(numPreds))
                 return false;
 
@@ -380,7 +380,7 @@ ObjectMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
         // Copy the current slot states to the index of current block in all the
         // Phi created during the first visit of the successor.
         for (size_t slot = 0; slot < state_->numSlots(); slot++) {
-            MPhi *phi = succState->getSlot(slot)->toPhi();
+            MPhi* phi = succState->getSlot(slot)->toPhi();
             phi->replaceOperand(currIndex, state_->getSlot(slot));
         }
     }
@@ -393,8 +393,8 @@ void
 ObjectMemoryView::assertSuccess()
 {
     for (MUseIterator i(obj_->usesBegin()); i != obj_->usesEnd(); i++) {
-        MNode *ins = (*i)->consumer();
-        MDefinition *def = nullptr;
+        MNode* ins = (*i)->consumer();
+        MDefinition* def = nullptr;
 
         // Resume points have been replaced by the object state.
         if (ins->isResumePoint() || (def = ins->toDefinition())->isRecoveredOnBailout()) {
@@ -411,7 +411,7 @@ ObjectMemoryView::assertSuccess()
 #endif
 
 void
-ObjectMemoryView::visitResumePoint(MResumePoint *rp)
+ObjectMemoryView::visitResumePoint(MResumePoint* rp)
 {
     // As long as the MObjectState is not yet seen next to the allocation, we do
     // not patch the resume point to recover the side effects.
@@ -422,14 +422,14 @@ ObjectMemoryView::visitResumePoint(MResumePoint *rp)
 }
 
 void
-ObjectMemoryView::visitObjectState(MObjectState *ins)
+ObjectMemoryView::visitObjectState(MObjectState* ins)
 {
     if (ins->isInWorklist())
         ins->setNotInWorklist();
 }
 
 void
-ObjectMemoryView::visitStoreFixedSlot(MStoreFixedSlot *ins)
+ObjectMemoryView::visitStoreFixedSlot(MStoreFixedSlot* ins)
 {
     // Skip stores made on other objects.
     if (ins->object() != obj_)
@@ -441,7 +441,7 @@ ObjectMemoryView::visitStoreFixedSlot(MStoreFixedSlot *ins)
         state_->setFixedSlot(ins->slot(), ins->value());
         ins->block()->insertBefore(ins->toInstruction(), state_);
     } else {
-        MBail *bailout = MBail::New(alloc_, Bailout_Inevitable);
+        MBail* bailout = MBail::New(alloc_, Bailout_Inevitable);
         ins->block()->insertBefore(ins, bailout);
     }
 
@@ -450,7 +450,7 @@ ObjectMemoryView::visitStoreFixedSlot(MStoreFixedSlot *ins)
 }
 
 void
-ObjectMemoryView::visitLoadFixedSlot(MLoadFixedSlot *ins)
+ObjectMemoryView::visitLoadFixedSlot(MLoadFixedSlot* ins)
 {
     // Skip loads made on other objects.
     if (ins->object() != obj_)
@@ -460,7 +460,7 @@ ObjectMemoryView::visitLoadFixedSlot(MLoadFixedSlot *ins)
     if (state_->hasFixedSlot(ins->slot())) {
         ins->replaceAllUsesWith(state_->getFixedSlot(ins->slot()));
     } else {
-        MBail *bailout = MBail::New(alloc_, Bailout_Inevitable);
+        MBail* bailout = MBail::New(alloc_, Bailout_Inevitable);
         ins->block()->insertBefore(ins, bailout);
         ins->replaceAllUsesWith(undefinedVal_);
     }
@@ -470,7 +470,7 @@ ObjectMemoryView::visitLoadFixedSlot(MLoadFixedSlot *ins)
 }
 
 void
-ObjectMemoryView::visitPostWriteBarrier(MPostWriteBarrier *ins)
+ObjectMemoryView::visitPostWriteBarrier(MPostWriteBarrier* ins)
 {
     // Skip loads made on other objects.
     if (ins->object() != obj_)
@@ -481,10 +481,10 @@ ObjectMemoryView::visitPostWriteBarrier(MPostWriteBarrier *ins)
 }
 
 void
-ObjectMemoryView::visitStoreSlot(MStoreSlot *ins)
+ObjectMemoryView::visitStoreSlot(MStoreSlot* ins)
 {
     // Skip stores made on other objects.
-    MSlots *slots = ins->slots()->toSlots();
+    MSlots* slots = ins->slots()->toSlots();
     if (slots->object() != obj_) {
         // Guard objects are replaced when they are visited.
         MOZ_ASSERT(!slots->object()->isGuardShape() || slots->object()->toGuardShape()->obj() != obj_);
@@ -497,7 +497,7 @@ ObjectMemoryView::visitStoreSlot(MStoreSlot *ins)
         state_->setDynamicSlot(ins->slot(), ins->value());
         ins->block()->insertBefore(ins->toInstruction(), state_);
     } else {
-        MBail *bailout = MBail::New(alloc_, Bailout_Inevitable);
+        MBail* bailout = MBail::New(alloc_, Bailout_Inevitable);
         ins->block()->insertBefore(ins, bailout);
     }
 
@@ -506,10 +506,10 @@ ObjectMemoryView::visitStoreSlot(MStoreSlot *ins)
 }
 
 void
-ObjectMemoryView::visitLoadSlot(MLoadSlot *ins)
+ObjectMemoryView::visitLoadSlot(MLoadSlot* ins)
 {
     // Skip loads made on other objects.
-    MSlots *slots = ins->slots()->toSlots();
+    MSlots* slots = ins->slots()->toSlots();
     if (slots->object() != obj_) {
         // Guard objects are replaced when they are visited.
         MOZ_ASSERT(!slots->object()->isGuardShape() || slots->object()->toGuardShape()->obj() != obj_);
@@ -520,7 +520,7 @@ ObjectMemoryView::visitLoadSlot(MLoadSlot *ins)
     if (state_->hasDynamicSlot(ins->slot())) {
         ins->replaceAllUsesWith(state_->getDynamicSlot(ins->slot()));
     } else {
-        MBail *bailout = MBail::New(alloc_, Bailout_Inevitable);
+        MBail* bailout = MBail::New(alloc_, Bailout_Inevitable);
         ins->block()->insertBefore(ins, bailout);
         ins->replaceAllUsesWith(undefinedVal_);
     }
@@ -530,7 +530,7 @@ ObjectMemoryView::visitLoadSlot(MLoadSlot *ins)
 }
 
 void
-ObjectMemoryView::visitGuardShape(MGuardShape *ins)
+ObjectMemoryView::visitGuardShape(MGuardShape* ins)
 {
     // Skip loads made on other objects.
     if (ins->obj() != obj_)
@@ -544,10 +544,10 @@ ObjectMemoryView::visitGuardShape(MGuardShape *ins)
 }
 
 void
-ObjectMemoryView::visitFunctionEnvironment(MFunctionEnvironment *ins)
+ObjectMemoryView::visitFunctionEnvironment(MFunctionEnvironment* ins)
 {
     // Skip function environment which are not aliases of the NewCallObject.
-    MDefinition *input = ins->input();
+    MDefinition* input = ins->input();
     if (!input->isLambda() || input->toLambda()->scopeChain() != obj_)
         return;
 
@@ -559,7 +559,7 @@ ObjectMemoryView::visitFunctionEnvironment(MFunctionEnvironment *ins)
 }
 
 void
-ObjectMemoryView::visitLambda(MLambda *ins)
+ObjectMemoryView::visitLambda(MLambda* ins)
 {
     if (ins->scopeChain() != obj_)
         return;
@@ -570,10 +570,10 @@ ObjectMemoryView::visitLambda(MLambda *ins)
 }
 
 static bool
-IndexOf(MDefinition *ins, int32_t *res)
+IndexOf(MDefinition* ins, int32_t* res)
 {
     MOZ_ASSERT(ins->isLoadElement() || ins->isStoreElement());
-    MDefinition *indexDef = ins->getOperand(1); // ins->index();
+    MDefinition* indexDef = ins->getOperand(1); // ins->index();
     if (indexDef->isBoundsCheck())
         indexDef = indexDef->toBoundsCheck()->index();
     if (indexDef->isToInt32())
@@ -594,7 +594,7 @@ IndexOf(MDefinition *ins, int32_t *res)
 // For the moment, this code is dumb as it only supports arrays which are not
 // changing length, with only access with known constants.
 static bool
-IsArrayEscaped(MInstruction *ins)
+IsArrayEscaped(MInstruction* ins)
 {
     MOZ_ASSERT(ins->type() == MIRType_Object);
     MOZ_ASSERT(ins->isNewArray());
@@ -616,7 +616,7 @@ IsArrayEscaped(MInstruction *ins)
     // of either a known Store / Load, then we consider it as escaped. This is a
     // cheap and conservative escape analysis.
     for (MUseIterator i(ins->usesBegin()); i != ins->usesEnd(); i++) {
-        MNode *consumer = (*i)->consumer();
+        MNode* consumer = (*i)->consumer();
         if (!consumer->isDefinition()) {
             // Cannot optimize if it is observable from fun.arguments or others.
             if (!consumer->toResumePoint()->isRecoverableOperand(*i)) {
@@ -626,14 +626,14 @@ IsArrayEscaped(MInstruction *ins)
             continue;
         }
 
-        MDefinition *def = consumer->toDefinition();
+        MDefinition* def = consumer->toDefinition();
         switch (def->op()) {
           case MDefinition::Op_Elements: {
             MOZ_ASSERT(def->toElements()->object() == ins);
             for (MUseIterator i(def->usesBegin()); i != def->usesEnd(); i++) {
                 // The MIRType_Elements cannot be captured in a resume point as
                 // it does not represent a value allocation.
-                MDefinition *access = (*i)->consumer()->toDefinition();
+                MDefinition* access = (*i)->consumer()->toDefinition();
 
                 switch (access->op()) {
                   case MDefinition::Op_LoadElement: {
@@ -746,27 +746,27 @@ class ArrayMemoryView : public MDefinitionVisitorDefaultNoop
 {
   public:
     typedef MArrayState BlockState;
-    static const char *phaseName;
+    static const char* phaseName;
 
   private:
-    TempAllocator &alloc_;
-    MConstant *undefinedVal_;
-    MConstant *length_;
-    MInstruction *arr_;
-    MBasicBlock *startBlock_;
-    BlockState *state_;
+    TempAllocator& alloc_;
+    MConstant* undefinedVal_;
+    MConstant* length_;
+    MInstruction* arr_;
+    MBasicBlock* startBlock_;
+    BlockState* state_;
 
     // Used to improve the memory usage by sharing common modification.
-    const MResumePoint *lastResumePoint_;
+    const MResumePoint* lastResumePoint_;
 
   public:
-    ArrayMemoryView(TempAllocator &alloc, MInstruction *arr);
+    ArrayMemoryView(TempAllocator& alloc, MInstruction* arr);
 
-    MBasicBlock *startingBlock();
-    bool initStartingState(BlockState **pState);
+    MBasicBlock* startingBlock();
+    bool initStartingState(BlockState** pState);
 
-    void setEntryBlockState(BlockState *state);
-    bool mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ, BlockState **pSuccState);
+    void setEntryBlockState(BlockState* state);
+    bool mergeIntoSuccessorState(MBasicBlock* curr, MBasicBlock* succ, BlockState** pSuccState);
 
 #ifdef DEBUG
     void assertSuccess();
@@ -775,22 +775,22 @@ class ArrayMemoryView : public MDefinitionVisitorDefaultNoop
 #endif
 
   private:
-    bool isArrayStateElements(MDefinition *elements);
-    void discardInstruction(MInstruction *ins, MDefinition *elements);
+    bool isArrayStateElements(MDefinition* elements);
+    void discardInstruction(MInstruction* ins, MDefinition* elements);
 
   public:
-    void visitResumePoint(MResumePoint *rp);
-    void visitArrayState(MArrayState *ins);
-    void visitStoreElement(MStoreElement *ins);
-    void visitLoadElement(MLoadElement *ins);
-    void visitSetInitializedLength(MSetInitializedLength *ins);
-    void visitInitializedLength(MInitializedLength *ins);
-    void visitArrayLength(MArrayLength *ins);
+    void visitResumePoint(MResumePoint* rp);
+    void visitArrayState(MArrayState* ins);
+    void visitStoreElement(MStoreElement* ins);
+    void visitLoadElement(MLoadElement* ins);
+    void visitSetInitializedLength(MSetInitializedLength* ins);
+    void visitInitializedLength(MInitializedLength* ins);
+    void visitArrayLength(MArrayLength* ins);
 };
 
-const char *ArrayMemoryView::phaseName = "Scalar Replacement of Array";
+const char* ArrayMemoryView::phaseName = "Scalar Replacement of Array";
 
-ArrayMemoryView::ArrayMemoryView(TempAllocator &alloc, MInstruction *arr)
+ArrayMemoryView::ArrayMemoryView(TempAllocator& alloc, MInstruction* arr)
   : alloc_(alloc),
     undefinedVal_(nullptr),
     length_(nullptr),
@@ -807,23 +807,23 @@ ArrayMemoryView::ArrayMemoryView(TempAllocator &alloc, MInstruction *arr)
     arr_->setImplicitlyUsedUnchecked();
 }
 
-MBasicBlock *
+MBasicBlock*
 ArrayMemoryView::startingBlock()
 {
     return startBlock_;
 }
 
 bool
-ArrayMemoryView::initStartingState(BlockState **pState)
+ArrayMemoryView::initStartingState(BlockState** pState)
 {
     // Uninitialized elements have an "undefined" value.
     undefinedVal_ = MConstant::New(alloc_, UndefinedValue());
-    MConstant *initLength = MConstant::New(alloc_, Int32Value(0));
+    MConstant* initLength = MConstant::New(alloc_, Int32Value(0));
     arr_->block()->insertBefore(arr_, undefinedVal_);
     arr_->block()->insertBefore(arr_, initLength);
 
     // Create a new block state and insert at it at the location of the new array.
-    BlockState *state = BlockState::New(alloc_, arr_, undefinedVal_, initLength);
+    BlockState* state = BlockState::New(alloc_, arr_, undefinedVal_, initLength);
     startBlock_->insertAfter(arr_, state);
 
     // Hold out of resume point until it is visited.
@@ -834,16 +834,16 @@ ArrayMemoryView::initStartingState(BlockState **pState)
 }
 
 void
-ArrayMemoryView::setEntryBlockState(BlockState *state)
+ArrayMemoryView::setEntryBlockState(BlockState* state)
 {
     state_ = state;
 }
 
 bool
-ArrayMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
-                                          BlockState **pSuccState)
+ArrayMemoryView::mergeIntoSuccessorState(MBasicBlock* curr, MBasicBlock* succ,
+                                          BlockState** pSuccState)
 {
-    BlockState *succState = *pSuccState;
+    BlockState* succState = *pSuccState;
 
     // When a block has no state yet, create an empty one for the
     // successor.
@@ -873,7 +873,7 @@ ArrayMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
         succState = BlockState::Copy(alloc_, state_);
         size_t numPreds = succ->numPredecessors();
         for (size_t index = 0; index < state_->numElements(); index++) {
-            MPhi *phi = MPhi::New(alloc_);
+            MPhi* phi = MPhi::New(alloc_);
             if (!phi->reserveLength(numPreds))
                 return false;
 
@@ -913,7 +913,7 @@ ArrayMemoryView::mergeIntoSuccessorState(MBasicBlock *curr, MBasicBlock *succ,
         // Copy the current element states to the index of current block in all
         // the Phi created during the first visit of the successor.
         for (size_t index = 0; index < state_->numElements(); index++) {
-            MPhi *phi = succState->getElement(index)->toPhi();
+            MPhi* phi = succState->getElement(index)->toPhi();
             phi->replaceOperand(currIndex, state_->getElement(index));
         }
     }
@@ -930,7 +930,7 @@ ArrayMemoryView::assertSuccess()
 #endif
 
 void
-ArrayMemoryView::visitResumePoint(MResumePoint *rp)
+ArrayMemoryView::visitResumePoint(MResumePoint* rp)
 {
     // As long as the MArrayState is not yet seen next to the allocation, we do
     // not patch the resume point to recover the side effects.
@@ -941,20 +941,20 @@ ArrayMemoryView::visitResumePoint(MResumePoint *rp)
 }
 
 void
-ArrayMemoryView::visitArrayState(MArrayState *ins)
+ArrayMemoryView::visitArrayState(MArrayState* ins)
 {
     if (ins->isInWorklist())
         ins->setNotInWorklist();
 }
 
 bool
-ArrayMemoryView::isArrayStateElements(MDefinition *elements)
+ArrayMemoryView::isArrayStateElements(MDefinition* elements)
 {
     return elements->isElements() && elements->toElements()->object() == arr_;
 }
 
 void
-ArrayMemoryView::discardInstruction(MInstruction *ins, MDefinition *elements)
+ArrayMemoryView::discardInstruction(MInstruction* ins, MDefinition* elements)
 {
     MOZ_ASSERT(elements->isElements());
     ins->block()->discard(ins);
@@ -963,10 +963,10 @@ ArrayMemoryView::discardInstruction(MInstruction *ins, MDefinition *elements)
 }
 
 void
-ArrayMemoryView::visitStoreElement(MStoreElement *ins)
+ArrayMemoryView::visitStoreElement(MStoreElement* ins)
 {
     // Skip other array objects.
-    MDefinition *elements = ins->elements();
+    MDefinition* elements = ins->elements();
     if (!isArrayStateElements(elements))
         return;
 
@@ -982,10 +982,10 @@ ArrayMemoryView::visitStoreElement(MStoreElement *ins)
 }
 
 void
-ArrayMemoryView::visitLoadElement(MLoadElement *ins)
+ArrayMemoryView::visitLoadElement(MLoadElement* ins)
 {
     // Skip other array objects.
-    MDefinition *elements = ins->elements();
+    MDefinition* elements = ins->elements();
     if (!isArrayStateElements(elements))
         return;
 
@@ -999,10 +999,10 @@ ArrayMemoryView::visitLoadElement(MLoadElement *ins)
 }
 
 void
-ArrayMemoryView::visitSetInitializedLength(MSetInitializedLength *ins)
+ArrayMemoryView::visitSetInitializedLength(MSetInitializedLength* ins)
 {
     // Skip other array objects.
-    MDefinition *elements = ins->elements();
+    MDefinition* elements = ins->elements();
     if (!isArrayStateElements(elements))
         return;
 
@@ -1012,7 +1012,7 @@ ArrayMemoryView::visitSetInitializedLength(MSetInitializedLength *ins)
     // a new constant that we register in the ArrayState.
     state_ = BlockState::Copy(alloc_, state_);
     int32_t initLengthValue = ins->index()->constantValue().toInt32() + 1;
-    MConstant *initLength = MConstant::New(alloc_, Int32Value(initLengthValue));
+    MConstant* initLength = MConstant::New(alloc_, Int32Value(initLengthValue));
     ins->block()->insertBefore(ins, initLength);
     ins->block()->insertBefore(ins, state_);
     state_->setInitializedLength(initLength);
@@ -1022,10 +1022,10 @@ ArrayMemoryView::visitSetInitializedLength(MSetInitializedLength *ins)
 }
 
 void
-ArrayMemoryView::visitInitializedLength(MInitializedLength *ins)
+ArrayMemoryView::visitInitializedLength(MInitializedLength* ins)
 {
     // Skip other array objects.
-    MDefinition *elements = ins->elements();
+    MDefinition* elements = ins->elements();
     if (!isArrayStateElements(elements))
         return;
 
@@ -1037,10 +1037,10 @@ ArrayMemoryView::visitInitializedLength(MInitializedLength *ins)
 }
 
 void
-ArrayMemoryView::visitArrayLength(MArrayLength *ins)
+ArrayMemoryView::visitArrayLength(MArrayLength* ins)
 {
     // Skip other array objects.
-    MDefinition *elements = ins->elements();
+    MDefinition* elements = ins->elements();
     if (!isArrayStateElements(elements))
         return;
 
@@ -1056,7 +1056,7 @@ ArrayMemoryView::visitArrayLength(MArrayLength *ins)
 }
 
 bool
-ScalarReplacement(MIRGenerator *mir, MIRGraph &graph)
+ScalarReplacement(MIRGenerator* mir, MIRGraph& graph)
 {
     EmulateStateOf<ObjectMemoryView> replaceObject(mir, graph);
     EmulateStateOf<ArrayMemoryView> replaceArray(mir, graph);

@@ -65,7 +65,7 @@ nsXPCWrappedJS::CanSkip()
         return true;
 
     // If this wrapper holds a gray object, need to trace it.
-    JSObject *obj = GetJSObjectPreserveColor();
+    JSObject* obj = GetJSObjectPreserveColor();
     if (obj && JS::ObjectIsMarkedGray(obj))
         return false;
 
@@ -93,11 +93,11 @@ nsXPCWrappedJS::CanSkip()
 
 NS_IMETHODIMP
 NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Traverse
-   (void *p, nsCycleCollectionTraversalCallback &cb)
+   (void* p, nsCycleCollectionTraversalCallback& cb)
 {
-    nsISupports *s = static_cast<nsISupports*>(p);
+    nsISupports* s = static_cast<nsISupports*>(p);
     MOZ_ASSERT(CheckForRightISupports(s), "not the nsISupports pointer we expect");
-    nsXPCWrappedJS *tmp = Downcast(s);
+    nsXPCWrappedJS* tmp = Downcast(s);
 
     nsrefcnt refcnt = tmp->mRefCnt.get();
     if (cb.WantDebugInfo()) {
@@ -232,7 +232,7 @@ nsXPCWrappedJS::AddRef(void)
         MOZ_CRASH();
 
     MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
-    nsISupports *base = NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Upcast(this);
+    nsISupports* base = NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Upcast(this);
     nsrefcnt cnt = mRefCnt.incr(base);
     NS_LOG_ADDREF(this, cnt, "nsXPCWrappedJS", sizeof(*this));
 
@@ -253,7 +253,7 @@ nsXPCWrappedJS::Release(void)
     NS_ASSERT_OWNINGTHREAD(nsXPCWrappedJS);
 
     bool shouldDelete = false;
-    nsISupports *base = NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Upcast(this);
+    nsISupports* base = NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Upcast(this);
     nsrefcnt cnt = mRefCnt.decr(base, &shouldDelete);
     NS_LOG_RELEASE(this, cnt, "nsXPCWrappedJS");
 
@@ -297,7 +297,7 @@ nsXPCWrappedJS::TraceJS(JSTracer* trc)
 
 // static
 void
-nsXPCWrappedJS::GetTraceName(JSTracer* trc, char *buf, size_t bufsize)
+nsXPCWrappedJS::GetTraceName(JSTracer* trc, char* buf, size_t bufsize)
 {
     const nsXPCWrappedJS* self = static_cast<const nsXPCWrappedJS*>
                                             (trc->debugPrintArg());
@@ -386,7 +386,7 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSContext* cx,
                                JSObject* aJSObj,
                                nsXPCWrappedJSClass* aClass,
                                nsXPCWrappedJS* root,
-                               nsresult *rv)
+                               nsresult* rv)
     : mJSObj(aJSObj),
       mClass(aClass),
       mRoot(root ? root : this),
@@ -605,7 +605,7 @@ nsXPCWrappedJS::GetEnumerator(nsISimpleEnumerator * *aEnumerate)
 
 /* nsIVariant getProperty (in AString name); */
 NS_IMETHODIMP
-nsXPCWrappedJS::GetProperty(const nsAString & name, nsIVariant **_retval)
+nsXPCWrappedJS::GetProperty(const nsAString & name, nsIVariant** _retval)
 {
     AutoJSContext cx;
     XPCCallContext ccx(NATIVE_CALLER, cx);

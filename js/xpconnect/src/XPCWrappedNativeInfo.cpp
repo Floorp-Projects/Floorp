@@ -49,7 +49,7 @@ XPCNativeMember::NewFunctionObject(XPCCallContext& ccx,
 
 bool
 XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
-                         HandleObject parent, jsval *vp)
+                         HandleObject parent, jsval* vp)
 {
     MOZ_ASSERT(iface == GetInterface());
     if (IsConstant()) {
@@ -86,7 +86,7 @@ XPCNativeMember::Resolve(XPCCallContext& ccx, XPCNativeInterface* iface,
         callback = XPC_WN_GetterSetter;
     }
 
-    JSFunction *fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, GetName());
+    JSFunction* fun = js::NewFunctionByIdWithReserved(ccx, callback, argc, 0, GetName());
     if (!fun)
         return false;
 
@@ -239,7 +239,7 @@ XPCNativeInterface::NewInstance(nsIInterfaceInfo* aInfo)
     if (mainProcessScriptableOnly && XRE_GetProcessType() != GeckoProcessType_Default) {
         nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
         if (console) {
-            char *intfNameChars;
+            char* intfNameChars;
             aInfo->GetName(&intfNameChars);
             nsPrintfCString errorMsg("Use of %s in content process is deprecated.", intfNameChars);
 

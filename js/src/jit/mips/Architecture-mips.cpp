@@ -30,7 +30,7 @@ uint32_t GetMIPSFlags()
 #else
 
 #ifdef __linux__
-    FILE *fp = fopen("/proc/cpuinfo", "r");
+    FILE* fp = fopen("/proc/cpuinfo", "r");
     if (!fp)
         return false;
 
@@ -55,7 +55,7 @@ bool hasFPU()
 }
 
 Registers::Code
-Registers::FromName(const char *name)
+Registers::FromName(const char* name)
 {
     for (size_t i = 0; i < Total; i++) {
         if (strcmp(GetName(i), name) == 0)
@@ -66,7 +66,7 @@ Registers::FromName(const char *name)
 }
 
 FloatRegisters::Code
-FloatRegisters::FromName(const char *name)
+FloatRegisters::FromName(const char* name)
 {
     for (size_t i = 0; i < Total; i++) {
         if (strcmp(GetName(i), name) == 0)
@@ -100,7 +100,7 @@ FloatRegister::singleOverlay(unsigned int which) const
 }
 
 FloatRegisterSet
-FloatRegister::ReduceSetForPush(const FloatRegisterSet &s)
+FloatRegister::ReduceSetForPush(const FloatRegisterSet& s)
 {
     FloatRegisterSet mod;
     for (TypedRegisterIterator<FloatRegister> iter(s); iter.more(); iter++) {
@@ -115,7 +115,7 @@ FloatRegister::ReduceSetForPush(const FloatRegisterSet &s)
 }
 
 uint32_t
-FloatRegister::GetPushSizeInBytes(const FloatRegisterSet &s)
+FloatRegister::GetPushSizeInBytes(const FloatRegisterSet& s)
 {
     FloatRegisterSet ss = s.reduceSetForPush();
     uint64_t bits = ss.bits();

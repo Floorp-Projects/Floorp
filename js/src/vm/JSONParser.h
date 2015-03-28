@@ -69,28 +69,28 @@ class MOZ_STACK_CLASS JSONParserBase : private JS::AutoGCRooter
 
     // Stack element for an in progress array or object.
     struct StackEntry {
-        ElementVector &elements() {
+        ElementVector& elements() {
             MOZ_ASSERT(state == FinishArrayElement);
-            return * static_cast<ElementVector *>(vector);
+            return * static_cast<ElementVector*>(vector);
         }
 
-        PropertyVector &properties() {
+        PropertyVector& properties() {
             MOZ_ASSERT(state == FinishObjectMember);
-            return * static_cast<PropertyVector *>(vector);
+            return * static_cast<PropertyVector*>(vector);
         }
 
-        explicit StackEntry(ElementVector *elements)
+        explicit StackEntry(ElementVector* elements)
           : state(FinishArrayElement), vector(elements)
         {}
 
-        explicit StackEntry(PropertyVector *properties)
+        explicit StackEntry(PropertyVector* properties)
           : state(FinishObjectMember), vector(properties)
         {}
 
         ParserState state;
 
       private:
-        void *vector;
+        void* vector;
     };
 
     // All in progress arrays and objects being parsed, in order from outermost
@@ -107,7 +107,7 @@ class MOZ_STACK_CLASS JSONParserBase : private JS::AutoGCRooter
     Token lastToken;
 #endif
 
-    JSONParserBase(JSContext *cx, ErrorHandling errorHandling)
+    JSONParserBase(JSContext* cx, ErrorHandling errorHandling)
       : JS::AutoGCRooter(cx, JSONPARSER),
         cx(cx),
         errorHandling(errorHandling),
@@ -132,7 +132,7 @@ class MOZ_STACK_CLASS JSONParserBase : private JS::AutoGCRooter
         return v;
     }
 
-    JSAtom *atomValue() const {
+    JSAtom* atomValue() const {
         Value strval = stringValue();
         return &strval.toString()->asAtom();
     }
@@ -146,7 +146,7 @@ class MOZ_STACK_CLASS JSONParserBase : private JS::AutoGCRooter
         return t;
     }
 
-    Token stringToken(JSString *str) {
+    Token stringToken(JSString* str) {
         this->v = StringValue(str);
 #ifdef DEBUG
         lastToken = String;
@@ -166,15 +166,15 @@ class MOZ_STACK_CLASS JSONParserBase : private JS::AutoGCRooter
 
     bool errorReturn();
 
-    bool finishObject(MutableHandleValue vp, PropertyVector &properties);
-    bool finishArray(MutableHandleValue vp, ElementVector &elements);
+    bool finishObject(MutableHandleValue vp, PropertyVector& properties);
+    bool finishArray(MutableHandleValue vp, ElementVector& elements);
 
   private:
-    friend void AutoGCRooter::trace(JSTracer *trc);
-    void trace(JSTracer *trc);
+    friend void AutoGCRooter::trace(JSTracer* trc);
+    void trace(JSTracer* trc);
 
-    JSONParserBase(const JSONParserBase &other) = delete;
-    void operator=(const JSONParserBase &other) = delete;
+    JSONParserBase(const JSONParserBase& other) = delete;
+    void operator=(const JSONParserBase& other) = delete;
 };
 
 template <typename CharT>
@@ -190,7 +190,7 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase
     /* Public API */
 
     /* Create a parser for the provided JSON data. */
-    JSONParser(JSContext *cx, mozilla::Range<const CharT> data,
+    JSONParser(JSContext* cx, mozilla::Range<const CharT> data,
                ErrorHandling errorHandling = RaiseError)
       : JSONParserBase(cx, errorHandling),
         current(data.start()),
@@ -224,13 +224,13 @@ class MOZ_STACK_CLASS JSONParser : public JSONParserBase
     Token advanceAfterObjectOpen();
     Token advanceAfterArrayElement();
 
-    void error(const char *msg);
+    void error(const char* msg);
 
-    void getTextPosition(uint32_t *column, uint32_t *line);
+    void getTextPosition(uint32_t* column, uint32_t* line);
 
   private:
-    JSONParser(const JSONParser &other) = delete;
-    void operator=(const JSONParser &other) = delete;
+    JSONParser(const JSONParser& other) = delete;
+    void operator=(const JSONParser& other) = delete;
 };
 
 } /* namespace js */

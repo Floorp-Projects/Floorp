@@ -86,7 +86,7 @@ class ABIArgGenerator
   public:
     ABIArgGenerator();
     ABIArg next(MIRType argType);
-    ABIArg &current() { return current_; }
+    ABIArg& current() { return current_; }
 
     uint32_t stackBytesConsumedSoFar() const {
         if (usedArgSlots_ <= 4)
@@ -268,10 +268,10 @@ uint32_t RD(uint32_t regCode);
 uint32_t SA(uint32_t value);
 uint32_t SA(FloatRegister r);
 
-Register toRS (Instruction &i);
-Register toRT (Instruction &i);
-Register toRD (Instruction &i);
-Register toR (Instruction &i);
+Register toRS (Instruction& i);
+Register toRT (Instruction& i);
+Register toRD (Instruction& i);
+Register toR (Instruction& i);
 
 // MIPS enums for instruction fields
 enum Opcode {
@@ -484,7 +484,7 @@ class BOffImm16
     bool isInvalid() {
         return data == INVALID;
     }
-    Instruction *getDest(Instruction *src);
+    Instruction* getDest(Instruction* src);
 
     BOffImm16(InstImm inst);
 };
@@ -525,7 +525,7 @@ class JOffImm26
     bool isInvalid() {
         return data == INVALID;
     }
-    Instruction *getDest(Instruction *src);
+    Instruction* getDest(Instruction* src);
 
 };
 
@@ -592,7 +592,7 @@ class Operand
       : tag(MEM), reg(base.code()), offset(off)
     { }
 
-    Operand (const Address &addr)
+    Operand (const Address& addr)
       : tag(MEM), reg(addr.base.code()), offset(addr.offset)
     { }
 
@@ -610,7 +610,7 @@ class Operand
         return FloatRegister::FromCode(reg);
     }
 
-    void toAddr(Register *r, Imm32 *dest) const {
+    void toAddr(Register* r, Imm32* dest) const {
         MOZ_ASSERT(tag == MEM);
         *r = Register::FromCode(reg);
         *dest = Imm32(offset);
@@ -635,10 +635,10 @@ class Operand
 };
 
 void
-PatchJump(CodeLocationJump &jump_, CodeLocationLabel label);
+PatchJump(CodeLocationJump& jump_, CodeLocationLabel label);
 
 void
-PatchBackedge(CodeLocationJump &jump_, CodeLocationLabel label, JitRuntime::BackedgeTarget target);
+PatchBackedge(CodeLocationJump& jump_, CodeLocationLabel label, JitRuntime::BackedgeTarget target);
 
 class Assembler;
 typedef js::jit::AssemblerBuffer<1024, Instruction> MIPSBuffer;
@@ -725,7 +725,7 @@ class Assembler : public AssemblerShared
   public:
     uint32_t actualOffset(uint32_t) const;
     uint32_t actualIndex(uint32_t) const;
-    static uint8_t *PatchableJumpAddress(JitCode *code, uint32_t index);
+    static uint8_t* PatchableJumpAddress(JitCode* code, uint32_t index);
   protected:
 
     // structure for fixing up pc-relative loads/jumps when a the machine code
@@ -735,10 +735,10 @@ class Assembler : public AssemblerShared
         // the offset within the code buffer where the value is loaded that
         // we want to fix-up
         BufferOffset offset;
-        void *target;
+        void* target;
         Relocation::Kind kind;
 
-        RelativePatch(BufferOffset offset, void *target, Relocation::Kind kind)
+        RelativePatch(BufferOffset offset, void* target, Relocation::Kind kind)
           : offset(offset),
             target(target),
             kind(kind)
@@ -765,7 +765,7 @@ class Assembler : public AssemblerShared
     static DoubleCondition InvertCondition(DoubleCondition cond);
 
     // MacroAssemblers hold onto gcthings, so they are traced by the GC.
-    void trace(JSTracer *trc);
+    void trace(JSTracer* trc);
     void writeRelocation(BufferOffset src) {
         jumpRelocations_.writeUnsigned(src.getOffset());
     }
@@ -781,21 +781,21 @@ class Assembler : public AssemblerShared
     }
 
   public:
-    static uintptr_t GetPointer(uint8_t *);
+    static uintptr_t GetPointer(uint8_t*);
 
     bool oom() const;
 
-    void setPrinter(Sprinter *sp) {
+    void setPrinter(Sprinter* sp) {
     }
 
   private:
     bool isFinished;
   public:
     void finish();
-    void executableCopy(void *buffer);
-    void copyJumpRelocationTable(uint8_t *dest);
-    void copyDataRelocationTable(uint8_t *dest);
-    void copyPreBarrierTable(uint8_t *dest);
+    void executableCopy(void* buffer);
+    void copyJumpRelocationTable(uint8_t* dest);
+    void copyDataRelocationTable(uint8_t* dest);
+    void copyPreBarrierTable(uint8_t* dest);
 
     void addCodeLabel(CodeLabel label);
     size_t numCodeLabels() const {
@@ -820,10 +820,10 @@ class Assembler : public AssemblerShared
     // instruction gets written into the instruction stream. If dest is not null
     // it is interpreted as a pointer to the location that we want the
     // instruction to be written.
-    BufferOffset writeInst(uint32_t x, uint32_t *dest = nullptr);
+    BufferOffset writeInst(uint32_t x, uint32_t* dest = nullptr);
     // A static variant for the cases where we don't want to have an assembler
     // object at all. Normally, you would use the dummy (nullptr) object.
-    static void WriteInstStatic(uint32_t x, uint32_t *dest);
+    static void WriteInstStatic(uint32_t x, uint32_t* dest);
 
   public:
     BufferOffset haltingAlign(int alignment);
@@ -996,30 +996,30 @@ class Assembler : public AssemblerShared
                          FPConditionBit fcc = FCC0);
 
     // label operations
-    void bind(Label *label, BufferOffset boff = BufferOffset());
-    void bind(RepatchLabel *label);
+    void bind(Label* label, BufferOffset boff = BufferOffset());
+    void bind(RepatchLabel* label);
     uint32_t currentOffset() {
         return nextOffset().getOffset();
     }
-    void retarget(Label *label, Label *target);
-    void Bind(uint8_t *rawCode, AbsoluteLabel *label, const void *address);
+    void retarget(Label* label, Label* target);
+    void Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address);
 
     // See Bind
     size_t labelOffsetToPatchOffset(size_t offset) {
         return actualOffset(offset);
     }
 
-    void call(Label *label);
-    void call(void *target);
+    void call(Label* label);
+    void call(void* target);
 
     void as_break(uint32_t code);
 
   public:
-    static void TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
-    static void TraceDataRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
+    static void TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
+    static void TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
 
-    static void FixupNurseryObjects(JSContext *cx, JitCode *code, CompactBufferReader &reader,
-                                    const ObjectVector &nurseryObjects);
+    static void FixupNurseryObjects(JSContext* cx, JitCode* code, CompactBufferReader& reader,
+                                    const ObjectVector& nurseryObjects);
 
     static bool SupportsFloatingPoint() {
 #if (defined(__mips_hard_float) && !defined(__mips_single_float)) || defined(JS_MIPS_SIMULATOR)
@@ -1034,7 +1034,7 @@ class Assembler : public AssemblerShared
 
   protected:
     InstImm invertBranch(InstImm branch, BOffImm16 skipOffset);
-    void bind(InstImm *inst, uint32_t branch, uint32_t target);
+    void bind(InstImm* inst, uint32_t branch, uint32_t target);
     void addPendingJump(BufferOffset src, ImmPtr target, Relocation::Kind kind) {
         enoughMemory_ &= jumps_.append(RelativePatch(src, target.value, kind));
         if (kind == Relocation::JITCODE)
@@ -1055,7 +1055,7 @@ class Assembler : public AssemblerShared
 
     // Copy the assembly code to the given buffer, and perform any pending
     // relocations relying on the target address.
-    void executableCopy(uint8_t *buffer);
+    void executableCopy(uint8_t* buffer);
 
     void flushBuffer() {
     }
@@ -1063,9 +1063,9 @@ class Assembler : public AssemblerShared
     static uint32_t PatchWrite_NearCallSize();
     static uint32_t NopSize() { return 4; }
 
-    static uint32_t ExtractLuiOriValue(Instruction *inst0, Instruction *inst1);
-    static void UpdateLuiOriValue(Instruction *inst0, Instruction *inst1, uint32_t value);
-    static void WriteLuiOriInstructions(Instruction *inst, Instruction *inst1,
+    static uint32_t ExtractLuiOriValue(Instruction* inst0, Instruction* inst1);
+    static void UpdateLuiOriValue(Instruction* inst0, Instruction* inst1, uint32_t value);
+    static void WriteLuiOriInstructions(Instruction* inst, Instruction* inst1,
                                         Register reg, uint32_t value);
 
     static void PatchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall);
@@ -1075,29 +1075,29 @@ class Assembler : public AssemblerShared
                                         ImmPtr expectedValue);
     static void PatchWrite_Imm32(CodeLocationLabel label, Imm32 imm);
 
-    static void PatchInstructionImmediate(uint8_t *code, PatchedImmPtr imm);
+    static void PatchInstructionImmediate(uint8_t* code, PatchedImmPtr imm);
 
     static uint32_t AlignDoubleArg(uint32_t offset) {
         return (offset + 1U) &~ 1U;
     }
 
-    static uint8_t *NextInstruction(uint8_t *instruction, uint32_t *count = nullptr);
+    static uint8_t* NextInstruction(uint8_t* instruction, uint32_t* count = nullptr);
 
     static void ToggleToJmp(CodeLocationLabel inst_);
     static void ToggleToCmp(CodeLocationLabel inst_);
 
     static void ToggleCall(CodeLocationLabel inst_, bool enabled);
 
-    static void UpdateBoundsCheck(uint32_t logHeapSize, Instruction *inst);
-    void processCodeLabels(uint8_t *rawCode);
-    static int32_t ExtractCodeLabelOffset(uint8_t *code);
+    static void UpdateBoundsCheck(uint32_t logHeapSize, Instruction* inst);
+    void processCodeLabels(uint8_t* rawCode);
+    static int32_t ExtractCodeLabelOffset(uint8_t* code);
 
     bool bailed() {
         return m_buffer.bail();
     }
 
     void verifyHeapAccessDisassembly(uint32_t begin, uint32_t end,
-                                     const Disassembler::HeapAccess &heapAccess)
+                                     const Disassembler::HeapAccess& heapAccess)
     {
         // Implement this if we implement a disassembler.
     }
@@ -1132,7 +1132,7 @@ class Instruction
         this->data = data;
     }
 
-    const Instruction & operator=(const Instruction &src) {
+    const Instruction & operator=(const Instruction& src) {
         data = src.data;
         return *this;
     }
@@ -1157,11 +1157,11 @@ class Instruction
 
     // Get the next instruction in the instruction stream.
     // This does neat things like ignoreconstant pools and their guards.
-    Instruction *next();
+    Instruction* next();
 
     // Sometimes, an api wants a uint32_t (or a pointer to it) rather than
     // an instruction.  raw() just coerces this into a pointer to a uint32_t
-    const uint32_t *raw() const { return &data; }
+    const uint32_t* raw() const { return &data; }
     uint32_t size() const { return 4; }
 }; // Instruction
 
@@ -1243,7 +1243,7 @@ class InstReg : public Instruction
 class InstImm : public Instruction
 {
   public:
-    void extractImm16(BOffImm16 *dest);
+    void extractImm16(BOffImm16* dest);
 
     InstImm(Opcode op, Register rs, Register rt, BOffImm16 off)
       : Instruction(op | RS(rs) | RT(rt) | off.encode())
@@ -1309,7 +1309,7 @@ class InstJump : public Instruction
 static const uint32_t NumIntArgRegs = 4;
 
 static inline bool
-GetIntArgReg(uint32_t usedArgSlots, Register *out)
+GetIntArgReg(uint32_t usedArgSlots, Register* out)
 {
     if (usedArgSlots < NumIntArgRegs) {
         *out = Register::FromCode(a0.code() + usedArgSlots);
@@ -1324,7 +1324,7 @@ GetIntArgReg(uint32_t usedArgSlots, Register *out)
 // CallTempReg* don't overlap the argument registers, and only fail once those
 // run out too.
 static inline bool
-GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register *out)
+GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
 {
     // NOTE: We can't properly determine which regs are used if there are
     // float arguments. If this is needed, we will have to guess.
