@@ -1561,42 +1561,6 @@
   </binding>
 
   <binding id="addon-progress-notification" extends="chrome://global/content/bindings/notification.xml#popup-notification">
-    <content align="start">
-      <xul:image class="popup-notification-icon"
-                 xbl:inherits="popupid,src=icon"/>
-      <xul:vbox flex="1">
-        <xul:label class="popup-notification-originHost header"
-                   xbl:inherits="value=originhost"
-                   crop="end"/>
-        <xul:description class="popup-notification-description"
-                         xbl:inherits="xbl:text=label,popupid"/>
-        <xul:progressmeter anonid="progressmeter" flex="1" mode="undetermined" class="popup-progress-meter"/>
-        <xul:label anonid="progresstext" class="popup-progress-label" flex="1" crop="end"/>
-        <xul:spacer flex="1"/>
-        <xul:hbox class="popup-notification-button-container"
-                  pack="end" align="center">
-          <children includes="button"/>
-          <xul:button anonid="button"
-                      class="popup-notification-menubutton"
-                      type="menu-button"
-                      xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey">
-            <xul:menupopup anonid="menupopup"
-                           xbl:inherits="oncommand=menucommand">
-              <children/>
-              <xul:menuitem class="menuitem-iconic popup-notification-closeitem close-icon"
-                            label="&closeNotificationItem.label;"
-                            xbl:inherits="oncommand=closeitemcommand"/>
-            </xul:menupopup>
-          </xul:button>
-        </xul:hbox>
-      </xul:vbox>
-      <xul:vbox pack="start">
-        <xul:toolbarbutton anonid="closebutton"
-                           class="messageCloseButton close-icon popup-notification-closebutton tabbable"
-                           xbl:inherits="oncommand=closebuttoncommand"
-                           tooltiptext="&closeNotification.tooltip;"/>
-      </xul:vbox>
-    </content>
     <implementation>
       <constructor><![CDATA[
         if (!this.notification)
@@ -1620,10 +1584,10 @@
       ]]></destructor>
 
       <field name="progressmeter" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "progressmeter");
+        document.getElementById("addon-progress-notification-progressmeter"); 
       </field>
       <field name="progresstext" readonly="true">
-        document.getAnonymousElementByAttribute(this, "anonid", "progresstext");
+        document.getElementById("addon-progress-notification-progresstext");
       </field>
       <field name="DownloadUtils" readonly="true">
         let utils = {};
@@ -1648,11 +1612,11 @@
         <parameter name="aMaxProgress"/>
         <body><![CDATA[
           if (aMaxProgress == -1) {
-            this.progressmeter.mode = "undetermined";
+            this.progressmeter.setAttribute("mode", "undetermined");
           }
           else {
-            this.progressmeter.mode = "determined";
-            this.progressmeter.value = (aProgress * 100) / aMaxProgress;
+            this.progressmeter.setAttribute("mode", "determined");
+            this.progressmeter.setAttribute("value", (aProgress * 100) / aMaxProgress);
           }
 
           let now = Date.now();
@@ -1680,7 +1644,8 @@
 
           let status = null;
           [status, this.notification.last] = this.DownloadUtils.getDownloadStatus(aProgress, aMaxProgress, speed, this.notification.last);
-          this.progresstext.value = this.progresstext.tooltipText = status;
+          this.progresstext.setAttribute("value", status);
+          this.progresstext.setAttribute("tooltiptext", status);
         ]]></body>
       </method>
 
@@ -1722,9 +1687,10 @@
           if (downloadingCount == 0) {
             this.destroy();
             if (Preferences.get("xpinstall.customConfirmationUI", false)) {
-              this.progressmeter.mode = "undetermined";
-              this.progresstext.value = this.progresstext.tooltipText =
-                gNavigatorBundle.getString("addonDownloadVerifying");
+              this.progressmeter.setAttribute("mode", "undetermined");
+              let status = gNavigatorBundle.getString("addonDownloadVerifying");
+              this.progresstext.setAttribute("value", status);
+              this.progresstext.setAttribute("tooltiptext", status);
             } else {
               PopupNotifications.remove(this.notification);
             }

@@ -30,7 +30,9 @@ loader.lazyGetter(this, "StyleEditorPanel", () => require("devtools/styleeditor/
 loader.lazyGetter(this, "ShaderEditorPanel", () => require("devtools/shadereditor/panel").ShaderEditorPanel);
 loader.lazyGetter(this, "CanvasDebuggerPanel", () => require("devtools/canvasdebugger/panel").CanvasDebuggerPanel);
 loader.lazyGetter(this, "WebAudioEditorPanel", () => require("devtools/webaudioeditor/panel").WebAudioEditorPanel);
+loader.lazyGetter(this, "ProfilerPanel", () => require("devtools/profiler/panel").ProfilerPanel);
 loader.lazyGetter(this, "PerformancePanel", () => require("devtools/performance/panel").PerformancePanel);
+loader.lazyGetter(this, "TimelinePanel", () => require("devtools/timeline/panel").TimelinePanel);
 loader.lazyGetter(this, "NetMonitorPanel", () => require("devtools/netmonitor/panel").NetMonitorPanel);
 loader.lazyGetter(this, "StoragePanel", () => require("devtools/storage/panel").StoragePanel);
 loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/scratchpad/scratchpad-panel").ScratchpadPanel);
@@ -45,6 +47,7 @@ const shaderEditorProps = "chrome://browser/locale/devtools/shadereditor.propert
 const canvasDebuggerProps = "chrome://browser/locale/devtools/canvasdebugger.properties";
 const webAudioEditorProps = "chrome://browser/locale/devtools/webaudioeditor.properties";
 const profilerProps = "chrome://browser/locale/devtools/profiler.properties";
+const timelineProps = "chrome://browser/locale/devtools/timeline.properties";
 const netMonitorProps = "chrome://browser/locale/devtools/netmonitor.properties";
 const storageProps = "chrome://browser/locale/devtools/storage.properties";
 const scratchpadProps = "chrome://browser/locale/devtools/scratchpad.properties";
@@ -58,6 +61,7 @@ loader.lazyGetter(this, "shaderEditorStrings", () => Services.strings.createBund
 loader.lazyGetter(this, "canvasDebuggerStrings", () => Services.strings.createBundle(canvasDebuggerProps));
 loader.lazyGetter(this, "webAudioEditorStrings", () => Services.strings.createBundle(webAudioEditorProps));
 loader.lazyGetter(this, "inspectorStrings", () => Services.strings.createBundle(inspectorProps));
+loader.lazyGetter(this, "timelineStrings", () => Services.strings.createBundle(timelineProps));
 loader.lazyGetter(this, "netMonitorStrings", () => Services.strings.createBundle(netMonitorProps));
 loader.lazyGetter(this, "storageStrings", () => Services.strings.createBundle(storageProps));
 loader.lazyGetter(this, "scratchpadStrings", () => Services.strings.createBundle(scratchpadProps));
@@ -245,15 +249,41 @@ Tools.canvasDebugger = {
   }
 };
 
+Tools.jsprofiler = {
+  id: "jsprofiler",
+  accesskey: l10n("profiler.accesskey", profilerStrings),
+  key: l10n("profiler.commandkey2", profilerStrings),
+  ordinal: 7,
+  modifiers: "shift",
+  visibilityswitch: "devtools.profiler.enabled",
+  icon: "chrome://browser/skin/devtools/tool-profiler.svg",
+  invertIconForLightTheme: true,
+  url: "chrome://browser/content/devtools/profiler.xul",
+  label: l10n("profiler.label2", profilerStrings),
+  panelLabel: l10n("profiler.panelLabel2", profilerStrings),
+  tooltip: l10n("profiler.tooltip2", profilerStrings),
+  inMenu: true,
+
+  isTargetSupported: function (target) {
+    // Hide the profiler when debugging devices pre bug 1046394,
+    // that don't expose profiler actor in content processes.
+    return target.hasActor("profiler");
+  },
+
+  build: function (frame, target) {
+    return new ProfilerPanel(frame, target);
+  }
+};
+
 Tools.performance = {
   id: "performance",
-  ordinal: 7,
+  ordinal: 19,
   icon: "chrome://browser/skin/devtools/tool-profiler.svg",
   invertIconForLightTheme: true,
   url: "chrome://browser/content/devtools/performance.xul",
-  visibilityswitch: "devtools.performance.enabled",
-  label: l10n("profiler.label2", profilerStrings),
-  panelLabel: l10n("profiler.panelLabel2", profilerStrings),
+  // TODO bug 1082695 audit the Performance tools labels
+  label: "Performance++", //l10n("profiler.label2", profilerStrings),
+  panelLabel: "Performance++", //l10n("profiler.panelLabel2", profilerStrings),
   tooltip: l10n("profiler.tooltip2", profilerStrings),
   accesskey: l10n("profiler.accesskey", profilerStrings),
   key: l10n("profiler.commandkey2", profilerStrings),
@@ -266,6 +296,27 @@ Tools.performance = {
 
   build: function (frame, target) {
     return new PerformancePanel(frame, target);
+  }
+};
+
+Tools.timeline = {
+  id: "timeline",
+  ordinal: 8,
+  visibilityswitch: "devtools.timeline.enabled",
+  icon: "chrome://browser/skin/devtools/tool-network.svg",
+  invertIconForLightTheme: true,
+  url: "chrome://browser/content/devtools/timeline/timeline.xul",
+  label: l10n("timeline.label", timelineStrings),
+  panelLabel: l10n("timeline.panelLabel", timelineStrings),
+  tooltip: l10n("timeline.tooltip", timelineStrings),
+
+  isTargetSupported: function(target) {
+    return target.hasActor("timeline");
+  },
+
+  build: function (iframeWindow, toolbox) {
+    let panel = new TimelinePanel(iframeWindow, toolbox);
+    return panel.open();
   }
 };
 
@@ -371,11 +422,22 @@ let defaultTools = [
   Tools.shaderEditor,
   Tools.canvasDebugger,
   Tools.webAudioEditor,
-  Tools.performance,
+  Tools.jsprofiler,
+  Tools.timeline,
   Tools.netMonitor,
   Tools.storage,
   Tools.scratchpad
 ];
+
+// Only enable in-development performance tools if `--enable-devtools-perf`
+// used in build, turning on `devtools.performance_dev.enabled`.
+// Add to normal `defaultTools` when ready for normal release,
+// pull out MOZ_DEVTOOLS_PERFTOOLS setting in `./configure.in`, and
+// leave config on in `./browser/app/profile/firefox.js`, and always
+// build in `./browser/devtools/moz.build`.
+if (Services.prefs.getBoolPref("devtools.performance_dev.enabled")) {
+  defaultTools.push(Tools.performance);
+}
 
 exports.defaultTools = defaultTools;
 
