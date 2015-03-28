@@ -29,7 +29,7 @@ namespace dom {
 // Attribute helper class used to wrap up an attribute with a dom
 // object that implements nsIDOMAttr and nsIDOMNode
 class Attr final : public nsIAttribute,
-                       public nsIDOMAttr
+                   public nsIDOMAttr
 {
   virtual ~Attr() {}
 

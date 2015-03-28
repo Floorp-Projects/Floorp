@@ -17,7 +17,7 @@ namespace storage {
 class Statement;
 
 class StatementRow final : public mozIStorageStatementRow
-                             , public nsIXPCScriptable
+                         , public nsIXPCScriptable
 {
 public:
   NS_DECL_ISUPPORTS

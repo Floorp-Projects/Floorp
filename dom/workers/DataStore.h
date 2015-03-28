@@ -99,7 +99,7 @@ private:
 };
 
 class DataStoreChangeEventProxy final : public nsIDOMEventListener
-                                          , public WorkerFeature
+                                      , public WorkerFeature
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

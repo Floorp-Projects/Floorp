@@ -12,7 +12,7 @@
 namespace mozilla {
 
 #define JSEP_CODEC_CLONE(T)                                                    \
-  virtual JsepCodecDescription* Clone() const override                     \
+  virtual JsepCodecDescription* Clone() const override                         \
   {                                                                            \
     return new T(*this);                                                       \
   }

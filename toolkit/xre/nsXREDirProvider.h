@@ -15,7 +15,7 @@
 #include "mozilla/Attributes.h"
 
 class nsXREDirProvider final : public nsIDirectoryServiceProvider2,
-                                   public nsIProfileStartup
+                               public nsIProfileStartup
 {
 public:
   // we use a custom isupports implementation (no refcount)

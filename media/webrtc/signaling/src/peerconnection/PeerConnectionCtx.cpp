@@ -289,14 +289,20 @@ PeerConnectionCtx::EverySecondTelemetryCallback_m(nsITimer* timer, void *closure
         p != ctx->mPeerConnections.end(); ++p) {
     if (p->second->HasMedia()) {
       queries->append(nsAutoPtr<RTCStatsQuery>(new RTCStatsQuery(true)));
-      p->second->BuildStatsQuery_m(nullptr, // all tracks
-                                   queries->back());
+      if (NS_WARN_IF(NS_FAILED(p->second->BuildStatsQuery_m(nullptr, // all tracks
+                                                            queries->back())))) {
+        queries->popBack();
+      } else {
+        MOZ_ASSERT(queries->back()->report);
+      }
     }
   }
-  rv = RUN_ON_THREAD(stsThread,
-                     WrapRunnableNM(&EverySecondTelemetryCallback_s, queries),
-                     NS_DISPATCH_NORMAL);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  if (!queries->empty()) {
+    rv = RUN_ON_THREAD(stsThread,
+                       WrapRunnableNM(&EverySecondTelemetryCallback_s, queries),
+                       NS_DISPATCH_NORMAL);
+    NS_ENSURE_SUCCESS_VOID(rv);
+  }
 }
 #endif
 

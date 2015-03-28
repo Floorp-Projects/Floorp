@@ -24,7 +24,7 @@ namespace dom {
 typedef nsSVGElement SVGScriptElementBase;
 
 class SVGScriptElement final : public SVGScriptElementBase,
-                                   public nsScriptElement
+                               public nsScriptElement
 {
 protected:
   friend nsresult (::NS_NewSVGScriptElement(nsIContent **aResult,

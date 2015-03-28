@@ -23,8 +23,8 @@ class Row;
 nsresult NS_NewTreeContentView(nsITreeView** aResult);
 
 class nsTreeContentView final : public nsINativeTreeView,
-                                    public nsITreeContentView,
-                                    public nsStubDocumentObserver
+                                public nsITreeContentView,
+                                public nsStubDocumentObserver
 {
   public:
     nsTreeContentView(void);

@@ -15,7 +15,7 @@ class nsCString;
 class nsIArray;
 
 class nsNSSCertificateDB final : public nsIX509CertDB
-                                   , public nsNSSShutDownObject
+                               , public nsNSSShutDownObject
 
 {
 public:

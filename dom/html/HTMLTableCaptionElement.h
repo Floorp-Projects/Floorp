@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 
 class HTMLTableCaptionElement final : public nsGenericHTMLElement,
-                                          public nsIDOMHTMLTableCaptionElement
+                                      public nsIDOMHTMLTableCaptionElement
 {
 public:
   explicit HTMLTableCaptionElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)

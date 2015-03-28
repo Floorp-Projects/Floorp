@@ -26,9 +26,9 @@ class GlobalObject;
 } // namespace mozilla
 
 class nsFormData final : public nsIDOMFormData,
-                             public nsIXHRSendable,
-                             public nsFormSubmission,
-                             public nsWrapperCache
+                         public nsIXHRSendable,
+                         public nsFormSubmission,
+                         public nsWrapperCache
 {
 private:
   ~nsFormData() {}

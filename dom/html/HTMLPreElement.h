@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class HTMLPreElement final : public nsGenericHTMLElement,
-                                 public nsIDOMHTMLPreElement
+                             public nsIDOMHTMLPreElement
 {
 public:
   explicit HTMLPreElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)

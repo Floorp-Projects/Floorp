@@ -17,9 +17,9 @@ namespace mozilla {
 namespace dom {
 
 class HTMLObjectElement final : public nsGenericHTMLFormElement
-                                  , public nsObjectLoadingContent
-                                  , public nsIDOMHTMLObjectElement
-                                  , public nsIConstraintValidation
+                              , public nsObjectLoadingContent
+                              , public nsIDOMHTMLObjectElement
+                              , public nsIConstraintValidation
 {
 public:
   explicit HTMLObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,

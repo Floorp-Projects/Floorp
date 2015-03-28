@@ -30,7 +30,7 @@ class ResultSet;
 class StatementData;
 
 class AsyncExecuteStatements final : public nsIRunnable
-                                       , public mozIStoragePendingStatement
+                                   , public mozIStoragePendingStatement
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

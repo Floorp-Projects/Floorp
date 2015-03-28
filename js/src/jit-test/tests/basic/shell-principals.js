@@ -30,7 +30,10 @@ var high = newGlobal({ principal: 0xfffff });
 low .eval('function b() { check("b",        Error().stack); c(); }');
 mid .eval('function c() { check("cba",      Error().stack); d(); }');
 high.eval('function d() { check("dcba",     Error().stack); e(); }');
-     eval('function e() { check("edcba",    Error().stack); f(); }'); // no principal, so checks skipped
+
+// Globals created with no explicit principals get 0xffff.
+     eval('function e() { check("ecba",     Error().stack); f(); }');
+
 low .eval('function f() { check("fb",       Error().stack); g(); }');
 mid .eval('function g() { check("gfecba",   Error().stack); h(); }');
 high.eval('function h() { check("hgfedcba", Error().stack);      }');

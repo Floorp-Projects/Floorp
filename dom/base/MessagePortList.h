@@ -19,7 +19,7 @@ namespace mozilla {
 namespace dom {
 
 class MessagePortList final : public nsISupports
-                                , public nsWrapperCache
+                            , public nsWrapperCache
 {
   ~MessagePortList() {}
 

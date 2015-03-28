@@ -51,8 +51,8 @@ class TableUpdate;
 // This is a proxy class that just creates a background thread and delagates
 // calls to the background thread.
 class nsUrlClassifierDBService final : public nsIUrlClassifierDBService,
-                                           public nsIURIClassifier,
-                                           public nsIObserver
+                                       public nsIURIClassifier,
+                                       public nsIObserver
 {
 public:
   // This is thread safe. It throws an exception if the thread is busy.

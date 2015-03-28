@@ -40,8 +40,8 @@ public:
   virtual bool IsMediaSeekable() final override;
   virtual bool IsShutdown() const final override;
   virtual bool IsTransportSeekable() final override;
-  virtual bool OnDecodeThread() const final override;
-  virtual bool OnStateMachineThread() const final override;
+  virtual bool OnDecodeTaskQueue() const final override;
+  virtual bool OnStateMachineTaskQueue() const final override;
   virtual int64_t GetMediaDuration() final override;
   virtual layers::ImageContainer* GetImageContainer() final override;
   virtual MediaDecoderOwner* GetOwner() final override;
@@ -114,7 +114,7 @@ public:
 
   virtual CDMProxy* GetCDMProxy() override
   {
-    MOZ_ASSERT(OnDecodeThread() || NS_IsMainThread());
+    MOZ_ASSERT(OnDecodeTaskQueue() || NS_IsMainThread());
     ReentrantMonitorAutoEnter mon(GetReentrantMonitor());
     return mCDMProxy;
   }

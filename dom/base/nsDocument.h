@@ -597,8 +597,8 @@ protected:
     
     // XXXbz I wish we could just derive the _allcaps thing from _i
 #define DECL_SHIM(_i, _allcaps)                                              \
-    class _i##Shim final : public nsIInterfaceRequestor,                 \
-                               public _i                                     \
+    class _i##Shim final : public nsIInterfaceRequestor,                     \
+                           public _i                                         \
     {                                                                        \
       ~_i##Shim() {}                                                         \
     public:                                                                  \

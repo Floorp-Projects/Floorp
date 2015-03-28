@@ -883,7 +883,7 @@ mount_operation_ask_password (GMountOperation   *mount_op,
 //-----------------------------------------------------------------------------
 
 class nsGIOProtocolHandler final : public nsIProtocolHandler
-                                     , public nsIObserver
+                                 , public nsIObserver
 {
   public:
     NS_DECL_ISUPPORTS

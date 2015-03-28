@@ -22,7 +22,7 @@ namespace mozilla {
 namespace dom {
 
 class SpeechRecognitionResult final : public nsISupports,
-                                          public nsWrapperCache
+                                      public nsWrapperCache
 {
 public:
   explicit SpeechRecognitionResult(SpeechRecognition* aParent);

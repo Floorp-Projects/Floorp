@@ -21,7 +21,7 @@ namespace dom {
 class SVGPathElement;
 
 class SVGMPathElement final : public SVGMPathElementBase,
-                                  public nsStubMutationObserver
+                              public nsStubMutationObserver
 {
 protected:
   friend nsresult (::NS_NewSVGMPathElement(nsIContent **aResult,

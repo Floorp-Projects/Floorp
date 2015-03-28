@@ -4553,7 +4553,7 @@ JS_SetErrorReporter(JSRuntime *rt, JSErrorReporter er);
 namespace JS {
 
 extern JS_PUBLIC_API(bool)
-CreateError(JSContext *cx, JSExnType type, HandleString stack,
+CreateError(JSContext *cx, JSExnType type, HandleObject stack,
             HandleString fileName, uint32_t lineNumber, uint32_t columnNumber,
             JSErrorReport *report, HandleString message, MutableHandleValue rval);
 
@@ -5262,9 +5262,13 @@ GetSavedFrameParent(JSContext *cx, HandleObject savedFrame, MutableHandleObject 
  * Given a SavedFrame JSObject stack, stringify it in the same format as
  * Error.prototype.stack. The stringified stack out parameter is placed in the
  * cx's compartment. Defaults to the empty string.
+ *
+ * The same notes above about SavedFrame accessors applies here as well: cx
+ * doesn't need to be in stack's compartment, and stack can be null, a
+ * SavedFrame object, or a wrapper (CCW or Xray) around a SavedFrame object.
  */
 extern JS_PUBLIC_API(bool)
-StringifySavedFrameStack(JSContext *cx, HandleObject stack, MutableHandleString stringp);
+BuildStackString(JSContext *cx, HandleObject stack, MutableHandleString stringp);
 
 } /* namespace JS */
 

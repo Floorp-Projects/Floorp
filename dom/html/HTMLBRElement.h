@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class HTMLBRElement final : public nsGenericHTMLElement,
-                                public nsIDOMHTMLBRElement
+                            public nsIDOMHTMLBRElement
 {
 public:
   explicit HTMLBRElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

@@ -16,7 +16,7 @@ namespace dom {
 namespace cellbroadcast {
 
 class CellBroadcastParent final : public PCellBroadcastParent
-                                    , public nsICellBroadcastListener
+                                , public nsICellBroadcastListener
 {
 public:
   NS_DECL_ISUPPORTS

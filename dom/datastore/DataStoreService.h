@@ -28,7 +28,7 @@ class RetrieveRevisionsCounter;
 class RevisionAddedEnableStoreCallback;
 
 class DataStoreService final : public nsIDataStoreService
-                                 , public nsIObserver
+                             , public nsIObserver
 {
   friend class ContentChild;
   friend class FirstRevisionIdCallback;

@@ -17,7 +17,7 @@ class nsMimeType;
 class nsPluginElement;
 
 class nsMimeTypeArray final : public nsISupports,
-                                  public nsWrapperCache
+                              public nsWrapperCache
 {
 public:
   explicit nsMimeTypeArray(nsPIDOMWindow* aWindow);

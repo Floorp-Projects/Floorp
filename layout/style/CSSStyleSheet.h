@@ -117,9 +117,9 @@ private:
 
 
 class CSSStyleSheet final : public nsIStyleSheet,
-                                public nsIDOMCSSStyleSheet,
-                                public nsICSSLoaderObserver,
-                                public nsWrapperCache
+                            public nsIDOMCSSStyleSheet,
+                            public nsICSSLoaderObserver,
+                            public nsWrapperCache
 {
 public:
   typedef net::ReferrerPolicy ReferrerPolicy;

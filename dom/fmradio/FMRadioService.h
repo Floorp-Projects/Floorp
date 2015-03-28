@@ -148,9 +148,9 @@ enum FMRadioState
 };
 
 class FMRadioService final : public IFMRadioService
-                               , public hal::FMRadioObserver
-                               , public hal::FMRadioRDSObserver
-                               , public nsIObserver
+                           , public hal::FMRadioObserver
+                           , public hal::FMRadioRDSObserver
+                           , public nsIObserver
 {
   friend class ReadAirplaneModeSettingTask;
   friend class EnableRunnable;

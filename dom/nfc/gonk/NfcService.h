@@ -19,7 +19,7 @@ class NfcEventOptions;
 } // namespace dom
 
 class NfcService final : public nsINfcService,
-                             public mozilla::ipc::NfcSocketListener
+                         public mozilla::ipc::NfcSocketListener
 {
 public:
   NS_DECL_ISUPPORTS

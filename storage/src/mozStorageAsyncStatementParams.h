@@ -23,7 +23,7 @@ class AsyncStatement;
  * an async variant.
  */
 class AsyncStatementParams final : public mozIStorageStatementParams
-                                     , public nsIXPCScriptable
+                                 , public nsIXPCScriptable
 {
 public:
   explicit AsyncStatementParams(AsyncStatement *aStatement);

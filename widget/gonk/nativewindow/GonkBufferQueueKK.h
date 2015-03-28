@@ -37,8 +37,9 @@ namespace android {
 // ----------------------------------------------------------------------------
 
 class GonkBufferQueue : public BnGraphicBufferProducer,
-                    public BnGonkGraphicBufferConsumer,
-                    private IBinder::DeathRecipient {
+                        public BnGonkGraphicBufferConsumer,
+                        private IBinder::DeathRecipient
+{
     typedef mozilla::layers::TextureClient TextureClient;
 
 public:

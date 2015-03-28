@@ -232,6 +232,12 @@
         todo_is(savedElement.toString, savedElement.toString, "toString identity works");
         todo_is(savedElement.QueryInterface, savedElement.QueryInterface, "toString identity works");
 
+        is(Object.prototype.toString.call(savedElement), "[object HTMLDivElement]",
+           "prove that this works (and doesn't leak)");
+
+        is(Object.prototype.toString.call(savedElement), "[object HTMLDivElement]",
+           "prove that this works twice (since we cache it and doesn't leak)");
+
         // This does work because we create a CPOW for isEqualNode that stays
         // alive as long as we have a reference to the first CPOW (so as long
         // as it's detectable).

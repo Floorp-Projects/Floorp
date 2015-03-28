@@ -105,8 +105,8 @@ class AudioChannelManager;
 } // namespace system
 
 class Navigator final : public nsIDOMNavigator
-                          , public nsIMozNavigatorNetwork
-                          , public nsWrapperCache
+                      , public nsIMozNavigatorNetwork
+                      , public nsWrapperCache
 {
 public:
   explicit Navigator(nsPIDOMWindow* aInnerWindow);

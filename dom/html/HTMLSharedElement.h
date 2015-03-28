@@ -22,11 +22,11 @@ namespace mozilla {
 namespace dom {
 
 class HTMLSharedElement final : public nsGenericHTMLElement,
-                                    public nsIDOMHTMLBaseElement,
-                                    public nsIDOMHTMLDirectoryElement,
-                                    public nsIDOMHTMLQuoteElement,
-                                    public nsIDOMHTMLHeadElement,
-                                    public nsIDOMHTMLHtmlElement
+                                public nsIDOMHTMLBaseElement,
+                                public nsIDOMHTMLDirectoryElement,
+                                public nsIDOMHTMLQuoteElement,
+                                public nsIDOMHTMLHeadElement,
+                                public nsIDOMHTMLHtmlElement
 {
 public:
   explicit HTMLSharedElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
