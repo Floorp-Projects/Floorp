@@ -1634,8 +1634,8 @@ JSObject* GetJSObjectFromCallback(void* noncallback)
 }
 
 template<typename T>
-static inline JSObject*
-WrapCallThisObject(JSContext* cx, const T& p)
+static inline bool
+WrapCallThisValue(JSContext* cx, const T& p, JS::MutableHandle<JS::Value> rval)
 {
   // Callbacks are nsISupports, so WrapNativeParent will just happily wrap them
   // up as an nsISupports XPCWrappedNative... which is not at all what we want.
@@ -1646,16 +1646,17 @@ WrapCallThisObject(JSContext* cx, const T& p)
     // wrap anything for us.
     obj = WrapNativeParent(cx, p);
     if (!obj) {
-      return nullptr;
+      return false;
     }
   }
 
   // But all that won't necessarily put things in the compartment of cx.
   if (!JS_WrapObject(cx, &obj)) {
-    return nullptr;
+    return false;
   }
 
-  return obj;
+  rval.setObject(*obj);
+  return true;
 }
 
 /*
@@ -1663,17 +1664,38 @@ WrapCallThisObject(JSContext* cx, const T& p)
  * WrapNativeParent() is not applicable for JS objects.
  */
 template<>
-inline JSObject*
-WrapCallThisObject<JS::Rooted<JSObject*>>(JSContext* cx,
-                                          const JS::Rooted<JSObject*>& p)
+inline bool
+WrapCallThisValue<JS::Rooted<JSObject*>>(JSContext* cx,
+                                         const JS::Rooted<JSObject*>& p,
+                                         JS::MutableHandle<JS::Value> rval)
 {
   JS::Rooted<JSObject*> obj(cx, p);
 
   if (!JS_WrapObject(cx, &obj)) {
-    return nullptr;
+    return false;
   }
 
-  return obj;
+  rval.setObject(*obj);
+  return true;
+}
+
+/*
+ * This specialization is for wrapping any JS value.
+ */
+template<>
+inline bool
+WrapCallThisValue<JS::Rooted<JS::Value>>(JSContext* cx,
+                                         const JS::Rooted<JS::Value>& v,
+                                         JS::MutableHandle<JS::Value> rval)
+{
+  JS::Rooted<JS::Value> val(cx, v);
+
+  if (!JS_WrapValue(cx, &val)) {
+    return false;
+  }
+
+  rval.set(val);
+  return true;
 }
 
 // Helper for calling GetOrCreateDOMReflector with smart pointers

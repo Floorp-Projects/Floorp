@@ -13740,7 +13740,7 @@ class CGCallback(CGClass):
         args.append(Argument("JSCompartment*", "aCompartment", "nullptr"))
         # And now insert our template argument.
         argsWithoutThis = list(args)
-        args.insert(0, Argument("const T&",  "thisObjPtr"))
+        args.insert(0, Argument("const T&",  "thisVal"))
         errorReturn = method.getDefaultRetval()
 
         setupCall = fill(
@@ -13756,14 +13756,11 @@ class CGCallback(CGClass):
         bodyWithThis = fill(
             """
             $*{setupCall}
-            JS::Rooted<JSObject*> thisObjJS(s.GetContext(),
-              WrapCallThisObject(s.GetContext(), thisObjPtr));
-            if (!thisObjJS) {
+            JS::Rooted<JS::Value> thisValJS(s.GetContext());
+            if (!WrapCallThisValue(s.GetContext(), thisVal, &thisValJS)) {
               aRv.Throw(NS_ERROR_FAILURE);
               return${errorReturn};
             }
-            JS::Rooted<JS::Value> thisValJS(s.GetContext(),
-                                            JS::ObjectValue(*thisObjJS));
             return ${methodName}(${callArgs});
             """,
             setupCall=setupCall,
