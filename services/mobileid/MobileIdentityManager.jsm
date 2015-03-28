@@ -56,9 +56,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "Ril",
                                    "@mozilla.org/ril;1",
                                    "nsIRadioInterfaceLayer");
 
-XPCOMUtils.defineLazyServiceGetter(this, "IccProvider",
-                                   "@mozilla.org/ril/content-helper;1",
-                                   "nsIIccProvider");
+XPCOMUtils.defineLazyServiceGetter(this, "IccService",
+                                   "@mozilla.org/icc/iccservice;1",
+                                   "nsIIccService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "MobileConnectionService",
                                    "@mozilla.org/mobileconnection/mobileconnectionservice;1",
@@ -116,11 +116,11 @@ this.MobileIdentityManager = {
     return Ril;
   },
 
-  get iccProvider() {
-    if (this._iccProvider) {
-      return this._iccProvider;
+  get iccService() {
+    if (this._iccService) {
+      return this._iccService;
     }
-    return IccProvider;
+    return IccService;
   },
 
   get mobileConnectionService() {
@@ -153,8 +153,10 @@ this.MobileIdentityManager = {
         // We don't need to keep listening for changes until we rebuild the
         // cache again.
         for (let i = 0; i < self._iccInfo.length; i++) {
-          self.iccProvider.unregisterIccMsg(self._iccInfo[i].clientId,
-                                            iccListener);
+          let icc = self.iccService.getIccByServiceId(i);
+          if (icc) {
+            icc.unregisterListener(iccListener);
+          }
         }
 
         self._iccInfo = null;
@@ -214,7 +216,10 @@ this.MobileIdentityManager = {
 
       // We need to subscribe to ICC change notifications so we can refresh
       // the cache if any change is observed.
-      this.iccProvider.registerIccMsg(i, iccListener);
+      let icc = this.iccService.getIccByServiceId(i);
+      if (icc) {
+        icc.registerListener(iccListener);
+      }
     }
 
     return this._iccInfo;
