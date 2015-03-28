@@ -2707,13 +2707,13 @@ public class BrowserApp extends GeckoApp
         } else if (info.parent == GECKO_TOOLS_MENU) {
             // The tools menu only exists in our -v11 resources.
             if (Versions.feature11Plus) {
-                MenuItem tools = menu.findItem(R.id.tools);
+                final MenuItem tools = menu.findItem(R.id.tools);
                 destination = tools != null ? tools.getSubMenu() : menu;
             } else {
                 destination = menu;
             }
         } else {
-            MenuItem parent = menu.findItem(info.parent);
+            final MenuItem parent = menu.findItem(info.parent);
             if (parent == null) {
                 return;
             }
@@ -2731,7 +2731,7 @@ public class BrowserApp extends GeckoApp
             }
         }
 
-        MenuItem item = destination.add(Menu.NONE, info.id, Menu.NONE, info.label);
+        final MenuItem item = destination.add(Menu.NONE, info.id, Menu.NONE, info.label);
 
         item.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
@@ -2749,7 +2749,7 @@ public class BrowserApp extends GeckoApp
                 @Override
                 public void onBitmapFound(Drawable d) {
                     // TODO: why do we re-find the item?
-                    MenuItem item = destination.findItem(id);
+                    final MenuItem item = destination.findItem(id);
                     if (item == null) {
                         return;
                     }
@@ -2800,7 +2800,7 @@ public class BrowserApp extends GeckoApp
         if (mMenu == null)
             return;
 
-        MenuItem menuItem = mMenu.findItem(id);
+        final MenuItem menuItem = mMenu.findItem(id);
         if (menuItem != null)
             mMenu.removeItem(id);
     }
@@ -2825,7 +2825,7 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        MenuItem menuItem = mMenu.findItem(id);
+        final MenuItem menuItem = mMenu.findItem(id);
         if (menuItem != null) {
             menuItem.setTitle(options.optString("name", menuItem.getTitle().toString()));
             menuItem.setCheckable(options.optBoolean("checkable", menuItem.isCheckable()));
@@ -2947,18 +2947,18 @@ public class BrowserApp extends GeckoApp
         }
 
         Tab tab = Tabs.getInstance().getSelectedTab();
-        MenuItem bookmark = aMenu.findItem(R.id.bookmark);
+        final MenuItem bookmark = aMenu.findItem(R.id.bookmark);
         final MenuItem reader = aMenu.findItem(R.id.reading_list);
-        MenuItem back = aMenu.findItem(R.id.back);
-        MenuItem forward = aMenu.findItem(R.id.forward);
-        MenuItem share = aMenu.findItem(R.id.share);
+        final MenuItem back = aMenu.findItem(R.id.back);
+        final MenuItem forward = aMenu.findItem(R.id.forward);
+        final MenuItem share = aMenu.findItem(R.id.share);
         final MenuItem quickShare = aMenu.findItem(R.id.quickshare);
-        MenuItem saveAsPDF = aMenu.findItem(R.id.save_as_pdf);
-        MenuItem charEncoding = aMenu.findItem(R.id.char_encoding);
-        MenuItem findInPage = aMenu.findItem(R.id.find_in_page);
-        MenuItem desktopMode = aMenu.findItem(R.id.desktop_mode);
-        MenuItem enterGuestMode = aMenu.findItem(R.id.new_guest_session);
-        MenuItem exitGuestMode = aMenu.findItem(R.id.exit_guest_session);
+        final MenuItem saveAsPDF = aMenu.findItem(R.id.save_as_pdf);
+        final MenuItem charEncoding = aMenu.findItem(R.id.char_encoding);
+        final MenuItem findInPage = aMenu.findItem(R.id.find_in_page);
+        final MenuItem desktopMode = aMenu.findItem(R.id.desktop_mode);
+        final MenuItem enterGuestMode = aMenu.findItem(R.id.new_guest_session);
+        final MenuItem exitGuestMode = aMenu.findItem(R.id.exit_guest_session);
 
         // Only show the "Quit" menu item on pre-ICS, television devices,
         // or if the user has explicitly enabled the clear on shutdown pref.
