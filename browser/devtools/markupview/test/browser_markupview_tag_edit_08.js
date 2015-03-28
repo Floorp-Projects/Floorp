@@ -36,7 +36,7 @@ function* testCollapsedLongAttribute(inspector) {
   });
 
   let {editor} = yield getContainerForSelector("#node24", inspector);
-  let attr = editor.attrs["data-long"].querySelector(".editable");
+  let attr = editor.attrElements.get("data-long").querySelector(".editable");
 
   // Check to make sure it has expanded after focus
   attr.focus();
@@ -48,7 +48,7 @@ function* testCollapsedLongAttribute(inspector) {
   setEditableFieldValue(attr, input.value + ' data-short="ABC"', inspector);
   yield inspector.once("markupmutation");
 
-  let visibleAttrText = editor.attrs["data-long"].querySelector(".attr-value").textContent;
+  let visibleAttrText = editor.attrElements.get("data-long").querySelector(".attr-value").textContent;
   is (visibleAttrText, LONG_ATTRIBUTE_COLLAPSED)
 
   yield assertAttributes("#node24", {
@@ -69,7 +69,7 @@ function* testModifyInlineStyleWithQuotes(inspector) {
 
   let onMutated = inspector.once("markupmutation");
   let {editor} = yield getContainerForSelector("#node26", inspector);
-  let attr = editor.attrs["style"].querySelector(".editable");
+  let attr = editor.attrElements.get("style").querySelector(".editable");
 
   attr.focus();
   EventUtils.sendKey("return", inspector.panelWin);
@@ -105,7 +105,7 @@ function* testEditingAttributeWithMixedQuotes(inspector) {
 
   let onMutated = inspector.once("markupmutation");
   let {editor} = yield getContainerForSelector("#node27", inspector);
-  let attr = editor.attrs["class"].querySelector(".editable");
+  let attr = editor.attrElements.get("class").querySelector(".editable");
 
   attr.focus();
   EventUtils.sendKey("return", inspector.panelWin);

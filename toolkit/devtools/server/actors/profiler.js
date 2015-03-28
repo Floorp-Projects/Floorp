@@ -7,7 +7,7 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 const Services = require("Services");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
 
-let DEFAULT_PROFILER_ENTRIES = 1000000;
+let DEFAULT_PROFILER_ENTRIES = 10000000;
 let DEFAULT_PROFILER_INTERVAL = 1;
 let DEFAULT_PROFILER_FEATURES = ["js"];
 let DEFAULT_PROFILER_THREADFILTERS = ["GeckoMain"];

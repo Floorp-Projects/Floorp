@@ -11,6 +11,7 @@ package org.mozilla.gecko.reading;
  * via UPDATE) to the DB.
  */
 public interface ReadingListChangeAccumulator {
+  void addDeletion(String guid);
   void addDeletion(ClientReadingListRecord record);
   void addChangedRecord(ClientReadingListRecord record);
   void addUploadedRecord(ClientReadingListRecord up, ServerReadingListRecord down);

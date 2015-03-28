@@ -98,8 +98,8 @@ IccInfo.prototype = {
   mcc: null,
   mnc: null,
   spn: null,
-  isDisplayNetworkNameRequired: null,
-  isDisplaySpnRequired: null
+  isDisplayNetworkNameRequired: false,
+  isDisplaySpnRequired: false
 };
 
 function GsmIccInfo() {}
@@ -131,16 +131,19 @@ function RILContentHelper() {
   this.numClients = gNumRadioInterfaces;
   if (DEBUG) debug("Number of clients: " + this.numClients);
 
+  this._iccs = [];
   this.rilContexts = [];
   for (let clientId = 0; clientId < this.numClients; clientId++) {
+    this._iccs.push(new Icc(this, clientId));
     this.rilContexts[clientId] = {
-      cardState: Ci.nsIIccProvider.CARD_STATE_UNKNOWN,
+      cardState: Ci.nsIIcc.CARD_STATE_UNKNOWN,
       iccInfo: null
     };
   }
 
   this.initDOMRequestHelper(/* aWindow */ null, RIL_IPC_MSG_NAMES);
   this._windowsMap = [];
+  this._requestMap = [];
   this._iccListeners = [];
   this._iccChannelCallback = [];
 
@@ -153,12 +156,14 @@ RILContentHelper.prototype = {
   __proto__: DOMRequestIpcHelper.prototype,
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIIccProvider,
+                                         Ci.nsIIccService,
                                          Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference]),
   classID:   RILCONTENTHELPER_CID,
   classInfo: XPCOMUtils.generateCI({classID: RILCONTENTHELPER_CID,
                                     classDescription: "RILContentHelper",
-                                    interfaces: [Ci.nsIIccProvider]}),
+                                    interfaces: [Ci.nsIIccProvider,
+                                                 Ci.nsIIccService]}),
 
   updateDebugFlag: function() {
     try {
@@ -206,6 +211,8 @@ RILContentHelper.prototype = {
 
   _windowsMap: null,
 
+  _requestMap: null,
+
   rilContexts: null,
 
   getRilContext: function(clientId) {
@@ -233,142 +240,6 @@ RILContentHelper.prototype = {
   /**
    * nsIIccProvider
    */
-
-  getIccInfo: function(clientId) {
-    let context = this.getRilContext(clientId);
-    return context && context.iccInfo;
-  },
-
-  getCardState: function(clientId) {
-    let context = this.getRilContext(clientId);
-    return context && context.cardState;
-  },
-
-  matchMvno: function(clientId, window, mvnoType, mvnoData) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-
-    let request = Services.DOMRequest.createRequest(window);
-    let requestId = this.getRequestId(request);
-
-    cpmm.sendAsyncMessage("RIL:MatchMvno", {
-      clientId: clientId,
-      data: {
-        requestId: requestId,
-        mvnoType: mvnoType,
-        mvnoData: mvnoData
-      }
-    });
-    return request;
-  },
-
-  getCardLockEnabled: function(clientId, window, lockType) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-
-    let request = Services.DOMRequest.createRequest(window);
-    let requestId = this.getRequestId(request);
-    this._windowsMap[requestId] = window;
-
-    cpmm.sendAsyncMessage("RIL:GetCardLockEnabled", {
-      clientId: clientId,
-      data: {
-        lockType: lockType,
-        requestId: requestId
-      }
-    });
-    return request;
-  },
-
-  unlockCardLock: function(clientId, window, lockType, password, newPin) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-
-    let request = Services.DOMRequest.createRequest(window);
-    let requestId = this.getRequestId(request);
-    this._windowsMap[requestId] = window;
-
-    cpmm.sendAsyncMessage("RIL:UnlockCardLock", {
-      clientId: clientId,
-      data: {
-        lockType: lockType,
-        password: password,
-        newPin: newPin,
-        requestId: requestId
-      }
-    });
-    return request;
-  },
-
-  setCardLockEnabled: function(clientId, window, lockType, password, enabled) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-
-    let request = Services.DOMRequest.createRequest(window);
-    let requestId = this.getRequestId(request);
-    this._windowsMap[requestId] = window;
-
-    cpmm.sendAsyncMessage("RIL:SetCardLockEnabled", {
-      clientId: clientId,
-      data: {
-        lockType: lockType,
-        password: password,
-        enabled: enabled,
-        requestId: requestId
-      }
-    });
-    return request;
-  },
-
-  changeCardLockPassword: function(clientId, window, lockType, password,
-                                   newPassword) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-
-    let request = Services.DOMRequest.createRequest(window);
-    let requestId = this.getRequestId(request);
-    this._windowsMap[requestId] = window;
-
-    cpmm.sendAsyncMessage("RIL:ChangeCardLockPassword", {
-      clientId: clientId,
-      data: {
-        lockType: lockType,
-        password: password,
-        newPassword: newPassword,
-        requestId: requestId
-      }
-    });
-    return request;
-  },
-
-  getCardLockRetryCount: function(clientId, window, lockType) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-    let request = Services.DOMRequest.createRequest(window);
-    let requestId = this.getRequestId(request);
-    this._windowsMap[requestId] = window;
-
-    cpmm.sendAsyncMessage("RIL:GetCardLockRetryCount", {
-      clientId: clientId,
-      data: {
-        lockType: lockType,
-        requestId: requestId
-      }
-    });
-    return request;
-  },
 
   sendStkResponse: function(clientId, window, command, response) {
     if (window == null) {
@@ -545,27 +416,6 @@ RILContentHelper.prototype = {
     return request;
   },
 
-  getServiceState: function(clientId, window, service) {
-    if (window == null) {
-      throw Components.Exception("Can't get window object",
-                                  Cr.NS_ERROR_UNEXPECTED);
-    }
-
-    return new window.Promise((resolve, reject) => {
-      let requestId =
-        this.getPromiseResolverId({resolve: resolve, reject: reject});
-      this._windowsMap[requestId] = window;
-
-      cpmm.sendAsyncMessage("RIL:GetServiceState", {
-        clientId: clientId,
-        data: {
-          requestId: requestId,
-          service: service
-        }
-      });
-    });
-  },
-
   _iccListeners: null,
 
   registerListener: function(listenerType, clientId, listener) {
@@ -721,62 +571,56 @@ RILContentHelper.prototype = {
       case "RIL:CardStateChanged":
         if (this.rilContexts[clientId].cardState != data.cardState) {
           this.rilContexts[clientId].cardState = data.cardState;
-          this._deliverEvent(clientId,
-                             "_iccListeners",
-                             "notifyCardStateChanged",
-                             null);
+          this._deliverIccEvent(clientId,
+                                "notifyCardStateChanged",
+                                null);
         }
         break;
       case "RIL:IccInfoChanged":
         this.updateIccInfo(clientId, data);
-        this._deliverEvent(clientId,
-                           "_iccListeners",
-                           "notifyIccInfoChanged",
-                           null);
+        this._deliverIccEvent(clientId,
+                              "notifyIccInfoChanged",
+                              null);
         break;
       case "RIL:GetCardLockResult": {
         let requestId = data.requestId;
-        let requestWindow = this._windowsMap[requestId];
-        delete this._windowsMap[requestId];
+        let callback = this._requestMap[requestId];
+        delete this._requestMap[requestId];
 
         if (data.errorMsg) {
-          this.fireRequestError(requestId, data.errorMsg);
+          callback.notifyError(data.errorMsg);
           break;
         }
 
-        this.fireRequestSuccess(requestId,
-                                Cu.cloneInto({ enabled: data.enabled },
-                                             requestWindow));
+        callback.notifySuccessWithBoolean(data.enabled);
         break;
       }
       case "RIL:SetUnlockCardLockResult": {
         let requestId = data.requestId;
-        let requestWindow = this._windowsMap[requestId];
-        delete this._windowsMap[requestId];
+        let callback = this._requestMap[requestId];
+        delete this._requestMap[requestId];
 
         if (data.errorMsg) {
-          let cardLockError = new requestWindow.IccCardLockError(data.errorMsg,
-                                                                 data.retryCount);
-          this.fireRequestDetailedError(requestId, cardLockError);
+          let retryCount =
+            (data.retryCount !== undefined) ? data.retryCount : -1;
+          callback.notifyCardLockError(data.errorMsg, retryCount);
           break;
         }
 
-        this.fireRequestSuccess(requestId, null);
+        callback.notifySuccess();
         break;
       }
       case "RIL:CardLockRetryCount": {
         let requestId = data.requestId;
-        let requestWindow = this._windowsMap[requestId];
-        delete this._windowsMap[requestId];
+        let callback = this._requestMap[requestId];
+        delete this._requestMap[requestId];
 
         if (data.errorMsg) {
-          this.fireRequestError(data.requestId, data.errorMsg);
+          callback.notifyError(data.errorMsg);
           break;
         }
 
-        this.fireRequestSuccess(data.requestId,
-                                Cu.cloneInto({ retryCount: data.retryCount },
-                                             requestWindow));
+        callback.notifyGetCardLockRetryCount(data.retryCount);
         break;
       }
       case "RIL:StkCommand":
@@ -801,12 +645,30 @@ RILContentHelper.prototype = {
       case "RIL:UpdateIccContact":
         this.handleUpdateIccContact(data);
         break;
-      case "RIL:MatchMvno":
-        this.handleSimpleRequest(data.requestId, data.errorMsg, data.result);
+      case "RIL:MatchMvno": {
+        let requestId = data.requestId;
+        let callback = this._requestMap[requestId];
+        delete this._requestMap[requestId];
+
+        if (data.errorMsg) {
+          callback.notifyError(data.errorMsg);
+          break;
+        }
+        callback.notifySuccessWithBoolean(data.result);
         break;
-      case "RIL:GetServiceState":
-        this.handleGetServiceState(data);
+      }
+      case "RIL:GetServiceState": {
+        let requestId = data.requestId;
+        let callback = this._requestMap[requestId];
+        delete this._requestMap[requestId];
+
+        if (data.errorMsg) {
+          callback.notifyError(data.errorMsg);
+          break;
+        }
+        callback.notifySuccessWithBoolean(data.result);
         break;
+      }
     }
   },
 
@@ -909,20 +771,6 @@ RILContentHelper.prototype = {
     this.fireRequestSuccess(message.requestId, contact);
   },
 
-  handleGetServiceState: function(message) {
-    let requestId = message.requestId;
-    let requestWindow = this._windowsMap[requestId];
-    delete this._windowsMap[requestId];
-
-    let resolver = this.takePromiseResolver(requestId);
-    if (message.errorMsg) {
-      resolver.reject(new requestWindow.DOMError(message.errorMsg));
-      return;
-    }
-
-    resolver.resolve(message.result);
-  },
-
   _deliverEvent: function(clientId, listenerType, name, args) {
     if (!this[listenerType]) {
       return;
@@ -947,6 +795,235 @@ RILContentHelper.prototype = {
         if (DEBUG) debug("listener for " + name + " threw an exception: " + e);
       }
     }
+  },
+
+  /**
+   * nsIIccService interface.
+   */
+
+  _iccs: null, // An array of Icc instances.
+
+  getIccByServiceId: function(serviceId) {
+    let icc = this._iccs[serviceId];
+    if (!icc) {
+      throw Cr.NS_ERROR_UNEXPECTED;
+    }
+
+    return icc;
+  },
+
+  /**
+   * Bridge APIs from nsIIccService to nsIIccProvider
+   */
+
+  _deliverIccEvent: function(clientId, name, args) {
+    let icc = this._iccs[clientId];
+    if (!icc) {
+      if (DEBUG) debug("_deliverIccEvent: Invalid clientId: " + clientId);
+      return;
+    }
+
+    icc.deliverListenerEvent(name, args);
+  },
+
+  getIccInfo: function(clientId) {
+    let context = this.getRilContext(clientId);
+    return context && context.iccInfo;
+  },
+
+  getCardState: function(clientId) {
+    let context = this.getRilContext(clientId);
+    return context && context.cardState;
+  },
+
+  matchMvno: function(clientId, mvnoType, mvnoData, callback) {
+    let requestId = UUIDGenerator.generateUUID().toString();
+    this._requestMap[requestId] = callback;
+
+    cpmm.sendAsyncMessage("RIL:MatchMvno", {
+      clientId: clientId,
+      data: {
+        requestId: requestId,
+        mvnoType: mvnoType,
+        mvnoData: mvnoData
+      }
+    });
+  },
+
+  getCardLockEnabled: function(clientId, lockType, callback) {
+    let requestId = UUIDGenerator.generateUUID().toString();
+    this._requestMap[requestId] = callback;
+
+    cpmm.sendAsyncMessage("RIL:GetCardLockEnabled", {
+      clientId: clientId,
+      data: {
+        lockType: lockType,
+        requestId: requestId
+      }
+    });
+  },
+
+  unlockCardLock: function(clientId, lockType, password, newPin, callback) {
+    let requestId = UUIDGenerator.generateUUID().toString();
+    this._requestMap[requestId] = callback;
+
+    cpmm.sendAsyncMessage("RIL:UnlockCardLock", {
+      clientId: clientId,
+      data: {
+        lockType: lockType,
+        password: password,
+        newPin: newPin,
+        requestId: requestId
+      }
+    });
+  },
+
+  setCardLockEnabled: function(clientId, lockType, password, enabled, callback) {
+    let requestId = UUIDGenerator.generateUUID().toString();
+    this._requestMap[requestId] = callback;
+
+    cpmm.sendAsyncMessage("RIL:SetCardLockEnabled", {
+      clientId: clientId,
+      data: {
+        lockType: lockType,
+        password: password,
+        enabled: enabled,
+        requestId: requestId
+      }
+    });
+  },
+
+  changeCardLockPassword: function(clientId, lockType, password, newPassword,
+                                   callback) {
+    let requestId = UUIDGenerator.generateUUID().toString();
+    this._requestMap[requestId] = callback;
+
+    cpmm.sendAsyncMessage("RIL:ChangeCardLockPassword", {
+      clientId: clientId,
+      data: {
+        lockType: lockType,
+        password: password,
+        newPassword: newPassword,
+        requestId: requestId
+      }
+    });
+  },
+
+  getCardLockRetryCount: function(clientId, lockType, callback) {
+    let requestId = UUIDGenerator.generateUUID().toString();
+    this._requestMap[requestId] = callback;
+
+    cpmm.sendAsyncMessage("RIL:GetCardLockRetryCount", {
+      clientId: clientId,
+      data: {
+        lockType: lockType,
+        requestId: requestId
+      }
+    });
+  },
+
+  getServiceStateEnabled: function(clientId, service, callback) {
+    let requestId = UUIDGenerator.generateUUID().toString();
+    this._requestMap[requestId] = callback;
+
+    cpmm.sendAsyncMessage("RIL:GetServiceState", {
+      clientId: clientId,
+      data: {
+        requestId: requestId,
+        service: service
+      }
+    });
+  }
+};
+
+function Icc(aIccProvider, aClientId) {
+  this._iccProvider = aIccProvider;
+  this._clientId = aClientId;
+  this._listeners = [];
+}
+Icc.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIIcc]),
+
+  _iccProvider: null,
+  _clientId: -1,
+  _listeners: null,
+
+  deliverListenerEvent: function(aName, aArgs) {
+    let listeners = this._listeners.slice();
+    for (let listener of listeners) {
+      if (this._listeners.indexOf(listener) === -1) {
+        continue;
+      }
+      let handler = listener[aName];
+      if (typeof handler != "function") {
+        throw new Error("No handler for " + aName);
+      }
+      try {
+        handler.apply(listener, aArgs);
+      } catch (e) {
+        if (DEBUG) {
+          debug("listener for " + aName + " threw an exception: " + e);
+        }
+      }
+    }
+  },
+
+  /**
+   * nsIIcc interface.
+   */
+  registerListener: function(aListener) {
+    if (this._listeners.indexOf(aListener) >= 0) {
+      throw Cr.NS_ERROR_UNEXPECTED;
+    }
+
+    this._listeners.push(aListener);
+    cpmm.sendAsyncMessage("RIL:RegisterIccMsg");
+  },
+
+  unregisterListener: function(aListener) {
+    let index = this._listeners.indexOf(aListener);
+    if (index >= 0) {
+      this._listeners.splice(index, 1);
+    }
+  },
+
+  get iccInfo() {
+    return this._iccProvider.getIccInfo(this._clientId);
+  },
+
+  get cardState() {
+    return this._iccProvider.getCardState(this._clientId);
+  },
+
+  getCardLockEnabled: function(aLockType, aCallback) {
+    this._iccProvider.getCardLockEnabled(this._clientId, aLockType, aCallback);
+  },
+
+  unlockCardLock: function(aLockType, aPassword, aNewPin, aCallback) {
+    this._iccProvider.unlockCardLock(this._clientId, aLockType,
+                                     aPassword, aNewPin, aCallback);
+  },
+
+  setCardLockEnabled: function(aLockType, aPassword, aEnabled, aCallback) {
+    this._iccProvider.setCardLockEnabled(this._clientId, aLockType,
+                                         aPassword, aEnabled, aCallback);
+  },
+
+  changeCardLockPassword: function(aLockType, aPassword, aNewPassword, aCallback) {
+    this._iccProvider.changeCardLockPassword(this._clientId, aLockType,
+                                             aPassword, aNewPassword, aCallback);
+  },
+
+  getCardLockRetryCount: function(aLockType, aCallback) {
+    this._iccProvider.getCardLockRetryCount(this._clientId, aLockType, aCallback);
+  },
+
+  matchMvno: function(aMvnoType, aMvnoData, aCallback) {
+    this._iccProvider.matchMvno(this._clientId, aMvnoType, aMvnoData, aCallback);
+  },
+
+  getServiceStateEnabled: function(aService, aCallback) {
+    this._iccProvider.getServiceStateEnabled(this._clientId, aService, aCallback);
   }
 };
 

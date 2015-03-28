@@ -32,6 +32,55 @@ function loadURI(tab, url) {
   return BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 }
 
+// Creates a framescript which caches the current object value from the plugin
+// in the page. checkObjectValue below verifies that the framescript is still
+// active for the browser and that the cached value matches that from the plugin
+// in the page which tells us the plugin hasn't been reinitialized.
+function cacheObjectValue(browser) {
+  let frame_script = function() {
+    let plugin = content.document.wrappedJSObject.body.firstChild;
+    let objectValue = plugin.getObjectValue();
+
+    addMessageListener("Test:CheckObjectValue", () => {
+      try {
+        let plugin = content.document.wrappedJSObject.body.firstChild;
+        sendAsyncMessage("Test:CheckObjectValue", {
+          result: plugin.checkObjectValue(objectValue)
+        });
+      }
+      catch (e) {
+        sendAsyncMessage("Test:CheckObjectValue", {
+          result: null,
+          exception: e.toString()
+        });
+      }
+    });
+  };
+
+  browser.messageManager.loadFrameScript("data:,(" + frame_script.toString() + ")();", false)
+}
+
+// See the notes for cacheObjectValue above.
+function checkObjectValue(browser) {
+  let mm = browser.messageManager;
+
+  return new Promise((resolve, reject) => {
+    let listener  = ({ data }) => {
+      mm.removeMessageListener("Test:CheckObjectValue", listener);
+      if (data.result === null) {
+        ok(false, "checkObjectValue threw an exception: " + data.exception);
+        reject(data.exception);
+      }
+      else {
+        resolve(data.result);
+      }
+    };
+
+    mm.addMessageListener("Test:CheckObjectValue", listener);
+    mm.sendAsyncMessage("Test:CheckObjectValue");
+  });
+}
+
 add_task(function*() {
   let embed = '<embed type="application/x-test" allowscriptaccess="always" allowfullscreen="true" wmode="window" width="640" height="480"></embed>'
   setTestPluginEnabledState(Ci.nsIPluginTag.STATE_ENABLED);
@@ -57,15 +106,12 @@ add_task(function*() {
   is(gBrowser.tabs[2], tabs[3], "tab3");
   is(gBrowser.tabs[3], tabs[4], "tab4");
 
-  let plugin = tabs[4].linkedBrowser.contentDocument.wrappedJSObject.body.firstChild;
-  let tab4_plugin_object = plugin.getObjectValue();
+  cacheObjectValue(tabs[4].linkedBrowser);
 
   swapTabsAndCloseOther(3, 2); // now: 0 1 4
   gBrowser.selectedTab = gBrowser.tabs[2];
 
-  let doc = gBrowser.tabs[2].linkedBrowser.contentDocument.wrappedJSObject;
-  plugin = doc.body.firstChild;
-  ok(plugin && plugin.checkObjectValue(tab4_plugin_object), "same plugin instance");
+  ok((yield checkObjectValue(gBrowser.tabs[2].linkedBrowser)), "same plugin instance");
 
   is(gBrowser.tabs[1], tabs[1], "tab1");
   is(gBrowser.tabs[2], tabs[3], "tab4");
@@ -77,9 +123,7 @@ add_task(function*() {
   swapTabsAndCloseOther(2, 1); // now: 0 4
   is(gBrowser.tabs[1], tabs[1], "tab1");
 
-  doc = gBrowser.tabs[1].linkedBrowser.contentDocument.wrappedJSObject;
-  plugin = doc.body.firstChild;
-  ok(plugin && plugin.checkObjectValue(tab4_plugin_object), "same plugin instance");
+  ok((yield checkObjectValue(gBrowser.tabs[1].linkedBrowser)), "same plugin instance");
 
   yield clickTest(gBrowser.tabs[1]);
 
