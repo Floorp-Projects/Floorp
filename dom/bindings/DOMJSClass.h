@@ -123,6 +123,9 @@ struct NativeProperties
   const Prefable<const ConstantSpec>* constants;
   jsid* constantIds;
   const ConstantSpec* constantSpecs;
+
+  // Index into methods for the entry that is [Alias="@@iterator"], -1 if none
+  int32_t iteratorAliasMethodIndex;
 };
 
 struct NativePropertiesHolder
