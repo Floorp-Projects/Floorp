@@ -1508,7 +1508,7 @@ class CGAddPropertyHook(CGAbstractClassHook):
         args = [Argument('JSContext*', 'cx'),
                 Argument('JS::Handle<JSObject*>', 'obj'),
                 Argument('JS::Handle<jsid>', 'id'),
-                Argument('JS::MutableHandle<JS::Value>', 'vp')]
+                Argument('JS::Handle<JS::Value>', 'val')]
         CGAbstractClassHook.__init__(self, descriptor, ADDPROPERTY_HOOK_NAME,
                                      'bool', args)
 
