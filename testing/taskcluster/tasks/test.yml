@@ -16,11 +16,14 @@ task:
     - 'queue:define-task:aws-provisioner/test-c4-2xlarge'
     - 'queue:create-task:aws-provisioner/test-c4-2xlarge'
     - 'docker-worker:cache:tc-vcs'
+    - 'docker-worker:cache:linux-cache'
 
   payload:
     image: '{{#docker_image}}tester{{/docker_image}}'
     maxRunTime: 3600
     cache:
+      # So pip installs are cached...
+      linux-cache: /home/worker/.cache
       tc-vcs: '/home/worker/.tc-vcs'
     env:
       GAIA_HEAD_REPOSITORY: '{{{gaia_head_repository}}}'
