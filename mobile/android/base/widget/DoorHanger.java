@@ -6,6 +6,7 @@
 package org.mozilla.gecko.widget;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.Spanned;
@@ -69,7 +70,8 @@ public abstract class DoorHanger extends LinearLayout {
     private final ImageView mIcon;
     private final TextView mMessage;
 
-    protected Context mContext;
+    protected final Context mContext;
+    protected final Resources mResources;
 
     protected int mDividerColor;
 
@@ -80,6 +82,7 @@ public abstract class DoorHanger extends LinearLayout {
     protected DoorHanger(Context context, DoorhangerConfig config, Type type) {
         super(context);
         mContext = context;
+        mResources = context.getResources();
         mTabId = config.getTabId();
         mIdentifier = config.getId();
 
@@ -107,7 +110,7 @@ public abstract class DoorHanger extends LinearLayout {
         mButtonsContainer = (LinearLayout) findViewById(R.id.doorhanger_buttons);
         mOnButtonClickListener = config.getButtonClickListener();
 
-        mDividerColor = getResources().getColor(R.color.divider_light);
+        mDividerColor = mResources.getColor(R.color.divider_light);
         setOrientation(VERTICAL);
     }
 
