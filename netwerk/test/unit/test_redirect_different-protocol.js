@@ -44,13 +44,7 @@ function redirectHandler(metadata, response)
 
 function finish_test(request, buffer)
 {
-  if (inChildProcess()) {
-    // redirects to protocols other than http/ftp will fail until bug 590682 is fixed.
-    do_check_eq(buffer, response301Body);
-  } else {
-    do_check_eq(buffer, redirectTargetBody);
-  }
-
+  do_check_eq(buffer, redirectTargetBody);
   httpServer.stop(do_test_finished);
 }
 

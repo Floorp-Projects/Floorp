@@ -24,7 +24,7 @@ class nsIChannel;
  * redirect decision is returned through the callback.
  */
 class nsAsyncRedirectVerifyHelper final : public nsIRunnable,
-                                              public nsIAsyncVerifyRedirectCallback
+                                          public nsIAsyncVerifyRedirectCallback
 {
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIRUNNABLE

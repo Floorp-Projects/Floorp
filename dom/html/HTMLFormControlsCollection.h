@@ -24,7 +24,7 @@ class OwningRadioNodeListOrElement;
 template<typename> struct Nullable;
 
 class HTMLFormControlsCollection final : public nsIHTMLCollection
-                                           , public nsWrapperCache
+                                       , public nsWrapperCache
 {
 public:
   explicit HTMLFormControlsCollection(HTMLFormElement* aForm);

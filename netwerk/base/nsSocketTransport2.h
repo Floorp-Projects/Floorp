@@ -106,10 +106,10 @@ private:
 //-----------------------------------------------------------------------------
 
 class nsSocketTransport final : public nsASocketHandler
-                                  , public nsISocketTransport
-                                  , public nsIDNSListener
-                                  , public nsIClassInfo
-                                  , public nsIInterfaceRequestor
+                              , public nsISocketTransport
+                              , public nsIDNSListener
+                              , public nsIClassInfo
+                              , public nsIInterfaceRequestor
 {
     typedef mozilla::Mutex Mutex;
 

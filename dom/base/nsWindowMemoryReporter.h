@@ -140,8 +140,8 @@ public:
  *
  */
 class nsWindowMemoryReporter final : public nsIMemoryReporter,
-                                         public nsIObserver,
-                                         public nsSupportsWeakReference
+                                     public nsIObserver,
+                                     public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS

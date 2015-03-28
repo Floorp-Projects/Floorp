@@ -43,7 +43,7 @@ namespace dom {
 class OnBeforeUnloadEventHandlerNonNull;
 
 class HTMLFrameSetElement final : public nsGenericHTMLElement,
-                                      public nsIDOMHTMLFrameSetElement
+                                  public nsIDOMHTMLFrameSetElement
 {
 public:
   explicit HTMLFrameSetElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)

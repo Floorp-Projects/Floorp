@@ -22,7 +22,7 @@ namespace dom {
 class GlobalObject;
 
 class SpeechGrammar final : public nsISupports,
-                                public nsWrapperCache
+                            public nsWrapperCache
 {
 public:
   explicit SpeechGrammar(nsISupports* aParent);

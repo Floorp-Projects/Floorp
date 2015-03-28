@@ -399,19 +399,19 @@ JSXrayTraits::resolveOwnProperty(JSContext *cx, const Wrapper &jsWrapper,
                 }
             }
         } else if (IsErrorObjectKey(key)) {
-            // The useful state of error objects is (unfortunately) represented
-            // as own data properties per-spec. This means that we can't have a
-            // a clean representation of the data (free from tampering) without
-            // doubling the slots of Error objects, which isn't great. So we
-            // forward these properties to the underlying object and then just
-            // censor any values with the wrong type. This limits the ability
-            // of content to do anything all that confusing.
+            // The useful state of error objects (except for .stack) is
+            // (unfortunately) represented as own data properties per-spec. This
+            // means that we can't have a a clean representation of the data
+            // (free from tampering) without doubling the slots of Error
+            // objects, which isn't great. So we forward these properties to the
+            // underlying object and then just censor any values with the wrong
+            // type. This limits the ability of content to do anything all that
+            // confusing.
             bool isErrorIntProperty =
                 id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_LINENUMBER) ||
                 id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_COLUMNNUMBER);
             bool isErrorStringProperty =
                 id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_FILENAME) ||
-                id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_STACK) ||
                 id == GetRTIdByIndex(cx, XPCJSRuntime::IDX_MESSAGE);
             if (isErrorIntProperty || isErrorStringProperty) {
                 RootedObject waiver(cx, wrapper);

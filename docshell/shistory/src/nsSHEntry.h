@@ -23,8 +23,8 @@ class nsIInputStream;
 class nsIURI;
 
 class nsSHEntry final : public nsISHEntry,
-                            public nsISHContainer,
-                            public nsISHEntryInternal
+                        public nsISHContainer,
+                        public nsISHEntryInternal
 {
 public: 
   nsSHEntry();

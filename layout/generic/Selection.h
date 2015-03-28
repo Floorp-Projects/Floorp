@@ -49,8 +49,8 @@ namespace mozilla {
 namespace dom {
 
 class Selection final : public nsISelectionPrivate,
-                            public nsWrapperCache,
-                            public nsSupportsWeakReference
+                        public nsWrapperCache,
+                        public nsSupportsWeakReference
 {
 protected:
   virtual ~Selection();

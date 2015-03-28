@@ -25,9 +25,9 @@ class Element;
 }
 
 class nsTextControlFrame final : public nsContainerFrame,
-                                     public nsIAnonymousContentCreator,
-                                     public nsITextControlFrame,
-                                     public nsIStatefulFrame
+                                 public nsIAnonymousContentCreator,
+                                 public nsITextControlFrame,
+                                 public nsIStatefulFrame
 {
 public:
   NS_DECL_FRAMEARENA_HELPERS

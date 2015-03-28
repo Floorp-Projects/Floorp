@@ -27,7 +27,7 @@ public:
 };
 
 class URLSearchParams final : public nsISupports,
-                                  public nsWrapperCache
+                              public nsWrapperCache
 {
   ~URLSearchParams();
 

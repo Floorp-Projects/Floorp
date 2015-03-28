@@ -39,7 +39,7 @@ enum {
 };
 
 class RadialGradientEffectD2D1 final : public ID2D1EffectImpl
-                                         , public ID2D1DrawTransform
+                                     , public ID2D1DrawTransform
 {
 public:
   // ID2D1EffectImpl

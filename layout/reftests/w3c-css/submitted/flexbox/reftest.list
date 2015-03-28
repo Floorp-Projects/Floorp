@@ -182,3 +182,11 @@ skip-if(Mulet) == flexbox-overflow-vert-001.html flexbox-overflow-vert-001-ref.h
 == flexbox-with-pseudo-elements-001.html flexbox-with-pseudo-elements-001-ref.html
 == flexbox-with-pseudo-elements-002.html flexbox-with-pseudo-elements-002-ref.html
 == flexbox-with-pseudo-elements-003.html flexbox-with-pseudo-elements-003-ref.html
+
+# Tests for combined influence of 'writing-mode' & 'direction' on flex axes
+test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-001.html flexbox-writing-mode-001-ref.html
+test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-002.html flexbox-writing-mode-002-ref.html
+test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-003.html flexbox-writing-mode-003-ref.html
+test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-004.html flexbox-writing-mode-004-ref.html
+test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-005.html flexbox-writing-mode-005-ref.html
+test-pref(layout.css.vertical-text.enabled,true) == flexbox-writing-mode-006.html flexbox-writing-mode-006-ref.html

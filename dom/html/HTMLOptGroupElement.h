@@ -15,7 +15,7 @@ class EventChainPreVisitor;
 namespace dom {
 
 class HTMLOptGroupElement final : public nsGenericHTMLElement,
-                                      public nsIDOMHTMLOptGroupElement
+                                  public nsIDOMHTMLOptGroupElement
 {
 public:
   explicit HTMLOptGroupElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 
 class SVGTitleElement final : public SVGTitleElementBase,
-                                  public nsStubMutationObserver
+                              public nsStubMutationObserver
 {
 protected:
   friend nsresult (::NS_NewSVGTitleElement(nsIContent **aResult,

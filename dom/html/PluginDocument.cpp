@@ -23,7 +23,7 @@ namespace mozilla {
 namespace dom {
 
 class PluginDocument final : public MediaDocument
-                               , public nsIPluginDocument
+                           , public nsIPluginDocument
 {
 public:
   PluginDocument();

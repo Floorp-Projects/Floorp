@@ -58,6 +58,7 @@ function test() {
   testType('float32x4', float32x4inputs);
 
   var v = float32x4inputs[1][0];
+  assertEqX4(float32x4.withX(v), withX(simdToArray(v), NaN));
   assertEqX4(float32x4.withX(v, good), withX(simdToArray(v), good | 0));
   assertThrowsInstanceOf(() => float32x4.withX(v, bad), TestError);
 
@@ -69,6 +70,7 @@ function test() {
   testType('float64x2', float64x2inputs);
 
   var v = float64x2inputs[1][0];
+  assertEqX4(float64x2.withX(v), withX(simdToArray(v), NaN));
   assertEqX4(float64x2.withX(v, good), withX(simdToArray(v), good | 0));
   assertThrowsInstanceOf(() => float64x2.withX(v, bad), TestError);
 
@@ -79,6 +81,7 @@ function test() {
   testType('int32x4', int32x4inputs);
 
   var v = int32x4inputs[1][0];
+  assertEqX4(int32x4.withX(v), withX(simdToArray(v), 0));
   assertEqX4(int32x4.withX(v, good), withX(simdToArray(v), good | 0));
   assertThrowsInstanceOf(() => int32x4.withX(v, bad), TestError);
 

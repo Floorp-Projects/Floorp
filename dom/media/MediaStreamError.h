@@ -41,7 +41,7 @@ protected:
 };
 
 class MediaMgrError final : public nsISupports,
-                                public BaseMediaMgrError
+                            public BaseMediaMgrError
 {
 public:
   explicit MediaMgrError(const nsAString& aName,
@@ -57,8 +57,8 @@ private:
 
 namespace dom {
 class MediaStreamError final : public nsISupports,
-                                   public BaseMediaMgrError,
-                                   public nsWrapperCache
+                               public BaseMediaMgrError,
+                               public nsWrapperCache
 {
 public:
   MediaStreamError(nsPIDOMWindow* aParent,

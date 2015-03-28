@@ -336,23 +336,23 @@ void nsRegion::SimplifyOutwardByArea(uint32_t aThreshold)
       // merge the rects into tmpRect
       rect = MergeRects(topRects, topRectsEnd, bottomRects, bottomRectsEnd, tmpRect);
 
+      // set topRects to where the newly merged rects will be so that we use them
+      // as our next set of topRects
+      topRects = destRect;
       // copy the merged rects back into the destination
       topRectsEnd = CopyRow(destRect, tmpRect, rect);
-      topRects = destRect;
-      bottomRects = bottomRectsEnd;
-      destRect = topRects;
     } else {
       // copy the unmerged rects
       destRect = CopyRow(destRect, topRects, topRectsEnd);
 
       topRects = bottomRects;
       topRectsEnd = bottomRectsEnd;
-      bottomRects = bottomRectsEnd;
       if (bottomRectsEnd == end) {
         // copy the last row when we are done
         topRectsEnd = CopyRow(destRect, topRects, topRectsEnd);
       }
     }
+    bottomRects = bottomRectsEnd;
   } while (bottomRectsEnd != end);
 
 

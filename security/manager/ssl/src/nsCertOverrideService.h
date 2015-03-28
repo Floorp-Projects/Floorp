@@ -127,8 +127,8 @@ class nsCertOverrideEntry final : public PLDHashEntryHdr
 };
 
 class nsCertOverrideService final : public nsICertOverrideService
-                                      , public nsIObserver
-                                      , public nsSupportsWeakReference
+                                  , public nsIObserver
+                                  , public nsSupportsWeakReference
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

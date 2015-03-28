@@ -271,9 +271,9 @@ private:
 };
 
 class nsXULPopupManager final : public nsIDOMEventListener,
-                                    public nsIRollupListener,
-                                    public nsITimerCallback,
-                                    public nsIObserver
+                                public nsIRollupListener,
+                                public nsITimerCallback,
+                                public nsIObserver
 {
 
 public:

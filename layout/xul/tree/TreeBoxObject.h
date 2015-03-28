@@ -21,7 +21,7 @@ struct TreeCellInfo;
 class DOMRect;
 
 class TreeBoxObject final : public BoxObject,
-                                public nsITreeBoxObject
+                            public nsITreeBoxObject
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

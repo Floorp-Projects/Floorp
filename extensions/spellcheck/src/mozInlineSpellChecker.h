@@ -117,9 +117,9 @@ protected:
 };
 
 class mozInlineSpellChecker final : public nsIInlineSpellChecker,
-                                        public nsIEditActionListener,
-                                        public nsIDOMEventListener,
-                                        public nsSupportsWeakReference
+                                    public nsIEditActionListener,
+                                    public nsIDOMEventListener,
+                                    public nsSupportsWeakReference
 {
 private:
   friend class mozInlineSpellStatus;

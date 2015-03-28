@@ -50,9 +50,9 @@ class gfxXlibSurface;
 #endif
 
 class nsPluginInstanceOwner final : public nsIPluginInstanceOwner,
-                                        public nsIDOMEventListener,
-                                        public nsIPrivacyTransitionObserver,
-                                        public nsSupportsWeakReference
+                                    public nsIDOMEventListener,
+                                    public nsIPrivacyTransitionObserver,
+                                    public nsSupportsWeakReference
 {
 public:
   nsPluginInstanceOwner();

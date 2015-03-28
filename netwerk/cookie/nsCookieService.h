@@ -239,10 +239,10 @@ enum OpenDBResult
  ******************************************************************************/
 
 class nsCookieService final : public nsICookieService
-                                , public nsICookieManager2
-                                , public nsIObserver
-                                , public nsSupportsWeakReference
-                                , public nsIMemoryReporter
+                            , public nsICookieManager2
+                            , public nsIObserver
+                            , public nsSupportsWeakReference
+                            , public nsIMemoryReporter
 {
   private:
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;

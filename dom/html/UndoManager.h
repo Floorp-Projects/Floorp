@@ -26,7 +26,7 @@ class DOMTransaction;
 class DOMTransactionCallback;
 
 class UndoManager final : public nsISupports,
-                              public nsWrapperCache
+                          public nsWrapperCache
 {
   friend class TxnScopeGuard;
 public:

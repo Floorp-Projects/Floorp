@@ -35,7 +35,7 @@ class SVGNumberList;
  * weak refs).
  */
 class DOMSVGAnimatedNumberList final : public nsISupports,
-                                           public nsWrapperCache
+                                       public nsWrapperCache
 {
   friend class DOMSVGNumberList;
 

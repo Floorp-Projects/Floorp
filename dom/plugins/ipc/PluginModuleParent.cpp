@@ -2901,7 +2901,7 @@ PluginModuleChromeParent::OnCrash(DWORD processID)
 
 #ifdef MOZ_ENABLE_PROFILER_SPS
 class PluginProfilerObserver final : public nsIObserver,
-                                         public nsSupportsWeakReference
+                                     public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS

@@ -322,7 +322,8 @@ WebBrowserChrome2Stub::GetInterface(const nsIID & aIID, void **aSink)
 // purely to keep a strong reference to the browser and the container to
 // prevent the container being collected while the stub remains alive.
 class WindowlessBrowserStub final : public nsIWebNavigation,
-                                        public nsIInterfaceRequestor {
+                                    public nsIInterfaceRequestor
+{
 public:
   WindowlessBrowserStub(nsIWebBrowser *aBrowser, nsISupports *aContainer) {
     mBrowser = aBrowser;

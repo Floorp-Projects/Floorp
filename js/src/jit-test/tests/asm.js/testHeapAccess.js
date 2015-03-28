@@ -173,9 +173,14 @@ assertEq(f(1), 0xfffeeee);
 var f = asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) {i=i|0; return i32[((i<<2)+4)>>2]|0 }; return f'), this, null, i32.buffer);
 assertEq(f(0), 0xfffeeee);
 
+// For legacy compatibility, test Int8/Uint8 accesses with no shift.
 asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { u8[7&0xffff] = 41 } return f'), this, null, BUF_64KB)();
 assertEq(new Uint8Array(BUF_64KB)[7], 41);
 asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { i8[7&0xffff] = -41 } return f'), this, null, BUF_64KB)();
+assertEq(new Int8Array(BUF_64KB)[7], -41);
+asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { u8[(7&0xffff)>>0] = 41 } return f'), this, null, BUF_64KB)();
+assertEq(new Uint8Array(BUF_64KB)[7], 41);
+asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { i8[(7&0xffff)>>0] = -41 } return f'), this, null, BUF_64KB)();
 assertEq(new Int8Array(BUF_64KB)[7], -41);
 asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { u16[(6&0xffff)>>1] = 0xabc } return f'), this, null, BUF_64KB)();
 assertEq(new Uint16Array(BUF_64KB)[3], 0xabc);
@@ -197,7 +202,9 @@ new Float64Array(BUF_64KB)[1] = 1.3;
 assertEq(asmLink(asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f() { return +f64[(8&0xffff)>>3] } return f'), this, null, BUF_64KB)(), 1.3);
 
 asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; u8[255]; u8[i] } return f');
+// For legacy compatibility, test Int8/Uint8 accesses with no shift.
 asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; u8[i&0xff]; u8[255] } return f');
+asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; u8[(i&0xff)>>0]; u8[255] } return f');
 asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; u32[63]; u32[i>>2] } return f');
 asmCompile('glob', 'imp', 'b', USE_ASM + HEAP_IMPORTS + 'function f(i) { i=i|0; u32[i>>2]; u32[63] } return f');
 

@@ -31,12 +31,12 @@ class nsJARInputThunk;
 //-----------------------------------------------------------------------------
 
 class nsJARChannel final : public nsIJARChannel
-                             , public mozilla::net::MemoryDownloader::IObserver
-                             , public nsIStreamListener
-                             , public nsIRemoteOpenFileListener
-                             , public nsIThreadRetargetableRequest
-                             , public nsIThreadRetargetableStreamListener
-                             , public nsHashPropertyBag
+                         , public mozilla::net::MemoryDownloader::IObserver
+                         , public nsIStreamListener
+                         , public nsIRemoteOpenFileListener
+                         , public nsIThreadRetargetableRequest
+                         , public nsIThreadRetargetableStreamListener
+                         , public nsHashPropertyBag
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED

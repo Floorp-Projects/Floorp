@@ -53,7 +53,8 @@ struct CachedPositionAndAccuracy {
 /**
  * Singleton that manages the geolocation provider
  */
-class nsGeolocationService final : public nsIGeolocationUpdate, public nsIObserver
+class nsGeolocationService final : public nsIGeolocationUpdate,
+                                   public nsIObserver
 {
 public:
 
@@ -124,8 +125,8 @@ namespace dom {
  * Can return a geolocation info
  */
 class Geolocation final : public nsIDOMGeoGeolocation,
-                              public nsIGeolocationUpdate,
-                              public nsWrapperCache
+                          public nsIGeolocationUpdate,
+                          public nsWrapperCache
 {
 public:
 
@@ -221,7 +222,7 @@ private:
 };
 
 class PositionError final : public nsIDOMGeoPositionError,
-                                public nsWrapperCache
+                            public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

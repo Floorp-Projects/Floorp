@@ -27,7 +27,7 @@ class  SVGLoadEventListener;
 class  SVGParseCompleteListener;
 
 class VectorImage final : public ImageResource,
-                              public nsIStreamListener
+                          public nsIStreamListener
 {
 public:
   NS_DECL_ISUPPORTS

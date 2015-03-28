@@ -42,7 +42,7 @@ namespace mozilla {
 namespace ipc {
 
 class DoWorkRunnable final : public nsICancelableRunnable,
-                                 public nsITimerCallback
+                             public nsITimerCallback
 {
 public:
   explicit DoWorkRunnable(MessagePump* aPump)

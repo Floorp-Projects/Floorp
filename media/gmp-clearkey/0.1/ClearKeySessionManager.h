@@ -19,7 +19,7 @@
 #include "RefCounted.h"
 
 class ClearKeySessionManager final : public GMPDecryptor
-                                       , public RefCounted
+                                   , public RefCounted
 {
 public:
   ClearKeySessionManager();

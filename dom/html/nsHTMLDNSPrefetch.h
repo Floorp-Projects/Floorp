@@ -82,8 +82,8 @@ public:
   };
   
   class nsDeferrals final: public nsIWebProgressListener
-                             , public nsSupportsWeakReference
-                             , public nsIObserver
+                         , public nsSupportsWeakReference
+                         , public nsIObserver
   {
   public:
     NS_DECL_ISUPPORTS

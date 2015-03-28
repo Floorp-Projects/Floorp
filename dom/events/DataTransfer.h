@@ -52,7 +52,7 @@ struct TransferItem {
   { 0x9b, 0xd0, 0xf1, 0x79, 0x09, 0x69, 0xf2, 0xfb } }
 
 class DataTransfer final : public nsIDOMDataTransfer,
-                               public nsWrapperCache
+                           public nsWrapperCache
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DATATRANSFER_IID)

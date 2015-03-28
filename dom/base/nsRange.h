@@ -31,8 +31,8 @@ class DOMRectList;
 }
 
 class nsRange final : public nsIDOMRange,
-                          public nsStubMutationObserver,
-                          public nsWrapperCache
+                      public nsStubMutationObserver,
+                      public nsWrapperCache
 {
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::DOMRect DOMRect;

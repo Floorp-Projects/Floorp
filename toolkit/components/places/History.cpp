@@ -466,8 +466,8 @@ GetJSObjectFromArray(JSContext* aCtx,
   return NS_OK;
 }
 
-class VisitedQuery final: public AsyncStatementCallback,
-                              public mozIStorageCompletionCallback
+class VisitedQuery final : public AsyncStatementCallback,
+                           public mozIStorageCompletionCallback
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

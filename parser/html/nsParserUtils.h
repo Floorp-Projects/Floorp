@@ -11,7 +11,7 @@
 #include "mozilla/Attributes.h"
 
 class nsParserUtils final : public nsIScriptableUnescapeHTML,
-                                public nsIParserUtils
+                            public nsIParserUtils
 {
   ~nsParserUtils() {}
 public:

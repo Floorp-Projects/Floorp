@@ -176,18 +176,18 @@ protected:
 #define NS_FORWARD_TO_UIEVENT                               \
   NS_FORWARD_NSIDOMUIEVENT(UIEvent::)                       \
   NS_FORWARD_TO_EVENT_NO_SERIALIZATION_NO_DUPLICATION       \
-  NS_IMETHOD DuplicatePrivateData() override            \
+  NS_IMETHOD DuplicatePrivateData() override                \
   {                                                         \
     return UIEvent::DuplicatePrivateData();                 \
   }                                                         \
   NS_IMETHOD_(void) Serialize(IPC::Message* aMsg,           \
                               bool aSerializeInterfaceType) \
-    override                                            \
+    override                                                \
   {                                                         \
     UIEvent::Serialize(aMsg, aSerializeInterfaceType);      \
   }                                                         \
   NS_IMETHOD_(bool) Deserialize(const IPC::Message* aMsg,   \
-                                void** aIter) override  \
+                                void** aIter) override      \
   {                                                         \
     return UIEvent::Deserialize(aMsg, aIter);               \
   }
