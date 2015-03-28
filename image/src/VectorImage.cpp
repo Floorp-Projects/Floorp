@@ -325,6 +325,7 @@ NS_IMPL_ISUPPORTS(VectorImage,
 VectorImage::VectorImage(ProgressTracker* aProgressTracker,
                          ImageURL* aURI /* = nullptr */) :
   ImageResource(aURI), // invoke superclass's constructor
+  mLockCount(0),
   mIsInitialized(false),
   mIsFullyLoaded(false),
   mIsDrawing(false),
@@ -354,6 +355,14 @@ VectorImage::Init(const char* aMimeType,
   MOZ_ASSERT(!mIsFullyLoaded && !mHaveAnimations && !mError,
              "Flags unexpectedly set before initialization");
   MOZ_ASSERT(!strcmp(aMimeType, IMAGE_SVG_XML), "Unexpected mimetype");
+
+  mDiscardable = !!(aFlags & INIT_FLAG_DISCARDABLE);
+
+  // Lock this image's surfaces in the SurfaceCache if we're not discardable.
+  if (!mDiscardable) {
+    mLockCount++;
+    SurfaceCache::LockImage(ImageKey(this));
+  }
 
   mIsInitialized = true;
   return NS_OK;
@@ -836,6 +845,14 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
   if (bypassCache)
     return Show(svgDrawable, aParams);
 
+  // We're about to rerasterize, which may mean that some of the previous
+  // surfaces we've rasterized aren't useful anymore. We can allow them to
+  // expire from the cache by unlocking them here, and then sending out an
+  // invalidation. If this image is locked, any surfaces that are still useful
+  // will become locked again when Draw touches them, and the remainder will
+  // eventually expire.
+  SurfaceCache::UnlockSurfaces(ImageKey(this));
+
   // Try to create an imgFrame, initializing the surface it contains by drawing
   // our gfxDrawable into it. (We use FILTER_NEAREST since we never scale here.)
   nsRefPtr<imgFrame> frame = new imgFrame;
@@ -861,12 +878,17 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
                        VectorSurfaceKey(aParams.size,
                                         aParams.svgContext,
                                         aParams.animationTime),
-                       Lifetime::Transient);
+                       Lifetime::Persistent);
 
   // Draw.
   nsRefPtr<gfxDrawable> drawable =
     new gfxSurfaceDrawable(surface, ThebesIntSize(aParams.size));
   Show(drawable, aParams);
+
+  // Send out an invalidation so that surfaces that are still in use get
+  // re-locked. See the discussion of the UnlockSurfaces call above.
+  mProgressTracker->SyncNotifyProgress(FLAG_FRAME_COMPLETE,
+                                       nsIntRect::GetMaxSizedIntRect());
 }
 
 
@@ -923,7 +945,19 @@ VectorImage::RequestDecodeForSize(const nsIntSize& aSize, uint32_t aFlags)
 NS_IMETHODIMP
 VectorImage::LockImage()
 {
-  // This method is for image-discarding, which only applies to RasterImages.
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mError) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mLockCount++;
+
+  if (mLockCount == 1) {
+    // Lock this image's surfaces in the SurfaceCache.
+    SurfaceCache::LockImage(ImageKey(this));
+  }
+
   return NS_OK;
 }
 
@@ -932,7 +966,24 @@ VectorImage::LockImage()
 NS_IMETHODIMP
 VectorImage::UnlockImage()
 {
-  // This method is for image-discarding, which only applies to RasterImages.
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mError) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mLockCount == 0) {
+    MOZ_ASSERT_UNREACHABLE("Calling UnlockImage with a zero lock count");
+    return NS_ERROR_ABORT;
+  }
+
+  mLockCount--;
+
+  if (mLockCount == 0) {
+    // Unlock this image's surfaces in the SurfaceCache.
+    SurfaceCache::UnlockImage(ImageKey(this));
+  }
+
   return NS_OK;
 }
 
@@ -941,8 +992,24 @@ VectorImage::UnlockImage()
 NS_IMETHODIMP
 VectorImage::RequestDiscard()
 {
-  SurfaceCache::RemoveImage(ImageKey(this));
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mDiscardable && mLockCount == 0) {
+    SurfaceCache::RemoveImage(ImageKey(this));
+    mProgressTracker->OnDiscard();
+  }
+
   return NS_OK;
+}
+
+void
+VectorImage::OnSurfaceDiscarded()
+{
+  MOZ_ASSERT(mProgressTracker);
+
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethod(mProgressTracker, &ProgressTracker::OnDiscard);
+  NS_DispatchToMainThread(runnable);
 }
 
 //******************************************************************************
