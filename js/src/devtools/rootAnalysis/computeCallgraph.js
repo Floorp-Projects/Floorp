@@ -200,7 +200,7 @@ function processBody(caller, body)
             prologue += memo(caller) + " ";
             if (callee.kind == 'direct') {
                 if (!(callee.name in seen)) {
-                    seen[name] = true;
+                    seen[callee.name] = true;
                     printOnce("D " + prologue + memo(callee.name));
                 }
             } else if (callee.kind == 'field') {
