@@ -6,11 +6,7 @@
 const TEST_URI = "http://example.com/browser/browser/devtools/styleeditor/" +
                  "test/browser_styleeditor_cmd_edit.html";
 
-function test() {
-  return Task.spawn(spawnTest).then(finish, helpers.handleError);
-}
-
-function spawnTest() {
+add_task(function* () {
   let options = yield helpers.openTab(TEST_URI);
   yield helpers.openToolbar(options);
 
@@ -203,4 +199,4 @@ function spawnTest() {
 
   yield helpers.closeToolbar(options);
   yield helpers.closeTab(options);
-}
+});
