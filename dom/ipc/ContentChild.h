@@ -173,6 +173,13 @@ public:
     virtual PHalChild* AllocPHalChild() override;
     virtual bool DeallocPHalChild(PHalChild*) override;
 
+    PIccChild*
+    SendPIccConstructor(PIccChild* aActor, const uint32_t& aServiceId);
+    virtual PIccChild*
+    AllocPIccChild(const uint32_t& aClientId) override;
+    virtual bool
+    DeallocPIccChild(PIccChild* aActor) override;
+
     virtual PMemoryReportRequestChild*
     AllocPMemoryReportRequestChild(const uint32_t& aGeneration,
                                    const bool& aAnonymize,

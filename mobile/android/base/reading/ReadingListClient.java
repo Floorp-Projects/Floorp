@@ -431,6 +431,76 @@ public class ReadingListClient {
     }
   }
 
+  private class DeleteBatchingDelegate implements ReadingListDeleteDelegate {
+    private final Queue<String> queue;
+    private final ReadingListDeleteDelegate batchDeleteDelegate;
+    private final Executor executor;
+
+    DeleteBatchingDelegate(Queue<String> guids,
+                           ReadingListDeleteDelegate batchDeleteDelegate,
+                           Executor executor) {
+      this.queue = guids;
+      this.batchDeleteDelegate = batchDeleteDelegate;
+      this.executor = executor;
+    }
+
+    void next() {
+      final String guid = queue.poll();
+      executor.execute(new Runnable() {
+        @Override
+        public void run() {
+          if (guid == null) {
+            batchDeleteDelegate.onBatchDone();
+            return;
+          }
+
+          again(guid);
+        }
+      });
+    }
+
+    void again(String guid) {
+      delete(guid, DeleteBatchingDelegate.this, -1L);
+    }
+
+    @Override
+    public void onSuccess(ReadingListRecordResponse response,
+                          ReadingListRecord record) {
+      batchDeleteDelegate.onSuccess(response, record);
+      next();
+    }
+
+    @Override
+    public void onPreconditionFailed(String guid, MozResponse response) {
+      batchDeleteDelegate.onPreconditionFailed(guid, response);
+      next();
+    }
+
+    @Override
+    public void onRecordMissingOrDeleted(String guid, MozResponse response) {
+      batchDeleteDelegate.onRecordMissingOrDeleted(guid, response);
+      next();
+    }
+
+    @Override
+    public void onFailure(Exception e) {
+      batchDeleteDelegate.onFailure(e);
+      next();
+    }
+
+    @Override
+    public void onFailure(MozResponse response) {
+      batchDeleteDelegate.onFailure(response);
+      next();
+    }
+
+    @Override
+    public void onBatchDone() {
+      // This should never occur, but if it does, pass through.
+      batchDeleteDelegate.onBatchDone();
+    }
+  }
+
   // Deliberately declare `delegate` non-final so we can't capture it below. We prefer
   // to use `recordDelegate` explicitly.
   public void getOne(final String guid, ReadingListRecordDelegate delegate, final long ifModifiedSince) {
@@ -509,6 +579,17 @@ public class ReadingListClient {
       Logger.info(LOG_TAG, "Uploading new record: " + body.toJSONString());
     }
     r.post(body);
+  }
+
+  public void delete(final Queue<String> guids, final Executor executor, final ReadingListDeleteDelegate batchDeleteDelegate) {
+    if (guids.isEmpty()) {
+      batchDeleteDelegate.onBatchDone();
+      return;
+    }
+
+    final ReadingListDeleteDelegate deleteDelegate = new DeleteBatchingDelegate(guids, batchDeleteDelegate, executor);
+
+    delete(guids.poll(), deleteDelegate, -1L);
   }
 
   public void delete(final String guid, final ReadingListDeleteDelegate delegate, final long ifUnmodifiedSince) {

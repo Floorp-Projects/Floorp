@@ -33,9 +33,9 @@ public:
   // Check whether two markers should be considered the same,
   // for the purpose of pairing start and end markers.  Normally
   // this definition suffices.
-  virtual bool Equals(const TimelineMarker* aOther)
+  virtual bool Equals(const TimelineMarker& aOther)
   {
-    return strcmp(mName, aOther->mName) == 0;
+    return strcmp(mName, aOther.mName) == 0;
   }
 
   // Add details specific to this marker type to aMarker.  The

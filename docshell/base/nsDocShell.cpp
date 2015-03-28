@@ -2977,10 +2977,10 @@ nsDocShell::PopProfileTimelineMarkers(
   // If we see an unpaired START, we keep it around for the next call
   // to PopProfileTimelineMarkers.  We store the kept START objects in
   // this array.
-  nsTArray<TimelineMarker*> keptMarkers;
+  nsTArray<UniquePtr<TimelineMarker>> keptMarkers;
 
   for (uint32_t i = 0; i < mProfileTimelineMarkers.Length(); ++i) {
-    TimelineMarker* startPayload = mProfileTimelineMarkers[i];
+    UniquePtr<TimelineMarker>& startPayload = mProfileTimelineMarkers[i];
     const char* startMarkerName = startPayload->GetName();
 
     bool hasSeenPaintedLayer = false;
@@ -3002,7 +3002,7 @@ nsDocShell::PopProfileTimelineMarkers(
       // enough for the amount of markers to always be small enough that the
       // nested for loop isn't going to be a performance problem.
       for (uint32_t j = i + 1; j < mProfileTimelineMarkers.Length(); ++j) {
-        TimelineMarker* endPayload = mProfileTimelineMarkers[j];
+        UniquePtr<TimelineMarker>& endPayload = mProfileTimelineMarkers[j];
         const char* endMarkerName = endPayload->GetName();
 
         // Look for Layer markers to stream out paint markers.
@@ -3011,7 +3011,7 @@ nsDocShell::PopProfileTimelineMarkers(
           endPayload->AddLayerRectangles(layerRectangles);
         }
 
-        if (!startPayload->Equals(endPayload)) {
+        if (!startPayload->Equals(*endPayload)) {
           continue;
         }
 
@@ -3048,14 +3048,13 @@ nsDocShell::PopProfileTimelineMarkers(
 
       // If we did not see the corresponding END, keep the START.
       if (!hasSeenEnd) {
-        keptMarkers.AppendElement(mProfileTimelineMarkers[i]);
+        keptMarkers.AppendElement(Move(mProfileTimelineMarkers[i]));
         mProfileTimelineMarkers.RemoveElementAt(i);
         --i;
       }
     }
   }
 
-  ClearProfileTimelineMarkers();
   mProfileTimelineMarkers.SwapElements(keptMarkers);
 
   if (!ToJSValue(aCx, profileTimelineMarkers, aProfileTimelineMarkers)) {
@@ -3086,10 +3085,10 @@ nsDocShell::AddProfileTimelineMarker(const char* aName,
 }
 
 void
-nsDocShell::AddProfileTimelineMarker(UniquePtr<TimelineMarker>& aMarker)
+nsDocShell::AddProfileTimelineMarker(UniquePtr<TimelineMarker>&& aMarker)
 {
   if (mProfileTimelineRecording) {
-    mProfileTimelineMarkers.AppendElement(aMarker.release());
+    mProfileTimelineMarkers.AppendElement(Move(aMarker));
   }
 }
 
@@ -3125,9 +3124,6 @@ nsDocShell::GetWindowDraggingAllowed(bool* aValue)
 void
 nsDocShell::ClearProfileTimelineMarkers()
 {
-  for (uint32_t i = 0; i < mProfileTimelineMarkers.Length(); ++i) {
-    delete mProfileTimelineMarkers[i];
-  }
   mProfileTimelineMarkers.Clear();
 }
 
