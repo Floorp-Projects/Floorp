@@ -8,13 +8,13 @@
 #include "jsapi-tests/tests.h"
 
 static bool
-GlobalEnumerate(JSContext *cx, JS::Handle<JSObject*> obj)
+GlobalEnumerate(JSContext* cx, JS::Handle<JSObject*> obj)
 {
     return JS_EnumerateStandardClasses(cx, obj);
 }
 
 static bool
-GlobalResolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *resolvedp)
+GlobalResolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* resolvedp)
 {
     return JS_ResolveStandardClass(cx, obj, id, resolvedp);
 }

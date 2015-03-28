@@ -39,14 +39,14 @@ class BufferOffset
     }
 
     template <class BOffImm>
-    BOffImm diffB(Label *other) const {
+    BOffImm diffB(Label* other) const {
         MOZ_ASSERT(other->bound());
         return BOffImm(offset - other->offset());
     }
 
-    explicit BufferOffset(Label *l) : offset(l->offset()) {
+    explicit BufferOffset(Label* l) : offset(l->offset()) {
     }
-    explicit BufferOffset(RepatchLabel *l) : offset(l->offset()) {
+    explicit BufferOffset(RepatchLabel* l) : offset(l->offset()) {
     }
 
     BufferOffset() : offset(INT_MIN) {}
@@ -56,14 +56,14 @@ class BufferOffset
 template<int SliceSize>
 struct BufferSlice {
   protected:
-    BufferSlice<SliceSize> *prev_;
-    BufferSlice<SliceSize> *next_;
+    BufferSlice<SliceSize>* prev_;
+    BufferSlice<SliceSize>* next_;
     // How much data has been added to the current node.
     uint32_t nodeSize_;
   public:
-    BufferSlice *getNext() const { return next_; }
-    BufferSlice *getPrev() const { return prev_; }
-    void setNext(BufferSlice<SliceSize> *next) {
+    BufferSlice* getNext() const { return next_; }
+    BufferSlice* getPrev() const { return prev_; }
+    void setNext(BufferSlice<SliceSize>* next) {
         MOZ_ASSERT(next_ == nullptr);
         MOZ_ASSERT(next->prev_ == nullptr);
         next_ = next;
@@ -91,8 +91,8 @@ struct AssemblerBuffer
   protected:
     typedef BufferSlice<SliceSize> Slice;
     typedef AssemblerBuffer<SliceSize, Inst> AssemblerBuffer_;
-    Slice *head;
-    Slice *tail;
+    Slice* head;
+    Slice* tail;
   public:
     bool m_oom;
     bool m_bail;
@@ -104,8 +104,8 @@ struct AssemblerBuffer
         MOZ_ASSERT(IsPowerOfTwo(alignment));
         return !(size() & (alignment - 1));
     }
-    virtual Slice *newSlice(LifoAlloc &a) {
-        Slice *tmp = static_cast<Slice*>(a.alloc(sizeof(Slice)));
+    virtual Slice* newSlice(LifoAlloc& a) {
+        Slice* tmp = static_cast<Slice*>(a.alloc(sizeof(Slice)));
         if (!tmp) {
             m_oom = true;
             return nullptr;
@@ -116,7 +116,7 @@ struct AssemblerBuffer
     bool ensureSpace(int size) {
         if (tail != nullptr && tail->size() + size <= SliceSize)
             return true;
-        Slice *tmp = newSlice(lifoAlloc_);
+        Slice* tmp = newSlice(lifoAlloc_);
         if (tmp == nullptr)
             return false;
         if (tail != nullptr) {
@@ -143,7 +143,7 @@ struct AssemblerBuffer
     BufferOffset putInt(uint32_t value) {
         return putBlob(sizeof(value), (uint8_t*)&value);
     }
-    BufferOffset putBlob(uint32_t instSize, uint8_t *inst) {
+    BufferOffset putBlob(uint32_t instSize, uint8_t* inst) {
         if (!ensureSpace(instSize))
             return BufferOffset();
         BufferOffset ret = nextOffset();
@@ -171,13 +171,13 @@ struct AssemblerBuffer
         m_bail = true;
     }
     // Finger for speeding up accesses.
-    Slice *finger;
+    Slice* finger;
     unsigned int finger_offset;
-    Inst *getInst(BufferOffset off) {
+    Inst* getInst(BufferOffset off) {
         int local_off = off.getOffset();
         // Don't update the structure's finger in place, so there is the option
         // to not update it.
-        Slice *cur = nullptr;
+        Slice* cur = nullptr;
         int cur_off;
         // Get the offset that we'd be dealing with by walking through
         // backwards.
@@ -245,7 +245,7 @@ struct AssemblerBuffer
 
     // Break the instruction stream so we can go back and edit it at this point
     void perforate() {
-        Slice *tmp = newSlice(lifoAlloc_);
+        Slice* tmp = newSlice(lifoAlloc_);
         if (!tmp) {
             m_oom = true;
             return;
@@ -255,11 +255,11 @@ struct AssemblerBuffer
         tail = tmp;
     }
 
-    void executableCopy(uint8_t *dest_) {
+    void executableCopy(uint8_t* dest_) {
         if (this->oom())
             return;
 
-        for (Slice *cur = head; cur != nullptr; cur = cur->getNext()) {
+        for (Slice* cur = head; cur != nullptr; cur = cur->getNext()) {
             memcpy(dest_, &cur->instructions, cur->size());
             dest_ += cur->size();
         }
@@ -268,18 +268,18 @@ struct AssemblerBuffer
     class AssemblerBufferInstIterator {
       private:
         BufferOffset bo;
-        AssemblerBuffer_ *m_buffer;
+        AssemblerBuffer_* m_buffer;
       public:
-        explicit AssemblerBufferInstIterator(BufferOffset off, AssemblerBuffer_ *buff)
+        explicit AssemblerBufferInstIterator(BufferOffset off, AssemblerBuffer_* buff)
             : bo(off), m_buffer(buff)
         {
         }
-        Inst *next() {
-            Inst *i = m_buffer->getInst(bo);
+        Inst* next() {
+            Inst* i = m_buffer->getInst(bo);
             bo = BufferOffset(bo.getOffset() + i->size());
             return cur();
         }
-        Inst *cur() {
+        Inst* cur() {
             return m_buffer->getInst(bo);
         }
     };

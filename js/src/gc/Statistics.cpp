@@ -64,25 +64,25 @@ class gcstats::StatisticsSerializer
         }
     }
 
-    void extra(const char *str) {
+    void extra(const char* str) {
         if (!asJSON_) {
             needComma_ = false;
             p(str);
         }
     }
 
-    void appendString(const char *name, const char *value) {
+    void appendString(const char* name, const char* value) {
         put(name, value, "", true);
     }
 
-    void appendNumber(const char *name, const char *vfmt, const char *units, ...) {
+    void appendNumber(const char* name, const char* vfmt, const char* units, ...) {
         va_list va;
         va_start(va, units);
         append(name, vfmt, va, units);
         va_end(va);
     }
 
-    void appendDecimal(const char *name, const char *units, double d) {
+    void appendDecimal(const char* name, const char* units, double d) {
         if (d < 0)
             d = 0;
         if (asJSON_)
@@ -91,12 +91,12 @@ class gcstats::StatisticsSerializer
             appendNumber(name, "%.1f", units, d);
     }
 
-    void appendIfNonzeroMS(const char *name, double v) {
+    void appendIfNonzeroMS(const char* name, double v) {
         if (asJSON_ || v >= 0.1)
             appendDecimal(name, "ms", v);
     }
 
-    void beginObject(const char *name) {
+    void beginObject(const char* name) {
         if (needComma_)
             pJSON(", ");
         if (asJSON_ && name) {
@@ -113,7 +113,7 @@ class gcstats::StatisticsSerializer
         needComma_ = true;
     }
 
-    void beginArray(const char *name) {
+    void beginArray(const char* name) {
         if (needComma_)
             pJSON(", ");
         if (asJSON_)
@@ -128,13 +128,13 @@ class gcstats::StatisticsSerializer
         needComma_ = true;
     }
 
-    char16_t *finishJSString() {
-        char *buf = finishCString();
+    char16_t* finishJSString() {
+        char* buf = finishCString();
         if (!buf)
             return nullptr;
 
         size_t nchars = strlen(buf);
-        char16_t *out = js_pod_malloc<char16_t>(nchars + 1);
+        char16_t* out = js_pod_malloc<char16_t>(nchars + 1);
         if (!out) {
             oom_ = true;
             js_free(buf);
@@ -148,13 +148,13 @@ class gcstats::StatisticsSerializer
         return out;
     }
 
-    char *finishCString() {
+    char* finishCString() {
         if (oom_)
             return nullptr;
 
         buf_.append('\0');
 
-        char *buf = buf_.extractRawBuffer();
+        char* buf = buf_.extractRawBuffer();
         if (!buf)
             oom_ = true;
 
@@ -162,15 +162,15 @@ class gcstats::StatisticsSerializer
     }
 
   private:
-    void append(const char *name, const char *vfmt,
-                va_list va, const char *units)
+    void append(const char* name, const char* vfmt,
+                va_list va, const char* units)
     {
         char val[MaxFieldValueLength];
         JS_vsnprintf(val, MaxFieldValueLength, vfmt, va);
         put(name, val, units, false);
     }
 
-    void p(const char *cstr) {
+    void p(const char* cstr) {
         if (oom_)
             return;
 
@@ -186,12 +186,12 @@ class gcstats::StatisticsSerializer
             oom_ = true;
     }
 
-    void pJSON(const char *str) {
+    void pJSON(const char* str) {
         if (asJSON_)
             p(str);
     }
 
-    void put(const char *name, const char *val, const char *units, bool valueIsQuoted) {
+    void put(const char* name, const char* val, const char* units, bool valueIsQuoted) {
         if (needComma_)
             p(", ");
         needComma_ = true;
@@ -206,20 +206,20 @@ class gcstats::StatisticsSerializer
             p(units);
     }
 
-    void putQuoted(const char *str) {
+    void putQuoted(const char* str) {
         pJSON("\"");
         p(str);
         pJSON("\"");
     }
 
-    void putKey(const char *str) {
+    void putKey(const char* str) {
         if (!asJSON_) {
             p(str);
             return;
         }
 
         p("\"");
-        const char *c = str;
+        const char* c = str;
         while (*c) {
             if (*c == ' ' || *c == '\t')
                 p('_');
@@ -244,7 +244,7 @@ class gcstats::StatisticsSerializer
  */
 JS_STATIC_ASSERT(JS::gcreason::NUM_TELEMETRY_REASONS >= JS::gcreason::NUM_REASONS);
 
-const char *
+const char*
 js::gcstats::ExplainInvocationKind(JSGCInvocationKind gckind)
 {
     MOZ_ASSERT(gckind == GC_NORMAL || gckind == GC_SHRINK);
@@ -254,7 +254,7 @@ js::gcstats::ExplainInvocationKind(JSGCInvocationKind gckind)
          return "Shrinking";
 }
 
-const char *
+const char*
 js::gcstats::ExplainReason(JS::gcreason::Reason reason)
 {
     switch (reason) {
@@ -278,7 +278,7 @@ t(int64_t t)
 struct PhaseInfo
 {
     Phase index;
-    const char *name;
+    const char* name;
     Phase parent;
 };
 
@@ -404,7 +404,7 @@ struct AllPhaseIterator {
     {
     }
 
-    void get(Phase *phase, size_t *dagSlot, size_t *level = nullptr) {
+    void get(Phase* phase, size_t* dagSlot, size_t* level = nullptr) {
         MOZ_ASSERT(!done());
         *dagSlot = activeSlot;
         *phase = descendants.empty() ? Phase(current) : descendants.front();
@@ -443,7 +443,7 @@ struct AllPhaseIterator {
 };
 
 static void
-FormatPhaseTimes(StatisticsSerializer &ss, const char *name, int64_t (*times)[PHASE_LIMIT])
+FormatPhaseTimes(StatisticsSerializer& ss, const char* name, int64_t (*times)[PHASE_LIMIT])
 {
     ss.beginObject(name);
 
@@ -457,10 +457,10 @@ FormatPhaseTimes(StatisticsSerializer &ss, const char *name, int64_t (*times)[PH
 }
 
 void
-Statistics::gcDuration(int64_t *total, int64_t *maxPause)
+Statistics::gcDuration(int64_t* total, int64_t* maxPause)
 {
     *total = *maxPause = 0;
-    for (SliceData *slice = slices.begin(); slice != slices.end(); slice++) {
+    for (SliceData* slice = slices.begin(); slice != slices.end(); slice++) {
         *total += slice->duration();
         if (slice->duration() > *maxPause)
             *maxPause = slice->duration();
@@ -470,7 +470,7 @@ Statistics::gcDuration(int64_t *total, int64_t *maxPause)
 }
 
 void
-Statistics::sccDurations(int64_t *total, int64_t *maxPause)
+Statistics::sccDurations(int64_t* total, int64_t* maxPause)
 {
     *total = *maxPause = 0;
     for (size_t i = 0; i < sccTimes.length(); i++) {
@@ -480,7 +480,7 @@ Statistics::sccDurations(int64_t *total, int64_t *maxPause)
 }
 
 bool
-Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
+Statistics::formatData(StatisticsSerializer& ss, uint64_t timestamp)
 {
     MOZ_ASSERT(!aborted);
 
@@ -562,15 +562,15 @@ Statistics::formatData(StatisticsSerializer &ss, uint64_t timestamp)
 typedef Vector<UniqueChars, 8, SystemAllocPolicy> FragmentVector;
 
 static UniqueChars
-Join(const FragmentVector &fragments) {
+Join(const FragmentVector& fragments) {
     size_t length = 0;
     for (size_t i = 0; i < fragments.length(); ++i)
         length += fragments[i] ? strlen(fragments[i].get()) : 0;
 
-    char *joined = js_pod_malloc<char>(length + 1);
+    char* joined = js_pod_malloc<char>(length + 1);
     joined[length] = '\0';
 
-    char *cursor = joined;
+    char* cursor = joined;
     for (size_t i = 0; i < fragments.length(); ++i) {
         if (fragments[i])
             strcpy(cursor, fragments[i].get());
@@ -591,7 +591,7 @@ Statistics::formatDescription()
     double mmu20 = computeMMU(20 * PRMJ_USEC_PER_MSEC);
     double mmu50 = computeMMU(50 * PRMJ_USEC_PER_MSEC);
 
-    const char *format =
+    const char* format =
 "=================================================================\n\
   Invocation Kind: %s\n\
   Reason: %s\n\
@@ -627,9 +627,9 @@ Statistics::formatDescription()
 }
 
 UniqueChars
-Statistics::formatSliceDescription(unsigned i, const SliceData &slice)
+Statistics::formatSliceDescription(unsigned i, const SliceData& slice)
 {
-    const char *format =
+    const char* format =
 "\
   ---- Slice %u ----\n\
     Reason: %s\n\
@@ -653,7 +653,7 @@ Statistics::formatTotals()
     int64_t total, longest;
     gcDuration(&total, &longest);
 
-    const char *format =
+    const char* format =
 "\
   ---- Totals ----\n\
     Total Time: %.3fms\n\
@@ -691,7 +691,7 @@ SumChildTimes(size_t phaseSlot, Phase phase, int64_t (*phaseTimes)[PHASE_LIMIT])
 UniqueChars
 Statistics::formatPhaseTimes(int64_t (*phaseTimes)[PHASE_LIMIT])
 {
-    static const char *LevelToIndent[] = { "", "  ", "    ", "      " };
+    static const char* LevelToIndent[] = { "", "  ", "    ", "      " };
     static const int64_t MaxUnaccountedChildTimeUS = 50;
 
     FragmentVector fragments;
@@ -747,7 +747,7 @@ Statistics::formatDetailedMessage()
     return Join(fragments);
 }
 
-char16_t *
+char16_t*
 Statistics::formatMessage()
 {
     StatisticsSerializer ss(StatisticsSerializer::AsText);
@@ -755,7 +755,7 @@ Statistics::formatMessage()
     return ss.finishJSString();
 }
 
-char16_t *
+char16_t*
 Statistics::formatJSON(uint64_t timestamp)
 {
     StatisticsSerializer ss(StatisticsSerializer::AsJSON);
@@ -763,7 +763,7 @@ Statistics::formatJSON(uint64_t timestamp)
     return ss.finishJSString();
 }
 
-Statistics::Statistics(JSRuntime *rt)
+Statistics::Statistics(JSRuntime* rt)
   : runtime(rt),
     startupTime(PRMJ_Now()),
     fp(nullptr),
@@ -831,7 +831,7 @@ Statistics::Statistics(JSRuntime *rt)
         }
     }
 
-    char *env = getenv("MOZ_GCTIMER");
+    char* env = getenv("MOZ_GCTIMER");
     if (!env || strcmp(env, "none") == 0) {
         fp = nullptr;
         return;
@@ -857,7 +857,7 @@ Statistics::~Statistics()
         if (fullFormat) {
             StatisticsSerializer ss(StatisticsSerializer::AsText);
             FormatPhaseTimes(ss, "", phaseTotals);
-            char *msg = ss.finishCString();
+            char* msg = ss.finishCString();
             if (msg) {
                 fprintf(fp, "TOTALS\n%s\n\n-------\n", msg);
                 js_free(msg);
@@ -987,7 +987,7 @@ Statistics::endGC()
 }
 
 void
-Statistics::beginSlice(const ZoneGCStats &zoneStats, JSGCInvocationKind gckind,
+Statistics::beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
                        JS::gcreason::Reason reason)
 {
     this->zoneStats = zoneStats;
@@ -1058,7 +1058,7 @@ Statistics::startTimingMutator()
 }
 
 bool
-Statistics::stopTimingMutator(double &mutator_ms, double &gc_ms)
+Statistics::stopTimingMutator(double& mutator_ms, double& gc_ms)
 {
     // This should only be called from outside of GC, while timing the mutator.
     if (phaseNestingDepth != 1 || phaseNesting[0] != PHASE_MUTATOR)
@@ -1140,7 +1140,7 @@ Statistics::endPhase(Phase phase)
 }
 
 void
-Statistics::endParallelPhase(Phase phase, const GCParallelTask *task)
+Statistics::endParallelPhase(Phase phase, const GCParallelTask* task)
 {
     phaseNestingDepth--;
 

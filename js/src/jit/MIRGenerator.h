@@ -37,27 +37,27 @@ class OptimizationInfo;
 class MIRGenerator
 {
   public:
-    MIRGenerator(CompileCompartment *compartment, const JitCompileOptions &options,
-                 TempAllocator *alloc, MIRGraph *graph,
-                 CompileInfo *info, const OptimizationInfo *optimizationInfo,
-                 Label *outOfBoundsLabel = nullptr, bool usesSignalHandlersForAsmJSOOB = false);
+    MIRGenerator(CompileCompartment* compartment, const JitCompileOptions& options,
+                 TempAllocator* alloc, MIRGraph* graph,
+                 CompileInfo* info, const OptimizationInfo* optimizationInfo,
+                 Label* outOfBoundsLabel = nullptr, bool usesSignalHandlersForAsmJSOOB = false);
 
-    TempAllocator &alloc() {
+    TempAllocator& alloc() {
         return *alloc_;
     }
-    MIRGraph &graph() {
+    MIRGraph& graph() {
         return *graph_;
     }
     bool ensureBallast() {
         return alloc().ensureBallast();
     }
-    const JitRuntime *jitRuntime() const {
+    const JitRuntime* jitRuntime() const {
         return GetJitContext()->runtime->jitRuntime();
     }
-    CompileInfo &info() {
+    CompileInfo& info() {
         return *info_;
     }
-    const OptimizationInfo &optimizationInfo() const {
+    const OptimizationInfo& optimizationInfo() const {
         return *optimizationInfo_;
     }
 
@@ -65,13 +65,13 @@ class MIRGenerator
     T * allocate(size_t count = 1) {
         if (count & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
             return nullptr;
-        return reinterpret_cast<T *>(alloc().allocate(sizeof(T) * count));
+        return reinterpret_cast<T*>(alloc().allocate(sizeof(T) * count));
     }
 
     // Set an error state and prints a message. Returns false so errors can be
     // propagated up.
-    bool abort(const char *message, ...);
-    bool abortFmt(const char *message, va_list ap);
+    bool abort(const char* message, ...);
+    bool abortFmt(const char* message, va_list ap);
 
     bool errored() const {
         return error_;
@@ -94,7 +94,7 @@ class MIRGenerator
     }
 
     // Whether the main thread is trying to cancel this build.
-    bool shouldCancel(const char *why) {
+    bool shouldCancel(const char* why) {
         maybePause();
         return cancelBuild_;
     }
@@ -106,7 +106,7 @@ class MIRGenerator
         if (pauseBuild_ && *pauseBuild_)
             PauseCurrentHelperThread();
     }
-    void setPauseFlag(mozilla::Atomic<bool, mozilla::Relaxed> *pauseBuild) {
+    void setPauseFlag(mozilla::Atomic<bool, mozilla::Relaxed>* pauseBuild) {
         pauseBuild_ = pauseBuild;
     }
 
@@ -156,29 +156,29 @@ class MIRGenerator
         return modifiesFrameArguments_;
     }
 
-    typedef Vector<ObjectGroup *, 0, JitAllocPolicy> ObjectGroupVector;
+    typedef Vector<ObjectGroup*, 0, JitAllocPolicy> ObjectGroupVector;
 
     // When abortReason() == AbortReason_PreliminaryObjects, all groups with
     // preliminary objects which haven't been analyzed yet.
-    const ObjectGroupVector &abortedPreliminaryGroups() const {
+    const ObjectGroupVector& abortedPreliminaryGroups() const {
         return abortedPreliminaryGroups_;
     }
 
   public:
-    CompileCompartment *compartment;
+    CompileCompartment* compartment;
 
   protected:
-    CompileInfo *info_;
-    const OptimizationInfo *optimizationInfo_;
-    TempAllocator *alloc_;
-    JSFunction *fun_;
+    CompileInfo* info_;
+    const OptimizationInfo* optimizationInfo_;
+    TempAllocator* alloc_;
+    JSFunction* fun_;
     uint32_t nslots_;
-    MIRGraph *graph_;
+    MIRGraph* graph_;
     AbortReason abortReason_;
     bool shouldForceAbort_; // Force AbortReason_Disable
     ObjectGroupVector abortedPreliminaryGroups_;
     bool error_;
-    mozilla::Atomic<bool, mozilla::Relaxed> *pauseBuild_;
+    mozilla::Atomic<bool, mozilla::Relaxed>* pauseBuild_;
     mozilla::Atomic<bool, mozilla::Relaxed> cancelBuild_;
 
     uint32_t maxAsmJSStackArgBytes_;
@@ -201,9 +201,9 @@ class MIRGenerator
     // CodeGenerator::link).
     ObjectVector nurseryObjects_;
 
-    void addAbortedPreliminaryGroup(ObjectGroup *group);
+    void addAbortedPreliminaryGroup(ObjectGroup* group);
 
-    Label *outOfBoundsLabel_;
+    Label* outOfBoundsLabel_;
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     bool usesSignalHandlersForAsmJSOOB_;
 #endif
@@ -219,22 +219,22 @@ class MIRGenerator
     AsmJSPerfSpewer asmJSPerfSpewer_;
 
   public:
-    AsmJSPerfSpewer &perfSpewer() { return asmJSPerfSpewer_; }
+    AsmJSPerfSpewer& perfSpewer() { return asmJSPerfSpewer_; }
 #endif
 
   public:
     const JitCompileOptions options;
 
-    void traceNurseryObjects(JSTracer *trc);
+    void traceNurseryObjects(JSTracer* trc);
 
-    const ObjectVector &nurseryObjects() const {
+    const ObjectVector& nurseryObjects() const {
         return nurseryObjects_;
     }
 
-    Label *outOfBoundsLabel() const {
+    Label* outOfBoundsLabel() const {
         return outOfBoundsLabel_;
     }
-    bool needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess *access) const {
+    bool needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access) const {
         // A heap access needs a bounds-check branch if we're not relying on signal
         // handlers to catch errors, and if it's not proven to be within bounds.
         // We use signal-handlers on x64, but on x86 there isn't enough address

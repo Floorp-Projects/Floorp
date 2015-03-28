@@ -27,7 +27,7 @@ BEGIN_TEST(testErrorCopying_columnCopied)
 }
 
 static void
-my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
+my_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* report)
 {
     column = report->column;
 }

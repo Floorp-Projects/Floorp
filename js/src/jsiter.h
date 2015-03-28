@@ -30,30 +30,30 @@ namespace js {
 struct NativeIterator
 {
     HeapPtrObject obj;                  // Object being iterated.
-    JSObject *iterObj_;                 // Internal iterator object.
-    HeapPtrFlatString *props_array;
-    HeapPtrFlatString *props_cursor;
-    HeapPtrFlatString *props_end;
-    Shape **shapes_array;
+    JSObject* iterObj_;                 // Internal iterator object.
+    HeapPtrFlatString* props_array;
+    HeapPtrFlatString* props_cursor;
+    HeapPtrFlatString* props_end;
+    Shape** shapes_array;
     uint32_t shapes_length;
     uint32_t shapes_key;
     uint32_t flags;
 
   private:
     /* While in compartment->enumerators, these form a doubly linked list. */
-    NativeIterator *next_;
-    NativeIterator *prev_;
+    NativeIterator* next_;
+    NativeIterator* prev_;
 
   public:
     bool isKeyIter() const {
         return (flags & JSITER_FOREACH) == 0;
     }
 
-    inline HeapPtrFlatString *begin() const {
+    inline HeapPtrFlatString* begin() const {
         return props_array;
     }
 
-    inline HeapPtrFlatString *end() const {
+    inline HeapPtrFlatString* end() const {
         return props_end;
     }
 
@@ -61,15 +61,15 @@ struct NativeIterator
         return end() - begin();
     }
 
-    JSObject *iterObj() const {
+    JSObject* iterObj() const {
         return iterObj_;
     }
-    HeapPtrFlatString *current() const {
+    HeapPtrFlatString* current() const {
         MOZ_ASSERT(props_cursor < props_end);
         return props_cursor;
     }
 
-    NativeIterator *next() {
+    NativeIterator* next() {
         return next_;
     }
 
@@ -83,7 +83,7 @@ struct NativeIterator
     void incCursor() {
         props_cursor = props_cursor + 1;
     }
-    void link(NativeIterator *other) {
+    void link(NativeIterator* other) {
         /* A NativeIterator cannot appear in the enumerator list twice. */
         MOZ_ASSERT(!next_ && !prev_);
         MOZ_ASSERT(flags & JSITER_ENUMERATE);
@@ -102,14 +102,14 @@ struct NativeIterator
         prev_ = nullptr;
     }
 
-    static NativeIterator *allocateSentinel(JSContext *cx);
-    static NativeIterator *allocateIterator(JSContext *cx, uint32_t slength,
-                                            const js::AutoIdVector &props);
-    void init(JSObject *obj, JSObject *iterObj, unsigned flags, uint32_t slength, uint32_t key);
+    static NativeIterator* allocateSentinel(JSContext* cx);
+    static NativeIterator* allocateIterator(JSContext* cx, uint32_t slength,
+                                            const js::AutoIdVector& props);
+    void init(JSObject* obj, JSObject* iterObj, unsigned flags, uint32_t slength, uint32_t key);
 
-    void mark(JSTracer *trc);
+    void mark(JSTracer* trc);
 
-    static void destroy(NativeIterator *iter) {
+    static void destroy(NativeIterator* iter) {
         js_free(iter);
     }
 };
@@ -119,18 +119,18 @@ class PropertyIteratorObject : public NativeObject
   public:
     static const Class class_;
 
-    NativeIterator *getNativeIterator() const {
-        return static_cast<js::NativeIterator *>(getPrivate());
+    NativeIterator* getNativeIterator() const {
+        return static_cast<js::NativeIterator*>(getPrivate());
     }
-    void setNativeIterator(js::NativeIterator *ni) {
+    void setNativeIterator(js::NativeIterator* ni) {
         setPrivate(ni);
     }
 
     size_t sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf) const;
 
   private:
-    static void trace(JSTracer *trc, JSObject *obj);
-    static void finalize(FreeOp *fop, JSObject *obj);
+    static void trace(JSTracer* trc, JSObject* obj);
+    static void finalize(FreeOp* fop, JSObject* obj);
 };
 
 class ArrayIteratorObject : public JSObject
@@ -146,24 +146,24 @@ class StringIteratorObject : public JSObject
 };
 
 bool
-VectorToIdArray(JSContext *cx, AutoIdVector &props, JSIdArray **idap);
+VectorToIdArray(JSContext* cx, AutoIdVector& props, JSIdArray** idap);
 
 bool
-GetIterator(JSContext *cx, HandleObject obj, unsigned flags, MutableHandleObject objp);
+GetIterator(JSContext* cx, HandleObject obj, unsigned flags, MutableHandleObject objp);
 
-JSObject *
-GetIteratorObject(JSContext *cx, HandleObject obj, unsigned flags);
+JSObject*
+GetIteratorObject(JSContext* cx, HandleObject obj, unsigned flags);
 
 /*
  * Creates either a key or value iterator, depending on flags. For a value
  * iterator, performs value-lookup to convert the given list of jsids.
  */
 bool
-EnumeratedIdVectorToIterator(JSContext *cx, HandleObject obj, unsigned flags, AutoIdVector &props,
+EnumeratedIdVectorToIterator(JSContext* cx, HandleObject obj, unsigned flags, AutoIdVector& props,
                              MutableHandleObject objp);
 
 bool
-NewEmptyPropertyIterator(JSContext *cx, unsigned flags, MutableHandleObject objp);
+NewEmptyPropertyIterator(JSContext* cx, unsigned flags, MutableHandleObject objp);
 
 /*
  * Convert the value stored in *vp to its iteration object. The flags should
@@ -172,48 +172,48 @@ NewEmptyPropertyIterator(JSContext *cx, unsigned flags, MutableHandleObject objp
  * iterator will never be exposed to scripts.
  */
 bool
-ValueToIterator(JSContext *cx, unsigned flags, MutableHandleValue vp);
+ValueToIterator(JSContext* cx, unsigned flags, MutableHandleValue vp);
 
 bool
-CloseIterator(JSContext *cx, HandleObject iterObj);
+CloseIterator(JSContext* cx, HandleObject iterObj);
 
 bool
-UnwindIteratorForException(JSContext *cx, HandleObject obj);
+UnwindIteratorForException(JSContext* cx, HandleObject obj);
 
 void
-UnwindIteratorForUncatchableException(JSContext *cx, JSObject *obj);
+UnwindIteratorForUncatchableException(JSContext* cx, JSObject* obj);
 
 bool
-IteratorConstructor(JSContext *cx, unsigned argc, Value *vp);
+IteratorConstructor(JSContext* cx, unsigned argc, Value* vp);
 
 extern bool
-SuppressDeletedProperty(JSContext *cx, HandleObject obj, jsid id);
+SuppressDeletedProperty(JSContext* cx, HandleObject obj, jsid id);
 
 extern bool
-SuppressDeletedElement(JSContext *cx, HandleObject obj, uint32_t index);
+SuppressDeletedElement(JSContext* cx, HandleObject obj, uint32_t index);
 
 extern bool
-SuppressDeletedElements(JSContext *cx, HandleObject obj, uint32_t begin, uint32_t end);
+SuppressDeletedElements(JSContext* cx, HandleObject obj, uint32_t begin, uint32_t end);
 
 /*
  * IteratorMore() returns the next iteration value. If no value is available,
  * MagicValue(JS_NO_ITER_VALUE) is returned.
  */
 extern bool
-IteratorMore(JSContext *cx, HandleObject iterobj, MutableHandleValue rval);
+IteratorMore(JSContext* cx, HandleObject iterobj, MutableHandleValue rval);
 
 extern bool
-ThrowStopIteration(JSContext *cx);
+ThrowStopIteration(JSContext* cx);
 
 /*
  * Create an object of the form { value: VALUE, done: DONE }.
  * ES6 draft from 2013-09-05, section 25.4.3.4.
  */
-extern JSObject *
-CreateItrResultObject(JSContext *cx, HandleValue value, bool done);
+extern JSObject*
+CreateItrResultObject(JSContext* cx, HandleValue value, bool done);
 
-extern JSObject *
-InitIteratorClasses(JSContext *cx, HandleObject obj);
+extern JSObject*
+InitIteratorClasses(JSContext* cx, HandleObject obj);
 
 } /* namespace js */
 

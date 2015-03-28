@@ -28,7 +28,7 @@
 
 #if defined(XP_WIN)
 
-void *
+void*
 js::GetNativeStackBaseImpl()
 {
 # if defined(_M_IX86) && defined(_MSC_VER)
@@ -65,7 +65,7 @@ js::GetNativeStackBaseImpl()
 
 JS_STATIC_ASSERT(JS_STACK_GROWTH_DIRECTION < 0);
 
-void *
+void*
 js::GetNativeStackBaseImpl()
 {
     stack_t st;
@@ -79,7 +79,7 @@ js::GetNativeStackBaseImpl()
 
 JS_STATIC_ASSERT(JS_STACK_GROWTH_DIRECTION < 0);
 
-void *
+void*
 js::GetNativeStackBaseImpl()
 {
     ucontext_t context;
@@ -90,7 +90,7 @@ js::GetNativeStackBaseImpl()
 
 #else /* XP_UNIX */
 
-void *
+void*
 js::GetNativeStackBaseImpl()
 {
     pthread_t thread = pthread_self();
@@ -113,7 +113,7 @@ js::GetNativeStackBaseImpl()
     pthread_getattr_np(thread, &sattr);
 #  endif
 
-    void *stackBase = 0;
+    void* stackBase = 0;
     size_t stackSize = 0;
     int rc;
 # if defined(__OpenBSD__)
@@ -126,7 +126,7 @@ js::GetNativeStackBaseImpl()
         // thread (see bug 846670). So we scan /proc/self/maps to find the
         // segment which contains the stack.
         rc = -1;
-        FILE *fs = fopen("/proc/self/maps", "r");
+        FILE* fs = fopen("/proc/self/maps", "r");
         if (fs) {
             char line[100];
             unsigned long stackAddr = (unsigned long)&sattr;
@@ -135,7 +135,7 @@ js::GetNativeStackBaseImpl()
                 unsigned long stackEnd;
                 if (sscanf(line, "%lx-%lx ", &stackStart, &stackEnd) == 2 &&
                     stackAddr >= stackStart && stackAddr < stackEnd) {
-                    stackBase = (void *)stackStart;
+                    stackBase = (void*)stackStart;
                     stackSize = stackEnd - stackStart;
                     rc = 0;
                     break;

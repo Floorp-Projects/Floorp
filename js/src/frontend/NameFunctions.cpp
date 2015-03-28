@@ -23,13 +23,13 @@ class NameResolver
 {
     static const size_t MaxParents = 100;
 
-    ExclusiveContext *cx;
+    ExclusiveContext* cx;
     size_t nparents;                /* number of parents in the parents array */
-    ParseNode *parents[MaxParents]; /* history of ParseNodes we've been looking at */
-    StringBuffer *buf;              /* when resolving, buffer to append to */
+    ParseNode* parents[MaxParents]; /* history of ParseNodes we've been looking at */
+    StringBuffer* buf;              /* when resolving, buffer to append to */
 
     /* Test whether a ParseNode represents a function invocation */
-    bool call(ParseNode *pn) {
+    bool call(ParseNode* pn) {
         return pn && pn->isKind(PNK_CALL);
     }
 
@@ -43,12 +43,12 @@ class NameResolver
      * front end will produce a PNK_DOT with a PNK_NAME child whose name
      * contains spaces.
      */
-    bool appendPropertyReference(JSAtom *name) {
+    bool appendPropertyReference(JSAtom* name) {
         if (IsIdentifier(name))
             return buf->append('.') && buf->append(name);
 
         /* Quote the string as needed. */
-        JSString *source = QuoteString(cx, name, '"');
+        JSString* source = QuoteString(cx, name, '"');
         return source && buf->append('[') && buf->append(source) && buf->append(']');
     }
 
@@ -68,7 +68,7 @@ class NameResolver
      * Walk over the given ParseNode, converting it to a stringified name that
      * respresents where the function is being assigned to.
      */
-    bool nameExpression(ParseNode *n) {
+    bool nameExpression(ParseNode* n) {
         switch (n->getKind()) {
           case PNK_DOT:
             return nameExpression(n->expr()) && appendPropertyReference(n->pn_atom);
@@ -111,11 +111,11 @@ class NameResolver
      * innermost node relevant to naming, and the last element will be the
      * outermost node.
      */
-    ParseNode *gatherNameable(ParseNode **nameable, size_t *size) {
+    ParseNode* gatherNameable(ParseNode** nameable, size_t* size) {
         *size = 0;
 
         for (int pos = nparents - 1; pos >= 0; pos--) {
-            ParseNode *cur = parents[pos];
+            ParseNode* cur = parents[pos];
             if (cur->isAssignment())
                 return cur;
 
@@ -174,7 +174,7 @@ class NameResolver
      * listed, then it is skipped. Otherwise an intelligent name is guessed to
      * assign to the function's displayAtom field
      */
-    bool resolveFun(ParseNode *pn, HandleAtom prefix, MutableHandleAtom retAtom) {
+    bool resolveFun(ParseNode* pn, HandleAtom prefix, MutableHandleAtom retAtom) {
         MOZ_ASSERT(pn != nullptr && pn->isKind(PNK_FUNCTION));
         RootedFunction fun(cx, pn->pn_funbox->function());
 
@@ -202,9 +202,9 @@ class NameResolver
             return false;
 
         /* Gather all nodes relevant to naming */
-        ParseNode *toName[MaxParents];
+        ParseNode* toName[MaxParents];
         size_t size;
-        ParseNode *assignment = gatherNameable(toName, &size);
+        ParseNode* assignment = gatherNameable(toName, &size);
 
         /* If the function is assigned to something, then that is very relevant */
         if (assignment) {
@@ -220,10 +220,10 @@ class NameResolver
          * contribution.
          */
         for (int pos = size - 1; pos >= 0; pos--) {
-            ParseNode *node = toName[pos];
+            ParseNode* node = toName[pos];
 
             if (node->isKind(PNK_COLON) || node->isKind(PNK_SHORTHAND)) {
-                ParseNode *left = node->pn_left;
+                ParseNode* left = node->pn_left;
                 if (left->isKind(PNK_OBJECT_PROPERTY_NAME) || left->isKind(PNK_STRING)) {
                     if (!appendPropertyReference(left->pn_atom))
                         return false;
@@ -266,19 +266,19 @@ class NameResolver
      * This is the case for functions which do things like simply create a scope
      * for new variables and then return an anonymous function using this scope.
      */
-    bool isDirectCall(int pos, ParseNode *cur) {
+    bool isDirectCall(int pos, ParseNode* cur) {
         return pos >= 0 && call(parents[pos]) && parents[pos]->pn_head == cur;
     }
 
   public:
-    explicit NameResolver(ExclusiveContext *cx) : cx(cx), nparents(0), buf(nullptr) {}
+    explicit NameResolver(ExclusiveContext* cx) : cx(cx), nparents(0), buf(nullptr) {}
 
     /*
      * Resolve all names for anonymous functions recursively within the
      * ParseNode instance given. The prefix is for each subsequent name, and
      * should initially be nullptr.
      */
-    bool resolve(ParseNode *cur, HandleAtom prefixArg = js::NullPtr()) {
+    bool resolve(ParseNode* cur, HandleAtom prefixArg = js::NullPtr()) {
         RootedAtom prefix(cx, prefixArg);
         if (cur == nullptr)
             return true;
@@ -341,7 +341,7 @@ class NameResolver
                 return false;
             break;
           case PN_LIST:
-            for (ParseNode *nxt = cur->pn_head; nxt; nxt = nxt->pn_next)
+            for (ParseNode* nxt = cur->pn_head; nxt; nxt = nxt->pn_next)
                 if (!resolve(nxt, prefix))
                     return false;
             break;
@@ -354,7 +354,7 @@ class NameResolver
 } /* anonymous namespace */
 
 bool
-frontend::NameFunctions(ExclusiveContext *cx, ParseNode *pn)
+frontend::NameFunctions(ExclusiveContext* cx, ParseNode* pn)
 {
     NameResolver nr(cx);
     return nr.resolve(pn);

@@ -20,37 +20,37 @@
 namespace js {
 
 inline bool
-NewObjectCache::lookupProto(const Class *clasp, JSObject *proto, gc::AllocKind kind, EntryIndex *pentry)
+NewObjectCache::lookupProto(const Class* clasp, JSObject* proto, gc::AllocKind kind, EntryIndex* pentry)
 {
     MOZ_ASSERT(!proto->is<GlobalObject>());
     return lookup(clasp, proto, kind, pentry);
 }
 
 inline bool
-NewObjectCache::lookupGlobal(const Class *clasp, GlobalObject *global, gc::AllocKind kind, EntryIndex *pentry)
+NewObjectCache::lookupGlobal(const Class* clasp, GlobalObject* global, gc::AllocKind kind, EntryIndex* pentry)
 {
     return lookup(clasp, global, kind, pentry);
 }
 
 inline void
-NewObjectCache::fillGlobal(EntryIndex entry, const Class *clasp, GlobalObject *global,
-                           gc::AllocKind kind, NativeObject *obj)
+NewObjectCache::fillGlobal(EntryIndex entry, const Class* clasp, GlobalObject* global,
+                           gc::AllocKind kind, NativeObject* obj)
 {
     //MOZ_ASSERT(global == obj->getGlobal());
     return fill(entry, clasp, global, kind, obj);
 }
 
-inline NativeObject *
-NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entryIndex, gc::InitialHeap heap)
+inline NativeObject*
+NewObjectCache::newObjectFromHit(JSContext* cx, EntryIndex entryIndex, gc::InitialHeap heap)
 {
     MOZ_ASSERT(unsigned(entryIndex) < mozilla::ArrayLength(entries));
-    Entry *entry = &entries[entryIndex];
+    Entry* entry = &entries[entryIndex];
 
-    NativeObject *templateObj = reinterpret_cast<NativeObject *>(&entry->templateObject);
+    NativeObject* templateObj = reinterpret_cast<NativeObject*>(&entry->templateObject);
 
     // Do an end run around JSObject::group() to avoid doing AutoUnprotectCell
     // on the templateObj, which is not a GC thing and can't use runtimeFromAnyThread.
-    ObjectGroup *group = templateObj->group_;
+    ObjectGroup* group = templateObj->group_;
 
     if (group->shouldPreTenure())
         heap = gc::TenuredHeap;
@@ -58,7 +58,7 @@ NewObjectCache::newObjectFromHit(JSContext *cx, EntryIndex entryIndex, gc::Initi
     if (cx->runtime()->gc.upcomingZealousGC())
         return nullptr;
 
-    NativeObject *obj = static_cast<NativeObject *>(Allocate<JSObject, NoGC>(cx, entry->kind, 0,
+    NativeObject* obj = static_cast<NativeObject*>(Allocate<JSObject, NoGC>(cx, entry->kind, 0,
                                                                              heap, group->clasp()));
     if (!obj)
         return nullptr;

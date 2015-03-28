@@ -40,7 +40,7 @@ os_getenv(JSContext* cx, unsigned argc, Value* vp)
     if (!keyBytes.encodeUtf8(cx, key))
         return false;
 
-    if (const char *valueBytes = getenv(keyBytes.ptr())) {
+    if (const char* valueBytes = getenv(keyBytes.ptr())) {
         RootedString value(cx, JS_NewStringCopyZ(cx, valueBytes));
         if (!value)
             return false;
@@ -70,14 +70,14 @@ os_getpid(JSContext* cx, unsigned argc, Value* vp)
 // other one returns an integer status code, and always writes the result into
 // the provided buffer.
 
-inline char *
-strerror_message(int result, char *buffer)
+inline char*
+strerror_message(int result, char* buffer)
 {
     return result == 0 ? buffer : nullptr;
 }
 
-inline char *
-strerror_message(char *result, char *buffer)
+inline char*
+strerror_message(char* result, char* buffer)
 {
     return result;
 }
@@ -85,22 +85,22 @@ strerror_message(char *result, char *buffer)
 #endif
 
 static void
-ReportSysError(JSContext *cx, const char *prefix)
+ReportSysError(JSContext* cx, const char* prefix)
 {
     char buffer[200];
 
 #if defined(XP_WIN)
     strerror_s(buffer, sizeof(buffer), errno);
-    const char *errstr = buffer;
+    const char* errstr = buffer;
 #else
-    const char *errstr = strerror_message(strerror_r(errno, buffer, sizeof(buffer)), buffer);
+    const char* errstr = strerror_message(strerror_r(errno, buffer, sizeof(buffer)), buffer);
 #endif
 
     if (!errstr)
         errstr = "unknown error";
 
     size_t nbytes = strlen(prefix) + strlen(errstr) + 3;
-    char *final = (char*) js_malloc(nbytes);
+    char* final = (char*) js_malloc(nbytes);
     if (!final) {
         JS_ReportOutOfMemory(cx);
         return;
@@ -117,7 +117,7 @@ ReportSysError(JSContext *cx, const char *prefix)
 }
 
 static bool
-os_system(JSContext *cx, unsigned argc, jsval *vp)
+os_system(JSContext* cx, unsigned argc, jsval* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -126,7 +126,7 @@ os_system(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    JSString *str = JS::ToString(cx, args[0]);
+    JSString* str = JS::ToString(cx, args[0]);
     if (!str)
         return false;
 
@@ -146,7 +146,7 @@ os_system(JSContext *cx, unsigned argc, jsval *vp)
 
 #ifndef XP_WIN
 static bool
-os_spawn(JSContext *cx, unsigned argc, jsval *vp)
+os_spawn(JSContext* cx, unsigned argc, jsval* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -155,7 +155,7 @@ os_spawn(JSContext *cx, unsigned argc, jsval *vp)
         return false;
     }
 
-    JSString *str = JS::ToString(cx, args[0]);
+    JSString* str = JS::ToString(cx, args[0]);
     if (!str)
         return false;
 
@@ -176,7 +176,7 @@ os_spawn(JSContext *cx, unsigned argc, jsval *vp)
 
     // We are in the child
 
-    const char *cmd[] = {"sh", "-c", nullptr, nullptr};
+    const char* cmd[] = {"sh", "-c", nullptr, nullptr};
     cmd[2] = command.ptr();
 
     execvp("sh", (char * const*)cmd);
@@ -296,7 +296,7 @@ static const JSFunctionSpecWithHelp os_functions[] = {
 };
 
 bool
-js::DefineOS(JSContext *cx, HandleObject global)
+js::DefineOS(JSContext* cx, HandleObject global)
 {
     RootedObject obj(cx, JS_NewPlainObject(cx));
     return obj &&

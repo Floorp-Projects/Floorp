@@ -15,7 +15,7 @@ namespace js {
 class ObjectValueMap : public WeakMap<PreBarrieredObject, RelocatableValue>
 {
   public:
-    ObjectValueMap(JSContext *cx, JSObject *obj)
+    ObjectValueMap(JSContext* cx, JSObject* obj)
       : WeakMap<PreBarrieredObject, RelocatableValue>(cx, obj) {}
 
     virtual bool findZoneEdges();
@@ -26,7 +26,7 @@ class WeakMapObject : public NativeObject
   public:
     static const Class class_;
 
-    ObjectValueMap *getMap() { return static_cast<ObjectValueMap*>(getPrivate()); }
+    ObjectValueMap* getMap() { return static_cast<ObjectValueMap*>(getPrivate()); }
 };
 
 // Generic weak map for mapping objects to other objects.
@@ -36,14 +36,14 @@ class ObjectWeakMap
     ObjectValueMap map;
 
   public:
-    explicit ObjectWeakMap(JSContext *cx);
+    explicit ObjectWeakMap(JSContext* cx);
     ~ObjectWeakMap();
 
-    JSObject *lookup(const JSObject *obj);
-    bool add(JSContext *cx, JSObject *obj, JSObject *target);
+    JSObject* lookup(const JSObject* obj);
+    bool add(JSContext* cx, JSObject* obj, JSObject* target);
     void clear();
 
-    void trace(JSTracer *trc);
+    void trace(JSTracer* trc);
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf);
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) {
         return mallocSizeOf(this) + sizeOfExcludingThis(mallocSizeOf);

@@ -24,7 +24,7 @@ using namespace js;
  * 720619.
  */
 bool
-Wrapper::defaultValue(JSContext *cx, HandleObject proxy, JSType hint, MutableHandleValue vp) const
+Wrapper::defaultValue(JSContext* cx, HandleObject proxy, JSType hint, MutableHandleValue vp) const
 {
     vp.set(ObjectValue(*proxy->as<ProxyObject>().target()));
     if (hint == JSTYPE_VOID)
@@ -32,37 +32,37 @@ Wrapper::defaultValue(JSContext *cx, HandleObject proxy, JSType hint, MutableHan
     return ToPrimitive(cx, hint, vp);
 }
 
-JSObject *
-Wrapper::New(JSContext *cx, JSObject *obj, const Wrapper *handler,
-             const WrapperOptions &options)
+JSObject*
+Wrapper::New(JSContext* cx, JSObject* obj, const Wrapper* handler,
+             const WrapperOptions& options)
 {
     RootedValue priv(cx, ObjectValue(*obj));
     return NewProxyObject(cx, handler, priv, options.proto(), options);
 }
 
-JSObject *
-Wrapper::Renew(JSContext *cx, JSObject *existing, JSObject *obj, const Wrapper *handler)
+JSObject*
+Wrapper::Renew(JSContext* cx, JSObject* existing, JSObject* obj, const Wrapper* handler)
 {
     existing->as<ProxyObject>().renew(cx, handler, ObjectValue(*obj));
     return existing;
 }
 
-const Wrapper *
-Wrapper::wrapperHandler(JSObject *wrapper)
+const Wrapper*
+Wrapper::wrapperHandler(JSObject* wrapper)
 {
     MOZ_ASSERT(wrapper->is<WrapperObject>());
     return static_cast<const Wrapper*>(wrapper->as<ProxyObject>().handler());
 }
 
-JSObject *
-Wrapper::wrappedObject(JSObject *wrapper)
+JSObject*
+Wrapper::wrappedObject(JSObject* wrapper)
 {
     MOZ_ASSERT(wrapper->is<WrapperObject>());
     return wrapper->as<ProxyObject>().target();
 }
 
 bool
-Wrapper::isConstructor(JSObject *obj) const
+Wrapper::isConstructor(JSObject* obj) const
 {
     // For now, all wrappers are constructable if they are callable. We will want to eventually
     // decouple this behavior, but none of the Wrapper infrastructure is currently prepared for
@@ -70,8 +70,8 @@ Wrapper::isConstructor(JSObject *obj) const
     return isCallable(obj);
 }
 
-JS_FRIEND_API(JSObject *)
-js::UncheckedUnwrap(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
+JS_FRIEND_API(JSObject*)
+js::UncheckedUnwrap(JSObject* wrapped, bool stopAtOuter, unsigned* flagsp)
 {
     unsigned flags = 0;
     while (true) {
@@ -93,19 +93,19 @@ js::UncheckedUnwrap(JSObject *wrapped, bool stopAtOuter, unsigned *flagsp)
     return wrapped;
 }
 
-JS_FRIEND_API(JSObject *)
-js::CheckedUnwrap(JSObject *obj, bool stopAtOuter)
+JS_FRIEND_API(JSObject*)
+js::CheckedUnwrap(JSObject* obj, bool stopAtOuter)
 {
     while (true) {
-        JSObject *wrapper = obj;
+        JSObject* wrapper = obj;
         obj = UnwrapOneChecked(obj, stopAtOuter);
         if (!obj || obj == wrapper)
             return obj;
     }
 }
 
-JS_FRIEND_API(JSObject *)
-js::UnwrapOneChecked(JSObject *obj, bool stopAtOuter)
+JS_FRIEND_API(JSObject*)
+js::UnwrapOneChecked(JSObject* obj, bool stopAtOuter)
 {
     if (!obj->is<WrapperObject>() ||
         MOZ_UNLIKELY(!!obj->getClass()->ext.innerObject && stopAtOuter))
@@ -113,19 +113,19 @@ js::UnwrapOneChecked(JSObject *obj, bool stopAtOuter)
         return obj;
     }
 
-    const Wrapper *handler = Wrapper::wrapperHandler(obj);
+    const Wrapper* handler = Wrapper::wrapperHandler(obj);
     return handler->hasSecurityPolicy() ? nullptr : Wrapper::wrappedObject(obj);
 }
 
 const char Wrapper::family = 0;
 const Wrapper Wrapper::singleton((unsigned)0);
 const Wrapper Wrapper::singletonWithPrototype((unsigned)0, true);
-JSObject *Wrapper::defaultProto = TaggedProto::LazyProto;
+JSObject* Wrapper::defaultProto = TaggedProto::LazyProto;
 
 /* Compartments. */
 
-extern JSObject *
-js::TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject obj)
+extern JSObject*
+js::TransparentObjectWrapper(JSContext* cx, HandleObject existing, HandleObject obj)
 {
     // Allow wrapping outer window proxies.
     MOZ_ASSERT(!obj->is<WrapperObject>() || obj->getClass()->ext.innerObject);
@@ -134,14 +134,14 @@ js::TransparentObjectWrapper(JSContext *cx, HandleObject existing, HandleObject 
 
 ErrorCopier::~ErrorCopier()
 {
-    JSContext *cx = ac->context()->asJSContext();
+    JSContext* cx = ac->context()->asJSContext();
     if (ac->origin() != cx->compartment() && cx->isExceptionPending()) {
         RootedValue exc(cx);
         if (cx->getPendingException(&exc) && exc.isObject() && exc.toObject().is<ErrorObject>()) {
             cx->clearPendingException();
             ac.reset();
             Rooted<ErrorObject*> errObj(cx, &exc.toObject().as<ErrorObject>());
-            JSObject *copyobj = CopyErrorObject(cx, errObj);
+            JSObject* copyobj = CopyErrorObject(cx, errObj);
             if (copyobj)
                 cx->setPendingException(ObjectValue(*copyobj));
         }
