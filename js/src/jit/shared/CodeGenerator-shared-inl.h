@@ -159,7 +159,7 @@ CodeGeneratorShared::restoreLive(LInstruction *ins)
 }
 
 void
-CodeGeneratorShared::restoreLiveIgnore(LInstruction *ins, RegisterSet ignore)
+CodeGeneratorShared::restoreLiveIgnore(LInstruction *ins, LiveRegisterSet ignore)
 {
     MOZ_ASSERT(!ins->isCall());
     LSafepoint *safepoint = ins->safepoint();
@@ -171,7 +171,8 @@ CodeGeneratorShared::saveLiveVolatile(LInstruction *ins)
 {
     MOZ_ASSERT(!ins->isCall());
     LSafepoint *safepoint = ins->safepoint();
-    RegisterSet regs = RegisterSet::Intersect(safepoint->liveRegs(), RegisterSet::Volatile());
+    LiveRegisterSet regs;
+    regs.set() = RegisterSet::Intersect(safepoint->liveRegs().set(), RegisterSet::Volatile());
     masm.PushRegsInMask(regs);
 }
 
@@ -180,7 +181,8 @@ CodeGeneratorShared::restoreLiveVolatile(LInstruction *ins)
 {
     MOZ_ASSERT(!ins->isCall());
     LSafepoint *safepoint = ins->safepoint();
-    RegisterSet regs = RegisterSet::Intersect(safepoint->liveRegs(), RegisterSet::Volatile());
+    LiveRegisterSet regs;
+    regs.set() = RegisterSet::Intersect(safepoint->liveRegs().set(), RegisterSet::Volatile());
     masm.PopRegsInMask(regs);
 }
 

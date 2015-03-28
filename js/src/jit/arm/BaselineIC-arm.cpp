@@ -86,8 +86,8 @@ ICBinaryArith_Int32::Compiler::generateStubCode(MacroAssembler &masm)
     Register scratchReg = R2.payloadReg();
 
     // DIV and MOD need an extra non-volatile ValueOperand to hold R0.
-    GeneralRegisterSet savedRegs = availableGeneralRegs(2);
-    savedRegs = GeneralRegisterSet::Intersect(GeneralRegisterSet::NonVolatile(), savedRegs);
+    AllocatableGeneralRegisterSet savedRegs(availableGeneralRegs(2));
+    savedRegs.set() = GeneralRegisterSet::Intersect(GeneralRegisterSet::NonVolatile(), savedRegs.set());
     ValueOperand savedValue = savedRegs.takeAnyValue();
 
     Label maybeNegZero, revertRegister;

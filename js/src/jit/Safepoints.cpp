@@ -88,11 +88,11 @@ ReadFloatRegisterMask(CompactBufferReader &stream)
 void
 SafepointWriter::writeGcRegs(LSafepoint *safepoint)
 {
-    GeneralRegisterSet gc = safepoint->gcRegs();
-    GeneralRegisterSet spilledGpr = safepoint->liveRegs().gprs();
-    FloatRegisterSet spilledFloat = safepoint->liveRegs().fpus();
-    GeneralRegisterSet slots = safepoint->slotsOrElementsRegs();
-    GeneralRegisterSet valueRegs;
+    LiveGeneralRegisterSet gc(safepoint->gcRegs());
+    LiveGeneralRegisterSet spilledGpr(safepoint->liveRegs().gprs());
+    LiveFloatRegisterSet spilledFloat(safepoint->liveRegs().fpus());
+    LiveGeneralRegisterSet slots(safepoint->slotsOrElementsRegs());
+    LiveGeneralRegisterSet valueRegs;
 
     WriteRegisterMask(stream_, spilledGpr.bits());
     if (!spilledGpr.empty()) {

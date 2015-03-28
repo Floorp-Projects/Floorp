@@ -5132,9 +5132,9 @@ MacroAssemblerARMCompat::asMasm() const
 // Stack manipulation functions.
 
 void
-MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
+MacroAssembler::PushRegsInMask(LiveRegisterSet set, LiveFloatRegisterSet simdSet)
 {
-    MOZ_ASSERT(!SupportsSimd() && simdSet.size() == 0);
+    MOZ_ASSERT(!SupportsSimd() && simdSet.set().size() == 0);
     int32_t diffF = set.fpus().getPushSizeInBytes();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 
@@ -5161,9 +5161,10 @@ MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
 }
 
 void
-MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRegisterSet simdSet)
+MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore,
+                                    LiveFloatRegisterSet simdSet)
 {
-    MOZ_ASSERT(!SupportsSimd() && simdSet.size() == 0);
+    MOZ_ASSERT(!SupportsSimd() && simdSet.set().size() == 0);
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
     int32_t diffF = set.fpus().getPushSizeInBytes();
     const int32_t reservedG = diffG;
@@ -5171,12 +5172,12 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRe
 
     // ARM can load multiple registers at once, but only if we want back all
     // the registers we previously saved to the stack.
-    if (ignore.empty(true)) {
+    if (ignore.emptyFloat()) {
         diffF -= transferMultipleByRuns(set.fpus(), IsLoad, StackPointer, IA);
         adjustFrame(-reservedF);
     } else {
-        TypedRegisterSet<VFPRegister> fpset = set.fpus().reduceSetForPush();
-        TypedRegisterSet<VFPRegister> fpignore = ignore.fpus().reduceSetForPush();
+        LiveFloatRegisterSet fpset(set.fpus().reduceSetForPush());
+        LiveFloatRegisterSet fpignore(ignore.fpus().reduceSetForPush());
         for (FloatRegisterBackwardIterator iter(fpset); iter.more(); iter++) {
             diffF -= (*iter).size();
             if (!fpignore.has(*iter))
@@ -5186,7 +5187,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRe
     }
     MOZ_ASSERT(diffF == 0);
 
-    if (set.gprs().size() > 1 && ignore.empty(false)) {
+    if (set.gprs().size() > 1 && ignore.emptyGeneral()) {
         startDataTransferM(IsLoad, StackPointer, IA, WriteBack);
         for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= sizeof(intptr_t);

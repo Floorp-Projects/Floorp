@@ -347,8 +347,8 @@ FloatRegisters::FromName(const char *name)
 FloatRegisterSet
 VFPRegister::ReduceSetForPush(const FloatRegisterSet &s)
 {
-    FloatRegisterSet mod;
-    for (TypedRegisterIterator<FloatRegister> iter(s); iter.more(); iter++) {
+    LiveFloatRegisterSet mod;
+    for (FloatRegisterIterator iter(s); iter.more(); iter++) {
         if ((*iter).isSingle()) {
             // Add in just this float.
             mod.addUnchecked(*iter);
@@ -361,7 +361,7 @@ VFPRegister::ReduceSetForPush(const FloatRegisterSet &s)
             mod.addUnchecked(*iter);
         }
     }
-    return mod;
+    return mod.set();
 }
 
 uint32_t

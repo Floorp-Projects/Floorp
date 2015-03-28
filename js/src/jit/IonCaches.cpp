@@ -764,9 +764,9 @@ CheckDOMProxyExpandoDoesNotShadow(JSContext *cx, MacroAssembler &masm, JSObject 
 
     // For the remaining code, we need to reserve some registers to load a value.
     // This is ugly, but unvaoidable.
-    RegisterSet domProxyRegSet(RegisterSet::All());
+    AllocatableRegisterSet domProxyRegSet(RegisterSet::All());
     domProxyRegSet.take(AnyRegister(object));
-    ValueOperand tempVal = domProxyRegSet.takeValueOperand();
+    ValueOperand tempVal = domProxyRegSet.takeAnyValue();
     masm.pushValue(tempVal);
 
     Label failDOMProxyCheck;
@@ -963,7 +963,7 @@ static bool
 EmitGetterCall(JSContext *cx, MacroAssembler &masm,
                IonCache::StubAttacher &attacher, JSObject *obj,
                JSObject *holder, HandleShape shape,
-               RegisterSet liveRegs, Register object,
+               LiveRegisterSet liveRegs, Register object,
                TypedOrValueRegister output,
                void *returnAddr)
 {
@@ -972,20 +972,20 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
 
     // Remaining registers should basically be free, but we need to use |object| still
     // so leave it alone.
-    RegisterSet regSet(RegisterSet::All());
+    AllocatableRegisterSet regSet(RegisterSet::All());
     regSet.take(AnyRegister(object));
 
     // This is a slower stub path, and we're going to be doing a call anyway.  Don't need
     // to try so hard to not use the stack.  Scratch regs are just taken from the register
     // set not including the input, current value saved on the stack, and restored when
     // we're done with it.
-    Register scratchReg = regSet.takeGeneral();
+    Register scratchReg = regSet.takeAnyGeneral();
 
     // Shape has a JSNative, PropertyOp or scripted getter function.
     if (IsCacheableGetPropCallNative(obj, holder, shape)) {
-        Register argJSContextReg = regSet.takeGeneral();
-        Register argUintNReg     = regSet.takeGeneral();
-        Register argVpReg        = regSet.takeGeneral();
+        Register argJSContextReg = regSet.takeAnyGeneral();
+        Register argUintNReg     = regSet.takeAnyGeneral();
+        Register argVpReg        = regSet.takeAnyGeneral();
 
         JSFunction *target = &shape->getterValue().toObject().as<JSFunction>();
         MOZ_ASSERT(target);
@@ -1032,11 +1032,11 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
         // masm.leaveExitFrame & pop locals
         masm.adjustStack(IonOOLNativeExitFrameLayout::Size(0));
     } else if (IsCacheableGetPropCallPropertyOp(obj, holder, shape)) {
-        Register argJSContextReg = regSet.takeGeneral();
-        Register argUintNReg     = regSet.takeGeneral();
-        Register argVpReg        = regSet.takeGeneral();
+        Register argJSContextReg = regSet.takeAnyGeneral();
+        Register argUintNReg     = regSet.takeAnyGeneral();
+        Register argVpReg        = regSet.takeAnyGeneral();
         Register argObjReg       = argUintNReg;
-        Register argIdReg        = regSet.takeGeneral();
+        Register argIdReg        = regSet.takeAnyGeneral();
 
         GetterOp target = shape->getterOp();
         MOZ_ASSERT(target);
@@ -1134,7 +1134,7 @@ EmitGetterCall(JSContext *cx, MacroAssembler &masm,
 static bool
 GenerateCallGetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
                    IonCache::StubAttacher &attacher, JSObject *obj, PropertyName *name,
-                   JSObject *holder, HandleShape shape, RegisterSet &liveRegs, Register object,
+                   JSObject *holder, HandleShape shape, LiveRegisterSet &liveRegs, Register object,
                    TypedOrValueRegister output, void *returnAddr, Label *failures = nullptr)
 {
     MOZ_ASSERT(output.hasValue());
@@ -1526,7 +1526,7 @@ PushObjectOpResult(MacroAssembler &masm)
 
 static bool
 EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
-                 PropertyName *name, RegisterSet liveRegs, Register object,
+                 PropertyName *name, LiveRegisterSet liveRegs, Register object,
                  TypedOrValueRegister output, jsbytecode *pc, void *returnAddr)
 {
     MOZ_ASSERT(output.hasValue());
@@ -1534,17 +1534,17 @@ EmitCallProxyGet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
 
     // Remaining registers should be free, but we need to use |object| still
     // so leave it alone.
-    RegisterSet regSet(RegisterSet::All());
+    AllocatableRegisterSet regSet(RegisterSet::All());
     regSet.take(AnyRegister(object));
 
     // Proxy::get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
     //            MutableHandleValue vp)
-    Register argJSContextReg = regSet.takeGeneral();
-    Register argProxyReg     = regSet.takeGeneral();
-    Register argIdReg        = regSet.takeGeneral();
-    Register argVpReg        = regSet.takeGeneral();
+    Register argJSContextReg = regSet.takeAnyGeneral();
+    Register argProxyReg     = regSet.takeAnyGeneral();
+    Register argIdReg        = regSet.takeAnyGeneral();
+    Register argVpReg        = regSet.takeAnyGeneral();
 
-    Register scratch         = regSet.takeGeneral();
+    Register scratch         = regSet.takeAnyGeneral();
 
     void *getFunction = JSOp(*pc) == JSOP_CALLPROP                      ?
                             JS_FUNC_TO_DATA_PTR(void *, Proxy::callProp) :
@@ -2228,7 +2228,7 @@ ProxySetProperty(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v, 
 
 static bool
 EmitCallProxySet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &attacher,
-                 HandleId propId, RegisterSet liveRegs, Register object,
+                 HandleId propId, LiveRegisterSet liveRegs, Register object,
                  ConstantOrRegister value, void *returnAddr, bool strict)
 {
     MacroAssembler::AfterICSaveLive aic = masm.icSaveLive(liveRegs);
@@ -2240,18 +2240,18 @@ EmitCallProxySet(JSContext *cx, MacroAssembler &masm, IonCache::StubAttacher &at
     // regSet is going to re-allocate it. Hence the emitted code must not touch
     // any of the registers allocated from regSet until after the last use of
     // |value|. (We can't afford to take it, either, because x86.)
-    RegisterSet regSet(RegisterSet::All());
+    AllocatableRegisterSet regSet(RegisterSet::All());
     regSet.take(AnyRegister(object));
 
     // ProxySetProperty(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
     //                  bool strict);
-    Register argJSContextReg = regSet.takeGeneral();
-    Register argProxyReg     = regSet.takeGeneral();
-    Register argIdReg        = regSet.takeGeneral();
-    Register argValueReg     = regSet.takeGeneral();
-    Register argStrictReg    = regSet.takeGeneral();
+    Register argJSContextReg = regSet.takeAnyGeneral();
+    Register argProxyReg     = regSet.takeAnyGeneral();
+    Register argIdReg        = regSet.takeAnyGeneral();
+    Register argValueReg     = regSet.takeAnyGeneral();
+    Register argStrictReg    = regSet.takeAnyGeneral();
 
-    Register scratch         = regSet.takeGeneral();
+    Register scratch         = regSet.takeAnyGeneral();
 
     // Push stubCode for marking.
     attacher.pushStubCodePointer(masm);
@@ -2311,12 +2311,12 @@ SetPropertyIC::attachGenericProxy(JSContext *cx, HandleScript outerScript, IonSc
         Label proxyFailures;
         Label proxySuccess;
 
-        RegisterSet regSet(RegisterSet::All());
+        AllocatableRegisterSet regSet(RegisterSet::All());
         regSet.take(AnyRegister(object()));
         if (!value().constant())
             regSet.takeUnchecked(value().reg());
 
-        Register scratch = regSet.takeGeneral();
+        Register scratch = regSet.takeAnyGeneral();
         masm.push(scratch);
 
         masm.branchTestObjectIsProxy(false, object(), scratch, &proxyFailures);
@@ -2393,17 +2393,17 @@ static bool
 GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
                    IonCache::StubAttacher &attacher, HandleObject obj,
                    HandleObject holder, HandleShape shape, bool strict, Register object,
-                   ConstantOrRegister value, Label *failure, RegisterSet liveRegs,
+                   ConstantOrRegister value, Label *failure, LiveRegisterSet liveRegs,
                    void *returnAddr)
 {
     // Generate prototype guards if needed.
     // Take a scratch register for use, save on stack.
     {
-        RegisterSet regSet(RegisterSet::All());
+        AllocatableRegisterSet regSet(RegisterSet::All());
         regSet.take(AnyRegister(object));
         if (!value.constant())
             regSet.takeUnchecked(value.reg());
-        Register scratchReg = regSet.takeGeneral();
+        Register scratchReg = regSet.takeAnyGeneral();
         masm.push(scratchReg);
 
         Label protoFailure;
@@ -2435,7 +2435,7 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
 
     // Remaining registers should basically be free, but we need to use |object| still
     // so leave it alone.  And of course we need our value, if it's not a constant.
-    RegisterSet regSet(RegisterSet::All());
+    AllocatableRegisterSet regSet(RegisterSet::All());
     regSet.take(AnyRegister(object));
     if (!value.constant())
         regSet.takeUnchecked(value.reg());
@@ -2447,11 +2447,11 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
     //
     // Be very careful not to use any of these before value is pushed, since they
     // might shadow.
-    Register scratchReg = regSet.takeGeneral();
+    Register scratchReg = regSet.takeAnyGeneral();
 
     if (IsCacheableSetPropCallNative(obj, holder, shape)) {
-        Register argJSContextReg = regSet.takeGeneral();
-        Register argVpReg        = regSet.takeGeneral();
+        Register argJSContextReg = regSet.takeAnyGeneral();
+        Register argVpReg        = regSet.takeAnyGeneral();
 
         MOZ_ASSERT(shape->hasSetterValue() && shape->setterObject() &&
                    shape->setterObject()->is<JSFunction>());
@@ -2459,7 +2459,7 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
 
         MOZ_ASSERT(target->isNative());
 
-        Register argUintNReg = regSet.takeGeneral();
+        Register argUintNReg = regSet.takeAnyGeneral();
 
         // Set up the call:
         //  bool (*)(JSContext *, unsigned, Value *vp)
@@ -2502,7 +2502,8 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
         // for the value, one for scratch, 5 for the arguments, which makes 8,
         // but we only have 7 to work with.  So only grab the ones we need
         // before we push value and release its reg back into the set.
-        Register argResultReg = regSet.takeGeneral();
+        Register argResultReg = regSet.takeAnyGeneral();
+
 
         SetterOp target = shape->setterOp();
         MOZ_ASSERT(target);
@@ -2528,11 +2529,11 @@ GenerateCallSetter(JSContext *cx, IonScript *ion, MacroAssembler &masm,
 
         // OK, now we can grab our remaining registers and grab the pointer to
         // what we just pushed into one of them.
-        Register argJSContextReg = regSet.takeGeneral();
-        Register argValueReg     = regSet.takeGeneral();
+        Register argJSContextReg = regSet.takeAnyGeneral();
+        Register argValueReg     = regSet.takeAnyGeneral();
         // We can just reuse the "object" register for argObjReg
         Register argObjReg       = object;
-        Register argIdReg        = regSet.takeGeneral();
+        Register argIdReg        = regSet.takeAnyGeneral();
         masm.movePtr(StackPointer, argValueReg);
 
         // push canonical jsid from shape instead of propertyname.
@@ -3387,7 +3388,7 @@ GetElementIC::attachGetProp(JSContext *cx, HandleScript outerScript, IonScript *
 
     // We have a non-atomized string with the same length. For now call a helper
     // function to do the comparison.
-    RegisterSet volatileRegs = RegisterSet::Volatile();
+    LiveRegisterSet volatileRegs(RegisterSet::Volatile());
     masm.PushRegsInMask(volatileRegs);
 
     Register objReg = object();
@@ -3407,7 +3408,7 @@ GetElementIC::attachGetProp(JSContext *cx, HandleScript outerScript, IonScript *
     if (!volatileRegs.has(objReg))
         masm.pop(objReg);
 
-    RegisterSet ignore = RegisterSet();
+    LiveRegisterSet ignore;
     ignore.add(scratch);
     masm.PopRegsInMaskIgnore(volatileRegs, ignore);
 
@@ -3737,20 +3738,21 @@ GenerateGetTypedArrayElement(JSContext *cx, MacroAssembler &masm, IonCache::Stub
         }
 
         // Part 2: Call to translate the str into index
-        RegisterSet regs = RegisterSet::Volatile();
-        masm.PushRegsInMask(regs);
+        AllocatableRegisterSet regs(RegisterSet::Volatile());
+        LiveRegisterSet save(regs.asLiveSet());
+        masm.PushRegsInMask(save);
         regs.takeUnchecked(str);
 
-        Register temp = regs.takeGeneral();
+        Register temp = regs.takeAnyGeneral();
 
         masm.setupUnalignedABICall(1, temp);
         masm.passABIArg(str);
         masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, GetIndexFromString));
         masm.mov(ReturnReg, indexReg);
 
-        RegisterSet ignore = RegisterSet();
+        LiveRegisterSet ignore;
         ignore.add(indexReg);
-        masm.PopRegsInMaskIgnore(RegisterSet::Volatile(), ignore);
+        masm.PopRegsInMaskIgnore(save, ignore);
 
         masm.branch32(Assembler::Equal, indexReg, Imm32(UINT32_MAX), &failures);
 

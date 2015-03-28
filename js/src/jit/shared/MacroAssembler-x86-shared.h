@@ -17,16 +17,16 @@
 #endif
 
 #ifdef DEBUG
-  #define CHECK_BYTEREG(reg)                                    \
-      JS_BEGIN_MACRO                                            \
-        GeneralRegisterSet byteRegs(Registers::SingleByteRegs); \
-        MOZ_ASSERT(byteRegs.has(reg));                          \
+  #define CHECK_BYTEREG(reg)                                               \
+      JS_BEGIN_MACRO                                                       \
+        AllocatableGeneralRegisterSet byteRegs(Registers::SingleByteRegs); \
+        MOZ_ASSERT(byteRegs.has(reg));                                     \
       JS_END_MACRO
-  #define CHECK_BYTEREGS(r1, r2)                                \
-      JS_BEGIN_MACRO                                            \
-        GeneralRegisterSet byteRegs(Registers::SingleByteRegs); \
-        MOZ_ASSERT(byteRegs.has(r1));                           \
-        MOZ_ASSERT(byteRegs.has(r2));                           \
+  #define CHECK_BYTEREGS(r1, r2)                                           \
+      JS_BEGIN_MACRO                                                       \
+        AllocatableGeneralRegisterSet byteRegs(Registers::SingleByteRegs); \
+        MOZ_ASSERT(byteRegs.has(r1));                                      \
+        MOZ_ASSERT(byteRegs.has(r2));                                      \
       JS_END_MACRO
 #else
   #define CHECK_BYTEREG(reg) (void)0
@@ -728,7 +728,7 @@ class MacroAssemblerX86Shared : public Assembler
         AutoEnsureByteRegister(MacroAssemblerX86Shared *masm, T address, Register reg)
           : masm(masm), original_(reg)
         {
-            GeneralRegisterSet singleByteRegs(Registers::SingleByteRegs);
+            AllocatableGeneralRegisterSet singleByteRegs(Registers::SingleByteRegs);
             if (singleByteRegs.has(reg)) {
                 substitute_ = reg;
             } else {
@@ -1397,7 +1397,7 @@ class MacroAssemblerX86Shared : public Assembler
 
     void emitSet(Assembler::Condition cond, Register dest,
                  Assembler::NaNCond ifNaN = Assembler::NaN_HandledByCond) {
-        if (GeneralRegisterSet(Registers::SingleByteRegs).has(dest)) {
+        if (AllocatableGeneralRegisterSet(Registers::SingleByteRegs).has(dest)) {
             // If the register we're defining is a single byte register,
             // take advantage of the setCC instruction
             setCC(cond, dest);

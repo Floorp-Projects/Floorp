@@ -261,7 +261,7 @@ class RegisterAllocator
     LIRGraph &graph;
 
     // Pool of all registers that should be considered allocateable
-    RegisterSet allRegisters_;
+    AllocatableRegisterSet allRegisters_;
 
     // Computed data
     InstructionDataMap insData;

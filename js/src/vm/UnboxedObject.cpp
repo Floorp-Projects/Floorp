@@ -100,12 +100,12 @@ UnboxedLayout::makeConstructorCode(JSContext *cx, HandleObjectGroup group)
     MOZ_ASSERT(propertiesReg.volatile_());
     MOZ_ASSERT(newKindReg.volatile_());
 
-    GeneralRegisterSet regs(GeneralRegisterSet::All());
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
     regs.take(propertiesReg);
     regs.take(newKindReg);
     Register object = regs.takeAny(), scratch1 = regs.takeAny(), scratch2 = regs.takeAny();
 
-    GeneralRegisterSet savedNonVolatileRegisters = SavedNonVolatileRegisters(regs);
+    LiveGeneralRegisterSet savedNonVolatileRegisters = SavedNonVolatileRegisters(regs);
     for (GeneralRegisterForwardIterator iter(savedNonVolatileRegisters); iter.more(); ++iter)
         masm.Push(*iter);
 

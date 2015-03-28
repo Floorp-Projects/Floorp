@@ -179,12 +179,12 @@ MacroAssemblerX86Shared::asMasm() const
 // Stack manipulation functions.
 
 void
-MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
+MacroAssembler::PushRegsInMask(LiveRegisterSet set, LiveFloatRegisterSet simdSet)
 {
-    FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet));
+    FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet.set()));
     MOZ_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
     doubleSet = doubleSet.reduceSetForPush();
-    unsigned numSimd = simdSet.size();
+    unsigned numSimd = simdSet.set().size();
     unsigned numDouble = doubleSet.size();
     int32_t diffF = doubleSet.getPushSizeInBytes() + numSimd * Simd128DataSize;
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
@@ -229,12 +229,13 @@ MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
 }
 
 void
-MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRegisterSet simdSet)
+MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore,
+                                    LiveFloatRegisterSet simdSet)
 {
-    FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet));
+    FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet.set()));
     MOZ_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
     doubleSet = doubleSet.reduceSetForPush();
-    unsigned numSimd = simdSet.size();
+    unsigned numSimd = simdSet.set().size();
     unsigned numDouble = doubleSet.size();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
     int32_t diffF = doubleSet.getPushSizeInBytes() + numSimd * Simd128DataSize;
@@ -278,7 +279,7 @@ MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRe
     // On x86, use pop to pop the integer registers, if we're not going to
     // ignore any slots, as it's fast on modern hardware and it's a small
     // instruction.
-    if (ignore.empty(false)) {
+    if (ignore.emptyGeneral()) {
         for (GeneralRegisterForwardIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= sizeof(intptr_t);
             Pop(*iter);

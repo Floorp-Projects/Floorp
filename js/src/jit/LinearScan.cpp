@@ -995,11 +995,17 @@ LinearScanAllocator::findBestFreeRegister(CodePosition *freeUntil)
     // Compute free-until positions for all registers
     CodePosition freeUntilPos[AnyRegister::Total];
     bool needFloat = vregs[current->vreg()].isFloatReg();
-    for (RegisterSet regs(allRegisters_); !regs.empty(needFloat); ) {
-        // If the requested register is a FP, we may need to look at
-        // all of the float32 and float64 registers.
-        AnyRegister reg = regs.takeUnaliasedAny(needFloat);
-        freeUntilPos[reg.code()] = CodePosition::MAX;
+    if (needFloat) {
+        // we may need to look at all of the float32 and float64 registers.
+        for (LiveRegisterSet regs(allRegisters_.asLiveSet()); !regs.emptyFloat(); ) {
+            AnyRegister reg(regs.takeAnyFloat());
+            freeUntilPos[reg.code()] = CodePosition::MAX;
+        }
+    } else {
+        for (LiveRegisterSet regs(allRegisters_.asLiveSet()); !regs.emptyGeneral(); ) {
+            AnyRegister reg(regs.takeAnyGeneral());
+            freeUntilPos[reg.code()] = CodePosition::MAX;
+        }
     }
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
         LAllocation *alloc = i->getAllocation();
@@ -1125,9 +1131,16 @@ LinearScanAllocator::findBestBlockedRegister(CodePosition *nextUsed)
     // Compute next-used positions for all registers
     CodePosition nextUsePos[AnyRegister::Total];
     bool needFloat = vregs[current->vreg()].isFloatReg();
-    for (RegisterSet regs(allRegisters_); !regs.empty(needFloat); ) {
-        AnyRegister reg = regs.takeUnaliasedAny(needFloat);
-        nextUsePos[reg.code()] = CodePosition::MAX;
+    if (needFloat) {
+        for (LiveRegisterSet regs(allRegisters_.asLiveSet()); !regs.emptyFloat(); ) {
+            AnyRegister reg(regs.takeAnyFloat());
+            nextUsePos[reg.code()] = CodePosition::MAX;
+        }
+    } else {
+        for (LiveRegisterSet regs(allRegisters_.asLiveSet()); !regs.emptyGeneral(); ) {
+            AnyRegister reg(regs.takeAnyGeneral());
+            nextUsePos[reg.code()] = CodePosition::MAX;
+        }
     }
     for (IntervalIterator i(active.begin()); i != active.end(); i++) {
         LAllocation *alloc = i->getAllocation();

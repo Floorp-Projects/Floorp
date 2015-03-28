@@ -1072,7 +1072,7 @@ EmitBaselineDebugModeOSRHandlerTail(MacroAssembler &masm, Register temp, bool re
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, FinishBaselineDebugModeOSR));
 
     // Restore saved values.
-    GeneralRegisterSet jumpRegs(GeneralRegisterSet::All());
+    AllocatableGeneralRegisterSet jumpRegs(GeneralRegisterSet::All());
     if (returnFromCallVM) {
         jumpRegs.take(ReturnReg);
     } else {
@@ -1099,7 +1099,7 @@ JitRuntime::generateBaselineDebugModeOSRHandler(JSContext *cx, uint32_t *noFrame
 {
     MacroAssembler masm(cx);
 
-    GeneralRegisterSet regs(GeneralRegisterSet::All());
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
     regs.take(BaselineFrameReg);
     regs.take(ReturnReg);
     Register temp = regs.takeAny();

@@ -467,7 +467,7 @@ BaselineCompiler::emitOutOfLinePostBarrierSlot()
     masm.bind(&postBarrierSlot_);
 
     Register objReg = R2.scratchReg();
-    GeneralRegisterSet regs(GeneralRegisterSet::All());
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
     regs.take(R0);
     regs.take(objReg);
     regs.take(BaselineFrameReg);
@@ -799,9 +799,9 @@ bool
 BaselineCompiler::emitTraceLoggerEnter()
 {
     TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
-    RegisterSet regs = RegisterSet::Volatile();
-    Register loggerReg = regs.takeGeneral();
-    Register scriptReg = regs.takeGeneral();
+    AllocatableRegisterSet regs(RegisterSet::Volatile());
+    Register loggerReg = regs.takeAnyGeneral();
+    Register scriptReg = regs.takeAnyGeneral();
 
     Label noTraceLogger;
     traceLoggerEnterToggleOffset_ = masm.toggledJump(&noTraceLogger);
@@ -833,7 +833,8 @@ bool
 BaselineCompiler::emitTraceLoggerExit()
 {
     TraceLoggerThread *logger = TraceLoggerForMainThread(cx->runtime());
-    Register loggerReg = RegisterSet::Volatile().takeGeneral();
+    AllocatableRegisterSet regs(RegisterSet::Volatile());
+    Register loggerReg = regs.takeAnyGeneral();
 
     Label noTraceLogger;
     traceLoggerExitToggleOffset_ = masm.toggledJump(&noTraceLogger);
@@ -3588,7 +3589,7 @@ BaselineCompiler::emit_JSOP_RESUME()
     frame.syncStack(0);
     masm.checkStackAlignment();
 
-    GeneralRegisterSet regs(GeneralRegisterSet::All());
+    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
     regs.take(BaselineFrameReg);
 
     // Load generator object.
