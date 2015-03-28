@@ -347,8 +347,8 @@ SessionStore.prototype = {
     if (aWindow.BrowserApp.tabs.length > 0) {
       // Bundle this browser's data and extra data and save in the closedTabs
       // window property
-      let data = aBrowser.__SS_data;
-      data.extData = aBrowser.__SS_extdata;
+      let data = aBrowser.__SS_data || {};
+      data.extData = aBrowser.__SS_extdata || {};
 
       this._windows[aWindow.__SSID].closedTabs.unshift(data);
       let length = this._windows[aWindow.__SSID].closedTabs.length;
