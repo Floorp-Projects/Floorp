@@ -9,9 +9,10 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
@@ -27,6 +28,7 @@ import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine;
 import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
+import org.mozilla.gecko.fxa.sync.FxAccountSyncDelegate.Result;
 import org.mozilla.gecko.sync.BackoffHandler;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.PrefsBackoffHandler;
@@ -114,7 +116,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
 
     protected final Collection<String> stageNamesToSync;
 
-    public SyncDelegate(CountDownLatch latch, SyncResult syncResult, AndroidFxAccount fxAccount, Collection<String> stageNamesToSync) {
+    public SyncDelegate(BlockingQueue<Result> latch, SyncResult syncResult, AndroidFxAccount fxAccount, Collection<String> stageNamesToSync) {
       super(latch, syncResult);
       this.stageNamesToSync = Collections.unmodifiableCollection(stageNamesToSync);
     }
@@ -416,7 +418,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
       }
     });
 
-    final CountDownLatch latch = new CountDownLatch(1);
+    final BlockingQueue<Result> latch = new LinkedBlockingQueue<>(1);
 
     Collection<String> knownStageNames = SyncConfiguration.validEngineNames();
     Collection<String> stageNamesToSync = Utils.getStagesToSyncFromBundle(knownStageNames, extras);
@@ -537,7 +539,7 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
         }
       });
 
-      latch.await();
+      latch.take();
     } catch (Exception e) {
       Logger.error(LOG_TAG, "Got error syncing.", e);
       syncDelegate.handleError(e);
