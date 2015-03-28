@@ -398,7 +398,7 @@ struct AutoSkipPropertyMirroring
 // add-ons in a separate compartment while still giving them access to the
 // chrome window.
 static bool
-sandbox_addProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
+sandbox_addProperty(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
 {
     CompartmentPrivate* priv = CompartmentPrivate::Get(obj);
     MOZ_ASSERT(priv->writeToGlobalPrototype);
@@ -441,7 +441,7 @@ sandbox_addProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
     // readonly attribute (as it calls JSObject::defineProperty). See bug
     // 1019181.
     if (pd.object() && !pd.configurable()) {
-        if (!JS_SetPropertyById(cx, proto, id, v))
+        if (!JS_SetPropertyById(cx, proto, id, vp))
             return false;
     } else {
         if (!JS_CopyPropertyFrom(cx, id, unwrappedProto, obj,
@@ -452,7 +452,7 @@ sandbox_addProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
     if (!JS_GetPropertyDescriptorById(cx, obj, id, &pd))
         return false;
     unsigned attrs = pd.attributes() & ~(JSPROP_GETTER | JSPROP_SETTER);
-    if (!JS_DefinePropertyById(cx, obj, id, v,
+    if (!JS_DefinePropertyById(cx, obj, id, vp,
                                attrs | JSPROP_PROPOP_ACCESSORS | JSPROP_REDEFINE_NONCONFIGURABLE,
                                JS_PROPERTYOP_GETTER(writeToProto_getProperty),
                                JS_PROPERTYOP_SETTER(writeToProto_setProperty)))
