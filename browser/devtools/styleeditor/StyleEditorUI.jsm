@@ -632,7 +632,8 @@ StyleEditorUI.prototype = {
    * @param  {number} col
    *         Column number to jump to
    * @return {Promise}
-   *         Promise that will resolve when the editor is selected.
+   *         Promise that will resolve when the editor is selected and ready
+   *         to be used.
    */
   _selectEditor: function(editor, line, col) {
     line = line || 0;
@@ -707,6 +708,9 @@ StyleEditorUI.prototype = {
    *        Line to which the caret should be moved (zero-indexed).
    * @param {Number} [col]
    *        Column to which the caret should be moved (zero-indexed).
+   * @return {Promise}
+   *         Promise that will resolve when the editor is selected and ready
+   *         to be used.
    */
   selectStyleSheet: function(stylesheet, line, col) {
     this._styleSheetToSelect = {
@@ -717,7 +721,7 @@ StyleEditorUI.prototype = {
 
     /* Switch to the editor for this sheet, if it exists yet.
        Otherwise each editor will be checked when it's created. */
-    this.switchToSelectedSheet();
+    return this.switchToSelectedSheet();
   },
 
 
