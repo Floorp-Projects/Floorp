@@ -41,6 +41,7 @@
 #include "mozilla/dom/GetUserMediaRequestBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Base64.h"
+#include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/media/MediaChild.h"
 #include "MediaTrackConstraints.h"
 #include "VideoUtils.h"
@@ -1514,7 +1515,7 @@ public:
       p->Then([runnable](nsCString result) mutable {
         runnable->mOriginKey = result;
         NS_DispatchToMainThread(runnable);
-      }, [](nsresult rv){});
+      });
     }
     // One of the Runnables have taken these.
     MOZ_ASSERT(!mOnSuccess && !mOnFailure);
@@ -2205,8 +2206,34 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
       prefs->RemoveObserver("media.navigator.video.default_minfps", this);
     }
 
-    // Close off any remaining active windows.
+    // Because mMediaThread is not an nsThread, we must dispatch to it so it can
+    // clean up BackgroundChild. Continue stopping thread once this is done.
+
+    class ShutdownTask : public Task
     {
+    public:
+      explicit ShutdownTask(nsRunnable* aReply) : mReply(aReply) {}
+    private:
+      virtual void
+      Run()
+      {
+        MOZ_ASSERT(MediaManager::IsInMediaThread());
+        mozilla::ipc::BackgroundChild::CloseForCurrentThread();
+        NS_DispatchToMainThread(mReply);
+      }
+      nsRefPtr<nsRunnable> mReply;
+    };
+
+    // Post ShutdownTask to execute on mMediaThread and pass in a lambda
+    // callback to be executed back on this thread once it is done.
+    //
+    // The lambda callback "captures" the 'this' pointer for member access.
+    // This is safe since this is guaranteed to be here since sSingleton isn't
+    // cleared until the lambda function clears it.
+
+    MediaManager::GetMessageLoop()->PostTask(FROM_HERE, new ShutdownTask(
+        media::CallbackRunnable::New([this]() mutable {
+      // Close off any remaining active windows.
       MutexAutoLock lock(mMutex);
       GetActiveWindows()->Clear();
       mActiveCallbacks.Clear();
@@ -2218,8 +2245,8 @@ MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
         mMediaThread->Stop();
       }
       mBackend = nullptr;
-    }
-
+      return NS_OK;
+    })));
     return NS_OK;
 
   } else if (!strcmp(aTopic, "getUserMedia:response:allow")) {

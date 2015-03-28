@@ -285,14 +285,13 @@ BackgroundChildImpl::DeallocPCacheStreamControlChild(PCacheStreamControlChild* a
 media::PMediaChild*
 BackgroundChildImpl::AllocPMediaChild()
 {
-  return media::CreateMediaChild();
+  return media::AllocPMediaChild();
 }
 
 bool
 BackgroundChildImpl::DeallocPMediaChild(media::PMediaChild *aActor)
 {
-  delete aActor;
-  return true;
+  return media::DeallocPMediaChild(aActor);
 }
 
 } // namespace ipc
