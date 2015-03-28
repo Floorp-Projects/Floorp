@@ -461,12 +461,17 @@ var LoginManagerContent = {
     if (!usernameField)
       log("(form -- no username field found)");
 
+    log("Username field id/name/value is: ", usernameField.id, " / ",
+        usernameField.name, " / ", usernameField.value);
 
     // If we're not submitting a form (it's a page load), there are no
     // password field values for us to use for identifying fields. So,
     // just assume the first password field is the one to be filled in.
-    if (!isSubmission || pwFields.length == 1)
-      return [usernameField, pwFields[0].element, null];
+    if (!isSubmission || pwFields.length == 1) {
+      var passwordField = pwFields[0].element;
+      log("Password field id/name is: ", passwordField.id, " / ", passwordField.name);
+      return [usernameField, passwordField, null];
+    }
 
 
     // Try to figure out WTF is in the form based on the password values.
@@ -509,6 +514,8 @@ var LoginManagerContent = {
       }
     }
 
+    log("Password field (new) id/name is: ", newPasswordField.id, " / ", newPasswordField.name);
+    log("Password field (old) id/name is: ", oldPasswordField.id, " / ", oldPasswordField.name);
     return [usernameField, newPasswordField, oldPasswordField];
   },
 
