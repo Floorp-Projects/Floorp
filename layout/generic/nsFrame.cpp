@@ -2058,13 +2058,14 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     set.Outlines()->DeleteAll();
   }
 
-  // This z-order sort also sorts secondarily by content order. We need to do
-  // this so that boxes produced by the same element are placed together
+  // Sort PositionedDescendants() in CSS 'z-order' order.  The list is already
+  // in content document order and SortByZOrder is a stable sort which
+  // guarantees that boxes produced by the same element are placed together
   // in the sort. Consider a position:relative inline element that breaks
   // across lines and has absolutely positioned children; all the abs-pos
   // children should be z-ordered after all the boxes for the position:relative
   // element itself.
-  set.PositionedDescendants()->SortByZOrder(aBuilder, GetContent());
+  set.PositionedDescendants()->SortByZOrder(aBuilder);
 
   nsDisplayList resultList;
   // Now follow the rules of http://www.w3.org/TR/CSS21/zindex.html
