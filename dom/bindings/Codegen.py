@@ -2150,7 +2150,8 @@ class MethodDefiner(PropertyDefiner):
                 "flags": "JSPROP_ENUMERATE",
                 "condition": PropertyDefiner.getControllingCondition(m, descriptor),
                 "allowCrossOriginThis": m.getExtendedAttribute("CrossOriginCallable"),
-                "returnsPromise": m.returnsPromise()
+                "returnsPromise": m.returnsPromise(),
+                "hasIteratorAlias": "@@iterator" in m.aliases
             }
             if isChromeOnly(m):
                 self.chrome.append(method)
@@ -2492,6 +2493,12 @@ class CGNativeProperties(CGList):
                 else:
                     props = "nullptr, nullptr, nullptr"
                 nativeProps.append(CGGeneric(props))
+            iteratorAliasIndex = -1
+            for index, item in enumerate(properties.methods.regular):
+                if item.get("hasIteratorAlias"):
+                    iteratorAliasIndex = index
+                    break
+            nativeProps.append(CGGeneric(str(iteratorAliasIndex)));
             return CGWrapper(CGIndenter(CGList(nativeProps, ",\n")),
                              pre="static const NativeProperties %s = {\n" % name,
                              post="\n};\n")

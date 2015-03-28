@@ -1164,7 +1164,16 @@ XrayResolveProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
     methodSpecs = nativeProperties->methodSpecs;
   }
   if (methods) {
-    if (!XrayResolveMethod(cx, wrapper, obj, id, methods, methodIds,
+    JS::Rooted<jsid> methodId(cx);
+    if (nativeProperties->iteratorAliasMethodIndex != -1 &&
+        id == SYMBOL_TO_JSID(
+                JS::GetWellKnownSymbol(cx, JS::SymbolCode::iterator))) {
+      methodId =
+        nativeProperties->methodIds[nativeProperties->iteratorAliasMethodIndex];
+    } else {
+      methodId = id;
+    }
+    if (!XrayResolveMethod(cx, wrapper, obj, methodId, methods, methodIds,
                            methodSpecs, desc, cacheOnHolder)) {
       return false;
     }
