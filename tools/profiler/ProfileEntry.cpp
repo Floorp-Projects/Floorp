@@ -101,12 +101,12 @@ void* ProfileEntry::get_tagPtr() {
 ////////////////////////////////////////////////////////////////////////
 // BEGIN ProfileBuffer
 
-ProfileBuffer::ProfileBuffer(int aEntrySize, uint32_t aGeneration)
+ProfileBuffer::ProfileBuffer(int aEntrySize)
   : mEntries(MakeUnique<ProfileEntry[]>(aEntrySize))
   , mWritePos(0)
   , mReadPos(0)
   , mEntrySize(aEntrySize)
-  , mGeneration(aGeneration)
+  , mGeneration(0)
 {
 }
 
