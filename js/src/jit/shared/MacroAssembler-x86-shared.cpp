@@ -179,14 +179,11 @@ MacroAssemblerX86Shared::asMasm() const
 // Stack manipulation functions.
 
 void
-MacroAssembler::PushRegsInMask(LiveRegisterSet set, LiveFloatRegisterSet simdSet)
+MacroAssembler::PushRegsInMask(LiveRegisterSet set)
 {
-    FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet.set()));
-    MOZ_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
-    doubleSet = doubleSet.reduceSetForPush();
-    unsigned numSimd = simdSet.set().size();
-    unsigned numDouble = doubleSet.size();
-    int32_t diffF = doubleSet.getPushSizeInBytes() + numSimd * Simd128DataSize;
+    FloatRegisterSet fpuSet(set.fpus().reduceSetForPush());
+    unsigned numFpu = fpuSet.size();
+    int32_t diffF = fpuSet.getPushSizeInBytes();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 
     // On x86, always use push to push the integer registers, as it's fast
@@ -198,10 +195,10 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set, LiveFloatRegisterSet simdSet
     MOZ_ASSERT(diffG == 0);
 
     reserveStack(diffF);
-    for (FloatRegisterBackwardIterator iter(doubleSet); iter.more(); iter++) {
+    for (FloatRegisterBackwardIterator iter(fpuSet); iter.more(); iter++) {
         FloatRegister reg = *iter;
         diffF -= reg.size();
-        numDouble -= 1;
+        numFpu -= 1;
         Address spillAddress(StackPointer, diffF);
         if (reg.isDouble())
             storeDouble(reg, spillAddress);
@@ -214,14 +211,7 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set, LiveFloatRegisterSet simdSet
         else
             MOZ_CRASH("Unknown register type.");
     }
-    MOZ_ASSERT(numDouble == 0);
-    for (FloatRegisterBackwardIterator iter(simdSet); iter.more(); iter++) {
-        diffF -= Simd128DataSize;
-        numSimd -= 1;
-        // XXX how to choose the right move type?
-        storeUnalignedInt32x4(*iter, Address(StackPointer, diffF));
-    }
-    MOZ_ASSERT(numSimd == 0);
+    MOZ_ASSERT(numFpu == 0);
     // x64 padding to keep the stack aligned on uintptr_t. Keep in sync with
     // GetPushBytesInSize.
     diffF -= diffF % sizeof(uintptr_t);
@@ -229,31 +219,19 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set, LiveFloatRegisterSet simdSet
 }
 
 void
-MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore,
-                                    LiveFloatRegisterSet simdSet)
+MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
 {
-    FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet.set()));
-    MOZ_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
-    doubleSet = doubleSet.reduceSetForPush();
-    unsigned numSimd = simdSet.set().size();
-    unsigned numDouble = doubleSet.size();
+    FloatRegisterSet fpuSet(set.fpus().reduceSetForPush());
+    unsigned numFpu = fpuSet.size();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
-    int32_t diffF = doubleSet.getPushSizeInBytes() + numSimd * Simd128DataSize;
+    int32_t diffF = fpuSet.getPushSizeInBytes();
     const int32_t reservedG = diffG;
     const int32_t reservedF = diffF;
 
-    for (FloatRegisterBackwardIterator iter(simdSet); iter.more(); iter++) {
-        diffF -= Simd128DataSize;
-        numSimd -= 1;
-        if (!ignore.has(*iter))
-            // XXX how to choose the right move type?
-            loadUnalignedInt32x4(Address(StackPointer, diffF), *iter);
-    }
-    MOZ_ASSERT(numSimd == 0);
-    for (FloatRegisterBackwardIterator iter(doubleSet); iter.more(); iter++) {
+    for (FloatRegisterBackwardIterator iter(fpuSet); iter.more(); iter++) {
         FloatRegister reg = *iter;
         diffF -= reg.size();
-        numDouble -= 1;
+        numFpu -= 1;
         if (ignore.has(reg))
             continue;
 
@@ -270,7 +248,7 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore,
             MOZ_CRASH("Unknown register type.");
     }
     freeStack(reservedF);
-    MOZ_ASSERT(numDouble == 0);
+    MOZ_ASSERT(numFpu == 0);
     // x64 padding to keep the stack aligned on uintptr_t. Keep in sync with
     // GetPushBytesInSize.
     diffF -= diffF % sizeof(uintptr_t);
