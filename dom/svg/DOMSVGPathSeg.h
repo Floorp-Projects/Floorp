@@ -42,25 +42,25 @@ namespace mozilla {
   }                                                                           \
   /* From DOMSVGPathSeg: */                                                   \
   virtual uint32_t                                                            \
-  Type() const override                                                   \
+  Type() const override                                                       \
   {                                                                           \
     return segType;                                                           \
   }                                                                           \
   virtual DOMSVGPathSeg*                                                      \
-  Clone() override                                                        \
+  Clone() override                                                            \
   {                                                                           \
     /* InternalItem() + 1, because we're skipping the encoded seg type */     \
     float *args = IsInList() ? InternalItem() + 1 : mArgs;                    \
     return new DOMSVGPathSeg##segName(args);                                  \
   }                                                                           \
   virtual float*                                                              \
-  PtrToMemberArgs() override                                              \
+  PtrToMemberArgs() override                                                  \
   {                                                                           \
     return mArgs;                                                             \
   }                                                                           \
                                                                               \
   virtual JSObject*                                                           \
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override  \
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override      \
   {                                                                           \
     return dom::SVGPathSeg##segName##Binding::Wrap(aCx, this, aGivenProto);   \
   }

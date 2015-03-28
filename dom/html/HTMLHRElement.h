@@ -17,7 +17,7 @@ namespace mozilla {
 namespace dom {
 
 class HTMLHRElement final : public nsGenericHTMLElement,
-                                public nsIDOMHTMLHRElement
+                            public nsIDOMHTMLHRElement
 {
 public:
   explicit HTMLHRElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

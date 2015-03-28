@@ -47,7 +47,7 @@ class SVGAnimatedPathSegList;
  * Our DOM items are created lazily on demand as and when script requests them.
  */
 class DOMSVGPathSegList final : public nsISupports,
-                                    public nsWrapperCache
+                                public nsWrapperCache
 {
   friend class AutoChangePathSegListNotifier;
   friend class DOMSVGPathSeg;

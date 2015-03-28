@@ -21,7 +21,7 @@ class TextEventDispatcher;
 } // namespace widget
 
 class TextInputProcessor final : public nsITextInputProcessor
-                                   , public widget::TextEventDispatcherListener
+                               , public widget::TextEventDispatcherListener
 {
   typedef mozilla::widget::IMENotification IMENotification;
   typedef mozilla::widget::TextEventDispatcher TextEventDispatcher;

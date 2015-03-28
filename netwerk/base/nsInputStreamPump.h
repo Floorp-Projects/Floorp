@@ -18,8 +18,8 @@ class nsILoadGroup;
 class nsIStreamListener;
 
 class nsInputStreamPump final : public nsIInputStreamPump
-                                  , public nsIInputStreamCallback
-                                  , public nsIThreadRetargetableRequest
+                              , public nsIInputStreamCallback
+                              , public nsIThreadRetargetableRequest
 {
     ~nsInputStreamPump();
 

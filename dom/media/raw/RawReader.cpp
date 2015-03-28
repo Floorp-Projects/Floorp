@@ -39,8 +39,7 @@ nsresult RawReader::ResetDecode()
 nsresult RawReader::ReadMetadata(MediaInfo* aInfo,
                                  MetadataTags** aTags)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(),
-               "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
 
   MediaResource* resource = mDecoder->GetResource();
   NS_ASSERTION(resource, "Decoder has no media resource");
@@ -121,8 +120,7 @@ RawReader::IsMediaSeekable()
 
  bool RawReader::DecodeAudioData()
 {
-  NS_ASSERTION(mDecoder->OnStateMachineThread() || mDecoder->OnDecodeThread(),
-               "Should be on state machine thread or decode thread.");
+  MOZ_ASSERT(OnTaskQueue() || mDecoder->OnStateMachineTaskQueue());
   return false;
 }
 
@@ -152,8 +150,7 @@ bool RawReader::ReadFromResource(MediaResource *aResource, uint8_t* aBuf,
 bool RawReader::DecodeVideoFrame(bool &aKeyframeSkip,
                                      int64_t aTimeThreshold)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(),
-               "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
 
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
@@ -246,8 +243,7 @@ RawReader::Seek(int64_t aTime, int64_t aEndTime)
 
 nsresult RawReader::SeekInternal(int64_t aTime)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(),
-               "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
 
   MediaResource *resource = mDecoder->GetResource();
   NS_ASSERTION(resource, "Decoder has no media resource");

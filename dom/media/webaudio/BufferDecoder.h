@@ -34,9 +34,9 @@ public:
 
   virtual bool IsShutdown() const final override;
 
-  virtual bool OnStateMachineThread() const final override;
+  virtual bool OnStateMachineTaskQueue() const final override;
 
-  virtual bool OnDecodeThread() const final override;
+  virtual bool OnDecodeTaskQueue() const final override;
 
   virtual MediaResource* GetResource() const final override;
 

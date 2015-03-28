@@ -17,7 +17,7 @@ namespace dom {
 namespace voicemail {
 
 class VoicemailIPCService final : public PVoicemailChild
-                                    , public nsIVoicemailService
+                                , public nsIVoicemailService
 {
 public:
   NS_DECL_ISUPPORTS

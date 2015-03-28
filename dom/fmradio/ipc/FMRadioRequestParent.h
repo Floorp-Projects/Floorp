@@ -14,7 +14,7 @@
 BEGIN_FMRADIO_NAMESPACE
 
 class FMRadioRequestParent final : public PFMRadioRequestParent
-                                     , public FMRadioReplyRunnable
+                                 , public FMRadioReplyRunnable
 {
 public:
   FMRadioRequestParent();

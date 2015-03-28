@@ -409,7 +409,7 @@ public:
     EventDispatcher::DispatchDOMEvent(parentWindow, nullptr, event, nullptr, nullptr);
   }
 
-  virtual bool IsStillValid()
+  virtual bool IsStillValid() override
   {
     nsCOMPtr<nsPIDOMWindow> parentWindow;
     nsCOMPtr<nsIDocument> document;

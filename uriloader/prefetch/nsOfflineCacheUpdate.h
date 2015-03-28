@@ -194,9 +194,9 @@ public:
 };
 
 class nsOfflineCacheUpdate final : public nsIOfflineCacheUpdate
-                                     , public nsIOfflineCacheUpdateObserver
-                                     , public nsIRunnable
-                                     , public nsOfflineCacheUpdateOwner
+                                 , public nsIOfflineCacheUpdateObserver
+                                 , public nsIRunnable
+                                 , public nsOfflineCacheUpdateOwner
 {
 public:
     MOZ_DECLARE_REFCOUNTED_TYPENAME(nsOfflineCacheUpdate)
@@ -320,9 +320,9 @@ private:
 };
 
 class nsOfflineCacheUpdateService final : public nsIOfflineCacheUpdateService
-                                            , public nsIObserver
-                                            , public nsOfflineCacheUpdateOwner
-                                            , public nsSupportsWeakReference
+                                        , public nsIObserver
+                                        , public nsOfflineCacheUpdateOwner
+                                        , public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS

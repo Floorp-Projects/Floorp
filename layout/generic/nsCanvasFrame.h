@@ -27,8 +27,8 @@ class nsRenderingContext;
  * frame
  */
 class nsCanvasFrame final : public nsContainerFrame,
-                                public nsIScrollPositionListener,
-                                public nsIAnonymousContentCreator
+                            public nsIScrollPositionListener,
+                            public nsIAnonymousContentCreator
 {
 public:
   explicit nsCanvasFrame(nsStyleContext* aContext)

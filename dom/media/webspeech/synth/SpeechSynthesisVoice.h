@@ -21,7 +21,7 @@ class nsSynthVoiceRegistry;
 class SpeechSynthesis;
 
 class SpeechSynthesisVoice final : public nsISupports,
-                                       public nsWrapperCache
+                                   public nsWrapperCache
 {
   friend class nsSynthVoiceRegistry;
   friend class SpeechSynthesis;

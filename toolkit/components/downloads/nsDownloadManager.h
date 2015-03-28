@@ -39,9 +39,9 @@ class nsDownload;
 #endif
 
 class nsDownloadManager final : public nsIDownloadManager,
-                                    public nsINavHistoryObserver,
-                                    public nsIObserver,
-                                    public nsSupportsWeakReference
+                                public nsINavHistoryObserver,
+                                public nsIObserver,
+                                public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS

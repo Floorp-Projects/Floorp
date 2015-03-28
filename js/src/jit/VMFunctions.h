@@ -728,6 +728,7 @@ bool LeaveWith(JSContext *cx, BaselineFrame *frame);
 
 bool PushBlockScope(JSContext *cx, BaselineFrame *frame, Handle<StaticBlockObject *> block);
 bool PopBlockScope(JSContext *cx, BaselineFrame *frame);
+bool FreshenBlockScope(JSContext *cx, BaselineFrame *frame);
 bool DebugLeaveBlock(JSContext *cx, BaselineFrame *frame, jsbytecode *pc);
 
 bool InitBaselineFrameForOsr(BaselineFrame *frame, InterpreterFrame *interpFrame,

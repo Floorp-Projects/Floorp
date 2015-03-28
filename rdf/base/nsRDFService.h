@@ -34,7 +34,7 @@ class nsIRDFDate;
 class BlobImpl;
 
 class RDFServiceImpl final : public nsIRDFService,
-                                 public nsSupportsWeakReference
+                             public nsSupportsWeakReference
 {
 protected:
     PLHashTable* mNamedDataSources;

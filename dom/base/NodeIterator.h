@@ -23,8 +23,8 @@ namespace mozilla {
 namespace dom {
 
 class NodeIterator final : public nsIDOMNodeIterator,
-                               public nsTraversal,
-                               public nsStubMutationObserver
+                           public nsTraversal,
+                           public nsStubMutationObserver
 {
 public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS

@@ -21,7 +21,7 @@ class imgRequestProxy;
 class nsBulletFrame;
 
 class nsBulletListener final : public imgINotificationObserver,
-                                   public imgIOnloadBlocker
+                               public imgIOnloadBlocker
 {
 public:
   nsBulletListener();

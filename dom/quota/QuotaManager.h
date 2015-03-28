@@ -69,7 +69,7 @@ struct OriginParams
 };
 
 class QuotaManager final : public nsIQuotaManager,
-                               public nsIObserver
+                           public nsIObserver
 {
   friend class AsyncUsageRunnable;
   friend class CollectOriginsHelper;

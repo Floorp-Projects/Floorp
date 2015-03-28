@@ -19,12 +19,12 @@
 #include "mozilla/Attributes.h"
 
 class nsViewSourceChannel final : public nsIViewSourceChannel,
-                                      public nsIStreamListener,
-                                      public nsIHttpChannel,
-                                      public nsIHttpChannelInternal,
-                                      public nsICachingChannel,
-                                      public nsIApplicationCacheChannel,
-                                      public nsIUploadChannel
+                                  public nsIStreamListener,
+                                  public nsIHttpChannel,
+                                  public nsIHttpChannelInternal,
+                                  public nsICachingChannel,
+                                  public nsIApplicationCacheChannel,
+                                  public nsIUploadChannel
 {
 
 public:

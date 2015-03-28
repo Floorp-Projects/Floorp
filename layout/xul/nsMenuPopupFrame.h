@@ -153,7 +153,7 @@ private:
 };
 
 class nsMenuPopupFrame final : public nsBoxFrame, public nsMenuParent,
-                                   public nsIReflowCallback
+                               public nsIReflowCallback
 {
 public:
   NS_DECL_QUERYFRAME_TARGET(nsMenuPopupFrame)

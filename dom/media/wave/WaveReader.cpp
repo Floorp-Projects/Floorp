@@ -128,7 +128,7 @@ nsresult WaveReader::Init(MediaDecoderReader* aCloneDonor)
 nsresult WaveReader::ReadMetadata(MediaInfo* aInfo,
                                   MetadataTags** aTags)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
 
   bool loaded = LoadRIFFChunk();
   if (!loaded) {
@@ -192,7 +192,7 @@ SignedShortToAudioSample<int16_t>(int16_t aValue)
 
 bool WaveReader::DecodeAudioData()
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
 
   int64_t pos = GetPosition() - mWavePCMOffset;
   int64_t len = GetDataLength();
@@ -252,7 +252,7 @@ bool WaveReader::DecodeAudioData()
 bool WaveReader::DecodeVideoFrame(bool &aKeyframeSkip,
                                       int64_t aTimeThreshold)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
 
   return false;
 }
@@ -260,7 +260,7 @@ bool WaveReader::DecodeVideoFrame(bool &aKeyframeSkip,
 nsRefPtr<MediaDecoderReader::SeekPromise>
 WaveReader::Seek(int64_t aTarget, int64_t aEndTime)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
   LOG(PR_LOG_DEBUG, ("%p About to seek to %lld", mDecoder, aTarget));
 
   if (NS_FAILED(ResetDecode())) {

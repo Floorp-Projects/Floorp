@@ -38,7 +38,7 @@ namespace layers {
  * interesting stuff is in ImageContainerParent.
  */
 class ImageBridgeParent final : public PImageBridgeParent,
-                                    public CompositableParentManager
+                                public CompositableParentManager
 {
 public:
   typedef InfallibleTArray<CompositableOperation> EditArray;

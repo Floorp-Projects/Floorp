@@ -20,7 +20,7 @@ class nsImageBoxFrame;
 class nsDisplayXULImage;
 
 class nsImageBoxListener final : public imgINotificationObserver,
-                                     public imgIOnloadBlocker
+                                 public imgIOnloadBlocker
 {
 public:
   nsImageBoxListener();

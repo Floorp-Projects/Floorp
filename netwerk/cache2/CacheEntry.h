@@ -48,8 +48,8 @@ class CacheOutputCloseListener;
 class CacheEntryHandle;
 
 class CacheEntry final : public nsICacheEntry
-                           , public nsIRunnable
-                           , public CacheFileListener
+                       , public nsIRunnable
+                       , public CacheFileListener
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

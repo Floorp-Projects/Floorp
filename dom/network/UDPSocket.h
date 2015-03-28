@@ -25,8 +25,8 @@ struct UDPOptions;
 class StringOrBlobOrArrayBufferOrArrayBufferView;
 
 class UDPSocket final : public DOMEventTargetHelper
-                          , public nsIUDPSocketListener
-                          , public nsIUDPSocketInternal
+                      , public nsIUDPSocketListener
+                      , public nsIUDPSocketInternal
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

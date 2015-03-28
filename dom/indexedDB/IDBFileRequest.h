@@ -26,7 +26,7 @@ namespace indexedDB {
 class IDBFileHandle;
 
 class IDBFileRequest final : public DOMRequest,
-                                 public FileRequestBase
+                             public FileRequestBase
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

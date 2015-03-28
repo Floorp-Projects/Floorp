@@ -34,10 +34,10 @@ class HTMLFormControlsCollection;
 class HTMLImageElement;
 
 class HTMLFormElement final : public nsGenericHTMLElement,
-                                  public nsIDOMHTMLFormElement,
-                                  public nsIWebProgressListener,
-                                  public nsIForm,
-                                  public nsIRadioGroupContainer
+                              public nsIDOMHTMLFormElement,
+                              public nsIWebProgressListener,
+                              public nsIForm,
+                              public nsIRadioGroupContainer
 {
   friend class HTMLFormControlsCollection;
 

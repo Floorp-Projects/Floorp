@@ -23,8 +23,8 @@ class EventChainPreVisitor;
 namespace dom {
 
 class HTMLAreaElement final : public nsGenericHTMLElement,
-                                  public nsIDOMHTMLAreaElement,
-                                  public Link
+                              public nsIDOMHTMLAreaElement,
+                              public Link
 {
 public:
   explicit HTMLAreaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

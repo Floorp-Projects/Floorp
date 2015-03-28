@@ -29,11 +29,13 @@
 #include "gc/Marking.h"
 #include "vm/ErrorObject.h"
 #include "vm/GlobalObject.h"
+#include "vm/SavedStacks.h"
 #include "vm/StringBuffer.h"
 
 #include "jsobjinlines.h"
 
 #include "vm/ErrorObject-inl.h"
+#include "vm/SavedStacks-inl.h"
 
 using namespace js;
 using namespace js::gc;
@@ -49,6 +51,11 @@ Error(JSContext *cx, unsigned argc, Value *vp);
 
 static bool
 exn_toSource(JSContext *cx, unsigned argc, Value *vp);
+
+static const JSPropertySpec exception_properties[] = {
+    JS_PSGS("stack", ErrorObject::getStack, ErrorObject::setStack, 0),
+    JS_PS_END
+};
 
 static const JSFunctionSpec exception_methods[] = {
 #if JS_HAS_TOSOURCE
@@ -82,7 +89,7 @@ static const JSFunctionSpec exception_methods[] = {
             nullptr, \
             nullptr, \
             exception_methods, \
-            nullptr, \
+            exception_properties, \
             nullptr, \
             JSProto_Error \
         } \
@@ -113,7 +120,8 @@ ErrorObject::classes[JSEXN_LIMIT] = {
             nullptr,
             nullptr,
             exception_methods,
-            0
+            exception_properties,
+            nullptr
         }
     },
     IMPLEMENT_ERROR_SUBCLASS(InternalError),
@@ -264,69 +272,30 @@ struct SuppressErrorsGuard
     }
 };
 
+// Cut off the stack if it gets too deep (most commonly for infinite recursion
+// errors).
+static const size_t MAX_REPORTED_STACK_DEPTH = 1u << 7;
+
+static bool
+CaptureStack(JSContext *cx, MutableHandleObject stack)
+{
+    return CaptureCurrentStack(cx, stack, MAX_REPORTED_STACK_DEPTH);
+}
+
 JSString *
 js::ComputeStackString(JSContext *cx)
 {
-    StringBuffer sb(cx);
+    SuppressErrorsGuard seg(cx);
 
-    {
-        RootedAtom atom(cx);
-        SuppressErrorsGuard seg(cx);
-        for (NonBuiltinFrameIter i(cx, FrameIter::ALL_CONTEXTS, FrameIter::GO_THROUGH_SAVED,
-                                   cx->compartment()->principals);
-             !i.done();
-             ++i)
-        {
-            /* First append the function name, if any. */
-            if (i.isNonEvalFunctionFrame())
-                atom = i.functionDisplayAtom();
-            else
-                atom = nullptr;
-            if (atom && !sb.append(atom))
-                return nullptr;
+    RootedObject stack(cx);
+    if (!CaptureStack(cx, &stack))
+        return nullptr;
 
-            /* Next a @ separating function name from source location. */
-            if (!sb.append('@'))
-                return nullptr;
+    RootedString str(cx);
+    if (!BuildStackString(cx, stack, &str))
+        return nullptr;
 
-            /* Now the filename. */
-
-            /* First, try the `//# sourceURL=some-display-url.js` directive. */
-            if (const char16_t *display = i.scriptDisplayURL()) {
-                if (!sb.append(display, js_strlen(display)))
-                    return nullptr;
-            }
-            /* Second, try the actual filename. */
-            else if (const char *filename = i.scriptFilename()) {
-                if (!sb.append(filename, strlen(filename)))
-                    return nullptr;
-            }
-
-            uint32_t column = 0;
-            uint32_t line = i.computeLine(&column);
-            // Now the line number
-            if (!sb.append(':') || !NumberValueToStringBuffer(cx, NumberValue(line), sb))
-                return nullptr;
-
-            // Finally, : followed by the column number (1-based, as in other browsers)
-            // and a newline.
-            if (!sb.append(':') || !NumberValueToStringBuffer(cx, NumberValue(column + 1), sb) ||
-                !sb.append('\n'))
-            {
-                return nullptr;
-            }
-
-            /*
-             * Cut off the stack if it gets too deep (most commonly for
-             * infinite recursion errors).
-             */
-            const size_t MaxReportedStackDepth = 1u << 20;
-            if (sb.length() > MaxReportedStackDepth)
-                break;
-        }
-    }
-
-    return sb.finishString();
+    return str.get();
 }
 
 static void
@@ -391,8 +360,8 @@ Error(JSContext *cx, unsigned argc, Value *vp)
         lineNumber = iter.done() ? 0 : iter.computeLine(&columnNumber);
     }
 
-    Rooted<JSString*> stack(cx, ComputeStackString(cx));
-    if (!stack)
+    RootedObject stack(cx);
+    if (!CaptureStack(cx, &stack))
         return false;
 
     /*
@@ -502,7 +471,7 @@ ErrorObject::createProto(JSContext *cx, JSProtoKey key)
     Rooted<ErrorObject*> err(cx, &errorProto->as<ErrorObject>());
     RootedString emptyStr(cx, cx->names().empty);
     JSExnType type = ExnTypeFromProtoKey(key);
-    if (!ErrorObject::init(cx, err, type, nullptr, emptyStr, emptyStr, 0, 0, emptyStr))
+    if (!ErrorObject::init(cx, err, type, nullptr, emptyStr, NullPtr(), 0, 0, emptyStr))
         return nullptr;
 
     // The various prototypes also have .name in addition to the normal error
@@ -583,8 +552,8 @@ js::ErrorToException(JSContext *cx, const char *message, JSErrorReport *reportp,
     uint32_t lineNumber = reportp->lineno;
     uint32_t columnNumber = reportp->column;
 
-    RootedString stack(cx, ComputeStackString(cx));
-    if (!stack)
+    RootedObject stack(cx);
+    if (!CaptureStack(cx, &stack))
         return cx->isExceptionPending();
 
     js::ScopedJSFreePtr<JSErrorReport> report(CopyErrorReport(cx, reportp));
@@ -928,7 +897,7 @@ js::CopyErrorObject(JSContext *cx, Handle<ErrorObject*> err)
     RootedString fileName(cx, err->fileName(cx));
     if (!cx->compartment()->wrap(cx, &fileName))
         return nullptr;
-    RootedString stack(cx, err->stack(cx));
+    RootedObject stack(cx, err->stack());
     if (!cx->compartment()->wrap(cx, &stack))
         return nullptr;
     uint32_t lineNumber = err->lineNumber();
@@ -941,11 +910,13 @@ js::CopyErrorObject(JSContext *cx, Handle<ErrorObject*> err)
 }
 
 JS_PUBLIC_API(bool)
-JS::CreateError(JSContext *cx, JSExnType type, HandleString stack, HandleString fileName,
+JS::CreateError(JSContext *cx, JSExnType type, HandleObject stack, HandleString fileName,
                     uint32_t lineNumber, uint32_t columnNumber, JSErrorReport *report,
                     HandleString message, MutableHandleValue rval)
 {
     assertSameCompartment(cx, stack, fileName, message);
+    AssertObjectIsSavedFrameOrWrapper(cx, stack);
+
     js::ScopedJSFreePtr<JSErrorReport> rep;
     if (report)
         rep = CopyErrorReport(cx, report);

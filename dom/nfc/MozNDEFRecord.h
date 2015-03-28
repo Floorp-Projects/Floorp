@@ -31,7 +31,7 @@ namespace dom {
 class MozNDEFRecordOptions;
 
 class MozNDEFRecord final : public nsISupports,
-                                public nsWrapperCache
+                            public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

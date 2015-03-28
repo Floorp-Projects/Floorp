@@ -36,11 +36,11 @@ class EventStates;
 namespace dom {
 
 class HTMLTextAreaElement final : public nsGenericHTMLFormElementWithState,
-                                      public nsIDOMHTMLTextAreaElement,
-                                      public nsITextControlElement,
-                                      public nsIDOMNSEditableElement,
-                                      public nsStubMutationObserver,
-                                      public nsIConstraintValidation
+                                  public nsIDOMHTMLTextAreaElement,
+                                  public nsITextControlElement,
+                                  public nsIDOMNSEditableElement,
+                                  public nsStubMutationObserver,
+                                  public nsIConstraintValidation
 {
 public:
   using nsIConstraintValidation::GetValidationMessage;

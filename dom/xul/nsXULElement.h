@@ -368,7 +368,7 @@ ASSERT_NODE_FLAGS_SPACE(ELEMENT_TYPE_SPECIFIC_BITS_OFFSET + 3);
 class nsScriptEventHandlerOwnerTearoff;
 
 class nsXULElement final : public nsStyledElement,
-                               public nsIDOMXULElement
+                           public nsIDOMXULElement
 {
 public:
     explicit nsXULElement(already_AddRefed<mozilla::dom::NodeInfo> aNodeInfo);

@@ -15,7 +15,7 @@
 #include "mozilla/Attributes.h"
 
 class nsLayoutHistoryState final : public nsILayoutHistoryState,
-                                       public nsSupportsWeakReference
+                                   public nsSupportsWeakReference
 {
 public:
   nsLayoutHistoryState()

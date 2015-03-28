@@ -47,19 +47,19 @@ class Http2PushedStream;
 }
 
 class nsHttpChannel final : public HttpBaseChannel
-                              , public HttpAsyncAborter<nsHttpChannel>
-                              , public nsIStreamListener
-                              , public nsICachingChannel
-                              , public nsICacheEntryOpenCallback
-                              , public nsITransportEventSink
-                              , public nsIProtocolProxyCallback
-                              , public nsIHttpAuthenticableChannel
-                              , public nsIApplicationCacheChannel
-                              , public nsIAsyncVerifyRedirectCallback
-                              , public nsIThreadRetargetableRequest
-                              , public nsIThreadRetargetableStreamListener
-                              , public nsIDNSListener
-                              , public nsSupportsWeakReference
+                          , public HttpAsyncAborter<nsHttpChannel>
+                          , public nsIStreamListener
+                          , public nsICachingChannel
+                          , public nsICacheEntryOpenCallback
+                          , public nsITransportEventSink
+                          , public nsIProtocolProxyCallback
+                          , public nsIHttpAuthenticableChannel
+                          , public nsIApplicationCacheChannel
+                          , public nsIAsyncVerifyRedirectCallback
+                          , public nsIThreadRetargetableRequest
+                          , public nsIThreadRetargetableStreamListener
+                          , public nsIDNSListener
+                          , public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS_INHERITED

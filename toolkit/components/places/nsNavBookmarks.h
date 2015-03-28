@@ -70,10 +70,10 @@ namespace places {
 } // namespace mozilla
 
 class nsNavBookmarks final : public nsINavBookmarksService
-                               , public nsINavHistoryObserver
-                               , public nsIAnnotationObserver
-                               , public nsIObserver
-                               , public nsSupportsWeakReference
+                           , public nsINavHistoryObserver
+                           , public nsIAnnotationObserver
+                           , public nsIObserver
+                           , public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS

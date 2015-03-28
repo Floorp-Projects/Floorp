@@ -6,7 +6,8 @@
 #ifndef APZCCallbackHandler_h__
 #define APZCCallbackHandler_h__
 
-#include "mozilla/layers/GeckoContentController.h"
+#include "mozilla/layers/ChromeProcessController.h"
+#include "mozilla/layers/APZEventState.h"
 #include "mozilla/EventForwards.h"  // for Modifiers
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
@@ -18,45 +19,35 @@ namespace mozilla {
 namespace widget {
 namespace android {
 
-class APZCCallbackHandler final : public mozilla::layers::GeckoContentController
+class APZCCallbackHandler final : public mozilla::layers::ChromeProcessController
 {
 private:
     static StaticRefPtr<APZCCallbackHandler> sInstance;
-    NativePanZoomController::GlobalRef mNativePanZoomController;
+
+    static NativePanZoomController::GlobalRef sNativePanZoomController;
 
 private:
-    APZCCallbackHandler()
-      : mNativePanZoomController(nullptr)
+    APZCCallbackHandler(nsIWidget* aWidget, mozilla::layers::APZEventState* aAPZEventState)
+      : mozilla::layers::ChromeProcessController(aWidget, aAPZEventState)
     {}
 
-    nsIDOMWindowUtils* GetDOMWindowUtils();
-
 public:
+    static void Initialize(nsIWidget* aWidget, mozilla::layers::APZEventState* aAPZEventState) {
+
+        MOZ_ASSERT(!sInstance.get(), "APZCCallbackHandler.Initialize() got called twice");
+        sInstance = new APZCCallbackHandler(aWidget, aAPZEventState);
+    }
+
     static APZCCallbackHandler* GetInstance() {
-        if (sInstance.get() == nullptr) {
-            sInstance = new APZCCallbackHandler();
-        }
+        MOZ_ASSERT(sInstance.get(), "Calling APZCCallbackHandler.GetInstance() before it's initialization");
         return sInstance.get();
     }
 
-    NativePanZoomController::LocalRef SetNativePanZoomController(NativePanZoomController::Param obj);
+    static NativePanZoomController::LocalRef SetNativePanZoomController(NativePanZoomController::Param obj);
     void NotifyDefaultPrevented(uint64_t aInputBlockId, bool aDefaultPrevented);
 
-public: // GeckoContentController methods
-    void RequestContentRepaint(const mozilla::layers::FrameMetrics& aFrameMetrics) override;
-    void RequestFlingSnap(const mozilla::layers::FrameMetrics::ViewID& aScrollId,
-                          const mozilla::CSSPoint& aDestination) override;
-    void AcknowledgeScrollUpdate(const mozilla::layers::FrameMetrics::ViewID& aScrollId,
-                                 const uint32_t& aScrollGeneration) override;
-    void HandleDoubleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
-                         const mozilla::layers::ScrollableLayerGuid& aGuid) override;
-    void HandleSingleTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
-                         const mozilla::layers::ScrollableLayerGuid& aGuid) override;
-    void HandleLongTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
-                       const mozilla::layers::ScrollableLayerGuid& aGuid,
-                       uint64_t aInputBlockId) override;
-    void SendAsyncScrollDOMEvent(bool aIsRoot, const mozilla::CSSRect& aContentRect,
-                                 const mozilla::CSSSize& aScrollableSize) override;
+public: // ChromeProcessController methods
+
     void PostDelayedTask(Task* aTask, int aDelayMs) override;
 };
 

@@ -16,8 +16,8 @@ namespace mozilla {
 namespace dom {
 
 class HTMLSharedListElement final : public nsGenericHTMLElement,
-                                        public nsIDOMHTMLOListElement,
-                                        public nsIDOMHTMLUListElement
+                                    public nsIDOMHTMLOListElement,
+                                    public nsIDOMHTMLUListElement
 {
 public:
   explicit HTMLSharedListElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)

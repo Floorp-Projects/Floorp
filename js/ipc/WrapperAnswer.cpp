@@ -513,7 +513,7 @@ WrapperAnswer::RecvObjectClassIs(const ObjectId &objId, const uint32_t &classVal
 }
 
 bool
-WrapperAnswer::RecvClassName(const ObjectId &objId, nsString *name)
+WrapperAnswer::RecvClassName(const ObjectId &objId, nsCString *name)
 {
     AutoJSAPI jsapi;
     if (NS_WARN_IF(!jsapi.Init(scopeForTargetObjects())))
@@ -528,7 +528,7 @@ WrapperAnswer::RecvClassName(const ObjectId &objId, nsString *name)
 
     LOG("%s.className()", ReceiverObj(objId));
 
-    *name = NS_ConvertASCIItoUTF16(js::ObjectClassName(cx, obj));
+    *name = js::ObjectClassName(cx, obj);
     return true;
 }
 
