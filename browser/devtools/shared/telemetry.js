@@ -140,7 +140,7 @@ Telemetry.prototype = {
       userHistogram: "DEVTOOLS_CANVASDEBUGGER_OPENED_PER_USER_FLAG",
       timerHistogram: "DEVTOOLS_CANVASDEBUGGER_TIME_ACTIVE_SECONDS"
     },
-    performance: {
+    jsprofiler: {
       histogram: "DEVTOOLS_JSPROFILER_OPENED_BOOLEAN",
       userHistogram: "DEVTOOLS_JSPROFILER_OPENED_PER_USER_FLAG",
       timerHistogram: "DEVTOOLS_JSPROFILER_TIME_ACTIVE_SECONDS"
