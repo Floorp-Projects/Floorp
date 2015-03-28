@@ -21,6 +21,30 @@ this.EXPORTED_SYMBOLS = [ "LoginManagerParent", "PasswordsMetricsProvider" ];
 
 var gDebug;
 
+#ifndef ANDROID
+#ifdef MOZ_SERVICES_HEALTHREPORT
+XPCOMUtils.defineLazyModuleGetter(this, "Metrics",
+                                  "resource://gre/modules/Metrics.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
+
+function recordFHRDailyCounter(aField) {
+    let reporter = Cc["@mozilla.org/datareporting/service;1"]
+                      .getService()
+                      .wrappedJSObject
+                      .healthReporter;
+    // This can happen if the FHR component of the data reporting service is
+    // disabled. This is controlled by a pref that most will never use.
+    if (!reporter) {
+      return;
+    }
+      reporter.onInit().then(() => reporter.getProvider("org.mozilla.passwordmgr")
+        .recordDailyCounter(aField));
+  }
+
+#endif
+#endif
+
 function log(...pieces) {
   function generateLogMessage(args) {
     let strings = ['Login Manager (parent):'];
@@ -53,10 +77,6 @@ function log(...pieces) {
 
 #ifndef ANDROID
 #ifdef MOZ_SERVICES_HEALTHREPORT
-XPCOMUtils.defineLazyModuleGetter(this, "Metrics",
-                                  "resource://gre/modules/Metrics.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Task",
-                                  "resource://gre/modules/Task.jsm");
 
 this.PasswordsMetricsProvider = function() {
   Metrics.Provider.call(this);
@@ -69,23 +89,36 @@ PasswordsMetricsProvider.prototype = Object.freeze({
 
   measurementTypes: [
     PasswordsMeasurement1,
+    PasswordsMeasurement2,
   ],
 
-  pullOnly: true,
-
-  collectDailyData: function* () {
+  collectDailyData: function () {
     return this.storage.enqueueTransaction(this._recordDailyPasswordData.bind(this));
   },
 
-  _recordDailyPasswordData: function() {
-    let m = this.getMeasurement(PasswordsMeasurement1.prototype.name,
-                                PasswordsMeasurement1.prototype.version);
+  _recordDailyPasswordData: function *() {
+    let m = this.getMeasurement(PasswordsMeasurement2.prototype.name,
+                                PasswordsMeasurement2.prototype.version);
     let enabled = Services.prefs.getBoolPref("signon.rememberSignons");
     yield m.setDailyLastNumeric("enabled", enabled ? 1 : 0);
 
     let loginsCount = Services.logins.countLogins("", "", "");
     yield m.setDailyLastNumeric("numSavedPasswords", loginsCount);
 
+  },
+
+  recordDailyCounter: function(aField) {
+    let m = this.getMeasurement(PasswordsMeasurement2.prototype.name,
+                                PasswordsMeasurement2.prototype.version);
+    if (this.storage.hasFieldFromMeasurement(m.id, aField,
+                                             Metrics.Storage.FIELD_DAILY_COUNTER)) {
+      let fieldID = this.storage.fieldIDFromMeasurement(m.id, aField, Metrics.Storage.FIELD_DAILY_COUNTER);
+      return this.enqueueStorageOperation(() => m.incrementDailyCounter(aField));
+    }
+
+    // Otherwise, we first need to create the field.
+    return this.enqueueStorageOperation (() => this.storage.registerField(m.id, aField, 
+      Metrics.Storage.FIELD_DAILY_COUNTER).then(() => m.incrementDailyCounter(aField)));
   },
 });
 
@@ -100,6 +133,22 @@ PasswordsMeasurement1.prototype = Object.freeze({
   fields: {
     enabled: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
     numSavedPasswords: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
+  },
+});
+
+function PasswordsMeasurement2() {
+  Metrics.Measurement.call(this);
+}
+PasswordsMeasurement2.prototype = Object.freeze({
+  __proto__: Metrics.Measurement.prototype,
+  name: "passwordmgr",
+  version: 2,
+  fields: {
+    enabled: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
+    numSavedPasswords: {type: Metrics.Storage.FIELD_DAILY_LAST_NUMERIC},
+    numSuccessfulFills: {type: Metrics.Storage.FIELD_DAILY_COUNTER},
+    numNewSavedPasswordsInSession: {type: Metrics.Storage.FIELD_DAILY_COUNTER},
+    numTotalLoginsEncountered: {type: Metrics.Storage.FIELD_DAILY_COUNTER},
   },
 });
 
@@ -120,12 +169,27 @@ var LoginManagerParent = {
     mm.addMessageListener("RemoteLogins:findLogins", this);
     mm.addMessageListener("RemoteLogins:onFormSubmit", this);
     mm.addMessageListener("RemoteLogins:autoCompleteLogins", this);
+    mm.addMessageListener("LoginStats:LoginEncountered", this);
+    mm.addMessageListener("LoginStats:LoginFillSuccessful", this);
+    Services.obs.addObserver(this, "LoginStats:NewSavedPassword", false);
 
     XPCOMUtils.defineLazyGetter(this, "recipeParentPromise", () => {
       const { LoginRecipesParent } = Cu.import("resource://gre/modules/LoginRecipes.jsm", {});
       let parent = new LoginRecipesParent();
       return parent.initializationPromise;
     });
+
+  },
+
+  observe: function (aSubject, aTopic, aData) {
+#ifndef ANDROID
+#ifdef MOZ_SERVICES_HEALTHREPORT
+    if (aTopic == "LoginStats:NewSavedPassword") {
+      recordFHRDailyCounter("numNewSavedPasswordsInSession");
+
+    }
+#endif
+#endif
   },
 
   receiveMessage: function (msg) {
@@ -155,6 +219,24 @@ var LoginManagerParent = {
 
       case "RemoteLogins:autoCompleteLogins": {
         this.doAutocompleteSearch(data, msg.target);
+        break;
+      }
+
+      case "LoginStats:LoginFillSuccessful": {
+#ifndef ANDROID
+#ifdef MOZ_SERVICES_HEALTHREPORT
+        recordFHRDailyCounter("numSuccessfulFills");
+#endif
+#endif
+        break;
+      }
+
+      case "LoginStats:LoginEncountered": {
+#ifndef ANDROID
+#ifdef MOZ_SERVICES_HEALTHREPORT
+        recordFHRDailyCounter("numTotalLoginsEncountered");
+#endif
+#endif
         break;
       }
     }

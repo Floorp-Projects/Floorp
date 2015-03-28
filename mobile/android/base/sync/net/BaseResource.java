@@ -14,6 +14,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.net.ssl.SSLContext;
 
@@ -58,6 +59,7 @@ import ch.boye.httpclientandroidlib.util.EntityUtils;
  * Communicates with a ResourceDelegate to asynchronously return responses and errors.
  * Exposes simple get/post/put/delete methods.
  */
+@SuppressWarnings("deprecation")
 public class BaseResource implements Resource {
   private static final String ANDROID_LOOPBACK_IP = "10.0.2.2";
 
@@ -77,7 +79,13 @@ public class BaseResource implements Resource {
   protected HttpRequestBase request;
   public final String charset = "utf-8";
 
-  protected static WeakReference<HttpResponseObserver> httpResponseObserver = null;
+  /**
+   * We have very few writes (observers tend to be installed around sync
+   * sessions) and many iterations (every HTTP request iterates observers), so
+   * CopyOnWriteArrayList is a reasonable choice.
+   */
+  protected static final CopyOnWriteArrayList<WeakReference<HttpResponseObserver>>
+    httpResponseObservers = new CopyOnWriteArrayList<>();
 
   public BaseResource(String uri) throws URISyntaxException {
     this(uri, rewriteLocalhost);
@@ -109,18 +117,33 @@ public class BaseResource implements Resource {
     }
   }
 
-  public static synchronized HttpResponseObserver getHttpResponseObserver() {
-    if (httpResponseObserver == null) {
-      return null;
+  public static void addHttpResponseObserver(HttpResponseObserver newHttpResponseObserver) {
+    if (newHttpResponseObserver == null) {
+      return;
     }
-    return httpResponseObserver.get();
+    httpResponseObservers.add(new WeakReference<HttpResponseObserver>(newHttpResponseObserver));
   }
 
-  public static synchronized void setHttpResponseObserver(HttpResponseObserver newHttpResponseObserver) {
-    if (httpResponseObserver != null) {
-      httpResponseObserver.clear();
+  public static boolean isHttpResponseObserver(HttpResponseObserver httpResponseObserver) {
+    for (WeakReference<HttpResponseObserver> weakReference : httpResponseObservers) {
+      HttpResponseObserver innerHttpResponseObserver = weakReference.get();
+      if (innerHttpResponseObserver == httpResponseObserver) {
+        return true;
+      }
     }
-    httpResponseObserver = new WeakReference<HttpResponseObserver>(newHttpResponseObserver);
+    return false;
+  }
+
+  public static boolean removeHttpResponseObserver(HttpResponseObserver httpResponseObserver) {
+    for (WeakReference<HttpResponseObserver> weakReference : httpResponseObservers) {
+      HttpResponseObserver innerHttpResponseObserver = weakReference.get();
+      if (innerHttpResponseObserver == httpResponseObserver) {
+        // It's safe to mutate the observers while iterating.
+        httpResponseObservers.remove(weakReference);
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
@@ -274,9 +297,11 @@ public class BaseResource implements Resource {
     }
 
     // Don't retry if the observer or delegate throws!
-    HttpResponseObserver observer = getHttpResponseObserver();
-    if (observer != null) {
-      observer.observeHttpResponse(response);
+    for (WeakReference<HttpResponseObserver> weakReference : httpResponseObservers) {
+      HttpResponseObserver observer = weakReference.get();
+      if (observer != null) {
+        observer.observeHttpResponse(request, response);
+      }
     }
     delegate.handleHttpResponse(response);
   }

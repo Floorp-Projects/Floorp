@@ -2173,11 +2173,6 @@ toolbarbutton.bookmark-item[dragover="true"][open="true"] {
   max-width: 27em;
 }
 
-.popup-progress-meter,
-#addon-install-confirmation-content {
-  margin-top: 1em;
-}
-
 .addon-install-confirmation-name {
   font-weight: bold;
 }

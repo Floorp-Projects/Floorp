@@ -76,6 +76,11 @@
   background-color: white;
 }
 
+.pdfViewer.removePageBorders .page {
+  margin: 0px auto 10px auto;
+  border: none;
+}
+
 .pdfViewer .page canvas {
   margin: 0;
   display: block;
@@ -1750,10 +1755,6 @@ html[dir='rtl'] #documentPropertiesOverlay .row > * {
     top: 0;
     left: 0;
     display: block;
-  }
-  #printContainer div {
-    page-break-after: always;
-    page-break-inside: avoid;
   }
 }
 

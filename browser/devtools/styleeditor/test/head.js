@@ -8,13 +8,10 @@ const TEST_HOST = 'mochi.test:8888';
 
 let {devtools} = Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
 let TargetFactory = devtools.TargetFactory;
-let {LoadContextInfo} = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
 let {console} = Cu.import("resource://gre/modules/devtools/Console.jsm", {});
 let {Promise: promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 
 let gPanelWindow;
-let cache = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
-              .getService(Ci.nsICacheStorageService);
 
 
 // Import the GCLI test helper
@@ -29,19 +26,22 @@ SimpleTest.registerCleanupFunction(() => {
 /**
  * Add a new test tab in the browser and load the given url.
  * @param {String} url The url to be loaded in the new tab
+ * @param {Window} win The window to add the tab to (default: current window).
  * @return a promise that resolves to the tab object when the url is loaded
  */
-function addTab(url) {
+function addTab(url, win) {
   info("Adding a new tab with URL: '" + url + "'");
   let def = promise.defer();
 
-  let tab = gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
+  let targetWindow = win || window;
+  let targetBrowser = targetWindow.gBrowser;
+
+  let tab = targetBrowser.selectedTab = targetBrowser.addTab(url);
+  targetBrowser.selectedBrowser.addEventListener("load", function onload() {
+    targetBrowser.selectedBrowser.removeEventListener("load", onload, true);
     info("URL '" + url + "' loading complete");
     def.resolve(tab);
   }, true);
-  content.location = url;
 
   return def.promise;
 }
@@ -71,6 +71,20 @@ function* cleanup()
     gBrowser.removeCurrentTab();
   }
 }
+
+/**
+ * Creates a new tab in specified window navigates it to the given URL and
+ * opens style editor in it.
+ */
+let openStyleEditorForURL = Task.async(function* (url, win) {
+  let tab = yield addTab(url, win);
+  let target = TargetFactory.forTab(tab);
+  let toolbox = yield gDevTools.showToolbox(target, "styleeditor");
+  let panel = toolbox.getPanel("styleeditor");
+  let ui = panel.UI;
+
+  return { tab, toolbox, panel, ui };
+});
 
 function addTabAndOpenStyleEditors(count, callback, uri) {
   let deferred = promise.defer();
@@ -120,33 +134,6 @@ function openStyleEditorInWindow(win, callback) {
     panel.UI._alwaysDisableAnimations = true;
     callback(panel);
   });
-}
-
-function checkDiskCacheFor(host, done)
-{
-  let foundPrivateData = false;
-
-  Visitor.prototype = {
-    onCacheStorageInfo: function(num, consumption)
-    {
-      info("disk storage contains " + num + " entries");
-    },
-    onCacheEntryInfo: function(uri)
-    {
-      var urispec = uri.asciiSpec;
-      info(urispec);
-      foundPrivateData |= urispec.contains(host);
-    },
-    onCacheEntryVisitCompleted: function()
-    {
-      is(foundPrivateData, false, "web content present in disk cache");
-      done();
-    }
-  };
-  function Visitor() {}
-
-  var storage = cache.diskCacheStorage(LoadContextInfo.default, false);
-  storage.asyncVisitStorage(new Visitor(), true /* Do walk entries */);
 }
 
 registerCleanupFunction(cleanup);

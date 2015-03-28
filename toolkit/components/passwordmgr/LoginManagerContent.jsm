@@ -261,11 +261,16 @@ var LoginManagerContent = {
   onFormPassword: function (event) {
     if (!event.isTrusted)
       return;
+    let form = event.target;
+
+    let doc = form.ownerDocument;
+    let win = doc.defaultView;
+    let messageManager = messageManagerFromWindow(win);
+    messageManager.sendAsyncMessage("LoginStats:LoginEncountered");
 
     if (!gEnabled)
       return;
 
-    let form = event.target;
     log("onFormPassword for", form.ownerDocument.documentURI);
     this._getLoginDataFromParent(form, { showMasterPassword: true })
         .then(this.loginsFound.bind(this))
@@ -806,6 +811,10 @@ var LoginManagerContent = {
       }
 
       recordAutofillResult(AUTOFILL_RESULT.FILLED);
+      let doc = form.ownerDocument;
+      let win = doc.defaultView;
+      let messageManager = messageManagerFromWindow(win);
+      messageManager.sendAsyncMessage("LoginStats:LoginFillSuccessful");
     } finally {
       Services.obs.notifyObservers(form, "passwordmgr-processed-form", null);
     }

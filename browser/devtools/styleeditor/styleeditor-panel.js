@@ -43,39 +43,31 @@ StyleEditorPanel.prototype = {
   /**
    * open is effectively an asynchronous constructor
    */
-  open: function() {
-    let deferred = promise.defer();
-
-    let targetPromise;
+  open: Task.async(function* () {
     // We always interact with the target as if it were remote
     if (!this.target.isRemote) {
-      targetPromise = this.target.makeRemote();
-    } else {
-      targetPromise = promise.resolve(this.target);
+      yield this.target.makeRemote();
     }
 
-    targetPromise.then(() => {
-      this.target.on("close", this.destroy);
+    this.target.on("close", this.destroy);
 
-      if (this.target.form.styleSheetsActor) {
-        this._debuggee = StyleSheetsFront(this.target.client, this.target.form);
-      }
-      else {
-        /* We're talking to a pre-Firefox 29 server-side */
-        this._debuggee = StyleEditorFront(this.target.client, this.target.form);
-      }
-      this.UI = new StyleEditorUI(this._debuggee, this.target, this._panelDoc);
-      this.UI.initialize().then(() => {
-        this.UI.on("error", this._showError);
+    if (this.target.form.styleSheetsActor) {
+      this._debuggee = StyleSheetsFront(this.target.client, this.target.form);
+    }
+    else {
+      /* We're talking to a pre-Firefox 29 server-side */
+      this._debuggee = StyleEditorFront(this.target.client, this.target.form);
+    }
 
-        this.isReady = true;
+    // Initialize the UI
+    this.UI = new StyleEditorUI(this._debuggee, this.target, this._panelDoc);
+    yield this.UI.initialize();
 
-        deferred.resolve(this);
-      });
-    }, console.error);
+    this.UI.on("error", this._showError);
+    this.isReady = true;
 
-    return deferred.promise;
-  },
+    return this;
+  }),
 
   /**
    * Show an error message from the style editor in the toolbox

@@ -18,6 +18,10 @@ public class Cohabiting extends TokensAndKeysState {
     super(StateLabel.Cohabiting, email, uid, sessionToken, kA, kB, keyPair);
   }
 
+  public Married withCertificate(String certificate) {
+    return new Married(email, uid, sessionToken, kA, kB, keyPair, certificate);
+  }
+
   @Override
   public void execute(final ExecuteDelegate delegate) {
     delegate.getClient().sign(sessionToken, keyPair.getPublic().toJSONObject(), delegate.getCertificateDurationInMilliseconds(),
@@ -39,7 +43,7 @@ public class Cohabiting extends TokensAndKeysState {
             FxAccountUtils.pii(LOG_TAG, "Could not parse certificate!");
           }
         }
-        delegate.handleTransition(new LogMessage("sign succeeded"), new Married(email, uid, sessionToken, kA, kB, keyPair, certificate));
+        delegate.handleTransition(new LogMessage("sign succeeded"), withCertificate(certificate));
       }
     });
   }
