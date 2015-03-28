@@ -27,7 +27,7 @@ function* testWellformedMixedCase(inspector) {
 
   info("Focusing the viewBox attribute editor");
   let {editor} = yield getContainerForSelector("svg", inspector);
-  let attr = editor.attrs["viewBox"].querySelector(".editable");
+  let attr = editor.attrElements.get("viewBox").querySelector(".editable");
   attr.focus();
   EventUtils.sendKey("return", inspector.panelWin);
 
@@ -53,7 +53,7 @@ function* testMalformedMixedCase(inspector) {
 
   info("Focusing the viewBox attribute editor");
   let {editor} = yield getContainerForSelector("svg", inspector);
-  let attr = editor.attrs["viewBox"].querySelector(".editable");
+  let attr = editor.attrElements.get("viewBox").querySelector(".editable");
   attr.focus();
   EventUtils.sendKey("return", inspector.panelWin);
 

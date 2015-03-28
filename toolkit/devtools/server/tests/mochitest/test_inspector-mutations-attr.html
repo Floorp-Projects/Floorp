@@ -45,10 +45,12 @@ addTest(setupAttrTest);
 addTest(testAddAttribute);
 addTest(testChangeAttribute);
 addTest(testRemoveAttribute);
+addTest(testQueuedMutations);
 addTest(setupFrameAttrTest);
 addTest(testAddAttribute);
 addTest(testChangeAttribute);
 addTest(testRemoveAttribute);
+addTest(testQueuedMutations);
 
 function setupAttrTest() {
   attrNode = gInspectee.querySelector("#a")
@@ -85,10 +87,13 @@ function testAddAttribute() {
 }
 
 function testChangeAttribute() {
-  attrNode.setAttribute("data-newattr", "changedvalue");
-  gWalker.once("mutations", () => {
+  attrNode.setAttribute("data-newattr", "changedvalue1");
+  attrNode.setAttribute("data-newattr", "changedvalue2");
+  attrNode.setAttribute("data-newattr", "changedvalue3");
+  gWalker.once("mutations", mutations => {
+    is(mutations.length, 1, "Only one mutation is sent for multiple queued attribute changes");
     is(attrFront.attributes.length, 3, "Should have id and two new attributes.");
-    is(attrFront.getAttribute("data-newattr"), "changedvalue", "Node front should have the changed first value");
+    is(attrFront.getAttribute("data-newattr"), "changedvalue3", "Node front should have the changed first value");
     is(attrFront.getAttribute("data-newattr2"), "newvalue", "Second value should remain unchanged.");
     runNextTest();
   });
@@ -98,8 +103,40 @@ function testRemoveAttribute() {
   attrNode.removeAttribute("data-newattr2");
   gWalker.once("mutations", () => {
     is(attrFront.attributes.length, 2, "Should have id and one remaining attribute.");
-    is(attrFront.getAttribute("data-newattr"), "changedvalue", "Node front should still have the first value");
+    is(attrFront.getAttribute("data-newattr"), "changedvalue3", "Node front should still have the first value");
     ok(!attrFront.hasAttribute("data-newattr2"), "Second value should be removed.");
+    runNextTest();
+  })
+}
+
+function testQueuedMutations() {
+  // All modifications to each attribute should be queued in one mutation event.
+
+  attrNode.removeAttribute("data-newattr");
+  attrNode.setAttribute("data-newattr", "1");
+  attrNode.removeAttribute("data-newattr");
+  attrNode.setAttribute("data-newattr", "2");
+  attrNode.removeAttribute("data-newattr");
+
+  for (var i = 0; i <= 1000; i++) {
+    attrNode.setAttribute("data-newattr2", i);
+  }
+
+  attrNode.removeAttribute("data-newattr3");
+  attrNode.setAttribute("data-newattr3", "1");
+  attrNode.removeAttribute("data-newattr3");
+  attrNode.setAttribute("data-newattr3", "2");
+  attrNode.removeAttribute("data-newattr3");
+  attrNode.setAttribute("data-newattr3", "3");
+
+  gWalker.once("mutations", mutations => {
+    is(mutations.length, 3, "Only one mutation each is sent for multiple queued attribute changes");
+    is(attrFront.attributes.length, 3, "Should have id, data-newattr2, and data-newattr3.");
+
+    is(attrFront.getAttribute("data-newattr2"), "1000", "Node front should still have the correct value");
+    is(attrFront.getAttribute("data-newattr3"), "3", "Node front should still have the correct value");
+    ok(!attrFront.hasAttribute("data-newattr"), "Attribute value should be removed.");
+
     runNextTest();
   })
 }

@@ -61,12 +61,15 @@ for (var constructor of constructors) {
         strConstructor.constructor = "not a constructor";
         strConstructor.slice(123);
     }, TypeError, "Assert that we have an invalid constructor");
-    assertThrowsInstanceOf(() => {
-        var mathConstructor = new constructor;
-        mathConstructor.constructor = Math.sin;
-        mathConstructor.slice(123);
-    }, TypeError, "Assert that we have an invalid constructor");
 
+    // If obj.constructor[@@species] is undefined or null -- which it has to be
+    // if we don't implement @@species -- then the default constructor is used.
+    var mathConstructor = new constructor(8);
+    mathConstructor.constructor = Math.sin;
+    assertDeepEq(mathConstructor.slice(4), new constructor(4));
+
+    assertEq("species" in Symbol, false,
+             "you've implemented @@species -- add real tests here!");
 }
 
 if (typeof reportCompare === "function")

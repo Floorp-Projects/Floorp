@@ -25,12 +25,12 @@ add_task(function*() {
   is (nbox.clientWidth, nboxWidth, "Opening the toolbox hasn't changed the width of the nbox");
 
   let iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-bottom-iframe");
-  is (iframe.clientHeight, nboxHeight - 10, "The iframe fits within the available space ");
+  is (iframe.clientHeight, nboxHeight - 25, "The iframe fits within the available space");
 
   yield toolbox.switchHost(devtools.Toolbox.HostType.SIDE);
   iframe = document.getAnonymousElementByAttribute(nbox, "class", "devtools-toolbox-side-iframe");
   iframe.style.minWidth = "1px"; // Disable the min width set in css
-  is (iframe.clientWidth, nboxWidth - 10, "The iframe fits within the available space");
+  is (iframe.clientWidth, nboxWidth - 25, "The iframe fits within the available space");
 
   yield cleanup(toolbox);
 });

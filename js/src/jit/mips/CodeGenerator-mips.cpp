@@ -2020,44 +2020,15 @@ CodeGeneratorMIPS::visitAsmJSPassStackArg(LAsmJSPassStackArg *ins)
 }
 
 void
-CodeGeneratorMIPS::visitUDiv(LUDiv *ins)
-{
-    Register lhs = ToRegister(ins->lhs());
-    Register rhs = ToRegister(ins->rhs());
-    Register output = ToRegister(ins->output());
-
-    Label done;
-    if (ins->mir()->canBeDivideByZero()) {
-        if (ins->mir()->isTruncated()) {
-            Label notzero;
-            masm.ma_b(rhs, rhs, &notzero, Assembler::NonZero, ShortJump);
-            masm.move32(Imm32(0), output);
-            masm.ma_b(&done, ShortJump);
-            masm.bind(&notzero);
-        } else {
-            MOZ_ASSERT(ins->mir()->fallible());
-            bailoutCmp32(Assembler::Equal, rhs, Imm32(0), ins->snapshot());
-        }
-    }
-
-    masm.as_divu(lhs, rhs);
-    masm.as_mflo(output);
-
-    if (!ins->mir()->isTruncated())
-        bailoutCmp32(Assembler::LessThan, output, Imm32(0), ins->snapshot());
-
-    masm.bind(&done);
-}
-
-void
-CodeGeneratorMIPS::visitUMod(LUMod *ins)
+CodeGeneratorMIPS::visitUDivOrMod(LUDivOrMod *ins)
 {
     Register lhs = ToRegister(ins->lhs());
     Register rhs = ToRegister(ins->rhs());
     Register output = ToRegister(ins->output());
     Label done;
 
-    if (ins->mir()->canBeDivideByZero()) {
+    // Prevent divide by zero.
+    if (ins->canBeDivideByZero()) {
         if (ins->mir()->isTruncated()) {
             // Infinity|0 == 0
             Label notzero;
@@ -2066,13 +2037,20 @@ CodeGeneratorMIPS::visitUMod(LUMod *ins)
             masm.ma_b(&done, ShortJump);
             masm.bind(&notzero);
         } else {
-            MOZ_ASSERT(ins->mir()->fallible());
             bailoutCmp32(Assembler::Equal, rhs, Imm32(0), ins->snapshot());
         }
     }
 
     masm.as_divu(lhs, rhs);
     masm.as_mfhi(output);
+
+    // If the remainder is > 0, bailout since this must be a double.
+    if (ins->mir()->isDiv()) {
+        if (!ins->mir()->toDiv()->canTruncateRemainder())
+          bailoutCmp32(Assembler::NonZero, output, output, ins->snapshot());
+        // Get quotient
+        masm.as_mflo(output);
+    }
 
     if (!ins->mir()->isTruncated())
         bailoutCmp32(Assembler::LessThan, output, Imm32(0), ins->snapshot());

@@ -42,8 +42,8 @@ class Proxy
     static bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp);
     static bool get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
                     MutableHandleValue vp);
-    static bool set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
-                    MutableHandleValue vp, ObjectOpResult &result);
+    static bool set(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
+                    HandleValue receiver, ObjectOpResult &result);
     static bool call(JSContext *cx, HandleObject proxy, const CallArgs &args);
     static bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args);
 

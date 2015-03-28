@@ -307,8 +307,8 @@ Proxy::callProp(JSContext *cx, HandleObject proxy, HandleObject receiver, Handle
 }
 
 bool
-Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
-           MutableHandleValue vp, ObjectOpResult &result)
+Proxy::set(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v, HandleValue receiver,
+           ObjectOpResult &result)
 {
     JS_CHECK_RECURSION(cx, return false);
     const BaseProxyHandler *handler = proxy->as<ProxyObject>().handler();
@@ -321,9 +321,9 @@ Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id
 
     // Special case. See the comment on BaseProxyHandler::mHasPrototype.
     if (handler->hasPrototype())
-        return handler->BaseProxyHandler::set(cx, proxy, receiver, id, vp, result);
+        return handler->BaseProxyHandler::set(cx, proxy, id, v, receiver, result);
 
-    return handler->set(cx, proxy, receiver, id, vp, result);
+    return handler->set(cx, proxy, id, v, receiver, result);
 }
 
 bool
@@ -580,10 +580,10 @@ js::proxy_GetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, Ha
 }
 
 bool
-js::proxy_SetProperty(JSContext *cx, HandleObject obj, HandleObject receiver, HandleId id,
-                      MutableHandleValue vp, ObjectOpResult &result)
+js::proxy_SetProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
+                      HandleValue receiver, ObjectOpResult &result)
 {
-    return Proxy::set(cx, obj, receiver, id, vp, result);
+    return Proxy::set(cx, obj, id, v, receiver, result);
 }
 
 bool

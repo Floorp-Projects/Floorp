@@ -312,7 +312,6 @@ AutoJSAPI::~AutoJSAPI()
 {
   if (mOwnErrorReporting) {
     MOZ_ASSERT(NS_IsMainThread(), "See corresponding assertion in TakeOwnershipOfErrorReporting()");
-    JS::ContextOptionsRef(cx()).setAutoJSAPIOwnsErrorReporting(mOldAutoJSAPIOwnsErrorReporting);
 
     if (HasException()) {
 
@@ -342,6 +341,13 @@ AutoJSAPI::~AutoJSAPI()
         NS_WARNING("OOMed while acquiring uncaught exception from JSAPI");
       }
     }
+
+    // We need to do this _after_ processing the existing exception, because the
+    // JS engine can throw while doing that, and uses this bit to determine what
+    // to do in that case: squelch the exception if the bit is set, otherwise
+    // call the error reporter. Calling WarningOnlyErrorReporter with a
+    // non-warning will assert, so we need to make sure we do the former.
+    JS::ContextOptionsRef(cx()).setAutoJSAPIOwnsErrorReporting(mOldAutoJSAPIOwnsErrorReporting);
   }
 
   if (mOldErrorReporter.isSome()) {

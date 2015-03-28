@@ -29,9 +29,7 @@ namespace layers {
  * the main thread and the compositor thread context. It's primary
  * purpose is to manage the PLayerTransaction sub protocol.
  */
-// This should really be 'sync', but we're using 'rpc' as a workaround
-// for Bug 716631.
-intr protocol PCompositor
+sync protocol PCompositor
 {
   // A Compositor manages a single Layer Manager (PLayerTransaction)
   manages PLayerTransaction;

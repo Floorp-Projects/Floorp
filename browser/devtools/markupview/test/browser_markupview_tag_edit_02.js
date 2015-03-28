@@ -22,7 +22,7 @@ add_task(function*() {
 
   info("Focus the ID attribute and change its content");
   let {editor} = yield getContainerForSelector("#test-div", inspector);
-  let attr = editor.attrs["id"].querySelector(".editable");
+  let attr = editor.attrElements.get("id").querySelector(".editable");
   let mutated = inspector.once("markupmutation");
   setEditableFieldValue(attr,
     attr.textContent + ' class="newclass" style="color:green"', inspector);

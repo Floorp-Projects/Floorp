@@ -154,13 +154,35 @@ function GetIterator(obj, method) {
     return iterator;
 }
 
+// ES6 draft 20150317 7.3.20.
 function SpeciesConstructor(obj, defaultConstructor) {
-    var C = obj.constructor;
-    if (C === undefined) {
+    // Step 1.
+    assert(IsObject(obj), "not passed an object");
+
+    // Steps 2-3.
+    var ctor = obj.constructor;
+
+    // Step 4.
+    if (ctor === undefined)
         return defaultConstructor;
-    }
-    if (!IsConstructor(C)) {
-        ThrowError(JSMSG_NOT_CONSTRUCTOR, DecompileArg(1, C));
-    }
-    return C;
+
+    // Step 5.
+    if (!IsObject(ctor))
+        ThrowError(JSMSG_NOT_NONNULL_OBJECT, "object's 'constructor' property");
+
+    // Steps 6-7.  We don't yet implement @@species and Symbol.species, so we
+    // don't implement this correctly right now.  Somebody fix this!
+    var s = /* ctor[Symbol.species] */ undefined;
+
+    // Step 8.
+    if (s === undefined || s === null)
+        return defaultConstructor;
+
+    // Step 9.
+    if (IsConstructor(s))
+        return s;
+
+    // Step 10.
+    ThrowError(JSMSG_NOT_CONSTRUCTOR,
+               "@@species property of object's constructor");
 }

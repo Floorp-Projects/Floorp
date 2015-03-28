@@ -643,9 +643,8 @@ public:
                    JS::Handle<jsid> id,
                    JS::MutableHandle<JS::Value> vp) const override;
   virtual bool set(JSContext *cx, JS::Handle<JSObject*> proxy,
-                   JS::Handle<JSObject*> receiver,
-                   JS::Handle<jsid> id,
-                   JS::MutableHandle<JS::Value> vp,
+                   JS::Handle<jsid> id, JS::Handle<JS::Value> v,
+                   JS::Handle<JS::Value> receiver,
                    JS::ObjectOpResult &result) const override;
 
   // SpiderMonkey extensions
@@ -909,9 +908,9 @@ nsOuterWindowProxy::get(JSContext *cx, JS::Handle<JSObject*> proxy,
 
 bool
 nsOuterWindowProxy::set(JSContext *cx, JS::Handle<JSObject*> proxy,
-                        JS::Handle<JSObject*> receiver,
                         JS::Handle<jsid> id,
-                        JS::MutableHandle<JS::Value> vp,
+                        JS::Handle<JS::Value> v,
+                        JS::Handle<JS::Value> receiver,
                         JS::ObjectOpResult &result) const
 {
   int32_t index = GetArrayIndexFromId(cx, id);
@@ -921,7 +920,7 @@ nsOuterWindowProxy::set(JSContext *cx, JS::Handle<JSObject*> proxy,
     return result.failReadOnly();
   }
 
-  return js::Wrapper::set(cx, proxy, receiver, id, vp, result);
+  return js::Wrapper::set(cx, proxy, id, v, receiver, result);
 }
 
 bool
