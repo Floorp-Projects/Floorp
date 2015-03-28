@@ -281,7 +281,7 @@ nsPNGDecoder::InitInternal()
                               (int)sizeof(unused_chunks)/5);
 #endif
 
-#ifdef PNG_SET_CHUNK_MALLOC_LIMIT_SUPPORTED
+#ifdef PNG_SET_USER_LIMITS_SUPPORTED
   if (mCMSMode != eCMSMode_Off) {
     png_set_chunk_malloc_max(mPNG, 4000000L);
   }
