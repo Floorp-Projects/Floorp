@@ -948,27 +948,27 @@ class MInstruction
 
 #define INSTRUCTION_HEADER_WITHOUT_TYPEPOLICY(opcode)                       \
     static const Opcode classOpcode = MDefinition::Op_##opcode;             \
-    Opcode op() const override {                                        \
+    Opcode op() const override {                                            \
         return classOpcode;                                                 \
     }                                                                       \
-    const char *opName() const override {                               \
+    const char *opName() const override {                                   \
         return #opcode;                                                     \
     }                                                                       \
-    void accept(MDefinitionVisitor *visitor) override {                 \
+    void accept(MDefinitionVisitor *visitor) override {                     \
         visitor->visit##opcode(this);                                       \
     }
 
 #define INSTRUCTION_HEADER(opcode)                                          \
     INSTRUCTION_HEADER_WITHOUT_TYPEPOLICY(opcode)                           \
-    virtual TypePolicy *typePolicy() override;                          \
+    virtual TypePolicy *typePolicy() override;                              \
     virtual MIRType typePolicySpecialization() override;
 
 #define ALLOW_CLONE(typename)                                               \
-    bool canClone() const override {                                    \
+    bool canClone() const override {                                        \
         return true;                                                        \
     }                                                                       \
     MInstruction *clone(TempAllocator &alloc,                               \
-                        const MDefinitionVector &inputs) const override { \
+                        const MDefinitionVector &inputs) const override {   \
         MInstruction *res = new(alloc) typename(*this);                     \
         for (size_t i = 0; i < numOperands(); i++)                          \
             res->replaceOperand(i, inputs[i]);                              \

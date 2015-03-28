@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 
 class Comment final : public nsGenericDOMDataNode,
-                          public nsIDOMComment
+                      public nsIDOMComment
 {
 private:
   void Init()

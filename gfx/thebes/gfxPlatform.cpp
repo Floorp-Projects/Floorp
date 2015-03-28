@@ -144,7 +144,7 @@ using namespace mozilla::gfx;
 /* Class to listen for pref changes so that chrome code can dynamically
    force sRGB as an output profile. See Bug #452125. */
 class SRGBOverrideObserver final : public nsIObserver,
-                                       public nsSupportsWeakReference
+                                   public nsSupportsWeakReference
 {
     ~SRGBOverrideObserver() {}
 public:

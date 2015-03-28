@@ -49,7 +49,7 @@ class nsAutoRefTraits<GdkDragContext> :
  */
 
 class nsDragService final : public nsBaseDragService,
-                                public nsIObserver
+                            public nsIObserver
 {
 public:
     nsDragService();

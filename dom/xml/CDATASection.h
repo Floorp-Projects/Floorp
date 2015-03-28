@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 
 class CDATASection final : public Text,
-                               public nsIDOMCDATASection
+                           public nsIDOMCDATASection
 {
 private:
   void Init()

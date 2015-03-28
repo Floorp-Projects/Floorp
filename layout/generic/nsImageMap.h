@@ -22,7 +22,7 @@ class nsIContent;
 struct nsRect;
 
 class nsImageMap final : public nsStubMutationObserver,
-                             public nsIDOMEventListener
+                         public nsIDOMEventListener
 {
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::ColorPattern ColorPattern;

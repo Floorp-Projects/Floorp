@@ -21,7 +21,7 @@ namespace ipc {
 //
 
 class ListenSocketIO final : public UnixSocketWatcher
-                               , protected SocketIOBase
+                           , protected SocketIOBase
 {
 public:
   class ListenTask;

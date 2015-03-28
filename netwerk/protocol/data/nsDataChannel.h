@@ -12,7 +12,8 @@
 
 class nsIInputStream;
 
-class nsDataChannel : public nsBaseChannel {
+class nsDataChannel : public nsBaseChannel
+{
 public:
     explicit nsDataChannel(nsIURI *uri) {
         SetURI(uri);

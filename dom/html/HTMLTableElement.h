@@ -19,7 +19,7 @@ namespace dom {
 class TableRowsCollection;
 
 class HTMLTableElement final : public nsGenericHTMLElement,
-                                   public nsIDOMHTMLTableElement
+                               public nsIDOMHTMLTableElement
 {
 public:
   explicit HTMLTableElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

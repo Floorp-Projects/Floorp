@@ -106,9 +106,9 @@ class nsCertVerificationThread;
 
 // Implementation of the PSM component interface.
 class nsNSSComponent final : public nsIEntropyCollector,
-                                 public nsINSSComponent,
-                                 public nsIObserver,
-                                 public nsSupportsWeakReference
+                             public nsINSSComponent,
+                             public nsIObserver,
+                             public nsSupportsWeakReference
 {
   typedef mozilla::Mutex Mutex;
 

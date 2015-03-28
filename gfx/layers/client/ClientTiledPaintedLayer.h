@@ -36,7 +36,7 @@ class SpecificLayerAttributes;
  * There is no ContentClient for tiled layers. There is a ContentHost, however.
  */
 class ClientTiledPaintedLayer : public PaintedLayer,
-                               public ClientLayer
+                                public ClientLayer
 {
   typedef PaintedLayer Base;
 

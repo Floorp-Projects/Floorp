@@ -51,7 +51,7 @@ function testFocus(sw, hud) {
 
     var loc = node.querySelector(".message-location");
     ok(loc, "location element exists");
-    is(loc.textContent.trim(), sw.Scratchpad.uniqueName + ":1:0",
+    is(loc.textContent.trim(), sw.Scratchpad.uniqueName + ":1:1",
         "location value is correct");
 
     sw.addEventListener("focus", function onFocus() {

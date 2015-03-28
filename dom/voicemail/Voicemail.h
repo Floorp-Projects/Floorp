@@ -23,7 +23,7 @@ namespace dom {
 class VoicemailStatus;
 
 class Voicemail final : public DOMEventTargetHelper,
-                            private nsIVoicemailListener
+                        private nsIVoicemailListener
 {
   /**
    * Class Voicemail doesn't actually expose nsIVoicemailListener. Instead, it

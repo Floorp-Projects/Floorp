@@ -63,8 +63,8 @@ class nsIRunnable;
 
 
 class nsParser final : public nsIParser,
-                           public nsIStreamListener,
-                           public nsSupportsWeakReference
+                       public nsIStreamListener,
+                       public nsSupportsWeakReference
 {
     /**
      * Destructor

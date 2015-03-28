@@ -26,7 +26,7 @@ class SpeechGrammar;
 template<typename> class Optional;
 
 class SpeechGrammarList final : public nsISupports,
-                                    public nsWrapperCache
+                                public nsWrapperCache
 {
 public:
   explicit SpeechGrammarList(nsISupports* aParent, nsISpeechRecognitionService* aRecognitionService);

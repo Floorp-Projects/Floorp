@@ -29,7 +29,7 @@ class XMLHttpRequestUpload;
 class WorkerPrivate;
 
 class XMLHttpRequest final: public nsXHREventTarget,
-                                public WorkerFeature
+                            public WorkerFeature
 {
 public:
   struct StateData

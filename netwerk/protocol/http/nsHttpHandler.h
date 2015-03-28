@@ -50,9 +50,9 @@ enum FrameCheckLevel {
 //-----------------------------------------------------------------------------
 
 class nsHttpHandler final : public nsIHttpProtocolHandler
-                              , public nsIObserver
-                              , public nsSupportsWeakReference
-                              , public nsISpeculativeConnect
+                          , public nsIObserver
+                          , public nsSupportsWeakReference
+                          , public nsISpeculativeConnect
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

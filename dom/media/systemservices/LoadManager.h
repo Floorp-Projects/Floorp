@@ -73,7 +73,7 @@ private:
 };
 
 class LoadManager final : public webrtc::CPULoadStateCallbackInvoker,
-                              public webrtc::CpuOveruseObserver
+                          public webrtc::CpuOveruseObserver
 {
 public:
     explicit LoadManager(LoadManagerSingleton* aManager)

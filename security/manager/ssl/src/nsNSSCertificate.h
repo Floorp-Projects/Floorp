@@ -25,9 +25,9 @@ class nsINSSComponent;
 class nsIASN1Sequence;
 
 class nsNSSCertificate final : public nsIX509Cert,
-                                   public nsISerializable,
-                                   public nsIClassInfo,
-                                   public nsNSSShutDownObject
+                               public nsISerializable,
+                               public nsIClassInfo,
+                               public nsNSSShutDownObject
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

@@ -21,9 +21,9 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsAutoCompleteController final : public nsIAutoCompleteController,
-                                           public nsIAutoCompleteObserver,
-                                           public nsITimerCallback,
-                                           public nsITreeView
+                                       public nsIAutoCompleteObserver,
+                                       public nsITimerCallback,
+                                       public nsITreeView
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

@@ -26,8 +26,8 @@
 { 0x96, 0xd0, 0x47, 0xa8, 0x28, 0x2a, 0xe3, 0xdb} }
 
 class nsSAXXMLReader final : public nsISAXXMLReader,
-                                 public nsIExtendedExpatSink,
-                                 public nsIContentSink
+                             public nsIExtendedExpatSink,
+                             public nsIContentSink
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

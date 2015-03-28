@@ -92,7 +92,7 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
                              bool *result) {
         return Answer::RecvObjectClassIs(ObjectId::deserialize(objId), classValue, result);
     }
-    bool RecvClassName(const uint64_t &objId, nsString *result) {
+    bool RecvClassName(const uint64_t &objId, nsCString *result) {
         return Answer::RecvClassName(ObjectId::deserialize(objId), result);
     }
     bool RecvGetPrototype(const uint64_t &objId, ReturnStatus *rs, ObjectOrNullVariant *result) {
@@ -181,7 +181,7 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
                            bool *result) {
         return Base::SendObjectClassIs(objId.serialize(), classValue, result);
     }
-    bool SendClassName(const ObjectId &objId, nsString *result) {
+    bool SendClassName(const ObjectId &objId, nsCString *result) {
         return Base::SendClassName(objId.serialize(), result);
     }
     bool SendGetPrototype(const ObjectId &objId, ReturnStatus *rs, ObjectOrNullVariant *result) {

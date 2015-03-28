@@ -399,7 +399,7 @@ EventListenerManagerHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
 }
 
 class SameOriginCheckerImpl final : public nsIChannelEventSink,
-                                        public nsIInterfaceRequestor
+                                    public nsIInterfaceRequestor
 {
   ~SameOriginCheckerImpl() {}
 

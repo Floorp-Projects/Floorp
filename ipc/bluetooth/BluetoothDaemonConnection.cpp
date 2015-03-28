@@ -191,7 +191,7 @@ BluetoothDaemonPDUConsumer::~BluetoothDaemonPDUConsumer()
 //
 
 class BluetoothDaemonConnectionIO final : public UnixSocketWatcher
-                                            , public ConnectionOrientedSocketIO
+                                        , public ConnectionOrientedSocketIO
 {
 public:
   BluetoothDaemonConnectionIO(MessageLoop* aIOLoop, int aFd,

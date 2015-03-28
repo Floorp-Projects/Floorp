@@ -35,11 +35,11 @@ protected:
 };
 
 class nsHTTPIndex final : public nsIHTTPIndex,
-                              public nsIRDFDataSource,
-                              public nsIStreamListener,
-                              public nsIDirIndexListener,
-                              public nsIInterfaceRequestor,
-                              public nsIFTPEventSink
+                          public nsIRDFDataSource,
+                          public nsIStreamListener,
+                          public nsIDirIndexListener,
+                          public nsIInterfaceRequestor,
+                          public nsIFTPEventSink
 {
 private:
 

@@ -874,7 +874,7 @@ TrackBuffer::AbortAppendData()
 const nsTArray<nsRefPtr<SourceBufferDecoder>>&
 TrackBuffer::Decoders()
 {
-  // XXX assert OnDecodeThread
+  // XXX assert OnDecodeTaskQueue
   return mInitializedDecoders;
 }
 

@@ -112,7 +112,7 @@ public:
 
 namespace dom {
 class DOMSVGAnimatedPreserveAspectRatio final : public nsISupports,
-                                                    public nsWrapperCache
+                                                public nsWrapperCache
 {
   ~DOMSVGAnimatedPreserveAspectRatio();
 
