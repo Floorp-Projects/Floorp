@@ -189,11 +189,11 @@ function runTests(document, window, finish) {
     setZoomToPageFit(document).then(function () {
       runNextTest(document, window, finish);
     }, function () {
-      ok(false, "Current scale has been ste to 'page-fit'");
+      ok(false, "Current scale has been set to 'page-fit'");
       finish();
     });
   }, function () {
-    ok(false, "Outline items have ben found");
+    ok(false, "Outline items have been found");
     finish();
   });
 }
@@ -267,14 +267,16 @@ function runNextTest(document, window, endCallback) {
  */
 function waitForOutlineItems(document) {
   var deferred = Promise.defer();
-  var timeout = setTimeout(() => deferred.reject(), 10000);
-  var interval = setInterval(function () {
-    if (document.querySelectorAll(".outlineItem").length == PDF_OUTLINE_ITEMS) {
-      clearInterval(interval);
-      clearTimeout(timeout);
+  document.addEventListener("outlineloaded", function outlineLoaded(evt) {
+    document.removeEventListener("outlineloaded", outlineLoaded);
+    var outlineCount = evt.detail.outlineCount;
+
+    if (document.querySelectorAll(".outlineItem").length === outlineCount) {
       deferred.resolve();
+    } else {
+      deferred.reject();
     }
-  }, 500);
+  });
 
   return deferred.promise;
 }
@@ -289,11 +291,10 @@ function waitForOutlineItems(document) {
 function setZoomToPageFit(document) {
   var deferred = Promise.defer();
   document.addEventListener("pagerendered", function onZoom(e) {
-    document.removeEventListener("pagerendered", onZoom), false;
+    document.removeEventListener("pagerendered", onZoom);
     document.querySelector("#viewer").click();
     deferred.resolve();
-
-  }, false);
+  });
 
   var select = document.querySelector("select#scaleSelect");
   select.selectedIndex = 2;
