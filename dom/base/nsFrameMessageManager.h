@@ -153,10 +153,10 @@ private:
 };
 
 class nsFrameMessageManager final : public nsIContentFrameMessageManager,
-                                        public nsIMessageBroadcaster,
-                                        public nsIFrameScriptLoader,
-                                        public nsIProcessScriptLoader,
-                                        public nsIProcessChecker
+                                    public nsIMessageBroadcaster,
+                                    public nsIFrameScriptLoader,
+                                    public nsIProcessScriptLoader,
+                                    public nsIProcessChecker
 {
   friend class mozilla::dom::MessageManagerReporter;
   typedef mozilla::dom::StructuredCloneData StructuredCloneData;

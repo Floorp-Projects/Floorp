@@ -5047,19 +5047,30 @@ BytecodeEmitter::emitNormalFor(ParseNode *pn, ptrdiff_t top)
     ParseNode *forBody = pn->pn_right;
 
     /* C-style for (init; cond; update) ... loop. */
-    JSOp op = JSOP_POP;
-    ParseNode *pn3 = forHead->pn_kid1;
-    if (!pn3) {
-        // No initializer, but emit a nop so that there's somewhere to put the
+    bool forLoopRequiresFreshening = false;
+    JSOp op;
+    ParseNode *init = forHead->pn_kid1;
+    if (!init) {
+        // If there's no init, emit a nop so that there's somewhere to put the
         // SRC_FOR annotation that IonBuilder will look for.
         op = JSOP_NOP;
+    } else if (init->isKind(PNK_FRESHENBLOCK)) {
+        // Also emit a nop, as above.
+        op = JSOP_NOP;
+
+        // The loop's init declaration was hoisted into an enclosing lexical
+        // scope node.  Note that the block scope must be freshened each
+        // iteration.
+        forLoopRequiresFreshening = true;
     } else {
         emittingForInit = true;
-        if (!updateSourceCoordNotes(pn3->pn_pos.begin))
+        if (!updateSourceCoordNotes(init->pn_pos.begin))
             return false;
-        if (!emitTree(pn3))
+        if (!emitTree(init))
             return false;
         emittingForInit = false;
+
+        op = JSOP_POP;
     }
 
     /*
@@ -5099,19 +5110,38 @@ BytecodeEmitter::emitNormalFor(ParseNode *pn, ptrdiff_t top)
     /* Set the second note offset so we can find the update part. */
     ptrdiff_t tmp2 = offset();
 
-    /* Set loop and enclosing "update" offsets, for continue. */
+    // Set loop and enclosing "update" offsets, for continue.  Note that we
+    // continue to immediately *before* the block-freshening: continuing must
+    // refresh the block.
     StmtInfoBCE *stmt = &stmtInfo;
     do {
         stmt->update = offset();
     } while ((stmt = stmt->down) != nullptr && stmt->type == STMT_LABEL);
 
+    // Freshen the block on the scope chain to expose distinct bindings for each loop
+    // iteration.
+    if (forLoopRequiresFreshening) {
+        // The scope chain only includes an actual block *if* the scope object
+        // is captured and therefore requires cloning.  Get the static block
+        // object from the parent let-block statement (which *must* be the
+        // let-statement for the guarding condition to have held) and freshen
+        // if the block object needs cloning.
+        StmtInfoBCE *parent = stmtInfo.down;
+        MOZ_ASSERT(parent->type == STMT_BLOCK);
+        MOZ_ASSERT(parent->isBlockScope);
+
+        if (parent->staticScope->as<StaticBlockObject>().needsClone()) {
+            if (!emit1(JSOP_FRESHENBLOCKSCOPE))
+                return false;
+        }
+    }
+
     /* Check for update code to do before the condition (if any). */
-    pn3 = forHead->pn_kid3;
-    if (pn3) {
-        if (!updateSourceCoordNotes(pn3->pn_pos.begin))
+    if (ParseNode *update = forHead->pn_kid3) {
+        if (!updateSourceCoordNotes(update->pn_pos.begin))
             return false;
         op = JSOP_POP;
-        if (!emitTree(pn3))
+        if (!emitTree(update))
             return false;
 
         /* Always emit the POP or NOP to help IonBuilder. */

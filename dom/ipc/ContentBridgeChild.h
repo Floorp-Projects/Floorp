@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 
 class ContentBridgeChild final : public PContentBridgeChild
-                                   , public nsIContentChild
+                               , public nsIContentChild
 {
 public:
   explicit ContentBridgeChild(Transport* aTransport);

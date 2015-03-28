@@ -27,8 +27,8 @@ class Promise;
 class RequestOrUSVString;
 
 class Request final : public nsISupports
-                        , public FetchBody<Request>
-                        , public nsWrapperCache
+                    , public FetchBody<Request>
+                    , public nsWrapperCache
 {
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Request)

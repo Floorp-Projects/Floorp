@@ -15,8 +15,8 @@ namespace mozilla {
 namespace embedding {
 
 class PrintProgressDialogChild final : public PPrintProgressDialogChild,
-                                           public nsIWebProgressListener,
-                                           public nsIPrintProgressParams
+                                       public nsIWebProgressListener,
+                                       public nsIPrintProgressParams
 {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER

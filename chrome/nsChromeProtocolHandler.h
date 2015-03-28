@@ -19,7 +19,7 @@
 }
 
 class nsChromeProtocolHandler final : public nsIProtocolHandler,
-                                          public nsSupportsWeakReference
+                                      public nsSupportsWeakReference
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

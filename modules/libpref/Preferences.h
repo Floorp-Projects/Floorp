@@ -37,9 +37,9 @@ class PrefSetting;
 }
 
 class Preferences final : public nsIPrefService,
-                              public nsIObserver,
-                              public nsIPrefBranchInternal,
-                              public nsSupportsWeakReference
+                          public nsIObserver,
+                          public nsIPrefBranchInternal,
+                          public nsSupportsWeakReference
 {
 public:
   typedef mozilla::dom::PrefSetting PrefSetting;

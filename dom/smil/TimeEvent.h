@@ -14,7 +14,7 @@ namespace mozilla {
 namespace dom {
 
 class TimeEvent final : public Event,
-                            public nsIDOMTimeEvent
+                        public nsIDOMTimeEvent
 {
 public:
   TimeEvent(EventTarget* aOwner,

@@ -15,8 +15,8 @@ namespace mozilla {
 namespace dom {
 
 class HTMLMenuElement final : public nsGenericHTMLElement,
-                                  public nsIDOMHTMLMenuElement,
-                                  public nsIHTMLMenu
+                              public nsIDOMHTMLMenuElement,
+                              public nsIHTMLMenu
 {
 public:
   explicit HTMLMenuElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

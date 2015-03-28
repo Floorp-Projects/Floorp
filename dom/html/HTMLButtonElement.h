@@ -17,8 +17,8 @@ class EventChainPreVisitor;
 namespace dom {
 
 class HTMLButtonElement final : public nsGenericHTMLFormElementWithState,
-                                    public nsIDOMHTMLButtonElement,
-                                    public nsIConstraintValidation
+                                public nsIDOMHTMLButtonElement,
+                                public nsIConstraintValidation
 {
 public:
   using nsIConstraintValidation::GetValidationMessage;

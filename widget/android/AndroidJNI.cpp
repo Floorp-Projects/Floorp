@@ -903,7 +903,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_init(JNIEnv* env, jobject ins
 
     const auto& newRef = NativePanZoomController::Ref::From(instance);
     NativePanZoomController::LocalRef oldRef =
-            APZCCallbackHandler::GetInstance()->SetNativePanZoomController(newRef);
+            APZCCallbackHandler::SetNativePanZoomController(newRef);
 
     MOZ_ASSERT(!oldRef, "Registering a new NPZC when we already have one");
 }
@@ -947,7 +947,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_destroy(JNIEnv* env, jobject 
     }
 
     NativePanZoomController::LocalRef oldRef =
-            APZCCallbackHandler::GetInstance()->SetNativePanZoomController(nullptr);
+            APZCCallbackHandler::SetNativePanZoomController(nullptr);
 
     MOZ_ASSERT(oldRef, "Clearing a non-existent NPZC");
 }

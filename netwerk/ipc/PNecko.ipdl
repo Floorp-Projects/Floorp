@@ -20,6 +20,7 @@ include protocol PDNSRequest;
 include protocol PChannelDiverter;
 include protocol PBlob; //FIXME: bug #792908
 include protocol PFileDescriptorSet;
+include protocol PDataChannel;
 
 include protocol PRtspController;
 include protocol PRtspChannel;
@@ -48,6 +49,7 @@ prio(normal upto urgent) sync protocol PNecko
   manages PUDPSocket;
   manages PDNSRequest;
   manages PRemoteOpenFile;
+  manages PDataChannel;
   manages PRtspController;
   manages PRtspChannel;
   manages PChannelDiverter;
@@ -76,6 +78,13 @@ parent:
   SpeculativeConnect(URIParams uri);
   HTMLDNSPrefetch(nsString hostname, uint16_t flags);
   CancelHTMLDNSPrefetch(nsString hostname, uint16_t flags, nsresult reason);
+
+  /**
+   * channelId is used to establish a connection between redirect channels in
+   * the parent and the child when we're redirecting to a data: URI.
+   */
+  PDataChannel(uint32_t channelId);
+
   PRtspController();
   PRtspChannel(RtspChannelConnectArgs args);
   PChannelDiverter(ChannelDiverterArgs channel);

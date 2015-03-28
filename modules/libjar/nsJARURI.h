@@ -33,10 +33,10 @@
 
 
 class nsJARURI final : public nsIJARURI,
-                           public nsISerializable,
-                           public nsIClassInfo,
-                           public nsINestedURI,
-                           public nsIIPCSerializableURI
+                       public nsISerializable,
+                       public nsIClassInfo,
+                       public nsINestedURI,
+                       public nsIIPCSerializableURI
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

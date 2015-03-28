@@ -34,7 +34,7 @@ class SharedThreadPool;
 //       For details see the test code at:
 //       https://github.com/cpearce/IMFByteStreamBehaviour/
 class WMFByteStream final : public IMFByteStream
-                              , public IMFAttributes
+                          , public IMFAttributes
 {
   ~WMFByteStream();
 

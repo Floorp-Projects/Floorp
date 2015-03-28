@@ -44,8 +44,8 @@ class nsIEditor;
 class nsIWebProgress;
 
 class nsEditingSession final : public nsIEditingSession,
-                                   public nsIWebProgressListener,
-                                   public nsSupportsWeakReference
+                               public nsIWebProgressListener,
+                               public nsSupportsWeakReference
 {
 public:
 

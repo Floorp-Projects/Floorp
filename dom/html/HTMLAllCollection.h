@@ -30,7 +30,7 @@ class OwningNodeOrHTMLCollection;
 template<typename> struct Nullable;
 
 class HTMLAllCollection final : public nsISupports
-                                  , public nsWrapperCache
+                              , public nsWrapperCache
 {
   ~HTMLAllCollection();
 

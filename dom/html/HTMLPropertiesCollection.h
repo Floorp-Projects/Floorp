@@ -49,8 +49,8 @@ protected:
 };
 
 class HTMLPropertiesCollection final : public nsIHTMLCollection,
-                                           public nsStubMutationObserver,
-                                           public nsWrapperCache
+                                       public nsStubMutationObserver,
+                                       public nsWrapperCache
 {
   friend class PropertyNodeList;
   friend class PropertyStringList;
@@ -149,7 +149,7 @@ protected:
 };
 
 class PropertyNodeList final : public nsINodeList,
-                                   public nsStubMutationObserver
+                               public nsStubMutationObserver
 {
 public:
   PropertyNodeList(HTMLPropertiesCollection* aCollection,

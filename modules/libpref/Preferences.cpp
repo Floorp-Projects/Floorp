@@ -126,7 +126,7 @@ public:
 };
 
 class ValueObserver final : public nsIObserver,
-                                public ValueObserverHashKey
+                            public ValueObserverHashKey
 {
   ~ValueObserver() {
     Preferences::RemoveObserver(this, mPrefName.get());

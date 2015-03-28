@@ -56,8 +56,8 @@ PRLogModuleInfo* GetSpeechRecognitionLog();
 already_AddRefed<nsISpeechRecognitionService> GetSpeechRecognitionService();
 
 class SpeechRecognition final : public DOMEventTargetHelper,
-                                    public nsIObserver,
-                                    public SupportsWeakPtr<SpeechRecognition>
+                                public nsIObserver,
+                                public SupportsWeakPtr<SpeechRecognition>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(SpeechRecognition)

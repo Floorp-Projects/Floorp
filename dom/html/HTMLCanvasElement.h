@@ -42,7 +42,7 @@ enum class CanvasContextType : uint8_t {
 };
 
 class HTMLCanvasElement final : public nsGenericHTMLElement,
-                                    public nsIDOMHTMLCanvasElement
+                                public nsIDOMHTMLCanvasElement
 {
   enum {
     DEFAULT_CANVAS_WIDTH = 300,

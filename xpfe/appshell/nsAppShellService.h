@@ -21,7 +21,7 @@
 { 0x99907d, 0x123c, 0x4853, { 0xa4, 0x6a, 0x43, 0x9, 0x8b, 0x5f, 0xb6, 0x8c } }
 
 class nsAppShellService final : public nsIAppShellService,
-                                    public nsIObserver
+                                public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS

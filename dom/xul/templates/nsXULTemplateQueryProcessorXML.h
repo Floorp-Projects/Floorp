@@ -119,7 +119,7 @@ public:
 };
 
 class nsXULTemplateQueryProcessorXML final : public nsIXULTemplateQueryProcessor,
-                                                 public nsIDOMEventListener
+                                             public nsIDOMEventListener
 {
 public:
 

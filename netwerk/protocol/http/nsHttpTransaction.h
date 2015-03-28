@@ -41,9 +41,9 @@ class nsHttpResponseHead;
 //-----------------------------------------------------------------------------
 
 class nsHttpTransaction final : public nsAHttpTransaction
-                                  , public ATokenBucketEvent
-                                  , public nsIInputStreamCallback
-                                  , public nsIOutputStreamCallback
+                              , public ATokenBucketEvent
+                              , public nsIInputStreamCallback
+                              , public nsIOutputStreamCallback
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

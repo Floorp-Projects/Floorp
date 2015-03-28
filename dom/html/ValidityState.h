@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class ValidityState final : public nsIDOMValidityState,
-                                public nsWrapperCache
+                            public nsWrapperCache
 {
   ~ValidityState() {}
 

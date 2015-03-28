@@ -21,11 +21,11 @@ BEGIN_FMRADIO_NAMESPACE
 class DOMRequest;
 
 class FMRadio final : public DOMEventTargetHelper
-                        , public hal::SwitchObserver
-                        , public FMRadioEventObserver
-                        , public nsSupportsWeakReference
-                        , public nsIAudioChannelAgentCallback
-                        , public nsIDOMEventListener
+                    , public hal::SwitchObserver
+                    , public FMRadioEventObserver
+                    , public nsSupportsWeakReference
+                    , public nsIAudioChannelAgentCallback
+                    , public nsIDOMEventListener
 
 {
   friend class FMRadioRequest;

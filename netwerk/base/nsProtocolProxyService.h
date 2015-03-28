@@ -34,7 +34,7 @@ class nsPACMan;
         { 0xad, 0x62, 0x0c, 0x87, 0x35, 0x1e, 0x64, 0x0d } }
 
 class nsProtocolProxyService final : public nsIProtocolProxyService2
-                                       , public nsIObserver
+                                   , public nsIObserver
 {
 public:
     NS_DECL_ISUPPORTS

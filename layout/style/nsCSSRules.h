@@ -45,7 +45,7 @@ class ErrorResult;
 namespace css {
 
 class MediaRule final : public GroupRule,
-                            public nsIDOMCSSMediaRule
+                        public nsIDOMCSSMediaRule
 {
 public:
   MediaRule(uint32_t aLineNumber, uint32_t aColumnNumber);
@@ -103,7 +103,7 @@ protected:
 };
 
 class DocumentRule final : public GroupRule,
-                               public nsIDOMCSSMozDocumentRule
+                           public nsIDOMCSSMozDocumentRule
 {
 public:
   DocumentRule(uint32_t aLineNumber, uint32_t aColumnNumber);
@@ -236,7 +236,7 @@ private:
 };
 
 class nsCSSFontFaceRule final : public mozilla::css::Rule,
-                                    public nsIDOMCSSFontFaceRule
+                                public nsIDOMCSSFontFaceRule
 {
 public:
   nsCSSFontFaceRule(uint32_t aLineNumber, uint32_t aColumnNumber)
@@ -303,9 +303,8 @@ nsCSSFontFaceStyleDecl::ContainingRule() const
     (reinterpret_cast<const char*>(this) - offsetof(nsCSSFontFaceRule, mDecl));
 }
 
-class nsCSSFontFeatureValuesRule final :
-                                       public mozilla::css::Rule,
-                                       public nsIDOMCSSFontFeatureValuesRule
+class nsCSSFontFeatureValuesRule final : public mozilla::css::Rule,
+                                         public nsIDOMCSSFontFeatureValuesRule
 {
 public:
   nsCSSFontFeatureValuesRule(uint32_t aLineNumber, uint32_t aColumnNumber)
@@ -360,7 +359,7 @@ namespace mozilla {
 namespace css {
 
 class CharsetRule final : public Rule,
-                              public nsIDOMCSSCharsetRule
+                          public nsIDOMCSSCharsetRule
 {
 public:
   CharsetRule(const nsAString& aEncoding,
@@ -429,7 +428,7 @@ protected:
 };
 
 class nsCSSKeyframeRule final : public mozilla::css::Rule,
-                                    public nsIDOMMozCSSKeyframeRule
+                                public nsIDOMMozCSSKeyframeRule
 {
 public:
   // WARNING: Steals the contents of aKeys *and* aDeclaration
@@ -481,7 +480,7 @@ private:
 };
 
 class nsCSSKeyframesRule final : public mozilla::css::GroupRule,
-                                     public nsIDOMMozCSSKeyframesRule
+                                 public nsIDOMMozCSSKeyframesRule
 {
 public:
   nsCSSKeyframesRule(const nsSubstring& aName,
@@ -562,7 +561,7 @@ protected:
 };
 
 class nsCSSPageRule final : public mozilla::css::Rule,
-                                public nsIDOMCSSPageRule
+                            public nsIDOMCSSPageRule
 {
 public:
   // WARNING: Steals the contents of aDeclaration
@@ -665,7 +664,7 @@ protected:
 } // namespace mozilla
 
 class nsCSSCounterStyleRule final : public mozilla::css::Rule,
-                                        public nsIDOMCSSCounterStyleRule
+                                    public nsIDOMCSSCounterStyleRule
 {
 public:
   explicit nsCSSCounterStyleRule(const nsAString& aName,

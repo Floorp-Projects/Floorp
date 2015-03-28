@@ -18,7 +18,7 @@ namespace mozilla {
 namespace dom {
 
 class HTMLMapElement final : public nsGenericHTMLElement,
-                                 public nsIDOMHTMLMapElement
+                             public nsIDOMHTMLMapElement
 {
 public:
   explicit HTMLMapElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

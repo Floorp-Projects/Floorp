@@ -69,7 +69,7 @@ PRLogModuleInfo* nsURILoader::mLog = nullptr;
  * (or aborted).
  */
 class nsDocumentOpenInfo final : public nsIStreamListener
-                                   , public nsIThreadRetargetableStreamListener
+                               , public nsIThreadRetargetableStreamListener
 {
 public:
   // Needed for nsCOMPtr to work right... Don't call this!

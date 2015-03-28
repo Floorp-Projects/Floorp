@@ -477,7 +477,7 @@ static const char sPopStatePrefStr[] = "browser.history.allowPopState";
  * on nsGlobalWindow, where any script could see it.
  */
 class nsGlobalWindowObserver final : public nsIObserver,
-                                         public nsIInterfaceRequestor
+                                     public nsIInterfaceRequestor
 {
 public:
   explicit nsGlobalWindowObserver(nsGlobalWindow* aWindow) : mWindow(aWindow) {}

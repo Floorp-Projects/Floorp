@@ -24,7 +24,7 @@ class nsTransactionItem;
  *
  */
 class nsTransactionManager final : public nsITransactionManager
-                                     , public nsSupportsWeakReference
+                                 , public nsSupportsWeakReference
 {
 private:
 

@@ -28,7 +28,7 @@
 #include "nsHtml5StreamListener.h"
 
 class nsHtml5Parser final : public nsIParser,
-                                public nsSupportsWeakReference
+                            public nsSupportsWeakReference
 {
   public:
     NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW

@@ -32,11 +32,11 @@ class nsFormHistory;
 class nsINode;
 
 class nsFormFillController final : public nsIFormFillController,
-                                       public nsIAutoCompleteInput,
-                                       public nsIAutoCompleteSearch,
-                                       public nsIDOMEventListener,
-                                       public nsIFormAutoCompleteObserver,
-                                       public nsIMutationObserver
+                                   public nsIAutoCompleteInput,
+                                   public nsIAutoCompleteSearch,
+                                   public nsIDOMEventListener,
+                                   public nsIFormAutoCompleteObserver,
+                                   public nsIMutationObserver
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

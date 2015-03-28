@@ -631,8 +631,8 @@ public:
   }
 
   class Listener final : public nsIStreamListener,
-                             public nsIInterfaceRequestor,
-                             public nsIChannelEventSink
+                         public nsIInterfaceRequestor,
+                         public nsIChannelEventSink
   {
     ~Listener() {}
   public:

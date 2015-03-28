@@ -86,19 +86,19 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIOfflineStorage, NS_OFFLINESTORAGE_IID)
 
 #define NS_DECL_NSIOFFLINESTORAGE                                              \
   NS_IMETHOD_(const nsACString&)                                               \
-  Id() override;                                                           \
+  Id() override;                                                               \
                                                                                \
   NS_IMETHOD_(Client*)                                                         \
-  GetClient() override;                                                    \
+  GetClient() override;                                                        \
                                                                                \
   NS_IMETHOD_(bool)                                                            \
-  IsOwnedByProcess(ContentParent* aOwner) override;                        \
+  IsOwnedByProcess(ContentParent* aOwner) override;                            \
                                                                                \
   NS_IMETHOD_(const nsACString&)                                               \
-  Origin() override;                                                       \
+  Origin() override;                                                           \
                                                                                \
   NS_IMETHOD_(nsresult)                                                        \
-  Close() override;                                                        \
+  Close() override;                                                            \
                                                                                \
   NS_IMETHOD_(void)                                                            \
   Invalidate() override;

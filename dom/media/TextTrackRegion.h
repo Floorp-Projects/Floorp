@@ -22,7 +22,7 @@ class GlobalObject;
 class TextTrack;
 
 class TextTrackRegion final : public nsISupports,
-                                  public nsWrapperCache
+                              public nsWrapperCache
 {
 public:
 

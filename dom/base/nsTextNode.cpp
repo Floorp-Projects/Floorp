@@ -28,7 +28,7 @@ using namespace mozilla::dom;
  * class used to implement attr() generated content
  */
 class nsAttributeTextNode final : public nsTextNode,
-                                      public nsStubMutationObserver
+                                  public nsStubMutationObserver
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

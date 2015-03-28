@@ -19,9 +19,9 @@ namespace mozilla {
 namespace dom {
 
 class HTMLSharedObjectElement final : public nsGenericHTMLElement
-                                        , public nsObjectLoadingContent
-                                        , public nsIDOMHTMLAppletElement
-                                        , public nsIDOMHTMLEmbedElement
+                                    , public nsObjectLoadingContent
+                                    , public nsIDOMHTMLAppletElement
+                                    , public nsIDOMHTMLEmbedElement
 {
 public:
   explicit HTMLSharedObjectElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,

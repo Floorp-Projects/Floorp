@@ -45,7 +45,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
           ensurePromiseFail.bind(null, 1),
           checkExn.bind(null, 44, "NS_ERROR_UNEXPECTED", "", undefined,
                         ourFile, 1,
-                        "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:44:6\n")),
+                        "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:44:7\n")),
       t.testPromiseWithThrowingContentPromiseInit(function() {
           thereIsNoSuchContentFunction1();
         }).then(
@@ -64,7 +64,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
           checkExn.bind(null, 61, "ReferenceError",
                         "thereIsNoSuchContentFunction2 is not defined",
                         undefined, ourFile, 4,
-                        "doTest/<@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:61:11\n")),
+                        "doTest/<@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:61:11\nAsync*doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:60:7\n")),
       t.testPromiseWithThrowingChromeThenable().then(
           ensurePromiseFail.bind(null, 5),
           checkExn.bind(null, 0, "NS_ERROR_UNEXPECTED", "", undefined, "", 5, "")),
@@ -81,13 +81,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
           checkExn.bind(null, 79, "NotFoundError",
                         "We are a second DOMException",
                         DOMException.NOT_FOUND_ERR, ourFile, 7,
-                        "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:79:6\n")),
+                        "doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:79:7\n")),
       t.testPromiseWithDOMExceptionThrowingThenFunction().then(
           ensurePromiseFail.bind(null, 8),
           checkExn.bind(null, 85, "NetworkError",
                         "We are a third DOMException",
                         DOMException.NETWORK_ERR, ourFile, 8,
-                        "Async*doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:85:6\n")),
+                        "Async*doTest@http://mochi.test:8888/tests/dom/bindings/test/test_promise_rejections_from_jsimplemented.html:85:7\n")),
       t.testPromiseWithDOMExceptionThrowingThenable().then(
           ensurePromiseFail.bind(null, 9),
           checkExn.bind(null, 0, "TypeMismatchError",

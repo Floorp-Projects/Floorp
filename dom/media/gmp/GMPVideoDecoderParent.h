@@ -21,8 +21,8 @@ namespace gmp {
 class GMPParent;
 
 class GMPVideoDecoderParent final : public PGMPVideoDecoderParent
-                                      , public GMPVideoDecoderProxy
-                                      , public GMPSharedMemManager
+                                  , public GMPVideoDecoderProxy
+                                  , public GMPSharedMemManager
 {
 public:
   NS_INLINE_DECL_REFCOUNTING(GMPVideoDecoderParent)

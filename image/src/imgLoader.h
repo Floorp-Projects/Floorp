@@ -212,10 +212,10 @@ enum class AcceptedMimeTypes : uint8_t {
 };
 
 class imgLoader final : public imgILoader,
-                            public nsIContentSniffer,
-                            public imgICache,
-                            public nsSupportsWeakReference,
-                            public nsIObserver
+                        public nsIContentSniffer,
+                        public imgICache,
+                        public nsSupportsWeakReference,
+                        public nsIObserver
 {
   virtual ~imgLoader();
 

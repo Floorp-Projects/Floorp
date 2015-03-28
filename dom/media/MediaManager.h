@@ -545,7 +545,7 @@ typedef void (*WindowListenerCallback)(MediaManager *aThis,
                                        void *aData);
 
 class MediaManager final : public nsIMediaManagerService,
-                               public nsIObserver
+                           public nsIObserver
 {
 public:
   static already_AddRefed<MediaManager> GetInstance();

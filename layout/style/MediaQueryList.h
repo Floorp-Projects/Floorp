@@ -26,8 +26,8 @@ namespace mozilla {
 namespace dom {
 
 class MediaQueryList final : public nsISupports,
-                                 public nsWrapperCache,
-                                 public PRCList
+                             public nsWrapperCache,
+                             public PRCList
 {
 public:
   // The caller who constructs is responsible for calling Evaluate

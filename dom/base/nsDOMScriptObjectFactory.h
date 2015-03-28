@@ -23,7 +23,7 @@
 #include "mozilla/Attributes.h"
 
 class nsDOMScriptObjectFactory final : public nsIDOMScriptObjectFactory,
-                                           public nsIObserver
+                                       public nsIObserver
 {
   ~nsDOMScriptObjectFactory() {}
 

@@ -21,9 +21,9 @@
 
 
 class nsWindowDataSource final : public nsIRDFDataSource,
-                                     public nsIObserver,
-                                     public nsIWindowMediatorListener,
-                                     public nsIWindowDataSource
+                                 public nsIObserver,
+                                 public nsIWindowMediatorListener,
+                                 public nsIWindowDataSource
 {
  public:
     nsWindowDataSource() { }

@@ -4709,11 +4709,50 @@ Parser<FullParseHandler>::forStatement()
     MOZ_ASSERT_IF(isForDecl, pn1->isArity(PN_LIST));
     MOZ_ASSERT(!!blockObj == (isForDecl && pn1->isOp(JSOP_NOP)));
 
-    // The form 'for (let <vars>; <expr2>; <expr3>) <stmt>' generates an
-    // implicit block even if stmt is not a BlockStatement.
-    // If the loop has that exact form, then:
-    // - forLetImpliedBlock is the node for the implicit block scope.
-    // - forLetDecl is the node for the decl 'let <vars>'.
+    // All forms of for-loop (for(;;), for-in, for-of) generate an implicit
+    // block to store any lexical variables declared by the loop-head.  We
+    // implement this by desugaring such loops.  These:
+    //
+    //   for (let/const <pattern-and-assigns>; <test>; <update>) <stmt>
+    //   for (let <pattern> in <expr>) <stmt>
+    //   for (let <pattern> of <expr>) <stmt>
+    //
+    // transform into almost these desugarings:
+    //
+    //   let (<pattern-and-assigns>) { for (; <test>; <update>) <stmt> }
+    //   let (<pattern>) { for (<pattern> in <expr>) <stmt> }
+    //   let (<pattern>) { for (<pattern> of <expr>) <stmt> }
+    //
+    // This desugaring is not *quite* correct.  Assignments in the head of a
+    // let-block are evaluated *outside* the scope of the variables declared by
+    // the let-block-head.  But ES6 mandates that they be evaluated in the same
+    // scope, triggering used-before-initialization temporal dead zone errors
+    // as necessary.  Bug 1069480 will fix this.
+    //
+    // Additionally, ES6 mandates that *each iteration* of a for-loop create a
+    // fresh binding of loop variables.  For example:
+    //
+    //   var funcs = [];
+    //   for (let i = 0; i < 2; i++)
+    //     funcs.push(function() { return i; });
+    //   assertEq(funcs[0](), 0);
+    //   assertEq(funcs[1](), 1);
+    //
+    // These semantics are implemented by "freshening" the implicit block --
+    // changing the scope chain to a fresh clone of the instantaneous block
+    // object -- each iteration, just before evaluating the "update" in
+    // for(;;) loops.  (We don't implement this freshening for for-in/of loops,
+    // but soon: bug 449811.)  No freshening occurs in for (const ...;;) as
+    // there's no point (you can't reassign consts), and moreover the spec
+    // requires it (which fact isn't exposed in-language but can be observed
+    // through the Debugger API).
+    //
+    // If the for-loop head includes a lexical declaration, then we create an
+    // implicit block scope, and:
+    //
+    //   * forLetImpliedBlock is the node for the implicit block scope.
+    //   * forLetDecl is the node for the decl 'let/const <pattern>'.
+    //
     // Otherwise both are null.
     ParseNode *forLetImpliedBlock = nullptr;
     ParseNode *forLetDecl = nullptr;
@@ -4885,23 +4924,45 @@ Parser<FullParseHandler>::forStatement()
         headKind = PNK_FORHEAD;
 
         if (blockObj) {
-            /*
-             * Desugar 'for (let A; B; C) D' into 'let (A) { for (; B; C) D }'
-             * to induce the correct scoping for A. Ensure here that the previously
-             * unchecked assignment mandate for const declarations holds.
-             */
+            // Ensure here that the previously-unchecked assignment mandate for
+            // const declarations holds.
             if (!checkForHeadConstInitializers(pn1)) {
                 report(ParseError, false, nullptr, JSMSG_BAD_CONST_DECL);
                 return null();
             }
 
+            // Desugar
+            //
+            //   for (let INIT; TEST; UPDATE) STMT
+            //
+            // into
+            //
+            //   let (INIT) { for (; TEST; UPDATE) STMT }
+            //
+            // to provide a block scope for INIT.
             forLetImpliedBlock = pushLetScope(blockObj, &letStmt);
             if (!forLetImpliedBlock)
                 return null();
             letStmt.isForLetBlock = true;
 
             forLetDecl = pn1;
-            pn1 = nullptr;
+
+            // The above transformation isn't enough to implement |INIT|
+            // scoping, because each loop iteration must see separate bindings
+            // of |INIT|.  We handle this by replacing the block on the scope
+            // chain with a new block, copying the old one's contents, each
+            // iteration.  We supply a special PNK_FRESHENBLOCK node as the
+            // |let INIT| node for |for(let INIT;;)| loop heads to distinguish
+            // such nodes from *actual*, non-desugared use of the above syntax.
+            // (We don't do this for PNK_CONST nodes because the spec says no
+            // freshening happens -- observable with the Debugger API.)
+            if (pn1->isKind(PNK_CONST)) {
+                pn1 = nullptr;
+            } else {
+                pn1 = handler.newFreshenBlock(pn1->pn_pos);
+                if (!pn1)
+                    return null();
+            }
         }
 
         /* Parse the loop condition or null into pn2. */

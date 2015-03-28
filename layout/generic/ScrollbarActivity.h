@@ -56,7 +56,8 @@ namespace layout {
  */
 
 class ScrollbarActivity final : public nsIDOMEventListener,
-                                    public nsARefreshObserver {
+                                public nsARefreshObserver
+{
 public:
   explicit ScrollbarActivity(nsIScrollbarMediator* aScrollableFrame)
    : mScrollableFrame(aScrollableFrame)

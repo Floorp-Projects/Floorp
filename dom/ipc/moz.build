@@ -148,10 +148,6 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gonk', 'qt'):
 if CONFIG['MOZ_TOOLKIT_SEARCH']:
     DEFINES['MOZ_TOOLKIT_SEARCH'] = True
 
-for var in ('MOZ_PERMISSIONS', 'MOZ_CHILD_PERMISSIONS'):
-    if CONFIG[var]:
-        DEFINES[var] = True
-
 JAR_MANIFESTS += ['jar.mn']
 
 BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']

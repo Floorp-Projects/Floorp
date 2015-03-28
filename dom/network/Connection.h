@@ -23,8 +23,8 @@ namespace dom {
 namespace network {
 
 class Connection final : public DOMEventTargetHelper
-                           , public NetworkObserver
-                           , public nsINetworkProperties
+                       , public NetworkObserver
+                       , public nsINetworkProperties
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

@@ -88,17 +88,17 @@ public:
   virtual void GetName(nsACString& aName) = 0;
 };
 
-#define BT_DECL_PROFILE_MGR_BASE                                                 \
-public:                                                                          \
-  NS_DECL_ISUPPORTS                                                              \
-  NS_DECL_NSIOBSERVER                                                            \
-  virtual void OnGetServiceChannel(const nsAString& aDeviceAddress,              \
-                                   const nsAString& aServiceUuid,                \
+#define BT_DECL_PROFILE_MGR_BASE                                             \
+public:                                                                      \
+  NS_DECL_ISUPPORTS                                                          \
+  NS_DECL_NSIOBSERVER                                                        \
+  virtual void OnGetServiceChannel(const nsAString& aDeviceAddress,          \
+                                   const nsAString& aServiceUuid,            \
                                    int aChannel) override;                   \
   virtual void OnUpdateSdpRecords(const nsAString& aDeviceAddress) override; \
   virtual void GetAddress(nsAString& aDeviceAddress) override;               \
   virtual bool IsConnected() override;                                       \
-  virtual void Connect(const nsAString& aDeviceAddress,                          \
+  virtual void Connect(const nsAString& aDeviceAddress,                      \
                        BluetoothProfileController* aController) override;    \
   virtual void Disconnect(BluetoothProfileController* aController) override; \
   virtual void OnConnect(const nsAString& aErrorStr) override;               \
