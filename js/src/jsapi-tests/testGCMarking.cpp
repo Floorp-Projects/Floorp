@@ -8,11 +8,11 @@
 #include "jsapi-tests/tests.h"
 
 class CCWTestTracer : public JS::CallbackTracer {
-    static void staticCallback(JS::CallbackTracer *trc, void **thingp, JSGCTraceKind kind) {
-        static_cast<CCWTestTracer *>(trc)->callback(thingp, kind);
+    static void staticCallback(JS::CallbackTracer* trc, void** thingp, JSGCTraceKind kind) {
+        static_cast<CCWTestTracer*>(trc)->callback(thingp, kind);
     }
 
-    void callback(void **thingp, JSGCTraceKind kind) {
+    void callback(void** thingp, JSGCTraceKind kind) {
         numberOfThingsTraced++;
 
         printf("*thingp         = %p\n", *thingp);
@@ -28,10 +28,10 @@ class CCWTestTracer : public JS::CallbackTracer {
   public:
     bool          okay;
     size_t        numberOfThingsTraced;
-    void          **expectedThingp;
+    void**        expectedThingp;
     JSGCTraceKind expectedKind;
 
-    CCWTestTracer(JSContext *cx, void **expectedThingp, JSGCTraceKind expectedKind)
+    CCWTestTracer(JSContext* cx, void** expectedThingp, JSGCTraceKind expectedKind)
       : JS::CallbackTracer(JS_GetRuntime(cx), staticCallback),
         okay(true),
         numberOfThingsTraced(0),
@@ -68,7 +68,7 @@ BEGIN_TEST(testTracingIncomingCCWs)
     CHECK(zones.init());
     CHECK(zones.put(global1->zone()));
 
-    void *thing = obj.get();
+    void* thing = obj.get();
     CCWTestTracer trc(cx, &thing, JSTRACE_OBJECT);
     JS_TraceIncomingCCWs(&trc, zones);
     CHECK(trc.numberOfThingsTraced == 1);

@@ -21,10 +21,10 @@ using namespace js::gc;
 JS_STATIC_ASSERT(AllocKinds == unsigned(AllocKind::LIMIT));
 JS_STATIC_ASSERT(LastObjectAllocKind == unsigned(AllocKind::OBJECT_LAST));
 
-static FILE *gcTraceFile = nullptr;
+static FILE* gcTraceFile = nullptr;
 
-static HashSet<const Class *, DefaultHasher<const Class *>, SystemAllocPolicy> tracedClasses;
-static HashSet<const ObjectGroup *, DefaultHasher<const ObjectGroup *>, SystemAllocPolicy> tracedGroups;
+static HashSet<const Class*, DefaultHasher<const Class*>, SystemAllocPolicy> tracedClasses;
+static HashSet<const ObjectGroup*, DefaultHasher<const ObjectGroup*>, SystemAllocPolicy> tracedGroups;
 
 static inline void
 WriteWord(uint64_t data)
@@ -43,7 +43,7 @@ TraceEvent(GCTraceEvent event, uint64_t payload = 0, uint8_t extra = 0)
 }
 
 static inline void
-TraceAddress(const void *p)
+TraceAddress(const void* p)
 {
     TraceEvent(TraceDataAddress, uint64_t(p));
 }
@@ -76,12 +76,12 @@ TraceString(const char* string)
 }
 
 bool
-js::gc::InitTrace(GCRuntime &gc)
+js::gc::InitTrace(GCRuntime& gc)
 {
     /* This currently does not support multiple runtimes. */
     MOZ_ALWAYS_TRUE(!gcTraceFile);
 
-    char *filename = getenv("JS_GC_TRACE");
+    char* filename = getenv("JS_GC_TRACE");
     if (!filename)
         return true;
 
@@ -123,7 +123,7 @@ js::gc::TraceEnabled()
 }
 
 void
-js::gc::TraceNurseryAlloc(Cell *thing, size_t size)
+js::gc::TraceNurseryAlloc(Cell* thing, size_t size)
 {
     if (thing) {
         /* We don't have AllocKind here, but we can work it out from size. */
@@ -134,14 +134,14 @@ js::gc::TraceNurseryAlloc(Cell *thing, size_t size)
 }
 
 void
-js::gc::TraceTenuredAlloc(Cell *thing, AllocKind kind)
+js::gc::TraceTenuredAlloc(Cell* thing, AllocKind kind)
 {
     if (thing)
         TraceEvent(TraceEventTenuredAlloc, uint64_t(thing), kind);
 }
 
 static void
-MaybeTraceClass(const Class *clasp)
+MaybeTraceClass(const Class* clasp)
 {
     if (tracedClasses.has(clasp))
         return;
@@ -155,7 +155,7 @@ MaybeTraceClass(const Class *clasp)
 }
 
 static void
-MaybeTraceGroup(ObjectGroup *group)
+MaybeTraceGroup(ObjectGroup* group)
 {
     if (tracedGroups.has(group))
         return;
@@ -169,18 +169,18 @@ MaybeTraceGroup(ObjectGroup *group)
 }
 
 void
-js::gc::TraceTypeNewScript(ObjectGroup *group)
+js::gc::TraceTypeNewScript(ObjectGroup* group)
 {
     const size_t bufLength = 128;
     static char buffer[bufLength];
     MOZ_ASSERT(group->hasNewScript());
-    JSAtom *funName = group->newScript()->fun->displayAtom();
+    JSAtom* funName = group->newScript()->fun->displayAtom();
     if (!funName)
         return;
 
     size_t length = funName->length();
     MOZ_ALWAYS_TRUE(length < bufLength);
-    CopyChars(reinterpret_cast<Latin1Char *>(buffer), *funName);
+    CopyChars(reinterpret_cast<Latin1Char*>(buffer), *funName);
     buffer[length] = 0;
 
     TraceEvent(TraceEventTypeNewScript, uint64_t(group));
@@ -193,7 +193,7 @@ js::gc::TraceCreateObject(JSObject* object)
     if (!gcTraceFile)
         return;
 
-    ObjectGroup *group = object->group();
+    ObjectGroup* group = object->group();
     MaybeTraceGroup(group);
     TraceEvent(TraceEventCreateObject, uint64_t(object));
     TraceAddress(group);
@@ -206,7 +206,7 @@ js::gc::TraceMinorGCStart()
 }
 
 void
-js::gc::TracePromoteToTenured(Cell *src, Cell *dst)
+js::gc::TracePromoteToTenured(Cell* src, Cell* dst)
 {
     TraceEvent(TraceEventPromoteToTenured, uint64_t(src));
     TraceAddress(dst);
@@ -225,12 +225,12 @@ js::gc::TraceMajorGCStart()
 }
 
 void
-js::gc::TraceTenuredFinalize(Cell *thing)
+js::gc::TraceTenuredFinalize(Cell* thing)
 {
     if (!gcTraceFile)
         return;
     if (thing->tenuredGetAllocKind() == AllocKind::OBJECT_GROUP)
-        tracedGroups.remove(static_cast<const ObjectGroup *>(thing));
+        tracedGroups.remove(static_cast<const ObjectGroup*>(thing));
     TraceEvent(TraceEventTenuredFinalize, uint64_t(thing));
 }
 

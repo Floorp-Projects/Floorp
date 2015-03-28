@@ -62,8 +62,8 @@ using namespace js::jit;
  * The tempN registers are free to use for computations.
  */
 
-NativeRegExpMacroAssembler::NativeRegExpMacroAssembler(LifoAlloc *alloc, RegExpShared *shared,
-                                                       JSRuntime *rt, Mode mode, int registers_to_save)
+NativeRegExpMacroAssembler::NativeRegExpMacroAssembler(LifoAlloc* alloc, RegExpShared* shared,
+                                                       JSRuntime* rt, Mode mode, int registers_to_save)
   : RegExpMacroAssembler(*alloc, shared, registers_to_save),
     runtime(rt), mode_(mode)
 {
@@ -101,7 +101,7 @@ NativeRegExpMacroAssembler::NativeRegExpMacroAssembler(LifoAlloc *alloc, RegExpS
 //
 // void execute(InputOutputData*);
 RegExpCode
-NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
+NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
 {
     if (!cx->compartment()->ensureJitCompartmentExists(cx))
         return RegExpCode();
@@ -131,7 +131,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
     masm.Push(IntArgReg0);
 #endif
 
-    size_t frameSize = sizeof(FrameData) + num_registers_ * sizeof(void *);
+    size_t frameSize = sizeof(FrameData) + num_registers_ * sizeof(void*);
     frameSize = JS_ROUNDUP(frameSize + masm.framePushed(), ABIStackAlignment) - masm.framePushed();
 
     // Actually emit code to start a new stack frame.
@@ -140,7 +140,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
 
     // Check if we have space on the stack.
     Label stack_ok;
-    void *stack_limit = runtime->addressOfJitStackLimit();
+    void* stack_limit = runtime->addressOfJitStackLimit();
     masm.branchPtr(Assembler::Below, AbsoluteAddress(stack_limit), StackPointer, &stack_ok);
 
     // Exit with an exception. There is not enough space on the stack
@@ -154,7 +154,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
     // Ensure that we write to each stack page, in order. Skipping a page
     // on Windows can cause segmentation faults. Assuming page size is 4k.
     const int kPageSize = 4096;
-    for (int i = frameSize - sizeof(void *); i >= 0; i -= kPageSize)
+    for (int i = frameSize - sizeof(void*); i >= 0; i -= kPageSize)
         masm.storePtr(temp0, Address(StackPointer, i));
 #endif // XP_WIN
 
@@ -163,7 +163,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
     Address inputOutputAddress(StackPointer, frameSize);
 #else
     // The InputOutputData* is left in its original on stack location.
-    Address inputOutputAddress(StackPointer, frameSize + (pushedNonVolatileRegisters + 1) * sizeof(void *));
+    Address inputOutputAddress(StackPointer, frameSize + (pushedNonVolatileRegisters + 1) * sizeof(void*));
 #endif
 
     masm.loadPtr(inputOutputAddress, temp0);
@@ -240,7 +240,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
         Label init_loop;
         masm.bind(&init_loop);
         masm.storePtr(temp0, BaseIndex(StackPointer, temp1, TimesOne));
-        masm.addPtr(ImmWord(sizeof(void *)), temp1);
+        masm.addPtr(ImmWord(sizeof(void*)), temp1);
         masm.branchPtr(Assembler::LessThan, temp1,
                        ImmWord(register_offset(num_saved_registers_)), &init_loop);
     } else {
@@ -313,7 +313,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
             masm.store32(temp0, numOutputRegistersAddress);
 
             // Advance the location for output.
-            masm.add32(Imm32(num_saved_registers_ * sizeof(void *)), outputRegistersAddress);
+            masm.add32(Imm32(num_saved_registers_ * sizeof(void*)), outputRegistersAddress);
 
             // Prepare temp0 to initialize registers with its value in the next run.
             masm.loadPtr(Address(StackPointer, offsetof(FrameData, inputStartMinusOne)), temp0);
@@ -354,7 +354,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
 
 #ifndef JS_CODEGEN_X86
     // Include the InputOutputData* when adjusting the stack size.
-    masm.freeStack(frameSize + sizeof(void *));
+    masm.freeStack(frameSize + sizeof(void*));
 #else
     masm.freeStack(frameSize);
 #endif
@@ -394,7 +394,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
 
         masm.setupUnalignedABICall(1, temp0);
         masm.passABIArg(temp1);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, GrowBacktrackStack));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GrowBacktrackStack));
         masm.storeCallResult(temp0);
 
         masm.PopRegsInMask(volatileRegs);
@@ -430,7 +430,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
 
     Linker linker(masm);
     AutoFlushICache afc("RegExp");
-    JitCode *code = linker.newCode<NoGC>(cx, REGEXP_CODE);
+    JitCode* code = linker.newCode<NoGC>(cx, REGEXP_CODE);
     if (!code)
         return RegExpCode();
 
@@ -439,7 +439,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
 #endif
 
     for (size_t i = 0; i < labelPatches.length(); i++) {
-        LabelPatch &v = labelPatches[i];
+        LabelPatch& v = labelPatches[i];
         MOZ_ASSERT(!v.label);
         v.patchOffset.fixup(&masm);
         uintptr_t offset = masm.actualOffset(v.labelOffset);
@@ -449,7 +449,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext *cx, bool match_only)
     }
 
     JitSpew(JitSpew_Codegen, "Created RegExp (raw %p length %d)",
-            (void *) code->raw(), (int) masm.bytesNeeded());
+            (void*) code->raw(), (int) masm.bytesNeeded());
 
     RegExpCode res;
     res.jitCode = code;
@@ -502,7 +502,7 @@ NativeRegExpMacroAssembler::Backtrack()
 }
 
 void
-NativeRegExpMacroAssembler::Bind(Label *label)
+NativeRegExpMacroAssembler::Bind(Label* label)
 {
     JitSpew(SPEW_PREFIX "Bind");
 
@@ -561,7 +561,7 @@ NativeRegExpMacroAssembler::CheckNotCharacter(unsigned c, Label* on_not_equal)
 
 void
 NativeRegExpMacroAssembler::CheckCharacterAfterAnd(unsigned c, unsigned and_with,
-                                                   Label *on_equal)
+                                                   Label* on_equal)
 {
     JitSpew(SPEW_PREFIX "CheckCharacterAfterAnd(%d, %d)", (int) c, (int) and_with);
 
@@ -577,7 +577,7 @@ NativeRegExpMacroAssembler::CheckCharacterAfterAnd(unsigned c, unsigned and_with
 
 void
 NativeRegExpMacroAssembler::CheckNotCharacterAfterAnd(unsigned c, unsigned and_with,
-                                                      Label *on_not_equal)
+                                                      Label* on_not_equal)
 {
     JitSpew(SPEW_PREFIX "CheckNotCharacterAfterAnd(%d, %d)", (int) c, (int) and_with);
 
@@ -613,9 +613,9 @@ NativeRegExpMacroAssembler::CheckGreedyLoop(Label* on_tos_equals_current_positio
 
     Label fallthrough;
     masm.branchPtr(Assembler::NotEqual,
-                   Address(backtrack_stack_pointer, -int(sizeof(void *))), current_position,
+                   Address(backtrack_stack_pointer, -int(sizeof(void*))), current_position,
                    &fallthrough);
-    masm.subPtr(Imm32(sizeof(void *)), backtrack_stack_pointer);  // Pop.
+    masm.subPtr(Imm32(sizeof(void*)), backtrack_stack_pointer);  // Pop.
     JumpOrBacktrack(on_tos_equals_current_position);
     masm.bind(&fallthrough);
 }
@@ -807,7 +807,7 @@ NativeRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, Label
         masm.passABIArg(current_position);
         masm.passABIArg(temp1);
         int (*fun)(const char16_t*, const char16_t*, size_t) = CaseInsensitiveCompareStrings;
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void *, fun));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
         masm.storeCallResult(temp0);
 
         masm.PopRegsInMask(volatileRegs);
@@ -860,7 +860,7 @@ NativeRegExpMacroAssembler::CheckCharacterNotInRange(char16_t from, char16_t to,
 }
 
 void
-NativeRegExpMacroAssembler::CheckBitInTable(uint8_t *table, Label *on_bit_set)
+NativeRegExpMacroAssembler::CheckBitInTable(uint8_t* table, Label* on_bit_set)
 {
     JitSpew(SPEW_PREFIX "CheckBitInTable");
 
@@ -968,7 +968,7 @@ NativeRegExpMacroAssembler::PopRegister(int register_index)
 }
 
 void
-NativeRegExpMacroAssembler::PushBacktrack(Label *label)
+NativeRegExpMacroAssembler::PushBacktrack(Label* label)
 {
     JitSpew(SPEW_PREFIX "PushBacktrack");
 
@@ -983,14 +983,14 @@ NativeRegExpMacroAssembler::PushBacktrack(Label *label)
 }
 
 void
-NativeRegExpMacroAssembler::BindBacktrack(Label *label)
+NativeRegExpMacroAssembler::BindBacktrack(Label* label)
 {
     JitSpew(SPEW_PREFIX "BindBacktrack");
 
     Bind(label);
 
     for (size_t i = 0; i < labelPatches.length(); i++) {
-        LabelPatch &v = labelPatches[i];
+        LabelPatch& v = labelPatches[i];
         if (v.label == label) {
             v.labelOffset = label->offset();
             v.label = nullptr;
@@ -1008,7 +1008,7 @@ NativeRegExpMacroAssembler::PushBacktrack(Register source)
 
     // Notice: This updates flags, unlike normal Push.
     masm.storePtr(source, Address(backtrack_stack_pointer, 0));
-    masm.addPtr(Imm32(sizeof(void *)), backtrack_stack_pointer);
+    masm.addPtr(Imm32(sizeof(void*)), backtrack_stack_pointer);
 }
 
 void
@@ -1018,7 +1018,7 @@ NativeRegExpMacroAssembler::PushBacktrack(int32_t value)
 
     // Notice: This updates flags, unlike normal Push.
     masm.storePtr(ImmWord(value), Address(backtrack_stack_pointer, 0));
-    masm.addPtr(Imm32(sizeof(void *)), backtrack_stack_pointer);
+    masm.addPtr(Imm32(sizeof(void*)), backtrack_stack_pointer);
 }
 
 void
@@ -1029,7 +1029,7 @@ NativeRegExpMacroAssembler::PopBacktrack(Register target)
     MOZ_ASSERT(target != backtrack_stack_pointer);
 
     // Notice: This updates flags, unlike normal Pop.
-    masm.subPtr(Imm32(sizeof(void *)), backtrack_stack_pointer);
+    masm.subPtr(Imm32(sizeof(void*)), backtrack_stack_pointer);
     masm.loadPtr(Address(backtrack_stack_pointer, 0), target);
 }
 
@@ -1038,7 +1038,7 @@ NativeRegExpMacroAssembler::CheckBacktrackStackLimit()
 {
     JitSpew(SPEW_PREFIX "CheckBacktrackStackLimit");
 
-    const void *limitAddr = runtime->regexpStack.addressOfLimit();
+    const void* limitAddr = runtime->regexpStack.addressOfLimit();
 
     Label no_stack_overflow;
     masm.branchPtr(Assembler::AboveOrEqual, AbsoluteAddress(limitAddr),
@@ -1167,8 +1167,8 @@ NativeRegExpMacroAssembler::CheckPosition(int cp_offset, Label* on_outside_input
                    ImmWord(-cp_offset * char_size()), BranchOrBacktrack(on_outside_input));
 }
 
-Label *
-NativeRegExpMacroAssembler::BranchOrBacktrack(Label *branch)
+Label*
+NativeRegExpMacroAssembler::BranchOrBacktrack(Label* branch)
 {
     if (branch)
         return branch;
@@ -1176,7 +1176,7 @@ NativeRegExpMacroAssembler::BranchOrBacktrack(Label *branch)
 }
 
 void
-NativeRegExpMacroAssembler::JumpOrBacktrack(Label *to)
+NativeRegExpMacroAssembler::JumpOrBacktrack(Label* to)
 {
     JitSpew(SPEW_PREFIX "JumpOrBacktrack");
 
@@ -1191,7 +1191,7 @@ NativeRegExpMacroAssembler::CheckSpecialCharacterClass(char16_t type, Label* on_
 {
     JitSpew(SPEW_PREFIX "CheckSpecialCharacterClass(%d)", (int) type);
 
-    Label *branch = BranchOrBacktrack(on_no_match);
+    Label* branch = BranchOrBacktrack(on_no_match);
 
     // Range checks (c in min..max) are generally implemented by an unsigned
     // (c - min) <= (max - min) check

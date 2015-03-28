@@ -33,11 +33,11 @@ namespace js {
 //  - rely on fault handler support for avoiding asm.js heap bounds checks
 //  - rely on InterruptRunningJitCode to halt running Ion/asm.js from any thread
 bool
-EnsureSignalHandlersInstalled(JSRuntime *rt);
+EnsureSignalHandlersInstalled(JSRuntime* rt);
 
 // Force any currently-executing asm.js code to call HandleExecutionInterrupt.
 extern void
-InterruptRunningJitCode(JSRuntime *rt);
+InterruptRunningJitCode(JSRuntime* rt);
 
 #if defined(XP_MACOSX) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 // On OSX we are forced to use the lower-level Mach exception mechanism instead
@@ -49,7 +49,7 @@ InterruptRunningJitCode(JSRuntime *rt);
 class AsmJSMachExceptionHandler
 {
     bool installed_;
-    PRThread *thread_;
+    PRThread* thread_;
     mach_port_t port_;
 
     void uninstall();
@@ -59,7 +59,7 @@ class AsmJSMachExceptionHandler
     ~AsmJSMachExceptionHandler() { uninstall(); }
     mach_port_t port() const { return port_; }
     bool installed() const { return installed_; }
-    bool install(JSRuntime *rt);
+    bool install(JSRuntime* rt);
 };
 #endif
 

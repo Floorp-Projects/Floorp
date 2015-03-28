@@ -65,7 +65,7 @@
 // One can construct a ubi::Node value given a pointer to a type that ubi::Node
 // supports. In the other direction, one can convert a ubi::Node back to a
 // pointer; these downcasts are checked dynamically. In particular, one can
-// convert a 'JSRuntime *' to a ubi::Node, yielding a node with an outgoing edge
+// convert a 'JSRuntime*' to a ubi::Node, yielding a node with an outgoing edge
 // for every root registered with the runtime; starting from this, one can walk
 // the entire heap. (Of course, one could also start traversal at any other kind
 // of type to which one has a pointer.)
@@ -160,26 +160,26 @@ class Base {
   protected:
     // Space for the actual pointer. Concrete subclasses should define a
     // properly typed 'get' member function to access this.
-    void *ptr;
+    void* ptr;
 
-    explicit Base(void *ptr) : ptr(ptr) { }
+    explicit Base(void* ptr) : ptr(ptr) { }
 
   public:
-    bool operator==(const Base &rhs) const {
+    bool operator==(const Base& rhs) const {
         // Some compilers will indeed place objects of different types at
         // the same address, so technically, we should include the vtable
         // in this comparison. But it seems unlikely to cause problems in
         // practice.
         return ptr == rhs.ptr;
     }
-    bool operator!=(const Base &rhs) const { return !(*this == rhs); }
+    bool operator!=(const Base& rhs) const { return !(*this == rhs); }
 
     // Return a human-readable name for the referent's type. The result should
     // be statically allocated. (You can use MOZ_UTF16("strings") for this.)
     //
     // This must always return Concrete<T>::concreteTypeName; we use that
     // pointer as a tag for this particular referent type.
-    virtual const char16_t *typeName() const = 0;
+    virtual const char16_t* typeName() const = 0;
 
     // Return the size of this node, in bytes. Include any structures that this
     // node owns exclusively that are not exposed as their own ubi::Nodes.
@@ -194,26 +194,26 @@ class Base {
     //
     // If wantNames is true, compute names for edges. Doing so can be expensive
     // in time and memory.
-    virtual EdgeRange *edges(JSContext *cx, bool wantNames) const = 0;
+    virtual EdgeRange* edges(JSContext* cx, bool wantNames) const = 0;
 
     // Return the Zone to which this node's referent belongs, or nullptr if the
     // referent is not of a type allocated in SpiderMonkey Zones.
-    virtual JS::Zone *zone() const { return nullptr; }
+    virtual JS::Zone* zone() const { return nullptr; }
 
     // Return the compartment for this node. Some ubi::Node referents are not
     // associated with JSCompartments, such as JSStrings (which are associated
     // with Zones). When the referent is not associated with a compartment,
     // nullptr is returned.
-    virtual JSCompartment *compartment() const { return nullptr; }
+    virtual JSCompartment* compartment() const { return nullptr; }
 
     // If this node references a JSObject in the live heap, or represents a
     // previously existing JSObject from some deserialized heap snapshot, return
     // the object's [[Class]]'s name. Otherwise, return nullptr.
-    virtual const char *jsObjectClassName() const { return nullptr; }
+    virtual const char* jsObjectClassName() const { return nullptr; }
 
   private:
-    Base(const Base &rhs) = delete;
-    Base &operator=(const Base &rhs) = delete;
+    Base(const Base& rhs) = delete;
+    Base& operator=(const Base& rhs) = delete;
 };
 
 // A traits template with a specialization for each referent type that
@@ -237,7 +237,7 @@ struct Concrete {
     //
     // So, we delegate the actual construction to this specialization, which
     // knows Referent's details.
-    static void construct(void *storage, Referent *referent);
+    static void construct(void* storage, Referent* referent);
 };
 
 // A container for a Base instance; all members simply forward to the contained instance.
@@ -245,11 +245,11 @@ struct Concrete {
 class Node {
     // Storage in which we allocate Base subclasses.
     mozilla::AlignedStorage2<Base> storage;
-    Base *base() { return storage.addr(); }
-    const Base *base() const { return storage.addr(); }
+    Base* base() { return storage.addr(); }
+    const Base* base() const { return storage.addr(); }
 
     template<typename T>
-    void construct(T *ptr) {
+    void construct(T* ptr) {
         static_assert(sizeof(Concrete<T>) == sizeof(*base()),
                       "ubi::Base specializations must be the same size as ubi::Base");
         Concrete<T>::construct(base(), ptr);
@@ -259,22 +259,22 @@ class Node {
     Node() { construct<void>(nullptr); }
 
     template<typename T>
-    Node(T *ptr) {
+    Node(T* ptr) {
         construct(ptr);
     }
     template<typename T>
-    Node &operator=(T *ptr) {
+    Node& operator=(T* ptr) {
         construct(ptr);
         return *this;
     }
 
     // We can construct and assign from rooted forms of pointers.
     template<typename T>
-    Node(const Rooted<T *> &root) {
+    Node(const Rooted<T*>& root) {
         construct(root.get());
     }
     template<typename T>
-    Node &operator=(const Rooted<T *> &root) {
+    Node& operator=(const Rooted<T*>& root) {
         construct(root.get());
         return *this;
     }
@@ -284,7 +284,7 @@ class Node {
     // JS::ubi::Node are both essentially tagged references to other sorts of
     // objects, so letting conversions happen automatically is appropriate.
     MOZ_IMPLICIT Node(JS::HandleValue value);
-    Node(JSGCTraceKind kind, void *ptr);
+    Node(JSGCTraceKind kind, void* ptr);
 
     // copy construction and copy assignment just use memcpy, since we know
     // instances contain nothing but a vtable pointer and a data pointer.
@@ -294,17 +294,17 @@ class Node {
     // instance in our storage. But this is good enough; there's no need to jump
     // through vtables for copying and assignment that are just going to move
     // two words around. The compiler knows how to optimize memcpy.
-    Node(const Node &rhs) {
+    Node(const Node& rhs) {
         memcpy(storage.u.mBytes, rhs.storage.u.mBytes, sizeof(storage.u));
     }
 
-    Node &operator=(const Node &rhs) {
+    Node& operator=(const Node& rhs) {
         memcpy(storage.u.mBytes, rhs.storage.u.mBytes, sizeof(storage.u));
         return *this;
     }
 
-    bool operator==(const Node &rhs) const { return *base() == *rhs.base(); }
-    bool operator!=(const Node &rhs) const { return *base() != *rhs.base(); }
+    bool operator==(const Node& rhs) const { return *base() == *rhs.base(); }
+    bool operator!=(const Node& rhs) const { return *base() != *rhs.base(); }
 
     explicit operator bool() const {
         return base()->ptr != nullptr;
@@ -316,14 +316,14 @@ class Node {
     }
 
     template<typename T>
-    T *as() const {
+    T* as() const {
         MOZ_ASSERT(is<T>());
-        return static_cast<T *>(base()->ptr);
+        return static_cast<T*>(base()->ptr);
     }
 
     template<typename T>
-    T *asOrNull() const {
-        return is<T>() ? static_cast<T *>(base()->ptr) : nullptr;
+    T* asOrNull() const {
+        return is<T>() ? static_cast<T*>(base()->ptr) : nullptr;
     }
 
     // If this node refers to something that can be represented as a JavaScript
@@ -332,16 +332,16 @@ class Node {
     // not all!) JSObjects can be exposed.
     JS::Value exposeToJS() const;
 
-    const char16_t *typeName()      const { return base()->typeName(); }
-    JS::Zone *zone()                const { return base()->zone(); }
-    JSCompartment *compartment()    const { return base()->compartment(); }
-    const char *jsObjectClassName() const { return base()->jsObjectClassName(); }
+    const char16_t* typeName()      const { return base()->typeName(); }
+    JS::Zone* zone()                const { return base()->zone(); }
+    JSCompartment* compartment()    const { return base()->compartment(); }
+    const char* jsObjectClassName() const { return base()->jsObjectClassName(); }
 
     size_t size(mozilla::MallocSizeOf mallocSizeof) const {
         return base()->size(mallocSizeof);
     }
 
-    EdgeRange *edges(JSContext *cx, bool wantNames = true) const {
+    EdgeRange* edges(JSContext* cx, bool wantNames = true) const {
         return base()->edges(cx, wantNames);
     }
 
@@ -349,14 +349,14 @@ class Node {
     // This simply uses the stock PointerHasher on the ubi::Node's pointer.
     // We specialize DefaultHasher below to make this the default.
     class HashPolicy {
-        typedef js::PointerHasher<void *, mozilla::tl::FloorLog2<sizeof(void *)>::value> PtrHash;
+        typedef js::PointerHasher<void*, mozilla::tl::FloorLog2<sizeof(void*)>::value> PtrHash;
 
       public:
         typedef Node Lookup;
 
-        static js::HashNumber hash(const Lookup &l) { return PtrHash::hash(l.base()->ptr); }
-        static bool match(const Node &k, const Lookup &l) { return k == l; }
-        static void rekey(Node &k, const Node &newKey) { k = newKey; }
+        static js::HashNumber hash(const Lookup& l) { return PtrHash::hash(l.base()->ptr); }
+        static bool match(const Node& k, const Lookup& l) { return k == l; }
+        static void rekey(Node& k, const Node& newKey) { k = newKey; }
     };
 };
 
@@ -382,14 +382,14 @@ class Edge {
     // (In real life we'll want a better representation for names, to avoid
     // creating tons of strings when the names follow a pattern; and we'll need
     // to think about lifetimes carefully to ensure traversal stays cheap.)
-    const char16_t *name;
+    const char16_t* name;
 
     // This edge's referent.
     Node referent;
 
   private:
-    Edge(const Edge &) = delete;
-    Edge &operator=(const Edge &) = delete;
+    Edge(const Edge&) = delete;
+    Edge& operator=(const Edge&) = delete;
 };
 
 
@@ -404,7 +404,7 @@ class Edge {
 class EdgeRange {
   protected:
     // The current front edge of this range, or nullptr if this range is empty.
-    Edge *front_;
+    Edge* front_;
 
     EdgeRange() : front_(nullptr) { }
 
@@ -417,44 +417,44 @@ class EdgeRange {
     // The front edge of this range. This is owned by the EdgeRange, and is
     // only guaranteed to live until the next call to popFront, or until
     // the EdgeRange is destructed.
-    const Edge &front() { return *front_; }
+    const Edge& front() { return *front_; }
 
     // Remove the front edge from this range. This should only be called if
     // !empty().
     virtual void popFront() = 0;
 
   private:
-    EdgeRange(const EdgeRange &) = delete;
-    EdgeRange &operator=(const EdgeRange &) = delete;
+    EdgeRange(const EdgeRange&) = delete;
+    EdgeRange& operator=(const EdgeRange&) = delete;
 };
 
 
 // A dumb Edge concrete class. All but the most essential members have the
 // default behavior.
 class SimpleEdge : public Edge {
-    SimpleEdge(SimpleEdge &) = delete;
-    SimpleEdge &operator=(const SimpleEdge &) = delete;
+    SimpleEdge(SimpleEdge&) = delete;
+    SimpleEdge& operator=(const SimpleEdge&) = delete;
 
   public:
     SimpleEdge() : Edge() { }
 
     // Construct an initialized SimpleEdge, taking ownership of |name|.
-    SimpleEdge(char16_t *name, const Node &referent) {
+    SimpleEdge(char16_t* name, const Node& referent) {
         this->name = name;
         this->referent = referent;
     }
     ~SimpleEdge() {
-        js_free(const_cast<char16_t *>(name));
+        js_free(const_cast<char16_t*>(name));
     }
 
     // Move construction and assignment.
-    SimpleEdge(SimpleEdge &&rhs) {
+    SimpleEdge(SimpleEdge&& rhs) {
         name = rhs.name;
         referent = rhs.referent;
 
         rhs.name = nullptr;
     }
-    SimpleEdge &operator=(SimpleEdge &&rhs) {
+    SimpleEdge& operator=(SimpleEdge&& rhs) {
         MOZ_ASSERT(&rhs != this);
         this->~SimpleEdge();
         new(this) SimpleEdge(mozilla::Move(rhs));
@@ -494,26 +494,26 @@ typedef mozilla::Vector<SimpleEdge, 8, js::TempAllocPolicy> SimpleEdgeVector;
 //        ...
 //    }
 class MOZ_STACK_CLASS RootList {
-    Maybe<AutoCheckCannotGC> &noGC;
-    JSContext                *cx;
+    Maybe<AutoCheckCannotGC>& noGC;
+    JSContext*               cx;
 
   public:
     SimpleEdgeVector edges;
     bool             wantNames;
 
-    RootList(JSContext *cx, Maybe<AutoCheckCannotGC> &noGC, bool wantNames = false);
+    RootList(JSContext* cx, Maybe<AutoCheckCannotGC>& noGC, bool wantNames = false);
 
     // Find all GC roots.
     bool init();
     // Find only GC roots in the provided set of |Zone|s.
-    bool init(ZoneSet &debuggees);
+    bool init(ZoneSet& debuggees);
     // Find only GC roots in the given Debugger object's set of debuggee zones.
     bool init(HandleObject debuggees);
 
     // Explicitly add the given Node as a root in this RootList. If wantNames is
     // true, you must pass an edgeName. The RootList does not take ownership of
     // edgeName.
-    bool addRoot(Node node, const char16_t *edgeName = nullptr);
+    bool addRoot(Node node, const char16_t* edgeName = nullptr);
 };
 
 
@@ -521,46 +521,46 @@ class MOZ_STACK_CLASS RootList {
 
 template<>
 struct Concrete<RootList> : public Base {
-    EdgeRange *edges(JSContext *cx, bool wantNames) const override;
-    const char16_t *typeName() const override { return concreteTypeName; }
+    EdgeRange* edges(JSContext* cx, bool wantNames) const override;
+    const char16_t* typeName() const override { return concreteTypeName; }
 
   protected:
-    explicit Concrete(RootList *ptr) : Base(ptr) { }
-    RootList &get() const { return *static_cast<RootList *>(ptr); }
+    explicit Concrete(RootList* ptr) : Base(ptr) { }
+    RootList& get() const { return *static_cast<RootList*>(ptr); }
 
   public:
     static const char16_t concreteTypeName[];
-    static void construct(void *storage, RootList *ptr) { new (storage) Concrete(ptr); }
+    static void construct(void* storage, RootList* ptr) { new (storage) Concrete(ptr); }
 };
 
 // A reusable ubi::Concrete specialization base class for types supported by
 // JS_TraceChildren.
 template<typename Referent>
 class TracerConcrete : public Base {
-    const char16_t *typeName() const override { return concreteTypeName; }
-    EdgeRange *edges(JSContext *, bool wantNames) const override;
-    JS::Zone *zone() const override;
+    const char16_t* typeName() const override { return concreteTypeName; }
+    EdgeRange* edges(JSContext*, bool wantNames) const override;
+    JS::Zone* zone() const override;
 
   protected:
-    explicit TracerConcrete(Referent *ptr) : Base(ptr) { }
-    Referent &get() const { return *static_cast<Referent *>(ptr); }
+    explicit TracerConcrete(Referent* ptr) : Base(ptr) { }
+    Referent& get() const { return *static_cast<Referent*>(ptr); }
 
   public:
     static const char16_t concreteTypeName[];
-    static void construct(void *storage, Referent *ptr) { new (storage) TracerConcrete(ptr); }
+    static void construct(void* storage, Referent* ptr) { new (storage) TracerConcrete(ptr); }
 };
 
 // For JS_TraceChildren-based types that have a 'compartment' method.
 template<typename Referent>
 class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
     typedef TracerConcrete<Referent> TracerBase;
-    JSCompartment *compartment() const override;
+    JSCompartment* compartment() const override;
 
   protected:
-    explicit TracerConcreteWithCompartment(Referent *ptr) : TracerBase(ptr) { }
+    explicit TracerConcreteWithCompartment(Referent* ptr) : TracerBase(ptr) { }
 
   public:
-    static void construct(void *storage, Referent *ptr) {
+    static void construct(void* storage, Referent* ptr) {
         new (storage) TracerConcreteWithCompartment(ptr);
     }
 };
@@ -570,12 +570,12 @@ class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
 template<typename Referent>
 class TracerConcreteWithCompartmentAndClassName : public TracerConcreteWithCompartment<Referent> {
     typedef TracerConcreteWithCompartment<Referent> TracerBase;
-    const char *jsObjectClassName() const override;
+    const char* jsObjectClassName() const override;
 
-    explicit TracerConcreteWithCompartmentAndClassName(Referent *ptr) : TracerBase(ptr) { }
+    explicit TracerConcreteWithCompartmentAndClassName(Referent* ptr) : TracerBase(ptr) { }
 
   public:
-    static void construct(void *storage, Referent *ptr) {
+    static void construct(void* storage, Referent* ptr) {
         new (storage) TracerConcreteWithCompartmentAndClassName(ptr);
     }
 };
@@ -589,16 +589,16 @@ template<> struct Concrete<JSObject> : TracerConcreteWithCompartmentAndClassName
 // The ubi::Node null pointer. Any attempt to operate on a null ubi::Node asserts.
 template<>
 class Concrete<void> : public Base {
-    const char16_t *typeName() const override;
+    const char16_t* typeName() const override;
     size_t size(mozilla::MallocSizeOf mallocSizeOf) const override;
-    EdgeRange *edges(JSContext *cx, bool wantNames) const override;
-    JS::Zone *zone() const override;
-    JSCompartment *compartment() const override;
+    EdgeRange* edges(JSContext* cx, bool wantNames) const override;
+    JS::Zone* zone() const override;
+    JSCompartment* compartment() const override;
 
-    explicit Concrete(void *ptr) : Base(ptr) { }
+    explicit Concrete(void* ptr) : Base(ptr) { }
 
   public:
-    static void construct(void *storage, void *ptr) { new (storage) Concrete(ptr); }
+    static void construct(void* storage, void* ptr) { new (storage) Concrete(ptr); }
     static const char16_t concreteTypeName[];
 };
 

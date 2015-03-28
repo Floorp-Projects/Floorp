@@ -587,15 +587,15 @@ iJIT_IsProfilingActiveFlags JITAPI iJIT_IsProfilingActive(void);
  *
  * @returns 1 on success, otherwise 0.
  */
-int JITAPI iJIT_NotifyEvent(iJIT_JVM_EVENT event_type, void *EventSpecificData);
+int JITAPI iJIT_NotifyEvent(iJIT_JVM_EVENT event_type, void* EventSpecificData);
 
 /** @cond exclude_from_documentation */
 /*
  * Do not use these legacy APIs, which are here for backward compatibility
  * with Intel(R) VTune(TM) Performance Analyzer.
  */
-typedef void (*iJIT_ModeChangedEx)(void *UserData, iJIT_ModeFlags Flags);
-void JITAPI iJIT_RegisterCallbackEx(void *userdata,
+typedef void (*iJIT_ModeChangedEx)(void* UserData, iJIT_ModeFlags Flags);
+void JITAPI iJIT_RegisterCallbackEx(void* userdata,
                                     iJIT_ModeChangedEx NewModeCallBackFuncEx);
 void JITAPI FinalizeThread(void);
 void JITAPI FinalizeProcess(void);

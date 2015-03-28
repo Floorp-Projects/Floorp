@@ -15,7 +15,7 @@ class MIRGenerator;
 class MIRGraph;
 
 bool
-EagerSimdUnbox(MIRGenerator *mir, MIRGraph &graph);
+EagerSimdUnbox(MIRGenerator* mir, MIRGraph& graph);
 
 } // namespace jit
 } // namespace js

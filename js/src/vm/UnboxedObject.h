@@ -23,8 +23,8 @@ UnboxedTypeSize(JSValueType type)
       case JSVAL_TYPE_BOOLEAN: return 1;
       case JSVAL_TYPE_INT32:   return 4;
       case JSVAL_TYPE_DOUBLE:  return 8;
-      case JSVAL_TYPE_STRING:  return sizeof(void *);
-      case JSVAL_TYPE_OBJECT:  return sizeof(void *);
+      case JSVAL_TYPE_STRING:  return sizeof(void*);
+      case JSVAL_TYPE_OBJECT:  return sizeof(void*);
       default:                 return 0;
     }
 }
@@ -40,7 +40,7 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
 {
   public:
     struct Property {
-        PropertyName *name;
+        PropertyName* name;
         uint32_t offset;
         JSValueType type;
 
@@ -59,11 +59,11 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     size_t size_;
 
     // Any 'new' script information associated with this layout.
-    TypeNewScript *newScript_;
+    TypeNewScript* newScript_;
 
     // List for use in tracing objects with this layout. This has the same
     // structure as the trace list on a TypeDescr.
-    int32_t *traceList_;
+    int32_t* traceList_;
 
     // If objects in this group have ever been converted to native objects,
     // these store the corresponding native group and initial shape for such
@@ -85,7 +85,7 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
     HeapPtrJitCode constructorCode_;
 
   public:
-    UnboxedLayout(const PropertyVector &properties, size_t size)
+    UnboxedLayout(const PropertyVector& properties, size_t size)
       : size_(size), newScript_(nullptr), traceList_(nullptr),
         nativeGroup_(nullptr), nativeShape_(nullptr), replacementNewGroup_(nullptr),
         constructorCode_(nullptr)
@@ -100,25 +100,25 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
 
     void detachFromCompartment();
 
-    const PropertyVector &properties() const {
+    const PropertyVector& properties() const {
         return properties_;
     }
 
-    TypeNewScript *newScript() const {
+    TypeNewScript* newScript() const {
         return newScript_;
     }
 
-    void setNewScript(TypeNewScript *newScript, bool writeBarrier = true);
+    void setNewScript(TypeNewScript* newScript, bool writeBarrier = true);
 
-    const int32_t *traceList() const {
+    const int32_t* traceList() const {
         return traceList_;
     }
 
-    void setTraceList(int32_t *traceList) {
+    void setTraceList(int32_t* traceList) {
         traceList_ = traceList;
     }
 
-    const Property *lookup(JSAtom *atom) const {
+    const Property* lookup(JSAtom* atom) const {
         for (size_t i = 0; i < properties_.length(); i++) {
             if (properties_[i].name == atom)
                 return &properties_[i];
@@ -126,7 +126,7 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
         return nullptr;
     }
 
-    const Property *lookup(jsid id) const {
+    const Property* lookup(jsid id) const {
         if (JSID_IS_STRING(id))
             return lookup(JSID_TO_ATOM(id));
         return nullptr;
@@ -136,30 +136,30 @@ class UnboxedLayout : public mozilla::LinkedListElement<UnboxedLayout>
         return size_;
     }
 
-    ObjectGroup *nativeGroup() const {
+    ObjectGroup* nativeGroup() const {
         return nativeGroup_;
     }
 
-    Shape *nativeShape() const {
+    Shape* nativeShape() const {
         return nativeShape_;
     }
 
-    jit::JitCode *constructorCode() const {
+    jit::JitCode* constructorCode() const {
         return constructorCode_;
     }
 
-    void setConstructorCode(jit::JitCode *code) {
+    void setConstructorCode(jit::JitCode* code) {
         constructorCode_ = code;
     }
 
     inline gc::AllocKind getAllocKind() const;
 
-    void trace(JSTracer *trc);
+    void trace(JSTracer* trc);
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
 
-    static bool makeNativeGroup(JSContext *cx, ObjectGroup *group);
-    static bool makeConstructorCode(JSContext *cx, HandleObjectGroup group);
+    static bool makeNativeGroup(JSContext* cx, ObjectGroup* group);
+    static bool makeConstructorCode(JSContext* cx, HandleObjectGroup group);
 };
 
 // Class for expando objects holding extra properties given to an unboxed plain
@@ -180,7 +180,7 @@ class UnboxedPlainObject : public JSObject
     // Optional object which stores extra properties on this object. This is
     // not automatically barriered to avoid problems if the object is converted
     // to a native. See ensureExpando().
-    UnboxedExpandoObject *expando_;
+    UnboxedExpandoObject* expando_;
 
     // Start of the inline data, which immediately follows the group and extra properties.
     uint8_t data_[1];
@@ -188,44 +188,44 @@ class UnboxedPlainObject : public JSObject
   public:
     static const Class class_;
 
-    static bool obj_lookupProperty(JSContext *cx, HandleObject obj,
+    static bool obj_lookupProperty(JSContext* cx, HandleObject obj,
                                    HandleId id, MutableHandleObject objp,
                                    MutableHandleShape propp);
 
-    static bool obj_defineProperty(JSContext *cx, HandleObject obj, HandleId id,
+    static bool obj_defineProperty(JSContext* cx, HandleObject obj, HandleId id,
                                    Handle<JSPropertyDescriptor> desc,
-                                   ObjectOpResult &result);
+                                   ObjectOpResult& result);
 
-    static bool obj_hasProperty(JSContext *cx, HandleObject obj, HandleId id, bool *foundp);
+    static bool obj_hasProperty(JSContext* cx, HandleObject obj, HandleId id, bool* foundp);
 
-    static bool obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
+    static bool obj_getProperty(JSContext* cx, HandleObject obj, HandleObject receiver,
                                 HandleId id, MutableHandleValue vp);
 
-    static bool obj_setProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
-                                HandleValue receiver, ObjectOpResult &result);
+    static bool obj_setProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v,
+                                HandleValue receiver, ObjectOpResult& result);
 
-    static bool obj_getOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
+    static bool obj_getOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
                                              MutableHandle<JSPropertyDescriptor> desc);
 
-    static bool obj_deleteProperty(JSContext *cx, HandleObject obj, HandleId id,
-                                   ObjectOpResult &result);
+    static bool obj_deleteProperty(JSContext* cx, HandleObject obj, HandleId id,
+                                   ObjectOpResult& result);
 
-    static bool obj_enumerate(JSContext *cx, HandleObject obj, AutoIdVector &properties);
-    static bool obj_watch(JSContext *cx, HandleObject obj, HandleId id, HandleObject callable);
+    static bool obj_enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties);
+    static bool obj_watch(JSContext* cx, HandleObject obj, HandleId id, HandleObject callable);
 
-    const UnboxedLayout &layout() const {
+    const UnboxedLayout& layout() const {
         return group()->unboxedLayout();
     }
 
-    const UnboxedLayout &layoutDontCheckGeneration() const {
+    const UnboxedLayout& layoutDontCheckGeneration() const {
         return group()->unboxedLayoutDontCheckGeneration();
     }
 
-    uint8_t *data() {
+    uint8_t* data() {
         return &data_[0];
     }
 
-    UnboxedExpandoObject *maybeExpando() const {
+    UnboxedExpandoObject* maybeExpando() const {
         return expando_;
     }
 
@@ -233,20 +233,20 @@ class UnboxedPlainObject : public JSObject
         expando_ = nullptr;
     }
 
-    bool containsUnboxedOrExpandoProperty(ExclusiveContext *cx, jsid id) const;
+    bool containsUnboxedOrExpandoProperty(ExclusiveContext* cx, jsid id) const;
 
-    static UnboxedExpandoObject *ensureExpando(JSContext *cx, Handle<UnboxedPlainObject *> obj);
+    static UnboxedExpandoObject* ensureExpando(JSContext* cx, Handle<UnboxedPlainObject*> obj);
 
-    bool setValue(ExclusiveContext *cx, const UnboxedLayout::Property &property, const Value &v);
-    Value getValue(const UnboxedLayout::Property &property);
+    bool setValue(ExclusiveContext* cx, const UnboxedLayout::Property& property, const Value& v);
+    Value getValue(const UnboxedLayout::Property& property);
 
-    static bool convertToNative(JSContext *cx, JSObject *obj);
-    static UnboxedPlainObject *create(ExclusiveContext *cx, HandleObjectGroup group,
+    static bool convertToNative(JSContext* cx, JSObject* obj);
+    static UnboxedPlainObject* create(ExclusiveContext* cx, HandleObjectGroup group,
                                       NewObjectKind newKind);
-    static JSObject *createWithProperties(ExclusiveContext *cx, HandleObjectGroup group,
-                                          NewObjectKind newKind, IdValuePair *properties);
+    static JSObject* createWithProperties(ExclusiveContext* cx, HandleObjectGroup group,
+                                          NewObjectKind newKind, IdValuePair* properties);
 
-    static void trace(JSTracer *trc, JSObject *object);
+    static void trace(JSTracer* trc, JSObject* object);
 
     static size_t offsetOfExpando() {
         return offsetof(UnboxedPlainObject, expando_);
@@ -261,8 +261,8 @@ class UnboxedPlainObject : public JSObject
 // provided they all match the template shape. If successful, converts the
 // preliminary objects and their group to the new unboxed representation.
 bool
-TryConvertToUnboxedLayout(ExclusiveContext *cx, Shape *templateShape,
-                          ObjectGroup *group, PreliminaryObjectArray *objects);
+TryConvertToUnboxedLayout(ExclusiveContext* cx, Shape* templateShape,
+                          ObjectGroup* group, PreliminaryObjectArray* objects);
 
 inline gc::AllocKind
 UnboxedLayout::getAllocKind() const

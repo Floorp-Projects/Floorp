@@ -9,16 +9,16 @@
 using namespace js;
 using namespace js::jit;
 
-JSRuntime *
+JSRuntime*
 CompileRuntime::runtime()
 {
-    return reinterpret_cast<JSRuntime *>(this);
+    return reinterpret_cast<JSRuntime*>(this);
 }
 
-/* static */ CompileRuntime *
-CompileRuntime::get(JSRuntime *rt)
+/* static */ CompileRuntime*
+CompileRuntime::get(JSRuntime* rt)
 {
-    return reinterpret_cast<CompileRuntime *>(rt);
+    return reinterpret_cast<CompileRuntime*>(rt);
 }
 
 bool
@@ -27,76 +27,76 @@ CompileRuntime::onMainThread()
     return js::CurrentThreadCanAccessRuntime(runtime());
 }
 
-js::PerThreadData *
+js::PerThreadData*
 CompileRuntime::mainThread()
 {
     MOZ_ASSERT(onMainThread());
     return &runtime()->mainThread;
 }
 
-const void *
+const void*
 CompileRuntime::addressOfJitTop()
 {
     return &runtime()->jitTop;
 }
 
-const void *
+const void*
 CompileRuntime::addressOfJitActivation()
 {
     return &runtime()->jitActivation;
 }
 
-const void *
+const void*
 CompileRuntime::addressOfProfilingActivation()
 {
-    return (const void *) &runtime()->profilingActivation_;
+    return (const void*) &runtime()->profilingActivation_;
 }
 
-const void *
+const void*
 CompileRuntime::addressOfJitStackLimit()
 {
     return runtime()->addressOfJitStackLimit();
 }
 
-const void *
+const void*
 CompileRuntime::addressOfJSContext()
 {
     return &runtime()->jitJSContext;
 }
 
-const void *
+const void*
 CompileRuntime::addressOfActivation()
 {
     return runtime()->addressOfActivation();
 }
 
-const void *
+const void*
 CompileRuntime::addressOfLastCachedNativeIterator()
 {
     return &runtime()->nativeIterCache.last;
 }
 
 #ifdef JS_GC_ZEAL
-const void *
+const void*
 CompileRuntime::addressOfGCZeal()
 {
     return runtime()->gc.addressOfZealMode();
 }
 #endif
 
-const void *
+const void*
 CompileRuntime::addressOfInterruptUint32()
 {
     return runtime()->addressOfInterruptUint32();
 }
 
-const JitRuntime *
+const JitRuntime*
 CompileRuntime::jitRuntime()
 {
     return runtime()->jitRuntime();
 }
 
-SPSProfiler &
+SPSProfiler&
 CompileRuntime::spsProfiler()
 {
     return runtime()->spsProfiler;
@@ -126,37 +126,37 @@ CompileRuntime::profilingScripts()
     return runtime()->profilingScripts;
 }
 
-const JSAtomState &
+const JSAtomState&
 CompileRuntime::names()
 {
     return *runtime()->commonNames;
 }
 
-const PropertyName *
+const PropertyName*
 CompileRuntime::emptyString()
 {
     return runtime()->emptyString;
 }
 
-const StaticStrings &
+const StaticStrings&
 CompileRuntime::staticStrings()
 {
     return *runtime()->staticStrings;
 }
 
-const Value &
+const Value&
 CompileRuntime::NaNValue()
 {
     return runtime()->NaNValue;
 }
 
-const Value &
+const Value&
 CompileRuntime::positiveInfinityValue()
 {
     return runtime()->positiveInfinityValue;
 }
 
-const WellKnownSymbols &
+const WellKnownSymbols&
 CompileRuntime::wellKnownSymbols()
 {
     MOZ_ASSERT(onMainThread());
@@ -165,91 +165,91 @@ CompileRuntime::wellKnownSymbols()
 
 #ifdef DEBUG
 bool
-CompileRuntime::isInsideNursery(gc::Cell *cell)
+CompileRuntime::isInsideNursery(gc::Cell* cell)
 {
     return UninlinedIsInsideNursery(cell);
 }
 #endif
 
-const DOMCallbacks *
+const DOMCallbacks*
 CompileRuntime::DOMcallbacks()
 {
     return GetDOMCallbacks(runtime());
 }
 
-const MathCache *
+const MathCache*
 CompileRuntime::maybeGetMathCache()
 {
     return runtime()->maybeGetMathCache();
 }
 
-const Nursery &
+const Nursery&
 CompileRuntime::gcNursery()
 {
     return runtime()->gc.nursery;
 }
 
-Zone *
+Zone*
 CompileZone::zone()
 {
-    return reinterpret_cast<Zone *>(this);
+    return reinterpret_cast<Zone*>(this);
 }
 
-/* static */ CompileZone *
-CompileZone::get(Zone *zone)
+/* static */ CompileZone*
+CompileZone::get(Zone* zone)
 {
-    return reinterpret_cast<CompileZone *>(zone);
+    return reinterpret_cast<CompileZone*>(zone);
 }
 
-const void *
+const void*
 CompileZone::addressOfNeedsIncrementalBarrier()
 {
     return zone()->addressOfNeedsIncrementalBarrier();
 }
 
-const void *
+const void*
 CompileZone::addressOfFreeListFirst(gc::AllocKind allocKind)
 {
     return zone()->arenas.getFreeList(allocKind)->addressOfFirst();
 }
 
-const void *
+const void*
 CompileZone::addressOfFreeListLast(gc::AllocKind allocKind)
 {
     return zone()->arenas.getFreeList(allocKind)->addressOfLast();
 }
 
-JSCompartment *
+JSCompartment*
 CompileCompartment::compartment()
 {
-    return reinterpret_cast<JSCompartment *>(this);
+    return reinterpret_cast<JSCompartment*>(this);
 }
 
-/* static */ CompileCompartment *
-CompileCompartment::get(JSCompartment *comp)
+/* static */ CompileCompartment*
+CompileCompartment::get(JSCompartment* comp)
 {
-    return reinterpret_cast<CompileCompartment *>(comp);
+    return reinterpret_cast<CompileCompartment*>(comp);
 }
 
-CompileZone *
+CompileZone*
 CompileCompartment::zone()
 {
     return CompileZone::get(compartment()->zone());
 }
 
-CompileRuntime *
+CompileRuntime*
 CompileCompartment::runtime()
 {
     return CompileRuntime::get(compartment()->runtimeFromAnyThread());
 }
 
-const void *
+const void*
 CompileCompartment::addressOfEnumerators()
 {
     return &compartment()->enumerators;
 }
 
-const JitCompartment *
+const JitCompartment*
 CompileCompartment::jitCompartment()
 {
     return compartment()->jitCompartment();
@@ -281,9 +281,9 @@ JitCompileOptions::JitCompileOptions()
 {
 }
 
-JitCompileOptions::JitCompileOptions(JSContext *cx)
+JitCompileOptions::JitCompileOptions(JSContext* cx)
 {
-    JS::CompartmentOptions &options = cx->compartment()->options();
+    JS::CompartmentOptions& options = cx->compartment()->options();
     cloneSingletons_ = options.cloneSingletons();
     spsSlowAssertionsEnabled_ = cx->runtime()->spsProfiler.enabled() &&
                                 cx->runtime()->spsProfiler.slowAssertionsEnabled();

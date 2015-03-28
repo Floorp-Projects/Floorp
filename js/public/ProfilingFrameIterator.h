@@ -33,35 +33,35 @@ namespace JS {
 // unwound.
 class JS_PUBLIC_API(ProfilingFrameIterator)
 {
-    JSRuntime *rt_;
+    JSRuntime* rt_;
     uint32_t sampleBufferGen_;
-    js::Activation *activation_;
+    js::Activation* activation_;
 
     // When moving past a JitActivation, we need to save the prevJitTop
     // from it to use as the exit-frame pointer when the next caller jit
     // activation (if any) comes around.
-    void *savedPrevJitTop_;
+    void* savedPrevJitTop_;
 
     static const unsigned StorageSpace = 6 * sizeof(void*);
     mozilla::AlignedStorage<StorageSpace> storage_;
-    js::AsmJSProfilingFrameIterator &asmJSIter() {
+    js::AsmJSProfilingFrameIterator& asmJSIter() {
         MOZ_ASSERT(!done());
         MOZ_ASSERT(isAsmJS());
         return *reinterpret_cast<js::AsmJSProfilingFrameIterator*>(storage_.addr());
     }
-    const js::AsmJSProfilingFrameIterator &asmJSIter() const {
+    const js::AsmJSProfilingFrameIterator& asmJSIter() const {
         MOZ_ASSERT(!done());
         MOZ_ASSERT(isAsmJS());
         return *reinterpret_cast<const js::AsmJSProfilingFrameIterator*>(storage_.addr());
     }
 
-    js::jit::JitProfilingFrameIterator &jitIter() {
+    js::jit::JitProfilingFrameIterator& jitIter() {
         MOZ_ASSERT(!done());
         MOZ_ASSERT(isJit());
         return *reinterpret_cast<js::jit::JitProfilingFrameIterator*>(storage_.addr());
     }
 
-    const js::jit::JitProfilingFrameIterator &jitIter() const {
+    const js::jit::JitProfilingFrameIterator& jitIter() const {
         MOZ_ASSERT(!done());
         MOZ_ASSERT(isJit());
         return *reinterpret_cast<const js::jit::JitProfilingFrameIterator*>(storage_.addr());
@@ -77,12 +77,12 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
     struct RegisterState
     {
         RegisterState() : pc(nullptr), sp(nullptr), lr(nullptr) {}
-        void *pc;
-        void *sp;
-        void *lr;
+        void* pc;
+        void* sp;
+        void* lr;
     };
 
-    ProfilingFrameIterator(JSRuntime *rt, const RegisterState &state,
+    ProfilingFrameIterator(JSRuntime* rt, const RegisterState& state,
                            uint32_t sampleBufferGen = UINT32_MAX);
     ~ProfilingFrameIterator();
     void operator++();
@@ -93,7 +93,7 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
     //  - is weakly monotonically increasing (may be equal for successive frames)
     //  - will compare greater than newer native and psuedo-stack frame addresses
     //    and less than older native and psuedo-stack frame addresses
-    void *stackAddress() const;
+    void* stackAddress() const;
 
     enum FrameKind
     {
@@ -105,16 +105,16 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
     struct Frame
     {
         FrameKind kind;
-        void *stackAddress;
-        void *returnAddress;
-        void *activation;
-        const char *label;
+        void* stackAddress;
+        void* returnAddress;
+        void* activation;
+        const char* label;
         bool mightHaveTrackedOptimizations;
     };
-    uint32_t extractStack(Frame *frames, uint32_t offset, uint32_t end) const;
+    uint32_t extractStack(Frame* frames, uint32_t offset, uint32_t end) const;
 
   private:
-    void iteratorConstruct(const RegisterState &state);
+    void iteratorConstruct(const RegisterState& state);
     void iteratorConstruct();
     void iteratorDestroy();
     bool iteratorDone();
@@ -124,10 +124,10 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
 };
 
 extern JS_PUBLIC_API(ProfilingFrameIterator::FrameKind)
-GetProfilingFrameKindFromNativeAddr(JSRuntime *runtime, void *pc);
+GetProfilingFrameKindFromNativeAddr(JSRuntime* runtime, void* pc);
 
 JS_FRIEND_API(bool)
-IsProfilingEnabledForRuntime(JSRuntime *runtime);
+IsProfilingEnabledForRuntime(JSRuntime* runtime);
 
 /**
  * After each sample run, this method should be called with the latest sample
@@ -138,7 +138,7 @@ IsProfilingEnabledForRuntime(JSRuntime *runtime);
  * JSRuntime for documentation about what these values are used for.
  */
 JS_FRIEND_API(void)
-UpdateJSRuntimeProfilerSampleBufferGen(JSRuntime *runtime, uint32_t generation,
+UpdateJSRuntimeProfilerSampleBufferGen(JSRuntime* runtime, uint32_t generation,
                                        uint32_t lapCount);
 
 } // namespace JS

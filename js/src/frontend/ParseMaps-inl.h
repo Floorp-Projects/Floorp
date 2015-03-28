@@ -16,7 +16,7 @@ namespace frontend {
 
 template <class Map>
 inline bool
-AtomThingMapPtr<Map>::ensureMap(ExclusiveContext *cx)
+AtomThingMapPtr<Map>::ensureMap(ExclusiveContext* cx)
 {
     if (map_)
         return true;
@@ -28,7 +28,7 @@ AtomThingMapPtr<Map>::ensureMap(ExclusiveContext *cx)
 
 template <class Map>
 inline void
-AtomThingMapPtr<Map>::releaseMap(ExclusiveContext *cx)
+AtomThingMapPtr<Map>::releaseMap(ExclusiveContext* cx)
 {
     if (!map_)
         return;

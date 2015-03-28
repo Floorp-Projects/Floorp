@@ -11,13 +11,13 @@
 
 using namespace js;
 
-/* static */ ProxyObject *
-ProxyObject::New(JSContext *cx, const BaseProxyHandler *handler, HandleValue priv, TaggedProto proto_,
-                 const ProxyOptions &options)
+/* static */ ProxyObject*
+ProxyObject::New(JSContext* cx, const BaseProxyHandler* handler, HandleValue priv, TaggedProto proto_,
+                 const ProxyOptions& options)
 {
     Rooted<TaggedProto> proto(cx, proto_);
 
-    const Class *clasp = options.clasp();
+    const Class* clasp = options.clasp();
 
     MOZ_ASSERT(isValidProxyClass(clasp));
     MOZ_ASSERT_IF(proto.isObject(), cx->compartment() == proto.toObject()->compartment());
@@ -41,7 +41,7 @@ ProxyObject::New(JSContext *cx, const BaseProxyHandler *handler, HandleValue pri
     if (handler->finalizeInBackground(priv))
         allocKind = GetBackgroundAllocKind(allocKind);
 
-    ProxyValueArray *values = cx->zone()->new_<ProxyValueArray>();
+    ProxyValueArray* values = cx->zone()->new_<ProxyValueArray>();
     if (!values)
         return nullptr;
 
@@ -69,20 +69,20 @@ ProxyObject::New(JSContext *cx, const BaseProxyHandler *handler, HandleValue pri
 }
 
 void
-ProxyObject::setCrossCompartmentPrivate(const Value &priv)
+ProxyObject::setCrossCompartmentPrivate(const Value& priv)
 {
     *slotOfPrivate() = priv;
 }
 
 void
-ProxyObject::setSameCompartmentPrivate(const Value &priv)
+ProxyObject::setSameCompartmentPrivate(const Value& priv)
 {
     MOZ_ASSERT(IsObjectValueInCompartment(priv, compartment()));
     *slotOfPrivate() = priv;
 }
 
 void
-ProxyObject::nuke(const BaseProxyHandler *handler)
+ProxyObject::nuke(const BaseProxyHandler* handler)
 {
     setSameCompartmentPrivate(NullValue());
     for (size_t i = 0; i < PROXY_EXTRA_SLOTS; i++)
@@ -93,9 +93,9 @@ ProxyObject::nuke(const BaseProxyHandler *handler)
 }
 
 JS_FRIEND_API(void)
-js::SetValueInProxy(Value *slot, const Value &value)
+js::SetValueInProxy(Value* slot, const Value& value)
 {
     // Slots in proxies are not HeapValues, so do a cast whenever assigning
     // values to them which might trigger a barrier.
-    *reinterpret_cast<HeapValue *>(slot) = value;
+    *reinterpret_cast<HeapValue*>(slot) = value;
 }

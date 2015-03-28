@@ -14,10 +14,10 @@ class MIRGraph;
 
 class AlignmentMaskAnalysis
 {
-    MIRGraph &graph_;
+    MIRGraph& graph_;
 
   public:
-    explicit AlignmentMaskAnalysis(MIRGraph &graph)
+    explicit AlignmentMaskAnalysis(MIRGraph& graph)
       : graph_(graph)
     {}
 

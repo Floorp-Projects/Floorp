@@ -20,7 +20,7 @@
 // would mess that up. See the module level documentation in
 // `js/src/vm/SavedStacks.h` as well as the comments in `js/src/jsapi.h`.
 inline void
-js::AssertObjectIsSavedFrameOrWrapper(JSContext *cx, HandleObject stack)
+js::AssertObjectIsSavedFrameOrWrapper(JSContext* cx, HandleObject stack)
 {
 #ifdef DEBUG
     if (stack) {

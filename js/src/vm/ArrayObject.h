@@ -29,7 +29,7 @@ class ArrayObject : public NativeObject
         return getElementsHeader()->length;
     }
 
-    inline void setLength(ExclusiveContext *cx, uint32_t length);
+    inline void setLength(ExclusiveContext* cx, uint32_t length);
 
     // Variant of setLength for use on arrays where the length cannot overflow int32_t.
     void setLengthInt32(uint32_t length) {
@@ -39,8 +39,8 @@ class ArrayObject : public NativeObject
     }
 
     // Make an array object with the specified initial state.
-    static inline ArrayObject *
-    createArray(ExclusiveContext *cx,
+    static inline ArrayObject*
+    createArray(ExclusiveContext* cx,
                 gc::AllocKind kind,
                 gc::InitialHeap heap,
                 HandleShape shape,
@@ -48,31 +48,31 @@ class ArrayObject : public NativeObject
                 uint32_t length);
 
     // Make an array object with the specified initial state and elements.
-    static inline ArrayObject *
-    createArray(ExclusiveContext *cx,
+    static inline ArrayObject*
+    createArray(ExclusiveContext* cx,
                 gc::InitialHeap heap,
                 HandleShape shape,
                 HandleObjectGroup group,
-                HeapSlot *elements);
+                HeapSlot* elements);
 
     // Make a copy-on-write array object which shares the elements of an
     // existing object.
-    static inline ArrayObject *
-    createCopyOnWriteArray(ExclusiveContext *cx,
+    static inline ArrayObject*
+    createCopyOnWriteArray(ExclusiveContext* cx,
                            gc::InitialHeap heap,
                            HandleArrayObject sharedElementsOwner);
 
   private:
     // Helper for the above methods.
-    static inline ArrayObject *
-    createArrayInternal(ExclusiveContext *cx,
+    static inline ArrayObject*
+    createArrayInternal(ExclusiveContext* cx,
                         gc::AllocKind kind,
                         gc::InitialHeap heap,
                         HandleShape shape,
                         HandleObjectGroup group);
 
-    static inline ArrayObject *
-    finishCreateArray(ArrayObject *obj, HandleShape shape);
+    static inline ArrayObject*
+    finishCreateArray(ArrayObject* obj, HandleShape shape);
 };
 
 } // namespace js

@@ -9,7 +9,7 @@
 
 #include "jsapi-tests/tests.h"
 
-JSObject *keyDelegate = nullptr;
+JSObject* keyDelegate = nullptr;
 
 BEGIN_TEST(testWeakMap_basicOperations)
 {
@@ -47,7 +47,7 @@ BEGIN_TEST(testWeakMap_basicOperations)
     return true;
 }
 
-JSObject *newKey()
+JSObject* newKey()
 {
     return JS_NewPlainObject(cx);
 }
@@ -123,7 +123,7 @@ BEGIN_TEST(testWeakMap_keyDelegates)
     return true;
 }
 
-static void DelegateObjectMoved(JSObject *obj, const JSObject *old)
+static void DelegateObjectMoved(JSObject* obj, const JSObject* old)
 {
     if (!keyDelegate)
         return;  // Object got moved before we set keyDelegate to point to it.
@@ -132,12 +132,12 @@ static void DelegateObjectMoved(JSObject *obj, const JSObject *old)
     keyDelegate = obj;
 }
 
-static JSObject *GetKeyDelegate(JSObject *obj)
+static JSObject* GetKeyDelegate(JSObject* obj)
 {
     return keyDelegate;
 }
 
-JSObject *newKey()
+JSObject* newKey()
 {
     static const js::Class keyClass = {
         "keyWithDelgate",
@@ -171,7 +171,7 @@ JSObject *newKey()
     return key;
 }
 
-JSObject *newCCW(JS::HandleObject sourceZone, JS::HandleObject destZone)
+JSObject* newCCW(JS::HandleObject sourceZone, JS::HandleObject destZone)
 {
     /*
      * Now ensure that this zone will be swept first by adding a cross
@@ -193,7 +193,7 @@ JSObject *newCCW(JS::HandleObject sourceZone, JS::HandleObject destZone)
     return object;
 }
 
-JSObject *newDelegate()
+JSObject* newDelegate()
 {
     static const js::Class delegateClass = {
         "delegate",
