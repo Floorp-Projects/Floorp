@@ -4,34 +4,32 @@
 
 package org.mozilla.gecko.fxa.sync;
 
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.BlockingQueue;
 
-import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-import org.mozilla.gecko.fxa.login.Married;
 import org.mozilla.gecko.fxa.login.State;
-import org.mozilla.gecko.fxa.login.State.StateLabel;
-import org.mozilla.gecko.tokenserver.TokenServerException;
 
 import android.content.SyncResult;
 
 public class FxAccountSyncDelegate {
-  protected final CountDownLatch latch;
-  protected final SyncResult syncResult;
-  protected final AndroidFxAccount fxAccount;
+  public enum Result {
+    Success,
+    Error,
+    Postponed,
+    Rejected,
+  }
 
-  public FxAccountSyncDelegate(CountDownLatch latch, SyncResult syncResult, AndroidFxAccount fxAccount) {
+  protected final BlockingQueue<Result> latch;
+  protected final SyncResult syncResult;
+
+  public FxAccountSyncDelegate(BlockingQueue<Result> latch, SyncResult syncResult) {
     if (latch == null) {
       throw new IllegalArgumentException("latch must not be null");
     }
     if (syncResult == null) {
       throw new IllegalArgumentException("syncResult must not be null");
     }
-    if (fxAccount == null) {
-      throw new IllegalArgumentException("fxAccount must not be null");
-    }
     this.latch = latch;
     this.syncResult = syncResult;
-    this.fxAccount = fxAccount;
   }
 
   /**
@@ -60,22 +58,12 @@ public class FxAccountSyncDelegate {
 
   public void handleSuccess() {
     setSyncResultSuccess();
-    latch.countDown();
+    latch.offer(Result.Success);
   }
 
   public void handleError(Exception e) {
     setSyncResultSoftError();
-    // This is awful, but we need to propagate bad assertions back up the
-    // chain somehow, and this will do for now.
-    if (e instanceof TokenServerException) {
-      // We should only get here *after* we're locked into the married state.
-      State state = fxAccount.getState();
-      if (state.getStateLabel() == StateLabel.Married) {
-        Married married = (Married) state;
-        fxAccount.setState(married.makeCohabitingState());
-      }
-    }
-    latch.countDown();
+    latch.offer(Result.Error);
   }
 
   /**
@@ -94,7 +82,7 @@ public class FxAccountSyncDelegate {
    */
   public void handleCannotSync(State finalState) {
     setSyncResultSoftError();
-    latch.countDown();
+    latch.offer(Result.Error);
   }
 
   public void postponeSync(long millis) {
@@ -108,7 +96,7 @@ public class FxAccountSyncDelegate {
        */
     }
     setSyncResultSoftError();
-    latch.countDown();
+    latch.offer(Result.Postponed);
   }
 
   /**
@@ -117,6 +105,6 @@ public class FxAccountSyncDelegate {
    * been met.
    */
   public void rejectSync() {
-    latch.countDown();
+    latch.offer(Result.Rejected);
   }
 }

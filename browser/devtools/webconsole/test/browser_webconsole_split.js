@@ -53,7 +53,7 @@ function test()
       yield openAndCheckPanel("jsdebugger");
       yield openAndCheckPanel("inspector");
       yield openAndCheckPanel("styleeditor");
-      yield openAndCheckPanel("performance");
+      yield openAndCheckPanel("jsprofiler");
       yield openAndCheckPanel("netmonitor");
 
       yield checkWebconsolePanelOpened();
