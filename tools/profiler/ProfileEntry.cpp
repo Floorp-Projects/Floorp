@@ -112,8 +112,9 @@ ProfileBuffer::ProfileBuffer(int aEntrySize)
 
 ProfileBuffer::~ProfileBuffer()
 {
-  mGeneration = INT_MAX;
-  deleteExpiredStoredMarkers();
+  while (mStoredMarkers.peek()) {
+    delete mStoredMarkers.popHead();
+  }
 }
 
 // Called from signal, call only reentrant functions
@@ -121,6 +122,9 @@ void ProfileBuffer::addTag(const ProfileEntry& aTag)
 {
   mEntries[mWritePos++] = aTag;
   if (mWritePos == mEntrySize) {
+    // Wrapping around may result in things referenced in the buffer (e.g.,
+    // JIT code addresses and markers) being incorrectly collected.
+    MOZ_ASSERT(mGeneration != UINT32_MAX);
     mGeneration++;
     mWritePos = 0;
   }
@@ -139,7 +143,7 @@ void ProfileBuffer::addStoredMarker(ProfilerMarker *aStoredMarker) {
 void ProfileBuffer::deleteExpiredStoredMarkers() {
   // Delete markers of samples that have been overwritten due to circular
   // buffer wraparound.
-  int generation = mGeneration;
+  uint32_t generation = mGeneration;
   while (mStoredMarkers.peek() &&
          mStoredMarkers.peek()->HasExpired(generation)) {
     delete mStoredMarkers.popHead();

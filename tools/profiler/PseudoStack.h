@@ -93,9 +93,9 @@ public:
   void
   StreamJSObject(JSStreamWriter& b) const;
 
-  void SetGeneration(int aGenID);
+  void SetGeneration(uint32_t aGenID);
 
-  bool HasExpired(int aGenID) const {
+  bool HasExpired(uint32_t aGenID) const {
     return mGenID + 2 <= aGenID;
   }
 
@@ -106,7 +106,7 @@ private:
   ProfilerMarkerPayload* mPayload;
   ProfilerMarker* mNext;
   float mTime;
-  int mGenID;
+  uint32_t mGenID;
 };
 
 // Foward declaration
