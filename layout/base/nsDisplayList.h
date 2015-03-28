@@ -1668,14 +1668,10 @@ public:
   uint32_t Count() const;
   /**
    * Stable sort the list by the z-order of GetUnderlyingFrame() on
-   * each item. 'auto' is counted as zero. Content order is used as the
-   * secondary order.
-   * @param aCommonAncestor a common ancestor of all the content elements
-   * associated with the display items, for speeding up tree order
-   * checks, or nullptr if not known; it's only a hint, if it is not an
-   * ancestor of some elements, then we lose performance but not correctness
+   * each item. 'auto' is counted as zero.
+   * It is assumed that the list is already in content document order.
    */
-  void SortByZOrder(nsDisplayListBuilder* aBuilder, nsIContent* aCommonAncestor);
+  void SortByZOrder(nsDisplayListBuilder* aBuilder);
   /**
    * Stable sort the list by the tree order of the content of
    * GetUnderlyingFrame() on each item. z-index is ignored.
