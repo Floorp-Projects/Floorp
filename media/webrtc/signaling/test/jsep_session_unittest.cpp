@@ -1333,12 +1333,13 @@ TEST_P(JsepSessionTest, RenegotiationBothRemoveTrack)
   ASSERT_TRUE(msection->IsReceiving());
   ASSERT_FALSE(msection->IsSending());
 
-  // First m-section should be inactive
+  // First m-section should be inactive, and rejected
   auto answer = GetParsedLocalDescription(mSessionAns);
   msection = GetMsection(*answer, types.front(), 0);
   ASSERT_TRUE(msection);
   ASSERT_FALSE(msection->IsReceiving());
   ASSERT_FALSE(msection->IsSending());
+  ASSERT_FALSE(msection->GetPort());
 
   auto newOffererPairs = GetTrackPairsByLevel(mSessionOff);
   auto newAnswererPairs = GetTrackPairsByLevel(mSessionAns);
@@ -1346,13 +1347,31 @@ TEST_P(JsepSessionTest, RenegotiationBothRemoveTrack)
   ASSERT_EQ(offererPairs.size(), newOffererPairs.size() + 1);
 
   for (size_t i = 0; i < newOffererPairs.size(); ++i) {
-    ASSERT_TRUE(Equals(offererPairs[i + 1], newOffererPairs[i]));
+    JsepTrackPair oldPair(offererPairs[i + 1]);
+    JsepTrackPair newPair(newOffererPairs[i]);
+    ASSERT_EQ(oldPair.mLevel, newPair.mLevel);
+    ASSERT_EQ(oldPair.mSending.get(), newPair.mSending.get());
+    ASSERT_EQ(oldPair.mReceiving.get(), newPair.mReceiving.get());
+    ASSERT_TRUE(oldPair.mBundleLevel.isSome());
+    ASSERT_TRUE(newPair.mBundleLevel.isSome());
+    ASSERT_EQ(0U, *oldPair.mBundleLevel);
+    ASSERT_EQ(1U, *newPair.mBundleLevel);
   }
 
   ASSERT_EQ(answererPairs.size(), newAnswererPairs.size() + 1);
 
   for (size_t i = 0; i < newAnswererPairs.size(); ++i) {
-    ASSERT_TRUE(Equals(answererPairs[i + 1], newAnswererPairs[i]));
+    JsepTrackPair oldPair(answererPairs[i + 1]);
+    JsepTrackPair newPair(newAnswererPairs[i]);
+    ASSERT_EQ(oldPair.mLevel, newPair.mLevel);
+    ASSERT_EQ(oldPair.mSending.get(), newPair.mSending.get());
+    ASSERT_EQ(oldPair.mReceiving.get(), newPair.mReceiving.get());
+    ASSERT_TRUE(oldPair.mBundleLevel.isSome());
+    ASSERT_TRUE(newPair.mBundleLevel.isSome());
+    ASSERT_EQ(0U, *oldPair.mBundleLevel);
+    ASSERT_EQ(1U, *newPair.mBundleLevel);
+  }
+}
 
 TEST_P(JsepSessionTest, RenegotiationBothRemoveThenAddTrack)
 {
