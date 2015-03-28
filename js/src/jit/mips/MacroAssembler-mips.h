@@ -83,20 +83,20 @@ class MacroAssemblerMIPS : public Assembler
 
     void convertBoolToInt32(Register source, Register dest);
     void convertInt32ToDouble(Register src, FloatRegister dest);
-    void convertInt32ToDouble(const Address &src, FloatRegister dest);
+    void convertInt32ToDouble(const Address& src, FloatRegister dest);
     void convertUInt32ToDouble(Register src, FloatRegister dest);
     void convertUInt32ToFloat32(Register src, FloatRegister dest);
     void convertDoubleToFloat32(FloatRegister src, FloatRegister dest);
-    void branchTruncateDouble(FloatRegister src, Register dest, Label *fail);
-    void convertDoubleToInt32(FloatRegister src, Register dest, Label *fail,
+    void branchTruncateDouble(FloatRegister src, Register dest, Label* fail);
+    void convertDoubleToInt32(FloatRegister src, Register dest, Label* fail,
                               bool negativeZeroCheck = true);
-    void convertFloat32ToInt32(FloatRegister src, Register dest, Label *fail,
+    void convertFloat32ToInt32(FloatRegister src, Register dest, Label* fail,
                                bool negativeZeroCheck = true);
 
     void convertFloat32ToDouble(FloatRegister src, FloatRegister dest);
-    void branchTruncateFloat32(FloatRegister src, Register dest, Label *fail);
+    void branchTruncateFloat32(FloatRegister src, Register dest, Label* fail);
     void convertInt32ToFloat32(Register src, FloatRegister dest);
-    void convertInt32ToFloat32(const Address &src, FloatRegister dest);
+    void convertInt32ToFloat32(const Address& src, FloatRegister dest);
 
 
     void addDouble(FloatRegister src, FloatRegister dest);
@@ -113,7 +113,7 @@ class MacroAssemblerMIPS : public Assembler
 
     void ma_li(Register dest, ImmGCPtr ptr);
 
-    void ma_li(Register dest, AbsoluteLabel *label);
+    void ma_li(Register dest, AbsoluteLabel* label);
 
     void ma_li(Register dest, Imm32 imm);
     void ma_liPatchable(Register dest, Imm32 imm);
@@ -158,24 +158,24 @@ class MacroAssemblerMIPS : public Assembler
     // load
     void ma_load(Register dest, Address address, LoadStoreSize size = SizeWord,
                  LoadStoreExtension extension = SignExtend);
-    void ma_load(Register dest, const BaseIndex &src, LoadStoreSize size = SizeWord,
+    void ma_load(Register dest, const BaseIndex& src, LoadStoreSize size = SizeWord,
                  LoadStoreExtension extension = SignExtend);
 
     // store
     void ma_store(Register data, Address address, LoadStoreSize size = SizeWord,
                   LoadStoreExtension extension = SignExtend);
-    void ma_store(Register data, const BaseIndex &dest, LoadStoreSize size = SizeWord,
+    void ma_store(Register data, const BaseIndex& dest, LoadStoreSize size = SizeWord,
                   LoadStoreExtension extension = SignExtend);
-    void ma_store(Imm32 imm, const BaseIndex &dest, LoadStoreSize size = SizeWord,
+    void ma_store(Imm32 imm, const BaseIndex& dest, LoadStoreSize size = SizeWord,
                   LoadStoreExtension extension = SignExtend);
 
-    void computeScaledAddress(const BaseIndex &address, Register dest);
+    void computeScaledAddress(const BaseIndex& address, Register dest);
 
-    void computeEffectiveAddress(const Address &address, Register dest) {
+    void computeEffectiveAddress(const Address& address, Register dest) {
         ma_addu(dest, address.base, Imm32(address.offset));
     }
 
-    void computeEffectiveAddress(const BaseIndex &address, Register dest) {
+    void computeEffectiveAddress(const BaseIndex& address, Register dest) {
         computeScaledAddress(address, dest);
         if (address.offset) {
             ma_addu(dest, dest, Imm32(address.offset));
@@ -188,29 +188,29 @@ class MacroAssemblerMIPS : public Assembler
     void ma_addu(Register rd, Register rs, Register rt);
     void ma_addu(Register rd, Register rs);
     void ma_addu(Register rd, Imm32 imm);
-    void ma_addTestOverflow(Register rd, Register rs, Register rt, Label *overflow);
-    void ma_addTestOverflow(Register rd, Register rs, Imm32 imm, Label *overflow);
+    void ma_addTestOverflow(Register rd, Register rs, Register rt, Label* overflow);
+    void ma_addTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow);
 
     // subtract
     void ma_subu(Register rd, Register rs, Register rt);
     void ma_subu(Register rd, Register rs, Imm32 imm);
     void ma_subu(Register rd, Imm32 imm);
-    void ma_subTestOverflow(Register rd, Register rs, Register rt, Label *overflow);
-    void ma_subTestOverflow(Register rd, Register rs, Imm32 imm, Label *overflow);
+    void ma_subTestOverflow(Register rd, Register rs, Register rt, Label* overflow);
+    void ma_subTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow);
 
     // multiplies.  For now, there are only few that we care about.
     void ma_mult(Register rs, Imm32 imm);
-    void ma_mul_branch_overflow(Register rd, Register rs, Register rt, Label *overflow);
-    void ma_mul_branch_overflow(Register rd, Register rs, Imm32 imm, Label *overflow);
+    void ma_mul_branch_overflow(Register rd, Register rs, Register rt, Label* overflow);
+    void ma_mul_branch_overflow(Register rd, Register rs, Imm32 imm, Label* overflow);
 
     // divisions
-    void ma_div_branch_overflow(Register rd, Register rs, Register rt, Label *overflow);
-    void ma_div_branch_overflow(Register rd, Register rs, Imm32 imm, Label *overflow);
+    void ma_div_branch_overflow(Register rd, Register rs, Register rt, Label* overflow);
+    void ma_div_branch_overflow(Register rd, Register rs, Imm32 imm, Label* overflow);
 
     // fast mod, uses scratch registers, and thus needs to be in the assembler
     // implicitly assumes that we can overwrite dest at the beginning of the sequence
     void ma_mod_mask(Register src, Register dest, Register hold, Register remain,
-                     int32_t shift, Label *negZero = nullptr);
+                     int32_t shift, Label* negZero = nullptr);
 
     // memory
     // shortcut for when we know we're transferring 32 bits of data
@@ -218,42 +218,42 @@ class MacroAssemblerMIPS : public Assembler
 
     void ma_sw(Register data, Address address);
     void ma_sw(Imm32 imm, Address address);
-    void ma_sw(Register data, BaseIndex &address);
+    void ma_sw(Register data, BaseIndex& address);
 
     void ma_pop(Register r);
     void ma_push(Register r);
 
     // branches when done from within mips-specific code
-    void ma_b(Register lhs, Register rhs, Label *l, Condition c, JumpKind jumpKind = LongJump);
-    void ma_b(Register lhs, Imm32 imm, Label *l, Condition c, JumpKind jumpKind = LongJump);
-    void ma_b(Register lhs, ImmPtr imm, Label *l, Condition c, JumpKind jumpKind = LongJump) {
+    void ma_b(Register lhs, Register rhs, Label* l, Condition c, JumpKind jumpKind = LongJump);
+    void ma_b(Register lhs, Imm32 imm, Label* l, Condition c, JumpKind jumpKind = LongJump);
+    void ma_b(Register lhs, ImmPtr imm, Label* l, Condition c, JumpKind jumpKind = LongJump) {
         ma_b(lhs, Imm32(uint32_t(imm.value)), l, c, jumpKind);
     }
-    void ma_b(Register lhs, ImmGCPtr imm, Label *l, Condition c, JumpKind jumpKind = LongJump) {
+    void ma_b(Register lhs, ImmGCPtr imm, Label* l, Condition c, JumpKind jumpKind = LongJump) {
         MOZ_ASSERT(lhs != ScratchRegister);
         ma_li(ScratchRegister, imm);
         ma_b(lhs, ScratchRegister, l, c, jumpKind);
     }
-    void ma_b(Register lhs, ImmWord imm, Label *l, Condition c, JumpKind jumpKind = LongJump)
+    void ma_b(Register lhs, ImmWord imm, Label* l, Condition c, JumpKind jumpKind = LongJump)
     {
         ma_b(lhs, Imm32(uint32_t(imm.value)), l, c, jumpKind);
     }
-    void ma_b(Address addr, ImmWord imm, Label *l, Condition c, JumpKind jumpKind = LongJump)
+    void ma_b(Address addr, ImmWord imm, Label* l, Condition c, JumpKind jumpKind = LongJump)
     {
         ma_b(addr, Imm32(uint32_t(imm.value)), l, c, jumpKind);
     }
 
-    void ma_b(Register lhs, Address addr, Label *l, Condition c, JumpKind jumpKind = LongJump);
-    void ma_b(Address addr, Imm32 imm, Label *l, Condition c, JumpKind jumpKind = LongJump);
-    void ma_b(Address addr, ImmGCPtr imm, Label *l, Condition c, JumpKind jumpKind = LongJump);
-    void ma_b(Address addr, Register rhs, Label *l, Condition c, JumpKind jumpKind = LongJump) {
+    void ma_b(Register lhs, Address addr, Label* l, Condition c, JumpKind jumpKind = LongJump);
+    void ma_b(Address addr, Imm32 imm, Label* l, Condition c, JumpKind jumpKind = LongJump);
+    void ma_b(Address addr, ImmGCPtr imm, Label* l, Condition c, JumpKind jumpKind = LongJump);
+    void ma_b(Address addr, Register rhs, Label* l, Condition c, JumpKind jumpKind = LongJump) {
         MOZ_ASSERT(rhs != ScratchRegister);
         ma_lw(ScratchRegister, addr);
         ma_b(ScratchRegister, rhs, l, c, jumpKind);
     }
 
-    void ma_b(Label *l, JumpKind jumpKind = LongJump);
-    void ma_bal(Label *l, DelaySlotFill delaySlotFill = FillDelaySlot);
+    void ma_b(Label* l, JumpKind jumpKind = LongJump);
+    void ma_bal(Label* l, DelaySlotFill delaySlotFill = FillDelaySlot);
 
     // fp instructions
     void ma_lis(FloatRegister dest, float value);
@@ -274,9 +274,9 @@ class MacroAssemblerMIPS : public Assembler
     void ma_push(FloatRegister fs);
 
     //FP branches
-    void ma_bc1s(FloatRegister lhs, FloatRegister rhs, Label *label, DoubleCondition c,
+    void ma_bc1s(FloatRegister lhs, FloatRegister rhs, Label* label, DoubleCondition c,
                  JumpKind jumpKind = LongJump, FPConditionBit fcc = FCC0);
-    void ma_bc1d(FloatRegister lhs, FloatRegister rhs, Label *label, DoubleCondition c,
+    void ma_bc1d(FloatRegister lhs, FloatRegister rhs, Label* label, DoubleCondition c,
                  JumpKind jumpKind = LongJump, FPConditionBit fcc = FCC0);
 
 
@@ -306,11 +306,11 @@ class MacroAssemblerMIPS : public Assembler
     }
 
   protected:
-    void branchWithCode(InstImm code, Label *label, JumpKind jumpKind);
+    void branchWithCode(InstImm code, Label* label, JumpKind jumpKind);
     Condition ma_cmp(Register rd, Register lhs, Register rhs, Condition c);
 
     void compareFloatingPoint(FloatFormat fmt, FloatRegister lhs, FloatRegister rhs,
-                              DoubleCondition c, FloatTestKind *testKind,
+                              DoubleCondition c, FloatTestKind* testKind,
                               FPConditionBit fcc = FCC0);
 
   public:
@@ -320,7 +320,7 @@ class MacroAssemblerMIPS : public Assembler
     void ma_callJitNoPush(const Register reg);
     // calls an ion function, assuming that the stack is currently not 8 byte aligned
     void ma_callJitHalfPush(const Register reg);
-    void ma_callJitHalfPush(Label *label);
+    void ma_callJitHalfPush(Label* label);
 
     void ma_call(ImmPtr dest);
 
@@ -348,8 +348,8 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
 {
   private:
     // Perform a downcast. Should be removed by Bug 996602.
-    MacroAssembler &asMasm();
-    const MacroAssembler &asMasm() const;
+    MacroAssembler& asMasm();
+    const MacroAssembler& asMasm() const;
 
   private:
     // Number of bytes the stack is adjusted inside a call to C. Calls to C may
@@ -394,7 +394,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
   public:
     using MacroAssemblerMIPS::call;
 
-    void j(Label *dest) {
+    void j(Label* dest) {
         ma_b(dest);
     }
 
@@ -419,7 +419,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         as_nop();
     }
 
-    void call(Label *label) {
+    void call(Label* label) {
         ma_bal(label);
     }
 
@@ -435,26 +435,26 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         movePtr(imm, CallReg);
         call(CallReg);
     }
-    void call(JitCode *c) {
+    void call(JitCode* c) {
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
         ma_liPatchable(ScratchRegister, Imm32((uint32_t)c->raw()));
         ma_callJitHalfPush(ScratchRegister);
     }
-    void call(const CallSiteDesc &desc, const Register reg) {
+    void call(const CallSiteDesc& desc, const Register reg) {
         call(reg);
         append(desc, currentOffset(), framePushed_);
     }
-    void call(const CallSiteDesc &desc, Label *label) {
+    void call(const CallSiteDesc& desc, Label* label) {
         call(label);
         append(desc, currentOffset(), framePushed_);
     }
 
-    void callAndPushReturnAddress(Label *label) {
+    void callAndPushReturnAddress(Label* label) {
         ma_callJitHalfPush(label);
     }
 
-    void branch(JitCode *c) {
+    void branch(JitCode* c) {
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
         ma_liPatchable(ScratchRegister, Imm32((uint32_t)c->raw()));
@@ -492,7 +492,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         ma_li(ScratchRegister, imm);
         ma_push(ScratchRegister);
     }
-    void push(const Address &address) {
+    void push(const Address& address) {
         ma_lw(ScratchRegister, address);
         ma_push(ScratchRegister);
     }
@@ -512,13 +512,13 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     // Emit a branch that can be toggled to a non-operation. On MIPS we use
     // "andi" instruction to toggle the branch.
     // See ToggleToJmp(), ToggleToCmp().
-    CodeOffsetLabel toggledJump(Label *label);
+    CodeOffsetLabel toggledJump(Label* label);
 
     // Emit a "jalr" or "nop" instruction. ToggleCall can be used to patch
     // this instruction.
-    CodeOffsetLabel toggledCall(JitCode *target, bool enabled);
+    CodeOffsetLabel toggledCall(JitCode* target, bool enabled);
 
-    static size_t ToggledCallSize(uint8_t *code) {
+    static size_t ToggledCallSize(uint8_t* code) {
         // Four instructions used in: MacroAssemblerMIPSCompat::toggledCall
         return 4 * sizeof(uint32_t);
     }
@@ -538,20 +538,20 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
         return movWithPatch(ImmWord(uintptr_t(imm.value)), dest);
     }
 
-    void jump(Label *label) {
+    void jump(Label* label) {
         ma_b(label);
     }
     void jump(Register reg) {
         as_jr(reg);
         as_nop();
     }
-    void jump(const Address &address) {
+    void jump(const Address& address) {
         ma_lw(ScratchRegister, address);
         as_jr(ScratchRegister);
         as_nop();
     }
 
-    void jump(JitCode *code) {
+    void jump(JitCode* code) {
         branch(code);
     }
 
@@ -563,187 +563,187 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     }
 
     // Returns the register containing the type tag.
-    Register splitTagForTest(const ValueOperand &value) {
+    Register splitTagForTest(const ValueOperand& value) {
         return value.typeReg();
     }
 
-    void branchTestGCThing(Condition cond, const Address &address, Label *label);
-    void branchTestGCThing(Condition cond, const BaseIndex &src, Label *label);
+    void branchTestGCThing(Condition cond, const Address& address, Label* label);
+    void branchTestGCThing(Condition cond, const BaseIndex& src, Label* label);
 
-    void branchTestPrimitive(Condition cond, const ValueOperand &value, Label *label);
-    void branchTestPrimitive(Condition cond, Register tag, Label *label);
+    void branchTestPrimitive(Condition cond, const ValueOperand& value, Label* label);
+    void branchTestPrimitive(Condition cond, Register tag, Label* label);
 
-    void branchTestValue(Condition cond, const ValueOperand &value, const Value &v, Label *label);
-    void branchTestValue(Condition cond, const Address &valaddr, const ValueOperand &value,
-                         Label *label);
+    void branchTestValue(Condition cond, const ValueOperand& value, const Value& v, Label* label);
+    void branchTestValue(Condition cond, const Address& valaddr, const ValueOperand& value,
+                         Label* label);
 
     // unboxing code
-    void unboxNonDouble(const ValueOperand &operand, Register dest);
-    void unboxNonDouble(const Address &src, Register dest);
-    void unboxNonDouble(const BaseIndex &src, Register dest);
-    void unboxInt32(const ValueOperand &operand, Register dest);
-    void unboxInt32(const Address &src, Register dest);
-    void unboxBoolean(const ValueOperand &operand, Register dest);
-    void unboxBoolean(const Address &src, Register dest);
-    void unboxDouble(const ValueOperand &operand, FloatRegister dest);
-    void unboxDouble(const Address &src, FloatRegister dest);
-    void unboxString(const ValueOperand &operand, Register dest);
-    void unboxString(const Address &src, Register dest);
-    void unboxObject(const ValueOperand &src, Register dest);
-    void unboxObject(const Address &src, Register dest);
-    void unboxObject(const BaseIndex &src, Register dest) { unboxNonDouble(src, dest); }
-    void unboxValue(const ValueOperand &src, AnyRegister dest);
-    void unboxPrivate(const ValueOperand &src, Register dest);
+    void unboxNonDouble(const ValueOperand& operand, Register dest);
+    void unboxNonDouble(const Address& src, Register dest);
+    void unboxNonDouble(const BaseIndex& src, Register dest);
+    void unboxInt32(const ValueOperand& operand, Register dest);
+    void unboxInt32(const Address& src, Register dest);
+    void unboxBoolean(const ValueOperand& operand, Register dest);
+    void unboxBoolean(const Address& src, Register dest);
+    void unboxDouble(const ValueOperand& operand, FloatRegister dest);
+    void unboxDouble(const Address& src, FloatRegister dest);
+    void unboxString(const ValueOperand& operand, Register dest);
+    void unboxString(const Address& src, Register dest);
+    void unboxObject(const ValueOperand& src, Register dest);
+    void unboxObject(const Address& src, Register dest);
+    void unboxObject(const BaseIndex& src, Register dest) { unboxNonDouble(src, dest); }
+    void unboxValue(const ValueOperand& src, AnyRegister dest);
+    void unboxPrivate(const ValueOperand& src, Register dest);
 
-    void notBoolean(const ValueOperand &val) {
+    void notBoolean(const ValueOperand& val) {
         as_xori(val.payloadReg(), val.payloadReg(), 1);
     }
 
     // boxing code
-    void boxDouble(FloatRegister src, const ValueOperand &dest);
-    void boxNonDouble(JSValueType type, Register src, const ValueOperand &dest);
+    void boxDouble(FloatRegister src, const ValueOperand& dest);
+    void boxNonDouble(JSValueType type, Register src, const ValueOperand& dest);
 
     // Extended unboxing API. If the payload is already in a register, returns
     // that register. Otherwise, provides a move to the given scratch register,
     // and returns that.
-    Register extractObject(const Address &address, Register scratch);
-    Register extractObject(const ValueOperand &value, Register scratch) {
+    Register extractObject(const Address& address, Register scratch);
+    Register extractObject(const ValueOperand& value, Register scratch) {
         return value.payloadReg();
     }
-    Register extractInt32(const ValueOperand &value, Register scratch) {
+    Register extractInt32(const ValueOperand& value, Register scratch) {
         return value.payloadReg();
     }
-    Register extractBoolean(const ValueOperand &value, Register scratch) {
+    Register extractBoolean(const ValueOperand& value, Register scratch) {
         return value.payloadReg();
     }
-    Register extractTag(const Address &address, Register scratch);
-    Register extractTag(const BaseIndex &address, Register scratch);
-    Register extractTag(const ValueOperand &value, Register scratch) {
+    Register extractTag(const Address& address, Register scratch);
+    Register extractTag(const BaseIndex& address, Register scratch);
+    Register extractTag(const ValueOperand& value, Register scratch) {
         return value.typeReg();
     }
 
-    void boolValueToDouble(const ValueOperand &operand, FloatRegister dest);
-    void int32ValueToDouble(const ValueOperand &operand, FloatRegister dest);
-    void loadInt32OrDouble(const Address &address, FloatRegister dest);
+    void boolValueToDouble(const ValueOperand& operand, FloatRegister dest);
+    void int32ValueToDouble(const ValueOperand& operand, FloatRegister dest);
+    void loadInt32OrDouble(const Address& address, FloatRegister dest);
     void loadInt32OrDouble(Register base, Register index,
                            FloatRegister dest, int32_t shift = defaultShift);
     void loadConstantDouble(double dp, FloatRegister dest);
 
-    void boolValueToFloat32(const ValueOperand &operand, FloatRegister dest);
-    void int32ValueToFloat32(const ValueOperand &operand, FloatRegister dest);
+    void boolValueToFloat32(const ValueOperand& operand, FloatRegister dest);
+    void int32ValueToFloat32(const ValueOperand& operand, FloatRegister dest);
     void loadConstantFloat32(float f, FloatRegister dest);
 
-    void branchTestInt32(Condition cond, const ValueOperand &value, Label *label);
-    void branchTestInt32(Condition cond, Register tag, Label *label);
-    void branchTestInt32(Condition cond, const Address &address, Label *label);
-    void branchTestInt32(Condition cond, const BaseIndex &src, Label *label);
+    void branchTestInt32(Condition cond, const ValueOperand& value, Label* label);
+    void branchTestInt32(Condition cond, Register tag, Label* label);
+    void branchTestInt32(Condition cond, const Address& address, Label* label);
+    void branchTestInt32(Condition cond, const BaseIndex& src, Label* label);
 
-    void branchTestBoolean(Condition cond, const ValueOperand &value, Label *label);
-    void branchTestBoolean(Condition cond, Register tag, Label *label);
-    void branchTestBoolean(Condition cond, const BaseIndex &src, Label *label);
+    void branchTestBoolean(Condition cond, const ValueOperand& value, Label* label);
+    void branchTestBoolean(Condition cond, Register tag, Label* label);
+    void branchTestBoolean(Condition cond, const BaseIndex& src, Label* label);
 
-    void branch32(Condition cond, Register lhs, Register rhs, Label *label) {
+    void branch32(Condition cond, Register lhs, Register rhs, Label* label) {
         ma_b(lhs, rhs, label, cond);
     }
-    void branch32(Condition cond, Register lhs, Imm32 imm, Label *label) {
+    void branch32(Condition cond, Register lhs, Imm32 imm, Label* label) {
         ma_b(lhs, imm, label, cond);
     }
-    void branch32(Condition cond, const Operand &lhs, Register rhs, Label *label) {
+    void branch32(Condition cond, const Operand& lhs, Register rhs, Label* label) {
         if (lhs.getTag() == Operand::REG) {
             ma_b(lhs.toReg(), rhs, label, cond);
         } else {
             branch32(cond, lhs.toAddress(), rhs, label);
         }
     }
-    void branch32(Condition cond, const Operand &lhs, Imm32 rhs, Label *label) {
+    void branch32(Condition cond, const Operand& lhs, Imm32 rhs, Label* label) {
         if (lhs.getTag() == Operand::REG) {
             ma_b(lhs.toReg(), rhs, label, cond);
         } else {
             branch32(cond, lhs.toAddress(), rhs, label);
         }
     }
-    void branch32(Condition cond, const Address &lhs, Register rhs, Label *label) {
+    void branch32(Condition cond, const Address& lhs, Register rhs, Label* label) {
         ma_lw(ScratchRegister, lhs);
         ma_b(ScratchRegister, rhs, label, cond);
     }
-    void branch32(Condition cond, const Address &lhs, Imm32 rhs, Label *label) {
+    void branch32(Condition cond, const Address& lhs, Imm32 rhs, Label* label) {
         ma_lw(SecondScratchReg, lhs);
         ma_b(SecondScratchReg, rhs, label, cond);
     }
-    void branch32(Condition cond, const BaseIndex &lhs, Imm32 rhs, Label *label) {
+    void branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs, Label* label) {
         load32(lhs, SecondScratchReg);
         ma_b(SecondScratchReg, rhs, label, cond);
     }
-    void branchPtr(Condition cond, const Address &lhs, Register rhs, Label *label) {
+    void branchPtr(Condition cond, const Address& lhs, Register rhs, Label* label) {
         branch32(cond, lhs, rhs, label);
     }
 
-    void branchPrivatePtr(Condition cond, const Address &lhs, ImmPtr ptr, Label *label) {
+    void branchPrivatePtr(Condition cond, const Address& lhs, ImmPtr ptr, Label* label) {
         branchPtr(cond, lhs, ptr, label);
     }
 
-    void branchPrivatePtr(Condition cond, const Address &lhs, Register ptr, Label *label) {
+    void branchPrivatePtr(Condition cond, const Address& lhs, Register ptr, Label* label) {
         branchPtr(cond, lhs, ptr, label);
     }
 
-    void branchPrivatePtr(Condition cond, Register lhs, ImmWord ptr, Label *label) {
+    void branchPrivatePtr(Condition cond, Register lhs, ImmWord ptr, Label* label) {
         branchPtr(cond, lhs, ptr, label);
     }
 
-    void branchTestDouble(Condition cond, const ValueOperand &value, Label *label);
-    void branchTestDouble(Condition cond, Register tag, Label *label);
-    void branchTestDouble(Condition cond, const Address &address, Label *label);
-    void branchTestDouble(Condition cond, const BaseIndex &src, Label *label);
+    void branchTestDouble(Condition cond, const ValueOperand& value, Label* label);
+    void branchTestDouble(Condition cond, Register tag, Label* label);
+    void branchTestDouble(Condition cond, const Address& address, Label* label);
+    void branchTestDouble(Condition cond, const BaseIndex& src, Label* label);
 
-    void branchTestNull(Condition cond, const ValueOperand &value, Label *label);
-    void branchTestNull(Condition cond, Register tag, Label *label);
-    void branchTestNull(Condition cond, const BaseIndex &src, Label *label);
-    void branchTestNull(Condition cond, const Address &address, Label *label);
-    void testNullSet(Condition cond, const ValueOperand &value, Register dest);
+    void branchTestNull(Condition cond, const ValueOperand& value, Label* label);
+    void branchTestNull(Condition cond, Register tag, Label* label);
+    void branchTestNull(Condition cond, const BaseIndex& src, Label* label);
+    void branchTestNull(Condition cond, const Address& address, Label* label);
+    void testNullSet(Condition cond, const ValueOperand& value, Register dest);
 
-    void branchTestObject(Condition cond, const ValueOperand &value, Label *label);
-    void branchTestObject(Condition cond, Register tag, Label *label);
-    void branchTestObject(Condition cond, const BaseIndex &src, Label *label);
-    void branchTestObject(Condition cond, const Address &src, Label *label);
-    void testObjectSet(Condition cond, const ValueOperand &value, Register dest);
+    void branchTestObject(Condition cond, const ValueOperand& value, Label* label);
+    void branchTestObject(Condition cond, Register tag, Label* label);
+    void branchTestObject(Condition cond, const BaseIndex& src, Label* label);
+    void branchTestObject(Condition cond, const Address& src, Label* label);
+    void testObjectSet(Condition cond, const ValueOperand& value, Register dest);
 
-    void branchTestString(Condition cond, const ValueOperand &value, Label *label);
-    void branchTestString(Condition cond, Register tag, Label *label);
-    void branchTestString(Condition cond, const BaseIndex &src, Label *label);
+    void branchTestString(Condition cond, const ValueOperand& value, Label* label);
+    void branchTestString(Condition cond, Register tag, Label* label);
+    void branchTestString(Condition cond, const BaseIndex& src, Label* label);
 
-    void branchTestSymbol(Condition cond, const ValueOperand &value, Label *label);
-    void branchTestSymbol(Condition cond, const Register &tag, Label *label);
-    void branchTestSymbol(Condition cond, const BaseIndex &src, Label *label);
+    void branchTestSymbol(Condition cond, const ValueOperand& value, Label* label);
+    void branchTestSymbol(Condition cond, const Register& tag, Label* label);
+    void branchTestSymbol(Condition cond, const BaseIndex& src, Label* label);
 
-    void branchTestUndefined(Condition cond, const ValueOperand &value, Label *label);
-    void branchTestUndefined(Condition cond, Register tag, Label *label);
-    void branchTestUndefined(Condition cond, const BaseIndex &src, Label *label);
-    void branchTestUndefined(Condition cond, const Address &address, Label *label);
-    void testUndefinedSet(Condition cond, const ValueOperand &value, Register dest);
+    void branchTestUndefined(Condition cond, const ValueOperand& value, Label* label);
+    void branchTestUndefined(Condition cond, Register tag, Label* label);
+    void branchTestUndefined(Condition cond, const BaseIndex& src, Label* label);
+    void branchTestUndefined(Condition cond, const Address& address, Label* label);
+    void testUndefinedSet(Condition cond, const ValueOperand& value, Register dest);
 
-    void branchTestNumber(Condition cond, const ValueOperand &value, Label *label);
-    void branchTestNumber(Condition cond, Register tag, Label *label);
+    void branchTestNumber(Condition cond, const ValueOperand& value, Label* label);
+    void branchTestNumber(Condition cond, Register tag, Label* label);
 
-    void branchTestMagic(Condition cond, const ValueOperand &value, Label *label);
-    void branchTestMagic(Condition cond, Register tag, Label *label);
-    void branchTestMagic(Condition cond, const Address &address, Label *label);
-    void branchTestMagic(Condition cond, const BaseIndex &src, Label *label);
+    void branchTestMagic(Condition cond, const ValueOperand& value, Label* label);
+    void branchTestMagic(Condition cond, Register tag, Label* label);
+    void branchTestMagic(Condition cond, const Address& address, Label* label);
+    void branchTestMagic(Condition cond, const BaseIndex& src, Label* label);
 
-    void branchTestMagicValue(Condition cond, const ValueOperand &val, JSWhyMagic why,
-                              Label *label) {
+    void branchTestMagicValue(Condition cond, const ValueOperand& val, JSWhyMagic why,
+                              Label* label) {
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
         branchTestValue(cond, val, MagicValue(why), label);
     }
 
-    void branchTestInt32Truthy(bool b, const ValueOperand &value, Label *label);
+    void branchTestInt32Truthy(bool b, const ValueOperand& value, Label* label);
 
-    void branchTestStringTruthy(bool b, const ValueOperand &value, Label *label);
+    void branchTestStringTruthy(bool b, const ValueOperand& value, Label* label);
 
-    void branchTestDoubleTruthy(bool b, FloatRegister value, Label *label);
+    void branchTestDoubleTruthy(bool b, FloatRegister value, Label* label);
 
-    void branchTestBooleanTruthy(bool b, const ValueOperand &operand, Label *label);
+    void branchTestBooleanTruthy(bool b, const ValueOperand& operand, Label* label);
 
-    void branchTest32(Condition cond, Register lhs, Register rhs, Label *label) {
+    void branchTest32(Condition cond, Register lhs, Register rhs, Label* label) {
         MOZ_ASSERT(cond == Zero || cond == NonZero || cond == Signed || cond == NotSigned);
         if (lhs == rhs) {
             ma_b(lhs, rhs, label, cond);
@@ -752,63 +752,63 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
             ma_b(ScratchRegister, ScratchRegister, label, cond);
         }
     }
-    void branchTest32(Condition cond, Register lhs, Imm32 imm, Label *label) {
+    void branchTest32(Condition cond, Register lhs, Imm32 imm, Label* label) {
         ma_li(ScratchRegister, imm);
         branchTest32(cond, lhs, ScratchRegister, label);
     }
-    void branchTest32(Condition cond, const Address &address, Imm32 imm, Label *label) {
+    void branchTest32(Condition cond, const Address& address, Imm32 imm, Label* label) {
         ma_lw(SecondScratchReg, address);
         branchTest32(cond, SecondScratchReg, imm, label);
     }
-    void branchTest32(Condition cond, AbsoluteAddress address, Imm32 imm, Label *label) {
+    void branchTest32(Condition cond, AbsoluteAddress address, Imm32 imm, Label* label) {
         loadPtr(address, ScratchRegister);
         branchTest32(cond, ScratchRegister, imm, label);
     }
-    void branchTestPtr(Condition cond, Register lhs, Register rhs, Label *label) {
+    void branchTestPtr(Condition cond, Register lhs, Register rhs, Label* label) {
         branchTest32(cond, lhs, rhs, label);
     }
-    void branchTestPtr(Condition cond, Register lhs, const Imm32 rhs, Label *label) {
+    void branchTestPtr(Condition cond, Register lhs, const Imm32 rhs, Label* label) {
         branchTest32(cond, lhs, rhs, label);
     }
-    void branchTestPtr(Condition cond, const Address &lhs, Imm32 imm, Label *label) {
+    void branchTestPtr(Condition cond, const Address& lhs, Imm32 imm, Label* label) {
         branchTest32(cond, lhs, imm, label);
     }
-    void branchPtr(Condition cond, Register lhs, Register rhs, Label *label) {
+    void branchPtr(Condition cond, Register lhs, Register rhs, Label* label) {
         ma_b(lhs, rhs, label, cond);
     }
-    void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label *label) {
+    void branchPtr(Condition cond, Register lhs, ImmGCPtr ptr, Label* label) {
         ma_li(ScratchRegister, ptr);
         ma_b(lhs, ScratchRegister, label, cond);
     }
-    void branchPtr(Condition cond, Register lhs, ImmWord imm, Label *label) {
+    void branchPtr(Condition cond, Register lhs, ImmWord imm, Label* label) {
         ma_b(lhs, Imm32(imm.value), label, cond);
     }
-    void branchPtr(Condition cond, Register lhs, ImmPtr imm, Label *label) {
+    void branchPtr(Condition cond, Register lhs, ImmPtr imm, Label* label) {
         branchPtr(cond, lhs, ImmWord(uintptr_t(imm.value)), label);
     }
-    void branchPtr(Condition cond, Register lhs, AsmJSImmPtr imm, Label *label) {
+    void branchPtr(Condition cond, Register lhs, AsmJSImmPtr imm, Label* label) {
         movePtr(imm, ScratchRegister);
         branchPtr(cond, lhs, ScratchRegister, label);
     }
-    void branchPtr(Condition cond, Register lhs, Imm32 imm, Label *label) {
+    void branchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
         ma_b(lhs, imm, label, cond);
     }
-    void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label *label) {
+    void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
         subPtr(imm, lhs);
         branch32(cond, lhs, Imm32(0), label);
     }
 
 protected:
-    uint32_t getType(const Value &val);
-    void moveData(const Value &val, Register data);
+    uint32_t getType(const Value& val);
+    void moveData(const Value& val, Register data);
 public:
-    void moveValue(const Value &val, Register type, Register data);
+    void moveValue(const Value& val, Register type, Register data);
 
-    CodeOffsetJump backedgeJump(RepatchLabel *label);
-    CodeOffsetJump jumpWithPatch(RepatchLabel *label);
+    CodeOffsetJump backedgeJump(RepatchLabel* label);
+    CodeOffsetJump jumpWithPatch(RepatchLabel* label);
 
     template <typename T>
-    CodeOffsetJump branchPtrWithPatch(Condition cond, Register reg, T ptr, RepatchLabel *label) {
+    CodeOffsetJump branchPtrWithPatch(Condition cond, Register reg, T ptr, RepatchLabel* label) {
         movePtr(ptr, ScratchRegister);
         Label skipJump;
         ma_b(reg, ScratchRegister, &skipJump, InvertCondition(cond), ShortJump);
@@ -818,7 +818,7 @@ public:
     }
 
     template <typename T>
-    CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, T ptr, RepatchLabel *label) {
+    CodeOffsetJump branchPtrWithPatch(Condition cond, Address addr, T ptr, RepatchLabel* label) {
         loadPtr(addr, SecondScratchReg);
         movePtr(ptr, ScratchRegister);
         Label skipJump;
@@ -827,45 +827,45 @@ public:
         bind(&skipJump);
         return off;
     }
-    void branchPtr(Condition cond, Address addr, ImmGCPtr ptr, Label *label) {
+    void branchPtr(Condition cond, Address addr, ImmGCPtr ptr, Label* label) {
         ma_lw(SecondScratchReg, addr);
         ma_li(ScratchRegister, ptr);
         ma_b(SecondScratchReg, ScratchRegister, label, cond);
     }
-    void branchPtr(Condition cond, Address addr, ImmMaybeNurseryPtr ptr, Label *label) {
+    void branchPtr(Condition cond, Address addr, ImmMaybeNurseryPtr ptr, Label* label) {
         branchPtr(cond, addr, noteMaybeNurseryPtr(ptr), label);
     }
 
-    void branchPtr(Condition cond, Address addr, ImmWord ptr, Label *label) {
+    void branchPtr(Condition cond, Address addr, ImmWord ptr, Label* label) {
         ma_lw(SecondScratchReg, addr);
         ma_b(SecondScratchReg, Imm32(ptr.value), label, cond);
     }
-    void branchPtr(Condition cond, Address addr, ImmPtr ptr, Label *label) {
+    void branchPtr(Condition cond, Address addr, ImmPtr ptr, Label* label) {
         branchPtr(cond, addr, ImmWord(uintptr_t(ptr.value)), label);
     }
-    void branchPtr(Condition cond, AbsoluteAddress addr, Register ptr, Label *label) {
+    void branchPtr(Condition cond, AbsoluteAddress addr, Register ptr, Label* label) {
         loadPtr(addr, ScratchRegister);
         ma_b(ScratchRegister, ptr, label, cond);
     }
-    void branchPtr(Condition cond, AbsoluteAddress addr, ImmWord ptr, Label *label) {
+    void branchPtr(Condition cond, AbsoluteAddress addr, ImmWord ptr, Label* label) {
         loadPtr(addr, ScratchRegister);
         ma_b(ScratchRegister, Imm32(ptr.value), label, cond);
     }
     void branchPtr(Condition cond, AsmJSAbsoluteAddress addr, Register ptr,
-                   Label *label) {
+                   Label* label) {
         loadPtr(addr, ScratchRegister);
         ma_b(ScratchRegister, ptr, label, cond);
     }
-    void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label *label) {
+    void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label* label) {
         loadPtr(lhs, SecondScratchReg); // ma_b might use scratch
         ma_b(SecondScratchReg, rhs, label, cond);
     }
-    void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label *label) {
+    void branch32(Condition cond, AbsoluteAddress lhs, Register rhs, Label* label) {
         loadPtr(lhs, ScratchRegister);
         ma_b(ScratchRegister, rhs, label, cond);
     }
     void branch32(Condition cond, AsmJSAbsoluteAddress addr, Imm32 imm,
-                  Label *label) {
+                  Label* label) {
         loadPtr(addr, ScratchRegister);
         ma_b(ScratchRegister, imm, label, cond);
     }
@@ -885,7 +885,7 @@ public:
     }
 
     template <typename T>
-    void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T &dest,
+    void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T& dest,
                            MIRType slotType);
 
     template <typename T>
@@ -901,9 +901,9 @@ public:
         }
     }
 
-    void moveValue(const Value &val, const ValueOperand &dest);
+    void moveValue(const Value& val, const ValueOperand& dest);
 
-    void moveValue(const ValueOperand &src, const ValueOperand &dest) {
+    void moveValue(const ValueOperand& src, const ValueOperand& dest) {
         Register s0 = src.typeReg(), d0 = dest.typeReg(),
                  s1 = src.payloadReg(), d1 = dest.payloadReg();
 
@@ -931,27 +931,27 @@ public:
     }
 
     void storeValue(ValueOperand val, Operand dst);
-    void storeValue(ValueOperand val, const BaseIndex &dest);
+    void storeValue(ValueOperand val, const BaseIndex& dest);
     void storeValue(JSValueType type, Register reg, BaseIndex dest);
-    void storeValue(ValueOperand val, const Address &dest);
+    void storeValue(ValueOperand val, const Address& dest);
     void storeValue(JSValueType type, Register reg, Address dest);
-    void storeValue(const Value &val, Address dest);
-    void storeValue(const Value &val, BaseIndex dest);
+    void storeValue(const Value& val, Address dest);
+    void storeValue(const Value& val, BaseIndex dest);
 
     void loadValue(Address src, ValueOperand val);
     void loadValue(Operand dest, ValueOperand val) {
         loadValue(dest.toAddress(), val);
     }
-    void loadValue(const BaseIndex &addr, ValueOperand val);
+    void loadValue(const BaseIndex& addr, ValueOperand val);
     void tagValue(JSValueType type, Register payload, ValueOperand dest);
 
     void pushValue(ValueOperand val);
     void popValue(ValueOperand val);
-    void pushValue(const Value &val) {
+    void pushValue(const Value& val) {
         jsval_layout jv = JSVAL_TO_IMPL(val);
         push(Imm32(jv.s.tag));
         if (val.isMarkable())
-            push(ImmGCPtr(reinterpret_cast<gc::Cell *>(val.toGCThing())));
+            push(ImmGCPtr(reinterpret_cast<gc::Cell*>(val.toGCThing())));
         else
             push(Imm32(jv.s.payload.i32));
     }
@@ -959,21 +959,21 @@ public:
         push(ImmTag(JSVAL_TYPE_TO_TAG(type)));
         ma_push(reg);
     }
-    void pushValue(const Address &addr);
+    void pushValue(const Address& addr);
 
-    void storePayload(const Value &val, Address dest);
+    void storePayload(const Value& val, Address dest);
     void storePayload(Register src, Address dest);
-    void storePayload(const Value &val, const BaseIndex &dest);
-    void storePayload(Register src, const BaseIndex &dest);
+    void storePayload(const Value& val, const BaseIndex& dest);
+    void storePayload(Register src, const BaseIndex& dest);
     void storeTypeTag(ImmTag tag, Address dest);
-    void storeTypeTag(ImmTag tag, const BaseIndex &dest);
+    void storeTypeTag(ImmTag tag, const BaseIndex& dest);
 
     void makeFrameDescriptor(Register frameSizeReg, FrameType type) {
         ma_sll(frameSizeReg, frameSizeReg, Imm32(FRAMESIZE_SHIFT));
         ma_or(frameSizeReg, frameSizeReg, Imm32(type));
     }
 
-    void handleFailureWithHandlerTail(void *handler);
+    void handleFailureWithHandlerTail(void* handler);
 
     /////////////////////////////////////////////////////////////////
     // Common interface.
@@ -982,190 +982,190 @@ public:
     // The following functions are exposed for use in platform-shared code.
 
     template<typename T>
-    void compareExchange8SignExtend(const T &mem, Register oldval, Register newval, Register output)
+    void compareExchange8SignExtend(const T& mem, Register oldval, Register newval, Register output)
     {
         MOZ_CRASH("NYI");
     }
     template<typename T>
-    void compareExchange8ZeroExtend(const T &mem, Register oldval, Register newval, Register output)
+    void compareExchange8ZeroExtend(const T& mem, Register oldval, Register newval, Register output)
     {
         MOZ_CRASH("NYI");
     }
     template<typename T>
-    void compareExchange16SignExtend(const T &mem, Register oldval, Register newval, Register output)
+    void compareExchange16SignExtend(const T& mem, Register oldval, Register newval, Register output)
     {
         MOZ_CRASH("NYI");
     }
     template<typename T>
-    void compareExchange16ZeroExtend(const T &mem, Register oldval, Register newval, Register output)
+    void compareExchange16ZeroExtend(const T& mem, Register oldval, Register newval, Register output)
     {
         MOZ_CRASH("NYI");
     }
     template<typename T>
-    void compareExchange32(const T &mem, Register oldval, Register newval, Register output)
+    void compareExchange32(const T& mem, Register oldval, Register newval, Register output)
     {
         MOZ_CRASH("NYI");
     }
 
     template<typename T, typename S>
-    void atomicFetchAdd8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchAdd8SignExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchAdd8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchAdd8ZeroExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchAdd16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchAdd16SignExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchAdd16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchAdd16ZeroExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchAdd32(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchAdd32(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template <typename T, typename S>
-    void atomicAdd8(const T &value, const S &mem) {
+    void atomicAdd8(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
     template <typename T, typename S>
-    void atomicAdd16(const T &value, const S &mem) {
+    void atomicAdd16(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
     template <typename T, typename S>
-    void atomicAdd32(const T &value, const S &mem) {
+    void atomicAdd32(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
 
     template<typename T, typename S>
-    void atomicFetchSub8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchSub8SignExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchSub8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchSub8ZeroExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchSub16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchSub16SignExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchSub16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchSub16ZeroExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchSub32(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchSub32(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
-    template <typename T, typename S> void atomicSub8(const T &value, const S &mem) {
+    template <typename T, typename S> void atomicSub8(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
-    template <typename T, typename S> void atomicSub16(const T &value, const S &mem) {
+    template <typename T, typename S> void atomicSub16(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
-    template <typename T, typename S> void atomicSub32(const T &value, const S &mem) {
+    template <typename T, typename S> void atomicSub32(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
 
     template<typename T, typename S>
-    void atomicFetchAnd8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchAnd8SignExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchAnd8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchAnd8ZeroExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchAnd16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchAnd16SignExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchAnd16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchAnd16ZeroExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchAnd32(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchAnd32(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template <typename T, typename S>
-    void atomicAnd8(const T &value, const S &mem) {
+    void atomicAnd8(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
     template <typename T, typename S>
-    void atomicAnd16(const T &value, const S &mem) {
+    void atomicAnd16(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
     template <typename T, typename S>
-    void atomicAnd32(const T &value, const S &mem) {
+    void atomicAnd32(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
 
     template<typename T, typename S>
-    void atomicFetchOr8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchOr8SignExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchOr8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchOr8ZeroExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchOr16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchOr16SignExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchOr16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchOr16ZeroExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchOr32(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchOr32(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template <typename T, typename S>
-    void atomicOr8(const T &value, const S &mem) {
+    void atomicOr8(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
     template <typename T, typename S>
-    void atomicOr16(const T &value, const S &mem) {
+    void atomicOr16(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
     template <typename T, typename S>
-    void atomicOr32(const T &value, const S &mem) {
+    void atomicOr32(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
 
     template<typename T, typename S>
-    void atomicFetchXor8SignExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchXor8SignExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchXor8ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchXor8ZeroExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchXor16SignExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchXor16SignExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchXor16ZeroExtend(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchXor16ZeroExtend(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template<typename T, typename S>
-    void atomicFetchXor32(const S &value, const T &mem, Register temp, Register output) {
+    void atomicFetchXor32(const S& value, const T& mem, Register temp, Register output) {
         MOZ_CRASH("NYI");
     }
     template <typename T, typename S>
-    void atomicXor8(const T &value, const S &mem) {
+    void atomicXor8(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
     template <typename T, typename S>
-    void atomicXor16(const T &value, const S &mem) {
+    void atomicXor16(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
     template <typename T, typename S>
-    void atomicXor32(const T &value, const S &mem) {
+    void atomicXor32(const T& value, const S& mem) {
         MOZ_CRASH("NYI");
     }
 
@@ -1190,11 +1190,11 @@ public:
 
     // Builds an exit frame on the stack, with a return address to an internal
     // non-function. Returns offset to be passed to markSafepointAt().
-    void buildFakeExitFrame(Register scratch, uint32_t *offset);
+    void buildFakeExitFrame(Register scratch, uint32_t* offset);
 
-    void callWithExitFrame(Label *target);
-    void callWithExitFrame(JitCode *target);
-    void callWithExitFrame(JitCode *target, Register dynStack);
+    void callWithExitFrame(Label* target);
+    void callWithExitFrame(JitCode* target);
+    void callWithExitFrame(JitCode* target, Register dynStack);
 
     // Makes a call using the only two methods that it is sane for indep code
     // to make a call.
@@ -1207,16 +1207,16 @@ public:
 
     void add32(Register src, Register dest);
     void add32(Imm32 imm, Register dest);
-    void add32(Imm32 imm, const Address &dest);
+    void add32(Imm32 imm, const Address& dest);
     void sub32(Imm32 imm, Register dest);
     void sub32(Register src, Register dest);
 
-    void incrementInt32Value(const Address &addr) {
+    void incrementInt32Value(const Address& addr) {
         add32(Imm32(1), ToPayload(addr));
     }
 
     template <typename T>
-    void branchAdd32(Condition cond, T src, Register dest, Label *overflow) {
+    void branchAdd32(Condition cond, T src, Register dest, Label* overflow) {
         switch (cond) {
           case Overflow:
             ma_addTestOverflow(dest, dest, src, overflow);
@@ -1226,7 +1226,7 @@ public:
         }
     }
     template <typename T>
-    void branchSub32(Condition cond, T src, Register dest, Label *overflow) {
+    void branchSub32(Condition cond, T src, Register dest, Label* overflow) {
         switch (cond) {
           case Overflow:
             ma_subTestOverflow(dest, dest, src, overflow);
@@ -1243,10 +1243,10 @@ public:
 
     void and32(Register src, Register dest);
     void and32(Imm32 imm, Register dest);
-    void and32(Imm32 imm, const Address &dest);
-    void and32(const Address &src, Register dest);
+    void and32(Imm32 imm, const Address& dest);
+    void and32(const Address& src, Register dest);
     void or32(Imm32 imm, Register dest);
-    void or32(Imm32 imm, const Address &dest);
+    void or32(Imm32 imm, const Address& dest);
     void xor32(Imm32 imm, Register dest);
     void xorPtr(Imm32 imm, Register dest);
     void xorPtr(Register src, Register dest);
@@ -1256,7 +1256,7 @@ public:
     void andPtr(Register src, Register dest);
     void addPtr(Register src, Register dest);
     void subPtr(Register src, Register dest);
-    void addPtr(const Address &src, Register dest);
+    void addPtr(const Address& src, Register dest);
     void not32(Register reg);
 
     void move32(Imm32 imm, Register dest);
@@ -1269,96 +1269,96 @@ public:
     void movePtr(ImmGCPtr imm, Register dest);
     void movePtr(ImmMaybeNurseryPtr imm, Register dest);
 
-    void load8SignExtend(const Address &address, Register dest);
-    void load8SignExtend(const BaseIndex &src, Register dest);
+    void load8SignExtend(const Address& address, Register dest);
+    void load8SignExtend(const BaseIndex& src, Register dest);
 
-    void load8ZeroExtend(const Address &address, Register dest);
-    void load8ZeroExtend(const BaseIndex &src, Register dest);
+    void load8ZeroExtend(const Address& address, Register dest);
+    void load8ZeroExtend(const BaseIndex& src, Register dest);
 
-    void load16SignExtend(const Address &address, Register dest);
-    void load16SignExtend(const BaseIndex &src, Register dest);
+    void load16SignExtend(const Address& address, Register dest);
+    void load16SignExtend(const BaseIndex& src, Register dest);
 
-    void load16ZeroExtend(const Address &address, Register dest);
-    void load16ZeroExtend(const BaseIndex &src, Register dest);
+    void load16ZeroExtend(const Address& address, Register dest);
+    void load16ZeroExtend(const BaseIndex& src, Register dest);
 
-    void load32(const Address &address, Register dest);
-    void load32(const BaseIndex &address, Register dest);
+    void load32(const Address& address, Register dest);
+    void load32(const BaseIndex& address, Register dest);
     void load32(AbsoluteAddress address, Register dest);
 
-    void loadPtr(const Address &address, Register dest);
-    void loadPtr(const BaseIndex &src, Register dest);
+    void loadPtr(const Address& address, Register dest);
+    void loadPtr(const BaseIndex& src, Register dest);
     void loadPtr(AbsoluteAddress address, Register dest);
     void loadPtr(AsmJSAbsoluteAddress address, Register dest);
 
-    void loadPrivate(const Address &address, Register dest);
+    void loadPrivate(const Address& address, Register dest);
 
-    void loadInt32x1(const Address &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
-    void loadInt32x1(const BaseIndex &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
-    void loadInt32x2(const Address &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
-    void loadInt32x2(const BaseIndex &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
-    void loadInt32x3(const Address &src, FloatRegister dest) { MOZ_CRASH("NYI"); }
-    void loadInt32x3(const BaseIndex &src, FloatRegister dest) { MOZ_CRASH("NYI"); }
-    void storeInt32x1(FloatRegister src, const Address &dest) { MOZ_CRASH("NYI"); }
-    void storeInt32x1(FloatRegister src, const BaseIndex &dest) { MOZ_CRASH("NYI"); }
-    void storeInt32x2(FloatRegister src, const Address &dest) { MOZ_CRASH("NYI"); }
-    void storeInt32x2(FloatRegister src, const BaseIndex &dest) { MOZ_CRASH("NYI"); }
-    void storeInt32x3(FloatRegister src, const Address &dest) { MOZ_CRASH("NYI"); }
-    void storeInt32x3(FloatRegister src, const BaseIndex &dest) { MOZ_CRASH("NYI"); }
-    void loadAlignedInt32x4(const Address &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadInt32x1(const Address& addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadInt32x1(const BaseIndex& addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadInt32x2(const Address& addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadInt32x2(const BaseIndex& addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadInt32x3(const Address& src, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadInt32x3(const BaseIndex& src, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void storeInt32x1(FloatRegister src, const Address& dest) { MOZ_CRASH("NYI"); }
+    void storeInt32x1(FloatRegister src, const BaseIndex& dest) { MOZ_CRASH("NYI"); }
+    void storeInt32x2(FloatRegister src, const Address& dest) { MOZ_CRASH("NYI"); }
+    void storeInt32x2(FloatRegister src, const BaseIndex& dest) { MOZ_CRASH("NYI"); }
+    void storeInt32x3(FloatRegister src, const Address& dest) { MOZ_CRASH("NYI"); }
+    void storeInt32x3(FloatRegister src, const BaseIndex& dest) { MOZ_CRASH("NYI"); }
+    void loadAlignedInt32x4(const Address& addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
     void storeAlignedInt32x4(FloatRegister src, Address addr) { MOZ_CRASH("NYI"); }
-    void loadUnalignedInt32x4(const Address &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
-    void loadUnalignedInt32x4(const BaseIndex &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadUnalignedInt32x4(const Address& addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadUnalignedInt32x4(const BaseIndex& addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
     void storeUnalignedInt32x4(FloatRegister src, Address addr) { MOZ_CRASH("NYI"); }
     void storeUnalignedInt32x4(FloatRegister src, BaseIndex addr) { MOZ_CRASH("NYI"); }
 
-    void loadFloat32x3(const Address &src, FloatRegister dest) { MOZ_CRASH("NYI"); }
-    void loadFloat32x3(const BaseIndex &src, FloatRegister dest) { MOZ_CRASH("NYI"); }
-    void storeFloat32x3(FloatRegister src, const Address &dest) { MOZ_CRASH("NYI"); }
-    void storeFloat32x3(FloatRegister src, const BaseIndex &dest) { MOZ_CRASH("NYI"); }
-    void loadAlignedFloat32x4(const Address &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadFloat32x3(const Address& src, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadFloat32x3(const BaseIndex& src, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void storeFloat32x3(FloatRegister src, const Address& dest) { MOZ_CRASH("NYI"); }
+    void storeFloat32x3(FloatRegister src, const BaseIndex& dest) { MOZ_CRASH("NYI"); }
+    void loadAlignedFloat32x4(const Address& addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
     void storeAlignedFloat32x4(FloatRegister src, Address addr) { MOZ_CRASH("NYI"); }
-    void loadUnalignedFloat32x4(const Address &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
-    void loadUnalignedFloat32x4(const BaseIndex &addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadUnalignedFloat32x4(const Address& addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
+    void loadUnalignedFloat32x4(const BaseIndex& addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
     void storeUnalignedFloat32x4(FloatRegister src, Address addr) { MOZ_CRASH("NYI"); }
     void storeUnalignedFloat32x4(FloatRegister src, BaseIndex addr) { MOZ_CRASH("NYI"); }
 
-    void loadDouble(const Address &addr, FloatRegister dest);
-    void loadDouble(const BaseIndex &src, FloatRegister dest);
+    void loadDouble(const Address& addr, FloatRegister dest);
+    void loadDouble(const BaseIndex& src, FloatRegister dest);
 
     // Load a float value into a register, then expand it to a double.
-    void loadFloatAsDouble(const Address &addr, FloatRegister dest);
-    void loadFloatAsDouble(const BaseIndex &src, FloatRegister dest);
+    void loadFloatAsDouble(const Address& addr, FloatRegister dest);
+    void loadFloatAsDouble(const BaseIndex& src, FloatRegister dest);
 
-    void loadFloat32(const Address &addr, FloatRegister dest);
-    void loadFloat32(const BaseIndex &src, FloatRegister dest);
+    void loadFloat32(const Address& addr, FloatRegister dest);
+    void loadFloat32(const BaseIndex& src, FloatRegister dest);
 
-    void store8(Register src, const Address &address);
-    void store8(Imm32 imm, const Address &address);
-    void store8(Register src, const BaseIndex &address);
-    void store8(Imm32 imm, const BaseIndex &address);
+    void store8(Register src, const Address& address);
+    void store8(Imm32 imm, const Address& address);
+    void store8(Register src, const BaseIndex& address);
+    void store8(Imm32 imm, const BaseIndex& address);
 
-    void store16(Register src, const Address &address);
-    void store16(Imm32 imm, const Address &address);
-    void store16(Register src, const BaseIndex &address);
-    void store16(Imm32 imm, const BaseIndex &address);
+    void store16(Register src, const Address& address);
+    void store16(Imm32 imm, const Address& address);
+    void store16(Register src, const BaseIndex& address);
+    void store16(Imm32 imm, const BaseIndex& address);
 
     void store32(Register src, AbsoluteAddress address);
-    void store32(Register src, const Address &address);
-    void store32(Register src, const BaseIndex &address);
-    void store32(Imm32 src, const Address &address);
-    void store32(Imm32 src, const BaseIndex &address);
+    void store32(Register src, const Address& address);
+    void store32(Register src, const BaseIndex& address);
+    void store32(Imm32 src, const Address& address);
+    void store32(Imm32 src, const BaseIndex& address);
 
     // NOTE: This will use second scratch on MIPS. Only ARM needs the
     // implementation without second scratch.
-    void store32_NoSecondScratch(Imm32 src, const Address &address) {
+    void store32_NoSecondScratch(Imm32 src, const Address& address) {
         store32(src, address);
     }
 
     template <typename T> void storePtr(ImmWord imm, T address);
     template <typename T> void storePtr(ImmPtr imm, T address);
     template <typename T> void storePtr(ImmGCPtr imm, T address);
-    void storePtr(Register src, const Address &address);
-    void storePtr(Register src, const BaseIndex &address);
+    void storePtr(Register src, const Address& address);
+    void storePtr(Register src, const BaseIndex& address);
     void storePtr(Register src, AbsoluteAddress dest);
     void storeDouble(FloatRegister src, Address addr) {
         ma_sd(src, addr);
@@ -1408,17 +1408,17 @@ public:
     }
 
     void subPtr(Imm32 imm, const Register dest);
-    void subPtr(const Address &addr, const Register dest);
-    void subPtr(Register src, const Address &dest);
+    void subPtr(const Address& addr, const Register dest);
+    void subPtr(Register src, const Address& dest);
     void addPtr(Imm32 imm, const Register dest);
-    void addPtr(Imm32 imm, const Address &dest);
+    void addPtr(Imm32 imm, const Address& dest);
     void addPtr(ImmWord imm, const Register dest) {
         addPtr(Imm32(imm.value), dest);
     }
     void addPtr(ImmPtr imm, const Register dest) {
         addPtr(ImmWord(uintptr_t(imm.value)), dest);
     }
-    void mulBy3(const Register &src, const Register &dest) {
+    void mulBy3(const Register& src, const Register& dest) {
         as_addu(dest, src, src);
         as_addu(dest, dest, src);
     }
@@ -1426,16 +1426,16 @@ public:
     void breakpoint();
 
     void branchDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
-                      Label *label);
+                      Label* label);
 
     void branchFloat(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs,
-                     Label *label);
+                     Label* label);
 
     void checkStackAlignment();
 
     void alignStackPointer();
     void restoreStackPointer();
-    static void calculateAlignedStackPointer(void **stackPointer);
+    static void calculateAlignedStackPointer(void** stackPointer);
 
     void rshiftPtr(Imm32 imm, Register dest) {
         ma_srl(dest, dest, imm);
@@ -1449,7 +1449,7 @@ public:
 
     // If source is a double, load it into dest. If source is int32,
     // convert it to double. Else, branch to failure.
-    void ensureDouble(const ValueOperand &source, FloatRegister dest, Label *failure);
+    void ensureDouble(const ValueOperand& source, FloatRegister dest, Label* failure);
 
     template <typename T1, typename T2>
     void cmpPtrSet(Assembler::Condition cond, T1 lhs, T2 rhs, Register dest)
@@ -1481,23 +1481,23 @@ public:
     // automatically adjusted. It is extremely important that sp-relative
     // addresses are computed *after* setupABICall(). Furthermore, no
     // operations should be emitted while setting arguments.
-    void passABIArg(const MoveOperand &from, MoveOp::Type type);
+    void passABIArg(const MoveOperand& from, MoveOp::Type type);
     void passABIArg(Register reg);
     void passABIArg(FloatRegister reg, MoveOp::Type type);
-    void passABIArg(const ValueOperand &regs);
+    void passABIArg(const ValueOperand& regs);
 
   protected:
-    bool buildOOLFakeExitFrame(void *fakeReturnAddr);
+    bool buildOOLFakeExitFrame(void* fakeReturnAddr);
 
   private:
-    void callWithABIPre(uint32_t *stackAdjust, bool callFromAsmJS = false);
+    void callWithABIPre(uint32_t* stackAdjust, bool callFromAsmJS = false);
     void callWithABIPost(uint32_t stackAdjust, MoveOp::Type result);
 
   public:
     // Emits a call to a C/C++ function, resolving all argument moves.
-    void callWithABI(void *fun, MoveOp::Type result = MoveOp::GENERAL);
+    void callWithABI(void* fun, MoveOp::Type result = MoveOp::GENERAL);
     void callWithABI(AsmJSImmPtr imm, MoveOp::Type result = MoveOp::GENERAL);
-    void callWithABI(const Address &fun, MoveOp::Type result = MoveOp::GENERAL);
+    void callWithABI(const Address& fun, MoveOp::Type result = MoveOp::GENERAL);
     void callWithABI(Register fun, MoveOp::Type result = MoveOp::GENERAL);
 
     CodeOffsetLabel labelForPatch() {
@@ -1518,7 +1518,7 @@ public:
         as_nop();
     }
 
-    void ma_storeImm(Imm32 imm, const Address &addr) {
+    void ma_storeImm(Imm32 imm, const Address& addr) {
         ma_sw(imm, addr);
     }
 
@@ -1532,9 +1532,9 @@ public:
         as_movs(dest, src);
     }
 
-    void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label *label);
+    void branchPtrInNurseryRange(Condition cond, Register ptr, Register temp, Label* label);
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
-                                    Label *label);
+                                    Label* label);
 
     void loadAsmJSActivation(Register dest) {
         loadPtr(Address(GlobalReg, AsmJSActivationGlobalDataOffset - AsmJSGlobalRegBias), dest);

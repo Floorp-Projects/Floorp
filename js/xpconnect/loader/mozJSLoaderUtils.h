@@ -17,22 +17,22 @@ class StartupCache;
 }
 
 nsresult
-ReadCachedScript(mozilla::scache::StartupCache* cache, nsACString &uri,
-                 JSContext *cx, nsIPrincipal *systemPrincipal,
+ReadCachedScript(mozilla::scache::StartupCache* cache, nsACString& uri,
+                 JSContext* cx, nsIPrincipal* systemPrincipal,
                  JS::MutableHandleScript scriptp);
 
 nsresult
-ReadCachedFunction(mozilla::scache::StartupCache* cache, nsACString &uri,
-                   JSContext *cx, nsIPrincipal *systemPrincipal,
-                   JSFunction **function);
+ReadCachedFunction(mozilla::scache::StartupCache* cache, nsACString& uri,
+                   JSContext* cx, nsIPrincipal* systemPrincipal,
+                   JSFunction** function);
 
 nsresult
-WriteCachedScript(mozilla::scache::StartupCache* cache, nsACString &uri,
-                  JSContext *cx, nsIPrincipal *systemPrincipal,
+WriteCachedScript(mozilla::scache::StartupCache* cache, nsACString& uri,
+                  JSContext* cx, nsIPrincipal* systemPrincipal,
                   JS::HandleScript script);
 nsresult
-WriteCachedFunction(mozilla::scache::StartupCache* cache, nsACString &uri,
-                    JSContext *cx, nsIPrincipal *systemPrincipal,
-                    JSFunction *function);
+WriteCachedFunction(mozilla::scache::StartupCache* cache, nsACString& uri,
+                    JSContext* cx, nsIPrincipal* systemPrincipal,
+                    JSFunction* function);
 
 #endif /* mozJSLoaderUtils_h */

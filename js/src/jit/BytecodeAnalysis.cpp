@@ -13,7 +13,7 @@
 using namespace js;
 using namespace js::jit;
 
-BytecodeAnalysis::BytecodeAnalysis(TempAllocator &alloc, JSScript *script)
+BytecodeAnalysis::BytecodeAnalysis(TempAllocator& alloc, JSScript* script)
   : script_(script),
     infos_(alloc),
     usesScopeChain_(false),
@@ -40,12 +40,12 @@ struct CatchFinallyRange
 };
 
 bool
-BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
+BytecodeAnalysis::init(TempAllocator& alloc, GSNCache& gsn)
 {
     if (!infos_.growByUninitialized(script_->length()))
         return false;
 
-    jsbytecode *end = script_->codeEnd();
+    jsbytecode* end = script_->codeEnd();
 
     // Clear all BytecodeInfo.
     mozilla::PodZero(infos_.begin(), infos_.length());
@@ -53,8 +53,8 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
 
     Vector<CatchFinallyRange, 0, JitAllocPolicy> catchFinallyRanges(alloc);
 
-    jsbytecode *nextpc;
-    for (jsbytecode *pc = script_->code(); pc < end; pc = nextpc) {
+    jsbytecode* nextpc;
+    for (jsbytecode* pc = script_->code(); pc < end; pc = nextpc) {
         JSOp op = JSOp(*pc);
         nextpc = pc + GetBytecodeLength(pc);
         unsigned offset = script_->pcToOffset(pc);
@@ -68,7 +68,7 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
 
         unsigned stackDepth = infos_[offset].stackDepth;
 #ifdef DEBUG
-        for (jsbytecode *chkpc = pc + 1; chkpc < (pc + GetBytecodeLength(pc)); chkpc++)
+        for (jsbytecode* chkpc = pc + 1; chkpc < (pc + GetBytecodeLength(pc)); chkpc++)
             MOZ_ASSERT(!infos_[script_->pcToOffset(chkpc)].initialized);
 #endif
 
@@ -85,7 +85,7 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
         switch (op) {
           case JSOP_TABLESWITCH: {
             unsigned defaultOffset = offset + GET_JUMP_OFFSET(pc);
-            jsbytecode *pc2 = pc + JUMP_OFFSET_LEN;
+            jsbytecode* pc2 = pc + JUMP_OFFSET_LEN;
             int32_t low = GET_JUMP_OFFSET(pc2);
             pc2 += JUMP_OFFSET_LEN;
             int32_t high = GET_JUMP_OFFSET(pc2);
@@ -106,8 +106,8 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
           }
 
           case JSOP_TRY: {
-            JSTryNote *tn = script_->trynotes()->vector;
-            JSTryNote *tnlimit = tn + script_->trynotes()->length;
+            JSTryNote* tn = script_->trynotes()->vector;
+            JSTryNote* tnlimit = tn + script_->trynotes()->length;
             for (; tn < tnlimit; tn++) {
                 unsigned startOffset = script_->mainOffset() + tn->start;
                 if (startOffset == offset + 1) {
@@ -122,13 +122,13 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
 
             // Get the pc of the last instruction in the try block. It's a JSOP_GOTO to
             // jump over the catch/finally blocks.
-            jssrcnote *sn = GetSrcNote(gsn, script_, pc);
+            jssrcnote* sn = GetSrcNote(gsn, script_, pc);
             MOZ_ASSERT(SN_TYPE(sn) == SRC_TRY);
 
-            jsbytecode *endOfTry = pc + GetSrcNoteOffset(sn, 0);
+            jsbytecode* endOfTry = pc + GetSrcNoteOffset(sn, 0);
             MOZ_ASSERT(JSOp(*endOfTry) == JSOP_GOTO);
 
-            jsbytecode *afterTry = endOfTry + GET_JUMP_OFFSET(endOfTry);
+            jsbytecode* afterTry = endOfTry + GET_JUMP_OFFSET(endOfTry);
             MOZ_ASSERT(afterTry > endOfTry);
 
             // Pop CatchFinallyRanges that are no longer needed.
@@ -204,7 +204,7 @@ BytecodeAnalysis::init(TempAllocator &alloc, GSNCache &gsn)
 
         // Handle any fallthrough from this opcode.
         if (BytecodeFallsThrough(op)) {
-            jsbytecode *fallthrough = pc + GetBytecodeLength(pc);
+            jsbytecode* fallthrough = pc + GetBytecodeLength(pc);
             MOZ_ASSERT(fallthrough < end);
             unsigned fallthroughOffset = script_->pcToOffset(fallthrough);
 

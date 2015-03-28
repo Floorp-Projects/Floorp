@@ -10,7 +10,7 @@
 static int callCount = 0;
 
 static bool
-AddProperty(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+AddProperty(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
     callCount++;
     return true;

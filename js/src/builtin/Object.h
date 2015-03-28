@@ -20,43 +20,43 @@ namespace js {
 
 // Object constructor native. Exposed only so the JIT can know its address.
 bool
-obj_construct(JSContext *cx, unsigned argc, JS::Value *vp);
+obj_construct(JSContext* cx, unsigned argc, JS::Value* vp);
 
 bool
-obj_propertyIsEnumerable(JSContext *cx, unsigned argc, Value *vp);
+obj_propertyIsEnumerable(JSContext* cx, unsigned argc, Value* vp);
 
 bool
-obj_valueOf(JSContext *cx, unsigned argc, JS::Value *vp);
+obj_valueOf(JSContext* cx, unsigned argc, JS::Value* vp);
 
-PlainObject *
-ObjectCreateImpl(JSContext *cx, HandleObject proto, NewObjectKind newKind = GenericObject,
+PlainObject*
+ObjectCreateImpl(JSContext* cx, HandleObject proto, NewObjectKind newKind = GenericObject,
                  HandleObjectGroup group = js::NullPtr());
 
-PlainObject *
-ObjectCreateWithTemplate(JSContext *cx, HandlePlainObject templateObj);
+PlainObject*
+ObjectCreateWithTemplate(JSContext* cx, HandlePlainObject templateObj);
 
 // Object methods exposed so they can be installed in the self-hosting global.
 bool
-obj_create(JSContext *cx, unsigned argc, JS::Value *vp);
+obj_create(JSContext* cx, unsigned argc, JS::Value* vp);
 
 bool
-obj_defineProperty(JSContext *cx, unsigned argc, JS::Value *vp);
+obj_defineProperty(JSContext* cx, unsigned argc, JS::Value* vp);
 
 bool
-obj_getOwnPropertyNames(JSContext *cx, unsigned argc, JS::Value *vp);
+obj_getOwnPropertyNames(JSContext* cx, unsigned argc, JS::Value* vp);
 
 bool
-obj_getOwnPropertyDescriptor(JSContext *cx, unsigned argc, JS::Value *vp);
+obj_getOwnPropertyDescriptor(JSContext* cx, unsigned argc, JS::Value* vp);
 
 bool
-obj_getPrototypeOf(JSContext *cx, unsigned argc, JS::Value *vp);
+obj_getPrototypeOf(JSContext* cx, unsigned argc, JS::Value* vp);
 
 bool
-obj_hasOwnProperty(JSContext *cx, unsigned argc, JS::Value *vp);
+obj_hasOwnProperty(JSContext* cx, unsigned argc, JS::Value* vp);
 
 // Exposed so SelfHosting.cpp can use it in the OwnPropertyKeys intrinsic
 bool
-GetOwnPropertyKeys(JSContext *cx, const JS::CallArgs &args, unsigned flags);
+GetOwnPropertyKeys(JSContext* cx, const JS::CallArgs& args, unsigned flags);
 
 /*
  * Like IdToValue, but convert int jsids to strings. This is used when
@@ -64,17 +64,17 @@ GetOwnPropertyKeys(JSContext *cx, const JS::CallArgs &args, unsigned flags);
  * or scriptable proxy traps.
  */
 bool
-IdToStringOrSymbol(JSContext *cx, JS::HandleId id, JS::MutableHandleValue result);
+IdToStringOrSymbol(JSContext* cx, JS::HandleId id, JS::MutableHandleValue result);
 
 #if JS_HAS_TOSOURCE
 // Object.prototype.toSource. Function.prototype.toSource and uneval use this.
-JSString *
-ObjectToSource(JSContext *cx, JS::HandleObject obj);
+JSString*
+ObjectToSource(JSContext* cx, JS::HandleObject obj);
 #endif // JS_HAS_TOSOURCE
 
 extern bool
-WatchHandler(JSContext *cx, JSObject *obj, jsid id, JS::Value old,
-             JS::Value *nvp, void *closure);
+WatchHandler(JSContext* cx, JSObject* obj, jsid id, JS::Value old,
+             JS::Value* nvp, void* closure);
 
 } /* namespace js */
 

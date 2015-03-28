@@ -75,11 +75,11 @@ struct AllocInfo
 struct ClassInfo
 {
     const ClassId id;
-    const char *name;
+    const char* name;
     const uint32_t flags;
     const FinalizerKind hasFinalizer;
 
-    ClassInfo(ClassId id, const char *name, uint32_t flags, FinalizerKind hasFinalizer)
+    ClassInfo(ClassId id, const char* name, uint32_t flags, FinalizerKind hasFinalizer)
       : id(id), name(name), flags(flags), hasFinalizer(hasFinalizer) {}
 };
 
@@ -88,12 +88,12 @@ struct TypeInfo
     const TypeId id;
     const ClassId classId;
     const uint32_t flags;
-    const char *name;
+    const char* name;
 
     TypeInfo(TypeId id, ClassId classId, uint32_t flags)
       : id(id), classId(classId), flags(flags), name(nullptr) {}
 
-    const char *getName() {
+    const char* getName() {
         if (name)
             return name;
         static char buffer[32];
@@ -140,7 +140,7 @@ struct Array
     Array() {}
     Array(const EmptyArrayTag&) { zero(); }
     void zero() { memset(&elements, 0, sizeof(elements)); }
-    T &operator[](size_t index) {
+    T& operator[](size_t index) {
         assert(index < length);
         return elements[index];
     }
@@ -165,7 +165,7 @@ Array<Array<uint64_t, MaxLifetimeBins>, MaxClasses> finalizedHeapObjectCountByCl
 std::vector<Array<Array<uint64_t, MaxLifetimeBins>, HeapKinds> > objectCountByTypeHeapAndLifetime;
 
 static void
-die(const char *format, ...)
+die(const char* format, ...)
 {
     va_list va;
     va_start(va, format);
@@ -215,10 +215,10 @@ testBinning()
     assert(binLimit(3) == 8 * FirstBinSize);
 }
 
-static const char *
+static const char*
 allocKindName(AllocKind kind)
 {
-    static const char *AllocKindNames[] = {
+    static const char* AllocKindNames[] = {
         "Object0",
         "Object0Bg",
         "Object2",
@@ -243,15 +243,15 @@ allocKindName(AllocKind kind)
         "JitCode",
         "Total"
     };
-    assert(sizeof(AllocKindNames) / sizeof(const char *) == AugAllocKinds);
+    assert(sizeof(AllocKindNames) / sizeof(const char*) == AugAllocKinds);
     assert(kind < AugAllocKinds);
     return AllocKindNames[kind];
 }
 
-static const char *
+static const char*
 heapName(unsigned heap)
 {
-    static const char *HeapNames[] = {
+    static const char* HeapNames[] = {
         "nursery",
         "tenured heap",
         "all"
@@ -261,10 +261,10 @@ heapName(unsigned heap)
 }
 
 
-static const char *
+static const char*
 heapLabel(unsigned heap)
 {
-    static const char *HeapLabels[] = {
+    static const char* HeapLabels[] = {
         "Nursery",
         "Tenured heap",
         "Total"
@@ -274,7 +274,7 @@ heapLabel(unsigned heap)
 }
 
 static void
-outputGcBytesAllocated(FILE *file)
+outputGcBytesAllocated(FILE* file)
 {
     fprintf(file, "# Total GC bytes allocated by timeslice\n");
     fprintf(file, "# Total allocations: %" PRIu64 "\n", allocCount);
@@ -289,7 +289,7 @@ outputGcBytesAllocated(FILE *file)
 }
 
 static void
-outputGcBytesUsed(FILE *file)
+outputGcBytesUsed(FILE* file)
 {
     fprintf(file, "# Total GC bytes used by timeslice\n");
     fprintf(file, "# Total allocations: %" PRIu64 "\n", allocCount);
@@ -304,7 +304,7 @@ outputGcBytesUsed(FILE *file)
 }
 
 static void
-outputThingCounts(FILE *file)
+outputThingCounts(FILE* file)
 {
     fprintf(file, "# GC thing allocation count in nursery and tenured heap by kind\n");
     fprintf(file, "# This shows what kind of things we are allocating in the nursery\n");
@@ -318,7 +318,7 @@ outputThingCounts(FILE *file)
 }
 
 static void
-outputObjectCounts(FILE *file)
+outputObjectCounts(FILE* file)
 {
     fprintf(file, "# Object allocation count in nursery and tenured heap by class\n");
     fprintf(file, "# This shows what kind of objects we are allocating in the nursery\n");
@@ -334,7 +334,7 @@ outputObjectCounts(FILE *file)
 }
 
 static void
-outputLifetimeByHeap(FILE *file)
+outputLifetimeByHeap(FILE* file)
 {
     fprintf(file, "# Lifetime of all things (in log2 bins) by initial heap\n");
     fprintf(file, "# NB invalid unless execution was traced with appropriate zeal\n");
@@ -353,7 +353,7 @@ outputLifetimeByHeap(FILE *file)
 }
 
 static void
-outputLifetimeByHasFinalizer(FILE *file)
+outputLifetimeByHasFinalizer(FILE* file)
 {
     fprintf(file, "# Lifetime of heap allocated objects by prescence of finalizer\n");
     fprintf(file, "# NB invalid unless execution was traced with appropriate zeal\n");
@@ -370,7 +370,7 @@ outputLifetimeByHasFinalizer(FILE *file)
 }
 
 static void
-outputFinalizedHeapObjectLifetimeByClass(FILE *file)
+outputFinalizedHeapObjectLifetimeByClass(FILE* file)
 {
     fprintf(file, "# Lifetime of finalized heap objects by class\n");
     fprintf(file, "# NB invalid unless execution was traced with appropriate zeal\n");
@@ -391,7 +391,7 @@ outputFinalizedHeapObjectLifetimeByClass(FILE *file)
 }
 
 static void
-outputLifetimeByKind(FILE *file, unsigned initialHeap)
+outputLifetimeByKind(FILE* file, unsigned initialHeap)
 {
     assert(initialHeap < AugHeapKinds);
 
@@ -413,7 +413,7 @@ outputLifetimeByKind(FILE *file, unsigned initialHeap)
 }
 
 static void
-outputLifetimeByClass(FILE *file, unsigned initialHeap)
+outputLifetimeByClass(FILE* file, unsigned initialHeap)
 {
     assert(initialHeap < AugHeapKinds);
 
@@ -435,7 +435,7 @@ outputLifetimeByClass(FILE *file, unsigned initialHeap)
 }
 
 static void
-outputLifetimeByType(FILE *file, unsigned initialHeap)
+outputLifetimeByType(FILE* file, unsigned initialHeap)
 {
     assert(initialHeap < AugHeapKinds);
 
@@ -470,7 +470,7 @@ outputLifetimeByType(FILE *file, unsigned initialHeap)
 }
 
 static void
-processAlloc(const AllocInfo &info, uint64_t finalizeTime)
+processAlloc(const AllocInfo& info, uint64_t finalizeTime)
 {
     uint64_t lifetime = finalizeTime - info.serial;
     unsigned timeslice = info.serial / timesliceSize;
@@ -483,8 +483,8 @@ processAlloc(const AllocInfo &info, uint64_t finalizeTime)
     ++allocCountByHeapKindAndLifetime[info.initialHeap][info.kind][lifetimeBin];
 
     if (info.kind <= LastObjectAllocKind) {
-        const TypeInfo &typeInfo = types[info.typeId];
-        const ClassInfo &classInfo = classes[typeInfo.classId];
+        const TypeInfo& typeInfo = types[info.typeId];
+        const ClassInfo& classInfo = classes[typeInfo.classId];
         ++objectCountByType.at(typeInfo.id);
         ++objectCountByClass[classInfo.id];
         ++objectCountByHeapAndClass[info.initialHeap][classInfo.id];
@@ -538,7 +538,7 @@ getTraceExtra(uint64_t trace)
 }
 
 static uint64_t
-expectTrace(FILE *file, GCTraceEvent event)
+expectTrace(FILE* file, GCTraceEvent event)
 {
     uint64_t trace;
     if (!readTrace(file, trace))
@@ -549,23 +549,23 @@ expectTrace(FILE *file, GCTraceEvent event)
 }
 
 static uint64_t
-expectDataAddress(FILE *file)
+expectDataAddress(FILE* file)
 {
     return expectTrace(file, TraceDataAddress);
 }
 
 static uint32_t
-expectDataInt(FILE *file)
+expectDataInt(FILE* file)
 {
     return (uint32_t)expectTrace(file, TraceDataInt);
 }
 
-static char *
-expectDataString(FILE *file)
+static char*
+expectDataString(FILE* file)
 {
     uint64_t length = expectTrace(file, TraceDataString);
     assert(length < 256); // Sanity check
-    char *string = static_cast<char *>(malloc(length + 1));
+    char* string = static_cast<char*>(malloc(length + 1));
     if (!string)
         die("Out of memory while reading string data");
 
@@ -581,7 +581,7 @@ expectDataString(FILE *file)
 }
 
 static void
-createClassInfo(const char *name, uint32_t flags, FinalizerKind hasFinalizer,
+createClassInfo(const char* name, uint32_t flags, FinalizerKind hasFinalizer,
                 address clasp = 0)
 {
     ClassId id = classes.size();
@@ -591,10 +591,10 @@ createClassInfo(const char *name, uint32_t flags, FinalizerKind hasFinalizer,
 }
 
 static void
-readClassInfo(FILE *file, address clasp)
+readClassInfo(FILE* file, address clasp)
 {
     assert(clasp);
-    char *name = expectDataString(file);
+    char* name = expectDataString(file);
     uint32_t flags = expectDataInt(file);
     FinalizerKind hasFinalizer = expectDataInt(file) != 0 ? HasFinalizer : NoFinalizer;
     createClassInfo(name, flags, hasFinalizer, clasp);
@@ -622,7 +622,7 @@ createTypeInfo(ClassId classId, uint32_t flags, address typeObject = 0)
 }
 
 static void
-readTypeInfo(FILE *file, address typeObject)
+readTypeInfo(FILE* file, address typeObject)
 {
     assert(typeObject);
     address clasp = expectDataAddress(file);
@@ -641,7 +641,7 @@ lookupTypeId(address typeObject)
 }
 
 static void
-setTypeName(address typeObject, const char *name)
+setTypeName(address typeObject, const char* name)
 {
     TypeId id = lookupTypeId(typeObject);
     types[id].name = name;
@@ -684,7 +684,7 @@ promoteToTenured(address src, address dst)
 }
 
 static void
-finalizeThing(const AllocInfo &info)
+finalizeThing(const AllocInfo& info)
 {
     processAlloc(info, allocCount);
 }
@@ -708,7 +708,7 @@ finalizeTenuredThing(address thing)
 }
 
 static void
-updateTimeslices(std::vector<uint64_t> &data, uint64_t lastTime, uint64_t currentTime, uint64_t value)
+updateTimeslices(std::vector<uint64_t>& data, uint64_t lastTime, uint64_t currentTime, uint64_t value)
 {
     unsigned firstSlice = (lastTime / timesliceSize) + 1;
     unsigned lastSlice = currentTime / timesliceSize;
@@ -717,9 +717,9 @@ updateTimeslices(std::vector<uint64_t> &data, uint64_t lastTime, uint64_t curren
 }
 
 static void
-processTraceFile(const char *filename)
+processTraceFile(const char* filename)
 {
-    FILE *file;
+    FILE* file;
     file = fopen(filename, "r");
     if (!file)
         die("Can't read file: %s", filename);
@@ -824,14 +824,14 @@ processTraceFile(const char *filename)
 }
 
 template <class func>
-void withOutputFile(const char *base, const char *name, func f)
+void withOutputFile(const char* base, const char* name, func f)
 {
     const size_t bufSize = 256;
     char filename[bufSize];
     int r = snprintf(filename, bufSize, "%s-%s.csv", base, name);
     assert(r > 0 && r < bufSize);
 
-    FILE *file = fopen(filename, "w");
+    FILE* file = fopen(filename, "w");
     if (!file)
         die("Can't write to %s", filename);
     f(file);
@@ -839,7 +839,7 @@ void withOutputFile(const char *base, const char *name, func f)
 }
 
 int
-main(int argc, const char *argv[])
+main(int argc, const char* argv[])
 {
     testBinning();
 

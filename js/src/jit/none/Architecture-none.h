@@ -36,8 +36,8 @@ class Registers
     static uint32_t SetSize(SetType) { MOZ_CRASH(); }
     static uint32_t FirstBit(SetType) { MOZ_CRASH(); }
     static uint32_t LastBit(SetType) { MOZ_CRASH(); }
-    static const char *GetName(Code) { MOZ_CRASH(); }
-    static Code FromName(const char *) { MOZ_CRASH(); }
+    static const char* GetName(Code) { MOZ_CRASH(); }
+    static Code FromName(const char*) { MOZ_CRASH(); }
 
     static const Code StackPointer = invalid_reg;
     static const Code Invalid = invalid_reg;
@@ -72,8 +72,8 @@ class FloatRegisters
 
     typedef uint32_t SetType;
 
-    static const char *GetName(Code) { MOZ_CRASH(); }
-    static Code FromName(const char *) { MOZ_CRASH(); }
+    static const char* GetName(Code) { MOZ_CRASH(); }
+    static Code FromName(const char*) { MOZ_CRASH(); }
 
     static const Code Invalid = invalid_reg;
     static const uint32_t Total = 0;
@@ -112,25 +112,25 @@ struct FloatRegister
     FloatRegister asFloat32x4() const { MOZ_CRASH(); }
     Code code() const { MOZ_CRASH(); }
     Encoding encoding() const { MOZ_CRASH(); }
-    const char *name() const { MOZ_CRASH(); }
+    const char* name() const { MOZ_CRASH(); }
     bool volatile_() const { MOZ_CRASH(); }
     bool operator != (FloatRegister) const { MOZ_CRASH(); }
     bool operator == (FloatRegister) const { MOZ_CRASH(); }
     bool aliases(FloatRegister) const { MOZ_CRASH(); }
     uint32_t numAliased() const { MOZ_CRASH(); }
-    void aliased(uint32_t, FloatRegister *) { MOZ_CRASH(); }
+    void aliased(uint32_t, FloatRegister*) { MOZ_CRASH(); }
     bool equiv(FloatRegister) const { MOZ_CRASH(); }
     uint32_t size() const { MOZ_CRASH(); }
     uint32_t numAlignedAliased() const { MOZ_CRASH(); }
-    void alignedAliased(uint32_t, FloatRegister *) { MOZ_CRASH(); }
+    void alignedAliased(uint32_t, FloatRegister*) { MOZ_CRASH(); }
     SetType alignedOrDominatedAliasedSet() const { MOZ_CRASH(); }
     template <typename T> static T ReduceSetForPush(T) { MOZ_CRASH(); }
     uint32_t getRegisterDumpOffsetInBytes() { MOZ_CRASH(); }
     static uint32_t SetSize(SetType x) { MOZ_CRASH(); }
-    static Code FromName(const char *name) { MOZ_CRASH(); }
+    static Code FromName(const char* name) { MOZ_CRASH(); }
 
     // This is used in static initializers, so produce a bogus value instead of crashing.
-    static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister> &) { return 0; }
+    static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister>&) { return 0; }
 };
 
 inline bool hasUnaliasedDouble() { MOZ_CRASH(); }

@@ -234,11 +234,11 @@ class TypeSet
     // non-singleton ObjectGroup.
     class ObjectKey {
       public:
-        static intptr_t keyBits(ObjectKey *obj) { return (intptr_t) obj; }
-        static ObjectKey *getKey(ObjectKey *obj) { return obj; }
+        static intptr_t keyBits(ObjectKey* obj) { return (intptr_t) obj; }
+        static ObjectKey* getKey(ObjectKey* obj) { return obj; }
 
-        static inline ObjectKey *get(JSObject *obj);
-        static inline ObjectKey *get(ObjectGroup *group);
+        static inline ObjectKey* get(JSObject* obj);
+        static inline ObjectKey* get(ObjectGroup* group);
 
         bool isGroup() {
             return (uintptr_t(this) & 1) == 0;
@@ -247,26 +247,26 @@ class TypeSet
             return (uintptr_t(this) & 1) != 0;
         }
 
-        inline ObjectGroup *group();
-        inline JSObject *singleton();
+        inline ObjectGroup* group();
+        inline JSObject* singleton();
 
-        inline ObjectGroup *groupNoBarrier();
-        inline JSObject *singletonNoBarrier();
+        inline ObjectGroup* groupNoBarrier();
+        inline JSObject* singletonNoBarrier();
 
-        const Class *clasp();
+        const Class* clasp();
         TaggedProto proto();
-        TypeNewScript *newScript();
+        TypeNewScript* newScript();
 
         bool unknownProperties();
-        bool hasFlags(CompilerConstraintList *constraints, ObjectGroupFlags flags);
-        bool hasStableClassAndProto(CompilerConstraintList *constraints);
-        void watchStateChangeForInlinedCall(CompilerConstraintList *constraints);
-        void watchStateChangeForTypedArrayData(CompilerConstraintList *constraints);
-        void watchStateChangeForUnboxedConvertedToNative(CompilerConstraintList *constraints);
+        bool hasFlags(CompilerConstraintList* constraints, ObjectGroupFlags flags);
+        bool hasStableClassAndProto(CompilerConstraintList* constraints);
+        void watchStateChangeForInlinedCall(CompilerConstraintList* constraints);
+        void watchStateChangeForTypedArrayData(CompilerConstraintList* constraints);
+        void watchStateChangeForUnboxedConvertedToNative(CompilerConstraintList* constraints);
         HeapTypeSetKey property(jsid id);
-        void ensureTrackedProperty(JSContext *cx, jsid id);
+        void ensureTrackedProperty(JSContext* cx, jsid id);
 
-        ObjectGroup *maybeGroup();
+        ObjectGroup* maybeGroup();
     };
 
     // Information about a single concrete type. We pack this into one word,
@@ -324,7 +324,7 @@ class TypeSet
             return data > JSVAL_TYPE_UNKNOWN;
         }
 
-        inline ObjectKey *objectKey() const;
+        inline ObjectKey* objectKey() const;
 
         /* Accessors for JSObject types */
 
@@ -335,8 +335,8 @@ class TypeSet
             return isObjectUnchecked() && !!(data & 1);
         }
 
-        inline JSObject *singleton() const;
-        inline JSObject *singletonNoBarrier() const;
+        inline JSObject* singleton() const;
+        inline JSObject* singletonNoBarrier() const;
 
         /* Accessors for ObjectGroup types */
 
@@ -347,8 +347,8 @@ class TypeSet
             return isObjectUnchecked() && !(data & 1);
         }
 
-        inline ObjectGroup *group() const;
-        inline ObjectGroup *groupNoBarrier() const;
+        inline ObjectGroup* group() const;
+        inline ObjectGroup* groupNoBarrier() const;
 
         bool operator == (Type o) const { return data == o.data; }
         bool operator != (Type o) const { return data != o.data; }
@@ -372,18 +372,18 @@ class TypeSet
         return Type(type);
     }
 
-    static inline Type ObjectType(JSObject *obj);
-    static inline Type ObjectType(ObjectGroup *group);
-    static inline Type ObjectType(ObjectKey *key);
+    static inline Type ObjectType(JSObject* obj);
+    static inline Type ObjectType(ObjectGroup* group);
+    static inline Type ObjectType(ObjectKey* key);
 
-    static const char *NonObjectTypeString(Type type);
+    static const char* NonObjectTypeString(Type type);
 
 #ifdef DEBUG
-    static const char *TypeString(Type type);
-    static const char *ObjectGroupString(ObjectGroup *group);
+    static const char* TypeString(Type type);
+    static const char* ObjectGroupString(ObjectGroup* group);
 #else
-    static const char *TypeString(Type type) { return nullptr; }
-    static const char *ObjectGroupString(ObjectGroup *group) { return nullptr; }
+    static const char* TypeString(Type type) { return nullptr; }
+    static const char* ObjectGroupString(ObjectGroup* group) { return nullptr; }
 #endif
 
   protected:
@@ -391,7 +391,7 @@ class TypeSet
     TypeFlags flags;
 
     /* Possible objects this type set can represent. */
-    ObjectKey **objectSet;
+    ObjectKey** objectSet;
 
   public:
 
@@ -399,7 +399,7 @@ class TypeSet
       : flags(0), objectSet(nullptr)
     {}
 
-    void print(FILE *fp = stderr);
+    void print(FILE* fp = stderr);
 
     /* Whether this set contains a specific type. */
     inline bool hasType(Type type) const;
@@ -430,22 +430,22 @@ class TypeSet
     }
 
     /* Join two type sets into a new set. The result should not be modified further. */
-    static TemporaryTypeSet *unionSets(TypeSet *a, TypeSet *b, LifoAlloc *alloc);
+    static TemporaryTypeSet* unionSets(TypeSet* a, TypeSet* b, LifoAlloc* alloc);
     /* Return the intersection of the 2 TypeSets. The result should not be modified further */
-    static TemporaryTypeSet *intersectSets(TemporaryTypeSet *a, TemporaryTypeSet *b, LifoAlloc *alloc);
+    static TemporaryTypeSet* intersectSets(TemporaryTypeSet* a, TemporaryTypeSet* b, LifoAlloc* alloc);
     /*
      * Returns a copy of TypeSet a excluding/removing the types in TypeSet b.
      * TypeSet b can only contain primitives or be any object. No support for
      * specific objects. The result should not be modified further.
      */
-    static TemporaryTypeSet *removeSet(TemporaryTypeSet *a, TemporaryTypeSet *b, LifoAlloc *alloc);
+    static TemporaryTypeSet* removeSet(TemporaryTypeSet* a, TemporaryTypeSet* b, LifoAlloc* alloc);
 
     /* Add a type to this set using the specified allocator. */
-    void addType(Type type, LifoAlloc *alloc);
+    void addType(Type type, LifoAlloc* alloc);
 
     /* Get a list of all types in this set. */
     typedef Vector<Type, 1, SystemAllocPolicy> TypeList;
-    template <class TypeListT> bool enumerateTypes(TypeListT *list) const;
+    template <class TypeListT> bool enumerateTypes(TypeListT* list) const;
 
     /*
      * Iterate through the objects in this set. getObjectCount overapproximates
@@ -453,14 +453,14 @@ class TypeSet
      * getObject may return nullptr.
      */
     inline unsigned getObjectCount() const;
-    inline ObjectKey *getObject(unsigned i) const;
-    inline JSObject *getSingleton(unsigned i) const;
-    inline ObjectGroup *getGroup(unsigned i) const;
-    inline JSObject *getSingletonNoBarrier(unsigned i) const;
-    inline ObjectGroup *getGroupNoBarrier(unsigned i) const;
+    inline ObjectKey* getObject(unsigned i) const;
+    inline JSObject* getSingleton(unsigned i) const;
+    inline ObjectGroup* getGroup(unsigned i) const;
+    inline JSObject* getSingletonNoBarrier(unsigned i) const;
+    inline ObjectGroup* getGroupNoBarrier(unsigned i) const;
 
     /* The Class of an object in this set. */
-    inline const Class *getObjectClass(unsigned i) const;
+    inline const Class* getObjectClass(unsigned i) const;
 
     bool canSetDefinite(unsigned slot) {
         // Note: the cast is required to work around an MSVC issue.
@@ -479,36 +479,36 @@ class TypeSet
      * Get whether this type set is known to be a subset of other.
      * This variant doesn't freeze constraints. That variant is called knownSubset
      */
-    bool isSubset(const TypeSet *other) const;
+    bool isSubset(const TypeSet* other) const;
 
     /*
      * Get whether the objects in this TypeSet are a subset of the objects
      * in other.
      */
-    bool objectsAreSubset(TypeSet *other);
+    bool objectsAreSubset(TypeSet* other);
 
     /* Whether this TypeSet contains exactly the same types as other. */
-    bool equals(const TypeSet *other) const {
+    bool equals(const TypeSet* other) const {
         return this->isSubset(other) && other->isSubset(this);
     }
 
-    bool objectsIntersect(const TypeSet *other) const;
+    bool objectsIntersect(const TypeSet* other) const;
 
     /* Forward all types in this set to the specified constraint. */
-    bool addTypesToConstraint(JSContext *cx, TypeConstraint *constraint);
+    bool addTypesToConstraint(JSContext* cx, TypeConstraint* constraint);
 
     // Clone a type set into an arbitrary allocator.
-    TemporaryTypeSet *clone(LifoAlloc *alloc) const;
-    bool clone(LifoAlloc *alloc, TemporaryTypeSet *result) const;
+    TemporaryTypeSet* clone(LifoAlloc* alloc) const;
+    bool clone(LifoAlloc* alloc, TemporaryTypeSet* result) const;
 
     // Create a new TemporaryTypeSet where undefined and/or null has been filtered out.
-    TemporaryTypeSet *filter(LifoAlloc *alloc, bool filterUndefined, bool filterNull) const;
+    TemporaryTypeSet* filter(LifoAlloc* alloc, bool filterUndefined, bool filterNull) const;
     // Create a new TemporaryTypeSet where the type has been set to object.
-    TemporaryTypeSet *cloneObjectsOnly(LifoAlloc *alloc);
-    TemporaryTypeSet *cloneWithoutObjects(LifoAlloc *alloc);
+    TemporaryTypeSet* cloneObjectsOnly(LifoAlloc* alloc);
+    TemporaryTypeSet* cloneWithoutObjects(LifoAlloc* alloc);
 
     // Trigger a read barrier on all the contents of a type set.
-    static void readBarrier(const TypeSet *types);
+    static void readBarrier(const TypeSet* types);
 
   protected:
     uint32_t baseObjectCount() const {
@@ -519,20 +519,20 @@ class TypeSet
     void clearObjects();
 
   public:
-    static inline Type GetValueType(const Value &val);
+    static inline Type GetValueType(const Value& val);
 
-    static inline bool IsUntrackedValue(const Value &val);
+    static inline bool IsUntrackedValue(const Value& val);
 
     // Get the type of a possibly optimized out or uninitialized let value.
     // This generally only happens on unconditional type monitors on bailing
     // out of Ion, such as for argument and local types.
-    static inline Type GetMaybeUntrackedValueType(const Value &val);
+    static inline Type GetMaybeUntrackedValueType(const Value& val);
 
-    static void MarkTypeRoot(JSTracer *trc, Type *v, const char *name);
-    static void MarkTypeUnbarriered(JSTracer *trc, Type *v, const char *name);
-    static bool IsTypeMarkedFromAnyThread(Type *v);
+    static void MarkTypeRoot(JSTracer* trc, Type* v, const char* name);
+    static void MarkTypeUnbarriered(JSTracer* trc, Type* v, const char* name);
+    static bool IsTypeMarkedFromAnyThread(Type* v);
     static bool IsTypeAllocatedDuringIncremental(Type v);
-    static bool IsTypeAboutToBeFinalized(Type *v);
+    static bool IsTypeAboutToBeFinalized(Type* v);
 };
 
 /*
@@ -543,36 +543,36 @@ class TypeConstraint
 {
 public:
     /* Next constraint listening to the same type set. */
-    TypeConstraint *next;
+    TypeConstraint* next;
 
     TypeConstraint()
         : next(nullptr)
     {}
 
     /* Debugging name for this kind of constraint. */
-    virtual const char *kind() = 0;
+    virtual const char* kind() = 0;
 
     /* Register a new type for the set this constraint is listening to. */
-    virtual void newType(JSContext *cx, TypeSet *source, TypeSet::Type type) = 0;
+    virtual void newType(JSContext* cx, TypeSet* source, TypeSet::Type type) = 0;
 
     /*
      * For constraints attached to an object property's type set, mark the
      * property as having changed somehow.
      */
-    virtual void newPropertyState(JSContext *cx, TypeSet *source) {}
+    virtual void newPropertyState(JSContext* cx, TypeSet* source) {}
 
     /*
      * For constraints attached to the JSID_EMPTY type set on an object,
      * indicate a change in one of the object's dynamic property flags or other
      * state.
      */
-    virtual void newObjectState(JSContext *cx, ObjectGroup *group) {}
+    virtual void newObjectState(JSContext* cx, ObjectGroup* group) {}
 
     /*
      * If the data this constraint refers to is still live, copy it into the
      * zone's new allocator. Type constraints only hold weak references.
      */
-    virtual bool sweep(TypeZone &zone, TypeConstraint **res) = 0;
+    virtual bool sweep(TypeZone& zone, TypeConstraint** res) = 0;
 };
 
 // If there is an OOM while sweeping types, the type information is deoptimized
@@ -583,11 +583,11 @@ public:
 // the type constraints.
 class AutoClearTypeInferenceStateOnOOM
 {
-    Zone *zone;
+    Zone* zone;
     bool oom;
 
   public:
-    explicit AutoClearTypeInferenceStateOnOOM(Zone *zone)
+    explicit AutoClearTypeInferenceStateOnOOM(Zone* zone)
       : zone(zone), oom(false)
     {}
 
@@ -603,7 +603,7 @@ class ConstraintTypeSet : public TypeSet
 {
   public:
     /* Chain of constraints which propagate changes out from this type set. */
-    TypeConstraint *constraintList;
+    TypeConstraint* constraintList;
 
     ConstraintTypeSet() : constraintList(nullptr) {}
 
@@ -611,12 +611,12 @@ class ConstraintTypeSet : public TypeSet
      * Add a type to this set, calling any constraint handlers if this is a new
      * possible type.
      */
-    void addType(ExclusiveContext *cx, Type type);
+    void addType(ExclusiveContext* cx, Type type);
 
     /* Add a new constraint to this set. */
-    bool addConstraint(JSContext *cx, TypeConstraint *constraint, bool callExisting = true);
+    bool addConstraint(JSContext* cx, TypeConstraint* constraint, bool callExisting = true);
 
-    inline void sweep(JS::Zone *zone, AutoClearTypeInferenceStateOnOOM &oom);
+    inline void sweep(JS::Zone* zone, AutoClearTypeInferenceStateOnOOM& oom);
 };
 
 class StackTypeSet : public ConstraintTypeSet
@@ -626,29 +626,29 @@ class StackTypeSet : public ConstraintTypeSet
 
 class HeapTypeSet : public ConstraintTypeSet
 {
-    inline void newPropertyState(ExclusiveContext *cx);
+    inline void newPropertyState(ExclusiveContext* cx);
 
   public:
     /* Mark this type set as representing a non-data property. */
-    inline void setNonDataProperty(ExclusiveContext *cx);
+    inline void setNonDataProperty(ExclusiveContext* cx);
 
     /* Mark this type set as representing a non-writable property. */
-    inline void setNonWritableProperty(ExclusiveContext *cx);
+    inline void setNonWritableProperty(ExclusiveContext* cx);
 
     // Mark this type set as being non-constant.
-    inline void setNonConstantProperty(ExclusiveContext *cx);
+    inline void setNonConstantProperty(ExclusiveContext* cx);
 };
 
-CompilerConstraintList *
-NewCompilerConstraintList(jit::TempAllocator &alloc);
+CompilerConstraintList*
+NewCompilerConstraintList(jit::TempAllocator& alloc);
 
 class TemporaryTypeSet : public TypeSet
 {
   public:
     TemporaryTypeSet() {}
-    TemporaryTypeSet(LifoAlloc *alloc, Type type);
+    TemporaryTypeSet(LifoAlloc* alloc, Type type);
 
-    TemporaryTypeSet(uint32_t flags, ObjectKey **objectSet) {
+    TemporaryTypeSet(uint32_t flags, ObjectKey** objectSet) {
         this->flags = flags;
         this->objectSet = objectSet;
     }
@@ -684,10 +684,10 @@ class TemporaryTypeSet : public TypeSet
     }
 
     /* Whether the type set contains objects with any of a set of flags. */
-    bool hasObjectFlags(CompilerConstraintList *constraints, ObjectGroupFlags flags);
+    bool hasObjectFlags(CompilerConstraintList* constraints, ObjectGroupFlags flags);
 
     /* Get the class shared by all objects in this set, or nullptr. */
-    const Class *getKnownClass(CompilerConstraintList *constraints);
+    const Class* getKnownClass(CompilerConstraintList* constraints);
 
     /* Result returned from forAllClasses */
     enum ForAllResult {
@@ -702,41 +702,41 @@ class TemporaryTypeSet : public TypeSet
     /* Apply func to the members of the set and return an appropriate result.
      * The iteration may end early if the result becomes known early.
      */
-    ForAllResult forAllClasses(CompilerConstraintList *constraints,
-                               bool (*func)(const Class *clasp));
+    ForAllResult forAllClasses(CompilerConstraintList* constraints,
+                               bool (*func)(const Class* clasp));
 
     /*
      * Returns true if all objects in this set have the same prototype, and
      * assigns this object to *proto. The proto can be nullptr.
      */
-    bool getCommonPrototype(CompilerConstraintList *constraints, JSObject **proto);
+    bool getCommonPrototype(CompilerConstraintList* constraints, JSObject** proto);
 
     /* Get the typed array type of all objects in this set, or Scalar::MaxTypedArrayViewType. */
-    Scalar::Type getTypedArrayType(CompilerConstraintList *constraints);
+    Scalar::Type getTypedArrayType(CompilerConstraintList* constraints);
 
     /* Get the shared typed array type of all objects in this set, or Scalar::MaxTypedArrayViewType. */
-    Scalar::Type getSharedTypedArrayType(CompilerConstraintList *constraints);
+    Scalar::Type getSharedTypedArrayType(CompilerConstraintList* constraints);
 
     /* Whether all objects have JSCLASS_IS_DOMJSCLASS set. */
-    bool isDOMClass(CompilerConstraintList *constraints);
+    bool isDOMClass(CompilerConstraintList* constraints);
 
     /* Whether clasp->isCallable() is true for one or more objects in this set. */
-    bool maybeCallable(CompilerConstraintList *constraints);
+    bool maybeCallable(CompilerConstraintList* constraints);
 
     /* Whether clasp->emulatesUndefined() is true for one or more objects in this set. */
-    bool maybeEmulatesUndefined(CompilerConstraintList *constraints);
+    bool maybeEmulatesUndefined(CompilerConstraintList* constraints);
 
     /* Get the single value which can appear in this type set, otherwise nullptr. */
-    JSObject *maybeSingleton();
+    JSObject* maybeSingleton();
 
     /* Whether any objects in the type set needs a barrier on id. */
-    bool propertyNeedsBarrier(CompilerConstraintList *constraints, jsid id);
+    bool propertyNeedsBarrier(CompilerConstraintList* constraints, jsid id);
 
     /*
      * Whether this set contains all types in other, except (possibly) the
      * specified type.
      */
-    bool filtersType(const TemporaryTypeSet *other, Type type) const;
+    bool filtersType(const TemporaryTypeSet* other, Type type) const;
 
     enum DoubleConversion {
         /* All types in the set should use eager double conversion. */
@@ -756,15 +756,15 @@ class TemporaryTypeSet : public TypeSet
      * Whether known double optimizations are possible for element accesses on
      * objects in this type set.
      */
-    DoubleConversion convertDoubleElements(CompilerConstraintList *constraints);
+    DoubleConversion convertDoubleElements(CompilerConstraintList* constraints);
 };
 
 bool
-AddClearDefiniteGetterSetterForPrototypeChain(JSContext *cx, ObjectGroup *group, HandleId id);
+AddClearDefiniteGetterSetterForPrototypeChain(JSContext* cx, ObjectGroup* group, HandleId id);
 
 bool
-AddClearDefiniteFunctionUsesInScript(JSContext *cx, ObjectGroup *group,
-                                     JSScript *script, JSScript *calleeScript);
+AddClearDefiniteFunctionUsesInScript(JSContext* cx, ObjectGroup* group,
+                                     JSScript* script, JSScript* calleeScript);
 
 // For groups where only a small number of objects have been allocated, this
 // structure keeps track of all objects in the group. Once COUNT objects have
@@ -779,16 +779,16 @@ class PreliminaryObjectArray
   private:
     // All objects with the type which have been allocated. The pointers in
     // this array are weak.
-    JSObject *objects[COUNT];
+    JSObject* objects[COUNT];
 
   public:
     PreliminaryObjectArray() {
         mozilla::PodZero(this);
     }
 
-    void registerNewObject(JSObject *res);
+    void registerNewObject(JSObject* res);
 
-    JSObject *get(size_t i) const {
+    JSObject* get(size_t i) const {
         MOZ_ASSERT(i < COUNT);
         return objects[i];
     }
@@ -802,19 +802,19 @@ class PreliminaryObjectArrayWithTemplate : public PreliminaryObjectArray
     HeapPtrShape shape_;
 
   public:
-    explicit PreliminaryObjectArrayWithTemplate(Shape *shape)
+    explicit PreliminaryObjectArrayWithTemplate(Shape* shape)
       : shape_(shape)
     {}
 
-    Shape *shape() {
+    Shape* shape() {
         return shape_;
     }
 
-    void maybeAnalyze(ExclusiveContext *cx, ObjectGroup *group, bool force = false);
+    void maybeAnalyze(ExclusiveContext* cx, ObjectGroup* group, bool force = false);
 
-    void trace(JSTracer *trc);
+    void trace(JSTracer* trc);
 
-    static void writeBarrierPre(PreliminaryObjectArrayWithTemplate *preliminaryObjects);
+    static void writeBarrierPre(PreliminaryObjectArrayWithTemplate* preliminaryObjects);
 };
 
 // New script properties analyses overview.
@@ -876,7 +876,7 @@ class TypeNewScript
 
     // Any preliminary objects with the type. The analyses are not performed
     // until this array is cleared.
-    PreliminaryObjectArray *preliminaryObjects;
+    PreliminaryObjectArray* preliminaryObjects;
 
     // After the new script properties analyses have been performed, a template
     // object to use for newly constructed objects. The shape of this object
@@ -894,7 +894,7 @@ class TypeNewScript
     // shape. Property assignments in inner frames are preceded by a series of
     // SETPROP_FRAME entries specifying the stack down to the frame containing
     // the write.
-    Initializer *initializerList;
+    Initializer* initializerList;
 
     // If there are additional properties found by the acquired properties
     // analysis which were not found by the definite properties analysis, this
@@ -914,59 +914,59 @@ class TypeNewScript
         js_free(initializerList);
     }
 
-    static void writeBarrierPre(TypeNewScript *newScript);
+    static void writeBarrierPre(TypeNewScript* newScript);
 
     bool analyzed() const {
         return preliminaryObjects == nullptr;
     }
 
-    PlainObject *templateObject() const {
+    PlainObject* templateObject() const {
         return templateObject_;
     }
 
-    Shape *initializedShape() const {
+    Shape* initializedShape() const {
         return initializedShape_;
     }
 
-    ObjectGroup *initializedGroup() const {
+    ObjectGroup* initializedGroup() const {
         return initializedGroup_;
     }
 
-    JSFunction *function() const {
+    JSFunction* function() const {
         return function_;
     }
 
-    void trace(JSTracer *trc);
+    void trace(JSTracer* trc);
     void sweep();
 
-    void registerNewObject(PlainObject *res);
-    bool maybeAnalyze(JSContext *cx, ObjectGroup *group, bool *regenerate, bool force = false);
+    void registerNewObject(PlainObject* res);
+    bool maybeAnalyze(JSContext* cx, ObjectGroup* group, bool* regenerate, bool force = false);
 
-    bool rollbackPartiallyInitializedObjects(JSContext *cx, ObjectGroup *group);
+    bool rollbackPartiallyInitializedObjects(JSContext* cx, ObjectGroup* group);
 
-    static void make(JSContext *cx, ObjectGroup *group, JSFunction *fun);
-    static TypeNewScript *makeNativeVersion(JSContext *cx, TypeNewScript *newScript,
-                                            PlainObject *templateObject);
+    static void make(JSContext* cx, ObjectGroup* group, JSFunction* fun);
+    static TypeNewScript* makeNativeVersion(JSContext* cx, TypeNewScript* newScript,
+                                            PlainObject* templateObject);
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 };
 
 /* Is this a reasonable PC to be doing inlining on? */
-inline bool isInlinableCall(jsbytecode *pc);
+inline bool isInlinableCall(jsbytecode* pc);
 
 bool
-ClassCanHaveExtraProperties(const Class *clasp);
+ClassCanHaveExtraProperties(const Class* clasp);
 
 /*
  * Whether Array.prototype, or an object on its proto chain, has an
  * indexed property.
  */
 bool
-ArrayPrototypeHasIndexedProperty(CompilerConstraintList *constraints, JSScript *script);
+ArrayPrototypeHasIndexedProperty(CompilerConstraintList* constraints, JSScript* script);
 
 /* Whether obj or any of its prototypes have an indexed property. */
 bool
-TypeCanHaveExtraIndexedProperties(CompilerConstraintList *constraints, TemporaryTypeSet *types);
+TypeCanHaveExtraIndexedProperties(CompilerConstraintList* constraints, TemporaryTypeSet* types);
 
 /* Persistent type information for a script, retained across GCs. */
 class TypeScript
@@ -978,11 +978,11 @@ class TypeScript
 
   public:
     /* Array of type sets for variables and JOF_TYPESET ops. */
-    StackTypeSet *typeArray() const {
+    StackTypeSet* typeArray() const {
         // Ensure typeArray_ is the last data member of TypeScript.
         JS_STATIC_ASSERT(sizeof(TypeScript) ==
                          sizeof(typeArray_) + offsetof(TypeScript, typeArray_));
-        return const_cast<StackTypeSet *>(typeArray_);
+        return const_cast<StackTypeSet*>(typeArray_);
     }
 
     static inline size_t SizeIncludingTypeArray(size_t arraySize) {
@@ -992,17 +992,17 @@ class TypeScript
         return offsetof(TypeScript, typeArray_) + arraySize * sizeof(StackTypeSet);
     }
 
-    static inline unsigned NumTypeSets(JSScript *script);
+    static inline unsigned NumTypeSets(JSScript* script);
 
-    static inline StackTypeSet *ThisTypes(JSScript *script);
-    static inline StackTypeSet *ArgTypes(JSScript *script, unsigned i);
+    static inline StackTypeSet* ThisTypes(JSScript* script);
+    static inline StackTypeSet* ArgTypes(JSScript* script, unsigned i);
 
     /* Get the type set for values observed at an opcode. */
-    static inline StackTypeSet *BytecodeTypes(JSScript *script, jsbytecode *pc);
+    static inline StackTypeSet* BytecodeTypes(JSScript* script, jsbytecode* pc);
 
     template <typename TYPESET>
-    static inline TYPESET *BytecodeTypes(JSScript *script, jsbytecode *pc, uint32_t *bytecodeMap,
-                                         uint32_t *hint, TYPESET *typeArray);
+    static inline TYPESET* BytecodeTypes(JSScript* script, jsbytecode* pc, uint32_t* bytecodeMap,
+                                         uint32_t* hint, TYPESET* typeArray);
 
     /*
      * Monitor a bytecode pushing any value. This must be called for any opcode
@@ -1011,32 +1011,32 @@ class TypeScript
      * always monitor JOF_TYPESET opcodes in the interpreter and stub calls,
      * and only look at barriers when generating JIT code for the script.
      */
-    static inline void Monitor(JSContext *cx, JSScript *script, jsbytecode *pc,
-                               const js::Value &val);
-    static inline void Monitor(JSContext *cx, const js::Value &rval);
+    static inline void Monitor(JSContext* cx, JSScript* script, jsbytecode* pc,
+                               const js::Value& val);
+    static inline void Monitor(JSContext* cx, const js::Value& rval);
 
     /* Monitor an assignment at a SETELEM on a non-integer identifier. */
-    static inline void MonitorAssign(JSContext *cx, HandleObject obj, jsid id);
+    static inline void MonitorAssign(JSContext* cx, HandleObject obj, jsid id);
 
     /* Add a type for a variable in a script. */
-    static inline void SetThis(JSContext *cx, JSScript *script, TypeSet::Type type);
-    static inline void SetThis(JSContext *cx, JSScript *script, const js::Value &value);
-    static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg,
+    static inline void SetThis(JSContext* cx, JSScript* script, TypeSet::Type type);
+    static inline void SetThis(JSContext* cx, JSScript* script, const js::Value& value);
+    static inline void SetArgument(JSContext* cx, JSScript* script, unsigned arg,
                                    TypeSet::Type type);
-    static inline void SetArgument(JSContext *cx, JSScript *script, unsigned arg,
-                                   const js::Value &value);
+    static inline void SetArgument(JSContext* cx, JSScript* script, unsigned arg,
+                                   const js::Value& value);
 
     /*
      * Freeze all the stack type sets in a script, for a compilation. Returns
      * copies of the type sets which will be checked against the actual ones
      * under FinishCompilation, to detect any type changes.
      */
-    static bool FreezeTypeSets(CompilerConstraintList *constraints, JSScript *script,
-                               TemporaryTypeSet **pThisTypes,
-                               TemporaryTypeSet **pArgTypes,
-                               TemporaryTypeSet **pBytecodeTypes);
+    static bool FreezeTypeSets(CompilerConstraintList* constraints, JSScript* script,
+                               TemporaryTypeSet** pThisTypes,
+                               TemporaryTypeSet** pArgTypes,
+                               TemporaryTypeSet** pBytecodeTypes);
 
-    static void Purge(JSContext *cx, HandleScript script);
+    static void Purge(JSContext* cx, HandleScript script);
 
     void destroy();
 
@@ -1045,12 +1045,12 @@ class TypeScript
     }
 
 #ifdef DEBUG
-    void printTypes(JSContext *cx, HandleScript script) const;
+    void printTypes(JSContext* cx, HandleScript script) const;
 #endif
 };
 
 void
-FillBytecodeTypeMap(JSScript *script, uint32_t *bytecodeMap);
+FillBytecodeTypeMap(JSScript* script, uint32_t* bytecodeMap);
 
 class RecompileInfo;
 
@@ -1058,13 +1058,13 @@ class RecompileInfo;
 // constraints for the compilation. Returns whether the type constraints
 // still hold.
 bool
-FinishCompilation(JSContext *cx, HandleScript script, CompilerConstraintList *constraints,
-                  RecompileInfo *precompileInfo);
+FinishCompilation(JSContext* cx, HandleScript script, CompilerConstraintList* constraints,
+                  RecompileInfo* precompileInfo);
 
 // Update the actual types in any scripts queried by constraints with any
 // speculative types added during the definite properties analysis.
 void
-FinishDefinitePropertiesAnalysis(JSContext *cx, CompilerConstraintList *constraints);
+FinishDefinitePropertiesAnalysis(JSContext* cx, CompilerConstraintList* constraints);
 
 // Representation of a heap type property which may or may not be instantiated.
 // Heap properties for singleton types are instantiated lazily as they are used
@@ -1079,33 +1079,33 @@ class HeapTypeSetKey
     friend class TypeSet::ObjectKey;
 
     // Object and property being accessed.
-    TypeSet::ObjectKey *object_;
+    TypeSet::ObjectKey* object_;
     jsid id_;
 
     // If instantiated, the underlying heap type set.
-    HeapTypeSet *maybeTypes_;
+    HeapTypeSet* maybeTypes_;
 
   public:
     HeapTypeSetKey()
       : object_(nullptr), id_(JSID_EMPTY), maybeTypes_(nullptr)
     {}
 
-    TypeSet::ObjectKey *object() const { return object_; }
+    TypeSet::ObjectKey* object() const { return object_; }
     jsid id() const { return id_; }
-    HeapTypeSet *maybeTypes() const { return maybeTypes_; }
+    HeapTypeSet* maybeTypes() const { return maybeTypes_; }
 
-    bool instantiate(JSContext *cx);
+    bool instantiate(JSContext* cx);
 
-    void freeze(CompilerConstraintList *constraints);
-    jit::MIRType knownMIRType(CompilerConstraintList *constraints);
-    bool nonData(CompilerConstraintList *constraints);
-    bool nonWritable(CompilerConstraintList *constraints);
-    bool isOwnProperty(CompilerConstraintList *constraints, bool allowEmptyTypesForGlobal = false);
-    bool knownSubset(CompilerConstraintList *constraints, const HeapTypeSetKey &other);
-    JSObject *singleton(CompilerConstraintList *constraints);
-    bool needsBarrier(CompilerConstraintList *constraints);
-    bool constant(CompilerConstraintList *constraints, Value *valOut);
-    bool couldBeConstant(CompilerConstraintList *constraints);
+    void freeze(CompilerConstraintList* constraints);
+    jit::MIRType knownMIRType(CompilerConstraintList* constraints);
+    bool nonData(CompilerConstraintList* constraints);
+    bool nonWritable(CompilerConstraintList* constraints);
+    bool isOwnProperty(CompilerConstraintList* constraints, bool allowEmptyTypesForGlobal = false);
+    bool knownSubset(CompilerConstraintList* constraints, const HeapTypeSetKey& other);
+    JSObject* singleton(CompilerConstraintList* constraints);
+    bool needsBarrier(CompilerConstraintList* constraints);
+    bool constant(CompilerConstraintList* constraints, Value* valOut);
+    bool couldBeConstant(CompilerConstraintList* constraints);
 };
 
 /*
@@ -1118,7 +1118,7 @@ class CompilerOutput
 {
     // If this compilation has not been invalidated, the associated script and
     // kind of compilation being performed.
-    JSScript *script_;
+    JSScript* script_;
 
     // Whether this compilation is about to be invalidated.
     bool pendingInvalidation_ : 1;
@@ -1135,14 +1135,14 @@ class CompilerOutput
         pendingInvalidation_(false), sweepIndex_(INVALID_SWEEP_INDEX)
     {}
 
-    explicit CompilerOutput(JSScript *script)
+    explicit CompilerOutput(JSScript* script)
       : script_(script),
         pendingInvalidation_(false), sweepIndex_(INVALID_SWEEP_INDEX)
     {}
 
-    JSScript *script() const { return script_; }
+    JSScript* script() const { return script_; }
 
-    inline jit::IonScript *ion() const;
+    inline jit::IonScript* ion() const;
 
     bool isValid() const {
         return script_ != nullptr;
@@ -1188,9 +1188,9 @@ class RecompileInfo
       : outputIndex(JS_BITMASK(31)), generation(0)
     {}
 
-    CompilerOutput *compilerOutput(TypeZone &types) const;
-    CompilerOutput *compilerOutput(JSContext *cx) const;
-    bool shouldSweep(TypeZone &types);
+    CompilerOutput* compilerOutput(TypeZone& types) const;
+    CompilerOutput* compilerOutput(JSContext* cx) const;
+    bool shouldSweep(TypeZone& types);
 };
 
 typedef Vector<RecompileInfo, 0, SystemAllocPolicy> RecompileInfoVector;
@@ -1199,7 +1199,7 @@ struct AutoEnterAnalysis;
 
 struct TypeZone
 {
-    JS::Zone *zone_;
+    JS::Zone* zone_;
 
     /* Pool for type information in this zone. */
     static const size_t TYPE_LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 8 * 1024;
@@ -1214,7 +1214,7 @@ struct TypeZone
      * invalidated compilations are swept on GC.
      */
     typedef Vector<CompilerOutput, 4, SystemAllocPolicy> CompilerOutputVector;
-    CompilerOutputVector *compilerOutputs;
+    CompilerOutputVector* compilerOutputs;
 
     // During incremental sweeping, allocator holding the old type information
     // for the zone.
@@ -1222,29 +1222,29 @@ struct TypeZone
 
     // During incremental sweeping, the old compiler outputs for use by
     // recompile indexes with a stale generation.
-    CompilerOutputVector *sweepCompilerOutputs;
+    CompilerOutputVector* sweepCompilerOutputs;
 
     // During incremental sweeping, whether to try to destroy all type
     // information attached to scripts.
     bool sweepReleaseTypes;
 
     // The topmost AutoEnterAnalysis on the stack, if there is one.
-    AutoEnterAnalysis *activeAnalysis;
+    AutoEnterAnalysis* activeAnalysis;
 
-    explicit TypeZone(JS::Zone *zone);
+    explicit TypeZone(JS::Zone* zone);
     ~TypeZone();
 
-    JS::Zone *zone() const { return zone_; }
+    JS::Zone* zone() const { return zone_; }
 
-    void beginSweep(FreeOp *fop, bool releaseTypes, AutoClearTypeInferenceStateOnOOM &oom);
-    void endSweep(JSRuntime *rt);
+    void beginSweep(FreeOp* fop, bool releaseTypes, AutoClearTypeInferenceStateOnOOM& oom);
+    void endSweep(JSRuntime* rt);
     void clearAllNewScriptsOnOOM();
 
     /* Mark a script as needing recompilation once inference has finished. */
-    void addPendingRecompile(JSContext *cx, const RecompileInfo &info);
-    void addPendingRecompile(JSContext *cx, JSScript *script);
+    void addPendingRecompile(JSContext* cx, const RecompileInfo& info);
+    void addPendingRecompile(JSContext* cx, JSScript* script);
 
-    void processPendingRecompiles(FreeOp *fop, RecompileInfoVector &recompiles);
+    void processPendingRecompiles(FreeOp* fop, RecompileInfoVector& recompiles);
 };
 
 enum SpewChannel {
@@ -1256,29 +1256,29 @@ enum SpewChannel {
 #ifdef DEBUG
 
 const char * InferSpewColorReset();
-const char * InferSpewColor(TypeConstraint *constraint);
-const char * InferSpewColor(TypeSet *types);
+const char * InferSpewColor(TypeConstraint* constraint);
+const char * InferSpewColor(TypeSet* types);
 
-void InferSpew(SpewChannel which, const char *fmt, ...);
+void InferSpew(SpewChannel which, const char* fmt, ...);
 
 /* Check that the type property for id in group contains value. */
-bool ObjectGroupHasProperty(JSContext *cx, ObjectGroup *group, jsid id, const Value &value);
+bool ObjectGroupHasProperty(JSContext* cx, ObjectGroup* group, jsid id, const Value& value);
 
 #else
 
 inline const char * InferSpewColorReset() { return nullptr; }
-inline const char * InferSpewColor(TypeConstraint *constraint) { return nullptr; }
-inline const char * InferSpewColor(TypeSet *types) { return nullptr; }
-inline void InferSpew(SpewChannel which, const char *fmt, ...) {}
+inline const char * InferSpewColor(TypeConstraint* constraint) { return nullptr; }
+inline const char * InferSpewColor(TypeSet* types) { return nullptr; }
+inline void InferSpew(SpewChannel which, const char* fmt, ...) {}
 
 #endif
 
 /* Print a warning, dump state and abort the program. */
-MOZ_NORETURN MOZ_COLD void TypeFailure(JSContext *cx, const char *fmt, ...);
+MOZ_NORETURN MOZ_COLD void TypeFailure(JSContext* cx, const char* fmt, ...);
 
 // Prints type information for a context if spew is enabled or force is set.
 void
-PrintTypes(JSContext *cx, JSCompartment *comp, bool force);
+PrintTypes(JSContext* cx, JSCompartment* comp, bool force);
 
 } /* namespace js */
 

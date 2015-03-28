@@ -17,11 +17,11 @@ namespace js {
  * Check whether the given JSFunction is a self-hosted function whose
  * self-hosted name is the given name.
  */
-bool IsSelfHostedFunctionWithName(JSFunction *fun, JSAtom *name);
+bool IsSelfHostedFunctionWithName(JSFunction* fun, JSAtom* name);
 
 /* Get the compile options used when compiling self hosted code. */
 void
-FillSelfHostingCompileOptions(JS::CompileOptions &options);
+FillSelfHostingCompileOptions(JS::CompileOptions& options);
 
 } /* namespace js */
 

@@ -15,22 +15,22 @@ namespace jit {
 class LIRGeneratorX86 : public LIRGeneratorX86Shared
 {
   public:
-    LIRGeneratorX86(MIRGenerator *gen, MIRGraph &graph, LIRGraph &lirGraph)
+    LIRGeneratorX86(MIRGenerator* gen, MIRGraph& graph, LIRGraph& lirGraph)
       : LIRGeneratorX86Shared(gen, graph, lirGraph)
     { }
 
   protected:
     // Adds a box input to an instruction, setting operand |n| to the type and
     // |n+1| to the payload.
-    void useBoxFixed(LInstruction *lir, size_t n, MDefinition *mir, Register reg1, Register reg2);
+    void useBoxFixed(LInstruction* lir, size_t n, MDefinition* mir, Register reg1, Register reg2);
 
     // It's a trap! On x86, the 1-byte store can only use one of
     // {al,bl,cl,dl,ah,bh,ch,dh}. That means if the register allocator
     // gives us one of {edi,esi,ebp,esp}, we're out of luck. (The formatter
     // will assert on us.) Ideally, we'd just ask the register allocator to
     // give us one of {al,bl,cl,dl}. For now, just useFixed(al).
-    LAllocation useByteOpRegister(MDefinition *mir);
-    LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition *mir);
+    LAllocation useByteOpRegister(MDefinition* mir);
+    LAllocation useByteOpRegisterOrNonDoubleConstant(MDefinition* mir);
     LDefinition tempByteOpRegister();
 
     inline LDefinition tempToUnbox() {
@@ -39,25 +39,25 @@ class LIRGeneratorX86 : public LIRGeneratorX86Shared
 
     bool needTempForPostBarrier() { return true; }
 
-    void lowerUntypedPhiInput(MPhi *phi, uint32_t inputPosition, LBlock *block, size_t lirIndex);
-    void defineUntypedPhi(MPhi *phi, size_t lirIndex);
+    void lowerUntypedPhiInput(MPhi* phi, uint32_t inputPosition, LBlock* block, size_t lirIndex);
+    void defineUntypedPhi(MPhi* phi, size_t lirIndex);
 
   public:
-    void visitBox(MBox *box);
-    void visitUnbox(MUnbox *unbox);
-    void visitReturn(MReturn *ret);
-    void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement *ins);
-    void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop *ins);
-    void visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble *ins);
-    void visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32 *ins);
-    void visitAsmJSLoadHeap(MAsmJSLoadHeap *ins);
-    void visitAsmJSStoreHeap(MAsmJSStoreHeap *ins);
-    void visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr *ins);
-    void visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap *ins);
-    void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap *ins);
-    void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic *ins);
-    void visitSubstr(MSubstr *ins);
-    void lowerPhi(MPhi *phi);
+    void visitBox(MBox* box);
+    void visitUnbox(MUnbox* unbox);
+    void visitReturn(MReturn* ret);
+    void visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins);
+    void visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins);
+    void visitAsmJSUnsignedToDouble(MAsmJSUnsignedToDouble* ins);
+    void visitAsmJSUnsignedToFloat32(MAsmJSUnsignedToFloat32* ins);
+    void visitAsmJSLoadHeap(MAsmJSLoadHeap* ins);
+    void visitAsmJSStoreHeap(MAsmJSStoreHeap* ins);
+    void visitAsmJSLoadFuncPtr(MAsmJSLoadFuncPtr* ins);
+    void visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins);
+    void visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins);
+    void visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStatic* ins);
+    void visitSubstr(MSubstr* ins);
+    void lowerPhi(MPhi* phi);
 
     static bool allowTypedElementHoleCheck() {
         return true;

@@ -68,7 +68,7 @@ public:
             r.front().value()->DebugDump(depth);
     }
 
-    void UpdateWeakPointersAfterGC(XPCJSRuntime *runtime);
+    void UpdateWeakPointersAfterGC(XPCJSRuntime* runtime);
 
     void ShutdownMarker();
 
@@ -85,9 +85,9 @@ private:
      * This function is called during minor GCs for each key in the HashMap that
      * has been moved.
      */
-    static void KeyMarkCallback(JSTracer *trc, JSObject *key, void *data) {
+    static void KeyMarkCallback(JSTracer* trc, JSObject* key, void* data) {
         JSObject2WrappedJSMap* self = static_cast<JSObject2WrappedJSMap*>(data);
-        JSObject *prior = key;
+        JSObject* prior = key;
         JS_CallUnbarrieredObjectTracer(trc, &key, "XPCJSRuntime::mWrappedJSMap key");
         self->mTable.rekeyIfMoved(prior, key);
     }
@@ -145,7 +145,7 @@ public:
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
-    inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
+    inline uint32_t Enumerate(PLDHashEnumerator f, void* arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
@@ -155,10 +155,10 @@ private:
     Native2WrappedNativeMap();    // no implementation
     explicit Native2WrappedNativeMap(int size);
 
-    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr, mozilla::MallocSizeOf mallocSizeOf, void *);
+    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr* hdr, mozilla::MallocSizeOf mallocSizeOf, void*);
 
 private:
-    PLDHashTable *mTable;
+    PLDHashTable* mTable;
 };
 
 /*************************/
@@ -204,7 +204,7 @@ public:
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
-    inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
+    inline uint32_t Enumerate(PLDHashEnumerator f, void* arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
     ~IID2WrappedJSClassMap();
@@ -212,7 +212,7 @@ private:
     IID2WrappedJSClassMap();    // no implementation
     explicit IID2WrappedJSClassMap(int size);
 private:
-    PLDHashTable *mTable;
+    PLDHashTable* mTable;
 };
 
 /*************************/
@@ -258,7 +258,7 @@ public:
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
-    inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
+    inline uint32_t Enumerate(PLDHashEnumerator f, void* arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
@@ -268,10 +268,10 @@ private:
     IID2NativeInterfaceMap();    // no implementation
     explicit IID2NativeInterfaceMap(int size);
 
-    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr, mozilla::MallocSizeOf mallocSizeOf, void *);
+    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr* hdr, mozilla::MallocSizeOf mallocSizeOf, void*);
 
 private:
-    PLDHashTable *mTable;
+    PLDHashTable* mTable;
 };
 
 /*************************/
@@ -314,7 +314,7 @@ public:
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
-    inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
+    inline uint32_t Enumerate(PLDHashEnumerator f, void* arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
     // ClassInfo2NativeSetMap holds pointers to *some* XPCNativeSets.
@@ -328,7 +328,7 @@ private:
     ClassInfo2NativeSetMap();    // no implementation
     explicit ClassInfo2NativeSetMap(int size);
 private:
-    PLDHashTable *mTable;
+    PLDHashTable* mTable;
 };
 
 /*************************/
@@ -371,7 +371,7 @@ public:
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
-    inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
+    inline uint32_t Enumerate(PLDHashEnumerator f, void* arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
@@ -381,10 +381,10 @@ private:
     ClassInfo2WrappedNativeProtoMap();    // no implementation
     explicit ClassInfo2WrappedNativeProtoMap(int size);
 
-    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr, mozilla::MallocSizeOf mallocSizeOf, void *);
+    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr* hdr, mozilla::MallocSizeOf mallocSizeOf, void*);
 
 private:
-    PLDHashTable *mTable;
+    PLDHashTable* mTable;
 };
 
 /*************************/
@@ -397,9 +397,9 @@ public:
         XPCNativeSet* key_value;
 
         static bool
-        Match(PLDHashTable *table,
-              const PLDHashEntryHdr *entry,
-              const void *key);
+        Match(PLDHashTable* table,
+              const PLDHashEntryHdr* entry,
+              const void* key);
 
         static const struct PLDHashTableOps sOps;
     };
@@ -441,7 +441,7 @@ public:
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
-    inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
+    inline uint32_t Enumerate(PLDHashEnumerator f, void* arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);
@@ -451,10 +451,10 @@ private:
     NativeSetMap();    // no implementation
     explicit NativeSetMap(int size);
 
-    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr *hdr, mozilla::MallocSizeOf mallocSizeOf, void *);
+    static size_t SizeOfEntryExcludingThis(PLDHashEntryHdr* hdr, mozilla::MallocSizeOf mallocSizeOf, void*);
 
 private:
-    PLDHashTable *mTable;
+    PLDHashTable* mTable;
 };
 
 /***************************************************************************/
@@ -468,12 +468,12 @@ public:
         nsCOMPtr<nsIXPCFunctionThisTranslator> value;
 
         static bool
-        Match(PLDHashTable *table,
-              const PLDHashEntryHdr *entry,
-              const void *key);
+        Match(PLDHashTable* table,
+              const PLDHashEntryHdr* entry,
+              const void* key);
 
         static void
-        Clear(PLDHashTable *table, PLDHashEntryHdr *entry);
+        Clear(PLDHashTable* table, PLDHashEntryHdr* entry);
 
         static const struct PLDHashTableOps sOps;
     };
@@ -504,7 +504,7 @@ public:
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
-    inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
+    inline uint32_t Enumerate(PLDHashEnumerator f, void* arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
     ~IID2ThisTranslatorMap();
@@ -512,7 +512,7 @@ private:
     IID2ThisTranslatorMap();    // no implementation
     explicit IID2ThisTranslatorMap(int size);
 private:
-    PLDHashTable *mTable;
+    PLDHashTable* mTable;
 };
 
 /***************************************************************************/
@@ -525,12 +525,12 @@ public:
         XPCNativeScriptableShared* key;
 
         static PLDHashNumber
-        Hash(PLDHashTable *table, const void *key);
+        Hash(PLDHashTable* table, const void* key);
 
         static bool
-        Match(PLDHashTable *table,
-              const PLDHashEntryHdr *entry,
-              const void *key);
+        Match(PLDHashTable* table,
+              const PLDHashEntryHdr* entry,
+              const void* key);
 
         static const struct PLDHashTableOps sOps;
     };
@@ -540,7 +540,7 @@ public:
     bool GetNewOrUsed(uint32_t flags, char* name, XPCNativeScriptableInfo* si);
 
     inline uint32_t Count() { return mTable->EntryCount(); }
-    inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
+    inline uint32_t Enumerate(PLDHashEnumerator f, void* arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
     ~XPCNativeScriptableSharedMap();
@@ -548,7 +548,7 @@ private:
     XPCNativeScriptableSharedMap();    // no implementation
     explicit XPCNativeScriptableSharedMap(int size);
 private:
-    PLDHashTable *mTable;
+    PLDHashTable* mTable;
 };
 
 /***************************************************************************/
@@ -578,7 +578,7 @@ public:
     }
 
     inline uint32_t Count() { return mTable->EntryCount(); }
-    inline uint32_t Enumerate(PLDHashEnumerator f, void *arg)
+    inline uint32_t Enumerate(PLDHashEnumerator f, void* arg)
         {return PL_DHashTableEnumerate(mTable, f, arg);}
 
     ~XPCWrappedNativeProtoMap();
@@ -586,14 +586,14 @@ private:
     XPCWrappedNativeProtoMap();    // no implementation
     explicit XPCWrappedNativeProtoMap(int size);
 private:
-    PLDHashTable *mTable;
+    PLDHashTable* mTable;
 };
 
 /***************************************************************************/
 
 class JSObject2JSObjectMap
 {
-    typedef js::HashMap<JSObject *, JS::Heap<JSObject *>, js::PointerHasher<JSObject *, 3>,
+    typedef js::HashMap<JSObject*, JS::Heap<JSObject*>, js::PointerHasher<JSObject*, 3>,
                         js::SystemAllocPolicy> Map;
 
 public:
@@ -613,7 +613,7 @@ public:
     }
 
     /* Note: If the entry already exists, return the old value. */
-    inline JSObject* Add(JSContext *cx, JSObject *key, JSObject *value) {
+    inline JSObject* Add(JSContext* cx, JSObject* key, JSObject* value) {
         NS_PRECONDITION(key,"bad param");
         Map::AddPtr p = mTable.lookupForAdd(key);
         if (p)
@@ -634,8 +634,8 @@ public:
 
     void Sweep() {
         for (Map::Enum e(mTable); !e.empty(); e.popFront()) {
-            JSObject *key = e.front().key();
-            JS::Heap<JSObject *> *valuep = &e.front().value();
+            JSObject* key = e.front().key();
+            JS::Heap<JSObject*>* valuep = &e.front().value();
             JS_UpdateWeakPointerAfterGCUnbarriered(&key);
             JS_UpdateWeakPointerAfterGC(valuep);
             if (!key || !*valuep)
@@ -652,18 +652,18 @@ private:
      * This function is called during minor GCs for each key in the HashMap that
      * has been moved.
      */
-    static void KeyMarkCallback(JSTracer *trc, JSObject *key, void *data) {
+    static void KeyMarkCallback(JSTracer* trc, JSObject* key, void* data) {
         /*
          * To stop the barriers on the values of mTable firing while we are
          * marking the store buffer, we cast the table to one that is
          * binary-equivatlent but without the barriers, and update that.
          */
-        typedef js::HashMap<JSObject *, JSObject *, js::PointerHasher<JSObject *, 3>,
+        typedef js::HashMap<JSObject*, JSObject*, js::PointerHasher<JSObject*, 3>,
                             js::SystemAllocPolicy> UnbarrieredMap;
-        JSObject2JSObjectMap *self = static_cast<JSObject2JSObjectMap *>(data);
-        UnbarrieredMap &table = reinterpret_cast<UnbarrieredMap &>(self->mTable);
+        JSObject2JSObjectMap* self = static_cast<JSObject2JSObjectMap*>(data);
+        UnbarrieredMap& table = reinterpret_cast<UnbarrieredMap&>(self->mTable);
 
-        JSObject *prior = key;
+        JSObject* prior = key;
         JS_CallUnbarrieredObjectTracer(trc, &key, "XPCWrappedNativeScope::mWaiverWrapperMap key");
         table.rekeyIfMoved(prior, key);
     }

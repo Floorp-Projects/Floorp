@@ -16,8 +16,8 @@ namespace gc {
 template<class Node>
 struct GraphNodeBase
 {
-    Node           *gcNextGraphNode;
-    Node           *gcNextGraphComponent;
+    Node*          gcNextGraphNode;
+    Node*          gcNextGraphComponent;
     unsigned       gcDiscoveryTime;
     unsigned       gcLowLink;
 
@@ -29,13 +29,13 @@ struct GraphNodeBase
 
     ~GraphNodeBase() {}
 
-    Node *nextNodeInGroup() const {
+    Node* nextNodeInGroup() const {
         if (gcNextGraphNode && gcNextGraphNode->gcNextGraphComponent == gcNextGraphComponent)
             return gcNextGraphNode;
         return nullptr;
     }
 
-    Node *nextGroup() const {
+    Node* nextGroup() const {
         return gcNextGraphComponent;
     }
 };
@@ -49,7 +49,7 @@ struct GraphNodeBase
  *
  * struct MyGraphNode : public GraphNodeBase
  * {
- *     void findOutgoingEdges(ComponentFinder<MyGraphNode> &finder)
+ *     void findOutgoingEdges(ComponentFinder<MyGraphNode>& finder)
  *     {
  *         for edge in my_outgoing_edges:
  *             if is_relevant(edge):
@@ -81,21 +81,21 @@ class ComponentFinder
     /* Forces all nodes to be added to a single component. */
     void useOneComponent() { stackFull = true; }
 
-    void addNode(Node *v) {
+    void addNode(Node* v) {
         if (v->gcDiscoveryTime == Undefined) {
             MOZ_ASSERT(v->gcLowLink == Undefined);
             processNode(v);
         }
     }
 
-    Node *getResultsList() {
+    Node* getResultsList() {
         if (stackFull) {
             /*
              * All nodes after the stack overflow are in |stack|. Put them all in
              * one big component of their own.
              */
-            Node *firstGoodComponent = firstComponent;
-            for (Node *v = stack; v; v = stack) {
+            Node* firstGoodComponent = firstComponent;
+            for (Node* v = stack; v; v = stack) {
                 stack = v->gcNextGraphNode;
                 v->gcNextGraphComponent = firstGoodComponent;
                 v->gcNextGraphNode = firstComponent;
@@ -106,10 +106,10 @@ class ComponentFinder
 
         MOZ_ASSERT(!stack);
 
-        Node *result = firstComponent;
+        Node* result = firstComponent;
         firstComponent = nullptr;
 
-        for (Node *v = result; v; v = v->gcNextGraphNode) {
+        for (Node* v = result; v; v = v->gcNextGraphNode) {
             v->gcDiscoveryTime = Undefined;
             v->gcLowLink = Undefined;
         }
@@ -117,14 +117,14 @@ class ComponentFinder
         return result;
     }
 
-    static void mergeGroups(Node *first) {
-        for (Node *v = first; v; v = v->gcNextGraphNode)
+    static void mergeGroups(Node* first) {
+        for (Node* v = first; v; v = v->gcNextGraphNode)
             v->gcNextGraphComponent = nullptr;
     }
 
   public:
     /* Call from implementation of GraphNodeBase::findOutgoingEdges(). */
-    void addEdgeTo(Node *w) {
+    void addEdgeTo(Node* w) {
         if (w->gcDiscoveryTime == Undefined) {
             processNode(w);
             cur->gcLowLink = Min(cur->gcLowLink, w->gcLowLink);
@@ -140,7 +140,7 @@ class ComponentFinder
     /* Constant used to indicate an processed vertex that is no longer on the stack. */
     static const unsigned Finished = (unsigned)-1;
 
-    void processNode(Node *v) {
+    void processNode(Node* v) {
         v->gcDiscoveryTime = clock;
         v->gcLowLink = clock;
         ++clock;
@@ -154,7 +154,7 @@ class ComponentFinder
             return;
         }
 
-        Node *old = cur;
+        Node* old = cur;
         cur = v;
         cur->findOutgoingEdges(*this);
         cur = old;
@@ -163,8 +163,8 @@ class ComponentFinder
             return;
 
         if (v->gcLowLink == v->gcDiscoveryTime) {
-            Node *nextComponent = firstComponent;
-            Node *w;
+            Node* nextComponent = firstComponent;
+            Node* w;
             do {
                 MOZ_ASSERT(stack);
                 w = stack;
@@ -191,9 +191,9 @@ class ComponentFinder
 
   private:
     unsigned       clock;
-    Node           *stack;
-    Node           *firstComponent;
-    Node           *cur;
+    Node*          stack;
+    Node*          firstComponent;
+    Node*          cur;
     uintptr_t      stackLimit;
     bool           stackFull;
 };

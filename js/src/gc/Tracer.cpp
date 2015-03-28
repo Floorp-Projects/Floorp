@@ -30,75 +30,75 @@ using namespace js::gc;
 using mozilla::DebugOnly;
 
 JS_PUBLIC_API(void)
-JS_CallUnbarrieredValueTracer(JSTracer *trc, Value *valuep, const char *name)
+JS_CallUnbarrieredValueTracer(JSTracer* trc, Value* valuep, const char* name)
 {
     MarkValueUnbarriered(trc, valuep, name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallUnbarrieredIdTracer(JSTracer *trc, jsid *idp, const char *name)
+JS_CallUnbarrieredIdTracer(JSTracer* trc, jsid* idp, const char* name)
 {
     MarkIdUnbarriered(trc, idp, name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallUnbarrieredObjectTracer(JSTracer *trc, JSObject **objp, const char *name)
+JS_CallUnbarrieredObjectTracer(JSTracer* trc, JSObject** objp, const char* name)
 {
     MarkObjectUnbarriered(trc, objp, name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallUnbarrieredStringTracer(JSTracer *trc, JSString **strp, const char *name)
+JS_CallUnbarrieredStringTracer(JSTracer* trc, JSString** strp, const char* name)
 {
     MarkStringUnbarriered(trc, strp, name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallUnbarrieredScriptTracer(JSTracer *trc, JSScript **scriptp, const char *name)
+JS_CallUnbarrieredScriptTracer(JSTracer* trc, JSScript** scriptp, const char* name)
 {
     MarkScriptUnbarriered(trc, scriptp, name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallValueTracer(JSTracer *trc, JS::Heap<JS::Value> *valuep, const char *name)
+JS_CallValueTracer(JSTracer* trc, JS::Heap<JS::Value>* valuep, const char* name)
 {
     MarkValueUnbarriered(trc, valuep->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallIdTracer(JSTracer *trc, JS::Heap<jsid> *idp, const char *name)
+JS_CallIdTracer(JSTracer* trc, JS::Heap<jsid>* idp, const char* name)
 {
     MarkIdUnbarriered(trc, idp->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallObjectTracer(JSTracer *trc, JS::Heap<JSObject *> *objp, const char *name)
+JS_CallObjectTracer(JSTracer* trc, JS::Heap<JSObject*>* objp, const char* name)
 {
     MarkObjectUnbarriered(trc, objp->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallStringTracer(JSTracer *trc, JS::Heap<JSString *> *strp, const char *name)
+JS_CallStringTracer(JSTracer* trc, JS::Heap<JSString*>* strp, const char* name)
 {
     MarkStringUnbarriered(trc, strp->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallScriptTracer(JSTracer *trc, JS::Heap<JSScript *> *scriptp, const char *name)
+JS_CallScriptTracer(JSTracer* trc, JS::Heap<JSScript*>* scriptp, const char* name)
 {
     MarkScriptUnbarriered(trc, scriptp->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallFunctionTracer(JSTracer *trc, JS::Heap<JSFunction *> *funp, const char *name)
+JS_CallFunctionTracer(JSTracer* trc, JS::Heap<JSFunction*>* funp, const char* name)
 {
     MarkObjectUnbarriered(trc, funp->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
-JS_CallTenuredObjectTracer(JSTracer *trc, JS::TenuredHeap<JSObject *> *objp, const char *name)
+JS_CallTenuredObjectTracer(JSTracer* trc, JS::TenuredHeap<JSObject*>* objp, const char* name)
 {
-    JSObject *obj = objp->getPtr();
+    JSObject* obj = objp->getPtr();
     if (!obj)
         return;
 
@@ -109,35 +109,35 @@ JS_CallTenuredObjectTracer(JSTracer *trc, JS::TenuredHeap<JSObject *> *objp, con
 }
 
 JS_PUBLIC_API(void)
-JS_TraceChildren(JSTracer *trc, void *thing, JSGCTraceKind kind)
+JS_TraceChildren(JSTracer* trc, void* thing, JSGCTraceKind kind)
 {
     js::TraceChildren(trc, thing, kind);
 }
 
 JS_PUBLIC_API(void)
-JS_TraceRuntime(JSTracer *trc)
+JS_TraceRuntime(JSTracer* trc)
 {
     AssertHeapIsIdle(trc->runtime());
     TraceRuntime(trc);
 }
 
 JS_PUBLIC_API(void)
-JS_TraceIncomingCCWs(JSTracer *trc, const JS::ZoneSet &zones)
+JS_TraceIncomingCCWs(JSTracer* trc, const JS::ZoneSet& zones)
 {
     for (js::ZonesIter z(trc->runtime(), SkipAtoms); !z.done(); z.next()) {
-        Zone *zone = z.get();
+        Zone* zone = z.get();
         if (!zone || zones.has(zone))
             continue;
 
         for (js::CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
-            JSCompartment *comp = c.get();
+            JSCompartment* comp = c.get();
             if (!comp)
                 continue;
 
             for (JSCompartment::WrapperEnum e(comp); !e.empty(); e.popFront()) {
-                const CrossCompartmentKey &key = e.front().key();
-                JSObject *obj;
-                JSScript *script;
+                const CrossCompartmentKey& key = e.front().key();
+                JSObject* obj;
+                JSScript* script;
 
                 switch (key.kind) {
                   case CrossCompartmentKey::StringWrapper:
@@ -150,7 +150,7 @@ JS_TraceIncomingCCWs(JSTracer *trc, const JS::ZoneSet &zones)
                   case CrossCompartmentKey::DebuggerObject:
                   case CrossCompartmentKey::DebuggerSource:
                   case CrossCompartmentKey::DebuggerEnvironment:
-                    obj = static_cast<JSObject *>(key.wrapped);
+                    obj = static_cast<JSObject*>(key.wrapped);
                     // Ignore CCWs whose wrapped value doesn't live in our given
                     // set of zones.
                     if (!zones.has(obj->zone()))
@@ -161,7 +161,7 @@ JS_TraceIncomingCCWs(JSTracer *trc, const JS::ZoneSet &zones)
                     break;
 
                   case CrossCompartmentKey::DebuggerScript:
-                    script = static_cast<JSScript *>(key.wrapped);
+                    script = static_cast<JSScript*>(key.wrapped);
                     // Ignore CCWs whose wrapped value doesn't live in our given
                     // set of zones.
                     if (!zones.has(script->zone()))
@@ -188,10 +188,10 @@ CountDecimalDigits(size_t num)
 }
 
 JS_PUBLIC_API(void)
-JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
+JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
                      JSGCTraceKind kind, bool details)
 {
-    const char *name = nullptr; /* silence uninitialized warning */
+    const char* name = nullptr; /* silence uninitialized warning */
     size_t n;
 
     if (bufsize == 0)
@@ -200,7 +200,7 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
     switch (kind) {
       case JSTRACE_OBJECT:
       {
-        name = static_cast<JSObject *>(thing)->getClass()->name;
+        name = static_cast<JSObject*>(thing)->getClass()->name;
         break;
       }
 
@@ -209,7 +209,7 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
         break;
 
       case JSTRACE_STRING:
-        name = ((JSString *)thing)->isDependent()
+        name = ((JSString*)thing)->isDependent()
                ? "substring"
                : "string";
         break;
@@ -255,9 +255,9 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
         switch (kind) {
           case JSTRACE_OBJECT:
           {
-            JSObject *obj = (JSObject *)thing;
+            JSObject* obj = (JSObject*)thing;
             if (obj->is<JSFunction>()) {
-                JSFunction *fun = &obj->as<JSFunction>();
+                JSFunction* fun = &obj->as<JSFunction>();
                 if (fun->displayAtom()) {
                     *buf++ = ' ';
                     bufsize--;
@@ -273,7 +273,7 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
 
           case JSTRACE_SCRIPT:
           {
-            JSScript *script = static_cast<JSScript *>(thing);
+            JSScript* script = static_cast<JSScript*>(thing);
             JS_snprintf(buf, bufsize, " %s:%" PRIuSIZE, script->filename(), script->lineno());
             break;
           }
@@ -282,7 +282,7 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
           {
             *buf++ = ' ';
             bufsize--;
-            JSString *str = (JSString *)thing;
+            JSString* str = (JSString*)thing;
 
             if (str->isLinear()) {
                 bool willFit = str->length() + strlen("<length > ") +
@@ -303,8 +303,8 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
 
           case JSTRACE_SYMBOL:
           {
-            JS::Symbol *sym = static_cast<JS::Symbol *>(thing);
-            if (JSString *desc = sym->description()) {
+            JS::Symbol* sym = static_cast<JS::Symbol*>(thing);
+            if (JSString* desc = sym->description()) {
                 if (desc->isLinear()) {
                     *buf++ = ' ';
                     bufsize--;
@@ -325,7 +325,7 @@ JS_GetTraceThingInfo(char *buf, size_t bufsize, JSTracer *trc, void *thing,
     buf[bufsize - 1] = '\0';
 }
 
-JSTracer::JSTracer(JSRuntime *rt, TracerKindTag kindTag,
+JSTracer::JSTracer(JSRuntime* rt, TracerKindTag kindTag,
                    WeakMapTraceKind weakTraceKind /* = TraceWeakMapValues */)
   : runtime_(rt)
   , tag(kindTag)
@@ -345,15 +345,15 @@ JSTracer::hasTracingDetails() const
     return debugPrinter_ || debugPrintArg_;
 }
 
-const char *
-JSTracer::tracingName(const char *fallback) const
+const char*
+JSTracer::tracingName(const char* fallback) const
 {
     MOZ_ASSERT(hasTracingDetails());
-    return debugPrinter_ ? fallback : (const char *)debugPrintArg_;
+    return debugPrinter_ ? fallback : (const char*)debugPrintArg_;
 }
 
-const char *
-JSTracer::getTracingEdgeName(char *buffer, size_t bufferSize)
+const char*
+JSTracer::getTracingEdgeName(char* buffer, size_t bufferSize)
 {
     if (debugPrinter_) {
         debugPrinter_(this, buffer, bufferSize);
@@ -361,7 +361,7 @@ JSTracer::getTracingEdgeName(char *buffer, size_t bufferSize)
     }
     if (debugPrintIndex_ != size_t(-1)) {
         JS_snprintf(buffer, bufferSize, "%s[%lu]",
-                    (const char *)debugPrintArg_,
+                    (const char*)debugPrintArg_,
                     debugPrintIndex_);
         return buffer;
     }
@@ -374,7 +374,7 @@ JSTracer::debugPrinter() const
     return debugPrinter_;
 }
 
-const void *
+const void*
 JSTracer::debugPrintArg() const
 {
     return debugPrintArg_;
@@ -394,7 +394,7 @@ JS::CallbackTracer::setTraceCallback(JSTraceCallback traceCallback)
 
 #ifdef JS_GC_ZEAL
 void
-JSTracer::setTracingLocation(void *location)
+JSTracer::setTracingLocation(void* location)
 {
     if (!realLocation_ || !location)
         realLocation_ = location;
@@ -406,10 +406,10 @@ JSTracer::unsetTracingLocation()
     realLocation_ = nullptr;
 }
 
-void **
-JSTracer::tracingLocation(void **thingp)
+void**
+JSTracer::tracingLocation(void** thingp)
 {
-    return realLocation_ ? (void **)realLocation_ : thingp;
+    return realLocation_ ? (void**)realLocation_ : thingp;
 }
 #endif
 
@@ -419,7 +419,7 @@ MarkStack::init(JSGCMode gcMode)
     setBaseCapacity(gcMode);
 
     MOZ_ASSERT(!stack_);
-    uintptr_t *newStack = js_pod_malloc<uintptr_t>(baseCapacity_);
+    uintptr_t* newStack = js_pod_malloc<uintptr_t>(baseCapacity_);
     if (!newStack)
         return false;
 
@@ -466,7 +466,7 @@ MarkStack::reset()
         return;
     }
 
-    uintptr_t *newStack = (uintptr_t *)js_realloc(stack_, sizeof(uintptr_t) * baseCapacity_);
+    uintptr_t* newStack = (uintptr_t*)js_realloc(stack_, sizeof(uintptr_t) * baseCapacity_);
     if (!newStack) {
         // If the realloc fails, just keep using the existing stack; it's
         // not ideal but better than failing.
@@ -485,7 +485,7 @@ MarkStack::enlarge(unsigned count)
 
     size_t tosIndex = position();
 
-    uintptr_t *newStack = (uintptr_t *)js_realloc(stack_, sizeof(uintptr_t) * newCapacity);
+    uintptr_t* newStack = (uintptr_t*)js_realloc(stack_, sizeof(uintptr_t) * newCapacity);
     if (!newStack)
         return false;
 
@@ -511,7 +511,7 @@ MarkStack::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
  * DoNotTraceWeakMaps: the GC is recomputing the liveness of WeakMap entries,
  * so we delay visting entries.
  */
-GCMarker::GCMarker(JSRuntime *rt)
+GCMarker::GCMarker(JSRuntime* rt)
   : JSTracer(rt, JSTracer::MarkingTracer, DoNotTraceWeakMaps),
     stack(size_t(-1)),
     color(BLACK),
@@ -564,7 +564,7 @@ GCMarker::reset()
     MOZ_ASSERT(isMarkStackEmpty());
 
     while (unmarkedArenaStackTop) {
-        ArenaHeader *aheader = unmarkedArenaStackTop;
+        ArenaHeader* aheader = unmarkedArenaStackTop;
         MOZ_ASSERT(aheader->hasDelayedMarking);
         MOZ_ASSERT(markLaterArenas);
         unmarkedArenaStackTop = aheader->getNextDelayedMarking();
@@ -578,14 +578,14 @@ GCMarker::reset()
 }
 
 void
-GCMarker::markDelayedChildren(ArenaHeader *aheader)
+GCMarker::markDelayedChildren(ArenaHeader* aheader)
 {
     if (aheader->markOverflow) {
         bool always = aheader->allocatedDuringIncremental;
         aheader->markOverflow = 0;
 
         for (ArenaCellIterUnderGC i(aheader); !i.done(); i.next()) {
-            TenuredCell *t = i.getCell();
+            TenuredCell* t = i.getCell();
             if (always || t->isMarked()) {
                 t->markIfUnmarked();
                 JS_TraceChildren(this, t, MapAllocToTraceKind(aheader->getAllocKind()));
@@ -604,9 +604,9 @@ GCMarker::markDelayedChildren(ArenaHeader *aheader)
 }
 
 bool
-GCMarker::markDelayedChildren(SliceBudget &budget)
+GCMarker::markDelayedChildren(SliceBudget& budget)
 {
-    GCRuntime &gc = runtime()->gc;
+    GCRuntime& gc = runtime()->gc;
     gcstats::AutoPhase ap(gc.stats, gc.state() == MARK, gcstats::PHASE_MARK_DELAYED);
 
     MOZ_ASSERT(unmarkedArenaStackTop);
@@ -616,7 +616,7 @@ GCMarker::markDelayedChildren(SliceBudget &budget)
          * marking of its things. For that we pop arena from the stack and
          * clear its hasDelayedMarking flag before we begin the marking.
          */
-        ArenaHeader *aheader = unmarkedArenaStackTop;
+        ArenaHeader* aheader = unmarkedArenaStackTop;
         MOZ_ASSERT(aheader->hasDelayedMarking);
         MOZ_ASSERT(markLaterArenas);
         unmarkedArenaStackTop = aheader->getNextDelayedMarking();
@@ -635,10 +635,10 @@ GCMarker::markDelayedChildren(SliceBudget &budget)
 
 #ifdef DEBUG
 void
-GCMarker::checkZone(void *p)
+GCMarker::checkZone(void* p)
 {
     MOZ_ASSERT(started);
-    DebugOnly<Cell *> cell = static_cast<Cell *>(p);
+    DebugOnly<Cell*> cell = static_cast<Cell*>(p);
     MOZ_ASSERT_IF(cell->isTenured(), cell->asTenured().zone()->isCollecting());
 }
 #endif
@@ -653,7 +653,7 @@ GCMarker::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 }
 
 void
-js::SetMarkStackLimit(JSRuntime *rt, size_t limit)
+js::SetMarkStackLimit(JSRuntime* rt, size_t limit)
 {
     rt->gc.setMarkStackLimit(limit);
 }

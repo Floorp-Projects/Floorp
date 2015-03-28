@@ -29,7 +29,7 @@ static JS::PersistentRootedObject trusted_glob;
 static JS::PersistentRootedObject trusted_fun;
 
 static bool
-CallTrusted(JSContext *cx, unsigned argc, jsval *vp)
+CallTrusted(JSContext* cx, unsigned argc, jsval* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
@@ -64,8 +64,8 @@ BEGIN_TEST(testChromeBuffer)
     {
         {
             JSAutoCompartment ac(cx, trusted_glob);
-            const char *paramName = "x";
-            const char *bytes = "return x ? 1 + trusted(x-1) : 0";
+            const char* paramName = "x";
+            const char* bytes = "return x ? 1 + trusted(x-1) : 0";
             JS::CompileOptions options(cx);
             options.setFileAndLine("", 0);
             JS::AutoObjectVector emptyScopeChain(cx);
@@ -78,8 +78,8 @@ BEGIN_TEST(testChromeBuffer)
         JS::RootedValue v(cx, JS::ObjectValue(*trusted_fun));
         CHECK(JS_WrapValue(cx, &v));
 
-        const char *paramName = "trusted";
-        const char *bytes = "try {                                      "
+        const char* paramName = "trusted";
+        const char* bytes = "try {                                      "
                             "    return untrusted(trusted);             "
                             "} catch (e) {                              "
                             "    try {                                  "
@@ -107,8 +107,8 @@ BEGIN_TEST(testChromeBuffer)
     {
         {
             JSAutoCompartment ac(cx, trusted_glob);
-            const char *paramName = "untrusted";
-            const char *bytes = "try {                                  "
+            const char* paramName = "untrusted";
+            const char* bytes = "try {                                  "
                                 "  untrusted();                         "
                                 "} catch (e) {                          "
                                 "  /*                                   "
@@ -130,8 +130,8 @@ BEGIN_TEST(testChromeBuffer)
         JS::RootedValue v(cx, JS::ObjectValue(*trusted_fun));
         CHECK(JS_WrapValue(cx, &v));
 
-        const char *paramName = "trusted";
-        const char *bytes = "try {                                      "
+        const char* paramName = "trusted";
+        const char* bytes = "try {                                      "
                             "  return untrusted(trusted);               "
                             "} catch (e) {                              "
                             "  return trusted(untrusted);               "
@@ -157,7 +157,7 @@ BEGIN_TEST(testChromeBuffer)
     {
         {
             JSAutoCompartment ac(cx, trusted_glob);
-            const char *bytes = "return 42";
+            const char* bytes = "return 42";
             JS::CompileOptions options(cx);
             options.setFileAndLine("", 0);
             JS::AutoObjectVector emptyScopeChain(cx);
@@ -170,8 +170,8 @@ BEGIN_TEST(testChromeBuffer)
         JS::RootedFunction fun(cx, JS_NewFunction(cx, CallTrusted, 0, 0, "callTrusted"));
         JS::RootedObject callTrusted(cx, JS_GetFunctionObject(fun));
 
-        const char *paramName = "f";
-        const char *bytes = "try {                                      "
+        const char* paramName = "f";
+        const char* bytes = "try {                                      "
                             "  return untrusted(trusted);               "
                             "} catch (e) {                              "
                             "  return f();                              "

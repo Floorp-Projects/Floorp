@@ -496,7 +496,7 @@ JSObject* XPCWrappedNativeTearOff::GetJSObjectPreserveColor() const
 inline
 JSObject* XPCWrappedNativeTearOff::GetJSObject()
 {
-    JSObject *obj = GetJSObjectPreserveColor();
+    JSObject* obj = GetJSObjectPreserveColor();
     if (obj) {
       JS::ExposeObjectToActiveJS(obj);
     }
@@ -511,7 +511,7 @@ void XPCWrappedNativeTearOff::SetJSObject(JSObject*  JSObj)
 }
 
 inline
-void XPCWrappedNativeTearOff::JSObjectMoved(JSObject *obj, const JSObject *old)
+void XPCWrappedNativeTearOff::JSObjectMoved(JSObject* obj, const JSObject* old)
 {
     MOZ_ASSERT(!IsMarked());
     MOZ_ASSERT(mJSObject == old);
@@ -565,9 +565,9 @@ xpc_ForcePropertyResolve(JSContext* cx, JS::HandleObject obj, jsid idArg)
 }
 
 inline jsid
-GetRTIdByIndex(JSContext *cx, unsigned index)
+GetRTIdByIndex(JSContext* cx, unsigned index)
 {
-  XPCJSRuntime *rt = nsXPConnect::XPConnect()->GetRuntime();
+  XPCJSRuntime* rt = nsXPConnect::XPConnect()->GetRuntime();
   return rt->GetStringID(index);
 }
 

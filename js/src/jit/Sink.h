@@ -15,7 +15,7 @@ class MIRGenerator;
 class MIRGraph;
 
 bool
-Sink(MIRGenerator *mir, MIRGraph &graph);
+Sink(MIRGenerator* mir, MIRGraph& graph);
 
 } // namespace jit
 } // namespace js

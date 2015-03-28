@@ -40,17 +40,17 @@ size_t ExecutableAllocator::determinePageSize()
     return getpagesize();
 }
 
-void *
-js::jit::AllocateExecutableMemory(void *addr, size_t bytes, unsigned permissions, const char *tag,
+void*
+js::jit::AllocateExecutableMemory(void* addr, size_t bytes, unsigned permissions, const char* tag,
                                   size_t pageSize)
 {
     MOZ_ASSERT(bytes % pageSize == 0);
-    void *p = MozTaggedAnonymousMmap(addr, bytes, permissions, MAP_PRIVATE | MAP_ANON, -1, 0, tag);
+    void* p = MozTaggedAnonymousMmap(addr, bytes, permissions, MAP_PRIVATE | MAP_ANON, -1, 0, tag);
     return p == MAP_FAILED ? nullptr : p;
 }
 
 void
-js::jit::DeallocateExecutableMemory(void *addr, size_t bytes, size_t pageSize)
+js::jit::DeallocateExecutableMemory(void* addr, size_t bytes, size_t pageSize)
 {
     MOZ_ASSERT(bytes % pageSize == 0);
     mozilla::DebugOnly<int> result = munmap(addr, bytes);
@@ -59,7 +59,7 @@ js::jit::DeallocateExecutableMemory(void *addr, size_t bytes, size_t pageSize)
 
 ExecutablePool::Allocation ExecutableAllocator::systemAlloc(size_t n)
 {
-    void *allocation = AllocateExecutableMemory(nullptr, n, INITIAL_PROTECTION_FLAGS,
+    void* allocation = AllocateExecutableMemory(nullptr, n, INITIAL_PROTECTION_FLAGS,
                                                 "js-jit-code", pageSize);
     ExecutablePool::Allocation alloc = { reinterpret_cast<char*>(allocation), n };
     return alloc;
