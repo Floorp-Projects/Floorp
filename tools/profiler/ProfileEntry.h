@@ -98,7 +98,7 @@ class ProfileBuffer {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ProfileBuffer)
 
-  explicit ProfileBuffer(int aEntrySize, uint32_t aGeneration = 0);
+  explicit ProfileBuffer(int aEntrySize);
 
   void addTag(const ProfileEntry& aTag);
   void IterateTagsForThread(IterateTagsCallback aCallback, int aThreadId);
