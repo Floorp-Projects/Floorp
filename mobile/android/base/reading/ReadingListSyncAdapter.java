@@ -7,9 +7,11 @@ package org.mozilla.gecko.reading;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
-import java.util.concurrent.CountDownLatch;
+import java.util.EnumSet;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import org.mozilla.gecko.background.ReadingListConstants;
@@ -18,9 +20,12 @@ import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
+import org.mozilla.gecko.fxa.FirefoxAccounts;
+import org.mozilla.gecko.fxa.FirefoxAccounts.SyncHint;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.sync.FxAccountSyncDelegate;
+import org.mozilla.gecko.fxa.sync.FxAccountSyncDelegate.Result;
 import org.mozilla.gecko.sync.BackoffHandler;
 import org.mozilla.gecko.sync.PrefsBackoffHandler;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
@@ -43,6 +48,11 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
   private static final String LOG_TAG = ReadingListSyncAdapter.class.getSimpleName();
   private static final long TIMEOUT_SECONDS = 60;
   protected final ExecutorService executor;
+
+  // Don't sync again if we successfully synced within this duration.
+  private static final int AFTER_SUCCESS_SYNC_DELAY_SECONDS = 5 * 60; // 5 minutes.
+  // Don't sync again if we unsuccessfully synced within this duration.
+  private static final int AFTER_ERROR_SYNC_DELAY_SECONDS = 15 * 60; // 15 minutes.
 
   public ReadingListSyncAdapter(Context context, boolean autoInitialize) {
     super(context, autoInitialize);
@@ -156,6 +166,9 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
     Logger.setThreadLogTag(ReadingListConstants.GLOBAL_LOG_TAG);
     Logger.resetLogging();
 
+    final EnumSet<SyncHint> syncHints = FirefoxAccounts.getHintsToSyncFromBundle(extras);
+    FirefoxAccounts.logSyncHints(syncHints);
+
     final Context context = getContext();
     final AndroidFxAccount fxAccount = new AndroidFxAccount(context, account);
 
@@ -180,6 +193,10 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
       return;
     }
 
+    Result result = Result.Error;
+    final BlockingQueue<Result> latch = new LinkedBlockingQueue<Result>(1);
+    final FxAccountSyncDelegate syncDelegate = new FxAccountSyncDelegate(latch, syncResult);
+
     // Allow testing against stage.
     final String endpointString;
     if (usingStageAuthServer) {
@@ -188,18 +205,16 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
       endpointString = ReadingListConstants.DEFAULT_PROD_ENDPOINT;
     }
 
-    Logger.info(LOG_TAG, "Syncing reading list against " + endpointString);
+    Logger.info(LOG_TAG, "Syncing reading list against endpoint: " + endpointString);
     final URI endpointURI;
     try {
       endpointURI = new URI(endpointString);
     } catch (URISyntaxException e) {
       // Should never happen.
       Logger.error(LOG_TAG, "Unexpected malformed URI for reading list service: " + endpointString);
+      syncDelegate.handleError(e);
       return;
     }
-
-    final CountDownLatch latch = new CountDownLatch(1);
-    final FxAccountSyncDelegate syncDelegate = new FxAccountSyncDelegate(latch, syncResult);
 
     final AccountManager accountManager = AccountManager.get(context);
     // If we have an auth failure that requires user intervention, FxA will show system
@@ -209,12 +224,20 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
     final boolean notifyAuthFailure = true;
     try {
       final SharedPreferences sharedPrefs = fxAccount.getReadingListPrefs();
-      final BackoffHandler storageBackoffHandler = new PrefsBackoffHandler(sharedPrefs, "storage");
 
-      // TODO: allow overriding based on flags.
-      final long delayMilliseconds = storageBackoffHandler.delayMilliseconds();
-      if (delayMilliseconds > 0) {
-        Logger.warn(LOG_TAG, "Not syncing: storage requested additional backoff: " + delayMilliseconds + " milliseconds.");
+      final BackoffHandler storageBackoffHandler = new PrefsBackoffHandler(sharedPrefs, "storage");
+      final long storageBackoffDelayMilliseconds = storageBackoffHandler.delayMilliseconds();
+      if (!syncHints.contains(SyncHint.SCHEDULE_NOW) && !syncHints.contains(SyncHint.IGNORE_REMOTE_SERVER_BACKOFF) && storageBackoffDelayMilliseconds > 0) {
+        Logger.warn(LOG_TAG, "Not syncing: storage requested additional backoff: " + storageBackoffDelayMilliseconds + " milliseconds.");
+        syncDelegate.rejectSync();
+        return;
+      }
+
+      final BackoffHandler rateLimitBackoffHandler = new PrefsBackoffHandler(sharedPrefs, "rate");
+      final long rateLimitBackoffDelayMilliseconds = rateLimitBackoffHandler.delayMilliseconds();
+      if (!syncHints.contains(SyncHint.SCHEDULE_NOW) && !syncHints.contains(SyncHint.IGNORE_LOCAL_RATE_LIMIT) && rateLimitBackoffDelayMilliseconds > 0) {
+        Logger.warn(LOG_TAG, "Not syncing: local rate limiting for another: " + rateLimitBackoffDelayMilliseconds + " milliseconds.");
+        syncDelegate.rejectSync();
         return;
       }
 
@@ -227,14 +250,27 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
       BaseResource.addHttpResponseObserver(observer);
       try {
         syncWithAuthorization(context, endpointURI, syncResult, syncDelegate, authToken, sharedPrefs, extras);
-        latch.await(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        result = latch.poll(TIMEOUT_SECONDS, TimeUnit.SECONDS);
       } finally {
-        long backoffInSeconds = observer.largestBackoffObservedInSeconds.get();
         BaseResource.removeHttpResponseObserver(observer);
+        long backoffInSeconds = observer.largestBackoffObservedInSeconds.get();
         if (backoffInSeconds > 0) {
-          Logger.warn(LOG_TAG, "Observed " + backoffInSeconds + " second backoff request.");
+          Logger.warn(LOG_TAG, "Observed " + backoffInSeconds + "-second backoff request.");
           storageBackoffHandler.extendEarliestNextRequest(System.currentTimeMillis() + 1000 * backoffInSeconds);
         }
+      }
+
+      switch (result) {
+      case Success:
+        requestPeriodicSync(account, ReadingListSyncAdapter.AFTER_SUCCESS_SYNC_DELAY_SECONDS);
+        break;
+      case Error:
+        requestPeriodicSync(account, ReadingListSyncAdapter.AFTER_ERROR_SYNC_DELAY_SECONDS);
+        break;
+      case Postponed:
+        break;
+      case Rejected:
+        break;
       }
 
       Logger.info(LOG_TAG, "Reading list sync done.");
@@ -256,7 +292,6 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
      * * Server URI lookup.
      * * Syncing.
      * * Error handling.
-     * * Sync scheduling.
      * * Forcing syncs/interactive use.
      */
   }
@@ -265,5 +300,16 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
     final ContentResolver contentResolver = context.getContentResolver();
     final ContentProviderClient client = contentResolver.acquireContentProviderClient(ReadingListItems.CONTENT_URI);
     return client;
+  }
+
+  /**
+   * Updates the existing system periodic sync interval to the specified duration.
+   *
+   * @param intervalSeconds the requested period, which Android will vary by up to 4%.
+   */
+  protected void requestPeriodicSync(final Account account, final long intervalSeconds) {
+    final String authority = BrowserContract.AUTHORITY;
+    Logger.info(LOG_TAG, "Scheduling periodic sync for " + intervalSeconds + ".");
+    ContentResolver.addPeriodicSync(account, authority, Bundle.EMPTY, intervalSeconds);
   }
 }
