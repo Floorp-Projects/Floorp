@@ -1248,10 +1248,10 @@ class ABIArg
 // Get the set of registers which should be saved by a block of code which
 // clobbers all registers besides |unused|, but does not clobber floating point
 // registers.
-inline GeneralRegisterSet
-SavedNonVolatileRegisters(GeneralRegisterSet unused)
+inline LiveGeneralRegisterSet
+SavedNonVolatileRegisters(AllocatableGeneralRegisterSet unused)
 {
-    GeneralRegisterSet result;
+    LiveGeneralRegisterSet result;
 
     for (GeneralRegisterIterator iter(GeneralRegisterSet::NonVolatile()); iter.more(); iter++) {
         Register reg = *iter;

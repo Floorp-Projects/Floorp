@@ -645,18 +645,10 @@ LiveRangeAllocator<VREG, forLSRA>::buildLivenessInfo()
         for (LInstructionReverseIterator ins = block->rbegin(); ins != block->rend(); ins++) {
             // Calls may clobber registers, so force a spill and reload around the callsite.
             if (ins->isCall()) {
-                for (AnyRegisterIterator iter(allRegisters_); iter.more(); iter++) {
+                for (AnyRegisterIterator iter(allRegisters_.asLiveSet()); iter.more(); iter++) {
                     if (forLSRA) {
-                        AnyRegister reg(*iter);
-                        // AnyRegisterIterator only iterates every allocatable
-                        // register once, and skip all aliased registers. Thus,
-                        // we have to record that each typed-variant/alias of
-                        // the same register has to be spilled if it got
-                        // allocated.
-                        for (size_t i = 0; i < reg.numAliased(); i++) {
-                            if (!addFixedRangeAtHead(reg.aliased(i), inputOf(*ins), outputOf(*ins)))
-                                return false;
-                        }
+                        if (!addFixedRangeAtHead(*iter, inputOf(*ins), outputOf(*ins)))
+                            return false;
                     } else {
                         bool found = false;
 

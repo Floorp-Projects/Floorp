@@ -47,8 +47,8 @@ BEGIN_TEST(testJitRegisterSet_GPR)
 {
     BEGIN_INDEX_WALK(Registers::Total)
 
-    LiveSet<GeneralRegisterSet> liveRegs;
-    Allocator<GeneralRegisterSet> pool(GeneralRegisterSet::All());
+    LiveGeneralRegisterSet liveRegs;
+    AllocatableGeneralRegisterSet pool(GeneralRegisterSet::All());
     CHECK(liveRegs.empty());
     CHECK(pool.set() == GeneralRegisterSet::All());
 
@@ -94,8 +94,8 @@ BEGIN_TEST(testJitRegisterSet_FPU)
 {
     BEGIN_INDEX_WALK(FloatRegisters::Total)
 
-    LiveSet<FloatRegisterSet> liveRegs;
-    Allocator<FloatRegisterSet> pool(FloatRegisterSet::All());
+    LiveFloatRegisterSet liveRegs;
+    AllocatableFloatRegisterSet pool(FloatRegisterSet::All());
     CHECK(liveRegs.empty());
     CHECK(pool.set() == FloatRegisterSet::All());
 
