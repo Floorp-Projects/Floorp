@@ -2573,6 +2573,7 @@ nsNativeThemeWin::WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType,
     if (aAttribute == nsGkAtoms::disabled ||
         aAttribute == nsGkAtoms::checked ||
         aAttribute == nsGkAtoms::selected ||
+        aAttribute == nsGkAtoms::visuallyselected ||
         aAttribute == nsGkAtoms::readonly ||
         aAttribute == nsGkAtoms::open ||
         aAttribute == nsGkAtoms::menuactive ||

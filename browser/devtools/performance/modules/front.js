@@ -297,8 +297,10 @@ PerformanceFront.prototype = {
       return profilerStatus.currentTime;
     }
 
-    // Extend the profiler options so that protocol.js doesn't modify the original.
-    let profilerOptions = extend({}, this._customProfilerOptions);
+    // If this._customProfilerOptions is defined, use those to pass in
+    // to the profiler actor. The profiler actor handles all the defaults
+    // now, so this should only be used for tests.
+    let profilerOptions = this._customProfilerOptions || {};
     yield this._request("profiler", "startProfiler", profilerOptions);
 
     this.emit("profiler-activated");
@@ -399,19 +401,6 @@ PerformanceFront.prototype = {
 
     deferred.resolve();
   }),
-
-  /**
-   * Overrides the options sent to the built-in profiler module when activating,
-   * such as the maximum entries count, the sampling interval etc.
-   *
-   * Used in tests and for older backend implementations.
-   */
-  _customProfilerOptions: {
-    entries: 1000000,
-    interval: 1,
-    features: ["js"],
-    threadFilters: ["GeckoMain"]
-  },
 
   /**
    * Returns an object indicating if mock actors are being used or not.

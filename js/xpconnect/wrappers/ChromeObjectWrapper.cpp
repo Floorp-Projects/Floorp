@@ -30,13 +30,12 @@ ChromeObjectWrapper::defineProperty(JSContext *cx, HandleObject wrapper,
 }
 
 bool
-ChromeObjectWrapper::set(JSContext *cx, HandleObject wrapper,
-                         HandleObject receiver, HandleId id,
-                         MutableHandleValue vp, ObjectOpResult &result) const
+ChromeObjectWrapper::set(JSContext *cx, HandleObject wrapper, HandleId id, HandleValue v,
+                         HandleValue receiver, ObjectOpResult &result) const
 {
-    if (!AccessCheck::checkPassToPrivilegedCode(cx, wrapper, vp))
+    if (!AccessCheck::checkPassToPrivilegedCode(cx, wrapper, v))
         return false;
-    return ChromeObjectWrapperBase::set(cx, wrapper, receiver, id, vp, result);
+    return ChromeObjectWrapperBase::set(cx, wrapper, id, v, receiver, result);
 }
 
 }

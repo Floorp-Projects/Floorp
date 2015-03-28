@@ -1631,5 +1631,70 @@ DocAccessibleChild::RecvBounds(const uint64_t& aID,
   return false;
 }
 
+bool
+DocAccessibleChild::RecvLanguage(const uint64_t& aID,
+                                 nsString* aLocale)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc) {
+    acc->Language(*aLocale);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvDocType(const uint64_t& aID,
+                                nsString* aType)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc && acc->IsDoc()) {
+    acc->AsDoc()->DocType(*aType);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvURL(const uint64_t& aID,
+                            nsString* aURL)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc && acc->IsDoc()) {
+    acc->AsDoc()->URL(*aURL);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvMimeType(const uint64_t& aID,
+                                 nsString* aMime)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc && acc->IsDoc()) {
+    acc->AsDoc()->MimeType(*aMime);
+  }
+
+  return true;
+}
+
+bool
+DocAccessibleChild::RecvURLDocTypeMimeType(const uint64_t& aID,
+                                           nsString* aURL,
+                                           nsString* aDocType,
+                                           nsString* aMimeType)
+{
+  Accessible* acc = IdToAccessible(aID);
+  if (acc && acc->IsDoc()) {
+    DocAccessible* doc = acc->AsDoc();
+    doc->URL(*aURL);
+    doc->DocType(*aDocType);
+    doc->MimeType(*aMimeType);
+  }
+
+  return true;
+}
+
 }
 }

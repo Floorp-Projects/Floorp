@@ -1550,6 +1550,20 @@ function JSTermHelpers(aOwner)
   };
 
   /**
+   * Returns the result of the last console input evaluation
+   *
+   * @return object|undefined
+   * Returns last console evaluation or undefined
+   */
+  Object.defineProperty(aOwner.sandbox, "$_", {
+    get: function() {
+      return aOwner.consoleActor.getLastConsoleInputEvaluation();
+    },
+    enumerable: true,
+    configurable: true
+  });
+
+  /**
    * Runs an xPath query and returns all matched nodes.
    *
    * @param string aXPath

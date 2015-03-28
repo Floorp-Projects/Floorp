@@ -10,7 +10,7 @@ xul|tabs {
   padding-left: 0;
 }
 
-xul|tab[selected] {
+xul|tab[visuallyselected] {
   text-shadow: none;
 }
 

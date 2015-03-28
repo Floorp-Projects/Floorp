@@ -922,8 +922,8 @@ ScriptedDirectProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject 
 
 // ES6 draft rev 32 (2015 Feb 2) 9.5.9 Proxy.[[Set]](P, V, Receiver)
 bool
-ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
-                                HandleId id, MutableHandleValue vp, ObjectOpResult &result) const
+ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
+                                HandleValue receiver, ObjectOpResult &result) const
 {
     // step 2-3 (Steps 1 and 4 are irrelevant assertions.)
     RootedObject handler(cx, GetDirectProxyHandlerObject(proxy));
@@ -940,7 +940,7 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
 
     // step 8
     if (trap.isUndefined())
-        return SetProperty(cx, target, receiver, id, vp, result);
+        return SetProperty(cx, target, id, v, receiver, result);
 
     // step 9-10
     RootedValue value(cx);
@@ -949,8 +949,8 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
     Value argv[] = {
         ObjectOrNullValue(target),
         value,
-        vp.get(),
-        ObjectValue(*receiver)
+        v.get(),
+        receiver.get()
     };
     RootedValue trapResult(cx);
     if (!Invoke(cx, ObjectValue(*handler), trap, ArrayLength(argv), argv, &trapResult))
@@ -969,7 +969,7 @@ ScriptedDirectProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject 
     if (desc.object()) {
         if (desc.isDataDescriptor() && !desc.configurable() && !desc.writable()) {
             bool same;
-            if (!SameValue(cx, vp, desc.value(), &same))
+            if (!SameValue(cx, v, desc.value(), &same))
                 return false;
             if (!same) {
                 JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_SET_NW_NC);

@@ -4,7 +4,7 @@
 
 %include ../../../shared/in-content/common.inc.css
 
-xul|tab[selected] {
+xul|tab[visuallyselected] {
   /* Override styles for tab[selected] from
      toolkit/themes/linux/global/tabbox.css */
   margin-bottom: 0;

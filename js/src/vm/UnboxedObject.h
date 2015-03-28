@@ -201,8 +201,8 @@ class UnboxedPlainObject : public JSObject
     static bool obj_getProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
                                 HandleId id, MutableHandleValue vp);
 
-    static bool obj_setProperty(JSContext *cx, HandleObject obj, HandleObject receiver,
-                                HandleId id, MutableHandleValue vp, ObjectOpResult &result);
+    static bool obj_setProperty(JSContext *cx, HandleObject obj, HandleId id, HandleValue v,
+                                HandleValue receiver, ObjectOpResult &result);
 
     static bool obj_getOwnPropertyDescriptor(JSContext *cx, HandleObject obj, HandleId id,
                                              MutableHandle<JSPropertyDescriptor> desc);

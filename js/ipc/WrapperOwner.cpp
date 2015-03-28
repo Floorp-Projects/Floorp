@@ -110,9 +110,8 @@ class CPOWProxyHandler : public BaseProxyHandler
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const override;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,
                      HandleId id, MutableHandleValue vp) const override;
-    virtual bool set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
-                     JS::HandleId id, JS::MutableHandleValue vp,
-                     JS::ObjectOpResult &result) const override;
+    virtual bool set(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, JS::HandleValue v,
+                     JS::HandleValue receiver, JS::ObjectOpResult &result) const override;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) const override;
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const override;
 
@@ -517,41 +516,37 @@ WrapperOwner::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
 }
 
 bool
-CPOWProxyHandler::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
-                      JS::HandleId id, JS::MutableHandleValue vp, JS::ObjectOpResult &result) const
+CPOWProxyHandler::set(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, JS::HandleValue v,
+                      JS::HandleValue receiver, JS::ObjectOpResult &result) const
 {
-    FORWARD(set, (cx, proxy, receiver, id, vp, result));
+    FORWARD(set, (cx, proxy, id, v, receiver, result));
 }
 
 bool
-WrapperOwner::set(JSContext *cx, JS::HandleObject proxy, JS::HandleObject receiver,
-                  JS::HandleId id, JS::MutableHandleValue vp, JS::ObjectOpResult &result)
+WrapperOwner::set(JSContext *cx, JS::HandleObject proxy, JS::HandleId id, JS::HandleValue v,
+                  JS::HandleValue receiver, JS::ObjectOpResult &result)
 {
     ObjectId objId = idOf(proxy);
-
-    ObjectVariant receiverVar;
-    if (!toObjectVariant(cx, receiver, &receiverVar))
-        return false;
 
     JSIDVariant idVar;
     if (!toJSIDVariant(cx, id, &idVar))
         return false;
 
     JSVariant val;
-    if (!toVariant(cx, vp, &val))
+    if (!toVariant(cx, v, &val))
+        return false;
+
+    JSVariant receiverVar;
+    if (!toVariant(cx, receiver, &receiverVar))
         return false;
 
     ReturnStatus status;
-    JSVariant resultValue;
-    if (!SendSet(objId, receiverVar, idVar, val, &status, &resultValue))
+    if (!SendSet(objId, idVar, val, receiverVar, &status))
         return ipcfail(cx);
 
     LOG_STACK();
 
-    if (!ok(cx, status, result))
-        return false;
-
-    return fromVariant(cx, resultValue, vp);
+    return ok(cx, status, result);
 }
 
 bool

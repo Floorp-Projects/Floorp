@@ -710,6 +710,8 @@ MConstant::MConstant(const js::Value &vp, CompilerConstraintList *constraints)
         setResultTypeSet(MakeUnknownTypeSet());
     }
 
+    MOZ_ASSERT_IF(vp.isString(), vp.toString()->isAtom());
+
     setMovable();
 }
 

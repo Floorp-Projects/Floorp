@@ -733,12 +733,12 @@ xpc::SandboxProxyHandler::get(JSContext *cx, JS::Handle<JSObject*> proxy,
 
 bool
 xpc::SandboxProxyHandler::set(JSContext *cx, JS::Handle<JSObject*> proxy,
-                              JS::Handle<JSObject*> receiver,
                               JS::Handle<jsid> id,
-                              JS::MutableHandle<Value> vp,
+                              JS::Handle<Value> v,
+                              JS::Handle<Value> receiver,
                               JS::ObjectOpResult &result) const
 {
-    return BaseProxyHandler::set(cx, proxy, receiver, id, vp, result);
+    return BaseProxyHandler::set(cx, proxy, id, v, receiver, result);
 }
 
 bool

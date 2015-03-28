@@ -234,6 +234,15 @@ class MacroAssemblerMIPS : public Assembler
         ma_li(ScratchRegister, imm);
         ma_b(lhs, ScratchRegister, l, c, jumpKind);
     }
+    void ma_b(Register lhs, ImmWord imm, Label *l, Condition c, JumpKind jumpKind = LongJump)
+    {
+        ma_b(lhs, Imm32(uint32_t(imm.value)), l, c, jumpKind);
+    }
+    void ma_b(Address addr, ImmWord imm, Label *l, Condition c, JumpKind jumpKind = LongJump)
+    {
+        ma_b(addr, Imm32(uint32_t(imm.value)), l, c, jumpKind);
+    }
+
     void ma_b(Register lhs, Address addr, Label *l, Condition c, JumpKind jumpKind = LongJump);
     void ma_b(Address addr, Imm32 imm, Label *l, Condition c, JumpKind jumpKind = LongJump);
     void ma_b(Address addr, ImmGCPtr imm, Label *l, Condition c, JumpKind jumpKind = LongJump);
