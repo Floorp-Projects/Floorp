@@ -165,4 +165,18 @@ public class MenuItemActionView extends LinearLayout
             listener.onClick(view);
         }
     }
+
+    /**
+     * Update the styles if this view is being used in the context menus.
+     *
+     * Ideally, we just use different layout files and styles to set this, but
+     * MenuItemActionView is too integrated into GeckoActionProvider to provide
+     * an easy separation so instead I provide this hack. I'm sorry.
+     */
+    public void initContextMenuStyles() {
+        final int defaultContextMenuPadding = getContext().getResources().getDimensionPixelOffset(
+                R.dimen.context_menu_item_horizontal_padding);
+        mMenuItem.setPadding(defaultContextMenuPadding, getPaddingTop(),
+                defaultContextMenuPadding, getPaddingBottom());
+    }
 }
