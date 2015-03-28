@@ -159,7 +159,7 @@ input[type=button] {
 .newtab-cell {
   display: -moz-box;
   height: 180px;
-  margin: 20px 10px 85px;
+  margin: 20px 10px 68px;
   width: 290px;
 }
 
@@ -226,7 +226,7 @@ input[type=button] {
 }
 
 .newtab-suggested-bounds {
-  max-height: 51px; /* 51 / 17 = 3 lines maximum */
+  max-height: 34px; /* 34 / 17 = 2 lines maximum */
 }
 
 .newtab-title {
