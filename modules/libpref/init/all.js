@@ -2300,11 +2300,7 @@ pref("layout.frame_rate.precise", false);
 pref("layout.spammy_warnings.enabled", true);
 
 // Should we fragment floats inside CSS column layout?
-#ifdef RELEASE_BUILD
-pref("layout.float-fragments-inside-column.enabled", false);
-#else
 pref("layout.float-fragments-inside-column.enabled", true);
-#endif
 
 // Is support for the Web Animations API enabled?
 #ifdef RELEASE_BUILD
