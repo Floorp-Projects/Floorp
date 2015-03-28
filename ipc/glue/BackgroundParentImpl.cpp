@@ -364,14 +364,13 @@ BackgroundParentImpl::DeallocPBroadcastChannelParent(
 media::PMediaParent*
 BackgroundParentImpl::AllocPMediaParent()
 {
-  return media::CreateParent();
+  return media::AllocPMediaParent();
 }
 
 bool
 BackgroundParentImpl::DeallocPMediaParent(media::PMediaParent *aActor)
 {
-  delete aActor;
-  return true;
+  return media::DeallocPMediaParent(aActor);
 }
 
 namespace {
