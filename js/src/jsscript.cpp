@@ -3434,7 +3434,7 @@ JSScript::markChildren(JSTracer *trc)
 
     if (hasConsts()) {
         ConstArray *constarray = consts();
-        TraceRange(trc, constarray->length, constarray->vector, "consts");
+        MarkValueRange(trc, constarray->length, constarray->vector, "consts");
     }
 
     if (sourceObject()) {

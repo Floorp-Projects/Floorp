@@ -1361,7 +1361,7 @@ inline void
 Shape::markChildren(JSTracer *trc)
 {
     MarkBaseShape(trc, &base_, "base");
-    TraceEdge(trc, &propidRef(), "propid");
+    gc::MarkId(trc, &propidRef(), "propid");
     if (parent)
         MarkShape(trc, &parent, "parent");
 

@@ -345,14 +345,14 @@ InterpreterFrame::mark(JSTracer *trc)
     if (trc->isMarkingTracer())
         script()->compartment()->zone()->active = true;
     if (hasReturnValue())
-        TraceManuallyBarrieredEdge(trc, &rval_, "rval");
+        gc::MarkValueUnbarriered(trc, &rval_, "rval");
 }
 
 void
 InterpreterFrame::markValues(JSTracer *trc, unsigned start, unsigned end)
 {
     if (start < end)
-        TraceRootRange(trc, end - start, slots() + start, "vm_stack");
+        gc::MarkValueRootRange(trc, end - start, slots() + start, "vm_stack");
 }
 
 void
@@ -396,10 +396,10 @@ InterpreterFrame::markValues(JSTracer *trc, Value *sp, jsbytecode *pc)
     if (hasArgs()) {
         // Mark callee, |this| and arguments.
         unsigned argc = Max(numActualArgs(), numFormalArgs());
-        TraceRootRange(trc, argc + 2, argv_ - 2, "fp argv");
+        gc::MarkValueRootRange(trc, argc + 2, argv_ - 2, "fp argv");
     } else {
         // Mark callee and |this|
-        TraceRootRange(trc, 2, ((Value *)this) - 2, "stack callee and this");
+        gc::MarkValueRootRange(trc, 2, ((Value *)this) - 2, "stack callee and this");
     }
 }
 
