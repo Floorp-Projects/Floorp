@@ -684,6 +684,14 @@ public:
     nsresult rv = mStorageFile ? mConnection->initialize(mStorageFile)
                                : mConnection->initialize();
     if (NS_FAILED(rv)) {
+      nsCOMPtr<nsIRunnable> closeRunnable =
+        NS_NewRunnableMethodWithArg<mozIStorageCompletionCallback*>(
+          mConnection.get(),
+          &Connection::AsyncClose,
+          nullptr);
+      MOZ_ASSERT(closeRunnable);
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(closeRunnable)));
+
       return DispatchResult(rv, nullptr);
     }
 
