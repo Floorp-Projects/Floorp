@@ -7,6 +7,7 @@
 
 #include "nsAutoPtr.h"
 #include "nsIIccProvider.h"
+#include "nsIIccService.h"
 
 namespace mozilla {
 namespace dom {
@@ -42,9 +43,12 @@ private:
   // IccListener, this will release the reference and break the cycle.
   nsRefPtr<Icc> mIcc;
   nsRefPtr<IccManager> mIccManager;
-  // mProvider is a xpcom service and will be released at shutdown, so it
+  // mProvider is a xpcom service and will be released at Shutdown(), so it
   // doesn't need to be cycle collected.
   nsCOMPtr<nsIIccProvider> mProvider;
+  // mHandler will be released at Shutdown(), there is no need to join cycle
+  // collection.
+  nsCOMPtr<nsIIcc> mHandler;
 };
 
 } // namespace dom

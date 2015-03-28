@@ -20,6 +20,8 @@ IccListener::IccListener(IccManager* aIccManager, uint32_t aClientId)
 {
   MOZ_ASSERT(mIccManager);
 
+  // TODO: Bug 1114938, Refactor STK in MozIcc.webidl with IPDL.
+  //       Remove the registration to IccProvider.
   mProvider = do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
 
   if (!mProvider) {
@@ -27,17 +29,34 @@ IccListener::IccListener(IccManager* aIccManager, uint32_t aClientId)
     return;
   }
 
+  nsCOMPtr<nsIIccService> iccService = do_GetService(ICC_SERVICE_CONTRACTID);
+
+  if (!iccService) {
+    NS_WARNING("Could not acquire nsIIccService!");
+    return;
+  }
+
+  iccService->GetIccByServiceId(mClientId, getter_AddRefs(mHandler));
+  if (!mHandler) {
+    NS_WARNING("Could not acquire nsIIcc!");
+    return;
+  }
+
   nsCOMPtr<nsIIccInfo> iccInfo;
-  mProvider->GetIccInfo(mClientId, getter_AddRefs(iccInfo));
+  mHandler->GetIccInfo(getter_AddRefs(iccInfo));
   if (iccInfo) {
     nsString iccId;
     iccInfo->GetIccid(iccId);
     if (!iccId.IsEmpty()) {
-      mIcc = new Icc(mIccManager->GetOwner(), mClientId, iccInfo);
+      mIcc = new Icc(mIccManager->GetOwner(), mClientId, mHandler, iccInfo);
     }
   }
 
-  DebugOnly<nsresult> rv = mProvider->RegisterIccMsg(mClientId, this);
+  DebugOnly<nsresult> rv = mHandler->RegisterListener(this);
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+                   "Failed registering icc listener with Icc Handler");
+
+  rv = mProvider->RegisterIccMsg(mClientId, this);
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
                    "Failed registering icc messages with provider");
 }
@@ -50,9 +69,16 @@ IccListener::~IccListener()
 void
 IccListener::Shutdown()
 {
+  // TODO: Bug 1114938, Refactor STK in MozIcc.webidl with IPDL.
+  //       Remove the unregistration to IccProvider.
   if (mProvider) {
     mProvider->UnregisterIccMsg(mClientId, this);
     mProvider = nullptr;
+  }
+
+  if (mHandler) {
+    mHandler->UnregisterListener(this);
+    mHandler = nullptr;
   }
 
   if (mIcc) {
@@ -98,8 +124,12 @@ IccListener::NotifyCardStateChanged()
 NS_IMETHODIMP
 IccListener::NotifyIccInfoChanged()
 {
+  if (!mHandler) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIIccInfo> iccInfo;
-  mProvider->GetIccInfo(mClientId, getter_AddRefs(iccInfo));
+  mHandler->GetIccInfo(getter_AddRefs(iccInfo));
 
   // Create/delete icc object based on current iccInfo.
   // 1. If the mIcc is nullptr and iccInfo has valid data, create icc object and
@@ -111,7 +141,7 @@ IccListener::NotifyIccInfoChanged()
       nsString iccId;
       iccInfo->GetIccid(iccId);
       if (!iccId.IsEmpty()) {
-        mIcc = new Icc(mIccManager->GetOwner(), mClientId, iccInfo);
+        mIcc = new Icc(mIccManager->GetOwner(), mClientId, mHandler, iccInfo);
         mIccManager->NotifyIccAdd(iccId);
         mIcc->NotifyEvent(NS_LITERAL_STRING("iccinfochange"));
       }

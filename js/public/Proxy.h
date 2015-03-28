@@ -295,8 +295,8 @@ class JS_FRIEND_API(BaseProxyHandler)
     virtual bool has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,
                      HandleId id, MutableHandleValue vp) const;
-    virtual bool set(JSContext *cx, HandleObject proxy, HandleObject receiver,
-                     HandleId id, MutableHandleValue vp, ObjectOpResult &result) const;
+    virtual bool set(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
+                     HandleValue receiver, ObjectOpResult &result) const;
 
     /*
      * [[Call]] and [[Construct]] are standard internal methods but according
@@ -395,9 +395,8 @@ class JS_FRIEND_API(DirectProxyHandler) : public BaseProxyHandler
                      bool *bp) const override;
     virtual bool get(JSContext *cx, HandleObject proxy, HandleObject receiver,
                      HandleId id, MutableHandleValue vp) const override;
-    virtual bool set(JSContext *cx, HandleObject proxy, HandleObject receiver,
-                     HandleId id, MutableHandleValue vp,
-                     ObjectOpResult &result) const override;
+    virtual bool set(JSContext *cx, HandleObject proxy, HandleId id, HandleValue v,
+                     HandleValue receiver, ObjectOpResult &result) const override;
     virtual bool call(JSContext *cx, HandleObject proxy, const CallArgs &args) const override;
     virtual bool construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const override;
 

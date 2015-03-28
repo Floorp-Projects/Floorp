@@ -8,6 +8,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 let { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 let { Promise } = Cu.import('resource://gre/modules/Promise.jsm', {});
 
+Cu.import("resource://gre/modules/Timer.jsm");
+
 // Functions that look like mochitest functions but forward to the
 // browser process.
 
@@ -81,8 +83,9 @@ this.timelineContentTest = function(tests) {
 
 function timelineWaitForMarkers(docshell, searchFor) {
   if (typeof(searchFor) == "string") {
+    let searchForString = searchFor;
     let f = function (markers) {
-      return markers.some(m => m.name == searchFor);
+      return markers.some(m => m.name == searchForString);
     };
     searchFor = f;
   }
@@ -92,14 +95,15 @@ function timelineWaitForMarkers(docshell, searchFor) {
     let maxWaitIterationCount = 10; // Wait for 2sec maximum
     let markers = [];
 
-    let interval = content.setInterval(() => {
+    setTimeout(function timeoutHandler() {
       let newMarkers = docshell.popProfileTimelineMarkers();
       markers = [...markers, ...newMarkers];
       if (searchFor(markers) || waitIterationCount > maxWaitIterationCount) {
-        content.clearInterval(interval);
         resolve(markers);
+      } else {
+        setTimeout(timeoutHandler, 200);
+        waitIterationCount++;
       }
-      waitIterationCount++;
     }, 200);
   });
 }

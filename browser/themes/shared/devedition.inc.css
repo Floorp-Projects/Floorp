@@ -141,17 +141,17 @@
   -moz-padding-start: 0;
 }
 
-.tab-background-start[selected=true]::after,
-.tab-background-start[selected=true]::before,
+.tab-background-start[visuallyselected=true]::after,
+.tab-background-start[visuallyselected=true]::before,
 .tab-background-start,
 .tab-background-end,
-.tab-background-end[selected=true]::after,
-.tab-background-end[selected=true]::before {
+.tab-background-end[visuallyselected=true]::after,
+.tab-background-end[visuallyselected=true]::before {
   width: 0;
 }
 
-.tab-background-start[selected=true]::after,
-.tab-background-end[selected=true]::after {
+.tab-background-start[visuallyselected=true]::after,
+.tab-background-end[visuallyselected=true]::after {
   -moz-margin-start: 0;
 }
 /* End override @tabCurveHalfWidth@ and @tabCurveWidth@ */
@@ -270,8 +270,8 @@ searchbar:not([oneoffui]) .search-go-button {
 
 /* Make the tab splitter 1px wide with a solid background. */
 #tabbrowser-tabs[movingtab] > .tabbrowser-tab[beforeselected]:not([last-visible-tab])::after,
-.tabbrowser-tab:not([selected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
-#tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([selected]):not([beforehovered]):not(:hover)::after {
+.tabbrowser-tab:not([visuallyselected]):not([afterselected-visible]):not([afterhovered]):not([first-visible-tab]):not(:hover)::before,
+#tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([visuallyselected]):not([beforehovered]):not(:hover)::after {
   background: var(--tab-separator-color);
   width: 1px;
   -moz-margin-start: 0;
@@ -282,7 +282,7 @@ searchbar:not([oneoffui]) .search-go-button {
    due to the ::after element causing the width of the tab to extend, which
    causes an overflow and makes it disappear, which removes the overflow and
    causes it to reappear, etc, etc. */
-#tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([selected]):not([beforehovered]):not(:hover)::after {
+#tabbrowser-tabs:not([overflow]) > .tabbrowser-tab[last-visible-tab]:not([visuallyselected]):not([beforehovered]):not(:hover)::after {
   -moz-margin-start: -1px;
   -moz-margin-end: 0;
 }
@@ -304,7 +304,7 @@ searchbar:not([oneoffui]) .search-go-button {
   pointer-events: auto;
 }
 
-.tabbrowser-tab[pinned][titlechanged]:not([selected="true"]) > .tab-stack > .tab-content {
+.tabbrowser-tab[pinned][titlechanged]:not([visuallyselected="true"]) > .tab-stack > .tab-content {
   background-image: var(--pinned-tab-glow);
   background-position: center;
   background-size: 100%;
@@ -316,7 +316,7 @@ searchbar:not([oneoffui]) .search-go-button {
   background-color: var(--tab-hover-background-color);
 }
 
-.tabbrowser-tab[selected] {
+.tabbrowser-tab[visuallyselected] {
   color: var(--tab-selection-color) !important; /* Override color: inherit */
   background-color: var(--tab-selection-background-color);
   box-shadow: var(--tab-selection-box-shadow);

@@ -71,10 +71,9 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
                    ReturnStatus *rs, JSVariant *result) {
         return Answer::RecvGet(ObjectId::deserialize(objId), receiverVar, id, rs, result);
     }
-    bool RecvSet(const uint64_t &objId, const ObjectVariant &receiverVar,
-                 const JSIDVariant &id, const JSVariant &value, ReturnStatus *rs,
-                 JSVariant *result) {
-        return Answer::RecvSet(ObjectId::deserialize(objId), receiverVar, id, value, rs, result);
+    bool RecvSet(const uint64_t &objId, const JSIDVariant &id, const JSVariant &value,
+                 const JSVariant &receiverVar, ReturnStatus *rs) {
+        return Answer::RecvSet(ObjectId::deserialize(objId), id, value, receiverVar, rs);
     }
 
     bool RecvIsExtensible(const uint64_t &objId, ReturnStatus *rs,
@@ -161,10 +160,9 @@ class JavaScriptBase : public WrapperOwner, public WrapperAnswer, public Base
                  ReturnStatus *rs, JSVariant *result) {
         return Base::SendGet(objId.serialize(), receiverVar, id, rs, result);
     }
-    bool SendSet(const ObjectId &objId, const ObjectVariant &receiverVar,
-                 const JSIDVariant &id, const JSVariant &value, ReturnStatus *rs,
-                 JSVariant *result) {
-        return Base::SendSet(objId.serialize(), receiverVar, id, value, rs, result);
+    bool SendSet(const ObjectId &objId, const JSIDVariant &id, const JSVariant &value,
+                 const JSVariant &receiverVar, ReturnStatus *rs) {
+        return Base::SendSet(objId.serialize(), id, value, receiverVar, rs);
     }
 
     bool SendIsExtensible(const ObjectId &objId, ReturnStatus *rs,

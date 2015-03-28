@@ -21,6 +21,7 @@ include protocol PFileDescriptorSet;
 include protocol PFMRadio;
 include protocol PFileSystemRequest;
 include protocol PHal;
+include protocol PIcc;
 include protocol PProcessHangMonitor;
 include protocol PImageBridge;
 include protocol PMemoryReportRequest;
@@ -379,6 +380,7 @@ prio(normal upto urgent) sync protocol PContent
     manages PFileDescriptorSet;
     manages PFMRadio;
     manages PHal;
+    manages PIcc;
     manages PMemoryReportRequest;
     manages PMobileConnection;
     manages PNecko;
@@ -610,8 +612,7 @@ parent:
      * This call connects the content process to a plugin process. While this
      * call runs, a new PluginModuleParent will be created in the ContentChild
      * via bridging. The corresponding PluginModuleChild will live in the plugin
-     * process. We use intr semantics here to ensure that the PluginModuleParent
-     * allocation message is dispatched before LoadPlugin returns.
+     * process.
      */
     sync LoadPlugin(uint32_t pluginId) returns (nsresult rv);
 
@@ -655,6 +656,8 @@ parent:
         returns (bool isSecureURI);
 
     PHal();
+
+    PIcc(uint32_t serviceId);
 
     PMobileConnection(uint32_t clientId);
 
