@@ -14,7 +14,6 @@ add_task(function*() {
 
   let toolbox = yield gDevTools.showToolbox(target, "styleeditor");
   let panel = toolbox.getCurrentPanel();
-  yield panel.UI.once("editor-added");
 
   ok(panel, "The style-editor panel did initialize correctly for the XUL window");
 });

@@ -269,4 +269,3 @@ var NetworkManager = (function NetworkManagerClosure() {
   return NetworkManager;
 })();
 
-

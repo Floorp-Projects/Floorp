@@ -22,8 +22,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.0.1149';
-PDFJS.build = 'bc7a110';
+PDFJS.version = '1.1.24';
+PDFJS.build = 'f6a8110';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -949,10 +949,6 @@ function isString(v) {
   return typeof v === 'string';
 }
 
-function isNull(v) {
-  return v === null;
-}
-
 function isName(v) {
   return v instanceof Name;
 }
@@ -1842,7 +1838,6 @@ var ChunkedStreamManager = (function ChunkedStreamManagerClosure() {
 })();
 
 
-
 // The maximum number of bytes fetched per range request
 var RANGE_CHUNK_SIZE = 65536;
 
@@ -2046,7 +2041,6 @@ var NetworkPdfManager = (function NetworkPdfManagerClosure() {
 
   return NetworkPdfManager;
 })();
-
 
 
 var Page = (function PageClosure() {
@@ -2556,7 +2550,6 @@ var PDFDocument = (function PDFDocumentClosure() {
 
   return PDFDocument;
 })();
-
 
 
 var Name = (function NameClosure() {
@@ -3091,7 +3084,7 @@ var Catalog = (function CatalogClosure() {
         var isPrintAction = (isName(objType) && objType.name === 'Action' &&
                             isName(actionType) && actionType.name === 'Named' &&
                             isName(action) && action.name === 'Print');
-        
+
         if (isPrintAction) {
           javaScript.push('print(true);');
         }
@@ -3947,7 +3940,7 @@ var NameTree = (function NameTreeClosure() {
           warn('Search depth limit for named destionations has been reached.');
           return null;
         }
-        
+
         var kids = kidsOrNames.get('Kids');
         if (!isArray(kids)) {
           return null;
@@ -4002,10 +3995,10 @@ var NameTree = (function NameTreeClosure() {
 })();
 
 /**
- * "A PDF file can refer to the contents of another file by using a File 
+ * "A PDF file can refer to the contents of another file by using a File
  * Specification (PDF 1.1)", see the spec (7.11) for more details.
  * NOTE: Only embedded files are supported (as part of the attachments support)
- * TODO: support the 'URL' file system (with caching if !/V), portable 
+ * TODO: support the 'URL' file system (with caching if !/V), portable
  * collections attributes and related files (/RF)
  */
 var FileSpec = (function FileSpecClosure() {
@@ -4333,7 +4326,6 @@ var ExpertSubsetCharset = [
   'eightinferior', 'nineinferior', 'centinferior', 'dollarinferior',
   'periodinferior', 'commainferior'
 ];
-
 
 
 var DEFAULT_ICON_SIZE = 22; // px
@@ -6229,10 +6221,10 @@ var ColorSpace = (function ColorSpaceClosure() {
         case 'CMYK':
           return 'DeviceCmykCS';
         case 'CalGray':
-          params = cs[1].getAll();
+          params = xref.fetchIfRef(cs[1]).getAll();
           return ['CalGrayCS', params];
         case 'CalRGB':
-          params = cs[1].getAll();
+          params = xref.fetchIfRef(cs[1]).getAll();
           return ['CalRGBCS', params];
         case 'ICCBased':
           var stream = xref.fetchIfRef(cs[1]);
@@ -10873,7 +10865,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
         styles: Object.create(null)
       };
       var bidiTexts = textContent.items;
-      var SPACE_FACTOR = 0.35;
+      var SPACE_FACTOR = 0.3;
       var MULTI_SPACE_FACTOR = 1.5;
 
       var self = this;
@@ -11312,8 +11304,11 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
       var cmap, cmapObj = toUnicode;
       if (isName(cmapObj)) {
         cmap = CMapFactory.create(cmapObj,
-          { url: PDFJS.cMapUrl, packed: PDFJS.cMapPacked }, null).getMap();
-        return new ToUnicodeMap(cmap);
+          { url: PDFJS.cMapUrl, packed: PDFJS.cMapPacked }, null);
+        if (cmap instanceof IdentityCMap) {
+          return new IdentityToUnicodeMap(0, 0xFFFF);
+        }
+        return new ToUnicodeMap(cmap.getMap());
       } else if (isStream(cmapObj)) {
         cmap = CMapFactory.create(cmapObj,
           { url: PDFJS.cMapUrl, packed: PDFJS.cMapPacked }, null).getMap();
@@ -15768,7 +15763,7 @@ var IdentityToUnicodeMap = (function IdentityToUnicodeMapClosure() {
 
   IdentityToUnicodeMap.prototype = {
     get length() {
-      error('should not access .length');
+      return (this.lastChar + 1) - this.firstChar;
     },
 
     forEach: function (callback) {
@@ -16113,8 +16108,6 @@ var Font = (function FontClosure() {
     if (subtype === 'CIDFontType0C' && type !== 'CIDFontType0') {
       type = 'CIDFontType0';
     }
-    // XXX: Temporarily change the type for open type so we trigger a warning.
-    // This should be removed when we add support for open type.
     if (subtype === 'OpenType') {
       type = 'OpenType';
     }
@@ -16241,6 +16234,8 @@ var Font = (function FontClosure() {
            fontCharCode === 0x7F || // Control char
            fontCharCode === 0xAD || // Soft hyphen
            fontCharCode === 0xA0 || // Non breaking space
+           fontCharCode === 0x0E33 || // Thai character SARA AM 
+           fontCharCode === 0x25CC || // Dotted circle (combining mark)
            (fontCharCode >= 0x80 && fontCharCode <= 0x9F) || // Control chars
            // Prevent drawing characters in the specials unicode block.
            (fontCharCode >= 0xFFF0 && fontCharCode <= 0xFFFF) ||
@@ -17521,7 +17516,8 @@ var Font = (function FontClosure() {
       var isTrueType = !tables['CFF '];
       if (!isTrueType) {
         // OpenType font
-        if (!tables.head || !tables.hhea || !tables.maxp || !tables.post) {
+        if (header.version === 'OTTO' ||
+            !tables.head || !tables.hhea || !tables.maxp || !tables.post) {
           // no major tables: throwing everything at CFFFont
           cffFile = new Stream(tables['CFF '].data);
           cff = new CFFFont(cffFile, properties);
@@ -21488,7 +21484,6 @@ var FontRendererFactory = (function FontRendererFactoryClosure() {
     }
   };
 })();
-
 
 
 var GlyphsUnicode = {
@@ -29497,7 +29492,6 @@ var Metrics = {
 };
 
 
-
 var EOF = {};
 
 function isEOF(v) {
@@ -33655,9 +33649,9 @@ if (typeof window === 'undefined') {
 
 /* This class implements the QM Coder decoding as defined in
  *   JPEG 2000 Part I Final Committee Draft Version 1.0
- *   Annex C.3 Arithmetic decoding procedure 
+ *   Annex C.3 Arithmetic decoding procedure
  * available at http://www.jpeg.org/public/fcd15444-1.pdf
- * 
+ *
  * The arithmetic decoder is used in conjunction with context models to decode
  * JPEG2000 and JBIG2 streams.
  */
@@ -34459,9 +34453,9 @@ var JpegImage = (function jpegImage() {
             if (fileMarker === 0xFFEE) {
               if (appData[0] === 0x41 && appData[1] === 0x64 &&
                   appData[2] === 0x6F && appData[3] === 0x62 &&
-                  appData[4] === 0x65 && appData[5] === 0) { // 'Adobe\x00'
+                  appData[4] === 0x65) { // 'Adobe'
                 adobe = {
-                  version: appData[6],
+                  version: (appData[5] << 8) | appData[6],
                   flags0: (appData[7] << 8) | appData[8],
                   flags1: (appData[9] << 8) | appData[10],
                   transformCode: appData[11]
@@ -34582,6 +34576,13 @@ var JpegImage = (function jpegImage() {
               successiveApproximation >> 4, successiveApproximation & 15);
             offset += processed;
             break;
+
+          case 0xFFFF: // Fill bytes
+            if (data[offset] !== 0xFF) { // Avoid skipping a valid marker.
+              offset--;
+            }
+            break;
+
           default:
             if (data[offset - 3] === 0xFF &&
                 data[offset - 2] >= 0xC0 && data[offset - 2] <= 0xFE) {
@@ -37016,7 +37017,6 @@ var JpxImage = (function JpxImageClosure() {
 })();
 
 
-
 var Jbig2Image = (function Jbig2ImageClosure() {
   // Utility data structures
   function ContextCache() {}
@@ -38492,7 +38492,6 @@ var bidi = PDFJS.bidi = (function bidiClosure() {
 
   return bidi;
 })();
-
 
 /* -*- Mode: Java; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: */

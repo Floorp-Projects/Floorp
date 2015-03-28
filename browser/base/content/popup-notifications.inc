@@ -69,6 +69,10 @@
 #endif
 
     <popupnotification id="addon-progress-notification" hidden="true">
+      <popupnotificationcontent orient="vertical">
+        <progressmeter id="addon-progress-notification-progressmeter"/>
+        <label id="addon-progress-notification-progresstext" crop="end"/>
+      </popupnotificationcontent>
       <button id="addon-progress-cancel"
               oncommand="this.parentNode.cancel();"/>
       <button id="addon-progress-accept" disabled="true"/>

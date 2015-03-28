@@ -6,3 +6,5 @@
 EXTRA_JS_MODULES.devtools.timeline += [
     'panel.js',
 ]
+
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

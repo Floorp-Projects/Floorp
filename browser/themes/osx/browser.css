@@ -4165,15 +4165,11 @@ notification[value="loop-sharing-notification"] .messageImage {
   max-width: 27em;
 }
 
-.popup-progress-label,
-.popup-progress-meter {
+#addon-progress-notification-progresstext,
+#addon-progress-notification-progressmeter {
+  /* override default label margin to match description margin */
   -moz-margin-start: 0;
   -moz-margin-end: 0;
-}
-
-.popup-progress-meter,
-#addon-install-confirmation-content {
-  margin-top: 1em;
 }
 
 .addon-install-confirmation-name {

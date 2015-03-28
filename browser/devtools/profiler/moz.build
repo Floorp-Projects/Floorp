@@ -7,3 +7,5 @@ EXTRA_JS_MODULES.devtools.profiler += [
     'panel.js',
     'utils/shared.js'
 ]
+
+BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

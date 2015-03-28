@@ -34,7 +34,7 @@ task:
 
   extra:
     chunks:
-      total: 3
+      total: 15
     treeherderEnv:
       - production
       - staging
