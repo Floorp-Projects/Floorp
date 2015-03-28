@@ -25,22 +25,16 @@ PRLogModuleInfo *gMediaChildLog;
 namespace mozilla {
 namespace media {
 
-static PMediaChild* sChild = nullptr;
-
-template<typename ValueType>
-ChildPledge<ValueType>::ChildPledge()
-{
-  MOZ_ASSERT(MediaManager::IsInMediaThread());
-}
+static Child* sChild;
 
 template<typename ValueType> void
 ChildPledge<ValueType>::ActorCreated(PBackgroundChild* aActor)
 {
   if (!sChild) {
     // Create PMedia by sending a message to the parent
-    sChild = aActor->SendPMediaConstructor();
+    sChild = static_cast<Child*>(aActor->SendPMediaConstructor());
   }
-  Run(static_cast<Child*>(sChild));
+  Run(sChild);
 }
 
 template<typename ValueType> void
@@ -65,11 +59,12 @@ GetOriginKey(const nsCString& aOrigin, bool aPrivateBrowsing)
     : mOrigin(aOrigin), mPrivateBrowsing(aPrivateBrowsing) {}
   private:
     ~Pledge() {}
-    void Run(PMediaChild* aMedia)
+    void Run(PMediaChild* aChild)
     {
-      aMedia->SendGetOriginKey(mOrigin, mPrivateBrowsing, &mValue);
-      LOG(("GetOriginKey for %s, result:", mOrigin.get(), mValue.get()));
-      Resolve();
+      Child* child = static_cast<Child*>(aChild);
+
+      uint32_t id = child->AddRequestPledge(*this);
+      child->SendGetOriginKey(id, mOrigin, mPrivateBrowsing);
     }
     const nsCString mOrigin;
     const bool mPrivateBrowsing;
@@ -125,10 +120,55 @@ Child::~Child()
   MOZ_COUNT_DTOR(Child);
 }
 
-PMediaChild*
-CreateMediaChild()
+uint32_t Child::sRequestCounter = 0;
+
+uint32_t
+Child::AddRequestPledge(ChildPledge<nsCString>& aPledge)
 {
-  return new Child();
+  uint32_t id = ++sRequestCounter;
+  nsRefPtr<ChildPledge<nsCString>> ptr(&aPledge);
+  mRequestPledges.AppendElement(PledgeEntry(id, ptr));
+  return id;
+}
+
+already_AddRefed<ChildPledge<nsCString>>
+Child::RemoveRequestPledge(uint32_t aRequestId)
+{
+  for (PledgeEntry& entry : mRequestPledges) {
+    if (entry.first == aRequestId) {
+      nsRefPtr<ChildPledge<nsCString>> ref;
+      ref.swap(entry.second);
+      mRequestPledges.RemoveElement(entry);
+      return ref.forget();
+    }
+  }
+  MOZ_ASSERT_UNREACHABLE("Received response with no matching media::ChildPledge!");
+  return nullptr;
+}
+
+bool
+Child::RecvGetOriginKeyResponse(const uint32_t& aRequestId, const nsCString& aKey)
+{
+  nsRefPtr<ChildPledge<nsCString>> pledge = RemoveRequestPledge(aRequestId);
+  if (pledge) {
+    pledge->Resolve(aKey);
+  }
+  return true;
+}
+
+PMediaChild*
+AllocPMediaChild()
+{
+  Child* obj = new Child();
+  obj->AddRef();
+  return obj;
+}
+
+bool
+DeallocPMediaChild(media::PMediaChild *aActor)
+{
+  static_cast<Child*>(aActor)->Release();
+  return true;
 }
 
 }
