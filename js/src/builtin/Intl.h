@@ -21,8 +21,8 @@ namespace js {
  * Initializes the Intl Object and its standard built-in properties.
  * Spec: ECMAScript Internationalization API Specification, 8.0, 8.1
  */
-extern JSObject *
-InitIntlClass(JSContext *cx, HandleObject obj);
+extern JSObject*
+InitIntlClass(JSContext* cx, HandleObject obj);
 
 /*
  * The following functions are for use by self-hosted code.
@@ -39,7 +39,7 @@ InitIntlClass(JSContext *cx, HandleObject obj);
  * Usage: collator = intl_Collator(locales, options)
  */
 extern bool
-intl_Collator(JSContext *cx, unsigned argc, Value *vp);
+intl_Collator(JSContext* cx, unsigned argc, Value* vp);
 
 /**
  * Returns an object indicating the supported locales for collation
@@ -50,7 +50,7 @@ intl_Collator(JSContext *cx, unsigned argc, Value *vp);
  * Usage: availableLocales = intl_Collator_availableLocales()
  */
 extern bool
-intl_Collator_availableLocales(JSContext *cx, unsigned argc, Value *vp);
+intl_Collator_availableLocales(JSContext* cx, unsigned argc, Value* vp);
 
 /**
  * Returns an array with the collation type identifiers per Unicode
@@ -61,7 +61,7 @@ intl_Collator_availableLocales(JSContext *cx, unsigned argc, Value *vp);
  * Usage: collations = intl_availableCollations(locale)
  */
 extern bool
-intl_availableCollations(JSContext *cx, unsigned argc, Value *vp);
+intl_availableCollations(JSContext* cx, unsigned argc, Value* vp);
 
 /**
  * Compares x and y (which must be String values), and returns a number less
@@ -74,7 +74,7 @@ intl_availableCollations(JSContext *cx, unsigned argc, Value *vp);
  * Usage: result = intl_CompareStrings(collator, x, y)
  */
 extern bool
-intl_CompareStrings(JSContext *cx, unsigned argc, Value *vp);
+intl_CompareStrings(JSContext* cx, unsigned argc, Value* vp);
 
 
 /******************** NumberFormat ********************/
@@ -87,7 +87,7 @@ intl_CompareStrings(JSContext *cx, unsigned argc, Value *vp);
  * Usage: numberFormat = intl_NumberFormat(locales, options)
  */
 extern bool
-intl_NumberFormat(JSContext *cx, unsigned argc, Value *vp);
+intl_NumberFormat(JSContext* cx, unsigned argc, Value* vp);
 
 /**
  * Returns an object indicating the supported locales for number formatting
@@ -98,7 +98,7 @@ intl_NumberFormat(JSContext *cx, unsigned argc, Value *vp);
  * Usage: availableLocales = intl_NumberFormat_availableLocales()
  */
 extern bool
-intl_NumberFormat_availableLocales(JSContext *cx, unsigned argc, Value *vp);
+intl_NumberFormat_availableLocales(JSContext* cx, unsigned argc, Value* vp);
 
 /**
  * Returns the numbering system type identifier per Unicode
@@ -108,7 +108,7 @@ intl_NumberFormat_availableLocales(JSContext *cx, unsigned argc, Value *vp);
  * Usage: defaultNumberingSystem = intl_numberingSystem(locale)
  */
 extern bool
-intl_numberingSystem(JSContext *cx, unsigned argc, Value *vp);
+intl_numberingSystem(JSContext* cx, unsigned argc, Value* vp);
 
 /**
  * Returns a string representing the number x according to the effective
@@ -119,7 +119,7 @@ intl_numberingSystem(JSContext *cx, unsigned argc, Value *vp);
  * Usage: formatted = intl_FormatNumber(numberFormat, x)
  */
 extern bool
-intl_FormatNumber(JSContext *cx, unsigned argc, Value *vp);
+intl_FormatNumber(JSContext* cx, unsigned argc, Value* vp);
 
 
 /******************** DateTimeFormat ********************/
@@ -132,7 +132,7 @@ intl_FormatNumber(JSContext *cx, unsigned argc, Value *vp);
  * Usage: dateTimeFormat = intl_DateTimeFormat(locales, options)
  */
 extern bool
-intl_DateTimeFormat(JSContext *cx, unsigned argc, Value *vp);
+intl_DateTimeFormat(JSContext* cx, unsigned argc, Value* vp);
 
 /**
  * Returns an object indicating the supported locales for date and time
@@ -143,7 +143,7 @@ intl_DateTimeFormat(JSContext *cx, unsigned argc, Value *vp);
  * Usage: availableLocales = intl_DateTimeFormat_availableLocales()
  */
 extern bool
-intl_DateTimeFormat_availableLocales(JSContext *cx, unsigned argc, Value *vp);
+intl_DateTimeFormat_availableLocales(JSContext* cx, unsigned argc, Value* vp);
 
 /**
  * Returns an array with the calendar type identifiers per Unicode
@@ -154,7 +154,7 @@ intl_DateTimeFormat_availableLocales(JSContext *cx, unsigned argc, Value *vp);
  * Usage: calendars = intl_availableCalendars(locale)
  */
 extern bool
-intl_availableCalendars(JSContext *cx, unsigned argc, Value *vp);
+intl_availableCalendars(JSContext* cx, unsigned argc, Value* vp);
 
 /**
  * Return a pattern in the date-time format pattern language of Unicode
@@ -165,7 +165,7 @@ intl_availableCalendars(JSContext *cx, unsigned argc, Value *vp);
  * Usage: pattern = intl_patternForSkeleton(locale, skeleton)
  */
 extern bool
-intl_patternForSkeleton(JSContext *cx, unsigned argc, Value *vp);
+intl_patternForSkeleton(JSContext* cx, unsigned argc, Value* vp);
 
 /**
  * Returns a String value representing x (which must be a Number value)
@@ -177,21 +177,21 @@ intl_patternForSkeleton(JSContext *cx, unsigned argc, Value *vp);
  * Usage: formatted = intl_FormatDateTime(dateTimeFormat, x)
  */
 extern bool
-intl_FormatDateTime(JSContext *cx, unsigned argc, Value *vp);
+intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp);
 
 /**
  * Cast char16_t* strings to UChar* strings used by ICU.
  */
-inline const UChar *
-Char16ToUChar(const char16_t *chars)
+inline const UChar*
+Char16ToUChar(const char16_t* chars)
 {
-  return reinterpret_cast<const UChar *>(chars);
+  return reinterpret_cast<const UChar*>(chars);
 }
 
-inline UChar *
-Char16ToUChar(char16_t *chars)
+inline UChar*
+Char16ToUChar(char16_t* chars)
 {
-  return reinterpret_cast<UChar *>(chars);
+  return reinterpret_cast<UChar*>(chars);
 }
 
 } // namespace js

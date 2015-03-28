@@ -47,7 +47,7 @@ class AutoLockSimulator;
 // When the SingleStepCallback is called, the simulator is about to execute
 // sim->get_pc() and the current machine state represents the completed
 // execution of the previous pc.
-typedef void (*SingleStepCallback)(void *arg, Simulator *sim, void *pc);
+typedef void (*SingleStepCallback)(void* arg, Simulator* sim, void* pc);
 
 // VFP rounding modes. See ARM DDI 0406B Page A2-29.
 enum VFPRoundingMode {
@@ -99,9 +99,9 @@ class Simulator
     };
 
     // Returns nullptr on OOM.
-    static Simulator *Create();
+    static Simulator* Create();
 
-    static void Destroy(Simulator *simulator);
+    static void Destroy(Simulator* simulator);
 
     // Constructor/destructor are for internal use only; use the static methods above.
     Simulator();
@@ -109,13 +109,13 @@ class Simulator
 
     // The currently executing Simulator instance. Potentially there can be one
     // for each native thread.
-    static Simulator *Current();
+    static Simulator* Current();
 
     static inline uintptr_t StackLimit() {
         return Simulator::Current()->stackLimit();
     }
 
-    uintptr_t *addressOfStackLimit();
+    uintptr_t* addressOfStackLimit();
 
     // Accessors for register state. Reading the pc value adheres to the ARM
     // architecture specification and is off by a 8 from the currently executing
@@ -165,7 +165,7 @@ class Simulator
         resume_pc_ = value;
     }
 
-    void enable_single_stepping(SingleStepCallback cb, void *arg);
+    void enable_single_stepping(SingleStepCallback cb, void* arg);
     void disable_single_stepping();
 
     uintptr_t stackLimit() const;
@@ -180,8 +180,8 @@ class Simulator
     int64_t call(uint8_t* entry, int argument_count, ...);
 
     // Debugger input.
-    void setLastDebuggerInput(char *input);
-    char *lastDebuggerInput() { return lastDebuggerInput_; }
+    void setLastDebuggerInput(char* input);
+    char* lastDebuggerInput() { return lastDebuggerInput_; }
 
     // Returns true if pc register contains one of the 'special_values' defined
     // below (bad_lr, end_sim_pc).
@@ -221,16 +221,16 @@ class Simulator
     inline double canonicalizeNaN(double value);
 
     // Helper functions to decode common "addressing" modes
-    int32_t getShiftRm(SimInstruction *instr, bool* carry_out);
-    int32_t getImm(SimInstruction *instr, bool* carry_out);
-    int32_t processPU(SimInstruction *instr, int num_regs, int operand_size,
-                      intptr_t *start_address, intptr_t *end_address);
-    void handleRList(SimInstruction *instr, bool load);
-    void handleVList(SimInstruction *inst);
-    void softwareInterrupt(SimInstruction *instr);
+    int32_t getShiftRm(SimInstruction* instr, bool* carry_out);
+    int32_t getImm(SimInstruction* instr, bool* carry_out);
+    int32_t processPU(SimInstruction* instr, int num_regs, int operand_size,
+                      intptr_t* start_address, intptr_t* end_address);
+    void handleRList(SimInstruction* instr, bool load);
+    void handleVList(SimInstruction* inst);
+    void softwareInterrupt(SimInstruction* instr);
 
     // Stop helper functions.
-    inline bool isStopInstruction(SimInstruction *instr);
+    inline bool isStopInstruction(SimInstruction* instr);
     inline bool isWatchedStop(uint32_t bkpt_code);
     inline bool isEnabledStop(uint32_t bkpt_code);
     inline void enableStop(uint32_t bkpt_code);
@@ -244,48 +244,48 @@ class Simulator
     inline void writeB(int32_t addr, uint8_t value);
     inline void writeB(int32_t addr, int8_t value);
 
-    inline uint16_t readHU(int32_t addr, SimInstruction *instr);
-    inline int16_t readH(int32_t addr, SimInstruction *instr);
+    inline uint16_t readHU(int32_t addr, SimInstruction* instr);
+    inline int16_t readH(int32_t addr, SimInstruction* instr);
     // Note: Overloaded on the sign of the value.
-    inline void writeH(int32_t addr, uint16_t value, SimInstruction *instr);
-    inline void writeH(int32_t addr, int16_t value, SimInstruction *instr);
+    inline void writeH(int32_t addr, uint16_t value, SimInstruction* instr);
+    inline void writeH(int32_t addr, int16_t value, SimInstruction* instr);
 
-    inline int readW(int32_t addr, SimInstruction *instr);
-    inline void writeW(int32_t addr, int value, SimInstruction *instr);
+    inline int readW(int32_t addr, SimInstruction* instr);
+    inline void writeW(int32_t addr, int value, SimInstruction* instr);
 
-    int32_t *readDW(int32_t addr);
+    int32_t* readDW(int32_t addr);
     void writeDW(int32_t addr, int32_t value1, int32_t value2);
 
     // Executing is handled based on the instruction type.
     // Both type 0 and type 1 rolled into one.
-    void decodeType01(SimInstruction *instr);
-    void decodeType2(SimInstruction *instr);
-    void decodeType3(SimInstruction *instr);
-    void decodeType4(SimInstruction *instr);
-    void decodeType5(SimInstruction *instr);
-    void decodeType6(SimInstruction *instr);
-    void decodeType7(SimInstruction *instr);
+    void decodeType01(SimInstruction* instr);
+    void decodeType2(SimInstruction* instr);
+    void decodeType3(SimInstruction* instr);
+    void decodeType4(SimInstruction* instr);
+    void decodeType5(SimInstruction* instr);
+    void decodeType6(SimInstruction* instr);
+    void decodeType7(SimInstruction* instr);
 
     // Support for VFP.
-    void decodeTypeVFP(SimInstruction *instr);
-    void decodeType6CoprocessorIns(SimInstruction *instr);
-    void decodeSpecialCondition(SimInstruction *instr);
+    void decodeTypeVFP(SimInstruction* instr);
+    void decodeType6CoprocessorIns(SimInstruction* instr);
+    void decodeSpecialCondition(SimInstruction* instr);
 
-    void decodeVMOVBetweenCoreAndSinglePrecisionRegisters(SimInstruction *instr);
-    void decodeVCMP(SimInstruction *instr);
-    void decodeVCVTBetweenDoubleAndSingle(SimInstruction *instr);
-    void decodeVCVTBetweenFloatingPointAndInteger(SimInstruction *instr);
-    void decodeVCVTBetweenFloatingPointAndIntegerFrac(SimInstruction *instr);
+    void decodeVMOVBetweenCoreAndSinglePrecisionRegisters(SimInstruction* instr);
+    void decodeVCMP(SimInstruction* instr);
+    void decodeVCVTBetweenDoubleAndSingle(SimInstruction* instr);
+    void decodeVCVTBetweenFloatingPointAndInteger(SimInstruction* instr);
+    void decodeVCVTBetweenFloatingPointAndIntegerFrac(SimInstruction* instr);
 
     // Support for some system functions.
-    void decodeType7CoprocessorIns(SimInstruction *instr);
+    void decodeType7CoprocessorIns(SimInstruction* instr);
 
     // Executes one instruction.
-    void instructionDecode(SimInstruction *instr);
+    void instructionDecode(SimInstruction* instr);
 
   public:
     static bool ICacheCheckingEnabled;
-    static void FlushICache(void *start, size_t size);
+    static void FlushICache(void* start, size_t size);
 
     static int64_t StopSimAt;
 
@@ -297,12 +297,12 @@ class Simulator
     bool skipCalleeSavedRegsCheck;
 
     // Runtime call support.
-    static void *RedirectNativeFunction(void *nativeFunction, ABIFunctionType type);
+    static void* RedirectNativeFunction(void* nativeFunction, ABIFunctionType type);
 
   private:
     // Handle arguments and return value for runtime FP functions.
-    void getFpArgs(double *x, double *y, int32_t *z);
-    void getFpFromStack(int32_t *stack, double *x1);
+    void getFpArgs(double* x, double* y, int32_t* z);
+    void getFpFromStack(int32_t* stack, double* x1);
     void setCallResultDouble(double result);
     void setCallResultFloat(float result);
     void setCallResult(int64_t res);
@@ -345,7 +345,7 @@ class Simulator
     bool inexact_vfp_flag_;
 
     // Simulator support.
-    char *stack_;
+    char* stack_;
     uintptr_t stackLimit_;
     bool pc_modified_;
     int64_t icount_;
@@ -353,16 +353,16 @@ class Simulator
     int32_t resume_pc_;
 
     // Debugger input.
-    char *lastDebuggerInput_;
+    char* lastDebuggerInput_;
 
     // Registered breakpoints.
-    SimInstruction *break_pc_;
+    SimInstruction* break_pc_;
     Instr break_instr_;
 
     // Single-stepping support
     bool single_stepping_;
     SingleStepCallback single_step_callback_;
-    void *single_step_callback_arg_;
+    void* single_step_callback_arg_;
 
     // A stop is watched if its code is less than kNumOfWatchedStops.
     // Only watched stops support enabling/disabling and the counter feature.
@@ -377,7 +377,7 @@ class Simulator
     // the breakpoint was hit or gone through.
     struct StopCountAndDesc {
         uint32_t count;
-        char *desc;
+        char* desc;
     };
     StopCountAndDesc watched_stops_[kNumOfWatchedStops];
 
@@ -389,29 +389,29 @@ class Simulator
   private:
     // ICache checking.
     struct ICacheHasher {
-        typedef void *Key;
-        typedef void *Lookup;
-        static HashNumber hash(const Lookup &l);
-        static bool match(const Key &k, const Lookup &l);
+        typedef void* Key;
+        typedef void* Lookup;
+        static HashNumber hash(const Lookup& l);
+        static bool match(const Key& k, const Lookup& l);
     };
 
   public:
-    typedef HashMap<void *, CachePage *, ICacheHasher, SystemAllocPolicy> ICacheMap;
+    typedef HashMap<void*, CachePage*, ICacheHasher, SystemAllocPolicy> ICacheMap;
 
   private:
     // This lock creates a critical section around 'redirection_' and
     // 'icache_', which are referenced both by the execution engine
     // and by the off-thread compiler (see Redirection::Get in the cpp file).
-    PRLock *cacheLock_;
+    PRLock* cacheLock_;
 #ifdef DEBUG
-    PRThread *cacheLockHolder_;
+    PRThread* cacheLockHolder_;
 #endif
 
-    Redirection *redirection_;
+    Redirection* redirection_;
     ICacheMap icache_;
 
   public:
-    ICacheMap &icache() {
+    ICacheMap& icache() {
         // Technically we need the lock to access the innards of the
         // icache, not to take its address, but the latter condition
         // serves as a useful complement to the former.
@@ -419,12 +419,12 @@ class Simulator
         return icache_;
     }
 
-    Redirection *redirection() const {
+    Redirection* redirection() const {
         MOZ_ASSERT(cacheLockHolder_);
         return redirection_;
     }
 
-    void setRedirection(js::jit::Redirection *redirection) {
+    void setRedirection(js::jit::Redirection* redirection) {
         MOZ_ASSERT(cacheLockHolder_);
         redirection_ = redirection;
     }

@@ -12,16 +12,16 @@ namespace jit {
 
 namespace X86Encoding {
 
-inline void *
+inline void*
 GetPointer(const void* where)
 {
-    return reinterpret_cast<void *const *>(where)[-1];
+    return reinterpret_cast<void* const*>(where)[-1];
 }
 
-inline void **
+inline void**
 GetPointerRef(void* where)
 {
-    return &reinterpret_cast<void **>(where)[-1];
+    return &reinterpret_cast<void**>(where)[-1];
 }
 
 inline void
@@ -65,11 +65,11 @@ SetRel32(void* from, void* to)
     SetInt32(from, offset);
 }
 
-inline void *
+inline void*
 GetRel32Target(void* where)
 {
     int32_t rel = GetInt32(where);
-    return (char *)where + rel;
+    return (char*)where + rel;
 }
 
 class JmpSrc {
@@ -125,7 +125,7 @@ class JmpDst {
 inline bool
 CanRelinkJump(void* from, void* to)
 {
-    intptr_t offset = static_cast<char *>(to) - static_cast<char *>(from);
+    intptr_t offset = static_cast<char*>(to) - static_cast<char*>(from);
     return (offset == static_cast<int32_t>(offset));
 }
 

@@ -26,44 +26,44 @@ class Symbol : public js::gc::TenuredCell
 {
   private:
     SymbolCode code_;
-    JSAtom *description_;
+    JSAtom* description_;
 
     // The minimum allocation size is sizeof(JSString): 16 bytes on 32-bit
     // architectures and 24 bytes on 64-bit.  8 bytes of padding makes Symbol
     // the minimum size on both.
     uint64_t unused2_;
 
-    Symbol(SymbolCode code, JSAtom *desc)
+    Symbol(SymbolCode code, JSAtom* desc)
         : code_(code), description_(desc)
     {
         // Silence warnings about unused2 being... unused.
         (void)unused2_;
     }
 
-    Symbol(const Symbol &) = delete;
-    void operator=(const Symbol &) = delete;
+    Symbol(const Symbol&) = delete;
+    void operator=(const Symbol&) = delete;
 
-    static Symbol *
-    newInternal(js::ExclusiveContext *cx, SymbolCode code, JSAtom *description);
+    static Symbol*
+    newInternal(js::ExclusiveContext* cx, SymbolCode code, JSAtom* description);
 
   public:
-    static Symbol *new_(js::ExclusiveContext *cx, SymbolCode code, JSString *description);
-    static Symbol *for_(js::ExclusiveContext *cx, js::HandleString description);
+    static Symbol* new_(js::ExclusiveContext* cx, SymbolCode code, JSString* description);
+    static Symbol* for_(js::ExclusiveContext* cx, js::HandleString description);
 
-    JSAtom *description() const { return description_; }
+    JSAtom* description() const { return description_; }
     SymbolCode code() const { return code_; }
 
     bool isWellKnownSymbol() const { return uint32_t(code_) < WellKnownSymbolLimit; }
 
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SYMBOL; }
-    inline void markChildren(JSTracer *trc) {
+    inline void markChildren(JSTracer* trc) {
         if (description_)
             js::gc::MarkStringUnbarriered(trc, &description_, "description");
     }
-    inline void finalize(js::FreeOp *) {}
+    inline void finalize(js::FreeOp*) {}
 
 #ifdef DEBUG
-    void dump(FILE *fp = stderr);
+    void dump(FILE* fp = stderr);
 #endif
 };
 
@@ -74,8 +74,8 @@ namespace js {
 /* Hash policy used by the SymbolRegistry. */
 struct HashSymbolsByDescription
 {
-    typedef JS::Symbol *Key;
-    typedef JSAtom *Lookup;
+    typedef JS::Symbol* Key;
+    typedef JSAtom* Lookup;
 
     static HashNumber hash(Lookup l) {
         return HashNumber(reinterpret_cast<uintptr_t>(l));
@@ -121,12 +121,12 @@ namespace js {
 
 // ES6 rev 27 (2014 Aug 24) 19.4.3.3
 bool
-SymbolDescriptiveString(JSContext *cx, JS::Symbol *sym, JS::MutableHandleValue result);
+SymbolDescriptiveString(JSContext* cx, JS::Symbol* sym, JS::MutableHandleValue result);
 
 bool
 IsSymbolOrSymbolWrapper(JS::Value v);
 
-JS::Symbol *
+JS::Symbol*
 ToSymbolPrimitive(JS::Value v);
 
 } /* namespace js */

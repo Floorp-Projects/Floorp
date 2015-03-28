@@ -17,7 +17,7 @@ nsXPCTestReturnCodeParent::~nsXPCTestReturnCodeParent()
 }
 
 /* unsigned long callChild (in long childBehavior); */
-NS_IMETHODIMP nsXPCTestReturnCodeParent::CallChild(int32_t childBehavior, nsresult *_retval)
+NS_IMETHODIMP nsXPCTestReturnCodeParent::CallChild(int32_t childBehavior, nsresult* _retval)
 {
     nsresult rv;
     nsCOMPtr<nsIXPCTestReturnCodeChild> child(do_CreateInstance("@mozilla.org/js/xpc/test/js/ReturnCodeChild;1", &rv));

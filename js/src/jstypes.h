@@ -170,7 +170,7 @@
 **      last element of a C array. Use them like this:
 **
 **      char16_t buf[10], *s;
-**      JSString *str;
+**      JSString* str;
 **      ...
 **      for (s = buf; s != JS_ARRAY_END(buf); ++s) *s = ...;
 **      ...
@@ -199,9 +199,9 @@
 **      size. Use them like this:
 **
 **      JSGetterOp nativeGetter;
-**      JSObject *scriptedGetter;
+**      JSObject* scriptedGetter;
 **      ...
-**      scriptedGetter = JS_FUNC_TO_DATA_PTR(JSObject *, nativeGetter);
+**      scriptedGetter = JS_FUNC_TO_DATA_PTR(JSObject*, nativeGetter);
 **      ...
 **      nativeGetter = JS_DATA_TO_FUNC_PTR(JSGetterOp, scriptedGetter);
 **

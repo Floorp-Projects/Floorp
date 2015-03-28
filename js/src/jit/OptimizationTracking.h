@@ -38,17 +38,17 @@ class OptimizationAttempt
     JS::TrackedStrategy strategy() const { return strategy_; }
     JS::TrackedOutcome outcome() const { return outcome_; }
 
-    bool operator ==(const OptimizationAttempt &other) const {
+    bool operator ==(const OptimizationAttempt& other) const {
         return strategy_ == other.strategy_ && outcome_ == other.outcome_;
     }
-    bool operator !=(const OptimizationAttempt &other) const {
+    bool operator !=(const OptimizationAttempt& other) const {
         return strategy_ != other.strategy_ || outcome_ != other.outcome_;
     }
     HashNumber hash() const {
         return (HashNumber(strategy_) << 8) + HashNumber(outcome_);
     }
 
-    void writeCompact(CompactBufferWriter &writer) const;
+    void writeCompact(CompactBufferWriter& writer) const;
 };
 
 typedef Vector<OptimizationAttempt, 4, JitAllocPolicy> TempOptimizationAttemptsVector;
@@ -63,31 +63,31 @@ class OptimizationTypeInfo
     TempTypeList types_;
 
   public:
-    OptimizationTypeInfo(OptimizationTypeInfo &&other)
+    OptimizationTypeInfo(OptimizationTypeInfo&& other)
       : site_(other.site_),
         mirType_(other.mirType_),
         types_(mozilla::Move(other.types_))
     { }
 
-    OptimizationTypeInfo(TempAllocator &alloc, JS::TrackedTypeSite site, MIRType mirType)
+    OptimizationTypeInfo(TempAllocator& alloc, JS::TrackedTypeSite site, MIRType mirType)
       : site_(site),
         mirType_(mirType),
         types_(alloc)
     { }
 
-    bool trackTypeSet(TemporaryTypeSet *typeSet);
+    bool trackTypeSet(TemporaryTypeSet* typeSet);
     bool trackType(TypeSet::Type type);
 
     JS::TrackedTypeSite site() const { return site_; }
     MIRType mirType() const { return mirType_; }
-    const TempTypeList &types() const { return types_; }
+    const TempTypeList& types() const { return types_; }
 
-    bool operator ==(const OptimizationTypeInfo &other) const;
-    bool operator !=(const OptimizationTypeInfo &other) const;
+    bool operator ==(const OptimizationTypeInfo& other) const;
+    bool operator !=(const OptimizationTypeInfo& other) const;
 
     HashNumber hash() const;
 
-    bool writeCompact(CompactBufferWriter &writer, UniqueTrackedTypes &uniqueTypes) const;
+    bool writeCompact(CompactBufferWriter& writer, UniqueTrackedTypes& uniqueTypes) const;
 };
 
 typedef Vector<OptimizationTypeInfo, 1, JitAllocPolicy> TempOptimizationTypeInfoVector;
@@ -101,7 +101,7 @@ class TrackedOptimizations : public TempObject
     uint32_t currentAttempt_;
 
   public:
-    explicit TrackedOptimizations(TempAllocator &alloc)
+    explicit TrackedOptimizations(TempAllocator& alloc)
       : types_(alloc),
         attempts_(alloc),
         currentAttempt_(UINT32_MAX)
@@ -113,15 +113,15 @@ class TrackedOptimizations : public TempObject
         currentAttempt_ = UINT32_MAX;
     }
 
-    bool trackTypeInfo(OptimizationTypeInfo &&ty);
+    bool trackTypeInfo(OptimizationTypeInfo&& ty);
 
     bool trackAttempt(JS::TrackedStrategy strategy);
     void amendAttempt(uint32_t index);
     void trackOutcome(JS::TrackedOutcome outcome);
     void trackSuccess();
 
-    bool matchTypes(const TempOptimizationTypeInfoVector &other) const;
-    bool matchAttempts(const TempOptimizationAttemptsVector &other) const;
+    bool matchTypes(const TempOptimizationTypeInfoVector& other) const;
+    bool matchAttempts(const TempOptimizationAttemptsVector& other) const;
 
     void spew() const;
 };
@@ -133,8 +133,8 @@ class UniqueTrackedOptimizations
   public:
     struct SortEntry
     {
-        const TempOptimizationTypeInfoVector *types;
-        const TempOptimizationAttemptsVector *attempts;
+        const TempOptimizationTypeInfoVector* types;
+        const TempOptimizationAttemptsVector* attempts;
         uint32_t frequency;
     };
     typedef Vector<SortEntry, 4> SortedVector;
@@ -142,13 +142,13 @@ class UniqueTrackedOptimizations
   private:
     struct Key
     {
-        const TempOptimizationTypeInfoVector *types;
-        const TempOptimizationAttemptsVector *attempts;
+        const TempOptimizationTypeInfoVector* types;
+        const TempOptimizationAttemptsVector* attempts;
 
         typedef Key Lookup;
-        static HashNumber hash(const Lookup &lookup);
-        static bool match(const Key &key, const Lookup &lookup);
-        static void rekey(Key &key, const Key &newKey) {
+        static HashNumber hash(const Lookup& lookup);
+        static bool match(const Key& key, const Lookup& lookup);
+        static void rekey(Key& key, const Key& newKey) {
             key = newKey;
         }
     };
@@ -168,19 +168,19 @@ class UniqueTrackedOptimizations
     SortedVector sorted_;
 
   public:
-    explicit UniqueTrackedOptimizations(JSContext *cx)
+    explicit UniqueTrackedOptimizations(JSContext* cx)
       : map_(cx),
         sorted_(cx)
     { }
 
     bool init() { return map_.init(); }
-    bool add(const TrackedOptimizations *optimizations);
+    bool add(const TrackedOptimizations* optimizations);
 
-    bool sortByFrequency(JSContext *cx);
+    bool sortByFrequency(JSContext* cx);
     bool sorted() const { return !sorted_.empty(); }
     uint32_t count() const { MOZ_ASSERT(sorted()); return sorted_.length(); }
-    const SortedVector &sortedVector() const { MOZ_ASSERT(sorted()); return sorted_; }
-    uint8_t indexOf(const TrackedOptimizations *optimizations) const;
+    const SortedVector& sortedVector() const { MOZ_ASSERT(sorted()); return sorted_; }
+    uint8_t indexOf(const TrackedOptimizations* optimizations) const;
 };
 
 // A compact table of tracked optimization information. Pictorially,
@@ -273,18 +273,18 @@ class UniqueTrackedOptimizations
 
 class IonTrackedOptimizationsRegion
 {
-    const uint8_t *start_;
-    const uint8_t *end_;
+    const uint8_t* start_;
+    const uint8_t* end_;
 
     // Unpacked state.
     uint32_t startOffset_;
     uint32_t endOffset_;
-    const uint8_t *rangesStart_;
+    const uint8_t* rangesStart_;
 
     void unpackHeader();
 
   public:
-    IonTrackedOptimizationsRegion(const uint8_t *start, const uint8_t *end)
+    IonTrackedOptimizationsRegion(const uint8_t* start, const uint8_t* end)
       : start_(start), end_(end),
         startOffset_(0), endOffset_(0), rangesStart_(nullptr)
     {
@@ -301,28 +301,28 @@ class IonTrackedOptimizationsRegion
 
     class RangeIterator
     {
-        const uint8_t *cur_;
-        const uint8_t *start_;
-        const uint8_t *end_;
+        const uint8_t* cur_;
+        const uint8_t* start_;
+        const uint8_t* end_;
 
         uint32_t firstStartOffset_;
         uint32_t prevEndOffset_;
 
       public:
-        RangeIterator(const uint8_t *start, const uint8_t *end, uint32_t startOffset)
+        RangeIterator(const uint8_t* start, const uint8_t* end, uint32_t startOffset)
           : cur_(start), start_(start), end_(end),
             firstStartOffset_(startOffset), prevEndOffset_(0)
         { }
 
         bool more() const { return cur_ < end_; }
-        void readNext(uint32_t *startOffset, uint32_t *endOffset, uint8_t *index);
+        void readNext(uint32_t* startOffset, uint32_t* endOffset, uint8_t* index);
     };
 
     RangeIterator ranges() const { return RangeIterator(rangesStart_, end_, startOffset_); }
 
     // Find the index of tracked optimization info (e.g., type info and
     // attempts) at a native code offset.
-    mozilla::Maybe<uint8_t> findIndex(uint32_t offset, uint32_t *entryOffsetOut) const;
+    mozilla::Maybe<uint8_t> findIndex(uint32_t offset, uint32_t* entryOffsetOut) const;
 
     // For the variants below, S stands for startDelta, L for length, and I
     // for index. These were automatically generated from training on the
@@ -399,33 +399,33 @@ class IonTrackedOptimizationsRegion
 
     static const uint32_t MAX_RUN_LENGTH = 100;
 
-    static uint32_t ExpectedRunLength(const NativeToTrackedOptimizations *start,
-                                      const NativeToTrackedOptimizations *end);
+    static uint32_t ExpectedRunLength(const NativeToTrackedOptimizations* start,
+                                      const NativeToTrackedOptimizations* end);
 
-    static void ReadDelta(CompactBufferReader &reader, uint32_t *startDelta, uint32_t *length,
-                          uint8_t *index);
-    static void WriteDelta(CompactBufferWriter &writer, uint32_t startDelta, uint32_t length,
+    static void ReadDelta(CompactBufferReader& reader, uint32_t* startDelta, uint32_t* length,
+                          uint8_t* index);
+    static void WriteDelta(CompactBufferWriter& writer, uint32_t startDelta, uint32_t length,
                            uint8_t index);
-    static bool WriteRun(CompactBufferWriter &writer,
-                         const NativeToTrackedOptimizations *start,
-                         const NativeToTrackedOptimizations *end,
-                         const UniqueTrackedOptimizations &unique);
+    static bool WriteRun(CompactBufferWriter& writer,
+                         const NativeToTrackedOptimizations* start,
+                         const NativeToTrackedOptimizations* end,
+                         const UniqueTrackedOptimizations& unique);
 };
 
 class IonTrackedOptimizationsAttempts
 {
-    const uint8_t *start_;
-    const uint8_t *end_;
+    const uint8_t* start_;
+    const uint8_t* end_;
 
   public:
-    IonTrackedOptimizationsAttempts(const uint8_t *start, const uint8_t *end)
+    IonTrackedOptimizationsAttempts(const uint8_t* start, const uint8_t* end)
       : start_(start), end_(end)
     {
         // Cannot be empty.
         MOZ_ASSERT(start < end);
     }
 
-    void forEach(JS::ForEachTrackedOptimizationAttemptOp &op);
+    void forEach(JS::ForEachTrackedOptimizationAttemptOp& op);
 };
 
 struct IonTrackedTypeWithAddendum
@@ -444,10 +444,10 @@ struct IonTrackedTypeWithAddendum
     // compartment during profiling time.
     union {
         struct {
-            JSScript *script;
+            JSScript* script;
             uint32_t offset;
         };
-        JSFunction *constructor;
+        JSFunction* constructor;
     };
 
     explicit IonTrackedTypeWithAddendum(TypeSet::Type type)
@@ -455,14 +455,14 @@ struct IonTrackedTypeWithAddendum
         hasAddendum(HasNothing)
     { }
 
-    IonTrackedTypeWithAddendum(TypeSet::Type type, JSScript *script, uint32_t offset)
+    IonTrackedTypeWithAddendum(TypeSet::Type type, JSScript* script, uint32_t offset)
       : type(type),
         hasAddendum(HasAllocationSite),
         script(script),
         offset(offset)
     { }
 
-    IonTrackedTypeWithAddendum(TypeSet::Type type, JSFunction *constructor)
+    IonTrackedTypeWithAddendum(TypeSet::Type type, JSFunction* constructor)
       : type(type),
         hasAddendum(HasConstructor),
         constructor(constructor)
@@ -476,11 +476,11 @@ typedef Vector<IonTrackedTypeWithAddendum, 1, SystemAllocPolicy> IonTrackedTypeV
 
 class IonTrackedOptimizationsTypeInfo
 {
-    const uint8_t *start_;
-    const uint8_t *end_;
+    const uint8_t* start_;
+    const uint8_t* end_;
 
   public:
-    IonTrackedOptimizationsTypeInfo(const uint8_t *start, const uint8_t *end)
+    IonTrackedOptimizationsTypeInfo(const uint8_t* start, const uint8_t* end)
       : start_(start), end_(end)
     {
         // Can be empty; i.e., no type info was tracked.
@@ -496,24 +496,24 @@ class IonTrackedOptimizationsTypeInfo
     // An adapter is provided below.
     struct ForEachOp
     {
-        virtual void readType(const IonTrackedTypeWithAddendum &tracked) = 0;
+        virtual void readType(const IonTrackedTypeWithAddendum& tracked) = 0;
         virtual void operator()(JS::TrackedTypeSite site, MIRType mirType) = 0;
     };
 
     class ForEachOpAdapter : public ForEachOp
     {
-        JS::ForEachTrackedOptimizationTypeInfoOp &op_;
+        JS::ForEachTrackedOptimizationTypeInfoOp& op_;
 
       public:
-        explicit ForEachOpAdapter(JS::ForEachTrackedOptimizationTypeInfoOp &op)
+        explicit ForEachOpAdapter(JS::ForEachTrackedOptimizationTypeInfoOp& op)
           : op_(op)
         { }
 
-        void readType(const IonTrackedTypeWithAddendum &tracked) override;
+        void readType(const IonTrackedTypeWithAddendum& tracked) override;
         void operator()(JS::TrackedTypeSite site, MIRType mirType) override;
     };
 
-    void forEach(ForEachOp &op, const IonTrackedTypeVector *allTypes);
+    void forEach(ForEachOp& op, const IonTrackedTypeVector* allTypes);
 };
 
 template <class Entry>
@@ -524,8 +524,8 @@ class IonTrackedOptimizationsOffsetsTable
     uint32_t entryOffsets_[1];
 
   protected:
-    const uint8_t *payloadEnd() const {
-        return (uint8_t *)(this) - padding_;
+    const uint8_t* payloadEnd() const {
+        return (uint8_t*)(this) - padding_;
     }
 
   public:
@@ -536,8 +536,8 @@ class IonTrackedOptimizationsOffsetsTable
     }
 
     Entry entry(uint32_t index) const {
-        const uint8_t *start = payloadEnd() - entryOffset(index);
-        const uint8_t *end = payloadEnd();
+        const uint8_t* start = payloadEnd() - entryOffset(index);
+        const uint8_t* end = payloadEnd();
         if (index < numEntries() - 1)
             end -= entryOffset(index + 1);
         return Entry(start, end);
@@ -550,7 +550,7 @@ class IonTrackedOptimizationsRegionTable
   public:
     mozilla::Maybe<IonTrackedOptimizationsRegion> findRegion(uint32_t offset) const;
 
-    const uint8_t *payloadStart() const { return payloadEnd() - entryOffset(0); }
+    const uint8_t* payloadStart() const { return payloadEnd() - entryOffset(0); }
 };
 
 typedef IonTrackedOptimizationsOffsetsTable<IonTrackedOptimizationsAttempts>
@@ -560,13 +560,13 @@ typedef IonTrackedOptimizationsOffsetsTable<IonTrackedOptimizationsTypeInfo>
     IonTrackedOptimizationsTypesTable;
 
 bool
-WriteIonTrackedOptimizationsTable(JSContext *cx, CompactBufferWriter &writer,
-                                  const NativeToTrackedOptimizations *start,
-                                  const NativeToTrackedOptimizations *end,
-                                  const UniqueTrackedOptimizations &unique,
-                                  uint32_t *numRegions, uint32_t *regionTableOffsetp,
-                                  uint32_t *typesTableOffsetp, uint32_t *attemptsTableOffsetp,
-                                  IonTrackedTypeVector *allTypes);
+WriteIonTrackedOptimizationsTable(JSContext* cx, CompactBufferWriter& writer,
+                                  const NativeToTrackedOptimizations* start,
+                                  const NativeToTrackedOptimizations* end,
+                                  const UniqueTrackedOptimizations& unique,
+                                  uint32_t* numRegions, uint32_t* regionTableOffsetp,
+                                  uint32_t* typesTableOffsetp, uint32_t* attemptsTableOffsetp,
+                                  IonTrackedTypeVector* allTypes);
 
 } // namespace jit
 } // namespace js

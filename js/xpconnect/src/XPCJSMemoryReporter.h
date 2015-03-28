@@ -21,10 +21,10 @@ typedef nsDataHashtable<nsUint64HashKey, nsCString> WindowPaths;
 class JSReporter
 {
 public:
-    static nsresult CollectReports(WindowPaths *windowPaths,
-                                   WindowPaths *topWindowPaths,
-                                   nsIMemoryReporterCallback *cb,
-                                   nsISupports *closure,
+    static nsresult CollectReports(WindowPaths* windowPaths,
+                                   WindowPaths* topWindowPaths,
+                                   nsIMemoryReporterCallback* cb,
+                                   nsISupports* closure,
                                    bool anonymize);
 };
 

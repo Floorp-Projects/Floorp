@@ -294,7 +294,7 @@ ITT_INLINE long __itt_interlocked_increment(volatile long* ptr)
 #define __itt_thread_yield()      sched_yield()
 #if ITT_ARCH==ITT_ARCH_IA64
 #ifdef __INTEL_COMPILER
-#define __TBB_machine_fetchadd4(addr, val) __fetchadd4_acq((void *)addr, val)
+#define __TBB_machine_fetchadd4(addr, val) __fetchadd4_acq((void*)addr, val)
 #else  /* __INTEL_COMPILER */
 /* TODO: Add Support for not Intel compilers for IA64 */
 #endif /* __INTEL_COMPILER */

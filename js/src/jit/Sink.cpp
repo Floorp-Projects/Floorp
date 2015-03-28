@@ -21,8 +21,8 @@ namespace jit {
 // CommonDominator function returns the basic block which dominate the last
 // common dominator and the definition. If no such block exists, then this
 // functions return null.
-static MBasicBlock *
-CommonDominator(MBasicBlock *commonDominator, MBasicBlock *defBlock)
+static MBasicBlock*
+CommonDominator(MBasicBlock* commonDominator, MBasicBlock* defBlock)
 {
     // This is the first instruction visited, record its basic block as being
     // the only interesting one.
@@ -32,7 +32,7 @@ CommonDominator(MBasicBlock *commonDominator, MBasicBlock *defBlock)
     // Iterate on immediate dominators of the known common dominator to find a
     // block which dominates all previous uses as well as this instruction.
     while (!commonDominator->dominates(defBlock)) {
-        MBasicBlock *nextBlock = commonDominator->immediateDominator();
+        MBasicBlock* nextBlock = commonDominator->immediateDominator();
         // All uses are dominated, so, this cannot happen unless the graph
         // coherency is not respected.
         MOZ_ASSERT(commonDominator != nextBlock);
@@ -43,9 +43,9 @@ CommonDominator(MBasicBlock *commonDominator, MBasicBlock *defBlock)
 }
 
 bool
-Sink(MIRGenerator *mir, MIRGraph &graph)
+Sink(MIRGenerator* mir, MIRGraph& graph)
 {
-    TempAllocator &alloc = graph.alloc();
+    TempAllocator& alloc = graph.alloc();
     bool sinkEnabled = mir->optimizationInfo().sinkEnabled();
 
     for (PostorderIterator block = graph.poBegin(); block != graph.poEnd(); block++) {
@@ -53,7 +53,7 @@ Sink(MIRGenerator *mir, MIRGraph &graph)
             return false;
 
         for (MInstructionReverseIterator iter = block->rbegin(); iter != block->rend(); ) {
-            MInstruction *ins = *iter++;
+            MInstruction* ins = *iter++;
 
             // Only instructions which can be recovered on bailout can be moved
             // into the bailout paths.
@@ -67,14 +67,14 @@ Sink(MIRGenerator *mir, MIRGraph &graph)
             // instruction.
             bool hasLiveUses = false;
             bool hasUses = false;
-            MBasicBlock *usesDominator = nullptr;
+            MBasicBlock* usesDominator = nullptr;
             for (MUseIterator i(ins->usesBegin()), e(ins->usesEnd()); i != e; i++) {
                 hasUses = true;
-                MNode *consumerNode = (*i)->consumer();
+                MNode* consumerNode = (*i)->consumer();
                 if (consumerNode->isResumePoint())
                     continue;
 
-                MDefinition *consumer = consumerNode->toDefinition();
+                MDefinition* consumer = consumerNode->toDefinition();
                 if (consumer->isRecoveredOnBailout())
                     continue;
 
@@ -82,7 +82,7 @@ Sink(MIRGenerator *mir, MIRGraph &graph)
 
                 // If the instruction is a Phi, then we should dominate the
                 // predecessor from which the value is coming from.
-                MBasicBlock *consumerBlock = consumer->block();
+                MBasicBlock* consumerBlock = consumer->block();
                 if (consumer->isPhi())
                     consumerBlock = consumerBlock->getPredecessor(consumer->indexOf(*i));
 
@@ -130,10 +130,10 @@ Sink(MIRGenerator *mir, MIRGraph &graph)
             // of the uses and the original instruction. This prevent moving the
             // computation of the arguments into an inline function if there is
             // no major win.
-            MBasicBlock *lastJoin = usesDominator;
+            MBasicBlock* lastJoin = usesDominator;
             while (*block != lastJoin && lastJoin->numPredecessors() == 1) {
                 MOZ_ASSERT(lastJoin != lastJoin->immediateDominator());
-                MBasicBlock *next = lastJoin->immediateDominator();
+                MBasicBlock* next = lastJoin->immediateDominator();
                 if (next->numSuccessors() > 1)
                     break;
                 lastJoin = next;
@@ -174,26 +174,26 @@ Sink(MIRGenerator *mir, MIRGraph &graph)
                     return false;
             }
 
-            MInstruction *clone = ins->clone(alloc, operands);
+            MInstruction* clone = ins->clone(alloc, operands);
             ins->block()->insertBefore(ins, clone);
             clone->setRecoveredOnBailout();
 
             // We should not update the producer of the entry resume point, as
             // it cannot refer to any instruction within the basic block excepts
             // for Phi nodes.
-            MResumePoint *entry = usesDominator->entryResumePoint();
+            MResumePoint* entry = usesDominator->entryResumePoint();
 
             // Replace the instruction by its clone in all the resume points /
             // recovered-on-bailout instructions which are not in blocks which
             // are dominated by the usesDominator block.
             for (MUseIterator i(ins->usesBegin()), e(ins->usesEnd()); i != e; ) {
-                MUse *use = *i++;
-                MNode *consumer = use->consumer();
+                MUse* use = *i++;
+                MNode* consumer = use->consumer();
 
                 // If the consumer is a Phi, then we look for the index of the
                 // use to find the corresponding predecessor block, which is
                 // then used as the consumer block.
-                MBasicBlock *consumerBlock = consumer->block();
+                MBasicBlock* consumerBlock = consumer->block();
                 if (consumer->isDefinition() && consumer->toDefinition()->isPhi()) {
                     consumerBlock = consumerBlock->getPredecessor(
                         consumer->toDefinition()->toPhi()->indexOf(use));
@@ -220,7 +220,7 @@ Sink(MIRGenerator *mir, MIRGraph &graph)
             // Now, that all uses which are not dominated by usesDominator are
             // using the cloned instruction, we can safely move the instruction
             // into the usesDominator block.
-            MInstruction *at = usesDominator->safeInsertTop(nullptr, MBasicBlock::IgnoreRecover);
+            MInstruction* at = usesDominator->safeInsertTop(nullptr, MBasicBlock::IgnoreRecover);
             block->moveBefore(at, ins);
         }
     }

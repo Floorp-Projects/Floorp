@@ -28,7 +28,7 @@ enum IonRegisterAllocator {
 };
 
 static inline mozilla::Maybe<IonRegisterAllocator>
-LookupRegisterAllocator(const char *name)
+LookupRegisterAllocator(const char* name)
 {
     if (!strcmp(name, "lsra"))
         return mozilla::Some(RegisterAllocator_LSRA);
@@ -71,7 +71,7 @@ struct JitOptions
     uint32_t smallFunctionMaxBytecodeLength_;
 
     JitOptions();
-    bool isSmallFunction(JSScript *script) const;
+    bool isSmallFunction(JSScript* script) const;
     void setEagerCompilation();
     void setCompilerWarmUpThreshold(uint32_t warmUpThreshold);
     void resetCompilerWarmUpThreshold();

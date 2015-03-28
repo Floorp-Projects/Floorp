@@ -77,7 +77,7 @@ enum TraceLoggerTextId {
     TraceLogger_Last
 };
 
-inline const char *
+inline const char*
 TLTextIdString(TraceLoggerTextId id)
 {
     switch (id) {
@@ -93,7 +93,7 @@ TLTextIdString(TraceLoggerTextId id)
 }
 
 uint32_t
-TLStringToTextId(JSLinearString *str);
+TLStringToTextId(JSLinearString* str);
 
 inline bool
 TLTextIdIsToggable(uint32_t id)
@@ -127,7 +127,7 @@ TLTextIdIsTreeEvent(uint32_t id)
 
 template <class T>
 class ContinuousSpace {
-    T *data_;
+    T* data_;
     uint32_t size_;
     uint32_t capacity_;
 
@@ -139,7 +139,7 @@ class ContinuousSpace {
     bool init() {
         capacity_ = 64;
         size_ = 0;
-        data_ = (T *) js_malloc(capacity_ * sizeof(T));
+        data_ = (T*) js_malloc(capacity_ * sizeof(T));
         if (!data_)
             return false;
 
@@ -152,7 +152,7 @@ class ContinuousSpace {
         data_ = nullptr;
     }
 
-    T *data() {
+    T* data() {
         return data_;
     }
 
@@ -173,7 +173,7 @@ class ContinuousSpace {
         return size_ - 1;
     }
 
-    T &lastEntry() {
+    T& lastEntry() {
         return data()[lastEntryId()];
     }
 
@@ -191,7 +191,7 @@ class ContinuousSpace {
         uint32_t nCapacity = capacity_ * 2;
         if (size_ + count > nCapacity)
             nCapacity = size_ + count;
-        T *entries = (T *) js_realloc(data_, nCapacity * sizeof(T));
+        T* entries = (T*) js_realloc(data_, nCapacity * sizeof(T));
 
         if (!entries)
             return false;
@@ -202,17 +202,17 @@ class ContinuousSpace {
         return true;
     }
 
-    T &operator[](size_t i) {
+    T& operator[](size_t i) {
         MOZ_ASSERT(i < size_);
         return data()[i];
     }
 
-    void push(T &data) {
+    void push(T& data) {
         MOZ_ASSERT(size_ < capacity_);
         data()[size_++] = data;
     }
 
-    T &pushUninitialized() {
+    T& pushUninitialized() {
         MOZ_ASSERT(size_ < capacity_);
         return data()[size_++];
     }

@@ -154,7 +154,7 @@ enum BailoutKind
     Bailout_IonExceptionDebugMode,
 };
 
-inline const char *
+inline const char*
 BailoutKindString(BailoutKind kind)
 {
     switch (kind) {
@@ -289,7 +289,7 @@ class SimdConstant {
         cst.fillInt32x4(x, y, z, w);
         return cst;
     }
-    static SimdConstant CreateX4(int32_t *array) {
+    static SimdConstant CreateX4(int32_t* array) {
         SimdConstant cst;
         cst.fillInt32x4(array[0], array[1], array[2], array[3]);
         return cst;
@@ -304,7 +304,7 @@ class SimdConstant {
         cst.fillFloat32x4(x, y, z, w);
         return cst;
     }
-    static SimdConstant CreateX4(float *array) {
+    static SimdConstant CreateX4(float* array) {
         SimdConstant cst;
         cst.fillFloat32x4(array[0], array[1], array[2], array[3]);
         return cst;
@@ -332,16 +332,16 @@ class SimdConstant {
         return type_;
     }
 
-    const int32_t *asInt32x4() const {
+    const int32_t* asInt32x4() const {
         MOZ_ASSERT(defined() && type_ == Int32x4);
         return u.i32x4;
     }
-    const float *asFloat32x4() const {
+    const float* asFloat32x4() const {
         MOZ_ASSERT(defined() && type_ == Float32x4);
         return u.f32x4;
     }
 
-    bool operator==(const SimdConstant &rhs) const {
+    bool operator==(const SimdConstant& rhs) const {
         MOZ_ASSERT(defined() && rhs.defined());
         if (type() != rhs.type())
             return false;
@@ -350,11 +350,11 @@ class SimdConstant {
 
     // SimdConstant is a HashPolicy
     typedef SimdConstant Lookup;
-    static HashNumber hash(const SimdConstant &val) {
+    static HashNumber hash(const SimdConstant& val) {
         uint32_t hash = mozilla::HashBytes(&val.u, sizeof(val.u));
         return mozilla::AddToHash(hash, val.type_);
     }
-    static bool match(const SimdConstant &lhs, const SimdConstant &rhs) {
+    static bool match(const SimdConstant& lhs, const SimdConstant& rhs) {
         return lhs == rhs;
     }
 };
@@ -458,7 +458,7 @@ MIRTypeToTag(MIRType type)
     return JSVAL_TYPE_TO_TAG(ValueTypeFromMIRType(type));
 }
 
-static inline const char *
+static inline const char*
 StringFromMIRType(MIRType type)
 {
   switch (type) {

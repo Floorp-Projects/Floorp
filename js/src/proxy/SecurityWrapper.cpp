@@ -13,8 +13,8 @@ using namespace js;
 
 template <class Base>
 bool
-SecurityWrapper<Base>::enter(JSContext *cx, HandleObject wrapper, HandleId id,
-                             Wrapper::Action act, bool *bp) const
+SecurityWrapper<Base>::enter(JSContext* cx, HandleObject wrapper, HandleId id,
+                             Wrapper::Action act, bool* bp) const
 {
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     *bp = false;
@@ -23,7 +23,7 @@ SecurityWrapper<Base>::enter(JSContext *cx, HandleObject wrapper, HandleId id,
 
 template <class Base>
 bool
-SecurityWrapper<Base>::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
+SecurityWrapper<Base>::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
                                   CallArgs args) const
 {
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
@@ -32,8 +32,8 @@ SecurityWrapper<Base>::nativeCall(JSContext *cx, IsAcceptableThis test, NativeIm
 
 template <class Base>
 bool
-SecurityWrapper<Base>::setPrototype(JSContext *cx, HandleObject wrapper, HandleObject proto,
-                                    ObjectOpResult &result) const
+SecurityWrapper<Base>::setPrototype(JSContext* cx, HandleObject wrapper, HandleObject proto,
+                                    ObjectOpResult& result) const
 {
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     return false;
@@ -41,8 +41,8 @@ SecurityWrapper<Base>::setPrototype(JSContext *cx, HandleObject wrapper, HandleO
 
 template <class Base>
 bool
-SecurityWrapper<Base>::setImmutablePrototype(JSContext *cx, HandleObject wrapper,
-                                             bool *succeeded) const
+SecurityWrapper<Base>::setImmutablePrototype(JSContext* cx, HandleObject wrapper,
+                                             bool* succeeded) const
 {
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
     return false;
@@ -50,8 +50,8 @@ SecurityWrapper<Base>::setImmutablePrototype(JSContext *cx, HandleObject wrapper
 
 template <class Base>
 bool
-SecurityWrapper<Base>::preventExtensions(JSContext *cx, HandleObject wrapper,
-                                         ObjectOpResult &result) const
+SecurityWrapper<Base>::preventExtensions(JSContext* cx, HandleObject wrapper,
+                                         ObjectOpResult& result) const
 {
     // Just like BaseProxyHandler, SecurityWrappers claim by default to always
     // be extensible, so as not to leak information about the state of the
@@ -61,7 +61,7 @@ SecurityWrapper<Base>::preventExtensions(JSContext *cx, HandleObject wrapper,
 
 template <class Base>
 bool
-SecurityWrapper<Base>::isExtensible(JSContext *cx, HandleObject wrapper, bool *extensible) const
+SecurityWrapper<Base>::isExtensible(JSContext* cx, HandleObject wrapper, bool* extensible) const
 {
     // See above.
     *extensible = true;
@@ -73,7 +73,7 @@ SecurityWrapper<Base>::isExtensible(JSContext *cx, HandleObject wrapper, bool *e
 // toString() will take effect and do the right thing here.
 template <class Base>
 bool
-SecurityWrapper<Base>::defaultValue(JSContext *cx, HandleObject wrapper,
+SecurityWrapper<Base>::defaultValue(JSContext* cx, HandleObject wrapper,
                                     JSType hint, MutableHandleValue vp) const
 {
     return OrdinaryToPrimitive(cx, wrapper, hint, vp);
@@ -81,21 +81,21 @@ SecurityWrapper<Base>::defaultValue(JSContext *cx, HandleObject wrapper,
 
 template <class Base>
 bool
-SecurityWrapper<Base>::objectClassIs(HandleObject obj, ESClassValue classValue, JSContext *cx) const
+SecurityWrapper<Base>::objectClassIs(HandleObject obj, ESClassValue classValue, JSContext* cx) const
 {
     return false;
 }
 
 template <class Base>
 bool
-SecurityWrapper<Base>::regexp_toShared(JSContext *cx, HandleObject obj, RegExpGuard *g) const
+SecurityWrapper<Base>::regexp_toShared(JSContext* cx, HandleObject obj, RegExpGuard* g) const
 {
     return Base::regexp_toShared(cx, obj, g);
 }
 
 template <class Base>
 bool
-SecurityWrapper<Base>::boxedValue_unbox(JSContext *cx, HandleObject obj, MutableHandleValue vp) const
+SecurityWrapper<Base>::boxedValue_unbox(JSContext* cx, HandleObject obj, MutableHandleValue vp) const
 {
     vp.setUndefined();
     return true;
@@ -103,17 +103,17 @@ SecurityWrapper<Base>::boxedValue_unbox(JSContext *cx, HandleObject obj, Mutable
 
 template <class Base>
 bool
-SecurityWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper, HandleId id,
+SecurityWrapper<Base>::defineProperty(JSContext* cx, HandleObject wrapper, HandleId id,
                                       Handle<PropertyDescriptor> desc,
-                                      ObjectOpResult &result) const
+                                      ObjectOpResult& result) const
 {
     if (desc.getter() || desc.setter()) {
         RootedValue idVal(cx, IdToValue(id));
-        JSString *str = ValueToSource(cx, idVal);
+        JSString* str = ValueToSource(cx, idVal);
         if (!str)
             return false;
         AutoStableStringChars chars(cx);
-        const char16_t *prop = nullptr;
+        const char16_t* prop = nullptr;
         if (str->ensureFlat(cx) && chars.initTwoByte(cx, str))
             prop = chars.twoByteChars();
         JS_ReportErrorNumberUC(cx, GetErrorMessage, nullptr,
@@ -126,7 +126,7 @@ SecurityWrapper<Base>::defineProperty(JSContext *cx, HandleObject wrapper, Handl
 
 template <class Base>
 bool
-SecurityWrapper<Base>::watch(JSContext *cx, HandleObject proxy,
+SecurityWrapper<Base>::watch(JSContext* cx, HandleObject proxy,
                              HandleId id, HandleObject callable) const
 {
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);
@@ -135,7 +135,7 @@ SecurityWrapper<Base>::watch(JSContext *cx, HandleObject proxy,
 
 template <class Base>
 bool
-SecurityWrapper<Base>::unwatch(JSContext *cx, HandleObject proxy,
+SecurityWrapper<Base>::unwatch(JSContext* cx, HandleObject proxy,
                                HandleId id) const
 {
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNWRAP_DENIED);

@@ -20,7 +20,7 @@ using namespace js;
 using namespace js::gc;
 
 bool
-js::ForOfPIC::Chain::initialize(JSContext *cx)
+js::ForOfPIC::Chain::initialize(JSContext* cx)
 {
     MOZ_ASSERT(!initialized_);
 
@@ -46,26 +46,26 @@ js::ForOfPIC::Chain::initialize(JSContext *cx)
     disabled_ = true;
 
     // Look up Array.prototype[@@iterator], ensure it's a slotful shape.
-    Shape *iterShape = arrayProto->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
+    Shape* iterShape = arrayProto->lookup(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().iterator));
     if (!iterShape || !iterShape->hasSlot() || !iterShape->hasDefaultGetter())
         return true;
 
     // Get the referred value, and ensure it holds the canonical ArrayValues function.
     Value iterator = arrayProto->getSlot(iterShape->slot());
-    JSFunction *iterFun;
+    JSFunction* iterFun;
     if (!IsFunctionObject(iterator, &iterFun))
         return true;
     if (!IsSelfHostedFunctionWithName(iterFun, cx->names().ArrayValues))
         return true;
 
     // Look up the 'next' value on ArrayIterator.prototype
-    Shape *nextShape = arrayIteratorProto->lookup(cx, cx->names().next);
+    Shape* nextShape = arrayIteratorProto->lookup(cx, cx->names().next);
     if (!nextShape || !nextShape->hasSlot())
         return true;
 
     // Get the referred value, ensure it holds the canonical ArrayIteratorNext function.
     Value next = arrayIteratorProto->getSlot(nextShape->slot());
-    JSFunction *nextFun;
+    JSFunction* nextFun;
     if (!IsFunctionObject(next, &nextFun))
         return true;
     if (!IsSelfHostedFunctionWithName(nextFun, cx->names().ArrayIteratorNext))
@@ -81,10 +81,10 @@ js::ForOfPIC::Chain::initialize(JSContext *cx)
     return true;
 }
 
-js::ForOfPIC::Stub *
-js::ForOfPIC::Chain::isArrayOptimized(ArrayObject *obj)
+js::ForOfPIC::Stub*
+js::ForOfPIC::Chain::isArrayOptimized(ArrayObject* obj)
 {
-    Stub *stub = getMatchingStub(obj);
+    Stub* stub = getMatchingStub(obj);
     if (!stub)
         return nullptr;
 
@@ -100,7 +100,7 @@ js::ForOfPIC::Chain::isArrayOptimized(ArrayObject *obj)
 }
 
 bool
-js::ForOfPIC::Chain::tryOptimizeArray(JSContext *cx, HandleArrayObject array, bool *optimized)
+js::ForOfPIC::Chain::tryOptimizeArray(JSContext* cx, HandleArrayObject array, bool* optimized)
 {
     MOZ_ASSERT(optimized);
 
@@ -128,7 +128,7 @@ js::ForOfPIC::Chain::tryOptimizeArray(JSContext *cx, HandleArrayObject array, bo
     MOZ_ASSERT(isArrayStateStillSane());
 
     // Check if stub already exists.
-    ForOfPIC::Stub *stub = isArrayOptimized(&array->as<ArrayObject>());
+    ForOfPIC::Stub* stub = isArrayOptimized(&array->as<ArrayObject>());
     if (stub) {
         *optimized = true;
         return true;
@@ -161,15 +161,15 @@ js::ForOfPIC::Chain::tryOptimizeArray(JSContext *cx, HandleArrayObject array, bo
     return true;
 }
 
-js::ForOfPIC::Stub *
-js::ForOfPIC::Chain::getMatchingStub(JSObject *obj)
+js::ForOfPIC::Stub*
+js::ForOfPIC::Chain::getMatchingStub(JSObject* obj)
 {
     // Ensure PIC is initialized and not disabled.
     if (!initialized_ || disabled_)
         return nullptr;
 
     // Check if there is a matching stub.
-    for (Stub *stub = stubs(); stub != nullptr; stub = stub->next()) {
+    for (Stub* stub = stubs(); stub != nullptr; stub = stub->next()) {
         if (stub->shape() == obj->maybeShape())
             return stub;
     }
@@ -178,7 +178,7 @@ js::ForOfPIC::Chain::getMatchingStub(JSObject *obj)
 }
 
 bool
-js::ForOfPIC::Chain::isOptimizableArray(JSObject *obj)
+js::ForOfPIC::Chain::isOptimizableArray(JSObject* obj)
 {
     MOZ_ASSERT(obj->is<ArrayObject>());
 
@@ -208,7 +208,7 @@ js::ForOfPIC::Chain::isArrayStateStillSane()
 }
 
 void
-js::ForOfPIC::Chain::reset(JSContext *cx)
+js::ForOfPIC::Chain::reset(JSContext* cx)
 {
     // Should never reset a disabled_ stub.
     MOZ_ASSERT(!disabled_);
@@ -237,9 +237,9 @@ js::ForOfPIC::Chain::eraseChain()
     MOZ_ASSERT(!disabled_);
 
     // Free all stubs.
-    Stub *stub = stubs_;
+    Stub* stub = stubs_;
     while (stub) {
-        Stub *next = stub->next();
+        Stub* next = stub->next();
         js_delete(stub);
         stub = next;
     }
@@ -249,7 +249,7 @@ js::ForOfPIC::Chain::eraseChain()
 
 // Trace the pointers stored directly on the stub.
 void
-js::ForOfPIC::Chain::mark(JSTracer *trc)
+js::ForOfPIC::Chain::mark(JSTracer* trc)
 {
     if (!initialized_ || disabled_)
         return;
@@ -269,11 +269,11 @@ js::ForOfPIC::Chain::mark(JSTracer *trc)
 }
 
 void
-js::ForOfPIC::Chain::sweep(FreeOp *fop)
+js::ForOfPIC::Chain::sweep(FreeOp* fop)
 {
     // Free all the stubs in the chain.
     while (stubs_) {
-        Stub *next = stubs_->next();
+        Stub* next = stubs_->next();
         fop->delete_(stubs_);
         stubs_ = next;
     }
@@ -281,16 +281,16 @@ js::ForOfPIC::Chain::sweep(FreeOp *fop)
 }
 
 static void
-ForOfPIC_finalize(FreeOp *fop, JSObject *obj)
+ForOfPIC_finalize(FreeOp* fop, JSObject* obj)
 {
-    if (ForOfPIC::Chain *chain = ForOfPIC::fromJSObject(&obj->as<NativeObject>()))
+    if (ForOfPIC::Chain* chain = ForOfPIC::fromJSObject(&obj->as<NativeObject>()))
         chain->sweep(fop);
 }
 
 static void
-ForOfPIC_traceObject(JSTracer *trc, JSObject *obj)
+ForOfPIC_traceObject(JSTracer* trc, JSObject* obj)
 {
-    if (ForOfPIC::Chain *chain = ForOfPIC::fromJSObject(&obj->as<NativeObject>()))
+    if (ForOfPIC::Chain* chain = ForOfPIC::fromJSObject(&obj->as<NativeObject>()))
         chain->mark(trc);
 }
 
@@ -304,26 +304,26 @@ const Class ForOfPIC::jsclass = {
     ForOfPIC_traceObject
 };
 
-/* static */ NativeObject *
-js::ForOfPIC::createForOfPICObject(JSContext *cx, Handle<GlobalObject*> global)
+/* static */ NativeObject*
+js::ForOfPIC::createForOfPICObject(JSContext* cx, Handle<GlobalObject*> global)
 {
     assertSameCompartment(cx, global);
-    NativeObject *obj = NewNativeObjectWithGivenProto(cx, &ForOfPIC::jsclass, NullPtr());
+    NativeObject* obj = NewNativeObjectWithGivenProto(cx, &ForOfPIC::jsclass, NullPtr());
     if (!obj)
         return nullptr;
-    ForOfPIC::Chain *chain = cx->new_<ForOfPIC::Chain>();
+    ForOfPIC::Chain* chain = cx->new_<ForOfPIC::Chain>();
     if (!chain)
         return nullptr;
     obj->setPrivate(chain);
     return obj;
 }
 
-/* static */ js::ForOfPIC::Chain *
-js::ForOfPIC::create(JSContext *cx)
+/* static */ js::ForOfPIC::Chain*
+js::ForOfPIC::create(JSContext* cx)
 {
     MOZ_ASSERT(!cx->global()->getForOfPICObject());
-    Rooted<GlobalObject *> global(cx, cx->global());
-    NativeObject *obj = GlobalObject::getOrCreateForOfPICObject(cx, global);
+    Rooted<GlobalObject*> global(cx, cx->global());
+    NativeObject* obj = GlobalObject::getOrCreateForOfPICObject(cx, global);
     if (!obj)
         return nullptr;
     return fromJSObject(obj);

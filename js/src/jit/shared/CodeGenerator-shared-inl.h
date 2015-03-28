@@ -14,7 +14,7 @@ namespace js {
 namespace jit {
 
 static inline int32_t
-ToInt32(const LAllocation *a)
+ToInt32(const LAllocation* a)
 {
     if (a->isConstantValue())
         return a->toConstant()->toInt32();
@@ -24,32 +24,32 @@ ToInt32(const LAllocation *a)
 }
 
 static inline double
-ToDouble(const LAllocation *a)
+ToDouble(const LAllocation* a)
 {
     return a->toConstant()->toNumber();
 }
 
 static inline Register
-ToRegister(const LAllocation &a)
+ToRegister(const LAllocation& a)
 {
     MOZ_ASSERT(a.isGeneralReg());
     return a.toGeneralReg()->reg();
 }
 
 static inline Register
-ToRegister(const LAllocation *a)
+ToRegister(const LAllocation* a)
 {
     return ToRegister(*a);
 }
 
 static inline Register
-ToRegister(const LDefinition *def)
+ToRegister(const LDefinition* def)
 {
     return ToRegister(*def->output());
 }
 
 static inline Register
-ToTempRegisterOrInvalid(const LDefinition *def)
+ToTempRegisterOrInvalid(const LDefinition* def)
 {
     if (def->isBogusTemp())
         return InvalidReg;
@@ -57,38 +57,38 @@ ToTempRegisterOrInvalid(const LDefinition *def)
 }
 
 static inline Register
-ToTempUnboxRegister(const LDefinition *def)
+ToTempUnboxRegister(const LDefinition* def)
 {
     return ToTempRegisterOrInvalid(def);
 }
 
 static inline Register
-ToRegisterOrInvalid(const LDefinition *a)
+ToRegisterOrInvalid(const LDefinition* a)
 {
     return a ? ToRegister(a) : InvalidReg;
 }
 
 static inline FloatRegister
-ToFloatRegister(const LAllocation &a)
+ToFloatRegister(const LAllocation& a)
 {
     MOZ_ASSERT(a.isFloatReg());
     return a.toFloatReg()->reg();
 }
 
 static inline FloatRegister
-ToFloatRegister(const LAllocation *a)
+ToFloatRegister(const LAllocation* a)
 {
     return ToFloatRegister(*a);
 }
 
 static inline FloatRegister
-ToFloatRegister(const LDefinition *def)
+ToFloatRegister(const LDefinition* def)
 {
     return ToFloatRegister(*def->output());
 }
 
 static inline AnyRegister
-ToAnyRegister(const LAllocation &a)
+ToAnyRegister(const LAllocation& a)
 {
     MOZ_ASSERT(a.isGeneralReg() || a.isFloatReg());
     if (a.isGeneralReg())
@@ -97,19 +97,19 @@ ToAnyRegister(const LAllocation &a)
 }
 
 static inline AnyRegister
-ToAnyRegister(const LAllocation *a)
+ToAnyRegister(const LAllocation* a)
 {
     return ToAnyRegister(*a);
 }
 
 static inline AnyRegister
-ToAnyRegister(const LDefinition *def)
+ToAnyRegister(const LDefinition* def)
 {
     return ToAnyRegister(def->output());
 }
 
 static inline Int32Key
-ToInt32Key(const LAllocation *a)
+ToInt32Key(const LAllocation* a)
 {
     if (a->isConstant())
         return Int32Key(ToInt32(a));
@@ -117,7 +117,7 @@ ToInt32Key(const LAllocation *a)
 }
 
 static inline ValueOperand
-GetValueOutput(LInstruction *ins)
+GetValueOutput(LInstruction* ins)
 {
 #if defined(JS_NUNBOX32)
     return ValueOperand(ToRegister(ins->getDef(TYPE_INDEX)),
@@ -143,44 +143,44 @@ GetTempValue(Register type, Register payload)
 }
 
 void
-CodeGeneratorShared::saveLive(LInstruction *ins)
+CodeGeneratorShared::saveLive(LInstruction* ins)
 {
     MOZ_ASSERT(!ins->isCall());
-    LSafepoint *safepoint = ins->safepoint();
+    LSafepoint* safepoint = ins->safepoint();
     masm.PushRegsInMask(safepoint->liveRegs());
 }
 
 void
-CodeGeneratorShared::restoreLive(LInstruction *ins)
+CodeGeneratorShared::restoreLive(LInstruction* ins)
 {
     MOZ_ASSERT(!ins->isCall());
-    LSafepoint *safepoint = ins->safepoint();
+    LSafepoint* safepoint = ins->safepoint();
     masm.PopRegsInMask(safepoint->liveRegs());
 }
 
 void
-CodeGeneratorShared::restoreLiveIgnore(LInstruction *ins, LiveRegisterSet ignore)
+CodeGeneratorShared::restoreLiveIgnore(LInstruction* ins, LiveRegisterSet ignore)
 {
     MOZ_ASSERT(!ins->isCall());
-    LSafepoint *safepoint = ins->safepoint();
+    LSafepoint* safepoint = ins->safepoint();
     masm.PopRegsInMaskIgnore(safepoint->liveRegs(), ignore);
 }
 
 void
-CodeGeneratorShared::saveLiveVolatile(LInstruction *ins)
+CodeGeneratorShared::saveLiveVolatile(LInstruction* ins)
 {
     MOZ_ASSERT(!ins->isCall());
-    LSafepoint *safepoint = ins->safepoint();
+    LSafepoint* safepoint = ins->safepoint();
     LiveRegisterSet regs;
     regs.set() = RegisterSet::Intersect(safepoint->liveRegs().set(), RegisterSet::Volatile());
     masm.PushRegsInMask(regs);
 }
 
 void
-CodeGeneratorShared::restoreLiveVolatile(LInstruction *ins)
+CodeGeneratorShared::restoreLiveVolatile(LInstruction* ins)
 {
     MOZ_ASSERT(!ins->isCall());
-    LSafepoint *safepoint = ins->safepoint();
+    LSafepoint* safepoint = ins->safepoint();
     LiveRegisterSet regs;
     regs.set() = RegisterSet::Intersect(safepoint->liveRegs().set(), RegisterSet::Volatile());
     masm.PopRegsInMask(regs);
@@ -189,7 +189,7 @@ CodeGeneratorShared::restoreLiveVolatile(LInstruction *ins)
 void
 CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, bool isLoad,
                                                  Scalar::Type type, unsigned numElems,
-                                                 const Operand &mem, LAllocation alloc)
+                                                 const Operand& mem, LAllocation alloc)
 {
 #ifdef DEBUG
     using namespace Disassembler;

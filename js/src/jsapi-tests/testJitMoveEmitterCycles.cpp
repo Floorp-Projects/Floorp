@@ -52,8 +52,8 @@ static MOZ_CONSTEXPR_VAR js::jit::FloatRegister s29(29, js::jit::VFPRegister::Si
 static MOZ_CONSTEXPR_VAR js::jit::FloatRegister s30(30, js::jit::VFPRegister::Single);
 static MOZ_CONSTEXPR_VAR js::jit::FloatRegister s31(31, js::jit::VFPRegister::Single);
 
-static js::jit::JitCode *
-linkAndAllocate(JSContext *cx, js::jit::MacroAssembler *masm)
+static js::jit::JitCode*
+linkAndAllocate(JSContext* cx, js::jit::MacroAssembler* masm)
 {
     using namespace js;
     using namespace js::jit;
@@ -74,7 +74,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_simple)
     MoveEmitter mover(masm);
     MoveResolver mr;
     mr.setAllocator(alloc);
-    Simulator *sim = Simulator::Current();
+    Simulator* sim = Simulator::Current();
     mr.addMove(MoveOperand(d0), MoveOperand(d2), MoveOp::DOUBLE);
     sim->set_d_register_from_double(0, 2);
     mr.addMove(MoveOperand(d3), MoveOperand(d1), MoveOp::DOUBLE);
@@ -92,7 +92,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_simple)
     mover.emit(mr);
     mover.finish();
     masm.abiret();
-    JitCode *code = linkAndAllocate(cx, &masm);
+    JitCode* code = linkAndAllocate(cx, &masm);
     sim->call(code->raw(), 1, 1);
     CHECK(sim->get_double_from_d_register(2) == 2);
     CHECK(int(sim->get_double_from_d_register(1)) == 1);
@@ -115,7 +115,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen)
     MoveEmitter mover(masm);
     MoveResolver mr;
     mr.setAllocator(alloc);
-    Simulator *sim = Simulator::Current();
+    Simulator* sim = Simulator::Current();
     mr.addMove(MoveOperand(d9), MoveOperand(d14), MoveOp::DOUBLE);
     sim->set_d_register_from_double(9, 9);
     mr.addMove(MoveOperand(s24), MoveOperand(s25), MoveOp::FLOAT32);
@@ -171,7 +171,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen)
     mover.emit(mr);
     mover.finish();
     masm.abiret();
-    JitCode *code = linkAndAllocate(cx, &masm);
+    JitCode* code = linkAndAllocate(cx, &masm);
     sim->skipCalleeSavedRegsCheck = true;
     sim->call(code->raw(), 1, 1);
     CHECK(int(sim->get_double_from_d_register(14)) == 9);
@@ -215,7 +215,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen2)
     MoveEmitter mover(masm);
     MoveResolver mr;
     mr.setAllocator(alloc);
-    Simulator *sim = Simulator::Current();
+    Simulator* sim = Simulator::Current();
     mr.addMove(MoveOperand(d10), MoveOperand(d0), MoveOp::DOUBLE);
     sim->set_d_register_from_double(10, 10);
     mr.addMove(MoveOperand(s15), MoveOperand(s3), MoveOp::FLOAT32);
@@ -279,7 +279,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen2)
     mover.emit(mr);
     mover.finish();
     masm.abiret();
-    JitCode *code = linkAndAllocate(cx, &masm);
+    JitCode* code = linkAndAllocate(cx, &masm);
     sim->skipCalleeSavedRegsCheck = true;
     sim->call(code->raw(), 1, 1);
     CHECK(int(sim->get_double_from_d_register(0)) == 10);
@@ -328,7 +328,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen3)
     MoveEmitter mover(masm);
     MoveResolver mr;
     mr.setAllocator(alloc);
-    Simulator *sim = Simulator::Current();
+    Simulator* sim = Simulator::Current();
     mr.addMove(MoveOperand(s0), MoveOperand(s21), MoveOp::FLOAT32);
     sim->set_s_register_from_float(0, 0);
     mr.addMove(MoveOperand(s2), MoveOperand(s26), MoveOp::FLOAT32);
@@ -392,7 +392,7 @@ BEGIN_TEST(testJitMoveEmitterCycles_autogen3)
     mover.emit(mr);
     mover.finish();
     masm.abiret();
-    JitCode *code = linkAndAllocate(cx, &masm);
+    JitCode* code = linkAndAllocate(cx, &masm);
     sim->skipCalleeSavedRegsCheck = true;
     sim->call(code->raw(), 1, 1);
     CHECK(int(sim->get_float_from_s_register(21)) == 0);

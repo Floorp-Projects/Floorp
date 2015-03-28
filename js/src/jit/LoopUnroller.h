@@ -13,7 +13,7 @@ namespace js {
 namespace jit {
 
 bool
-UnrollLoops(MIRGraph &graph, const LoopIterationBoundVector &bounds);
+UnrollLoops(MIRGraph& graph, const LoopIterationBoundVector& bounds);
 
 } // namespace jit
 } // namespace js
