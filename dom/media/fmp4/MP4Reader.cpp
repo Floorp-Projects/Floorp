@@ -744,18 +744,6 @@ MP4Reader::Update(TrackType aTrack)
       mFoundSPSForTelemetry = AccumulateSPSTelemetry(extradata);
     }
 
-    if (sample && sample->crypto.valid) {
-      CryptoSample& crypto = sample->crypto;
-      MOZ_ASSERT(crypto.session_ids.IsEmpty());
-
-      ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-
-      nsRefPtr<CDMProxy> proxy = mDecoder->GetCDMProxy();
-      MOZ_ASSERT(proxy);
-
-      proxy->GetSessionIdsForKeyId(crypto.key, crypto.session_ids);
-    }
-
     if (sample) {
       decoder.mDecoder->Input(sample);
       if (aTrack == kVideo) {
