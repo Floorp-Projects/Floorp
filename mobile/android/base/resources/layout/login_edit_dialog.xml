@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:padding="@dimen/doorhanger_padding"
+              android:orientation="vertical">
+
+    <EditText android:id="@+id/username_edit"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:inputType="textNoSuggestions"
+              android:hint="@string/doorhanger_login_edit_username_hint"/>
+
+    <EditText android:id="@+id/password_edit"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:password="true"
+              android:hint="@string/doorhanger_login_edit_password_hint"/>
+
+    <CheckBox android:id="@+id/checkbox_toggle_password"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:text="@string/doorhanger_login_edit_toggle"
+              android:paddingTop="@dimen/doorhanger_padding"/>
+
+</LinearLayout>

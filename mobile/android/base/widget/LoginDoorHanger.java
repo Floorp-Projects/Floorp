@@ -5,13 +5,20 @@
 
 package org.mozilla.gecko.widget;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.TextView;
 import ch.boye.httpclientandroidlib.util.TextUtils;
 import org.json.JSONException;
@@ -22,6 +29,7 @@ import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 
 public class LoginDoorHanger extends DoorHanger {
     private static final String LOGTAG = "LoginDoorHanger";
+    private enum ActionType { EDIT };
 
     final TextView mTitle;
     final TextView mLogin;
@@ -53,7 +61,7 @@ public class LoginDoorHanger extends DoorHanger {
                 final String text = titleObj.getString("text");
                 mTitle.setText(text);
             } catch (JSONException e) {
-                Log.e(LOGTAG, "Error loading title from options JSON");
+                Log.e(LOGTAG, "Error loading title from options JSON", e);
             }
 
             final String resource = titleObj.optString("resource");
@@ -62,21 +70,16 @@ public class LoginDoorHanger extends DoorHanger {
                     @Override
                     public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
                         if (favicon != null) {
-                            mTitle.setCompoundDrawablesWithIntrinsicBounds(new BitmapDrawable(mContext.getResources(), favicon), null, null, null);
-                            mTitle.setCompoundDrawablePadding((int) mContext.getResources().getDimension(R.dimen.doorhanger_drawable_padding));
+                            mTitle.setCompoundDrawablesWithIntrinsicBounds(new BitmapDrawable(mResources, favicon), null, null, null);
+                            mTitle.setCompoundDrawablePadding((int) mResources.getDimension(R.dimen.doorhanger_drawable_padding));
                         }
                     }
                 });
             }
         }
 
-        final String subtext = options.optString("subtext");
-        if (!TextUtils.isEmpty(subtext)) {
-            mLogin.setText(subtext);
-            mLogin.setVisibility(View.VISIBLE);
-        } else {
-            mLogin.setVisibility(View.GONE);
-        }
+        final JSONObject actionText = options.optJSONObject("actionText");
+        addActionText(actionText);
     }
 
     @Override
@@ -91,12 +94,93 @@ public class LoginDoorHanger extends DoorHanger {
                 try {
                     response.put("callback", id);
                 } catch (JSONException e) {
-                    Log.e(LOGTAG, "Error making doorhanger response message");
+                    Log.e(LOGTAG, "Error making doorhanger response message", e);
                 }
                 mOnButtonClickListener.onButtonClick(response, LoginDoorHanger.this);
             }
         });
 
         return button;
+    }
+
+    /**
+     * Add sub-text to the doorhanger and add the click action.
+     *
+     * If the parsing the action from the JSON throws, the text is left visible, but there is no
+     * click action.
+     * @param actionTextObj JSONObject containing blob for making an action.
+     */
+    private void addActionText(JSONObject actionTextObj) {
+        if (actionTextObj == null) {
+            mLogin.setVisibility(View.GONE);
+            return;
+        }
+
+        boolean hasUsername = true;
+        String text = actionTextObj.optString("text");
+        if (TextUtils.isEmpty(text)) {
+            hasUsername = false;
+            text = mResources.getString(R.string.doorhanger_login_no_username);
+        }
+        mLogin.setText(text);
+        mLogin.setVisibility(View.VISIBLE);
+
+        // Make action.
+        try {
+            final JSONObject bundle = actionTextObj.getJSONObject("bundle");
+            final ActionType type = ActionType.valueOf(actionTextObj.getString("type"));
+            final AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+
+            switch (type) {
+                case EDIT:
+                    builder.setTitle(mResources.getString(R.string.doorhanger_login_edit_title));
+
+                    final View view = LayoutInflater.from(mContext).inflate(R.layout.login_edit_dialog, null);
+                    final EditText username = (EditText) view.findViewById(R.id.username_edit);
+                    username.setText(bundle.getString("username"));
+                    final EditText password = (EditText) view.findViewById(R.id.password_edit);
+                    password.setText(bundle.getString("password"));
+                    final CheckBox passwordCheckbox = (CheckBox) view.findViewById(R.id.checkbox_toggle_password);
+                    passwordCheckbox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                        @Override
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                            if (isChecked) {
+                                password.setTransformationMethod(null);
+                            } else {
+                                password.setTransformationMethod(PasswordTransformationMethod.getInstance());
+                            }
+                        }
+                    });
+                    builder.setView(view);
+
+                    builder.setPositiveButton(R.string.button_remember, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            // TODO: Hide doorhanger
+                            // TODO: Send addLogin message
+                        }
+                    });
+                    builder.setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    });
+            }
+
+            final Dialog dialog = builder.create();
+            mLogin.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialog.show();
+                }
+            });
+        } catch (JSONException e) {
+            // Log an error, but leave the text visible if there was a username.
+            Log.e(LOGTAG, "Error fetching actionText from JSON", e);
+            if (!hasUsername) {
+                mLogin.setVisibility(View.GONE);
+            }
+        }
     }
 }
