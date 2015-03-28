@@ -283,6 +283,24 @@ public:
   already_AddRefed<InternalRequest>
   GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult& aRv) const;
 
+  bool
+  WasCreatedByFetchEvent() const
+  {
+    return mCreatedByFetchEvent;
+  }
+
+  void
+  SetCreatedByFetchEvent()
+  {
+    mCreatedByFetchEvent = true;
+  }
+
+  void
+  ClearCreatedByFetchEvent()
+  {
+    mCreatedByFetchEvent = false;
+  }
+
 private:
   // Does not copy mBodyStream.  Use fallible Clone() for complete copy.
   explicit InternalRequest(const InternalRequest& aOther);
@@ -317,6 +335,10 @@ private:
   bool mSynchronous;
   bool mUnsafeRequest;
   bool mUseURLCredentials;
+  // This is only set when a Request object is created by a fetch event.  We
+  // use it to check if Service Workers are simply fetching intercepted Request
+  // objects without modifying them.
+  bool mCreatedByFetchEvent = false;
 };
 
 } // namespace dom

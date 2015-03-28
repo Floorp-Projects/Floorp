@@ -40,6 +40,32 @@ const TEST_DATA = [
     }
   },
   {
+    desc: "Re-adding an attribute",
+    test: () => {
+      let node1 = getNode("#node1");
+      node1.setAttribute("newattr", "newattrval");
+    },
+    check: function*(inspector) {
+      let {editor} = yield getContainerForSelector("#node1", inspector);
+      ok([...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
+        return attr.textContent.trim() === "newattr=\"newattrval\"";
+      }), "newattr attribute found");
+    }
+  },
+  {
+    desc: "Changing an attribute",
+    test: () => {
+      let node1 = getNode("#node1");
+      node1.setAttribute("newattr", "newattrchanged");
+    },
+    check: function*(inspector) {
+      let {editor} = yield getContainerForSelector("#node1", inspector);
+      ok([...editor.attrList.querySelectorAll(".attreditor")].some(attr => {
+        return attr.textContent.trim() === "newattr=\"newattrchanged\"";
+      }), "newattr attribute found");
+    }
+  },
+  {
     desc: "Updating the text-content",
     test: () => {
       let node1 = getNode("#node1");

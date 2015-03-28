@@ -17,8 +17,8 @@ interface FetchEvent : Event {
   readonly attribute Client? client; // The window issuing the request.
   readonly attribute boolean isReload;
 
-  [Throws] void respondWith(Promise<Response> r);
-  [Throws] void respondWith(Response r);
+  [Throws]
+  void respondWith((Response or Promise<Response>) r);
 };
 
 dictionary FetchEventInit : EventInit {

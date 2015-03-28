@@ -934,13 +934,13 @@ public:
     }
   }
 
-  virtual bool Equals(const TimelineMarker* aOther) override
+  virtual bool Equals(const TimelineMarker& aOther) override
   {
     if (!TimelineMarker::Equals(aOther)) {
       return false;
     }
     // Console markers must have matching causes as well.
-    return GetCause() == aOther->GetCause();
+    return GetCause() == aOther.GetCause();
   }
 
   virtual void AddDetails(mozilla::dom::ProfileTimelineMarker& aMarker) override
@@ -1057,7 +1057,7 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
               MakeUnique<ConsoleTimelineMarker>(docShell,
                                                 aMethodName == MethodTime ? TRACING_INTERVAL_START : TRACING_INTERVAL_END,
                                                 key);
-            docShell->AddProfileTimelineMarker(marker);
+            docShell->AddProfileTimelineMarker(Move(marker));
           }
         }
       }

@@ -216,6 +216,11 @@
     "n_values": 10,
     "description": "GPU Device Reset Reason (ok, hung, removed, reset, internal error, invalid call, out of memory)"
   },
+  "FETCH_IS_MAINTHREAD": {
+    "expires_in_version": "50",
+    "kind": "boolean",
+    "description": "Was Fetch request initiated from the main thread?"
+  },
   "FORGET_SKIPPABLE_MAX": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -7275,6 +7280,11 @@
     "high": "5000",
     "n_buckets": 20,
     "description": "Tracking how ServiceWorkerRegistrar loads data before the first content is shown"
+  },
+  "SERVICE_WORKER_REQUEST_PASSTHROUGH": {
+    "expires_in_version": "50",
+    "kind": "boolean",
+    "description": "Intercepted fetch sending back same Request object."
   },
   "LOOP_CLIENT_CALL_URL_REQUESTS_SUCCESS": {
     "expires_in_version": "never",

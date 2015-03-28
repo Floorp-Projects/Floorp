@@ -1542,9 +1542,14 @@ IonBuilder::inlineConstantStringSplit(CallInfo &callInfo)
     if (templateObject->getDenseInitializedLength() != initLength)
         return InliningStatus_NotInlined;
 
+    JSContext *cx = GetJitContext()->cx;
     Vector<MConstant *, 0, SystemAllocPolicy> arrayValues;
     for (uint32_t i = 0; i < initLength; i++) {
-        MConstant *value = MConstant::New(alloc(), templateObject->getDenseElement(i), constraints());
+        JSAtom *str = js::AtomizeString(cx, templateObject->getDenseElement(i).toString());
+        if (!str)
+            return InliningStatus_Error;
+
+        MConstant *value = MConstant::New(alloc(), StringValue(str), constraints());
         if (!TypeSetIncludes(key.maybeTypes(), value->type(), value->resultTypeSet()))
             return InliningStatus_NotInlined;
 
