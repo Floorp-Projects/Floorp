@@ -472,7 +472,11 @@ LivemarkService.prototype = {
   onPageChanged:      function () {},
   onTitleChanged:     function () {},
   onDeleteVisits:     function () {},
-  onClearHistory:     function () {},
+  onClearHistory() {
+    for each (let livemark in this._livemarks) {
+      livemark.updateURIVisitedStatus(null, false);
+    }
+  },
 
   onDeleteURI: function PS_onDeleteURI(aURI) {
     for each (let livemark in this._livemarks) {
@@ -803,11 +807,20 @@ Livemark.prototype = {
     }
   },
 
+  /**
+   * Updates the visited status of nodes observing this livemark.
+   *
+   * @param aURI
+   *        If provided will update nodes having the given uri,
+   *        otherwise any node.
+   * @param aVisitedStatus
+   *        Whether the nodes should be set as visited.
+   */
   updateURIVisitedStatus:
   function LM_updateURIVisitedStatus(aURI, aVisitedStatus)
   {
     for (let i = 0; i < this.children.length; i++) {
-      if (this.children[i].uri.equals(aURI)) {
+      if (!aURI || this.children[i].uri.equals(aURI)) {
         this.children[i].visited = aVisitedStatus;
       }
     }
@@ -819,7 +832,7 @@ Livemark.prototype = {
         let nodes = this._nodes.get(container);
         for (let j = 0; j < nodes.length; j++) {
           let node = nodes[j];
-          if (node.uri == aURI.spec) {
+          if (!aURI || node.uri == aURI.spec) {
             Services.tm.mainThread.dispatch((function () {
               observer.nodeHistoryDetailsChanged(node, 0, aVisitedStatus);
             }).bind(this), Ci.nsIThread.DISPATCH_NORMAL);
