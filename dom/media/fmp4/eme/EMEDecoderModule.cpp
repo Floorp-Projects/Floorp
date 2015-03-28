@@ -89,6 +89,9 @@ public:
       return NS_OK;
     }
 
+    mProxy->GetSessionIdsForKeyId(aSample->crypto.key,
+                                  aSample->crypto.session_ids);
+
     mProxy->Decrypt(aSample, new DeliverDecrypted(this, mTaskQueue));
     return NS_OK;
   }
@@ -162,6 +165,7 @@ public:
   EMEMediaDataDecoderProxy(nsIThread* aProxyThread, MediaDataDecoderCallback* aCallback, CDMProxy* aProxy, FlushableMediaTaskQueue* aTaskQueue)
    : MediaDataDecoderProxy(aProxyThread, aCallback)
    , mSamplesWaitingForKey(new SamplesWaitingForKey(this, aTaskQueue, aProxy))
+   , mProxy(aProxy)
   {
   }
 
@@ -170,6 +174,7 @@ public:
 
 private:
   nsRefPtr<SamplesWaitingForKey> mSamplesWaitingForKey;
+  nsRefPtr<CDMProxy> mProxy;
 };
 
 nsresult
@@ -178,6 +183,9 @@ EMEMediaDataDecoderProxy::Input(mp4_demuxer::MP4Sample* aSample)
   if (mSamplesWaitingForKey->WaitIfKeyNotUsable(aSample)) {
     return NS_OK;
   }
+
+  mProxy->GetSessionIdsForKeyId(aSample->crypto.key,
+                                aSample->crypto.session_ids);
 
   return MediaDataDecoderProxy::Input(aSample);
 }
@@ -189,6 +197,7 @@ EMEMediaDataDecoderProxy::Shutdown()
 
   mSamplesWaitingForKey->BreakCycles();
   mSamplesWaitingForKey = nullptr;
+  mProxy = nullptr;
 
   return rv;
 }
