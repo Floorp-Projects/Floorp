@@ -6,6 +6,7 @@
 
 
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/SyncRunnable.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
@@ -82,6 +83,27 @@ GetTempDir(nsIFile** aTempDir)
   return NS_OK;
 }
 
+namespace {
+
+class nsRemoteAnonymousTemporaryFileRunnable : public nsRunnable
+{
+public:
+  dom::FileDescOrError *mResultPtr;
+  explicit nsRemoteAnonymousTemporaryFileRunnable(dom::FileDescOrError *aResultPtr)
+  : mResultPtr(aResultPtr)
+  { }
+
+protected:
+  NS_IMETHODIMP Run() {
+    dom::ContentChild* child = dom::ContentChild::GetSingleton();
+    MOZ_ASSERT(child);
+    child->SendOpenAnonymousTemporaryFile(mResultPtr);
+    return NS_OK;
+  }
+};
+
+} // namespace
+
 nsresult
 NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc)
 {
@@ -90,8 +112,15 @@ NS_OpenAnonymousTemporaryFile(PRFileDesc** aOutFileDesc)
   }
 
   if (dom::ContentChild* child = dom::ContentChild::GetSingleton()) {
-    dom::FileDescOrError fd;
-    child->SendOpenAnonymousTemporaryFile(&fd);
+    dom::FileDescOrError fd = NS_OK;
+    if (NS_IsMainThread()) {
+      child->SendOpenAnonymousTemporaryFile(&fd);
+    } else {
+      nsCOMPtr<nsIThread> mainThread = do_GetMainThread();
+      MOZ_ASSERT(mainThread);
+      SyncRunnable::DispatchToThread(mainThread,
+        new nsRemoteAnonymousTemporaryFileRunnable(&fd));
+    }
     if (fd.type() == dom::FileDescOrError::Tnsresult) {
       nsresult rv = fd.get_nsresult();
       MOZ_ASSERT(NS_FAILED(rv));
