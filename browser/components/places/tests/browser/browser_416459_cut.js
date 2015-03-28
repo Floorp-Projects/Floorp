@@ -6,7 +6,14 @@
 const TEST_URL = "http://example.com/";
 
 add_task(function* () {
+  yield PlacesUtils.bookmarks.eraseEverything();
   let organizer = yield promiseLibrary();
+
+  registerCleanupFunction(function* () {
+    yield promiseLibraryClosed(organizer);
+    yield PlacesUtils.bookmarks.eraseEverything();
+  });
+
   let PlacesOrganizer = organizer.PlacesOrganizer;
   let ContentTree = organizer.ContentTree;
 
@@ -16,13 +23,28 @@ add_task(function* () {
   ok(PlacesOrganizer, "PlacesOrganizer in scope");
   ok(ContentTree, "ContentTree is in scope");
 
-  let bm = yield PlacesUtils.bookmarks.insert({
+  // Test with multiple entries to ensure they retain their order.
+  let bookmarks = [];
+  bookmarks.push(yield PlacesUtils.bookmarks.insert({
     parentGuid: PlacesUtils.bookmarks.toolbarGuid,
     type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
-    url: TEST_URL
-  });
+    url: TEST_URL,
+    title: "0"
+  }));
+  bookmarks.push(yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    url: TEST_URL,
+    title: "1"
+  }));
+  bookmarks.push(yield PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+    url: TEST_URL,
+    title: "2"
+  }));
 
-  yield selectBookmarkIn(organizer, bm, "BookmarksToolbar");
+  yield selectBookmarksIn(organizer, bookmarks, "BookmarksToolbar");
 
   yield promiseClipboard(() => {
     info("Cutting selection");
@@ -34,26 +56,28 @@ add_task(function* () {
   info("Pasting clipboard");
   ContentTree.view.controller.paste();
 
-  yield selectBookmarkIn(organizer, bm, "UnfiledBookmarks");
-
-  yield promiseLibraryClosed(organizer);
-  yield PlacesUtils.bookmarks.eraseEverything();
+  yield selectBookmarksIn(organizer, bookmarks, "UnfiledBookmarks");
 });
 
-let selectBookmarkIn = Task.async(function* (organizer, bm, aLeftPaneQuery) {
+let selectBookmarksIn = Task.async(function* (organizer, bookmarks, aLeftPaneQuery) {
   let PlacesOrganizer = organizer.PlacesOrganizer;
   let ContentTree = organizer.ContentTree;
-
   info("Selecting " + aLeftPaneQuery + " in the left pane");
   PlacesOrganizer.selectLeftPaneQuery(aLeftPaneQuery);
-  let rootId = PlacesUtils.getConcreteItemId(PlacesOrganizer._places.selectedNode);
 
-  bm = yield PlacesUtils.bookmarks.fetch(bm.guid);
-  is((yield PlacesUtils.promiseItemId(bm.parentGuid)), rootId,
-     "Bookmark has the right parent");
+  let ids = [];
+  for (let {guid} of bookmarks) {
+    let bookmark = yield PlacesUtils.bookmarks.fetch(guid);
+    is (bookmark.parentGuid, PlacesOrganizer._places.selectedNode.targetFolderGuid,
+        "Bookmark has the right parent");
+    ids.push(yield PlacesUtils.promiseItemId(bookmark.guid));
+  }
 
-  info("Selecting the bookmark in the right pane");
-  ContentTree.view.selectItems([yield PlacesUtils.promiseItemId(bm.guid)]);
-  let bookmarkNode = ContentTree.view.selectedNode;
-  is(bookmarkNode.uri, TEST_URL, "Found the expected bookmark");
+  info("Selecting the bookmarks in the right pane");
+  ContentTree.view.selectItems(ids);
+
+  for (let node of ContentTree.view.selectedNodes) {
+    is(node.bookmarkIndex, node.title,
+       "Found the expected bookmark in the expected position");
+  }
 });
