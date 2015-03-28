@@ -1184,6 +1184,11 @@ JsepSessionImpl::CreateAnswerMSection(const JsepAnswerOptions& options,
   // Add extmap attributes.
   AddCommonExtmaps(remoteMsection, msection);
 
+  if (!msection->IsReceiving() && !msection->IsSending()) {
+    DisableMsection(sdp, msection);
+    return NS_OK;
+  }
+
   if (msection->GetFormats().empty()) {
     // Could not negotiate anything. Disable m-section.
     DisableMsection(sdp, msection);
@@ -2682,7 +2687,7 @@ JsepSessionImpl::GetBundleInfo(const Sdp& sdp,
   }
 
   if (!bundleMids->empty()) {
-    if (!bundleMsection) {
+    if (!*bundleMsection) {
       JSEP_SET_ERROR("mid specified for bundle transport in group attribute"
           " does not exist in the SDP. (mid="
           << group->tags[0] << ")");
