@@ -4,16 +4,14 @@
 
 const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 
-waitForExplicitFinish();
-
 const NEW_RULE = "body { background-color: purple; }";
 
 add_task(function*() {
-  let {UI} = yield addTabAndOpenStyleEditors(2, null, TESTCASE_URI);
+  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
 
-  is(UI.editors.length, 2, "correct number of editors");
+  is(ui.editors.length, 2, "correct number of editors");
 
-  let editor = UI.editors[0];
+  let editor = ui.editors[0];
   yield openEditor(editor);
 
   // Set text twice in a row
