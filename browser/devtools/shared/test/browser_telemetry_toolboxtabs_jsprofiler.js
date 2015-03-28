@@ -11,7 +11,7 @@ add_task(function*() {
   yield promiseTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 
-  yield openAndCloseToolbox(2, TOOL_DELAY, "performance");
+  yield openAndCloseToolbox(2, TOOL_DELAY, "jsprofiler");
   checkTelemetryResults(Telemetry);
 
   stopRecordingTelemetryLogs(Telemetry);
