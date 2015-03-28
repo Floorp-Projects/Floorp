@@ -376,20 +376,20 @@ public:
                                     uint32_t* aModifierMask) override;
 
   virtual bool RecvCurValue(const uint64_t& aID,
-                            double* aValue);
+                            double* aValue) override;
 
   virtual bool RecvSetCurValue(const uint64_t& aID,
                                const double& aValue,
-                               bool* aRetVal);
+                               bool* aRetVal) override;
 
   virtual bool RecvMinValue(const uint64_t& aID,
-                            double* aValue);
+                            double* aValue) override;
 
   virtual bool RecvMaxValue(const uint64_t& aID,
-                            double* aValue);
+                            double* aValue) override;
 
   virtual bool RecvStep(const uint64_t& aID,
-                        double* aStep);
+                        double* aStep) override;
 
   virtual bool RecvTakeFocus(const uint64_t& aID) override;
 
