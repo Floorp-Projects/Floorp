@@ -208,7 +208,8 @@ public:
   NS_IMETHOD PreCreate(nsISupports *nativeObj, JSContext *cx,
                        JSObject *globalObj, JSObject **parentObj) override;
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
-                         JSObject *obj, jsid id, JS::Value *vp, bool *_retval) override;
+                         JSObject *obj, jsid id, JS::Handle<JS::Value> val,
+                         bool *_retval) override;
 
   virtual void PreserveWrapper(nsISupports *aNative) override;
 
