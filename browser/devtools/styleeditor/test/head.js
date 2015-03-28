@@ -1,6 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+const FRAME_SCRIPT_UTILS_URL = "chrome://browser/content/devtools/frame-script-utils.js"
 const TEST_BASE = "chrome://mochitests/content/browser/browser/devtools/styleeditor/test/";
 const TEST_BASE_HTTP = "http://example.com/browser/browser/devtools/styleeditor/test/";
 const TEST_BASE_HTTPS = "https://example.com/browser/browser/devtools/styleeditor/test/";
@@ -134,6 +135,66 @@ function openStyleEditorInWindow(win, callback) {
     panel.UI._alwaysDisableAnimations = true;
     callback(panel);
   });
+}
+
+/**
+ * Loads shared/frame-script-utils.js in the specified tab.
+ *
+ * @param tab
+ *        Optional tab to load the frame script in. Defaults to the current tab.
+ */
+function loadCommonFrameScript(tab) {
+  let browser = tab ? tab.linkedBrowser : gBrowser.selectedBrowser;
+
+  browser.messageManager.loadFrameScript(FRAME_SCRIPT_UTILS_URL, false);
+}
+
+/**
+ * Send an async message to the frame script (chrome -> content) and wait for a
+ * response message with the same name (content -> chrome).
+ *
+ * @param String name
+ *        The message name. Should be one of the messages defined
+ *        shared/frame-script-utils.js
+ * @param Object data
+ *        Optional data to send along
+ * @param Object objects
+ *        Optional CPOW objects to send along
+ * @param Boolean expectResponse
+ *        If set to false, don't wait for a response with the same name from the
+ *        content script. Defaults to true.
+ *
+ * @return Promise
+ *         Resolves to the response data if a response is expected, immediately
+ *         resolves otherwise
+ */
+function executeInContent(name, data={}, objects={}, expectResponse=true) {
+  let mm = gBrowser.selectedBrowser.messageManager;
+
+  mm.sendAsyncMessage(name, data, objects);
+  if (expectResponse) {
+    return waitForContentMessage(name);
+  } else {
+    return promise.resolve();
+  }
+}
+
+/**
+ * Wait for a content -> chrome message on the message manager (the window
+ * messagemanager is used).
+ * @param {String} name The message name
+ * @return {Promise} A promise that resolves to the response data when the
+ * message has been received
+ */
+function waitForContentMessage(name) {
+  let mm = gBrowser.selectedBrowser.messageManager;
+
+  let def = promise.defer();
+  mm.addMessageListener(name, function onMessage(msg) {
+    mm.removeMessageListener(name, onMessage);
+    def.resolve(msg);
+  });
+  return def.promise;
 }
 
 registerCleanupFunction(cleanup);
