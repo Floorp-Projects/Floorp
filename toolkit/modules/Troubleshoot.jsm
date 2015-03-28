@@ -10,7 +10,10 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm");
+
+#ifdef MOZ_CRASHREPORTER
+Cu.import("resource://gre/modules/CrashReports.jsm");
+#endif
 
 let Experiments;
 try {
@@ -151,8 +154,9 @@ let dataProviders = {
                  userAgent,
     };
 
-    if (AppConstants.MOZ_UPDATER)
-      data.updateChannel = Cu.import("resource://gre/modules/UpdateChannel.jsm", {}).UpdateChannel.get();
+#ifdef MOZ_UPDATER
+    data.updateChannel = Cu.import("resource://gre/modules/UpdateChannel.jsm", {}).UpdateChannel.get();
+#endif
 
     try {
       data.vendor = Services.prefs.getCharPref("app.support.vendor");
@@ -184,6 +188,18 @@ let dataProviders = {
 
     done(data);
   },
+
+#ifdef MOZ_CRASHREPORTER
+  crashes: function crashes(done) {
+    let reports = CrashReports.getReports();
+    let now = new Date();
+    let reportsNew = reports.filter(report => (now - report.date < Troubleshoot.kMaxCrashAge));
+    let reportsSubmitted = reportsNew.filter(report => (!report.pending));
+    let reportsPendingCount = reportsNew.length - reportsSubmitted.length;
+    let data = {submitted : reportsSubmitted, pending : reportsPendingCount};
+    done(data);
+  },
+#endif
 
   extensions: function extensions(done) {
     AddonManager.getAddonsByTypes(["extension"], function (extensions) {
@@ -322,9 +338,12 @@ let dataProviders = {
     }
 
     if (!data.numAcceleratedWindows && gfxInfo) {
-      let win = AppConstants.platform == "win";
-      let feature = win ? gfxInfo.FEATURE_DIRECT3D_9_LAYERS :
-                          gfxInfo.FEATURE_OPENGL_LAYERS;
+      let feature =
+#ifdef XP_WIN
+        gfxInfo.FEATURE_DIRECT3D_9_LAYERS;
+#else
+        gfxInfo.FEATURE_OPENGL_LAYERS;
+#endif
       data.numAcceleratedWindowsMessage = statusMsgForFeature(feature);
     }
 
@@ -395,20 +414,20 @@ let dataProviders = {
                            + " -- "
                            + gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
     } else {
-      let feature;
-      if (AppConstants.platform == "win") {
+      let feature =
+#ifdef XP_WIN
         // If ANGLE is not available but OpenGL is, we want to report on the
         // OpenGL feature, because that's what's going to get used.  In all
         // other cases we want to report on the ANGLE feature.
-        let angle = gfxInfo.getFeatureStatus(gfxInfo.FEATURE_WEBGL_ANGLE) ==
-                    gfxInfo.FEATURE_STATUS_OK;
-        let opengl = gfxInfo.getFeatureStatus(gfxInfo.FEATURE_WEBGL_OPENGL) ==
-                     gfxInfo.FEATURE_STATUS_OK;
-        feature = !angle && opengl ? gfxInfo.FEATURE_WEBGL_OPENGL :
-                                     gfxInfo.FEATURE_WEBGL_ANGLE;
-      } else {
-        feature = gfxInfo.FEATURE_WEBGL_OPENGL;
-      }
+        gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBGL_ANGLE) !=
+          Ci.nsIGfxInfo.FEATURE_STATUS_OK &&
+        gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBGL_OPENGL) ==
+          Ci.nsIGfxInfo.FEATURE_STATUS_OK ?
+        Ci.nsIGfxInfo.FEATURE_WEBGL_OPENGL :
+        Ci.nsIGfxInfo.FEATURE_WEBGL_ANGLE;
+#else
+        Ci.nsIGfxInfo.FEATURE_WEBGL_OPENGL;
+#endif
       data.webglRendererMessage = statusMsgForFeature(feature);
     }
 
@@ -481,24 +500,10 @@ let dataProviders = {
     done({
       exists: userJSFile.exists() && userJSFile.fileSize > 0,
     });
-  }
-};
+  },
 
-if (AppConstants.MOZ_CRASHREPORTER) {
-  dataProviders.crashes = function crashes(done) {
-    let CrashReports = Cu.import("resource://gre/modules/CrashReports.jsm").CrashReports;
-    let reports = CrashReports.getReports();
-    let now = new Date();
-    let reportsNew = reports.filter(report => (now - report.date < Troubleshoot.kMaxCrashAge));
-    let reportsSubmitted = reportsNew.filter(report => (!report.pending));
-    let reportsPendingCount = reportsNew.length - reportsSubmitted.length;
-    let data = {submitted : reportsSubmitted, pending : reportsPendingCount};
-    done(data);
-  }
-}
-
-if (AppConstants.platform == "linux" && AppConstants.MOZ_SANDBOX) {
-  dataProviders.sandbox = function sandbox(done) {
+#if defined(XP_LINUX) && defined (MOZ_SANDBOX)
+  sandbox: function sandbox(done) {
     const keys = ["hasSeccompBPF", "hasSeccompTSync",
                   "hasPrivilegedUserNamespaces", "hasUserNamespaces",
                   "canSandboxContent", "canSandboxMedia"];
@@ -513,4 +518,5 @@ if (AppConstants.platform == "linux" && AppConstants.MOZ_SANDBOX) {
     }
     done(data);
   }
-}
+#endif
+};
