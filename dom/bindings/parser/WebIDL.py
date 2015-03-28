@@ -1097,7 +1097,7 @@ class IDLInterface(IDLObjectWithScope, IDLExposureMixins):
                             raise WebIDLError("[Alias=%s] has same name as "
                                               "interface member" % alias,
                                               [member.location, m.location])
-                        if m.isMethod() and alias in m.aliases:
+                        if m.isMethod() and m != member and alias in m.aliases:
                             raise WebIDLError("duplicate [Alias=%s] definitions" %
                                               alias,
                                               [member.location, m.location])
