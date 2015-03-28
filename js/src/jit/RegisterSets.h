@@ -323,9 +323,12 @@ struct Int32Key {
 template <typename T>
 class TypedRegisterSet
 {
+  public:
+    typedef T RegType;
     typedef typename T::SetType SetType;
-    SetType bits_;
 
+  private:
+    SetType bits_;
 
   public:
     explicit MOZ_CONSTEXPR TypedRegisterSet(SetType bits)
@@ -367,96 +370,33 @@ class TypedRegisterSet
     static inline TypedRegisterSet NonVolatile() {
         return TypedRegisterSet(T::Codes::AllocatableMask & T::Codes::NonVolatileMask);
     }
-    bool has(T reg) const {
-        // When checking to see if a set has a register, we only want that exact
-        // register, not worrying about aliasing.
-        return !!(bits_ & (SetType(1) << reg.code()));
-    }
-    void addUnchecked(T reg) {
-        bits_ |= (SetType(1) << reg.code());
-    }
-    void addAllAliasedUnchecked(T reg) {
-        for (uint32_t a = 0; a < reg.numAliased(); a++) {
-            T tmp;
-            reg.aliased(a, &tmp);
-            bits_ |= (SetType(1) << tmp.code());
-        }
-    }
 
-    void add(T reg) {
-        // Make sure we don't add two overlapping registers.
-#ifdef DEBUG
-        for (uint32_t a = 0; a < reg.numAliased(); a++) {
-            T tmp;
-            reg.aliased(a, &tmp);
-            MOZ_ASSERT(!has(tmp));
-        }
-#endif
-        addUnchecked(reg);
-    }
-
-    void add(ValueOperand value) {
-#if defined(JS_NUNBOX32)
-        add(value.payloadReg());
-        add(value.typeReg());
-#elif defined(JS_PUNBOX64)
-        add(value.valueReg());
-#else
-#error "Bad architecture"
-#endif
-    }
-    // Determine if some register are still allocated.  This function should
-    // be used with the set of allocatable registers used for the initialization
-    // of the current set.
-    bool someAllocated(const TypedRegisterSet &allocatable) const {
-        return allocatable.bits_ & ~bits_;
-    }
     bool empty() const {
         return !bits_;
     }
-    void take(T reg) {
-        MOZ_ASSERT(has(reg));
-        takeUnchecked(reg);
+
+    bool hasRegisterIndex(T reg) const {
+        return !!(bits_ & (SetType(1) << reg.code()));
     }
-    void takeUnchecked(T reg) {
+    bool hasAllocatable(T reg) const {
+        return !(~bits_ & reg.alignedOrDominatedAliasedSet());
+    }
+
+    void addRegisterIndex(T reg) {
+        bits_ |= (SetType(1) << reg.code());
+    }
+    void addAllocatable(T reg) {
+        bits_ |= reg.alignedOrDominatedAliasedSet();
+    }
+
+
+    void takeRegisterIndex(T reg) {
         bits_ &= ~(SetType(1) << reg.code());
     }
-    void takeAllAliasedUnchecked(T reg) {
-        for (uint32_t a = 0; a < reg.numAliased(); a++) {
-            T tmp;
-            reg.aliased(a, &tmp);
-            takeUnchecked(tmp);
-        }
+    void takeAllocatable(T reg) {
+        bits_ &= ~reg.alignedOrDominatedAliasedSet();
     }
-    void take(ValueOperand value) {
-#if defined(JS_NUNBOX32)
-        take(value.payloadReg());
-        take(value.typeReg());
-#elif defined(JS_PUNBOX64)
-        take(value.valueReg());
-#else
-#error "Bad architecture"
-#endif
-    }
-    void takeUnchecked(ValueOperand value) {
-#if defined(JS_NUNBOX32)
-        takeUnchecked(value.payloadReg());
-        takeUnchecked(value.typeReg());
-#elif defined(JS_PUNBOX64)
-        takeUnchecked(value.valueReg());
-#else
-#error "Bad architecture"
-#endif
-    }
-    ValueOperand takeValueOperand() {
-#if defined(JS_NUNBOX32)
-        return ValueOperand(takeAny(), takeAny());
-#elif defined(JS_PUNBOX64)
-        return ValueOperand(takeAny());
-#else
-#error "Bad architecture"
-#endif
-    }
+
     T getAny() const {
         // The choice of first or last here is mostly arbitrary, as they are
         // about the same speed on popular architectures. We choose first, as
@@ -464,17 +404,6 @@ class TypedRegisterSet
         // registers are sometimes more efficient (e.g. optimized encodings for
         // EAX on x86).
         return getFirst();
-    }
-    T getAnyExcluding(T preclude) {
-        MOZ_ASSERT(!empty());
-        if (!has(preclude))
-            return getAny();
-
-        take(preclude);
-        MOZ_ASSERT(!empty());
-        T result = getAny();
-        add(preclude);
-        return result;
     }
     T getFirst() const {
         MOZ_ASSERT(!empty());
@@ -485,56 +414,7 @@ class TypedRegisterSet
         int ireg = T::LastBit(bits_);
         return T::FromCode(ireg);
     }
-    T takeAny() {
-        MOZ_ASSERT(!empty());
-        T reg = getAny();
-        takeAllAliasedUnchecked(reg);
-        return reg;
-    }
-    T takeUnaliasedAny() {
-        // This variant is used by LinearScan for iterating over all registers.
-        MOZ_ASSERT(!empty());
-        T reg = getAny();
-        takeUnchecked(reg);
-        return reg;
-    }
-    T takeAnyExcluding(T preclude) {
-        T reg = getAnyExcluding(preclude);
-        takeAllAliasedUnchecked(reg);
-        return reg;
-    }
-    ValueOperand takeAnyValue() {
-#if defined(JS_NUNBOX32)
-        T type = takeAny();
-        T payload = takeAny();
-        return ValueOperand(type, payload);
-#elif defined(JS_PUNBOX64)
-        T reg = takeAny();
-        return ValueOperand(reg);
-#else
-#error "Bad architecture"
-#endif
-    }
-    T takeFirst() {
-        // This function is used to implement a forward register set iterator.
-        MOZ_ASSERT(!empty());
-        T reg = getFirst();
-        // The iterator is used by PushRegsInMask which might be called with
-        // AllAlllocatableRegister mask.  To avoid saving more than needed we
-        // should take aliased registers too.
-        takeAllAliasedUnchecked(reg);
-        return reg;
-    }
-    T takeLast() {
-        // This function is used to implement a backward register set iterator.
-        MOZ_ASSERT(!empty());
-        T reg = getLast();
-        takeAllAliasedUnchecked(reg);
-        return reg;
-    }
-    void clear() {
-        bits_ = 0;
-    }
+
     SetType bits() const {
         return bits_;
     }
@@ -592,27 +472,473 @@ class RegisterSet {
     static inline RegisterSet Volatile() {
         return RegisterSet(GeneralRegisterSet::Volatile(), FloatRegisterSet::Volatile());
     }
+
+    bool empty() const {
+        return fpu_.empty() && gpr_.empty();
+    }
+    bool emptyGeneral() const {
+        return gpr_.empty();
+    }
+    bool emptyFloat() const {
+        return fpu_.empty();
+    }
+    MOZ_CONSTEXPR GeneralRegisterSet gprs() const {
+        return gpr_;
+    }
+    GeneralRegisterSet &gprs() {
+        return gpr_;
+    }
+    MOZ_CONSTEXPR FloatRegisterSet fpus() const {
+        return fpu_;
+    }
+    FloatRegisterSet &fpus() {
+        return fpu_;
+    }
+    bool operator ==(const RegisterSet &other) const {
+        return other.gpr_ == gpr_ && other.fpu_ == fpu_;
+    }
+
+};
+
+// There are 2 use cases for register sets:
+//
+//   1. To serve as a pool of allocatable register. This is useful for working
+//      on the code produced by some stub where free registers are available, or
+//      when we can release some registers.
+//
+//   2. To serve as a list of typed registers. This is useful for working with
+//      live registers and to manipulate them with the proper instructions. This
+//      is used by the register allocator to fill the Safepoints.
+//
+// These 2 uses cases can be used on top of 3 different backend representation
+// of register sets, which are either GeneralRegisterSet, FloatRegisterSet, or
+// RegisterSet (for both). These classes are used to store the bit sets to
+// represent each register.
+//
+// Each use case defines an Accessor class, such as AllocatableSetAccessor or
+// LiveSetAccessor, which is parameterized with the type of the register
+// set. These accessors are in charge of manipulating the register set in a
+// consistent way.
+//
+// The RegSetCommonInterface class is used to wrap the accessors with convenient
+// shortcuts which are based on the accessors.
+//
+// Then, to avoid to many levels of complexity while using these interfaces,
+// shortcut templates are created to make it easy to distinguish between a
+// register set used for allocating registers, or a register set used for making
+// a collection of allocated (live) registers.
+//
+// This separation exists to prevent mixing LiveSet and AllocatableSet
+// manipulations of the same register set, and ensure safety while avoiding
+// false positive.
+
+template <typename RegisterSet>
+class AllocatableSet;
+
+template <typename RegisterSet>
+class LiveSet;
+
+// Base accessors classes have the minimal set of raw methods to manipulate the register set
+// given as parameter in a consistent manner.  These methods are:
+//
+//    - has: Returns if all the bits needed to take a register are present.
+//
+//    - takeUnchecked: Subtracts the bits used to represent the register in the
+//      register set.
+//
+//    - addUnchecked: Adds the bits used to represent the register in the
+//      register set.
+
+// The AllocatableSet accessors are used to make a pool of unused
+// registers. Taking or adding registers should consider the aliasing rules of
+// the architecture.  For example, on ARM, the following piece of code should
+// work fine, knowing that the double register |d0| is composed of float
+// registers |s0| and |s1|:
+//
+//     AllocatableFloatRegisterSet regs;
+//     regs.add(s0);
+//     regs.add(s1);
+//     // d0 is now available.
+//     regs.take(d0);
+//
+// These accessors are useful for allocating registers within the functions used
+// to generate stubs, trampolines, and inline caches (BaselineIC, IonCache).
+template <typename Set>
+class AllocatableSetAccessors
+{
+  public:
+    typedef Set RegSet;
+    typedef typename RegSet::RegType RegType;
+    typedef typename RegSet::SetType SetType;
+
+  protected:
+    RegSet set_;
+
+  public:
+    AllocatableSetAccessors() : set_() {}
+    explicit MOZ_CONSTEXPR AllocatableSetAccessors(SetType set) : set_(set) {}
+    explicit MOZ_CONSTEXPR AllocatableSetAccessors(RegSet set) : set_(set) {}
+
+    bool has(RegType reg) const {
+        return set_.hasAllocatable(reg);
+    }
+
+    void addUnchecked(RegType reg) {
+        set_.addAllocatable(reg);
+    }
+
+    void takeUnchecked(RegType reg) {
+        set_.takeAllocatable(reg);
+    }
+};
+
+// Specialization of the AllocatableSet accessors for the RegisterSet aggregate.
+template <>
+class AllocatableSetAccessors<RegisterSet>
+{
+  public:
+    typedef RegisterSet RegSet;
+    typedef AnyRegister RegType;
+    typedef char SetType;
+
+  protected:
+    RegisterSet set_;
+
+  public:
+    AllocatableSetAccessors() : set_() {}
+    explicit MOZ_CONSTEXPR AllocatableSetAccessors(SetType) = delete;
+    explicit MOZ_CONSTEXPR AllocatableSetAccessors(RegisterSet set) : set_(set) {}
+
     bool has(Register reg) const {
-        return gpr_.has(reg);
+        return set_.gprs().hasAllocatable(reg);
     }
     bool has(FloatRegister reg) const {
-        return fpu_.has(reg);
+        return set_.fpus().hasAllocatable(reg);
     }
+
+    void addUnchecked(Register reg) {
+        set_.gprs().addAllocatable(reg);
+    }
+    void addUnchecked(FloatRegister reg) {
+        set_.fpus().addAllocatable(reg);
+    }
+
+    void takeUnchecked(Register reg) {
+        set_.gprs().takeAllocatable(reg);
+    }
+    void takeUnchecked(FloatRegister reg) {
+        set_.fpus().takeAllocatable(reg);
+    }
+};
+
+
+// The LiveSet accessors are used to collect a list of allocated
+// registers. Taking or adding a register should *not* consider the aliases, as
+// we care about interpreting the registers with the correct type.  For example,
+// on x64, where one float registers can be interpreted as an Int32x4, a Double,
+// or a Float, adding xmm0 as an Int32x4, does not make the register available
+// as a Double.
+//
+//     LiveFloatRegisterSet regs;
+//     regs.add(xmm0.asInt32x4());
+//     regs.take(xmm0); // Assert!
+//
+// These accessors are useful for recording the result of a register allocator,
+// such as what the Backtracking allocator do on the Safepoints.
+template <typename Set>
+class LiveSetAccessors
+{
+  public:
+    typedef Set RegSet;
+    typedef typename RegSet::RegType RegType;
+    typedef typename RegSet::SetType SetType;
+
+  protected:
+    RegSet set_;
+
+  public:
+    LiveSetAccessors() : set_() {}
+    explicit MOZ_CONSTEXPR LiveSetAccessors(SetType set) : set_(set) {}
+    explicit MOZ_CONSTEXPR LiveSetAccessors(RegSet set) : set_(set) {}
+
+    bool has(RegType reg) const {
+        return set_.hasRegisterIndex(reg);
+    }
+
+    void addUnchecked(RegType reg) {
+        set_.addRegisterIndex(reg);
+    }
+
+    void takeUnchecked(RegType reg) {
+        set_.takeRegisterIndex(reg);
+    }
+};
+
+// Specialization of the LiveSet accessors for the RegisterSet aggregate.
+template <>
+class LiveSetAccessors<RegisterSet>
+{
+  public:
+    typedef RegisterSet RegSet;
+    typedef AnyRegister RegType;
+    typedef char SetType;
+
+  protected:
+    RegisterSet set_;
+
+  public:
+    LiveSetAccessors() : set_() {}
+    explicit MOZ_CONSTEXPR LiveSetAccessors(SetType) = delete;
+    explicit MOZ_CONSTEXPR LiveSetAccessors(RegisterSet set) : set_(set) {}
+
+    bool has(Register reg) const {
+        return set_.gprs().hasRegisterIndex(reg);
+    }
+    bool has(FloatRegister reg) const {
+        return set_.fpus().hasRegisterIndex(reg);
+    }
+
+    void addUnchecked(Register reg) {
+        set_.gprs().addRegisterIndex(reg);
+    }
+    void addUnchecked(FloatRegister reg) {
+        set_.fpus().addRegisterIndex(reg);
+    }
+
+    void takeUnchecked(Register reg) {
+        set_.gprs().takeRegisterIndex(reg);
+    }
+    void takeUnchecked(FloatRegister reg) {
+        set_.fpus().takeRegisterIndex(reg);
+    }
+};
+
+#define DEFINE_ACCESSOR_CONSTRUCTORS_(REGSET)                         \
+    typedef typename Parent::RegSet  RegSet;                          \
+    typedef typename Parent::RegType RegType;                         \
+    typedef typename Parent::SetType SetType;                         \
+                                                                      \
+    MOZ_CONSTEXPR_TMPL REGSET() : Parent() {}                         \
+    explicit MOZ_CONSTEXPR_TMPL REGSET(SetType set) : Parent(set) {}  \
+    explicit MOZ_CONSTEXPR_TMPL REGSET(RegSet set) : Parent(set) {}
+
+// This class adds checked accessors on top of the unchecked variants defined by
+// AllocatableSet and LiveSet accessors. Also it defines interface which are
+// specialized to the register set implementation, such as |getAny| and
+// |takeAny| variants.
+template <class Accessors, typename Set>
+class SpecializedRegSet : public Accessors
+{
+    typedef Accessors Parent;
+
+  public:
+    DEFINE_ACCESSOR_CONSTRUCTORS_(SpecializedRegSet)
+
+    SetType bits() const {
+        return this->Parent::set_.bits();
+    }
+
+    using Parent::has;
+
+    using Parent::addUnchecked;
+    void add(RegType reg) {
+        MOZ_ASSERT(!has(reg));
+        addUnchecked(reg);
+    }
+
+    using Parent::takeUnchecked;
+    void take(RegType reg) {
+        MOZ_ASSERT(has(reg));
+        takeUnchecked(reg);
+    }
+
+    RegType getAny() const {
+        return this->Parent::set_.getAny();
+    }
+    RegType getFirst() const {
+        return this->Parent::set_.getFirst();
+    }
+    RegType getLast() const {
+        return this->Parent::set_.getLast();
+    }
+
+    RegType getAnyExcluding(RegType preclude) {
+        if (!has(preclude))
+            return getAny();
+
+        take(preclude);
+        RegType result = getAny();
+        add(preclude);
+        return result;
+    }
+
+    RegType takeAny() {
+        RegType reg = getAny();
+        take(reg);
+        return reg;
+    }
+    RegType takeFirst() {
+        RegType reg = getFirst();
+        take(reg);
+        return reg;
+    }
+    RegType takeLast() {
+        RegType reg = getLast();
+        take(reg);
+        return reg;
+    }
+
+    ValueOperand takeAnyValue() {
+#if defined(JS_NUNBOX32)
+        return ValueOperand(takeAny(), takeAny());
+#elif defined(JS_PUNBOX64)
+        return ValueOperand(takeAny());
+#else
+#error "Bad architecture"
+#endif
+    }
+
+    RegType takeAnyExcluding(RegType preclude) {
+        RegType reg = getAnyExcluding(preclude);
+        take(reg);
+        return reg;
+    }
+};
+
+// Specialization of the accessors for the RegisterSet aggregate.
+template <class Accessors>
+class SpecializedRegSet<Accessors, RegisterSet> : public Accessors
+{
+    typedef Accessors Parent;
+
+  public:
+    DEFINE_ACCESSOR_CONSTRUCTORS_(SpecializedRegSet)
+
+    GeneralRegisterSet gprs() const {
+        return this->Parent::set_.gprs();
+    }
+    GeneralRegisterSet &gprs() {
+        return this->Parent::set_.gprs();
+    }
+    FloatRegisterSet fpus() const {
+        return this->Parent::set_.fpus();
+    }
+    FloatRegisterSet &fpus() {
+        return this->Parent::set_.fpus();
+    }
+
+    bool emptyGeneral() const {
+        return this->Parent::set_.emptyGeneral();
+    }
+    bool emptyFloat() const {
+        return this->Parent::set_.emptyFloat();
+    }
+
+
+    using Parent::has;
     bool has(AnyRegister reg) const {
         return reg.isFloat() ? has(reg.fpu()) : has(reg.gpr());
     }
+
+
+    using Parent::addUnchecked;
+    void addUnchecked(AnyRegister reg) {
+        if (reg.isFloat())
+            addUnchecked(reg.fpu());
+        else
+            addUnchecked(reg.gpr());
+    }
+
     void add(Register reg) {
-        gpr_.add(reg);
+        MOZ_ASSERT(!has(reg));
+        addUnchecked(reg);
     }
     void add(FloatRegister reg) {
-        fpu_.add(reg);
+        MOZ_ASSERT(!has(reg));
+        addUnchecked(reg);
     }
-    void add(AnyRegister any) {
-        if (any.isFloat())
-            add(any.fpu());
+    void add(AnyRegister reg) {
+        if (reg.isFloat())
+            add(reg.fpu());
         else
-            add(any.gpr());
+            add(reg.gpr());
     }
+
+    using Parent::takeUnchecked;
+    void takeUnchecked(AnyRegister reg) {
+        if (reg.isFloat())
+            takeUnchecked(reg.fpu());
+        else
+            takeUnchecked(reg.gpr());
+    }
+
+    void take(Register reg) {
+        MOZ_ASSERT(has(reg));
+        takeUnchecked(reg);
+    }
+    void take(FloatRegister reg) {
+        MOZ_ASSERT(has(reg));
+        takeUnchecked(reg);
+    }
+    void take(AnyRegister reg) {
+        if (reg.isFloat())
+            take(reg.fpu());
+        else
+            take(reg.gpr());
+    }
+
+    Register getAnyGeneral() const {
+        return this->Parent::set_.gprs().getAny();
+    }
+    FloatRegister getAnyFloat() const {
+        return this->Parent::set_.fpus().getAny();
+    }
+
+    Register takeAnyGeneral() {
+        Register reg = getAnyGeneral();
+        take(reg);
+        return reg;
+    }
+    FloatRegister takeAnyFloat() {
+        FloatRegister reg = getAnyFloat();
+        take(reg);
+        return reg;
+    }
+    ValueOperand takeAnyValue() {
+#if defined(JS_NUNBOX32)
+        return ValueOperand(takeAnyGeneral(), takeAnyGeneral());
+#elif defined(JS_PUNBOX64)
+        return ValueOperand(takeAnyGeneral());
+#else
+#error "Bad architecture"
+#endif
+    }
+};
+
+
+// Interface which is common to all register set implementations. It overloads
+// |add|, |take| and |takeUnchecked| methods for types such as |ValueOperand|
+// and |TypedOrValueRegister|.
+template <class Accessors, typename Set>
+class CommonRegSet : public SpecializedRegSet<Accessors, Set>
+{
+    typedef SpecializedRegSet<Accessors, Set> Parent;
+
+  public:
+    DEFINE_ACCESSOR_CONSTRUCTORS_(CommonRegSet)
+
+    RegSet set() const {
+        return this->Parent::set_;
+    }
+    RegSet &set() {
+        return this->Parent::set_;
+    }
+
+    bool empty() const {
+        return this->Parent::set_.empty();
+    }
+
+    using Parent::add;
     void add(ValueOperand value) {
 #if defined(JS_NUNBOX32)
         add(value.payloadReg());
@@ -629,96 +955,35 @@ class RegisterSet {
         else if (reg.hasTyped())
             add(reg.typedReg());
     }
-    void addUnchecked(Register reg) {
-        gpr_.addUnchecked(reg);
-    }
-    void addUnchecked(FloatRegister reg) {
-        fpu_.addUnchecked(reg);
-    }
-    void addUnchecked(AnyRegister any) {
-        if (any.isFloat())
-            addUnchecked(any.fpu());
-        else
-            addUnchecked(any.gpr());
-    }
-    void addAllAliasedUnchecked(const AnyRegister &reg) {
-        if (reg.isFloat())
-            fpu_.addAllAliasedUnchecked(reg.fpu());
-        else
-            gpr_.addAllAliasedUnchecked(reg.gpr());
-    }
 
-
-    bool empty(bool floats) const {
-        return floats ? fpu_.empty() : gpr_.empty();
-    }
-    FloatRegister takeFloat() {
-        return fpu_.takeAny();
-    }
-    FloatRegister takeUnaliasedFloat() {
-        return fpu_.takeUnaliasedAny();
-    }
-    Register takeGeneral() {
-        return gpr_.takeAny();
-    }
-    Register takeUnaliasedGeneral() {
-        return gpr_.takeUnaliasedAny();
-    }
-    ValueOperand takeValueOperand() {
+    using Parent::take;
+    void take(ValueOperand value) {
 #if defined(JS_NUNBOX32)
-        return ValueOperand(takeGeneral(), takeGeneral());
+        take(value.payloadReg());
+        take(value.typeReg());
 #elif defined(JS_PUNBOX64)
-        return ValueOperand(takeGeneral());
+        take(value.valueReg());
 #else
 #error "Bad architecture"
 #endif
     }
-    void take(AnyRegister reg) {
-        if (reg.isFloat())
-            fpu_.take(reg.fpu());
-        else
-            gpr_.take(reg.gpr());
-    }
-    void takeAllAliasedUnchecked(AnyRegister reg) {
-        if (reg.isFloat())
-            fpu_.takeAllAliasedUnchecked(reg.fpu());
-        else
-            gpr_.takeAllAliasedUnchecked(reg.gpr());
-    }
-    // This function is used by LinearScan to find a free register.
-    AnyRegister takeUnaliasedAny(bool isFloat) {
-        if (isFloat)
-            return AnyRegister(takeUnaliasedFloat());
-        return AnyRegister(takeUnaliasedGeneral());
-    }
-    void clear() {
-        gpr_.clear();
-        fpu_.clear();
-    }
-    MOZ_CONSTEXPR GeneralRegisterSet gprs() const {
-        return gpr_;
-    }
-    MOZ_CONSTEXPR FloatRegisterSet fpus() const {
-        return fpu_;
-    }
-    bool operator ==(const RegisterSet &other) const {
-        return other.gpr_ == gpr_ && other.fpu_ == fpu_;
+    void take(TypedOrValueRegister reg) {
+        if (reg.hasValue())
+            take(reg.valueReg());
+        else if (reg.hasTyped())
+            take(reg.typedReg());
     }
 
-    void takeUnchecked(Register reg) {
-        gpr_.takeUnchecked(reg);
-    }
-    void takeUnchecked(FloatRegister reg) {
-        fpu_.takeUnchecked(reg);
-    }
-    void takeUnchecked(AnyRegister reg) {
-        if (reg.isFloat())
-            fpu_.takeUnchecked(reg.fpu());
-        else
-            gpr_.takeUnchecked(reg.gpr());
-    }
+    using Parent::takeUnchecked;
     void takeUnchecked(ValueOperand value) {
-        gpr_.takeUnchecked(value);
+#if defined(JS_NUNBOX32)
+        takeUnchecked(value.payloadReg());
+        takeUnchecked(value.typeReg());
+#elif defined(JS_PUNBOX64)
+        takeUnchecked(value.valueReg());
+#else
+#error "Bad architecture"
+#endif
     }
     void takeUnchecked(TypedOrValueRegister reg) {
         if (reg.hasValue())
@@ -728,16 +993,100 @@ class RegisterSet {
     }
 };
 
+
+// These classes do not provide any additional members, they only use their
+// constructors to forward to the common interface for all register sets.  The
+// only benefit of these classes is to provide user friendly names.
+template <typename Set>
+class LiveSet : public CommonRegSet<LiveSetAccessors<Set>, Set>
+{
+    typedef CommonRegSet<LiveSetAccessors<Set>, Set> Parent;
+
+  public:
+    DEFINE_ACCESSOR_CONSTRUCTORS_(LiveSet)
+};
+
+template <typename Set>
+class AllocatableSet : public CommonRegSet<AllocatableSetAccessors<Set>, Set>
+{
+    typedef CommonRegSet<AllocatableSetAccessors<Set>, Set> Parent;
+
+  public:
+    DEFINE_ACCESSOR_CONSTRUCTORS_(AllocatableSet)
+
+    LiveSet<Set> asLiveSet() const {
+        return LiveSet<Set>(this->set());
+    }
+};
+
+#define DEFINE_ACCESSOR_CONSTRUCTORS_FOR_REGISTERSET_(REGSET)               \
+    typedef Parent::RegSet  RegSet;                                         \
+    typedef Parent::RegType RegType;                                        \
+    typedef Parent::SetType SetType;                                        \
+                                                                            \
+    MOZ_CONSTEXPR_TMPL REGSET() : Parent() {}                               \
+    explicit MOZ_CONSTEXPR_TMPL REGSET(SetType) = delete;                   \
+    explicit MOZ_CONSTEXPR_TMPL REGSET(RegSet set) : Parent(set) {}         \
+    MOZ_CONSTEXPR_TMPL REGSET(GeneralRegisterSet gpr, FloatRegisterSet fpu) \
+      : Parent(RegisterSet(gpr, fpu))                                       \
+    {}                                                                      \
+    REGSET(REGSET<GeneralRegisterSet> gpr, REGSET<FloatRegisterSet> fpu)    \
+      : Parent(RegisterSet(gpr.set(), fpu.set()))                           \
+    {}
+
+template <>
+class LiveSet<RegisterSet>
+  : public CommonRegSet<LiveSetAccessors<RegisterSet>, RegisterSet>
+{
+    // Note: We have to provide a qualified name for LiveSetAccessors, as it is
+    // interpreted as being the specialized class name inherited from the parent
+    // class specialization.
+    typedef CommonRegSet<jit::LiveSetAccessors<RegisterSet>, RegisterSet> Parent;
+
+  public:
+    DEFINE_ACCESSOR_CONSTRUCTORS_FOR_REGISTERSET_(LiveSet)
+};
+
+template <>
+class AllocatableSet<RegisterSet>
+  : public CommonRegSet<AllocatableSetAccessors<RegisterSet>, RegisterSet>
+{
+    // Note: We have to provide a qualified name for AllocatableSetAccessors, as
+    // it is interpreted as being the specialized class name inherited from the
+    // parent class specialization.
+    typedef CommonRegSet<jit::AllocatableSetAccessors<RegisterSet>, RegisterSet> Parent;
+
+  public:
+    DEFINE_ACCESSOR_CONSTRUCTORS_FOR_REGISTERSET_(AllocatableSet)
+
+    LiveSet<RegisterSet> asLiveSet() const {
+        return LiveSet<RegisterSet>(this->set());
+    }
+};
+
+#undef DEFINE_ACCESSOR_CONSTRUCTORS_FOR_REGISTERSET_
+#undef DEFINE_ACCESSOR_CONSTRUCTORS_
+
+typedef AllocatableSet<GeneralRegisterSet> AllocatableGeneralRegisterSet;
+typedef AllocatableSet<FloatRegisterSet> AllocatableFloatRegisterSet;
+typedef AllocatableSet<RegisterSet> AllocatableRegisterSet;
+
+typedef LiveSet<GeneralRegisterSet> LiveGeneralRegisterSet;
+typedef LiveSet<FloatRegisterSet> LiveFloatRegisterSet;
+typedef LiveSet<RegisterSet> LiveRegisterSet;
+
 // iterates in whatever order happens to be convenient.
 // Use TypedRegisterBackwardIterator or TypedRegisterForwardIterator if a
 // specific order is required.
 template <typename T>
 class TypedRegisterIterator
 {
-    TypedRegisterSet<T> regset_;
+    LiveSet<TypedRegisterSet<T>> regset_;
 
   public:
     explicit TypedRegisterIterator(TypedRegisterSet<T> regset) : regset_(regset)
+    { }
+    explicit TypedRegisterIterator(LiveSet<TypedRegisterSet<T>> regset) : regset_(regset)
     { }
     TypedRegisterIterator(const TypedRegisterIterator &other) : regset_(other.regset_)
     { }
@@ -763,10 +1112,12 @@ class TypedRegisterIterator
 template <typename T>
 class TypedRegisterBackwardIterator
 {
-    TypedRegisterSet<T> regset_;
+    LiveSet<TypedRegisterSet<T>> regset_;
 
   public:
     explicit TypedRegisterBackwardIterator(TypedRegisterSet<T> regset) : regset_(regset)
+    { }
+    explicit TypedRegisterBackwardIterator(LiveSet<TypedRegisterSet<T>> regset) : regset_(regset)
     { }
     TypedRegisterBackwardIterator(const TypedRegisterBackwardIterator &other)
       : regset_(other.regset_)
@@ -793,10 +1144,12 @@ class TypedRegisterBackwardIterator
 template <typename T>
 class TypedRegisterForwardIterator
 {
-    TypedRegisterSet<T> regset_;
+    LiveSet<TypedRegisterSet<T>> regset_;
 
   public:
     explicit TypedRegisterForwardIterator(TypedRegisterSet<T> regset) : regset_(regset)
+    { }
+    explicit TypedRegisterForwardIterator(LiveSet<TypedRegisterSet<T>> regset) : regset_(regset)
     { }
     TypedRegisterForwardIterator(const TypedRegisterForwardIterator &other) : regset_(other.regset_)
     { }
@@ -839,6 +1192,9 @@ class AnyRegisterIterator
     { }
     explicit AnyRegisterIterator(const RegisterSet &set)
       : geniter_(set.gpr_), floatiter_(set.fpu_)
+    { }
+    explicit AnyRegisterIterator(const LiveSet<RegisterSet> &set)
+      : geniter_(set.gprs()), floatiter_(set.fpus())
     { }
     AnyRegisterIterator(const AnyRegisterIterator &other)
       : geniter_(other.geniter_), floatiter_(other.floatiter_)
