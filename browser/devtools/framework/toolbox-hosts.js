@@ -10,6 +10,12 @@ const {Promise: promise} = require("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource:///modules/devtools/DOMHelpers.jsm");
 
+/* A host should always allow this much space for the page to be displayed.
+ * There is also a min-height on the browser, but we still don't want to set
+ * frame.height to be larger than that, since it can cause problems with
+ * resizing the toolbox and panel layout. */
+const MIN_PAGE_SIZE = 25;
+
 /**
  * A toolbox host represents an object that contains a toolbox (e.g. the
  * sidebar or a separate window). Any host object should implement the
@@ -57,7 +63,7 @@ BottomHost.prototype = {
     this.frame.className = "devtools-toolbox-bottom-iframe";
     this.frame.height = Math.min(
       Services.prefs.getIntPref(this.heightPref),
-      this._nbox.clientHeight - 10 // Always show at least some page content
+      this._nbox.clientHeight - MIN_PAGE_SIZE
     );
 
     this._nbox.appendChild(this._splitter);
@@ -144,7 +150,7 @@ SidebarHost.prototype = {
 
     this.frame.width = Math.min(
       Services.prefs.getIntPref(this.widthPref),
-      this._sidebar.clientWidth - 10 // Always show at least some page content
+      this._sidebar.clientWidth - MIN_PAGE_SIZE
     );
 
     this._sidebar.appendChild(this._splitter);

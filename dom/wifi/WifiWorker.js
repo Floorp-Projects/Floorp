@@ -850,6 +850,16 @@ var WifiManager = (function() {
     if (eventData.indexOf("CTRL-EVENT-EAP") === 0) {
       return handleWpaEapEvents(event);
     }
+    if (eventData.indexOf("CTRL-EVENT-ASSOC-REJECT") === 0) {
+      debug("CTRL-EVENT-ASSOC-REJECT: network error");
+      notify("passwordmaybeincorrect");
+      if (manager.authenticationFailuresCount > MAX_RETRIES_ON_AUTHENTICATION_FAILURE) {
+        manager.authenticationFailuresCount = 0;
+        debug("CTRL-EVENT-ASSOC-REJECT: disconnect network");
+        notify("disconnected", {connectionInfo: manager.connectionInfo});
+      }
+      return true;
+    }
     if (eventData.indexOf("WPS-TIMEOUT") === 0) {
       notifyStateChange({ state: "WPS_TIMEOUT", BSSID: null, id: -1 });
       return true;
@@ -2162,7 +2172,10 @@ function WifiWorker() {
             ssid: quote(WifiManager.connectionInfo.ssid),
             mode: MODE_ESS,
             frequency: 0};
-        self._fireEvent("onconnecting", { network: netToDOM(self.currentNetwork) });
+        WifiManager.getNetworkConfiguration(self.currentNetwork, function (){
+          // Notify again because we get complete network information.
+          self._fireEvent("onconnecting", { network: netToDOM(self.currentNetwork) });
+        });
         break;
       case "ASSOCIATED":
         // set to full power mode when ready to do 4 way handsharke.

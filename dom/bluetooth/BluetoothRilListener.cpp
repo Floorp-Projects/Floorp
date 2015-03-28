@@ -7,12 +7,11 @@
 #include "BluetoothRilListener.h"
 
 #include "BluetoothHfpManager.h"
-#include "nsIIccProvider.h"
+#include "nsIIccService.h"
 #include "nsIMobileConnectionInfo.h"
 #include "nsIMobileConnectionService.h"
 #include "nsITelephonyCallInfo.h"
 #include "nsITelephonyService.h"
-#include "nsRadioInterfaceLayer.h" // For NS_RILCONTENTHELPER_CONTRACTID.
 #include "nsServiceManagerUtils.h"
 #include "nsString.h"
 
@@ -60,15 +59,19 @@ IccListener::Listen(bool aStart)
 {
   NS_ENSURE_TRUE(mOwner, false);
 
-  nsCOMPtr<nsIIccProvider> provider =
-    do_GetService(NS_RILCONTENTHELPER_CONTRACTID);
-  NS_ENSURE_TRUE(provider, false);
+  nsCOMPtr<nsIIccService> service =
+    do_GetService(ICC_SERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(service, false);
+
+  nsCOMPtr<nsIIcc> icc;
+  service->GetIccByServiceId(mOwner->mClientId, getter_AddRefs(icc));
+  NS_ENSURE_TRUE(icc, false);
 
   nsresult rv;
   if (aStart) {
-    rv = provider->RegisterIccMsg(mOwner->mClientId, this);
+    rv = icc->RegisterListener(this);
   } else {
-    rv = provider->UnregisterIccMsg(mOwner->mClientId, this);
+    rv = icc->UnregisterListener(this);
   }
 
   return NS_SUCCEEDED(rv);

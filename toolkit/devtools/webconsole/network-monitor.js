@@ -753,13 +753,8 @@ NetworkMonitor.prototype = {
     event.private = httpActivity.private;
 
     // Determine if this is an XHR request.
-    try {
-      let callbacks = aChannel.notificationCallbacks;
-      let xhrRequest = callbacks ? callbacks.getInterface(Ci.nsIXMLHttpRequest) : null;
-      httpActivity.isXHR = event.isXHR = !!xhrRequest;
-    } catch (e) {
-      httpActivity.isXHR = event.isXHR = false;
-    }
+    httpActivity.isXHR = event.isXHR =
+        (aChannel.loadInfo.contentPolicyType === Ci.nsIContentPolicy.TYPE_XMLHTTPREQUEST);
 
     // Determine the HTTP version.
     aChannel.QueryInterface(Ci.nsIHttpChannelInternal);
