@@ -28,6 +28,7 @@
 #include "mozilla/dom/Response.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/URLSearchParams.h"
+#include "mozilla/Telemetry.h"
 
 #include "InternalRequest.h"
 #include "InternalResponse.h"
@@ -231,6 +232,8 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
       return nullptr;
     }
 
+    Telemetry::Accumulate(Telemetry::FETCH_IS_MAINTHREAD, 1);
+
     nsRefPtr<MainThreadFetchResolver> resolver = new MainThreadFetchResolver(p);
     nsCOMPtr<nsILoadGroup> loadGroup = doc->GetDocumentLoadGroup();
     nsRefPtr<FetchDriver> fetch =
@@ -243,6 +246,8 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
   } else {
     WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(worker);
+
+    Telemetry::Accumulate(Telemetry::FETCH_IS_MAINTHREAD, 0);
 
     if (worker->IsServiceWorker()) {
       r->SetSkipServiceWorker();

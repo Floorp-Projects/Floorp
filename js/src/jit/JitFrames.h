@@ -699,16 +699,13 @@ class IonOOLSetterOpExitFrameLayout : public IonOOLPropertyOpExitFrameLayout
 
 // Proxy::get(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
 //            MutableHandleValue vp)
-// Proxy::set(JSContext *cx, HandleObject proxy, HandleObject receiver, HandleId id,
-//            MutableHandleValue vp, ObjectOpResult &result)
+// ProxySetProperty(JSContext *cx, HandleObject proxy, HandleId id, MutableHandleValue vp,
+//                  bool strict)
 class IonOOLProxyExitFrameLayout
 {
   protected: // only to silence a clang warning about unused private fields
     ExitFooterFrame footer_;
     ExitFrameLayout exit_;
-
-    // result out-parameter (unused for Proxy::get)
-    JS::ObjectOpResult result_;
 
     // The proxy object.
     JSObject *proxy_;
@@ -734,20 +731,8 @@ class IonOOLProxyExitFrameLayout
         return sizeof(IonOOLProxyExitFrameLayout);
     }
 
-    static size_t offsetOfObject() {
-        return offsetof(IonOOLProxyExitFrameLayout, proxy_);
-    }
-
     static size_t offsetOfResult() {
         return offsetof(IonOOLProxyExitFrameLayout, vp0_);
-    }
-
-    static size_t offsetOfId() {
-        return offsetof(IonOOLProxyExitFrameLayout, id_);
-    }
-
-    static size_t offsetOfObjectOpResult() {
-        return offsetof(IonOOLProxyExitFrameLayout, result_);
     }
 
     inline JitCode **stubCode() {

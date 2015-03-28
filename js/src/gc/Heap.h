@@ -113,21 +113,39 @@ enum class AllocKind {
 static_assert(uint8_t(AllocKind::OBJECT0) == 0, "Please check AllocKind iterations and comparisons"
     " of the form |kind <= AllocKind::OBJECT_LAST| to ensure their range is still valid!");
 
+// Returns a sequence for use in a range-based for loop,
+// to iterate over all alloc kinds.
 inline decltype(mozilla::MakeEnumeratedRange<int>(AllocKind::FIRST, AllocKind::LIMIT))
 AllAllocKinds()
 {
     return mozilla::MakeEnumeratedRange<int>(AllocKind::FIRST, AllocKind::LIMIT);
 }
 
+// Returns a sequence for use in a range-based for loop,
+// to iterate over all object alloc kinds.
 inline decltype(mozilla::MakeEnumeratedRange<int>(AllocKind::OBJECT0, AllocKind::OBJECT_LIMIT))
 ObjectAllocKinds()
 {
     return mozilla::MakeEnumeratedRange<int>(AllocKind::OBJECT0, AllocKind::OBJECT_LIMIT);
 }
 
+// Returns a sequence for use in a range-based for loop,
+// to iterate over alloc kinds from |first| to |limit|, exclusive.
+inline decltype(mozilla::MakeEnumeratedRange<int>(AllocKind::FIRST, AllocKind::LIMIT))
+SomeAllocKinds(AllocKind first = AllocKind::FIRST, AllocKind limit = AllocKind::LIMIT)
+{
+    MOZ_ASSERT(limit <= AllocKind::LIMIT);
+    MOZ_ASSERT(first <= limit);
+    return mozilla::MakeEnumeratedRange<int>(first, limit);
+}
+
+// AllAllocKindArray<ValueType> gives an enumerated array of ValueTypes,
+// with each index corresponding to a particular alloc kind.
 template<typename ValueType> using AllAllocKindArray =
     mozilla::EnumeratedArray<AllocKind, AllocKind::LIMIT, ValueType>;
 
+// ObjectAllocKindArray<ValueType> gives an enumerated array of ValueTypes,
+// with each index corresponding to a particular object alloc kind.
 template<typename ValueType> using ObjectAllocKindArray =
     mozilla::EnumeratedArray<AllocKind, AllocKind::OBJECT_LIMIT, ValueType>;
 
