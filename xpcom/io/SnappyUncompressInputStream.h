@@ -17,7 +17,7 @@
 namespace mozilla {
 
 class SnappyUncompressInputStream final : public nsIInputStream
-                                            , protected detail::SnappyFrameUtils
+                                        , protected detail::SnappyFrameUtils
 {
 public:
   // Construct a new blocking stream to uncompress the given base stream.  The

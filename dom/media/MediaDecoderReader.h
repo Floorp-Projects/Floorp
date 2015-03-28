@@ -112,7 +112,7 @@ public:
 
   MediaTaskQueue* EnsureTaskQueue();
 
-  virtual bool OnDecodeThread()
+  virtual bool OnTaskQueue()
   {
     return !GetTaskQueue() || GetTaskQueue()->IsCurrentThreadIn();
   }

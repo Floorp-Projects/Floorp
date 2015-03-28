@@ -28,8 +28,8 @@ class StatementJSHelper;
 class Connection;
 
 class Statement final : public mozIStorageStatement
-                          , public mozIStorageValueArray
-                          , public StorageBaseStatementInternal
+                      , public mozIStorageValueArray
+                      , public StorageBaseStatementInternal
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

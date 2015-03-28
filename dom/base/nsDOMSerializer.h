@@ -15,7 +15,7 @@
 class nsINode;
 
 class nsDOMSerializer final : public nsIDOMSerializer,
-                                  public nsWrapperCache
+                              public nsWrapperCache
 {
 public:
   nsDOMSerializer();

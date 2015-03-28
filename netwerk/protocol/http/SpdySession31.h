@@ -26,9 +26,9 @@ class SpdyStream31;
 class nsHttpTransaction;
 
 class SpdySession31 final : public ASpdySession
-                              , public nsAHttpConnection
-                              , public nsAHttpSegmentReader
-                              , public nsAHttpSegmentWriter
+                          , public nsAHttpConnection
+                          , public nsAHttpSegmentReader
+                          , public nsAHttpSegmentWriter
 {
   ~SpdySession31();
 

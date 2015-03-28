@@ -23,7 +23,7 @@ class nsXULPrototypeElement;
 class nsXULPrototypeNode;
 
 class XULContentSinkImpl final : public nsIXMLContentSink,
-                                     public nsIExpatSink
+                                 public nsIExpatSink
 {
 public:
     XULContentSinkImpl();

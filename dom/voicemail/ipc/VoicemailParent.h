@@ -19,7 +19,7 @@ namespace dom {
 namespace voicemail {
 
 class VoicemailParent final : public PVoicemailParent
-                                , public nsIVoicemailListener
+                            , public nsIVoicemailListener
 {
 public:
   NS_DECL_ISUPPORTS

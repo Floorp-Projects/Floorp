@@ -22,8 +22,8 @@
 #include "mozilla/Attributes.h"
 
 class nsDNSService final : public nsPIDNSService
-                             , public nsIObserver
-                             , public nsIMemoryReporter
+                         , public nsIObserver
+                         , public nsIMemoryReporter
 {
 public:
     NS_DECL_THREADSAFE_ISUPPORTS

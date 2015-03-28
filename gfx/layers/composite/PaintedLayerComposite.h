@@ -34,7 +34,7 @@ class ContentHost;
 class TiledLayerComposer;
 
 class PaintedLayerComposite : public PaintedLayer,
-                             public LayerComposite
+                              public LayerComposite
 {
 public:
   explicit PaintedLayerComposite(LayerManagerComposite *aManager);

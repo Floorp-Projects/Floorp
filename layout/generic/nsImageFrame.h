@@ -324,7 +324,8 @@ private:
                     imgRequestProxy **aRequest);
 
   class IconLoad final : public nsIObserver,
-                             public imgINotificationObserver {
+                         public imgINotificationObserver
+  {
     // private class that wraps the data and logic needed for
     // broken image and loading image icons
   public:

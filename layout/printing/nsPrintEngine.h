@@ -38,8 +38,8 @@ class nsIWeakReference;
 //
 //------------------------------------------------------------------------
 class nsPrintEngine final : public nsIObserver,
-                                public nsIWebProgressListener,
-                                public nsSupportsWeakReference
+                            public nsIWebProgressListener,
+                            public nsSupportsWeakReference
 {
 public:
   // nsISupports interface...

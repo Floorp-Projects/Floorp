@@ -1293,8 +1293,8 @@ nsObjectLoadingContent::GetBaseURI(nsIURI **aResult)
 // see an interface requestor even though WebIDL bindings don't expose
 // that stuff.
 class ObjectInterfaceRequestorShim final : public nsIInterfaceRequestor,
-                                               public nsIChannelEventSink,
-                                               public nsIStreamListener
+                                           public nsIChannelEventSink,
+                                           public nsIStreamListener
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

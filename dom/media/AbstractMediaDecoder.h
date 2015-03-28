@@ -54,9 +54,9 @@ public:
   // Returns true if the decoder is shut down.
   virtual bool IsShutdown() const = 0;
 
-  virtual bool OnStateMachineThread() const = 0;
+  virtual bool OnStateMachineTaskQueue() const = 0;
 
-  virtual bool OnDecodeThread() const = 0;
+  virtual bool OnDecodeTaskQueue() const = 0;
 
   // Get the current MediaResource being used. Its URI will be returned
   // by currentSrc. Returns what was passed to Load(), if Load() has been called.

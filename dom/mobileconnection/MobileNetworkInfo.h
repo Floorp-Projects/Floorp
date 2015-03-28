@@ -18,7 +18,7 @@ namespace dom {
 class GlobalObject;
 
 class MobileNetworkInfo final : public nsIMobileNetworkInfo
-                                  , public nsWrapperCache
+                              , public nsWrapperCache
 {
 public:
   NS_DECL_NSIMOBILENETWORKINFO

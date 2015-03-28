@@ -1108,7 +1108,7 @@ FindHashMatch(const Metadata& aMetadata, const ReadParams& aReadParams,
 
 // A runnable that executes for a cache access originating in the main process.
 class SingleProcessRunnable final : public File,
-                                        private MainProcessRunnable
+                                    private MainProcessRunnable
 {
 public:
   // In the single-process case, the calling JS compilation thread holds the
@@ -1186,7 +1186,7 @@ private:
 // in the content process. This runnable gets registered as an IPDL subprotocol
 // actor so that it can communicate with the corresponding ChildProcessRunnable.
 class ParentProcessRunnable final : public PAsmJSCacheEntryParent,
-                                        public MainProcessRunnable
+                                    public MainProcessRunnable
 {
 public:
   // The given principal comes from an IPC::Principal which will be dec-refed
@@ -1357,7 +1357,7 @@ DeallocEntryParent(PAsmJSCacheEntryParent* aActor)
 namespace {
 
 class ChildProcessRunnable final : public File,
-                                       public PAsmJSCacheEntryChild
+                                   public PAsmJSCacheEntryChild
 {
 public:
   NS_DECL_NSIRUNNABLE

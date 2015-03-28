@@ -15,9 +15,9 @@ namespace mozilla {
 namespace dom {
 
 class ImageDocument final : public MediaDocument,
-                                public nsIImageDocument,
-                                public imgINotificationObserver,
-                                public nsIDOMEventListener
+                            public nsIImageDocument,
+                            public imgINotificationObserver,
+                            public nsIDOMEventListener
 {
 public:
   ImageDocument();

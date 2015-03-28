@@ -30,7 +30,7 @@ namespace dom {
  * CameraRecorderVideoProfile
  */
 class CameraRecorderVideoProfile final : public nsISupports
-                                           , public nsWrapperCache
+                                       , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -69,7 +69,7 @@ private:
  * CameraRecorderAudioProfile
  */
 class CameraRecorderAudioProfile final : public nsISupports
-                                           , public nsWrapperCache
+                                       , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -103,7 +103,7 @@ private:
  * CameraRecorderProfile
  */
 class CameraRecorderProfile final : public nsISupports
-                                      , public nsWrapperCache
+                                  , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -149,7 +149,7 @@ private:
 template<class T> class CameraClosedListenerProxy;
 
 class CameraRecorderProfiles final : public nsISupports
-                                       , public nsWrapperCache
+                                   , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -182,7 +182,7 @@ private:
  * CameraCapabilities
  */
 class CameraCapabilities final : public nsISupports
-                                   , public nsWrapperCache
+                               , public nsWrapperCache
 {
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS

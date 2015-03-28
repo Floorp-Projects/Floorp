@@ -63,7 +63,7 @@ private:
 };
 
 class nsOfflineCacheDevice final : public nsCacheDevice
-                                     , public nsISupports
+                                 , public nsISupports
 {
 public:
   nsOfflineCacheDevice();

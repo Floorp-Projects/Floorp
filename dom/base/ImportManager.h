@@ -62,7 +62,7 @@ class ImportManager;
 typedef nsTHashtable<nsPtrHashKey<nsINode>> NodeTable;
 
 class ImportLoader final : public nsIStreamListener
-                             , public nsIDOMEventListener
+                         , public nsIDOMEventListener
 {
 
   // A helper inner class to decouple the logic of updating the import graph

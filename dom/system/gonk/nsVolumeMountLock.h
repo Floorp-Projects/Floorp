@@ -26,8 +26,8 @@ namespace system {
  */
 
 class nsVolumeMountLock final : public nsIVolumeMountLock,
-                                    public nsIObserver,
-                                    public nsSupportsWeakReference
+                                public nsIObserver,
+                                public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS

@@ -37,11 +37,11 @@ class AsyncVerifyRedirectCallbackFwr;
 struct EventSourceInit;
 
 class EventSource final : public DOMEventTargetHelper
-                            , public nsIObserver
-                            , public nsIStreamListener
-                            , public nsIChannelEventSink
-                            , public nsIInterfaceRequestor
-                            , public nsSupportsWeakReference
+                        , public nsIObserver
+                        , public nsIStreamListener
+                        , public nsIChannelEventSink
+                        , public nsIInterfaceRequestor
+                        , public nsSupportsWeakReference
 {
 friend class AsyncVerifyRedirectCallbackFwr;
 

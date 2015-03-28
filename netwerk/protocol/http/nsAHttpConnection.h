@@ -153,31 +153,30 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
     nsresult TakeTransport(nsISocketTransport **,    \
                            nsIAsyncInputStream **,   \
                            nsIAsyncOutputStream **) override; \
-    bool IsPersistent() override; \
-    bool IsReused() override; \
-    void DontReuse() override;  \
-    nsresult PushBack(const char *, uint32_t) override; \
-    nsHttpConnection *TakeHttpConnection() override; \
-    uint32_t CancelPipeline(nsresult originalReason) override;   \
-    nsAHttpTransaction::Classifier Classification() override;      \
+    bool IsPersistent() override;                         \
+    bool IsReused() override;                             \
+    void DontReuse() override;                            \
+    nsresult PushBack(const char *, uint32_t) override;   \
+    nsHttpConnection *TakeHttpConnection() override;      \
+    uint32_t CancelPipeline(nsresult originalReason) override; \
+    nsAHttpTransaction::Classifier Classification() override; \
     /*                                                    \
        Thes methods below have automatic definitions that just forward the \
        function to a lower level connection object        \
     */                                                    \
     void GetConnectionInfo(nsHttpConnectionInfo **result) \
-      override                                        \
+      override                                            \
     {                                                     \
       if (!(fwdObject)) {                                 \
-          *result = nullptr;                               \
+          *result = nullptr;                              \
           return;                                         \
       }                                                   \
         return (fwdObject)->GetConnectionInfo(result);    \
     }                                                     \
-    void GetSecurityInfo(nsISupports **result)            \
-      override                                        \
+    void GetSecurityInfo(nsISupports **result) override   \
     {                                                     \
       if (!(fwdObject)) {                                 \
-          *result = nullptr;                               \
+          *result = nullptr;                              \
           return;                                         \
       }                                                   \
       return (fwdObject)->GetSecurityInfo(result);        \
@@ -219,29 +218,29 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsAHttpConnection, NS_AHTTPCONNECTION_IID)
             (fwdObject)->Version() :       \
             NS_HTTP_VERSION_UNKNOWN;       \
     }                                      \
-    bool IsProxyConnectInProgress() override            \
+    bool IsProxyConnectInProgress() override                \
     {                                                       \
         return (fwdObject)->IsProxyConnectInProgress();     \
     }                                                       \
-    bool LastTransactionExpectedNoContent() override    \
+    bool LastTransactionExpectedNoContent() override        \
     {                                                       \
         return (fwdObject)->LastTransactionExpectedNoContent(); \
     }                                                       \
     void SetLastTransactionExpectedNoContent(bool val)      \
-      override                                          \
+      override                                              \
     {                                                       \
         return (fwdObject)->SetLastTransactionExpectedNoContent(val); \
     }                                                       \
     void Classify(nsAHttpTransaction::Classifier newclass)  \
-      override                                          \
+      override                                              \
     {                                                       \
     if (fwdObject)                                          \
         return (fwdObject)->Classify(newclass);             \
     }                                                       \
-    int64_t BytesWritten() override                     \
+    int64_t BytesWritten() override                         \
     {     return fwdObject ? (fwdObject)->BytesWritten() : 0; } \
     void SetSecurityCallbacks(nsIInterfaceRequestor* aCallbacks) \
-      override                                          \
+      override                                              \
     {                                                       \
         if (fwdObject)                                      \
             (fwdObject)->SetSecurityCallbacks(aCallbacks);  \

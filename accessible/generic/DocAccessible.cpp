@@ -1289,10 +1289,12 @@ DocAccessible::ContentInserted(nsIContent* aContainerNode,
     // null (document element is inserted or removed).
     Accessible* container = aContainerNode ?
       GetAccessibleOrContainer(aContainerNode) : this;
-
-    mNotificationController->ScheduleContentInsertion(container,
-                                                      aStartChildNode,
-                                                      aEndChildNode);
+    if (container) {
+      // Ignore notification if the container node is no longer in the DOM tree.
+      mNotificationController->ScheduleContentInsertion(container,
+                                                        aStartChildNode,
+                                                        aEndChildNode);
+    }
   }
 }
 

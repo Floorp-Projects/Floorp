@@ -13,7 +13,7 @@
 #include "nsIIPCSerializableURI.h"
 
 class nsMozIconURI final : public nsIMozIconURI
-                             , public nsIIPCSerializableURI
+                         , public nsIIPCSerializableURI
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS

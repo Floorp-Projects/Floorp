@@ -25,7 +25,7 @@ namespace dom {
 class DocumentType;
 
 class DOMImplementation final : public nsIDOMDOMImplementation
-                                  , public nsWrapperCache
+                              , public nsWrapperCache
 {
   ~DOMImplementation()
   {

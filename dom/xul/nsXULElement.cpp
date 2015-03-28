@@ -124,7 +124,7 @@ uint32_t             nsXULPrototypeAttribute::gNumCacheFills;
 #endif
 
 class nsXULElementTearoff final : public nsIDOMElementCSSInlineStyle,
-                                      public nsIFrameLoaderOwner
+                                  public nsIFrameLoaderOwner
 {
   ~nsXULElementTearoff() {}
 

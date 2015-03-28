@@ -24,7 +24,7 @@ namespace dom {
 namespace telephony {
 
 class TelephonyDialCallback final : public TelephonyCallback,
-                                        public nsITelephonyDialCallback
+                                    public nsITelephonyDialCallback
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED

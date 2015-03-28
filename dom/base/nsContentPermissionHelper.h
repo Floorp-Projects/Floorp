@@ -107,7 +107,7 @@ class nsContentPermissionRequestProxy : public nsIContentPermissionRequest
  * RemotePermissionRequest will send a prompt ipdl request to b2g process.
  */
 class RemotePermissionRequest final : public nsISupports
-                                        , public mozilla::dom::PContentPermissionRequestChild
+                                    , public mozilla::dom::PContentPermissionRequestChild
 {
 public:
   NS_DECL_ISUPPORTS

@@ -156,19 +156,19 @@ SourceBufferDecoder::GetReentrantMonitor()
 }
 
 bool
-SourceBufferDecoder::OnStateMachineThread() const
+SourceBufferDecoder::OnStateMachineTaskQueue() const
 {
-  return mParentDecoder->OnStateMachineThread();
+  return mParentDecoder->OnStateMachineTaskQueue();
 }
 
 bool
-SourceBufferDecoder::OnDecodeThread() const
+SourceBufferDecoder::OnDecodeTaskQueue() const
 {
   // During initialization we run on our TrackBuffer's task queue.
   if (mTaskQueue) {
     return mTaskQueue->IsCurrentThreadIn();
   }
-  return mParentDecoder->OnDecodeThread();
+  return mParentDecoder->OnDecodeTaskQueue();
 }
 
 SourceBufferResource*

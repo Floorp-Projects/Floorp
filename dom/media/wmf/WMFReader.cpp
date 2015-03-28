@@ -154,14 +154,14 @@ WMFReader::Init(MediaDecoderReader* aCloneDonor)
 bool
 WMFReader::HasAudio()
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
   return mHasAudio;
 }
 
 bool
 WMFReader::HasVideo()
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
   return mHasVideo;
 }
 
@@ -507,7 +507,7 @@ nsresult
 WMFReader::ReadMetadata(MediaInfo* aInfo,
                         MetadataTags** aTags)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
 
   DECODER_LOG("WMFReader::ReadMetadata()");
   HRESULT hr;
@@ -575,7 +575,7 @@ WMFReader::IsMediaSeekable()
 bool
 WMFReader::DecodeAudioData()
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
 
   HRESULT hr;
   hr = mSourceReader->ReadSample(MF_SOURCE_READER_FIRST_AUDIO_STREAM,
@@ -804,7 +804,7 @@ bool
 WMFReader::DecodeVideoFrame(bool &aKeyframeSkip,
                             int64_t aTimeThreshold)
 {
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
 
   // Record number of frames decoded and parsed. Automatically update the
   // stats counters using the AutoNotifyDecoded stack-based class.
@@ -909,7 +909,7 @@ WMFReader::SeekInternal(int64_t aTargetUs)
 {
   DECODER_LOG("WMFReader::Seek() %lld", aTargetUs);
 
-  NS_ASSERTION(mDecoder->OnDecodeThread(), "Should be on decode thread.");
+  MOZ_ASSERT(OnTaskQueue());
 #ifdef DEBUG
   bool canSeek = false;
   GetSourceReaderCanSeek(mSourceReader, canSeek);

@@ -294,7 +294,7 @@ nsDNSRecord::ReportUnusable(uint16_t aPort)
 //-----------------------------------------------------------------------------
 
 class nsDNSAsyncRequest final : public nsResolveHostCallback
-                                  , public nsICancelable
+                              , public nsICancelable
 {
     ~nsDNSAsyncRequest() {}
 

@@ -34,7 +34,7 @@ enum {
 // (which can transform transparent pixels into non-transparent ones, but only
 // inside their input effect's output rect).
 class ExtendInputEffectD2D1 final : public ID2D1EffectImpl
-                                      , public ID2D1DrawTransform
+                                  , public ID2D1DrawTransform
 {
 public:
   // ID2D1EffectImpl

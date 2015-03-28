@@ -18,9 +18,9 @@ namespace mozilla {
 namespace dom {
 
 class HTMLStyleElement final : public nsGenericHTMLElement,
-                                   public nsIDOMHTMLStyleElement,
-                                   public nsStyleLinkElement,
-                                   public nsStubMutationObserver
+                               public nsIDOMHTMLStyleElement,
+                               public nsStyleLinkElement,
+                               public nsStubMutationObserver
 {
 public:
   explicit HTMLStyleElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);

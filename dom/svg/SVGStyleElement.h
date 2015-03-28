@@ -20,8 +20,8 @@ namespace mozilla {
 namespace dom {
 
 class SVGStyleElement final : public SVGStyleElementBase,
-                                  public nsStyleLinkElement,
-                                  public nsStubMutationObserver
+                              public nsStyleLinkElement,
+                              public nsStubMutationObserver
 {
 protected:
   friend nsresult (::NS_NewSVGStyleElement(nsIContent **aResult,

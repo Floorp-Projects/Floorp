@@ -15,7 +15,7 @@ namespace mozilla {
 namespace dom {
 
 class HTMLLIElement final : public nsGenericHTMLElement,
-                                public nsIDOMHTMLLIElement
+                            public nsIDOMHTMLLIElement
 {
 public:
   explicit HTMLLIElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)

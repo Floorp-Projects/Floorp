@@ -46,7 +46,7 @@ class StartRecordingHelper;
 
 // Main camera control.
 class nsDOMCameraControl final : public DOMMediaStream
-                                   , public nsSupportsWeakReference
+                               , public nsSupportsWeakReference
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOM_CAMERA_CONTROL_CID)
