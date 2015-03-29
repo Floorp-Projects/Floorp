@@ -227,6 +227,7 @@ struct WorkerLoadInfo
     already_AddRefed<nsITabChild> GetAnyLiveTabChild();
 
     nsCOMPtr<nsILoadContext> mLoadContext;
+    nsCOMPtr<nsIInterfaceRequestor> mOuterRequestor;
 
     // Array of weak references to nsITabChild.  We do not want to keep TabChild
     // actors alive for long after their ActorDestroy() methods are called.
