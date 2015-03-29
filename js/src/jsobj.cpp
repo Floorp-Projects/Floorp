@@ -2936,16 +2936,20 @@ js::LookupPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSObject** 
                     break;
                 return false;
             } while (0);
-        } else {
-            // Search for a property on an unboxed object. Other non-native objects
-            // are not handled here.
-            if (!obj->is<UnboxedPlainObject>())
-                return false;
+        } else if (obj->is<UnboxedPlainObject>()) {
             if (obj->as<UnboxedPlainObject>().containsUnboxedOrExpandoProperty(cx, id)) {
                 *objp = obj;
                 MarkNonNativePropertyFound<NoGC>(propp);
                 return true;
             }
+        } else if (obj->is<TypedObject>()) {
+            if (obj->as<TypedObject>().typeDescr().hasProperty(cx->names(), id)) {
+                *objp = obj;
+                MarkNonNativePropertyFound<NoGC>(propp);
+                return true;
+            }
+        } else {
+            return false;
         }
 
         obj = obj->getProto();
