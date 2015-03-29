@@ -251,6 +251,7 @@ nsHTMLCanvasFrame::Reflow(nsPresContext*           aPresContext,
                           const nsHTMLReflowState& aReflowState,
                           nsReflowStatus&          aStatus)
 {
+  MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsHTMLCanvasFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aStatus);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,

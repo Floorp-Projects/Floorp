@@ -164,6 +164,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
+  MarkInReflow();
   nsReflowStatus childStatus;
 
   mPresentationData.flags &= ~NS_MATHML_ERROR;
