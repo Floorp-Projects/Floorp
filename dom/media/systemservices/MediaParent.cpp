@@ -7,6 +7,7 @@
 #include "MediaParent.h"
 
 #include "mozilla/Base64.h"
+#include <mozilla/StaticMutex.h>
 
 #include "MediaUtils.h"
 #include "MediaEngine.h"
@@ -35,11 +36,12 @@ PRLogModuleInfo *gMediaParentLog;
 namespace mozilla {
 namespace media {
 
+static StaticMutex gMutex;
 static ParentSingleton* sParentSingleton = nullptr;
 
 class ParentSingleton : public nsISupports
 {
-  NS_DECL_ISUPPORTS
+  NS_DECL_THREADSAFE_ISUPPORTS
 
   class OriginKey
   {
@@ -332,6 +334,13 @@ private:
 public:
   static ParentSingleton* Get()
   {
+    // Protect creation of singleton and access from multiple Background threads.
+    //
+    // Multiple Background threads happen because sanitize.js calls us from the
+    // chrome process and gets a thread separate from the one servicing ipc from
+    // the content process.
+
+    StaticMutexAutoLock lock(gMutex);
     if (!sParentSingleton) {
       sParentSingleton = new ParentSingleton();
     }
@@ -345,23 +354,58 @@ public:
 NS_IMPL_ISUPPORTS0(ParentSingleton)
 
 bool
-Parent::RecvGetOriginKey(const nsCString& aOrigin,
-                         const bool& aPrivateBrowsing,
-                         nsCString* aKey)
+Parent::RecvGetOriginKey(const uint32_t& aRequestId,
+                         const nsCString& aOrigin,
+                         const bool& aPrivateBrowsing)
 {
-  if (aPrivateBrowsing) {
-    mSingleton->mPrivateBrowsingOriginKeys.GetOriginKey(aOrigin, *aKey);
-  } else {
-    mSingleton->mOriginKeys.GetOriginKey(aOrigin, *aKey);
+  // Hand over to stream-transport thread.
+
+  nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  MOZ_ASSERT(sts);
+  nsRefPtr<ParentSingleton> singleton(mSingleton);
+
+  nsRefPtr<PledgeRunnable<nsCString>> p = PledgeRunnable<nsCString>::New(
+      [singleton, aOrigin, aPrivateBrowsing](nsCString& aResult) {
+    if (aPrivateBrowsing) {
+      singleton->mPrivateBrowsingOriginKeys.GetOriginKey(aOrigin, aResult);
+    } else {
+      singleton->mOriginKeys.GetOriginKey(aOrigin, aResult);
+    }
+    return NS_OK;
+  });
+  nsresult rv = sts->Dispatch(p, NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
   }
+  nsRefPtr<media::Parent> keepAlive(this);
+  p->Then([this, keepAlive, aRequestId](const nsCString& aKey) mutable {
+    if (!mDestroyed) {
+      unused << SendGetOriginKeyResponse(aRequestId, aKey);
+    }
+    return NS_OK;
+  });
   return true;
 }
 
 bool
 Parent::RecvSanitizeOriginKeys(const uint64_t& aSinceWhen)
 {
-  mSingleton->mPrivateBrowsingOriginKeys.Clear(aSinceWhen);
-  mSingleton->mOriginKeys.Clear(aSinceWhen);
+  // Hand over to stream-transport thread.
+
+  nsCOMPtr<nsIEventTarget> sts = do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
+  MOZ_ASSERT(sts);
+  nsRefPtr<ParentSingleton> singleton(mSingleton);
+
+  nsRefPtr<PledgeRunnable<bool>> p = PledgeRunnable<bool>::New(
+      [singleton, aSinceWhen](bool) {
+    singleton->mPrivateBrowsingOriginKeys.Clear(aSinceWhen);
+    singleton->mOriginKeys.Clear(aSinceWhen);
+    return NS_OK;
+  });
+  nsresult rv = sts->Dispatch(p, NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
   return true;
 }
 
@@ -369,11 +413,13 @@ void
 Parent::ActorDestroy(ActorDestroyReason aWhy)
 {
   // No more IPC from here
+  mDestroyed = true;
   LOG((__FUNCTION__));
 }
 
 Parent::Parent()
   : mSingleton(ParentSingleton::Get())
+  , mDestroyed(false)
 {
 #if defined(PR_LOGGING)
   if (!gMediaParentLog)
@@ -391,9 +437,19 @@ Parent::~Parent()
   MOZ_COUNT_DTOR(Parent);
 }
 
-PMediaParent* CreateParent()
+PMediaParent*
+AllocPMediaParent()
 {
-  return new Parent();
+  Parent* obj = new Parent();
+  obj->AddRef();
+  return obj;
+}
+
+bool
+DeallocPMediaParent(media::PMediaParent *aActor)
+{
+  static_cast<Parent*>(aActor)->Release();
+  return true;
 }
 
 }
