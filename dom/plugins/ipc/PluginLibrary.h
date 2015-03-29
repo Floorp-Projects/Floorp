@@ -14,11 +14,11 @@
 #include "nsTArray.h"
 #include "nsError.h"
 #include "mozilla/EventForwards.h"
+#include "nsSize.h"
 
 class gfxContext;
 class nsCString;
 struct nsIntRect;
-struct nsIntSize;
 class nsNPAPIPlugin;
 
 namespace mozilla {

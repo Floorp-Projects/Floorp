@@ -12,10 +12,10 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsColor.h"
+#include "nsSize.h"
 
 struct nsRect;
 struct nsIntRect;
-struct nsIntSize;
 class nsIntRegion;
 struct nsFont;
 struct nsIntMargin;

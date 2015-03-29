@@ -13,7 +13,7 @@
 // Maximum allowable size
 #define NS_MAXSIZE nscoord_MAX
 
-struct nsIntSize;
+typedef mozilla::gfx::IntSize nsIntSize;
 typedef nsIntSize gfxIntSize;
 
 struct nsSize : public mozilla::gfx::BaseSize<nscoord, nsSize> {
@@ -33,19 +33,6 @@ struct nsSize : public mozilla::gfx::BaseSize<nscoord, nsSize> {
    */
   MOZ_WARN_UNUSED_RESULT inline nsSize
     ScaleToOtherAppUnits(int32_t aFromAPP, int32_t aToAPP) const;
-};
-
-struct nsIntSize : public mozilla::gfx::BaseSize<int32_t, nsIntSize> {
-  typedef mozilla::gfx::BaseSize<int32_t, nsIntSize> Super;
-
-  nsIntSize() : Super() {}
-  nsIntSize(int32_t aWidth, int32_t aHeight) : Super(aWidth, aHeight) {}
-
-  inline nsSize ToAppUnits(nscoord aAppUnitsPerPixel) const;
-  mozilla::gfx::IntSize ToIntSize() const
-  {
-    return mozilla::gfx::IntSize(width, height);
-  };
 };
 
 inline nsIntSize
@@ -75,10 +62,10 @@ nsSize::ScaleToOtherAppUnits(int32_t aFromAPP, int32_t aToAPP) const {
 }
 
 inline nsSize
-nsIntSize::ToAppUnits(nscoord aAppUnitsPerPixel) const
+IntSizeToAppUnits(mozilla::gfx::IntSize aSize, nscoord aAppUnitsPerPixel)
 {
-  return nsSize(NSIntPixelsToAppUnits(width, aAppUnitsPerPixel),
-                NSIntPixelsToAppUnits(height, aAppUnitsPerPixel));
+  return nsSize(NSIntPixelsToAppUnits(aSize.width, aAppUnitsPerPixel),
+                NSIntPixelsToAppUnits(aSize.height, aAppUnitsPerPixel));
 }
 
 #endif /* NSSIZE_H */

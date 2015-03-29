@@ -10,7 +10,6 @@
 #include "nsAutoPtr.h"
 #include "mozilla/Mutex.h"
 
-struct nsIntSize;
 struct nsIntRect;
 
 namespace mozilla {
