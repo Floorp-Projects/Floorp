@@ -658,7 +658,8 @@ IndexedDatabaseManager::FullSynchronous()
 
 // static
 bool
-IndexedDatabaseManager::ExperimentalFeaturesEnabled()
+IndexedDatabaseManager::ExperimentalFeaturesEnabled(JSContext* aCx,
+                                                    JSObject* aGlobal)
 {
   if (NS_IsMainThread()) {
     if (NS_WARN_IF(!GetOrCreate())) {
