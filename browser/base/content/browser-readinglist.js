@@ -17,6 +17,7 @@ let ReadingListUI = {
   MESSAGES: [
     "ReadingList:GetVisibility",
     "ReadingList:ToggleVisibility",
+    "ReadingList:ShowIntro",
   ],
 
   /**
@@ -220,6 +221,14 @@ let ReadingListUI = {
 
       case "ReadingList:ToggleVisibility": {
         this.toggleSidebar();
+        break;
+      }
+
+      case "ReadingList:ShowIntro": {
+        if (this.enabled && !Preferences.get("browser.readinglist.introShown", false)) {
+          Preferences.set("browser.readinglist.introShown", true);
+          this.showSidebar();
+        }
         break;
       }
     }
