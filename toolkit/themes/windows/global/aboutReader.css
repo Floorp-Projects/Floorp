@@ -9,6 +9,10 @@ body {
   margin-right: auto;
 }
 
+body.loaded {
+  transition: color 0.4s, background-color 0.4s;
+}
+
 .light,
 .light-button {
   color: #333333;
