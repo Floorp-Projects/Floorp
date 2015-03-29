@@ -20,6 +20,7 @@ public final class HelperInitializer {
         AssertionHelper.init(context);
 
         DeviceHelper.init(context);
+        GeckoClickHelper.init(context);
         GeckoHelper.init(context);
         JavascriptBridge.init(context);
         NavigationHelper.init(context);
