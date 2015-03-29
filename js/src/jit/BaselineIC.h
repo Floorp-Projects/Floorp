@@ -3842,17 +3842,17 @@ class ICGetProp_StringLength : public ICStub
 };
 
 // Structure encapsulating the guarding that needs to be done on an object
-// before it can be accessed or modified.
+// before it can be accessed or modified by an inline cache.
 class ReceiverGuard
 {
-    // Group to guard on, or null. If the object is not unboxed and the IC does
-    // not require the object to have a specific group, this is null.
-    // Otherwise, this is the object's group.
+    // Group to guard on, or null. If the object is not unboxed or typed and
+    // the IC does  not require the object to have a specific group, this is
+    // null. Otherwise, this is the object's group.
     HeapPtrObjectGroup group_;
 
-    // Shape to guard on, or null. If the object is not unboxed then this is
-    // the object's shape. If the object is unboxed, then this is the shape of
-    // the object's expando, null if the object has no expando.
+    // Shape to guard on, or null. If the object is not unboxed or typed then
+    // this is the object's shape. If the object is unboxed, then this is the
+    // shape of the object's expando, null if the object has no expando.
     HeapPtrShape shape_;
 
   public:
@@ -3885,11 +3885,14 @@ class ReceiverGuard
           : group(nullptr), shape(nullptr)
         {
             if (obj) {
-                shape = obj->maybeShape();
-                if (!shape) {
+                if (obj->is<UnboxedPlainObject>()) {
                     group = obj->group();
                     if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando())
                         shape = expando->lastProperty();
+                } else if (obj->is<TypedObject>()) {
+                    group = obj->group();
+                } else {
+                    shape = obj->maybeShape();
                 }
             }
         }
@@ -3942,9 +3945,17 @@ class ReceiverGuard
     // Bits to munge into IC compiler keys when that IC has a ReceiverGuard.
     // This uses at two bits for data.
     static int32_t keyBits(JSObject* obj) {
-        if (obj->maybeShape())
-            return 0;
-        return obj->as<UnboxedPlainObject>().maybeExpando() ? 1 : 2;
+        if (obj->is<UnboxedPlainObject>()) {
+            // Both the group and shape need to be guarded for unboxed objects.
+            return obj->as<UnboxedPlainObject>().maybeExpando() ? 0 : 1;
+        }
+        if (obj->is<TypedObject>()) {
+            // Only the group needs to be guarded for typed objects.
+            return 2;
+        }
+        // Other objects only need the shape to be guarded, except for ICs
+        // which always guard the group.
+        return 3;
     }
 };
 
