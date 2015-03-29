@@ -115,7 +115,7 @@ gfxCallbackDrawable::MakeSurfaceDrawable(const GraphicsFilter aFilter)
     SurfaceFormat format =
         gfxPlatform::GetPlatform()->Optimal2DFormatForContent(gfxContentType::COLOR_ALPHA);
     RefPtr<DrawTarget> dt =
-        gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(mSize.ToIntSize(),
+        gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(mSize,
                                                                      format);
     if (!dt)
         return nullptr;

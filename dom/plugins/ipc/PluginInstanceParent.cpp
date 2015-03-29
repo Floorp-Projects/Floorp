@@ -641,7 +641,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
         NS_ASSERTION(image->GetFormat() == ImageFormat::CAIRO_SURFACE, "Wrong format?");
         CairoImage* cairoImage = static_cast<CairoImage*>(image.get());
         CairoImage::Data cairoData;
-        cairoData.mSize = surface->GetSize().ToIntSize();
+        cairoData.mSize = surface->GetSize();
         cairoData.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surface);
         cairoImage->SetData(cairoData);
 

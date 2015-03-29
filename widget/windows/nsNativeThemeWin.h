@@ -14,9 +14,9 @@
 #include "gfxTypes.h"
 #include <windows.h>
 #include "mozilla/TimeStamp.h"
+#include "nsSize.h"
 
 struct nsIntRect;
-struct nsIntSize;
 
 class nsNativeThemeWin : private nsNativeTheme,
                          public nsITheme {

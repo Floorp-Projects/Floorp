@@ -30,8 +30,6 @@
 #include "mozilla/layers/AtomicRefCountedWithFinalize.h"
 
 class gfxReusableSurfaceWrapper;
-struct nsIntPoint;
-struct nsIntSize;
 struct nsIntRect;
 
 namespace mozilla {

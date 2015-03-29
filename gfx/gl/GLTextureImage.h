@@ -211,22 +211,10 @@ protected:
      * TextureImage from GLContext::CreateTextureImage().  That is,
      * clients must not be given partially-constructed TextureImages.
      */
-    TextureImage(const nsIntSize& aSize,
-                 GLenum aWrapMode, ContentType aContentType,
-                 Flags aFlags = NoFlags,
-                 ImageFormat aImageFormat = gfxImageFormat::Unknown)
-        : mSize(aSize.ToIntSize())
-        , mWrapMode(aWrapMode)
-        , mContentType(aContentType)
-        , mImageFormat(aImageFormat)
-        , mFilter(GraphicsFilter::FILTER_GOOD)
-        , mFlags(aFlags)
-    {}
-
-    // Moz2D equivalent...
     TextureImage(const gfx::IntSize& aSize,
                  GLenum aWrapMode, ContentType aContentType,
-                 Flags aFlags = NoFlags);
+                 Flags aFlags = NoFlags,
+                 ImageFormat aImageFormat = gfxImageFormat::Unknown);
 
     // Protected destructor, to discourage deletion outside of Release():
     virtual ~TextureImage() {}
@@ -257,13 +245,6 @@ class BasicTextureImage
 public:
     virtual ~BasicTextureImage();
 
-    BasicTextureImage(GLuint aTexture,
-                      const nsIntSize& aSize,
-                      GLenum aWrapMode,
-                      ContentType aContentType,
-                      GLContext* aContext,
-                      TextureImage::Flags aFlags = TextureImage::NoFlags,
-                      TextureImage::ImageFormat aImageFormat = gfxImageFormat::Unknown);
     BasicTextureImage(GLuint aTexture,
                       const gfx::IntSize& aSize,
                       GLenum aWrapMode,

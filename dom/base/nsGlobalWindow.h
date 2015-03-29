@@ -51,6 +51,7 @@
 #include "mozilla/dom/WindowBinding.h"
 #include "Units.h"
 #include "nsComponentManagerUtils.h"
+#include "nsSize.h"
 
 #define DEFAULT_HOME_PAGE "www.mozilla.org"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
@@ -90,7 +91,6 @@ class nsGlobalWindowObserver;
 class nsGlobalWindow;
 class nsDOMWindowUtils;
 class nsIIdleService;
-struct nsIntSize;
 struct nsRect;
 
 class nsWindowSizes;

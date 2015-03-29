@@ -254,7 +254,7 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
     return NS_ERROR_FAILURE;
   }
 
-  mImageSize = aImageSize.ToIntSize();
+  mImageSize = aImageSize;
   mOffset.MoveTo(aRect.x, aRect.y);
   mSize.SizeTo(aRect.width, aRect.height);
 
@@ -319,7 +319,7 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
     return NS_ERROR_FAILURE;
   }
 
-  mImageSize = aSize.ToIntSize();
+  mImageSize = aSize;
   mOffset.MoveTo(0, 0);
   mSize.SizeTo(aSize.width, aSize.height);
 
