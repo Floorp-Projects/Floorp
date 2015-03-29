@@ -116,8 +116,7 @@ gfxPlatformMac::CreateOffscreenSurface(const IntSize& size,
                                        gfxContentType contentType)
 {
     nsRefPtr<gfxASurface> newSurface =
-      new gfxQuartzSurface(ThebesIntSize(size),
-                           OptimalFormatForContent(contentType));
+      new gfxQuartzSurface(size, OptimalFormatForContent(contentType));
     return newSurface.forget();
 }
 

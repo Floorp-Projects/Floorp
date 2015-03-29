@@ -189,7 +189,7 @@ void TestTextureClientSurface(TextureClient* texture, gfxImageSurface* surface) 
 
     nsRefPtr<gfxImageSurface> hostSurface =
       new gfxImageSurface(hostDataSurface->GetData(),
-                          ThebesIntSize(hostDataSurface->GetSize()),
+                          hostDataSurface->GetSize(),
                           hostDataSurface->Stride(),
                           SurfaceFormatToImageFormat(hostDataSurface->GetFormat()));
     AssertSurfacesEqual(surface, hostSurface.get());
