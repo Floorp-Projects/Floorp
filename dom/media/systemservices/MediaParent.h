@@ -21,20 +21,24 @@ class ParentSingleton;
 
 class Parent : public PMediaParent
 {
+  NS_INLINE_DECL_REFCOUNTING(Parent)
 public:
-  virtual bool RecvGetOriginKey(const nsCString& aOrigin,
-                                const bool& aPrivateBrowsing,
-                                nsCString* aKey) override;
+  virtual bool RecvGetOriginKey(const uint32_t& aRequestId,
+                                const nsCString& aOrigin,
+                                const bool& aPrivateBrowsing) override;
   virtual bool RecvSanitizeOriginKeys(const uint64_t& aSinceWhen) override;
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   Parent();
-  virtual ~Parent();
 private:
+  virtual ~Parent();
+
   nsRefPtr<ParentSingleton> mSingleton;
+  bool mDestroyed;
 };
 
-PMediaParent* CreateParent();
+PMediaParent* AllocPMediaParent();
+bool DeallocPMediaParent(PMediaParent *aActor);
 
 } // namespace media
 } // namespace mozilla
