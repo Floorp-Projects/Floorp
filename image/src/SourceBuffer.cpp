@@ -121,8 +121,13 @@ SourceBuffer::Compact()
   // consumer will ever have to wait.
   mWaitingConsumers.Compact();
 
-  // If we have no more than one chunk, then we can't compact further.
-  if (mChunks.Length() < 2) {
+  // If we have no chunks, then there's nothing to compact.
+  if (mChunks.Length() < 1) {
+    return NS_OK;
+  }
+
+  // If we have one chunk, then we can compact if it has excess capacity.
+  if (mChunks.Length() == 1 && mChunks[0].Length() == mChunks[0].Capacity()) {
     return NS_OK;
   }
 
