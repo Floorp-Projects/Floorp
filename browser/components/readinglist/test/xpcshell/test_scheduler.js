@@ -174,6 +174,81 @@ add_task(function* testBackoff() {
   scheduler.finalize();
 });
 
+add_task(function testErrorBackoff() {
+  // This test can't sanely use the "test scheduler" above, so make one more
+  // suited.
+  let rlMock = new ReadingListMock();
+  let scheduler = createTestableScheduler(rlMock);
+  scheduler._setTimeout = function(delay) {
+    // create a timer that fires immediately
+    return setTimeout(() => scheduler._doSync(), 0);
+  }
+
+  // This does all the work...
+  function checkBackoffs(expectedSequences) {
+    let orig_maybeReschedule = scheduler._maybeReschedule;
+    return new Promise(resolve => {
+      let isSuccess = true; // ie, first run will put us in "fail" mode.
+      let expected;
+      function nextSequence() {
+        if (expectedSequences.length == 0) {
+          resolve();
+          return true; // we are done.
+        }
+        // setup the current set of expected results.
+        expected = expectedSequences.shift()
+        // and toggle the success status of the engine.
+        isSuccess = !isSuccess;
+        if (isSuccess) {
+          scheduler._engine.start = Promise.resolve;
+        } else {
+          scheduler._engine.start = () => {
+            return Promise.reject(new Error("oh no"))
+          }
+        }
+        return false; // not done.
+      };
+      // get the first sequence;
+      nextSequence();
+      // and setup the scheduler to check the sequences.
+      scheduler._maybeReschedule = function(nextDelay) {
+        let thisExpected = expected.shift();
+        equal(thisExpected * 1000, nextDelay);
+        if (expected.length == 0) {
+          if (nextSequence()) {
+            // we are done, so do nothing.
+            return;
+          }
+        }
+        // call the original impl to get the next schedule.
+        return orig_maybeReschedule.call(scheduler, nextDelay);
+      }
+    });
+  }
+
+  prefs.set("schedule", 100);
+  prefs.set("retry", 5);
+  // The sequences of timeouts we expect as the Sync error state changes.
+  let backoffsChecked = checkBackoffs([
+    // first sequence is in failure mode - expect the timeout to double until 'schedule'
+    [5, 10, 20, 40, 80, 100, 100],
+    // Sync just started working - more 'schedule'
+    [100, 100],
+    // Just stopped again - error backoff process restarts.
+    [5, 10],
+    // Another success and we are back to 'schedule'
+    [100, 100],
+  ]);
+
+  // fire things off.
+  scheduler.init();
+
+  // and wait for completion.
+  yield backoffsChecked;
+
+  scheduler.finalize();
+});
+
 function run_test() {
   run_next_test();
 }
