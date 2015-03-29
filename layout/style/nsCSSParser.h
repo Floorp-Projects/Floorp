@@ -122,25 +122,25 @@ public:
   // particular, units may be omitted from <length>.  The 'aIsSVGMode'
   // argument controls this quirk.  Note that this *only* applies to
   // mapped attributes, not inline styles or full style sheets in SVG.
-  nsresult ParseProperty(const nsCSSProperty aPropID,
-                         const nsAString&    aPropValue,
-                         nsIURI*             aSheetURL,
-                         nsIURI*             aBaseURL,
-                         nsIPrincipal*       aSheetPrincipal,
-                         mozilla::css::Declaration* aDeclaration,
-                         bool*               aChanged,
-                         bool                aIsImportant,
-                         bool                aIsSVGMode = false);
+  void ParseProperty(const nsCSSProperty aPropID,
+                     const nsAString&    aPropValue,
+                     nsIURI*             aSheetURL,
+                     nsIURI*             aBaseURL,
+                     nsIPrincipal*       aSheetPrincipal,
+                     mozilla::css::Declaration* aDeclaration,
+                     bool*               aChanged,
+                     bool                aIsImportant,
+                     bool                aIsSVGMode = false);
 
   // The same as ParseProperty but for a variable.
-  nsresult ParseVariable(const nsAString&    aVariableName,
-                         const nsAString&    aPropValue,
-                         nsIURI*             aSheetURL,
-                         nsIURI*             aBaseURL,
-                         nsIPrincipal*       aSheetPrincipal,
-                         mozilla::css::Declaration* aDeclaration,
-                         bool*               aChanged,
-                         bool                aIsImportant);
+  void ParseVariable(const nsAString&    aVariableName,
+                     const nsAString&    aPropValue,
+                     nsIURI*             aSheetURL,
+                     nsIURI*             aBaseURL,
+                     nsIPrincipal*       aSheetPrincipal,
+                     mozilla::css::Declaration* aDeclaration,
+                     bool*               aChanged,
+                     bool                aIsImportant);
   /**
    * Parse aBuffer into a media list |aMediaList|, which must be
    * non-null, replacing its current contents.  If aHTMLMode is true,
