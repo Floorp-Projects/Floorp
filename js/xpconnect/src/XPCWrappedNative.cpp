@@ -655,16 +655,12 @@ XPCWrappedNative::GatherProtoScriptableCreateInfo(nsIClassInfo* classInfo,
         return;
     }
 
-    nsCOMPtr<nsISupports> possibleHelper;
-    nsresult rv = classInfo->GetHelperForLanguage(nsIProgrammingLanguage::JAVASCRIPT,
-                                                  getter_AddRefs(possibleHelper));
-    if (NS_SUCCEEDED(rv) && possibleHelper) {
-        nsCOMPtr<nsIXPCScriptable> helper(do_QueryInterface(possibleHelper));
-        if (helper) {
-            uint32_t flags = helper->GetScriptableFlags();
-            sciProto.SetCallback(helper.forget());
-            sciProto.SetFlags(XPCNativeScriptableFlags(flags));
-        }
+    nsCOMPtr<nsIXPCScriptable> helper;
+    nsresult rv = classInfo->GetScriptableHelper(getter_AddRefs(helper));
+    if (NS_SUCCEEDED(rv) && helper) {
+        uint32_t flags = helper->GetScriptableFlags();
+        sciProto.SetCallback(helper.forget());
+        sciProto.SetFlags(XPCNativeScriptableFlags(flags));
     }
 }
 
