@@ -2433,6 +2433,7 @@ InterfaceRequestor::InterfaceRequestor(nsIPrincipal* aPrincipal,
       callbacks->GetInterface(NS_GET_IID(nsILoadContext),
                               getter_AddRefs(baseContext));
     }
+    mOuterRequestor = callbacks;
   }
 
   mLoadContext = new LoadContext(aPrincipal, baseContext);
@@ -2489,6 +2490,13 @@ InterfaceRequestor::GetInterface(const nsIID& aIID, void** aSink)
     }
     tabChild.forget(aSink);
     return NS_OK;
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsINetworkInterceptController)) &&
+      mOuterRequestor) {
+    // If asked for the network intercept controller, ask the outer requestor,
+    // which could be the docshell.
+    return mOuterRequestor->GetInterface(aIID, aSink);
   }
 
   return NS_NOINTERFACE;
