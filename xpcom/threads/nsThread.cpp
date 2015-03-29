@@ -126,7 +126,7 @@ nsThreadClassInfo::GetInterfaces(uint32_t* aCount, nsIID*** aArray)
 }
 
 NS_IMETHODIMP
-nsThreadClassInfo::GetHelperForLanguage(uint32_t aLang, nsISupports** aResult)
+nsThreadClassInfo::GetScriptableHelper(nsIXPCScriptable** aResult)
 {
   *aResult = nullptr;
   return NS_OK;

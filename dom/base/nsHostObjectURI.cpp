@@ -202,7 +202,7 @@ nsHostObjectURI::GetInterfaces(uint32_t *count, nsIID * **array)
 }
 
 NS_IMETHODIMP 
-nsHostObjectURI::GetHelperForLanguage(uint32_t language, nsISupports **_retval)
+nsHostObjectURI::GetScriptableHelper(nsIXPCScriptable **_retval)
 {
   *_retval = nullptr;
   return NS_OK;
