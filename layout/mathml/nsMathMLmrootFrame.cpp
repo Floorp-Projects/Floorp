@@ -166,6 +166,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 {
   nsReflowStatus childStatus;
 
+  mPresentationData.flags &= ~NS_MATHML_ERROR;
   aDesiredSize.ClearSize();
   aDesiredSize.SetBlockStartAscent(0);
 
