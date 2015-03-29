@@ -61,9 +61,7 @@ function testSteps()
     ok(true, "clear should throw on READ_ONLY transactions");
   }
 
-  request = db.transaction("foo", "readwriteflush")
-              .objectStore("foo")
-              .clear();
+  request = db.transaction("foo", "readwrite").objectStore("foo").clear();
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
@@ -83,9 +81,7 @@ function testSteps()
   }
   yield undefined;
 
-  request = db.transaction("foo", "readwrite")
-              .objectStore("foo")
-              .add({});
+  request = db.transaction("foo", "readwrite").objectStore("foo").add({});
   request.onerror = errorHandler;
   request.onsuccess = grabEventAndContinueHandler;
   event = yield undefined;
