@@ -8,25 +8,27 @@ include protocol PBackground;
 namespace mozilla {
 namespace media {
 
-sync protocol PMedia
+protocol PMedia
 {
   manager PBackground;
 
 parent:
   /**
-   * Returns a persistent unique secret key for each origin.
+   * Requests a persistent unique secret key for each origin.
    * Has no expiry, but is cleared by age along with cookies.
    * This is needed by mediaDevices.enumerateDevices() to produce persistent
    * deviceIds that wont work cross-origin.
    */
-  sync GetOriginKey(nsCString origin, bool privateBrowsing) returns (nsCString key);
+  GetOriginKey(uint32_t aRequestId, nsCString aOrigin, bool aPrivateBrowsing);
 
   /**
-   * On clear cookies.
+   * On clear cookies. Fire and forget.
    */
-  sync SanitizeOriginKeys(uint64_t sinceWhen);
+  SanitizeOriginKeys(uint64_t aSinceWhen);
 
-  async __delete__();
+child:
+  GetOriginKeyResponse(uint32_t aRequestId, nsCString key);
+  __delete__();
 };
 
 } // namespace media
