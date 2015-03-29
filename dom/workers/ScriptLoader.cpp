@@ -883,7 +883,12 @@ private:
       return rv;
     }
 
-    if (!aLoadInfo.mScriptTextBuf || !aLoadInfo.mScriptTextLength) {
+    if (!aLoadInfo.mScriptTextLength && !aLoadInfo.mScriptTextBuf) {
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      NS_LITERAL_CSTRING("DOM"), parentDoc,
+                                      nsContentUtils::eDOM_PROPERTIES,
+                                      "EmptyWorkerSourceWarning");
+    } else if (!aLoadInfo.mScriptTextBuf) {
       return NS_ERROR_FAILURE;
     }
 
