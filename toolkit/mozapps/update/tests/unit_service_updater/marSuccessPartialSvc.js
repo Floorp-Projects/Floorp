@@ -69,5 +69,6 @@ function finishCheckUpdateFinished() {
 
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
   checkUpdateLogContents(LOG_PARTIAL_SUCCESS);
+  standardInit();
   checkCallbackServiceLog();
 }

@@ -33,7 +33,8 @@ function run_test() {
 }
 
 function setupAppFilesFinished() {
-  runUpdateUsingService(STATE_PENDING_SVC, STATE_FAILED);
+  runUpdateUsingService(STATE_PENDING_SVC,
+                        STATE_FAILED_LOADSOURCE_ERROR_WRONG_SIZE);
 }
 
 /**
@@ -59,5 +60,6 @@ function checkUpdateFinished() {
 
   checkFilesAfterUpdateFailure(getApplyDirFile, false, false);
   checkUpdateLogContents(LOG_PARTIAL_FAILURE);
+  standardInit();
   checkCallbackServiceLog();
 }

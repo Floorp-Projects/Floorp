@@ -149,7 +149,7 @@ MBS_ApplyPatch(const MBSPatchHeader *header, FILE* patchFile,
         diffsrc[i] += fbuffer[i];
       }
       if ((uint32_t) fwrite(diffsrc, 1, ctrlsrc->x, file) != ctrlsrc->x) {
-        rv = WRITE_ERROR;
+        rv = WRITE_ERROR_PATCH_FILE;
         goto end;
       }
       fbuffer += ctrlsrc->x;
@@ -162,7 +162,7 @@ MBS_ApplyPatch(const MBSPatchHeader *header, FILE* patchFile,
         goto end;
       }
       if ((uint32_t) fwrite(extrasrc, 1, ctrlsrc->y, file) != ctrlsrc->y) {
-        rv = WRITE_ERROR;
+        rv = WRITE_ERROR_PATCH_FILE;
         goto end;
       }
       extrasrc += ctrlsrc->y;

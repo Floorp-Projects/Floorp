@@ -95,5 +95,6 @@ function finishTest() {
   do_check_eq(readStatusState(), STATE_PENDING);
   checkFilesAfterUpdateFailure(getApplyDirFile, false, false);
   unlockDirectory(getAppBaseDir());
+  standardInit();
   waitForFilesInUse();
 }
