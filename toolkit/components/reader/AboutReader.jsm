@@ -302,6 +302,14 @@ AboutReader.prototype = {
   },
 
   /**
+   * To help introduce ReadingList, we want to automatically
+   * open the Desktop sidebar the first time ReaderMode is used.
+   */
+  _showListIntro: function() {
+    this._mm.sendAsyncMessage("ReadingList:ShowIntro");
+  },
+
+  /**
    * Toggle ReadingList Sidebar visibility. SidebarUI will trigger
    * _updateListButtonStyle().
    */
@@ -724,6 +732,7 @@ AboutReader.prototype = {
     this._updateImageMargins();
     this._requestReadingListStatus();
 
+    this._showListIntro();
     this._requestFavicon();
     this._doc.body.classList.add("loaded");
   },
