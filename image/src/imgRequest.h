@@ -116,7 +116,7 @@ public:
 
   // Returns whether we went through an insecure (non-HTTPS) redirect at some
   // point during loading. This does not consider the current URI.
-  bool HadInsecureRedirect() const { return mHadInsecureRedirect; }
+  bool HadInsecureRedirect() const;
 
   // The CORS mode for which we loaded this image.
   int32_t GetCORSMode() const { return mCORSMode; }
