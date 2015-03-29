@@ -7,8 +7,11 @@
  * reader-able content, and that ReadingList button can open and close
  * its Sidebar UI.
  */
-const READER_PREF = "reader.parse-on-load.enabled";
-const READING_LIST_PREF = "browser.readinglist.enabled";
+const TEST_PREFS = [
+  ["reader.parse-on-load.enabled", true],
+  ["browser.readinglist.enabled", true],
+  ["browser.readinglist.introShown", false],
+];
 
 const TEST_PATH = "http://example.com/browser/browser/base/content/test/general/";
 
@@ -16,16 +19,19 @@ let readerButton = document.getElementById("reader-mode-button");
 
 add_task(function* () {
   registerCleanupFunction(function() {
-    Services.prefs.clearUserPref(READER_PREF);
-    Services.prefs.clearUserPref(READING_LIST_PREF);
+    // Reset test prefs.
+    TEST_PREFS.forEach(([name, value]) => {
+      Services.prefs.clearUserPref(name);
+    });
     while (gBrowser.tabs.length > 1) {
       gBrowser.removeCurrentTab();
     }
   });
 
-  // Enable the reader mode and ReadingList buttons.
-  Services.prefs.setBoolPref(READER_PREF, true);
-  Services.prefs.setBoolPref(READING_LIST_PREF, true);
+  // Set required test prefs.
+  TEST_PREFS.forEach(([name, value]) => {
+    Services.prefs.setBoolPref(name, value);
+  });
 
   let tab = gBrowser.selectedTab = gBrowser.addTab();
   is_element_hidden(readerButton, "Reader mode button is not present on a new tab");
@@ -36,6 +42,7 @@ add_task(function* () {
   yield promiseWaitForCondition(() => !readerButton.hidden);
   is_element_visible(readerButton, "Reader mode button is present on a reader-able page");
 
+  // Switch page into reader mode.
   readerButton.click();
   yield promiseTabLoadEvent(tab);
 
@@ -46,33 +53,31 @@ add_task(function* () {
   is(gURLBar.value, readerUrl, "gURLBar value is about:reader URL");
   is(gURLBar.textValue, url.substring("http://".length), "gURLBar is displaying original article URL");
 
-  // Readinglist button should be present, and status should be "closed".
+  // Readinglist button should be present, and status should be "openned", as the
+  // first time in readerMode opens the Sidebar ReadingList as a feature introduction.
   let listButton;
   yield promiseWaitForCondition(() =>
     listButton = gBrowser.contentDocument.getElementById("list-button"));
   is_element_visible(listButton, "List button is present on a reader-able page");
-  yield promiseWaitForCondition(() => !listButton.classList.contains("on"));
-  ok(!listButton.classList.contains("on"),
-    "List button should not indicate SideBar-ReadingList open.");
-  ok(!ReadingListUI.isSidebarOpen,
-    "The ReadingListUI should not indicate SideBar-ReadingList open.");
-
-  // After we click ReadingList button, status should be "open".
-  listButton.click();
   yield promiseWaitForCondition(() => listButton.classList.contains("on"));
   ok(listButton.classList.contains("on"),
-    "List button should now indicate SideBar-ReadingList open.");
+    "List button should indicate SideBar-ReadingList open.");
   ok(ReadingListUI.isSidebarOpen,
-    "The ReadingListUI should now indicate SideBar-ReadingList open.");
+    "The ReadingListUI should indicate SideBar-ReadingList open.");
 
-  // Now close the sidebar.
+  // Now close the Sidebar ReadingList.
   listButton.click();
   yield promiseWaitForCondition(() => !listButton.classList.contains("on"));
-  ok(!ReadingListUI.isSidebarOpen, "The sidebar should be closed.");
+  ok(!listButton.classList.contains("on"),
+    "List button should now indicate SideBar-ReadingList closed.");
+  ok(!ReadingListUI.isSidebarOpen,
+    "The ReadingListUI should now indicate SideBar-ReadingList closed.");
 
+  // Switch page back out of reader mode.
   readerButton.click();
   yield promiseTabLoadEvent(tab);
-  is(gBrowser.selectedBrowser.currentURI.spec, url, "Original page loaded after clicking active reader mode button");
+  is(gBrowser.selectedBrowser.currentURI.spec, url,
+    "Original page loaded after clicking active reader mode button");
 
   // Load a new tab that is NOT reader-able.
   let newTab = gBrowser.selectedTab = gBrowser.addTab();
