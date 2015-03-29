@@ -12,9 +12,6 @@ Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/AddonManager.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.import("resource://gre/modules/ctypes.jsm");
-#ifdef MOZ_SERVICES_HEALTHREPORT
-Components.utils.import("resource://gre/modules/UpdaterHealthProvider.jsm");
-#endif
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -260,18 +257,6 @@ const PING_BGUC_CHECK_NO_INCOMPAT            = 28;
 const PING_BGUC_ADDON_UPDATES_FOR_INCOMPAT   = 29;
 // Incompatible add-ons found (update notification)
 const PING_BGUC_ADDON_HAVE_INCOMPAT          = 30;
-
-// Health report field names
-const UpdaterHealthReportFields = {
-  CHECK_START: "updateCheckStart",
-  CHECK_SUCCESS: "updateCheckSuccess",
-  CHECK_FAILED: "updateCheckFailed",
-  COMPLETE_START: "completeUpdateStart",
-  PARTIAL_START: "partialUpdateStart",
-  COMPLETE_SUCCESS: "completeUpdateSuccess",
-  PARTIAL_SUCCESS: "partialUpdateSuccess",
-  FAILED: "updateFailed"
-};
 
 var gLocale = null;
 var gUpdateMutexHandle = null;
@@ -962,37 +947,6 @@ function getStatusTextFromCode(code, defaultCode) {
         ", default code: " + defaultCode);
   }
   return reason;
-}
-
-/**
- * Record count in the health report.
- * @param field
- *        The field name to record
- * @param status
- *        Status code for errors, 0 otherwise
- */
-function recordInHealthReport(field, status) {
-#ifdef MOZ_SERVICES_HEALTHREPORT
-  try {
-    LOG("recordInHealthReport - " + field + " - " + status);
-
-    let reporter = Cc["@mozilla.org/datareporting/service;1"]
-                      .getService().wrappedJSObject.healthReporter;
-
-    if (reporter) {
-      reporter.onInit().then(function recordUpdateInHealthReport() {
-        try {
-          reporter.getProvider("org.mozilla.update").recordUpdate(field, status);
-        } catch (ex) {
-          Cu.reportError(ex);
-        }
-      });
-    }
-  // If getting the heath reporter service fails, don't fail updating.
-  } catch (ex) {
-    LOG("recordInHealthReport - could not initialize health reporter");
-  }
-#endif
 }
 
 /**
@@ -3721,8 +3675,6 @@ Checker.prototype = {
     if (!url || (!this.enabled && !force))
       return;
 
-    recordInHealthReport(UpdaterHealthReportFields.CHECK_START, 0);
-
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                     createInstance(Ci.nsISupports);
     // This is here to let unit test code override XHR
@@ -3846,8 +3798,6 @@ Checker.prototype = {
       if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS))
         Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDERRORS);
 
-      recordInHealthReport(UpdaterHealthReportFields.CHECK_SUCCESS, 0);
-
       // Tell the callback about the updates
       this._callback.onCheckComplete(event.target, updates, updates.length);
     }
@@ -3868,8 +3818,6 @@ Checker.prototype = {
         update.errorCode = updates[0] ? CERT_ATTR_CHECK_FAILED_HAS_UPDATE
                                       : CERT_ATTR_CHECK_FAILED_NO_UPDATE;
       }
-
-      recordInHealthReport(UpdaterHealthReportFields.CHECK_FAILED, update.errorCode);
 
       this._callback.onError(request, update);
     }
@@ -3902,10 +3850,7 @@ Checker.prototype = {
       update.errorCode = HTTP_ERROR_OFFSET + status;
     }
 
-    recordInHealthReport(UpdaterHealthReportFields.CHECK_FAILED, update.errorCode);
-
     this._callback.onError(request, update);
-
     this._request = null;
   },
 
@@ -4221,10 +4166,6 @@ Downloader.prototype = {
     }
     this.isCompleteUpdate = this._patch.type == "complete";
 
-    recordInHealthReport(
-      this.isCompleteUpdate ? UpdaterHealthReportFields.COMPLETE_START :
-                              UpdaterHealthReportFields.PARTIAL_START, 0);
-
     var patchFile = null;
 
 #ifdef MOZ_WIDGET_GONK
@@ -4480,10 +4421,6 @@ Downloader.prototype = {
         "current fail: " + this.updateService._consecutiveSocketErrors + ", " +
         "max fail: " + maxFail + ", " + "retryTimeout: " + retryTimeout);
     if (Components.isSuccessCode(status)) {
-      recordInHealthReport(
-        this.isCompleteUpdate ? UpdaterHealthReportFields.COMPLETE_SUCCESS :
-                                UpdaterHealthReportFields.PARTIAL_SUCCESS, 0);
-
       if (this._verifyDownload()) {
         state = shouldUseService() ? STATE_PENDING_SVC : STATE_PENDING;
         if (this.background) {
@@ -4513,8 +4450,6 @@ Downloader.prototype = {
         cleanUpUpdatesDir();
       }
     } else {
-      recordInHealthReport(UpdaterHealthReportFields.FAILED, status);
-
       if (status == Cr.NS_ERROR_OFFLINE) {
         // Register an online observer to try again.
         // The online observer will continue the incremental download by
