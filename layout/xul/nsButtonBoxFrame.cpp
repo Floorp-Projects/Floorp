@@ -22,6 +22,29 @@
 
 using namespace mozilla;
 
+
+NS_IMPL_ISUPPORTS(nsButtonBoxFrame::nsButtonBoxListener, nsIDOMEventListener)
+
+nsresult
+nsButtonBoxFrame::nsButtonBoxListener::HandleEvent(nsIDOMEvent* aEvent)
+{
+  if (!mButtonBoxFrame) {
+    return NS_OK;
+  }
+
+  nsAutoString eventType;
+  aEvent->GetType(eventType);
+
+  if (eventType.EqualsLiteral("blur")) {
+    mButtonBoxFrame->Blurred();
+    return NS_OK;
+  }
+
+  NS_ABORT();
+
+  return NS_OK;
+}
+
 //
 // NS_NewXULButtonFrame
 //
@@ -34,6 +57,37 @@ NS_NewButtonBoxFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsButtonBoxFrame)
+
+nsButtonBoxFrame::nsButtonBoxFrame(nsStyleContext* aContext) :
+  nsBoxFrame(aContext, false),
+  mButtonBoxListener(nullptr),
+  mIsHandlingKeyEvent(false)
+{
+  UpdateMouseThrough();
+}
+
+void
+nsButtonBoxFrame::Init(nsIContent*       aContent,
+                       nsContainerFrame* aParent,
+                       nsIFrame*         aPrevInFlow)
+{
+  nsBoxFrame::Init(aContent, aParent, aPrevInFlow);
+
+  mButtonBoxListener = new nsButtonBoxListener(this);
+
+  mContent->AddSystemEventListener(NS_LITERAL_STRING("blur"), mButtonBoxListener, false);
+}
+
+void
+nsButtonBoxFrame::DestroyFrom(nsIFrame* aDestructRoot)
+{
+  mContent->RemoveSystemEventListener(NS_LITERAL_STRING("blur"), mButtonBoxListener, false);
+
+  mButtonBoxListener->mButtonBoxFrame = nullptr;
+  mButtonBoxListener = nullptr;
+
+  nsBoxFrame::DestroyFrom(aDestructRoot);
+}
 
 void
 nsButtonBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
@@ -67,6 +121,7 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
         // :hover:active state
         esm->SetContentState(mContent, NS_EVENT_STATE_HOVER);
         esm->SetContentState(mContent, NS_EVENT_STATE_ACTIVE);
+        mIsHandlingKeyEvent = true;
       }
       break;
     }
@@ -95,6 +150,7 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
         break;
       }
       if (NS_VK_SPACE == keyEvent->keyCode) {
+        mIsHandlingKeyEvent = false;
         // only activate on keyup if we're already in the :hover:active state
         NS_ASSERTION(mContent->IsElement(), "How do we have a non-element?");
         EventStates buttonState = mContent->AsElement()->State();
@@ -122,7 +178,23 @@ nsButtonBoxFrame::HandleEvent(nsPresContext* aPresContext,
   return nsBoxFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
-void 
+void
+nsButtonBoxFrame::Blurred()
+{
+  NS_ASSERTION(mContent->IsElement(), "How do we have a non-element?");
+  EventStates buttonState = mContent->AsElement()->State();
+  if (mIsHandlingKeyEvent &&
+      buttonState.HasAllStates(NS_EVENT_STATE_ACTIVE |
+                               NS_EVENT_STATE_HOVER)) {
+    // return to normal state
+    EventStateManager* esm = PresContext()->EventStateManager();
+    esm->SetContentState(nullptr, NS_EVENT_STATE_ACTIVE);
+    esm->SetContentState(nullptr, NS_EVENT_STATE_HOVER);
+  }
+  mIsHandlingKeyEvent = false;
+}
+
+void
 nsButtonBoxFrame::DoMouseClick(WidgetGUIEvent* aEvent, bool aTrustEvent)
 {
   // Don't execute if we're disabled.
