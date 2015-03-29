@@ -4133,7 +4133,7 @@ CanvasRenderingContext2D::CachedSurfaceFromElement(Element* aElement)
     res.mCORSUsed = corsmode != imgIRequest::CORS_NONE;
   }
 
-  res.mSize = ThebesIntSize(res.mSourceSurface->GetSize());
+  res.mSize = res.mSourceSurface->GetSize();
   res.mPrincipal = principal.forget();
   res.mIsWriteOnly = false;
   res.mImageRequest = imgRequest.forget();
@@ -4337,7 +4337,7 @@ CanvasRenderingContext2D::DrawImage(const HTMLImageOrCanvasOrVideoElement& image
     if (res.mSourceSurface) {
       if (res.mImageRequest) {
         CanvasImageCache::NotifyDrawImage(element, mCanvasElement, res.mImageRequest,
-                                          res.mSourceSurface, ThebesIntSize(imgSize));
+                                          res.mSourceSurface, imgSize);
       }
 
       srcSurf = res.mSourceSurface;

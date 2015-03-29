@@ -436,7 +436,7 @@ Decoder::EnsureFrame(uint32_t aFrameNum,
   MOZ_ASSERT(ref, "No ref to current frame?");
 
   // Reinitialize the old frame.
-  nsIntSize oldSize = ThebesIntSize(aPreviousFrame->GetImageSize());
+  nsIntSize oldSize = aPreviousFrame->GetImageSize();
   bool nonPremult =
     aDecodeFlags & imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
   if (NS_FAILED(aPreviousFrame->ReinitForDecoder(oldSize, aFrameRect, aFormat,

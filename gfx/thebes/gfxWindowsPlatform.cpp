@@ -773,18 +773,18 @@ gfxWindowsPlatform::CreateOffscreenSurface(const IntSize& size,
 
 #ifdef CAIRO_HAS_WIN32_SURFACE
     if (mRenderMode == RENDER_GDI)
-        surf = new gfxWindowsSurface(ThebesIntSize(size),
+        surf = new gfxWindowsSurface(size,
                                      OptimalFormatForContent(contentType));
 #endif
 
 #ifdef CAIRO_HAS_D2D_SURFACE
     if (mRenderMode == RENDER_DIRECT2D)
-        surf = new gfxD2DSurface(ThebesIntSize(size),
+        surf = new gfxD2DSurface(size,
                                  OptimalFormatForContent(contentType));
 #endif
 
     if (!surf || surf->CairoStatus()) {
-        surf = new gfxImageSurface(ThebesIntSize(size),
+        surf = new gfxImageSurface(size,
                                    OptimalFormatForContent(contentType));
     }
 
