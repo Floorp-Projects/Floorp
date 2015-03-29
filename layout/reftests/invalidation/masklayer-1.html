@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Moving a layer in a box with a rounded clip shouldn't invalidate.</title>
+
+<style>
+
+#outer {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+  width: 300px;
+  height: 200px;
+  background-color: #DDD;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+#animatedLeft {
+  position: absolute;
+  top: 50px;
+  left: 40px;
+  box-model: border-box;
+  border: 1px solid lime;
+  width: 100px;
+  height: 100px;
+}
+
+</style>
+
+<body>
+
+<div id="outer">
+  <div id="animatedLeft" class="reftest-no-paint"></div>
+</div>
+
+<script>
+
+var animatedLeft = document.getElementById("animatedLeft");
+
+function doTest() {
+  animatedLeft.style.left = "100px";
+  document.documentElement.removeAttribute("class");
+}
+
+// Layerize #animatedLeft
+animatedLeft.offsetLeft;
+animatedLeft.style.left = "60px";
+animatedLeft.offsetLeft;
+animatedLeft.style.left = "40px";
+animatedLeft.offsetLeft;
+
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>
