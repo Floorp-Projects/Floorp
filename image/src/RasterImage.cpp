@@ -517,7 +517,7 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
     // The OS threw this frame away. We need to redecode if we can.
     MOZ_ASSERT(!mAnim, "Animated frames should be locked");
 
-    Decode(Some(ThebesIntSize(requestedSize)), aFlags);
+    Decode(Some(requestedSize), aFlags);
 
     // If we can sync decode, we should already have the frame.
     if (aFlags & FLAG_SYNC_DECODE) {
@@ -1742,7 +1742,7 @@ RasterImage::DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
   // adjust the drawing parameters accordingly.
   IntSize finalSize = frameRef->GetImageSize();
   bool couldRedecodeForBetterFrame = false;
-  if (ThebesIntSize(finalSize) != aSize) {
+  if (finalSize != aSize) {
     gfx::Size scale(double(aSize.width) / finalSize.width,
                     double(aSize.height) / finalSize.height);
     aContext->Multiply(gfxMatrix::Scaling(scale.width, scale.height));
