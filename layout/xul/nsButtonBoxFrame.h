@@ -6,6 +6,7 @@
 #define nsButtonBoxFrame_h___
 
 #include "mozilla/Attributes.h"
+#include "nsIDOMEventListener.h"
 #include "nsBoxFrame.h"
 
 class nsButtonBoxFrame : public nsBoxFrame
