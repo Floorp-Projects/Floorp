@@ -497,7 +497,7 @@ protected:
   // current frame time as appropriate, and trigger ready state update.  The
   // decoder monitor must be held with exactly one lock count. Called on the
   // state machine thread.
-  void AdvanceFrame();
+  void UpdateRenderedVideoFrames();
 
   // Stops the audio thread. The decoder monitor must be held with exactly
   // one lock count. Called on the state machine thread.
