@@ -629,6 +629,7 @@ nsBoxFrame::Reflow(nsPresContext*          aPresContext,
                    const nsHTMLReflowState& aReflowState,
                    nsReflowStatus&          aStatus)
 {
+  MarkInReflow();
   // If you make changes to this method, please keep nsLeafBoxFrame::Reflow
   // in sync, if the changes are applicable there.
 

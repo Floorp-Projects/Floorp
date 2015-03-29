@@ -104,6 +104,7 @@ nsProgressFrame::Reflow(nsPresContext*           aPresContext,
                                       const nsHTMLReflowState& aReflowState,
                                       nsReflowStatus&          aStatus)
 {
+  MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsProgressFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 
