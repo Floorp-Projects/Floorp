@@ -323,7 +323,7 @@ pref("media.video-queue.default-size", 3);
 
 // optimize images' memory usage
 pref("image.decode-only-on-draw.enabled", true);
-pref("image.mem.allow_locking_in_content_processes", false); /* don't allow image locking */
+pref("image.mem.allow_locking_in_content_processes", true);
 // Limit the surface cache to 1/8 of main memory or 128MB, whichever is smaller.
 // Almost everything that was factored into 'max_decoded_image_kb' is now stored
 // in the surface cache.  1/8 of main memory is 32MB on a 256MB device, which is
