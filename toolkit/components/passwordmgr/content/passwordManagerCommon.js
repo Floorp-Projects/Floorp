@@ -4,6 +4,8 @@
 
 /*** =================== INITIALISATION CODE =================== ***/
 
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 var kObserverService;
 
 // interface variables
@@ -169,6 +171,7 @@ function HandleTreeColumnClick(sortFunction, event) {
   }
 
   sortFunction(sortField);
+  Services.telemetry.getKeyedHistogramById("PWMGR_MANAGE_SORTED").add(sortField);
 }
 
 function SortTree(tree, view, table, column, lastSortColumn, lastSortAscending, updateSelection) {
