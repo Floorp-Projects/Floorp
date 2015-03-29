@@ -42,7 +42,7 @@ function setupAppFilesFinished() {
 }
 
 function doUpdate() {
-  runUpdateUsingService(STATE_PENDING_SVC, STATE_FAILED);
+  runUpdateUsingService(STATE_PENDING_SVC, STATE_FAILED_READ_ERROR);
 }
 
 function checkUpdateFinished() {
@@ -52,5 +52,6 @@ function checkUpdateFinished() {
 function checkUpdate() {
   checkFilesAfterUpdateFailure(getApplyDirFile, false, false);
   checkUpdateLogContains(ERR_UNABLE_OPEN_DEST);
+  standardInit();
   checkCallbackServiceLog();
 }

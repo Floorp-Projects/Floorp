@@ -41,5 +41,6 @@ function checkUpdateApplied() {
 function checkUpdate() {
   checkFilesAfterUpdateFailure(getApplyDirFile, true, false);
   checkUpdateLogContains(ERR_RENAME_FILE);
+  standardInit();
   checkCallbackAppLog();
 }

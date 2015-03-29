@@ -37,5 +37,6 @@ function checkUpdateApplied() {
   }
 
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+  standardInit();
   doTestFinish();
 }

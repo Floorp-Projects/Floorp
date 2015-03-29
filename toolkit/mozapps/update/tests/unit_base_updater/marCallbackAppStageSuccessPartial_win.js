@@ -23,5 +23,6 @@ function run_test() {
 
 function checkUpdateApplied() {
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+  standardInit();
   checkCallbackAppLog();
 }
