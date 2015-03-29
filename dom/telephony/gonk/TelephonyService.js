@@ -1002,11 +1002,6 @@ TelephonyService.prototype = {
     aRilCall.number = this._formatInternationalNumber(aRilCall.number,
                                                       aRilCall.toa);
 
-    if (!aCall.started &&
-        aCall.state == nsITelephonyService.CALL_STATE_CONNECTED) {
-      aCall.started = new Date().getTime();
-    }
-
     let change = false;
     const key = ["state", "number", "numberPresentation", "name",
                  "namePresentation"];
@@ -1020,6 +1015,11 @@ TelephonyService.prototype = {
 
     aCall.isOutgoing = !aRilCall.isMT;
     aCall.isEmergency = gDialNumberUtils.isEmergency(aCall.number);
+
+    if (!aCall.started &&
+        aCall.state == nsITelephonyService.CALL_STATE_CONNECTED) {
+      aCall.started = new Date().getTime();
+    }
 
     return change;
   },
