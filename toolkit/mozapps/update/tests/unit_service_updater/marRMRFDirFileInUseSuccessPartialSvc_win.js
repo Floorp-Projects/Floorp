@@ -50,5 +50,6 @@ function checkUpdateFinished() {
 function checkUpdate() {
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
   checkUpdateLogContains(ERR_BACKUP_DISCARD);
+  standardInit();
   checkCallbackServiceLog();
 }

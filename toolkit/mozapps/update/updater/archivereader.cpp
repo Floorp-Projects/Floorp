@@ -308,7 +308,7 @@ ArchiveReader::ExtractItemToStream(const MarItem *item, FILE *fp)
     outlen = outbuf_size - strm.avail_out;
     if (outlen) {
       if (fwrite(outbuf, outlen, 1, fp) != 1) {
-        ret = WRITE_ERROR;
+        ret = WRITE_ERROR_EXTRACT;
         break;
       }
     }
