@@ -11,6 +11,7 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/CheckedInt.h"
 #include "nsIThread.h"
+#include "nsSize.h"
 
 #if !(defined(XP_WIN) || defined(XP_MACOSX) || defined(LINUX)) || \
     defined(MOZ_ASAN)
@@ -27,7 +28,6 @@ using mozilla::CheckedUint64;
 using mozilla::CheckedInt32;
 using mozilla::CheckedUint32;
 
-struct nsIntSize;
 struct nsIntRect;
 
 // This file contains stuff we'd rather put elsewhere, but which is

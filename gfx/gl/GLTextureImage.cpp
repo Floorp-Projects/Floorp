@@ -265,7 +265,7 @@ gfx::IntSize TextureImage::GetSize() const {
 
 TextureImage::TextureImage(const gfx::IntSize& aSize,
              GLenum aWrapMode, ContentType aContentType,
-             Flags aFlags)
+             Flags aFlags, ImageFormat aImageFormat)
     : mSize(aSize)
     , mWrapMode(aWrapMode)
     , mContentType(aContentType)
@@ -274,28 +274,13 @@ TextureImage::TextureImage(const gfx::IntSize& aSize,
 {}
 
 BasicTextureImage::BasicTextureImage(GLuint aTexture,
-                                     const nsIntSize& aSize,
-                                     GLenum aWrapMode,
-                                     ContentType aContentType,
-                                     GLContext* aContext,
-                                     TextureImage::Flags aFlags /* = TextureImage::NoFlags */,
-                                     TextureImage::ImageFormat aImageFormat /* = gfxImageFormat::Unknown */)
-    : TextureImage(aSize, aWrapMode, aContentType, aFlags, aImageFormat)
-    , mTexture(aTexture)
-    , mTextureState(Created)
-    , mGLContext(aContext)
-    , mUpdateOffset(0, 0)
-{
-}
-
-BasicTextureImage::BasicTextureImage(GLuint aTexture,
                   const gfx::IntSize& aSize,
                   GLenum aWrapMode,
                   ContentType aContentType,
                   GLContext* aContext,
                   TextureImage::Flags aFlags,
                   TextureImage::ImageFormat aImageFormat)
-  : TextureImage(ThebesIntSize(aSize), aWrapMode, aContentType, aFlags, aImageFormat)
+  : TextureImage(aSize, aWrapMode, aContentType, aFlags, aImageFormat)
   , mTexture(aTexture)
   , mTextureState(Created)
   , mGLContext(aContext)
@@ -499,7 +484,7 @@ TiledTextureImage::BeginUpdate(nsIntRegion& aRegion)
         (GetContentType() == gfxContentType::COLOR) ?
         gfx::SurfaceFormat::B8G8R8X8: gfx::SurfaceFormat::B8G8R8A8;
     mUpdateDrawTarget = gfx::Factory::CreateDrawTarget(gfx::BackendType::CAIRO,
-                                                       bounds.Size().ToIntSize(),
+                                                       bounds.Size(),
                                                        format);
 
     return mUpdateDrawTarget;;

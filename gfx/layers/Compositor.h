@@ -106,7 +106,6 @@
  */
 
 class nsIWidget;
-struct nsIntSize;
 class nsIntRegion;
 
 namespace mozilla {

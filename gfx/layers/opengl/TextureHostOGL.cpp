@@ -280,15 +280,15 @@ TextureImageTextureSourceOGL::EnsureBuffer(const nsIntSize& aSize,
                                            gfxContentType aContentType)
 {
   if (!mTexImage ||
-      mTexImage->GetSize() != aSize.ToIntSize() ||
+      mTexImage->GetSize() != aSize ||
       mTexImage->GetContentType() != aContentType) {
     mTexImage = CreateTextureImage(mCompositor->gl(),
-                                   aSize.ToIntSize(),
+                                   aSize,
                                    aContentType,
                                    LOCAL_GL_CLAMP_TO_EDGE,
                                    FlagsToGLFlags(mFlags));
   }
-  mTexImage->Resize(aSize.ToIntSize());
+  mTexImage->Resize(aSize);
 }
 
 void

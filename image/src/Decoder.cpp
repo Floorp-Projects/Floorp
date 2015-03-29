@@ -470,7 +470,7 @@ Decoder::InternalAddFrame(uint32_t aFrameNum,
     return RawAccessFrameRef();
   }
 
-  if (!SurfaceCache::CanHold(aTargetSize.ToIntSize())) {
+  if (!SurfaceCache::CanHold(aTargetSize)) {
     NS_WARNING("Trying to add frame that's too large for the SurfaceCache");
     return RawAccessFrameRef();
   }
@@ -492,7 +492,7 @@ Decoder::InternalAddFrame(uint32_t aFrameNum,
 
   InsertOutcome outcome =
     SurfaceCache::Insert(frame, ImageKey(mImage.get()),
-                         RasterSurfaceKey(aTargetSize.ToIntSize(),
+                         RasterSurfaceKey(aTargetSize,
                                           aDecodeFlags,
                                           aFrameNum),
                          Lifetime::Persistent);
