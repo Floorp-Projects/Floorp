@@ -2056,19 +2056,13 @@ CreateStyleRule(nsINode* aNode,
   }
 
   if (aProp1 != eCSSProperty_UNKNOWN) {
-    error = parser.ParseProperty(aProp1, aValue1, docURL, baseURL, principal,
-                                 rule->GetDeclaration(), aChanged1, false);
-    if (error.Failed()) {
-      return nullptr;
-    }
+    parser.ParseProperty(aProp1, aValue1, docURL, baseURL, principal,
+                         rule->GetDeclaration(), aChanged1, false);
   }
 
   if (aProp2 != eCSSProperty_UNKNOWN) {
-    error = parser.ParseProperty(aProp2, aValue2, docURL, baseURL, principal,
-                                 rule->GetDeclaration(), aChanged2, false);
-    if (error.Failed()) {
-      return nullptr;
-    }
+    parser.ParseProperty(aProp2, aValue2, docURL, baseURL, principal,
+                         rule->GetDeclaration(), aChanged2, false);
   }
 
   rule->RuleMatched();
