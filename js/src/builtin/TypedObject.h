@@ -174,6 +174,9 @@ class TypeDescr : public NativeObject
         return getReservedSlot(JS_DESCR_SLOT_SIZE).toInt32();
     }
 
+    // Whether id is an 'own' property of objects with this descriptor.
+    bool hasProperty(const JSAtomState& names, jsid id);
+
     // Type descriptors may contain a list of their references for use during
     // scanning. Marking code is optimized to use this list to mark inline
     // typed objects, rather than the slower trace hook. This list is only
@@ -524,9 +527,6 @@ class TypedObject : public JSObject
     static bool obj_lookupProperty(JSContext* cx, HandleObject obj,
                                    HandleId id, MutableHandleObject objp,
                                    MutableHandleShape propp);
-
-    static bool obj_lookupElement(JSContext* cx, HandleObject obj, uint32_t index,
-                                  MutableHandleObject objp, MutableHandleShape propp);
 
     static bool obj_defineProperty(JSContext* cx, HandleObject obj, HandleId id,
                                    Handle<JSPropertyDescriptor> desc,
