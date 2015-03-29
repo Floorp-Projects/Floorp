@@ -4855,7 +4855,7 @@ static int32_t RoundUp(double aDouble)
     return;
   }
 
-  mGeckoChild->DispatchWindowEvent(wheelEvent);
+  mGeckoChild->DispatchAPZAwareEvent(wheelEvent.AsInputEvent());
   if (!mGeckoChild) {
     return;
   }
