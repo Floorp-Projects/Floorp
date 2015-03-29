@@ -7618,6 +7618,43 @@
     "n_values" : 20,
     "description": "The result of auto-filling a login form. See http://mzl.la/1Mbs6jL for bucket descriptions."
   },
+  "PWMGR_MANAGE_COPIED_PASSWORD": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Count of passwords copied from the password management interface"
+  },
+  "PWMGR_MANAGE_COPIED_USERNAME": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Count of usernames copied from the password management interface"
+  },
+  "PWMGR_MANAGE_DELETED": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Count of passwords deleted from the password management interface (including via Remove All)"
+  },
+  "PWMGR_MANAGE_DELETED_ALL": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Count of times that Remove All was used from the password management interface"
+  },
+  "PWMGR_MANAGE_OPENED": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values" : 5,
+    "description": "Accumulates how the password management interface was opened. (0=Preferences, 1=Page Info)"
+  },
+  "PWMGR_MANAGE_SORTED": {
+    "expires_in_version": "never",
+    "keyed": true,
+    "kind": "count",
+    "description": "Reports the column that logins are sorted by"
+  },
+  "PWMGR_MANAGE_VISIBILITY_TOGGLED": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "Whether the visibility of passwords was toggled (0=Hide, 1=Show)"
+  },
   "PWMGR_NUM_PASSWORDS_PER_HOSTNAME": {
     "expires_in_version": "never",
     "kind": "linear",
