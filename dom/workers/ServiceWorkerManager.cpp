@@ -2370,8 +2370,11 @@ ServiceWorkerManager::DispatchFetchEvent(nsIDocument* aDoc, nsIInterceptedChanne
 
     nsRefPtr<ServiceWorkerRegistrationInfo> registration =
       GetServiceWorkerRegistrationInfo(uri);
+    if (!registration) {
+      NS_WARNING("No registration found when dispatching the fetch event");
+      return NS_ERROR_FAILURE;
+    }
     // This should only happen if IsAvailableForURI() returned true.
-    MOZ_ASSERT(registration);
     MOZ_ASSERT(registration->mActiveWorker);
 
     nsRefPtr<ServiceWorker> sw;
