@@ -201,6 +201,7 @@ nsLeafBoxFrame::Reflow(nsPresContext*   aPresContext,
   // class hierarchy.  If you make changes here, please keep
   // nsBoxFrame::Reflow in sync.
 
+  MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsLeafBoxFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
 

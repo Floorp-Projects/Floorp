@@ -141,6 +141,7 @@ nsPlaceholderFrame::Reflow(nsPresContext*           aPresContext,
   }
 #endif
 
+  MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsPlaceholderFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aDesiredSize.ClearSize();
