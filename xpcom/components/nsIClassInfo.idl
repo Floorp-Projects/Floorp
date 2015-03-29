@@ -6,13 +6,15 @@
 
 #include "nsISupports.idl"
 
+interface nsIXPCScriptable;
+
 /**
  * Provides information about a specific implementation class.  If you want
  * your class to implement nsIClassInfo, see nsIClassInfoImpl.h for
  * instructions--you most likely do not want to inherit from nsIClassInfo.
  */
 
-[scriptable, uuid(986c11d0-f340-11d4-9075-0010a4e73d9a)]
+[scriptable, uuid(7a633335-18cc-4794-9ddd-26ac7cab7be6)]
 interface nsIClassInfo : nsISupports
 {
     /**
@@ -27,18 +29,10 @@ interface nsIClassInfo : nsISupports
                        [array, size_is(count), retval] out nsIIDPtr array);
 
     /**
-     * Get a language mapping specific helper object that may assist in using
-     * objects of this class in a specific lanaguage. For instance, if asked
-     * for the helper for nsIProgrammingLanguage::JAVASCRIPT this might return 
-     * an object that can be QI'd into the nsIXPCScriptable interface to assist 
-     * XPConnect in supplying JavaScript specific behavior to callers of the 
-     * instance object.
-     *
-     * see: nsIProgrammingLanguage.idl
-     *
-     * Should return null if no helper available for given language.
+     * Return an object to assist XPConnect in supplying JavaScript-specific
+     * behavior to callers of the instance object, or null if not needed.
      */
-    nsISupports getHelperForLanguage(in uint32_t language);
+    nsIXPCScriptable getScriptableHelper();
 
     /**
      * A contract ID through which an instance of this class can be created

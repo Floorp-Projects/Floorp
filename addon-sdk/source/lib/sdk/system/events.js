@@ -29,7 +29,7 @@ const Subject = Class({
       object: object
     };
   },
-  getHelperForLanguage: function() {},
+  getScriptableHelper: function() {},
   getInterfaces: function() {}
 });
 

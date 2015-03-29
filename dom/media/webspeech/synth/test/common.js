@@ -16,7 +16,7 @@ SpeechTaskCallback.prototype = {
 
   getInterfaces: function(c) {},
 
-  getHelperForLanguage: function() {},
+  getScriptableHelper: function() {},
 
   onPause: function onPause() {
     if (this.onpause)
@@ -58,7 +58,7 @@ var TestSpeechServiceWithAudio = SpecialPowers.wrapCallbackObject({
 
   getInterfaces: function(c) {},
 
-  getHelperForLanguage: function() {}
+  getScriptableHelper: function() {}
 });
 
 var TestSpeechServiceNoAudio = SpecialPowers.wrapCallbackObject({
@@ -98,7 +98,7 @@ var TestSpeechServiceNoAudio = SpecialPowers.wrapCallbackObject({
 
   getInterfaces: function(c) {},
 
-  getHelperForLanguage: function() {},
+  getScriptableHelper: function() {},
 
   expectedSpeaks: []
 });
