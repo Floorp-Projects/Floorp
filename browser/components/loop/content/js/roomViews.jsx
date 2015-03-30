@@ -145,7 +145,7 @@ loop.roomViews = (function(mozL10n) {
           <div className="btn-group call-action-group">
             <button className="btn btn-info btn-email"
                     onClick={this.handleEmailButtonClick}>
-              {mozL10n.get("share_button2")}
+              {mozL10n.get("email_link_button")}
             </button>
             <button className="btn btn-info btn-copy"
                     onClick={this.handleCopyButtonClick}>
