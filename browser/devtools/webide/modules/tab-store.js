@@ -6,8 +6,7 @@ const { Cu } = require("chrome");
 
 const EventEmitter = require("devtools/toolkit/event-emitter");
 const { Connection } = require("devtools/client/connection-manager");
-const { Promise: promise } =
-  Cu.import("resource://gre/modules/Promise.jsm", {});
+const promise = require("promise");
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 const { devtools } =
   Cu.import("resource://gre/modules/devtools/Loader.jsm", {});
@@ -82,7 +81,8 @@ TabStore.prototype = {
   },
 
   _onTabListChanged: function() {
-    this.listTabs();
+    this.listTabs().then(() => this.emit("tab-list"))
+                   .catch(console.error);
   },
 
   _onTabNavigated: function(e, { from, title, url }) {
@@ -105,9 +105,13 @@ TabStore.prototype = {
         deferred.reject(response.error);
         return;
       }
+      let tabsChanged = JSON.stringify(this.tabs) !== JSON.stringify(response.tabs);
       this.response = response;
       this.tabs = response.tabs;
       this._checkSelectedTab();
+      if (tabsChanged) {
+        this.emit("tab-list");
+      }
       deferred.resolve(response);
     });
     return deferred.promise;

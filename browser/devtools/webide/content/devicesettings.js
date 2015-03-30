@@ -33,7 +33,7 @@ function CloseUI() {
 }
 
 function OnAppManagerUpdate(event, what) {
-  if (what == "connection" || what == "list-tabs-response") {
+  if (what == "connection" || what == "runtime-global-actors") {
     BuildUI();
   }
 }

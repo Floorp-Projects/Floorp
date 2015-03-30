@@ -23,7 +23,7 @@ bool BrowserTabsRemoteAutostart();
  *                    stable/frozen, please contact Benjamin Smedberg.
  */
 
-[scriptable, uuid(5754b56e-f392-426d-aec0-3ba7c49aff32)]
+[scriptable, uuid(c4cd11c4-6e8e-49da-85a8-dad3b7605bc3)]
 interface nsIXULRuntime : nsISupports
 {
   /**
@@ -95,13 +95,6 @@ interface nsIXULRuntime : nsISupports
    * If true, the accessibility service is running.
    */
   readonly attribute boolean accessibilityEnabled;
-
-  /**
-   * This returns a very rough approximation of whether IME is likely
-   * to be used for the browser session. DO NOT USE! This is temporary
-   * and will be removed.
-   */
-  readonly attribute boolean keyboardMayHaveIME;
 
   /**
    * Indicates if the active accessibility client is UIA.

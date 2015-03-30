@@ -116,7 +116,7 @@ let Monitor = {
    */
   onAppManagerUpdate: function(event, what, details) {
     switch (what) {
-      case 'list-tabs-response':
+      case 'runtime-global-actors':
         Monitor.connectToRuntime();
         break;
       case 'connection':

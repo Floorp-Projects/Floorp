@@ -86,7 +86,7 @@
             }
           });
 
-          win.AppManager.update("runtimelist");
+          win.AppManager.update("runtime-list");
 
           let packagedAppLocation = getTestFilePath("app");
 
@@ -109,7 +109,7 @@
 
           is(Object.keys(DebuggerServer._connections).length, 1, "Connected");
 
-          yield waitForUpdate(win, "runtime-apps-found");
+          yield waitForUpdate(win, "runtime-global-actors");
 
           ok(isPlayActive(), "play button is enabled 1");
           ok(!isStopActive(), "stop button is disabled 1");
@@ -138,7 +138,7 @@
 
           win.document.querySelectorAll(".runtime-panel-item-other")[1].click();
 
-          yield waitForUpdate(win, "runtime-apps-found");
+          yield waitForUpdate(win, "runtime-targets");
 
           is(Object.keys(DebuggerServer._connections).length, 1, "Locally connected");
 
@@ -146,6 +146,7 @@
 
           // Select main process
           yield win.Cmds.showProjectPanel();
+          yield waitForUpdate(win, "runtime-targets");
           SimpleTest.executeSoon(() => {
             win.document.querySelectorAll("#project-panel-runtimeapps .panel-item")[0].click();
           });
