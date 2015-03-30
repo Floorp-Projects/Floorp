@@ -13,12 +13,6 @@
 callback DecodeSuccessCallback = void (AudioBuffer decodedData);
 callback DecodeErrorCallback = void ();
 
-enum AudioContextState {
-    "suspended",
-    "running",
-    "closed"
-};
-
 [Constructor,
  Constructor(AudioChannel audioChannelType)]
 interface AudioContext : EventTarget {
@@ -27,14 +21,6 @@ interface AudioContext : EventTarget {
     readonly attribute float sampleRate;
     readonly attribute double currentTime;
     readonly attribute AudioListener listener;
-    readonly attribute AudioContextState state;
-    [Throws]
-    Promise<void> suspend();
-    [Throws]
-    Promise<void> resume();
-    [Throws]
-    Promise<void> close();
-    attribute EventHandler onstatechange;
 
     [NewObject, Throws]
     AudioBuffer createBuffer(unsigned long numberOfChannels, unsigned long length, float sampleRate);
@@ -45,7 +31,7 @@ interface AudioContext : EventTarget {
                                          optional DecodeErrorCallback errorCallback);
 
     // AudioNode creation
-    [NewObject, Throws]
+    [NewObject]
     AudioBufferSourceNode createBufferSource();
 
     [NewObject, Throws]
@@ -56,25 +42,25 @@ interface AudioContext : EventTarget {
                                               optional unsigned long numberOfInputChannels = 2,
                                               optional unsigned long numberOfOutputChannels = 2);
 
-    [NewObject, Throws]
+    [NewObject]
     StereoPannerNode createStereoPanner();
-    [NewObject, Throws]
+    [NewObject]
     AnalyserNode createAnalyser();
     [NewObject, Throws, UnsafeInPrerendering]
     MediaElementAudioSourceNode createMediaElementSource(HTMLMediaElement mediaElement);
     [NewObject, Throws, UnsafeInPrerendering]
     MediaStreamAudioSourceNode createMediaStreamSource(MediaStream mediaStream);
-    [NewObject, Throws]
+    [NewObject]
     GainNode createGain();
     [NewObject, Throws]
     DelayNode createDelay(optional double maxDelayTime = 1);
-    [NewObject, Throws]
+    [NewObject]
     BiquadFilterNode createBiquadFilter();
-    [NewObject, Throws]
+    [NewObject]
     WaveShaperNode createWaveShaper();
-    [NewObject, Throws]
+    [NewObject]
     PannerNode createPanner();
-    [NewObject, Throws]
+    [NewObject]
     ConvolverNode createConvolver();
 
     [NewObject, Throws]
@@ -82,10 +68,10 @@ interface AudioContext : EventTarget {
     [NewObject, Throws]
     ChannelMergerNode createChannelMerger(optional unsigned long numberOfInputs = 6);
 
-    [NewObject, Throws]
+    [NewObject]
     DynamicsCompressorNode createDynamicsCompressor();
 
-    [NewObject, Throws]
+    [NewObject]
     OscillatorNode createOscillator();
     [NewObject, Throws]
     PeriodicWave createPeriodicWave(Float32Array real, Float32Array imag);
