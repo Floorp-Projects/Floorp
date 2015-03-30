@@ -24,7 +24,6 @@
 #include "nsStyleConsts.h"
 #include "nsWidgetInitData.h"
 #include "mozilla/Attributes.h"
-#include "Units.h"
 
 // X.h defines KeyPress
 #ifdef KeyPress
@@ -532,9 +531,9 @@ public:
 
   /**
    * Indicate that the popup associated with aView has been resized to the
-   * given device pixel size aSize.
+   * specified screen width and height.
    */
-  void PopupResized(nsIFrame* aFrame, mozilla::LayoutDeviceIntSize aSize);
+  void PopupResized(nsIFrame* aFrame, nsIntSize ASize);
 
   /**
    * Called when a popup frame is destroyed. In this case, just remove the
