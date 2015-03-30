@@ -4089,14 +4089,14 @@ nsWindow::SetHasMappedToplevel(bool aState)
     }
 }
 
-LayoutDeviceIntSize
-nsWindow::GetSafeWindowSize(LayoutDeviceIntSize aSize)
+nsIntSize
+nsWindow::GetSafeWindowSize(nsIntSize aSize)
 {
     // The X protocol uses CARD32 for window sizes, but the server (1.11.3)
     // reads it as CARD16.  Sizes of pixmaps, used for drawing, are (unsigned)
     // CARD16 in the protocol, but the server's ProcCreatePixmap returns
     // BadAlloc if dimensions cannot be represented by signed shorts.
-    LayoutDeviceIntSize result = aSize;
+    nsIntSize result = aSize;
     const int32_t kInt16Max = 32767;
     if (result.width > kInt16Max) {
         result.width = kInt16Max;
