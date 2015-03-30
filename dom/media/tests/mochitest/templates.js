@@ -522,6 +522,12 @@ var commandsPeerConnectionOfferAnswer = [
   },
   function PC_REMOTE_CHECK_STATS(test) {
     return checkAllTrackStats(test.pcRemote);
+  },
+  function PC_LOCAL_WAIT_FOR_END_OF_TRICKLE(test) {
+    return test.pcLocal.endOfTrickleIce;
+  },
+  function PC_REMOTE_WAIT_FOR_END_OF_TRICKLE(test) {
+    return test.pcRemote.endOfTrickleIce;
   }
 ];
 
