@@ -117,20 +117,25 @@ ProjectList.prototype = {
     }
   },
 
-  _buildProjectPanelTabs: function() {
-    let tabs = AppManager.tabStore.tabs;
+  updateTabs: function() {
     let tabsHeaderNode = this._doc.querySelector("#panel-header-tabs");
-
-    if (AppManager.connected && tabs.length > 0) {
-      tabsHeaderNode.removeAttribute("hidden");
-    } else {
-      tabsHeaderNode.setAttribute("hidden", "true");
-    }
-
     let tabsNode = this._doc.querySelector("#project-panel-tabs");
 
     while (tabsNode.hasChildNodes()) {
       tabsNode.firstChild.remove();
+    }
+
+    if (!AppManager.connected) {
+      tabsHeaderNode.setAttribute("hidden", "true");
+      return;
+    }
+
+    let tabs = AppManager.tabStore.tabs;
+
+    if (tabs.length > 0) {
+      tabsHeaderNode.removeAttribute("hidden");
+    } else {
+      tabsHeaderNode.setAttribute("hidden", "true");
     }
 
     for (let i = 0; i < tabs.length; i++) {
@@ -173,54 +178,12 @@ ProjectList.prototype = {
         };
       }, true);
     }
+
+    return promise.resolve();
   },
 
-  update: function() {
-    let deferred = promise.defer();
+  updateApps: function() {
     let doc = this._doc;
-    let panelVboxNode = doc.querySelector("#project-panel > #project-panel-box");
-    let anchorNode = doc.querySelector("#project-panel-button > .panel-button-anchor");
-    let projectsNode = doc.querySelector("#project-panel-projects");
-
-    while (projectsNode.hasChildNodes()) {
-      projectsNode.firstChild.remove();
-    }
-
-    AppProjects.load().then(() => {
-      let projects = AppProjects.store.object.projects;
-      for (let i = 0; i < projects.length; i++) {
-        let project = projects[i];
-        let panelItemNode = doc.createElement(this._panelNodeEl);
-        panelItemNode.className = "panel-item";
-        projectsNode.appendChild(panelItemNode);
-        this._renderProjectItem({
-          panel: panelItemNode,
-          name: project.name || AppManager.DEFAULT_PROJECT_NAME,
-          icon: project.icon|| AppManager.DEFAULT_PROJECT_ICON
-        });
-        if (!project.name || !project.icon) {
-          // The result of the validation process (storing names, icons, …) is not stored in
-          // the IndexedDB database when App Manager v1 is used.
-          // We need to run the validation again and update the name and icon of the app.
-          AppManager.validateAndUpdateProject(project).then(() => {
-            this._renderProjectItem({
-              panel: panelItemNode,
-              name: project.name,
-              icon: project.icon
-            });
-          });
-        }
-        panelItemNode.addEventListener("click", () => {
-          if (!this._sidebarsEnabled) {
-            this._UI.hidePanels();
-          }
-          AppManager.selectedProject = project;
-        }, true);
-      }
-
-      deferred.resolve();
-    }, deferred.reject);
-
     let runtimeappsHeaderNode = doc.querySelector("#panel-header-runtimeapps");
     let sortedApps = [];
     for (let [manifestURL, app] of AppManager.apps) {
@@ -285,14 +248,77 @@ ProjectList.prototype = {
       }, true);
     }
 
+    return promise.resolve();
+  },
+
+  /**
+   * Trigger an update of the project and remote runtime list.
+   * @param options object (optional)
+   *        An |options| object containing a type of |apps| or |tabs| will limit
+   *        what is updated to only those sections.
+   */
+  update: function(options) {
+    let deferred = promise.defer();
+
+    if (options && options.type === "apps") {
+      return this.updateApps();
+    } else if (options && options.type === "tabs") {
+      return this.updateTabs();
+    }
+
+    let doc = this._doc;
+    let projectsNode = doc.querySelector("#project-panel-projects");
+
+    while (projectsNode.hasChildNodes()) {
+      projectsNode.firstChild.remove();
+    }
+
+    AppProjects.load().then(() => {
+      let projects = AppProjects.store.object.projects;
+      for (let i = 0; i < projects.length; i++) {
+        let project = projects[i];
+        let panelItemNode = doc.createElement(this._panelNodeEl);
+        panelItemNode.className = "panel-item";
+        projectsNode.appendChild(panelItemNode);
+        this._renderProjectItem({
+          panel: panelItemNode,
+          name: project.name || AppManager.DEFAULT_PROJECT_NAME,
+          icon: project.icon || AppManager.DEFAULT_PROJECT_ICON
+        });
+        if (!project.name || !project.icon) {
+          // The result of the validation process (storing names, icons, …) is not stored in
+          // the IndexedDB database when App Manager v1 is used.
+          // We need to run the validation again and update the name and icon of the app.
+          AppManager.validateAndUpdateProject(project).then(() => {
+            this._renderProjectItem({
+              panel: panelItemNode,
+              name: project.name,
+              icon: project.icon
+            });
+          });
+        }
+        panelItemNode.addEventListener("click", () => {
+          if (!this._sidebarsEnabled) {
+            this._UI.hidePanels();
+          }
+          AppManager.selectedProject = project;
+        }, true);
+      }
+
+      deferred.resolve();
+    }, deferred.reject);
+
+    // List remote apps and the main process, if they exist
+    this.updateApps();
+
     // Build the tab list right now, so it's fast...
-    this._buildProjectPanelTabs();
+    this.updateTabs();
 
     // But re-list them and rebuild, in case any tabs navigated since the last
     // time they were listed.
     if (AppManager.connected) {
       AppManager.listTabs().then(() => {
-        this._buildProjectPanelTabs();
+        this.updateTabs();
       }).catch(console.error);
     }
 

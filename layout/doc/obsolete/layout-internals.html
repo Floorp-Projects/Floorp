@@ -46,9 +46,9 @@ associated with the frame, painting the frame, and handling events that
 are passed in from the widget hierarchy.&nbsp; The nsIHTMLReflow interface
 inherits from the nsIReflow interface and adds methods related to word
 breaking and whitespace querying.&nbsp; The nsIReflow interface defines
-the Reflow() method that initiates the reflow process along with the WillReflow()
-and DidReflow() methods that get called before and after the reflow process
-respectively.&nbsp; nsReflowState and nsReflowMetrics are parameters to
+the Reflow() method that initiates the reflow process along with the
+DidReflow() method that get calledafter the reflow process.&nbsp;
+nsReflowState and nsReflowMetrics are parameters to
 the templatized nsIReflow interface: the former is used to hold state during
 reflow of a frame and the latter is used to return the frame's desired
 size and alignment to the parent frame during the reflow process.

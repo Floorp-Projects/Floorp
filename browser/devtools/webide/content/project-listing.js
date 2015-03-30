@@ -24,14 +24,14 @@ window.addEventListener("unload", function onUnload() {
   AppManager.off("app-manager-update", onAppManagerUpdate);
 });
 
-function onAppManagerUpdate(event, what) {
+function onAppManagerUpdate(event, what, details) {
   switch (what) {
-    case "list-tabs-response":
-    case "runtime-apps-found":
+    case "runtime-global-actors":
+    case "runtime-targets":
     case "project-validated":
     case "project-removed":
     case "project":
-      projectList.update();
+      projectList.update(details);
       break;
   }
 }

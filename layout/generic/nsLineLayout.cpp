@@ -931,10 +931,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     mLineBox->DisableResizeReflowOptimization();
   }
 
-  // Let frame know that are reflowing it. Note that we don't bother
-  // positioning the frame yet, because we're probably going to end up
-  // moving it when we do the block-direction alignment
-  aFrame->WillReflow(mPresContext);
+  // Note that we don't bother positioning the frame yet, because we're probably
+  // going to end up moving it when we do the block-direction alignment.
 
   // Adjust spacemanager coordinate system for the frame.
   nsHTMLReflowMetrics metrics(lineWM);
