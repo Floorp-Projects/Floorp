@@ -93,6 +93,21 @@ function expressionUsesVariable(exp, variable)
     return false;
 }
 
+function expressionUsesVariableContents(exp, variable)
+{
+    if (!("Exp" in exp))
+        return false;
+    for (var childExp of exp.Exp) {
+        if (childExp.Kind == 'Drf') {
+            if (expressionUsesVariable(childExp, variable))
+                return true;
+        } else if (expressionUsesVariableContents(childExp, variable)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 // Detect simple |return nullptr;| statements.
 function isReturningImmobileValue(edge, variable)
 {
@@ -136,7 +151,7 @@ function edgeUsesVariable(edge, variable, body)
         return expressionUsesVariable(edge.Exp[1], variable) ? src : 0;
 
     case "Assume":
-        return expressionUsesVariable(edge.Exp[0], variable) ? src : 0;
+        return expressionUsesVariableContents(edge.Exp[0], variable) ? src : 0;
 
     case "Call":
         if (expressionUsesVariable(edge.Exp[0], variable))
