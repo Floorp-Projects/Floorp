@@ -1,8 +1,8 @@
 
 /* pngwrite.c - general routines to write a PNG file
  *
- * Last changed in libpng 1.6.15 [November 20, 2014]
- * Copyright (c) 1998-2014 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.17 [March 25, 2015]
+ * Copyright (c) 1998-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -647,8 +647,8 @@ png_do_write_intrapixel(png_row_infop row_info, png_bytep row)
 
          for (i = 0, rp = row; i < row_width; i++, rp += bytes_per_pixel)
          {
-            *(rp)     = (png_byte)((*rp       - *(rp + 1)) & 0xff);
-            *(rp + 2) = (png_byte)((*(rp + 2) - *(rp + 1)) & 0xff);
+            *(rp)     = (png_byte)(*rp       - *(rp + 1));
+            *(rp + 2) = (png_byte)(*(rp + 2) - *(rp + 1));
          }
       }
 
@@ -674,10 +674,10 @@ png_do_write_intrapixel(png_row_infop row_info, png_bytep row)
             png_uint_32 s2   = (*(rp + 4) << 8) | *(rp + 5);
             png_uint_32 red  = (png_uint_32)((s0 - s1) & 0xffffL);
             png_uint_32 blue = (png_uint_32)((s2 - s1) & 0xffffL);
-            *(rp    ) = (png_byte)((red >> 8) & 0xff);
-            *(rp + 1) = (png_byte)(red & 0xff);
-            *(rp + 4) = (png_byte)((blue >> 8) & 0xff);
-            *(rp + 5) = (png_byte)(blue & 0xff);
+            *(rp    ) = (png_byte)(red >> 8);
+            *(rp + 1) = (png_byte)red;
+            *(rp + 4) = (png_byte)(blue >> 8);
+            *(rp + 5) = (png_byte)blue;
          }
       }
 #endif /* WRITE_16BIT */
@@ -1059,8 +1059,8 @@ png_set_filter(png_structrp png_ptr, int method, int filters)
        * it is too late to start using the filters that need it, since we
        * will be missing the data in the previous row.  If an application
        * wants to start and stop using particular filters during compression,
-       * it should start out with all of the filters, and then add and
-       * remove them after the start of compression.
+       * it should start out with all of the filters, and then remove them
+       * or add them back after the start of compression.
        */
       if (png_ptr->row_buf != NULL)
       {
@@ -1381,6 +1381,7 @@ png_set_filter_heuristics_fixed(png_structrp png_ptr, int heuristic_method,
 #endif /* FIXED_POINT */
 #endif /* WRITE_WEIGHTED_FILTER */
 
+#ifdef PNG_WRITE_CUSTOMIZE_COMPRESSION_SUPPORTED
 void PNGAPI
 png_set_compression_level(png_structrp png_ptr, int level)
 {
@@ -1426,8 +1427,8 @@ png_set_compression_window_bits(png_structrp png_ptr, int window_bits)
    if (png_ptr == NULL)
       return;
 
-   /* Prior to 1.6.0 this would warn but then set the window_bits value, this
-    * meant that negative window bits values could be selected which would cause
+   /* Prior to 1.6.0 this would warn but then set the window_bits value. This
+    * meant that negative window bits values could be selected that would cause
     * libpng to write a non-standard PNG file with raw deflate or gzip
     * compressed IDAT or ancillary chunks.  Such files can be read and there is
     * no warning on read, so this seems like a very bad idea.
@@ -1463,6 +1464,7 @@ png_set_compression_method(png_structrp png_ptr, int method)
 
    png_ptr->zlib_method = method;
 }
+#endif /* WRITE_CUSTOMIZE_COMPRESSION */
 
 /* The following were added to libpng-1.5.4 */
 #ifdef PNG_WRITE_CUSTOMIZE_ZTXT_COMPRESSION_SUPPORTED
@@ -2296,7 +2298,9 @@ png_image_write_main(png_voidp argument)
        * it about 50 times.  The speed-up in pngstest was about 10-20% of the
        * total (user) time on a heavily loaded system.
        */
+#ifdef PNG_WRITE_CUSTOMIZE_COMPRESSION_SUPPORTED
       png_set_compression_level(png_ptr, 3);
+#endif
    }
 
    /* Check for the cases that currently require a pre-transform on the row

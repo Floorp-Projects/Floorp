@@ -1,9 +1,9 @@
 libpng-manual.txt - A description on how to use and modify libpng
 
- libpng version 1.6.16 - December 22, 2014
+ libpng version 1.6.17 - March 25, 2015
  Updated and distributed by Glenn Randers-Pehrson
  <glennrp at users.sourceforge.net>
- Copyright (c) 1998-2014 Glenn Randers-Pehrson
+ Copyright (c) 1998-2015 Glenn Randers-Pehrson
 
  This document is released under the libpng license.
  For conditions of distribution and use, see the disclaimer
@@ -11,9 +11,9 @@ libpng-manual.txt - A description on how to use and modify libpng
 
  Based on:
 
- libpng versions 0.97, January 1998, through 1.6.16 - December 22, 2014
+ libpng versions 0.97, January 1998, through 1.6.17 - March 25, 2015
  Updated and distributed by Glenn Randers-Pehrson
- Copyright (c) 1998-2014 Glenn Randers-Pehrson
+ Copyright (c) 1998-2015 Glenn Randers-Pehrson
 
  libpng 1.0 beta 6 - version 0.96 - May 28, 1997
  Updated and distributed by Andreas Dilger
@@ -336,7 +336,7 @@ prediction.
 
 If you are intending to keep the file pointer open for use in libpng,
 you must ensure you don't read more than 8 bytes from the beginning
-of the file, and you also have to make a call to png_set_sig_bytes_read()
+of the file, and you also have to make a call to png_set_sig_bytes()
 with the number of bytes you read from the beginning.  Libpng will
 then only check the bytes (if any) that your program didn't read.
 
@@ -344,21 +344,22 @@ then only check the bytes (if any) that your program didn't read.
 to replace them with custom functions.  See the discussion under
 Customizing libpng.
 
-
     FILE *fp = fopen(file_name, "rb");
     if (!fp)
     {
        return (ERROR);
     }
 
-    fread(header, 1, number, fp);
-    is_png = !png_sig_cmp(header, 0, number);
+    if (fread(header, 1, number, fp) != number)
+    {
+       return (ERROR);
+    }
 
+    is_png = !png_sig_cmp(header, 0, number);
     if (!is_png)
     {
        return (NOT_PNG);
     }
-
 
 Next, png_struct and png_info need to be allocated and initialized.  In
 order to ensure that the size of these structures is correct even with a
@@ -649,7 +650,7 @@ User limits
 The PNG specification allows the width and height of an image to be as
 large as 2^31-1 (0x7fffffff), or about 2.147 billion rows and columns.
 Larger images will be rejected immediately with a png_error() call. If
-you wish to reduce these limits, you can use
+you wish to change these limits, you can use
 
    png_set_user_limits(png_ptr, width_max, height_max);
 
@@ -1264,13 +1265,13 @@ in until png_read_end() has read the chunk data following the image.
                      the PNG datastream is embedded in
                      a MNG-1.0 datastream)
 
-    Any or all of interlace_type, compression_type, or
-    filter_method can be NULL if you are
-    not interested in their values.
+    Any of width, height, color_type, bit_depth,
+    interlace_type, compression_type, or filter_method can
+    be NULL if you are not interested in their values.
 
     Note that png_get_IHDR() returns 32-bit data into
     the application's width and height variables.
-    This is an unsafe situation if these are 16-bit
+    This is an unsafe situation if these are not png_uint_32
     variables.  In such situations, the
     png_get_image_width() and png_get_image_height()
     functions described below are safer.
@@ -1993,7 +1994,7 @@ value when you call it in this position:
       png_set_gamma(png_ptr, screen_gamma, 0.45455);
 
 If you need to reduce an RGB file to a paletted file, or if a paletted
-file has more entries then will fit on your screen, png_set_quantize()
+file has more entries than will fit on your screen, png_set_quantize()
 will do that.  Note that this is a simple match quantization that merely
 finds the closest color available.  This should work fairly well with
 optimized palettes, but fairly badly with linear color cubes.  If you
@@ -2546,7 +2547,7 @@ png_infop info_ptr;
        64K.  The library seems to run fine with sizes
        of 4K. Although you can give it much less if
        necessary (I assume you can give it chunks of
-       1 byte, I haven't tried less then 256 bytes
+       1 byte, I haven't tried less than 256 bytes
        yet).  When this function returns, you may
        want to display any rows that were generated
        in the row callback if you don't already do
@@ -5031,6 +5032,10 @@ The signatures of many exported functions were changed, such that
    png_infop became png_inforp or png_const_inforp
 where "rp" indicates a "restricted pointer".
 
+The support for FAR/far types has been eliminated and the definition of
+png_alloc_size_t is now controlled by a flag so that 'small size_t' systems
+can select it if necessary.
+
 Error detection in some chunks has improved; in particular the iCCP chunk
 reader now does pretty complete validation of the basic format.  Some bad
 profiles that were previously accepted are now accepted with a warning or
@@ -5045,7 +5050,7 @@ means of
            PNG_OPTION_ON);
     #endif
 
-It's not a good idea to do this if you are using the new "simplified API",
+It's not a good idea to do this if you are using the "simplified API",
 which needs to be able to recognize sRGB profiles conveyed via the iCCP
 chunk.
 
@@ -5274,13 +5279,13 @@ Other rules can be inferred by inspecting the libpng source.
 
 XVI. Y2K Compliance in libpng
 
-December 22, 2014
+March 25, 2015
 
 Since the PNG Development group is an ad-hoc body, we can't make
 an official declaration.
 
 This is your unofficial assurance that libpng from version 0.71 and
-upward through 1.6.16 are Y2K compliant.  It is my belief that earlier
+upward through 1.6.17 are Y2K compliant.  It is my belief that earlier
 versions were also Y2K compliant.
 
 Libpng only has two year fields.  One is a 2-byte unsigned integer
