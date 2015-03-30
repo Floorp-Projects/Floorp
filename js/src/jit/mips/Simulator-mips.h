@@ -142,9 +142,9 @@ class Simulator {
     };
 
     // Returns nullptr on OOM.
-    static Simulator *Create();
+    static Simulator* Create();
 
-    static void Destroy(Simulator *simulator);
+    static void Destroy(Simulator* simulator);
 
     // Constructor/destructor are for internal use only; use the static methods above.
     Simulator();
@@ -152,13 +152,13 @@ class Simulator {
 
     // The currently executing Simulator instance. Potentially there can be one
     // for each native thread.
-    static Simulator *Current();
+    static Simulator* Current();
 
     static inline uintptr_t StackLimit() {
         return Simulator::Current()->stackLimit();
     }
 
-    uintptr_t *addressOfStackLimit();
+    uintptr_t* addressOfStackLimit();
 
     // Accessors for register state. Reading the pc value adheres to the MIPS
     // architecture specification and is off by a 8 from the currently executing
@@ -198,7 +198,7 @@ class Simulator {
     void execute();
 
     // Sets up the simulator state and grabs the result on return.
-    int64_t call(uint8_t *entry, int argument_count, ...);
+    int64_t call(uint8_t* entry, int argument_count, ...);
 
     // Push an address onto the JS stack.
     uintptr_t pushAddress(uintptr_t address);
@@ -207,10 +207,10 @@ class Simulator {
     uintptr_t popAddress();
 
     // Debugger input.
-    void setLastDebuggerInput(char *input);
-    char *lastDebuggerInput() { return lastDebuggerInput_; }
+    void setLastDebuggerInput(char* input);
+    char* lastDebuggerInput() { return lastDebuggerInput_; }
     // ICache checking.
-    static void FlushICache(void *start, size_t size);
+    static void FlushICache(void* start, size_t size);
 
     // Returns true if pc register contains one of the 'SpecialValues' defined
     // below (bad_ra, end_sim_pc).
@@ -241,23 +241,23 @@ class Simulator {
     inline void writeB(uint32_t addr, uint8_t value);
     inline void writeB(uint32_t addr, int8_t value);
 
-    inline uint16_t readHU(uint32_t addr, SimInstruction *instr);
-    inline int16_t readH(uint32_t addr, SimInstruction *instr);
+    inline uint16_t readHU(uint32_t addr, SimInstruction* instr);
+    inline int16_t readH(uint32_t addr, SimInstruction* instr);
     // Note: Overloaded on the sign of the value.
-    inline void writeH(uint32_t addr, uint16_t value, SimInstruction *instr);
-    inline void writeH(uint32_t addr, int16_t value, SimInstruction *instr);
+    inline void writeH(uint32_t addr, uint16_t value, SimInstruction* instr);
+    inline void writeH(uint32_t addr, int16_t value, SimInstruction* instr);
 
-    inline int readW(uint32_t addr, SimInstruction *instr);
-    inline void writeW(uint32_t addr, int value, SimInstruction *instr);
+    inline int readW(uint32_t addr, SimInstruction* instr);
+    inline void writeW(uint32_t addr, int value, SimInstruction* instr);
 
-    inline double readD(uint32_t addr, SimInstruction *instr);
-    inline void writeD(uint32_t addr, double value, SimInstruction *instr);
+    inline double readD(uint32_t addr, SimInstruction* instr);
+    inline void writeD(uint32_t addr, double value, SimInstruction* instr);
 
     // Executing is handled based on the instruction type.
-    void decodeTypeRegister(SimInstruction *instr);
+    void decodeTypeRegister(SimInstruction* instr);
 
     // Helper function for decodeTypeRegister.
-    void configureTypeRegister(SimInstruction *instr,
+    void configureTypeRegister(SimInstruction* instr,
                                int32_t& alu_out,
                                int64_t& i64hilo,
                                uint64_t& u64hilo,
@@ -265,17 +265,17 @@ class Simulator {
                                int32_t& return_addr_reg,
                                bool& do_interrupt);
 
-    void decodeTypeImmediate(SimInstruction *instr);
-    void decodeTypeJump(SimInstruction *instr);
+    void decodeTypeImmediate(SimInstruction* instr);
+    void decodeTypeJump(SimInstruction* instr);
 
     // Used for breakpoints and traps.
-    void softwareInterrupt(SimInstruction *instr);
+    void softwareInterrupt(SimInstruction* instr);
 
     // Stop helper functions.
     bool isWatchpoint(uint32_t code);
     void printWatchpoint(uint32_t code);
-    void handleStop(uint32_t code, SimInstruction *instr);
-    bool isStopInstruction(SimInstruction *instr);
+    void handleStop(uint32_t code, SimInstruction* instr);
+    bool isStopInstruction(SimInstruction* instr);
     bool isEnabledStop(uint32_t code);
     void enableStop(uint32_t code);
     void disableStop(uint32_t code);
@@ -284,9 +284,9 @@ class Simulator {
 
 
     // Executes one instruction.
-    void instructionDecode(SimInstruction *instr);
+    void instructionDecode(SimInstruction* instr);
     // Execute one instruction placed in a branch delay slot.
-    void branchDelayInstructionDecode(SimInstruction *instr);
+    void branchDelayInstructionDecode(SimInstruction* instr);
 
   public:
     static bool ICacheCheckingEnabled;
@@ -294,7 +294,7 @@ class Simulator {
     static int StopSimAt;
 
     // Runtime call support.
-    static void *RedirectNativeFunction(void *nativeFunction, ABIFunctionType type);
+    static void* RedirectNativeFunction(void* nativeFunction, ABIFunctionType type);
 
   private:
     enum Exception {
@@ -310,14 +310,14 @@ class Simulator {
     void signalExceptions();
 
     // Handle arguments and return value for runtime FP functions.
-    void getFpArgs(double *x, double *y, int32_t *z);
-    void getFpFromStack(int32_t *stack, double *x);
+    void getFpArgs(double* x, double* y, int32_t* z);
+    void getFpFromStack(int32_t* stack, double* x);
 
     void setCallResultDouble(double result);
     void setCallResultFloat(float result);
     void setCallResult(int64_t res);
 
-    void callInternal(uint8_t *entry);
+    void callInternal(uint8_t* entry);
 
     // Architecture state.
     // Registers.
@@ -328,7 +328,7 @@ class Simulator {
     uint32_t FCSR_;
 
     // Simulator support.
-    char *stack_;
+    char* stack_;
     uintptr_t stackLimit_;
     bool pc_modified_;
     int icount_;
@@ -337,10 +337,10 @@ class Simulator {
     int32_t resume_pc_;
 
     // Debugger input.
-    char *lastDebuggerInput_;
+    char* lastDebuggerInput_;
 
     // Registered breakpoints.
-    SimInstruction *break_pc_;
+    SimInstruction* break_pc_;
     Instr break_instr_;
 
     // A stop is watched if its code is less than kNumOfWatchedStops.
@@ -357,36 +357,36 @@ class Simulator {
     // the breakpoint was hit or gone through.
     struct StopCountAndDesc {
         uint32_t count_;
-        char *desc_;
+        char* desc_;
     };
     StopCountAndDesc watchedStops_[kNumOfWatchedStops];
 
   private:
     // ICache checking.
     struct ICacheHasher {
-        typedef void *Key;
-        typedef void *Lookup;
-        static HashNumber hash(const Lookup &l);
-        static bool match(const Key &k, const Lookup &l);
+        typedef void* Key;
+        typedef void* Lookup;
+        static HashNumber hash(const Lookup& l);
+        static bool match(const Key& k, const Lookup& l);
     };
 
   public:
-    typedef HashMap<void *, CachePage *, ICacheHasher, SystemAllocPolicy> ICacheMap;
+    typedef HashMap<void*, CachePage*, ICacheHasher, SystemAllocPolicy> ICacheMap;
 
   private:
     // This lock creates a critical section around 'redirection_' and
     // 'icache_', which are referenced both by the execution engine
     // and by the off-thread compiler (see Redirection::Get in the cpp file).
-    PRLock *cacheLock_;
+    PRLock* cacheLock_;
 #ifdef DEBUG
-    PRThread *cacheLockHolder_;
+    PRThread* cacheLockHolder_;
 #endif
 
-    Redirection *redirection_;
+    Redirection* redirection_;
     ICacheMap icache_;
 
   public:
-    ICacheMap &icache() {
+    ICacheMap& icache() {
         // Technically we need the lock to access the innards of the
         // icache, not to take its address, but the latter condition
         // serves as a useful complement to the former.
@@ -394,12 +394,12 @@ class Simulator {
         return icache_;
     }
 
-    Redirection *redirection() const {
+    Redirection* redirection() const {
         MOZ_ASSERT(cacheLockHolder_);
         return redirection_;
     }
 
-    void setRedirection(js::jit::Redirection *redirection) {
+    void setRedirection(js::jit::Redirection* redirection) {
         MOZ_ASSERT(cacheLockHolder_);
         redirection_ = redirection;
     }

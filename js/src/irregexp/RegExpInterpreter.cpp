@@ -43,7 +43,7 @@ static const size_t kBitsPerByteLog2 = 3;
 class MOZ_STACK_CLASS RegExpStackCursor
 {
   public:
-    explicit RegExpStackCursor(JSContext *cx)
+    explicit RegExpStackCursor(JSContext* cx)
       : cx(cx), cursor(nullptr)
     {}
 
@@ -90,34 +90,34 @@ class MOZ_STACK_CLASS RegExpStackCursor
     }
 
   private:
-    JSContext *cx;
+    JSContext* cx;
     RegExpStack stack;
 
-    int32_t *cursor;
+    int32_t* cursor;
 
-    int32_t *base() { return (int32_t *) stack.base(); }
+    int32_t* base() { return (int32_t*) stack.base(); }
 };
 
 static int32_t
 Load32Aligned(const uint8_t* pc)
 {
     MOZ_ASSERT((reinterpret_cast<uintptr_t>(pc) & 3) == 0);
-    return *reinterpret_cast<const int32_t *>(pc);
+    return *reinterpret_cast<const int32_t*>(pc);
 }
 
 static int32_t
 Load16Aligned(const uint8_t* pc)
 {
     MOZ_ASSERT((reinterpret_cast<uintptr_t>(pc) & 1) == 0);
-    return *reinterpret_cast<const uint16_t *>(pc);
+    return *reinterpret_cast<const uint16_t*>(pc);
 }
 
 #define BYTECODE(name)  case BC_##name:
 
 template <typename CharT>
 RegExpRunStatus
-irregexp::InterpretCode(JSContext *cx, const uint8_t *byteCode, const CharT *chars, size_t current,
-                        size_t length, MatchPairs *matches)
+irregexp::InterpretCode(JSContext* cx, const uint8_t* byteCode, const CharT* chars, size_t current,
+                        size_t length, MatchPairs* matches)
 {
     const uint8_t* pc = byteCode;
 
@@ -470,9 +470,9 @@ irregexp::InterpretCode(JSContext *cx, const uint8_t *byteCode, const CharT *cha
 }
 
 template RegExpRunStatus
-irregexp::InterpretCode(JSContext *cx, const uint8_t *byteCode, const Latin1Char *chars, size_t current,
-                        size_t length, MatchPairs *matches);
+irregexp::InterpretCode(JSContext* cx, const uint8_t* byteCode, const Latin1Char* chars, size_t current,
+                        size_t length, MatchPairs* matches);
 
 template RegExpRunStatus
-irregexp::InterpretCode(JSContext *cx, const uint8_t *byteCode, const char16_t *chars, size_t current,
-                        size_t length, MatchPairs *matches);
+irregexp::InterpretCode(JSContext* cx, const uint8_t* byteCode, const char16_t* chars, size_t current,
+                        size_t length, MatchPairs* matches);

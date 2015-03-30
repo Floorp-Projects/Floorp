@@ -104,7 +104,7 @@ ExhaustiveTest(const char funcode[])
 
 template <size_t N>
 static void
-ClearElements(JS::AutoValueArray<N> &elems)
+ClearElements(JS::AutoValueArray<N>& elems)
 {
     for (size_t i = 0; i < elems.length() - 1; i++)
         elems[i].setNull();

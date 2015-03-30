@@ -132,7 +132,7 @@ namespace jit {
             memcpy(m_buffer.end() - 4, &value, 4);
         }
 
-        unsigned char *data()
+        unsigned char* data()
         {
             return m_buffer.begin();
         }
@@ -147,7 +147,7 @@ namespace jit {
             return m_oom;
         }
 
-        const unsigned char *buffer() const {
+        const unsigned char* buffer() const {
             MOZ_ASSERT(!m_oom);
             return m_buffer.begin();
         }
@@ -178,7 +178,7 @@ namespace jit {
 
     class GenericAssembler
     {
-        Sprinter *printer;
+        Sprinter* printer;
 
       public:
 
@@ -186,11 +186,11 @@ namespace jit {
           : printer(NULL)
         {}
 
-        void setPrinter(Sprinter *sp) {
+        void setPrinter(Sprinter* sp) {
             printer = sp;
         }
 
-        void spew(const char *fmt, ...)
+        void spew(const char* fmt, ...)
 #ifdef __GNUC__
             __attribute__ ((format (printf, 2, 3)))
 #endif
@@ -203,7 +203,7 @@ namespace jit {
             }
         }
 
-        MOZ_COLD void spew(const char *fmt, va_list va);
+        MOZ_COLD void spew(const char* fmt, va_list va);
     };
 
 } // namespace jit

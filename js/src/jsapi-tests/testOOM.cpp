@@ -19,7 +19,7 @@ BEGIN_TEST(testOOM)
 
 virtual JSRuntime * createRuntime() override
 {
-    JSRuntime *rt = JS_NewRuntime(0);
+    JSRuntime* rt = JS_NewRuntime(0);
     if (!rt)
         return nullptr;
     JS_SetGCParameter(rt, JSGC_MAX_BYTES, (uint32_t)-1);
@@ -54,7 +54,7 @@ BEGIN_TEST(testNewRuntime)
 {
     uninit(); // Get rid of test harness' original JSRuntime.
 
-    JSRuntime *rt;
+    JSRuntime* rt;
     START_OOM_TEST("new runtime");
     rt = JS_NewRuntime(8L * 1024 * 1024);
     if (rt)

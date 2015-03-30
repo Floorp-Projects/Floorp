@@ -28,7 +28,7 @@ using namespace JS;
 
 // static
 void
-XPCStringConvert::FreeZoneCache(JS::Zone *zone)
+XPCStringConvert::FreeZoneCache(JS::Zone* zone)
 {
     // Put the zone user data into an AutoPtr (which will do the cleanup for us),
     // and null out the user data (which may already be null).
@@ -38,9 +38,9 @@ XPCStringConvert::FreeZoneCache(JS::Zone *zone)
 
 // static
 void
-XPCStringConvert::ClearZoneCache(JS::Zone *zone)
+XPCStringConvert::ClearZoneCache(JS::Zone* zone)
 {
-    ZoneStringCache *cache = static_cast<ZoneStringCache*>(JS_GetZoneUserData(zone));
+    ZoneStringCache* cache = static_cast<ZoneStringCache*>(JS_GetZoneUserData(zone));
     if (cache) {
         cache->mBuffer = nullptr;
         cache->mString = nullptr;
@@ -49,7 +49,7 @@ XPCStringConvert::ClearZoneCache(JS::Zone *zone)
 
 // static
 void
-XPCStringConvert::FinalizeLiteral(const JSStringFinalizer *fin, char16_t *chars)
+XPCStringConvert::FinalizeLiteral(const JSStringFinalizer* fin, char16_t* chars)
 {
 }
 
@@ -58,7 +58,7 @@ const JSStringFinalizer XPCStringConvert::sLiteralFinalizer =
 
 // static
 void
-XPCStringConvert::FinalizeDOMString(const JSStringFinalizer *fin, char16_t *chars)
+XPCStringConvert::FinalizeDOMString(const JSStringFinalizer* fin, char16_t* chars)
 {
     nsStringBuffer* buf = nsStringBuffer::FromData(chars);
     buf->Release();
@@ -70,8 +70,8 @@ const JSStringFinalizer XPCStringConvert::sDOMStringFinalizer =
 // convert a readable to a JSString, copying string data
 // static
 bool
-XPCStringConvert::ReadableToJSVal(JSContext *cx,
-                                  const nsAString &readable,
+XPCStringConvert::ReadableToJSVal(JSContext* cx,
+                                  const nsAString& readable,
                                   nsStringBuffer** sharedBuffer,
                                   MutableHandleValue vp)
 {
@@ -80,7 +80,7 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
     uint32_t length = readable.Length();
 
     if (readable.IsLiteral()) {
-        JSString *str = JS_NewExternalString(cx,
+        JSString* str = JS_NewExternalString(cx,
                                              static_cast<const char16_t*>(readable.BeginReading()),
                                              length, &sLiteralFinalizer);
         if (!str)
@@ -89,7 +89,7 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
         return true;
     }
 
-    nsStringBuffer *buf = nsStringBuffer::FromString(readable);
+    nsStringBuffer* buf = nsStringBuffer::FromString(readable);
     if (buf) {
         bool shared;
         if (!StringBufferToJSVal(cx, buf, length, vp, &shared))
@@ -100,7 +100,7 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
     }
 
     // blech, have to copy.
-    JSString *str = JS_NewUCStringCopyN(cx, readable.BeginReading(), length);
+    JSString* str = JS_NewUCStringCopyN(cx, readable.BeginReading(), length);
     if (!str)
         return false;
     vp.setString(str);
@@ -110,7 +110,7 @@ XPCStringConvert::ReadableToJSVal(JSContext *cx,
 namespace xpc {
 
 bool
-NonVoidStringToJsval(JSContext *cx, nsAString &str, MutableHandleValue rval)
+NonVoidStringToJsval(JSContext* cx, nsAString& str, MutableHandleValue rval)
 {
     nsStringBuffer* sharedBuffer;
     if (!XPCStringConvert::ReadableToJSVal(cx, str, &sharedBuffer, rval))

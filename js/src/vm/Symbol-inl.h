@@ -16,7 +16,7 @@
 #include "jsgcinlines.h"
 
 inline void
-JS::Symbol::markChildren(JSTracer *trc)
+JS::Symbol::markChildren(JSTracer* trc)
 {
     if (description_)
         MarkStringUnbarriered(trc, &description_, "description");

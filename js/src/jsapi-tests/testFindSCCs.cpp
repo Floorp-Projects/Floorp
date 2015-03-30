@@ -21,13 +21,13 @@ struct TestNode : public GraphNodeBase<TestNode>
     unsigned   index;
     bool       hasEdge[MaxVertices];
 
-    void findOutgoingEdges(ComponentFinder<TestNode> &finder);
+    void findOutgoingEdges(ComponentFinder<TestNode>& finder);
 };
 
 static TestNode Vertex[MaxVertices];
 
 void
-TestNode::findOutgoingEdges(ComponentFinder<TestNode> &finder)
+TestNode::findOutgoingEdges(ComponentFinder<TestNode>& finder)
 {
     for (unsigned i = 0; i < MaxVertices; ++i) {
         if (hasEdge[i])
@@ -127,14 +127,14 @@ BEGIN_TEST(testFindSCCs)
 }
 
 unsigned vertex_count;
-ComponentFinder<TestNode> *finder;
-TestNode *resultsList;
+ComponentFinder<TestNode>* finder;
+TestNode* resultsList;
 
 void setup(unsigned count)
 {
     vertex_count = count;
     for (unsigned i = 0; i < MaxVertices; ++i) {
-        TestNode &v = Vertex[i];
+        TestNode& v = Vertex[i];
         v.gcNextGraphNode = nullptr;
         v.index = i;
         memset(&v.hasEdge, 0, sizeof(v.hasEdge));
@@ -156,7 +156,7 @@ void run()
 
 bool group(int vertex, ...)
 {
-    TestNode *v = resultsList;
+    TestNode* v = resultsList;
 
     va_list ap;
     va_start(ap, vertex);
@@ -175,14 +175,14 @@ bool group(int vertex, ...)
 
 bool remaining(int vertex, ...)
 {
-    TestNode *v = resultsList;
+    TestNode* v = resultsList;
 
     va_list ap;
     va_start(ap, vertex);
     while (vertex != -1) {
         CHECK(v != nullptr);
         CHECK(v->index == unsigned(vertex));
-        v = (TestNode *)v->gcNextGraphNode;
+        v = (TestNode*)v->gcNextGraphNode;
         vertex = va_arg(ap, int);
     }
     va_end(ap);
@@ -204,7 +204,7 @@ END_TEST(testFindSCCs)
 
 struct TestNode2 : public GraphNodeBase<TestNode2>
 {
-    TestNode2 *edge;
+    TestNode2* edge;
 
     TestNode2() :
         edge(nullptr)
@@ -212,7 +212,7 @@ struct TestNode2 : public GraphNodeBase<TestNode2>
     }
 
     void
-    findOutgoingEdges(ComponentFinder<TestNode2> &finder) {
+    findOutgoingEdges(ComponentFinder<TestNode2>& finder) {
         if (edge)
             finder.addEdgeTo(edge);
     }
@@ -235,7 +235,7 @@ BEGIN_TEST(testFindSCCsStackLimit)
     const unsigned max = 1000000;
     const unsigned initial = 10;
 
-    TestNode2 *vertices = new TestNode2[max]();
+    TestNode2* vertices = new TestNode2[max]();
     for (unsigned i = initial; i < (max - 10); ++i)
         vertices[i].edge = &vertices[i + 1];
 
@@ -243,9 +243,9 @@ BEGIN_TEST(testFindSCCsStackLimit)
     for (unsigned i = 0; i < max; ++i)
         finder.addNode(&vertices[i]);
 
-    TestNode2 *r = finder.getResultsList();
+    TestNode2* r = finder.getResultsList();
     CHECK(r);
-    TestNode2 *v = r;
+    TestNode2* v = r;
 
     unsigned count = 0;
     while (v) {

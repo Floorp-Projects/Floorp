@@ -53,7 +53,7 @@ class MoveOperand
         if (disp == 0 && kind_ == EFFECTIVE_ADDRESS)
             kind_ = REG;
     }
-    MoveOperand(const MoveOperand &other)
+    MoveOperand(const MoveOperand& other)
       : kind_(other.kind_),
         code_(other.code_),
         disp_(other.disp_)
@@ -112,7 +112,7 @@ class MoveOperand
         return true;
     }
 
-    bool operator ==(const MoveOperand &other) const {
+    bool operator ==(const MoveOperand& other) const {
         if (kind_ != other.kind_)
             return false;
         if (code_ != other.code_)
@@ -121,7 +121,7 @@ class MoveOperand
             return disp_ == other.disp_;
         return true;
     }
-    bool operator !=(const MoveOperand &other) const {
+    bool operator !=(const MoveOperand& other) const {
         return !operator==(other);
     }
 };
@@ -160,7 +160,7 @@ class MoveOp
   public:
     MoveOp()
     { }
-    MoveOp(const MoveOperand &from, const MoveOperand &to, Type type)
+    MoveOp(const MoveOperand& from, const MoveOperand& to, Type type)
       : from_(from),
         to_(to),
         cycleBegin_(false),
@@ -184,10 +184,10 @@ class MoveOp
         MOZ_ASSERT(cycleEndSlot_ != -1);
         return cycleEndSlot_;
     }
-    const MoveOperand &from() const {
+    const MoveOperand& from() const {
         return from_;
     }
-    const MoveOperand &to() const {
+    const MoveOperand& to() const {
         return to_;
     }
     Type type() const {
@@ -209,7 +209,7 @@ class MoveResolver
     {
         PendingMove()
         { }
-        PendingMove(const MoveOperand &from, const MoveOperand &to, Type type)
+        PendingMove(const MoveOperand& from, const MoveOperand& to, Type type)
           : MoveOp(from, to, type)
         { }
 
@@ -238,9 +238,9 @@ class MoveResolver
 
     InlineList<PendingMove> pending_;
 
-    PendingMove *findBlockingMove(const PendingMove *last);
-    PendingMove *findCycledMove(PendingMoveIterator *stack, PendingMoveIterator end, const PendingMove *first);
-    bool addOrderedMove(const MoveOp &move);
+    PendingMove* findBlockingMove(const PendingMove* last);
+    PendingMove* findCycledMove(PendingMoveIterator* stack, PendingMoveIterator end, const PendingMove* first);
+    bool addOrderedMove(const MoveOp& move);
 
     // Internal reset function. Does not clear lists.
     void resetState();
@@ -255,13 +255,13 @@ class MoveResolver
     //
     // After calling addMove() for each parallel move, resolve() performs the
     // cycle resolution algorithm. Calling addMove() again resets the resolver.
-    bool addMove(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type);
+    bool addMove(const MoveOperand& from, const MoveOperand& to, MoveOp::Type type);
     bool resolve();
 
     size_t numMoves() const {
         return orderedMoves_.length();
     }
-    const MoveOp &getMove(size_t i) const {
+    const MoveOp& getMove(size_t i) const {
         return orderedMoves_[i];
     }
     uint32_t numCycles() const {
@@ -270,7 +270,7 @@ class MoveResolver
     void clearTempObjectPool() {
         movePool_.clear();
     }
-    void setAllocator(TempAllocator &alloc) {
+    void setAllocator(TempAllocator& alloc) {
         movePool_.setAllocator(alloc);
     }
 };

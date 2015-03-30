@@ -34,7 +34,7 @@ class StupidAllocator : public RegisterAllocator
         // Whether the physical register is not synced with the backing stack slot.
         bool dirty;
 
-        void set(uint32_t vreg, LInstruction *ins = nullptr, bool dirty = false) {
+        void set(uint32_t vreg, LInstruction* ins = nullptr, bool dirty = false) {
             this->vreg = vreg;
             this->age = ins ? ins->id() : 0;
             this->dirty = dirty;
@@ -52,7 +52,7 @@ class StupidAllocator : public RegisterAllocator
     Vector<LDefinition*, 0, SystemAllocPolicy> virtualRegisters;
 
   public:
-    StupidAllocator(MIRGenerator *mir, LIRGenerator *lir, LIRGraph &graph)
+    StupidAllocator(MIRGenerator* mir, LIRGenerator* lir, LIRGraph& graph)
       : RegisterAllocator(mir, lir, graph)
     {
     }
@@ -62,26 +62,26 @@ class StupidAllocator : public RegisterAllocator
   private:
     bool init();
 
-    void syncForBlockEnd(LBlock *block, LInstruction *ins);
-    void allocateForInstruction(LInstruction *ins);
-    void allocateForDefinition(LInstruction *ins, LDefinition *def);
+    void syncForBlockEnd(LBlock* block, LInstruction* ins);
+    void allocateForInstruction(LInstruction* ins);
+    void allocateForDefinition(LInstruction* ins, LDefinition* def);
 
-    LAllocation *stackLocation(uint32_t vreg);
+    LAllocation* stackLocation(uint32_t vreg);
 
     RegisterIndex registerIndex(AnyRegister reg);
 
-    AnyRegister ensureHasRegister(LInstruction *ins, uint32_t vreg);
-    RegisterIndex allocateRegister(LInstruction *ins, uint32_t vreg);
+    AnyRegister ensureHasRegister(LInstruction* ins, uint32_t vreg);
+    RegisterIndex allocateRegister(LInstruction* ins, uint32_t vreg);
 
-    void syncRegister(LInstruction *ins, RegisterIndex index);
-    void evictRegister(LInstruction *ins, RegisterIndex index);
-    void evictAliasedRegister(LInstruction *ins, RegisterIndex index);
-    void loadRegister(LInstruction *ins, uint32_t vreg, RegisterIndex index, LDefinition::Type type);
+    void syncRegister(LInstruction* ins, RegisterIndex index);
+    void evictRegister(LInstruction* ins, RegisterIndex index);
+    void evictAliasedRegister(LInstruction* ins, RegisterIndex index);
+    void loadRegister(LInstruction* ins, uint32_t vreg, RegisterIndex index, LDefinition::Type type);
 
     RegisterIndex findExistingRegister(uint32_t vreg);
 
-    bool allocationRequiresRegister(const LAllocation *alloc, AnyRegister reg);
-    bool registerIsReserved(LInstruction *ins, AnyRegister reg);
+    bool allocationRequiresRegister(const LAllocation* alloc, AnyRegister reg);
+    bool registerIsReserved(LInstruction* ins, AnyRegister reg);
 };
 
 } // namespace jit

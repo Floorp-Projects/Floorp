@@ -42,7 +42,7 @@ size_t ExecutableAllocator::determinePageSize()
     return system_info.dwPageSize;
 }
 
-void *ExecutableAllocator::computeRandomAllocationAddress()
+void* ExecutableAllocator::computeRandomAllocationAddress()
 {
     /*
      * Inspiration is V8's OS::Allocate in platform-win32.cc.
@@ -66,7 +66,7 @@ void *ExecutableAllocator::computeRandomAllocationAddress()
 # error "Unsupported architecture"
 #endif
     uint64_t rand = random_next(&rngSeed, 32) << chunkBits;
-    return (void *) (base | (rand & mask));
+    return (void*) (base | (rand & mask));
 }
 
 static bool
@@ -123,8 +123,8 @@ struct ExceptionHandlerRecord
 // This type is rather elusive in documentation; Wine is the best I've found:
 //   http://source.winehq.org/source/include/winnt.h
 static DWORD
-ExceptionHandler(PEXCEPTION_RECORD exceptionRecord, _EXCEPTION_REGISTRATION_RECORD *,
-                 PCONTEXT context, _EXCEPTION_REGISTRATION_RECORD **)
+ExceptionHandler(PEXCEPTION_RECORD exceptionRecord, _EXCEPTION_REGISTRATION_RECORD*,
+                 PCONTEXT context, _EXCEPTION_REGISTRATION_RECORD**)
 {
     return sJitExceptionHandler(exceptionRecord, context);
 }
@@ -132,9 +132,9 @@ ExceptionHandler(PEXCEPTION_RECORD exceptionRecord, _EXCEPTION_REGISTRATION_RECO
 // For an explanation of the problem being solved here, see
 // SetJitExceptionFilter in jsfriendapi.h.
 static bool
-RegisterExecutableMemory(void *p, size_t bytes, size_t pageSize)
+RegisterExecutableMemory(void* p, size_t bytes, size_t pageSize)
 {
-    ExceptionHandlerRecord *r = reinterpret_cast<ExceptionHandlerRecord*>(p);
+    ExceptionHandlerRecord* r = reinterpret_cast<ExceptionHandlerRecord*>(p);
 
     // All these fields are specified to be offsets from the base of the
     // executable code (which is 'p'), even if they have 'Address' in their
@@ -159,7 +159,7 @@ RegisterExecutableMemory(void *p, size_t bytes, size_t pageSize)
     // mov imm64, rax
     r->thunk[0]  = 0x48;
     r->thunk[1]  = 0xb8;
-    void *handler = JS_FUNC_TO_DATA_PTR(void *, ExceptionHandler);
+    void* handler = JS_FUNC_TO_DATA_PTR(void*, ExceptionHandler);
     memcpy(&r->thunk[2], &handler, 8);
 
     // jmp rax
@@ -174,15 +174,15 @@ RegisterExecutableMemory(void *p, size_t bytes, size_t pageSize)
 }
 
 static void
-UnregisterExecutableMemory(void *p, size_t bytes, size_t pageSize)
+UnregisterExecutableMemory(void* p, size_t bytes, size_t pageSize)
 {
-    ExceptionHandlerRecord *r = reinterpret_cast<ExceptionHandlerRecord*>(p);
+    ExceptionHandlerRecord* r = reinterpret_cast<ExceptionHandlerRecord*>(p);
     RtlDeleteFunctionTable(&r->runtimeFunction);
 }
 #endif
 
-void *
-js::jit::AllocateExecutableMemory(void *addr, size_t bytes, unsigned permissions, const char *tag,
+void*
+js::jit::AllocateExecutableMemory(void* addr, size_t bytes, unsigned permissions, const char* tag,
                                   size_t pageSize)
 {
     MOZ_ASSERT(bytes % pageSize == 0);
@@ -193,7 +193,7 @@ js::jit::AllocateExecutableMemory(void *addr, size_t bytes, unsigned permissions
         bytes += pageSize;
 #endif
 
-    void *p = VirtualAlloc(addr, bytes, MEM_COMMIT | MEM_RESERVE, permissions);
+    void* p = VirtualAlloc(addr, bytes, MEM_COMMIT | MEM_RESERVE, permissions);
     if (!p)
         return nullptr;
 
@@ -212,7 +212,7 @@ js::jit::AllocateExecutableMemory(void *addr, size_t bytes, unsigned permissions
 }
 
 void
-js::jit::DeallocateExecutableMemory(void *addr, size_t bytes, size_t pageSize)
+js::jit::DeallocateExecutableMemory(void* addr, size_t bytes, size_t pageSize)
 {
     MOZ_ASSERT(bytes % pageSize == 0);
 
@@ -228,12 +228,12 @@ js::jit::DeallocateExecutableMemory(void *addr, size_t bytes, size_t pageSize)
 
 ExecutablePool::Allocation ExecutableAllocator::systemAlloc(size_t n)
 {
-    void *allocation = nullptr;
+    void* allocation = nullptr;
     // Randomization disabled to avoid a performance fault on x64 builds.
     // See bug 728623.
 #ifndef JS_CPU_X64
     if (!RandomizeIsBroken()) {
-        void *randomAddress = computeRandomAllocationAddress();
+        void* randomAddress = computeRandomAllocationAddress();
         allocation = AllocateExecutableMemory(randomAddress, n, PAGE_EXECUTE_READWRITE,
                                               "js-jit-code", pageSize);
     }

@@ -25,28 +25,28 @@ namespace jit {
 class LoopAliasInfo : public TempObject
 {
   private:
-    LoopAliasInfo *outer_;
-    MBasicBlock *loopHeader_;
+    LoopAliasInfo* outer_;
+    MBasicBlock* loopHeader_;
     MInstructionVector invariantLoads_;
 
   public:
-    LoopAliasInfo(TempAllocator &alloc, LoopAliasInfo *outer, MBasicBlock *loopHeader)
+    LoopAliasInfo(TempAllocator& alloc, LoopAliasInfo* outer, MBasicBlock* loopHeader)
       : outer_(outer), loopHeader_(loopHeader), invariantLoads_(alloc)
     { }
 
-    MBasicBlock *loopHeader() const {
+    MBasicBlock* loopHeader() const {
         return loopHeader_;
     }
-    LoopAliasInfo *outer() const {
+    LoopAliasInfo* outer() const {
         return outer_;
     }
-    bool addInvariantLoad(MInstruction *ins) {
+    bool addInvariantLoad(MInstruction* ins) {
         return invariantLoads_.append(ins);
     }
     const MInstructionVector& invariantLoads() const {
         return invariantLoads_;
     }
-    MInstruction *firstInstruction() const {
+    MInstruction* firstInstruction() const {
         return *loopHeader_->begin();
     }
 };
@@ -82,7 +82,7 @@ class AliasSetIterator
     operator bool() const {
         return !!flags;
     }
-    unsigned operator *() const {
+    unsigned operator*() const {
         MOZ_ASSERT(pos < AliasSet::NumCategories);
         return pos;
     }
@@ -90,7 +90,7 @@ class AliasSetIterator
 
 } /* anonymous namespace */
 
-AliasAnalysis::AliasAnalysis(MIRGenerator *mir, MIRGraph &graph)
+AliasAnalysis::AliasAnalysis(MIRGenerator* mir, MIRGraph& graph)
   : mir(mir),
     graph_(graph),
     loop_(nullptr)
@@ -100,7 +100,7 @@ AliasAnalysis::AliasAnalysis(MIRGenerator *mir, MIRGraph &graph)
 // Whether there might be a path from src to dest, excluding loop backedges. This is
 // approximate and really ought to depend on precomputed reachability information.
 static inline bool
-BlockMightReach(MBasicBlock *src, MBasicBlock *dest)
+BlockMightReach(MBasicBlock* src, MBasicBlock* dest)
 {
     while (src->id() <= dest->id()) {
         if (src == dest)
@@ -109,7 +109,7 @@ BlockMightReach(MBasicBlock *src, MBasicBlock *dest)
           case 0:
             return false;
           case 1: {
-            MBasicBlock *successor = src->getSuccessor(0);
+            MBasicBlock* successor = src->getSuccessor(0);
             if (successor->id() <= src->id())
                 return true; // Don't iloop.
             src = successor;
@@ -123,7 +123,7 @@ BlockMightReach(MBasicBlock *src, MBasicBlock *dest)
 }
 
 static void
-IonSpewDependency(MInstruction *load, MInstruction *store, const char *verb, const char *reason)
+IonSpewDependency(MInstruction* load, MInstruction* store, const char* verb, const char* reason)
 {
     if (!JitSpewEnabled(JitSpew_Alias))
         return;
@@ -136,7 +136,7 @@ IonSpewDependency(MInstruction *load, MInstruction *store, const char *verb, con
 }
 
 static void
-IonSpewAliasInfo(const char *pre, MInstruction *ins, const char *post)
+IonSpewAliasInfo(const char* pre, MInstruction* ins, const char* post)
 {
     if (!JitSpewEnabled(JitSpew_Alias))
         return;
@@ -166,7 +166,7 @@ AliasAnalysis::analyze()
     Vector<MInstructionVector, AliasSet::NumCategories, JitAllocPolicy> stores(alloc());
 
     // Initialize to the first instruction.
-    MInstruction *firstIns = *graph_.entryBlock()->begin();
+    MInstruction* firstIns = *graph_.entryBlock()->begin();
     for (unsigned i = 0; i < AliasSet::NumCategories; i++) {
         MInstructionVector defs(alloc());
         if (!defs.append(firstIns))
@@ -214,12 +214,12 @@ AliasAnalysis::analyze()
                 }
             } else {
                 // Find the most recent store on which this instruction depends.
-                MInstruction *lastStore = firstIns;
+                MInstruction* lastStore = firstIns;
 
                 for (AliasSetIterator iter(set); iter; iter++) {
-                    MInstructionVector &aliasedStores = stores[*iter];
+                    MInstructionVector& aliasedStores = stores[*iter];
                     for (int i = aliasedStores.length() - 1; i >= 0; i--) {
-                        MInstruction *store = aliasedStores[i];
+                        MInstruction* store = aliasedStores[i];
                         if (def->mightAlias(store) && BlockMightReach(store->block(), *block)) {
                             if (lastStore->id() < store->id())
                                 lastStore = store;
@@ -248,21 +248,21 @@ AliasAnalysis::analyze()
             MOZ_ASSERT(loop_->loopHeader() == block->loopHeaderOfBackedge());
             JitSpew(JitSpew_Alias, "Processing loop backedge %d (header %d)", block->id(),
                     loop_->loopHeader()->id());
-            LoopAliasInfo *outerLoop = loop_->outer();
-            MInstruction *firstLoopIns = *loop_->loopHeader()->begin();
+            LoopAliasInfo* outerLoop = loop_->outer();
+            MInstruction* firstLoopIns = *loop_->loopHeader()->begin();
 
-            const MInstructionVector &invariant = loop_->invariantLoads();
+            const MInstructionVector& invariant = loop_->invariantLoads();
 
             for (unsigned i = 0; i < invariant.length(); i++) {
-                MInstruction *ins = invariant[i];
+                MInstruction* ins = invariant[i];
                 AliasSet set = ins->getAliasSet();
                 MOZ_ASSERT(set.isLoad());
 
                 bool hasAlias = false;
                 for (AliasSetIterator iter(set); iter; iter++) {
-                    MInstructionVector &aliasedStores = stores[*iter];
+                    MInstructionVector& aliasedStores = stores[*iter];
                     for (int i = aliasedStores.length() - 1;; i--) {
-                        MInstruction *store = aliasedStores[i];
+                        MInstruction* store = aliasedStores[i];
                         if (store->id() < firstLoopIns->id())
                             break;
                         if (ins->mightAlias(store)) {
@@ -279,7 +279,7 @@ AliasAnalysis::analyze()
                     // This instruction depends on stores inside the loop body. Mark it as having a
                     // dependency on the last instruction of the loop header. The last instruction is a
                     // control instruction and these are never hoisted.
-                    MControlInstruction *controlIns = loop_->loopHeader()->lastIns();
+                    MControlInstruction* controlIns = loop_->loopHeader()->lastIns();
                     IonSpewDependency(ins, controlIns, "depends", "due to stores in loop body");
                     ins->setDependency(controlIns);
                 } else {

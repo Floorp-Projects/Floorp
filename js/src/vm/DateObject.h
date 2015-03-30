@@ -41,7 +41,7 @@ class DateObject : public NativeObject
   public:
     static const Class class_;
 
-    inline const js::Value &UTCTime() const {
+    inline const js::Value& UTCTime() const {
         return getFixedSlot(UTC_TIME_SLOT);
     }
 
@@ -49,30 +49,30 @@ class DateObject : public NativeObject
     void setUTCTime(double t);
     void setUTCTime(double t, MutableHandleValue vp);
 
-    inline double cachedLocalTime(DateTimeInfo *dtInfo);
+    inline double cachedLocalTime(DateTimeInfo* dtInfo);
 
     // Cache the local time, year, month, and so forth of the object.
     // If UTC time is not finite (e.g., NaN), the local time
     // slots will be set to the UTC time without conversion.
-    void fillLocalTimeSlots(DateTimeInfo *dtInfo);
+    void fillLocalTimeSlots(DateTimeInfo* dtInfo);
 
-    static MOZ_ALWAYS_INLINE bool getTime_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getYear_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getFullYear_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getUTCFullYear_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getMonth_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getUTCMonth_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getDate_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getUTCDate_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getDay_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getUTCDay_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getHours_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getUTCHours_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getMinutes_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getUTCMinutes_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getUTCSeconds_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getUTCMilliseconds_impl(JSContext *cx, CallArgs args);
-    static MOZ_ALWAYS_INLINE bool getTimezoneOffset_impl(JSContext *cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getTime_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getYear_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getFullYear_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getUTCFullYear_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getMonth_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getUTCMonth_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getDate_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getUTCDate_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getDay_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getUTCDay_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getHours_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getUTCHours_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getMinutes_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getUTCMinutes_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getUTCSeconds_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getUTCMilliseconds_impl(JSContext* cx, CallArgs args);
+    static MOZ_ALWAYS_INLINE bool getTimezoneOffset_impl(JSContext* cx, CallArgs args);
 };
 
 } // namespace js

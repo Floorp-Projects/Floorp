@@ -19,23 +19,23 @@ using namespace js::jit;
 BEGIN_TEST(testJitFoldsTo_DivReciprocal)
 {
     MinimalFunc func;
-    MBasicBlock *block = func.createEntryBlock();
+    MBasicBlock* block = func.createEntryBlock();
 
     // return p / 4.0
-    MParameter *p = func.createParameter();
+    MParameter* p = func.createParameter();
     block->add(p);
-    MConstant *c = MConstant::New(func.alloc, DoubleValue(4.0));
+    MConstant* c = MConstant::New(func.alloc, DoubleValue(4.0));
     block->add(c);
-    MDiv *div = MDiv::New(func.alloc, p, c, MIRType_Double);
+    MDiv* div = MDiv::New(func.alloc, p, c, MIRType_Double);
     block->add(div);
-    MReturn *ret = MReturn::New(func.alloc, div);
+    MReturn* ret = MReturn::New(func.alloc, div);
     block->end(ret);
 
     if (!func.runGVN())
         return false;
 
     // Test that the div got folded to p * 0.25.
-    MDefinition *op = ret->getOperand(0);
+    MDefinition* op = ret->getOperand(0);
     CHECK(op->isMul());
     CHECK(op->getOperand(0) == p);
     CHECK(op->getOperand(1)->isConstant());
@@ -47,23 +47,23 @@ END_TEST(testJitFoldsTo_DivReciprocal)
 BEGIN_TEST(testJitFoldsTo_NoDivReciprocal)
 {
     MinimalFunc func;
-    MBasicBlock *block = func.createEntryBlock();
+    MBasicBlock* block = func.createEntryBlock();
 
     // return p / 5.0
-    MParameter *p = func.createParameter();
+    MParameter* p = func.createParameter();
     block->add(p);
-    MConstant *c = MConstant::New(func.alloc, DoubleValue(5.0));
+    MConstant* c = MConstant::New(func.alloc, DoubleValue(5.0));
     block->add(c);
-    MDiv *div = MDiv::New(func.alloc, p, c, MIRType_Double);
+    MDiv* div = MDiv::New(func.alloc, p, c, MIRType_Double);
     block->add(div);
-    MReturn *ret = MReturn::New(func.alloc, div);
+    MReturn* ret = MReturn::New(func.alloc, div);
     block->end(ret);
 
     if (!func.runGVN())
         return false;
 
     // Test that the div didn't get folded.
-    MDefinition *op = ret->getOperand(0);
+    MDefinition* op = ret->getOperand(0);
     CHECK(op->isDiv());
     CHECK(op->getOperand(0) == p);
     CHECK(op->getOperand(1) == c);
@@ -74,23 +74,23 @@ END_TEST(testJitFoldsTo_NoDivReciprocal)
 BEGIN_TEST(testJitNotNot)
 {
     MinimalFunc func;
-    MBasicBlock *block = func.createEntryBlock();
+    MBasicBlock* block = func.createEntryBlock();
 
     // return Not(Not(p))
-    MParameter *p = func.createParameter();
+    MParameter* p = func.createParameter();
     block->add(p);
-    MNot *not0 = MNot::New(func.alloc, p);
+    MNot* not0 = MNot::New(func.alloc, p);
     block->add(not0);
-    MNot *not1 = MNot::New(func.alloc, not0);
+    MNot* not1 = MNot::New(func.alloc, not0);
     block->add(not1);
-    MReturn *ret = MReturn::New(func.alloc, not1);
+    MReturn* ret = MReturn::New(func.alloc, not1);
     block->end(ret);
 
     if (!func.runGVN())
         return false;
 
     // Test that the nots did not get folded.
-    MDefinition *op = ret->getOperand(0);
+    MDefinition* op = ret->getOperand(0);
     CHECK(op->isNot());
     CHECK(op->getOperand(0)->isNot());
     CHECK(op->getOperand(0)->getOperand(0) == p);
@@ -101,25 +101,25 @@ END_TEST(testJitNotNot)
 BEGIN_TEST(testJitNotNotNot)
 {
     MinimalFunc func;
-    MBasicBlock *block = func.createEntryBlock();
+    MBasicBlock* block = func.createEntryBlock();
 
     // return Not(Not(Not(p)))
-    MParameter *p = func.createParameter();
+    MParameter* p = func.createParameter();
     block->add(p);
-    MNot *not0 = MNot::New(func.alloc, p);
+    MNot* not0 = MNot::New(func.alloc, p);
     block->add(not0);
-    MNot *not1 = MNot::New(func.alloc, not0);
+    MNot* not1 = MNot::New(func.alloc, not0);
     block->add(not1);
-    MNot *not2 = MNot::New(func.alloc, not1);
+    MNot* not2 = MNot::New(func.alloc, not1);
     block->add(not2);
-    MReturn *ret = MReturn::New(func.alloc, not2);
+    MReturn* ret = MReturn::New(func.alloc, not2);
     block->end(ret);
 
     if (!func.runGVN())
         return false;
 
     // Test that the nots got folded.
-    MDefinition *op = ret->getOperand(0);
+    MDefinition* op = ret->getOperand(0);
     CHECK(op->isNot());
     CHECK(op->getOperand(0) == p);
     return true;
@@ -129,24 +129,24 @@ END_TEST(testJitNotNotNot)
 BEGIN_TEST(testJitNotTest)
 {
     MinimalFunc func;
-    MBasicBlock *block = func.createEntryBlock();
-    MBasicBlock *then = func.createBlock(block);
-    MBasicBlock *else_ = func.createBlock(block);
-    MBasicBlock *exit = func.createBlock(block);
+    MBasicBlock* block = func.createEntryBlock();
+    MBasicBlock* then = func.createBlock(block);
+    MBasicBlock* else_ = func.createBlock(block);
+    MBasicBlock* exit = func.createBlock(block);
 
     // MTest(Not(p))
-    MParameter *p = func.createParameter();
+    MParameter* p = func.createParameter();
     block->add(p);
-    MNot *not0 = MNot::New(func.alloc, p);
+    MNot* not0 = MNot::New(func.alloc, p);
     block->add(not0);
-    MTest *test = MTest::New(func.alloc, not0, then, else_);
+    MTest* test = MTest::New(func.alloc, not0, then, else_);
     block->end(test);
 
     then->end(MGoto::New(func.alloc, exit));
 
     else_->end(MGoto::New(func.alloc, exit));
 
-    MReturn *ret = MReturn::New(func.alloc, p);
+    MReturn* ret = MReturn::New(func.alloc, p);
     exit->end(ret);
 
     exit->addPredecessorWithoutPhis(then);
@@ -166,26 +166,26 @@ END_TEST(testJitNotTest)
 BEGIN_TEST(testJitNotNotTest)
 {
     MinimalFunc func;
-    MBasicBlock *block = func.createEntryBlock();
-    MBasicBlock *then = func.createBlock(block);
-    MBasicBlock *else_ = func.createBlock(block);
-    MBasicBlock *exit = func.createBlock(block);
+    MBasicBlock* block = func.createEntryBlock();
+    MBasicBlock* then = func.createBlock(block);
+    MBasicBlock* else_ = func.createBlock(block);
+    MBasicBlock* exit = func.createBlock(block);
 
     // MTest(Not(Not(p)))
-    MParameter *p = func.createParameter();
+    MParameter* p = func.createParameter();
     block->add(p);
-    MNot *not0 = MNot::New(func.alloc, p);
+    MNot* not0 = MNot::New(func.alloc, p);
     block->add(not0);
-    MNot *not1 = MNot::New(func.alloc, not0);
+    MNot* not1 = MNot::New(func.alloc, not0);
     block->add(not1);
-    MTest *test = MTest::New(func.alloc, not1, then, else_);
+    MTest* test = MTest::New(func.alloc, not1, then, else_);
     block->end(test);
 
     then->end(MGoto::New(func.alloc, exit));
 
     else_->end(MGoto::New(func.alloc, exit));
 
-    MReturn *ret = MReturn::New(func.alloc, p);
+    MReturn* ret = MReturn::New(func.alloc, p);
     exit->end(ret);
 
     exit->addPredecessorWithoutPhis(then);
@@ -205,23 +205,23 @@ END_TEST(testJitNotNotTest)
 BEGIN_TEST(testJitFoldsTo_UnsignedDiv)
 {
     MinimalFunc func;
-    MBasicBlock *block = func.createEntryBlock();
+    MBasicBlock* block = func.createEntryBlock();
 
     // return 1.0 / 0xffffffff
-    MConstant *c0 = MConstant::New(func.alloc, Int32Value(1));
+    MConstant* c0 = MConstant::New(func.alloc, Int32Value(1));
     block->add(c0);
-    MConstant *c1 = MConstant::New(func.alloc, Int32Value(0xffffffff));
+    MConstant* c1 = MConstant::New(func.alloc, Int32Value(0xffffffff));
     block->add(c1);
-    MDiv *div = MDiv::NewAsmJS(func.alloc, c0, c1, MIRType_Int32, /*unsignd=*/true);
+    MDiv* div = MDiv::NewAsmJS(func.alloc, c0, c1, MIRType_Int32, /*unsignd=*/true);
     block->add(div);
-    MReturn *ret = MReturn::New(func.alloc, div);
+    MReturn* ret = MReturn::New(func.alloc, div);
     block->end(ret);
 
     if (!func.runGVN())
         return false;
 
     // Test that the div got folded to 0.
-    MConstant *op = ret->getOperand(0)->toConstant();
+    MConstant* op = ret->getOperand(0)->toConstant();
     CHECK(mozilla::NumbersAreIdentical(op->value().toNumber(), 0.0));
     return true;
 }
@@ -230,23 +230,23 @@ END_TEST(testJitFoldsTo_UnsignedDiv)
 BEGIN_TEST(testJitFoldsTo_UnsignedMod)
 {
     MinimalFunc func;
-    MBasicBlock *block = func.createEntryBlock();
+    MBasicBlock* block = func.createEntryBlock();
 
     // return 1.0 % 0xffffffff
-    MConstant *c0 = MConstant::New(func.alloc, Int32Value(1));
+    MConstant* c0 = MConstant::New(func.alloc, Int32Value(1));
     block->add(c0);
-    MConstant *c1 = MConstant::New(func.alloc, Int32Value(0xffffffff));
+    MConstant* c1 = MConstant::New(func.alloc, Int32Value(0xffffffff));
     block->add(c1);
-    MMod *mod = MMod::NewAsmJS(func.alloc, c0, c1, MIRType_Int32, /*unsignd=*/true);
+    MMod* mod = MMod::NewAsmJS(func.alloc, c0, c1, MIRType_Int32, /*unsignd=*/true);
     block->add(mod);
-    MReturn *ret = MReturn::New(func.alloc, mod);
+    MReturn* ret = MReturn::New(func.alloc, mod);
     block->end(ret);
 
     if (!func.runGVN())
         return false;
 
     // Test that the mod got folded to 1.
-    MConstant *op = ret->getOperand(0)->toConstant();
+    MConstant* op = ret->getOperand(0)->toConstant();
     CHECK(mozilla::NumbersAreIdentical(op->value().toNumber(), 1.0));
     return true;
 }

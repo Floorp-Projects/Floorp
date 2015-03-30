@@ -20,7 +20,7 @@ typedef SPSInstrumentation<MacroAssembler, Register> BaseInstrumentation;
 class IonInstrumentation : public BaseInstrumentation
 {
   public:
-    IonInstrumentation(SPSProfiler *profiler, jsbytecode **pc)
+    IonInstrumentation(SPSProfiler* profiler, jsbytecode** pc)
       : BaseInstrumentation(profiler)
     {
         MOZ_ASSERT(pc != nullptr);

@@ -13,15 +13,15 @@
 using namespace js;
 
 bool
-BaseProxyHandler::enter(JSContext *cx, HandleObject wrapper, HandleId id, Action act,
-                        bool *bp) const
+BaseProxyHandler::enter(JSContext* cx, HandleObject wrapper, HandleId id, Action act,
+                        bool* bp) const
 {
     *bp = true;
     return true;
 }
 
 bool
-BaseProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const
+BaseProxyHandler::has(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const
 {
     assertEnteredPolicy(cx, proxy, id, GET);
     Rooted<PropertyDescriptor> desc(cx);
@@ -32,7 +32,7 @@ BaseProxyHandler::has(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) 
 }
 
 bool
-BaseProxyHandler::hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *bp) const
+BaseProxyHandler::hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp) const
 {
     assertEnteredPolicy(cx, proxy, id, GET);
     Rooted<PropertyDescriptor> desc(cx);
@@ -43,7 +43,7 @@ BaseProxyHandler::hasOwn(JSContext *cx, HandleObject proxy, HandleId id, bool *b
 }
 
 bool
-BaseProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
+BaseProxyHandler::get(JSContext* cx, HandleObject proxy, HandleObject receiver,
                       HandleId id, MutableHandleValue vp) const
 {
     assertEnteredPolicy(cx, proxy, id, GET);
@@ -72,7 +72,7 @@ BaseProxyHandler::get(JSContext *cx, HandleObject proxy, HandleObject receiver,
 }
 
 bool
-BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
+BaseProxyHandler::set(JSContext* cx, HandleObject proxy, HandleObject receiver,
                       HandleId id, bool strict, MutableHandleValue vp) const
 {
     assertEnteredPolicy(cx, proxy, id, SET);
@@ -134,7 +134,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
 
         // A very old nonstandard SpiderMonkey extension: default to the Class
         // getter and setter ops.
-        const Class *clasp = receiver->getClass();
+        const Class* clasp = receiver->getClass();
         MOZ_ASSERT(clasp->getProperty != JS_PropertyStub);
         MOZ_ASSERT(clasp->setProperty != JS_StrictPropertyStub);
         return DefineProperty(cx, receiver, id, vp,
@@ -153,7 +153,7 @@ BaseProxyHandler::set(JSContext *cx, HandleObject proxy, HandleObject receiver,
 }
 
 bool
-js::SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handler,
+js::SetPropertyIgnoringNamedGetter(JSContext* cx, const BaseProxyHandler* handler,
                                    HandleObject proxy, HandleObject receiver,
                                    HandleId id, MutableHandle<PropertyDescriptor> desc,
                                    bool descIsOwn, bool strict, MutableHandleValue vp)
@@ -197,8 +197,8 @@ js::SetPropertyIgnoringNamedGetter(JSContext *cx, const BaseProxyHandler *handle
 }
 
 bool
-BaseProxyHandler::getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy,
-                                               AutoIdVector &props) const
+BaseProxyHandler::getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
+                                               AutoIdVector& props) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
     MOZ_ASSERT(props.length() == 0);
@@ -230,7 +230,7 @@ BaseProxyHandler::getOwnEnumerablePropertyKeys(JSContext *cx, HandleObject proxy
 }
 
 bool
-BaseProxyHandler::enumerate(JSContext *cx, HandleObject proxy, MutableHandleObject objp) const
+BaseProxyHandler::enumerate(JSContext* cx, HandleObject proxy, MutableHandleObject objp) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
 
@@ -244,25 +244,25 @@ BaseProxyHandler::enumerate(JSContext *cx, HandleObject proxy, MutableHandleObje
 }
 
 bool
-BaseProxyHandler::call(JSContext *cx, HandleObject proxy, const CallArgs &args) const
+BaseProxyHandler::call(JSContext* cx, HandleObject proxy, const CallArgs& args) const
 {
     MOZ_CRASH("callable proxies should implement call trap");
 }
 
 bool
-BaseProxyHandler::construct(JSContext *cx, HandleObject proxy, const CallArgs &args) const
+BaseProxyHandler::construct(JSContext* cx, HandleObject proxy, const CallArgs& args) const
 {
     MOZ_CRASH("callable proxies should implement construct trap");
 }
 
-const char *
-BaseProxyHandler::className(JSContext *cx, HandleObject proxy) const
+const char*
+BaseProxyHandler::className(JSContext* cx, HandleObject proxy) const
 {
     return proxy->isCallable() ? "Function" : "Object";
 }
 
-JSString *
-BaseProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, unsigned indent) const
+JSString*
+BaseProxyHandler::fun_toString(JSContext* cx, HandleObject proxy, unsigned indent) const
 {
     if (proxy->isCallable())
         return JS_NewStringCopyZ(cx, "function () {\n    [native code]\n}");
@@ -272,28 +272,28 @@ BaseProxyHandler::fun_toString(JSContext *cx, HandleObject proxy, unsigned inden
 }
 
 bool
-BaseProxyHandler::regexp_toShared(JSContext *cx, HandleObject proxy,
-                                  RegExpGuard *g) const
+BaseProxyHandler::regexp_toShared(JSContext* cx, HandleObject proxy,
+                                  RegExpGuard* g) const
 {
     MOZ_CRASH("This should have been a wrapped regexp");
 }
 
 bool
-BaseProxyHandler::boxedValue_unbox(JSContext *cx, HandleObject proxy, MutableHandleValue vp) const
+BaseProxyHandler::boxedValue_unbox(JSContext* cx, HandleObject proxy, MutableHandleValue vp) const
 {
     vp.setUndefined();
     return true;
 }
 
 bool
-BaseProxyHandler::defaultValue(JSContext *cx, HandleObject proxy, JSType hint,
+BaseProxyHandler::defaultValue(JSContext* cx, HandleObject proxy, JSType hint,
                                MutableHandleValue vp) const
 {
     return OrdinaryToPrimitive(cx, proxy, hint, vp);
 }
 
 bool
-BaseProxyHandler::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl impl,
+BaseProxyHandler::nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
                              CallArgs args) const
 {
     ReportIncompatible(cx, args);
@@ -301,8 +301,8 @@ BaseProxyHandler::nativeCall(JSContext *cx, IsAcceptableThis test, NativeImpl im
 }
 
 bool
-BaseProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleValue v,
-                              bool *bp) const
+BaseProxyHandler::hasInstance(JSContext* cx, HandleObject proxy, MutableHandleValue v,
+                              bool* bp) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
     RootedValue val(cx, ObjectValue(*proxy.get()));
@@ -312,40 +312,40 @@ BaseProxyHandler::hasInstance(JSContext *cx, HandleObject proxy, MutableHandleVa
 }
 
 bool
-BaseProxyHandler::objectClassIs(HandleObject proxy, ESClassValue classValue, JSContext *cx) const
+BaseProxyHandler::objectClassIs(HandleObject proxy, ESClassValue classValue, JSContext* cx) const
 {
     return false;
 }
 
 void
-BaseProxyHandler::trace(JSTracer *trc, JSObject *proxy) const
+BaseProxyHandler::trace(JSTracer* trc, JSObject* proxy) const
 {
 }
 
 void
-BaseProxyHandler::finalize(JSFreeOp *fop, JSObject *proxy) const
+BaseProxyHandler::finalize(JSFreeOp* fop, JSObject* proxy) const
 {
 }
 
 void
-BaseProxyHandler::objectMoved(JSObject *proxy, const JSObject *old) const
+BaseProxyHandler::objectMoved(JSObject* proxy, const JSObject* old) const
 {
 }
 
-JSObject *
-BaseProxyHandler::weakmapKeyDelegate(JSObject *proxy) const
+JSObject*
+BaseProxyHandler::weakmapKeyDelegate(JSObject* proxy) const
 {
     return nullptr;
 }
 
 bool
-BaseProxyHandler::getPrototypeOf(JSContext *cx, HandleObject proxy, MutableHandleObject protop) const
+BaseProxyHandler::getPrototypeOf(JSContext* cx, HandleObject proxy, MutableHandleObject protop) const
 {
     MOZ_CRASH("Must override getPrototypeOf with lazy prototype.");
 }
 
 bool
-BaseProxyHandler::setPrototypeOf(JSContext *cx, HandleObject, HandleObject, bool *) const
+BaseProxyHandler::setPrototypeOf(JSContext* cx, HandleObject, HandleObject, bool*) const
 {
     // Disallow sets of protos on proxies with lazy protos, but no hook.
     // This keeps us away from the footgun of having the first proto set opt
@@ -356,14 +356,14 @@ BaseProxyHandler::setPrototypeOf(JSContext *cx, HandleObject, HandleObject, bool
 }
 
 bool
-BaseProxyHandler::setImmutablePrototype(JSContext *cx, HandleObject proxy, bool *succeeded) const
+BaseProxyHandler::setImmutablePrototype(JSContext* cx, HandleObject proxy, bool* succeeded) const
 {
     *succeeded = false;
     return true;
 }
 
 bool
-BaseProxyHandler::watch(JSContext *cx, HandleObject proxy, HandleId id, HandleObject callable) const
+BaseProxyHandler::watch(JSContext* cx, HandleObject proxy, HandleId id, HandleObject callable) const
 {
     JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
                          proxy->getClass()->name);
@@ -371,14 +371,14 @@ BaseProxyHandler::watch(JSContext *cx, HandleObject proxy, HandleId id, HandleOb
 }
 
 bool
-BaseProxyHandler::unwatch(JSContext *cx, HandleObject proxy, HandleId id) const
+BaseProxyHandler::unwatch(JSContext* cx, HandleObject proxy, HandleId id) const
 {
     return true;
 }
 
 bool
-BaseProxyHandler::getElements(JSContext *cx, HandleObject proxy, uint32_t begin, uint32_t end,
-                              ElementAdder *adder) const
+BaseProxyHandler::getElements(JSContext* cx, HandleObject proxy, uint32_t begin, uint32_t end,
+                              ElementAdder* adder) const
 {
     assertEnteredPolicy(cx, proxy, JSID_VOID, GET);
 
@@ -386,13 +386,13 @@ BaseProxyHandler::getElements(JSContext *cx, HandleObject proxy, uint32_t begin,
 }
 
 bool
-BaseProxyHandler::isCallable(JSObject *obj) const
+BaseProxyHandler::isCallable(JSObject* obj) const
 {
     return false;
 }
 
 bool
-BaseProxyHandler::isConstructor(JSObject *obj) const
+BaseProxyHandler::isConstructor(JSObject* obj) const
 {
     return false;
 }

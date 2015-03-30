@@ -76,17 +76,17 @@ class Registers
     };
     typedef RegisterID Code;
 
-    static const char *GetName(Code code) {
+    static const char* GetName(Code code) {
         static const char * const Names[] = { "r0", "r1", "r2", "r3", "r4", "r5", "r6", "r7",
                                               "r8", "r9", "r10", "r11", "r12", "sp", "r14", "pc"};
         return Names[code];
     }
-    static const char *GetName(uint32_t i) {
+    static const char* GetName(uint32_t i) {
         MOZ_ASSERT(i < Total);
         return GetName(Code(i));
     }
 
-    static Code FromName(const char *name);
+    static Code FromName(const char* name);
 
     static const Code StackPointer = sp;
     static const Code Invalid = invalid_reg;
@@ -234,14 +234,14 @@ class FloatRegisters
     typedef FPRegisterID Code;
 
 
-    static const char *GetDoubleName(Code code) {
+    static const char* GetDoubleName(Code code) {
         static const char * const Names[] = { "d0", "d1", "d2", "d3", "d4", "d5", "d6", "d7",
                                               "d8", "d9", "d10", "d11", "d12", "d13", "d14", "d15",
                                               "d16", "d17", "d18", "d19", "d20", "d21", "d22", "d23",
                                               "d24", "d25", "d26", "d27", "d28", "d29", "d30", "d31"};
         return Names[code];
     }
-    static const char *GetSingleName(Code code) {
+    static const char* GetSingleName(Code code) {
         static const char * const Names[] = { "s0", "s1", "s2", "s3", "s4", "s5", "s6", "s7",
                                               "s8", "s9", "s10", "s11", "s12", "s13", "s14", "s15",
                                               "s16", "s17", "s18", "s19", "s20", "s21", "s22", "s23",
@@ -249,12 +249,12 @@ class FloatRegisters
         return Names[code];
     }
 
-    static const char *GetName(uint32_t i) {
+    static const char* GetName(uint32_t i) {
         MOZ_ASSERT(i < Total);
         return GetName(Code(i));
     }
 
-    static Code FromName(const char *name);
+    static Code FromName(const char* name);
 
     static const Code Invalid = invalid_freg;
     static const uint32_t Total = 48;
@@ -360,7 +360,7 @@ class VFPRegister
     explicit MOZ_CONSTEXPR VFPRegister(Code id)
       : kind(Double), code_(id), _isInvalid(false), _isMissing(false)
     { }
-    bool operator==(const VFPRegister &other) const {
+    bool operator==(const VFPRegister& other) const {
         MOZ_ASSERT(!isInvalid());
         MOZ_ASSERT(!other.isInvalid());
         return kind == other.kind && code_ == other.code_;
@@ -371,7 +371,7 @@ class VFPRegister
     bool isInt() const { return (kind == UInt) || (kind == Int); }
     bool isSInt() const { return kind == Int; }
     bool isUInt() const { return kind == UInt; }
-    bool equiv(const VFPRegister &other) const { return other.kind == kind; }
+    bool equiv(const VFPRegister& other) const { return other.kind == kind; }
     size_t size() const { return (kind == Double) ? 8 : 4; }
     bool isInvalid() const;
     bool isMissing() const;
@@ -420,15 +420,15 @@ class VFPRegister
             return !!((1 << (code_ >> 1)) & FloatRegisters::VolatileMask);
         return !!((1 << code_) & FloatRegisters::VolatileMask);
     }
-    const char *name() const {
+    const char* name() const {
         if (isDouble())
             return FloatRegisters::GetDoubleName(Code(code_));
         return FloatRegisters::GetSingleName(Code(code_));
     }
-    bool operator != (const VFPRegister &other) const {
+    bool operator != (const VFPRegister& other) const {
         return other.kind != kind || code_ != other.code_;
     }
-    bool aliases(const VFPRegister &other) {
+    bool aliases(const VFPRegister& other) {
         if (kind == other.kind)
             return code_ == other.code_;
         return doubleOverlay() == other.doubleOverlay();
@@ -445,7 +445,7 @@ class VFPRegister
 
     // N.B. FloatRegister is an explicit outparam here because msvc-2010
     // miscompiled it on win64 when the value was simply returned
-    void aliased(uint32_t aliasIdx, VFPRegister *ret) {
+    void aliased(uint32_t aliasIdx, VFPRegister* ret) {
         if (aliasIdx == 0) {
             *ret = *this;
             return;
@@ -474,7 +474,7 @@ class VFPRegister
     // If we've stored s0 and s1 in memory, we also want to say that d0 is
     // stored there, but it is only stored at the location where it is aligned
     // e.g. at s0, not s1.
-    void alignedAliased(uint32_t aliasIdx, VFPRegister *ret) {
+    void alignedAliased(uint32_t aliasIdx, VFPRegister* ret) {
         if (aliasIdx == 0) {
             *ret = *this;
             return;
@@ -494,12 +494,12 @@ class VFPRegister
         static_assert(sizeof(SetType) == 8, "SetType must be 64 bits");
         return mozilla::CountPopulation32(x);
     }
-    static Code FromName(const char *name) {
+    static Code FromName(const char* name) {
         return FloatRegisters::FromName(name);
     }
-    static TypedRegisterSet<VFPRegister> ReduceSetForPush(const TypedRegisterSet<VFPRegister> &s);
-    static uint32_t GetSizeInBytes(const TypedRegisterSet<VFPRegister> &s);
-    static uint32_t GetPushSizeInBytes(const TypedRegisterSet<VFPRegister> &s);
+    static TypedRegisterSet<VFPRegister> ReduceSetForPush(const TypedRegisterSet<VFPRegister>& s);
+    static uint32_t GetSizeInBytes(const TypedRegisterSet<VFPRegister>& s);
+    static uint32_t GetPushSizeInBytes(const TypedRegisterSet<VFPRegister>& s);
     uint32_t getRegisterDumpOffsetInBytes();
     static uint32_t FirstBit(SetType x) {
         return mozilla::CountTrailingZeroes64(x);
@@ -563,7 +563,7 @@ hasMultiAlias()
     return true;
 }
 
-bool ParseARMHwCapFlags(const char *armHwCap);
+bool ParseARMHwCapFlags(const char* armHwCap);
 void InitARMFlags();
 uint32_t GetARMFlags();
 

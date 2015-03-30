@@ -17,10 +17,10 @@
 extern "C" {
 
 extern bool
-C_ValueToObject(JSContext *cx, jsval v, JSObject **obj);
+C_ValueToObject(JSContext* cx, jsval v, JSObject** obj);
 
 extern jsval
-C_GetEmptyStringValue(JSContext *cx);
+C_GetEmptyStringValue(JSContext* cx);
 
 extern size_t
 C_jsvalAlignmentTest();

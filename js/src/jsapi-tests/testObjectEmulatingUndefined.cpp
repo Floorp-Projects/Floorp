@@ -10,10 +10,10 @@ static const JSClass ObjectEmulatingUndefinedClass = {
 };
 
 static bool
-ObjectEmulatingUndefinedConstructor(JSContext *cx, unsigned argc, jsval *vp)
+ObjectEmulatingUndefinedConstructor(JSContext* cx, unsigned argc, jsval* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-    JSObject *obj = JS_NewObjectForConstructor(cx, &ObjectEmulatingUndefinedClass, args);
+    JSObject* obj = JS_NewObjectForConstructor(cx, &ObjectEmulatingUndefinedClass, args);
     if (!obj)
         return false;
     args.rval().setObject(*obj);

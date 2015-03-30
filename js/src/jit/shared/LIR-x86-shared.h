@@ -15,13 +15,13 @@ class LDivI : public LBinaryMath<1>
   public:
     LIR_HEADER(DivI)
 
-    LDivI(const LAllocation &lhs, const LAllocation &rhs, const LDefinition &temp) {
+    LDivI(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp);
     }
 
-    const char *extraName() const {
+    const char* extraName() const {
         if (mir()->isTruncated()) {
             if (mir()->canBeNegativeZero()) {
                 return mir()->canBeNegativeOverflow()
@@ -35,10 +35,10 @@ class LDivI : public LBinaryMath<1>
         return mir()->canBeNegativeOverflow() ? "NegativeOverflow" : nullptr;
     }
 
-    const LDefinition *remainder() {
+    const LDefinition* remainder() {
         return getTemp(0);
     }
-    MDiv *mir() const {
+    MDiv* mir() const {
         return mir_->toDiv();
     }
 };
@@ -52,17 +52,17 @@ class LDivPowTwoI : public LBinaryMath<0>
   public:
     LIR_HEADER(DivPowTwoI)
 
-    LDivPowTwoI(const LAllocation &lhs, const LAllocation &lhsCopy, int32_t shift, bool negativeDivisor)
+    LDivPowTwoI(const LAllocation& lhs, const LAllocation& lhsCopy, int32_t shift, bool negativeDivisor)
       : shift_(shift), negativeDivisor_(negativeDivisor)
     {
         setOperand(0, lhs);
         setOperand(1, lhsCopy);
     }
 
-    const LAllocation *numerator() {
+    const LAllocation* numerator() {
         return getOperand(0);
     }
-    const LAllocation *numeratorCopy() {
+    const LAllocation* numeratorCopy() {
         return getOperand(1);
     }
     int32_t shift() const {
@@ -71,7 +71,7 @@ class LDivPowTwoI : public LBinaryMath<0>
     bool negativeDivisor() const {
         return negativeDivisor_;
     }
-    MDiv *mir() const {
+    MDiv* mir() const {
         return mir_->toDiv();
     }
 };
@@ -83,22 +83,22 @@ class LDivOrModConstantI : public LInstructionHelper<1, 1, 1>
   public:
     LIR_HEADER(DivOrModConstantI)
 
-    LDivOrModConstantI(const LAllocation &lhs, int32_t denominator, const LDefinition& temp)
+    LDivOrModConstantI(const LAllocation& lhs, int32_t denominator, const LDefinition& temp)
     : denominator_(denominator)
     {
         setOperand(0, lhs);
         setTemp(0, temp);
     }
 
-    const LAllocation *numerator() {
+    const LAllocation* numerator() {
         return getOperand(0);
     }
     int32_t denominator() const {
         return denominator_;
     }
-    MBinaryArithInstruction *mir() const {
+    MBinaryArithInstruction* mir() const {
         MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
-        return static_cast<MBinaryArithInstruction *>(mir_);
+        return static_cast<MBinaryArithInstruction*>(mir_);
     }
     bool canBeNegativeDividend() const {
         if (mir_->isMod())
@@ -112,20 +112,20 @@ class LModI : public LBinaryMath<1>
   public:
     LIR_HEADER(ModI)
 
-    LModI(const LAllocation &lhs, const LAllocation &rhs, const LDefinition &temp) {
+    LModI(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp);
     }
 
-    const char *extraName() const {
+    const char* extraName() const {
         return mir()->isTruncated() ? "Truncated" : nullptr;
     }
 
-    const LDefinition *remainder() {
+    const LDefinition* remainder() {
         return getDef(0);
     }
-    MMod *mir() const {
+    MMod* mir() const {
         return mir_->toMod();
     }
 };
@@ -137,23 +137,23 @@ class LUDivOrMod : public LBinaryMath<1>
   public:
     LIR_HEADER(UDivOrMod);
 
-    LUDivOrMod(const LAllocation &lhs, const LAllocation &rhs, const LDefinition &temp) {
+    LUDivOrMod(const LAllocation& lhs, const LAllocation& rhs, const LDefinition& temp) {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setTemp(0, temp);
     }
 
-    const LDefinition *remainder() {
+    const LDefinition* remainder() {
         return getTemp(0);
     }
 
-    const char *extraName() const {
+    const char* extraName() const {
         return mir()->isTruncated() ? "Truncated" : nullptr;
     }
 
-    MBinaryArithInstruction *mir() const {
+    MBinaryArithInstruction* mir() const {
         MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
-        return static_cast<MBinaryArithInstruction *>(mir_);
+        return static_cast<MBinaryArithInstruction*>(mir_);
     }
 
     bool canBeDivideByZero() const {
@@ -170,7 +170,7 @@ class LModPowTwoI : public LInstructionHelper<1,1,0>
   public:
     LIR_HEADER(ModPowTwoI)
 
-    LModPowTwoI(const LAllocation &lhs, int32_t shift)
+    LModPowTwoI(const LAllocation& lhs, int32_t shift)
       : shift_(shift)
     {
         setOperand(0, lhs);
@@ -179,10 +179,10 @@ class LModPowTwoI : public LInstructionHelper<1,1,0>
     int32_t shift() const {
         return shift_;
     }
-    const LDefinition *remainder() {
+    const LDefinition* remainder() {
         return getDef(0);
     }
-    MMod *mir() const {
+    MMod* mir() const {
         return mir_->toMod();
     }
 };
@@ -192,17 +192,17 @@ class LPowHalfD : public LInstructionHelper<1, 1, 0>
 {
   public:
     LIR_HEADER(PowHalfD)
-    explicit LPowHalfD(const LAllocation &input) {
+    explicit LPowHalfD(const LAllocation& input) {
         setOperand(0, input);
     }
 
-    const LAllocation *input() {
+    const LAllocation* input() {
         return getOperand(0);
     }
-    const LDefinition *output() {
+    const LDefinition* output() {
         return getDef(0);
     }
-    MPowHalf *mir() const {
+    MPowHalf* mir() const {
         return mir_->toPowHalf();
     }
 };
@@ -213,8 +213,8 @@ class LTableSwitch : public LInstructionHelper<0, 1, 2>
   public:
     LIR_HEADER(TableSwitch)
 
-    LTableSwitch(const LAllocation &in, const LDefinition &inputCopy,
-                 const LDefinition &jumpTablePointer, MTableSwitch *ins)
+    LTableSwitch(const LAllocation& in, const LDefinition& inputCopy,
+                 const LDefinition& jumpTablePointer, MTableSwitch* ins)
     {
         setOperand(0, in);
         setTemp(0, inputCopy);
@@ -222,17 +222,17 @@ class LTableSwitch : public LInstructionHelper<0, 1, 2>
         setMir(ins);
     }
 
-    MTableSwitch *mir() const {
+    MTableSwitch* mir() const {
         return mir_->toTableSwitch();
     }
 
-    const LAllocation *index() {
+    const LAllocation* index() {
         return getOperand(0);
     }
-    const LDefinition *tempInt() {
+    const LDefinition* tempInt() {
         return getTemp(0);
     }
-    const LDefinition *tempPointer() {
+    const LDefinition* tempPointer() {
         return getTemp(1);
     }
 };
@@ -243,8 +243,8 @@ class LTableSwitchV : public LInstructionHelper<0, BOX_PIECES, 3>
   public:
     LIR_HEADER(TableSwitchV)
 
-    LTableSwitchV(const LDefinition &inputCopy, const LDefinition &floatCopy,
-                  const LDefinition &jumpTablePointer, MTableSwitch *ins)
+    LTableSwitchV(const LDefinition& inputCopy, const LDefinition& floatCopy,
+                  const LDefinition& jumpTablePointer, MTableSwitch* ins)
     {
         setTemp(0, inputCopy);
         setTemp(1, floatCopy);
@@ -252,19 +252,19 @@ class LTableSwitchV : public LInstructionHelper<0, BOX_PIECES, 3>
         setMir(ins);
     }
 
-    MTableSwitch *mir() const {
+    MTableSwitch* mir() const {
         return mir_->toTableSwitch();
     }
 
     static const size_t InputValue = 0;
 
-    const LDefinition *tempInt() {
+    const LDefinition* tempInt() {
         return getTemp(0);
     }
-    const LDefinition *tempFloat() {
+    const LDefinition* tempFloat() {
         return getTemp(1);
     }
-    const LDefinition *tempPointer() {
+    const LDefinition* tempPointer() {
         return getTemp(2);
     }
 };
@@ -274,10 +274,10 @@ class LGuardShape : public LInstructionHelper<0, 1, 0>
   public:
     LIR_HEADER(GuardShape)
 
-    explicit LGuardShape(const LAllocation &in) {
+    explicit LGuardShape(const LAllocation& in) {
         setOperand(0, in);
     }
-    const MGuardShape *mir() const {
+    const MGuardShape* mir() const {
         return mir_->toGuardShape();
     }
 };
@@ -287,10 +287,10 @@ class LGuardObjectGroup : public LInstructionHelper<0, 1, 0>
   public:
     LIR_HEADER(GuardObjectGroup)
 
-    explicit LGuardObjectGroup(const LAllocation &in) {
+    explicit LGuardObjectGroup(const LAllocation& in) {
         setOperand(0, in);
     }
-    const MGuardObjectGroup *mir() const {
+    const MGuardObjectGroup* mir() const {
         return mir_->toGuardObjectGroup();
     }
 };
@@ -300,22 +300,22 @@ class LMulI : public LBinaryMath<0, 1>
   public:
     LIR_HEADER(MulI)
 
-    LMulI(const LAllocation &lhs, const LAllocation &rhs, const LAllocation &lhsCopy) {
+    LMulI(const LAllocation& lhs, const LAllocation& rhs, const LAllocation& lhsCopy) {
         setOperand(0, lhs);
         setOperand(1, rhs);
         setOperand(2, lhsCopy);
     }
 
-    const char *extraName() const {
+    const char* extraName() const {
         return (mir()->mode() == MMul::Integer)
                ? "Integer"
                : (mir()->canBeNegativeZero() ? "CanBeNegativeZero" : nullptr);
     }
 
-    MMul *mir() const {
+    MMul* mir() const {
         return mir_->toMul();
     }
-    const LAllocation *lhsCopy() {
+    const LAllocation* lhsCopy() {
         return this->getOperand(2);
     }
 };
@@ -325,8 +325,8 @@ class LSimdValueInt32x4 : public LInstructionHelper<1, 4, 0>
 {
   public:
     LIR_HEADER(SimdValueInt32x4)
-    LSimdValueInt32x4(const LAllocation &x, const LAllocation &y,
-                      const LAllocation &z, const LAllocation &w)
+    LSimdValueInt32x4(const LAllocation& x, const LAllocation& y,
+                      const LAllocation& z, const LAllocation& w)
     {
         setOperand(0, x);
         setOperand(1, y);
@@ -334,7 +334,7 @@ class LSimdValueInt32x4 : public LInstructionHelper<1, 4, 0>
         setOperand(3, w);
     }
 
-    MSimdValueX4 *mir() const {
+    MSimdValueX4* mir() const {
         return mir_->toSimdValueX4();
     }
 };
@@ -344,9 +344,9 @@ class LSimdValueFloat32x4 : public LInstructionHelper<1, 4, 1>
 {
   public:
     LIR_HEADER(SimdValueFloat32x4)
-    LSimdValueFloat32x4(const LAllocation &x, const LAllocation &y,
-                        const LAllocation &z, const LAllocation &w,
-                        const LDefinition &copyY)
+    LSimdValueFloat32x4(const LAllocation& x, const LAllocation& y,
+                        const LAllocation& z, const LAllocation& w,
+                        const LDefinition& copyY)
     {
         setOperand(0, x);
         setOperand(1, y);
@@ -356,7 +356,7 @@ class LSimdValueFloat32x4 : public LInstructionHelper<1, 4, 1>
         setTemp(0, copyY);
     }
 
-    MSimdValueX4 *mir() const {
+    MSimdValueX4* mir() const {
         return mir_->toSimdValueX4();
     }
 };

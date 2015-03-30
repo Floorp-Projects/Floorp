@@ -10,7 +10,7 @@
 static int g_counter;
 
 static bool
-CounterAdd(JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
+CounterAdd(JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp)
 {
     g_counter++;
     return true;

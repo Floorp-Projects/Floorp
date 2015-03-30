@@ -18,15 +18,15 @@ namespace jit {
 class BaselineCompilerShared
 {
   protected:
-    JSContext *cx;
-    JSScript *script;
-    jsbytecode *pc;
+    JSContext* cx;
+    JSScript* script;
+    jsbytecode* pc;
     MacroAssembler masm;
     bool ionCompileable_;
     bool ionOSRCompileable_;
     bool compileDebugInstrumentation_;
 
-    TempAllocator &alloc_;
+    TempAllocator& alloc_;
     BytecodeAnalysis analysis_;
     FrameInfo frame;
 
@@ -44,7 +44,7 @@ class BaselineCompilerShared
         // current entry.
         bool addIndexEntry;
 
-        void fixupNativeOffset(MacroAssembler &masm) {
+        void fixupNativeOffset(MacroAssembler& masm) {
             CodeOffsetLabel offset(nativeOffset);
             offset.fixup(&masm);
             MOZ_ASSERT(offset.offset() <= UINT32_MAX);
@@ -74,16 +74,16 @@ class BaselineCompilerShared
     CodeOffsetLabel traceLoggerExitToggleOffset_;
     CodeOffsetLabel traceLoggerScriptTextIdOffset_;
 
-    BaselineCompilerShared(JSContext *cx, TempAllocator &alloc, JSScript *script);
+    BaselineCompilerShared(JSContext* cx, TempAllocator& alloc, JSScript* script);
 
-    ICEntry *allocateICEntry(ICStub *stub, ICEntry::Kind kind) {
+    ICEntry* allocateICEntry(ICStub* stub, ICEntry::Kind kind) {
         if (!stub)
             return nullptr;
 
         // Create the entry and add it to the vector.
         if (!icEntries_.append(ICEntry(script->pcToOffset(pc), kind)))
             return nullptr;
-        ICEntry &vecEntry = icEntries_.back();
+        ICEntry& vecEntry = icEntries_.back();
 
         // Set the first stub for the IC entry to the fallback stub
         vecEntry.setFirstStub(stub);
@@ -107,7 +107,7 @@ class BaselineCompilerShared
         return icLoadLabels_.append(loadLabel);
     }
 
-    JSFunction *function() const {
+    JSFunction* function() const {
         // Not delazifying here is ok as the function is guaranteed to have
         // been delazified before compilation started.
         return script->functionNonDelazifying();
@@ -147,9 +147,9 @@ class BaselineCompilerShared
         PRE_INITIALIZE,
         CHECK_OVER_RECURSED
     };
-    bool callVM(const VMFunction &fun, CallVMPhase phase=POST_INITIALIZE);
+    bool callVM(const VMFunction& fun, CallVMPhase phase=POST_INITIALIZE);
 
-    bool callVMNonOp(const VMFunction &fun, CallVMPhase phase=POST_INITIALIZE) {
+    bool callVMNonOp(const VMFunction& fun, CallVMPhase phase=POST_INITIALIZE) {
         if (!callVM(fun, phase))
             return false;
         icEntries_.back().setFakeKind(ICEntry::Kind_NonOpCallVM);
@@ -157,7 +157,7 @@ class BaselineCompilerShared
     }
 
   public:
-    BytecodeAnalysis &analysis() {
+    BytecodeAnalysis& analysis() {
         return analysis_;
     }
 

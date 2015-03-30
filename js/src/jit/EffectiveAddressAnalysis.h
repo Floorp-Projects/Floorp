@@ -14,10 +14,10 @@ class MIRGraph;
 
 class EffectiveAddressAnalysis
 {
-    MIRGraph &graph_;
+    MIRGraph& graph_;
 
   public:
-    explicit EffectiveAddressAnalysis(MIRGraph &graph)
+    explicit EffectiveAddressAnalysis(MIRGraph& graph)
       : graph_(graph)
     {}
 

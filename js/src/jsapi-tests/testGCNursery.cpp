@@ -12,7 +12,7 @@
 static int ranFinalizer = 0;
 
 void
-_finalize(js::FreeOp *fop, JSObject *obj)
+_finalize(js::FreeOp* fop, JSObject* obj)
 {
     JS::AutoAssertGCCallback suppress(obj);
     ++ranFinalizer;

@@ -14,7 +14,7 @@ using namespace js;
 using namespace js::jit;
 
 bool
-FrameInfo::init(TempAllocator &alloc)
+FrameInfo::init(TempAllocator& alloc)
 {
     // One slot is always needed for this/arguments type checks.
     size_t nstack = Max(script->nslots() - script->nfixed(), size_t(1));
@@ -25,7 +25,7 @@ FrameInfo::init(TempAllocator &alloc)
 }
 
 void
-FrameInfo::sync(StackValue *val)
+FrameInfo::sync(StackValue* val)
 {
     switch (val->kind()) {
       case StackValue::Stack:
@@ -60,7 +60,7 @@ FrameInfo::syncStack(uint32_t uses)
     uint32_t depth = stackDepth() - uses;
 
     for (uint32_t i = 0; i < depth; i++) {
-        StackValue *current = &stack[i];
+        StackValue* current = &stack[i];
         sync(current);
     }
 }
@@ -80,7 +80,7 @@ FrameInfo::numUnsyncedSlots()
 void
 FrameInfo::popValue(ValueOperand dest)
 {
-    StackValue *val = peek(-1);
+    StackValue* val = peek(-1);
 
     switch (val->kind()) {
       case StackValue::Constant:
@@ -128,7 +128,7 @@ FrameInfo::popRegsAndSync(uint32_t uses)
       case 2: {
         // If the second value is in R1, move it to R2 so that it's not
         // clobbered by the first popValue.
-        StackValue *val = peek(-2);
+        StackValue* val = peek(-2);
         if (val->kind() == StackValue::Register && val->reg() == R1) {
             masm.moveValue(R1, R2);
             val->setRegister(R2);
@@ -144,7 +144,7 @@ FrameInfo::popRegsAndSync(uint32_t uses)
 
 #ifdef DEBUG
 void
-FrameInfo::assertValidState(const BytecodeInfo &info)
+FrameInfo::assertValidState(const BytecodeInfo& info)
 {
     // Check stack depth.
     MOZ_ASSERT(stackDepth() == info.stackDepth);

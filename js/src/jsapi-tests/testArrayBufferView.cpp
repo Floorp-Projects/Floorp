@@ -83,8 +83,8 @@ BEGIN_TEST(testArrayBufferView_type)
     return true;
 }
 
-static JSObject *
-CreateDataView(JSContext *cx)
+static JSObject*
+CreateDataView(JSContext* cx)
 {
     JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
     if (!global)
@@ -105,21 +105,21 @@ CreateDataView(JSContext *cx)
     return dv;
 }
 
-template<JSObject * CreateTypedArray(JSContext *cx, uint32_t length),
+template<JSObject * CreateTypedArray(JSContext* cx, uint32_t length),
          size_t Length>
-static JSObject *
-Create(JSContext *cx)
+static JSObject*
+Create(JSContext* cx)
 {
     return CreateTypedArray(cx, Length);
 }
 
 template<typename T,
-         JSObject * CreateViewType(JSContext *cx),
-         JSObject * GetObjectAs(JSObject *obj, uint32_t *length, T **data),
+         JSObject * CreateViewType(JSContext* cx),
+         JSObject * GetObjectAs(JSObject* obj, uint32_t* length, T** data),
          js::Scalar::Type ExpectedType,
          uint32_t ExpectedLength,
          uint32_t ExpectedByteLength>
-bool TestViewType(JSContext *cx)
+bool TestViewType(JSContext* cx)
 {
     JS::Rooted<JSObject*> obj(cx, CreateViewType(cx));
     CHECK(obj);
@@ -132,9 +132,9 @@ bool TestViewType(JSContext *cx)
 
     {
         JS::AutoCheckCannotGC nogc;
-        T *data1 = static_cast<T*>(JS_GetArrayBufferViewData(obj, nogc));
+        T* data1 = static_cast<T*>(JS_GetArrayBufferViewData(obj, nogc));
 
-        T *data2;
+        T* data2;
         uint32_t len;
         CHECK(obj == GetObjectAs(obj, &len, &data2));
         CHECK(data1 == data2);

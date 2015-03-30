@@ -45,7 +45,7 @@ static void
 #ifdef __GNUC__
 __attribute__((format(printf,1,2)))
 #endif
-UnsafeError(const char *format, ...)
+UnsafeError(const char* format, ...)
 {
     va_list args;
     va_start(args, format);
@@ -56,7 +56,7 @@ UnsafeError(const char *format, ...)
 }
 #endif
 
-JS_PUBLIC_API(const char *)
+JS_PUBLIC_API(const char*)
 JS_UnsafeGetLastProfilingError()
 {
     return gLastError;
@@ -64,7 +64,7 @@ JS_UnsafeGetLastProfilingError()
 
 #ifdef __APPLE__
 static bool
-StartOSXProfiling(const char *profileName, pid_t pid)
+StartOSXProfiling(const char* profileName, pid_t pid)
 {
     bool ok = true;
     const char* profiler = nullptr;
@@ -88,7 +88,7 @@ StartOSXProfiling(const char *profileName, pid_t pid)
 #endif
 
 JS_PUBLIC_API(bool)
-JS_StartProfiling(const char *profileName, pid_t pid)
+JS_StartProfiling(const char* profileName, pid_t pid)
 {
     bool ok = true;
 #ifdef __APPLE__
@@ -102,7 +102,7 @@ JS_StartProfiling(const char *profileName, pid_t pid)
 }
 
 JS_PUBLIC_API(bool)
-JS_StopProfiling(const char *profileName)
+JS_StopProfiling(const char* profileName)
 {
     bool ok = true;
 #ifdef __APPLE__
@@ -183,19 +183,19 @@ ControlProfilers(bool toState)
  * tracked, not the state of each profiler.
  */
 JS_PUBLIC_API(bool)
-JS_PauseProfilers(const char *profileName)
+JS_PauseProfilers(const char* profileName)
 {
     return ControlProfilers(false);
 }
 
 JS_PUBLIC_API(bool)
-JS_ResumeProfilers(const char *profileName)
+JS_ResumeProfilers(const char* profileName)
 {
     return ControlProfilers(true);
 }
 
 JS_PUBLIC_API(bool)
-JS_DumpProfile(const char *outfile, const char *profileName)
+JS_DumpProfile(const char* outfile, const char* profileName)
 {
     bool ok = true;
 #ifdef MOZ_CALLGRIND
@@ -207,9 +207,9 @@ JS_DumpProfile(const char *outfile, const char *profileName)
 #ifdef MOZ_PROFILING
 
 struct RequiredStringArg {
-    JSContext *mCx;
-    char *mBytes;
-    RequiredStringArg(JSContext *cx, const CallArgs &args, size_t argi, const char *caller)
+    JSContext* mCx;
+    char* mBytes;
+    RequiredStringArg(JSContext* cx, const CallArgs& args, size_t argi, const char* caller)
         : mCx(cx), mBytes(nullptr)
     {
         if (args.length() <= argi) {
@@ -229,7 +229,7 @@ struct RequiredStringArg {
 };
 
 static bool
-StartProfiling(JSContext *cx, unsigned argc, jsval *vp)
+StartProfiling(JSContext* cx, unsigned argc, jsval* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {
@@ -256,7 +256,7 @@ StartProfiling(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-StopProfiling(JSContext *cx, unsigned argc, jsval *vp)
+StopProfiling(JSContext* cx, unsigned argc, jsval* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {
@@ -272,7 +272,7 @@ StopProfiling(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-PauseProfilers(JSContext *cx, unsigned argc, jsval *vp)
+PauseProfilers(JSContext* cx, unsigned argc, jsval* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {
@@ -288,7 +288,7 @@ PauseProfilers(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-ResumeProfilers(JSContext *cx, unsigned argc, jsval *vp)
+ResumeProfilers(JSContext* cx, unsigned argc, jsval* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {
@@ -305,7 +305,7 @@ ResumeProfilers(JSContext *cx, unsigned argc, jsval *vp)
 
 /* Usage: DumpProfile([filename[, profileName]]) */
 static bool
-DumpProfile(JSContext *cx, unsigned argc, jsval *vp)
+DumpProfile(JSContext* cx, unsigned argc, jsval* vp)
 {
     bool ret;
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -332,7 +332,7 @@ DumpProfile(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-GetMaxGCPauseSinceClear(JSContext *cx, unsigned argc, jsval *vp)
+GetMaxGCPauseSinceClear(JSContext* cx, unsigned argc, jsval* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setNumber(uint32_t(cx->runtime()->gc.stats.getMaxGCPauseSinceClear()));
@@ -340,7 +340,7 @@ GetMaxGCPauseSinceClear(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-ClearMaxGCPauseAccumulator(JSContext *cx, unsigned argc, jsval *vp)
+ClearMaxGCPauseAccumulator(JSContext* cx, unsigned argc, jsval* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setNumber(uint32_t(cx->runtime()->gc.stats.clearMaxGCPauseAccumulator()));
@@ -350,7 +350,7 @@ ClearMaxGCPauseAccumulator(JSContext *cx, unsigned argc, jsval *vp)
 #if defined(MOZ_SHARK) || defined(MOZ_INSTRUMENTS)
 
 static bool
-IgnoreAndReturnTrue(JSContext *cx, unsigned argc, jsval *vp)
+IgnoreAndReturnTrue(JSContext* cx, unsigned argc, jsval* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setBoolean(true);
@@ -361,7 +361,7 @@ IgnoreAndReturnTrue(JSContext *cx, unsigned argc, jsval *vp)
 
 #ifdef MOZ_CALLGRIND
 static bool
-StartCallgrind(JSContext *cx, unsigned argc, jsval *vp)
+StartCallgrind(JSContext* cx, unsigned argc, jsval* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setBoolean(js_StartCallgrind());
@@ -369,7 +369,7 @@ StartCallgrind(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-StopCallgrind(JSContext *cx, unsigned argc, jsval *vp)
+StopCallgrind(JSContext* cx, unsigned argc, jsval* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setBoolean(js_StopCallgrind());
@@ -377,7 +377,7 @@ StopCallgrind(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-DumpCallgrind(JSContext *cx, unsigned argc, jsval *vp)
+DumpCallgrind(JSContext* cx, unsigned argc, jsval* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 0) {
@@ -420,7 +420,7 @@ static const JSFunctionSpec profiling_functions[] = {
 #endif
 
 JS_PUBLIC_API(bool)
-JS_DefineProfilingFunctions(JSContext *cx, HandleObject obj)
+JS_DefineProfilingFunctions(JSContext* cx, HandleObject obj)
 {
     assertSameCompartment(cx, obj);
 #ifdef MOZ_PROFILING
@@ -448,7 +448,7 @@ js_StopCallgrind()
 }
 
 JS_FRIEND_API(bool)
-js_DumpCallgrind(const char *outfile)
+js_DumpCallgrind(const char* outfile)
 {
     if (outfile) {
         JS_SILENCE_UNUSED_VALUE_IN_EXPR(CALLGRIND_DUMP_STATS_AT(outfile));
@@ -493,7 +493,7 @@ static pid_t perfPid = 0;
 
 bool js_StartPerf()
 {
-    const char *outfile = "mozperf.data";
+    const char* outfile = "mozperf.data";
 
     if (perfPid != 0) {
         UnsafeError("js_StartPerf: called while perf was already running!\n");
@@ -526,26 +526,26 @@ bool js_StartPerf()
 
         char mainPidStr[16];
         snprintf(mainPidStr, sizeof(mainPidStr), "%d", mainPid);
-        const char *defaultArgs[] = {"perf", "record", "--append",
+        const char* defaultArgs[] = {"perf", "record", "--append",
                                      "--pid", mainPidStr, "--output", outfile};
 
         Vector<const char*, 0, SystemAllocPolicy> args;
         args.append(defaultArgs, ArrayLength(defaultArgs));
 
-        const char *flags = getenv("MOZ_PROFILE_PERF_FLAGS");
+        const char* flags = getenv("MOZ_PROFILE_PERF_FLAGS");
         if (!flags) {
             flags = "--call-graph";
         }
 
-        char *flags2 = (char *)js_malloc(strlen(flags) + 1);
+        char* flags2 = (char*)js_malloc(strlen(flags) + 1);
         if (!flags2)
             return false;
         strcpy(flags2, flags);
 
         // Split |flags2| on spaces.  (Don't bother to free it -- we're going to
         // exec anyway.)
-        char *toksave;
-        char *tok = strtok_r(flags2, " ", &toksave);
+        char* toksave;
+        char* tok = strtok_r(flags2, " ", &toksave);
         while (tok) {
             args.append(tok);
             tok = strtok_r(nullptr, " ", &toksave);

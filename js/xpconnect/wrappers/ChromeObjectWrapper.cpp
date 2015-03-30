@@ -19,7 +19,7 @@ namespace xpc {
 const ChromeObjectWrapper ChromeObjectWrapper::singleton;
 
 bool
-ChromeObjectWrapper::defineProperty(JSContext *cx, HandleObject wrapper,
+ChromeObjectWrapper::defineProperty(JSContext* cx, HandleObject wrapper,
                                     HandleId id,
                                     MutableHandle<JSPropertyDescriptor> desc) const
 {
@@ -29,7 +29,7 @@ ChromeObjectWrapper::defineProperty(JSContext *cx, HandleObject wrapper,
 }
 
 bool
-ChromeObjectWrapper::set(JSContext *cx, HandleObject wrapper,
+ChromeObjectWrapper::set(JSContext* cx, HandleObject wrapper,
                          HandleObject receiver, HandleId id,
                          bool strict, MutableHandleValue vp) const
 {

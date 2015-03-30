@@ -18,13 +18,13 @@ typedef bool (*IsAcceptableThis)(HandleValue v);
 
 // Implements the guts of a method; guaranteed to be provided an acceptable
 // this-value, as determined by a corresponding IsAcceptableThis method.
-typedef bool (*NativeImpl)(JSContext *cx, CallArgs args);
+typedef bool (*NativeImpl)(JSContext* cx, CallArgs args);
 
 namespace detail {
 
 // DON'T CALL THIS DIRECTLY.  It's for use only by CallNonGenericMethod!
 extern JS_PUBLIC_API(bool)
-CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
+CallMethodIfWrapped(JSContext* cx, IsAcceptableThis test, NativeImpl impl, CallArgs args);
 
 } // namespace detail
 
@@ -44,7 +44,7 @@ CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallA
 //   static const JSClass AnswerClass = { ... };
 //
 //   static bool
-//   IsAnswerObject(const Value &v)
+//   IsAnswerObject(const Value& v)
 //   {
 //       if (!v.isObject())
 //           return false;
@@ -57,7 +57,7 @@ CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallA
 // its interface is the same as that of JSNative.
 //
 //   static bool
-//   answer_getAnswer_impl(JSContext *cx, JS::CallArgs args)
+//   answer_getAnswer_impl(JSContext* cx, JS::CallArgs args)
 //   {
 //       args.rval().setInt32(42);
 //       return true;
@@ -70,7 +70,7 @@ CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallA
 // declared below, passing the appropriate template and runtime arguments.
 //
 //   static bool
-//   answer_getAnswer(JSContext *cx, unsigned argc, JS::Value *vp)
+//   answer_getAnswer(JSContext* cx, unsigned argc, JS::Value* vp)
 //   {
 //       JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 //       return JS::CallNonGenericMethod<IsAnswerObject, answer_getAnswer_impl>(cx, args);
@@ -93,7 +93,7 @@ CallMethodIfWrapped(JSContext *cx, IsAcceptableThis test, NativeImpl impl, CallA
 //
 template<IsAcceptableThis Test, NativeImpl Impl>
 MOZ_ALWAYS_INLINE bool
-CallNonGenericMethod(JSContext *cx, CallArgs args)
+CallNonGenericMethod(JSContext* cx, CallArgs args)
 {
     HandleValue thisv = args.thisv();
     if (Test(thisv))
@@ -103,7 +103,7 @@ CallNonGenericMethod(JSContext *cx, CallArgs args)
 }
 
 MOZ_ALWAYS_INLINE bool
-CallNonGenericMethod(JSContext *cx, IsAcceptableThis Test, NativeImpl Impl, CallArgs args)
+CallNonGenericMethod(JSContext* cx, IsAcceptableThis Test, NativeImpl Impl, CallArgs args)
 {
     HandleValue thisv = args.thisv();
     if (Test(thisv))

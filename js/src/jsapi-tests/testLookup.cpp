@@ -29,7 +29,7 @@ BEGIN_TEST(testLookup_bug522590)
     JS::RootedValue r(cx);
     CHECK(JS_GetProperty(cx, xobj, "f", &r));
     CHECK(r.isObject());
-    JSObject *funobj = &r.toObject();
+    JSObject* funobj = &r.toObject();
     CHECK(funobj->is<JSFunction>());
     CHECK(!js::IsInternalFunctionObject(funobj));
 
@@ -43,7 +43,7 @@ static const JSClass DocumentAllClass = {
 };
 
 bool
-document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *resolvedp)
+document_resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id, bool* resolvedp)
 {
     // If id is "all", resolve document.all=true.
     JS::RootedValue v(cx);
@@ -51,8 +51,8 @@ document_resolve(JSContext *cx, JS::HandleObject obj, JS::HandleId id, bool *res
         return false;
 
     if (v.isString()) {
-        JSString *str = v.toString();
-        JSFlatString *flatStr = JS_FlattenString(cx, str);
+        JSString* str = v.toString();
+        JSFlatString* flatStr = JS_FlattenString(cx, str);
         if (!flatStr)
             return false;
         if (JS_FlatStringEqualsAscii(flatStr, "all")) {

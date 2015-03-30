@@ -19,7 +19,7 @@ BEGIN_TEST(testGCChunkPool)
 
     // Create.
     for (int i = 0; i < N; ++i) {
-        js::gc::Chunk *chunk = js::gc::Chunk::allocate(rt);
+        js::gc::Chunk* chunk = js::gc::Chunk::allocate(rt);
         CHECK(chunk);
         pool.push(chunk);
     }
@@ -34,9 +34,9 @@ BEGIN_TEST(testGCChunkPool)
 
     // Push/Pop.
     for (int i = 0; i < N; ++i) {
-        js::gc::Chunk *chunkA = pool.pop();
-        js::gc::Chunk *chunkB = pool.pop();
-        js::gc::Chunk *chunkC = pool.pop();
+        js::gc::Chunk* chunkA = pool.pop();
+        js::gc::Chunk* chunkB = pool.pop();
+        js::gc::Chunk* chunkC = pool.pop();
         pool.push(chunkA);
         pool.push(chunkB);
         pool.push(chunkC);
@@ -44,7 +44,7 @@ BEGIN_TEST(testGCChunkPool)
     MOZ_ASSERT(pool.verify());
 
     // Remove.
-    js::gc::Chunk *chunk = nullptr;
+    js::gc::Chunk* chunk = nullptr;
     int offset = N / 2;
     for (js::gc::ChunkPool::Iter iter(pool); !iter.done(); iter.next(), --offset) {
         if (offset == 0) {
@@ -60,7 +60,7 @@ BEGIN_TEST(testGCChunkPool)
     // Destruct.
     js::AutoLockGC lock(rt);
     for (js::gc::ChunkPool::Iter iter(pool); !iter.done();) {
-        js::gc::Chunk *chunk = iter.get();
+        js::gc::Chunk* chunk = iter.get();
         iter.next();
         pool.remove(chunk);
         js::gc::UnmapPages(chunk, js::gc::ChunkSize);

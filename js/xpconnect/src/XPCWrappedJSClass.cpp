@@ -86,7 +86,7 @@ bool xpc_IsReportableErrorCode(nsresult code)
 // PendingResult.
 class MOZ_STACK_CLASS AutoSavePendingResult {
 public:
-    explicit AutoSavePendingResult(XPCContext *xpcc) :
+    explicit AutoSavePendingResult(XPCContext* xpcc) :
         mXPCContext(xpcc)
     {
         // Save any existing pending result and reset to NS_OK for this invocation.
@@ -97,7 +97,7 @@ public:
         mXPCContext->SetPendingResult(mSavedResult);
     }
 private:
-    XPCContext *mXPCContext;
+    XPCContext* mXPCContext;
     nsresult mSavedResult;
 };
 
@@ -253,7 +253,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
                 if (jsexception.isObject()) {
                     // XPConnect may have constructed an object to represent a
                     // C++ QI failure. See if that is the case.
-                    Exception *e = nullptr;
+                    Exception* e = nullptr;
                     UNWRAP_OBJECT(Exception, &jsexception.toObject(), e);
 
                     if (e &&
@@ -918,8 +918,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     if (!ccx.IsValid())
         return retval;
 
-    XPCContext *xpcc = ccx.GetXPCContext();
-    JSContext *cx = ccx.GetJSContext();
+    XPCContext* xpcc = ccx.GetXPCContext();
+    JSContext* cx = ccx.GetJSContext();
 
     if (!cx || !xpcc || !IsReflectable(methodIndex))
         return NS_ERROR_FAILURE;
@@ -927,7 +927,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     // [implicit_jscontext] and [optional_argc] have a different calling
     // convention, which we don't support for JS-implemented components.
     if (info->WantsOptArgc() || info->WantsContext()) {
-        const char *str = "IDL methods marked with [implicit_jscontext] "
+        const char* str = "IDL methods marked with [implicit_jscontext] "
                           "or [optional_argc] may not be implemented in JS";
         // Throw and warn for good measure.
         JS_ReportError(cx, str);
@@ -1441,7 +1441,7 @@ nsXPCWrappedJSClass::GetInterfaceName()
 }
 
 static void
-FinalizeStub(JSFreeOp *fop, JSObject *obj)
+FinalizeStub(JSFreeOp* fop, JSObject* obj)
 {
 }
 

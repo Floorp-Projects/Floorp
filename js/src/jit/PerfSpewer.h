@@ -35,14 +35,14 @@ static inline bool PerfEnabled() { return false; }
 #ifdef JS_ION_PERF
 
 struct Record {
-    const char *filename;
+    const char* filename;
     unsigned lineNumber;
     unsigned columnNumber;
     uint32_t id;
     Label start, end;
     size_t startOffset, endOffset;
 
-    Record(const char *filename,
+    Record(const char* filename,
            unsigned lineNumber,
            unsigned columnNumber,
            uint32_t id)
@@ -66,32 +66,32 @@ class PerfSpewer
     BasicBlocksVector basicBlocks_;
 
   public:
-    virtual bool startBasicBlock(MBasicBlock *blk, MacroAssembler &masm);
-    bool endBasicBlock(MacroAssembler &masm);
-    bool noteEndInlineCode(MacroAssembler &masm);
+    virtual bool startBasicBlock(MBasicBlock* blk, MacroAssembler& masm);
+    bool endBasicBlock(MacroAssembler& masm);
+    bool noteEndInlineCode(MacroAssembler& masm);
 
-    void writeProfile(JSScript *script, JitCode *code, MacroAssembler &masm);
+    void writeProfile(JSScript* script, JitCode* code, MacroAssembler& masm);
 };
 
-void writePerfSpewerBaselineProfile(JSScript *script, JitCode *code);
-void writePerfSpewerJitCodeProfile(JitCode *code, const char *msg);
+void writePerfSpewerBaselineProfile(JSScript* script, JitCode* code);
+void writePerfSpewerJitCodeProfile(JitCode* code, const char* msg);
 
 class AsmJSPerfSpewer : public PerfSpewer
 {
   public:
-    bool startBasicBlock(MBasicBlock *blk, MacroAssembler &masm);
+    bool startBasicBlock(MBasicBlock* blk, MacroAssembler& masm);
 
     void noteBlocksOffsets();
-    BasicBlocksVector &basicBlocks() { return basicBlocks_; }
+    BasicBlocksVector& basicBlocks() { return basicBlocks_; }
 };
 
-void writePerfSpewerAsmJSFunctionMap(uintptr_t base, uintptr_t size, const char *filename,
-                                     unsigned lineno, unsigned colIndex, const char *funcName);
+void writePerfSpewerAsmJSFunctionMap(uintptr_t base, uintptr_t size, const char* filename,
+                                     unsigned lineno, unsigned colIndex, const char* funcName);
 
 void writePerfSpewerAsmJSBlocksMap(uintptr_t baseAddress, size_t funcStartOffset,
                                    size_t funcStartOOLOffset, size_t funcSize,
-                                   const char *filename, const char *funcName,
-                                   const BasicBlocksVector &basicBlocks);
+                                   const char* filename, const char* funcName,
+                                   const BasicBlocksVector& basicBlocks);
 
 void writePerfSpewerAsmJSEntriesAndExits(uintptr_t base, size_t size);
 

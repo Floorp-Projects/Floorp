@@ -25,12 +25,12 @@ struct ContextFriendFields;
 class SystemAllocPolicy
 {
   public:
-    template <typename T> T *pod_malloc(size_t numElems) { return js_pod_malloc<T>(numElems); }
-    template <typename T> T *pod_calloc(size_t numElems) { return js_pod_calloc<T>(numElems); }
-    template <typename T> T *pod_realloc(T *p, size_t oldSize, size_t newSize) {
+    template <typename T> T* pod_malloc(size_t numElems) { return js_pod_malloc<T>(numElems); }
+    template <typename T> T* pod_calloc(size_t numElems) { return js_pod_calloc<T>(numElems); }
+    template <typename T> T* pod_realloc(T* p, size_t oldSize, size_t newSize) {
         return js_pod_realloc<T>(p, oldSize, newSize);
     }
-    void free_(void *p) { js_free(p); }
+    void free_(void* p) { js_free(p); }
     void reportAllocOverflow() const {}
 };
 
@@ -45,43 +45,43 @@ class SystemAllocPolicy
  */
 class TempAllocPolicy
 {
-    ContextFriendFields *const cx_;
+    ContextFriendFields* const cx_;
 
     /*
      * Non-inline helper to call JSRuntime::onOutOfMemory with minimal
      * code bloat.
      */
-    JS_FRIEND_API(void *) onOutOfMemory(void *p, size_t nbytes);
+    JS_FRIEND_API(void*) onOutOfMemory(void* p, size_t nbytes);
 
   public:
-    MOZ_IMPLICIT TempAllocPolicy(JSContext *cx) : cx_((ContextFriendFields *) cx) {} // :(
-    MOZ_IMPLICIT TempAllocPolicy(ContextFriendFields *cx) : cx_(cx) {}
+    MOZ_IMPLICIT TempAllocPolicy(JSContext* cx) : cx_((ContextFriendFields*) cx) {} // :(
+    MOZ_IMPLICIT TempAllocPolicy(ContextFriendFields* cx) : cx_(cx) {}
 
     template <typename T>
-    T *pod_malloc(size_t numElems) {
-        T *p = js_pod_malloc<T>(numElems);
+    T* pod_malloc(size_t numElems) {
+        T* p = js_pod_malloc<T>(numElems);
         if (MOZ_UNLIKELY(!p))
-            p = static_cast<T *>(onOutOfMemory(nullptr, numElems * sizeof(T)));
+            p = static_cast<T*>(onOutOfMemory(nullptr, numElems * sizeof(T)));
         return p;
     }
 
     template <typename T>
-    T *pod_calloc(size_t numElems) {
-        T *p = js_pod_calloc<T>(numElems);
+    T* pod_calloc(size_t numElems) {
+        T* p = js_pod_calloc<T>(numElems);
         if (MOZ_UNLIKELY(!p))
-            p = static_cast<T *>(onOutOfMemory(reinterpret_cast<void *>(1), numElems * sizeof(T)));
+            p = static_cast<T*>(onOutOfMemory(reinterpret_cast<void*>(1), numElems * sizeof(T)));
         return p;
     }
 
     template <typename T>
-    T *pod_realloc(T *prior, size_t oldSize, size_t newSize) {
-        T *p2 = js_pod_realloc<T>(prior, oldSize, newSize);
+    T* pod_realloc(T* prior, size_t oldSize, size_t newSize) {
+        T* p2 = js_pod_realloc<T>(prior, oldSize, newSize);
         if (MOZ_UNLIKELY(!p2))
-            p2 = static_cast<T *>(onOutOfMemory(p2, newSize * sizeof(T)));
+            p2 = static_cast<T*>(onOutOfMemory(p2, newSize * sizeof(T)));
         return p2;
     }
 
-    void free_(void *p) {
+    void free_(void* p) {
         js_free(p);
     }
 

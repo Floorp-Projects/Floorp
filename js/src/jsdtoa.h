@@ -16,11 +16,11 @@
 
 struct DtoaState;
 
-DtoaState *
+DtoaState*
 js_NewDtoaState();
 
 void
-js_DestroyDtoaState(DtoaState *state);
+js_DestroyDtoaState(DtoaState* state);
 
 /*
  * js_strtod_harder() returns as a double-precision floating-point number the
@@ -37,7 +37,7 @@ js_DestroyDtoaState(DtoaState *state);
  */
 #define JS_DTOA_ENOMEM 2
 double
-js_strtod_harder(DtoaState *state, const char *s00, char **se, int *err);
+js_strtod_harder(DtoaState* state, const char* s00, char** se, int* err);
 
 /*
  * Modes for converting floating-point numbers to strings.
@@ -84,8 +84,8 @@ typedef enum JSDToStrMode {
  *
  * Return nullptr if out of memory.
  */
-char *
-js_dtostr(DtoaState *state, char *buffer, size_t bufferSize, JSDToStrMode mode, int precision,
+char*
+js_dtostr(DtoaState* state, char* buffer, size_t bufferSize, JSDToStrMode mode, int precision,
           double dval);
 
 /*
@@ -106,7 +106,7 @@ js_dtostr(DtoaState *state, char *buffer, size_t bufferSize, JSDToStrMode mode, 
  * Return nullptr if out of memory.  If the result is not nullptr, it must be
  * released via js_free().
  */
-char *
-js_dtobasestr(DtoaState *state, int base, double d);
+char*
+js_dtobasestr(DtoaState* state, int base, double d);
 
 #endif /* jsdtoa_h */

@@ -24,7 +24,7 @@ END_TEST(testAtomizedIsNotInterned)
 
 struct StringWrapperStruct
 {
-    JSString *str;
+    JSString* str;
     bool     strOk;
 } sw;
 
@@ -40,7 +40,7 @@ BEGIN_TEST(testInternAcrossGC)
 }
 
 static void
-FinalizeCallback(JSFreeOp *fop, JSFinalizeStatus status, bool isCompartmentGC, void *data)
+FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status, bool isCompartmentGC, void* data)
 {
     if (status == JSFINALIZE_GROUP_START)
         sw.strOk = js::gc::IsStringMarked(&sw.str);

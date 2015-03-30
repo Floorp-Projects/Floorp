@@ -57,7 +57,7 @@ FOR_EACH_REG_EXP_TREE_TYPE(MAKE_TYPE_CASE)
 #undef MAKE_TYPE_CASE
 
 static Interval
-ListCaptureRegisters(const RegExpTreeVector &children)
+ListCaptureRegisters(const RegExpTreeVector& children)
 {
     Interval result = Interval::Empty();
     for (size_t i = 0; i < children.length(); i++)
@@ -68,7 +68,7 @@ ListCaptureRegisters(const RegExpTreeVector &children)
 // ----------------------------------------------------------------------------
 // RegExpDisjunction
 
-RegExpDisjunction::RegExpDisjunction(RegExpTreeVector *alternatives)
+RegExpDisjunction::RegExpDisjunction(RegExpTreeVector* alternatives)
   : alternatives_(alternatives)
 {
     MOZ_ASSERT(alternatives->length() > 1);
@@ -91,7 +91,7 @@ RegExpDisjunction::CaptureRegisters()
 bool
 RegExpDisjunction::IsAnchoredAtStart()
 {
-    const RegExpTreeVector &alternatives = this->alternatives();
+    const RegExpTreeVector& alternatives = this->alternatives();
     for (size_t i = 0; i < alternatives.length(); i++) {
         if (!alternatives[i]->IsAnchoredAtStart())
             return false;
@@ -102,7 +102,7 @@ RegExpDisjunction::IsAnchoredAtStart()
 bool
 RegExpDisjunction::IsAnchoredAtEnd()
 {
-    const RegExpTreeVector &alternatives = this->alternatives();
+    const RegExpTreeVector& alternatives = this->alternatives();
     for (size_t i = 0; i < alternatives.length(); i++) {
         if (!alternatives[i]->IsAnchoredAtEnd())
             return false;
@@ -120,7 +120,7 @@ static int IncreaseBy(int previous, int increase)
     return previous + increase;
 }
 
-RegExpAlternative::RegExpAlternative(RegExpTreeVector *nodes)
+RegExpAlternative::RegExpAlternative(RegExpTreeVector* nodes)
   : nodes_(nodes),
     min_match_(0),
     max_match_(0)
@@ -144,9 +144,9 @@ RegExpAlternative::CaptureRegisters()
 bool
 RegExpAlternative::IsAnchoredAtStart()
 {
-    const RegExpTreeVector &nodes = this->nodes();
+    const RegExpTreeVector& nodes = this->nodes();
     for (size_t i = 0; i < nodes.length(); i++) {
-        RegExpTree *node = nodes[i];
+        RegExpTree* node = nodes[i];
         if (node->IsAnchoredAtStart()) { return true; }
         if (node->max_match() > 0) { return false; }
     }
@@ -156,9 +156,9 @@ RegExpAlternative::IsAnchoredAtStart()
 bool
 RegExpAlternative::IsAnchoredAtEnd()
 {
-    const RegExpTreeVector &nodes = this->nodes();
+    const RegExpTreeVector& nodes = this->nodes();
     for (int i = nodes.length() - 1; i >= 0; i--) {
-        RegExpTree *node = nodes[i];
+        RegExpTree* node = nodes[i];
         if (node->IsAnchoredAtEnd()) { return true; }
         if (node->max_match() > 0) { return false; }
     }
@@ -189,8 +189,8 @@ RegExpCharacterClass::AppendToText(RegExpText* text)
     text->AddElement(TextElement::CharClass(this));
 }
 
-CharacterRangeVector &
-CharacterSet::ranges(LifoAlloc *alloc)
+CharacterRangeVector&
+CharacterSet::ranges(LifoAlloc* alloc)
 {
     if (ranges_ == nullptr) {
         ranges_ = alloc->newInfallible<CharacterRangeVector>(*alloc);

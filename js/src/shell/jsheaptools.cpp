@@ -74,17 +74,17 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
          * incoming edge Vector in the hash table: Vectors support moves, but
          * not assignments or copy construction.
          */
-        Node(Node &&rhs)
+        Node(Node&& rhs)
           : kind(rhs.kind), incoming(Move(rhs.incoming)), marked(rhs.marked) { }
-        Node &operator=(Node &&rhs) {
+        Node& operator=(Node&& rhs) {
             MOZ_ASSERT(this != &rhs, "self-move assignment is prohibited");
             this->~Node();
             new(this) Node(Move(rhs));
             return *this;
         }
 
-        void trace(JSTracer *trc) {
-            for (Edge *e = incoming.begin(); e != incoming.end(); e++)
+        void trace(JSTracer* trc) {
+            for (Edge* e = incoming.begin(); e != incoming.end(); e++)
                 e->trace(trc);
         }
 
@@ -102,14 +102,14 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
         bool marked;
 
       private:
-        Node(const Node &) = delete;
-        Node &operator=(const Node &) = delete;
+        Node(const Node&) = delete;
+        Node& operator=(const Node&) = delete;
     };
 
     /* Metadata for a heap edge we have traversed. */
     struct Edge {
       public:
-        Edge(char *name, void *origin) : name(name), origin(origin) { }
+        Edge(char* name, void* origin) : name(name), origin(origin) { }
         ~Edge() { js_free(name); }
 
         /*
@@ -117,23 +117,23 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
          * Vectors without needing to copy our name string when the vector is
          * resized.
          */
-        Edge(Edge &&rhs) : name(rhs.name), origin(rhs.origin) {
+        Edge(Edge&& rhs) : name(rhs.name), origin(rhs.origin) {
             rhs.name = nullptr;
         }
-        Edge &operator=(Edge &&rhs) {
+        Edge& operator=(Edge&& rhs) {
             MOZ_ASSERT(this != &rhs, "self-move assignment is prohibited");
             this->~Edge();
             new(this) Edge(Move(rhs));
             return *this;
         }
 
-        void trace(JSTracer *trc) {
+        void trace(JSTracer* trc) {
             if (origin)
                 gc::MarkGCThingRoot(trc, &origin, "HeapReverser::Edge");
         }
 
         /* The name of this heap edge. Owned by this Edge. */
-        char *name;
+        char* name;
 
         /*
          * The Cell from which this edge originates. nullptr means a root. This
@@ -142,18 +142,18 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
          * the Nodes it contains would become invalid. You should look up the
          * address here in |map| to find its Node.
          */
-        void *origin;
+        void* origin;
     };
 
     /*
      * The result of a reversal is a map from Cells' addresses to Node
      * structures describing their incoming edges.
      */
-    typedef HashMap<void *, Node, DefaultHasher<void *>, SystemAllocPolicy> Map;
+    typedef HashMap<void*, Node, DefaultHasher<void*>, SystemAllocPolicy> Map;
     Map map;
 
     /* Construct a HeapReverser for |context|'s heap. */
-    explicit HeapReverser(JSContext *cx)
+    explicit HeapReverser(JSContext* cx)
       : JSTracer(cx->runtime(), traverseEdgeWithThis),
         JS::CustomAutoRooter(cx),
         noggc(JS_GetRuntime(cx)),
@@ -173,7 +173,7 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
     js::AutoDisableCompactingGC nocgc;
 
     /* A runtime pointer for use by the destructor. */
-    JSRuntime *runtime;
+    JSRuntime* runtime;
 
     /*
      * Return the name of the most recent edge this JSTracer has traversed. The
@@ -183,12 +183,12 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
      * This may not be called after that edge's call to traverseEdge has
      * returned.
      */
-    char *getEdgeDescription();
+    char* getEdgeDescription();
 
     /* Class for setting new parent, and then restoring the original. */
     class AutoParent {
       public:
-        AutoParent(HeapReverser *reverser, void *newParent) : reverser(reverser) {
+        AutoParent(HeapReverser* reverser, void* newParent) : reverser(reverser) {
             savedParent = reverser->parent;
             reverser->parent = newParent;
         }
@@ -196,14 +196,14 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
             reverser->parent = savedParent;
         }
       private:
-        HeapReverser *reverser;
-        void *savedParent;
+        HeapReverser* reverser;
+        void* savedParent;
     };
 
     /* A work item in the stack of nodes whose children we need to traverse. */
     struct Child {
-        Child(void *cell, JSGCTraceKind kind) : cell(cell), kind(kind) { }
-        void *cell;
+        Child(void* cell, JSGCTraceKind kind) : cell(cell), kind(kind) { }
+        void* cell;
         JSGCTraceKind kind;
     };
 
@@ -214,10 +214,10 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
     Vector<Child, 0, SystemAllocPolicy> work;
 
     /* When traverseEdge is called, the Cell and kind at which the edge originated. */
-    void *parent;
+    void* parent;
 
     /* Traverse an edge. */
-    bool traverseEdge(void *cell, JSGCTraceKind kind);
+    bool traverseEdge(void* cell, JSGCTraceKind kind);
 
     /*
      * JS_TraceRuntime and JS_TraceChildren don't propagate error returns,
@@ -228,38 +228,38 @@ class HeapReverser : public JSTracer, public JS::CustomAutoRooter
     bool traversalStatus;
 
     /* Static member function wrapping 'traverseEdge'. */
-    static void traverseEdgeWithThis(JSTracer *tracer, void **thingp, JSGCTraceKind kind) {
-        HeapReverser *reverser = static_cast<HeapReverser *>(tracer);
+    static void traverseEdgeWithThis(JSTracer* tracer, void** thingp, JSGCTraceKind kind) {
+        HeapReverser* reverser = static_cast<HeapReverser*>(tracer);
         if (!reverser->traverseEdge(*thingp, kind))
             reverser->traversalStatus = false;
     }
 
     /* Return a jsval representing a node, if possible; otherwise, return JSVAL_VOID. */
-    jsval nodeToValue(void *cell, int kind) {
+    jsval nodeToValue(void* cell, int kind) {
         if (kind != JSTRACE_OBJECT)
             return JSVAL_VOID;
-        JSObject *object = static_cast<JSObject *>(cell);
+        JSObject* object = static_cast<JSObject*>(cell);
         return OBJECT_TO_JSVAL(object);
     }
 
     /* Keep all tracked objects live across GC. */
-    virtual void trace(JSTracer *trc) override {
+    virtual void trace(JSTracer* trc) override {
         if (!map.initialized())
             return;
         for (Map::Enum e(map); !e.empty(); e.popFront()) {
-            gc::MarkGCThingRoot(trc, const_cast<void **>(&e.front().key()), "HeapReverser::map::key");
+            gc::MarkGCThingRoot(trc, const_cast<void**>(&e.front().key()), "HeapReverser::map::key");
             e.front().value().trace(trc);
         }
-        for (Child *c = work.begin(); c != work.end(); ++c)
+        for (Child* c = work.begin(); c != work.end(); ++c)
             gc::MarkGCThingRoot(trc, &c->cell, "HeapReverser::Child");
     }
 };
 
 bool
-HeapReverser::traverseEdge(void *cell, JSGCTraceKind kind)
+HeapReverser::traverseEdge(void* cell, JSGCTraceKind kind)
 {
     /* Capture this edge before the JSTracer members get overwritten. */
-    char *edgeDescription = getEdgeDescription();
+    char* edgeDescription = getEdgeDescription();
     if (!edgeDescription)
         return false;
     Edge e(edgeDescription, parent);
@@ -307,12 +307,12 @@ HeapReverser::reverseHeap()
     return true;
 }
 
-char *
+char*
 HeapReverser::getEdgeDescription()
 {
     if (!debugPrinter() && debugPrintIndex() == (size_t) -1) {
-        const char *arg = static_cast<const char *>(debugPrintArg());
-        char *name = js_pod_malloc<char>(strlen(arg) + 1);
+        const char* arg = static_cast<const char*>(debugPrintArg());
+        char* name = js_pod_malloc<char>(strlen(arg) + 1);
         if (!name)
             return nullptr;
         strcpy(name, arg);
@@ -321,17 +321,17 @@ HeapReverser::getEdgeDescription()
 
     /* Lovely; but a fixed size is required by JSTraceNamePrinter. */
     static const int nameSize = 200;
-    char *name = js_pod_malloc<char>(nameSize);
+    char* name = js_pod_malloc<char>(nameSize);
     if (!name)
         return nullptr;
     if (debugPrinter())
         debugPrinter()(this, name, nameSize);
     else
         JS_snprintf(name, nameSize, "%s[%lu]",
-                    static_cast<const char *>(debugPrintArg()), debugPrintIndex());
+                    static_cast<const char*>(debugPrintArg()), debugPrintIndex());
 
     /* Shrink storage to fit. */
-    return static_cast<char *>(js_realloc(name, strlen(name) + 1));
+    return static_cast<char*>(js_realloc(name, strlen(name) + 1));
 }
 
 
@@ -340,18 +340,18 @@ HeapReverser::getEdgeDescription()
 /* A class for finding an object's referrers, given a reversed heap map. */
 class ReferenceFinder {
   public:
-    ReferenceFinder(JSContext *cx, const HeapReverser &reverser)
+    ReferenceFinder(JSContext* cx, const HeapReverser& reverser)
       : context(cx), reverser(reverser), result(cx) { }
 
     /* Produce an object describing all references to |target|. */
-    JSObject *findReferences(HandleObject target);
+    JSObject* findReferences(HandleObject target);
 
   private:
     /* The context in which to do allocation and error-handling. */
-    JSContext *context;
+    JSContext* context;
 
     /* A reversed map of the current heap. */
-    const HeapReverser &reverser;
+    const HeapReverser& reverser;
 
     /* The results object we're currently building. */
     RootedObject result;
@@ -359,24 +359,24 @@ class ReferenceFinder {
     /* A list of edges we've traversed to get to a certain point. */
     class Path {
       public:
-        Path(const HeapReverser::Edge &edge, Path *next) : edge(edge), next(next) { }
+        Path(const HeapReverser::Edge& edge, Path* next) : edge(edge), next(next) { }
 
         /*
          * Compute the full path represented by this Path. The result is
          * owned by the caller.
          */
-        char *computeName(JSContext *cx);
+        char* computeName(JSContext* cx);
 
       private:
-        const HeapReverser::Edge &edge;
-        Path *next;
+        const HeapReverser::Edge& edge;
+        Path* next;
     };
 
     struct AutoNodeMarker {
-        explicit AutoNodeMarker(HeapReverser::Node *node) : node(node) { node->marked = true; }
+        explicit AutoNodeMarker(HeapReverser::Node* node) : node(node) { node->marked = true; }
         ~AutoNodeMarker() { node->marked = false; }
       private:
-        HeapReverser::Node *node;
+        HeapReverser::Node* node;
     };
 
     /*
@@ -384,15 +384,15 @@ class ReferenceFinder {
      * path marked, add paths from all reportable objects reachable from cell
      * to |result|.
      */
-    bool visit(void *cell, Path *path);
+    bool visit(void* cell, Path* path);
 
     /*
      * If |cell|, of |kind|, is representable as a JavaScript value, return that
      * value; otherwise, return JSVAL_VOID.
      */
-    jsval representable(void *cell, int kind) {
+    jsval representable(void* cell, int kind) {
         if (kind == JSTRACE_OBJECT) {
-            JSObject *object = static_cast<JSObject *>(cell);
+            JSObject* object = static_cast<JSObject*>(cell);
 
             /* Certain classes of object are for internal use only. */
             if (object->is<BlockObject>() ||
@@ -414,11 +414,11 @@ class ReferenceFinder {
     }
 
     /* Add |referrer| as something that refers to |target| via |path|. */
-    bool addReferrer(jsval referrer, Path *path);
+    bool addReferrer(jsval referrer, Path* path);
 };
 
 bool
-ReferenceFinder::visit(void *cell, Path *path)
+ReferenceFinder::visit(void* cell, Path* path)
 {
     /* In ReferenceFinder, paths will almost certainly fit on the C++ stack. */
     JS_CHECK_RECURSION(context, return false);
@@ -429,7 +429,7 @@ ReferenceFinder::visit(void *cell, Path *path)
 
     HeapReverser::Map::Ptr p = reverser.map.lookup(cell);
     MOZ_ASSERT(p);
-    HeapReverser::Node *node = &p->value();
+    HeapReverser::Node* node = &p->value();
 
     /* Is |cell| a representable cell, reached via a non-empty path? */
     if (path != nullptr) {
@@ -449,7 +449,7 @@ ReferenceFinder::visit(void *cell, Path *path)
 
     /* Visit the origins of all |cell|'s incoming edges. */
     for (size_t i = 0; i < node->incoming.length(); i++) {
-        const HeapReverser::Edge &edge = node->incoming[i];
+        const HeapReverser::Edge& edge = node->incoming[i];
         Path extendedPath(edge, path);
         if (!visit(edge.origin, &extendedPath))
             return false;
@@ -458,16 +458,16 @@ ReferenceFinder::visit(void *cell, Path *path)
     return true;
 }
 
-char *
-ReferenceFinder::Path::computeName(JSContext *cx)
+char*
+ReferenceFinder::Path::computeName(JSContext* cx)
 {
     /* Walk the edge list and compute the total size of the path. */
     size_t size = 6;
-    for (Path *l = this; l; l = l->next)
+    for (Path* l = this; l; l = l->next)
         size += strlen(l->edge.name) + (l->next ? 2 : 0);
     size += 1;
 
-    char *path = cx->pod_malloc<char>(size);
+    char* path = cx->pod_malloc<char>(size);
     if (!path)
         return nullptr;
 
@@ -478,8 +478,8 @@ ReferenceFinder::Path::computeName(JSContext *cx)
      * target, so we can walk the list and build the path from left to right.
      */
     strcpy(path, "edge: ");
-    char *next = path + 6;
-    for (Path *l = this; l; l = l->next) {
+    char* next = path + 6;
+    for (Path* l = this; l; l = l->next) {
         strcpy(next, l->edge.name);
         next += strlen(next);
         if (l->next) {
@@ -493,7 +493,7 @@ ReferenceFinder::Path::computeName(JSContext *cx)
 }
 
 bool
-ReferenceFinder::addReferrer(jsval referrerArg, Path *path)
+ReferenceFinder::addReferrer(jsval referrerArg, Path* path)
 {
     RootedValue referrer(context, referrerArg);
 
@@ -511,7 +511,7 @@ ReferenceFinder::addReferrer(jsval referrerArg, Path *path)
         return false;
     if (v.isUndefined()) {
         /* Create an array to accumulate referents under this path. */
-        JSObject *array = JS_NewArrayObject(context, HandleValueArray(referrer));
+        JSObject* array = JS_NewArrayObject(context, HandleValueArray(referrer));
         if (!array)
             return false;
         v.setObject(*array);
@@ -528,7 +528,7 @@ ReferenceFinder::addReferrer(jsval referrerArg, Path *path)
            JS_SetElement(context, array, length, referrer);
 }
 
-JSObject *
+JSObject*
 ReferenceFinder::findReferences(HandleObject target)
 {
     result = JS_NewPlainObject(context);
@@ -542,7 +542,7 @@ ReferenceFinder::findReferences(HandleObject target)
 
 /* See help(findReferences). */
 bool
-FindReferences(JSContext *cx, unsigned argc, jsval *vp)
+FindReferences(JSContext* cx, unsigned argc, jsval* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() < 1) {
@@ -566,7 +566,7 @@ FindReferences(JSContext *cx, unsigned argc, jsval *vp)
     /* Given the reversed map, find the referents of target. */
     ReferenceFinder finder(cx, reverser);
     Rooted<JSObject*> targetObj(cx, &target.toObject());
-    JSObject *references = finder.findReferences(targetObj);
+    JSObject* references = finder.findReferences(targetObj);
     if (!references)
         return false;
 

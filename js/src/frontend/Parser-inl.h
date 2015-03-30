@@ -16,7 +16,7 @@ namespace frontend {
 
 template <typename ParseHandler>
 bool
-ParseContext<ParseHandler>::init(TokenStream &ts)
+ParseContext<ParseHandler>::init(TokenStream& ts)
 {
     if (!frontend::GenerateBlockId(ts, this, this->bodyid))
         return false;

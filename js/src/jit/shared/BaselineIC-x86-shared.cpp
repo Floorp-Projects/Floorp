@@ -11,7 +11,7 @@ using namespace js;
 using namespace js::jit;
 
 bool
-ICCompare_Double::Compiler::generateStubCode(MacroAssembler &masm)
+ICCompare_Double::Compiler::generateStubCode(MacroAssembler& masm)
 {
     Label failure, notNaN;
     masm.ensureDouble(R0, FloatReg0, &failure);

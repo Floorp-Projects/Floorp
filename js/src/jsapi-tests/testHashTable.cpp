@@ -53,7 +53,7 @@ struct LowToHighWithRemoval
 };
 
 static bool
-MapsAreEqual(IntMap &am, IntMap &bm)
+MapsAreEqual(IntMap& am, IntMap& bm)
 {
     bool equal = true;
     if (am.count() != bm.count()) {
@@ -76,7 +76,7 @@ MapsAreEqual(IntMap &am, IntMap &bm)
 }
 
 static bool
-SetsAreEqual(IntSet &am, IntSet &bm)
+SetsAreEqual(IntSet& am, IntSet& bm)
 {
     bool equal = true;
     if (am.count() != bm.count()) {
@@ -99,7 +99,7 @@ SetsAreEqual(IntSet &am, IntSet &bm)
 }
 
 static bool
-AddLowKeys(IntMap *am, IntMap *bm, int seed)
+AddLowKeys(IntMap* am, IntMap* bm, int seed)
 {
     size_t i = 0;
     srand(seed);
@@ -117,7 +117,7 @@ AddLowKeys(IntMap *am, IntMap *bm, int seed)
 }
 
 static bool
-AddLowKeys(IntSet *as, IntSet *bs, int seed)
+AddLowKeys(IntSet* as, IntSet* bs, int seed)
 {
     size_t i = 0;
     srand(seed);
@@ -136,7 +136,7 @@ AddLowKeys(IntSet *as, IntSet *bs, int seed)
 
 template <class NewKeyFunction>
 static bool
-SlowRekey(IntMap *m) {
+SlowRekey(IntMap* m) {
     IntMap tmp;
     tmp.init();
 
@@ -159,7 +159,7 @@ SlowRekey(IntMap *m) {
 
 template <class NewKeyFunction>
 static bool
-SlowRekey(IntSet *s) {
+SlowRekey(IntSet* s) {
     IntSet tmp;
     tmp.init();
 

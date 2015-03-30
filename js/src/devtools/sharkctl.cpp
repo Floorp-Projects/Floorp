@@ -22,8 +22,8 @@
 #define RECV_SIZEOF(ty) offsetof(ty, out)
 
 // Private API in libSystem.dylib
-extern "C" void bootstrap_look_up(mach_port_t special_port, const char *name,
-                                  mach_port_t *dest_port);
+extern "C" void bootstrap_look_up(mach_port_t special_port, const char* name,
+                                  mach_port_t* dest_port);
 
 struct chud_client_acquire_msg {
     mach_msg_header_t hdr;

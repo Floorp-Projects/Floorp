@@ -36,26 +36,26 @@ class OptimizationInfo;
 class MIRGenerator
 {
   public:
-    MIRGenerator(CompileCompartment *compartment, const JitCompileOptions &options,
-                 TempAllocator *alloc, MIRGraph *graph,
-                 CompileInfo *info, const OptimizationInfo *optimizationInfo);
+    MIRGenerator(CompileCompartment* compartment, const JitCompileOptions& options,
+                 TempAllocator* alloc, MIRGraph* graph,
+                 CompileInfo* info, const OptimizationInfo* optimizationInfo);
 
-    TempAllocator &alloc() {
+    TempAllocator& alloc() {
         return *alloc_;
     }
-    MIRGraph &graph() {
+    MIRGraph& graph() {
         return *graph_;
     }
     bool ensureBallast() {
         return alloc().ensureBallast();
     }
-    const JitRuntime *jitRuntime() const {
+    const JitRuntime* jitRuntime() const {
         return GetJitContext()->runtime->jitRuntime();
     }
-    CompileInfo &info() {
+    CompileInfo& info() {
         return *info_;
     }
-    const OptimizationInfo &optimizationInfo() const {
+    const OptimizationInfo& optimizationInfo() const {
         return *optimizationInfo_;
     }
 
@@ -63,13 +63,13 @@ class MIRGenerator
     T * allocate(size_t count = 1) {
         if (count & mozilla::tl::MulOverflowMask<sizeof(T)>::value)
             return nullptr;
-        return reinterpret_cast<T *>(alloc().allocate(sizeof(T) * count));
+        return reinterpret_cast<T*>(alloc().allocate(sizeof(T) * count));
     }
 
     // Set an error state and prints a message. Returns false so errors can be
     // propagated up.
-    bool abort(const char *message, ...);
-    bool abortFmt(const char *message, va_list ap);
+    bool abort(const char* message, ...);
+    bool abortFmt(const char* message, va_list ap);
 
     bool errored() const {
         return error_;
@@ -92,7 +92,7 @@ class MIRGenerator
     }
 
     // Whether the main thread is trying to cancel this build.
-    bool shouldCancel(const char *why) {
+    bool shouldCancel(const char* why) {
         maybePause();
         return cancelBuild_;
     }
@@ -104,7 +104,7 @@ class MIRGenerator
         if (pauseBuild_ && *pauseBuild_)
             PauseCurrentHelperThread();
     }
-    void setPauseFlag(mozilla::Atomic<bool, mozilla::Relaxed> *pauseBuild) {
+    void setPauseFlag(mozilla::Atomic<bool, mozilla::Relaxed>* pauseBuild) {
         pauseBuild_ = pauseBuild;
     }
 
@@ -154,29 +154,29 @@ class MIRGenerator
         return modifiesFrameArguments_;
     }
 
-    typedef Vector<ObjectGroup *, 0, JitAllocPolicy> ObjectGroupVector;
+    typedef Vector<ObjectGroup*, 0, JitAllocPolicy> ObjectGroupVector;
 
     // When abortReason() == AbortReason_NewScriptProperties, all types which
     // the new script properties analysis hasn't been performed on yet.
-    const ObjectGroupVector &abortedNewScriptPropertiesGroups() const {
+    const ObjectGroupVector& abortedNewScriptPropertiesGroups() const {
         return abortedNewScriptPropertiesGroups_;
     }
 
   public:
-    CompileCompartment *compartment;
+    CompileCompartment* compartment;
 
   protected:
-    CompileInfo *info_;
-    const OptimizationInfo *optimizationInfo_;
-    TempAllocator *alloc_;
-    JSFunction *fun_;
+    CompileInfo* info_;
+    const OptimizationInfo* optimizationInfo_;
+    TempAllocator* alloc_;
+    JSFunction* fun_;
     uint32_t nslots_;
-    MIRGraph *graph_;
+    MIRGraph* graph_;
     AbortReason abortReason_;
     bool shouldForceAbort_; // Force AbortReason_Disable
     ObjectGroupVector abortedNewScriptPropertiesGroups_;
     bool error_;
-    mozilla::Atomic<bool, mozilla::Relaxed> *pauseBuild_;
+    mozilla::Atomic<bool, mozilla::Relaxed>* pauseBuild_;
     mozilla::Atomic<bool, mozilla::Relaxed> cancelBuild_;
 
     uint32_t maxAsmJSStackArgBytes_;
@@ -199,7 +199,7 @@ class MIRGenerator
     // CodeGenerator::link).
     ObjectVector nurseryObjects_;
 
-    void addAbortedNewScriptPropertiesGroup(ObjectGroup *type);
+    void addAbortedNewScriptPropertiesGroup(ObjectGroup* type);
     void setForceAbort() {
         shouldForceAbort_ = true;
     }
@@ -211,15 +211,15 @@ class MIRGenerator
     AsmJSPerfSpewer asmJSPerfSpewer_;
 
   public:
-    AsmJSPerfSpewer &perfSpewer() { return asmJSPerfSpewer_; }
+    AsmJSPerfSpewer& perfSpewer() { return asmJSPerfSpewer_; }
 #endif
 
   public:
     const JitCompileOptions options;
 
-    void traceNurseryObjects(JSTracer *trc);
+    void traceNurseryObjects(JSTracer* trc);
 
-    const ObjectVector &nurseryObjects() const {
+    const ObjectVector& nurseryObjects() const {
         return nurseryObjects_;
     }
 };

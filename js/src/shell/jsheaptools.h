@@ -11,7 +11,7 @@
 
 #include "js/TypeDecls.h"
 
-bool FindReferences(JSContext *cx, unsigned argc, JS::Value *vp);
+bool FindReferences(JSContext* cx, unsigned argc, JS::Value* vp);
 
 #endif /* DEBUG */
 

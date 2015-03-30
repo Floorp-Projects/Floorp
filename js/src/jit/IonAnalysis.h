@@ -19,10 +19,10 @@ class MIRGenerator;
 class MIRGraph;
 
 void
-FoldTests(MIRGraph &graph);
+FoldTests(MIRGraph& graph);
 
 bool
-SplitCriticalEdges(MIRGraph &graph);
+SplitCriticalEdges(MIRGraph& graph);
 
 enum Observability {
     ConservativeObservability,
@@ -30,85 +30,85 @@ enum Observability {
 };
 
 bool
-EliminatePhis(MIRGenerator *mir, MIRGraph &graph, Observability observe);
+EliminatePhis(MIRGenerator* mir, MIRGraph& graph, Observability observe);
 
 size_t
-MarkLoopBlocks(MIRGraph &graph, MBasicBlock *header, bool *canOsr);
+MarkLoopBlocks(MIRGraph& graph, MBasicBlock* header, bool* canOsr);
 
 void
-UnmarkLoopBlocks(MIRGraph &graph, MBasicBlock *header);
+UnmarkLoopBlocks(MIRGraph& graph, MBasicBlock* header);
 
 bool
-MakeLoopsContiguous(MIRGraph &graph);
+MakeLoopsContiguous(MIRGraph& graph);
 
 bool
-EliminateDeadResumePointOperands(MIRGenerator *mir, MIRGraph &graph);
+EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph);
 
 bool
-EliminateDeadCode(MIRGenerator *mir, MIRGraph &graph);
+EliminateDeadCode(MIRGenerator* mir, MIRGraph& graph);
 
 bool
-ApplyTypeInformation(MIRGenerator *mir, MIRGraph &graph);
+ApplyTypeInformation(MIRGenerator* mir, MIRGraph& graph);
 
 bool
-MakeMRegExpHoistable(MIRGraph &graph);
+MakeMRegExpHoistable(MIRGraph& graph);
 
 bool
-RenumberBlocks(MIRGraph &graph);
+RenumberBlocks(MIRGraph& graph);
 
 bool
-AccountForCFGChanges(MIRGenerator *mir, MIRGraph &graph, bool updateAliasAnalysis);
+AccountForCFGChanges(MIRGenerator* mir, MIRGraph& graph, bool updateAliasAnalysis);
 
 bool
-RemoveUnmarkedBlocks(MIRGenerator *mir, MIRGraph &graph, uint32_t numMarkedBlocks);
+RemoveUnmarkedBlocks(MIRGenerator* mir, MIRGraph& graph, uint32_t numMarkedBlocks);
 
 void
-ClearDominatorTree(MIRGraph &graph);
+ClearDominatorTree(MIRGraph& graph);
 
 bool
-BuildDominatorTree(MIRGraph &graph);
+BuildDominatorTree(MIRGraph& graph);
 
 bool
-BuildPhiReverseMapping(MIRGraph &graph);
+BuildPhiReverseMapping(MIRGraph& graph);
 
 void
-AssertBasicGraphCoherency(MIRGraph &graph);
+AssertBasicGraphCoherency(MIRGraph& graph);
 
 void
-AssertGraphCoherency(MIRGraph &graph);
+AssertGraphCoherency(MIRGraph& graph);
 
 void
-AssertExtendedGraphCoherency(MIRGraph &graph);
+AssertExtendedGraphCoherency(MIRGraph& graph);
 
 bool
-EliminateRedundantChecks(MIRGraph &graph);
+EliminateRedundantChecks(MIRGraph& graph);
 
 class MDefinition;
 
 // Simple linear sum of the form 'n' or 'x + n'.
 struct SimpleLinearSum
 {
-    MDefinition *term;
+    MDefinition* term;
     int32_t constant;
 
-    SimpleLinearSum(MDefinition *term, int32_t constant)
+    SimpleLinearSum(MDefinition* term, int32_t constant)
         : term(term), constant(constant)
     {}
 };
 
 SimpleLinearSum
-ExtractLinearSum(MDefinition *ins);
+ExtractLinearSum(MDefinition* ins);
 
 bool
-ExtractLinearInequality(MTest *test, BranchDirection direction,
-                        SimpleLinearSum *plhs, MDefinition **prhs, bool *plessEqual);
+ExtractLinearInequality(MTest* test, BranchDirection direction,
+                        SimpleLinearSum* plhs, MDefinition** prhs, bool* plessEqual);
 
 struct LinearTerm
 {
-    MDefinition *term;
+    MDefinition* term;
     int32_t scale;
 
-    LinearTerm(MDefinition *term, int32_t scale)
+    LinearTerm(MDefinition* term, int32_t scale)
       : term(term), scale(scale)
     {
     }
@@ -118,13 +118,13 @@ struct LinearTerm
 class LinearSum
 {
   public:
-    explicit LinearSum(TempAllocator &alloc)
+    explicit LinearSum(TempAllocator& alloc)
       : terms_(alloc),
         constant_(0)
     {
     }
 
-    LinearSum(const LinearSum &other)
+    LinearSum(const LinearSum& other)
       : terms_(other.terms_.allocPolicy()),
         constant_(other.constant_)
     {
@@ -134,9 +134,9 @@ class LinearSum
     // These return false on an integer overflow, and afterwards the sum must
     // not be used.
     bool multiply(int32_t scale);
-    bool add(const LinearSum &other, int32_t scale = 1);
+    bool add(const LinearSum& other, int32_t scale = 1);
     bool add(SimpleLinearSum other, int32_t scale = 1);
-    bool add(MDefinition *term, int32_t scale);
+    bool add(MDefinition* term, int32_t scale);
     bool add(int32_t constant);
 
     // Unlike the above function, on failure this leaves the sum unchanged and
@@ -146,10 +146,10 @@ class LinearSum
     int32_t constant() const { return constant_; }
     size_t numTerms() const { return terms_.length(); }
     LinearTerm term(size_t i) const { return terms_[i]; }
-    void replaceTerm(size_t i, MDefinition *def) { terms_[i].term = def; }
+    void replaceTerm(size_t i, MDefinition* def) { terms_[i].term = def; }
 
-    void print(Sprinter &sp) const;
-    void dump(FILE *) const;
+    void print(Sprinter& sp) const;
+    void dump(FILE*) const;
     void dump() const;
 
   private:
@@ -159,28 +159,28 @@ class LinearSum
 
 // Convert all components of a linear sum (except, optionally, the constant)
 // and add any new instructions to the end of block.
-MDefinition *
-ConvertLinearSum(TempAllocator &alloc, MBasicBlock *block, const LinearSum &sum,
+MDefinition*
+ConvertLinearSum(TempAllocator& alloc, MBasicBlock* block, const LinearSum& sum,
                  bool convertConstant = false);
 
 // Convert the test 'sum >= 0' to a comparison, adding any necessary
 // instructions to the end of block.
-MCompare *
-ConvertLinearInequality(TempAllocator &alloc, MBasicBlock *block, const LinearSum &sum);
+MCompare*
+ConvertLinearInequality(TempAllocator& alloc, MBasicBlock* block, const LinearSum& sum);
 
 bool
-AnalyzeNewScriptDefiniteProperties(JSContext *cx, JSFunction *fun,
-                                   ObjectGroup *group, HandlePlainObject baseobj,
-                                   Vector<TypeNewScript::Initializer> *initializerList);
+AnalyzeNewScriptDefiniteProperties(JSContext* cx, JSFunction* fun,
+                                   ObjectGroup* group, HandlePlainObject baseobj,
+                                   Vector<TypeNewScript::Initializer>* initializerList);
 
 bool
-AnalyzeArgumentsUsage(JSContext *cx, JSScript *script);
+AnalyzeArgumentsUsage(JSContext* cx, JSScript* script);
 
 bool
-DeadIfUnused(const MDefinition *def);
+DeadIfUnused(const MDefinition* def);
 
 bool
-IsDiscardable(const MDefinition *def);
+IsDiscardable(const MDefinition* def);
 
 } // namespace jit
 } // namespace js

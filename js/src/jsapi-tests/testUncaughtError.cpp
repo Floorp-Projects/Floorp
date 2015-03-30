@@ -48,7 +48,7 @@ BEGIN_TEST(testUncaughtError)
 }
 
 static void
-UncaughtErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
+UncaughtErrorReporter(JSContext* cx, const char* message, JSErrorReport* report)
 {
     uncaughtCount++;
 }

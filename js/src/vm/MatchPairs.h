@@ -60,7 +60,7 @@ class MatchPairs
     uint32_t pairCount_;
 
     /* Raw pointer into an allocated MatchPair buffer. */
-    MatchPair *pairs_;
+    MatchPair* pairs_;
 
   protected:
     /* Not used directly: use ScopedMatchPairs or VectorMatchPairs. */
@@ -77,14 +77,14 @@ class MatchPairs
     virtual bool allocOrExpandArray(size_t pairCount) = 0;
 
     bool initArray(size_t pairCount);
-    bool initArrayFrom(MatchPairs &copyFrom);
+    bool initArrayFrom(MatchPairs& copyFrom);
     void forgetArray() { pairs_ = nullptr; }
 
     void displace(size_t disp);
     void checkAgainst(size_t inputLength) {
 #ifdef DEBUG
         for (size_t i = 0; i < pairCount_; i++) {
-            const MatchPair &p = (*this)[i];
+            const MatchPair& p = (*this)[i];
             MOZ_ASSERT(p.check());
             if (p.isUndefined())
                 continue;
@@ -102,16 +102,16 @@ class MatchPairs
     static size_t offsetOfPairs() { return offsetof(MatchPairs, pairs_); }
     static size_t offsetOfPairCount() { return offsetof(MatchPairs, pairCount_); }
 
-    int32_t *pairsRaw() { return reinterpret_cast<int32_t *>(pairs_); }
+    int32_t* pairsRaw() { return reinterpret_cast<int32_t*>(pairs_); }
 
   public:
     size_t length() const { return pairCount_; }
 
-    const MatchPair &operator[](size_t i) const {
+    const MatchPair& operator[](size_t i) const {
         MOZ_ASSERT(i < pairCount_);
         return pairs_[i];
     }
-    MatchPair &operator[](size_t i) {
+    MatchPair& operator[](size_t i) {
         MOZ_ASSERT(i < pairCount_);
         return pairs_[i];
     }
@@ -124,7 +124,7 @@ class ScopedMatchPairs : public MatchPairs
 
   public:
     /* Constructs an implicit LifoAllocScope. */
-    explicit ScopedMatchPairs(LifoAlloc *lifoAlloc)
+    explicit ScopedMatchPairs(LifoAlloc* lifoAlloc)
       : lifoScope_(lifoAlloc)
     { }
 

@@ -44,7 +44,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
     mozJSComponentLoader();
 
     // ModuleLoader
-    const mozilla::Module* LoadModule(mozilla::FileLocation &aFile) override;
+    const mozilla::Module* LoadModule(mozilla::FileLocation& aFile) override;
 
     nsresult FindTargetObject(JSContext* aCx,
                               JS::MutableHandleObject aTargetObject);
@@ -63,21 +63,21 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
 
     JSObject* PrepareObjectForLocation(JSContext* aCx,
                                        nsIFile* aComponentFile,
-                                       nsIURI *aComponent,
+                                       nsIURI* aComponent,
                                        bool aReuseLoaderGlobal,
-                                       bool *aRealFile);
+                                       bool* aRealFile);
 
     nsresult ObjectForLocation(ComponentLoaderInfo& aInfo,
                                nsIFile* aComponentFile,
                                JS::MutableHandleObject aObject,
                                JS::MutableHandleScript aTableScript,
-                               char **location,
+                               char** location,
                                bool aCatchException,
                                JS::MutableHandleValue aException);
 
-    nsresult ImportInto(const nsACString &aLocation,
+    nsresult ImportInto(const nsACString& aLocation,
                         JS::HandleObject targetObj,
-                        JSContext *callercx,
+                        JSContext* callercx,
                         JS::MutableHandleObject vp);
 
     nsCOMPtr<nsIComponentManager> mCompMgr;
@@ -133,7 +133,7 @@ class mozJSComponentLoader : public mozilla::ModuleLoader,
         nsCOMPtr<xpcIJSGetFactory> getfactoryobj;
         JS::PersistentRootedObject obj;
         JS::PersistentRootedScript thisObjectKey;
-        char                *location;
+        char*               location;
     };
 
     friend class ModuleEntry;

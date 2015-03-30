@@ -18,16 +18,16 @@ class MIRGraph;
 
 class AliasAnalysis
 {
-    MIRGenerator *mir;
-    MIRGraph &graph_;
-    LoopAliasInfo *loop_;
+    MIRGenerator* mir;
+    MIRGraph& graph_;
+    LoopAliasInfo* loop_;
 
-    TempAllocator &alloc() const {
+    TempAllocator& alloc() const {
         return graph_.alloc();
     }
 
   public:
-    AliasAnalysis(MIRGenerator *mir, MIRGraph &graph);
+    AliasAnalysis(MIRGenerator* mir, MIRGraph& graph);
     bool analyze();
 };
 

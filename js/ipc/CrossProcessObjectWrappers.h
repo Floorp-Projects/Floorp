@@ -34,26 +34,26 @@ class PJavaScriptChild;
 class CPOWManager
 {
   public:
-    virtual bool Unwrap(JSContext *cx,
-                        const InfallibleTArray<CpowEntry> &aCpows,
+    virtual bool Unwrap(JSContext* cx,
+                        const InfallibleTArray<CpowEntry>& aCpows,
                         JS::MutableHandleObject objp) = 0;
 
-    virtual bool Wrap(JSContext *cx,
+    virtual bool Wrap(JSContext* cx,
                       JS::HandleObject aObj,
-                      InfallibleTArray<CpowEntry> *outCpows) = 0;
+                      InfallibleTArray<CpowEntry>* outCpows) = 0;
 };
 
 class CrossProcessCpowHolder : public CpowHolder
 {
   public:
-    CrossProcessCpowHolder(dom::CPOWManagerGetter *managerGetter,
-                           const InfallibleTArray<CpowEntry> &cpows);
+    CrossProcessCpowHolder(dom::CPOWManagerGetter* managerGetter,
+                           const InfallibleTArray<CpowEntry>& cpows);
 
-    bool ToObject(JSContext *cx, JS::MutableHandleObject objp);
+    bool ToObject(JSContext* cx, JS::MutableHandleObject objp);
 
   private:
-    CPOWManager *js_;
-    const InfallibleTArray<CpowEntry> &cpows_;
+    CPOWManager* js_;
+    const InfallibleTArray<CpowEntry>& cpows_;
 };
 
 CPOWManager*
@@ -63,31 +63,31 @@ CPOWManager*
 CPOWManagerFor(PJavaScriptChild* aChild);
 
 bool
-IsCPOW(JSObject *obj);
+IsCPOW(JSObject* obj);
 
 bool
-IsWrappedCPOW(JSObject *obj);
+IsWrappedCPOW(JSObject* obj);
 
 nsresult
-InstanceOf(JSObject *obj, const nsID *id, bool *bp);
+InstanceOf(JSObject* obj, const nsID* id, bool* bp);
 
 bool
-DOMInstanceOf(JSContext *cx, JSObject *obj, int prototypeID, int depth, bool *bp);
+DOMInstanceOf(JSContext* cx, JSObject* obj, int prototypeID, int depth, bool* bp);
 
 void
-GetWrappedCPOWTag(JSObject *obj, nsACString &out);
+GetWrappedCPOWTag(JSObject* obj, nsACString& out);
 
-PJavaScriptParent *
-NewJavaScriptParent(JSRuntime *rt);
-
-void
-ReleaseJavaScriptParent(PJavaScriptParent *parent);
-
-PJavaScriptChild *
-NewJavaScriptChild(JSRuntime *rt);
+PJavaScriptParent*
+NewJavaScriptParent(JSRuntime* rt);
 
 void
-ReleaseJavaScriptChild(PJavaScriptChild *child);
+ReleaseJavaScriptParent(PJavaScriptParent* parent);
+
+PJavaScriptChild*
+NewJavaScriptChild(JSRuntime* rt);
+
+void
+ReleaseJavaScriptChild(PJavaScriptChild* child);
 
 } // namespace jsipc
 } // namespace mozilla
