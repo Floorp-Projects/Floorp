@@ -38,7 +38,6 @@
 
 #include "prlog.h"
 #include "nsTArray.h"
-#include "Units.h"
 
 extern PRLogModuleInfo *gWidgetLog;
 extern PRLogModuleInfo *gWidgetFocusLog;
@@ -212,7 +211,7 @@ private:
 
     void               NativeShow  (bool    aAction);
     void               SetHasMappedToplevel(bool aState);
-    mozilla::LayoutDeviceIntSize GetSafeWindowSize(mozilla::LayoutDeviceIntSize aSize);
+    nsIntSize          GetSafeWindowSize(nsIntSize aSize);
 
     void               EnsureGrabs  (void);
     void               GrabPointer  (guint32 aTime);
