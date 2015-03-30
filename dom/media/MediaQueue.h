@@ -137,6 +137,13 @@ template <class T> class MediaQueue : private nsDeque {
     }
   }
 
+  void GetFirstElements(uint32_t aMaxElements, nsTArray<nsRefPtr<T>>* aResult) {
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    for (int32_t i = 0; i < (int32_t)aMaxElements && i < GetSize(); ++i) {
+      *aResult->AppendElement() = static_cast<T*>(ObjectAt(i));
+    }
+  }
+
   uint32_t FrameCount() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     uint32_t frames = 0;
