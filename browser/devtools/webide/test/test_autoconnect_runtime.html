@@ -44,7 +44,7 @@
             }
           };
           win.AppManager.runtimeList.usb.push(fakeRuntime);
-          win.AppManager.update("runtimelist");
+          win.AppManager.update("runtime-list");
 
           let panelNode = win.document.querySelector("#runtime-panel");
           let items = panelNode.querySelectorAll(".runtime-panel-item-usb");
@@ -69,9 +69,9 @@
           win = yield openWebIDE();
 
           win.AppManager.runtimeList.usb.push(fakeRuntime);
-          win.AppManager.update("runtimelist");
+          win.AppManager.update("runtime-list");
 
-          yield waitForUpdate(win, "runtime-apps-found");
+          yield waitForUpdate(win, "runtime-targets");
 
           is(Object.keys(DebuggerServer._connections).length, 1, "Automatically reconnected");
 
