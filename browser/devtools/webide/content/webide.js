@@ -156,8 +156,9 @@ let UI = {
 
   appManagerUpdate: function(event, what, details) {
     // Got a message from app-manager.js
+    // See AppManager.update() for descriptions of what these events mean.
     switch (what) {
-      case "runtimelist":
+      case "runtime-list":
         this.updateRuntimeList();
         this.autoConnectRuntime();
         break;
@@ -183,16 +184,16 @@ let UI = {
           projectList.update();
         });
         return;
-      case "project-is-not-running":
-      case "project-is-running":
-      case "list-tabs-response":
+      case "project-stopped":
+      case "project-started":
+      case "runtime-global-actors":
         this.updateCommands();
         projectList.update();
         break;
       case "runtime-details":
         this.updateRuntimeButton();
         break;
-      case "runtime-changed":
+      case "runtime":
         this.updateRuntimeButton();
         this.saveLastConnectedRuntime();
         break;
@@ -203,13 +204,14 @@ let UI = {
         this.updateProjectEditorHeader();
         projectList.update();
         break;
+      case "runtime-targets":
       case "project-removed":
-        projectList.update();
+        projectList.update(details);
         break;
       case "install-progress":
         this.updateProgress(Math.round(100 * details.bytesSent / details.totalBytes));
         break;
-      case "runtime-apps-found":
+      case "runtime-targets":
         this.autoSelectProject();
         projectList.update();
         break;
@@ -1076,6 +1078,18 @@ let Cmds = {
 
   showProjectPanel: function() {
     ProjectPanel.toggle(projectList.sidebarsEnabled, true);
+
+    // There are currently no available events to listen for when an unselected
+    // tab navigates.  Since we show every tab's location in the project menu,
+    // we re-list all the tabs each time the menu is displayed.
+    // TODO: An event-based solution will be needed for the sidebar UI.
+    if (!projectList.sidebarsEnabled && AppManager.connected) {
+      return AppManager.listTabs().then(() => {
+        projectList.updateTabs();
+      }).catch(console.error);
+    }
+
+    return promise.resolve();
   },
 
   showRuntimePanel: function() {
