@@ -113,13 +113,20 @@ let RLSidebar = {
     log.trace(`onItemDeleted: ${item}`);
 
     let itemNode = this.itemNodesById.get(item.id);
-    itemNode.remove();
-    this.itemNodesById.delete(item.id);
-    this.itemsById.delete(item.id);
-    // TODO: ensureListItems doesn't yet cope with needing to add one item.
-    //this.ensureListItems();
+    itemNode.addEventListener('transitionend', (event) => {
+      if (event.propertyName == "max-height") {
+        this.itemNodesById.delete(item.id);
+        this.itemsById.delete(item.id);
+        itemNode.remove();
 
-    this.emptyListInfo.hidden = (this.numItems > 0);
+        // TODO: ensureListItems doesn't yet cope with needing to add one item.
+        //this.ensureListItems();
+
+        this.emptyListInfo.hidden = (this.numItems > 0);
+      }
+    }, false);
+
+    itemNode.classList.remove('visible');
   },
 
   /**
