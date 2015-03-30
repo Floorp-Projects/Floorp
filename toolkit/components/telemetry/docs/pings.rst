@@ -29,7 +29,8 @@ Ping types
 ==========
 
 * :doc:`main <main-ping>` - contains the information collected by Telemetry (Histograms, hang stacks, ...)
-* :doc:`saved-session <main-ping>` - has the same format as a main ping, but it contains the *"classic"* Telemetry payload with measurements covering the whole browser session. This is only a separate type to make storage of saved-session easier server-side.
+* :doc:`saved-session <main-ping>` - has the same format as a main ping, but it contains the *"classic"* Telemetry payload with measurements covering the whole browser session. This is only a separate type to make storage of saved-session easier server-side. This is temporary and will be removed soon.
+* :doc:`crash <crash-ping>` - a ping that is captured and sent after Firefox crashes.
 * ``activation`` - *planned* - sent right after installation or profile creation
 * ``upgrade`` - *planned* - sent right after an upgrade
 * ``deletion`` - *planned* - on opt-out we may have to tell the server to delete user data
