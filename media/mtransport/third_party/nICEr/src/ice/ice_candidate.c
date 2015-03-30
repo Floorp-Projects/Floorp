@@ -259,6 +259,13 @@ int nr_ice_candidate_destroy(nr_ice_candidate **candp)
 
     cand=*candp;
 
+    if (cand->state == NR_ICE_CAND_STATE_INITIALIZING) {
+      /* Make sure the ICE ctx isn't still waiting around for this candidate
+       * to init. */
+      cand->state=NR_ICE_CAND_STATE_FAILED;
+      cand->done_cb(0,0,cand->cb_arg);
+    }
+
     switch(cand->type){
       case HOST:
         break;
