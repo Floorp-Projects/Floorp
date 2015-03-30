@@ -10,8 +10,6 @@
 #include <stdint.h>
 #include <mozilla/UniquePtr.h>
 
-struct nsIntSize;
-
 namespace mozilla {
 
 namespace gl { class GLContext; }

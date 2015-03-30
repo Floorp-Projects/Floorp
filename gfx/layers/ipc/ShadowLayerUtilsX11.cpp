@@ -64,7 +64,7 @@ GetXRenderPictFormatFromId(Display* aDisplay, PictFormat aFormatId)
 
 SurfaceDescriptorX11::SurfaceDescriptorX11(gfxXlibSurface* aSurf)
   : mId(aSurf->XDrawable())
-  , mSize(aSurf->GetSize().ToIntSize())
+  , mSize(aSurf->GetSize())
 {
   const XRenderPictFormat *pictFormat = aSurf->XRenderFormat();
   if (pictFormat) {
@@ -90,7 +90,7 @@ SurfaceDescriptorX11::OpenForeign() const
   nsRefPtr<gfxXlibSurface> surf;
   XRenderPictFormat* pictFormat = GetXRenderPictFormatFromId(display, mFormat);
   if (pictFormat) {
-    surf = new gfxXlibSurface(screen, mId, pictFormat, gfx::ThebesIntSize(mSize));
+    surf = new gfxXlibSurface(screen, mId, pictFormat, mSize);
   } else {
     Visual* visual;
     int depth;
@@ -98,7 +98,7 @@ SurfaceDescriptorX11::OpenForeign() const
     if (!visual)
       return nullptr;
 
-    surf = new gfxXlibSurface(display, mId, visual, gfx::ThebesIntSize(mSize));
+    surf = new gfxXlibSurface(display, mId, visual, mSize);
   }
   return surf->CairoStatus() ? nullptr : surf.forget();
 }

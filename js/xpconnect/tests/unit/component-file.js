@@ -93,7 +93,7 @@ FileComponent.prototype =
     return interfaces;
   },
 
-  getHelperForLanguage: function getHelperForLanguage(aLanguage) {
+  getScriptableHelper: function getScriptableHelper() {
     return null;
   },
 

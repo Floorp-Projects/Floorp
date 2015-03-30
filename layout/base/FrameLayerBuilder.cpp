@@ -2797,7 +2797,7 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
   RefPtr<DrawTarget> tempDT;
   if (gfxUtils::sDumpPainting) {
     tempDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-                                      itemVisibleRect.Size().ToIntSize(),
+                                      itemVisibleRect.Size(),
                                       SurfaceFormat::B8G8R8A8);
     if (tempDT) {
       context = new gfxContext(tempDT);

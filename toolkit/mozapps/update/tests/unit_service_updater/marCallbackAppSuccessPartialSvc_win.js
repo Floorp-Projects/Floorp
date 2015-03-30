@@ -25,5 +25,6 @@ function setupAppFilesFinished() {
 
 function checkUpdateFinished() {
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+  standardInit();
   checkCallbackServiceLog();
 }

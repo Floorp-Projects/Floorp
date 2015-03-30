@@ -60,15 +60,10 @@ public:
   }
 
   NS_IMETHODIMP
-  GetHelperForLanguage(uint32_t aLanguage, nsISupports **_helper) override
+  GetScriptableHelper(nsIXPCScriptable **_helper) override
   {
-    if (aLanguage == nsIProgrammingLanguage::JAVASCRIPT) {
-      static StatementJSHelper sJSHelper;
-      *_helper = &sJSHelper;
-      return NS_OK;
-    }
-
-    *_helper = nullptr;
+    static StatementJSHelper sJSHelper;
+    *_helper = &sJSHelper;
     return NS_OK;
   }
 

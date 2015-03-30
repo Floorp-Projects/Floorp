@@ -21,8 +21,6 @@
 #include "nsRegion.h"                   // for nsIntRegion
 #include "LayersTypes.h"
 
-struct nsIntSize;
-
 namespace mozilla {
 namespace gfx {
 class Matrix;
@@ -389,7 +387,7 @@ protected:
    * buffer provider.
    */
   gfxContentType BufferContentType();
-  bool BufferSizeOkFor(const nsIntSize& aSize);
+  bool BufferSizeOkFor(const gfx::IntSize& aSize);
   /**
    * If the buffer hasn't been mapped, map it.
    */

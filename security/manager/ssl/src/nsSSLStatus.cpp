@@ -214,7 +214,7 @@ nsSSLStatus::GetInterfaces(uint32_t* aCount, nsIID*** aArray)
 }
 
 NS_IMETHODIMP
-nsSSLStatus::GetHelperForLanguage(uint32_t aLanguage, nsISupports** aHelper)
+nsSSLStatus::GetScriptableHelper(nsIXPCScriptable** aHelper)
 {
   *aHelper = nullptr;
   return NS_OK;

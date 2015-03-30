@@ -5,9 +5,6 @@
 /* Replace app binary complete MAR file staged patch apply success test */
 
 function run_test() {
-  // Set to true due to bug 1037599
-  DEBUG_AUS_TEST = true;
-
   if (!shouldRunServiceTest()) {
     return;
   }
@@ -36,5 +33,6 @@ function checkUpdateFinished() {
 
 function checkUpdateApplied() {
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+  standardInit();
   checkCallbackAppLog();
 }

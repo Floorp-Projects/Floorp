@@ -149,6 +149,6 @@ function Subject(object) {
 
 Subject.prototype = {
   QueryInterface: XPCOMUtils.generateQI([]),
-  getHelperForLanguage: function() {},
+  getScriptableHelper: function() {},
   getInterfaces: function() {}
 };

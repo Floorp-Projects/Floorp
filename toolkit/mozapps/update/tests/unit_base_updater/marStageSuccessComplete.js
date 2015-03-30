@@ -118,6 +118,7 @@ function finishCheckUpdateApplied() {
   }
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
   checkUpdateLogContents(LOG_COMPLETE_SUCCESS);
+  standardInit();
   checkCallbackAppLog();
 }
 

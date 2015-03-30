@@ -28,11 +28,10 @@ GenericClassInfo::GetInterfaces(uint32_t* aCount, nsIID*** aArray)
 }
 
 NS_IMETHODIMP
-GenericClassInfo::GetHelperForLanguage(uint32_t aLanguage,
-                                       nsISupports** aHelper)
+GenericClassInfo::GetScriptableHelper(nsIXPCScriptable** aHelper)
 {
-  if (mData->getlanguagehelper) {
-    return mData->getlanguagehelper(aLanguage, aHelper);
+  if (mData->getscriptablehelper) {
+    return mData->getscriptablehelper(aHelper);
   }
   return NS_ERROR_NOT_IMPLEMENTED;
 }

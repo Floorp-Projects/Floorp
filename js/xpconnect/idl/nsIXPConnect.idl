@@ -266,7 +266,7 @@ interface nsIXPCFunctionThisTranslator : nsISupports
     { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 %}
 
-[noscript, uuid(6872bfd6-660b-4aa3-b54b-41ce1d2d69e3)]
+[noscript, uuid(241fbefa-89dc-42b2-b180-08167d4b351b)]
 interface nsIXPConnect : nsISupports
 {
 %{ C++
@@ -406,14 +406,6 @@ interface nsIXPConnect : nsISupports
     [noscript, notxpcom] nsISupports
     getNativeOfWrapper(in JSContextPtr aJSContext,
                        in JSObjectPtr  aJSObj);
-
-    nsIStackFrame
-    createStackFrameLocation(in uint32_t       aLanguage,
-                             in string         aFilename,
-                             in string         aFunctionName,
-                             in int32_t        aLineNumber,
-                             in nsIStackFrame  aCaller);
-
 
     [noscript,notxpcom,nostdcall] JSContextPtr getCurrentJSContext();
     [noscript,notxpcom,nostdcall] JSContextPtr getSafeJSContext();

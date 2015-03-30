@@ -6,9 +6,6 @@
 /* General Partial MAR File Staged Patch Apply Test */
 
 function run_test() {
-  // Set to true due to bug 1083653
-  DEBUG_AUS_TEST = true;
-
   if (!shouldRunServiceTest()) {
     return;
   }
@@ -96,5 +93,6 @@ function finishCheckUpdateApplied() {
 
   checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
   checkUpdateLogContents(LOG_PARTIAL_SUCCESS);
+  standardInit();
   checkCallbackAppLog();
 }

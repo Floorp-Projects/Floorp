@@ -165,15 +165,6 @@ AppendToString(std::stringstream& aStream, const EventRegions& e,
 }
 
 void
-AppendToString(std::stringstream& aStream, const nsIntSize& sz,
-               const char* pfx, const char* sfx)
-{
-  aStream << pfx;
-  aStream << nsPrintfCString("(w=%d, h=%d)", sz.width, sz.height).get();
-  aStream << sfx;
-}
-
-void
 AppendToString(std::stringstream& aStream, const FrameMetrics& m,
                const char* pfx, const char* sfx, bool detailed)
 {

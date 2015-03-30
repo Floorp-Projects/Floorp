@@ -7,19 +7,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/FileUtils.jsm");
-Components.utils.import("resource://gre/modules/AddonManager.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
-Components.utils.import("resource://gre/modules/ctypes.jsm");
-#ifdef MOZ_SERVICES_HEALTHREPORT
-Components.utils.import("resource://gre/modules/UpdaterHealthProvider.jsm");
-#endif
+const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cu = Components.utils;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
+Cu.import("resource://gre/modules/FileUtils.jsm", this);
+Cu.import("resource://gre/modules/AddonManager.jsm", this);
+Cu.import("resource://gre/modules/Services.jsm", this);
+Cu.import("resource://gre/modules/ctypes.jsm", this);
+Cu.import("resource://gre/modules/UpdateTelemetry.jsm", this);
 
 const UPDATESERVICE_CID = Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}");
 const UPDATESERVICE_CONTRACTID = "@mozilla.org/updates/update-service;1";
@@ -29,6 +24,7 @@ const PREF_APP_UPDATE_AUTO                = "app.update.auto";
 const PREF_APP_UPDATE_BACKGROUND_INTERVAL = "app.update.download.backgroundInterval";
 const PREF_APP_UPDATE_BACKGROUNDERRORS    = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_BACKGROUNDMAXERRORS = "app.update.backgroundMaxErrors";
+const PREF_APP_UPDATE_CANCELATIONS        = "app.update.cancelations";
 const PREF_APP_UPDATE_CERTS_BRANCH        = "app.update.certs.";
 const PREF_APP_UPDATE_CERT_CHECKATTRS     = "app.update.cert.checkAttributes";
 const PREF_APP_UPDATE_CERT_ERRORS         = "app.update.cert.errors";
@@ -36,11 +32,9 @@ const PREF_APP_UPDATE_CERT_MAXERRORS      = "app.update.cert.maxErrors";
 const PREF_APP_UPDATE_CERT_REQUIREBUILTIN = "app.update.cert.requireBuiltIn";
 const PREF_APP_UPDATE_CUSTOM              = "app.update.custom";
 const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
-const PREF_APP_UPDATE_METRO_ENABLED       = "app.update.metro.enabled";
 const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
 const PREF_APP_UPDATE_INCOMPATIBLE_MODE   = "app.update.incompatible.mode";
 const PREF_APP_UPDATE_INTERVAL            = "app.update.interval";
-const PREF_APP_UPDATE_LASTUPDATETIME      = "app.update.lastUpdateTime.background-update-timer";
 const PREF_APP_UPDATE_LOG                 = "app.update.log";
 const PREF_APP_UPDATE_MODE                = "app.update.mode";
 const PREF_APP_UPDATE_NEVER_BRANCH        = "app.update.never.";
@@ -71,8 +65,6 @@ const URI_UPDATE_HISTORY_DIALOG = "chrome://mozapps/content/update/history.xul";
 const URI_BRAND_PROPERTIES      = "chrome://branding/locale/brand.properties";
 const URI_UPDATES_PROPERTIES    = "chrome://mozapps/locale/update/updates.properties";
 const URI_UPDATE_NS             = "http://www.mozilla.org/2005/app-update";
-
-const CATEGORY_UPDATE_TIMER               = "update-timer";
 
 const KEY_GRED            = "GreD";
 const KEY_UPDROOT         = "UpdRootD";
@@ -128,12 +120,9 @@ const STATE_SUCCEEDED       = "succeeded";
 const STATE_DOWNLOAD_FAILED = "download-failed";
 const STATE_FAILED          = "failed";
 
-// From updater/errors.h:
-const WRITE_ERROR        = 7;
-// const UNEXPECTED_ERROR   = 8; // Replaced with errors 38-42
-const ELEVATION_CANCELED = 9;
-
-// Windows service specific errors
+// The values below used by this code are from common/errors.h
+const WRITE_ERROR                          = 7;
+const ELEVATION_CANCELED                   = 9;
 const SERVICE_UPDATER_COULD_NOT_BE_STARTED = 24;
 const SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS = 25;
 const SERVICE_UPDATER_SIGN_ERROR           = 26;
@@ -144,30 +133,65 @@ const SERVICE_STILL_APPLYING_ON_FAILURE    = 30;
 const SERVICE_UPDATER_NOT_FIXED_DRIVE      = 31;
 const SERVICE_COULD_NOT_LOCK_UPDATER       = 32;
 const SERVICE_INSTALLDIR_ERROR             = 33;
+const WRITE_ERROR_ACCESS_DENIED            = 35;
+const WRITE_ERROR_CALLBACK_APP             = 37;
+const FILESYSTEM_MOUNT_READWRITE_ERROR     = 43;
 const SERVICE_COULD_NOT_COPY_UPDATER       = 49;
+const WRITE_ERROR_FILE_COPY                = 61;
+const WRITE_ERROR_DELETE_FILE              = 62;
+const WRITE_ERROR_OPEN_PATCH_FILE          = 63;
+const WRITE_ERROR_PATCH_FILE               = 64;
+const WRITE_ERROR_APPLY_DIR_PATH           = 65;
+const WRITE_ERROR_CALLBACK_PATH            = 66;
+const WRITE_ERROR_FILE_ACCESS_DENIED       = 67;
+const WRITE_ERROR_DIR_ACCESS_DENIED        = 68;
+const WRITE_ERROR_DELETE_BACKUP            = 69;
+const WRITE_ERROR_EXTRACT                  = 70;
 
-const WRITE_ERROR_ACCESS_DENIED                     = 35;
-// const WRITE_ERROR_SHARING_VIOLATION                 = 36; // Replaced with errors 46-48
-const WRITE_ERROR_CALLBACK_APP                      = 37;
-const INVALID_UPDATER_STATUS_CODE                   = 38;
-const UNEXPECTED_BZIP_ERROR                         = 39;
-const UNEXPECTED_MAR_ERROR                          = 40;
-const UNEXPECTED_BSPATCH_ERROR                      = 41;
-const UNEXPECTED_FILE_OPERATION_ERROR               = 42;
-const FILESYSTEM_MOUNT_READWRITE_ERROR              = 43;
-const FOTA_GENERAL_ERROR                            = 44;
-const FOTA_UNKNOWN_ERROR                            = 45;
-const WRITE_ERROR_SHARING_VIOLATION_SIGNALED        = 46;
-const WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID = 47;
-const WRITE_ERROR_SHARING_VIOLATION_NOPID           = 48;
-const FOTA_FILE_OPERATION_ERROR                     = 49;
-const FOTA_RECOVERY_ERROR                           = 50;
+// Array of write errors to simplify checks for write errors
+const WRITE_ERRORS = [WRITE_ERROR,
+                      WRITE_ERROR_ACCESS_DENIED,
+                      WRITE_ERROR_CALLBACK_APP,
+                      WRITE_ERROR_FILE_COPY,
+                      WRITE_ERROR_DELETE_FILE,
+                      WRITE_ERROR_OPEN_PATCH_FILE,
+                      WRITE_ERROR_PATCH_FILE,
+                      WRITE_ERROR_APPLY_DIR_PATH,
+                      WRITE_ERROR_CALLBACK_PATH,
+                      WRITE_ERROR_FILE_ACCESS_DENIED,
+                      WRITE_ERROR_DIR_ACCESS_DENIED,
+                      WRITE_ERROR_DELETE_BACKUP,
+                      WRITE_ERROR_EXTRACT];
 
+// Array of write errors to simplify checks for service errors
+const SERVICE_ERRORS = [SERVICE_UPDATER_COULD_NOT_BE_STARTED,
+                        SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS,
+                        SERVICE_UPDATER_SIGN_ERROR,
+                        SERVICE_UPDATER_COMPARE_ERROR,
+                        SERVICE_UPDATER_IDENTITY_ERROR,
+                        SERVICE_STILL_APPLYING_ON_SUCCESS,
+                        SERVICE_STILL_APPLYING_ON_FAILURE,
+                        SERVICE_UPDATER_NOT_FIXED_DRIVE,
+                        SERVICE_COULD_NOT_LOCK_UPDATER,
+                        SERVICE_INSTALLDIR_ERROR,
+                        SERVICE_COULD_NOT_COPY_UPDATER];
+
+// Error codes 80 through 99 are reserved for nsUpdateService.js and are not
+// defined in common/errors.h
+const FOTA_GENERAL_ERROR                   = 80;
+const FOTA_UNKNOWN_ERROR                   = 81;
+const FOTA_FILE_OPERATION_ERROR            = 82;
+const FOTA_RECOVERY_ERROR                  = 83;
+// Staging failed and changed the state to pending
+const STAGE_FAIL_FALLBACK                  = 97;
+const INVALID_UPDATER_STATE_CODE           = 98;
+const INVALID_UPDATER_STATUS_CODE          = 99;
+
+// Custom update error codes
 const CERT_ATTR_CHECK_FAILED_NO_UPDATE  = 100;
 const CERT_ATTR_CHECK_FAILED_HAS_UPDATE = 101;
 const BACKGROUNDCHECK_MULTIPLE_FAILURES = 110;
 const NETWORK_ERROR_OFFLINE             = 111;
-const FILE_ERROR_TOO_BIG                = 112;
 
 // Error codes should be < 1000. Errors above 1000 represent http status codes
 const HTTP_ERROR_OFFSET                 = 1000;
@@ -188,90 +212,6 @@ const DEFAULT_SOCKET_MAX_ERRORS = 10;
 
 // The number of milliseconds to wait before retrying a connection error.
 const DEFAULT_UPDATE_RETRY_TIMEOUT = 2000;
-
-// A background download is in progress (no notification)
-const PING_BGUC_IS_DOWNLOADING               = 0;
-// An update is staged (no notification)
-const PING_BGUC_IS_STAGED                    = 1;
-// Invalid url for app.update.url default preference (no notification)
-const PING_BGUC_INVALID_DEFAULT_URL          = 2;
-// Invalid url for app.update.url user preference (no notification)
-const PING_BGUC_INVALID_CUSTOM_URL           = 3;
-// Invalid url for app.update.url.override user preference (no notification)
-const PING_BGUC_INVALID_OVERRIDE_URL         = 4;
-// Unable to check for updates per gCanCheckForUpdates and hasUpdateMutex()
-// (no notification)
-const PING_BGUC_UNABLE_TO_CHECK              = 5;
-// Already has an active update in progress (no notification)
-const PING_BGUC_HAS_ACTIVEUPDATE             = 6;
-// Background checks disabled by preference (no notification)
-const PING_BGUC_PREF_DISABLED                = 7;
-// Background checks disabled for the current session (no notification)
-const PING_BGUC_DISABLED_FOR_SESSION         = 8;
-// Background checks disabled in Metro (no notification)
-const PING_BGUC_METRO_DISABLED               = 9;
-// Unable to perform a background check while offline (no notification)
-const PING_BGUC_OFFLINE                      = 10;
-// No update found certificate check failed and threshold reached
-// (possible mitm attack notification)
-const PING_BGUC_CERT_ATTR_NO_UPDATE_NOTIFY   = 11;
-// No update found certificate check failed and threshold not reached
-// (no notification)
-const PING_BGUC_CERT_ATTR_NO_UPDATE_SILENT   = 12;
-// Update found certificate check failed and threshold reached
-// (possible mitm attack notification)
-const PING_BGUC_CERT_ATTR_WITH_UPDATE_NOTIFY = 13;
-// Update found certificate check failed and threshold not reached
-// (no notification)
-const PING_BGUC_CERT_ATTR_WITH_UPDATE_SILENT = 14;
-// General update check failure and threshold reached
-// (check failure notification)
-const PING_BGUC_GENERAL_ERROR_NOTIFY         = 15;
-// General update check failure and threshold not reached
-// (no notification)
-const PING_BGUC_GENERAL_ERROR_SILENT         = 16;
-// No update found (no notification)
-const PING_BGUC_NO_UPDATE_FOUND              = 17;
-// No compatible update found though there were updates (no notification)
-const PING_BGUC_NO_COMPAT_UPDATE_FOUND       = 18;
-// Update found for a previous version (no notification)
-const PING_BGUC_UPDATE_PREVIOUS_VERSION      = 19;
-// Update found for a version with the never preference set (no notification)
-const PING_BGUC_UPDATE_NEVER_PREF            = 20;
-// Update found without a type attribute (no notification)
-const PING_BGUC_UPDATE_INVALID_TYPE          = 21;
-// The system is no longer supported (system unsupported notification)
-const PING_BGUC_UNSUPPORTED                  = 22;
-// Unable to apply updates (manual install to update notification)
-const PING_BGUC_UNABLE_TO_APPLY              = 23;
-// Showing prompt due to the update.xml specifying showPrompt
-// (update notification)
-const PING_BGUC_SHOWPROMPT_SNIPPET           = 24;
-// Showing prompt due to preference (update notification)
-const PING_BGUC_SHOWPROMPT_PREF              = 25;
-// Incompatible add-on check disabled by preference (background download)
-const PING_BGUC_ADDON_PREF_DISABLED          = 26;
-// Incompatible add-on not checked not performed due to same update version and
-// app version (background download)
-const PING_BGUC_ADDON_SAME_APP_VER           = 27;
-// No incompatible add-ons found during incompatible check (background download)
-const PING_BGUC_CHECK_NO_INCOMPAT            = 28;
-// Incompatible add-ons found and all of them have updates (background download)
-const PING_BGUC_ADDON_UPDATES_FOR_INCOMPAT   = 29;
-// Incompatible add-ons found (update notification)
-const PING_BGUC_ADDON_HAVE_INCOMPAT          = 30;
-
-// Health report field names
-const UpdaterHealthReportFields = {
-  CHECK_START: "updateCheckStart",
-  CHECK_SUCCESS: "updateCheckSuccess",
-  CHECK_FAILED: "updateCheckFailed",
-  COMPLETE_START: "completeUpdateStart",
-  PARTIAL_START: "partialUpdateStart",
-  COMPLETE_SUCCESS: "completeUpdateSuccess",
-  PARTIAL_SUCCESS: "partialUpdateSuccess",
-  FAILED: "updateFailed"
-};
 
 var gLocale = null;
 var gUpdateMutexHandle = null;
@@ -570,9 +510,7 @@ function getPerInstallationMutexName(aGlobal) {
  * Whether or not the current instance has the update mutex. The update mutex
  * gives protection against 2 applications from the same installation updating:
  * 1) Running multiple profiles from the same installation path
- * 2) Running a Metro and Desktop application at the same time from the same
- *    path
- * 3) 2 applications running in 2 different user sessions from the same path
+ * 2) Two applications running in 2 different user sessions from the same path
  *
  * @return true if this instance holds the update mutex
  */
@@ -589,16 +527,6 @@ function hasUpdateMutex() {
 }
 
 XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpdates() {
-  function submitHasPermissionsTelemetryPing(val) {
-    try {
-      let h = Services.telemetry.getHistogramById("UPDATER_HAS_PERMISSIONS");
-      h.add(+val);
-    } catch(e) {
-      // Don't allow any exception to be propagated.
-      Components.utils.reportError(e);
-    }
-  }
-
   let useService = false;
   if (shouldUseService() && isServiceInstalled()) {
     // No need to perform directory write checks, the maintenance service will
@@ -631,15 +559,15 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
       LOG("gCanApplyUpdates - windowsVersion = " + windowsVersion);
 
     /**
-  #    For Vista, updates can be performed to a location requiring admin
-  #    privileges by requesting elevation via the UAC prompt when launching
-  #    updater.exe if the appDir is under the Program Files directory
-  #    (e.g. C:\Program Files\) and UAC is turned on and  we can elevate
-  #    (e.g. user has a split token).
-  #
-  #    Note: this does note attempt to handle the case where UAC is turned on
-  #    and the installation directory is in a restricted location that
-  #    requires admin privileges to update other than Program Files.
+     * For Vista, updates can be performed to a location requiring admin
+     * privileges by requesting elevation via the UAC prompt when launching
+     * updater.exe if the appDir is under the Program Files directory
+     * (e.g. C:\Program Files\) and UAC is turned on and  we can elevate
+     * (e.g. user has a split token).
+     *
+     * Note: this does note attempt to handle the case where UAC is turned on
+     * and the installation directory is in a restricted location that
+     * requires admin privileges to update other than Program Files.
      */
       var userCanElevate = false;
 
@@ -664,24 +592,24 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
       }
 
       /**
-#      On Windows, we no longer store the update under the app dir.
-#
-#      If we are on Windows (including Vista, if we can't elevate) we need to
-#      to check that we can create and remove files from the actual app
-#      directory (like C:\Program Files\Mozilla Firefox).  If we can't
-#      (because this user is not an adminstrator, for example) canUpdate()
-#      should return false.
-#
-#      For Vista, we perform this check to enable updating the  application
-#      when the user has write access to the installation directory under the
-#      following scenarios:
-#      1) the installation directory is not under Program Files
-#         (e.g. C:\Program Files)
-#      2) UAC is turned off
-#      3) UAC is turned on and the user is not an admin
-#         (e.g. the user does not have a split token)
-#      4) UAC is turned on and the user is already elevated, so they can't be
-#         elevated again
+       * On Windows, we no longer store the update under the app dir.
+       *
+       * If we are on Windows (including Vista, if we can't elevate) we need to
+       * to check that we can create and remove files from the actual app
+       * directory (like C:\Program Files\Mozilla Firefox).  If we can't
+       * (because this user is not an adminstrator, for example) canUpdate()
+       * should return false.
+       *
+       * For Vista, we perform this check to enable updating the  application
+       * when the user has write access to the installation directory under the
+       * following scenarios:
+       * 1) the installation directory is not under Program Files
+       *    (e.g. C:\Program Files)
+       * 2) UAC is turned off
+       * 3) UAC is turned on and the user is not an admin
+       *    (e.g. the user does not have a split token)
+       * 4) UAC is turned on and the user is already elevated, so they can't be
+       *    elevated again
        */
       if (!userCanElevate) {
         // if we're unable to create the test file this will throw an exception.
@@ -698,13 +626,11 @@ XPCOMUtils.defineLazyGetter(this, "gCanApplyUpdates", function aus_gCanApplyUpda
     catch (e) {
        LOG("gCanApplyUpdates - unable to apply updates. Exception: " + e);
       // No write privileges to install directory
-      submitHasPermissionsTelemetryPing(false);
       return false;
     }
   } // if (!useService)
 
   LOG("gCanApplyUpdates - able to apply updates");
-  submitHasPermissionsTelemetryPing(true);
   return true;
 });
 
@@ -777,23 +703,6 @@ function getCanStageUpdates() {
   return canStageUpdatesSession;
 }
 
-XPCOMUtils.defineLazyGetter(this, "gMetroUpdatesEnabled", function aus_gMetroUpdatesEnabled() {
-#ifdef XP_WIN
-#ifdef MOZ_METRO
-  if (Services.metro && Services.metro.immersive) {
-    let metroUpdate = getPref("getBoolPref", PREF_APP_UPDATE_METRO_ENABLED, true);
-    if (!metroUpdate) {
-      LOG("gMetroUpdatesEnabled - unable to automatically check for metro " +
-          "updates, disabled by pref");
-      return false;
-    }
-  }
-#endif
-#endif
-
-  return true;
-});
-
 XPCOMUtils.defineLazyGetter(this, "gCanCheckForUpdates", function aus_gCanCheckForUpdates() {
   // If the administrator has disabled app update and locked the preference so
   // users can't check for updates. This preference check is ok in this lazy
@@ -802,10 +711,6 @@ XPCOMUtils.defineLazyGetter(this, "gCanCheckForUpdates", function aus_gCanCheckF
   if (!enabled && Services.prefs.prefIsLocked(PREF_APP_UPDATE_ENABLED)) {
     LOG("gCanCheckForUpdates - unable to automatically check for updates, " +
         "the preference is disabled and admistratively locked.");
-    return false;
-  }
-
-  if (!gMetroUpdatesEnabled) {
     return false;
   }
 
@@ -962,37 +867,6 @@ function getStatusTextFromCode(code, defaultCode) {
         ", default code: " + defaultCode);
   }
   return reason;
-}
-
-/**
- * Record count in the health report.
- * @param field
- *        The field name to record
- * @param status
- *        Status code for errors, 0 otherwise
- */
-function recordInHealthReport(field, status) {
-#ifdef MOZ_SERVICES_HEALTHREPORT
-  try {
-    LOG("recordInHealthReport - " + field + " - " + status);
-
-    let reporter = Cc["@mozilla.org/datareporting/service;1"]
-                      .getService().wrappedJSObject.healthReporter;
-
-    if (reporter) {
-      reporter.onInit().then(function recordUpdateInHealthReport() {
-        try {
-          reporter.getProvider("org.mozilla.update").recordUpdate(field, status);
-        } catch (ex) {
-          Cu.reportError(ex);
-        }
-      });
-    }
-  // If getting the heath reporter service fails, don't fail updating.
-  } catch (ex) {
-    LOG("recordInHealthReport - could not initialize health reporter");
-  }
-#endif
 }
 
 /**
@@ -1486,12 +1360,8 @@ function handleUpdateFailure(update, errorCode) {
     return true;
   }
 
-  if (update.errorCode == WRITE_ERROR ||
-      update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
-      update.errorCode == WRITE_ERROR_SHARING_VIOLATION_SIGNALED ||
-      update.errorCode == WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID ||
-      update.errorCode == WRITE_ERROR_SHARING_VIOLATION_NOPID ||
-      update.errorCode == WRITE_ERROR_CALLBACK_APP ||
+  // Replace with Array.prototype.includes when it has stabilized.
+  if (WRITE_ERRORS.indexOf(update.errorCode) != -1 ||
       update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR) {
     Cc["@mozilla.org/updates/update-prompt;1"].
       createInstance(Ci.nsIUpdatePrompt).
@@ -1502,21 +1372,17 @@ function handleUpdateFailure(update, errorCode) {
 
   if (update.errorCode == ELEVATION_CANCELED) {
     writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
+    let cancelations = getPref("getIntPref", PREF_APP_UPDATE_CANCELATIONS, 0);
+    cancelations++;
+    Services.prefs.setIntPref(PREF_APP_UPDATE_CANCELATIONS, cancelations);
     return true;
   }
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_SERVICE_ERRORS)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_SERVICE_ERRORS);
+  }
 
-  if (update.errorCode == SERVICE_UPDATER_COULD_NOT_BE_STARTED ||
-      update.errorCode == SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS ||
-      update.errorCode == SERVICE_UPDATER_SIGN_ERROR ||
-      update.errorCode == SERVICE_UPDATER_COMPARE_ERROR ||
-      update.errorCode == SERVICE_UPDATER_IDENTITY_ERROR ||
-      update.errorCode == SERVICE_STILL_APPLYING_ON_SUCCESS ||
-      update.errorCode == SERVICE_STILL_APPLYING_ON_FAILURE ||
-      update.errorCode == SERVICE_UPDATER_NOT_FIXED_DRIVE ||
-      update.errorCode == SERVICE_COULD_NOT_LOCK_UPDATER ||
-      update.errorCode == SERVICE_COULD_NOT_COPY_UPDATER ||
-      update.errorCode == SERVICE_INSTALLDIR_ERROR) {
-
+  // Replace with Array.prototype.includes when it has stabilized.
+  if (SERVICE_ERRORS.indexOf(update.errorCode) != -1) {
     var failCount = getPref("getIntPref",
                             PREF_APP_UPDATE_SERVICE_ERRORS, 0);
     var maxFail = getPref("getIntPref",
@@ -1536,21 +1402,7 @@ function handleUpdateFailure(update, errorCode) {
     }
 
     writeStatusFile(getUpdatesDir(), update.state = STATE_PENDING);
-    try {
-      Services.telemetry.getHistogramById("UPDATER_SERVICE_ERROR_CODE").
-        add(update.errorCode);
-    }
-    catch (e) {
-      Cu.reportError(e);
-    }
     return true;
-  }
-
-  try {
-    Services.telemetry.getHistogramById("UPDATER_SERVICE_ERROR_CODE").add(0);
-  }
-  catch (e) {
-    Cu.reportError(e);
   }
   return false;
 }
@@ -1584,6 +1436,71 @@ function handleFallbackToCompleteUpdate(update, postStaging) {
   }
   update.QueryInterface(Ci.nsIWritablePropertyBag);
   update.setProperty("patchingFailed", oldType);
+}
+
+function pingStateAndStatusCodes(aUpdate, aStartup, aStatus) {
+  let patchType = AUSTLMY.PATCH_UNKNOWN;
+  if (aUpdate && aUpdate.selectedPatch && aUpdate.selectedPatch.type) {
+    if (aUpdate.selectedPatch.type == "complete") {
+      patchType = AUSTLMY.PATCH_COMPLETE;
+    } else if (aUpdate.selectedPatch.type == "partial") {
+      patchType = AUSTLMY.PATCH_PARTIAL;
+    }
+  }
+
+  let suffix = patchType + "_" + (aStartup ? AUSTLMY.STARTUP : AUSTLMY.STAGE);
+  let stateCode = 0;
+  let parts = aStatus.split(":");
+  if (parts.length > 0) {
+    switch (parts[0]) {
+      case STATE_NONE:
+        stateCode = 2;
+        break;
+      case STATE_DOWNLOADING:
+        stateCode = 3;
+        break;
+      case STATE_PENDING:
+        stateCode = 4;
+        parts[0] = STATE_FAILED;
+        parts.push(STAGE_FAIL_FALLBACK);
+        break;
+      case STATE_PENDING_SVC:
+        stateCode = 5;
+        break;
+      case STATE_APPLYING:
+        stateCode = 6;
+        break;
+      case STATE_APPLIED:
+        stateCode = 7;
+        break;
+      case STATE_APPLIED_OS:
+        stateCode = 8;
+        break;
+      case STATE_APPLIED_SVC:
+        stateCode = 9;
+        break;
+      case STATE_SUCCEEDED:
+        stateCode = 10;
+        break;
+      case STATE_DOWNLOAD_FAILED:
+        stateCode = 11;
+        break;
+      case STATE_FAILED:
+        stateCode = 12;
+        break;
+      default:
+        stateCode = 1;
+    }
+
+    if (parts.length > 1) {
+      let statusErrorCode = INVALID_UPDATER_STATE_CODE;
+      if (parts[0] == STATE_FAILED) {
+        statusErrorCode = parseInt(parts[1]) || INVALID_UPDATER_STATUS_CODE;
+      }
+      AUSTLMY.pingStatusErrorCode(suffix, statusErrorCode);
+    }
+  }
+  AUSTLMY.pingStateCode(suffix, stateCode);
 }
 
 /**
@@ -2166,17 +2083,7 @@ UpdateService.prototype = {
    * notify the user of install success.
    */
   _postUpdateProcessing: function AUS__postUpdateProcessing() {
-    // canCheckForUpdates will return false when metro-only updates are disabled
-    // from within metro.  In that case we still want _postUpdateProcessing to
-    // run.  gMetroUpdatesEnabled returns true on non Windows 8 platforms.
-    // We want _postUpdateProcessing to run so that it will update the history
-    // XML. Without updating the history XML, the about flyout will continue to
-    // have the "Restart to Apply Update" button (history xml indicates update
-    // is applied).
-    // TODO: I think this whole if-block should be removed since updates can
-    // always be applied via the about dialog, we should be running post update
-    // in those cases.
-    if (!this.canCheckForUpdates && gMetroUpdatesEnabled) {
+    if (!this.canCheckForUpdates) {
       LOG("UpdateService:_postUpdateProcessing - unable to check for " +
           "updates... returning early");
       return;
@@ -2191,17 +2098,18 @@ UpdateService.prototype = {
       return;
     }
 
+    var um = Cc["@mozilla.org/updates/update-manager;1"].
+             getService(Ci.nsIUpdateManager);
+    var update = um.activeUpdate;
     var status = readStatusFile(getUpdatesDir());
-    // STATE_NONE status means that the update.status file is present but a
-    // background download error occurred.
+    pingStateAndStatusCodes(update, true, status);
+    // STATE_NONE status typically means that the update.status file is present
+    // but a background download error occurred.
     if (status == STATE_NONE) {
       LOG("UpdateService:_postUpdateProcessing - no status, no update");
       cleanupActiveUpdate();
       return;
     }
-
-    var um = Cc["@mozilla.org/updates/update-manager;1"].
-             getService(Ci.nsIUpdateManager);
 
 #ifdef MOZ_WIDGET_GONK
     // This code is called very early in the boot process, before we've even
@@ -2219,8 +2127,6 @@ UpdateService.prototype = {
       return;
     }
 #endif
-
-    var update = um.activeUpdate;
 
     if (status == STATE_DOWNLOADING) {
       LOG("UpdateService:_postUpdateProcessing - patch found in downloading " +
@@ -2305,7 +2211,6 @@ UpdateService.prototype = {
                    createInstance(Ci.nsIUpdatePrompt);
 
     update.state = status;
-    this._sendStatusCodeTelemetryPing(status);
 
     if (status == STATE_SUCCEEDED) {
       update.statusText = gUpdateBundle.GetStringFromName("installSuccess");
@@ -2344,167 +2249,6 @@ UpdateService.prototype = {
     // Now trash the MozUpdater directory created when replacing an install with
     // a staged update.
     cleanUpMozUpdaterDirs();
-  },
-
-  /**
-   * Submit a telemetry ping with the boolean value of a pref for a histogram
-   *
-   * @param  pref
-   *         The preference to report
-   * @param  histogram
-   *         The histogram ID to report to
-   */
-  _sendBoolPrefTelemetryPing: function AUS__boolTelemetryPing(pref, histogram) {
-    try {
-      // The getPref is already wrapped in a try/catch but we never
-      // want telemetry pings breaking app update so we just put it
-      // inside the try to be safe.
-      let val = getPref("getBoolPref", pref, false);
-      Services.telemetry.getHistogramById(histogram).add(+val);
-    } catch(e) {
-      // Don't allow any exception to be propagated.
-      Cu.reportError(e);
-    }
-  },
-
-#ifdef XP_WIN
-  /**
-   * Submit a telemetry ping with a boolean value which indicates if the service
-   * is installed.
-   * Also submits a telemetry ping with a boolean value which indicates if the
-   * service was at some point installed, but is now uninstalled.
-   */
-  _sendServiceInstalledTelemetryPing: function AUS__svcInstallTelemetryPing() {
-    let installed = isServiceInstalled(); // Is the service installed?
-    let attempted = 0;
-    try {
-      let wrk = Cc["@mozilla.org/windows-registry-key;1"].
-                createInstance(Ci.nsIWindowsRegKey);
-      wrk.open(wrk.ROOT_KEY_LOCAL_MACHINE,
-               "SOFTWARE\\Mozilla\\MaintenanceService",
-               wrk.ACCESS_READ | wrk.WOW64_64);
-      // Was the service at some point installed, but is now uninstalled?
-      attempted = wrk.readIntValue("Attempted");
-      wrk.close();
-    } catch(e) {
-    }
-    try {
-      let h = Services.telemetry.getHistogramById("UPDATER_SERVICE_INSTALLED");
-      h.add(Number(installed));
-    } catch(e) {
-      // Don't allow any exception to be propagated.
-      Cu.reportError(e);
-    }
-    try {
-      let h = Services.telemetry.getHistogramById("UPDATER_SERVICE_MANUALLY_UNINSTALLED");
-      h.add(!installed && attempted ? 1 : 0);
-    } catch(e) {
-      // Don't allow any exception to be propagated.
-      Cu.reportError(e);
-    }
-  },
-#endif
-
-  /**
-   * Submit a telemetry ping with the int value of a pref for a histogram
-   *
-   * @param  pref
-   *         The preference to report
-   * @param histogram
-   *         The histogram ID to report to
-   */
-  _sendIntPrefTelemetryPing: function AUS__intTelemetryPing(pref, histogram) {
-    try {
-      // The getPref is already wrapped in a try/catch but we never
-      // want telemetry pings breaking app update so we just put it
-      // inside the try to be safe.
-      let val = getPref("getIntPref", pref, 0);
-      Services.telemetry.getHistogramById(histogram).add(val);
-    } catch(e) {
-      // Don't allow any exception to be propagated.
-      Cu.reportError(e);
-    }
-  },
-
-
-  /**
-   * Submit the results of applying the update via telemetry.
-   *
-   * @param  status
-   *         The status of the update as read from the update.status file
-   */
-  _sendStatusCodeTelemetryPing: function AUS__statusTelemetryPing(status) {
-    try {
-      let parts = status.split(":");
-      if ((parts.length == 1 && status != STATE_SUCCEEDED) ||
-          (parts.length > 1  && parts[0] != STATE_FAILED)) {
-        // Should also report STATE_DOWNLOAD_FAILED
-        return;
-      }
-      let result = 0; // 0 means success
-      if (parts.length > 1) {
-        result = parseInt(parts[1]) || INVALID_UPDATER_STATUS_CODE;
-      }
-      Services.telemetry.getHistogramById("UPDATER_STATUS_CODES").add(result);
-    } catch(e) {
-      // Don't allow any exception to be propagated.
-      Cu.reportError(e);
-    }
-  },
-
-  /**
-   * Submit the interval in days since the last notification for this background
-   * update check.
-   */
-  _sendLastNotifyIntervalPing: function AUS__notifyIntervalPing() {
-    if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_LASTUPDATETIME)) {
-      let idSuffix = this._isNotify ? "NOTIFY" : "EXTERNAL";
-      let lastUpdateTimeSeconds = getPref("getIntPref",
-                                          PREF_APP_UPDATE_LASTUPDATETIME, 0);
-      if (lastUpdateTimeSeconds) {
-        let currentTimeSeconds = Math.round(Date.now() / 1000);
-        if (lastUpdateTimeSeconds > currentTimeSeconds) {
-          try {
-            Services.telemetry.
-              getHistogramById("UPDATER_INVALID_LASTUPDATETIME_" + idSuffix).
-              add(1);
-          } catch(e) {
-            Cu.reportError(e);
-          }
-        }
-        else {
-          let intervalDays = (currentTimeSeconds - lastUpdateTimeSeconds) /
-                             (60 * 60 * 24);
-          try {
-            Services.telemetry.
-              getHistogramById("UPDATER_INVALID_LASTUPDATETIME_" + idSuffix).
-              add(0);
-            Services.telemetry.
-              getHistogramById("UPDATER_LAST_NOTIFY_INTERVAL_DAYS_" + idSuffix).
-              add(intervalDays);
-          } catch(e) {
-            Cu.reportError(e);
-          }
-        }
-      }
-    }
-  },
-
-  /**
-   * Submit the result for the background update check.
-   *
-   * @param  code
-   *         An integer value as defined by the PING_BGUC_* constants.
-   */
-  _backgroundUpdateCheckCodePing: function AUS__backgroundUpdateCheckCodePing(code) {
-    try {
-      let idSuffix = this._isNotify ? "NOTIFY" : "EXTERNAL";
-      Services.telemetry.
-        getHistogramById("UPDATER_BACKGROUND_CHECK_CODE_" + idSuffix).add(code);
-    }
-    catch (e) {
-      Cu.reportError(e);
-    }
   },
 
   /**
@@ -2555,7 +2299,9 @@ UpdateService.prototype = {
     if (update.errorCode == NETWORK_ERROR_OFFLINE) {
       // Register an online observer to try again
       this._registerOnlineObserver();
-      this._backgroundUpdateCheckCodePing(PING_BGUC_OFFLINE);
+      if (this._pingSuffix) {
+        AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_OFFLINE);
+      }
       return;
     }
 
@@ -2565,8 +2311,7 @@ UpdateService.prototype = {
       errCount++;
       Services.prefs.setIntPref(PREF_APP_UPDATE_CERT_ERRORS, errCount);
       maxErrors = getPref("getIntPref", PREF_APP_UPDATE_CERT_MAXERRORS, 5);
-    }
-    else {
+    } else {
       update.errorCode = BACKGROUNDCHECK_MULTIPLE_FAILURES;
       errCount = getPref("getIntPref", PREF_APP_UPDATE_BACKGROUNDERRORS, 0);
       errCount++;
@@ -2575,7 +2320,7 @@ UpdateService.prototype = {
                           10);
     }
 
-    var pingCode;
+    let checkCode;
     if (errCount >= maxErrors) {
       var prompter = Cc["@mozilla.org/updates/update-prompt;1"].
                      createInstance(Ci.nsIUpdatePrompt);
@@ -2583,28 +2328,29 @@ UpdateService.prototype = {
 
       switch (update.errorCode) {
         case CERT_ATTR_CHECK_FAILED_NO_UPDATE:
-          pingCode = PING_BGUC_CERT_ATTR_NO_UPDATE_NOTIFY;
+          checkCode = AUSTLMY.CHK_CERT_ATTR_NO_UPDATE_PROMPT;
           break;
         case CERT_ATTR_CHECK_FAILED_HAS_UPDATE:
-          pingCode = PING_BGUC_CERT_ATTR_WITH_UPDATE_NOTIFY;
+          checkCode = AUSTLMY.CHK_CERT_ATTR_WITH_UPDATE_PROMPT;
           break;
         default:
-          pingCode = PING_BGUC_GENERAL_ERROR_NOTIFY;
+          checkCode = AUSTLMY.CHK_GENERAL_ERROR_PROMPT;
+          AUSTLMY.pingCheckExError(this._pingSuffix, update.errorCode);
       }
-    }
-    else {
+    } else {
       switch (update.errorCode) {
         case CERT_ATTR_CHECK_FAILED_NO_UPDATE:
-          pingCode = PING_BGUC_CERT_ATTR_NO_UPDATE_SILENT;
+          checkCode = AUSTLMY.CHK_CERT_ATTR_NO_UPDATE_SILENT;
           break;
         case CERT_ATTR_CHECK_FAILED_HAS_UPDATE:
-          pingCode = PING_BGUC_CERT_ATTR_WITH_UPDATE_SILENT;
+          checkCode = AUSTLMY.CHK_CERT_ATTR_WITH_UPDATE_SILENT;
           break;
         default:
-          pingCode = PING_BGUC_GENERAL_ERROR_SILENT;
+          checkCode = AUSTLMY.CHK_GENERAL_ERROR_SILENT;
+          AUSTLMY.pingCheckExError(this._pingSuffix, update.errorCode);
       }
     }
-    this._backgroundUpdateCheckCodePing(pingCode);
+    AUSTLMY.pingCheckCode(this._pingSuffix, checkCode);
   },
 
   /**
@@ -2638,24 +2384,6 @@ UpdateService.prototype = {
    *          The timer that fired
    */
   notify: function AUS_notify(timer) {
-    // The telemetry below is specific to background notification.
-    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_ENABLED,
-                                    "UPDATER_UPDATES_ENABLED");
-    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_METRO_ENABLED,
-                                    "UPDATER_UPDATES_METRO_ENABLED");
-    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_AUTO,
-                                    "UPDATER_UPDATES_AUTOMATIC");
-    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_STAGING_ENABLED,
-                                    "UPDATER_STAGE_ENABLED");
-
-#ifdef XP_WIN
-    this._sendBoolPrefTelemetryPing(PREF_APP_UPDATE_SERVICE_ENABLED,
-                                    "UPDATER_SERVICE_ENABLED");
-    this._sendIntPrefTelemetryPing(PREF_APP_UPDATE_SERVICE_ERRORS,
-                                   "UPDATER_SERVICE_ERRORS");
-    this._sendServiceInstalledTelemetryPing();
-#endif
-
     this._checkForBackgroundUpdates(true);
   },
 
@@ -2666,6 +2394,11 @@ UpdateService.prototype = {
     this._checkForBackgroundUpdates(false);
   },
 
+  // The suffix used for background update check telemetry histogram ID's.
+  get _pingSuffix() {
+    return this._isNotify ? AUSTLMY.NOTIFY : AUSTLMY.EXTERNAL;
+  },
+
   /**
    * Checks for updates in the background.
    * @param   isNotify
@@ -2674,55 +2407,122 @@ UpdateService.prototype = {
    */
   _checkForBackgroundUpdates: function AUS__checkForBackgroundUpdates(isNotify) {
     this._isNotify = isNotify;
-    // From this point on, the telemetry reported differentiates between a call
-    // to notify and a call to checkForBackgroundUpdates so they are reported
-    // separately.
-    this._sendLastNotifyIntervalPing();
+
+    // Histogram IDs:
+    // UPDATE_CANNOT_APPLY_EXTERNAL
+    // UPDATE_CANNOT_APPLY_NOTIFY
+    AUSTLMY.pingGeneric("UPDATE_CANNOT_APPLY_" + this._pingSuffix,
+                        gCanApplyUpdates);
+    // Histogram IDs:
+    // UPDATE_CANNOT_STAGE_EXTERNAL
+    // UPDATE_CANNOT_STAGE_NOTIFY
+    AUSTLMY.pingGeneric("UPDATE_CANNOT_STAGE_" + this._pingSuffix,
+                        getCanStageUpdates(), true);
+    // Histogram IDs:
+    // UPDATE_INVALID_LASTUPDATETIME_EXTERNAL
+    // UPDATE_INVALID_LASTUPDATETIME_NOTIFY
+    // UPDATE_LAST_NOTIFY_INTERVAL_DAYS_EXTERNAL
+    // UPDATE_LAST_NOTIFY_INTERVAL_DAYS_NOTIFY
+    AUSTLMY.pingLastUpdateTime(this._pingSuffix);
+    // Histogram IDs:
+    // UPDATE_NOT_PREF_UPDATE_ENABLED_EXTERNAL
+    // UPDATE_NOT_PREF_UPDATE_ENABLED_NOTIFY
+    AUSTLMY.pingBoolPref("UPDATE_NOT_PREF_UPDATE_ENABLED_" + this._pingSuffix,
+                         PREF_APP_UPDATE_ENABLED, true, true);
+    // Histogram IDs:
+    // UPDATE_NOT_PREF_UPDATE_AUTO_EXTERNAL
+    // UPDATE_NOT_PREF_UPDATE_AUTO_NOTIFY
+    AUSTLMY.pingBoolPref("UPDATE_NOT_PREF_UPDATE_AUTO_" + this._pingSuffix,
+                         PREF_APP_UPDATE_AUTO, true, true);
+    // Histogram IDs:
+    // UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_EXTERNAL
+    // UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_NOTIFY
+    AUSTLMY.pingBoolPref("UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_" +
+                         this._pingSuffix,
+                         PREF_APP_UPDATE_STAGING_ENABLED, true, true);
+#ifdef XP_WIN
+    // Histogram IDs:
+    // UPDATE_PREF_UPDATE_CANCELATIONS_EXTERNAL
+    // UPDATE_PREF_UPDATE_CANCELATIONS_NOTIFY
+    AUSTLMY.pingIntPref("UPDATE_PREF_UPDATE_CANCELATIONS_" + this._pingSuffix,
+                        PREF_APP_UPDATE_CANCELATIONS, 0, 0);
+#ifdef MOZ_MAINTENANCE_SERVICE
+    // Histogram IDs:
+    // UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_EXTERNAL
+    // UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_NOTIFY
+    AUSTLMY.pingBoolPref("UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_" +
+                         this._pingSuffix,
+                         PREF_APP_UPDATE_SERVICE_ENABLED, true);
+    // Histogram IDs:
+    // UPDATE_PREF_SERVICE_ERRORS_EXTERNAL
+    // UPDATE_PREF_SERVICE_ERRORS_NOTIFY
+    AUSTLMY.pingIntPref("UPDATE_PREF_SERVICE_ERRORS_" + this._pingSuffix,
+                        PREF_APP_UPDATE_SERVICE_ERRORS, 0, 0);
+    // Histogram IDs:
+    // UPDATE_SERVICE_INSTALLED_EXTERNAL
+    // UPDATE_SERVICE_INSTALLED_NOTIFY
+    // UPDATE_SERVICE_MANUALLY_UNINSTALLED_EXTERNAL
+    // UPDATE_SERVICE_MANUALLY_UNINSTALLED_NOTIFY
+    AUSTLMY.pingServiceInstallStatus(this._pingSuffix, isServiceInstalled());
+#endif // MOZ_MAINTENANCE_SERVICE
+#endif // XP_WIN
+    let prefType = Services.prefs.getPrefType(PREF_APP_UPDATE_URL_OVERRIDE);
+    let overridePrefHasValue = prefType != Ci.nsIPrefBranch.PREF_INVALID;
+    // Histogram IDs:
+    // UPDATE_HAS_PREF_URL_OVERRIDE_EXTERNAL
+    // UPDATE_HAS_PREF_URL_OVERRIDE_NOTIFY
+    AUSTLMY.pingGeneric("UPDATE_HAS_PREF_URL_OVERRIDE_" + this._pingSuffix,
+                        overridePrefHasValue, false);
 
     // If a download is in progress or the patch has been staged do nothing.
     if (this.isDownloading) {
-      this._backgroundUpdateCheckCodePing(PING_BGUC_IS_DOWNLOADING);
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_DOWNLOADING);
       return;
     }
 
     if (this._downloader && this._downloader.patchIsStaged) {
-      this._backgroundUpdateCheckCodePing(PING_BGUC_IS_STAGED);
+      let readState = readStatusFile(getUpdatesDir());
+      if (readState == STATE_PENDING || readState == STATE_PENDING_SVC) {
+        AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_DOWNLOADED);
+      } else {
+        AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_IS_STAGED);
+      }
       return;
     }
 
-    // The following checks will return early without notification in the call
-    // to checkForUpdates below. To simplify the background update check ping
-    // their values are checked here.
+    let validUpdateURL = true;
     try {
-      if (!this.backgroundChecker.getUpdateURL(false)) {
-        let prefs = Services.prefs;
-        if (!prefs.prefHasUserValue(PREF_APP_UPDATE_URL_OVERRIDE)) {
-          if (!prefs.prefHasUserValue(PREF_APP_UPDATE_URL)) {
-            this._backgroundUpdateCheckCodePing(PING_BGUC_INVALID_DEFAULT_URL);
-          }
-          else {
-            this._backgroundUpdateCheckCodePing(PING_BGUC_INVALID_CUSTOM_URL);
-          }
-        }
-        else {
-          this._backgroundUpdateCheckCodePing(PING_BGUC_INVALID_OVERRIDE_URL);
-        }
-      }
-      else if (!gMetroUpdatesEnabled) {
-        this._backgroundUpdateCheckCodePing(PING_BGUC_METRO_DISABLED);
-      }
-      else if (!getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true)) {
-        this._backgroundUpdateCheckCodePing(PING_BGUC_PREF_DISABLED);
-      }
-      else if (!(gCanCheckForUpdates && hasUpdateMutex())) {
-        this._backgroundUpdateCheckCodePing(PING_BGUC_UNABLE_TO_CHECK);
-      }
-      else if (!this.backgroundChecker._enabled) {
-        this._backgroundUpdateCheckCodePing(PING_BGUC_DISABLED_FOR_SESSION);
-      }
+      this.backgroundChecker.getUpdateURL(false);
+    } catch (e) {
+      validUpdateURL = false;
     }
-    catch (e) {
-      Cu.reportError(e);
+    // The following checks are done here so they can be differentiated from
+    // foreground checks.
+    if (!gOSVersion) {
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_NO_OS_VERSION);
+    } else if (!gABI) {
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_NO_OS_ABI);
+    } else if (!validUpdateURL) {
+      if (overridePrefHasValue) {
+        if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_URL_OVERRIDE)) {
+          AUSTLMY.pingCheckCode(this._pingSuffix,
+                                AUSTLMY.CHK_INVALID_USER_OVERRIDE_URL);
+        } else {
+          AUSTLMY.pingCheckCode(this._pingSuffix,
+                                AUSTLMY.CHK_INVALID_DEFAULT_OVERRIDE_URL);
+        }
+      } else {
+        AUSTLMY.pingCheckCode(this._pingSuffix,
+                              AUSTLMY.CHK_INVALID_DEFAULT_URL);
+      }
+    } else if (!getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true)) {
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_PREF_DISABLED);
+    } else if (!hasUpdateMutex()) {
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_NO_MUTEX);
+    } else if (!gCanCheckForUpdates) {
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_UNABLE_TO_CHECK);
+    } else if (!this.backgroundChecker._enabled) {
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_DISABLED_FOR_SESSION);
     }
 
     this.backgroundChecker.checkForUpdates(this, false);
@@ -2738,19 +2538,20 @@ UpdateService.prototype = {
    */
   selectUpdate: function AUS_selectUpdate(updates) {
     if (updates.length == 0) {
-      this._backgroundUpdateCheckCodePing(PING_BGUC_NO_UPDATE_FOUND);
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_NO_UPDATE_FOUND);
       return null;
     }
 
     // The ping for unsupported is sent after the call to showPrompt.
-    if (updates.length == 1 && updates[0].unsupported)
+    if (updates.length == 1 && updates[0].unsupported) {
       return updates[0];
+    }
 
     // Choose the newest of the available minor and major updates.
     var majorUpdate = null;
     var minorUpdate = null;
     var vc = Services.vc;
-    var lastPingCode = PING_BGUC_NO_COMPAT_UPDATE_FOUND;
+    let lastCheckCode = AUSTLMY.CHK_NO_COMPAT_UPDATE_FOUND;
 
     updates.forEach(function(aUpdate) {
       // Ignore updates for older versions of the application and updates for
@@ -2761,7 +2562,7 @@ UpdateService.prototype = {
         LOG("UpdateService:selectUpdate - skipping update because the " +
             "update's application version is less than the current " +
             "application version");
-        lastPingCode = PING_BGUC_UPDATE_PREVIOUS_VERSION;
+        lastCheckCode = AUSTLMY.CHK_UPDATE_PREVIOUS_VERSION;
         return;
       }
 
@@ -2773,7 +2574,7 @@ UpdateService.prototype = {
           getPref("getBoolPref", neverPrefName, false)) {
         LOG("UpdateService:selectUpdate - skipping update because the " +
             "preference " + neverPrefName + " is true");
-        lastPingCode = PING_BGUC_UPDATE_NEVER_PREF;
+        lastCheckCode = AUSTLMY.CHK_UPDATE_NEVER_PREF;
         return;
       }
 
@@ -2793,14 +2594,15 @@ UpdateService.prototype = {
         default:
           LOG("UpdateService:selectUpdate - skipping unknown update type: " +
               aUpdate.type);
-          lastPingCode = PING_BGUC_UPDATE_INVALID_TYPE;
+          lastCheckCode = AUSTLMY.CHK_UPDATE_INVALID_TYPE;
           break;
       }
     });
 
     var update = minorUpdate || majorUpdate;
-    if (!update)
-      this._backgroundUpdateCheckCodePing(lastPingCode);
+    if (!update) {
+      AUSTLMY.pingCheckCode(this._pingSuffix, lastCheckCode);
+    }
 
     return update;
   },
@@ -2828,20 +2630,15 @@ UpdateService.prototype = {
       // to show the prompt to make sure.
       this._showPrompt(um.activeUpdate);
 #endif
-      this._backgroundUpdateCheckCodePing(PING_BGUC_HAS_ACTIVEUPDATE);
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_HAS_ACTIVEUPDATE);
       return;
     }
 
     var updateEnabled = getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true);
     if (!updateEnabled) {
-      this._backgroundUpdateCheckCodePing(PING_BGUC_PREF_DISABLED);
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_PREF_DISABLED);
       LOG("UpdateService:_selectAndInstallUpdate - not prompting because " +
           "update is disabled");
-      return;
-    }
-
-    if (!gMetroUpdatesEnabled) {
-      this._backgroundUpdateCheckCodePing(PING_BGUC_METRO_DISABLED);
       return;
     }
 
@@ -2858,15 +2655,15 @@ UpdateService.prototype = {
             "update is not supported for this system");
         this._showPrompt(update);
       }
-      this._backgroundUpdateCheckCodePing(PING_BGUC_UNSUPPORTED);
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_UNSUPPORTED);
       return;
     }
 
-    if (!(gCanApplyUpdates && hasUpdateMutex())) {
+    if (!gCanApplyUpdates) {
       LOG("UpdateService:_selectAndInstallUpdate - the user is unable to " +
           "apply updates... prompting");
       this._showPrompt(update);
-      this._backgroundUpdateCheckCodePing(PING_BGUC_UNABLE_TO_APPLY);
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_UNABLE_TO_APPLY);
       return;
     }
 
@@ -2899,21 +2696,16 @@ UpdateService.prototype = {
     if (update.showPrompt) {
       LOG("UpdateService:_selectAndInstallUpdate - prompting because the " +
           "update snippet specified showPrompt");
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_SHOWPROMPT_SNIPPET);
       this._showPrompt(update);
-      if (!Services.metro || !Services.metro.immersive) {
-        this._backgroundUpdateCheckCodePing(PING_BGUC_SHOWPROMPT_SNIPPET);
-        return;
-      }
+      return;
     }
 
     if (!getPref("getBoolPref", PREF_APP_UPDATE_AUTO, true)) {
       LOG("UpdateService:_selectAndInstallUpdate - prompting because silent " +
           "install is disabled");
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_SHOWPROMPT_PREF);
       this._showPrompt(update);
-      if (!Services.metro || !Services.metro.immersive) {
-        this._backgroundUpdateCheckCodePing(PING_BGUC_SHOWPROMPT_PREF);
-        return;
-      }
     }
 
     if (getPref("getIntPref", PREF_APP_UPDATE_MODE, 1) == 0) {
@@ -2923,7 +2715,7 @@ UpdateService.prototype = {
       var status = this.downloadUpdate(update, true);
       if (status == STATE_NONE)
         cleanupActiveUpdate();
-      this._backgroundUpdateCheckCodePing(PING_BGUC_ADDON_PREF_DISABLED);
+      AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_ADDON_PREF_DISABLED);
       return;
     }
 
@@ -2937,10 +2729,11 @@ UpdateService.prototype = {
       LOG("UpdateService:_selectAndInstallUpdate - add-on compatibility " +
           "check not performed due to the update version being the same as " +
           "the current application version, just download the update");
-      var status = this.downloadUpdate(update, true);
-      if (status == STATE_NONE)
+      let status = this.downloadUpdate(update, true);
+      if (status == STATE_NONE) {
         cleanupActiveUpdate();
-      this._backgroundUpdateCheckCodePing(PING_BGUC_ADDON_SAME_APP_VER);
+      }
+      AUSTLMY.pingCheckCode(this._pingSuffix,AUSTLMY.CHK_ADDON_SAME_APP_VER);
     }
   },
 
@@ -2966,8 +2759,9 @@ UpdateService.prototype = {
         if (!("isCompatibleWith" in addon) || !("findUpdates" in addon)) {
           let errMsg = "Add-on doesn't implement either the isCompatibleWith " +
                        "or the findUpdates method!";
-          if (addon.id)
+          if (addon.id) {
             errMsg += " Add-on ID: " + addon.id;
+          }
           Cu.reportError(errMsg);
           return;
         }
@@ -2988,10 +2782,10 @@ UpdateService.prototype = {
               addon.scope != AddonManager.SCOPE_APPLICATION &&
               addon.isCompatible &&
               !addon.isCompatibleWith(self._update.appVersion,
-                                      self._update.platformVersion))
+                                      self._update.platformVersion)) {
             self._incompatibleAddons.push(addon);
-        }
-        catch (e) {
+          }
+        } catch (e) {
           Cu.reportError(e);
         }
       });
@@ -3033,7 +2827,7 @@ UpdateService.prototype = {
         if (status == STATE_NONE)
           cleanupActiveUpdate();
         self._update = null;
-        self._backgroundUpdateCheckCodePing(PING_BGUC_CHECK_NO_INCOMPAT);
+        AUSTLMY.pingCheckCode(self._pingSuffix, AUSTLMY.CHK_ADDON_NO_INCOMPAT);
       }
     });
   },
@@ -3073,12 +2867,16 @@ UpdateService.prototype = {
     if (--this._updateCheckCount > 0)
       return;
 
-    if (this._incompatibleAddons.length > 0 ||
-        !(gCanApplyUpdates && hasUpdateMutex())) {
+    if (this._incompatibleAddons.length > 0 || !gCanApplyUpdates) {
       LOG("UpdateService:onUpdateEnded - prompting because there are " +
           "incompatible add-ons");
+      if (this._incompatibleAddons.length > 0) {
+        AUSTLMY.pingCheckCode(this._pingSuffix,
+                              AUSTLMY.CHK_ADDON_HAVE_INCOMPAT);
+      } else {
+        AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_UNABLE_TO_APPLY);
+      }
       this._showPrompt(this._update);
-      this._backgroundUpdateCheckCodePing(PING_BGUC_ADDON_HAVE_INCOMPAT);
     }
     else {
       LOG("UpdateService:_selectAndInstallUpdate - updates for all " +
@@ -3086,7 +2884,8 @@ UpdateService.prototype = {
       var status = this.downloadUpdate(this._update, true);
       if (status == STATE_NONE)
         cleanupActiveUpdate();
-      this._backgroundUpdateCheckCodePing(PING_BGUC_ADDON_UPDATES_FOR_INCOMPAT);
+      AUSTLMY.pingCheckCode(this._pingSuffix,
+                            AUSTLMY.CHK_ADDON_UPDATES_FOR_INCOMPAT);
     }
     this._update = null;
   },
@@ -3254,6 +3053,8 @@ UpdateService.prototype = {
     if (!osApplyToDir) {
       LOG("UpdateService:applyOsUpdate - Error: osApplyToDir is not defined" +
           "in the nsIUpdate!");
+      pingStateAndStatusCodes(aUpdate, false,
+                              STATE_FAILED + ": " + FOTA_FILE_OPERATION_ERROR);
       handleUpdateFailure(aUpdate, FOTA_FILE_OPERATION_ERROR);
       return;
     }
@@ -3263,6 +3064,8 @@ UpdateService.prototype = {
     if (!updateFile.exists()) {
       LOG("UpdateService:applyOsUpdate - Error: OS update is not found at " +
           updateFile.path);
+      pingStateAndStatusCodes(aUpdate, false,
+                              STATE_FAILED + ": " + FOTA_FILE_OPERATION_ERROR);
       handleUpdateFailure(aUpdate, FOTA_FILE_OPERATION_ERROR);
       return;
     }
@@ -3277,6 +3080,8 @@ UpdateService.prototype = {
     } catch (e) {
       LOG("UpdateService:applyOsUpdate - Error: Couldn't reboot into recovery" +
           " to apply FOTA update " + updateFile.path);
+      pingStateAndStatusCodes(aUpdate, false,
+                              STATE_FAILED + ": " + FOTA_RECOVERY_ERROR);
       writeStatusFile(getUpdatesDir(), aUpdate.state = STATE_APPLIED);
       handleUpdateFailure(aUpdate, FOTA_RECOVERY_ERROR);
     }
@@ -3572,11 +3377,13 @@ UpdateManager.prototype = {
     }
     var updateSucceeded = true;
     var status = readStatusFile(getUpdatesDir());
-    var ary = status.split(":");
-    update.state = ary[0];
-    if (update.state == STATE_FAILED && ary[1]) {
+    pingStateAndStatusCodes(update, false, status);
+    var parts = status.split(":");
+    update.state = parts[0];
+
+    if (update.state == STATE_FAILED && parts[1]) {
       updateSucceeded = false;
-      if (!handleUpdateFailure(update, ary[1])) {
+      if (!handleUpdateFailure(update, parts[1])) {
         handleFallbackToCompleteUpdate(update, true);
       }
     }
@@ -3721,8 +3528,6 @@ Checker.prototype = {
     if (!url || (!this.enabled && !force))
       return;
 
-    recordInHealthReport(UpdaterHealthReportFields.CHECK_START, 0);
-
     this._request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                     createInstance(Ci.nsISupports);
     // This is here to let unit test code override XHR
@@ -3846,8 +3651,6 @@ Checker.prototype = {
       if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BACKGROUNDERRORS))
         Services.prefs.clearUserPref(PREF_APP_UPDATE_BACKGROUNDERRORS);
 
-      recordInHealthReport(UpdaterHealthReportFields.CHECK_SUCCESS, 0);
-
       // Tell the callback about the updates
       this._callback.onCheckComplete(event.target, updates, updates.length);
     }
@@ -3868,8 +3671,6 @@ Checker.prototype = {
         update.errorCode = updates[0] ? CERT_ATTR_CHECK_FAILED_HAS_UPDATE
                                       : CERT_ATTR_CHECK_FAILED_NO_UPDATE;
       }
-
-      recordInHealthReport(UpdaterHealthReportFields.CHECK_FAILED, update.errorCode);
 
       this._callback.onError(request, update);
     }
@@ -3902,10 +3703,7 @@ Checker.prototype = {
       update.errorCode = HTTP_ERROR_OFFSET + status;
     }
 
-    recordInHealthReport(UpdaterHealthReportFields.CHECK_FAILED, update.errorCode);
-
     this._callback.onError(request, update);
-
     this._request = null;
   },
 
@@ -3914,10 +3712,6 @@ Checker.prototype = {
    */
   _enabled: true,
   get enabled() {
-    if (!gMetroUpdatesEnabled) {
-      return false;
-    }
-
     return getPref("getBoolPref", PREF_APP_UPDATE_ENABLED, true) &&
            gCanCheckForUpdates && hasUpdateMutex() && this._enabled;
   },
@@ -4017,6 +3811,8 @@ Downloader.prototype = {
   _verifyDownload: function Downloader__verifyDownload() {
     LOG("Downloader:_verifyDownload called");
     if (!this._request) {
+      AUSTLMY.pingDownloadCode(this.isCompleteUpdate,
+                               AUSTLMY.DWNLD_ERR_VERIFY_NO_REQUEST);
       return false;
     }
 
@@ -4025,6 +3821,8 @@ Downloader.prototype = {
     // Ensure that the file size matches the expected file size.
     if (destination.fileSize != this._patch.size) {
       LOG("Downloader:_verifyDownload downloaded size != expected size.");
+      AUSTLMY.pingDownloadCode(this.isCompleteUpdate,
+                               AUSTLMY.DWNLD_ERR_VERIFY_PATCH_SIZE_NOT_EQUAL);
       return false;
     }
 
@@ -4062,6 +3860,8 @@ Downloader.prototype = {
     }
 
     LOG("Downloader:_verifyDownload hashes do not match. ");
+    AUSTLMY.pingDownloadCode(this.isCompleteUpdate,
+                             AUSTLMY.DWNLD_ERR_VERIFY_NO_HASH_MATCH);
     return false;
   },
 
@@ -4205,8 +4005,10 @@ Downloader.prototype = {
    */
   downloadUpdate: function Downloader_downloadUpdate(update) {
     LOG("UpdateService:_downloadUpdate");
-    if (!update)
+    if (!update) {
+      AUSTLMY.pingDownloadCode(undefined, AUSTLMY.DWNLD_ERR_NO_UPDATE);
       throw Cr.NS_ERROR_NULL_POINTER;
+    }
 
     var updateDir = getUpdatesDir();
 
@@ -4217,13 +4019,10 @@ Downloader.prototype = {
     this._patch = this._selectPatch(update, updateDir);
     if (!this._patch) {
       LOG("Downloader:downloadUpdate - no patch to download");
+      AUSTLMY.pingDownloadCode(undefined, AUSTLMY.DWNLD_ERR_NO_UPDATE_PATCH);
       return readStatusFile(updateDir);
     }
     this.isCompleteUpdate = this._patch.type == "complete";
-
-    recordInHealthReport(
-      this.isCompleteUpdate ? UpdaterHealthReportFields.COMPLETE_START :
-                              UpdaterHealthReportFields.PARTIAL_START, 0);
 
     var patchFile = null;
 
@@ -4286,6 +4085,8 @@ Downloader.prototype = {
       patchFile = this._getUpdateArchiveFile();
     }
     if (!patchFile) {
+      AUSTLMY.pingDownloadCode(this.isCompleteUpdate,
+                               AUSTLMY.DWNLD_ERR_NO_PATCH_FILE);
       return STATE_NONE;
     }
 
@@ -4403,6 +4204,8 @@ Downloader.prototype = {
       // It's important that we use a different code than
       // NS_ERROR_CORRUPTED_CONTENT so that tests can verify the difference
       // between a hash error and a wrong download error.
+      AUSTLMY.pingDownloadCode(this.isCompleteUpdate,
+                               AUSTLMY.DWNLD_ERR_PATCH_SIZE_LARGER);
       this.cancel(Cr.NS_ERROR_UNEXPECTED);
       return;
     }
@@ -4413,6 +4216,8 @@ Downloader.prototype = {
       // It's important that we use a different code than
       // NS_ERROR_CORRUPTED_CONTENT so that tests can verify the difference
       // between a hash error and a wrong download error.
+      AUSTLMY.pingDownloadCode(this.isCompleteUpdate,
+                               AUSTLMY.DWNLD_ERR_PATCH_SIZE_NOT_EQUAL);
       this.cancel(Cr.NS_ERROR_UNEXPECTED);
       return;
     }
@@ -4480,15 +4285,12 @@ Downloader.prototype = {
         "current fail: " + this.updateService._consecutiveSocketErrors + ", " +
         "max fail: " + maxFail + ", " + "retryTimeout: " + retryTimeout);
     if (Components.isSuccessCode(status)) {
-      recordInHealthReport(
-        this.isCompleteUpdate ? UpdaterHealthReportFields.COMPLETE_SUCCESS :
-                                UpdaterHealthReportFields.PARTIAL_SUCCESS, 0);
-
       if (this._verifyDownload()) {
         state = shouldUseService() ? STATE_PENDING_SVC : STATE_PENDING;
         if (this.background) {
           shouldShowPrompt = !getCanStageUpdates();
         }
+        AUSTLMY.pingDownloadCode(this.isCompleteUpdate, AUSTLMY.DWNLD_SUCCESS);
 
         // Tell the updater.exe we're ready to apply.
         writeStatusFile(getUpdatesDir(), state);
@@ -4513,14 +4315,14 @@ Downloader.prototype = {
         cleanUpUpdatesDir();
       }
     } else {
-      recordInHealthReport(UpdaterHealthReportFields.FAILED, status);
-
       if (status == Cr.NS_ERROR_OFFLINE) {
         // Register an online observer to try again.
         // The online observer will continue the incremental download by
         // calling downloadUpdate on the active update which continues
         // downloading the file from where it was.
         LOG("Downloader:onStopRequest - offline, register online observer: true");
+        AUSTLMY.pingDownloadCode(this.isCompleteUpdate,
+                                 AUSTLMY.DWNLD_RETRY_OFFLINE);
         shouldRegisterOnlineObserver = true;
         deleteActiveUpdate = false;
       // Each of NS_ERROR_NET_TIMEOUT, ERROR_CONNECTION_REFUSED, and
@@ -4532,12 +4334,27 @@ Downloader.prototype = {
                   status == Cr.NS_ERROR_NET_RESET) &&
                  this.updateService._consecutiveSocketErrors < maxFail) {
         LOG("Downloader:onStopRequest - socket error, shouldRetrySoon: true");
+        let dwnldCode = AUSTLMY.DWNLD_RETRY_CONNECTION_REFUSED;
+        if (status == Cr.NS_ERROR_NET_TIMEOUT) {
+          dwnldCode = AUSTLMY.DWNLD_RETRY_NET_TIMEOUT;
+        } else if (status == Cr.NS_ERROR_NET_RESET) {
+          dwnldCode = AUSTLMY.DWNLD_RETRY_NET_RESET;
+        }
+        AUSTLMY.pingDownloadCode(this.isCompleteUpdate, dwnldCode);
         shouldRetrySoon = true;
         deleteActiveUpdate = false;
       } else if (status != Cr.NS_BINDING_ABORTED &&
                  status != Cr.NS_ERROR_ABORT &&
                  status != Cr.NS_ERROR_DOCUMENT_NOT_CACHED) {
         LOG("Downloader:onStopRequest - non-verification failure");
+        let dwnldCode = AUSTLMY.DWNLD_ERR_DOCUMENT_NOT_CACHED;
+        if (status == Cr.NS_BINDING_ABORTED) {
+          dwnldCode = AUSTLMY.DWNLD_ERR_BINDING_ABORTED;
+        } else if (status == Cr.NS_ERROR_ABORT) {
+          dwnldCode = AUSTLMY.DWNLD_ERR_ABORT;
+        }
+        AUSTLMY.pingDownloadCode(this.isCompleteUpdate, dwnldCode);
+
         // Some sort of other failure, log this in the |statusText| property
         state = STATE_DOWNLOAD_FAILED;
 
@@ -4569,8 +4386,9 @@ Downloader.prototype = {
       um.activeUpdate = null;
     }
     else {
-      if (um.activeUpdate)
+      if (um.activeUpdate) {
         um.activeUpdate.state = state;
+      }
     }
     um.saveUpdates();
 
@@ -4799,14 +4617,10 @@ UpdatePrompt.prototype = {
         this._getAltUpdateWindow())
       return;
 
-    // In some cases, we want to just show a simple alert dialog:
+    // In some cases, we want to just show a simple alert dialog.
+    // Replace with Array.prototype.includes when it has stabilized.
     if (update.state == STATE_FAILED &&
-        (update.errorCode == WRITE_ERROR ||
-         update.errorCode == WRITE_ERROR_ACCESS_DENIED ||
-         update.errorCode == WRITE_ERROR_SHARING_VIOLATION_SIGNALED ||
-         update.errorCode == WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID ||
-         update.errorCode == WRITE_ERROR_SHARING_VIOLATION_NOPID ||
-         update.errorCode == WRITE_ERROR_CALLBACK_APP ||
+        (WRITE_ERRORS.indexOf(update.errorCode) != -1 ||
          update.errorCode == FILESYSTEM_MOUNT_READWRITE_ERROR ||
          update.errorCode == FOTA_GENERAL_ERROR ||
          update.errorCode == FOTA_FILE_OPERATION_ERROR ||

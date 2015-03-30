@@ -20,7 +20,6 @@ class gfxASurface;
 class gfxContext;
 struct nsIntRect;
 struct nsIntPoint;
-struct nsIntSize;
 typedef struct _cairo cairo_t;
 typedef struct _cairo_surface cairo_surface_t;
 
@@ -82,18 +81,18 @@ public:
      * successful, a pointer to the new gfxASurface is stored in *resultSurface,
      * otherwise *resultSurface is set to nullptr.
      */
-    void Draw(gfxContext* ctx, nsIntSize size,
+    void Draw(gfxContext* ctx, mozilla::gfx::IntSize size,
               uint32_t flags, Screen *screen, Visual *visual);
 
 private:
-    bool DrawDirect(gfxContext *ctx, nsIntSize bounds,
+    bool DrawDirect(gfxContext *ctx, mozilla::gfx::IntSize bounds,
                     uint32_t flags, Screen *screen, Visual *visual);
 
-    bool DrawCairo(cairo_t* cr, nsIntSize size,
+    bool DrawCairo(cairo_t* cr, mozilla::gfx::IntSize size,
                    uint32_t flags, Screen *screen, Visual *visual);
 
     void DrawFallback(mozilla::gfx::DrawTarget* dt, gfxContext* ctx,
-                      gfxASurface* aSurface, nsIntSize& size,
+                      gfxASurface* aSurface, mozilla::gfx::IntSize& size,
                       nsIntRect& drawingRect, bool canDrawOverBackground,
                       uint32_t flags, Screen* screen, Visual* visual);
 

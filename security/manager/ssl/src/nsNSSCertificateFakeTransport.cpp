@@ -290,8 +290,7 @@ nsNSSCertificateFakeTransport::GetInterfaces(uint32_t* count, nsIID*** array)
 }
 
 NS_IMETHODIMP
-nsNSSCertificateFakeTransport::GetHelperForLanguage(uint32_t,
-                                                    nsISupports** _retval)
+nsNSSCertificateFakeTransport::GetScriptableHelper(nsIXPCScriptable** _retval)
 {
   *_retval = nullptr;
   return NS_OK;

@@ -41,7 +41,6 @@ class gfxReusableSurfaceWrapper;
 class nsIntRegion;
 struct nsIntPoint;
 struct nsIntRect;
-struct nsIntSize;
 
 namespace mozilla {
 namespace gfx {
@@ -202,8 +201,8 @@ public:
                       nsIntRegion* aDestRegion = nullptr,
                       gfx::IntPoint* aSrcOffset = nullptr) override;
 
-  void EnsureBuffer(const nsIntSize& aSize,
-                            gfxContentType aContentType);
+  void EnsureBuffer(const gfx::IntSize& aSize,
+                    gfxContentType aContentType);
 
   void CopyTo(const nsIntRect& aSourceRect,
                       DataTextureSource* aDest,

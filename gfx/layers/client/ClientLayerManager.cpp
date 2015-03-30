@@ -476,7 +476,7 @@ ClientLayerManager::MakeSnapshotIfRequired()
 
       SurfaceDescriptor inSnapshot;
       if (!bounds.IsEmpty() &&
-          mForwarder->AllocSurfaceDescriptor(bounds.Size().ToIntSize(),
+          mForwarder->AllocSurfaceDescriptor(bounds.Size(),
                                              gfxContentType::COLOR_ALPHA,
                                              &inSnapshot) &&
           remoteRenderer->SendMakeSnapshot(inSnapshot, bounds)) {

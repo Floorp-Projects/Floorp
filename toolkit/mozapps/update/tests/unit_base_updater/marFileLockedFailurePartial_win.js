@@ -44,5 +44,6 @@ function checkUpdateApplied() {
 function checkUpdate() {
   checkFilesAfterUpdateFailure(getApplyDirFile, false, false);
   checkUpdateLogContains(ERR_UNABLE_OPEN_DEST);
+  standardInit();
   checkCallbackAppLog();
 }

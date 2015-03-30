@@ -331,14 +331,14 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
 
   nsCSSParser cssParser(env.mCSSLoader);
   bool changed;
-  nsresult result = cssParser.ParseProperty(aPropID, aPropValue, env.mSheetURI,
-                                            env.mBaseURI, env.mPrincipal, decl,
-                                            &changed, aIsImportant);
-  if (NS_FAILED(result) || !changed) {
+  cssParser.ParseProperty(aPropID, aPropValue, env.mSheetURI, env.mBaseURI,
+                          env.mPrincipal, decl, &changed, aIsImportant);
+  if (!changed) {
     if (decl != olddecl) {
       delete decl;
     }
-    return result;
+    // Parsing failed -- but we don't throw an exception for that.
+    return NS_OK;
   }
 
   return SetCSSDeclaration(decl);
@@ -372,17 +372,17 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
 
   nsCSSParser cssParser(env.mCSSLoader);
   bool changed;
-  nsresult result =
-    cssParser.ParseVariable(Substring(aPropertyName,
-                                      CSS_CUSTOM_NAME_PREFIX_LENGTH),
-                            aPropValue, env.mSheetURI,
-                            env.mBaseURI, env.mPrincipal, decl,
-                            &changed, aIsImportant);
-  if (NS_FAILED(result) || !changed) {
+  cssParser.ParseVariable(Substring(aPropertyName,
+                                    CSS_CUSTOM_NAME_PREFIX_LENGTH),
+                          aPropValue, env.mSheetURI,
+                          env.mBaseURI, env.mPrincipal, decl,
+                          &changed, aIsImportant);
+  if (!changed) {
     if (decl != olddecl) {
       delete decl;
     }
-    return result;
+    // Parsing failed -- but we don't throw an exception for that.
+    return NS_OK;
   }
 
   return SetCSSDeclaration(decl);

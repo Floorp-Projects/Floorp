@@ -411,13 +411,11 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
 {
   for (size_t playerIdx = 0; playerIdx < aPlayers.Length(); playerIdx++) {
     AnimationPlayer* player = aPlayers[playerIdx];
-    if (!player->IsRunning()) {
+    if (!player->IsPlaying()) {
       continue;
     }
     dom::Animation* anim = player->GetSource();
-    if (!anim) {
-      continue;
-    }
+    MOZ_ASSERT(anim, "A playing player should have a source animation");
     const AnimationProperty* property =
       anim->GetAnimationOfProperty(aProperty);
     if (!property) {
@@ -3019,11 +3017,6 @@ nsDisplayThemedBackground::GetBoundsInternal() {
   presContext->GetTheme()->
       GetWidgetOverflow(presContext->DeviceContext(), mFrame,
                         mFrame->StyleDisplay()->mAppearance, &r);
-#ifdef XP_MACOSX
-  // Bug 748219
-  r.Inflate(mFrame->PresContext()->AppUnitsPerDevPixel());
-#endif
-
   return r + ToReferenceFrame();
 }
 
