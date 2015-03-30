@@ -160,7 +160,14 @@ SessionStore.prototype = {
       }
       case "Tabs:OpenMultiple": {
         let data = JSON.parse(aData);
+
         this._openTabs(data);
+
+        if (data.shouldNotifyTabsOpenedToJava) {
+          Messaging.sendRequest({
+            type: "Tabs:TabsOpened"
+          });
+        }
         break;
       }
       case "application-background":
