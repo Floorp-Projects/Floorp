@@ -4567,7 +4567,7 @@ nsLayoutUtils::IntrinsicForContainer(nsRenderingContext *aRenderingContext,
 
   const nsStyleDisplay *disp = aFrame->StyleDisplay();
   if (aFrame->IsThemed(disp)) {
-    nsIntSize size(0, 0);
+    LayoutDeviceIntSize size;
     bool canOverride = true;
     nsPresContext *presContext = aFrame->PresContext();
     presContext->GetTheme()->
