@@ -2848,7 +2848,6 @@ let E10SUINotification = {
 
       if (!Services.appinfo.inSafeMode &&
           !Services.appinfo.accessibilityEnabled &&
-          !Services.appinfo.keyboardMayHaveIME &&
           isHardwareAccelerated &&
           e10sPromptShownCount < 5) {
         Services.tm.mainThread.dispatch(() => {
