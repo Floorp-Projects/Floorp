@@ -164,6 +164,7 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aReflowStatus)
 {
+  MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsFirstLetterFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aMetrics, aReflowStatus);
 
@@ -205,7 +206,6 @@ nsFirstLetterFrame::Reflow(nsPresContext*          aPresContext,
     ll.SetInFirstLetter(true);
     ll.SetFirstLetterStyleOK(true);
 
-    kid->WillReflow(aPresContext);
     kid->Reflow(aPresContext, kidMetrics, rs, aReflowStatus);
 
     ll.EndLineReflow();

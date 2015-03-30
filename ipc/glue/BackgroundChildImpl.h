@@ -71,6 +71,12 @@ protected:
   virtual bool
   DeallocPFileDescriptorSetChild(PFileDescriptorSetChild* aActor) override;
 
+  virtual PMediaChild*
+  AllocPMediaChild() override;
+
+  virtual bool
+  DeallocPMediaChild(PMediaChild* aActor) override;
+
   virtual PVsyncChild*
   AllocPVsyncChild() override;
 
