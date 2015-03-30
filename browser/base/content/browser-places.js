@@ -434,10 +434,10 @@ var PlacesCommandHook = {
    */
   addLiveBookmark: function PCH_addLiveBookmark(url, feedTitle, feedSubtitle) {
     var feedURI = makeURI(url);
-    
-    var doc = gBrowser.contentDocument;
+
+    var doc = gBrowser.contentDocumentAsCPOW;
     var title = (arguments.length > 1) ? feedTitle : doc.title;
- 
+
     var description;
     if (arguments.length > 2)
       description = feedSubtitle;
