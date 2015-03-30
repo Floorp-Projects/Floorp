@@ -146,8 +146,6 @@ static const uint32_t kMaxICCDuration = 2000; // ms
 // Trigger a CC if the purple buffer exceeds this size when we check it.
 #define NS_CC_PURPLE_LIMIT          200
 
-#define JAVASCRIPT nsIProgrammingLanguage::JAVASCRIPT
-
 // Large value used to specify that a script should run essentially forever
 #define NS_UNLIMITED_SCRIPT_RUNTIME (0x40000000LL << 32)
 
