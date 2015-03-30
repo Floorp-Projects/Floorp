@@ -14,7 +14,7 @@ interface nsIXPCScriptable;
  * instructions--you most likely do not want to inherit from nsIClassInfo.
  */
 
-[scriptable, uuid(7a633335-18cc-4794-9ddd-26ac7cab7be6)]
+[scriptable, uuid(a60569d7-d401-4677-ba63-2aa5971af25d)]
 interface nsIClassInfo : nsISupports
 {
     /**
@@ -52,12 +52,6 @@ interface nsIClassInfo : nsISupports
     readonly attribute nsCIDPtr classID;
 
     /**
-     * Return language type from list in nsIProgrammingLanguage
-     */
-
-    readonly attribute uint32_t implementationLanguage;
-
-    /**
      * Bitflags for 'flags' attribute.
      */
     const uint32_t SINGLETON            = 1 << 0;
@@ -72,7 +66,7 @@ interface nsIClassInfo : nsISupports
      * nsIContent.
      */
     const uint32_t CONTENT_NODE         = 1 << 6;
-    
+
     // The high order bit is RESERVED for consumers of these flags. 
     // No implementor of this interface should ever return flags 
     // with this bit set.

@@ -43,7 +43,6 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
-#include "nsIProgrammingLanguage.h"
 #include "nsContentUtils.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
 #include "mozilla/Attributes.h"
@@ -862,14 +861,6 @@ NS_IMETHODIMP
 nsDOMClassInfo::GetClassIDNoAlloc(nsCID *aClassID)
 {
   return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
-nsDOMClassInfo::GetImplementationLanguage(uint32_t *aImplLanguage)
-{
-  *aImplLanguage = nsIProgrammingLanguage::CPLUSPLUS;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
