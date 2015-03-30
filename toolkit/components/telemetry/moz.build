@@ -45,6 +45,10 @@ EXTRA_PP_JS_MODULES += [
     'TelemetrySession.jsm',
 ]
 
+TESTING_JS_MODULES += [
+  'tests/unit/TelemetryArchiveTesting.jsm',
+]
+
 FAIL_ON_WARNINGS = True
 
 include('/ipc/chromium/chromium-config.mozbuild')

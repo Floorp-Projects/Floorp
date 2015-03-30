@@ -5,15 +5,17 @@
 "use strict";
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const myScope = this;
 
 Cu.import("resource://gre/modules/Log.jsm", this);
-Cu.import("resource://gre/modules/osfile.jsm", this)
+Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://services-common/utils.js", this);
+Cu.import("resource://gre/modules/TelemetryController.jsm");
 
 this.EXPORTED_SYMBOLS = [
   "CrashManager",
@@ -529,6 +531,32 @@ this.CrashManager.prototype = Object.freeze({
           }
           store.addCrash(this.PROCESS_TYPE_MAIN, this.CRASH_TYPE_CRASH,
                          crashID, date, metadata);
+
+          // If we have a saved environment, use it. Otherwise report
+          // the current environment.
+          let crashEnvironment = null;
+          let reportMeta = Cu.cloneInto(metadata, myScope);
+          if ('TelemetryEnvironment' in reportMeta) {
+            try {
+              crashEnvironment = JSON.parse(reportMeta.TelemetryEnvironment);
+            } catch(e) {
+              Cu.reportError(e);
+            }
+            delete reportMeta.TelemetryEnvironment;
+          }
+          TelemetryController.submitExternalPing("crash",
+            {
+              version: 1,
+              crashDate: date.toISOString().slice(0, 10), // YYYY-MM-DD
+              metadata: reportMeta,
+              hasCrashEnvironment: (crashEnvironment !== null),
+            },
+            {
+              retentionDays: 180,
+              addClientId: true,
+              addEnvironment: true,
+              overrideEnvironment: crashEnvironment,
+            });
           break;
 
         case "crash.submission.1":
@@ -773,14 +801,10 @@ CrashStore.prototype = Object.freeze({
         // with "-submission", we will need to convert the data to be stored
         // as actual submissions.
         //
-        // TODO: The old way of storing submissions was used from FF33 - FF34.
-        // We should drop the conversion code after a few releases. See bug
-        // 1056157.
-        let hasSubmissionsStoredAsCrashes = false;
-
+        // The old way of storing submissions was used from FF33 - FF34. We
+        // drop this old data on the floor.
         for (let id in data.crashes) {
           if (id.endsWith("-submission")) {
-            hasSubmissionsStoredAsCrashes = true;
             continue;
           }
 
@@ -809,32 +833,6 @@ CrashStore.prototype = Object.freeze({
             actualCounts.set(oomKey, (actualCounts.get(oomKey) || 0) + 1);
           }
 
-        }
-
-        if (hasSubmissionsStoredAsCrashes) {
-          for (let id in data.crashes) {
-            if (!id.endsWith("-submission")) {
-              continue;
-            }
-
-            // This type of record will contain e.g.:
-            // {
-            //   "id": "crash1-submission",
-            //   "type": "main-crash-submission-succeeded",
-            //   "crashDate": "...",
-            // }
-            let submissionData = this._denormalize(data.crashes[id]);
-
-            let crashID = id.replace(/-submission$/, "");
-            let result = submissionData.type.endsWith("-succeeded") ?
-              CrashManager.prototype.SUBMISSION_RESULT_OK :
-              CrashManager.prototype.SUBMISSION_RESULT_FAILED;
-
-            this.addSubmissionAttempt(crashID, "converted",
-                                      submissionData.crashDate);
-            this.addSubmissionResult(crashID, "converted",
-                                     submissionData.crashDate, result);
-          }
         }
 
         // The validation in this loop is arguably not necessary. We perform
@@ -1160,21 +1158,8 @@ CrashStore.prototype = Object.freeze({
   },
 
   /**
-   * Obtain a particular crash submission from its ID.
-   *
-   * @return undefined | submission object
-   */
-  getSubmission: function (crashID, submissionID) {
-    let crash = this._data.crashes.get(crashID);
-    if (!crash || !submissionID) {
-      return undefined;
-    }
-
-    return crash.submissions.get(submissionID);
-  },
-
-  /**
    * Ensure the submission record is present in storage.
+   * @returns [submission, crash]
    */
   _ensureSubmissionRecord: function (crashID, submissionID) {
     let crash = this._data.crashes.get(crashID);
@@ -1190,19 +1175,22 @@ CrashStore.prototype = Object.freeze({
       });
     }
 
-    return crash.submissions.get(submissionID);
+    return [crash.submissions.get(submissionID), crash];
   },
 
   /**
    * @return boolean True if the attempt was recorded.
    */
   addSubmissionAttempt: function (crashID, submissionID, date) {
-    let submission = this._ensureSubmissionRecord(crashID, submissionID);
+    let [submission, crash] =
+      this._ensureSubmissionRecord(crashID, submissionID);
     if (!submission) {
       return false;
     }
 
     submission.requestDate = date;
+    Services.telemetry.getKeyedHistogramById("PROCESS_CRASH_SUBMIT_ATTEMPT")
+      .add(crash.type, 1);
     return true;
   },
 
@@ -1210,13 +1198,19 @@ CrashStore.prototype = Object.freeze({
    * @return boolean True if the response was recorded.
    */
   addSubmissionResult: function (crashID, submissionID, date, result) {
-    let submission = this.getSubmission(crashID, submissionID);
+    let crash = this._data.crashes.get(crashID);
+    if (!crash || !submissionID) {
+      return false;
+    }
+    let submission = crash.submissions.get(submissionID);
     if (!submission) {
       return false;
     }
 
     submission.responseDate = date;
     submission.result = result;
+    Services.telemetry.getKeyedHistogramById("PROCESS_CRASH_SUBMIT_SUCCESS")
+      .add(crash.type, result == "ok");
     return true;
   },
 
