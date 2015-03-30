@@ -7545,6 +7545,20 @@
     "keyed": true,
     "description": "Counts of plugin and content process crashes which are reported with a crash dump."
   },
+  "PROCESS_CRASH_SUBMIT_ATTEMPT": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "description": "An attempt to submit a crash. Keyed on the CrashManager Crash.type."
+  },
+  "PROCESS_CRASH_SUBMIT_SUCCESS": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "description": "The submission status when main/plugin/content crashes are submitted. 1 is success, 0 is failure. Keyed on the CrashManager Crash.type."
+  },
   "STUMBLER_TIME_BETWEEN_UPLOADS_SEC": {
     "expires_in_version": "45",
     "kind": "exponential",
