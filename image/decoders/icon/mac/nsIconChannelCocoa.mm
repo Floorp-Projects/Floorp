@@ -460,8 +460,8 @@ nsIconChannel::
 NS_IMETHODIMP
 nsIconChannel::GetContentLength(int64_t* aContentLength)
 {
-  *aContentLength = mContentLength;
-  return NS_OK;
+  *aContentLength = 0;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
