@@ -118,9 +118,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "gScreenManager",
   "@mozilla.org/gfx/screenmanager;1", "nsIScreenManager");
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
   "@mozilla.org/base/telemetry;1", "nsITelemetry");
-XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
-  "@mozilla.org/parentprocessmessagemanager;1",
-  "nsIMessageListenerManager");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
