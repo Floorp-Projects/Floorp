@@ -175,7 +175,7 @@ nsScrollbarFrame::GetMargin(nsMargin& aMargin)
     nsPresContext* presContext = PresContext();
     nsITheme* theme = presContext->GetTheme();
     if (theme) {
-      LayoutDeviceIntSize size;
+      nsIntSize size;
       bool isOverridable;
       theme->GetMinimumWidgetSize(presContext, this, NS_THEME_SCROLLBAR, &size,
                                   &isOverridable);

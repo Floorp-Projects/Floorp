@@ -681,7 +681,7 @@ nsIFrame::AddCSSMinSize(nsBoxLayoutState& aState, nsIFrame* aBox, nsSize& aSize,
     if (display->mAppearance) {
       nsITheme *theme = aState.PresContext()->GetTheme();
       if (theme && theme->ThemeSupportsWidget(aState.PresContext(), aBox, display->mAppearance)) {
-        LayoutDeviceIntSize size;
+        nsIntSize size;
         theme->GetMinimumWidgetSize(aState.PresContext(), aBox,
                                     display->mAppearance, &size, &canOverride);
         if (size.width) {
