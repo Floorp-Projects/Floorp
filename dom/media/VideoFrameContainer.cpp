@@ -31,7 +31,7 @@ VideoFrameContainer::~VideoFrameContainer()
 
 void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
                                           Image* aImage,
-                                          TimeStamp aTargetTime)
+                                          const TimeStamp& aTargetTime)
 {
   MutexAutoLock lock(mMutex);
 
@@ -51,12 +51,10 @@ void VideoFrameContainer::SetCurrentFrame(const gfxIntSize& aIntrinsicSize,
   nsTArray<ImageContainer::OwningImage> kungFuDeathGrip;
   mImageContainer->GetCurrentImages(&kungFuDeathGrip);
 
-  ++mFrameID;
-
   if (aImage) {
     nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
     imageList.AppendElement(
-        ImageContainer::NonOwningImage(aImage, aTargetTime, mFrameID));
+        ImageContainer::NonOwningImage(aImage, aTargetTime, ++mFrameID));
     mImageContainer->SetCurrentImages(imageList);
   } else {
     mImageContainer->ClearAllImages();
