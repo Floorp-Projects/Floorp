@@ -243,10 +243,10 @@ static inline bool IS_WN_REFLECTOR(JSObject* obj)
 // returned as function call result values they are not addref'd. Exceptions
 // to this rule are noted explicitly.
 
-class nsXPConnect : public nsIXPConnect,
-                    public nsIThreadObserver,
-                    public nsSupportsWeakReference,
-                    public nsIJSRuntimeService
+class nsXPConnect final : public nsIXPConnect,
+                          public nsIThreadObserver,
+                          public nsSupportsWeakReference,
+                          public nsIJSRuntimeService
 {
 public:
     // all the interface method declarations...
@@ -2009,7 +2009,7 @@ private:
 // XPCWrappedNative the wrapper around one instance of a native xpcom object
 // to be used from JavaScript.
 
-class XPCWrappedNative : public nsIXPConnectWrappedNative
+class XPCWrappedNative final : public nsIXPConnectWrappedNative
 {
 public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -2315,7 +2315,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIXPCWrappedJSClass,
 // nsXPCWrappedJSClass represents the sharable factored out common code and
 // data for nsXPCWrappedJS instances for the same interface type.
 
-class nsXPCWrappedJSClass : public nsIXPCWrappedJSClass
+class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass
 {
     // all the interface method declarations...
     NS_DECL_ISUPPORTS
