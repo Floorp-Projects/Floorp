@@ -26,7 +26,7 @@ window.addEventListener("unload", function onUnload() {
 
 function onAppManagerUpdate(event, what) {
   switch (what) {
-    case "list-tabs-response":
+    case "runtime-global-actors":
     case "runtime-apps-found":
     case "project-validated":
     case "project-removed":
