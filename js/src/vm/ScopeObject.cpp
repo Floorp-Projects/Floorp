@@ -2481,7 +2481,10 @@ js::GetDebugScopeForFunction(JSContext* cx, HandleFunction fun)
     MOZ_ASSERT(CanUseDebugScopeMaps(cx));
     if (!DebugScopes::updateLiveScopes(cx))
         return nullptr;
-    ScopeIter si(cx, fun->environment(), fun->nonLazyScript()->enclosingStaticScope());
+    JSScript* script = fun->getOrCreateScript(cx);
+    if (!script)
+        return nullptr;
+    ScopeIter si(cx, fun->environment(), script->enclosingStaticScope());
     return GetDebugScope(cx, si);
 }
 
