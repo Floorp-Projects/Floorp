@@ -1690,7 +1690,7 @@ public:
 
 private:
   virtual bool
-  IsDebuggerRunnable() const
+  IsDebuggerRunnable() const override
   {
     return true;
   }
