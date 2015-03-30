@@ -9,26 +9,38 @@
 
 #include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
+#include "nsIPresentationControlChannel.h"
+#include "nsIPresentationDevice.h"
 #include "nsIPresentationListener.h"
 #include "nsIPresentationService.h"
+#include "nsIPresentationSessionTransport.h"
+#include "nsIServerSocket.h"
 #include "nsString.h"
 
 namespace mozilla {
 namespace dom {
 
-class PresentationSessionInfo
+class PresentationSessionInfo : public nsIPresentationSessionTransportCallback
+                              , public nsIPresentationControlChannelListener
 {
 public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIPRESENTATIONSESSIONTRANSPORTCALLBACK
+
   PresentationSessionInfo(const nsAString& aUrl,
                           const nsAString& aSessionId,
                           nsIPresentationServiceCallback* aCallback)
     : mUrl(aUrl)
     , mSessionId(aSessionId)
+    , mIsResponderReady(false)
+    , mIsTransportReady(false)
     , mCallback(aCallback)
   {
     MOZ_ASSERT(!mUrl.IsEmpty());
     MOZ_ASSERT(!mSessionId.IsEmpty());
   }
+
+  virtual nsresult Init(nsIPresentationControlChannel* aControlChannel);
 
   const nsAString& GetUrl() const
   {
@@ -45,16 +57,114 @@ public:
     mCallback = aCallback;
   }
 
-  void SetListener(nsIPresentationSessionListener* aListener)
+  nsresult SetListener(nsIPresentationSessionListener* aListener);
+
+  void SetDevice(nsIPresentationDevice* aDevice)
   {
-    mListener = aListener;
+    mDevice = aDevice;
   }
 
-private:
+  already_AddRefed<nsIPresentationDevice> GetDevice() const
+  {
+    nsCOMPtr<nsIPresentationDevice> device = mDevice;
+    return device.forget();
+  }
+
+  void SetControlChannel(nsIPresentationControlChannel* aControlChannel)
+  {
+    if (mControlChannel) {
+      mControlChannel->SetListener(nullptr);
+    }
+
+    mControlChannel = aControlChannel;
+    if (mControlChannel) {
+      mControlChannel->SetListener(this);
+    }
+  }
+
+  nsresult Send(nsIInputStream* aData);
+
+  nsresult Close(nsresult aReason);
+
+  nsresult ReplyError(nsresult aReason);
+
+protected:
+  virtual ~PresentationSessionInfo()
+  {
+    Shutdown(NS_OK);
+  }
+
+  virtual void Shutdown(nsresult aReason);
+
+  nsresult ReplySuccess();
+
+  bool IsSessionReady()
+  {
+    return mIsResponderReady && mIsTransportReady;
+  }
+
   nsString mUrl;
   nsString mSessionId;
+  bool mIsResponderReady;
+  bool mIsTransportReady;
   nsCOMPtr<nsIPresentationServiceCallback> mCallback;
   nsCOMPtr<nsIPresentationSessionListener> mListener;
+  nsCOMPtr<nsIPresentationDevice> mDevice;
+  nsCOMPtr<nsIPresentationSessionTransport> mTransport;
+  nsCOMPtr<nsIPresentationControlChannel> mControlChannel;
+};
+
+// Session info with sender side behaviors.
+class PresentationRequesterInfo final : public PresentationSessionInfo
+                                      , public nsIServerSocketListener
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIPRESENTATIONCONTROLCHANNELLISTENER
+  NS_DECL_NSISERVERSOCKETLISTENER
+
+  PresentationRequesterInfo(const nsAString& aUrl,
+                            const nsAString& aSessionId,
+                            nsIPresentationServiceCallback* aCallback)
+    : PresentationSessionInfo(aUrl, aSessionId, aCallback)
+  {
+    MOZ_ASSERT(mCallback);
+  }
+
+  nsresult Init(nsIPresentationControlChannel* aControlChannel) override;
+
+private:
+  ~PresentationRequesterInfo()
+  {
+    Shutdown(NS_OK);
+  }
+
+  void Shutdown(nsresult aReason) override;
+
+  nsCOMPtr<nsIServerSocket> mServerSocket;
+};
+
+// Session info with receiver side behaviors.
+class PresentationResponderInfo final : public PresentationSessionInfo
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIPRESENTATIONCONTROLCHANNELLISTENER
+
+  PresentationResponderInfo(const nsAString& aUrl,
+                            const nsAString& aSessionId,
+                            nsIPresentationDevice* aDevice)
+    : PresentationSessionInfo(aUrl, aSessionId, nullptr)
+  {
+    MOZ_ASSERT(aDevice);
+
+    SetDevice(aDevice);
+  }
+
+  // TODO May need to inherit more interfaces to handle some observed changes.
+
+private:
+  ~PresentationResponderInfo() {}
 };
 
 } // namespace dom
