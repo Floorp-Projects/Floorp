@@ -150,7 +150,7 @@ Zone::sweepBreakpoints(FreeOp* fop)
                 HeapPtrNativeObject& dbgobj = bp->debugger->toJSObjectRef();
                 MOZ_ASSERT_IF(isGCSweeping() && dbgobj->zone()->isCollecting(),
                               dbgobj->zone()->isGCSweeping());
-                bool dying = scriptGone || IsObjectAboutToBeFinalized(&dbgobj);
+                bool dying = scriptGone || IsAboutToBeFinalized(&dbgobj);
                 MOZ_ASSERT_IF(!dying, !IsAboutToBeFinalized(&bp->getHandlerRef()));
                 if (dying)
                     bp->destroy(fop);

@@ -2272,7 +2272,7 @@ Debugger::markAllIteratively(GCMarker* trc)
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next()) {
         if (c->isDebuggee()) {
             GlobalObject* global = c->maybeGlobal();
-            if (!IsObjectMarked(&global))
+            if (!IsMarkedUnbarriered(&global))
                 continue;
 
             /*
@@ -2294,13 +2294,13 @@ Debugger::markAllIteratively(GCMarker* trc)
                 if (!dbgobj->zone()->isGCMarking())
                     continue;
 
-                bool dbgMarked = IsObjectMarked(&dbgobj);
+                bool dbgMarked = IsMarked(&dbgobj);
                 if (!dbgMarked && dbg->hasAnyLiveHooks()) {
                     /*
                      * obj could be reachable only via its live, enabled
                      * debugger hooks, which may yet be called.
                      */
-                    MarkObject(trc, &dbgobj, "enabled Debugger");
+                    TraceEdge(trc, &dbgobj, "enabled Debugger");
                     markedAny = true;
                     dbgMarked = true;
                 }
@@ -2313,8 +2313,8 @@ Debugger::markAllIteratively(GCMarker* trc)
                              * The debugger and the script are both live.
                              * Therefore the breakpoint handler is live.
                              */
-                            if (!IsObjectMarked(&bp->getHandlerRef())) {
-                                MarkObject(trc, &bp->getHandlerRef(), "breakpoint handler");
+                            if (!IsMarked(&bp->getHandlerRef())) {
+                                TraceEdge(trc, &bp->getHandlerRef(), "breakpoint handler");
                                 markedAny = true;
                             }
                         }
@@ -2339,13 +2339,13 @@ Debugger::markAll(JSTracer* trc)
         WeakGlobalObjectSet& debuggees = dbg->debuggees;
         for (WeakGlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
             GlobalObject* global = e.front();
-            MarkObjectUnbarriered(trc, &global, "Global Object");
+            TraceManuallyBarrieredEdge(trc, &global, "Global Object");
             if (global != e.front())
                 e.rekeyFront(ReadBarrieredGlobalObject(global));
         }
 
         HeapPtrNativeObject& dbgobj = dbg->toJSObjectRef();
-        MarkObject(trc, &dbgobj, "Debugger Object");
+        TraceEdge(trc, &dbgobj, "Debugger Object");
 
         dbg->scripts.trace(trc);
         dbg->sources.trace(trc);
@@ -2354,7 +2354,7 @@ Debugger::markAll(JSTracer* trc)
 
         for (Breakpoint* bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
             TraceManuallyBarrieredEdge(trc, &bp->site->script, "breakpoint script");
-            MarkObject(trc, &bp->getHandlerRef(), "breakpoint handler");
+            TraceEdge(trc, &bp->getHandlerRef(), "breakpoint handler");
         }
     }
 }
@@ -2370,7 +2370,7 @@ void
 Debugger::trace(JSTracer* trc)
 {
     if (uncaughtExceptionHook)
-        MarkObject(trc, &uncaughtExceptionHook, "hooks");
+        TraceEdge(trc, &uncaughtExceptionHook, "hooks");
 
     /*
      * Mark Debugger.Frame objects. These are all reachable from JS, because the
@@ -2383,7 +2383,7 @@ Debugger::trace(JSTracer* trc)
     for (FrameMap::Range r = frames.all(); !r.empty(); r.popFront()) {
         RelocatablePtrNativeObject& frameobj = r.front().value();
         MOZ_ASSERT(MaybeForwarded(frameobj.get())->getPrivate());
-        MarkObject(trc, &frameobj, "live Debugger.Frame");
+        TraceEdge(trc, &frameobj, "live Debugger.Frame");
     }
 
     /*
@@ -2391,7 +2391,7 @@ Debugger::trace(JSTracer* trc)
      */
     for (AllocationSite* s = allocationsLog.getFirst(); s; s = s->getNext()) {
         if (s->frame)
-            MarkObject(trc, &s->frame, "allocation log SavedFrame");
+            TraceEdge(trc, &s->frame, "allocation log SavedFrame");
     }
 
     /* Trace the weak map from JSScript instances to Debugger.Script objects. */
@@ -2413,7 +2413,7 @@ Debugger::sweepAll(FreeOp* fop)
     JSRuntime* rt = fop->runtime();
 
     for (Debugger* dbg = rt->debuggerList.getFirst(); dbg; dbg = dbg->getNext()) {
-        if (IsObjectAboutToBeFinalized(&dbg->object)) {
+        if (IsAboutToBeFinalized(&dbg->object)) {
             /*
              * dbg is being GC'd. Detach it from its debuggees. The debuggee
              * might be GC'd too. Since detaching requires access to both

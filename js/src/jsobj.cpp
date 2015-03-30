@@ -3977,7 +3977,7 @@ JSObject::markChildren(JSTracer* trc)
             if (nobj->denseElementsAreCopyOnWrite()) {
                 HeapPtrNativeObject& owner = nobj->getElementsHeader()->ownerObject();
                 if (owner != nobj) {
-                    MarkObject(trc, &owner, "objectElementsOwner");
+                    TraceEdge(trc, &owner, "objectElementsOwner");
                     break;
                 }
             }

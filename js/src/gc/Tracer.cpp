@@ -44,7 +44,7 @@ JS_CallUnbarrieredIdTracer(JSTracer* trc, jsid* idp, const char* name)
 JS_PUBLIC_API(void)
 JS_CallUnbarrieredObjectTracer(JSTracer* trc, JSObject** objp, const char* name)
 {
-    MarkObjectUnbarriered(trc, objp, name);
+    TraceManuallyBarrieredEdge(trc, objp, name);
 }
 
 JS_PUBLIC_API(void)
@@ -74,7 +74,7 @@ JS_CallIdTracer(JSTracer* trc, JS::Heap<jsid>* idp, const char* name)
 JS_PUBLIC_API(void)
 JS_CallObjectTracer(JSTracer* trc, JS::Heap<JSObject*>* objp, const char* name)
 {
-    MarkObjectUnbarriered(trc, objp->unsafeGet(), name);
+    TraceManuallyBarrieredEdge(trc, objp->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
@@ -92,7 +92,7 @@ JS_CallScriptTracer(JSTracer* trc, JS::Heap<JSScript*>* scriptp, const char* nam
 JS_PUBLIC_API(void)
 JS_CallFunctionTracer(JSTracer* trc, JS::Heap<JSFunction*>* funp, const char* name)
 {
-    MarkObjectUnbarriered(trc, funp->unsafeGet(), name);
+    TraceManuallyBarrieredEdge(trc, funp->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
@@ -103,7 +103,7 @@ JS_CallTenuredObjectTracer(JSTracer* trc, JS::TenuredHeap<JSObject*>* objp, cons
         return;
 
     trc->setTracingLocation((void*)objp);
-    MarkObjectUnbarriered(trc, &obj, name);
+    TraceManuallyBarrieredEdge(trc, &obj, name);
 
     objp->setPtr(obj);
 }
@@ -156,7 +156,7 @@ JS_TraceIncomingCCWs(JSTracer* trc, const JS::ZoneSet& zones)
                     if (!zones.has(obj->zone()))
                         continue;
 
-                    MarkObjectUnbarriered(trc, &obj, "cross-compartment wrapper");
+                    TraceManuallyBarrieredEdge(trc, &obj, "cross-compartment wrapper");
                     MOZ_ASSERT(obj == key.wrapped);
                     break;
 

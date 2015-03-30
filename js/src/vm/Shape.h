@@ -1366,10 +1366,10 @@ Shape::markChildren(JSTracer* trc)
         TraceEdge(trc, &parent, "parent");
 
     if (hasGetterObject())
-        gc::MarkObjectUnbarriered(trc, &asAccessorShape().getterObj, "getter");
+        TraceManuallyBarrieredEdge(trc, &asAccessorShape().getterObj, "getter");
 
     if (hasSetterObject())
-        gc::MarkObjectUnbarriered(trc, &asAccessorShape().setterObj, "setter");
+        TraceManuallyBarrieredEdge(trc, &asAccessorShape().setterObj, "setter");
 }
 
 /*

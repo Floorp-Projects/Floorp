@@ -188,7 +188,7 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>, publ
              * gray marking when the key's delegate is black and the map is
              * gray.
              */
-            return delegate && gc::IsObjectMarked(&delegate);
+            return delegate && gc::IsMarkedUnbarriered(&delegate);
         }
         return false;
     }

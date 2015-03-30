@@ -3439,12 +3439,12 @@ JSScript::markChildren(JSTracer* trc)
 
     if (hasObjects()) {
         ObjectArray* objarray = objects();
-        MarkObjectRange(trc, objarray->length, objarray->vector, "objects");
+        TraceRange(trc, objarray->length, objarray->vector, "objects");
     }
 
     if (hasRegexps()) {
         ObjectArray* objarray = regexps();
-        MarkObjectRange(trc, objarray->length, objarray->vector, "objects");
+        TraceRange(trc, objarray->length, objarray->vector, "objects");
     }
 
     if (hasConsts()) {
@@ -3454,14 +3454,14 @@ JSScript::markChildren(JSTracer* trc)
 
     if (sourceObject()) {
         MOZ_ASSERT(MaybeForwarded(sourceObject())->compartment() == compartment());
-        MarkObject(trc, &sourceObject_, "sourceObject");
+        TraceEdge(trc, &sourceObject_, "sourceObject");
     }
 
     if (functionNonDelazifying())
-        MarkObject(trc, &function_, "function");
+        TraceEdge(trc, &function_, "function");
 
     if (enclosingStaticScope_)
-        MarkObject(trc, &enclosingStaticScope_, "enclosingStaticScope");
+        TraceEdge(trc, &enclosingStaticScope_, "enclosingStaticScope");
 
     if (maybeLazyScript())
         TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
@@ -3482,13 +3482,13 @@ void
 LazyScript::markChildren(JSTracer* trc)
 {
     if (function_)
-        MarkObject(trc, &function_, "function");
+        TraceEdge(trc, &function_, "function");
 
     if (sourceObject_)
-        MarkObject(trc, &sourceObject_, "sourceObject");
+        TraceEdge(trc, &sourceObject_, "sourceObject");
 
     if (enclosingScope_)
-        MarkObject(trc, &enclosingScope_, "enclosingScope");
+        TraceEdge(trc, &enclosingScope_, "enclosingScope");
 
     if (script_)
         TraceEdge(trc, &script_, "realScript");
@@ -3502,7 +3502,7 @@ LazyScript::markChildren(JSTracer* trc)
 
     HeapPtrFunction* innerFunctions = this->innerFunctions();
     for (size_t i = 0; i < numInnerFunctions(); i++)
-        MarkObject(trc, &innerFunctions[i], "lazyScriptInnerFunction");
+        TraceEdge(trc, &innerFunctions[i], "lazyScriptInnerFunction");
 }
 
 void

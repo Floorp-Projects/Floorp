@@ -142,24 +142,6 @@ bool Is##base##AboutToBeFinalized(type** thingp);                               
 bool Is##base##AboutToBeFinalized(BarrieredBase<type*>* thingp);                                  \
 type* Update##base##IfRelocated(JSRuntime* rt, BarrieredBase<type*>* thingp);                     \
 type* Update##base##IfRelocated(JSRuntime* rt, type** thingp);
-
-DeclMarker(Object, NativeObject)
-DeclMarker(Object, ArrayObject)
-DeclMarker(Object, ArgumentsObject)
-DeclMarker(Object, ArrayBufferObject)
-DeclMarker(Object, ArrayBufferObjectMaybeShared)
-DeclMarker(Object, ArrayBufferViewObject)
-DeclMarker(Object, DebugScopeObject)
-DeclMarker(Object, GlobalObject)
-DeclMarker(Object, JSObject)
-DeclMarker(Object, JSFunction)
-DeclMarker(Object, NestedScopeObject)
-DeclMarker(Object, PlainObject)
-DeclMarker(Object, SavedFrame)
-DeclMarker(Object, ScopeObject)
-DeclMarker(Object, SharedArrayBufferObject)
-DeclMarker(Object, SharedTypedArrayObject)
-
 #undef DeclMarker
 
 void
