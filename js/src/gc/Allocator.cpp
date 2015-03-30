@@ -232,7 +232,7 @@ GCRuntime::tryNewTenuredThing(ExclusiveContext* cx, AllocKind kind, size_t thing
 {
     T* t = reinterpret_cast<T*>(cx->arenas()->allocateFromFreeList(kind, thingSize));
     if (!t)
-        t = reinterpret_cast<T*>(refillFreeListFromAnyThread<allowGC>(cx, kind, thingSize));
+        t = reinterpret_cast<T*>(refillFreeListFromAnyThread<allowGC>(cx, kind));
 
     checkIncrementalZoneState(cx, t);
     TraceTenuredAlloc(t, kind);
@@ -241,19 +241,19 @@ GCRuntime::tryNewTenuredThing(ExclusiveContext* cx, AllocKind kind, size_t thing
 
 template <AllowGC allowGC>
 /* static */ void*
-GCRuntime::refillFreeListFromAnyThread(ExclusiveContext* cx, AllocKind thingKind, size_t thingSize)
+GCRuntime::refillFreeListFromAnyThread(ExclusiveContext* cx, AllocKind thingKind)
 {
     MOZ_ASSERT(cx->arenas()->freeLists[thingKind].isEmpty());
 
     if (cx->isJSContext())
-        return refillFreeListFromMainThread<allowGC>(cx->asJSContext(), thingKind, thingSize);
+        return refillFreeListFromMainThread<allowGC>(cx->asJSContext(), thingKind);
 
     return refillFreeListOffMainThread(cx, thingKind);
 }
 
 template <AllowGC allowGC>
 /* static */ void*
-GCRuntime::refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind, size_t thingSize)
+GCRuntime::refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind)
 {
     JSRuntime* rt = cx->runtime();
     MOZ_ASSERT(!rt->isHeapBusy(), "allocating while under GC");
@@ -277,11 +277,7 @@ GCRuntime::refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind, size
     }
 
     // Retry the allocation after the last-ditch GC.
-    // Note that due to GC callbacks we might already have allocated an arena
-    // for this thing kind!
-    thing = cx->arenas()->allocateFromFreeList(thingKind, thingSize);
-    if (!thing)
-        thing = tryRefillFreeListFromMainThread(cx, thingKind);
+    thing = tryRefillFreeListFromMainThread(cx, thingKind);
     if (thing)
         return thing;
 
