@@ -181,7 +181,7 @@ private:
   uint32_t mOutgoingBufferedAmount;
 
   // related to the WebSocket constructor steps
-  nsString mOriginalURL;
+  nsString mURI;
   nsString mEffectiveURL;   // after redirects
   nsCString mEstablishedExtensions;
   nsCString mEstablishedProtocol;
