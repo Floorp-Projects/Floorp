@@ -4295,7 +4295,7 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
 
   const nsStyleDisplay *disp = StyleDisplay();
   if (IsThemed(disp)) {
-    LayoutDeviceIntSize widget;
+    nsIntSize widget(0, 0);
     bool canOverride = true;
     nsPresContext *presContext = PresContext();
     presContext->GetTheme()->

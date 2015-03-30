@@ -1039,7 +1039,7 @@ ScrollFrameHelper::GetNondisappearingScrollbarWidth(nsBoxLayoutState* aState)
         theme->ThemeSupportsWidget(aState->PresContext(),
                                    mVScrollbarBox,
                                    NS_THEME_SCROLLBAR_NON_DISAPPEARING)) {
-      LayoutDeviceIntSize size;
+      nsIntSize size;
       bool canOverride = true;
       theme->GetMinimumWidgetSize(aState->PresContext(),
                                   mVScrollbarBox,

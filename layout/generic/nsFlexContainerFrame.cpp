@@ -169,14 +169,14 @@ public:
   nscoord GetMainComponent(const nsSize& aSize) const {
     return GET_MAIN_COMPONENT(*this, aSize.width, aSize.height);
   }
-  int32_t GetMainComponent(const LayoutDeviceIntSize& aIntSize) const {
+  int32_t GetMainComponent(const nsIntSize& aIntSize) const {
     return GET_MAIN_COMPONENT(*this, aIntSize.width, aIntSize.height);
   }
 
   nscoord GetCrossComponent(const nsSize& aSize) const {
     return GET_CROSS_COMPONENT(*this, aSize.width, aSize.height);
   }
-  int32_t GetCrossComponent(const LayoutDeviceIntSize& aIntSize) const {
+  int32_t GetCrossComponent(const nsIntSize& aIntSize) const {
     return GET_CROSS_COMPONENT(*this, aIntSize.width, aIntSize.height);
   }
 
@@ -1045,7 +1045,7 @@ nsFlexContainerFrame::GenerateFlexItemForChild(
   bool isFixedSizeWidget = false;
   const nsStyleDisplay* disp = aChildFrame->StyleDisplay();
   if (aChildFrame->IsThemed(disp)) {
-    LayoutDeviceIntSize widgetMinSize;
+    nsIntSize widgetMinSize(0, 0);
     bool canOverride = true;
     aPresContext->GetTheme()->
       GetMinimumWidgetSize(aPresContext, aChildFrame,
