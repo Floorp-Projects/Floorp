@@ -10154,18 +10154,26 @@ nsCSSFrameConstructor::WrapItemsInPseudoParent(nsIContent* aParentContent,
                               wrapperStyle,
                               true, nullptr);
 
+  const nsStyleDisplay* disp = newItem->mStyleContext->StyleDisplay();
   // Here we're cheating a tad... technically, table-internal items should be
   // inline if aParentFrame is inline, but they'll get wrapped in an
   // inline-table in the end, so it'll all work out.  In any case, arguably
   // we don't need to maintain this state at this point... but it's better
   // to, I guess.
   newItem->mIsAllInline = newItem->mHasInlineEnds =
-    newItem->mStyleContext->StyleDisplay()->IsInlineOutsideStyle();
+    disp->IsInlineOutsideStyle();
 
-  // Table pseudo frames always induce line boundaries around their
-  // contents.
-  newItem->mChildItems.SetLineBoundaryAtStart(true);
-  newItem->mChildItems.SetLineBoundaryAtEnd(true);
+  bool isRuby = disp->IsRubyDisplayType();
+  // All types of ruby frames need a block frame to provide line layout,
+  // hence they are always line participant.
+  newItem->mIsLineParticipant = isRuby;
+
+  if (!isRuby) {
+    // Table pseudo frames always induce line boundaries around their
+    // contents.
+    newItem->mChildItems.SetLineBoundaryAtStart(true);
+    newItem->mChildItems.SetLineBoundaryAtEnd(true);
+  }
   // The parent of the items in aItems is also the parent of the items
   // in mChildItems
   newItem->mChildItems.SetParentHasNoXBLChildren(
