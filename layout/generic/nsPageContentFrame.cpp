@@ -26,6 +26,7 @@ nsPageContentFrame::Reflow(nsPresContext*           aPresContext,
                            const nsHTMLReflowState& aReflowState,
                            nsReflowStatus&          aStatus)
 {
+  MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsPageContentFrame");
   DISPLAY_REFLOW(aPresContext, this, aReflowState, aDesiredSize, aStatus);
   aStatus = NS_FRAME_COMPLETE;  // initialize out parameter

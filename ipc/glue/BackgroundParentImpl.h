@@ -84,6 +84,12 @@ protected:
   virtual bool
   DeallocPBroadcastChannelParent(PBroadcastChannelParent* aActor) override;
 
+  virtual PMediaParent*
+  AllocPMediaParent() override;
+
+  virtual bool
+  DeallocPMediaParent(PMediaParent* aActor) override;
+
   virtual bool
   RecvRegisterServiceWorker(const ServiceWorkerRegistrationData& aData)
                             override;

@@ -1014,6 +1014,7 @@ nsColumnSetFrame::Reflow(nsPresContext*           aPresContext,
                          const nsHTMLReflowState& aReflowState,
                          nsReflowStatus&          aStatus)
 {
+  MarkInReflow();
   // Don't support interruption in columns
   nsPresContext::InterruptPreventer noInterrupts(aPresContext);
 

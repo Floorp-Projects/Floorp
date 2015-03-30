@@ -9088,8 +9088,6 @@ PresShell::DoReflow(nsIFrame* target, bool aInterruptible)
   mCurrentReflowRoot = target;
 #endif
 
-  target->WillReflow(mPresContext);
-
   // If the target frame is the root of the frame hierarchy, then
   // use all the available space. If it's simply a `reflow root',
   // then use the target frame's size as the available space.
