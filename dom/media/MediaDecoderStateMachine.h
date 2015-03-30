@@ -469,13 +469,15 @@ protected:
 
   // Get the video stream position, taking the |playbackRate| change into
   // account. This is a position in the media, not the duration of the playback
-  // so far.
-  int64_t GetVideoStreamPosition() const;
+  // so far. Returns the position for the given time aTimeStamp.
+  int64_t GetVideoStreamPosition(TimeStamp aTimeStamp) const;
 
   // Return the current time, either the audio clock if available (if the media
   // has audio, and the playback is possible), or a clock for the video.
   // Called on the state machine thread.
-  int64_t GetClock() const;
+  // If aTimeStamp is non-null, set *aTimeStamp to the TimeStamp corresponding
+  // to the returned stream time.
+  int64_t GetClock(TimeStamp* aTimeStamp = nullptr) const;
 
   nsresult DropAudioUpToSeekTarget(AudioData* aSample);
   nsresult DropVideoUpToSeekTarget(VideoData* aSample);
