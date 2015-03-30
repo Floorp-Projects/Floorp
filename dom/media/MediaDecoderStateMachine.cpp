@@ -3013,6 +3013,8 @@ MediaDecoderStateMachine::LogicalPlaybackRateChanged()
   if (mAudioSink) {
     mAudioSink->SetPlaybackRate(mPlaybackRate);
   }
+
+  ScheduleStateMachine();
 }
 
 void MediaDecoderStateMachine::PreservesPitchChanged()
