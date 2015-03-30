@@ -78,9 +78,12 @@ private:
       , mPromise(new MediaTimerPromise::Private(aCallSite))
     {}
 
+    // Define a < overload that reverses ordering because std::priority_queue
+    // provides access to the largest element, and we want the smallest
+    // (i.e. the soonest).
     bool operator<(const Entry& aOther) const
     {
-      return mTimeStamp < aOther.mTimeStamp;
+      return mTimeStamp > aOther.mTimeStamp;
     }
   };
 
