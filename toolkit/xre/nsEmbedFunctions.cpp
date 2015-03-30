@@ -427,6 +427,9 @@ XRE_InitChildProcess(int aArgc,
   gArgv = aArgv;
   gArgc = aArgc;
 
+#ifdef MOZ_X11
+  XInitThreads();
+#endif
 #if defined(MOZ_WIDGET_GTK)
   g_thread_init(nullptr);
 #endif
