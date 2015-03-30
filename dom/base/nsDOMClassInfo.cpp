@@ -43,6 +43,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
+#include "nsIProgrammingLanguage.h"
 #include "nsContentUtils.h"
 #include "nsIDOMGlobalPropertyInitializer.h"
 #include "mozilla/Attributes.h"
