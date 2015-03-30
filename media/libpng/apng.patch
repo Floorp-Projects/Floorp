@@ -107,7 +107,7 @@ Index: pngget.c
 ===================================================================
 --- pngget.c
 +++ pngget.c
-@@ -1210,4 +1210,166 @@
+@@ -1216,4 +1216,166 @@
  #  endif
  #endif
  
@@ -278,7 +278,7 @@ Index: png.h
 ===================================================================
 --- png.h
 +++ png.h
-@@ -476,6 +476,10 @@
+@@ -480,6 +480,10 @@
  #   include "pnglibconf.h"
  #endif
  
@@ -289,7 +289,7 @@ Index: png.h
  #ifndef PNG_VERSION_INFO_ONLY
     /* Machine specific configuration. */
  #  include "pngconf.h"
-@@ -566,6 +570,17 @@
+@@ -570,6 +574,17 @@
   * See pngconf.h for base types that vary by machine/system
   */
  
@@ -307,7 +307,7 @@ Index: png.h
  /* This triggers a compiler error in png.c, if png.c and png.h
   * do not agree upon the version number.
   */
-@@ -886,6 +901,10 @@
+@@ -890,6 +905,10 @@
  #define PNG_INFO_sPLT 0x2000   /* ESR, 1.0.6 */
  #define PNG_INFO_sCAL 0x4000   /* ESR, 1.0.6 */
  #define PNG_INFO_IDAT 0x8000   /* ESR, 1.0.6 */
@@ -318,7 +318,7 @@ Index: png.h
  
  /* This is used for the transformation routines, as some of them
   * change these values for the row.  It also should enable using
-@@ -923,6 +942,10 @@
+@@ -927,6 +946,10 @@
  #ifdef PNG_PROGRESSIVE_READ_SUPPORTED
  typedef PNG_CALLBACK(void, *png_progressive_info_ptr, (png_structp, png_infop));
  typedef PNG_CALLBACK(void, *png_progressive_end_ptr, (png_structp, png_infop));
@@ -329,7 +329,7 @@ Index: png.h
  
  /* The following callback receives png_uint_32 row_number, int pass for the
   * png_bytep data of the row.  When transforming an interlaced image the
-@@ -3262,6 +3285,75 @@
+@@ -3272,6 +3295,75 @@
   *  END OF HARDWARE AND SOFTWARE OPTIONS
   ******************************************************************************/
  
@@ -405,7 +405,7 @@ Index: png.h
  /* Maintainer: Put new public prototypes here ^, in libpng.3, in project
   * defs, and in scripts/symbols.def.
   */
-@@ -3270,7 +3362,11 @@
+@@ -3280,7 +3372,11 @@
   * one to use is one more than this.)
   */
  #ifdef PNG_EXPORT_LAST_ORDINAL
@@ -421,7 +421,7 @@ Index: pngpriv.h
 ===================================================================
 --- pngpriv.h
 +++ pngpriv.h
-@@ -555,6 +555,10 @@
+@@ -516,6 +516,10 @@
  #define PNG_HAVE_CHUNK_AFTER_IDAT 0x2000 /* Have another chunk after IDAT */
                     /*             0x4000 (unused) */
  #define PNG_IS_READ_STRUCT        0x8000 /* Else is a write struct */
@@ -432,7 +432,7 @@ Index: pngpriv.h
  
  /* Flags for the transformations the PNG library does on the image data */
  #define PNG_BGR                 0x0001
-@@ -776,6 +780,16 @@
+@@ -737,6 +741,16 @@
  #define png_tRNS PNG_U32(116,  82,  78,  83)
  #define png_zTXt PNG_U32(122,  84,  88, 116)
  
@@ -449,7 +449,7 @@ Index: pngpriv.h
  /* The following will work on (signed char*) strings, whereas the get_uint_32
   * macro will fail on top-bit-set values because of the sign extension.
   */
-@@ -1456,6 +1470,49 @@
+@@ -1420,6 +1434,49 @@
  
  #endif /* PROGRESSIVE_READ */
  
@@ -503,7 +503,7 @@ Index: pnginfo.h
 ===================================================================
 --- pnginfo.h
 +++ pnginfo.h
-@@ -256,5 +256,18 @@
+@@ -255,5 +255,18 @@
     png_bytepp row_pointers;        /* the image bits */
  #endif
  
@@ -526,7 +526,7 @@ Index: pngstruct.h
 ===================================================================
 --- pngstruct.h
 +++ pngstruct.h
-@@ -409,6 +409,27 @@
+@@ -408,6 +408,27 @@
     png_byte filter_type;
  #endif
  
@@ -581,7 +581,7 @@ Index: pngwrite.c
  #ifdef PNG_WRITE_CHECK_FOR_INVALID_INDEX_SUPPORTED
     if (png_ptr->num_palette_max > png_ptr->num_palette)
        png_benign_error(png_ptr, "Wrote palette index exceeding num_palette");
-@@ -2452,4 +2461,42 @@
+@@ -2456,4 +2465,42 @@
  }
  #endif /* STDIO */
  #endif /* SIMPLIFIED_WRITE */
@@ -836,7 +836,7 @@ Index: pngpread.c
     /* This routine must process all the data it has been given
      * before returning, calling the row callback as required to
      * handle the uncompressed results.
-@@ -1157,6 +1311,18 @@
+@@ -1163,6 +1317,18 @@
     png_set_read_fn(png_ptr, progressive_ptr, png_push_fill_buffer);
  }
  
@@ -859,7 +859,7 @@ Index: pngset.c
 ===================================================================
 --- pngset.c
 +++ pngset.c
-@@ -240,6 +240,11 @@
+@@ -241,6 +241,11 @@
     info_ptr->pixel_depth = (png_byte)(info_ptr->channels * info_ptr->bit_depth);
  
     info_ptr->rowbytes = PNG_ROWBYTES(info_ptr->pixel_depth, width);
@@ -871,7 +871,7 @@ Index: pngset.c
  }
  
  #ifdef PNG_oFFs_SUPPORTED
-@@ -1071,6 +1076,147 @@
+@@ -1090,6 +1095,147 @@
  }
  #endif /* sPLT */
  
@@ -1035,7 +1035,7 @@ Index: pngrutil.c
     /* Set internal variables */
     png_ptr->width = width;
     png_ptr->height = height;
-@@ -2700,6 +2705,180 @@
+@@ -2702,6 +2707,180 @@
  }
  #endif
  
@@ -1216,7 +1216,7 @@ Index: pngrutil.c
  #ifdef PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
  /* Utility function for png_handle_unknown; set up png_ptr::unknown_chunk */
  static int
-@@ -3959,6 +4138,38 @@
+@@ -3961,6 +4140,38 @@
           uInt avail_in;
           png_bytep buffer;
  
@@ -1255,7 +1255,7 @@ Index: pngrutil.c
           while (png_ptr->idat_size == 0)
           {
              png_crc_finish(png_ptr, 0);
-@@ -3970,6 +4181,7 @@
+@@ -3972,6 +4183,7 @@
              if (png_ptr->chunk_name != png_IDAT)
                 png_error(png_ptr, "Not enough image data");
           }
@@ -1263,7 +1263,7 @@ Index: pngrutil.c
  
           avail_in = png_ptr->IDAT_read_size;
  
-@@ -4033,6 +4245,9 @@
+@@ -4035,6 +4247,9 @@
  
           png_ptr->mode |= PNG_AFTER_IDAT;
           png_ptr->flags |= PNG_FLAG_ZSTREAM_ENDED;
@@ -1273,7 +1273,7 @@ Index: pngrutil.c
  
           if (png_ptr->zstream.avail_in > 0 || png_ptr->idat_size > 0)
              png_chunk_benign_error(png_ptr, "Extra compressed data");
-@@ -4471,4 +4686,80 @@
+@@ -4473,4 +4688,80 @@
  
     png_ptr->flags |= PNG_FLAG_ROW_INIT;
  }
@@ -1485,7 +1485,7 @@ Index: pngwutil.c
  /* Initializes the row writing capability of libpng */
  void /* PRIVATE */
  png_write_start_row(png_structrp png_ptr)
-@@ -3026,4 +3123,39 @@
+@@ -3028,4 +3125,39 @@
     }
  #endif /* WRITE_FLUSH */
  }
