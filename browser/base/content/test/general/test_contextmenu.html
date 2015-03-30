@@ -848,7 +848,7 @@ function waitForEvents(event)
   if (painted && loaded) {
     subwindow.removeEventListener("MozAfterPaint", waitForEvents, false);
     subwindow.onload = null;
-    startTest();
+    SimpleTest.waitForFocus(startTest, subwindow);
   }
 }
 
