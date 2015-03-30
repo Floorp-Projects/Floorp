@@ -7,6 +7,7 @@
 #include "ActorsChild.h" // IndexedDB
 #include "BroadcastChannelChild.h"
 #include "FileDescriptorSetChild.h"
+#include "mozilla/media/MediaChild.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/PBlobChild.h"
 #include "mozilla/dom/cache/ActorUtils.h"
@@ -279,6 +280,18 @@ BackgroundChildImpl::DeallocPCacheStreamControlChild(PCacheStreamControlChild* a
 {
   dom::cache::DeallocPCacheStreamControlChild(aActor);
   return true;
+}
+
+media::PMediaChild*
+BackgroundChildImpl::AllocPMediaChild()
+{
+  return media::AllocPMediaChild();
+}
+
+bool
+BackgroundChildImpl::DeallocPMediaChild(media::PMediaChild *aActor)
+{
+  return media::DeallocPMediaChild(aActor);
 }
 
 } // namespace ipc
