@@ -278,7 +278,7 @@ Assembler::TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReade
     RelocationIterator iter(reader);
     while (iter.read()) {
         JitCode* child = CodeFromJump((Instruction*)(code->raw() + iter.offset()));
-        MarkJitCodeUnbarriered(trc, &child, "rel32");
+        TraceManuallyBarrieredEdge(trc, &child, "rel32");
     }
 }
 
@@ -393,7 +393,7 @@ Assembler::trace(JSTracer* trc)
         RelativePatch& rp = jumps_[i];
         if (rp.kind == Relocation::JITCODE) {
             JitCode* code = JitCode::FromExecutable((uint8_t*)rp.target);
-            MarkJitCodeUnbarriered(trc, &code, "masmrel32");
+            TraceManuallyBarrieredEdge(trc, &code, "masmrel32");
             MOZ_ASSERT(code == JitCode::FromExecutable((uint8_t*)rp.target));
         }
     }
