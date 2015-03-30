@@ -181,6 +181,11 @@ private:
   // If required, use MultDouble explicitly and with care.
   BaseTimeDuration operator*(const double aMultiplier) const = delete;
 
+  // Block double divisor (for the same reason, and because dividing by
+  // fractional values would otherwise invoke the int64_t variant, and rounding
+  // the passed argument can then cause divide-by-zero) - Bug 1147491.
+  BaseTimeDuration operator/(const double aDivisor) const = delete;
+
 public:
   BaseTimeDuration MultDouble(double aMultiplier) const
   {
