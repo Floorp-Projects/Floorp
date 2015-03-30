@@ -1405,7 +1405,7 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
             bool remove = false;
             if (!key.type.isUnknown() && key.type.isGroup()) {
                 ObjectGroup* group = key.type.groupNoBarrier();
-                if (IsObjectGroupAboutToBeFinalized(&group))
+                if (IsAboutToBeFinalizedUnbarriered(&group))
                     remove = true;
                 else
                     key.type = TypeSet::ObjectType(group);
@@ -1415,7 +1415,7 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
             {
                 remove = true;
             }
-            if (IsObjectGroupAboutToBeFinalized(e.front().value().unsafeGet()))
+            if (IsAboutToBeFinalized(&e.front().value()))
                 remove = true;
 
             if (remove)
@@ -1431,7 +1431,7 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
             PlainObjectEntry& entry = e.front().value();
 
             bool remove = false;
-            if (IsObjectGroupAboutToBeFinalized(entry.group.unsafeGet()))
+            if (IsAboutToBeFinalized(&entry.group))
                 remove = true;
             if (IsAboutToBeFinalized(&entry.shape))
                 remove = true;
@@ -1440,10 +1440,9 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
                     remove = true;
 
                 MOZ_ASSERT(!entry.types[i].isSingleton());
-                ObjectGroup* group = nullptr;
                 if (entry.types[i].isGroup()) {
-                    group = entry.types[i].groupNoBarrier();
-                    if (IsObjectGroupAboutToBeFinalized(&group))
+                    ObjectGroup* group = entry.types[i].groupNoBarrier();
+                    if (IsAboutToBeFinalizedUnbarriered(&group))
                         remove = true;
                     else if (group != entry.types[i].groupNoBarrier())
                         entry.types[i] = TypeSet::ObjectType(group);
@@ -1462,7 +1461,7 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
         for (AllocationSiteTable::Enum e(*allocationSiteTable); !e.empty(); e.popFront()) {
             AllocationSiteKey key = e.front().key();
             bool keyDying = IsAboutToBeFinalizedUnbarriered(&key.script);
-            bool valDying = IsObjectGroupAboutToBeFinalized(e.front().value().unsafeGet());
+            bool valDying = IsAboutToBeFinalized(&e.front().value());
             if (keyDying || valDying)
                 e.removeFront();
             else if (key.script != e.front().key().script)
@@ -1480,7 +1479,7 @@ ObjectGroupCompartment::sweepNewTable(NewTable* table)
     if (table && table->initialized()) {
         for (NewTable::Enum e(*table); !e.empty(); e.popFront()) {
             NewEntry entry = e.front();
-            if (IsObjectGroupAboutToBeFinalized(entry.group.unsafeGet()) ||
+            if (IsAboutToBeFinalized(&entry.group) ||
                 (entry.associated && IsObjectAboutToBeFinalized(&entry.associated)))
             {
                 e.removeFront();

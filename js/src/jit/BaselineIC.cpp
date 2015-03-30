@@ -171,7 +171,7 @@ ReceiverGuard::trace(JSTracer* trc)
     if (shape_)
         TraceEdge(trc, &shape_, "receiver_guard_shape");
     else
-        MarkObjectGroup(trc, &group_, "receiver_guard_group");
+        TraceEdge(trc, &group_, "receiver_guard_group");
 }
 
 /* static */ void
@@ -264,12 +264,12 @@ ICStub::trace(JSTracer* trc)
       case ICStub::SetElem_Dense: {
         ICSetElem_Dense* setElemStub = toSetElem_Dense();
         TraceEdge(trc, &setElemStub->shape(), "baseline-getelem-dense-shape");
-        MarkObjectGroup(trc, &setElemStub->group(), "baseline-setelem-dense-group");
+        TraceEdge(trc, &setElemStub->group(), "baseline-setelem-dense-group");
         break;
       }
       case ICStub::SetElem_DenseAdd: {
         ICSetElem_DenseAdd* setElemStub = toSetElem_DenseAdd();
-        MarkObjectGroup(trc, &setElemStub->group(), "baseline-setelem-denseadd-group");
+        TraceEdge(trc, &setElemStub->group(), "baseline-setelem-denseadd-group");
 
         JS_STATIC_ASSERT(ICSetElem_DenseAdd::MAX_PROTO_CHAIN_DEPTH == 4);
 
@@ -295,7 +295,7 @@ ICStub::trace(JSTracer* trc)
       }
       case ICStub::TypeMonitor_ObjectGroup: {
         ICTypeMonitor_ObjectGroup* monitorStub = toTypeMonitor_ObjectGroup();
-        MarkObjectGroup(trc, &monitorStub->group(), "baseline-monitor-group");
+        TraceEdge(trc, &monitorStub->group(), "baseline-monitor-group");
         break;
       }
       case ICStub::TypeUpdate_SingleObject: {
@@ -305,7 +305,7 @@ ICStub::trace(JSTracer* trc)
       }
       case ICStub::TypeUpdate_ObjectGroup: {
         ICTypeUpdate_ObjectGroup* updateStub = toTypeUpdate_ObjectGroup();
-        MarkObjectGroup(trc, &updateStub->group(), "baseline-update-group");
+        TraceEdge(trc, &updateStub->group(), "baseline-update-group");
         break;
       }
       case ICStub::GetName_Global: {
@@ -376,7 +376,7 @@ ICStub::trace(JSTracer* trc)
       }
       case ICStub::GetProp_Unboxed: {
         ICGetProp_Unboxed* propStub = toGetProp_Unboxed();
-        MarkObjectGroup(trc, &propStub->group(), "baseline-getprop-unboxed-stub-group");
+        TraceEdge(trc, &propStub->group(), "baseline-getprop-unboxed-stub-group");
         break;
       }
       case ICStub::GetProp_TypedObject: {
@@ -426,15 +426,15 @@ ICStub::trace(JSTracer* trc)
       case ICStub::SetProp_Native: {
         ICSetProp_Native* propStub = toSetProp_Native();
         TraceEdge(trc, &propStub->shape(), "baseline-setpropnative-stub-shape");
-        MarkObjectGroup(trc, &propStub->group(), "baseline-setpropnative-stub-group");
+        TraceEdge(trc, &propStub->group(), "baseline-setpropnative-stub-group");
         break;
       }
       case ICStub::SetProp_NativeAdd: {
         ICSetProp_NativeAdd* propStub = toSetProp_NativeAdd();
-        MarkObjectGroup(trc, &propStub->group(), "baseline-setpropnativeadd-stub-group");
+        TraceEdge(trc, &propStub->group(), "baseline-setpropnativeadd-stub-group");
         TraceEdge(trc, &propStub->newShape(), "baseline-setpropnativeadd-stub-newshape");
         if (propStub->newGroup())
-            MarkObjectGroup(trc, &propStub->newGroup(), "baseline-setpropnativeadd-stub-new-group");
+            TraceEdge(trc, &propStub->newGroup(), "baseline-setpropnativeadd-stub-new-group");
         JS_STATIC_ASSERT(ICSetProp_NativeAdd::MAX_PROTO_CHAIN_DEPTH == 4);
         switch (propStub->protoChainDepth()) {
           case 0: propStub->toImpl<0>()->traceShapes(trc); break;
@@ -448,13 +448,13 @@ ICStub::trace(JSTracer* trc)
       }
       case ICStub::SetProp_Unboxed: {
         ICSetProp_Unboxed* propStub = toSetProp_Unboxed();
-        MarkObjectGroup(trc, &propStub->group(), "baseline-setprop-unboxed-stub-group");
+        TraceEdge(trc, &propStub->group(), "baseline-setprop-unboxed-stub-group");
         break;
       }
       case ICStub::SetProp_TypedObject: {
         ICSetProp_TypedObject* propStub = toSetProp_TypedObject();
         TraceEdge(trc, &propStub->shape(), "baseline-setprop-typedobject-stub-shape");
-        MarkObjectGroup(trc, &propStub->group(), "baseline-setprop-typedobject-stub-group");
+        TraceEdge(trc, &propStub->group(), "baseline-setprop-typedobject-stub-group");
         break;
       }
       case ICStub::SetProp_CallScripted: {

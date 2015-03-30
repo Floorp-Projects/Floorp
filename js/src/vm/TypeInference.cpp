@@ -718,7 +718,7 @@ TypeSet::IsTypeMarked(TypeSet::Type* v)
         *v = TypeSet::ObjectType(obj);
     } else if (v->isGroupUnchecked()) {
         ObjectGroup* group = v->groupNoBarrier();
-        rv = IsObjectGroupMarked(&group);
+        rv = IsMarkedUnbarriered(&group);
         *v = TypeSet::ObjectType(group);
     } else {
         rv = true;
@@ -749,7 +749,7 @@ IsObjectKeyAboutToBeFinalized(TypeSet::ObjectKey** keyp)
     bool isAboutToBeFinalized;
     if (key->isGroup()) {
         ObjectGroup* group = key->groupNoBarrier();
-        isAboutToBeFinalized = IsObjectGroupAboutToBeFinalized(&group);
+        isAboutToBeFinalized = IsAboutToBeFinalizedUnbarriered(&group);
         if (!isAboutToBeFinalized)
             *keyp = TypeSet::ObjectKey::get(group);
     } else {
@@ -3058,7 +3058,7 @@ class TypeConstraintClearDefiniteGetterSetter : public TypeConstraint
     void newType(JSContext* cx, TypeSet* source, TypeSet::Type type) {}
 
     bool sweep(TypeZone& zone, TypeConstraint** res) {
-        if (IsObjectGroupAboutToBeFinalized(&group))
+        if (IsAboutToBeFinalizedUnbarriered(&group))
             return false;
         *res = zone.typeLifoAlloc.new_<TypeConstraintClearDefiniteGetterSetter>(group);
         return true;
@@ -3109,7 +3109,7 @@ class TypeConstraintClearDefiniteSingle : public TypeConstraint
     }
 
     bool sweep(TypeZone& zone, TypeConstraint** res) {
-        if (IsObjectGroupAboutToBeFinalized(&group))
+        if (IsAboutToBeFinalizedUnbarriered(&group))
             return false;
         *res = zone.typeLifoAlloc.new_<TypeConstraintClearDefiniteSingle>(group);
         return true;
@@ -3889,7 +3889,7 @@ TypeNewScript::trace(JSTracer* trc)
         TraceEdge(trc, &initializedShape_, "TypeNewScript_initializedShape");
 
     if (initializedGroup_)
-        MarkObjectGroup(trc, &initializedGroup_, "TypeNewScript_initializedGroup");
+        TraceEdge(trc, &initializedGroup_, "TypeNewScript_initializedGroup");
 }
 
 /* static */ void
@@ -4062,7 +4062,7 @@ ObjectGroup::maybeSweep(AutoClearTypeInferenceStateOnOOM* oom)
         // Remove unboxed layouts that are about to be finalized from the
         // compartment wide list while we are still on the main thread.
         ObjectGroup* group = this;
-        if (IsObjectGroupAboutToBeFinalized(&group))
+        if (IsAboutToBeFinalizedUnbarriered(&group))
             unboxedLayout().detachFromCompartment();
 
         if (unboxedLayout().newScript())
@@ -4287,7 +4287,7 @@ TypeZone::clearAllNewScriptsOnOOM()
          !iter.done(); iter.next())
     {
         ObjectGroup* group = iter.get<ObjectGroup>();
-        if (!IsObjectGroupAboutToBeFinalized(&group))
+        if (!IsAboutToBeFinalizedUnbarriered(&group))
             group->maybeClearNewScriptOnOOM();
     }
 }
