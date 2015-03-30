@@ -1,0 +1,366 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset=utf-8>
+  <title>unicode-range load tests using font loading api</title>
+  <link rel="author" title="John Daggett" href="mailto:jdaggett@mozilla.com">
+  <link rel="help" href="http://www.w3.org/TR/css-fonts-3/#unicode-range-desc" />
+  <link rel="help" href="http://dev.w3.org/csswg/css-font-loading/" />
+  <meta name="assert" content="unicode-range descriptor defines precisely which fonts should be loaded" />
+  <script type="text/javascript" src="/resources/testharness.js"></script>
+  <script type="text/javascript" src="/resources/testharnessreport.js"></script>
+  <style type="text/css">
+  </style>
+</head>
+<body>
+<div id="log"></div>
+<pre id="display"></pre>
+<style id="testfonts"></style>
+<style id="teststyle"></style>
+<div id="testcontent"></div>
+
+<script>
+
+const kSheetFonts = 1;
+const kSheetStyles = 2;
+
+const redSquDataURL = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' width='100%' height='100%'><rect fill='red' x='0' y='0' width='10' height='10'/></svg>";
+
+var unicodeRangeTests = [
+  { test: "simple load sanity check, unused fonts not loaded",
+    fonts: [{ family: "a", src: "markA", descriptors: { }, loaded: false}],
+    content: "AAA", style: { "font-family": "unused" } },
+  { test: "simple load sanity check, font for a used character loaded",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+41" }, loaded: true}],
+    content: "AAA" },
+  { test: "simple load sanity check, font for an unused character not loaded",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+41" }, loaded: false}],
+    content: "BBB" },
+  { test: "simple load sanity check, with two fonts only font for used character loaded A",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+41" }, loaded: true},
+            { family: "a", src: "markB", descriptors: { unicodeRange: "u+42" }, loaded: false}],
+    content: "AAA" },
+  { test: "simple load sanity check, with two fonts only font for used character loaded B",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+41" }, loaded: false},
+            { family: "a", src: "markB", descriptors: { unicodeRange: "u+42" }, loaded: true}],
+    content: "BBB" },
+  { test: "simple load sanity check, two fonts but neither supports characters used",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+41" }, loaded: false},
+            { family: "a", src: "markB", descriptors: { unicodeRange: "u+42" }, loaded: false}],
+    content: "CCC" },
+  { test: "simple load sanity check, two fonts and both are used",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+41" }, loaded: true},
+            { family: "a", src: "markB", descriptors: { unicodeRange: "u+42" }, loaded: true}],
+    content: "ABC" },
+  { test: "simple load sanity check, one with Han ranges",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+3???,u+5???,u+7???,u+8???" }, loaded: true},
+            { family: "a", src: "markB", descriptors: { unicodeRange: "u+42" }, loaded: false}],
+    content: "納豆嫌い" },
+  { test: "simple load sanity check, two fonts with different styles A",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+41" }, loaded: true},
+            { family: "a", src: "markB", descriptors: { weight: "bold", unicodeRange: "u+42" }, loaded: false}],
+    content: "ABC" },
+  { test: "simple load sanity check, two fonts with different styles B",
+    fonts: [{ family: "a", src: "markA", descriptors: { weight: "bold", unicodeRange: "u+41" }, loaded: false},
+            { family: "a", src: "markB", descriptors: { unicodeRange: "u+42" }, loaded: true}],
+    content: "ABC" },
+  { test: "multiple fonts with overlapping ranges, all with default ranges, only last one supports character used",
+    fonts: [{ family: "a", src: "markC", descriptors: { }, loaded: true},
+            { family: "a", src: "markA", descriptors: { }, loaded: true},
+            { family: "a", src: "markB", descriptors: { }, loaded: true}],
+    content: "CCC" },
+  { test: "multiple fonts with overlapping ranges, all with default ranges, first one supports character used",
+    fonts: [{ family: "a", src: "markB", descriptors: { }, loaded: false},
+            { family: "a", src: "markA", descriptors: { }, loaded: false},
+            { family: "a", src: "markC", descriptors: { }, loaded: true}],
+    content: "CCC" },
+  { test: "multiple fonts with overlapping ranges, one with default value in the fallback position",
+    fonts: [{ family: "a", src: "markC", descriptors: { }, loaded: true},
+            { family: "a", src: "markA", descriptors: { unicodeRange: "u+41" }, loaded: true},
+            { family: "a", src: "markB", descriptors: { unicodeRange: "u+42" }, loaded: true}],
+    content: "ABC" },
+  { test: "multiple fonts with overlapping ranges, one with default value in the primary use position, fallback to one",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+41" }, loaded: true},
+            { family: "a", src: "markB", descriptors: { unicodeRange: "u+42" }, loaded: false},
+            { family: "a", src: "markC", descriptors: { }, loaded: true}],
+    content: "AAA" },
+  { test: "multiple fonts with overlapping ranges, one with default value in the primary use position, fallback to two",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+41" }, loaded: true},
+            { family: "a", src: "markB", descriptors: { unicodeRange: "u+42" }, loaded: true},
+            { family: "a", src: "markC", descriptors: { }, loaded: true}],
+    content: "ABC" },
+  { test: "multiple fonts with overlapping ranges, one with default value in the primary use position, no fallback",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+41" }, loaded: false},
+            { family: "a", src: "markB", descriptors: { unicodeRange: "u+42" }, loaded: false},
+            { family: "a", src: "markC", descriptors: { }, loaded: true}],
+    content: "CCC" },
+  { test: "metrics only case, ex-sized image, single font with space in range",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+0??" }, loaded: true}],
+    content: "<img style='width: 2ex' src=\"" + redSquDataURL + "\">" },
+  { test: "metrics only case, ex-sized image, single font with space outside range",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+1??" }, loaded: false}],
+    content: "<img style='width: 2ex' src=\"" + redSquDataURL + "\">" },
+  { test: "metrics only case, ch-sized image, single font with space in range",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+0??" }, loaded: true}],
+    content: "<img style='width: 2ch' src=\"" + redSquDataURL + "\">" },
+  { test: "metrics only case, ch-sized image, single font with space outside range",
+    fonts: [{ family: "a", src: "markA", descriptors: { unicodeRange: "u+1??" }, loaded: false}],
+    content: "<img style='width: 2ch' src=\"" + redSquDataURL + "\">" },
+];
+
+// map font loading descriptor names to @font-face rule descriptor names
+var mapDescriptorNames = {
+  style: "font-style",
+  weight: "font-weight",
+  stretch: "font-stretch",
+  unicodeRange: "unicode-range",
+  variant: "font-variant",
+  featureSettings: "font-feature-settings"
+};
+
+var kBaseFontURL;
+if ("SpecialPowers" in window) {
+  kBaseFontURL = "";
+} else {
+  kBaseFontURL = "fonts/";
+}
+
+var mapFontURLs = {
+  markA: "url(" + kBaseFontURL + "markA.woff" + ")",
+  markB: "url(" + kBaseFontURL + "markB.woff" + ")",
+  markC: "url(" + kBaseFontURL + "markC.woff" + ")",
+  markD: "url(" + kBaseFontURL + "markD.woff" + ")",
+
+  /* twourl versions include a bogus url followed by a valid url */
+  markAtwourl: "url(" + kBaseFontURL + "bogus-markA.woff" + "), url(" + kBaseFontURL + "markA.woff" + ")",
+  markBtwourl: "url(" + kBaseFontURL + "bogus-markB.woff" + "), url(" + kBaseFontURL + "markB.woff" + ")",
+  markCtwourl: "url(" + kBaseFontURL + "bogus-markC.woff" + "), url(" + kBaseFontURL + "markC.woff" + ")",
+  markDtwourl: "url(" + kBaseFontURL + "bogus-markD.woff" + "), url(" + kBaseFontURL + "markD.woff" + ")",
+
+  /* localfont versions include a bogus local ref followed by a valid url */
+  markAlocalfirst: "local(bogus-markA), url(" + kBaseFontURL + "markA.woff" + ")",
+  markBlocalfirst: "local(bogus-markB), url(" + kBaseFontURL + "markB.woff" + ")",
+  markClocalfirst: "local(bogus-markC), url(" + kBaseFontURL + "markC.woff" + ")",
+  markDlocalfirst: "local(bogus-markD), url(" + kBaseFontURL + "markD.woff" + ")",
+};
+
+function familyName(name, i) {
+  return "test" + i + "-" + name;
+}
+
+function fontFaceRule(name, fontdata, ft) {
+  var desc = [];
+  desc.push("font-family: " + name);
+  var srckey = fontdata.src + ft;
+  desc.push("src: " + mapFontURLs[srckey]);
+  for (var d in fontdata.descriptors) {
+    desc.push(mapDescriptorNames[d] + ": " + fontdata.descriptors[d]);
+  }
+  return "@font-face { " + desc.join(";") + " }";
+}
+
+function clearRules(sheetIndex) {
+  var sheet = document.styleSheets[sheetIndex];
+  while(sheet.cssRules.length > 0) {
+    sheet.deleteRule(0);
+  }
+}
+
+function clearAllRulesAndFonts() {
+  clearRules(kSheetFonts);
+  clearRules(kSheetStyles);
+  document.fonts.clear();
+}
+
+function addStyleRulesAndText(testdata, i) {
+  // add style rules for testcontent
+  var sheet = document.styleSheets[kSheetStyles];
+  while(sheet.cssRules.length > 0) {
+    sheet.deleteRule(0);
+  }
+  var rule = [];
+  var family = familyName(testdata.fonts[0].family, i);
+  rule.push("#testcontent { font-family: " + family);
+  if ("style" in testdata) {
+    for (s in testdata.style) {
+      rule.push(s + ": " + testdata.style[s]);
+    }
+  }
+  rule.push("}");
+  sheet.insertRule(rule.join("; "), 0);
+
+  var content = document.getElementById("testcontent");
+  content.innerHTML = testdata.content;
+  content.offsetHeight;
+}
+
+// work arounds
+function getFonts() {
+  if ("forEach" in document.fonts) {
+    return document.fonts;
+  }
+  return Array.from(document.fonts);
+}
+
+function getSize() {
+  if ("size" in document.fonts) {
+    return document.fonts.size;
+  }
+  return getFonts().length;
+}
+
+function getReady() {
+  if (typeof(document.fonts.ready) == "function") {
+    return document.fonts.ready();
+  }
+  return document.fonts.ready;
+}
+
+function setTimeoutPromise(aDelay) {
+  return new Promise(function(aResolve, aReject) {
+    setTimeout(aResolve, aDelay);
+  });
+}
+
+function addFontFaceRules(testdata, i, ft) {
+  var sheet = document.styleSheets[kSheetFonts];
+  var createdFonts = [];
+  testdata.fonts.forEach(function(f) {
+    var n = sheet.cssRules.length;
+    var fn = familyName(f.family, i);
+    sheet.insertRule(fontFaceRule(fn, f, ft), n);
+    var newfont;
+    var fonts = getFonts();
+    try {
+      fonts.forEach(function(font) { newfont = font; });
+      createdFonts.push({family: fn, data: f, font: newfont});
+    } catch (e) {
+      console.log(e);
+    }
+  });
+  return createdFonts;
+}
+
+function addDocumentFonts(testdata, i, ft) {
+  var createdFonts = [];
+  testdata.fonts.forEach(function(fd) {
+    var fn = familyName(fd.family, i);
+    var srckey = fd.src + ft;
+    var f = new FontFace(fn, mapFontURLs[srckey], fd.descriptors);
+    document.fonts.add(f);
+    createdFonts.push({family: fn, data: fd, font: f});
+  });
+  return createdFonts;
+}
+
+var q = Promise.resolve();
+
+function runTests() {
+  function setupTests() {
+    setup({explicit_done: true});
+  }
+
+  function checkFontsBeforeLoad(name, testdata, fd) {
+    test(function() {
+      assert_equals(document.fonts.status, "loaded", "before initializing test, no fonts should be loading - found: " + document.fonts.status);
+      var size = getSize();
+      assert_equals(size, testdata.fonts.length,
+                    "fonts where not added to the font set object");
+      var i = 0;
+      fonts = getFonts();
+      fonts.forEach(function(ff) {
+        assert_equals(ff.status, "unloaded", "added fonts should be in unloaded state");
+      });
+    }, name + " before load");
+  }
+
+  function checkFontsAfterLoad(name, testdata, fd, afterTimeout) {
+    test(function() {
+      assert_equals(document.fonts.status, "loaded", "after ready promise resolved, no fonts should be loading");
+      var i = 0;
+      fd.forEach(function(f) {
+        assert_true(f.font instanceof FontFace, "font needs to be an instance of FontFace object");
+        if (f.data.loaded) {
+          assert_equals(f.font.status, "loaded", "font not loaded - font " + i + " " + f.data.src + " "
+                        + JSON.stringify(f.data.descriptors) + " for content " + testdata.content);
+        } else {
+          assert_equals(f.font.status, "unloaded", "font loaded - font " + i + " " + f.data.src + " "
+                        + JSON.stringify(f.data.descriptors) + " for content " + testdata.content);
+        }
+        i++;
+      });
+    }, name + " after load" + (afterTimeout ? " and timeout" : ""));
+  }
+
+  function testFontLoads(testdata, i, name, fd) {
+    checkFontsBeforeLoad(name, testdata, fd);
+    addStyleRulesAndText(testdata, i);
+
+    var ready = getReady();
+    return ready.then(function() {
+      checkFontsAfterLoad(name, testdata, fd, false);
+    }).then(function() {
+      return setTimeoutPromise(0).then(function() {
+        checkFontsAfterLoad(name, testdata, fd, true);
+      });
+    }).then(function() {
+      var ar = getReady();
+      return ar.then(function() {
+        test(function() {
+          assert_equals(document.fonts.status, "loaded", "after ready promise fulfilled once, fontset should not be loading");
+          var fonts = getFonts();
+          fonts.forEach(function(f) {
+            assert_not_equals(f.status, "loading", "after ready promise fulfilled once, no font should be loading");
+          });
+        }, name + " test done check");
+      });
+    }).then(function() {
+      clearAllRulesAndFonts();
+    });
+  }
+
+  function testUnicodeRangeFontFace(testdata, i, ft) {
+    var name = "TEST " + i + " " + testdata.test + " (@font-face rules)" + (ft != "" ? " " + ft : ft);
+
+    var fd = addFontFaceRules(testdata, i, ft);
+    return testFontLoads(testdata, i, name, fd);
+  }
+
+  function testUnicodeRangeDocumentFonts(testdata, i, ft) {
+    var name = "TEST " + i + " " + testdata.test + " (document.fonts)" + (ft != "" ? " " + ft : ft);
+
+    var fd = addDocumentFonts(testdata, i, ft);
+    return testFontLoads(testdata, i, name, fd);
+  }
+
+  q = q.then(function() {
+    setupTests();
+  });
+
+  var fontTypes = ["", "twourl", "localfirst"];
+
+  unicodeRangeTests.forEach(function(testdata, i) {
+    fontTypes.forEach(function(ft) {
+      q = q.then(function() {
+        return testUnicodeRangeFontFace(testdata, i, ft);
+      }).then(function() {
+        return testUnicodeRangeDocumentFonts(testdata, i, ft);
+      });
+    });
+  });
+
+  q = q.then(function() {
+    done();
+  });
+}
+
+if ("fonts" in document) {
+  runTests();
+} else {
+  test(function() {
+    assert_true(true, "CSS Font Loading API is not enabled.");
+  }, "CSS Font Loading API is not enabled");
+}
+</script>
+</body>
+</html>
