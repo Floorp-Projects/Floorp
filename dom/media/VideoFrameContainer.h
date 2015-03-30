@@ -20,11 +20,6 @@ namespace dom {
 class HTMLMediaElement;
 }
 
-namespace layers {
-class Image;
-class ImageContainer;
-}
-
 /**
  * This object is used in the decoder backend threads and the main thread
  * to manage the "current video frame" state. This state includes timing data
@@ -49,9 +44,11 @@ public:
   // Call on any thread
   B2G_ACL_EXPORT void SetCurrentFrame(const gfxIntSize& aIntrinsicSize, Image* aImage,
                        const TimeStamp& aTargetTime);
+  void SetCurrentFrames(const gfxIntSize& aIntrinsicSize,
+                        const nsTArray<ImageContainer::NonOwningImage>& aImages);
   void ClearCurrentFrame(const gfxIntSize& aIntrinsicSize)
   {
-    SetCurrentFrame(aIntrinsicSize, nullptr, TimeStamp());
+    SetCurrentFrames(aIntrinsicSize, nsTArray<ImageContainer::NonOwningImage>());
   }
 
   void ClearCurrentFrame();
@@ -70,6 +67,9 @@ public:
   void ForgetElement() { mElement = nullptr; }
 
 protected:
+  void SetCurrentFramesLocked(const gfxIntSize& aIntrinsicSize,
+                              const nsTArray<ImageContainer::NonOwningImage>& aImages);
+
   // Non-addreffed pointer to the element. The element calls ForgetElement
   // to clear this reference when the element is destroyed.
   dom::HTMLMediaElement* mElement;
