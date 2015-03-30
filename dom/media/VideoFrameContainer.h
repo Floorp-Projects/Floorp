@@ -48,7 +48,12 @@ public:
 
   // Call on any thread
   B2G_ACL_EXPORT void SetCurrentFrame(const gfxIntSize& aIntrinsicSize, Image* aImage,
-                       TimeStamp aTargetTime);
+                       const TimeStamp& aTargetTime);
+  void ClearCurrentFrame(const gfxIntSize& aIntrinsicSize)
+  {
+    SetCurrentFrame(aIntrinsicSize, nullptr, TimeStamp());
+  }
+
   void ClearCurrentFrame();
   // Time in seconds by which the last painted video frame was late by.
   // E.g. if the last painted frame should have been painted at time t,
