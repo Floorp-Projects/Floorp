@@ -84,14 +84,10 @@ struct SavedFrame::Lookup {
             TraceManuallyBarrieredEdge(trc, &functionDisplayName,
                                        "SavedFrame::Lookup::functionDisplayName");
         }
-        if (asyncCause) {
-            TraceManuallyBarrieredEdge(trc, &asyncCause,
-                                       "SavedFrame::Lookup::asyncCause");
-        }
-        if (parent) {
-            gc::MarkObjectUnbarriered(trc, &parent,
-                                      "SavedFrame::Lookup::parent");
-        }
+        if (asyncCause)
+            TraceManuallyBarrieredEdge(trc, &asyncCause, "SavedFrame::Lookup::asyncCause");
+        if (parent)
+            TraceManuallyBarrieredEdge(trc, &parent, "SavedFrame::Lookup::parent");
     }
 };
 
@@ -817,7 +813,7 @@ SavedStacks::sweep(JSRuntime* rt)
             JSObject* obj = e.front().unbarrieredGet();
             JSObject* temp = obj;
 
-            if (IsObjectAboutToBeFinalized(&obj)) {
+            if (IsAboutToBeFinalizedUnbarriered(&obj)) {
                 e.removeFront();
             } else {
                 SavedFrame* frame = &obj->as<SavedFrame>();

@@ -930,7 +930,7 @@ RegExpCompartment::sweep(JSRuntime* rt)
     }
 
     if (matchResultTemplateObject_ &&
-        IsObjectAboutToBeFinalized(matchResultTemplateObject_.unsafeGet()))
+        IsAboutToBeFinalized(&matchResultTemplateObject_))
     {
         matchResultTemplateObject_.set(nullptr);
     }

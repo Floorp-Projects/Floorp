@@ -134,7 +134,7 @@ AsmJSModule::trace(JSTracer* trc)
         globals_[i].trace(trc);
     for (unsigned i = 0; i < exits_.length(); i++) {
         if (exitIndexToGlobalDatum(i).fun)
-            MarkObject(trc, &exitIndexToGlobalDatum(i).fun, "asm.js imported function");
+            TraceEdge(trc, &exitIndexToGlobalDatum(i).fun, "asm.js imported function");
     }
     for (unsigned i = 0; i < exports_.length(); i++)
         exports_[i].trace(trc);
@@ -155,7 +155,7 @@ AsmJSModule::trace(JSTracer* trc)
     if (bufferArgumentName_)
         TraceManuallyBarrieredEdge(trc, &bufferArgumentName_, "asm.js buffer argument name");
     if (maybeHeap_)
-        gc::MarkObject(trc, &maybeHeap_, "asm.js heap");
+        TraceEdge(trc, &maybeHeap_, "asm.js heap");
 }
 
 void
