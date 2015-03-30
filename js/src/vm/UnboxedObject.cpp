@@ -28,7 +28,7 @@ void
 UnboxedLayout::trace(JSTracer* trc)
 {
     for (size_t i = 0; i < properties_.length(); i++)
-        MarkStringUnbarriered(trc, &properties_[i].name, "unboxed_layout_name");
+        TraceManuallyBarrieredEdge(trc, &properties_[i].name, "unboxed_layout_name");
 
     if (newScript())
         newScript()->trace(trc);
@@ -364,7 +364,7 @@ UnboxedPlainObject::trace(JSTracer* trc, JSObject* obj)
     uint8_t* data = obj->as<UnboxedPlainObject>().data();
     while (*list != -1) {
         HeapPtrString* heap = reinterpret_cast<HeapPtrString*>(data + *list);
-        MarkString(trc, heap, "unboxed_string");
+        TraceEdge(trc, heap, "unboxed_string");
         list++;
     }
     list++;

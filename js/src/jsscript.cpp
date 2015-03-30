@@ -322,7 +322,7 @@ Bindings::trace(JSTracer* trc)
 
     for (const Binding& b : *this) {
         PropertyName* name = b.name();
-        MarkStringUnbarriered(trc, &name, "bindingArray");
+        TraceManuallyBarrieredEdge(trc, &name, "bindingArray");
     }
 }
 
@@ -3434,7 +3434,7 @@ JSScript::markChildren(JSTracer* trc)
 
     for (uint32_t i = 0; i < natoms(); ++i) {
         if (atoms[i])
-            MarkString(trc, &atoms[i], "atom");
+            TraceEdge(trc, &atoms[i], "atom");
     }
 
     if (hasObjects()) {
@@ -3497,7 +3497,7 @@ LazyScript::markChildren(JSTracer* trc)
     FreeVariable* freeVariables = this->freeVariables();
     for (size_t i = 0; i < numFreeVariables(); i++) {
         JSAtom* atom = freeVariables[i].atom();
-        MarkStringUnbarriered(trc, &atom, "lazyScriptFreeVariable");
+        TraceManuallyBarrieredEdge(trc, &atom, "lazyScriptFreeVariable");
     }
 
     HeapPtrFunction* innerFunctions = this->innerFunctions();

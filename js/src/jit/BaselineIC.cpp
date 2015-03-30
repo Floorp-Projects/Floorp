@@ -222,20 +222,20 @@ ICStub::trace(JSTracer* trc)
       case ICStub::Call_StringSplit: {
         ICCall_StringSplit* callStub = toCall_StringSplit();
         MarkObject(trc, &callStub->templateObject(), "baseline-callstringsplit-template");
-        MarkString(trc, &callStub->expectedArg(), "baseline-callstringsplit-arg");
-        MarkString(trc, &callStub->expectedThis(), "baseline-callstringsplit-this");
+        TraceEdge(trc, &callStub->expectedArg(), "baseline-callstringsplit-arg");
+        TraceEdge(trc, &callStub->expectedThis(), "baseline-callstringsplit-this");
         break;
       }
       case ICStub::GetElem_NativeSlot: {
         ICGetElem_NativeSlot* getElemStub = toGetElem_NativeSlot();
         TraceEdge(trc, &getElemStub->shape(), "baseline-getelem-native-shape");
-        MarkString(trc, &getElemStub->name(), "baseline-getelem-native-name");
+        TraceEdge(trc, &getElemStub->name(), "baseline-getelem-native-name");
         break;
       }
       case ICStub::GetElem_NativePrototypeSlot: {
         ICGetElem_NativePrototypeSlot* getElemStub = toGetElem_NativePrototypeSlot();
         TraceEdge(trc, &getElemStub->shape(), "baseline-getelem-nativeproto-shape");
-        MarkString(trc, &getElemStub->name(), "baseline-getelem-nativeproto-name");
+        TraceEdge(trc, &getElemStub->name(), "baseline-getelem-nativeproto-name");
         MarkObject(trc, &getElemStub->holder(), "baseline-getelem-nativeproto-holder");
         TraceEdge(trc, &getElemStub->holderShape(), "baseline-getelem-nativeproto-holdershape");
         break;
@@ -245,7 +245,7 @@ ICStub::trace(JSTracer* trc)
         ICGetElemNativePrototypeCallStub* callStub =
             reinterpret_cast<ICGetElemNativePrototypeCallStub*>(this);
         TraceEdge(trc, &callStub->shape(), "baseline-getelem-nativeprotocall-shape");
-        MarkString(trc, &callStub->name(), "baseline-getelem-nativeprotocall-name");
+        TraceEdge(trc, &callStub->name(), "baseline-getelem-nativeprotocall-name");
         MarkObject(trc, &callStub->getter(), "baseline-getelem-nativeprotocall-getter");
         MarkObject(trc, &callStub->holder(), "baseline-getelem-nativeprotocall-holder");
         TraceEdge(trc, &callStub->holderShape(), "baseline-getelem-nativeprotocall-holdershape");
@@ -404,7 +404,7 @@ ICStub::trace(JSTracer* trc)
       case ICStub::GetProp_DOMProxyShadowed: {
         ICGetProp_DOMProxyShadowed* propStub = toGetProp_DOMProxyShadowed();
         TraceEdge(trc, &propStub->shape(), "baseline-getproplistbaseshadowed-stub-shape");
-        MarkString(trc, &propStub->name(), "baseline-getproplistbaseshadowed-stub-name");
+        TraceEdge(trc, &propStub->name(), "baseline-getproplistbaseshadowed-stub-name");
         break;
       }
       case ICStub::GetProp_CallScripted: {
