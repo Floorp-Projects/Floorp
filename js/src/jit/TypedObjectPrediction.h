@@ -56,12 +56,12 @@ class TypedObjectPrediction {
     };
 
     struct PrefixData {
-        const StructTypeDescr *descr;
+        const StructTypeDescr* descr;
         size_t fields;
     };
 
     union Data {
-        const TypeDescr *descr;
+        const TypeDescr* descr;
         PrefixData prefix;
     };
 
@@ -77,40 +77,40 @@ class TypedObjectPrediction {
         kind_ = Inconsistent;
     }
 
-    const TypeDescr &descr() const {
+    const TypeDescr& descr() const {
         MOZ_ASSERT(predictionKind() == Descr);
         return *data_.descr;
     }
 
-    const PrefixData &prefix() const {
+    const PrefixData& prefix() const {
         MOZ_ASSERT(predictionKind() == Prefix);
         return data_.prefix;
     }
 
-    void setDescr(const TypeDescr &descr) {
+    void setDescr(const TypeDescr& descr) {
         kind_ = Descr;
         data_.descr = &descr;
     }
 
-    void setPrefix(const StructTypeDescr &descr, size_t fields) {
+    void setPrefix(const StructTypeDescr& descr, size_t fields) {
         kind_ = Prefix;
         data_.prefix.descr = &descr;
         data_.prefix.fields = fields;
     }
 
-    void markAsCommonPrefix(const StructTypeDescr &descrA,
-                            const StructTypeDescr &descrB,
+    void markAsCommonPrefix(const StructTypeDescr& descrA,
+                            const StructTypeDescr& descrB,
                             size_t max);
 
     template<typename T>
     typename T::Type extractType() const;
 
-    bool hasFieldNamedPrefix(const StructTypeDescr &descr,
+    bool hasFieldNamedPrefix(const StructTypeDescr& descr,
                              size_t fieldCount,
                              jsid id,
-                             size_t *fieldOffset,
-                             TypedObjectPrediction *out,
-                             size_t *index) const;
+                             size_t* fieldOffset,
+                             TypedObjectPrediction* out,
+                             size_t* index) const;
 
   public:
 
@@ -122,15 +122,15 @@ class TypedObjectPrediction {
         kind_ = Empty;
     }
 
-    explicit TypedObjectPrediction(const TypeDescr &descr) {
+    explicit TypedObjectPrediction(const TypeDescr& descr) {
         setDescr(descr);
     }
 
-    TypedObjectPrediction(const StructTypeDescr &descr, size_t fields) {
+    TypedObjectPrediction(const StructTypeDescr& descr, size_t fields) {
         setPrefix(descr, fields);
     }
 
-    void addDescr(const TypeDescr &descr);
+    void addDescr(const TypeDescr& descr);
 
     ///////////////////////////////////////////////////////////////////////////
     // Queries that are always valid.
@@ -144,7 +144,7 @@ class TypedObjectPrediction {
     // object is of scalar/reference kind, in which case instances are
     // not objects and hence do not have a (publicly available)
     // prototype.
-    const TypedProto *getKnownPrototype() const;
+    const TypedProto* getKnownPrototype() const;
 
     ///////////////////////////////////////////////////////////////////////////
     // Queries that are valid if not useless.
@@ -159,7 +159,7 @@ class TypedObjectPrediction {
     // The size may not be statically known if (1) the object is
     // an array whose dimensions are unknown or (2) only a prefix
     // of its type is known.
-    bool hasKnownSize(int32_t *out) const;
+    bool hasKnownSize(int32_t* out) const;
 
     //////////////////////////////////////////////////////////////////////
     // Simple operations
@@ -175,7 +175,7 @@ class TypedObjectPrediction {
 
     // Returns true if the length of the array is statically known,
     // and sets |*length| appropriately. Otherwise returns false.
-    bool hasKnownArrayLength(int32_t *length) const;
+    bool hasKnownArrayLength(int32_t* length) const;
 
     // Returns a prediction for the array element type, if any.
     TypedObjectPrediction arrayElementType() const;
@@ -190,9 +190,9 @@ class TypedObjectPrediction {
     // the offset (in bytes), type, and index of the field
     // respectively.  Otherwise returns false.
     bool hasFieldNamed(jsid id,
-                       size_t *fieldOffset,
-                       TypedObjectPrediction *fieldType,
-                       size_t *fieldIndex) const;
+                       size_t* fieldOffset,
+                       TypedObjectPrediction* fieldType,
+                       size_t* fieldIndex) const;
 };
 
 } // namespace jit

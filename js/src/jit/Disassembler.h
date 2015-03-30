@@ -59,7 +59,7 @@ class ComplexAddress {
         MOZ_ASSERT(index_ == index);
     }
 
-    explicit ComplexAddress(const void *addr)
+    explicit ComplexAddress(const void* addr)
       : disp_(static_cast<uint32_t>(reinterpret_cast<uintptr_t>(addr))),
         base_(Registers::Invalid),
         index_(Registers::Invalid),
@@ -67,10 +67,10 @@ class ComplexAddress {
         isPCRelative_(false)
     {
         MOZ_ASSERT(*this == *this);
-        MOZ_ASSERT(reinterpret_cast<const void *>(uintptr_t(disp_)) == addr);
+        MOZ_ASSERT(reinterpret_cast<const void*>(uintptr_t(disp_)) == addr);
     }
 
-    explicit ComplexAddress(const Operand &op) {
+    explicit ComplexAddress(const Operand& op) {
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86)
         switch (op.kind()) {
           case Operand::MEM_REG_DISP:
@@ -110,8 +110,8 @@ class ComplexAddress {
     }
 
 #ifdef DEBUG
-    bool operator==(const ComplexAddress &other) const;
-    bool operator!=(const ComplexAddress &other) const;
+    bool operator==(const ComplexAddress& other) const;
+    bool operator!=(const ComplexAddress& other) const;
 #endif
 };
 
@@ -181,8 +181,8 @@ class OtherOperand {
     }
 
 #ifdef DEBUG
-    bool operator==(const OtherOperand &other) const;
-    bool operator!=(const OtherOperand &other) const;
+    bool operator==(const OtherOperand& other) const;
+    bool operator!=(const OtherOperand& other) const;
 #endif
 };
 
@@ -209,7 +209,7 @@ class HeapAccess {
         MOZ_ASSERT(*this == *this);
     }
 
-    HeapAccess(Kind kind, size_t size, const ComplexAddress &address, const OtherOperand &otherOperand)
+    HeapAccess(Kind kind, size_t size, const ComplexAddress& address, const OtherOperand& otherOperand)
       : kind_(kind),
         size_(size),
         address_(address),
@@ -230,30 +230,30 @@ class HeapAccess {
         return size_;
     }
 
-    const ComplexAddress &address() const {
+    const ComplexAddress& address() const {
         return address_;
     }
 
-    const OtherOperand &otherOperand() const {
+    const OtherOperand& otherOperand() const {
         return otherOperand_;
     }
 
 #ifdef DEBUG
-    bool operator==(const HeapAccess &other) const;
-    bool operator!=(const HeapAccess &other) const;
+    bool operator==(const HeapAccess& other) const;
+    bool operator!=(const HeapAccess& other) const;
 #endif
 };
 
-MOZ_COLD uint8_t *DisassembleHeapAccess(uint8_t *ptr, HeapAccess *access);
+MOZ_COLD uint8_t* DisassembleHeapAccess(uint8_t* ptr, HeapAccess* access);
 
 #ifdef DEBUG
-void DumpHeapAccess(const HeapAccess &access);
+void DumpHeapAccess(const HeapAccess& access);
 
 inline void
-VerifyHeapAccess(uint8_t *begin, uint8_t *end, const HeapAccess &expected)
+VerifyHeapAccess(uint8_t* begin, uint8_t* end, const HeapAccess& expected)
 {
     HeapAccess disassembled;
-    uint8_t *e = DisassembleHeapAccess(begin, &disassembled);
+    uint8_t* e = DisassembleHeapAccess(begin, &disassembled);
     MOZ_ASSERT(e == end);
     MOZ_ASSERT(disassembled == expected);
 }

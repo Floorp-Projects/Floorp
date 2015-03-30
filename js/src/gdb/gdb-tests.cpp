@@ -22,8 +22,8 @@ const JSClass global_class = {
 };
 
 template<typename T>
-static inline T *
-checkPtr(T *ptr)
+static inline T*
+checkPtr(T* ptr)
 {
   if (! ptr)
     abort();
@@ -38,7 +38,7 @@ checkBool(bool success)
 }
 
 /* The error reporter callback. */
-void reportError(JSContext *cx, const char *message, JSErrorReport *report)
+void reportError(JSContext* cx, const char* message, JSErrorReport* report)
 {
     fprintf(stderr, "%s:%u: %s\n",
             report->filename ? report->filename : "<no filename>",
@@ -56,17 +56,17 @@ void breakpoint() {
     fprintf(stderr, "Called " __FILE__ ":breakpoint\n");
 }
 
-GDBFragment *GDBFragment::allFragments = nullptr;
+GDBFragment* GDBFragment::allFragments = nullptr;
 
 int
-main (int argc, const char **argv)
+main (int argc, const char** argv)
 {
     if (!JS_Init()) return 1;
-    JSRuntime *runtime = checkPtr(JS_NewRuntime(1024 * 1024));
+    JSRuntime* runtime = checkPtr(JS_NewRuntime(1024 * 1024));
     JS_SetGCParameter(runtime, JSGC_MAX_BYTES, 0xffffffff);
     JS_SetNativeStackQuota(runtime, 5000000);
 
-    JSContext *cx = checkPtr(JS_NewContext(runtime, 8192));
+    JSContext* cx = checkPtr(JS_NewContext(runtime, 8192));
     JS_SetErrorReporter(runtime, reportError);
 
     JSAutoRequest ar(cx);
@@ -84,8 +84,8 @@ main (int argc, const char **argv)
 
     argv++;
     while (*argv) {
-        const char *name = *argv++;
-        GDBFragment *fragment;
+        const char* name = *argv++;
+        GDBFragment* fragment;
         for (fragment = GDBFragment::allFragments; fragment; fragment = fragment->next) {
             if (strcmp(fragment->name(), name) == 0) {
                 fragment->run(cx, argv);

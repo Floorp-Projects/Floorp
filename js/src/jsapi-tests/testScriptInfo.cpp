@@ -39,7 +39,7 @@ BEGIN_TEST(testScriptInfo)
     return true;
 }
 static bool
-CharsMatch(const char16_t *p, const char *q)
+CharsMatch(const char16_t* p, const char* q)
 {
     while (*q) {
         if (*p++ != *q++)

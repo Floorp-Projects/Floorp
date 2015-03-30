@@ -15,7 +15,7 @@ namespace js {
 
 /* Define an os object on the given global object. */
 bool
-DefineOS(JSContext *cx, JS::HandleObject global);
+DefineOS(JSContext* cx, JS::HandleObject global);
 
 }
 

@@ -12,14 +12,14 @@
 static int called_test_fn;
 static int called_test_prop_get;
 
-static bool test_prop_get( JSContext *cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp )
+static bool test_prop_get( JSContext* cx, JS::HandleObject obj, JS::HandleId id, JS::MutableHandleValue vp )
 {
     called_test_prop_get++;
     return true;
 }
 
 static bool
-PTest(JSContext* cx, unsigned argc, jsval *vp);
+PTest(JSContext* cx, unsigned argc, jsval* vp);
 
 static const JSClass ptestClass = {
     "PTest",
@@ -31,16 +31,16 @@ static const JSClass ptestClass = {
 };
 
 static bool
-PTest(JSContext* cx, unsigned argc, jsval *vp)
+PTest(JSContext* cx, unsigned argc, jsval* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-    JSObject *obj = JS_NewObjectForConstructor(cx, &ptestClass, args);
+    JSObject* obj = JS_NewObjectForConstructor(cx, &ptestClass, args);
     if (!obj)
         return false;
     args.rval().setObject(*obj);
     return true;
 }
-static bool test_fn(JSContext *cx, unsigned argc, jsval *vp)
+static bool test_fn(JSContext* cx, unsigned argc, jsval* vp)
 {
     called_test_fn++;
     return true;

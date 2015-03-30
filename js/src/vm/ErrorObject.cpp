@@ -18,8 +18,8 @@
 
 using namespace js;
 
-/* static */ Shape *
-js::ErrorObject::assignInitialShape(ExclusiveContext *cx, Handle<ErrorObject*> obj)
+/* static */ Shape*
+js::ErrorObject::assignInitialShape(ExclusiveContext* cx, Handle<ErrorObject*> obj)
 {
     MOZ_ASSERT(obj->empty());
 
@@ -33,8 +33,8 @@ js::ErrorObject::assignInitialShape(ExclusiveContext *cx, Handle<ErrorObject*> o
 }
 
 /* static */ bool
-js::ErrorObject::init(JSContext *cx, Handle<ErrorObject*> obj, JSExnType type,
-                      ScopedJSFreePtr<JSErrorReport> *errorReport, HandleString fileName,
+js::ErrorObject::init(JSContext* cx, Handle<ErrorObject*> obj, JSExnType type,
+                      ScopedJSFreePtr<JSErrorReport>* errorReport, HandleString fileName,
                       HandleString stack, uint32_t lineNumber, uint32_t columnNumber,
                       HandleString message)
 {
@@ -66,7 +66,7 @@ js::ErrorObject::init(JSContext *cx, Handle<ErrorObject*> obj, JSExnType type,
 
     MOZ_ASSERT(JSEXN_ERR <= type && type < JSEXN_LIMIT);
 
-    JSErrorReport *report = errorReport ? errorReport->forget() : nullptr;
+    JSErrorReport* report = errorReport ? errorReport->forget() : nullptr;
     obj->initReservedSlot(EXNTYPE_SLOT, Int32Value(type));
     obj->setReservedSlot(ERROR_REPORT_SLOT, PrivateValue(report));
     obj->initReservedSlot(FILENAME_SLOT, StringValue(fileName));
@@ -79,10 +79,10 @@ js::ErrorObject::init(JSContext *cx, Handle<ErrorObject*> obj, JSExnType type,
     return true;
 }
 
-/* static */ ErrorObject *
-js::ErrorObject::create(JSContext *cx, JSExnType errorType, HandleString stack,
+/* static */ ErrorObject*
+js::ErrorObject::create(JSContext* cx, JSExnType errorType, HandleString stack,
                         HandleString fileName, uint32_t lineNumber, uint32_t columnNumber,
-                        ScopedJSFreePtr<JSErrorReport> *report, HandleString message)
+                        ScopedJSFreePtr<JSErrorReport>* report, HandleString message)
 {
     Rooted<JSObject*> proto(cx, GlobalObject::getOrCreateCustomErrorPrototype(cx, cx->global(), errorType));
     if (!proto)
@@ -90,7 +90,7 @@ js::ErrorObject::create(JSContext *cx, JSExnType errorType, HandleString stack,
 
     Rooted<ErrorObject*> errObject(cx);
     {
-        const Class *clasp = ErrorObject::classForType(errorType);
+        const Class* clasp = ErrorObject::classForType(errorType);
         JSObject* obj = NewObjectWithGivenProto(cx, clasp, proto, NullPtr());
         if (!obj)
             return nullptr;
@@ -106,10 +106,10 @@ js::ErrorObject::create(JSContext *cx, JSExnType errorType, HandleString stack,
     return errObject;
 }
 
-JSErrorReport *
-js::ErrorObject::getOrCreateErrorReport(JSContext *cx)
+JSErrorReport*
+js::ErrorObject::getOrCreateErrorReport(JSContext* cx)
 {
-    if (JSErrorReport *r = getErrorReport())
+    if (JSErrorReport* r = getErrorReport())
         return r;
 
     // We build an error report on the stack and then use CopyErrorReport to do
@@ -143,7 +143,7 @@ js::ErrorObject::getOrCreateErrorReport(JSContext *cx)
     report.ucmessage = chars.twoByteRange().start().get();
 
     // Cache and return.
-    JSErrorReport *copy = CopyErrorReport(cx, &report);
+    JSErrorReport* copy = CopyErrorReport(cx, &report);
     if (!copy)
         return nullptr;
     setReservedSlot(ERROR_REPORT_SLOT, PrivateValue(copy));

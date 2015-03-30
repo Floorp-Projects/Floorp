@@ -32,7 +32,7 @@ XPCThrower::Throw(nsresult rv, JSContext* cx)
 namespace xpc {
 
 bool
-Throw(JSContext *cx, nsresult rv)
+Throw(JSContext* cx, nsresult rv)
 {
     XPCThrower::Throw(rv, cx);
     return false;
@@ -47,7 +47,7 @@ Throw(JSContext *cx, nsresult rv)
  */
 // static
 bool
-XPCThrower::CheckForPendingException(nsresult result, JSContext *cx)
+XPCThrower::CheckForPendingException(nsresult result, JSContext* cx)
 {
     nsCOMPtr<nsIException> e = XPCJSRuntime::Get()->GetPendingException();
     if (!e)
@@ -161,7 +161,7 @@ XPCThrower::Verbosify(XPCCallContext& ccx,
         XPCNativeInterface* iface = ccx.GetInterface();
         jsid id = ccx.GetMember()->GetName();
         JSAutoByteString bytes;
-        const char *name = JSID_IS_VOID(id) ? "Unknown" : bytes.encodeLatin1(ccx, JSID_TO_STRING(id));
+        const char* name = JSID_IS_VOID(id) ? "Unknown" : bytes.encodeLatin1(ccx, JSID_TO_STRING(id));
         if (!name) {
             name = "";
         }

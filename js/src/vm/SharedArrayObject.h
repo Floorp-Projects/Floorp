@@ -49,10 +49,10 @@ class SharedArrayRawBuffer
 
     // A list of structures representing tasks waiting on some
     // location within this buffer.
-    FutexWaiter *waiters_;
+    FutexWaiter* waiters_;
 
   protected:
-    SharedArrayRawBuffer(uint8_t *buffer, uint32_t length)
+    SharedArrayRawBuffer(uint8_t* buffer, uint32_t length)
       : refcount(1),
         length(length),
         waiters_(nullptr)
@@ -61,7 +61,7 @@ class SharedArrayRawBuffer
     }
 
   public:
-    static SharedArrayRawBuffer *New(JSContext *cx, uint32_t length);
+    static SharedArrayRawBuffer* New(JSContext* cx, uint32_t length);
 
     // This may be called from multiple threads.  The caller must take
     // care of mutual exclusion.
@@ -71,12 +71,12 @@ class SharedArrayRawBuffer
 
     // This may be called from multiple threads.  The caller must take
     // care of mutual exclusion.
-    void setWaiters(FutexWaiter *waiters) {
+    void setWaiters(FutexWaiter* waiters) {
         waiters_ = waiters;
     }
 
-    inline uint8_t *dataPointer() const {
-        return ((uint8_t *)this) + sizeof(SharedArrayRawBuffer);
+    inline uint8_t* dataPointer() const {
+        return ((uint8_t*)this) + sizeof(SharedArrayRawBuffer);
     }
 
     inline uint32_t byteLength() const {
@@ -108,7 +108,7 @@ class SharedArrayRawBuffer
  */
 class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared
 {
-    static bool byteLengthGetterImpl(JSContext *cx, CallArgs args);
+    static bool byteLengthGetterImpl(JSContext* cx, CallArgs args);
 
   public:
     // RAWBUF_SLOT holds a pointer (as "private" data) to the
@@ -122,28 +122,28 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared
     static const JSFunctionSpec jsfuncs[];
     static const JSFunctionSpec jsstaticfuncs[];
 
-    static bool byteLengthGetter(JSContext *cx, unsigned argc, Value *vp);
+    static bool byteLengthGetter(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool fun_isView(JSContext *cx, unsigned argc, Value *vp);
+    static bool fun_isView(JSContext* cx, unsigned argc, Value* vp);
 
-    static bool class_constructor(JSContext *cx, unsigned argc, Value *vp);
+    static bool class_constructor(JSContext* cx, unsigned argc, Value* vp);
 
     // Create a SharedArrayBufferObject with a new SharedArrayRawBuffer.
-    static SharedArrayBufferObject *New(JSContext *cx, uint32_t length);
+    static SharedArrayBufferObject* New(JSContext* cx, uint32_t length);
 
     // Create a SharedArrayBufferObject using an existing SharedArrayRawBuffer.
-    static SharedArrayBufferObject *New(JSContext *cx, SharedArrayRawBuffer *buffer);
+    static SharedArrayBufferObject* New(JSContext* cx, SharedArrayRawBuffer* buffer);
 
-    static void Finalize(FreeOp *fop, JSObject *obj);
+    static void Finalize(FreeOp* fop, JSObject* obj);
 
-    static void addSizeOfExcludingThis(JSObject *obj, mozilla::MallocSizeOf mallocSizeOf,
-                                       JS::ClassInfo *info);
+    static void addSizeOfExcludingThis(JSObject* obj, mozilla::MallocSizeOf mallocSizeOf,
+                                       JS::ClassInfo* info);
 
-    SharedArrayRawBuffer *rawBufferObject() const;
+    SharedArrayRawBuffer* rawBufferObject() const;
 
     // Invariant: This method does not cause GC and can be called
     // without anchoring the object it is called on.
-    void *globalID() const {
+    void* globalID() const {
         // The buffer address is good enough as an ID provided the memory is not shared
         // between processes or, if it is, it is mapped to the same address in every
         // process.  (At the moment, shared memory cannot be shared between processes.)
@@ -154,19 +154,19 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared
         return rawBufferObject()->byteLength();
     }
 
-    uint8_t *dataPointer() const {
+    uint8_t* dataPointer() const {
         return rawBufferObject()->dataPointer();
     }
 
 private:
-    void acceptRawBuffer(SharedArrayRawBuffer *buffer);
+    void acceptRawBuffer(SharedArrayRawBuffer* buffer);
     void dropRawBuffer();
 };
 
 bool IsSharedArrayBuffer(HandleValue v);
 bool IsSharedArrayBuffer(HandleObject o);
 
-SharedArrayBufferObject &AsSharedArrayBuffer(HandleObject o);
+SharedArrayBufferObject& AsSharedArrayBuffer(HandleObject o);
 
 } // namespace js
 

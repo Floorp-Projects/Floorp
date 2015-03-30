@@ -13,13 +13,13 @@
 namespace js {
 
 static inline JSPropertyOp
-CastAsPropertyOp(JSObject *object)
+CastAsPropertyOp(JSObject* object)
 {
     return JS_DATA_TO_FUNC_PTR(JSPropertyOp, object);
 }
 
 static inline JSStrictPropertyOp
-CastAsStrictPropertyOp(JSObject *object)
+CastAsStrictPropertyOp(JSObject* object)
 {
     return JS_DATA_TO_FUNC_PTR(JSStrictPropertyOp, object);
 }
@@ -46,7 +46,7 @@ struct PropDesc {
     /* Or maybe this represents a property's absence, and it's undefined. */
     bool isUndefined_ : 1;
 
-    explicit PropDesc(const Value &v)
+    explicit PropDesc(const Value& v)
       : value_(v),
         get_(UndefinedValue()), set_(UndefinedValue()),
         attrs(0),
@@ -59,7 +59,7 @@ struct PropDesc {
   public:
     friend struct GCMethods<PropDesc>;
 
-    void trace(JSTracer *trc);
+    void trace(JSTracer* trc);
     static ThingRootKind rootKind() { return THING_ROOT_PROP_DESC; }
 
     enum Enumerability { Enumerable = true, NonEnumerable = false };
@@ -69,9 +69,9 @@ struct PropDesc {
     PropDesc();
 
     static PropDesc undefined() { return PropDesc(); }
-    static PropDesc valueOnly(const Value &v) { return PropDesc(v); }
+    static PropDesc valueOnly(const Value& v) { return PropDesc(v); }
 
-    PropDesc(const Value &v, Writability writable,
+    PropDesc(const Value& v, Writability writable,
              Enumerability enumerable, Configurability configurable)
       : value_(v),
         get_(UndefinedValue()), set_(UndefinedValue()),
@@ -83,7 +83,7 @@ struct PropDesc {
         isUndefined_(false)
     {}
 
-    inline PropDesc(const Value &getter, const Value &setter,
+    inline PropDesc(const Value& getter, const Value& setter,
                     Enumerability enumerable, Configurability configurable);
 
     /*
@@ -96,7 +96,7 @@ struct PropDesc {
      * are expected to be Debugger.Object wrappers of functions, which are not
      * themselves callable.)
      */
-    bool initialize(JSContext *cx, const Value &v, bool checkAccessors = true);
+    bool initialize(JSContext* cx, const Value& v, bool checkAccessors = true);
 
     /*
      * If IsGenericDescriptor(desc) or IsDataDescriptor(desc) is true, then if
@@ -118,7 +118,7 @@ struct PropDesc {
      */
     void initFromPropertyDescriptor(Handle<JSPropertyDescriptor> desc);
     void populatePropertyDescriptor(HandleObject obj, MutableHandle<JSPropertyDescriptor> desc) const;
-    bool makeObject(JSContext *cx, MutableHandleObject objp);
+    bool makeObject(JSContext* cx, MutableHandleObject objp);
 
     /* Reset the descriptor entirely. */
     void setUndefined();
@@ -170,7 +170,7 @@ struct PropDesc {
         MOZ_ASSERT(hasValue());
         return HandleValue::fromMarkedLocation(&value_);
     }
-    void setValue(const Value &value) {
+    void setValue(const Value& value) {
         MOZ_ASSERT(!isUndefined());
         value_ = value;
         hasValue_ = true;
@@ -198,12 +198,12 @@ struct PropDesc {
         return HandleValue::fromMarkedLocation(&set_);
     }
 
-    void setGetter(const Value &getter) {
+    void setGetter(const Value& getter) {
         MOZ_ASSERT(!isUndefined());
         get_ = getter;
         hasGet_ = true;
     }
-    void setSetter(const Value &setter) {
+    void setSetter(const Value& setter) {
         MOZ_ASSERT(!isUndefined());
         set_ = setter;
         hasSet_ = true;
@@ -225,8 +225,8 @@ struct PropDesc {
      * nor undefined. These methods do exactly the type checks that are skipped
      * by passing false as the checkAccessors parameter of initialize.
      */
-    bool checkGetter(JSContext *cx);
-    bool checkSetter(JSContext *cx);
+    bool checkGetter(JSContext* cx);
+    bool checkSetter(JSContext* cx);
 };
 
 } /* namespace js */
@@ -258,8 +258,8 @@ class PropDescOperations
     bool writable() const { return desc()->writable(); }
 
     HandleValue value() const { return desc()->value(); }
-    JSObject *getterObject() const { return desc()->getterObject(); }
-    JSObject *setterObject() const { return desc()->setterObject(); }
+    JSObject* getterObject() const { return desc()->getterObject(); }
+    JSObject* setterObject() const { return desc()->setterObject(); }
     HandleValue getterValue() const { return desc()->getterValue(); }
     HandleValue setterValue() const { return desc()->setterValue(); }
 
@@ -279,30 +279,30 @@ class MutablePropDescOperations : public PropDescOperations<Outer>
 
   public:
 
-    bool initialize(JSContext *cx, const Value &v, bool checkAccessors = true) {
+    bool initialize(JSContext* cx, const Value& v, bool checkAccessors = true) {
         return desc()->initialize(cx, v, checkAccessors);
     }
     void complete() {
         desc()->complete();
     }
 
-    bool checkGetter(JSContext *cx) { return desc()->checkGetter(cx); }
-    bool checkSetter(JSContext *cx) { return desc()->checkSetter(cx); }
+    bool checkGetter(JSContext* cx) { return desc()->checkGetter(cx); }
+    bool checkSetter(JSContext* cx) { return desc()->checkSetter(cx); }
 
     void initFromPropertyDescriptor(Handle<JSPropertyDescriptor> descriptor) {
         desc()->initFromPropertyDescriptor(descriptor);
     }
-    bool makeObject(JSContext *cx, MutableHandleObject objp) {
+    bool makeObject(JSContext* cx, MutableHandleObject objp) {
         return desc()->makeObject(cx, objp);
     }
 
-    void setValue(const Value &value) {
+    void setValue(const Value& value) {
         desc()->setValue(value);
     }
-    void setGetter(const Value &getter) {
+    void setGetter(const Value& getter) {
         desc()->setGetter(getter);
     }
-    void setSetter(const Value &setter) {
+    void setSetter(const Value& setter) {
         desc()->setSetter(setter);
     }
 
@@ -316,7 +316,7 @@ namespace js {
 template <>
 struct GCMethods<PropDesc> {
     static PropDesc initial() { return PropDesc(); }
-    static bool poisoned(const PropDesc &desc) {
+    static bool poisoned(const PropDesc& desc) {
         return JS::IsPoisonedValue(desc.value_) ||
                JS::IsPoisonedValue(desc.get_) ||
                JS::IsPoisonedValue(desc.set_);
@@ -329,10 +329,10 @@ class RootedBase<PropDesc>
 {
     friend class JS::PropDescOperations<JS::Rooted<PropDesc> >;
     friend class JS::MutablePropDescOperations<JS::Rooted<PropDesc> >;
-    const PropDesc *extract() const {
+    const PropDesc* extract() const {
         return static_cast<const JS::Rooted<PropDesc>*>(this)->address();
     }
-    PropDesc *extractMutable() {
+    PropDesc* extractMutable() {
         return static_cast<JS::Rooted<PropDesc>*>(this)->address();
     }
 };
@@ -342,7 +342,7 @@ class HandleBase<PropDesc>
   : public JS::PropDescOperations<JS::Handle<PropDesc> >
 {
     friend class JS::PropDescOperations<JS::Handle<PropDesc> >;
-    const PropDesc *extract() const {
+    const PropDesc* extract() const {
         return static_cast<const JS::Handle<PropDesc>*>(this)->address();
     }
 };
@@ -353,10 +353,10 @@ class MutableHandleBase<PropDesc>
 {
     friend class JS::PropDescOperations<JS::MutableHandle<PropDesc> >;
     friend class JS::MutablePropDescOperations<JS::MutableHandle<PropDesc> >;
-    const PropDesc *extract() const {
+    const PropDesc* extract() const {
         return static_cast<const JS::MutableHandle<PropDesc>*>(this)->address();
     }
-    PropDesc *extractMutable() {
+    PropDesc* extractMutable() {
         return static_cast<JS::MutableHandle<PropDesc>*>(this)->address();
     }
 };

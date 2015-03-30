@@ -12,7 +12,7 @@
 
 BEGIN_TEST(testStringBuffer_finishString)
 {
-    JSString *str = JS_NewStringCopyZ(cx, "foopy");
+    JSString* str = JS_NewStringCopyZ(cx, "foopy");
     CHECK(str);
 
     JS::Rooted<JSAtom*> atom(cx, js::AtomizeString(cx, str));

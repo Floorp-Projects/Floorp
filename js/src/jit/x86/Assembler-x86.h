@@ -73,7 +73,7 @@ class ABIArgGenerator
   public:
     ABIArgGenerator();
     ABIArg next(MIRType argType);
-    ABIArg &current() { return current_; }
+    ABIArg& current() { return current_; }
     uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
 
     // Note: these registers are all guaranteed to be different
@@ -160,14 +160,14 @@ PatchJump(CodeLocationJump jump, CodeLocationLabel label)
     // Assert that we're overwriting a jump instruction, either:
     //   0F 80+cc <imm32>, or
     //   E9 <imm32>
-    unsigned char *x = (unsigned char *)jump.raw() - 5;
+    unsigned char* x = (unsigned char*)jump.raw() - 5;
     MOZ_ASSERT(((*x >= 0x80 && *x <= 0x8F) && *(x - 1) == 0x0F) ||
                (*x == 0xE9));
 #endif
     X86Encoding::SetRel32(jump.raw(), label.raw());
 }
 static inline void
-PatchBackedge(CodeLocationJump &jump_, CodeLocationLabel label, JitRuntime::BackedgeTarget target)
+PatchBackedge(CodeLocationJump& jump_, CodeLocationLabel label, JitRuntime::BackedgeTarget target)
 {
     PatchJump(jump_, label);
 }
@@ -198,11 +198,11 @@ class Assembler : public AssemblerX86Shared
     using AssemblerX86Shared::push;
     using AssemblerX86Shared::pop;
 
-    static void TraceJumpRelocations(JSTracer *trc, JitCode *code, CompactBufferReader &reader);
+    static void TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
 
     // Copy the assembly code to the given buffer, and perform any pending
     // relocations relying on the target address.
-    void executableCopy(uint8_t *buffer);
+    void executableCopy(uint8_t* buffer);
 
     // Actual assembly emitting functions.
 
@@ -246,7 +246,7 @@ class Assembler : public AssemblerX86Shared
         masm.movl_i32r(uintptr_t(ptr.value), dest.code());
         writeDataRelocation(ptr);
     }
-    void movl(ImmGCPtr ptr, const Operand &dest) {
+    void movl(ImmGCPtr ptr, const Operand& dest) {
         switch (dest.kind()) {
           case Operand::REG:
             masm.movl_i32r(uintptr_t(ptr.value), dest.reg());
@@ -286,16 +286,16 @@ class Assembler : public AssemblerX86Shared
         masm.movl_i32r(-1, dest.code());
         append(AsmJSAbsoluteLink(CodeOffsetLabel(masm.currentOffset()), imm.kind()));
     }
-    void mov(const Operand &src, Register dest) {
+    void mov(const Operand& src, Register dest) {
         movl(src, dest);
     }
-    void mov(Register src, const Operand &dest) {
+    void mov(Register src, const Operand& dest) {
         movl(src, dest);
     }
-    void mov(Imm32 imm, const Operand &dest) {
+    void mov(Imm32 imm, const Operand& dest) {
         movl(imm, dest);
     }
-    void mov(AbsoluteLabel *label, Register dest) {
+    void mov(AbsoluteLabel* label, Register dest) {
         MOZ_ASSERT(!label->bound());
         // Thread the patch list through the unpatched address word in the
         // instruction stream.
@@ -308,11 +308,11 @@ class Assembler : public AssemblerX86Shared
     void xchg(Register src, Register dest) {
         xchgl(src, dest);
     }
-    void lea(const Operand &src, Register dest) {
+    void lea(const Operand& src, Register dest) {
         return leal(src, dest);
     }
 
-    void fld32(const Operand &dest) {
+    void fld32(const Operand& dest) {
         switch (dest.kind()) {
           case Operand::MEM_REG_DISP:
             masm.fld32_m(dest.disp(), dest.base());
@@ -322,7 +322,7 @@ class Assembler : public AssemblerX86Shared
         }
     }
 
-    void fstp32(const Operand &src) {
+    void fstp32(const Operand& src) {
         switch (src.kind()) {
           case Operand::MEM_REG_DISP:
             masm.fstp32_m(src.disp(), src.base());
@@ -345,7 +345,7 @@ class Assembler : public AssemblerX86Shared
     void cmpl(Register rhs, Register lhs) {
         masm.cmpl_rr(rhs.code(), lhs.code());
     }
-    void cmpl(ImmGCPtr rhs, const Operand &lhs) {
+    void cmpl(ImmGCPtr rhs, const Operand& lhs) {
         switch (lhs.kind()) {
           case Operand::REG:
             masm.cmpl_i32r(uintptr_t(rhs.value), lhs.reg());
@@ -363,7 +363,7 @@ class Assembler : public AssemblerX86Shared
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void cmpl(ImmMaybeNurseryPtr rhs, const Operand &lhs) {
+    void cmpl(ImmMaybeNurseryPtr rhs, const Operand& lhs) {
         cmpl(noteMaybeNurseryPtr(rhs), lhs);
     }
     void cmpl(Register rhs, AsmJSAbsoluteAddress lhs) {
@@ -385,13 +385,13 @@ class Assembler : public AssemblerX86Shared
         addPendingJump(src, target, reloc);
     }
 
-    void jmp(JitCode *target) {
+    void jmp(JitCode* target) {
         jmp(ImmPtr(target->raw()), Relocation::JITCODE);
     }
-    void j(Condition cond, JitCode *target) {
+    void j(Condition cond, JitCode* target) {
         j(cond, ImmPtr(target->raw()), Relocation::JITCODE);
     }
-    void call(JitCode *target) {
+    void call(JitCode* target) {
         JmpSrc src = masm.call();
         addPendingJump(src, ImmPtr(target->raw()), Relocation::JITCODE);
     }
@@ -405,7 +405,7 @@ class Assembler : public AssemblerX86Shared
 
     // Emit a CALL or CMP (nop) instruction. ToggleCall can be used to patch
     // this instruction.
-    CodeOffsetLabel toggledCall(JitCode *target, bool enabled) {
+    CodeOffsetLabel toggledCall(JitCode* target, bool enabled) {
         CodeOffsetLabel offset(size());
         JmpSrc src = enabled ? masm.call() : masm.cmp_eax();
         addPendingJump(src, ImmPtr(target->raw()), Relocation::JITCODE);
@@ -413,14 +413,14 @@ class Assembler : public AssemblerX86Shared
         return offset;
     }
 
-    static size_t ToggledCallSize(uint8_t *code) {
+    static size_t ToggledCallSize(uint8_t* code) {
         // Size of a call instruction.
         return 5;
     }
 
     // Re-routes pending jumps to an external target, flushing the label in the
     // process.
-    void retarget(Label *label, ImmPtr target, Relocation::Kind reloc) {
+    void retarget(Label* label, ImmPtr target, Relocation::Kind reloc) {
         if (label->used()) {
             bool more;
             X86Encoding::JmpSrc jmp(label->offset());
@@ -680,7 +680,7 @@ class Assembler : public AssemblerX86Shared
 // CallTempReg* don't overlap the argument registers, and only fail once those
 // run out too.
 static inline bool
-GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register *out)
+GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
 {
     if (usedIntArgs >= NumCallTempNonArgRegs)
         return false;

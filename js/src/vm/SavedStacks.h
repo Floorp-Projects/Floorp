@@ -24,43 +24,43 @@ class SavedFrame : public NativeObject {
 
   public:
     static const Class          class_;
-    static void finalize(FreeOp *fop, JSObject *obj);
+    static void finalize(FreeOp* fop, JSObject* obj);
     static const JSPropertySpec protoAccessors[];
     static const JSFunctionSpec protoFunctions[];
     static const JSFunctionSpec staticFunctions[];
 
     // Prototype methods and properties to be exposed to JS.
-    static bool construct(JSContext *cx, unsigned argc, Value *vp);
-    static bool sourceProperty(JSContext *cx, unsigned argc, Value *vp);
-    static bool lineProperty(JSContext *cx, unsigned argc, Value *vp);
-    static bool columnProperty(JSContext *cx, unsigned argc, Value *vp);
-    static bool functionDisplayNameProperty(JSContext *cx, unsigned argc, Value *vp);
-    static bool parentProperty(JSContext *cx, unsigned argc, Value *vp);
-    static bool toStringMethod(JSContext *cx, unsigned argc, Value *vp);
+    static bool construct(JSContext* cx, unsigned argc, Value* vp);
+    static bool sourceProperty(JSContext* cx, unsigned argc, Value* vp);
+    static bool lineProperty(JSContext* cx, unsigned argc, Value* vp);
+    static bool columnProperty(JSContext* cx, unsigned argc, Value* vp);
+    static bool functionDisplayNameProperty(JSContext* cx, unsigned argc, Value* vp);
+    static bool parentProperty(JSContext* cx, unsigned argc, Value* vp);
+    static bool toStringMethod(JSContext* cx, unsigned argc, Value* vp);
 
     // Convenient getters for SavedFrame's reserved slots for use from C++.
-    JSAtom       *getSource();
+    JSAtom*      getSource();
     uint32_t     getLine();
     uint32_t     getColumn();
-    JSAtom       *getFunctionDisplayName();
-    SavedFrame   *getParent();
-    JSPrincipals *getPrincipals();
+    JSAtom*      getFunctionDisplayName();
+    SavedFrame*  getParent();
+    JSPrincipals* getPrincipals();
 
     bool         isSelfHosted();
 
     struct Lookup;
     struct HashPolicy;
 
-    typedef HashSet<js::ReadBarriered<SavedFrame *>,
+    typedef HashSet<js::ReadBarriered<SavedFrame*>,
                     HashPolicy,
                     SystemAllocPolicy> Set;
 
     typedef RootedGeneric<Lookup*> AutoLookupRooter;
-    typedef AutoLookupRooter &HandleLookup;
+    typedef AutoLookupRooter& HandleLookup;
     class AutoLookupVector;
 
   private:
-    static bool finishSavedFrameInit(JSContext *cx, HandleObject ctor, HandleObject proto);
+    static bool finishSavedFrameInit(JSContext* cx, HandleObject ctor, HandleObject proto);
     void initFromLookup(HandleLookup lookup);
 
     enum {
@@ -88,25 +88,25 @@ class SavedFrame : public NativeObject {
     bool parentMoved();
     void updatePrivateParent();
 
-    static bool checkThis(JSContext *cx, CallArgs &args, const char *fnName,
+    static bool checkThis(JSContext* cx, CallArgs& args, const char* fnName,
                           MutableHandleSavedFrame frame);
 };
 
 struct SavedFrame::HashPolicy
 {
     typedef SavedFrame::Lookup               Lookup;
-    typedef PointerHasher<SavedFrame *, 3>   SavedFramePtrHasher;
-    typedef PointerHasher<JSPrincipals *, 3> JSPrincipalsPtrHasher;
+    typedef PointerHasher<SavedFrame*, 3>   SavedFramePtrHasher;
+    typedef PointerHasher<JSPrincipals*, 3> JSPrincipalsPtrHasher;
 
-    static HashNumber hash(const Lookup &lookup);
-    static bool       match(SavedFrame *existing, const Lookup &lookup);
+    static HashNumber hash(const Lookup& lookup);
+    static bool       match(SavedFrame* existing, const Lookup& lookup);
 
     typedef ReadBarriered<SavedFrame*> Key;
-    static void rekey(Key &key, const Key &newKey);
+    static void rekey(Key& key, const Key& newKey);
 };
 
 class SavedStacks {
-    friend bool SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata);
+    friend bool SavedStacksMetadataCallback(JSContext* cx, JSObject** pmetadata);
 
   public:
     SavedStacks()
@@ -122,9 +122,9 @@ class SavedStacks {
 
     bool     init();
     bool     initialized() const { return frames.initialized(); }
-    bool     saveCurrentStack(JSContext *cx, MutableHandleSavedFrame frame, unsigned maxFrameCount = 0);
-    void     sweep(JSRuntime *rt);
-    void     trace(JSTracer *trc);
+    bool     saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame, unsigned maxFrameCount = 0);
+    void     sweep(JSRuntime* rt);
+    void     trace(JSTracer* trc);
     uint32_t count();
     void     clear();
     void     setRNGState(uint64_t state) { rngState = state; }
@@ -137,30 +137,30 @@ class SavedStacks {
     uint32_t            allocationSkipCount;
     uint64_t            rngState;
 
-    bool       insertFrames(JSContext *cx, FrameIter &iter, MutableHandleSavedFrame frame,
+    bool       insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFrame frame,
                             unsigned maxFrameCount = 0);
-    SavedFrame *getOrCreateSavedFrame(JSContext *cx, SavedFrame::HandleLookup lookup);
-    SavedFrame *createFrameFromLookup(JSContext *cx, SavedFrame::HandleLookup lookup);
+    SavedFrame* getOrCreateSavedFrame(JSContext* cx, SavedFrame::HandleLookup lookup);
+    SavedFrame* createFrameFromLookup(JSContext* cx, SavedFrame::HandleLookup lookup);
     void       chooseSamplingProbability(JSContext* cx);
 
     // Cache for memoizing PCToLineNumber lookups.
 
     struct PCKey {
-        PCKey(JSScript *script, jsbytecode *pc) : script(script), pc(pc) { }
+        PCKey(JSScript* script, jsbytecode* pc) : script(script), pc(pc) { }
 
         PreBarrieredScript script;
-        jsbytecode         *pc;
+        jsbytecode*        pc;
     };
 
     struct LocationValue {
         LocationValue() : source(nullptr), line(0), column(0) { }
-        LocationValue(JSAtom *source, size_t line, uint32_t column)
+        LocationValue(JSAtom* source, size_t line, uint32_t column)
             : source(source),
               line(line),
               column(column)
         { }
 
-        void trace(JSTracer *trc) {
+        void trace(JSTracer* trc) {
             if (source)
                 gc::MarkString(trc, &source, "SavedStacks::LocationValue::source");
         }
@@ -173,16 +173,16 @@ class SavedStacks {
     class MOZ_STACK_CLASS AutoLocationValueRooter : public JS::CustomAutoRooter
     {
       public:
-        explicit AutoLocationValueRooter(JSContext *cx)
+        explicit AutoLocationValueRooter(JSContext* cx)
             : JS::CustomAutoRooter(cx),
               value() {}
 
-        inline LocationValue *operator->() { return &value; }
-        void set(LocationValue &loc) { value = loc; }
-        LocationValue &get() { return value; }
+        inline LocationValue* operator->() { return &value; }
+        void set(LocationValue& loc) { value = loc; }
+        LocationValue& get() { return value; }
 
       private:
-        virtual void trace(JSTracer *trc) {
+        virtual void trace(JSTracer* trc) {
             value.trace(trc);
         }
 
@@ -192,26 +192,26 @@ class SavedStacks {
     class MOZ_STACK_CLASS MutableHandleLocationValue
     {
       public:
-        inline MOZ_IMPLICIT MutableHandleLocationValue(AutoLocationValueRooter *location)
+        inline MOZ_IMPLICIT MutableHandleLocationValue(AutoLocationValueRooter* location)
             : location(location) {}
 
-        inline LocationValue *operator->() { return &location->get(); }
-        void set(LocationValue &loc) { location->set(loc); }
+        inline LocationValue* operator->() { return &location->get(); }
+        void set(LocationValue& loc) { location->set(loc); }
 
       private:
-        AutoLocationValueRooter *location;
+        AutoLocationValueRooter* location;
     };
 
     struct PCLocationHasher : public DefaultHasher<PCKey> {
-        typedef PointerHasher<JSScript *, 3>   ScriptPtrHasher;
-        typedef PointerHasher<jsbytecode *, 3> BytecodePtrHasher;
+        typedef PointerHasher<JSScript*, 3>   ScriptPtrHasher;
+        typedef PointerHasher<jsbytecode*, 3> BytecodePtrHasher;
 
-        static HashNumber hash(const PCKey &key) {
+        static HashNumber hash(const PCKey& key) {
             return mozilla::AddToHash(ScriptPtrHasher::hash(key.script),
                                       BytecodePtrHasher::hash(key.pc));
         }
 
-        static bool match(const PCKey &l, const PCKey &k) {
+        static bool match(const PCKey& l, const PCKey& k) {
             return l.script == k.script && l.pc == k.pc;
         }
     };
@@ -221,10 +221,10 @@ class SavedStacks {
     PCLocationMap pcLocationMap;
 
     void sweepPCLocationMap();
-    bool getLocation(JSContext *cx, const FrameIter &iter, MutableHandleLocationValue locationp);
+    bool getLocation(JSContext* cx, const FrameIter& iter, MutableHandleLocationValue locationp);
 };
 
-bool SavedStacksMetadataCallback(JSContext *cx, JSObject **pmetadata);
+bool SavedStacksMetadataCallback(JSContext* cx, JSObject** pmetadata);
 
 } /* namespace js */
 

@@ -37,7 +37,7 @@ struct Register {
         Register r = { (Registers::Code)i };
         return r;
     }
-    static Register FromName(const char *name) {
+    static Register FromName(const char* name) {
         Registers::Code code = Registers::FromName(name);
         Register r = { code };
         return r;
@@ -46,7 +46,7 @@ struct Register {
         MOZ_ASSERT((uint32_t)code_ < Registers::Total);
         return code_;
     }
-    const char *name() const {
+    const char* name() const {
         return Registers::GetName(code());
     }
     bool operator ==(Register other) const {
@@ -58,7 +58,7 @@ struct Register {
     bool volatile_() const {
         return !!((1 << code()) & Registers::VolatileMask);
     }
-    bool aliases(const Register &other) const {
+    bool aliases(const Register& other) const {
         return code_ == other.code_;
     }
     uint32_t numAliased() const {
@@ -68,7 +68,7 @@ struct Register {
     // N.B. FloatRegister is an explicit outparam here because msvc-2010
     // miscompiled it on win64 when the value was simply returned.  This
     // now has an explicit outparam for compatability.
-    void aliased(uint32_t aliasIdx, Register *ret) const {
+    void aliased(uint32_t aliasIdx, Register* ret) const {
         MOZ_ASSERT(aliasIdx == 0);
         *ret = *this;
     }
@@ -101,17 +101,17 @@ class RegisterDump
 // Information needed to recover machine register state.
 class MachineState
 {
-    mozilla::Array<uintptr_t *, Registers::Total> regs_;
-    mozilla::Array<double *, FloatRegisters::Total> fpregs_;
+    mozilla::Array<uintptr_t*, Registers::Total> regs_;
+    mozilla::Array<double*, FloatRegisters::Total> fpregs_;
 
   public:
-    static MachineState FromBailout(mozilla::Array<uintptr_t, Registers::Total> &regs,
-                                    mozilla::Array<double, FloatRegisters::TotalPhys> &fpregs);
+    static MachineState FromBailout(mozilla::Array<uintptr_t, Registers::Total>& regs,
+                                    mozilla::Array<double, FloatRegisters::TotalPhys>& fpregs);
 
-    void setRegisterLocation(Register reg, uintptr_t *up) {
+    void setRegisterLocation(Register reg, uintptr_t* up) {
         regs_[reg.code()] = up;
     }
-    void setRegisterLocation(FloatRegister reg, double *dp) {
+    void setRegisterLocation(FloatRegister reg, double* dp) {
         fpregs_[reg.code()] = dp;
     }
 

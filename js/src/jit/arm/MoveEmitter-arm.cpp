@@ -9,7 +9,7 @@
 using namespace js;
 using namespace js::jit;
 
-MoveEmitterARM::MoveEmitterARM(MacroAssemblerARMCompat &masm)
+MoveEmitterARM::MoveEmitterARM(MacroAssemblerARMCompat& masm)
   : inCycle_(0),
     masm(masm),
     pushedAtCycle_(-1),
@@ -21,7 +21,7 @@ MoveEmitterARM::MoveEmitterARM(MacroAssemblerARMCompat &masm)
 }
 
 void
-MoveEmitterARM::emit(const MoveResolver &moves)
+MoveEmitterARM::emit(const MoveResolver& moves)
 {
     if (moves.numCycles()) {
         // Reserve stack for cycle resolution
@@ -56,7 +56,7 @@ MoveEmitterARM::spillSlot() const
 }
 
 Operand
-MoveEmitterARM::toOperand(const MoveOperand &operand, bool isFloat) const
+MoveEmitterARM::toOperand(const MoveOperand& operand, bool isFloat) const
 {
     if (operand.isMemoryOrEffectiveAddress()) {
         if (operand.base() != StackPointer) {
@@ -100,7 +100,7 @@ MoveEmitterARM::tempReg()
 }
 
 void
-MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to,
+MoveEmitterARM::breakCycle(const MoveOperand& from, const MoveOperand& to,
                            MoveOp::Type type, uint32_t slotId)
 {
     // There is some pattern:
@@ -156,7 +156,7 @@ MoveEmitterARM::breakCycle(const MoveOperand &from, const MoveOperand &to,
 }
 
 void
-MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, MoveOp::Type type, uint32_t slotId)
+MoveEmitterARM::completeCycle(const MoveOperand& from, const MoveOperand& to, MoveOp::Type type, uint32_t slotId)
 {
     // There is some pattern:
     //   (A -> B)
@@ -199,7 +199,7 @@ MoveEmitterARM::completeCycle(const MoveOperand &from, const MoveOperand &to, Mo
 }
 
 void
-MoveEmitterARM::emitMove(const MoveOperand &from, const MoveOperand &to)
+MoveEmitterARM::emitMove(const MoveOperand& from, const MoveOperand& to)
 {
     if (to.isGeneralReg() && to.reg() == spilledReg_) {
         // If the destination is the spilled register, make sure we
@@ -246,7 +246,7 @@ MoveEmitterARM::emitMove(const MoveOperand &from, const MoveOperand &to)
 }
 
 void
-MoveEmitterARM::emitFloat32Move(const MoveOperand &from, const MoveOperand &to)
+MoveEmitterARM::emitFloat32Move(const MoveOperand& from, const MoveOperand& to)
 {
     if (from.isFloatReg()) {
         if (to.isFloatReg())
@@ -269,7 +269,7 @@ MoveEmitterARM::emitFloat32Move(const MoveOperand &from, const MoveOperand &to)
 }
 
 void
-MoveEmitterARM::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
+MoveEmitterARM::emitDoubleMove(const MoveOperand& from, const MoveOperand& to)
 {
     if (from.isFloatReg()) {
         if (to.isFloatReg())
@@ -288,10 +288,10 @@ MoveEmitterARM::emitDoubleMove(const MoveOperand &from, const MoveOperand &to)
 }
 
 void
-MoveEmitterARM::emit(const MoveOp &move)
+MoveEmitterARM::emit(const MoveOp& move)
 {
-    const MoveOperand &from = move.from();
-    const MoveOperand &to = move.to();
+    const MoveOperand& from = move.from();
+    const MoveOperand& to = move.to();
 
     if (move.isCycleEnd() && move.isCycleBegin()) {
         // A fun consequence of aliased registers is you can have multiple

@@ -17,18 +17,18 @@ namespace js {
 class StringBuffer;
 }
 
-extern JSObject *
-js_InitJSONClass(JSContext *cx, js::HandleObject obj);
+extern JSObject*
+js_InitJSONClass(JSContext* cx, js::HandleObject obj);
 
 extern bool
-js_Stringify(JSContext *cx, js::MutableHandleValue vp, JSObject *replacer,
-             js::Value space, js::StringBuffer &sb);
+js_Stringify(JSContext* cx, js::MutableHandleValue vp, JSObject* replacer,
+             js::Value space, js::StringBuffer& sb);
 
 namespace js {
 
 template <typename CharT>
 extern bool
-ParseJSONWithReviver(JSContext *cx, const mozilla::Range<const CharT> chars,
+ParseJSONWithReviver(JSContext* cx, const mozilla::Range<const CharT> chars,
                      HandleValue reviver, MutableHandleValue vp);
 
 } // namespace js

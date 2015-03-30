@@ -34,51 +34,51 @@ class TokenStream;
 class CGConstList {
     Vector<Value> list;
   public:
-    explicit CGConstList(ExclusiveContext *cx) : list(cx) {}
+    explicit CGConstList(ExclusiveContext* cx) : list(cx) {}
     bool append(Value v) { MOZ_ASSERT_IF(v.isString(), v.toString()->isAtom()); return list.append(v); }
     size_t length() const { return list.length(); }
-    void finish(ConstArray *array);
+    void finish(ConstArray* array);
 };
 
 struct CGObjectList {
     uint32_t            length;     /* number of emitted so far objects */
-    ObjectBox           *lastbox;   /* last emitted object */
+    ObjectBox*          lastbox;   /* last emitted object */
 
     CGObjectList() : length(0), lastbox(nullptr) {}
 
-    unsigned add(ObjectBox *objbox);
-    unsigned indexOf(JSObject *obj);
-    void finish(ObjectArray *array);
+    unsigned add(ObjectBox* objbox);
+    unsigned indexOf(JSObject* obj);
+    void finish(ObjectArray* array);
     ObjectBox* find(uint32_t index);
 };
 
 struct CGTryNoteList {
     Vector<JSTryNote> list;
-    explicit CGTryNoteList(ExclusiveContext *cx) : list(cx) {}
+    explicit CGTryNoteList(ExclusiveContext* cx) : list(cx) {}
 
     bool append(JSTryNoteKind kind, uint32_t stackDepth, size_t start, size_t end);
     size_t length() const { return list.length(); }
-    void finish(TryNoteArray *array);
+    void finish(TryNoteArray* array);
 };
 
 struct CGBlockScopeList {
     Vector<BlockScopeNote> list;
-    explicit CGBlockScopeList(ExclusiveContext *cx) : list(cx) {}
+    explicit CGBlockScopeList(ExclusiveContext* cx) : list(cx) {}
 
     bool append(uint32_t scopeObject, uint32_t offset, uint32_t parent);
     uint32_t findEnclosingScope(uint32_t index);
     void recordEnd(uint32_t index, uint32_t offset);
     size_t length() const { return list.length(); }
-    void finish(BlockScopeArray *array);
+    void finish(BlockScopeArray* array);
 };
 
 struct CGYieldOffsetList {
     Vector<uint32_t> list;
-    explicit CGYieldOffsetList(ExclusiveContext *cx) : list(cx) {}
+    explicit CGYieldOffsetList(ExclusiveContext* cx) : list(cx) {}
 
     bool append(uint32_t offset) { return list.append(offset); }
     size_t length() const { return list.length(); }
-    void finish(YieldOffsetArray &array, uint32_t prologLength);
+    void finish(YieldOffsetArray& array, uint32_t prologLength);
 };
 
 struct StmtInfoBCE;
@@ -92,13 +92,13 @@ struct BytecodeEmitter
 {
     typedef StmtInfoBCE StmtInfo;
 
-    SharedContext   *const sc;      /* context shared between parsing and bytecode generation */
+    SharedContext*  const sc;      /* context shared between parsing and bytecode generation */
 
-    BytecodeEmitter *const parent;  /* enclosing function or global context */
+    BytecodeEmitter* const parent;  /* enclosing function or global context */
 
     Rooted<JSScript*> script;       /* the JSScript we're ultimately producing */
 
-    Rooted<LazyScript *> lazyScript; /* the lazy script if mode is LazyFunction,
+    Rooted<LazyScript*> lazyScript; /* the lazy script if mode is LazyFunction,
                                         nullptr otherwise. */
 
     struct EmitSection {
@@ -109,22 +109,22 @@ struct BytecodeEmitter
         uint32_t    lastColumn;     /* zero-based column index on currentLine of
                                        last SRC_COLSPAN-annotated opcode */
 
-        EmitSection(ExclusiveContext *cx, uint32_t lineNum)
+        EmitSection(ExclusiveContext* cx, uint32_t lineNum)
           : code(cx), notes(cx), lastNoteOffset(0), currentLine(lineNum), lastColumn(0)
         {}
     };
     EmitSection prolog, main, *current;
 
     /* the parser */
-    Parser<FullParseHandler> *const parser;
+    Parser<FullParseHandler>* const parser;
 
     HandleScript    evalCaller;     /* scripted caller info for eval and dbgapi */
-    Handle<StaticEvalObject *> evalStaticScope;
+    Handle<StaticEvalObject*> evalStaticScope;
                                    /* compile time scope for eval; does not imply stmt stack */
 
-    StmtInfoBCE     *topStmt;       /* top of statement info stack */
-    StmtInfoBCE     *topScopeStmt;  /* top lexical scope statement */
-    Rooted<NestedScopeObject *> staticScope;
+    StmtInfoBCE*    topStmt;       /* top of statement info stack */
+    StmtInfoBCE*    topScopeStmt;  /* top lexical scope statement */
+    Rooted<NestedScopeObject*> staticScope;
                                     /* compile time scope chain */
 
     OwnedAtomIndexMapPtr atomIndices; /* literals indexed for mapping */
@@ -202,18 +202,18 @@ struct BytecodeEmitter
      * tempLifoAlloc and save the pointer beyond the next BytecodeEmitter
      * destruction.
      */
-    BytecodeEmitter(BytecodeEmitter *parent, Parser<FullParseHandler> *parser, SharedContext *sc,
-                    HandleScript script, Handle<LazyScript *> lazyScript,
+    BytecodeEmitter(BytecodeEmitter* parent, Parser<FullParseHandler>* parser, SharedContext* sc,
+                    HandleScript script, Handle<LazyScript*> lazyScript,
                     bool insideEval, HandleScript evalCaller,
-                    Handle<StaticEvalObject *> evalStaticScope, bool hasGlobalScope,
+                    Handle<StaticEvalObject*> evalStaticScope, bool hasGlobalScope,
                     uint32_t lineNum, EmitterMode emitterMode = Normal);
     bool init();
     bool updateLocalsToFrameSlots();
 
-    bool isAliasedName(ParseNode *pn);
+    bool isAliasedName(ParseNode* pn);
 
     MOZ_ALWAYS_INLINE
-    bool makeAtomIndex(JSAtom *atom, jsatomid *indexp) {
+    bool makeAtomIndex(JSAtom* atom, jsatomid* indexp) {
         AtomIndexAddPtr p = atomIndices->lookupForAdd(atom);
         if (p) {
             *indexp = p.value();
@@ -233,62 +233,62 @@ struct BytecodeEmitter
 
     bool needsImplicitThis();
 
-    void tellDebuggerAboutCompiledScript(ExclusiveContext *cx);
+    void tellDebuggerAboutCompiledScript(ExclusiveContext* cx);
 
-    inline TokenStream *tokenStream();
+    inline TokenStream* tokenStream();
 
-    BytecodeVector &code() const { return current->code; }
-    jsbytecode *code(ptrdiff_t offset) const { return current->code.begin() + offset; }
+    BytecodeVector& code() const { return current->code; }
+    jsbytecode* code(ptrdiff_t offset) const { return current->code.begin() + offset; }
     ptrdiff_t offset() const { return current->code.end() - current->code.begin(); }
     ptrdiff_t prologOffset() const { return prolog.code.end() - prolog.code.begin(); }
     void switchToMain() { current = &main; }
     void switchToProlog() { current = &prolog; }
 
-    SrcNotesVector &notes() const { return current->notes; }
+    SrcNotesVector& notes() const { return current->notes; }
     ptrdiff_t lastNoteOffset() const { return current->lastNoteOffset; }
     unsigned currentLine() const { return current->currentLine; }
     unsigned lastColumn() const { return current->lastColumn; }
 
-    bool reportError(ParseNode *pn, unsigned errorNumber, ...);
-    bool reportStrictWarning(ParseNode *pn, unsigned errorNumber, ...);
-    bool reportStrictModeError(ParseNode *pn, unsigned errorNumber, ...);
+    bool reportError(ParseNode* pn, unsigned errorNumber, ...);
+    bool reportStrictWarning(ParseNode* pn, unsigned errorNumber, ...);
+    bool reportStrictModeError(ParseNode* pn, unsigned errorNumber, ...);
 };
 
 /*
  * Emit one bytecode.
  */
 ptrdiff_t
-Emit1(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op);
+Emit1(ExclusiveContext* cx, BytecodeEmitter* bce, JSOp op);
 
 /*
  * Emit two bytecodes, an opcode (op) with a byte of immediate operand (op1).
  */
 ptrdiff_t
-Emit2(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1);
+Emit2(ExclusiveContext* cx, BytecodeEmitter* bce, JSOp op, jsbytecode op1);
 
 /*
  * Emit three bytecodes, an opcode with two bytes of immediate operands.
  */
 ptrdiff_t
-Emit3(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, jsbytecode op1, jsbytecode op2);
+Emit3(ExclusiveContext* cx, BytecodeEmitter* bce, JSOp op, jsbytecode op1, jsbytecode op2);
 
 /*
  * Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
  */
 ptrdiff_t
-EmitN(ExclusiveContext *cx, BytecodeEmitter *bce, JSOp op, size_t extra);
+EmitN(ExclusiveContext* cx, BytecodeEmitter* bce, JSOp op, size_t extra);
 
 /*
  * Emit code into bce for the tree rooted at pn.
  */
 bool
-EmitTree(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *pn);
+EmitTree(ExclusiveContext* cx, BytecodeEmitter* bce, ParseNode* pn);
 
 /*
  * Emit function code using bce for the tree rooted at body.
  */
 bool
-EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *body);
+EmitFunctionScript(ExclusiveContext* cx, BytecodeEmitter* bce, ParseNode* body);
 
 /*
  * Append a new source note of the given type (and therefore size) to bce's
@@ -297,24 +297,24 @@ EmitFunctionScript(ExclusiveContext *cx, BytecodeEmitter *bce, ParseNode *body);
  * memory.
  */
 int
-NewSrcNote(ExclusiveContext *cx, BytecodeEmitter *bce, SrcNoteType type);
+NewSrcNote(ExclusiveContext* cx, BytecodeEmitter* bce, SrcNoteType type);
 
 int
-NewSrcNote2(ExclusiveContext *cx, BytecodeEmitter *bce, SrcNoteType type, ptrdiff_t offset);
+NewSrcNote2(ExclusiveContext* cx, BytecodeEmitter* bce, SrcNoteType type, ptrdiff_t offset);
 
 int
-NewSrcNote3(ExclusiveContext *cx, BytecodeEmitter *bce, SrcNoteType type, ptrdiff_t offset1,
+NewSrcNote3(ExclusiveContext* cx, BytecodeEmitter* bce, SrcNoteType type, ptrdiff_t offset1,
                ptrdiff_t offset2);
 
 /* NB: this function can add at most one extra extended delta note. */
 bool
-AddToSrcNoteDelta(ExclusiveContext *cx, BytecodeEmitter *bce, jssrcnote *sn, ptrdiff_t delta);
+AddToSrcNoteDelta(ExclusiveContext* cx, BytecodeEmitter* bce, jssrcnote* sn, ptrdiff_t delta);
 
 bool
-FinishTakingSrcNotes(ExclusiveContext *cx, BytecodeEmitter *bce, uint32_t *out);
+FinishTakingSrcNotes(ExclusiveContext* cx, BytecodeEmitter* bce, uint32_t* out);
 
 void
-CopySrcNotes(BytecodeEmitter *bce, jssrcnote *destination, uint32_t nsrcnotes);
+CopySrcNotes(BytecodeEmitter* bce, jssrcnote* destination, uint32_t nsrcnotes);
 
 } /* namespace frontend */
 } /* namespace js */

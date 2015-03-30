@@ -17,8 +17,8 @@
 using namespace js;
 using namespace js::jit;
 
-static MBasicBlock *
-FollowTrivialGotos(MBasicBlock *block)
+static MBasicBlock*
+FollowTrivialGotos(MBasicBlock* block)
 {
     while (block->phisEmpty() && *block->begin() == block->lastIns() && block->lastIns()->isGoto())
         block = block->lastIns()->toGoto()->getSuccessor(0);
@@ -32,16 +32,16 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoop)
 
     MinimalFunc func;
 
-    MBasicBlock *entry = func.createEntryBlock();
-    MBasicBlock *osrEntry = func.createOsrEntryBlock();
-    MBasicBlock *outerHeader = func.createBlock(entry);
-    MBasicBlock *merge = func.createBlock(outerHeader);
-    MBasicBlock *innerHeader = func.createBlock(merge);
-    MBasicBlock *innerBackedge = func.createBlock(innerHeader);
-    MBasicBlock *outerBackedge = func.createBlock(innerHeader);
-    MBasicBlock *exit = func.createBlock(outerHeader);
+    MBasicBlock* entry = func.createEntryBlock();
+    MBasicBlock* osrEntry = func.createOsrEntryBlock();
+    MBasicBlock* outerHeader = func.createBlock(entry);
+    MBasicBlock* merge = func.createBlock(outerHeader);
+    MBasicBlock* innerHeader = func.createBlock(merge);
+    MBasicBlock* innerBackedge = func.createBlock(innerHeader);
+    MBasicBlock* outerBackedge = func.createBlock(innerHeader);
+    MBasicBlock* exit = func.createBlock(outerHeader);
 
-    MConstant *c = MConstant::New(func.alloc, BooleanValue(false));
+    MConstant* c = MConstant::New(func.alloc, BooleanValue(false));
     entry->add(c);
     entry->end(MTest::New(func.alloc, c, outerHeader, exit));
     osrEntry->end(MGoto::New(func.alloc, merge));
@@ -49,22 +49,22 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoop)
     merge->end(MGoto::New(func.alloc, innerHeader));
 
     // Use Beta nodes to hide the constants and suppress folding.
-    MConstant *x = MConstant::New(func.alloc, BooleanValue(false));
+    MConstant* x = MConstant::New(func.alloc, BooleanValue(false));
     outerHeader->add(x);
-    MBeta *xBeta = MBeta::New(func.alloc, x, Range::NewInt32Range(func.alloc, 0, 1));
+    MBeta* xBeta = MBeta::New(func.alloc, x, Range::NewInt32Range(func.alloc, 0, 1));
     outerHeader->add(xBeta);
     outerHeader->end(MTest::New(func.alloc, xBeta, merge, exit));
 
-    MConstant *y = MConstant::New(func.alloc, BooleanValue(false));
+    MConstant* y = MConstant::New(func.alloc, BooleanValue(false));
     innerHeader->add(y);
-    MBeta *yBeta = MBeta::New(func.alloc, y, Range::NewInt32Range(func.alloc, 0, 1));
+    MBeta* yBeta = MBeta::New(func.alloc, y, Range::NewInt32Range(func.alloc, 0, 1));
     innerHeader->add(yBeta);
     innerHeader->end(MTest::New(func.alloc, yBeta, innerBackedge, outerBackedge));
 
     innerBackedge->end(MGoto::New(func.alloc, innerHeader));
     outerBackedge->end(MGoto::New(func.alloc, outerHeader));
 
-    MConstant *u = MConstant::New(func.alloc, UndefinedValue());
+    MConstant* u = MConstant::New(func.alloc, UndefinedValue());
     exit->add(u);
     exit->end(MReturn::New(func.alloc, u));
 
@@ -82,9 +82,9 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoop)
     // The loops are no longer reachable from the normal entry. They are
     // doinated by the osrEntry.
     MOZ_RELEASE_ASSERT(func.graph.osrBlock() == osrEntry);
-    MBasicBlock *newInner = FollowTrivialGotos(osrEntry->lastIns()->toGoto()->target());
-    MBasicBlock *newOuter = FollowTrivialGotos(newInner->lastIns()->toTest()->ifFalse());
-    MBasicBlock *newExit = FollowTrivialGotos(entry);
+    MBasicBlock* newInner = FollowTrivialGotos(osrEntry->lastIns()->toGoto()->target());
+    MBasicBlock* newOuter = FollowTrivialGotos(newInner->lastIns()->toTest()->ifFalse());
+    MBasicBlock* newExit = FollowTrivialGotos(entry);
     MOZ_RELEASE_ASSERT(newInner->isLoopHeader());
     MOZ_RELEASE_ASSERT(newOuter->isLoopHeader());
     MOZ_RELEASE_ASSERT(newExit->lastIns()->isReturn());
@@ -115,18 +115,18 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoopNested)
 
     MinimalFunc func;
 
-    MBasicBlock *entry = func.createEntryBlock();
-    MBasicBlock *osrEntry = func.createOsrEntryBlock();
-    MBasicBlock *outerHeader = func.createBlock(entry);
-    MBasicBlock *middleHeader = func.createBlock(outerHeader);
-    MBasicBlock *merge = func.createBlock(middleHeader);
-    MBasicBlock *innerHeader = func.createBlock(merge);
-    MBasicBlock *innerBackedge = func.createBlock(innerHeader);
-    MBasicBlock *middleBackedge = func.createBlock(innerHeader);
-    MBasicBlock *outerBackedge = func.createBlock(middleHeader);
-    MBasicBlock *exit = func.createBlock(outerHeader);
+    MBasicBlock* entry = func.createEntryBlock();
+    MBasicBlock* osrEntry = func.createOsrEntryBlock();
+    MBasicBlock* outerHeader = func.createBlock(entry);
+    MBasicBlock* middleHeader = func.createBlock(outerHeader);
+    MBasicBlock* merge = func.createBlock(middleHeader);
+    MBasicBlock* innerHeader = func.createBlock(merge);
+    MBasicBlock* innerBackedge = func.createBlock(innerHeader);
+    MBasicBlock* middleBackedge = func.createBlock(innerHeader);
+    MBasicBlock* outerBackedge = func.createBlock(middleHeader);
+    MBasicBlock* exit = func.createBlock(outerHeader);
 
-    MConstant *c = MConstant::New(func.alloc, BooleanValue(false));
+    MConstant* c = MConstant::New(func.alloc, BooleanValue(false));
     entry->add(c);
     entry->end(MTest::New(func.alloc, c, outerHeader, exit));
     osrEntry->end(MGoto::New(func.alloc, merge));
@@ -134,21 +134,21 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoopNested)
     merge->end(MGoto::New(func.alloc, innerHeader));
 
     // Use Beta nodes to hide the constants and suppress folding.
-    MConstant *x = MConstant::New(func.alloc, BooleanValue(false));
+    MConstant* x = MConstant::New(func.alloc, BooleanValue(false));
     outerHeader->add(x);
-    MBeta *xBeta = MBeta::New(func.alloc, x, Range::NewInt32Range(func.alloc, 0, 1));
+    MBeta* xBeta = MBeta::New(func.alloc, x, Range::NewInt32Range(func.alloc, 0, 1));
     outerHeader->add(xBeta);
     outerHeader->end(MTest::New(func.alloc, xBeta, middleHeader, exit));
 
-    MConstant *y = MConstant::New(func.alloc, BooleanValue(false));
+    MConstant* y = MConstant::New(func.alloc, BooleanValue(false));
     middleHeader->add(y);
-    MBeta *yBeta = MBeta::New(func.alloc, y, Range::NewInt32Range(func.alloc, 0, 1));
+    MBeta* yBeta = MBeta::New(func.alloc, y, Range::NewInt32Range(func.alloc, 0, 1));
     middleHeader->add(yBeta);
     middleHeader->end(MTest::New(func.alloc, yBeta, merge, outerBackedge));
 
-    MConstant *w = MConstant::New(func.alloc, BooleanValue(false));
+    MConstant* w = MConstant::New(func.alloc, BooleanValue(false));
     innerHeader->add(w);
-    MBeta *wBeta = MBeta::New(func.alloc, w, Range::NewInt32Range(func.alloc, 0, 1));
+    MBeta* wBeta = MBeta::New(func.alloc, w, Range::NewInt32Range(func.alloc, 0, 1));
     innerHeader->add(wBeta);
     innerHeader->end(MTest::New(func.alloc, wBeta, innerBackedge, middleBackedge));
 
@@ -156,7 +156,7 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoopNested)
     middleBackedge->end(MGoto::New(func.alloc, middleHeader));
     outerBackedge->end(MGoto::New(func.alloc, outerHeader));
 
-    MConstant *u = MConstant::New(func.alloc, UndefinedValue());
+    MConstant* u = MConstant::New(func.alloc, UndefinedValue());
     exit->add(u);
     exit->end(MReturn::New(func.alloc, u));
 
@@ -176,10 +176,10 @@ BEGIN_TEST(testJitGVN_FixupOSROnlyLoopNested)
     // The loops are no longer reachable from the normal entry. They are
     // doinated by the osrEntry.
     MOZ_RELEASE_ASSERT(func.graph.osrBlock() == osrEntry);
-    MBasicBlock *newInner = FollowTrivialGotos(osrEntry->lastIns()->toGoto()->target());
-    MBasicBlock *newMiddle = FollowTrivialGotos(newInner->lastIns()->toTest()->ifFalse());
-    MBasicBlock *newOuter = FollowTrivialGotos(newMiddle->lastIns()->toTest()->ifFalse());
-    MBasicBlock *newExit = FollowTrivialGotos(entry);
+    MBasicBlock* newInner = FollowTrivialGotos(osrEntry->lastIns()->toGoto()->target());
+    MBasicBlock* newMiddle = FollowTrivialGotos(newInner->lastIns()->toTest()->ifFalse());
+    MBasicBlock* newOuter = FollowTrivialGotos(newMiddle->lastIns()->toTest()->ifFalse());
+    MBasicBlock* newExit = FollowTrivialGotos(entry);
     MOZ_RELEASE_ASSERT(newInner->isLoopHeader());
     MOZ_RELEASE_ASSERT(newMiddle->isLoopHeader());
     MOZ_RELEASE_ASSERT(newOuter->isLoopHeader());
@@ -213,24 +213,24 @@ BEGIN_TEST(testJitGVN_PinnedPhis)
 
     MinimalFunc func;
 
-    MBasicBlock *entry = func.createEntryBlock();
-    MBasicBlock *outerHeader = func.createBlock(entry);
-    MBasicBlock *outerBlock = func.createBlock(outerHeader);
-    MBasicBlock *innerHeader = func.createBlock(outerBlock);
-    MBasicBlock *innerBackedge = func.createBlock(innerHeader);
-    MBasicBlock *exit = func.createBlock(innerHeader);
+    MBasicBlock* entry = func.createEntryBlock();
+    MBasicBlock* outerHeader = func.createBlock(entry);
+    MBasicBlock* outerBlock = func.createBlock(outerHeader);
+    MBasicBlock* innerHeader = func.createBlock(outerBlock);
+    MBasicBlock* innerBackedge = func.createBlock(innerHeader);
+    MBasicBlock* exit = func.createBlock(innerHeader);
 
-    MPhi *phi0 = MPhi::New(func.alloc);
-    MPhi *phi1 = MPhi::New(func.alloc);
-    MPhi *phi2 = MPhi::New(func.alloc);
-    MPhi *phi3 = MPhi::New(func.alloc);
+    MPhi* phi0 = MPhi::New(func.alloc);
+    MPhi* phi1 = MPhi::New(func.alloc);
+    MPhi* phi2 = MPhi::New(func.alloc);
+    MPhi* phi3 = MPhi::New(func.alloc);
 
-    MParameter *p = func.createParameter();
+    MParameter* p = func.createParameter();
     entry->add(p);
-    MConstant *z0 = MConstant::New(func.alloc, Int32Value(0));
-    MConstant *z1 = MConstant::New(func.alloc, Int32Value(1));
-    MConstant *z2 = MConstant::New(func.alloc, Int32Value(2));
-    MConstant *z3 = MConstant::New(func.alloc, Int32Value(2));
+    MConstant* z0 = MConstant::New(func.alloc, Int32Value(0));
+    MConstant* z1 = MConstant::New(func.alloc, Int32Value(1));
+    MConstant* z2 = MConstant::New(func.alloc, Int32Value(2));
+    MConstant* z3 = MConstant::New(func.alloc, Int32Value(2));
     phi0->addInputSlow(z0);
     phi1->addInputSlow(z1);
     phi2->addInputSlow(z2);
@@ -249,16 +249,16 @@ BEGIN_TEST(testJitGVN_PinnedPhis)
 
     outerBlock->end(MGoto::New(func.alloc, innerHeader));
 
-    MConstant *true_ = MConstant::New(func.alloc, BooleanValue(true));
+    MConstant* true_ = MConstant::New(func.alloc, BooleanValue(true));
     innerHeader->add(true_);
     innerHeader->end(MTest::New(func.alloc, true_, innerBackedge, exit));
 
     innerBackedge->end(MGoto::New(func.alloc, innerHeader));
 
-    MInstruction *z4 = MAdd::New(func.alloc, phi0, phi1);
-    MConstant *z5 = MConstant::New(func.alloc, Int32Value(4));
-    MInstruction *z6 = MAdd::New(func.alloc, phi2, phi3);
-    MConstant *z7 = MConstant::New(func.alloc, Int32Value(6));
+    MInstruction* z4 = MAdd::New(func.alloc, phi0, phi1);
+    MConstant* z5 = MConstant::New(func.alloc, Int32Value(4));
+    MInstruction* z6 = MAdd::New(func.alloc, phi2, phi3);
+    MConstant* z7 = MConstant::New(func.alloc, Int32Value(6));
     phi0->addInputSlow(z4);
     phi1->addInputSlow(z5);
     phi2->addInputSlow(z6);

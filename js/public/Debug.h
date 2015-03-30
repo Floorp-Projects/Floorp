@@ -89,11 +89,11 @@ namespace dbg {
 // the object shown above, given a Builder passed to it by Debugger:
 //
 //    bool
-//    MyScriptEntryReason::explain(JSContext *cx,
-//                                 Builder &builder,
-//                                 Builder::Object &result)
+//    MyScriptEntryReason::explain(JSContext* cx,
+//                                 Builder& builder,
+//                                 Builder::Object& result)
 //    {
-//        JSObject *eventObject = ... obtain debuggee event object somehow ...;
+//        JSObject* eventObject = ... obtain debuggee event object somehow ...;
 //        if (!eventObject)
 //            return false;
 //        result = builder.newObject(cx);
@@ -124,44 +124,44 @@ class Builder {
     PersistentRootedObject debuggerObject;
 
     // debuggerObject's Debugger structure, for convenience.
-    js::Debugger *debugger;
+    js::Debugger* debugger;
 
     // Check that |thing| is in the same compartment as our debuggerObject. Used
     // for assertions when constructing BuiltThings. We can overload this as we
     // add more instantiations of BuiltThing.
 #if DEBUG
-    void assertBuilt(JSObject *obj);
+    void assertBuilt(JSObject* obj);
 #else
-    void assertBuilt(JSObject *obj) { }
+    void assertBuilt(JSObject* obj) { }
 #endif
 
   protected:
     // A reference to a trusted object or value. At the moment, we only use it
-    // with JSObject *.
+    // with JSObject*.
     template<typename T>
     class BuiltThing {
         friend class BuilderOrigin;
 
       protected:
         // The Builder to which this trusted thing belongs.
-        Builder &owner;
+        Builder& owner;
 
         // A rooted reference to our value.
         PersistentRooted<T> value;
 
-        BuiltThing(JSContext *cx, Builder &owner_, T value_ = js::GCMethods<T>::initial())
+        BuiltThing(JSContext* cx, Builder& owner_, T value_ = js::GCMethods<T>::initial())
           : owner(owner_), value(cx, value_)
         {
             owner.assertBuilt(value_);
         }
 
         // Forward some things from our owner, for convenience.
-        js::Debugger *debugger() const { return owner.debugger; }
-        JSObject *debuggerObject() const { return owner.debuggerObject; }
+        js::Debugger* debugger() const { return owner.debugger; }
+        JSObject* debuggerObject() const { return owner.debuggerObject; }
 
       public:
-        BuiltThing(const BuiltThing &rhs) : owner(rhs.owner), value(rhs.value) { }
-        BuiltThing &operator=(const BuiltThing &rhs) {
+        BuiltThing(const BuiltThing& rhs) : owner(rhs.owner), value(rhs.value) { }
+        BuiltThing& operator=(const BuiltThing& rhs) {
             MOZ_ASSERT(&owner == &rhs.owner);
             owner.assertBuilt(rhs.value);
             value = rhs.value;
@@ -181,22 +181,22 @@ class Builder {
     // A reference to a trusted object, possibly null. Instances of Object are
     // always properly rooted. They can be copied and assigned, as if they were
     // pointers.
-    class Object: private BuiltThing<JSObject *> {
+    class Object: private BuiltThing<JSObject*> {
         friend class Builder;           // for construction
         friend class BuilderOrigin;     // for unwrapping
 
-        typedef BuiltThing<JSObject *> Base;
+        typedef BuiltThing<JSObject*> Base;
 
         // This is private, because only Builders can create Objects that
         // actually point to something (hence the 'friend' declaration).
-        Object(JSContext *cx, Builder &owner_, HandleObject obj) : Base(cx, owner_, obj.get()) { }
+        Object(JSContext* cx, Builder& owner_, HandleObject obj) : Base(cx, owner_, obj.get()) { }
 
-        bool definePropertyToTrusted(JSContext *cx, const char *name,
+        bool definePropertyToTrusted(JSContext* cx, const char* name,
                                      JS::MutableHandleValue value);
 
       public:
-        Object(JSContext *cx, Builder &owner_) : Base(cx, owner_, nullptr) { }
-        Object(const Object &rhs) : Base(rhs) { }
+        Object(JSContext* cx, Builder& owner_) : Base(cx, owner_, nullptr) { }
+        Object(const Object& rhs) : Base(rhs) { }
 
         // Our automatically-generated assignment operator can see our base
         // class's assignment operator, so we don't need to write one out here.
@@ -214,36 +214,36 @@ class Builder {
         // property's value.
         //
         // On error, report the problem on cx and return false.
-        bool defineProperty(JSContext *cx, const char *name, JS::HandleValue value);
-        bool defineProperty(JSContext *cx, const char *name, JS::HandleObject value);
-        bool defineProperty(JSContext *cx, const char *name, Object &value);
+        bool defineProperty(JSContext* cx, const char* name, JS::HandleValue value);
+        bool defineProperty(JSContext* cx, const char* name, JS::HandleObject value);
+        bool defineProperty(JSContext* cx, const char* name, Object& value);
 
         using Base::operator bool;
     };
 
     // Build an empty object for direct use by debugger code, owned by this
     // Builder. If an error occurs, report it on cx and return a false Object.
-    Object newObject(JSContext *cx);
+    Object newObject(JSContext* cx);
 
   protected:
-    Builder(JSContext *cx, js::Debugger *debugger);
+    Builder(JSContext* cx, js::Debugger* debugger);
 };
 
 // Debugger itself instantiates this subclass of Builder, which can unwrap
 // BuiltThings that belong to it.
 class BuilderOrigin : public Builder {
     template<typename T>
-    T unwrapAny(const BuiltThing<T> &thing) {
+    T unwrapAny(const BuiltThing<T>& thing) {
         MOZ_ASSERT(&thing.owner == this);
         return thing.value.get();
     }
 
   public:
-    BuilderOrigin(JSContext *cx, js::Debugger *debugger_)
+    BuilderOrigin(JSContext* cx, js::Debugger* debugger_)
       : Builder(cx, debugger_)
     { }
 
-    JSObject *unwrap(Object &object) { return unwrapAny(object); }
+    JSObject* unwrap(Object& object) { return unwrapAny(object); }
 };
 
 
@@ -258,7 +258,7 @@ class BuilderOrigin : public Builder {
 
 // Tell Debuggers in |runtime| to use |mallocSizeOf| to find the size of
 // malloc'd blocks.
-void SetDebuggerMallocSizeOf(JSRuntime *runtime, mozilla::MallocSizeOf mallocSizeOf);
+void SetDebuggerMallocSizeOf(JSRuntime* runtime, mozilla::MallocSizeOf mallocSizeOf);
 
 
 
@@ -276,7 +276,7 @@ void SetDebuggerMallocSizeOf(JSRuntime *runtime, mozilla::MallocSizeOf mallocSiz
 // Notify any Debugger instances observing this promise's global that a new
 // promise was allocated.
 JS_PUBLIC_API(void)
-onNewPromise(JSContext *cx, HandleObject promise);
+onNewPromise(JSContext* cx, HandleObject promise);
 
 // Notify any Debugger instances observing this promise's global that the
 // promise has settled (ie, it has either been fulfilled or rejected). Note that
@@ -288,7 +288,7 @@ onNewPromise(JSContext *cx, HandleObject promise);
 // promise more than once (because a promise can only make the transition from
 // unsettled to settled once).
 JS_PUBLIC_API(void)
-onPromiseSettled(JSContext *cx, HandleObject promise);
+onPromiseSettled(JSContext* cx, HandleObject promise);
 
 
 

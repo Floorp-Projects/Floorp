@@ -31,21 +31,21 @@ typedef int pid_t;
  * Returns true if no profilers fail to start.
  */
 extern JS_PUBLIC_API(bool)
-JS_StartProfiling(const char *profileName, pid_t pid);
+JS_StartProfiling(const char* profileName, pid_t pid);
 
 /**
  * Stop any profilers that were previously started with JS_StartProfiling.
  * Returns true if no profilers fail to stop.
  */
 extern JS_PUBLIC_API(bool)
-JS_StopProfiling(const char *profileName);
+JS_StopProfiling(const char* profileName);
 
 /**
  * Write the current profile data to the given file, if applicable to whatever
  * profiler is being used.
  */
 extern JS_PUBLIC_API(bool)
-JS_DumpProfile(const char *outfile, const char *profileName);
+JS_DumpProfile(const char* outfile, const char* profileName);
 
 /**
  * Pause currently active profilers (only supported by some profilers). Returns
@@ -53,20 +53,20 @@ JS_DumpProfile(const char *outfile, const char *profileName);
  * pause/resume do not count.)
  */
 extern JS_PUBLIC_API(bool)
-JS_PauseProfilers(const char *profileName);
+JS_PauseProfilers(const char* profileName);
 
 /**
  * Resume suspended profilers
  */
 extern JS_PUBLIC_API(bool)
-JS_ResumeProfilers(const char *profileName);
+JS_ResumeProfilers(const char* profileName);
 
 /**
  * The profiling API calls are not able to report errors, so they use a
  * thread-unsafe global memory buffer to hold the last error encountered. This
  * should only be called after something returns false.
  */
-JS_PUBLIC_API(const char *)
+JS_PUBLIC_API(const char*)
 JS_UnsafeGetLastProfilingError();
 
 #ifdef MOZ_CALLGRIND
@@ -78,7 +78,7 @@ extern JS_FRIEND_API(bool)
 js_StartCallgrind();
 
 extern JS_FRIEND_API(bool)
-js_DumpCallgrind(const char *outfile);
+js_DumpCallgrind(const char* outfile);
 
 #endif /* MOZ_CALLGRIND */
 

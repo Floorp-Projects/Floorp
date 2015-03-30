@@ -15,7 +15,7 @@ namespace js {
 class ObjectValueMap : public WeakMap<PreBarrieredObject, RelocatableValue>
 {
   public:
-    ObjectValueMap(JSContext *cx, JSObject *obj)
+    ObjectValueMap(JSContext* cx, JSObject* obj)
       : WeakMap<PreBarrieredObject, RelocatableValue>(cx, obj) {}
 
     virtual bool findZoneEdges();
@@ -26,7 +26,7 @@ class WeakMapObject : public NativeObject
   public:
     static const Class class_;
 
-    ObjectValueMap *getMap() { return static_cast<ObjectValueMap*>(getPrivate()); }
+    ObjectValueMap* getMap() { return static_cast<ObjectValueMap*>(getPrivate()); }
 };
 
 } // namespace js

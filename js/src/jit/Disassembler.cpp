@@ -12,7 +12,7 @@ using namespace js::jit::Disassembler;
 
 #ifdef DEBUG
 bool
-Disassembler::ComplexAddress::operator==(const ComplexAddress &other) const
+Disassembler::ComplexAddress::operator==(const ComplexAddress& other) const
 {
     return base_ == other.base_ &&
            index_ == other.index_ &&
@@ -22,13 +22,13 @@ Disassembler::ComplexAddress::operator==(const ComplexAddress &other) const
 }
 
 bool
-Disassembler::ComplexAddress::operator!=(const ComplexAddress &other) const
+Disassembler::ComplexAddress::operator!=(const ComplexAddress& other) const
 {
     return !operator==(other);
 }
 
 bool
-Disassembler::OtherOperand::operator==(const OtherOperand &other) const
+Disassembler::OtherOperand::operator==(const OtherOperand& other) const
 {
     if (kind_ != other.kind_)
         return false;
@@ -41,13 +41,13 @@ Disassembler::OtherOperand::operator==(const OtherOperand &other) const
 }
 
 bool
-Disassembler::OtherOperand::operator!=(const OtherOperand &other) const
+Disassembler::OtherOperand::operator!=(const OtherOperand& other) const
 {
     return !operator==(other);
 }
 
 bool
-Disassembler::HeapAccess::operator==(const HeapAccess &other) const
+Disassembler::HeapAccess::operator==(const HeapAccess& other) const
 {
     return kind_ == other.kind_ &&
            size_ == other.size_ &&
@@ -56,7 +56,7 @@ Disassembler::HeapAccess::operator==(const HeapAccess &other) const
 }
 
 bool
-Disassembler::HeapAccess::operator!=(const HeapAccess &other) const
+Disassembler::HeapAccess::operator!=(const HeapAccess& other) const
 {
     return !operator==(other);
 }

@@ -24,23 +24,23 @@ class JS_PUBLIC_API(WeakMapPtr)
 {
   public:
     WeakMapPtr() : ptr(nullptr) {}
-    bool init(JSContext *cx);
+    bool init(JSContext* cx);
     bool initialized() { return ptr != nullptr; }
     void destroy();
     virtual ~WeakMapPtr() { MOZ_ASSERT(!initialized()); }
-    void trace(JSTracer *tracer);
+    void trace(JSTracer* tracer);
 
-    V lookup(const K &key);
-    bool put(JSContext *cx, const K &key, const V &value);
+    V lookup(const K& key);
+    bool put(JSContext* cx, const K& key, const V& value);
 
-    static void keyMarkCallback(JSTracer *trc, K key, void *data);
+    static void keyMarkCallback(JSTracer* trc, K key, void* data);
 
   private:
-    void *ptr;
+    void* ptr;
 
     // WeakMapPtr is neither copyable nor assignable.
-    WeakMapPtr(const WeakMapPtr &wmp) = delete;
-    WeakMapPtr &operator=(const WeakMapPtr &wmp) = delete;
+    WeakMapPtr(const WeakMapPtr& wmp) = delete;
+    WeakMapPtr& operator=(const WeakMapPtr& wmp) = delete;
 };
 
 } /* namespace JS */

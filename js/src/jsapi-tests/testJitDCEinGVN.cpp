@@ -19,18 +19,18 @@ using namespace js::jit;
 BEGIN_TEST(testJitDCEinGVN_ins)
 {
     MinimalFunc func;
-    MBasicBlock *block = func.createEntryBlock();
+    MBasicBlock* block = func.createEntryBlock();
 
     // mul0 = p * p
     // mul1 = mul0 * mul0
     // return p
-    MParameter *p = func.createParameter();
+    MParameter* p = func.createParameter();
     block->add(p);
-    MMul *mul0 = MMul::New(func.alloc, p, p, MIRType_Double);
+    MMul* mul0 = MMul::New(func.alloc, p, p, MIRType_Double);
     block->add(mul0);
-    MMul *mul1 = MMul::New(func.alloc, mul0, mul0, MIRType_Double);
+    MMul* mul1 = MMul::New(func.alloc, mul0, mul0, MIRType_Double);
     block->add(mul1);
-    MReturn *ret = MReturn::New(func.alloc, p);
+    MReturn* ret = MReturn::New(func.alloc, p);
     block->end(ret);
 
     if (!func.runGVN())
@@ -48,12 +48,12 @@ END_TEST(testJitDCEinGVN_ins)
 BEGIN_TEST(testJitDCEinGVN_phi)
 {
     MinimalFunc func;
-    MBasicBlock *block = func.createEntryBlock();
-    MBasicBlock *thenBlock1 = func.createBlock(block);
-    MBasicBlock *thenBlock2 = func.createBlock(block);
-    MBasicBlock *elifBlock = func.createBlock(block);
-    MBasicBlock *elseBlock = func.createBlock(block);
-    MBasicBlock *joinBlock = func.createBlock(block);
+    MBasicBlock* block = func.createEntryBlock();
+    MBasicBlock* thenBlock1 = func.createBlock(block);
+    MBasicBlock* thenBlock2 = func.createBlock(block);
+    MBasicBlock* elifBlock = func.createBlock(block);
+    MBasicBlock* elseBlock = func.createBlock(block);
+    MBasicBlock* joinBlock = func.createBlock(block);
 
     // if (p) {
     //   x = 1.0;
@@ -70,36 +70,36 @@ BEGIN_TEST(testJitDCEinGVN_phi)
     // z = x * y;
     // return y;
 
-    MConstant *c1 = MConstant::New(func.alloc, DoubleValue(1.0));
+    MConstant* c1 = MConstant::New(func.alloc, DoubleValue(1.0));
     block->add(c1);
-    MPhi *x = MPhi::New(func.alloc);
-    MPhi *y = MPhi::New(func.alloc);
+    MPhi* x = MPhi::New(func.alloc);
+    MPhi* y = MPhi::New(func.alloc);
 
     // if (p) {
-    MParameter *p = func.createParameter();
+    MParameter* p = func.createParameter();
     block->add(p);
     block->end(MTest::New(func.alloc, p, thenBlock1, elifBlock));
 
     //   x = 1.0
     //   y = 3.0;
     x->addInputSlow(c1);
-    MConstant *c3 = MConstant::New(func.alloc, DoubleValue(3.0));
+    MConstant* c3 = MConstant::New(func.alloc, DoubleValue(3.0));
     thenBlock1->add(c3);
     y->addInputSlow(c3);
     thenBlock1->end(MGoto::New(func.alloc, joinBlock));
     joinBlock->addPredecessor(func.alloc, thenBlock1);
 
     // } else if (q) {
-    MParameter *q = func.createParameter();
+    MParameter* q = func.createParameter();
     elifBlock->add(q);
     elifBlock->end(MTest::New(func.alloc, q, thenBlock2, elseBlock));
 
     //   x = 2.0
     //   y = 4.0;
-    MConstant *c2 = MConstant::New(func.alloc, DoubleValue(2.0));
+    MConstant* c2 = MConstant::New(func.alloc, DoubleValue(2.0));
     thenBlock2->add(c2);
     x->addInputSlow(c2);
-    MConstant *c4 = MConstant::New(func.alloc, DoubleValue(4.0));
+    MConstant* c4 = MConstant::New(func.alloc, DoubleValue(4.0));
     thenBlock2->add(c4);
     y->addInputSlow(c4);
     thenBlock2->end(MGoto::New(func.alloc, joinBlock));
@@ -110,7 +110,7 @@ BEGIN_TEST(testJitDCEinGVN_phi)
     //   y = 5.0;
     // }
     x->addInputSlow(c1);
-    MConstant *c5 = MConstant::New(func.alloc, DoubleValue(5.0));
+    MConstant* c5 = MConstant::New(func.alloc, DoubleValue(5.0));
     elseBlock->add(c5);
     y->addInputSlow(c5);
     elseBlock->end(MGoto::New(func.alloc, joinBlock));
@@ -122,9 +122,9 @@ BEGIN_TEST(testJitDCEinGVN_phi)
     // return y
     joinBlock->addPhi(x);
     joinBlock->addPhi(y);
-    MMul *z = MMul::New(func.alloc, x, y, MIRType_Double);
+    MMul* z = MMul::New(func.alloc, x, y, MIRType_Double);
     joinBlock->add(z);
-    MReturn *ret = MReturn::New(func.alloc, y);
+    MReturn* ret = MReturn::New(func.alloc, y);
     joinBlock->end(ret);
 
     if (!func.runGVN())

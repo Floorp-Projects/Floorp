@@ -27,24 +27,24 @@ SafepointIndex::resolve()
 #endif
 }
 
-inline uint8_t *
+inline uint8_t*
 JitFrameIterator::returnAddress() const
 {
-    CommonFrameLayout *current = (CommonFrameLayout *) current_;
+    CommonFrameLayout* current = (CommonFrameLayout*) current_;
     return current->returnAddress();
 }
 
 inline size_t
 JitFrameIterator::prevFrameLocalSize() const
 {
-    CommonFrameLayout *current = (CommonFrameLayout *) current_;
+    CommonFrameLayout* current = (CommonFrameLayout*) current_;
     return current->prevFrameLocalSize();
 }
 
 inline FrameType
 JitFrameIterator::prevType() const
 {
-    CommonFrameLayout *current = (CommonFrameLayout *) current_;
+    CommonFrameLayout* current = (CommonFrameLayout*) current_;
     return current->prevType();
 }
 
@@ -61,16 +61,16 @@ JitFrameIterator::isFakeExitFrame() const
     return res;
 }
 
-inline ExitFrameLayout *
+inline ExitFrameLayout*
 JitFrameIterator::exitFrame() const
 {
     MOZ_ASSERT(type() == JitFrame_Exit);
     MOZ_ASSERT(!isFakeExitFrame());
-    return (ExitFrameLayout *) fp();
+    return (ExitFrameLayout*) fp();
 }
 
-inline BaselineFrame *
-GetTopBaselineFrame(JSContext *cx)
+inline BaselineFrame*
+GetTopBaselineFrame(JSContext* cx)
 {
     JitFrameIterator iter(cx);
     MOZ_ASSERT(iter.type() == JitFrame_Exit);

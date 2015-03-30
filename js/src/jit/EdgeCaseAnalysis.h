@@ -16,11 +16,11 @@ class MIRGraph;
 
 class EdgeCaseAnalysis
 {
-    MIRGenerator *mir;
-    MIRGraph &graph;
+    MIRGenerator* mir;
+    MIRGraph& graph;
 
   public:
-    EdgeCaseAnalysis(MIRGenerator *mir, MIRGraph &graph);
+    EdgeCaseAnalysis(MIRGenerator* mir, MIRGraph& graph);
     bool analyzeLate();
 };
 

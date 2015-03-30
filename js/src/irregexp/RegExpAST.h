@@ -74,12 +74,12 @@ class RegExpTree
 #undef MAKE_ASTYPE
 };
 
-typedef Vector<RegExpTree *, 1, LifoAllocPolicy<Infallible> > RegExpTreeVector;
+typedef Vector<RegExpTree*, 1, LifoAllocPolicy<Infallible> > RegExpTreeVector;
 
 class RegExpDisjunction : public RegExpTree
 {
   public:
-    explicit RegExpDisjunction(RegExpTreeVector *alternatives);
+    explicit RegExpDisjunction(RegExpTreeVector* alternatives);
     virtual void* Accept(RegExpVisitor* visitor, void* data);
     virtual RegExpNode* ToNode(RegExpCompiler* compiler,
                                RegExpNode* on_success);
@@ -91,10 +91,10 @@ class RegExpDisjunction : public RegExpTree
     virtual int min_match() { return min_match_; }
     virtual int max_match() { return max_match_; }
 
-    const RegExpTreeVector &alternatives() { return *alternatives_; }
+    const RegExpTreeVector& alternatives() { return *alternatives_; }
 
   private:
-    RegExpTreeVector *alternatives_;
+    RegExpTreeVector* alternatives_;
     int min_match_;
     int max_match_;
 };
@@ -102,7 +102,7 @@ class RegExpDisjunction : public RegExpTree
 class RegExpAlternative : public RegExpTree
 {
   public:
-    explicit RegExpAlternative(RegExpTreeVector *nodes);
+    explicit RegExpAlternative(RegExpTreeVector* nodes);
     virtual void* Accept(RegExpVisitor* visitor, void* data);
     virtual RegExpNode* ToNode(RegExpCompiler* compiler,
                                RegExpNode* on_success);
@@ -114,10 +114,10 @@ class RegExpAlternative : public RegExpTree
     virtual int min_match() { return min_match_; }
     virtual int max_match() { return max_match_; }
 
-    const RegExpTreeVector &nodes() { return *nodes_; }
+    const RegExpTreeVector& nodes() { return *nodes_; }
 
   private:
-    RegExpTreeVector *nodes_;
+    RegExpTreeVector* nodes_;
     int min_match_;
     int max_match_;
 };
@@ -154,12 +154,12 @@ class CharacterSet
       : ranges_(nullptr),
         standard_set_type_(standard_set_type)
     {}
-    explicit CharacterSet(CharacterRangeVector *ranges)
+    explicit CharacterSet(CharacterRangeVector* ranges)
       : ranges_(ranges),
         standard_set_type_(0)
     {}
 
-    CharacterRangeVector &ranges(LifoAlloc *alloc);
+    CharacterRangeVector& ranges(LifoAlloc* alloc);
     char16_t standard_set_type() { return standard_set_type_; }
     void set_standard_set_type(char16_t special_set_type) {
         standard_set_type_ = special_set_type;
@@ -168,7 +168,7 @@ class CharacterSet
     void Canonicalize();
 
   private:
-    CharacterRangeVector *ranges_;
+    CharacterRangeVector* ranges_;
 
     // If non-zero, the value represents a standard set (e.g., all whitespace
     // characters) without having to expand the ranges.
@@ -178,7 +178,7 @@ class CharacterSet
 class RegExpCharacterClass : public RegExpTree
 {
   public:
-    RegExpCharacterClass(CharacterRangeVector *ranges, bool is_negated)
+    RegExpCharacterClass(CharacterRangeVector* ranges, bool is_negated)
       : set_(ranges),
         is_negated_(is_negated)
     {}
@@ -202,7 +202,7 @@ class RegExpCharacterClass : public RegExpTree
 
     // TODO(lrn): Remove need for complex version if is_standard that
     // recognizes a mangled standard set and just do { return set_.is_special(); }
-    bool is_standard(LifoAlloc *alloc);
+    bool is_standard(LifoAlloc* alloc);
 
     // Returns a value representing the standard character set if is_standard()
     // returns true.
@@ -217,7 +217,7 @@ class RegExpCharacterClass : public RegExpTree
     // * : All characters
     char16_t standard_type() { return set_.standard_set_type(); }
 
-    CharacterRangeVector &ranges(LifoAlloc *alloc) { return set_.ranges(alloc); }
+    CharacterRangeVector& ranges(LifoAlloc* alloc) { return set_.ranges(alloc); }
     bool is_negated() { return is_negated_; }
 
   private:
@@ -230,7 +230,7 @@ typedef Vector<char16_t, 10, LifoAllocPolicy<Infallible> > CharacterVector;
 class RegExpAtom : public RegExpTree
 {
   public:
-    explicit RegExpAtom(CharacterVector *data)
+    explicit RegExpAtom(CharacterVector* data)
       : data_(data)
     {}
 
@@ -244,17 +244,17 @@ class RegExpAtom : public RegExpTree
     virtual int max_match() { return data_->length(); }
     virtual void AppendToText(RegExpText* text);
 
-    const CharacterVector &data() { return *data_; }
+    const CharacterVector& data() { return *data_; }
     int length() { return data_->length(); }
 
   private:
-    CharacterVector *data_;
+    CharacterVector* data_;
 };
 
 class RegExpText : public RegExpTree
 {
   public:
-    explicit RegExpText(LifoAlloc *alloc)
+    explicit RegExpText(LifoAlloc* alloc)
       : elements_(*alloc), length_(0)
     {}
 
@@ -272,7 +272,7 @@ class RegExpText : public RegExpTree
         elements_.append(elm);
         length_ += elm.length();
     }
-    const TextElementVector &elements() { return elements_; }
+    const TextElementVector& elements() { return elements_; }
 
   private:
     TextElementVector elements_;
@@ -393,7 +393,7 @@ class RegExpLookahead : public RegExpTree
     int capture_from_;
 };
 
-typedef Vector<RegExpCapture *, 1, LifoAllocPolicy<Infallible> > RegExpCaptureVector;
+typedef Vector<RegExpCapture*, 1, LifoAllocPolicy<Infallible> > RegExpCaptureVector;
 
 class RegExpBackReference : public RegExpTree
 {

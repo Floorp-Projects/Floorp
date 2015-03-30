@@ -18,7 +18,7 @@ namespace frontend {
 class ParseNode;
 
 bool
-NameFunctions(ExclusiveContext *cx, ParseNode *pn);
+NameFunctions(ExclusiveContext* cx, ParseNode* pn);
 
 } /* namespace frontend */
 } /* namespace js */

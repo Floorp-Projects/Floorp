@@ -53,13 +53,13 @@ template<class Client>
 struct MallocProvider
 {
     template <class T>
-    T *pod_malloc() {
+    T* pod_malloc() {
         return pod_malloc<T>(1);
     }
 
     template <class T>
-    T *pod_malloc(size_t numElems) {
-        T *p = js_pod_malloc<T>(numElems);
+    T* pod_malloc(size_t numElems) {
+        T* p = js_pod_malloc<T>(numElems);
         if (MOZ_LIKELY(p)) {
             client()->updateMallocCounter(numElems * sizeof(T));
             return p;
@@ -68,11 +68,11 @@ struct MallocProvider
             client()->reportAllocationOverflow();
             return nullptr;
         }
-        return (T *)client()->onOutOfMemory(nullptr, numElems * sizeof(T));
+        return (T*)client()->onOutOfMemory(nullptr, numElems * sizeof(T));
     }
 
     template <class T, class U>
-    T *pod_malloc_with_extra(size_t numExtra) {
+    T* pod_malloc_with_extra(size_t numExtra) {
         if (MOZ_UNLIKELY(numExtra & mozilla::tl::MulOverflowMask<sizeof(U)>::value)) {
             client()->reportAllocationOverflow();
             return nullptr;
@@ -82,12 +82,12 @@ struct MallocProvider
             client()->reportAllocationOverflow();
             return nullptr;
         }
-        T *p = reinterpret_cast<T *>(js_pod_malloc<uint8_t>(bytes));
+        T* p = reinterpret_cast<T*>(js_pod_malloc<uint8_t>(bytes));
         if (MOZ_LIKELY(p)) {
             client()->updateMallocCounter(bytes);
             return p;
         }
-        return (T *)client()->onOutOfMemory(nullptr, bytes);
+        return (T*)client()->onOutOfMemory(nullptr, bytes);
     }
 
     template <class T>
@@ -97,13 +97,13 @@ struct MallocProvider
     }
 
     template <class T>
-    T *pod_calloc() {
+    T* pod_calloc() {
         return pod_calloc<T>(1);
     }
 
     template <class T>
-    T *pod_calloc(size_t numElems) {
-        T *p = js_pod_calloc<T>(numElems);
+    T* pod_calloc(size_t numElems) {
+        T* p = js_pod_calloc<T>(numElems);
         if (MOZ_LIKELY(p)) {
             client()->updateMallocCounter(numElems * sizeof(T));
             return p;
@@ -112,11 +112,11 @@ struct MallocProvider
             client()->reportAllocationOverflow();
             return nullptr;
         }
-        return (T *)client()->onOutOfMemory(nullptr, numElems * sizeof(T));
+        return (T*)client()->onOutOfMemory(nullptr, numElems * sizeof(T));
     }
 
     template <class T, class U>
-    T *pod_calloc_with_extra(size_t numExtra) {
+    T* pod_calloc_with_extra(size_t numExtra) {
         if (MOZ_UNLIKELY(numExtra & mozilla::tl::MulOverflowMask<sizeof(U)>::value)) {
             client()->reportAllocationOverflow();
             return nullptr;
@@ -126,12 +126,12 @@ struct MallocProvider
             client()->reportAllocationOverflow();
             return nullptr;
         }
-        T *p = reinterpret_cast<T *>(js_pod_calloc<uint8_t>(bytes));
+        T* p = reinterpret_cast<T*>(js_pod_calloc<uint8_t>(bytes));
         if (MOZ_LIKELY(p)) {
             client()->updateMallocCounter(bytes);
             return p;
         }
-        return (T *)client()->onOutOfMemory(nullptr, bytes);
+        return (T*)client()->onOutOfMemory(nullptr, bytes);
     }
 
     template <class T>
@@ -142,8 +142,8 @@ struct MallocProvider
     }
 
     template <class T>
-    T *pod_realloc(T *prior, size_t oldSize, size_t newSize) {
-        T *p = js_pod_realloc(prior, oldSize, newSize);
+    T* pod_realloc(T* prior, size_t oldSize, size_t newSize) {
+        T* p = js_pod_realloc(prior, oldSize, newSize);
         if (MOZ_LIKELY(p)) {
             // For compatibility we do not account for realloc that decreases
             // previously allocated memory.
@@ -155,14 +155,14 @@ struct MallocProvider
             client()->reportAllocationOverflow();
             return nullptr;
         }
-        return (T *)client()->onOutOfMemory(prior, newSize * sizeof(T));
+        return (T*)client()->onOutOfMemory(prior, newSize * sizeof(T));
     }
 
     JS_DECLARE_NEW_METHODS(new_, pod_malloc<uint8_t>, MOZ_ALWAYS_INLINE)
     JS_DECLARE_MAKE_METHODS(make_unique, new_, MOZ_ALWAYS_INLINE)
 
   private:
-    Client *client() { return static_cast<Client *>(this); }
+    Client* client() { return static_cast<Client*>(this); }
 };
 
 } /* namespace js */

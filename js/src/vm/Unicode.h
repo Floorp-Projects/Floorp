@@ -191,7 +191,7 @@ IsSpaceOrBOM2(char16_t ch)
 inline char16_t
 ToUpperCase(char16_t ch)
 {
-    const CharacterInfo &info = CharInfo(ch);
+    const CharacterInfo& info = CharInfo(ch);
 
     return uint16_t(ch) + info.upperCase;
 }
@@ -199,7 +199,7 @@ ToUpperCase(char16_t ch)
 inline char16_t
 ToLowerCase(char16_t ch)
 {
-    const CharacterInfo &info = CharInfo(ch);
+    const CharacterInfo& info = CharInfo(ch);
 
     return uint16_t(ch) + info.lowerCase;
 }

@@ -19,7 +19,7 @@ using namespace js;
 using namespace js::jit;
 
 static bool
-EquivalentRanges(const Range *a, const Range *b) {
+EquivalentRanges(const Range* a, const Range* b) {
     if (a->hasInt32UpperBound() != b->hasInt32UpperBound())
         return false;
     if (a->hasInt32LowerBound() != b->hasInt32LowerBound())
@@ -45,33 +45,33 @@ BEGIN_TEST(testJitRangeAnalysis_MathSign)
 {
     MinimalAlloc func;
 
-    Range *xnan = new(func.alloc) Range();
+    Range* xnan = new(func.alloc) Range();
 
-    Range *ninf = Range::NewDoubleSingletonRange(func.alloc, mozilla::NegativeInfinity<double>());
-    Range *n1_5 = Range::NewDoubleSingletonRange(func.alloc, -1.5);
-    Range *n1_0 = Range::NewDoubleSingletonRange(func.alloc, -1);
-    Range *n0_5 = Range::NewDoubleSingletonRange(func.alloc, -0.5);
-    Range *n0_0 = Range::NewDoubleSingletonRange(func.alloc, -0.0);
+    Range* ninf = Range::NewDoubleSingletonRange(func.alloc, mozilla::NegativeInfinity<double>());
+    Range* n1_5 = Range::NewDoubleSingletonRange(func.alloc, -1.5);
+    Range* n1_0 = Range::NewDoubleSingletonRange(func.alloc, -1);
+    Range* n0_5 = Range::NewDoubleSingletonRange(func.alloc, -0.5);
+    Range* n0_0 = Range::NewDoubleSingletonRange(func.alloc, -0.0);
 
-    Range *p0_0 = Range::NewDoubleSingletonRange(func.alloc, 0.0);
-    Range *p0_5 = Range::NewDoubleSingletonRange(func.alloc, 0.5);
-    Range *p1_0 = Range::NewDoubleSingletonRange(func.alloc, 1.0);
-    Range *p1_5 = Range::NewDoubleSingletonRange(func.alloc, 1.5);
-    Range *pinf = Range::NewDoubleSingletonRange(func.alloc, mozilla::PositiveInfinity<double>());
+    Range* p0_0 = Range::NewDoubleSingletonRange(func.alloc, 0.0);
+    Range* p0_5 = Range::NewDoubleSingletonRange(func.alloc, 0.5);
+    Range* p1_0 = Range::NewDoubleSingletonRange(func.alloc, 1.0);
+    Range* p1_5 = Range::NewDoubleSingletonRange(func.alloc, 1.5);
+    Range* pinf = Range::NewDoubleSingletonRange(func.alloc, mozilla::PositiveInfinity<double>());
 
-    Range *xnanSign = Range::sign(func.alloc, xnan);
+    Range* xnanSign = Range::sign(func.alloc, xnan);
 
-    Range *ninfSign = Range::sign(func.alloc, ninf);
-    Range *n1_5Sign = Range::sign(func.alloc, n1_5);
-    Range *n1_0Sign = Range::sign(func.alloc, n1_0);
-    Range *n0_5Sign = Range::sign(func.alloc, n0_5);
-    Range *n0_0Sign = Range::sign(func.alloc, n0_0);
+    Range* ninfSign = Range::sign(func.alloc, ninf);
+    Range* n1_5Sign = Range::sign(func.alloc, n1_5);
+    Range* n1_0Sign = Range::sign(func.alloc, n1_0);
+    Range* n0_5Sign = Range::sign(func.alloc, n0_5);
+    Range* n0_0Sign = Range::sign(func.alloc, n0_0);
 
-    Range *p0_0Sign = Range::sign(func.alloc, p0_0);
-    Range *p0_5Sign = Range::sign(func.alloc, p0_5);
-    Range *p1_0Sign = Range::sign(func.alloc, p1_0);
-    Range *p1_5Sign = Range::sign(func.alloc, p1_5);
-    Range *pinfSign = Range::sign(func.alloc, pinf);
+    Range* p0_0Sign = Range::sign(func.alloc, p0_0);
+    Range* p0_5Sign = Range::sign(func.alloc, p0_5);
+    Range* p1_0Sign = Range::sign(func.alloc, p1_0);
+    Range* p1_5Sign = Range::sign(func.alloc, p1_5);
+    Range* pinfSign = Range::sign(func.alloc, pinf);
 
     CHECK(!xnanSign);
     CHECK(EquivalentRanges(ninfSign, Range::NewInt32SingletonRange(func.alloc, -1)));
@@ -113,20 +113,20 @@ BEGIN_TEST(testJitRangeAnalysis_MathSignBeta)
     MinimalFunc func;
     MathCache cache;
 
-    MBasicBlock *entry = func.createEntryBlock();
-    MBasicBlock *thenBlock = func.createBlock(entry);
-    MBasicBlock *elseBlock = func.createBlock(entry);
-    MBasicBlock *elseThenBlock = func.createBlock(elseBlock);
-    MBasicBlock *elseElseBlock = func.createBlock(elseBlock);
+    MBasicBlock* entry = func.createEntryBlock();
+    MBasicBlock* thenBlock = func.createBlock(entry);
+    MBasicBlock* elseBlock = func.createBlock(entry);
+    MBasicBlock* elseThenBlock = func.createBlock(elseBlock);
+    MBasicBlock* elseElseBlock = func.createBlock(elseBlock);
 
     // if (p < 0)
-    MParameter *p = func.createParameter();
+    MParameter* p = func.createParameter();
     entry->add(p);
-    MConstant *c0 = MConstant::New(func.alloc, DoubleValue(0.0));
+    MConstant* c0 = MConstant::New(func.alloc, DoubleValue(0.0));
     entry->add(c0);
-    MConstant *cm0 = MConstant::New(func.alloc, DoubleValue(-0.0));
+    MConstant* cm0 = MConstant::New(func.alloc, DoubleValue(-0.0));
     entry->add(cm0);
-    MCompare *cmp = MCompare::New(func.alloc, p, c0, JSOP_LT);
+    MCompare* cmp = MCompare::New(func.alloc, p, c0, JSOP_LT);
     cmp->setCompareType(MCompare::Compare_Double);
     entry->add(cmp);
     entry->end(MTest::New(func.alloc, cmp, thenBlock, elseBlock));
@@ -134,17 +134,17 @@ BEGIN_TEST(testJitRangeAnalysis_MathSignBeta)
     // {
     //   return Math.sign(p + -0);
     // }
-    MAdd *thenAdd = MAdd::NewAsmJS(func.alloc, p, cm0, MIRType_Double);
+    MAdd* thenAdd = MAdd::NewAsmJS(func.alloc, p, cm0, MIRType_Double);
     thenBlock->add(thenAdd);
-    MMathFunction *thenSign = MMathFunction::New(func.alloc, thenAdd, MMathFunction::Sign, &cache);
+    MMathFunction* thenSign = MMathFunction::New(func.alloc, thenAdd, MMathFunction::Sign, &cache);
     thenBlock->add(thenSign);
-    MReturn *thenRet = MReturn::New(func.alloc, thenSign);
+    MReturn* thenRet = MReturn::New(func.alloc, thenSign);
     thenBlock->end(thenRet);
 
     // else
     // {
     //   if (p >= 0)
-    MCompare *elseCmp = MCompare::New(func.alloc, p, c0, JSOP_GE);
+    MCompare* elseCmp = MCompare::New(func.alloc, p, c0, JSOP_GE);
     elseCmp->setCompareType(MCompare::Compare_Double);
     elseBlock->add(elseCmp);
     elseBlock->end(MTest::New(func.alloc, elseCmp, elseThenBlock, elseElseBlock));
@@ -152,11 +152,11 @@ BEGIN_TEST(testJitRangeAnalysis_MathSignBeta)
     //   {
     //     return Math.sign(p + -0);
     //   }
-    MAdd *elseThenAdd = MAdd::NewAsmJS(func.alloc, p, cm0, MIRType_Double);
+    MAdd* elseThenAdd = MAdd::NewAsmJS(func.alloc, p, cm0, MIRType_Double);
     elseThenBlock->add(elseThenAdd);
-    MMathFunction *elseThenSign = MMathFunction::New(func.alloc, elseThenAdd, MMathFunction::Sign, &cache);
+    MMathFunction* elseThenSign = MMathFunction::New(func.alloc, elseThenAdd, MMathFunction::Sign, &cache);
     elseThenBlock->add(elseThenSign);
-    MReturn *elseThenRet = MReturn::New(func.alloc, elseThenSign);
+    MReturn* elseThenRet = MReturn::New(func.alloc, elseThenSign);
     elseThenBlock->end(elseThenRet);
 
     //   else
@@ -164,11 +164,11 @@ BEGIN_TEST(testJitRangeAnalysis_MathSignBeta)
     //     return Math.sign(p + -0);
     //   }
     // }
-    MAdd *elseElseAdd = MAdd::NewAsmJS(func.alloc, p, cm0, MIRType_Double);
+    MAdd* elseElseAdd = MAdd::NewAsmJS(func.alloc, p, cm0, MIRType_Double);
     elseElseBlock->add(elseElseAdd);
-    MMathFunction *elseElseSign = MMathFunction::New(func.alloc, elseElseAdd, MMathFunction::Sign, &cache);
+    MMathFunction* elseElseSign = MMathFunction::New(func.alloc, elseElseAdd, MMathFunction::Sign, &cache);
     elseElseBlock->add(elseElseSign);
-    MReturn *elseElseRet = MReturn::New(func.alloc, elseElseSign);
+    MReturn* elseElseRet = MReturn::New(func.alloc, elseElseSign);
     elseElseBlock->end(elseElseRet);
 
     if (!func.runRangeAnalysis())
@@ -218,34 +218,34 @@ BEGIN_TEST(testJitRangeAnalysis_StrictCompareBeta)
 {
     MinimalFunc func;
 
-    MBasicBlock *entry = func.createEntryBlock();
-    MBasicBlock *thenBlock = func.createBlock(entry);
-    MBasicBlock *elseBlock = func.createBlock(entry);
+    MBasicBlock* entry = func.createEntryBlock();
+    MBasicBlock* thenBlock = func.createBlock(entry);
+    MBasicBlock* elseBlock = func.createBlock(entry);
 
     // if (p === 0)
-    MParameter *p = func.createParameter();
+    MParameter* p = func.createParameter();
     entry->add(p);
-    MConstant *c0 = MConstant::New(func.alloc, DoubleValue(0.0));
+    MConstant* c0 = MConstant::New(func.alloc, DoubleValue(0.0));
     entry->add(c0);
-    MCompare *cmp = MCompare::New(func.alloc, p, c0, JSOP_STRICTEQ);
+    MCompare* cmp = MCompare::New(func.alloc, p, c0, JSOP_STRICTEQ);
     entry->add(cmp);
     entry->end(MTest::New(func.alloc, cmp, thenBlock, elseBlock));
 
     // {
     //   return p + -0;
     // }
-    MConstant *cm0 = MConstant::New(func.alloc, DoubleValue(-0.0));
+    MConstant* cm0 = MConstant::New(func.alloc, DoubleValue(-0.0));
     thenBlock->add(cm0);
-    MAdd *thenAdd = MAdd::NewAsmJS(func.alloc, p, cm0, MIRType_Double);
+    MAdd* thenAdd = MAdd::NewAsmJS(func.alloc, p, cm0, MIRType_Double);
     thenBlock->add(thenAdd);
-    MReturn *thenRet = MReturn::New(func.alloc, thenAdd);
+    MReturn* thenRet = MReturn::New(func.alloc, thenAdd);
     thenBlock->end(thenRet);
 
     // else
     // {
     //   return 0;
     // }
-    MReturn *elseRet = MReturn::New(func.alloc, c0);
+    MReturn* elseRet = MReturn::New(func.alloc, c0);
     elseBlock->end(elseRet);
 
     // If range analysis inserts a beta node for p, it will be able to compute

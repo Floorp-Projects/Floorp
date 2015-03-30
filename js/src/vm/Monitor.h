@@ -28,8 +28,8 @@ class Monitor
     friend class AutoLockMonitor;
     friend class AutoUnlockMonitor;
 
-    PRLock *lock_;
-    PRCondVar *condVar_;
+    PRLock* lock_;
+    PRCondVar* condVar_;
 
   public:
     Monitor()
@@ -50,10 +50,10 @@ class Monitor
 class AutoLockMonitor
 {
   private:
-    Monitor &monitor;
+    Monitor& monitor;
 
   public:
-    explicit AutoLockMonitor(Monitor &monitor)
+    explicit AutoLockMonitor(Monitor& monitor)
       : monitor(monitor)
     {
         PR_Lock(monitor.lock_);
@@ -63,11 +63,11 @@ class AutoLockMonitor
         PR_Unlock(monitor.lock_);
     }
 
-    bool isFor(Monitor &other) const {
+    bool isFor(Monitor& other) const {
         return monitor.lock_ == other.lock_;
     }
 
-    void wait(PRCondVar *condVar) {
+    void wait(PRCondVar* condVar) {
         mozilla::DebugOnly<PRStatus> status =
           PR_WaitCondVar(condVar, PR_INTERVAL_NO_TIMEOUT);
         MOZ_ASSERT(status == PR_SUCCESS);
@@ -77,7 +77,7 @@ class AutoLockMonitor
         wait(monitor.condVar_);
     }
 
-    void notify(PRCondVar *condVar) {
+    void notify(PRCondVar* condVar) {
         mozilla::DebugOnly<PRStatus> status = PR_NotifyCondVar(condVar);
         MOZ_ASSERT(status == PR_SUCCESS);
     }
@@ -86,7 +86,7 @@ class AutoLockMonitor
         notify(monitor.condVar_);
     }
 
-    void notifyAll(PRCondVar *condVar) {
+    void notifyAll(PRCondVar* condVar) {
         mozilla::DebugOnly<PRStatus> status = PR_NotifyAllCondVar(monitor.condVar_);
         MOZ_ASSERT(status == PR_SUCCESS);
     }
@@ -99,10 +99,10 @@ class AutoLockMonitor
 class AutoUnlockMonitor
 {
   private:
-    Monitor &monitor;
+    Monitor& monitor;
 
   public:
-    explicit AutoUnlockMonitor(Monitor &monitor)
+    explicit AutoUnlockMonitor(Monitor& monitor)
       : monitor(monitor)
     {
         PR_Unlock(monitor.lock_);
@@ -112,7 +112,7 @@ class AutoUnlockMonitor
         PR_Lock(monitor.lock_);
     }
 
-    bool isFor(Monitor &other) const {
+    bool isFor(Monitor& other) const {
         return monitor.lock_ == other.lock_;
     }
 };
