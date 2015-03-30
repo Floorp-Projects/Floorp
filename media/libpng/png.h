@@ -1,8 +1,9 @@
 
 /* png.h - header file for PNG reference library
  *
- * libpng version 1.6.16, December 22, 2014
- * Copyright (c) 1998-2014 Glenn Randers-Pehrson
+ * libpng version 1.6.17, March 25, 2015
+ *
+ * Copyright (c) 1998-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -11,7 +12,7 @@
  * Authors and maintainers:
  *   libpng versions 0.71, May 1995, through 0.88, January 1996: Guy Schalnat
  *   libpng versions 0.89c, June 1996, through 0.96, May 1997: Andreas Dilger
- *   libpng versions 0.97, January 1998, through 1.6.16, December 22, 2014: Glenn
+ *   libpng versions 0.97, January 1998, through 1.6.17, March 25, 2015: Glenn
  *   See also "Contributing Authors", below.
  *
  * Note about libpng version numbers:
@@ -212,6 +213,9 @@
  *    1.6.16beta01-03         16    10616  16.so.16.16[.0]
  *    1.6.16rc01-02           16    10616  16.so.16.16[.0]
  *    1.6.16                  16    10616  16.so.16.16[.0]
+ *    1.6.17beta01-06         16    10617  16.so.16.17[.0]
+ *    1.6.17rc01-06           16    10617  16.so.16.17[.0]
+ *    1.6.17                  16    10617  16.so.16.17[.0]
  *
  *   Henceforth the source version will match the shared-library major
  *   and minor numbers; the shared-library major version number will be
@@ -243,8 +247,8 @@
  *
  * This code is released under the libpng license.
  *
- * libpng versions 1.2.6, August 15, 2004, through 1.6.16, December 22, 2014, are
- * Copyright (c) 2004, 2006-2014 Glenn Randers-Pehrson, and are
+ * libpng versions 1.2.6, August 15, 2004, through 1.6.17, March 25, 2015, are
+ * Copyright (c) 2004, 2006-2015 Glenn Randers-Pehrson, and are
  * distributed according to the same disclaimer and license as libpng-1.2.5
  * with the following individual added to the list of Contributing Authors:
  *
@@ -355,13 +359,13 @@
  * Y2K compliance in libpng:
  * =========================
  *
- *    December 22, 2014
+ *    March 25, 2015
  *
  *    Since the PNG Development group is an ad-hoc body, we can't make
  *    an official declaration.
  *
  *    This is your unofficial assurance that libpng from version 0.71 and
- *    upward through 1.6.16 are Y2K compliant.  It is my belief that
+ *    upward through 1.6.17 are Y2K compliant.  It is my belief that
  *    earlier versions were also Y2K compliant.
  *
  *    Libpng only has two year fields.  One is a 2-byte unsigned integer
@@ -423,9 +427,9 @@
  */
 
 /* Version information for png.h - this should match the version in png.c */
-#define PNG_LIBPNG_VER_STRING "1.6.16"
+#define PNG_LIBPNG_VER_STRING "1.6.17"
 #define PNG_HEADER_VERSION_STRING \
-     " libpng version 1.6.16 - December 22, 2014\n"
+     " libpng version 1.6.17 - March 25, 2015\n"
 
 #define PNG_LIBPNG_VER_SONUM   16
 #define PNG_LIBPNG_VER_DLLNUM  16
@@ -433,7 +437,7 @@
 /* These should match the first 3 components of PNG_LIBPNG_VER_STRING: */
 #define PNG_LIBPNG_VER_MAJOR   1
 #define PNG_LIBPNG_VER_MINOR   6
-#define PNG_LIBPNG_VER_RELEASE 16
+#define PNG_LIBPNG_VER_RELEASE 17
 
 /* This should match the numeric part of the final component of
  * PNG_LIBPNG_VER_STRING, omitting any leading zero:
@@ -464,7 +468,7 @@
  * version 1.0.0 was mis-numbered 100 instead of 10000).  From
  * version 1.0.1 it's    xxyyzz, where x=major, y=minor, z=release
  */
-#define PNG_LIBPNG_VER 10616 /* 1.6.16 */
+#define PNG_LIBPNG_VER 10617 /* 1.6.17 */
 
 /* Library configuration: these options cannot be changed after
  * the library has been built.
@@ -584,7 +588,7 @@ extern "C" {
 /* This triggers a compiler error in png.c, if png.c and png.h
  * do not agree upon the version number.
  */
-typedef char* png_libpng_version_1_6_16;
+typedef char* png_libpng_version_1_6_17;
 
 /* Basic control structions.  Read libpng-manual.txt or libpng.3 for more info.
  *
@@ -1601,6 +1605,7 @@ PNG_EXPORT(66, void, png_set_crc_action, (png_structrp png_ptr, int crit_action,
 #define PNG_CRC_QUIET_USE     4  /* quiet/use data      quiet/use data    */
 #define PNG_CRC_NO_CHANGE     5  /* use current value   use current value */
 
+#ifdef PNG_WRITE_SUPPORTED
 /* These functions give the user control over the scan-line filtering in
  * libpng and the compression methods used by zlib.  These functions are
  * mainly useful for testing, as the defaults should work with most users.
@@ -1614,6 +1619,7 @@ PNG_EXPORT(66, void, png_set_crc_action, (png_structrp png_ptr, int crit_action,
  */
 PNG_EXPORT(67, void, png_set_filter, (png_structrp png_ptr, int method,
     int filters));
+#endif /* WRITE */
 
 /* Flags for png_set_filter() to say which filters to use.  The flags
  * are chosen so that they don't conflict with real filter types
@@ -1639,6 +1645,7 @@ PNG_EXPORT(67, void, png_set_filter, (png_structrp png_ptr, int method,
 #define PNG_FILTER_VALUE_PAETH 4
 #define PNG_FILTER_VALUE_LAST  5
 
+#ifdef PNG_WRITE_SUPPORTED
 #ifdef PNG_WRITE_WEIGHTED_FILTER_SUPPORTED /* EXPERIMENTAL */
 /* The "heuristic_method" is given by one of the PNG_FILTER_HEURISTIC_
  * defines, either the default (minimum-sum-of-absolute-differences), or
@@ -1685,7 +1692,6 @@ PNG_FIXED_EXPORT(209, void, png_set_filter_heuristics_fixed,
 #define PNG_FILTER_HEURISTIC_WEIGHTED   2  /* Experimental feature */
 #define PNG_FILTER_HEURISTIC_LAST       3  /* Not a valid value */
 
-#ifdef PNG_WRITE_SUPPORTED
 /* Set the library compression level.  Currently, valid values range from
  * 0 - 9, corresponding directly to the zlib compression levels 0 - 9
  * (0 - no compression, 9 - "maximal" compression).  Note that tests have
@@ -1693,6 +1699,7 @@ PNG_FIXED_EXPORT(209, void, png_set_filter_heuristics_fixed,
  * for PNG images, and do considerably fewer caclulations.  In the future,
  * these values may not correspond directly to the zlib compression levels.
  */
+#ifdef PNG_WRITE_CUSTOMIZE_COMPRESSION_SUPPORTED
 PNG_EXPORT(69, void, png_set_compression_level, (png_structrp png_ptr,
     int level));
 
@@ -1710,7 +1717,7 @@ PNG_EXPORT(72, void, png_set_compression_window_bits, (png_structrp png_ptr,
 
 PNG_EXPORT(73, void, png_set_compression_method, (png_structrp png_ptr,
     int method));
-#endif
+#endif /* WRITE_CUSTOMIZE_COMPRESSION */
 
 #ifdef PNG_WRITE_CUSTOMIZE_ZTXT_COMPRESSION_SUPPORTED
 /* Also set zlib parameters for compressing non-IDAT chunks */
@@ -1732,6 +1739,7 @@ PNG_EXPORT(225, void, png_set_text_compression_window_bits,
 PNG_EXPORT(226, void, png_set_text_compression_method, (png_structrp png_ptr,
     int method));
 #endif /* WRITE_CUSTOMIZE_ZTXT_COMPRESSION */
+#endif /* WRITE */
 
 /* These next functions are called for input/output, memory, and error
  * handling.  They are in the file pngrio.c, pngwio.c, and pngerror.c,
@@ -1842,7 +1850,7 @@ PNG_EXPORT(218, png_byte, png_get_current_pass_number, (png_const_structrp));
  *
  * The integer return from the callback function is interpreted thus:
  *
- * negative: An error occured, png_chunk_error will be called.
+ * negative: An error occurred; png_chunk_error will be called.
  *     zero: The chunk was not handled, the chunk will be saved. A critical
  *           chunk will cause an error at this point unless it is to be saved.
  * positive: The chunk was handled, libpng will ignore/discard it.
@@ -2687,26 +2695,28 @@ PNG_EXPORT(216, png_uint_32, png_get_io_chunk_type,
            * (png_uint_16)(alpha)                         \
            + (png_uint_16)(bg)*(png_uint_16)(255          \
            - (png_uint_16)(alpha)) + 128);                \
-       (composite) = (png_byte)((temp + (temp >> 8)) >> 8); }
+       (composite) = (png_byte)(((temp + (temp >> 8)) >> 8) & 0xff); }
 
 #  define png_composite_16(composite, fg, alpha, bg)       \
      { png_uint_32 temp = (png_uint_32)((png_uint_32)(fg)  \
            * (png_uint_32)(alpha)                          \
            + (png_uint_32)(bg)*(65535                      \
            - (png_uint_32)(alpha)) + 32768);               \
-       (composite) = (png_uint_16)((temp + (temp >> 16)) >> 16); }
+       (composite) = (png_uint_16)(0xffff & ((temp + (temp >> 16)) >> 16)); }
 
 #else  /* Standard method using integer division */
 
-#  define png_composite(composite, fg, alpha, bg)                          \
-     (composite) = (png_byte)(((png_uint_16)(fg) * (png_uint_16)(alpha) +  \
-     (png_uint_16)(bg) * (png_uint_16)(255 - (png_uint_16)(alpha)) +       \
-     127) / 255)
+#  define png_composite(composite, fg, alpha, bg)                        \
+     (composite) =                                                       \
+         (png_byte)(0xff & (((png_uint_16)(fg) * (png_uint_16)(alpha) +  \
+         (png_uint_16)(bg) * (png_uint_16)(255 - (png_uint_16)(alpha)) + \
+         127) / 255))
 
 #  define png_composite_16(composite, fg, alpha, bg)                         \
-     (composite) = (png_uint_16)(((png_uint_32)(fg) * (png_uint_32)(alpha) + \
-     (png_uint_32)(bg)*(png_uint_32)(65535 - (png_uint_32)(alpha)) +         \
-     32767) / 65535)
+     (composite) =                                                           \
+         (png_uint_16)(0xffff & (((png_uint_32)(fg) * (png_uint_32)(alpha) + \
+         (png_uint_32)(bg)*(png_uint_32)(65535 - (png_uint_32)(alpha)) +     \
+         32767) / 65535))
 #endif /* READ_COMPOSITE_NODIV */
 
 #ifdef PNG_READ_INT_FUNCTIONS_SUPPORTED

@@ -1,8 +1,8 @@
 
 /* pngwutil.c - utilities to write a PNG file
  *
- * Last changed in libpng 1.6.15 [November 20, 2014]
- * Copyright (c) 1998-2014 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.17 [March 25, 2015]
+ * Copyright (c) 1998-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -23,10 +23,10 @@
 void PNGAPI
 png_save_uint_32(png_bytep buf, png_uint_32 i)
 {
-   buf[0] = (png_byte)((i >> 24) & 0xff);
-   buf[1] = (png_byte)((i >> 16) & 0xff);
-   buf[2] = (png_byte)((i >> 8) & 0xff);
-   buf[3] = (png_byte)(i & 0xff);
+   buf[0] = (png_byte)(i >> 24);
+   buf[1] = (png_byte)(i >> 16);
+   buf[2] = (png_byte)(i >> 8);
+   buf[3] = (png_byte)(i     );
 }
 
 /* Place a 16-bit number into a buffer in PNG byte order.
@@ -36,8 +36,8 @@ png_save_uint_32(png_bytep buf, png_uint_32 i)
 void PNGAPI
 png_save_uint_16(png_bytep buf, unsigned int i)
 {
-   buf[0] = (png_byte)((i >> 8) & 0xff);
-   buf[1] = (png_byte)(i & 0xff);
+   buf[0] = (png_byte)(i >> 8);
+   buf[1] = (png_byte)(i     );
 }
 #endif
 
@@ -695,7 +695,7 @@ png_check_keyword(png_structrp png_ptr, png_const_charp key, png_bytep new_key)
 
    while (*key && key_len < 79)
    {
-      png_byte ch = (png_byte)(0xff & *key++);
+      png_byte ch = (png_byte)*key++;
 
       if ((ch > 32 && ch <= 126) || (ch >= 161 /*&& ch <= 255*/))
          *new_key++ = ch, ++key_len, space = 0;
@@ -871,7 +871,7 @@ png_write_IHDR(png_structrp png_ptr, png_uint_32 width, png_uint_32 height,
    interlace_type=PNG_INTERLACE_NONE;
 #endif
 
-   /* Save the relevent information */
+   /* Save the relevant information */
    png_ptr->bit_depth = (png_byte)bit_depth;
    png_ptr->color_type = (png_byte)color_type;
    png_ptr->interlaced = (png_byte)interlace_type;
@@ -1786,7 +1786,7 @@ png_write_iTXt(png_structrp png_ptr, int compression, png_const_charp key,
       png_write_compressed_data_out(png_ptr, &comp);
 
    else
-      png_write_chunk_data(png_ptr, (png_const_bytep)text, comp.input_len);
+      png_write_chunk_data(png_ptr, (png_const_bytep)text, comp.output_len);
 
    png_write_chunk_end(png_ptr);
 }
@@ -2411,7 +2411,7 @@ png_do_write_interlace(png_row_infop row_info, png_bytep row, int pass)
  * been specified by the application, and then writes the row out with the
  * chosen filter.
  */
-static void
+static void /* PRIVATE */
 png_write_filtered_row(png_structrp png_ptr, png_bytep filtered_row,
    png_size_t row_bytes);
 
@@ -2550,7 +2550,7 @@ png_write_find_filter(png_structrp png_ptr, png_row_infop row_info)
       for (lp = row_buf + 1; i < row_bytes;
          i++, rp++, lp++, dp++)
       {
-         *dp = (png_byte)(((int)*rp - (int)*lp) & 0xff);
+         *dp = (png_byte)((int)*rp - (int)*lp);
       }
 
       best_row = png_ptr->sub_row;
@@ -2612,7 +2612,7 @@ png_write_find_filter(png_structrp png_ptr, png_row_infop row_info)
       for (lp = row_buf + 1; i < row_bytes;
          i++, rp++, lp++, dp++)
       {
-         v = *dp = (png_byte)(((int)*rp - (int)*lp) & 0xff);
+         v = *dp = (png_byte)((int)*rp - (int)*lp);
 
          sum += (v < 128) ? v : 256 - v;
 
@@ -2671,7 +2671,7 @@ png_write_find_filter(png_structrp png_ptr, png_row_infop row_info)
           pp = prev_row + 1; i < row_bytes;
           i++, rp++, pp++, dp++)
       {
-         *dp = (png_byte)(((int)*rp - (int)*pp) & 0xff);
+         *dp = (png_byte)((int)*rp - (int)*pp);
       }
 
       best_row = png_ptr->up_row;
@@ -2722,7 +2722,7 @@ png_write_find_filter(png_structrp png_ptr, png_row_infop row_info)
       for (i = 0, rp = row_buf + 1, dp = png_ptr->up_row + 1,
           pp = prev_row + 1; i < row_bytes; i++)
       {
-         v = *dp++ = (png_byte)(((int)*rp++ - (int)*pp++) & 0xff);
+         v = *dp++ = (png_byte)((int)*rp++ - (int)*pp++);
 
          sum += (v < 128) ? v : 256 - v;
 
@@ -2780,13 +2780,13 @@ png_write_find_filter(png_structrp png_ptr, png_row_infop row_info)
       for (i = 0, rp = row_buf + 1, dp = png_ptr->avg_row + 1,
            pp = prev_row + 1; i < bpp; i++)
       {
-         *dp++ = (png_byte)(((int)*rp++ - ((int)*pp++ / 2)) & 0xff);
+         *dp++ = (png_byte)((int)*rp++ - ((int)*pp++ / 2));
       }
 
       for (lp = row_buf + 1; i < row_bytes; i++)
       {
-         *dp++ = (png_byte)(((int)*rp++ - (((int)*pp++ + (int)*lp++) / 2))
-                 & 0xff);
+         *dp++ =
+             (png_byte)((int)*rp++ - (((int)*pp++ + (int)*lp++) / 2));
       }
       best_row = png_ptr->avg_row;
    }
@@ -2835,7 +2835,7 @@ png_write_find_filter(png_structrp png_ptr, png_row_infop row_info)
       for (i = 0, rp = row_buf + 1, dp = png_ptr->avg_row + 1,
            pp = prev_row + 1; i < bpp; i++)
       {
-         v = *dp++ = (png_byte)(((int)*rp++ - ((int)*pp++ / 2)) & 0xff);
+         v = *dp++ = (png_byte)((int)*rp++ - ((int)*pp++ / 2));
 
          sum += (v < 128) ? v : 256 - v;
       }
@@ -2843,7 +2843,7 @@ png_write_find_filter(png_structrp png_ptr, png_row_infop row_info)
       for (lp = row_buf + 1; i < row_bytes; i++)
       {
          v = *dp++ =
-             (png_byte)(((int)*rp++ - (((int)*pp++ + (int)*lp++) / 2)) & 0xff);
+             (png_byte)(((int)*rp++ - ((int)*pp++ + (int)*lp++) / 2));
 
          sum += (v < 128) ? v : 256 - v;
 
@@ -2901,7 +2901,7 @@ png_write_find_filter(png_structrp png_ptr, png_row_infop row_info)
       for (i = 0, rp = row_buf + 1, dp = png_ptr->paeth_row + 1,
           pp = prev_row + 1; i < bpp; i++)
       {
-         *dp++ = (png_byte)(((int)*rp++ - (int)*pp++) & 0xff);
+         *dp++ = (png_byte)((int)*rp++ - (int)*pp++);
       }
 
       for (lp = row_buf + 1, cp = prev_row + 1; i < row_bytes; i++)
@@ -2927,7 +2927,7 @@ png_write_find_filter(png_structrp png_ptr, png_row_infop row_info)
 
          p = (pa <= pb && pa <=pc) ? a : (pb <= pc) ? b : c;
 
-         *dp++ = (png_byte)(((int)*rp++ - p) & 0xff);
+         *dp++ = (png_byte)((int)*rp++ - p);
       }
       best_row = png_ptr->paeth_row;
    }
@@ -2976,7 +2976,7 @@ png_write_find_filter(png_structrp png_ptr, png_row_infop row_info)
       for (i = 0, rp = row_buf + 1, dp = png_ptr->paeth_row + 1,
           pp = prev_row + 1; i < bpp; i++)
       {
-         v = *dp++ = (png_byte)(((int)*rp++ - (int)*pp++) & 0xff);
+         v = *dp++ = (png_byte)((int)*rp++ - (int)*pp++);
 
          sum += (v < 128) ? v : 256 - v;
       }
@@ -3018,7 +3018,7 @@ png_write_find_filter(png_structrp png_ptr, png_row_infop row_info)
             p = c;
 #endif /* SLOW_PAETH */
 
-         v = *dp++ = (png_byte)(((int)*rp++ - p) & 0xff);
+         v = *dp++ = (png_byte)((int)*rp++ - p);
 
          sum += (v < 128) ? v : 256 - v;
 
@@ -3100,6 +3100,7 @@ png_write_filtered_row(png_structrp png_ptr, png_bytep filtered_row,
 
    png_compress_IDAT(png_ptr, filtered_row, full_row_length, Z_NO_FLUSH);
 
+#ifdef PNG_WRITE_FILTER_SUPPORTED
    /* Swap the current and previous rows */
    if (png_ptr->prev_row != NULL)
    {
@@ -3109,6 +3110,7 @@ png_write_filtered_row(png_structrp png_ptr, png_bytep filtered_row,
       png_ptr->prev_row = png_ptr->row_buf;
       png_ptr->row_buf = tptr;
    }
+#endif /* WRITE_FILTER */
 
    /* Finish row - updates counters and flushes zlib if last row */
    png_write_finish_row(png_ptr);

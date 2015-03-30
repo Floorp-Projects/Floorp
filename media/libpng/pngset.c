@@ -1,8 +1,8 @@
 
 /* pngset.c - storage of image information into info struct
  *
- * Last changed in libpng 1.6.15 [November 20, 2014]
- * Copyright (c) 1998-2014 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.17 [March 25, 2015]
+ * Copyright (c) 1998-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -190,6 +190,7 @@ png_set_hIST(png_const_structrp png_ptr, png_inforp info_ptr,
    if (info_ptr->hist == NULL)
    {
       png_warning(png_ptr, "Insufficient memory for hIST chunk data");
+
       return;
    }
 
@@ -276,7 +277,7 @@ png_set_pCAL(png_const_structrp png_ptr, png_inforp info_ptr,
    png_debug1(1, "in %s storage function", "pCAL");
 
    if (png_ptr == NULL || info_ptr == NULL || purpose == NULL || units == NULL
-      || (nparams > 0 && params == NULL))
+       || (nparams > 0 && params == NULL))
       return;
 
    length = strlen(purpose) + 1;
@@ -306,6 +307,7 @@ png_set_pCAL(png_const_structrp png_ptr, png_inforp info_ptr,
    if (info_ptr->pcal_purpose == NULL)
    {
       png_warning(png_ptr, "Insufficient memory for pCAL purpose");
+
       return;
    }
 
@@ -327,6 +329,7 @@ png_set_pCAL(png_const_structrp png_ptr, png_inforp info_ptr,
    if (info_ptr->pcal_units == NULL)
    {
       png_warning(png_ptr, "Insufficient memory for pCAL units");
+
       return;
    }
 
@@ -338,6 +341,7 @@ png_set_pCAL(png_const_structrp png_ptr, png_inforp info_ptr,
    if (info_ptr->pcal_params == NULL)
    {
       png_warning(png_ptr, "Insufficient memory for pCAL params");
+
       return;
    }
 
@@ -354,6 +358,7 @@ png_set_pCAL(png_const_structrp png_ptr, png_inforp info_ptr,
       if (info_ptr->pcal_params[i] == NULL)
       {
          png_warning(png_ptr, "Insufficient memory for pCAL parameter");
+
          return;
       }
 
@@ -403,6 +408,7 @@ png_set_sCAL_s(png_const_structrp png_ptr, png_inforp info_ptr,
    if (info_ptr->scal_s_width == NULL)
    {
       png_warning(png_ptr, "Memory allocation failed while processing sCAL");
+
       return;
    }
 
@@ -421,6 +427,7 @@ png_set_sCAL_s(png_const_structrp png_ptr, png_inforp info_ptr,
       info_ptr->scal_s_width = NULL;
 
       png_warning(png_ptr, "Memory allocation failed while processing sCAL");
+
       return;
    }
 
@@ -524,6 +531,7 @@ png_set_PLTE(png_structrp png_ptr, png_inforp info_ptr,
       else
       {
          png_warning(png_ptr, "Invalid palette length");
+
          return;
       }
    }
@@ -536,7 +544,6 @@ png_set_PLTE(png_structrp png_ptr, png_inforp info_ptr,
       ))
    {
       png_error(png_ptr, "Invalid palette");
-      return;
    }
 
    /* It may not actually be necessary to set png_ptr->palette here;
@@ -660,6 +667,7 @@ png_set_iCCP(png_const_structrp png_ptr, png_inforp info_ptr,
    if (new_iccp_name == NULL)
    {
       png_benign_error(png_ptr, "Insufficient memory to process iCCP chunk");
+
       return;
    }
 
@@ -673,6 +681,7 @@ png_set_iCCP(png_const_structrp png_ptr, png_inforp info_ptr,
       new_iccp_name = NULL;
       png_benign_error(png_ptr,
           "Insufficient memory to process iCCP profile");
+
       return;
    }
 
@@ -748,6 +757,7 @@ png_set_text_2(png_const_structrp png_ptr, png_inforp info_ptr,
       {
          png_chunk_report(png_ptr, "too many text chunks",
             PNG_CHUNK_WRITE_ERROR);
+
          return 1;
       }
 
@@ -803,7 +813,7 @@ png_set_text_2(png_const_structrp png_ptr, png_inforp info_ptr,
          else
             lang_key_len = 0;
       }
-#  else /* PNG_iTXt_SUPPORTED */
+#  else /* iTXt */
       {
          png_chunk_report(png_ptr, "iTXt chunk not supported",
             PNG_CHUNK_WRITE_ERROR);
@@ -836,6 +846,7 @@ png_set_text_2(png_const_structrp png_ptr, png_inforp info_ptr,
       {
          png_chunk_report(png_ptr, "text chunk: out of memory",
                PNG_CHUNK_WRITE_ERROR);
+
          return 1;
       }
 
@@ -909,6 +920,7 @@ png_set_tIME(png_const_structrp png_ptr, png_inforp info_ptr,
        mod_time->second > 60)
    {
       png_warning(png_ptr, "Ignoring invalid time value");
+
       return;
    }
 
@@ -925,6 +937,7 @@ png_set_tRNS(png_structrp png_ptr, png_inforp info_ptr,
    png_debug1(1, "in %s storage function", "tRNS");
 
    if (png_ptr == NULL || info_ptr == NULL)
+
       return;
 
    if (trans_alpha != NULL)
@@ -950,16 +963,21 @@ png_set_tRNS(png_structrp png_ptr, png_inforp info_ptr,
 
    if (trans_color != NULL)
    {
-      int sample_max = (1 << info_ptr->bit_depth);
+#ifdef PNG_WARNINGS_SUPPORTED
+      if (info_ptr->bit_depth < 16)
+      {
+         int sample_max = (1 << info_ptr->bit_depth) - 1;
 
-      if ((info_ptr->color_type == PNG_COLOR_TYPE_GRAY &&
-          trans_color->gray > sample_max) ||
-          (info_ptr->color_type == PNG_COLOR_TYPE_RGB &&
-          (trans_color->red > sample_max ||
-          trans_color->green > sample_max ||
-          trans_color->blue > sample_max)))
-         png_warning(png_ptr,
-            "tRNS chunk has out-of-range samples for bit_depth");
+         if ((info_ptr->color_type == PNG_COLOR_TYPE_GRAY &&
+             trans_color->gray > sample_max) ||
+             (info_ptr->color_type == PNG_COLOR_TYPE_RGB &&
+             (trans_color->red > sample_max ||
+             trans_color->green > sample_max ||
+             trans_color->blue > sample_max)))
+            png_warning(png_ptr,
+               "tRNS chunk has out-of-range samples for bit_depth");
+      }
+#endif
 
       info_ptr->trans_color = *trans_color;
 
@@ -1006,6 +1024,7 @@ png_set_sPLT(png_const_structrp png_ptr,
    {
       /* Out of memory or too many chunks */
       png_chunk_report(png_ptr, "too many sPLT chunks", PNG_CHUNK_WRITE_ERROR);
+
       return;
    }
 
@@ -1262,7 +1281,7 @@ png_set_unknown_chunks(png_const_structrp png_ptr,
    png_unknown_chunkp np;
 
    if (png_ptr == NULL || info_ptr == NULL || num_unknowns <= 0 ||
-      unknowns == NULL)
+       unknowns == NULL)
       return;
 
    /* Check for the failure cases where support has been disabled at compile
@@ -1276,6 +1295,7 @@ png_set_unknown_chunks(png_const_structrp png_ptr,
       if ((png_ptr->mode & PNG_IS_READ_STRUCT) != 0)
       {
          png_app_error(png_ptr, "no unknown chunk support on read");
+
          return;
       }
 #  endif
@@ -1284,6 +1304,7 @@ png_set_unknown_chunks(png_const_structrp png_ptr,
       if ((png_ptr->mode & PNG_IS_READ_STRUCT) == 0)
       {
          png_app_error(png_ptr, "no unknown chunk support on write");
+
          return;
       }
 #  endif
@@ -1301,6 +1322,7 @@ png_set_unknown_chunks(png_const_structrp png_ptr,
    {
       png_chunk_report(png_ptr, "too many unknown chunks",
          PNG_CHUNK_WRITE_ERROR);
+
       return;
    }
 
@@ -1378,8 +1400,7 @@ png_set_unknown_chunk_location(png_const_structrp png_ptr, png_inforp info_ptr,
          check_location(png_ptr, location);
    }
 }
-#endif
-
+#endif /* STORE_UNKNOWN_CHUNKS */
 
 #ifdef PNG_MNG_FEATURES_SUPPORTED
 png_uint_32 PNGAPI
@@ -1410,6 +1431,7 @@ add_one_chunk(png_bytep list, unsigned int count, png_const_bytep add, int keep)
       if (memcmp(list, add, 4) == 0)
       {
          list[4] = (png_byte)keep;
+
          return count;
       }
    }
@@ -1437,6 +1459,7 @@ png_set_keep_unknown_chunks(png_structrp png_ptr, int keep,
    if (keep < 0 || keep >= PNG_HANDLE_CHUNK_LAST)
    {
       png_app_error(png_ptr, "png_set_keep_unknown_chunks: invalid keep");
+
       return;
    }
 
@@ -1486,6 +1509,7 @@ png_set_keep_unknown_chunks(png_structrp png_ptr, int keep,
           * which can be switched off.
           */
          png_app_error(png_ptr, "png_set_keep_unknown_chunks: no chunk list");
+
          return;
       }
 
@@ -1501,6 +1525,7 @@ png_set_keep_unknown_chunks(png_structrp png_ptr, int keep,
    if (num_chunks + old_num_chunks > UINT_MAX/5)
    {
       png_app_error(png_ptr, "png_set_keep_unknown_chunks: too many chunks");
+
       return;
    }
 
@@ -1638,23 +1663,27 @@ png_set_compression_buffer_size(png_structrp png_ptr, png_size_t size)
          {
             png_warning(png_ptr,
               "Compression buffer size cannot be changed because it is in use");
+
             return;
          }
 
+#ifndef __COVERITY__
          if (size > ZLIB_IO_MAX)
          {
             png_warning(png_ptr,
                "Compression buffer size limited to system maximum");
             size = ZLIB_IO_MAX; /* must fit */
          }
+#endif
 
-         else if (size < 6)
+         if (size < 6)
          {
             /* Deflate will potentially go into an infinite loop on a SYNC_FLUSH
              * if this is permitted.
              */
             png_warning(png_ptr,
                "Compression buffer size cannot be reduced below 6");
+
             return;
          }
 
@@ -1696,8 +1725,8 @@ png_set_user_limits (png_structrp png_ptr, png_uint_32 user_width_max,
 void PNGAPI
 png_set_chunk_cache_max (png_structrp png_ptr, png_uint_32 user_chunk_cache_max)
 {
-    if (png_ptr != NULL)
-       png_ptr->user_chunk_cache_max = user_chunk_cache_max;
+   if (png_ptr != NULL)
+      png_ptr->user_chunk_cache_max = user_chunk_cache_max;
 }
 
 /* This function was added to libpng 1.4.1 */

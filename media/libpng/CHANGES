@@ -2102,7 +2102,7 @@ Version 1.4.0beta24 [July 25, 2008]
     png_decompress_chunk(), and remove "chunkdata" from parameter list.
   Put a call to png_check_chunk_name() in png_read_chunk_header().
   Revised png_check_chunk_name() to reject a name with a lowercase 3rd byte.
-  Removed two calls to png_check_chunk_name() occuring later in the process.
+  Removed two calls to png_check_chunk_name() occurring later in the process.
   Define PNG_NO_ERROR_NUMBERS by default in pngconf.h
 
 Version 1.4.0beta25 [July 30, 2008]
@@ -5114,15 +5114,95 @@ Version 1.6.16beta03 [December 21, 2014]
 
 Version 1.6.16rc01 [December 21, 2014]
   Restored a test on width that was removed from png.c at libpng-1.6.9
-    (Bug report by Alex Eubanks).
+    (Bug report by Alex Eubanks, CVE-2015-0973).
 
 Version 1.6.16rc02 [December 21, 2014]
   Undid the update to pngrutil.c in 1.6.16rc01.
 
 Version 1.6.16rc03 [December 21, 2014]
-  Fixed an overflow in png_combine_row with very wide interlaced images.
+  Fixed an overflow in png_combine_row() with very wide interlaced images
+    (Bug report and fix by John Bowler, CVE-2014-9495).
 
 Version 1.6.16 [December 22, 2014]
+  No changes.
+
+Version 1.6.17beta01 [January 29, 2015]
+  Removed duplicate PNG_SAFE_LIMITS_SUPPORTED handling from pngconf.h
+  Corrected the width limit calculation in png_check_IHDR().
+  Removed user limits from pngfix. Also pass NULL pointers to
+    png_read_row to skip the unnecessary row de-interlace stuff.
+  Added testing of png_set_packing() to pngvalid.c
+  Regenerated configure scripts in the *.tar distributions with libtool-2.4.4
+  Implement previously untested cases of libpng transforms in pngvalid.c
+  Fixed byte order in 2-byte filler, in png_do_read_filler().
+  Made the check for out-of-range values in png_set_tRNS() detect
+    values that are exactly 2^bit_depth, and work on 16-bit platforms.
+  Merged some parts of libpng-1.6.17beta01 and libpng-1.7.0beta47.
+  Added #ifndef __COVERITY__ where needed in png.c, pngrutil.c and
+    pngset.c to avoid warnings about dead code.
+  Added "& 0xff" to many instances of expressions that are typecast
+    to (png_byte), to avoid Coverity gripes.
+
+Version 1.6.17beta02 [February 7, 2015]
+  Work around one more Coverity-scan dead-code warning.
+  Do not build png_product2() when it is unused.
+
+Version 1.6.17beta03 [February 17, 2015]
+  Display user limits in the output from pngtest.
+  Eliminated the PNG_SAFE_LIMITS macro and restored the 1-million-column
+    and 1-million-row default limits in pnglibconf.dfa, that can be reset
+    by the user at build time or run time.  This provides a more robust
+    defense against DOS and as-yet undiscovered overflows.
+
+Version 1.6.17beta04 [February 21, 2015]
+  Added PNG_WRITE_CUSTOMIZE_COMPRESSION_SUPPORTED macro, on by default.
+  Allow user to call png_get_IHDR() with NULL arguments (Reuben Hawkins).
+  Rebuilt configure scripts with automake-1.15 and libtool-2.4.6
+
+Version 1.6.17beta05 [February 25, 2015]
+  Restored compiling of png_reciprocal2 with PNG_NO_16BIT.
+
+Version 1.6.17beta06 [February 27, 2015]
+  Moved png_set_filter() prototype into a PNG_WRITE_SUPPORTED block
+    of png.h.
+  Avoid runtime checks when converting integer to png_byte with
+    Visual Studio (Sergey Kosarevsky)
+
+Version 1.6.17rc01 [March 4, 2015]
+  No changes.
+
+Version 1.6.17rc02 [March 9, 2015]
+  Removed some comments that the configure script did not handle
+    properly from scripts/pnglibconf.dfa and pnglibconf.h.prebuilt.
+  Free the unknown_chunks structure even when it contains no data.
+
+Version 1.6.17rc03 [March 12, 2015]
+  Updated CMakeLists.txt to add OSX framework, change YES/NO to ON/OFF
+    for consistency, and remove some useless tests (Alexey Petruchik).
+
+Version 1.6.17rc04 [March 16, 2015]
+  Remove pnglibconf.h, pnglibconf.c, and pnglibconf.out instead of
+    pnglibconf.* in "make clean" (Cosmin).
+  Fix bug in calculation of maxbits, in png_write_sBIT, introduced
+    in libpng-1.6.17beta01 (John Bowler).
+
+Version 1.6.17rc05 [March 21, 2015]
+  Define PNG_FILTER_* and PNG_FILTER_VALUE_* in png.h even when WRITE
+    is not supported (John Bowler).  This fixes an error introduced in
+    libpng-1.6.17beta06.
+  Reverted "& 0xff" additions of version 1.6.17beta01. Libpng passes
+    the Coverity scan without them.
+
+Version 1.6.17rc06 [March 23, 2015]
+  Remove pnglibconf.dfn and pnglibconf.pre with "make clean".
+  Reformatted some "&0xff" instances to "& 0xff".
+  Fixed simplified 8-bit-linear to sRGB alpha. The calculated alpha
+    value was wrong.  It's not clear if this affected the final stored
+    value; in the obvious code path the upper and lower 8-bits of the
+    alpha value were identical and the alpha was truncated to 8-bits
+    rather than dividing by 257 (John Bowler).
+
+Version 1.6.17 [March 25, 2015]
   No changes.
 
 Send comments/corrections/commendations to png-mng-implement at lists.sf.net

@@ -1,9 +1,9 @@
 
 /* pngconf.h - machine configurable file for libpng
  *
- * libpng version 1.6.16,December 22, 2014
+ * libpng version 1.6.17, March 25, 2015
  *
- * Copyright (c) 1998-2014 Glenn Randers-Pehrson
+ * Copyright (c) 1998-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -11,9 +11,7 @@
  * For conditions of distribution and use, see the disclaimer
  * and license in png.h
  *
- */
-
-/* Any machine specific code is near the front of this file, so if you
+ * Any machine specific code is near the front of this file, so if you
  * are configuring libpng for a machine, you may want to read the section
  * starting here down to where it starts to typedef png_color, png_text,
  * and png_info.
@@ -21,26 +19,6 @@
 
 #ifndef PNGCONF_H
 #define PNGCONF_H
-
-/* To do: Do all of this in scripts/pnglibconf.dfa */
-#ifdef PNG_SAFE_LIMITS_SUPPORTED
-#  ifdef PNG_USER_WIDTH_MAX
-#    undef PNG_USER_WIDTH_MAX
-#    define PNG_USER_WIDTH_MAX 1000000L
-#  endif
-#  ifdef PNG_USER_HEIGHT_MAX
-#    undef PNG_USER_HEIGHT_MAX
-#    define PNG_USER_HEIGHT_MAX 1000000L
-#  endif
-#  ifdef PNG_USER_CHUNK_MALLOC_MAX
-#    undef PNG_USER_CHUNK_MALLOC_MAX
-#    define PNG_USER_CHUNK_MALLOC_MAX 4000000L
-#  endif
-#  ifdef PNG_USER_CHUNK_CACHE_MAX
-#    undef PNG_USER_CHUNK_CACHE_MAX
-#    define PNG_USER_CHUNK_CACHE_MAX 128
-#  endif
-#endif
 
 #ifndef PNG_BUILDING_SYMBOL_TABLE /* else includes may cause problems */
 
