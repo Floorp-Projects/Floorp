@@ -25,6 +25,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIFormControl.h"
+#include "nsIProgrammingLanguage.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
