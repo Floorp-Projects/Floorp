@@ -44,7 +44,13 @@ let ReaderParent = {
   receiveMessage: function(message) {
     switch (message.name) {
       case "Reader:AddToList":
-        ReadingList.addItem(message.data.article);
+        let article = message.data.article;
+        ReadingList.addItem({
+          url: article.url,
+          title: article.title,
+          excerpt: article.excerpt,
+          status: article.status
+        });
         break;
 
       case "Reader:ArticleGet":
