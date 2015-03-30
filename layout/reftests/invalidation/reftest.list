@@ -55,3 +55,5 @@ pref(layout.animated-image-layers.enabled,true) == test-animated-image-layers-ba
 != paintedlayer-recycling-5.html about:blank
 != paintedlayer-recycling-6.html about:blank
 != paintedlayer-recycling-7.html about:blank
+!= masklayer-1.html about:blank
+!= masklayer-2.html about:blank

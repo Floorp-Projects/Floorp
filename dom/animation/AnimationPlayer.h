@@ -201,15 +201,32 @@ public:
     return PlayState() == AnimationPlayState::Paused ||
            mPendingState == PendingState::PausePending;
   }
-  bool IsRunning() const;
 
+  bool HasInPlaySource() const
+  {
+    return GetSource() && GetSource()->IsInPlay(*this);
+  }
   bool HasCurrentSource() const
   {
-    return GetSource() && GetSource()->IsCurrent();
+    return GetSource() && GetSource()->IsCurrent(*this);
   }
   bool HasInEffectSource() const
   {
     return GetSource() && GetSource()->IsInEffect();
+  }
+
+  /**
+   * "Playing" is different to "running". An animation in its delay phase is
+   * still running but we only consider it playing when it is in its active
+   * interval. This definition is used for fetching the animations that are
+   * are candidates for running on the compositor (since we don't ship
+   * animations to the compositor when they are in their delay phase or
+   * paused).
+   */
+  bool IsPlaying() const
+  {
+    return HasInPlaySource() && // Check we are in the active interval
+           PlayState() == AnimationPlayState::Running; // And not paused
   }
 
   bool IsRelevant() const { return mIsRelevant; }

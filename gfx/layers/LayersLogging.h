@@ -19,7 +19,6 @@
 struct gfxRGBA;
 struct nsIntPoint;
 struct nsIntRect;
-struct nsIntSize;
 
 namespace mozilla {
 namespace gfx {
@@ -131,10 +130,6 @@ AppendToString(std::stringstream& aStream, const mozilla::gfx::IntRegionTyped<un
 
 void
 AppendToString(std::stringstream& aStream, const EventRegions& e,
-               const char* pfx="", const char* sfx="");
-
-void
-AppendToString(std::stringstream& aStream, const nsIntSize& sz,
                const char* pfx="", const char* sfx="");
 
 void

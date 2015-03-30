@@ -104,12 +104,12 @@ gfxPlatformGtk::CreateOffscreenSurface(const IntSize& size,
 
             if (xrenderFormat) {
                 newSurface = gfxXlibSurface::Create(screen, xrenderFormat,
-                                                    ThebesIntSize(size));
+                                                    size);
             }
         } else {
             // We're not going to use XRender, so we don't need to
             // search for a render format
-            newSurface = new gfxImageSurface(ThebesIntSize(size), imageFormat);
+            newSurface = new gfxImageSurface(size, imageFormat);
             // The gfxImageSurface ctor zeroes this for us, no need to
             // waste time clearing again
             needsClear = false;
@@ -121,7 +121,7 @@ gfxPlatformGtk::CreateOffscreenSurface(const IntSize& size,
         // We couldn't create a native surface for whatever reason;
         // e.g., no display, no RENDER, bad size, etc.
         // Fall back to image surface for the data.
-        newSurface = new gfxImageSurface(ThebesIntSize(size), imageFormat);
+        newSurface = new gfxImageSurface(size, imageFormat);
     }
 
     if (newSurface->CairoStatus()) {

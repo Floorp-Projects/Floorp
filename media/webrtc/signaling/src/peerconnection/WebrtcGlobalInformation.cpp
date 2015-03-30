@@ -167,23 +167,31 @@ WebrtcGlobalInformation::GetAllStats(
           pcIdFilter.Value().EqualsASCII(p->second->GetIdAsAscii().c_str())) {
         if (p->second->HasMedia()) {
           queries->append(nsAutoPtr<RTCStatsQuery>(new RTCStatsQuery(true)));
-          p->second->BuildStatsQuery_m(nullptr, // all tracks
-                                       queries->back());
+          if (NS_WARN_IF(NS_FAILED(p->second->BuildStatsQuery_m(nullptr, // all tracks
+                                                                queries->back())))) {
+            queries->popBack();
+          } else {
+            MOZ_ASSERT(queries->back()->report);
+          }
         }
       }
     }
   }
 
-  // CallbackObject does not support threadsafe refcounting, and must be
-  // destroyed on main.
-  nsMainThreadPtrHandle<WebrtcGlobalStatisticsCallback> callbackHandle(
-    new nsMainThreadPtrHolder<WebrtcGlobalStatisticsCallback>(&aStatsCallback));
+  if (!queries->empty()) {
+    // CallbackObject does not support threadsafe refcounting, and must be
+    // destroyed on main.
+    nsMainThreadPtrHandle<WebrtcGlobalStatisticsCallback> callbackHandle(
+      new nsMainThreadPtrHolder<WebrtcGlobalStatisticsCallback>(&aStatsCallback));
 
-  rv = RUN_ON_THREAD(stsThread,
-                     WrapRunnableNM(&GetAllStats_s, callbackHandle, queries),
-                     NS_DISPATCH_NORMAL);
+    rv = RUN_ON_THREAD(stsThread,
+                       WrapRunnableNM(&GetAllStats_s, callbackHandle, queries),
+                       NS_DISPATCH_NORMAL);
 
-  aRv = rv;
+    aRv = rv;
+  } else {
+    aRv = NS_OK;
+  }
 }
 
 void

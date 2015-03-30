@@ -47,7 +47,7 @@ if CONFIG['MOZ_UPDATER']:
     ]
 
     EXTRA_JS_MODULES += [
-      'UpdaterHealthProvider.jsm'
+        'UpdateTelemetry.jsm',
     ]
 
 JAR_MANIFESTS += ['jar.mn']

@@ -640,9 +640,9 @@ static int ensure_copy(const NS_tchar *path, const NS_tchar *dest)
   if (!result) {
     LOG(("ensure_copy: failed to copy the file " LOG_S " over to " LOG_S ", lasterr: %x",
          path, dest, GetLastError()));
-    return WRITE_ERROR;
+    return WRITE_ERROR_FILE_COPY;
   }
-  return 0;
+  return OK;
 #else
   struct NS_tstat_t ss;
   int rv = NS_tlstat(path, &ss);
@@ -706,7 +706,7 @@ static int ensure_copy(const NS_tchar *path, const NS_tchar *dest)
         LOG(("ensure_copy: failed to write the file: " LOG_S ", err: %d",
              dest, errno));
         free(buffer);
-        return WRITE_ERROR;
+        return WRITE_ERROR_FILE_COPY;
       }
 
       written += chunkWritten;
@@ -822,7 +822,7 @@ static int rename_file(const NS_tchar *spath, const NS_tchar *dpath,
     if (allowDirs && !S_ISDIR(spathInfo.st_mode)) {
       LOG(("rename_file: path present, but not a file: " LOG_S ", err: %d",
            spath, errno));
-      return UNEXPECTED_FILE_OPERATION_ERROR;
+      return RENAME_ERROR_EXPECTED_FILE;
     } else {
       LOG(("rename_file: proceeding to rename the directory"));
     }
@@ -832,7 +832,7 @@ static int rename_file(const NS_tchar *spath, const NS_tchar *dpath,
     if (ensure_remove(dpath)) {
       LOG(("rename_file: destination file exists and could not be " \
            "removed: " LOG_S, dpath));
-      return WRITE_ERROR;
+      return WRITE_ERROR_DELETE_FILE;
     }
   }
 
@@ -894,7 +894,7 @@ static int backup_discard(const NS_tchar *path)
     if (rename_file(backup, path)) {
       LOG(("backup_discard: failed to rename file:" LOG_S ", dst:" LOG_S,
            backup, path));
-      return WRITE_ERROR;
+      return WRITE_ERROR_DELETE_BACKUP;
     }
     // The MoveFileEx call to remove the file on OS reboot will fail if the
     // process doesn't have write access to the HKEY_LOCAL_MACHINE registry key
@@ -911,7 +911,7 @@ static int backup_discard(const NS_tchar *path)
   }
 #else
   if (rv)
-    return WRITE_ERROR;
+    return WRITE_ERROR_DELETE_BACKUP;
 #endif
 
   return OK;
@@ -1009,7 +1009,7 @@ RemoveFile::Prepare()
 
   if (!S_ISREG(fileInfo.st_mode)) {
     LOG(("path present, but not a file: " LOG_S, mFile));
-    return UNEXPECTED_FILE_OPERATION_ERROR;
+    return DELETE_ERROR_EXPECTED_FILE;
   }
 
   NS_tchar *slash = (NS_tchar *) NS_tstrrchr(mFile, NS_T('/'));
@@ -1023,7 +1023,7 @@ RemoveFile::Prepare()
 
   if (rv) {
     LOG(("access failed: %d", errno));
-    return WRITE_ERROR;
+    return WRITE_ERROR_FILE_ACCESS_DENIED;
   }
 
   return OK;
@@ -1118,13 +1118,13 @@ RemoveDir::Prepare()
 
   if (!S_ISDIR(dirInfo.st_mode)) {
     LOG(("path present, but not a directory: " LOG_S, mDir));
-    return UNEXPECTED_FILE_OPERATION_ERROR;
+    return DELETE_ERROR_EXPECTED_DIR;
   }
 
   rv = NS_taccess(mDir, W_OK);
   if (rv) {
     LOG(("access failed: %d, %d", rv, errno));
-    return WRITE_ERROR;
+    return WRITE_ERROR_DIR_ACCESS_DENIED;
   }
 
   return OK;
@@ -1310,7 +1310,7 @@ PatchFile::LoadSourceFile(FILE* ofile)
   if (uint32_t(os.st_size) != header.slen) {
     LOG(("LoadSourceFile: destination file size %d does not match expected size %d",
          uint32_t(os.st_size), header.slen));
-    return UNEXPECTED_FILE_OPERATION_ERROR;
+    return LOADSOURCE_ERROR_WRONG_SIZE;
   }
 
   buf = (unsigned char *) malloc(header.slen);
@@ -1461,7 +1461,7 @@ PatchFile::Execute()
   // Creating the file, setting the size, and then closing the file handle
   // lessens fragmentation more than any other method tested. Other methods that
   // have been tested are:
-  // 1. _chsize / _chsize_s reduced fragmentation but though not completely.
+  // 1. _chsize / _chsize_s reduced fragmentation though not completely.
   // 2. _get_osfhandle and then setting the size reduced fragmentation though
   //    not completely. There are also reports of _get_osfhandle failing on
   //    mingw.
@@ -1482,7 +1482,8 @@ PatchFile::Execute()
     CloseHandle(hfile);
   }
 
-  AutoFile ofile(ensure_open(mFile, shouldTruncate ? NS_T("wb+") : NS_T("rb+"), ss.st_mode));
+  AutoFile ofile(ensure_open(mFile, shouldTruncate ? NS_T("wb+") : NS_T("rb+"),
+                             ss.st_mode));
 #elif defined(XP_MACOSX)
   AutoFile ofile(ensure_open(mFile, NS_T("wb+"), ss.st_mode));
   // Modified code from FileUtils.cpp
@@ -1504,7 +1505,7 @@ PatchFile::Execute()
 
   if (ofile == nullptr) {
     LOG(("unable to create new file: " LOG_S ", err: %d", mFile, errno));
-    return WRITE_ERROR;
+    return WRITE_ERROR_OPEN_PATCH_FILE;
   }
 
 #ifdef XP_WIN
@@ -1942,7 +1943,8 @@ ProcessReplaceRequest()
   // name, so that if the user has used a different case when launching the
   // application, the installation directory's name does not change.
   NS_tchar destDir[MAXPATHLEN];
-  if (!GetLongPathNameW(gInstallDirPath, destDir, sizeof(destDir)/sizeof(destDir[0]))) {
+  if (!GetLongPathNameW(gInstallDirPath, destDir,
+                        sizeof(destDir)/sizeof(destDir[0]))) {
     return NO_INSTALLDIR_ERROR;
   }
 #else
@@ -1990,6 +1992,8 @@ ProcessReplaceRequest()
   }
 #endif
   if (rv) {
+    // The status file will have 'pending' written to it so there is no value in
+    // returning an error specific for this failure.
     LOG(("Moving destDir to tmpDir failed, err: %d", rv));
     return rv;
   }
@@ -2013,6 +2017,8 @@ ProcessReplaceRequest()
     if (rv2) {
       LOG(("Moving tmpDir back to destDir failed, err: %d", rv2));
     }
+    // The status file will be have 'pending' written to it so there is no value
+    // in returning an error specific for this failure.
     return rv;
   }
 
@@ -2084,7 +2090,8 @@ ReadMARChannelIDs(const NS_tchar *path, MARChannelStringTable *results)
 static int
 GetUpdateFileName(NS_tchar *fileName, int maxChars)
 {
-#if defined(MOZ_WIDGET_GONK)  // If an update.link file exists, then it will contain the name
+#if defined(MOZ_WIDGET_GONK)
+  // If an update.link file exists, then it will contain the name
   // of the update file (terminated by a newline).
 
   NS_tchar linkFileName[MAXPATHLEN];
@@ -2226,7 +2233,8 @@ UpdateThreadFunc(void *param)
     // staged directory as it won't be useful any more.
     ensure_remove_recursive(gWorkingDirPath);
     WriteStatusFile(sUsingService ? "pending-service" : "pending");
-    putenv(const_cast<char*>("MOZ_PROCESS_UPDATES=")); // We need to use --process-updates again in the tests
+    // We need to use --process-updates again in the tests
+    putenv(const_cast<char*>("MOZ_PROCESS_UPDATES="));
     reportRealResults = false; // pretend success
   }
 
@@ -2439,7 +2447,8 @@ int NS_main(int argc, NS_tchar **argv)
         fprintf(fs, "%d", oomScoreAdj);
         fclose(fs);
       } else {
-        LOG(("Unable to open /proc/self/oom_score_adj for writing, errno = %d", errno));
+        LOG(("Unable to open /proc/self/oom_score_adj for writing, errno = %d",
+             errno));
       }
     }
   }
@@ -2623,7 +2632,8 @@ int NS_main(int argc, NS_tchar **argv)
       // are available.  If not don't use the service.
       if (useService) {
         WCHAR maintenanceServiceKey[MAX_PATH + 1];
-        if (CalculateRegistryPathFromFilePath(gInstallDirPath, maintenanceServiceKey)) {
+        if (CalculateRegistryPathFromFilePath(gInstallDirPath,
+                                              maintenanceServiceKey)) {
           HKEY baseKey = nullptr;
           if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             maintenanceServiceKey, 0,
@@ -2712,7 +2722,8 @@ int NS_main(int argc, NS_tchar **argv)
         bool updateStatusSucceeded = false;
         if (IsUpdateStatusSucceeded(updateStatusSucceeded) &&
             updateStatusSucceeded) {
-          if (!LaunchWinPostProcess(gInstallDirPath, gPatchDirPath, false, nullptr)) {
+          if (!LaunchWinPostProcess(gInstallDirPath, gPatchDirPath, false,
+                                    nullptr)) {
             fprintf(stderr, "The post update process which runs as the user"
                     " for service update could not be launched.");
           }
@@ -2855,7 +2866,7 @@ int NS_main(int argc, NS_tchar **argv)
                         sizeof(applyDirLongPath)/sizeof(applyDirLongPath[0]))) {
     LOG(("NS_main: unable to find apply to dir: " LOG_S, gWorkingDirPath));
     LogFinish();
-    WriteStatusFile(WRITE_ERROR);
+    WriteStatusFile(WRITE_ERROR_APPLY_DIR_PATH);
     EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 1);
     if (argc > callbackIndex) {
       LaunchCallbackApp(argv[5], argc - callbackIndex,
@@ -2900,14 +2911,15 @@ int NS_main(int argc, NS_tchar **argv)
       size_t callbackPrefixLength = PathCommonPrefixW(argv[callbackIndex],
                                                       installDir,
                                                       nullptr);
-      NS_tstrncpy(p, argv[callbackIndex] + std::max(callbackPrefixLength, commonPrefixLength), bufferLeft);
+      NS_tstrncpy(p, argv[callbackIndex] + std::max(callbackPrefixLength,
+                  commonPrefixLength), bufferLeft);
       targetPath = buffer;
     }
     if (!GetLongPathNameW(targetPath, callbackLongPath,
                           sizeof(callbackLongPath)/sizeof(callbackLongPath[0]))) {
       LOG(("NS_main: unable to find callback file: " LOG_S, targetPath));
       LogFinish();
-      WriteStatusFile(WRITE_ERROR);
+      WriteStatusFile(WRITE_ERROR_CALLBACK_PATH);
       EXIT_WHEN_ELEVATED(elevatedLockFilePath, updateLockFileHandle, 1);
       if (argc > callbackIndex) {
         LaunchCallbackApp(argv[5],
@@ -3187,7 +3199,7 @@ ActionList::Prepare()
   // actually done. See bug 327140.
   if (mCount == 0) {
     LOG(("empty action list"));
-    return UNEXPECTED_MAR_ERROR;
+    return MAR_ERROR_EMPTY_ACTION_LIST;
   }
 
   Action *a = mFirst;
@@ -3297,7 +3309,8 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
         Action *action = new RemoveFile();
         rv = action->Parse(quotedpath);
         if (rv) {
-          LOG(("add_dir_entries Parse error on recurse: " LOG_S ", err: %d", quotedpath, rv));
+          LOG(("add_dir_entries Parse error on recurse: " LOG_S ", err: %d",
+               quotedpath, rv));
           return rv;
         }
 
@@ -3315,7 +3328,8 @@ int add_dir_entries(const NS_tchar *dirpath, ActionList *list)
       Action *action = new RemoveDir();
       rv = action->Parse(quotedpath);
       if (rv)
-        LOG(("add_dir_entries Parse error on close: " LOG_S ", err: %d", quotedpath, rv));
+        LOG(("add_dir_entries Parse error on close: " LOG_S ", err: %d",
+             quotedpath, rv));
       else
         list->Append(action);
     }

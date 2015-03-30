@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Moving a layer in a box with a rounded clip shouldn't invalidate.</title>
+
+<style>
+
+#scrollbox {
+  position: absolute;
+  top: 50px;
+  left: 50px;
+  width: 300px;
+  height: 200px;
+  background-color: #DDD;
+  overflow: auto;
+  border-radius: 10px;
+}
+
+#scrollable {
+  width: 600px;
+}
+
+#scrolledLayer {
+  margin-top: 50px;
+  margin-left: 100px;
+  box-model: border-box;
+  border: 1px solid lime;
+  width: 100px;
+  height: 100px;
+}
+
+</style>
+
+<body>
+
+<div id="scrollbox">
+  <div id="scrollable">
+    <div id="scrolledLayer" class="reftest-no-paint"></div>
+  </div>
+</div>
+
+<script>
+
+var scrollbox = document.getElementById("scrollbox");
+
+function doTest() {
+  scrollbox.scrollLeft = 0;
+  document.documentElement.removeAttribute("class");
+}
+
+// Make #scrollbox have active scrolling
+scrollbox.scrollLeft = 60;
+scrollbox.offsetLeft;
+scrollbox.scrollLeft = 40;
+scrollbox.offsetLeft;
+
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>

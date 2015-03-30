@@ -3438,105 +3438,267 @@
     "n_buckets" : 10,
     "description": "PLACES: Days from last maintenance"
   },
-  "UPDATER_BACKGROUND_CHECK_CODE_EXTERNAL": {
-    "expires_in_version": "default",
-    "kind": "enumerated",
-    "n_values": 50,
-    "description": "Updater: externally initiated (typically by the application) background update check result code (see PING_BGUC_* constants defined in /toolkit/mozapps/update/nsUpdateService.js)"
+  "UPDATE_CHECK_NO_UPDATE_EXTERNAL" : {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of no updates were found for a background update check (externally initiated)"
   },
-  "UPDATER_BACKGROUND_CHECK_CODE_NOTIFY": {
-    "expires_in_version": "40",
-    "kind": "enumerated",
-    "n_values": 50,
-    "description": "Updater: timer initiated background update check result code (see PING_BGUC_* constants defined in /toolkit/mozapps/update/nsUpdateService.js)"
+  "UPDATE_CHECK_NO_UPDATE_NOTIFY" : {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of no updates were found for a background update check (timer initiated)"
   },
-  "UPDATER_INVALID_LASTUPDATETIME_EXTERNAL": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "Updater: Whether the last update time is invalid when a background update check was externally requested (typically by the application)"
-  },
-  "UPDATER_INVALID_LASTUPDATETIME_NOTIFY": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "Updater: Whether the last update time is invalid when a background update check was timer initiated"
-  },
-  "UPDATER_LAST_NOTIFY_INTERVAL_DAYS_EXTERNAL": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "n_buckets": 10,
-    "high": "60",
-    "description": "Updater: The interval in days between the previous and the current background update check when the check was externally requested (typically by the application)"
-  },
-  "UPDATER_LAST_NOTIFY_INTERVAL_DAYS_NOTIFY": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "n_buckets": 10,
-    "high": "60",
-    "description": "Updater: The interval in days between the previous and the current background update check when the check was timer initiated"
-  },
-  "UPDATER_STATUS_CODES": {
+  "UPDATE_CHECK_CODE_EXTERNAL": {
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 50,
-    "description": "Updater: the status of the latest update performed"
+    "description": "Update: background update check result code except for no updates found (externally initiated)"
   },
-  "UPDATER_UPDATES_ENABLED": {
-    "expires_in_version": "default",
+  "UPDATE_CHECK_CODE_NOTIFY": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 50,
+    "description": "Update: background update check result code except for no updates found (timer initiated)"
+  },
+  "UPDATE_CHECK_EXTENDED_ERROR_EXTERNAL": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "description": "Update: keyed count (key names are prefixed with AUS_CHECK_EX_ERR_) of background update check extended error code (externally initiated)"
+  },
+  "UPDATE_CHECK_EXTENDED_ERROR_NOTIFY": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "description": "Update: keyed count (key names are prefixed with AUS_CHECK_EX_ERR_) of background update check extended error code (timer initiated)"
+  },
+  "UPDATE_INVALID_LASTUPDATETIME_EXTERNAL": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of systems that have a last update time greater than the current time (externally initiated)"
+  },
+  "UPDATE_INVALID_LASTUPDATETIME_NOTIFY": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of systems that have a last update time greater than the current time (timer initiated)"
+  },
+  "UPDATE_LAST_NOTIFY_INTERVAL_DAYS_EXTERNAL": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "n_buckets": 60,
+    "high": "365",
+    "description": "Update: interval in days since the last background update check (externally initiated)"
+  },
+  "UPDATE_LAST_NOTIFY_INTERVAL_DAYS_NOTIFY": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "n_buckets": 30,
+    "high": "180",
+    "description": "Update: interval in days since the last background update check (timer initiated)"
+  },
+  "UPDATE_SERVICE_INSTALLED_EXTERNAL": {
+    "expires_in_version": "never",
     "kind": "boolean",
-    "description": "Updater: Whether or not updates are enabled"
+    "description": "Update: whether the service is installed (externally initiated)"
   },
-  "UPDATER_UPDATES_METRO_ENABLED": {
-    "expires_in_version": "default",
+  "UPDATE_SERVICE_INSTALLED_NOTIFY": {
+    "expires_in_version": "never",
     "kind": "boolean",
-    "description": "Updater: Whether or not Metro updates are enabled"
+    "description": "Update: whether the service is installed (timer initiated)"
   },
-  "UPDATER_UPDATES_AUTOMATIC": {
-    "expires_in_version": "40",
+  "UPDATE_SERVICE_MANUALLY_UNINSTALLED_EXTERNAL": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of systems that manually uninstalled the service (externally initiated)"
+  },
+  "UPDATE_SERVICE_MANUALLY_UNINSTALLED_NOTIFY": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of systems that manually uninstalled the service (timer initiated)"
+  },
+  "UPDATE_CANNOT_APPLY_EXTERNAL": {
+    "expires_in_version": "never",
     "kind": "boolean",
-    "description": "Updater: Whether or not updates are automatic"
+    "description": "Update: systems that cannot apply updates (externally initiated)"
   },
-  "UPDATER_SERVICE_ENABLED": {
-    "expires_in_version": "default",
+  "UPDATE_CANNOT_APPLY_NOTIFY": {
+    "expires_in_version": "never",
     "kind": "boolean",
-    "description": "Updater: Whether or not the MozillaMaintenance service is enabled"
+    "description": "Update: systems that cannot apply updates (timer initiated)"
   },
-  "UPDATER_SERVICE_ERROR_CODE": {
-    "expires_in_version": "default",
+  "UPDATE_CANNOT_STAGE_EXTERNAL": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of systems that cannot stage updates (externally initiated)"
+  },
+  "UPDATE_CANNOT_STAGE_NOTIFY": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of systems that cannot stage updates (timer initiated)"
+  },
+  "UPDATE_HAS_PREF_URL_OVERRIDE_EXTERNAL": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of systems that have an app.update.url.override preference (externally initiated)"
+  },
+  "UPDATE_HAS_PREF_URL_OVERRIDE_NOTIFY": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of systems that have an app.update.url.override preference (timer initiated)"
+  },
+  "UPDATE_PREF_UPDATE_CANCELATIONS_EXTERNAL": {
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 100,
-    "description": "Updater: 0=success else SERVICE_* error code defined in /toolkit/mozapps/update/common/errors.h"
+    "description": "Update: number of sequential update elevation request cancelations greater than 0 (externally initiated)"
   },
-  "UPDATER_SERVICE_ERRORS": {
-    "expires_in_version": "default",
+  "UPDATE_PREF_UPDATE_CANCELATIONS_NOTIFY": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 100,
+    "description": "Update: number of sequential update elevation request cancelations greater than 0 (timer initiated)"
+  },
+  "UPDATE_PREF_SERVICE_ERRORS_EXTERNAL": {
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 30,
-    "description": "Updater: The number of MozillaMaintenance service errors that have occurred"
+    "description": "Update: number of sequential update service errors greater than 0 (externally initiated)"
   },
-  "UPDATER_SERVICE_INSTALLED": {
-    "expires_in_version": "default",
-    "kind": "boolean",
-    "description": "Updater: Whether or not the MozillaMaintenance service is installed"
-  },
-  "UPDATER_SERVICE_MANUALLY_UNINSTALLED": {
-    "expires_in_version": "default",
-    "kind": "boolean",
-    "description": "Updater: Whether or not someone manually uninstalled the service."
-  },
-  "UPDATER_STAGE_ENABLED": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "Updater: Whether or not staging updates are enabled"
-  },
-  "UPDATER_HAS_PERMISSIONS": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "Updater: Whether or not the updater has permissions"
-  },
-  "UPDATER_WIZ_LAST_PAGE_CODE": {
-    "expires_in_version": "40",
+  "UPDATE_PREF_SERVICE_ERRORS_NOTIFY": {
+    "expires_in_version": "never",
     "kind": "enumerated",
-    "n_values": 25,
-    "description": "Updater: The update wizard page displayed when the UI was closed (mapped in toolkit/mozapps/update/content/updates.js)"
+    "n_values": 30,
+    "description": "Update: number of sequential update service errors greater than 0 (timer initiated)"
+  },
+  "UPDATE_NOT_PREF_UPDATE_AUTO_EXTERNAL": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of when the app.update.auto boolean preference is not the default value of true (true values are not submitted)"
+  },
+  "UPDATE_NOT_PREF_UPDATE_AUTO_NOTIFY": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of when the app.update.auto boolean preference is not the default value of true (true values are not submitted)"
+  },
+  "UPDATE_NOT_PREF_UPDATE_ENABLED_EXTERNAL": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of when the app.update.enabled boolean preference is not the default value of true (true values are not submitted)"
+  },
+  "UPDATE_NOT_PREF_UPDATE_ENABLED_NOTIFY": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of when the app.update.enabled boolean preference is not the default value of true (true values are not submitted)"
+  },
+  "UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_EXTERNAL": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of when the app.update.staging.enabled boolean preference is not the default value of true (true values are not submitted)"
+  },
+  "UPDATE_NOT_PREF_UPDATE_STAGING_ENABLED_NOTIFY": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of when the app.update.staging.enabled boolean preference is not the default value of true (true values are not submitted)"
+  },
+  "UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_EXTERNAL": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of when the app.update.service.enabled boolean preference is not the default value of true (true values are not submitted)"
+  },
+  "UPDATE_NOT_PREF_UPDATE_SERVICE_ENABLED_NOTIFY": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "Update: count of when the app.update.service.enabled boolean preference is not the default value of true (true values are not submitted)"
+  },
+  "UPDATE_DOWNLOAD_CODE_COMPLETE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 50,
+    "description": "Update: complete patch download result code"
+  },
+  "UPDATE_DOWNLOAD_CODE_PARTIAL": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 50,
+    "description": "Update: complete patch download result code"
+  },
+  "UPDATE_STATE_CODE_COMPLETE_STARTUP": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Update: the state of a complete update from update.status on startup"
+  },
+  "UPDATE_STATE_CODE_PARTIAL_STARTUP": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Update: the state of a partial patch update from update.status on startup"
+  },
+  "UPDATE_STATE_CODE_UNKNOWN_STARTUP": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Update: the state of an unknown patch update from update.status on startup"
+  },
+  "UPDATE_STATE_CODE_COMPLETE_STAGE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Update: the state of a complete patch update from update.status after staging"
+  },
+  "UPDATE_STATE_CODE_PARTIAL_STAGE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Update: the state of a partial patch update from update.status after staging"
+  },
+  "UPDATE_STATE_CODE_UNKNOWN_STAGE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 20,
+    "description": "Update: the state of an unknown patch update from update.status after staging"
+  },
+  "UPDATE_STATUS_ERROR_CODE_COMPLETE_STARTUP": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 100,
+    "description": "Update: the status error code for a failed complete patch update from update.status on startup"
+  },
+  "UPDATE_STATUS_ERROR_CODE_PARTIAL_STARTUP": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 100,
+    "description": "Update: the status error code for a failed partial patch update from update.status on startup"
+  },
+  "UPDATE_STATUS_ERROR_CODE_UNKNOWN_STARTUP": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 100,
+    "description": "Update: the status error code for a failed unknown patch update from update.status on startup"
+  },
+  "UPDATE_STATUS_ERROR_CODE_COMPLETE_STAGE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 100,
+    "description": "Update: the status error code for a failed complete patch update from update.status after staging"
+  },
+  "UPDATE_STATUS_ERROR_CODE_PARTIAL_STAGE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 100,
+    "description": "Update: the status error code for a failed partial patch update from update.status after staging"
+  },
+  "UPDATE_STATUS_ERROR_CODE_UNKNOWN_STAGE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 100,
+    "description": "Update: the status error code for a failed unknown patch update from update.status after staging"
+  },
+  "UPDATE_WIZ_LAST_PAGE_CODE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 30,
+    "description": "Update: the update wizard page displayed when the UI was closed (mapped in toolkit/mozapps/update/UpdateTelemetry.jsm)"
   },
   "THUNDERBIRD_GLODA_SIZE_MB": {
     "expires_in_version": "40",

@@ -1121,7 +1121,7 @@ void GStreamerReader::VideoPreroll()
   if (IsValidVideoRegion(frameSize, pictureRect, displaySize)) {
     GstStructure* structure = gst_caps_get_structure(caps, 0);
     gst_structure_get_fraction(structure, "framerate", &fpsNum, &fpsDen);
-    mInfo.mVideo.mDisplay = ThebesIntSize(displaySize.ToIntSize());
+    mInfo.mVideo.mDisplay = displaySize;
     mInfo.mVideo.mHasVideo = true;
   } else {
     LOG(PR_LOG_DEBUG, "invalid video region");

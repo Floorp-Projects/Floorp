@@ -91,11 +91,10 @@ public:
   {
     typedef NS_CALLBACK(GetInterfacesProc)(uint32_t* aCountP,
                                            nsIID*** aArray);
-    typedef NS_CALLBACK(GetLanguageHelperProc)(uint32_t aLanguage,
-                                               nsISupports** aHelper);
+    typedef NS_CALLBACK(GetScriptableHelperProc)(nsIXPCScriptable** aHelper);
 
     GetInterfacesProc getinterfaces;
-    GetLanguageHelperProc getlanguagehelper;
+    GetScriptableHelperProc getscriptablehelper;
     uint32_t flags;
     nsCID cid;
   };
@@ -115,11 +114,11 @@ private:
   extern NS_IMETHODIMP NS_CI_INTERFACE_GETTER_NAME(_class)                    \
      (uint32_t *, nsIID ***);
 
-#define NS_IMPL_CLASSINFO(_class, _getlanguagehelper, _flags, _cid)     \
+#define NS_IMPL_CLASSINFO(_class, _getscriptablehelper, _flags, _cid)   \
   NS_DECL_CI_INTERFACE_GETTER(_class)                                   \
   static const GenericClassInfo::ClassInfoData k##_class##ClassInfoData = { \
     NS_CI_INTERFACE_GETTER_NAME(_class),                                \
-    _getlanguagehelper,                                                 \
+    _getscriptablehelper,                                               \
     _flags | nsIClassInfo::SINGLETON_CLASSINFO,                         \
     _cid,                                                               \
   };                                                                    \

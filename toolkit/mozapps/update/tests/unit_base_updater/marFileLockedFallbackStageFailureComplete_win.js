@@ -35,7 +35,7 @@ function run_test() {
 }
 
 function doUpdate() {
-  runUpdate(1, STATE_FAILED_WRITE_ERROR, null);
+  runUpdate(1, STATE_FAILED_WRITE_ERROR_FILE_COPY, null);
 
   // Switch the application to the staged application that was updated.
   gStageUpdate = false;
@@ -50,5 +50,6 @@ function checkUpdateApplied() {
 function checkUpdate() {
   checkFilesAfterUpdateFailure(getApplyDirFile, false, false);
   checkUpdateLogContains(ERR_RENAME_FILE);
+  standardInit();
   checkCallbackAppLog();
 }

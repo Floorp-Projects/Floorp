@@ -6,6 +6,7 @@
 #ifndef nsNPAPIPluginInstance_h_
 #define nsNPAPIPluginInstance_h_
 
+#include "nsSize.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "nsPIDOMWindow.h"
