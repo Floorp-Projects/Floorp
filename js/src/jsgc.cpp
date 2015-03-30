@@ -2976,7 +2976,11 @@ GCRuntime::refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind)
     }
 
     // Retry the allocation after the last-ditch GC.
-    thing = tryRefillFreeListFromMainThread(cx, thingKind);
+    // Note that due to GC callbacks we might already have allocated an arena
+    // for this thing kind!
+    thing = cx->arenas()->allocateFromFreeList(thingKind, Arena::thingSize(thingKind));
+    if (!thing)
+        thing = tryRefillFreeListFromMainThread(cx, thingKind);
     if (thing)
         return thing;
 
