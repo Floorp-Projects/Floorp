@@ -107,7 +107,7 @@ AnimationPlayer::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
     }
   } else {
     mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
-                          (aSeekTime / mPlaybackRate));
+                          (aSeekTime.MultDouble(1 / mPlaybackRate)));
   }
 
   mPreviousCurrentTime.SetNull();
@@ -604,7 +604,8 @@ AnimationPlayer::ResumeAt(const TimeDuration& aReadyTime)
   // we should use. In all other cases, we resolve it from the ready time.
   if (mStartTime.IsNull()) {
     if (mPlaybackRate != 0) {
-      mStartTime.SetValue(aReadyTime - (mHoldTime.Value() / mPlaybackRate));
+      mStartTime.SetValue(aReadyTime -
+                          (mHoldTime.Value().MultDouble(1 / mPlaybackRate)));
       mHoldTime.SetNull();
     } else {
       mStartTime.SetValue(aReadyTime);
@@ -679,7 +680,7 @@ AnimationPlayer::UpdateFinishedState(bool aSeekFlag)
                !currentTime.IsNull()) {
       if (aSeekFlag && !mHoldTime.IsNull()) {
         mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
-                              (mHoldTime.Value() / mPlaybackRate));
+                              (mHoldTime.Value().MultDouble(1 / mPlaybackRate)));
       }
       mHoldTime.SetNull();
     }
