@@ -478,7 +478,7 @@ static nsRoleMapEntry sWAIRoleMaps[] =
   },
   { // radiogroup
     &nsGkAtoms::radiogroup,
-    roles::GROUPING,
+    roles::RADIO_GROUP,
     kUseMapRole,
     eNoValue,
     eNoAction,
