@@ -2611,21 +2611,21 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
   }
 
   TimeStamp nowTime;
-  const int64_t clock_time = GetClock(&nowTime);
+  const int64_t clockTime = GetClock(&nowTime);
   // Skip frames up to the frame at the playback position, and figure out
   // the time remaining until it's time to display the next frame.
   int64_t remainingTime = AUDIO_DURATION_USECS;
-  NS_ASSERTION(clock_time >= 0, "Should have positive clock time.");
+  NS_ASSERTION(clockTime >= 0, "Should have positive clock time.");
   nsRefPtr<VideoData> currentFrame;
   if (VideoQueue().GetSize() > 0) {
     VideoData* frame = VideoQueue().PeekFront();
     int32_t droppedFrames = 0;
-    while (IsRealTime() || clock_time >= frame->mTime) {
+    while (IsRealTime() || clockTime >= frame->mTime) {
       mVideoFrameEndTime = frame->GetEndTime();
       if (currentFrame) {
         mDecoder->NotifyDecodedFrames(0, 0, 1);
         VERBOSE_LOG("discarding video frame mTime=%lld clock_time=%lld (%d so far)",
-                    currentFrame->mTime, clock_time, ++droppedFrames);
+                    currentFrame->mTime, clockTime, ++droppedFrames);
       }
       currentFrame = frame;
       nsRefPtr<VideoData> releaseMe = VideoQueue().PopFront();
@@ -2637,7 +2637,7 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
     // Current frame has already been presented, wait until it's time to
     // present the next frame.
     if (frame && !currentFrame) {
-      remainingTime = frame->mTime - clock_time;
+      remainingTime = frame->mTime - clockTime;
     }
   }
 
@@ -2673,7 +2673,7 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
   // advance the clock to after the media end time.
   if (mVideoFrameEndTime != -1 || mAudioEndTime != -1) {
     // These will be non -1 if we've displayed a video frame, or played an audio frame.
-    int64_t t = std::min(clock_time, std::max(mVideoFrameEndTime, mAudioEndTime));
+    int64_t t = std::min(clockTime, std::max(mVideoFrameEndTime, mAudioEndTime));
     // FIXME: Bug 1091422 - chained ogg files hit this assertion.
     //MOZ_ASSERT(t >= GetMediaTime());
     if (t > GetMediaTime()) {
@@ -2687,7 +2687,7 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
 
   if (currentFrame) {
     // Decode one frame and display it.
-    int64_t delta = currentFrame->mTime - clock_time;
+    int64_t delta = currentFrame->mTime - clockTime;
     TimeStamp presTime = nowTime + TimeDuration::FromMicroseconds(delta / mPlaybackRate);
     NS_ASSERTION(currentFrame->mTime >= 0, "Should have positive frame time");
     {
@@ -2699,21 +2699,21 @@ void MediaDecoderStateMachine::UpdateRenderedVideoFrames()
     MOZ_ASSERT(IsPlaying());
     MediaDecoder::FrameStatistics& frameStats = mDecoder->GetFrameStatistics();
     frameStats.NotifyPresentedFrame();
-    remainingTime = currentFrame->GetEndTime() - clock_time;
+    remainingTime = currentFrame->GetEndTime() - clockTime;
     currentFrame = nullptr;
   }
 
   // The remainingTime is negative (include zero):
-  // 1. When the clock_time is larger than the latest video frame's endtime.
+  // 1. When the clockTime is larger than the latest video frame's endtime.
   // All the video frames should be rendered or dropped, nothing left in
   // VideoQueue. And since the VideoQueue is empty, we don't need to wake up
   // statemachine thread immediately, so set the remainingTime to default value.
-  // 2. Current frame's endtime is smaller than clock_time but there still exist
+  // 2. Current frame's endtime is smaller than clockTime but there still exist
   // newer frames in queue. Re-calculate the remainingTime.
   if (remainingTime <= 0) {
     VideoData* nextFrame = VideoQueue().PeekFront();
     if (nextFrame) {
-      remainingTime = nextFrame->mTime - clock_time;
+      remainingTime = nextFrame->mTime - clockTime;
     } else {
       remainingTime = AUDIO_DURATION_USECS;
     }
