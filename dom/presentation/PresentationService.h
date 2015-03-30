@@ -13,6 +13,9 @@
 #include "nsTObserverArray.h"
 #include "PresentationSessionInfo.h"
 
+class nsIPresentationSessionRequest;
+class nsIURI;
+
 namespace mozilla {
 namespace dom {
 
@@ -38,6 +41,10 @@ public:
   void
   RemoveSessionInfo(const nsAString& aSessionId)
   {
+    if (mRespondingSessionId.Equals(aSessionId)) {
+      mRespondingSessionId.Truncate();
+    }
+
     mSessionInfo.Remove(aSessionId);
   }
 
@@ -45,9 +52,12 @@ private:
   ~PresentationService();
   void HandleShutdown();
   nsresult HandleDeviceChange();
+  nsresult HandleSessionRequest(nsIPresentationSessionRequest* aRequest);
   void NotifyAvailableChange(bool aIsAvailable);
+  bool IsAppInstalled(nsIURI* aUri);
 
   bool mIsAvailable;
+  nsString mRespondingSessionId;
   nsRefPtrHashtable<nsStringHashKey, PresentationSessionInfo> mSessionInfo;
   nsTObserverArray<nsCOMPtr<nsIPresentationListener>> mListeners;
 };

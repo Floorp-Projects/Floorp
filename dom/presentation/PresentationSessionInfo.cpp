@@ -4,6 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/TabParent.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/Services.h"
+#include "nsIDocShell.h"
+#include "nsIFrameLoader.h"
+#include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "PresentationService.h"
@@ -11,6 +18,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::services;
 
 /*
  * Implementation of PresentationSessionInfo
@@ -229,6 +237,8 @@ PresentationRequesterInfo::OnOffer(nsIPresentationChannelDescription* aDescripti
 NS_IMETHODIMP
 PresentationRequesterInfo::OnAnswer(nsIPresentationChannelDescription* aDescription)
 {
+  mIsResponderReady = true;
+
   // Close the control channel since it's no longer needed.
   nsresult rv = mControlChannel->Close(NS_OK);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -311,16 +321,138 @@ PresentationRequesterInfo::OnStopListening(nsIServerSocket* aServerSocket,
 
 /*
  * Implementation of PresentationResponderInfo
+ *
+ * During presentation session establishment, the receiver expects the following
+ * after trying to launch the app by notifying "presentation-launch-receiver":
+ * (The order between step 2 and 3 is not guaranteed.)
+ * 1. |Observe| of |nsIObserver| is called with "presentation-receiver-launched".
+ *    Then start listen to document |STATE_TRANSFERRING| event.
+ * 2. |NotifyResponderReady| is called to indicate the receiver page is ready
+ *    for presentation use.
+ * 3. |OnOffer| of |nsIPresentationControlChannelListener| is called.
+ * 4. Once both step 2 and 3 are done, establish the data transport channel and
+ *    send the answer. (The control channel will be closed by the sender once it
+ *    receives the answer.)
+ * 5. |NotifyTransportReady| of |nsIPresentationSessionTransportCallback| is
+ *    called. The presentation session is ready to use, so notify the listener
+ *    of CONNECTED state.
  */
 
-NS_IMPL_ISUPPORTS_INHERITED0(PresentationResponderInfo,
-                             PresentationSessionInfo)
+NS_IMPL_ISUPPORTS_INHERITED(PresentationResponderInfo,
+                            PresentationSessionInfo,
+                            nsIObserver,
+                            nsITimerCallback)
+
+nsresult
+PresentationResponderInfo::Init(nsIPresentationControlChannel* aControlChannel)
+{
+  PresentationSessionInfo::Init(aControlChannel);
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (NS_WARN_IF(!obs)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsresult rv = obs->AddObserver(this, "presentation-receiver-launched", false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Add a timer to prevent waiting indefinitely in case the receiver page fails
+  // to become ready.
+  int32_t timeout =
+    Preferences::GetInt("presentation.receiver.loading.timeout", 10000);
+  mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  rv = mTimer->InitWithCallback(this, timeout, nsITimer::TYPE_ONE_SHOT);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+void
+PresentationResponderInfo::Shutdown(nsresult aReason)
+{
+  PresentationSessionInfo::Shutdown(aReason);
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  if (obs) {
+    obs->RemoveObserver(this, "presentation-receiver-launched");
+  }
+
+  if (mTimer) {
+    mTimer->Cancel();
+  }
+
+  mLoadingCallback = nullptr;
+  mRequesterDescription = nullptr;
+}
+
+nsresult
+PresentationResponderInfo::InitTransportAndSendAnswer()
+{
+  // Establish a data transport channel |mTransport| to the sender and use
+  // |this| as the callback.
+  mTransport = do_CreateInstance(PRESENTATION_SESSION_TRANSPORT_CONTRACTID);
+  if (NS_WARN_IF(!mTransport)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsresult rv = mTransport->InitWithChannelDescription(mRequesterDescription, this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // TODO Prepare and send the answer.
+
+  return NS_OK;
+ }
+
+nsresult
+PresentationResponderInfo::NotifyResponderReady()
+{
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
+
+  mIsResponderReady = true;
+
+  // Initialize |mTransport| and send the answer to the sender if sender's
+  // description is already offered.
+  if (mRequesterDescription) {
+    nsresult rv = InitTransportAndSendAnswer();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return ReplyError(rv);
+    }
+  }
+
+  return NS_OK;
+}
 
 // nsIPresentationControlChannelListener
 NS_IMETHODIMP
 PresentationResponderInfo::OnOffer(nsIPresentationChannelDescription* aDescription)
 {
-  // TODO Initialize |mTransport| and use |this| as the callback.
+  if (NS_WARN_IF(!aDescription)) {
+    return ReplyError(NS_ERROR_INVALID_ARG);
+  }
+
+  mRequesterDescription = aDescription;
+
+  // Initialize |mTransport| and send the answer to the sender if the receiver
+  // page is ready for presentation use.
+  if (mIsResponderReady) {
+    nsresult rv = InitTransportAndSendAnswer();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return ReplyError(rv);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -346,8 +478,80 @@ PresentationResponderInfo::NotifyClosed(nsresult aReason)
   SetControlChannel(nullptr);
 
   if (NS_WARN_IF(NS_FAILED(aReason))) {
-    // TODO Notify session failure.
+    // Reply error for an abnormal close.
+    return ReplyError(aReason);
   }
 
   return NS_OK;
+}
+
+// nsIObserver
+NS_IMETHODIMP
+PresentationResponderInfo::Observe(nsISupports* aSubject,
+                                   const char* aTopic,
+                                   const char16_t* aData)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // The receiver has launched.
+  if (!strcmp(aTopic, "presentation-receiver-launched")) {
+    // Ignore irrelevant notifications.
+    if (!mSessionId.Equals(aData)) {
+      return NS_OK;
+    }
+
+    // Remove the observer.
+    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+    if (obs) {
+      obs->RemoveObserver(this, "presentation-receiver-launched");
+    }
+
+    // Start to listen to document state change event |STATE_TRANSFERRING|.
+    nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(aSubject);
+    if (NS_WARN_IF(!owner)) {
+      return ReplyError(NS_ERROR_NOT_AVAILABLE);
+    }
+
+    nsCOMPtr<nsIFrameLoader> frameLoader;
+    nsresult rv = owner->GetFrameLoader(getter_AddRefs(frameLoader));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return ReplyError(rv);
+    }
+
+    nsRefPtr<TabParent> tabParent = TabParent::GetFrom(frameLoader);
+    if (tabParent) {
+      // OOP frame
+      nsCOMPtr<nsIContentParent> cp = tabParent->Manager();
+      NS_WARN_IF(!static_cast<ContentParent*>(cp.get())->SendNotifyPresentationReceiverLaunched(tabParent, mSessionId));
+    } else {
+      // In-process frame
+      nsCOMPtr<nsIDocShell> docShell;
+      rv = frameLoader->GetDocShell(getter_AddRefs(docShell));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return ReplyError(rv);
+      }
+
+      mLoadingCallback = new PresentationResponderLoadingCallback(mSessionId);
+      rv = mLoadingCallback->Init(docShell);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return ReplyError(rv);
+      }
+    }
+
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(false, "Unexpected topic for PresentationResponderInfo.");
+  return NS_ERROR_UNEXPECTED;
+}
+
+// nsITimerCallback
+NS_IMETHODIMP
+PresentationResponderInfo::Notify(nsITimer* aTimer)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_WARNING("The receiver page fails to become ready before timeout.");
+
+  mTimer = nullptr;
+  return ReplyError(NS_ERROR_DOM_TIMEOUT_ERR);
 }
