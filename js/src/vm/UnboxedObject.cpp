@@ -34,13 +34,13 @@ UnboxedLayout::trace(JSTracer* trc)
         newScript()->trace(trc);
 
     if (nativeGroup_)
-        MarkObjectGroup(trc, &nativeGroup_, "unboxed_layout_nativeGroup");
+        TraceEdge(trc, &nativeGroup_, "unboxed_layout_nativeGroup");
 
     if (nativeShape_)
         TraceEdge(trc, &nativeShape_, "unboxed_layout_nativeShape");
 
     if (replacementNewGroup_)
-        MarkObjectGroup(trc, &replacementNewGroup_, "unboxed_layout_replacementNewGroup");
+        TraceEdge(trc, &replacementNewGroup_, "unboxed_layout_replacementNewGroup");
 
     if (constructorCode_)
         MarkJitCode(trc, &constructorCode_, "unboxed_layout_constructorCode");

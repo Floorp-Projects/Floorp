@@ -1117,7 +1117,6 @@ DeclMarkerImpl(String, JSString)
 DeclMarkerImpl(String, JSFlatString)
 DeclMarkerImpl(String, JSLinearString)
 DeclMarkerImpl(String, PropertyName)
-DeclMarkerImpl(ObjectGroup, js::ObjectGroup)
 
 } /* namespace gc */
 } /* namespace js */
@@ -1649,7 +1648,7 @@ gc::MarkChildren(JSTracer* trc, ObjectGroup* group)
         group->unboxedLayout().trace(trc);
 
     if (ObjectGroup* unboxedGroup = group->maybeOriginalUnboxedGroup()) {
-        MarkObjectGroupUnbarriered(trc, &unboxedGroup, "group_original_unboxed_group");
+        TraceManuallyBarrieredEdge(trc, &unboxedGroup, "group_original_unboxed_group");
         group->setOriginalUnboxedGroup(unboxedGroup);
     }
 
