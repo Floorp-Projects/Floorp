@@ -37,20 +37,20 @@ function check_test_helper_pt1() {
 
 // Callback function used by the custom XMLHttpRequest implementation to
 // call the nsIDOMEventListener's handleEvent method for onload.
-function callHandleEvent() {
-  gXHR.status = 400;
-  gXHR.responseText = gResponseBody;
+function callHandleEvent(aXHR) {
+  aXHR.status = 400;
+  aXHR.responseText = gResponseBody;
   try {
     if (gResponseBody) {
       let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                    createInstance(Ci.nsIDOMParser);
-      gXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
+      aXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
     }
   } catch (e) {
-    gXHR.responseXML = null;
+    aXHR.responseXML = null;
   }
-  let e = { target: gXHR };
-  gXHR.onload(e);
+  let e = { target: aXHR };
+  aXHR.onload(e);
 }
 
 // update xml not found
