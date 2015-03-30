@@ -904,8 +904,7 @@ ReifyStack(nsIStackFrame* aStack, nsTArray<ConsoleStackEntry>& aRefiedStack)
     nsresult rv = stack->GetLanguage(&language);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (language == nsIProgrammingLanguage::JAVASCRIPT ||
-        language == nsIProgrammingLanguage::JAVASCRIPT2) {
+    if (language == nsIProgrammingLanguage::JAVASCRIPT) {
       ConsoleStackEntry& data = *aRefiedStack.AppendElement();
       rv = StackFrameToStackEntry(stack, data, language);
       NS_ENSURE_SUCCESS(rv, rv);
@@ -993,8 +992,7 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
       return;
     }
 
-    if (language == nsIProgrammingLanguage::JAVASCRIPT ||
-        language == nsIProgrammingLanguage::JAVASCRIPT2) {
+    if (language == nsIProgrammingLanguage::JAVASCRIPT) {
       callData->mTopStackFrame.emplace();
       nsresult rv = StackFrameToStackEntry(stack,
                                            *callData->mTopStackFrame,
