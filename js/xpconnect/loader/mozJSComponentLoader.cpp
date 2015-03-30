@@ -70,7 +70,7 @@ static const char kJSCachePrefix[] = "jsloader";
 
 #ifdef PR_LOGGING
 // NSPR_LOG_MODULES=JSComponentLoader:5
-static PRLogModuleInfo *gJSCLLog;
+static PRLogModuleInfo* gJSCLLog;
 #endif
 
 #define LOG(args) PR_LOG(gJSCLLog, PR_LOG_DEBUG, args)
@@ -85,7 +85,7 @@ static PRLogModuleInfo *gJSCLLog;
 #define ERROR_SETTING_SYMBOL "%s - Could not set symbol '%s' on target object."
 
 static bool
-Dump(JSContext *cx, unsigned argc, Value *vp)
+Dump(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -117,7 +117,7 @@ Dump(JSContext *cx, unsigned argc, Value *vp)
 }
 
 static bool
-Debug(JSContext *cx, unsigned argc, jsval *vp)
+Debug(JSContext* cx, unsigned argc, jsval* vp)
 {
 #ifdef DEBUG
     return Dump(cx, argc, vp);
@@ -140,20 +140,20 @@ public:
     explicit JSCLContextHelper(JSContext* aCx);
     ~JSCLContextHelper();
 
-    void reportErrorAfterPop(char *buf);
+    void reportErrorAfterPop(char* buf);
 
 private:
     JSContext* mContext;
     char*      mBuf;
 
     // prevent copying and assignment
-    JSCLContextHelper(const JSCLContextHelper &) = delete;
-    const JSCLContextHelper& operator=(const JSCLContextHelper &) = delete;
+    JSCLContextHelper(const JSCLContextHelper&) = delete;
+    const JSCLContextHelper& operator=(const JSCLContextHelper&) = delete;
 };
 
 static nsresult
-ReportOnCaller(JSContext *callerContext,
-               const char *format, ...) {
+ReportOnCaller(JSContext* callerContext,
+               const char* format, ...) {
     if (!callerContext) {
         return NS_ERROR_FAILURE;
     }
@@ -161,7 +161,7 @@ ReportOnCaller(JSContext *callerContext,
     va_list ap;
     va_start(ap, format);
 
-    char *buf = JS_vsmprintf(format, ap);
+    char* buf = JS_vsmprintf(format, ap);
     if (!buf) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -173,13 +173,13 @@ ReportOnCaller(JSContext *callerContext,
 }
 
 static nsresult
-ReportOnCaller(JSCLContextHelper &helper,
-               const char *format, ...)
+ReportOnCaller(JSCLContextHelper& helper,
+               const char* format, ...)
 {
     va_list ap;
     va_start(ap, format);
 
-    char *buf = JS_vsmprintf(format, ap);
+    char* buf = JS_vsmprintf(format, ap);
     if (!buf) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -329,7 +329,7 @@ mozJSComponentLoader::ReallyInit()
 }
 
 const mozilla::Module*
-mozJSComponentLoader::LoadModule(FileLocation &aFile)
+mozJSComponentLoader::LoadModule(FileLocation& aFile)
 {
     nsCOMPtr<nsIFile> file = aFile.GetBaseFile();
 
@@ -452,9 +452,9 @@ mozJSComponentLoader::FindTargetObject(JSContext* aCx,
 
     RootedObject targetObject(aCx);
     if (mReuseLoaderGlobal) {
-        JSFunction *fun = js::GetOutermostEnclosingFunctionOfScriptedCaller(aCx);
+        JSFunction* fun = js::GetOutermostEnclosingFunctionOfScriptedCaller(aCx);
         if (fun) {
-            JSObject *funParent = js::GetObjectEnvironmentObjectForFunction(fun);
+            JSObject* funParent = js::GetObjectEnvironmentObjectForFunction(fun);
             if (JS_GetClass(funParent) == &kFakeBackstagePassJSClass)
                 targetObject = funParent;
         }
@@ -507,37 +507,37 @@ mozJSComponentLoader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 class FileAutoCloser
 {
  public:
-    explicit FileAutoCloser(PRFileDesc *file) : mFile(file) {}
+    explicit FileAutoCloser(PRFileDesc* file) : mFile(file) {}
     ~FileAutoCloser() { PR_Close(mFile); }
  private:
-    PRFileDesc *mFile;
+    PRFileDesc* mFile;
 };
 
 class FileMapAutoCloser
 {
  public:
-    explicit FileMapAutoCloser(PRFileMap *map) : mMap(map) {}
+    explicit FileMapAutoCloser(PRFileMap* map) : mMap(map) {}
     ~FileMapAutoCloser() { PR_CloseFileMap(mMap); }
  private:
-    PRFileMap *mMap;
+    PRFileMap* mMap;
 };
 #else
 class ANSIFileAutoCloser
 {
  public:
-    explicit ANSIFileAutoCloser(FILE *file) : mFile(file) {}
+    explicit ANSIFileAutoCloser(FILE* file) : mFile(file) {}
     ~ANSIFileAutoCloser() { fclose(mFile); }
  private:
-    FILE *mFile;
+    FILE* mFile;
 };
 #endif
 
 JSObject*
 mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
-                                               nsIFile *aComponentFile,
-                                               nsIURI *aURI,
+                                               nsIFile* aComponentFile,
+                                               nsIURI* aURI,
                                                bool aReuseLoaderGlobal,
-                                               bool *aRealFile)
+                                               bool* aRealFile)
 {
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     if (aReuseLoaderGlobal) {
@@ -564,7 +564,7 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
         // been defined so the JS debugger can tell what module the global is
         // for
         rv = xpc->InitClassesWithNewWrappedGlobal(aCx,
-                                                  static_cast<nsIGlobalObject *>(backstagePass),
+                                                  static_cast<nsIGlobalObject*>(backstagePass),
                                                   mSystemPrincipal,
                                                   nsIXPConnect::DONT_FIRE_ONNEWGLOBALHOOK,
                                                   options,
@@ -651,11 +651,11 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
 }
 
 nsresult
-mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo &aInfo,
-                                        nsIFile *aComponentFile,
+mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
+                                        nsIFile* aComponentFile,
                                         MutableHandleObject aObject,
                                         MutableHandleScript aTableScript,
-                                        char **aLocation,
+                                        char** aLocation,
                                         bool aPropagateExceptions,
                                         MutableHandleValue aException)
 {
@@ -746,7 +746,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo &aInfo,
                 return NS_ERROR_FAILURE;
             }
 
-            PRFileDesc *fileHandle;
+            PRFileDesc* fileHandle;
             rv = aComponentFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fileHandle);
             if (NS_FAILED(rv)) {
                 return NS_ERROR_FILE_NOT_FOUND;
@@ -760,7 +760,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo &aInfo,
             // didn't require extending the file.  We know that the file doesn't
             // need to be extended, so skip the extra work by not providing the
             // size.
-            PRFileMap *map = PR_CreateFileMap(fileHandle, 0, PR_PROT_READONLY);
+            PRFileMap* map = PR_CreateFileMap(fileHandle, 0, PR_PROT_READONLY);
             if (!map) {
                 NS_ERROR("Failed to create file map");
                 return NS_ERROR_FAILURE;
@@ -771,7 +771,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo &aInfo,
 
             uint32_t fileSize32 = fileSize;
 
-            char *buf = static_cast<char*>(PR_MemMap(map, 0, fileSize32));
+            char* buf = static_cast<char*>(PR_MemMap(map, 0, fileSize32));
             if (!buf) {
                 NS_WARNING("Failed to map file");
                 return NS_ERROR_FAILURE;
@@ -799,7 +799,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo &aInfo,
              * reading in the file
              */
 
-            FILE *fileHandle;
+            FILE* fileHandle;
             rv = aComponentFile->OpenANSIFileDesc("r", &fileHandle);
             if (NS_FAILED(rv)) {
                 return NS_ERROR_FILE_NOT_FOUND;
@@ -815,7 +815,7 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo &aInfo,
                 return NS_ERROR_FAILURE;
             }
 
-            char *buf = (char *) malloc(len * sizeof(char));
+            char* buf = (char*) malloc(len * sizeof(char));
             if (!buf) {
                 return NS_ERROR_FAILURE;
             }
@@ -1006,7 +1006,7 @@ mozJSComponentLoader::UnloadModules()
 NS_IMETHODIMP
 mozJSComponentLoader::Import(const nsACString& registryLocation,
                              HandleValue targetValArg,
-                             JSContext *cx,
+                             JSContext* cx,
                              uint8_t optionalArgc,
                              MutableHandleValue retval)
 {
@@ -1062,12 +1062,12 @@ mozJSComponentLoader::Import(const nsACString& registryLocation,
 /* [noscript] JSObjectPtr importInto(in AUTF8String registryLocation,
                                      in JSObjectPtr targetObj); */
 NS_IMETHODIMP
-mozJSComponentLoader::ImportInto(const nsACString &aLocation,
-                                 JSObject *aTargetObj,
-                                 nsAXPCNativeCallContext *cc,
-                                 JSObject **_retval)
+mozJSComponentLoader::ImportInto(const nsACString& aLocation,
+                                 JSObject* aTargetObj,
+                                 nsAXPCNativeCallContext* cc,
+                                 JSObject** _retval)
 {
-    JSContext *callercx;
+    JSContext* callercx;
     nsresult rv = cc->GetJSContext(&callercx);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1082,7 +1082,7 @@ mozJSComponentLoader::ImportInto(const nsACString &aLocation,
 /* boolean isModuleLoaded (in AUTF8String registryLocation); */
 NS_IMETHODIMP
 mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
-                                     bool *retval)
+                                     bool* retval)
 {
     MOZ_ASSERT(nsContentUtils::IsCallerChrome());
 
@@ -1101,9 +1101,9 @@ mozJSComponentLoader::IsModuleLoaded(const nsACString& aLocation,
 }
 
 nsresult
-mozJSComponentLoader::ImportInto(const nsACString &aLocation,
+mozJSComponentLoader::ImportInto(const nsACString& aLocation,
                                  HandleObject targetObj,
-                                 JSContext *callercx,
+                                 JSContext* callercx,
                                  MutableHandleObject vp)
 {
     vp.set(nullptr);
@@ -1309,8 +1309,8 @@ mozJSComponentLoader::Unload(const nsACString & aLocation)
 }
 
 NS_IMETHODIMP
-mozJSComponentLoader::Observe(nsISupports *subject, const char *topic,
-                              const char16_t *data)
+mozJSComponentLoader::Observe(nsISupports* subject, const char* topic,
+                              const char16_t* data)
 {
     if (!strcmp(topic, "xpcom-shutdown-loaders")) {
         UnloadModules();
@@ -1362,7 +1362,7 @@ JSCLContextHelper::~JSCLContextHelper()
 }
 
 void
-JSCLContextHelper::reportErrorAfterPop(char *buf)
+JSCLContextHelper::reportErrorAfterPop(char* buf)
 {
     MOZ_ASSERT(!mBuf, "Already called reportErrorAfterPop");
     mBuf = buf;

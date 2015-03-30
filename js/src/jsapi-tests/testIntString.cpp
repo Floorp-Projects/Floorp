@@ -12,7 +12,7 @@ BEGIN_TEST(testIntString_bug515273)
     JS::RootedValue v(cx);
 
     EVAL("'1';", &v);
-    JSString *str = v.toString();
+    JSString* str = v.toString();
     CHECK(JS_StringHasBeenInterned(cx, str));
     CHECK(JS_FlatStringEqualsAscii(JS_ASSERT_STRING_IS_FLAT(str), "1"));
 

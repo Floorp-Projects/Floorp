@@ -40,7 +40,7 @@ static const int32_t NUNBOX32_PAYLOAD_OFFSET = 0;
 
 // Size of each bailout table entry.
 // For MIPS this is 2 instructions relative call.
-static const uint32_t BAILOUT_TABLE_ENTRY_SIZE = 2 * sizeof(void *);
+static const uint32_t BAILOUT_TABLE_ENTRY_SIZE = 2 * sizeof(void*);
 
 class Registers
 {
@@ -114,19 +114,19 @@ class Registers
     };
     typedef RegisterID Code;
 
-    static const char *GetName(Code code) {
+    static const char* GetName(Code code) {
         static const char * const Names[] = { "zero", "at", "v0", "v1", "a0", "a1", "a2", "a3",
                                               "t0",   "t1", "t2", "t3", "t4", "t5", "t6", "t7",
                                               "s0",   "s1", "s2", "s3", "s4", "s5", "s6", "s7",
                                               "t8",   "t9", "k0", "k1", "gp", "sp", "fp", "ra"};
         return Names[code];
     }
-    static const char *GetName(uint32_t i) {
+    static const char* GetName(uint32_t i) {
         MOZ_ASSERT(i < Total);
         return GetName(Code(i));
     }
 
-    static Code FromName(const char *name);
+    static Code FromName(const char* name);
 
     static const Code StackPointer = sp;
     static const Code Invalid = invalid_reg;
@@ -265,7 +265,7 @@ class FloatRegisters
     };
     typedef FPRegisterID Code;
 
-    static const char *GetName(Code code) {
+    static const char* GetName(Code code) {
         static const char * const Names[] = { "f0", "f1", "f2", "f3",  "f4", "f5",  "f6", "f7",
                                               "f8", "f9",  "f10", "f11", "f12", "f13",
                                               "f14", "f15", "f16", "f17", "f18", "f19",
@@ -273,12 +273,12 @@ class FloatRegisters
                                               "f26", "f27", "f28", "f29", "f30", "f31"};
         return Names[code];
     }
-    static const char *GetName(uint32_t i) {
+    static const char* GetName(uint32_t i) {
         MOZ_ASSERT(i < Total);
         return GetName(Code(i % 32));
     }
 
-    static Code FromName(const char *name);
+    static Code FromName(const char* name);
 
     static const Code Invalid = invalid_freg;
 
@@ -365,14 +365,14 @@ class FloatRegister
       : code_(Code(FloatRegisters::invalid_freg)), kind_(Double)
     { }
 
-    bool operator==(const FloatRegister &other) const {
+    bool operator==(const FloatRegister& other) const {
         MOZ_ASSERT(!isInvalid());
         MOZ_ASSERT(!other.isInvalid());
         return kind_ == other.kind_ && code_ == other.code_;
     }
     bool isDouble() const { return kind_ == Double; }
     bool isSingle() const { return kind_ == Single; }
-    bool equiv(const FloatRegister &other) const { return other.kind_ == kind_; }
+    bool equiv(const FloatRegister& other) const { return other.kind_ == kind_; }
     size_t size() const { return (kind_ == Double) ? 8 : 4; }
     bool isInvalid() const {
         return code_ == FloatRegisters::invalid_freg;
@@ -409,13 +409,13 @@ class FloatRegister
             return !!((1ULL << code_) & FloatRegisters::VolatileMask);
         return !!((1ULL << (code_ & ~1)) & FloatRegisters::VolatileMask);
     }
-    const char *name() const {
+    const char* name() const {
         return FloatRegisters::GetName(code_);
     }
-    bool operator != (const FloatRegister &other) const {
+    bool operator != (const FloatRegister& other) const {
         return other.kind_ != kind_ || code_ != other.code_;
     }
-    bool aliases(const FloatRegister &other) {
+    bool aliases(const FloatRegister& other) {
         if (kind_ == other.kind_)
             return code_ == other.code_;
         return doubleOverlay() == other.doubleOverlay();
@@ -427,7 +427,7 @@ class FloatRegister
         }
         return 2;
     }
-    void aliased(uint32_t aliasIdx, FloatRegister *ret) {
+    void aliased(uint32_t aliasIdx, FloatRegister* ret) {
         if (aliasIdx == 0) {
             *ret = *this;
             return;
@@ -454,7 +454,7 @@ class FloatRegister
     // | f0-float32 | f1-float32 |
     // We only push double registers on MIPS. So, if we've stored f0-double
     // we also want to f0-float32 is stored there.
-    void alignedAliased(uint32_t aliasIdx, FloatRegister *ret) {
+    void alignedAliased(uint32_t aliasIdx, FloatRegister* ret) {
         MOZ_ASSERT(isDouble());
         MOZ_ASSERT((code_ & 1) == 0);
         if (aliasIdx == 0) {
@@ -469,12 +469,12 @@ class FloatRegister
         static_assert(sizeof(SetType) == 8, "SetType must be 64 bits");
         return mozilla::CountPopulation32(x);
     }
-    static Code FromName(const char *name) {
+    static Code FromName(const char* name) {
         return FloatRegisters::FromName(name);
     }
-    static TypedRegisterSet<FloatRegister> ReduceSetForPush(const TypedRegisterSet<FloatRegister> &s);
-    static uint32_t GetSizeInBytes(const TypedRegisterSet<FloatRegister> &s);
-    static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister> &s);
+    static TypedRegisterSet<FloatRegister> ReduceSetForPush(const TypedRegisterSet<FloatRegister>& s);
+    static uint32_t GetSizeInBytes(const TypedRegisterSet<FloatRegister>& s);
+    static uint32_t GetPushSizeInBytes(const TypedRegisterSet<FloatRegister>& s);
     uint32_t getRegisterDumpOffsetInBytes();
     static uint32_t FirstBit(SetType x) {
         return mozilla::CountTrailingZeroes64(x);

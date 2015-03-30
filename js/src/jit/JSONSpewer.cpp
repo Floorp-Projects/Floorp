@@ -35,7 +35,7 @@ JSONSpewer::indent()
 }
 
 void
-JSONSpewer::property(const char *name)
+JSONSpewer::property(const char* name)
 {
     if (!fp_)
         return;
@@ -63,7 +63,7 @@ JSONSpewer::beginObject()
 }
 
 void
-JSONSpewer::beginObjectProperty(const char *name)
+JSONSpewer::beginObjectProperty(const char* name)
 {
     if (!fp_)
         return;
@@ -75,7 +75,7 @@ JSONSpewer::beginObjectProperty(const char *name)
 }
 
 void
-JSONSpewer::beginListProperty(const char *name)
+JSONSpewer::beginListProperty(const char* name)
 {
     if (!fp_)
         return;
@@ -86,7 +86,7 @@ JSONSpewer::beginListProperty(const char *name)
 }
 
 void
-JSONSpewer::stringProperty(const char *name, const char *format, ...)
+JSONSpewer::stringProperty(const char* name, const char* format, ...)
 {
     if (!fp_)
         return;
@@ -103,7 +103,7 @@ JSONSpewer::stringProperty(const char *name, const char *format, ...)
 }
 
 void
-JSONSpewer::stringValue(const char *format, ...)
+JSONSpewer::stringValue(const char* format, ...)
 {
     if (!fp_)
         return;
@@ -122,7 +122,7 @@ JSONSpewer::stringValue(const char *format, ...)
 }
 
 void
-JSONSpewer::integerProperty(const char *name, int value)
+JSONSpewer::integerProperty(const char* name, int value)
 {
     if (!fp_)
         return;
@@ -166,7 +166,7 @@ JSONSpewer::endList()
 }
 
 bool
-JSONSpewer::init(const char *path)
+JSONSpewer::init(const char* path)
 {
     fp_ = fopen(path, "w");
     if (!fp_)
@@ -178,7 +178,7 @@ JSONSpewer::init(const char *path)
 }
 
 void
-JSONSpewer::beginFunction(JSScript *script)
+JSONSpewer::beginFunction(JSScript* script)
 {
     if (inFunction_)
         endFunction();
@@ -194,14 +194,14 @@ JSONSpewer::beginFunction(JSScript *script)
 }
 
 void
-JSONSpewer::beginPass(const char *pass)
+JSONSpewer::beginPass(const char* pass)
 {
     beginObject();
     stringProperty("name", pass);
 }
 
 void
-JSONSpewer::spewMResumePoint(MResumePoint *rp)
+JSONSpewer::spewMResumePoint(MResumePoint* rp)
 {
     if (!rp)
         return;
@@ -225,7 +225,7 @@ JSONSpewer::spewMResumePoint(MResumePoint *rp)
     }
 
     beginListProperty("operands");
-    for (MResumePoint *iter = rp; iter; iter = iter->caller()) {
+    for (MResumePoint* iter = rp; iter; iter = iter->caller()) {
         for (int i = iter->numOperands() - 1; i >= 0; i--)
             integerValue(iter->getOperand(i)->id());
         if (iter->caller())
@@ -237,7 +237,7 @@ JSONSpewer::spewMResumePoint(MResumePoint *rp)
 }
 
 void
-JSONSpewer::spewMDef(MDefinition *def)
+JSONSpewer::spewMDef(MDefinition* def)
 {
     beginObject();
 
@@ -285,7 +285,7 @@ JSONSpewer::spewMDef(MDefinition *def)
     }
 
     if (def->isInstruction()) {
-        if (MResumePoint *rp = def->toInstruction()->resumePoint())
+        if (MResumePoint* rp = def->toInstruction()->resumePoint())
             spewMResumePoint(rp);
     }
 
@@ -293,7 +293,7 @@ JSONSpewer::spewMDef(MDefinition *def)
 }
 
 void
-JSONSpewer::spewMIR(MIRGraph *mir)
+JSONSpewer::spewMIR(MIRGraph* mir)
 {
     if (!fp_)
         return;
@@ -342,7 +342,7 @@ JSONSpewer::spewMIR(MIRGraph *mir)
 }
 
 void
-JSONSpewer::spewLIns(LNode *ins)
+JSONSpewer::spewLIns(LNode* ins)
 {
     if (!fp_)
         return;
@@ -365,7 +365,7 @@ JSONSpewer::spewLIns(LNode *ins)
 }
 
 void
-JSONSpewer::spewLIR(MIRGraph *mir)
+JSONSpewer::spewLIR(MIRGraph* mir)
 {
     if (!fp_)
         return;
@@ -374,7 +374,7 @@ JSONSpewer::spewLIR(MIRGraph *mir)
     beginListProperty("blocks");
 
     for (MBasicBlockIterator i(mir->begin()); i != mir->end(); i++) {
-        LBlock *block = i->lir();
+        LBlock* block = i->lir();
         if (!block)
             continue;
 
@@ -396,7 +396,7 @@ JSONSpewer::spewLIR(MIRGraph *mir)
 }
 
 void
-JSONSpewer::spewIntervals(LinearScanAllocator *regalloc)
+JSONSpewer::spewIntervals(LinearScanAllocator* regalloc)
 {
     if (!fp_)
         return;
@@ -409,18 +409,18 @@ JSONSpewer::spewIntervals(LinearScanAllocator *regalloc)
         integerProperty("number", bno);
         beginListProperty("vregs");
 
-        LBlock *lir = regalloc->graph.getBlock(bno);
+        LBlock* lir = regalloc->graph.getBlock(bno);
         for (LInstructionIterator ins = lir->begin(); ins != lir->end(); ins++) {
             for (size_t k = 0; k < ins->numDefs(); k++) {
                 uint32_t id = ins->getDef(k)->virtualRegister();
-                VirtualRegister *vreg = &regalloc->vregs[id];
+                VirtualRegister* vreg = &regalloc->vregs[id];
 
                 beginObject();
                 integerProperty("vreg", id);
                 beginListProperty("intervals");
 
                 for (size_t i = 0; i < vreg->numIntervals(); i++) {
-                    LiveInterval *live = vreg->getInterval(i);
+                    LiveInterval* live = vreg->getInterval(i);
 
                     if (live->numRanges()) {
                         beginObject();

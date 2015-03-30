@@ -20,7 +20,7 @@ IsCustomClass(JS::Handle<JS::Value> v)
 }
 
 static bool
-CustomMethodImpl(JSContext *cx, CallArgs args)
+CustomMethodImpl(JSContext* cx, CallArgs args)
 {
   MOZ_RELEASE_ASSERT(IsCustomClass(args.thisv()));
   args.rval().set(JS_GetReservedSlot(&args.thisv().toObject(), CUSTOM_SLOT));
@@ -28,7 +28,7 @@ CustomMethodImpl(JSContext *cx, CallArgs args)
 }
 
 static bool
-CustomMethod(JSContext *cx, unsigned argc, Value *vp)
+CustomMethod(JSContext* cx, unsigned argc, Value* vp)
 {
   CallArgs args = CallArgsFromVp(argc, vp);
   return CallNonGenericMethod(cx, IsCustomClass, CustomMethodImpl, args);

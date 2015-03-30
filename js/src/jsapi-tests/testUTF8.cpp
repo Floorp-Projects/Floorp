@@ -16,7 +16,7 @@
 BEGIN_TEST(testUTF8_badUTF8)
 {
     static const char badUTF8[] = "...\xC0...";
-    JSString *str = JS_NewStringCopyZ(cx, badUTF8);
+    JSString* str = JS_NewStringCopyZ(cx, badUTF8);
     CHECK(str);
     char16_t ch;
     if (!JS_GetStringCharAt(cx, str, 3, &ch))
@@ -29,7 +29,7 @@ END_TEST(testUTF8_badUTF8)
 BEGIN_TEST(testUTF8_bigUTF8)
 {
     static const char bigUTF8[] = "...\xFB\xBF\xBF\xBF\xBF...";
-    JSString *str = JS_NewStringCopyZ(cx, bigUTF8);
+    JSString* str = JS_NewStringCopyZ(cx, bigUTF8);
     CHECK(str);
     char16_t ch;
     if (!JS_GetStringCharAt(cx, str, 3, &ch))

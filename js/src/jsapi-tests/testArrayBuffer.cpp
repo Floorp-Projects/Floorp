@@ -46,7 +46,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         // Modifying the underlying data should update the value returned through the view
         {
             JS::AutoCheckCannotGC nogc;
-            uint8_t *data = JS_GetArrayBufferData(obj, nogc);
+            uint8_t* data = JS_GetArrayBufferData(obj, nogc);
             CHECK(data != nullptr);
             *reinterpret_cast<uint32_t*>(data) = MAGIC_VALUE_2;
         }
@@ -54,7 +54,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         CHECK_SAME(v, INT_TO_JSVAL(MAGIC_VALUE_2));
 
         // Steal the contents
-        void *contents = JS_StealArrayBufferContents(cx, obj);
+        void* contents = JS_StealArrayBufferContents(cx, obj);
         CHECK(contents != nullptr);
 
         // Check that the original ArrayBuffer is neutered
@@ -86,7 +86,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         CHECK_EQUAL(JS_GetArrayBufferByteLength(dst), size);
         {
             JS::AutoCheckCannotGC nogc;
-            uint8_t *data = JS_GetArrayBufferData(dst, nogc);
+            uint8_t* data = JS_GetArrayBufferData(dst, nogc);
             CHECK(data != nullptr);
             CHECK_EQUAL(*reinterpret_cast<uint32_t*>(data), MAGIC_VALUE_2);
         }
@@ -112,7 +112,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
     {
         buffer = JS_NewArrayBuffer(cx, 2000);
         JS::RootedObject view(cx, JS_NewUint8ArrayWithBuffer(cx, buffer, 0, -1));
-        void *contents = JS_StealArrayBufferContents(cx, buffer);
+        void* contents = JS_StealArrayBufferContents(cx, buffer);
         CHECK(contents != nullptr);
         JS_free(nullptr, contents);
         GC(cx);
@@ -137,7 +137,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
         view2 = JS_NewUint8ArrayWithBuffer(cx, buffer, 1, 200);
 
         // Neuter
-        void *contents = JS_StealArrayBufferContents(cx, buffer);
+        void* contents = JS_StealArrayBufferContents(cx, buffer);
         CHECK(contents != nullptr);
         JS_free(nullptr, contents);
 
@@ -156,7 +156,7 @@ BEGIN_TEST(testArrayBuffer_bug720949_viewList)
     return true;
 }
 
-static void GC(JSContext *cx)
+static void GC(JSContext* cx)
 {
     JS_GC(JS_GetRuntime(cx));
     JS_GC(JS_GetRuntime(cx)); // Trigger another to wait for background finalization to end

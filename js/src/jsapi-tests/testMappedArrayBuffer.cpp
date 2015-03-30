@@ -21,7 +21,7 @@ const char test_filename[] = "temp-bug945152_MappedArrayBuffer";
 BEGIN_TEST(testMappedArrayBuffer_bug945152)
 {
     TempFile test_file;
-    FILE *test_stream = test_file.open(test_filename);
+    FILE* test_stream = test_file.open(test_filename);
     CHECK(fputs(test_data, test_stream) != EOF);
     test_file.close();
 
@@ -57,14 +57,14 @@ BEGIN_TEST(testMappedArrayBuffer_bug945152)
     return true;
 }
 
-JSObject *CreateNewObject(const int offset, const int length)
+JSObject* CreateNewObject(const int offset, const int length)
 {
     int fd = open(test_filename, O_RDONLY);
-    void *ptr = JS_CreateMappedArrayBufferContents(fd, offset, length);
+    void* ptr = JS_CreateMappedArrayBufferContents(fd, offset, length);
     close(fd);
     if (!ptr)
         return nullptr;
-    JSObject *obj = JS_NewMappedArrayBufferWithContents(cx, length, ptr);
+    JSObject* obj = JS_NewMappedArrayBufferWithContents(cx, length, ptr);
     if (!obj) {
         JS_ReleaseMappedArrayBufferContents(ptr, length);
         return nullptr;
@@ -83,7 +83,7 @@ bool VerifyObject(JS::HandleObject obj, uint32_t offset, uint32_t length, const 
         CHECK(JS_IsMappedArrayBufferObject(obj));
     else
         CHECK(!JS_IsMappedArrayBufferObject(obj));
-    const char *data = reinterpret_cast<const char *>(JS_GetArrayBufferData(obj, nogc));
+    const char* data = reinterpret_cast<const char*>(JS_GetArrayBufferData(obj, nogc));
     CHECK(data);
     CHECK(memcmp(data, test_data + offset, length) == 0);
 
@@ -101,7 +101,7 @@ bool TestCreateObject(uint32_t offset, uint32_t length)
 bool TestReleaseContents()
 {
     int fd = open(test_filename, O_RDONLY);
-    void *ptr = JS_CreateMappedArrayBufferContents(fd, 0, 12);
+    void* ptr = JS_CreateMappedArrayBufferContents(fd, 0, 12);
     close(fd);
     if (!ptr)
         return false;
@@ -126,7 +126,7 @@ bool TestCloneObject()
     CHECK(obj1);
     JSAutoStructuredCloneBuffer cloned_buffer;
     JS::RootedValue v1(cx, OBJECT_TO_JSVAL(obj1));
-    const JSStructuredCloneCallbacks *callbacks = js::GetContextStructuredCloneCallbacks(cx);
+    const JSStructuredCloneCallbacks* callbacks = js::GetContextStructuredCloneCallbacks(cx);
     CHECK(cloned_buffer.write(cx, v1, callbacks, nullptr));
     JS::RootedValue v2(cx);
     CHECK(cloned_buffer.read(cx, &v2, callbacks, nullptr));
@@ -140,7 +140,7 @@ bool TestStealContents()
 {
     JS::RootedObject obj(cx, CreateNewObject(8, 12));
     CHECK(obj);
-    void *contents = JS_StealArrayBufferContents(cx, obj);
+    void* contents = JS_StealArrayBufferContents(cx, obj);
     CHECK(contents);
     CHECK(memcmp(contents, test_data + 8, 12) == 0);
     CHECK(isNeutered(obj));
@@ -162,7 +162,7 @@ bool TestTransferObject()
     JS::RootedValue transferable(cx, OBJECT_TO_JSVAL(obj));
 
     JSAutoStructuredCloneBuffer cloned_buffer;
-    const JSStructuredCloneCallbacks *callbacks = js::GetContextStructuredCloneCallbacks(cx);
+    const JSStructuredCloneCallbacks* callbacks = js::GetContextStructuredCloneCallbacks(cx);
     CHECK(cloned_buffer.write(cx, v1, transferable, callbacks, nullptr));
     JS::RootedValue v2(cx);
     CHECK(cloned_buffer.read(cx, &v2, callbacks, nullptr));
@@ -179,7 +179,7 @@ bool isNeutered(JS::HandleObject obj)
     return JS_GetProperty(cx, obj, "byteLength", &v) && v.toInt32() == 0;
 }
 
-static void GC(JSContext *cx)
+static void GC(JSContext* cx)
 {
     JS_GC(JS_GetRuntime(cx));
     // Trigger another to wait for background finalization to end.

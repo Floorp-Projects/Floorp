@@ -11,31 +11,31 @@
 
 #include "jscntxt.h"
 
-inline JSString *
-js::ErrorObject::fileName(JSContext *cx) const
+inline JSString*
+js::ErrorObject::fileName(JSContext* cx) const
 {
-    const HeapSlot &slot = getReservedSlotRef(FILENAME_SLOT);
+    const HeapSlot& slot = getReservedSlotRef(FILENAME_SLOT);
     return slot.isString() ? slot.toString() : cx->names().empty;
 }
 
 inline uint32_t
 js::ErrorObject::lineNumber() const
 {
-    const HeapSlot &slot = getReservedSlotRef(LINENUMBER_SLOT);
+    const HeapSlot& slot = getReservedSlotRef(LINENUMBER_SLOT);
     return slot.isInt32() ? slot.toInt32() : 0;
 }
 
 inline uint32_t
 js::ErrorObject::columnNumber() const
 {
-    const HeapSlot &slot = getReservedSlotRef(COLUMNNUMBER_SLOT);
+    const HeapSlot& slot = getReservedSlotRef(COLUMNNUMBER_SLOT);
     return slot.isInt32() ? slot.toInt32() : 0;
 }
 
-inline JSString *
-js::ErrorObject::stack(JSContext *cx) const
+inline JSString*
+js::ErrorObject::stack(JSContext* cx) const
 {
-    const HeapSlot &slot = getReservedSlotRef(STACK_SLOT);
+    const HeapSlot& slot = getReservedSlotRef(STACK_SLOT);
     if (slot.isString())
         return slot.toString();
     return cx->names().empty;

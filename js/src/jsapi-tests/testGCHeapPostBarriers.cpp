@@ -44,7 +44,7 @@ TestHeapPostBarriers(T initialObj)
     CHECK(js::gc::IsInsideNursery(initialObj));
 
     /* Construct Heap<> wrapper. */
-    JS::Heap<T> *heapData = new JS::Heap<T>();
+    JS::Heap<T>* heapData = new JS::Heap<T>();
     CHECK(heapData);
     CHECK(Passthrough(heapData->get() == nullptr));
     *heapData = initialObj;
@@ -68,7 +68,7 @@ TestHeapPostBarriers(T initialObj)
     return true;
 }
 
-JSObject *NurseryObject()
+JSObject* NurseryObject()
 {
     JS::RootedObject obj(cx, JS_NewPlainObject(cx));
     if (!obj)
@@ -77,13 +77,13 @@ JSObject *NurseryObject()
     return obj;
 }
 
-JSFunction *NurseryFunction()
+JSFunction* NurseryFunction()
 {
     /*
      * We don't actually use the function as a function, so here we cheat and
      * cast a JSObject.
      */
-    return static_cast<JSFunction *>(NurseryObject());
+    return static_cast<JSFunction*>(NurseryObject());
 }
 
 END_TEST(testGCHeapPostBarriers)

@@ -8,7 +8,7 @@
 
 #include "jsopcode.h"
 
-void js::jit::GenericAssembler::spew(const char *fmt, va_list va)
+void js::jit::GenericAssembler::spew(const char* fmt, va_list va)
 {
     // Buffer to hold the formatted string. Note that this may contain
     // '%' characters, so do not pass it directly to printf functions.

@@ -40,23 +40,23 @@ struct JSPrincipals {
 };
 
 extern JS_PUBLIC_API(void)
-JS_HoldPrincipals(JSPrincipals *principals);
+JS_HoldPrincipals(JSPrincipals* principals);
 
 extern JS_PUBLIC_API(void)
-JS_DropPrincipals(JSRuntime *rt, JSPrincipals *principals);
+JS_DropPrincipals(JSRuntime* rt, JSPrincipals* principals);
 
 // Return whether the first principal subsumes the second. The exact meaning of
 // 'subsumes' is left up to the browser. Subsumption is checked inside the JS
 // engine when determining, e.g., which stack frames to display in a backtrace.
 typedef bool
-(* JSSubsumesOp)(JSPrincipals *first, JSPrincipals *second);
+(* JSSubsumesOp)(JSPrincipals* first, JSPrincipals* second);
 
 /*
  * Used to check if a CSP instance wants to disable eval() and friends.
  * See js_CheckCSPPermitsJSAction() in jsobj.
  */
 typedef bool
-(* JSCSPEvalChecker)(JSContext *cx);
+(* JSCSPEvalChecker)(JSContext* cx);
 
 struct JSSecurityCallbacks {
     JSCSPEvalChecker           contentSecurityPolicyAllows;
@@ -64,10 +64,10 @@ struct JSSecurityCallbacks {
 };
 
 extern JS_PUBLIC_API(void)
-JS_SetSecurityCallbacks(JSRuntime *rt, const JSSecurityCallbacks *callbacks);
+JS_SetSecurityCallbacks(JSRuntime* rt, const JSSecurityCallbacks* callbacks);
 
-extern JS_PUBLIC_API(const JSSecurityCallbacks *)
-JS_GetSecurityCallbacks(JSRuntime *rt);
+extern JS_PUBLIC_API(const JSSecurityCallbacks*)
+JS_GetSecurityCallbacks(JSRuntime* rt);
 
 /*
  * Code running with "trusted" principals will be given a deeper stack
@@ -82,10 +82,10 @@ JS_GetSecurityCallbacks(JSRuntime *rt);
  * called again, passing nullptr for 'prin'.
  */
 extern JS_PUBLIC_API(void)
-JS_SetTrustedPrincipals(JSRuntime *rt, const JSPrincipals *prin);
+JS_SetTrustedPrincipals(JSRuntime* rt, const JSPrincipals* prin);
 
 typedef void
-(* JSDestroyPrincipalsOp)(JSPrincipals *principals);
+(* JSDestroyPrincipalsOp)(JSPrincipals* principals);
 
 /*
  * Initialize the callback that is called to destroy JSPrincipals instance
@@ -93,6 +93,6 @@ typedef void
  * only once per JS runtime.
  */
 extern JS_PUBLIC_API(void)
-JS_InitDestroyPrincipalsCallback(JSRuntime *rt, JSDestroyPrincipalsOp destroyPrincipals);
+JS_InitDestroyPrincipalsCallback(JSRuntime* rt, JSDestroyPrincipalsOp destroyPrincipals);
 
 #endif  /* js_Principals_h */

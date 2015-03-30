@@ -62,7 +62,7 @@ class BitArray
 
   private:
     inline void getMarkWordAndMask(size_t offset,
-                                   uintptr_t *indexp, uintptr_t *maskp) const {
+                                   uintptr_t* indexp, uintptr_t* maskp) const {
         static_assert(bitsPerElement == 32 || bitsPerElement == 64,
                       "unexpected bitsPerElement value");
         *indexp = offset / bitsPerElement;

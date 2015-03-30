@@ -27,8 +27,8 @@ static const size_t ALL_FIELDS = SIZE_MAX;
 // descrA and which struct is passed as descrB, as the operation is
 // symmetric.)
 void
-TypedObjectPrediction::markAsCommonPrefix(const StructTypeDescr &descrA,
-                                          const StructTypeDescr &descrB,
+TypedObjectPrediction::markAsCommonPrefix(const StructTypeDescr& descrA,
+                                          const StructTypeDescr& descrB,
                                           size_t max)
 {
     // count is the number of fields in common. It begins as the min
@@ -57,7 +57,7 @@ TypedObjectPrediction::markAsCommonPrefix(const StructTypeDescr &descrA,
 }
 
 void
-TypedObjectPrediction::addDescr(const TypeDescr &descr)
+TypedObjectPrediction::addDescr(const TypeDescr& descr)
 {
     switch (predictionKind()) {
       case Empty:
@@ -76,8 +76,8 @@ TypedObjectPrediction::addDescr(const TypeDescr &descr)
         if (descr.kind() != type::Struct)
             return markInconsistent();
 
-        const StructTypeDescr &structDescr = descr.as<StructTypeDescr>();
-        const StructTypeDescr &currentDescr = data_.descr->as<StructTypeDescr>();
+        const StructTypeDescr& structDescr = descr.as<StructTypeDescr>();
+        const StructTypeDescr& currentDescr = data_.descr->as<StructTypeDescr>();
         markAsCommonPrefix(structDescr, currentDescr, ALL_FIELDS);
         return;
       }
@@ -131,7 +131,7 @@ TypedObjectPrediction::ofArrayKind() const
 }
 
 bool
-TypedObjectPrediction::hasKnownSize(int32_t *out) const
+TypedObjectPrediction::hasKnownSize(int32_t* out) const
 {
     switch (predictionKind()) {
       case TypedObjectPrediction::Empty:
@@ -152,7 +152,7 @@ TypedObjectPrediction::hasKnownSize(int32_t *out) const
     }
 }
 
-const TypedProto *
+const TypedProto*
 TypedObjectPrediction::getKnownPrototype() const
 {
     switch (predictionKind()) {
@@ -214,7 +214,7 @@ TypedObjectPrediction::simdType() const
 }
 
 bool
-TypedObjectPrediction::hasKnownArrayLength(int32_t *length) const
+TypedObjectPrediction::hasKnownArrayLength(int32_t* length) const
 {
     switch (predictionKind()) {
       case TypedObjectPrediction::Empty:
@@ -258,12 +258,12 @@ TypedObjectPrediction::arrayElementType() const
 }
 
 bool
-TypedObjectPrediction::hasFieldNamedPrefix(const StructTypeDescr &descr,
+TypedObjectPrediction::hasFieldNamedPrefix(const StructTypeDescr& descr,
                                            size_t fieldCount,
                                            jsid id,
-                                           size_t *fieldOffset,
-                                           TypedObjectPrediction *out,
-                                           size_t *index) const
+                                           size_t* fieldOffset,
+                                           TypedObjectPrediction* out,
+                                           size_t* index) const
 {
     // Find the index of the field |id| if any.
     if (!descr.fieldIndex(id, index))
@@ -281,9 +281,9 @@ TypedObjectPrediction::hasFieldNamedPrefix(const StructTypeDescr &descr,
 
 bool
 TypedObjectPrediction::hasFieldNamed(jsid id,
-                                     size_t *fieldOffset,
-                                     TypedObjectPrediction *fieldType,
-                                     size_t *fieldIndex) const
+                                     size_t* fieldOffset,
+                                     TypedObjectPrediction* fieldType,
+                                     size_t* fieldIndex) const
 {
     MOZ_ASSERT(kind() == type::Struct);
 

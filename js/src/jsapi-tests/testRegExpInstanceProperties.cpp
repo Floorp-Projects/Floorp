@@ -16,7 +16,7 @@ BEGIN_TEST(testRegExpInstanceProperties)
     jsval regexpProtoVal;
     EVAL("RegExp.prototype", &regexpProtoVal);
 
-    JSObject *regexpProto = regexpProtoVal.toObjectOrNull();
+    JSObject* regexpProto = regexpProtoVal.toObjectOrNull();
 
     if (!helper(regexpProto))
         return false;
@@ -27,7 +27,7 @@ BEGIN_TEST(testRegExpInstanceProperties)
 
     jsval regexp;
     EVAL("/foopy/", &regexp);
-    JSObject *robj = regexp.toObjectOrNull();
+    JSObject* robj = regexp.toObjectOrNull();
 
     CHECK(robj->lastProperty());
     CHECK_EQUAL(robj->compartment()->initialRegExpShape, robj->lastProperty());
@@ -39,12 +39,12 @@ BEGIN_TEST(testRegExpInstanceProperties)
  * Do this all in a nested function evaluation so as (hopefully) not to get
  * screwed up by the conservative stack scanner when GCing.
  */
-MOZ_NEVER_INLINE bool helper(JSObject *regexpProto)
+MOZ_NEVER_INLINE bool helper(JSObject* regexpProto)
 {
     CHECK(!regexpProto->inDictionaryMode());
 
     // Verify the compartment's cached shape is being used by RegExp.prototype.
-    const js::Shape *shape = regexpProto->lastProperty();
+    const js::Shape* shape = regexpProto->lastProperty();
     js::AutoShapeRooter root(cx, shape);
     for (js::Shape::Range r = shape;
          &r.front() != regexpProto->compartment()->initialRegExpShape;
@@ -60,7 +60,7 @@ MOZ_NEVER_INLINE bool helper(JSObject *regexpProto)
     CHECK(JS_DeleteProperty(cx, regexpProto, "foopy"));
     CHECK(regexpProto->inDictionaryMode());
 
-    const js::Shape *shape2 = regexpProto->lastProperty();
+    const js::Shape* shape2 = regexpProto->lastProperty();
     js::AutoShapeRooter root2(cx, shape2);
     js::Shape::Range r2 = shape2;
     while (!r2.empty()) {

@@ -39,23 +39,23 @@ namespace jit { class CallSite; class MacroAssembler; class Label; }
 // from asm.js code; in this case, the backtrace may not be correct.
 class AsmJSFrameIterator
 {
-    const AsmJSModule *module_;
-    const jit::CallSite *callsite_;
-    uint8_t *fp_;
+    const AsmJSModule* module_;
+    const jit::CallSite* callsite_;
+    uint8_t* fp_;
 
     // Really, a const AsmJSModule::CodeRange*, but no forward declarations of
     // nested classes, so use void* to avoid pulling in all of AsmJSModule.h.
-    const void *codeRange_;
+    const void* codeRange_;
 
     void settle();
 
   public:
     explicit AsmJSFrameIterator() : module_(nullptr) {}
-    explicit AsmJSFrameIterator(const AsmJSActivation &activation);
+    explicit AsmJSFrameIterator(const AsmJSActivation& activation);
     void operator++();
     bool done() const { return !fp_; }
-    JSAtom *functionDisplayAtom() const;
-    unsigned computeLine(uint32_t *column) const;
+    JSAtom* functionDisplayAtom() const;
+    unsigned computeLine(uint32_t* column) const;
 };
 
 namespace AsmJSExit
@@ -124,49 +124,49 @@ namespace AsmJSExit
 // module is not in profiling mode, the activation is skipped.
 class AsmJSProfilingFrameIterator
 {
-    const AsmJSModule *module_;
-    uint8_t *callerFP_;
-    void *callerPC_;
-    void *stackAddress_;
+    const AsmJSModule* module_;
+    uint8_t* callerFP_;
+    void* callerPC_;
+    void* stackAddress_;
     AsmJSExit::Reason exitReason_;
 
     // Really, a const AsmJSModule::CodeRange*, but no forward declarations of
     // nested classes, so use void* to avoid pulling in all of AsmJSModule.h.
-    const void *codeRange_;
+    const void* codeRange_;
 
-    void initFromFP(const AsmJSActivation &activation);
+    void initFromFP(const AsmJSActivation& activation);
 
   public:
     AsmJSProfilingFrameIterator() : codeRange_(nullptr) {}
-    explicit AsmJSProfilingFrameIterator(const AsmJSActivation &activation);
-    AsmJSProfilingFrameIterator(const AsmJSActivation &activation,
-                                const JS::ProfilingFrameIterator::RegisterState &state);
+    explicit AsmJSProfilingFrameIterator(const AsmJSActivation& activation);
+    AsmJSProfilingFrameIterator(const AsmJSActivation& activation,
+                                const JS::ProfilingFrameIterator::RegisterState& state);
     void operator++();
     bool done() const { return !codeRange_; }
 
-    void *stackAddress() const { MOZ_ASSERT(!done()); return stackAddress_; }
-    const char *label() const;
+    void* stackAddress() const { MOZ_ASSERT(!done()); return stackAddress_; }
+    const char* label() const;
 };
 
 /******************************************************************************/
 // Prologue/epilogue code generation.
 
 void
-GenerateAsmJSFunctionPrologue(jit::MacroAssembler &masm, unsigned framePushed,
-                              AsmJSFunctionLabels *labels);
+GenerateAsmJSFunctionPrologue(jit::MacroAssembler& masm, unsigned framePushed,
+                              AsmJSFunctionLabels* labels);
 void
-GenerateAsmJSFunctionEpilogue(jit::MacroAssembler &masm, unsigned framePushed,
-                              AsmJSFunctionLabels *labels);
+GenerateAsmJSFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed,
+                              AsmJSFunctionLabels* labels);
 void
-GenerateAsmJSStackOverflowExit(jit::MacroAssembler &masm, jit::Label *overflowExit,
-                               jit::Label *throwLabel);
+GenerateAsmJSStackOverflowExit(jit::MacroAssembler& masm, jit::Label* overflowExit,
+                               jit::Label* throwLabel);
 
 void
-GenerateAsmJSExitPrologue(jit::MacroAssembler &masm, unsigned framePushed, AsmJSExit::Reason reason,
-                          jit::Label *begin);
+GenerateAsmJSExitPrologue(jit::MacroAssembler& masm, unsigned framePushed, AsmJSExit::Reason reason,
+                          jit::Label* begin);
 void
-GenerateAsmJSExitEpilogue(jit::MacroAssembler &masm, unsigned framePushed, AsmJSExit::Reason reason,
-                          jit::Label *profilingReturn);
+GenerateAsmJSExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, AsmJSExit::Reason reason,
+                          jit::Label* profilingReturn);
 
 } // namespace js
 

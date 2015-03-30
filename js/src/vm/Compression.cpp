@@ -10,19 +10,19 @@
 
 using namespace js;
 
-static void *
-zlib_alloc(void *cx, uInt items, uInt size)
+static void*
+zlib_alloc(void* cx, uInt items, uInt size)
 {
     return js_calloc(items, size);
 }
 
 static void
-zlib_free(void *cx, void *addr)
+zlib_free(void* cx, void* addr)
 {
     js_free(addr);
 }
 
-Compressor::Compressor(const unsigned char *inp, size_t inplen)
+Compressor::Compressor(const unsigned char* inp, size_t inplen)
     : inp(inp),
       inplen(inplen),
       outbytes(0),
@@ -30,7 +30,7 @@ Compressor::Compressor(const unsigned char *inp, size_t inplen)
 {
     MOZ_ASSERT(inplen > 0);
     zs.opaque = nullptr;
-    zs.next_in = (Bytef *)inp;
+    zs.next_in = (Bytef*)inp;
     zs.avail_in = 0;
     zs.next_out = nullptr;
     zs.avail_out = 0;
@@ -69,7 +69,7 @@ Compressor::init()
 }
 
 void
-Compressor::setOutput(unsigned char *out, size_t outlen)
+Compressor::setOutput(unsigned char* out, size_t outlen)
 {
     MOZ_ASSERT(outlen > outbytes);
     zs.next_out = out + outbytes;
@@ -86,7 +86,7 @@ Compressor::compressMore()
         zs.avail_in = left;
     else if (zs.avail_in == 0)
         zs.avail_in = CHUNKSIZE;
-    Bytef *oldout = zs.next_out;
+    Bytef* oldout = zs.next_out;
     int ret = deflate(&zs, done ? Z_FINISH : Z_NO_FLUSH);
     outbytes += zs.next_out - oldout;
     if (ret == Z_MEM_ERROR) {
@@ -103,7 +103,7 @@ Compressor::compressMore()
 }
 
 bool
-js::DecompressString(const unsigned char *inp, size_t inplen, unsigned char *out, size_t outlen)
+js::DecompressString(const unsigned char* inp, size_t inplen, unsigned char* out, size_t outlen)
 {
     MOZ_ASSERT(inplen <= UINT32_MAX);
 
@@ -116,7 +116,7 @@ js::DecompressString(const unsigned char *inp, size_t inplen, unsigned char *out
     zs.zalloc = zlib_alloc;
     zs.zfree = zlib_free;
     zs.opaque = nullptr;
-    zs.next_in = (Bytef *)inp;
+    zs.next_in = (Bytef*)inp;
     zs.avail_in = inplen;
     zs.next_out = out;
     MOZ_ASSERT(outlen);

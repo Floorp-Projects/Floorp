@@ -25,7 +25,7 @@ using namespace js;
 // system call (2.6.30 or older) nothing unpredictable will
 // happen - it will just always fail and return -1.
 static int
-sys_perf_event_open(struct perf_event_attr *attr, pid_t pid, int cpu,
+sys_perf_event_open(struct perf_event_attr* attr, pid_t pid, int cpu,
                     int group_fd, unsigned long flags)
 {
     return syscall(__NR_perf_event_open, attr, pid, cpu, group_fd, flags);

@@ -15,10 +15,10 @@ namespace detail {
 
 template<typename T>
 MOZ_ALWAYS_INLINE void
-CopyNonEmptyArray(T *dst, const T *src, size_t nelems)
+CopyNonEmptyArray(T* dst, const T* src, size_t nelems)
 {
     MOZ_ASSERT(nelems != 0);
-    const T *end = src + nelems;
+    const T* end = src + nelems;
     do {
         *dst++ = *src++;
     } while (src != end);
@@ -27,20 +27,20 @@ CopyNonEmptyArray(T *dst, const T *src, size_t nelems)
 /* Helper function for MergeSort. */
 template<typename T, typename Comparator>
 MOZ_ALWAYS_INLINE bool
-MergeArrayRuns(T *dst, const T *src, size_t run1, size_t run2, Comparator c)
+MergeArrayRuns(T* dst, const T* src, size_t run1, size_t run2, Comparator c)
 {
     MOZ_ASSERT(run1 >= 1);
     MOZ_ASSERT(run2 >= 1);
 
     /* Copy runs already in sorted order. */
-    const T *b = src + run1;
+    const T* b = src + run1;
     bool lessOrEqual;
     if (!c(b[-1],  b[0], &lessOrEqual))
         return false;
 
     if (!lessOrEqual) {
         /* Runs are not already sorted, merge them. */
-        for (const T *a = src;;) {
+        for (const T* a = src;;) {
             if (!c(*a, *b, &lessOrEqual))
                 return false;
             if (lessOrEqual) {
@@ -70,7 +70,7 @@ MergeArrayRuns(T *dst, const T *src, size_t run1, size_t run2, Comparator c)
  *
  * The comparator must provide the () operator with the following signature:
  *
- *     bool operator()(const T& a, const T& a, bool *lessOrEqualp);
+ *     bool operator()(const T& a, const T& a, bool* lessOrEqualp);
  *
  * It should return true on success and set *lessOrEqualp to the result of
  * a <= b operation. If it returns false, the sort terminates immediately with
@@ -79,7 +79,7 @@ MergeArrayRuns(T *dst, const T *src, size_t run1, size_t run2, Comparator c)
  */
 template<typename T, typename Comparator>
 bool
-MergeSort(T *array, size_t nelems, T *scratch, Comparator c)
+MergeSort(T* array, size_t nelems, T* scratch, Comparator c)
 {
     const size_t INS_SORT_LIMIT = 3;
 
@@ -110,8 +110,8 @@ MergeSort(T *array, size_t nelems, T *scratch, Comparator c)
         }
     }
 
-    T *vec1 = array;
-    T *vec2 = scratch;
+    T* vec1 = array;
+    T* vec2 = scratch;
     for (size_t run = INS_SORT_LIMIT; run < nelems; run *= 2) {
         for (size_t lo = 0; lo < nelems; lo += 2 * run) {
             size_t hi = lo + run;
@@ -123,7 +123,7 @@ MergeSort(T *array, size_t nelems, T *scratch, Comparator c)
             if (!detail::MergeArrayRuns(vec2 + lo, vec1 + lo, run, run2, c))
                 return false;
         }
-        T *swap = vec1;
+        T* swap = vec1;
         vec1 = vec2;
         vec2 = swap;
     }

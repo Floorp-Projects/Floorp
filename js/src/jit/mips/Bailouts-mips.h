@@ -52,10 +52,10 @@ class BailoutStack
         MOZ_ASSERT(frameClass() == FrameSizeClass::None());
         return snapshotOffset_;
     }
-    uint8_t *parentStackPointer() const {
+    uint8_t* parentStackPointer() const {
         if (frameClass() == FrameSizeClass::None())
-            return (uint8_t *)this + sizeof(BailoutStack);
-        return (uint8_t *)this + offsetof(BailoutStack, snapshotOffset_);
+            return (uint8_t*)this + sizeof(BailoutStack);
+        return (uint8_t*)this + offsetof(BailoutStack, snapshotOffset_);
     }
     static size_t offsetOfFrameClass() {
         return offsetof(BailoutStack, frameClassId_);

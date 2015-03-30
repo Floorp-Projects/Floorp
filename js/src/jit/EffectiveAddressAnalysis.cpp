@@ -12,15 +12,15 @@ using namespace js;
 using namespace jit;
 
 static void
-AnalyzeLsh(TempAllocator &alloc, MLsh *lsh)
+AnalyzeLsh(TempAllocator& alloc, MLsh* lsh)
 {
     if (lsh->specialization() != MIRType_Int32)
         return;
 
-    MDefinition *index = lsh->lhs();
+    MDefinition* index = lsh->lhs();
     MOZ_ASSERT(index->type() == MIRType_Int32);
 
-    MDefinition *shift = lsh->rhs();
+    MDefinition* shift = lsh->rhs();
     if (!shift->isConstantValue())
         return;
 
@@ -31,8 +31,8 @@ AnalyzeLsh(TempAllocator &alloc, MLsh *lsh)
     Scale scale = ShiftToScale(shiftValue.toInt32());
 
     int32_t displacement = 0;
-    MInstruction *last = lsh;
-    MDefinition *base = nullptr;
+    MInstruction* last = lsh;
+    MDefinition* base = nullptr;
     while (true) {
         if (!last->hasOneUse())
             break;
@@ -41,11 +41,11 @@ AnalyzeLsh(TempAllocator &alloc, MLsh *lsh)
         if (!use->consumer()->isDefinition() || !use->consumer()->toDefinition()->isAdd())
             break;
 
-        MAdd *add = use->consumer()->toDefinition()->toAdd();
+        MAdd* add = use->consumer()->toDefinition()->toAdd();
         if (add->specialization() != MIRType_Int32 || !add->isTruncated())
             break;
 
-        MDefinition *other = add->getOperand(1 - add->indexOf(*use));
+        MDefinition* other = add->getOperand(1 - add->indexOf(*use));
 
         if (other->isConstantValue()) {
             displacement += other->constantValue().toInt32();
@@ -70,8 +70,8 @@ AnalyzeLsh(TempAllocator &alloc, MLsh *lsh)
         if (!use->consumer()->isDefinition() || !use->consumer()->toDefinition()->isBitAnd())
             return;
 
-        MBitAnd *bitAnd = use->consumer()->toDefinition()->toBitAnd();
-        MDefinition *other = bitAnd->getOperand(1 - bitAnd->indexOf(*use));
+        MBitAnd* bitAnd = use->consumer()->toDefinition()->toBitAnd();
+        MDefinition* other = bitAnd->getOperand(1 - bitAnd->indexOf(*use));
         if (!other->isConstantValue() || !other->constantValue().isInt32())
             return;
 
@@ -84,7 +84,7 @@ AnalyzeLsh(TempAllocator &alloc, MLsh *lsh)
         return;
     }
 
-    MEffectiveAddress *eaddr = MEffectiveAddress::New(alloc, base, index, scale, displacement);
+    MEffectiveAddress* eaddr = MEffectiveAddress::New(alloc, base, index, scale, displacement);
     last->replaceAllUsesWith(eaddr);
     last->block()->insertAfter(last, eaddr);
 }

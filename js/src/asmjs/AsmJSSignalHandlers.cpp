@@ -41,10 +41,10 @@ extern "C" MFBT_API bool IsSignalHandlingBroken();
 // For platforms where the signal/exception handler runs on the same
 // thread/stack as the victim (Unix and Windows), we can use TLS to find any
 // currently executing asm.js code.
-static JSRuntime *
+static JSRuntime*
 RuntimeForCurrentThread()
 {
-    PerThreadData *threadData = TlsPerThreadData.get();
+    PerThreadData* threadData = TlsPerThreadData.get();
     if (!threadData)
         return nullptr;
 
@@ -58,10 +58,10 @@ RuntimeForCurrentThread()
 // trying to handle it.
 class AutoSetHandlingSignal
 {
-    JSRuntime *rt;
+    JSRuntime* rt;
 
   public:
-    explicit AutoSetHandlingSignal(JSRuntime *rt)
+    explicit AutoSetHandlingSignal(JSRuntime* rt)
       : rt(rt)
     {
         MOZ_ASSERT(!rt->handlingSignal);
@@ -150,7 +150,7 @@ class AutoSetHandlingSignal
 #  define RFP_sig(p) ((p)->uc_mcontext.gregs[30])
 # endif
 #elif defined(__NetBSD__)
-# define XMM_sig(p,i) (((struct fxsave64 *)(p)->uc_mcontext.__fpregs)->fx_xmm[i])
+# define XMM_sig(p,i) (((struct fxsave64*)(p)->uc_mcontext.__fpregs)->fx_xmm[i])
 # define EIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_EIP])
 # define RIP_sig(p) ((p)->uc_mcontext.__gregs[_REG_RIP])
 # define RAX_sig(p) ((p)->uc_mcontext.__gregs[_REG_RAX])
@@ -171,9 +171,9 @@ class AutoSetHandlingSignal
 # define R15_sig(p) ((p)->uc_mcontext.__gregs[_REG_R15])
 #elif defined(__DragonFly__) || defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 # if defined(__DragonFly__)
-#  define XMM_sig(p,i) (((union savefpu *)(p)->uc_mcontext.mc_fpregs)->sv_xmm.sv_xmm[i])
+#  define XMM_sig(p,i) (((union savefpu*)(p)->uc_mcontext.mc_fpregs)->sv_xmm.sv_xmm[i])
 # else
-#  define XMM_sig(p,i) (((struct savefpu *)(p)->uc_mcontext.mc_fpstate)->sv_xmm[i])
+#  define XMM_sig(p,i) (((struct savefpu*)(p)->uc_mcontext.mc_fpstate)->sv_xmm[i])
 # endif
 # define EIP_sig(p) ((p)->uc_mcontext.mc_eip)
 # define RIP_sig(p) ((p)->uc_mcontext.mc_rip)
@@ -318,8 +318,8 @@ enum { REG_EIP = 14 };
 # define PC_sig(p) EPC_sig(p)
 #endif
 
-static uint8_t **
-ContextToPC(CONTEXT *context)
+static uint8_t**
+ContextToPC(CONTEXT* context)
 {
 #ifdef JS_CODEGEN_NONE
     MOZ_CRASH();
@@ -331,12 +331,12 @@ ContextToPC(CONTEXT *context)
 #if defined(JS_CODEGEN_X64)
 template <class T>
 static void
-SetXMMRegToNaN(Scalar::Type viewType, T *xmm_reg)
+SetXMMRegToNaN(Scalar::Type viewType, T* xmm_reg)
 {
     switch (viewType) {
       case Scalar::Float32: {
         JS_STATIC_ASSERT(sizeof(T) == 4 * sizeof(float));
-        float *floats = reinterpret_cast<float*>(xmm_reg);
+        float* floats = reinterpret_cast<float*>(xmm_reg);
         floats[0] = GenericNaN();
         floats[1] = 0;
         floats[2] = 0;
@@ -345,7 +345,7 @@ SetXMMRegToNaN(Scalar::Type viewType, T *xmm_reg)
       }
       case Scalar::Float64: {
         JS_STATIC_ASSERT(sizeof(T) == 2 * sizeof(double));
-        double *dbls = reinterpret_cast<double*>(xmm_reg);
+        double* dbls = reinterpret_cast<double*>(xmm_reg);
         dbls[0] = GenericNaN();
         dbls[1] = 0;
         break;
@@ -367,7 +367,7 @@ SetXMMRegToNaN(Scalar::Type viewType, T *xmm_reg)
 
 # if !defined(XP_MACOSX)
 static void
-SetRegisterToCoercedUndefined(CONTEXT *context, Scalar::Type viewType, AnyRegister reg)
+SetRegisterToCoercedUndefined(CONTEXT* context, Scalar::Type viewType, AnyRegister reg)
 {
     if (reg.isFloat()) {
         switch (reg.fpu().code()) {
@@ -414,7 +414,7 @@ SetRegisterToCoercedUndefined(CONTEXT *context, Scalar::Type viewType, AnyRegist
 # endif  // !XP_MACOSX
 
 static void
-RedirectToOutOfBoundsLabel(uint8_t **ppc, const AsmJSModule &module)
+RedirectToOutOfBoundsLabel(uint8_t** ppc, const AsmJSModule& module)
 {
     MOZ_ASSERT(module.containsFunctionPC(*ppc));
     *ppc = module.outOfBoundsExit();
@@ -426,34 +426,34 @@ RedirectToOutOfBoundsLabel(uint8_t **ppc, const AsmJSModule &module)
 static bool
 HandleFault(PEXCEPTION_POINTERS exception)
 {
-    EXCEPTION_RECORD *record = exception->ExceptionRecord;
-    CONTEXT *context = exception->ContextRecord;
+    EXCEPTION_RECORD* record = exception->ExceptionRecord;
+    CONTEXT* context = exception->ContextRecord;
 
     if (record->ExceptionCode != EXCEPTION_ACCESS_VIOLATION)
         return false;
 
-    uint8_t **ppc = ContextToPC(context);
-    uint8_t *pc = *ppc;
+    uint8_t** ppc = ContextToPC(context);
+    uint8_t* pc = *ppc;
 
     if (record->NumberParameters < 2)
         return false;
 
     // Don't allow recursive handling of signals, see AutoSetHandlingSignal.
-    JSRuntime *rt = RuntimeForCurrentThread();
+    JSRuntime* rt = RuntimeForCurrentThread();
     if (!rt || rt->handlingSignal)
         return false;
     AutoSetHandlingSignal handling(rt);
 
-    AsmJSActivation *activation = rt->asmJSActivationStack();
+    AsmJSActivation* activation = rt->asmJSActivationStack();
     if (!activation)
         return false;
 
 # if defined(JS_CODEGEN_X64)
-    const AsmJSModule &module = activation->module();
+    const AsmJSModule& module = activation->module();
 
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    void *faultingAddress = (void*)record->ExceptionInformation[1];
+    void* faultingAddress = (void*)record->ExceptionInformation[1];
     if (!module.maybeHeap() ||
         faultingAddress < module.maybeHeap() ||
         faultingAddress >= module.maybeHeap() + AsmJSMappedSize)
@@ -480,7 +480,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
         return false;
     }
 
-    const AsmJSHeapAccess *heapAccess = module.lookupHeapAccess(pc);
+    const AsmJSHeapAccess* heapAccess = module.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 
@@ -524,8 +524,8 @@ AsmJSFaultHandler(LPEXCEPTION_POINTERS exception)
 #elif defined(XP_MACOSX)
 # include <mach/exc.h>
 
-static uint8_t **
-ContextToPC(x86_thread_state_t &state)
+static uint8_t**
+ContextToPC(x86_thread_state_t& state)
 {
 # if defined(JS_CPU_X64)
     static_assert(sizeof(state.uts.ts64.__rip) == sizeof(void*),
@@ -540,8 +540,8 @@ ContextToPC(x86_thread_state_t &state)
 
 # if defined(JS_CODEGEN_X64)
 static bool
-SetRegisterToCoercedUndefined(mach_port_t rtThread, x86_thread_state64_t &state,
-                              const AsmJSHeapAccess &heapAccess)
+SetRegisterToCoercedUndefined(mach_port_t rtThread, x86_thread_state64_t& state,
+                              const AsmJSHeapAccess& heapAccess)
 {
     if (heapAccess.loadedReg().isFloat()) {
         kern_return_t kret;
@@ -626,7 +626,7 @@ struct ExceptionRequest
 };
 
 static bool
-HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
+HandleMachException(JSRuntime* rt, const ExceptionRequest& request)
 {
     // Don't allow recursive handling of signals, see AutoSetHandlingSignal.
     if (rt->handlingSignal)
@@ -644,24 +644,24 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
     if (kret != KERN_SUCCESS)
         return false;
 
-    uint8_t **ppc = ContextToPC(state);
-    uint8_t *pc = *ppc;
+    uint8_t** ppc = ContextToPC(state);
+    uint8_t* pc = *ppc;
 
     if (request.body.exception != EXC_BAD_ACCESS || request.body.codeCnt != 2)
         return false;
 
-    AsmJSActivation *activation = rt->asmJSActivationStack();
+    AsmJSActivation* activation = rt->asmJSActivationStack();
     if (!activation)
         return false;
 
-    const AsmJSModule &module = activation->module();
+    const AsmJSModule& module = activation->module();
     if (!module.containsFunctionPC(pc))
         return false;
 
 # if defined(JS_CPU_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    void *faultingAddress = (void*)request.body.code[1];
+    void* faultingAddress = (void*)request.body.code[1];
     if (!module.maybeHeap() ||
         faultingAddress < module.maybeHeap() ||
         faultingAddress >= module.maybeHeap() + AsmJSMappedSize)
@@ -669,7 +669,7 @@ HandleMachException(JSRuntime *rt, const ExceptionRequest &request)
         return false;
     }
 
-    const AsmJSHeapAccess *heapAccess = module.lookupHeapAccess(pc);
+    const AsmJSHeapAccess* heapAccess = module.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 
@@ -709,9 +709,9 @@ static const mach_msg_id_t sExceptionId = 2405;
 static const mach_msg_id_t sQuitId = 42;
 
 void
-AsmJSMachExceptionHandlerThread(void *threadArg)
+AsmJSMachExceptionHandlerThread(void* threadArg)
 {
-    JSRuntime *rt = reinterpret_cast<JSRuntime*>(threadArg);
+    JSRuntime* rt = reinterpret_cast<JSRuntime*>(threadArg);
     mach_port_t port = rt->asmJSMachExceptionHandler.port();
     kern_return_t kret;
 
@@ -810,7 +810,7 @@ AsmJSMachExceptionHandler::uninstall()
 }
 
 bool
-AsmJSMachExceptionHandler::install(JSRuntime *rt)
+AsmJSMachExceptionHandler::install(JSRuntime* rt)
 {
     MOZ_ASSERT(!installed());
     kern_return_t kret;
@@ -858,30 +858,30 @@ AsmJSMachExceptionHandler::install(JSRuntime *rt)
 // Be very cautious and default to not handling; we don't want to accidentally
 // silence real crashes from real bugs.
 static bool
-HandleFault(int signum, siginfo_t *info, void *ctx)
+HandleFault(int signum, siginfo_t* info, void* ctx)
 {
-    CONTEXT *context = (CONTEXT *)ctx;
-    uint8_t **ppc = ContextToPC(context);
-    uint8_t *pc = *ppc;
+    CONTEXT* context = (CONTEXT*)ctx;
+    uint8_t** ppc = ContextToPC(context);
+    uint8_t* pc = *ppc;
 
     // Don't allow recursive handling of signals, see AutoSetHandlingSignal.
-    JSRuntime *rt = RuntimeForCurrentThread();
+    JSRuntime* rt = RuntimeForCurrentThread();
     if (!rt || rt->handlingSignal)
         return false;
     AutoSetHandlingSignal handling(rt);
 
-    AsmJSActivation *activation = rt->asmJSActivationStack();
+    AsmJSActivation* activation = rt->asmJSActivationStack();
     if (!activation)
         return false;
 
-    const AsmJSModule &module = activation->module();
+    const AsmJSModule& module = activation->module();
     if (!module.containsFunctionPC(pc))
         return false;
 
 # if defined(JS_CODEGEN_X64)
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    void *faultingAddress = info->si_addr;
+    void* faultingAddress = info->si_addr;
     if (!module.maybeHeap() ||
         faultingAddress < module.maybeHeap() ||
         faultingAddress >= module.maybeHeap() + AsmJSMappedSize)
@@ -889,7 +889,7 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
         return false;
     }
 
-    const AsmJSHeapAccess *heapAccess = module.lookupHeapAccess(pc);
+    const AsmJSHeapAccess* heapAccess = module.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 
@@ -919,7 +919,7 @@ HandleFault(int signum, siginfo_t *info, void *ctx)
 static struct sigaction sPrevSEGVHandler;
 
 static void
-AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
+AsmJSFaultHandler(int signum, siginfo_t* info, void* context)
 {
     if (HandleFault(signum, info, context))
         return;
@@ -946,9 +946,9 @@ AsmJSFaultHandler(int signum, siginfo_t *info, void *context)
 #endif
 
 static void
-RedirectIonBackedgesToInterruptCheck(JSRuntime *rt)
+RedirectIonBackedgesToInterruptCheck(JSRuntime* rt)
 {
-    if (jit::JitRuntime *jitRuntime = rt->jitRuntime()) {
+    if (jit::JitRuntime* jitRuntime = rt->jitRuntime()) {
         // If the backedge list is being mutated, the pc must be in C++ code and
         // thus not in a JIT iloop. We assume that the interrupt flag will be
         // checked at least once before entering JIT code (if not, no big deal;
@@ -959,20 +959,20 @@ RedirectIonBackedgesToInterruptCheck(JSRuntime *rt)
 }
 
 static bool
-RedirectJitCodeToInterruptCheck(JSRuntime *rt, CONTEXT *context)
+RedirectJitCodeToInterruptCheck(JSRuntime* rt, CONTEXT* context)
 {
     RedirectIonBackedgesToInterruptCheck(rt);
 
-    if (AsmJSActivation *activation = rt->asmJSActivationStack()) {
-        const AsmJSModule &module = activation->module();
+    if (AsmJSActivation* activation = rt->asmJSActivationStack()) {
+        const AsmJSModule& module = activation->module();
 
 #if defined(JS_ARM_SIMULATOR) || defined(JS_MIPS_SIMULATOR)
         if (module.containsFunctionPC((void*)rt->simulator()->get_pc()))
             rt->simulator()->set_resume_pc(int32_t(module.interruptExit()));
 #endif
 
-        uint8_t **ppc = ContextToPC(context);
-        uint8_t *pc = *ppc;
+        uint8_t** ppc = ContextToPC(context);
+        uint8_t* pc = *ppc;
         if (module.containsFunctionPC(pc)) {
             activation->setResumePC(pc);
             *ppc = module.interruptExit();
@@ -992,15 +992,15 @@ RedirectJitCodeToInterruptCheck(JSRuntime *rt, CONTEXT *context)
 static const int sInterruptSignal = SIGVTALRM;
 
 static void
-JitInterruptHandler(int signum, siginfo_t *info, void *context)
+JitInterruptHandler(int signum, siginfo_t* info, void* context)
 {
-    if (JSRuntime *rt = RuntimeForCurrentThread())
+    if (JSRuntime* rt = RuntimeForCurrentThread())
         RedirectJitCodeToInterruptCheck(rt, (CONTEXT*)context);
 }
 #endif
 
 bool
-js::EnsureSignalHandlersInstalled(JSRuntime *rt)
+js::EnsureSignalHandlersInstalled(JSRuntime* rt)
 {
 #if defined(XP_MACOSX)
     // On OSX, each JSRuntime gets its own handler thread.
@@ -1091,7 +1091,7 @@ js::EnsureSignalHandlersInstalled(JSRuntime *rt)
 //  2. if the main thread's pc is inside asm.js code, the pc is updated to point
 //     to a stub that handles the interrupt.
 void
-js::InterruptRunningJitCode(JSRuntime *rt)
+js::InterruptRunningJitCode(JSRuntime* rt)
 {
     // If signal handlers weren't installed, then Ion and asm.js emit normal
     // interrupt checks and don't need asynchronous interruption.

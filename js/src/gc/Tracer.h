@@ -43,9 +43,9 @@ class MarkStack
 {
     friend class GCMarker;
 
-    uintptr_t *stack_;
-    uintptr_t *tos_;
-    uintptr_t *end_;
+    uintptr_t* stack_;
+    uintptr_t* tos_;
+    uintptr_t* end_;
 
     // The capacity we start with and reset() to.
     size_t baseCapacity_;
@@ -68,7 +68,7 @@ class MarkStack
 
     ptrdiff_t position() const { return tos_ - stack_; }
 
-    void setStack(uintptr_t *stack, size_t tosIndex, size_t capacity) {
+    void setStack(uintptr_t* stack, size_t tosIndex, size_t capacity) {
         stack_ = stack;
         tos_ = stack + tosIndex;
         end_ = stack + capacity;
@@ -91,7 +91,7 @@ class MarkStack
     }
 
     bool push(uintptr_t item1, uintptr_t item2, uintptr_t item3) {
-        uintptr_t *nextTos = tos_ + 3;
+        uintptr_t* nextTos = tos_ + 3;
         if (nextTos > end_) {
             if (!enlarge(3))
                 return false;
@@ -127,7 +127,7 @@ class MarkStack
 class GCMarker : public JSTracer
 {
   public:
-    explicit GCMarker(JSRuntime *rt);
+    explicit GCMarker(JSRuntime* rt);
     bool init(JSGCMode gcMode);
 
     void setMaxCapacity(size_t maxCap) { stack.setMaxCapacity(maxCap); }
@@ -137,15 +137,15 @@ class GCMarker : public JSTracer
     void stop();
     void reset();
 
-    void pushObject(JSObject *obj) {
+    void pushObject(JSObject* obj) {
         pushTaggedPtr(ObjectTag, obj);
     }
 
-    void pushType(ObjectGroup *group) {
+    void pushType(ObjectGroup* group) {
         pushTaggedPtr(GroupTag, group);
     }
 
-    void pushJitCode(jit::JitCode *code) {
+    void pushJitCode(jit::JitCode* code) {
         pushTaggedPtr(JitCodeTag, code);
     }
 
@@ -172,10 +172,10 @@ class GCMarker : public JSTracer
         color = gc::BLACK;
     }
 
-    inline void delayMarkingArena(gc::ArenaHeader *aheader);
-    void delayMarkingChildren(const void *thing);
-    void markDelayedChildren(gc::ArenaHeader *aheader);
-    bool markDelayedChildren(SliceBudget &budget);
+    inline void delayMarkingArena(gc::ArenaHeader* aheader);
+    void delayMarkingChildren(const void* thing);
+    void markDelayedChildren(gc::ArenaHeader* aheader);
+    bool markDelayedChildren(SliceBudget& budget);
     bool hasDelayedChildren() const {
         return !!unmarkedArenaStackTop;
     }
@@ -184,7 +184,7 @@ class GCMarker : public JSTracer
         return isMarkStackEmpty() && !unmarkedArenaStackTop;
     }
 
-    bool drainMarkStack(SliceBudget &budget);
+    bool drainMarkStack(SliceBudget& budget);
 
     /*
      * Gray marking must be done after all black marking is complete. However,
@@ -199,9 +199,9 @@ class GCMarker : public JSTracer
     void startBufferingGrayRoots();
     void endBufferingGrayRoots();
     void resetBufferedGrayRoots();
-    void markBufferedGrayRoots(JS::Zone *zone);
+    void markBufferedGrayRoots(JS::Zone* zone);
 
-    static void GrayCallback(JSTracer *trc, void **thing, JSGCTraceKind kind);
+    static void GrayCallback(JSTracer* trc, void** thing, JSGCTraceKind kind);
 
     void setGCMode(JSGCMode mode) { stack.setGCMode(mode); }
 
@@ -216,9 +216,9 @@ class GCMarker : public JSTracer
 
   private:
 #ifdef DEBUG
-    void checkZone(void *p);
+    void checkZone(void* p);
 #else
-    void checkZone(void *p) {}
+    void checkZone(void* p) {}
 #endif
 
     /*
@@ -240,7 +240,7 @@ class GCMarker : public JSTracer
     static_assert(StackTagMask >= uintptr_t(LastTag), "The tag mask must subsume the tags.");
     static_assert(StackTagMask <= gc::CellMask, "The tag mask must be embeddable in a Cell*.");
 
-    void pushTaggedPtr(StackTag tag, void *ptr) {
+    void pushTaggedPtr(StackTag tag, void* ptr) {
         checkZone(ptr);
         uintptr_t addr = reinterpret_cast<uintptr_t>(ptr);
         MOZ_ASSERT(!(addr & StackTagMask));
@@ -248,7 +248,7 @@ class GCMarker : public JSTracer
             delayMarkingChildren(ptr);
     }
 
-    void pushValueArray(JSObject *obj, void *start, void *end) {
+    void pushValueArray(JSObject* obj, void* start, void* end) {
         checkZone(obj);
 
         MOZ_ASSERT(start <= end);
@@ -268,22 +268,22 @@ class GCMarker : public JSTracer
         return stack.isEmpty();
     }
 
-    bool restoreValueArray(NativeObject *obj, void **vpp, void **endp);
+    bool restoreValueArray(NativeObject* obj, void** vpp, void** endp);
     void saveValueRanges();
-    inline void processMarkStackTop(SliceBudget &budget);
+    inline void processMarkStackTop(SliceBudget& budget);
     void processMarkStackOther(uintptr_t tag, uintptr_t addr);
 
-    void markAndScanString(JSObject *source, JSString *str);
-    void markAndScanSymbol(JSObject *source, JS::Symbol *sym);
-    bool markObject(JSObject *source, JSObject *obj);
+    void markAndScanString(JSObject* source, JSString* str);
+    void markAndScanSymbol(JSObject* source, JS::Symbol* sym);
+    bool markObject(JSObject* source, JSObject* obj);
 
-    void appendGrayRoot(void *thing, JSGCTraceKind kind);
+    void appendGrayRoot(void* thing, JSGCTraceKind kind);
 
     /* The color is only applied to objects and functions. */
     uint32_t color;
 
     /* Pointer to the top of the stack of arenas we are delaying marking on. */
-    js::gc::ArenaHeader *unmarkedArenaStackTop;
+    js::gc::ArenaHeader* unmarkedArenaStackTop;
 
     /* Count of arenas that are currently in the stack. */
     mozilla::DebugOnly<size_t> markLaterArenas;
@@ -306,7 +306,7 @@ class GCMarker : public JSTracer
 };
 
 void
-SetMarkStackLimit(JSRuntime *rt, size_t limit);
+SetMarkStackLimit(JSRuntime* rt, size_t limit);
 
 } /* namespace js */
 

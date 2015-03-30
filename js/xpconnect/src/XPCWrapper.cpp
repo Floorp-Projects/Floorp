@@ -16,7 +16,7 @@ namespace XPCNativeWrapper {
 
 static inline
 bool
-ThrowException(nsresult ex, JSContext *cx)
+ThrowException(nsresult ex, JSContext* cx)
 {
   XPCThrower::Throw(ex, cx);
 
@@ -24,7 +24,7 @@ ThrowException(nsresult ex, JSContext *cx)
 }
 
 static bool
-UnwrapNW(JSContext *cx, unsigned argc, jsval *vp)
+UnwrapNW(JSContext* cx, unsigned argc, jsval* vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   if (args.length() != 1) {
@@ -47,7 +47,7 @@ UnwrapNW(JSContext *cx, unsigned argc, jsval *vp)
 }
 
 static bool
-XrayWrapperConstructor(JSContext *cx, unsigned argc, jsval *vp)
+XrayWrapperConstructor(JSContext* cx, unsigned argc, jsval* vp)
 {
   JS::CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() == 0) {
@@ -64,12 +64,12 @@ XrayWrapperConstructor(JSContext *cx, unsigned argc, jsval *vp)
 }
 // static
 bool
-AttachNewConstructorObject(JSContext *aCx, JS::HandleObject aGlobalObject)
+AttachNewConstructorObject(JSContext* aCx, JS::HandleObject aGlobalObject)
 {
   // Pushing a JSContext calls ActivateDebugger which calls this function, so
   // we can't use an AutoJSContext here until JSD is gone.
   JSAutoCompartment ac(aCx, aGlobalObject);
-  JSFunction *xpcnativewrapper =
+  JSFunction* xpcnativewrapper =
     JS_DefineFunction(aCx, aGlobalObject, "XPCNativeWrapper",
                       XrayWrapperConstructor, 1,
                       JSPROP_READONLY | JSPROP_PERMANENT | JSFUN_STUB_GSOPS | JSFUN_CONSTRUCTOR);
@@ -85,8 +85,8 @@ AttachNewConstructorObject(JSContext *aCx, JS::HandleObject aGlobalObject)
 
 namespace XPCWrapper {
 
-JSObject *
-UnsafeUnwrapSecurityWrapper(JSObject *obj)
+JSObject*
+UnsafeUnwrapSecurityWrapper(JSObject* obj)
 {
   if (js::IsProxy(obj)) {
     return js::UncheckedUnwrap(obj);

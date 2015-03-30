@@ -35,9 +35,9 @@ enum XMMRegisterID {
    ,invalid_xmm
 };
 
-inline const char *XMMRegName(XMMRegisterID reg)
+inline const char* XMMRegName(XMMRegisterID reg)
 {
-    static const char *const names[] = {
+    static const char* const names[] = {
         "%xmm0", "%xmm1", "%xmm2", "%xmm3", "%xmm4", "%xmm5", "%xmm6", "%xmm7"
 #ifdef JS_CODEGEN_X64
        ,"%xmm8", "%xmm9", "%xmm10", "%xmm11", "%xmm12", "%xmm13", "%xmm14", "%xmm15"
@@ -48,9 +48,9 @@ inline const char *XMMRegName(XMMRegisterID reg)
 }
 
 #ifdef JS_CODEGEN_X64
-inline const char *GPReg64Name(RegisterID reg)
+inline const char* GPReg64Name(RegisterID reg)
 {
-    static const char *const names[] = {
+    static const char* const names[] = {
         "%rax", "%rcx", "%rdx", "%rbx", "%rsp", "%rbp", "%rsi", "%rdi"
 #ifdef JS_CODEGEN_X64
        ,"%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15"
@@ -61,9 +61,9 @@ inline const char *GPReg64Name(RegisterID reg)
 }
 #endif
 
-inline const char *GPReg32Name(RegisterID reg)
+inline const char* GPReg32Name(RegisterID reg)
 {
-    static const char *const names[] = {
+    static const char* const names[] = {
         "%eax", "%ecx", "%edx", "%ebx", "%esp", "%ebp", "%esi", "%edi"
 #ifdef JS_CODEGEN_X64
        ,"%r8d", "%r9d", "%r10d", "%r11d", "%r12d", "%r13d", "%r14d", "%r15d"
@@ -73,9 +73,9 @@ inline const char *GPReg32Name(RegisterID reg)
     return names[reg];
 }
 
-inline const char *GPReg16Name(RegisterID reg)
+inline const char* GPReg16Name(RegisterID reg)
 {
-    static const char *const names[] = {
+    static const char* const names[] = {
         "%ax", "%cx", "%dx", "%bx", "%sp", "%bp", "%si", "%di"
 #ifdef JS_CODEGEN_X64
        ,"%r8w", "%r9w", "%r10w", "%r11w", "%r12w", "%r13w", "%r14w", "%r15w"
@@ -85,9 +85,9 @@ inline const char *GPReg16Name(RegisterID reg)
     return names[reg];
 }
 
-inline const char *GPReg8Name(RegisterID reg)
+inline const char* GPReg8Name(RegisterID reg)
 {
-    static const char *const names[] = {
+    static const char* const names[] = {
         "%al", "%cl", "%dl", "%bl"
 #ifdef JS_CODEGEN_X64
        ,"%spl", "%bpl", "%sil", "%dil",
@@ -98,7 +98,7 @@ inline const char *GPReg8Name(RegisterID reg)
     return names[reg];
 }
 
-inline const char *GPRegName(RegisterID reg)
+inline const char* GPRegName(RegisterID reg)
 {
 #ifdef JS_CODEGEN_X64
     return GPReg64Name(reg);
@@ -133,9 +133,9 @@ inline HRegisterID GetSubregH(RegisterID reg)
     return HRegisterID(reg + 4);
 }
 
-inline const char *HRegName8(HRegisterID reg)
+inline const char* HRegName8(HRegisterID reg)
 {
-    static const char *const names[] = {
+    static const char* const names[] = {
         "%ah", "%ch", "%dh", "%bh"
     };
     size_t index = reg - GetSubregH(rax);
@@ -165,9 +165,9 @@ enum Condition {
     ConditionNC = ConditionAE
 };
 
-inline const char *CCName(Condition cc)
+inline const char* CCName(Condition cc)
 {
-    static const char *const names[] = {
+    static const char* const names[] = {
         "o ", "no", "b ", "ae", "e ", "ne", "be", "a ",
         "s ", "ns", "p ", "np", "l ", "ge", "le", "g "
     };
@@ -198,7 +198,7 @@ enum RoundingMode {
 // Test whether the given address will fit in an address immediate field.
 // This is always true on x86, but on x64 it's only true for addreses which
 // fit in the 32-bit immediate field.
-inline bool IsAddressImmediate(const void *address)
+inline bool IsAddressImmediate(const void* address)
 {
     intptr_t value = reinterpret_cast<intptr_t>(address);
     int32_t immediate = static_cast<int32_t>(value);
@@ -208,7 +208,7 @@ inline bool IsAddressImmediate(const void *address)
 // Convert the given address to a 32-bit immediate field value. This is a
 // no-op on x86, but on x64 it asserts that the address is actually a valid
 // address immediate.
-inline int32_t AddressImmediate(const void *address)
+inline int32_t AddressImmediate(const void* address)
 {
     MOZ_ASSERT(IsAddressImmediate(address));
     return static_cast<int32_t>(reinterpret_cast<intptr_t>(address));

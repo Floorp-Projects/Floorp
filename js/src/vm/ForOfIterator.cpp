@@ -20,7 +20,7 @@ using JS::ForOfIterator;
 bool
 ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavior)
 {
-    JSContext *cx = cx_;
+    JSContext* cx = cx_;
     RootedObject iterableObj(cx, ToObject(cx, iterable));
     if (!iterableObj)
         return false;
@@ -29,7 +29,7 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
 
     // Check the PIC first for a match.
     if (iterableObj->is<ArrayObject>()) {
-        ForOfPIC::Chain *stubChain = ForOfPIC::getOrCreate(cx);
+        ForOfPIC::Chain* stubChain = ForOfPIC::getOrCreate(cx);
         if (!stubChain)
             return false;
 
@@ -69,7 +69,7 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
     // throw an inscrutable error message about |method| rather than this nice
     // one about |obj|.
     if (!callee.isObject() || !callee.toObject().isCallable()) {
-        char *bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, iterable, NullPtr());
+        char* bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, iterable, NullPtr());
         if (!bytes)
             return false;
         JS_ReportErrorNumber(cx, js_GetErrorMessage, nullptr, JSMSG_NOT_ITERABLE, bytes);
@@ -91,20 +91,20 @@ ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavio
 bool
 ForOfIterator::initWithIterator(HandleValue aIterator)
 {
-    JSContext *cx = cx_;
+    JSContext* cx = cx_;
     RootedObject iteratorObj(cx, ToObject(cx, aIterator));
     return iterator = iteratorObj;
 }
 
 inline bool
-ForOfIterator::nextFromOptimizedArray(MutableHandleValue vp, bool *done)
+ForOfIterator::nextFromOptimizedArray(MutableHandleValue vp, bool* done)
 {
     MOZ_ASSERT(index != NOT_ARRAY);
 
     if (!CheckForInterrupt(cx_))
         return false;
 
-    ArrayObject *arr = &iterator->as<ArrayObject>();
+    ArrayObject* arr = &iterator->as<ArrayObject>();
 
     if (index >= arr->length()) {
         vp.setUndefined();
@@ -126,12 +126,12 @@ ForOfIterator::nextFromOptimizedArray(MutableHandleValue vp, bool *done)
 }
 
 bool
-ForOfIterator::next(MutableHandleValue vp, bool *done)
+ForOfIterator::next(MutableHandleValue vp, bool* done)
 {
     MOZ_ASSERT(iterator);
 
     if (index != NOT_ARRAY) {
-        ForOfPIC::Chain *stubChain = ForOfPIC::getOrCreate(cx_);
+        ForOfPIC::Chain* stubChain = ForOfPIC::getOrCreate(cx_);
         if (!stubChain)
             return false;
 
@@ -176,7 +176,7 @@ ForOfIterator::materializeArrayIterator()
 {
     MOZ_ASSERT(index != NOT_ARRAY);
 
-    const char *nameString = "ArrayValuesAt";
+    const char* nameString = "ArrayValuesAt";
 
     RootedAtom name(cx_, Atomize(cx_, nameString, strlen(nameString)));
     if (!name)

@@ -37,9 +37,9 @@ namespace ubi {
 //      resources, move constructors and assignment operators are probably a
 //      good idea, too.
 //
-//   bool operator() (BreadthFirst &traversal,
-//                    Node origin, const Edge &edge,
-//                    Handler::NodeData *referentData, bool first);
+//   bool operator() (BreadthFirst& traversal,
+//                    Node origin, const Edge& edge,
+//                    Handler::NodeData* referentData, bool first);
 //
 //      The visitor function, called to report that we have traversed
 //      |edge| from |origin|. This is called once for each edge we traverse.
@@ -83,7 +83,7 @@ struct BreadthFirst {
     //
     // We do nothing with noGC, other than require it to exist, with a lifetime
     // that encloses our own.
-    BreadthFirst(JSContext *cx, Handler &handler, const JS::AutoCheckCannotGC &noGC)
+    BreadthFirst(JSContext* cx, Handler& handler, const JS::AutoCheckCannotGC& noGC)
       : wantNames(true), cx(cx), visited(cx), handler(handler), pending(cx),
         traversalBegun(false), stopRequested(false), abandonRequested(false)
     { }
@@ -134,7 +134,7 @@ struct BreadthFirst {
             for (; !range->empty(); range->popFront()) {
                 MOZ_ASSERT(!stopRequested);
 
-                const Edge &edge = range->front();
+                const Edge& edge = range->front();
                 typename NodeMap::AddPtr a = visited.lookupForAdd(edge.referent);
                 bool first = !a;
 
@@ -182,7 +182,7 @@ struct BreadthFirst {
     void abandonReferent() { abandonRequested = true; }
 
     // The context with which we were constructed.
-    JSContext *cx;
+    JSContext* cx;
 
     // A map associating each node N that we have reached with a
     // Handler::NodeData, for |handler|'s use. This is public, so that
@@ -192,7 +192,7 @@ struct BreadthFirst {
 
   private:
     // Our handler object.
-    Handler &handler;
+    Handler& handler;
 
     // A queue template. Appending and popping the front are constant time.
     // Wasted space is never more than some recent actual population plus the
@@ -202,9 +202,9 @@ struct BreadthFirst {
         js::Vector<T, 0> head, tail;
         size_t frontIndex;
       public:
-        explicit Queue(JSContext *cx) : head(cx), tail(cx), frontIndex(0) { }
+        explicit Queue(JSContext* cx) : head(cx), tail(cx), frontIndex(0) { }
         bool empty() { return frontIndex >= head.length(); }
-        T &front() {
+        T& front() {
             MOZ_ASSERT(!empty());
             return head[frontIndex];
         }
@@ -217,7 +217,7 @@ struct BreadthFirst {
                 frontIndex = 0;
             }
         }
-        bool append(const T &elt) {
+        bool append(const T& elt) {
             return frontIndex == 0 ? head.append(elt) : tail.append(elt);
         }
     };

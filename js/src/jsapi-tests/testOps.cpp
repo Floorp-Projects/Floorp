@@ -27,7 +27,7 @@ static const JSClass myClass = {
 };
 
 static bool
-createMyObject(JSContext* context, unsigned argc, jsval *vp)
+createMyObject(JSContext* context, unsigned argc, jsval* vp)
 {
     JS_BeginRequest(context);
 

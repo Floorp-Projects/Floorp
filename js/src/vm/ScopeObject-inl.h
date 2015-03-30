@@ -14,7 +14,7 @@
 namespace js {
 
 inline void
-ScopeObject::setAliasedVar(JSContext *cx, ScopeCoordinate sc, PropertyName *name, const Value &v)
+ScopeObject::setAliasedVar(JSContext* cx, ScopeCoordinate sc, PropertyName* name, const Value& v)
 {
     MOZ_ASSERT(is<CallObject>() || is<ClonedBlockObject>());
     JS_STATIC_ASSERT(CallObject::RESERVED_SLOTS == BlockObject::RESERVED_SLOTS);
@@ -28,7 +28,7 @@ ScopeObject::setAliasedVar(JSContext *cx, ScopeCoordinate sc, PropertyName *name
 
         // Keep track of properties which have ever been overwritten.
         if (!getSlot(sc.slot()).isUndefined()) {
-            Shape *shape = lookup(cx, name);
+            Shape* shape = lookup(cx, name);
             shape->setOverwritten();
         }
     }
@@ -37,7 +37,7 @@ ScopeObject::setAliasedVar(JSContext *cx, ScopeCoordinate sc, PropertyName *name
 }
 
 inline void
-CallObject::setAliasedVar(JSContext *cx, AliasedFormalIter fi, PropertyName *name, const Value &v)
+CallObject::setAliasedVar(JSContext* cx, AliasedFormalIter fi, PropertyName* name, const Value& v)
 {
     MOZ_ASSERT(name == fi->name());
     setSlot(fi.scopeSlot(), v);
@@ -46,7 +46,7 @@ CallObject::setAliasedVar(JSContext *cx, AliasedFormalIter fi, PropertyName *nam
 }
 
 inline void
-CallObject::setAliasedVarFromArguments(JSContext *cx, const Value &argsValue, jsid id, const Value &v)
+CallObject::setAliasedVarFromArguments(JSContext* cx, const Value& argsValue, jsid id, const Value& v)
 {
     setSlot(ArgumentsObject::SlotFromMagicScopeSlotValue(argsValue), v);
     if (isSingleton())
@@ -62,7 +62,7 @@ CallObject::initRemainingSlotsToUninitializedLexicals(uint32_t begin)
 }
 
 inline void
-CallObject::initAliasedLexicalsToThrowOnTouch(JSScript *script)
+CallObject::initAliasedLexicalsToThrowOnTouch(JSScript* script)
 {
     initRemainingSlotsToUninitializedLexicals(script->bindings.aliasedBodyLevelLexicalBegin());
 }
@@ -107,7 +107,7 @@ StaticScopeIter<allowGC>::hasDynamicScopeObject() const
 }
 
 template <AllowGC allowGC>
-inline Shape *
+inline Shape*
 StaticScopeIter<allowGC>::scopeShape() const
 {
     MOZ_ASSERT(hasDynamicScopeObject());
@@ -133,7 +133,7 @@ StaticScopeIter<allowGC>::type() const
 }
 
 template <AllowGC allowGC>
-inline StaticBlockObject &
+inline StaticBlockObject&
 StaticScopeIter<allowGC>::block() const
 {
     MOZ_ASSERT(type() == Block);
@@ -141,7 +141,7 @@ StaticScopeIter<allowGC>::block() const
 }
 
 template <AllowGC allowGC>
-inline StaticWithObject &
+inline StaticWithObject&
 StaticScopeIter<allowGC>::staticWith() const
 {
     MOZ_ASSERT(type() == With);
@@ -149,7 +149,7 @@ StaticScopeIter<allowGC>::staticWith() const
 }
 
 template <AllowGC allowGC>
-inline StaticEvalObject &
+inline StaticEvalObject&
 StaticScopeIter<allowGC>::eval() const
 {
     MOZ_ASSERT(type() == Eval);
@@ -157,7 +157,7 @@ StaticScopeIter<allowGC>::eval() const
 }
 
 template <AllowGC allowGC>
-inline JSScript *
+inline JSScript*
 StaticScopeIter<allowGC>::funScript() const
 {
     MOZ_ASSERT(type() == Function);
@@ -165,7 +165,7 @@ StaticScopeIter<allowGC>::funScript() const
 }
 
 template <AllowGC allowGC>
-inline JSFunction &
+inline JSFunction&
 StaticScopeIter<allowGC>::fun() const
 {
     MOZ_ASSERT(type() == Function);

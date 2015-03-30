@@ -30,7 +30,7 @@ namespace js {
  *
  * void hash(Lookup, HashNumber[NumHashes]) - Compute all hashes for an entry.
  *
- * void clear(T *) - Clear an entry, such that isCleared() holds afterwards.
+ * void clear(T*) - Clear an entry, such that isCleared() holds afterwards.
  *
  * bool isCleared(T) - Test whether an entry has been cleared.
  */
@@ -54,7 +54,7 @@ class FixedSizeHashSet
         MOZ_ASSERT(HashPolicy::isCleared(entries[0]));
     }
 
-    bool lookup(const Lookup &lookup, T *pentry)
+    bool lookup(const Lookup& lookup, T* pentry)
     {
         size_t bucket;
         if (lookupReference(lookup, &bucket)) {
@@ -65,14 +65,14 @@ class FixedSizeHashSet
         return false;
     }
 
-    void insert(const Lookup &lookup, const T &entry)
+    void insert(const Lookup& lookup, const T& entry)
     {
         size_t buckets[NumHashes];
         getBuckets(lookup, buckets);
 
         size_t min = buckets[0];
         for (size_t i = 0; i < NumHashes; i++) {
-            const T &entry = entries[buckets[i]];
+            const T& entry = entries[buckets[i]];
             if (HashPolicy::isCleared(entry)) {
                 entries[buckets[i]] = entry;
                 lastOperations[buckets[i]] = numOperations++;
@@ -87,7 +87,7 @@ class FixedSizeHashSet
     }
 
     template <typename S>
-    void remove(const S &s)
+    void remove(const S& s)
     {
         size_t bucket;
         if (lookupReference(s, &bucket))
@@ -96,13 +96,13 @@ class FixedSizeHashSet
 
   private:
     template <typename S>
-    bool lookupReference(const S &s, size_t *pbucket)
+    bool lookupReference(const S& s, size_t* pbucket)
     {
         size_t buckets[NumHashes];
         getBuckets(s, buckets);
 
         for (size_t i = 0; i < NumHashes; i++) {
-            const T &entry = entries[buckets[i]];
+            const T& entry = entries[buckets[i]];
             if (!HashPolicy::isCleared(entry) && HashPolicy::match(entry, s)) {
                 *pbucket = buckets[i];
                 return true;
@@ -113,7 +113,7 @@ class FixedSizeHashSet
     }
 
     template <typename S>
-    void getBuckets(const S &s, size_t buckets[NumHashes])
+    void getBuckets(const S& s, size_t buckets[NumHashes])
     {
         HashNumber hashes[NumHashes];
         HashPolicy::hash(s, hashes);

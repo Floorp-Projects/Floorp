@@ -21,7 +21,7 @@ struct LabelBase
     bool bound_   : 1;
 
     // Disallow assignment.
-    void operator =(const LabelBase &label);
+    void operator =(const LabelBase& label);
   public:
     static const int32_t INVALID_OFFSET = -1;
 
@@ -83,7 +83,7 @@ class Label : public LabelBase
         // The assertion below doesn't hold if an error occurred.
         if (OOM_counter > OOM_maxAllocations)
             return;
-        if (JitContext *context = MaybeGetJitContext()) {
+        if (JitContext* context = MaybeGetJitContext()) {
             if (context->runtime->hadOutOfMemory())
                 return;
         }
