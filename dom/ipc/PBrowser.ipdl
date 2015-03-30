@@ -40,7 +40,7 @@ using struct mozilla::widget::IMENotification from "nsIWidget.h";
 using struct nsIMEUpdatePreference from "nsIWidget.h";
 using struct nsIntPoint from "nsPoint.h";
 using struct nsIntRect from "nsRect.h";
-using struct nsIntSize from "nsSize.h";
+using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using class mozilla::WidgetKeyboardEvent from "ipc/nsGUIEventIPC.h";
 using class mozilla::WidgetMouseEvent from "ipc/nsGUIEventIPC.h";
 using class mozilla::WidgetWheelEvent from "ipc/nsGUIEventIPC.h";
@@ -605,7 +605,7 @@ child:
     PDocumentRenderer(nsRect documentRect, Matrix transform,
                       nsString bgcolor,
                       uint32_t renderFlags, bool flushLayout,
-                      nsIntSize renderSize);
+                      IntSize renderSize);
 
     /**
      * Sent by the chrome process when it no longer wants this remote

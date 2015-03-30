@@ -34,7 +34,6 @@
 class gfxReusableSurfaceWrapper;
 struct nsIntPoint;
 struct nsIntRect;
-struct nsIntSize;
 
 namespace mozilla {
 namespace gfx {
@@ -309,7 +308,7 @@ private:
                   const gfx::Rect& aClipRect,
                   const nsIntRegion& aScreenRegion,
                   const nsIntPoint& aTextureOffset,
-                  const nsIntSize& aTextureBounds);
+                  const gfx::IntSize& aTextureBounds);
 
   void EnsureTileStore() {}
 

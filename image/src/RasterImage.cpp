@@ -161,7 +161,7 @@ public:
     // Insert the new surface into the cache immediately. We need to do this so
     // that we won't start multiple scaling jobs for the same size.
     SurfaceCache::Insert(mDstRef.get(), ImageKey(mImage.get()),
-                         RasterSurfaceKey(mDstSize.ToIntSize(), mImageFlags, 0),
+                         RasterSurfaceKey(mDstSize, mImageFlags, 0),
                          Lifetime::Transient);
 
     return true;
@@ -210,7 +210,7 @@ public:
 
       // Remove the frame from the cache since we know we don't need it.
       SurfaceCache::RemoveSurface(ImageKey(mImage.get()),
-                                  RasterSurfaceKey(mDstSize.ToIntSize(),
+                                  RasterSurfaceKey(mDstSize,
                                                    mImageFlags, 0));
 
       // Release everything we're holding, too.
@@ -504,8 +504,7 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
   MOZ_ASSERT(NS_IsMainThread());
 
   IntSize requestedSize = CanDownscaleDuringDecode(aSize, aFlags)
-                        ? aSize.ToIntSize()
-                        : mSize.ToIntSize();
+                        ? aSize : mSize;
 
   DrawableFrameRef ref = LookupFrameInternal(aFrameNum, requestedSize, aFlags);
 
@@ -518,7 +517,7 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
     // The OS threw this frame away. We need to redecode if we can.
     MOZ_ASSERT(!mAnim, "Animated frames should be locked");
 
-    Decode(Some(ThebesIntSize(requestedSize)), aFlags);
+    Decode(Some(requestedSize), aFlags);
 
     // If we can sync decode, we should already have the frame.
     if (aFlags & FLAG_SYNC_DECODE) {
@@ -935,7 +934,7 @@ RasterImage::OnAddedFrame(uint32_t aNewFrameCount,
     if (aNewFrameCount == 2) {
       // We're becoming animated, so initialize animation stuff.
       MOZ_ASSERT(!mAnim, "Already have animation state?");
-      mAnim = MakeUnique<FrameAnimator>(this, mSize.ToIntSize(), mAnimationMode);
+      mAnim = MakeUnique<FrameAnimator>(this, mSize, mAnimationMode);
 
       // We don't support discarding animated images (See bug 414259).
       // Lock the image and throw away the key.
@@ -1612,7 +1611,7 @@ RasterImage::CanScale(GraphicsFilter aFilter,
   }
 
   // There's no point in scaling if we can't store the result.
-  if (!SurfaceCache::CanHold(aSize.ToIntSize())) {
+  if (!SurfaceCache::CanHold(aSize)) {
     return false;
   }
 
@@ -1654,7 +1653,7 @@ RasterImage::CanDownscaleDuringDecode(const nsIntSize& aSize, uint32_t aFlags)
   }
 
   // There's no point in scaling if we can't store the result.
-  if (!SurfaceCache::CanHold(aSize.ToIntSize())) {
+  if (!SurfaceCache::CanHold(aSize)) {
     return false;
   }
 
@@ -1715,7 +1714,7 @@ RasterImage::DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
   if (CanScale(aFilter, aSize, aFlags)) {
     frameRef =
       SurfaceCache::Lookup(ImageKey(this),
-                           RasterSurfaceKey(aSize.ToIntSize(),
+                           RasterSurfaceKey(aSize,
                                             DecodeFlags(aFlags),
                                             0));
     if (!frameRef) {
@@ -1743,7 +1742,7 @@ RasterImage::DrawWithPreDownscaleIfNeeded(DrawableFrameRef&& aFrameRef,
   // adjust the drawing parameters accordingly.
   IntSize finalSize = frameRef->GetImageSize();
   bool couldRedecodeForBetterFrame = false;
-  if (ThebesIntSize(finalSize) != aSize) {
+  if (finalSize != aSize) {
     gfx::Size scale(double(aSize.width) / finalSize.width,
                     double(aSize.height) / finalSize.height);
     aContext->Multiply(gfxMatrix::Scaling(scale.width, scale.height));
@@ -2096,7 +2095,7 @@ RasterImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame,
   } else if (CanScale(aFilter, destSize, aFlags)) {
     DrawableFrameRef frameRef =
       SurfaceCache::Lookup(ImageKey(this),
-                           RasterSurfaceKey(destSize.ToIntSize(),
+                           RasterSurfaceKey(destSize,
                                             DecodeFlags(aFlags),
                                             0));
 

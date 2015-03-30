@@ -302,7 +302,8 @@ public:
     mIsFinishedTransition = true;
   }
 
-  bool IsCurrent() const;
+  bool IsInPlay(const AnimationPlayer& aPlayer) const;
+  bool IsCurrent(const AnimationPlayer& aPlayer) const;
   bool IsInEffect() const;
 
   const AnimationProperty*

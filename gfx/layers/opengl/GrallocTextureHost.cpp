@@ -220,7 +220,7 @@ GrallocTextureHostOGL::GetRenderState()
       flags |= LayerRenderStateFlags::FORMAT_RB_SWAP;
     }
     return LayerRenderState(graphicBuffer,
-                            gfx::ThebesIntSize(mDescriptorSize),
+                            mDescriptorSize,
                             flags,
                             this);
   }

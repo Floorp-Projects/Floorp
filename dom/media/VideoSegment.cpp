@@ -97,7 +97,7 @@ VideoSegment::AppendFrame(already_AddRefed<Image>&& aImage,
                           bool aForceBlack)
 {
   VideoChunk* chunk = AppendChunk(aDuration);
-  VideoFrame frame(aImage, ThebesIntSize(aIntrinsicSize));
+  VideoFrame frame(aImage, aIntrinsicSize);
   frame.SetForceBlack(aForceBlack);
   chunk->mFrame.TakeFrom(&frame);
 }

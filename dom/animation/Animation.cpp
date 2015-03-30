@@ -229,10 +229,24 @@ Animation::ActiveDuration(const AnimationTiming& aTiming)
     aTiming.mIterationDuration.MultDouble(aTiming.mIterationCount));
 }
 
+// http://w3c.github.io/web-animations/#in-play
 bool
-Animation::IsCurrent() const
+Animation::IsInPlay(const AnimationPlayer& aPlayer) const
 {
-  if (IsFinishedTransition()) {
+  if (IsFinishedTransition() ||
+      aPlayer.PlayState() == AnimationPlayState::Finished) {
+    return false;
+  }
+
+  return GetComputedTiming().mPhase == ComputedTiming::AnimationPhase_Active;
+}
+
+// http://w3c.github.io/web-animations/#current
+bool
+Animation::IsCurrent(const AnimationPlayer& aPlayer) const
+{
+  if (IsFinishedTransition() ||
+      aPlayer.PlayState() == AnimationPlayState::Finished) {
     return false;
   }
 

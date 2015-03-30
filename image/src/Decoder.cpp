@@ -436,7 +436,7 @@ Decoder::EnsureFrame(uint32_t aFrameNum,
   MOZ_ASSERT(ref, "No ref to current frame?");
 
   // Reinitialize the old frame.
-  nsIntSize oldSize = ThebesIntSize(aPreviousFrame->GetImageSize());
+  nsIntSize oldSize = aPreviousFrame->GetImageSize();
   bool nonPremult =
     aDecodeFlags & imgIContainer::FLAG_DECODE_NO_PREMULTIPLY_ALPHA;
   if (NS_FAILED(aPreviousFrame->ReinitForDecoder(oldSize, aFrameRect, aFormat,
@@ -470,7 +470,7 @@ Decoder::InternalAddFrame(uint32_t aFrameNum,
     return RawAccessFrameRef();
   }
 
-  if (!SurfaceCache::CanHold(aTargetSize.ToIntSize())) {
+  if (!SurfaceCache::CanHold(aTargetSize)) {
     NS_WARNING("Trying to add frame that's too large for the SurfaceCache");
     return RawAccessFrameRef();
   }
@@ -492,7 +492,7 @@ Decoder::InternalAddFrame(uint32_t aFrameNum,
 
   InsertOutcome outcome =
     SurfaceCache::Insert(frame, ImageKey(mImage.get()),
-                         RasterSurfaceKey(aTargetSize.ToIntSize(),
+                         RasterSurfaceKey(aTargetSize,
                                           aDecodeFlags,
                                           aFrameNum),
                          Lifetime::Persistent);

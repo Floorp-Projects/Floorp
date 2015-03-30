@@ -144,15 +144,15 @@ public:
                      nsIPrincipal*           aSheetPrincipal,
                      css::Rule**             aResult);
 
-  nsresult ParseProperty(const nsCSSProperty aPropID,
-                         const nsAString& aPropValue,
-                         nsIURI* aSheetURL,
-                         nsIURI* aBaseURL,
-                         nsIPrincipal* aSheetPrincipal,
-                         css::Declaration* aDeclaration,
-                         bool* aChanged,
-                         bool aIsImportant,
-                         bool aIsSVGMode);
+  void ParseProperty(const nsCSSProperty aPropID,
+                     const nsAString& aPropValue,
+                     nsIURI* aSheetURL,
+                     nsIURI* aBaseURL,
+                     nsIPrincipal* aSheetPrincipal,
+                     css::Declaration* aDeclaration,
+                     bool* aChanged,
+                     bool aIsImportant,
+                     bool aIsSVGMode);
 
   void ParseMediaList(const nsSubstring& aBuffer,
                       nsIURI* aURL, // for error reporting
@@ -167,14 +167,14 @@ public:
                            InfallibleTArray<nsCSSValue>& aValues,
                            bool aHTMLMode);
 
-  nsresult ParseVariable(const nsAString& aVariableName,
-                         const nsAString& aPropValue,
-                         nsIURI* aSheetURL,
-                         nsIURI* aBaseURL,
-                         nsIPrincipal* aSheetPrincipal,
-                         css::Declaration* aDeclaration,
-                         bool* aChanged,
-                         bool aIsImportant);
+  void ParseVariable(const nsAString& aVariableName,
+                     const nsAString& aPropValue,
+                     nsIURI* aSheetURL,
+                     nsIURI* aBaseURL,
+                     nsIPrincipal* aSheetPrincipal,
+                     css::Declaration* aDeclaration,
+                     bool* aChanged,
+                     bool aIsImportant);
 
   bool ParseFontFamilyListString(const nsSubstring& aBuffer,
                                  nsIURI* aURL, // for error reporting
@@ -1615,7 +1615,7 @@ CSSParserImpl::ParseRule(const nsAString&        aRule,
 #pragma warning( disable : 4748 )
 #endif
 
-nsresult
+void
 CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              const nsAString& aPropValue,
                              nsIURI* aSheetURI,
@@ -1654,7 +1654,7 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
     REPORT_UNEXPECTED(PEDeclDropped);
     OUTPUT_ERROR();
     ReleaseScanner();
-    return NS_OK;
+    return;
   }
 
   bool parsedOK = ParseProperty(aPropID);
@@ -1693,10 +1693,9 @@ CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
   mTempData.AssertInitialState();
 
   ReleaseScanner();
-  return NS_OK;
 }
 
-nsresult
+void
 CSSParserImpl::ParseVariable(const nsAString& aVariableName,
                              const nsAString& aPropValue,
                              nsIURI* aSheetURI,
@@ -1749,7 +1748,6 @@ CSSParserImpl::ParseVariable(const nsAString& aVariableName,
   mTempData.AssertInitialState();
 
   ReleaseScanner();
-  return NS_OK;
 }
 
 #ifdef _MSC_VER
@@ -15568,7 +15566,7 @@ nsCSSParser::ParseRule(const nsAString&        aRule,
     ParseRule(aRule, aSheetURI, aBaseURI, aSheetPrincipal, aResult);
 }
 
-nsresult
+void
 nsCSSParser::ParseProperty(const nsCSSProperty aPropID,
                            const nsAString&    aPropValue,
                            nsIURI*             aSheetURI,
@@ -15579,13 +15577,13 @@ nsCSSParser::ParseProperty(const nsCSSProperty aPropID,
                            bool                aIsImportant,
                            bool                aIsSVGMode)
 {
-  return static_cast<CSSParserImpl*>(mImpl)->
+  static_cast<CSSParserImpl*>(mImpl)->
     ParseProperty(aPropID, aPropValue, aSheetURI, aBaseURI,
                   aSheetPrincipal, aDeclaration, aChanged,
                   aIsImportant, aIsSVGMode);
 }
 
-nsresult
+void
 nsCSSParser::ParseVariable(const nsAString&    aVariableName,
                            const nsAString&    aPropValue,
                            nsIURI*             aSheetURI,
@@ -15595,7 +15593,7 @@ nsCSSParser::ParseVariable(const nsAString&    aVariableName,
                            bool*               aChanged,
                            bool                aIsImportant)
 {
-  return static_cast<CSSParserImpl*>(mImpl)->
+  static_cast<CSSParserImpl*>(mImpl)->
     ParseVariable(aVariableName, aPropValue, aSheetURI, aBaseURI,
                   aSheetPrincipal, aDeclaration, aChanged, aIsImportant);
 }

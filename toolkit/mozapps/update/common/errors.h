@@ -9,9 +9,12 @@
 
 #define OK 0
 
-// Old unused error codes:
-// #define MEM_ERROR 1  // Replaced with errors 10-16 (inclusive)
-// #define IO_ERROR 2  // Use READ_ERROR or WRITE_ERROR instead
+// Error codes that are no longer used should not be used again unless they
+// aren't used in client code (e.g. nsUpdateService.js, updates.js,
+// UpdatePrompt.js, etc.).
+
+#define MAR_ERROR_EMPTY_ACTION_LIST 1
+#define LOADSOURCE_ERROR_WRONG_SIZE 2
 
 // Error codes 3-16 are for general update problems.
 #define USAGE_ERROR 3
@@ -39,8 +42,7 @@
 #define MAR_CHANNEL_MISMATCH_ERROR 22
 #define VERSION_DOWNGRADE_ERROR 23
 
-// Error codes 24-34 are related to the maintenance service
-// and so are Windows only
+// Error codes 24-33 and 49 are for the Windows maintenance service.
 #define SERVICE_UPDATER_COULD_NOT_BE_STARTED 24
 #define SERVICE_NOT_ENOUGH_COMMAND_LINE_ARGS 25
 #define SERVICE_UPDATER_SIGN_ERROR 26
@@ -51,26 +53,38 @@
 #define SERVICE_UPDATER_NOT_FIXED_DRIVE 31
 #define SERVICE_COULD_NOT_LOCK_UPDATER 32
 #define SERVICE_INSTALLDIR_ERROR 33
-#define SERVICE_COULD_NOT_COPY_UPDATER 49
 
 #define NO_INSTALLDIR_ERROR 34
 #define WRITE_ERROR_ACCESS_DENIED 35
 // #define WRITE_ERROR_SHARING_VIOLATION 36 // Replaced with errors 46-48
 #define WRITE_ERROR_CALLBACK_APP 37
-#define INVALID_UPDATER_STATUS_CODE 38
 #define UNEXPECTED_BZIP_ERROR 39
 #define UNEXPECTED_MAR_ERROR 40
 #define UNEXPECTED_BSPATCH_ERROR 41
 #define UNEXPECTED_FILE_OPERATION_ERROR 42
 #define FILESYSTEM_MOUNT_READWRITE_ERROR 43
-#define FOTA_GENERAL_ERROR 44
-#define FOTA_UNKNOWN_ERROR 45
-#define WRITE_ERROR_SHARING_VIOLATION_SIGNALED 46
-#define WRITE_ERROR_SHARING_VIOLATION_NOPROCESSFORPID 47
-#define WRITE_ERROR_SHARING_VIOLATION_NOPID 48
+#define DELETE_ERROR_EXPECTED_DIR 46
+#define DELETE_ERROR_EXPECTED_FILE 47
+#define RENAME_ERROR_EXPECTED_FILE 48
+
+// Error codes 24-33 and 49 are for the Windows maintenance service.
+#define SERVICE_COULD_NOT_COPY_UPDATER 49
+
+#define WRITE_ERROR_FILE_COPY 61
+#define WRITE_ERROR_DELETE_FILE 62
+#define WRITE_ERROR_OPEN_PATCH_FILE 63
+#define WRITE_ERROR_PATCH_FILE 64
+#define WRITE_ERROR_APPLY_DIR_PATH 65
+#define WRITE_ERROR_CALLBACK_PATH 66
+#define WRITE_ERROR_FILE_ACCESS_DENIED 67
+#define WRITE_ERROR_DIR_ACCESS_DENIED 68
+#define WRITE_ERROR_DELETE_BACKUP 69
+#define WRITE_ERROR_EXTRACT 70
+
+// Error codes 80 through 99 are reserved for nsUpdateService.js
 
 // The following error codes are only used by updater.exe
-// when a fallback key exists and XPCShell tests are being run.
+// when a fallback key exists for tests.
 #define FALLBACKKEY_UNKNOWN_ERROR 100
 #define FALLBACKKEY_REGPATH_ERROR 101
 #define FALLBACKKEY_NOKEY_ERROR 102

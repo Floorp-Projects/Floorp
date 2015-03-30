@@ -26,7 +26,7 @@ function run_test() {
     applyToDir.lastModifiedTime = yesterday;
   }
 
-  runUpdate(1, STATE_FAILED_UNEXPECTED_FILE_OPERATION_ERROR);
+  runUpdate(1, STATE_FAILED_LOADSOURCE_ERROR_WRONG_SIZE);
 }
 
 /**
@@ -41,5 +41,6 @@ function checkUpdateApplied() {
 
   checkFilesAfterUpdateFailure(getApplyDirFile, true, false);
   checkUpdateLogContents(LOG_PARTIAL_FAILURE);
+  standardInit();
   waitForFilesInUse();
 }

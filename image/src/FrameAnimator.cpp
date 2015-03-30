@@ -444,7 +444,7 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
   // Create the Compositing Frame
   if (!mCompositingFrame) {
     nsRefPtr<imgFrame> newFrame = new imgFrame;
-    nsresult rv = newFrame->InitForDecoder(ThebesIntSize(mSize),
+    nsresult rv = newFrame->InitForDecoder(mSize,
                                            SurfaceFormat::B8G8R8A8);
     if (NS_FAILED(rv)) {
       mCompositingFrame.reset();
@@ -584,7 +584,7 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
     // overwrite.
     if (!mCompositingPrevFrame) {
       nsRefPtr<imgFrame> newFrame = new imgFrame;
-      nsresult rv = newFrame->InitForDecoder(ThebesIntSize(mSize),
+      nsresult rv = newFrame->InitForDecoder(mSize,
                                              SurfaceFormat::B8G8R8A8);
       if (NS_FAILED(rv)) {
         mCompositingPrevFrame.reset();
