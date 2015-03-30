@@ -56,7 +56,7 @@ JS_CallUnbarrieredStringTracer(JSTracer* trc, JSString** strp, const char* name)
 JS_PUBLIC_API(void)
 JS_CallUnbarrieredScriptTracer(JSTracer* trc, JSScript** scriptp, const char* name)
 {
-    MarkScriptUnbarriered(trc, scriptp, name);
+    TraceManuallyBarrieredEdge(trc, scriptp, name);
 }
 
 JS_PUBLIC_API(void)
@@ -86,7 +86,7 @@ JS_CallStringTracer(JSTracer* trc, JS::Heap<JSString*>* strp, const char* name)
 JS_PUBLIC_API(void)
 JS_CallScriptTracer(JSTracer* trc, JS::Heap<JSScript*>* scriptp, const char* name)
 {
-    MarkScriptUnbarriered(trc, scriptp->unsafeGet(), name);
+    TraceManuallyBarrieredEdge(trc, scriptp->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
@@ -166,7 +166,7 @@ JS_TraceIncomingCCWs(JSTracer* trc, const JS::ZoneSet& zones)
                     // set of zones.
                     if (!zones.has(script->zone()))
                         continue;
-                    MarkScriptUnbarriered(trc, &script, "cross-compartment wrapper");
+                    TraceManuallyBarrieredEdge(trc, &script, "cross-compartment wrapper");
                     MOZ_ASSERT(script == key.wrapped);
                     break;
                 }

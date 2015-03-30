@@ -102,8 +102,8 @@ MarkExactStackRootsAcrossTypes(T context, JSTracer* trc)
     MarkExactStackRootList<JSString*, MarkStringRoot>(trc, context, "exact-string");
     MarkExactStackRootList<JS::Symbol*, MarkSymbolRoot>(trc, context, "exact-symbol");
     MarkExactStackRootList<jit::JitCode*, MarkJitCodeRoot>(trc, context, "exact-jitcode");
-    MarkExactStackRootList<JSScript*, MarkScriptRoot>(trc, context, "exact-script");
-    MarkExactStackRootList<LazyScript*, MarkLazyScriptRoot>(trc, context, "exact-lazy-script");
+    MarkExactStackRootList<JSScript*, TraceRoot>(trc, context, "exact-script");
+    MarkExactStackRootList<LazyScript*, TraceRoot>(trc, context, "exact-lazy-script");
     MarkExactStackRootList<jsid, TraceRoot>(trc, context, "exact-id");
     MarkExactStackRootList<Value, TraceRoot>(trc, context, "exact-value");
     MarkExactStackRootList<TypeSet::Type, TypeSet::MarkTypeRoot>(trc, context, "TypeSet::Type");
@@ -213,7 +213,7 @@ AutoGCRooter::trace(JSTracer* trc)
 
       case SCRIPTVECTOR: {
         AutoScriptVector::VectorImpl& vector = static_cast<AutoScriptVector*>(this)->vector;
-        MarkScriptRootRange(trc, vector.length(), vector.begin(), "js::AutoScriptVector.vector");
+        TraceRootRange(trc, vector.length(), vector.begin(), "js::AutoScriptVector.vector");
         return;
       }
 
@@ -400,7 +400,7 @@ js::gc::MarkPersistentRootedChains(JSTracer* trc)
         trc, rt->functionPersistentRooteds, "PersistentRooted<JSFunction*>");
     PersistentRootedMarker<JSObject*>::markChainIfNotNull<MarkObjectRoot>(
         trc, rt->objectPersistentRooteds, "PersistentRooted<JSObject*>");
-    PersistentRootedMarker<JSScript*>::markChainIfNotNull<MarkScriptRoot>(
+    PersistentRootedMarker<JSScript*>::markChainIfNotNull<TraceRoot>(
         trc, rt->scriptPersistentRooteds, "PersistentRooted<JSScript*>");
     PersistentRootedMarker<JSString*>::markChainIfNotNull<MarkStringRoot>(
         trc, rt->stringPersistentRooteds, "PersistentRooted<JSString*>");
@@ -463,7 +463,7 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc,
     if (rt->scriptAndCountsVector) {
         ScriptAndCountsVector& vec = *rt->scriptAndCountsVector;
         for (size_t i = 0; i < vec.length(); i++)
-            MarkScriptRoot(trc, &vec[i].script, "scriptAndCountsVector");
+            TraceRoot(trc, &vec[i].script, "scriptAndCountsVector");
     }
 
     if (!rt->isBeingDestroyed() && !trc->runtime()->isHeapMinorCollecting()) {
@@ -489,7 +489,7 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc,
             for (ZoneCellIterUnderGC i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
                 JSScript* script = i.get<JSScript>();
                 if (script->hasScriptCounts()) {
-                    MarkScriptRoot(trc, &script, "profilingScripts");
+                    TraceRoot(trc, &script, "profilingScripts");
                     MOZ_ASSERT(script == i.get<JSScript>());
                 }
             }

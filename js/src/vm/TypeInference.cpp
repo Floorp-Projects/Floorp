@@ -1294,7 +1294,7 @@ class TypeConstraintFreezeStack : public TypeConstraint
     }
 
     bool sweep(TypeZone& zone, TypeConstraint** res) {
-        if (IsScriptAboutToBeFinalized(&script_))
+        if (IsAboutToBeFinalizedUnbarriered(&script_))
             return false;
         *res = zone.typeLifoAlloc.new_<TypeConstraintFreezeStack>(script_);
         return true;
@@ -4241,7 +4241,7 @@ TypeZone::beginSweep(FreeOp* fop, bool releaseTypes, AutoClearTypeInferenceState
             CompilerOutput& output = (*compilerOutputs)[i];
             if (output.isValid()) {
                 JSScript* script = output.script();
-                if (IsScriptAboutToBeFinalized(&script)) {
+                if (IsAboutToBeFinalizedUnbarriered(&script)) {
                     script->ionScript()->recompileInfoRef() = RecompileInfo();
                     output.invalidate();
                 } else {
