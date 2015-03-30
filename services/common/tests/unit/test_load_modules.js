@@ -6,7 +6,6 @@ const modules = [
   "bagheeraclient.js",
   "logmanager.js",
   "rest.js",
-  "storageservice.js",
   "stringbundle.js",
   "tokenserverclient.js",
   "utils.js",
