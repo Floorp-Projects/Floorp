@@ -540,11 +540,12 @@ NrIceCtx::SetStream(size_t index, NrIceMediaStream* stream) {
     streams_.resize(index + 1);
   }
 
-  if (streams_[index]) {
-    streams_[index]->Close();
-  }
-
+  RefPtr<NrIceMediaStream> oldStream(streams_[index]);
   streams_[index] = stream;
+
+  if (oldStream) {
+    oldStream->Close();
+  }
 }
 
 std::string NrIceCtx::ufrag() const {
