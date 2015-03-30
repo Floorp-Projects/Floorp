@@ -111,7 +111,9 @@ MediaTimer::UpdateLocked()
   TimeStamp now = TimeStamp::Now();
   while (!mEntries.empty() && mEntries.top().mTimeStamp <= now) {
     mEntries.top().mPromise->Resolve(true, __func__);
+    DebugOnly<TimeStamp> poppedTimeStamp = mEntries.top().mTimeStamp;
     mEntries.pop();
+    MOZ_ASSERT_IF(!mEntries.empty(), *&poppedTimeStamp <= mEntries.top().mTimeStamp);
   }
 
   // If we've got no more entries, cancel any pending timer and bail out.
