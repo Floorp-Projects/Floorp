@@ -143,7 +143,6 @@ bool Is##base##AboutToBeFinalized(BarrieredBase<type*>* thingp);                
 type* Update##base##IfRelocated(JSRuntime* rt, BarrieredBase<type*>* thingp);                     \
 type* Update##base##IfRelocated(JSRuntime* rt, type** thingp);
 
-DeclMarker(JitCode, jit::JitCode)
 DeclMarker(Object, NativeObject)
 DeclMarker(Object, ArrayObject)
 DeclMarker(Object, ArgumentsObject)

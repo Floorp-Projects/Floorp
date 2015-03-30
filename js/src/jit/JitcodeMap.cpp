@@ -801,8 +801,8 @@ JitcodeGlobalTable::sweep(JSRuntime* rt)
 bool
 JitcodeGlobalEntry::BaseEntry::markJitcodeIfUnmarked(JSTracer* trc)
 {
-    if (!IsJitCodeMarked(&jitcode_)) {
-        MarkJitCodeUnbarriered(trc, &jitcode_, "jitcodglobaltable-baseentry-jitcode");
+    if (!IsMarkedUnbarriered(&jitcode_)) {
+        TraceManuallyBarrieredEdge(trc, &jitcode_, "jitcodglobaltable-baseentry-jitcode");
         return true;
     }
     return false;
@@ -811,14 +811,14 @@ JitcodeGlobalEntry::BaseEntry::markJitcodeIfUnmarked(JSTracer* trc)
 bool
 JitcodeGlobalEntry::BaseEntry::isJitcodeMarkedFromAnyThread()
 {
-    return IsJitCodeMarked(&jitcode_) ||
+    return IsMarkedUnbarriered(&jitcode_) ||
            jitcode_->arenaHeader()->allocatedDuringIncremental;
 }
 
 bool
 JitcodeGlobalEntry::BaseEntry::isJitcodeAboutToBeFinalized()
 {
-    return IsJitCodeAboutToBeFinalized(&jitcode_);
+    return IsAboutToBeFinalizedUnbarriered(&jitcode_);
 }
 
 bool
