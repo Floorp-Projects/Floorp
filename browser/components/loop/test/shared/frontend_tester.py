@@ -11,7 +11,6 @@ import os
 
 DEBUG = False
 
-
 # XXX Once we're on a branch with bug 993478 landed, we may want to get
 # rid of this HTTP server and just use the built-in one from Marionette,
 # since there will less code to maintain, and it will be faster.  We'll
@@ -60,6 +59,16 @@ class BaseTestFrontendUnits(MarionetteTestCase):
 
     def setUp(self):
         super(BaseTestFrontendUnits, self).setUp()
+
+        # Unfortunately, enforcing preferences currently comes with the side
+        # effect of launching and restarting the browser before running the
+        # real functional tests.  Bug 1048554 has been filed to track this.
+        #
+        # Note: when e10s is enabled by default, this pref can go away. The automatic
+        # restart will also go away if this is still the only pref set here.
+        self.marionette.enforce_gecko_prefs({
+            "browser.tabs.remote.autostart": True
+        })
 
         # This extends the timeout for find_element. We need this as the tests
         # take an amount of time to run after loading, which we have to wait for.
