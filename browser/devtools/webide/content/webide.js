@@ -204,13 +204,14 @@ let UI = {
         this.updateProjectEditorHeader();
         projectList.update();
         break;
+      case "runtime-targets":
       case "project-removed":
-        projectList.update();
+        projectList.update(details);
         break;
       case "install-progress":
         this.updateProgress(Math.round(100 * details.bytesSent / details.totalBytes));
         break;
-      case "runtime-apps-found":
+      case "runtime-targets":
         this.autoSelectProject();
         projectList.update();
         break;
@@ -1077,6 +1078,18 @@ let Cmds = {
 
   showProjectPanel: function() {
     ProjectPanel.toggle(projectList.sidebarsEnabled, true);
+
+    // There are currently no available events to listen for when an unselected
+    // tab navigates.  Since we show every tab's location in the project menu,
+    // we re-list all the tabs each time the menu is displayed.
+    // TODO: An event-based solution will be needed for the sidebar UI.
+    if (!projectList.sidebarsEnabled && AppManager.connected) {
+      return AppManager.listTabs().then(() => {
+        projectList.updateTabs();
+      }).catch(console.error);
+    }
+
+    return promise.resolve();
   },
 
   showRuntimePanel: function() {
