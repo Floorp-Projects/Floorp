@@ -26,8 +26,12 @@ function SignonsStartup() {
   // filter the table if requested by caller
   if (window.arguments &&
       window.arguments[0] &&
-      window.arguments[0].filterString)
+      window.arguments[0].filterString) {
     setFilter(window.arguments[0].filterString);
+    Services.telemetry.getHistogramById("PWMGR_MANAGE_OPENED").add(1);
+  } else {
+    Services.telemetry.getHistogramById("PWMGR_MANAGE_OPENED").add(0);
+  }
 
   FocusFilterBox();
 }
@@ -154,6 +158,7 @@ function DeleteAllSignons() {
                         signonsTreeView._filterSet.length ? signonsTreeView._filterSet : signons,
                         deletedSignons, "removeSignon", "removeAllSignons");
   FinalizeSignonDeletions(syncNeeded);
+  Services.telemetry.getHistogramById("PWMGR_MANAGE_DELETED_ALL").add(1);
 }
 
 function TogglePasswordVisible() {
@@ -170,6 +175,7 @@ function TogglePasswordVisible() {
   Components.classes["@mozilla.org/observer-service;1"]
             .getService(Components.interfaces.nsIObserverService)
             .notifyObservers(null, "passwordmgr-password-toggle-complete", null);
+  Services.telemetry.getHistogramById("PWMGR_MANAGE_VISIBILITY_TOGGLED").add(showingPasswords);
 }
 
 function AskUserShowPasswords() {
@@ -186,6 +192,7 @@ function AskUserShowPasswords() {
 function FinalizeSignonDeletions(syncNeeded) {
   for (var s=0; s<deletedSignons.length; s++) {
     passwordmanager.removeLogin(deletedSignons[s]);
+    Services.telemetry.getHistogramById("PWMGR_MANAGE_DELETED").add(1);
   }
   // If the deletion has been performed in a filtered view, reflect the deletion in the unfiltered table.
   // See bug 405389.
@@ -357,6 +364,7 @@ function CopyPassword() {
   var row = document.getElementById("signonsTree").currentIndex;
   var password = signonsTreeView.getCellText(row, {id : "passwordCol" });
   clipboard.copyString(password, document);
+  Services.telemetry.getHistogramById("PWMGR_MANAGE_COPIED_PASSWORD").add(1);
 }
 
 function CopyUsername() {
@@ -366,6 +374,7 @@ function CopyUsername() {
   var row = document.getElementById("signonsTree").currentIndex;
   var username = signonsTreeView.getCellText(row, {id : "userCol" });
   clipboard.copyString(username);
+  Services.telemetry.getHistogramById("PWMGR_MANAGE_COPIED_USERNAME").add(1);
 }
 
 function UpdateCopyPassword() {
