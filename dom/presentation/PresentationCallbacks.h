@@ -10,8 +10,12 @@
 #include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIPresentationService.h"
+#include "nsIWebProgressListener.h"
 #include "nsString.h"
+#include "nsWeakReference.h"
 
+class nsIDocShell;
+class nsIWebProgress;
 class nsPIDOMWindow;
 
 namespace mozilla {
@@ -36,6 +40,26 @@ private:
   nsCOMPtr<nsPIDOMWindow> mWindow;
   nsString mSessionId;
   nsRefPtr<Promise> mPromise;
+};
+
+class PresentationResponderLoadingCallback final : public nsIWebProgressListener
+                                                 , public nsSupportsWeakReference
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWEBPROGRESSLISTENER
+
+  explicit PresentationResponderLoadingCallback(const nsAString& aSessionId);
+
+  nsresult Init(nsIDocShell* aDocShell);
+
+private:
+  ~PresentationResponderLoadingCallback();
+
+  nsresult NotifyReceiverReady();
+
+  nsString mSessionId;
+  nsCOMPtr<nsIWebProgress> mProgress;
 };
 
 } // namespace dom

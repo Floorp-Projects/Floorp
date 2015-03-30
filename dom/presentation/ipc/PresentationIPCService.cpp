@@ -8,6 +8,7 @@
 #include "mozilla/dom/PPresentation.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "nsIPresentationListener.h"
+#include "PresentationCallbacks.h"
 #include "PresentationChild.h"
 #include "PresentationIPCService.h"
 
@@ -197,4 +198,12 @@ void
 PresentationIPCService::NotifyPresentationChildDestroyed()
 {
   sPresentationChild = nullptr;
+}
+
+nsresult
+PresentationIPCService::MonitorResponderLoading(const nsAString& aSessionId,
+                                                nsIDocShell* aDocShell)
+{
+  mCallback = new PresentationResponderLoadingCallback(aSessionId);
+  return mCallback->Init(aDocShell);
 }

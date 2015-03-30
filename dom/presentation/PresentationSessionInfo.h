@@ -9,13 +9,16 @@
 
 #include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
+#include "nsIObserver.h"
 #include "nsIPresentationControlChannel.h"
 #include "nsIPresentationDevice.h"
 #include "nsIPresentationListener.h"
 #include "nsIPresentationService.h"
 #include "nsIPresentationSessionTransport.h"
 #include "nsIServerSocket.h"
+#include "nsITimer.h"
 #include "nsString.h"
+#include "PresentationCallbacks.h"
 
 namespace mozilla {
 namespace dom {
@@ -146,10 +149,14 @@ private:
 
 // Session info with receiver side behaviors.
 class PresentationResponderInfo final : public PresentationSessionInfo
+                                      , public nsIObserver
+                                      , public nsITimerCallback
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPRESENTATIONCONTROLCHANNELLISTENER
+  NS_DECL_NSIOBSERVER
+  NS_DECL_NSITIMERCALLBACK
 
   PresentationResponderInfo(const nsAString& aUrl,
                             const nsAString& aSessionId,
@@ -161,10 +168,23 @@ public:
     SetDevice(aDevice);
   }
 
-  // TODO May need to inherit more interfaces to handle some observed changes.
+  nsresult Init(nsIPresentationControlChannel* aControlChannel) override;
+
+  nsresult NotifyResponderReady();
 
 private:
-  ~PresentationResponderInfo() {}
+  ~PresentationResponderInfo()
+  {
+    Shutdown(NS_OK);
+  }
+
+  void Shutdown(nsresult aReason) override;
+
+  nsresult InitTransportAndSendAnswer();
+
+  nsRefPtr<PresentationResponderLoadingCallback> mLoadingCallback;
+  nsCOMPtr<nsITimer> mTimer;
+  nsCOMPtr<nsIPresentationChannelDescription> mRequesterDescription;
 };
 
 } // namespace dom

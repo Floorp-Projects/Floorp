@@ -11,10 +11,13 @@
 #include "nsRefPtrHashtable.h"
 #include "nsTObserverArray.h"
 
+class nsIDocShell;
+
 namespace mozilla {
 namespace dom {
 
 class PresentationRequest;
+class PresentationResponderLoadingCallback;
 
 class PresentationIPCService final : public nsIPresentationService
 {
@@ -29,9 +32,13 @@ public:
   nsresult NotifySessionStateChange(const nsAString& aSessionId,
                                     uint16_t aState);
 
-  nsresult NotifyMessage(const nsAString& aSessionId, const nsACString& aData);
+  nsresult NotifyMessage(const nsAString& aSessionId,
+                         const nsACString& aData);
 
   void NotifyPresentationChildDestroyed();
+
+  nsresult MonitorResponderLoading(const nsAString& aSessionId,
+                                   nsIDocShell* aDocShell);
 
 private:
   virtual ~PresentationIPCService();
@@ -40,6 +47,7 @@ private:
 
   nsTObserverArray<nsCOMPtr<nsIPresentationListener> > mListeners;
   nsRefPtrHashtable<nsStringHashKey, nsIPresentationSessionListener> mSessionListeners;
+  nsRefPtr<PresentationResponderLoadingCallback> mCallback;
 };
 
 } // namespace dom
