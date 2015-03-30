@@ -45,9 +45,8 @@ add_task(function* shift_left_click_test() {
 
   info("URL should be loaded in a new window");
   is(gURLBar.value, "", "Urlbar reverted to original value");
-  let childFocus = yield promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
-  ok(childFocus, "There should be no focused element");
-  is(document.activeElement, gBrowser.selectedBrowser, "Content window should be focused");
+  is(Services.focus.focusedElement, null, "There should be no focused element");
+  is(Services.focus.focusedWindow, win.gBrowser.contentWindow, "Content window should be focused");
   is(win.gURLBar.textValue, TEST_VALUE, "New URL is loaded in new window");
 
   // Cleanup.
@@ -73,12 +72,9 @@ add_task(function* right_click_test() {
 add_task(function* shift_accel_left_click_test() {
   info("Running test: Shift+Ctrl/Cmd left click on go button");
 
-  let tabSelectedPromise = promiseNewTabSelected();
-
   // Add a new tab.
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
   yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  yield tabSelectedPromise;
 
   let loadStartedPromise = promiseLoadStarted();
   triggerCommand(true, {accelKey: true, shiftKey: true});
@@ -121,9 +117,8 @@ add_task(function* load_in_current_tab_test() {
 
     info("URL should be loaded in the current tab");
     is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
-    let childFocus = yield promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
-    ok(childFocus, "There should be no focused element");
-    is(document.activeElement, gBrowser.selectedBrowser, "Content window should be focused");
+    is(Services.focus.focusedElement, null, "There should be no focused element");
+    is(Services.focus.focusedWindow, gBrowser.contentWindow, "Content window should be focused");
     is(gBrowser.selectedTab, tab, "New URL was loaded in the current tab");
 
     // Cleanup.
@@ -152,9 +147,8 @@ add_task(function* load_in_new_tab_test() {
     // Check the load occurred in a new tab.
     info("URL should be loaded in a new focused tab");
     is(gURLBar.value, TEST_VALUE, "Urlbar still has the value we entered");
-    let childFocus = yield promiseCheckChildNoFocusedElement(gBrowser.selectedBrowser);
-    ok(childFocus, "There should be no focused element");
-    is(document.activeElement, gBrowser.selectedBrowser, "Content window should be focused");
+    is(Services.focus.focusedElement, null, "There should be no focused element");
+    is(Services.focus.focusedWindow, gBrowser.contentWindow, "Content window should be focused");
     isnot(gBrowser.selectedTab, tab, "New URL was loaded in a new tab");
 
     // Cleanup.
@@ -192,28 +186,10 @@ function promiseLoadStarted() {
 }
 
 function promiseNewTabSelected() {
-  // In multi-process mode, we need to wait for the focus event that comes
-  // after the TabSelect event.
   return new Promise(resolve => {
-    let tabSelected = false;
-
-    if (gMultiProcessBrowser) {
-      gBrowser.addEventListener("focus", function onFocus(event) {
-        if (tabSelected && event.originalTarget.localName) {
-          gBrowser.removeEventListener("focus", onFocus, true);
-          resolve();
-        }
-      }, true);
-    }
-
     gBrowser.tabContainer.addEventListener("TabSelect", function onSelect() {
       gBrowser.tabContainer.removeEventListener("TabSelect", onSelect);
-      if (gMultiProcessBrowser) {
-        tabSelected = true;
-      }
-      else {
-        resolve();
-      }
+      resolve();
     });
   });
 }
@@ -234,18 +210,5 @@ function promiseWaitForNewWindow() {
     };
 
     Services.wm.addListener(listener);
-  });
-}
-
-function promiseCheckChildNoFocusedElement(browser)
-{
-  if (!gMultiProcessBrowser) {
-    return Services.focus.focusedElement == null;
-  }
-
-  return ContentTask.spawn(browser, { }, function* () {
-    const fm = Components.classes["@mozilla.org/focus-manager;1"].
-                          getService(Components.interfaces.nsIFocusManager);
-    return fm.focusedElement == null;
   });
 }

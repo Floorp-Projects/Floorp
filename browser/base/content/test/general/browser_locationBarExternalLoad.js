@@ -1,12 +1,15 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const url = "data:text/html,<body>hi";
+function test() {
+  waitForExplicitFinish();
 
-add_task(function*() {
-  yield* testURL(url, urlEnter);
-  yield* testURL(url, urlClick);
-});
+  nextTest();
+}
+
+let urls = [
+  "data:text/html,<body>hi"
+];
 
 function urlEnter(url) {
   gURLBar.value = url;
@@ -21,37 +24,41 @@ function urlClick(url) {
   EventUtils.synthesizeMouseAtCenter(goButton, {});
 }
 
+function nextTest() {
+  let url = urls.shift();
+  if (url) {
+    testURL(url, urlEnter, function () {
+      testURL(url, urlClick, nextTest);
+    });
+  }
+  else
+    finish();
+}
+
 function testURL(url, loadFunc, endFunc) {
   let tab = gBrowser.selectedTab = gBrowser.addTab();
-  let browser = gBrowser.selectedBrowser;
-
-  yield promiseWaitForEvent(browser, "pageshow");
-  let pagePrincipal = gBrowser.contentPrincipal;
-  loadFunc(url);
-
-  yield promiseWaitForEvent(browser, "pageshow");
-
-  let focused = yield ContentTask.spawn(browser, { isRemote: gMultiProcessBrowser },
-    function* (arg) {
-      const fm = Components.classes["@mozilla.org/focus-manager;1"].
-                            getService(Components.interfaces.nsIFocusManager);
-      if (fm.focusedElement != null) {
-        return "FAIL - focusedElement not null";
-      }
-
-      if (arg.isRemote) {
-        return fm.activeWindow == content ? "PASS" :
-                                            "FAIL - activeWindow not correct";
-      }
-
-      return "PASS";
+  registerCleanupFunction(function () {
+    gBrowser.removeTab(tab);
   });
+  addPageShowListener(function () {
+    let pagePrincipal = gBrowser.contentPrincipal;
+    loadFunc(url);
 
-  is(focused, "PASS", "should be no focused element");
-  is(document.activeElement, browser, "content window should be focused");
+    addPageShowListener(function () {
+      let fm = Services.focus;
+      is(fm.focusedElement, null, "should be no focused element");
+      is(fm.focusedWindow, gBrowser.contentWindow, "content window should be focused");
 
-  ok(!gBrowser.contentPrincipal.equals(pagePrincipal),
-     "load of " + url + " by " + loadFunc.name + " should produce a page with a different principal");
+      ok(!gBrowser.contentPrincipal.equals(pagePrincipal),
+         "load of " + url + " by " + loadFunc.name + " should produce a page with a different principal");
+      endFunc();
+    });
+  });
+}
 
-  gBrowser.removeTab(tab);
+function addPageShowListener(func) {
+  gBrowser.selectedBrowser.addEventListener("pageshow", function loadListener() {
+    gBrowser.selectedBrowser.removeEventListener("pageshow", loadListener, false);
+    func();
+  });
 }
