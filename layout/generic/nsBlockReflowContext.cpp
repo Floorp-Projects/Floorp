@@ -282,9 +282,6 @@ nsBlockReflowContext::ReflowBlock(const LogicalRect&  aSpace,
         mOuterReflowState.mBlockDelta + mBCoord - aLine->BStart();
   }
 
-  // Let frame know that we are reflowing it
-  mFrame->WillReflow(mPresContext);
-
 #ifdef DEBUG
   mMetrics.ISize(mWritingMode) = nscoord(0xdeadbeef);
   mMetrics.BSize(mWritingMode) = nscoord(0xdeadbeef);

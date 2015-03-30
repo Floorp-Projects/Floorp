@@ -231,9 +231,9 @@ public:
                   bool aShrinkWrap) override;
 
   /**
-   * Invokes the WillReflow() function, positions the frame and its view (if
-   * requested), and then calls Reflow(). If the reflow succeeds and the child
-   * frame is complete, deletes any next-in-flows using DeleteNextInFlowChild()
+   * Positions aChildFrame and its view (if requested), and then calls Reflow().
+   * If the reflow status after reflowing the child is FULLY_COMPLETE then any
+   * next-in-flows are deleted using DeleteNextInFlowChild().
    *
    * Flags:
    * NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
@@ -241,7 +241,7 @@ public:
    * NS_FRAME_NO_MOVE_FRAME - don't move the frame. aX and aY are ignored in this
    *    case. Also implies NS_FRAME_NO_MOVE_VIEW
    */
-  void ReflowChild(nsIFrame*                      aKidFrame,
+  void ReflowChild(nsIFrame*                      aChildFrame,
                    nsPresContext*                 aPresContext,
                    nsHTMLReflowMetrics&           aDesiredSize,
                    const nsHTMLReflowState&       aReflowState,

@@ -18,6 +18,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/WindowsVersion.h"
+#include "nsIXULRuntime.h"
 
 #define INPUTSCOPE_INIT_GUID
 #define TEXTATTRS_INIT_GUID
@@ -4623,7 +4624,8 @@ nsTextStore::Initialize()
 
   bool enableTsf =
     Preferences::GetBool(kPrefNameForceEnableTSF, false) ||
-    (IsVistaOrLater() && Preferences::GetBool(kPrefNameEnableTSF, false));
+    (IsVistaOrLater() && Preferences::GetBool(kPrefNameEnableTSF, false) &&
+     !BrowserTabsRemoteAutostart());
   PR_LOG(sTextStoreLog, PR_LOG_ALWAYS,
     ("TSF:   nsTextStore::Initialize(), TSF is %s",
      enableTsf ? "enabled" : "disabled"));

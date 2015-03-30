@@ -48,8 +48,10 @@ let AppManager = exports.AppManager = {
     this.connection.on(Connection.Events.STATUS_CHANGED, this.onConnectionChanged);
 
     this.tabStore = new TabStore(this.connection);
+    this.onTabList = this.onTabList.bind(this);
     this.onTabNavigate = this.onTabNavigate.bind(this);
     this.onTabClosed = this.onTabClosed.bind(this);
+    this.tabStore.on("tab-list", this.onTabList);
     this.tabStore.on("navigate", this.onTabNavigate);
     this.tabStore.on("closed", this.onTabClosed);
 
@@ -75,6 +77,7 @@ let AppManager = exports.AppManager = {
     RuntimeScanners.off("runtime-list-updated", this._rebuildRuntimeList);
     RuntimeScanners.disable();
     this.runtimeList = null;
+    this.tabStore.off("tab-list", this.onTabList);
     this.tabStore.off("navigate", this.onTabNavigate);
     this.tabStore.off("closed", this.onTabClosed);
     this.tabStore.destroy();
@@ -85,6 +88,52 @@ let AppManager = exports.AppManager = {
     this.connection = null;
   },
 
+  /**
+   * This module emits various events when state changes occur.  The basic event
+   * naming scheme is that event "X" means "X has changed" or "X is available".
+   * Some names are more detailed to clarify their precise meaning.
+   *
+   * The events this module may emit include:
+   *   before-project:
+   *     The selected project is about to change.  The event includes a special
+   *     |cancel| callback that will abort the project change if desired.
+   *   connection:
+   *     The connection status has changed (connected, disconnected, etc.)
+   *   install-progress:
+   *     A project being installed to a runtime has made further progress.  This
+   *     event contains additional details about exactly how far the process is
+   *     when such information is available.
+   *   project:
+   *     The selected project has changed.
+   *   project-started:
+   *     The selected project started running on the connected runtime.
+   *   project-stopped:
+   *     The selected project stopped running on the connected runtime.
+   *   project-removed:
+   *     The selected project was removed from the project list.
+   *   project-validated:
+   *     The selected project just completed validation.  As part of validation,
+   *     many pieces of metadata about the project are refreshed, including its
+   *     name, manifest details, etc.
+   *   runtime:
+   *     The selected runtime has changed.
+   *   runtime-global-actors:
+   *     The list of global actors for the entire runtime (but not actors for a
+   *     specific tab or app) are now available, so we can test for features
+   *     like preferences and settings.
+   *   runtime-details:
+   *     The selected runtime's details have changed, such as its user-visible
+   *     name.
+   *   runtime-list:
+   *     The list of available runtimes has changed, or any of the user-visible
+   *     details (like names) for the non-selected runtimes has changed.
+   *   runtime-targets:
+   *     The list of remote runtime targets available from the currently
+   *     connected runtime (such as tabs or apps) has changed, or any of the
+   *     user-visible details (like names) for the non-selected runtime targets
+   *     has changed.  This event includes |type| in the details, to distguish
+   *     "apps" and "tabs".
+   */
   update: function(what, details) {
     // Anything we want to forward to the UI
     this.emit("app-manager-update", what, details);
@@ -132,16 +181,16 @@ let AppManager = exports.AppManager = {
             // first.
             this._appsFront = front;
             this._listTabsResponse = response;
-            this.update("list-tabs-response");
+            this.update("runtime-global-actors");
           })
           .then(() => {
             this.checkIfProjectIsRunning();
-            this.update("runtime-apps-found");
+            this.update("runtime-targets", { type: "apps" });
             front.fetchIcons();
           });
         } else {
           this._listTabsResponse = response;
-          this.update("list-tabs-response");
+          this.update("runtime-global-actors");
         }
       });
     }
@@ -150,7 +199,8 @@ let AppManager = exports.AppManager = {
   },
 
   get connected() {
-    return this.connection.status == Connection.Status.CONNECTED;
+    return this.connection &&
+           this.connection.status == Connection.Status.CONNECTED;
   },
 
   get apps() {
@@ -178,9 +228,9 @@ let AppManager = exports.AppManager = {
   checkIfProjectIsRunning: function() {
     if (this.selectedProject) {
       if (this.isProjectRunning()) {
-        this.update("project-is-running");
+        this.update("project-started");
       } else {
-        this.update("project-is-not-running");
+        this.update("project-stopped");
       }
     }
   },
@@ -189,8 +239,13 @@ let AppManager = exports.AppManager = {
     return this.tabStore.listTabs();
   },
 
+  onTabList: function() {
+    this.update("runtime-targets", { type: "tabs" });
+  },
+
   // TODO: Merge this into TabProject as part of project-agnostic work
   onTabNavigate: function() {
+    this.update("runtime-targets", { type: "tabs" });
     if (this.selectedProject.type !== "tab") {
       return;
     }
@@ -373,7 +428,7 @@ let AppManager = exports.AppManager = {
          this.selectedProject.type == "tab")) {
       this.selectedProject = null;
     }
-    this.update("runtime-changed");
+    this.update("runtime");
   },
 
   get selectedRuntime() {
@@ -580,7 +635,7 @@ let AppManager = exports.AppManager = {
       if (!app.running) {
         let deferred = promise.defer();
         self.on("app-manager-update", function onUpdate(event, what) {
-          if (what == "project-is-running") {
+          if (what == "project-started") {
             self.off("app-manager-update", onUpdate);
             deferred.resolve();
           }
@@ -720,7 +775,7 @@ let AppManager = exports.AppManager = {
     }
 
     this.update("runtime-details");
-    this.update("runtimelist");
+    this.update("runtime-list");
   },
 
   /* MANIFEST UTILS */

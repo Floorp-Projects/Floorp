@@ -115,13 +115,6 @@ public:
          const nsHTMLReflowState& aReflowState,
          nsReflowStatus&          aStatus) override;
 
-  virtual void
-  WillReflow(nsPresContext* aPresContext) override
-  {
-    mPresentationData.flags &= ~NS_MATHML_ERROR;
-    nsContainerFrame::WillReflow(aPresContext);
-  }
-
   virtual void DidReflow(nsPresContext*           aPresContext,
             const nsHTMLReflowState*  aReflowState,
             nsDidReflowStatus         aStatus) override
