@@ -11,6 +11,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://testing-common/MockRegistrar.jsm");
 var testserver = new HttpServer();
 testserver.start(-1);
 gPort = testserver.identity.primaryPort;
@@ -49,19 +50,7 @@ var WindowWatcher = {
   }
 };
 
-var WindowWatcherFactory = {
-  createInstance: function createInstance(outer, iid) {
-    if (outer != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    return WindowWatcher.QueryInterface(iid);
-  }
-};
-
-var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-registrar.registerFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
-                          "Fake Window Watcher",
-                          "@mozilla.org/embedcomp/window-watcher;1",
-                          WindowWatcherFactory);
+MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1", WindowWatcher);
 
 
 function load_blocklist(aFile, aCallback) {
