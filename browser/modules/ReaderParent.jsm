@@ -45,11 +45,17 @@ let ReaderParent = {
     switch (message.name) {
       case "Reader:AddToList":
         let article = message.data.article;
-        ReadingList.addItem({
-          url: article.url,
-          title: article.title,
-          excerpt: article.excerpt,
-          status: article.status
+        ReadingList.getMetadataFromBrowser(message.target).then(function(metadata) {
+          if (metadata.previews.length > 0) {
+            article.preview = metadata.previews[0];
+          }
+
+          ReadingList.addItem({
+            url: article.url,
+            title: article.title,
+            excerpt: article.excerpt,
+            preview: article.preview
+          });
         });
         break;
 
