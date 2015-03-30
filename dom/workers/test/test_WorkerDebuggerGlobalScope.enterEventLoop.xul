@@ -33,22 +33,23 @@
         let worker = new Worker(WORKER_URL);
         let [dbg, childDbg] = yield promise;
 
-        info("Send a request to the child worker. This should cause a nested " +
-             "event loop to be entered.");
+        info("Send a request to the child worker. This should cause the " +
+             "child worker debugger to enter a nested event loop.");
         promise = waitForDebuggerMessage(childDbg, "paused");
         worker.postMessage("child:ping");
         yield promise;
 
         info("Send a request to the child worker debugger. This should cause " +
-             "a second nested event loop to be entered.");
+             "the child worker debugger to enter a second nested event loop.");
         promise = waitForDebuggerMessage(childDbg, "paused");
         childDbg.postMessage("eval");
         yield promise;
 
         info("Send a request to the child worker debugger. This should cause " +
-             "the second nested event loop to be left. Check that a response " +
-             "for the previous request is not received from the child worker " +
-             "debugger until after the event loop is left.");
+             "the child worker debugger to leave its second nested event " +
+             "loop. The child worker debugger should not send a response " +
+             "for its previous request until after it has left the nested " +
+             "event loop.");
         promise = waitForMultiple([
           waitForDebuggerMessage(childDbg, "resumed"),
           waitForDebuggerMessage(childDbg, "evalled")
@@ -57,9 +58,10 @@
         yield promise;
 
         info("Send a request to the child worker debugger. This should cause " +
-             "the first nested event loop to be left. Check that a response " +
-             "for the previous request is not received from the child worker " +
-             "until after the event loop is left.");
+             "the child worker debugger to leave its first nested event loop." +
+             "The child worker should not send a response for its earlier " +
+             "request until after the child worker debugger has left the " +
+             "nested event loop.");
         promise = waitForMultiple([
           waitForDebuggerMessage(childDbg, "resumed"),
           waitForWorkerMessage(worker, "child:pong")
@@ -67,30 +69,30 @@
         childDbg.postMessage("resume");
         yield promise;
 
-        info("Send a request to the worker. This should cause a nested event " +
-             "loop to be entered.");
+        info("Send a request to the worker. This should cause the worker " +
+             "debugger to enter a nested event loop.");
         promise = waitForDebuggerMessage(dbg, "paused");
         worker.postMessage("ping");
         yield promise;
 
         info("Terminate the worker. This should not cause the worker " +
-             "debugger to stop running.");
+             "debugger to terminate as well.");
         worker.terminate();
 
         worker.onmessage = function () {
           ok(false, "Worker should have been terminated.");
         };
 
-        info("Send a request to the worker debugger. This should cause a " +
-             "second nested event loop to be entered.");
+        info("Send a request to the worker debugger. This should cause the " +
+             "worker debugger to enter a second nested event loop.");
         promise = waitForDebuggerMessage(dbg, "paused");
         dbg.postMessage("eval");
         yield promise;
 
         info("Send a request to the worker debugger. This should cause the " +
-             "second nested event loop to be left. Check that a response for " +
-             "the previous request is not received from the worker " +
-             "debugger until after the event loop is left.");
+             "worker debugger to leave its second nested event loop. The " +
+             "worker debugger should not send a response for the previous " +
+             "request until after leaving the nested event loop.");
         promise = waitForMultiple([
           waitForDebuggerMessage(dbg, "resumed"),
           waitForDebuggerMessage(dbg, "evalled")
@@ -98,9 +100,9 @@
         dbg.postMessage("resume");
         yield promise;
 
-        info("Send a request to the child worker debugger. This should cause " +
-             "the first nested event loop to be left. No response for the " +
-             "previous request should be received from the worker debugger, " +
+        info("Send a request to the worker debugger. This should cause the " +
+             "worker debugger to leave its first nested event loop. The " +
+             "worker should not send a response for its earlier request, " +
              "since it has been terminated.");
         promise = waitForMultiple([
           waitForDebuggerMessage(dbg, "resumed"),

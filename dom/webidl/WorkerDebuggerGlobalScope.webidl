@@ -15,6 +15,9 @@ interface WorkerDebuggerGlobalScope : EventTarget {
 
   attribute EventHandler onmessage;
 
+  [Throws]
+  void setImmediate(Function handler);
+
   void reportError(DOMString message);
 };
 

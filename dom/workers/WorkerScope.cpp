@@ -532,6 +532,13 @@ WorkerDebuggerGlobalScope::PostMessage(const nsAString& aMessage)
 }
 
 void
+WorkerDebuggerGlobalScope::SetImmediate(JSContext* aCx, Function& aHandler,
+                                        ErrorResult& aRv)
+{
+  mWorkerPrivate->SetDebuggerImmediate(aCx, aHandler, aRv);
+}
+
+void
 WorkerDebuggerGlobalScope::ReportError(JSContext* aCx,
                                        const nsAString& aMessage)
 {
