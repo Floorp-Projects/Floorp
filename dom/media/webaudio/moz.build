@@ -31,7 +31,6 @@ EXPORTS += [
 
 EXPORTS.mozilla += [
     'FFTBlock.h',
-    'MediaStreamAudioDestinationNode.h',
 ]
 
 EXPORTS.mozilla.dom += [
