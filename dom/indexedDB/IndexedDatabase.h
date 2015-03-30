@@ -7,8 +7,6 @@
 #ifndef mozilla_dom_indexeddb_indexeddatabase_h__
 #define mozilla_dom_indexeddb_indexeddatabase_h__
 
-#include "nsIProgrammingLanguage.h"
-
 #include "js/StructuredClone.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
