@@ -20,6 +20,13 @@ const READINGLIST_COMMAND_ID = "readingListSidebar";
 let gStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
 let AboutReader = function(mm, win, articlePromise) {
+  let url = this._getOriginalUrl(win);
+  if (!(url.startsWith("http://") || url.startsWith("https://"))) {
+    Cu.reportError("Only http:// and https:// URLs can be loaded in about:reader");
+    win.location.href = "about:blank";
+    return;
+  }
+
   let doc = win.document;
 
   this._mm = mm;
@@ -755,8 +762,8 @@ AboutReader.prototype = {
   /**
    * Returns the original article URL for this about:reader view.
    */
-  _getOriginalUrl: function() {
-    let url = this._win.location.href;
+  _getOriginalUrl: function(win) {
+    let url = win ? win.location.href : this._win.location.href;
     let searchParams = new URLSearchParams(url.split("?")[1]);
     if (!searchParams.has("url")) {
       Cu.reportError("Error finding original URL for about:reader URL: " + url);
