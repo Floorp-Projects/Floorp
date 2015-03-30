@@ -1337,7 +1337,7 @@ ScriptSourceObject::trace(JSTracer* trc, JSObject* obj)
     if (!sso->getReservedSlot(INTRODUCTION_SCRIPT_SLOT).isMagic(JS_GENERIC_MAGIC)) {
         JSScript* script = sso->introductionScript();
         if (script) {
-            MarkScriptUnbarriered(trc, &script, "ScriptSourceObject introductionScript");
+            TraceManuallyBarrieredEdge(trc, &script, "ScriptSourceObject introductionScript");
             sso->setReservedSlot(INTRODUCTION_SCRIPT_SLOT, PrivateValue(script));
         }
     }
@@ -3464,7 +3464,7 @@ JSScript::markChildren(JSTracer* trc)
         MarkObject(trc, &enclosingStaticScope_, "enclosingStaticScope");
 
     if (maybeLazyScript())
-        MarkLazyScriptUnbarriered(trc, &lazyScript, "lazyScript");
+        TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
 
     if (trc->isMarkingTracer()) {
         compartment()->mark();
@@ -3491,7 +3491,7 @@ LazyScript::markChildren(JSTracer* trc)
         MarkObject(trc, &enclosingScope_, "enclosingScope");
 
     if (script_)
-        MarkScript(trc, &script_, "realScript");
+        TraceEdge(trc, &script_, "realScript");
 
     // We rely on the fact that atoms are always tenured.
     FreeVariable* freeVariables = this->freeVariables();

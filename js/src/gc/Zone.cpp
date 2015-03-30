@@ -137,7 +137,7 @@ Zone::sweepBreakpoints(FreeOp* fop)
         if (!script->hasAnyBreakpointsOrStepMode())
             continue;
 
-        bool scriptGone = IsScriptAboutToBeFinalized(&script);
+        bool scriptGone = IsAboutToBeFinalizedUnbarriered(&script);
         MOZ_ASSERT(script == i.get<JSScript>());
         for (unsigned i = 0; i < script->length(); i++) {
             BreakpointSite* site = script->getBreakpointSite(script->offsetToPC(i));

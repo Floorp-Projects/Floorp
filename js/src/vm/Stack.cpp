@@ -339,9 +339,9 @@ InterpreterFrame::mark(JSTracer* trc)
     if (isFunctionFrame()) {
         gc::MarkObjectUnbarriered(trc, &exec.fun, "fun");
         if (isEvalFrame())
-            gc::MarkScriptUnbarriered(trc, &u.evalScript, "eval script");
+            TraceManuallyBarrieredEdge(trc, &u.evalScript, "eval script");
     } else {
-        gc::MarkScriptUnbarriered(trc, &exec.script, "script");
+        TraceManuallyBarrieredEdge(trc, &exec.script, "script");
     }
     if (trc->isMarkingTracer())
         script()->compartment()->zone()->active = true;

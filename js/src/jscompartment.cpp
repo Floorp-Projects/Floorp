@@ -627,7 +627,7 @@ JSCompartment::sweepCrossCompartmentWrappers()
               break;
           case CrossCompartmentKey::DebuggerScript:
               MOZ_ASSERT(key.wrapped->asTenured().getTraceKind() == JSTRACE_SCRIPT);
-              keyDying = IsScriptAboutToBeFinalized(
+              keyDying = IsAboutToBeFinalizedUnbarriered(
                   reinterpret_cast<JSScript**>(&key.wrapped));
               break;
           default:

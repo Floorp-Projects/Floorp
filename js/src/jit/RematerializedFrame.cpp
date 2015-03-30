@@ -147,7 +147,7 @@ RematerializedFrame::initFunctionScopeObjects(JSContext* cx)
 void
 RematerializedFrame::mark(JSTracer* trc)
 {
-    gc::MarkScriptRoot(trc, &script_, "remat ion frame script");
+    TraceRoot(trc, &script_, "remat ion frame script");
     gc::MarkObjectRoot(trc, &scopeChain_, "remat ion frame scope chain");
     TraceRoot(trc, &returnValue_, "remat ion frame return value");
     TraceRoot(trc, &thisValue_, "remat ion frame this");
