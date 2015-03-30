@@ -133,11 +133,11 @@ class RegExpStatics
          * RegExpStatics::AutoRooter::trace().
          */
         if (matchesInput)
-            MarkString(trc, &matchesInput, "res->matchesInput");
+            TraceEdge(trc, &matchesInput, "res->matchesInput");
         if (lazySource)
-            MarkString(trc, &lazySource, "res->lazySource");
+            TraceEdge(trc, &lazySource, "res->lazySource");
         if (pendingInput)
-            MarkString(trc, &pendingInput, "res->pendingInput");
+            TraceEdge(trc, &pendingInput, "res->pendingInput");
     }
 
     /* Value creators. */
@@ -201,16 +201,16 @@ class AutoRegExpStaticsBuffer : private JS::CustomAutoRooter
   private:
     virtual void trace(JSTracer* trc) {
         if (statics.matchesInput) {
-            MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics.matchesInput),
-                                "AutoRegExpStaticsBuffer matchesInput");
+            TraceRoot(trc, reinterpret_cast<JSString**>(&statics.matchesInput),
+                      "AutoRegExpStaticsBuffer matchesInput");
         }
         if (statics.lazySource) {
-            MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics.lazySource),
-                                "AutoRegExpStaticsBuffer lazySource");
+            TraceRoot(trc, reinterpret_cast<JSString**>(&statics.lazySource),
+                      "AutoRegExpStaticsBuffer lazySource");
         }
         if (statics.pendingInput) {
-            MarkStringRoot(trc, reinterpret_cast<JSString**>(&statics.pendingInput),
-                                "AutoRegExpStaticsBuffer pendingInput");
+            TraceRoot(trc, reinterpret_cast<JSString**>(&statics.pendingInput),
+                      "AutoRegExpStaticsBuffer pendingInput");
         }
     }
 

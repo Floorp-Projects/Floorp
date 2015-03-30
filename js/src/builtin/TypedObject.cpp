@@ -2954,7 +2954,7 @@ MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem)
       {
         HeapPtrString* stringPtr = reinterpret_cast<js::HeapPtrString*>(mem);
         if (*stringPtr)
-            gc::MarkString(trace_, stringPtr, "reference-str");
+            TraceEdge(trace_, stringPtr, "reference-str");
         return;
       }
     }

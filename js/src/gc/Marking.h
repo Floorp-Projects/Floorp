@@ -159,11 +159,6 @@ DeclMarker(Object, SavedFrame)
 DeclMarker(Object, ScopeObject)
 DeclMarker(Object, SharedArrayBufferObject)
 DeclMarker(Object, SharedTypedArrayObject)
-DeclMarker(String, JSAtom)
-DeclMarker(String, JSString)
-DeclMarker(String, JSFlatString)
-DeclMarker(String, JSLinearString)
-DeclMarker(String, PropertyName)
 
 #undef DeclMarker
 

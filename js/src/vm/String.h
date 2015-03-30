@@ -468,7 +468,7 @@ class JSString : public js::gc::TenuredCell
 
     void markBase(JSTracer* trc) {
         MOZ_ASSERT(hasBase());
-        js::gc::MarkStringUnbarriered(trc, &d.s.u3.base, "base");
+        js::TraceManuallyBarrieredEdge(trc, &d.s.u3.base, "base");
     }
 
     /* Only called by the GC for strings with the AllocKind::STRING kind. */
@@ -579,8 +579,8 @@ class JSRope : public JSString
     }
 
     void markChildren(JSTracer* trc) {
-        js::gc::MarkStringUnbarriered(trc, &d.s.u2.left, "left child");
-        js::gc::MarkStringUnbarriered(trc, &d.s.u3.right, "right child");
+        js::TraceManuallyBarrieredEdge(trc, &d.s.u2.left, "left child");
+        js::TraceManuallyBarrieredEdge(trc, &d.s.u3.right, "right child");
     }
 
     static size_t offsetOfLeft() {

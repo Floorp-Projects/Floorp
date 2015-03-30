@@ -50,7 +50,7 @@ JS_CallUnbarrieredObjectTracer(JSTracer* trc, JSObject** objp, const char* name)
 JS_PUBLIC_API(void)
 JS_CallUnbarrieredStringTracer(JSTracer* trc, JSString** strp, const char* name)
 {
-    MarkStringUnbarriered(trc, strp, name);
+    TraceManuallyBarrieredEdge(trc, strp, name);
 }
 
 JS_PUBLIC_API(void)
@@ -80,7 +80,7 @@ JS_CallObjectTracer(JSTracer* trc, JS::Heap<JSObject*>* objp, const char* name)
 JS_PUBLIC_API(void)
 JS_CallStringTracer(JSTracer* trc, JS::Heap<JSString*>* strp, const char* name)
 {
-    MarkStringUnbarriered(trc, strp->unsafeGet(), name);
+    TraceManuallyBarrieredEdge(trc, strp->unsafeGet(), name);
 }
 
 JS_PUBLIC_API(void)
