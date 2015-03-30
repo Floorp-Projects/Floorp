@@ -37,7 +37,7 @@ UnboxedLayout::trace(JSTracer* trc)
         MarkObjectGroup(trc, &nativeGroup_, "unboxed_layout_nativeGroup");
 
     if (nativeShape_)
-        MarkShape(trc, &nativeShape_, "unboxed_layout_nativeShape");
+        TraceEdge(trc, &nativeShape_, "unboxed_layout_nativeShape");
 
     if (replacementNewGroup_)
         MarkObjectGroup(trc, &replacementNewGroup_, "unboxed_layout_replacementNewGroup");

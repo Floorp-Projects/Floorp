@@ -95,7 +95,7 @@ static void
 MarkExactStackRootsAcrossTypes(T context, JSTracer* trc)
 {
     MarkExactStackRootList<JSObject*, MarkObjectRoot>(trc, context, "exact-object");
-    MarkExactStackRootList<Shape*, MarkShapeRoot>(trc, context, "exact-shape");
+    MarkExactStackRootList<Shape*, TraceRoot>(trc, context, "exact-shape");
     MarkExactStackRootList<BaseShape*, TraceRoot>(trc, context, "exact-baseshape");
     MarkExactStackRootList<ObjectGroup*, MarkObjectGroupRoot>(
         trc, context, "exact-objectgroup");
@@ -172,8 +172,8 @@ AutoGCRooter::trace(JSTracer* trc)
 
       case SHAPEVECTOR: {
         AutoShapeVector::VectorImpl& vector = static_cast<js::AutoShapeVector*>(this)->vector;
-        MarkShapeRootRange(trc, vector.length(), const_cast<Shape**>(vector.begin()),
-                           "js::AutoShapeVector.vector");
+        TraceRootRange(trc, vector.length(), const_cast<Shape**>(vector.begin()),
+                       "js::AutoShapeVector.vector");
         return;
       }
 

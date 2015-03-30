@@ -3337,7 +3337,7 @@ PreliminaryObjectArray::sweep()
 void
 PreliminaryObjectArrayWithTemplate::trace(JSTracer* trc)
 {
-    MarkShape(trc, &shape_, "PreliminaryObjectArrayWithTemplate_shape");
+    TraceEdge(trc, &shape_, "PreliminaryObjectArrayWithTemplate_shape");
 }
 
 /* static */ void
@@ -3886,7 +3886,7 @@ TypeNewScript::trace(JSTracer* trc)
         MarkObject(trc, &templateObject_, "TypeNewScript_templateObject");
 
     if (initializedShape_)
-        MarkShape(trc, &initializedShape_, "TypeNewScript_initializedShape");
+        TraceEdge(trc, &initializedShape_, "TypeNewScript_initializedShape");
 
     if (initializedGroup_)
         MarkObjectGroup(trc, &initializedGroup_, "TypeNewScript_initializedGroup");

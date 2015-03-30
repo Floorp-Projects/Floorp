@@ -1433,7 +1433,7 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
             bool remove = false;
             if (IsObjectGroupAboutToBeFinalized(entry.group.unsafeGet()))
                 remove = true;
-            if (IsShapeAboutToBeFinalized(entry.shape.unsafeGet()))
+            if (IsAboutToBeFinalized(&entry.shape))
                 remove = true;
             for (unsigned i = 0; !remove && i < key.nproperties; i++) {
                 if (JSID_IS_STRING(key.properties[i])) {
