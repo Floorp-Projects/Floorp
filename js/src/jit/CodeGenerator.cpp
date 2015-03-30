@@ -2763,7 +2763,7 @@ CodeGenerator::visitCallNative(LCallNative* call)
 
     // Preload arguments into registers.
     masm.loadJSContext(argContextReg);
-    masm.move32(Imm32(call->numStackArgs()), argUintNReg);
+    masm.move32(Imm32(call->numActualArgs()), argUintNReg);
     masm.movePtr(StackPointer, argVpReg);
 
     masm.Push(argUintNReg);
@@ -2874,7 +2874,7 @@ CodeGenerator::visitCallDOMNative(LCallDOMNative* call)
     LoadDOMPrivate(masm, obj, argPrivate);
 
     // Push argc from the call instruction into what will become the IonExitFrame
-    masm.Push(Imm32(call->numStackArgs()));
+    masm.Push(Imm32(call->numActualArgs()));
 
     // Push our argv onto the stack
     masm.Push(argArgs);
@@ -3001,8 +3001,11 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
     masm.Push(Imm32(descriptor));
 
     // Check whether the provided arguments satisfy target argc.
+    // We cannot have lowered to LCallGeneric with a known target. Assert that we didn't
+    // add any undefineds in IonBuilder. NB: MCall::numStackArgs includes |this|.
+    MOZ_ASSERT(call->numActualArgs() == call->mir()->numStackArgs() - 1);
     masm.load16ZeroExtend(Address(calleereg, JSFunction::offsetOfNargs()), nargsreg);
-    masm.branch32(Assembler::Above, nargsreg, Imm32(call->numStackArgs()), &thunk);
+    masm.branch32(Assembler::Above, nargsreg, Imm32(call->numActualArgs()), &thunk);
     masm.jump(&makeCall);
 
     // Argument fixed needed. Load the ArgumentsRectifier.
@@ -3011,7 +3014,7 @@ CodeGenerator::visitCallGeneric(LCallGeneric* call)
         MOZ_ASSERT(ArgumentsRectifierReg != objreg);
         masm.movePtr(ImmGCPtr(argumentsRectifier), objreg); // Necessary for GC marking.
         masm.loadPtr(Address(objreg, JitCode::offsetOfCode()), objreg);
-        masm.move32(Imm32(call->numStackArgs()), ArgumentsRectifierReg);
+        masm.move32(Imm32(call->numActualArgs()), ArgumentsRectifierReg);
     }
 
     // Finally call the function in objreg.
@@ -3053,7 +3056,7 @@ CodeGenerator::visitCallKnown(LCallKnown* call)
     // Native single targets are handled by LCallNative.
     MOZ_ASSERT(!target->isNative());
     // Missing arguments must have been explicitly appended by the IonBuilder.
-    MOZ_ASSERT(target->nargs() <= call->numStackArgs());
+    MOZ_ASSERT(target->nargs() <= call->mir()->numStackArgs() - 1);
 
     MOZ_ASSERT_IF(call->mir()->isConstructing(), target->isInterpretedConstructor());
 

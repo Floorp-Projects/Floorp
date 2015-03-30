@@ -1552,14 +1552,6 @@ class LJSCallInstructionHelper : public LCallInstructionHelper<Defs, Operands, T
         return mir()->getSingleTarget();
     }
 
-    // The number of stack arguments is the max between the number of formal
-    // arguments and the number of actual arguments. The number of stack
-    // argument includes the |undefined| padding added in case of underflow.
-    // Does not include |this|.
-    uint32_t numStackArgs() const {
-        MOZ_ASSERT(mir()->numStackArgs() >= 1);
-        return mir()->numStackArgs() - 1; // |this| is not a formal argument.
-    }
     // Does not include |this|.
     uint32_t numActualArgs() const {
         return mir()->numActualArgs();
