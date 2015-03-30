@@ -14,6 +14,7 @@ EXPORTS.mozilla.dom += [
     'ipc/PresentationIPCService.h',
     'ipc/PresentationParent.h',
     'Presentation.h',
+    'PresentationCallbacks.h',
     'PresentationDeviceManager.h',
     'PresentationService.h',
     'PresentationSession.h',
@@ -25,9 +26,11 @@ UNIFIED_SOURCES += [
     'ipc/PresentationIPCService.cpp',
     'ipc/PresentationParent.cpp',
     'Presentation.cpp',
+    'PresentationCallbacks.cpp',
     'PresentationDeviceManager.cpp',
     'PresentationService.cpp',
     'PresentationSession.cpp',
+    'PresentationSessionInfo.cpp',
     'PresentationSessionRequest.cpp',
 ]
 

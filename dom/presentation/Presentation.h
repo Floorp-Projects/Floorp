@@ -8,6 +8,7 @@
 #define mozilla_dom_Presentation_h
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "nsIPresentationListener.h"
 
 namespace mozilla {
 namespace dom {
@@ -16,11 +17,13 @@ class Promise;
 class PresentationSession;
 
 class Presentation final : public DOMEventTargetHelper
+                         , public nsIPresentationListener
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(Presentation,
                                            DOMEventTargetHelper)
+  NS_DECL_NSIPRESENTATIONLISTENER
 
   static already_AddRefed<Presentation> Create(nsPIDOMWindow* aWindow);
   virtual JSObject*
