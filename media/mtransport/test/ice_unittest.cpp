@@ -1814,6 +1814,45 @@ TEST_F(IceConnectTest, RemoveAndAddStream) {
   ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
 }
 
+TEST_F(IceConnectTest, RemoveStreamBeforeGather) {
+  AddStream("first", 1);
+  AddStream("second", 1);
+  ASSERT_TRUE(Gather(0));
+  RemoveStream(0);
+  WaitForGather();
+  ConnectTrickle();
+  RealisticTrickleDelay(p1_->ControlTrickle(1));
+  RealisticTrickleDelay(p2_->ControlTrickle(1));
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
+}
+
+TEST_F(IceConnectTest, RemoveStreamDuringGather) {
+  AddStream("first", 1);
+  AddStream("second", 1);
+  RemoveStream(0);
+  ASSERT_TRUE(Gather());
+  ConnectTrickle();
+  RealisticTrickleDelay(p1_->ControlTrickle(1));
+  RealisticTrickleDelay(p2_->ControlTrickle(1));
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
+}
+
+TEST_F(IceConnectTest, RemoveStreamDuringConnect) {
+  AddStream("first", 1);
+  AddStream("second", 1);
+  ASSERT_TRUE(Gather());
+  ConnectTrickle();
+  RealisticTrickleDelay(p1_->ControlTrickle(0));
+  RealisticTrickleDelay(p2_->ControlTrickle(0));
+  RealisticTrickleDelay(p1_->ControlTrickle(1));
+  RealisticTrickleDelay(p2_->ControlTrickle(1));
+  RemoveStream(0);
+  ASSERT_TRUE_WAIT(p1_->ice_complete(), 1000);
+  ASSERT_TRUE_WAIT(p2_->ice_complete(), 1000);
+}
+
 TEST_F(IceConnectTest, TestConnectRealTrickleOneStreamOneComponent) {
   AddStream("first", 1);
   AddStream("second", 1);
