@@ -35,7 +35,7 @@
   <script src="../shared/sdk_mock.js"></script>
   <script>
     chai.config.includeStack = true;
-    mocha.setup('bdd');
+    mocha.setup({ui: 'bdd', timeout: 10000});
   </script>
   <!-- App scripts -->
   <script src="../../content/shared/js/utils.js"></script>
