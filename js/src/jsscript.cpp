@@ -310,7 +310,7 @@ void
 Bindings::trace(JSTracer* trc)
 {
     if (callObjShape_)
-        MarkShape(trc, &callObjShape_, "callObjShape");
+        TraceEdge(trc, &callObjShape_, "callObjShape");
 
     /*
      * As the comment in Bindings explains, bindingsArray may point into freed
