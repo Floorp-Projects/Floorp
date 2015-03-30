@@ -64,7 +64,7 @@
             }
           });
 
-          win.AppManager.update("runtimelist");
+          win.AppManager.update("runtime-list");
 
           let packagedAppLocation = getTestFilePath("app");
 
@@ -86,7 +86,7 @@
 
           is(Object.keys(DebuggerServer._connections).length, 1, "Connected");
 
-          yield waitForUpdate(win, "runtime-apps-found");
+          yield waitForUpdate(win, "runtime-targets");
 
           ok(isPlayActive(), "play button is enabled 1");
           ok(!isStopActive(), "stop button is disabled 1");
@@ -115,7 +115,7 @@
 
           winIframe.document.querySelectorAll(".runtime-panel-item-other")[1].click();
 
-          yield waitForUpdate(win, "runtime-apps-found");
+          yield waitForUpdate(win, "runtime-targets");
 
           is(Object.keys(DebuggerServer._connections).length, 1, "Locally connected");
 
