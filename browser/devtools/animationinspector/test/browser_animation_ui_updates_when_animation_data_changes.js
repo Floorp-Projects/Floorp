@@ -40,5 +40,5 @@ function* setStyle(widget, name, value) {
   });
 
   info("Wait for the next state update");
-  yield widget.player.once(widget.player.AUTO_REFRESH_EVENT);
+  yield onceNextPlayerRefresh(widget.player);
 }
