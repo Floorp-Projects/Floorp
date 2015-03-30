@@ -12,11 +12,9 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsColor.h"
-#include "nsSize.h"
+#include "Units.h"
 
 struct nsRect;
-struct nsIntRect;
-class nsIntRegion;
 struct nsFont;
 struct nsIntMargin;
 class nsPresContext;
@@ -116,7 +114,7 @@ public:
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext,
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
-                                  nsIntSize* aResult,
+                                  mozilla::LayoutDeviceIntSize* aResult,
                                   bool* aIsOverridable)=0;
 
 

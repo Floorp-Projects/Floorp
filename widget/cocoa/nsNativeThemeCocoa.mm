@@ -3163,7 +3163,7 @@ NS_IMETHODIMP
 nsNativeThemeCocoa::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                          nsIFrame* aFrame,
                                          uint8_t aWidgetType,
-                                         nsIntSize* aResult,
+                                         LayoutDeviceIntSize* aResult,
                                          bool* aIsOverridable)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
