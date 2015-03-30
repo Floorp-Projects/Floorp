@@ -84,7 +84,6 @@ FileComponent.prototype =
   contractID: "@mozilla.org/tests/component-file;1",
 
   // nsIClassInfo
-  implementationLanguage: Components.interfaces.nsIProgrammingLanguage.JAVASCRIPT,
   flags: 0,
 
   getInterfaces: function getInterfaces(aCount) {

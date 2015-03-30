@@ -18,7 +18,6 @@
 #include "nsIObjectOutputStream.h"
 #include "nsEscape.h"
 #include "nsError.h"
-#include "nsIProgrammingLanguage.h"
 #include "nsIIPCSerializableURI.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -588,13 +587,6 @@ nsSimpleURI::GetClassID(nsCID * *aClassID)
     if (!*aClassID)
         return NS_ERROR_OUT_OF_MEMORY;
     return GetClassIDNoAlloc(*aClassID);
-}
-
-NS_IMETHODIMP 
-nsSimpleURI::GetImplementationLanguage(uint32_t *aImplementationLanguage)
-{
-    *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
-    return NS_OK;
 }
 
 NS_IMETHODIMP 

@@ -7,7 +7,6 @@
 #include "nsSSLStatus.h"
 #include "plstr.h"
 #include "nsIClassInfoImpl.h"
-#include "nsIProgrammingLanguage.h"
 #include "nsIObjectOutputStream.h"
 #include "nsIObjectInputStream.h"
 #include "ssl.h"
@@ -242,13 +241,6 @@ nsSSLStatus::GetClassID(nsCID** aClassID)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return GetClassIDNoAlloc(*aClassID);
-}
-
-NS_IMETHODIMP
-nsSSLStatus::GetImplementationLanguage(uint32_t* aImplementationLanguage)
-{
-  *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
