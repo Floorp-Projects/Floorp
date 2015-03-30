@@ -1699,7 +1699,7 @@ let SessionStoreInternal = {
     }
 
     // fetch the data of closed tab, while removing it from the array
-    let closedTab = closedTabs.splice(aIndex, 1).shift();
+    let [closedTab] = closedTabs.splice(aIndex, 1);
     let closedTabState = closedTab.state;
 
     // create a new tab
