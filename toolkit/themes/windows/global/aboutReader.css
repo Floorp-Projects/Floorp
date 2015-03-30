@@ -5,8 +5,7 @@
 body {
   padding: 64px 0;
   max-width: 660px;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto;
 }
 
 body.loaded {
@@ -31,11 +30,13 @@ body.loaded {
   background-color: #f0ece7;
 }
 
-.sans-serif {
+.sans-serif,
+.sans-serif .remove-button {
   font-family: "Fira Sans", Helvetica, Arial, sans-serif;
 }
 
-.serif {
+.serif,
+.serif .remove-button {
   font-family: "Charis SIL", Georgia, "Times New Roman", serif;
 }
 
@@ -246,30 +247,33 @@ body.loaded {
   font-family: "Fira Sans", Helvetica, Arial, sans-serif;
   position: fixed;
   height: 100%;
-  top: 0px;
-  left: 0px;
+  top: 0;
+  left: 0;
   margin: 0;
   padding: 0;
   list-style: none;
-  background-color: #FBFBFB;
+  background-color: #fbfbfb;
   -moz-user-select: none;
-  border-right: 1px solid #B5B5B5;
+  border-right: 1px solid #b5b5b5;
 }
 
 .button {
-  color: white;
   display: block;
-  background-position: center;
   background-size: 24px 24px;
   background-repeat: no-repeat;
-  background-color: transparent;
   height: 40px;
+  padding: 0;
+}
+
+.toolbar .button {
+  color: white;
   width: 40px;
+  background-position: center;
+  background-color: #fbfbfb;
   border-top: 0;
   border-left: 0;
   border-right: 0;
   border-bottom: 1px solid #c1c1c1;
-  padding: 0;
 }
 
 .button[hidden] {
@@ -279,13 +283,13 @@ body.loaded {
 .dropdown {
   text-align: center;
   list-style: none;
-  margin: 0px;
-  padding: 0px;
+  margin: 0;
+  padding: 0;
 }
 
 .dropdown li {
-  margin: 0px;
-  padding: 0px;
+  margin: 0;
+  padding: 0;
 }
 
 /*======= Font style popup =======*/
@@ -296,18 +300,18 @@ body.loaded {
   position: absolute;
   left: 48px; /* offset to account for toolbar width */
   z-index: 1000;
-  background-color: #FBFBFB;
+  background-color: #fbfbfb;
   visibility: hidden;
   border-radius: 4px;
-  border: 1px 1px 0 1px solid #B5B5B5;
-  box-shadow: 0px 1px 12px #666;
+  border: 1px 1px 0 1px solid #b5b5b5;
+  box-shadow: 0 1px 12px #666;
 }
 
 .dropdown-popup > hr {
   width: 100%;
-  height: 0px;
-  border: 0px;
-  border-top: 1px solid #B5B5B5;
+  height: 0;
+  border: 0;
+  border-top: 1px solid #b5b5b5;
   margin: 0;
 }
 
@@ -349,7 +353,7 @@ body.loaded {
 #font-size-buttons > button,
 #color-scheme-buttons > button {
   text-align: center;
-  border-left: 1px solid #B5B5B5;
+  border-left: 1px solid #b5b5b5;
   border-right: 0;
   border-top: 0;
   border-bottom: 0;
@@ -370,7 +374,7 @@ body.loaded {
 #font-type-buttons > button:first-child,
 #font-size-buttons > button:first-child,
 #color-scheme-buttons > button:first-child {
-  border-left: 0px;
+  border-left: 0;
 }
 
 #font-type-buttons > button {
@@ -382,7 +386,7 @@ body.loaded {
 #font-type-buttons > button.selected,
 #color-scheme-buttons > button:active:hover,
 #color-scheme-buttons > button.selected {
-  box-shadow: inset 0 -3px 0 0 #FC6420;
+  box-shadow: inset 0 -3px 0 0 #fc6420;
 }
 
 #font-type-buttons > button > div {
@@ -393,14 +397,14 @@ body.loaded {
 .button:hover,
 #font-size-buttons > button:hover,
 #font-type-buttons > button:hover {
-  background-color: #EBEBEB;
+  background-color: #ebebeb;
 }
 
 .dropdown.open,
 .button:active,
 #font-size-buttons > button:active,
 #font-size-buttons > button.selected {
-  background-color: #DADADA;
+  background-color: #dadada;
 }
 
 /* Only used on Android */
@@ -421,6 +425,39 @@ body.loaded {
   background-repeat: no-repeat;
   background-position: center;
 }
+
+.footer {
+  height: 64px;
+  background-color: #ebebeb;
+  position: absolute;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  padding: 12px 0;
+  box-sizing: border-box;
+  box-shadow: 0 9px 9px -9px #c1c1c1 inset;
+}
+
+.sepia .footer {
+  background-color: #dedad4;
+}
+
+.dark .footer {
+  background-color: #777;
+}
+
+.remove-button {
+  background-image: url("chrome://global/skin/reader/RM-Delete-24x24.svg");
+  margin: 0 auto;
+  border: 1px solid #c1c1c1;
+  background-position: 10px 7px;
+  padding-left: 42px;
+  padding-right: 10px;
+  border-radius: 2px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  font-size: 18px;
+}
+
 
 /*======= Toolbar icons =======*/
 
@@ -470,6 +507,9 @@ body.loaded {
 
 @media print {
   .toolbar {
+    display: none;
+  }
+  .footer {
     display: none;
   }
 }
