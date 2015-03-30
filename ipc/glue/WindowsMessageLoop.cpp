@@ -16,6 +16,7 @@
 #include "nsIXULAppInfo.h"
 #include "WinUtils.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/PaintTracker.h"
 
 using namespace mozilla;
@@ -105,9 +106,66 @@ HHOOK gDeferredCallWndProcHook = nullptr;
 
 DWORD gUIThreadId = 0;
 HWND gCOMWindow = 0;
+// Once initialized, gWinEventHook is never unhooked. We save the handle so
+// that we can check whether or not the hook is initialized.
+HWINEVENTHOOK gWinEventHook = nullptr;
+const wchar_t kCOMWindowClassName[] = L"OleMainThreadWndClass";
 
 // WM_GETOBJECT id pulled from uia headers
 #define MOZOBJID_UIAROOT -25
+
+HWND
+FindCOMWindow()
+{
+  MOZ_ASSERT(gUIThreadId);
+
+  HWND last = 0;
+  while ((last = FindWindowExW(HWND_MESSAGE, last, kCOMWindowClassName, NULL))) {
+    if (GetWindowThreadProcessId(last, NULL) == gUIThreadId) {
+      return last;
+    }
+  }
+
+  return (HWND)0;
+}
+
+void CALLBACK
+WinEventHook(HWINEVENTHOOK aWinEventHook, DWORD aEvent, HWND aHwnd,
+             LONG aIdObject, LONG aIdChild, DWORD aEventThread,
+             DWORD aMsEventTime)
+{
+  MOZ_ASSERT(aWinEventHook == gWinEventHook);
+  MOZ_ASSERT(gUIThreadId == aEventThread);
+  switch (aEvent) {
+    case EVENT_OBJECT_CREATE: {
+      if (aIdObject != OBJID_WINDOW || aIdChild != CHILDID_SELF) {
+        // Not an event we're interested in
+        return;
+      }
+      wchar_t classBuf[256] = {0};
+      int result = ::GetClassNameW(aHwnd, classBuf,
+                                   MOZ_ARRAY_LENGTH(classBuf));
+      if (result != (MOZ_ARRAY_LENGTH(kCOMWindowClassName) - 1) ||
+          wcsncmp(kCOMWindowClassName, classBuf, result)) {
+        // Not a class we're interested in
+        return;
+      }
+      MOZ_ASSERT(FindCOMWindow() == aHwnd);
+      gCOMWindow = aHwnd;
+      break;
+    }
+    case EVENT_OBJECT_DESTROY: {
+      if (aHwnd == gCOMWindow && aIdObject == OBJID_WINDOW) {
+        MOZ_ASSERT(aIdChild == CHILDID_SELF);
+        gCOMWindow = 0;
+      }
+      break;
+    }
+    default: {
+      return;
+    }
+  }
+}
 
 LRESULT CALLBACK
 DeferredMessageHook(int nCode,
@@ -650,13 +708,22 @@ InitUIThread()
   // on startup.
   if (!gUIThreadId) {
     gUIThreadId = GetCurrentThreadId();
-
-    CoInitialize(nullptr);
   }
 
   MOZ_ASSERT(gUIThreadId);
   MOZ_ASSERT(gUIThreadId == GetCurrentThreadId(),
              "Called InitUIThread multiple times on different threads!");
+
+  if (!gWinEventHook) {
+    gWinEventHook = SetWinEventHook(EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY,
+                                    NULL, &WinEventHook, GetCurrentProcessId(),
+                                    gUIThreadId, WINEVENT_OUTOFCONTEXT);
+
+    // We need to execute this after setting the hook in case the OLE window
+    // already existed.
+    gCOMWindow = FindCOMWindow();
+  }
+  MOZ_ASSERT(gWinEventHook);
 }
 
 } // namespace windows
@@ -810,21 +877,6 @@ IsTimeoutExpired(PRIntervalTime aStart, PRIntervalTime aTimeout)
     (aTimeout <= (PR_IntervalNow() - aStart));
 }
 
-HWND
-FindCOMWindow()
-{
-  MOZ_ASSERT(gUIThreadId);
-
-  HWND last = 0;
-  while ((last = FindWindowExW(HWND_MESSAGE, last, L"OleMainThreadWndClass", NULL))) {
-    if (GetWindowThreadProcessId(last, NULL) == gUIThreadId) {
-      return last;
-    }
-  }
-
-  return (HWND)0;
-}
-
 bool
 MessageChannel::WaitForSyncNotify()
 {
@@ -864,12 +916,6 @@ MessageChannel::WaitForSyncNotify()
                "Top frame is not a sync frame!");
 
   MonitorAutoUnlock unlock(*mMonitor);
-
-  MOZ_ASSERT_IF(gCOMWindow, FindCOMWindow() == gCOMWindow);
-
-  if (!gCOMWindow) {
-    gCOMWindow = FindCOMWindow();
-  }
 
   bool timedout = false;
 
@@ -1013,12 +1059,6 @@ MessageChannel::WaitForInterruptNotify()
                "Top frame is not a sync frame!");
 
   MonitorAutoUnlock unlock(*mMonitor);
-
-  MOZ_ASSERT_IF(gCOMWindow, FindCOMWindow() == gCOMWindow);
-
-  if (!gCOMWindow) {
-    gCOMWindow = FindCOMWindow();
-  }
 
   bool timedout = false;
 
