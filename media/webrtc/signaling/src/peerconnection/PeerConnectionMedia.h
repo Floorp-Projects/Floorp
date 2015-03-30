@@ -244,7 +244,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   }
 
   // Create and modify transports in response to negotiation events.
-  void UpdateTransports(const JsepSession& session);
+  void UpdateTransports(const JsepSession& session, bool restartGathering);
 
   // Start ICE checks.
   void StartIceChecks(const JsepSession& session);
