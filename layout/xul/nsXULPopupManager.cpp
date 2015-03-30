@@ -471,7 +471,7 @@ nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt)
 }
 
 void
-nsXULPopupManager::PopupResized(nsIFrame* aFrame, LayoutDeviceIntSize aSize)
+nsXULPopupManager::PopupResized(nsIFrame* aFrame, nsIntSize aSize)
 {
   nsMenuPopupFrame* menuPopupFrame = GetPopupToMoveOrResize(aFrame);
   if (!menuPopupFrame)
@@ -490,8 +490,8 @@ nsXULPopupManager::PopupResized(nsIFrame* aFrame, LayoutDeviceIntSize aSize)
   // as 'width' and 'height' attributes on the popup.
   nsPresContext* presContext = menuPopupFrame->PresContext();
 
-  CSSIntSize newCSS(presContext->DevPixelsToIntCSSPixels(aSize.width),
-                    presContext->DevPixelsToIntCSSPixels(aSize.height));
+  nsIntSize newCSS(presContext->DevPixelsToIntCSSPixels(aSize.width),
+                   presContext->DevPixelsToIntCSSPixels(aSize.height));
 
   nsIContent* popup = menuPopupFrame->GetContent();
   nsAutoString width, height;
