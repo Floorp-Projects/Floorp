@@ -786,6 +786,7 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
                                     const nsHTMLReflowState& aOuterRS,
                                     nsReflowStatus&          aStatus)
 {
+  MarkInReflow();
   DO_GLOBAL_REFLOW_COUNT("nsTableOuterFrame");
   DISPLAY_REFLOW(aPresContext, this, aOuterRS, aDesiredSize, aStatus);
 

@@ -397,9 +397,6 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
                                    aContainingBlock.width,
                                    aContainingBlock.height);
 
-  // Send the WillReflow() notification and position the frame
-  aKidFrame->WillReflow(aPresContext);
-
   // Get the border values
   const nsMargin& border = aReflowState.mStyleBorder->GetComputedBorder();
 
