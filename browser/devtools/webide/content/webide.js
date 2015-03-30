@@ -156,8 +156,9 @@ let UI = {
 
   appManagerUpdate: function(event, what, details) {
     // Got a message from app-manager.js
+    // See AppManager.update() for descriptions of what these events mean.
     switch (what) {
-      case "runtimelist":
+      case "runtime-list":
         this.updateRuntimeList();
         this.autoConnectRuntime();
         break;
@@ -183,16 +184,16 @@ let UI = {
           projectList.update();
         });
         return;
-      case "project-is-not-running":
-      case "project-is-running":
-      case "list-tabs-response":
+      case "project-stopped":
+      case "project-started":
+      case "runtime-global-actors":
         this.updateCommands();
         projectList.update();
         break;
       case "runtime-details":
         this.updateRuntimeButton();
         break;
-      case "runtime-changed":
+      case "runtime":
         this.updateRuntimeButton();
         this.saveLastConnectedRuntime();
         break;
