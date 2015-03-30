@@ -1200,12 +1200,13 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
 #ifdef DEBUG
   if (!PR_GetEnv("MOZ_QUIET")) {
-    printf_stderr("++DOMWINDOW == %d (%p) [pid = %d] [serial = %d] [outer = %p]\n",
+    printf_stderr("++DOMWINDOW == %d (%p) [pid = %d] [serial = %d] [outer = %p] [winid = %llu]\n",
                   gRefCnt,
                   static_cast<void*>(ToCanonicalSupports(this)),
                   getpid(),
                   gSerialCounter,
-                  static_cast<void*>(ToCanonicalSupports(aOuterWindow)));
+                  static_cast<void*>(ToCanonicalSupports(aOuterWindow)),
+                  WindowID());
   }
 #endif
 
@@ -1293,13 +1294,14 @@ nsGlobalWindow::~nsGlobalWindow()
     }
 
     nsGlobalWindow* outer = static_cast<nsGlobalWindow*>(mOuterWindow.get());
-    printf_stderr("--DOMWINDOW == %d (%p) [pid = %d] [serial = %d] [outer = %p] [url = %s]\n",
+    printf_stderr("--DOMWINDOW == %d (%p) [pid = %d] [serial = %d] [outer = %p] [url = %s] [winid = %llu]\n",
                   gRefCnt,
                   static_cast<void*>(ToCanonicalSupports(this)),
                   getpid(),
                   mSerial,
                   static_cast<void*>(ToCanonicalSupports(outer)),
-                  url.get());
+                  url.get(),
+                  WindowID());
   }
 #endif
 
