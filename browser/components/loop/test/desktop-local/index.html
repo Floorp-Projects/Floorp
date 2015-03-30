@@ -35,7 +35,7 @@
   <script>
     /*global chai,mocha */
     chai.config.includeStack = true;
-    mocha.setup('bdd');
+    mocha.setup({ui: 'bdd', timeout: 10000});
   </script>
 
   <!-- App scripts -->
