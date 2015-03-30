@@ -49,6 +49,14 @@
   }
   setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
 
+  function isMulet() {
+    try {
+      return SpecialPowers.getBoolPref("b2g.is_mulet");
+    } catch(e) {
+      return false;
+    }
+  }
+
   var iframe;
   function runTest() {
     iframe = document.querySelector("iframe");

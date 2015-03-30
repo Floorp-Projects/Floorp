@@ -226,7 +226,7 @@
 
   function testPlugin() {
     var isMobile = /Mobile|Tablet/.test(navigator.userAgent);
-    if (isMobile) {
+    if (isMobile || parent.isMulet()) {
       // We can't use plugins on mobile, so skip this part of the test there.
       return Promise.resolve();
     }
