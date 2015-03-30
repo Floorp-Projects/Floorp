@@ -76,16 +76,8 @@ enum {
     JOF_CHECKSTRICT     = 1 << 20,  /* Op can only be generated in strict mode */
     JOF_INVOKE          = 1 << 21,  /* JSOP_CALL, JSOP_FUNCALL, JSOP_FUNAPPLY,
                                        JSOP_NEW, JSOP_EVAL */
-    JOF_TMPSLOT         = 1 << 22,  /* interpreter uses extra temporary slot
-                                       to root intermediate objects besides
-                                       the slots opcode uses */
-    JOF_TMPSLOT2        = 2 << 22,  /* interpreter uses extra 2 temporary slot
-                                       besides the slots opcode uses */
-    JOF_TMPSLOT3        = 3 << 22,  /* interpreter uses extra 3 temporary slot
-                                       besides the slots opcode uses */
-    JOF_TMPSLOT_SHIFT   = 22,
-    JOF_TMPSLOT_MASK    = JS_BITMASK(2) << JOF_TMPSLOT_SHIFT,
-
+    /* 1 << 22 is unused */
+    /* 1 << 23 is unused */
     /* 1 << 24 is unused */
     JOF_GNAME           = 1 << 25,  /* predicted global name */
     JOF_TYPESET         = 1 << 26,  /* has an entry in a script's type sets */
