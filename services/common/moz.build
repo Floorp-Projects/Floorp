@@ -17,7 +17,6 @@ EXTRA_JS_MODULES['services-common'] += [
     'hawkclient.js',
     'hawkrequest.js',
     'logmanager.js',
-    'storageservice.js',
     'stringbundle.js',
     'tokenserverclient.js',
     'utils.js',
