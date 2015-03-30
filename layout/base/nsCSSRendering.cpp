@@ -4709,7 +4709,7 @@ nsImageRenderer::ComputeIntrinsicSize()
     case eStyleImageType_Image:
     {
       bool haveWidth, haveHeight;
-      CSSIntSize imageIntSize;
+      nsIntSize imageIntSize;
       nsLayoutUtils::ComputeSizeForDrawing(mImageContainer, imageIntSize,
                                            result.mRatio, haveWidth, haveHeight);
       if (haveWidth) {
