@@ -412,7 +412,7 @@ BaselineScript::New(JSScript* jsscript, uint32_t prologueOffset, uint32_t epilog
 void
 BaselineScript::trace(JSTracer* trc)
 {
-    MarkJitCode(trc, &method_, "baseline-method");
+    TraceEdge(trc, &method_, "baseline-method");
     if (templateScope_)
         MarkObject(trc, &templateScope_, "baseline-template-scope");
 

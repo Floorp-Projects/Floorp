@@ -154,7 +154,7 @@ void
 ICStub::markCode(JSTracer* trc, const char* name)
 {
     JitCode* stubJitCode = jitCode();
-    MarkJitCodeUnbarriered(trc, &stubJitCode, name);
+    TraceManuallyBarrieredEdge(trc, &stubJitCode, name);
 }
 
 void

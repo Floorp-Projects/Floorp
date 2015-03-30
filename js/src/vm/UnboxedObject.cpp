@@ -43,7 +43,7 @@ UnboxedLayout::trace(JSTracer* trc)
         TraceEdge(trc, &replacementNewGroup_, "unboxed_layout_replacementNewGroup");
 
     if (constructorCode_)
-        MarkJitCode(trc, &constructorCode_, "unboxed_layout_constructorCode");
+        TraceEdge(trc, &constructorCode_, "unboxed_layout_constructorCode");
 }
 
 size_t
