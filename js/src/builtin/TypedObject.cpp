@@ -1641,7 +1641,7 @@ OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
 
     // Mark the owner, watching in case it is moved by the tracer.
     JSObject* oldOwner = typedObj.owner_;
-    gc::MarkObjectUnbarriered(trc, &typedObj.owner_, "typed object owner");
+    TraceManuallyBarrieredEdge(trc, &typedObj.owner_, "typed object owner");
     JSObject* owner = typedObj.owner_;
 
     uint8_t* oldData = typedObj.outOfLineTypedMem();
@@ -2946,7 +2946,7 @@ MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem)
       {
         HeapPtrObject* objectPtr = reinterpret_cast<js::HeapPtrObject*>(mem);
         if (*objectPtr)
-            gc::MarkObject(trace_, objectPtr, "reference-obj");
+            TraceEdge(trace_, objectPtr, "reference-obj");
         return;
       }
 

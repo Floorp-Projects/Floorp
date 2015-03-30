@@ -333,11 +333,11 @@ InterpreterFrame::mark(JSTracer* trc)
      * frame is copied to the floating frame. Therefore, no barrier is needed.
      */
     if (flags_ & HAS_SCOPECHAIN)
-        gc::MarkObjectUnbarriered(trc, &scopeChain_, "scope chain");
+        TraceManuallyBarrieredEdge(trc, &scopeChain_, "scope chain");
     if (flags_ & HAS_ARGS_OBJ)
-        gc::MarkObjectUnbarriered(trc, &argsObj_, "arguments");
+        TraceManuallyBarrieredEdge(trc, &argsObj_, "arguments");
     if (isFunctionFrame()) {
-        gc::MarkObjectUnbarriered(trc, &exec.fun, "fun");
+        TraceManuallyBarrieredEdge(trc, &exec.fun, "fun");
         if (isEvalFrame())
             TraceManuallyBarrieredEdge(trc, &u.evalScript, "eval script");
     } else {

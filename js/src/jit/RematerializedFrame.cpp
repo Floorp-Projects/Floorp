@@ -148,7 +148,7 @@ void
 RematerializedFrame::mark(JSTracer* trc)
 {
     TraceRoot(trc, &script_, "remat ion frame script");
-    gc::MarkObjectRoot(trc, &scopeChain_, "remat ion frame scope chain");
+    TraceRoot(trc, &scopeChain_, "remat ion frame scope chain");
     TraceRoot(trc, &returnValue_, "remat ion frame return value");
     TraceRoot(trc, &thisValue_, "remat ion frame this");
     TraceRootRange(trc, numActualArgs_ + script_->nfixed(), slots_, "remat ion frame stack");

@@ -758,7 +758,7 @@ JSFunction::trace(JSTracer* trc)
             TraceManuallyBarrieredEdge(trc, &u.i.s.lazy_, "lazyScript");
         }
         if (u.i.env_)
-            MarkObjectUnbarriered(trc, &u.i.env_, "fun_environment");
+            TraceManuallyBarrieredEdge(trc, &u.i.env_, "fun_environment");
     }
 }
 

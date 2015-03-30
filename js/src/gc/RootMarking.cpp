@@ -94,7 +94,7 @@ template<class T>
 static void
 MarkExactStackRootsAcrossTypes(T context, JSTracer* trc)
 {
-    MarkExactStackRootList<JSObject*, MarkObjectRoot>(trc, context, "exact-object");
+    MarkExactStackRootList<JSObject*, TraceRoot>(trc, context, "exact-object");
     MarkExactStackRootList<Shape*, TraceRoot>(trc, context, "exact-shape");
     MarkExactStackRootList<BaseShape*, TraceRoot>(trc, context, "exact-baseshape");
     MarkExactStackRootList<ObjectGroup*, TraceRoot>(
@@ -179,13 +179,13 @@ AutoGCRooter::trace(JSTracer* trc)
 
       case OBJVECTOR: {
         AutoObjectVector::VectorImpl& vector = static_cast<AutoObjectVector*>(this)->vector;
-        MarkObjectRootRange(trc, vector.length(), vector.begin(), "js::AutoObjectVector.vector");
+        TraceRootRange(trc, vector.length(), vector.begin(), "js::AutoObjectVector.vector");
         return;
       }
 
       case FUNVECTOR: {
         AutoFunctionVector::VectorImpl& vector = static_cast<AutoFunctionVector*>(this)->vector;
-        MarkObjectRootRange(trc, vector.length(), vector.begin(), "js::AutoFunctionVector.vector");
+        TraceRootRange(trc, vector.length(), vector.begin(), "js::AutoFunctionVector.vector");
         return;
       }
 
@@ -220,10 +220,10 @@ AutoGCRooter::trace(JSTracer* trc)
       case OBJOBJHASHMAP: {
         AutoObjectObjectHashMap::HashMapImpl& map = static_cast<AutoObjectObjectHashMap*>(this)->map;
         for (AutoObjectObjectHashMap::Enum e(map); !e.empty(); e.popFront()) {
-            MarkObjectRoot(trc, &e.front().value(), "AutoObjectObjectHashMap value");
+            TraceRoot(trc, &e.front().value(), "AutoObjectObjectHashMap value");
             trc->setTracingLocation((void*)&e.front().key());
             JSObject* key = e.front().key();
-            MarkObjectRoot(trc, &key, "AutoObjectObjectHashMap key");
+            TraceRoot(trc, &key, "AutoObjectObjectHashMap key");
             if (key != e.front().key())
                 e.rekeyFront(key);
         }
@@ -235,7 +235,7 @@ AutoGCRooter::trace(JSTracer* trc)
         AutoObjectUnsigned32HashMap::HashMapImpl& map = self->map;
         for (AutoObjectUnsigned32HashMap::Enum e(map); !e.empty(); e.popFront()) {
             JSObject* key = e.front().key();
-            MarkObjectRoot(trc, &key, "AutoObjectUnsignedHashMap key");
+            TraceRoot(trc, &key, "AutoObjectUnsignedHashMap key");
             if (key != e.front().key())
                 e.rekeyFront(key);
         }
@@ -247,7 +247,7 @@ AutoGCRooter::trace(JSTracer* trc)
         AutoObjectHashSet::HashSetImpl& set = self->set;
         for (AutoObjectHashSet::Enum e(set); !e.empty(); e.popFront()) {
             JSObject* obj = e.front();
-            MarkObjectRoot(trc, &obj, "AutoObjectHashSet value");
+            TraceRoot(trc, &obj, "AutoObjectHashSet value");
             if (obj != e.front())
                 e.rekeyFront(obj);
         }
@@ -335,26 +335,26 @@ StackShape::trace(JSTracer* trc)
     TraceRoot(trc, (jsid*) &propid, "StackShape id");
 
     if ((attrs & JSPROP_GETTER) && rawGetter)
-        MarkObjectRoot(trc, (JSObject**)&rawGetter, "StackShape getter");
+        TraceRoot(trc, (JSObject**)&rawGetter, "StackShape getter");
 
     if ((attrs & JSPROP_SETTER) && rawSetter)
-        MarkObjectRoot(trc, (JSObject**)&rawSetter, "StackShape setter");
+        TraceRoot(trc, (JSObject**)&rawSetter, "StackShape setter");
 }
 
 void
 JSPropertyDescriptor::trace(JSTracer* trc)
 {
     if (obj)
-        MarkObjectRoot(trc, &obj, "Descriptor::obj");
+        TraceRoot(trc, &obj, "Descriptor::obj");
     TraceRoot(trc, &value, "Descriptor::value");
     if ((attrs & JSPROP_GETTER) && getter) {
         JSObject* tmp = JS_FUNC_TO_DATA_PTR(JSObject*, getter);
-        MarkObjectRoot(trc, &tmp, "Descriptor::get");
+        TraceRoot(trc, &tmp, "Descriptor::get");
         getter = JS_DATA_TO_FUNC_PTR(JSGetterOp, tmp);
     }
     if ((attrs & JSPROP_SETTER) && setter) {
         JSObject* tmp = JS_FUNC_TO_DATA_PTR(JSObject*, setter);
-        MarkObjectRoot(trc, &tmp, "Descriptor::set");
+        TraceRoot(trc, &tmp, "Descriptor::set");
         setter = JS_DATA_TO_FUNC_PTR(JSSetterOp, tmp);
     }
 }
@@ -369,22 +369,20 @@ struct PersistentRootedMarker
     typedef mozilla::LinkedList<Element> List;
     typedef void (*MarkFunc)(JSTracer* trc, T* ref, const char* name);
 
-    template <MarkFunc Mark>
     static void
     markChainIfNotNull(JSTracer* trc, List& list, const char* name)
     {
         for (Element* r = list.getFirst(); r; r = r->getNext()) {
             if (r->get())
-                Mark(trc, r->address(), name);
+                TraceRoot(trc, r->address(), name);
         }
     }
 
-    template <MarkFunc Mark>
     static void
     markChain(JSTracer* trc, List& list, const char* name)
     {
         for (Element* r = list.getFirst(); r; r = r->getNext())
-            Mark(trc, r->address(), name);
+            TraceRoot(trc, r->address(), name);
     }
 };
 }
@@ -396,20 +394,20 @@ js::gc::MarkPersistentRootedChains(JSTracer* trc)
     JSRuntime* rt = trc->runtime();
 
     // Mark the PersistentRooted chains of types that may be null.
-    PersistentRootedMarker<JSFunction*>::markChainIfNotNull<MarkObjectRoot>(
-        trc, rt->functionPersistentRooteds, "PersistentRooted<JSFunction*>");
-    PersistentRootedMarker<JSObject*>::markChainIfNotNull<MarkObjectRoot>(
-        trc, rt->objectPersistentRooteds, "PersistentRooted<JSObject*>");
-    PersistentRootedMarker<JSScript*>::markChainIfNotNull<TraceRoot>(
-        trc, rt->scriptPersistentRooteds, "PersistentRooted<JSScript*>");
-    PersistentRootedMarker<JSString*>::markChainIfNotNull<TraceRoot>(
-        trc, rt->stringPersistentRooteds, "PersistentRooted<JSString*>");
+    PersistentRootedMarker<JSFunction*>::markChainIfNotNull(trc, rt->functionPersistentRooteds,
+                                                            "PersistentRooted<JSFunction*>");
+    PersistentRootedMarker<JSObject*>::markChainIfNotNull(trc, rt->objectPersistentRooteds,
+                                                          "PersistentRooted<JSObject*>");
+    PersistentRootedMarker<JSScript*>::markChainIfNotNull(trc, rt->scriptPersistentRooteds,
+                                                          "PersistentRooted<JSScript*>");
+    PersistentRootedMarker<JSString*>::markChainIfNotNull(trc, rt->stringPersistentRooteds,
+                                                          "PersistentRooted<JSString*>");
 
     // Mark the PersistentRooted chains of types that are never null.
-    PersistentRootedMarker<jsid>::markChain<TraceRoot>(trc, rt->idPersistentRooteds,
-                                                       "PersistentRooted<jsid>");
-    PersistentRootedMarker<Value>::markChain<TraceRoot>(trc, rt->valuePersistentRooteds,
-                                                        "PersistentRooted<Value>");
+    PersistentRootedMarker<jsid>::markChain(trc, rt->idPersistentRooteds,
+                                            "PersistentRooted<jsid>");
+    PersistentRootedMarker<Value>::markChain(trc, rt->valuePersistentRooteds,
+                                             "PersistentRooted<Value>");
 }
 
 void
@@ -453,8 +451,7 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc,
     }
 
     if (rt->asyncStackForNewActivations)
-        MarkObjectRoot(trc, &rt->asyncStackForNewActivations,
-                       "asyncStackForNewActivations");
+        TraceRoot(trc, &rt->asyncStackForNewActivations, "asyncStackForNewActivations");
 
     if (rt->asyncCauseForNewActivations)
         TraceRoot(trc, &rt->asyncCauseForNewActivations, "asyncCauseForNewActivations");

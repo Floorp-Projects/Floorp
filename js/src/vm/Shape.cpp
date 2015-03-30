@@ -1538,7 +1538,7 @@ JSCompartment::sweepInitialShapeTable()
             Shape* shape = entry.shape.unbarrieredGet();
             JSObject* proto = entry.proto.raw();
             if (IsAboutToBeFinalizedUnbarriered(&shape) ||
-                (entry.proto.isObject() && IsObjectAboutToBeFinalized(&proto)))
+                (entry.proto.isObject() && IsAboutToBeFinalizedUnbarriered(&proto)))
             {
                 e.removeFront();
             } else {
@@ -1583,7 +1583,7 @@ void
 AutoRooterGetterSetter::Inner::trace(JSTracer* trc)
 {
     if ((attrs & JSPROP_GETTER) && *pgetter)
-        gc::MarkObjectRoot(trc, (JSObject**) pgetter, "AutoRooterGetterSetter getter");
+        TraceRoot(trc, (JSObject**) pgetter, "AutoRooterGetterSetter getter");
     if ((attrs & JSPROP_SETTER) && *psetter)
-        gc::MarkObjectRoot(trc, (JSObject**) psetter, "AutoRooterGetterSetter setter");
+        TraceRoot(trc, (JSObject**) psetter, "AutoRooterGetterSetter setter");
 }

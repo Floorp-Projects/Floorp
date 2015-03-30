@@ -554,7 +554,7 @@ JitCompartment::sweep(FreeOp* fop, JSCompartment* compartment)
 
     for (size_t i = 0; i <= SimdTypeDescr::LAST_TYPE; i++) {
         ReadBarrieredObject& obj = simdTemplateObjects_[i];
-        if (obj && IsObjectAboutToBeFinalized(obj.unsafeGet()))
+        if (obj && IsAboutToBeFinalized(&obj))
             obj.set(nullptr);
     }
 }
@@ -1714,7 +1714,7 @@ AttachFinishedCompilations(JSContext* cx)
 void
 MIRGenerator::traceNurseryObjects(JSTracer* trc)
 {
-    MarkObjectRootRange(trc, nurseryObjects_.length(), nurseryObjects_.begin(), "ion-nursery-objects");
+    TraceRootRange(trc, nurseryObjects_.length(), nurseryObjects_.begin(), "ion-nursery-objects");
 }
 
 class MarkOffThreadNurseryObjects : public gc::BufferableRef

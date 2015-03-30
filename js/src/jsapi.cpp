@@ -1521,7 +1521,7 @@ JS_UpdateWeakPointerAfterGC(JS::Heap<JSObject*>* objp)
 JS_PUBLIC_API(void)
 JS_UpdateWeakPointerAfterGCUnbarriered(JSObject** objp)
 {
-    if (IsObjectAboutToBeFinalized(objp))
+    if (IsAboutToBeFinalizedUnbarriered(objp))
         *objp = nullptr;
 }
 

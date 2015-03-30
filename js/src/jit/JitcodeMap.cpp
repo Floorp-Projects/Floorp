@@ -871,9 +871,9 @@ JitcodeGlobalEntry::IonEntry::markIfUnmarked(JSTracer* trc)
             TraceManuallyBarrieredEdge(trc, &iter->script,
                                        "jitcodeglobaltable-ionentry-type-addendum-script");
             markedAny = true;
-        } else if (iter->hasConstructor() && !IsObjectMarked(&iter->constructor)) {
-            MarkObjectUnbarriered(trc, &iter->constructor,
-                                  "jitcodeglobaltable-ionentry-type-addendum-constructor");
+        } else if (iter->hasConstructor() && !IsMarkedUnbarriered(&iter->constructor)) {
+            TraceManuallyBarrieredEdge(trc, &iter->constructor,
+                                       "jitcodeglobaltable-ionentry-type-addendum-constructor");
             markedAny = true;
         }
     }
@@ -899,7 +899,7 @@ JitcodeGlobalEntry::IonEntry::sweep()
         if (iter->hasAllocationSite())
             MOZ_ALWAYS_FALSE(IsAboutToBeFinalizedUnbarriered(&iter->script));
         else if (iter->hasConstructor())
-            MOZ_ALWAYS_FALSE(IsObjectAboutToBeFinalized(&iter->constructor));
+            MOZ_ALWAYS_FALSE(IsAboutToBeFinalizedUnbarriered(&iter->constructor));
     }
 }
 
