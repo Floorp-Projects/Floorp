@@ -1635,8 +1635,8 @@ let SessionStoreInternal = {
     if (!aTab.ownerDocument.defaultView.__SSi) {
       throw Components.Exception("Default view is not tracked", Cr.NS_ERROR_INVALID_ARG);
     }
-    if (!aWindow.getBrowser) {
-      throw Components.Exception("Invalid window object: no getBrowser", Cr.NS_ERROR_INVALID_ARG);
+    if (!aWindow.gBrowser) {
+      throw Components.Exception("Invalid window object: no gBrowser", Cr.NS_ERROR_INVALID_ARG);
     }
 
     // Flush all data queued in the content script because we will need that
