@@ -401,13 +401,6 @@ OnSharedPreferenceChangeListener
             }
         });
 
-        if (Versions.feature14Plus) {
-            final ActionBar actionBar = getActionBar();
-            if (actionBar != null) {
-                actionBar.setHomeButtonEnabled(true);
-            }
-        }
-
         // N.B., if we ever need to redisplay the locale selection UI without
         // just finishing and recreating the activity, right here we'll need to
         // capture EXTRA_SHOW_FRAGMENT_TITLE from the intent and store the title ID.
