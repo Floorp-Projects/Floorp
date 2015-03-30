@@ -231,16 +231,10 @@ template <> struct MapTypeToTraceKind<UnownedBaseShape> { static const JSGCTrace
 template <> struct MapTypeToTraceKind<jit::JitCode>     { static const JSGCTraceKind kind = JSTRACE_JITCODE; };
 template <> struct MapTypeToTraceKind<ObjectGroup>      { static const JSGCTraceKind kind = JSTRACE_OBJECT_GROUP; };
 
-// Direct value access used by the write barriers and the jits.
-void
-MarkValueForBarrier(JSTracer* trc, Value* v, const char* name);
-
-// These three declarations are also present in gc/Marking.h, via the DeclMarker
-// macro.  Not great, but hard to avoid.
-void
-MarkStringUnbarriered(JSTracer* trc, JSString** str, const char* name);
-void
-MarkSymbolUnbarriered(JSTracer* trc, JS::Symbol** sym, const char* name);
+// Marking.h depends on these barrier definitions, so we need a separate
+// entry point for marking to implement the pre-barrier.
+void MarkValueForBarrier(JSTracer* trc, Value* v, const char* name);
+void MarkIdForBarrier(JSTracer* trc, jsid* idp, const char* name);
 
 } // namespace gc
 
@@ -281,6 +275,13 @@ ZoneOfValueFromAnyThread(const JS::Value& value)
     if (value.isObject())
         return ZoneOfObjectFromAnyThread(value.toObject());
     return js::gc::TenuredCell::fromPointer(value.toGCThing())->zoneFromAnyThread();
+}
+
+MOZ_ALWAYS_INLINE JS::Zone*
+ZoneOfIdFromAnyThread(const jsid& id)
+{
+    MOZ_ASSERT(JSID_IS_GCTHING(id));
+    return js::gc::TenuredCell::fromPointer(JSID_TO_GCTHING(id).asCell())->zoneFromAnyThread();
 }
 
 void
@@ -387,19 +388,13 @@ struct InternalGCMethods<jsid>
     static bool isMarkable(jsid id) { return JSID_IS_STRING(id) || JSID_IS_SYMBOL(id); }
 
     static void preBarrier(jsid id) {
-        if (JSID_IS_STRING(id)) {
-            JSString* str = JSID_TO_STRING(id);
-            JS::shadow::Zone* shadowZone = ShadowZoneOfStringFromAnyThread(str);
+        if (JSID_IS_GCTHING(id)) {
+            JS::Zone* zone = ZoneOfIdFromAnyThread(id);
+            JS::shadow::Zone* shadowZone = JS::shadow::Zone::asShadowZone(zone);
             if (shadowZone->needsIncrementalBarrier()) {
-                js::gc::MarkStringUnbarriered(shadowZone->barrierTracer(), &str, "write barrier");
-                MOZ_ASSERT(str == JSID_TO_STRING(id));
-            }
-        } else if (JSID_IS_SYMBOL(id)) {
-            JS::Symbol* sym = JSID_TO_SYMBOL(id);
-            JS::shadow::Zone* shadowZone = ShadowZoneOfSymbolFromAnyThread(sym);
-            if (shadowZone->needsIncrementalBarrier()) {
-                js::gc::MarkSymbolUnbarriered(shadowZone->barrierTracer(), &sym, "write barrier");
-                MOZ_ASSERT(sym == JSID_TO_SYMBOL(id));
+                jsid tmp(id);
+                js::gc::MarkIdForBarrier(shadowZone->barrierTracer(), &tmp, "id write barrier");
+                MOZ_ASSERT(tmp == id);
             }
         }
     }

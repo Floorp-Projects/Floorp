@@ -1436,16 +1436,8 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
             if (IsAboutToBeFinalized(&entry.shape))
                 remove = true;
             for (unsigned i = 0; !remove && i < key.nproperties; i++) {
-                if (JSID_IS_STRING(key.properties[i])) {
-                    JSString* str = JSID_TO_STRING(key.properties[i]);
-                    if (IsStringAboutToBeFinalized(&str))
-                        remove = true;
-                    MOZ_ASSERT(AtomToId((JSAtom*)str) == key.properties[i]);
-                } else if (JSID_IS_SYMBOL(key.properties[i])) {
-                    JS::Symbol* sym = JSID_TO_SYMBOL(key.properties[i]);
-                    if (IsSymbolAboutToBeFinalized(&sym))
-                        remove = true;
-                }
+                if (gc::IsAboutToBeFinalizedUnbarriered(&key.properties[i]))
+                    remove = true;
 
                 MOZ_ASSERT(!entry.types[i].isSingleton());
                 ObjectGroup* group = nullptr;

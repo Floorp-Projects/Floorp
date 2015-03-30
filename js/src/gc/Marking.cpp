@@ -1117,7 +1117,6 @@ DeclMarkerImpl(String, JSString)
 DeclMarkerImpl(String, JSFlatString)
 DeclMarkerImpl(String, JSLinearString)
 DeclMarkerImpl(String, PropertyName)
-DeclMarkerImpl(Symbol, JS::Symbol)
 DeclMarkerImpl(ObjectGroup, js::ObjectGroup)
 
 } /* namespace gc */
@@ -1310,10 +1309,16 @@ ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Value val)
 /*** Special Marking ***/
 
 void
-gc::MarkValueForBarrier(JSTracer* trc, Value* v, const char* name)
+gc::MarkValueForBarrier(JSTracer* trc, Value* valuep, const char* name)
 {
     MOZ_ASSERT(!trc->runtime()->isHeapBusy());
-    TraceManuallyBarrieredEdge(trc, v, name);
+    TraceManuallyBarrieredEdge(trc, valuep, name);
+}
+
+void
+gc::MarkIdForBarrier(JSTracer* trc, jsid* idp, const char* name)
+{
+    TraceManuallyBarrieredEdge(trc, idp, name);
 }
 
 /*** Push Mark Stack ***/

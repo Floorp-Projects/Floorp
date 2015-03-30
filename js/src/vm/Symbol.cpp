@@ -110,8 +110,10 @@ SymbolRegistry::sweep()
 {
     for (Enum e(*this); !e.empty(); e.popFront()) {
         Symbol* sym = e.front();
-        if (IsSymbolAboutToBeFinalized(&sym))
+        if (IsAboutToBeFinalizedUnbarriered(&sym))
             e.removeFront();
+        else
+            MOZ_ASSERT(sym == e.front());
     }
 }
 

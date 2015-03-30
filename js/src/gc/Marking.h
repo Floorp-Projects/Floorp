@@ -165,7 +165,6 @@ DeclMarker(String, JSString)
 DeclMarker(String, JSFlatString)
 DeclMarker(String, JSLinearString)
 DeclMarker(String, PropertyName)
-DeclMarker(Symbol, JS::Symbol)
 DeclMarker(ObjectGroup, ObjectGroup)
 
 #undef DeclMarker
