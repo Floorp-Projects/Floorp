@@ -103,6 +103,11 @@ let RLSidebar = {
     this.itemsById.set(item.id, item);
 
     this.emptyListInfo.hidden = true;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        itemNode.classList.add('visible');
+      });
+    });
   },
 
   /**
