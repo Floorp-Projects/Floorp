@@ -18,7 +18,7 @@ add_task(function*() {
   let widget = panel.playerWidgets[0];
   let timeline = widget.currentTimeEl;
 
-  yield widget.player.once(widget.player.AUTO_REFRESH_EVENT);
+  yield onceNextPlayerRefresh(widget.player);
   ok(widget.rafID, "The widget is updating the timeline with a rAF loop");
 
   info("Pause the animation");

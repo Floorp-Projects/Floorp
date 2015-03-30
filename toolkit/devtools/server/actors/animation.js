@@ -31,7 +31,6 @@ const {setInterval, clearInterval} = require("sdk/timers");
 const protocol = require("devtools/server/protocol");
 const {ActorClass, Actor, FrontClass, Front, Arg, method, RetVal} = protocol;
 const {NodeActor} = require("devtools/server/actors/inspector");
-const EventEmitter = require("devtools/toolkit/event-emitter");
 const events = require("sdk/event/core");
 
 const PLAYER_DEFAULT_AUTO_REFRESH_TIMEOUT = 500; // ms
@@ -316,7 +315,6 @@ let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
   AUTO_REFRESH_EVENT: "updated-state",
 
   initialize: function(conn, form, detail, ctx) {
-    EventEmitter.decorate(this);
     Front.prototype.initialize.call(this, conn, form, detail, ctx);
 
     this.state = {};
@@ -414,7 +412,7 @@ let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
 
     if (this.currentStateHasChanged) {
       this.state = data;
-      this.emit(this.AUTO_REFRESH_EVENT, this.state);
+      events.emit(this, this.AUTO_REFRESH_EVENT, this.state);
     }
   }),
 

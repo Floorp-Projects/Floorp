@@ -34,7 +34,7 @@ add_task(function*() {
   let onAllEventsReceived = new Promise(resolve => {
     let expected = 5;
     let previousState = player.initialState;
-    let onNewState = (e, state) => {
+    let onNewState = state => {
       ok(state.currentTime !== previousState.currentTime,
         "The time has changed since the last update");
       expected --;

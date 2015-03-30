@@ -29,7 +29,7 @@ add_task(function*() {
 
   info("Resume the player and wait for an auto-refresh event");
   yield widget.player.play();
-  yield widget.player.once(widget.player.AUTO_REFRESH_EVENT);
+  yield onceNextPlayerRefresh(widget.player);
 
   info("Click on the rewind button");
   EventUtils.sendMouseEvent({type: "click"}, rwBtn, win);
