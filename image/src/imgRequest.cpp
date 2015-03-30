@@ -662,6 +662,13 @@ imgRequest::GetMultipart() const
   return mIsMultiPartChannel;
 }
 
+bool
+imgRequest::HadInsecureRedirect() const
+{
+  MutexAutoLock lock(mMutex);
+  return mHadInsecureRedirect;
+}
+
 /** nsIRequestObserver methods **/
 
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
@@ -1184,6 +1191,7 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
       NS_FAILED(mCurrentURI->SchemeIs("chrome", &isChrome)) ||
       NS_FAILED(NS_URIChainHasFlags(mCurrentURI, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE , &schemeLocal))  ||
       (!isHttps && !isChrome && !schemeLocal)) {
+    MutexAutoLock lock(mMutex);
     mHadInsecureRedirect = true;
   }
 
