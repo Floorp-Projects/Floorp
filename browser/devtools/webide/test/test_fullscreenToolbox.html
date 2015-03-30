@@ -31,7 +31,7 @@
         Task.spawn(function* () {
           Cu.import("resource://gre/modules/devtools/dbg-server.jsm");
           win = yield openWebIDE();
-          win.AppManager.update("runtimelist");
+          win.AppManager.update("runtime-list");
 
           yield connectToLocal(win);
 
