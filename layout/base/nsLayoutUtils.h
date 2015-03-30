@@ -1802,7 +1802,7 @@ public:
    * have less information about the frame tree.
    */
   static void ComputeSizeForDrawing(imgIContainer* aImage,
-                                    mozilla::CSSIntSize& aImageSize,
+                                    nsIntSize&     aImageSize,
                                     nsSize&        aIntrinsicRatio,
                                     bool&          aGotWidth,
                                     bool&          aGotHeight);
@@ -1815,9 +1815,8 @@ public:
    * after trying all these methods, no value is available for one or both
    * dimensions, the corresponding dimension of aFallbackSize is used instead.
    */
-  static mozilla::CSSIntSize
-  ComputeSizeForDrawingWithFallback(imgIContainer* aImage,
-                                    const nsSize&  aFallbackSize);
+  static nsIntSize ComputeSizeForDrawingWithFallback(imgIContainer* aImage,
+                                                     const nsSize&  aFallbackSize);
 
   /**
    * Given a source area of an image (in appunits) and a destination area
