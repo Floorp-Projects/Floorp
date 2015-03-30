@@ -5,9 +5,16 @@ python /home/worker/bin/validate_task.py
 
 echo "Retrieving device"
 res=`curl --request POST -H "Content-Type: application/json" -d "$DEVICE_CAPABILITIES" http://$CLOUD_HOST/device`
+error=`echo $res | jq .error`
+
+if [ "$error" != "null" ]; then
+    echo $error
+    exit -1
+fi
+
 status=`echo $res | jq .session`
 
-if [[ $status == 'null' ]]; then
+if [ "$status" == "null" ]; then
     echo "Session could not be created with a device."
     exit -1
 fi
