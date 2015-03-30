@@ -224,9 +224,7 @@ RemoteFinderListener.prototype = {
       }
 
       case "Finder:FastFind":
-
         this._finder.fastFind(data.searchString, data.linksOnly, data.drawOutline);
-        this._finder.setSelectionModeAndRepaint(Ci.nsISelectionController.SELECTION_ON);
         break;
 
       case "Finder:FindAgain":
