@@ -1,18 +1,23 @@
 $inherits:
-  from: 'tasks/builds/b2g_phone_base.yml'
+  from: 'tasks/builds/b2g_dolphin_base.yml'
 task:
   scopes:
     - 'docker-worker:cache:build-dolphin-eng'
   metadata:
-    name: B2G Dolphin Eng
+    name: '[TC] B2G Dolphin Eng'
+
+  extra:
+    treeherder:
+      symbol: Be
+      groupSymbol: Dolphin
+      groupName: Dolphin Device Image
+      machine:
+        platform: b2g-device-image
+
   payload:
     cache:
-      build-hamachi-eng: /home/worker/object-folder
+      build-dolphin-eng: /home/worker/object-folder
     env:
       TARGET: 'dolphin'
-      DEBUG: 0
       VARIANT: eng
-  extra:
-    locations:
-      img: 'private/build/dolphin.zip'
 
