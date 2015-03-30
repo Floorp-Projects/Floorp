@@ -49,7 +49,7 @@ BaselineFrame::trace(JSTracer* trc, JitFrameIterator& frameIterator)
         TraceRoot(trc, returnValue().address(), "baseline-rval");
 
     if (isEvalFrame())
-        gc::MarkScriptRoot(trc, &evalScript_, "baseline-evalscript");
+        TraceRoot(trc, &evalScript_, "baseline-evalscript");
 
     if (hasArgsObj())
         gc::MarkObjectRoot(trc, &argsObj_, "baseline-args-obj");

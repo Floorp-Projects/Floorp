@@ -521,7 +521,7 @@ Debugger::hasAnyLiveHooks() const
 
     /* If any breakpoints are in live scripts, return true. */
     for (Breakpoint* bp = firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
-        if (IsScriptMarked(&bp->site->script))
+        if (IsMarkedUnbarriered(&bp->site->script))
             return true;
     }
 
@@ -2038,7 +2038,7 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
             for (gc::ZoneCellIter iter(zone, gc::AllocKind::SCRIPT); !iter.done(); iter.next()) {
                 JSScript* script = iter.get<JSScript>();
                 if (obs.shouldRecompileOrInvalidate(script) &&
-                    !gc::IsScriptAboutToBeFinalized(&script))
+                    !gc::IsAboutToBeFinalizedUnbarriered(&script))
                 {
                     if (!AppendAndInvalidateScript(cx, zone, script, scripts))
                         return false;
@@ -2308,7 +2308,7 @@ Debugger::markAllIteratively(GCMarker* trc)
                 if (dbgMarked) {
                     /* Search for breakpoints to mark. */
                     for (Breakpoint* bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
-                        if (IsScriptMarked(&bp->site->script)) {
+                        if (IsMarkedUnbarriered(&bp->site->script)) {
                             /*
                              * The debugger and the script are both live.
                              * Therefore the breakpoint handler is live.
@@ -2353,7 +2353,7 @@ Debugger::markAll(JSTracer* trc)
         dbg->environments.trace(trc);
 
         for (Breakpoint* bp = dbg->firstBreakpoint(); bp; bp = bp->nextInDebugger()) {
-            MarkScriptUnbarriered(trc, &bp->site->script, "breakpoint script");
+            TraceManuallyBarrieredEdge(trc, &bp->site->script, "breakpoint script");
             MarkObject(trc, &bp->getHandlerRef(), "breakpoint handler");
         }
     }

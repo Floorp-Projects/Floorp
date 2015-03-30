@@ -1469,7 +1469,7 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
     if (allocationSiteTable) {
         for (AllocationSiteTable::Enum e(*allocationSiteTable); !e.empty(); e.popFront()) {
             AllocationSiteKey key = e.front().key();
-            bool keyDying = IsScriptAboutToBeFinalized(&key.script);
+            bool keyDying = IsAboutToBeFinalizedUnbarriered(&key.script);
             bool valDying = IsObjectGroupAboutToBeFinalized(e.front().value().unsafeGet());
             if (keyDying || valDying)
                 e.removeFront();

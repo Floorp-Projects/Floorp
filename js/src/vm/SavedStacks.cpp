@@ -1085,7 +1085,7 @@ SavedStacks::sweepPCLocationMap()
     for (PCLocationMap::Enum e(pcLocationMap); !e.empty(); e.popFront()) {
         PCKey key = e.front().key();
         JSScript* script = key.script.get();
-        if (IsScriptAboutToBeFinalized(&script)) {
+        if (IsAboutToBeFinalizedUnbarriered(&script)) {
             e.removeFront();
         } else if (script != key.script.get()) {
             key.script = script;
