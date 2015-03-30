@@ -1430,8 +1430,9 @@ class DebugScopeProxy : public BaseProxyHandler
     static bool isMagicMissingArgumentsValue(JSContext* cx, ScopeObject& scope, HandleValue v)
     {
         bool isMagic = v.isMagic() && v.whyMagic() == JS_OPTIMIZED_ARGUMENTS;
-        MOZ_ASSERT_IF(isMagic, isFunctionScope(scope) &&
-                               !scope.as<CallObject>().callee().nonLazyScript()->needsArgsObj());
+        MOZ_ASSERT_IF(isMagic,
+                      isFunctionScope(scope) &&
+                      scope.as<CallObject>().callee().nonLazyScript()->argumentsHasVarBinding());
         return isMagic;
     }
 
