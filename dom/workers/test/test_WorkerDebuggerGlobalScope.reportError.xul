@@ -37,8 +37,8 @@
           ok(false, "Debugger error events should not be fired at workers.");
         };
 
-        info("Send a message to the worker debugger and wait for it to " +
-             "report an error.");
+        info("Send a request to the worker debugger. This should cause the " +
+             "worker debugger to report an error.");
         promise = waitForDebuggerError(dbg);
         dbg.postMessage("report");
         let error = yield promise;
@@ -48,8 +48,8 @@
            "lineNumber should be line number from which error is reported.");
         is(error.message, "reported", "message should be reported.");
 
-        info("Send a message to the worker debugger and wait for it to " +
-             "throw an error.");
+        info("Send a request to the worker debugger. This should cause the " +
+             "worker debugger to throw an error.");
         promise = waitForDebuggerError(dbg);
         dbg.postMessage("throw");
         error = yield promise;
@@ -59,8 +59,8 @@
            "lineNumber should be line number from which error is thrown");
         is(error.message, "Error: thrown", "message should be Error: thrown");
 
-        info("Send a message to the child worker debugger and wait for it to " +
-             "report an error.");
+        info("Send a reqeust to the child worker debugger. This should cause " +
+             "the child worker debugger to report an error.");
         promise = waitForDebuggerError(childDbg);
         childDbg.postMessage("report");
         error = yield promise;
@@ -70,8 +70,8 @@
            "lineNumber should be line number from which error is reported.");
         is(error.message, "reported", "message should be reported.");
 
-        info("Send a message to the child worker debugger and wait for it to " +
-             "report throw an error.");
+        info("Send a message to the child worker debugger. This should cause " +
+             "the child worker debugger to throw an error.");
         promise = waitForDebuggerError(childDbg);
         childDbg.postMessage("throw");
         error = yield promise;

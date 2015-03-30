@@ -276,6 +276,9 @@ public:
   IMPL_EVENT_HANDLER(message)
 
   void
+  SetImmediate(JSContext* aCx, Function& aHandler, ErrorResult& aRv);
+
+  void
   ReportError(JSContext* aCx, const nsAString& aMessage);
 
   void

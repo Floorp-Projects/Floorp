@@ -986,6 +986,9 @@ public:
   PostMessageToDebugger(const nsAString& aMessage);
 
   void
+  SetDebuggerImmediate(JSContext* aCx, Function& aHandler, ErrorResult& aRv);
+
+  void
   ReportErrorToDebugger(const nsAString& aFilename, uint32_t aLineno,
                         const nsAString& aMessage);
 
