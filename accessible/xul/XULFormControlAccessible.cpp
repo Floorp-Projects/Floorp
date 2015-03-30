@@ -472,7 +472,7 @@ XULRadioGroupAccessible::
 role
 XULRadioGroupAccessible::NativeRole()
 {
-  return roles::GROUPING;
+  return roles::RADIO_GROUP;
 }
 
 uint64_t
