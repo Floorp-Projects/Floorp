@@ -14,6 +14,7 @@ const CATEGORY_UPDATE_TIMER           = "update-timer";
 
 // Get the HTTP server.
 Components.utils.import("resource://testing-common/httpd.js");
+Components.utils.import("resource://testing-common/MockRegistrar.jsm");
 var testserver;
 var gOSVersion;
 var gBlocklist;
@@ -49,16 +50,7 @@ var timerService = {
   }
 };
 
-var TimerServiceFactory = {
-  createInstance: function (outer, iid) {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return timerService.QueryInterface(iid);
-  }
-};
-var registrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-registrar.registerFactory(Components.ID("{61189e7a-6b1b-44b8-ac81-f180a6105085}"), "TimerService",
-                          "@mozilla.org/updates/timer-manager;1", TimerServiceFactory);
+MockRegistrar.register("@mozilla.org/updates/timer-manager;1", timerService);
 
 function failHandler(metadata, response) {
   do_throw("Should not have attempted to retrieve the blocklist when it is disabled");

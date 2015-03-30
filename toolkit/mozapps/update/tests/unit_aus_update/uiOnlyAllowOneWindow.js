@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+Components.utils.import("resource://testing-common/MockRegistrar.jsm");
+
 /**
  * Test that nsIUpdatePrompt doesn't display UI for showUpdateInstalled and
  * showUpdateAvailable when there is already an application update window open.
@@ -15,15 +17,16 @@ function run_test() {
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, false);
 
-  let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.registerFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
-                            "Fake Window Watcher",
-                            "@mozilla.org/embedcomp/window-watcher;1",
-                            WindowWatcherFactory);
-  registrar.registerFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af56}"),
-                            "Fake Window Mediator",
-                            "@mozilla.org/appshell/window-mediator;1",
-                            WindowMediatorFactory);
+  let windowWatcherCID =
+    MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1",
+                           WindowWatcher);
+  let windowMediatorCID =
+    MockRegistrar.register("@mozilla.org/appshell/window-mediator;1",
+                           WindowMediator);
+  do_register_cleanup(() => {
+    MockRegistrar.unregister(windowWatcherCID);
+    MockRegistrar.unregister(windowMediatorCID);
+  });
 
   standardInit();
 
@@ -52,12 +55,6 @@ function run_test() {
   // didn't throw and otherwise it would report no tests run.
   do_check_true(true);
 
-  registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.unregisterFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
-                              WindowWatcherFactory);
-  registrar.unregisterFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af56}"),
-                              WindowMediatorFactory);
-
   doTestFinish();
 }
 
@@ -77,15 +74,6 @@ const WindowWatcher = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowWatcher])
 };
 
-const WindowWatcherFactory = {
-  createInstance: function createInstance(aOuter, aIID) {
-    if (aOuter != null) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    }
-    return WindowWatcher.QueryInterface(aIID);
-  }
-};
-
 const WindowMediator = {
   getMostRecentWindow: function(aWindowType) {
     return { getInterface: XPCOMUtils.generateQI([Ci.nsIDOMWindow]) };
@@ -93,12 +81,3 @@ const WindowMediator = {
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowMediator])
 }
-
-const WindowMediatorFactory = {
-  createInstance: function createInstance(aOuter, aIID) {
-    if (aOuter != null) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    }
-    return WindowMediator.QueryInterface(aIID);
-  }
-};

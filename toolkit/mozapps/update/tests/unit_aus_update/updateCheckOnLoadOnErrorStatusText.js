@@ -27,10 +27,10 @@ function run_test() {
 
 // Callback function used by the custom XMLHttpRequest implementation to
 // call the nsIDOMEventListener's handleEvent method for onload.
-function callHandleEvent() {
-  gXHR.status = gExpectedStatusCode;
-  let e = { target: gXHR };
-  gXHR.onload(e);
+function callHandleEvent(aXHR) {
+  aXHR.status = gExpectedStatusCode;
+  var e = { target: aXHR };
+  aXHR.onload(e);
 }
 
 // Helper functions for testing nsIUpdateCheckListener statusText

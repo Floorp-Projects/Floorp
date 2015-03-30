@@ -11,6 +11,7 @@ const Cr = Components.results;
 const URI_EXTENSION_BLOCKLIST_DIALOG = "chrome://mozapps/content/extensions/blocklist.xul";
 
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://testing-common/MockRegistrar.jsm");
 var gTestserver = new HttpServer();
 gTestserver.start(-1);
 gPort = gTestserver.identity.primaryPort;
@@ -132,14 +133,6 @@ var PluginHost = {
   }
 }
 
-var PluginHostFactory = {
-  createInstance: function (outer, iid) {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return PluginHost.QueryInterface(iid);
-  }
-};
-
 // Don't need the full interface, attempts to call other methods will just
 // throw which is just fine
 var WindowWatcher = {
@@ -168,20 +161,8 @@ var WindowWatcher = {
   }
 }
 
-var WindowWatcherFactory = {
-  createInstance: function createInstance(outer, iid) {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return WindowWatcher.QueryInterface(iid);
-  }
-};
-var registrar = Components.manager.QueryInterface(Components.interfaces.nsIComponentRegistrar);
-registrar.registerFactory(Components.ID("{721c3e73-969e-474b-a6dc-059fd288c428}"),
-                          "Fake Plugin Host",
-                          "@mozilla.org/plugin/host;1", PluginHostFactory);
-registrar.registerFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
-                          "Fake Window Watcher",
-                          "@mozilla.org/embedcomp/window-watcher;1", WindowWatcherFactory);
+MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
+MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1", WindowWatcher);
 
 function create_addon(addon) {
   var installrdf = "<?xml version=\"1.0\"?>\n" +
