@@ -649,20 +649,16 @@ let DirectoryLinksProvider = {
     let suggestedIndex = Math.floor(Math.random() * numLinks);
     let chosenSuggestedLink = flattenedLinks[suggestedIndex];
 
-    // Show the new directory tile.
-    this._callObservers("onLinkChanged", {
-      url: chosenSuggestedLink.url,
-      title: chosenSuggestedLink.title,
+    // Add the suggested link to the front with some extra values
+    this._callObservers("onLinkChanged", Object.assign({
       frecency: SUGGESTED_FRECENCY,
-      lastVisitDate: chosenSuggestedLink.lastVisitDate,
-      type: chosenSuggestedLink.type,
 
       // Choose the first site a user has visited as the target. In the future,
       // this should be the site with the highest frecency. However, we currently
       // store frecency by URL not by site.
       targetedSite: targetedSites.get(chosenSuggestedLink.url).length ?
         targetedSites.get(chosenSuggestedLink.url)[0] : null
-    });
+    }, chosenSuggestedLink));
     return chosenSuggestedLink;
    },
 
