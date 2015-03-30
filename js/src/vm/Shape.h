@@ -1363,7 +1363,7 @@ Shape::markChildren(JSTracer* trc)
     TraceEdge(trc, &base_, "base");
     TraceEdge(trc, &propidRef(), "propid");
     if (parent)
-        MarkShape(trc, &parent, "parent");
+        TraceEdge(trc, &parent, "parent");
 
     if (hasGetterObject())
         gc::MarkObjectUnbarriered(trc, &asAccessorShape().getterObj, "getter");

@@ -1537,7 +1537,7 @@ JSCompartment::sweepInitialShapeTable()
             const InitialShapeEntry& entry = e.front();
             Shape* shape = entry.shape.unbarrieredGet();
             JSObject* proto = entry.proto.raw();
-            if (IsShapeAboutToBeFinalized(&shape) ||
+            if (IsAboutToBeFinalizedUnbarriered(&shape) ||
                 (entry.proto.isObject() && IsObjectAboutToBeFinalized(&proto)))
             {
                 e.removeFront();

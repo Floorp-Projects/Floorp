@@ -3291,7 +3291,7 @@ class ICSetElem_DenseAddImpl : public ICSetElem_DenseAdd
   public:
     void traceShapes(JSTracer* trc) {
         for (size_t i = 0; i < NumShapes; i++)
-            MarkShape(trc, &shapes_[i], "baseline-setelem-denseadd-stub-shape");
+            TraceEdge(trc, &shapes_[i], "baseline-setelem-denseadd-stub-shape");
     }
     Shape* shape(size_t i) const {
         MOZ_ASSERT(i < NumShapes);
@@ -3521,7 +3521,7 @@ class ICGetName_Scope : public ICMonitoredStub
   public:
     void traceScopes(JSTracer* trc) {
         for (size_t i = 0; i < NumHops + 1; i++)
-            MarkShape(trc, &shapes_[i], "baseline-scope-stub-shape");
+            TraceEdge(trc, &shapes_[i], "baseline-scope-stub-shape");
     }
 
     static size_t offsetOfShape(size_t index) {
@@ -4145,7 +4145,7 @@ class ICGetProp_NativeDoesNotExistImpl : public ICGetProp_NativeDoesNotExist
     void traceShapes(JSTracer* trc) {
         // Note: using int32_t here to avoid gcc warning.
         for (int32_t i = 0; i < int32_t(NumShapes); i++)
-            MarkShape(trc, &shapes_[i], "baseline-getpropnativedoesnotexist-stub-shape");
+            TraceEdge(trc, &shapes_[i], "baseline-getpropnativedoesnotexist-stub-shape");
     }
 
     static size_t offsetOfShape(size_t idx) {
@@ -4890,7 +4890,7 @@ class ICSetProp_NativeAddImpl : public ICSetProp_NativeAdd
   public:
     void traceShapes(JSTracer* trc) {
         for (size_t i = 0; i < NumShapes; i++)
-            MarkShape(trc, &shapes_[i], "baseline-setpropnativeadd-stub-shape");
+            TraceEdge(trc, &shapes_[i], "baseline-setpropnativeadd-stub-shape");
     }
 
     static size_t offsetOfShape(size_t idx) {

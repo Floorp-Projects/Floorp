@@ -1265,7 +1265,7 @@ MarkObjectFromIon(JSRuntime* rt, JSObject** objp)
 void
 MarkShapeFromIon(JSRuntime* rt, Shape** shapep)
 {
-    gc::MarkShapeUnbarriered(&rt->gc.marker, shapep, "write barrier");
+    TraceManuallyBarrieredEdge(&rt->gc.marker, shapep, "write barrier");
 }
 
 void

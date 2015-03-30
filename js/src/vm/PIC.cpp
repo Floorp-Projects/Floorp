@@ -257,8 +257,8 @@ js::ForOfPIC::Chain::mark(JSTracer* trc)
     gc::MarkObject(trc, &arrayProto_, "ForOfPIC Array.prototype.");
     gc::MarkObject(trc, &arrayIteratorProto_, "ForOfPIC ArrayIterator.prototype.");
 
-    gc::MarkShape(trc, &arrayProtoShape_, "ForOfPIC Array.prototype shape.");
-    gc::MarkShape(trc, &arrayIteratorProtoShape_, "ForOfPIC ArrayIterator.prototype shape.");
+    TraceEdge(trc, &arrayProtoShape_, "ForOfPIC Array.prototype shape.");
+    TraceEdge(trc, &arrayIteratorProtoShape_, "ForOfPIC ArrayIterator.prototype shape.");
 
     TraceEdge(trc, &canonicalIteratorFunc_, "ForOfPIC ArrayValues builtin.");
     TraceEdge(trc, &canonicalNextFunc_, "ForOfPIC ArrayIterator.prototype.next builtin.");
