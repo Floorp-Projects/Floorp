@@ -228,12 +228,6 @@ public class LocalReadingListStorage implements ReadingListStorage {
     }
 
     @Override
-    public void addUploadedRecord(ClientReadingListRecord up,
-                                  ServerReadingListRecord down) {
-      // TODO
-    }
-
-    @Override
     public void addDownloadedRecord(ServerReadingListRecord down) {
       additionsOrChanges.add(down);
     }
