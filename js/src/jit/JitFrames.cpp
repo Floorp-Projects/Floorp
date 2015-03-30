@@ -1413,7 +1413,7 @@ MarkJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
           }
           case VMFunction::RootString:
           case VMFunction::RootPropertyName:
-            gc::MarkStringRoot(trc, reinterpret_cast<JSString**>(argBase), "ion-vm-args");
+            TraceRoot(trc, reinterpret_cast<JSString**>(argBase), "ion-vm-args");
             break;
           case VMFunction::RootFunction:
             gc::MarkObjectRoot(trc, reinterpret_cast<JSFunction**>(argBase), "ion-vm-args");
@@ -1447,7 +1447,7 @@ MarkJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
             break;
           case VMFunction::RootString:
           case VMFunction::RootPropertyName:
-            gc::MarkStringRoot(trc, footer->outParam<JSString*>(), "ion-vm-out");
+            TraceRoot(trc, footer->outParam<JSString*>(), "ion-vm-out");
             break;
           case VMFunction::RootFunction:
             gc::MarkObjectRoot(trc, footer->outParam<JSFunction*>(), "ion-vm-out");

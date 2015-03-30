@@ -726,7 +726,7 @@ JSFunction::trace(JSTracer* trc)
     }
 
     if (atom_)
-        MarkString(trc, &atom_, "atom");
+        TraceEdge(trc, &atom_, "atom");
 
     if (isInterpreted()) {
         // Functions can be be marked as interpreted despite having no script

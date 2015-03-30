@@ -258,7 +258,7 @@ class AsmJSModule
 
         void trace(JSTracer* trc) {
             if (name_)
-                MarkStringUnbarriered(trc, &name_, "asm.js global name");
+                TraceManuallyBarrieredEdge(trc, &name_, "asm.js global name");
             MOZ_ASSERT_IF(pod.which_ == Variable && pod.u.var.initKind_ == InitConstant,
                           !pod.u.var.u.numLit_.scalarValue().isMarkable());
         }
@@ -476,9 +476,9 @@ class AsmJSModule
         }
 
         void trace(JSTracer* trc) {
-            MarkStringUnbarriered(trc, &name_, "asm.js export name");
+            TraceManuallyBarrieredEdge(trc, &name_, "asm.js export name");
             if (maybeFieldName_)
-                MarkStringUnbarriered(trc, &maybeFieldName_, "asm.js export field");
+                TraceManuallyBarrieredEdge(trc, &maybeFieldName_, "asm.js export field");
         }
 
       public:
@@ -680,7 +680,7 @@ class AsmJSModule
 
         void trace(JSTracer* trc) {
             if (name)
-                MarkStringUnbarriered(trc, &name, "asm.js profiled function name");
+                TraceManuallyBarrieredEdge(trc, &name, "asm.js profiled function name");
         }
 
         size_t serializedSize() const;

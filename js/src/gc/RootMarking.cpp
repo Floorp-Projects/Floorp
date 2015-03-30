@@ -99,7 +99,7 @@ MarkExactStackRootsAcrossTypes(T context, JSTracer* trc)
     MarkExactStackRootList<BaseShape*, TraceRoot>(trc, context, "exact-baseshape");
     MarkExactStackRootList<ObjectGroup*, TraceRoot>(
         trc, context, "exact-objectgroup");
-    MarkExactStackRootList<JSString*, MarkStringRoot>(trc, context, "exact-string");
+    MarkExactStackRootList<JSString*, TraceRoot>(trc, context, "exact-string");
     MarkExactStackRootList<JS::Symbol*, TraceRoot>(trc, context, "exact-symbol");
     MarkExactStackRootList<jit::JitCode*, TraceRoot>(trc, context, "exact-jitcode");
     MarkExactStackRootList<JSScript*, TraceRoot>(trc, context, "exact-script");
@@ -191,13 +191,13 @@ AutoGCRooter::trace(JSTracer* trc)
 
       case STRINGVECTOR: {
         AutoStringVector::VectorImpl& vector = static_cast<AutoStringVector*>(this)->vector;
-        MarkStringRootRange(trc, vector.length(), vector.begin(), "js::AutoStringVector.vector");
+        TraceRootRange(trc, vector.length(), vector.begin(), "js::AutoStringVector.vector");
         return;
       }
 
       case NAMEVECTOR: {
         AutoNameVector::VectorImpl& vector = static_cast<AutoNameVector*>(this)->vector;
-        MarkStringRootRange(trc, vector.length(), vector.begin(), "js::AutoNameVector.vector");
+        TraceRootRange(trc, vector.length(), vector.begin(), "js::AutoNameVector.vector");
         return;
       }
 
@@ -402,7 +402,7 @@ js::gc::MarkPersistentRootedChains(JSTracer* trc)
         trc, rt->objectPersistentRooteds, "PersistentRooted<JSObject*>");
     PersistentRootedMarker<JSScript*>::markChainIfNotNull<TraceRoot>(
         trc, rt->scriptPersistentRooteds, "PersistentRooted<JSScript*>");
-    PersistentRootedMarker<JSString*>::markChainIfNotNull<MarkStringRoot>(
+    PersistentRootedMarker<JSString*>::markChainIfNotNull<TraceRoot>(
         trc, rt->stringPersistentRooteds, "PersistentRooted<JSString*>");
 
     // Mark the PersistentRooted chains of types that are never null.
@@ -457,8 +457,7 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc,
                        "asyncStackForNewActivations");
 
     if (rt->asyncCauseForNewActivations)
-        MarkStringRoot(trc, &rt->asyncCauseForNewActivations,
-                       "asyncCauseForNewActivations");
+        TraceRoot(trc, &rt->asyncCauseForNewActivations, "asyncCauseForNewActivations");
 
     if (rt->scriptAndCountsVector) {
         ScriptAndCountsVector& vec = *rt->scriptAndCountsVector;

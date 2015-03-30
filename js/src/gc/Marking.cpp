@@ -1111,11 +1111,6 @@ DeclMarkerImpl(Object, SavedFrame)
 DeclMarkerImpl(Object, ScopeObject)
 DeclMarkerImpl(Object, SharedArrayBufferObject)
 DeclMarkerImpl(Object, SharedTypedArrayObject)
-DeclMarkerImpl(String, JSAtom)
-DeclMarkerImpl(String, JSString)
-DeclMarkerImpl(String, JSFlatString)
-DeclMarkerImpl(String, JSLinearString)
-DeclMarkerImpl(String, PropertyName)
 
 } /* namespace gc */
 } /* namespace js */
