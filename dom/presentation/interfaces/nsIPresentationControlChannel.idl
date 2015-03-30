@@ -63,7 +63,7 @@ interface nsIPresentationControlChannelListener: nsISupports
  * The control channel for establishing RTCPeerConnection for a presentation
  * session. SDP Offer/Answer will be exchanged through this interface.
  */
-[scriptable, uuid(6bff04b9-8e79-466f-9446-f969de646fd3)]
+[scriptable, uuid(2c8ec493-4e5b-4df7-bedc-7ab25af323f0)]
 interface nsIPresentationControlChannel: nsISupports
 {
   // The listener for handling events of this control channel.
@@ -87,7 +87,14 @@ interface nsIPresentationControlChannel: nsISupports
   void sendAnswer(in nsIPresentationChannelDescription answer);
 
   /*
-   * Close the transport channel.
+   * Notify the app-to-app connection is fully established. (Only used at the
+   * receiver side.)
    */
-  void close();
+  void sendReceiverReady();
+
+  /*
+   * Close the transport channel.
+   * @param reason The reason of channel close; NS_OK represents normal.
+   */
+  void close(in nsresult reason);
 };

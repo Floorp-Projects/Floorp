@@ -7,9 +7,9 @@
 #ifndef mozilla_dom_PresentationService_h
 #define mozilla_dom_PresentationService_h
 
-#include "nsClassHashtable.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
+#include "nsRefPtrHashtable.h"
 #include "nsTObserverArray.h"
 #include "PresentationSessionInfo.h"
 
@@ -27,11 +27,28 @@ public:
   PresentationService();
   bool Init();
 
+  already_AddRefed<PresentationSessionInfo>
+  GetSessionInfo(const nsAString& aSessionId)
+  {
+    nsRefPtr<PresentationSessionInfo> info;
+    return mSessionInfo.Get(aSessionId, getter_AddRefs(info)) ?
+           info.forget() : nullptr;
+  }
+
+  void
+  RemoveSessionInfo(const nsAString& aSessionId)
+  {
+    mSessionInfo.Remove(aSessionId);
+  }
+
 private:
   ~PresentationService();
+  void HandleShutdown();
+  nsresult HandleDeviceChange();
   void NotifyAvailableChange(bool aIsAvailable);
 
-  nsClassHashtable<nsStringHashKey, PresentationSessionInfo> mSessionInfo;
+  bool mIsAvailable;
+  nsRefPtrHashtable<nsStringHashKey, PresentationSessionInfo> mSessionInfo;
   nsTObserverArray<nsCOMPtr<nsIPresentationListener>> mListeners;
 };
 

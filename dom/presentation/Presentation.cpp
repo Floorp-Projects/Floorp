@@ -4,12 +4,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/dom/PresentationAvailableEvent.h"
 #include "mozilla/dom/PresentationBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPresentationDeviceManager.h"
+#include "nsIPresentationService.h"
+#include "nsIUUIDGenerator.h"
 #include "nsServiceManagerUtils.h"
 #include "Presentation.h"
+#include "PresentationCallbacks.h"
 #include "PresentationSession.h"
 
 using namespace mozilla;
@@ -30,6 +35,7 @@ NS_IMPL_ADDREF_INHERITED(Presentation, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(Presentation, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Presentation)
+  NS_INTERFACE_MAP_ENTRY(nsIPresentationListener)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 /* static */ already_AddRefed<Presentation>
@@ -53,7 +59,39 @@ Presentation::~Presentation()
 bool
 Presentation::Init()
 {
-  // TODO: Register listener for |mAvailable| changes.
+  nsCOMPtr<nsIPresentationService> service =
+    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
+    return false;
+  }
+
+  nsresult rv = service->RegisterListener(this);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+
+  nsCOMPtr<nsIPresentationDeviceManager> deviceManager =
+    do_GetService(PRESENTATION_DEVICE_MANAGER_CONTRACTID);
+  if (NS_WARN_IF(!deviceManager)) {
+    return false;
+  }
+  deviceManager->GetDeviceAvailable(&mAvailable);
+
+  // Check if a session instance is required now. The receiver requires a
+  // session instance is ready at beginning because the web content may access
+  // it right away; whereas the sender doesn't until |startSession| succeeds.
+  nsAutoString sessionId;
+  rv = service->GetExistentSessionIdAtLaunch(sessionId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+  if (!sessionId.IsEmpty()) {
+    mSession = PresentationSession::Create(GetOwner(), sessionId,
+                                           PresentationSessionState::Disconnected);
+    if (NS_WARN_IF(!mSession)) {
+      return false;
+    }
+  }
 
   return true;
 }
@@ -62,7 +100,14 @@ void Presentation::Shutdown()
 {
   mSession = nullptr;
 
-  // TODO: Unregister listener for |mAvailable| changes.
+  nsCOMPtr<nsIPresentationService> service =
+    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
+    return;
+  }
+
+  nsresult rv = service->UnregisterListener(this);
+  NS_WARN_IF(NS_FAILED(rv));
 }
 
 /* virtual */ JSObject*
@@ -82,12 +127,63 @@ Presentation::StartSession(const nsAString& aUrl,
     return nullptr;
   }
 
+  // Get the origin.
+  nsAutoString origin;
+  nsresult rv = nsContentUtils::GetUTFOrigin(global->PrincipalOrNull(), origin);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
   nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
 
-  // TODO: Resolve/reject the promise.
+  // Ensure there's something to select.
+  if (NS_WARN_IF(!mAvailable)) {
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+
+  // Ensure the URL is not empty.
+  if (NS_WARN_IF(aUrl.IsEmpty())) {
+    promise->MaybeReject(NS_ERROR_DOM_SYNTAX_ERR);
+    return promise.forget();
+  }
+
+  // Generate an ID if it's not assigned.
+  nsAutoString id;
+  if (aId.WasPassed()) {
+    id = aId.Value();
+  } else {
+    nsCOMPtr<nsIUUIDGenerator> uuidgen =
+      do_GetService("@mozilla.org/uuid-generator;1");
+    if(NS_WARN_IF(!uuidgen)) {
+      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+      return promise.forget();
+    }
+
+    nsID uuid;
+    uuidgen->GenerateUUIDInPlace(&uuid);
+    char buffer[NSID_LENGTH];
+    uuid.ToProvidedString(buffer);
+    CopyASCIItoUTF16(buffer, id);
+  }
+
+  nsCOMPtr<nsIPresentationService> service =
+    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if(NS_WARN_IF(!service)) {
+    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    return promise.forget();
+  }
+
+  nsCOMPtr<nsIPresentationServiceCallback> callback =
+    new PresentationRequesterCallback(GetOwner(), aUrl, id, promise);
+  rv = service->StartSession(aUrl, id, origin, callback);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+  }
 
   return promise.forget();
 }
@@ -103,4 +199,22 @@ bool
 Presentation::CachedAvailable() const
 {
   return mAvailable;
+}
+
+NS_IMETHODIMP
+Presentation::NotifyAvailableChange(bool aAvailable)
+{
+  mAvailable = aAvailable;
+
+  PresentationAvailableEventInit init;
+  init.mAvailable = mAvailable;
+  nsRefPtr<PresentationAvailableEvent> event =
+    PresentationAvailableEvent::Constructor(this,
+                                            NS_LITERAL_STRING("availablechange"),
+                                            init);
+  event->SetTrusted(true);
+
+  nsRefPtr<AsyncEventDispatcher> asyncDispatcher =
+    new AsyncEventDispatcher(this, event);
+  return asyncDispatcher->PostDOMEvent();
 }
