@@ -35,7 +35,6 @@ public:
       NS_ERROR("MediaStreamAudioSourceNodeEngine bad parameter index");
     }
   }
-
 private:
   bool mEnabled;
 };
