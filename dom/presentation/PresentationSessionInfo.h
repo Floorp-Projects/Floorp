@@ -7,9 +7,10 @@
 #ifndef mozilla_dom_PresentationSessionInfo_h
 #define mozilla_dom_PresentationSessionInfo_h
 
+#include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/nsRefPtr.h"
 #include "nsCOMPtr.h"
-#include "nsIObserver.h"
 #include "nsIPresentationControlChannel.h"
 #include "nsIPresentationDevice.h"
 #include "nsIPresentationListener.h"
@@ -149,13 +150,12 @@ private:
 
 // Session info with receiver side behaviors.
 class PresentationResponderInfo final : public PresentationSessionInfo
-                                      , public nsIObserver
+                                      , public PromiseNativeHandler
                                       , public nsITimerCallback
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPRESENTATIONCONTROLCHANNELLISTENER
-  NS_DECL_NSIOBSERVER
   NS_DECL_NSITIMERCALLBACK
 
   PresentationResponderInfo(const nsAString& aUrl,
@@ -172,6 +172,16 @@ public:
 
   nsresult NotifyResponderReady();
 
+  void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+
+  void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+
+  void SetPromise(Promise* aPromise)
+  {
+    mPromise = aPromise;
+    mPromise->AppendNativeHandler(this);
+  }
+
 private:
   ~PresentationResponderInfo()
   {
@@ -185,6 +195,7 @@ private:
   nsRefPtr<PresentationResponderLoadingCallback> mLoadingCallback;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsIPresentationChannelDescription> mRequesterDescription;
+  nsRefPtr<Promise> mPromise;
 };
 
 } // namespace dom

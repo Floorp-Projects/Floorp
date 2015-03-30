@@ -5,12 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/HTMLIFrameElementBinding.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "nsIDocShell.h"
 #include "nsIFrameLoader.h"
-#include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "PresentationService.h"
@@ -340,7 +340,6 @@ PresentationRequesterInfo::OnStopListening(nsIServerSocket* aServerSocket,
 
 NS_IMPL_ISUPPORTS_INHERITED(PresentationResponderInfo,
                             PresentationSessionInfo,
-                            nsIObserver,
                             nsITimerCallback)
 
 nsresult
@@ -348,18 +347,9 @@ PresentationResponderInfo::Init(nsIPresentationControlChannel* aControlChannel)
 {
   PresentationSessionInfo::Init(aControlChannel);
 
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (NS_WARN_IF(!obs)) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  nsresult rv = obs->AddObserver(this, "presentation-receiver-launched", false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
   // Add a timer to prevent waiting indefinitely in case the receiver page fails
   // to become ready.
+  nsresult rv;
   int32_t timeout =
     Preferences::GetInt("presentation.receiver.loading.timeout", 10000);
   mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
@@ -379,17 +369,13 @@ PresentationResponderInfo::Shutdown(nsresult aReason)
 {
   PresentationSessionInfo::Shutdown(aReason);
 
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (obs) {
-    obs->RemoveObserver(this, "presentation-receiver-launched");
-  }
-
   if (mTimer) {
     mTimer->Cancel();
   }
 
   mLoadingCallback = nullptr;
   mRequesterDescription = nullptr;
+  mPromise = nullptr;
 }
 
 nsresult
@@ -485,66 +471,6 @@ PresentationResponderInfo::NotifyClosed(nsresult aReason)
   return NS_OK;
 }
 
-// nsIObserver
-NS_IMETHODIMP
-PresentationResponderInfo::Observe(nsISupports* aSubject,
-                                   const char* aTopic,
-                                   const char16_t* aData)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // The receiver has launched.
-  if (!strcmp(aTopic, "presentation-receiver-launched")) {
-    // Ignore irrelevant notifications.
-    if (!mSessionId.Equals(aData)) {
-      return NS_OK;
-    }
-
-    // Remove the observer.
-    nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-    if (obs) {
-      obs->RemoveObserver(this, "presentation-receiver-launched");
-    }
-
-    // Start to listen to document state change event |STATE_TRANSFERRING|.
-    nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface(aSubject);
-    if (NS_WARN_IF(!owner)) {
-      return ReplyError(NS_ERROR_NOT_AVAILABLE);
-    }
-
-    nsCOMPtr<nsIFrameLoader> frameLoader;
-    nsresult rv = owner->GetFrameLoader(getter_AddRefs(frameLoader));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return ReplyError(rv);
-    }
-
-    nsRefPtr<TabParent> tabParent = TabParent::GetFrom(frameLoader);
-    if (tabParent) {
-      // OOP frame
-      nsCOMPtr<nsIContentParent> cp = tabParent->Manager();
-      NS_WARN_IF(!static_cast<ContentParent*>(cp.get())->SendNotifyPresentationReceiverLaunched(tabParent, mSessionId));
-    } else {
-      // In-process frame
-      nsCOMPtr<nsIDocShell> docShell;
-      rv = frameLoader->GetDocShell(getter_AddRefs(docShell));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return ReplyError(rv);
-      }
-
-      mLoadingCallback = new PresentationResponderLoadingCallback(mSessionId);
-      rv = mLoadingCallback->Init(docShell);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return ReplyError(rv);
-      }
-    }
-
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(false, "Unexpected topic for PresentationResponderInfo.");
-  return NS_ERROR_UNEXPECTED;
-}
-
 // nsITimerCallback
 NS_IMETHODIMP
 PresentationResponderInfo::Notify(nsITimer* aTimer)
@@ -554,4 +480,81 @@ PresentationResponderInfo::Notify(nsITimer* aTimer)
 
   mTimer = nullptr;
   return ReplyError(NS_ERROR_DOM_TIMEOUT_ERR);
+}
+
+// PromiseNativeHandler
+void
+PresentationResponderInfo::ResolvedCallback(JSContext* aCx,
+                                            JS::Handle<JS::Value> aValue)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (NS_WARN_IF(!aValue.isObject())) {
+    ReplyError(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
+
+  JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
+  if (NS_WARN_IF(!obj)) {
+    ReplyError(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
+
+  // Start to listen to document state change event |STATE_TRANSFERRING|.
+  HTMLIFrameElement* frame = nullptr;
+  nsresult rv = UNWRAP_OBJECT(HTMLIFrameElement, obj, frame);
+  if (NS_WARN_IF(!frame)) {
+    ReplyError(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
+
+  nsCOMPtr<nsIFrameLoaderOwner> owner = do_QueryInterface((nsIFrameLoaderOwner*) frame);
+  if (NS_WARN_IF(!owner)) {
+    ReplyError(NS_ERROR_NOT_AVAILABLE);
+    return;
+  }
+
+  nsCOMPtr<nsIFrameLoader> frameLoader;
+  rv = owner->GetFrameLoader(getter_AddRefs(frameLoader));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    ReplyError(rv);
+    return;
+  }
+
+  nsRefPtr<TabParent> tabParent = TabParent::GetFrom(frameLoader);
+  if (tabParent) {
+    // OOP frame
+    nsCOMPtr<nsIContentParent> cp = tabParent->Manager();
+    NS_WARN_IF(!static_cast<ContentParent*>(cp.get())->SendNotifyPresentationReceiverLaunched(tabParent, mSessionId));
+  } else {
+    // In-process frame
+    nsCOMPtr<nsIDocShell> docShell;
+    rv = frameLoader->GetDocShell(getter_AddRefs(docShell));
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      ReplyError(rv);
+      return;
+    }
+
+    mLoadingCallback = new PresentationResponderLoadingCallback(mSessionId);
+    rv = mLoadingCallback->Init(docShell);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      ReplyError(rv);
+      return;
+    }
+  }
+}
+
+void
+PresentationResponderInfo::RejectedCallback(JSContext* aCx,
+                                            JS::Handle<JS::Value> aValue)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_WARNING("The receiver page fails to become ready before timeout.");
+
+  if (mTimer) {
+    mTimer->Cancel();
+    mTimer = nullptr;
+  }
+
+  ReplyError(NS_ERROR_DOM_ABORT_ERR);
 }

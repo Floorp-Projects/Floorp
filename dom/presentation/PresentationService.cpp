@@ -12,6 +12,7 @@
 #include "nsIPresentationDeviceManager.h"
 #include "nsIPresentationDevicePrompt.h"
 #include "nsIPresentationListener.h"
+#include "nsIPresentationRequestUIGlue.h"
 #include "nsIPresentationSessionRequest.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
@@ -336,16 +337,20 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
   mSessionInfo.Put(sessionId, info);
 
   // Notify the receiver to launch.
-  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-  if (NS_WARN_IF(!obs)) {
+  nsCOMPtr<nsIPresentationRequestUIGlue> glue =
+    do_CreateInstance(PRESENTATION_REQUEST_UI_GLUE_CONTRACTID);
+  if (NS_WARN_IF(!glue)) {
     ctrlChannel->Close(NS_ERROR_DOM_ABORT_ERR);
     return info->ReplyError(NS_ERROR_NOT_AVAILABLE);
   }
-  rv = obs->NotifyObservers(aRequest, "presentation-launch-receiver", nullptr);
+  nsCOMPtr<nsISupports> promise;
+  rv = glue->SendRequest(url, sessionId, getter_AddRefs(promise));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     ctrlChannel->Close(NS_ERROR_DOM_ABORT_ERR);
     return info->ReplyError(rv);
   }
+  nsCOMPtr<Promise> realPromise = do_QueryInterface(promise);
+  static_cast<PresentationResponderInfo*>(info.get())->SetPromise(realPromise);
 
   return NS_OK;
 }
