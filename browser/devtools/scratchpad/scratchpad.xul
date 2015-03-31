@@ -218,7 +218,6 @@
                 label="&lineNumbers.label;"
                 accesskey="&lineNumbers.accesskey;"
                 type="checkbox"
-                checked="true"
                 command="sp-cmd-line-numbers"/>
       <menuitem id="sp-menu-word-wrap"
                 label="&wordWrap.label;"
