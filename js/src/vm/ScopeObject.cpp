@@ -1246,7 +1246,7 @@ class DebugScopeProxy : public BaseProxyHandler
      *  - ACCESS_LOST      if the value has been lost to the debugger
      */
     bool handleUnaliasedAccess(JSContext* cx, Handle<DebugScopeObject*> debugScope,
-                               Handle<ScopeObject*> scope, jsid id, Action action,
+                               Handle<ScopeObject*> scope, HandleId id, Action action,
                                MutableHandleValue vp, AccessResult* accessResult) const
     {
         MOZ_ASSERT(&debugScope->scope() == scope);
@@ -1257,7 +1257,7 @@ class DebugScopeProxy : public BaseProxyHandler
         /* Handle unaliased formals, vars, lets, and consts at function scope. */
         if (scope->is<CallObject>() && !scope->as<CallObject>().isForEval()) {
             CallObject& callobj = scope->as<CallObject>();
-            RootedScript script(cx, callobj.callee().nonLazyScript());
+            RootedScript script(cx, callobj.callee().getOrCreateScript(cx));
             if (!script->ensureHasTypes(cx) || !script->ensureHasAnalyzedArgsUsage(cx))
                 return false;
 
@@ -2468,7 +2468,10 @@ js::GetDebugScopeForFunction(JSContext* cx, HandleFunction fun)
     MOZ_ASSERT(CanUseDebugScopeMaps(cx));
     if (!DebugScopes::updateLiveScopes(cx))
         return nullptr;
-    ScopeIter si(cx, fun->environment(), fun->nonLazyScript()->enclosingStaticScope());
+    JSScript* script = fun->getOrCreateScript(cx);
+    if (!script)
+        return nullptr;
+    ScopeIter si(cx, fun->environment(), script->enclosingStaticScope());
     return GetDebugScope(cx, si);
 }
 
