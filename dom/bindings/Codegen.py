@@ -134,9 +134,6 @@ def dedent(s):
 fill_multiline_substitution_re = re.compile(r"( *)\$\*{(\w+)}(\n)?")
 
 
-find_substitutions = re.compile(r"\${")
-
-
 @memoize
 def compile_fill_template(template):
     """
@@ -176,8 +173,6 @@ def compile_fill_template(template):
         return "${" + modified_name + "}"
 
     t = re.sub(fill_multiline_substitution_re, replace, t)
-    if not re.search(find_substitutions, t):
-        raise TypeError("Using fill() when dedent() would do.")
     return (string.Template(t), argModList)
 
 
@@ -2771,13 +2766,14 @@ class CGCreateInterfaceObjectsMethod(CGAbstractMethod):
 
         if self.descriptor.hasUnforgeableMembers:
             assert needInterfacePrototypeObject
-            setUnforgeableHolder = CGGeneric(dedent(
+            setUnforgeableHolder = CGGeneric(fill(
                 """
                 if (*protoCache) {
                   js::SetReservedSlot(*protoCache, DOM_INTERFACE_PROTO_SLOTS_BASE,
                                       JS::ObjectValue(*unforgeableHolder));
                 }
-                """))
+                """,
+                name=self.descriptor.name))
         else:
             setUnforgeableHolder = None
 
@@ -11518,7 +11514,7 @@ class CGDictionary(CGThing):
                 """,
                 dictName=self.makeClassName(self.dictionary.parent))
         else:
-            body += dedent(
+            body += fill(
                 """
                 if (!IsConvertibleToDictionary(cx, val)) {
                   return ThrowErrorMessage(cx, MSG_NOT_DICTIONARY, sourceDescription);
@@ -11604,7 +11600,7 @@ class CGDictionary(CGThing):
                 """,
                 dictName=self.makeClassName(self.dictionary.parent))
         else:
-            body += dedent(
+            body += fill(
                 """
                 JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
                 if (!obj) {
