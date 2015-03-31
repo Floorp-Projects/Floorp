@@ -264,32 +264,6 @@ MP4Reader::Init(MediaDecoderReader* aCloneDonor)
   return NS_OK;
 }
 
-class DispatchKeyNeededEvent : public nsRunnable {
-public:
-  DispatchKeyNeededEvent(AbstractMediaDecoder* aDecoder,
-                         nsTArray<uint8_t>& aInitData,
-                         const nsString& aInitDataType)
-    : mDecoder(aDecoder)
-    , mInitData(aInitData)
-    , mInitDataType(aInitDataType)
-  {
-  }
-  NS_IMETHOD Run() {
-    // Note: Null check the owner, as the decoder could have been shutdown
-    // since this event was dispatched.
-    MediaDecoderOwner* owner = mDecoder->GetOwner();
-    if (owner) {
-      owner->DispatchEncrypted(mInitData, mInitDataType);
-    }
-    mDecoder = nullptr;
-    return NS_OK;
-  }
-private:
-  nsRefPtr<AbstractMediaDecoder> mDecoder;
-  nsTArray<uint8_t> mInitData;
-  nsString mInitDataType;
-};
-
 void MP4Reader::RequestCodecResource() {
   if (mVideo.mDecoder) {
     mVideo.mDecoder->AllocateMediaResources();
@@ -394,7 +368,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     {
       MonitorAutoUnlock unlock(mDemuxerMonitor);
       ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
-      mIsEncrypted = mCrypto.valid;
+      mInfo.mCrypto.mIsEncrypted = mIsEncrypted = mCrypto.valid;
     }
 
     // Remember that we've initialized the demuxer, so that if we're decoding
@@ -426,19 +400,15 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
     }
   }
 
-  if (mCrypto.valid) {
+  if (mIsEncrypted) {
     nsTArray<uint8_t> initData;
     ExtractCryptoInitData(initData);
     if (initData.Length() == 0) {
       return NS_ERROR_FAILURE;
     }
 
-    // Try and dispatch 'encrypted'. Won't go if ready state still HAVE_NOTHING.
-    NS_DispatchToMainThread(
-      new DispatchKeyNeededEvent(mDecoder, initData, NS_LITERAL_STRING("cenc")));
-    // Add init data to info, will get sent from HTMLMediaElement::MetadataLoaded
-    // (i.e., when transitioning from HAVE_NOTHING to HAVE_METADATA).
-    mInfo.mCrypto.AddInitData(NS_LITERAL_STRING("cenc"), Move(initData));
+    mInfo.mCrypto.mInitData = initData;
+    mInfo.mCrypto.mType = NS_LITERAL_STRING("cenc");
   }
 
   // Get the duration, and report it to the decoder if we have it.
