@@ -409,6 +409,10 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
                          Layer* aLayer, AnimationData& aData,
                          bool aPending)
 {
+  MOZ_ASSERT(nsCSSProps::PropHasFlags(aProperty,
+                                      CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
+             "inconsistent property flags");
+
   for (size_t playerIdx = 0; playerIdx < aPlayers.Length(); playerIdx++) {
     AnimationPlayer* player = aPlayers[playerIdx];
     if (!player->IsPlaying()) {
@@ -462,6 +466,10 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
                                                          nsIFrame* aFrame,
                                                          nsCSSProperty aProperty)
 {
+  MOZ_ASSERT(nsCSSProps::PropHasFlags(aProperty,
+                                      CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
+             "inconsistent property flags");
+
   // This function can be called in two ways:  from
   // nsDisplay*::BuildLayer while constructing a layer (with all
   // pointers non-null), or from RestyleManager's handling of
