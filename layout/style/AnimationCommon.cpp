@@ -803,6 +803,13 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
   // mStyleRule may be null and valid, if we have no style to apply.
   if (mStyleRuleRefreshTime.IsNull() ||
       mStyleRuleRefreshTime != aRefreshTime) {
+    if (mManager->IsAnimationManager()) {
+      // Update cascade results before updating the style rule, since the
+      // cascade results can influence the style rule.
+      static_cast<nsAnimationManager*>(mManager)->
+        MaybeUpdateCascadeResults(this);
+    }
+
     mStyleRuleRefreshTime = aRefreshTime;
     mStyleRule = nullptr;
     // We'll set mNeedsRefreshes to true below in all cases where we need them.

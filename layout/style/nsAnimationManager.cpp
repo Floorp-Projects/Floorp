@@ -222,6 +222,26 @@ nsAnimationManager::QueueEvents(AnimationPlayerCollection* aCollection,
   }
 }
 
+void
+nsAnimationManager::MaybeUpdateCascadeResults(AnimationPlayerCollection* aCollection)
+{
+  for (size_t playerIdx = aCollection->mPlayers.Length(); playerIdx-- != 0; ) {
+    CSSAnimationPlayer* player =
+      aCollection->mPlayers[playerIdx]->AsCSSAnimationPlayer();
+
+    if (player->HasInEffectSource() != player->mInEffectForCascadeResults) {
+      mozilla::dom::Element* element = aCollection->GetElementToRestyle();
+      if (element) {
+        nsIFrame* frame = element->GetPrimaryFrame();
+        if (frame) {
+          UpdateCascadeResults(frame->StyleContext(), aCollection);
+        }
+      }
+      return;
+    }
+  }
+}
+
 /* virtual */ size_t
 nsAnimationManager::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
@@ -774,8 +794,12 @@ nsAnimationManager::UpdateCascadeResults(
   bool changed = false;
   for (size_t playerIdx = aElementAnimations->mPlayers.Length();
        playerIdx-- != 0; ) {
-    AnimationPlayer* player = aElementAnimations->mPlayers[playerIdx];
+    CSSAnimationPlayer* player =
+      aElementAnimations->mPlayers[playerIdx]->AsCSSAnimationPlayer();
     Animation* anim = player->GetSource();
+
+    player->mInEffectForCascadeResults = player->HasInEffectSource();
+
     if (!anim) {
       continue;
     }
@@ -794,7 +818,7 @@ nsAnimationManager::UpdateCascadeResults(
         }
         prop.mWinsInCascade = newWinsInCascade;
 
-        if (prop.mWinsInCascade && anim->IsInEffect()) {
+        if (prop.mWinsInCascade && player->mInEffectForCascadeResults) {
           // This animation is in effect right now, so it overrides
           // earlier animations.  (For animations that aren't in effect,
           // we set mWinsInCascade as though they were, but they don't
