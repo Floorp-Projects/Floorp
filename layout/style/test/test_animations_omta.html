@@ -2163,5 +2163,110 @@ addAsyncAnimTest(function *() {
   done_div();
 });
 
+// Bug 847287 - Test that changes of when an animation is dynamically
+// overridden work correctly.
+addAsyncAnimTest(function *() {
+  // anim2 and anim3 are both animations from opacity 0 to 1
+
+  new_div("animation: anim2 1s linear forwards; opacity: 0.5 ! important");
+  yield waitForPaintsFlushed();
+  omta_todo_is("opacity", 0.5, RunningOn.TodoMainThread,
+          "opacity overriding animation at start (0s)");
+  advance_clock(750);
+  omta_todo_is("opacity", 0.5, RunningOn.TodoMainThread,
+          "opacity overriding animation while running (750ms)");
+  advance_clock(1000);
+  omta_todo_is("opacity", 0.5, RunningOn.TodoMainThread,
+          "opacity overriding animation while filling (1750ms)");
+  done_div();
+
+  new_div("animation: anim2 1s linear; opacity: 0.5 ! important");
+  yield waitForPaintsFlushed();
+  omta_todo_is("opacity", 0.5, RunningOn.TodoMainThread,
+          "opacity overriding animation at start (0s)");
+  advance_clock(750);
+  omta_todo_is("opacity", 0.5, RunningOn.TodoMainThread,
+          "opacity overriding animation while running (750ms)");
+  advance_clock(1000);
+  omta_todo_is("opacity", 0.5, RunningOn.TodoMainThread,
+          "opacity overriding animation after complete (1750ms)");
+  done_div();
+
+  // One animation overriding another, and then not.
+  new_div("animation: anim2 1s linear, anim3 500ms linear reverse");
+  yield waitForPaintsFlushed();
+  omta_todo_is("opacity", 1, RunningOn.Compositor,
+          "anim3 overriding anim2 at start (0s)");
+  advance_clock(400);
+  omta_todo_is("opacity", 0.2, RunningOn.Compositor,
+          "anim3 overriding anim2 at 400ms");
+  advance_clock(200);
+  // Wait for paints because we're resending animations to the
+  // compositor via an UpdateOpacityLayer hint, which does the resending
+  // via painting.
+  yield waitForPaints();
+  omta_is("opacity", 0.6, RunningOn.Compositor,
+          "anim2 at 600ms");
+  done_div();
+
+  // One animation overriding another, and then not, but without a
+  // restyle when the overriding one ends.
+  new_div("animation: anim2 1s steps(8, end)");
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "anim2 at start (0s)");
+  advance_clock(300);
+  omta_is("opacity", 0.25, RunningOn.Compositor,
+          "anim2 at 300ms");
+  gDiv.style.animation = "anim2 1s steps(8, end), anim3 500ms steps(4, end)";
+  yield waitForPaintsFlushed();
+  omta_todo_is("opacity", 0, RunningOn.Compositor,
+          "anim3 overriding anim2 at 300ms");
+  advance_clock(475);
+  omta_is("opacity", 0.75, RunningOn.Compositor,
+          "anim3 the same as anim2 at 775ms");
+  advance_clock(50);
+  // Wait for paints because we're resending animations to the
+  // compositor via an UpdateOpacityLayer hint, which does the resending
+  // via painting.
+  yield waitForPaints();
+  omta_is("opacity", 0.75, RunningOn.Compositor,
+          "anim2 at 825ms");
+  advance_clock(75);
+  omta_is("opacity", 0.875, RunningOn.Compositor,
+          "anim2 at 900ms");
+  done_div();
+
+  // Exactly the same as the previous test, except with an extra
+  // waitForPaintsFlushed(), since that extra one exposes other bugs.
+  new_div("animation: anim2 1s steps(8, end)");
+  yield waitForPaintsFlushed();
+  omta_is("opacity", 0, RunningOn.Compositor,
+          "anim2 at start (0s)");
+  advance_clock(300);
+  omta_is("opacity", 0.25, RunningOn.Compositor,
+          "anim2 at 300ms");
+  gDiv.style.animation = "anim2 1s steps(8, end), anim3 500ms steps(4, end)";
+  yield waitForPaintsFlushed();
+  omta_todo_is("opacity", 0, RunningOn.Compositor,
+          "anim3 overriding anim2 at 300ms");
+  advance_clock(475);
+  omta_is("opacity", 0.75, RunningOn.Compositor,
+          "anim3 the same as anim2 at 775ms");
+  // Extra waitForPaintsFlushed to expose bugs.
+  yield waitForPaintsFlushed();
+  advance_clock(50);
+  // Wait for paints because we're resending animations to the
+  // compositor via an UpdateOpacityLayer hint, which does the resending
+  // via painting.
+  yield waitForPaints();
+  omta_is("opacity", 0.75, RunningOn.Compositor,
+          "anim2 at 825ms");
+  advance_clock(75);
+  omta_is("opacity", 0.875, RunningOn.Compositor,
+          "anim2 at 900ms");
+  done_div();
+});
+
 </script>
 </html>
