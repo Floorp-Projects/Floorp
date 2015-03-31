@@ -24,7 +24,7 @@ SpdyZlibReporter::Alloc(void*, uInt items, uInt size)
 SpdyZlibReporter::Free(void*, void* p)
 {
   sAmount -= MallocSizeOfOnFree(p);
-  moz_free(p);
+  free(p);
 }
 
 NS_IMETHODIMP

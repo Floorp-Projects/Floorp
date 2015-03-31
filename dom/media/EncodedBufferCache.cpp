@@ -54,7 +54,7 @@ EncodedBufferCache::ExtractBlob(nsISupports* aParent,
     mDataSize = 0;
     mFD = nullptr;
   } else {
-    void* blobData = moz_malloc(mDataSize);
+    void* blobData = malloc(mDataSize);
     NS_ASSERTION(blobData, "out of memory!!");
 
     if (blobData) {

@@ -6,6 +6,7 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://testing-common/services/common/logging.js");
+Cu.import("resource://testing-common/MockRegistrar.jsm");
 
 let btoa = Cu.import("resource://gre/modules/Log.jsm").btoa;
 let atob = Cu.import("resource://gre/modules/Log.jsm").atob;
@@ -134,22 +135,7 @@ function ensureThrows(func) {
  * Fake a PAC to prompt a channel replacement.
  */
 let PACSystemSettings = {
-  CID: Components.ID("{5645d2c1-d6d8-4091-b117-fe7ee4027db7}"),
-  contractID: "@mozilla.org/system-proxy-settings;1",
-
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIFactory,
-                                         Ci.nsISystemProxySettings]),
-
-  createInstance: function createInstance(outer, iid) {
-    if (outer) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    }
-    return this.QueryInterface(iid);
-  },
-
-  lockFactory: function lockFactory(lock) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
-  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsISystemProxySettings]),
 
   // Replace this URI for each test to avoid caching. We want to ensure that
   // each test gets a completely fresh setup.
@@ -160,19 +146,16 @@ let PACSystemSettings = {
   }
 };
 
+let fakePACCID;
 function installFakePAC() {
   _("Installing fake PAC.");
-  Cm.nsIComponentRegistrar
-    .registerFactory(PACSystemSettings.CID,
-                     "Fake system proxy-settings",
-                     PACSystemSettings.contractID,
-                     PACSystemSettings);
+  fakePACCID = MockRegistrar.register("@mozilla.org/system-proxy-settings;1",
+                                      PACSystemSettings);
 }
 
 function uninstallFakePAC() {
   _("Uninstalling fake PAC.");
-  let CID = PACSystemSettings.CID;
-  Cm.nsIComponentRegistrar.unregisterFactory(CID, PACSystemSettings);
+  MockRegistrar.unregister(fakePACCID);
 }
 
 // Many tests do service.startOver() and don't expect the provider type to

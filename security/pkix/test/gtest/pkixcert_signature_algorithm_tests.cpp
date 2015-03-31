@@ -3,6 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+#include "pkixder.h"
 #include "pkixgtest.h"
 
 using namespace mozilla::pkix;
@@ -12,7 +13,7 @@ static ByteString
 CreateCert(const char* issuerCN,
            const char* subjectCN,
            EndEntityOrCA endEntityOrCA,
-           const ByteString& signatureAlgorithm,
+           const TestSignatureAlgorithm& signatureAlgorithm,
            /*out*/ ByteString& subjectDER)
 {
   static long serialNumberValue = 0;
@@ -107,18 +108,34 @@ private:
   ByteString intSubjectDER;
 };
 
-static const ByteString NO_INTERMEDIATE; // empty
+static const TestSignatureAlgorithm NO_INTERMEDIATE
+{
+  TestPublicKeyAlgorithm(ByteString()),
+  TestDigestAlgorithmID::MD2,
+  ByteString(),
+  false
+};
 
 struct ChainValidity final
 {
+  ChainValidity(const TestSignatureAlgorithm& endEntitySignatureAlgorithm,
+                const TestSignatureAlgorithm& optionalIntSignatureAlgorithm,
+                const TestSignatureAlgorithm& rootSignatureAlgorithm,
+                bool isValid)
+    : endEntitySignatureAlgorithm(endEntitySignatureAlgorithm)
+    , optionalIntermediateSignatureAlgorithm(optionalIntSignatureAlgorithm)
+    , rootSignatureAlgorithm(rootSignatureAlgorithm)
+    , isValid(isValid)
+  { }
+
   // In general, a certificate is generated for each of these.  However, if
   // optionalIntermediateSignatureAlgorithm is NO_INTERMEDIATE, then only 2
   // certificates are generated.
   // The certificate generated for the given rootSignatureAlgorithm is the
   // trust anchor.
-  ByteString endEntitySignatureAlgorithm;
-  ByteString optionalIntermediateSignatureAlgorithm;
-  ByteString rootSignatureAlgorithm;
+  TestSignatureAlgorithm endEntitySignatureAlgorithm;
+  TestSignatureAlgorithm optionalIntermediateSignatureAlgorithm;
+  TestSignatureAlgorithm rootSignatureAlgorithm;
   bool isValid;
 };
 
@@ -126,49 +143,41 @@ static const ChainValidity CHAIN_VALIDITY[] =
 {
   // The trust anchor may have a signature with an unsupported signature
   // algorithm.
-  { sha256WithRSAEncryption,
-    NO_INTERMEDIATE,
-    md5WithRSAEncryption,
-    true
-  },
-  { sha256WithRSAEncryption,
-    NO_INTERMEDIATE,
-    md2WithRSAEncryption,
-    true
-  },
+  ChainValidity(sha256WithRSAEncryption(),
+                NO_INTERMEDIATE,
+                md5WithRSAEncryption(),
+                true),
+  ChainValidity(sha256WithRSAEncryption(),
+                NO_INTERMEDIATE,
+                md2WithRSAEncryption(),
+                true),
 
   // Certificates that are not trust anchors must not have a signature with an
   // unsupported signature algorithm.
-  { md5WithRSAEncryption,
-    NO_INTERMEDIATE,
-    sha256WithRSAEncryption,
-    false
-  },
-  { md2WithRSAEncryption,
-    NO_INTERMEDIATE,
-    sha256WithRSAEncryption,
-    false
-  },
-  { md2WithRSAEncryption,
-    NO_INTERMEDIATE,
-    md5WithRSAEncryption,
-    false
-  },
-  { sha256WithRSAEncryption,
-    md5WithRSAEncryption,
-    sha256WithRSAEncryption,
-    false
-  },
-  { sha256WithRSAEncryption,
-    md2WithRSAEncryption,
-    sha256WithRSAEncryption,
-    false
-  },
-  { sha256WithRSAEncryption,
-    md2WithRSAEncryption,
-    md5WithRSAEncryption,
-    false
-  },
+  ChainValidity(md5WithRSAEncryption(),
+                NO_INTERMEDIATE,
+                sha256WithRSAEncryption(),
+                false),
+  ChainValidity(md2WithRSAEncryption(),
+                NO_INTERMEDIATE,
+                sha256WithRSAEncryption(),
+                false),
+  ChainValidity(md2WithRSAEncryption(),
+                NO_INTERMEDIATE,
+                md5WithRSAEncryption(),
+                false),
+  ChainValidity(sha256WithRSAEncryption(),
+                md5WithRSAEncryption(),
+                sha256WithRSAEncryption(),
+                false),
+  ChainValidity(sha256WithRSAEncryption(),
+                md2WithRSAEncryption(),
+                sha256WithRSAEncryption(),
+                false),
+  ChainValidity(sha256WithRSAEncryption(),
+                md2WithRSAEncryption(),
+                md5WithRSAEncryption(),
+                false),
 };
 
 class pkixcert_IsValidChainForAlgorithm
@@ -193,7 +202,10 @@ TEST_P(pkixcert_IsValidChainForAlgorithm, IsValidChainForAlgorithm)
   const char* intermediateCN = "CN=Intermediate";
   ByteString intermediateSubjectDER;
   ByteString intermediateEncoded;
-  if (chainValidity.optionalIntermediateSignatureAlgorithm != NO_INTERMEDIATE) {
+
+  // If the the algorithmIdentifier is empty, then it's NO_INTERMEDIATE.
+  if (!chainValidity.optionalIntermediateSignatureAlgorithm
+                    .algorithmIdentifier.empty()) {
     intermediateEncoded =
       CreateCert(rootCN, intermediateCN, EndEntityOrCA::MustBeCA,
                  chainValidity.optionalIntermediateSignatureAlgorithm,

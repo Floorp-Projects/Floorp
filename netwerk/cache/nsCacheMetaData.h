@@ -18,7 +18,7 @@ public:
 
     ~nsCacheMetaData() {
         mBufferSize = mMetaSize = 0;  
-        moz_free(mBuffer);
+        free(mBuffer);
         mBuffer = nullptr;
     }
 

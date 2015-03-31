@@ -550,30 +550,29 @@ StyleEditorUI.prototype = {
           this.emit("editor-selected", editor);
 
           // Is there any CSS coverage markup to include?
-          csscoverage.getUsage(this._target).then(usage => {
-            if (usage == null) {
-              return;
+          let usage = yield csscoverage.getUsage(this._target);
+          if (usage == null) {
+            return;
+          }
+
+          let href = csscoverage.sheetToUrl(editor.styleSheet);
+          let data = yield usage.createEditorReport(href)
+
+          editor.removeAllUnusedRegions();
+
+          if (data.reports.length > 0) {
+            // Only apply if this file isn't compressed. We detect a
+            // compressed file if there are more rules than lines.
+            let text = editor.sourceEditor.getText();
+            let lineCount = text.split("\n").length;
+            let ruleCount = editor.styleSheet.ruleCount;
+            if (lineCount >= ruleCount) {
+              editor.addUnusedRegions(data.reports);
             }
-
-            let href = csscoverage.sheetToUrl(editor.styleSheet);
-            usage.createEditorReport(href).then(data => {
-              editor.removeAllUnusedRegions();
-
-              if (data.reports.length > 0) {
-                // Only apply if this file isn't compressed. We detect a
-                // compressed file if there are more rules than lines.
-                let text = editor.sourceEditor.getText();
-                let lineCount = text.split("\n").length;
-                let ruleCount = editor.styleSheet.ruleCount;
-                if (lineCount >= ruleCount) {
-                  editor.addUnusedRegions(data.reports);
-                }
-                else {
-                  this.emit("error", { key: "error-compressed", level: "info" });
-                }
-              }
-            }, Cu.reportError);
-          }, Cu.reportError);
+            else {
+              this.emit("error", { key: "error-compressed", level: "info" });
+            }
+          }
         }.bind(this)).then(null, Cu.reportError);
       }.bind(this)
     });
@@ -632,7 +631,8 @@ StyleEditorUI.prototype = {
    * @param  {number} col
    *         Column number to jump to
    * @return {Promise}
-   *         Promise that will resolve when the editor is selected.
+   *         Promise that will resolve when the editor is selected and ready
+   *         to be used.
    */
   _selectEditor: function(editor, line, col) {
     line = line || 0;
@@ -707,6 +707,9 @@ StyleEditorUI.prototype = {
    *        Line to which the caret should be moved (zero-indexed).
    * @param {Number} [col]
    *        Column to which the caret should be moved (zero-indexed).
+   * @return {Promise}
+   *         Promise that will resolve when the editor is selected and ready
+   *         to be used.
    */
   selectStyleSheet: function(stylesheet, line, col) {
     this._styleSheetToSelect = {
@@ -717,7 +720,7 @@ StyleEditorUI.prototype = {
 
     /* Switch to the editor for this sheet, if it exists yet.
        Otherwise each editor will be checked when it's created. */
-    this.switchToSelectedSheet();
+    return this.switchToSelectedSheet();
   },
 
 

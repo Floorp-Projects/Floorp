@@ -480,7 +480,7 @@ nsHtml5StreamParser::FinalizeSniffing(const uint8_t* aFromSegment, // can be nul
       {
         (void *(*)(size_t))moz_xmalloc,
         (void *(*)(void *, size_t))moz_xrealloc,
-        moz_free
+        free
       };
 
     static const char16_t kExpatSeparator[] = { 0xFFFF, '\0' };

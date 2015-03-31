@@ -83,6 +83,7 @@
         './src/common/CommonTypes.h',
         './src/common/csf_common.h',
         './src/common/NullDeleter.h',
+        './src/common/PtrVector.h',
         './src/common/Wrapper.h',
         './src/common/NullTransport.h',
         './src/common/YuvStamper.cpp',

@@ -5,6 +5,7 @@
 #include "signaling/src/sdp/SipccSdp.h"
 
 #include <cstdlib>
+#include "mozilla/UniquePtr.h"
 #include "mozilla/Assertions.h"
 #include "signaling/src/sdp/SdpErrorHolder.h"
 
@@ -15,13 +16,6 @@
 
 namespace mozilla
 {
-
-SipccSdp::~SipccSdp()
-{
-  for (auto i = mMediaSections.begin(); i != mMediaSections.end(); ++i) {
-    delete *i;
-  }
-}
 
 const SdpOrigin&
 SipccSdp::GetOrigin() const
@@ -42,19 +36,19 @@ SipccSdp::GetBandwidth(const std::string& type) const
 const SdpMediaSection&
 SipccSdp::GetMediaSection(size_t level) const
 {
-  if (level > mMediaSections.size()) {
+  if (level > mMediaSections.values.size()) {
     MOZ_CRASH();
   }
-  return *mMediaSections[level];
+  return *mMediaSections.values[level];
 }
 
 SdpMediaSection&
 SipccSdp::GetMediaSection(size_t level)
 {
-  if (level > mMediaSections.size()) {
+  if (level > mMediaSections.values.size()) {
     MOZ_CRASH();
   }
-  return *mMediaSections[level];
+  return *mMediaSections.values[level];
 }
 
 SdpMediaSection&
@@ -63,7 +57,7 @@ SipccSdp::AddMediaSection(SdpMediaSection::MediaType mediaType,
                           SdpMediaSection::Protocol protocol,
                           sdp::AddrType addrType, const std::string& addr)
 {
-  size_t level = mMediaSections.size();
+  size_t level = mMediaSections.values.size();
   SipccSdpMediaSection* media =
       new SipccSdpMediaSection(level, &mAttributeList);
   media->mMediaType = mediaType;
@@ -72,7 +66,7 @@ SipccSdp::AddMediaSection(SdpMediaSection::MediaType mediaType,
   media->mProtocol = protocol;
   media->mConnection = MakeUnique<SdpConnection>(addrType, addr);
   media->GetAttributeList().SetAttribute(new SdpDirectionAttribute(dir));
-  mMediaSections.push_back(media);
+  mMediaSections.values.push_back(media);
   return *media;
 }
 
@@ -131,7 +125,7 @@ SipccSdp::Load(sdp_t* sdp, SdpErrorHolder& errorHolder)
     if (!section->Load(sdp, i + 1, errorHolder)) {
       return false;
     }
-    mMediaSections.push_back(section.release());
+    mMediaSections.values.push_back(section.release());
   }
   return true;
 }
@@ -153,8 +147,8 @@ SipccSdp::Serialize(std::ostream& os) const
   os << mAttributeList;
 
   // media sections
-  for (auto i = mMediaSections.begin(); i != mMediaSections.end(); ++i) {
-    os << (**i);
+  for (const SdpMediaSection* msection : mMediaSections.values) {
+    os << *msection;
   }
 }
 

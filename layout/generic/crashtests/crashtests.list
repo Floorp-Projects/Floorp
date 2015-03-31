@@ -579,3 +579,6 @@ asserts(3-7) load 1137723-2.html # bug 1019192, bug 1138133
 asserts(0-3) load 1134667.html
 asserts(0-3) load 1134667.html
 asserts(0-3) load 1134667.html
+load 1146103.html
+load 1146107.html
+load 1146114.html

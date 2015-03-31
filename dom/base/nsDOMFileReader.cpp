@@ -363,7 +363,7 @@ nsDOMFileReader::DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount)
       return NS_ERROR_OUT_OF_MEMORY;
     }
     if (mDataFormat != FILE_AS_ARRAYBUFFER) {
-      mFileData = (char *) moz_realloc(mFileData, mDataLen + aCount);
+      mFileData = (char *) realloc(mFileData, mDataLen + aCount);
       NS_ENSURE_TRUE(mFileData, NS_ERROR_OUT_OF_MEMORY);
     }
 
