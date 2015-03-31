@@ -720,9 +720,12 @@ public class LocalBrowserDB implements BrowserDB {
     }
 
     @Override
-    public void clearHistory(ContentResolver cr) {
-        cr.delete(mHistoryUriWithProfile, null, null);
-        cr.delete(mSearchHistoryUri, null, null);
+    public void clearHistory(ContentResolver cr, boolean clearSearchHistory) {
+        if (clearSearchHistory) {
+            cr.delete(mSearchHistoryUri, null, null);
+        } else {
+            cr.delete(mHistoryUriWithProfile, null, null);
+        }
     }
 
     @Override

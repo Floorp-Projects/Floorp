@@ -106,4 +106,15 @@
 
     <style name="GeckoStartPane" parent="GeckoBase"/>
 
+    <!-- Make the share overlay activity appear like an overlay. -->
+    <style name="ShareOverlayActivity">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:backgroundDimEnabled">true</item>
+
+        <!-- We display the overlay on top of other Activities so show their status bar. -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
 </resources>
