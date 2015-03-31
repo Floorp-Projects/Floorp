@@ -11,7 +11,6 @@
 #include "nsString.h"
 
 class mozIStorageStatement;
-class mozIStorageValueArray;
 
 namespace IPC {
 
@@ -30,27 +29,10 @@ class Key
   nsCString mBuffer;
 
 public:
-  enum {
-    eTerminator = 0,
-    eFloat = 0x10,
-    eDate = 0x20,
-    eString = 0x30,
-    eArray = 0x50,
-    eMaxType = eArray
-  };
-
-  static const uint8_t kMaxArrayCollapse = uint8_t(3);
-  static const uint8_t kMaxRecursionDepth = uint8_t(64);
-
   Key()
   {
     Unset();
   }
-
-  explicit
-  Key(const nsACString& aBuffer)
-    : mBuffer(aBuffer)
-  { }
 
   Key&
   operator=(const nsAString& aString)
@@ -129,25 +111,25 @@ public:
   bool
   IsFloat() const
   {
-    return !IsUnset() && *BufferStart() == eFloat;
+    return !IsUnset() && mBuffer.First() == eFloat;
   }
 
   bool
   IsDate() const
   {
-    return !IsUnset() && *BufferStart() == eDate;
+    return !IsUnset() && mBuffer.First() == eDate;
   }
 
   bool
   IsString() const
   {
-    return !IsUnset() && *BufferStart() == eString;
+    return !IsUnset() && mBuffer.First() == eString;
   }
 
   bool
   IsArray() const
   {
-    return !IsUnset() && *BufferStart() >= eArray;
+    return !IsUnset() && mBuffer.First() >= eArray;
   }
 
   double
@@ -226,9 +208,6 @@ public:
   nsresult
   SetFromStatement(mozIStorageStatement* aStatement, uint32_t aIndex);
 
-  nsresult
-  SetFromValueArray(mozIStorageValueArray* aValues, uint32_t aIndex);
-
   static int16_t
   CompareKeys(Key& aFirst, Key& aSecond)
   {
@@ -257,6 +236,15 @@ private:
   {
     return reinterpret_cast<const unsigned char*>(mBuffer.EndReading());
   }
+
+  enum {
+    eTerminator = 0,
+    eFloat = 1,
+    eDate = 2,
+    eString = 3,
+    eArray = 4,
+    eMaxType = eArray
+  };
 
   // Encoding helper. Trims trailing zeros off of mBuffer as a post-processing
   // step.
@@ -287,6 +275,7 @@ private:
   DecodeJSVal(const unsigned char*& aPos,
               const unsigned char* aEnd,
               JSContext* aCx,
+              uint8_t aTypeOffset,
               JS::MutableHandle<JS::Value> aVal);
 
   static void
@@ -310,10 +299,6 @@ private:
                       uint8_t aTypeOffset,
                       JS::MutableHandle<JS::Value> aVal,
                       uint16_t aRecursionDepth);
-
-  template <typename T>
-  nsresult
-  SetFromSource(T* aSource, uint32_t aIndex);
 
   void
   Assert(bool aCondition) const
