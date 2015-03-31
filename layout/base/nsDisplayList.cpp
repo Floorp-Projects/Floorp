@@ -413,6 +413,7 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
                                       CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
              "inconsistent property flags");
 
+  // Add from first to last (since last overrides)
   for (size_t playerIdx = 0; playerIdx < aPlayers.Length(); playerIdx++) {
     AnimationPlayer* player = aPlayers[playerIdx];
     if (!player->IsPlaying()) {
@@ -560,6 +561,8 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
     data = null_t();
   }
 
+  // When both are running, animations override transitions.  We want
+  // to add the ones that override last.
   if (transitions) {
     AddAnimationsForProperty(aFrame, aProperty, transitions->mPlayers,
                              aLayer, data, pending);
