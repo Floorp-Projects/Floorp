@@ -1322,8 +1322,10 @@ pref("network.http.spdy.push-allowance", 131072);
 
 // alt-svc allows separation of transport routing from
 // the origin host without using a proxy.
-pref("network.http.altsvc.enabled", true);
-pref("network.http.altsvc.oe", true);
+pref("network.http.atsvc.enabled", false);
+pref("network.http.atsvc.oe", false);
+pref("network.http.altsvc.enabled", false);
+pref("network.http.altsvc.oe", false);
 
 pref("network.http.diagnostics", false);
 
