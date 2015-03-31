@@ -1,5 +1,8 @@
 $inherits:
   from: 'tasks/builds/b2g_phone_base.yml'
+  variables:
+    build_name: 'nexus-4-user'
+    build_type: 'opt'
 task:
   scopes:
     - 'docker-worker:cache:build-nexus-4-user'
@@ -21,4 +24,3 @@ task:
         platform: b2g-device-image
     locations:
       img: 'private/build/nexus-4.zip'
-
