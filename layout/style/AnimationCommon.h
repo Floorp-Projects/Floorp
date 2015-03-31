@@ -69,6 +69,9 @@ public:
   static void Initialize();
 #endif
 
+  // NOTE:  This can return null after Disconnect().
+  nsPresContext* PresContext() const { return mPresContext; }
+
   /**
    * Notify the manager that the pres context is going away.
    */

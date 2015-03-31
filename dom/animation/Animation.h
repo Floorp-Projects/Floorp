@@ -160,9 +160,12 @@ struct AnimationProperty
   // then use this to decide whether to apply the style both in the CSS
   // cascade and for OMTA.
   //
-  // FIXME (bug 847287): For CSS Animations, which are overridden by
-  // !important rules in the cascade, we actually determine this from
-  // the CSS cascade computations, and then use it for OMTA.
+  // For CSS Animations, which are overridden by !important rules in the
+  // cascade, we actually determine this from the CSS cascade
+  // computations, and then use it for OMTA.
+  // **NOTE**: For CSS animations, we only bother setting mWinsInCascade
+  // accurately for properties that we can animate on the compositor.
+  // For other properties, we make it always be true.
   bool mWinsInCascade;
 
   InfallibleTArray<AnimationPropertySegment> mSegments;

@@ -237,6 +237,10 @@ private:
                     mozilla::css::Declaration* aFromDeclaration,
                     float aToKey, nsStyleContext* aToContext);
 
+  static void UpdateCascadeResults(nsStyleContext* aStyleContext,
+                                   mozilla::AnimationPlayerCollection*
+                                     aElementAnimations);
+
   // The guts of DispatchEvents
   void DoDispatchEvents();
 
