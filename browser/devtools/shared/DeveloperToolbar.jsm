@@ -410,7 +410,7 @@ DeveloperToolbar.prototype.show = function(focus) {
 
       return gcli.load().then(() => {
         this.display = gcli.createDisplay({
-          contentDocument: this._chromeWindow.gBrowser.contentDocument,
+          contentDocument: this._chromeWindow.gBrowser.contentDocumentAsCPOW,
           chromeDocument: this._doc,
           chromeWindow: this._chromeWindow,
           hintElement: this.tooltipPanel.hintElement,
@@ -624,7 +624,7 @@ DeveloperToolbar.prototype.handleEvent = function(ev) {
   if (ev.type == "TabSelect" || ev.type == "load") {
     if (this.visible) {
       this.display.reattach({
-        contentDocument: this._chromeWindow.gBrowser.contentDocument
+        contentDocument: this._chromeWindow.gBrowser.contentDocumentAsCPOW
       });
 
       if (ev.type == "TabSelect") {

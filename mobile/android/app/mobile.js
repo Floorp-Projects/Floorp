@@ -344,6 +344,7 @@ pref("privacy.item.cache", true);
 pref("privacy.item.cookies", true);
 pref("privacy.item.offlineApps", true);
 pref("privacy.item.history", true);
+pref("privacy.item.searchHistory", true);
 pref("privacy.item.formdata", true);
 pref("privacy.item.downloads", true);
 pref("privacy.item.passwords", true);

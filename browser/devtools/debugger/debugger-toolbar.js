@@ -57,6 +57,7 @@ ToolbarView.prototype = {
     this._stepOverButton.setAttribute("tooltiptext", this._stepOverTooltip);
     this._stepInButton.setAttribute("tooltiptext", this._stepInTooltip);
     this._stepOutButton.setAttribute("tooltiptext", this._stepOutTooltip);
+    this._addCommands();
   },
 
   /**
@@ -70,6 +71,18 @@ ToolbarView.prototype = {
     this._stepOverButton.removeEventListener("mousedown", this._onStepOverPressed, false);
     this._stepInButton.removeEventListener("mousedown", this._onStepInPressed, false);
     this._stepOutButton.removeEventListener("mousedown", this._onStepOutPressed, false);
+  },
+
+  /**
+   * Add commands that XUL can fire.
+   */
+  _addCommands: function() {
+    utils.addCommands(document.getElementById('debuggerCommands'), {
+      resumeCommand: () => this._onResumePressed(),
+      stepOverCommand: () => this._onStepOverPressed(),
+      stepInCommand: () => this._onStepInPressed(),
+      stepOutCommand: () => this._onStepOutPressed()
+    });
   },
 
   /**
@@ -225,8 +238,9 @@ OptionsView.prototype = {
     this._showVariablesFilterBoxItem.setAttribute("checked", Prefs.variablesSearchboxVisible);
     this._showOriginalSourceItem.setAttribute("checked", Prefs.sourceMapsEnabled);
     this._autoBlackBoxItem.setAttribute("checked", Prefs.autoBlackBox);
-  },
 
+    this._addCommands();
+  },
 
   /**
    * Destruction function, called when the debugger is closed.
@@ -234,6 +248,22 @@ OptionsView.prototype = {
   destroy: function() {
     dumpn("Destroying the OptionsView");
     // Nothing to do here yet.
+  },
+
+  /**
+   * Add commands that XUL can fire.
+   */
+  _addCommands: function() {
+    utils.addCommands(document.getElementById('debuggerCommands'), {
+      toggleAutoPrettyPrint: () => this._toggleAutoPrettyPrint(),
+      togglePauseOnExceptions: () => this._togglePauseOnExceptions(),
+      toggleIgnoreCaughtExceptions: () => this._toggleIgnoreCaughtExceptions(),
+      toggleShowPanesOnStartup: () => this._toggleShowPanesOnStartup(),
+      toggleShowOnlyEnum: () => this._toggleShowVariablesOnlyEnum(),
+      toggleShowVariablesFilterBox: () => this._toggleShowVariablesFilterBox(),
+      toggleShowOriginalSource: () => this._toggleShowOriginalSource(),
+      toggleAutoBlackBox: () =>  this._toggleAutoBlackBox()
+    });
   },
 
   /**
@@ -784,6 +814,8 @@ FilterView.prototype = {
       L10N.getFormatStr("searchPanelGoToLine", this._lineSearchKey));
     this._variableOperatorLabel.setAttribute("value",
       L10N.getFormatStr("searchPanelVariable", this._variableSearchKey));
+
+    this._addCommands();
   },
 
   /**
@@ -797,6 +829,21 @@ FilterView.prototype = {
     this._searchbox.removeEventListener("input", this._onInput, false);
     this._searchbox.removeEventListener("keypress", this._onKeyPress, false);
     this._searchbox.removeEventListener("blur", this._onBlur, false);
+  },
+
+  /**
+   * Add commands that XUL can fire.
+   */
+  _addCommands: function() {
+    utils.addCommands(document.getElementById('debuggerCommands'), {
+      fileSearchCommand: () => this._doFileSearch(),
+      globalSearchCommand: () => this._doGlobalSearch(),
+      functionSearchCommand: () => this._doFunctionSearch(),
+      tokenSearchCommand: () => this._doTokenSearch(),
+      lineSearchCommand: () => this._doLineSearch(),
+      variableSearchCommand: () => this._doVariableSearch(),
+      variablesFocusCommand: () => this._doVariablesFocus()
+    });
   },
 
   /**

@@ -926,6 +926,14 @@ BluetoothA2dpManager::UpdateRegisterNotification(BluetoothAvrcpEvent aEvent,
       }
       mPlaybackInterval = aParam;
       break;
+    case AVRCP_EVENT_APP_SETTINGS_CHANGED:
+      mAppSettingsChangedNotifyType = AVRCP_NTF_INTERIM;
+      param.mNumAttr = 2;
+      param.mIds[0] = AVRCP_PLAYER_ATTRIBUTE_REPEAT;
+      param.mValues[0] = AVRCP_PLAYER_VAL_OFF_REPEAT;
+      param.mIds[1] = AVRCP_PLAYER_ATTRIBUTE_SHUFFLE;
+      param.mValues[1] = AVRCP_PLAYER_VAL_OFF_SHUFFLE;
+      break;
     default:
       break;
   }

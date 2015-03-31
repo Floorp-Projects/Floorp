@@ -17,7 +17,7 @@ DIRS += [
     'layoutview',
     'markupview',
     'netmonitor',
-    'profiler',
+    'performance',
     'projecteditor',
     'responsivedesign',
     'scratchpad',
@@ -28,14 +28,10 @@ DIRS += [
     'styleeditor',
     'styleinspector',
     'tilt',
-    'timeline',
     'webaudioeditor',
     'webconsole',
     'webide',
 ]
-
-if CONFIG['MOZ_DEVTOOLS_PERFTOOLS']:
-  DIRS += ['performance']
 
 EXTRA_COMPONENTS += [
     'devtools-clhandler.js',

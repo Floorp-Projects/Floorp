@@ -1,5 +1,8 @@
 $inherits:
   from: 'tasks/builds/b2g_emulator_base.yml'
+  variables:
+    build_name: 'emualtor-jb'
+    build_type: 'debug'
 task:
   workerType: emulator-jb-debug
   scopes:
@@ -22,4 +25,3 @@ task:
     env:
       TARGET: 'emulator-jb'
       B2G_DEBUG: 1
-

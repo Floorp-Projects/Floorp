@@ -94,6 +94,8 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
       }
       return (a in KNOWN_SOURCE_GROUPS) ? 1 : -1;
     };
+
+    this._addCommands();
   },
 
   /**
@@ -110,6 +112,22 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
     this._cbPanel.removeEventListener("popupshowing", this._onConditionalPopupShown, false);
     this._cbPanel.removeEventListener("popuphiding", this._onConditionalPopupHiding, false);
     this._cbTextbox.removeEventListener("keypress", this._onConditionalTextboxKeyPress, false);
+  },
+
+  /**
+   * Add commands that XUL can fire.
+   */
+  _addCommands: function() {
+    utils.addCommands(this._commandset, {
+      addBreakpointCommand: e => this._onCmdAddBreakpoint(e),
+      addConditionalBreakpointCommand: e => this._onCmdAddConditionalBreakpoint(e),
+      blackBoxCommand: () => this.toggleBlackBoxing(),
+      unBlackBoxButton: () => this._onStopBlackBoxing(),
+      prettyPrintCommand: () => this.togglePrettyPrint(),
+      toggleBreakpointsCommand: () =>this.toggleBreakpoints(),
+      nextSourceCommand: () => this.selectNextItem(),
+      prevSourceCommand: () => this.selectPrevItem()
+    });
   },
 
   /**
@@ -1279,6 +1297,8 @@ TracerView.prototype = Heritage.extend(WidgetMethods, {
 
     this._traceButton.setAttribute("tooltiptext", this._startTooltip);
     this.emptyText = this._tracingNotStartedString;
+
+    this._addCommands();
   },
 
   /**
@@ -1295,6 +1315,17 @@ TracerView.prototype = Heritage.extend(WidgetMethods, {
     this.widget.removeEventListener("mouseover", this._onMouseOver, false);
     this.widget.removeEventListener("mouseout", this._unhighlightMatchingItems, false);
     this._search.removeEventListener("input", this._onSearch, false);
+  },
+
+  /**
+   * Add commands that XUL can fire.
+   */
+  _addCommands: function() {
+    utils.addCommands(document.getElementById('debuggerCommands'), {
+      toggleTracing: () => this._onToggleTracing(),
+      startTracing: () => this._onStartTracing(),
+      clearTraces: () => this._onClear()
+    });
   },
 
   /**
@@ -2205,6 +2236,7 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
     this.widget.addEventListener("click", this._onClick, false);
 
     this.headerText = L10N.getStr("addWatchExpressionText");
+    this._addCommands();
   },
 
   /**
@@ -2214,6 +2246,16 @@ WatchExpressionsView.prototype = Heritage.extend(WidgetMethods, {
     dumpn("Destroying the WatchExpressionsView");
 
     this.widget.removeEventListener("click", this._onClick, false);
+  },
+
+  /**
+   * Add commands that XUL can fire.
+   */
+  _addCommands: function() {
+    utils.addCommands(document.getElementById('debuggerCommands'), {
+      addWatchExpressionCommand: () => this._onCmdAddExpression(),
+      removeAllWatchExpressionsCommand: () => this._onCmdRemoveAllExpressions()
+    });
   },
 
   /**

@@ -459,7 +459,8 @@ body {
 
 /* desktop-only controls */
 .close-button,
-.list-button {
+.list-button,
+.footer {
   display: none;
 }
 

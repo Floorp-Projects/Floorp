@@ -255,7 +255,8 @@ size. -->
 <!ENTITY pref_import_android "Import from Android">
 <!ENTITY pref_import_android_summary "Import bookmarks and history from the native browser">
 <!ENTITY pref_private_data_history2 "Browsing history">
-<!ENTITY pref_private_data_formdata "Form &amp; search history">
+<!ENTITY pref_private_data_searchHistory "Search history">
+<!ENTITY pref_private_data_formdata2 "Form history">
 <!ENTITY pref_private_data_cookies2 "Cookies &amp; active logins">
 <!ENTITY pref_private_data_passwords "Saved passwords">
 <!ENTITY pref_private_data_cache "Cache">
