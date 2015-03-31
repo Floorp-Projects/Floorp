@@ -83,13 +83,11 @@ struct MOZ_STACK_CLASS PostMessageData final
   PostMessageData(BroadcastChannelParent* aParent,
                   const ClonedMessageData& aData,
                   const nsAString& aOrigin,
-                  const nsAString& aChannel,
-                  bool aPrivateBrowsing)
+                  const nsAString& aChannel)
     : mParent(aParent)
     , mData(aData)
     , mOrigin(aOrigin)
     , mChannel(aChannel)
-    , mPrivateBrowsing(aPrivateBrowsing)
   {
     MOZ_ASSERT(aParent);
     MOZ_COUNT_CTOR(PostMessageData);
@@ -118,7 +116,6 @@ struct MOZ_STACK_CLASS PostMessageData final
   nsTArray<nsRefPtr<FileImpl>> mFiles;
   const nsString mOrigin;
   const nsString mChannel;
-  bool mPrivateBrowsing;
 };
 
 PLDHashOperator
@@ -131,8 +128,7 @@ PostMessageEnumerator(nsPtrHashKey<BroadcastChannelParent>* aKey, void* aPtr)
   MOZ_ASSERT(parent);
 
   if (parent != data->mParent) {
-    parent->CheckAndDeliver(data->mData, data->mOrigin, data->mChannel,
-                            data->mPrivateBrowsing);
+    parent->CheckAndDeliver(data->mData, data->mOrigin, data->mChannel);
   }
 
   return PL_DHASH_NEXT;
@@ -144,14 +140,13 @@ void
 BroadcastChannelService::PostMessage(BroadcastChannelParent* aParent,
                                      const ClonedMessageData& aData,
                                      const nsAString& aOrigin,
-                                     const nsAString& aChannel,
-                                     bool aPrivateBrowsing)
+                                     const nsAString& aChannel)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(mAgents.Contains(aParent));
 
-  PostMessageData data(aParent, aData, aOrigin, aChannel, aPrivateBrowsing);
+  PostMessageData data(aParent, aData, aOrigin, aChannel);
   mAgents.EnumerateEntries(PostMessageEnumerator, &data);
 }
 
