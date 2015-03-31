@@ -567,6 +567,7 @@ class PerThreadData : public PerThreadDataFriendFields
 
 class AutoLockForExclusiveAccess;
 
+struct AutoStopwatch;
 } // namespace js
 
 struct JSRuntime : public JS::shadow::Runtime,
@@ -1453,6 +1454,113 @@ struct JSRuntime : public JS::shadow::Runtime,
 
     /* Last time at which an animation was played for this runtime. */
     int64_t lastAnimationTime;
+
+  public:
+
+    /* ------------------------------------------
+       Performance measurements
+       ------------------------------------------ */
+    struct Stopwatch {
+        /**
+         * The number of times we have entered the event loop.
+         * Used to reset counters whenever we enter the loop,
+         * which may be caused either by having completed the
+         * previous run of the event loop, or by entering a
+         * nested loop.
+         *
+         * Always incremented by 1, may safely overflow.
+         */
+        uint64_t iteration;
+
+        /**
+         * `true` if no stopwatch has been registered for the
+         * current run of the event loop, `false` until then.
+         */
+        bool isEmpty;
+
+        /**
+         * Performance data on the entire runtime.
+         */
+        js::PerformanceData performance;
+
+        Stopwatch()
+          : iteration(0)
+          , isEmpty(true)
+          , isActive_(false)
+        { }
+
+        /**
+         * Reset the stopwatch.
+         *
+         * This method is meant to be called whenever we start processing
+         * an event, to ensure that stop any ongoing measurement that would
+         * otherwise provide irrelevant results.
+         */
+        void reset() {
+            ++iteration;
+            isEmpty = true;
+        }
+
+        /**
+         * Activate/deactivate stopwatch measurement.
+         *
+         * Noop if `value` is `true` and the stopwatch is already active,
+         * or if `value` is `false` and the stopwatch is already inactive.
+         *
+         * Otherwise, any pending measurements are dropped, but previous
+         * measurements remain stored.
+         *
+         * May return `false` if the underlying hashtable cannot be allocated.
+         */
+        bool setIsActive(bool value) {
+            if (isActive_ != value)
+                reset();
+
+            if (value && !groups_.initialized()) {
+                if (!groups_.init(128))
+                    return false;
+            }
+
+            isActive_ = value;
+            return true;
+        }
+
+        /**
+         * `true` if the stopwatch is currently monitoring, `false` otherwise.
+         */
+        bool isActive() const {
+            return isActive_;
+        }
+
+    private:
+        /**
+         * A map used to collapse compartments belonging to the same
+         * add-on (respectively to the same webpage, to the platform)
+         * into a single group.
+         *
+         * Keys: for system compartments, a `JSAddonId*` (which may be
+         * `nullptr`), and for webpages, a `JSPrincipals*` (which may
+         * not). Note that compartments may start as non-system
+         * compartments and become compartments later during their
+         * lifetime, which requires an invalidation.
+         *
+         * This map is meant to be accessed only by instances of
+         * PerformanceGroupHolder, which handle both reference-counting
+         * of the values and invalidation of the key/value pairs.
+         */
+        typedef js::HashMap<void*, js::PerformanceGroup*,
+                            js::DefaultHasher<void*>,
+                            js::SystemAllocPolicy> Groups;
+
+        Groups groups_;
+        friend struct js::PerformanceGroupHolder;
+
+        /**
+         * `true` if stopwatch monitoring is active, `false` otherwise.
+         */
+        bool isActive_;
+    };
+    Stopwatch stopwatch;
 };
 
 namespace js {
