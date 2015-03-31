@@ -90,19 +90,16 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(nsXULPrototypeDocument)
 NS_IMETHODIMP
 NS_NewXULPrototypeDocument(nsXULPrototypeDocument** aResult)
 {
-    *aResult = new nsXULPrototypeDocument();
-    if (! *aResult)
-        return NS_ERROR_OUT_OF_MEMORY;
+    *aResult = nullptr;
+    nsRefPtr<nsXULPrototypeDocument> doc =
+      new nsXULPrototypeDocument();
 
-    nsresult rv;
-    rv = (*aResult)->Init();
+    nsresult rv = doc->Init();
     if (NS_FAILED(rv)) {
-        delete *aResult;
-        *aResult = nullptr;
         return rv;
     }
 
-    NS_ADDREF(*aResult);
+    doc.forget(aResult);
     return rv;
 }
 
