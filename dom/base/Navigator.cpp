@@ -201,6 +201,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCachedResolveResults)
+#ifdef MOZ_EME
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMediaKeySystemAccessManager)
+#endif
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -314,6 +317,13 @@ Navigator::Invalidate()
   }
 
   mServiceWorkerContainer = nullptr;
+
+#ifdef MOZ_EME
+  if (mMediaKeySystemAccessManager) {
+    mMediaKeySystemAccessManager->Shutdown();
+    mMediaKeySystemAccessManager = nullptr;
+  }
+#endif
 }
 
 //*****************************************************************************
@@ -2628,64 +2638,19 @@ Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
                                        ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
-  nsRefPtr<Promise> p = Promise::Create(go, aRv);
+  nsRefPtr<Promise> promise = Promise::Create(go, aRv);
   if (aRv.Failed()) {
     return nullptr;
   }
 
-  if (!Preferences::GetBool("media.eme.enabled", false)) {
-    // EME disabled by user, send notification to chrome so UI can
-    // inform user.
-    MediaKeySystemAccess::NotifyObservers(mWindow, aKeySystem,
-                                          MediaKeySystemStatus::Api_disabled);
-    p->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return p.forget();
+  if (!mMediaKeySystemAccessManager) {
+    mMediaKeySystemAccessManager = new MediaKeySystemAccessManager(mWindow);
   }
 
-  if (aKeySystem.IsEmpty() ||
-      (aOptions.WasPassed() && aOptions.Value().IsEmpty())) {
-    p->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
-    return p.forget();
-  }
-
-  // Parse keysystem, split it out into keySystem prefix, and version suffix.
-  nsAutoString keySystem;
-  int32_t minCdmVersion = NO_CDM_VERSION;
-  if (!ParseKeySystem(aKeySystem,
-                      keySystem,
-                      minCdmVersion)) {
-    // Invalid keySystem string, or unsupported keySystem. Send notification
-    // to chrome to show a failure notice.
-    MediaKeySystemAccess::NotifyObservers(mWindow, aKeySystem, MediaKeySystemStatus::Cdm_not_supported);
-    p->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return p.forget();
-  }
-
-  MediaKeySystemStatus status = MediaKeySystemAccess::GetKeySystemStatus(keySystem, minCdmVersion);
-  if (status != MediaKeySystemStatus::Available) {
-    if (status != MediaKeySystemStatus::Error) {
-      // Failed due to user disabling something, send a notification to
-      // chrome, so we can show some UI to explain how the user can rectify
-      // the situation.
-      MediaKeySystemAccess::NotifyObservers(mWindow, keySystem, status);
-    }
-    p->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return p.forget();
-  }
-
-  // TODO: Wait (async) until the CDM is downloaded, if it's not already.
-
-  if (!aOptions.WasPassed() ||
-      MediaKeySystemAccess::IsSupported(keySystem, aOptions.Value())) {
-    nsRefPtr<MediaKeySystemAccess> access(new MediaKeySystemAccess(mWindow, keySystem));
-    p->MaybeResolve(access);
-    return p.forget();
-  }
-
-  p->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-
-  return p.forget();
+  mMediaKeySystemAccessManager->Request(promise, aKeySystem, aOptions);
+  return promise.forget();
 }
+
 #endif
 
 } // namespace dom
