@@ -80,6 +80,13 @@ public:
 
   void QueueEvents(EventArray& aEventsToDispatch);
 
+  // Is this animation currently in effect for the purposes of computing
+  // mWinsInCascade.  (In general, this can be computed from the timing
+  // function.  This boolean remembers the state as of the last time we
+  // called UpdateCascadeResults so we know if it changes and we need to
+  // call UpdateCascadeResults again.)
+  bool mInEffectForCascadeResults;
+
 protected:
   virtual ~CSSAnimationPlayer() { }
   virtual css::CommonAnimationManager* GetAnimationManager() const override;
@@ -170,6 +177,9 @@ public:
                             mozilla::EnsureStyleRuleFlags aFlags);
   void QueueEvents(mozilla::AnimationPlayerCollection* aEA,
                    mozilla::EventArray &aEventsToDispatch);
+
+  void MaybeUpdateCascadeResults(mozilla::AnimationPlayerCollection*
+                                   aCollection);
 
   // nsIStyleRuleProcessor (parts)
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
