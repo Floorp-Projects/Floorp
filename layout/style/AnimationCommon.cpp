@@ -781,6 +781,12 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     return;
   }
 
+  if (!mStyleRuleRefreshTime.IsNull() &&
+      mStyleRuleRefreshTime == aRefreshTime) {
+    // mStyleRule may be null and valid, if we have no style to apply.
+    return;
+  }
+
   // If we're performing animations on the compositor thread, then we can skip
   // most of the work in this method. But even if we are throttled, then we
   // have to do the work if an animation is ending in order to get correct end
@@ -800,34 +806,28 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     return;
   }
 
-  // mStyleRule may be null and valid, if we have no style to apply.
-  if (mStyleRuleRefreshTime.IsNull() ||
-      mStyleRuleRefreshTime != aRefreshTime) {
-    if (mManager->IsAnimationManager()) {
-      // Update cascade results before updating the style rule, since the
-      // cascade results can influence the style rule.
-      static_cast<nsAnimationManager*>(mManager)->
-        MaybeUpdateCascadeResults(this);
-    }
-
-    mStyleRuleRefreshTime = aRefreshTime;
-    mStyleRule = nullptr;
-    // We'll set mNeedsRefreshes to true below in all cases where we need them.
-    mNeedsRefreshes = false;
-
-    // If multiple animations specify behavior for the same property the
-    // animation which occurs last in the value of animation-name wins.
-    // As a result, we iterate from last animation to first and, if a
-    // property has already been set, we don't leave it.
-    nsCSSPropertySet properties;
-
-    for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-      mPlayers[playerIdx]->ComposeStyle(mStyleRule, properties,
-                                        mNeedsRefreshes);
-    }
-
-    mManager->CheckNeedsRefresh();
+  if (mManager->IsAnimationManager()) {
+    // Update cascade results before updating the style rule, since the
+    // cascade results can influence the style rule.
+    static_cast<nsAnimationManager*>(mManager)->MaybeUpdateCascadeResults(this);
   }
+
+  mStyleRuleRefreshTime = aRefreshTime;
+  mStyleRule = nullptr;
+  // We'll set mNeedsRefreshes to true below in all cases where we need them.
+  mNeedsRefreshes = false;
+
+  // If multiple animations specify behavior for the same property the
+  // animation which occurs last in the value of animation-name wins.
+  // As a result, we iterate from last animation to first and, if a
+  // property has already been set, we don't leave it.
+  nsCSSPropertySet properties;
+
+  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
+    mPlayers[playerIdx]->ComposeStyle(mStyleRule, properties, mNeedsRefreshes);
+  }
+
+  mManager->CheckNeedsRefresh();
 }
 
 bool
