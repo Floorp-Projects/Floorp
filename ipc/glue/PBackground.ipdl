@@ -46,8 +46,7 @@ parent:
   PVsync();
   PMedia();
 
-  PBroadcastChannel(PrincipalInfo pInfo, nsString origin, nsString channel,
-                    bool privateBrowsing);
+  PBroadcastChannel(PrincipalInfo pInfo, nsString origin, nsString channel);
 
   RegisterServiceWorker(ServiceWorkerRegistrationData data);
   UnregisterServiceWorker(PrincipalInfo principalInfo,
