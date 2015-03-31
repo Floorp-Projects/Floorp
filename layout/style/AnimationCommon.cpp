@@ -404,6 +404,21 @@ CommonAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
         nsDisplayItem::TYPE_OPACITY,
         nsChangeHint_UpdateOpacityLayer } };
 
+/* static */ const CommonAnimationManager::LayerAnimationRecord*
+CommonAnimationManager::LayerAnimationRecordFor(nsCSSProperty aProperty)
+{
+  MOZ_ASSERT(nsCSSProps::PropHasFlags(aProperty,
+                                      CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
+             "unexpected property");
+  const auto& info = sLayerAnimationInfo;
+  for (size_t i = 0; i < ArrayLength(info); ++i) {
+    if (aProperty == info[i].mProperty) {
+      return &info[i];
+    }
+  }
+  return nullptr;
+}
+
 #ifdef DEBUG
 /* static */ void
 CommonAnimationManager::Initialize()
@@ -639,6 +654,30 @@ AnimationPlayerCollection::CanPerformOnCompositorThread(
   }
 
   return true;
+}
+
+void
+AnimationPlayerCollection::PostUpdateLayerAnimations()
+{
+  nsCSSPropertySet propsHandled;
+  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
+    const auto& properties = mPlayers[playerIdx]->GetSource()->Properties();
+    for (size_t propIdx = properties.Length(); propIdx-- != 0; ) {
+      nsCSSProperty prop = properties[propIdx].mProperty;
+      if (nsCSSProps::PropHasFlags(prop,
+                                   CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR) &&
+          !propsHandled.HasProperty(prop)) {
+        propsHandled.AddProperty(prop);
+        nsChangeHint changeHint = css::CommonAnimationManager::
+          LayerAnimationRecordFor(prop)->mChangeHint;
+        dom::Element* element = GetElementToRestyle();
+        if (element) {
+          mManager->mPresContext->RestyleManager()->
+            PostRestyleEvent(element, nsRestyleHint(0), changeHint);
+        }
+      }
+    }
+  }
 }
 
 bool
