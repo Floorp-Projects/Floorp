@@ -230,6 +230,7 @@ nsAnimationManager::MaybeUpdateCascadeResults(AnimationPlayerCollection* aCollec
       aCollection->mPlayers[playerIdx]->AsCSSAnimationPlayer();
 
     if (player->HasInEffectSource() != player->mInEffectForCascadeResults) {
+      // Update our own cascade results.
       mozilla::dom::Element* element = aCollection->GetElementToRestyle();
       if (element) {
         nsIFrame* frame = element->GetPrimaryFrame();
@@ -237,6 +238,11 @@ nsAnimationManager::MaybeUpdateCascadeResults(AnimationPlayerCollection* aCollec
           UpdateCascadeResults(frame->StyleContext(), aCollection);
         }
       }
+
+      // Notify the transition manager, whose results might depend on ours.
+      mPresContext->TransitionManager()->
+        UpdateCascadeResultsWithAnimations(aCollection);
+
       return;
     }
   }
