@@ -19,6 +19,7 @@
 #include "nsThreadUtils.h"
 #include "prlog.h"
 #include "VideoUtils.h"
+#include "gfxPlatform.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* GetAppleMediaLog();
@@ -381,7 +382,13 @@ AppleVTDecoder::CreateDecoderSpecification()
   }
 
   const void* specKeys[] = { AppleVTLinker::skPropEnableHWAccel };
-  const void* specValues[] = { kCFBooleanTrue };
+  const void* specValues[1];
+  if (gfxPlatform::CanUseHardwareVideoDecoding()) {
+    specValues[0] = kCFBooleanTrue;
+  } else {
+    // This GPU is blacklisted for hardware decoding.
+    specValues[0] = kCFBooleanFalse;
+  }
   static_assert(ArrayLength(specKeys) == ArrayLength(specValues),
                 "Non matching keys/values array size");
 
