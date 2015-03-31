@@ -123,11 +123,20 @@ HRESULT MFGetService(IUnknown *punkObject,
 HRESULT DXVA2CreateDirect3DDeviceManager9(UINT *pResetToken,
                                           IDirect3DDeviceManager9 **ppDXVAManager);
 
+
+HRESULT MFCreateDXGIDeviceManager(UINT *pResetToken, IMFDXGIDeviceManager **ppDXVAManager);
+
 HRESULT MFCreateSample(IMFSample **ppIMFSample);
 
 HRESULT MFCreateAlignedMemoryBuffer(DWORD cbMaxLength,
                                     DWORD fAlignmentFlags,
                                     IMFMediaBuffer **ppBuffer);
+
+HRESULT MFCreateDXGISurfaceBuffer(REFIID riid,
+                                  IUnknown *punkSurface,
+                                  UINT uSubresourceIndex,
+                                  BOOL fButtomUpWhenLinear,
+                                  IMFMediaBuffer **ppBuffer);
 
 } // end namespace wmf
 } // end namespace mozilla

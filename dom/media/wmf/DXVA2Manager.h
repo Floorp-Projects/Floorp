@@ -22,15 +22,15 @@ class ImageContainer;
 class DXVA2Manager {
 public:
 
-  // Creates and initializes a DXVA2Manager. Currently we always use D3D9Ex
-  // to access DXVA, but via this interface we can seamlessly support D3D11
-  // DXVA integration if need be.
-  static DXVA2Manager* Create();
+  // Creates and initializes a DXVA2Manager. We can use DXVA2 via either
+  // D3D9Ex or D3D11.
+  static DXVA2Manager* CreateD3D9DXVA();
+  static DXVA2Manager* CreateD3D11DXVA();
 
   // Returns a pointer to the D3D device manager responsible for managing the
   // device we're using for hardware accelerated video decoding. If we're using
-  // D3D9, this is an IDirect3DDeviceManager9. It is safe to call this on any
-  // thread.
+  // D3D9Ex, this is an IDirect3DDeviceManager9. For D3D11 this is an
+  // IMFDXGIDeviceManager. It is safe to call this on any thread.
   virtual IUnknown* GetDXVADeviceManager() = 0;
 
   // Creates an Image for the video frame stored in aVideoSample.
@@ -38,6 +38,8 @@ public:
                               const nsIntRect& aRegion,
                               layers::ImageContainer* aContainer,
                               layers::Image** aOutImage) = 0;
+
+  virtual HRESULT ConfigureForSize(uint32_t aWidth, uint32_t aHeight) { return S_OK; }
 
   virtual ~DXVA2Manager();
 
