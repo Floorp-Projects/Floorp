@@ -220,7 +220,12 @@ LoginManagerPrompter.prototype = {
             },
             {
                 label: this._getLocalizedString("rememberButton"),
-                callback: function() {
+                callback: function(checked, response) {
+
+                    if (response) {
+                        aLogin.username = response["username"] || aLogin.username;
+                        aLogin.password = response["password"] || aLogin.password;
+                    }
                     pwmgr.addLogin(aLogin);
                     promptHistogram.add(PROMPT_ADD);
                 }
