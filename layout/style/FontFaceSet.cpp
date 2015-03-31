@@ -345,14 +345,6 @@ FontFaceSet::GetFontFaceAt(uint32_t aIndex)
   return nullptr;
 }
 
-FontFace*
-FontFaceSet::IndexedGetter(uint32_t aIndex, bool& aFound)
-{
-  FontFace* f = GetFontFaceAt(aIndex);
-  aFound = !!f;
-  return f;
-}
-
 uint32_t
 FontFaceSet::Size()
 {
