@@ -287,8 +287,8 @@ AddrInfo::~AddrInfo()
   while ((addrElement = mAddresses.popLast())) {
     delete addrElement;
   }
-  moz_free(mHostName);
-  moz_free(mCanonicalName);
+  free(mHostName);
+  free(mCanonicalName);
 }
 
 void

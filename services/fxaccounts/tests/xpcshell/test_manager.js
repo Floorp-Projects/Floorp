@@ -9,6 +9,7 @@ Cu.import("resource://gre/modules/FxAccounts.jsm");
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/FxAccountsManager.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://testing-common/MockRegistrar.jsm");
 
 // === Mocks ===
 
@@ -22,20 +23,8 @@ let certExpired = false;
 // Mock RP
 let principal = {origin: 'app://settings.gaiamobile.org', appId: 27}
 
-// Override FxAccountsUIGlue.
-const kFxAccountsUIGlueUUID = "{8f6d5d87-41ed-4bb5-aa28-625de57564c5}";
-const kFxAccountsUIGlueContractID =
-  "@mozilla.org/fxaccounts/fxaccounts-ui-glue;1";
-
-// Save original FxAccountsUIGlue factory.
-const kFxAccountsUIGlueFactory =
-  Cm.getClassObject(Cc[kFxAccountsUIGlueContractID], Ci.nsIFactory);
-
-let fakeFxAccountsUIGlueFactory = {
-  createInstance: function(aOuter, aIid) {
-    return FxAccountsUIGlue.QueryInterface(aIid);
-  }
-};
+// For override FxAccountsUIGlue.
+let fakeFxAccountsUIGlueCID;
 
 // FxAccountsUIGlue fake component.
 let FxAccountsUIGlue = {
@@ -91,11 +80,9 @@ let FxAccountsUIGlue = {
 };
 
 (function registerFakeFxAccountsUIGlue() {
-  Cm.QueryInterface(Ci.nsIComponentRegistrar)
-    .registerFactory(Components.ID(kFxAccountsUIGlueUUID),
-                     "FxAccountsUIGlue",
-                     kFxAccountsUIGlueContractID,
-                     fakeFxAccountsUIGlueFactory);
+  fakeFxAccountsUIGlueCID =
+    MockRegistrar.register("@mozilla.org/fxaccounts/fxaccounts-ui-glue;1",
+                           FxAccountsUIGlue);
 })();
 
 // Save original fxAccounts instance
@@ -246,16 +233,7 @@ FxAccountsManager._getFxAccountsClient = function() {
 // Unregister mocks and restore original code.
 do_register_cleanup(function() {
   // Unregister the factory so we do not leak
-  Cm.QueryInterface(Ci.nsIComponentRegistrar)
-    .unregisterFactory(Components.ID(kFxAccountsUIGlueUUID),
-                       fakeFxAccountsUIGlueFactory);
-
-  // Restore the original factory.
-  Cm.QueryInterface(Ci.nsIComponentRegistrar)
-    .registerFactory(Components.ID(kFxAccountsUIGlueUUID),
-                     "FxAccountsUIGlue",
-                     kFxAccountsUIGlueContractID,
-                     kFxAccountsUIGlueFactory);
+  MockRegistrar.unregister(fakeFxAccountsUIGlueCID);
 
   // Restore the original FxAccounts instance from FxAccountsManager.
   FxAccountsManager._fxAccounts = kFxAccounts;

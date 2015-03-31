@@ -78,6 +78,7 @@ def build_dict(config, env=os.environ):
     # other CPUs will wind up with unknown bits
 
     d['debug'] = substs.get('MOZ_DEBUG') == '1'
+    d['pgo'] = substs.get('MOZ_PGO') == '1'
     d['crashreporter'] = bool(substs.get('MOZ_CRASHREPORTER'))
     d['datareporting'] = bool(substs.get('MOZ_DATA_REPORTING'))
     d['healthreport'] = substs.get('MOZ_SERVICES_HEALTHREPORT') == '1'
@@ -91,6 +92,46 @@ def build_dict(config, env=os.environ):
     d['wave'] = bool(substs.get('MOZ_WAVE'))
 
     d['official'] = bool(substs.get('MOZILLA_OFFICIAL'))
+
+    def guess_platform():
+        if d['buildapp'] in ('browser', 'mulet'):
+            p = d['os']
+            if p == 'mac':
+                p = 'macosx64'
+            elif d['bits'] == 64:
+                p = '{}64'.format(p)
+            elif p in ('win',):
+                p = '{}32'.format(p)
+
+            if d['buildapp'] == 'mulet':
+                p = '{}-mulet'.format(p)
+            return p
+
+        if d['buildapp'] == 'b2g':
+            if d['toolkit'] == 'gonk':
+                return 'emulator'
+
+            if d['bits'] == 64:
+                return 'linux64_gecko'
+            return 'linux32_gecko'
+
+        if d['buildapp'] == 'mobile/android':
+            if d['processor'] == 'x86':
+                return 'android-x86'
+            return 'android-arm'
+
+    def guess_buildtype():
+        if d['debug']:
+            return 'debug'
+        if d['pgo']:
+            return 'pgo'
+        if d['asan']:
+            return 'asan'
+        return 'opt'
+
+    if 'buildapp' in d:
+        d['platform_guess'] = guess_platform()
+        d['buildtype_guess'] = guess_buildtype()
 
     return d
 

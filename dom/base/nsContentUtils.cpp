@@ -6052,7 +6052,7 @@ nsContentUtils::CreateBlobBuffer(JSContext* aCx,
                                  JS::MutableHandle<JS::Value> aBlob)
 {
   uint32_t blobLen = aData.Length();
-  void* blobData = moz_malloc(blobLen);
+  void* blobData = malloc(blobLen);
   nsRefPtr<File> blob;
   if (blobData) {
     memcpy(blobData, aData.BeginReading(), blobLen);

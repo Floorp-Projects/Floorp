@@ -674,7 +674,7 @@ public:
 
   ~AutoFreeBuffer()
   {
-    moz_free(mBuffer);
+    free(mBuffer);
   }
 
   void

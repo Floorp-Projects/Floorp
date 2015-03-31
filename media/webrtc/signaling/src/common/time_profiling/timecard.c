@@ -21,8 +21,8 @@ create_timecard()
 void
 destroy_timecard(Timecard *tc)
 {
-  moz_free(tc->entries);
-  moz_free(tc);
+  free(tc->entries);
+  free(tc);
 }
 
 void

@@ -122,7 +122,7 @@ function waitForDebuggerMessage(dbg, message) {
         if (message !== message1) {
           return;
         }
-        info(true, "Should receive " + message + " message from debugger.");
+        ok(true, "Should receive " + message + " message from debugger.");
         dbg.removeListener(this);
         resolve();
       }

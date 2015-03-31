@@ -15,6 +15,8 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm", this);
 
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+  "resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
   "resource://gre/modules/devtools/Console.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivacyFilter",
@@ -205,23 +207,23 @@ let SessionSaverInternal = {
       delete state.deferredInitialState;
     }
 
-#ifndef XP_MACOSX
-    // We want to restore closed windows that are marked with _shouldRestore.
-    // We're doing this here because we want to control this only when saving
-    // the file.
-    while (state._closedWindows.length) {
-      let i = state._closedWindows.length - 1;
+    if (AppConstants.platform != "macosx") {
+      // We want to restore closed windows that are marked with _shouldRestore.
+      // We're doing this here because we want to control this only when saving
+      // the file.
+      while (state._closedWindows.length) {
+        let i = state._closedWindows.length - 1;
 
-      if (!state._closedWindows[i]._shouldRestore) {
-        // We only need to go until _shouldRestore
-        // is falsy since we're going in reverse.
-        break;
+        if (!state._closedWindows[i]._shouldRestore) {
+          // We only need to go until _shouldRestore
+          // is falsy since we're going in reverse.
+          break;
+        }
+
+        delete state._closedWindows[i]._shouldRestore;
+        state.windows.unshift(state._closedWindows.pop());
       }
-
-      delete state._closedWindows[i]._shouldRestore;
-      state.windows.unshift(state._closedWindows.pop());
     }
-#endif
 
     stopWatchFinish("COLLECT_DATA_MS", "COLLECT_DATA_LONGEST_OP_MS");
     return this._writeState(state);

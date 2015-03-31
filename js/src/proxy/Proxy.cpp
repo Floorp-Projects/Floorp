@@ -633,15 +633,15 @@ ProxyObject::trace(JSTracer* trc, JSObject* obj)
 
     // Note: If you add new slots here, make sure to change
     // nuke() to cope.
-    MarkCrossCompartmentSlot(trc, obj, proxy->slotOfPrivate(), "private");
-    MarkValue(trc, proxy->slotOfExtra(0), "extra0");
+    TraceCrossCompartmentEdge(trc, obj, proxy->slotOfPrivate(), "private");
+    TraceEdge(trc, proxy->slotOfExtra(0), "extra0");
 
     /*
      * The GC can use the second reserved slot to link the cross compartment
      * wrappers into a linked list, in which case we don't want to trace it.
      */
     if (!proxy->is<CrossCompartmentWrapperObject>())
-        MarkValue(trc, proxy->slotOfExtra(1), "extra1");
+        TraceEdge(trc, proxy->slotOfExtra(1), "extra1");
 
     Proxy::trace(trc, obj);
 }

@@ -83,7 +83,7 @@ public:
 
   ~QueuedDataMessage()
   {
-    moz_free(mData);
+    free(mData);
   }
 
   uint16_t mStream;

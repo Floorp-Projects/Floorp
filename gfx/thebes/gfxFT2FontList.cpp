@@ -107,7 +107,7 @@ public:
             NS_ASSERTION(item, "failed to find zip entry");
 
             uint32_t bufSize = item->RealSize();
-            mFontDataBuf = static_cast<uint8_t*>(moz_malloc(bufSize));
+            mFontDataBuf = static_cast<uint8_t*>(malloc(bufSize));
             if (mFontDataBuf) {
                 nsZipCursor cursor(item, reader, mFontDataBuf, bufSize);
                 cursor.Copy(&bufSize);
@@ -136,7 +136,7 @@ public:
         if (mFace && mOwnsFace) {
             FT_Done_Face(mFace);
             if (mFontDataBuf) {
-                moz_free(mFontDataBuf);
+                free(mFontDataBuf);
             }
         }
     }
