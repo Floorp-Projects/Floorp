@@ -64,12 +64,3 @@ interface FontFaceSet : EventTarget {
   // loading state, "loading" while one or more fonts loading, "loaded" otherwise
   readonly attribute FontFaceSetLoadStatus status;
 };
-
-// This provides access to the FontFace objects in the FontFaceSet until we
-// get iterators working (bug 1072101).  Don't enable the pref for the CSS Font
-// Loading API until the iterator is available, as we don't want to expose more
-// indexed properties on the Web.
-partial interface FontFaceSet {
-  getter FontFace (unsigned long index);
-  readonly attribute unsigned long length;
-};
