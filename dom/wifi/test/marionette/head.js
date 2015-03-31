@@ -835,10 +835,21 @@ let gTestSuite = (function() {
    * @return A deferred promise.
    */
   function writeFile(aFilePath, aContent) {
-    if (-1 === aContent.indexOf(' ')) {
-      aContent = '"' + aContent + '"';
+    const CONTENT_MAX_LENGTH = 900;
+    var commands = [];
+    for (var i = 0; i < aContent.length; i += CONTENT_MAX_LENGTH) {
+      var content = aContent.substr(i, CONTENT_MAX_LENGTH);
+      if (-1 === content.indexOf(' ')) {
+        content = '"' + content + '"';
+      }
+      commands.push(['echo', '-n', content, i === 0 ? '>' : '>>', aFilePath]);
     }
-    return runEmulatorShellSafe(['echo', aContent, '>', aFilePath]);
+
+    let chain = Promise.resolve();
+    commands.forEach(function (command) {
+      chain = chain.then(() => runEmulatorShellSafe(command));
+    });
+    return chain;
   }
 
   /**
@@ -1242,6 +1253,7 @@ let gTestSuite = (function() {
   suite.importCert = importCert;
   suite.getImportedCerts = getImportedCerts;
   suite.deleteCert = deleteCert;
+  suite.writeFile = writeFile;
 
   /**
    * Common test routine.
@@ -1364,7 +1376,7 @@ let gTestSuite = (function() {
    * @return A deferred promise.
    */
   suite.doTestWithCertificate = function(certBlob, password, nickname, usage, aTestCaseChain) {
-    return suite.doTest(function() {
+    return suite.doTestWithoutStockAp(function() {
       return ensureWifiEnabled(true)
       // Import test certificate.
       .then(() => importCert(certBlob, password, nickname))
