@@ -89,7 +89,6 @@ toolkit.jar:
 * skin/classic/global/console/console.css                            (console/console.css)
   skin/classic/global/dirListing/dirListing.css                      (dirListing/dirListing.css)
   skin/classic/global/dirListing/folder.png                          (dirListing/folder.png)
-  skin/classic/global/dirListing/local.png                           (dirListing/folder.png)
   skin/classic/global/dirListing/remote.png                          (dirListing/remote.png)
   skin/classic/global/dirListing/up.png                              (dirListing/up.png)
   skin/classic/global/icons/autocomplete-dropmarker.png              (icons/autocomplete-dropmarker.png)
@@ -215,3 +214,5 @@ toolkit.jar:
   skin/classic/global/tree/columnpicker.gif                          (tree/columnpicker.gif)
   skin/classic/global/tree/folder.png                                (tree/folder.png)
   skin/classic/global/tree/folder@2x.png                             (tree/folder@2x.png)
+
+% override chrome://global/skin/dirListing/local.png                 chrome://global/skin/dirListing/folder.png
