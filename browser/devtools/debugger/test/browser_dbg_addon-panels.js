@@ -10,7 +10,7 @@ let gAddon, gClient, gThreadClient, gDebugger, gSources;
 let PREFS = [
   "devtools.canvasdebugger.enabled",
   "devtools.shadereditor.enabled",
-  "devtools.profiler.enabled",
+  "devtools.performance.enabled",
   "devtools.netmonitor.enabled"
 ];
 function test() {
