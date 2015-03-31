@@ -21,7 +21,7 @@
 
     <item android:state_pressed="true"
           android:state_checked="true"
-          android:color="@color/new_tablet_highlight" />
+          android:color="@color/toolbar_grey_pressed" />
 
     <!-- Lightweight Themes -->
     <item android:state_checked="true"
