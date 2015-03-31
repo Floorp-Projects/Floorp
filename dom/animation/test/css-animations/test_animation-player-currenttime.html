@@ -462,7 +462,7 @@ async_test(function(t) {
   animation.currentTime = currentTimeForActivePhase(animation.timeline);
   animation.currentTime = currentTimeForBeforePhase(animation.timeline);
 
-  waitForTwoAnimationFrames().then(function() {
+  waitForAnimationFrames(2).then(function() {
     eventWatcher.stopWatching();
     t.done();
   });
@@ -477,7 +477,7 @@ async_test(function(t) {
   animation.currentTime = currentTimeForAfterPhase(animation.timeline);
   animation.currentTime = currentTimeForBeforePhase(animation.timeline);
 
-  waitForTwoAnimationFrames().then(function() {
+  waitForAnimationFrames(2).then(function() {
     eventWatcher.stopWatching();
     t.done();
   });
@@ -493,7 +493,7 @@ async_test(function(t) {
     animation.currentTime = currentTimeForBeforePhase(animation.timeline);
     animation.currentTime = currentTimeForActivePhase(animation.timeline);
 
-    waitForTwoAnimationFrames().then(function() {
+    waitForAnimationFrames(2).then(function() {
       eventWatcher.stopWatching();
       t.done();
     });
@@ -512,7 +512,7 @@ async_test(function(t) {
     animation.currentTime = currentTimeForAfterPhase(animation.timeline);
     animation.currentTime = currentTimeForActivePhase(animation.timeline);
 
-    waitForTwoAnimationFrames().then(function() {
+    waitForAnimationFrames(2).then(function() {
       eventWatcher.stopWatching();
       t.done();
     });
@@ -532,7 +532,7 @@ async_test(function(t) {
     animation.currentTime = currentTimeForBeforePhase(animation.timeline);
     animation.currentTime = currentTimeForAfterPhase(animation.timeline);
 
-    waitForTwoAnimationFrames().then(function() {
+    waitForAnimationFrames(2).then(function() {
       eventWatcher.stopWatching();
       t.done();
     });
@@ -552,7 +552,7 @@ async_test(function(t) {
     animation.currentTime = currentTimeForActivePhase(animation.timeline);
     animation.currentTime = currentTimeForAfterPhase(animation.timeline);
 
-    waitForTwoAnimationFrames().then(function() {
+    waitForAnimationFrames(2).then(function() {
       eventWatcher.stopWatching();
       t.done();
     });
@@ -621,7 +621,7 @@ async_test(function(t) {
     // just before animation ends:
     animation.currentTime = ANIM_DELAY_MS + ANIM_DUR_MS - 1;
 
-    return waitForTwoAnimationFrames();
+    return waitForAnimationFrames(2);
   }).then(t.step_func(function() {
     assert_equals(animation.currentTime, ANIM_DELAY_MS + ANIM_DUR_MS,
       'Animation.currentTime should not continue to increase after the ' +
@@ -643,7 +643,7 @@ async_test(function(t) {
     // just before animation ends (at the "start"):
     animation.currentTime = 1;
 
-    return waitForTwoAnimationFrames();
+    return waitForAnimationFrames(2);
   }).then(t.step_func(function() {
     assert_equals(animation.currentTime, 0,
       'Animation.currentTime should not continue to decrease after an ' +

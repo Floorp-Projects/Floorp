@@ -510,7 +510,7 @@ async_test(function(t) {
   animation.startTime = startTimeForActivePhase(animation.timeline);
   animation.startTime = startTimeForBeforePhase(animation.timeline);
 
-  waitForTwoAnimationFrames().then(function() {
+  waitForAnimationFrames(2).then(function() {
     eventWatcher.stopWatching();
     t.done();
   });
@@ -525,7 +525,7 @@ async_test(function(t) {
   animation.startTime = startTimeForAfterPhase(animation.timeline);
   animation.startTime = startTimeForBeforePhase(animation.timeline);
 
-  waitForTwoAnimationFrames().then(function() {
+  waitForAnimationFrames(2).then(function() {
     eventWatcher.stopWatching();
     t.done();
   });
@@ -541,7 +541,7 @@ async_test(function(t) {
     animation.startTime = startTimeForBeforePhase(animation.timeline);
     animation.startTime = startTimeForActivePhase(animation.timeline);
 
-    waitForTwoAnimationFrames().then(function() {
+    waitForAnimationFrames(2).then(function() {
       eventWatcher.stopWatching();
       t.done();
     });
@@ -560,7 +560,7 @@ async_test(function(t) {
     animation.startTime = startTimeForAfterPhase(animation.timeline);
     animation.startTime = startTimeForActivePhase(animation.timeline);
 
-    waitForTwoAnimationFrames().then(function() {
+    waitForAnimationFrames(2).then(function() {
       eventWatcher.stopWatching();
       t.done();
     });
@@ -580,7 +580,7 @@ async_test(function(t) {
     animation.startTime = startTimeForBeforePhase(animation.timeline);
     animation.startTime = startTimeForAfterPhase(animation.timeline);
 
-    waitForTwoAnimationFrames().then(function() {
+    waitForAnimationFrames(2).then(function() {
       eventWatcher.stopWatching();
       t.done();
     });
@@ -600,7 +600,7 @@ async_test(function(t) {
     animation.startTime = startTimeForActivePhase(animation.timeline);
     animation.startTime = startTimeForAfterPhase(animation.timeline);
 
-    waitForTwoAnimationFrames().then(function() {
+    waitForAnimationFrames(2).then(function() {
       eventWatcher.stopWatching();
       t.done();
     });
