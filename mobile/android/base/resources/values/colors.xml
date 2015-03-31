@@ -127,9 +127,6 @@
 
   <color name="home_button_bar_bg">#FFF5F7F9</color>
 
-  <!-- Colour used for share overlay button labels -->
-  <color name="home_text_color_disabled">#AFB1B3</color>
-
   <color name="panel_image_item_background">#D1D9E1</color>
 
   <!-- Swipe to refresh colors for dynamic panel -->
@@ -158,8 +155,6 @@
   <color name="tab_history_border_color">#DADADF</color>
 
   <!-- Colour used for Find-In-Page dialog -->
-  <color name="find_status_default">#AFB1B3</color>
-  <color name="find_matchcase_on">#AFB1B3</color>
   <color name="find_matchcase_off">#D02626</color>
 
   <!-- Canvas delegate paint color -->
@@ -168,9 +163,5 @@
   <!-- Top sites thumbnail colors -->
   <color name="top_site_default">#FFECF0F3</color>
   <color name="top_site_border">#FFCFD9E1</color>
-
-  <!-- Tab grid text highlight colour -->
-  <color name="new_tablet_tab_grid_text_unselected">#FFAFB1B3</color>
-
 
 </resources>
