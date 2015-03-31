@@ -150,6 +150,7 @@ nsRubyTextContainerFrame::Reflow(nsPresContext* aPresContext,
   LogicalSize size(lineWM, mISize, 0);
   if (!mFrames.IsEmpty()) {
     if (MOZ_UNLIKELY(minBCoord > maxBCoord)) {
+      // XXX When bug 765861 gets fixed, this warning should be upgraded.
       NS_WARNING("bad block coord");
       minBCoord = maxBCoord = 0;
     }
