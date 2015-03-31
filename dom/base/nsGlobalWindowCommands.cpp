@@ -631,8 +631,7 @@ nsSelectionCommand::GetContentViewerEditFromContext(nsISupports *aContext,
   nsCOMPtr<nsIContentViewerEdit> edit(do_QueryInterface(viewer));
   NS_ENSURE_TRUE(edit, NS_ERROR_FAILURE);
 
-  *aEditInterface = edit;
-  NS_ADDREF(*aEditInterface);
+  edit.forget(aEditInterface);
   return NS_OK;
 }
 

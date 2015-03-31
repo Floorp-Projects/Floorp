@@ -83,7 +83,7 @@ nsDataChannel::OpenContentStream(bool async, nsIInputStream **result,
     SetContentCharset(contentCharset);
     mContentLength = contentLen;
 
-    NS_ADDREF(*result = bufInStream);
+    bufInStream.forget(result);
 
     return NS_OK;
 }

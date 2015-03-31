@@ -1104,8 +1104,7 @@ DataStoreService::GetAppManifestURLsForDataStore(const nsAString& aName,
     apps->EnumerateRead(GetAppManifestURLsEnumerator, manifestURLs.get());
   }
 
-  *aManifestURLs = manifestURLs;
-  NS_ADDREF(*aManifestURLs);
+  manifestURLs.forget(aManifestURLs);
   return NS_OK;
 }
 

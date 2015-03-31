@@ -239,7 +239,7 @@ nsVolumeService::GetVolumeNames(nsIArray** aVolNames)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  NS_ADDREF(*aVolNames = volNames);
+  volNames.forget(aVolNames);
   return NS_OK;
 }
 

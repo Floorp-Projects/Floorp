@@ -3515,7 +3515,7 @@ nsDOMDeviceStorage::CreateDeviceStorageFor(nsPIDOMWindow* aWin,
     *aStore = nullptr;
     return;
   }
-  NS_ADDREF(*aStore = ds.get());
+  ds.forget(aStore);
 }
 
 // static

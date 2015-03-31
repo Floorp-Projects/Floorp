@@ -240,7 +240,7 @@ nsXULTemplateQueryProcessorStorage::GetDatasource(nsIArray* aDataSources,
         return rv;
     }
 
-    NS_ADDREF(*aReturn = connection);
+    connection.forget(aReturn);
     return NS_OK;
 }
 

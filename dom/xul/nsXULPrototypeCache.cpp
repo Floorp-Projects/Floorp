@@ -372,7 +372,7 @@ nsXULPrototypeCache::GetInputStream(nsIURI* uri, nsIObjectInputStream** stream)
 
     mInputStreamTable.Put(uri, ois);
     
-    NS_ADDREF(*stream = ois);
+    ois.forget(stream);
     return NS_OK;
 }
 
@@ -402,7 +402,7 @@ nsXULPrototypeCache::GetOutputStream(nsIURI* uri, nsIObjectOutputStream** stream
         NS_ENSURE_SUCCESS(rv, rv);
         mOutputStreamTable.Put(uri, storageStream);
     }
-    NS_ADDREF(*stream = objectOutput);
+    objectOutput.forget(stream);
     return NS_OK;
 }
 

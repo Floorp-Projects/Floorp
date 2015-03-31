@@ -282,7 +282,7 @@ nsNavHistory::QueryStringToQueries(const nsACString& aQueryString,
       NS_ADDREF((*aQueries)[i]);
     }
   }
-  NS_ADDREF(*aOptions = options);
+  options.forget(aOptions);
   return NS_OK;
 }
 
@@ -316,7 +316,7 @@ nsNavHistory::QueryStringToQueryArray(const nsACString& aQueryString,
     return rv;
   }
 
-  NS_ADDREF(*aOptions = options);
+  options.forget(aOptions);
   return NS_OK;
 }
 
@@ -1163,7 +1163,7 @@ NS_IMETHODIMP nsNavHistoryQuery::GetTags(nsIVariant **aTags)
   }
   NS_ENSURE_SUCCESS(rv, rv);
 
-  NS_ADDREF(*aTags = out);
+  out.forget(aTags);
   return NS_OK;
 }
 

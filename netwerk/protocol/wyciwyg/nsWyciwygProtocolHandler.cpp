@@ -78,8 +78,7 @@ nsWyciwygProtocolHandler::NewURI(const nsACString &aSpec,
   rv = url->SetSpec(aSpec);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  *result = url;
-  NS_ADDREF(*result);
+  url.forget(result);
 
   return rv;
 }

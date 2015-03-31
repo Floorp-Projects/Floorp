@@ -425,8 +425,7 @@ nsXULTemplateQueryProcessorRDF::CompileQuery(nsIXULTemplateBuilder* aBuilder,
 
     mQueries.AppendElement(query);
 
-    *_retval = query;
-    NS_ADDREF(*_retval);
+    query.forget(_retval);
 
     return NS_OK;
 }
