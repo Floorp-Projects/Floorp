@@ -47,6 +47,7 @@
 #include "CSSVariableResolver.h"
 #include "nsCSSParser.h"
 #include "CounterStyleManager.h"
+#include "nsCSSPropertySet.h"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
@@ -9662,6 +9663,89 @@ nsRuleNode::HasAuthorSpecifiedRules(nsStyleContext* aStyleContext,
   } while (haveExplicitUAInherit && styleContext);
 
   return false;
+}
+
+/* static */ void
+nsRuleNode::ComputePropertiesOverridingAnimation(
+                              const nsTArray<nsCSSProperty>& aProperties,
+                              nsStyleContext* aStyleContext,
+                              nsCSSPropertySet& aPropertiesOverridden)
+{
+  /*
+   * Set up an nsRuleData with all the structs needed for all of the
+   * properties in aProperties.
+   */
+  uint32_t structBits = 0;
+  size_t nprops = 0;
+  size_t offsets[nsStyleStructID_Length];
+  for (size_t propIdx = 0, propEnd = aProperties.Length();
+       propIdx < propEnd; ++propIdx) {
+    nsCSSProperty prop = aProperties[propIdx];
+    nsStyleStructID sid = nsCSSProps::kSIDTable[prop];
+    uint32_t bit = nsCachedStyleData::GetBitForSID(sid);
+    if (!(structBits & bit)) {
+      structBits |= bit;
+      offsets[sid] = nprops;
+      nprops += nsCSSProps::PropertyCountInStruct(sid);
+    }
+  }
+
+  void* dataStorage = alloca(nprops * sizeof(nsCSSValue));
+  AutoCSSValueArray dataArray(dataStorage, nprops);
+
+  // We're relying on the use of |aStyleContext| not mutating it!
+  nsRuleData ruleData(structBits, dataArray.get(),
+                      aStyleContext->PresContext(), aStyleContext);
+  for (nsStyleStructID sid = nsStyleStructID(0);
+       sid < nsStyleStructID_Length; sid = nsStyleStructID(sid + 1)) {
+    if (structBits & nsCachedStyleData::GetBitForSID(sid)) {
+      ruleData.mValueOffsets[sid] = offsets[sid];
+    }
+  }
+
+  /*
+   * Actually walk up the rule tree until we're someplace less
+   * specific than animations.
+   */
+  for (nsRuleNode* ruleNode = aStyleContext->RuleNode(); ruleNode;
+       ruleNode = ruleNode->GetParent()) {
+    nsIStyleRule *rule = ruleNode->GetRule();
+    if (rule) {
+      ruleData.mLevel = ruleNode->GetLevel();
+      ruleData.mIsImportantRule = ruleNode->IsImportantRule();
+
+      // Transitions are the only non-!important level overriding
+      // animations in the cascade ordering.  They also don't actually
+      // override animations, since transitions are suppressed when both
+      // are present.  And since we might not have called
+      // UpdateCascadeResults (which updates when they are suppressed
+      // due to the presence of animations for the same element and
+      // property) for transitions yet (which will make their
+      // MapRuleInfoInto skip the properties that are currently
+      // animating), we should skip them explicitly.
+      if (ruleData.mLevel == nsStyleSet::eTransitionSheet) {
+        continue;
+      }
+
+      if (!ruleData.mIsImportantRule) {
+        // We're now equal to or less than the animation level; stop.
+        break;
+      }
+
+      rule->MapRuleInfoInto(&ruleData);
+    }
+  }
+
+  /*
+   * Fill in which properties were overridden.
+   */
+  for (size_t propIdx = 0, propEnd = aProperties.Length();
+       propIdx < propEnd; ++propIdx) {
+    nsCSSProperty prop = aProperties[propIdx];
+    if (ruleData.ValueFor(prop)->GetUnit() != eCSSUnit_Null) {
+      aPropertiesOverridden.AddProperty(prop);
+    }
+  }
 }
 
 /* static */
