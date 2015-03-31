@@ -142,7 +142,7 @@ nsGIOMimeApp::GetSupportedURISchemes(nsIUTF8StringEnumerator** aSchemes)
     uri_schemes++;
   }
 
-  NS_ADDREF(*aSchemes = array);
+  array.forget(aSchemes);
   return NS_OK;
 }
 

@@ -194,7 +194,7 @@ GetXULRunnerStubPath(const char* argv0, nsIFile* *aResult)
   if (NS_FAILED(rv))
     return rv;
 
-  NS_ADDREF(*aResult = static_cast<nsIFile*>(lfm.get()));
+  lfm.forget(aResult);
   return NS_OK;
 }
 #endif /* XP_MACOSX */

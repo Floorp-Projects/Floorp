@@ -271,7 +271,7 @@ nsHttpDigestAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
             do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID));
     if (v) {
       v->SetData(1);
-      NS_ADDREF(*sessionState = v);
+      v.forget(sessionState);
     }
   }
   LOG(("   nonce_count=%s\n", nonce_count));

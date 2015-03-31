@@ -1250,8 +1250,7 @@ nsXULContentBuilder::EnsureElementHasGenericChild(nsIContent* parent,
         if (NS_FAILED(rv))
             return rv;
 
-        *result = element;
-        NS_ADDREF(*result);
+        element.forget(result);
         return NS_ELEMENT_GOT_CREATED;
     }
     else {
