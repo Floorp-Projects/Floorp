@@ -139,7 +139,7 @@ public:
   NS_IMETHOD              SetTitle(const nsAString& aTitle);
   NS_IMETHOD              SetIcon(const nsAString& aIconSpec);
   virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset();
-  virtual nsIntSize       ClientToWindowSize(const nsIntSize& aClientSize);
+  virtual mozilla::LayoutDeviceIntSize ClientToWindowSize(const mozilla::LayoutDeviceIntSize& aClientSize) override;
   NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                                         nsEventStatus& aStatus);
   NS_IMETHOD              EnableDragDrop(bool aEnable);
