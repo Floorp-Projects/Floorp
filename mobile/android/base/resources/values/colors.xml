@@ -28,8 +28,7 @@
   <!-- Non-palette colors -->
   <color name="background_light">#FFF5F5F5</color>
 
-  <!-- If you update one, update the other. -->
-  <color name="background_normal">#FFEBEBF0</color>
+  <!-- Synced w/ toolbar_grey -->
   <color name="background_normal_lwt">#DDEBEBF0</color>
 
   <color name="highlight">#33000000</color>

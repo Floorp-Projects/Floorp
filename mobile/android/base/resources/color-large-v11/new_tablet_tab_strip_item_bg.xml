@@ -38,7 +38,7 @@
           android:color="@color/new_tablet_highlight_dark_lwt" />
 
     <item android:state_checked="true"
-          android:color="@color/background_normal" />
+          android:color="@color/toolbar_grey" />
 
     <item android:state_pressed="true"
           android:color="@color/tabs_tray_grey_pressed" />
