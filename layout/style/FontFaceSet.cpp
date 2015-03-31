@@ -12,6 +12,7 @@
 #include "mozilla/dom/CSSFontFaceLoadEvent.h"
 #include "mozilla/dom/CSSFontFaceLoadEventBinding.h"
 #include "mozilla/dom/FontFaceSetBinding.h"
+#include "mozilla/dom/FontFaceSetIterator.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Preferences.h"
@@ -328,23 +329,28 @@ FontFaceSet::Has(FontFace& aFontFace)
 }
 
 FontFace*
-FontFaceSet::IndexedGetter(uint32_t aIndex, bool& aFound)
+FontFaceSet::GetFontFaceAt(uint32_t aIndex)
 {
   mPresContext->FlushUserFontSet();
 
   if (aIndex < mRuleFaces.Length()) {
-    aFound = true;
     return mRuleFaces[aIndex].mFontFace;
   }
 
   aIndex -= mRuleFaces.Length();
   if (aIndex < mNonRuleFaces.Length()) {
-    aFound = true;
     return mNonRuleFaces[aIndex].mFontFace;
   }
 
-  aFound = false;
   return nullptr;
+}
+
+FontFace*
+FontFaceSet::IndexedGetter(uint32_t aIndex, bool& aFound)
+{
+  FontFace* f = GetFontFaceAt(aIndex);
+  aFound = !!f;
+  return f;
 }
 
 uint32_t
@@ -356,6 +362,18 @@ FontFaceSet::Size()
 
   size_t total = mRuleFaces.Length() + mNonRuleFaces.Length();
   return std::min<size_t>(total, INT32_MAX);
+}
+
+FontFaceSetIterator*
+FontFaceSet::Entries()
+{
+  return new FontFaceSetIterator(this, true);
+}
+
+FontFaceSetIterator*
+FontFaceSet::Values()
+{
+  return new FontFaceSetIterator(this, false);
 }
 
 static PLDHashOperator DestroyIterator(nsPtrHashKey<nsFontFaceLoader>* aKey,
