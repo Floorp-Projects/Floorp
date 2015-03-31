@@ -2195,9 +2195,6 @@ addAsyncAnimTest(function *() {
   // compositor via an UpdateOpacityLayer hint, which does the resending
   // via painting.
   yield waitForPaints();
-  // FIXME: Half of this test fails, which means that omta_todo_is fails
-  // just as much as omta_is.  (The value is wrong on both compositor and
-  // main threads.)
   omta_is("opacity", 0.6, RunningOn.Compositor,
           "anim2 at 600ms");
   done_div();
@@ -2223,15 +2220,9 @@ addAsyncAnimTest(function *() {
   // compositor via an UpdateOpacityLayer hint, which does the resending
   // via painting.
   yield waitForPaints();
-  // FIXME: Half of this test fails, which means that omta_todo_is fails
-  // just as much as omta_is.  (The value is wrong on both compositor and
-  // main threads.)
   omta_is("opacity", 0.75, RunningOn.Compositor,
           "anim2 at 825ms");
   advance_clock(75);
-  // FIXME: Half of this test fails, which means that omta_todo_is fails
-  // just as much as omta_is.  (The value is wrong on both compositor and
-  // main threads.)
   omta_is("opacity", 0.875, RunningOn.Compositor,
           "anim2 at 900ms");
   done_div();
@@ -2259,15 +2250,9 @@ addAsyncAnimTest(function *() {
   // compositor via an UpdateOpacityLayer hint, which does the resending
   // via painting.
   yield waitForPaints();
-  // FIXME: Half of this test fails, which means that omta_todo_is fails
-  // just as much as omta_is.  (The value is wrong on both compositor and
-  // main threads.)
   omta_is("opacity", 0.75, RunningOn.Compositor,
           "anim2 at 825ms");
   advance_clock(75);
-  // FIXME: Half of this test fails, which means that omta_todo_is fails
-  // just as much as omta_is.  (The value is wrong on both compositor and
-  // main threads.)
   omta_is("opacity", 0.875, RunningOn.Compositor,
           "anim2 at 900ms");
   done_div();
