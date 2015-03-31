@@ -27,7 +27,6 @@
 
 #include <cstring>
 
-#include "pkix/stdkeywords.h"
 #include "pkix/Result.h"
 #include "stdint.h"
 
