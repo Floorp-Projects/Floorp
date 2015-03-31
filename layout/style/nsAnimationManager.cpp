@@ -391,6 +391,8 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     newPlayers[newPlayerIdx]->Cancel();
   }
 
+  UpdateCascadeResults(aStyleContext, collection);
+
   TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
   UpdateStyleAndEvents(collection, refreshTime,
                        EnsureStyleRule_IsNotThrottled);
@@ -704,6 +706,115 @@ nsAnimationManager::BuildSegment(InfallibleTArray<AnimationPropertySegment>&
   segment.mTimingFunction.Init(*tf);
 
   return true;
+}
+
+/* static */ void
+nsAnimationManager::UpdateCascadeResults(
+                      nsStyleContext* aStyleContext,
+                      AnimationPlayerCollection* aElementAnimations)
+{
+  /*
+   * Figure out which properties we need to examine.
+   */
+
+  // size of 2 since we only currently have 2 properties we animate on
+  // the compositor
+  nsAutoTArray<nsCSSProperty, 2> propertiesToTrack;
+
+  {
+    nsCSSPropertySet propertiesToTrackAsSet;
+
+    for (size_t playerIdx = aElementAnimations->mPlayers.Length();
+         playerIdx-- != 0; ) {
+      const AnimationPlayer* player = aElementAnimations->mPlayers[playerIdx];
+      const Animation* anim = player->GetSource();
+      if (!anim) {
+        continue;
+      }
+
+      for (size_t propIdx = 0, propEnd = anim->Properties().Length();
+           propIdx != propEnd; ++propIdx) {
+        const AnimationProperty& prop = anim->Properties()[propIdx];
+        // We only bother setting mWinsInCascade for properties that we
+        // can animate on the compositor.
+        if (nsCSSProps::PropHasFlags(prop.mProperty,
+                                     CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR)) {
+          if (!propertiesToTrackAsSet.HasProperty(prop.mProperty)) {
+            propertiesToTrack.AppendElement(prop.mProperty);
+            propertiesToTrackAsSet.AddProperty(prop.mProperty);
+          }
+        }
+      }
+    }
+  }
+
+  /*
+   * Determine whether those properties are set in things that
+   * override animations.
+   */
+
+  nsCSSPropertySet propertiesOverridden;
+  nsRuleNode::ComputePropertiesOverridingAnimation(propertiesToTrack,
+                                                   aStyleContext,
+                                                   propertiesOverridden);
+
+  /*
+   * Set mWinsInCascade based both on what is overridden at levels
+   * higher than animations and based on one animation overriding
+   * another.
+   *
+   * We iterate from the last animation to the first, just like we do
+   * when calling ComposeStyle from
+   * AnimationPlayerCollection::EnsureStyleRuleFor.  Later animations
+   * override earlier ones, so we add properties to the set of
+   * overridden properties as we encounter them, if the animation is
+   * currently in effect.
+   */
+
+  bool changed = false;
+  for (size_t playerIdx = aElementAnimations->mPlayers.Length();
+       playerIdx-- != 0; ) {
+    AnimationPlayer* player = aElementAnimations->mPlayers[playerIdx];
+    Animation* anim = player->GetSource();
+    if (!anim) {
+      continue;
+    }
+
+    for (size_t propIdx = 0, propEnd = anim->Properties().Length();
+         propIdx != propEnd; ++propIdx) {
+      AnimationProperty& prop = anim->Properties()[propIdx];
+      // We only bother setting mWinsInCascade for properties that we
+      // can animate on the compositor.
+      if (nsCSSProps::PropHasFlags(prop.mProperty,
+                                   CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR)) {
+        bool newWinsInCascade =
+          !propertiesOverridden.HasProperty(prop.mProperty);
+        if (newWinsInCascade != prop.mWinsInCascade) {
+          changed = true;
+        }
+        prop.mWinsInCascade = newWinsInCascade;
+
+        if (prop.mWinsInCascade && anim->IsInEffect()) {
+          // This animation is in effect right now, so it overrides
+          // earlier animations.  (For animations that aren't in effect,
+          // we set mWinsInCascade as though they were, but they don't
+          // suppress animations lower in the cascade.)
+          propertiesOverridden.AddProperty(prop.mProperty);
+        }
+      }
+    }
+  }
+
+  if (changed) {
+    nsPresContext* presContext = aElementAnimations->mManager->PresContext();
+    presContext->RestyleManager()->IncrementAnimationGeneration();
+    aElementAnimations->UpdateAnimationGeneration(presContext);
+    aElementAnimations->PostUpdateLayerAnimations();
+
+    // Invalidate our style rule.
+    aElementAnimations->mNeedsRefreshes = true;
+    aElementAnimations->mStyleRuleRefreshTime = TimeStamp();
+  }
 }
 
 /* virtual */ void
