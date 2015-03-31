@@ -607,6 +607,8 @@ nsresult GStreamerReader::CheckSupportedFormats()
     }
   }
 
+  gst_iterator_free(it);
+
   return unsupported ? NS_ERROR_FAILURE : NS_OK;
 }
 
