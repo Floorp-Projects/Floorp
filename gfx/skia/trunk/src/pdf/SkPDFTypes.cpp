@@ -11,7 +11,7 @@
 #include "SkPDFTypes.h"
 #include "SkStream.h"
 
-#ifdef SK_BUILD_FOR_WIN
+#if defined(_MSC_VER) && _MSC_VER < 1900
     #define SNPRINTF    _snprintf
 #else
     #define SNPRINTF    snprintf
