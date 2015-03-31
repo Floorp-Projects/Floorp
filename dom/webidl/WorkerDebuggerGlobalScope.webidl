@@ -7,11 +7,6 @@
 interface WorkerDebuggerGlobalScope : EventTarget {
   readonly attribute object global;
 
-  object createSandbox(DOMString name, object prototype);
-
-  [Throws]
-  void loadSubScript(DOMString url, optional object sandbox);
-
   void enterEventLoop();
 
   void leaveEventLoop();
