@@ -1,12 +1,16 @@
 /* Reading List button */
 
 #urlbar:not([focused]):not(:hover) #readinglist-addremove-button {
-  display: none;
+  opacity: 0;
+  width: 0px;
 }
 
 #readinglist-addremove-button {
   list-style-image: url("chrome://browser/skin/readinglist/icons.svg#addpage");
   -moz-image-region: rect(0, 14px, 14px, 0);
+  transition: width 150ms ease-in-out, opacity 150ms ease-in-out 150ms;
+  opacity: 1;
+  width: 20px;
 }
 
 #readinglist-addremove-button:hover {
