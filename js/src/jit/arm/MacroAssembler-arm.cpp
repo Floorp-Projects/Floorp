@@ -5132,8 +5132,9 @@ MacroAssemblerARMCompat::asMasm() const
 // Stack manipulation functions.
 
 void
-MacroAssembler::PushRegsInMask(LiveRegisterSet set)
+MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
 {
+    MOZ_ASSERT(!SupportsSimd() && simdSet.size() == 0);
     int32_t diffF = set.fpus().getPushSizeInBytes();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 
@@ -5160,8 +5161,9 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set)
 }
 
 void
-MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
+MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRegisterSet simdSet)
 {
+    MOZ_ASSERT(!SupportsSimd() && simdSet.size() == 0);
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
     int32_t diffF = set.fpus().getPushSizeInBytes();
     const int32_t reservedG = diffG;
@@ -5169,12 +5171,12 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
 
     // ARM can load multiple registers at once, but only if we want back all
     // the registers we previously saved to the stack.
-    if (ignore.emptyFloat()) {
+    if (ignore.empty(true)) {
         diffF -= transferMultipleByRuns(set.fpus(), IsLoad, StackPointer, IA);
         adjustFrame(-reservedF);
     } else {
-        LiveFloatRegisterSet fpset(set.fpus().reduceSetForPush());
-        LiveFloatRegisterSet fpignore(ignore.fpus().reduceSetForPush());
+        TypedRegisterSet<VFPRegister> fpset = set.fpus().reduceSetForPush();
+        TypedRegisterSet<VFPRegister> fpignore = ignore.fpus().reduceSetForPush();
         for (FloatRegisterBackwardIterator iter(fpset); iter.more(); iter++) {
             diffF -= (*iter).size();
             if (!fpignore.has(*iter))
@@ -5184,7 +5186,7 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
     }
     MOZ_ASSERT(diffF == 0);
 
-    if (set.gprs().size() > 1 && ignore.emptyGeneral()) {
+    if (set.gprs().size() > 1 && ignore.empty(false)) {
         startDataTransferM(IsLoad, StackPointer, IA, WriteBack);
         for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= sizeof(intptr_t);

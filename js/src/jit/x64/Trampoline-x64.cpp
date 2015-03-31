@@ -19,9 +19,9 @@ using namespace js::jit;
 
 // All registers to save and restore. This includes the stack pointer, since we
 // use the ability to reference register values on the stack by index.
-static const LiveRegisterSet AllRegs =
-    LiveRegisterSet(GeneralRegisterSet(Registers::AllMask),
-                         FloatRegisterSet(FloatRegisters::AllMask));
+static const RegisterSet AllRegs =
+  RegisterSet(GeneralRegisterSet(Registers::AllMask),
+              FloatRegisterSet(FloatRegisters::AllMask));
 
 // Generates a trampoline for calling Jit compiled code from a C++ function.
 // The trampoline use the EnterJitCode signature, with the standard x64 fastcall
@@ -150,7 +150,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     CodeLabel returnLabel;
     if (type == EnterJitBaseline) {
         // Handle OSR.
-        AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+        GeneralRegisterSet regs(GeneralRegisterSet::All());
         regs.takeUnchecked(OsrFrameReg);
         regs.take(rbp);
         regs.take(reg_code);
@@ -516,11 +516,12 @@ PushBailoutFrame(MacroAssembler& masm, Register spArg)
         // the float registers to have the maximal possible size
         // (Simd128DataSize). To work around this, we just spill the double
         // registers by hand here, using the register dump offset directly.
-        for (GeneralRegisterBackwardIterator iter(AllRegs.gprs()); iter.more(); iter++)
+        RegisterSet set = AllRegs;
+        for (GeneralRegisterBackwardIterator iter(set.gprs()); iter.more(); iter++)
             masm.Push(*iter);
 
         masm.reserveStack(sizeof(RegisterDump::FPUArray));
-        for (FloatRegisterBackwardIterator iter(AllRegs.fpus()); iter.more(); iter++) {
+        for (FloatRegisterBackwardIterator iter(set.fpus()); iter.more(); iter++) {
             FloatRegister reg = *iter;
             Address spillAddress(StackPointer, reg.getRegisterDumpOffsetInBytes());
             masm.storeDouble(reg, spillAddress);
@@ -601,7 +602,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
 
     // Avoid conflicts with argument registers while discarding the result after
     // the function call.
-    AllocatableGeneralRegisterSet regs(Register::Codes::WrapperMask);
+    GeneralRegisterSet regs = GeneralRegisterSet(Register::Codes::WrapperMask);
 
     // Wrapper register set is a superset of Volatile register set.
     JS_STATIC_ASSERT((Register::Codes::VolatileMask & ~Register::Codes::WrapperMask) == 0);
@@ -776,9 +777,8 @@ JitRuntime::generatePreBarrier(JSContext* cx, MIRType type)
 {
     MacroAssembler masm;
 
-    LiveRegisterSet regs =
-        LiveRegisterSet(GeneralRegisterSet(Registers::VolatileMask),
-                             FloatRegisterSet(FloatRegisters::VolatileMask));
+    RegisterSet regs = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
+                                   FloatRegisterSet(FloatRegisters::VolatileMask));
     masm.PushRegsInMask(regs);
 
     MOZ_ASSERT(PreBarrierReg == rdx);

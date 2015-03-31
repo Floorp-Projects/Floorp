@@ -1446,7 +1446,7 @@ MacroAssembler::initGCThing(Register obj, Register temp, JSObject* templateObj,
     RegisterSet regs = RegisterSet::Volatile();
     PushRegsInMask(regs);
     regs.takeUnchecked(obj);
-    Register temp = regs.takeAnyGeneral();
+    Register temp = regs.takeGeneral();
 
     setupUnalignedABICall(2, temp);
     passABIArg(obj);
@@ -1595,7 +1595,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
     bind(&baseline);
     {
         // Prepare a register set for use in this case.
-        AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+        GeneralRegisterSet regs(GeneralRegisterSet::All());
         MOZ_ASSERT(!regs.has(BaselineStackReg));
         regs.take(bailoutInfo);
 
@@ -1657,7 +1657,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             branchTest32(Zero, ReturnReg, ReturnReg, exceptionLabel());
 
             // Restore values where they need to be and resume execution.
-            AllocatableGeneralRegisterSet enterMonRegs(GeneralRegisterSet::All());
+            GeneralRegisterSet enterMonRegs(GeneralRegisterSet::All());
             enterMonRegs.take(R0);
             enterMonRegs.take(BaselineStubReg);
             enterMonRegs.take(BaselineFrameReg);
@@ -1695,7 +1695,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             branchTest32(Zero, ReturnReg, ReturnReg, exceptionLabel());
 
             // Restore values where they need to be and resume execution.
-            AllocatableGeneralRegisterSet enterRegs(GeneralRegisterSet::All());
+            GeneralRegisterSet enterRegs(GeneralRegisterSet::All());
             enterRegs.take(R0);
             enterRegs.take(R1);
             enterRegs.take(BaselineFrameReg);
@@ -1759,17 +1759,16 @@ MacroAssembler::assumeUnreachable(const char* output)
 {
 #ifdef DEBUG
     if (!IsCompilingAsmJS()) {
-        AllocatableRegisterSet regs(RegisterSet::Volatile());
-        LiveRegisterSet save(regs.asLiveSet());
-        PushRegsInMask(save);
-        Register temp = regs.takeAnyGeneral();
+        RegisterSet regs = RegisterSet::Volatile();
+        PushRegsInMask(regs);
+        Register temp = regs.takeGeneral();
 
         setupUnalignedABICall(1, temp);
         movePtr(ImmPtr(output), temp);
         passABIArg(temp);
         callWithABI(JS_FUNC_TO_DATA_PTR(void*, AssumeUnreachable_));
 
-        PopRegsInMask(save);
+        PopRegsInMask(RegisterSet::Volatile());
     }
 #endif
 
@@ -1801,18 +1800,17 @@ Printf0_(const char* output) {
 void
 MacroAssembler::printf(const char* output)
 {
-    AllocatableRegisterSet regs(RegisterSet::Volatile());
-    LiveRegisterSet save(regs.asLiveSet());
-    PushRegsInMask(save);
+    RegisterSet regs = RegisterSet::Volatile();
+    PushRegsInMask(regs);
 
-    Register temp = regs.takeAnyGeneral();
+    Register temp = regs.takeGeneral();
 
     setupUnalignedABICall(1, temp);
     movePtr(ImmPtr(output), temp);
     passABIArg(temp);
     callWithABI(JS_FUNC_TO_DATA_PTR(void*, Printf0_));
 
-    PopRegsInMask(save);
+    PopRegsInMask(RegisterSet::Volatile());
 }
 
 static void
@@ -1825,13 +1823,12 @@ Printf1_(const char* output, uintptr_t value) {
 void
 MacroAssembler::printf(const char* output, Register value)
 {
-    AllocatableRegisterSet regs(RegisterSet::Volatile());
-    LiveRegisterSet save(regs.asLiveSet());
-    PushRegsInMask(save);
+    RegisterSet regs = RegisterSet::Volatile();
+    PushRegsInMask(regs);
 
     regs.takeUnchecked(value);
 
-    Register temp = regs.takeAnyGeneral();
+    Register temp = regs.takeGeneral();
 
     setupUnalignedABICall(2, temp);
     movePtr(ImmPtr(output), temp);
@@ -1839,7 +1836,7 @@ MacroAssembler::printf(const char* output, Register value)
     passABIArg(value);
     callWithABI(JS_FUNC_TO_DATA_PTR(void*, Printf1_));
 
-    PopRegsInMask(save);
+    PopRegsInMask(RegisterSet::Volatile());
 }
 
 #ifdef JS_TRACE_LOGGING
@@ -1849,12 +1846,12 @@ MacroAssembler::tracelogStartId(Register logger, uint32_t textId, bool force)
     if (!force && !TraceLogTextIdEnabled(textId))
         return;
 
-    AllocatableRegisterSet regs(RegisterSet::Volatile());
-    LiveRegisterSet save(regs.asLiveSet());
-    PushRegsInMask(save);
+    PushRegsInMask(RegisterSet::Volatile());
+
+    RegisterSet regs = RegisterSet::Volatile();
     regs.takeUnchecked(logger);
 
-    Register temp = regs.takeAnyGeneral();
+    Register temp = regs.takeGeneral();
 
     setupUnalignedABICall(2, temp);
     passABIArg(logger);
@@ -1862,26 +1859,26 @@ MacroAssembler::tracelogStartId(Register logger, uint32_t textId, bool force)
     passABIArg(temp);
     callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStartEventPrivate));
 
-    PopRegsInMask(save);
+    PopRegsInMask(RegisterSet::Volatile());
 }
 
 void
 MacroAssembler::tracelogStartId(Register logger, Register textId)
 {
-    AllocatableRegisterSet regs(RegisterSet::Volatile());
-    LiveRegisterSet save(regs.asLiveSet());
-    PushRegsInMask(save);
+    PushRegsInMask(RegisterSet::Volatile());
+
+    RegisterSet regs = RegisterSet::Volatile();
     regs.takeUnchecked(logger);
     regs.takeUnchecked(textId);
 
-    Register temp = regs.takeAnyGeneral();
+    Register temp = regs.takeGeneral();
 
     setupUnalignedABICall(2, temp);
     passABIArg(logger);
     passABIArg(textId);
     callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStartEventPrivate));
 
-    PopRegsInMask(save);
+    PopRegsInMask(RegisterSet::Volatile());
 }
 
 void
@@ -1889,20 +1886,20 @@ MacroAssembler::tracelogStartEvent(Register logger, Register event)
 {
     void (&TraceLogFunc)(TraceLoggerThread*, const TraceLoggerEvent&) = TraceLogStartEvent;
 
-    AllocatableRegisterSet regs(RegisterSet::Volatile());
-    LiveRegisterSet save(regs.asLiveSet());
-    PushRegsInMask(save);
+    PushRegsInMask(RegisterSet::Volatile());
+
+    RegisterSet regs = RegisterSet::Volatile();
     regs.takeUnchecked(logger);
     regs.takeUnchecked(event);
 
-    Register temp = regs.takeAnyGeneral();
+    Register temp = regs.takeGeneral();
 
     setupUnalignedABICall(2, temp);
     passABIArg(logger);
     passABIArg(event);
     callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogFunc));
 
-    PopRegsInMask(save);
+    PopRegsInMask(RegisterSet::Volatile());
 }
 
 void
@@ -1911,12 +1908,12 @@ MacroAssembler::tracelogStopId(Register logger, uint32_t textId, bool force)
     if (!force && !TraceLogTextIdEnabled(textId))
         return;
 
-    AllocatableRegisterSet regs(RegisterSet::Volatile());
-    LiveRegisterSet save(regs.asLiveSet());
-    PushRegsInMask(save);
+    PushRegsInMask(RegisterSet::Volatile());
+
+    RegisterSet regs = RegisterSet::Volatile();
     regs.takeUnchecked(logger);
 
-    Register temp = regs.takeAnyGeneral();
+    Register temp = regs.takeGeneral();
 
     setupUnalignedABICall(2, temp);
     passABIArg(logger);
@@ -1925,26 +1922,26 @@ MacroAssembler::tracelogStopId(Register logger, uint32_t textId, bool force)
 
     callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStopEventPrivate));
 
-    PopRegsInMask(save);
+    PopRegsInMask(RegisterSet::Volatile());
 }
 
 void
 MacroAssembler::tracelogStopId(Register logger, Register textId)
 {
-    AllocatableRegisterSet regs(RegisterSet::Volatile());
-    LiveRegisterSet save(regs.asLiveSet());
-    PushRegsInMask(save);
+    PushRegsInMask(RegisterSet::Volatile());
+    RegisterSet regs = RegisterSet::Volatile();
     regs.takeUnchecked(logger);
+
     regs.takeUnchecked(textId);
 
-    Register temp = regs.takeAnyGeneral();
+    Register temp = regs.takeGeneral();
 
     setupUnalignedABICall(2, temp);
     passABIArg(logger);
     passABIArg(textId);
     callWithABI(JS_FUNC_TO_DATA_PTR(void*, TraceLogStopEventPrivate));
 
-    PopRegsInMask(save);
+    PopRegsInMask(RegisterSet::Volatile());
 }
 #endif
 
@@ -2532,21 +2529,39 @@ MacroAssembler::alignJitStackBasedOnNArgs(uint32_t nargs)
 // Stack manipulation functions.
 
 void
-MacroAssembler::PushRegsInMask(LiveGeneralRegisterSet set)
+MacroAssembler::PushRegsInMask(RegisterSet set)
 {
-    PushRegsInMask(LiveRegisterSet(set.set(), FloatRegisterSet()));
+    PushRegsInMask(set, FloatRegisterSet());
 }
 
 void
-MacroAssembler::PopRegsInMask(LiveRegisterSet set)
+MacroAssembler::PushRegsInMask(GeneralRegisterSet set)
 {
-    PopRegsInMaskIgnore(set, LiveRegisterSet());
+    PushRegsInMask(RegisterSet(set, FloatRegisterSet()));
 }
 
 void
-MacroAssembler::PopRegsInMask(LiveGeneralRegisterSet set)
+MacroAssembler::PopRegsInMask(RegisterSet set)
 {
-    PopRegsInMask(LiveRegisterSet(set.set(), FloatRegisterSet()));
+    PopRegsInMaskIgnore(set, RegisterSet());
+}
+
+void
+MacroAssembler::PopRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
+{
+    PopRegsInMaskIgnore(set, RegisterSet(), simdSet);
+}
+
+void
+MacroAssembler::PopRegsInMask(GeneralRegisterSet set)
+{
+    PopRegsInMask(RegisterSet(set, FloatRegisterSet()));
+}
+
+void
+MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore)
+{
+    PopRegsInMaskIgnore(set, ignore, FloatRegisterSet());
 }
 
 void
