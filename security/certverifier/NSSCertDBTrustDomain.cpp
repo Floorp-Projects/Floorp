@@ -220,6 +220,10 @@ NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
                     candidateCert->derIssuer.len,
                     candidateCert->serialNumber.data,
                     candidateCert->serialNumber.len,
+                    candidateCert->derSubject.data,
+                    candidateCert->derSubject.len,
+                    candidateCert->derPublicKey.data,
+                    candidateCert->derPublicKey.len,
                     &isCertRevoked);
   if (NS_FAILED(nsrv)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
