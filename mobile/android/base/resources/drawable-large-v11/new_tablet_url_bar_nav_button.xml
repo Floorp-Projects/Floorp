@@ -19,7 +19,7 @@
 
     <!-- pressed state -->
     <item android:state_pressed="true"
-          android:drawable="@color/new_tablet_highlight"/>
+          android:drawable="@color/toolbar_grey_pressed"/>
 
     <!-- focused state -->
     <item android:state_focused="true"
