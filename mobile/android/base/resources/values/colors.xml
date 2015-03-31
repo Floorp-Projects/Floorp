@@ -41,8 +41,7 @@
   <color name="new_tablet_highlight">#D7D7DC</color>
   <color name="new_tablet_highlight_lwt">#AAD7D7DC</color>
 
-  <!-- If you update one, update the other. -->
-  <color name="new_tablet_highlight_dark">#45494E</color>
+  <!-- Synced w/ tabs_tray_grey_pressed -->
   <color name="new_tablet_highlight_dark_lwt">#AA45494E</color>
 
   <!-- (bug 1077195) Focused state values are temporary. -->
