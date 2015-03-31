@@ -360,6 +360,11 @@ SyncImpl.prototype = {
 
     // Update local items based on the response.
     for (let serverRecord of response.body.items) {
+      if (serverRecord.deleted) {
+        // _deleteItemForGUID is a no-op if no item exists with the GUID.
+        yield this._deleteItemForGUID(serverRecord.id);
+        continue;
+      }
       let localItem = yield this._itemForGUID(serverRecord.id);
       if (localItem) {
         if (localItem.serverLastModified == serverRecord.last_modified) {
@@ -372,20 +377,22 @@ SyncImpl.prototype = {
         // the material-changes phase.
         // TODO
 
-        if (serverRecord.deleted) {
-          yield this._deleteItemForGUID(serverRecord.id);
-          continue;
-        }
         yield this._updateItemWithServerRecord(localItem, serverRecord);
         continue;
       }
-      // new item
+      // A potentially new item.  addItem() will fail here when an item was
+      // added to the local list between the time we uploaded new items and
+      // now.
       let localRecord = localRecordFromServerRecord(serverRecord);
       try {
         yield this.list.addItem(localRecord);
       } catch (ex) {
-        log.warn("Failed to add a new item from server record ${serverRecord}: ${ex}",
-                 {serverRecord, ex});
+        if (ex instanceof ReadingList.Error.Exists) {
+          log.debug("Tried to add an item that already exists.");
+        } else {
+          log.error("Error adding an item from server record ${serverRecord} ${ex}",
+                    { serverRecord, ex });
+        }
       }
     }
 
@@ -428,14 +435,24 @@ SyncImpl.prototype = {
    */
   _updateItemWithServerRecord: Task.async(function* (localItem, serverRecord) {
     if (!localItem) {
-      throw new Error("Item should exist");
+      // The item may have been deleted from the local list between the time we
+      // saw that it needed updating and now.
+      log.debug("Tried to update a null local item from server record",
+                serverRecord);
+      return;
     }
     localItem._record = localRecordFromServerRecord(serverRecord);
     try {
       yield this.list.updateItem(localItem);
     } catch (ex) {
-      log.warn("Failed to update an item from server record ${serverRecord}: ${ex}",
-               {serverRecord, ex});
+      // The item may have been deleted from the local list after we fetched it.
+      if (ex instanceof ReadingList.Error.Deleted) {
+        log.debug("Tried to update an item that was deleted from server record",
+                  serverRecord);
+      } else {
+        log.error("Error updating an item from server record ${serverRecord} ${ex}",
+                  { serverRecord, ex });
+      }
     }
   }),
 
@@ -455,8 +472,8 @@ SyncImpl.prototype = {
       try {
         yield this.list.deleteItem(item);
       } catch (ex) {
-        log.warn("Failed delete local item with id ${guid}: ${ex}",
-                 {guid, ex});
+        log.error("Failed delete local item with id ${guid} ${ex}",
+                  { guid, ex });
       }
       return;
     }
@@ -468,8 +485,8 @@ SyncImpl.prototype = {
     try {
       this.list._store.deleteItemByGUID(guid);
     } catch (ex) {
-      log.warn("Failed to delete local item with id ${guid}: ${ex}",
-               {guid, ex});
+      log.error("Failed to delete local item with id ${guid} ${ex}",
+                { guid, ex });
     }
   }),
 
@@ -488,7 +505,7 @@ SyncImpl.prototype = {
   }),
 
   _handleUnexpectedResponse(contextMsgFragment, response) {
-    log.warn(`Unexpected response ${contextMsgFragment}`, response);
+    log.error(`Unexpected response ${contextMsgFragment}`, response);
   },
 
   // TODO: Wipe this pref when user logs out.
