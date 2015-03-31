@@ -155,6 +155,18 @@ let gEMEHandler = {
                            buttons);
   },
   showPopupNotificationForSuccess: function(browser, keySystem) {
+    // We're playing EME content! Remove any "we can't play because..." messages.
+    var box = gBrowser.getNotificationBox(browser);
+    ["drmContentDisabled",
+     "drmContentCDMNotSupported",
+     "drmContentCDMInsufficientVersion",
+     "drmContentCDMInstalling"
+     ].forEach(function (value) {
+        var notification = box.getNotificationWithValue(value);
+        if (notification)
+          box.removeNotification(notification);
+      });
+
     // Don't bother creating it if it's already there:
     if (PopupNotifications.getNotification("drmContentPlaying", browser)) {
       return;
