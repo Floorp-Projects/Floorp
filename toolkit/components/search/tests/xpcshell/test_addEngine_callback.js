@@ -5,29 +5,10 @@
  * Tests covering nsIBrowserSearchService::addEngine's optional callback.
  */
 
+Components.utils.import("resource://testing-common/MockRegistrar.jsm");
+
 "use strict";
 
-// Override the prompt service and nsIPrompt, since the search service currently
-// prompts in response to certain installation failures we test here
-// XXX this should disappear once bug 863474 is fixed
-function replaceService(contractID, component) {
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  let cid = registrar.contractIDToCID(contractID);
-
-  let oldFactory = Components.manager.getClassObject(Components.classes[contractID],
-                                                     Ci.nsIFactory);
-  registrar.unregisterFactory(cid, oldFactory);
-
-  let factory = {
-    createInstance: function(aOuter, aIid) {
-      if (aOuter != null)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
-      return component.QueryInterface(aIid);
-    }
-  };
-
-  registrar.registerFactory(cid, "", contractID, factory);
-}
 // Only need to stub the methods actually called by nsSearchService
 let promptService = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPromptService]),
@@ -37,8 +18,11 @@ let prompt = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt]),
   alert: function() {}
 };
-replaceService("@mozilla.org/embedcomp/prompt-service;1", promptService);
-replaceService("@mozilla.org/prompter;1", prompt);
+// Override the prompt service and nsIPrompt, since the search service currently
+// prompts in response to certain installation failures we test here
+// XXX this should disappear once bug 863474 is fixed
+MockRegistrar.register("@mozilla.org/embedcomp/prompt-service;1", promptService);
+MockRegistrar.register("@mozilla.org/prompter;1", prompt);
 
 
 // First test inits the search service

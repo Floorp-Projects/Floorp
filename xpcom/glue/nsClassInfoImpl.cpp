@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsIClassInfoImpl.h"
-#include "nsIProgrammingLanguage.h"
 
 NS_IMETHODIMP_(MozExternalRefCountType)
 GenericClassInfo::AddRef()
@@ -57,13 +56,6 @@ GenericClassInfo::GetClassID(nsCID** aClassID)
   NS_ERROR("GetClassID not implemented");
   *aClassID = nullptr;
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-GenericClassInfo::GetImplementationLanguage(uint32_t* aLanguage)
-{
-  *aLanguage = nsIProgrammingLanguage::CPLUSPLUS;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

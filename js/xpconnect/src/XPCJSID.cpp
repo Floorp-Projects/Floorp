@@ -11,6 +11,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/StaticPtr.h"
+#include "nsIProgrammingLanguage.h"
 
 using namespace mozilla::dom;
 using namespace JS;

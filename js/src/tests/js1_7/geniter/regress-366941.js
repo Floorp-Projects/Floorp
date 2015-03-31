@@ -60,24 +60,24 @@ function test()
 
   reportCompare(expect, actual, summary + ': 3');
 
-  // syntax error in js17
+  // Before JS1.7's destructuring for…in was fixed to match JS1.8's,
+  // the expected result was a SyntaxError about the for…in loop's lhs.
   var iter2 = gen(list2);
-  expect = /SyntaxError: (invalid for.in left-hand side|Left hand side of for..in loop must be an array of length 2 to accept key.value pair.)/;
+  expect = '1,2,3;4,5,6;7,8,9;';
   actual = '';
 
   try
   {
     eval('for (var [foo, bar, baz] in iter2) {' +
-         'actual += foo + "," + bar + "," + baz + ";";' + 
+         'actual += foo + "," + bar + "," + baz + ";";' +
          '}');
-    actual = 'No Error';
   }
   catch(ex)
   {
     actual = ex + '';
   }
- 
-  reportMatch(expect, actual, summary + ': 4');
+
+  reportCompare(expect, actual, summary + ': 4');
 
   exitFunc ('test');
 }

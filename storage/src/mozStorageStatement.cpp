@@ -11,7 +11,6 @@
 #include "nsMemory.h"
 #include "nsThreadUtils.h"
 #include "nsIClassInfoImpl.h"
-#include "nsIProgrammingLanguage.h"
 #include "Variant.h"
 
 #include "mozIStorageError.h"
@@ -85,13 +84,6 @@ public:
   GetClassID(nsCID **_id) override
   {
     *_id = nullptr;
-    return NS_OK;
-  }
-
-  NS_IMETHODIMP
-  GetImplementationLanguage(uint32_t *_language) override
-  {
-    *_language = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;
   }
 

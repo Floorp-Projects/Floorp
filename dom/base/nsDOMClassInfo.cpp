@@ -864,14 +864,6 @@ nsDOMClassInfo::GetClassIDNoAlloc(nsCID *aClassID)
 }
 
 NS_IMETHODIMP
-nsDOMClassInfo::GetImplementationLanguage(uint32_t *aImplLanguage)
-{
-  *aImplLanguage = nsIProgrammingLanguage::CPLUSPLUS;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDOMClassInfo::GetFlags(uint32_t *aFlags)
 {
   *aFlags = DOMCLASSINFO_STANDARD_FLAGS;

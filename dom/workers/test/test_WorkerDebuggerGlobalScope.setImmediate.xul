@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Test for WorkerDebuggerGlobalScope.setImmediate"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript" src="dom_worker_helper.js"/>
+
+  <script type="application/javascript">
+  <![CDATA[
+
+    const WORKER_URL = "WorkerDebuggerGlobalScope.setImmediate_worker.js";
+    const DEBUGGER_URL = BASE_URL + "WorkerDebuggerGlobalScope.setImmediate_debugger.js";
+
+    function test() {
+      Task.spawn(function* () {
+        SimpleTest.waitForExplicitFinish();
+
+        let promise = waitForRegister(WORKER_URL, DEBUGGER_URL);
+        let worker = new Worker(WORKER_URL);
+        let dbg = yield promise;
+
+        info("Send a request to the worker debugger. This should cause a " +
+             "the worker debugger to send two responses. The worker debugger " +
+             "should send the second response before the first one, since " +
+             "the latter is delayed until the next tick of the event loop.");
+        promise = waitForMultiple([
+          waitForDebuggerMessage(dbg, "pong2"),
+          waitForDebuggerMessage(dbg, "pong1")
+        ]);
+        dbg.postMessage("ping");
+        yield promise;
+
+        SimpleTest.finish();
+      });
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+  </body>
+  <label id="test-result"/>
+</window>

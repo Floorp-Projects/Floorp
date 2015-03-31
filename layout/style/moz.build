@@ -93,6 +93,7 @@ EXPORTS.mozilla.dom += [
     'CSSValue.h',
     'FontFace.h',
     'FontFaceSet.h',
+    'FontFaceSetIterator.h',
     'MediaQueryList.h',
 ]
 
@@ -120,6 +121,7 @@ UNIFIED_SOURCES += [
     'Declaration.cpp',
     'ErrorReporter.cpp',
     'FontFace.cpp',
+    'FontFaceSetIterator.cpp',
     'ImageLoader.cpp',
     'Loader.cpp',
     'MediaQueryList.cpp',

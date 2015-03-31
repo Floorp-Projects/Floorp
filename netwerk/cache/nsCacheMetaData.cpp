@@ -151,7 +151,7 @@ nsresult
 nsCacheMetaData::EnsureBuffer(uint32_t bufSize)
 {
     if (mBufferSize < bufSize) {
-        char * buf = (char *)moz_realloc(mBuffer, bufSize);
+        char * buf = (char *)realloc(mBuffer, bufSize);
         if (!buf) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
