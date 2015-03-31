@@ -169,7 +169,6 @@ GeckoTouchDispatcher::DispatchTouchMoveEvents(TimeStamp aVsyncTime)
   {
     MutexAutoLock lock(mTouchQueueLock);
     if (!mHavePendingTouchMoves) {
-      MOZ_ASSERT(mTouchMoveEvents.empty());
       return;
     }
     mHavePendingTouchMoves = false;

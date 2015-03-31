@@ -3,10 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-% skin global classic/1.0 %skin/classic/global/ os=WINNT osversion<6
-% skin global classic/1.0 %skin/classic/global/ os!=WINNT
-# NOTE: If you add a new file here, you'll need to add it to the aero
-# section at the bottom of this file
+% skin global classic/1.0 %skin/classic/global/
         skin/classic/global/about.css
         skin/classic/global/aboutCache.css
         skin/classic/global/aboutCacheEntry.css
@@ -70,12 +67,10 @@ toolkit.jar:
         skin/classic/global/arrow/arrow-down.png                 (arrow/arrow-down.png)
         skin/classic/global/arrow/arrow-lft.gif                  (arrow/arrow-lft.gif)
         skin/classic/global/arrow/arrow-lft-dis.gif              (arrow/arrow-lft-dis.gif)
-        skin/classic/global/arrow/arrow-lft-hov.gif              (arrow/arrow-lft.gif)
         skin/classic/global/arrow/arrow-lft-sharp.gif            (arrow/arrow-lft-sharp.gif)
         skin/classic/global/arrow/arrow-lft-sharp-end.gif        (arrow/arrow-lft-sharp-end.gif)
         skin/classic/global/arrow/arrow-rit.gif                  (arrow/arrow-rit.gif)
         skin/classic/global/arrow/arrow-rit-dis.gif              (arrow/arrow-rit-dis.gif)
-        skin/classic/global/arrow/arrow-rit-hov.gif              (arrow/arrow-rit.gif)
         skin/classic/global/arrow/arrow-rit-sharp.gif            (arrow/arrow-rit-sharp.gif)
         skin/classic/global/arrow/arrow-rit-sharp-end.gif        (arrow/arrow-rit-sharp-end.gif)
         skin/classic/global/arrow/arrow-up.gif                   (arrow/arrow-up.gif)
@@ -194,7 +189,6 @@ toolkit.jar:
         skin/classic/global/reader/RM-Reading-List-24x24.svg     (../../shared/reader/RM-Reading-List-24x24.svg)
         skin/classic/global/reader/RM-Type-Controls-24x24.svg    (../../shared/reader/RM-Type-Controls-24x24.svg)
         skin/classic/global/reader/RM-Type-Controls-Arrow.svg    (../../shared/reader/RM-Type-Controls-Arrow.svg)
-
         skin/classic/global/scrollbar/slider.gif                 (scrollbar/slider.gif)
         skin/classic/global/splitter/grip-bottom.gif             (splitter/grip-bottom.gif)
         skin/classic/global/splitter/grip-top.gif                (splitter/grip-top.gif)
@@ -212,211 +206,136 @@ toolkit.jar:
         skin/classic/global/tree/twisty-open.png                 (tree/twisty-open.png)
 
 #ifdef XP_WIN
-toolkit.jar:
-% skin global classic/1.0 %skin/classic/aero/global/ os=WINNT osversion>=6
-        skin/classic/aero/global/about.css
-        skin/classic/aero/global/aboutCache.css
-        skin/classic/aero/global/aboutCacheEntry.css
-        skin/classic/aero/global/aboutMemory.css
-        skin/classic/aero/global/aboutReader.css
-        skin/classic/aero/global/aboutSupport.css
-        skin/classic/aero/global/appPicker.css
-        skin/classic/aero/global/arrow.css
-*       skin/classic/aero/global/autocomplete.css                        (autocomplete-aero.css)
-        skin/classic/aero/global/button.css
-        skin/classic/aero/global/checkbox.css
-        skin/classic/aero/global/colorpicker.css
-        skin/classic/aero/global/commonDialog.css
-        skin/classic/aero/global/config.css                              (../../shared/config.css)
-        skin/classic/aero/global/customizeToolbar.css
-        skin/classic/aero/global/datetimepicker.css
-        skin/classic/aero/global/dialog.css
-        skin/classic/aero/global/dropmarker.css
-        skin/classic/aero/global/expander.css
-        skin/classic/aero/global/filefield.css
-        skin/classic/aero/global/filepicker.css
-        skin/classic/aero/global/findBar.css
-*       skin/classic/aero/global/global.css
-        skin/classic/aero/global/globalBindings.xml
-        skin/classic/aero/global/groupbox.css
-*       skin/classic/aero/global/inContentUI.css                         (inContentUI-aero.css)
-        skin/classic/aero/global/linkTree.css
-*       skin/classic/aero/global/listbox.css                             (listbox-aero.css)
-*       skin/classic/aero/global/menu.css                                (menu-aero.css)
-*       skin/classic/aero/global/menulist.css                            (menulist-aero.css)
-        skin/classic/aero/global/netError.css
-        skin/classic/aero/global/numberbox.css
-*       skin/classic/aero/global/notification.css                        (notification-aero.css)
-        skin/classic/aero/global/passwordmgr.css
-*       skin/classic/aero/global/popup.css                               (popup-aero.css)
-        skin/classic/aero/global/preferences.css
-        skin/classic/aero/global/printPageSetup.css
-        skin/classic/aero/global/printPreview.css
-        skin/classic/aero/global/progressmeter.css
-        skin/classic/aero/global/radio.css
-        skin/classic/aero/global/resizer.css
-        skin/classic/aero/global/richlistbox.css
-        skin/classic/aero/global/scale.css
-        skin/classic/aero/global/scrollbars.css                          (xulscrollbars.css)
-        skin/classic/aero/global/scrollbox.css
-        skin/classic/aero/global/spinbuttons.css
-        skin/classic/aero/global/splitter.css
-        skin/classic/aero/global/tabbox.css
-        skin/classic/aero/global/tabprompts.css
-*       skin/classic/aero/global/textbox.css                             (textbox-aero.css)
-        skin/classic/aero/global/toolbar.css
-*       skin/classic/aero/global/toolbarbutton.css                       (toolbarbutton-aero.css)
-*       skin/classic/aero/global/tree.css                                (tree-aero.css)
-        skin/classic/aero/global/wizard.css
-        skin/classic/aero/global/alerts/alert.css                        (alerts/alert.css)
-        skin/classic/aero/global/alerts/notification-48.png              (alerts/notification-48.png)
-        skin/classic/aero/global/arrow/arrow-dn.gif                      (arrow/arrow-dn.gif)
-        skin/classic/aero/global/arrow/arrow-dn-dis.gif                  (arrow/arrow-dn-dis.gif)
-        skin/classic/aero/global/arrow/arrow-dn-hov.gif                  (arrow/arrow-dn-hov.gif)
-        skin/classic/aero/global/arrow/arrow-dn-sharp.gif                (arrow/arrow-dn-sharp.gif)
-        skin/classic/aero/global/arrow/arrow-down.png                    (arrow/arrow-down.png)
-        skin/classic/aero/global/arrow/arrow-lft.gif                     (arrow/arrow-lft.gif)
-        skin/classic/aero/global/arrow/arrow-lft-dis.gif                 (arrow/arrow-lft-dis.gif)
-        skin/classic/aero/global/arrow/arrow-lft-hov.gif                 (arrow/arrow-lft.gif)
-        skin/classic/aero/global/arrow/arrow-lft-sharp.gif               (arrow/arrow-lft-sharp.gif)
-        skin/classic/aero/global/arrow/arrow-lft-sharp-end.gif           (arrow/arrow-lft-sharp-end.gif)
-        skin/classic/aero/global/arrow/arrow-rit.gif                     (arrow/arrow-rit.gif)
-        skin/classic/aero/global/arrow/arrow-rit-dis.gif                 (arrow/arrow-rit-dis.gif)
-        skin/classic/aero/global/arrow/arrow-rit-hov.gif                 (arrow/arrow-rit.gif)
-        skin/classic/aero/global/arrow/arrow-rit-sharp.gif               (arrow/arrow-rit-sharp.gif)
-        skin/classic/aero/global/arrow/arrow-rit-sharp-end.gif           (arrow/arrow-rit-sharp-end.gif)
-        skin/classic/aero/global/arrow/arrow-up.gif                      (arrow/arrow-up.gif)
-        skin/classic/aero/global/arrow/arrow-up-dis.gif                  (arrow/arrow-up-dis.gif)
-        skin/classic/aero/global/arrow/arrow-up-hov.gif                  (arrow/arrow-up-hov.gif)
-        skin/classic/aero/global/arrow/arrow-up-sharp.gif                (arrow/arrow-up-sharp.gif)
-        skin/classic/aero/global/arrow/panelarrow-horizontal.svg         (arrow/panelarrow-horizontal.svg)
-        skin/classic/aero/global/arrow/panelarrow-vertical.svg           (arrow/panelarrow-vertical.svg)
-        skin/classic/aero/global/arrow/panelarrow-horizontal-themed.svg  (arrow/panelarrow-horizontal-themed.svg)
-        skin/classic/aero/global/arrow/panelarrow-vertical-themed.svg    (arrow/panelarrow-vertical-themed.svg)
-        skin/classic/aero/global/checkbox/cbox-check.gif                 (checkbox/cbox-check.gif)
-        skin/classic/aero/global/checkbox/cbox-check-dis.gif             (checkbox/cbox-check-dis.gif)
-*       skin/classic/aero/global/console/console.css                     (console/console-aero.css)
-        skin/classic/aero/global/console/console-toolbar.png             (console/console-toolbar-aero.png)
-        skin/classic/aero/global/console/console-error-caret.gif         (console/console-error-caret.gif)
-        skin/classic/aero/global/console/console-error-dash.gif          (console/console-error-dash.gif)
-        skin/classic/aero/global/console/itemSelected.png                (console/itemSelected.png)
-*       skin/classic/aero/global/dirListing/dirListing.css               (dirListing/dirListing.css)
-        skin/classic/aero/global/dirListing/folder.png                   (dirListing/folder-aero.png)
-        skin/classic/aero/global/dirListing/local.png                    (dirListing/local-aero.png)
-        skin/classic/aero/global/dirListing/remote.png                   (dirListing/remote-aero.png)
-        skin/classic/aero/global/dirListing/up.png                       (dirListing/up-aero.png)
-        skin/classic/aero/global/Filepicker.png                          (filepicker/Filepicker.png)
-        skin/classic/aero/global/icons/autoscroll.png                    (icons/autoscroll-aero.png)
-        skin/classic/aero/global/icons/autocomplete-search.svg           (icons/autocomplete-search.svg)
-        skin/classic/aero/global/icons/blacklist_favicon.png             (icons/blacklist_favicon-aero.png)
-        skin/classic/aero/global/icons/blacklist_large.png               (icons/blacklist_large-aero.png)
-        skin/classic/aero/global/icons/Close.gif                         (icons/Close.gif)
-        skin/classic/aero/global/icons/close.png                         (icons/close.png)
-        skin/classic/aero/global/icons/collapse.png                      (icons/collapse.png)
-        skin/classic/aero/global/icons/Error.png                         (icons/Error-aero.png)
-        skin/classic/aero/global/icons/error-16.png                      (icons/error-16-aero.png)
-        skin/classic/aero/global/icons/error-24.png                      (icons/error-24-aero.png)
-        skin/classic/aero/global/icons/error-48.png                      (icons/error-48-aero.png)
-        skin/classic/aero/global/icons/error-64.png                      (icons/error-64-aero.png)
-        skin/classic/aero/global/icons/expand.png                        (icons/expand.png)
-        skin/classic/aero/global/icons/find.png                          (icons/find-aero.png)
-        skin/classic/aero/global/icons/find-arrows.png                   (icons/find-arrows.png)
-        skin/classic/aero/global/icons/folder-item.png                   (icons/folder-item-aero.png)
-        skin/classic/aero/global/icons/information-16.png                (icons/information-16-aero.png)
-        skin/classic/aero/global/icons/information-24.png                (icons/information-24-aero.png)
-        skin/classic/aero/global/icons/information-32.png                (icons/information-32-aero.png)
-        skin/classic/aero/global/icons/information-48.png                (icons/information-48-aero.png)
-        skin/classic/aero/global/icons/information-64.png                (icons/information-64-aero.png)
-        skin/classic/aero/global/icons/loading_16.png                    (icons/loading_16.png)
-        skin/classic/aero/global/icons/Minimize.gif                      (icons/Minimize.gif)
-        skin/classic/aero/global/icons/Print-preview.png                 (icons/Print-preview-aero.png)
-        skin/classic/aero/global/icons/Portrait.png                      (icons/Portrait-aero.png)
-        skin/classic/aero/global/icons/Landscape.png                     (icons/Landscape-aero.png)
-        skin/classic/aero/global/icons/Question.png                      (icons/Question-aero.png)
-        skin/classic/aero/global/icons/question-16.png                   (icons/question-16-aero.png)
-        skin/classic/aero/global/icons/question-24.png                   (icons/question-24-aero.png)
-        skin/classic/aero/global/icons/question-48.png                   (icons/question-48-aero.png)
-        skin/classic/aero/global/icons/question-64.png                   (icons/question-64-aero.png)
-        skin/classic/aero/global/icons/resizer.png                       (icons/resizer.png)
-        skin/classic/aero/global/icons/resizer-rtl.png                   (icons/resizer-rtl.png)
-        skin/classic/aero/global/icons/Restore.gif                       (icons/Restore.gif)
-        skin/classic/aero/global/icons/Search-close.png                  (icons/Search-close-aero.png)
-        skin/classic/aero/global/icons/Search-glass.png                  (icons/Search-glass-aero.png)
-        skin/classic/aero/global/icons/sslWarning.png                    (icons/sslWarning-aero.png)
-        skin/classic/aero/global/icons/tabprompts-bgtexture.png          (icons/tabprompts-bgtexture.png)
-        skin/classic/aero/global/icons/warning.svg                       (../../shared/incontent-icons/warning.svg)
-        skin/classic/aero/global/icons/Warning.png                       (icons/Warning-aero.png)
-        skin/classic/aero/global/icons/warning-large.png                 (icons/warning-large-aero.png)
-        skin/classic/aero/global/icons/warning-16.png                    (icons/warning-16-aero.png)
-        skin/classic/aero/global/icons/warning-24.png                    (icons/warning-24-aero.png)
-        skin/classic/aero/global/icons/warning-64.png                    (icons/warning-64-aero.png)
-        skin/classic/aero/global/icons/windowControls.png                (icons/windowControls-aero.png)
-        skin/classic/aero/global/icons/wrap.png                          (icons/wrap-aero.png)
-        skin/classic/aero/global/icons/webapps-16.png                    (icons/webapps-16.png)
-        skin/classic/aero/global/icons/webapps-64.png                    (icons/webapps-64.png)
-        skin/classic/aero/global/inContentUI/background-texture.png      (inContentUI/background-texture.png)
-        skin/classic/aero/global/media/TopLevelImageDocument.css         (media/TopLevelImageDocument.css)
-        skin/classic/aero/global/media/TopLevelVideoDocument.css         (media/TopLevelVideoDocument.css)
-        skin/classic/aero/global/media/imagedoc-lightnoise.png           (media/imagedoc-lightnoise.png)
-        skin/classic/aero/global/media/imagedoc-darknoise.png            (media/imagedoc-darknoise.png)
-        skin/classic/aero/global/media/videocontrols.css                 (media/videocontrols.css)
-        skin/classic/aero/global/media/pauseButton.png                   (media/pauseButton.png)
-        skin/classic/aero/global/media/playButton.png                    (media/playButton.png)
-        skin/classic/aero/global/media/muteButton.png                    (media/muteButton.png)
-        skin/classic/aero/global/media/unmuteButton.png                  (media/unmuteButton.png)
-        skin/classic/aero/global/media/noAudio.png                       (media/noAudio.png)
-        skin/classic/aero/global/media/fullscreenButton.png              (media/fullscreenButton.png)
-        skin/classic/aero/global/media/scrubberThumb.png                 (media/scrubberThumb.png)
-        skin/classic/aero/global/media/scrubberThumbWide.png             (media/scrubberThumbWide.png)
-        skin/classic/aero/global/media/throbber.png                      (media/throbber.png)
-        skin/classic/aero/global/media/stalled.png                       (media/stalled.png)
-        skin/classic/aero/global/media/volume-empty.png                  (media/volume-empty.png)
-        skin/classic/aero/global/media/volume-full.png                   (media/volume-full.png)
-        skin/classic/aero/global/media/error.png                         (media/error.png)
-        skin/classic/aero/global/media/clicktoplay-bgtexture.png         (media/clicktoplay-bgtexture.png)
-        skin/classic/aero/global/media/videoClickToPlayButton.svg        (media/videoClickToPlayButton.svg)
-        skin/classic/aero/global/menu/shared-menu-check.png              (../../shared/menu-check.png)
-*       skin/classic/aero/global/in-content/common.css                   (in-content/common.css)
-*       skin/classic/aero/global/in-content/info-pages.css               (in-content/info-pages.css)
-        skin/classic/aero/global/in-content/check.svg                    (../../shared/in-content/check.svg)
-        skin/classic/aero/global/in-content/check-partial.svg            (../../shared/in-content/check-partial.svg)
-        skin/classic/aero/global/in-content/dropdown.svg                 (../../shared/in-content/dropdown.svg)
-        skin/classic/aero/global/in-content/help-glyph.svg               (../../shared/in-content/help-glyph.svg)
-        skin/classic/aero/global/in-content/radio.svg                    (../../shared/in-content/radio.svg)
-        skin/classic/aero/global/printpreview/arrow-left.png             (printpreview/arrow-left-aero.png)
-        skin/classic/aero/global/printpreview/arrow-left-end.png         (printpreview/arrow-left-end-aero.png)
-        skin/classic/aero/global/printpreview/arrow-right.png            (printpreview/arrow-right-aero.png)
-        skin/classic/aero/global/printpreview/arrow-right-end.png        (printpreview/arrow-right-end-aero.png)
-        skin/classic/aero/global/radio/radio-check.gif                   (radio/radio-check.gif)
-        skin/classic/aero/global/radio/radio-check-dis.gif               (radio/radio-check-dis.gif)
-        skin/classic/aero/global/reader/RM-Add-24x24.svg                 (../../shared/reader/RM-Add-24x24.svg)
-        skin/classic/aero/global/reader/RM-Close-24x24.svg               (../../shared/reader/RM-Close-24x24.svg)
-        skin/classic/aero/global/reader/RM-Close-hover-24x24.svg         (../../shared/reader/RM-Close-hover-24x24.svg)
-        skin/classic/aero/global/reader/RM-Delete-24x24.svg              (../../shared/reader/RM-Delete-24x24.svg)
-        skin/classic/aero/global/reader/RM-Minus-24x24.svg               (../../shared/reader/RM-Minus-24x24.svg)
-        skin/classic/aero/global/reader/RM-Plus-24x24.svg                (../../shared/reader/RM-Plus-24x24.svg)
-        skin/classic/aero/global/reader/RM-Reading-List-24x24.svg        (../../shared/reader/RM-Reading-List-24x24.svg)
-        skin/classic/aero/global/reader/RM-Type-Controls-24x24.svg       (../../shared/reader/RM-Type-Controls-24x24.svg)
-        skin/classic/aero/global/reader/RM-Type-Controls-Arrow.svg       (../../shared/reader/RM-Type-Controls-Arrow.svg)
-        skin/classic/aero/global/scrollbar/slider.gif                    (scrollbar/slider.gif)
-        skin/classic/aero/global/splitter/grip-bottom.gif                (splitter/grip-bottom.gif)
-        skin/classic/aero/global/splitter/grip-top.gif                   (splitter/grip-top.gif)
-        skin/classic/aero/global/splitter/grip-left.gif                  (splitter/grip-left.gif)
-        skin/classic/aero/global/splitter/grip-right.gif                 (splitter/grip-right.gif)
-        skin/classic/aero/global/toolbar/chevron.gif                     (toolbar/chevron.gif)
-        skin/classic/aero/global/toolbar/chevron-inverted.png            (toolbar/chevron-inverted.png)
-        skin/classic/aero/global/toolbar/spring.png                      (toolbar/spring-aero.png)
-        skin/classic/aero/global/tree/columnpicker.gif                   (tree/columnpicker.gif)
-        skin/classic/aero/global/tree/sort-asc.png                       (tree/sort-asc-aero.png)
-        skin/classic/aero/global/tree/sort-dsc.png                       (tree/sort-dsc-aero.png)
-        skin/classic/aero/global/tree/sort-asc-classic.png               (tree/sort-asc-classic.png)
-        skin/classic/aero/global/tree/sort-dsc-classic.png               (tree/sort-dsc-classic.png)
-        skin/classic/aero/global/tree/twisty-clsd.png                    (tree/twisty-clsd-aero.png)
-        skin/classic/aero/global/tree/twisty-clsd-rtl.png                (tree/twisty-clsd-rtl-aero.png)
-        skin/classic/aero/global/tree/twisty-clsd-hover.png              (tree/twisty-clsd-hover-aero.png)
-        skin/classic/aero/global/tree/twisty-clsd-hover-rtl.png          (tree/twisty-clsd-hover-rtl-aero.png)
-        skin/classic/aero/global/tree/twisty-open.png                    (tree/twisty-open-aero.png)
-        skin/classic/aero/global/tree/twisty-open-rtl.png                (tree/twisty-open-rtl-aero.png)
-        skin/classic/aero/global/tree/twisty-open-hover.png              (tree/twisty-open-hover-aero.png)
-        skin/classic/aero/global/tree/twisty-open-hover-rtl.png          (tree/twisty-open-hover-rtl-aero.png)
+*       skin/classic/global/autocomplete-aero.css                        (autocomplete-aero.css)
+*       skin/classic/global/inContentUI-aero.css                         (inContentUI-aero.css)
+*       skin/classic/global/listbox-aero.css                             (listbox-aero.css)
+*       skin/classic/global/menu-aero.css                                (menu-aero.css)
+*       skin/classic/global/menulist-aero.css                            (menulist-aero.css)
+*       skin/classic/global/notification-aero.css                        (notification-aero.css)
+*       skin/classic/global/popup-aero.css                               (popup-aero.css)
+*       skin/classic/global/textbox-aero.css                             (textbox-aero.css)
+*       skin/classic/global/toolbarbutton-aero.css                       (toolbarbutton-aero.css)
+*       skin/classic/global/tree-aero.css                                (tree-aero.css)
+*       skin/classic/global/console/console-aero.css                     (console/console-aero.css)
+        skin/classic/global/console/console-toolbar-aero.png             (console/console-toolbar-aero.png)
+        skin/classic/global/dirListing/folder-aero.png                   (dirListing/folder-aero.png)
+        skin/classic/global/dirListing/local-aero.png                    (dirListing/local-aero.png)
+        skin/classic/global/dirListing/remote-aero.png                   (dirListing/remote-aero.png)
+        skin/classic/global/dirListing/up-aero.png                       (dirListing/up-aero.png)
+        skin/classic/global/icons/autoscroll-aero.png                    (icons/autoscroll-aero.png)
+        skin/classic/global/icons/blacklist_favicon-aero.png             (icons/blacklist_favicon-aero.png)
+        skin/classic/global/icons/blacklist_large-aero.png               (icons/blacklist_large-aero.png)
+        skin/classic/global/icons/Error-aero.png                         (icons/Error-aero.png)
+        skin/classic/global/icons/error-16-aero.png                      (icons/error-16-aero.png)
+        skin/classic/global/icons/error-24-aero.png                      (icons/error-24-aero.png)
+        skin/classic/global/icons/error-48-aero.png                      (icons/error-48-aero.png)
+        skin/classic/global/icons/error-64-aero.png                      (icons/error-64-aero.png)
+        skin/classic/global/icons/find-aero.png                          (icons/find-aero.png)
+        skin/classic/global/icons/folder-item-aero.png                   (icons/folder-item-aero.png)
+        skin/classic/global/icons/information-16-aero.png                (icons/information-16-aero.png)
+        skin/classic/global/icons/information-24-aero.png                (icons/information-24-aero.png)
+        skin/classic/global/icons/information-32-aero.png                (icons/information-32-aero.png)
+        skin/classic/global/icons/information-48-aero.png                (icons/information-48-aero.png)
+        skin/classic/global/icons/information-64-aero.png                (icons/information-64-aero.png)
+        skin/classic/global/icons/Print-preview-aero.png                 (icons/Print-preview-aero.png)
+        skin/classic/global/icons/Portrait-aero.png                      (icons/Portrait-aero.png)
+        skin/classic/global/icons/Landscape-aero.png                     (icons/Landscape-aero.png)
+        skin/classic/global/icons/Question-aero.png                      (icons/Question-aero.png)
+        skin/classic/global/icons/question-16-aero.png                   (icons/question-16-aero.png)
+        skin/classic/global/icons/question-24-aero.png                   (icons/question-24-aero.png)
+        skin/classic/global/icons/question-48-aero.png                   (icons/question-48-aero.png)
+        skin/classic/global/icons/question-64-aero.png                   (icons/question-64-aero.png)
+        skin/classic/global/icons/Search-close-aero.png                  (icons/Search-close-aero.png)
+        skin/classic/global/icons/Search-glass-aero.png                  (icons/Search-glass-aero.png)
+        skin/classic/global/icons/sslWarning-aero.png                    (icons/sslWarning-aero.png)
+        skin/classic/global/icons/Warning-aero.png                       (icons/Warning-aero.png)
+        skin/classic/global/icons/warning-large-aero.png                 (icons/warning-large-aero.png)
+        skin/classic/global/icons/warning-16-aero.png                    (icons/warning-16-aero.png)
+        skin/classic/global/icons/warning-24-aero.png                    (icons/warning-24-aero.png)
+        skin/classic/global/icons/warning-64-aero.png                    (icons/warning-64-aero.png)
+        skin/classic/global/icons/windowControls-aero.png                (icons/windowControls-aero.png)
+        skin/classic/global/icons/wrap-aero.png                          (icons/wrap-aero.png)
+        skin/classic/global/printpreview/arrow-left-aero.png             (printpreview/arrow-left-aero.png)
+        skin/classic/global/printpreview/arrow-left-end-aero.png         (printpreview/arrow-left-end-aero.png)
+        skin/classic/global/printpreview/arrow-right-aero.png            (printpreview/arrow-right-aero.png)
+        skin/classic/global/printpreview/arrow-right-end-aero.png        (printpreview/arrow-right-end-aero.png)
+        skin/classic/global/toolbar/spring-aero.png                      (toolbar/spring-aero.png)
+        skin/classic/global/tree/sort-asc-aero.png                       (tree/sort-asc-aero.png)
+        skin/classic/global/tree/sort-dsc-aero.png                       (tree/sort-dsc-aero.png)
+        skin/classic/global/tree/twisty-clsd-aero.png                    (tree/twisty-clsd-aero.png)
+        skin/classic/global/tree/twisty-clsd-rtl-aero.png                (tree/twisty-clsd-rtl-aero.png)
+        skin/classic/global/tree/twisty-clsd-hover-aero.png              (tree/twisty-clsd-hover-aero.png)
+        skin/classic/global/tree/twisty-clsd-hover-rtl-aero.png          (tree/twisty-clsd-hover-rtl-aero.png)
+        skin/classic/global/tree/twisty-open-aero.png                    (tree/twisty-open-aero.png)
+        skin/classic/global/tree/twisty-open-rtl-aero.png                (tree/twisty-open-rtl-aero.png)
+        skin/classic/global/tree/twisty-open-hover-aero.png              (tree/twisty-open-hover-aero.png)
+        skin/classic/global/tree/twisty-open-hover-rtl-aero.png          (tree/twisty-open-hover-rtl-aero.png)
+
+% override chrome://global/skin/autocomplete.css                  chrome://global/skin/autocomplete-aero.css                 osversion>=6
+% override chrome://global/skin/inContentUI.css                   chrome://global/skin/inContentUI-aero.css                  osversion>=6
+% override chrome://global/skin/listbox.css                       chrome://global/skin/listbox-aero.css                      osversion>=6
+% override chrome://global/skin/menu.css                          chrome://global/skin/menu-aero.css                         osversion>=6
+% override chrome://global/skin/menulist.css                      chrome://global/skin/menulist-aero.css                     osversion>=6
+% override chrome://global/skin/notification.css                  chrome://global/skin/notification-aero.css                 osversion>=6
+% override chrome://global/skin/popup.css                         chrome://global/skin/popup-aero.css                        osversion>=6
+% override chrome://global/skin/textbox.css                       chrome://global/skin/textbox-aero.css                      osversion>=6
+% override chrome://global/skin/toolbarbutton.css                 chrome://global/skin/toolbarbutton-aero.css                osversion>=6
+% override chrome://global/skin/tree.css                          chrome://global/skin/tree-aero.css                         osversion>=6
+% override chrome://global/skin/console/console.css               chrome://global/skin/console/console-aero.css              osversion>=6
+% override chrome://global/skin/console/console-toolbar.png       chrome://global/skin/console/console-toolbar-aero.png      osversion>=6
+% override chrome://global/skin/dirListing/folder.png             chrome://global/skin/dirListing/folder-aero.png            osversion>=6
+% override chrome://global/skin/dirListing/local.png              chrome://global/skin/dirListing/local-aero.png             osversion>=6
+% override chrome://global/skin/dirListing/remote.png             chrome://global/skin/dirListing/remote-aero.png            osversion>=6
+% override chrome://global/skin/dirListing/up.png                 chrome://global/skin/dirListing/up-aero.png                osversion>=6
+% override chrome://global/skin/icons/autoscroll.png              chrome://global/skin/icons/autoscroll-aero.png             osversion>=6
+% override chrome://global/skin/icons/blacklist_favicon.png       chrome://global/skin/icons/blacklist_favicon-aero.png      osversion>=6
+% override chrome://global/skin/icons/blacklist_large.png         chrome://global/skin/icons/blacklist_large-aero.png        osversion>=6
+% override chrome://global/skin/icons/Error.png                   chrome://global/skin/icons/Error-aero.png                  osversion>=6
+% override chrome://global/skin/icons/error-16.png                chrome://global/skin/icons/error-16-aero.png               osversion>=6
+% override chrome://global/skin/icons/error-24.png                chrome://global/skin/icons/error-24-aero.png               osversion>=6
+% override chrome://global/skin/icons/error-48.png                chrome://global/skin/icons/error-48-aero.png               osversion>=6
+% override chrome://global/skin/icons/error-64.png                chrome://global/skin/icons/error-64-aero.png               osversion>=6
+% override chrome://global/skin/icons/find.png                    chrome://global/skin/icons/find-aero.png                   osversion>=6
+% override chrome://global/skin/icons/folder-item.png             chrome://global/skin/icons/folder-item-aero.png            osversion>=6
+% override chrome://global/skin/icons/information-16.png          chrome://global/skin/icons/information-16-aero.png         osversion>=6
+% override chrome://global/skin/icons/information-24.png          chrome://global/skin/icons/information-24-aero.png         osversion>=6
+% override chrome://global/skin/icons/information-32.png          chrome://global/skin/icons/information-32-aero.png         osversion>=6
+% override chrome://global/skin/icons/information-48.png          chrome://global/skin/icons/information-48-aero.png         osversion>=6
+% override chrome://global/skin/icons/information-64.png          chrome://global/skin/icons/information-64-aero.png         osversion>=6
+% override chrome://global/skin/icons/Print-preview.png           chrome://global/skin/icons/Print-preview-aero.png          osversion>=6
+% override chrome://global/skin/icons/Portrait.png                chrome://global/skin/icons/Portrait-aero.png               osversion>=6
+% override chrome://global/skin/icons/Landscape.png               chrome://global/skin/icons/Landscape-aero.png              osversion>=6
+% override chrome://global/skin/icons/Question.png                chrome://global/skin/icons/Question-aero.png               osversion>=6
+% override chrome://global/skin/icons/question-16.png             chrome://global/skin/icons/question-16-aero.png            osversion>=6
+% override chrome://global/skin/icons/question-24.png             chrome://global/skin/icons/question-24-aero.png            osversion>=6
+% override chrome://global/skin/icons/question-48.png             chrome://global/skin/icons/question-48-aero.png            osversion>=6
+% override chrome://global/skin/icons/question-64.png             chrome://global/skin/icons/question-64-aero.png            osversion>=6
+% override chrome://global/skin/icons/Search-close.png            chrome://global/skin/icons/Search-close-aero.png           osversion>=6
+% override chrome://global/skin/icons/Search-glass.png            chrome://global/skin/icons/Search-glass-aero.png           osversion>=6
+% override chrome://global/skin/icons/sslWarning.png              chrome://global/skin/icons/sslWarning-aero.png             osversion>=6
+% override chrome://global/skin/icons/Warning.png                 chrome://global/skin/icons/Warning-aero.png                osversion>=6
+% override chrome://global/skin/icons/warning-large.png           chrome://global/skin/icons/warning-large-aero.png          osversion>=6
+% override chrome://global/skin/icons/warning-16.png              chrome://global/skin/icons/warning-16-aero.png             osversion>=6
+% override chrome://global/skin/icons/warning-24.png              chrome://global/skin/icons/warning-24-aero.png             osversion>=6
+% override chrome://global/skin/icons/warning-64.png              chrome://global/skin/icons/warning-64-aero.png             osversion>=6
+% override chrome://global/skin/icons/windowControls.png          chrome://global/skin/icons/windowControls-aero.png         osversion>=6
+% override chrome://global/skin/icons/wrap.png                    chrome://global/skin/icons/wrap-aero.png                   osversion>=6
+% override chrome://global/skin/printpreview/arrow-left.png       chrome://global/skin/printpreview/arrow-left-aero.png      osversion>=6
+% override chrome://global/skin/printpreview/arrow-left-end.png   chrome://global/skin/printpreview/arrow-left-end-aero.png  osversion>=6
+% override chrome://global/skin/printpreview/arrow-right.png      chrome://global/skin/printpreview/arrow-right-aero.png     osversion>=6
+% override chrome://global/skin/printpreview/arrow-right-end.png  chrome://global/skin/printpreview/arrow-right-end-aero.png osversion>=6
+% override chrome://global/skin/toolbar/spring.png                chrome://global/skin/toolbar/spring-aero.png               osversion>=6
+% override chrome://global/skin/tree/sort-asc.png                 chrome://global/skin/tree/sort-asc-aero.png                osversion>=6
+% override chrome://global/skin/tree/sort-dsc.png                 chrome://global/skin/tree/sort-dsc-aero.png                osversion>=6
+% override chrome://global/skin/tree/twisty-clsd.png              chrome://global/skin/tree/twisty-clsd-aero.png             osversion>=6
+% override chrome://global/skin/tree/twisty-clsd-rtl.png          chrome://global/skin/tree/twisty-clsd-rtl-aero.png         osversion>=6
+% override chrome://global/skin/tree/twisty-clsd-hover.png        chrome://global/skin/tree/twisty-clsd-hover-aero.png       osversion>=6
+% override chrome://global/skin/tree/twisty-clsd-hover-rtl.png    chrome://global/skin/tree/twisty-clsd-hover-rtl-aero.png   osversion>=6
+% override chrome://global/skin/tree/twisty-open.png              chrome://global/skin/tree/twisty-open-aero.png             osversion>=6
+% override chrome://global/skin/tree/twisty-open-rtl.png          chrome://global/skin/tree/twisty-open-rtl-aero.png         osversion>=6
+% override chrome://global/skin/tree/twisty-open-hover.png        chrome://global/skin/tree/twisty-open-hover-aero.png       osversion>=6
+% override chrome://global/skin/tree/twisty-open-hover-rtl.png    chrome://global/skin/tree/twisty-open-hover-rtl-aero.png   osversion>=6
 #endif
+
+% override chrome://global/skin/arrow/arrow-lft-hov.gif           chrome://global/skin/arrow/arrow-lft.gif
+% override chrome://global/skin/arrow/arrow-rit-hov.gif           chrome://global/skin/arrow/arrow-rit.gif

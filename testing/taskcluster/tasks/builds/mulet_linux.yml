@@ -1,5 +1,8 @@
 $inherits:
   from: 'tasks/build.yml'
+  variables:
+    build_name: 'mulet'
+    build_type: 'opt'
 task:
   metadata:
     name: '[TC] Mulet Linux'

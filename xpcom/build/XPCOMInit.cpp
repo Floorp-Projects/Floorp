@@ -535,8 +535,8 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
     sMessageLoop = new MessageLoopForUI(MessageLoop::TYPE_MOZILLA_UI);
     sMessageLoop->set_thread_name("Gecko");
     // Set experimental values for main thread hangs:
-    // 512ms for transient hangs and 8192ms for permanent hangs
-    sMessageLoop->set_hang_timeouts(512, 8192);
+    // 128ms for transient hangs and 8192ms for permanent hangs
+    sMessageLoop->set_hang_timeouts(128, 8192);
   }
 
   if (XRE_GetProcessType() == GeckoProcessType_Default &&
