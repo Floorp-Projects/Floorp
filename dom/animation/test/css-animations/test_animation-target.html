@@ -13,8 +13,8 @@
 test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim 100s';
-  var players = div.getAnimationPlayers();
-  assert_equals(players[0].source.target, div,
+  var animation = div.getAnimations()[0];
+  assert_equals(animation.source.target, div,
     'Animation.target is the animatable div');
 }, 'Returned CSS animations have the correct Animation.target');
 

@@ -35,11 +35,11 @@ function check_cert_err(cert, expected_error) {
 }
 
 function check_ok(x) {
-  return check_cert_err(x, 0);
+  return check_cert_err(x, PRErrorCodeSuccess);
 }
 
 function check_ok_ca (x) {
-  return check_cert_err_generic(x, 0, certificateUsageSSLCA);
+  return check_cert_err_generic(x, PRErrorCodeSuccess, certificateUsageSSLCA);
 }
 
 function check_fail(x) {
@@ -267,7 +267,7 @@ function run_test() {
   {
     let cert = certFromFile('cn-www.foo.org-int-nc-perm-foo.com-ca-nc.der');
     check_cert_err_generic(cert, SEC_ERROR_CERT_NOT_IN_NAME_SPACE, certificateUsageSSLServer);
-    check_cert_err_generic(cert, 0, certificateUsageSSLClient);
+    check_cert_err_generic(cert, PRErrorCodeSuccess, certificateUsageSSLClient);
   }
 
   // DCISS tests

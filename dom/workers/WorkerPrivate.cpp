@@ -1511,15 +1511,16 @@ public:
           if (!globalScope) {
             WorkerDebuggerGlobalScope* globalScope = nullptr;
             UNWRAP_OBJECT(WorkerDebuggerGlobalScope, global, globalScope);
-            MOZ_ASSERT(globalScope);
-            MOZ_ASSERT(global == globalScope->GetWrapperPreserveColor());
+
+            MOZ_ASSERT_IF(globalScope, globalScope->GetWrapperPreserveColor() == global);
+            MOZ_ASSERT_IF(!globalScope, IsDebuggerSandbox(global));
 
             aWorkerPrivate->ReportErrorToDebugger(aFilename, aLineNumber,
                                                   aMessage);
             return true;
           }
 
-          MOZ_ASSERT(global == globalScope->GetWrapperPreserveColor());
+          MOZ_ASSERT(globalScope->GetWrapperPreserveColor() == global);
           nsIDOMEventTarget* target = static_cast<nsIDOMEventTarget*>(globalScope);
 
           nsRefPtr<ErrorEvent> event =

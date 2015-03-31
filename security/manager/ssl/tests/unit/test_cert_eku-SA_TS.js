@@ -24,7 +24,7 @@ function load_cert(cert_name, trust_string) {
 function run_test() {
   load_cert("ca", "CT,CT,CT");
 
-  checkCertErrorGeneric(certdb, load_cert('int-EKU-SA_TS', ',,'), 0, certificateUsageSSLCA);
+  checkCertErrorGeneric(certdb, load_cert('int-EKU-SA_TS', ',,'), PRErrorCodeSuccess, certificateUsageSSLCA);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLClient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_KEY_USAGE, certificateUsageSSLCA);
@@ -56,7 +56,7 @@ function run_test() {
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_OS-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_OS-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageStatusResponder);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLClient);
-  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_SA-int-EKU-SA_TS.der'), 0, certificateUsageSSLServer);
+  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_SA-int-EKU-SA_TS.der'), PRErrorCodeSuccess, certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_KEY_USAGE, certificateUsageSSLCA);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
@@ -86,7 +86,7 @@ function run_test() {
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-EP_OS-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-EP_OS-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageStatusResponder);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-EP_SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLClient);
-  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-EP_SA-int-EKU-SA_TS.der'), 0, certificateUsageSSLServer);
+  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-EP_SA-int-EKU-SA_TS.der'), PRErrorCodeSuccess, certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-EP_SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_KEY_USAGE, certificateUsageSSLCA);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-EP_SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-EP_SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
@@ -98,7 +98,7 @@ function run_test() {
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-EP_TS-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-EP_TS-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageStatusResponder);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NONE-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLClient);
-  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NONE-int-EKU-SA_TS.der'), 0, certificateUsageSSLServer);
+  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NONE-int-EKU-SA_TS.der'), PRErrorCodeSuccess, certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NONE-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_KEY_USAGE, certificateUsageSSLCA);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NONE-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NONE-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
@@ -116,7 +116,7 @@ function run_test() {
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NS_OS-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NS_OS-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageStatusResponder);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NS_SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLClient);
-  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NS_SA-int-EKU-SA_TS.der'), 0, certificateUsageSSLServer);
+  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NS_SA-int-EKU-SA_TS.der'), PRErrorCodeSuccess, certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NS_SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_KEY_USAGE, certificateUsageSSLCA);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NS_SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NS_SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
@@ -146,13 +146,13 @@ function run_test() {
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-OS_TS-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-OS_TS-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageStatusResponder);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLClient);
-  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-SA-int-EKU-SA_TS.der'), 0, certificateUsageSSLServer);
+  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-SA-int-EKU-SA_TS.der'), PRErrorCodeSuccess, certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_KEY_USAGE, certificateUsageSSLCA);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-SA-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageStatusResponder);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-SA_TS-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLClient);
-  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-SA_TS-int-EKU-SA_TS.der'), 0, certificateUsageSSLServer);
+  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-SA_TS-int-EKU-SA_TS.der'), PRErrorCodeSuccess, certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-SA_TS-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_KEY_USAGE, certificateUsageSSLCA);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-SA_TS-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-SA_TS-int-EKU-SA_TS.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);

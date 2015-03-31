@@ -34,7 +34,7 @@ function loadCert(certName, trustString) {
  * @param {Number} intKeySize
  * @param {String} eeKeyType
  * @param {Number} eeKeySize
- * @param {Number} eeExpectedError
+ * @param {PRErrorCode} eeExpectedError
  */
 function checkChain(rootKeyType, rootKeySize, intKeyType, intKeySize,
                     eeKeyType, eeKeySize, eeExpectedError) {
@@ -68,7 +68,7 @@ function checkRSAChains(inadequateKeySize, adequateKeySize) {
   checkChain("rsa", adequateKeySize,
              "rsa", adequateKeySize,
              "rsa", adequateKeySize,
-             0);
+             PRErrorCodeSuccess);
 
   // Chain with a root cert that has an inadequate size for DV
   checkChain("rsa", inadequateKeySize,
@@ -93,7 +93,7 @@ function checkECCChains() {
   checkChain("prime256v1", 256,
              "secp384r1", 384,
              "secp521r1", 521,
-             0);
+             PRErrorCodeSuccess);
   checkChain("prime256v1", 256,
              "secp224r1", 224,
              "prime256v1", 256,
@@ -120,7 +120,7 @@ function checkCombinationChains() {
   checkChain("rsa", 2048,
              "prime256v1", 256,
              "secp384r1", 384,
-             0);
+             PRErrorCodeSuccess);
   checkChain("rsa", 2048,
              "prime256v1", 256,
              "secp224r1", 224,
