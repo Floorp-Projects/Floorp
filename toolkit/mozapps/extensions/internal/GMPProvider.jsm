@@ -70,6 +70,9 @@ XPCOMUtils.defineLazyGetter(this, "pluginsBundle",
 XPCOMUtils.defineLazyGetter(this, "gmpService",
   () => Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(Ci.mozIGeckoMediaPluginService));
 
+let messageManager = Cc["@mozilla.org/globalmessagemanager;1"]
+                       .getService(Ci.nsIMessageListenerManager);
+
 let gLogger;
 let gLogAppenderDump = null;
 
@@ -113,7 +116,7 @@ function GMPWrapper(aPluginInfo) {
   if (this._plugin.isEME) {
     Preferences.observe(GMPPrefs.KEY_EME_ENABLED,
                         this.onPrefEMEGlobalEnabledChanged, this);
-    Services.obs.addObserver(this, "mediakeys-request", false);
+    messageManager.addMessageListener("EMEVideo:ContentMediaKeysRequest", this);
   }
 }
 
@@ -371,7 +374,8 @@ GMPWrapper.prototype = {
     }, delay);
   },
 
-  observe: function(subject, topic, data) {
+  receiveMessage: function({target: browser, data: data}) {
+    this._log.trace("receiveMessage() data=" + data);
     let parsedData;
     try {
       parsedData = JSON.parse(data);
@@ -439,7 +443,7 @@ GMPWrapper.prototype = {
     if (this._plugin.isEME) {
       Preferences.ignore(GMPPrefs.KEY_EME_ENABLED,
                          this.onPrefEMEGlobalEnabledChanged, this);
-      Services.obs.removeObserver(this, "mediakeys-request", false);
+      messageManager.removeMessageListener("EMEVideo:ContentMediaKeysRequest", this);
     }
     return this._updateTask;
   },
