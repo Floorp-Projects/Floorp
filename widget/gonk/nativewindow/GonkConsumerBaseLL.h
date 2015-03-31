@@ -107,7 +107,12 @@ protected:
     // the GonkConsumerBase implementation must be called from the derived class.
     // The GonkConsumerBase version of onSidebandStreamChanged does nothing and can
     // be overriden by derived classes if they want the notification.
+#if ANDROID_VERSION == 21
     virtual void onFrameAvailable();
+#else
+    virtual void onFrameAvailable(const ::android::BufferItem& item);
+    virtual void onFrameReplaced(const ::android::BufferItem& item) {};
+#endif
     virtual void onBuffersReleased();
     virtual void onSidebandStreamChanged();
 
