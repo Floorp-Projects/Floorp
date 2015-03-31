@@ -5,7 +5,7 @@
 
 let gItemsToTest = {
   "menu_devToolbar": "devtools.toolbar.enabled",
-  "menu_browserToolbox": ["devtools.chrome.enabled", "devtools.debugger.remote-enabled", "devtools.debugger.chrome-enabled"],
+  "menu_browserToolbox": ["devtools.chrome.enabled", "devtools.debugger.remote-enabled"],
   "javascriptConsole": "devtools.errorconsole.enabled",
   "menu_devtools_connect": "devtools.debugger.remote-enabled",
 };
