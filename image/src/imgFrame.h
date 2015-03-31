@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef imgFrame_h
-#define imgFrame_h
+#ifndef mozilla_image_src_imgFrame_h
+#define mozilla_image_src_imgFrame_h
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Monitor.h"
@@ -44,7 +44,6 @@ enum class Opacity : uint8_t {
   OPAQUE,
   SOME_TRANSPARENCY
 };
-
 
 /**
  * AnimationData contains all of the information necessary for using an imgFrame
@@ -189,7 +188,7 @@ public:
   bool Draw(gfxContext* aContext, const ImageRegion& aRegion,
             GraphicsFilter aFilter, uint32_t aImageFlags);
 
-  nsresult ImageUpdated(const nsIntRect &aUpdateRect);
+  nsresult ImageUpdated(const nsIntRect& aUpdateRect);
 
   /**
    * Mark this imgFrame as completely decoded, and set final options.
@@ -241,11 +240,11 @@ public:
   nsIntRect GetRect() const;
   IntSize GetSize() const { return mSize; }
   bool NeedsPadding() const { return mOffset != nsIntPoint(0, 0); }
-  void GetImageData(uint8_t **aData, uint32_t *length) const;
+  void GetImageData(uint8_t** aData, uint32_t* length) const;
   uint8_t* GetImageData() const;
 
   bool GetIsPaletted() const;
-  void GetPaletteData(uint32_t **aPalette, uint32_t *length) const;
+  void GetPaletteData(uint32_t** aPalette, uint32_t* length) const;
   uint32_t* GetPaletteData() const;
   uint8_t GetPaletteDepth() const { return mPaletteDepth; }
 
@@ -286,7 +285,7 @@ private: // methods
 
   bool IsImageCompleteInternal() const;
   nsresult ImageUpdatedInternal(const nsIntRect& aUpdateRect);
-  void GetImageDataInternal(uint8_t **aData, uint32_t *length) const;
+  void GetImageDataInternal(uint8_t** aData, uint32_t* length) const;
   uint32_t GetImageBytesPerRow() const;
   uint32_t GetImageDataLength() const;
   int32_t GetStride() const;
@@ -301,9 +300,10 @@ private: // methods
   struct SurfaceWithFormat {
     nsRefPtr<gfxDrawable> mDrawable;
     SurfaceFormat mFormat;
-    SurfaceWithFormat() {}
+    SurfaceWithFormat() { }
     SurfaceWithFormat(gfxDrawable* aDrawable, SurfaceFormat aFormat)
-     : mDrawable(aDrawable), mFormat(aFormat) {}
+      : mDrawable(aDrawable), mFormat(aFormat)
+    { }
     bool IsValid() { return !!mDrawable; }
   };
 
@@ -524,4 +524,4 @@ private:
 } // namespace image
 } // namespace mozilla
 
-#endif /* imgFrame_h */
+#endif // mozilla_image_src_imgFrame_h
