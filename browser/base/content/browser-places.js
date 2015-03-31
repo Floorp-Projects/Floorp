@@ -56,7 +56,7 @@ var StarUI = {
   },
 
   // nsIDOMEventListener
-  handleEvent(aEvent) {
+  handleEvent: function SU_handleEvent(aEvent) {
     switch (aEvent.type) {
       case "popuphidden":
         if (aEvent.originalTarget == this.panel) {
@@ -69,32 +69,26 @@ var StarUI = {
           }
           this._restoreCommandsState();
           this._itemId = -1;
-          if (this._batching)
-            this.endBatch();
+          if (this._batching) {
+            PlacesUtils.transactionManager.endBatch(false);
+            this._batching = false;
+          }
 
           switch (this._actionOnHide) {
             case "cancel": {
-              if (!PlacesUIUtils.useAsyncTransactions) {
-                PlacesUtils.transactionManager.undoTransaction();
-                break;
-              }
-              PlacesTransactions.undo().catch(Cu.reportError);
+              PlacesUtils.transactionManager.undoTransaction();
               break;
             }
             case "remove": {
               // Remove all bookmarks for the bookmark's url, this also removes
               // the tags for the url.
-              if (!PlacesUIUtils.useAsyncTransactions) {
-                let itemIds = PlacesUtils.getBookmarksForURI(this._uriForRemoval);
-                for (let itemId of itemIds) {
-                  let txn = new PlacesRemoveItemTransaction(itemId);
-                  PlacesUtils.transactionManager.doTransaction(txn);
-                }
-                break;
+              PlacesUtils.transactionManager.beginBatch(null);
+              let itemIds = PlacesUtils.getBookmarksForURI(this._uriForRemoval);
+              for (let i = 0; i < itemIds.length; i++) {
+                let txn = new PlacesRemoveItemTransaction(itemIds[i]);
+                PlacesUtils.transactionManager.doTransaction(txn);
               }
-
-              PlacesTransactions.RemoveBookmarksForUrls(this._uriForRemoval)
-                                .transact().catch(Cu.reportError);
+              PlacesUtils.transactionManager.endBatch(false);
               break;
             }
           }
@@ -128,30 +122,15 @@ var StarUI = {
 
   _overlayLoaded: false,
   _overlayLoading: false,
-  showEditBookmarkPopup: Task.async(function* (aNode, aAnchorElement, aPosition) {
-    // TODO: Deprecate this once async transactions are enabled and the legacy
-    // transactions code is gone (bug 1131491) - we don't want addons to to use
-    // the  completeNodeLikeObjectForItemId, so it's better if they keep passing
-    // the item-id for now).
-    if (typeof(aNode) == "number") {
-      let itemId = aNode;
-      if (PlacesUIUtils.useAsyncTransactions) {
-        let guid = yield PlacesUtils.promiseItemGuid(itemId);
-        aNode = yield PlacesUIUtils.promiseNodeLike(guid);
-      }
-      else {
-        aNode = { itemId };
-        yield PlacesUIUtils.completeNodeLikeObjectForItemId(aNode);
-      }
-    }
-
+  showEditBookmarkPopup:
+  function SU_showEditBookmarkPopup(aItemId, aAnchorElement, aPosition) {
     // Performance: load the overlay the first time the panel is opened
     // (see bug 392443).
     if (this._overlayLoading)
       return;
 
     if (this._overlayLoaded) {
-      this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition);
+      this._doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition);
       return;
     }
 
@@ -168,12 +147,13 @@ var StarUI = {
 
         this._overlayLoading = false;
         this._overlayLoaded = true;
-        this._doShowEditBookmarkPanel(aNode, aAnchorElement, aPosition);
+        this._doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition);
       }).bind(this)
     );
-  }),
+  },
 
-  _doShowEditBookmarkPanel: Task.async(function* (aNode, aAnchorElement, aPosition) {
+  _doShowEditBookmarkPanel:
+  function SU__doShowEditBookmarkPanel(aItemId, aAnchorElement, aPosition) {
     if (this.panel.state != "closed")
       return;
 
@@ -199,15 +179,15 @@ var StarUI = {
 
     // The label of the remove button differs if the URI is bookmarked
     // multiple times.
-    let bookmarks = PlacesUtils.getBookmarksForURI(gBrowser.currentURI);
-    let forms = gNavigatorBundle.getString("editBookmark.removeBookmarks.label");
-    let label = PluralForm.get(bookmarks.length, forms).replace("#1", bookmarks.length);
+    var bookmarks = PlacesUtils.getBookmarksForURI(gBrowser.currentURI);
+    var forms = gNavigatorBundle.getString("editBookmark.removeBookmarks.label");
+    var label = PluralForm.get(bookmarks.length, forms).replace("#1", bookmarks.length);
     this._element("editBookmarkPanelRemoveButton").label = label;
 
     // unset the unstarred state, if set
     this._element("editBookmarkPanelStarIcon").removeAttribute("unstarred");
 
-    this._itemId = aNode.itemId;
+    this._itemId = aItemId !== undefined ? aItemId : this._itemId;
     this.beginBatch();
 
     if (aAnchorElement) {
@@ -227,10 +207,10 @@ var StarUI = {
     }
     this.panel.openPopup(aAnchorElement, aPosition);
 
-    gEditItemOverlay.initPanel({ node: aNode
-                               , hiddenRows: ["description", "location",
+    gEditItemOverlay.initPanel(this._itemId,
+                               { hiddenRows: ["description", "location",
                                               "loadInSidebar", "keyword"] });
-  }),
+  },
 
   panelShown:
   function SU_panelShown(aEvent) {
@@ -267,46 +247,13 @@ var StarUI = {
     this.panel.hidePopup();
   },
 
-	// Matching the way it is used in the Library, editBookmarkOverlay implements
-	// an instant-apply UI, having no batched-Undo/Redo support.
-	// However, in this context (the Star UI) we have a Cancel button whose
-	// expected behavior is to undo all the operations done in the panel.
-	// Sometime in the future this needs to be reimplemented using a
-	// non-instant apply code path, but for the time being, we patch-around
-	// editBookmarkOverlay so that all of the actions done in the panel
-	// are treated by PlacesTransactions as a single batch.  To do so,
-	// we start a PlacesTransactions batch when the star UI panel is shown, and
-	// we keep the batch ongoing until the panel is hidden.
-  _batchBlockingDeferred: null,
-  beginBatch() {
-    if (this._batching)
-      return;
-    if (PlacesUIUtils.useAsyncTransactions) {
-      this._batchBlockingDeferred = PromiseUtils.defer();
-      PlacesTransactions.batch(function* () {
-        yield this._batchBlockingDeferred.promise;
-      }.bind(this));
-    }
-    else {
+  beginBatch: function SU_beginBatch() {
+    if (!this._batching) {
       PlacesUtils.transactionManager.beginBatch(null);
+      this._batching = true;
     }
-    this._batching = true;
-  },
-
-  endBatch() {
-    if (!this._batching)
-      return;
-
-    if (PlacesUIUtils.useAsyncTransactions) {
-      this._batchBlockingDeferred.resolve();
-      this._batchBlockingDeferred = null;
-    }
-    else {
-      PlacesUtils.transactionManager.endBatch(false);
-    }
-    this._batching = false;
   }
-};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 //// PlacesCommandHook
@@ -322,11 +269,8 @@ var PlacesCommandHook = {
    *        aBrowser isn't bookmarked yet, defaults to the unfiled root.
    * @param [optional] aShowEditUI
    *        whether or not to show the edit-bookmark UI for the bookmark item
-   */
-  bookmarkPage: Task.async(function* (aBrowser, aParent, aShowEditUI) {
-    if (PlacesUIUtils.useAsyncTransactions)
-      return (yield this._bookmarkPagePT(aBrowser, aParent, aShowEditUI));
-
+   */  
+  bookmarkPage: function PCH_bookmarkPage(aBrowser, aParent, aShowEditUI) {
     var uri = aBrowser.currentURI;
     var itemId = PlacesUtils.getMostRecentBookmarkForURI(uri);
     if (itemId == -1) {
@@ -359,7 +303,7 @@ var PlacesCommandHook = {
         StarUI.beginBatch();
       }
 
-      var parent = aParent !== undefined ?
+      var parent = aParent != undefined ?
                    aParent : PlacesUtils.unfiledBookmarksFolderId;
       var descAnno = { name: PlacesUIUtils.DESCRIPTION_ANNO, value: description };
       var txn = new PlacesCreateBookmarkTransaction(uri, parent, 
@@ -367,7 +311,7 @@ var PlacesCommandHook = {
                                                     title, null, [descAnno]);
       PlacesUtils.transactionManager.doTransaction(txn);
       itemId = txn.item.id;
-      // Set the character-set.
+      // Set the character-set
       if (charset && !PrivateBrowsingUtils.isBrowserPrivate(aBrowser))
         PlacesUtils.setCharsetForURI(uri, charset);
     }
@@ -397,88 +341,7 @@ var PlacesCommandHook = {
     } else {
       StarUI.showEditBookmarkPopup(itemId, aBrowser, "overlap");
     }
-  }),
-
-  // TODO: Replace bookmarkPage code with this function once legacy
-  // transactions are removed.
-  _bookmarkPagePT: Task.async(function* (aBrowser, aParentId, aShowEditUI) {
-    let url = new URL(aBrowser.currentURI.spec);
-    let info = yield PlacesUtils.bookmarks.fetch({ url });
-    if (!info) {
-      let parentGuid = aParentId !== undefined ?
-                         yield PlacesUtils.promiseItemGuid(aParentId) :
-                         PlacesUtils.bookmarks.unfiledGuid;
-      info = { url, parentGuid };
-      // Copied over from addBookmarkForBrowser:
-      // Bug 52536: We obtain the URL and title from the nsIWebNavigation
-      // associated with a <browser/> rather than from a DOMWindow.
-      // This is because when a full page plugin is loaded, there is
-      // no DOMWindow (?) but information about the loaded document
-      // may still be obtained from the webNavigation.
-      let webNav = aBrowser.webNavigation;
-      let description = null;
-      let charset = null;
-      try {
-        let isErrorPage = /^about:(neterror|certerror|blocked)/
-                          .test(webNav.document.documentURI);
-        info.title = isErrorPage ?
-          (yield PlacesUtils.promisePlaceInfo(aBrowser.currentURI)).title :
-          webNav.document.title;
-        info.title = info.title || url.href;
-        description = PlacesUIUtils.getDescriptionFromDocument(webNav.document);
-        charset = webNav.document.characterSet;
-      }
-      catch (e) {
-      	Components.utils.reportError(e);
-      }
-
-      if (aShowEditUI) {
-        // If we bookmark the page here (i.e. page was not "starred" already)
-        // but open right into the "edit" state, start batching here, so
-        // "Cancel" in that state removes the bookmark.
-        StarUI.beginBatch();
-      }
-
-      if (description) {
-        info.annotations = [{ name: PlacesUIUtils.DESCRIPTION_ANNO
-                            , value: description }];
-      }
-
-      info.guid = yield PlacesTransactions.NewBookmark(info).transact();
-
-      // Set the character-set
-      if (charset && !PrivateBrowsingUtils.isBrowserPrivate(aBrowser))
-      	 PlacesUtils.setCharsetForURI(makeURI(url.href), charset);
-    }
-
-    // Revert the contents of the location bar
-    if (gURLBar)
-      gURLBar.handleRevert();
-
-    // If it was not requested to open directly in "edit" mode, we are done.
-    if (!aShowEditUI)
-      return;
-
-    let node = yield PlacesUIUtils.promiseNodeLikeFromFetchInfo(info);
-
-    // Try to dock the panel to:
-    // 1. the bookmarks menu button
-    // 2. the page-proxy-favicon
-    // 3. the content area
-    if (BookmarkingUI.anchor) {
-      StarUI.showEditBookmarkPopup(node, BookmarkingUI.anchor,
-                                   "bottomcenter topright");
-      return;
-    }
-
-    let pageProxyFavicon = document.getElementById("page-proxy-favicon");
-    if (isElementVisible(pageProxyFavicon)) {
-      StarUI.showEditBookmarkPopup(node, pageProxyFavicon,
-                                   "bottomcenter topright");
-    } else {
-      StarUI.showEditBookmarkPopup(node, aBrowser, "overlap");
-    }
-  }),
+  },
 
   /**
    * Adds a bookmark to the page loaded in the current tab. 
@@ -497,27 +360,10 @@ var PlacesCommandHook = {
    * @param aTitle
    *        The link text
    */
-  bookmarkLink: Task.async(function* (aParentId, aURL, aTitle) {
-    let node = null;
-    if (PlacesUIUtils.useAsyncTransactions) {
-      node = yield PlacesUIUtils.fetchNodeLike({ url: aURL });
-    }
-    else {
-      let linkURI = makeURI(aURL);
-      let itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
-      if (itemId != -1) {
-        node = { itemId, uri: aURL };
-        PlacesUIUtils.completeNodeLikeObjectForItemId(node);
-      }
-    }
-
-    if (node) {
-      PlacesUIUtils.showBookmarkDialog({ action: "edit"
-                                       , type: "bookmark"
-                                       , node
-                                       }, window);
-    }
-    else {
+  bookmarkLink: function PCH_bookmarkLink(aParent, aURL, aTitle) {
+    var linkURI = makeURI(aURL);
+    var itemId = PlacesUtils.getMostRecentBookmarkForURI(linkURI);
+    if (itemId == -1) {
       PlacesUIUtils.showBookmarkDialog({ action: "add"
                                        , type: "bookmark"
                                        , uri: linkURI
@@ -528,7 +374,13 @@ var PlacesCommandHook = {
                                                      , "keyword" ]
                                        }, window);
     }
-  }),
+    else {
+      PlacesUIUtils.showBookmarkDialog({ action: "edit"
+                                       , type: "bookmark"
+                                       , itemId: itemId
+                                       }, window);
+    }
+  },
 
   /**
    * List of nsIURI objects characterizing the tabs currently open in the
