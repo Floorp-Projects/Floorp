@@ -9,7 +9,9 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import ch.boye.httpclientandroidlib.util.TextUtils;
 import org.json.JSONException;
@@ -37,7 +39,7 @@ public class LoginDoorHanger extends DoorHanger {
     protected void loadConfig(DoorhangerConfig config) {
         setOptions(config.getOptions());
         setMessage(config.getMessage());
-
+        setButtons(config);
     }
 
     @Override
@@ -75,5 +77,26 @@ public class LoginDoorHanger extends DoorHanger {
         } else {
             mLogin.setVisibility(View.GONE);
         }
+    }
+
+    @Override
+    protected Button createButtonInstance(final String text, final int id) {
+        final Button button = (Button) LayoutInflater.from(getContext()).inflate(R.layout.doorhanger_button, null);
+        button.setText(text);
+
+        button.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final JSONObject response = new JSONObject();
+                try {
+                    response.put("callback", id);
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "Error making doorhanger response message");
+                }
+                mOnButtonClickListener.onButtonClick(response, LoginDoorHanger.this);
+            }
+        });
+
+        return button;
     }
 }

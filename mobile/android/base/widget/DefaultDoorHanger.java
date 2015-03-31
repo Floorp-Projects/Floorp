@@ -5,6 +5,9 @@
 
 package org.mozilla.gecko.widget;
 
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.widget.Button;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.prompts.PromptInput;
 
@@ -18,6 +21,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import org.mozilla.gecko.toolbar.SiteIdentityPopup;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,10 +34,6 @@ public class DefaultDoorHanger extends DoorHanger {
 
     private List<PromptInput> mInputs;
     private CheckBox mCheckBox;
-
-    public DefaultDoorHanger(Context context, DoorhangerConfig config) {
-        this(context, config, Type.DEFAULT);
-    }
 
     public DefaultDoorHanger(Context context, DoorhangerConfig config, Type type) {
         super(context, config, type);
@@ -62,15 +62,15 @@ public class DefaultDoorHanger extends DoorHanger {
         if (link != null) {
             addLink(link.label, link.url, link.delimiter);
         }
+
+        setButtons(config);
     }
 
-    @Override
-    public List<PromptInput> getInputs() {
+    private List<PromptInput> getInputs() {
         return mInputs;
     }
 
-    @Override
-    public CheckBox getCheckBox() {
+    private CheckBox getCheckBox() {
         return mCheckBox;
     }
 
@@ -113,6 +113,54 @@ public class DefaultDoorHanger extends DoorHanger {
             mCheckBox.setText(checkBoxText);
             mCheckBox.setVisibility(VISIBLE);
         }
+    }
+
+    @Override
+    protected Button createButtonInstance(final String text, final int id) {
+        final Button button = (Button) LayoutInflater.from(getContext()).inflate(R.layout.doorhanger_button, null);
+        button.setText(text);
+
+        button.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final JSONObject response = new JSONObject();
+                try {
+                    // TODO: Bug 1149359 - Split this into each Doorhanger Type class.
+                    switch (mType) {
+                        case MIXED_CONTENT:
+                            response.put("allowContent", (id == SiteIdentityPopup.ButtonType.DISABLE.ordinal()));
+                            response.put("contentType", ("mixed"));
+                            break;
+                        case TRACKING:
+                            response.put("allowContent", (id == SiteIdentityPopup.ButtonType.DISABLE.ordinal()));
+                            response.put("contentType", ("tracking"));
+                            break;
+                        default:
+                            response.put("callback", id);
+
+                            CheckBox checkBox = getCheckBox();
+                            // If the checkbox is being used, pass its value
+                            if (checkBox != null) {
+                                response.put("checked", checkBox.isChecked());
+                            }
+
+                            List<PromptInput> doorHangerInputs = getInputs();
+                            if (doorHangerInputs != null) {
+                                JSONObject inputs = new JSONObject();
+                                for (PromptInput input : doorHangerInputs) {
+                                    inputs.put(input.getId(), input.getValue());
+                                }
+                                response.put("inputs", inputs);
+                            }
+                    }
+                    mOnButtonClickListener.onButtonClick(response, DefaultDoorHanger.this);
+                } catch (JSONException e) {
+                    Log.e(LOGTAG, "Error creating onClick response", e);
+                }
+            }
+        });
+
+        return button;
     }
 
     private void styleInput(PromptInput input, View view) {
