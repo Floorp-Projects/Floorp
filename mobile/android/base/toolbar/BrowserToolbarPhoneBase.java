@@ -63,7 +63,7 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
 
         roundCornerPaint = new Paint();
         roundCornerPaint.setAntiAlias(true);
-        roundCornerPaint.setColor(res.getColor(R.color.background_tabs));
+        roundCornerPaint.setColor(res.getColor(R.color.text_and_tabs_tray_grey));
         roundCornerPaint.setStrokeWidth(0.0f);
     }
 
