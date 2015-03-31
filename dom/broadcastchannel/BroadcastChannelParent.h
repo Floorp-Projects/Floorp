@@ -24,13 +24,11 @@ class BroadcastChannelParent final : public PBroadcastChannelParent
 public:
   void CheckAndDeliver(const ClonedMessageData& aData,
                        const nsString& aOrigin,
-                       const nsString& aChannel,
-                       bool aPrivateBrowsing);
+                       const nsString& aChannel);
 
 private:
   BroadcastChannelParent(const nsAString& aOrigin,
-                         const nsAString& aChannel,
-                         bool aPrivateBrowsing);
+                         const nsAString& aChannel);
   ~BroadcastChannelParent();
 
   virtual bool
@@ -43,7 +41,6 @@ private:
   nsRefPtr<BroadcastChannelService> mService;
   nsString mOrigin;
   nsString mChannel;
-  bool mPrivateBrowsing;
 };
 
 } // dom namespace
