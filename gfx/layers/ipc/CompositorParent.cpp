@@ -332,6 +332,8 @@ CompositorVsyncObserver::Composite(TimeStamp aVsyncTimestamp)
     mCurrentCompositeTask = nullptr;
   }
 
+  DispatchTouchEvents(aVsyncTimestamp);
+
   if (mNeedsComposite && mCompositorParent) {
     mNeedsComposite = false;
     mCompositorParent->CompositeCallback(aVsyncTimestamp);
@@ -339,8 +341,6 @@ CompositorVsyncObserver::Composite(TimeStamp aVsyncTimestamp)
   } else if (mVsyncNotificationsSkipped++ > gfxPrefs::CompositorUnobserveCount()) {
     UnobserveVsync();
   }
-
-  DispatchTouchEvents(aVsyncTimestamp);
 }
 
 void

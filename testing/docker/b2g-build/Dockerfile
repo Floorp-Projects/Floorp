@@ -11,6 +11,7 @@ RUN yum install -y epel-release && \
   GConf2-devel \
   alsa-lib-devel \
   autoconf213 \
+  bc \
   bison \
   bzip2 \
   ccache \

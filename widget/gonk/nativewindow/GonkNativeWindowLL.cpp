@@ -188,8 +188,13 @@ void GonkNativeWindow::setNewFrameCallback(
     mNewFrameCallback = callback;
 }
 
+#if ANDROID_VERSION == 21
 void GonkNativeWindow::onFrameAvailable() {
     GonkConsumerBase::onFrameAvailable();
+#else
+void GonkNativeWindow::onFrameAvailable(const ::android::BufferItem &item) {
+    GonkConsumerBase::onFrameAvailable(item);
+#endif
 
     if (mNewFrameCallback) {
         mNewFrameCallback->OnNewFrame();
