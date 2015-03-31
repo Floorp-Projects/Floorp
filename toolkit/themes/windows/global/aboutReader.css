@@ -8,6 +8,15 @@ body {
   margin: 0 auto;
 }
 
+@media (max-width: 785px) {
+  body {
+    padding-top: 64px;
+    -moz-padding-end: 0;
+    padding-bottom: 64px;
+    -moz-padding-start: 51px;
+  }
+}
+
 body.loaded {
   transition: color 0.4s, background-color 0.4s;
 }
