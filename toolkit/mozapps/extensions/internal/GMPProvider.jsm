@@ -107,6 +107,7 @@ function GMPWrapper(aPluginInfo) {
   if (this._plugin.isEME) {
     Preferences.observe(GMPPrefs.KEY_EME_ENABLED,
                         this.onPrefEMEGlobalEnabledChanged, this);
+    Services.obs.addObserver(this, "mediakeys-request", false);
   }
 }
 
@@ -338,24 +339,43 @@ GMPWrapper.prototype = {
                                                null, false);
       AddonManagerPrivate.callAddonListeners("onInstalling", this, false);
       AddonManagerPrivate.callAddonListeners("onInstalled", this);
-      if (!this._isUpdateCheckPending) {
-        this._isUpdateCheckPending = true;
-        GMPPrefs.reset(GMPPrefs.KEY_UPDATE_LAST_CHECK, null);
-        // Delay this in case the user changes his mind and doesn't want to
-        // enable EME after all.
-        setTimeout(() => {
-          if (!this.appDisabled) {
-            let gmpInstallManager = new GMPInstallManager();
-            // We don't really care about the results, if someone is interested
-            // they can check the log.
-            gmpInstallManager.simpleCheckAndInstall().then(null, () => {});
-          }
-          this._isUpdateCheckPending = false;
-        }, GMP_CHECK_DELAY);
-      }
+      this.checkForUpdates(GMP_CHECK_DELAY);
     }
     if (!this.userDisabled) {
       this._handleEnabledChanged();
+    }
+  },
+
+  checkForUpdates: function(delay) {
+    if (this._isUpdateCheckPending) {
+      return;
+    }
+    this._isUpdateCheckPending = true;
+    GMPPrefs.reset(GMPPrefs.KEY_UPDATE_LAST_CHECK, null);
+    // Delay this in case the user changes his mind and doesn't want to
+    // enable EME after all.
+    setTimeout(() => {
+      if (!this.appDisabled) {
+        let gmpInstallManager = new GMPInstallManager();
+        // We don't really care about the results, if someone is interested
+        // they can check the log.
+        gmpInstallManager.simpleCheckAndInstall().then(null, () => {});
+      }
+      this._isUpdateCheckPending = false;
+    }, delay);
+  },
+
+  observe: function(subject, topic, data) {
+    let parsedData;
+    try {
+      parsedData = JSON.parse(data);
+    } catch(ex) {
+      this._log.error("Malformed EME video message with data: " + data);
+      return;
+    }
+    let {status: status, keySystem: keySystem} = parsedData;
+    if (status == "cdm-not-installed" || status == "cdm-insufficient-version") {
+      this.checkForUpdates(0);
     }
   },
 
@@ -413,6 +433,7 @@ GMPWrapper.prototype = {
     if (this._plugin.isEME) {
       Preferences.ignore(GMPPrefs.KEY_EME_ENABLED,
                          this.onPrefEMEGlobalEnabledChanged, this);
+      Services.obs.removeObserver(this, "mediakeys-request", false);
     }
     return this._updateTask;
   },
