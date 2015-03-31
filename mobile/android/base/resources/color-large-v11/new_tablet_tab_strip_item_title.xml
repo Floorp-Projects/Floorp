@@ -4,14 +4,14 @@
 
     <item android:state_checked="true"
           gecko:state_private="true"
-          android:color="@color/text_color_primary_inverse"/>
+          android:color="@color/about_page_header_grey"/>
 
     <item android:state_checked="true"
           android:color="@color/placeholder_grey"/>
 
     <item android:state_checked="false"
           gecko:state_dark="true"
-          android:color="@color/text_color_primary_inverse"/>
+          android:color="@color/about_page_header_grey"/>
 
     <item android:color="@color/placeholder_grey"/>
 
