@@ -90,9 +90,14 @@ this.SQLiteStore.prototype = {
       paramNames.push(`:${propName}`);
     }
     let conn = yield this._connectionPromise;
-    yield conn.executeCached(`
-      INSERT INTO items (${colNames}) VALUES (${paramNames});
-    `, item);
+    try {
+      yield conn.executeCached(`
+        INSERT INTO items (${colNames}) VALUES (${paramNames});
+      `, item);
+    }
+    catch (err) {
+      throwExistsError(err);
+    }
   }),
 
   /**
@@ -207,11 +212,16 @@ this.SQLiteStore.prototype = {
     }
     let conn = yield this._connectionPromise;
     if (!item[keyProp]) {
-      throw new Error("Item must have " + keyProp);
+      throw new ReadingList.Error.Error("Item must have " + keyProp);
     }
-    yield conn.executeCached(`
-      UPDATE items SET ${assignments} WHERE ${keyProp} = :${keyProp};
-    `, item);
+    try {
+      yield conn.executeCached(`
+        UPDATE items SET ${assignments} WHERE ${keyProp} = :${keyProp};
+      `, item);
+    }
+    catch (err) {
+      throwExistsError(err);
+    }
   }),
 
   // The current schema version.
@@ -286,6 +296,26 @@ function itemFromRow(row) {
     item[name] = row.getResultByName(name);
   }
   return item;
+}
+
+/**
+ * If the given Error indicates that a unique constraint failed, then wraps that
+ * error in a ReadingList.Error.Exists and throws it.  Otherwise throws the
+ * given error.
+ *
+ * @param err An Error object.
+ */
+function throwExistsError(err) {
+  let match =
+    /UNIQUE constraint failed: items\.([a-zA-Z0-9_]+)/.exec(err.message);
+  if (match) {
+    let newErr = new ReadingList.Error.Exists(
+      "An item with the following property already exists: " + match[1]
+    );
+    newErr.originalError = err;
+    err = newErr;
+  }
+  throw err;
 }
 
 /**
