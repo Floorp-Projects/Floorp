@@ -37,7 +37,9 @@ public:
   }
 
 private:
-  explicit BroadcastChannelChild(const nsAString& aOrigin);
+  BroadcastChannelChild(const nsAString& aOrigin,
+                        const nsAString& aChannel);
+
   ~BroadcastChannelChild();
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
@@ -47,6 +49,7 @@ private:
   BroadcastChannel* mBC;
 
   nsString mOrigin;
+  nsString mChannel;
 
   bool mActorDestroyed;
 };
