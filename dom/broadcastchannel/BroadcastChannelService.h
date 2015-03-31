@@ -32,8 +32,7 @@ public:
   void PostMessage(BroadcastChannelParent* aParent,
                    const ClonedMessageData& aData,
                    const nsAString& aOrigin,
-                   const nsAString& aChannel,
-                   bool aPrivateBrowsing);
+                   const nsAString& aChannel);
 
 private:
   BroadcastChannelService();

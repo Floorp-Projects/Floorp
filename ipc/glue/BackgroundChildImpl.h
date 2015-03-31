@@ -86,8 +86,7 @@ protected:
   virtual PBroadcastChannelChild*
   AllocPBroadcastChannelChild(const PrincipalInfo& aPrincipalInfo,
                               const nsString& aOrigin,
-                              const nsString& aChannel,
-                              const bool& aPrivateBrowsing) override;
+                              const nsString& aChannel) override;
 
   virtual bool
   DeallocPBroadcastChannelChild(PBroadcastChannelChild* aActor) override;
