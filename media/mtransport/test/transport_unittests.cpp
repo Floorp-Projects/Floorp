@@ -955,6 +955,12 @@ TEST_F(TransportTest, TestConnectAllowAll) {
   ConnectSocket();
 }
 
+TEST_F(TransportTest, TestConnectNoDigest) {
+  SetDtlsPeer(0, 0);
+
+  ConnectSocketExpectFail();
+}
+
 TEST_F(TransportTest, TestConnectBadDigest) {
   SetDtlsPeer(1, 1);
 

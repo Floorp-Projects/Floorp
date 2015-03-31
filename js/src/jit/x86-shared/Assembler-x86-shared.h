@@ -4,13 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_shared_Assembler_x86_shared_h
-#define jit_shared_Assembler_x86_shared_h
+#ifndef jit_x86_shared_Assembler_x86_shared_h
+#define jit_x86_shared_Assembler_x86_shared_h
 
 #include <cstddef>
 
 #include "jit/shared/Assembler-shared.h"
-#include "jit/shared/BaseAssembler-x86-shared.h"
+#include "jit/x86-shared/BaseAssembler-x86-shared.h"
 
 namespace js {
 namespace jit {
@@ -2962,4 +2962,4 @@ class AssemblerX86Shared : public AssemblerShared
 } // namespace jit
 } // namespace js
 
-#endif /* jit_shared_Assembler_x86_shared_h */
+#endif /* jit_x86_shared_Assembler_x86_shared_h */

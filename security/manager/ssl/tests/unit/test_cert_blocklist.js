@@ -189,12 +189,12 @@ function run_test() {
   // test-int-ee.der.
   // Check the cert validates before we load the blocklist
   let file = "tlsserver/test-int-ee.der";
-  verify_cert(file, Cr.NS_OK);
+  verify_cert(file, PRErrorCodeSuccess);
 
   // The blocklist also revokes other-test-ca.der, which issued other-ca-ee.der.
   // Check the cert validates before we load the blocklist
   file = "tlsserver/default-ee.der";
-  verify_cert(file, Cr.NS_OK);
+  verify_cert(file, PRErrorCodeSuccess);
 
   // blocklist load is async so we must use add_test from here
   add_test(function() {
@@ -264,7 +264,7 @@ function run_test() {
 
     // Check a non-blocklisted chain still validates OK
     file = "tlsserver/default-ee.der";
-    verify_cert(file, Cr.NS_OK);
+    verify_cert(file, PRErrorCodeSuccess);
 
     // Check a bad cert is still bad (unknown issuer)
     file = "tlsserver/unknown-issuer.der";

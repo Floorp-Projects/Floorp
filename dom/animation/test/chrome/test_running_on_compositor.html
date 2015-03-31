@@ -42,21 +42,21 @@ var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
 // FIXME: When we implement Element.animate, use that here instead of CSS
 // so that we remove any dependency on the CSS mapping.
 div.style.animation = 'anim 100s';
-var player = div.getAnimationPlayers()[0];
+var animation = div.getAnimations()[0];
 
-player.ready.then(function() {
-  is(player.isRunningOnCompositor, omtaEnabled,
-     'AnimationPlayer reports that it is running on the compositor'
+animation.ready.then(function() {
+  is(animation.isRunningOnCompositor, omtaEnabled,
+     'Animation reports that it is running on the compositor'
      + ' during playback');
 
   div.style.animationPlayState = 'paused';
   window.getComputedStyle(div).animationPlayState;
 
   // FIXME: When we implement deferred pausing (bug 1109390), we should wait
-  // on player.ready here.
+  // on animation.ready here.
   window.requestAnimationFrame(function() {
-    is(player.isRunningOnCompositor, false,
-       'AnimationPlayer reports that it is NOT running on the compositor'
+    is(animation.isRunningOnCompositor, false,
+       'Animation reports that it is NOT running on the compositor'
        + ' when paused');
     SimpleTest.finish();
   });

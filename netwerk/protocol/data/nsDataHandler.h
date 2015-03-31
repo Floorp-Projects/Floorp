@@ -7,8 +7,10 @@
 #define nsDataHandler_h___
 
 #include "nsIProtocolHandler.h"
+#include "nsWeakReference.h"
 
 class nsDataHandler : public nsIProtocolHandler
+                    , public nsSupportsWeakReference
 {
     virtual ~nsDataHandler();
 

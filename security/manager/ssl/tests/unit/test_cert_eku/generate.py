@@ -81,7 +81,7 @@ def gen_int_js_output(int_string):
     # usage (the second of which is deprecated but currently supported for
     # compatibility purposes).
     if ("NONE" in int_string or "SA" in int_string or "NS" in int_string):
-      expectedResult = "0"
+      expectedResult = "PRErrorCodeSuccess"
     return ("  checkCertErrorGeneric(certdb, load_cert('" + int_string +
             "', ',,'), " + expectedResult + ", certificateUsageSSLCA);\n")
 
@@ -123,7 +123,7 @@ def gen_ee_js_output(int_string, ee_string, cert_usage, ee_name):
         if not has_compatible_eku(int_string, usage_abbreviation):
             return single_test_output(ee_name, cert_usage,
                                       "SEC_ERROR_INADEQUATE_CERT_TYPE")
-        return single_test_output(ee_name, cert_usage, "0")
+        return single_test_output(ee_name, cert_usage, "PRErrorCodeSuccess")
 
     # If the usage isn't Status Responder, if the end-entity certificate has
     # the OCSP Signing usage in its EKU, it is not valid for any other usage.
@@ -142,7 +142,7 @@ def gen_ee_js_output(int_string, ee_string, cert_usage, ee_name):
             "NS" not in int_string):
             return single_test_output(ee_name, cert_usage,
                                       "SEC_ERROR_INADEQUATE_CERT_TYPE")
-        return single_test_output(ee_name, cert_usage, "0")
+        return single_test_output(ee_name, cert_usage, "PRErrorCodeSuccess")
 
     if not has_compatible_eku(ee_string, usage_abbreviation):
         return single_test_output(ee_name, cert_usage,
@@ -151,7 +151,7 @@ def gen_ee_js_output(int_string, ee_string, cert_usage, ee_name):
         return single_test_output(ee_name, cert_usage,
                                   "SEC_ERROR_INADEQUATE_CERT_TYPE")
 
-    return single_test_output(ee_name, cert_usage, "0")
+    return single_test_output(ee_name, cert_usage, "PRErrorCodeSuccess")
 
 def generate_test_eku():
     outmap = { "NONE" : ""}

@@ -29,8 +29,9 @@ interface AnimationPlayer {
   readonly attribute AnimationPlayState playState;
   [Throws]
   readonly attribute Promise<AnimationPlayer> ready;
-  /*
+  [Throws]
   readonly attribute Promise<AnimationPlayer> finished;
+  /*
   void cancel ();
   void finish ();
   */

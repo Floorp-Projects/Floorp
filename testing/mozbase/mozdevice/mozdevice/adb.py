@@ -683,11 +683,31 @@ class ADBDevice(ADBCommand):
 
     @property
     def test_root(self):
-        """Set up the test root and cache its value
+        """
+        The test_root property returns the directory on the device where
+        temporary test files are stored.
+
+        The first time test_root it is called it determines and caches a value
+        for the test root on the device. It determines the appropriate test
+        root by attempting to create a 'dummy' directory on each of a list of
+        directories and returning the first successful directory as the
+        test_root value.
+
+        The default list of directories checked by test_root are:
+
+        - /storage/sdcard0/tests
+        - /storage/sdcard1/tests
+        - /sdcard/tests
+        - /mnt/sdcard/tests
+        - /data/local/tests
+
+        You may override the default list by providing a test_root argument to
+        the :class:`ADBDevice` constructor which will then be used when
+        attempting to create the 'dummy' directory.
+
         :raises: * ADBTimeoutError
                  * ADBRootError
                  * ADBError
-
         """
         if self._test_root is not None:
             return self._test_root

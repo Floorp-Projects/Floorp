@@ -41,13 +41,17 @@ function check_cert_err_generic(cert, expected_error, usage) {
 
 function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
   // On reset most usages are successful
-  check_cert_err_generic(ee_cert, 0, certificateUsageSSLServer);
-  check_cert_err_generic(ee_cert, 0, certificateUsageSSLClient);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageSSLServer);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageSSLClient);
   check_cert_err_generic(ee_cert, SEC_ERROR_CA_CERT_INVALID,
                          certificateUsageSSLCA);  // expected no bc
-  check_cert_err_generic(ee_cert, 0, certificateUsageEmailSigner);
-  check_cert_err_generic(ee_cert, 0, certificateUsageEmailRecipient);
-  check_cert_err_generic(ee_cert, 0,
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageEmailSigner);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageEmailRecipient);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
                          certificateUsageObjectSigner); // expected
   check_cert_err_generic(ee_cert, SEC_ERROR_CA_CERT_INVALID,
                          certificateUsageVerifyCA);
@@ -85,21 +89,26 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
   // Trust set to T  -  trusted CA to issue client certs, where client cert is
   // usageSSLClient.
   setCertTrust(cert_to_modify_trust, 'T,T,T');
-  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER : 0,
+  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER
+                                           : PRErrorCodeSuccess,
                          certificateUsageSSLServer);
 
   // XXX(Bug 982340)
-  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER : 0,
+  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER
+                                           : PRErrorCodeSuccess,
                          certificateUsageSSLClient);
 
   check_cert_err_generic(ee_cert, SEC_ERROR_CA_CERT_INVALID,
                          certificateUsageSSLCA);
 
-  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER : 0,
+  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER
+                                           : PRErrorCodeSuccess,
                          certificateUsageEmailSigner);
-  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER : 0,
+  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER
+                                           : PRErrorCodeSuccess,
                          certificateUsageEmailRecipient);
-  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER : 0,
+  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER
+                                           : PRErrorCodeSuccess,
                          certificateUsageObjectSigner);
   check_cert_err_generic(ee_cert, SEC_ERROR_CA_CERT_INVALID,
                          certificateUsageVerifyCA);
@@ -113,12 +122,16 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
                          certificateUsageSSLServer);
 
   //XXX(Bug 982340)
-  check_cert_err_generic(ee_cert, 0, certificateUsageSSLClient);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageSSLClient);
   check_cert_err_generic(ee_cert, SEC_ERROR_CA_CERT_INVALID,
                          certificateUsageSSLCA);
-  check_cert_err_generic(ee_cert, 0, certificateUsageEmailSigner);
-  check_cert_err_generic(ee_cert, 0, certificateUsageEmailRecipient);
-  check_cert_err_generic(ee_cert, 0, certificateUsageObjectSigner);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageEmailSigner);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageEmailRecipient);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageObjectSigner);
   check_cert_err_generic(ee_cert, SEC_ERROR_CA_CERT_INVALID,
                          certificateUsageVerifyCA);
   check_cert_err_generic(ee_cert,
@@ -128,15 +141,20 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
 
   // Inherited trust SSL
   setCertTrust(cert_to_modify_trust, ',C,C');
-  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER : 0,
+  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER
+                                           : PRErrorCodeSuccess,
                          certificateUsageSSLServer);
   // XXX(Bug 982340)
-  check_cert_err_generic(ee_cert, 0, certificateUsageSSLClient);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageSSLClient);
   check_cert_err_generic(ee_cert, SEC_ERROR_CA_CERT_INVALID,
                          certificateUsageSSLCA);
-  check_cert_err_generic(ee_cert, 0, certificateUsageEmailSigner);
-  check_cert_err_generic(ee_cert, 0, certificateUsageEmailRecipient);
-  check_cert_err_generic(ee_cert, 0, certificateUsageObjectSigner);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageEmailSigner);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageEmailRecipient);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageObjectSigner);
   check_cert_err_generic(ee_cert, SEC_ERROR_CA_CERT_INVALID,
                          certificateUsageVerifyCA);
   check_cert_err_generic(ee_cert, SEC_ERROR_INADEQUATE_CERT_TYPE,
@@ -144,7 +162,8 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
 
   // Now tests on the EMAIL trust bit
   setCertTrust(cert_to_modify_trust, 'C,p,C');
-  check_cert_err_generic(ee_cert, 0, certificateUsageSSLServer);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageSSLServer);
   check_cert_err_generic(ee_cert, SEC_ERROR_UNTRUSTED_ISSUER,
                          certificateUsageSSLClient);
   check_cert_err_generic(ee_cert, SEC_ERROR_CA_CERT_INVALID,
@@ -153,7 +172,8 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
                          certificateUsageEmailSigner);
   check_cert_err_generic(ee_cert, SEC_ERROR_UNTRUSTED_ISSUER,
                          certificateUsageEmailRecipient);
-  check_cert_err_generic(ee_cert, 0, certificateUsageObjectSigner);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageObjectSigner);
   check_cert_err_generic(ee_cert, SEC_ERROR_CA_CERT_INVALID,
                          certificateUsageVerifyCA);
   check_cert_err_generic(ee_cert, SEC_ERROR_INADEQUATE_CERT_TYPE,
@@ -162,16 +182,21 @@ function test_ca_distrust(ee_cert, cert_to_modify_trust, isRootCA) {
 
   //inherited EMAIL Trust
   setCertTrust(cert_to_modify_trust, 'C,,C');
-  check_cert_err_generic(ee_cert, 0, certificateUsageSSLServer);
-  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER : 0,
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageSSLServer);
+  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER
+                                           : PRErrorCodeSuccess,
                          certificateUsageSSLClient);
   check_cert_err_generic(ee_cert, SEC_ERROR_CA_CERT_INVALID,
                          certificateUsageSSLCA);
-  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER : 0,
+  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER
+                                           : PRErrorCodeSuccess,
                          certificateUsageEmailSigner);
-  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER : 0,
+  check_cert_err_generic(ee_cert, isRootCA ? SEC_ERROR_UNKNOWN_ISSUER
+                                           : PRErrorCodeSuccess,
                          certificateUsageEmailRecipient);
-  check_cert_err_generic(ee_cert, 0, certificateUsageObjectSigner);
+  check_cert_err_generic(ee_cert, PRErrorCodeSuccess,
+                         certificateUsageObjectSigner);
   check_cert_err_generic(ee_cert, SEC_ERROR_CA_CERT_INVALID,
                          certificateUsageVerifyCA);
   check_cert_err_generic(ee_cert, SEC_ERROR_INADEQUATE_CERT_TYPE,

@@ -13,7 +13,7 @@
 #include "jit/IonCode.h"
 #include "jit/JitCompartment.h"
 #include "jit/shared/Assembler-shared.h"
-#include "jit/shared/Constants-x86-shared.h"
+#include "jit/x86-shared/Constants-x86-shared.h"
 
 namespace js {
 namespace jit {
@@ -153,7 +153,7 @@ static const Scale ScalePointer = TimesFour;
 } // namespace jit
 } // namespace js
 
-#include "jit/shared/Assembler-x86-shared.h"
+#include "jit/x86-shared/Assembler-x86-shared.h"
 
 namespace js {
 namespace jit {

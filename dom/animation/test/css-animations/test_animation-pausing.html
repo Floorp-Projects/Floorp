@@ -22,17 +22,17 @@ async_test(function(t) {
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s';
 
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
 
   assert_equals(getMarginLeft(cs), 0,
                 'Initial value of margin-left is zero');
   var previousAnimVal = getMarginLeft(cs);
 
-  player.ready.then(waitForFrame).then(t.step_func(function() {
+  animation.ready.then(waitForFrame).then(t.step_func(function() {
     assert_true(getMarginLeft(cs) > previousAnimVal,
                 'margin-left is initially increasing');
-    player.pause();
-    return player.ready;
+    animation.pause();
+    return animation.ready;
   })).then(t.step_func(function() {
     previousAnimVal = getMarginLeft(cs);
     return waitForFrame();
@@ -48,14 +48,14 @@ async_test(function(t) {
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
 
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,
                 'Initial value of margin-left is zero');
 
-  player.pause();
+  animation.pause();
   div.style.animationPlayState = 'running';
 
-  player.ready.then(waitForFrame).then(t.step_func(function() {
+  animation.ready.then(waitForFrame).then(t.step_func(function() {
     assert_equals(cs.animationPlayState, 'running',
                   'animation-play-state is running');
     assert_equals(getMarginLeft(cs), 0,
@@ -69,14 +69,14 @@ async_test(function(t) {
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
 
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
 
   assert_equals(getMarginLeft(cs), 0,
                 'Initial value of margin-left is zero');
 
-  player.play();
+  animation.play();
 
-  player.ready.then(waitForFrame).then(t.step_func(function() {
+  animation.ready.then(waitForFrame).then(t.step_func(function() {
     assert_true(getMarginLeft(cs) > 0,
                 'Playing value of margin-left is greater than zero');
     t.done();
@@ -88,15 +88,15 @@ async_test(function(t) {
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
 
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,
                 'Initial value of margin-left is zero');
 
-  player.play();
+  animation.play();
 
   var previousAnimVal;
 
-  player.ready.then(function() {
+  animation.ready.then(function() {
     div.style.animationPlayState = 'running';
     cs.animationPlayState; // Trigger style resolution
     return waitForFrame();
@@ -104,7 +104,7 @@ async_test(function(t) {
     assert_equals(cs.animationPlayState, 'running',
                   'animation-play-state is running');
     div.style.animationPlayState = 'paused';
-    return player.ready;
+    return animation.ready;
   })).then(t.step_func(function() {
     assert_equals(cs.animationPlayState, 'paused',
                   'animation-play-state is paused');
@@ -123,7 +123,7 @@ async_test(function(t) {
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s';
 
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,
                 'Initial value of margin-left is zero');
 
@@ -131,10 +131,10 @@ async_test(function(t) {
   // apply the style changes first, they will ignore the redundant
   // call to play() and fail to correctly override the pause style.
   div.style.animationPlayState = 'paused';
-  player.play();
+  animation.play();
   var previousAnimVal = getMarginLeft(cs);
 
-  player.ready.then(waitForFrame).then(t.step_func(function() {
+  animation.ready.then(waitForFrame).then(t.step_func(function() {
     assert_equals(cs.animationPlayState, 'paused',
                   'animation-play-state is paused');
     assert_true(getMarginLeft(cs) > previousAnimVal,
@@ -148,7 +148,7 @@ async_test(function(t) {
   var cs = window.getComputedStyle(div);
   div.style.animation = 'anim 1000s paused';
 
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
   assert_equals(getMarginLeft(cs), 0,
                 'Initial value of margin-left is zero');
 
@@ -163,10 +163,10 @@ async_test(function(t) {
   // For now this just serves as a sanity check that we do the same thing
   // even if we set style before calling the API.
   div.style.animationPlayState = 'running';
-  player.pause();
+  animation.pause();
   var previousAnimVal = getMarginLeft(cs);
 
-  player.ready.then(waitForFrame).then(t.step_func(function() {
+  animation.ready.then(waitForFrame).then(t.step_func(function() {
     assert_equals(cs.animationPlayState, 'running',
                   'animation-play-state is running');
     assert_equals(getMarginLeft(cs), previousAnimVal,

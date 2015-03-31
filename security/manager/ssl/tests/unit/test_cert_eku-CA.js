@@ -25,13 +25,13 @@ function run_test() {
   load_cert("ca", "CT,CT,CT");
 
   checkCertErrorGeneric(certdb, load_cert('int-EKU-CA', ',,'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLCA);
-  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA-int-EKU-CA.der'), 0, certificateUsageSSLClient);
+  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA-int-EKU-CA.der'), PRErrorCodeSuccess, certificateUsageSSLClient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_KEY_USAGE, certificateUsageSSLCA);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageStatusResponder);
-  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_EP-int-EKU-CA.der'), 0, certificateUsageSSLClient);
+  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_EP-int-EKU-CA.der'), PRErrorCodeSuccess, certificateUsageSSLClient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_EP-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_EP-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_KEY_USAGE, certificateUsageSSLCA);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_EP-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);
@@ -43,7 +43,7 @@ function run_test() {
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_EP_NS_OS_SA_TS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_EP_NS_OS_SA_TS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_EP_NS_OS_SA_TS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageStatusResponder);
-  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_NS-int-EKU-CA.der'), 0, certificateUsageSSLClient);
+  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_NS-int-EKU-CA.der'), PRErrorCodeSuccess, certificateUsageSSLClient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_NS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_NS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_KEY_USAGE, certificateUsageSSLCA);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_NS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);
@@ -55,13 +55,13 @@ function run_test() {
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_OS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_OS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_OS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageStatusResponder);
-  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_SA-int-EKU-CA.der'), 0, certificateUsageSSLClient);
+  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_SA-int-EKU-CA.der'), PRErrorCodeSuccess, certificateUsageSSLClient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_SA-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_SA-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_KEY_USAGE, certificateUsageSSLCA);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_SA-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_SA-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_SA-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageStatusResponder);
-  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_TS-int-EKU-CA.der'), 0, certificateUsageSSLClient);
+  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_TS-int-EKU-CA.der'), PRErrorCodeSuccess, certificateUsageSSLClient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_TS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_TS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_KEY_USAGE, certificateUsageSSLCA);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-CA_TS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);
@@ -97,7 +97,7 @@ function run_test() {
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-EP_TS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-EP_TS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailRecipient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-EP_TS-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageStatusResponder);
-  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NONE-int-EKU-CA.der'), 0, certificateUsageSSLClient);
+  checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NONE-int-EKU-CA.der'), PRErrorCodeSuccess, certificateUsageSSLClient);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NONE-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageSSLServer);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NONE-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_KEY_USAGE, certificateUsageSSLCA);
   checkCertErrorGeneric(certdb, cert_from_file('ee-EKU-NONE-int-EKU-CA.der'), SEC_ERROR_INADEQUATE_CERT_TYPE, certificateUsageEmailSigner);

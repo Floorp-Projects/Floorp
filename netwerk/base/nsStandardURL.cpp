@@ -270,10 +270,12 @@ nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
     mParser = net_GetStdURLParser();
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-    if (aTrackURL) {
-        PR_APPEND_LINK(&mDebugCList, &gAllURLs);
-    } else {
-        PR_INIT_CLIST(&mDebugCList);
+    if (NS_IsMainThread()) {
+        if (aTrackURL) {
+            PR_APPEND_LINK(&mDebugCList, &gAllURLs);
+        } else {
+            PR_INIT_CLIST(&mDebugCList);
+        }
     }
 #endif
 }
@@ -286,8 +288,10 @@ nsStandardURL::~nsStandardURL()
         free(mHostA);
     }
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
-    if (!PR_CLIST_IS_EMPTY(&mDebugCList)) {
-        PR_REMOVE_LINK(&mDebugCList);
+    if (NS_IsMainThread()) {
+        if (!PR_CLIST_IS_EMPTY(&mDebugCList)) {
+            PR_REMOVE_LINK(&mDebugCList);
+        }
     }
 #endif
 }
@@ -300,6 +304,7 @@ struct DumpLeakedURLs {
 
 DumpLeakedURLs::~DumpLeakedURLs()
 {
+    MOZ_ASSERT(NS_IsMainThread());
     if (!PR_CLIST_IS_EMPTY(&gAllURLs)) {
         printf("Leaked URLs:\n");
         for (PRCList *l = PR_LIST_HEAD(&gAllURLs); l != &gAllURLs; l = PR_NEXT_LINK(l)) {

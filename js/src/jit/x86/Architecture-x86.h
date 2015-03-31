@@ -7,7 +7,7 @@
 #ifndef jit_x86_Architecture_x86_h
 #define jit_x86_Architecture_x86_h
 
-#include "jit/shared/Constants-x86-shared.h"
+#include "jit/x86-shared/Constants-x86-shared.h"
 
 namespace js {
 namespace jit {

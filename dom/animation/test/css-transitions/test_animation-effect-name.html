@@ -16,7 +16,7 @@ test(function(t) {
   div.style.transition = 'all 100s';
   div.style.left = '100px';
 
-  assert_equals(div.getAnimationPlayers()[0].source.effect.name, '',
+  assert_equals(div.getAnimations()[0].source.effect.name, '',
                 'Animation effects for transitions have an empty name');
 }, 'Effect name for transitions');
 
