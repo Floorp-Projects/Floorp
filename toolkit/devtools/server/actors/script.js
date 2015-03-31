@@ -2046,7 +2046,7 @@ ThreadActor.prototype = {
       let actor = _actor;
 
       if (actor.isPending) {
-        promises.push(sourceActor._setBreakpoint(actor));
+        promises.push(actor.originalLocation.originalSourceActor._setBreakpoint(actor));
       } else {
         promises.push(this.sources.getGeneratedLocation(actor.originalLocation)
                                   .then((generatedLocation) => {
