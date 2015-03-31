@@ -10,6 +10,19 @@
  * liability, trademark and document use rules apply.
  */
 
+// To implement FontFaceSet's iterator until we can use setlike.
+dictionary FontFaceSetIteratorResult
+{
+  required any value;
+  required boolean done;
+};
+
+// To implement FontFaceSet's iterator until we can use setlike.
+[NoInterfaceObject]
+interface FontFaceSetIterator {
+  [Throws] FontFaceSetIteratorResult next();
+};
+
 enum FontFaceSetLoadStatus { "loading", "loaded" };
 
 // Bug 1072762 is for the FontFaceSet constructor.
@@ -23,9 +36,9 @@ interface FontFaceSet : EventTarget {
   boolean has(FontFace font);
   [Throws] boolean delete(FontFace font);
   void clear();
-  // Iterator entries();
+  [NewObject] FontFaceSetIterator entries();
   // Iterator keys();
-  // Iterator values();
+  [NewObject] FontFaceSetIterator values();
   // void forEach(ForEachCallback cb, optional any thisArg);
   // FontFace iterator;
 
