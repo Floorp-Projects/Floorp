@@ -70,6 +70,13 @@ public:
   virtual CSSAnimationPlayer* AsCSSAnimationPlayer() { return nullptr; }
   virtual CSSTransitionPlayer* AsCSSTransitionPlayer() { return nullptr; }
 
+  // Flag to pass to DoPlay to indicate that it should not carry out finishing
+  // behavior (reset the current time to the beginning of the active duration).
+  enum LimitBehavior {
+    AutoRewind = 0,
+    Continue = 1
+  };
+
   // AnimationPlayer methods
   Animation* GetSource() const { return mSource; }
   AnimationTimeline* Timeline() const { return mTimeline; }
@@ -83,7 +90,8 @@ public:
   void SilentlySetPlaybackRate(double aPlaybackRate);
   AnimationPlayState PlayState() const;
   virtual Promise* GetReady(ErrorResult& aRv);
-  virtual void Play();
+  virtual Promise* GetFinished(ErrorResult& aRv);
+  virtual void Play(LimitBehavior aLimitBehavior);
   virtual void Pause();
   bool IsRunningOnCompositor() const { return mIsRunningOnCompositor; }
 
@@ -97,7 +105,7 @@ public:
   void SetCurrentTimeAsDouble(const Nullable<double>& aCurrentTime,
                               ErrorResult& aRv);
   virtual AnimationPlayState PlayStateFromJS() const { return PlayState(); }
-  virtual void PlayFromJS() { Play(); }
+  virtual void PlayFromJS() { Play(LimitBehavior::AutoRewind); }
   // PauseFromJS is currently only here for symmetry with PlayFromJS but
   // in future we will likely have to flush style in
   // CSSAnimationPlayer::PauseFromJS so we leave it for now.
@@ -252,10 +260,12 @@ public:
                     bool& aNeedsRefreshes);
 
 protected:
-  void DoPlay();
+  void DoPlay(LimitBehavior aLimitBehavior);
   void DoPause();
   void ResumeAt(const TimeDuration& aResumeTime);
 
+  void UpdateTiming();
+  void UpdateFinishedState(bool aSeekFlag = false);
   void UpdateSourceContent();
   void FlushStyle() const;
   void PostUpdate();
@@ -265,6 +275,8 @@ protected:
    * aborting the mReady promise as necessary.
    */
   void CancelPendingTasks();
+
+  bool IsFinished() const;
 
   bool IsPossiblyOrphanedPendingPlayer() const;
   StickyTimeDuration SourceContentEnd() const;
@@ -280,12 +292,21 @@ protected:
   Nullable<TimeDuration> mStartTime; // Timeline timescale
   Nullable<TimeDuration> mHoldTime;  // Player timescale
   Nullable<TimeDuration> mPendingReadyTime; // Timeline timescale
+  Nullable<TimeDuration> mPreviousCurrentTime; // Player timescale
   double mPlaybackRate;
 
   // A Promise that is replaced on each call to Play() (and in future Pause())
   // and fulfilled when Play() is successfully completed.
   // This object is lazily created by GetReady.
+  // See http://w3c.github.io/web-animations/#current-ready-promise
   nsRefPtr<Promise> mReady;
+
+  // A Promise that is resolved when we reach the end of the source content, or
+  // 0 when playing backwards. The Promise is replaced if the animation is
+  // finished but then a state change makes it not finished.
+  // This object is lazily created by GetFinished.
+  // See http://w3c.github.io/web-animations/#current-finished-promise
+  nsRefPtr<Promise> mFinished;
 
   // Indicates if the player is in the pending state (and what state it is
   // waiting to enter when it finished pending). We use this rather than
@@ -299,12 +320,9 @@ protected:
   bool mIsRunningOnCompositor;
   // Indicates whether we were in the finished state during our
   // most recent unthrottled sample (our last ComposeStyle call).
-  // FIXME: When we implement the finished promise (bug 1074630) we can
-  // probably remove this and check if the promise has been settled yet
-  // or not instead.
   bool mIsPreviousStateFinished; // Spec calls this "previous finished state"
-  // Indicates that the player should be exposed in an element's
-  // getAnimationPlayers() list.
+  // Indicates that the animation should be exposed in an element's
+  // getAnimations() list.
   bool mIsRelevant;
 };
 

@@ -3186,7 +3186,7 @@ Element::MozRequestPointerLock()
 }
 
 void
-Element::GetAnimationPlayers(nsTArray<nsRefPtr<AnimationPlayer> >& aPlayers)
+Element::GetAnimations(nsTArray<nsRefPtr<AnimationPlayer> >& aAnimations)
 {
   nsIDocument* doc = GetComposedDoc();
   if (doc) {
@@ -3208,7 +3208,7 @@ Element::GetAnimationPlayers(nsTArray<nsRefPtr<AnimationPlayer> >& aPlayers)
          playerIdx++) {
       AnimationPlayer* player = collection->mPlayers[playerIdx];
       if (player->IsRelevant()) {
-        aPlayers.AppendElement(player);
+        aAnimations.AppendElement(player);
       }
     }
   }

@@ -3,7 +3,7 @@
   <head>
     <meta charset=utf-8>
     <title>Tests for the effect of setting a CSS transition's
-           AnimationPlayer.startTime</title>
+           Animation.startTime</title>
     <style>
 
 .animated-div {
@@ -191,17 +191,17 @@ function EventWatcher(watchedNode, eventTypes)
 // active interval. (If there is no delay, they are the same.)
 
 // Called when the ready Promise's callbacks should happen
-function checkStateOnReadyPromiseResolved(player)
+function checkStateOnReadyPromiseResolved(animation)
 {
-  assert_less_than_equal(player.startTime, player.timeline.currentTime,
-    'AnimationPlayer.startTime should be less than the timeline\'s ' +
+  assert_less_than_equal(animation.startTime, animation.timeline.currentTime,
+    'Animation.startTime should be less than the timeline\'s ' +
     'currentTime on the first paint tick after animation creation');
 
-  assert_equals(player.playState, 'running',
-    'AnimationPlayer.playState should be "running" on the first paint ' +
+  assert_equals(animation.playState, 'running',
+    'Animation.playState should be "running" on the first paint ' +
     'tick after animation creation');
 
-  var div = player.source.target;
+  var div = animation.source.target;
   var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
   assert_equals(marginLeft, INITIAL_POSITION,
                 'the computed value of margin-left should be unaffected ' +
@@ -209,26 +209,26 @@ function checkStateOnReadyPromiseResolved(player)
 }
 
 // Called when startTime is set to the time the active interval starts.
-function checkStateAtActiveIntervalStartTime(player)
+function checkStateAtActiveIntervalStartTime(animation)
 {
-  // We don't test player.startTime since our caller just set it.
+  // We don't test animation.startTime since our caller just set it.
 
-  assert_equals(player.playState, 'running',
-    'AnimationPlayer.playState should be "running" at the start of ' +
+  assert_equals(animation.playState, 'running',
+    'Animation.playState should be "running" at the start of ' +
     'the active interval');
 
-  var div = player.source.target;
+  var div = animation.source.target;
   var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
   assert_between_inclusive(marginLeft, INITIAL_POSITION, TEN_PCT_POSITION,
     'the computed value of margin-left should be close to the value at the ' +
     'beginning of the animation');
 }
 
-function checkStateAtFiftyPctOfActiveInterval(player)
+function checkStateAtFiftyPctOfActiveInterval(animation)
 {
-  // We don't test player.startTime since our caller just set it.
+  // We don't test animation.startTime since our caller just set it.
 
-  var div = player.source.target;
+  var div = animation.source.target;
   var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
   assert_equals(marginLeft, FIFTY_PCT_POSITION,
     'the computed value of margin-left should be half way through the ' +
@@ -236,15 +236,15 @@ function checkStateAtFiftyPctOfActiveInterval(player)
 }
 
 // Called when startTime is set to the time the active interval ends.
-function checkStateAtActiveIntervalEndTime(player)
+function checkStateAtActiveIntervalEndTime(animation)
 {
-  // We don't test player.startTime since our caller just set it.
+  // We don't test animation.startTime since our caller just set it.
 
-  assert_equals(player.playState, 'finished',
-    'AnimationPlayer.playState should be "finished" at the end of ' +
+  assert_equals(animation.playState, 'finished',
+    'Animation.playState should be "finished" at the end of ' +
     'the active interval');
 
-  var div = player.source.target;
+  var div = animation.source.target;
   var marginLeft = parseFloat(getComputedStyle(div).marginLeft);
   assert_equals(marginLeft, END_POSITION,
     'the computed value of margin-left should be the final transitioned-to ' +
@@ -257,8 +257,8 @@ test(function(t)
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
 
-  var player = div.getAnimationPlayers()[0];
-  assert_equals(player.startTime, null, 'startTime is unresolved');
+  var animation = div.getAnimations()[0];
+  assert_equals(animation.startTime, null, 'startTime is unresolved');
 }, 'startTime of a newly created transition is unresolved');
 
 
@@ -268,10 +268,10 @@ test(function(t)
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
 
-  var player = div.getAnimationPlayers()[0];
-  var currentTime = player.timeline.currentTime;
-  player.startTime = currentTime;
-  assert_approx_equals(player.startTime, currentTime, 0.0001, // rounding error
+  var animation = div.getAnimations()[0];
+  var currentTime = animation.timeline.currentTime;
+  animation.startTime = currentTime;
+  assert_approx_equals(animation.startTime, currentTime, 0.0001, // rounding error
     'Check setting of startTime actually works');
 }, 'Sanity test to check round-tripping assigning to new animation\'s ' +
    'startTime');
@@ -284,22 +284,22 @@ async_test(function(t) {
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
 
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
 
-  player.ready.then(t.step_func(function() {
-    checkStateOnReadyPromiseResolved(player);
+  animation.ready.then(t.step_func(function() {
+    checkStateOnReadyPromiseResolved(animation);
 
-    player.startTime = startTimeForStartOfActiveInterval(player.timeline);
-    checkStateAtActiveIntervalStartTime(player);
+    animation.startTime = startTimeForStartOfActiveInterval(animation.timeline);
+    checkStateAtActiveIntervalStartTime(animation);
 
-    player.startTime =
-      startTimeForFiftyPercentThroughActiveInterval(player.timeline);
-    checkStateAtFiftyPctOfActiveInterval(player);
+    animation.startTime =
+      startTimeForFiftyPercentThroughActiveInterval(animation.timeline);
+    checkStateAtFiftyPctOfActiveInterval(animation);
 
-    player.startTime = startTimeForEndOfActiveInterval(player.timeline);
+    animation.startTime = startTimeForEndOfActiveInterval(animation.timeline);
     return eventWatcher.waitForEvent('transitionend');
   })).then(t.step_func(function() {
-    checkStateAtActiveIntervalEndTime(player);
+    checkStateAtActiveIntervalEndTime(animation);
 
     eventWatcher.stopWatching();
   })).catch(t.step_func(function(reason) {
@@ -317,17 +317,18 @@ test(function(t) {
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
 
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
 
   // Unlike in the case of CSS animations, we cannot skip to the end and skip
   // backwards since when we reach the end the transition effect is removed and
-  // changes to the AnimationPlayer object no longer affect the element. For
+  // changes to the Animation object no longer affect the element. For
   // this reason we only skip forwards as far as the 90% through point.
 
-  player.startTime = startTimeForFiftyPercentThroughActiveInterval(player.timeline);
-  checkStateAtFiftyPctOfActiveInterval(player);
+  animation.startTime =
+    startTimeForFiftyPercentThroughActiveInterval(animation.timeline);
+  checkStateAtFiftyPctOfActiveInterval(animation);
 
-  player.startTime = startTimeForStartOfActiveInterval(player.timeline);
+  animation.startTime = startTimeForStartOfActiveInterval(animation.timeline);
 
   // Despite going backwards from being in the active interval to being before
   // it, we now expect an 'animationend' event because the animation should go
@@ -341,7 +342,7 @@ test(function(t) {
     eventWatcher.stopWatching();
     t.done();
   });
-  checkStateAtActiveIntervalStartTime(player);
+  checkStateAtActiveIntervalStartTime(animation);
 }, 'Skipping backwards through transition');
 
 
@@ -351,18 +352,18 @@ async_test(function(t) {
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
 
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
 
   var storedCurrentTime;
 
-  player.ready.then(t.step_func(function() {
-    storedCurrentTime = player.currentTime;
-    player.startTime = null;
-    return player.ready;
+  animation.ready.then(t.step_func(function() {
+    storedCurrentTime = animation.currentTime;
+    animation.startTime = null;
+    return animation.ready;
   })).catch(t.step_func(function(reason) {
     assert_unreached(reason);
   })).then(function() {
-    assert_equals(player.currentTime, storedCurrentTime,
+    assert_equals(animation.currentTime, storedCurrentTime,
       'Test that hold time is correct');
     t.done();
   });
@@ -375,27 +376,27 @@ async_test(function(t) {
   flushComputedStyle(div);
   div.style.marginLeft = '200px'; // initiate transition
 
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
 
-  player.ready.then(t.step_func(function() {
-    var savedStartTime = player.startTime;
+  animation.ready.then(t.step_func(function() {
+    var savedStartTime = animation.startTime;
 
-    assert_not_equals(player.startTime, null,
-      'AnimationPlayer.startTime not null on ready Promise resolve');
+    assert_not_equals(animation.startTime, null,
+      'Animation.startTime not null on ready Promise resolve');
 
-    player.pause();
-    return player.ready;
+    animation.pause();
+    return animation.ready;
   })).then(t.step_func(function() {
-    assert_equals(player.startTime, null,
-      'AnimationPlayer.startTime is null after paused');
-    assert_equals(player.playState, 'paused',
-      'AnimationPlayer.playState is "paused" after pause() call');
+    assert_equals(animation.startTime, null,
+      'Animation.startTime is null after paused');
+    assert_equals(animation.playState, 'paused',
+      'Animation.playState is "paused" after pause() call');
   })).catch(t.step_func(function(reason) {
     assert_unreached(reason);
   })).then(function() {
     t.done();
   });
-}, 'AnimationPlayer.startTime after paused');
+}, 'Animation.startTime after paused');
 
     </script>
   </body>

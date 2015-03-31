@@ -74,6 +74,11 @@ public:
     return mSurfaceAllocator->IsSameProcess();
   }
 
+  virtual MessageLoop * GetMessageLoop() const override
+  {
+    return mSurfaceAllocator->GetMessageLoop();
+  }
+
 protected:
   // ISurfaceAllocator
   virtual bool IsOnCompositorSide() const override
