@@ -20,6 +20,7 @@ struct ANPEvent;
 
 namespace mozilla {
     class AndroidGeckoEvent;
+    class TextComposition;
 
     namespace layers {
         class CompositorParent;
@@ -168,6 +169,8 @@ protected:
     void BringToFront();
     nsWindow *FindTopLevel();
     bool IsTopLevel();
+
+    nsRefPtr<mozilla::TextComposition> GetIMEComposition();
     void RemoveIMEComposition();
     void PostFlushIMEChanges();
     void FlushIMEChanges();
@@ -189,9 +192,6 @@ protected:
 
     nsCOMPtr<nsIIdleServiceInternal> mIdleService;
 
-    bool mIMEComposing;
-    int32_t mIMEComposingStart;
-    nsString mIMEComposingText;
     bool mIMEMaskSelectionUpdate, mIMEMaskTextUpdate;
     int32_t mIMEMaskEventsCount; // Mask events when > 0
     nsRefPtr<mozilla::TextRangeArray> mIMERanges;
