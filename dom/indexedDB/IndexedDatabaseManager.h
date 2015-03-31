@@ -109,13 +109,7 @@ public:
 #endif
 
   static bool
-  ExperimentalFeaturesEnabled();
-
-  static bool
-  ExperimentalFeaturesEnabled(JSContext* /* aCx */, JSObject* /* aGlobal */)
-  {
-    return ExperimentalFeaturesEnabled();
-  }
+  ExperimentalFeaturesEnabled(JSContext* aCx, JSObject* aGlobal);
 
   already_AddRefed<FileManager>
   GetFileManager(PersistenceType aPersistenceType,
