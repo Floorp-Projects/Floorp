@@ -1841,27 +1841,22 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 InitEvent(event, nullptr);
                 event.mData = ae->Characters();
 
-                if (ae->Action() == AndroidGeckoEvent::IME_COMPOSE_TEXT) {
-                    // Because we're leaving the composition open, we need to
-                    // include proper text ranges to make the editor happy.
-                    TextRange range;
-                    range.mStartOffset = 0;
-                    range.mEndOffset = event.mData.Length();
-                    range.mRangeType = NS_TEXTRANGE_RAWINPUT;
-                    event.mRanges = new TextRangeArray();
-                    event.mRanges->AppendElement(range);
-                }
+                // Include proper text ranges to make the editor happy.
+                TextRange range;
+                range.mStartOffset = 0;
+                range.mEndOffset = event.mData.Length();
+                range.mRangeType = NS_TEXTRANGE_RAWINPUT;
+                event.mRanges = new TextRangeArray();
+                event.mRanges->AppendElement(range);
 
                 DispatchEvent(&event);
             }
 
             // Don't end composition when composing text.
-            if (ae->Action() != AndroidGeckoEvent::IME_COMPOSE_TEXT)
-            {
+            if (ae->Action() != AndroidGeckoEvent::IME_COMPOSE_TEXT) {
                 WidgetCompositionEvent compositionCommitEvent(
-                                           true, NS_COMPOSITION_COMMIT, this);
+                        true, NS_COMPOSITION_COMMIT_AS_IS, this);
                 InitEvent(compositionCommitEvent, nullptr);
-                compositionCommitEvent.mData = ae->Characters();
                 DispatchEvent(&compositionCommitEvent);
             }
 
