@@ -70,17 +70,6 @@ const ITEM_RECORD_PROPERTIES = `
   syncStatus
 `.trim().split(/\s+/);
 
-// Article objects that are passed to ReadingList.addItem may contain
-// some properties that are known but are not currently stored in the
-// ReadingList records. This is the list of properties that are knowingly
-// disregarded before the item is normalized.
-const ITEM_DISREGARDED_PROPERTIES = `
-  byline
-  dir
-  content
-  length
-`.trim().split(/\s+/);
-
 // Each local item has a syncStatus indicating the state of the item in relation
 // to the sync server.  See also Sync.jsm.
 const SYNC_STATUS_SYNCED = 0;
@@ -991,9 +980,6 @@ ReadingListItemIterator.prototype = {
 function normalizeRecord(nonNormalizedRecord) {
   let record = {};
   for (let prop in nonNormalizedRecord) {
-    if (ITEM_DISREGARDED_PROPERTIES.indexOf(prop) >= 0) {
-      continue;
-    }
     if (ITEM_RECORD_PROPERTIES.indexOf(prop) < 0) {
       throw new Error("Unrecognized item property: " + prop);
     }
