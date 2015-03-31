@@ -244,7 +244,7 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">32dp</item>
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.Header</item>
-        <item name="android:background">@color/background_light</item>
+        <item name="android:background">@color/about_page_header_grey</item>
         <item name="android:focusable">false</item>
         <item name="android:gravity">center|left</item>
         <item name="android:paddingLeft">10dip</item>
@@ -571,7 +571,7 @@
     <style name="Widget.RemoteTabsItemView" parent="Widget.TwoLinePageRow"/>
 
     <style name="Widget.RemoteTabsClientView" parent="Widget.TwoLinePageRow">
-        <item name="android:background">@color/background_light</item>
+        <item name="android:background">@color/about_page_header_grey</item>
     </style>
 
     <style name="Widget.RemoteTabsListView" parent="Widget.HomeListView">
