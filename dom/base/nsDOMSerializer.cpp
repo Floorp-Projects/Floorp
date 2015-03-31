@@ -83,8 +83,7 @@ SetUpEncoder(nsIDOMNode *aRoot, const nsACString& aCharset,
   }
 
   if (NS_SUCCEEDED(rv)) {
-    *aEncoder = encoder.get();
-    NS_ADDREF(*aEncoder);
+    encoder.forget(aEncoder);
   }
 
   return rv;

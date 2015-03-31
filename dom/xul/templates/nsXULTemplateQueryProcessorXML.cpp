@@ -285,8 +285,7 @@ nsXULTemplateQueryProcessorXML::CompileQuery(nsIXULTemplateBuilder* aBuilder,
         }
     }
 
-    *_retval = query;
-    NS_ADDREF(*_retval);
+    query.forget(_retval);
 
     return NS_OK;
 }

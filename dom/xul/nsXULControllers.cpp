@@ -107,8 +107,7 @@ nsXULControllers::GetControllerForCommand(const char *aCommand, nsIController** 
         bool supportsCommand;
         controller->SupportsCommand(aCommand, &supportsCommand);
         if (supportsCommand) {
-          *_retval = controller;
-          NS_ADDREF(*_retval);
+          controller.forget(_retval);
           return NS_OK;
         }
       }

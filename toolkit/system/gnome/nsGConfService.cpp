@@ -190,7 +190,7 @@ nsGConfService::GetStringList(const nsACString &aKey, nsIArray** aResult)
   }
   
   g_slist_free(list);
-  NS_ADDREF(*aResult = items);
+  items.forget(aResult);
   return NS_OK;
 }
 

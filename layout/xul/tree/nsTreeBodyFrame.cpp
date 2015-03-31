@@ -621,7 +621,7 @@ nsTreeBodyFrame::GetSelectionRegion(nsIScriptableRegion **aRegion)
   // clip to the tree boundary in case one row extends past it
   region->IntersectRect(x, top, rect.width, rect.height);
 
-  NS_ADDREF(*aRegion = region);
+  region.forget(aRegion);
   return NS_OK;
 }
 
