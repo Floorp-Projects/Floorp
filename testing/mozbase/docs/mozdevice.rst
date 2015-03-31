@@ -185,6 +185,7 @@ File management methods
 .. automethod:: ADBDevice.push(self, local, remote, timeout=None)
 .. automethod:: ADBDevice.rm(self, path, recursive=False, force=False, timeout=None, root=False)
 .. automethod:: ADBDevice.rmdir(self, path, timeout=None, root=False)
+.. autoattribute:: ADBDevice.test_root
 
 Process management methods
 ++++++++++++++++++++++++++
