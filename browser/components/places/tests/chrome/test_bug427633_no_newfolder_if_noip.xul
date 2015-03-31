@@ -58,7 +58,7 @@
         ok(gEditItemOverlay, "gEditItemOverlay is in context");
         let itemId = yield PlacesUtils.promiseItemId(bm.guid);
         gEditItemOverlay.initPanel(itemId);
-        ok(gEditItemOverlay.initialized, "gEditItemOverlay is initialized");
+        ok(gEditItemOverlay._initialized, "gEditItemOverlay is initialized");
 
         let tree = gEditItemOverlay._element("folderTree");
         yield openFolderTree(tree);
