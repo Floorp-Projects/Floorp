@@ -1844,7 +1844,7 @@ LAllocation::toRegister() const
 # elif defined(JS_CODEGEN_X64)
 #  include "jit/x64/LIR-x64.h"
 # endif
-# include "jit/shared/LIR-x86-shared.h"
+# include "jit/x86-shared/LIR-x86-shared.h"
 #elif defined(JS_CODEGEN_ARM)
 # include "jit/arm/LIR-arm.h"
 #elif defined(JS_CODEGEN_MIPS)
