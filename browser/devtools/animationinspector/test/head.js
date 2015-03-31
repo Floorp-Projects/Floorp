@@ -279,7 +279,36 @@ let togglePlayPauseButton = Task.async(function*(widget) {
   yield onClicked;
 
   // Wait for the next sate change event to make sure the state is updated
-  yield widget.player.once(widget.player.AUTO_REFRESH_EVENT);
+  yield waitForStateCondition(widget.player, state => {
+    return state.playState === nextState;
+  }, "after clicking the toggle button");
+});
+
+/**
+ * Wait for a player's auto-refresh events and stop when a condition becomes
+ * truthy.
+ * @param {AnimationPlayerFront} player
+ * @param {Function} conditionCheck Will be called over and over again when the
+ * player state changes, passing the state as argument. This method must return
+ * a truthy value to stop waiting.
+ * @param {String} desc If provided, this will be logged with info(...) every
+ * time the state is refreshed, until the condition passes.
+ * @return {Promise} Resolves when the condition passes.
+ */
+let waitForStateCondition = Task.async(function*(player, conditionCheck, desc="") {
+  if (desc) {
+    desc = "(" + desc + ")";
+  }
+  info("Waiting for a player's auto-refresh event " + desc);
+  let def = promise.defer();
+  player.on(player.AUTO_REFRESH_EVENT, function onNewState() {
+    info("State refreshed, checking condition ... " + desc);
+    if (conditionCheck(player.state)) {
+      player.off(player.AUTO_REFRESH_EVENT, onNewState);
+      def.resolve();
+    }
+  });
+  return def.promise;
 });
 
 /**
