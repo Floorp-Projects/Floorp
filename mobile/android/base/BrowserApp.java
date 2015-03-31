@@ -2891,6 +2891,11 @@ public class BrowserApp extends GeckoApp
         if (mMenuPanel != null)
             mMenuPanel.scrollTo(0, 0);
 
+        // Scroll menu ListView (potentially in MenuPanel ViewGroup) to top.
+        if (mMenu instanceof GeckoMenu) {
+            ((GeckoMenu) mMenu).setSelection(0);
+        }
+
         if (!mBrowserToolbar.openOptionsMenu())
             super.openOptionsMenu();
 
