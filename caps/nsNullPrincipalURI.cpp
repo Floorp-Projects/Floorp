@@ -20,14 +20,12 @@
 //// nsNullPrincipalURI
 
 nsNullPrincipalURI::nsNullPrincipalURI()
-  : mScheme(NS_NULLPRINCIPAL_SCHEME),
-    mPath(mPathBytes, ArrayLength(mPathBytes), ArrayLength(mPathBytes) - 1)
+  : mPath(mPathBytes, ArrayLength(mPathBytes), ArrayLength(mPathBytes) - 1)
 {
 }
 
 nsNullPrincipalURI::nsNullPrincipalURI(const nsNullPrincipalURI& aOther)
-  : mScheme(NS_NULLPRINCIPAL_SCHEME),
-    mPath(mPathBytes, ArrayLength(mPathBytes), ArrayLength(mPathBytes) - 1)
+  : mPath(mPathBytes, ArrayLength(mPathBytes), ArrayLength(mPathBytes) - 1)
 {
   mPath.Assign(aOther.mPath);
 }
@@ -171,7 +169,7 @@ nsNullPrincipalURI::SetRef(const nsACString &aRef)
 NS_IMETHODIMP
 nsNullPrincipalURI::GetPrePath(nsACString &_prePath)
 {
-  _prePath = mScheme + NS_LITERAL_CSTRING(":");
+  _prePath = NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME ":");
   return NS_OK;
 }
 
@@ -190,7 +188,7 @@ nsNullPrincipalURI::SetPort(int32_t aPort)
 NS_IMETHODIMP
 nsNullPrincipalURI::GetScheme(nsACString &_scheme)
 {
-  _scheme = mScheme;
+  _scheme = NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME);
   return NS_OK;
 }
 
@@ -203,7 +201,7 @@ nsNullPrincipalURI::SetScheme(const nsACString &aScheme)
 NS_IMETHODIMP
 nsNullPrincipalURI::GetSpec(nsACString &_spec)
 {
-  _spec = mScheme + NS_LITERAL_CSTRING(":") + mPath;
+  _spec = NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME ":") + mPath;
   return NS_OK;
 }
 
@@ -275,7 +273,7 @@ nsNullPrincipalURI::Equals(nsIURI *aOther, bool *_equals)
   nsresult rv = aOther->QueryInterface(kNullPrincipalURIImplementationCID,
                                        (void **)&otherURI);
   if (NS_SUCCEEDED(rv)) {
-    *_equals = (mScheme == otherURI->mScheme && mPath == otherURI->mPath);
+    *_equals = mPath == otherURI->mPath;
     NS_RELEASE(otherURI);
   }
   return NS_OK;
@@ -300,7 +298,7 @@ nsNullPrincipalURI::Resolve(const nsACString &aRelativePath,
 NS_IMETHODIMP
 nsNullPrincipalURI::SchemeIs(const char *aScheme, bool *_schemeIs)
 {
-  *_schemeIs = (0 == nsCRT::strcasecmp(mScheme.get(), aScheme));
+  *_schemeIs = (0 == nsCRT::strcasecmp(NS_NULLPRINCIPAL_SCHEME, aScheme));
   return NS_OK;
 }
 
@@ -333,8 +331,7 @@ nsNullPrincipalURI::Deserialize(const mozilla::ipc::URIParams &aParams)
 size_t
 nsNullPrincipalURI::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  return mScheme.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
-         mPath.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  return mPath.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }
 
 size_t
