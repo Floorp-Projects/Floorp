@@ -132,7 +132,7 @@ GeckoTouchDispatcher::NotifyTouch(MultiTouchInput& aTouch, TimeStamp aEventTime)
     layers::APZThreadUtils::RunOnControllerThread(NewRunnableMethod(
       this, &GeckoTouchDispatcher::DispatchTouchMoveEvents, TimeStamp::Now()));
   } else {
-    if (mResamplingEnabled) {
+    { // scope lock
       MutexAutoLock lock(mTouchQueueLock);
       mInflightNonMoveEvents++;
     }
@@ -154,7 +154,7 @@ GeckoTouchDispatcher::DispatchTouchNonMoveEvent(MultiTouchInput aInput)
   }
   DispatchTouchEvent(aInput);
 
-  if (mResamplingEnabled) {
+  { // scope lock
     MutexAutoLock lock(mTouchQueueLock);
     mInflightNonMoveEvents--;
     MOZ_ASSERT(mInflightNonMoveEvents >= 0);
@@ -169,6 +169,7 @@ GeckoTouchDispatcher::DispatchTouchMoveEvents(TimeStamp aVsyncTime)
   {
     MutexAutoLock lock(mTouchQueueLock);
     if (!mHavePendingTouchMoves) {
+      MOZ_ASSERT(mTouchMoveEvents.empty());
       return;
     }
     mHavePendingTouchMoves = false;
