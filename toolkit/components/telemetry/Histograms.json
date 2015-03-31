@@ -4821,6 +4821,22 @@
     "keyed" : true,
     "description" : "Exceptions thrown by add-ons"
   },
+  "MISBEHAVING_ADDONS_CPOW_TIME_MS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "low": 1,
+    "high": 10000,
+    "n_buckets": 20,
+    "keyed": true,
+    "description": "Time spent by an add-on performing blocking cross-process communications (ms, keyed by add-on ID, updated every 15s by default)"
+  },
+  "MISBEHAVING_ADDONS_JANK_LEVEL": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 10,
+    "keyed": true,
+    "description": "Longest blocking operation performed by the add-on (log2(duration in ms), keyed by add-on, updated every 15s by default)"
+  },
   "SEARCH_COUNTS": {
     "expires_in_version": "never",
     "kind": "count",
