@@ -131,11 +131,11 @@ public:
   void UpdateCascadeResultsWithTransitions(
          AnimationPlayerCollection* aTransitions);
   void UpdateCascadeResultsWithAnimations(
-         const AnimationPlayerCollection* aAnimations);
+         AnimationPlayerCollection* aAnimations);
   void UpdateCascadeResultsWithAnimationsToBeDestroyed(
          const AnimationPlayerCollection* aAnimations);
   void UpdateCascadeResults(AnimationPlayerCollection* aTransitions,
-                            const AnimationPlayerCollection* aAnimations);
+                            AnimationPlayerCollection* aAnimations);
 
   void SetInAnimationOnlyStyleUpdate(bool aInAnimationOnlyUpdate) {
     mInAnimationOnlyStyleUpdate = aInAnimationOnlyUpdate;
