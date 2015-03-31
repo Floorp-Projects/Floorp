@@ -4,13 +4,10 @@
 
 <resources>
 
-    <color name="global_background_color">#EBEBF0</color>
-
     <!-- card colors -->
     <color name="row_background">#ffffff</color>
     <color name="row_background_pressed">#DCDCE1</color>
 
-    <color name="widget_logo_default">#EBEBF0</color>
     <color name="widget_button_pressed">#33000000</color>
 
     <!--Facet button colors-->
