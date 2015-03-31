@@ -1,5 +1,8 @@
 $inherits:
   from: 'tasks/builds/b2g_emulator_base.yml'
+  variables:
+    build_name: 'emualtor-kk'
+    build_type: 'opt'
 task:
   workerType: emulator-kk
   scopes:
@@ -22,4 +25,3 @@ task:
       workspace-emulator-kk-opt: /home/worker/workspace
     env:
       TARGET: 'emulator-kk'
-

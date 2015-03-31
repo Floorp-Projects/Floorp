@@ -1,5 +1,8 @@
 $inherits:
   from: 'tasks/builds/b2g_emulator_base.yml'
+  variables:
+    build_name: 'emualtor-x86-l'
+    build_type: 'opt'
 task:
   workerType: emulator-l
   scopes:
@@ -29,6 +32,3 @@ task:
       workspace-emulator-l-x86-opt: /home/worker/workspace
     env:
       TARGET: 'emulator-x86-l'
-
-
-

@@ -15,4 +15,3 @@ task:
   extra:
     locations:
       img: 'private/build/dolphin.zip'
-

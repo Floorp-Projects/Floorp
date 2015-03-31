@@ -221,6 +221,10 @@ class Graph(object):
     @CommandArgument('--project',
         required=True,
         help='Project to use for creating task graph. Example: --project=try')
+    @CommandArgument('--pushlog-id',
+        dest='pushlog_id',
+        required=False,
+        default=0)
     @CommandArgument('--owner',
         required=True,
         help='email address of who owns this graph')
@@ -247,6 +251,8 @@ class Graph(object):
         job_graph = parse_commit(message, jobs)
         # Template parameters used when expanding the graph
         parameters = dict(gaia_info().items() + {
+            'project': project,
+            'pushlog_id': params.get('pushlog_id', 0),
             'docker_image': docker_image,
             'base_repository': params['base_repository'] or \
                 params['head_repository'],
