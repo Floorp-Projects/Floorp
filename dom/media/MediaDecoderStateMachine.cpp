@@ -1823,8 +1823,10 @@ MediaDecoderStateMachine::InitiateSeek()
     // as far as fast-seek is concerned. It also fix the problem where stream
     // clock seems to go backwards during seeking.
     nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethodWithArg<int64_t>(mDecoder, &MediaDecoder::RecreateDecodedStream,
-                                           seekTime - mStartTime);
+      NS_NewRunnableMethodWithArgs<int64_t, MediaStreamGraph*>(mDecoder,
+                                                               &MediaDecoder::RecreateDecodedStream,
+                                                               seekTime - mStartTime,
+                                                               nullptr);
     NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
   }
 
