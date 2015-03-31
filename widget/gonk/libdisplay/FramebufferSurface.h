@@ -63,7 +63,11 @@ public:
 private:
     virtual ~FramebufferSurface() { }; // this class cannot be overloaded
 
+#if ANDROID_VERSION >= 22
+    virtual void onFrameAvailable(const ::android::BufferItem &item);
+#else
     virtual void onFrameAvailable();
+#endif
     virtual void freeBufferLocked(int slotIndex);
 
     // nextBuffer waits for and then latches the next buffer from the
