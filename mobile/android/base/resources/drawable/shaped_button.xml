@@ -12,6 +12,6 @@
           android:state_pressed="false"
           android:drawable="@color/highlight_shaped_focused"/>
  
-    <item android:drawable="@color/background_tabs"/>
+    <item android:drawable="@color/text_and_tabs_tray_grey"/>
 
 </selector>

@@ -26,15 +26,12 @@
   <color name="about_page_header_grey">#F5F5F5</color>
 
   <!-- Non-palette colors -->
-  <color name="primary">#363B40</color>
-
   <color name="background_light">#FFF5F5F5</color>
 
   <!-- If you update one, update the other. -->
   <color name="background_normal">#FFEBEBF0</color>
   <color name="background_normal_lwt">#DDEBEBF0</color>
 
-  <color name="background_tabs">#FF363B40</color>
   <color name="highlight">#33000000</color>
   <color name="highlight_focused">#1A000000</color>
   <color name="highlight_dark">#33FFFFFF</color>
@@ -50,12 +47,11 @@
 
   <!-- (bug 1077195) Focused state values are temporary. -->
   <color name="new_tablet_highlight_focused">#C0C9D0</color>
-  <color name="new_tablet_highlight_focused_pb">#363B40</color>
 
-  <!-- highlight on shaped button: 20% white over background_tabs -->
+  <!-- highlight on shaped button: 20% white over text_and_tabs_tray_grey -->
   <color name="highlight_shaped">#FF696D71</color>
 
-  <!-- highlight-focused on shaped button: 10% white over background_tabs -->
+  <!-- highlight-focused on shaped button: 10% white over text_and_tabs_tray_grey -->
   <color name="highlight_shaped_focused">#FF565B60</color>
 
   <!-- highlight on private nav button: 20% white over private_toolbar_grey -->
@@ -161,7 +157,6 @@
   <color name="tab_history_timeline_separator">#D7D9DB</color>
   <color name="tab_history_favicon_border">#D7D9DB</color>
   <color name="tab_history_favicon_background">#FFFFFF</color>
-  <color name="tab_history_title_color">#363B40</color>
   <color name="tab_history_border_color">#DADADF</color>
 
   <!-- Colour used for Find-In-Page dialog -->

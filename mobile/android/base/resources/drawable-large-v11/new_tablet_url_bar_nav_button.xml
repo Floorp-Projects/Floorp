@@ -15,7 +15,7 @@
     <item gecko:state_private="true"
           android:state_focused="true"
           android:state_pressed="false"
-          android:drawable="@color/new_tablet_highlight_focused_pb"/>
+          android:drawable="@color/text_and_tabs_tray_grey"/>
 
     <!-- pressed state -->
     <item android:state_pressed="true"
