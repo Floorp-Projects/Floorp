@@ -2918,8 +2918,8 @@ public:
   nsresult
   RollbackSavepoint();
 
-  nsresult
-  Checkpoint(bool aIdle);
+  void
+  Checkpoint();
 
   void
   Close();
@@ -4285,7 +4285,7 @@ private:
   const int64_t mLoggingSerialNumber;
   uint64_t mActiveRequestCount;
   Atomic<bool> mInvalidatedOnAnyThread;
-  const Mode mMode;
+  Mode mMode;
   bool mHasBeenActive;
   bool mActorDestroyed;
   bool mInvalidated;
@@ -6905,8 +6905,8 @@ DatabaseConnection::RollbackSavepoint()
   return NS_OK;
 }
 
-nsresult
-DatabaseConnection::Checkpoint(bool aIdle)
+void
+DatabaseConnection::Checkpoint()
 {
   AssertIsOnConnectionThread();
 
@@ -6914,33 +6914,15 @@ DatabaseConnection::Checkpoint(bool aIdle)
                  "DatabaseConnection::Checkpoint",
                  js::ProfileEntry::Category::STORAGE);
 
-  nsAutoCString checkpointMode;
-  if (aIdle) {
-    // When idle we want to reclaim disk space.
-    checkpointMode.AssignLiteral("TRUNCATE");
-  } else {
-    // We're being called at the end of a READ_WRITE_FLUSH transaction so make
-    // sure that the database is completely checkpointed and flushed to disk.
-    checkpointMode.AssignLiteral("FULL");
-  }
-
   CachedStatement stmt;
-  nsresult rv =
-    GetCachedStatement(
-      NS_LITERAL_CSTRING("PRAGMA wal_checkpoint(") +
-      checkpointMode +
-      NS_LITERAL_CSTRING(")"),
-      &stmt);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  nsresult rv = GetCachedStatement("PRAGMA wal_checkpoint(TRUNCATE)", &stmt);
+  if (NS_SUCCEEDED(rv)) {
+    if (NS_FAILED(stmt->Execute())) {
+      NS_WARNING("Failed to execute checkpoint statement!");
+    }
+  } else {
+    NS_WARNING("Failed to prepare checkpoint statement!");
   }
-
-  rv = stmt->Execute();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
 }
 
 void
@@ -7062,8 +7044,6 @@ AutoSavepoint::~AutoSavepoint()
     mConnection->AssertIsOnConnectionThread();
     MOZ_ASSERT(mDEBUGTransaction);
     MOZ_ASSERT(mDEBUGTransaction->GetMode() == IDBTransaction::READ_WRITE ||
-               mDEBUGTransaction->GetMode() ==
-                 IDBTransaction::READ_WRITE_FLUSH ||
                mDEBUGTransaction->GetMode() == IDBTransaction::VERSION_CHANGE);
 
     if (NS_FAILED(mConnection->RollbackSavepoint())) {
@@ -7078,7 +7058,6 @@ AutoSavepoint::Start(const TransactionBase* aTransaction)
 {
   MOZ_ASSERT(aTransaction);
   MOZ_ASSERT(aTransaction->GetMode() == IDBTransaction::READ_WRITE ||
-             aTransaction->GetMode() == IDBTransaction::READ_WRITE_FLUSH ||
              aTransaction->GetMode() == IDBTransaction::VERSION_CHANGE);
 
   DatabaseConnection* connection = aTransaction->GetDatabase()->GetConnection();
@@ -8725,7 +8704,7 @@ CheckpointConnectionRunnable::Run()
     nsCOMPtr<nsIEventTarget> owningThread;
     mOwningThread.swap(owningThread);
 
-    mDatabaseInfo->mConnection->Checkpoint(/* aIdle */ true);
+    mDatabaseInfo->mConnection->Checkpoint();
 
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
       owningThread->Dispatch(this, NS_DISPATCH_NORMAL)));
@@ -9983,16 +9962,14 @@ Database::AllocPBackgroundIDBTransactionParent(
   }
 
   if (NS_WARN_IF(aMode != IDBTransaction::READ_ONLY &&
-                 aMode != IDBTransaction::READ_WRITE &&
-                 aMode != IDBTransaction::READ_WRITE_FLUSH)) {
+                 aMode != IDBTransaction::READ_WRITE)) {
     ASSERT_UNLESS_FUZZING();
     return nullptr;
   }
 
   // If this is a readwrite transaction to a chrome database make sure the child
   // has write access.
-  if (NS_WARN_IF((aMode == IDBTransaction::READ_WRITE ||
-                  aMode == IDBTransaction::READ_WRITE_FLUSH) &&
+  if (NS_WARN_IF(aMode == IDBTransaction::READ_WRITE &&
                  mPrincipalInfo.type() == PrincipalInfo::TSystemPrincipalInfo &&
                  !mChromeWriteAccessAllowed)) {
     return nullptr;
@@ -10053,8 +10030,7 @@ Database::RecvPBackgroundIDBTransactionConstructor(
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!aObjectStoreNames.IsEmpty());
   MOZ_ASSERT(aMode == IDBTransaction::READ_ONLY ||
-             aMode == IDBTransaction::READ_WRITE ||
-             aMode == IDBTransaction::READ_WRITE_FLUSH);
+             aMode == IDBTransaction::READ_WRITE);
   MOZ_ASSERT(!mClosed);
 
   if (IsInvalidated()) {
@@ -10481,7 +10457,6 @@ TransactionBase::VerifyRequestParams(const RequestParams& aParams) const
 
     case RequestParams::TObjectStoreDeleteParams: {
       if (NS_WARN_IF(mMode != IDBTransaction::READ_WRITE &&
-                     mMode != IDBTransaction::READ_WRITE_FLUSH &&
                      mMode != IDBTransaction::VERSION_CHANGE)) {
         ASSERT_UNLESS_FUZZING();
         return false;
@@ -10504,7 +10479,6 @@ TransactionBase::VerifyRequestParams(const RequestParams& aParams) const
 
     case RequestParams::TObjectStoreClearParams: {
       if (NS_WARN_IF(mMode != IDBTransaction::READ_WRITE &&
-                     mMode != IDBTransaction::READ_WRITE_FLUSH &&
                      mMode != IDBTransaction::VERSION_CHANGE)) {
         ASSERT_UNLESS_FUZZING();
         return false;
@@ -10799,7 +10773,6 @@ TransactionBase::VerifyRequestParams(const ObjectStoreAddPutParams& aParams)
   AssertIsOnBackgroundThread();
 
   if (NS_WARN_IF(mMode != IDBTransaction::READ_WRITE &&
-                 mMode != IDBTransaction::READ_WRITE_FLUSH &&
                  mMode != IDBTransaction::VERSION_CHANGE)) {
     ASSERT_UNLESS_FUZZING();
     return false;
@@ -11321,8 +11294,7 @@ NormalTransaction::DeallocPBackgroundIDBCursorParent(
 
 VersionChangeTransaction::VersionChangeTransaction(
                                                 OpenDatabaseOp* aOpenDatabaseOp)
-  : TransactionBase(aOpenDatabaseOp->mDatabase,
-                    IDBTransaction::VERSION_CHANGE)
+  : TransactionBase(aOpenDatabaseOp->mDatabase, IDBTransaction::VERSION_CHANGE)
   , mOpenDatabaseOp(aOpenDatabaseOp)
   , mActorWasAlive(false)
 {
@@ -16748,7 +16720,6 @@ CommitOp::WriteAutoIncrementCounts()
   MOZ_ASSERT(mTransaction);
   mTransaction->AssertIsOnConnectionThread();
   MOZ_ASSERT(mTransaction->GetMode() == IDBTransaction::READ_WRITE ||
-             mTransaction->GetMode() == IDBTransaction::READ_WRITE_FLUSH ||
              mTransaction->GetMode() == IDBTransaction::VERSION_CHANGE);
 
   const nsTArray<nsRefPtr<FullObjectStoreMetadata>>& metadataArray =
@@ -16815,7 +16786,6 @@ CommitOp::CommitOrRollbackAutoIncrementCounts()
   MOZ_ASSERT(mTransaction);
   mTransaction->AssertIsOnConnectionThread();
   MOZ_ASSERT(mTransaction->GetMode() == IDBTransaction::READ_WRITE ||
-             mTransaction->GetMode() == IDBTransaction::READ_WRITE_FLUSH ||
              mTransaction->GetMode() == IDBTransaction::VERSION_CHANGE);
 
   nsTArray<nsRefPtr<FullObjectStoreMetadata>>& metadataArray =
@@ -16885,11 +16855,6 @@ CommitOp::Run()
             if (NS_SUCCEEDED(mResultCode)) {
               mResultCode = stmt->Execute();
               NS_WARN_IF_FALSE(NS_SUCCEEDED(mResultCode), "Commit failed!");
-
-              if (mTransaction->GetMode() == IDBTransaction::READ_WRITE_FLUSH &&
-                  NS_SUCCEEDED(mResultCode)) {
-                mResultCode = connection->Checkpoint(/* aIdle */ false);
-              }
 
               if (NS_SUCCEEDED(mResultCode)) {
                 fileRefcountFunction->DidCommit();
