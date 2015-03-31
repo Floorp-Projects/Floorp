@@ -56,7 +56,6 @@ typedef Handle<StaticBlockObject*> HandleStaticBlockObject;
 typedef Rooted<NestedScopeObject*> RootedNestedScopeObject;
 typedef Handle<NestedScopeObject*> HandleNestedScopeObject;
 
-
 /* Read a token. Report an error and return null() if that token isn't of type tt. */
 #define MUST_MATCH_TOKEN(tt, errno)                                                         \
     JS_BEGIN_MACRO                                                                          \
@@ -3925,6 +3924,8 @@ Parser<ParseHandler>::variables(ParseNodeKind kind, bool* psimple,
                 if (!data.binder(&data, name, this))
                     return null();
             }
+
+            handler.setEndPosition(pn, pn2);
         } while (false);
 
         bool matched;
@@ -4557,40 +4558,16 @@ Parser<FullParseHandler>::isValidForStatementLHS(ParseNode* pn1, JSVersion versi
                                                  bool isForDecl, bool isForEach,
                                                  ParseNodeKind headKind)
 {
-    if (isForDecl) {
-        if (pn1->pn_count > 1)
-            return false;
-        if (pn1->isKind(PNK_CONST))
-            return false;
-
-        // In JS 1.7 only, for (var [K, V] in EXPR) has a special meaning.
-        // Hence all other destructuring decls are banned there.
-        if (version == JSVERSION_1_7 && !isForEach && headKind == PNK_FORIN) {
-            ParseNode* lhs = pn1->pn_head;
-            if (lhs->isKind(PNK_ASSIGN))
-                lhs = lhs->pn_left;
-
-            if (lhs->isKind(PNK_OBJECT))
-                return false;
-            if (lhs->isKind(PNK_ARRAY) && lhs->pn_count != 2)
-                return false;
-        }
-        return true;
-    }
+    if (isForDecl)
+        return pn1->pn_count < 2 && !pn1->isKind(PNK_CONST);
 
     switch (pn1->getKind()) {
-      case PNK_NAME:
-      case PNK_DOT:
-      case PNK_CALL:
-      case PNK_ELEM:
-        return true;
-
       case PNK_ARRAY:
+      case PNK_CALL:
+      case PNK_DOT:
+      case PNK_ELEM:
+      case PNK_NAME:
       case PNK_OBJECT:
-        // In JS 1.7 only, for ([K, V] in EXPR) has a special meaning.
-        // Hence all other destructuring left-hand sides are banned there.
-        if (version == JSVERSION_1_7 && !isForEach && headKind == PNK_FORIN)
-            return pn1->isKind(PNK_ARRAY) && pn1->pn_count == 2;
         return true;
 
       default:
@@ -4890,30 +4867,12 @@ Parser<FullParseHandler>::forStatement()
                 return null();
         }
 
-        switch (pn2->getKind()) {
-          case PNK_NAME:
+        ParseNodeKind kind2 = pn2->getKind();
+        MOZ_ASSERT(kind2 != PNK_ASSIGN, "forStatement TOK_ASSIGN");
+
+        if (kind2 == PNK_NAME) {
             /* Beware 'for (arguments in ...)' with or without a 'var'. */
             pn2->markAsAssigned();
-            break;
-
-          case PNK_ASSIGN:
-            MOZ_CRASH("forStatement TOK_ASSIGN");
-
-          case PNK_ARRAY:
-          case PNK_OBJECT:
-            if (versionNumber() == JSVERSION_1_7) {
-                /*
-                 * Destructuring for-in requires [key, value] enumeration
-                 * in JS1.7.
-                 */
-                if (!isForEach && headKind == PNK_FORIN) {
-                    iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
-                    addTelemetry(JSCompartment::DeprecatedDestructuringForIn);
-                }
-            }
-            break;
-
-          default:;
         }
     } else {
         if (isForEach) {
@@ -6042,7 +6001,6 @@ Parser<ParseHandler>::statement(bool canHaveDirectives)
             return null();
         return classDefinition(ClassStatement);
 
-
       /* TOK_CATCH and TOK_FINALLY are both handled in the TOK_TRY case */
       case TOK_CATCH:
         report(ParseError, false, null(), JSMSG_CATCH_WITHOUT_TRY);
@@ -7090,22 +7048,6 @@ Parser<FullParseHandler>::legacyComprehensionTail(ParseNode* bodyExpr, unsigned 
           case TOK_LC:
             if (!checkDestructuring(&data, pn3))
                 return null();
-
-            if (versionNumber() == JSVERSION_1_7 &&
-                !(pn2->pn_iflags & JSITER_FOREACH) &&
-                !isForOf)
-            {
-                /* Destructuring requires [key, value] enumeration in JS1.7. */
-                if (!pn3->isKind(PNK_ARRAY) || pn3->pn_count != 2) {
-                    report(ParseError, false, null(), JSMSG_BAD_FOR_LEFTSIDE);
-                    return null();
-                }
-
-                MOZ_ASSERT(pn2->isOp(JSOP_ITER));
-                MOZ_ASSERT(pn2->pn_iflags & JSITER_ENUMERATE);
-                MOZ_ASSERT(headKind == PNK_FORIN);
-                pn2->pn_iflags |= JSITER_FOREACH | JSITER_KEYVALUE;
-            }
             break;
 
           case TOK_NAME:

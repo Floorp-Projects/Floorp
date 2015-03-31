@@ -574,9 +574,9 @@ class LSANLeaks(object):
     # Don't various allocation-related stack frames, as they do not help much to
     # distinguish different leaks.
     unescapedSkipList = [
-      "malloc", "js_malloc", "malloc_", "__interceptor_malloc", "moz_malloc", "moz_xmalloc",
-      "calloc", "js_calloc", "calloc_", "__interceptor_calloc", "moz_calloc", "moz_xcalloc",
-      "realloc","js_realloc", "realloc_", "__interceptor_realloc", "moz_realloc", "moz_xrealloc",
+      "malloc", "js_malloc", "malloc_", "__interceptor_malloc", "moz_xmalloc",
+      "calloc", "js_calloc", "calloc_", "__interceptor_calloc", "moz_xcalloc",
+      "realloc","js_realloc", "realloc_", "__interceptor_realloc", "moz_xrealloc",
       "new",
       "js::MallocProvider",
     ]

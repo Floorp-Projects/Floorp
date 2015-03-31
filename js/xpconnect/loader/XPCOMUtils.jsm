@@ -148,7 +148,6 @@ this.XPCOMUtils = {
       contractID: classInfo.contractID,
       classDescription: classInfo.classDescription,
       classID: classInfo.classID,
-      implementationLanguage: Ci.nsIProgrammingLanguage.JAVASCRIPT,
       flags: classInfo.flags,
       QueryInterface: this.generateQI([Ci.nsIClassInfo])
     };

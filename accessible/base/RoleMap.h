@@ -1359,3 +1359,11 @@ ROLE(MATHML_STACK_LINE,
      0,
      IA2_ROLE_UNKNOWN,
      eNoNameRule)
+
+ROLE(RADIO_GROUP,
+     "grouping",
+     ATK_ROLE_PANEL,
+     NSAccessibilityRadioGroupRole,
+     ROLE_SYSTEM_GROUPING,
+     ROLE_SYSTEM_GROUPING,
+     eNoNameRule)

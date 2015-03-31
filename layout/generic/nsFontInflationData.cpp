@@ -168,7 +168,7 @@ ComputeDescendantISize(const nsHTMLReflowState& aAncestorReflowState,
   for (uint32_t i = len; i-- != 0; ) {
     reflowStates[i].~nsHTMLReflowState();
   }
-  moz_free(reflowStates);
+  free(reflowStates);
 
   return result;
 }

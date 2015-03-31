@@ -27,6 +27,7 @@ Components.utils.import("resource://gre/modules/Promise.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
 Components.utils.import("resource://gre/modules/osfile.jsm");
 Components.utils.import("resource://gre/modules/AsyncShutdown.jsm");
+Components.utils.import("resource://testing-common/MockRegistrar.jsm");
 
 // We need some internal bits of AddonManager
 let AMscope = Components.utils.import("resource://gre/modules/AddonManager.jsm");
@@ -1405,20 +1406,7 @@ if ("nsIWindowsRegKey" in AM_Ci) {
     }
   };
 
-  var WinRegFactory = {
-    createInstance: function(aOuter, aIid) {
-      if (aOuter != null)
-        throw Components.results.NS_ERROR_NO_AGGREGATION;
-
-      var key = new MockWindowsRegKey();
-      return key.QueryInterface(aIid);
-    }
-  };
-
-  var registrar = Components.manager.QueryInterface(AM_Ci.nsIComponentRegistrar);
-  registrar.registerFactory(Components.ID("{0478de5b-0f38-4edb-851d-4c99f1ed8eba}"),
-                            "Mock Windows Registry Implementation",
-                            "@mozilla.org/windows-registry-key;1", WinRegFactory);
+  MockRegistrar.register("@mozilla.org/windows-registry-key;1", MockWindowsRegKey);
 }
 
 // Get the profile directory for tests to use.

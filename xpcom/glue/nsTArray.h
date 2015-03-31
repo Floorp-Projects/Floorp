@@ -167,13 +167,13 @@ struct nsTArrayInfallibleAllocatorBase
 
 struct nsTArrayFallibleAllocator : nsTArrayFallibleAllocatorBase
 {
-  static void* Malloc(size_t aSize) { return moz_malloc(aSize); }
+  static void* Malloc(size_t aSize) { return malloc(aSize); }
   static void* Realloc(void* aPtr, size_t aSize)
   {
-    return moz_realloc(aPtr, aSize);
+    return realloc(aPtr, aSize);
   }
 
-  static void Free(void* aPtr) { moz_free(aPtr); }
+  static void Free(void* aPtr) { free(aPtr); }
   static void SizeTooBig(size_t) {}
 };
 
@@ -185,7 +185,7 @@ struct nsTArrayInfallibleAllocator : nsTArrayInfallibleAllocatorBase
     return moz_xrealloc(aPtr, aSize);
   }
 
-  static void Free(void* aPtr) { moz_free(aPtr); }
+  static void Free(void* aPtr) { free(aPtr); }
   static void SizeTooBig(size_t aSize) { NS_ABORT_OOM(aSize); }
 };
 

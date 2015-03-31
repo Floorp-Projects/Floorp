@@ -999,7 +999,7 @@ nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth, int32_t aHeight)
   else if (IsPopupWidget(aWidget)) {
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
-      pm->PopupResized(mFrame, nsIntSize(aWidth, aHeight));
+      pm->PopupResized(mFrame, LayoutDeviceIntSize(aWidth, aHeight));
       return true;
     }
   }

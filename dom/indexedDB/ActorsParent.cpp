@@ -14785,14 +14785,14 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(TransactionBase* aTransaction)
     reinterpret_cast<const char*>(mParams.cloneInfo().data().Elements());
   size_t uncompressedLength = mParams.cloneInfo().data().Length();
 
-  // We don't have a smart pointer class that calls moz_free, so we need to
+  // We don't have a smart pointer class that calls free, so we need to
   // manage | compressed | manually.
   {
     size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
 
-    // moz_malloc is equivalent to NS_Alloc, which we use because mozStorage
+    // malloc is equivalent to NS_Alloc, which we use because mozStorage
     // expects to be able to free the adopted pointer with NS_Free.
-    char* compressed = static_cast<char*>(moz_malloc(compressedLength));
+    char* compressed = static_cast<char*>(malloc(compressedLength));
     if (NS_WARN_IF(!compressed)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -14808,7 +14808,7 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(TransactionBase* aTransaction)
     rv = stmt->BindAdoptedBlobByName(NS_LITERAL_CSTRING("data"), dataBuffer,
                                      dataBufferLength);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      moz_free(compressed);
+      free(compressed);
       return rv;
     }
   }

@@ -2098,6 +2098,7 @@ public:
       void VBlankLoop()
       {
         MOZ_ASSERT(IsInVsyncThread());
+        MOZ_ASSERT(sizeof(int64_t) == sizeof(QPC_TIME));
 
         DWM_TIMING_INFO vblankTime;
         // Make sure to init the cbSize, otherwise GetCompositionTiming will fail
@@ -2107,6 +2108,7 @@ public:
         LARGE_INTEGER frequency;
         QueryPerformanceFrequency(&frequency);
         TimeStamp vsync = TimeStamp::Now();
+        TimeStamp previousVsync = vsync;
         const int microseconds = 1000000;
 
         for (;;) {
@@ -2115,6 +2117,12 @@ public:
             if (!mVsyncEnabled) return;
           }
 
+          if (previousVsync > vsync) {
+            vsync = TimeStamp::Now();
+            NS_WARNING("Previous vsync timestamp is ahead of the calculated vsync timestamp.");
+          }
+
+          previousVsync = vsync;
           Display::NotifyVsync(vsync);
 
           // DwmComposition can be dynamically enabled/disabled
@@ -2127,16 +2135,17 @@ public:
           }
 
           // Use a combination of DwmFlush + DwmGetCompositionTimingInfoPtr
-          // The qpcVBlank is always AFTER Now(), so it behaves like b2g
           // Using WaitForVBlank, the whole system dies :/
           WinUtils::dwmFlushProcPtr();
           HRESULT hr = WinUtils::dwmGetCompositionTimingInfoPtr(0, &vblankTime);
           vsync = TimeStamp::Now();
           if (SUCCEEDED(hr)) {
             QueryPerformanceCounter(&qpcNow);
-            QPC_TIME adjust = qpcNow.QuadPart - vblankTime.qpcVBlank;
-            MOZ_ASSERT(adjust >= 0);
-            uint64_t usAdjust = (adjust * microseconds) / frequency.QuadPart;
+            // Adjust the timestamp to be the vsync timestamp since when
+            // DwmFlush wakes up and when the actual vsync occurred are not the
+            // same.
+            int64_t adjust = qpcNow.QuadPart - vblankTime.qpcVBlank;
+            int64_t usAdjust = (adjust * microseconds) / frequency.QuadPart;
             vsync -= TimeDuration::FromMicroseconds((double) usAdjust);
           }
         } // end for

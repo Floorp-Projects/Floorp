@@ -8,7 +8,6 @@
 
 #include "nsContentUtils.h"
 #include "BackstagePass.h"
-#include "nsIProgrammingLanguage.h"
 #include "nsDOMClassInfo.h"
 #include "nsIPrincipal.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -145,14 +144,6 @@ NS_IMETHODIMP
 BackstagePass::GetClassID(nsCID * *aClassID)
 {
     *aClassID = nullptr;
-    return NS_OK;
-}
-
-/* readonly attribute uint32_t implementationLanguage; */
-NS_IMETHODIMP
-BackstagePass::GetImplementationLanguage(uint32_t* aImplementationLanguage)
-{
-    *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
     return NS_OK;
 }
 

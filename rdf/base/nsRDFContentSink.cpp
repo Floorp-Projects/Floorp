@@ -343,7 +343,7 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
 
         delete mContextStack;
     }
-    moz_free(mText);
+    free(mText);
 
 
     if (--gRefCnt == 0) {
@@ -755,7 +755,7 @@ RDFContentSinkImpl::AddText(const char16_t* aText, int32_t aLength)
 {
     // Create buffer when we first need it
     if (0 == mTextSize) {
-        mText = (char16_t *) moz_malloc(sizeof(char16_t) * 4096);
+        mText = (char16_t *) malloc(sizeof(char16_t) * 4096);
         if (!mText) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -773,7 +773,7 @@ RDFContentSinkImpl::AddText(const char16_t* aText, int32_t aLength)
         int32_t newSize = (2 * mTextSize > (mTextSize + aLength)) ?
                           (2 * mTextSize) : (mTextSize + aLength);
         char16_t* newText = 
-            (char16_t *) moz_realloc(mText, sizeof(char16_t) * newSize);
+            (char16_t *) realloc(mText, sizeof(char16_t) * newSize);
         if (!newText)
             return NS_ERROR_OUT_OF_MEMORY;
         mTextSize = newSize;

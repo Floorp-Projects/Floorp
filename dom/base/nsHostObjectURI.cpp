@@ -8,7 +8,6 @@
 #include "nsAutoPtr.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
-#include "nsIProgrammingLanguage.h"
 
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -233,13 +232,6 @@ nsHostObjectURI::GetClassID(nsCID * *aClassID)
   NS_ENSURE_TRUE(*aClassID, NS_ERROR_OUT_OF_MEMORY);
 
   return GetClassIDNoAlloc(*aClassID);
-}
-
-NS_IMETHODIMP 
-nsHostObjectURI::GetImplementationLanguage(uint32_t *aImplementationLanguage)
-{
-  *aImplementationLanguage = nsIProgrammingLanguage::CPLUSPLUS;
-  return NS_OK;
 }
 
 NS_IMETHODIMP 

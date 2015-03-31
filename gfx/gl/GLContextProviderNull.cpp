@@ -35,7 +35,7 @@ GLContextProviderNull::CreateHeadless(bool)
 }
 
 GLContext*
-GLContextProviderNull::GetGlobalContext(ContextFlags)
+GLContextProviderNull::GetGlobalContext()
 {
     return nullptr;
 }

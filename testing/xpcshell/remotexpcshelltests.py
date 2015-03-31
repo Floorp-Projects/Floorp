@@ -487,8 +487,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             self.device.removeDir(self.remoteMinidumpDir)
         self.device.mkDir(self.remoteMinidumpDir)
 
-    def buildTestList(self):
-        xpcshell.XPCShellTests.buildTestList(self)
+    def buildTestList(self, test_tags=None):
+        xpcshell.XPCShellTests.buildTestList(self, test_tags=test_tags)
         uniqueTestPaths = set([])
         for test in self.alltests:
             uniqueTestPaths.add(test['here'])

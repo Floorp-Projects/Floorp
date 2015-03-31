@@ -30,7 +30,8 @@ struct JsepCodecDescription {
         mName(name),
         mClock(clock),
         mChannels(channels),
-        mEnabled(enabled)
+        mEnabled(enabled),
+        mStronglyPreferred(false)
   {
   }
   virtual ~JsepCodecDescription() {}
@@ -92,12 +93,11 @@ struct JsepCodecDescription {
   }
 
   UniquePtr<JsepCodecDescription>
-  MakeNegotiatedCodec(const std::string& pt,
-                      const SdpMediaSection& remoteMsection) const
+  MakeNegotiatedCodec(const SdpMediaSection& remoteMsection) const
   {
     UniquePtr<JsepCodecDescription> negotiated(Clone());
 
-    if (!negotiated->Negotiate(pt, remoteMsection)) {
+    if (!negotiated->Negotiate(remoteMsection)) {
       negotiated.reset();
     }
 
@@ -105,9 +105,8 @@ struct JsepCodecDescription {
   }
 
   virtual bool
-  Negotiate(const std::string& pt, const SdpMediaSection& remoteMsection)
+  Negotiate(const SdpMediaSection& remoteMsection)
   {
-    mDefaultPt = pt;
     return true;
   }
 
@@ -131,13 +130,11 @@ struct JsepCodecDescription {
   }
 
   UniquePtr<JsepCodecDescription>
-  MakeSendCodec(const mozilla::SdpMediaSection& remoteMsection,
-                const std::string& pt) const
+  MakeSendCodec(const mozilla::SdpMediaSection& remoteMsection) const
   {
     UniquePtr<JsepCodecDescription> sendCodec(Clone());
-    sendCodec->mDefaultPt = pt;
 
-    if (!sendCodec->LoadSendParameters(remoteMsection, pt)) {
+    if (!sendCodec->LoadSendParameters(remoteMsection)) {
       sendCodec.reset();
     }
 
@@ -145,13 +142,11 @@ struct JsepCodecDescription {
   }
 
   UniquePtr<JsepCodecDescription>
-  MakeRecvCodec(const mozilla::SdpMediaSection& remoteMsection,
-                const std::string& pt) const
+  MakeRecvCodec(const mozilla::SdpMediaSection& remoteMsection) const
   {
     UniquePtr<JsepCodecDescription> recvCodec(Clone());
-    recvCodec->mDefaultPt = pt;
 
-    if (!recvCodec->LoadRecvParameters(remoteMsection, pt)) {
+    if (!recvCodec->LoadRecvParameters(remoteMsection)) {
       recvCodec.reset();
     }
 
@@ -159,15 +154,13 @@ struct JsepCodecDescription {
   }
 
   virtual bool LoadSendParameters(
-      const mozilla::SdpMediaSection& remoteMsection,
-      const std::string& pt)
+      const mozilla::SdpMediaSection& remoteMsection)
   {
     return true;
   }
 
   virtual bool LoadRecvParameters(
-      const mozilla::SdpMediaSection& remoteMsection,
-      const std::string& pt)
+      const mozilla::SdpMediaSection& remoteMsection)
   {
     return true;
   }
@@ -233,6 +226,7 @@ struct JsepCodecDescription {
   uint32_t mClock;
   uint32_t mChannels;
   bool mEnabled;
+  bool mStronglyPreferred;
 };
 
 struct JsepAudioCodecDescription : public JsepCodecDescription {
@@ -368,12 +362,11 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
   }
 
   virtual bool
-  Negotiate(const std::string& pt,
-            const SdpMediaSection& remoteMsection) override
+  Negotiate(const SdpMediaSection& remoteMsection) override
   {
     if (mName == "H264") {
       SdpFmtpAttributeList::H264Parameters h264Params(
-          GetH264Parameters(pt, remoteMsection));
+          GetH264Parameters(mDefaultPt, remoteMsection));
       if (!h264Params.level_asymmetry_allowed) {
         SetSaneH264Level(std::min(GetSaneH264Level(h264Params.profile_level_id),
                                   GetSaneH264Level(mProfileLevelId)),
@@ -383,7 +376,7 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
       // TODO(bug 1143709): max-recv-level support
     }
 
-    return JsepCodecDescription::Negotiate(pt, remoteMsection);
+    return JsepCodecDescription::Negotiate(remoteMsection);
   }
 
   // Maps the not-so-sane encoding of H264 level into something that is
@@ -439,13 +432,12 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
   }
 
   virtual bool
-  LoadSendParameters(const mozilla::SdpMediaSection& remoteMsection,
-                     const std::string& pt) override
+  LoadSendParameters(const mozilla::SdpMediaSection& remoteMsection) override
   {
 
     if (mName == "H264") {
       SdpFmtpAttributeList::H264Parameters h264Params(
-          GetH264Parameters(pt, remoteMsection));
+          GetH264Parameters(mDefaultPt, remoteMsection));
 
       if (!h264Params.level_asymmetry_allowed) {
         SetSaneH264Level(std::min(GetSaneH264Level(h264Params.profile_level_id),
@@ -464,7 +456,7 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
       mSpropParameterSets = h264Params.sprop_parameter_sets;
     } else if (mName == "VP8" || mName == "VP9") {
       SdpFmtpAttributeList::VP8Parameters vp8Params(
-          GetVP8Parameters(pt, remoteMsection));
+          GetVP8Parameters(mDefaultPt, remoteMsection));
 
       mMaxFs = vp8Params.max_fs;
       mMaxFr = vp8Params.max_fr;
@@ -473,8 +465,7 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
   }
 
   virtual bool
-  LoadRecvParameters(const mozilla::SdpMediaSection& remoteMsection,
-                     const std::string& pt) override
+  LoadRecvParameters(const mozilla::SdpMediaSection& remoteMsection) override
   {
     const SdpAttributeList& attrs(remoteMsection.GetAttributeList());
 
@@ -503,7 +494,7 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
 
     if (mName == "H264") {
       SdpFmtpAttributeList::H264Parameters h264Params(
-          GetH264Parameters(pt, remoteMsection));
+          GetH264Parameters(mDefaultPt, remoteMsection));
       if (!h264Params.level_asymmetry_allowed) {
         SetSaneH264Level(std::min(GetSaneH264Level(h264Params.profile_level_id),
                                   GetSaneH264Level(mProfileLevelId)),
