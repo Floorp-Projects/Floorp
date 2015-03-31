@@ -98,7 +98,8 @@ class TestExecutor(object):
         self.server_config = server_config
         self.timeout_multiplier = timeout_multiplier
         self.debug_args = debug_args
-        self.last_protocol = "http"
+        self.last_environment = {"protocol": "http",
+                                 "prefs": []}
         self.protocol = None # This must be set in subclasses
 
     @property
@@ -123,9 +124,8 @@ class TestExecutor(object):
         """Run a particular test.
 
         :param test: The test to run"""
-
-        if test.protocol != self.last_protocol:
-            self.on_protocol_change(test.protocol)
+        if test.environment != self.last_environment:
+            self.on_environment_change(test.environment)
 
         try:
             result = self.do_test(test)
@@ -138,7 +138,7 @@ class TestExecutor(object):
         if result[0].status == "ERROR":
             self.logger.debug(result[0].message)
 
-        self.last_protocol = test.protocol
+        self.last_environment = test.environment
 
         self.runner.send_message("test_ended", test, result)
 
@@ -149,7 +149,7 @@ class TestExecutor(object):
                                self.server_config["ports"][protocol][0])
 
     def test_url(self, test):
-        return urlparse.urljoin(self.server_url(test.protocol), test.url)
+        return urlparse.urljoin(self.server_url(test.environment["protocol"]), test.url)
 
     @abstractmethod
     def do_test(self, test):
@@ -159,7 +159,7 @@ class TestExecutor(object):
         :param test: The test to run."""
         pass
 
-    def on_protocol_change(self, new_protocol):
+    def on_environment_change(self, new_environment):
         pass
 
     def result_from_exception(self, test, e):

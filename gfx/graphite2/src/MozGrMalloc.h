@@ -6,7 +6,7 @@
 #ifndef MOZ_GR_MALLOC_H
 #define MOZ_GR_MALLOC_H
 
-// Override malloc() and friends to call moz_malloc() etc, so that we get
+// Override malloc() and friends to call moz_xmalloc() etc, so that we get
 // predictable, safe OOM crashes rather than relying on the code to handle
 // allocation failures reliably.
 
@@ -15,6 +15,5 @@
 #define malloc moz_xmalloc
 #define calloc moz_xcalloc
 #define realloc moz_xrealloc
-#define free moz_free
 
 #endif // MOZ_GR_MALLOC_H

@@ -7,22 +7,9 @@
   private browsing mode transition.
 **/
 
+Components.utils.import("resource://testing-common/MockRegistrar.jsm");
+
 const Cm = Components.manager;
-
-const kPromptServiceUUID = "{6cc9c9fe-bc0b-432b-a410-253ef8bcc699}";
-const kPromptServiceContractID = "@mozilla.org/embedcomp/prompt-service;1";
-
-// Save original prompt service factory
-const kPromptServiceFactory = Cm.getClassObject(Cc[kPromptServiceContractID],
-                                                Ci.nsIFactory);
-
-let fakePromptServiceFactory = {
-  createInstance: function(aOuter, aIid) {
-    if (aOuter != null)
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    return promptService.QueryInterface(aIid);
-  }
-};
 
 let promptService = {
   _buttonChoice: 0,
@@ -55,9 +42,9 @@ let promptService = {
   }
 };
 
-Cm.QueryInterface(Ci.nsIComponentRegistrar)
-  .registerFactory(Components.ID(kPromptServiceUUID), "Prompt Service",
-                   kPromptServiceContractID, fakePromptServiceFactory);
+let mockCID =
+  MockRegistrar.register("@mozilla.org/embedcomp/prompt-service;1",
+                         promptService);
 
 this.__defineGetter__("dm", function() {
   delete this.dm;
@@ -93,15 +80,8 @@ function run_test() {
     dm.removeListener(listener);
     httpserv.stop(do_test_finished);
 
-    // Unregister the factory so we do not leak
-    Cm.QueryInterface(Ci.nsIComponentRegistrar)
-      .unregisterFactory(Components.ID(kPromptServiceUUID),
-                         fakePromptServiceFactory);
-
-    // Restore the original factory
-    Cm.QueryInterface(Ci.nsIComponentRegistrar)
-      .registerFactory(Components.ID(kPromptServiceUUID), "Prompt Service",
-                       kPromptServiceContractID, kPromptServiceFactory);
+    // Unregister the mock so we do not leak
+    MockRegistrar.unregister(mockCID);
   }
 
   do_test_pending();

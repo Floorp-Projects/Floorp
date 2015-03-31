@@ -1,14 +1,5 @@
 .module-cache
 node_modules
-bower_components
 *.pyc
 content/config.js
 content/VERSION.txt
-
-# XXX Once a grunt contrib-clean command has been added (bug 1066491), or
-# once legal has centralized their ToS and PP hosting infrastructure,
-# (expected Q4 2014) the legal doc build stuff for Loop can be removed,
-# including the following three lines:
-content/legal/styles/*.css
-content/legal/terms/*.html
-!content/legal/terms/index.html

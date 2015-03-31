@@ -976,7 +976,12 @@ enum Role {
    */
   MATHML_STACK_LINE = 167,
 
-  LAST_ROLE = MATHML_STACK_LINE
+  /**
+   * A group containing radio buttons
+   */
+  RADIO_GROUP = 168,
+
+  LAST_ROLE = RADIO_GROUP
 };
 
 } // namespace role

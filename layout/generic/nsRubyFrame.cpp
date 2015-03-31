@@ -374,9 +374,10 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
   // Set block leadings of the base container
   nscoord startLeading = baseRect.BStart(lineWM) - offsetRect.BStart(lineWM);
   nscoord endLeading = offsetRect.BEnd(lineWM) - baseRect.BEnd(lineWM);
-  NS_ASSERTION(startLeading >= 0 && endLeading >= 0,
-               "Leadings should be non-negative (because adding "
-               "ruby annotation can only increase the size)");
+  // XXX When bug 765861 gets fixed, this warning should be upgraded.
+  NS_WARN_IF_FALSE(startLeading >= 0 && endLeading >= 0,
+                   "Leadings should be non-negative (because adding "
+                   "ruby annotation can only increase the size)");
   mBStartLeading = std::max(mBStartLeading, startLeading);
   mBEndLeading = std::max(mBEndLeading, endLeading);
 }

@@ -10,6 +10,21 @@
  * liability, trademark and document use rules apply.
  */
 
+// To implement FontFaceSet's iterator until we can use setlike.
+dictionary FontFaceSetIteratorResult
+{
+  required any value;
+  required boolean done;
+};
+
+// To implement FontFaceSet's iterator until we can use setlike.
+[NoInterfaceObject]
+interface FontFaceSetIterator {
+  [Throws] FontFaceSetIteratorResult next();
+};
+
+callback FontFaceSetForEachCallback = void (FontFace value, FontFace key, FontFaceSet set);
+
 enum FontFaceSetLoadStatus { "loading", "loaded" };
 
 // Bug 1072762 is for the FontFaceSet constructor.
@@ -17,19 +32,16 @@ enum FontFaceSetLoadStatus { "loading", "loaded" };
 [Pref="layout.css.font-loading-api.enabled"]
 interface FontFaceSet : EventTarget {
 
-  // Emulate the Set interface, until we can extend Set correctly.
-  // Implementing these commented out operations and the iterator is
-  // bug 1072101.
-  // readonly attribute unsigned long size;
+  // Emulate setlike behavior until we can use that directly.
+  readonly attribute unsigned long size;
   [Throws] void add(FontFace font);
   boolean has(FontFace font);
   [Throws] boolean delete(FontFace font);
   void clear();
-  // Iterator entries();
+  [NewObject] FontFaceSetIterator entries();
   // Iterator keys();
-  // Iterator values();
-  // void forEach(ForEachCallback cb, optional any thisArg);
-  // FontFace iterator;
+  [NewObject, Alias=keys, Alias="@@iterator"] FontFaceSetIterator values();
+  [Throws] void forEach(FontFaceSetForEachCallback cb, optional any thisArg);
 
   // -- events for when loading state changes
   attribute EventHandler onloading;
@@ -51,13 +63,4 @@ interface FontFaceSet : EventTarget {
 
   // loading state, "loading" while one or more fonts loading, "loaded" otherwise
   readonly attribute FontFaceSetLoadStatus status;
-};
-
-// This provides access to the FontFace objects in the FontFaceSet until we
-// get iterators working (bug 1072101).  Don't enable the pref for the CSS Font
-// Loading API until the iterator is available, as we don't want to expose more
-// indexed properties on the Web.
-partial interface FontFaceSet {
-  getter FontFace (unsigned long index);
-  readonly attribute unsigned long length;
 };
