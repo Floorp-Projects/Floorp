@@ -82,5 +82,10 @@
     EXPECT_TRUE(res); \
   } while(0)
 
+#define ASSERT_EQ_WAIT(expected, actual, timeout) \
+  do { \
+    WAIT(expected == actual, timeout); \
+    ASSERT_EQ(expected, actual); \
+  } while(0)
 
 #endif
