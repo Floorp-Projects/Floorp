@@ -1865,9 +1865,9 @@ WebSocketImpl::ParseURL(const nsAString& aURL)
   nsCOMPtr<nsIURL> parsedURL = do_QueryInterface(uri, &rv);
   NS_ENSURE_SUCCESS(rv, NS_ERROR_DOM_SYNTAX_ERR);
 
-  nsAutoCString fragment;
-  rv = parsedURL->GetRef(fragment);
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && fragment.IsEmpty(),
+  bool hasRef;
+  rv = parsedURL->GetHasRef(&hasRef);
+  NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && !hasRef,
                  NS_ERROR_DOM_SYNTAX_ERR);
 
   nsAutoCString scheme;
