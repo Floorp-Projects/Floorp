@@ -52,6 +52,7 @@ ThirdPartyUtil::IsThirdPartyInternal(const nsCString& aFirstDomain,
   // Get the base domain for aSecondURI.
   nsCString secondDomain;
   nsresult rv = GetBaseDomain(aSecondURI, secondDomain);
+  LOG(("ThirdPartyUtil::IsThirdPartyInternal %s =? %s", aFirstDomain.get(), secondDomain.get()));
   if (NS_FAILED(rv))
     return rv;
 
@@ -180,6 +181,7 @@ ThirdPartyUtil::IsThirdPartyChannel(nsIChannel* aChannel,
                                     nsIURI* aURI,
                                     bool* aResult)
 {
+  LOG(("ThirdPartyUtil::IsThirdPartyChannel [channel=%p]", aChannel));
   NS_ENSURE_ARG(aChannel);
   NS_ASSERTION(aResult, "null outparam pointer");
 
