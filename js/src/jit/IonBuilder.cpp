@@ -9723,7 +9723,6 @@ IonBuilder::freezePropertiesForCommonPrototype(TemporaryTypeSet* types, Property
 bool
 IonBuilder::testCommonGetterSetter(TemporaryTypeSet* types, PropertyName* name,
                                    bool isGetter, JSObject* foundProto, Shape* lastProperty,
-                                   JSFunction* getterOrSetter,
                                    MDefinition** guard,
                                    Shape* globalShape/* = nullptr*/,
                                    MDefinition** globalGuard/* = nullptr */)
@@ -9758,17 +9757,9 @@ IonBuilder::testCommonGetterSetter(TemporaryTypeSet* types, PropertyName* name,
     }
 
     if (foundProto->isNative()) {
-        NativeObject& nativeProto = foundProto->as<NativeObject>();
-        if (nativeProto.lastProperty() == lastProperty) {
-            // The proto shape is the same as it was at the point when we
-            // created the baseline IC, so looking up the prop on the object as
-            // it is now should be safe.
-            Shape* propShape = nativeProto.lookupPure(name);
-            MOZ_ASSERT_IF(isGetter, propShape->getterObject() == getterOrSetter);
-            MOZ_ASSERT_IF(!isGetter, propShape->setterObject() == getterOrSetter);
-            if (propShape && !propShape->configurable())
-                return true;
-        }
+        Shape* propShape = foundProto->as<NativeObject>().lookupPure(name);
+        if (propShape && !propShape->configurable())
+            return true;
     }
 
     MInstruction* wrapper = constantMaybeNursery(foundProto);
@@ -10639,8 +10630,8 @@ IonBuilder::getPropTryCommonGetter(bool* emitted, MDefinition* obj, PropertyName
     MDefinition* globalGuard = nullptr;
     bool canUseTIForGetter =
         testCommonGetterSetter(objTypes, name, /* isGetter = */ true,
-                               foundProto, lastProperty, commonGetter, &guard,
-                               globalShape, &globalGuard);
+                               foundProto, lastProperty, &guard, globalShape,
+                               &globalGuard);
     if (!canUseTIForGetter) {
         // If type information is bad, we can still optimize the getter if we
         // shape guard.
@@ -11147,7 +11138,7 @@ IonBuilder::setPropTryCommonSetter(bool* emitted, MDefinition* obj,
     MDefinition* guard = nullptr;
     bool canUseTIForSetter =
         testCommonGetterSetter(objTypes, name, /* isGetter = */ false,
-                               foundProto, lastProperty, commonSetter, &guard);
+                               foundProto, lastProperty, &guard);
     if (!canUseTIForSetter) {
         // If type information is bad, we can still optimize the setter if we
         // shape guard.
