@@ -526,7 +526,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(WorkerDebuggerSandboxPrivate,
                                                          nsIGlobalObject)
 
-  JSObject *GetGlobalJSObject()
+  virtual JSObject *GetGlobalJSObject() override
   {
     return GetWrapper();
   }
