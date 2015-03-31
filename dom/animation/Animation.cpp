@@ -272,7 +272,11 @@ Animation::GetAnimationOfProperty(nsCSSProperty aProperty) const
   for (size_t propIdx = 0, propEnd = mProperties.Length();
        propIdx != propEnd; ++propIdx) {
     if (aProperty == mProperties[propIdx].mProperty) {
-      return &mProperties[propIdx];
+      const AnimationProperty* result = &mProperties[propIdx];
+      if (!result->mWinsInCascade) {
+        result = nullptr;
+      }
+      return result;
     }
   }
   return nullptr;

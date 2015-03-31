@@ -2160,25 +2160,25 @@ addAsyncAnimTest(function *() {
 
   new_div("animation: anim2 1s linear forwards; opacity: 0.5 ! important");
   yield waitForPaintsFlushed();
-  omta_is("opacity", 0.5, RunningOn.TodoMainThread,
+  omta_is("opacity", 0.5, RunningOn.MainThread,
           "opacity overriding animation at start (0s)");
   advance_clock(750);
-  omta_is("opacity", 0.5, RunningOn.TodoMainThread,
+  omta_is("opacity", 0.5, RunningOn.MainThread,
           "opacity overriding animation while running (750ms)");
   advance_clock(1000);
-  omta_is("opacity", 0.5, RunningOn.TodoMainThread,
+  omta_is("opacity", 0.5, RunningOn.MainThread,
           "opacity overriding animation while filling (1750ms)");
   done_div();
 
   new_div("animation: anim2 1s linear; opacity: 0.5 ! important");
   yield waitForPaintsFlushed();
-  omta_is("opacity", 0.5, RunningOn.TodoMainThread,
+  omta_is("opacity", 0.5, RunningOn.MainThread,
           "opacity overriding animation at start (0s)");
   advance_clock(750);
-  omta_is("opacity", 0.5, RunningOn.TodoMainThread,
+  omta_is("opacity", 0.5, RunningOn.MainThread,
           "opacity overriding animation while running (750ms)");
   advance_clock(1000);
-  omta_is("opacity", 0.5, RunningOn.TodoMainThread,
+  omta_is("opacity", 0.5, RunningOn.MainThread,
           "opacity overriding animation after complete (1750ms)");
   done_div();
 

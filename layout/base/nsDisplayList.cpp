@@ -426,17 +426,17 @@ AddAnimationsForProperty(nsIFrame* aFrame, nsCSSProperty aProperty,
       continue;
     }
 
-    if (!property->mWinsInCascade) {
-      // We have an animation or transition, but it isn't actually
-      // winning in the CSS cascade, so we don't want to send it to the
-      // compositor.
-      // I believe that anything that changes mWinsInCascade should
-      // trigger this code again, either because of a restyle that
-      // changes the properties in question, or because of the
-      // main-thread style update that results when an animation stops
-      // filling.
-      continue;
-    }
+    // Note that if mWinsInCascade on property was  false,
+    // GetAnimationOfProperty returns null instead.
+    // This is what we want, since if we have an animation or transition
+    // that isn't actually winning in the CSS cascade, we don't want to
+    // send it to the compositor.
+    // I believe that anything that changes mWinsInCascade should
+    // trigger this code again, either because of a restyle that changes
+    // the properties in question, or because of the main-thread style
+    // update that results when an animation stops being in effect.
+    MOZ_ASSERT(property->mWinsInCascade,
+               "GetAnimationOfProperty already tested mWinsInCascade");
 
     // Don't add animations that are pending when their corresponding
     // refresh driver is under test control. This is because any pending
