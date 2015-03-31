@@ -45,8 +45,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "Favicons",
 XPCOMUtils.defineLazyServiceGetter(this, "gDNSService",
                                    "@mozilla.org/network/dns-service;1",
                                    "nsIDNSService");
-XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
-                                  "resource://gre/modules/LightweightThemeManager.jsm");
 
 const nsIWebNavigation = Ci.nsIWebNavigation;
 
