@@ -265,6 +265,16 @@ public:
   GetGlobal(JSContext* aCx, JS::MutableHandle<JSObject*> aGlobal);
 
   void
+  CreateSandbox(JSContext* aCx, const nsAString& aName,
+                JS::Handle<JSObject*> aPrototype,
+                JS::MutableHandle<JSObject*> aResult);
+
+  void
+  LoadSubScript(JSContext* aCx, const nsAString& aURL,
+                const Optional<JS::Handle<JSObject*>>& aSandbox,
+                ErrorResult& aRv);
+
+  void
   EnterEventLoop();
 
   void
