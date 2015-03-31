@@ -73,6 +73,7 @@ tasks:
             checkout-gecko workspace &&
             cd workspace/gecko &&
             ./mach taskcluster-graph
+            --pushlog-id='{{pushlog_id}}'
             --project='{{project}}'
             --message='{{comment}}'
             --owner='{{owner}}'
@@ -84,4 +85,3 @@ tasks:
       extra:
         treeherder:
           symbol: D
-
