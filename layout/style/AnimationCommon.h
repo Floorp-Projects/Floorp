@@ -128,6 +128,12 @@ protected:
 public:
   static const LayerAnimationRecord sLayerAnimationInfo[kLayerRecords];
 
+  // Will return non-null for any property with the
+  // CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR flag; should only be called
+  // on such properties.
+  static const LayerAnimationRecord*
+    LayerAnimationRecordFor(nsCSSProperty aProperty);
+
 protected:
   virtual ~CommonAnimationManager();
 
@@ -295,6 +301,9 @@ struct AnimationPlayerCollection : public PRCList
   // (This is useful for determining whether throttle the animation
   // (suppress main-thread style updates).)
   bool CanPerformOnCompositorThread(CanAnimateFlags aFlags) const;
+
+  void PostUpdateLayerAnimations();
+
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const;
 
   bool IsForElement() const { // rather than for a pseudo-element
