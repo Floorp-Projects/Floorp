@@ -3,6 +3,7 @@
 
 "use strict";
 
+Cu.import("resource:///modules/readinglist/ReadingList.jsm");
 Cu.import("resource:///modules/readinglist/SQLiteStore.jsm");
 Cu.import("resource://gre/modules/Sqlite.jsm");
 
@@ -58,7 +59,10 @@ add_task(function* constraints() {
   catch (e) {
     err = e;
   }
-  checkError(err, "UNIQUE constraint failed");
+  Assert.ok(err);
+  Assert.ok(err instanceof ReadingList.Error.Exists);
+  Assert.ok(err.message);
+  Assert.ok(err.message.indexOf("An item with the following property already exists:") >= 0);
 
   // add a new item with an existing guid
   function kindOfClone(item) {
@@ -80,7 +84,10 @@ add_task(function* constraints() {
   catch (e) {
     err = e;
   }
-  checkError(err, "UNIQUE constraint failed: items.guid");
+  Assert.ok(err);
+  Assert.ok(err instanceof ReadingList.Error.Exists);
+  Assert.ok(err.message);
+  Assert.ok(err.message.indexOf("An item with the following property already exists: guid") >= 0);
 
   // add a new item with an existing url
   item = kindOfClone(gItems[0]);
@@ -92,7 +99,10 @@ add_task(function* constraints() {
   catch (e) {
     err = e;
   }
-  checkError(err, "UNIQUE constraint failed: items.url");
+  Assert.ok(err);
+  Assert.ok(err instanceof ReadingList.Error.Exists);
+  Assert.ok(err.message);
+  Assert.ok(err.message.indexOf("An item with the following property already exists: url") >= 0);
 
   // update an item with an existing url
   item.guid = gItems[1].guid;
@@ -106,7 +116,10 @@ add_task(function* constraints() {
   // The failure actually happens on items.guid, not items.url, because the item
   // is first looked up by url, and then its other properties are updated on the
   // resulting row.
-  checkError(err, "UNIQUE constraint failed: items.guid");
+  Assert.ok(err);
+  Assert.ok(err instanceof ReadingList.Error.Exists);
+  Assert.ok(err.message);
+  Assert.ok(err.message.indexOf("An item with the following property already exists: guid") >= 0);
 
   // add a new item with an existing resolvedURL
   item = kindOfClone(gItems[0]);
@@ -118,7 +131,10 @@ add_task(function* constraints() {
   catch (e) {
     err = e;
   }
-  checkError(err, "UNIQUE constraint failed: items.resolvedURL");
+  Assert.ok(err);
+  Assert.ok(err instanceof ReadingList.Error.Exists);
+  Assert.ok(err.message);
+  Assert.ok(err.message.indexOf("An item with the following property already exists: resolvedURL") >= 0);
 
   // update an item with an existing resolvedURL
   item.url = gItems[1].url;
@@ -129,7 +145,10 @@ add_task(function* constraints() {
   catch (e) {
     err = e;
   }
-  checkError(err, "UNIQUE constraint failed: items.resolvedURL");
+  Assert.ok(err);
+  Assert.ok(err instanceof ReadingList.Error.Exists);
+  Assert.ok(err.message);
+  Assert.ok(err.message.indexOf("An item with the following property already exists: resolvedURL") >= 0);
 
   // add a new item with no guid, which is allowed
   item = kindOfClone(gItems[0]);
@@ -311,11 +330,4 @@ function checkItems(actualItems, expectedItems) {
       Assert.equal(actualItems[i][prop], expectedItems[i][prop]);
     }
   }
-}
-
-function checkError(err, expectedMsgSubstring) {
-  Assert.ok(err);
-  Assert.ok(err instanceof Cu.getGlobalForObject(Sqlite).Error);
-  Assert.ok(err.message);
-  Assert.ok(err.message.indexOf(expectedMsgSubstring) >= 0, err.message);
 }
