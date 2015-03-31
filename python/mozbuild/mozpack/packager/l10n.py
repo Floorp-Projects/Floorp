@@ -14,8 +14,15 @@ from mozpack.packager.formats import (
     JarFormatter,
     OmniJarFormatter,
 )
-from mozpack.packager import SimplePackager
-from mozpack.files import ManifestFile
+from mozpack.packager import (
+    Component,
+    SimplePackager,
+    SimpleManifestSink,
+)
+from mozpack.files import (
+    ComposedFinder,
+    ManifestFile,
+)
 from mozpack.copier import (
     FileCopier,
     Jarrer,
@@ -165,9 +172,35 @@ def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
         copier[path].preload([l.replace(locale, l10n_locale) for l in log])
 
 
-def repack(source, l10n, non_resources=[], non_chrome=set()):
+def repack(source, l10n, extra_l10n={}, non_resources=[], non_chrome=set()):
+    '''
+    Replace localized data from the `source` directory with localized data
+    from `l10n` and `extra_l10n`.
+
+    The `source` argument points to a directory containing a packaged
+    application (in omnijar, jar or flat form).
+    The `l10n` argument points to a directory containing the main localized
+    data (usually in the form of a language pack addon) to use to replace
+    in the packaged application.
+    The `extra_l10n` argument contains a dict associating relative paths in
+    the source to separate directories containing localized data for them.
+    This can be used to point at different language pack addons for different
+    parts of the package application.
+    The `non_resources` argument gives a list of relative paths in the source
+    that should not be added in an omnijar in case the packaged application
+    is in that format.
+    The `non_chrome` argument gives a list of file/directory patterns for
+    localized files that are not listed in a chrome.manifest.
+    '''
     app_finder = UnpackFinder(source)
     l10n_finder = UnpackFinder(l10n)
+    if extra_l10n:
+        finders = {
+            '': l10n_finder,
+        }
+        for base, path in extra_l10n.iteritems():
+            finders[base] = UnpackFinder(path)
+        l10n_finder = ComposedFinder(finders)
     copier = FileCopier()
     if app_finder.kind == 'flat':
         formatter = FlatFormatter(copier)

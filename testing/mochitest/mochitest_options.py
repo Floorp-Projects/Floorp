@@ -87,6 +87,12 @@ class MochitestOptions(optparse.OptionParser):
           "help": "which chunk to run",
           "default": None,
           }],
+        [["--chunk-by-runtime"],
+         {"action": "store_true",
+          "dest": "chunkByRuntime",
+          "help": "group tests such that each chunk has roughly the same runtime",
+          "default": False,
+          }],
         [["--chunk-by-dir"],
          {"type": "int",
           "dest": "chunkByDir",
@@ -470,6 +476,14 @@ class MochitestOptions(optparse.OptionParser):
            "help": "maximum number of timeouts permitted before halting testing",
            "default": None,
            }],
+        [["--tag"],
+         { "action": "append",
+           "dest": "test_tags",
+           "default": None,
+           "help": "filter out tests that don't have the given tag. Can be "
+                   "used multiple times in which case the test must contain "
+                   "at least one of the given tags.",
+         }],
     ]
 
     def __init__(self, **kwargs):
@@ -506,6 +520,10 @@ class MochitestOptions(optparse.OptionParser):
         if options.totalChunks:
             if not 1 <= options.thisChunk <= options.totalChunks:
                 self.error("thisChunk must be between 1 and totalChunks")
+
+        if options.chunkByDir and options.chunkByRuntime:
+            self.error(
+                "can only use one of --chunk-by-dir or --chunk-by-runtime")
 
         if options.xrePath is None:
             # default xrePath to the app path if not provided
@@ -578,7 +596,6 @@ class MochitestOptions(optparse.OptionParser):
         if options.jsdebugger:
             options.extraPrefs += [
                 "devtools.debugger.remote-enabled=true",
-                "devtools.debugger.chrome-enabled=true",
                 "devtools.chrome.enabled=true",
                 "devtools.debugger.prompt-connection=false"
             ]

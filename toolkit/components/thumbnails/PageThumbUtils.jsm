@@ -110,8 +110,10 @@ this.PageThumbUtils = {
       return false;
     }
 
+    let webNav = aDocShell.QueryInterface(Ci.nsIWebNavigation);
+
     // Don't take screenshots of about: pages.
-    if (aDocShell.currentURI.schemeIs("about")) {
+    if (webNav.currentURI.schemeIs("about")) {
       return false;
     }
 

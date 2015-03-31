@@ -2,6 +2,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
+Components.utils.import("resource://testing-common/MockRegistrar.jsm");
+
 function run_test() {
   setupTestCommon();
 
@@ -15,15 +17,16 @@ function run_test() {
   overrideXHR(callHandleEvent);
   standardInit();
 
-  let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.registerFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
-                            "Fake Window Watcher",
-                            "@mozilla.org/embedcomp/window-watcher;1",
-                            WindowWatcherFactory);
-  registrar.registerFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af56}"),
-                            "Fake Window Mediator",
-                            "@mozilla.org/appshell/window-mediator;1",
-                            WindowMediatorFactory);
+  let windowWatcherCID =
+    MockRegistrar.register("@mozilla.org/embedcomp/window-watcher;1",
+                           WindowWatcher);
+  let windowMediatorCID =
+    MockRegistrar.register("@mozilla.org/appshell/window-mediator;1",
+                           WindowMediator);
+  do_register_cleanup(() => {
+    MockRegistrar.unregister(windowWatcherCID);
+    MockRegistrar.unregister(windowMediatorCID);
+  });
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, false);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED, true);
@@ -50,27 +53,19 @@ function check_test() {
   doTestFinish();
 }
 
-function end_test() {
-  let registrar = Cm.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.unregisterFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af55}"),
-                              WindowWatcherFactory);
-  registrar.unregisterFactory(Components.ID("{1dfeb90a-2193-45d5-9cb8-864928b2af56}"),
-                              WindowMediatorFactory);
-}
-
 // Callback function used by the custom XMLHttpRequest implementation to
 // call the nsIDOMEventListener's handleEvent method for onload.
-function callHandleEvent() {
-  gXHR.status = 400;
-  gXHR.responseText = gResponseBody;
+function callHandleEvent(aXHR) {
+  aXHR.status = 400;
+  aXHR.responseText = gResponseBody;
   try {
     let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                  createInstance(Ci.nsIDOMParser);
-    gXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
+    aXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
   } catch (e) {
   }
-  let e = { target: gXHR };
-  gXHR.onload(e);
+  let e = { target: aXHR };
+  aXHR.onload(e);
 }
 
 function check_showUpdateAvailable() {
@@ -85,28 +80,10 @@ const WindowWatcher = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowWatcher])
 };
 
-const WindowWatcherFactory = {
-  createInstance: function createInstance(aOuter, aIID) {
-    if (aOuter != null) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    }
-    return WindowWatcher.QueryInterface(aIID);
-  }
-};
-
 const WindowMediator = {
   getMostRecentWindow: function(aWindowType) {
     return null;
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWindowMediator])
-};
-
-const WindowMediatorFactory = {
-  createInstance: function createInstance(aOuter, aIID) {
-    if (aOuter != null) {
-      throw Cr.NS_ERROR_NO_AGGREGATION;
-    }
-    return WindowMediator.QueryInterface(aIID);
-  }
 };

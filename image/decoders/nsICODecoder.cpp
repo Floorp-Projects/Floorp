@@ -70,7 +70,7 @@ nsICODecoder::nsICODecoder(RasterImage* aImage)
 nsICODecoder::~nsICODecoder()
 {
   if (mRow) {
-    moz_free(mRow);
+    free(mRow);
   }
 }
 
@@ -530,7 +530,7 @@ nsICODecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
           mPos++;
           mRowBytes = 0;
           mCurLine = GetRealHeight();
-          mRow = (uint8_t*)moz_realloc(mRow, rowSize);
+          mRow = (uint8_t*)realloc(mRow, rowSize);
           if (!mRow) {
             PostDecoderError(NS_ERROR_OUT_OF_MEMORY);
             return;

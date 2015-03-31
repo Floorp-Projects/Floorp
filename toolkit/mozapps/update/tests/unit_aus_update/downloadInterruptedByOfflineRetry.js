@@ -16,7 +16,7 @@ function run_test() {
   setUpdateURLOverride();
   Services.prefs.setBoolPref(PREF_APP_UPDATE_AUTO, false);
 
-  overrideXHR(null);
+  overrideXHR(xhr_pt1);
   overrideUpdatePrompt(updatePrompt);
   standardInit();
 
@@ -26,13 +26,12 @@ function run_test() {
 function run_test_pt1() {
   gResponseBody = null;
   gCheckFunc = check_test_pt1;
-  gXHRCallback = xhr_pt1;
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }
 
-function xhr_pt1() {
-  gXHR.status = Cr.NS_ERROR_OFFLINE;
-  gXHR.onerror({ target: gXHR });
+function xhr_pt1(aXHR) {
+  aXHR.status = Cr.NS_ERROR_OFFLINE;
+  aXHR.onerror({ target: aXHR });
 }
 
 function check_test_pt1(request, update) {
@@ -43,7 +42,7 @@ function check_test_pt1(request, update) {
   gAUS.onError(request, update);
 
   // Trigger another check by notifying the offline status observer
-  gXHRCallback = xhr_pt2;
+  overrideXHR(xhr_pt2);
   Services.obs.notifyObservers(gAUS, "network:offline-status-changed", "online");
 }
 
@@ -53,20 +52,20 @@ const updatePrompt = {
   }
 };
 
-function xhr_pt2() {
+function xhr_pt2(aXHR) {
   let patches = getLocalPatchString();
   let updates = getLocalUpdateString(patches);
   let responseBody = getLocalUpdatesXMLString(updates);
 
-  gXHR.status = 200;
-  gXHR.responseText = responseBody;
+  aXHR.status = 200;
+  aXHR.responseText = responseBody;
   try {
     let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                  createInstance(Ci.nsIDOMParser);
-    gXHR.responseXML = parser.parseFromString(responseBody, "application/xml");
+    aXHR.responseXML = parser.parseFromString(responseBody, "application/xml");
   } catch (e) {
   }
-  gXHR.onload({ target: gXHR });
+  aXHR.onload({ target: aXHR });
 }
 
 function check_test_pt2(update) {

@@ -19,15 +19,21 @@ function test()
   enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
- 
-  expect = '23';
-  actual = '';
-  for (let [, { a: b }] in [{ a: 2 }, { a: 3 }])
-  {
-    actual += b;
-  }
-  reportCompare(expect, actual, summary);
 
+  // Before JS1.7's destructuring for…in was fixed to match JS1.8's,
+  // the expected result was '23'.
+  expect = 'TypeError';
+  actual = '';
+  try {
+    for (let [, { a: b }] in [{ a: 2 }, { a: 3 }]) {
+      actual += b;
+    }
+    reportCompare(expect, actual, summary);
+  } catch (ex) {
+    actual = ex.name;
+  }
+
+  expect = '23';
   actual = '';
   for each (let { a: b } in [{ a: 2 }, { a: 3 }])
   {

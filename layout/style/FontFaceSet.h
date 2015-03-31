@@ -158,6 +158,8 @@ public:
                               bool aWasAlternate,
                               nsresult aStatus) override;
 
+  FontFace* GetFontFaceAt(uint32_t aIndex);
+
   // -- Web IDL --------------------------------------------------------------
 
   IMPL_EVENT_HANDLER(loading)
@@ -176,8 +178,12 @@ public:
   void Clear();
   bool Delete(FontFace& aFontFace, mozilla::ErrorResult& aRv);
   bool Has(FontFace& aFontFace);
-  FontFace* IndexedGetter(uint32_t aIndex, bool& aFound);
-  uint32_t Length();
+  uint32_t Size();
+  mozilla::dom::FontFaceSetIterator* Entries();
+  mozilla::dom::FontFaceSetIterator* Values();
+  void ForEach(JSContext* aCx, FontFaceSetForEachCallback& aCallback,
+               JS::Handle<JS::Value> aThisArg,
+               mozilla::ErrorResult& aRv);
 
 private:
   ~FontFaceSet();
