@@ -262,7 +262,8 @@ public:
 
   nsPopupLevel PopupLevel() { return mPopupLevel; }
 
-  virtual nsIntSize       ClientToWindowSize(const nsIntSize& aClientSize) override
+  virtual mozilla::LayoutDeviceIntSize
+  ClientToWindowSize(const mozilla::LayoutDeviceIntSize& aClientSize) override
   {
     return aClientSize;
   }
