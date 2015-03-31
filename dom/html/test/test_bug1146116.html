@@ -30,14 +30,20 @@ helper.addMessageListener("fail", function onFail(message) {
 helper.addMessageListener("file.opened", onFileOpened);
 helper.sendAsyncMessage("file.open", "test_bug1146116.txt");
 
+function getGlobal(thing) {
+  return SpecialPowers.unwrap(SpecialPowers.Cu.getGlobalForObject(thing));
+}
+
 function onFileOpened(message) {
   const file = message.domFile;
   const elem = document.getElementById("file");
-  isnot(SpecialPowers.Cu.getGlobalForObject(elem), window,
+  is(getGlobal(elem), window,
+     "getGlobal() works as expected");
+  isnot(getGlobal(file), window,
         "File from MessageManager is wrapped");
   SpecialPowers.wrap(elem).mozSetFileArray([file]);
-  is(SpecialPowers.unwrap(SpecialPowers.Cu.getGlobalForObject(elem.files[0])),
-     window, "File read back from input element is not wrapped");
+  is(getGlobal(elem.files[0]), window,
+     "File read back from input element is not wrapped");
   helper.addMessageListener("file.removed", onFileRemoved);
   helper.sendAsyncMessage("file.remove", null);
 }
