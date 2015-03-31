@@ -571,7 +571,7 @@ final class GeckoEditable
     }
 
     @Override
-    public void setUpdateGecko(boolean update, boolean force) {
+    public void setUpdateGecko(boolean update) {
         if (!onIcThread()) {
             // Android may be holding an old InputConnection; ignore
             if (DEBUG) {
@@ -580,7 +580,7 @@ final class GeckoEditable
             return;
         }
         if (update) {
-            icUpdateGecko(force);
+            icUpdateGecko(false);
         }
         mUpdateGecko = update;
     }
