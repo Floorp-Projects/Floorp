@@ -1,5 +1,8 @@
 $inherits:
   from: 'tasks/builds/b2g_phone_base.yml'
+  variables:
+    build_name: 'hamachi-eng'
+    build_type: 'opt'
 task:
   scopes:
     - 'docker-worker:cache:build-hamachi-eng'
@@ -15,4 +18,3 @@ task:
   extra:
     locations:
       img: 'private/build/hamachi.zip'
-
