@@ -67,6 +67,7 @@ static char const * const sDefaultCodecCaps[][2] = {
 
 static char const * const sPluginBlacklist[] = {
   "flump3dec",
+  "h264parse",
 };
 
 GStreamerFormatHelper::GStreamerFormatHelper()
@@ -251,7 +252,8 @@ static gboolean FactoryFilter(GstPluginFeature *aFeature, gpointer)
   const gchar *className =
     gst_element_factory_get_klass(GST_ELEMENT_FACTORY_CAST(aFeature));
 
-  if (!strstr(className, "Decoder") && !strstr(className, "Demux")) {
+  if (!strstr(className, "Decoder") && !strstr(className, "Demux") &&
+      !strstr(className, "Parser")) {
     return FALSE;
   }
 
