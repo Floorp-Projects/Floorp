@@ -95,7 +95,7 @@ if test -n "$USE_ICU"; then
                     MOZ_ICU_DBG_SUFFIX=d
                 fi
                 ;;
-            Darwin|Linux|DragonFly|FreeBSD|NetBSD|OpenBSD|GNU/kFreeBSD)
+            Darwin|Linux|DragonFly|FreeBSD|NetBSD|OpenBSD|GNU/kFreeBSD|SunOS)
                 ICU_LIB_NAMES="icui18n icuuc icudata"
                 ;;
             *)
