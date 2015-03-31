@@ -69,8 +69,8 @@ MemoryOverview.prototype = Heritage.extend(LineGraphWidget.prototype, {
   setTheme: function (theme) {
     theme = theme || "light";
     this.backgroundColor = getColor("body-background", theme);
-    this.backgroundGradientStart = setAlpha(getColor("highlight-blue", theme), 0.1);
-    this.backgroundGradientEnd = setAlpha(getColor("highlight-blue", theme), 0);
+    this.backgroundGradientStart = setAlpha(getColor("highlight-blue", theme), 0.2);
+    this.backgroundGradientEnd = setAlpha(getColor("highlight-blue", theme), 0.05);
     this.strokeColor = getColor("highlight-blue", theme);
     this.selectionBackgroundColor = setAlpha(getColor("selection-background", theme), 0.25);
     this.selectionStripesColor = "rgba(255, 255, 255, 0.1)";
