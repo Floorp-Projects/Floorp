@@ -26,7 +26,8 @@ function loadCert(cert_name, trust_string) {
 }
 
 function checkOK(cert) {
-  return checkCertErrorGeneric(certdb, cert, 0, certificateUsageSSLServer);
+  return checkCertErrorGeneric(certdb, cert, PRErrorCodeSuccess,
+                               certificateUsageSSLServer);
 }
 
 function checkFail(cert) {

@@ -475,13 +475,13 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
    * /toolkit/devtools/server/actors/inspector
    */
   getAnimationPlayersForNode: method(function(nodeActor) {
-    let players = nodeActor.rawNode.getAnimationPlayers();
+    let animations = nodeActor.rawNode.getAnimations();
 
     let actors = [];
-    for (let i = 0; i < players.length; i ++) {
+    for (let i = 0; i < animations.length; i ++) {
       // XXX: for now the index is passed along as the AnimationPlayerActor uses
       // it to retrieve animation information from CSS.
-      actors.push(AnimationPlayerActor(this, players[i], nodeActor.rawNode, i));
+      actors.push(AnimationPlayerActor(this, animations[i], nodeActor.rawNode, i));
     }
 
     return actors;
@@ -503,7 +503,7 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
    * only iterate once and then listen for changes).
    */
   getAllAnimationPlayers: function() {
-    let players = [];
+    let animations = [];
 
     // These loops shouldn't be as bad as they look.
     // Typically, there will be very few windows, and getElementsByTagName is
@@ -511,11 +511,11 @@ let AnimationsActor = exports.AnimationsActor = ActorClass({
     for (let window of this.tabActor.windows) {
       let root = window.document.body || window.document;
       for (let element of root.getElementsByTagNameNS("*", "*")) {
-        players = [...players, ...element.getAnimationPlayers()];
+        animations = [...animations, ...element.getAnimations()];
       }
     }
 
-    return players;
+    return animations;
   },
 
   onNavigate: function({isTopLevel}) {

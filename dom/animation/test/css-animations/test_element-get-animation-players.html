@@ -21,21 +21,21 @@
 
 test(function(t) {
   var div = addDiv(t);
-  assert_equals(div.getAnimationPlayers().length, 0,
-    'getAnimationPlayers returns an empty sequence for an element'
+  assert_equals(div.getAnimations().length, 0,
+    'getAnimations returns an empty sequence for an element'
     + ' with no animations');
-}, 'getAnimationPlayers for non-animated content');
+}, 'getAnimations for non-animated content');
 
 async_test(function(t) {
   var div = addDiv(t);
 
   // Add an animation
   div.style.animation = 'anim1 100s';
-  var players = div.getAnimationPlayers();
-  assert_equals(players.length, 1,
-    'getAnimationPlayers returns a player running CSS Animations');
-  players[0].ready.then(t.step_func(function() {
-    var startTime = players[0].startTime;
+  var animations = div.getAnimations();
+  assert_equals(animations.length, 1,
+    'getAnimations returns an Animation running CSS Animations');
+  animations[0].ready.then(t.step_func(function() {
+    var startTime = animations[0].startTime;
     assert_true(startTime > 0 && startTime <= document.timeline.currentTime,
       'CSS animation has a sensible start time');
 
@@ -46,31 +46,31 @@ async_test(function(t) {
     return waitForFrame();
   })).then(t.step_func(function() {
     div.style.animation = 'anim1 100s, anim2 100s';
-    players = div.getAnimationPlayers();
-    assert_equals(players.length, 2,
-      'getAnimationPlayers returns one player for each value of'
+    animations = div.getAnimations();
+    assert_equals(animations.length, 2,
+      'getAnimations returns one Animation for each value of'
       + ' animation-name');
-    // Wait until both players are ready
-    // (We don't make any assumptions about the order of the players since
+    // Wait until both Animations are ready
+    // (We don't make any assumptions about the order of the Animations since
     //  that is the purpose of the following test.)
-    return waitForAllPlayers(players);
+    return waitForAllAnimations(animations);
   })).then(t.step_func(function() {
-    assert_true(players[0].startTime < players[1].startTime,
-      'Additional players for CSS animations start after the original'
+    assert_true(animations[0].startTime < animations[1].startTime,
+      'Additional Animations for CSS animations start after the original'
       + ' animation and appear later in the list');
     t.done();
   }));
-}, 'getAnimationPlayers for CSS Animations');
+}, 'getAnimations for CSS Animations');
 
 test(function(t) {
   var div = addDiv(t);
 
   // Add an animation that targets multiple properties
   div.style.animation = 'multiPropAnim 100s';
-  assert_equals(div.getAnimationPlayers().length, 1,
-    'getAnimationPlayers returns only one player for a CSS Animation'
+  assert_equals(div.getAnimations().length, 1,
+    'getAnimations returns only one Animation for a CSS Animation'
     + ' that targets multiple properties');
-}, 'getAnimationPlayers for multi-property animations');
+}, 'getAnimations for multi-property animations');
 
 async_test(function(t) {
   var div = addDiv(t);
@@ -81,173 +81,173 @@ async_test(function(t) {
   window.getComputedStyle(div).backgroundColor;
 
   // Wait until a frame after the animation starts, then add a transition
-  var players = div.getAnimationPlayers();
-  players[0].ready.then(waitForFrame).then(t.step_func(function() {
+  var animations = div.getAnimations();
+  animations[0].ready.then(waitForFrame).then(t.step_func(function() {
     div.style.transition = 'all 100s';
     div.style.backgroundColor = 'green';
 
-    players = div.getAnimationPlayers();
-    assert_equals(players.length, 2,
-      'getAnimationPlayers returns players for both animations and'
+    animations = div.getAnimations();
+    assert_equals(animations.length, 2,
+      'getAnimations returns Animations for both animations and'
       + ' transitions that run simultaneously');
-    return waitForAllPlayers(players);
+    return waitForAllAnimations(animations);
   })).then(t.step_func(function() {
-    assert_true(players[0].startTime > players[1].startTime,
-      'players for transitions appear before animations even if they'
+    assert_true(animations[0].startTime > animations[1].startTime,
+      'Animations for transitions appear before animations even if they'
       + ' start later');
     t.done();
   }));
-}, 'getAnimationPlayers for both CSS Animations and Transitions at once');
+}, 'getAnimations for both CSS Animations and Transitions at once');
 
 async_test(function(t) {
   var div = addDiv(t);
 
   // Set up event listener
   div.addEventListener('animationend', t.step_func(function() {
-    assert_equals(div.getAnimationPlayers().length, 0,
-      'getAnimationPlayers does not return players for finished '
+    assert_equals(div.getAnimations().length, 0,
+      'getAnimations does not return Animations for finished '
       + ' (and non-forwards-filling) CSS Animations');
     t.done();
   }));
 
   // Add a very short animation
   div.style.animation = 'anim1 0.01s';
-}, 'getAnimationPlayers for CSS Animations that have finished');
+}, 'getAnimations for CSS Animations that have finished');
 
 async_test(function(t) {
   var div = addDiv(t);
 
   // Set up event listener
   div.addEventListener('animationend', t.step_func(function() {
-    assert_equals(div.getAnimationPlayers().length, 1,
-      'getAnimationPlayers returns players for CSS Animations that have'
+    assert_equals(div.getAnimations().length, 1,
+      'getAnimations returns Animations for CSS Animations that have'
       + ' finished but are filling forwards');
     t.done();
   }));
 
   // Add a very short animation
   div.style.animation = 'anim1 0.01s forwards';
-}, 'getAnimationPlayers for CSS Animations that have finished but are'
+}, 'getAnimations for CSS Animations that have finished but are'
    + ' forwards filling');
 
 test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'none 100s';
 
-  var players = div.getAnimationPlayers();
-  assert_equals(players.length, 0,
-    'getAnimationPlayers returns an empty sequence for an element'
+  var animations = div.getAnimations();
+  assert_equals(animations.length, 0,
+    'getAnimations returns an empty sequence for an element'
     + ' with animation-name: none');
 
   div.style.animation = 'none 100s, anim1 100s';
-  players = div.getAnimationPlayers();
-  assert_equals(players.length, 1,
-    'getAnimationPlayers returns players only for those CSS Animations whose'
+  animations = div.getAnimations();
+  assert_equals(animations.length, 1,
+    'getAnimations returns Animations only for those CSS Animations whose'
     + ' animation-name is not none');
-}, 'getAnimationPlayers for CSS Animations with animation-name: none');
+}, 'getAnimations for CSS Animations with animation-name: none');
 
 test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'missing 100s';
-  var players = div.getAnimationPlayers();
-  assert_equals(players.length, 0,
-    'getAnimationPlayers returns an empty sequence for an element'
+  var animations = div.getAnimations();
+  assert_equals(animations.length, 0,
+    'getAnimations returns an empty sequence for an element'
     + ' with animation-name: missing');
 
   div.style.animation = 'anim1 100s, missing 100s';
-  players = div.getAnimationPlayers();
-  assert_equals(players.length, 1,
-    'getAnimationPlayers returns players only for those CSS Animations whose'
+  animations = div.getAnimations();
+  assert_equals(animations.length, 1,
+    'getAnimations returns Animations only for those CSS Animations whose'
     + ' animation-name is found');
-}, 'getAnimationPlayers for CSS Animations with animation-name: missing');
+}, 'getAnimations for CSS Animations with animation-name: missing');
 
 async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim1 100s, notyet 100s';
-  var players = div.getAnimationPlayers();
-  assert_equals(players.length, 1,
-    'getAnimationPlayers initally only returns players for CSS Animations whose'
+  var animations = div.getAnimations();
+  assert_equals(animations.length, 1,
+    'getAnimations initally only returns Animations for CSS Animations whose'
     + ' animation-name is found');
 
-  players[0].ready.then(waitForFrame).then(t.step_func(function() {
+  animations[0].ready.then(waitForFrame).then(t.step_func(function() {
     var keyframes = '@keyframes notyet { to { left: 100px; } }';
     document.styleSheets[0].insertRule(keyframes, 0);
-    players = div.getAnimationPlayers();
-    assert_equals(players.length, 2,
-      'getAnimationPlayers includes player when @keyframes rule is added'
+    animations = div.getAnimations();
+    assert_equals(animations.length, 2,
+      'getAnimations includes Animation when @keyframes rule is added'
       + ' later');
-    return waitForAllPlayers(players);
+    return waitForAllAnimations(animations);
   })).then(t.step_func(function() {
-    assert_true(players[0].startTime < players[1].startTime,
-      'Newly added player has a later start time');
+    assert_true(animations[0].startTime < animations[1].startTime,
+      'Newly added animation has a later start time');
     document.styleSheets[0].deleteRule(0);
     t.done();
   }));
-}, 'getAnimationPlayers for CSS Animations where the @keyframes rule is added'
+}, 'getAnimations for CSS Animations where the @keyframes rule is added'
    + ' later');
 
 test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim1 100s, anim1 100s';
-  assert_equals(div.getAnimationPlayers().length, 2,
-    'getAnimationPlayers returns one player for each CSS animation-name'
+  assert_equals(div.getAnimations().length, 2,
+    'getAnimations returns one Animation for each CSS animation-name'
     + ' even if the names are duplicated');
-}, 'getAnimationPlayers for CSS Animations with duplicated animation-name');
+}, 'getAnimations for CSS Animations with duplicated animation-name');
 
 test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'empty 100s';
-  assert_equals(div.getAnimationPlayers().length, 1,
-    'getAnimationPlayers returns players for CSS animations with an'
+  assert_equals(div.getAnimations().length, 1,
+    'getAnimations returns Animations for CSS animations with an'
     + ' empty keyframes rule');
-}, 'getAnimationPlayers for CSS Animations with empty keyframes rule');
+}, 'getAnimations for CSS Animations with empty keyframes rule');
 
 async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim1 100s 100s';
-  var players = div.getAnimationPlayers();
-  assert_equals(players.length, 1,
-    'getAnimationPlayers returns animations for CSS animations whose'
+  var animations = div.getAnimations();
+  assert_equals(animations.length, 1,
+    'getAnimations returns animations for CSS animations whose'
     + ' delay makes them start later');
-  players[0].ready.then(waitForFrame).then(t.step_func(function() {
-    assert_true(players[0].startTime <= document.timeline.currentTime,
-      'For CSS Animations in delay phase, the start time of the player is'
+  animations[0].ready.then(waitForFrame).then(t.step_func(function() {
+    assert_true(animations[0].startTime <= document.timeline.currentTime,
+      'For CSS Animations in delay phase, the start time of the Animation is'
       + ' not in the future');
     t.done();
   }));
-}, 'getAnimationPlayers for CSS animations in delay phase');
+}, 'getAnimations for CSS animations in delay phase');
 
 test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim1 0s 100s';
-  assert_equals(div.getAnimationPlayers().length, 1,
-    'getAnimationPlayers returns animations for CSS animations whose'
+  assert_equals(div.getAnimations().length, 1,
+    'getAnimations returns animations for CSS animations whose'
     + ' duration is zero');
   div.remove();
-}, 'getAnimationPlayers for zero-duration CSS Animations');
+}, 'getAnimations for zero-duration CSS Animations');
 
 test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'anim1 100s';
-  var originalPlayer = div.getAnimationPlayers()[0];
+  var originalAnimation = div.getAnimations()[0];
 
-  // Update pause state (an AnimationPlayer change)
+  // Update pause state (an Animation change)
   div.style.animationPlayState = 'paused';
-  var pausedPlayer = div.getAnimationPlayers()[0];
-  assert_equals(pausedPlayer.playState, 'paused',
-                'player\'s paused state is updated');
-  assert_equals(originalPlayer, pausedPlayer,
-                'getAnimationPlayers returns the same objects even when their'
+  var pausedAnimation = div.getAnimations()[0];
+  assert_equals(pausedAnimation.playState, 'paused',
+                'animation\'s paused state is updated');
+  assert_equals(originalAnimation, pausedAnimation,
+                'getAnimations returns the same objects even when their'
                 + ' play state changes');
 
   // Update duration (an Animation change)
   div.style.animationDuration = '200s';
-  var extendedPlayer = div.getAnimationPlayers()[0];
-  // FIXME: Check extendedPlayer.source.timing.duration has changed once the
+  var extendedAnimation = div.getAnimations()[0];
+  // FIXME: Check extendedAnimation.source.timing.duration has changed once the
   // API is available
-  assert_equals(originalPlayer, extendedPlayer,
-                'getAnimationPlayers returns the same objects even when their'
+  assert_equals(originalAnimation, extendedAnimation,
+                'getAnimations returns the same objects even when their'
                 + ' duration changes');
-}, 'getAnimationPlayers returns objects with the same identity');
+}, 'getAnimations returns objects with the same identity');
 
 </script>

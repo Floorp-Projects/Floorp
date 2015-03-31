@@ -136,7 +136,7 @@ function checkCertErrorGeneric(certdb, cert, expectedError, usage) {
   if (expectedError != -1 ) {
     do_check_eq(error, expectedError);
   } else {
-    do_check_neq (error, 0);
+    do_check_neq(error, PRErrorCodeSuccess);
   }
 }
 

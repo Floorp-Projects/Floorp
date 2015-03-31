@@ -209,7 +209,7 @@ static const Scale ScalePointer = TimesEight;
 } // namespace jit
 } // namespace js
 
-#include "jit/shared/Assembler-x86-shared.h"
+#include "jit/x86-shared/Assembler-x86-shared.h"
 
 namespace js {
 namespace jit {

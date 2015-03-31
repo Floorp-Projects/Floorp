@@ -21,11 +21,11 @@ addMessageListener("Test:ToggleAnimationPlayer", function(msg) {
     return;
   }
 
-  let player = node.getAnimationPlayers()[animationIndex];
+  let animation = node.getAnimations()[animationIndex];
   if (pause) {
-    player.pause();
+    animation.pause();
   } else {
-    player.play();
+    animation.play();
   }
 
   sendAsyncMessage("Test:ToggleAnimationPlayer");
@@ -46,8 +46,8 @@ addMessageListener("Test:SetAnimationPlayerCurrentTime", function(msg) {
     return;
   }
 
-  let player = node.getAnimationPlayers()[animationIndex];
-  player.currentTime = currentTime;
+  let animation = node.getAnimations()[animationIndex];
+  animation.currentTime = currentTime;
 
   sendAsyncMessage("Test:SetAnimationPlayerCurrentTime");
 });
@@ -66,9 +66,9 @@ addMessageListener("Test:GetAnimationPlayerState", function(msg) {
     return;
   }
 
-  let player = node.getAnimationPlayers()[animationIndex];
-  player.ready.then(() => {
-    sendAsyncMessage("Test:GetAnimationPlayerState", player.playState);
+  let animation = node.getAnimations()[animationIndex];
+  animation.ready.then(() => {
+    sendAsyncMessage("Test:GetAnimationPlayerState", animation.playState);
   });
 });
 

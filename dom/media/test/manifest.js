@@ -833,6 +833,12 @@ function once(target, name, cb) {
 // Number of tests to run in parallel.
 var PARALLEL_TESTS = 2;
 
+// Prefs to set before running tests.  Use this to improve coverage of
+// conditions that might not otherwise be encountered on the test data.
+var gTestPrefs = [
+  ['media.recorder.max_memory', 1024],
+];
+
 // When true, we'll loop forever on whatever test we run. Use this to debug
 // intermittent test failures.
 const DEBUG_TEST_LOOP_FOREVER = false;
@@ -873,7 +879,9 @@ function MediaTestManager() {
     this.numTestsRunning = 0;
     // Always wait for explicit finish.
     SimpleTest.waitForExplicitFinish();
-    this.nextTest();
+    SpecialPowers.pushPrefEnv({'set': gTestPrefs}, (function() {
+      this.nextTest();
+    }).bind(this));
   }
 
   // Registers that the test corresponding to 'token' has been started.

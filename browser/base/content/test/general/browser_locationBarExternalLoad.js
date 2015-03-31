@@ -1,15 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
-  waitForExplicitFinish();
+const url = "data:text/html,<body>hi";
 
-  nextTest();
-}
-
-let urls = [
-  "data:text/html,<body>hi"
-];
+add_task(function*() {
+  yield* testURL(url, urlEnter);
+  yield* testURL(url, urlClick);
+});
 
 function urlEnter(url) {
   gURLBar.value = url;
@@ -24,41 +21,51 @@ function urlClick(url) {
   EventUtils.synthesizeMouseAtCenter(goButton, {});
 }
 
-function nextTest() {
-  let url = urls.shift();
-  if (url) {
-    testURL(url, urlEnter, function () {
-      testURL(url, urlClick, nextTest);
+function promiseNewTabSwitched() {
+  return new Promise(resolve => {
+    gBrowser.addEventListener("TabSwitchDone", function onSwitch() {
+      gBrowser.removeEventListener("TabSwitchDone", onSwitch);
+      executeSoon(resolve);
     });
-  }
-  else
-    finish();
+  });
 }
 
 function testURL(url, loadFunc, endFunc) {
+  let tabSwitchedPromise = promiseNewTabSwitched();
   let tab = gBrowser.selectedTab = gBrowser.addTab();
-  registerCleanupFunction(function () {
-    gBrowser.removeTab(tab);
-  });
-  addPageShowListener(function () {
-    let pagePrincipal = gBrowser.contentPrincipal;
-    loadFunc(url);
+  let browser = gBrowser.selectedBrowser;
 
-    addPageShowListener(function () {
-      let fm = Services.focus;
-      is(fm.focusedElement, null, "should be no focused element");
-      is(fm.focusedWindow, gBrowser.contentWindow, "content window should be focused");
+  let pageshowPromise = promiseWaitForEvent(browser, "pageshow");
 
-      ok(!gBrowser.contentPrincipal.equals(pagePrincipal),
-         "load of " + url + " by " + loadFunc.name + " should produce a page with a different principal");
-      endFunc();
-    });
-  });
-}
+  yield tabSwitchedPromise;
+  yield pageshowPromise;
 
-function addPageShowListener(func) {
-  gBrowser.selectedBrowser.addEventListener("pageshow", function loadListener() {
-    gBrowser.selectedBrowser.removeEventListener("pageshow", loadListener, false);
-    func();
+  let pagePrincipal = gBrowser.contentPrincipal;
+  loadFunc(url);
+
+  yield promiseWaitForEvent(browser, "pageshow");
+
+  let focused = yield ContentTask.spawn(browser, { isRemote: gMultiProcessBrowser },
+    function* (arg) {
+      const fm = Components.classes["@mozilla.org/focus-manager;1"].
+                            getService(Components.interfaces.nsIFocusManager);
+      if (fm.focusedElement != null) {
+        return "FAIL - focusedElement not null";
+      }
+
+      if (arg.isRemote) {
+        return fm.activeWindow == content ? "PASS" :
+                                            "FAIL - activeWindow not correct";
+      }
+
+      return "PASS";
   });
+
+  is(focused, "PASS", "should be no focused element");
+  is(document.activeElement, browser, "content window should be focused");
+
+  ok(!gBrowser.contentPrincipal.equals(pagePrincipal),
+     "load of " + url + " by " + loadFunc.name + " should produce a page with a different principal");
+
+  gBrowser.removeTab(tab);
 }

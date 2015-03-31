@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_shared_MacroAssembler_x86_shared_h
-#define jit_shared_MacroAssembler_x86_shared_h
+#ifndef jit_x86_shared_MacroAssembler_x86_shared_h
+#define jit_x86_shared_MacroAssembler_x86_shared_h
 
 #include "mozilla/Casting.h"
 #include "mozilla/DebugOnly.h"
@@ -1535,4 +1535,4 @@ MacroAssemblerX86Shared::storeScalar<float>(FloatRegister src, const Address& de
 #undef CHECK_BYTEREG
 #undef CHECK_BYTEREGS
 
-#endif /* jit_shared_MacroAssembler_x86_shared_h */
+#endif /* jit_x86_shared_MacroAssembler_x86_shared_h */

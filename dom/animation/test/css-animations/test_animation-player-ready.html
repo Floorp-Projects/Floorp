@@ -15,19 +15,19 @@
 async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'abc 100s';
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
 
-  var originalReadyPromise = player.ready;
-  player.ready.then(function() {
-    assert_equals(player.ready, originalReadyPromise,
+  var originalReadyPromise = animation.ready;
+  animation.ready.then(function() {
+    assert_equals(animation.ready, originalReadyPromise,
                   'Ready promise is the same object when playing completes');
-    player.pause();
+    animation.pause();
     // TODO: When we implement deferred pausing (bug 1109390), change this to
     // assert_not_equals and wait on the new promise before continuing.
-    assert_equals(player.ready, originalReadyPromise,
+    assert_equals(animation.ready, originalReadyPromise,
                   'Ready promise does not change when pausing (for now)');
-    player.play();
-    assert_not_equals(player.ready, originalReadyPromise,
+    animation.play();
+    assert_not_equals(animation.ready, originalReadyPromise,
                       'Ready promise object identity differs after calling'
                       + ' play()');
     t.done();
@@ -38,11 +38,11 @@ async_test(function(t) {
 test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'abc 100s paused';
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
 
-  var originalReadyPromise = player.ready;
+  var originalReadyPromise = animation.ready;
   div.style.animationPlayState = 'running';
-  assert_not_equals(player.ready, originalReadyPromise,
+  assert_not_equals(animation.ready, originalReadyPromise,
                     'After updating animation-play-state a new ready promise'
                     + ' object is created');
 }, 'A new ready promise is created when setting animation-play-state: running');
@@ -50,12 +50,12 @@ test(function(t) {
 async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'abc 100s';
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
 
-  player.ready.then(function() {
-    var promiseBeforeCallingPlay = player.ready;
-    player.play();
-    assert_equals(player.ready, promiseBeforeCallingPlay,
+  animation.ready.then(function() {
+    var promiseBeforeCallingPlay = animation.ready;
+    animation.play();
+    assert_equals(animation.ready, promiseBeforeCallingPlay,
                   'Ready promise has same object identity after redundant call'
                   + ' to play()');
     t.done();
@@ -65,32 +65,33 @@ async_test(function(t) {
 async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'abc 100s';
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
 
-  player.ready.then(function(resolvedPlayer) {
-    assert_equals(resolvedPlayer, player,
-                  'Object identity of player passed to Promise callback'
-                  + ' matches the player object owning the Promise');
+  animation.ready.then(function(resolvedAnimation) {
+    assert_equals(resolvedAnimation, animation,
+                  'Object identity of Animation passed to Promise callback'
+                  + ' matches the Animation object owning the Promise');
     t.done();
   });
-}, 'The ready promise is fulfilled with its AnimationPlayer');
+}, 'The ready promise is fulfilled with its Animation');
 
 async_test(function(t) {
   var div = addDiv(t);
 
   // Set up pending animation
   div.style.animation = 'abc 100s';
-  var player = div.getAnimationPlayers()[0];
-  assert_equals(player.playState, 'pending', 'Player is initially pending');
+  var animation = div.getAnimations()[0];
+  assert_equals(animation.playState, 'pending',
+               'Animation is initially pending');
 
   // Set up listeners on ready promise
-  player.ready.then(t.step_func(function() {
+  animation.ready.then(t.step_func(function() {
     assert_unreached('ready promise is fulfilled');
   })).catch(t.step_func(function(err) {
     assert_equals(err.name, 'AbortError',
                   'ready promise is rejected with AbortError');
-    assert_equals(player.playState, 'idle',
-                  'Player is idle after animation was cancelled');
+    assert_equals(animation.playState, 'idle',
+                  'Animation is idle after animation was cancelled');
   })).then(t.step_func(function() {
     t.done();
   }));
@@ -111,17 +112,18 @@ async_test(function(t) {
 
   // Set up pending animation
   div.style.animation = 'abc 100s';
-  var player = div.getAnimationPlayers()[0];
-  assert_equals(player.playState, 'pending', 'Player is initially pending');
+  var animation = div.getAnimations()[0];
+  assert_equals(animation.playState, 'pending',
+                'Animation is initially pending');
 
   // Set up listeners on ready promise
-  player.ready.then(t.step_func(function() {
+  animation.ready.then(t.step_func(function() {
     assert_unreached('ready promise was fulfilled');
   })).catch(t.step_func(function(err) {
     assert_equals(err.name, 'AbortError',
                   'ready promise is rejected with AbortError');
-    assert_equals(player.playState, 'idle',
-                  'Player is idle after animation was cancelled');
+    assert_equals(animation.playState, 'idle',
+                  'Animation is idle after animation was cancelled');
   })).then(t.step_func(function() {
     t.done();
   }));

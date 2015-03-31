@@ -7,7 +7,7 @@
 #ifndef jit_x64_BaselineCompiler_x64_h
 #define jit_x64_BaselineCompiler_x64_h
 
-#include "jit/shared/BaselineCompiler-x86-shared.h"
+#include "jit/x86-shared/BaselineCompiler-x86-shared.h"
 
 namespace js {
 namespace jit {

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/shared/BaselineCompiler-x86-shared.h"
+#include "jit/x86-shared/BaselineCompiler-x86-shared.h"
 
 using namespace js;
 using namespace js::jit;

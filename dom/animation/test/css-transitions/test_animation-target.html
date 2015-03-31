@@ -15,8 +15,8 @@ test(function(t) {
   div.style.transition = 'left 100s';
   div.style.left = '100px';
 
-  var players = div.getAnimationPlayers();
-  assert_equals(players[0].source.target, div,
+  var animation = div.getAnimations()[0];
+  assert_equals(animation.source.target, div,
     'Animation.target is the animatable div');
 }, 'Returned CSS transitions have the correct Animation.target');
 
