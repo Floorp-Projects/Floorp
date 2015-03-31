@@ -8,6 +8,7 @@
 
 #include "xpcprivate.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
+#include "nsIProgrammingLanguage.h"
 #include "nsWrapperCacheInlines.h"
 #include "XPCLog.h"
 #include "jsprf.h"

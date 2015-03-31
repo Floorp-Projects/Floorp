@@ -24,6 +24,7 @@
 #include "mozilla/TimeStamp.h"
 #include "Units.h"
 #include "mozilla/gfx/Point.h"
+#include "Units.h"
 
 // forward declarations
 class   nsFontMetrics;
@@ -545,15 +546,15 @@ struct SizeConstraints {
   {
   }
 
-  SizeConstraints(nsIntSize aMinSize,
-                  nsIntSize aMaxSize)
+  SizeConstraints(mozilla::LayoutDeviceIntSize aMinSize,
+                  mozilla::LayoutDeviceIntSize aMaxSize)
   : mMinSize(aMinSize),
     mMaxSize(aMaxSize)
   {
   }
 
-  nsIntSize mMinSize;
-  nsIntSize mMaxSize;
+  mozilla::LayoutDeviceIntSize mMinSize;
+  mozilla::LayoutDeviceIntSize mMaxSize;
 };
 
 // IMEMessage is shared by IMEStateManager and TextComposition.

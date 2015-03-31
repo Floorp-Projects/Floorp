@@ -4,9 +4,13 @@
 
 from mozbuild.util import ensureParentDir
 
-from mozpack.errors import ErrorMessage
+from mozpack.errors import (
+    ErrorMessage,
+    errors,
+)
 from mozpack.files import (
     AbsoluteSymlinkFile,
+    ComposedFinder,
     DeflatedFile,
     Dest,
     ExistingFile,
@@ -40,6 +44,7 @@ import sys
 import mozpack.path as mozpath
 from tempfile import mkdtemp
 from io import BytesIO
+from StringIO import StringIO
 from xpt import Typelib
 
 
@@ -795,10 +800,16 @@ class TestMinifiedJavaScript(TestWithTmpDir):
 
     def test_minified_verify_failure(self):
         orig_f = GeneratedFile('\n'.join(self.orig_lines))
+        errors.out = StringIO()
         min_f = MinifiedJavaScript(orig_f,
             verify_command=self._verify_command('1'))
 
         mini_lines = min_f.open().readlines()
+        output = errors.out.getvalue()
+        errors.out = sys.stderr
+        self.assertEqual(output,
+            'Warning: JS minification verification failed for <unknown>:\n'
+            'Warning: Error message\n')
         self.assertEqual(mini_lines, orig_f.open().readlines())
 
 
@@ -842,6 +853,10 @@ class MatchTestTemplate(object):
         self.do_check('foo/*/2/test*', ['foo/qux/2/test', 'foo/qux/2/test2'])
         self.do_check('**/bar', ['bar', 'foo/bar', 'foo/qux/bar'])
         self.do_check('foo/**/test', ['foo/qux/2/test'])
+        self.do_check('foo', [
+            'foo/bar', 'foo/baz', 'foo/qux/1', 'foo/qux/bar',
+            'foo/qux/2/test', 'foo/qux/2/test2'
+        ])
         self.do_check('foo/**', [
             'foo/bar', 'foo/baz', 'foo/qux/1', 'foo/qux/bar',
             'foo/qux/2/test', 'foo/qux/2/test2'
@@ -952,6 +967,37 @@ class TestJarFinder(MatchTestTemplate, TestWithTmpDir):
         self.jar.finish()
         reader = JarReader(file=self.tmppath('test.jar'))
         self.finder = JarFinder(self.tmppath('test.jar'), reader)
+        self.do_match_test()
+
+
+class TestComposedFinder(MatchTestTemplate, TestWithTmpDir):
+    def add(self, path, content=None):
+        # Put foo/qux files under $tmp/b.
+        if path.startswith('foo/qux/'):
+            real_path = mozpath.join('b', path[8:])
+        else:
+            real_path = mozpath.join('a', path)
+        ensureParentDir(self.tmppath(real_path))
+        if not content:
+            content = path
+        open(self.tmppath(real_path), 'wb').write(content)
+
+    def do_check(self, pattern, result):
+        if '*' in pattern:
+            return
+        do_check(self, self.finder, pattern, result)
+
+    def test_composed_finder(self):
+        self.prepare_match_test()
+        # Also add files in $tmp/a/foo/qux because ComposedFinder is
+        # expected to mask foo/qux entirely with content from $tmp/b.
+        ensureParentDir(self.tmppath('a/foo/qux/hoge'))
+        open(self.tmppath('a/foo/qux/hoge'), 'wb').write('hoge')
+        open(self.tmppath('a/foo/qux/bar'), 'wb').write('not the right content')
+        self.finder = ComposedFinder({
+            '': FileFinder(self.tmppath('a')),
+            'foo/qux': FileFinder(self.tmppath('b')),
+        })
         self.do_match_test()
 
 

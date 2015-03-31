@@ -1170,8 +1170,8 @@ WebSocketChannel::~WebSocketChannel()
   MOZ_ASSERT(!mCancelable, "DNS/Proxy Request still alive at destruction");
   MOZ_ASSERT(!mConnecting, "Should not be connecting in destructor");
 
-  moz_free(mBuffer);
-  moz_free(mDynamicOutput);
+  free(mBuffer);
+  free(mDynamicOutput);
   delete mCurrentOut;
 
   while ((mCurrentOut = (OutboundMessage *) mOutgoingPingMessages.PopFront()))
@@ -1400,7 +1400,7 @@ WebSocketChannel::UpdateReadBuffer(uint8_t *buffer, uint32_t count,
     mBufferSize += count + 8192 + mBufferSize/3;
     LOG(("WebSocketChannel: update read buffer extended to %u\n", mBufferSize));
     uint8_t *old = mBuffer;
-    mBuffer = (uint8_t *)moz_realloc(mBuffer, mBufferSize);
+    mBuffer = (uint8_t *)realloc(mBuffer, mBufferSize);
     if (!mBuffer) {
       mBuffer = old;
       return false;
@@ -1777,7 +1777,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
     // release memory if we've been processing a large message
     if (mBufferSize > kIncomingBufferStableSize) {
       mBufferSize = kIncomingBufferStableSize;
-      moz_free(mBuffer);
+      free(mBuffer);
       mBuffer = (uint8_t *)moz_xmalloc(mBufferSize);
     }
   }

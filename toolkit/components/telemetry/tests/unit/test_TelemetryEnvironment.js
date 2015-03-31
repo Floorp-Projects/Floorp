@@ -10,6 +10,7 @@ Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://testing-common/AddonManagerTesting.jsm");
 Cu.import("resource://testing-common/httpd.js");
+Cu.import("resource://testing-common/MockRegistrar.jsm", this);
 
 // Lazy load |LightweightThemeManager|, we won't be using it on Gonk.
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
@@ -57,9 +58,6 @@ const PLUGIN_MIME_TYPE2 = "text/plain";
 const PLUGIN2_NAME = "Quicktime";
 const PLUGIN2_DESC = "A mock Quicktime plugin";
 const PLUGIN2_VERSION = "2.3";
-
-const PLUGINHOST_CONTRACTID = "@mozilla.org/plugin/host;1";
-const PLUGINHOST_CID = Components.ID("{2329e6ea-1f15-4cbe-9ded-6e98e842de0e}");
 
 const PERSONA_ID = "3785";
 // Defined by LightweightThemeManager, it is appended to the PERSONA_ID.
@@ -119,18 +117,8 @@ let PluginHost = {
   }
 }
 
-let PluginHostFactory = {
-  createInstance: function (outer, iid) {
-    if (outer != null)
-      throw Components.results.NS_ERROR_NO_AGGREGATION;
-    return PluginHost.QueryInterface(iid);
-  }
-};
-
 function registerFakePluginHost() {
-  let registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  registrar.registerFactory(PLUGINHOST_CID, "Fake Plugin Host",
-                            PLUGINHOST_CONTRACTID, PluginHostFactory);
+  MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
 }
 
 /**

@@ -14,7 +14,7 @@
 
 #define hnj_malloc(size)      moz_xmalloc(size)
 #define hnj_realloc(p, size)  moz_xrealloc(p, size)
-#define hnj_free(p)           moz_free(p)
+#define hnj_free(p)           free(p)
 
 /*
  * To enable us to load hyphenation dictionaries from arbitrary resource URIs,

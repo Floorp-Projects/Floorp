@@ -18,4 +18,4 @@ global.eval("function f(n){var w0,x1=3,y2=4,z3=9} debugger;");
 global.f(3);
 
 // Should have hit each variable declared.
-assertEq(global.log, "18 21 26 31 33 ");
+assertEq(global.log, "18 21 26 31 35 ");

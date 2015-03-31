@@ -402,10 +402,10 @@ namespace {
 // allocated for a given request.  SQLite uses this function before all
 // allocations, and may be able to use any excess bytes caused by the rounding.
 //
-// Note: the wrappers for moz_malloc, moz_realloc and moz_malloc_usable_size
-// are necessary because the sqlite_mem_methods type signatures differ slightly
+// Note: the wrappers for malloc, realloc and moz_malloc_usable_size are
+// necessary because the sqlite_mem_methods type signatures differ slightly
 // from the standard ones -- they use int instead of size_t.  But we don't need
-// a wrapper for moz_free.
+// a wrapper for free.
 
 #ifdef MOZ_DMD
 
@@ -429,7 +429,7 @@ MOZ_DEFINE_MALLOC_SIZE_OF_ON_FREE(SqliteMallocSizeOfOnFree)
 
 static void *sqliteMemMalloc(int n)
 {
-  void* p = ::moz_malloc(n);
+  void* p = ::malloc(n);
 #ifdef MOZ_DMD
   gSqliteMemoryUsed += SqliteMallocSizeOfOnAlloc(p);
 #endif
@@ -441,14 +441,14 @@ static void sqliteMemFree(void *p)
 #ifdef MOZ_DMD
   gSqliteMemoryUsed -= SqliteMallocSizeOfOnFree(p);
 #endif
-  ::moz_free(p);
+  ::free(p);
 }
 
 static void *sqliteMemRealloc(void *p, int n)
 {
 #ifdef MOZ_DMD
   gSqliteMemoryUsed -= SqliteMallocSizeOfOnFree(p);
-  void *pnew = ::moz_realloc(p, n);
+  void *pnew = ::realloc(p, n);
   if (pnew) {
     gSqliteMemoryUsed += SqliteMallocSizeOfOnAlloc(pnew);
   } else {
@@ -457,7 +457,7 @@ static void *sqliteMemRealloc(void *p, int n)
   }
   return pnew;
 #else
-  return ::moz_realloc(p, n);
+  return ::realloc(p, n);
 #endif
 }
 

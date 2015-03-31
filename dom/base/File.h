@@ -84,7 +84,7 @@ public:
          uint64_t aLength);
 
   // The returned File takes ownership of aMemoryBuffer. aMemoryBuffer will be
-  // freed by moz_free so it must be allocated by moz_malloc or something
+  // freed by free so it must be allocated by malloc or something
   // compatible with it.
   static already_AddRefed<File>
   CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer, uint64_t aLength,
@@ -92,7 +92,7 @@ public:
                    uint64_t aLastModifiedDate);
 
   // The returned File takes ownership of aMemoryBuffer. aMemoryBuffer will be
-  // freed by moz_free so it must be allocated by moz_malloc or something
+  // freed by free so it must be allocated by malloc or something
   // compatible with it.
   static already_AddRefed<File>
   CreateMemoryFile(nsISupports* aParent, void* aMemoryBuffer, uint64_t aLength,
@@ -552,7 +552,7 @@ public:
         sDataOwners = nullptr;
       }
 
-      moz_free(mData);
+      free(mData);
     }
 
   public:
