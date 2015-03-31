@@ -48,11 +48,11 @@ function startTest(test, token)
     }
   );
 
-  var gotEncrypted = 0;
+  var gotEncrypted = false;
   var gotPlaying = false;
 
   v.addEventListener("encrypted", function(ev) {
-    gotEncrypted += 1;
+    gotEncrypted = true;
   });
 
   v.addEventListener("playing", function () { gotPlaying = true; });
@@ -66,9 +66,7 @@ function startTest(test, token)
   v.addEventListener("ended", function(ev) {
     ok(true, TimeStamp(token) + " got ended event");
 
-    is(gotEncrypted, test.sessionCount,
-       TimeStamp(token) + " encrypted events expected: " + test.sessionCount
-       + ", actual: " + gotEncrypted);
+    ok(gotEncrypted, TimeStamp(token) + " encrypted event should have fired");
     ok(gotPlaying, TimeStamp(token) + " playing event should have fired");
 
     ok(Math.abs(test.duration - v.duration) < 0.1,

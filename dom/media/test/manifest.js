@@ -664,7 +664,6 @@ var gEMETests = [
       "7e571d047e571d047e571d047e571d04" : "7e5744447e5744447e5744447e574444",
     },
     sessionType:"temporary",
-    sessionCount:1,
     duration:1.60,
   },
   {
@@ -685,7 +684,6 @@ var gEMETests = [
       "7e571d047e571d047e571d047e571d04" : "7e5744447e5744447e5744447e574444",
     },
     sessionType:"temporary",
-    sessionCount:1,
     crossOrigin:true,
     duration:1.60,
   },
@@ -716,7 +714,6 @@ var gEMETests = [
       "7e571d047e571d047e571d047e571d04" : "7e5744447e5744447e5744447e574444",
     },
     sessionType:"temporary",
-    sessionCount:2,
     duration:1.60,
   },
   {
@@ -746,7 +743,6 @@ var gEMETests = [
       "7e571d047e571d047e571d047e571d04" : "7e5744447e5744447e5744447e574444",
     },
     sessionType:"temporary",
-    sessionCount:2,
     crossOrigin:true,
     duration:1.60,
   },
