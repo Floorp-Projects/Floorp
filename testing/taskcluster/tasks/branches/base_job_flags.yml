@@ -18,6 +18,10 @@ flags:
     - win32_gecko    # b2g desktop win 32 bit
     - flame-kk       # b2g flame kitkat
     - flame-kk-eng   # b2g flame eng build
+    - dolphin
+    - dolphin-eng
+    - dolphin-512
+    - dolphin-512-eng
 
   tests:
     - cppunit
