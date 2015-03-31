@@ -162,6 +162,15 @@ var ShumwayCom = {
           environment.swfUrl, environment.privateBrowsing);
       },
 
+      getWeakMapKeys: function (weakMap) {
+        var keys = Components.utils.nondeterministicGetWeakMapKeys(weakMap);
+        var result = new content.Array();
+        keys.forEach(function (key) {
+          result.push(key);
+        });
+        return result;
+      },
+
       setLoadFileCallback: function (callback) {
         onLoadFileCallback = callback;
       },

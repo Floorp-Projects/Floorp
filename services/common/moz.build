@@ -14,26 +14,38 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES['services-common'] += [
-    'hawkclient.js',
-    'hawkrequest.js',
     'logmanager.js',
-    'storageservice.js',
     'stringbundle.js',
-    'tokenserverclient.js',
     'utils.js',
 ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
+    EXTRA_JS_MODULES['services-common'] += [
+        'hawkclient.js',
+        'hawkrequest.js',
+        'tokenserverclient.js',
+    ]
+
+    TESTING_JS_MODULES.services.common += [
+        'modules-testing/storageserver.js',
+    ]
+
+    if CONFIG['MOZ_SERVICES_HEALTHREPORT']:
+        EXTRA_PP_JS_MODULES['services-common'] += [
+            'bagheeraclient.js',
+        ]
+        TESTING_JS_MODULES.services.common += [
+            'modules-testing/bagheeraserver.js',
+        ]
+
 EXTRA_PP_JS_MODULES['services-common'] += [
     'async.js',
-    'bagheeraclient.js',
     'observers.js',
     'rest.js',
 ]
 
 TESTING_JS_MODULES.services.common += [
-    'modules-testing/bagheeraserver.js',
     'modules-testing/logging.js',
-    'modules-testing/storageserver.js',
     'modules-testing/utils.js',
 ]
 

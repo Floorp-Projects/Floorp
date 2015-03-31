@@ -1,7 +1,0 @@
-{
-  "name": "loop-client",
-  "dependencies": {
-    "tos-pp": "https://github.com/mozilla/legal-docs.git"
-  },
-  "devDependencies": {}
-}
