@@ -404,6 +404,42 @@ CommonAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
         nsDisplayItem::TYPE_OPACITY,
         nsChangeHint_UpdateOpacityLayer } };
 
+#ifdef DEBUG
+/* static */ void
+CommonAnimationManager::Initialize()
+{
+  const auto& info = css::CommonAnimationManager::sLayerAnimationInfo;
+  for (size_t i = 0; i < ArrayLength(info); i++) {
+    auto record = info[i];
+    MOZ_ASSERT(nsCSSProps::PropHasFlags(record.mProperty,
+                                        CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
+               "CSS property with entry in sLayerAnimationInfo does not "
+               "have the CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR flag");
+  }
+
+  // Check that every property with the flag for animating on the
+  // compositor has an entry in sLayerAnimationInfo.
+  for (nsCSSProperty prop = nsCSSProperty(0);
+       prop < eCSSProperty_COUNT;
+       prop = nsCSSProperty(prop + 1)) {
+    if (nsCSSProps::PropHasFlags(prop,
+                                 CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR)) {
+      bool found = false;
+      for (size_t i = 0; i < ArrayLength(info); i++) {
+        auto record = info[i];
+        if (record.mProperty == prop) {
+          found = true;
+          break;
+        }
+      }
+      MOZ_ASSERT(found,
+                 "CSS property with the CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR "
+                 "flag does not have an entry in sLayerAnimationInfo");
+    }
+  }
+}
+#endif
+
 NS_IMPL_ISUPPORTS(AnimValuesStyleRule, nsIStyleRule)
 
 /* virtual */ void
