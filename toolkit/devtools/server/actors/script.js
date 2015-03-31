@@ -2046,7 +2046,7 @@ ThreadActor.prototype = {
       let actor = _actor;
 
       if (actor.isPending) {
-        promises.push(sourceActor._setBreakpoint(actor));
+        promises.push(actor.originalLocation.originalSourceActor._setBreakpoint(actor));
       } else {
         promises.push(this.sources.getGeneratedLocation(actor.originalLocation)
                                   .then((generatedLocation) => {
@@ -2751,23 +2751,17 @@ SourceActor.prototype = {
       location,
       condition
     ).then((actor) => {
-      if (actor.isPending) {
-        return {
-          error: "noCodeAtLocation",
-          actor: actor.actorID
-        };
-      } else {
-        let response = {
-          actor: actor.actorID
-        };
+      let response = {
+        actor: actor.actorID,
+        isPending: actor.isPending
+      };
 
-        let actualLocation = actor.originalLocation;
-        if (!actualLocation.equals(location)) {
-          response.actualLocation = actualLocation.toJSON();
-        }
-
-        return response;
+      let actualLocation = actor.originalLocation;
+      if (!actualLocation.equals(location)) {
+        response.actualLocation = actualLocation.toJSON();
       }
+
+      return response;
     });
   },
 
@@ -2885,7 +2879,7 @@ SourceActor.prototype = {
             }
             ++actualLine;
           }
-          if (actualLine === lineToEntryPointsMap.length) {
+          if (actualLine >= lineToEntryPointsMap.length) {
             // We went past the last line in the map, so breakpoint sliding
             // failed. Keep the BreakpointActor in the BreakpointActorMap as a
             // pending breakpoint, so we can try again whenever a new script is
