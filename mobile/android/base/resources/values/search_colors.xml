@@ -14,7 +14,6 @@
 
     <color name="widget_logo_default">#EBEBF0</color>
     <color name="widget_button_pressed">#33000000</color>
-    <color name="widget_text_color">#5F6368</color>
 
     <!--Facet button colors-->
     <color name="facet_button_background_color_default">@android:color/white</color>

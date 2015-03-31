@@ -36,7 +36,7 @@
             android:text="@string/new_tab"
             android:fontFamily="sans-serif"
             android:textSize="@dimen/widget_text_size"
-            android:textColor="@color/widget_text_color"/>
+            android:textColor="@color/toolbar_icon_grey"/>
 
     </LinearLayout>
 
