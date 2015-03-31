@@ -156,14 +156,14 @@ JS_NewObjectWithoutMetadata(JSContext* cx, const JSClass* clasp, JS::Handle<JSOb
 JS_FRIEND_API(JSPrincipals*)
 JS_GetCompartmentPrincipals(JSCompartment* compartment)
 {
-    return compartment->principals;
+    return compartment->principals();
 }
 
 JS_FRIEND_API(void)
 JS_SetCompartmentPrincipals(JSCompartment* compartment, JSPrincipals* principals)
 {
     // Short circuit if there's no change.
-    if (principals == compartment->principals)
+    if (principals == compartment->principals())
         return;
 
     // Any compartment with the trusted principals -- and there can be
@@ -172,24 +172,24 @@ JS_SetCompartmentPrincipals(JSCompartment* compartment, JSPrincipals* principals
     bool isSystem = principals && principals == trusted;
 
     // Clear out the old principals, if any.
-    if (compartment->principals) {
-        JS_DropPrincipals(compartment->runtimeFromMainThread(), compartment->principals);
-        compartment->principals = nullptr;
+    if (compartment->principals()) {
+        JS_DropPrincipals(compartment->runtimeFromMainThread(), compartment->principals());
+        compartment->setPrincipals(nullptr);
         // We'd like to assert that our new principals is always same-origin
         // with the old one, but JSPrincipals doesn't give us a way to do that.
         // But we can at least assert that we're not switching between system
         // and non-system.
-        MOZ_ASSERT(compartment->isSystem == isSystem);
+        MOZ_ASSERT(compartment->isSystem() == isSystem);
     }
 
     // Set up the new principals.
     if (principals) {
         JS_HoldPrincipals(principals);
-        compartment->principals = principals;
+        compartment->setPrincipals(principals);
     }
 
     // Update the system flag.
-    compartment->isSystem = isSystem;
+    compartment->setIsSystem(isSystem);
 }
 
 JS_FRIEND_API(JSPrincipals*)
@@ -280,7 +280,7 @@ js::GetCompartmentZone(JSCompartment* comp)
 JS_FRIEND_API(bool)
 js::IsSystemCompartment(JSCompartment* comp)
 {
-    return comp->isSystem;
+    return comp->isSystem();
 }
 
 JS_FRIEND_API(bool)
