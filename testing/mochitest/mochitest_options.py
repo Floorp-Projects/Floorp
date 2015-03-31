@@ -596,7 +596,6 @@ class MochitestOptions(optparse.OptionParser):
         if options.jsdebugger:
             options.extraPrefs += [
                 "devtools.debugger.remote-enabled=true",
-                "devtools.debugger.chrome-enabled=true",
                 "devtools.chrome.enabled=true",
                 "devtools.debugger.prompt-connection=false"
             ]

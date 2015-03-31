@@ -17,6 +17,7 @@ task:
         --config-file ./mozharness/configs/b2g/gaia_unit_production_config.py
         --config-file ./mozharness_configs/gaia_integration_override.py
         --config-file ./mozharness_configs/remove_executables.py
+        --no-pull
         --browser-arg -oop
         --download-symbols ondemand
         --installer-url {{build_url}}

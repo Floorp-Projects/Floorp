@@ -110,12 +110,15 @@ StyleEditorPanel.prototype = {
    *        Line number to jump to after selecting. One-indexed
    * @param {number} col
    *        Column number to jump to after selecting. One-indexed
+   * @return {Promise}
+   *         Promise that will resolve when the editor is selected and ready
+   *         to be used.
    */
   selectStyleSheet: function(href, line, col) {
     if (!this._debuggee || !this.UI) {
       return;
     }
-    this.UI.selectStyleSheet(href, line - 1, col ? col - 1 : 0);
+    return this.UI.selectStyleSheet(href, line - 1, col ? col - 1 : 0);
   },
 
   /**

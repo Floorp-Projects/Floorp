@@ -8,23 +8,50 @@
 let imported = {};
 Components.utils.import("resource://gre/modules/Timer.jsm", imported);
 
-function run_test(browser, tab, document) {
-  do_test_pending();
+function run_test() {
+  run_next_test();
+}
 
-  let timeout1 = imported.setTimeout(function() do_throw("Should not be called"), 100);
+add_task(function* test_setTimeout() {
+  let timeout1 = imported.setTimeout(() => do_throw("Should not be called"), 100);
   do_check_eq(typeof timeout1, "number", "setTimeout returns a number");
   do_check_true(timeout1 > 0, "setTimeout returns a positive number");
 
-  let timeout2 = imported.setTimeout(function(param1, param2) {
-    do_check_true(true, "Should be called");
-    do_check_eq(param1, 5, "first parameter is correct");
-    do_check_eq(param2, "test", "second parameter is correct");
-    do_test_finished();
-  }, 100, 5, "test");
-
-  do_check_eq(typeof timeout2, "number", "setTimeout returns a number");
-  do_check_true(timeout2 > 0, "setTimeout returns a positive number");
-  do_check_neq(timeout1, timeout2, "Calling setTimeout again returns a different value");
-
   imported.clearTimeout(timeout1);
-}
+
+  yield new Promise((resolve) => {
+    let timeout2 = imported.setTimeout((param1, param2) => {
+      do_check_true(true, "Should be called");
+      do_check_eq(param1, 5, "first parameter is correct");
+      do_check_eq(param2, "test", "second parameter is correct");
+      resolve();
+    }, 100, 5, "test");
+
+    do_check_eq(typeof timeout2, "number", "setTimeout returns a number");
+    do_check_true(timeout2 > 0, "setTimeout returns a positive number");
+    do_check_neq(timeout1, timeout2, "Calling setTimeout again returns a different value");
+  });
+});
+
+add_task(function* test_setInterval() {
+  let interval1 = imported.setInterval(function() do_throw("Should not be called!"), 100);
+  do_check_eq(typeof interval1, "number", "setInterval returns a number");
+  do_check_true(interval1 > 0, "setTimeout returns a positive number");
+
+  imported.clearInterval(interval1);
+
+  const EXPECTED_CALLS = 5;
+  let calls = 0;
+
+  yield new Promise((resolve) => {
+    let interval2 = imported.setInterval((param1, param2) => {
+      do_check_true(true, "Should be called");
+      do_check_eq(param1, 15, "first parameter is correct");
+      do_check_eq(param2, "hola", "second parameter is correct");
+      if (calls >= EXPECTED_CALLS) {
+        resolve();
+      }
+      calls++;
+    }, 100, 15, "hola");
+  });
+});

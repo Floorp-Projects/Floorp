@@ -8,7 +8,7 @@
  * JS module implementation of nsIDOMJSWindow.setTimeout and clearTimeout.
  */
 
-this.EXPORTED_SYMBOLS = ["setTimeout", "clearTimeout"];
+this.EXPORTED_SYMBOLS = ["setTimeout", "clearTimeout", "setInterval", "clearInterval"];
 
 const Cc = Components.classes;
 const Ci = Components.interfaces;
@@ -17,26 +17,38 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 // This gives us >=2^30 unique timer IDs, enough for 1 per ms for 12.4 days.
-let gNextTimeoutId = 1; // setTimeout must return a positive integer
+let gNextId = 1; // setTimeout and setInterval must return a positive integer
 
-let gTimeoutTable = new Map(); // int -> nsITimer
+let gTimerTable = new Map(); // int -> nsITimer
 
 this.setTimeout = function setTimeout(aCallback, aMilliseconds) {
-  let id = gNextTimeoutId++;
+  let id = gNextId++;
   let args = Array.slice(arguments, 2);
   let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   timer.initWithCallback(function setTimeout_timer() {
-    gTimeoutTable.delete(id);
+    gTimerTable.delete(id);
     aCallback.apply(null, args);
   }, aMilliseconds, timer.TYPE_ONE_SHOT);
 
-  gTimeoutTable.set(id, timer);
+  gTimerTable.set(id, timer);
   return id;
 }
 
-this.clearTimeout = function clearTimeout(aId) {
-  if (gTimeoutTable.has(aId)) {
-    gTimeoutTable.get(aId).cancel();
-    gTimeoutTable.delete(aId);
+this.setInterval = function setInterval(aCallback, aMilliseconds) {
+  let id = gNextId++;
+  let args = Array.slice(arguments, 2);
+  let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  timer.initWithCallback(function setInterval_timer() {
+    aCallback.apply(null, args);
+  }, aMilliseconds, timer.TYPE_REPEATING_SLACK);
+
+  gTimerTable.set(id, timer);
+  return id;
+}
+
+this.clearInterval = this.clearTimeout = function clearTimeout(aId) {
+  if (gTimerTable.has(aId)) {
+    gTimerTable.get(aId).cancel();
+    gTimerTable.delete(aId);
   }
 }
