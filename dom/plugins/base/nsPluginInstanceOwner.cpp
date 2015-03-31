@@ -790,7 +790,6 @@ NPBool nsPluginInstanceOwner::ConvertPointPuppet(PuppetWidget *widget,
   tabContentBounds.ScaleInverseRoundOut(scaleFactor);
   int32_t windowH = tabContentBounds.height + int(chromeSize.y);
 
-  // This is actually relative to window-chrome.
   nsPoint pluginPosition = AsNsPoint(pluginFrame->GetScreenRect().TopLeft());
 
   // Convert (sourceX, sourceY) to 'real' (not PuppetWidget) screen space.
@@ -800,8 +799,8 @@ NPBool nsPluginInstanceOwner::ConvertPointPuppet(PuppetWidget *widget,
   nsPoint screenPoint;
   switch (sourceSpace) {
     case NPCoordinateSpacePlugin:
-      screenPoint = sourcePoint + pluginFrame->GetContentRectRelativeToSelf().TopLeft() +
-        chromeSize + pluginPosition + windowPosition;
+      screenPoint = sourcePoint + pluginPosition +
+        pluginFrame->GetContentRectRelativeToSelf().TopLeft() / nsPresContext::AppUnitsPerCSSPixel();
       break;
     case NPCoordinateSpaceWindow:
       screenPoint = nsPoint(sourcePoint.x, windowH-sourcePoint.y) +
@@ -824,8 +823,8 @@ NPBool nsPluginInstanceOwner::ConvertPointPuppet(PuppetWidget *widget,
   nsPoint destPoint;
   switch (destSpace) {
     case NPCoordinateSpacePlugin:
-      destPoint = screenPoint - pluginFrame->GetContentRectRelativeToSelf().TopLeft() -
-        chromeSize - pluginPosition - windowPosition;
+      destPoint = screenPoint - pluginPosition -
+        pluginFrame->GetContentRectRelativeToSelf().TopLeft() / nsPresContext::AppUnitsPerCSSPixel();
       break;
     case NPCoordinateSpaceWindow:
       destPoint = screenPoint - windowPosition;
