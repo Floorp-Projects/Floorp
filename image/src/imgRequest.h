@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef imgRequest_h__
-#define imgRequest_h__
+#ifndef mozilla_image_src_imgRequest_h
+#define mozilla_image_src_imgRequest_h
 
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
@@ -64,12 +64,12 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIASYNCVERIFYREDIRECTCALLBACK
 
-  nsresult Init(nsIURI *aURI,
-                nsIURI *aCurrentURI,
+  nsresult Init(nsIURI* aURI,
+                nsIURI* aCurrentURI,
                 bool aHadInsecureRedirect,
-                nsIRequest *aRequest,
-                nsIChannel *aChannel,
-                imgCacheEntry *aCacheEntry,
+                nsIRequest* aRequest,
+                nsIChannel* aChannel,
+                imgCacheEntry* aCacheEntry,
                 nsISupports* aCX,
                 nsIPrincipal* aLoadingPrincipal,
                 int32_t aCORSMode,
@@ -78,9 +78,9 @@ public:
   void ClearLoader();
 
   // Callers must call imgRequestProxy::Notify later.
-  void AddProxy(imgRequestProxy *proxy);
+  void AddProxy(imgRequestProxy* proxy);
 
-  nsresult RemoveProxy(imgRequestProxy *proxy, nsresult aStatus);
+  nsresult RemoveProxy(imgRequestProxy* proxy, nsresult aStatus);
 
   // Cancel, but also ensure that all work done in Init() is undone. Call this
   // only when the channel has failed to open, and so calling Cancel() on it
@@ -147,8 +147,8 @@ public:
   void ResetCacheEntry();
 
   // OK to use on any thread.
-  nsresult GetURI(ImageURL **aURI);
-  nsresult GetCurrentURI(nsIURI **aURI);
+  nsresult GetURI(ImageURL** aURI);
+  nsresult GetCurrentURI(nsIURI** aURI);
 
   nsresult GetImageErrorCode(void);
 
@@ -227,7 +227,8 @@ private:
   nsRefPtr<ImageURL> mURI;
   // The URI of the resource we ended up loading after all redirects, etc.
   nsCOMPtr<nsIURI> mCurrentURI;
-  // The principal of the document which loaded this image. Used when validating for CORS.
+  // The principal of the document which loaded this image. Used when
+  // validating for CORS.
   nsCOMPtr<nsIPrincipal> mLoadingPrincipal;
   // The principal of this image.
   nsCOMPtr<nsIPrincipal> mPrincipal;
@@ -241,11 +242,12 @@ private:
 
   nsCString mContentType;
 
-  nsRefPtr<imgCacheEntry> mCacheEntry; /* we hold on to this to this so long as we have observers */
+  /* we hold on to this to this so long as we have observers */
+  nsRefPtr<imgCacheEntry> mCacheEntry;
 
-  void *mLoadId;
+  void* mLoadId;
 
-  imgCacheValidator *mValidator;
+  imgCacheValidator* mValidator;
   nsCOMPtr<nsIAsyncVerifyRedirectCallback> mRedirectCallback;
   nsCOMPtr<nsIChannel> mNewRedirectChannel;
 
@@ -276,4 +278,4 @@ private:
   bool mHadInsecureRedirect : 1;
 };
 
-#endif
+#endif // mozilla_image_src_imgRequest_h
