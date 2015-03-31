@@ -39,7 +39,7 @@
 
       // radiogroup
       accTree = {
-        role: ROLE_GROUPING,
+        role: ROLE_RADIO_GROUP,
         children: [
           {
             role: ROLE_RADIOBUTTON,

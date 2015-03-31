@@ -64,10 +64,10 @@ index 0000000..1f16ee5
 +}
 +
 +void sk_free(void* p) {
-+    moz_free(p);
++    free(p);
 +}
 +
 +void* sk_malloc_flags(size_t size, unsigned flags) {
-+    return (flags & SK_MALLOC_THROW) ? moz_xmalloc(size) : moz_malloc(size);
++    return (flags & SK_MALLOC_THROW) ? moz_xmalloc(size) : malloc(size);
 +}
 +

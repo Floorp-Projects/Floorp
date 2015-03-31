@@ -609,7 +609,7 @@ nsHTTPListener::~nsHTTPListener()
     send_done_signal();
 
   if (mResultData) {
-    moz_free(const_cast<uint8_t *>(mResultData));
+    free(const_cast<uint8_t *>(mResultData));
   }
 
   if (mLoader) {

@@ -103,9 +103,9 @@ nsSocketTransportService::~nsSocketTransportService()
     if (mThreadEvent)
         PR_DestroyPollableEvent(mThreadEvent);
 
-    moz_free(mActiveList);
-    moz_free(mIdleList);
-    moz_free(mPollList);
+    free(mActiveList);
+    free(mIdleList);
+    free(mPollList);
     gSocketTransportService = nullptr;
 }
 

@@ -669,12 +669,12 @@ void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,
                                           const nsSize& aMinSize,
                                           const nsSize& aMaxSize)
 {
-  nsIntSize devMinSize(aPresContext->AppUnitsToDevPixels(aMinSize.width),
-                       aPresContext->AppUnitsToDevPixels(aMinSize.height));
-  nsIntSize devMaxSize(aMaxSize.width == NS_INTRINSICSIZE ? NS_MAXSIZE :
-                         aPresContext->AppUnitsToDevPixels(aMaxSize.width),
-                       aMaxSize.height == NS_INTRINSICSIZE ? NS_MAXSIZE :
-                         aPresContext->AppUnitsToDevPixels(aMaxSize.height));
+  LayoutDeviceIntSize devMinSize(aPresContext->AppUnitsToDevPixels(aMinSize.width),
+                                 aPresContext->AppUnitsToDevPixels(aMinSize.height));
+  LayoutDeviceIntSize devMaxSize(aMaxSize.width == NS_INTRINSICSIZE ? NS_MAXSIZE :
+                                 aPresContext->AppUnitsToDevPixels(aMaxSize.width),
+                                 aMaxSize.height == NS_INTRINSICSIZE ? NS_MAXSIZE :
+                                 aPresContext->AppUnitsToDevPixels(aMaxSize.height));
 
   // MinSize has a priority over MaxSize
   if (devMinSize.width > devMaxSize.width)

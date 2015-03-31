@@ -25,6 +25,65 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 
+/*
+ * The mapping of RequestContext and nsContentPolicyType is currently as the
+ * following.  Note that this mapping is not perfect yet (see the TODO comments
+ * below for examples), so for now we'll have to keep both an mContext and an
+ * mContentPolicyType, because we cannot have a two way conversion.
+ *
+ * RequestContext    | nsContentPolicyType
+ * ------------------+--------------------
+ * audio             | TYPE_MEDIA
+ * beacon            | TYPE_BEACON
+ * cspreport         | TYPE_CSP_REPORT
+ * download          |
+ * embed             | TYPE_OBJECT
+ * eventsource       |
+ * favicon           |
+ * fetch             | TYPE_FETCH
+ * font              | TYPE_FONT
+ * form              |
+ * frame             | TYPE_SUBDOCUMENT
+ * hyperlink         |
+ * iframe            | TYPE_SUBDOCUMENT
+ * image             | TYPE_IMAGE
+ * imageset          | TYPE_IMAGESET
+ * import            | Not supported by Gecko
+ * internal          | TYPE_DOCUMENT, TYPE_XBL, TYPE_OTHER
+ * location          |
+ * manifest          |
+ * object            | TYPE_OBJECT
+ * ping              | TYPE_PING
+ * plugin            | TYPE_OBJECT_SUBREQUEST
+ * prefetch          |
+ * script            | TYPE_SCRIPT
+ * serviceworker     |
+ * sharedworker      |
+ * subresource       | Not supported by Gecko
+ * style             | TYPE_STYLESHEET
+ * track             | TYPE_MEDIA
+ * video             | TYPE_MEDIA
+ * worker            |
+ * xmlhttprequest    | TYPE_XMLHTTPREQUEST
+ * xslt              | TYPE_XSLT
+ *
+ * TODO: Figure out if TYPE_REFRESH maps to anything useful
+ * TODO: Figure out if TYPE_DTD maps to anything useful
+ * TODO: Split TYPE_MEDIA into TYPE_AUDIO, TYPE_VIDEO and TYPE_TRACK
+ * TODO: Split TYPE_XMLHTTPREQUEST and TYPE_DATAREQUEST for EventSource
+ * TODO: Figure out if TYPE_WEBSOCKET maps to anything useful
+ * TODO: Differentiate between frame and iframe
+ * TODO: Add content types for different kinds of workers
+ * TODO: Add a content type for prefetch
+ * TODO: Use the content type for manifest when it becomes available
+ * TODO: Add a content type for location
+ * TODO: Add a content type for hyperlink
+ * TODO: Add a content type for form
+ * TODO: Add a content type for favicon
+ * TODO: Add a content type for download
+ * TODO: Split TYPE_OBJECT into TYPE_EMBED and TYPE_OBJECT
+ */
+
 class FetchBodyStream;
 class Request;
 
@@ -221,9 +280,18 @@ public:
   }
 
   void
-  SetContentPolicyType(nsContentPolicyType aContentPolicyType)
+  SetContentPolicyType(nsContentPolicyType aContentPolicyType);
+
+  RequestContext
+  Context() const
   {
-    mContentPolicyType = aContentPolicyType;
+    return mContext;
+  }
+
+  void
+  SetContext(RequestContext aContext)
+  {
+    mContext = aContext;
   }
 
   bool
@@ -312,9 +380,8 @@ private:
   nsRefPtr<InternalHeaders> mHeaders;
   nsCOMPtr<nsIInputStream> mBodyStream;
 
-  // nsContentPolicyType does not cover the complete set defined in the spec,
-  // but it is a good start.
   nsContentPolicyType mContentPolicyType;
+  RequestContext mContext;
 
   // Empty string: no-referrer
   // "about:client": client (default)

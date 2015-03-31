@@ -8,7 +8,7 @@
 /**
  * Defines cross platform (Gecko) roles.
  */
-[scriptable, uuid(55581ec3-ba6e-4805-8108-260ed34cdcbb)]
+[scriptable, uuid(00f9e831-3198-40b7-9186-5251474d4d7a)]
 interface nsIAccessibleRole : nsISupports
 {
   /**
@@ -969,4 +969,9 @@ interface nsIAccessibleRole : nsISupports
    * A MathML line in a stack (msline in MathML).
    */
   const unsigned long ROLE_MATHML_STACK_LINE = 167;
+
+  /**
+   * A group containing radio buttons
+   */
+  const unsigned long ROLE_RADIO_GROUP = 168;
 };
