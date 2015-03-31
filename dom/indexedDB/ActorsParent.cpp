@@ -3424,7 +3424,7 @@ protected:
   UpdateMetadata(nsresult aResult)
   { }
 
-  virtual bool
+  virtual void
   SendCompleteNotification(nsresult aResult) = 0;
 
 private:
@@ -3723,7 +3723,7 @@ private:
   IsSameProcessActor();
 
   // Only called by TransactionBase.
-  virtual bool
+  virtual void
   SendCompleteNotification(nsresult aResult) override;
 
   // IPDL methods are only called by IPDL.
@@ -3797,7 +3797,7 @@ private:
   UpdateMetadata(nsresult aResult) override;
 
   // Only called by TransactionBase.
-  virtual bool
+  virtual void
   SendCompleteNotification(nsresult aResult) override;
 
   // IPDL methods are only called by IPDL.
@@ -7814,18 +7814,22 @@ NormalTransaction::IsSameProcessActor()
   return !BackgroundParent::IsOtherProcessActor(actor);
 }
 
-bool
+void
 NormalTransaction::SendCompleteNotification(nsresult aResult)
 {
   AssertIsOnBackgroundThread();
 
-  return IsActorDestroyed() || !NS_WARN_IF(!SendComplete(aResult));
+  if (!IsActorDestroyed()) {
+    unused << SendComplete(aResult);
+  }
 }
 
 void
 NormalTransaction::ActorDestroy(ActorDestroyReason aWhy)
 {
   AssertIsOnBackgroundThread();
+
+  NoteActorDestroyed();
 
   if (!mCommittedOrAborted) {
     if (NS_SUCCEEDED(mResultCode)) {
@@ -7837,8 +7841,6 @@ NormalTransaction::ActorDestroy(ActorDestroyReason aWhy)
 
     MaybeCommitOrAbort();
   }
-
-  NoteActorDestroyed();
 }
 
 bool
@@ -8018,8 +8020,8 @@ VersionChangeTransaction::UpdateMetadata(nsresult aResult)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(GetDatabase());
   MOZ_ASSERT(mOpenDatabaseOp);
-  MOZ_ASSERT(mOpenDatabaseOp->mDatabase);
-  MOZ_ASSERT(!mOpenDatabaseOp->mDatabaseId.IsEmpty());
+  MOZ_ASSERT(!!mActorWasAlive == !!mOpenDatabaseOp->mDatabase);
+  MOZ_ASSERT_IF(mActorWasAlive, !mOpenDatabaseOp->mDatabaseId.IsEmpty());
 
   class MOZ_STACK_CLASS Helper final
   {
@@ -8061,7 +8063,7 @@ VersionChangeTransaction::UpdateMetadata(nsresult aResult)
     }
   };
 
-  if (IsActorDestroyed()) {
+  if (IsActorDestroyed() || !mActorWasAlive) {
     return;
   }
 
@@ -8093,14 +8095,21 @@ VersionChangeTransaction::UpdateMetadata(nsresult aResult)
   }
 }
 
-bool
+void
 VersionChangeTransaction::SendCompleteNotification(nsresult aResult)
 {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mOpenDatabaseOp);
+  MOZ_ASSERT_IF(!mActorWasAlive, NS_FAILED(mOpenDatabaseOp->mResultCode));
+  MOZ_ASSERT_IF(!mActorWasAlive,
+                mOpenDatabaseOp->mState > OpenDatabaseOp::State_SendingResults);
 
   nsRefPtr<OpenDatabaseOp> openDatabaseOp;
   mOpenDatabaseOp.swap(openDatabaseOp);
+
+  if (!mActorWasAlive) {
+    return;
+  }
 
   if (NS_FAILED(aResult) && NS_SUCCEEDED(openDatabaseOp->mResultCode)) {
     openDatabaseOp->mResultCode = aResult;
@@ -8108,17 +8117,19 @@ VersionChangeTransaction::SendCompleteNotification(nsresult aResult)
 
   openDatabaseOp->mState = OpenDatabaseOp::State_SendingResults;
 
-  bool result = IsActorDestroyed() || !NS_WARN_IF(!SendComplete(aResult));
+  if (!IsActorDestroyed()) {
+    unused << SendComplete(aResult);
+  }
 
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(openDatabaseOp->Run()));
-
-  return result;
 }
 
 void
 VersionChangeTransaction::ActorDestroy(ActorDestroyReason aWhy)
 {
   AssertIsOnBackgroundThread();
+
+  NoteActorDestroyed();
 
   if (!mCommittedOrAborted) {
     if (NS_SUCCEEDED(mResultCode)) {
@@ -8130,8 +8141,6 @@ VersionChangeTransaction::ActorDestroy(ActorDestroyReason aWhy)
 
     MaybeCommitOrAbort();
   }
-
-  NoteActorDestroyed();
 }
 
 bool
