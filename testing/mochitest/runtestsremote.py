@@ -677,7 +677,7 @@ class MochiRemote(Mochitest):
         os.unlink(fHandle.name)
 
     def getGMPPluginPath(self, options):
-        # TODO: bug 1043403
+        # TODO: bug 1149374
         return None
 
     def buildBrowserEnv(self, options, debugger=False):
