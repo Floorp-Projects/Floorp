@@ -3279,23 +3279,7 @@ WifiWorker.prototype = {
             WifiManager.reconnect(function (ok) {
               self._sendMessage(message, ok, ok, msg);
             });
-          } else if (WifiManager.state == "INACTIVE") {
-             // If AP info didn't clear, then call associate function.
-             // That maybe occurs wpa supplicant that suppose already associated.
-             // To avoid this case, need to clear AP info and call reassoiate
-             // in INACTIVE state.
-             let networkKey = getNetworkKey(network);
-             if (!(networkKey in this.configuredNetworks)) {
-               self._sendMessage(message, false, "Trying to forget an unknown network", msg);
-               return;
-             }
-             let configured = this.configuredNetworks[networkKey];
-             WifiManager.removeNetwork(configured.netId, function() {
-               WifiManager.reassociate(function() {
-                 self._sendMessage(message, ok, ok, msg);
-               });
-             });
-          }else {
+          } else {
             self._sendMessage(message, ok, ok, msg);
           }
         });
