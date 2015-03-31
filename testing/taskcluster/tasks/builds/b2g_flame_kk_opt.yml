@@ -1,5 +1,8 @@
 $inherits:
   from: 'tasks/builds/b2g_phone_base.yml'
+  variables:
+    build_name: 'flame-kk'
+    build_type: 'opt'
 task:
   workerType: flame-kk
   scopes:
@@ -27,4 +30,3 @@ task:
         platform: b2g-device-image
     locations:
       img: 'private/build/flame-kk.zip'
-

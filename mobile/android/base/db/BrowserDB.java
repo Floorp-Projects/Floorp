@@ -101,7 +101,7 @@ public interface BrowserDB {
 
     public abstract void removeHistoryEntry(ContentResolver cr, String url);
 
-    public abstract void clearHistory(ContentResolver cr);
+    public abstract void clearHistory(ContentResolver cr, boolean clearSearchHistory);
 
 
     public abstract String getUrlForKeyword(ContentResolver cr, String keyword);

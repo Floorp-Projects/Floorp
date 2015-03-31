@@ -34,6 +34,7 @@ namespace mozilla {
 class DOMLocalMediaStream;
 class MediaStream;
 class MediaEngineSource;
+class MediaStreamGraph;
 
 namespace dom {
 class AudioNode;
@@ -180,14 +181,14 @@ public:
   /**
    * Create an nsDOMMediaStream whose underlying stream is a SourceMediaStream.
    */
-  static already_AddRefed<DOMMediaStream>
-  CreateSourceStream(nsIDOMWindow* aWindow);
+  static already_AddRefed<DOMMediaStream> CreateSourceStream(nsIDOMWindow* aWindow,
+                                                             MediaStreamGraph* aGraph = nullptr);
 
   /**
    * Create an nsDOMMediaStream whose underlying stream is a TrackUnionStream.
    */
-  static already_AddRefed<DOMMediaStream>
-  CreateTrackUnionStream(nsIDOMWindow* aWindow);
+  static already_AddRefed<DOMMediaStream> CreateTrackUnionStream(nsIDOMWindow* aWindow,
+                                                                 MediaStreamGraph* aGraph = nullptr);
 
   void SetLogicalStreamStartTime(StreamTime aTime)
   {
@@ -249,8 +250,10 @@ protected:
   virtual ~DOMMediaStream();
 
   void Destroy();
-  void InitSourceStream(nsIDOMWindow* aWindow);
-  void InitTrackUnionStream(nsIDOMWindow* aWindow);
+  void InitSourceStream(nsIDOMWindow* aWindow,
+                        MediaStreamGraph* aGraph = nullptr);
+  void InitTrackUnionStream(nsIDOMWindow* aWindow,
+                            MediaStreamGraph* aGraph = nullptr);
   void InitStreamCommon(MediaStream* aStream);
   already_AddRefed<AudioTrack> CreateAudioTrack(AudioStreamTrack* aStreamTrack);
   already_AddRefed<VideoTrack> CreateVideoTrack(VideoStreamTrack* aStreamTrack);
@@ -331,13 +334,15 @@ public:
    * Create an nsDOMLocalMediaStream whose underlying stream is a SourceMediaStream.
    */
   static already_AddRefed<DOMLocalMediaStream>
-  CreateSourceStream(nsIDOMWindow* aWindow);
+  CreateSourceStream(nsIDOMWindow* aWindow,
+                     MediaStreamGraph* aGraph = nullptr);
 
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a TrackUnionStream.
    */
   static already_AddRefed<DOMLocalMediaStream>
-  CreateTrackUnionStream(nsIDOMWindow* aWindow);
+  CreateTrackUnionStream(nsIDOMWindow* aWindow,
+                         MediaStreamGraph* aGraph = nullptr);
 
 protected:
   virtual ~DOMLocalMediaStream();
@@ -360,7 +365,8 @@ public:
    */
   static already_AddRefed<DOMAudioNodeMediaStream>
   CreateTrackUnionStream(nsIDOMWindow* aWindow,
-                         AudioNode* aNode);
+                         AudioNode* aNode,
+                         MediaStreamGraph* aGraph = nullptr);
 
 protected:
   ~DOMAudioNodeMediaStream();

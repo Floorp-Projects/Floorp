@@ -1,5 +1,8 @@
 $inherits:
   from: 'tasks/builds/b2g_phone_base.yml'
+  variables:
+    build_name: 'flame-kk-nightly'
+    build_type: 'opt'
 task:
   workerType: flame-kk
   scopes:
@@ -29,4 +32,3 @@ task:
     locations:
       img: 'private/build/flame-kk.zip'
       mar: 'public/build/b2g-flame-gecko-update.mar'
-
