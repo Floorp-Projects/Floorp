@@ -58,8 +58,7 @@ bool LoadMainScript(JSContext* aCx, const nsAString& aScriptURL,
 
 void Load(JSContext* aCx,
           WorkerPrivate* aWorkerPrivate,
-          const nsTArray<nsString>& aScriptURLs,
-          WorkerScriptType aWorkerScriptType,
+          const mozilla::dom::Sequence<nsString>& aScriptURLs,
           mozilla::ErrorResult& aRv);
 
 } // namespace scriptloader

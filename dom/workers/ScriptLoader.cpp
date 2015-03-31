@@ -981,8 +981,7 @@ LoadMainScript(JSContext* aCx, const nsAString& aScriptURL,
 
 void
 Load(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-     const nsTArray<nsString>& aScriptURLs, WorkerScriptType aWorkerScriptType,
-     ErrorResult& aRv)
+     const Sequence<nsString>& aScriptURLs, ErrorResult& aRv)
 {
   const uint32_t urlCount = aScriptURLs.Length();
 
@@ -1002,7 +1001,7 @@ Load(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
     loadInfos[index].mURL = aScriptURLs[index];
   }
 
-  if (!LoadAllScripts(aCx, aWorkerPrivate, loadInfos, false, aWorkerScriptType)) {
+  if (!LoadAllScripts(aCx, aWorkerPrivate, loadInfos, false, WorkerScript)) {
     // LoadAllScripts can fail if we're shutting down.
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
   }

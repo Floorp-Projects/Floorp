@@ -873,14 +873,14 @@ JSObject*
 Wrap(JSContext *cx, JS::HandleObject existing, JS::HandleObject obj)
 {
   JSObject* targetGlobal = JS::CurrentGlobalOrNull(cx);
-  if (!IsDebuggerGlobal(targetGlobal) && !IsDebuggerSandbox(targetGlobal)) {
+  if (!IsDebuggerGlobal(targetGlobal)) {
     MOZ_CRASH("There should be no edges from the debuggee to the debugger.");
   }
 
   JSObject* originGlobal = js::GetGlobalForObjectCrossCompartment(obj);
 
   const js::Wrapper* wrapper = nullptr;
-  if (IsDebuggerGlobal(originGlobal) || IsDebuggerSandbox(originGlobal)) {
+  if (IsDebuggerGlobal(originGlobal)) {
     wrapper = &js::CrossCompartmentWrapper::singleton;
   } else {
     if (obj != originGlobal) {
