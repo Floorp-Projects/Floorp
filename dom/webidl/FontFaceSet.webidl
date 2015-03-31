@@ -40,9 +40,8 @@ interface FontFaceSet : EventTarget {
   void clear();
   [NewObject] FontFaceSetIterator entries();
   // Iterator keys();
-  [NewObject] FontFaceSetIterator values();
+  [NewObject, Alias=keys, Alias="@@iterator"] FontFaceSetIterator values();
   [Throws] void forEach(FontFaceSetForEachCallback cb, optional any thisArg);
-  // FontFace iterator;
 
   // -- events for when loading state changes
   attribute EventHandler onloading;
