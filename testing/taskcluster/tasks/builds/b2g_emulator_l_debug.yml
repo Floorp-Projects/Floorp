@@ -1,5 +1,8 @@
 $inherits:
   from: 'tasks/builds/b2g_emulator_base.yml'
+  variables:
+    build_name: 'emualtor-l'
+    build_type: 'opt'
 task:
   workerType: emulator-l-debug
   scopes:
@@ -25,4 +28,3 @@ task:
     env:
       TARGET: 'emulator-l'
       B2G_DEBUG: 1
-
