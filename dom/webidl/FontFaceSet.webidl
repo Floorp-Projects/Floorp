@@ -17,10 +17,8 @@ enum FontFaceSetLoadStatus { "loading", "loaded" };
 [Pref="layout.css.font-loading-api.enabled"]
 interface FontFaceSet : EventTarget {
 
-  // Emulate the Set interface, until we can extend Set correctly.
-  // Implementing these commented out operations and the iterator is
-  // bug 1072101.
-  // readonly attribute unsigned long size;
+  // Emulate setlike behavior until we can use that directly.
+  readonly attribute unsigned long size;
   [Throws] void add(FontFace font);
   boolean has(FontFace font);
   [Throws] boolean delete(FontFace font);

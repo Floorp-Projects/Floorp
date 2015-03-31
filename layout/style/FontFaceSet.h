@@ -176,8 +176,9 @@ public:
   void Clear();
   bool Delete(FontFace& aFontFace, mozilla::ErrorResult& aRv);
   bool Has(FontFace& aFontFace);
+  uint32_t Size();
   FontFace* IndexedGetter(uint32_t aIndex, bool& aFound);
-  uint32_t Length();
+  uint32_t Length() { return Size(); }
 
 private:
   ~FontFaceSet();
