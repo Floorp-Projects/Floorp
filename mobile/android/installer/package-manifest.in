@@ -123,7 +123,6 @@
 @BINPATH@/components/chrome.xpt
 @BINPATH@/components/commandhandler.xpt
 @BINPATH@/components/commandlines.xpt
-@BINPATH@/components/compartments.xpt
 @BINPATH@/components/composer.xpt
 @BINPATH@/components/content_events.xpt
 @BINPATH@/components/content_geckomediaplugins.xpt
@@ -254,6 +253,7 @@
 @BINPATH@/components/toolkit_finalizationwitness.xpt
 @BINPATH@/components/toolkit_formautofill.xpt
 @BINPATH@/components/toolkit_osfile.xpt
+@BINPATH@/components/toolkit_perfmonitoring.xpt
 @BINPATH@/components/toolkit_xulstore.xpt
 @BINPATH@/components/toolkitprofile.xpt
 #ifdef MOZ_ENABLE_XREMOTE
