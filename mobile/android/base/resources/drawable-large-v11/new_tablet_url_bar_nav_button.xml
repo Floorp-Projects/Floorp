@@ -31,6 +31,6 @@
           android:drawable="@color/private_toolbar_grey"/>
 
     <!-- normal mode -->
-    <item android:drawable="@color/background_normal"/>
+    <item android:drawable="@color/toolbar_grey"/>
 
 </selector>
