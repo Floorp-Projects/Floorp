@@ -6,22 +6,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "jsfriendapi.h"
-#include "xpcprivate.h"
+#include "nsContentUtils.h"
 #include "CPOWTimer.h"
 
 CPOWTimer::~CPOWTimer()
 {
-    /* This is a best effort to find the compartment responsible for this CPOW call */
-    nsIGlobalObject* global = mozilla::dom::GetIncumbentGlobal();
-    if (!global)
+    JSContext* cx = nsContentUtils::GetCurrentJSContextForThread();
+    if (!cx)
         return;
-    JSObject* obj = global->GetGlobalJSObject();
-    if (!obj)
+
+    JSRuntime* runtime = JS_GetRuntime(cx);
+    if (!js::IsStopwatchActive(runtime))
         return;
-    JSCompartment* compartment = js::GetObjectCompartment(obj);
-    xpc::CompartmentPrivate* compartmentPrivate = xpc::CompartmentPrivate::Get(compartment);
-    if (!compartmentPrivate)
-        return;
-    PRIntervalTime time = PR_IntervalNow() - startInterval;
-    compartmentPrivate->CPOWTime += time;
+
+    js::PerformanceData *performance = js::GetPerformanceData(runtime);
+    uint64_t duration = PR_IntervalToMicroseconds(PR_IntervalNow() - startInterval);
+    performance->totalCPOWTime += duration;
 }

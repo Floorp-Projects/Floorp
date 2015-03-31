@@ -795,7 +795,7 @@ JS::SystemCompartmentCount(JSRuntime* rt)
 {
     size_t n = 0;
     for (CompartmentsIter comp(rt, WithAtoms); !comp.done(); comp.next()) {
-        if (comp->isSystem)
+        if (comp->isSystem())
             ++n;
     }
     return n;
@@ -806,7 +806,7 @@ JS::UserCompartmentCount(JSRuntime* rt)
 {
     size_t n = 0;
     for (CompartmentsIter comp(rt, WithAtoms); !comp.done(); comp.next()) {
-        if (!comp->isSystem)
+        if (!comp->isSystem())
             ++n;
     }
     return n;
