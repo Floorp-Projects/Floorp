@@ -68,7 +68,7 @@ NativeRegExpMacroAssembler::NativeRegExpMacroAssembler(LifoAlloc* alloc, RegExpS
     runtime(rt), mode_(mode)
 {
     // Find physical registers for each compiler register.
-    AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+    GeneralRegisterSet regs(GeneralRegisterSet::All());
 
     input_end_pointer = regs.takeAny();
     current_character = regs.takeAny();
@@ -382,7 +382,7 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
         masm.movePtr(ImmPtr(runtime), temp1);
 
         // Save registers before calling C function
-        LiveGeneralRegisterSet volatileRegs(GeneralRegisterSet::Volatile());
+        GeneralRegisterSet volatileRegs = GeneralRegisterSet::Volatile();
 #if defined(JS_CODEGEN_ARM)
         volatileRegs.add(Register::FromCode(Registers::lr));
 #elif defined(JS_CODEGEN_MIPS)
@@ -784,7 +784,7 @@ NativeRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, Label
         MOZ_ASSERT(mode_ == CHAR16);
 
         // Note: temp1 needs to be saved/restored if it is volatile, as it is used after the call.
-        LiveGeneralRegisterSet volatileRegs(GeneralRegisterSet::Volatile());
+        GeneralRegisterSet volatileRegs = GeneralRegisterSet::Volatile();
         volatileRegs.takeUnchecked(temp0);
         volatileRegs.takeUnchecked(temp2);
         masm.PushRegsInMask(volatileRegs);

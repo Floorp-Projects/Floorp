@@ -84,11 +84,8 @@
 #  endif
 #elif defined(__GNUC__)
 #  if defined(__GXX_EXPERIMENTAL_CXX0X__) || __cplusplus >= 201103L
-#    define MOZ_HAVE_CXX11_CONSTEXPR
-#    if MOZ_GCC_VERSION_AT_LEAST(4, 8, 0)
-#      define MOZ_HAVE_CXX11_CONSTEXPR_IN_TEMPLATES
-#    endif
-#    define MOZ_HAVE_EXPLICIT_CONVERSION
+#      define MOZ_HAVE_CXX11_CONSTEXPR
+#      define MOZ_HAVE_EXPLICIT_CONVERSION
 #  endif
 #  define MOZ_HAVE_NEVER_INLINE          __attribute__((noinline))
 #  define MOZ_HAVE_NORETURN              __attribute__((noreturn))
@@ -117,15 +114,9 @@
 #ifdef MOZ_HAVE_CXX11_CONSTEXPR
 #  define MOZ_CONSTEXPR         constexpr
 #  define MOZ_CONSTEXPR_VAR     constexpr
-#  ifdef MOZ_HAVE_CXX11_CONSTEXPR_IN_TEMPLATES
-#    define MOZ_CONSTEXPR_TMPL  constexpr
-#  else
-#    define MOZ_CONSTEXPR_TMPL
-#  endif
 #else
 #  define MOZ_CONSTEXPR         /* no support */
 #  define MOZ_CONSTEXPR_VAR     const
-#  define MOZ_CONSTEXPR_TMPL
 #endif
 
 /*

@@ -92,20 +92,20 @@ class SafepointReader
     uint32_t osiCallPointOffset() const {
         return osiCallPointOffset_;
     }
-    LiveGeneralRegisterSet gcSpills() const {
-        return LiveGeneralRegisterSet(gcSpills_);
+    GeneralRegisterSet gcSpills() const {
+        return gcSpills_;
     }
-    LiveGeneralRegisterSet slotsOrElementsSpills() const {
-        return LiveGeneralRegisterSet(slotsOrElementsSpills_);
+    GeneralRegisterSet slotsOrElementsSpills() const {
+        return slotsOrElementsSpills_;
     }
-    LiveGeneralRegisterSet valueSpills() const {
-        return LiveGeneralRegisterSet(valueSpills_);
+    GeneralRegisterSet valueSpills() const {
+        return valueSpills_;
     }
-    LiveGeneralRegisterSet allGprSpills() const {
-        return LiveGeneralRegisterSet(allGprSpills_);
+    GeneralRegisterSet allGprSpills() const {
+        return allGprSpills_;
     }
-    LiveFloatRegisterSet allFloatSpills() const {
-        return LiveFloatRegisterSet(allFloatSpills_);
+    FloatRegisterSet allFloatSpills() const {
+        return allFloatSpills_;
     }
     uint32_t osiReturnPointOffset() const;
 

@@ -205,7 +205,7 @@ JitRuntime::generateEnterJIT(JSContext* cx, EnterJitType type)
     Label returnLabel;
     if (type == EnterJitBaseline) {
         // Handle OSR.
-        AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+        GeneralRegisterSet regs(GeneralRegisterSet::All());
         regs.take(JSReturnOperand);
         regs.takeUnchecked(OsrFrameReg);
         regs.take(r11);
@@ -725,7 +725,7 @@ JitRuntime::generateVMWrapper(JSContext* cx, const VMFunction& f)
 
     // Generate a separated code for the wrapper.
     MacroAssembler masm(cx);
-    AllocatableGeneralRegisterSet regs(GeneralRegisterSet(Register::Codes::WrapperMask));
+    GeneralRegisterSet regs = GeneralRegisterSet(Register::Codes::WrapperMask);
 
     // Wrapper register set is a superset of Volatile register set.
     JS_STATIC_ASSERT((Register::Codes::VolatileMask & ~Register::Codes::WrapperMask) == 0);
@@ -904,13 +904,13 @@ JitRuntime::generatePreBarrier(JSContext* cx, MIRType type)
 {
     MacroAssembler masm(cx);
 
-    LiveRegisterSet save;
+    RegisterSet save;
     if (cx->runtime()->jitSupportsFloatingPoint) {
-        save.set() = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
-                                 FloatRegisterSet(FloatRegisters::VolatileDoubleMask));
+        save = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
+                           FloatRegisterSet(FloatRegisters::VolatileDoubleMask));
     } else {
-        save.set() = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
-                                 FloatRegisterSet());
+        save = RegisterSet(GeneralRegisterSet(Registers::VolatileMask),
+                           FloatRegisterSet());
     }
     save.add(lr);
     masm.PushRegsInMask(save);
