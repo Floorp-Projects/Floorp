@@ -34,7 +34,6 @@
   <color name="background_normal">#FFEBEBF0</color>
   <color name="background_normal_lwt">#DDEBEBF0</color>
 
-  <color name="background_private">#FF292C29</color>
   <color name="background_tabs">#FF363B40</color>
   <color name="highlight">#33000000</color>
   <color name="highlight_focused">#1A000000</color>
@@ -59,10 +58,10 @@
   <!-- highlight-focused on shaped button: 10% white over background_tabs -->
   <color name="highlight_shaped_focused">#FF565B60</color>
 
-  <!-- highlight on private nav button: 20% white over background_private -->
+  <!-- highlight on private nav button: 20% white over private_toolbar_grey -->
   <color name="highlight_nav_pb">#FF545654</color>
 
-  <!-- highlight-focused on private nav button: 10% white over background_private -->
+  <!-- highlight-focused on private nav button: 10% white over private_toolbar_grey -->
   <color name="highlight_nav_focused_pb">#FF3F423F</color>
 
   <!-- Firstrun tour-->
