@@ -910,6 +910,7 @@ class IonBuilder
      */
     bool testCommonGetterSetter(TemporaryTypeSet* types, PropertyName* name,
                                 bool isGetter, JSObject* foundProto, Shape* lastProperty,
+                                JSFunction* getterOrSetter,
                                 MDefinition** guard, Shape* globalShape = nullptr,
                                 MDefinition** globalGuard = nullptr);
     bool testShouldDOMCall(TypeSet* inTypes,
