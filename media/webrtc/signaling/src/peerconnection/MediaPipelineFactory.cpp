@@ -833,6 +833,9 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
   if (aConfig->mName == "VP8" || aConfig->mName == "VP9") {
     return kMediaConduitNoError;
   } else if (aConfig->mName == "H264") {
+    if (aConduit.CodecPluginID() != 0) {
+      return kMediaConduitNoError;
+    }
     // Register H.264 codec.
     if (aIsSend) {
       VideoEncoder* encoder = nullptr;
