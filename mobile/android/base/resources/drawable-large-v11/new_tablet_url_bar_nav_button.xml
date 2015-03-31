@@ -28,7 +28,7 @@
 
     <!-- private browsing mode -->
     <item gecko:state_private="true"
-          android:drawable="@color/background_private"/>
+          android:drawable="@color/private_toolbar_grey"/>
 
     <!-- normal mode -->
     <item android:drawable="@color/background_normal"/>
