@@ -181,6 +181,9 @@ public:
   uint32_t Size();
   mozilla::dom::FontFaceSetIterator* Entries();
   mozilla::dom::FontFaceSetIterator* Values();
+  void ForEach(JSContext* aCx, FontFaceSetForEachCallback& aCallback,
+               JS::Handle<JS::Value> aThisArg,
+               mozilla::ErrorResult& aRv);
   FontFace* IndexedGetter(uint32_t aIndex, bool& aFound);
   uint32_t Length() { return Size(); }
 
