@@ -27,8 +27,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jit_shared_AssemblerBuffer_x86_shared_h
-#define jit_shared_AssemblerBuffer_x86_shared_h
+#ifndef jit_x86_shared_AssemblerBuffer_x86_shared_h
+#define jit_x86_shared_AssemblerBuffer_x86_shared_h
 
 #include <stdarg.h>
 #include <string.h>
@@ -209,4 +209,4 @@ namespace jit {
 } // namespace jit
 } // namespace js
 
-#endif /* jit_shared_AssemblerBuffer_x86_shared_h */
+#endif /* jit_x86_shared_AssemblerBuffer_x86_shared_h */
