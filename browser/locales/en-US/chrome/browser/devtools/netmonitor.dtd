@@ -273,6 +273,14 @@
   -  for the Copy Image As Data URI menu item displayed in the context menu for a request -->
 <!ENTITY netmonitorUI.context.copyImageAsDataUri.accesskey  "I">
 
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyResponse): This is the label displayed
+  -  on the context menu that copies the selected response as a string -->
+<!ENTITY netmonitorUI.context.copyResponse "Copy Response">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyImageAsDataUri.accesskey): This is the access key
+  -  for the Copy Response menu item displayed in the context menu for a request -->
+<!ENTITY netmonitorUI.context.copyResponse.accesskey  "G">
+
 <!-- LOCALIZATION NOTE (netmonitorUI.summary.editAndResend): This is the label displayed
   -  on the button in the headers tab that opens a form to edit and resend the currently
      displayed request -->
