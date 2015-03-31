@@ -145,13 +145,28 @@ function load_cert(cert, trust) {
   addCertFromFile(certDB, file, trust);
 }
 
-function test_is_revoked(certList, issuerString, serialString) {
-  let issuer = converter.convertToByteArray(issuerString, {});
-  let serial = converter.convertToByteArray(serialString, {});
+function test_is_revoked(certList, issuerString, serialString, subjectString,
+                         pubKeyString) {
+  let issuer = converter.convertToByteArray(issuerString ? issuerString : '',
+                                            {});
+
+  let serial = converter.convertToByteArray(serialString ? serialString : '',
+                                            {});
+
+  let subject = converter.convertToByteArray(subjectString ? subjectString : '',
+                                             {});
+
+  let pubKey = converter.convertToByteArray(pubKeyString ? pubKeyString : '',
+                                            {});
+
   return certList.isCertRevoked(issuer,
-                                issuerString.length,
+                                issuerString ? issuerString.length : 0,
                                 serial,
-                                serialString.length);
+                                serialString ? serialString.length : 0,
+                                subject,
+                                subjectString ? subjectString.length : 0,
+                                pubKey,
+                                pubKeyString ? pubKeyString.length : 0);
 }
 
 function run_test() {
@@ -273,7 +288,8 @@ function run_test() {
     // check that save with no further update is a no-op
     let lastModified = revocations.lastModifiedTime;
     // add an already existing entry
-    certList.addRevokedCert("YW5vdGhlciBpbWFnaW5hcnkgaXNzdWVy","c2VyaWFsMi4=");
+    certList.revokeCertByIssuerAndSerial("YW5vdGhlciBpbWFnaW5hcnkgaXNzdWVy",
+                                         "c2VyaWFsMi4=");
     certList.saveEntries();
     let newModified = revocations.lastModifiedTime;
     equal(lastModified, newModified,
