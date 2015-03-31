@@ -12,6 +12,7 @@ EXPORTS.mozilla.dom += [
     'MediaKeySession.h',
     'MediaKeyStatusMap.h',
     'MediaKeySystemAccess.h',
+    'MediaKeySystemAccessManager.h',
 ]
 
 EXPORTS.mozilla += [
@@ -33,6 +34,7 @@ UNIFIED_SOURCES += [
     'MediaKeySession.cpp',
     'MediaKeyStatusMap.cpp',
     'MediaKeySystemAccess.cpp',
+    'MediaKeySystemAccessManager.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'
