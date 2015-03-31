@@ -3,21 +3,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsCompartmentInfo_h
-#define nsCompartmentInfo_h
+#ifndef nsPerformanceStats_h
+#define nsPerformanceStats_h
 
-#include "nsICompartmentInfo.h"
+#include "nsIPerformanceStats.h"
 
-class nsCompartmentInfo : public nsICompartmentInfo
+class nsPerformanceStatsService : public nsIPerformanceStatsService
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSICOMPARTMENTINFO
+  NS_DECL_NSIPERFORMANCESTATSSERVICE
 
-  nsCompartmentInfo();
+  nsPerformanceStatsService();
 
 private:
-  virtual ~nsCompartmentInfo();
+  virtual ~nsPerformanceStatsService();
 
 protected:
 };
