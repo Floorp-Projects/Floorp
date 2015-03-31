@@ -615,7 +615,7 @@ nsTransitionManager::UpdateCascadeResultsWithTransitions(
 
 void
 nsTransitionManager::UpdateCascadeResultsWithAnimations(
-                       const AnimationPlayerCollection* aAnimations)
+                       AnimationPlayerCollection* aAnimations)
 {
   AnimationPlayerCollection* transitions =
     mPresContext->TransitionManager()->
@@ -641,7 +641,7 @@ nsTransitionManager::UpdateCascadeResultsWithAnimationsToBeDestroyed(
 void
 nsTransitionManager::UpdateCascadeResults(
                        AnimationPlayerCollection* aTransitions,
-                       const AnimationPlayerCollection* aAnimations)
+                       AnimationPlayerCollection* aAnimations)
 {
   if (!aTransitions) {
     // Nothing to do.
@@ -656,8 +656,15 @@ nsTransitionManager::UpdateCascadeResults(
   // http://dev.w3.org/csswg/css-transitions/#application says that
   // transitions do not apply when the same property has a CSS Animation
   // on that element (even though animations are lower in the cascade).
-  if (aAnimations && aAnimations->mStyleRule) {
-    aAnimations->mStyleRule->AddPropertiesToSet(propertiesUsed);
+  if (aAnimations) {
+    TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
+    // Passing EnsureStyleRule_IsThrottled is OK since we will
+    // unthrottle when animations are finishing.
+    aAnimations->EnsureStyleRuleFor(now, EnsureStyleRule_IsThrottled);
+
+    if (aAnimations->mStyleRule) {
+      aAnimations->mStyleRule->AddPropertiesToSet(propertiesUsed);
+    }
   }
 
   // Since we should never have more than one transition for the same
