@@ -27,7 +27,7 @@ abstract class NavButton extends ShapedButton {
         super(context, attrs);
 
         final Resources res = getResources();
-        mBorderColor = res.getColor(R.color.nav_button_border_color);
+        mBorderColor = res.getColor(R.color.disabled_grey);
         mBorderColorPrivate = res.getColor(R.color.toolbar_icon_grey);
         mBorderWidth = res.getDimension(R.dimen.nav_button_border_width);
 
