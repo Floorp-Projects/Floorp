@@ -117,7 +117,6 @@ HwcComposer2D::HwcComposer2D()
 #if ANDROID_VERSION >= 17
     , mPrevRetireFence(Fence::NO_FENCE)
     , mPrevDisplayFence(Fence::NO_FENCE)
-    , mLastVsyncTime(0)
 #endif
     , mPrepared(false)
     , mHasHWVsync(false)
@@ -229,12 +228,6 @@ void
 HwcComposer2D::Vsync(int aDisplay, nsecs_t aVsyncTimestamp)
 {
     TimeStamp vsyncTime = mozilla::TimeStamp::FromSystemTime(aVsyncTimestamp);
-    nsecs_t vsyncInterval = aVsyncTimestamp - mLastVsyncTime;
-    if (vsyncInterval < 16000000 || vsyncInterval > 17000000) {
-      LOGE("Non-uniform vsync interval: %lld\n", vsyncInterval);
-    }
-    mLastVsyncTime = aVsyncTimestamp;
-
     gfxPlatform::GetPlatform()->GetHardwareVsync()->GetGlobalDisplay().NotifyVsync(vsyncTime);
 }
 
