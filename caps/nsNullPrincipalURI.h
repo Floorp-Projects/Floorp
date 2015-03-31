@@ -54,7 +54,6 @@ private:
   nsresult Init();
 
   char mPathBytes[NSID_LENGTH];
-  nsCString mScheme;
   nsFixedCString mPath;
 };
 
