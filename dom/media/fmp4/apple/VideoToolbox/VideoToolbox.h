@@ -25,6 +25,12 @@ enum {
   kVTDecodeInfo_Asynchronous = 1UL << 0,
   kVTDecodeInfo_FrameDropped = 1UL << 1,
 };
+enum {
+  kVTDecodeFrame_EnableAsynchronousDecompression = 1<<0,
+  kVTDecodeFrame_DoNotOutputFrame = 1<<1,
+  kVTDecodeFrame_1xRealTimePlayback = 1<<2,
+  kVTDecodeFrame_EnableTemporalProcessing = 1<<3,
+};
 
 typedef CFTypeRef VTSessionRef;
 typedef struct OpaqueVTDecompressionSession* VTDecompressionSessionRef;
