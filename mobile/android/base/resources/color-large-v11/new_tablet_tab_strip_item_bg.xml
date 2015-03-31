@@ -41,7 +41,7 @@
           android:color="@color/background_normal" />
 
     <item android:state_pressed="true"
-          android:color="@color/new_tablet_highlight_dark" />
+          android:color="@color/tabs_tray_grey_pressed" />
 
     <item android:color="@android:color/transparent"/>
 
