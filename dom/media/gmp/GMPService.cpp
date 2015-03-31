@@ -965,6 +965,25 @@ GeckoMediaPluginService::ClonePlugin(const GMPParent* aOriginal)
   return gmp.get();
 }
 
+class NotifyObserversTask final : public nsRunnable {
+public:
+  explicit NotifyObserversTask(const char* aTopic)
+    : mTopic(aTopic)
+  {}
+  NS_IMETHOD Run() override {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
+    MOZ_ASSERT(obsService);
+    if (obsService) {
+      obsService->NotifyObservers(nullptr, mTopic, nullptr);
+    }
+    return NS_OK;
+  }
+private:
+  ~NotifyObserversTask() {}
+  const char* mTopic;
+};
+
 void
 GeckoMediaPluginService::AddOnGMPThread(const nsAString& aDirectory)
 {
@@ -990,8 +1009,12 @@ GeckoMediaPluginService::AddOnGMPThread(const nsAString& aDirectory)
     return;
   }
 
-  MutexAutoLock lock(mMutex);
-  mPlugins.AppendElement(gmp);
+  {
+    MutexAutoLock lock(mMutex);
+    mPlugins.AppendElement(gmp);
+  }
+
+  NS_DispatchToMainThread(new NotifyObserversTask("gmp-path-added"), NS_DISPATCH_NORMAL);
 }
 
 void
@@ -1486,19 +1509,6 @@ GeckoMediaPluginService::ForgetThisSiteOnGMPThread(const nsACString& aOrigin)
   ClearNodeIdAndPlugin(filter);
 }
 
-class StorageClearedTask : public nsRunnable {
-public:
-  NS_IMETHOD Run() {
-    MOZ_ASSERT(NS_IsMainThread());
-    nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
-    MOZ_ASSERT(obsService);
-    if (obsService) {
-      obsService->NotifyObservers(nullptr, "gmp-clear-storage-complete", nullptr);
-    }
-    return NS_OK;
-  }
-};
-
 void
 GeckoMediaPluginService::ClearRecentHistoryOnGMPThread(PRTime aSince)
 {
@@ -1583,7 +1593,7 @@ GeckoMediaPluginService::ClearRecentHistoryOnGMPThread(PRTime aSince)
 
   ClearNodeIdAndPlugin(filter);
 
-  NS_DispatchToMainThread(new StorageClearedTask(), NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(new NotifyObserversTask("gmp-clear-storage-complete"), NS_DISPATCH_NORMAL);
 }
 
 NS_IMETHODIMP
@@ -1617,7 +1627,7 @@ GeckoMediaPluginService::ClearStorage()
   if (NS_FAILED(DeleteDir(path))) {
     NS_WARNING("Failed to delete GMP storage directory");
   }
-  NS_DispatchToMainThread(new StorageClearedTask(), NS_DISPATCH_NORMAL);
+  NS_DispatchToMainThread(new NotifyObserversTask("gmp-clear-storage-complete"), NS_DISPATCH_NORMAL);
 }
 
 } // namespace gmp
