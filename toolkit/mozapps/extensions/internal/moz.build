@@ -28,7 +28,7 @@ EXTRA_PP_JS_MODULES.addons += [
 
 # This is used in multiple places, so is defined here to avoid it getting
 # out of sync.
-DEFINES['MOZ_EXTENSIONS_DB_SCHEMA'] = 16
+DEFINES['MOZ_EXTENSIONS_DB_SCHEMA'] = 17
 
 # Additional debugging info is exposed in debug builds
 if CONFIG['MOZ_EM_DEBUG']:
