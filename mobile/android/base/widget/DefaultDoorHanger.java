@@ -16,7 +16,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
