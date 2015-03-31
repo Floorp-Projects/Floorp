@@ -10,47 +10,54 @@
 #include "QuotaManager.h"
 #include "Utilities.h"
 
+#ifdef DEBUG
+#include "nsComponentManagerUtils.h"
+#include "nsIFile.h"
+#include "nsXPCOMCID.h"
+#endif
+
 USING_QUOTA_NAMESPACE
 
 namespace {
 
-template <typename T, bool = mozilla::IsUnsigned<T>::value>
-struct IntChecker
-{
-  static void
-  Assert(T aInt)
-  {
-    static_assert(mozilla::IsIntegral<T>::value, "Not an integer!");
-    MOZ_ASSERT(aInt >= 0);
-  }
-};
-
-template <typename T>
-struct IntChecker<T, true>
-{
-  static void
-  Assert(T aInt)
-  {
-    static_assert(mozilla::IsIntegral<T>::value, "Not an integer!");
-  }
-};
-
-template <typename T>
+template <typename T, typename U>
 void
-AssertNoOverflow(uint64_t aDest, T aArg)
+AssertPositiveIntegers(T aOne, U aTwo)
 {
-  IntChecker<T>::Assert(aDest);
-  IntChecker<T>::Assert(aArg);
-  MOZ_ASSERT(UINT64_MAX - aDest >= uint64_t(aArg));
+  static_assert(mozilla::IsIntegral<T>::value, "Not an integer!");
+  static_assert(mozilla::IsIntegral<U>::value, "Not an integer!");
+  MOZ_ASSERT(aOne >= 0);
+  MOZ_ASSERT(aTwo >= 0);
 }
 
 template <typename T, typename U>
 void
-AssertNoUnderflow(T aDest, U aArg)
+AssertNoOverflow(T aOne, U aTwo)
 {
-  IntChecker<T>::Assert(aDest);
-  IntChecker<T>::Assert(aArg);
-  MOZ_ASSERT(uint64_t(aDest) >= uint64_t(aArg));
+  AssertPositiveIntegers(aOne, aTwo);
+  AssertNoOverflow(uint64_t(aOne), uint64_t(aTwo));
+}
+
+template <>
+void
+AssertNoOverflow<uint64_t, uint64_t>(uint64_t aOne, uint64_t aTwo)
+{
+  MOZ_ASSERT(UINT64_MAX - aOne >= aTwo);
+}
+
+template <typename T, typename U>
+void
+AssertNoUnderflow(T aOne, U aTwo)
+{
+  AssertPositiveIntegers(aOne, aTwo);
+  AssertNoUnderflow(uint64_t(aOne), uint64_t(aTwo));
+}
+
+template <>
+void
+AssertNoUnderflow<uint64_t, uint64_t>(uint64_t aOne, uint64_t aTwo)
+{
+  MOZ_ASSERT(aOne >= aTwo);
 }
 
 } // anonymous namespace
@@ -105,51 +112,87 @@ QuotaObject::Release()
   delete this;
 }
 
-bool
-QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
+void
+QuotaObject::UpdateSize(int64_t aSize)
 {
+  MOZ_ASSERT(aSize >= 0);
+
+#ifdef DEBUG
+  {
+    nsCOMPtr<nsIFile> file = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+    MOZ_ASSERT(file);
+
+    MOZ_ASSERT(NS_SUCCEEDED(file->InitWithPath(mPath)));
+
+    bool exists;
+    MOZ_ASSERT(NS_SUCCEEDED(file->Exists(&exists)));
+
+    if (exists) {
+      int64_t fileSize;
+      MOZ_ASSERT(NS_SUCCEEDED(file->GetFileSize(&fileSize)));
+
+      MOZ_ASSERT(aSize == fileSize);
+    } else {
+      MOZ_ASSERT(!aSize);
+    }
+  }
+#endif
+
   QuotaManager* quotaManager = QuotaManager::Get();
-  MOZ_ASSERT(quotaManager);
+  NS_ASSERTION(quotaManager, "Shouldn't be null!");
 
   MutexAutoLock lock(quotaManager->mQuotaMutex);
 
-  if (mSize == aSize) {
-    return true;
+  if (!mOriginInfo || mSize == aSize) {
+    return;
   }
 
-  if (!mOriginInfo) {
-    mSize = aSize;
+  AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, mSize);
+  quotaManager->mTemporaryStorageUsage -= mSize;
+
+  GroupInfo* groupInfo = mOriginInfo->mGroupInfo;
+
+  AssertNoUnderflow(groupInfo->mUsage, mSize);
+  groupInfo->mUsage -= mSize;
+
+  AssertNoUnderflow(mOriginInfo->mUsage, mSize);
+  mOriginInfo->mUsage -= mSize;
+
+  mSize = aSize;
+
+  AssertNoOverflow(mOriginInfo->mUsage, mSize);
+  mOriginInfo->mUsage += mSize;
+
+  AssertNoOverflow(groupInfo->mUsage, mSize);
+  groupInfo->mUsage += mSize;
+
+  AssertNoOverflow(quotaManager->mTemporaryStorageUsage, mSize);
+  quotaManager->mTemporaryStorageUsage += mSize;
+}
+
+bool
+QuotaObject::MaybeAllocateMoreSpace(int64_t aOffset, int32_t aCount)
+{
+  AssertNoOverflow(aOffset, aCount);
+  int64_t end = aOffset + aCount;
+
+  QuotaManager* quotaManager = QuotaManager::Get();
+  NS_ASSERTION(quotaManager, "Shouldn't be null!");
+
+  MutexAutoLock lock(quotaManager->mQuotaMutex);
+
+  if (mSize >= end || !mOriginInfo) {
     return true;
   }
 
   GroupInfo* groupInfo = mOriginInfo->mGroupInfo;
-  MOZ_ASSERT(groupInfo);
-
-  if (mSize > aSize) {
-    if (aTruncate) {
-      const int64_t delta = mSize - aSize;
-
-      AssertNoUnderflow(quotaManager->mTemporaryStorageUsage, delta);
-      quotaManager->mTemporaryStorageUsage -= delta;
-
-      AssertNoUnderflow(groupInfo->mUsage, delta);
-      groupInfo->mUsage -= delta;
-
-      AssertNoUnderflow(mOriginInfo->mUsage, delta);
-      mOriginInfo->mUsage -= delta;
-
-      mSize = aSize;
-    }
-    return true;
-  }
-
-  MOZ_ASSERT(mSize < aSize);
 
   nsRefPtr<GroupInfo> complementaryGroupInfo =
     groupInfo->mGroupInfoPair->LockedGetGroupInfo(
       ComplementaryPersistenceType(groupInfo->mPersistenceType));
 
-  uint64_t delta = aSize - mSize;
+  AssertNoUnderflow(end, mSize);
+  uint64_t delta = end - mSize;
 
   AssertNoOverflow(mOriginInfo->mUsage, delta);
   uint64_t newUsage = mOriginInfo->mUsage + delta;
@@ -229,8 +272,8 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
     // We unlocked and relocked several times so we need to recompute all the
     // essential variables and recheck the group limit.
 
-    AssertNoUnderflow(aSize, mSize);
-    delta = aSize - mSize;
+    AssertNoUnderflow(end, mSize);
+    delta = end - mSize;
 
     AssertNoOverflow(mOriginInfo->mUsage, delta);
     newUsage = mOriginInfo->mUsage + delta;
@@ -271,8 +314,8 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
 
     // Some other thread could increase the size in the meantime, but no more
     // than this one.
-    MOZ_ASSERT(mSize < aSize);
-    mSize = aSize;
+    MOZ_ASSERT(mSize < end);
+    mSize = end;
 
     // Finally, release IO thread only objects and allow next synchronized
     // ops for the evicted origins.
@@ -287,7 +330,7 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
   groupInfo->mUsage = newGroupUsage;
   quotaManager->mTemporaryStorageUsage = newTemporaryStorageUsage;
 
-  mSize = aSize;
+  mSize = end;
 
   return true;
 }
