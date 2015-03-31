@@ -23,6 +23,8 @@ interface FontFaceSetIterator {
   [Throws] FontFaceSetIteratorResult next();
 };
 
+callback FontFaceSetForEachCallback = void (FontFace value, FontFace key, FontFaceSet set);
+
 enum FontFaceSetLoadStatus { "loading", "loaded" };
 
 // Bug 1072762 is for the FontFaceSet constructor.
@@ -39,7 +41,7 @@ interface FontFaceSet : EventTarget {
   [NewObject] FontFaceSetIterator entries();
   // Iterator keys();
   [NewObject] FontFaceSetIterator values();
-  // void forEach(ForEachCallback cb, optional any thisArg);
+  [Throws] void forEach(FontFaceSetForEachCallback cb, optional any thisArg);
   // FontFace iterator;
 
   // -- events for when loading state changes
