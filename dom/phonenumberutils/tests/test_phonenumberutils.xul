@@ -47,6 +47,26 @@ function ParseWithMcc(dial, mcc) {
   }
 }
 
+function ParseWithCountryName(dial, countryName) {
+  var result = PhoneNumberUtils.parseWithCountryName(dial, countryName);
+  if (result) {
+    ok(true, "Parses!\n");
+  } else {
+    ok(false, "Should Parse");
+    dump("expected: parses");
+  }
+}
+
+function CantParseWithCountryName(dial, countryName) {
+  var result = PhoneNumberUtils.parseWithCountryName(dial, countryName);
+  if (result) {
+    ok(false, "Should not Parse");
+    dump("expected: does not parse!\n");
+  } else {
+    ok(true, "Expected Parsing error!\n");
+  }
+}
+
 function FuzzyMatch(number1, number2, expect) {
   var result = PhoneNumberUtils.fuzzyMatch(number1, number2);
   is(result, expect, "FuzzyMatch OK!");
@@ -55,6 +75,12 @@ function FuzzyMatch(number1, number2, expect) {
 // Unknown mcc
 CantParseWithMcc("1234", 123);
 ParseWithMcc("4165555555", 302);
+
+ParseWithCountryName("4155123456", "US");
+CantParseWithCountryName("4155123456", "001");
+CantParseWithCountryName("4155123456", "XXY");
+ParseWithCountryName("4155123456", "US");
+
 
 is(PhoneNumberUtils.normalize("123abc", true), "123", "NumbersOnly");
 is(PhoneNumberUtils.normalize("123abc", false), "123222", "NumbersOnly");

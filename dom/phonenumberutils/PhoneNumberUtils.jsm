@@ -29,8 +29,14 @@ XPCOMUtils.defineLazyServiceGetter(this, "gIccService",
 #endif
 
 this.PhoneNumberUtils = {
-  init: function() {
+
+  initParent: function() {
     ppmm.addMessageListener(["PhoneNumberService:FuzzyMatch"], this);
+    this._countryNameCache = Object.create(null);
+  },
+
+  initChild: function () {
+    this._countryNameCache = Object.create(null);
   },
   //  1. See whether we have a network mcc
   //  2. If we don't have that, look for the simcard mcc
@@ -131,13 +137,31 @@ this.PhoneNumberUtils = {
   },
 
   parseWithMCC: function(aNumber, aMCC) {
+    if (DEBUG) debug("parseWithMCC " + aNumber + ", " + aMCC);
     let countryName = MCC_ISO3166_TABLE[aMCC];
     if (DEBUG) debug("found country name: " + countryName);
     return PhoneNumber.Parse(aNumber, countryName);
   },
 
-  parseWithCountryName: function(aNumber, countryName) {
-    return PhoneNumber.Parse(aNumber, countryName);
+  parseWithCountryName: function(aNumber, aCountryName) {
+    if (this._countryNameCache[aCountryName]) {
+      return PhoneNumber.Parse(aNumber, aCountryName);
+    }
+
+    if (Object.keys(this._countryNameCache).length === 0) {
+      // populate the cache
+      let keys = Object.keys(MCC_ISO3166_TABLE);
+      for (let i = 0; i < keys.length; i++) {
+        this._countryNameCache[MCC_ISO3166_TABLE[keys[i]]] = true;
+      }
+    }
+
+    if (!this._countryNameCache[aCountryName]) {
+      dump("Couldn't find country name: " + aCountryName + "\n");
+      return null;
+    }
+
+    return PhoneNumber.Parse(aNumber, aCountryName);
   },
 
   isPlainPhoneNumber: function isPlainPhoneNumber(aNumber) {
@@ -205,6 +229,8 @@ if (inParent) {
   XPCOMUtils.defineLazyServiceGetter(this, "ppmm",
                                      "@mozilla.org/parentprocessmessagemanager;1",
                                      "nsIMessageListenerManager");
-  PhoneNumberUtils.init();
+  PhoneNumberUtils.initParent();
+} else {
+  PhoneNumberUtils.initChild();
 }
 
