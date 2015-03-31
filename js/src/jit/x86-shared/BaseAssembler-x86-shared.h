@@ -27,14 +27,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef jit_shared_BaseAssembler_x86_shared_h
-#define jit_shared_BaseAssembler_x86_shared_h
+#ifndef jit_x86_shared_BaseAssembler_x86_shared_h
+#define jit_x86_shared_BaseAssembler_x86_shared_h
 
 #include "mozilla/IntegerPrintfMacros.h"
 
-#include "jit/shared/AssemblerBuffer-x86-shared.h"
-#include "jit/shared/Encoding-x86-shared.h"
-#include "jit/shared/Patching-x86-shared.h"
+#include "jit/x86-shared/AssemblerBuffer-x86-shared.h"
+#include "jit/x86-shared/Encoding-x86-shared.h"
+#include "jit/x86-shared/Patching-x86-shared.h"
 
 namespace js {
 namespace jit {
@@ -5317,4 +5317,4 @@ threeByteOpImmSimd("vblendps", VEX_PD, OP3_BLENDPS_VpsWpsIb, ESCAPE_3A, imm, off
 } // namespace jit
 } // namespace js
 
-#endif /* jit_shared_BaseAssembler_x86_shared_h */
+#endif /* jit_x86_shared_BaseAssembler_x86_shared_h */
