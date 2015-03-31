@@ -41,30 +41,22 @@ from createprecomplete import generate_precomplete
 
 class LocaleManifestFinder(object):
     def __init__(self, finder):
-        entries = self.entries = []
-        bases = self.bases = ['']
-
-        class MockFormatter(object):
-            def add_interfaces(self, path, content):
-                pass
-
-            def add(self, path, content):
-                pass
-
-            def add_manifest(self, entry):
-                if entry.localized:
-                    entries.append(entry)
-
-            def add_base(self, base, addon=False):
-                bases.append(base)
-
-        sink = SimpleManifestSink(finder, MockFormatter())
-        sink.add(Component(''), '*')
-        sink.close(False)
-
+        # Read all manifest entries
+        manifests = dict((p, m) for p, m in finder.find('**/*.manifest')
+                         if is_manifest(p))
+        assert all(isinstance(m, ManifestFile)
+                   for m in manifests.itervalues())
+        self.entries = [e for m in manifests.itervalues()
+                        for e in m if e.localized]
         # Find unique locales used in these manifest entries.
         self.locales = list(set(e.id for e in self.entries
                                 if isinstance(e, ManifestLocale)))
+        # Find all paths whose manifest are included by no other manifest.
+        includes = set(mozpath.join(e.base, e.relpath)
+                       for m in manifests.itervalues()
+                       for e in m if isinstance(e, Manifest))
+        self.bases = [mozpath.dirname(p)
+                      for p in set(manifests.keys()) - includes]
 
 
 def _repack(app_finder, l10n_finder, copier, formatter, non_chrome=set()):
