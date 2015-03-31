@@ -15,8 +15,6 @@
 #include "nsNullPrincipal.h"
 #include "nsNullPrincipalURI.h"
 #include "nsMemory.h"
-#include "nsIUUIDGenerator.h"
-#include "nsID.h"
 #include "nsNetUtil.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIObjectInputStream.h"
@@ -78,7 +76,15 @@ nsNullPrincipal::CreateWithInheritedAttributes(nsIPrincipal* aInheritFrom)
   return NS_SUCCEEDED(rv) ? nullPrin.forget() : nullptr;
 }
 
-#define NS_NULLPRINCIPAL_PREFIX NS_NULLPRINCIPAL_SCHEME ":"
+/* static */ already_AddRefed<nsNullPrincipal>
+nsNullPrincipal::Create(uint32_t aAppId, bool aInMozBrowser)
+{
+  nsRefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
+  nsresult rv = nullPrin->Init(aAppId, aInMozBrowser);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return nullPrin.forget();
+}
 
 nsresult
 nsNullPrincipal::Init(uint32_t aAppId, bool aInMozBrowser)
@@ -87,11 +93,8 @@ nsNullPrincipal::Init(uint32_t aAppId, bool aInMozBrowser)
   mAppId = aAppId;
   mInMozBrowser = aInMozBrowser;
 
-  nsCString str;
-  nsresult rv = GenerateNullPrincipalURI(str);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  mURI = new nsNullPrincipalURI(str);
+  mURI = nsNullPrincipalURI::Create();
+  NS_ENSURE_TRUE(mURI, NS_ERROR_NOT_AVAILABLE);
 
   return NS_OK;
 }
@@ -100,40 +103,6 @@ void
 nsNullPrincipal::GetScriptLocation(nsACString &aStr)
 {
   mURI->GetSpec(aStr);
-}
-
-nsresult
-nsNullPrincipal::GenerateNullPrincipalURI(nsACString &aStr)
-{
-  // FIXME: bug 327161 -- make sure the uuid generator is reseeding-resistant.
-  nsresult rv;
-  nsCOMPtr<nsIUUIDGenerator> uuidgen =
-    do_GetService("@mozilla.org/uuid-generator;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsID id;
-  rv = uuidgen->GenerateUUIDInPlace(&id);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  char chars[NSID_LENGTH];
-  id.ToProvidedString(chars);
-
-  uint32_t suffixLen = NSID_LENGTH - 1;
-  uint32_t prefixLen = ArrayLength(NS_NULLPRINCIPAL_PREFIX) - 1;
-
-  // Use an nsCString so we only do the allocation once here and then share
-  // with nsJSPrincipals
-  aStr.SetCapacity(prefixLen + suffixLen);
-
-  aStr.Append(NS_NULLPRINCIPAL_PREFIX);
-  aStr.Append(chars);
-
-  if (aStr.Length() != prefixLen + suffixLen) {
-    NS_WARNING("Out of memory allocating null-principal URI");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return NS_OK;
 }
 
 #ifdef DEBUG
