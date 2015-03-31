@@ -596,7 +596,6 @@ nsresult GStreamerReader::CheckSupportedFormats()
       }
       case GST_ITERATOR_RESYNC:
         unsupported = false;
-        done = false;
         break;
       case GST_ITERATOR_ERROR:
         done = true;
