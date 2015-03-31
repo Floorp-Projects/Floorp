@@ -11,6 +11,8 @@ const { WebConsoleActor } = require("devtools/server/actors/webconsole");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const { ActorPool } = require("devtools/server/main");
 const Services = require("Services");
+const { dbg_assert } = require("devtools/toolkit/DevToolsUtils");
+const { TabSources } = require("./utils/TabSources");
 
 function ChildProcessActor(aConnection) {
   this.conn = aConnection;
@@ -48,6 +50,14 @@ ChildProcessActor.prototype = {
 
   get window() {
     return this._consoleScope;
+  },
+
+  get sources() {
+    if (!this._sources) {
+      dbg_assert(this._threadActor, "threadActor should exist when creating sources.");
+      this._sources = new TabSources(this._threadActor);
+    }
+    return this._sources;
   },
 
   form: function() {

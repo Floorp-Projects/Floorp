@@ -7,7 +7,7 @@
 #ifndef jit_x86_Lowering_x86_h
 #define jit_x86_Lowering_x86_h
 
-#include "jit/shared/Lowering-x86-shared.h"
+#include "jit/x86-shared/Lowering-x86-shared.h"
 
 namespace js {
 namespace jit {

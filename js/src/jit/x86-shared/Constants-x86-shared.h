@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_shared_Constants_x86_shared_h
-#define jit_shared_Constants_x86_shared_h
+#ifndef jit_x86_shared_Constants_x86_shared_h
+#define jit_x86_shared_Constants_x86_shared_h
 
 namespace js {
 namespace jit {
@@ -219,4 +219,4 @@ inline int32_t AddressImmediate(const void* address)
 } // namespace jit
 } // namespace js
 
-#endif /* jit_shared_Constants_x86_shared_h */
+#endif /* jit_x86_shared_Constants_x86_shared_h */

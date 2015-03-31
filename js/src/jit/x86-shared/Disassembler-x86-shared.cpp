@@ -6,7 +6,7 @@
 
 #include "jit/Disassembler.h"
 
-#include "jit/shared/Encoding-x86-shared.h"
+#include "jit/x86-shared/Encoding-x86-shared.h"
 
 using namespace js;
 using namespace js::jit;

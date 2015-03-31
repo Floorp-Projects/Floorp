@@ -52,9 +52,9 @@ async_test(function(t) {
   var promiseCallbackDone = false;
   waitForDocLoad().then(function() {
     div.style.animation = 'empty 1000s';
-    var player = div.getAnimationPlayers()[0];
+    var animation = div.getAnimations()[0];
 
-    player.ready.then(function() {
+    animation.ready.then(function() {
       promiseCallbackDone = true;
     }).catch(function() {
       assert_unreached('ready promise was rejected');
@@ -74,7 +74,7 @@ async_test(function(t) {
                 + ' within three animation frames');
     t.done();
   }));
-}, 'AnimationPlayer.ready is resolved for an empty animation');
+}, 'Animation.ready is resolved for an empty animation');
 
 // Test that compositor animations with delays get synced correctly
 //
@@ -95,9 +95,9 @@ async_test(function(t) {
   var div = addDiv(t);
   div.classList.add('target');
   div.style.animation = 'animTransform 100s -50s forwards';
-  var player = div.getAnimationPlayers()[0];
+  var animation = div.getAnimations()[0];
 
-  player.ready.then(t.step_func(function() {
+  animation.ready.then(t.step_func(function() {
     var transformStr =
       SpecialPowers.DOMWindowUtils.getOMTAStyle(div, 'transform');
 

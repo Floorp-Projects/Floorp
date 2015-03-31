@@ -131,10 +131,12 @@ CustomizeMode.prototype = {
 
   swatchForTheme: function(aDocument) {
    let lwthemeButton = aDocument.getElementById("customization-lwtheme-button");
+   let lwthemeIcon = aDocument.getAnonymousElementByAttribute(lwthemeButton,
+          "class", "button-icon");
    let imageURL = LightweightThemeManager.currentTheme === null ?
           "chrome://browser/skin/theme-switcher-icon.png" :
           LightweightThemeManager.currentTheme.iconURL;
-    lwthemeButton.setAttribute("image", imageURL);
+    lwthemeIcon.style.backgroundImage = "url(" + imageURL + ")";
   },
 
   enter: function() {

@@ -87,7 +87,7 @@
         <vbox id="profiler-options" class="options-groupbox">
           <checkbox label="&options.showPlatformData.label;"
                     tooltiptext="&options.showPlatformData.tooltip;"
-                    data-pref="devtools.profiler.ui.show-platform-data"/>
+                    data-pref="devtools.performance.ui.show-platform-data"/>
         </vbox>
       </vbox>
 

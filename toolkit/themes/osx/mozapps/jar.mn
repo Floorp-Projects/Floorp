@@ -10,10 +10,7 @@ toolkit.jar:
   skin/classic/mozapps/downloads/unknownContentType.css           (downloads/unknownContentType.css)
   skin/classic/mozapps/extensions/category-search.png             (extensions/category-search.png)
   skin/classic/mozapps/extensions/category-discover.png           (extensions/category-discover.png)
-  skin/classic/mozapps/extensions/category-languages.png          (extensions/localeGeneric.png)
   skin/classic/mozapps/extensions/category-searchengines.png      (extensions/category-searchengines.png)
-  skin/classic/mozapps/extensions/category-extensions.png         (extensions/extensionGeneric.png)
-  skin/classic/mozapps/extensions/category-themes.png             (extensions/themeGeneric.png)
   skin/classic/mozapps/extensions/category-plugins.png            (extensions/category-plugins.png)
   skin/classic/mozapps/extensions/category-service.png            (extensions/category-service.png)
   skin/classic/mozapps/extensions/category-dictionaries.png       (extensions/category-dictionaries.png)
@@ -67,7 +64,6 @@ toolkit.jar:
   skin/classic/mozapps/plugins/contentPluginDownload.png          (../../shared/plugins/contentPluginDownload.png)
   skin/classic/mozapps/plugins/contentPluginMissing.png           (../../shared/plugins/contentPluginMissing.png)
   skin/classic/mozapps/plugins/contentPluginStripe.png            (../../shared/plugins/contentPluginStripe.png)
-  skin/classic/mozapps/plugins/notifyPluginCrashed.png            (plugins/notifyPluginGeneric.png)
   skin/classic/mozapps/plugins/notifyPluginGeneric.png            (plugins/notifyPluginGeneric.png)
   skin/classic/mozapps/plugins/pluginGeneric.png                  (plugins/pluginGeneric.png)
   skin/classic/mozapps/plugins/pluginBlocked.png                  (plugins/pluginBlocked.png)
@@ -80,10 +76,15 @@ toolkit.jar:
   skin/classic/mozapps/update/buttons.png                         (update/buttons.png)
 * skin/classic/mozapps/update/updates.css                         (update/updates.css)
   skin/classic/mozapps/viewsource/viewsource.css                  (viewsource/viewsource.css)
-  skin/classic/mozapps/xpinstall/xpinstallItemGeneric.png         (extensions/extensionGeneric.png)
   skin/classic/mozapps/xpinstall/xpinstallConfirm.css             (extensions/xpinstallConfirm.css)
 #ifdef MOZ_PLACES
   skin/classic/mozapps/places/defaultFavicon.png                  (places/defaultFavicon.png)
   skin/classic/mozapps/places/defaultFavicon@2x.png               (places/defaultFavicon@2x.png)
 #endif
   skin/classic/mozapps/handling/handling.css                      (handling/handling.css)
+
+% override chrome://mozapps/skin/extensions/category-extensions.png       chrome://mozapps/skin/extensions/extensionGeneric.png
+% override chrome://mozapps/skin/extensions/category-languages.png        chrome://mozapps/skin/extensions/localeGeneric.png
+% override chrome://mozapps/skin/extensions/category-themes.png           chrome://mozapps/skin/extensions/themeGeneric.png
+% override chrome://mozapps/skin/plugins/notifyPluginCrashed.png          chrome://mozapps/skin/plugins/notifyPluginGeneric.png
+% override chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png       chrome://mozapps/skin/extensions/extensionGeneric.png

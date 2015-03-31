@@ -159,6 +159,19 @@ Sanitizer.prototype = {
       }
     },
 
+    searchHistory: {
+      clear: function ()
+      {
+        return Messaging.sendRequestForResult({ type: "Sanitize:ClearHistory", clearSearchHistory: true })
+          .catch(e => Cu.reportError("Java-side search history clearing failed: " + e))
+      },
+
+      get canClear()
+      {
+        return true;
+      }
+    },
+
     formdata: {
       clear: function ()
       {

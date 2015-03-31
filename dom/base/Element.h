@@ -808,7 +808,7 @@ public:
   {
   }
 
-  void GetAnimationPlayers(nsTArray<nsRefPtr<AnimationPlayer> >& aPlayers);
+  void GetAnimations(nsTArray<nsRefPtr<AnimationPlayer> >& aAnimations);
 
   NS_IMETHOD GetInnerHTML(nsAString& aInnerHTML);
   virtual void SetInnerHTML(const nsAString& aInnerHTML, ErrorResult& aError);

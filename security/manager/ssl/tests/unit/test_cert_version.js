@@ -37,11 +37,11 @@ function check_ca_err(cert, expected_error) {
 }
 
 function check_ok(x) {
-  return check_cert_err(x, 0);
+  return check_cert_err(x, PRErrorCodeSuccess);
 }
 
 function check_ok_ca(x) {
-  return check_cert_err_generic(x, 0, certificateUsageSSLCA);
+  return check_cert_err_generic(x, PRErrorCodeSuccess, certificateUsageSSLCA);
 }
 
 function run_test() {

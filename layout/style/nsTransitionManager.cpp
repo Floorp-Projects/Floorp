@@ -174,7 +174,7 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   }
 
   AnimationPlayerCollection* collection =
-    GetAnimationPlayers(aElement, pseudoType, false);
+    GetAnimations(aElement, pseudoType, false);
   if (!collection &&
       disp->mTransitionPropertyCount == 1 &&
       disp->mTransitions[0].GetCombinedDuration() <= 0.0f) {
@@ -566,7 +566,7 @@ nsTransitionManager::ConsiderStartingTransition(
 
   if (!aElementTransitions) {
     aElementTransitions =
-      GetAnimationPlayers(aElement, aNewStyleContext->GetPseudoType(), true);
+      GetAnimations(aElement, aNewStyleContext->GetPseudoType(), true);
     if (!aElementTransitions) {
       NS_WARNING("allocating CommonAnimationManager failed");
       return;
@@ -608,8 +608,8 @@ nsTransitionManager::UpdateCascadeResultsWithTransitions(
 {
   AnimationPlayerCollection* animations =
     mPresContext->AnimationManager()->
-      GetAnimationPlayers(aTransitions->mElement,
-                          aTransitions->PseudoElementType(), false);
+      GetAnimations(aTransitions->mElement,
+                    aTransitions->PseudoElementType(), false);
   UpdateCascadeResults(aTransitions, animations);
 }
 
@@ -619,8 +619,8 @@ nsTransitionManager::UpdateCascadeResultsWithAnimations(
 {
   AnimationPlayerCollection* transitions =
     mPresContext->TransitionManager()->
-      GetAnimationPlayers(aAnimations->mElement,
-                          aAnimations->PseudoElementType(), false);
+      GetAnimations(aAnimations->mElement,
+                    aAnimations->PseudoElementType(), false);
   UpdateCascadeResults(transitions, aAnimations);
 }
 
@@ -633,8 +633,8 @@ nsTransitionManager::UpdateCascadeResultsWithAnimationsToBeDestroyed(
   // information that may now be incorrect.
   AnimationPlayerCollection* transitions =
     mPresContext->TransitionManager()->
-      GetAnimationPlayers(aAnimations->mElement,
-                          aAnimations->PseudoElementType(), false);
+      GetAnimations(aAnimations->mElement,
+                    aAnimations->PseudoElementType(), false);
   UpdateCascadeResults(transitions, nullptr);
 }
 

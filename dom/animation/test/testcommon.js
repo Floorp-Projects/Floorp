@@ -39,12 +39,14 @@ function waitForFrame() {
 }
 
 /**
- * Wrapper that takes a sequence of N players and returns:
+ * Wrapper that takes a sequence of N animations and returns:
  *
- *   Promise.all([players[0].ready, players[1].ready, ... players[N-1].ready]);
+ *   Promise.all([animations[0].ready, animations[1].ready, ... animations[N-1].ready]);
  */
-function waitForAllPlayers(players) {
-  return Promise.all(players.map(function(player) { return player.ready; }));
+function waitForAllAnimations(animations) {
+  return Promise.all(animations.map(function(animation) {
+    return animation.ready;
+  }));
 }
 
 /**
