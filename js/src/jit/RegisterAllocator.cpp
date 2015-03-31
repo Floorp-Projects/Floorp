@@ -144,8 +144,8 @@ AllocationIntegrityState::check(bool populateSafepoints)
                         return false;
                 }
                 MOZ_ASSERT_IF(ins->isCall() && !populateSafepoints,
-                              safepoint->liveRegs().emptyFloat() &&
-                              safepoint->liveRegs().emptyGeneral());
+                              safepoint->liveRegs().empty(true) &&
+                              safepoint->liveRegs().empty(false));
             }
 
             size_t inputIndex = 0;

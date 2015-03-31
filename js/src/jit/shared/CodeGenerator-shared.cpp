@@ -1048,7 +1048,7 @@ CodeGeneratorShared::markOsiPoint(LOsiPoint* ins)
 #ifdef CHECK_OSIPOINT_REGISTERS
 template <class Op>
 static void
-HandleRegisterDump(Op op, MacroAssembler& masm, LiveRegisterSet liveRegs, Register activation,
+HandleRegisterDump(Op op, MacroAssembler& masm, RegisterSet liveRegs, Register activation,
                    Register scratch)
 {
     const size_t baseOffset = JitActivation::offsetOfRegs();
@@ -1107,14 +1107,14 @@ class StoreOp
 };
 
 static void
-StoreAllLiveRegs(MacroAssembler& masm, LiveRegisterSet liveRegs)
+StoreAllLiveRegs(MacroAssembler& masm, RegisterSet liveRegs)
 {
     // Store a copy of all live registers before performing the call.
     // When we reach the OsiPoint, we can use this to check nothing
     // modified them in the meantime.
 
     // Load pointer to the JitActivation in a scratch register.
-    AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
+    GeneralRegisterSet allRegs(GeneralRegisterSet::All());
     Register scratch = allRegs.takeAny();
     masm.push(scratch);
     masm.loadJitActivation(scratch);
@@ -1164,7 +1164,7 @@ CodeGeneratorShared::verifyOsiPointRegs(LSafepoint* safepoint)
     // the call and this OsiPoint. Try-catch relies on this invariant.
 
     // Load pointer to the JitActivation in a scratch register.
-    AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
+    GeneralRegisterSet allRegs(GeneralRegisterSet::All());
     Register scratch = allRegs.takeAny();
     masm.push(scratch);
     masm.loadJitActivation(scratch);
@@ -1191,9 +1191,8 @@ CodeGeneratorShared::verifyOsiPointRegs(LSafepoint* safepoint)
     // instructions (including this OsiPoint) will depend on them. Also
     // backtracking can also use the same register for an input and an output.
     // These are marked as clobbered and shouldn't get checked.
-    LiveRegisterSet liveRegs;
-    liveRegs.set() = RegisterSet::Intersect(safepoint->liveRegs().set(),
-                                            RegisterSet::Not(safepoint->clobberedRegs().set()));
+    RegisterSet liveRegs = safepoint->liveRegs();
+    liveRegs = RegisterSet::Intersect(liveRegs, RegisterSet::Not(safepoint->clobberedRegs()));
 
     VerifyOp op(masm, &failure);
     HandleRegisterDump<VerifyOp>(op, masm, liveRegs, scratch, allRegs.getAny());
@@ -1231,7 +1230,7 @@ CodeGeneratorShared::shouldVerifyOsiPointRegs(LSafepoint* safepoint)
     if (!checkOsiPointRegisters)
         return false;
 
-    if (safepoint->liveRegs().emptyGeneral() && safepoint->liveRegs().emptyFloat())
+    if (safepoint->liveRegs().empty(true) && safepoint->liveRegs().empty(false))
         return false; // No registers to check.
 
     return true;
@@ -1245,7 +1244,7 @@ CodeGeneratorShared::resetOsiPointRegs(LSafepoint* safepoint)
 
     // Set checkRegs to 0. If we perform a VM call, the instruction
     // will set it to 1.
-    AllocatableGeneralRegisterSet allRegs(GeneralRegisterSet::All());
+    GeneralRegisterSet allRegs(GeneralRegisterSet::All());
     Register scratch = allRegs.takeAny();
     masm.push(scratch);
     masm.loadJitActivation(scratch);
@@ -1646,9 +1645,9 @@ CodeGeneratorShared::emitTracelogScript(bool isStart)
 
     Label done;
 
-    AllocatableRegisterSet regs(RegisterSet::Volatile());
-    Register logger = regs.takeAnyGeneral();
-    Register script = regs.takeAnyGeneral();
+    RegisterSet regs = RegisterSet::Volatile();
+    Register logger = regs.takeGeneral();
+    Register script = regs.takeGeneral();
 
     masm.Push(logger);
 
@@ -1682,8 +1681,8 @@ CodeGeneratorShared::emitTracelogTree(bool isStart, uint32_t textId)
         return;
 
     Label done;
-    AllocatableRegisterSet regs(RegisterSet::Volatile());
-    Register logger = regs.takeAnyGeneral();
+    RegisterSet regs = RegisterSet::Volatile();
+    Register logger = regs.takeGeneral();
 
     masm.Push(logger);
 

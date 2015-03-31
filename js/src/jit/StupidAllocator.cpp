@@ -76,12 +76,12 @@ StupidAllocator::init()
     // Assign physical registers to the tracked allocation.
     {
         registerCount = 0;
-        LiveRegisterSet remainingRegisters(allRegisters_.asLiveSet());
-        while (!remainingRegisters.emptyGeneral())
-            registers[registerCount++].reg = AnyRegister(remainingRegisters.takeAnyGeneral());
+        RegisterSet remainingRegisters(allRegisters_);
+        while (!remainingRegisters.empty(/* float = */ false))
+            registers[registerCount++].reg = AnyRegister(remainingRegisters.takeUnaliasedGeneral());
 
-        while (!remainingRegisters.emptyFloat())
-            registers[registerCount++].reg = AnyRegister(remainingRegisters.takeAnyFloat());
+        while (!remainingRegisters.empty(/* float = */ true))
+            registers[registerCount++].reg = AnyRegister(remainingRegisters.takeUnaliasedFloat());
 
         MOZ_ASSERT(registerCount <= MAX_REGISTERS);
     }

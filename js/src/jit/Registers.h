@@ -73,11 +73,6 @@ struct Register {
         MOZ_ASSERT(aliasIdx == 0);
         *ret = *this;
     }
-
-    SetType alignedOrDominatedAliasedSet() const {
-        return SetType(1) << code_;
-    }
-
     static uint32_t SetSize(SetType x) {
         return Codes::SetSize(x);
     }

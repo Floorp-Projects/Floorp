@@ -179,11 +179,14 @@ MacroAssemblerX86Shared::asMasm() const
 // Stack manipulation functions.
 
 void
-MacroAssembler::PushRegsInMask(LiveRegisterSet set)
+MacroAssembler::PushRegsInMask(RegisterSet set, FloatRegisterSet simdSet)
 {
-    FloatRegisterSet fpuSet(set.fpus().reduceSetForPush());
-    unsigned numFpu = fpuSet.size();
-    int32_t diffF = fpuSet.getPushSizeInBytes();
+    FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet));
+    MOZ_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
+    doubleSet = doubleSet.reduceSetForPush();
+    unsigned numSimd = simdSet.size();
+    unsigned numDouble = doubleSet.size();
+    int32_t diffF = doubleSet.getPushSizeInBytes() + numSimd * Simd128DataSize;
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
 
     // On x86, always use push to push the integer registers, as it's fast
@@ -195,10 +198,10 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set)
     MOZ_ASSERT(diffG == 0);
 
     reserveStack(diffF);
-    for (FloatRegisterBackwardIterator iter(fpuSet); iter.more(); iter++) {
+    for (FloatRegisterBackwardIterator iter(doubleSet); iter.more(); iter++) {
         FloatRegister reg = *iter;
         diffF -= reg.size();
-        numFpu -= 1;
+        numDouble -= 1;
         Address spillAddress(StackPointer, diffF);
         if (reg.isDouble())
             storeDouble(reg, spillAddress);
@@ -211,7 +214,14 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set)
         else
             MOZ_CRASH("Unknown register type.");
     }
-    MOZ_ASSERT(numFpu == 0);
+    MOZ_ASSERT(numDouble == 0);
+    for (FloatRegisterBackwardIterator iter(simdSet); iter.more(); iter++) {
+        diffF -= Simd128DataSize;
+        numSimd -= 1;
+        // XXX how to choose the right move type?
+        storeUnalignedInt32x4(*iter, Address(StackPointer, diffF));
+    }
+    MOZ_ASSERT(numSimd == 0);
     // x64 padding to keep the stack aligned on uintptr_t. Keep in sync with
     // GetPushBytesInSize.
     diffF -= diffF % sizeof(uintptr_t);
@@ -219,19 +229,30 @@ MacroAssembler::PushRegsInMask(LiveRegisterSet set)
 }
 
 void
-MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
+MacroAssembler::PopRegsInMaskIgnore(RegisterSet set, RegisterSet ignore, FloatRegisterSet simdSet)
 {
-    FloatRegisterSet fpuSet(set.fpus().reduceSetForPush());
-    unsigned numFpu = fpuSet.size();
+    FloatRegisterSet doubleSet(FloatRegisterSet::Subtract(set.fpus(), simdSet));
+    MOZ_ASSERT_IF(simdSet.empty(), doubleSet == set.fpus());
+    doubleSet = doubleSet.reduceSetForPush();
+    unsigned numSimd = simdSet.size();
+    unsigned numDouble = doubleSet.size();
     int32_t diffG = set.gprs().size() * sizeof(intptr_t);
-    int32_t diffF = fpuSet.getPushSizeInBytes();
+    int32_t diffF = doubleSet.getPushSizeInBytes() + numSimd * Simd128DataSize;
     const int32_t reservedG = diffG;
     const int32_t reservedF = diffF;
 
-    for (FloatRegisterBackwardIterator iter(fpuSet); iter.more(); iter++) {
+    for (FloatRegisterBackwardIterator iter(simdSet); iter.more(); iter++) {
+        diffF -= Simd128DataSize;
+        numSimd -= 1;
+        if (!ignore.has(*iter))
+            // XXX how to choose the right move type?
+            loadUnalignedInt32x4(Address(StackPointer, diffF), *iter);
+    }
+    MOZ_ASSERT(numSimd == 0);
+    for (FloatRegisterBackwardIterator iter(doubleSet); iter.more(); iter++) {
         FloatRegister reg = *iter;
         diffF -= reg.size();
-        numFpu -= 1;
+        numDouble -= 1;
         if (ignore.has(reg))
             continue;
 
@@ -248,7 +269,7 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
             MOZ_CRASH("Unknown register type.");
     }
     freeStack(reservedF);
-    MOZ_ASSERT(numFpu == 0);
+    MOZ_ASSERT(numDouble == 0);
     // x64 padding to keep the stack aligned on uintptr_t. Keep in sync with
     // GetPushBytesInSize.
     diffF -= diffF % sizeof(uintptr_t);
@@ -257,7 +278,7 @@ MacroAssembler::PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
     // On x86, use pop to pop the integer registers, if we're not going to
     // ignore any slots, as it's fast on modern hardware and it's a small
     // instruction.
-    if (ignore.emptyGeneral()) {
+    if (ignore.empty(false)) {
         for (GeneralRegisterForwardIterator iter(set.gprs()); iter.more(); iter++) {
             diffG -= sizeof(intptr_t);
             Pop(*iter);

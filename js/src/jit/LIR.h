@@ -1323,15 +1323,15 @@ class LSafepoint : public TempObject
     // registers: if passed to the call, the values passed will be marked via
     // MarkJitExitFrame, and no registers can be live after the instruction
     // except its outputs.
-    LiveRegisterSet liveRegs_;
+    RegisterSet liveRegs_;
 
     // The subset of liveRegs which contains gcthing pointers.
-    LiveGeneralRegisterSet gcRegs_;
+    GeneralRegisterSet gcRegs_;
 
 #ifdef CHECK_OSIPOINT_REGISTERS
     // Clobbered regs of the current instruction. This set is never written to
     // the safepoint; it's only used by assertions during compilation.
-    LiveRegisterSet clobberedRegs_;
+    RegisterSet clobberedRegs_;
 #endif
 
     // Offset to a position in the safepoint stream, or
@@ -1352,11 +1352,11 @@ class LSafepoint : public TempObject
     NunboxList nunboxParts_;
 #elif JS_PUNBOX64
     // The subset of liveRegs which have Values.
-    LiveGeneralRegisterSet valueRegs_;
+    GeneralRegisterSet valueRegs_;
 #endif
 
     // The subset of liveRegs which contains pointers to slots/elements.
-    LiveGeneralRegisterSet slotsOrElementsRegs_;
+    GeneralRegisterSet slotsOrElementsRegs_;
 
     // List of slots which have slots/elements pointers.
     SlotList slotsOrElementsSlots_;
@@ -1386,7 +1386,7 @@ class LSafepoint : public TempObject
         liveRegs_.addUnchecked(reg);
         assertInvariants();
     }
-    const LiveRegisterSet& liveRegs() const {
+    const RegisterSet& liveRegs() const {
         return liveRegs_;
     }
 #ifdef CHECK_OSIPOINT_REGISTERS
@@ -1394,7 +1394,7 @@ class LSafepoint : public TempObject
         clobberedRegs_.addUnchecked(reg);
         assertInvariants();
     }
-    const LiveRegisterSet& clobberedRegs() const {
+    const RegisterSet& clobberedRegs() const {
         return clobberedRegs_;
     }
 #endif
@@ -1402,7 +1402,7 @@ class LSafepoint : public TempObject
         gcRegs_.addUnchecked(reg);
         assertInvariants();
     }
-    LiveGeneralRegisterSet gcRegs() const {
+    GeneralRegisterSet gcRegs() const {
         return gcRegs_;
     }
     bool addGcSlot(bool stack, uint32_t slot) {
@@ -1418,7 +1418,7 @@ class LSafepoint : public TempObject
     SlotList& slotsOrElementsSlots() {
         return slotsOrElementsSlots_;
     }
-    LiveGeneralRegisterSet slotsOrElementsRegs() const {
+    GeneralRegisterSet slotsOrElementsRegs() const {
         return slotsOrElementsRegs_;
     }
     void addSlotsOrElementsRegister(Register reg) {
@@ -1567,7 +1567,7 @@ class LSafepoint : public TempObject
         valueRegs_.add(reg);
         assertInvariants();
     }
-    LiveGeneralRegisterSet valueRegs() const {
+    GeneralRegisterSet valueRegs() const {
         return valueRegs_;
     }
 
