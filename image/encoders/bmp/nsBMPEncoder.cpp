@@ -30,7 +30,7 @@ nsBMPEncoder::nsBMPEncoder() : mImageBufferStart(nullptr),
 nsBMPEncoder::~nsBMPEncoder()
 {
   if (mImageBufferStart) {
-    moz_free(mImageBufferStart);
+    free(mImageBufferStart);
     mImageBufferStart = nullptr;
     mImageBufferCurr = nullptr;
   }
@@ -133,7 +133,7 @@ nsBMPEncoder::StartImageEncode(uint32_t aWidth,
   InitInfoHeader(version, bpp, aWidth, aHeight);
 
   mImageBufferSize = mBMPFileHeader.filesize;
-  mImageBufferStart = static_cast<uint8_t*>(moz_malloc(mImageBufferSize));
+  mImageBufferStart = static_cast<uint8_t*>(malloc(mImageBufferSize));
   if (!mImageBufferStart) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -316,7 +316,7 @@ NS_IMETHODIMP
 nsBMPEncoder::Close()
 {
   if (mImageBufferStart) {
-    moz_free(mImageBufferStart);
+    free(mImageBufferStart);
     mImageBufferStart = nullptr;
     mImageBufferSize = 0;
     mImageBufferReadPoint = 0;

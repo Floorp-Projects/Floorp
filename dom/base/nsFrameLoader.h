@@ -229,9 +229,6 @@ public:
   void ActivateUpdateHitRegion();
   void DeactivateUpdateHitRegion();
 
-  // Properly retrieves documentSize of any subdocument type.
-  nsresult GetWindowDimensions(nsIntRect& aRect);
-
 private:
 
   void SetOwnerContent(mozilla::dom::Element* aContent);
@@ -286,6 +283,9 @@ private:
    */
   nsresult MaybeCreateDocShell();
   nsresult EnsureMessageManager();
+
+  // Properly retrieves documentSize of any subdocument type.
+  nsresult GetWindowDimensions(nsIntRect& aRect);
 
   // Updates the subdocument position and size. This gets called only
   // when we have our own in-process DocShell.

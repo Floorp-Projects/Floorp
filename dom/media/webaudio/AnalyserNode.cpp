@@ -255,7 +255,7 @@ AnalyserNode::FFTAnalysis()
   if (mWriteIndex == 0) {
     inputBuffer = mBuffer.Elements();
   } else {
-    inputBuffer = static_cast<float*>(moz_malloc(FftSize() * sizeof(float)));
+    inputBuffer = static_cast<float*>(malloc(FftSize() * sizeof(float)));
     if (!inputBuffer) {
       return false;
     }
@@ -280,7 +280,7 @@ AnalyserNode::FFTAnalysis()
   }
 
   if (allocated) {
-    moz_free(inputBuffer);
+    free(inputBuffer);
   }
   return true;
 }

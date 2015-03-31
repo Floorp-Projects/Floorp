@@ -38,6 +38,7 @@ InternalRequest::GetRequestConstructorCopy(nsIGlobalObject* aGlobal, ErrorResult
   // The default referrer is already about:client.
 
   copy->mContentPolicyType = nsIContentPolicy::TYPE_FETCH;
+  copy->mContext = RequestContext::Fetch;
   copy->mMode = mMode;
   copy->mCredentialsMode = mCredentialsMode;
   copy->mCacheMode = mCacheMode;
@@ -74,6 +75,7 @@ InternalRequest::InternalRequest(const InternalRequest& aOther)
   , mURL(aOther.mURL)
   , mHeaders(new InternalHeaders(*aOther.mHeaders))
   , mContentPolicyType(aOther.mContentPolicyType)
+  , mContext(aOther.mContext)
   , mReferrer(aOther.mReferrer)
   , mMode(aOther.mMode)
   , mCredentialsMode(aOther.mCredentialsMode)
@@ -95,6 +97,81 @@ InternalRequest::InternalRequest(const InternalRequest& aOther)
 
 InternalRequest::~InternalRequest()
 {
+}
+
+void
+InternalRequest::SetContentPolicyType(nsContentPolicyType aContentPolicyType)
+{
+  mContentPolicyType = aContentPolicyType;
+  switch (aContentPolicyType) {
+  case nsIContentPolicy::TYPE_OTHER:
+    mContext = RequestContext::Internal;
+    break;
+  case nsIContentPolicy::TYPE_SCRIPT:
+    mContext = RequestContext::Script;
+    break;
+  case nsIContentPolicy::TYPE_IMAGE:
+    mContext = RequestContext::Image;
+    break;
+  case nsIContentPolicy::TYPE_STYLESHEET:
+    mContext = RequestContext::Style;
+    break;
+  case nsIContentPolicy::TYPE_OBJECT:
+    mContext = RequestContext::Object;
+    break;
+  case nsIContentPolicy::TYPE_DOCUMENT:
+    mContext = RequestContext::Internal;
+    break;
+  case nsIContentPolicy::TYPE_SUBDOCUMENT:
+    mContext = RequestContext::Iframe;
+    break;
+  case nsIContentPolicy::TYPE_REFRESH:
+    mContext = RequestContext::Internal;
+    break;
+  case nsIContentPolicy::TYPE_XBL:
+    mContext = RequestContext::Internal;
+    break;
+  case nsIContentPolicy::TYPE_PING:
+    mContext = RequestContext::Ping;
+    break;
+  case nsIContentPolicy::TYPE_XMLHTTPREQUEST:
+    mContext = RequestContext::Xmlhttprequest;
+    break;
+  case nsIContentPolicy::TYPE_OBJECT_SUBREQUEST:
+    mContext = RequestContext::Plugin;
+    break;
+  case nsIContentPolicy::TYPE_DTD:
+    mContext = RequestContext::Internal;
+    break;
+  case nsIContentPolicy::TYPE_FONT:
+    mContext = RequestContext::Font;
+    break;
+  case nsIContentPolicy::TYPE_MEDIA:
+    mContext = RequestContext::Audio;
+    break;
+  case nsIContentPolicy::TYPE_WEBSOCKET:
+    mContext = RequestContext::Internal;
+    break;
+  case nsIContentPolicy::TYPE_CSP_REPORT:
+    mContext = RequestContext::Cspreport;
+    break;
+  case nsIContentPolicy::TYPE_XSLT:
+    mContext = RequestContext::Xslt;
+    break;
+  case nsIContentPolicy::TYPE_BEACON:
+    mContext = RequestContext::Beacon;
+    break;
+  case nsIContentPolicy::TYPE_FETCH:
+    mContext = RequestContext::Fetch;
+    break;
+  case nsIContentPolicy::TYPE_IMAGESET:
+    mContext = RequestContext::Imageset;
+    break;
+  default:
+    MOZ_ASSERT(false, "Unhandled nsContentPolicyType value");
+    mContext = RequestContext::Internal;
+    break;
+  }
 }
 
 } // namespace dom

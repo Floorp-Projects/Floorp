@@ -40,12 +40,12 @@ nsCollationMacUC::~nsCollationMacUC()
   NS_ASSERTION(NS_SUCCEEDED(res), "CleanUpCollator failed");
   if (mUseICU) {
     if (mLocaleICU) {
-      moz_free(mLocaleICU);
+      free(mLocaleICU);
       mLocaleICU = nullptr;
     }
   } else {
     if (mBuffer) {
-      moz_free(mBuffer);
+      free(mBuffer);
       mBuffer = nullptr;
     }
   }
@@ -111,7 +111,7 @@ nsresult nsCollationMacUC::ConvertLocaleICU(nsILocale* aNSLocale, char** aICULoc
                  NS_ERROR_FAILURE);
   NS_LossyConvertUTF16toASCII tmp(localeString);
   tmp.ReplaceChar('-', '_');
-  char* locale = (char*)moz_malloc(tmp.Length() + 1);
+  char* locale = (char*)malloc(tmp.Length() + 1);
   if (!locale) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -273,13 +273,13 @@ NS_IMETHODIMP nsCollationMacUC::AllocateRawSortKey(int32_t strength, const nsASt
     do {
       newBufferLen *= 2;
     } while (newBufferLen < maxKeyLen);
-    void* newBuffer = moz_malloc(newBufferLen);
+    void* newBuffer = malloc(newBufferLen);
     if (!newBuffer) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
     if (mBuffer) {
-      moz_free(mBuffer);
+      free(mBuffer);
       mBuffer = nullptr;
     }
     mBuffer = newBuffer;

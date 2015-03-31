@@ -1677,6 +1677,54 @@ private:
   }
 };
 
+class DebuggerImmediateRunnable : public WorkerRunnable
+{
+  nsRefPtr<Function> mHandler;
+
+public:
+  explicit DebuggerImmediateRunnable(WorkerPrivate* aWorkerPrivate,
+                                     Function& aHandler)
+  : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+    mHandler(&aHandler)
+  { }
+
+private:
+  virtual bool
+  IsDebuggerRunnable() const override
+  {
+    return true;
+  }
+
+  virtual bool
+  PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    // Silence bad assertions.
+    return true;
+  }
+
+  virtual void
+  PostDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+               bool aDispatchResult) override
+  {
+    // Silence bad assertions.
+  }
+
+  virtual bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
+    JS::Rooted<JS::Value> callable(aCx, JS::ObjectValue(*mHandler->Callable()));
+    JS::HandleValueArray args = JS::HandleValueArray::empty();
+    JS::Rooted<JS::Value> rval(aCx);
+    if (!JS_CallFunctionValue(aCx, global, callable, args, &rval) &&
+        !JS_ReportPendingException(aCx)) {
+      return false;
+    }
+
+    return true;
+  }
+};
+
 void
 DummyCallback(nsITimer* aTimer, void* aClosure)
 {
@@ -2385,6 +2433,7 @@ InterfaceRequestor::InterfaceRequestor(nsIPrincipal* aPrincipal,
       callbacks->GetInterface(NS_GET_IID(nsILoadContext),
                               getter_AddRefs(baseContext));
     }
+    mOuterRequestor = callbacks;
   }
 
   mLoadContext = new LoadContext(aPrincipal, baseContext);
@@ -2441,6 +2490,13 @@ InterfaceRequestor::GetInterface(const nsIID& aIID, void** aSink)
     }
     tabChild.forget(aSink);
     return NS_OK;
+  }
+
+  if (aIID.Equals(NS_GET_IID(nsINetworkInterceptController)) &&
+      mOuterRequestor) {
+    // If asked for the network intercept controller, ask the outer requestor,
+    // which could be the docshell.
+    return mOuterRequestor->GetInterface(aIID, aSink);
   }
 
   return NS_NOINTERFACE;
@@ -6261,6 +6317,19 @@ void
 WorkerPrivate::PostMessageToDebugger(const nsAString& aMessage)
 {
   mDebugger->PostMessageToDebugger(aMessage);
+}
+
+void
+WorkerPrivate::SetDebuggerImmediate(JSContext* aCx, Function& aHandler,
+                                    ErrorResult& aRv)
+{
+  AssertIsOnWorkerThread();
+
+  nsRefPtr<DebuggerImmediateRunnable> runnable =
+    new DebuggerImmediateRunnable(this, aHandler);
+  if (!runnable->Dispatch(aCx)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+  }
 }
 
 void

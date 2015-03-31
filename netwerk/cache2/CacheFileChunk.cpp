@@ -185,7 +185,7 @@ CacheFileChunk::Read(CacheFileHandle *aHandle, uint32_t aLen,
   mState = READING;
 
   if (CanAllocate(aLen)) {
-    mRWBuf = static_cast<char *>(moz_malloc(aLen));
+    mRWBuf = static_cast<char *>(malloc(aLen));
     if (mRWBuf) {
       mRWBufSize = aLen;
       ChunkAllocationChanged();
@@ -698,7 +698,7 @@ CacheFileChunk::EnsureBufSize(uint32_t aBufSize)
     return mStatus;
   }
 
-  char *newBuf = static_cast<char *>(moz_realloc(mBuf, aBufSize));
+  char *newBuf = static_cast<char *>(realloc(mBuf, aBufSize));
   if (!newBuf) {
     SetError(NS_ERROR_OUT_OF_MEMORY);
     return mStatus;

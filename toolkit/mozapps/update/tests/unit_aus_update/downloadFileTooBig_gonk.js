@@ -43,18 +43,18 @@ function run_test() {
   do_execute_soon(run_test_pt1);
 }
 
-function xhr_pt1() {
-  gXHR.status = 200;
-  gXHR.responseText = gResponseBody;
+function xhr_pt1(aXHR) {
+  aXHR.status = 200;
+  aXHR.responseText = gResponseBody;
   try {
     let parser = Cc["@mozilla.org/xmlextras/domparser;1"].
                  createInstance(Ci.nsIDOMParser);
-    gXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
+    aXHR.responseXML = parser.parseFromString(gResponseBody, "application/xml");
   } catch (e) {
-    gXHR.responseXML = null;
+    aXHR.responseXML = null;
   }
-  let e = { target: gXHR };
-  gXHR.onload(e);
+  let e = { target: aXHR };
+  aXHR.onload(e);
 }
 
 function run_test_pt1() {

@@ -154,13 +154,6 @@ nsThreadClassInfo::GetClassID(nsCID** aResult)
 }
 
 NS_IMETHODIMP
-nsThreadClassInfo::GetImplementationLanguage(uint32_t* aResult)
-{
-  *aResult = nsIProgrammingLanguage::CPLUSPLUS;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsThreadClassInfo::GetFlags(uint32_t* aResult)
 {
   *aResult = THREADSAFE;

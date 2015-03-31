@@ -77,12 +77,6 @@ extern "C" MOZ_MEMORY_API char *strndup_impl(const char *, size_t);
 #define UNLIKELY(x)  (x)
 #endif
 
-void
-moz_free(void* ptr)
-{
-    free_impl(ptr);
-}
-
 void*
 moz_xmalloc(size_t size)
 {
@@ -92,11 +86,6 @@ moz_xmalloc(size_t size)
         return moz_xmalloc(size);
     }
     return ptr;
-}
-void*
-moz_malloc(size_t size)
-{
-    return malloc_impl(size);
 }
 
 void*
@@ -109,11 +98,6 @@ moz_xcalloc(size_t nmemb, size_t size)
     }
     return ptr;
 }
-void*
-moz_calloc(size_t nmemb, size_t size)
-{
-    return calloc_impl(nmemb, size);
-}
 
 void*
 moz_xrealloc(void* ptr, size_t size)
@@ -124,11 +108,6 @@ moz_xrealloc(void* ptr, size_t size)
         return moz_xrealloc(ptr, size);
     }
     return newptr;
-}
-void*
-moz_realloc(void* ptr, size_t size)
-{
-    return realloc_impl(ptr, size);
 }
 
 char*
@@ -141,11 +120,6 @@ moz_xstrdup(const char* str)
     }
     return dup;
 }
-char*
-moz_strdup(const char* str)
-{
-    return strdup_impl(str);
-}
 
 #if defined(HAVE_STRNDUP)
 char*
@@ -157,11 +131,6 @@ moz_xstrndup(const char* str, size_t strsize)
         return moz_xstrndup(str, strsize);
     }
     return dup;
-}
-char*
-moz_strndup(const char* str, size_t strsize)
-{
-    return strndup_impl(str, strsize);
 }
 #endif  // if defined(HAVE_STRNDUP)
 
@@ -212,11 +181,6 @@ moz_xmemalign(size_t boundary, size_t size)
     // non-NULL ptr or errno == EINVAL
     return ptr;
 }
-void*
-moz_memalign(size_t boundary, size_t size)
-{
-    return memalign_impl(boundary, size);
-}
 #endif // if defined(HAVE_MEMALIGN)
 
 #if defined(HAVE_VALLOC)
@@ -229,11 +193,6 @@ moz_xvalloc(size_t size)
         return moz_xvalloc(size);
     }
     return ptr;
-}
-void*
-moz_valloc(size_t size)
-{
-    return valloc_impl(size);
 }
 #endif // if defined(HAVE_VALLOC)
 
