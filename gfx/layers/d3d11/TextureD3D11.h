@@ -34,6 +34,12 @@ public:
 
   virtual ~TextureClientD3D11();
 
+  void InitWith(ID3D11Texture2D* aTexture, const gfx::IntSize& aSize)
+  {
+    mTexture = aTexture;
+    mSize = aSize;
+  }
+
   // TextureClient
 
   virtual bool IsAllocated() const override { return mTexture || mTexture10; }
