@@ -37,8 +37,7 @@
   <color name="highlight_dark">#33FFFFFF</color>
   <color name="highlight_dark_focused">#1AFFFFFF</color>
 
-  <!-- If you update one, update the other. -->
-  <color name="new_tablet_highlight">#D7D7DC</color>
+  <!-- Synced w/ toolbar_grey_pressed -->
   <color name="new_tablet_highlight_lwt">#AAD7D7DC</color>
 
   <!-- Synced w/ tabs_tray_grey_pressed -->
