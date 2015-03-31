@@ -1328,8 +1328,11 @@ pref("services.sync.prefs.sync.xpinstall.whitelist.required", true);
 
 // Developer edition preferences
 #ifdef MOZ_DEV_EDITION
-pref("lightweightThemes.selectedThemeID", "firefox-devedition@mozilla.org");
 pref("browser.devedition.theme.enabled", true);
+pref("browser.devedition.theme.showCustomizeButton", true);
+#else
+pref("browser.devedition.theme.enabled", false);
+pref("browser.devedition.theme.showCustomizeButton", false);
 #endif
 
 // Developer edition promo preferences
@@ -1492,11 +1495,16 @@ pref("devtools.tilt.outro_transition", true);
 //                  stored. Setting this preference to 0 will not
 //                  clear any recent files, but rather hide the
 //                  'Open Recent'-menu.
+// - lineNumbers: Whether to show line numbers or not.
+// - wrapText: Whether to wrap text or not.
 // - showTrailingSpace: Whether to highlight trailing space or not.
-// - enableCodeFolding: Whether to enable code folding or not.
+// - editorFontSize: Editor font size configuration.
 // - enableAutocompletion: Whether to enable JavaScript autocompletion.
 pref("devtools.scratchpad.recentFilesMax", 10);
+pref("devtools.scratchpad.lineNumbers", true);
+pref("devtools.scratchpad.wrapText", false);
 pref("devtools.scratchpad.showTrailingSpace", false);
+pref("devtools.scratchpad.editorFontSize", 12);
 pref("devtools.scratchpad.enableAutocompletion", true);
 
 // Enable the Storage Inspector
@@ -1609,6 +1617,7 @@ pref("devtools.eyedropper.zoom", 6);
 // - keymap: which keymap to use (can be 'default', 'emacs' or 'vim')
 // - autoclosebrackets: whether to permit automatic bracket/quote closing.
 // - detectindentation: whether to detect the indentation from the file
+// - enableCodeFolding: Whether to enable code folding or not.
 pref("devtools.editor.tabsize", 2);
 pref("devtools.editor.expandtab", true);
 pref("devtools.editor.keymap", "default");

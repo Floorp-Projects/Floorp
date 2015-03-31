@@ -554,6 +554,7 @@ status_t GonkBufferQueueProducer::queueBuffer(int slot,
             return BAD_VALUE;
     }
 
+    GonkBufferItem item;
     sp<IConsumerListener> listener;
     { // Autolock scope
         Mutex::Autolock lock(mCore->mMutex);
@@ -610,7 +611,6 @@ status_t GonkBufferQueueProducer::queueBuffer(int slot,
         ++mCore->mFrameCounter;
         mSlots[slot].mFrameNumber = mCore->mFrameCounter;
 
-        GonkBufferItem item;
         item.mAcquireCalled = mSlots[slot].mAcquireCalled;
         item.mGraphicBuffer = mSlots[slot].mGraphicBuffer;
         item.mCrop = crop;
@@ -659,11 +659,18 @@ status_t GonkBufferQueueProducer::queueBuffer(int slot,
 
         output->inflate(mCore->mDefaultWidth, mCore->mDefaultHeight,
                 mCore->mTransformHint, mCore->mQueue.size());
+
+        item.mGraphicBuffer.clear();
+        item.mSlot = GonkBufferItem::INVALID_BUFFER_SLOT;
     } // Autolock scope
 
     // Call back without lock held
     if (listener != NULL) {
+#if ANDROID_VERSION == 21
         listener->onFrameAvailable();
+#else
+        listener->onFrameAvailable(reinterpret_cast<::android::BufferItem&>(item));
+#endif
     }
 
     return NO_ERROR;

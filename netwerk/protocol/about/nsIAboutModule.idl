@@ -9,7 +9,7 @@ interface nsIURI;
 interface nsIChannel;
 interface nsILoadInfo;
 
-[scriptable, uuid(cdef9e4e-b731-450c-871a-8015a95fa54c)]
+[scriptable, uuid(c0c19db9-1b5a-4ac5-b656-ed6f8149fa48)]
 interface nsIAboutModule : nsISupports 
 {
 
