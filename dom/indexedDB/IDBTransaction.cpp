@@ -215,9 +215,7 @@ IDBTransaction::CreateVersionChange(
   nsTArray<nsString> emptyObjectStoreNames;
 
   nsRefPtr<IDBTransaction> transaction =
-    new IDBTransaction(aDatabase,
-                       emptyObjectStoreNames,
-                       VERSION_CHANGE);
+    new IDBTransaction(aDatabase, emptyObjectStoreNames, VERSION_CHANGE);
   aOpenRequest->GetCallerLocation(transaction->mFilename,
                                   &transaction->mLineNo);
 
@@ -253,9 +251,7 @@ IDBTransaction::Create(IDBDatabase* aDatabase,
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
   MOZ_ASSERT(!aObjectStoreNames.IsEmpty());
-  MOZ_ASSERT(aMode == READ_ONLY ||
-             aMode == READ_WRITE ||
-             aMode == READ_WRITE_FLUSH);
+  MOZ_ASSERT(aMode == READ_ONLY || aMode == READ_WRITE);
 
   nsRefPtr<IDBTransaction> transaction =
     new IDBTransaction(aDatabase, aObjectStoreNames, aMode);
@@ -866,9 +862,6 @@ IDBTransaction::GetMode(ErrorResult& aRv) const
 
     case READ_WRITE:
       return IDBTransactionMode::Readwrite;
-
-    case READ_WRITE_FLUSH:
-      return IDBTransactionMode::Readwriteflush;
 
     case VERSION_CHANGE:
       return IDBTransactionMode::Versionchange;
