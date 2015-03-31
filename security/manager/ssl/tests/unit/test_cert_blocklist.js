@@ -113,6 +113,8 @@ let blocklist_contents =
     "<certItem issuerName='YW5vdGhlciBpbWFnaW5hcnkgaXNzdWVy'>" +
     "<serialNumber>c2VyaWFsMi4=</serialNumber>" +
     "<serialNumber>YW5vdGhlciBzZXJpYWwu</serialNumber>" +
+    "</certItem><certItem subject='MCIxIDAeBgNVBAMTF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5'"+
+    " pubKeyHash='2ETEb0QP574JkM+35JVwS899PLUmt1rrJyWOV6GRfAE='>" +
     "</certItem></certItems></blocklist>";
 testserver.registerPathHandler("/push_blocked_cert/",
   function serveResponse(request, response) {
@@ -208,7 +210,12 @@ function run_test() {
 
   // The blocklist also revokes other-test-ca.der, which issued other-ca-ee.der.
   // Check the cert validates before we load the blocklist
-  file = "tlsserver/default-ee.der";
+  file = "tlsserver/other-issuer-ee.der";
+  verify_cert(file, PRErrorCodeSuccess);
+
+  // The blocklist will revoke same-issuer-ee.der via subject / pubKeyHash.
+  // Check the cert validates before we load the blocklist
+  file = "tlsserver/same-issuer-ee.der";
   verify_cert(file, PRErrorCodeSuccess);
 
   // blocklist load is async so we must use add_test from here
@@ -242,6 +249,11 @@ function run_test() {
     ok(test_is_revoked(certList, "another imaginary issuer", "another serial."),
        "issuer / serial pair should be blocked");
 
+    // test a subject / pubKey revocation
+    ok(test_is_revoked(certList, "nonsense", "more nonsense",
+       "some imaginary subject", "some imaginary pubkey"),
+       "issuer / serial pair should be blocked");
+
     // Check the blocklist entry has been persisted properly to the backing
     // file
     let profile = do_get_profile();
@@ -260,6 +272,8 @@ function run_test() {
       contents = contents + (contents.length == 0 ? "" : "\n") + line.value;
     } while (hasmore);
     let expected = "# Auto generated contents. Do not edit.\n" +
+                  "MCIxIDAeBgNVBAMTF0Fub3RoZXIgVGVzdCBFbmQtZW50aXR5\n"+
+                  "\t2ETEb0QP574JkM+35JVwS899PLUmt1rrJyWOV6GRfAE=\n"+
                   "MBgxFjAUBgNVBAMTDU90aGVyIHRlc3QgQ0E=\n" +
                   " AKEIivg=\n" +
                   "MBIxEDAOBgNVBAMTB1Rlc3QgQ0E=\n" +
@@ -275,6 +289,10 @@ function run_test() {
 
     // Check the ee with the blocklisted root also causes a failure
     file = "tlsserver/other-issuer-ee.der";
+    verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
+
+    // Check the ee blocked by subject / pubKey causes a failure
+    file = "tlsserver/same-issuer-ee.der";
     verify_cert(file, SEC_ERROR_REVOKED_CERTIFICATE);
 
     // Check a non-blocklisted chain still validates OK
