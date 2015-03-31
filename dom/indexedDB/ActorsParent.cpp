@@ -250,17 +250,17 @@ const uint32_t kDEBUGTransactionThreadSleepMS = 0;
 
 #endif
 
-struct MozFreeDeleter
+struct FreeDeleter
 {
   void
   operator()(void* aPtr) const
   {
-    moz_free(aPtr);
+    free(aPtr);
   }
 };
 
 template <typename T>
-using UniqueMozFreePtr = UniquePtr<T, MozFreeDeleter>;
+using UniqueFreePtr = UniquePtr<T, FreeDeleter>;
 
 template <size_t N>
 MOZ_CONSTEXPR size_t
@@ -721,9 +721,9 @@ ReadCompressedIndexId(const uint8_t** aIterator,
 // static
 nsresult
 MakeCompressedIndexDataValues(
-                          const FallibleTArray<IndexDataValue>& aIndexValues,
-                          UniqueMozFreePtr<uint8_t>& aCompressedIndexDataValues,
-                          uint32_t* aCompressedIndexDataValuesLength)
+                             const FallibleTArray<IndexDataValue>& aIndexValues,
+                             UniqueFreePtr<uint8_t>& aCompressedIndexDataValues,
+                             uint32_t* aCompressedIndexDataValuesLength)
 {
   MOZ_ASSERT(!NS_IsMainThread());
   MOZ_ASSERT(!IsOnBackgroundThread());
@@ -772,8 +772,8 @@ MakeCompressedIndexDataValues(
     blobDataLength += infoLength;
   }
 
-  UniqueMozFreePtr<uint8_t> blobData(
-    static_cast<uint8_t*>(moz_malloc(blobDataLength)));
+  UniqueFreePtr<uint8_t> blobData(
+    static_cast<uint8_t*>(malloc(blobDataLength)));
   if (NS_WARN_IF(!blobData)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_OUT_OF_MEMORY;
@@ -2724,7 +2724,7 @@ InsertIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
     indexValues.InsertElementSorted(IndexDataValue(indexId, !!unique, value)));
 
   // Compress the array.
-  UniqueMozFreePtr<uint8_t> indexValuesBlob;
+  UniqueFreePtr<uint8_t> indexValuesBlob;
   uint32_t indexValuesBlobLength;
   rv = MakeCompressedIndexDataValues(indexValues,
                                      indexValuesBlob,
@@ -2950,8 +2950,8 @@ UpgradeKeyFunction::OnFunctionCall(mozIStorageValueArray* aValues,
   }
 
   // Upgrading the key doesn't change the amount of space needed to hold it.
-  UniqueMozFreePtr<uint8_t> upgradedBlobData(
-    static_cast<uint8_t*>(moz_malloc(blobDataLength)));
+  UniqueFreePtr<uint8_t> upgradedBlobData(
+    static_cast<uint8_t*>(malloc(blobDataLength)));
   if (NS_WARN_IF(!upgradedBlobData)) {
     IDB_REPORT_INTERNAL_ERR();
     return NS_ERROR_OUT_OF_MEMORY;
@@ -15993,7 +15993,7 @@ DatabaseOperationBase::UpdateIndexValues(
                  "DatabaunseOperationBase::UpdateIndexValues",
                  js::ProfileEntry::Category::STORAGE);
 
-  UniqueMozFreePtr<uint8_t> indexDataValues;
+  UniqueFreePtr<uint8_t> indexDataValues;
   uint32_t indexDataValuesLength;
   nsresult rv = MakeCompressedIndexDataValues(aIndexValues,
                                               indexDataValues,
@@ -20010,7 +20010,7 @@ UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
     }
 
     std::pair<uint8_t *, int> copiedBlobDataPair(
-      static_cast<uint8_t*>(moz_malloc(blobDataLength)),
+      static_cast<uint8_t*>(malloc(blobDataLength)),
       blobDataLength);
 
     if (!copiedBlobDataPair.first) {
@@ -20058,7 +20058,7 @@ UpdateIndexDataValuesFunction::OnFunctionCall(mozIStorageValueArray* aValues,
                                                      info.value())));
   }
 
-  UniqueMozFreePtr<uint8_t> indexValuesBlob;
+  UniqueFreePtr<uint8_t> indexValuesBlob;
   uint32_t indexValuesBlobLength;
   rv = MakeCompressedIndexDataValues(indexValues,
                                      indexValuesBlob,
