@@ -13,6 +13,46 @@
     return good;
   }
 
+  function mkElement(type) {
+    // This makes an unattached element.
+    // It's not rendered to save the cycles that costs on b2g emulator
+    // and it gets dropped (and GC'd) when the test is done.
+    var e = document.createElement(type);
+    e.width = 32;
+    e.height = 24;
+    document.getElementById('display').appendChild(e);
+    return e;
+  }
+
+  // Runs checkFunc until it reports success.
+  // This is kludgy, but you have to wait for media to start flowing, and it
+  // can't be any old media, it has to include real data, for which we have no
+  // reliable signals to use as a trigger.
+  function periodicCheck(checkFunc) {
+    var resolve;
+    var done = false;
+    // This returns a function so that we create 10 closures in the loop, not
+    // one; and so that the timers don't all start straight away
+    var waitAndCheck = counter => () => {
+      if (done) {
+        return Promise.resolve();
+      }
+      return new Promise(r => setTimeout(r, 200 << counter))
+        .then(() => {
+          if (checkFunc()) {
+            done = true;
+            resolve();
+          }
+        });
+    };
+
+    var chain = Promise.resolve();
+    for (var i = 0; i < 10; ++i) {
+      chain = chain.then(waitAndCheck(i));
+    }
+    return new Promise(r => resolve = r);
+  }
+
   function isSilence(audioData) {
     var silence = true;
     for (var i = 0; i < audioData.length; ++i) {
@@ -23,97 +63,46 @@
     return silence;
   }
 
-  function periodicCheck(type, checkFunc, successMessage, done) {
-    var num = 0;
-    var timeout;
-    function periodic() {
-      if (checkFunc()) {
-        ok(true, type + ' is ' + successMessage);
-        done();
-      } else {
-        setupNext();
-      }
-    }
-    function setupNext() {
-      // exponential backoff on the timer
-      // on a very slow system (like the b2g emulator) a long timeout is
-      // necessary, but we want to run fast if we can
-      timeout = setTimeout(periodic, 200 << num);
-      num++;
-    }
+  function checkAudio(constraintApplied, stream) {
+    var audio = mkElement('audio');
+    audio.mozSrcObject = stream;
+    audio.play();
 
-    setupNext();
-
-    return function cancel() {
-      if (timeout) {
-        ok(false, type + ' (' + successMessage + ')' +
-           ' failed after waiting full duration');
-        clearTimeout(timeout);
-        done();
-      }
-    };
-  }
-
-  function checkAudio(constraintApplied, stream, done) {
     var context = new AudioContext();
     var source = context.createMediaStreamSource(stream);
     var analyser = context.createAnalyser();
     source.connect(analyser);
     analyser.connect(context.destination);
 
-    function testAudio() {
+    return periodicCheck(() => {
       var sampleCount = analyser.frequencyBinCount;
       info('got some audio samples: ' + sampleCount);
-      var bucket = new ArrayBuffer(sampleCount);
-      var view = new Uint8Array(bucket);
-      analyser.getByteTimeDomainData(view);
+      var buffer = new Uint8Array(sampleCount);
+      analyser.getByteTimeDomainData(buffer);
 
-      var silent = check(constraintApplied, isSilence(view), 'be silence for audio');
+      var silent = check(constraintApplied, isSilence(buffer),
+                         'be silence for audio');
       return sampleCount > 0 && silent;
-    }
-    function disconnect() {
+    }).then(() => {
       source.disconnect();
       analyser.disconnect();
-      done();
-    }
-    return periodicCheck('audio', testAudio,
-                         (constraintApplied ? '' : 'not ') + 'silent', disconnect);
+      audio.pause();
+      ok(true, 'audio is ' + (constraintApplied ? '' : 'not ') + 'silent');
+    });
   }
 
-  function mkElement(type) {
-    // this makes an unattached element
-    // it's not rendered to save the cycles that costs on b2g emulator
-    // and it gets droped (and GC'd) when the test is done
-    var e = document.createElement(type);
-    e.width = 32;
-    e.height = 24;
-    return e;
-  }
-
-  function checkVideo(constraintApplied, stream, done) {
+  function checkVideo(constraintApplied, stream) {
     var video = mkElement('video');
     video.mozSrcObject = stream;
-
-    var ready = false;
-    video.onplaying = function() {
-      ready = true;
-    }
     video.play();
 
-    function tryToRenderToCanvas() {
-      if (!ready) {
-        info('waiting for video to start');
-        return false;
-      }
-
+    return periodicCheck(() => {
       try {
-        // every try needs a new canvas, otherwise a taint from an earlier call
-        // will affect subsequent calls
         var canvas = mkElement('canvas');
         var ctx = canvas.getContext('2d');
-        // have to guard drawImage with the try as well, due to bug 879717
-        // if we get an error, this round fails, but that failure is usually
-        // just transitory
+        // Have to guard drawImage with the try as well, due to bug 879717. If
+        // we get an error, this round fails, but that failure is usually just
+        // transitory.
         ctx.drawImage(video, 0, 0);
         ctx.getImageData(0, 0, 1, 1);
         return check(constraintApplied, false, 'throw on getImageData for video');
@@ -121,10 +110,10 @@
         return check(constraintApplied, e.name === 'SecurityError',
                      'get a security error: ' + e.name);
       }
-    }
-
-    return periodicCheck('video', tryToRenderToCanvas,
-                         (constraintApplied ? '' : 'not ') + 'protected', done);
+    }).then(() => {
+      video.pause();
+      ok(true, 'video is ' + (constraintApplied ? '' : 'not ') + 'protected');
+    });
   }
 
   global.audioIsSilence = checkAudio;
