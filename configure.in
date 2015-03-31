@@ -5316,6 +5316,10 @@ MOZ_ARG_DISABLE_BOOL(fmp4,
     MOZ_FMP4=,
     MOZ_FMP4=1)
 
+if test -n "$MOZ_FFMPEG" -a -z "$MOZ_FMP4"; then
+    AC_MSG_ERROR([Fragmented MP4 support must be enabled if using FFMPEG])
+fi
+
 if test -n "$MOZ_FMP4"; then
     AC_DEFINE(MOZ_FMP4)
     MOZ_EME=1
