@@ -1238,10 +1238,10 @@ RestyleManager::GetMaxAnimationGenerationForFrame(nsIFrame* aFrame)
   nsCSSPseudoElements::Type pseudoType =
     aFrame->StyleContext()->GetPseudoType();
   AnimationPlayerCollection* transitions =
-    aFrame->PresContext()->TransitionManager()->GetAnimationPlayers(
+    aFrame->PresContext()->TransitionManager()->GetAnimations(
       content->AsElement(), pseudoType, false /* don't create */);
   AnimationPlayerCollection* animations =
-    aFrame->PresContext()->AnimationManager()->GetAnimationPlayers(
+    aFrame->PresContext()->AnimationManager()->GetAnimations(
       content->AsElement(), pseudoType, false /* don't create */);
 
   return std::max(transitions ? transitions->mAnimationGeneration : 0,

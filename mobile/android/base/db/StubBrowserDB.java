@@ -217,7 +217,7 @@ public class StubBrowserDB implements BrowserDB {
     public void removeHistoryEntry(ContentResolver cr, String url) {
     }
 
-    public void clearHistory(ContentResolver cr) {
+    public void clearHistory(ContentResolver cr, boolean clearSearchHistory) {
     }
 
     @RobocopTarget

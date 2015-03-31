@@ -376,7 +376,9 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    mEncodedBufferCache = new EncodedBufferCache(MAX_ALLOW_MEMORY_BUFFER);
+    uint32_t maxMem = Preferences::GetUint("media.recorder.max_memory",
+                                           MAX_ALLOW_MEMORY_BUFFER);
+    mEncodedBufferCache = new EncodedBufferCache(maxMem);
     mLastBlobTimeStamp = TimeStamp::Now();
   }
 

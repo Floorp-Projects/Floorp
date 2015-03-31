@@ -339,6 +339,9 @@ IsWorkerGlobal(JSObject* global);
 bool
 IsDebuggerGlobal(JSObject* global);
 
+bool
+IsDebuggerSandbox(JSObject* object);
+
 // Throws the JSMSG_GETTER_ONLY exception.  This shouldn't be used going
 // forward -- getter-only properties should just use JS_PSG for the setter
 // (implying no setter at all), which will not throw when set in non-strict

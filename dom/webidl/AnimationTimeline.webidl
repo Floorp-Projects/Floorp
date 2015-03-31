@@ -16,5 +16,5 @@ interface AnimationTimeline {
   readonly attribute double? currentTime;
   // Not yet implemented:
   // AnimationPlayer            play (optional TimedItem? source = null);
-  // sequence<AnimationPlayer>  getAnimationPlayers ();
+  // sequence<AnimationPlayer>  getAnimations ();
 };

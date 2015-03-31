@@ -421,7 +421,7 @@ ReadingListImpl.prototype = {
    * @return {Promise} Promise that is fullfilled with the added item.
    */
   addItemFromBrowser: Task.async(function* (browser, url) {
-    let metadata = yield getMetadataFromBrowser(browser);
+    let metadata = yield this.getMetadataFromBrowser(browser);
     let record = {
       url: url,
       title: metadata.title,
@@ -435,6 +435,25 @@ ReadingListImpl.prototype = {
 
     return (yield this.addItem(record));
   }),
+
+  /**
+   * Get page metadata from the content document in a given <xul:browser>.
+   * @see PageMetadata.jsm
+   *
+   * @param {<xul:browser>} browser - Browser element for the document.
+   * @returns {Promise} Promise that is fulfilled with an object describing the metadata.
+   */
+  getMetadataFromBrowser(browser) {
+    let mm = browser.messageManager;
+    return new Promise(resolve => {
+      function handleResult(msg) {
+        mm.removeMessageListener("PageMetadata:PageDataResult", handleResult);
+        resolve(msg.json);
+      }
+      mm.addMessageListener("PageMetadata:PageDataResult", handleResult);
+      mm.sendAsyncMessage("PageMetadata:GetPageData");
+    });
+  },
 
   /**
    * Adds a listener that will be notified when the list changes.  Listeners
@@ -1041,25 +1060,6 @@ function hash(str) {
 
 function clone(obj) {
   return Cu.cloneInto(obj, {}, { cloneFunctions: false });
-}
-
-/**
- * Get page metadata from the content document in a given <xul:browser>.
- * @see PageMetadata.jsm
- *
- * @param {<xul:browser>} browser - Browser element for the document.
- * @returns {Promise} Promise that is fulfilled with an object describing the metadata.
- */
-function getMetadataFromBrowser(browser) {
-  let mm = browser.messageManager;
-  return new Promise(resolve => {
-    function handleResult(msg) {
-      mm.removeMessageListener("PageMetadata:PageDataResult", handleResult);
-      resolve(msg.json);
-    }
-    mm.addMessageListener("PageMetadata:PageDataResult", handleResult);
-    mm.sendAsyncMessage("PageMetadata:GetPageData");
-  });
 }
 
 Object.defineProperty(this, "ReadingList", {

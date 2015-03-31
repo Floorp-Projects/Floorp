@@ -32,6 +32,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
+#include "nsBidiPresUtils.h"
 #include "nsBidiUtils.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/EventDispatcher.h"

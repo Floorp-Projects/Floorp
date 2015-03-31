@@ -523,12 +523,12 @@ public abstract class GeckoApp
         outState.putString(SAVED_STATE_PRIVATE_SESSION, mPrivateBrowsingSession);
     }
 
-    void handleClearHistory() {
+    void handleClearHistory(final boolean clearSearchHistory) {
         final BrowserDB db = getProfile().getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                db.clearHistory(getContentResolver());
+                db.clearHistory(getContentResolver(), clearSearchHistory);
             }
         });
     }
@@ -626,7 +626,7 @@ public abstract class GeckoApp
             mPrivateBrowsingSession = message.optString("session", null);
 
         } else if ("Sanitize:ClearHistory".equals(event)) {
-            handleClearHistory();
+            handleClearHistory(message.optBoolean("clearSearchHistory", false));
             callback.sendSuccess(true);
 
         } else if ("Session:StatePurged".equals(event)) {

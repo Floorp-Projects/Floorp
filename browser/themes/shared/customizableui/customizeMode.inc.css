@@ -164,6 +164,13 @@
   -moz-margin-start: 6px !important;
 }
 
+#customization-lwtheme-button > .box-inherit > .box-inherit > .button-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 2px;
+  background-size: contain;
+}
+
 #customization-titlebar-visibility-button > .button-box > .button-icon {
   vertical-align: middle;
 }

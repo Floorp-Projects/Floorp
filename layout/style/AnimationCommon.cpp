@@ -303,9 +303,9 @@ CommonAnimationManager::ExtractComputedValueForTransition(
 }
 
 AnimationPlayerCollection*
-CommonAnimationManager::GetAnimationPlayers(dom::Element *aElement,
-                                            nsCSSPseudoElements::Type aPseudoType,
-                                            bool aCreateIfNeeded)
+CommonAnimationManager::GetAnimations(dom::Element *aElement,
+                                      nsCSSPseudoElements::Type aPseudoType,
+                                      bool aCreateIfNeeded)
 {
   if (!aCreateIfNeeded && PR_CLIST_IS_EMPTY(&mElementCollections)) {
     // Early return for the most common case.
@@ -366,7 +366,7 @@ CommonAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
   }
 
   AnimationPlayerCollection* collection =
-    GetAnimationPlayers(aElement, aPseudoType, false);
+    GetAnimations(aElement, aPseudoType, false);
   if (!collection) {
     return nullptr;
   }
