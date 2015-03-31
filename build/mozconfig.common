@@ -10,8 +10,6 @@
 # another mozconfig file, you'll need to use mozconfig.common.override instead
 # of this file.
 
-MOZ_CRASHREPORTER_UPLOAD_FULL_SYMBOLS=1
-
 mk_add_options AUTOCLOBBER=1
 
 ac_add_options --enable-crashreporter
