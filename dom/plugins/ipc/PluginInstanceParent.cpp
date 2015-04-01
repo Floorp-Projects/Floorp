@@ -1739,10 +1739,17 @@ PluginInstanceParent::RecvAsyncNPP_NewResult(const NPError& aResult)
         mSurrogate->SetAcceptingCalls(true);
     }
 
+    // It is possible for a plugin instance to outlive its owner (eg. When a
+    // PluginDestructionGuard was on the stack at the time the owner was being
+    // destroyed). We need to handle that case.
     nsPluginInstanceOwner* owner = GetOwner();
-    // It is possible for a plugin instance to outlive its owner when async
-    // plugin init is turned on, so we need to handle that case.
-    if (aResult != NPERR_NO_ERROR || !owner) {
+    if (!owner) {
+        // We can't do anything at this point, just return. Any pending browser
+        // streams will be cleaned up when the plugin instance is destroyed.
+        return true;
+    }
+
+    if (aResult != NPERR_NO_ERROR) {
         mSurrogate->NotifyAsyncInitFailed();
         return true;
     }
