@@ -88,6 +88,7 @@ public:
     explicit SavedState() {}
   private:
     uint32_t mFloatInfoCount;
+    mozilla::WritingMode mWritingMode;
     nscoord mLineLeft, mBlockStart;
     bool mPushedLeftFloatPastBreak;
     bool mPushedRightFloatPastBreak;
@@ -286,7 +287,8 @@ public:
 
   void AssertStateMatches(SavedState *aState) const
   {
-    NS_ASSERTION(aState->mLineLeft == mLineLeft &&
+    NS_ASSERTION(aState->mWritingMode == mWritingMode &&
+                 aState->mLineLeft == mLineLeft &&
                  aState->mBlockStart == mBlockStart &&
                  aState->mPushedLeftFloatPastBreak ==
                    mPushedLeftFloatPastBreak &&
@@ -341,7 +343,7 @@ private:
     nsRect mRect;
   };
 
-  mozilla::DebugOnly<mozilla::WritingMode> mWritingMode;
+  mozilla::WritingMode mWritingMode;
 
   // Translation from local to global coordinate space.
   nscoord mLineLeft, mBlockStart;
