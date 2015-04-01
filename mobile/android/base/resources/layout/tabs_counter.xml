@@ -11,7 +11,7 @@
                                          android:paddingLeft="4dip"
                                          android:background="@drawable/tabs_count_foreground"
                                          android:textAppearance="@style/TextAppearance.Micro"
-                                         android:textColor="#FF43484E"
+                                         android:textColor="@color/text_and_tabs_tray_grey"
                                          android:textStyle="bold"
                                          android:duplicateParentState="true"
                                          android:gravity="center"/>
