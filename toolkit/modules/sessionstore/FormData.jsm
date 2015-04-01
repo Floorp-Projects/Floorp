@@ -328,7 +328,12 @@ let FormDataInternal = {
       }
     } else if (aValue && aValue.fileList && aValue.type == "file" &&
       aNode.type == "file") {
-      aNode.mozSetFileNameArray(aValue.fileList, aValue.fileList.length);
+      try {
+        // FIXME (bug 1122855): This won't work in content processes.
+        aNode.mozSetFileNameArray(aValue.fileList, aValue.fileList.length);
+      } catch (e) {
+        Cu.reportError("mozSetFileNameArray: " + e);
+      }
       eventType = "input";
     } else if (Array.isArray(aValue) && aNode.options) {
       Array.forEach(aNode.options, function(opt, index) {
