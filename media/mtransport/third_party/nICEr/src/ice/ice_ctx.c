@@ -405,6 +405,11 @@ static void nr_ice_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
     int i;
     nr_ice_stun_id *id1,*id2;
 
+    STAILQ_FOREACH_SAFE(s1, &ctx->streams, entry, s2){
+      STAILQ_REMOVE(&ctx->streams,s1,nr_ice_media_stream_,entry);
+      nr_ice_media_stream_destroy(&s1);
+    }
+
     RFREE(ctx->label);
 
     RFREE(ctx->stun_servers);
@@ -425,11 +430,6 @@ static void nr_ice_ctx_destroy_cb(NR_SOCKET s, int how, void *cb_arg)
     }
     RFREE(ctx->pwd);
     RFREE(ctx->ufrag);
-
-    STAILQ_FOREACH_SAFE(s1, &ctx->streams, entry, s2){
-      STAILQ_REMOVE(&ctx->streams,s1,nr_ice_media_stream_,entry);
-      nr_ice_media_stream_destroy(&s1);
-    }
 
     STAILQ_FOREACH_SAFE(id1, &ctx->ids, entry, id2){
       STAILQ_REMOVE(&ctx->ids,id1,nr_ice_stun_id_,entry);

@@ -21,6 +21,7 @@
 #include "prlog.h"
 #include "VideoUtils.h"
 #include <algorithm>
+#include "gfxPlatform.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* GetAppleMediaLog();
@@ -79,6 +80,11 @@ AppleVDADecoder::~AppleVDADecoder()
 nsresult
 AppleVDADecoder::Init()
 {
+  if (!gfxPlatform::CanUseHardwareVideoDecoding()) {
+    // This GPU is blacklisted for hardware decoding.
+    return NS_ERROR_FAILURE;
+  }
+
   if (mDecoder) {
     return NS_OK;
   }

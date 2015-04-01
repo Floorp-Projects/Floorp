@@ -430,6 +430,9 @@
 @RESPATH@/components/htmlMenuBuilder.manifest
 @RESPATH@/components/PresentationDeviceInfoManager.manifest
 @RESPATH@/components/PresentationDeviceInfoManager.js
+@RESPATH@/components/BuiltinProviders.manifest
+@RESPATH@/components/TCPPresentationServer.js
+
 #ifdef MOZ_SECUREELEMENT
 @RESPATH@/components/SecureElement.js
 @RESPATH@/components/SecureElement.manifest

@@ -31,6 +31,8 @@ MOZ_SERVICE(ServiceWorkerManager, nsIServiceWorkerManager,
             "@mozilla.org/serviceworkers/manager;1");
 MOZ_SERVICE(AsyncShutdown, nsIAsyncShutdownService,
             "@mozilla.org/async-shutdown-service;1")
+MOZ_SERVICE(UUIDGenerator, nsIUUIDGenerator,
+	    "@mozilla.org/uuid-generator;1");
 
 #ifdef MOZ_USE_NAMESPACE
 namespace mozilla {

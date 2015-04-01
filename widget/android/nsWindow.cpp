@@ -7,8 +7,10 @@
 #include <math.h>
 #include <unistd.h>
 
+#include "mozilla/IMEStateManager.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 
@@ -175,8 +177,6 @@ nsWindow::nsWindow() :
     mIsVisible(false),
     mParent(nullptr),
     mFocus(nullptr),
-    mIMEComposing(false),
-    mIMEComposingStart(-1),
     mIMEMaskSelectionUpdate(false),
     mIMEMaskTextUpdate(false),
     mIMEMaskEventsCount(1), // Mask IME events since there's no focus yet
@@ -668,26 +668,7 @@ nsEventStatus
 nsWindow::DispatchEvent(WidgetGUIEvent* aEvent)
 {
     if (mWidgetListener) {
-        nsEventStatus status = mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
-
-        switch (aEvent->message) {
-        case NS_COMPOSITION_START:
-            MOZ_ASSERT(!mIMEComposing);
-            mIMEComposing = true;
-            break;
-        case NS_COMPOSITION_COMMIT_AS_IS:
-        case NS_COMPOSITION_COMMIT:
-            MOZ_ASSERT(mIMEComposing);
-            mIMEComposing = false;
-            mIMEComposingStart = -1;
-            mIMEComposingText.Truncate();
-            break;
-        case NS_COMPOSITION_CHANGE:
-            MOZ_ASSERT(mIMEComposing);
-            mIMEComposingText = aEvent->AsCompositionEvent()->mData;
-            break;
-        }
-        return status;
+        return mWidgetListener->HandleEvent(aEvent, mUseAttachedEvents);
     }
     return nsEventStatus_eIgnore;
 }
@@ -1690,14 +1671,24 @@ public:
 };
 
 /*
+ * Get the current composition object, if any.
+ */
+nsRefPtr<mozilla::TextComposition>
+nsWindow::GetIMEComposition()
+{
+    return mozilla::IMEStateManager::GetTextCompositionFor(this);
+}
+
+/*
     Remove the composition but leave the text content as-is
 */
 void
 nsWindow::RemoveIMEComposition()
 {
     // Remove composition on Gecko side
-    if (!mIMEComposing)
+    if (!GetIMEComposition()) {
         return;
+    }
 
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
     AutoIMEMask selMask(mIMEMaskSelectionUpdate);
@@ -1795,12 +1786,15 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                   Gecko text
             */
             AutoIMEMask selMask(mIMEMaskSelectionUpdate);
+            const auto composition(GetIMEComposition());
+            MOZ_ASSERT(!composition || !composition->IsEditorHandlingEvent());
 
-            if (!mIMEKeyEvents.IsEmpty() ||
-                mIMEComposingStart < 0 ||
-                ae->Start() != mIMEComposingStart ||
-                ae->End() != mIMEComposingStart +
-                             int32_t(mIMEComposingText.Length())) {
+            if (!mIMEKeyEvents.IsEmpty() || !composition ||
+                uint32_t(ae->Start()) !=
+                    composition->NativeOffsetOfStartComposition() ||
+                uint32_t(ae->End()) !=
+                    composition->NativeOffsetOfStartComposition() +
+                    composition->String().Length()) {
 
                 // Only start a new composition if we have key events,
                 // if we don't have an existing composition, or
@@ -1832,8 +1826,17 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                         true, NS_COMPOSITION_START, this);
                     InitEvent(event, nullptr);
                     DispatchEvent(&event);
-                    mIMEComposingStart = ae->Start();
                 }
+
+            } else if (composition->String().Equals(ae->Characters())) {
+                /* If the new text is the same as the existing composition text,
+                 * the NS_COMPOSITION_CHANGE event does not generate a text
+                 * change notification. However, the Java side still expects
+                 * one, so we manually generate a notification. */
+                IMEChange dummyChange;
+                dummyChange.mStart = ae->Start();
+                dummyChange.mOldEnd = dummyChange.mNewEnd = ae->End();
+                AddIMETextChange(dummyChange);
             }
 
             {
@@ -1841,27 +1844,22 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                 InitEvent(event, nullptr);
                 event.mData = ae->Characters();
 
-                if (ae->Action() == AndroidGeckoEvent::IME_COMPOSE_TEXT) {
-                    // Because we're leaving the composition open, we need to
-                    // include proper text ranges to make the editor happy.
-                    TextRange range;
-                    range.mStartOffset = 0;
-                    range.mEndOffset = event.mData.Length();
-                    range.mRangeType = NS_TEXTRANGE_RAWINPUT;
-                    event.mRanges = new TextRangeArray();
-                    event.mRanges->AppendElement(range);
-                }
+                // Include proper text ranges to make the editor happy.
+                TextRange range;
+                range.mStartOffset = 0;
+                range.mEndOffset = event.mData.Length();
+                range.mRangeType = NS_TEXTRANGE_RAWINPUT;
+                event.mRanges = new TextRangeArray();
+                event.mRanges->AppendElement(range);
 
                 DispatchEvent(&event);
             }
 
             // Don't end composition when composing text.
-            if (ae->Action() != AndroidGeckoEvent::IME_COMPOSE_TEXT)
-            {
+            if (ae->Action() != AndroidGeckoEvent::IME_COMPOSE_TEXT) {
                 WidgetCompositionEvent compositionCommitEvent(
-                                           true, NS_COMPOSITION_COMMIT, this);
+                        true, NS_COMPOSITION_COMMIT_AS_IS, this);
                 InitEvent(compositionCommitEvent, nullptr);
-                compositionCommitEvent.mData = ae->Characters();
                 DispatchEvent(&compositionCommitEvent);
             }
 
@@ -1939,6 +1937,8 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             */
             AutoIMEMask selMask(mIMEMaskSelectionUpdate);
             AutoIMEMask textMask(mIMEMaskTextUpdate);
+            const auto composition(GetIMEComposition());
+            MOZ_ASSERT(!composition || !composition->IsEditorHandlingEvent());
 
             WidgetCompositionEvent event(true, NS_COMPOSITION_CHANGE, this);
             InitEvent(event, nullptr);
@@ -1946,10 +1946,12 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             event.mRanges = new TextRangeArray();
             mIMERanges.swap(event.mRanges);
 
-            if (mIMEComposingStart < 0 ||
-                ae->Start() != mIMEComposingStart ||
-                ae->End() != mIMEComposingStart +
-                             int32_t(mIMEComposingText.Length())) {
+            if (!composition ||
+                uint32_t(ae->Start()) !=
+                    composition->NativeOffsetOfStartComposition() ||
+                uint32_t(ae->End()) !=
+                    composition->NativeOffsetOfStartComposition() +
+                    composition->String().Length()) {
 
                 // Only start new composition if we don't have an existing one,
                 // or if the existing composition doesn't match the new one.
@@ -1972,8 +1974,6 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
                     DispatchEvent(&queryEvent);
                     MOZ_ASSERT(queryEvent.mSucceeded && !queryEvent.mWasAsync);
                     event.mData = queryEvent.mReply.mString;
-
-                    mIMEComposingStart = queryEvent.mReply.mOffset;
                 }
 
                 {
@@ -1986,7 +1986,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
             } else {
                 // If the new composition matches the existing composition,
                 // reuse the old composition.
-                event.mData = mIMEComposingText;
+                event.mData = composition->String();
             }
 
 #ifdef DEBUG_ANDROID_IME
@@ -2056,11 +2056,12 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
             RemoveIMEComposition();
             GeckoAppShell::NotifyIME(REQUEST_TO_COMMIT_COMPOSITION);
             return NS_OK;
+
         case REQUEST_TO_CANCEL_COMPOSITION:
             ALOGIME("IME: REQUEST_TO_CANCEL_COMPOSITION");
 
             // Cancel composition on Gecko side
-            if (mIMEComposing) {
+            if (GetIMEComposition()) {
                 nsRefPtr<nsWindow> kungFuDeathGrip(this);
 
                 WidgetCompositionEvent compositionCommitEvent(
@@ -2073,10 +2074,12 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
 
             GeckoAppShell::NotifyIME(REQUEST_TO_CANCEL_COMPOSITION);
             return NS_OK;
+
         case NOTIFY_IME_OF_FOCUS:
             ALOGIME("IME: NOTIFY_IME_OF_FOCUS");
             GeckoAppShell::NotifyIME(NOTIFY_IME_OF_FOCUS);
             return NS_OK;
+
         case NOTIFY_IME_OF_BLUR:
             ALOGIME("IME: NOTIFY_IME_OF_BLUR");
 
@@ -2084,11 +2087,10 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
             // Gecko will notify Java, and Java will send an acknowledge focus
             // event back to Gecko. That is where we unmask event handling
             mIMEMaskEventsCount++;
-            mIMEComposing = false;
-            mIMEComposingText.Truncate();
 
             GeckoAppShell::NotifyIME(NOTIFY_IME_OF_BLUR);
             return NS_OK;
+
         case NOTIFY_IME_OF_SELECTION_CHANGE:
             if (mIMEMaskSelectionUpdate) {
                 return NS_OK;
@@ -2099,8 +2101,10 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
             PostFlushIMEChanges();
             mIMESelectionChanged = true;
             return NS_OK;
+
         case NOTIFY_IME_OF_TEXT_CHANGE:
             return NotifyIMEOfTextChange(aIMENotification);
+
         default:
             return NS_ERROR_NOT_IMPLEMENTED;
     }
@@ -2250,19 +2254,25 @@ nsWindow::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
     /* Make sure Java's selection is up-to-date */
     mIMESelectionChanged = false;
     NotifyIME(NOTIFY_IME_OF_SELECTION_CHANGE);
-    PostFlushIMEChanges();
 
-    mIMETextChanges.AppendElement(IMEChange(aIMENotification));
+    AddIMETextChange(IMEChange(aIMENotification));
+    PostFlushIMEChanges();
+    return NS_OK;
+}
+
+void
+nsWindow::AddIMETextChange(const IMEChange& aChange) {
+
+    mIMETextChanges.AppendElement(aChange);
+
     // Now that we added a new range we need to go back and
     // update all the ranges before that.
     // Ranges that have offsets which follow this new range
     // need to be updated to reflect new offsets
-    int32_t delta = aIMENotification.mTextChangeData.AdditionalLength();
+    const int32_t delta = aChange.mNewEnd - aChange.mOldEnd;
     for (int32_t i = mIMETextChanges.Length() - 2; i >= 0; i--) {
         IMEChange &previousChange = mIMETextChanges[i];
-        if (previousChange.mStart >
-                static_cast<int32_t>(
-                    aIMENotification.mTextChangeData.mOldEndOffset)) {
+        if (previousChange.mStart > aChange.mOldEnd) {
             previousChange.mStart += delta;
             previousChange.mOldEnd += delta;
             previousChange.mNewEnd += delta;
@@ -2310,7 +2320,6 @@ nsWindow::NotifyIMEOfTextChange(const IMENotification& aIMENotification)
         // so we can safely continue the merge starting at dst
         srcIndex = dstIndex;
     }
-    return NS_OK;
 }
 
 nsIMEUpdatePreference

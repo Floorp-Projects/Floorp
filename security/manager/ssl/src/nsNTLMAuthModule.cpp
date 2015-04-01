@@ -409,7 +409,7 @@ GenerateType1Msg(void **outBuf, uint32_t *outLen)
   // verify that bufLen is sufficient
   //
   *outLen = NTLM_TYPE1_HEADER_LEN;
-  *outBuf = nsMemory::Alloc(*outLen);
+  *outBuf = moz_xmalloc(*outLen);
   if (!*outBuf)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -877,7 +877,7 @@ GenerateType3Msg(const nsString &domain,
     NS_ERROR("failed preparing to allocate NTLM response: integer overflow?!?");
     return NS_ERROR_FAILURE;
   }
-  *outBuf = nsMemory::Alloc(totalLen.value());
+  *outBuf = moz_xmalloc(totalLen.value());
   *outLen = totalLen.value();
   if (!*outBuf) {
     return NS_ERROR_OUT_OF_MEMORY;

@@ -18,6 +18,11 @@
 #define NS_CERT_BLOCKLIST_CID \
 {0x11aefd53, 0x2fbb, 0x4c92, {0xa0, 0xc1, 0x05, 0x32, 0x12, 0xae, 0x42, 0xd0} }
 
+enum CertBlocklistItemMechanism {
+  BlockByIssuerAndSerial,
+  BlockBySubjectAndPubKey
+};
+
 enum CertBlocklistItemState {
   CertNewFromBlocklist,
   CertOldFromLocalCache
@@ -26,19 +31,22 @@ enum CertBlocklistItemState {
 class CertBlocklistItem
 {
 public:
-  CertBlocklistItem(mozilla::pkix::Input aIssuer, mozilla::pkix::Input aSerial);
+  CertBlocklistItem(const uint8_t*  DNData, size_t DNLength,
+                    const uint8_t* otherData, size_t otherLength,
+                    CertBlocklistItemMechanism itemMechanism);
   CertBlocklistItem(const CertBlocklistItem& aItem);
   ~CertBlocklistItem();
   nsresult ToBase64(nsACString& b64IssuerOut, nsACString& b64SerialOut);
   bool operator==(const CertBlocklistItem& aItem) const;
   uint32_t Hash() const;
   bool mIsCurrent;
+  CertBlocklistItemMechanism mItemMechanism;
 
 private:
-  mozilla::pkix::Input mIssuer;
-  uint8_t* mIssuerData;
-  mozilla::pkix::Input mSerial;
-  uint8_t* mSerialData;
+  size_t mDNLength;
+  uint8_t* mDNData;
+  size_t mOtherLength;
+  uint8_t* mOtherData;
 };
 
 typedef nsGenericHashKey<CertBlocklistItem> BlocklistItemKey;
@@ -56,8 +64,9 @@ public:
 
 private:
   BlocklistTable mBlocklist;
-  nsresult AddRevokedCertInternal(const char* aIssuer,
-                                  const char* aSerial,
+  nsresult AddRevokedCertInternal(const nsACString& aEncodedDN,
+                                  const nsACString& aEncodedOther,
+                                  CertBlocklistItemMechanism aMechanism,
                                   CertBlocklistItemState aItemState,
                                   mozilla::MutexAutoLock& /*proofOfLock*/);
   mozilla::Mutex mMutex;

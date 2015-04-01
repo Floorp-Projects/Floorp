@@ -125,6 +125,9 @@ public:
       case IDBTransaction::READ_WRITE:
         AppendLiteral("\"readwrite\"");
         break;
+      case IDBTransaction::READ_WRITE_FLUSH:
+        AppendLiteral("\"readwriteflush\"");
+        break;
       case IDBTransaction::VERSION_CHANGE:
         AppendLiteral("\"versionchange\"");
         break;
@@ -278,7 +281,7 @@ LoggingHelper(bool aUseProfiler, const char* aFmt, ...)
   PRLogModuleInfo* logModule = IndexedDatabaseManager::GetLoggingModule();
   MOZ_ASSERT(logModule);
 
-  static const PRLogModuleLevel logLevel = PR_LOG_DEBUG;
+  static const PRLogModuleLevel logLevel = PR_LOG_WARNING;
 
   if (PR_LOG_TEST(logModule, logLevel) ||
       (aUseProfiler && profiler_is_active())) {

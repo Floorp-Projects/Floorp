@@ -440,7 +440,8 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
 
   bool activeAnimations = false;
 
-  for (uint32_t i = animations.Length(); i-- !=0; ) {
+  // Process in order, since later animations override earlier ones.
+  for (size_t i = 0, iEnd = animations.Length(); i < iEnd; ++i) {
     Animation& animation = animations[i];
     AnimData& animData = animationData[i];
 

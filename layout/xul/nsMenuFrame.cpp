@@ -1152,7 +1152,7 @@ nsMenuFrame::BuildAcceleratorText(bool aNotify)
     token = nsCRT::strtok(newStr, ", \t", &newStr);
   }
 
-  nsMemory::Free(str);
+  free(str);
 
   accelText += accelString;
 
