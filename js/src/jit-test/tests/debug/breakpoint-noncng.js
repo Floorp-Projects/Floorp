@@ -8,8 +8,7 @@ g.evaluate(
     "function f() {\n" +  // fscript.startLine
     "    s += 'a';\n" +   // fscript.startLine + 1
     "    s += 'b';\n" +   // fscript.startLine + 2
-    "}\n",
-    {compileAndGo: false});
+    "}\n");
 
 var fscript = gw.makeDebuggeeValue(g.f).script;
 var handler = {hit: function (frame) { g.s += '1'; }};
