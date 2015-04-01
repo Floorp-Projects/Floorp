@@ -13,7 +13,6 @@
 #include <string>
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-#include "mozilla/sandboxTarget.h"
 #include "mozilla/Scoped.h"
 #include "windows.h"
 #include <intrin.h>
