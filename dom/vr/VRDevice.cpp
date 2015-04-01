@@ -325,13 +325,8 @@ protected:
 bool
 VRDevice::CreateAllKnownVRDevices(nsISupports *aParent, nsTArray<nsRefPtr<VRDevice>>& aDevices)
 {
-  if (!gfx::VRHMDManagerOculus::Init()) {
-    NS_WARNING("Failed to initialize Oculus HMD Manager");
-    return false;
-  }
-
   nsTArray<nsRefPtr<gfx::VRHMDInfo>> hmds;
-  gfx::VRHMDManagerOculus::GetOculusHMDs(hmds);
+  gfx::VRHMDManager::GetAllHMDs(hmds);
 
   for (size_t i = 0; i < hmds.Length(); ++i) {
     uint32_t sensorBits = hmds[i]->GetSupportedSensorStateBits();

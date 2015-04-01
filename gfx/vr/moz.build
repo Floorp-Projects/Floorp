@@ -14,6 +14,7 @@ LOCAL_INCLUDES += [
 
 UNIFIED_SOURCES += [
     'gfxVR.cpp',
+    'gfxVROculus.cpp',
 ]
 
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
