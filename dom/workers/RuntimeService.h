@@ -129,10 +129,10 @@ public:
   CancelWorkersForWindow(nsPIDOMWindow* aWindow);
 
   void
-  SuspendWorkersForWindow(nsPIDOMWindow* aWindow);
+  FreezeWorkersForWindow(nsPIDOMWindow* aWindow);
 
   void
-  ResumeWorkersForWindow(nsPIDOMWindow* aWindow);
+  ThawWorkersForWindow(nsPIDOMWindow* aWindow);
 
   nsresult
   CreateSharedWorker(const GlobalObject& aGlobal,

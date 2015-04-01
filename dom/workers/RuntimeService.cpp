@@ -1246,22 +1246,22 @@ CancelWorkersForWindow(nsPIDOMWindow* aWindow)
 }
 
 void
-SuspendWorkersForWindow(nsPIDOMWindow* aWindow)
+FreezeWorkersForWindow(nsPIDOMWindow* aWindow)
 {
   AssertIsOnMainThread();
   RuntimeService* runtime = RuntimeService::GetService();
   if (runtime) {
-    runtime->SuspendWorkersForWindow(aWindow);
+    runtime->FreezeWorkersForWindow(aWindow);
   }
 }
 
 void
-ResumeWorkersForWindow(nsPIDOMWindow* aWindow)
+ThawWorkersForWindow(nsPIDOMWindow* aWindow)
 {
   AssertIsOnMainThread();
   RuntimeService* runtime = RuntimeService::GetService();
   if (runtime) {
-    runtime->ResumeWorkersForWindow(aWindow);
+    runtime->ThawWorkersForWindow(aWindow);
   }
 }
 
@@ -2243,7 +2243,7 @@ RuntimeService::CancelWorkersForWindow(nsPIDOMWindow* aWindow)
 }
 
 void
-RuntimeService::SuspendWorkersForWindow(nsPIDOMWindow* aWindow)
+RuntimeService::FreezeWorkersForWindow(nsPIDOMWindow* aWindow)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
@@ -2259,7 +2259,7 @@ RuntimeService::SuspendWorkersForWindow(nsPIDOMWindow* aWindow)
     JSContext* cx = jsapi.cx();
 
     for (uint32_t index = 0; index < workers.Length(); index++) {
-      if (!workers[index]->Suspend(cx, aWindow)) {
+      if (!workers[index]->Freeze(cx, aWindow)) {
         JS_ReportPendingException(cx);
       }
     }
@@ -2267,7 +2267,7 @@ RuntimeService::SuspendWorkersForWindow(nsPIDOMWindow* aWindow)
 }
 
 void
-RuntimeService::ResumeWorkersForWindow(nsPIDOMWindow* aWindow)
+RuntimeService::ThawWorkersForWindow(nsPIDOMWindow* aWindow)
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aWindow);
@@ -2283,7 +2283,7 @@ RuntimeService::ResumeWorkersForWindow(nsPIDOMWindow* aWindow)
     JSContext* cx = jsapi.cx();
 
     for (uint32_t index = 0; index < workers.Length(); index++) {
-      if (!workers[index]->SynchronizeAndResume(cx, aWindow)) {
+      if (!workers[index]->Thaw(cx, aWindow)) {
         JS_ReportPendingException(cx);
       }
     }

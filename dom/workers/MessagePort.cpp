@@ -280,7 +280,7 @@ MessagePort::PreHandleEvent(EventChainPreVisitor& aVisitor)
 
     if (IsClosed()) {
       preventDispatch = true;
-    } else if (NS_IsMainThread() && mSharedWorker->IsSuspended()) {
+    } else if (NS_IsMainThread() && mSharedWorker->IsFrozen()) {
       mSharedWorker->QueueEvent(event);
       preventDispatch = true;
     } else if (!mStarted) {
