@@ -26,22 +26,21 @@ repositories {
     jcenter()
 }
 
-subprojects {
-    task generateCodeAndResources(type:Exec) {
-        workingDir "${topobjdir}"
+task generateCodeAndResources(type:Exec) {
+    workingDir "${topobjdir}"
 
-        commandLine "${topsrcdir}/mach"
-        args 'build'
-        args 'mobile/android/base/gradle-targets'
+    commandLine mozconfig.substs.GMAKE
+    args '-C'
+    args "${topobjdir}/mobile/android/base"
+    args 'gradle-targets'
 
-        // Only show the output if something went wrong.
-        ignoreExitValue = true
-        standardOutput = new ByteArrayOutputStream()
-        errorOutput = standardOutput
-        doLast {
-            if (execResult.exitValue != 0) {
-                throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
-            }
+    // Only show the output if something went wrong.
+    ignoreExitValue = true
+    standardOutput = new ByteArrayOutputStream()
+    errorOutput = standardOutput
+    doLast {
+        if (execResult.exitValue != 0) {
+            throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
         }
     }
 }
