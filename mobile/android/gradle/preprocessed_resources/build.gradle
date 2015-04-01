@@ -24,7 +24,7 @@ android {
 }
 
 android.libraryVariants.all { variant ->
-    variant.checkManifest.dependsOn generateCodeAndResources
+    variant.checkManifest.dependsOn rootProject.generateCodeAndResources
 }
 
 dependencies {
