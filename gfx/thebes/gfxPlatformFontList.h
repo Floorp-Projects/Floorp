@@ -155,7 +155,7 @@ public:
                                           bool aItalic) = 0;
 
     // create a new platform font from downloaded data (@font-face)
-    // this method is responsible to ensure aFontData is NS_Free()'d
+    // this method is responsible to ensure aFontData is free()'d
     virtual gfxFontEntry* MakePlatformFont(const nsAString& aFontName,
                                            uint16_t aWeight,
                                            int16_t aStretch,

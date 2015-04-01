@@ -21268,8 +21268,6 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   {
     size_t compressedLength = snappy::MaxCompressedLength(uncompressedLength);
 
-    // malloc is equivalent to NS_Alloc, which we use because mozStorage
-    // expects to be able to free the adopted pointer with NS_Free.
     char* compressed = static_cast<char*>(malloc(compressedLength));
     if (NS_WARN_IF(!compressed)) {
       return NS_ERROR_OUT_OF_MEMORY;

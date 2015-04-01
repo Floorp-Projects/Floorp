@@ -200,7 +200,7 @@ public:
   {
     // Notify mock EIT broadcasting.
     nsITVProgramData** programDataList =
-      static_cast<nsITVProgramData **>(NS_Alloc(1 * sizeof(nsITVProgramData*)));
+      static_cast<nsITVProgramData **>(moz_xmalloc(1 * sizeof(nsITVProgramData*)));
     programDataList[0] = new TVProgramData();
     programDataList[0]->SetEventId(NS_LITERAL_STRING("eventId"));
     programDataList[0]->SetTitle(NS_LITERAL_STRING("title"));

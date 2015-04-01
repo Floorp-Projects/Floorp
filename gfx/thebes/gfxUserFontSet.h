@@ -611,14 +611,14 @@ protected:
     // returns true if platform font creation sucessful (or local()
     // reference was next in line)
     // Ownership of aFontData is passed in here; the font set must
-    // ensure that it is eventually deleted with NS_Free().
+    // ensure that it is eventually deleted with free().
     bool FontDataDownloadComplete(const uint8_t* aFontData, uint32_t aLength,
                                   nsresult aDownloadStatus);
 
     // helper method for creating a platform font
     // returns true if platform font creation successful
     // Ownership of aFontData is passed in here; the font must
-    // ensure that it is eventually deleted with NS_Free().
+    // ensure that it is eventually deleted with free().
     bool LoadPlatformFont(const uint8_t* aFontData, uint32_t& aLength);
 
     // store metadata and src details for current src into aFontEntry

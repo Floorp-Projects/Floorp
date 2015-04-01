@@ -971,7 +971,7 @@ gfxMacPlatformFontList::LookupLocalFont(const nsAString& aFontName,
 
 static void ReleaseData(void *info, const void *data, size_t size)
 {
-    NS_Free((void*)data);
+    free((void*)data);
 }
 
 gfxFontEntry*

@@ -779,14 +779,14 @@ gfxDWriteFontList::MakePlatformFont(const nsAString& aFontName,
     nsAutoString uniqueName;
     rv = gfxFontUtils::MakeUniqueUserFontName(uniqueName);
     if (NS_FAILED(rv)) {
-        NS_Free((void*)aFontData);
+        free((void*)aFontData);
         return nullptr;
     }
 
     FallibleTArray<uint8_t> newFontData;
 
     rv = gfxFontUtils::RenameFont(uniqueName, aFontData, aLength, &newFontData);
-    NS_Free((void*)aFontData);
+    free((void*)aFontData);
 
     if (NS_FAILED(rv)) {
         return nullptr;

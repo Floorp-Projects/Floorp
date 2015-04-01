@@ -758,7 +758,7 @@ private:
       // Unfortunately we've to copy the data first since all our strings are
       // going to free it. We also need fallible alloc, so we can't just use
       // ToNewCString().
-      char* copy = static_cast<char*>(NS_Alloc(body.Length()));
+      char* copy = static_cast<char*>(moz_xmalloc(body.Length()));
       if (!copy) {
         NS_WARNING("Failed to copy File entry body.");
         return false;
