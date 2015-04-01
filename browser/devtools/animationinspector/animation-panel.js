@@ -383,14 +383,14 @@ PlayerWidget.prototype = {
    */
   onStateChanged: function() {
     let state = this.player.state;
+
     this.updateWidgetState(state);
     this.metaDataComponent.render(state);
 
     switch (state.playState) {
       case "finished":
         this.stopTimelineAnimation();
-        this.displayTime(this.player.state.duration);
-        this.stopListeners();
+        this.displayTime(this.player.state.currentTime);
         break;
       case "running":
         this.startTimelineAnimation();
@@ -398,6 +398,10 @@ PlayerWidget.prototype = {
       case "paused":
         this.stopTimelineAnimation();
         this.displayTime(this.player.state.currentTime);
+        break;
+      case "idle":
+        this.stopTimelineAnimation();
+        this.displayTime(0);
         break;
     }
   },
@@ -435,10 +439,6 @@ PlayerWidget.prototype = {
    * switched to the right state, and the timeline animation is stopped.
    */
   pause: function() {
-    if (this.player.state.playState === "finished") {
-      return;
-    }
-
     // Switch to the right className on the element right away to avoid waiting
     // for the next state update to change the playPause icon.
     this.updateWidgetState({playState: "paused"});
@@ -452,10 +452,6 @@ PlayerWidget.prototype = {
    * switched to the right state, and the timeline animation is started.
    */
   play: function() {
-    if (this.player.state.playState === "finished") {
-      return;
-    }
-
     // Switch to the right className on the element right away to avoid waiting
     // for the next state update to change the playPause icon.
     this.updateWidgetState({playState: "running"});
