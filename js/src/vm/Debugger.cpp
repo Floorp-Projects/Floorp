@@ -874,6 +874,10 @@ Debugger::wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp)
 JSObject*
 Debugger::translateGCStatistics(JSContext* cx, const gcstats::Statistics& stats)
 {
+    // If this functions triggers a GC then the statistics object will change
+    // underneath us.
+    gc::AutoSuppressGC suppressGC(cx);
+
     RootedObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
     if (!obj)
         return nullptr;
