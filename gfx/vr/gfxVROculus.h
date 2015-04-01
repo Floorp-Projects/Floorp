@@ -41,6 +41,15 @@ public:
   void Destroy();
 
 protected:
+  // must match the size of VRDistortionVertex
+  struct DistortionVertex {
+    float pos[2];
+    float texR[2];
+    float texG[2];
+    float texB[2];
+    float genericAttribs[4];
+  };
+
   virtual ~HMDInfoOculus() {
       Destroy();
       MOZ_COUNT_DTOR_INHERITED(HMDInfoOculus, VRHMDInfo);
