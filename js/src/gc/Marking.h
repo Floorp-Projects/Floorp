@@ -62,12 +62,12 @@ TraceManuallyBarrieredEdge(JSTracer* trc, T* thingp, const char* name);
 // Trace all edges contained in the given array.
 template <typename T>
 void
-TraceRange(JSTracer* trc, size_t len, BarrieredBase<T>* thingp, const char* name);
+TraceRange(JSTracer* trc, size_t len, BarrieredBase<T>* vec, const char* name);
 
 // Trace all root edges in the given array.
 template <typename T>
 void
-TraceRootRange(JSTracer* trc, size_t len, T* thingp, const char* name);
+TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name);
 
 // Trace an edge that crosses compartment boundaries. If the compartment of the
 // destination thing is not being GC'd, then the edge will not be traced.
