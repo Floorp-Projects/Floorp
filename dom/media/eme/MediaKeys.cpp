@@ -153,6 +153,12 @@ MediaKeys::SetServerCertificate(const ArrayBufferViewOrArrayBuffer& aCert, Error
     return nullptr;
   }
 
+  if (!mProxy) {
+    NS_WARNING("Tried to use a MediaKeys without a CDM");
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return promise.forget();
+  }
+
   nsTArray<uint8_t> data;
   if (!CopyArrayBufferViewOrArrayBufferData(aCert, data)) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR);
@@ -487,6 +493,12 @@ MediaKeys::CreateSession(JSContext* aCx,
                          SessionType aSessionType,
                          ErrorResult& aRv)
 {
+  if (!mProxy) {
+    NS_WARNING("Tried to use a MediaKeys which lost its CDM");
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
   EME_LOG("MediaKeys[%p] Creating session", this);
 
   nsRefPtr<MediaKeySession> session = new MediaKeySession(aCx,
