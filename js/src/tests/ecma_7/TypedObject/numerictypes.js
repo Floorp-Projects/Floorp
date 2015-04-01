@@ -76,7 +76,7 @@ function runTests()
             thrown = true;
         }
 
-        check(function() thrown, todo);
+        check(() => thrown, todo);
     }
 
     var types = [uint8, uint16, uint32, int8, int16, int32];
@@ -84,20 +84,20 @@ function runTests()
     for (var i = 0; i < types.length; i++) {
         var type = types[i];
 
-        check(function() type(true) === 1);
-        check(function() type(false) === 0);
-        check(function() type(+Infinity) === 0);
-        check(function() type(-Infinity) === 0);
-        check(function() type(NaN) === 0);
-        check(function() type.toSource() === strings[i]);
-        check(function() type(null) == 0);
-        check(function() type(undefined) == 0);
-        check(function() type([]) == 0);
-        check(function() type({}) == 0);
-        check(function() type(/abcd/) == 0);
+        check(() => type(true) === 1);
+        check(() => type(false) === 0);
+        check(() => type(+Infinity) === 0);
+        check(() => type(-Infinity) === 0);
+        check(() => type(NaN) === 0);
+        check(() => type.toSource() === strings[i]);
+        check(() => type(null) == 0);
+        check(() => type(undefined) == 0);
+        check(() => type([]) == 0);
+        check(() => type({}) == 0);
+        check(() => type(/abcd/) == 0);
 
-        checkThrows(function() new type());
-        checkThrows(function() type());
+        checkThrows(() => new type());
+        checkThrows(() => type());
     }
 
     var floatTypes = [float32, float64];
@@ -105,81 +105,81 @@ function runTests()
     for (var i = 0; i < floatTypes.length; i++) {
         var type = floatTypes[i];
 
-        check(function() type(true) === 1);
-        check(function() type(false) === 0);
-        check(function() type(+Infinity) === Infinity);
-        check(function() type(-Infinity) === -Infinity);
-        check(function() Number.isNaN(type(NaN)));
-        check(function() type.toSource() === floatStrings[i]);
-        check(function() type(null) == 0);
-        check(function() Number.isNaN(type(undefined)));
-        check(function() type([]) == 0);
-        check(function() Number.isNaN(type({})));
-        check(function() Number.isNaN(type(/abcd/)));
+        check(() => type(true) === 1);
+        check(() => type(false) === 0);
+        check(() => type(+Infinity) === Infinity);
+        check(() => type(-Infinity) === -Infinity);
+        check(() => Number.isNaN(type(NaN)));
+        check(() => type.toSource() === floatStrings[i]);
+        check(() => type(null) == 0);
+        check(() => Number.isNaN(type(undefined)));
+        check(() => type([]) == 0);
+        check(() => Number.isNaN(type({})));
+        check(() => Number.isNaN(type(/abcd/)));
 
-        checkThrows(function() new type());
-        checkThrows(function() type());
+        checkThrows(() => new type());
+        checkThrows(() => type());
     }
 
     ///// test ranges and creation
     /// uint8
     // valid
-    check(function() uint8(0) == 0);
-    check(function() uint8(-0) == 0);
-    check(function() uint8(129) == 129);
-    check(function() uint8(255) == 255);
+    check(() => uint8(0) == 0);
+    check(() => uint8(-0) == 0);
+    check(() => uint8(129) == 129);
+    check(() => uint8(255) == 255);
 
     // overflow is allowed for explicit conversions
-    check(function() uint8(-1) == 255);
-    check(function() uint8(-255) == 1);
-    check(function() uint8(256) == 0);
-    check(function() uint8(2345678) == 206);
-    check(function() uint8(3.14) == 3);
-    check(function() uint8(342.56) == 86);
-    check(function() uint8(-342.56) == 170);
+    check(() => uint8(-1) == 255);
+    check(() => uint8(-255) == 1);
+    check(() => uint8(256) == 0);
+    check(() => uint8(2345678) == 206);
+    check(() => uint8(3.14) == 3);
+    check(() => uint8(342.56) == 86);
+    check(() => uint8(-342.56) == 170);
 
     /// uint8clamped
     // valid
-    check(function() uint8Clamped(0) == 0);
-    check(function() uint8Clamped(-0) == 0);
-    check(function() uint8Clamped(129) == 129);
-    check(function() uint8Clamped(-30) == 0);
-    check(function() uint8Clamped(254.5) == 254);
-    check(function() uint8Clamped(257) == 255);
-    check(function() uint8Clamped(513) == 255);
-    check(function() uint8Clamped(60000) == 255);
+    check(() => uint8Clamped(0) == 0);
+    check(() => uint8Clamped(-0) == 0);
+    check(() => uint8Clamped(129) == 129);
+    check(() => uint8Clamped(-30) == 0);
+    check(() => uint8Clamped(254.5) == 254);
+    check(() => uint8Clamped(257) == 255);
+    check(() => uint8Clamped(513) == 255);
+    check(() => uint8Clamped(60000) == 255);
 
     // strings
-    check(function() uint8("0") == 0);
-    check(function() uint8("255") == 255);
-    check(function() uint8("256") == 0);
-    check(function() uint8("0x0f") == 15);
-    check(function() uint8("0x00") == 0);
-    check(function() uint8("0xff") == 255);
-    check(function() uint8("0x1ff") == 255);
+    check(() => uint8("0") == 0);
+    check(() => uint8("255") == 255);
+    check(() => uint8("256") == 0);
+    check(() => uint8("0x0f") == 15);
+    check(() => uint8("0x00") == 0);
+    check(() => uint8("0xff") == 255);
+    check(() => uint8("0x1ff") == 255);
     // in JS, string literals with leading zeroes are interpreted as decimal
-    check(function() uint8("-0777") == 247);
-    check(function() uint8("-0xff") == 0);
+    check(() => uint8("-0777") == 247);
+    check(() => uint8("-0xff") == 0);
 
     /// uint16
     // valid
-    check(function() uint16(65535) == 65535);
+    check(() => uint16(65535) == 65535);
 
     // overflow is allowed for explicit conversions
-    check(function() uint16(-1) == 65535);
-    check(function() uint16(-65535) == 1);
-    check(function() uint16(-65536) == 0);
-    check(function() uint16(65536) == 0);
+    check(() => uint16(-1) == 65535);
+    check(() => uint16(-65535) == 1);
+    check(() => uint16(-65536) == 0);
+    check(() => uint16(65536) == 0);
 
     // strings
-    check(function() uint16("0x1234") == 0x1234);
-    check(function() uint16("0x00") == 0);
-    check(function() uint16("0xffff") == 65535);
-    check(function() uint16("-0xffff") == 0);
-    check(function() uint16("0xffffff") == 0xffff);
+    check(() => uint16("0x1234") == 0x1234);
+    check(() => uint16("0x00") == 0);
+    check(() => uint16("0xffff") == 65535);
+    check(() => uint16("-0xffff") == 0);
+    check(() => uint16("0xffffff") == 0xffff);
 
     // wrong types
-    check(function() uint16(3.14) == 3); // c-like casts in explicit conversion
+    check(() => uint16(3.14) == 3); // c-like casts in explicit conversion
 
     print("done");
 
