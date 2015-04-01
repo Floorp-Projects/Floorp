@@ -421,6 +421,11 @@ pref("security.apps.certified.CSP.default", "default-src *; script-src 'self'; o
 // Default Content Security Policy to apply to trusted apps.
 pref("security.apps.trusted.CSP.default", "default-src *; object-src 'none'; frame-src 'none'");
 
+// Temporarily force-enable GL compositing.  This is default-disabled
+// deep within the bowels of the widgetry system.  Remove me when GL
+// compositing isn't default disabled in widget/android.
+pref("layers.acceleration.force-enabled", true);
+
 // handle links targeting new windows
 // 1=current window/tab, 2=new window, 3=new tab in most recent window
 pref("browser.link.open_newwindow", 3);
