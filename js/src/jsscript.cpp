@@ -611,6 +611,14 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enc
     if (mode == XDR_ENCODE) {
         script = scriptp.get();
         MOZ_ASSERT_IF(enclosingScript, enclosingScript->compartment() == script->compartment());
+        MOZ_ASSERT(script->functionNonDelazifying() == fun);
+
+        if (!fun && script->treatAsRunOnce() && script->hasRunOnce()) {
+            JS_ReportError(cx,
+                           "Can't serialize a run-once non-function script "
+                           "that has already run");
+            return false;
+        }
 
         nargs = script->bindings.numArgs();
         nblocklocals = script->bindings.numBlockScoped();
@@ -2962,6 +2970,12 @@ js::CloneScript(JSContext* cx, HandleObject enclosingScope, HandleFunction fun, 
                 PollutedGlobalScopeOption polluted /* = HasCleanGlobalScope */,
                 NewObjectKind newKind /* = GenericObject */)
 {
+    if (src->treatAsRunOnce() && !src->functionNonDelazifying()) {
+        // Toplevel run-once scripts may not be cloned.
+        JS_ReportError(cx, "No cloning toplevel run-once scripts");
+        return nullptr;
+    }
+
     /* NB: Keep this in sync with XDRScript. */
 
     /* Some embeddings are not careful to use ExposeObjectToActiveJS as needed. */
