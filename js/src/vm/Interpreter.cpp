@@ -854,6 +854,15 @@ js::ExecuteKernel(JSContext* cx, HandleScript script, JSObject& scopeChainArg, c
                script->hasPollutedGlobalScope());
 #endif
 
+    if (script->treatAsRunOnce()) {
+        if (script->hasRunOnce()) {
+            JS_ReportError(cx, "Trying to execute a run-once script multiple times");
+            return false;
+        }
+
+        script->setHasRunOnce();
+    }
+
     if (script->isEmpty()) {
         if (result)
             result->setUndefined();
