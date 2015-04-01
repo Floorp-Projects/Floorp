@@ -27,4 +27,7 @@
 
     <dimen name="tab_queue_container_width">360dp</dimen>
 
+    <!-- Should be closer to 0.83 (140/168) but various roundings mean that 0.9 works better -->
+    <item name="thumbnail_aspect_ratio" format="float" type="dimen">0.9</item>
+
 </resources>
