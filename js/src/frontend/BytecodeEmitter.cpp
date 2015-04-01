@@ -5223,7 +5223,6 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             Rooted<JSScript*> parent(cx, script);
             CompileOptions options(cx, parser->options());
             options.setMutedErrors(parent->mutedErrors())
-                   .setCompileAndGo(parent->compileAndGo())
                    .setHasPollutedScope(parent->hasPollutedGlobalScope())
                    .setSelfHostingMode(parent->selfHosted())
                    .setNoScriptRval(false)

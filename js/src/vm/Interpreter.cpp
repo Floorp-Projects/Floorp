@@ -887,9 +887,6 @@ js::Execute(JSContext* cx, HandleScript script, JSObject& scopeChainArg, Value* 
     RootedObject scopeChain(cx, &scopeChainArg);
     MOZ_ASSERT(scopeChain == GetInnerObject(scopeChain));
 
-    MOZ_RELEASE_ASSERT(scopeChain->is<GlobalObject>() || !script->compileAndGo(),
-                       "Only non-compile-and-go scripts can be executed with "
-                       "interesting scopechains");
     MOZ_RELEASE_ASSERT(scopeChain->is<GlobalObject>() || script->hasPollutedGlobalScope(),
                        "Only scripts with polluted scopes can be executed with "
                        "interesting scopechains");
@@ -4058,7 +4055,7 @@ js::DefFunOperation(JSContext* cx, HandleScript script, HandleObject scopeChain,
         if (!fun)
             return false;
     } else {
-        MOZ_ASSERT(script->compileAndGo());
+        MOZ_ASSERT(script->treatAsRunOnce());
         MOZ_ASSERT(!script->functionNonDelazifying());
     }
 
