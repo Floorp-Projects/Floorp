@@ -262,7 +262,18 @@ public:
 protected:
   void DoPlay(LimitBehavior aLimitBehavior);
   void DoPause();
-  void ResumeAt(const TimeDuration& aResumeTime);
+  void ResumeAt(const TimeDuration& aReadyTime);
+  void PauseAt(const TimeDuration& aReadyTime);
+  void FinishPendingAt(const TimeDuration& aReadyTime)
+  {
+    if (mPendingState == PendingState::PlayPending) {
+      ResumeAt(aReadyTime);
+    } else if (mPendingState == PendingState::PausePending) {
+      PauseAt(aReadyTime);
+    } else {
+      NS_NOTREACHED("Can't finish pending if we're not in a pending state");
+    }
+  }
 
   void UpdateTiming();
   void UpdateFinishedState(bool aSeekFlag = false);
