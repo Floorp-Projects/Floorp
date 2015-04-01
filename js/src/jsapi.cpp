@@ -4024,9 +4024,7 @@ CompileFunction(JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
         return false;
 
     // Make sure to handle cases when we have a polluted scopechain.
-    OwningCompileOptions options(cx);
-    if (!options.copy(cx, optionsArg))
-        return false;
+    CompileOptions options(cx, optionsArg);
     if (!enclosingDynamicScope->is<GlobalObject>())
         options.setHasPollutedScope(true);
 
@@ -4204,6 +4202,7 @@ Evaluate(JSContext* cx, HandleObject scope, const ReadOnlyCompileOptions& option
 
     options.setCompileAndGo(scope->is<GlobalObject>());
     options.setHasPollutedScope(!scope->is<GlobalObject>());
+    options.setIsRunOnce(true);
     SourceCompressionTask sct(cx);
     RootedScript script(cx, frontend::CompileScript(cx, &cx->tempLifoAlloc(),
                                                     scope, NullPtr(), NullPtr(), options,
