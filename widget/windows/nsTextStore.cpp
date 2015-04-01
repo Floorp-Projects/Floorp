@@ -787,6 +787,14 @@ public:
     return mActiveTIPKeyboardDescription.EqualsLiteral("Free CangJie IME 10");
   }
 
+  bool IsEasyChangjeiActive() const
+  {
+    return
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING(
+          "\x4E2D\x6587 (\x7E41\x9AD4) - \x6613\x9821\x8F38\x5165\x6CD5"));
+  }
+
 public: // ITfActiveLanguageProfileNotifySink
   STDMETHODIMP OnActivated(REFCLSID clsid, REFGUID guidProfile,
                            BOOL fActivated);
@@ -1186,10 +1194,6 @@ bool nsTextStore::sDoNotReturnNoLayoutErrorToFreeChangJie = false;
 bool nsTextStore::sDoNotReturnNoLayoutErrorToEasyChangjei = false;
 bool nsTextStore::sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar = false;
 bool nsTextStore::sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret = false;
-
-#define TIP_NAME_EASY_CHANGJEI \
-  (NS_LITERAL_STRING( \
-     "\x4E2D\x6587 (\x7E41\x9AD4) - \x6613\x9821\x8F38\x5165\x6CD5"))
 
 #define TEXTSTORE_DEFAULT_VIEW (1)
 
@@ -3189,8 +3193,6 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
   // However, this is fixed on Win 10.
 
   const TSFStaticSink* kSink = TSFStaticSink::GetInstance();
-  const nsString& activeTIPKeyboardDescription =
-    kSink->GetActiveTIPKeyboardDescription();
   if (mComposition.IsComposing() && mComposition.mStart < acpEnd &&
       mLockedContent.IsLayoutChangedAfter(acpEnd)) {
     const Selection& currentSel = CurrentSelection();
@@ -3236,7 +3238,7 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
     else if ((sDoNotReturnNoLayoutErrorToFreeChangJie &&
               kSink->IsFreeChangJieActive()) ||
              (sDoNotReturnNoLayoutErrorToEasyChangjei &&
-              activeTIPKeyboardDescription.Equals(TIP_NAME_EASY_CHANGJEI))) {
+              kSink->IsEasyChangjeiActive())) {
       acpEnd = mComposition.mStart;
       acpStart = std::min(acpStart, acpEnd);
       PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
