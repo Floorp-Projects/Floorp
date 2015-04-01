@@ -264,18 +264,12 @@ MediaOmxCommonDecoder::SetElementVisibility(bool aIsVisible)
   }
 }
 
-void
-MediaOmxCommonDecoder::UpdateReadyStateForData()
+MediaDecoderOwner::NextFrameStatus
+MediaOmxCommonDecoder::NextFrameStatus()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mAudioOffloadPlayer) {
-    MediaDecoder::UpdateReadyStateForData();
-    return;
-  }
-
-  if (!mOwner || mShuttingDown)
-    return;
-  mOwner->UpdateReadyStateForData(mAudioOffloadPlayer->GetNextFrameStatus());
+  return mAudioOffloadPlayer ? mAudioOffloadPlayer->GetNextFrameStatus()
+                             : MediaDecoder::NextFrameStatus();
 }
 
 void

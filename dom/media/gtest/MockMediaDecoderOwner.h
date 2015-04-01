@@ -33,9 +33,6 @@ public:
   virtual void DownloadResumed(bool aForceNetworkLoading) override {}
   virtual void NotifySuspendedByCache(bool aIsSuspended) override {}
   virtual void NotifyDecoderPrincipalChanged() override {}
-  virtual void UpdateReadyStateForData(NextFrameStatus aNextFrame) override
-  {
-  }
   virtual VideoFrameContainer* GetVideoFrameContainer() override
   {
     return nullptr;
