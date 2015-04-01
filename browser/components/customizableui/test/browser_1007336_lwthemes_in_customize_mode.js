@@ -5,10 +5,12 @@
 "use strict";
 
 const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
+const {LightweightThemeManager} = Components.utils.import("resource://gre/modules/LightweightThemeManager.jsm", {});
 
 add_task(function () {
   Services.prefs.clearUserPref("lightweightThemes.usedThemes");
   Services.prefs.clearUserPref("lightweightThemes.recommendedThemes");
+  LightweightThemeManager.clearBuiltInThemes();
 
   yield startCustomizing();
 
