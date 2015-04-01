@@ -16,7 +16,7 @@ var it = Proxy.create({
     get: function (receiver, name) {
         if (name == 'toSource') {
             s += '?';
-            return function () 'it';
+            return () => 'it';
         }
         assertEq(name, "next");
         s += "N";

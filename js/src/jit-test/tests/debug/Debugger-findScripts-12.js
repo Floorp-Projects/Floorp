@@ -6,11 +6,11 @@ var url2 = scriptdir + 'Debugger-findScripts-12-script2';
 
 // Three globals: two with code, one with nothing.
 var g1 = newGlobal();
-g1.toSource = function () "[global g1]";
+g1.toSource = () => "[global g1]";
 g1.load(url1);
 g1.load(url2);
 var g2 = newGlobal();
-g2.toSource = function () "[global g2]";
+g2.toSource = () => "[global g2]";
 g2.load(url1);
 g2.load(url2);
 var g3 = newGlobal();
