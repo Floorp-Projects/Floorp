@@ -86,6 +86,7 @@
 
     <application android:label="@string/moz_app_displayname"
                  android:icon="@drawable/icon"
+                 android:logo="@drawable/logo"
                  android:name="org.mozilla.gecko.GeckoApplication"
                  android:hardwareAccelerated="true"
 # The preprocessor does not yet support arbitrary parentheses, so this cannot

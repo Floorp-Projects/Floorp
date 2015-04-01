@@ -139,6 +139,15 @@ XPCOMUtils.defineLazyGetter(this, "ShellService", function() {
   }
 });
 
+XPCOMUtils.defineLazyGetter(this, "gBrandBundle", function() {
+  return Services.strings.createBundle('chrome://branding/locale/brand.properties');
+});
+
+XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
+  return Services.strings.createBundle('chrome://browser/locale/browser.properties');
+});
+
+
 XPCOMUtils.defineLazyModuleGetter(this, "FormValidationHandler",
                                   "resource:///modules/FormValidationHandler.jsm");
 
@@ -150,6 +159,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "ReaderParent",
 
 XPCOMUtils.defineLazyModuleGetter(this, "AddonWatcher",
                                   "resource://gre/modules/AddonWatcher.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
+                                  "resource://gre/modules/LightweightThemeManager.jsm");
 
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
@@ -715,6 +727,19 @@ BrowserGlue.prototype = {
     DebugUserAgent.init();
 #endif
 
+#ifndef RELEASE_BUILD
+    let themeName = gBrowserBundle.GetStringFromName("deveditionTheme.name");
+    let vendorShortName = gBrandBundle.GetStringFromName("vendorShortName");
+
+    LightweightThemeManager.addBuiltInTheme({
+      id: "firefox-devedition@mozilla.org",
+      name: themeName,
+      headerURL: "resource:///chrome/browser/content/browser/defaultthemes/devedition.header.png",
+      iconURL: "resource:///chrome/browser/content/browser/defaultthemes/devedition.icon.png",
+      author: vendorShortName,
+    });
+#endif
+
     Services.obs.notifyObservers(null, "browser-ui-startup-complete", "");
 
     AddonWatcher.init(this._notifySlowAddon);
@@ -746,7 +771,7 @@ BrowserGlue.prototype = {
 
   _onSafeModeRestart: function BG_onSafeModeRestart() {
     // prompt the user to confirm
-    let strings = Services.strings.createBundle("chrome://browser/locale/browser.properties");
+    let strings = gBrowserBundle;
     let promptTitle = strings.GetStringFromName("safeModeRestartPromptTitle");
     let promptMessage = strings.GetStringFromName("safeModeRestartPromptMessage");
     let restartText = strings.GetStringFromName("safeModeRestartButton");
@@ -804,9 +829,7 @@ BrowserGlue.prototype = {
     if (!win)
       return;
 
-    let productName = Services.strings
-                              .createBundle("chrome://branding/locale/brand.properties")
-                              .GetStringFromName("brandFullName");
+    let productName = gBrandBundle.GetStringFromName("brandFullName");
     let message = win.gNavigatorBundle.getFormattedString("slowStartup.message", [productName]);
 
     let buttons = [
@@ -844,9 +867,7 @@ BrowserGlue.prototype = {
     if (!ResetProfile.resetSupported())
       return;
 
-    let productName = Services.strings
-                              .createBundle("chrome://branding/locale/brand.properties")
-                              .GetStringFromName("brandShortName");
+    let productName = gBrandBundle.GetStringFromName("brandShortName");
     let resetBundle = Services.strings
                               .createBundle("chrome://global/locale/resetProfile.properties");
 
@@ -1195,9 +1216,7 @@ BrowserGlue.prototype = {
 
     let prompt = Services.prompt;
     let quitBundle = Services.strings.createBundle("chrome://browser/locale/quitDialog.properties");
-    let brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
-
-    let appName = brandBundle.GetStringFromName("brandShortName");
+    let appName = gBrandBundle.GetStringFromName("brandShortName");
     let quitDialogTitle = quitBundle.formatStringFromName("quitDialogTitle",
                                                           [appName], 1);
     let neverAskText = quitBundle.GetStringFromName("neverAsk2");
@@ -1274,9 +1293,7 @@ BrowserGlue.prototype = {
 
     var formatter = Cc["@mozilla.org/toolkit/URLFormatterService;1"].
                     getService(Ci.nsIURLFormatter);
-    var browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
-    var brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
-    var appName = brandBundle.GetStringFromName("brandShortName");
+    var appName = gBrandBundle.GetStringFromName("brandShortName");
 
     function getNotifyString(aPropData) {
       var propValue = update.getProperty(aPropData.propName);
@@ -1284,11 +1301,11 @@ BrowserGlue.prototype = {
         if (aPropData.prefName)
           propValue = formatter.formatURLPref(aPropData.prefName);
         else if (aPropData.stringParams)
-          propValue = browserBundle.formatStringFromName(aPropData.stringName,
-                                                         aPropData.stringParams,
-                                                         aPropData.stringParams.length);
+          propValue = gBrowserBundle.formatStringFromName(aPropData.stringName,
+                                                          aPropData.stringParams,
+                                                          aPropData.stringParams.length);
         else
-          propValue = browserBundle.GetStringFromName(aPropData.stringName);
+          propValue = gBrowserBundle.GetStringFromName(aPropData.stringName);
       }
       return propValue;
     }
@@ -1608,8 +1625,7 @@ BrowserGlue.prototype = {
    * Show the notificationBox for a locked places database.
    */
   _showPlacesLockedNotificationBox: function BG__showPlacesLockedNotificationBox() {
-    var brandBundle  = Services.strings.createBundle("chrome://branding/locale/brand.properties");
-    var applicationName = brandBundle.GetStringFromName("brandShortName");
+    var applicationName = gBrandBundle.GetStringFromName("brandShortName");
     var placesBundle = Services.strings.createBundle("chrome://browser/locale/places/places.properties");
     var title = placesBundle.GetStringFromName("lockPrompt.title");
     var text = placesBundle.formatStringFromName("lockPrompt.text", [applicationName], 1);
@@ -1643,7 +1659,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 29;
+    const UI_VERSION = 30;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
     let currentUIVersion = 0;
     try {
@@ -1977,6 +1993,42 @@ BrowserGlue.prototype = {
       }
     }
 
+    if (currentUIVersion < 30) {
+      // Convert old devedition theme pref to lightweight theme storage
+      let lightweightThemeSelected = false;
+      let selectedThemeID = null;
+      try {
+        lightweightThemeSelected = Services.prefs.prefHasUserValue("lightweightThemes.selectedThemeID");
+        selectedThemeID = Services.prefs.getCharPref("lightweightThemes.selectedThemeID");
+      } catch(e) {}
+
+      let defaultThemeSelected = false;
+      try {
+         defaultThemeSelected = Services.prefs.getCharPref("general.skins.selectedSkin") == "classic/1.0";
+      } catch(e) {}
+
+      let deveditionThemeEnabled = false;
+      try {
+         deveditionThemeEnabled = Services.prefs.getBoolPref("browser.devedition.theme.enabled");
+      } catch(e) {}
+
+      // If we are on the devedition channel, the devedition theme is on by
+      // default.  But we need to handle the case where they didn't want it
+      // applied, and unapply the theme.
+      let userChoseToNotUseDeveditionTheme =
+        !deveditionThemeEnabled ||
+        !defaultThemeSelected ||
+        (lightweightThemeSelected && selectedThemeID != "firefox-devedition@mozilla.org");
+
+      if (userChoseToNotUseDeveditionTheme && selectedThemeID == "firefox-devedition@mozilla.org") {
+        Services.prefs.setCharPref("lightweightThemes.selectedThemeID", "");
+      }
+
+      // Not clearing browser.devedition.theme.enabled, to preserve user's pref
+      // if for some reason this function runs again (even though it shouldn't)
+      Services.prefs.clearUserPref("browser.devedition.showCustomizeButton");
+    }
+
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
@@ -2220,9 +2272,7 @@ BrowserGlue.prototype = {
     if (!win) {
       return;
     }
-    let productName = Services.strings
-      .createBundle("chrome://branding/locale/brand.properties")
-      .GetStringFromName("brandShortName");
+    let productName = gBrandBundle.GetStringFromName("brandShortName");
     let message = win.gNavigatorBundle.
       getFormattedString("flashHang.message", [productName]);
     let buttons = [{
@@ -2288,7 +2338,6 @@ ContentPermissionPrompt.prototype = {
       popup.remove();
     }
 
-    var browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
 
     var browser = this._getBrowserForRequest(aRequest);
     var chromeWin = browser.ownerDocument.defaultView;
@@ -2307,8 +2356,8 @@ ContentPermissionPrompt.prototype = {
       }
 
       var action = {
-        label: browserBundle.GetStringFromName(promptAction.stringId),
-        accessKey: browserBundle.GetStringFromName(promptAction.stringId + ".accesskey"),
+        label: gBrowserBundle.GetStringFromName(promptAction.stringId),
+        accessKey: gBrowserBundle.GetStringFromName(promptAction.stringId + ".accesskey"),
         callback: function() {
           if (promptAction.callback) {
             promptAction.callback();
@@ -2377,7 +2426,6 @@ ContentPermissionPrompt.prototype = {
 
   _promptGeo : function(aRequest) {
     var secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
-    var browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
     var requestingURI = aRequest.principal.URI;
 
     var message;
@@ -2393,11 +2441,11 @@ ContentPermissionPrompt.prototype = {
     }];
 
     if (requestingURI.schemeIs("file")) {
-      message = browserBundle.formatStringFromName("geolocation.shareWithFile",
-                                                   [requestingURI.path], 1);
+      message = gBrowserBundle.formatStringFromName("geolocation.shareWithFile",
+                                                    [requestingURI.path], 1);
     } else {
-      message = browserBundle.formatStringFromName("geolocation.shareWithSite",
-                                                   [requestingURI.host], 1);
+      message = gBrowserBundle.formatStringFromName("geolocation.shareWithSite",
+                                                    [requestingURI.host], 1);
       // Always share location action.
       actions.push({
         stringId: "geolocation.alwaysShareLocation",
@@ -2430,11 +2478,10 @@ ContentPermissionPrompt.prototype = {
   },
 
   _promptWebNotifications : function(aRequest) {
-    var browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
     var requestingURI = aRequest.principal.URI;
 
-    var message = browserBundle.formatStringFromName("webNotifications.showFromSite",
-                                                     [requestingURI.host], 1);
+    var message = gBrowserBundle.formatStringFromName("webNotifications.showFromSite",
+                                                      [requestingURI.host], 1);
 
     var actions = [
       {
@@ -2464,11 +2511,10 @@ ContentPermissionPrompt.prototype = {
 
   _promptPointerLock: function CPP_promtPointerLock(aRequest, autoAllow) {
 
-    let browserBundle = Services.strings.createBundle("chrome://browser/locale/browser.properties");
     let requestingURI = aRequest.principal.URI;
 
     let originString = requestingURI.schemeIs("file") ? requestingURI.path : requestingURI.host;
-    let message = browserBundle.formatStringFromName(autoAllow ?
+    let message = gBrowserBundle.formatStringFromName(autoAllow ?
                                   "pointerLock.autoLock.title2" : "pointerLock.title2",
                                   [originString], 1);
     // If this is an autoAllow info prompt, offer no actions.
