@@ -305,7 +305,7 @@ MediaSourceDecoder::SetCDMProxy(CDMProxy* aProxy)
   rv = mReader->SetCDMProxy(aProxy);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  {
+  if (aProxy) {
     // The sub readers can't decrypt EME content until they have a CDMProxy,
     // and the CDMProxy knows the capabilities of the CDM. The MediaSourceReader
     // remains in "waiting for resources" state until then. We need to kick the
