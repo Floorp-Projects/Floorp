@@ -554,15 +554,14 @@ AnimationPlayer::DoPlay(LimitBehavior aLimitBehavior)
 void
 AnimationPlayer::DoPause()
 {
+  if (mPendingState == PendingState::PausePending) {
+    return;
+  }
+
+  bool reuseReadyPromise = false;
   if (mPendingState == PendingState::PlayPending) {
     CancelPendingTasks();
-    // Resolve the ready promise since we currently only use it for
-    // players that are waiting to play. Later (in bug 1109390), we will
-    // use this for players waiting to pause as well and then we won't
-    // want to resolve it just yet.
-    if (mReady) {
-      mReady->MaybeResolve(this);
-    }
+    reuseReadyPromise = true;
   }
 
   // Mark this as no longer running on the compositor so that next time
@@ -570,9 +569,21 @@ AnimationPlayer::DoPause()
   // to remove the animation from any layer it might be on.
   mIsRunningOnCompositor = false;
 
-  // Bug 1109390 - check for null result here and go to pending state
-  mHoldTime = GetCurrentTime();
-  mStartTime.SetNull();
+  if (!reuseReadyPromise) {
+    // Clear ready promise. We'll create a new one lazily.
+    mReady = nullptr;
+  }
+
+  mPendingState = PendingState::PausePending;
+
+  nsIDocument* doc = GetRenderedDocument();
+  if (!doc) {
+    TriggerOnNextTick(Nullable<TimeDuration>());
+    return;
+  }
+
+  PendingPlayerTracker* tracker = doc->GetOrCreatePendingPlayerTracker();
+  tracker->AddPausePending(*this);
 
   UpdateFinishedState();
 }

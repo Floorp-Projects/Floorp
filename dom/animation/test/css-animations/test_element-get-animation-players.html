@@ -233,10 +233,10 @@ test(function(t) {
 
   // Update pause state (an Animation change)
   div.style.animationPlayState = 'paused';
-  var pausedAnimation = div.getAnimations()[0];
-  assert_equals(pausedAnimation.playState, 'paused',
-                'animation\'s paused state is updated');
-  assert_equals(originalAnimation, pausedAnimation,
+  var pendingAnimation = div.getAnimations()[0];
+  assert_equals(pendingAnimation.playState, 'pending',
+                'animation\'s play state is updated');
+  assert_equals(originalAnimation, pendingAnimation,
                 'getAnimations returns the same objects even when their'
                 + ' play state changes');
 

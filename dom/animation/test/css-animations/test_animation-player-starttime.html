@@ -316,15 +316,13 @@ async_test(function(t)
   animation.ready.then(t.step_func(function() {
     div.style.animationPlayState = 'paused';
     getComputedStyle(div).animationPlayState;
-    /* FIXME: Switch this on once deferred pausing is enabled
     assert_not_equals(animation.startTime, null,
                       'startTime is resolved when pause-pending');
-    */
 
     div.style.animationPlayState = 'running';
     getComputedStyle(div).animationPlayState;
-    assert_equals(animation.startTime, null,
-                  'startTime is unresolved when play-pending');
+    assert_not_equals(animation.startTime, null,
+                      'startTime is preserved when a pause is aborted');
     t.done();
   }));
 }, 'startTime while pause-pending and play-pending');
