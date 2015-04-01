@@ -19,6 +19,7 @@ namespace gfx {
 
 enum class VRHMDType : uint16_t {
   Oculus,
+  Cardboard,
   NumHMDTypes
 };
 
@@ -217,6 +218,7 @@ public:
 
 protected:
   VRHMDManager() { }
+  virtual ~VRHMDManager() { }
 };
 
 } // namespace gfx

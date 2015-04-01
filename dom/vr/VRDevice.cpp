@@ -214,9 +214,21 @@ public:
     : HMDVRDevice(aParent, aHMD)
   {
     // XXX TODO use real names/IDs
-    mHWID.AppendPrintf("HMDInfo-0x%llx", aHMD);
-    mDeviceId.AssignLiteral("somedevid");
-    mDeviceName.AssignLiteral("HMD Device");
+    uint64_t hmdid = reinterpret_cast<uint64_t>(aHMD);
+
+    mHWID.Truncate();
+    mHWID.AppendPrintf("HMDInfo-0x%llx", hmdid);
+
+    mDeviceId.Truncate();
+    mDeviceId.AppendPrintf("HMDInfo-dev-0x%llx", hmdid);
+
+    if (aHMD->GetType() == VRHMDType::Oculus) {
+      mDeviceName.AssignLiteral("VR HMD Device (oculus)");
+    } else if (aHMD->GetType() == VRHMDType::Cardboard) {
+      mDeviceName.AssignLiteral("VR HMD Device (cardboard)");
+    } else {
+      mDeviceName.AssignLiteral("VR HMD Device (unknown)");
+    }
 
     mValid = true;
   }
@@ -270,9 +282,21 @@ public:
     , mTracking(false)
   {
     // XXX TODO use real names/IDs
-    mHWID.AppendPrintf("HMDInfo-0x%llx", aHMD);
-    mDeviceId.AssignLiteral("somedevid");
-    mDeviceName.AssignLiteral("HMD Position Device");
+    uint64_t hmdid = reinterpret_cast<uint64_t>(aHMD);
+
+    mHWID.Truncate();
+    mHWID.AppendPrintf("HMDInfo-0x%llx", hmdid);
+
+    mDeviceId.Truncate();
+    mDeviceId.AppendPrintf("HMDInfo-dev-0x%llx", hmdid);
+
+    if (aHMD->GetType() == VRHMDType::Oculus) {
+      mDeviceName.AssignLiteral("VR Position Device (oculus)");
+    } else if (aHMD->GetType() == VRHMDType::Cardboard) {
+      mDeviceName.AssignLiteral("VR Position Device (cardboard)");
+    } else {
+      mDeviceName.AssignLiteral("VR Position Device (unknown)");
+    }
 
     mValid = true;
   }
