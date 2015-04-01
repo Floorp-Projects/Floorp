@@ -56,17 +56,15 @@ static pfn_ovrMatrix4f_Projection ovrMatrix4f_Projection = nullptr;
 static pfn_ovrMatrix4f_OrthoSubProjection ovrMatrix4f_OrthoSubProjection = nullptr;
 static pfn_ovr_GetTimeInSeconds ovr_GetTimeInSeconds = nullptr;
 
-#if defined(XP_WIN)
-# ifdef HAVE_64BIT_BUILD
-#  define OVR_LIB_NAME "libovr64.dll"
-# else
-#  define OVR_LIB_NAME "libovr.dll"
-# endif
-#elif defined(XP_MACOSX)
-# define OVR_LIB_NAME "libovr.dylib"
+#ifdef HAVE_64BIT_BUILD
+#define BUILD_BITS 64
 #else
-# define OVR_LIB_NAME 0
+#define BUILD_BITS 32
 #endif
+
+#define LIBOVR_PRODUCT_VERSION 0
+#define LIBOVR_MAJOR_VERSION   5
+#define LIBOVR_MINOR_VERSION   0
 
 static bool
 InitializeOculusCAPI()
@@ -74,51 +72,82 @@ InitializeOculusCAPI()
   static PRLibrary *ovrlib = nullptr;
 
   if (!ovrlib) {
-    const char *libName = OVR_LIB_NAME;
+    nsTArray<nsCString> libSearchPaths;
+    nsCString libName;
+    nsCString searchPath;
+
+#if defined(_WIN32)
+    static const char dirSep = '\\';
+#else
+    static const char dirSep = '/';
+#endif
+
+#if defined(_WIN32)
+    static const int pathLen = 260;
+    searchPath.SetCapacity(pathLen);
+    int realLen = ::GetSystemDirectoryA(searchPath.BeginWriting(), pathLen);
+    if (realLen != 0 && realLen < pathLen) {
+      searchPath.SetLength(realLen);
+      libSearchPaths.AppendElement(searchPath);
+    }
+    libName.AppendPrintf("LibOVRRT%d_%d_%d.dll", BUILD_BITS, LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
+#elif defined(__APPLE__)
+    searchPath.Truncate();
+    searchPath.AppendPrintf("/Library/Frameworks/LibOVRRT_%d.framework/Versions/%d", LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
+    libSearchPaths.AppendElement(searchPath);
+
+    if (PR_GetEnv("HOME")) {
+      searchPath.Truncate();
+      searchPath.AppendPrintf("%s/Library/Frameworks/LibOVRRT_%d.framework/Versions/%d", PR_GetEnv("HOME"), LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
+      libSearchPaths.AppendElement(searchPath);
+    }
+    libName.AppendPrintf("LibOVRRT_%d", LIBOVR_PRODUCT_VERSION);
+#else
+    libSearchPaths.AppendElement(nsCString("/usr/local/lib"));
+    libSearchPaths.AppendElement(nsCString("/usr/lib"));
+    libName.AppendPrintf("LibOVRRT%d_%d.so.%d", BUILD_BITS, LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
+#endif
 
     // If the pref is present, we override libName
-    nsAdoptingCString prefLibName = mozilla::Preferences::GetCString("dom.vr.ovr_lib_path");
-    if (prefLibName && prefLibName.get()) {
-      libName = prefLibName.get();
+    nsAdoptingCString prefLibPath = mozilla::Preferences::GetCString("dom.vr.ovr_lib_path");
+    if (prefLibPath && prefLibPath.get()) {
+      libSearchPaths.InsertElementsAt(0, 1, prefLibPath);
     }
 
+    nsAdoptingCString prefLibName = mozilla::Preferences::GetCString("dom.vr.ovr_lib_name");
+    if (prefLibName && prefLibName.get()) {
+      libName.Assign(prefLibName);
+    }
+
+    // search the path/module dir
+    libSearchPaths.InsertElementsAt(0, 1, nsCString());
+
     // If the env var is present, we override libName
+    if (PR_GetEnv("OVR_LIB_PATH")) {
+      searchPath = PR_GetEnv("OVR_LIB_PATH");
+      libSearchPaths.InsertElementsAt(0, 1, searchPath);
+    }
+
     if (PR_GetEnv("OVR_LIB_NAME")) {
       libName = PR_GetEnv("OVR_LIB_NAME");
     }
 
-    if (!libName) {
-      printf_stderr("Don't know how to find Oculus VR library; missing dom.vr.ovr_lib_path or OVR_LIB_NAME\n");
-      return false;
-    }
-
-    ovrlib = PR_LoadLibrary(libName);
-
-    if (!ovrlib) {
-      // Not found? Try harder. Needed mainly on OSX/etc. where
-      // the binary location is not in the search path.
-      const char *xulName = "libxul.so";
-#if defined(XP_MACOSX)
-      xulName = "XUL";
-#endif
-
-      char *xulpath = PR_GetLibraryFilePathname(xulName, (PRFuncPtr) &InitializeOculusCAPI);
-      if (xulpath) {
-        char *xuldir = strrchr(xulpath, '/');
-        if (xuldir) {
-          *xuldir = 0;
-          xuldir = xulpath;
-
-          char *ovrpath = PR_GetLibraryName(xuldir, libName);
-          ovrlib = PR_LoadLibrary(ovrpath);
-          PR_Free(ovrpath);
-        }
-        PR_Free(xulpath);
+    for (uint32_t i = 0; i < libSearchPaths.Length(); ++i) {
+      nsCString& libPath = libSearchPaths[i];
+      nsCString fullName;
+      if (libPath.Length() == 0) {
+        fullName.Assign(libName);
+      } else {
+        fullName.AppendPrintf("%s%c%s", libPath.BeginReading(), dirSep, libName.BeginReading());
       }
+
+      ovrlib = PR_LoadLibrary(fullName.BeginReading());
+      if (ovrlib)
+        break;
     }
 
     if (!ovrlib) {
-      printf_stderr("Failed to load Oculus VR library, tried '%s'\n", libName);
+      printf_stderr("Failed to load Oculus VR library!\n");
       return false;
     }
   }
@@ -262,7 +291,7 @@ HMDInfoOculus::SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRi
 
     // these values are negated so that content can add the adjustment to its camera position,
     // instead of subtracting
-    mEyeTranslation[eye] = Point3D(-renderDesc.ViewAdjust.x, -renderDesc.ViewAdjust.y, -renderDesc.ViewAdjust.z);
+    mEyeTranslation[eye] = Point3D(-renderDesc.HmdToEyeViewOffset.x, -renderDesc.HmdToEyeViewOffset.y, -renderDesc.HmdToEyeViewOffset.z);
 
     // note that we are using a right-handed coordinate system here, to match CSS
     ovrMatrix4f projMatrix = ovrMatrix4f_Projection(mFOVPort[eye], zNear, zFar, true);
@@ -442,7 +471,13 @@ VRHMDManagerOculus::PlatformInit()
   if (!InitializeOculusCAPI())
     return false;
 
-  bool ok = ovr_Initialize();
+  ovrInitParams params;
+  params.Flags = ovrInit_RequestVersion;
+  params.RequestedMinorVersion = LIBOVR_MINOR_VERSION;
+  params.LogCallback = nullptr;
+  params.ConnectionTimeoutMS = 0;
+
+  bool ok = ovr_Initialize(&params);
 
   if (!ok)
     return false;
