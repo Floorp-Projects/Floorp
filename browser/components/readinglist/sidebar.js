@@ -118,10 +118,12 @@ let RLSidebar = {
     log.trace(`onItemDeleted: ${item}`);
 
     let itemNode = this.itemNodesById.get(item.id);
+
+    this.itemNodesById.delete(item.id);
+    this.itemsById.delete(item.id);
+
     itemNode.addEventListener('transitionend', (event) => {
       if (event.propertyName == "max-height") {
-        this.itemNodesById.delete(item.id);
-        this.itemsById.delete(item.id);
         itemNode.remove();
 
         // TODO: ensureListItems doesn't yet cope with needing to add one item.
