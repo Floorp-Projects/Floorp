@@ -23,19 +23,10 @@ add_task(function*() {
   is(controller.animationPlayers.length, 2, "2 animation players exist");
 
   info("Wait for both animations to end");
-
   let promises = controller.animationPlayers.map(front => {
-    let def = promise.defer();
-    let onStateChanged = () => {
-      if (front.state.playState === "finished") {
-        front.off(front.AUTO_REFRESH_EVENT, onStateChanged);
-        def.resolve();
-      }
-    };
-    front.on(front.AUTO_REFRESH_EVENT, onStateChanged);
-    return def.promise;
+    return waitForStateCondition(front, state => state.playState === "finished",
+                                 "Waiting for the animation to finish");
   });
-
   yield promise.all(promises);
 
   for (let widgetEl of panel.playersEl.querySelectorAll(".player-widget")) {
