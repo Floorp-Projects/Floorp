@@ -140,7 +140,7 @@ PluginProcessChild::Init()
       return false;
     }
 
-    bool retval = mPlugin.InitForChrome(pluginFilename, ParentHandle(),
+    bool retval = mPlugin.InitForChrome(pluginFilename, ParentPid(),
                                         IOThreadChild::message_loop(),
                                         IOThreadChild::channel());
 #if defined(XP_MACOSX)

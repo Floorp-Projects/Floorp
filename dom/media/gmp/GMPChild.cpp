@@ -265,13 +265,13 @@ GMPChild::CheckThread()
 bool
 GMPChild::Init(const std::string& aPluginPath,
                const std::string& aVoucherPath,
-               base::ProcessHandle aParentProcessHandle,
+               base::ProcessId aParentPid,
                MessageLoop* aIOLoop,
                IPC::Channel* aChannel)
 {
   LOGD("%s pluginPath=%s", __FUNCTION__, aPluginPath.c_str());
 
-  if (NS_WARN_IF(!Open(aChannel, aParentProcessHandle, aIOLoop))) {
+  if (NS_WARN_IF(!Open(aChannel, aParentPid, aIOLoop))) {
     return false;
   }
 

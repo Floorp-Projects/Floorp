@@ -215,16 +215,16 @@ public:
   // successful (owned by the caller), nullptr if not.
   IPC::Message*
   ShareTo(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
-          base::ProcessHandle aProcess,
+          base::ProcessId aTargetPid,
           int32_t routingId);
 
-  // Stop sharing this with |aProcess|.  Return an IPC message that
+  // Stop sharing this with |aTargetPid|.  Return an IPC message that
   // contains enough information for the other process to unmap this
   // segment.  Return a new message if successful (owned by the
   // caller), nullptr if not.
   IPC::Message*
   UnshareFrom(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
-              base::ProcessHandle aProcess,
+              base::ProcessId aTargetPid,
               int32_t routingId);
 
   // Return a SharedMemory instance in this process using the

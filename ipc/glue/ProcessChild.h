@@ -22,10 +22,10 @@ namespace ipc {
 
 class ProcessChild : public ChildProcess {
 protected:
-  typedef base::ProcessHandle ProcessHandle;
+  typedef base::ProcessId ProcessId;
 
 public:
-  explicit ProcessChild(ProcessHandle parentHandle);
+  explicit ProcessChild(ProcessId aParentPid);
   virtual ~ProcessChild();
 
   virtual bool Init() = 0;
@@ -41,15 +41,15 @@ protected:
     return gProcessChild;
   }
 
-  ProcessHandle ParentHandle() {
-    return mParentHandle;
+  ProcessId ParentPid() {
+    return mParentPid;
   }
 
 private:
   static ProcessChild* gProcessChild;
 
   MessageLoop* mUILoop;
-  ProcessHandle mParentHandle;
+  ProcessId mParentPid;
 
   DISALLOW_EVIL_CONSTRUCTORS(ProcessChild);
 };
