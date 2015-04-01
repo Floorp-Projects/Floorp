@@ -715,7 +715,7 @@ public:
 
   void MozGetFileNameArray(nsTArray< nsString >& aFileNames);
 
-  void MozSetFileNameArray(const Sequence< nsString >& aFileNames);
+  void MozSetFileNameArray(const Sequence< nsString >& aFileNames, ErrorResult& aRv);
   void MozSetFileArray(const Sequence<OwningNonNull<File>>& aFiles);
 
   HTMLInputElement* GetOwnerNumberControl();
