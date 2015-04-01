@@ -25,10 +25,8 @@ namespace dom {
 
 using namespace workers;
 
-BroadcastChannelChild::BroadcastChannelChild(const nsAString& aOrigin,
-                                             const nsAString& aChannel)
+BroadcastChannelChild::BroadcastChannelChild(const nsAString& aOrigin)
   : mOrigin(aOrigin)
-  , mChannel(aChannel)
   , mActorDestroyed(false)
 {
 }
