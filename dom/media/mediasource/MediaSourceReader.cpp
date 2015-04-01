@@ -1068,22 +1068,6 @@ MediaSourceReader::MaybeNotifyHaveData()
             IsSeeking(), haveAudio, haveVideo, ended);
 }
 
-static void
-CombineEncryptionData(EncryptionInfo& aTo, const EncryptionInfo& aFrom)
-{
-  if (!aFrom.mIsEncrypted) {
-    return;
-  }
-  aTo.mIsEncrypted = true;
-
-  if (!aTo.mType.IsEmpty() && !aTo.mType.Equals(aFrom.mType)) {
-    NS_WARNING("mismatched encryption types");
-  }
-
-  aTo.mType = aFrom.mType;
-  aTo.mInitData.AppendElements(aFrom.mInitData);
-}
-
 nsresult
 MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
 {
@@ -1107,7 +1091,7 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     const MediaInfo& info = GetAudioReader()->GetMediaInfo();
     MOZ_ASSERT(info.HasAudio());
     mInfo.mAudio = info.mAudio;
-    CombineEncryptionData(mInfo.mCrypto, info.mCrypto);
+    mInfo.mCrypto.AddInitData(info.mCrypto);
     MSE_DEBUG("audio reader=%p duration=%lld",
               mAudioSourceDecoder.get(),
               mAudioSourceDecoder->GetReader()->GetDecoder()->GetMediaDuration());
@@ -1120,7 +1104,7 @@ MediaSourceReader::ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags)
     const MediaInfo& info = GetVideoReader()->GetMediaInfo();
     MOZ_ASSERT(info.HasVideo());
     mInfo.mVideo = info.mVideo;
-    CombineEncryptionData(mInfo.mCrypto, info.mCrypto);
+    mInfo.mCrypto.AddInitData(info.mCrypto);
     MSE_DEBUG("video reader=%p duration=%lld",
               GetVideoReader(),
               GetVideoReader()->GetDecoder()->GetMediaDuration());
