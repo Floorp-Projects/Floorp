@@ -8,6 +8,7 @@ TAGS
 tags
 ID
 .DS_Store*
+*.pdb
 
 # Vim swap files.
 .*.sw[a-z]
