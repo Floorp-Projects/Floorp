@@ -20,9 +20,9 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         '/xpcom/base',
     ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    # For sandbox includes and the include dependencies those have
+
+if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += [
-        '/security',
         '/security/sandbox/chromium',
+        '/security/sandbox/chromium-shim',
     ]
