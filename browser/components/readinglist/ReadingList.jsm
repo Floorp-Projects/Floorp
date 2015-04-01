@@ -244,15 +244,17 @@ ReadingListImpl.prototype = {
    *         an Error on error.
    */
   forEachItem: Task.async(function* (callback, ...optsList) {
-    yield this._forEachItem(callback, optsList, STORE_OPTIONS_IGNORE_DELETED);
+    let thisCallback = record => callback(this._itemFromRecord(record));
+    yield this._forEachRecord(thisCallback, optsList, STORE_OPTIONS_IGNORE_DELETED);
   }),
 
   /**
-   * Like forEachItem, but enumerates only previously synced items that are
-   * marked as being locally deleted.
+   * Enumerates the GUIDs for previously synced items that are marked as being
+   * locally deleted.
    */
-  forEachSyncedDeletedItem: Task.async(function* (callback, ...optsList) {
-    yield this._forEachItem(callback, optsList, {
+  forEachSyncedDeletedGUID: Task.async(function* (callback, ...optsList) {
+    let thisCallback = record => callback(record.guid);
+    yield this._forEachRecord(thisCallback, optsList, {
       syncStatus: SYNC_STATUS_DELETED,
     });
   }),
@@ -263,12 +265,12 @@ ReadingListImpl.prototype = {
    * @param storeOptions An options object passed to the store as the "control"
    *        options.
    */
-  _forEachItem: Task.async(function* (callback, optsList, storeOptions) {
+  _forEachRecord: Task.async(function* (callback, optsList, storeOptions) {
     let promiseChain = Promise.resolve();
     yield this._store.forEachItem(record => {
       promiseChain = promiseChain.then(() => {
         return new Promise((resolve, reject) => {
-          let promise = callback(this._itemFromRecord(record));
+          let promise = callback(record);
           if (promise instanceof Promise) {
             return promise.then(resolve, reject);
           }
@@ -328,7 +330,9 @@ ReadingListImpl.prototype = {
       record.syncStatus = SYNC_STATUS_NEW;
     }
 
+    log.debug("addingItem with guid: ${guid}, url: ${url}", record);
     yield this._store.addItem(record);
+    log.trace("added item with guid: ${guid}, url: ${url}", record);
     this._invalidateIterators();
     let item = this._itemFromRecord(record);
     this._callListeners("onItemAdded", item);
@@ -356,7 +360,9 @@ ReadingListImpl.prototype = {
       throw new Error("The item must have a url");
     }
     this._ensureItemBelongsToList(item);
+    log.debug("updatingItem with guid: ${guid}, url: ${url}", item._record);
     yield this._store.updateItem(item._record);
+    log.trace("finished update of item guid: ${guid}, url: ${url}", item._record);
     this._invalidateIterators();
     this._callListeners("onItemUpdated", item);
   }),
@@ -378,6 +384,7 @@ ReadingListImpl.prototype = {
     // the store.  Otherwise mark it as deleted but don't actually delete it so
     // that its status can be synced.
     if (item._record.syncStatus == SYNC_STATUS_NEW) {
+      log.debug("deleteItem guid: ${guid}, url: ${url} - item is local so really deleting it", item._record);
       yield this._store.deleteItemByURL(item.url);
     }
     else {
@@ -389,12 +396,16 @@ ReadingListImpl.prototype = {
       }
       newRecord.guid = item._record.guid;
       newRecord.syncStatus = SYNC_STATUS_DELETED;
-      item._record = newRecord;
-      yield this._store.updateItemByGUID(item._record);
+      log.debug("deleteItem guid: ${guid}, url: ${url} - item has been synced so updating to deleted state", item._record);
+      yield this._store.updateItemByGUID(newRecord);
     }
 
+    log.trace("finished db operation deleting item with guid: ${guid}, url: ${url}", item._record);
     item.list = null;
-    this._itemsByNormalizedURL.delete(item.url);
+    // failing to remove the item from the map points at something bad!
+    if (!this._itemsByNormalizedURL.delete(item.url)) {
+      log.error("Failed to remove item from the map", item);
+    }
     this._invalidateIterators();
     let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
     mm.broadcastAsyncMessage("Reader:Removed", item);
@@ -506,6 +517,9 @@ ReadingListImpl.prototype = {
    * @return The ReadingListItem.
    */
   _itemFromRecord(record) {
+    if (!record.url) {
+      throw new Error("record must have a URL");
+    }
     let itemWeakRef = this._itemsByNormalizedURL.get(record.url);
     let item = itemWeakRef ? itemWeakRef.get() : null;
     if (item) {
