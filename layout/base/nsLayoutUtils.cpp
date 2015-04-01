@@ -367,36 +367,12 @@ TextAlignTrueEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
     isTextAlignTrueEnabled ? eCSSKeyword_true : eCSSKeyword_UNKNOWN;
 }
 
-static AnimationPlayerCollection*
-GetAnimationsOrTransitionsForCompositor(nsIContent* aContent,
-                                        nsIAtom* aAnimationProperty,
-                                        nsCSSProperty aProperty)
-{
-  AnimationPlayerCollection* collection =
-    static_cast<AnimationPlayerCollection*>(
-      aContent->GetProperty(aAnimationProperty));
-  if (collection) {
-    bool propertyMatches = collection->HasAnimationOfProperty(aProperty);
-    if (propertyMatches &&
-        collection->CanPerformOnCompositorThread(
-          AnimationPlayerCollection::CanAnimate_AllowPartial)) {
-      return collection;
-    }
-  }
-
-  return nullptr;
-}
-
 bool
 nsLayoutUtils::HasAnimationsForCompositor(nsIContent* aContent,
                                           nsCSSProperty aProperty)
 {
-  if (!aContent->MayHaveAnimations())
-    return false;
-  return GetAnimationsOrTransitionsForCompositor(
-           aContent, nsGkAtoms::animationsProperty, aProperty) ||
-         GetAnimationsOrTransitionsForCompositor(
-           aContent, nsGkAtoms::transitionsProperty, aProperty);
+  return nsAnimationManager::GetAnimationsForCompositor(aContent, aProperty) ||
+         nsTransitionManager::GetAnimationsForCompositor(aContent, aProperty);
 }
 
 static AnimationPlayerCollection*
@@ -515,18 +491,12 @@ GetSuitableScale(float aMaxScale, float aMinScale)
 
 static void
 GetMinAndMaxScaleForAnimationProperty(nsIContent* aContent,
-                                      nsIAtom* aAnimationProperty,
+                                      AnimationPlayerCollection* aPlayers,
                                       gfxSize& aMaxScale,
                                       gfxSize& aMinScale)
 {
-  AnimationPlayerCollection* collection =
-    GetAnimationsOrTransitionsForCompositor(aContent, aAnimationProperty,
-                                            eCSSProperty_transform);
-  if (!collection)
-    return;
-
-  for (size_t playerIdx = collection->mPlayers.Length(); playerIdx-- != 0; ) {
-    AnimationPlayer* player = collection->mPlayers[playerIdx];
+  for (size_t playerIdx = aPlayers->mPlayers.Length(); playerIdx-- != 0; ) {
+    AnimationPlayer* player = aPlayers->mPlayers[playerIdx];
     if (!player->GetSource() || player->GetSource()->IsFinishedTransition()) {
       continue;
     }
@@ -562,10 +532,21 @@ nsLayoutUtils::ComputeSuitableScaleForAnimation(nsIContent* aContent)
   gfxSize minScale(std::numeric_limits<gfxFloat>::max(),
                    std::numeric_limits<gfxFloat>::max());
 
-  GetMinAndMaxScaleForAnimationProperty(aContent,
-    nsGkAtoms::animationsProperty, maxScale, minScale);
-  GetMinAndMaxScaleForAnimationProperty(aContent,
-    nsGkAtoms::transitionsProperty, maxScale, minScale);
+  AnimationPlayerCollection* animations =
+    nsAnimationManager::GetAnimationsForCompositor(aContent,
+                                                   eCSSProperty_transform);
+  if (animations) {
+    GetMinAndMaxScaleForAnimationProperty(aContent, animations,
+                                          maxScale, minScale);
+  }
+
+  animations =
+    nsTransitionManager::GetAnimationsForCompositor(aContent,
+                                                    eCSSProperty_transform);
+  if (animations) {
+    GetMinAndMaxScaleForAnimationProperty(aContent, animations,
+                                          maxScale, minScale);
+  }
 
   if (maxScale.width == std::numeric_limits<gfxFloat>::min()) {
     // We didn't encounter a transform
