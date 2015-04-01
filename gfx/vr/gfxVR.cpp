@@ -13,6 +13,7 @@
 #include "gfxPrefs.h"
 #include "gfxVR.h"
 #include "gfxVROculus.h"
+#include "gfxVRCardboard.h"
 
 #include "nsServiceManagerUtils.h"
 #include "nsIScreenManager.h"
@@ -83,6 +84,10 @@ VRHMDManager::ManagerInit()
   nsRefPtr<VRHMDManager> mgr;
 
   mgr = new VRHMDManagerOculus();
+  if (mgr->PlatformInit())
+    sManagers->AppendElement(mgr);
+
+  mgr = new VRHMDManagerCardboard();
   if (mgr->PlatformInit())
     sManagers->AppendElement(mgr);
 }
