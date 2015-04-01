@@ -17,9 +17,6 @@ const kPlaceholderClass = "panel-customization-placeholder";
 const kSkipSourceNodePref = "browser.uiCustomization.skipSourceNodeCheck";
 const kToolbarVisibilityBtn = "customization-toolbar-visibility-button";
 const kDrawInTitlebarPref = "browser.tabs.drawInTitlebar";
-const kDeveditionThemePref = "browser.devedition.theme.enabled";
-const kDeveditionButtonPref = "browser.devedition.theme.showCustomizeButton";
-const kDeveditionChangedNotification = "devedition-theme-state-changed";
 const kMaxTransitionDurationMs = 2000;
 
 const kPanelItemContextMenu = "customizationPanelItemContextMenu";
@@ -67,17 +64,12 @@ function CustomizeMode(aWindow) {
   this.tipPanel = this.document.getElementById("customization-tipPanel");
   if (Services.prefs.getCharPref("general.skins.selectedSkin") != "classic/1.0") {
     let lwthemeButton = this.document.getElementById("customization-lwtheme-button");
-    let deveditionButton = this.document.getElementById("customization-devedition-theme-button");
     lwthemeButton.setAttribute("hidden", "true");
-    deveditionButton.setAttribute("hidden", "true");
   }
 #ifdef CAN_DRAW_IN_TITLEBAR
   this._updateTitlebarButton();
   Services.prefs.addObserver(kDrawInTitlebarPref, this, false);
 #endif
-  this._updateDevEditionThemeButton();
-  Services.prefs.addObserver(kDeveditionButtonPref, this, false);
-  Services.obs.addObserver(this, kDeveditionChangedNotification, false);
   this.window.addEventListener("unload", this);
 };
 
@@ -113,8 +105,6 @@ CustomizeMode.prototype = {
 #ifdef CAN_DRAW_IN_TITLEBAR
     Services.prefs.removeObserver(kDrawInTitlebarPref, this);
 #endif
-    Services.prefs.removeObserver(kDeveditionButtonPref, this);
-    Services.obs.removeObserver(this, kDeveditionChangedNotification);
   },
 
   toggle: function() {
@@ -1509,13 +1499,6 @@ CustomizeMode.prototype = {
           }
         }
         break;
-      case kDeveditionChangedNotification:
-        if (aSubject == this.window) {
-          this._updateDevEditionThemeButton();
-          this._updateResetButton();
-          this._updateUndoResetButton();
-        }
-        break;
     }
   },
 
@@ -1539,44 +1522,6 @@ CustomizeMode.prototype = {
     Services.prefs.setBoolPref(kDrawInTitlebarPref, !aShouldShowTitlebar);
   },
 #endif
-
-  _updateDevEditionThemeButton: function() {
-    let button = this.document.getElementById("customization-devedition-theme-button");
-
-    let themeEnabled = !!this.window.DevEdition.styleSheet;
-    if (themeEnabled) {
-      button.setAttribute("checked", "true");
-    } else {
-      button.removeAttribute("checked");
-    }
-
-    let buttonVisible = Services.prefs.getBoolPref(kDeveditionButtonPref);
-    if (buttonVisible) {
-      button.removeAttribute("hidden");
-    } else {
-      button.setAttribute("hidden", "true");
-    }
-  },
-
-  toggleDevEditionTheme: function(shouldEnable) {
-    const DEFAULT_THEME_ID = "{972ce4c6-7e08-4474-a285-3208198ce6fd}";
-
-    Services.prefs.setBoolPref(kDeveditionThemePref, shouldEnable);
-
-    let currentLWT = LightweightThemeManager.currentTheme;
-    if (currentLWT && shouldEnable) {
-      this._lastLightweightTheme = currentLWT;
-      AddonManager.getAddonByID(DEFAULT_THEME_ID, function(aDefaultTheme) {
-        // Theoretically, this could race if people are /very/ quick in switching
-        // something else here, so doublecheck:
-        if (Services.prefs.getBoolPref(kDeveditionThemePref)) {
-          aDefaultTheme.userDisabled = false;
-        }
-      });
-    } else if (!currentLWT && !shouldEnable && this._lastLightweightTheme) {
-      LightweightThemeManager.currentTheme = this._lastLightweightTheme;
-    }
-  },
 
   _onDragStart: function(aEvent) {
     __dumpDragData(aEvent);
