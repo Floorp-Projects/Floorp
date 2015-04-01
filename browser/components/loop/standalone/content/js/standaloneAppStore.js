@@ -96,8 +96,20 @@ loop.store.StandaloneAppStore = (function() {
     },
 
     /**
+     * Extracts the crypto key from the hash for the page.
+     */
+    _extractCryptoKey: function(windowHash) {
+      if (windowHash && windowHash[0] === "#") {
+        return windowHash.substring(1, windowHash.length);
+      }
+
+      return null;
+    },
+
+    /**
      * Handles the extract token info action - obtains the token information
-     * and its type; updates the store and notifies interested components.
+     * and its type; extracts any crypto information; updates the store and
+     * notifies interested components.
      *
      * @param {sharedActions.GetWindowData} actionData The action data
      */
@@ -135,6 +147,7 @@ loop.store.StandaloneAppStore = (function() {
       // it.
       if (token) {
         this._dispatcher.dispatch(new loop.shared.actions.FetchServerData({
+          cryptoKey: this._extractCryptoKey(actionData.windowHash),
           token: token,
           windowType: windowType
         }));
