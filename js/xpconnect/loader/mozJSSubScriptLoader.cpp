@@ -540,7 +540,6 @@ ScriptPrecompiler::OnStreamComplete(nsIStreamLoader* aLoader,
 
     JS::CompileOptions options(cx, JSVERSION_DEFAULT);
     options.forceAsync = true;
-    options.compileAndGo = true;
     options.installedFile = true;
 
     nsCOMPtr<nsIURI> uri;
