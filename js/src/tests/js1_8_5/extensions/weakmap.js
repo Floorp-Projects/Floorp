@@ -76,45 +76,45 @@ function test()
             thrown = true;
         }
 
-        check(function() thrown, todo);
+        check(() => thrown, todo);
     }
 
     var key = {};
     var map = new WeakMap();
 
-    check(function() !map.has(key));
-    check(function() map.delete(key) == false);
-    check(function() map.set(key, 42) === map);
-    check(function() map.get(key) == 42);
-    check(function() typeof map.get({}) == "undefined");
-    check(function() map.get({}, "foo") == undefined);
+    check(() => !map.has(key));
+    check(() => map.delete(key) == false);
+    check(() => map.set(key, 42) === map);
+    check(() => map.get(key) == 42);
+    check(() => typeof map.get({}) == "undefined");
+    check(() => map.get({}, "foo") == undefined);
 
     gc(); gc(); gc();
 
-    check(function() map.get(key) == 42);
-    check(function() map.delete(key) == true);
-    check(function() map.delete(key) == false);
-    check(function() map.delete({}) == false);
+    check(() => map.get(key) == 42);
+    check(() => map.delete(key) == true);
+    check(() => map.delete(key) == false);
+    check(() => map.delete({}) == false);
 
-    check(function() typeof map.get(key) == "undefined");
-    check(function() !map.has(key));
-    check(function() map.delete(key) == false);
+    check(() => typeof map.get(key) == "undefined");
+    check(() => !map.has(key));
+    check(() => map.delete(key) == false);
 
     var value = { };
-    check(function() map.set(new Object(), value) === map);
+    check(() => map.set(new Object(), value) === map);
     gc(); gc(); gc();
 
-    check(function() map.has("non-object key") == false);
-    check(function() map.has() == false);
-    check(function() map.get("non-object key") == undefined);
-    check(function() map.get() == undefined);
-    check(function() map.delete("non-object key") == false);
-    check(function() map.delete() == false);
+    check(() => map.has("non-object key") == false);
+    check(() => map.has() == false);
+    check(() => map.get("non-object key") == undefined);
+    check(() => map.get() == undefined);
+    check(() => map.delete("non-object key") == false);
+    check(() => map.delete() == false);
 
-    check(function() map.set(key) === map);
-    check(function() map.get(key) == undefined);
+    check(() => map.set(key) === map);
+    check(() => map.get(key) == undefined);
 
-    checkThrows(function() map.set("non-object key", value));
+    checkThrows(() => map.set("non-object key", value));
 
     print ("done");
 

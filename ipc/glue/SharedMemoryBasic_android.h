@@ -53,7 +53,7 @@ public:
     return aHandle.fd >= 0;
   }
 
-  bool ShareToProcess(base::ProcessHandle aProcess,
+  bool ShareToProcess(base::ProcessId aProcessId,
                       Handle* aNewHandle);
 
 private:

@@ -66,7 +66,7 @@ public:
         if (NS_FAILED(rv)) return rv;
         uint32_t len = (uint32_t)std::min(len64, (uint64_t)(UINT32_MAX - 1));
 
-        char *buffer = (char*)nsMemory::Alloc(len + 1);
+        char *buffer = (char*)moz_xmalloc(len + 1);
         if (!buffer) return NS_ERROR_OUT_OF_MEMORY;
 
         rv = inStr->Read(buffer, len, &read);
@@ -75,7 +75,7 @@ public:
             printf("CONTEXT %p: Received %u bytes and the following data: \n %s\n\n",
                    static_cast<void*>(ctxt), read, buffer);
         }
-        nsMemory::Free(buffer);
+        free(buffer);
 
         return NS_OK;
     }

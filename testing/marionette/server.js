@@ -54,20 +54,6 @@ this.MarionetteServer = function(port, forceLocal) {
 };
 
 /**
- * Initialises the Marionette server by loading in the special powers
- * which is required to provide some automation-only features.
- */
-MarionetteServer.prototype.init = function() {
-  // SpecialPowers requires insecure automation-only features that we put behind a pref
-  Services.prefs.setBoolPref(SPECIAL_POWERS_PREF, true);
-  let specialpowers = {};
-  loader.loadSubScript(
-    "chrome://specialpowers/content/SpecialPowersObserver.js", specialpowers);
-  specialpowers.specialPowersObserver = new specialpowers.SpecialPowersObserver();
-  specialpowers.specialPowersObserver.init();
-};
-
-/**
  * Function that takes an Emulator and produces a GeckoDriver.
  *
  * Determines application name and device type to initialise the driver
@@ -115,7 +101,6 @@ MarionetteServer.prototype.start = function() {
   if (this.alive) {
     return;
   }
-  this.init();
   let flags = Ci.nsIServerSocket.KeepWhenOffline;
   if (this.forceLocal) {
     flags |= Ci.nsIServerSocket.LoopbackOnly;

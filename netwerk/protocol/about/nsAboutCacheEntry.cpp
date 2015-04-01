@@ -373,7 +373,7 @@ nsAboutCacheEntry::WriteCacheEntryDescription(nsICacheEntry *entry)
     } else {
         buffer.Append(escapedStr);
     }
-    nsMemory::Free(escapedStr);
+    free(escapedStr);
     buffer.AppendLiteral("</td>\n"
                          "  </tr>\n");
 
@@ -506,7 +506,7 @@ nsAboutCacheEntry::OnMetaDataElement(char const * key, char const * value)
                            "    <td>");
     char* escapedValue = nsEscapeHTML(value);
     mBuffer->Append(escapedValue);
-    nsMemory::Free(escapedValue);
+    free(escapedValue);
     mBuffer->AppendLiteral("</td>\n"
                            "  </tr>\n");
 

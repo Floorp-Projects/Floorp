@@ -565,7 +565,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         if (length == size_t(-1)) {
             return false;
         }
-        char* buffer = static_cast<char*>(nsMemory::Alloc(length + 1));
+        char* buffer = static_cast<char *>(moz_xmalloc(length + 1));
         if (!buffer) {
             return false;
         }
@@ -589,7 +589,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
         }
         int len = JS_GetStringLength(str);
         int byte_len = (len+1)*sizeof(char16_t);
-        if (!(*((void**)d) = nsMemory::Alloc(byte_len))) {
+        if (!(*((void**)d) = moz_xmalloc(byte_len))) {
             // XXX should report error
             return false;
         }
@@ -1356,7 +1356,7 @@ CheckTargetAndPopulate(const nsXPTType& type,
 
     // This could overflow on 32-bit systems so check max first.
     size_t byteSize = count * typeSize;
-    if (count > max || !(*output = nsMemory::Alloc(byteSize))) {
+    if (count > max || !(*output = moz_xmalloc(byteSize))) {
         if (pErr)
             *pErr = NS_ERROR_OUT_OF_MEMORY;
 
@@ -1541,7 +1541,7 @@ XPCConvert::JSArray2Native(void** d, HandleValue s,
         cleanupMode = _mode;                                                   \
         size_t max = UINT32_MAX / sizeof(_t);                                  \
         if (count > max ||                                                     \
-            nullptr == (array = nsMemory::Alloc(count * sizeof(_t)))) {        \
+            nullptr == (array = moz_xmalloc(count * sizeof(_t)))) {            \
             if (pErr)                                                          \
                 *pErr = NS_ERROR_OUT_OF_MEMORY;                                \
             goto failure;                                                      \
@@ -1611,10 +1611,10 @@ failure:
             void** a = (void**) array;
             for (uint32_t i = 0; i < initedCount; i++) {
                 void* p = a[i];
-                if (p) nsMemory::Free(p);
+                if (p) free(p);
             }
         }
-        nsMemory::Free(array);
+        free(array);
     }
 
     return false;
@@ -1691,7 +1691,7 @@ XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
                 }
                 if (0 != count) {
                     len = (count + 1) * sizeof(char);
-                    if (!(*((void**)d) = nsMemory::Alloc(len)))
+                    if (!(*((void**)d) = moz_xmalloc(len)))
                         return false;
                     return true;
                 }
@@ -1721,7 +1721,7 @@ XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
                 len = count;
 
             uint32_t alloc_len = (len + 1) * sizeof(char);
-            char* buffer = static_cast<char*>(nsMemory::Alloc(alloc_len));
+            char* buffer = static_cast<char *>(moz_xmalloc(alloc_len));
             if (!buffer) {
                 return false;
             }
@@ -1745,7 +1745,7 @@ XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
 
                 if (0 != count) {
                     len = (count + 1) * sizeof(char16_t);
-                    if (!(*((void**)d) = nsMemory::Alloc(len)))
+                    if (!(*((void**)d) = moz_xmalloc(len)))
                         return false;
                     return true;
                 }
@@ -1769,7 +1769,7 @@ XPCConvert::JSStringWithSize2Native(void* d, HandleValue s,
             len = count;
 
             uint32_t alloc_len = (len + 1) * sizeof(char16_t);
-            if (!(*((void**)d) = nsMemory::Alloc(alloc_len))) {
+            if (!(*((void**)d) = moz_xmalloc(alloc_len))) {
                 // XXX should report error
                 return false;
             }

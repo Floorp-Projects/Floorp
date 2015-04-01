@@ -764,6 +764,37 @@ public:
 
   bool EnsureInitActiveTIPKeyboard();
 
+  // Note that TIP name may depend on the language of the environment.
+  // For example, some TIP may use localized name for its target language
+  // environment but English name for the others.
+  bool IsGoogleJapaneseInputActive() const
+  {
+    return mActiveTIPKeyboardDescription.Equals(
+             NS_LITERAL_STRING("Google \x65E5\x672C\x8A9E\x5165\x529B")) ||
+           mActiveTIPKeyboardDescription.EqualsLiteral("Google Japanese Input");
+  }
+
+  bool IsATOKActive() const
+  {
+    // FYI: Name of ATOK includes the release year like "ATOK 2015".
+    return StringBeginsWith(mActiveTIPKeyboardDescription,
+                            NS_LITERAL_STRING("ATOK "));
+  }
+
+  bool IsFreeChangJieActive() const
+  {
+    // FYI: The TIP name is misspelled...
+    return mActiveTIPKeyboardDescription.EqualsLiteral("Free CangJie IME 10");
+  }
+
+  bool IsEasyChangjeiActive() const
+  {
+    return
+      mActiveTIPKeyboardDescription.Equals(
+        NS_LITERAL_STRING(
+          "\x4E2D\x6587 (\x7E41\x9AD4) - \x6613\x9821\x8F38\x5165\x6CD5"));
+  }
+
 public: // ITfActiveLanguageProfileNotifySink
   STDMETHODIMP OnActivated(REFCLSID clsid, REFGUID guidProfile,
                            BOOL fActivated);
@@ -1163,26 +1194,6 @@ bool nsTextStore::sDoNotReturnNoLayoutErrorToFreeChangJie = false;
 bool nsTextStore::sDoNotReturnNoLayoutErrorToEasyChangjei = false;
 bool nsTextStore::sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar = false;
 bool nsTextStore::sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret = false;
-
-#define TIP_NAME_BEGINS_WITH_ATOK \
-  (NS_LITERAL_STRING("ATOK "))
-// NOTE: Free ChangJie 2010 missspells its name...
-#define TIP_NAME_FREE_CHANG_JIE_2010 \
-  (NS_LITERAL_STRING("Free CangJie IME 10"))
-#define TIP_NAME_EASY_CHANGJEI \
-  (NS_LITERAL_STRING( \
-     "\x4E2D\x6587 (\x7E41\x9AD4) - \x6613\x9821\x8F38\x5165\x6CD5"))
-#define TIP_NAME_GOOGLE_JA_INPUT_JA \
-  (NS_LITERAL_STRING("Google \x65E5\x672C\x8A9E\x5165\x529B"))
-#define TIP_NAME_GOOGLE_JA_INPUT_EN \
-  (NS_LITERAL_STRING("Google Japanese Input"))
-
-static bool
-IsGoogleJapaneseInput(const nsAString& aTIPName)
-{
-  return aTIPName.Equals(TIP_NAME_GOOGLE_JA_INPUT_JA) ||
-         aTIPName.Equals(TIP_NAME_GOOGLE_JA_INPUT_EN);
-}
 
 #define TEXTSTORE_DEFAULT_VIEW (1)
 
@@ -3181,8 +3192,7 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
   // caller even if we return it.  It's converted to just E_FAIL.
   // However, this is fixed on Win 10.
 
-  const nsString& activeTIPKeyboardDescription =
-    TSFStaticSink::GetInstance()->GetActiveTIPKeyboardDescription();
+  const TSFStaticSink* kSink = TSFStaticSink::GetInstance();
   if (mComposition.IsComposing() && mComposition.mStart < acpEnd &&
       mLockedContent.IsLayoutChangedAfter(acpEnd)) {
     const Selection& currentSel = CurrentSelection();
@@ -3197,7 +3207,7 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
       if (!mLockedContent.IsLayoutChangedAfter(acpStart) &&
           acpStart < acpEnd &&
           sDoNotReturnNoLayoutErrorToGoogleJaInputAtFirstChar &&
-          IsGoogleJapaneseInput(activeTIPKeyboardDescription)) {
+          kSink->IsGoogleJapaneseInputActive()) {
         acpEnd = acpStart;
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::GetTextExt() hacked the offsets of "
@@ -3213,7 +3223,7 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
       else if (acpStart == acpEnd &&
                currentSel.IsCollapsed() && currentSel.EndOffset() == acpEnd &&
                sDoNotReturnNoLayoutErrorToGoogleJaInputAtCaret &&
-               IsGoogleJapaneseInput(activeTIPKeyboardDescription)) {
+               kSink->IsGoogleJapaneseInputActive()) {
         acpEnd = acpStart = mLockedContent.MinOffsetOfLayoutChanged();
         PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
                ("TSF: 0x%p   nsTextStore::GetTextExt() hacked the offsets of "
@@ -3226,10 +3236,9 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
     // TSF.  We need to check if this is necessary on Windows 10 before
     // disabling this on Windows 10.
     else if ((sDoNotReturnNoLayoutErrorToFreeChangJie &&
-              activeTIPKeyboardDescription.Equals(
-                                             TIP_NAME_FREE_CHANG_JIE_2010)) ||
+              kSink->IsFreeChangJieActive()) ||
              (sDoNotReturnNoLayoutErrorToEasyChangjei &&
-              activeTIPKeyboardDescription.Equals(TIP_NAME_EASY_CHANGJEI))) {
+              kSink->IsEasyChangjeiActive())) {
       acpEnd = mComposition.mStart;
       acpStart = std::min(acpStart, acpEnd);
       PR_LOG(sTextStoreLog, PR_LOG_DEBUG,
@@ -3301,9 +3310,7 @@ nsTextStore::GetTextExt(TsViewCookie vcView,
   // ATOK refers native caret position and size on Desktop applications for
   // deciding candidate window.  Therefore, we need to create native caret
   // for hacking the bug.
-  if (sCreateNativeCaretForATOK &&
-      StringBeginsWith(
-        activeTIPKeyboardDescription, TIP_NAME_BEGINS_WITH_ATOK) &&
+  if (sCreateNativeCaretForATOK && kSink->IsATOKActive() &&
       mComposition.IsComposing() &&
       mComposition.mStart <= acpStart && mComposition.EndOffset() >= acpStart &&
       mComposition.mStart <= acpEnd && mComposition.EndOffset() >= acpEnd) {

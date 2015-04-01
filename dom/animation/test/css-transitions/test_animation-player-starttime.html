@@ -36,7 +36,6 @@
 
 const ANIM_DELAY_MS = 1000000; // 1000s
 const ANIM_DUR_MS = 1000000; // 1000s
-const ANIM_PROPERTY_VAL = 'anim ' + ANIM_DUR_MS + 'ms ' + ANIM_DELAY_MS + 'ms';
 
 /**
  * These helpers get the value that the startTime needs to be set to, to put an
@@ -184,7 +183,7 @@ function EventWatcher(watchedNode, eventTypes)
 // terms used in the Web Animations specification for specific phases of an
 // animation. The terms can be found here:
 //
-//   http://w3c.github.io/web-animations/#animation-node-phases-and-states
+//   http://w3c.github.io/web-animations/#animation-effect-phases-and-states
 //
 // Note the distinction between "player start time" and "animation start time".
 // The former is the start of the start delay. The latter is the start of the

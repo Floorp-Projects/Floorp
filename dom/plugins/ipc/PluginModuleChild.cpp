@@ -42,7 +42,6 @@
 #include "nsNPAPIPlugin.h"
 
 #ifdef XP_WIN
-#include "COMMessageFilter.h"
 #include "nsWindowsDllInterceptor.h"
 #include "mozilla/widget/AudioSession.h"
 #endif
@@ -111,16 +110,11 @@ struct RunnableMethodTraits<PluginModuleChild>
 /* static */
 PluginModuleChild*
 PluginModuleChild::CreateForContentProcess(mozilla::ipc::Transport* aTransport,
-                                           base::ProcessId aOtherProcess)
+                                           base::ProcessId aOtherPid)
 {
     PluginModuleChild* child = new PluginModuleChild(false);
-    ProcessHandle handle;
-    if (!base::OpenProcessHandle(aOtherProcess, &handle)) {
-        // XXX need to kill |aOtherProcess|, it's boned
-        return nullptr;
-    }
 
-    if (!child->InitForContent(handle, XRE_GetIOMessageLoop(), aTransport)) {
+    if (!child->InitForContent(aOtherPid, XRE_GetIOMessageLoop(), aTransport)) {
         return nullptr;
     }
 
@@ -207,7 +201,7 @@ PluginModuleChild::GetChrome()
 }
 
 bool
-PluginModuleChild::CommonInit(base::ProcessHandle aParentProcessHandle,
+PluginModuleChild::CommonInit(base::ProcessId aParentPid,
                               MessageLoop* aIOLoop,
                               IPC::Channel* aChannel)
 {
@@ -219,8 +213,9 @@ PluginModuleChild::CommonInit(base::ProcessHandle aParentProcessHandle,
     // Bug 1090573 - Don't do this for connections to content processes.
     GetIPCChannel()->SetChannelFlags(MessageChannel::REQUIRE_DEFERRED_MESSAGE_PROTECTION);
 
-    if (!Open(aChannel, aParentProcessHandle, aIOLoop))
+    if (!Open(aChannel, aParentPid, aIOLoop)) {
         return false;
+    }
 
     memset((void*) &mFunctions, 0, sizeof(mFunctions));
     mFunctions.size = sizeof(mFunctions);
@@ -230,11 +225,11 @@ PluginModuleChild::CommonInit(base::ProcessHandle aParentProcessHandle,
 }
 
 bool
-PluginModuleChild::InitForContent(base::ProcessHandle aParentProcessHandle,
+PluginModuleChild::InitForContent(base::ProcessId aParentPid,
                                   MessageLoop* aIOLoop,
                                   IPC::Channel* aChannel)
 {
-    if (!CommonInit(aParentProcessHandle, aIOLoop, aChannel)) {
+    if (!CommonInit(aParentPid, aIOLoop, aChannel)) {
         return false;
     }
 
@@ -260,14 +255,10 @@ PluginModuleChild::RecvDisableFlashProtectedMode()
 
 bool
 PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
-                                 base::ProcessHandle aParentProcessHandle,
+                                 base::ProcessId aParentPid,
                                  MessageLoop* aIOLoop,
                                  IPC::Channel* aChannel)
 {
-#ifdef XP_WIN
-    COMMessageFilter::Initialize(this);
-#endif
-
     NS_ASSERTION(aChannel, "need a channel");
 
     if (!InitGraphics())
@@ -317,7 +308,7 @@ PluginModuleChild::InitForChrome(const std::string& aPluginFilename,
     }
     NS_ASSERTION(mLibrary, "couldn't open shared object");
 
-    if (!CommonInit(aParentProcessHandle, aIOLoop, aChannel)) {
+    if (!CommonInit(aParentPid, aIOLoop, aChannel)) {
         return false;
     }
 
@@ -796,9 +787,9 @@ PluginModuleChild::QuickExit()
 
 PPluginModuleChild*
 PluginModuleChild::AllocPPluginModuleChild(mozilla::ipc::Transport* aTransport,
-                                           base::ProcessId aOtherProcess)
+                                           base::ProcessId aOtherPid)
 {
-    return PluginModuleChild::CreateForContentProcess(aTransport, aOtherProcess);
+    return PluginModuleChild::CreateForContentProcess(aTransport, aOtherPid);
 }
 
 PCrashReporterChild*

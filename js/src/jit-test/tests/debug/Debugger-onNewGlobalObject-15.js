@@ -16,7 +16,7 @@ log = '';
 assertEq(typeof newGlobal({invisibleToDebugger: true}), "object");
 assertEq(log, '');
 
-assertThrowsInstanceOf(function() dbg.addDebuggee(newGlobal({invisibleToDebugger: true})), Error);
+assertThrowsInstanceOf(() => dbg.addDebuggee(newGlobal({invisibleToDebugger: true})), Error);
 
 var glob = newGlobal({invisibleToDebugger: true});
 dbg.addAllGlobalsAsDebuggees();

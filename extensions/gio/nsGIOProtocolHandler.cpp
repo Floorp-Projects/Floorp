@@ -875,8 +875,8 @@ mount_operation_ask_password (GMountOperation   *mount_op,
   /* GIO should accept UTF8 */
   g_mount_operation_set_username(mount_op, NS_ConvertUTF16toUTF8(user).get());
   g_mount_operation_set_password(mount_op, NS_ConvertUTF16toUTF8(pass).get());
-  nsMemory::Free(user);
-  nsMemory::Free(pass);
+  free(user);
+  free(pass);
   g_mount_operation_reply(mount_op, G_MOUNT_OPERATION_HANDLED);
 }
 

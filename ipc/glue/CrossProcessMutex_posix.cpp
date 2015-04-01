@@ -138,11 +138,11 @@ CrossProcessMutex::Unlock()
 }
 
 CrossProcessMutexHandle
-CrossProcessMutex::ShareToProcess(base::ProcessHandle aHandle)
+CrossProcessMutex::ShareToProcess(base::ProcessId aTargetPid)
 {
   CrossProcessMutexHandle result = ipc::SharedMemoryBasic::NULLHandle();
 
-  if (mSharedBuffer && !mSharedBuffer->ShareToProcess(aHandle, &result)) {
+  if (mSharedBuffer && !mSharedBuffer->ShareToProcess(aTargetPid, &result)) {
     MOZ_CRASH();
   }
 

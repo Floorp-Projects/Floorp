@@ -331,7 +331,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
                     data = (guchar *)htmlBody;
                     length = htmlBodyLen * 2;
                 } else {
-                    data = (guchar *)nsMemory::Alloc(length);
+                    data = (guchar *)moz_xmalloc(length);
                     if (!data)
                         break;
                     memcpy(data, clipboardData, length);
@@ -354,7 +354,7 @@ nsClipboard::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
     }
 
     if (data)
-        nsMemory::Free(data);
+        free(data);
 
     return NS_OK;
 }
@@ -547,7 +547,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
         gtk_selection_data_set_text (aSelectionData, utf8string,
                                      strlen(utf8string));
 
-        nsMemory::Free(utf8string);
+        free(utf8string);
         return;
     }
 
@@ -609,13 +609,13 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
              * detect mozilla use UCS2 encoding when copy-paste.
              */
             guchar *buffer = (guchar *)
-                    nsMemory::Alloc((len * sizeof(guchar)) + sizeof(char16_t));
+                    moz_xmalloc((len * sizeof(guchar)) + sizeof(char16_t));
             if (!buffer)
                 return;
             char16_t prefix = 0xFEFF;
             memcpy(buffer, &prefix, sizeof(prefix));
             memcpy(buffer + sizeof(prefix), primitive_data, len);
-            nsMemory::Free((guchar *)primitive_data);
+            free((guchar *)primitive_data);
             primitive_data = (guchar *)buffer;
             len += sizeof(prefix);
         }
@@ -623,7 +623,7 @@ nsClipboard::SelectionGetEvent(GtkClipboard     *aClipboard,
         gtk_selection_data_set(aSelectionData, selectionTarget,
                                8, /* 8 bits in a unit */
                                (const guchar *)primitive_data, len);
-        nsMemory::Free(primitive_data);
+        free(primitive_data);
     }
 
     g_free(target_name);
@@ -691,7 +691,7 @@ void ConvertHTMLtoUCS2(guchar * data, int32_t dataLength,
     if (charset.EqualsLiteral("UTF-16")) {//current mozilla
         outUnicodeLen = (dataLength / 2) - 1;
         *unicodeData = reinterpret_cast<char16_t*>
-                                       (nsMemory::Alloc((outUnicodeLen + sizeof('\0')) *
+                                       (moz_xmalloc((outUnicodeLen + sizeof('\0')) *
                        sizeof(char16_t)));
         if (*unicodeData) {
             memcpy(*unicodeData, data + sizeof(char16_t),
@@ -720,7 +720,7 @@ void ConvertHTMLtoUCS2(guchar * data, int32_t dataLength,
         // |outUnicodeLen| is number of chars
         if (outUnicodeLen) {
             *unicodeData = reinterpret_cast<char16_t*>
-                                           (nsMemory::Alloc((outUnicodeLen + sizeof('\0')) *
+                                           (moz_xmalloc((outUnicodeLen + sizeof('\0')) *
                            sizeof(char16_t)));
             if (*unicodeData) {
                 int32_t numberTmp = dataLength;

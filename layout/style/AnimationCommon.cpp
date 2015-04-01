@@ -120,11 +120,13 @@ CommonAnimationManager::CheckNeedsRefresh()
 
 AnimationPlayerCollection*
 CommonAnimationManager::GetAnimationsForCompositor(nsIContent* aContent,
-                                                   nsIAtom* aElementProperty,
-                                                   nsCSSProperty aProperty)
+  nsIAtom* aElementProperty,
+  nsCSSProperty aProperty,
+  GetCompositorAnimationOptions aFlags)
 {
   if (!aContent->MayHaveAnimations())
     return nullptr;
+
   AnimationPlayerCollection* collection =
     static_cast<AnimationPlayerCollection*>(
       aContent->GetProperty(aElementProperty));
@@ -133,6 +135,10 @@ CommonAnimationManager::GetAnimationsForCompositor(nsIContent* aContent,
       !collection->CanPerformOnCompositorThread(
         AnimationPlayerCollection::CanAnimate_AllowPartial)) {
     return nullptr;
+  }
+
+  if (!(aFlags & GetCompositorAnimationOptions::NotifyActiveLayerTracker)) {
+    return collection;
   }
 
   // This animation can be done on the compositor.
@@ -404,6 +410,57 @@ CommonAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
         nsDisplayItem::TYPE_OPACITY,
         nsChangeHint_UpdateOpacityLayer } };
 
+/* static */ const CommonAnimationManager::LayerAnimationRecord*
+CommonAnimationManager::LayerAnimationRecordFor(nsCSSProperty aProperty)
+{
+  MOZ_ASSERT(nsCSSProps::PropHasFlags(aProperty,
+                                      CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
+             "unexpected property");
+  const auto& info = sLayerAnimationInfo;
+  for (size_t i = 0; i < ArrayLength(info); ++i) {
+    if (aProperty == info[i].mProperty) {
+      return &info[i];
+    }
+  }
+  return nullptr;
+}
+
+#ifdef DEBUG
+/* static */ void
+CommonAnimationManager::Initialize()
+{
+  const auto& info = css::CommonAnimationManager::sLayerAnimationInfo;
+  for (size_t i = 0; i < ArrayLength(info); i++) {
+    auto record = info[i];
+    MOZ_ASSERT(nsCSSProps::PropHasFlags(record.mProperty,
+                                        CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
+               "CSS property with entry in sLayerAnimationInfo does not "
+               "have the CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR flag");
+  }
+
+  // Check that every property with the flag for animating on the
+  // compositor has an entry in sLayerAnimationInfo.
+  for (nsCSSProperty prop = nsCSSProperty(0);
+       prop < eCSSProperty_COUNT;
+       prop = nsCSSProperty(prop + 1)) {
+    if (nsCSSProps::PropHasFlags(prop,
+                                 CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR)) {
+      bool found = false;
+      for (size_t i = 0; i < ArrayLength(info); i++) {
+        auto record = info[i];
+        if (record.mProperty == prop) {
+          found = true;
+          break;
+        }
+      }
+      MOZ_ASSERT(found,
+                 "CSS property with the CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR "
+                 "flag does not have an entry in sLayerAnimationInfo");
+    }
+  }
+}
+#endif
+
 NS_IMPL_ISUPPORTS(AnimValuesStyleRule, nsIStyleRule)
 
 /* virtual */ void
@@ -605,6 +662,30 @@ AnimationPlayerCollection::CanPerformOnCompositorThread(
   return true;
 }
 
+void
+AnimationPlayerCollection::PostUpdateLayerAnimations()
+{
+  nsCSSPropertySet propsHandled;
+  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
+    const auto& properties = mPlayers[playerIdx]->GetSource()->Properties();
+    for (size_t propIdx = properties.Length(); propIdx-- != 0; ) {
+      nsCSSProperty prop = properties[propIdx].mProperty;
+      if (nsCSSProps::PropHasFlags(prop,
+                                   CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR) &&
+          !propsHandled.HasProperty(prop)) {
+        propsHandled.AddProperty(prop);
+        nsChangeHint changeHint = css::CommonAnimationManager::
+          LayerAnimationRecordFor(prop)->mChangeHint;
+        dom::Element* element = GetElementToRestyle();
+        if (element) {
+          mManager->mPresContext->RestyleManager()->
+            PostRestyleEvent(element, nsRestyleHint(0), changeHint);
+        }
+      }
+    }
+  }
+}
+
 bool
 AnimationPlayerCollection::HasAnimationOfProperty(
   nsCSSProperty aProperty) const
@@ -706,6 +787,12 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     return;
   }
 
+  if (!mStyleRuleRefreshTime.IsNull() &&
+      mStyleRuleRefreshTime == aRefreshTime) {
+    // mStyleRule may be null and valid, if we have no style to apply.
+    return;
+  }
+
   // If we're performing animations on the compositor thread, then we can skip
   // most of the work in this method. But even if we are throttled, then we
   // have to do the work if an animation is ending in order to get correct end
@@ -725,35 +812,28 @@ AnimationPlayerCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime,
     return;
   }
 
-  // mStyleRule may be null and valid, if we have no style to apply.
-  if (mStyleRuleRefreshTime.IsNull() ||
-      mStyleRuleRefreshTime != aRefreshTime) {
-    mStyleRuleRefreshTime = aRefreshTime;
-    mStyleRule = nullptr;
-    // We'll set mNeedsRefreshes to true below in all cases where we need them.
-    mNeedsRefreshes = false;
+  if (mManager->IsAnimationManager()) {
+    // Update cascade results before updating the style rule, since the
+    // cascade results can influence the style rule.
+    static_cast<nsAnimationManager*>(mManager)->MaybeUpdateCascadeResults(this);
+  }
 
-    // If multiple animations specify behavior for the same property the
-    // animation which occurs last in the value of animation-name wins.
-    // As a result, we iterate from last animation to first and, if a
-    // property has already been set, we don't leave it.
-    nsCSSPropertySet properties;
+  mStyleRuleRefreshTime = aRefreshTime;
+  mStyleRule = nullptr;
+  // We'll set mNeedsRefreshes to true below in all cases where we need them.
+  mNeedsRefreshes = false;
 
-    for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
-      mPlayers[playerIdx]->ComposeStyle(mStyleRule, properties,
-                                        mNeedsRefreshes);
-    }
+  // If multiple animations specify behavior for the same property the
+  // animation which occurs last in the value of animation-name wins.
+  // As a result, we iterate from last animation to first and, if a
+  // property has already been set, we don't leave it.
+  nsCSSPropertySet properties;
+
+  for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
+    mPlayers[playerIdx]->ComposeStyle(mStyleRule, properties, mNeedsRefreshes);
   }
 
   mManager->CheckNeedsRefresh();
-
-  // If one of our animations just started or stopped filling, we need
-  // to notify the transition manager.  This does the notification a bit
-  // more than necessary, but it's easier than doing it exactly.
-  if (mManager->IsAnimationManager()) {
-    mManager->mPresContext->TransitionManager()->
-      UpdateCascadeResultsWithAnimations(this);
-  }
 }
 
 bool

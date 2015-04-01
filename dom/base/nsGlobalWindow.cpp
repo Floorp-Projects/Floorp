@@ -6091,7 +6091,7 @@ nsGlobalWindow::Dump(const nsAString& aStr)
     FILE *fp = gDumpFile ? gDumpFile : stdout;
     fputs(cstr, fp);
     fflush(fp);
-    nsMemory::Free(cstr);
+    free(cstr);
   }
 
   return NS_OK;
@@ -12942,8 +12942,8 @@ nsGlobalWindow::SuspendTimeouts(uint32_t aIncrease,
     }
     DisableGamepadUpdates();
 
-    // Suspend all of the workers for this window.
-    mozilla::dom::workers::SuspendWorkersForWindow(this);
+    // Freeze all of the workers for this window.
+    mozilla::dom::workers::FreezeWorkersForWindow(this);
 
     TimeStamp now = TimeStamp::Now();
     for (nsTimeout *t = mTimeouts.getFirst(); t; t = t->getNext()) {
@@ -13031,8 +13031,8 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
       mAudioContexts[i]->Resume();
     }
 
-    // Resume all of the workers for this window.
-    mozilla::dom::workers::ResumeWorkersForWindow(this);
+    // Thaw all of the workers for this window.
+    mozilla::dom::workers::ThawWorkersForWindow(this);
 
     // Restore all of the timeouts, using the stored time remaining
     // (stored in timeout->mTimeRemaining).

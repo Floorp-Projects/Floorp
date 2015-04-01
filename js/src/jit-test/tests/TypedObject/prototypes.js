@@ -17,9 +17,9 @@ function main() { // once a C programmer, always a C programmer.
 
   var uints = new Uints();
   assertEq(uints.__proto__, p);
-  assertThrowsInstanceOf(function() uints.__proto__ = {},
+  assertThrowsInstanceOf(() => uints.__proto__ = {},
                          TypeError);
-  assertThrowsInstanceOf(function() Object.setPrototypeOf(uints, {}),
+  assertThrowsInstanceOf(() => Object.setPrototypeOf(uints, {}),
                          TypeError);
   assertEq(uints.__proto__, p);
 

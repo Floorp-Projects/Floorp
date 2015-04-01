@@ -5,7 +5,7 @@ assert_subprinter_registered('SpiderMonkey', 'ref-to-JSObject')
 
 run_fragment('JSObject.simple')
 
-# These patterns look a little strange because of prolog.py's 'set print
+# These patterns look a little strange because of prologue.py's 'set print
 # address off', which avoids putting varying addresses in the output. After
 # the '(JSObject *) ', there is a 'void *' value printing as the empty
 # string.

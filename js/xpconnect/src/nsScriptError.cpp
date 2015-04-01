@@ -227,11 +227,11 @@ nsScriptError::ToString(nsACString& /*UTF8*/ aResult)
                            tempMessage);
 
     if (nullptr != tempMessage)
-        nsMemory::Free(tempMessage);
+        free(tempMessage);
     if (nullptr != tempSourceName)
-        nsMemory::Free(tempSourceName);
+        free(tempSourceName);
     if (nullptr != tempSourceLine)
-        nsMemory::Free(tempSourceLine);
+        free(tempSourceLine);
 
     if (!temp)
         return NS_ERROR_OUT_OF_MEMORY;

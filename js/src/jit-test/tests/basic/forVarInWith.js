@@ -1,6 +1,6 @@
 function forVarInWith() {
-    function foo() ({notk:42});
-    function bar() ({p:1, q:2, r:3, s:4, t:5});
+    function foo() { return {notk:42}; }
+    function bar() { return {p:1, q:2, r:3, s:4, t:5}; };
     var o = foo();
     var a = [];
     with (o) {

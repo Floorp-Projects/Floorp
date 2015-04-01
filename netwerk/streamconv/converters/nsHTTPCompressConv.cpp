@@ -52,10 +52,10 @@ nsHTTPCompressConv::~nsHTTPCompressConv()
     NS_IF_RELEASE(mListener);
 
     if (mInpBuffer)
-        nsMemory::Free(mInpBuffer);
+        free(mInpBuffer);
 
     if (mOutBuffer)
-        nsMemory::Free(mOutBuffer);
+        free(mOutBuffer);
 
     // For some reason we are not getting Z_STREAM_END.  But this was also seen
     //    for mozilla bug 198133.  Need to handle this case.

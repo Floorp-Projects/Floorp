@@ -126,11 +126,13 @@ class InitializeRunnable final : public WorkerMainThreadRunnable
 {
 public:
   InitializeRunnable(WorkerPrivate* aWorkerPrivate, nsAString& aOrigin,
-                     PrincipalInfo& aPrincipalInfo, ErrorResult& aRv)
+                     PrincipalInfo& aPrincipalInfo, bool& aPrivateBrowsing,
+                     ErrorResult& aRv)
     : WorkerMainThreadRunnable(aWorkerPrivate)
     , mWorkerPrivate(GetCurrentThreadWorkerPrivate())
     , mOrigin(aOrigin)
     , mPrincipalInfo(aPrincipalInfo)
+    , mPrivateBrowsing(aPrivateBrowsing)
     , mRv(aRv)
   {
     MOZ_ASSERT(mWorkerPrivate);
@@ -180,8 +182,10 @@ public:
     }
 
     nsIDocument* doc = window->GetExtantDoc();
-    // No bfcache when BroadcastChannel is used.
     if (doc) {
+      mPrivateBrowsing = nsContentUtils::IsInPrivateBrowsing(doc);
+
+      // No bfcache when BroadcastChannel is used.
       doc->DisallowBFCaching();
     }
 
@@ -192,6 +196,7 @@ private:
   WorkerPrivate* mWorkerPrivate;
   nsAString& mOrigin;
   PrincipalInfo& mPrincipalInfo;
+  bool& mPrivateBrowsing;
   ErrorResult& mRv;
 };
 
@@ -396,12 +401,14 @@ BroadcastChannel::IsEnabled(JSContext* aCx, JSObject* aGlobal)
 BroadcastChannel::BroadcastChannel(nsPIDOMWindow* aWindow,
                                    const PrincipalInfo& aPrincipalInfo,
                                    const nsAString& aOrigin,
-                                   const nsAString& aChannel)
+                                   const nsAString& aChannel,
+                                   bool aPrivateBrowsing)
   : DOMEventTargetHelper(aWindow)
   , mWorkerFeature(nullptr)
   , mPrincipalInfo(new PrincipalInfo(aPrincipalInfo))
   , mOrigin(aOrigin)
   , mChannel(aChannel)
+  , mPrivateBrowsing(aPrivateBrowsing)
   , mIsKeptAlive(false)
   , mInnerID(0)
   , mState(StateActive)
@@ -431,6 +438,7 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
 
   nsAutoString origin;
   PrincipalInfo principalInfo;
+  bool privateBrowsing = false;
   WorkerPrivate* workerPrivate = nullptr;
 
   if (NS_IsMainThread()) {
@@ -469,8 +477,10 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
     }
 
     nsIDocument* doc = window->GetExtantDoc();
-    // No bfcache when BroadcastChannel is used.
     if (doc) {
+      privateBrowsing = nsContentUtils::IsInPrivateBrowsing(doc);
+
+      // No bfcache when BroadcastChannel is used.
       doc->DisallowBFCaching();
     }
   } else {
@@ -479,7 +489,8 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
     MOZ_ASSERT(workerPrivate);
 
     nsRefPtr<InitializeRunnable> runnable =
-      new InitializeRunnable(workerPrivate, origin, principalInfo, aRv);
+      new InitializeRunnable(workerPrivate, origin, principalInfo,
+                             privateBrowsing, aRv);
     runnable->Dispatch(cx);
   }
 
@@ -488,7 +499,8 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
   }
 
   nsRefPtr<BroadcastChannel> bc =
-    new BroadcastChannel(window, principalInfo, origin, aChannel);
+    new BroadcastChannel(window, principalInfo, origin, aChannel,
+                         privateBrowsing);
 
   // Register this component to PBackground.
   PBackgroundChild* actor = BackgroundChild::GetForCurrentThread();
@@ -614,7 +626,8 @@ BroadcastChannel::ActorCreated(PBackgroundChild* aActor)
   }
 
   PBroadcastChannelChild* actor =
-    aActor->SendPBroadcastChannelConstructor(*mPrincipalInfo, mOrigin, mChannel);
+    aActor->SendPBroadcastChannelConstructor(*mPrincipalInfo, mOrigin, mChannel,
+                                             mPrivateBrowsing);
 
   mActor = static_cast<BroadcastChannelChild*>(actor);
   MOZ_ASSERT(mActor);

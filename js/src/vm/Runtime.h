@@ -428,6 +428,7 @@ namespace js {
 struct WellKnownSymbols
 {
     js::ImmutableSymbolPtr iterator;
+    js::ImmutableSymbolPtr match;
 
     const ImmutableSymbolPtr& get(size_t u) const {
         MOZ_ASSERT(u < JS::WellKnownSymbolLimit);

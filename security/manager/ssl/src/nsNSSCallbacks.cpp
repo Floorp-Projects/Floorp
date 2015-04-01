@@ -835,7 +835,7 @@ void PK11PasswordPromptRunnable::RunOnTargetThread()
   rv = nssComponent->PIPBundleFormatStringFromName("CertPassPrompt",
                                       formatStrings, 1,
                                       promptString);
-  nsMemory::Free(const_cast<char16_t*>(formatStrings[0]));
+  free(const_cast<char16_t*>(formatStrings[0]));
 
   if (NS_FAILED(rv))
     return;
