@@ -12,7 +12,6 @@ import java.util.List;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.SiteIdentity;
@@ -158,26 +157,8 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         mFavicon = (ImageButton) findViewById(R.id.favicon);
         mSiteSecurity = (ImageButton) findViewById(R.id.site_security);
 
-        if (NewTabletUI.isEnabled(context)) {
+        if (HardwareUtils.isTablet()) {
             mSiteSecurity.setVisibility(View.VISIBLE);
-            // TODO: Rename this resource and remove this call when new tablet is default.
-            mSiteSecurity.setImageResource(R.drawable.new_tablet_site_security_level);
-
-            // TODO: This can likely be set statically in resources when new tablet is default.
-            // Dynamically update parameters for new tablet.
-            final LinearLayout.LayoutParams lp =
-                    (LinearLayout.LayoutParams) mSiteSecurity.getLayoutParams();
-            lp.height = res.getDimensionPixelSize(R.dimen.new_tablet_site_security_height);
-            lp.width = res.getDimensionPixelSize(R.dimen.new_tablet_site_security_width);
-            // TODO: Override a common static value when new tablet is standard.
-            lp.rightMargin = res.getDimensionPixelSize(R.dimen.new_tablet_site_security_right_margin);
-            mSiteSecurity.setLayoutParams(lp);
-            final int siteSecurityVerticalPadding =
-                    res.getDimensionPixelSize(R.dimen.new_tablet_site_security_padding_vertical);
-            final int siteSecurityHorizontalPadding =
-                    res.getDimensionPixelSize(R.dimen.new_tablet_site_security_padding_horizontal);
-            mSiteSecurity.setPadding(siteSecurityHorizontalPadding, siteSecurityVerticalPadding,
-                    siteSecurityHorizontalPadding, siteSecurityVerticalPadding);
 
             // We don't show favicons in the toolbar on new tablet. Note that while we could
             // null the favicon reference, we don't do so to avoid excessive null-checking.
