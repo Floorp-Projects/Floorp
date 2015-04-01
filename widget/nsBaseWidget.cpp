@@ -1130,7 +1130,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   mCompositorChild->OpenSameProcess(mCompositorParent);
 
   // Make sure the parent knows it is same process.
-  mCompositorParent->SetOtherProcessId(kCurrentProcessId);
+  mCompositorParent->SetOtherProcessId(base::GetCurrentProcId());
 
   if (gfxPrefs::AsyncPanZoomEnabled() &&
       (WindowType() == eWindowType_toplevel || WindowType() == eWindowType_child)) {

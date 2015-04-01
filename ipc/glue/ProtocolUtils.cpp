@@ -265,7 +265,7 @@ bool DuplicateHandle(HANDLE aSourceHandle,
                      DWORD aDesiredAccess,
                      DWORD aOptions) {
   // If our process is the target just duplicate the handle.
-  if (aTargetProcessId == kCurrentProcessId) {
+  if (aTargetProcessId == base::GetCurrentProcId()) {
     return !!::DuplicateHandle(::GetCurrentProcess(), aSourceHandle,
                                ::GetCurrentProcess(), aTargetHandle,
                                aDesiredAccess, false, aOptions);
@@ -318,7 +318,7 @@ FatalError(const char* aProtocolName, const char* aMsg,
     formattedMessage.AppendLiteral("\". Killing child side as a result.");
     NS_ERROR(formattedMessage.get());
 
-    if (aOtherPid != kInvalidProcessId && aOtherPid != kCurrentProcessId) {
+    if (aOtherPid != kInvalidProcessId && aOtherPid != base::GetCurrentProcId()) {
       ScopedProcessHandle otherProcessHandle;
       if (base::OpenProcessHandle(aOtherPid, &otherProcessHandle.rwget())) {
         if (!base::KillProcess(otherProcessHandle,
