@@ -1026,7 +1026,7 @@ add_task(function test_DirectoryLinksProvider_getAllowedEnhancedImages() {
 });
 
 add_task(function test_DirectoryLinksProvider_getEnhancedLink() {
-  let data = {"directory": [
+  let data = {"enhanced": [
     {url: "http://example.net", enhancedImageURI: "data:,net1"},
     {url: "http://example.com", enhancedImageURI: "data:,com1"},
     {url: "http://example.com", enhancedImageURI: "data:,com2"},
@@ -1035,7 +1035,7 @@ add_task(function test_DirectoryLinksProvider_getEnhancedLink() {
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
 
   let links = yield fetchData();
-  do_check_eq(links.length, 3);
+  do_check_eq(links.length, 0); // There are no directory links.
 
   function checkEnhanced(url, image) {
     let enhanced = DirectoryLinksProvider.getEnhancedLink({url: url});
@@ -1066,15 +1066,61 @@ add_task(function test_DirectoryLinksProvider_getEnhancedLink() {
   checkEnhanced("http://127.0.0.1", undefined);
 
   // Make sure old data is not cached
-  data = {"directory": [
+  data = {"enhanced": [
     {url: "http://example.com", enhancedImageURI: "data:,fresh"},
   ]};
   dataURI = 'data:application/json,' + JSON.stringify(data);
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
   links = yield fetchData();
-  do_check_eq(links.length, 1);
+  do_check_eq(links.length, 0); // There are no directory links.
   checkEnhanced("http://example.net", undefined);
   checkEnhanced("http://example.com", "data:,fresh");
+});
+
+add_task(function test_DirectoryLinksProvider_enhancedURIs() {
+  let origIsTopPlacesSite = NewTabUtils.isTopPlacesSite;
+  NewTabUtils.isTopPlacesSite = () => true;
+
+  let data = {
+    "suggested": [
+      {url: "http://example.net", enhancedImageURI: "data:,net1", title:"SuggestedTitle", frecent_sites: ["test.com"]}
+    ],
+    "directory": [
+      {url: "http://example.net", enhancedImageURI: "data:,net2", title:"DirectoryTitle"}
+    ]
+  };
+  let dataURI = 'data:application/json,' + JSON.stringify(data);
+  yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
+
+  // Wait for links to get loaded
+  let gLinks = NewTabUtils.links;
+  gLinks.addProvider(DirectoryLinksProvider);
+  gLinks.populateCache();
+  yield new Promise(resolve => {
+    NewTabUtils.allPages.register({
+      observe: _ => _,
+      update() {
+        NewTabUtils.allPages.unregister(this);
+        resolve();
+      }
+    });
+  });
+
+  // Check that we've saved the directory tile.
+  let links = yield fetchData();
+  do_check_eq(links.length, 1);
+  do_check_eq(links[0].title, "DirectoryTitle");
+  do_check_eq(links[0].enhancedImageURI, "data:,net2");
+
+  // Check that the suggested tile with the same URL replaces the directory tile.
+  links = gLinks.getLinks();
+  do_check_eq(links.length, 1);
+  do_check_eq(links[0].title, "SuggestedTitle");
+  do_check_eq(links[0].enhancedImageURI, "data:,net1");
+
+  // Cleanup.
+  NewTabUtils.isTopPlacesSite = origIsTopPlacesSite;
+  gLinks.removeProvider(DirectoryLinksProvider);
 });
 
 add_task(function test_DirectoryLinksProvider_setDefaultEnhanced() {
