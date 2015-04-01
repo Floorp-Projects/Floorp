@@ -67,24 +67,24 @@ public class testSettingsMenuItems extends PixelTest {
          * based on build (e.g., release vs. nightly), add the items in <code>addConditionalSettings</code>.
          */
 
-        String[] PATH_CUSTOMIZE = { mStringHelper.CUSTOMIZE_SECTION_LABEL };
-        String[][] OPTIONS_CUSTOMIZE = {
+        PATH_CUSTOMIZE = new String[] { mStringHelper.CUSTOMIZE_SECTION_LABEL };
+        OPTIONS_CUSTOMIZE = new String[][] {
                 { "Home" },
                 { "Search", "", "Show search suggestions", "Installed search engines"},
                 { mStringHelper.TABS_LABEL, "Don't restore after quitting " + mStringHelper.BRAND_NAME, "Always restore", "Don't restore after quitting " + mStringHelper.BRAND_NAME },
                 { mStringHelper.IMPORT_FROM_ANDROID_LABEL, "", "Bookmarks", "History", "Import" },
         };
 
-        String[] PATH_HOME = { mStringHelper.CUSTOMIZE_SECTION_LABEL, "Home" };
-        String[][] OPTIONS_HOME = {
+        PATH_HOME = new String[] { mStringHelper.CUSTOMIZE_SECTION_LABEL, "Home" };
+        OPTIONS_HOME = new String[][] {
                 { "Panels" },
                 { "Automatic updates", "Enabled", "Enabled", "Only over Wi-Fi" },
         };
 
-        String[] PATH_DISPLAY = { mStringHelper.DISPLAY_SECTION_LABEL };
-        final String[] TITLE_BAR_LABEL_ARR = { mStringHelper.TITLE_BAR_LABEL, mStringHelper.SHOW_PAGE_ADDRESS_LABEL,
+        PATH_DISPLAY = new String[] { mStringHelper.DISPLAY_SECTION_LABEL };
+        TITLE_BAR_LABEL_ARR = new String[] { mStringHelper.TITLE_BAR_LABEL, mStringHelper.SHOW_PAGE_ADDRESS_LABEL,
                 mStringHelper.SHOW_PAGE_TITLE_LABEL, mStringHelper.SHOW_PAGE_ADDRESS_LABEL };
-        String[][] OPTIONS_DISPLAY = {
+        OPTIONS_DISPLAY = new String[][] {
                 { mStringHelper.TEXT_SIZE_LABEL },
                 TITLE_BAR_LABEL_ARR,
                 { mStringHelper.SCROLL_TITLE_BAR_LABEL, "Hide the " + mStringHelper.BRAND_NAME + " title bar when scrolling down a page" },
@@ -93,10 +93,10 @@ public class testSettingsMenuItems extends PixelTest {
                 { mStringHelper.PLUGINS_LABEL, "Tap to play", "Enabled", "Tap to play", "Disabled" },
         };
 
-        String[] PATH_PRIVACY = { mStringHelper.PRIVACY_SECTION_LABEL };
-        final String[] TRACKING_PROTECTION_LABEL_ARR = { mStringHelper.TRACKING_PROTECTION_LABEL };
-        final String[] MANAGE_LOGINS_ARR = { mStringHelper.MANAGE_LOGINS_LABEL };
-        String[][] OPTIONS_PRIVACY = {
+        PATH_PRIVACY = new String[] { mStringHelper.PRIVACY_SECTION_LABEL };
+        TRACKING_PROTECTION_LABEL_ARR = new String[] { mStringHelper.TRACKING_PROTECTION_LABEL };
+        MANAGE_LOGINS_ARR = new String[] { mStringHelper.MANAGE_LOGINS_LABEL };
+        OPTIONS_PRIVACY = new String[][] {
                 TRACKING_PROTECTION_LABEL_ARR,
                 { mStringHelper.DNT_LABEL },
                 { mStringHelper.COOKIES_LABEL, "Enabled", "Enabled, excluding 3rd party", "Disabled" },
@@ -106,8 +106,8 @@ public class testSettingsMenuItems extends PixelTest {
                 { mStringHelper.CLEAR_PRIVATE_DATA_LABEL, "", "Browsing history", "Search history", "Downloads", "Form history", "Cookies & active logins", "Saved passwords", "Cache", "Offline website data", "Site settings", "Clear data" },
         };
 
-        String[] PATH_MOZILLA = { mStringHelper.MOZILLA_SECTION_LABEL };
-        String[][] OPTIONS_MOZILLA = {
+        PATH_MOZILLA = new String[] { mStringHelper.MOZILLA_SECTION_LABEL };
+        OPTIONS_MOZILLA = new String[][] {
                 { mStringHelper.ABOUT_LABEL },
                 { mStringHelper.FAQS_LABEL },
                 { mStringHelper.FEEDBACK_LABEL },
@@ -116,8 +116,8 @@ public class testSettingsMenuItems extends PixelTest {
                 { mStringHelper.MY_HEALTH_REPORT_LABEL },
         };
 
-        String[] PATH_DEVELOPER = { mStringHelper.DEVELOPER_TOOLS_SECTION_LABEL };
-        String[][] OPTIONS_DEVELOPER = {
+        PATH_DEVELOPER = new String[] { mStringHelper.DEVELOPER_TOOLS_SECTION_LABEL };
+        OPTIONS_DEVELOPER = new String[][] {
                 { mStringHelper.PAINT_FLASHING_LABEL },
                 { mStringHelper.REMOTE_DEBUGGING_LABEL },
                 { mStringHelper.LEARN_MORE_LABEL },
