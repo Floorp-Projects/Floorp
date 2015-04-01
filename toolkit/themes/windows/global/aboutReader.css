@@ -234,6 +234,13 @@ body.loaded {
 .dark > .container > .content blockquote {
   -moz-border-start: 2px solid #eeeeee;
 }
+.dark *::-moz-selection {
+  background-color: #FFFFFF;
+  color: #0095DD;
+}
+.dark a::-moz-selection {
+  color: #DD4800;
+}
 
 .content ul,
 .content ol {
