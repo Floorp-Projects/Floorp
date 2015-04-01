@@ -581,7 +581,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enc
         OwnSource,
         ExplicitUseStrict,
         SelfHosted,
-        IsCompileAndGo,
         HasSingleton,
         TreatAsRunOnce,
         HasLazyScript,
@@ -711,8 +710,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enc
             scriptBits |= (1 << IsLegacyGenerator);
         if (script->isStarGenerator())
             scriptBits |= (1 << IsStarGenerator);
-        if (script->compileAndGo())
-            scriptBits |= (1 << IsCompileAndGo);
         if (script->hasSingletons())
             scriptBits |= (1 << HasSingleton);
         if (script->treatAsRunOnce())
@@ -832,8 +829,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enc
             script->setNeedsArgsObj(true);
         if (scriptBits & (1 << IsGeneratorExp))
             script->isGeneratorExp_ = true;
-        if (scriptBits & (1 << IsCompileAndGo))
-            script->compileAndGo_ = true;
         if (scriptBits & (1 << HasSingleton))
             script->hasSingletons_ = true;
         if (scriptBits & (1 << TreatAsRunOnce))
@@ -2412,7 +2407,6 @@ JSScript::Create(ExclusiveContext* cx, HandleObject enclosingScope, bool savedCa
     script->savedCallerFun_ = savedCallerFun;
     script->initCompartment(cx);
 
-    script->compileAndGo_ = options.compileAndGo;
     script->hasPollutedGlobalScope_ = options.hasPollutedGlobalScope;
     script->selfHosted_ = options.selfHostingMode;
     script->noScriptRval_ = options.noScriptRval;
@@ -3109,7 +3103,6 @@ js::CloneScript(JSContext* cx, HandleObject enclosingScope, HandleFunction fun, 
 
     CompileOptions options(cx);
     options.setMutedErrors(src->mutedErrors())
-           .setCompileAndGo(src->compileAndGo())
            .setHasPollutedScope(src->hasPollutedGlobalScope() ||
                                 polluted == HasPollutedGlobalScope)
            .setSelfHostingMode(src->selfHosted())

@@ -930,9 +930,6 @@ class JSScript : public js::gc::TenuredCell
     // Code has "use strict"; explicitly.
     bool explicitUseStrict_:1;
 
-    // See Parser::compileAndGo.
-    bool compileAndGo_:1;
-
     // True if the script has a non-syntactic scope on its dynamic scope chain.
     // That is, there are objects about which we know nothing between the
     // outermost syntactic scope and the global.
@@ -1166,10 +1163,6 @@ class JSScript : public js::gc::TenuredCell
     }
 
     bool explicitUseStrict() const { return explicitUseStrict_; }
-
-    bool compileAndGo() const {
-        return compileAndGo_;
-    }
 
     bool hasPollutedGlobalScope() const {
         return hasPollutedGlobalScope_;
