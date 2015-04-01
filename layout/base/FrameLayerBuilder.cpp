@@ -328,7 +328,7 @@ class PaintedLayerData {
 public:
   PaintedLayerData() :
     mAnimatedGeometryRoot(nullptr),
-    mIsAsyncScrollable(false),
+    mIsScrollable(false),
     mFixedPosFrameForLayerData(nullptr),
     mReferenceFrame(nullptr),
     mLayer(nullptr),
@@ -404,13 +404,13 @@ public:
 
   bool VisibleRegionIntersects(const nsIntRect& aRect) const
   {
-    return IsSubjectToAsyncTransforms() || mVisibleRegion.Intersects(aRect);
+    return IsSubjectToScrollTransforms() || mVisibleRegion.Intersects(aRect);
   }
 
-  bool IsSubjectToAsyncTransforms() const
+  bool IsSubjectToScrollTransforms() const
   {
-    return mFixedPosFrameForLayerData != nullptr
-        || mIsAsyncScrollable;
+    return mFixedPosFrameForLayerData || mSingleItemFixedToViewport ||
+           mIsScrollable;
   }
 
   /**
@@ -468,11 +468,11 @@ public:
    */
   nsPoint mAnimatedGeometryRootOffset;
   /**
-   * Whether or not this layer is async scrollable. If it is, that means display
+   * Whether or not this layer is scrollable (sync or async). If it is, that means display
    * items above this layer should not end up in a layer below this one, as they
    * might be obscured when they shouldn't be.
    */
-  bool mIsAsyncScrollable;
+  bool mIsScrollable;
   /**
    * If non-null, the frame from which we'll extract "fixed positioning"
    * metadata for this layer. This can be a position:fixed frame or a viewport
@@ -897,7 +897,7 @@ protected:
    * so, return true. This is used to flag a particular PaintedLayer as being
    * subject to async transforms.
    */
-  bool HasAsyncScrollableGeometryInContainer(const nsIFrame* aAnimatedGeometryRoot);
+  bool HasScrollableGeometryInContainer(const nsIFrame* aAnimatedGeometryRoot);
   /**
    * Find the PaintedLayer to which we should assign the next display item.
    * We scan the PaintedLayerData stack to find the topmost PaintedLayer
@@ -2659,12 +2659,12 @@ PaintedLayerData::Accumulate(ContainerState* aState,
 }
 
 bool
-ContainerState::HasAsyncScrollableGeometryInContainer(const nsIFrame* aAnimatedGeometryRoot)
+ContainerState::HasScrollableGeometryInContainer(const nsIFrame* aAnimatedGeometryRoot)
 {
   const nsIFrame* f = aAnimatedGeometryRoot;
   while (f) {
-    if (nsLayoutUtils::GetScrollableFrameFor(f) &&
-        nsLayoutUtils::GetDisplayPort(f->GetContent(), nullptr)) {
+    nsIScrollableFrame* sf = nsLayoutUtils::GetScrollableFrameFor(f);
+    if (sf && sf->IsScrollingActive(mBuilder)) {
       return true;
     }
     if (f == mContainerAnimatedGeometryRoot) {
@@ -2744,8 +2744,8 @@ ContainerState::FindPaintedLayerFor(nsDisplayItem* aItem,
     paintedLayerData->mAnimatedGeometryRootOffset = aTopLeft;
     paintedLayerData->mFixedPosFrameForLayerData =
       FindFixedPosFrameForLayerData(aAnimatedGeometryRoot, aShouldFixToViewport);
-    paintedLayerData->mIsAsyncScrollable =
-      HasAsyncScrollableGeometryInContainer(aAnimatedGeometryRoot);
+    paintedLayerData->mIsScrollable =
+      HasScrollableGeometryInContainer(aAnimatedGeometryRoot);
     paintedLayerData->mReferenceFrame = aItem->ReferenceFrame();
     paintedLayerData->mSingleItemFixedToViewport = aShouldFixToViewport;
 
@@ -2973,13 +2973,13 @@ ContainerState::UpdateVisibleAboveRegionOnPop(PaintedLayerData* aData,
   PossiblyInfiniteRegion& visibleAboveRegion = aNextPaintedLayerData ?
     aNextPaintedLayerData->mVisibleAboveRegion : mVisibleAboveBackgroundRegion;
 
-  // If aData has a draw region and is subject to async transforms then the
+  // If aData has a draw region and is subject to scroll transforms then the
   // layer can potentially be moved arbitrarily on the compositor. So we
   // should avoid moving display items from on top of the layer to below the
   // layer, which we do by making the visibleAboveRegion infinite. Note that
   // if the visible region is empty (such as when aData has only event-regions
   // items) then we don't need to do this.
-  if (aData->IsSubjectToAsyncTransforms() && !aData->mVisibleRegion.IsEmpty()) {
+  if (aData->IsSubjectToScrollTransforms() && !aData->mVisibleRegion.IsEmpty()) {
     visibleAboveRegion.AccumulateAndSimplifyOutward(PossiblyInfiniteRegion::InfiniteRegion());
   } else {
     visibleAboveRegion.AccumulateAndSimplifyOutward(aData->mVisibleAboveRegion);
