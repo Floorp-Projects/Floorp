@@ -18,48 +18,52 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=143220
   
 </div>
 <pre id="test">
-<script class="testbody" type="text/javascript">
+<script class="testbody" type="text/javascript;version=1.7">
 
 /** Test for Bug 143220 **/
-var leafName;
-var fullPath;
+SimpleTest.waitForExplicitFinish();
+const helperURL = SimpleTest.getTestFileURL("simpleFileOpener.js");
+const helper = SpecialPowers.loadChromeScript(helperURL);
+helper.addMessageListener("fail", function onFail(message) {
+  is(message, null, "chrome script failed");
+  SimpleTest.finish();
+});
+helper.addMessageListener("file.opened", onFileOpened);
+helper.sendAsyncMessage("file.open", "test_bug143220.txt");
 
+function onFileOpened(message) {
+  const { leafName, fullPath, domFile } = message;
 
-function initVals() {
-  var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
-                            .getService(SpecialPowers.Ci.nsIProperties);
-  var file = dirSvc.get("XpcomLib", SpecialPowers.Ci.nsILocalFile);
-  isnot(file, null, "Must have file here");
+  function initControl1() {
+    SpecialPowers.wrap($("i1")).mozSetFileArray([domFile]);
+  }
 
-  leafName = file.leafName;
-  fullPath = file.path;
+  function initControl2() {
+    SpecialPowers.wrap($("i2")).mozSetFileArray([domFile]);
+  }
+
+  // Check that we can't just set the value
+  try {
+    $("i1").value = fullPath;
+    is(0, 1, "Should have thrown exception on set!");
+  } catch(e) {
+    is($("i1").value, "", "Shouldn't have value here");
+  }
+
+  initControl1();
+  initControl2();
+
+  is($("i1").value, leafName, "Leaking full value?");
+  is($("i2").value, leafName, "Leaking full value?");
+
+  helper.addMessageListener("file.removed", onFileRemoved);
+  helper.sendAsyncMessage("file.remove", null);
 }
 
-function initControl1() {
-  SpecialPowers.wrap($("i1")).value = fullPath;
-  is(SpecialPowers.wrap($("i1")).value, fullPath, "Should have set full path 1");
+function onFileRemoved() {
+  helper.destroy();
+  SimpleTest.finish();
 }
-
-function initControl2() {
-  SpecialPowers.wrap($("i2")).value = fullPath;
-  is(SpecialPowers.wrap($("i2")).value, fullPath, "Should have set full path 2");
-}
-
-initVals();
-
-// Check that we can't just set the value
-try {
-  $("i1").value = fullPath;
-  is(0, 1, "Should have thrown exception on set!");
-} catch(e) {
-  is($("i1").value, "", "Shouldn't have value here");
-}
-
-initControl1();
-initControl2();
-
-is($("i1").value, leafName, "Leaking full value?");
-is($("i2").value, leafName, "Leaking full value?");
 
 </script>
 </pre>
