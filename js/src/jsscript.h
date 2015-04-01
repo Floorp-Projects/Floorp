@@ -927,6 +927,9 @@ class JSScript : public js::gc::TenuredCell
     // Code has "use strict"; explicitly.
     bool explicitUseStrict_:1;
 
+    // See Parser::compileAndGo.
+    bool compileAndGo_:1;
+
     // True if the script has a non-syntactic scope on its dynamic scope chain.
     // That is, there are objects about which we know nothing between the
     // outermost syntactic scope and the global.
@@ -949,9 +952,7 @@ class JSScript : public js::gc::TenuredCell
     // Script has singleton objects.
     bool hasSingletons_:1;
 
-    // Script is a lambda to treat as running once or a global or eval script
-    // that will only run once.  Which one it is can be disambiguated by
-    // checking whether function_ is null.
+    // Script is a lambda to treat as running once.
     bool treatAsRunOnce_:1;
 
     // If treatAsRunOnce, whether script has executed.
@@ -1158,6 +1159,10 @@ class JSScript : public js::gc::TenuredCell
 
     bool explicitUseStrict() const { return explicitUseStrict_; }
 
+    bool compileAndGo() const {
+        return compileAndGo_;
+    }
+
     bool hasPollutedGlobalScope() const {
         return hasPollutedGlobalScope_;
     }
@@ -1193,10 +1198,6 @@ class JSScript : public js::gc::TenuredCell
         MOZ_ASSERT(isActiveEval() && !isCachedEval());
         isActiveEval_ = false;
         isCachedEval_ = true;
-        // IsEvalCacheCandidate will make sure that there's nothing in this
-        // script that would prevent reexecution even if isRunOnce is
-        // true.  So just pretend like we never ran this script.
-        hasRunOnce_ = false;
     }
 
     void uncacheForEval() {

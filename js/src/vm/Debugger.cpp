@@ -6146,8 +6146,8 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, HandleValue thisv, AbstractFrameP
     if (!staticScope)
         return false;
     CompileOptions options(cx);
-    options.setHasPollutedScope(true)
-           .setIsRunOnce(true)
+    options.setCompileAndGo(true)
+           .setHasPollutedScope(true)
            .setForEval(true)
            .setNoScriptRval(false)
            .setFileAndLine(filename, lineno)

@@ -1680,7 +1680,7 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
 
     if (dn->pn_cookie.isFree()) {
         if (evalCaller) {
-            MOZ_ASSERT(script->treatAsRunOnce() || sc->isFunctionBox());
+            MOZ_ASSERT(script->compileAndGo());
 
             /*
              * Don't generate upvars on the left side of a for loop. See
@@ -2073,16 +2073,10 @@ BytecodeEmitter::isInLoop()
 bool
 BytecodeEmitter::checkSingletonContext()
 {
-    if (!script->treatAsRunOnce() || sc->isFunctionBox() || isInLoop())
+    if (!script->compileAndGo() || sc->isFunctionBox() || isInLoop())
         return false;
     hasSingletons = true;
     return true;
-}
-
-bool
-BytecodeEmitter::checkRunOnceContext()
-{
-    return checkSingletonContext() || (!isInLoop() && isRunOnceLambda());
 }
 
 bool
@@ -5199,7 +5193,10 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
      * make a deep clone of its contents.
      */
     if (fun->isInterpreted()) {
-        bool singleton = checkRunOnceContext();
+        bool singleton =
+            script->compileAndGo() &&
+            fun->isInterpreted() &&
+            (checkSingletonContext() || (!isInLoop() && isRunOnceLambda()));
         if (!JSFunction::setTypeForScriptedFunction(cx, fun, singleton))
             return false;
 
@@ -5222,6 +5219,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             Rooted<JSScript*> parent(cx, script);
             CompileOptions options(cx, parser->options());
             options.setMutedErrors(parent->mutedErrors())
+                   .setCompileAndGo(parent->compileAndGo())
                    .setHasPollutedScope(parent->hasPollutedGlobalScope())
                    .setSelfHostingMode(parent->selfHosted())
                    .setNoScriptRval(false)
@@ -6089,7 +6087,7 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
          * will just cause the inner scripts to be repeatedly cloned.
          */
         MOZ_ASSERT(!emittingRunOnceLambda);
-        if (checkRunOnceContext()) {
+        if (checkSingletonContext() || (!isInLoop() && isRunOnceLambda())) {
             emittingRunOnceLambda = true;
             if (!emitTree(pn2))
                 return false;
