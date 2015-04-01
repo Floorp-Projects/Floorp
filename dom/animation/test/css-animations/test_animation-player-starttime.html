@@ -345,6 +345,35 @@ async_test(function(t)
   }));
 }, 'startTime while play-pending from finished state');
 
+async_test(function(t) {
+  var div = addDiv(t, { style: 'animation: anim 1000s' });
+  var animation = div.getAnimations()[0];
+
+  assert_equals(animation.startTime, null, 'The initial startTime is null');
+  var initialTimelineTime = document.timeline.currentTime;
+
+  animation.ready.then(t.step_func(function() {
+    assert_true(animation.startTime > initialTimelineTime,
+                'After the animation has started, startTime is greater than ' +
+                'the time when it was started');
+    var startTimeBeforePausing = animation.startTime;
+
+    div.style.animationPlayState = 'paused';
+    // Flush styles just in case querying animation.startTime doesn't flush
+    // styles (which would be a bug in of itself and could mask a further bug
+    // by causing startTime to appear to not change).
+    getComputedStyle(div).animationPlayState;
+
+    assert_equals(animation.startTime, startTimeBeforePausing,
+                  'The startTime does not change when pausing-pending');
+    return animation.ready;
+  })).then(t.step_func(function() {
+    assert_equals(animation.startTime, null,
+                  'After actually pausing, the startTime of an animation ' +
+                  'is null');
+    t.done();
+  }));
+}, 'Pausing should make the startTime become null');
 
 test(function(t)
 {
