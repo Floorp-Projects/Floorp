@@ -431,19 +431,23 @@ js::TraceRoot(JSTracer* trc, T* thingp, const char* name)
 
 template <typename T>
 void
-js::TraceRange(JSTracer* trc, size_t len, BarrieredBase<T>* thingp, const char* name)
+js::TraceRange(JSTracer* trc, size_t len, BarrieredBase<T>* vec, const char* name)
 {
-    for (auto i : MakeRange(len))
-        DispatchToTracer(trc, ConvertToBase(thingp[i].unsafeGet()), name, i);
+    for (auto i : MakeRange(len)) {
+        if (InternalGCMethods<T>::isMarkable(vec[i].get()))
+            DispatchToTracer(trc, ConvertToBase(vec[i].unsafeGet()), name, i);
+    }
 }
 
 template <typename T>
 void
-js::TraceRootRange(JSTracer* trc, size_t len, T* thingp, const char* name)
+js::TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name)
 {
     JS_ROOT_MARKING_ASSERT(trc);
-    for (auto i : MakeRange(len))
-        DispatchToTracer(trc, ConvertToBase(&thingp[i]), name, i);
+    for (auto i : MakeRange(len)) {
+        if (InternalGCMethods<T>::isMarkable(vec[i]))
+            DispatchToTracer(trc, ConvertToBase(&vec[i]), name, i);
+    }
 }
 
 // Instantiate a copy of the Tracing templates for each derived type.
