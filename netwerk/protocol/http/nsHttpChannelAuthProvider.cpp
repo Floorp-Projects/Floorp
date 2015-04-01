@@ -7,6 +7,7 @@
 // HttpLog.h should generally be included first
 #include "HttpLog.h"
 
+#include "mozilla/Preferences.h"
 #include "nsHttpChannelAuthProvider.h"
 #include "nsNetUtil.h"
 #include "nsHttpHandler.h"
@@ -22,9 +23,14 @@
 #include "netCore.h"
 #include "nsIHttpAuthenticableChannel.h"
 #include "nsIURI.h"
+#include "nsContentUtils.h"
 
 namespace mozilla {
 namespace net {
+
+#define SUBRESOURCE_AUTH_DIALOG_DISALLOW_ALL 0
+#define SUBRESOURCE_AUTH_DIALOG_DISALLOW_CROSS_ORIGIN 1
+#define SUBRESOURCE_AUTH_DIALOG_ALLOW_ALL 2
 
 static void
 GetAppIdAndBrowserStatus(nsIChannel* aChan, uint32_t* aAppId, bool* aInBrowserElem)
@@ -58,6 +64,18 @@ nsHttpChannelAuthProvider::nsHttpChannelAuthProvider()
 nsHttpChannelAuthProvider::~nsHttpChannelAuthProvider()
 {
     MOZ_ASSERT(!mAuthChannel, "Disconnect wasn't called");
+}
+
+uint32_t nsHttpChannelAuthProvider::sAuthAllowPref =
+    SUBRESOURCE_AUTH_DIALOG_DISALLOW_CROSS_ORIGIN;
+
+void
+nsHttpChannelAuthProvider::InitializePrefs()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mozilla::Preferences::AddUintVarCache(&sAuthAllowPref,
+                                        "network.auth.allow-subresource-auth",
+                                        SUBRESOURCE_AUTH_DIALOG_DISALLOW_CROSS_ORIGIN);
 }
 
 NS_IMETHODIMP
@@ -736,6 +754,14 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
             else if (authFlags & nsIHttpAuthenticator::IDENTITY_ENCRYPTED)
                 level = nsIAuthPrompt2::LEVEL_PW_ENCRYPTED;
 
+            // Depending on the pref setting, the authentication dialog may be
+            // blocked for all sub-resources, blocked for cross-origin
+            // sub-resources, or always allowed for sub-resources.
+            // For more details look at the bug 647010.
+            if (BlockPrompt()) {
+              return NS_ERROR_ABORT;
+            }
+
             // at this point we are forced to interact with the user to get
             // their username and password for this domain.
             rv = PromptForIdentity(level, proxyAuth, realm.get(),
@@ -777,6 +803,53 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
     if (NS_SUCCEEDED(rv))
         creds = result;
     return rv;
+}
+
+bool
+nsHttpChannelAuthProvider::BlockPrompt()
+{
+    nsCOMPtr<nsIChannel> chan = do_QueryInterface(mAuthChannel);
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    chan->GetLoadInfo(getter_AddRefs(loadInfo));
+    if (!loadInfo) {
+        return false;
+    }
+
+    // Allow if it is the top-level document or xhr.
+    if ((loadInfo->GetContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) ||
+        (loadInfo->GetContentPolicyType() == nsIContentPolicy::TYPE_XMLHTTPREQUEST)) {
+        return false;
+    }
+
+    switch (sAuthAllowPref) {
+    case SUBRESOURCE_AUTH_DIALOG_DISALLOW_ALL:
+        // Do not open the http-authentication credentials dialog for
+        // the sub-resources.
+        return true;
+        break;
+    case SUBRESOURCE_AUTH_DIALOG_DISALLOW_CROSS_ORIGIN:
+        // Do not open the http-authentication credentials dialog for
+        // the sub-resources only if they are not cross-origin.
+        {
+            nsCOMPtr<nsIPrincipal> loadingPrincipal =
+                loadInfo->LoadingPrincipal();
+            if (!loadingPrincipal) {
+                return false;
+            }
+
+            if (NS_FAILED(loadingPrincipal->CheckMayLoad(mURI, false, false))) {
+                return true;
+            }
+        }
+        break;
+    case SUBRESOURCE_AUTH_DIALOG_ALLOW_ALL:
+        // Allow the http-authentication dialog.
+        return false;
+    default:
+        // This is an invalid value.
+        MOZ_ASSERT(false, "A non valid value!");
+    }
+    return false;
 }
 
 inline void
