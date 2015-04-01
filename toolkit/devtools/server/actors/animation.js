@@ -404,11 +404,6 @@ let AnimationPlayerFront = FrontClass(AnimationPlayerActor, {
       return;
     }
 
-    // If the animationplayer is now finished, stop auto-refreshing.
-    if (data.playState === "finished") {
-      this.stopAutoRefresh();
-    }
-
     if (this.currentStateHasChanged) {
       this.state = data;
       events.emit(this, this.AUTO_REFRESH_EVENT, this.state);
