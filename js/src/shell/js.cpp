@@ -2564,14 +2564,6 @@ Clone(JSContext* cx, unsigned argc, jsval* vp)
             funobj = JS_GetFunctionObject(fun);
         }
     }
-    if (funobj->compartment() != cx->compartment()) {
-        JSFunction* fun = &funobj->as<JSFunction>();
-        if (fun->hasScript() && fun->nonLazyScript()->compileAndGo()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
-                                 "function", "compile-and-go");
-            return false;
-        }
-    }
 
     if (args.length() > 1) {
         if (!JS_ValueToObject(cx, args[1], &parent))
