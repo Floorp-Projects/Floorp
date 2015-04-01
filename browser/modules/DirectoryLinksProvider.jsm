@@ -215,6 +215,10 @@ let DirectoryLinksProvider = {
   },
 
   _cacheSuggestedLinks: function(link) {
+    if (!link.frecent_sites) {
+      // Don't cache links that don't have the expected 'frecent_sites'.
+      return;
+    }
     for (let suggestedSite of link.frecent_sites) {
       let suggestedMap = this._suggestedLinks.get(suggestedSite) || new Map();
       suggestedMap.set(link.url, link);
@@ -311,13 +315,15 @@ let DirectoryLinksProvider = {
    *         or {'directory': [], 'suggested': []} if read or parse fails.
    */
   _readDirectoryLinksFile: function DirectoryLinksProvider_readDirectoryLinksFile() {
-    let emptyOutput = {directory: [], suggested: []};
+    let emptyOutput = {directory: [], suggested: [], enhanced: []};
     return OS.File.read(this._directoryFilePath).then(binaryData => {
       let output;
       try {
         let json = gTextDecoder.decode(binaryData);
         let linksObj = JSON.parse(json);
-        output = {directory: linksObj.directory || [], suggested: linksObj.suggested || []};
+        output = {directory: linksObj.directory || [],
+                  suggested: linksObj.suggested || [],
+                  enhanced:  linksObj.enhanced  || []};
       }
       catch (e) {
         Cu.reportError(e);
@@ -415,8 +421,7 @@ let DirectoryLinksProvider = {
    */
   getEnhancedLink: function DirectoryLinksProvider_getEnhancedLink(link) {
     // Use the provided link if it's already enhanced
-    return link.type == "history" ? null :
-           link.enhancedImageURI && link ? link :
+    return link.enhancedImageURI && link ? link :
            this._enhancedLinks.get(NewTabUtils.extractSite(link.url));
   },
 
@@ -456,16 +461,8 @@ let DirectoryLinksProvider = {
                this.isURLAllowed(link.enhancedImageURI, ALLOWED_IMAGE_SCHEMES);
       }.bind(this);
 
-      let setCommonProperties = function(link, length, position) {
-        // Stash the enhanced image for the site
-        if (link.enhancedImageURI) {
-          this._enhancedLinks.set(NewTabUtils.extractSite(link.url), link);
-        }
-        link.lastVisitDate = length - position;
-      }.bind(this);
-
       rawLinks.suggested.filter(validityFilter).forEach((link, position) => {
-        setCommonProperties(link, rawLinks.suggested.length, position);
+        link.lastVisitDate = rawLinks.suggested.length - position;
 
         // We cache suggested tiles here but do not push any of them in the links list yet.
         // The decision for which suggested tile to include will be made separately.
@@ -473,8 +470,17 @@ let DirectoryLinksProvider = {
         this._frequencyCaps.set(link.url, DEFAULT_FREQUENCY_CAP);
       });
 
+      rawLinks.enhanced.filter(validityFilter).forEach((link, position) => {
+        link.lastVisitDate = rawLinks.enhanced.length - position;
+
+        // Stash the enhanced image for the site
+        if (link.enhancedImageURI) {
+          this._enhancedLinks.set(NewTabUtils.extractSite(link.url), link);
+        }
+      });
+
       let links = rawLinks.directory.filter(validityFilter).map((link, position) => {
-        setCommonProperties(link, rawLinks.directory.length, position);
+        link.lastVisitDate = rawLinks.directory.length - position;
         link.frecency = DIRECTORY_FRECENCY;
         return link;
       });
