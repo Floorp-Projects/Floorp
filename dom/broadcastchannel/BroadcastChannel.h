@@ -92,7 +92,8 @@ private:
   BroadcastChannel(nsPIDOMWindow* aWindow,
                    const PrincipalInfo& aPrincipalInfo,
                    const nsAString& aOrigin,
-                   const nsAString& aChannel);
+                   const nsAString& aChannel,
+                   bool aPrivateBrowsing);
 
   ~BroadcastChannel();
 
@@ -112,6 +113,7 @@ private:
 
   nsString mOrigin;
   nsString mChannel;
+  bool mPrivateBrowsing;
 
   bool mIsKeptAlive;
 
