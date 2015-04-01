@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Matrix.h"
+#include "Quaternion.h"
 #include "Tools.h"
 #include <algorithm>
 #include <ostream>
@@ -26,6 +27,17 @@ operator<<(std::ostream& aStream, const Matrix& aMatrix)
                  << "; " << aMatrix._31
                  << " "  << aMatrix._32
                  << "; ]";
+}
+
+std::ostream&
+operator<<(std::ostream& aStream, const Matrix4x4& aMatrix)
+{
+  const Float *f = &aMatrix._11;
+  aStream << "[ " << f[0] << " "  << f[1] << " " << f[2] << " " << f[3] << " ;" << std::endl; f += 4;
+  aStream << "  " << f[0] << " "  << f[1] << " " << f[2] << " " << f[3] << " ;" << std::endl; f += 4;
+  aStream << "  " << f[0] << " "  << f[1] << " " << f[2] << " " << f[3] << " ;" << std::endl; f += 4;
+  aStream << "  " << f[0] << " "  << f[1] << " " << f[2] << " " << f[3] << " ]" << std::endl;
+  return aStream;
 }
 
 Matrix
@@ -281,6 +293,33 @@ Matrix4x4::SetNAN()
   _24 = UnspecifiedNaN<Float>();
   _34 = UnspecifiedNaN<Float>();
   _44 = UnspecifiedNaN<Float>();
+}
+
+void
+Matrix4x4::SetRotationFromQuaternion(const Quaternion& q)
+{
+  const Float x2 = q.x + q.x, y2 = q.y + q.y, z2 = q.z + q.z;
+  const Float xx = q.x * x2, xy = q.x * y2, xz = q.x * z2;
+  const Float yy = q.y * y2, yz = q.y * z2, zz = q.z * z2;
+  const Float wx = q.w * x2, wy = q.w * y2, wz = q.w * z2;
+
+  _11 = 1.0f - (yy + zz);
+  _21 = xy + wz;
+  _31 = xz - wy;
+  _41 = 0.0f;
+
+  _12 = xy - wz;
+  _22 = 1.0f - (xx + zz);
+  _32 = yz + wx;
+  _42 = 0.0f;
+
+  _13 = xz + wy;
+  _23 = yz - wx;
+  _33 = 1.0f - (xx + yy);
+  _43 = 0.0f;
+
+  _14 = _42 = _43 = 0.0f;
+  _44 = 1.0f;
 }
 
 }
