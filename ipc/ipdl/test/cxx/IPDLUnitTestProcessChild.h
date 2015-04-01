@@ -16,8 +16,8 @@ class IPDLUnitTestProcessChild : public mozilla::ipc::ProcessChild
   typedef mozilla::ipc::ProcessChild ProcessChild;
 
 public:
-  IPDLUnitTestProcessChild(ProcessHandle aParentHandle) :
-    ProcessChild(aParentHandle)
+  IPDLUnitTestProcessChild(ProcessId aParentPid) :
+    ProcessChild(aParentPid)
   { }
 
   ~IPDLUnitTestProcessChild()

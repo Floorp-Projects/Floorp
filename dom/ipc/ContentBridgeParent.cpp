@@ -42,18 +42,14 @@ ContentBridgeParent::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 /*static*/ ContentBridgeParent*
-ContentBridgeParent::Create(Transport* aTransport, ProcessId aOtherProcess)
+ContentBridgeParent::Create(Transport* aTransport, ProcessId aOtherPid)
 {
   nsRefPtr<ContentBridgeParent> bridge =
     new ContentBridgeParent(aTransport);
-  ProcessHandle handle;
-  if (!base::OpenProcessHandle(aOtherProcess, &handle)) {
-    // XXX need to kill |aOtherProcess|, it's boned
-    return nullptr;
-  }
   bridge->mSelfRef = bridge;
 
-  DebugOnly<bool> ok = bridge->Open(aTransport, handle, XRE_GetIOMessageLoop());
+  DebugOnly<bool> ok = bridge->Open(aTransport, aOtherPid,
+                                    XRE_GetIOMessageLoop());
   MOZ_ASSERT(ok);
 
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();

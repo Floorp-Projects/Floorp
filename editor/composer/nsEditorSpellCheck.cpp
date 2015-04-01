@@ -544,7 +544,7 @@ nsEditorSpellCheck::GetDictionaryList(char16_t ***aDictionaryList, uint32_t *aCo
     // If there are no dictionaries, return an array containing
     // one element and a count of one.
 
-    tmpPtr = (char16_t **)nsMemory::Alloc(sizeof(char16_t *));
+    tmpPtr = (char16_t **)moz_xmalloc(sizeof(char16_t *));
 
     NS_ENSURE_TRUE(tmpPtr, NS_ERROR_OUT_OF_MEMORY);
 
@@ -555,7 +555,7 @@ nsEditorSpellCheck::GetDictionaryList(char16_t ***aDictionaryList, uint32_t *aCo
     return NS_OK;
   }
 
-  tmpPtr = (char16_t **)nsMemory::Alloc(sizeof(char16_t *) * dictList.Length());
+  tmpPtr = (char16_t **)moz_xmalloc(sizeof(char16_t *) * dictList.Length());
 
   NS_ENSURE_TRUE(tmpPtr, NS_ERROR_OUT_OF_MEMORY);
 

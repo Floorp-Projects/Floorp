@@ -23,11 +23,11 @@ function runTests() {
 
     assertEq(typeof ArrayType.prototype.prototype.forEach == "function", true);
 
-    assertThrows(function() ArrayType(uint8, 10));
-    assertThrows(function() new ArrayType());
-    assertThrows(function() new ArrayType(""));
-    assertThrows(function() new ArrayType(5));
-    assertThrows(function() new ArrayType(uint8).dimension(-1));
+    assertThrows(() => ArrayType(uint8, 10));
+    assertThrows(() => new ArrayType());
+    assertThrows(() => new ArrayType(""));
+    assertThrows(() => new ArrayType(5));
+    assertThrows(() => new ArrayType(uint8).dimension(-1));
     var A = new ArrayType(uint8, 10);
     //assertEq(A.__proto__.__proto__, ArrayType.prototype);
     assertEq(A.length, 10);
@@ -41,7 +41,7 @@ function runTests() {
     assertEq(a.__proto__, A.prototype);
     assertEq(a.length, 10);
 
-    assertThrows(function() a.length = 2);
+    assertThrows(() => a.length = 2);
 
     for (var i = 0; i < a.length; i++)
         a[i] = i*2;
@@ -55,7 +55,7 @@ function runTests() {
     });
 
     // Range.
-    assertThrows(function() a[i] = 5);
+    assertThrows(() => a[i] = 5);
 
     assertEq(a[a.length], undefined);
 
@@ -69,10 +69,10 @@ function runTests() {
     for (var i = 0; i < b.length; i++)
         assertEq(b[i], i%2);
 
-    assertThrows(function() new A(5));
-    assertThrows(function() new A(/fail/));
+    assertThrows(() => new A(5));
+    assertThrows(() => new A(/fail/));
     // Length different
-    assertThrows(function() new A([0, 1, 0, 1, 0, 1, 0, 1, 0]));
+    assertThrows(() => new A([0, 1, 0, 1, 0, 1, 0, 1, 0]));
 
     var Vec3 = new ArrayType(float32, 3);
     var Sprite = new ArrayType(Vec3, 3); // say for position, velocity, and direction
@@ -91,7 +91,7 @@ function runTests() {
     assertEq(mario[0][1], 0);
     assertEq(mario[0][2], 0);
 
-    assertThrows(function() mario[1] = 5);
+    assertThrows(() => mario[1] = 5);
     mario[1][1] = {};
     assertEq(Number.isNaN(mario[1][1]), true);
 
@@ -118,7 +118,7 @@ function runTests() {
     }
     assertEq(counter, as.length);
 
-    assertThrows(function() Object.defineProperty(o, "foo", { value: "bar" }));
+    assertThrows(() => Object.defineProperty(o, "foo", { value: "bar" }));
 
     // check if a reference acts the way it should
     var AA = uint8.array(5, 5);

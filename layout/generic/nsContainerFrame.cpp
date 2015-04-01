@@ -687,7 +687,8 @@ void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,
   // The sizes are in inner window sizes, so convert them into outer window sizes.
   // Use a size of (200, 200) as only the difference between the inner and outer
   // size is needed.
-  nsIntSize windowSize = aWidget->ClientToWindowSize(nsIntSize(200, 200));
+  LayoutDeviceIntSize windowSize =
+    aWidget->ClientToWindowSize(LayoutDeviceIntSize(200, 200));
   if (constraints.mMinSize.width)
     constraints.mMinSize.width += windowSize.width - 200;
   if (constraints.mMinSize.height)

@@ -9,7 +9,7 @@ assertEq("a".repeat(10), "aaaaaaaaaa");
 assertEq("abc".repeat(0), "");
 assertEq("abc".repeat(2.9), "abcabc");
 
-var myobj = {toString : (function () "abc"), repeat : String.prototype.repeat};
+var myobj = {toString : () => "abc", repeat : String.prototype.repeat};
 assertEq(myobj.repeat(1), "abc");
 assertEq(myobj.repeat(2), "abcabc");
 

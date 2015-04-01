@@ -78,7 +78,7 @@ interface nsIAuthModule : nsISupports
      *        If getNextToken succeeds, then aOutToken will point to a buffer
      *        to be sent in response to the server challenge.  The length of
      *        this buffer is given by aOutTokenLength.  The buffer at aOutToken
-     *        must be recycled with a call to nsMemory::Free.
+     *        must be recycled with a call to free.
      * @param aOutTokenLength
      *        If getNextToken succeeds, then aOutTokenLength contains the
      *        length of the buffer (number of bytes) pointed to by aOutToken.

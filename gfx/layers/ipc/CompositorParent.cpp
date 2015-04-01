@@ -12,8 +12,7 @@
 #include "LayerTransactionParent.h"     // for LayerTransactionParent
 #include "RenderTrace.h"                // for RenderTraceLayers
 #include "base/message_loop.h"          // for MessageLoop
-#include "base/process.h"               // for ProcessHandle
-#include "base/process_util.h"          // for OpenProcessHandle
+#include "base/process.h"               // for ProcessId
 #include "base/task.h"                  // for CancelableTask, etc
 #include "base/thread.h"                // for Thread
 #include "base/tracked.h"               // for FROM_HERE
@@ -78,7 +77,7 @@ using namespace mozilla::ipc;
 using namespace mozilla::gfx;
 using namespace std;
 
-using base::ProcessHandle;
+using base::ProcessId;
 using base::Thread;
 
 CompositorParent::LayerTreeState::LayerTreeState()
@@ -1301,9 +1300,7 @@ CompositorParent::AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aB
   if (!mLayerManager) {
     NS_WARNING("Failed to initialise Compositor");
     *aSuccess = false;
-    LayerTransactionParent* p = new LayerTransactionParent(nullptr, this, 0,
-                                                           // child side's process id is current process Id
-                                                           base::GetProcId(base::GetCurrentProcessHandle()));
+    LayerTransactionParent* p = new LayerTransactionParent(nullptr, this, 0);
     p->AddIPDLReference();
     return p;
   }
@@ -1312,9 +1309,7 @@ CompositorParent::AllocPLayerTransactionParent(const nsTArray<LayersBackend>& aB
   *aSuccess = true;
 
   *aTextureFactoryIdentifier = mCompositor->GetTextureFactoryIdentifier();
-  LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, 0,
-                                                         // child side's process id is current process Id
-                                                         base::GetProcId(base::GetCurrentProcessHandle()));
+  LayerTransactionParent* p = new LayerTransactionParent(mLayerManager, this, 0);
   p->AddIPDLReference();
   return p;
 }
@@ -1520,9 +1515,8 @@ class CrossProcessCompositorParent final : public PCompositorParent,
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CrossProcessCompositorParent)
 public:
-  CrossProcessCompositorParent(Transport* aTransport, ProcessId aOtherProcess)
+  explicit CrossProcessCompositorParent(Transport* aTransport)
     : mTransport(aTransport)
-    , mChildProcessId(aOtherProcess)
     , mCompositorThreadHolder(sCompositorThreadHolder)
     , mNotifyAfterRemotePaint(false)
   {
@@ -1605,8 +1599,6 @@ private:
   // ourself.  This is released (deferred) in ActorDestroy().
   nsRefPtr<CrossProcessCompositorParent> mSelfRef;
   Transport* mTransport;
-  // Child side's process Id.
-  base::ProcessId mChildProcessId;
 
   nsRefPtr<CompositorThreadHolder> mCompositorThreadHolder;
   // If true, we should send a RemotePaintIsReady message when the layer transaction
@@ -1634,31 +1626,26 @@ CompositorParent::DidComposite()
 
 static void
 OpenCompositor(CrossProcessCompositorParent* aCompositor,
-               Transport* aTransport, ProcessHandle aHandle,
+               Transport* aTransport, ProcessId aOtherPid,
                MessageLoop* aIOLoop)
 {
-  DebugOnly<bool> ok = aCompositor->Open(aTransport, aHandle, aIOLoop);
+  DebugOnly<bool> ok = aCompositor->Open(aTransport, aOtherPid, aIOLoop);
   MOZ_ASSERT(ok);
 }
 
 /*static*/ PCompositorParent*
-CompositorParent::Create(Transport* aTransport, ProcessId aOtherProcess)
+CompositorParent::Create(Transport* aTransport, ProcessId aOtherPid)
 {
   gfxPlatform::InitLayersIPC();
 
   nsRefPtr<CrossProcessCompositorParent> cpcp =
-    new CrossProcessCompositorParent(aTransport, aOtherProcess);
-  ProcessHandle handle;
-  if (!base::OpenProcessHandle(aOtherProcess, &handle)) {
-    // XXX need to kill |aOtherProcess|, it's boned
-    return nullptr;
-  }
+    new CrossProcessCompositorParent(aTransport);
 
   cpcp->mSelfRef = cpcp;
   CompositorLoop()->PostTask(
     FROM_HERE,
     NewRunnableFunction(OpenCompositor, cpcp.get(),
-                        aTransport, handle, XRE_GetIOMessageLoop()));
+                        aTransport, aOtherPid, XRE_GetIOMessageLoop()));
   // The return value is just compared to null for success checking,
   // we're not sharing a ref.
   return cpcp.get();
@@ -1737,7 +1724,7 @@ CrossProcessCompositorParent::AllocPLayerTransactionParent(const nsTArray<Layers
     LayerManagerComposite* lm = state->mLayerManager;
     *aTextureFactoryIdentifier = lm->GetCompositor()->GetTextureFactoryIdentifier();
     *aSuccess = true;
-    LayerTransactionParent* p = new LayerTransactionParent(lm, this, aId, mChildProcessId);
+    LayerTransactionParent* p = new LayerTransactionParent(lm, this, aId);
     p->AddIPDLReference();
     sIndirectLayerTrees[aId].mLayerTree = p;
     return p;
@@ -1747,7 +1734,7 @@ CrossProcessCompositorParent::AllocPLayerTransactionParent(const nsTArray<Layers
   // XXX: should be false, but that causes us to fail some tests on Mac w/ OMTC.
   // Bug 900745. change *aSuccess to false to see test failures.
   *aSuccess = true;
-  LayerTransactionParent* p = new LayerTransactionParent(nullptr, this, aId, mChildProcessId);
+  LayerTransactionParent* p = new LayerTransactionParent(nullptr, this, aId);
   p->AddIPDLReference();
   return p;
 }

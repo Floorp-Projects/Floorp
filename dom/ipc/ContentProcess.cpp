@@ -23,7 +23,7 @@ bool
 ContentProcess::Init()
 {
     mContent.Init(IOThreadChild::message_loop(),
-                         ParentHandle(),
+                         ParentPid(),
                          IOThreadChild::channel());
     mXREEmbed.Start();
     mContent.InitXPCOM();

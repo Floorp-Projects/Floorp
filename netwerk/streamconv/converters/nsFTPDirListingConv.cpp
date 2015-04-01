@@ -142,7 +142,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     
     nsUnescape(unescData);
     printf("::OnData() sending the following %d bytes...\n\n%s\n\n", indexFormat.Length(), unescData);
-    nsMemory::Free(unescData);
+    free(unescData);
 #endif // DEBUG_dougt
 
     // if there's any data left over, buffer it.
@@ -325,7 +325,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
 
         char *escapedDate = nsEscape(buffer, url_Path);
         aString.Append(escapedDate);
-        nsMemory::Free(escapedDate);
+        free(escapedDate);
         aString.Append(' ');
 
         // ENTRY TYPE

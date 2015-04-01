@@ -184,7 +184,7 @@ C++ code. Running tests works like this:
 
 - Then, for each '.py' test script in js/src/gdb/tests, the harness starts
   GDB on the 'gdb-tests' executable, and then has GDB run
-  js/src/gdb/lib-for-tests/prolog.py, passing it the test script's path as
+  js/src/gdb/lib-for-tests/prologue.py, passing it the test script's path as
   its first command-line argument.
 
 Thanks To:

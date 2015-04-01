@@ -67,7 +67,7 @@ public:
 
   virtual base::ProcessId GetChildProcessId() override
   {
-    return mChildProcessId;
+    return OtherPid();
   }
 
   // PImageBridge
@@ -150,8 +150,6 @@ private:
 
   MessageLoop* mMessageLoop;
   Transport* mTransport;
-  // Child side's process id.
-  base::ProcessId mChildProcessId;
   // This keeps us alive until ActorDestroy(), at which point we do a
   // deferred destruction of ourselves.
   nsRefPtr<ImageBridgeParent> mSelfRef;

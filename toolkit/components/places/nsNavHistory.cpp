@@ -2290,7 +2290,7 @@ nsNavHistory::GetObservers(uint32_t* _count,
     return NS_OK;
 
   *_observers = static_cast<nsINavHistoryObserver**>
-    (nsMemory::Alloc(observers.Count() * sizeof(nsINavHistoryObserver*)));
+    (moz_xmalloc(observers.Count() * sizeof(nsINavHistoryObserver*)));
   NS_ENSURE_TRUE(*_observers, NS_ERROR_OUT_OF_MEMORY);
 
   *_count = observers.Count();

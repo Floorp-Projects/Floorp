@@ -74,8 +74,9 @@ bool OpenProcessHandle(ProcessId pid, ProcessHandle* handle) {
                                          SYNCHRONIZE,
                                      FALSE, pid);
 
-  if (result == INVALID_HANDLE_VALUE)
+  if (result == NULL) {
     return false;
+  }
 
   *handle = result;
   return true;
@@ -89,8 +90,9 @@ bool OpenPrivilegedProcessHandle(ProcessId pid, ProcessHandle* handle) {
                                          SYNCHRONIZE,
                                      FALSE, pid);
 
-  if (result == INVALID_HANDLE_VALUE)
+  if (result == NULL) {
     return false;
+  }
 
   *handle = result;
   return true;

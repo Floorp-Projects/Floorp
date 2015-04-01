@@ -670,7 +670,7 @@ ProcessKeyUsageExtension(SECItem *extData, nsAString &text,
   if (decoded.len) {
     keyUsage = decoded.data[0];
   }
-  nsMemory::Free(decoded.data);  
+  free(decoded.data);
   if (keyUsage & KU_DIGITAL_SIGNATURE) {
     nssComponent->GetPIPNSSBundleString("CertDumpKUSign", local);
     text.Append(local.get());
@@ -901,7 +901,7 @@ ProcessIA5String(SECItem  *extData,
 				       extData))
     return NS_ERROR_FAILURE;
   local.AssignASCII((char*)item.data, item.len);
-  nsMemory::Free(item.data);
+  free(item.data);
   text.Append(local);
   return NS_OK;
 }
@@ -1516,7 +1516,7 @@ ProcessMSCAVersion(SECItem  *extData,
     return ProcessRawBytes(nssComponent, extData, text);
 
   rv = GetIntValue(&decoded, &version);
-  nsMemory::Free(decoded.data);
+  free(decoded.data);
   if (NS_FAILED(rv))
     /* Value out of range, display raw bytes */
     return ProcessRawBytes(nssComponent, extData, text);

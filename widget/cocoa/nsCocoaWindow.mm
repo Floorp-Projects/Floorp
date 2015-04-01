@@ -1838,21 +1838,23 @@ nsIntPoint nsCocoaWindow::GetClientOffset()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0, 0));
 }
 
-nsIntSize nsCocoaWindow::ClientToWindowSize(const nsIntSize& aClientSize)
+LayoutDeviceIntSize
+nsCocoaWindow::ClientToWindowSize(const LayoutDeviceIntSize& aClientSize)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
   if (!mWindow)
-    return nsIntSize(0, 0);
+    return LayoutDeviceIntSize(0, 0);
 
   CGFloat backingScale = BackingScaleFactor();
   nsIntRect r(0, 0, aClientSize.width, aClientSize.height);
   NSRect rect = nsCocoaUtils::DevPixelsToCocoaPoints(r, backingScale);
 
   NSRect inflatedRect = [mWindow frameRectForContentRect:rect];
-  return nsCocoaUtils::CocoaRectToGeckoRectDevPix(inflatedRect, backingScale).Size();
+  r = nsCocoaUtils::CocoaRectToGeckoRectDevPix(inflatedRect, backingScale);
+  return LayoutDeviceIntSize(r.width, r.height);
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntSize(0,0));
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntSize(0,0));
 }
 
 nsMenuBarX* nsCocoaWindow::GetMenuBar()

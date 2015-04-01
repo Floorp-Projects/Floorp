@@ -697,7 +697,7 @@ nsROCSSPrimitiveValue::Reset()
     case CSS_ATTR:
     case CSS_COUNTER: // FIXME: Counter should use an object
       NS_ASSERTION(mValue.mString, "Null string should never happen");
-      nsMemory::Free(mValue.mString);
+      free(mValue.mString);
       mValue.mString = nullptr;
       break;
     case CSS_URI:
