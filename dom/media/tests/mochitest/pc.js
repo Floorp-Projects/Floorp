@@ -338,8 +338,13 @@ PeerConnectionTest.prototype.createDataChannel = function(options) {
     });
   }
 
-  return Promise.all([localPromise, remotePromise]).then(result => {
-    return { local: result[0], remote: result[1] };
+  // pcRemote.observedNegotiationNeeded might be undefined if
+  // !options.negotiated, which means we just wait on pcLocal
+  return Promise.all([this.pcLocal.observedNegotiationNeeded,
+                      this.pcRemote.observedNegotiationNeeded]).then(() => {
+    return Promise.all([localPromise, remotePromise]).then(result => {
+      return { local: result[0], remote: result[1] };
+    });
   });
 };
 
@@ -750,8 +755,6 @@ function PeerConnectionWrapper(label, configuration, h264) {
 
   this.disableRtpCountChecking = false;
 
-  this.negotiationNeededFired = false;
-
   this.iceCheckingRestartExpected = false;
 
   this.h264 = typeof h264 !== "undefined" ? true : false;
@@ -861,6 +864,7 @@ PeerConnectionWrapper.prototype = {
     this.streams.push(stream);
 
     if (side === 'local') {
+      this.expectNegotiationNeeded();
       // In order to test both the addStream and addTrack APIs, we do video one
       // way and audio + audiovideo the other.
       if (type == "video") {
@@ -893,13 +897,16 @@ PeerConnectionWrapper.prototype = {
     // Don't store remote ones because they should stop when the PC does.
     if (side === 'local') {
       this.localMediaElements.push(element);
+      return this.observedNegotiationNeeded;
     }
   },
 
   removeSender : function(index) {
     var sender = this._pc.getSenders()[index];
     delete this.expectedLocalTrackInfoById[sender.track.id];
+    this.expectNegotiationNeeded();
     this._pc.removeTrack(sender);
+    return this.observedNegotiationNeeded;
   },
 
   senderReplaceTrack : function(index, withTrack, withStreamId) {
@@ -942,7 +949,7 @@ PeerConnectionWrapper.prototype = {
               " with video track " + track.id);
           });
         }
-        this.attachMedia(stream, type, 'local');
+        return this.attachMedia(stream, type, 'local');
       });
     }));
   },
@@ -971,6 +978,9 @@ PeerConnectionWrapper.prototype = {
     var label = 'channel_' + this.dataChannels.length;
     info(this + ": Create data channel '" + label);
 
+    if (!this.dataChannels.length) {
+      this.expectNegotiationNeeded();
+    }
     var channel = this._pc.createDataChannel(label, options);
     var wrapper = new DataChannelWrapper(channel, this);
     this.dataChannels.push(wrapper);
@@ -1014,6 +1024,7 @@ PeerConnectionWrapper.prototype = {
    *        mozRTCSessionDescription for the local description request
    */
   setLocalDescription : function(desc) {
+    this.observedNegotiationNeeded = undefined;
     return this._pc.setLocalDescription(desc).then(() => {
       info(this + ": Successfully set the local description");
     });
@@ -1044,6 +1055,7 @@ PeerConnectionWrapper.prototype = {
    *        mozRTCSessionDescription for the remote description request
    */
   setRemoteDescription : function(desc) {
+    this.observedNegotiationNeeded = undefined;
     return this._pc.setRemoteDescription(desc).then(() => {
       info(this + ": Successfully set remote description");
       this.releaseIceCandidates();
@@ -1698,6 +1710,14 @@ PeerConnectionWrapper.prototype = {
       var numAudioVideoDataTracks = numAudioTracks + numVideoTracks + numDataTracks;
       info("expected audio + video + data tracks: " + numAudioVideoDataTracks);
       is(numAudioVideoDataTracks, numIceConnections, "stats ICE connections matches expected A/V tracks");
+    }
+  },
+
+  expectNegotiationNeeded : function() {
+    if (!this.observedNegotiationNeeded) {
+      this.observedNegotiationNeeded = new Promise((resolve) => {
+        this.onnegotiationneeded = resolve;
+      });
     }
   },
 
