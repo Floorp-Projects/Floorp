@@ -1422,3 +1422,15 @@ try {
     prefs.setCharPref("browser.selfsupport.url", "https://%(server)s/selfsupport-dummy/");
   }
 } catch (e) { }
+
+// Make tests run consistently on DevEdition (which has a lightweight theme
+// selected by default).
+try {
+  if (runningInParent) {
+    let prefs = Components.classes["@mozilla.org/preferences-service;1"]
+      .getService(Components.interfaces.nsIPrefBranch);
+
+    prefs.deleteBranch("lightweightThemes.selectedThemeID");
+    prefs.deleteBranch("browser.devedition.theme.enabled");
+  }
+} catch (e) { }

@@ -1,0 +1,10 @@
+{
+  "ecmaFeatures": {
+    // since the code here is running only on known versions of
+    // Firefox, we can use newer ECMAscript features here
+    "arrowFunctions": true,
+    "blockBindings": true,
+    "destructuring": true,
+    "forOf": true
+  },
+}
