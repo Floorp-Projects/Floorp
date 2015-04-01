@@ -1788,7 +1788,6 @@ FunctionConstructor(JSContext* cx, unsigned argc, Value* vp, GeneratorKind gener
     options.setMutedErrors(mutedErrors)
            .setFileAndLine(filename, 1)
            .setNoScriptRval(false)
-           .setCompileAndGo(true)
            .setIntroductionInfo(introducerFilename, introductionType, lineno, maybeScript, pcOffset);
 
     unsigned n = args.length() ? args.length() - 1 : 0;

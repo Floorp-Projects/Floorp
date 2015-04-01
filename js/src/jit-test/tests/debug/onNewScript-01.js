@@ -37,7 +37,7 @@ assertEq(fn(8), 13);
 assertEq(hits, 1);
 
 // cloning functions across compartments
-fn = g.evaluate("(function(a) { return 5 + a; })", {compileAndGo: false});
+fn = g.evaluate("(function(a) { return 5 + a; })");
 var g2 = newGlobal();
 dbg.addDebuggee(g2, dbg);
 hits = 0;

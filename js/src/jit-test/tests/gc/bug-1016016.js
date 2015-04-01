@@ -11,5 +11,5 @@ newGlobal();\
 ''.addDebuggee(g1);\
 ");
 function loadFile(lfVarx) {
-  evaluate(lfVarx, { noScriptRval : true, compileAndGo : true, isRunOnce : true }); 
+  evaluate(lfVarx, { noScriptRval : true, isRunOnce : true }); 
 }

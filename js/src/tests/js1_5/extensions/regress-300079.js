@@ -27,7 +27,7 @@ function test()
   else {
     expect = 'PASSED';
 
-    f = evaluate("(function () { return a * a; })", {compileAndGo: false});
+    f = evaluate("(function () { return a * a; })");
     g = clone(f, {a: 3});
     f = null;
     gc();

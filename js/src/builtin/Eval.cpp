@@ -332,7 +332,6 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
 
         CompileOptions options(cx);
         options.setFileAndLine(filename, 1)
-               .setCompileAndGo(true)
                .setHasPollutedScope(hasPollutedGlobalScope)
                .setIsRunOnce(true)
                .setForEval(true)
@@ -416,7 +415,6 @@ js::DirectEvalStringFromIon(JSContext* cx,
 
         CompileOptions options(cx);
         options.setFileAndLine(filename, 1)
-               .setCompileAndGo(true)
                .setHasPollutedScope(HasPollutedScopeChain(scopeobj) ||
                                     callerScript->hasPollutedGlobalScope())
                .setIsRunOnce(true)
