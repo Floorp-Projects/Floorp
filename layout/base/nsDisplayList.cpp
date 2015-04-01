@@ -502,9 +502,11 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
     return;
   }
   AnimationPlayerCollection* transitions =
-    nsTransitionManager::GetAnimationsForCompositor(content, aProperty);
+    nsTransitionManager::GetAnimationsForCompositor(content, aProperty,
+      GetCompositorAnimationOptions::NotifyActiveLayerTracker);
   AnimationPlayerCollection* animations =
-    nsAnimationManager::GetAnimationsForCompositor(content, aProperty);
+    nsAnimationManager::GetAnimationsForCompositor(content, aProperty,
+      GetCompositorAnimationOptions::NotifyActiveLayerTracker);
 
   if (!animations && !transitions) {
     return;
