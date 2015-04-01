@@ -441,7 +441,7 @@ loop.shared.mixins = (function() {
      */
     getDefaultPublisherConfig: function(options) {
       options = options || {};
-      if (!"publishVideo" in options) {
+      if (!("publishVideo" in options)) {
         throw new Error("missing option publishVideo");
       }
 

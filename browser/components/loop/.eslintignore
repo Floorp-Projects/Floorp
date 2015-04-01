@@ -1,0 +1,9 @@
+MozLoopWorker.js
+content/libs
+content/shared/libs
+standalone/content/libs
+standalone/node_modules
+test/xpcshell
+test/mochitest
+test/shared/vendor
+
