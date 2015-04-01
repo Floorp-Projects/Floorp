@@ -30,9 +30,7 @@ async_test(function(t) {
   div.style.animation = 'anim 1000s paused';
 
   var animation = div.getAnimations()[0];
-  // FIXME: When we turn on async pausing later in this patch series, enable
-  // this
-  //   assert_equals(animation.playState, 'pending');
+  assert_equals(animation.playState, 'pending');
 
   animation.ready.then(t.step_func(function() {
     assert_equals(animation.playState, 'paused');
@@ -47,9 +45,7 @@ async_test(function(t) {
 
   var animation = div.getAnimations()[0];
   animation.pause();
-  // FIXME: When we turn on async pausing later in this patch series, enable
-  // this
-  //   assert_equals(animation.playState, 'pending');
+  assert_equals(animation.playState, 'pending');
 
   animation.ready.then(t.step_func(function() {
     assert_equals(animation.playState, 'paused');

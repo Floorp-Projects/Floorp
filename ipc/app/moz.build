@@ -46,8 +46,8 @@ if CONFIG['OS_TARGET'] != 'Android':
 if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
     # For sandbox includes and the include dependencies those have
     LOCAL_INCLUDES += [
-        '/security',
         '/security/sandbox/chromium',
+        '/security/sandbox/chromium-shim',
     ]
     USE_LIBS += [
         'rlz',

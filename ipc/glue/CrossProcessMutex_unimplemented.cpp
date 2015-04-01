@@ -37,7 +37,7 @@ CrossProcessMutex::Unlock()
 }
 
 CrossProcessMutexHandle
-CrossProcessMutex::ShareToProcess(base::ProcessHandle aHandle)
+CrossProcessMutex::ShareToProcess(base::ProcessId aTargetPid)
 {
   NS_RUNTIMEABORT("Cross-process mutices not allowed on this platform - woah! We should've aborted by now!");
   return 0;

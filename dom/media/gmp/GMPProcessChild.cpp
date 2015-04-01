@@ -16,8 +16,8 @@ using mozilla::ipc::IOThreadChild;
 namespace mozilla {
 namespace gmp {
 
-GMPProcessChild::GMPProcessChild(ProcessHandle parentHandle)
-: ProcessChild(parentHandle)
+GMPProcessChild::GMPProcessChild(ProcessId aParentPid)
+: ProcessChild(aParentPid)
 {
 }
 
@@ -52,7 +52,7 @@ GMPProcessChild::Init()
 
   return mPlugin.Init(pluginFilename,
                       voucherFilename,
-                      ParentHandle(),
+                      ParentPid(),
                       IOThreadChild::message_loop(),
                       IOThreadChild::channel());
 }

@@ -245,12 +245,12 @@ def main(argv):
         options.ignore_timeouts = set()
 
     prefix = [which(args[0])] + shlex.split(options.shell_args)
-    prolog = os.path.join(jittests.LIB_DIR, 'prolog.js')
+    prologue = os.path.join(jittests.LIB_DIR, 'prologue.js')
     if options.remote:
-        prolog = posixpath.join(options.remote_test_root,
-                                'jit-tests', 'jit-tests', 'lib', 'prolog.js')
+        prologue = posixpath.join(options.remote_test_root,
+                                'jit-tests', 'jit-tests', 'lib', 'prologue.js')
 
-    prefix += ['-f', prolog]
+    prefix += ['-f', prologue]
 
     # Clean up any remnants from previous crashes etc
     shutil.rmtree(jittests.JS_CACHE_DIR, ignore_errors=True)

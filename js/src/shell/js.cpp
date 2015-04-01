@@ -2216,7 +2216,7 @@ DisassembleScript(JSContext* cx, HandleScript script, HandleFunction fun, bool l
             Sprint(sp, " LAMBDA");
         if (fun->isHeavyweight())
             Sprint(sp, " HEAVYWEIGHT");
-        if (fun->isExprClosure())
+        if (fun->isExprBody())
             Sprint(sp, " EXPRESSION_CLOSURE");
         if (fun->isFunctionPrototype())
             Sprint(sp, " Function.prototype");

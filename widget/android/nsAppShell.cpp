@@ -510,9 +510,9 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
         nsresult rv = cmdline->Init(4, argv, nullptr, nsICommandLine::STATE_REMOTE_AUTO);
         if (NS_SUCCEEDED(rv))
             cmdline->Run();
-        nsMemory::Free(uri);
+        free(uri);
         if (flag)
-            nsMemory::Free(flag);
+            free(flag);
         break;
     }
 

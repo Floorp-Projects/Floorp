@@ -634,7 +634,7 @@ nsScriptNameSpaceManager::OperateCategoryEntryHash(nsICategoryManager* aCategory
   // Copy CID onto the stack, so we can free it right away and avoid having
   // to add cleanup code at every exit point from this function.
   nsCID cid = *cidPtr;
-  nsMemory::Free(cidPtr);
+  free(cidPtr);
 
   if (type == nsGlobalNameStruct::eTypeExternalConstructor) {
     nsXPIDLCString constructorProto;

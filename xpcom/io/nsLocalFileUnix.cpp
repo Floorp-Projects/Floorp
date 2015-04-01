@@ -1765,13 +1765,13 @@ nsLocalFile::GetNativeTarget(nsACString& aResult)
   }
 
   int32_t size = (int32_t)symStat.st_size;
-  char* target = (char*)nsMemory::Alloc(size + 1);
+  char* target = (char*)moz_xmalloc(size + 1);
   if (!target) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (readlink(mPath.get(), target, (size_t)size) < 0) {
-    nsMemory::Free(target);
+    free(target);
     return NSRESULT_FOR_ERRNO();
   }
   target[size] = '\0';
@@ -1816,7 +1816,7 @@ nsLocalFile::GetNativeTarget(nsACString& aResult)
 
     int32_t newSize = (int32_t)symStat.st_size;
     if (newSize > size) {
-      char* newTarget = (char*)nsMemory::Realloc(target, newSize + 1);
+      char* newTarget = (char*)moz_xrealloc(target, newSize + 1);
       if (!newTarget) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         break;
@@ -1833,7 +1833,7 @@ nsLocalFile::GetNativeTarget(nsACString& aResult)
     target[linkLen] = '\0';
   }
 
-  nsMemory::Free(target);
+  free(target);
 
   if (NS_FAILED(rv)) {
     aResult.Truncate();

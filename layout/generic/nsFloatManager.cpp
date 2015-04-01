@@ -66,7 +66,7 @@ void* nsFloatManager::operator new(size_t aSize) CPP_THROW_NEW
 
   // The cache is empty, this means we haveto create a new instance using
   // the global |operator new|.
-  return nsMemory::Alloc(aSize);
+  return moz_xmalloc(aSize);
 }
 
 void
@@ -89,7 +89,7 @@ nsFloatManager::operator delete(void* aPtr, size_t aSize)
 
   // The cache is full, or the layout module has been shut down,
   // delete this float manager.
-  nsMemory::Free(aPtr);
+  free(aPtr);
 }
 
 
@@ -104,7 +104,7 @@ void nsFloatManager::Shutdown()
   for (i = 0; i < sCachedFloatManagerCount; i++) {
     void* floatManager = sCachedFloatManagers[i];
     if (floatManager)
-      nsMemory::Free(floatManager);
+      free(floatManager);
   }
 
   // Disable further caching.

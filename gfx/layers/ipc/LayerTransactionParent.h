@@ -47,8 +47,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
 public:
   LayerTransactionParent(LayerManagerComposite* aManager,
                          ShadowLayersManager* aLayersManager,
-                         uint64_t aId,
-                         ProcessId aOtherProcess);
+                         uint64_t aId);
 
 protected:
   ~LayerTransactionParent();
@@ -98,7 +97,7 @@ public:
 
   virtual base::ProcessId GetChildProcessId() override
   {
-    return mChildProcessId;
+    return OtherPid();
   }
 
   virtual void ReplyRemoveTexture(const OpReplyRemoveTexture& aReply) override;
@@ -200,9 +199,6 @@ private:
   // called on us but the mLayerManager might not be destroyed, or
   // vice versa.  In both cases though, we want to ignore shadow-layer
   // transactions posted by the child.
-
-  // Child side's process id.
-  base::ProcessId mChildProcessId;
 
   bool mDestroyed;
 

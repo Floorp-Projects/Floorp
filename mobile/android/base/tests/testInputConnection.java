@@ -89,6 +89,26 @@ public class testInputConnection extends UITest {
 
             // Test getTextAfterCursor
             fAssertEquals("Can retrieve text after cursor", "", ic.getTextAfterCursor(3, 0));
+
+            ic.deleteSurroundingText(6, 0);
+            assertTextAndSelectionAt("Can clear text", ic, "", 0);
+
+            // Bug 1133802, duplication when setting the same composing text more than once.
+            ic.setComposingText("foo", 1);
+            assertTextAndSelectionAt("Can set the composing text", ic, "foo", 3);
+            ic.setComposingText("foo", 1);
+            assertTextAndSelectionAt("Can set the same composing text", ic, "foo", 3);
+            ic.setComposingText("bar", 1);
+            assertTextAndSelectionAt("Can set different composing text", ic, "bar", 3);
+            ic.setComposingText("bar", 1);
+            assertTextAndSelectionAt("Can set the same composing text", ic, "bar", 3);
+            ic.setComposingText("bar", 1);
+            assertTextAndSelectionAt("Can set the same composing text again", ic, "bar", 3);
+            ic.finishComposingText();
+            assertTextAndSelectionAt("Can finish composing text", ic, "bar", 3);
+
+            ic.deleteSurroundingText(3, 0);
+            assertTextAndSelectionAt("Can clear text", ic, "", 0);
         }
     }
 }

@@ -122,7 +122,7 @@ CStringArrayToXPCArray(nsTArray<nsCString> & aArray,
   }
 
   *aResults =
-    static_cast<char16_t**>(nsMemory::Alloc(count * sizeof(**aResults)));
+    static_cast<char16_t**>(moz_xmalloc(count * sizeof(**aResults)));
   *aCount = count;
 
   for (uint32_t i = 0; i < count; i++) {

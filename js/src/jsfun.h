@@ -33,7 +33,8 @@ class JSFunction : public js::NativeObject
         NATIVE_CTOR      = 0x0002,  /* native that can be called as a constructor */
         EXTENDED         = 0x0004,  /* structure is FunctionExtended */
         IS_FUN_PROTO     = 0x0010,  /* function is Function.prototype for some global object */
-        EXPR_CLOSURE     = 0x0020,  /* expression closure: function(x) x*x */
+        EXPR_BODY        = 0x0020,  /* arrow function with expression body or
+                                     * expression closure: function(x) x*x */
         HAS_GUESSED_ATOM = 0x0040,  /* function had no explicit name, but a
                                        name was guessed for it anyway */
         LAMBDA           = 0x0080,  /* function comes from a FunctionExpression, ArrowFunction, or
@@ -56,7 +57,7 @@ class JSFunction : public js::NativeObject
         ASMJS_LAMBDA_CTOR = ASMJS | NATIVE_CTOR | LAMBDA,
         INTERPRETED_LAMBDA = INTERPRETED | LAMBDA,
         INTERPRETED_LAMBDA_ARROW = INTERPRETED | LAMBDA | ARROW,
-        STABLE_ACROSS_CLONES = NATIVE_CTOR | IS_FUN_PROTO | EXPR_CLOSURE | HAS_GUESSED_ATOM |
+        STABLE_ACROSS_CLONES = NATIVE_CTOR | IS_FUN_PROTO | EXPR_BODY | HAS_GUESSED_ATOM |
                                LAMBDA | SELF_HOSTED | SELF_HOSTED_CTOR | HAS_REST | ASMJS | ARROW
     };
 
@@ -122,7 +123,7 @@ class JSFunction : public js::NativeObject
 
     /* Possible attributes of an interpreted function: */
     bool isFunctionPrototype()      const { return flags() & IS_FUN_PROTO; }
-    bool isExprClosure()            const { return flags() & EXPR_CLOSURE; }
+    bool isExprBody()               const { return flags() & EXPR_BODY; }
     bool hasGuessedAtom()           const { return flags() & HAS_GUESSED_ATOM; }
     bool isLambda()                 const { return flags() & LAMBDA; }
     bool isSelfHostedBuiltin()      const { return flags() & SELF_HOSTED; }
@@ -196,8 +197,8 @@ class JSFunction : public js::NativeObject
     }
 
     // Can be called multiple times by the parser.
-    void setIsExprClosure() {
-        flags_ |= EXPR_CLOSURE;
+    void setIsExprBody() {
+        flags_ |= EXPR_BODY;
     }
 
     void setArrow() {

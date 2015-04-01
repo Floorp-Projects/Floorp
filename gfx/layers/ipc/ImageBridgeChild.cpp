@@ -11,8 +11,7 @@
 #include "ShadowLayers.h"               // for ShadowLayerForwarder
 #include "base/message_loop.h"          // for MessageLoop
 #include "base/platform_thread.h"       // for PlatformThread
-#include "base/process.h"               // for ProcessHandle
-#include "base/process_util.h"          // for OpenProcessHandle
+#include "base/process.h"               // for ProcessId
 #include "base/task.h"                  // for NewRunnableFunction, etc
 #include "base/thread.h"                // for Thread
 #include "base/tracked.h"               // for FROM_HERE
@@ -49,7 +48,7 @@ class Shmem;
 namespace layers {
 
 using base::Thread;
-using base::ProcessHandle;
+using base::ProcessId;
 using namespace mozilla::ipc;
 using namespace mozilla::gfx;
 
@@ -322,10 +321,10 @@ void ImageBridgeChild::StartUp()
 
 static void
 ConnectImageBridgeInChildProcess(Transport* aTransport,
-                                 ProcessHandle aOtherProcess)
+                                 ProcessId aOtherPid)
 {
   // Bind the IPC channel to the image bridge thread.
-  sImageBridgeChildSingleton->Open(aTransport, aOtherProcess,
+  sImageBridgeChildSingleton->Open(aTransport, aOtherPid,
                                    XRE_GetIOMessageLoop(),
                                    ipc::ChildSide);
 #ifdef MOZ_NUWA_PROCESS
@@ -549,16 +548,11 @@ ImageBridgeChild::EndTransaction()
 
 PImageBridgeChild*
 ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
-                                        ProcessId aOtherProcess)
+                                        ProcessId aOtherPid)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   gfxPlatform::GetPlatform();
-
-  ProcessHandle processHandle;
-  if (!base::OpenProcessHandle(aOtherProcess, &processHandle)) {
-    return nullptr;
-  }
 
   sImageBridgeChildThread = new Thread("ImageBridgeChild");
   if (!sImageBridgeChildThread->Start()) {
@@ -569,7 +563,7 @@ ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
   sImageBridgeChildSingleton->GetMessageLoop()->PostTask(
     FROM_HERE,
     NewRunnableFunction(ConnectImageBridgeInChildProcess,
-                        aTransport, processHandle));
+                        aTransport, aOtherPid));
 
   return sImageBridgeChildSingleton;
 }
@@ -621,7 +615,7 @@ bool ImageBridgeChild::StartUpOnThread(Thread* aThread)
     }
     sImageBridgeChildSingleton = new ImageBridgeChild();
     sImageBridgeParentSingleton = new ImageBridgeParent(
-      CompositorParent::CompositorLoop(), nullptr, base::GetProcId(base::GetCurrentProcessHandle()));
+      CompositorParent::CompositorLoop(), nullptr, ipc::kCurrentProcessId);
     sImageBridgeChildSingleton->ConnectAsync(sImageBridgeParentSingleton);
     return true;
   } else {
@@ -949,7 +943,7 @@ void ImageBridgeChild::RemoveTexture(TextureClient* aTexture)
 
 bool ImageBridgeChild::IsSameProcess() const
 {
-  return OtherProcess() == ipc::kInvalidProcessHandle;
+  return OtherPid() == ipc::kCurrentProcessId;
 }
 
 void ImageBridgeChild::SendPendingAsyncMessges()

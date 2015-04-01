@@ -9,7 +9,7 @@ function Range(start, stop) {
     this.stop = stop;
 }
 Range.prototype = {
-    __iterator__: function() this,
+    __iterator__: function() { return this; },
     next: function() {
         if (this.i >= this.stop)
             throw StopIteration;

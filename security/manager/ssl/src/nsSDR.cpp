@@ -178,7 +178,7 @@ DecryptString(const char *crypt, char **_retval)
   if (rv != NS_OK) goto loser;
 
   // Convert to NUL-terminated string
-  r = (char *)nsMemory::Alloc(decryptedLen+1);
+  r = (char *)moz_xmalloc(decryptedLen+1);
   if (!r) { rv = NS_ERROR_OUT_OF_MEMORY; goto loser; }
 
   memcpy(r, decrypted, decryptedLen);

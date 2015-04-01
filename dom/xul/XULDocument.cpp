@@ -4371,7 +4371,7 @@ XULDocument::InsertElement(nsINode* aParent, nsIContent* aChild,
 
             token = nsCRT::strtok(rest, ", ", &rest);
         }
-        nsMemory::Free(str);
+        free(str);
 
         if (content) {
             int32_t pos = aParent->IndexOf(content);
