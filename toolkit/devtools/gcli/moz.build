@@ -20,6 +20,7 @@ EXTRA_JS_MODULES.devtools.gcli.commands += [
     'commands/pagemod.js',
     'commands/paintflashing.js',
     'commands/restart.js',
+    'commands/rulers.js',
     'commands/screenshot.js',
     'commands/tools.js',
 ]
