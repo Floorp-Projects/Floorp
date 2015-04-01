@@ -208,6 +208,9 @@ HMDInfoOculus::HMDInfoOculus(ovrHmd aHMD)
   , mHMD(aHMD)
   , mStartCount(0)
 {
+  MOZ_ASSERT(sizeof(HMDInfoOculus::DistortionVertex) == sizeof(VRDistortionVertex),
+             "HMDInfoOculus::DistortionVertex must match the size of VRDistortionVertex");
+
   MOZ_COUNT_CTOR_INHERITED(HMDInfoOculus, VRHMDInfo);
 
   mSupportedSensorBits = 0;
@@ -279,7 +282,7 @@ HMDInfoOculus::SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRi
     mDistortionMesh[eye].mIndices.SetLength(mesh.IndexCount);
 
     ovrDistortionVertex *srcv = mesh.pVertexData;
-    VRDistortionVertex *destv = mDistortionMesh[eye].mVertices.Elements();
+    HMDInfoOculus::DistortionVertex *destv = reinterpret_cast<HMDInfoOculus::DistortionVertex*>(mDistortionMesh[eye].mVertices.Elements());
     memset(destv, 0, mesh.VertexCount * sizeof(VRDistortionVertex));
     for (uint32_t i = 0; i < mesh.VertexCount; ++i) {
       destv[i].pos[0] = srcv[i].ScreenPosNDC.x;
