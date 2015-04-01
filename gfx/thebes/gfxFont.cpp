@@ -2657,7 +2657,13 @@ gfxFont::ShapeTextWithoutWordCache(gfxContext *aContext,
             aTextRun->SetIsNewline(aOffset + i);
         } else if (IsInvalidControlChar(ch) &&
             !(aTextRun->GetFlags() & gfxTextRunFactory::TEXT_HIDE_CONTROL_CHARACTERS)) {
-            aTextRun->SetMissingGlyph(aOffset + i, ch, this);
+            if (GetFontEntry()->IsUserFont() && HasCharacter(ch)) {
+                ShapeFragmentWithoutWordCache(aContext, aText + i,
+                                              aOffset + i, 1,
+                                              aScript, aVertical, aTextRun);
+            } else {
+                aTextRun->SetMissingGlyph(aOffset + i, ch, this);
+            }
         }
         fragStart = i + 1;
     }
@@ -2861,7 +2867,13 @@ gfxFont::SplitAndInitTextRun(gfxContext *aContext,
             aTextRun->SetIsNewline(aRunStart + i);
         } else if (IsInvalidControlChar(ch) &&
             !(aTextRun->GetFlags() & gfxTextRunFactory::TEXT_HIDE_CONTROL_CHARACTERS)) {
-            aTextRun->SetMissingGlyph(aRunStart + i, ch, this);
+            if (GetFontEntry()->IsUserFont() && HasCharacter(ch)) {
+                ShapeFragmentWithoutWordCache(aContext, aString + i,
+                                              aRunStart + i, 1,
+                                              aRunScript, aVertical, aTextRun);
+            } else {
+                aTextRun->SetMissingGlyph(aRunStart + i, ch, this);
+            }
         }
 
         hash = 0;
