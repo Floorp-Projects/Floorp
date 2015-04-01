@@ -2605,44 +2605,22 @@ SourceActor.prototype = {
     return DevToolsUtils.yieldingEach(mappings._array, m => {
       let mapping = {
         generated: {
-          line: m.generatedLine,
-          column: m.generatedColumn
+          line: m.originalLine,
+          column: m.originalColumn
         }
       };
       if (m.source) {
         mapping.source = m.source;
         mapping.original = {
-          line: m.originalLine,
-          column: m.originalColumn
+          line: m.generatedLine,
+          column: m.generatedColumn
         };
         mapping.name = m.name;
       }
       generator.addMapping(mapping);
     }).then(() => {
       generator.setSourceContent(this.url, code);
-      const consumer = SourceMapConsumer.fromSourceMap(generator);
-
-      // XXX bug 918802: Monkey punch the source map consumer, because iterating
-      // over all mappings and inverting each of them, and then creating a new
-      // SourceMapConsumer is slow.
-
-      const getOrigPos = consumer.originalPositionFor.bind(consumer);
-      const getGenPos = consumer.generatedPositionFor.bind(consumer);
-
-      consumer.originalPositionFor = ({ line, column }) => {
-        const location = getGenPos({
-          line: line,
-          column: column,
-          source: this.url
-        });
-        location.source = this.url;
-        return location;
-      };
-
-      consumer.generatedPositionFor = ({ line, column }) => getOrigPos({
-        line: line,
-        column: column
-      });
+      let consumer = SourceMapConsumer.fromSourceMap(generator);
 
       return {
         code: code,
@@ -2896,40 +2874,63 @@ SourceActor.prototype = {
           return originalLocation;
         }
       } else {
-        if (originalColumn === undefined) {
-          let loop = (actualLocation) => {
-            let {
-              originalLine: actualLine,
-              originalColumn: actualColumn
-            } = actualLocation;
+        let slideByColumn = (actualColumn) => {
+          return this.sources.getAllGeneratedLocations(new OriginalLocation(
+            this,
+            originalLine,
+            actualColumn
+          )).then((generatedLocations) => {
+            // Because getAllGeneratedLocations will always return the list of
+            // generated locations for the closest column that is greater than
+            // the one we are searching for if no exact match can be found, if
+            // the list of generated locations is empty, we've reached the end
+            // of the original line, and sliding continues by line.
+            if (generatedLocations.length === 0) {
+              return slideByLine(originalLine + 1);
+            }
 
-            return this.threadActor.sources.getAllGeneratedLocations(actualLocation)
-                                           .then((generatedLocations) => {
-              // Because getAllGeneratedLocations will always return the list of
-              // generated locations for the closest line that is greater than
-              // the one we are searching for if no exact match can be found, if
-              // the list of generated locations is empty, we've reached the end
-              // of the original source, and breakpoint sliding failed.
-              if (generatedLocations.length === 0) {
-                return originalLocation;
-              }
+            // If at least one script has an offset that matches one of the
+            // generated locations in the list, then breakpoint sliding
+            // succeeded.
+            if (this._setBreakpointAtAllGeneratedLocations(actor, generatedLocations)) {
+              return this.threadActor.sources.getOriginalLocation(generatedLocations[0]);
+            }
 
-              // If at least one script has an offset that matches one of the
-              // generated locations in the list, then breakpoint sliding
-              // succeeded.
-              if (this._setBreakpointAtAllGeneratedLocations(actor, generatedLocations)) {
-                return this.threadActor.sources.getOriginalLocation(generatedLocations[0]);
-              }
+            // Try the next column in the original source.
+            return slideByColumn(actualColumn + 1);
+          });
+        };
 
-              // Try the next line in the original source.
-              return loop(new OriginalLocation(this, actualLine + 1));
-            });
-          };
+        let slideByLine = (actualLine) => {
+          return this.sources.getAllGeneratedLocations(new OriginalLocation(
+            this,
+            actualLine
+          )).then((generatedLocations) => {
+            // Because getAllGeneratedLocations will always return the list of
+            // generated locations for the closest line that is greater than
+            // the one we are searching for if no exact match can be found, if
+            // the list of generated locations is empty, we've reached the end
+            // of the original source, and breakpoint sliding failed.
+            if (generatedLocations.length === 0) {
+              return originalLocation;
+            }
 
-          return loop(new OriginalLocation(this, originalLine + 1));
+            // If at least one script has an offset that matches one of the
+            // generated locations in the list, then breakpoint sliding
+            // succeeded.
+            if (this._setBreakpointAtAllGeneratedLocations(actor, generatedLocations)) {
+              return this.threadActor.sources.getOriginalLocation(generatedLocations[0]);
+            }
+
+            // Try the next line in the original source.
+            return slideByLine(actualLine + 1);
+          });
+        };
+
+        if (originalColumn !== undefined) {
+          return slideByColumn(originalColumn + 1);
         } else {
-          // TODO: Implement breakpoint sliding for column breakpoints
-          return originalLocation;
+          return slideByLine(originalLine + 1);
         }
       }
     }).then((actualLocation) => {
@@ -3040,8 +3041,6 @@ SourceActor.prototype = {
           return lineNumber === generatedLine;
         });
         for (let { columnNumber: column, offset } of columnToOffsetMap) {
-          // TODO: What we are actually interested in here is a range of
-          // columns, rather than a single one.
           if (column >= generatedColumn && column <= generatedLastColumn) {
             entryPoints.push({ script, offsets: [offset] });
           }
