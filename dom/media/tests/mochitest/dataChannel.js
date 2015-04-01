@@ -29,6 +29,7 @@ var commandsCreateDataChannel = [
 
     is(test.pcLocal.signalingState, STABLE,
        "Create datachannel does not change signaling state");
+    return test.pcLocal.observedNegotiationNeeded;
   }
 ];
 
