@@ -16,6 +16,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIGfxInfo.h"
 #include "GfxDriverInfo.h"
+#include "gfxWindowsPlatform.h"
 
 namespace mozilla {
 
