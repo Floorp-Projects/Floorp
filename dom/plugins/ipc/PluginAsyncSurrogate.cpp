@@ -436,16 +436,20 @@ PluginAsyncSurrogate::SetStreamType(NPStream* aStream, uint16_t aStreamType)
 void
 PluginAsyncSurrogate::OnInstanceCreated(PluginInstanceParent* aInstance)
 {
-  for (uint32_t i = 0, len = mPendingNewStreamCalls.Length(); i < len; ++i) {
-    PendingNewStreamCall& curPendingCall = mPendingNewStreamCalls[i];
-    uint16_t streamType = NP_NORMAL;
-    NPError curError = aInstance->NPP_NewStream(
-                    const_cast<char*>(NullableStringGet(curPendingCall.mType)),
-                    curPendingCall.mStream, curPendingCall.mSeekable,
-                    &streamType);
-    if (curError != NPERR_NO_ERROR) {
-      // If we failed here then the send failed and we need to clean up
-      DestroyAsyncStream(curPendingCall.mStream);
+  if (!mDestroyPending) {
+    // If NPP_Destroy has already been called then these streams have already
+    // been cleaned up on the browser side and are no longer valid.
+    for (uint32_t i = 0, len = mPendingNewStreamCalls.Length(); i < len; ++i) {
+      PendingNewStreamCall& curPendingCall = mPendingNewStreamCalls[i];
+      uint16_t streamType = NP_NORMAL;
+      NPError curError = aInstance->NPP_NewStream(
+                      const_cast<char*>(NullableStringGet(curPendingCall.mType)),
+                      curPendingCall.mStream, curPendingCall.mSeekable,
+                      &streamType);
+      if (curError != NPERR_NO_ERROR) {
+        // If we failed here then the send failed and we need to clean up
+        DestroyAsyncStream(curPendingCall.mStream);
+      }
     }
   }
   mPendingNewStreamCalls.Clear();
@@ -543,10 +547,12 @@ PluginAsyncSurrogate::AsyncCallArriving()
 void
 PluginAsyncSurrogate::NotifyAsyncInitFailed()
 {
-  // Clean up any pending NewStream requests
-  for (uint32_t i = 0, len = mPendingNewStreamCalls.Length(); i < len; ++i) {
-    PendingNewStreamCall& curPendingCall = mPendingNewStreamCalls[i];
-    DestroyAsyncStream(curPendingCall.mStream);
+  if (!mDestroyPending) {
+    // Clean up any pending NewStream requests
+    for (uint32_t i = 0, len = mPendingNewStreamCalls.Length(); i < len; ++i) {
+      PendingNewStreamCall& curPendingCall = mPendingNewStreamCalls[i];
+      DestroyAsyncStream(curPendingCall.mStream);
+    }
   }
   mPendingNewStreamCalls.Clear();
 
@@ -556,9 +562,7 @@ PluginAsyncSurrogate::NotifyAsyncInitFailed()
       return;
   }
   nsPluginInstanceOwner* owner = inst->GetOwner();
-  if (!owner) {
-      return;
-  }
+  MOZ_ASSERT(owner);
   owner->NotifyHostAsyncInitFailed();
 }
 
