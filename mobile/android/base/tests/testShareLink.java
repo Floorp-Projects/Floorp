@@ -26,10 +26,10 @@ import com.jayway.android.robotium.solo.Condition;
  */
 public class testShareLink extends AboutHomeTest {
     String url;
-    String urlTitle = StringHelper.ROBOCOP_BIG_LINK_TITLE;
+    String urlTitle = mStringHelper.ROBOCOP_BIG_LINK_TITLE;
 
     public void testShareLink() {
-        url = getAbsoluteUrl(StringHelper.ROBOCOP_BIG_LINK_URL);
+        url = getAbsoluteUrl(mStringHelper.ROBOCOP_BIG_LINK_URL);
         ArrayList<String> shareOptions;
         blockForGeckoReady();
 
@@ -39,7 +39,7 @@ public class testShareLink extends AboutHomeTest {
         inputAndLoadUrl(url);
         verifyUrlBarTitle(url); // Waiting for page title to ensure the page is loaded
 
-        selectMenuItem(StringHelper.SHARE_LABEL);
+        selectMenuItem(mStringHelper.SHARE_LABEL);
         if (Build.VERSION.SDK_INT >= 14) {
             // Check for our own sync in the submenu.
             waitForText("Sync$");
@@ -94,16 +94,16 @@ public class testShareLink extends AboutHomeTest {
 
         // Prepopulate top sites with history items to overflow tiles.
         // We are trying to move away from using reflection and doing more black-box testing.
-        inputAndLoadUrl(getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL));
-        inputAndLoadUrl(getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_02_URL));
-        inputAndLoadUrl(getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_03_URL));
-        inputAndLoadUrl(getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_04_URL));
+        inputAndLoadUrl(getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL));
+        inputAndLoadUrl(getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_02_URL));
+        inputAndLoadUrl(getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_03_URL));
+        inputAndLoadUrl(getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_04_URL));
         if (mDevice.type.equals("tablet")) {
             // Tablets have more tile spaces to fill.
-            inputAndLoadUrl(getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_05_URL));
-            inputAndLoadUrl(getAbsoluteUrl(StringHelper.ROBOCOP_BOXES_URL));
-            inputAndLoadUrl(getAbsoluteUrl(StringHelper.ROBOCOP_SEARCH_URL));
-            inputAndLoadUrl(getAbsoluteUrl(StringHelper.ROBOCOP_TEXT_PAGE_URL));
+            inputAndLoadUrl(getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_05_URL));
+            inputAndLoadUrl(getAbsoluteUrl(mStringHelper.ROBOCOP_BOXES_URL));
+            inputAndLoadUrl(getAbsoluteUrl(mStringHelper.ROBOCOP_SEARCH_URL));
+            inputAndLoadUrl(getAbsoluteUrl(mStringHelper.ROBOCOP_TEXT_PAGE_URL));
         }
 
         // Test the share popup in Top Sites.
