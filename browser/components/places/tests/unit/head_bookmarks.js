@@ -90,3 +90,32 @@ let createCorruptDB = Task.async(function* () {
   // Check there's a DB now.
   Assert.ok((yield OS.File.exists(dbPath)), "should have a DB now");
 });
+
+/**
+ * Rebuilds smart bookmarks listening to console output to report any message or
+ * exception generated.
+ *
+ * @return {Promise}
+ *         Resolved when done.
+ */
+function rebuildSmartBookmarks() {
+  let consoleListener = {
+    observe(aMsg) {
+      do_throw("Got console message: " + aMsg.message);
+    },
+    QueryInterface: XPCOMUtils.generateQI([ Ci.nsIConsoleListener ]),
+  };
+  Services.console.reset();
+  Services.console.registerListener(consoleListener);
+  do_register_cleanup(() => {
+    try {
+      Services.console.unregisterListener(consoleListener);
+    } catch (ex) { /* will likely fail */ }
+  });
+  Cc["@mozilla.org/browser/browserglue;1"]
+    .getService(Ci.nsIObserver)
+    .observe(null, "browser-glue-test", "smart-bookmarks-init");
+  return promiseTopicObserved("test-smart-bookmarks-done").then(() => {
+    Services.console.unregisterListener(consoleListener);
+  });
+}
