@@ -12,7 +12,7 @@ var p = new Proxy(t, {
 });
 evaluate(`function testFunc() {
     x += " x";
-}`, { compileAndGo: false });
+}`);
 
 var cloneFunc = clone(testFunc, p);
 cloneFunc();

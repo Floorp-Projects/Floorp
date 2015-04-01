@@ -8,7 +8,6 @@ test = (function () {
 evalWithCache(test, {});
 function evalWithCache(code, ctx) {
   code = cacheEntry(code);
-  ctx.compileAndGo = true;
   ctx.isRunOnce = true;
   var res1 = evaluate(code, Object.create(ctx, {saveBytecode: { value: true } }));
   var res2 = evaluate(code, Object.create(ctx, {loadBytecode: { value: true }, saveBytecode: { value: true } }));

@@ -10,5 +10,5 @@ for (var i = 0; i < 2; i++) {\
 gcparam("maxBytes", gcparam("gcBytes") + (1)*1024);
 newGlobal("same-compartment");
 function loadFile(lfVarx) {
-  evaluate(lfVarx, { noScriptRval : true, compileAndGo : true, isRunOnce : true }); 
+  evaluate(lfVarx, { noScriptRval : true, isRunOnce : true }); 
 }

@@ -8,4 +8,4 @@ var evalInFrame = (function (global) {
     var completion = frame.eval(code);
   };
 })(this);
-evaluate("for (var k in 'xxx') (function g() { Math.atan2(42); evalInFrame((0), (''), true); })();", { noScriptRval : true, compileAndGo : true, isRunOnce : true });
+evaluate("for (var k in 'xxx') (function g() { Math.atan2(42); evalInFrame((0), (''), true); })();", { noScriptRval : true, isRunOnce : true });
