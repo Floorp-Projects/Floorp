@@ -5,7 +5,7 @@ function test(str, arg, result)
 {
         var fun = new Function('x', str);
             var code = "(function (x) { " + str + " })";
-                var c = clone(otherGlobal.evaluate(code));
+                var c = clone(otherGlobal.evaluate(code, {compileAndGo: false}));
                     assertEq(c.toSource(), eval(code).toSource());
 }
 test('return let (y) x;');

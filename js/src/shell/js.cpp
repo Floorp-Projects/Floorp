@@ -450,7 +450,7 @@ RunFile(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
         options.setIntroductionType("js shell file")
                .setUTF8(true)
                .setFileAndLine(filename, 1)
-               .setIsRunOnce(true)
+               .setCompileAndGo(true)
                .setNoScriptRval(true);
 
         gGotError = false;
@@ -481,7 +481,7 @@ EvalAndPrint(JSContext* cx, const char* bytes, size_t length,
     JS::CompileOptions options(cx);
     options.setIntroductionType("js shell interactive")
            .setUTF8(true)
-           .setIsRunOnce(true)
+           .setCompileAndGo(true)
            .setFileAndLine("typein", lineno);
     RootedScript script(cx);
     if (!JS::Compile(cx, options, bytes, length, &script))
@@ -865,7 +865,7 @@ LoadScript(JSContext* cx, unsigned argc, jsval* vp, bool scriptRelative)
         CompileOptions opts(cx);
         opts.setIntroductionType("js shell load")
             .setUTF8(true)
-            .setIsRunOnce(true)
+            .setCompileAndGo(true)
             .setNoScriptRval(true);
         RootedScript script(cx);
         RootedValue unused(cx);
@@ -902,10 +902,10 @@ ParseCompileOptions(JSContext* cx, CompileOptions& options, HandleObject opts,
     RootedValue v(cx);
     RootedString s(cx);
 
-    if (!JS_GetProperty(cx, opts, "isRunOnce", &v))
+    if (!JS_GetProperty(cx, opts, "compileAndGo", &v))
         return false;
     if (!v.isUndefined())
-        options.setIsRunOnce(ToBoolean(v));
+        options.setCompileAndGo(ToBoolean(v));
 
     if (!JS_GetProperty(cx, opts, "noScriptRval", &v))
         return false;
@@ -1484,7 +1484,7 @@ Run(JSContext* cx, unsigned argc, jsval* vp)
         JS::CompileOptions options(cx);
         options.setIntroductionType("js shell run")
                .setFileAndLine(filename.ptr(), 1)
-               .setIsRunOnce(true)
+               .setCompileAndGo(true)
                .setNoScriptRval(true);
         if (!JS_CompileUCScript(cx, ucbuf, buflen, options, &script))
             return false;
@@ -2378,7 +2378,7 @@ DisassFile(JSContext* cx, unsigned argc, jsval* vp)
         options.setIntroductionType("js shell disFile")
                .setUTF8(true)
                .setFileAndLine(filename.ptr(), 1)
-               .setIsRunOnce(true)
+               .setCompileAndGo(true)
                .setNoScriptRval(true);
 
         if (!JS::Compile(cx, options, filename.ptr(), &script))
@@ -2555,6 +2555,14 @@ Clone(JSContext* cx, unsigned argc, jsval* vp)
             if (!fun)
                 return false;
             funobj = JS_GetFunctionObject(fun);
+        }
+    }
+    if (funobj->compartment() != cx->compartment()) {
+        JSFunction* fun = &funobj->as<JSFunction>();
+        if (fun->hasScript() && fun->nonLazyScript()->compileAndGo()) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,
+                                 "function", "compile-and-go");
+            return false;
         }
     }
 
@@ -2798,7 +2806,7 @@ WorkerMain(void* arg)
 
         JS::CompileOptions options(cx);
         options.setFileAndLine("<string>", 1)
-               .setIsRunOnce(true);
+               .setCompileAndGo(true);
 
         RootedScript script(cx);
         if (!JS::Compile(cx, options, input->chars, input->length, &script))
@@ -3242,7 +3250,7 @@ Compile(JSContext* cx, unsigned argc, jsval* vp)
     JS::CompileOptions options(cx);
     options.setIntroductionType("js shell compile")
            .setFileAndLine("<string>", 1)
-           .setIsRunOnce(true)
+           .setCompileAndGo(true)
            .setNoScriptRval(true);
     RootedScript script(cx);
     const char16_t* chars = stableChars.twoByteRange().start().get();
@@ -3282,7 +3290,8 @@ Parse(JSContext* cx, unsigned argc, jsval* vp)
 
     CompileOptions options(cx);
     options.setIntroductionType("js shell parse")
-           .setFileAndLine("<string>", 1);
+           .setFileAndLine("<string>", 1)
+           .setCompileAndGo(false);
     Parser<FullParseHandler> parser(cx, &cx->tempLifoAlloc(), options, chars, length,
                                     /* foldConstants = */ true, nullptr, nullptr);
     if (!parser.checkOptions())
@@ -3322,7 +3331,8 @@ SyntaxParse(JSContext* cx, unsigned argc, jsval* vp)
         return false;
     CompileOptions options(cx);
     options.setIntroductionType("js shell syntaxParse")
-           .setFileAndLine("<string>", 1);
+           .setFileAndLine("<string>", 1)
+           .setCompileAndGo(false);
 
     AutoStableStringChars stableChars(cx);
     if (!stableChars.initTwoByte(cx, scriptContents))
@@ -3472,7 +3482,7 @@ OffThreadCompileScript(JSContext* cx, unsigned argc, jsval* vp)
     }
 
     // These option settings must override whatever the caller requested.
-    options.setIsRunOnce(true)
+    options.setCompileAndGo(true)
            .setSourceIsLazy(false);
 
     // We assume the caller wants caching if at all possible, ignoring
@@ -4509,7 +4519,7 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "evaluate(code[, options])",
 "  Evaluate code as though it were the contents of a file.\n"
 "  options is an optional object that may have these properties:\n"
-"      isRunOnce: use the isRunOnce compiler option (default: false)\n"
+"      compileAndGo: use the compile-and-go compiler option (default: true)\n"
 "      noScriptRval: use the no-script-rval compiler option (default: false)\n"
 "      fileName: filename for error messages and debug info\n"
 "      lineNumber: starting line number for error messages and debug info\n"
