@@ -1,5 +1,5 @@
 function testObjectToString() {
-    var o = {toString: function()"foo"};
+    var o = {toString: () => "foo"};
     var s = "";
     for (var i = 0; i < 10; i++)
         s += o;
