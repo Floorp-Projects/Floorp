@@ -6,7 +6,9 @@ function assertWithMessage(got, expected, message) {
     assertEq(message + ": " + got, message + ": " + expected);
 }
 
-function testFunc() {
+// Create our test func via "evaluate" so it won't be compileAndGo and
+// we can clone it.
+evaluate(`function testFunc() {
     assertWithMessage(checkNameLookup(), "local", "nameLookup");
     assertWithMessage(checkThisBinding(), "local", "thisBinding");
 
@@ -18,7 +20,7 @@ function testFunc() {
 	assertWithMessage(checkNameLookup(), "local", "nameLookup" + reason);
 	assertWithMessage(checkThisBinding(), "local", "thisBinding" + reason);
     })();
-}
+}`, { compileAndGo: false });
 
 var obj = {
     checkNameLookup: function() {

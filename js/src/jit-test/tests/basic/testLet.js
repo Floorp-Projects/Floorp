@@ -20,7 +20,7 @@ function test(str, arg, result)
 
     // test xdr by cloning a cross-compartment function
     var code = "(function (x) { " + str + " })";
-    var c = clone(otherGlobal.evaluate(code));
+    var c = clone(otherGlobal.evaluate(code, {compileAndGo: false}));
     assertEq(c.toSource(), eval(code).toSource());
 
     var got = fun(arg);

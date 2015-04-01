@@ -3441,7 +3441,7 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
     // function compiled with LAZY_SOURCE, it calls SourceHook to load it.
     ///
     // Note we do have to retain the source code in memory for scripts compiled in
-    // isRunOnce mode and compiled function bodies (from
+    // compileAndGo mode and compiled function bodies (from
     // JS::CompileFunction). In practice, this means content scripts and event
     // handlers.
     UniquePtr<XPCJSSourceHook> hook(new XPCJSSourceHook);

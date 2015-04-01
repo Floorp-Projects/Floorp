@@ -12,5 +12,4 @@ Engineer.prototype = new WorkerBee();
 var pat = new Engineer();
 getTestCaseResult(pat.__proto__.__proto__.__proto__.__proto__ == Object.prototype);
 getTestCaseResult(InstanceOf(pat, Engineer));
-evaluate("getTestCaseResult( Object.prototype.__proto__ );",
-	 { isRunOnce: true });
+evaluate("getTestCaseResult( Object.prototype.__proto__ );", { compileAndGo: true });
