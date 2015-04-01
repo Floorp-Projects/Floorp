@@ -10,8 +10,17 @@ fi
 set -e
 
 # Main tests
-./mach xpcshell-test browser/components/loop/
-./mach marionette-test browser/components/loop/manifest.ini
+
+LOOPDIR=browser/components/loop
+#ESLINT=standalone/node_modules/.bin/eslint
+#if [ -x "${LOOPDIR}/${ESLINT}" ]; then
+#  echo 'running eslint; see http://eslint.org/docs/rules/ for error info'
+#  (cd ${LOOPDIR} && ./${ESLINT} .)
+#  echo 'eslint run finished.'
+#fi
+
+./mach xpcshell-test ${LOOPDIR}/
+./mach marionette-test ${LOOPDIR}/manifest.ini
 
 # The browser_parsable_css.js can fail if we add some css that isn't parsable.
 #
@@ -20,7 +29,7 @@ set -e
 # to mess this up with CSP handling, and probably other changes, too.
 
 TESTS="
-  browser/components/loop/test/mochitest
+  ${LOOPDIR}/test/mochitest
   browser/modules/test/browser_UITour_loop.js
   browser/base/content/test/general/browser_devices_get_user_media_about_urls.js
 "
