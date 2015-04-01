@@ -19,7 +19,7 @@ bool
 IPDLUnitTestProcessChild::Init()
 {
     IPDLUnitTestChildInit(IOThreadChild::channel(),
-                          ParentId(),
+                          ParentPid(),
                           IOThreadChild::message_loop());
 
     if (NS_FAILED(nsRegion::InitStatic()))
