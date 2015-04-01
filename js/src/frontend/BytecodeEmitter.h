@@ -248,6 +248,10 @@ struct BytecodeEmitter
     bool isInLoop();
     bool checkSingletonContext();
 
+    // Check whether our function is in a run-once context (a toplevel
+    // run-one script or a run-once lambda).
+    bool checkRunOnceContext();
+
     bool needsImplicitThis();
 
     void tellDebuggerAboutCompiledScript(ExclusiveContext* cx);
