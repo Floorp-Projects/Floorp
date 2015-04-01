@@ -32,7 +32,7 @@ For more options:
 Simply create a JS file under the 'tests/' directory. Most tests should go in
 'tests/basic/'.
 
-All tests are run with 'lib/prolog.js' included first on the command line. The
+All tests are run with 'lib/prologue.js' included first on the command line. The
 command line also creates a global variable 'libdir' that is set to the path
 of the 'lib' directory. To include a file 'foo.js' from the lib directory in a 
 test case:

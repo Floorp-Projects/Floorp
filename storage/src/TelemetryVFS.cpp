@@ -140,9 +140,204 @@ struct telemetry_file {
   // quota object for this file
   nsRefPtr<QuotaObject> quotaObject;
 
+  // The chunk size for this file. See the documentation for
+  // sqlite3_file_control() and FCNTL_CHUNK_SIZE.
+  int fileChunkSize;
+
   // This contains the vfs that actually does work
   sqlite3_file pReal[1];
 };
+
+const char*
+DatabasePathFromWALPath(const char *zWALName)
+{
+  /**
+   * Do some sketchy pointer arithmetic to find the parameter key. The WAL
+   * filename is in the middle of a big allocated block that contains:
+   *
+   *   - Random Values
+   *   - Main Database Path
+   *   - \0
+   *   - Multiple URI components consisting of:
+   *     - Key
+   *     - \0
+   *     - Value
+   *     - \0
+   *   - \0
+   *   - Journal Path
+   *   - \0
+   *   - WAL Path (zWALName)
+   *   - \0
+   *
+   * Because the main database path is preceded by a random value we have to be
+   * careful when trying to figure out when we should terminate this loop.
+   */
+  MOZ_ASSERT(zWALName);
+
+  nsDependentCSubstring dbPath(zWALName, strlen(zWALName));
+
+  // Chop off the "-wal" suffix.
+  NS_NAMED_LITERAL_CSTRING(kWALSuffix, "-wal");
+  MOZ_ASSERT(StringEndsWith(dbPath, kWALSuffix));
+
+  dbPath.Rebind(zWALName, dbPath.Length() - kWALSuffix.Length());
+  MOZ_ASSERT(!dbPath.IsEmpty());
+
+  // We want to scan to the end of the key/value URI pairs. Skip the preceding
+  // null and go to the last char of the journal path.
+  const char* cursor = zWALName - 2;
+
+  // Make sure we just skipped a null.
+  MOZ_ASSERT(!*(cursor + 1));
+
+  // Walk backwards over the journal path.
+  while (*cursor) {
+    cursor--;
+  }
+
+  // There should be another null here.
+  cursor--;
+  MOZ_ASSERT(!*cursor);
+
+  // Back up one more char to the last char of the previous string. It may be
+  // the database path or it may be a key/value URI pair.
+  cursor--;
+
+#ifdef DEBUG
+  {
+    // Verify that we just walked over the journal path. Account for the two
+    // nulls we just skipped.
+    const char *journalStart = cursor + 3;
+
+    nsDependentCSubstring journalPath(journalStart,
+                                      strlen(journalStart));
+
+    // Chop off the "-journal" suffix.
+    NS_NAMED_LITERAL_CSTRING(kJournalSuffix, "-journal");
+    MOZ_ASSERT(StringEndsWith(journalPath, kJournalSuffix));
+
+    journalPath.Rebind(journalStart,
+                        journalPath.Length() - kJournalSuffix.Length());
+    MOZ_ASSERT(!journalPath.IsEmpty());
+
+    // Make sure that the database name is a substring of the journal name.
+    MOZ_ASSERT(journalPath == dbPath);
+  }
+#endif
+
+  // Now we're either at the end of the key/value URI pairs or we're at the
+  // end of the database path. Carefully walk backwards one character at a
+  // time to do this safely without running past the beginning of the database
+  // path.
+  const char *const dbPathStart = dbPath.BeginReading();
+  const char *dbPathCursor = dbPath.EndReading() - 1;
+  bool isDBPath = true;
+
+  while (true) {
+    MOZ_ASSERT(*dbPathCursor, "dbPathCursor should never see a null char!");
+
+    if (isDBPath) {
+      isDBPath = dbPathStart <= dbPathCursor &&
+                 *dbPathCursor == *cursor &&
+                 *cursor;
+    }
+
+    if (!isDBPath) {
+      // This isn't the database path so it must be a value. Scan past it and
+      // the key also.
+      for (size_t stringCount = 0; stringCount < 2; stringCount++) {
+        // Scan past the string to the preceding null character.
+        while (*cursor) {
+          cursor--;
+        }
+
+        // Back up one more char to the last char of preceding string.
+        cursor--;
+      }
+
+      // Reset and start again.
+      dbPathCursor = dbPath.EndReading() - 1;
+      isDBPath = true;
+
+      continue;
+    }
+
+    MOZ_ASSERT(isDBPath);
+    MOZ_ASSERT(*cursor);
+
+    if (dbPathStart == dbPathCursor) {
+      // Found the full database path, we're all done.
+      MOZ_ASSERT(nsDependentCString(cursor) == dbPath);
+      return cursor;
+    }
+
+    // Change the cursors and go through the loop again.
+    cursor--;
+    dbPathCursor--;
+  }
+
+  MOZ_CRASH("Should never get here!");
+}
+
+already_AddRefed<QuotaObject>
+GetQuotaObjectFromNameAndParameters(const char *zName,
+                                    const char *zURIParameterKey)
+{
+  MOZ_ASSERT(zName);
+  MOZ_ASSERT(zURIParameterKey);
+
+  const char *persistenceType =
+    sqlite3_uri_parameter(zURIParameterKey, "persistenceType");
+  if (!persistenceType) {
+    return nullptr;
+  }
+
+  const char *group = sqlite3_uri_parameter(zURIParameterKey, "group");
+  if (!group) {
+    NS_WARNING("SQLite URI had 'persistenceType' but not 'group'?!");
+    return nullptr;
+  }
+
+  const char *origin = sqlite3_uri_parameter(zURIParameterKey, "origin");
+  if (!origin) {
+    NS_WARNING("SQLite URI had 'persistenceType' and 'group' but not "
+               "'origin'?!");
+    return nullptr;
+  }
+
+  QuotaManager *quotaManager = QuotaManager::Get();
+  MOZ_ASSERT(quotaManager);
+
+  return quotaManager->GetQuotaObject(
+    PersistenceTypeFromText(nsDependentCString(persistenceType)),
+    nsDependentCString(group),
+    nsDependentCString(origin),
+    NS_ConvertUTF8toUTF16(zName));
+}
+
+void
+MaybeEstablishQuotaControl(const char *zName,
+                           telemetry_file *pFile,
+                           int flags)
+{
+  MOZ_ASSERT(pFile);
+  MOZ_ASSERT(!pFile->quotaObject);
+
+  if (!(flags & (SQLITE_OPEN_URI | SQLITE_OPEN_WAL))) {
+    return;
+  }
+
+  MOZ_ASSERT(zName);
+
+  const char *zURIParameterKey = (flags & SQLITE_OPEN_WAL) ?
+                                 DatabasePathFromWALPath(zName) :
+                                 zName;
+
+  MOZ_ASSERT(zURIParameterKey);
+
+  pFile->quotaObject =
+    GetQuotaObjectFromNameAndParameters(zName, zURIParameterKey);
+}
 
 /*
 ** Close a telemetry_file.
@@ -160,6 +355,9 @@ xClose(sqlite3_file *pFile)
     delete p->base.pMethods;
     p->base.pMethods = nullptr;
     p->quotaObject = nullptr;
+#ifdef DEBUG
+    p->fileChunkSize = 0;
+#endif
   }
   return rc;
 }
@@ -181,19 +379,43 @@ xRead(sqlite3_file *pFile, void *zBuf, int iAmt, sqlite_int64 iOfst)
 }
 
 /*
+** Return the current file-size of a telemetry_file.
+*/
+int
+xFileSize(sqlite3_file *pFile, sqlite_int64 *pSize)
+{
+  IOThreadAutoTimer ioTimer(IOInterposeObserver::OpStat);
+  telemetry_file *p = (telemetry_file *)pFile;
+  int rc;
+  rc = p->pReal->pMethods->xFileSize(p->pReal, pSize);
+  return rc;
+}
+
+/*
 ** Write data to a telemetry_file.
 */
 int
 xWrite(sqlite3_file *pFile, const void *zBuf, int iAmt, sqlite_int64 iOfst)
 {
   telemetry_file *p = (telemetry_file *)pFile;
-  if (p->quotaObject && !p->quotaObject->MaybeAllocateMoreSpace(iOfst, iAmt)) {
-    return SQLITE_FULL;
-  }
   IOThreadAutoTimer ioTimer(p->histograms->writeMS, IOInterposeObserver::OpWrite);
   int rc;
+  if (p->quotaObject) {
+    MOZ_ASSERT(INT64_MAX - iOfst >= iAmt);
+    if (!p->quotaObject->MaybeUpdateSize(iOfst + iAmt, /* aTruncate */ false)) {
+      return SQLITE_FULL;
+    }
+  }
   rc = p->pReal->pMethods->xWrite(p->pReal, zBuf, iAmt, iOfst);
   Telemetry::Accumulate(p->histograms->writeB, rc == SQLITE_OK ? iAmt : 0);
+  if (p->quotaObject && rc != SQLITE_OK) {
+    NS_WARNING("xWrite failed on a quota-controlled file, attempting to "
+               "update its current size...");
+    sqlite_int64 currentSize;
+    if (xFileSize(pFile, &currentSize) == SQLITE_OK) {
+      p->quotaObject->MaybeUpdateSize(currentSize, /* aTruncate */ true);
+    }
+  }
   return rc;
 }
 
@@ -207,9 +429,33 @@ xTruncate(sqlite3_file *pFile, sqlite_int64 size)
   telemetry_file *p = (telemetry_file *)pFile;
   int rc;
   Telemetry::AutoTimer<Telemetry::MOZ_SQLITE_TRUNCATE_MS> timer;
+  if (p->quotaObject) {
+    if (p->fileChunkSize > 0) {
+      // Round up to the smallest multiple of the chunk size that will hold all
+      // the data.
+      size =
+        ((size + p->fileChunkSize - 1) / p->fileChunkSize) * p->fileChunkSize;
+    }
+    if (!p->quotaObject->MaybeUpdateSize(size, /* aTruncate */ true)) {
+      return SQLITE_FULL;
+    }
+  }
   rc = p->pReal->pMethods->xTruncate(p->pReal, size);
-  if (rc == SQLITE_OK && p->quotaObject) {
-    p->quotaObject->UpdateSize(size);
+  if (p->quotaObject) {
+    if (rc == SQLITE_OK) {
+#ifdef DEBUG
+      // Make sure xTruncate set the size exactly as we calculated above.
+      sqlite_int64 newSize;
+      MOZ_ASSERT(xFileSize(pFile, &newSize) == SQLITE_OK);
+      MOZ_ASSERT(newSize == size);
+#endif
+    } else {
+      NS_WARNING("xTruncate failed on a quota-controlled file, attempting to "
+                 "update its current size...");
+      if (xFileSize(pFile, &size) == SQLITE_OK) {
+        p->quotaObject->MaybeUpdateSize(size, /* aTruncate */ true);
+      }
+    }
   }
   return rc;
 }
@@ -223,19 +469,6 @@ xSync(sqlite3_file *pFile, int flags)
   telemetry_file *p = (telemetry_file *)pFile;
   IOThreadAutoTimer ioTimer(p->histograms->syncMS, IOInterposeObserver::OpFSync);
   return p->pReal->pMethods->xSync(p->pReal, flags);
-}
-
-/*
-** Return the current file-size of a telemetry_file.
-*/
-int
-xFileSize(sqlite3_file *pFile, sqlite_int64 *pSize)
-{
-  IOThreadAutoTimer ioTimer(IOInterposeObserver::OpStat);
-  telemetry_file *p = (telemetry_file *)pFile;
-  int rc;
-  rc = p->pReal->pMethods->xFileSize(p->pReal, pSize);
-  return rc;
 }
 
 /*
@@ -280,7 +513,41 @@ int
 xFileControl(sqlite3_file *pFile, int op, void *pArg)
 {
   telemetry_file *p = (telemetry_file *)pFile;
-  int rc = p->pReal->pMethods->xFileControl(p->pReal, op, pArg);
+  int rc;
+  // Hook SQLITE_FCNTL_SIZE_HINT for quota-controlled files and do the necessary
+  // work before passing to the SQLite VFS.
+  if (op == SQLITE_FCNTL_SIZE_HINT && p->quotaObject) {
+    sqlite3_int64 hintSize = *static_cast<sqlite3_int64*>(pArg);
+    sqlite3_int64 currentSize;
+    rc = xFileSize(pFile, &currentSize);
+    if (rc != SQLITE_OK) {
+      return rc;
+    }
+    if (hintSize > currentSize) {
+      rc = xTruncate(pFile, hintSize);
+      if (rc != SQLITE_OK) {
+        return rc;
+      }
+    }
+  }
+  rc = p->pReal->pMethods->xFileControl(p->pReal, op, pArg);
+  // Grab the file chunk size after the SQLite VFS has approved.
+  if (op == SQLITE_FCNTL_CHUNK_SIZE && rc == SQLITE_OK) {
+    p->fileChunkSize = *static_cast<int*>(pArg);
+  }
+#ifdef DEBUG
+  if (op == SQLITE_FCNTL_SIZE_HINT && p->quotaObject && rc == SQLITE_OK) {
+    sqlite3_int64 hintSize = *static_cast<sqlite3_int64*>(pArg);
+    if (p->fileChunkSize > 0) {
+      hintSize =
+        ((hintSize + p->fileChunkSize - 1) / p->fileChunkSize) *
+          p->fileChunkSize;
+    }
+    sqlite3_int64 currentSize;
+    MOZ_ASSERT(xFileSize(pFile, &currentSize) == SQLITE_OK);
+    MOZ_ASSERT(currentSize >= hintSize);
+  }
+#endif
   return rc;
 }
 
@@ -386,20 +653,7 @@ xOpen(sqlite3_vfs* vfs, const char *zName, sqlite3_file* pFile,
   }
   p->histograms = h;
 
-  const char* persistenceType;
-  const char* group;
-  const char* origin;
-  if ((flags & SQLITE_OPEN_URI) &&
-      (persistenceType = sqlite3_uri_parameter(zName, "persistenceType")) &&
-      (group = sqlite3_uri_parameter(zName, "group")) &&
-      (origin = sqlite3_uri_parameter(zName, "origin"))) {
-    QuotaManager* quotaManager = QuotaManager::Get();
-    MOZ_ASSERT(quotaManager);
-
-    p->quotaObject = quotaManager->GetQuotaObject(PersistenceTypeFromText(
-      nsDependentCString(persistenceType)), nsDependentCString(group),
-      nsDependentCString(origin), NS_ConvertUTF8toUTF16(zName));
-  }
+  MaybeEstablishQuotaControl(zName, p, flags);
 
   rc = orig_vfs->xOpen(orig_vfs, zName, p->pReal, flags, pOutFlags);
   if( rc != SQLITE_OK )
@@ -451,7 +705,22 @@ int
 xDelete(sqlite3_vfs* vfs, const char *zName, int syncDir)
 {
   sqlite3_vfs *orig_vfs = static_cast<sqlite3_vfs*>(vfs->pAppData);
-  return orig_vfs->xDelete(orig_vfs, zName, syncDir);
+  int rc;
+  nsRefPtr<QuotaObject> quotaObject;
+
+  if (StringEndsWith(nsDependentCString(zName), NS_LITERAL_CSTRING("-wal"))) {
+    const char *zURIParameterKey = DatabasePathFromWALPath(zName);
+    MOZ_ASSERT(zURIParameterKey);
+
+    quotaObject = GetQuotaObjectFromNameAndParameters(zName, zURIParameterKey);
+  }
+
+  rc = orig_vfs->xDelete(orig_vfs, zName, syncDir);
+  if (rc == SQLITE_OK && quotaObject) {
+    MOZ_ALWAYS_TRUE(quotaObject->MaybeUpdateSize(0, /* aTruncate */ true));
+  }
+
+  return rc;
 }
 
 int

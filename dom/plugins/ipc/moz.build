@@ -50,7 +50,6 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'PluginSurfaceParent.h',
     ]
     UNIFIED_SOURCES += [
-        'COMMessageFilter.cpp',
         'PluginHangUIParent.cpp',
         'PluginSurfaceParent.cpp',
     ]
@@ -129,6 +128,12 @@ LOCAL_INCLUDES += [
     '../base',
     '/xpcom/base/',
 ]
+
+if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
+    LOCAL_INCLUDES += [
+        '/security/sandbox/chromium',
+        '/security/sandbox/chromium-shim',
+    ]
 
 DEFINES['FORCE_PR_LOG'] = True
 

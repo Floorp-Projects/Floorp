@@ -54,7 +54,7 @@
 @RESPATH@/hyphenation/*
 @RESPATH@/browser/@PREF_DIR@/firefox-l10n.js
 @RESPATH@/browser/searchplugins/*
-#ifdef XP_WIN32
+#ifdef HAVE_MAKENSISU
 @BINPATH@/uninstall/helper.exe
 #endif
 #ifdef MOZ_UPDATER
@@ -609,6 +609,8 @@
 
 @RESPATH@/components/PresentationDeviceInfoManager.manifest
 @RESPATH@/components/PresentationDeviceInfoManager.js
+@RESPATH@/components/BuiltinProviders.manifest
+@RESPATH@/components/TCPPresentationServer.js
 
 ; InputMethod API
 @RESPATH@/components/MozKeyboard.js

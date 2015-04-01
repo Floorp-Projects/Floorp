@@ -40,7 +40,7 @@ AString2Double(const nsAString& aString, double* aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
   nsresult rv = String2Double(pChars, aResult);
-  nsMemory::Free(pChars);
+  free(pChars);
   return rv;
 }
 
@@ -180,7 +180,7 @@ FreeArray(nsDiscriminatedUnion* aData)
             ctype_ ** p = (ctype_ **) aData->u.array.mArrayValue;             \
             for(uint32_t i = aData->u.array.mArrayCount; i > 0; p++, i--)     \
                 if(*p)                                                        \
-                    nsMemory::Free((char*)*p);                                \
+                    free((char*)*p);                                \
             break;                                                            \
         }
 
@@ -234,7 +234,7 @@ FreeArray(nsDiscriminatedUnion* aData)
   }
 
   // Free the array memory.
-  nsMemory::Free((char*)aData->u.array.mArrayValue);
+  free((char*)aData->u.array.mArrayValue);
 
 #undef CASE__FREE_ARRAY_PTR
 #undef CASE__FREE_ARRAY_IFACE
@@ -331,7 +331,7 @@ CloneArray(uint16_t aInType, const nsIID* aInIID,
   // Alloc the u.array.
 
   allocSize = aInCount * elementSize;
-  *aOutValue = nsMemory::Alloc(allocSize);
+  *aOutValue = moz_xmalloc(allocSize);
   if (!*aOutValue) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -450,9 +450,9 @@ bad:
     char** p = (char**)*aOutValue;
     for (i = allocatedValueCount; i > 0; ++p, --i)
       if (*p) {
-        nsMemory::Free(*p);
+        free(*p);
       }
-    nsMemory::Free((char*)*aOutValue);
+    free((char*)*aOutValue);
     *aOutValue = nullptr;
   }
   return rv;
@@ -710,7 +710,7 @@ String2ID(const nsDiscriminatedUnion& aData, nsID* aPid)
     return false;
   }
   bool result = aPid->Parse(pChars);
-  nsMemory::Free(pChars);
+  free(pChars);
   return result;
 }
 
@@ -791,7 +791,7 @@ ToString(const nsDiscriminatedUnion& aData, nsACString& aOutString)
         return NS_ERROR_OUT_OF_MEMORY;
       }
       aOutString.Assign(ptr);
-      nsMemory::Free(ptr);
+      free(ptr);
       return NS_OK;
 
     // Can't use PR_smprintf for floats, since it's locale-dependent
@@ -1343,7 +1343,7 @@ nsVariant::SetFromVariant(nsDiscriminatedUnion* aData, nsIVariant* aValue)
       rv = aValue->GetAsInterface(&iid, (void**)&aData->u.iface.mInterfaceValue);
       if (NS_SUCCEEDED(rv)) {
         aData->u.iface.mInterfaceID = *iid;
-        nsMemory::Free((char*)iid);
+        free((char*)iid);
       }
       CASE__SET_FROM_VARIANT_VTYPE_EPILOGUE(VTYPE_INTERFACE_IS)
 
@@ -1628,11 +1628,11 @@ nsVariant::Cleanup(nsDiscriminatedUnion* aData)
       break;
     case nsIDataType::VTYPE_CHAR_STR:
     case nsIDataType::VTYPE_STRING_SIZE_IS:
-      nsMemory::Free((char*)aData->u.str.mStringValue);
+      free((char*)aData->u.str.mStringValue);
       break;
     case nsIDataType::VTYPE_WCHAR_STR:
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
-      nsMemory::Free((char*)aData->u.wstr.mWStringValue);
+      free((char*)aData->u.wstr.mWStringValue);
       break;
     case nsIDataType::VTYPE_INTERFACE:
     case nsIDataType::VTYPE_INTERFACE_IS:

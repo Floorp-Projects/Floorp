@@ -31,7 +31,7 @@ struct nsXBLTextWithLineNumber
   ~nsXBLTextWithLineNumber() {
     MOZ_COUNT_DTOR(nsXBLTextWithLineNumber);
     if (mText) {
-      nsMemory::Free(mText);
+      free(mText);
     }
   }
 
@@ -39,7 +39,7 @@ struct nsXBLTextWithLineNumber
     if (mText) {
       char16_t* temp = mText;
       mText = ToNewUnicode(nsDependentString(temp) + aText);
-      nsMemory::Free(temp);
+      free(temp);
     } else {
       mText = ToNewUnicode(aText);
     }
@@ -68,7 +68,7 @@ public:
     mName = ToNewUnicode(nsDependentString(aName));
   }
   virtual ~nsXBLProtoImplMember() {
-    nsMemory::Free(mName);
+    free(mName);
     NS_CONTENT_DELETE_LIST_MEMBER(nsXBLProtoImplMember, this, mNext);
   }
 

@@ -30,7 +30,7 @@
         ["{workdir}/gecko/tools/rb/fix_stack_using_bpsyms.py", "gecko/tools/rb/"]
     ],
     "env": {
-        "VARIANT": "user",
+        "VARIANT": "userdebug",
         "MOZILLA_OFFICIAL": "1",
         "MOZ_TELEMETRY_REPORTING": "1",
         "B2G_UPDATE_CHANNEL": "nightly",

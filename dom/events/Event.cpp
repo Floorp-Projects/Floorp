@@ -858,7 +858,7 @@ void
 Event::PopupAllowedEventsChanged()
 {
   if (sPopupAllowedEvents) {
-    nsMemory::Free(sPopupAllowedEvents);
+    free(sPopupAllowedEvents);
   }
 
   nsAdoptingCString str = Preferences::GetCString("dom.popup_allowed_events");
@@ -873,7 +873,7 @@ void
 Event::Shutdown()
 {
   if (sPopupAllowedEvents) {
-    nsMemory::Free(sPopupAllowedEvents);
+    free(sPopupAllowedEvents);
   }
 }
 

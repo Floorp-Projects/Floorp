@@ -10,6 +10,7 @@ const errors = [
   "ElementNotVisibleError",
   "FrameSendFailureError",
   "FrameSendNotInitializedError",
+  "InvalidElementStateError",
   "JavaScriptError",
   "NoAlertOpenError",
   "NoSuchElementError",
@@ -127,30 +128,6 @@ this.WebDriverError = function(msg) {
 };
 WebDriverError.prototype = Object.create(Error.prototype);
 
-this.NoSuchElementError = function(msg) {
-  WebDriverError.call(this, msg);
-  this.name = "NoSuchElementError";
-  this.status = "no such element";
-  this.code = 7;
-};
-NoSuchElementError.prototype = Object.create(WebDriverError.prototype);
-
-this.NoSuchFrameError = function(msg) {
-  WebDriverError.call(this, msg);
-  this.name = "NoSuchFrameError";
-  this.status = "no such frame";
-  this.code = 8;
-};
-NoSuchFrameError.prototype = Object.create(WebDriverError.prototype);
-
-this.UnknownCommandError = function(msg) {
-  WebDriverError.call(this, msg);
-  this.name = "UnknownCommandError";
-  this.status = "unknown command";
-  this.code = 9;
-};
-UnknownCommandError.prototype = Object.create(WebDriverError.prototype);
-
 this.ElementNotVisibleError = function(msg) {
   WebDriverError.call(this, msg);
   this.name = "ElementNotVisibleError";
@@ -159,21 +136,35 @@ this.ElementNotVisibleError = function(msg) {
 };
 ElementNotVisibleError.prototype = Object.create(WebDriverError.prototype);
 
-this.InvalidElementState = function(msg) {
+this.FrameSendFailureError = function(frame) {
+  this.message = "Error sending message to frame (NS_ERROR_FAILURE)";
+  WebDriverError.call(this, this.message);
+  this.name = "FrameSendFailureError";
+  this.status = "frame send failure error";
+  this.code = 55;
+  this.frame = frame;
+  this.errMsg = `${this.message} ${this.frame}; frame not responding.`;
+};
+FrameSendFailureError.prototype = Object.create(WebDriverError.prototype);
+
+this.FrameSendNotInitializedError = function(frame) {
+  this.message = "Error sending message to frame (NS_ERROR_NOT_INITIALIZED)";
+  WebDriverError.call(this, this.message);
+  this.name = "FrameSendNotInitializedError";
+  this.status = "frame send not initialized error";
+  this.code = 54;
+  this.frame = frame;
+  this.errMsg = `${this.message} ${this.frame}; frame has closed.`;
+};
+FrameSendNotInitializedError.prototype = Object.create(WebDriverError.prototype);
+
+this.InvalidElementStateError = function(msg) {
   WebDriverError.call(this, msg);
-  this.name = "InvalidElementState";
+  this.name = "InvalidElementStateError";
   this.status = "invalid element state";
   this.code = 12;
 };
-InvalidElementState.prototype = Object.create(WebDriverError.prototype);
-
-this.UnknownError = function(msg) {
-  WebDriverError.call(this, msg);
-  this.name = "UnknownError";
-  this.status = "unknown error";
-  this.code = 13;
-};
-UnknownError.prototype = Object.create(WebDriverError.prototype);
+InvalidElementStateError.prototype = Object.create(WebDriverError.prototype);
 
 /**
  * Creates an error message for a JavaScript error thrown during
@@ -223,13 +214,29 @@ this.JavaScriptError = function(err, fnName, file, line, script) {
 };
 JavaScriptError.prototype = Object.create(WebDriverError.prototype);
 
-this.TimeoutError = function(msg) {
+this.NoAlertOpenError = function(msg) {
   WebDriverError.call(this, msg);
-  this.name = "TimeoutError";
-  this.status = "timeout";
-  this.code = 21;
+  this.name = "NoAlertOpenError";
+  this.status = "no such alert";
+  this.code = 27;
+}
+NoAlertOpenError.prototype = Object.create(WebDriverError.prototype);
+
+this.NoSuchElementError = function(msg) {
+  WebDriverError.call(this, msg);
+  this.name = "NoSuchElementError";
+  this.status = "no such element";
+  this.code = 7;
 };
-TimeoutError.prototype = Object.create(WebDriverError.prototype);
+NoSuchElementError.prototype = Object.create(WebDriverError.prototype);
+
+this.NoSuchFrameError = function(msg) {
+  WebDriverError.call(this, msg);
+  this.name = "NoSuchFrameError";
+  this.status = "no such frame";
+  this.code = 8;
+};
+NoSuchFrameError.prototype = Object.create(WebDriverError.prototype);
 
 this.NoSuchWindowError = function(msg) {
   WebDriverError.call(this, msg);
@@ -238,14 +245,6 @@ this.NoSuchWindowError = function(msg) {
   this.code = 23;
 };
 NoSuchWindowError.prototype = Object.create(WebDriverError.prototype);
-
-this.NoAlertOpenError = function(msg) {
-  WebDriverError.call(this, msg);
-  this.name = "NoAlertOpenError";
-  this.status = "no such alert";
-  this.code = 27;
-}
-NoAlertOpenError.prototype = Object.create(WebDriverError.prototype);
 
 this.ScriptTimeoutError = function(msg) {
   WebDriverError.call(this, msg);
@@ -264,27 +263,29 @@ this.SessionNotCreatedError = function(msg) {
 }
 SessionNotCreatedError.prototype = Object.create(WebDriverError.prototype);
 
-this.FrameSendNotInitializedError = function(frame) {
-  this.message = "Error sending message to frame (NS_ERROR_NOT_INITIALIZED)";
-  WebDriverError.call(this, this.message);
-  this.name = "FrameSendNotInitializedError";
-  this.status = "frame send not initialized error";
-  this.code = 54;
-  this.frame = frame;
-  this.errMsg = `${this.message} ${this.frame}; frame has closed.`;
+this.TimeoutError = function(msg) {
+  WebDriverError.call(this, msg);
+  this.name = "TimeoutError";
+  this.status = "timeout";
+  this.code = 21;
 };
-FrameSendNotInitializedError.prototype = Object.create(WebDriverError.prototype);
+TimeoutError.prototype = Object.create(WebDriverError.prototype);
 
-this.FrameSendFailureError = function(frame) {
-  this.message = "Error sending message to frame (NS_ERROR_FAILURE)";
-  WebDriverError.call(this, this.message);
-  this.name = "FrameSendFailureError";
-  this.status = "frame send failure error";
-  this.code = 55;
-  this.frame = frame;
-  this.errMsg = `${this.message} ${this.frame}; frame not responding.`;
+this.UnknownCommandError = function(msg) {
+  WebDriverError.call(this, msg);
+  this.name = "UnknownCommandError";
+  this.status = "unknown command";
+  this.code = 9;
 };
-FrameSendFailureError.prototype = Object.create(WebDriverError.prototype);
+UnknownCommandError.prototype = Object.create(WebDriverError.prototype);
+
+this.UnknownError = function(msg) {
+  WebDriverError.call(this, msg);
+  this.name = "UnknownError";
+  this.status = "unknown error";
+  this.code = 13;
+};
+UnknownError.prototype = Object.create(WebDriverError.prototype);
 
 this.UnsupportedOperationError = function(msg) {
   WebDriverError.call(this, msg);
@@ -298,6 +299,7 @@ const errorObjs = [
   this.ElementNotVisibleError,
   this.FrameSendFailureError,
   this.FrameSendNotInitializedError,
+  this.InvalidElementStateError,
   this.JavaScriptError,
   this.NoAlertOpenError,
   this.NoSuchElementError,

@@ -132,6 +132,20 @@ SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel)
                             L"\\??\\pipe\\chrome.*");
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
+  // The content process needs to be able to duplicate named pipes back to the
+  // broker process, which are File type handles.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_HANDLES,
+                            sandbox::TargetPolicy::HANDLES_DUP_BROKER,
+                            L"File");
+  ret = ret && (sandbox::SBOX_ALL_OK == result);
+
+  // The content process needs to be able to duplicate shared memory to the
+  // broker process, which are Section type handles.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_HANDLES,
+                            sandbox::TargetPolicy::HANDLES_DUP_BROKER,
+                            L"Section");
+  ret = ret && (sandbox::SBOX_ALL_OK == result);
+
   return ret;
 }
 #endif
@@ -202,6 +216,13 @@ SandboxBroker::SetSecurityLevelForPluginProcess(int32_t aSandboxLevel)
   result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_FILES,
                             sandbox::TargetPolicy::FILES_ALLOW_ANY,
                             L"\\??\\pipe\\chrome.*");
+  ret = ret && (sandbox::SBOX_ALL_OK == result);
+
+  // The NPAPI process needs to be able to duplicate shared memory to the
+  // content process, which are Section type handles.
+  result = mPolicy->AddRule(sandbox::TargetPolicy::SUBSYS_HANDLES,
+                            sandbox::TargetPolicy::HANDLES_DUP_ANY,
+                            L"Section");
   ret = ret && (sandbox::SBOX_ALL_OK == result);
 
   return ret;

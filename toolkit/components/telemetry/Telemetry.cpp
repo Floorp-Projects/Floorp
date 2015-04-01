@@ -3076,7 +3076,7 @@ GetRegisteredHistogramIds(bool keyed, uint32_t dataset, uint32_t *aCount,
   }
 
   const size_t bytes = collection.Length() * sizeof(char*);
-  char** histograms = static_cast<char**>(nsMemory::Alloc(bytes));
+  char** histograms = static_cast<char**>(moz_xmalloc(bytes));
   memcpy(histograms, collection.Elements(), bytes);
   *aHistograms = histograms;
   *aCount = collection.Length();
