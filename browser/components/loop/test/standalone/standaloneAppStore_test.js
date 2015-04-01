@@ -54,7 +54,8 @@ describe("loop.store.StandaloneAppStore", function () {
 
     beforeEach(function() {
       fakeGetWindowData = {
-        windowPath: ""
+        windowPath: "",
+        windowHash: ""
       };
 
       sandbox.stub(loop.shared.utils, "getUnsupportedPlatform").returns();
@@ -177,7 +178,7 @@ describe("loop.store.StandaloneAppStore", function () {
         });
       });
 
-    it("should set the loopToken on the conversation for call paths",
+    it("should dispatch a FetchServerData action for call paths",
       function() {
         fakeGetWindowData.windowPath = "/c/fakecalltoken";
 
@@ -187,14 +188,15 @@ describe("loop.store.StandaloneAppStore", function () {
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.FetchServerData({
+            cryptoKey: null,
             windowType: "outgoing",
             token: "fakecalltoken"
           }));
       });
 
-    it("should set the loopToken on the conversation for room paths",
+    it("should dispatch a FetchServerData action for room paths",
       function() {
-        fakeGetWindowData.windowPath = "/c/fakeroomtoken";
+        fakeGetWindowData.windowPath = "/fakeroomtoken";
 
         store.extractTokenInfo(
           new sharedActions.ExtractTokenInfo(fakeGetWindowData));
@@ -202,11 +204,29 @@ describe("loop.store.StandaloneAppStore", function () {
         sinon.assert.calledOnce(dispatcher.dispatch);
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.FetchServerData({
-            windowType: "outgoing",
+            cryptoKey: null,
+            windowType: "room",
             token: "fakeroomtoken"
           }));
       });
 
+    it("should dispatch a FetchServerData action with a crypto key extracted from the hash", function() {
+      fakeGetWindowData = {
+        windowPath: "/fakeroomtoken",
+        windowHash: "#fakeKey"
+      };
+
+      store.extractTokenInfo(
+        new sharedActions.ExtractTokenInfo(fakeGetWindowData));
+
+      sinon.assert.calledOnce(dispatcher.dispatch);
+      sinon.assert.calledWithExactly(dispatcher.dispatch,
+        new sharedActions.FetchServerData({
+          cryptoKey: "fakeKey",
+          windowType: "room",
+          token: "fakeroomtoken"
+        }));
+    });
   });
 
 });

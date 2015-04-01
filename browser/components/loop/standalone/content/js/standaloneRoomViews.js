@@ -12,6 +12,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
   "use strict";
 
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
+  var ROOM_INFO_FAILURES = loop.shared.utils.ROOM_INFO_FAILURES;
   var ROOM_STATES = loop.store.ROOM_STATES;
   var sharedActions = loop.shared.actions;
   var sharedMixins = loop.shared.mixins;
@@ -194,6 +195,29 @@ loop.standaloneRoomViews = (function(mozL10n) {
           React.createElement("p", {dangerouslySetInnerHTML: {__html: this._getContent()}}), 
           React.createElement("div", {className: "footer-logo"})
         )
+      );
+    }
+  });
+
+  var StandaloneRoomContextView = React.createClass({displayName: "StandaloneRoomContextView",
+    propTypes: {
+      roomName: React.PropTypes.string,
+      roomInfoFailure: React.PropTypes.string
+    },
+
+    render: function() {
+      if (this.props.roomInfoFailure === ROOM_INFO_FAILURES.WEB_CRYPTO_UNSUPPORTED) {
+        return (React.createElement("h2", {className: "room-info-failure"}, 
+          mozL10n.get("room_information_failure_unsupported_browser")
+        ));
+      } else if (this.props.roomInfoFailure) {
+        return (React.createElement("h2", {className: "room-info-failure"}, 
+          mozL10n.get("room_information_failure_not_available")
+        ));
+      }
+
+      return (
+        React.createElement("h2", {className: "room-name"}, this.props.roomName)
       );
     }
   });
@@ -458,7 +482,8 @@ loop.standaloneRoomViews = (function(mozL10n) {
                                   roomUsed: this.state.used}), 
           React.createElement("div", {className: "video-layout-wrapper"}, 
             React.createElement("div", {className: "conversation room-conversation"}, 
-              React.createElement("h2", {className: "room-name"}, this.state.roomName), 
+              React.createElement(StandaloneRoomContextView, {roomName: this.state.roomName, 
+                                         roomInfoFailure: this.state.roomInfoFailure}), 
               React.createElement("div", {className: "media nested"}, 
                 React.createElement("span", {className: "self-view-hidden-message"}, 
                   mozL10n.get("self_view_hidden_message")
@@ -491,6 +516,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
   });
 
   return {
+    StandaloneRoomContextView: StandaloneRoomContextView,
     StandaloneRoomView: StandaloneRoomView
   };
 })(navigator.mozL10n);
