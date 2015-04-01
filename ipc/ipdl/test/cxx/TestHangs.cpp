@@ -111,8 +111,14 @@ TestHangsParent::AnswerStackFrame()
 void
 TestHangsParent::CleanUp()
 {
-    if (!KillProcess(OtherProcess(), 0, false))
-        fail("terminating child process");
+    ipc::ScopedProcessHandle otherProcessHandle;
+    if (!base::OpenProcessHandle(OtherPid(), &otherProcessHandle.rwget())) {
+        fail("couldn't open child process");
+    } else {
+        if (!KillProcess(otherProcessHandle, 0, false)) {
+            fail("terminating child process");
+        }
+    }
     Close();
 }
 
