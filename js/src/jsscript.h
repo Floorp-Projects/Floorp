@@ -955,7 +955,9 @@ class JSScript : public js::gc::TenuredCell
     // Script has singleton objects.
     bool hasSingletons_:1;
 
-    // Script is a lambda to treat as running once.
+    // Script is a lambda to treat as running once or a global or eval script
+    // that will only run once.  Which one it is can be disambiguated by
+    // checking whether function_ is null.
     bool treatAsRunOnce_:1;
 
     // If treatAsRunOnce, whether script has executed.
