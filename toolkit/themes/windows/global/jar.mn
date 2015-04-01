@@ -11,7 +11,7 @@ toolkit.jar:
         skin/classic/global/aboutCache.css
         skin/classic/global/aboutCacheEntry.css
         skin/classic/global/aboutMemory.css
-        skin/classic/global/aboutReader.css
+*       skin/classic/global/aboutReader.css
         skin/classic/global/aboutSupport.css
         skin/classic/global/appPicker.css
         skin/classic/global/arrow.css
@@ -217,7 +217,7 @@ toolkit.jar:
         skin/classic/aero/global/aboutCache.css
         skin/classic/aero/global/aboutCacheEntry.css
         skin/classic/aero/global/aboutMemory.css
-        skin/classic/aero/global/aboutReader.css
+*       skin/classic/aero/global/aboutReader.css
         skin/classic/aero/global/aboutSupport.css
         skin/classic/aero/global/appPicker.css
         skin/classic/aero/global/arrow.css
