@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.toolbar;
 
-import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 
 import android.content.Context;
