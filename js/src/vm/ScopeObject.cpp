@@ -661,32 +661,19 @@ ClonedBlockObject::copyUnaliasedValues(AbstractFramePtr frame)
 }
 
 /* static */ ClonedBlockObject*
-ClonedBlockObject::clone(ExclusiveContext* cx, Handle<ClonedBlockObject*> block)
+ClonedBlockObject::clone(JSContext* cx, Handle<ClonedBlockObject*> clonedBlock)
 {
-    RootedObject enclosing(cx, &block->enclosingScope());
+    Rooted<StaticBlockObject*> staticBlock(cx, &clonedBlock->staticBlock());
+    RootedObject enclosing(cx, &clonedBlock->enclosingScope());
 
-    MOZ_ASSERT(block->getClass() == &BlockObject::class_);
-
-    RootedObjectGroup cloneGroup(cx, block->group());
-    RootedShape cloneShape(cx, block->lastProperty());
-
-    JSObject* obj = JSObject::create(cx, FINALIZE_KIND, gc::TenuredHeap, cloneShape, cloneGroup);
-    if (!obj)
+    Rooted<ClonedBlockObject*> copy(cx, create(cx, staticBlock, enclosing));
+    if (!copy)
         return nullptr;
 
-    ClonedBlockObject& copy = obj->as<ClonedBlockObject>();
+    for (uint32_t i = 0, count = staticBlock->numVariables(); i < count; i++)
+        copy->setVar(i, clonedBlock->var(i, DONT_CHECK_ALIASING), DONT_CHECK_ALIASING);
 
-    MOZ_ASSERT(!copy.inDictionaryMode());
-    MOZ_ASSERT(copy.isDelegate());
-    MOZ_ASSERT(block->slotSpan() == copy.slotSpan());
-    MOZ_ASSERT(copy.slotSpan() >= copy.numVariables() + RESERVED_SLOTS);
-
-    copy.setReservedSlot(SCOPE_CHAIN_SLOT, block->getReservedSlot(SCOPE_CHAIN_SLOT));
-
-    for (uint32_t i = 0, count = copy.numVariables(); i < count; i++)
-        copy.setVar(i, block->var(i, DONT_CHECK_ALIASING), DONT_CHECK_ALIASING);
-
-    return &copy;
+    return copy;
 }
 
 StaticBlockObject*
