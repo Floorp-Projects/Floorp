@@ -10,11 +10,22 @@
 <pre id="test">
 <script type="application/javascript">
 createHTML({
-  title: "setIdentityProvider leads to peerIdentity and assertions in SDP",
-  bug: "942367"
+  title: "Non-isolated media entering an isolated session becomes isolated",
+  bug: "996238"
 });
 
-runNetworkTest(identityPcTest);
+function theTest() {
+  // override the remote media capture options to remove isolation
+  // for the remote party; the test verifies that the media it receives
+  // on the local side is isolated
+  identityPcTest({
+    audio: true,
+    video: true,
+    fake: true
+  });
+}
+runNetworkTest(theTest);
+
 </script>
 </pre>
 </body>
