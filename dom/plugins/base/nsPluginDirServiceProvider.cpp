@@ -116,10 +116,20 @@ TranslateVersionStr(const WCHAR* szVersion, verBlock *vbVersion)
     szJavaBuild[0] = '.';
   }
 
-  szNum1 = wcstok(strVer,  L".");
-  szNum2 = wcstok(nullptr, L".");
-  szNum3 = wcstok(nullptr, L".");
-  szNum4 = wcstok(nullptr, L".");
+#if defined(_MSC_VER) && _MSC_VER < 1900
+  // MSVC 2013 and earlier provided only a non-standard two-argument variant of
+  // wcstok that is generally not thread-safe. For our purposes here, it works
+  // fine, though.
+  auto wcstok = [](wchar_t* strToken, const wchar_t* strDelimit,
+                   wchar_t** /*ctx*/) {
+    return ::std::wcstok(strToken, strDelimit);
+  };
+#endif
+  wchar_t* ctx = nullptr;
+  szNum1 = wcstok(strVer,  L".", &ctx);
+  szNum2 = wcstok(nullptr, L".", &ctx);
+  szNum3 = wcstok(nullptr, L".", &ctx);
+  szNum4 = wcstok(nullptr, L".", &ctx);
 
   vbVersion->wMajor   = szNum1 ? (WORD) _wtoi(szNum1) : 0;
   vbVersion->wMinor   = szNum2 ? (WORD) _wtoi(szNum2) : 0;
