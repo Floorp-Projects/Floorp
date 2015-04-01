@@ -1910,9 +1910,9 @@ nsFlexContainerFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // Our children are all block-level, so their borders/backgrounds all go on
   // the BlockBorderBackgrounds list.
   nsDisplayListSet childLists(aLists, aLists.BlockBorderBackgrounds());
-  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    BuildDisplayListForChild(aBuilder, e.get(), aDirtyRect, childLists,
-                             GetDisplayFlagsForFlexItem(e.get()));
+  for (nsIFrame* childFrame : mFrames) {
+    BuildDisplayListForChild(aBuilder, childFrame, aDirtyRect, childLists,
+                             GetDisplayFlagsForFlexItem(childFrame));
   }
 }
 
@@ -1942,8 +1942,7 @@ void
 nsFlexContainerFrame::SanityCheckAnonymousFlexItems() const
 {
   bool prevChildWasAnonFlexItem = false;
-  for (nsIFrame* child = mFrames.FirstChild(); child;
-       child = child->GetNextSibling()) {
+  for (nsIFrame* child : mFrames) {
     MOZ_ASSERT(!FrameWantsToBeInAnonymousFlexItem(child),
                "frame wants to be inside an anonymous flex item, "
                "but it isn't");
@@ -3071,9 +3070,7 @@ nsFlexContainerFrame::GenerateFlexLines(
   // checked against entries in aStruts.)
   uint32_t itemIdxInContainer = 0;
 
-  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    nsIFrame* childFrame = e.get();
-
+  for (nsIFrame* childFrame : mFrames) {
     // Honor "page-break-before", if we're multi-line and this line isn't empty:
     if (!isSingleLine && !curLine->IsEmpty() &&
         childFrame->StyleDisplay()->mBreakBefore) {
@@ -3819,8 +3816,8 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 
   // Overflow area = union(my overflow area, kids' overflow areas)
   aDesiredSize.SetOverflowAreasToDesiredBounds();
-  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
-    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, e.get());
+  for (nsIFrame* childFrame : mFrames) {
+    ConsiderChildOverflow(aDesiredSize.mOverflowAreas, childFrame);
   }
 
   FinishReflowWithAbsoluteFrames(aPresContext, aDesiredSize,
@@ -3962,9 +3959,9 @@ nsFlexContainerFrame::GetMinISize(nsRenderingContext* aRenderingContext)
   const nsStylePosition* stylePos = StylePosition();
   const FlexboxAxisTracker axisTracker(stylePos, GetWritingMode());
 
-  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
+  for (nsIFrame* childFrame : mFrames) {
     nscoord childMinWidth =
-      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, e.get(),
+      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
                                            nsLayoutUtils::MIN_ISIZE);
     // For a horizontal single-line flex container, the intrinsic min width is
     // the sum of its items' min widths.
@@ -3993,9 +3990,9 @@ nsFlexContainerFrame::GetPrefISize(nsRenderingContext* aRenderingContext)
   // does)
   const FlexboxAxisTracker axisTracker(StylePosition(), GetWritingMode());
 
-  for (nsFrameList::Enumerator e(mFrames); !e.AtEnd(); e.Next()) {
+  for (nsIFrame* childFrame : mFrames) {
     nscoord childPrefWidth =
-      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, e.get(),
+      nsLayoutUtils::IntrinsicForContainer(aRenderingContext, childFrame,
                                            nsLayoutUtils::PREF_ISIZE);
     if (axisTracker.IsMainAxisHorizontal()) {
       prefWidth += childPrefWidth;
