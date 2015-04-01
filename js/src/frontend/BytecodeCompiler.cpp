@@ -537,6 +537,8 @@ CompileFunctionBody(JSContext* cx, MutableHandleFunction fun, const ReadOnlyComp
                     const AutoNameVector& formals, SourceBufferHolder& srcBuf,
                     HandleObject enclosingStaticScope, GeneratorKind generatorKind)
 {
+    MOZ_ASSERT(!options.isRunOnce);
+
     js::TraceLoggerThread* logger = js::TraceLoggerForMainThread(cx->runtime());
     js::TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, options);
     js::AutoTraceLog scriptLogger(logger, event);
