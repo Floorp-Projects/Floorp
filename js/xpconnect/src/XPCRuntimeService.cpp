@@ -87,7 +87,7 @@ BackstagePass::GetInterfaces(uint32_t* aCount, nsIID * **aArray)
     const uint32_t count = 2;
     *aCount = count;
     nsIID** array;
-    *aArray = array = static_cast<nsIID**>(nsMemory::Alloc(count * sizeof(nsIID*)));
+    *aArray = array = static_cast<nsIID**>(moz_xmalloc(count * sizeof(nsIID*)));
     if (!array)
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -107,8 +107,8 @@ BackstagePass::GetInterfaces(uint32_t* aCount, nsIID * **aArray)
     return NS_OK;
 oom:
     while (index)
-        nsMemory::Free(array[--index]);
-    nsMemory::Free(array);
+        free(array[--index]);
+    free(array);
     *aArray = nullptr;
     return NS_ERROR_OUT_OF_MEMORY;
 }

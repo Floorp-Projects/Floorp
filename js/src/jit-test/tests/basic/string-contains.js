@@ -23,7 +23,7 @@ assertEq("abc".contains("ab", -Infinity), true);
 assertEq("abc".contains("cd", -Infinity), false);
 assertEq("abc".contains("ab", NaN), true);
 assertEq("abc".contains("cd", NaN), false);
-var myobj = {toString : (function () "abc"), contains : String.prototype.contains};
+var myobj = {toString : () => "abc", contains : String.prototype.contains};
 assertEq(myobj.contains("abc"), true);
 assertEq(myobj.contains("cd"), false);
 var gotStr = false, gotPos = false;

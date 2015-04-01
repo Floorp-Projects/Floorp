@@ -115,7 +115,7 @@ nsStaticCaseInsensitiveNameTable::~nsStaticCaseInsensitiveNameTable()
     for (uint32_t index = 0; index < mNameTable.EntryCount(); index++) {
       mNameArray[index].~nsDependentCString();
     }
-    nsMemory::Free((void*)mNameArray);
+    free((void*)mNameArray);
   }
   if (mNameTable.IsInitialized()) {
     PL_DHashTableFinish(&mNameTable);
@@ -133,7 +133,7 @@ nsStaticCaseInsensitiveNameTable::Init(const char* const aNames[],
   NS_ASSERTION(aLength, "0 length");
 
   mNameArray = (nsDependentCString*)
-    nsMemory::Alloc(aLength * sizeof(nsDependentCString));
+    moz_xmalloc(aLength * sizeof(nsDependentCString));
   if (!mNameArray) {
     return false;
   }

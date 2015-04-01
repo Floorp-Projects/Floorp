@@ -3206,7 +3206,7 @@ nsStandardURL::GetClassDescription(char * *aClassDescription)
 NS_IMETHODIMP 
 nsStandardURL::GetClassID(nsCID * *aClassID)
 {
-    *aClassID = (nsCID*) nsMemory::Alloc(sizeof(nsCID));
+    *aClassID = (nsCID*) moz_xmalloc(sizeof(nsCID));
     if (!*aClassID)
         return NS_ERROR_OUT_OF_MEMORY;
     return GetClassIDNoAlloc(*aClassID);

@@ -862,7 +862,7 @@ class JSScript : public js::gc::TenuredCell
     uint32_t        column_;    /* base column of script, optionally set */
 
     uint32_t        mainOffset_;/* offset of main entry point from code, after
-                                   predef'ing prolog */
+                                   predef'ing prologue */
 
     uint32_t        natoms_;    /* length of atoms array */
     uint32_t        nslots_;    /* vars plus maximum stack depth */

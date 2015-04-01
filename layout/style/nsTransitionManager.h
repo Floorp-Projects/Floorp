@@ -104,10 +104,12 @@ public:
   typedef mozilla::AnimationPlayerCollection AnimationPlayerCollection;
 
   static AnimationPlayerCollection*
-  GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty)
+  GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty,
+                             mozilla::GetCompositorAnimationOptions aFlags
+                               = mozilla::GetCompositorAnimationOptions(0))
   {
     return mozilla::css::CommonAnimationManager::GetAnimationsForCompositor(
-      aContent, nsGkAtoms::transitionsProperty, aProperty);
+      aContent, nsGkAtoms::transitionsProperty, aProperty, aFlags);
   }
 
   /**
@@ -131,11 +133,11 @@ public:
   void UpdateCascadeResultsWithTransitions(
          AnimationPlayerCollection* aTransitions);
   void UpdateCascadeResultsWithAnimations(
-         const AnimationPlayerCollection* aAnimations);
+         AnimationPlayerCollection* aAnimations);
   void UpdateCascadeResultsWithAnimationsToBeDestroyed(
          const AnimationPlayerCollection* aAnimations);
   void UpdateCascadeResults(AnimationPlayerCollection* aTransitions,
-                            const AnimationPlayerCollection* aAnimations);
+                            AnimationPlayerCollection* aAnimations);
 
   void SetInAnimationOnlyStyleUpdate(bool aInAnimationOnlyUpdate) {
     mInAnimationOnlyStyleUpdate = aInAnimationOnlyUpdate;

@@ -239,7 +239,7 @@ async_test(function(t) {
   animation.ready.then(function() {
     animation.playbackRate = 0;
     animation.currentTime = ANIM_DURATION + 1000;
-    return waitForTwoAnimationFrames();
+    return waitForAnimationFrames(2);
   }).then(t.step_func(function() {
     t.done();
   }));
@@ -274,7 +274,7 @@ async_test(function(t) {
 
   animation.finished.then(function() {
     div.style.animationPlayState = 'running';
-    return waitForTwoAnimationFrames();
+    return waitForAnimationFrames(2);
   }).then(t.step_func(function() {
     assert_equals(animation.finished, previousFinishedPromise,
                   'Should not replay when animation-play-state changes to ' +

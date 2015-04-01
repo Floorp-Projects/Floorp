@@ -34,10 +34,7 @@ static const int MAX_VOUCHER_LENGTH = 500000;
 #endif
 
 #if defined(MOZ_GMP_SANDBOX)
-#if defined(XP_WIN)
-#define TARGET_SANDBOX_EXPORTS
-#include "mozilla/sandboxTarget.h"
-#elif defined(XP_MACOSX)
+#if defined(XP_MACOSX)
 #include "mozilla/Sandbox.h"
 #endif
 #endif
@@ -268,13 +265,13 @@ GMPChild::CheckThread()
 bool
 GMPChild::Init(const std::string& aPluginPath,
                const std::string& aVoucherPath,
-               base::ProcessHandle aParentProcessHandle,
+               base::ProcessId aParentPid,
                MessageLoop* aIOLoop,
                IPC::Channel* aChannel)
 {
   LOGD("%s pluginPath=%s", __FUNCTION__, aPluginPath.c_str());
 
-  if (NS_WARN_IF(!Open(aChannel, aParentProcessHandle, aIOLoop))) {
+  if (NS_WARN_IF(!Open(aChannel, aParentPid, aIOLoop))) {
     return false;
   }
 

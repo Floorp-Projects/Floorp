@@ -80,7 +80,7 @@ class XULInfo:
 
 class XULInfoTester:
     def __init__(self, xulinfo, js_bin):
-        self.js_prolog = xulinfo.as_js()
+        self.js_prologue = xulinfo.as_js()
         self.js_bin = js_bin
         # Maps JS expr to evaluation result.
         self.cache = {}
@@ -91,7 +91,7 @@ class XULInfoTester:
         if ans is None:
             cmd = [
                 self.js_bin,
-                '-e', self.js_prolog,
+                '-e', self.js_prologue,
                 '-e', 'print(!!({}))'.format(cond)
             ]
             p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)

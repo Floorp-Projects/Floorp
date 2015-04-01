@@ -16,6 +16,7 @@
 #include "nsIXULAppInfo.h"
 #include "WinUtils.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/PaintTracker.h"
 
 using namespace mozilla;
@@ -104,9 +105,67 @@ HHOOK gDeferredGetMsgHook = nullptr;
 HHOOK gDeferredCallWndProcHook = nullptr;
 
 DWORD gUIThreadId = 0;
+HWND gCOMWindow = 0;
+// Once initialized, gWinEventHook is never unhooked. We save the handle so
+// that we can check whether or not the hook is initialized.
+HWINEVENTHOOK gWinEventHook = nullptr;
+const wchar_t kCOMWindowClassName[] = L"OleMainThreadWndClass";
 
 // WM_GETOBJECT id pulled from uia headers
 #define MOZOBJID_UIAROOT -25
+
+HWND
+FindCOMWindow()
+{
+  MOZ_ASSERT(gUIThreadId);
+
+  HWND last = 0;
+  while ((last = FindWindowExW(HWND_MESSAGE, last, kCOMWindowClassName, NULL))) {
+    if (GetWindowThreadProcessId(last, NULL) == gUIThreadId) {
+      return last;
+    }
+  }
+
+  return (HWND)0;
+}
+
+void CALLBACK
+WinEventHook(HWINEVENTHOOK aWinEventHook, DWORD aEvent, HWND aHwnd,
+             LONG aIdObject, LONG aIdChild, DWORD aEventThread,
+             DWORD aMsEventTime)
+{
+  MOZ_ASSERT(aWinEventHook == gWinEventHook);
+  MOZ_ASSERT(gUIThreadId == aEventThread);
+  switch (aEvent) {
+    case EVENT_OBJECT_CREATE: {
+      if (aIdObject != OBJID_WINDOW || aIdChild != CHILDID_SELF) {
+        // Not an event we're interested in
+        return;
+      }
+      wchar_t classBuf[256] = {0};
+      int result = ::GetClassNameW(aHwnd, classBuf,
+                                   MOZ_ARRAY_LENGTH(classBuf));
+      if (result != (MOZ_ARRAY_LENGTH(kCOMWindowClassName) - 1) ||
+          wcsncmp(kCOMWindowClassName, classBuf, result)) {
+        // Not a class we're interested in
+        return;
+      }
+      MOZ_ASSERT(FindCOMWindow() == aHwnd);
+      gCOMWindow = aHwnd;
+      break;
+    }
+    case EVENT_OBJECT_DESTROY: {
+      if (aHwnd == gCOMWindow && aIdObject == OBJID_WINDOW) {
+        MOZ_ASSERT(aIdChild == CHILDID_SELF);
+        gCOMWindow = 0;
+      }
+      break;
+    }
+    default: {
+      return;
+    }
+  }
+}
 
 LRESULT CALLBACK
 DeferredMessageHook(int nCode,
@@ -340,13 +399,15 @@ ProcessOrDeferMessage(HWND hwnd,
    case WM_GETOBJECT: {
       if (!::GetPropW(hwnd, k3rdPartyWindowProp)) {
         DWORD objId = static_cast<DWORD>(lParam);
-        WNDPROC oldWndProc = (WNDPROC)GetProp(hwnd, kOldWndProcProp);
-        if ((objId == OBJID_CLIENT || objId == MOZOBJID_UIAROOT) && oldWndProc) {
-          return CallWindowProcW(oldWndProc, hwnd, uMsg, wParam, lParam);
+        if ((objId == OBJID_CLIENT || objId == MOZOBJID_UIAROOT)) {
+          WNDPROC oldWndProc = (WNDPROC)GetProp(hwnd, kOldWndProcProp);
+          if (oldWndProc) {
+            return CallWindowProcW(oldWndProc, hwnd, uMsg, wParam, lParam);
+          }
         }
       }
-      break;
-    }
+      return DefWindowProc(hwnd, uMsg, wParam, lParam);
+   }
 #endif // ACCESSIBILITY
 
     default: {
@@ -648,9 +709,21 @@ InitUIThread()
   if (!gUIThreadId) {
     gUIThreadId = GetCurrentThreadId();
   }
+
   MOZ_ASSERT(gUIThreadId);
   MOZ_ASSERT(gUIThreadId == GetCurrentThreadId(),
              "Called InitUIThread multiple times on different threads!");
+
+  if (!gWinEventHook) {
+    gWinEventHook = SetWinEventHook(EVENT_OBJECT_CREATE, EVENT_OBJECT_DESTROY,
+                                    NULL, &WinEventHook, GetCurrentProcessId(),
+                                    gUIThreadId, WINEVENT_OUTOFCONTEXT);
+
+    // We need to execute this after setting the hook in case the OLE window
+    // already existed.
+    gCOMWindow = FindCOMWindow();
+  }
+  MOZ_ASSERT(gWinEventHook);
 }
 
 } // namespace windows
@@ -912,11 +985,20 @@ MessageChannel::WaitForSyncNotify()
       bool haveSentMessagesPending =
         (HIWORD(GetQueueStatus(QS_SENDMESSAGE)) & QS_SENDMESSAGE) != 0;
 
-      // This PeekMessage call will actually process all "nonqueued" messages
-      // that are pending before returning. If we have "nonqueued" messages
-      // pending then we should have switched out all the window procedures
-      // above. In that case this PeekMessage call won't actually cause any
-      // mozilla code (or plugin code) to run.
+      // Either of the PeekMessage calls below will actually process all
+      // "nonqueued" messages that are pending before returning. If we have
+      // "nonqueued" messages pending then we should have switched out all the
+      // window procedures above. In that case this PeekMessage call won't
+      // actually cause any mozilla code (or plugin code) to run.
+
+      // We have to manually pump all COM messages *after* looking at the queue
+      // queue status but before yielding our thread below.
+      if (gCOMWindow) {
+        if (PeekMessageW(&msg, gCOMWindow, 0, 0, PM_REMOVE)) {
+          TranslateMessage(&msg);
+          ::DispatchMessageW(&msg);
+        }
+      }
 
       // If the following PeekMessage call fails to return a message for us (and
       // returns false) and we didn't run any "nonqueued" messages then we must
@@ -1066,6 +1148,14 @@ MessageChannel::WaitForInterruptNotify()
     // See MessageChannel's WaitFor*Notify for details.
     bool haveSentMessagesPending =
       (HIWORD(GetQueueStatus(QS_SENDMESSAGE)) & QS_SENDMESSAGE) != 0;
+
+    // Run all COM messages *after* looking at the queue status.
+    if (gCOMWindow) {
+        if (PeekMessageW(&msg, gCOMWindow, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&msg);
+            ::DispatchMessageW(&msg);
+        }
+    }
 
     // PeekMessage markes the messages as "old" so that they don't wake up
     // MsgWaitForMultipleObjects every time.

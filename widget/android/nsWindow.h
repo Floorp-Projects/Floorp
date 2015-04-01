@@ -20,6 +20,7 @@ struct ANPEvent;
 
 namespace mozilla {
     class AndroidGeckoEvent;
+    class TextComposition;
 
     namespace layers {
         class CompositorParent;
@@ -168,7 +169,34 @@ protected:
     void BringToFront();
     nsWindow *FindTopLevel();
     bool IsTopLevel();
+
+    struct IMEChange {
+        int32_t mStart, mOldEnd, mNewEnd;
+
+        IMEChange() :
+            mStart(-1), mOldEnd(-1), mNewEnd(-1)
+        {
+        }
+        IMEChange(const IMENotification& aIMENotification)
+            : mStart(aIMENotification.mTextChangeData.mStartOffset)
+            , mOldEnd(aIMENotification.mTextChangeData.mOldEndOffset)
+            , mNewEnd(aIMENotification.mTextChangeData.mNewEndOffset)
+        {
+            MOZ_ASSERT(aIMENotification.mMessage ==
+                           mozilla::widget::NOTIFY_IME_OF_TEXT_CHANGE,
+                       "IMEChange initialized with wrong notification");
+            MOZ_ASSERT(aIMENotification.mTextChangeData.IsInInt32Range(),
+                       "The text change notification is out of range");
+        }
+        bool IsEmpty() const
+        {
+            return mStart < 0;
+        }
+    };
+
+    nsRefPtr<mozilla::TextComposition> GetIMEComposition();
     void RemoveIMEComposition();
+    void AddIMETextChange(const IMEChange& aChange);
     void PostFlushIMEChanges();
     void FlushIMEChanges();
 
@@ -189,38 +217,11 @@ protected:
 
     nsCOMPtr<nsIIdleServiceInternal> mIdleService;
 
-    bool mIMEComposing;
-    int32_t mIMEComposingStart;
-    nsString mIMEComposingText;
     bool mIMEMaskSelectionUpdate, mIMEMaskTextUpdate;
     int32_t mIMEMaskEventsCount; // Mask events when > 0
     nsRefPtr<mozilla::TextRangeArray> mIMERanges;
     bool mIMEUpdatingContext;
     nsAutoTArray<mozilla::AndroidGeckoEvent, 8> mIMEKeyEvents;
-
-    struct IMEChange {
-        int32_t mStart, mOldEnd, mNewEnd;
-
-        IMEChange() :
-            mStart(-1), mOldEnd(-1), mNewEnd(-1)
-        {
-        }
-        IMEChange(const IMENotification& aIMENotification)
-            : mStart(aIMENotification.mTextChangeData.mStartOffset)
-            , mOldEnd(aIMENotification.mTextChangeData.mOldEndOffset)
-            , mNewEnd(aIMENotification.mTextChangeData.mNewEndOffset)
-        {
-            MOZ_ASSERT(aIMENotification.mMessage ==
-                           mozilla::widget::NOTIFY_IME_OF_TEXT_CHANGE,
-                       "IMEChange initialized with wrong notification");
-            MOZ_ASSERT(aIMENotification.mTextChangeData.IsInInt32Range(),
-                       "The text change notification is out of range");
-        }
-        bool IsEmpty()
-        {
-            return mStart < 0;
-        }
-    };
     nsAutoTArray<IMEChange, 4> mIMETextChanges;
     bool mIMESelectionChanged;
 

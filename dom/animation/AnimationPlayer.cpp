@@ -6,6 +6,7 @@
 #include "AnimationPlayer.h"
 #include "AnimationUtils.h"
 #include "mozilla/dom/AnimationPlayerBinding.h"
+#include "mozilla/AutoRestore.h"
 #include "AnimationCommon.h" // For AnimationPlayerCollection,
                              // CommonAnimationManager
 #include "nsIDocument.h" // For nsIDocument
@@ -106,7 +107,7 @@ AnimationPlayer::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
     }
   } else {
     mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
-                          (aSeekTime / mPlaybackRate));
+                          (aSeekTime.MultDouble(1 / mPlaybackRate)));
   }
 
   mPreviousCurrentTime.SetNull();
@@ -287,14 +288,14 @@ AnimationPlayer::Tick()
   if (mPendingState != PendingState::NotPending &&
       !mPendingReadyTime.IsNull() &&
       mPendingReadyTime.Value() <= mTimeline->GetCurrentTime().Value()) {
-    ResumeAt(mPendingReadyTime.Value());
+    FinishPendingAt(mPendingReadyTime.Value());
     mPendingReadyTime.SetNull();
   }
 
   if (IsPossiblyOrphanedPendingPlayer()) {
     MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTime().IsNull(),
                "Orphaned pending players should have an active timeline");
-    ResumeAt(mTimeline->GetCurrentTime().Value());
+    FinishPendingAt(mTimeline->GetCurrentTime().Value());
   }
 
   UpdateTiming();
@@ -323,7 +324,7 @@ AnimationPlayer::TriggerNow()
   MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTime().IsNull(),
              "Expected an active timeline");
 
-  ResumeAt(mTimeline->GetCurrentTime().Value());
+  FinishPendingAt(mTimeline->GetCurrentTime().Value());
 }
 
 Nullable<TimeDuration>
@@ -423,14 +424,75 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
     aNeedsRefreshes = true;
   }
 
-  mSource->ComposeStyle(aStyleRule, aSetProperties);
+  // In order to prevent flicker, there are a few cases where we want to use
+  // a different time for rendering that would otherwise be returned by
+  // GetCurrentTime. These are:
+  //
+  // (a) For animations that are pausing but which are still running on the
+  //     compositor. In this case we send a layer transaction that removes the
+  //     animation but which also contains the animation values calculated on
+  //     the main thread. To prevent flicker when this occurs we want to ensure
+  //     the timeline time used to calculate the main thread animation values
+  //     does not lag far behind the time used on the compositor. Ideally we
+  //     would like to use the "animation ready time" calculated at the end of
+  //     the layer transaction as the timeline time but it will be too late to
+  //     update the style rule at that point so instead we just use the current
+  //     wallclock time.
+  //
+  // (b) For animations that are pausing that we have already taken off the
+  //     compositor. In this case we record a pending ready time but we don't
+  //     apply it until the next tick. However, while waiting for the next tick,
+  //     we should still use the pending ready time as the timeline time. If we
+  //     use the regular timeline time the animation may appear jump backwards
+  //     if the main thread's timeline time lags behind the compositor.
+  //
+  // (c) For animations that are play-pending due to an aborted pause operation
+  //     (i.e. a pause operation that was interrupted before we entered the
+  //     paused state). When we cancel a pending pause we might momentarily take
+  //     the animation off the compositor, only to re-add it moments later. In
+  //     that case the compositor might have been ahead of the main thread so we
+  //     should use the current wallclock time to ensure the animation doesn't
+  //     temporarily jump backwards.
+  //
+  // To address each of these cases we temporarily tweak the hold time
+  // immediately before updating the style rule and then restore it immediately
+  // afterwards. This is purely to prevent visual flicker. Other behavior
+  // such as dispatching events continues to rely on the regular timeline time.
+  {
+    AutoRestore<Nullable<TimeDuration>> restoreHoldTime(mHoldTime);
+    bool updatedHoldTime = false;
 
-  //XXXjwatt mIsPreviousStateFinished = (playState == AnimationPlayState::Finished);
+    if (PlayState() == AnimationPlayState::Pending &&
+        mHoldTime.IsNull() &&
+        !mStartTime.IsNull()) {
+      Nullable<TimeDuration> timeToUse = mPendingReadyTime;
+      if (timeToUse.IsNull() &&
+          mTimeline &&
+          !mTimeline->IsUnderTestControl()) {
+        timeToUse = mTimeline->ToTimelineTime(TimeStamp::Now());
+      }
+      if (!timeToUse.IsNull()) {
+        mHoldTime.SetValue((timeToUse.Value() - mStartTime.Value())
+                            .MultDouble(mPlaybackRate));
+        // Push the change down to the source content
+        UpdateSourceContent();
+        updatedHoldTime = true;
+      }
+    }
+
+    mSource->ComposeStyle(aStyleRule, aSetProperties);
+
+    if (updatedHoldTime) {
+      UpdateTiming();
+    }
+  }
 }
 
 void
 AnimationPlayer::DoPlay(LimitBehavior aLimitBehavior)
 {
+  bool abortedPause = mPendingState == PendingState::PausePending;
+
   bool reuseReadyPromise = false;
   if (mPendingState != PendingState::NotPending) {
     CancelPendingTasks();
@@ -454,12 +516,20 @@ AnimationPlayer::DoPlay(LimitBehavior aLimitBehavior)
     mHoldTime.SetValue(TimeDuration(0));
   }
 
-  if (mHoldTime.IsNull()) {
+  // If the hold time is null then we're either already playing normally (and
+  // we can ignore this call) or we aborted a pending pause operation (in which
+  // case, for consistency, we need to go through the motions of doing an
+  // asynchronous start even though we already have a resolved start time).
+  if (mHoldTime.IsNull() && !abortedPause) {
     return;
   }
 
-  // Clear the start time until we resolve a new one
-  mStartTime.SetNull();
+  // Clear the start time until we resolve a new one (unless we are aborting
+  // a pending pause operation, in which case we keep the old start time so
+  // that the animation continues moving uninterrupted by the aborted pause).
+  if (!abortedPause) {
+    mStartTime.SetNull();
+  }
 
   if (!reuseReadyPromise) {
     // Clear ready promise. We'll create a new one lazily.
@@ -484,15 +554,14 @@ AnimationPlayer::DoPlay(LimitBehavior aLimitBehavior)
 void
 AnimationPlayer::DoPause()
 {
+  if (mPendingState == PendingState::PausePending) {
+    return;
+  }
+
+  bool reuseReadyPromise = false;
   if (mPendingState == PendingState::PlayPending) {
     CancelPendingTasks();
-    // Resolve the ready promise since we currently only use it for
-    // players that are waiting to play. Later (in bug 1109390), we will
-    // use this for players waiting to pause as well and then we won't
-    // want to resolve it just yet.
-    if (mReady) {
-      mReady->MaybeResolve(this);
-    }
+    reuseReadyPromise = true;
   }
 
   // Mark this as no longer running on the compositor so that next time
@@ -500,31 +569,68 @@ AnimationPlayer::DoPause()
   // to remove the animation from any layer it might be on.
   mIsRunningOnCompositor = false;
 
-  // Bug 1109390 - check for null result here and go to pending state
-  mHoldTime = GetCurrentTime();
-  mStartTime.SetNull();
+  if (!reuseReadyPromise) {
+    // Clear ready promise. We'll create a new one lazily.
+    mReady = nullptr;
+  }
+
+  mPendingState = PendingState::PausePending;
+
+  nsIDocument* doc = GetRenderedDocument();
+  if (!doc) {
+    TriggerOnNextTick(Nullable<TimeDuration>());
+    return;
+  }
+
+  PendingPlayerTracker* tracker = doc->GetOrCreatePendingPlayerTracker();
+  tracker->AddPausePending(*this);
 
   UpdateFinishedState();
 }
 
 void
-AnimationPlayer::ResumeAt(const TimeDuration& aResumeTime)
+AnimationPlayer::ResumeAt(const TimeDuration& aReadyTime)
 {
   // This method is only expected to be called for a player that is
   // waiting to play. We can easily adapt it to handle other states
   // but it's currently not necessary.
   MOZ_ASSERT(mPendingState == PendingState::PlayPending,
              "Expected to resume a play-pending player");
-  MOZ_ASSERT(!mHoldTime.IsNull(),
-             "A player in the play-pending state should have a resolved"
-             " hold time");
+  MOZ_ASSERT(mHoldTime.IsNull() != mStartTime.IsNull(),
+             "A player in the play-pending state should have either a"
+             " resolved hold time or resolved start time (but not both)");
 
-  if (mPlaybackRate != 0) {
-    mStartTime.SetValue(aResumeTime - (mHoldTime.Value() / mPlaybackRate));
-    mHoldTime.SetNull();
-  } else {
-    mStartTime.SetValue(aResumeTime);
+  // If we aborted a pending pause operation we will already have a start time
+  // we should use. In all other cases, we resolve it from the ready time.
+  if (mStartTime.IsNull()) {
+    if (mPlaybackRate != 0) {
+      mStartTime.SetValue(aReadyTime -
+                          (mHoldTime.Value().MultDouble(1 / mPlaybackRate)));
+      mHoldTime.SetNull();
+    } else {
+      mStartTime.SetValue(aReadyTime);
+    }
   }
+  mPendingState = PendingState::NotPending;
+
+  UpdateTiming();
+
+  if (mReady) {
+    mReady->MaybeResolve(this);
+  }
+}
+
+void
+AnimationPlayer::PauseAt(const TimeDuration& aReadyTime)
+{
+  MOZ_ASSERT(mPendingState == PendingState::PausePending,
+             "Expected to pause a pause-pending player");
+
+  if (!mStartTime.IsNull()) {
+    mHoldTime.SetValue((aReadyTime - mStartTime.Value())
+                        .MultDouble(mPlaybackRate));
+  }
+  mStartTime.SetNull();
   mPendingState = PendingState::NotPending;
 
   UpdateTiming();
@@ -574,7 +680,7 @@ AnimationPlayer::UpdateFinishedState(bool aSeekFlag)
                !currentTime.IsNull()) {
       if (aSeekFlag && !mHoldTime.IsNull()) {
         mStartTime.SetValue(mTimeline->GetCurrentTime().Value() -
-                              (mHoldTime.Value() / mPlaybackRate));
+                              (mHoldTime.Value().MultDouble(1 / mPlaybackRate)));
       }
       mHoldTime.SetNull();
     }
@@ -590,7 +696,9 @@ AnimationPlayer::UpdateFinishedState(bool aSeekFlag)
     mFinished = nullptr;
   }
   mIsPreviousStateFinished = currentFinishedState;
-  mPreviousCurrentTime = currentTime;
+  // We must recalculate the current time to take account of any mHoldTime
+  // changes the code above made.
+  mPreviousCurrentTime = GetCurrentTime();
 }
 
 void

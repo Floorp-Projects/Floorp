@@ -81,7 +81,7 @@ void QuitParent();
 extern void* gChildActor;
 
 void IPDLUnitTestChildInit(IPC::Channel* transport,
-                           base::ProcessHandle parent,
+                           base::ProcessId parentPid,
                            MessageLoop* worker);
 
 void QuitChild();

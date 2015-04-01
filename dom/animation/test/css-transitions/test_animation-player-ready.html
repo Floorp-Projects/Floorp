@@ -22,14 +22,8 @@ async_test(function(t) {
     assert_equals(animation.ready, originalReadyPromise,
                   'Ready promise is the same object when playing completes');
     animation.pause();
-    // TODO: When we implement deferred pausing, change this to
-    // assert_not_equals and wait on the new promise before continuing.
-    assert_equals(animation.ready, originalReadyPromise,
-                  'Ready promise does not change when pausing (for now)');
-    animation.play();
     assert_not_equals(animation.ready, originalReadyPromise,
-                      'Ready promise object identity differs after calling'
-                      + ' play()');
+                      'Ready promise object identity differs when pausing');
     t.done();
   }));
 }, 'A new ready promise is created each time play() is called'

@@ -35,7 +35,7 @@ namespace ipc {
 class FileDescriptor
 {
 public:
-  typedef base::ProcessHandle ProcessHandle;
+  typedef base::ProcessId ProcessId;
 
 #ifdef XP_WIN
   typedef HANDLE PlatformHandleType;
@@ -89,7 +89,7 @@ public:
   // process (e.g. dup() on POSIX, DuplicateHandle() on Windows). Returns a
   // pickled value that can be passed to the other process via IPC.
   PickleType
-  ShareTo(const IPDLPrivate&, ProcessHandle aOtherProcess) const;
+  ShareTo(const IPDLPrivate&, ProcessId aTargetPid) const;
 
   // Tests mHandle against a well-known invalid platform-specific file handle
   // (e.g. -1 on POSIX, INVALID_HANDLE_VALUE on Windows).

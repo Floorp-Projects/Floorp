@@ -268,7 +268,7 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChanne
     //
     char *encoded_token = PL_Base64Encode((char *)outToken, outTokenLen, nullptr);
 
-    nsMemory::Free(outToken);
+    free(outToken);
 
     if (!encoded_token)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -276,7 +276,7 @@ nsHttpNegotiateAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChanne
     LOG(("  Sending a token of length %d\n", outTokenLen));
 
     // allocate a buffer sizeof("Negotiate" + " " + b64output_token + "\0")
-    *creds = (char *) nsMemory::Alloc(kNegotiateLen + 1 + strlen(encoded_token) + 1);
+    *creds = (char *) moz_xmalloc(kNegotiateLen + 1 + strlen(encoded_token) + 1);
     if (MOZ_UNLIKELY(!*creds))
         rv = NS_ERROR_OUT_OF_MEMORY;
     else
@@ -368,7 +368,7 @@ nsHttpNegotiateAuth::TestPref(nsIURI *uri, const char *pref)
         start = end + 1;
     }
     
-    nsMemory::Free(hostList);
+    free(hostList);
     return false;
 }
 
