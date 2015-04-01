@@ -2706,6 +2706,7 @@ UpdateService.prototype = {
           "install is disabled");
       AUSTLMY.pingCheckCode(this._pingSuffix, AUSTLMY.CHK_SHOWPROMPT_PREF);
       this._showPrompt(update);
+      return;
     }
 
     if (getPref("getIntPref", PREF_APP_UPDATE_MODE, 1) == 0) {

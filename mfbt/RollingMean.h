@@ -86,7 +86,7 @@ public:
   T mean()
   {
     MOZ_ASSERT(!empty());
-    return T(mTotal / mValues.length());
+    return T(mTotal / int64_t(mValues.length()));
   }
 
   bool empty()

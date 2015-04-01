@@ -11047,7 +11047,7 @@ nsDocShell::ScrollToAnchor(nsACString& aCurHash, nsACString& aNewHash,
       rv = shell->GoToAnchor(NS_ConvertUTF8toUTF16(str), scroll,
                              nsIPresShell::SCROLL_SMOOTH_AUTO);
     }
-    nsMemory::Free(str);
+    free(str);
 
     // Above will fail if the anchor name is not UTF-8.  Need to
     // convert from document charset to unicode.

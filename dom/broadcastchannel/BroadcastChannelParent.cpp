@@ -18,10 +18,12 @@ namespace dom {
 
 BroadcastChannelParent::BroadcastChannelParent(
                                             const nsAString& aOrigin,
-                                            const nsAString& aChannel)
+                                            const nsAString& aChannel,
+                                            bool aPrivateBrowsing)
   : mService(BroadcastChannelService::GetOrCreate())
   , mOrigin(aOrigin)
   , mChannel(aChannel)
+  , mPrivateBrowsing(aPrivateBrowsing)
 {
   AssertIsOnBackgroundThread();
   mService->RegisterActor(this);
@@ -41,7 +43,7 @@ BroadcastChannelParent::RecvPostMessage(const ClonedMessageData& aData)
     return false;
   }
 
-  mService->PostMessage(this, aData, mOrigin, mChannel);
+  mService->PostMessage(this, aData, mOrigin, mChannel, mPrivateBrowsing);
   return true;
 }
 
@@ -77,11 +79,14 @@ BroadcastChannelParent::ActorDestroy(ActorDestroyReason aWhy)
 void
 BroadcastChannelParent::CheckAndDeliver(const ClonedMessageData& aData,
                                         const nsString& aOrigin,
-                                        const nsString& aChannel)
+                                        const nsString& aChannel,
+                                        bool aPrivateBrowsing)
 {
   AssertIsOnBackgroundThread();
 
-  if (aOrigin == mOrigin && aChannel == mChannel) {
+  if (aOrigin == mOrigin &&
+      aChannel == mChannel &&
+      aPrivateBrowsing == mPrivateBrowsing) {
     // We need to duplicate data only if we have blobs or if the manager of
     // them is different than the manager of this parent actor.
     if (aData.blobsParent().IsEmpty() ||

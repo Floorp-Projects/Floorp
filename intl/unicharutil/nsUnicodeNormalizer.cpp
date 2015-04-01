@@ -576,8 +576,8 @@ workbuf_init(workbuf_t *wb) {
 static void
 workbuf_free(workbuf_t *wb) {
 	if (wb->ucs != wb->ucs_buf) {
-		nsMemory::Free(wb->ucs);
-		nsMemory::Free(wb->cclass);
+		free(wb->ucs);
+		free(wb->cclass);
 	}
 }
 
@@ -586,21 +586,21 @@ workbuf_extend(workbuf_t *wb) {
 	int32_t newsize = wb->size * 3;
 
 	if (wb->ucs == wb->ucs_buf) {
-		wb->ucs = (uint32_t*)nsMemory::Alloc(sizeof(wb->ucs[0]) * newsize);
+		wb->ucs = (uint32_t*)moz_xmalloc(sizeof(wb->ucs[0]) * newsize);
 		if (!wb->ucs)
 			return NS_ERROR_OUT_OF_MEMORY;
-		wb->cclass = (int32_t*)nsMemory::Alloc(sizeof(wb->cclass[0]) * newsize);
+		wb->cclass = (int32_t*)moz_xmalloc(sizeof(wb->cclass[0]) * newsize);
 		if (!wb->cclass) {
-			nsMemory::Free(wb->ucs);
+			free(wb->ucs);
 			wb->ucs = nullptr;
 			return NS_ERROR_OUT_OF_MEMORY;
 		}
 	} else {
-		void* buf = nsMemory::Realloc(wb->ucs, sizeof(wb->ucs[0]) * newsize);
+		void* buf = moz_xrealloc(wb->ucs, sizeof(wb->ucs[0]) * newsize);
 		if (!buf)
 			return NS_ERROR_OUT_OF_MEMORY;
 		wb->ucs = (uint32_t*)buf;
-		buf = nsMemory::Realloc(wb->cclass, sizeof(wb->cclass[0]) * newsize);
+		buf = moz_xrealloc(wb->cclass, sizeof(wb->cclass[0]) * newsize);
 		if (!buf)
 			return NS_ERROR_OUT_OF_MEMORY;
 		wb->cclass = (int32_t*)buf;

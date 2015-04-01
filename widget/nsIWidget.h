@@ -22,7 +22,6 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
-#include "Units.h"
 #include "mozilla/gfx/Point.h"
 #include "Units.h"
 
@@ -1689,7 +1688,8 @@ class nsIWidget : public nsISupports {
      * which includes the area for the borders and titlebar. This method
      * should work even when the window is not yet visible.
      */
-    virtual nsIntSize ClientToWindowSize(const nsIntSize& aClientSize) = 0;
+    virtual mozilla::LayoutDeviceIntSize ClientToWindowSize(
+                const mozilla::LayoutDeviceIntSize& aClientSize) = 0;
 
     /**
      * Dispatches an event to the widget

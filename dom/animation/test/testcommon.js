@@ -39,6 +39,23 @@ function waitForFrame() {
 }
 
 /**
+ * Returns a Promise that is resolved after the given number of consecutive
+ * animation frames have occured (using requestAnimationFrame callbacks).
+ */
+function waitForAnimationFrames(frameCount) {
+  return new Promise(function(resolve, reject) {
+    function handleFrame() {
+      if (--frameCount <= 0) {
+        resolve();
+      } else {
+        window.requestAnimationFrame(handleFrame); // wait another frame
+      }
+    }
+    window.requestAnimationFrame(handleFrame);
+  });
+}
+
+/**
  * Wrapper that takes a sequence of N animations and returns:
  *
  *   Promise.all([animations[0].ready, animations[1].ready, ... animations[N-1].ready]);
@@ -47,21 +64,6 @@ function waitForAllAnimations(animations) {
   return Promise.all(animations.map(function(animation) {
     return animation.ready;
   }));
-}
-
-/**
- * Returns a Promise that is resolved after the next two animation frames have
- * occured (that is, after two consecutive requestAnimationFrame callbacks
- * have been called).
- */
-function waitForTwoAnimationFrames() {
-   return new Promise(function(resolve, reject) {
-     window.requestAnimationFrame(function() {
-       window.requestAnimationFrame(function() {
-         resolve();
-       });
-     });
-   });
 }
 
 /**

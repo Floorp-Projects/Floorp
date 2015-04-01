@@ -147,13 +147,11 @@ ShadowChild(const OpRaiseToTopChild& op)
 // LayerTransactionParent
 LayerTransactionParent::LayerTransactionParent(LayerManagerComposite* aManager,
                                                ShadowLayersManager* aLayersManager,
-                                               uint64_t aId,
-                                               ProcessId aOtherProcess)
+                                               uint64_t aId)
   : mLayerManager(aManager)
   , mShadowLayersManager(aLayersManager)
   , mId(aId)
   , mPendingTransaction(0)
-  , mChildProcessId(aOtherProcess)
   , mDestroyed(false)
   , mIPCOpen(false)
 {
@@ -629,7 +627,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       mLayerManager->VisualFrameWarning(severity);
 #ifdef PR_LOGGING
       PR_LogPrint("LayerTransactionParent::RecvUpdate transaction from process %d took %f ms",
-                  mChildProcessId,
+                  OtherPid(),
                   latency.ToMilliseconds());
 #endif
     }
@@ -978,7 +976,7 @@ LayerTransactionParent::ActorDestroy(ActorDestroyReason why)
 
 bool LayerTransactionParent::IsSameProcess() const
 {
-  return OtherProcess() == ipc::kInvalidProcessHandle;
+  return OtherPid() == ipc::kCurrentProcessId;
 }
 
 void

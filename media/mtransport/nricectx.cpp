@@ -540,11 +540,12 @@ NrIceCtx::SetStream(size_t index, NrIceMediaStream* stream) {
     streams_.resize(index + 1);
   }
 
-  if (streams_[index]) {
-    streams_[index]->Close();
-  }
-
+  RefPtr<NrIceMediaStream> oldStream(streams_[index]);
   streams_[index] = stream;
+
+  if (oldStream) {
+    oldStream->Close();
+  }
 }
 
 std::string NrIceCtx::ufrag() const {
@@ -676,19 +677,21 @@ abort:
 
 nsresult NrIceCtx::StartGathering() {
   ASSERT_ON_THREAD(sts_target_);
+  SetGatheringState(ICE_CTX_GATHER_STARTED);
   // This might start gathering for the first time, or again after
   // renegotiation, or might do nothing at all if gathering has already
   // finished.
   int r = nr_ice_gather(ctx_, &NrIceCtx::gather_cb, this);
 
-  if (r && (r != R_WOULDBLOCK)) {
+  if (!r) {
+    SetGatheringState(ICE_CTX_GATHER_COMPLETE);
+  } else if (r != R_WOULDBLOCK) {
     MOZ_MTLOG(ML_ERROR, "Couldn't gather ICE candidates for '"
                         << name_ << "', error=" << r);
     SetConnectionState(ICE_CTX_FAILED);
     return NS_ERROR_FAILURE;
   }
 
-  SetGatheringState(ICE_CTX_GATHER_STARTED);
   return NS_OK;
 }
 

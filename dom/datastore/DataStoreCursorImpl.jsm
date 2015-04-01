@@ -73,7 +73,7 @@ Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
 /* Helper functions */
 function createDOMError(aWindow, aEvent) {
-  return new aWindow.DOMError(aEvent.target.error.name);
+  return new aWindow.DOMError(aEvent);
 }
 
 /* DataStoreCursor object */

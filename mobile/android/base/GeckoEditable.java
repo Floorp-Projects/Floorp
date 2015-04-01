@@ -571,7 +571,7 @@ final class GeckoEditable
     }
 
     @Override
-    public void setUpdateGecko(boolean update, boolean force) {
+    public void setUpdateGecko(boolean update) {
         if (!onIcThread()) {
             // Android may be holding an old InputConnection; ignore
             if (DEBUG) {
@@ -580,7 +580,7 @@ final class GeckoEditable
             return;
         }
         if (update) {
-            icUpdateGecko(force);
+            icUpdateGecko(false);
         }
         mUpdateGecko = update;
     }
@@ -735,8 +735,8 @@ final class GeckoEditable
         }
         if (type == NOTIFY_IME_REPLY_EVENT) {
             try {
-                if (mFocused) {
-                    // When mFocused is false, the reply is for a stale action,
+                if (mGeckoFocused) {
+                    // When mGeckoFocused is false, the reply is for a stale action,
                     // and we should not do anything
                     geckoActionReply();
                 } else if (DEBUG) {
@@ -752,18 +752,23 @@ final class GeckoEditable
         geckoPostToIc(new Runnable() {
             @Override
             public void run() {
-                if (type == NOTIFY_IME_OF_BLUR) {
-                    mFocused = false;
-                } else if (type == NOTIFY_IME_OF_FOCUS) {
+                if (type == NOTIFY_IME_OF_FOCUS) {
                     mFocused = true;
                     // Unmask events on the Gecko side
                     mActionQueue.offer(new Action(Action.TYPE_ACKNOWLEDGE_FOCUS));
                 }
+
                 // Make sure there are no other things going on. If we sent
                 // GeckoEvent.IME_ACKNOWLEDGE_FOCUS, this line also makes us
                 // wait for Gecko to update us on the newly focused content
                 mActionQueue.syncWithGecko();
                 mListener.notifyIME(type);
+
+                // Unset mFocused after we call syncWithGecko because
+                // syncWithGecko becomes a no-op when mFocused is false.
+                if (type == NOTIFY_IME_OF_BLUR) {
+                    mFocused = false;
+                }
             }
         });
 

@@ -2148,7 +2148,7 @@ nsNavBookmarks::GetBookmarkIdsForURI(nsIURI* aURI, uint32_t* aCount,
   // Copy the results into a new array for output
   if (bookmarks.Length()) {
     *aBookmarks =
-      static_cast<int64_t*>(nsMemory::Alloc(sizeof(int64_t) * bookmarks.Length()));
+      static_cast<int64_t*>(moz_xmalloc(sizeof(int64_t) * bookmarks.Length()));
     if (!*aBookmarks)
       return NS_ERROR_OUT_OF_MEMORY;
     for (uint32_t i = 0; i < bookmarks.Length(); i ++)
@@ -2543,7 +2543,7 @@ nsNavBookmarks::GetObservers(uint32_t* _count,
     return NS_OK;
 
   *_observers = static_cast<nsINavBookmarkObserver**>
-    (nsMemory::Alloc(observers.Count() * sizeof(nsINavBookmarkObserver*)));
+    (moz_xmalloc(observers.Count() * sizeof(nsINavBookmarkObserver*)));
   NS_ENSURE_TRUE(*_observers, NS_ERROR_OUT_OF_MEMORY);
 
   *_count = observers.Count();

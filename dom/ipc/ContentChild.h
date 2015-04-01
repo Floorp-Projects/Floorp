@@ -78,7 +78,7 @@ public:
     };
 
     bool Init(MessageLoop* aIOLoop,
-              base::ProcessHandle aParentHandle,
+              base::ProcessId aParentPid,
               IPC::Channel* aChannel);
     void InitProcessAttributes();
     void InitXPCOM();

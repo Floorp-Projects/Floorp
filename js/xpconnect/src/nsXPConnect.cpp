@@ -1264,7 +1264,7 @@ ReadScriptOrFunction(nsIObjectInputStream* stream, JSContext* cx,
         }
     }
 
-    nsMemory::Free(data);
+    free(data);
     return rv;
 }
 

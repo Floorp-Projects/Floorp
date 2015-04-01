@@ -3774,6 +3774,8 @@
                                           charSet: aMessage.data.charSet,
                                           referrer: aMessage.data.referrer,
                                           referrerPolicy: aMessage.data.referrerPolicy,
+                                          contentType: aMessage.data.contentType,
+                                          contentDisposition: aMessage.data.contentDisposition,
                                         };
               let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
               let event = gContextMenuContentData.event;

@@ -73,11 +73,11 @@ public:
     return base::SharedMemory::IsHandleValid(aHandle);
   }
 
-  bool ShareToProcess(base::ProcessHandle process,
+  bool ShareToProcess(base::ProcessId aProcessId,
                       Handle* new_handle)
   {
     base::SharedMemoryHandle handle;
-    bool ret = mSharedMemory.ShareToProcess(process, &handle);
+    bool ret = mSharedMemory.ShareToProcess(aProcessId, &handle);
     if (ret)
       *new_handle = handle;
     return ret;
