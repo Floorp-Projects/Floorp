@@ -33,7 +33,7 @@ public:
     NS_DECL_NSIAUTHPROMPTCALLBACK
 
     nsHttpChannelAuthProvider();
-
+    static void InitializePrefs();
 private:
     virtual ~nsHttpChannelAuthProvider();
 
@@ -111,6 +111,12 @@ private:
      */
     nsresult ProcessSTSHeader();
 
+    // Depending on the pref setting, the authentication dialog may be blocked
+    // for all sub-resources, blocked for cross-origin sub-resources, or
+    // always allowed for sub-resources.
+    // For more details look at the bug 647010.
+    bool BlockPrompt();
+
 private:
     nsIHttpAuthenticableChannel      *mAuthChannel;  // weak ref
 
@@ -149,6 +155,11 @@ private:
     uint32_t                          mSuppressDefensiveAuth    : 1;
 
     nsRefPtr<nsHttpHandler>           mHttpHandler;  // keep gHttpHandler alive
+
+    // A variable holding the preference settings to whether to open HTTP
+    // authentication credentials dialogs for sub-resources and cross-origin
+    // sub-resources.
+    static uint32_t                   sAuthAllowPref;
 };
 
 }} // namespace mozilla::net
