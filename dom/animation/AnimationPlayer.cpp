@@ -6,6 +6,7 @@
 #include "AnimationPlayer.h"
 #include "AnimationUtils.h"
 #include "mozilla/dom/AnimationPlayerBinding.h"
+#include "mozilla/AutoRestore.h"
 #include "AnimationCommon.h" // For AnimationPlayerCollection,
                              // CommonAnimationManager
 #include "nsIDocument.h" // For nsIDocument
@@ -423,7 +424,68 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
     aNeedsRefreshes = true;
   }
 
-  mSource->ComposeStyle(aStyleRule, aSetProperties);
+  // In order to prevent flicker, there are a few cases where we want to use
+  // a different time for rendering that would otherwise be returned by
+  // GetCurrentTime. These are:
+  //
+  // (a) For animations that are pausing but which are still running on the
+  //     compositor. In this case we send a layer transaction that removes the
+  //     animation but which also contains the animation values calculated on
+  //     the main thread. To prevent flicker when this occurs we want to ensure
+  //     the timeline time used to calculate the main thread animation values
+  //     does not lag far behind the time used on the compositor. Ideally we
+  //     would like to use the "animation ready time" calculated at the end of
+  //     the layer transaction as the timeline time but it will be too late to
+  //     update the style rule at that point so instead we just use the current
+  //     wallclock time.
+  //
+  // (b) For animations that are pausing that we have already taken off the
+  //     compositor. In this case we record a pending ready time but we don't
+  //     apply it until the next tick. However, while waiting for the next tick,
+  //     we should still use the pending ready time as the timeline time. If we
+  //     use the regular timeline time the animation may appear jump backwards
+  //     if the main thread's timeline time lags behind the compositor.
+  //
+  // (c) For animations that are play-pending due to an aborted pause operation
+  //     (i.e. a pause operation that was interrupted before we entered the
+  //     paused state). When we cancel a pending pause we might momentarily take
+  //     the animation off the compositor, only to re-add it moments later. In
+  //     that case the compositor might have been ahead of the main thread so we
+  //     should use the current wallclock time to ensure the animation doesn't
+  //     temporarily jump backwards.
+  //
+  // To address each of these cases we temporarily tweak the hold time
+  // immediately before updating the style rule and then restore it immediately
+  // afterwards. This is purely to prevent visual flicker. Other behavior
+  // such as dispatching events continues to rely on the regular timeline time.
+  {
+    AutoRestore<Nullable<TimeDuration>> restoreHoldTime(mHoldTime);
+    bool updatedHoldTime = false;
+
+    if (PlayState() == AnimationPlayState::Pending &&
+        mHoldTime.IsNull() &&
+        !mStartTime.IsNull()) {
+      Nullable<TimeDuration> timeToUse = mPendingReadyTime;
+      if (timeToUse.IsNull() &&
+          mTimeline &&
+          !mTimeline->IsUnderTestControl()) {
+        timeToUse = mTimeline->ToTimelineTime(TimeStamp::Now());
+      }
+      if (!timeToUse.IsNull()) {
+        mHoldTime.SetValue((timeToUse.Value() - mStartTime.Value())
+                            .MultDouble(mPlaybackRate));
+        // Push the change down to the source content
+        UpdateSourceContent();
+        updatedHoldTime = true;
+      }
+    }
+
+    mSource->ComposeStyle(aStyleRule, aSetProperties);
+
+    if (updatedHoldTime) {
+      UpdateTiming();
+    }
+  }
 }
 
 void
