@@ -11,9 +11,11 @@ function evalWithCache(code, ctx) {
   if (!("global" in ctx))
     ctx.global = newGlobal();
 
-  // ... and by default enable compileAndGo.
+  // ... and by default enable compileAndGo and isRunOnce
   if (!("compileAndGo" in ctx))
     ctx.compileAndGo = true;
+  if (!("isRunOnce" in ctx))
+    ctx.isRunOnce = true;
 
   // Fetch the verification function from the evaluation context.  This function
   // is used to assert the state of the script/function after each run of the

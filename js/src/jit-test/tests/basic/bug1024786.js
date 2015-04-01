@@ -61,5 +61,6 @@
 evaluate("function f(){\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",({
     fileName: null,
     lineNumber: 42,
-    compileAndGo: 9
+    compileAndGo: 9,
+    isRunOnce: 9,
 }))

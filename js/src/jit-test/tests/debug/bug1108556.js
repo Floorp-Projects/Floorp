@@ -7,4 +7,4 @@ evaluate('\
 var fe="v";\
 for (i=0; String.fromCharCode(0x004E); i++)\
   fe += fe;\
-', { compileAndGo : true });
+', { compileAndGo : true, isRunOnce: true });

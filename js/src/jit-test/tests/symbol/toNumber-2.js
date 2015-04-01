@@ -11,4 +11,4 @@ try {
 } catch (exc1) {}
 eq(.1, .1);
 var sym = Symbol("method");
-evaluate("f(test, sym, 0)", {compileAndGo: true});
+evaluate("f(test, sym, 0)", {compileAndGo: true, isRunOnce:true});
