@@ -27,6 +27,5 @@ function test_2() {
 }
 test_2();
 evaluate("test_2(); test_2();", {
-    compileAndGo: true,
     isRunOnce: true,
 });

@@ -11,4 +11,4 @@ function evalWithCache(code, ctx) {
 if (typeof assertThrowsInstanceOf === 'undefined') {
     var assertThrowsInstanceOf = function assertThrowsInstanceOf(f, ctor, msg) {};
 }
-evaluate('evaluate(\'assertThrowsInstanceOf(function () {}, ["jak", "ms"]);\', { noScriptRval : true, compileAndGo : true, isRunOnce: true  })');
+evaluate('evaluate(\'assertThrowsInstanceOf(function () {}, ["jak", "ms"]);\', { noScriptRval : true, isRunOnce: true  })');
