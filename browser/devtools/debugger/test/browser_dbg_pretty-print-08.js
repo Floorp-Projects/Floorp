@@ -21,7 +21,7 @@ function test() {
 
 const BP_LOCATION = {
   line: 5,
-  column: 11
+  // column: 0
 };
 
 function findSource() {

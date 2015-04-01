@@ -597,40 +597,29 @@ TabSources.prototype = {
       originalColumn
     } = originalLocation;
 
-    if (originalColumn === undefined) {
-      let source = originalSourceActor.source ||
-                   originalSourceActor.generatedSource;
+    let source = originalSourceActor.source ||
+                 originalSourceActor.generatedSource;
 
-      return this.fetchSourceMap(source).then((map) => {
-        if (map) {
-          map.computeColumnSpans();
+    return this.fetchSourceMap(source).then((map) => {
+      if (map) {
+        map.computeColumnSpans();
 
-          return map.allGeneratedPositionsFor({
-            source: originalSourceActor.url,
-            line: originalLine
-          }).map(({ line, column, lastColumn }) => {
-            return new GeneratedLocation(
-              this.createNonSourceMappedActor(source),
-              line,
-              column,
-              lastColumn
-            );
-          });
-        }
+        return map.allGeneratedPositionsFor({
+          source: originalSourceActor.url,
+          line: originalLine,
+          column: originalColumn
+        }).map(({ line, column, lastColumn }) => {
+          return new GeneratedLocation(
+            this.createNonSourceMappedActor(source),
+            line,
+            column,
+            lastColumn
+          );
+        });
+      }
 
-        return [GeneratedLocation.fromOriginalLocation(originalLocation)];
-      });
-    } else {
-      // TODO: Some source maps have multiple mappings for the same column
-      return this.getGeneratedLocation(originalLocation)
-                 .then((generatedLocation) => {
-        if (generatedLocation.generatedLine === null &&
-            generatedLocation.generatedColumn === null) {
-          return [];
-        }
-        return [generatedLocation];
-      });
-    }
+      return [GeneratedLocation.fromOriginalLocation(originalLocation)];
+    });
   },
 
 
