@@ -7,7 +7,6 @@ config = {
         "mochitest": {
             "options": [
                 "--console-level=INFO",
-                "%(test_manifest)s",
                 "--total-chunks=%(total_chunks)s",
                 "--this-chunk=%(this_chunk)s",
                 "--profile=%(gaia_profile)s",

@@ -65,7 +65,6 @@ config = {
                 "--emulator=%(emulator)s",
                 "--logdir=%(logcat_dir)s",
                 "--remote-webserver=%(remote_webserver)s",
-                "%(test_manifest)s",
                 "--xre-path=%(xre_path)s",
                 "--symbols-path=%(symbols_path)s",
                 "--busybox=%(busybox)s",
