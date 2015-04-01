@@ -1349,7 +1349,9 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
     }
 
      if (layerManager) {
-      if (mode == RenderingMode::OpenGLBackendMode && CheckSizeForSkiaGL(size)) {
+      if (mode == RenderingMode::OpenGLBackendMode &&
+          gfxPlatform::GetPlatform()->UseAcceleratedSkiaCanvas() &&
+          CheckSizeForSkiaGL(size)) {
         DemoteOldestContextIfNecessary();
 
 #if USE_SKIA_GPU
