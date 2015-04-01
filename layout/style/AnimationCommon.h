@@ -35,6 +35,14 @@ namespace mozilla {
 class RestyleTracker;
 struct AnimationPlayerCollection;
 
+// Options to set when fetching animations to run on the compositor.
+enum class GetCompositorAnimationOptions {
+  // When fetching compositor animations, if there are any such animations,
+  // also let the ActiveLayerTracker know at the same time.
+  NotifyActiveLayerTracker = 1 << 0
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(GetCompositorAnimationOptions)
+
 namespace css {
 
 bool IsGeometricProperty(nsCSSProperty aProperty);
@@ -158,12 +166,11 @@ protected:
     return false;
   }
 
-  // When this returns a value other than nullptr, it also,
-  // as a side-effect, notifies the ActiveLayerTracker.
   static AnimationPlayerCollection*
   GetAnimationsForCompositor(nsIContent* aContent,
                              nsIAtom* aElementProperty,
-                             nsCSSProperty aProperty);
+                             nsCSSProperty aProperty,
+                             GetCompositorAnimationOptions aFlags);
 
   PRCList mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)

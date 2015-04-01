@@ -120,11 +120,13 @@ CommonAnimationManager::CheckNeedsRefresh()
 
 AnimationPlayerCollection*
 CommonAnimationManager::GetAnimationsForCompositor(nsIContent* aContent,
-                                                   nsIAtom* aElementProperty,
-                                                   nsCSSProperty aProperty)
+  nsIAtom* aElementProperty,
+  nsCSSProperty aProperty,
+  GetCompositorAnimationOptions aFlags)
 {
   if (!aContent->MayHaveAnimations())
     return nullptr;
+
   AnimationPlayerCollection* collection =
     static_cast<AnimationPlayerCollection*>(
       aContent->GetProperty(aElementProperty));
@@ -133,6 +135,10 @@ CommonAnimationManager::GetAnimationsForCompositor(nsIContent* aContent,
       !collection->CanPerformOnCompositorThread(
         AnimationPlayerCollection::CanAnimate_AllowPartial)) {
     return nullptr;
+  }
+
+  if (!(aFlags & GetCompositorAnimationOptions::NotifyActiveLayerTracker)) {
+    return collection;
   }
 
   // This animation can be done on the compositor.

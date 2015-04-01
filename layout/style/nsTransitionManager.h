@@ -107,7 +107,8 @@ public:
   GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty)
   {
     return mozilla::css::CommonAnimationManager::GetAnimationsForCompositor(
-      aContent, nsGkAtoms::transitionsProperty, aProperty);
+      aContent, nsGkAtoms::transitionsProperty, aProperty,
+      mozilla::GetCompositorAnimationOptions::NotifyActiveLayerTracker);
   }
 
   /**
