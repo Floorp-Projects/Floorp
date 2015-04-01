@@ -940,6 +940,10 @@ CompositorParent::CompositeCallback(TimeStamp aScheduleTime)
 /* static */ void
 CompositorParent::SetShadowProperties(Layer* aLayer)
 {
+  if (Layer* maskLayer = aLayer->GetMaskLayer()) {
+    SetShadowProperties(maskLayer);
+  }
+
   // FIXME: Bug 717688 -- Do these updates in LayerTransactionParent::RecvUpdate.
   LayerComposite* layerComposite = aLayer->AsLayerComposite();
   // Set the layerComposite's base transform to the layer's base transform.
