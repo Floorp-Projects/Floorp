@@ -28,6 +28,8 @@ const signalingStateTransitions = {
   "closed": []
 }
 
+var wait = (time) => new Promise(r => setTimeout(r, time));
+
 /**
  * This class provides a state checker for media elements which store
  * a media stream to check for media attribute state and events fired.
@@ -62,8 +64,8 @@ function MediaElementChecker(element) {
 
     // If time has passed, then track that and remove the timeupdate event
     // listener.
-    if(element.mozSrcObject && element.mozSrcObject.currentTime > 0 &&
-       element.currentTime > 0) {
+    if (element.mozSrcObject && element.mozSrcObject.currentTime > 0 &&
+        element.currentTime > 0) {
       info('time passed for media element ' + elementId);
       this.timePassed = true;
       this.element.removeEventListener('timeupdate', timeUpdateCallback,
