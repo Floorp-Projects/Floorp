@@ -79,6 +79,10 @@ if test -n "$USE_ICU"; then
     fi
     MOZ_ICU_VERSION="$version"
 
+    if test "$OS_TARGET" = WINNT; then
+        MOZ_SHARED_ICU=1
+    fi
+
     if test -z "${JS_STANDALONE}" -a -n "${JS_SHARED_LIBRARY}${MOZ_NATIVE_ICU}"; then
         MOZ_SHARED_ICU=1
     fi
