@@ -32,6 +32,7 @@ runNetworkTest(function() {
           var stream = v1.mozCaptureStreamUntilEnded();
           is(stream.getTracks().length, 2, "Captured stream has 2 tracks");
           stream.getTracks().forEach(track => {
+            test.pcLocal.expectNegotiationNeeded();
             test.pcLocal._pc.addTrack(track, stream);
             test.pcLocal.expectedLocalTrackInfoById[track.id] = {
                 type: track.kind,
@@ -39,6 +40,7 @@ runNetworkTest(function() {
               };
           });
           test.pcLocal.constraints = [{ video: true, audio:true }]; // fool tests
+          return test.pcLocal.observedNegotiationNeeded;
         });
     }
   ]);
