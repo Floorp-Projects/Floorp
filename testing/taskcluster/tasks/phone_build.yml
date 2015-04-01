@@ -17,6 +17,10 @@ task:
   provisionerId: aws-provisioner
   schedulerId: task-graph-scheduler
 
+  routes:
+    - 'index.gecko.v1.{{project}}.revision.linux.{{head_rev}}.{{build_name}}.{{build_type}}'
+    - 'index.gecko.v1.{{project}}.latest.linux.{{build_name}}.{{build_type}}'
+
   scopes:
     # Nearly all of our build tasks use tc-vcs so just include the scope across
     # the board.
@@ -55,6 +59,8 @@ task:
       MOZHARNESS_REF: '{{mozharness_ref}}'
 
   extra:
+    index:
+      rank: {{pushlog_id}}
     treeherder:
       groupSymbol: tc
       groupName: Submitted by taskcluster
