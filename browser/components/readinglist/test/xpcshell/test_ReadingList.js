@@ -9,6 +9,10 @@ Cu.import("resource:///modules/readinglist/ReadingList.jsm");
 Cu.import("resource:///modules/readinglist/SQLiteStore.jsm");
 Cu.import("resource://gre/modules/Sqlite.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
+Cu.import("resource://gre/modules/Log.jsm");
+
+Log.repository.getLogger("readinglist.api").level = Log.Level.All;
+Log.repository.getLogger("readinglist.api").addAppender(new Log.DumpAppender());
 
 var gList;
 var gItems;
@@ -294,10 +298,10 @@ add_task(function* forEachSyncedDeletedItem() {
   });
   deletedItem._record.syncStatus = gList.SyncStatus.SYNCED;
   yield gList.deleteItem(deletedItem);
-  let items = [];
-  yield gList.forEachSyncedDeletedItem(item => items.push(item));
-  Assert.equal(items.length, 1);
-  Assert.equal(items[0].guid, deletedItem.guid);
+  let guids = [];
+  yield gList.forEachSyncedDeletedGUID(guid => guids.push(guid));
+  Assert.equal(guids.length, 1);
+  Assert.equal(guids[0], deletedItem.guid);
 });
 
 add_task(function* forEachItem_promises() {
@@ -654,7 +658,7 @@ add_task(function* listeners() {
   Assert.equal((yield gList.count()), gItems.length);
 });
 
-// This test deletes items so it should probably run last.
+// This test deletes items so it should probably run last of the 'gItems' tests...
 add_task(function* deleteItem() {
   // delete first item with item.delete()
   let iter = gList.iterator({
@@ -690,6 +694,28 @@ add_task(function* deleteItem() {
     sort: "guid",
   });
   checkItems(items, gItems.slice(3));
+});
+
+// Check that when we delete an item with a GUID it's no longer available as
+// an item
+add_task(function* deletedItemRemovedFromMap() {
+  yield gList.forEachItem(item => item.delete());
+  Assert.equal((yield gList.count()), 0);
+  let map = gList._itemsByNormalizedURL;
+  Assert.equal(gList._itemsByNormalizedURL.size, 0, [for (i of map.keys()) i]);
+  let record = {
+    guid: "test-item",
+    url: "http://localhost",
+    syncStatus: gList.SyncStatus.SYNCED,
+  }
+  let item = yield gList.addItem(record);
+  Assert.equal(map.size, 1);
+  yield item.delete();
+  Assert.equal(gList._itemsByNormalizedURL.size, 0, [for (i of map.keys()) i]);
+
+  // Now enumerate deleted items - should not come back.
+  yield gList.forEachSyncedDeletedGUID(() => {});
+  Assert.equal(gList._itemsByNormalizedURL.size, 0, [for (i of map.keys()) i]);
 });
 
 function checkItems(actualItems, expectedItems) {
