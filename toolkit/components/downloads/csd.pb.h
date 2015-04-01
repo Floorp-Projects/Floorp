@@ -58,11 +58,12 @@ enum ClientDownloadRequest_DownloadType {
   ClientDownloadRequest_DownloadType_WIN_EXECUTABLE = 0,
   ClientDownloadRequest_DownloadType_CHROME_EXTENSION = 1,
   ClientDownloadRequest_DownloadType_ANDROID_APK = 2,
-  ClientDownloadRequest_DownloadType_ZIPPED_EXECUTABLE = 3
+  ClientDownloadRequest_DownloadType_ZIPPED_EXECUTABLE = 3,
+  ClientDownloadRequest_DownloadType_MAC_EXECUTABLE = 4
 };
 bool ClientDownloadRequest_DownloadType_IsValid(int value);
 const ClientDownloadRequest_DownloadType ClientDownloadRequest_DownloadType_DownloadType_MIN = ClientDownloadRequest_DownloadType_WIN_EXECUTABLE;
-const ClientDownloadRequest_DownloadType ClientDownloadRequest_DownloadType_DownloadType_MAX = ClientDownloadRequest_DownloadType_ZIPPED_EXECUTABLE;
+const ClientDownloadRequest_DownloadType ClientDownloadRequest_DownloadType_DownloadType_MAX = ClientDownloadRequest_DownloadType_MAC_EXECUTABLE;
 const int ClientDownloadRequest_DownloadType_DownloadType_ARRAYSIZE = ClientDownloadRequest_DownloadType_DownloadType_MAX + 1;
 
 enum ClientDownloadResponse_Verdict {
@@ -906,6 +907,7 @@ class ClientDownloadRequest : public ::google::protobuf::MessageLite {
   static const DownloadType CHROME_EXTENSION = ClientDownloadRequest_DownloadType_CHROME_EXTENSION;
   static const DownloadType ANDROID_APK = ClientDownloadRequest_DownloadType_ANDROID_APK;
   static const DownloadType ZIPPED_EXECUTABLE = ClientDownloadRequest_DownloadType_ZIPPED_EXECUTABLE;
+  static const DownloadType MAC_EXECUTABLE = ClientDownloadRequest_DownloadType_MAC_EXECUTABLE;
   static inline bool DownloadType_IsValid(int value) {
     return ClientDownloadRequest_DownloadType_IsValid(value);
   }
