@@ -6122,8 +6122,9 @@ nsTextFrame::PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
     return;
 
   PropertyProvider provider(this, iter, nsTextFrame::eInflated);
-  // Trim trailing whitespace
-  provider.InitializeForDisplay(true);
+  // Trim trailing whitespace, unless we're painting a selection highlight,
+  // which should include trailing spaces if present (bug 1146754).
+  provider.InitializeForDisplay(!IsSelected());
 
   gfxContext* ctx = aRenderingContext->ThebesContext();
   const bool rtl = mTextRun->IsRightToLeft();
@@ -8696,7 +8697,8 @@ nsTextFrame::RecomputeOverflow(nsIFrame* aBlockFrame)
     return result;
 
   PropertyProvider provider(this, iter, nsTextFrame::eInflated);
-  provider.InitializeForDisplay(true);
+  // Don't trim trailing space, in case we need to paint it as selected.
+  provider.InitializeForDisplay(false);
 
   gfxTextRun::Metrics textMetrics =
     mTextRun->MeasureText(provider.GetStart().GetSkippedOffset(),
