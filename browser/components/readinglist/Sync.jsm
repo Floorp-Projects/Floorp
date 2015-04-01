@@ -296,9 +296,9 @@ SyncImpl.prototype = {
 
     // Get deleted synced local items.
     let requests = [];
-    yield this.list.forEachSyncedDeletedItem(localItem => {
+    yield this.list.forEachSyncedDeletedGUID(guid => {
       requests.push({
-        path: "/articles/" + localItem.guid,
+        path: "/articles/" + guid,
       });
     });
     if (!requests.length) {
