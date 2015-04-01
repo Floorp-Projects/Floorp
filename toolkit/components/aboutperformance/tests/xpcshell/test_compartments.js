@@ -61,9 +61,24 @@ function ensureEquals(snap1, snap2, name) {
   );
 }
 
-add_task(function* test_measure() {
-  let [sysName, sysVersion] = [Services.sysinfo.getPropertyAsAString("name"), Services.sysinfo.getPropertyAsInt32("version")];
+function hasLowPrecision() {
+  let [sysName, sysVersion] = [Services.sysinfo.getPropertyAsAString("name"), Services.sysinfo.getPropertyAsDouble("version")];
   do_print(`Running ${sysName} version ${sysVersion}`);
+
+  if (sysName != "Windows_NT") {
+    do_print("Not running Windows, precision should be good.");
+    return false;
+  }
+  if (sysVersion >= 6) {
+    do_print("Running a recent version of Windows, precision should be good.");
+    return false;
+  }
+  do_print("Running old Windows, need to deactivate tests due to bad precision.");
+  return true;
+}
+
+add_task(function* test_measure() {
+  let skipPrecisionTests = hasLowPrecision();
 
   do_print("Burn CPU without the stopwatch");
   yield promiseSetMonitoring(false);
@@ -87,7 +102,7 @@ add_task(function* test_measure() {
   let process2 = stats2.processData;
   let process3 = stats3.processData;
   let process4 = stats4.processData;
-  if (sysName == "WINNT" && sysVersion == "5.2") {
+  if (skipPrecisionTests) {
     do_print("Skipping totalUserTime check under Windows XP, as timer is not always updated by the OS.")
   } else {
     Assert.ok(process2.totalUserTime - process1.totalUserTime >= 10000, `At least 10ms counted for process time (${process2.totalUserTime - process1.totalUserTime})`);
@@ -104,7 +119,7 @@ add_task(function* test_measure() {
   Assert.notEqual(builtin3, null, "Found the statistics for built-ins 3");
   Assert.notEqual(builtin4, null, "Found the statistics for built-ins 4");
 
-  if (sysName == "WINNT" && sysVersion == "5.2") {
+  if (skipPrecisionTests) {
     do_print("Skipping totalUserTime check under Windows XP, as timer is not always updated by the OS.")
   } else {
     Assert.ok(builtin2.totalUserTime - builtin1.totalUserTime >= 10000, `At least 10ms counted for built-in statistics (${builtin2.totalUserTime - builtin1.totalUserTime})`);
