@@ -18,33 +18,39 @@ async_test(function(t) {
   var animation = div.getAnimations()[0];
 
   var originalReadyPromise = animation.ready;
-  animation.ready.then(function() {
+  var pauseReadyPromise;
+
+  animation.ready.then(t.step_func(function() {
     assert_equals(animation.ready, originalReadyPromise,
                   'Ready promise is the same object when playing completes');
     animation.pause();
-    // TODO: When we implement deferred pausing (bug 1109390), change this to
-    // assert_not_equals and wait on the new promise before continuing.
-    assert_equals(animation.ready, originalReadyPromise,
-                  'Ready promise does not change when pausing (for now)');
-    animation.play();
     assert_not_equals(animation.ready, originalReadyPromise,
-                      'Ready promise object identity differs after calling'
-                      + ' play()');
+                      'A new ready promise is created when pausing');
+    pauseReadyPromise = animation.ready;
+    // Wait for the promise to fulfill since if we abort the pause the ready
+    // promise object is reused.
+    return animation.ready;
+  })).then(t.step_func(function() {
+    animation.play();
+    assert_not_equals(animation.ready, pauseReadyPromise,
+                      'A new ready promise is created when playing');
     t.done();
-  });
-}, 'A new ready promise is created each time play() is called'
-   + ' the animation property');
+  }));
+}, 'A new ready promise is created when play()/pause() is called');
 
-test(function(t) {
+async_test(function(t) {
   var div = addDiv(t);
   div.style.animation = 'abc 100s paused';
   var animation = div.getAnimations()[0];
 
   var originalReadyPromise = animation.ready;
-  div.style.animationPlayState = 'running';
-  assert_not_equals(animation.ready, originalReadyPromise,
-                    'After updating animation-play-state a new ready promise'
-                    + ' object is created');
+  animation.ready.then(function() {
+    div.style.animationPlayState = 'running';
+    assert_not_equals(animation.ready, originalReadyPromise,
+                      'After updating animation-play-state a new ready promise'
+                      + ' object is created');
+    t.done();
+  });
 }, 'A new ready promise is created when setting animation-play-state: running');
 
 async_test(function(t) {
