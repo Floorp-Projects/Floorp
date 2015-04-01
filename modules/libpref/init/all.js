@@ -4641,14 +4641,15 @@ pref("media.gmp.insecure.allow", false);
 
 // Use vsync aligned rendering. b2g prefs are in b2g.js
 // Only supported on windows, os x, and b2g
-#if defined(XP_MACOSX) || defined(XP_WIN)
+#if defined(XP_MACOSX)
 pref("gfx.vsync.hw-vsync.enabled", true);
 pref("gfx.vsync.compositor", true);
+pref("gfx.vsync.refreshdriver", true);
 #endif
 
-#if defined(XP_MACOSX)
-pref("gfx.vsync.refreshdriver", true);
-#else
+#if defined(XP_WIN)
+pref("gfx.vsync.hw-vsync.enabled", false);
+pref("gfx.vsync.compositor", false);
 pref("gfx.vsync.refreshdriver", false);
 #endif
 
