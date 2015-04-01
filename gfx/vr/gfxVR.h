@@ -69,11 +69,7 @@ struct VRDistortionConstants {
 };
 
 struct VRDistortionVertex {
-  float pos[2];
-  float texR[2];
-  float texG[2];
-  float texB[2];
-  float genericAttribs[4];
+  float values[12];
 };
 
 struct VRDistortionMesh {
