@@ -287,14 +287,14 @@ AnimationPlayer::Tick()
   if (mPendingState != PendingState::NotPending &&
       !mPendingReadyTime.IsNull() &&
       mPendingReadyTime.Value() <= mTimeline->GetCurrentTime().Value()) {
-    ResumeAt(mPendingReadyTime.Value());
+    FinishPendingAt(mPendingReadyTime.Value());
     mPendingReadyTime.SetNull();
   }
 
   if (IsPossiblyOrphanedPendingPlayer()) {
     MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTime().IsNull(),
                "Orphaned pending players should have an active timeline");
-    ResumeAt(mTimeline->GetCurrentTime().Value());
+    FinishPendingAt(mTimeline->GetCurrentTime().Value());
   }
 
   UpdateTiming();
@@ -323,7 +323,7 @@ AnimationPlayer::TriggerNow()
   MOZ_ASSERT(mTimeline && !mTimeline->GetCurrentTime().IsNull(),
              "Expected an active timeline");
 
-  ResumeAt(mTimeline->GetCurrentTime().Value());
+  FinishPendingAt(mTimeline->GetCurrentTime().Value());
 }
 
 Nullable<TimeDuration>
@@ -506,7 +506,7 @@ AnimationPlayer::DoPause()
 }
 
 void
-AnimationPlayer::ResumeAt(const TimeDuration& aResumeTime)
+AnimationPlayer::ResumeAt(const TimeDuration& aReadyTime)
 {
   // This method is only expected to be called for a player that is
   // waiting to play. We can easily adapt it to handle other states
@@ -518,11 +518,31 @@ AnimationPlayer::ResumeAt(const TimeDuration& aResumeTime)
              " hold time");
 
   if (mPlaybackRate != 0) {
-    mStartTime.SetValue(aResumeTime - (mHoldTime.Value() / mPlaybackRate));
+    mStartTime.SetValue(aReadyTime - (mHoldTime.Value() / mPlaybackRate));
     mHoldTime.SetNull();
   } else {
-    mStartTime.SetValue(aResumeTime);
+    mStartTime.SetValue(aReadyTime);
   }
+  mPendingState = PendingState::NotPending;
+
+  UpdateTiming();
+
+  if (mReady) {
+    mReady->MaybeResolve(this);
+  }
+}
+
+void
+AnimationPlayer::PauseAt(const TimeDuration& aReadyTime)
+{
+  MOZ_ASSERT(mPendingState == PendingState::PausePending,
+             "Expected to pause a pause-pending player");
+
+  if (!mStartTime.IsNull()) {
+    mHoldTime.SetValue((aReadyTime - mStartTime.Value())
+                        .MultDouble(mPlaybackRate));
+  }
+  mStartTime.SetNull();
   mPendingState = PendingState::NotPending;
 
   UpdateTiming();
