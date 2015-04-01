@@ -1200,6 +1200,10 @@ class JSScript : public js::gc::TenuredCell
         MOZ_ASSERT(isActiveEval() && !isCachedEval());
         isActiveEval_ = false;
         isCachedEval_ = true;
+        // IsEvalCacheCandidate will make sure that there's nothing in this
+        // script that would prevent reexecution even if isRunOnce is
+        // true.  So just pretend like we never ran this script.
+        hasRunOnce_ = false;
     }
 
     void uncacheForEval() {
