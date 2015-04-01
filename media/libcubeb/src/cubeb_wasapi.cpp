@@ -1155,6 +1155,9 @@ void close_wasapi_stream(cubeb_stream * stm)
   SafeRelease(stm->render_client);
   stm->render_client = NULL;
 
+  SafeRelease(stm->audio_stream_volume);
+  stm->audio_stream_volume = NULL;
+
   if (stm->resampler) {
     cubeb_resampler_destroy(stm->resampler);
     stm->resampler = NULL;
