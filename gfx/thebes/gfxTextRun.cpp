@@ -929,8 +929,15 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
     }
 
     if (aMetrics) {
-        *aMetrics = MeasureText(aStart, charsFit - trimmableChars,
+        *aMetrics = MeasureText(aStart, charsFit,
             aBoundingBoxType, aRefContext, aProvider);
+        if (trimmableChars) {
+            Metrics trimMetrics =
+                MeasureText(aStart + charsFit - trimmableChars,
+                            trimmableChars, aBoundingBoxType,
+                            aRefContext, aProvider);
+            aMetrics->mAdvanceWidth -= trimMetrics.mAdvanceWidth;
+        }
     }
     if (aTrimWhitespace) {
         *aTrimWhitespace = trimmableAdvance;
