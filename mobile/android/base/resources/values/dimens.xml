@@ -13,7 +13,7 @@
     <dimen name="browser_toolbar_height">48dp</dimen>
     <dimen name="browser_toolbar_button_padding">12dp</dimen>
     <dimen name="browser_toolbar_icon_width">48dp</dimen>
-    <dimen name="browser_toolbar_site_security_width">12dp</dimen>
+
     <!-- favicon_size includes 4dp of right padding. We can't use margin (which would allow us to
          specify the actual size) because that would decrease the size of our hit target. -->
     <dimen name="browser_toolbar_favicon_size">21.33dip</dimen>
@@ -32,12 +32,6 @@
     <dimen name="new_tablet_tab_strip_item_width">208dp</dimen>
     <dimen name="new_tablet_tab_strip_item_margin">-28dp</dimen>
     <dimen name="new_tablet_tab_strip_fading_edge_size">15dp</dimen>
-    <dimen name="new_tablet_site_security_height">60dp</dimen>
-    <dimen name="new_tablet_site_security_width">34dp</dimen>
-    <!-- We primarily use padding (instead of margins) to increase the hit area. -->
-    <dimen name="new_tablet_site_security_padding_vertical">21dp</dimen>
-    <dimen name="new_tablet_site_security_padding_horizontal">8dp</dimen>
-    <dimen name="new_tablet_site_security_right_margin">1dp</dimen>
     <dimen name="new_tablet_browser_toolbar_height">60dp</dimen>
     <dimen name="new_tablet_browser_toolbar_menu_item_width">56dp</dimen>
     <!-- Padding combines with an 18dp image to form the menu item width and height. -->
@@ -70,10 +64,16 @@
     <dimen name="tab_queue_container_width">@dimen/match_parent</dimen>
 
     <!-- Site security icon -->
+    <dimen name="browser_toolbar_site_security_height">@dimen/match_parent</dimen>
+    <dimen name="browser_toolbar_site_security_width">12dp</dimen>
+    <dimen name="browser_toolbar_site_security_margin_right">4dp</dimen>
+    <dimen name="browser_toolbar_site_security_padding_vertical">0dp</dimen>
+    <dimen name="browser_toolbar_site_security_padding_horizontal">0dp</dimen>
+
     <!-- If one of these values changes, they all should. -->
-    <dimen name="site_security_bottom_margin">.5dp</dimen>
-    <dimen name="new_tablet_site_security_unknown_inset_top">1dp</dimen>
-    <dimen name="new_tablet_site_security_unknown_inset_bottom">-1dp</dimen>
+    <dimen name="browser_toolbar_site_security_margin_bottom">.5dp</dimen>
+    <dimen name="site_security_unknown_inset_top">1dp</dimen>
+    <dimen name="site_security_unknown_inset_bottom">-1dp</dimen>
 
     <!-- Regular page row on about:home -->
     <dimen name="page_row_height">64dp</dimen>
