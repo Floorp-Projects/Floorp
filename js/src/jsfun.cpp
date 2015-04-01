@@ -1407,8 +1407,7 @@ JSFunction::createScriptForLazilyInterpretedFunction(JSContext* cx, HandleFuncti
         // chain of their inner functions, or in the case of eval, possibly
         // eval'd inner functions. This prohibits re-lazification as
         // StaticScopeIter queries isHeavyweight of those functions, which
-        // requires a non-lazy script.  Note that if this ever changes,
-        // XDRRelazificationInfo will have to be fixed.
+        // requires a non-lazy script.
         bool canRelazify = !lazy->numInnerFunctions() && !lazy->hasDirectEval();
 
         if (script) {
