@@ -25,6 +25,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm")
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
   "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
+  "resource://gre/modules/UpdateChannel.jsm");
 XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => {
   return new TextDecoder();
 });
@@ -229,6 +231,7 @@ let DirectoryLinksProvider = {
   _fetchAndCacheLinks: function DirectoryLinksProvider_fetchAndCacheLinks(uri) {
     // Replace with the same display locale used for selecting links data
     uri = uri.replace("%LOCALE%", this.locale);
+    uri = uri.replace("%CHANNEL%", UpdateChannel.get());
 
     let deferred = Promise.defer();
     let xmlHttp = new XMLHttpRequest();
