@@ -497,7 +497,7 @@ public:
 
     static bool CanUseDirect3D9();
     static bool CanUseDirect3D11();
-    static bool CanUseDXVA();
+    static bool CanUseHardwareVideoDecoding();
 
     /**
      * Is it possible to use buffer rotation.  Note that these
