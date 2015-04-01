@@ -999,7 +999,18 @@ _cairo_win32_scaled_font_init_glyph_metrics (cairo_win32_scaled_font_t *scaled_f
 			      &metrics, 0, NULL, &matrix) == GDI_ERROR) {
 	    memset (&metrics, 0, sizeof (GLYPHMETRICS));
 	} else {
-	    if (metrics.gmBlackBoxX > 0 && scaled_font->base.options.antialias != CAIRO_ANTIALIAS_NONE) {
+            if (metrics.gmBlackBoxX == 1 && metrics.gmBlackBoxY == 1 &&
+                GetGlyphOutlineW (hdc,
+                                  _cairo_scaled_glyph_index (scaled_glyph),
+                                  GGO_NATIVE | GGO_GLYPH_INDEX,
+                                  &metrics, 0, NULL, &matrix) == 0) {
+                /* Workaround for GetGlyphOutline returning 1x1 bounding box
+                 * for <space> glyph that is in fact empty.
+                 */
+                metrics.gmBlackBoxX = metrics.gmBlackBoxY = 0;
+            }
+	    else if (metrics.gmBlackBoxX > 0 &&
+                     scaled_font->base.options.antialias != CAIRO_ANTIALIAS_NONE) {
 		/* The bounding box reported by Windows supposedly contains the glyph's "black" area;
 		 * however, antialiasing (especially with ClearType) means that the actual image that
 		 * needs to be rendered may "bleed" into the adjacent pixels, mainly on the right side.
