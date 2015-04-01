@@ -30,7 +30,7 @@ nsRandomGenerator::GenerateRandomBytes(uint32_t aLength,
     return NS_ERROR_FAILURE;
   }
 
-  uint8_t* buf = reinterpret_cast<uint8_t*>(NS_Alloc(aLength));
+  uint8_t* buf = reinterpret_cast<uint8_t*>(moz_xmalloc(aLength));
   if (!buf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -38,7 +38,7 @@ nsRandomGenerator::GenerateRandomBytes(uint32_t aLength,
   SECStatus srv = PK11_GenerateRandomOnSlot(slot, buf, aLength);
 
   if (srv != SECSuccess) {
-    NS_Free(buf);
+    free(buf);
     return NS_ERROR_FAILURE;
   }
 

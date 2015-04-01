@@ -1561,7 +1561,7 @@ nsVariant::AllocateWStringWithSize(nsDiscriminatedUnion* aData, uint32_t aSize)
 {
   DATA_SETTER_PROLOGUE(aData);
   if (!(aData->u.wstr.mWStringValue =
-          (char16_t*)NS_Alloc((aSize + 1) * sizeof(char16_t)))) {
+          (char16_t*)moz_xmalloc((aSize + 1) * sizeof(char16_t)))) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   aData->u.wstr.mWStringValue[aSize] = '\0';

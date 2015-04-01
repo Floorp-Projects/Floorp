@@ -455,7 +455,7 @@ RDFContentSinkImpl::HandleEndElement(const char16_t *aName)
                  ("rdfxml: extra close tag '%s' at line %d",
                   tagCStr, 0/*XXX fix me */);
 
-          NS_Free(tagCStr);
+          free(tagCStr);
       }
 #endif
 

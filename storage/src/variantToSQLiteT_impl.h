@@ -107,7 +107,7 @@ variantToSQLiteT(T aObj,
       if (type != nsIDataType::VTYPE_UINT8) {
         // Technically this could leak with certain data types, but somebody was
         // being stupid passing us this anyway.
-        NS_Free(data);
+        free(data);
         return SQLITE_MISMATCH;
       }
 

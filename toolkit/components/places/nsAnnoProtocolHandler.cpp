@@ -130,7 +130,7 @@ public:
                  "Failed to write all of our data out to the stream!");
 
     // Free our favicon array.
-    NS_Free(favicon);
+    free(favicon);
 
     // Handle an error to write if it occurred, but only after we've freed our
     // favicon.

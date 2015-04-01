@@ -63,7 +63,7 @@ nsXBLProtoImplField::~nsXBLProtoImplField()
   MOZ_COUNT_DTOR(nsXBLProtoImplField);
   if (mFieldText)
     free(mFieldText);
-  NS_Free(mName);
+  free(mName);
   NS_CONTENT_DELETE_LIST_MEMBER(nsXBLProtoImplField, this, mNext);
 }
 

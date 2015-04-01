@@ -240,7 +240,7 @@ _handle_union(const T* aStr, const T* aExpr, bool aCaseInsensitive,
     return ABORTED;
   }
   ++cp;                /* now index of char after closing parenthesis */
-  e2 = (T*)NS_Alloc((1 + nsCharTraits<T>::length(aExpr)) * sizeof(T));
+  e2 = (T*)moz_xmalloc((1 + nsCharTraits<T>::length(aExpr)) * sizeof(T));
   if (!e2) {
     return ABORTED;
   }
@@ -261,7 +261,7 @@ _handle_union(const T* aStr, const T* aExpr, bool aCaseInsensitive,
       break;
     }
   }
-  NS_Free(e2);
+  free(e2);
   if (sx < 2) {
     ret = ABORTED;
   }
@@ -426,7 +426,7 @@ ns_WildCardMatch(const T* aStr, const T* aXp, bool aCaseInsensitive)
     return ::_shexp_match(aStr, aXp, aCaseInsensitive, 0);
   }
 
-  expr = (T*)NS_Alloc((nsCharTraits<T>::length(aXp) + 1) * sizeof(T));
+  expr = (T*)moz_xmalloc((nsCharTraits<T>::length(aXp) + 1) * sizeof(T));
   if (!expr) {
     return NOMATCH;
   }
@@ -451,7 +451,7 @@ ns_WildCardMatch(const T* aStr, const T* aXp, bool aCaseInsensitive)
     ret = ::_shexp_match(aStr, expr, aCaseInsensitive, 0);
   }
 
-  NS_Free(expr);
+  free(expr);
   return ret;
 }
 

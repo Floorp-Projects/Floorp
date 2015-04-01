@@ -1390,7 +1390,7 @@ nsPlaintextEditor::PasteAsQuotation(int32_t aSelectionType)
         rv = InsertAsQuotation(stuffToPaste, 0);
       }
     }
-    NS_Free(flav);
+    free(flav);
   }
 
   return rv;

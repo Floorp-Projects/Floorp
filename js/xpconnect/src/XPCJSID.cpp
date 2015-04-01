@@ -33,9 +33,9 @@ nsJSID::nsJSID()
 nsJSID::~nsJSID()
 {
     if (mNumber && mNumber != gNoString)
-        NS_Free(mNumber);
+        free(mNumber);
     if (mName && mName != gNoString)
-        NS_Free(mName);
+        free(mName);
 }
 
 void nsJSID::Reset()
@@ -43,9 +43,9 @@ void nsJSID::Reset()
     mID = GetInvalidIID();
 
     if (mNumber && mNumber != gNoString)
-        NS_Free(mNumber);
+        free(mNumber);
     if (mName && mName != gNoString)
-        NS_Free(mName);
+        free(mName);
 
     mNumber = mName = nullptr;
 }

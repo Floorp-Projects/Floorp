@@ -293,7 +293,7 @@ nsFileView::~nsFileView()
 {
   uint32_t count = mCurrentFilters.Length();
   for (uint32_t i = 0; i < count; ++i)
-    NS_Free(mCurrentFilters[i]);
+    free(mCurrentFilters[i]);
 }
 
 nsresult
@@ -469,7 +469,7 @@ nsFileView::SetFilter(const nsAString& aFilterString)
 {
   uint32_t filterCount = mCurrentFilters.Length();
   for (uint32_t i = 0; i < filterCount; ++i)
-    NS_Free(mCurrentFilters[i]);
+    free(mCurrentFilters[i]);
   mCurrentFilters.Clear();
 
   nsAString::const_iterator start, iter, end;
@@ -498,7 +498,7 @@ nsFileView::SetFilter(const nsAString& aFilterString)
       return NS_ERROR_OUT_OF_MEMORY;
 
     if (!mCurrentFilters.AppendElement(filter)) {
-      NS_Free(filter);
+      free(filter);
       return NS_ERROR_OUT_OF_MEMORY;
     }
 

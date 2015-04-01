@@ -205,7 +205,7 @@ nsControllerCommandTable::GetSupportedCommands(uint32_t* aCount,
                                                char*** aCommands)
 {
   char** commands =
-    static_cast<char **>(NS_Alloc(sizeof(char *) * mCommandsTable.Count()));
+    static_cast<char **>(moz_xmalloc(sizeof(char *) * mCommandsTable.Count()));
   *aCount = mCommandsTable.Count();
   *aCommands = commands;
 

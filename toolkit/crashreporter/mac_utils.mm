@@ -17,12 +17,12 @@ void GetObjCExceptionInfo(void* inException, nsACString& outString)
   unsigned int nameLength = [name length];
   unsigned int reasonLength = [reason length];
 
-  unichar* nameBuffer = (unichar*)NS_Alloc(sizeof(unichar) * (nameLength + 1));
+  unichar* nameBuffer = (unichar*)moz_xmalloc(sizeof(unichar) * (nameLength + 1));
   if (!nameBuffer)
     return;
-  unichar* reasonBuffer = (unichar*)NS_Alloc(sizeof(unichar) * (reasonLength + 1));
+  unichar* reasonBuffer = (unichar*)moz_xmalloc(sizeof(unichar) * (reasonLength + 1));
   if (!reasonBuffer) {
-    NS_Free(nameBuffer);
+    free(nameBuffer);
     return;
   }
 
@@ -36,6 +36,6 @@ void GetObjCExceptionInfo(void* inException, nsACString& outString)
   outString.AppendLiteral(": ");
   AppendUTF16toUTF8(reinterpret_cast<const char16_t*>(reasonBuffer), outString);
 
-  NS_Free(nameBuffer);
-  NS_Free(reasonBuffer);
+  free(nameBuffer);
+  free(reasonBuffer);
 }
