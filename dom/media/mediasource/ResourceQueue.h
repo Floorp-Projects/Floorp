@@ -196,7 +196,7 @@ private:
   // no such resource exists, returns GetSize() and aOffset is
   // untouched.
   uint32_t GetAtOffset(uint64_t aOffset, uint32_t *aResourceOffset) {
-    MOZ_ASSERT(aOffset >= mOffset);
+    MOZ_RELEASE_ASSERT(aOffset >= mOffset);
     uint64_t offset = mOffset;
     for (uint32_t i = 0; i < uint32_t(GetSize()); ++i) {
       ResourceItem* item = ResourceAt(i);
