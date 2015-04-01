@@ -29,8 +29,10 @@ async_test(function(t) {
   animation.ready.then(waitForFrame).then(t.step_func(function() {
     assert_true(getMarginLeft(cs) > previousAnimVal,
                 'margin-left is initially increasing');
-    previousAnimVal = getMarginLeft(cs);
     animation.pause();
+    return animation.ready;
+  })).then(t.step_func(function() {
+    previousAnimVal = getMarginLeft(cs);
     return waitForFrame();
   })).then(t.step_func(function() {
     assert_equals(getMarginLeft(cs), previousAnimVal,
