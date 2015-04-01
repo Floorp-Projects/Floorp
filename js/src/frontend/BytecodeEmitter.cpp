@@ -2636,8 +2636,6 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
     /* Try for most optimal, fall back if not dense ints. */
     JSOp switchOp = JSOP_TABLESWITCH;
     uint32_t tableLength = 0;
-    UniquePtr<ParseNode*[], JS::FreePolicy> table(nullptr);
-
     int32_t low, high;
     bool hasDefault = false;
     if (caseCount == 0 ||
@@ -2647,10 +2645,8 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
         low = 0;
         high = -1;
     } else {
-        static const unsigned INTMAP_LENGTH = 256;
-        jsbitmap intmap_space[INTMAP_LENGTH];
-        jsbitmap* intmap = nullptr;
-        int32_t intmap_bitlen = 0;
+        Vector<jsbitmap, 128, SystemAllocPolicy> intmap;
+        int32_t intmapBitLength = 0;
 
         low  = JSVAL_INT_MAX;
         high = JSVAL_INT_MIN;
@@ -2687,7 +2683,7 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
             }
             if (i < low)
                 low = i;
-            if (high < i)
+            if (i > high)
                 high = i;
 
             /*
@@ -2697,22 +2693,11 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
              */
             if (i < 0)
                 i += JS_BIT(16);
-            if (i >= intmap_bitlen) {
-                if (!intmap &&
-                    size_t(i) < (INTMAP_LENGTH * JS_BITMAP_NBITS))
-                {
-                    intmap = intmap_space;
-                    intmap_bitlen = INTMAP_LENGTH * JS_BITMAP_NBITS;
-                } else {
-                    /* Just grab 8K for the worst-case bitmap. */
-                    intmap_bitlen = JS_BIT(16);
-                    intmap = cx->pod_malloc<jsbitmap>(JS_BIT(16) / JS_BITMAP_NBITS);
-                    if (!intmap) {
-                        ReportOutOfMemory(cx);
-                        return false;
-                    }
-                }
-                memset(intmap, 0, size_t(intmap_bitlen) / CHAR_BIT);
+            if (i >= intmapBitLength) {
+                size_t newLength = (i / JS_BITMAP_NBITS) + 1;
+                if (!intmap.resize(newLength))
+                    return false;
+                intmapBitLength = newLength * JS_BITMAP_NBITS;
             }
             if (JS_TEST_BIT(intmap, i)) {
                 switchOp = JSOP_CONDSWITCH;
@@ -2720,9 +2705,6 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
             }
             JS_SET_BIT(intmap, i);
         }
-
-        if (intmap && intmap != intmap_space)
-            js_free(intmap);
 
         /*
          * Compute table length and select condswitch instead if overlarge or
@@ -2758,6 +2740,8 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
     /* Emit switchOp followed by switchSize bytes of jump or lookup table. */
     if (!emitN(switchOp, switchSize))
         return false;
+
+    Vector<ParseNode*, 32, SystemAllocPolicy> table;
 
     ptrdiff_t condSwitchDefaultOff = -1;
     if (switchOp == JSOP_CONDSWITCH) {
@@ -2822,14 +2806,10 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
         SET_JUMP_OFFSET(pc, high);
         pc += JUMP_OFFSET_LEN;
 
-        /*
-         * Use malloc to avoid arena bloat for programs with many switches.
-         * UniquePtr takes care of freeing it on exit.
-         */
         if (tableLength != 0) {
-            table = cx->make_zeroed_pod_array<ParseNode*>(tableLength);
-            if (!table)
+            if (!table.growBy(tableLength))
                 return false;
+
             for (ParseNode* caseNode = cases->pn_head; caseNode; caseNode = caseNode->pn_next) {
                 if (caseNode->isKind(PNK_DEFAULT))
                     continue;
@@ -2844,6 +2824,7 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
 
                 i -= low;
                 MOZ_ASSERT(uint32_t(i) < tableLength);
+                MOZ_ASSERT(!table[i]);
                 table[i] = caseNode;
             }
         }
