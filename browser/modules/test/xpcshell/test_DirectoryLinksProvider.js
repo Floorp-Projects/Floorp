@@ -65,7 +65,7 @@ let gLastRequestPath;
 let suggestedTile1 = {
   url: "http://turbotax.com",
   type: "affiliate",
-  lastVisitDate: 3,
+  lastVisitDate: 4,
   frecent_sites: [
     "taxact.com",
     "hrblock.com",
@@ -76,7 +76,7 @@ let suggestedTile1 = {
 let suggestedTile2 = {
   url: "http://irs.gov",
   type: "affiliate",
-  lastVisitDate: 2,
+  lastVisitDate: 3,
   frecent_sites: [
     "taxact.com",
     "hrblock.com",
@@ -87,7 +87,7 @@ let suggestedTile2 = {
 let suggestedTile3 = {
   url: "http://hrblock.com",
   type: "affiliate",
-  lastVisitDate: 1,
+  lastVisitDate: 2,
   frecent_sites: [
     "taxact.com",
     "freetaxusa.com",
@@ -95,6 +95,14 @@ let suggestedTile3 = {
     "taxslayer.com"
   ]
 };
+let suggestedTile4 = {
+  url: "http://sponsoredtile.com",
+  type: "sponsored",
+  lastVisitDate: 1,
+  frecent_sites: [
+    "sponsoredtarget.com"
+  ]
+}
 let someOtherSite = {url: "http://someothersite.com", title: "Not_A_Suggested_Site"};
 
 function getHttpHandler(path) {
@@ -341,7 +349,7 @@ add_task(function test_updateSuggestedTile() {
 });
 
 add_task(function test_suggestedLinksMap() {
-  let data = {"suggested": [suggestedTile1, suggestedTile2, suggestedTile3], "directory": [someOtherSite]};
+  let data = {"suggested": [suggestedTile1, suggestedTile2, suggestedTile3, suggestedTile4], "directory": [someOtherSite]};
   let dataURI = 'data:application/json,' + JSON.stringify(data);
 
   yield promiseSetupDirectoryLinksProvider({linksURL: dataURI});
@@ -360,6 +368,7 @@ add_task(function test_suggestedLinksMap() {
     "taxslayer.com": [suggestedTile1, suggestedTile2, suggestedTile3],
     "freetaxusa.com": [suggestedTile2, suggestedTile3],
   };
+  do_check_eq([...DirectoryLinksProvider._suggestedLinks.keys()].indexOf("sponsoredtarget.com"), -1);
 
   DirectoryLinksProvider._suggestedLinks.forEach((suggestedLinks, site) => {
     let suggestedLinksItr = suggestedLinks.values();
@@ -482,7 +491,7 @@ add_task(function test_frequencyCappedSites_views() {
   let targets = ["top.site.com"];
   let data = {
     suggested: [{
-      type: "sponsored",
+      type: "affiliate",
       frecent_sites: targets,
       url: testUrl
     }],
@@ -525,15 +534,15 @@ add_task(function test_frequencyCappedSites_views() {
   }
 
   // Make sure we get 5 views of the link before it is removed
-  checkFirstTypeAndLength("sponsored", 2);
+  checkFirstTypeAndLength("affiliate", 2);
   synthesizeAction("view");
-  checkFirstTypeAndLength("sponsored", 2);
+  checkFirstTypeAndLength("affiliate", 2);
   synthesizeAction("view");
-  checkFirstTypeAndLength("sponsored", 2);
+  checkFirstTypeAndLength("affiliate", 2);
   synthesizeAction("view");
-  checkFirstTypeAndLength("sponsored", 2);
+  checkFirstTypeAndLength("affiliate", 2);
   synthesizeAction("view");
-  checkFirstTypeAndLength("sponsored", 2);
+  checkFirstTypeAndLength("affiliate", 2);
   synthesizeAction("view");
   checkFirstTypeAndLength("organic", 1);
 
@@ -553,7 +562,7 @@ add_task(function test_frequencyCappedSites_click() {
   let targets = ["top.site.com"];
   let data = {
     suggested: [{
-      type: "sponsored",
+      type: "affiliate",
       frecent_sites: targets,
       url: testUrl
     }],
@@ -596,9 +605,9 @@ add_task(function test_frequencyCappedSites_click() {
   }
 
   // Make sure the link disappears after the first click
-  checkFirstTypeAndLength("sponsored", 2);
+  checkFirstTypeAndLength("affiliate", 2);
   synthesizeAction("view");
-  checkFirstTypeAndLength("sponsored", 2);
+  checkFirstTypeAndLength("affiliate", 2);
   synthesizeAction("click");
   checkFirstTypeAndLength("organic", 1);
 
