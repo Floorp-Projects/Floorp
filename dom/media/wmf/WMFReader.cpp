@@ -84,9 +84,11 @@ WMFReader::~WMFReader()
 bool
 WMFReader::InitializeDXVA()
 {
-  if (!Preferences::GetBool("media.windows-media-foundation.use-dxva", false)) {
+  if (gfxWindowsPlatform::GetPlatform()->IsWARP() ||
+      !gfxPlatform::CanUseHardwareVideoDecoding()) {
     return false;
   }
+
   MOZ_ASSERT(mDecoder->GetImageContainer());
 
   // Extract the layer manager backend type so that we can determine
@@ -108,11 +110,6 @@ WMFReader::InitializeDXVA()
   if (backend != LayersBackend::LAYERS_D3D9 &&
       backend != LayersBackend::LAYERS_D3D10 &&
       backend != LayersBackend::LAYERS_D3D11) {
-    return false;
-  }
-
-  if (gfxWindowsPlatform::GetPlatform()->IsWARP() ||
-      !gfxPlatform::CanUseDXVA()) {
     return false;
   }
 
