@@ -2,7 +2,7 @@
 
 interface nsIDOMWindow;
 
-[scriptable, uuid(55d54034-1573-4889-b1d9-93ba12fc33c7)]
+[scriptable, uuid(530db841-1b2c-485a-beeb-f2b1acb9714e)]
 interface nsIWorkerDebuggerListener : nsISupports
 {
   void onClose();
@@ -10,10 +10,14 @@ interface nsIWorkerDebuggerListener : nsISupports
   void onError(in DOMString filename, in unsigned long lineno,
                in DOMString message);
 
+  void onFreeze();
+
   void onMessage(in DOMString message);
+
+  void onThaw();
 };
 
-[scriptable, builtinclass, uuid(28e0a60c-ff10-446c-8c2a-5fbdc01394ea)]
+[scriptable, builtinclass, uuid(d7c73e54-3c41-4393-9d13-fa2ed4Ba6764)]
 interface nsIWorkerDebugger : nsISupports
 {
   const unsigned long TYPE_DEDICATED = 0;
@@ -23,6 +27,8 @@ interface nsIWorkerDebugger : nsISupports
   readonly attribute bool isClosed;
 
   readonly attribute bool isChrome;
+
+  readonly attribute bool isFrozen;
 
   readonly attribute nsIWorkerDebugger parent;
 
