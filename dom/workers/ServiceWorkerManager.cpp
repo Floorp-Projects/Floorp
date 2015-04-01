@@ -311,18 +311,19 @@ public:
 class LifecycleEventWorkerRunnable final : public WorkerRunnable
 {
   nsString mEventName;
-  nsMainThreadPtrHandle<ContinueLifecycleTask> mTask;
+  const nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
+  const nsMainThreadPtrHandle<ContinueLifecycleTask> mTask;
 
 public:
-  LifecycleEventWorkerRunnable(WorkerPrivate* aWorkerPrivate,
+  LifecycleEventWorkerRunnable(nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker,
                                const nsString& aEventName,
                                const nsMainThreadPtrHandle<ContinueLifecycleTask>& aTask)
-      : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+      : WorkerRunnable(aServiceWorker->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
       , mEventName(aEventName)
+      , mServiceWorker(aServiceWorker)
       , mTask(aTask)
   {
     AssertIsOnMainThread();
-    MOZ_ASSERT(aWorkerPrivate);
   }
 
   bool
@@ -443,11 +444,13 @@ public:
 
 class CheckWorkerEvaluationAndContinueUpdateWorkerRunnable final : public WorkerRunnable
 {
+  const nsMainThreadPtrHandle<ServiceWorker> mServiceWorker;
   const nsMainThreadPtrHandle<nsISupports> mJob;
 public:
-  CheckWorkerEvaluationAndContinueUpdateWorkerRunnable(WorkerPrivate* aWorkerPrivate,
+  CheckWorkerEvaluationAndContinueUpdateWorkerRunnable(nsMainThreadPtrHandle<ServiceWorker>& aServiceWorker,
                                                        const nsMainThreadPtrHandle<nsISupports> aJob)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
+    : WorkerRunnable(aServiceWorker->GetWorkerPrivate(), WorkerThreadUnchangedBusyCount)
+    , mServiceWorker(aServiceWorker)
     , mJob(aJob)
   {
     AssertIsOnMainThread();
@@ -648,8 +651,10 @@ public:
     nsMainThreadPtrHandle<nsISupports> handle(
         new nsMainThreadPtrHolder<nsISupports>(upcasted));
 
+    nsMainThreadPtrHandle<ServiceWorker> serviceWorkerHandle(
+      new nsMainThreadPtrHolder<ServiceWorker>(serviceWorker));
     nsRefPtr<CheckWorkerEvaluationAndContinueUpdateWorkerRunnable> r =
-      new CheckWorkerEvaluationAndContinueUpdateWorkerRunnable(serviceWorker->GetWorkerPrivate(), handle);
+      new CheckWorkerEvaluationAndContinueUpdateWorkerRunnable(serviceWorkerHandle, handle);
     AutoJSAPI jsapi;
     jsapi.Init();
     bool ok = r->Dispatch(jsapi.cx());
@@ -713,8 +718,10 @@ public:
     nsMainThreadPtrHandle<ContinueLifecycleTask> handle(
         new nsMainThreadPtrHolder<ContinueLifecycleTask>(new ContinueInstallTask(this)));
 
+    nsMainThreadPtrHandle<ServiceWorker> serviceWorkerHandle(
+      new nsMainThreadPtrHolder<ServiceWorker>(serviceWorker));
     nsRefPtr<LifecycleEventWorkerRunnable> r =
-      new LifecycleEventWorkerRunnable(serviceWorker->GetWorkerPrivate(), NS_LITERAL_STRING("install"), handle);
+      new LifecycleEventWorkerRunnable(serviceWorkerHandle, NS_LITERAL_STRING("install"), handle);
 
     AutoJSAPI jsapi;
     jsapi.Init();
@@ -1207,8 +1214,10 @@ ServiceWorkerRegistrationInfo::Activate()
   nsMainThreadPtrHandle<ContinueLifecycleTask> handle(
     new nsMainThreadPtrHolder<ContinueLifecycleTask>(new ContinueActivateTask(this)));
 
+  nsMainThreadPtrHandle<ServiceWorker> serviceWorkerHandle(
+    new nsMainThreadPtrHolder<ServiceWorker>(serviceWorker));
   nsRefPtr<LifecycleEventWorkerRunnable> r =
-    new LifecycleEventWorkerRunnable(serviceWorker->GetWorkerPrivate(), NS_LITERAL_STRING("activate"), handle);
+    new LifecycleEventWorkerRunnable(serviceWorkerHandle, NS_LITERAL_STRING("activate"), handle);
 
   AutoJSAPI jsapi;
   jsapi.Init();
