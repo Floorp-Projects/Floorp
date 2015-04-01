@@ -141,4 +141,74 @@ async_test(function(t) {
 }, 'ready promise is rejected when an animation is cancelled by updating'
    + ' the animation property');
 
+async_test(function(t) {
+  var div = addDiv(t, { style: 'animation: abc 100s' });
+  var animation = div.getAnimations()[0];
+
+  var originalReadyPromise = animation.ready;
+  animation.ready.then(t.step_func(function() {
+    div.style.animationPlayState = 'paused';
+    assert_not_equals(animation.ready, originalReadyPromise,
+                      'A new Promise object is generated when setting'
+                      + ' animation-play-state: paused');
+    t.done();
+  }));
+}, 'A new ready promise is created when setting animation-play-state: paused');
+
+async_test(function(t) {
+  var div = addDiv(t, { style: 'animation: abc 100s' });
+  var animation = div.getAnimations()[0];
+
+  animation.ready.then(t.step_func(function() {
+    div.style.animationPlayState = 'paused';
+    var firstReadyPromise = animation.ready;
+    animation.pause();
+    assert_equals(animation.ready, firstReadyPromise,
+                  'Ready promise objects are identical after redundant pause');
+    t.done();
+  }));
+}, 'Pausing twice re-uses the same Promise');
+
+async_test(function(t) {
+  var div = addDiv(t, { style: 'animation: abc 100s' });
+  var animation = div.getAnimations()[0];
+
+  animation.ready.then(t.step_func(function() {
+    div.style.animationPlayState = 'paused';
+
+    // Flush style and verify we're pending at the same time
+    assert_equals(animation.playState, 'pending', 'Animation is pending');
+    var pauseReadyPromise = animation.ready;
+
+    // Now play again immediately
+    div.style.animationPlayState = 'running';
+    assert_equals(animation.playState, 'pending', 'Animation is still pending');
+    assert_equals(animation.ready, pauseReadyPromise,
+                  'The pause Promise is re-used when playing while waiting'
+                  + ' to pause');
+
+    return animation.ready;
+  })).then(t.step_func(function() {
+    assert_equals(animation.playState, 'running',
+                  'Animation is running after aborting a pause');
+    t.done();
+  }));
+}, 'If a pause operation is interrupted, the ready promise is reused');
+
+async_test(function(t) {
+  var div = addDiv(t, { style: 'animation: abc 100s' });
+  var animation = div.getAnimations()[0];
+
+  animation.ready.then(t.step_func(function() {
+    div.style.animationPlayState = 'paused';
+    return animation.ready;
+  })).then(t.step_func(function(resolvedAnimation) {
+    assert_equals(resolvedAnimation, animation,
+                  'Promise received when ready Promise for a pause operation'
+                  + ' is completed is the animation on which the pause was'
+                  + ' performed');
+    t.done();
+  }));
+}, 'When a pause is complete the Promise callback gets the correct animation');
+
 </script>
