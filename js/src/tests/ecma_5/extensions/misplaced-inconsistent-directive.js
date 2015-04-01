@@ -23,7 +23,7 @@ options("werror");
 
 function evaluateNoRval(code)
 {
-  evaluate(code, { compileAndGo: true, noScriptRval: true });
+  evaluate(code, { compileAndGo: true, isRunOnce: true, noScriptRval: true });
 }
 
 function expectSyntaxError(code)
