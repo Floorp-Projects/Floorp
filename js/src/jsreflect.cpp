@@ -3400,7 +3400,7 @@ ASTSerializer::function(ParseNode* pn, ASTType type, MutableHandleValue dst)
 
     bool isExpression =
 #if JS_HAS_EXPR_CLOSURES
-        func->isExprClosure();
+        func->isExprBody();
 #else
         false;
 #endif
