@@ -398,7 +398,7 @@ struct AutoSkipPropertyMirroring
 // add-ons in a separate compartment while still giving them access to the
 // chrome window.
 static bool
-sandbox_addProperty(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue vp)
+sandbox_addProperty(JSContext* cx, HandleObject obj, HandleId id, HandleValue v)
 {
     CompartmentPrivate* priv = CompartmentPrivate::Get(obj);
     MOZ_ASSERT(priv->writeToGlobalPrototype);
@@ -441,7 +441,7 @@ sandbox_addProperty(JSContext* cx, HandleObject obj, HandleId id, MutableHandleV
     // readonly attribute (as it calls JSObject::defineProperty). See bug
     // 1019181.
     if (pd.object() && !pd.configurable()) {
-        if (!JS_SetPropertyById(cx, proto, id, vp))
+        if (!JS_SetPropertyById(cx, proto, id, v))
             return false;
     } else {
         if (!JS_CopyPropertyFrom(cx, id, unwrappedProto, obj,
@@ -452,7 +452,7 @@ sandbox_addProperty(JSContext* cx, HandleObject obj, HandleId id, MutableHandleV
     if (!JS_GetPropertyDescriptorById(cx, obj, id, &pd))
         return false;
     unsigned attrs = pd.attributes() & ~(JSPROP_GETTER | JSPROP_SETTER);
-    if (!JS_DefinePropertyById(cx, obj, id, vp,
+    if (!JS_DefinePropertyById(cx, obj, id, v,
                                attrs | JSPROP_PROPOP_ACCESSORS | JSPROP_REDEFINE_NONCONFIGURABLE,
                                JS_PROPERTYOP_GETTER(writeToProto_getProperty),
                                JS_PROPERTYOP_SETTER(writeToProto_setProperty)))
@@ -868,16 +868,14 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
                          SandboxOptions& options)
 {
     // Create the sandbox global object
-    nsresult rv;
     nsCOMPtr<nsIPrincipal> principal = do_QueryInterface(prinOrSop);
     if (!principal) {
         nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(prinOrSop);
         if (sop) {
             principal = sop->GetPrincipal();
         } else {
-            nsRefPtr<nsNullPrincipal> nullPrin = new nsNullPrincipal();
-            rv = nullPrin->Init();
-            NS_ENSURE_SUCCESS(rv, rv);
+            nsRefPtr<nsNullPrincipal> nullPrin = nsNullPrincipal::Create();
+            NS_ENSURE_TRUE(nullPrin, NS_ERROR_FAILURE);
             principal = nullPrin;
         }
     }

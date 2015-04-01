@@ -555,7 +555,6 @@ enum ErrorArgumentsType {
     ArgumentsAreASCII
 };
 
-
 /*
  * Loads and returns a self-hosted function by name. For performance, define
  * the property name in vm/CommonPropertyNames.h.
@@ -581,10 +580,10 @@ ReportErrorNumberUCArray(JSContext* cx, unsigned flags, JSErrorCallback callback
 #endif
 
 extern bool
-ExpandErrorArguments(ExclusiveContext* cx, JSErrorCallback callback,
-                     void* userRef, const unsigned errorNumber,
-                     char** message, JSErrorReport* reportp,
-                     ErrorArgumentsType argumentsType, va_list ap);
+ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
+                       void* userRef, const unsigned errorNumber,
+                       char** message, JSErrorReport* reportp,
+                       ErrorArgumentsType argumentsType, va_list ap);
 
 /* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
 extern void

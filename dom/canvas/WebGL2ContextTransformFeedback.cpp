@@ -206,7 +206,7 @@ WebGL2Context::TransformFeedbackVaryings(WebGLProgram* program,
         return;
 
     GLsizei count = varyings.Length();
-    GLchar** tmpVaryings = (GLchar**) nsMemory::Alloc(count * sizeof(GLchar*));
+    GLchar** tmpVaryings = (GLchar**) moz_xmalloc(count * sizeof(GLchar*));
 
     for (GLsizei n = 0; n < count; n++) {
         tmpVaryings[n] = (GLchar*) ToNewCString(varyings[n]);

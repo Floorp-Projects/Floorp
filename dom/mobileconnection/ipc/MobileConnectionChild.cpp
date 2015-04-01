@@ -114,7 +114,7 @@ MobileConnectionChild::GetSupportedNetworkTypes(int32_t** aTypes,
 
   *aLength = mSupportedNetworkTypes.Length();
   *aTypes =
-    static_cast<int32_t*>(nsMemory::Alloc((*aLength) * sizeof(int32_t)));
+    static_cast<int32_t*>(moz_xmalloc((*aLength) * sizeof(int32_t)));
   NS_ENSURE_TRUE(*aTypes, NS_ERROR_OUT_OF_MEMORY);
 
   for (uint32_t i = 0; i < *aLength; i++) {

@@ -71,7 +71,7 @@ xpcTestObjectReadWrite :: xpcTestObjectReadWrite() {
 
 xpcTestObjectReadWrite :: ~xpcTestObjectReadWrite()
 {
-    nsMemory::Free(stringProperty);
+    free(stringProperty);
 }
 
 NS_IMETHODIMP xpcTestObjectReadWrite :: GetStringProperty(char * *aStringProperty) {
@@ -83,7 +83,7 @@ NS_IMETHODIMP xpcTestObjectReadWrite :: GetStringProperty(char * *aStringPropert
 
 }
 NS_IMETHODIMP xpcTestObjectReadWrite :: SetStringProperty(const char * aStringProperty) {
-    nsMemory::Free(stringProperty);
+    free(stringProperty);
     stringProperty = (char*) nsMemory::Clone(aStringProperty,
                                              sizeof(char)*(strlen(aStringProperty)+1));
     return NS_OK;

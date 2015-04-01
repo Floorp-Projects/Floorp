@@ -8957,6 +8957,7 @@
       },
       {
         "path": "IndexedDB/key_valid.html",
+        "timeout": "long",
         "url": "/IndexedDB/key_valid.html"
       },
       {

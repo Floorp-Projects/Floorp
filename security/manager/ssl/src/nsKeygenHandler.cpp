@@ -389,7 +389,7 @@ GetSlotWithMechanism(uint32_t aMechanism,
         }
 
         // Allocate the slot name buffer //
-        tokenNameList = static_cast<char16_t**>(nsMemory::Alloc(sizeof(char16_t *) * numSlots));
+        tokenNameList = static_cast<char16_t**>(moz_xmalloc(sizeof(char16_t *) * numSlots));
         if (!tokenNameList) {
             rv = NS_ERROR_OUT_OF_MEMORY;
             goto loser;
@@ -761,10 +761,10 @@ loser:
         NS_RELEASE(KeygenRunnable);
     }
     if (keyparamsString) {
-        nsMemory::Free(keyparamsString);
+        free(keyparamsString);
     }
     if (pkac.challenge.data) {
-        nsMemory::Free(pkac.challenge.data);
+        free(pkac.challenge.data);
     }
     return rv;
 }

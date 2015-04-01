@@ -164,8 +164,10 @@ LOCAL_INCLUDES += [
     '/toolkit/crashreporter',
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_ARCH'] == 'WINNT':
     LOCAL_INCLUDES += [
+        '/security/sandbox/chromium',
+        '/security/sandbox/chromium-shim',
         '/security/sandbox/win/src/sandboxbroker',
     ]
 

@@ -53,7 +53,7 @@ public:
                            const char16_t* aFmt, ...);
 
   /*
-   * sprintf into a nsMemory::Alloc'd buffer. Return a pointer to
+   * sprintf into a moz_xmalloc'd buffer. Return a pointer to
    * buffer on success, nullptr on failure.
    */
   static char16_t* smprintf(const char16_t* aFmt, ...);
@@ -71,7 +71,7 @@ public:
   /*
    * Free the memory allocated, for the caller, by smprintf.
    * -- Deprecated --
-   * Callers can substitute calling smprintf_free with nsMemory::Free
+   * Callers can substitute calling smprintf_free with free
    */
   static void smprintf_free(char16_t* aMem);
 

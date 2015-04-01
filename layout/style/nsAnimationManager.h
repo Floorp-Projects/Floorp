@@ -80,6 +80,13 @@ public:
 
   void QueueEvents(EventArray& aEventsToDispatch);
 
+  // Is this animation currently in effect for the purposes of computing
+  // mWinsInCascade.  (In general, this can be computed from the timing
+  // function.  This boolean remembers the state as of the last time we
+  // called UpdateCascadeResults so we know if it changes and we need to
+  // call UpdateCascadeResults again.)
+  bool mInEffectForCascadeResults;
+
 protected:
   virtual ~CSSAnimationPlayer() { }
   virtual css::CommonAnimationManager* GetAnimationManager() const override;
@@ -159,10 +166,12 @@ public:
   }
 
   static mozilla::AnimationPlayerCollection*
-  GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty)
+  GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty,
+                             mozilla::GetCompositorAnimationOptions aFlags
+                               = mozilla::GetCompositorAnimationOptions(0))
   {
     return mozilla::css::CommonAnimationManager::GetAnimationsForCompositor(
-      aContent, nsGkAtoms::animationsProperty, aProperty);
+      aContent, nsGkAtoms::animationsProperty, aProperty, aFlags);
   }
 
   void UpdateStyleAndEvents(mozilla::AnimationPlayerCollection* aEA,
@@ -170,6 +179,9 @@ public:
                             mozilla::EnsureStyleRuleFlags aFlags);
   void QueueEvents(mozilla::AnimationPlayerCollection* aEA,
                    mozilla::EventArray &aEventsToDispatch);
+
+  void MaybeUpdateCascadeResults(mozilla::AnimationPlayerCollection*
+                                   aCollection);
 
   // nsIStyleRuleProcessor (parts)
   virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
@@ -236,6 +248,10 @@ private:
                     float aFromKey, nsStyleContext* aFromContext,
                     mozilla::css::Declaration* aFromDeclaration,
                     float aToKey, nsStyleContext* aToContext);
+
+  static void UpdateCascadeResults(nsStyleContext* aStyleContext,
+                                   mozilla::AnimationPlayerCollection*
+                                     aElementAnimations);
 
   // The guts of DispatchEvents
   void DoDispatchEvents();

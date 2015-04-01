@@ -20,7 +20,6 @@
 #include "nsIPrefService.h"
 #include "nsIClientAuthDialogs.h"
 #include "nsClientAuthRemember.h"
-#include "nsISSLErrorListener.h"
 
 #include "nsNetUtil.h"
 #include "nsPrintfCString.h"
@@ -619,29 +618,6 @@ nsHandleSSLError(nsNSSSocketInfo* socketInfo,
     // If the socket has been flagged as canceled,
     // the code who did was responsible for setting the error code.
     return;
-  }
-
-  nsresult rv;
-  NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
-  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
-  if (NS_FAILED(rv))
-    return;
-
-  // Try to get a nsISSLErrorListener implementation from the socket consumer.
-  nsCOMPtr<nsIInterfaceRequestor> cb;
-  socketInfo->GetNotificationCallbacks(getter_AddRefs(cb));
-  if (cb) {
-    nsCOMPtr<nsISSLErrorListener> sel = do_GetInterface(cb);
-    if (sel) {
-      nsIInterfaceRequestor* csi = static_cast<nsIInterfaceRequestor*>(socketInfo);
-
-      nsCString hostWithPortString;
-      getSiteKey(socketInfo->GetHostName(), socketInfo->GetPort(),
-                 hostWithPortString);
-
-      bool suppressMessage = false; // obsolete, ignored
-      rv = sel->NotifySSLError(csi, err, hostWithPortString, &suppressMessage);
-    }
   }
 
   // We must cancel first, which sets the error code.
@@ -1995,7 +1971,7 @@ nsGetUserCertChoice(SSM_UserCertChoice* certChoice)
 
 loser:
   if (mode) {
-    nsMemory::Free(mode);
+    free(mode);
   }
   return ret;
 }
@@ -2366,13 +2342,13 @@ ClientAuthDataRunnable::RunOnTargetThread()
       if (cissuer) PORT_Free(cissuer);
 
       certNicknameList =
-        (char16_t**)nsMemory::Alloc(sizeof(char16_t*)* nicknames->numnicknames);
+        (char16_t**)moz_xmalloc(sizeof(char16_t*)* nicknames->numnicknames);
       if (!certNicknameList)
         goto loser;
       certDetailsList =
-        (char16_t**)nsMemory::Alloc(sizeof(char16_t*)* nicknames->numnicknames);
+        (char16_t**)moz_xmalloc(sizeof(char16_t*)* nicknames->numnicknames);
       if (!certDetailsList) {
-        nsMemory::Free(certNicknameList);
+        free(certNicknameList);
         goto loser;
       }
 
@@ -2397,7 +2373,7 @@ ClientAuthDataRunnable::RunOnTargetThread()
           continue;
         certDetailsList[CertsToUse] = ToNewUnicode(details);
         if (!certDetailsList[CertsToUse]) {
-          nsMemory::Free(certNicknameList[CertsToUse]);
+          free(certNicknameList[CertsToUse]);
           continue;
         }
 

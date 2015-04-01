@@ -3724,7 +3724,7 @@ CheckFunctionHead(ModuleCompiler& m, ParseNode* fn)
     JSFunction* fun = FunctionObject(fn);
     if (fun->hasRest())
         return m.fail(fn, "rest args not allowed");
-    if (fun->isExprClosure())
+    if (fun->isExprBody())
         return m.fail(fn, "expression closures not allowed");
     if (fn->pn_funbox->hasDestructuringArgs)
         return m.fail(fn, "destructuring args not allowed");
