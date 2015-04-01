@@ -8,7 +8,6 @@ import org.mozilla.gecko.Actions;
 import org.mozilla.gecko.R;
 
 import com.jayway.android.robotium.solo.Condition;
-
 import android.view.View;
 
 /**
@@ -33,13 +32,13 @@ public class testClearPrivateData extends PixelTest {
     private void clearHistory() {
 
         // Loading a page and adding a second one as bookmark to have user made bookmarks and history
-        String blank1 = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
-        String blank2 = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
-        String title = StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE;
+        String blank1 = getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL);
+        String blank2 = getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_02_URL);
+        String title = mStringHelper.ROBOCOP_BLANK_PAGE_01_TITLE;
 
         loadUrl(blank1);
         verifyUrlBarTitle(blank1);
-        mDatabaseHelper.addOrUpdateMobileBookmark(StringHelper.ROBOCOP_BLANK_PAGE_02_TITLE, blank2);
+        mDatabaseHelper.addOrUpdateMobileBookmark(mStringHelper.ROBOCOP_BLANK_PAGE_02_TITLE, blank2);
 
         // Checking that the history list is not empty
         verifyHistoryCount(1);
@@ -66,9 +65,8 @@ public class testClearPrivateData extends PixelTest {
 
     public void clearSiteSettings() {
         String shareStrings[] = {"Share your location with", "Share", "Don't share", "There are no settings to clear"};
-        String titleGeolocation = StringHelper.ROBOCOP_GEOLOCATION_TITLE;
-        String url = getAbsoluteUrl(StringHelper.ROBOCOP_GEOLOCATION_URL);
-
+        String titleGeolocation = mStringHelper.ROBOCOP_GEOLOCATION_TITLE;
+        String url = getAbsoluteUrl(mStringHelper.ROBOCOP_GEOLOCATION_URL);
         loadCheckDismiss(shareStrings[1], url, shareStrings[0]);
         checkOption(shareStrings[1], "Clear");
         checkOption(shareStrings[3], "Cancel");
@@ -78,14 +76,14 @@ public class testClearPrivateData extends PixelTest {
     }
 
     public void clearPassword(){
-        String passwordStrings[] = { StringHelper.LOGIN_MESSAGE, StringHelper.LOGIN_ALLOW, StringHelper.LOGIN_DENY };
-        String title = StringHelper.ROBOCOP_BLANK_PAGE_01_TITLE;
-        String loginUrl = getAbsoluteUrl(StringHelper.ROBOCOP_LOGIN_01_URL);
+        String passwordStrings[] = { mStringHelper.LOGIN_MESSAGE, mStringHelper.LOGIN_ALLOW, mStringHelper.LOGIN_DENY };
+        String title = mStringHelper.ROBOCOP_BLANK_PAGE_01_TITLE;
+        String loginUrl = getAbsoluteUrl(mStringHelper.ROBOCOP_LOGIN_01_URL);
 
         loadCheckDismiss(passwordStrings[1], loginUrl, passwordStrings[0]);
-        checkOption(StringHelper.CONTEXT_MENU_SITE_SETTINGS_SAVE_PASSWORD, "Clear");
+        checkOption(mStringHelper.CONTEXT_MENU_SITE_SETTINGS_SAVE_PASSWORD, "Clear");
         loadCheckDismiss(passwordStrings[2], loginUrl, passwordStrings[0]);
-        checkDevice(title, getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL));
+        checkDevice(title, getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL));
     }
 
     // clear private data and verify the device type because for phone there is an extra back action to exit the settings menu
@@ -93,7 +91,7 @@ public class testClearPrivateData extends PixelTest {
         clearPrivateData();
         if (mDevice.type.equals("phone")) {
             mActions.sendSpecialKey(Actions.SpecialKey.BACK);
-            mAsserter.ok(waitForText(StringHelper.PRIVACY_SECTION_LABEL), "waiting to perform one back", "one back");
+            mAsserter.ok(waitForText(mStringHelper.PRIVACY_SECTION_LABEL), "waiting to perform one back", "one back");
         }
         mActions.sendSpecialKey(Actions.SpecialKey.BACK);
         verifyUrlBarTitle(url);
@@ -114,14 +112,14 @@ public class testClearPrivateData extends PixelTest {
             // Use the context menu in pre-11
             final View toolbarView = mSolo.getView(R.id.browser_toolbar);
             mSolo.clickLongOnView(toolbarView);
-            mAsserter.ok(waitForText(StringHelper.CONTEXT_MENU_ITEMS_IN_URL_BAR[2]), "Waiting for the pop-up to open", "Pop up was opened");
+            mAsserter.ok(waitForText(mStringHelper.CONTEXT_MENU_ITEMS_IN_URL_BAR[2]), "Waiting for the pop-up to open", "Pop up was opened");
         } else {
             // Use the Page menu in 11+
-            selectMenuItem(StringHelper.PAGE_LABEL);
-            mAsserter.ok(waitForText(StringHelper.CONTEXT_MENU_ITEMS_IN_URL_BAR[2]), "Waiting for the submenu to open", "Submenu was opened");
+            selectMenuItem(mStringHelper.PAGE_LABEL);
+            mAsserter.ok(waitForText(mStringHelper.CONTEXT_MENU_ITEMS_IN_URL_BAR[2]), "Waiting for the submenu to open", "Submenu was opened");
         }
 
-        mSolo.clickOnText(StringHelper.CONTEXT_MENU_ITEMS_IN_URL_BAR[2]);
+	mSolo.clickOnText(mStringHelper.CONTEXT_MENU_ITEMS_IN_URL_BAR[2]);
         mAsserter.ok(waitForText(option), "Verify that the option: " + option + " is in the list", "The option is in the list. There are settings to clear");
         mSolo.clickOnButton(button);
     }
