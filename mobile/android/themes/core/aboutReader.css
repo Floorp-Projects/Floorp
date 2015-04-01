@@ -365,7 +365,7 @@ body {
 /* Only used on desktop */
 .dropdown-popup > hr,
 .dropdown-arrow,
-#font-type-buttons > button > span {
+#font-type-buttons > button > .name {
   display: none;
 }
 
