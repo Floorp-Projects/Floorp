@@ -727,6 +727,7 @@ class WorkerDebugger : public nsIWorkerDebugger {
 
   // Only touched on the main thread.
   bool mIsInitialized;
+  bool mIsFrozen;
   nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> mListeners;
 
 public:
@@ -748,6 +749,12 @@ public:
   Disable();
 
   void
+  Freeze();
+
+  void
+  Thaw();
+
+  void
   PostMessageToDebugger(const nsAString& aMessage);
 
   void
@@ -760,6 +767,12 @@ private:
 
   void
   NotifyIsEnabled(bool aIsEnabled);
+
+  void
+  FreezeOnMainThread();
+
+  void
+  ThawOnMainThread();
 
   void
   PostMessageToDebuggerOnMainThread(const nsAString& aMessage);
