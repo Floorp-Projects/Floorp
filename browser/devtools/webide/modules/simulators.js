@@ -5,8 +5,9 @@
 const { Cu } = require("chrome");
 const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm");
 const { EventEmitter } = Cu.import("resource://gre/modules/devtools/event-emitter.js");
-const { ConnectionManager } = require("devtools/client/connection-manager");
-const { AddonSimulatorProcess, OldAddonSimulatorProcess } = require("devtools/webide/simulator-process");
+loader.lazyRequireGetter(this, "ConnectionManager", "devtools/client/connection-manager", true);
+loader.lazyRequireGetter(this, "AddonSimulatorProcess", "devtools/webide/simulator-process", true);
+loader.lazyRequireGetter(this, "OldAddonSimulatorProcess", "devtools/webide/simulator-process", true);
 const promise = require("promise");
 
 const SimulatorRegExp = new RegExp(Services.prefs.getCharPref("devtools.webide.simulatorAddonRegExp"));

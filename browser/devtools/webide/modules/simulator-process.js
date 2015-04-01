@@ -13,19 +13,23 @@ const { EventEmitter } = Cu.import("resource://gre/modules/devtools/event-emitte
 const { Promise: promise } = Cu.import("resource://gre/modules/Promise.jsm", {});
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
-let platform = Services.appShell.hiddenDOMWindow.navigator.platform;
-let OS = "";
-if (platform.indexOf("Win") != -1) {
-  OS = "win32";
-} else if (platform.indexOf("Mac") != -1) {
-  OS = "mac64";
-} else if (platform.indexOf("Linux") != -1) {
-  if (platform.indexOf("x86_64") != -1) {
-    OS = "linux64";
-  } else {
-    OS = "linux32";
+loader.lazyGetter(this, "OS", () => {
+  const Runtime = require("sdk/system/runtime");
+  switch (Runtime.OS) {
+    case "Darwin":
+      return "mac64";
+    case "Linux":
+      if (Runtime.XPCOMABI.indexOf("x86_64") === 0) {
+        return "linux64";
+      } else {
+        return "linux32";
+      }
+    case "WINNT":
+      return "win32";
+    default:
+      return "";
   }
-}
+});
 
 function SimulatorProcess() {}
 SimulatorProcess.prototype = {
