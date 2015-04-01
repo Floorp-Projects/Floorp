@@ -1,0 +1,118 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>Test for BroadcastChannel - Private Browsing</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+</head>
+<body>
+
+<script type="application/javascript">
+
+const Ci = Components.interfaces;
+var mainWindow;
+
+var prefBranch = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
+prefBranch.setIntPref("browser.startup.page", 0);
+prefBranch.setCharPref("browser.startup.homepage_override.mstone", "ignore");
+
+var contentPage = "http://mochi.test:8888/chrome/dom/broadcastchannel/tests/blank.html";
+
+function testOnWindow(aIsPrivate, aCallback) {
+  var win = mainWindow.OpenBrowserWindow({private: aIsPrivate});
+  win.addEventListener("load", function onLoad() {
+    win.removeEventListener("load", onLoad, false);
+    win.addEventListener("DOMContentLoaded", function onInnerLoad() {
+      if (win.content.location.href != contentPage) {
+        win.gBrowser.loadURI(contentPage);
+        return;
+      }
+
+      win.removeEventListener("DOMContentLoaded", onInnerLoad, true);
+      SimpleTest.executeSoon(function() { aCallback(win); });
+    }, true);
+
+    if (!aIsPrivate) {
+      win.gBrowser.loadURI(contentPage);
+    }
+  }, true);
+}
+
+function setupWindow() {
+  mainWindow = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIWebNavigation)
+                     .QueryInterface(Ci.nsIDocShellTreeItem)
+                     .rootTreeItem
+                     .QueryInterface(Ci.nsIInterfaceRequestor)
+                     .getInterface(Ci.nsIDOMWindow);
+  runTest();
+}
+
+var gCounter = 0;
+
+function check(msg, private) {
+  is(msg, private ? "private" : "public", "Correct context!");
+  gCounter++;
+
+  if (gCounter > 1) {
+    runTest();
+  }
+}
+
+var wN;
+var wP;
+
+function doTests() {
+  testOnWindow(false, function(aWin) {
+    wN = aWin;
+
+    testOnWindow(true, function(aWin) {
+      wP = aWin;
+
+      var bcP = new wP.content.BroadcastChannel('foobar');
+      bcP.onmessage = function(e) { ok(false, "This should not be called!"); }
+
+      var bc = new wP.content.BroadcastChannel('foobar');
+      bc.onmessage = function(e) { check(e.data, true); }
+
+      var bcN = new wN.content.BroadcastChannel('foobar');
+      bcN.onmessage = function(e) { ok(false, "This should not be called!"); }
+
+      var bc = new wN.content.BroadcastChannel('foobar');
+      bc.onmessage = function(e) { check(e.data, false); }
+
+      bcP.postMessage('private');
+      bcN.postMessage('public');
+    });
+  });
+}
+
+var steps = [
+  setupWindow,
+  doTests
+];
+
+function runTest() {
+  if (!steps.length) {
+    wN.close();
+    wP.close();
+
+    prefBranch.clearUserPref("browser.startup.page")
+    prefBranch.clearUserPref("browser.startup.homepage_override.mstone");
+
+    SimpleTest.finish();
+    return;
+  }
+
+  var step = steps.shift();
+  step();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({"set": [["dom.broadcastChannel.enabled", true]]}, runTest);
+
+</script>
+</body>
+</html>
+
+

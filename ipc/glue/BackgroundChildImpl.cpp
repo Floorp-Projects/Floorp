@@ -220,10 +220,11 @@ BackgroundChildImpl::DeallocPVsyncChild(PVsyncChild* aActor)
 dom::PBroadcastChannelChild*
 BackgroundChildImpl::AllocPBroadcastChannelChild(const PrincipalInfo& aPrincipalInfo,
                                                  const nsString& aOrigin,
-                                                 const nsString& aChannel)
+                                                 const nsString& aChannel,
+                                                 const bool& aPrivateBrowsing)
 {
   nsRefPtr<dom::BroadcastChannelChild> agent =
-    new dom::BroadcastChannelChild(aOrigin, aChannel);
+    new dom::BroadcastChannelChild(aOrigin);
   return agent.forget().take();
 }
 
