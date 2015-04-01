@@ -37,7 +37,6 @@ const kPrefCustomizationState        = "browser.uiCustomization.state";
 const kPrefCustomizationAutoAdd      = "browser.uiCustomization.autoAdd";
 const kPrefCustomizationDebug        = "browser.uiCustomization.debug";
 const kPrefDrawInTitlebar            = "browser.tabs.drawInTitlebar";
-const kPrefDeveditionTheme           = "browser.devedition.theme.enabled";
 const kPrefWebIDEInNavbar            = "devtools.webide.widget.inNavbarByDefault";
 
 /**
@@ -2332,7 +2331,6 @@ let CustomizableUIInternal = {
   _resetUIState: function() {
     try {
       gUIStateBeforeReset.drawInTitlebar = Services.prefs.getBoolPref(kPrefDrawInTitlebar);
-      gUIStateBeforeReset.deveditionTheme = Services.prefs.getBoolPref(kPrefDeveditionTheme);
       gUIStateBeforeReset.uiCustomizationState = Services.prefs.getCharPref(kPrefCustomizationState);
     } catch(e) { }
 
@@ -2340,7 +2338,6 @@ let CustomizableUIInternal = {
 
     Services.prefs.clearUserPref(kPrefCustomizationState);
     Services.prefs.clearUserPref(kPrefDrawInTitlebar);
-    Services.prefs.clearUserPref(kPrefDeveditionTheme);
     LOG("State reset");
 
     // Reset placements to make restoring default placements possible.
@@ -2402,15 +2399,13 @@ let CustomizableUIInternal = {
    */
   undoReset: function() {
     if (gUIStateBeforeReset.uiCustomizationState == null ||
-        gUIStateBeforeReset.drawInTitlebar == null ||
-        gUIStateBeforeReset.deveditionTheme == null) {
+        gUIStateBeforeReset.drawInTitlebar == null) {
       return;
     }
     gUndoResetting = true;
 
     let uiCustomizationState = gUIStateBeforeReset.uiCustomizationState;
     let drawInTitlebar = gUIStateBeforeReset.drawInTitlebar;
-    let deveditionTheme = gUIStateBeforeReset.deveditionTheme;
 
     // Need to clear the previous state before setting the prefs
     // because pref observers may check if there is a previous UI state.
@@ -2418,7 +2413,6 @@ let CustomizableUIInternal = {
 
     Services.prefs.setCharPref(kPrefCustomizationState, uiCustomizationState);
     Services.prefs.setBoolPref(kPrefDrawInTitlebar, drawInTitlebar);
-    Services.prefs.setBoolPref(kPrefDeveditionTheme, deveditionTheme);
     this.loadSavedState();
     // If the user just customizes toolbar/titlebar visibility, gSavedState will be null
     // and we don't need to do anything else here:
@@ -2594,10 +2588,6 @@ let CustomizableUIInternal = {
 
     if (Services.prefs.prefHasUserValue(kPrefDrawInTitlebar)) {
       LOG(kPrefDrawInTitlebar + " pref is non-default");
-      return false;
-    }
-    if (Services.prefs.prefHasUserValue(kPrefDeveditionTheme)) {
-      LOG(kPrefDeveditionTheme + " pref is non-default");
       return false;
     }
 
@@ -3300,8 +3290,7 @@ this.CustomizableUI = {
    */
   get canUndoReset() {
     return gUIStateBeforeReset.uiCustomizationState != null ||
-           gUIStateBeforeReset.drawInTitlebar != null ||
-           gUIStateBeforeReset.deveditionTheme != null;
+           gUIStateBeforeReset.drawInTitlebar != null;
   },
 
   /**
