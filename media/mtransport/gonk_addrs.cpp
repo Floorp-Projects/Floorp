@@ -85,7 +85,7 @@ GetInterfaces(std::vector<NetworkInterface>* aInterfaces)
       }
     }
 
-    nsMemory::Free(prefixs);
+    free(prefixs);
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, ips);
 
     if (!isAddressGot) {

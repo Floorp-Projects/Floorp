@@ -328,7 +328,8 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
 }
 
 void
-PeerConnectionMedia::UpdateTransports(const JsepSession& session) {
+PeerConnectionMedia::UpdateTransports(const JsepSession& session,
+                                      bool restartGathering) {
 
   auto transports = session.GetTransports();
   for (size_t i = 0; i < transports.size(); ++i) {
@@ -361,8 +362,9 @@ PeerConnectionMedia::UpdateTransports(const JsepSession& session) {
                   NS_DISPATCH_NORMAL);
   }
 
-
-  GatherIfReady();
+  if (restartGathering) {
+    GatherIfReady();
+  }
 }
 
 nsresult PeerConnectionMedia::UpdateMediaPipelines(

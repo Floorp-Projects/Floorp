@@ -78,42 +78,61 @@ nsChannelClassifier::ShouldEnableTrackingProtection(nsIChannel *aChannel,
     nsCOMPtr<mozIThirdPartyUtil> thirdPartyUtil =
         do_GetService(THIRDPARTYUTIL_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    // Third party checks don't work for chrome:// URIs in mochitests, so just
-    // default to isThirdParty = true
-    bool isThirdParty = true;
-    (void)thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &isThirdParty);
-    if (!isThirdParty) {
-        *result = false;
-        return NS_OK;
-    }
-
-
-    nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIURI> uri;
-    rv = chan->GetTopWindowURI(getter_AddRefs(uri));
+    nsCOMPtr<nsIURI> topWinURI;
+    rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (!uri) {
+    if (!topWinURI) {
       LOG(("nsChannelClassifier[%p]: No window URI\n", this));
     }
 
+    nsCOMPtr<nsIURI> chanURI;
+    rv = aChannel->GetURI(getter_AddRefs(chanURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // Third party checks don't work for chrome:// URIs in mochitests, so just
+    // default to isThirdParty = true. We check isThirdPartyWindow to expand
+    // the list of domains that are considered first party (e.g., if
+    // facebook.com includes an iframe from fatratgames.com, all subsources
+    // included in that iframe are considered third-party with
+    // isThirdPartyChannel, even if they are not third-party w.r.t.
+    // facebook.com), and isThirdPartyChannel to prevent top-level navigations
+    // from being detected as third-party.
+    bool isThirdPartyChannel = true;
+    bool isThirdPartyWindow = true;
+    thirdPartyUtil->IsThirdPartyURI(chanURI, topWinURI, &isThirdPartyWindow);
+    thirdPartyUtil->IsThirdPartyChannel(aChannel, nullptr, &isThirdPartyChannel);
+    if (!isThirdPartyWindow || !isThirdPartyChannel) {
+        *result = false;
+#ifdef DEBUG
+        nsCString spec;
+        chanURI->GetSpec(spec);
+        LOG(("nsChannelClassifier[%p]: Skipping tracking protection checks for "
+             "first party or top-level load channel[%p] with uri %s", this, aChannel,
+             spec.get()));
+#endif
+        return NS_OK;
+    }
+
+    nsCOMPtr<nsIIOService> ios = do_GetService(NS_IOSERVICE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     const char ALLOWLIST_EXAMPLE_PREF[] = "channelclassifier.allowlist_example";
-    if (!uri && Preferences::GetBool(ALLOWLIST_EXAMPLE_PREF, false)) {
+    if (!topWinURI && Preferences::GetBool(ALLOWLIST_EXAMPLE_PREF, false)) {
       LOG(("nsChannelClassifier[%p]: Allowlisting test domain\n", this));
       rv = ios->NewURI(NS_LITERAL_CSTRING("http://allowlisted.example.com"),
-                       nullptr, nullptr, getter_AddRefs(uri));
+                       nullptr, nullptr, getter_AddRefs(topWinURI));
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
     // Take the host/port portion so we can allowlist by site. Also ignore the
     // scheme, since users who put sites on the allowlist probably don't expect
     // allowlisting to depend on scheme.
-    nsCOMPtr<nsIURL> url = do_QueryInterface(uri, &rv);
+    nsCOMPtr<nsIURL> url = do_QueryInterface(topWinURI, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCString escaped(NS_LITERAL_CSTRING("https://"));
@@ -123,7 +142,7 @@ nsChannelClassifier::ShouldEnableTrackingProtection(nsIChannel *aChannel,
     escaped.Append(temp);
 
     // Stuff the whole thing back into a URI for the permission manager.
-    rv = ios->NewURI(escaped, nullptr, nullptr, getter_AddRefs(uri));
+    rv = ios->NewURI(escaped, nullptr, nullptr, getter_AddRefs(topWinURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIPermissionManager> permMgr =
@@ -131,7 +150,7 @@ nsChannelClassifier::ShouldEnableTrackingProtection(nsIChannel *aChannel,
     NS_ENSURE_SUCCESS(rv, rv);
 
     uint32_t permissions = nsIPermissionManager::UNKNOWN_ACTION;
-    rv = permMgr->TestPermission(uri, "trackingprotection", &permissions);
+    rv = permMgr->TestPermission(topWinURI, "trackingprotection", &permissions);
     NS_ENSURE_SUCCESS(rv, rv);
 
 #ifdef DEBUG
@@ -155,9 +174,8 @@ nsChannelClassifier::ShouldEnableTrackingProtection(nsIChannel *aChannel,
 #ifdef DEBUG
       nsCString topspec;
       nsCString spec;
-      uri->GetSpec(topspec);
-      aChannel->GetURI(getter_AddRefs(uri));
-      uri->GetSpec(spec);
+      topWinURI->GetSpec(topspec);
+      chanURI->GetSpec(spec);
       LOG(("nsChannelClassifier[%p]: Enabling tracking protection checks on channel[%p] "
            "with uri %s for toplevel window %s", this, aChannel, spec.get(),
            topspec.get()));

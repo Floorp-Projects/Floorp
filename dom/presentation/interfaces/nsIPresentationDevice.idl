@@ -48,7 +48,8 @@ interface nsIPresentationDevice : nsISupports
    * Establish a control channel to this device.
    * @param url The URL requested to open by remote device.
    * @param presentationId The Id for representing this session.
-   * @return The control channel for this session.
+   * @returns The control channel for this session.
+   * @throws  NS_ERROR_FAILURE if the establishment fails
    */
   nsIPresentationControlChannel establishControlChannel(in DOMString url,
                                                         in DOMString presentationId);

@@ -14,29 +14,51 @@
 #include "nsNetUtil.h"
 #include "nsEscape.h"
 #include "nsCRT.h"
+#include "nsIUUIDGenerator.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 //// nsNullPrincipalURI
 
-nsNullPrincipalURI::nsNullPrincipalURI(const nsCString &aSpec)
+nsNullPrincipalURI::nsNullPrincipalURI()
+  : mPath(mPathBytes, ArrayLength(mPathBytes), ArrayLength(mPathBytes) - 1)
 {
-  InitializeFromSpec(aSpec);
 }
 
-void
-nsNullPrincipalURI::InitializeFromSpec(const nsCString &aSpec)
+nsNullPrincipalURI::nsNullPrincipalURI(const nsNullPrincipalURI& aOther)
+  : mPath(mPathBytes, ArrayLength(mPathBytes), ArrayLength(mPathBytes) - 1)
 {
-  int32_t dividerPosition = aSpec.FindChar(':');
-  NS_ASSERTION(dividerPosition != -1, "Malformed URI!");
+  mPath.Assign(aOther.mPath);
+}
 
-  mozilla::DebugOnly<int32_t> n = aSpec.Left(mScheme, dividerPosition);
-  NS_ASSERTION(n == dividerPosition, "Storing the scheme failed!");
+nsresult
+nsNullPrincipalURI::Init()
+{
+  // FIXME: bug 327161 -- make sure the uuid generator is reseeding-resistant.
+  nsCOMPtr<nsIUUIDGenerator> uuidgen = services::GetUUIDGenerator();
+  NS_ENSURE_TRUE(uuidgen, NS_ERROR_NOT_AVAILABLE);
 
-  int32_t count = aSpec.Length() - dividerPosition - 1;
-  n = aSpec.Mid(mPath, dividerPosition + 1, count);
-  NS_ASSERTION(n == count, "Storing the path failed!");
+  nsID id;
+  nsresult rv = uuidgen->GenerateUUIDInPlace(&id);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  ToLowerCase(mScheme);
+  MOZ_ASSERT(mPathBytes == mPath.BeginWriting());
+
+  id.ToProvidedString(mPathBytes);
+
+  MOZ_ASSERT(mPath.Length() == NSID_LENGTH - 1);
+  MOZ_ASSERT(strlen(mPath.get()) == NSID_LENGTH - 1);
+
+  return NS_OK;
+}
+
+/* static */
+already_AddRefed<nsNullPrincipalURI>
+nsNullPrincipalURI::Create()
+{
+  nsRefPtr<nsNullPrincipalURI> uri = new nsNullPrincipalURI();
+  nsresult rv = uri->Init();
+  NS_ENSURE_SUCCESS(rv, nullptr);
+  return uri.forget();
 }
 
 static NS_DEFINE_CID(kNullPrincipalURIImplementationCID,
@@ -147,7 +169,7 @@ nsNullPrincipalURI::SetRef(const nsACString &aRef)
 NS_IMETHODIMP
 nsNullPrincipalURI::GetPrePath(nsACString &_prePath)
 {
-  _prePath = mScheme + NS_LITERAL_CSTRING(":");
+  _prePath = NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME ":");
   return NS_OK;
 }
 
@@ -166,7 +188,7 @@ nsNullPrincipalURI::SetPort(int32_t aPort)
 NS_IMETHODIMP
 nsNullPrincipalURI::GetScheme(nsACString &_scheme)
 {
-  _scheme = mScheme;
+  _scheme = NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME);
   return NS_OK;
 }
 
@@ -179,7 +201,7 @@ nsNullPrincipalURI::SetScheme(const nsACString &aScheme)
 NS_IMETHODIMP
 nsNullPrincipalURI::GetSpec(nsACString &_spec)
 {
-  _spec = mScheme + NS_LITERAL_CSTRING(":") + mPath;
+  _spec = NS_LITERAL_CSTRING(NS_NULLPRINCIPAL_SCHEME ":") + mPath;
   return NS_OK;
 }
 
@@ -230,8 +252,7 @@ nsNullPrincipalURI::SetUserPass(const nsACString &aUserPass)
 NS_IMETHODIMP
 nsNullPrincipalURI::Clone(nsIURI **_newURI)
 {
-  nsCOMPtr<nsIURI> uri =
-    new nsNullPrincipalURI(mScheme + NS_LITERAL_CSTRING(":") + mPath);
+  nsCOMPtr<nsIURI> uri = new nsNullPrincipalURI(*this);
   uri.forget(_newURI);
   return NS_OK;
 }
@@ -252,7 +273,7 @@ nsNullPrincipalURI::Equals(nsIURI *aOther, bool *_equals)
   nsresult rv = aOther->QueryInterface(kNullPrincipalURIImplementationCID,
                                        (void **)&otherURI);
   if (NS_SUCCEEDED(rv)) {
-    *_equals = (mScheme == otherURI->mScheme && mPath == otherURI->mPath);
+    *_equals = mPath == otherURI->mPath;
     NS_RELEASE(otherURI);
   }
   return NS_OK;
@@ -277,7 +298,7 @@ nsNullPrincipalURI::Resolve(const nsACString &aRelativePath,
 NS_IMETHODIMP
 nsNullPrincipalURI::SchemeIs(const char *aScheme, bool *_schemeIs)
 {
-  *_schemeIs = (0 == nsCRT::strcasecmp(mScheme.get(), aScheme));
+  *_schemeIs = (0 == nsCRT::strcasecmp(NS_NULLPRINCIPAL_SCHEME, aScheme));
   return NS_OK;
 }
 
@@ -298,11 +319,9 @@ nsNullPrincipalURI::Deserialize(const mozilla::ipc::URIParams &aParams)
     return false;
   }
 
-  nsCString str;
-  nsresult rv = nsNullPrincipal::GenerateNullPrincipalURI(str);
+  nsresult rv = Init();
   NS_ENSURE_SUCCESS(rv, false);
 
-  InitializeFromSpec(str);
   return true;
 }
 
@@ -312,8 +331,7 @@ nsNullPrincipalURI::Deserialize(const mozilla::ipc::URIParams &aParams)
 size_t
 nsNullPrincipalURI::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  return mScheme.SizeOfExcludingThisIfUnshared(aMallocSizeOf) +
-         mPath.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  return mPath.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 }
 
 size_t

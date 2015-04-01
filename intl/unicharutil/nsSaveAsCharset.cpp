@@ -96,7 +96,7 @@ nsSaveAsCharset::Convert(const char16_t *inString, char **_retval)
       rv = mEntityConverter->ConvertToEntities(inString, mEntityVersion, &entity);
       if(NS_SUCCEEDED(rv)) {
         rv = DoCharsetConversion(entity, _retval);
-        nsMemory::Free(entity);
+        free(entity);
       }
     }
     else
@@ -287,7 +287,7 @@ nsSaveAsCharset::DoConversionFallBack(uint32_t inUCS4, char *outString, int32_t 
         return NS_ERROR_OUT_OF_MEMORY;
       }
       PL_strcpy(outString, entity);
-      nsMemory::Free(entity);
+      free(entity);
       return rv;
     }
   }

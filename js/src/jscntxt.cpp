@@ -555,10 +555,10 @@ js::PrintError(JSContext* cx, FILE* file, const char* message, JSErrorReport* re
  * Returns true if the expansion succeeds (can fail if out of memory).
  */
 bool
-js::ExpandErrorArguments(ExclusiveContext* cx, JSErrorCallback callback,
-                         void* userRef, const unsigned errorNumber,
-                         char** messagep, JSErrorReport* reportp,
-                         ErrorArgumentsType argumentsType, va_list ap)
+js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
+                           void* userRef, const unsigned errorNumber,
+                           char** messagep, JSErrorReport* reportp,
+                           ErrorArgumentsType argumentsType, va_list ap)
 {
     const JSErrorFormatString* efs;
     int i;
@@ -736,8 +736,8 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
     report.errorNumber = errorNumber;
     PopulateReportBlame(cx, &report);
 
-    if (!ExpandErrorArguments(cx, callback, userRef, errorNumber,
-                              &message, &report, argumentsType, ap)) {
+    if (!ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber,
+                                &message, &report, argumentsType, ap)) {
         return false;
     }
 
@@ -746,7 +746,7 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
     js_free(message);
     if (report.messageArgs) {
         /*
-         * ExpandErrorArguments owns its messageArgs only if it had to
+         * ExpandErrorArgumentsVA owns its messageArgs only if it had to
          * inflate the arguments (from regular |char*|s).
          */
         if (argumentsType == ArgumentsAreASCII) {
@@ -759,6 +759,20 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
     js_free((void*)report.ucmessage);
 
     return warning;
+}
+
+static bool
+ExpandErrorArguments(ExclusiveContext *cx, JSErrorCallback callback,
+                     void *userRef, const unsigned errorNumber,
+                     char **messagep, JSErrorReport *reportp,
+                     ErrorArgumentsType argumentsType, ...)
+{
+    va_list ap;
+    va_start(ap, argumentsType);
+    bool expanded = js::ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber,
+                                               messagep, reportp, argumentsType, ap);
+    va_end(ap);
+    return expanded;
 }
 
 bool
@@ -777,9 +791,8 @@ js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags, JSErrorCallback call
     report.messageArgs = args;
 
     char* message;
-    va_list dummy;
     if (!ExpandErrorArguments(cx, callback, userRef, errorNumber,
-                              &message, &report, ArgumentsAreUnicode, dummy)) {
+                              &message, &report, ArgumentsAreUnicode)) {
         return false;
     }
 

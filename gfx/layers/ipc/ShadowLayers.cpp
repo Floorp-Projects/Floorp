@@ -738,7 +738,7 @@ ShadowLayerForwarder::IsSameProcess() const
   if (!HasShadowManager() || !mShadowManager->IPCOpen()) {
     return false;
   }
-  return mShadowManager->OtherProcess() == kInvalidProcessHandle;
+  return mShadowManager->OtherPid() == kCurrentProcessId;
 }
 
 /**

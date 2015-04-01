@@ -2419,11 +2419,16 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState)
     return;
   }
 
+  bool restartGathering =
+    aSignalingState == PCImplSignalingState::SignalingHaveLocalOffer ||
+    (aSignalingState == PCImplSignalingState::SignalingStable &&
+     mSignalingState == PCImplSignalingState::SignalingHaveRemoteOffer);
+
   mSignalingState = aSignalingState;
 
   if (mSignalingState == PCImplSignalingState::SignalingHaveLocalOffer ||
       mSignalingState == PCImplSignalingState::SignalingStable) {
-    mMedia->UpdateTransports(*mJsepSession);
+    mMedia->UpdateTransports(*mJsepSession, restartGathering);
   }
 
   bool fireNegotiationNeeded = false;

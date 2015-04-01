@@ -753,6 +753,9 @@ Blocklist.prototype = {
 #          <!-- ... as is the serial number DER data -->
 #          <serialNumber>AkHVNA==</serialNumber>
 #        </certItem>
+#        <!-- subject is the DER subject name data base64 encoded... -->
+#        <certItem subject="MA0xCzAJBgNVBAMMAmNh" pubKeyHash="/xeHA5s+i9/z9d8qy6JEuE1xGoRYIwgJuTE/lmaGJ7M=">
+#        </certItem>
 #      </certItems>
 #    </blocklist>
    */
@@ -926,13 +929,27 @@ Blocklist.prototype = {
   _handleCertItemNode: function Blocklist_handleCertItemNode(blocklistElement,
                                                              result) {
     let issuer = blocklistElement.getAttribute("issuerName");
-    for (let snElement of blocklistElement.children) {
+    if (issuer) {
+      for (let snElement of blocklistElement.children) {
+        try {
+          gCertBlocklistService.revokeCertByIssuerAndSerial(issuer, snElement.textContent);
+        } catch (e) {
+          // we want to keep trying other elements since missing all items
+          // is worse than missing one
+          LOG("Blocklist::_handleCertItemNode: Error adding revoked cert by Issuer and Serial" + e);
+        }
+      }
+      return;
+    }
+
+    let pubKeyHash = blocklistElement.getAttribute("pubKeyHash");
+    let subject = blocklistElement.getAttribute("subject");
+
+    if (pubKeyHash && subject) {
       try {
-        gCertBlocklistService.addRevokedCert(issuer, snElement.textContent);
+        gCertBlocklistService.revokeCertBySubjectAndPubKey(subject, pubKeyHash);
       } catch (e) {
-        // we want to keep trying other elements since missing all items
-        // is worse than missing one
-        LOG("Blocklist::_handleCertItemNode: Error adding revoked cert " + e);
+        LOG("Blocklist::_handleCertItemNode: Error adding revoked cert by Subject and PubKey" + e);
       }
     }
   },

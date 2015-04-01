@@ -41,7 +41,7 @@ NS_IMETHODIMP
 nsSupportsIDImpl::SetData(const nsID* aData)
 {
   if (mData) {
-    nsMemory::Free(mData);
+    free(mData);
   }
   if (aData) {
     mData = (nsID*)nsMemory::Clone(aData, sizeof(nsID));
@@ -469,7 +469,7 @@ nsSupportsCharImpl::ToString(char** aResult)
 {
   NS_ASSERTION(aResult, "Bad pointer");
 
-  char* result = (char*)nsMemory::Alloc(2 * sizeof(char));
+  char* result = (char*)moz_xmalloc(2 * sizeof(char));
   if (result) {
     result[0] = mData;
     result[1] = '\0';
@@ -769,7 +769,7 @@ nsSupportsInterfacePointerImpl::nsSupportsInterfacePointerImpl()
 nsSupportsInterfacePointerImpl::~nsSupportsInterfacePointerImpl()
 {
   if (mIID) {
-    nsMemory::Free(mIID);
+    free(mIID);
   }
 }
 
@@ -818,7 +818,7 @@ NS_IMETHODIMP
 nsSupportsInterfacePointerImpl::SetDataIID(const nsID* aIID)
 {
   if (mIID) {
-    nsMemory::Free(mIID);
+    free(mIID);
   }
   if (aIID) {
     mIID = (nsID*)nsMemory::Clone(aIID, sizeof(nsID));
