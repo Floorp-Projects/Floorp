@@ -2416,6 +2416,7 @@ JSScript::Create(ExclusiveContext* cx, HandleObject enclosingScope, bool savedCa
     script->hasPollutedGlobalScope_ = options.hasPollutedGlobalScope;
     script->selfHosted_ = options.selfHostingMode;
     script->noScriptRval_ = options.noScriptRval;
+    script->treatAsRunOnce_ = options.isRunOnce;
 
     script->version = options.version;
     MOZ_ASSERT(script->getVersion() == options.version);     // assert that no overflow occurred
