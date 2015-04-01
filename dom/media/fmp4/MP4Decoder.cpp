@@ -42,7 +42,7 @@ MP4Decoder::SetCDMProxy(CDMProxy* aProxy)
 {
   nsresult rv = MediaDecoder::SetCDMProxy(aProxy);
   NS_ENSURE_SUCCESS(rv, rv);
-  {
+  if (aProxy) {
     // The MP4Reader can't decrypt EME content until it has a CDMProxy,
     // and the CDMProxy knows the capabilities of the CDM. The MP4Reader
     // remains in "waiting for resources" state until then.
