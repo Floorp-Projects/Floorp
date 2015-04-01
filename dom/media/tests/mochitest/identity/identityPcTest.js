@@ -23,30 +23,27 @@ function identityPcTest(remoteOptions) {
     fake: true,
     peerIdentity: id1
   }]);
-  test.pcLocal.setIdentityProvider('test1.example.com', 'idp.js');
-  test.pcRemote.setIdentityProvider('test2.example.com', 'idp.js');
+  test.setIdentityProvider(test.pcLocal, 'test1.example.com', 'idp.html');
+  test.setIdentityProvider(test.pcRemote, 'test2.example.com', 'idp.html');
   test.chain.append([
+
     function PEER_IDENTITY_IS_SET_CORRECTLY(test) {
       // no need to wait to check identity in this case,
       // setRemoteDescription should wait for the IdP to complete
       function checkIdentity(pc, pfx, idp, name) {
-        return pc.peerIdentity.then(peerInfo => {
-          is(peerInfo.idp, idp, pfx + "IdP check");
-          is(peerInfo.name, name + "@" + idp, pfx + "identity check");
-        });
+        is(pc.peerIdentity.idp, idp, pfx + "IdP is correct");
+        is(pc.peerIdentity.name, name + "@" + idp, pfx + "identity is correct");
       }
 
-      return Promise.all([
-        checkIdentity(test.pcLocal._pc, "local: ", "test2.example.com", "someone"),
-        checkIdentity(test.pcRemote._pc, "remote: ", "test1.example.com", "someone")
-      ]);
+      checkIdentity(test.pcLocal._pc, "local: ", "test2.example.com", "someone");
+      checkIdentity(test.pcRemote._pc, "remote: ", "test1.example.com", "someone");
     },
 
     function REMOTE_STREAMS_ARE_RESTRICTED(test) {
       var remoteStream = test.pcLocal._pc.getRemoteStreams()[0];
       return Promise.all([
-        audioIsSilence(true, remoteStream),
-        videoIsBlack(true, remoteStream)
+        new Promise(done => audioIsSilence(true, remoteStream, done)),
+        new Promise(done => videoIsBlack(true, remoteStream, done))
       ]);
     }
   ]);
