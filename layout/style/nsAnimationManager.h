@@ -169,7 +169,8 @@ public:
   GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty)
   {
     return mozilla::css::CommonAnimationManager::GetAnimationsForCompositor(
-      aContent, nsGkAtoms::animationsProperty, aProperty);
+      aContent, nsGkAtoms::animationsProperty, aProperty,
+      mozilla::GetCompositorAnimationOptions::NotifyActiveLayerTracker);
   }
 
   void UpdateStyleAndEvents(mozilla::AnimationPlayerCollection* aEA,
