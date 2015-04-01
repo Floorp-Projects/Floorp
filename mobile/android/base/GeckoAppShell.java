@@ -226,6 +226,8 @@ public class GeckoAppShell
     private static Sensor gOrientationSensor;
     private static Sensor gProximitySensor;
     private static Sensor gLightSensor;
+    private static Sensor gRotationVectorSensor;
+    private static Sensor gGameRotationVectorSensor;
 
     private static final String GECKOREQUEST_RESPONSE_KEY = "response";
     private static final String GECKOREQUEST_ERROR_KEY = "error";
@@ -648,46 +650,61 @@ public class GeckoAppShell
 
         switch(aSensortype) {
         case GeckoHalDefines.SENSOR_ORIENTATION:
-            if(gOrientationSensor == null)
+            if (gOrientationSensor == null)
                 gOrientationSensor = sm.getDefaultSensor(Sensor.TYPE_ORIENTATION);
-            if (gOrientationSensor != null) 
+            if (gOrientationSensor != null)
                 sm.registerListener(gi.getSensorEventListener(), gOrientationSensor, SensorManager.SENSOR_DELAY_GAME);
             break;
 
         case GeckoHalDefines.SENSOR_ACCELERATION:
-            if(gAccelerometerSensor == null)
+            if (gAccelerometerSensor == null)
                 gAccelerometerSensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             if (gAccelerometerSensor != null)
                 sm.registerListener(gi.getSensorEventListener(), gAccelerometerSensor, SensorManager.SENSOR_DELAY_GAME);
             break;
 
         case GeckoHalDefines.SENSOR_PROXIMITY:
-            if(gProximitySensor == null  )
+            if (gProximitySensor == null)
                 gProximitySensor = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
             if (gProximitySensor != null)
                 sm.registerListener(gi.getSensorEventListener(), gProximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
             break;
 
         case GeckoHalDefines.SENSOR_LIGHT:
-            if(gLightSensor == null)
+            if (gLightSensor == null)
                 gLightSensor = sm.getDefaultSensor(Sensor.TYPE_LIGHT);
             if (gLightSensor != null)
                 sm.registerListener(gi.getSensorEventListener(), gLightSensor, SensorManager.SENSOR_DELAY_NORMAL);
             break;
 
         case GeckoHalDefines.SENSOR_LINEAR_ACCELERATION:
-            if(gLinearAccelerometerSensor == null)
-                gLinearAccelerometerSensor = sm.getDefaultSensor(10 /* API Level 9 - TYPE_LINEAR_ACCELERATION */);
+            if (gLinearAccelerometerSensor == null)
+                gLinearAccelerometerSensor = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
             if (gLinearAccelerometerSensor != null)
                 sm.registerListener(gi.getSensorEventListener(), gLinearAccelerometerSensor, SensorManager.SENSOR_DELAY_GAME);
             break;
 
         case GeckoHalDefines.SENSOR_GYROSCOPE:
-            if(gGyroscopeSensor == null)
+            if (gGyroscopeSensor == null)
                 gGyroscopeSensor = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             if (gGyroscopeSensor != null)
                 sm.registerListener(gi.getSensorEventListener(), gGyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
             break;
+
+        case GeckoHalDefines.SENSOR_ROTATION_VECTOR:
+            if (gRotationVectorSensor == null)
+                gRotationVectorSensor = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+            if (gRotationVectorSensor != null)
+                sm.registerListener(gi.getSensorEventListener(), gRotationVectorSensor, SensorManager.SENSOR_DELAY_GAME);
+            break;
+
+        case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
+            if (gGameRotationVectorSensor == null)
+                gGameRotationVectorSensor = sm.getDefaultSensor(15 /* Sensor.TYPE_GAME_ROTATION_VECTOR */); // API >= 18
+            if (gGameRotationVectorSensor != null)
+                sm.registerListener(gi.getSensorEventListener(), gGameRotationVectorSensor, SensorManager.SENSOR_DELAY_GAME);
+            break;
+
         default:
             Log.w(LOGTAG, "Error! Can't enable unknown SENSOR type " + aSensortype);
         }
@@ -726,6 +743,16 @@ public class GeckoAppShell
         case GeckoHalDefines.SENSOR_LINEAR_ACCELERATION:
             if (gLinearAccelerometerSensor != null)
                 sm.unregisterListener(gi.getSensorEventListener(), gLinearAccelerometerSensor);
+            break;
+
+        case GeckoHalDefines.SENSOR_ROTATION_VECTOR:
+            if (gRotationVectorSensor != null)
+                sm.unregisterListener(gi.getSensorEventListener(), gRotationVectorSensor);
+            break;
+
+        case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
+            if (gGameRotationVectorSensor != null)
+                sm.unregisterListener(gi.getSensorEventListener(), gGameRotationVectorSensor);
             break;
 
         case GeckoHalDefines.SENSOR_GYROSCOPE:
