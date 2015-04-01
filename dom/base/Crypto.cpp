@@ -110,7 +110,7 @@ Crypto::GetRandomValues(JSContext* aCx, const ArrayBufferView& aArray,
     }
 
     memcpy(data, buf, dataLen);
-    NS_Free(buf);
+    free(buf);
   }
 
   aRetval.set(view);

@@ -47,7 +47,7 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI* aURI,
 
   const int n_channels = 4;
   gsize buf_size = 2 + n_channels * height * width;
-  uint8_t* const buf = (uint8_t*)NS_Alloc(buf_size);
+  uint8_t* const buf = (uint8_t*)moz_xmalloc(buf_size);
   NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
   uint8_t* out = buf;
 
@@ -89,7 +89,7 @@ moz_gdk_pixbuf_to_channel(GdkPixbuf* aPixbuf, nsIURI* aURI,
 
   // Prevent the leaking of buf
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    NS_Free(buf);
+    free(buf);
     return rv;
   }
 

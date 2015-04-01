@@ -98,7 +98,7 @@ nsPrintData::~nsPrintData()
   delete mPrintObject;
 
   if (mBrandName) {
-    NS_Free(mBrandName);
+    free(mBrandName);
   }
 }
 

@@ -130,7 +130,7 @@ FontFace::~FontFace()
   }
 
   if (mSourceBuffer) {
-    NS_Free(mSourceBuffer);
+    free(mSourceBuffer);
   }
 }
 

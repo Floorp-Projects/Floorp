@@ -92,7 +92,7 @@ sqlite3_T_blob(BindingColumnData aData,
                int aSize)
 {
   return ::sqlite3_bind_blob(aData.stmt, aData.column + 1, aBlob, aSize,
-                             NS_Free);
+                             free);
 
 }
 

@@ -86,7 +86,7 @@ public:
   {
     Report();
     if (mFilename) {
-      NS_Free(mFilename);
+      free(mFilename);
       mFilename = nullptr;
     }
   }

@@ -557,7 +557,7 @@ nsresult nsPluginHost::PostURL(nsISupports* pluginInst,
 
     nsCOMPtr<nsIStringInputStream> sis = do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
     if (!sis) {
-      NS_Free(dataToPost);
+      free(dataToPost);
       return rv;
     }
 

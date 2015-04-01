@@ -473,7 +473,7 @@ protected:
 
     // mFontData holds the data used to instantiate the FT_Face;
     // this has to persist until we are finished with the face,
-    // then be released with NS_Free().
+    // then be released with free().
     const uint8_t* mFontData;
 
     FT_Face mFace;
@@ -522,7 +522,7 @@ gfxDownloadedFcFontEntry::~gfxDownloadedFcFontEntry()
         FcPatternDel(mPatterns[0], FC_FT_FACE);
     }
     FT_Done_Face(mFace);
-    NS_Free((void*)mFontData);
+    free((void*)mFontData);
 }
 
 typedef FcPattern* (*QueryFaceFunction)(const FT_Face face,
@@ -1706,7 +1706,7 @@ gfxPangoFontGroup::NewFontEntry(const nsAString& aFontName,
     FT_Error error =
         FT_New_Memory_Face(GetFTLibrary(), aFontData, aLength, 0, &face);
     if (error != 0) {
-        NS_Free((void*)aFontData);
+        free((void*)aFontData);
         return nullptr;
     }
 

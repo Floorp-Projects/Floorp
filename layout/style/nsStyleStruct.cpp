@@ -1886,7 +1886,7 @@ nsStyleImage::SetNull()
   else if (mType == eStyleImageType_Image)
     NS_RELEASE(mImage);
   else if (mType == eStyleImageType_Element)
-    NS_Free(mElementId);
+    free(mElementId);
 
   mType = eStyleImageType_Null;
   mCropRect = nullptr;
@@ -2984,7 +2984,7 @@ nsStyleContentData::~nsStyleContentData()
              mType == eStyleContentType_Counters) {
     mContent.mCounters->Release();
   } else if (mContent.mString) {
-    NS_Free(mContent.mString);
+    free(mContent.mString);
   }
 }
 

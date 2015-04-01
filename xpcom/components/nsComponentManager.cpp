@@ -1036,7 +1036,7 @@ nsComponentManagerImpl::GetClassObject(const nsCID& aClass, const nsIID& aIID,
     char* buf = aClass.ToString();
     PR_LogPrint("nsComponentManager: GetClassObject(%s)", buf);
     if (buf) {
-      NS_Free(buf);
+      free(buf);
     }
   }
 #endif
@@ -1160,7 +1160,7 @@ nsComponentManagerImpl::CreateInstance(const nsCID& aClass,
            ("nsComponentManager: CreateInstance(%s) %s", buf,
             NS_SUCCEEDED(rv) ? "succeeded" : "FAILED"));
     if (buf) {
-      NS_Free(buf);
+      free(buf);
     }
   }
 #endif
@@ -1832,7 +1832,7 @@ nsComponentManagerImpl::ContractIDToCID(const char* aContractID,
     SafeMutexAutoLock lock(mLock);
     nsFactoryEntry* entry = mContractIDs.Get(nsDependentCString(aContractID));
     if (entry) {
-      *aResult = (nsCID*)NS_Alloc(sizeof(nsCID));
+      *aResult = (nsCID*)moz_xmalloc(sizeof(nsCID));
       **aResult = *entry->mCIDEntry->cid;
       return NS_OK;
     }

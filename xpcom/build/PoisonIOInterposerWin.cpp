@@ -180,7 +180,7 @@ public:
     Report();
     if (mFilename) {
       MOZ_ASSERT(mHasQueriedFilename);
-      NS_Free(mFilename);
+      free(mFilename);
       mFilename = nullptr;
     }
   }
