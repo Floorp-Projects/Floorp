@@ -8,6 +8,7 @@
 
 #include <queue>
 #include <algorithm>
+#include <sstream>
 
 #include "mozilla/UniquePtr.h"
 
@@ -44,6 +45,7 @@ static PRDescIdentity transport_layer_identity = PR_INVALID_IO_LAYER;
   MOZ_ASSERT(false);                                            \
   PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0)
 
+#define MAX_ALPN_LENGTH 255
 
 // We need to adapt the NSPR/libssl model to the TransportFlow model.
 // The former wants pull semantics and TransportFlow wants push.
@@ -388,6 +390,24 @@ void TransportLayerDtls::WasInserted() {
 }
 
 
+// Set the permitted and default ALPN identifiers.
+// The default is here to allow for peers that don't want to negotiate ALPN
+// in that case, the default string will be reported from GetNegotiatedAlpn().
+// Setting the default to the empty string causes the transport layer to fail
+// if ALPN is not negotiated.
+// Note: we only support Unicode strings here, which are encoded into UTF-8,
+// even though ALPN ostensibly allows arbitrary octet sequences.
+nsresult TransportLayerDtls::SetAlpn(
+  const std::set<std::string>& alpn_allowed,
+  const std::string& alpn_default) {
+
+  alpn_allowed_ = alpn_allowed;
+  alpn_default_ = alpn_default;
+
+  return NS_OK;
+}
+
+
 nsresult TransportLayerDtls::SetVerificationAllowAll() {
   // Defensive programming
   if (verification_mode_ != VERIFY_UNSET)
@@ -564,6 +584,10 @@ bool TransportLayerDtls::Setup() {
     return false;
   }
 
+  if (!SetupAlpn(ssl_fd)) {
+    return false;
+  }
+
   // Now start the handshake
   rv = SSL_ResetHandshake(ssl_fd, role_ == SERVER ? PR_TRUE : PR_FALSE);
   if (rv != SECSuccess) {
@@ -581,6 +605,43 @@ bool TransportLayerDtls::Setup() {
     Handshake();
   }
 
+  return true;
+}
+
+bool TransportLayerDtls::SetupAlpn(PRFileDesc* ssl_fd) const {
+  if (alpn_allowed_.empty()) {
+    return true;
+  }
+
+  SECStatus rv = SSL_OptionSet(ssl_fd, SSL_ENABLE_NPN, PR_FALSE);
+  if (rv != SECSuccess) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't disable NPN");
+    return false;
+  }
+
+  rv = SSL_OptionSet(ssl_fd, SSL_ENABLE_ALPN, PR_TRUE);
+  if (rv != SECSuccess) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't enable ALPN");
+    return false;
+  }
+
+  unsigned char buf[MAX_ALPN_LENGTH];
+  size_t offset = 0;
+  for (auto tag = alpn_allowed_.begin();
+       tag != alpn_allowed_.end(); ++tag) {
+    if ((offset + 1 + tag->length()) >= sizeof(buf)) {
+      MOZ_MTLOG(ML_ERROR, "ALPN too long");
+      return false;
+    }
+    buf[offset++] = tag->length();
+    memcpy(buf + offset, tag->c_str(), tag->length());
+    offset += tag->length();
+  }
+  rv = SSL_SetNextProtoNego(ssl_fd, buf, offset);
+  if (rv != SECSuccess) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't set ALPN string");
+    return false;
+  }
   return true;
 }
 
@@ -777,6 +838,15 @@ void TransportLayerDtls::Handshake() {
       TL_SET_STATE(TS_ERROR);
       return;
     }
+    if (!CheckAlpn()) {
+      // Despite connecting, the connection doesn't have a valid ALPN label.
+      // Forcibly close the connection so that the peer isn't left hanging
+      // (assuming the close_notify isn't dropped).
+      ssl_fd_ = nullptr;
+      TL_SET_STATE(TS_ERROR);
+      return;
+    }
+
     TL_SET_STATE(TS_OPEN);
   } else {
     int32_t err = PR_GetError();
@@ -807,6 +877,61 @@ void TransportLayerDtls::Handshake() {
     }
   }
 }
+
+// Checks if ALPN was negotiated correctly and returns false if it wasn't.
+// After this returns successfully, alpn_ will be set to the negotiated
+// protocol.
+bool TransportLayerDtls::CheckAlpn() {
+  if (alpn_allowed_.empty()) {
+    return true;
+  }
+
+  SSLNextProtoState alpnState;
+  char chosenAlpn[MAX_ALPN_LENGTH];
+  unsigned int chosenAlpnLen;
+  SECStatus rv = SSL_GetNextProto(ssl_fd_, &alpnState,
+                                  reinterpret_cast<unsigned char*>(chosenAlpn),
+                                  &chosenAlpnLen, sizeof(chosenAlpn));
+  if (rv != SECSuccess) {
+    MOZ_MTLOG(ML_ERROR, LAYER_INFO << "ALPN error");
+    return false;
+  }
+  switch (alpnState) {
+    case SSL_NEXT_PROTO_SELECTED:
+    case SSL_NEXT_PROTO_NEGOTIATED:
+      break; // OK
+
+    case SSL_NEXT_PROTO_NO_SUPPORT:
+      MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "ALPN not negotiated, "
+                << (alpn_default_.empty() ? "failing" : "selecting default"));
+      alpn_ = alpn_default_;
+      return !alpn_.empty();
+
+    case SSL_NEXT_PROTO_NO_OVERLAP:
+      // This only happens if there is a custom NPN/ALPN callback installed and
+      // that callback doesn't properly handle ALPN.
+      MOZ_MTLOG(ML_ERROR, LAYER_INFO << "error in ALPN selection callback");
+      return false;
+  }
+
+  // Warning: NSS won't null terminate the ALPN string for us.
+  std::string chosen(chosenAlpn, chosenAlpnLen);
+  MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "Selected ALPN string: " << chosen);
+  if (alpn_allowed_.find(chosen) == alpn_allowed_.end()) {
+    // Maybe our peer chose a protocol we didn't offer (when we are client), or
+    // something is seriously wrong.
+    std::ostringstream ss;
+    for (auto i = alpn_allowed_.begin(); i != alpn_allowed_.end(); ++i) {
+      ss << (i == alpn_allowed_.begin() ? " '" : ", '") << *i << "'";
+    }
+    MOZ_MTLOG(ML_ERROR, LAYER_INFO << "Bad ALPN string: '" << chosen
+              << "'; permitted:" << ss.str());
+    return false;
+  }
+  alpn_ = chosen;
+  return true;
+}
+
 
 void TransportLayerDtls::PacketReceived(TransportLayer* layer,
                                         const unsigned char *data,
@@ -928,6 +1053,9 @@ nsresult TransportLayerDtls::SetSrtpCiphers(std::vector<uint16_t> ciphers) {
 
 nsresult TransportLayerDtls::GetSrtpCipher(uint16_t *cipher) const {
   CheckThread();
+  if (state_ != TS_OPEN) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
   SECStatus rv = SSL_GetSRTPCipher(ssl_fd_, cipher);
   if (rv != SECSuccess) {
     MOZ_MTLOG(ML_DEBUG, "No SRTP cipher negotiated");
@@ -943,6 +1071,10 @@ nsresult TransportLayerDtls::ExportKeyingMaterial(const std::string& label,
                                                   unsigned char *out,
                                                   unsigned int outlen) {
   CheckThread();
+  if (state_ != TS_OPEN) {
+    MOZ_ASSERT(false, "Transport must be open for ExportKeyingMaterial");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
   SECStatus rv = SSL_ExportKeyingMaterial(ssl_fd_,
                                           label.c_str(),
                                           label.size(),
