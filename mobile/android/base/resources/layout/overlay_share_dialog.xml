@@ -5,7 +5,9 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!-- Serves to position the content on the screen (bottom, centered) and provide the drop-shadow -->
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:gecko="http://schemas.android.com/apk/res-auto"
     android:id="@+id/sharedialog"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -60,7 +62,10 @@
             android:id="@+id/overlay_share_reading_list_btn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:enabled="false"/>
+            android:enabled="false"
+            gecko:drawable="@drawable/overlay_share_reading_list_button"
+            gecko:enabledText="@string/overlay_share_reading_list_btn_label"
+            gecko:disabledText="@string/overlay_share_reading_list_btn_label_already"/>
 
         <!-- "Add bookmark" -->
         <org.mozilla.gecko.overlays.ui.OverlayDialogButton
@@ -68,7 +73,10 @@
             android:id="@+id/overlay_share_bookmark_btn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:enabled="false"/>
+            android:enabled="false"
+            gecko:drawable="@drawable/overlay_share_bookmark_button"
+            gecko:enabledText="@string/overlay_share_bookmark_btn_label"
+            gecko:disabledText="@string/overlay_share_bookmark_btn_label_already"/>
 
     </LinearLayout>
 
