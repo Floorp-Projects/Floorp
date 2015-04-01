@@ -429,6 +429,8 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
 void
 AnimationPlayer::DoPlay(LimitBehavior aLimitBehavior)
 {
+  bool abortedPause = mPendingState == PendingState::PausePending;
+
   bool reuseReadyPromise = false;
   if (mPendingState != PendingState::NotPending) {
     CancelPendingTasks();
@@ -452,12 +454,20 @@ AnimationPlayer::DoPlay(LimitBehavior aLimitBehavior)
     mHoldTime.SetValue(TimeDuration(0));
   }
 
-  if (mHoldTime.IsNull()) {
+  // If the hold time is null then we're either already playing normally (and
+  // we can ignore this call) or we aborted a pending pause operation (in which
+  // case, for consistency, we need to go through the motions of doing an
+  // asynchronous start even though we already have a resolved start time).
+  if (mHoldTime.IsNull() && !abortedPause) {
     return;
   }
 
-  // Clear the start time until we resolve a new one
-  mStartTime.SetNull();
+  // Clear the start time until we resolve a new one (unless we are aborting
+  // a pending pause operation, in which case we keep the old start time so
+  // that the animation continues moving uninterrupted by the aborted pause).
+  if (!abortedPause) {
+    mStartTime.SetNull();
+  }
 
   if (!reuseReadyPromise) {
     // Clear ready promise. We'll create a new one lazily.
@@ -513,15 +523,19 @@ AnimationPlayer::ResumeAt(const TimeDuration& aReadyTime)
   // but it's currently not necessary.
   MOZ_ASSERT(mPendingState == PendingState::PlayPending,
              "Expected to resume a play-pending player");
-  MOZ_ASSERT(!mHoldTime.IsNull(),
-             "A player in the play-pending state should have a resolved"
-             " hold time");
+  MOZ_ASSERT(mHoldTime.IsNull() != mStartTime.IsNull(),
+             "A player in the play-pending state should have either a"
+             " resolved hold time or resolved start time (but not both)");
 
-  if (mPlaybackRate != 0) {
-    mStartTime.SetValue(aReadyTime - (mHoldTime.Value() / mPlaybackRate));
-    mHoldTime.SetNull();
-  } else {
-    mStartTime.SetValue(aReadyTime);
+  // If we aborted a pending pause operation we will already have a start time
+  // we should use. In all other cases, we resolve it from the ready time.
+  if (mStartTime.IsNull()) {
+    if (mPlaybackRate != 0) {
+      mStartTime.SetValue(aReadyTime - (mHoldTime.Value() / mPlaybackRate));
+      mHoldTime.SetNull();
+    } else {
+      mStartTime.SetValue(aReadyTime);
+    }
   }
   mPendingState = PendingState::NotPending;
 
