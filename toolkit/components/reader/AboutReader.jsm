@@ -54,7 +54,7 @@ let AboutReader = function(mm, win, articlePromise) {
 
   this._scrollOffset = win.pageYOffset;
 
-  doc.getElementById("container").addEventListener("click", this, false);
+  doc.addEventListener("click", this, false);
 
   win.addEventListener("unload", this, false);
   win.addEventListener("scroll", this, false);
@@ -211,7 +211,11 @@ AboutReader.prototype = {
 
     switch (aEvent.type) {
       case "click":
-        this._toggleToolbarVisibility();
+        let target = aEvent.target;
+        while (target && target.id != "reader-popup")
+          target = target.parentNode;
+        if (!target)
+          this._toggleToolbarVisibility();
         break;
       case "scroll":
         let isScrollingUp = this._scrollOffset > aEvent.pageY;
