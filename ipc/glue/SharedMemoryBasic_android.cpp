@@ -95,7 +95,7 @@ SharedMemoryBasic::Map(size_t nBytes)
 }
 
 bool
-SharedMemoryBasic::ShareToProcess(base::ProcessHandle/*unused*/,
+SharedMemoryBasic::ShareToProcess(base::ProcessId/*unused*/,
                                   Handle* aNewHandle)
 {
   MOZ_ASSERT(mShmFd >= 0, "Should have been Create()d by now");

@@ -607,7 +607,7 @@ NS_INTERFACE_MAP_END
 
 bool
 ContentChild::Init(MessageLoop* aIOLoop,
-                   base::ProcessHandle aParentHandle,
+                   base::ProcessId aParentPid,
                    IPC::Channel* aChannel)
 {
 #ifdef MOZ_WIDGET_GTK
@@ -639,7 +639,7 @@ ContentChild::Init(MessageLoop* aIOLoop,
         return false;
     }
 
-    if (!Open(aChannel, aParentHandle, aIOLoop)) {
+    if (!Open(aChannel, aParentPid, aIOLoop)) {
       return false;
     }
     sSingleton = this;

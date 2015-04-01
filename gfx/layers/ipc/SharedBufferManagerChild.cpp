@@ -96,10 +96,11 @@ SharedBufferManagerChild::StartUp()
 
 static void
 ConnectSharedBufferManagerInChildProcess(mozilla::ipc::Transport* aTransport,
-                                         base::ProcessHandle aOtherProcess)
+                                         base::ProcessId aOtherPid)
 {
   // Bind the IPC channel to the shared buffer manager thread.
-  SharedBufferManagerChild::sSharedBufferManagerChildSingleton->Open(aTransport, aOtherProcess,
+  SharedBufferManagerChild::sSharedBufferManagerChildSingleton->Open(aTransport,
+                                                                     aOtherPid,
                                                                      XRE_GetIOMessageLoop(),
                                                                      ipc::ChildSide);
 
@@ -116,14 +117,9 @@ ConnectSharedBufferManagerInChildProcess(mozilla::ipc::Transport* aTransport,
 
 PSharedBufferManagerChild*
 SharedBufferManagerChild::StartUpInChildProcess(Transport* aTransport,
-                                                base::ProcessId aOtherProcess)
+                                                base::ProcessId aOtherPid)
 {
   NS_ASSERTION(NS_IsMainThread(), "Should be on the main Thread!");
-
-  ProcessHandle processHandle;
-  if (!base::OpenProcessHandle(aOtherProcess, &processHandle)) {
-    return nullptr;
-  }
 
   sSharedBufferManagerChildThread = new base::Thread("BufferMgrChild");
   if (!sSharedBufferManagerChildThread->Start()) {
@@ -134,7 +130,7 @@ SharedBufferManagerChild::StartUpInChildProcess(Transport* aTransport,
   sSharedBufferManagerChildSingleton->GetMessageLoop()->PostTask(
     FROM_HERE,
     NewRunnableFunction(ConnectSharedBufferManagerInChildProcess,
-                        aTransport, processHandle));
+                        aTransport, aOtherPid));
 
   return sSharedBufferManagerChildSingleton;
 }

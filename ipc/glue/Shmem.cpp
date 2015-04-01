@@ -613,20 +613,15 @@ Shmem::GetSysVID() const
 
 IPC::Message*
 Shmem::ShareTo(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
-               base::ProcessHandle aProcess,
+               base::ProcessId aTargetPid,
                int32_t routingId)
 {
   AssertInvariants();
 
-  // kInvalidProcessHandle is used to indicate that it's the same process.
-  if (aProcess == kInvalidProcessHandle) {
-    aProcess = base::GetCurrentProcessHandle();
-  }
-
   if (SharedMemory::TYPE_BASIC == mSegment->Type()) {
     SharedMemoryBasic* seg = static_cast<SharedMemoryBasic*>(mSegment);
     SharedMemoryBasic::Handle handle;
-    if (!seg->ShareToProcess(aProcess, &handle))
+    if (!seg->ShareToProcess(aTargetPid, &handle))
       return nullptr;
 
     return new ShmemCreated(routingId, mId, mSize, handle);
@@ -647,7 +642,7 @@ Shmem::ShareTo(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
 
 IPC::Message*
 Shmem::UnshareFrom(IHadBetterBeIPDLCodeCallingThis_OtherwiseIAmADoodyhead,
-                   base::ProcessHandle aProcess,
+                   base::ProcessId aTargetPid,
                    int32_t routingId)
 {
   AssertInvariants();

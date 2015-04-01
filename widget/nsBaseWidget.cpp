@@ -1147,6 +1147,9 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   mCompositorChild = new CompositorChild(lm);
   mCompositorChild->Open(parentChannel, childMessageLoop, ipc::ChildSide);
 
+  // Make sure the parent knows it is same process.
+  mCompositorParent->SetOtherProcessId(kCurrentProcessId);
+
   if (gfxPrefs::AsyncPanZoomEnabled() &&
       (WindowType() == eWindowType_toplevel || WindowType() == eWindowType_child)) {
     ConfigureAPZCTreeManager();

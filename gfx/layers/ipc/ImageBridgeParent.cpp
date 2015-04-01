@@ -8,8 +8,7 @@
 #include <stdint.h>                     // for uint64_t, uint32_t
 #include "CompositableHost.h"           // for CompositableParent, Create
 #include "base/message_loop.h"          // for MessageLoop
-#include "base/process.h"               // for ProcessHandle
-#include "base/process_util.h"          // for OpenProcessHandle
+#include "base/process.h"               // for ProcessId
 #include "base/task.h"                  // for CancelableTask, DeleteTask, etc
 #include "base/tracked.h"               // for FROM_HERE
 #include "mozilla/gfx/Point.h"                   // for IntSize
@@ -54,7 +53,6 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
                                      ProcessId aChildProcessId)
   : mMessageLoop(aLoop)
   , mTransport(aTransport)
-  , mChildProcessId(aChildProcessId)
   , mCompositorThreadHolder(GetCompositorThreadHolder())
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -67,6 +65,7 @@ ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
   // with several bridges
   CompositableMap::Create();
   sImageBridges[aChildProcessId] = this;
+  SetOtherProcessId(aChildProcessId);
 }
 
 ImageBridgeParent::~ImageBridgeParent()
@@ -79,7 +78,7 @@ ImageBridgeParent::~ImageBridgeParent()
                                      new DeleteTask<Transport>(mTransport));
   }
 
-  sImageBridges.erase(mChildProcessId);
+  sImageBridges.erase(OtherPid());
 }
 
 LayersBackend
@@ -155,25 +154,20 @@ ImageBridgeParent::RecvUpdateNoSwap(EditArray&& aEdits)
 static void
 ConnectImageBridgeInParentProcess(ImageBridgeParent* aBridge,
                                   Transport* aTransport,
-                                  base::ProcessHandle aOtherProcess)
+                                  base::ProcessId aOtherPid)
 {
-  aBridge->Open(aTransport, aOtherProcess, XRE_GetIOMessageLoop(), ipc::ParentSide);
+  aBridge->Open(aTransport, aOtherPid, XRE_GetIOMessageLoop(), ipc::ParentSide);
 }
 
 /*static*/ PImageBridgeParent*
 ImageBridgeParent::Create(Transport* aTransport, ProcessId aChildProcessId)
 {
-  base::ProcessHandle processHandle;
-  if (!base::OpenProcessHandle(aChildProcessId, &processHandle)) {
-    return nullptr;
-  }
-
   MessageLoop* loop = CompositorParent::CompositorLoop();
   nsRefPtr<ImageBridgeParent> bridge = new ImageBridgeParent(loop, aTransport, aChildProcessId);
   bridge->mSelfRef = bridge;
   loop->PostTask(FROM_HERE,
                  NewRunnableFunction(ConnectImageBridgeInParentProcess,
-                                     bridge.get(), aTransport, processHandle));
+                                     bridge.get(), aTransport, aChildProcessId));
   return bridge.get();
 }
 
@@ -346,7 +340,7 @@ ImageBridgeParent::CloneToplevel(const InfallibleTArray<ProtocolFdMapping>& aFds
 
 bool ImageBridgeParent::IsSameProcess() const
 {
-  return OtherProcess() == ipc::kInvalidProcessHandle;
+  return OtherPid() == ipc::kCurrentProcessId;
 }
 
 void

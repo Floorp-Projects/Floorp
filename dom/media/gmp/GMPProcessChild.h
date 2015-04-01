@@ -19,7 +19,7 @@ protected:
   typedef mozilla::ipc::ProcessChild ProcessChild;
 
 public:
-  explicit GMPProcessChild(ProcessHandle parentHandle);
+  explicit GMPProcessChild(ProcessId aParentPid);
   ~GMPProcessChild();
 
   virtual bool Init() override;

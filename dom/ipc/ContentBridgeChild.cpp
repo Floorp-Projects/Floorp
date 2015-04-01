@@ -39,18 +39,13 @@ ContentBridgeChild::ActorDestroy(ActorDestroyReason aWhy)
 }
 
 /*static*/ ContentBridgeChild*
-ContentBridgeChild::Create(Transport* aTransport, ProcessId aOtherProcess)
+ContentBridgeChild::Create(Transport* aTransport, ProcessId aOtherPid)
 {
   nsRefPtr<ContentBridgeChild> bridge =
     new ContentBridgeChild(aTransport);
-  ProcessHandle handle;
-  if (!base::OpenProcessHandle(aOtherProcess, &handle)) {
-    // XXX need to kill |aOtherProcess|, it's boned
-    return nullptr;
-  }
   bridge->mSelfRef = bridge;
 
-  DebugOnly<bool> ok = bridge->Open(aTransport, handle, XRE_GetIOMessageLoop());
+  DebugOnly<bool> ok = bridge->Open(aTransport, aOtherPid, XRE_GetIOMessageLoop());
   MOZ_ASSERT(ok);
   return bridge;
 }
