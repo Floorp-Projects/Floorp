@@ -956,14 +956,14 @@ PeerConnectionMedia::EndOfLocalCandidates_m(const std::string& aDefaultAddr,
 }
 
 void
-PeerConnectionMedia::DtlsConnected_s(TransportLayer *dtlsLayer,
+PeerConnectionMedia::DtlsConnected_s(TransportLayer *layer,
                                      TransportLayer::State state)
 {
+  MOZ_ASSERT(layer->id() == "dtls");
+  TransportLayerDtls* dtlsLayer = static_cast<TransportLayerDtls*>(layer);
   dtlsLayer->SignalStateChange.disconnect(this);
 
-  bool privacyRequested = false;
-  // TODO (Bug 952678) set privacy mode, ask the DTLS layer about that
-  // This has to be a dispatch to a static method, we could be going away
+  bool privacyRequested = (dtlsLayer->GetNegotiatedAlpn() == "c-webrtc");
   GetMainThread()->Dispatch(
     WrapRunnableNM(&PeerConnectionMedia::DtlsConnected_m,
                    mParentHandle, privacyRequested),

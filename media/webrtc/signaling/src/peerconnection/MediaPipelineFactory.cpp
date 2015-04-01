@@ -199,6 +199,22 @@ MediaPipelineFactory::CreateOrGetTransportFlow(
     return rv;
   }
 
+  // Always permits negotiation of the confidential mode.
+  // Only allow non-confidential (which is an allowed default),
+  // if we aren't confidential.
+  std::set<std::string> alpn;
+  std::string alpnDefault = "";
+  alpn.insert("c-webrtc");
+  if (!mPC->PrivacyRequested()) {
+    alpnDefault = "webrtc";
+    alpn.insert(alpnDefault);
+  }
+  rv = dtls->SetAlpn(alpn, alpnDefault);
+  if (NS_FAILED(rv)) {
+    MOZ_MTLOG(ML_ERROR, "Couldn't set ALPN");
+    return rv;
+  }
+
   nsAutoPtr<PtrVector<TransportLayer> > layers(new PtrVector<TransportLayer>);
   layers->values.push_back(ice.release());
   layers->values.push_back(dtls.release());
