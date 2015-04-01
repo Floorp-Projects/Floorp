@@ -111,11 +111,14 @@ template<class Toplevel>
 inline bool
 CrashReporterParent::GeneratePairedMinidump(Toplevel* t)
 {
-  CrashReporter::ProcessHandle child;
+  mozilla::ipc::ScopedProcessHandle child;
 #ifdef XP_MACOSX
   child = t->Process()->GetChildTask();
 #else
-  child = t->OtherProcess();
+  if (!base::OpenPrivilegedProcessHandle(t->OtherPid(), &child.rwget())) {
+    NS_WARNING("Failed to open child process handle.");
+    return false;
+  }
 #endif
   nsCOMPtr<nsIFile> childDump;
   if (CrashReporter::CreatePairedMinidumps(child,

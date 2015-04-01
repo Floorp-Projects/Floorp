@@ -22,7 +22,7 @@ namespace mozilla {
 namespace ipc {
 
 bool
-CreateTransport(ProcessHandle /*unused*/, ProcessHandle /*unused*/,
+CreateTransport(base::ProcessId /*unused*/,
                 TransportDescriptor* aOne, TransportDescriptor* aTwo)
 {
   // Gecko doesn't care about this random ID, and the argument to this

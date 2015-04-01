@@ -7,6 +7,7 @@
 #include "base/logging.h"
 #include "base/win_util.h"
 #include "base/string_util.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 
 namespace base {
 
@@ -118,7 +119,7 @@ bool SharedMemory::Unmap() {
   return true;
 }
 
-bool SharedMemory::ShareToProcessCommon(ProcessHandle process,
+bool SharedMemory::ShareToProcessCommon(ProcessId processId,
                                         SharedMemoryHandle *new_handle,
                                         bool close_self) {
   *new_handle = 0;
@@ -135,14 +136,16 @@ bool SharedMemory::ShareToProcessCommon(ProcessHandle process,
     Unmap();
   }
 
-  if (process == GetCurrentProcess() && close_self) {
+  if (processId == GetCurrentProcId() && close_self) {
     *new_handle = mapped_file;
     return true;
   }
 
-  if (!DuplicateHandle(GetCurrentProcess(), mapped_file, process,
-      &result, access, FALSE, options))
+  if (!mozilla::ipc::DuplicateHandle(mapped_file, processId, &result, access,
+                                     options)) {
     return false;
+  }
+
   *new_handle = result;
   return true;
 }

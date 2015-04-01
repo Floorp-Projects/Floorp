@@ -149,7 +149,8 @@ GMPParent::LoadProcess()
     mChildPid = base::GetProcId(mProcess->GetChildProcessHandle());
 #endif
 
-    bool opened = Open(mProcess->GetChannel(), mProcess->GetChildProcessHandle());
+    bool opened = Open(mProcess->GetChannel(),
+                       base::GetProcId(mProcess->GetChildProcessHandle()));
     if (!opened) {
       LOGD("%s: Failed to create new child process", __FUNCTION__);
       mProcess->Delete();

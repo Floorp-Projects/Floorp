@@ -28,7 +28,7 @@ public:
 
   bool Init(const std::string& aPluginPath,
             const std::string& aVoucherPath,
-            base::ProcessHandle aParentProcessHandle,
+            base::ProcessId aParentPid,
             MessageLoop* aIOLoop,
             IPC::Channel* aChannel);
 #ifdef XP_WIN

@@ -137,9 +137,6 @@ private:
     }
   };
 
-  // A handle that is invalid on any platform.
-  static const ProcessHandle kInvalidProcessHandle;
-
   // The length of time we will wait at shutdown for all actors to clean
   // themselves up before forcing them to be destroyed.
   static const uint32_t kShutdownTimerDelayMS = 10000;
@@ -239,7 +236,7 @@ private:
   static PBackgroundParent*
   Alloc(ContentParent* aContent,
         Transport* aTransport,
-        ProcessId aOtherProcess);
+        ProcessId aOtherPid);
 
   static bool
   CreateBackgroundThread();
@@ -257,8 +254,6 @@ private:
   {
     AssertIsInMainProcess();
     AssertIsOnMainThread();
-
-    SetOtherProcess(kInvalidProcessHandle);
   }
 
   // For other-process actors.
@@ -409,7 +404,7 @@ private:
 
   // Forwarded from BackgroundChild.
   static PBackgroundChild*
-  Alloc(Transport* aTransport, ProcessId aOtherProcess);
+  Alloc(Transport* aTransport, ProcessId aOtherPid);
 
   // Forwarded from BackgroundChild.
   static PBackgroundChild*
@@ -595,15 +590,15 @@ class ParentImpl::ConnectActorRunnable final : public nsRunnable
 {
   nsRefPtr<ParentImpl> mActor;
   Transport* mTransport;
-  ProcessHandle mProcessHandle;
+  ProcessId mOtherPid;
   nsTArray<ParentImpl*>* mLiveActorArray;
 
 public:
   ConnectActorRunnable(ParentImpl* aActor,
                        Transport* aTransport,
-                       ProcessHandle aProcessHandle,
+                       ProcessId aOtherPid,
                        nsTArray<ParentImpl*>* aLiveActorArray)
-  : mActor(aActor), mTransport(aTransport), mProcessHandle(aProcessHandle),
+  : mActor(aActor), mTransport(aTransport), mOtherPid(aOtherPid),
     mLiveActorArray(aLiveActorArray)
   {
     AssertIsInMainProcess();
@@ -749,14 +744,14 @@ class ChildImpl::OpenChildProcessActorRunnable final : public nsRunnable
 {
   nsRefPtr<ChildImpl> mActor;
   nsAutoPtr<Transport> mTransport;
-  ProcessHandle mProcessHandle;
+  ProcessId mOtherPid;
 
 public:
   OpenChildProcessActorRunnable(already_AddRefed<ChildImpl>&& aActor,
                                 Transport* aTransport,
-                                ProcessHandle aProcessHandle)
+                                ProcessId aOtherPid)
   : mActor(aActor), mTransport(aTransport),
-    mProcessHandle(aProcessHandle)
+    mOtherPid(aOtherPid)
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(mActor);
@@ -876,9 +871,9 @@ BackgroundParent::GetRawContentParentForComparison(
 PBackgroundParent*
 BackgroundParent::Alloc(ContentParent* aContent,
                         Transport* aTransport,
-                        ProcessId aOtherProcess)
+                        ProcessId aOtherPid)
 {
-  return ParentImpl::Alloc(aContent, aTransport, aOtherProcess);
+  return ParentImpl::Alloc(aContent, aTransport, aOtherPid);
 }
 
 // -----------------------------------------------------------------------------
@@ -894,9 +889,9 @@ BackgroundChild::Startup()
 
 // static
 PBackgroundChild*
-BackgroundChild::Alloc(Transport* aTransport, ProcessId aOtherProcess)
+BackgroundChild::Alloc(Transport* aTransport, ProcessId aOtherPid)
 {
-  return ChildImpl::Alloc(aTransport, aOtherProcess);
+  return ChildImpl::Alloc(aTransport, aOtherPid);
 }
 
 // static
@@ -958,13 +953,6 @@ BackgroundChildImpl::GetThreadLocalForCurrentThread()
 // -----------------------------------------------------------------------------
 // ParentImpl Static Members
 // -----------------------------------------------------------------------------
-
-const ParentImpl::ProcessHandle ParentImpl::kInvalidProcessHandle =
-#ifdef XP_WIN
-  ProcessHandle(INVALID_HANDLE_VALUE);
-#else
-  ProcessHandle(-1);
-#endif
 
 StaticRefPtr<nsIThread> ParentImpl::sBackgroundThread;
 
@@ -1062,17 +1050,11 @@ ParentImpl::GetRawContentParentForComparison(
 PBackgroundParent*
 ParentImpl::Alloc(ContentParent* aContent,
                   Transport* aTransport,
-                  ProcessId aOtherProcess)
+                  ProcessId aOtherPid)
 {
   AssertIsInMainProcess();
   AssertIsOnMainThread();
   MOZ_ASSERT(aTransport);
-
-  ProcessHandle processHandle;
-  if (!base::OpenProcessHandle(aOtherProcess, &processHandle)) {
-    // Process has already died?
-    return nullptr;
-  }
 
   if (!sBackgroundThread && !CreateBackgroundThread()) {
     NS_WARNING("Failed to create background thread!");
@@ -1086,7 +1068,7 @@ ParentImpl::Alloc(ContentParent* aContent,
   nsRefPtr<ParentImpl> actor = new ParentImpl(aContent, aTransport);
 
   nsCOMPtr<nsIRunnable> connectRunnable =
-    new ConnectActorRunnable(actor, aTransport, processHandle,
+    new ConnectActorRunnable(actor, aTransport, aOtherPid,
                              sLiveActorsForBackgroundThread);
 
   if (NS_FAILED(sBackgroundThread->Dispatch(connectRunnable,
@@ -1325,14 +1307,6 @@ ParentImpl::MainThreadActorDestroy()
     XRE_GetIOMessageLoop()->PostTask(FROM_HERE,
                                      new DeleteTask<Transport>(mTransport));
     mTransport = nullptr;
-  }
-
-  ProcessHandle otherProcess = OtherProcess();
-  if (otherProcess != kInvalidProcessHandle) {
-    base::CloseProcessHandle(otherProcess);
-#ifdef DEBUG
-    SetOtherProcess(kInvalidProcessHandle);
-#endif
   }
 
   mContent = nullptr;
@@ -1585,8 +1559,7 @@ ParentImpl::ConnectActorRunnable::Run()
   ParentImpl* actor;
   mActor.forget(&actor);
 
-  if (!actor->Open(mTransport, mProcessHandle, XRE_GetIOMessageLoop(),
-                   ParentSide)) {
+  if (!actor->Open(mTransport, mOtherPid, XRE_GetIOMessageLoop(), ParentSide)) {
     actor->Destroy();
     return NS_ERROR_FAILURE;
   }
@@ -1658,7 +1631,7 @@ ChildImpl::Shutdown()
 
 // static
 PBackgroundChild*
-ChildImpl::Alloc(Transport* aTransport, ProcessId aOtherProcess)
+ChildImpl::Alloc(Transport* aTransport, ProcessId aOtherPid)
 {
   AssertIsInChildProcess();
   AssertIsOnMainThread();
@@ -1671,18 +1644,13 @@ ChildImpl::Alloc(Transport* aTransport, ProcessId aOtherProcess)
 
   sPendingTargets->RemoveElementAt(0);
 
-  ProcessHandle processHandle;
-  if (!base::OpenProcessHandle(aOtherProcess, &processHandle)) {
-    MOZ_CRASH("Failed to open process handle!");
-  }
-
   nsRefPtr<ChildImpl> actor = new ChildImpl();
 
   ChildImpl* weakActor = actor;
 
   nsCOMPtr<nsIRunnable> openRunnable =
     new OpenChildProcessActorRunnable(actor.forget(), aTransport,
-                                      processHandle);
+                                      aOtherPid);
   if (NS_FAILED(eventTarget->Dispatch(openRunnable, NS_DISPATCH_NORMAL))) {
     MOZ_CRASH("Failed to dispatch OpenActorRunnable!");
   }
@@ -1915,7 +1883,7 @@ ChildImpl::OpenChildProcessActorRunnable::Run()
   nsRefPtr<ChildImpl> strongActor;
   mActor.swap(strongActor);
 
-  if (!strongActor->Open(mTransport.forget(), mProcessHandle,
+  if (!strongActor->Open(mTransport.forget(), mOtherPid,
                          XRE_GetIOMessageLoop(), ChildSide)) {
     CRASH_IN_CHILD_PROCESS("Failed to open ChildImpl!");
 
@@ -1987,6 +1955,9 @@ ChildImpl::OpenMainProcessActorRunnable::Run()
 
     return NS_OK;
   }
+
+  // Make sure the parent knows it is same process.
+  parentActor->SetOtherProcessId(kCurrentProcessId);
 
   // Now that Open() has succeeded transfer the ownership of the actors to IPDL.
   unused << parentActor.forget();
