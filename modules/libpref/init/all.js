@@ -4663,6 +4663,11 @@ pref("gfx.vsync.refreshdriver", true);
 pref("gfx.vsync.refreshdriver", false);
 #endif
 
+#if defined(XP_LINUX)
+pref("gfx.vsync.hw-vsync.enabled", true);
+pref("gfx.vsync.compositor", true);
+#endif
+
 // Secure Element API
 #ifdef MOZ_SECUREELEMENT
 pref("dom.secureelement.enabled", false);
