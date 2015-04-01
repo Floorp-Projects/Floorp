@@ -2,6 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* eslint-env node */
+
+/* XXX We should enable these and fix the warnings, but at the time of this
+ * writing, we're just bootstrapping the linting infrastructure.
+ */
+/* eslint-disable no-path-concat,no-process-exit */
+
 var express = require('express');
 var app = express();
 
