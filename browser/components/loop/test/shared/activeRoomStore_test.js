@@ -10,6 +10,7 @@ describe("loop.store.ActiveRoomStore", function () {
   var ROOM_STATES = loop.store.ROOM_STATES;
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
+  var ROOM_INFO_FAILURES = loop.shared.utils.ROOM_INFO_FAILURES;
   var sandbox, dispatcher, store, fakeMozLoop, fakeSdkDriver;
   var fakeMultiplexGum;
 
@@ -347,20 +348,127 @@ describe("loop.store.ActiveRoomStore", function () {
       sinon.assert.calledOnce(fakeMozLoop.rooms.get);
     });
 
-    it("should dispatch UpdateRoomInfo if mozLoop.rooms.get is successful", function() {
-      var roomDetails = {
-        roomName: "fakeName",
-        roomUrl: "http://invalid",
-        roomOwner: "gavin"
-      };
-
-      fakeMozLoop.rooms.get.callsArgWith(1, null, roomDetails);
+    it("should dispatch an UpdateRoomInfo message with 'no data' failure if neither roomName nor context are supplied", function() {
+      fakeMozLoop.rooms.get.callsArgWith(1, null, {
+        roomOwner: "Dan",
+        roomUrl: "http://invalid"
+      });
 
       store.fetchServerData(fetchServerAction);
 
       sinon.assert.calledOnce(dispatcher.dispatch);
       sinon.assert.calledWithExactly(dispatcher.dispatch,
-        new sharedActions.UpdateRoomInfo(roomDetails));
+        new sharedActions.UpdateRoomInfo({
+          roomInfoFailure: ROOM_INFO_FAILURES.NO_DATA,
+          roomOwner: "Dan",
+          roomUrl: "http://invalid"
+        }));
+    });
+
+    describe("mozLoop.rooms.get returns roomName as a separate field (no context)", function() {
+      it("should dispatch UpdateRoomInfo if mozLoop.rooms.get is successful", function() {
+        var roomDetails = {
+          roomName: "fakeName",
+          roomUrl: "http://invalid",
+          roomOwner: "gavin"
+        };
+
+        fakeMozLoop.rooms.get.callsArgWith(1, null, roomDetails);
+
+        store.fetchServerData(fetchServerAction);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.UpdateRoomInfo(roomDetails));
+      });
+    });
+
+    describe("mozLoop.rooms.get returns encryptedContext", function() {
+      var roomDetails, expectedDetails;
+
+      beforeEach(function() {
+        roomDetails = {
+          context: {
+            value: "fakeContext"
+          },
+          roomUrl: "http://invalid",
+          roomOwner: "Mark"
+        };
+        expectedDetails = {
+          roomUrl: "http://invalid",
+          roomOwner: "Mark"
+        };
+
+        fakeMozLoop.rooms.get.callsArgWith(1, null, roomDetails);
+
+        sandbox.stub(loop.crypto, "isSupported").returns(true);
+      });
+
+      it("should dispatch UpdateRoomInfo message with 'unsupported' failure if WebCrypto is unsupported", function() {
+        loop.crypto.isSupported.returns(false);
+
+        store.fetchServerData(fetchServerAction);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.UpdateRoomInfo(_.extend({
+            roomInfoFailure: ROOM_INFO_FAILURES.WEB_CRYPTO_UNSUPPORTED
+          }, expectedDetails)));
+      });
+
+      it("should dispatch UpdateRoomInfo message with 'no crypto key' failure if there is no crypto key", function() {
+        store.fetchServerData(fetchServerAction);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.UpdateRoomInfo(_.extend({
+            roomInfoFailure: ROOM_INFO_FAILURES.NO_CRYPTO_KEY
+          }, expectedDetails)));
+      });
+
+      it("should dispatch UpdateRoomInfo message with 'decrypt failed' failure if decryption failed", function() {
+        fetchServerAction.cryptoKey = "fakeKey";
+
+        // This is a work around to turn promise into a sync action to make handling test failures
+        // easier.
+        sandbox.stub(loop.crypto, "decryptBytes", function() {
+          return {
+            then: function(resolve, reject) {
+              reject(new Error("Operation unsupported"));
+            }
+          };
+        });
+
+        store.fetchServerData(fetchServerAction);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.UpdateRoomInfo(_.extend({
+            roomInfoFailure: ROOM_INFO_FAILURES.DECRYPT_FAILED
+          }, expectedDetails)));
+      });
+
+      it("should dispatch UpdateRoomInfo message with the room name if decryption was successful", function() {
+        fetchServerAction.cryptoKey = "fakeKey";
+
+        // This is a work around to turn promise into a sync action to make handling test failures
+        // easier.
+        sandbox.stub(loop.crypto, "decryptBytes", function() {
+          return {
+            then: function(resolve, reject) {
+              resolve(JSON.stringify({roomName: "The wonderful Loopy room"}));
+            }
+          };
+        });
+
+        store.fetchServerData(fetchServerAction);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.UpdateRoomInfo(_.extend({
+            roomName: "The wonderful Loopy room"
+          }, expectedDetails)));
+      });
     });
   });
 
