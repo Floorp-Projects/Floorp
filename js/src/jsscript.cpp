@@ -504,27 +504,33 @@ XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun, HandleScript scri
             MOZ_ASSERT(end == lazy->end());
             MOZ_ASSERT(lineno == lazy->lineno());
             MOZ_ASSERT(column == lazy->column());
+            // We can assert we have no inner functions because we don't
+            // relazify scripts with inner functions.  See
+            // JSFunction::createScriptForLazilyInterpretedFunction.
+            MOZ_ASSERT(lazy->numInnerFunctions() == 0);
         }
 
         if (!xdr->codeUint64(&packedFields))
             return false;
 
         if (mode == XDR_DECODE) {
-            lazy.set(LazyScript::Create(cx, fun, packedFields, begin, end, lineno, column));
+            lazy.set(LazyScript::Create(cx, fun, script, enclosingScope,
+                                        &script->scriptSourceUnwrap(),
+                                        packedFields, begin, end, lineno, column));
 
             // As opposed to XDRLazyScript, we need to restore the runtime bits
             // of the script, as we are trying to match the fact this function
             // has already been parsed and that it would need to be re-lazified.
             lazy->initRuntimeFields(packedFields);
-
-            MOZ_ASSERT(!lazy->sourceObject());
-            lazy->setParent(enclosingScope, &script->scriptSourceUnwrap());
         }
     }
 
     // Code free variables.
     if (!XDRLazyFreeVariables(xdr, lazy))
         return false;
+
+    // No need to do anything with inner functions, since we asserted we don't
+    // have any.
 
     return true;
 }
@@ -1143,7 +1149,9 @@ js::XDRLazyScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript
         }
 
         if (mode == XDR_DECODE)
-            lazy.set(LazyScript::Create(cx, fun, packedFields, begin, end, lineno, column));
+            lazy.set(LazyScript::Create(cx, fun, NullPtr(), enclosingScope,
+                                        &enclosingScript->scriptSourceUnwrap(),
+                                        packedFields, begin, end, lineno, column));
     }
 
     // Code free variables.
@@ -1165,15 +1173,6 @@ js::XDRLazyScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript
             if (mode == XDR_DECODE)
                 innerFunctions[i] = func;
         }
-    }
-
-    if (mode == XDR_DECODE) {
-        MOZ_ASSERT(!lazy->sourceObject());
-        ScriptSourceObject* sourceObject = &enclosingScript->scriptSourceUnwrap();
-
-        // Set the enclosing scope of the lazy function, this would later be
-        // used to define the environment when the function would be used.
-        lazy->setParent(enclosingScope, sourceObject);
     }
 
     return true;
@@ -3826,6 +3825,8 @@ LazyScript::CreateRaw(ExclusiveContext* cx, HandleFunction fun,
 
 /* static */ LazyScript*
 LazyScript::Create(ExclusiveContext* cx, HandleFunction fun,
+                   HandleScript script, HandleObject enclosingScope,
+                   ScriptSourceObject* sourceObject,
                    uint64_t packedFields, uint32_t begin, uint32_t end,
                    uint32_t lineno, uint32_t column)
 {
@@ -3850,6 +3851,15 @@ LazyScript::Create(ExclusiveContext* cx, HandleFunction fun,
     HeapPtrFunction* functions = res->innerFunctions();
     for (i = 0, num = res->numInnerFunctions(); i < num; i++)
         functions[i].init(dummyFun);
+
+    // Set the enclosing scope of the lazy function, this would later be
+    // used to define the environment when the function would be used.
+    MOZ_ASSERT(!res->sourceObject());
+    res->setParent(enclosingScope, sourceObject);
+
+    MOZ_ASSERT(!res->maybeScript());
+    if (script)
+        res->initScript(script);
 
     return res;
 }
