@@ -237,32 +237,24 @@ StyleSheetEditor.prototype = {
 
   /**
    * Start fetching the full text source for this editor's sheet.
+   *
+   * @return {Promise}
+   *         A promise that'll resolve with the source text once the source
+   *         has been loaded or reject on unexpected error.
    */
-  fetchSource: function(callback) {
-    return this.styleSheet.getText().then((longStr) => {
-      longStr.string().then((source) => {
-        let ruleCount = this.styleSheet.ruleCount;
-        if (!this.styleSheet.isOriginalSource) {
-          source = CssLogic.prettifyCSS(source, ruleCount);
-        }
-        this._state.text = source;
-        this.sourceLoaded = true;
+  fetchSource: function () {
+    return Task.spawn(function* () {
+      let longStr = yield this.styleSheet.getText();
+      let source = yield longStr.string();
+      let ruleCount = this.styleSheet.ruleCount;
+      if (!this.styleSheet.isOriginalSource) {
+        source = CssLogic.prettifyCSS(source, ruleCount);
+      }
+      this._state.text = source;
+      this.sourceLoaded = true;
 
-        if (callback) {
-          callback(source);
-        }
-        return source;
-      }, e => {
-        if (this._isDestroyed) {
-          console.warn("Could not fetch the source for " +
-                       this.styleSheet.href +
-                       ", the editor was destroyed");
-          Cu.reportError(e);
-        } else {
-          throw e;
-        }
-      });
-    }, e => {
+      return source;
+    }.bind(this)).then(null, e => {
       if (this._isDestroyed) {
         console.warn("Could not fetch the source for " +
                      this.styleSheet.href +
