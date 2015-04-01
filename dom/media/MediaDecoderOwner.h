@@ -113,13 +113,6 @@ public:
     NEXT_FRAME_UNINITIALIZED
   };
 
-  // Called by the decoder when some data has been downloaded or
-  // buffering/seeking has ended. aNextFrameAvailable is true when
-  // the data for the next frame is available. This method will
-  // decide whether to set the ready state to HAVE_CURRENT_DATA,
-  // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
-  virtual void UpdateReadyStateForData(NextFrameStatus aNextFrame) = 0;
-
   // Check if the decoder owner is active.
   virtual bool IsActive() = 0;
 

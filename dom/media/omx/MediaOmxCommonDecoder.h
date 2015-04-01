@@ -30,7 +30,7 @@ public:
   virtual void SetVolume(double aVolume);
   virtual void PlaybackPositionChanged(MediaDecoderEventVisibility aEventVisibility =
                                          MediaDecoderEventVisibility::Observable);
-  virtual void UpdateReadyStateForData();
+  virtual MediaDecoderOwner::NextFrameStatus NextFrameStatus() override;
   virtual void SetElementVisibility(bool aIsVisible);
   virtual void SetPlatformCanOffloadAudio(bool aCanOffloadAudio);
   virtual bool CheckDecoderCanOffloadAudio();

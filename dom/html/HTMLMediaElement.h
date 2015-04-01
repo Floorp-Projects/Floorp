@@ -220,13 +220,6 @@ public:
   // Dispatch events that were raised while in the bfcache
   nsresult DispatchPendingMediaEvents();
 
-  // Called by the decoder when some data has been downloaded or
-  // buffering/seeking has ended. aNextFrameAvailable is true when
-  // the data for the next frame is available. This method will
-  // decide whether to set the ready state to HAVE_CURRENT_DATA,
-  // HAVE_FUTURE_DATA or HAVE_ENOUGH_DATA.
-  virtual void UpdateReadyStateForData(MediaDecoderOwner::NextFrameStatus aNextFrame) final override;
-
   // Return true if we can activate autoplay assuming enough data has arrived.
   bool CanActivateAutoplay();
 
@@ -647,6 +640,8 @@ protected:
   class MediaStreamTracksAvailableCallback;
   class StreamListener;
   class StreamSizeListener;
+
+  MediaDecoderOwner::NextFrameStatus NextFrameStatus();
 
   void SetDecoder(MediaDecoder* aDecoder)
   {
@@ -1108,9 +1103,6 @@ protected:
   Watchable<nsMediaReadyState> mReadyState;
 
   WatcherHolder mReadyStateUpdater;
-
-  // Last value passed from codec or stream source to UpdateReadyStateForData.
-  Watchable<NextFrameStatus> mNextFrameStatus;
 
   enum LoadAlgorithmState {
     // No load algorithm instance is waiting for a source to be added to the
