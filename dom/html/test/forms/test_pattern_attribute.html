@@ -41,9 +41,12 @@ function completeValidityCheck(element, alwaysValid, isBarred)
   } else if (element.type == 'url') {
     element.pattern = "http://.*\\.com$";
     element.value = "http://mozilla.com";
+  } else if (element.type == 'file') {
+    element.pattern = "foo";
+    SpecialPowers.wrap(element).mozSetFileArray([new File(["foo"], "foo")]);
   } else {
     element.pattern = "foo";
-    SpecialPowers.wrap(element).value = "foo";
+    element.value = "foo";
   }
 
   checkValidPattern(element, true, isBarred);
@@ -56,9 +59,12 @@ function completeValidityCheck(element, alwaysValid, isBarred)
   } else if (element.type == 'url') {
     element.pattern = "http://.*\\.com$";
     element.value = "http://mozilla.org";
+  } else if (element.type == 'file') {
+    element.pattern = "foo";
+    SpecialPowers.wrap(element).mozSetFileArray([new File(["bar"], "bar")]);
   } else {
     element.pattern = "foo";
-    SpecialPowers.wrap(element).value = "bar";
+    element.value = "bar";
   }
 
   if (!alwaysValid) {

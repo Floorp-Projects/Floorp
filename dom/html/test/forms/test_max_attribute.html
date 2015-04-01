@@ -175,14 +175,9 @@ for (var test of data) {
       checkValidity(input, true, apply, apply);
       break;
     case 'file':
-      var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
-                                .getService(SpecialPowers.Ci.nsIProperties);
-      var file = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
-      file.append('635499_file');
-      // Only the file's path is used, so it doesn't need to be created.
-      // See also bug 1058977.
+      var file = new File([''], '635499_file');
 
-      SpecialPowers.wrap(input).value = file.path;
+      SpecialPowers.wrap(input).mozSetFileArray([file]);
       checkValidity(input, true, apply, apply);
 
       break;
