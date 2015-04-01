@@ -23,6 +23,7 @@ DIRS += [
     'ots/src',
     'thebes',
     'ipc',
+    'vr',
 ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:
