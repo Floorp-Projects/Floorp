@@ -104,11 +104,12 @@ public:
   typedef mozilla::AnimationPlayerCollection AnimationPlayerCollection;
 
   static AnimationPlayerCollection*
-  GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty)
+  GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty,
+                             mozilla::GetCompositorAnimationOptions aFlags
+                               = mozilla::GetCompositorAnimationOptions(0))
   {
     return mozilla::css::CommonAnimationManager::GetAnimationsForCompositor(
-      aContent, nsGkAtoms::transitionsProperty, aProperty,
-      mozilla::GetCompositorAnimationOptions::NotifyActiveLayerTracker);
+      aContent, nsGkAtoms::transitionsProperty, aProperty, aFlags);
   }
 
   /**
