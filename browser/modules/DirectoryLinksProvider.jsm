@@ -217,8 +217,8 @@ let DirectoryLinksProvider = {
   },
 
   _cacheSuggestedLinks: function(link) {
-    if (!link.frecent_sites) {
-      // Don't cache links that don't have the expected 'frecent_sites'.
+    if (!link.frecent_sites || "sponsored" == link.type) {
+      // Don't cache links that don't have the expected 'frecent_sites' or are sponsored.
       return;
     }
     for (let suggestedSite of link.frecent_sites) {
