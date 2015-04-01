@@ -12,12 +12,12 @@ set -e
 # Main tests
 
 LOOPDIR=browser/components/loop
-#ESLINT=standalone/node_modules/.bin/eslint
-#if [ -x "${LOOPDIR}/${ESLINT}" ]; then
-#  echo 'running eslint; see http://eslint.org/docs/rules/ for error info'
-#  (cd ${LOOPDIR} && ./${ESLINT} .)
-#  echo 'eslint run finished.'
-#fi
+ESLINT=standalone/node_modules/.bin/eslint
+if [ -x "${LOOPDIR}/${ESLINT}" ]; then
+  echo 'running eslint; see http://eslint.org/docs/rules/ for error info'
+  (cd ${LOOPDIR} && ./${ESLINT} .)
+  echo 'eslint run finished.'
+fi
 
 ./mach xpcshell-test ${LOOPDIR}/
 ./mach marionette-test ${LOOPDIR}/manifest.ini
