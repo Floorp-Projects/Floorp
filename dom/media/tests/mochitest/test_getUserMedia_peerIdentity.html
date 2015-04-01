@@ -7,41 +7,33 @@
 <body>
 <pre id="test">
 <script type="application/javascript">
-createHTML({ title: "Test getUserMedia peerIdentity Constraint", bug: "942367" });
+createHTML({
+  title: "Test getUserMedia peerIdentity Constraint",
+  bug: "942367"
+});
 function theTest() {
-  function testPeerIdentityConstraint(withConstraint, done) {
+  function testPeerIdentityConstraint(withConstraint) {
     var config = { audio: true, video: true, fake: true };
     if (withConstraint) {
       config.peerIdentity = 'user@example.com';
     }
     info('getting media with constraints: ' + JSON.stringify(config));
-    navigator.mediaDevices.getUserMedia(config).then(function(stream) {
-      var oneDone = false;
-      function checkDone() {
-        if (oneDone) {
-          done();
-        }
-        oneDone = true;
-      }
-      var cancelAudioCheck = audioIsSilence(withConstraint, stream, checkDone);
-      var cancelVideoCheck = videoIsBlack(withConstraint, stream, checkDone);
-      setTimeout(cancelAudioCheck, 3*60*1000);
-      setTimeout(cancelVideoCheck, 3*60*1000);
-    })
-    .catch(function(e) {
-      ok(false, 'gUM error: ' + e);
-    });
+    return getUserMedia(config)
+      .then(stream => Promise.all([
+        audioIsSilence(withConstraint, stream),
+        videoIsBlack(withConstraint, stream)
+      ]));
   };
 
-  // without constraint
-  testPeerIdentityConstraint(false, function() {
-    // with the constraint
-    testPeerIdentityConstraint(true, SimpleTest.finish.bind(SimpleTest));
-  });
+  // both without and with the constraint
+  testPeerIdentityConstraint(false)
+    .then(() => testPeerIdentityConstraint(true))
+    .catch(e => ok(false, 'error in test: ' + e))
+    .then(() => SimpleTest.finish())
+    .catch(e => ok(false, 'something is really messed up: ' + e));
 }
 
 runTest(theTest);
-SimpleTest.waitForExplicitFinish();
 
 </script>
 </pre>
