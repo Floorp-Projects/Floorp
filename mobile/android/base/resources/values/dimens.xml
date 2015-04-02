@@ -11,6 +11,9 @@
     <dimen name="autocomplete_row_height">32dp</dimen>
 
     <dimen name="browser_toolbar_height">48dp</dimen>
+    <!-- We use two different values for browser_toolbar_height on tablet
+         which is inconsistent. Temporary value until bug 1150730 is fixed. -->
+    <dimen name="browser_toolbar_height_flipper">48dp</dimen>
     <dimen name="browser_toolbar_button_padding">12dp</dimen>
     <dimen name="browser_toolbar_icon_width">48dp</dimen>
 
@@ -32,7 +35,6 @@
     <dimen name="new_tablet_tab_strip_item_width">208dp</dimen>
     <dimen name="new_tablet_tab_strip_item_margin">-28dp</dimen>
     <dimen name="new_tablet_tab_strip_fading_edge_size">15dp</dimen>
-    <dimen name="new_tablet_browser_toolbar_height">60dp</dimen>
     <dimen name="new_tablet_browser_toolbar_menu_item_width">56dp</dimen>
     <!-- Padding combines with an 18dp image to form the menu item width and height. -->
     <dimen name="new_tablet_browser_toolbar_menu_item_padding_horizontal">19dp</dimen>
