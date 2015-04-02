@@ -329,7 +329,8 @@ enum ZoneSelector {
 class ZonesIter
 {
     gc::AutoEnterIteration iterMarker;
-    JS::Zone** it, **end;
+    JS::Zone** it;
+    JS::Zone** end;
 
   public:
     ZonesIter(JSRuntime* rt, ZoneSelector selector) : iterMarker(&rt->gc) {

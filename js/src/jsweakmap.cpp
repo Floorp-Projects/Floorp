@@ -110,8 +110,8 @@ void
 WeakMapBase::sweepCompartment(JSCompartment* c)
 {
     WeakMapBase** tailPtr = &c->gcWeakMapList;
-    for (WeakMapBase* m = c->gcWeakMapList, *next; m; m = next) {
-        next = m->next;
+    for (WeakMapBase* m = c->gcWeakMapList; m; ) {
+        WeakMapBase* next = m->next;
         if (m->marked) {
             m->sweep();
             *tailPtr = m;
@@ -121,6 +121,7 @@ WeakMapBase::sweepCompartment(JSCompartment* c)
             m->finish();
             m->next = WeakMapNotInList;
         }
+        m = next;
     }
     *tailPtr = nullptr;
 

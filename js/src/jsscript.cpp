@@ -320,8 +320,8 @@ Bindings::trace(JSTracer* trc)
     if (bindingArrayUsingTemporaryStorage())
         return;
 
-    for (Binding* b = bindingArray(), *end = b + count(); b != end; b++) {
-        PropertyName* name = b->name();
+    for (const Binding& b : *this) {
+        PropertyName* name = b.name();
         MarkStringUnbarriered(trc, &name, "bindingArray");
     }
 }

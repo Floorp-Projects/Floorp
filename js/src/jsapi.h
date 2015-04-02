@@ -2090,7 +2090,7 @@ inline int CheckIsSetterOp(JSSetterOp op);
    reinterpret_cast<To>(s))
 
 #define JS_CHECK_ACCESSOR_FLAGS(flags) \
-  (static_cast<mozilla::EnableIf<!((flags) & (JSPROP_READONLY | JSPROP_SHARED | JSPROP_PROPOP_ACCESSORS))>::Type>(0), \
+  (static_cast<mozilla::EnableIf<((flags) & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT)) == 0>::Type>(0), \
    (flags))
 
 #define JS_PROPERTYOP_GETTER(v) \
@@ -2521,6 +2521,13 @@ class PropertyDescriptorOperations
         return (desc()->attrs & bits) != 0;
     }
 
+    bool hasAll(unsigned bits) const {
+        return (desc()->attrs & bits) == bits;
+    }
+
+    // Non-API attributes bit used internally for arguments objects.
+    enum { SHADOWABLE = JSPROP_INTERNAL_USE_BIT };
+
   public:
     // Descriptors with JSGetterOp/JSSetterOp are considered data
     // descriptors. It's complicated.
@@ -2568,6 +2575,59 @@ class PropertyDescriptorOperations
     unsigned attributes() const { return desc()->attrs; }
     JSGetterOp getter() const { return desc()->getter; }
     JSSetterOp setter() const { return desc()->setter; }
+
+    void assertValid() const {
+#ifdef DEBUG
+        MOZ_ASSERT((attributes() & ~(JSPROP_ENUMERATE | JSPROP_IGNORE_ENUMERATE |
+                                     JSPROP_PERMANENT | JSPROP_IGNORE_PERMANENT |
+                                     JSPROP_READONLY | JSPROP_IGNORE_READONLY |
+                                     JSPROP_IGNORE_VALUE |
+                                     JSPROP_GETTER |
+                                     JSPROP_SETTER |
+                                     JSPROP_SHARED |
+                                     JSPROP_REDEFINE_NONCONFIGURABLE |
+                                     SHADOWABLE)) == 0);
+        MOZ_ASSERT(!hasAll(JSPROP_IGNORE_ENUMERATE | JSPROP_ENUMERATE));
+        MOZ_ASSERT(!hasAll(JSPROP_IGNORE_PERMANENT | JSPROP_PERMANENT));
+        if (isAccessorDescriptor()) {
+            MOZ_ASSERT(has(JSPROP_SHARED));
+            MOZ_ASSERT(!has(JSPROP_READONLY));
+            MOZ_ASSERT(!has(JSPROP_IGNORE_READONLY));
+            MOZ_ASSERT(!has(JSPROP_IGNORE_VALUE));
+            MOZ_ASSERT(!has(SHADOWABLE));
+            MOZ_ASSERT(desc()->value.isUndefined());
+            MOZ_ASSERT_IF(!has(JSPROP_GETTER), !getter());
+            MOZ_ASSERT_IF(!has(JSPROP_SETTER), !setter());
+        } else {
+            MOZ_ASSERT(!hasAll(JSPROP_IGNORE_READONLY | JSPROP_READONLY));
+            MOZ_ASSERT_IF(has(JSPROP_IGNORE_VALUE), value().isUndefined());
+        }
+        MOZ_ASSERT(getter() != JS_PropertyStub);
+        MOZ_ASSERT(setter() != JS_StrictPropertyStub);
+#endif
+    }
+
+    void assertComplete() const {
+#ifdef DEBUG
+        assertValid();
+        MOZ_ASSERT((attributes() & ~(JSPROP_ENUMERATE |
+                                     JSPROP_PERMANENT |
+                                     JSPROP_READONLY |
+                                     JSPROP_GETTER |
+                                     JSPROP_SETTER |
+                                     JSPROP_SHARED |
+                                     JSPROP_REDEFINE_NONCONFIGURABLE |
+                                     SHADOWABLE)) == 0);
+        MOZ_ASSERT_IF(isAccessorDescriptor(), has(JSPROP_GETTER) && has(JSPROP_SETTER));
+#endif
+    }
+
+    void assertCompleteIfFound() const {
+#ifdef DEBUG
+        if (object())
+            assertComplete();
+#endif
+    }
 };
 
 template <typename Outer>

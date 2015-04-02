@@ -75,7 +75,8 @@ class DebugModeOSRVolatileStub
 //
 class DebugModeOSRVolatileJitFrameIterator : public JitFrameIterator
 {
-    DebugModeOSRVolatileJitFrameIterator** stack, *prev;
+    DebugModeOSRVolatileJitFrameIterator** stack;
+    DebugModeOSRVolatileJitFrameIterator* prev;
 
   public:
     explicit DebugModeOSRVolatileJitFrameIterator(JSContext* cx)

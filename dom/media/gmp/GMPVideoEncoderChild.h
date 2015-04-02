@@ -15,14 +15,14 @@
 namespace mozilla {
 namespace gmp {
 
-class GMPChild;
+class GMPContentChild;
 
 class GMPVideoEncoderChild : public PGMPVideoEncoderChild,
                              public GMPVideoEncoderCallback,
                              public GMPSharedMemManager
 {
 public:
-  explicit GMPVideoEncoderChild(GMPChild* aPlugin);
+  explicit GMPVideoEncoderChild(GMPContentChild* aPlugin);
   virtual ~GMPVideoEncoderChild();
 
   void Init(GMPVideoEncoder* aEncoder);
@@ -73,7 +73,7 @@ private:
   virtual bool RecvSetPeriodicKeyFrames(const bool& aEnable) override;
   virtual bool RecvEncodingComplete() override;
 
-  GMPChild* mPlugin;
+  GMPContentChild* mPlugin;
   GMPVideoEncoder* mVideoEncoder;
   GMPVideoHostImpl mVideoHost;
 };
