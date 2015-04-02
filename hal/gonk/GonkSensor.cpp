@@ -38,6 +38,10 @@ namespace mozilla {
 // different orientation angles
 #define ACCELEROMETER_POLL_RATE 66667000 /*66.667ms*/
 
+// This is present in Android from API level 18 onwards, which is 4.3.  We might
+// be building on something before 4.3, so use a local define for its value
+#define MOZ_SENSOR_TYPE_GAME_ROTATION_VECTOR   15
+
 double radToDeg(double a) {
   return a * (180.0 / M_PI);
 }
@@ -58,6 +62,10 @@ HardwareSensorToHalSensor(int type)
       return SENSOR_GYROSCOPE;
     case SENSOR_TYPE_LINEAR_ACCELERATION:
       return SENSOR_LINEAR_ACCELERATION;
+    case SENSOR_TYPE_ROTATION_VECTOR:
+      return SENSOR_ROTATION_VECTOR;
+    case MOZ_SENSOR_TYPE_GAME_ROTATION_VECTOR:
+      return SENSOR_GAME_ROTATION_VECTOR;
     default:
       return SENSOR_UNKNOWN;
   }
@@ -84,6 +92,10 @@ HalSensorToHardwareSensor(SensorType type)
       return SENSOR_TYPE_GYROSCOPE;
     case SENSOR_LINEAR_ACCELERATION:
       return SENSOR_TYPE_LINEAR_ACCELERATION;
+    case SENSOR_ROTATION_VECTOR:
+      return SENSOR_TYPE_ROTATION_VECTOR;
+    case SENSOR_GAME_ROTATION_VECTOR:
+      return MOZ_SENSOR_TYPE_GAME_ROTATION_VECTOR;
     default:
       return -1;
   }
@@ -131,6 +143,28 @@ public:
       }
     } else if (mSensorData.sensor() == SENSOR_LIGHT) {
       mSensorValues.AppendElement(data.data[0]);
+    } else if (mSensorData.sensor() == SENSOR_ROTATION_VECTOR) {
+      mSensorValues.AppendElement(data.data[0]);
+      mSensorValues.AppendElement(data.data[1]);
+      mSensorValues.AppendElement(data.data[2]);
+      if (data.data[3] == 0.0) {
+        // data.data[3] was optional in Android <= API level 18.  It can be computed from 012,
+        // but it's better to take the actual value if one is provided.  The computation is
+        //   v = 1 - d[0]*d[0] - d[1]*d[1] - d[2]*d[2]
+        //   d[3] = v > 0 ? sqrt(v) : 0;
+        // I'm assuming that it will be 0 if it's not passed in.  (The values form a unit
+        // quaternion, so the angle can be computed from the direction vector.)
+        float sx = data.data[0], sy = data.data[1], sz = data.data[2];
+        float v = 1.0f - sx*sx - sy*sy - sz*sz;
+        mSensorValues.AppendElement(v > 0.0f ? sqrt(v) : 0.0f);
+      } else {
+        mSensorValues.AppendElement(data.data[3]);
+      }
+    } else if (mSensorData.sensor() == SENSOR_GAME_ROTATION_VECTOR) {
+      mSensorValues.AppendElement(data.data[0]);
+      mSensorValues.AppendElement(data.data[1]);
+      mSensorValues.AppendElement(data.data[2]);
+      mSensorValues.AppendElement(data.data[3]);
     } else {
       mSensorValues.AppendElement(data.data[0]);
       mSensorValues.AppendElement(data.data[1]);
@@ -149,7 +183,7 @@ public:
 
 private:
   SensorData mSensorData;
-  InfallibleTArray<float> mSensorValues;
+  nsAutoTArray<float, 4> mSensorValues;
 };
 
 namespace hal_impl {
