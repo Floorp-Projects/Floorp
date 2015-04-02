@@ -23,12 +23,18 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
 
     this._onPrefChanged = this._onPrefChanged.bind(this);
     this._onLink = this._onLink.bind(this);
+
+    this.container = $("#js-calltree-view .call-tree-cells-container");
+
+    JITOptimizationsView.initialize();
   },
 
   /**
    * Unbinds events.
    */
   destroy: function () {
+    this.container = null;
+    JITOptimizationsView.destroy();
     DetailsSubview.destroy.call(this);
   },
 
@@ -37,10 +43,12 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
    *
    * @param object interval [optional]
    *        The { startTime, endTime }, in milliseconds.
-   * @param object options [optional]
-   *        Additional options for new the call tree.
    */
-  render: function (interval={}, options={}) {
+  render: function (interval={}) {
+    let options = {
+      contentOnly: !PerformanceController.getOption("show-platform-data"),
+      invertTree: PerformanceController.getOption("invert-call-tree")
+    };
     let recording = PerformanceController.getCurrentRecording();
     let profile = recording.getProfile();
     let threadNode = this._prepareCallTree(profile, interval, options);
@@ -64,16 +72,11 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
    */
   _prepareCallTree: function (profile, { startTime, endTime }, options) {
     let threadSamples = profile.threads[0].samples;
-    let contentOnly = !PerformanceController.getOption("show-platform-data");
-    let invertTree = PerformanceController.getOption("invert-call-tree");
+    let optimizations = profile.threads[0].optimizations;
+    let { contentOnly, invertTree } = options;
 
     let threadNode = new ThreadNode(threadSamples,
-      { startTime, endTime, contentOnly, invertTree });
-
-    // If we have an empty profile (no samples), then don't invert the tree, as
-    // it would hide the root node and a completely blank call tree space can be
-    // mis-interpreted as an error.
-    options.inverted = invertTree && threadNode.samples > 0;
+      { startTime, endTime, contentOnly, invertTree, optimizations });
 
     return threadNode;
   },
@@ -82,31 +85,38 @@ let JsCallTreeView = Heritage.extend(DetailsSubview, {
    * Renders the call tree.
    */
   _populateCallTree: function (frameNode, options={}) {
+    // If we have an empty profile (no samples), then don't invert the tree, as
+    // it would hide the root node and a completely blank call tree space can be
+    // mis-interpreted as an error.
+    let inverted = options.invertTree && frameNode.samples > 0;
+
     let root = new CallView({
       frame: frameNode,
-      inverted: options.inverted,
+      inverted: inverted,
       // Root nodes are hidden in inverted call trees.
-      hidden: options.inverted,
+      hidden: inverted,
       // Call trees should only auto-expand when not inverted. Passing undefined
       // will default to the CALL_TREE_AUTO_EXPAND depth.
-      autoExpandDepth: options.inverted ? 0 : undefined,
+      autoExpandDepth: inverted ? 0 : undefined
     });
 
     // Bind events.
     root.on("link", this._onLink);
 
-    // Pipe "focus" events to the view, mostly for tests
-    root.on("focus", () => this.emit("focus"));
+    // Pipe "focus" events to the view, used by
+    // tests and JITOptimizationsView.
+    root.on("focus", (_, node) => this.emit("focus", node));
 
     // Clear out other call trees.
-    let container = $("#js-calltree-view > .call-tree-cells-container");
-    container.innerHTML = "";
-    root.attachTo(container);
+    this.container.innerHTML = "";
+    root.attachTo(this.container);
 
     // When platform data isn't shown, hide the cateogry labels, since they're
     // only available for C++ frames.
-    let contentOnly = !PerformanceController.getOption("show-platform-data");
-    root.toggleCategories(!contentOnly);
+    root.toggleCategories(options.contentOnly);
+
+    // Return the CallView for tests
+    return root;
   },
 
   toString: () => "[object JsCallTreeView]"

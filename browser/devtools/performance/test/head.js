@@ -34,6 +34,7 @@ const IDLE_PREF = "devtools.performance.ui.show-idle-blocks";
 const INVERT_PREF = "devtools.performance.ui.invert-call-tree";
 const INVERT_FLAME_PREF = "devtools.performance.ui.invert-flame-graph";
 const FLATTEN_PREF = "devtools.performance.ui.flatten-tree-recursion";
+const JIT_PREF = "devtools.performance.ui.show-jit-optimizations";
 
 // All tests are asynchronous.
 waitForExplicitFinish();
@@ -48,6 +49,7 @@ let DEFAULT_PREFS = [
   "devtools.performance.ui.show-idle-blocks",
   "devtools.performance.ui.enable-memory",
   "devtools.performance.ui.enable-framerate",
+  "devtools.performance.ui.show-jit-optimizations",
 ].reduce((prefs, pref) => {
   prefs[pref] = Services.prefs.getBoolPref(pref);
   return prefs;
