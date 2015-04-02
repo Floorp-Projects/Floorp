@@ -13,7 +13,6 @@
 #include "nsSiteSecurityService.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "pkix/stdkeywords.h"
 #include "pkix/pkixtypes.h"
 #include "prlog.h"
 #include "RootCertificateTelemetryUtils.h"

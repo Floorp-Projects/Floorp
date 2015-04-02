@@ -807,15 +807,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         }
 
         if (mRecvd) {
-            MOZ_ASSERT(mRecvd->is_reply(), "expected reply");
-            MOZ_ASSERT(!mRecvd->is_reply_error());
-            MOZ_ASSERT(mRecvd->type() == replyType, "wrong reply type");
-            MOZ_ASSERT(mRecvd->seqno() == seqno);
-            MOZ_ASSERT(mRecvd->is_sync());
-
-            *aReply = Move(*mRecvd);
-            mRecvd = nullptr;
-            return true;
+            break;
         }
 
         MOZ_ASSERT(!mTimedOutMessageSeqno);
@@ -831,11 +823,32 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
         // if neither side has any other message Sends on the stack).
         bool canTimeOut = transaction == seqno;
         if (maybeTimedOut && canTimeOut && !ShouldContinueFromTimeout()) {
+            // We might have received a reply during WaitForSyncNotify or inside
+            // ShouldContinueFromTimeout (which drops the lock). We need to make
+            // sure not to set mTimedOutMessageSeqno if that happens, since then
+            // there would be no way to unset it.
+            if (mRecvdErrors) {
+                mRecvdErrors--;
+                return false;
+            }
+            if (mRecvd) {
+                break;
+            }
+
             mTimedOutMessageSeqno = seqno;
             return false;
         }
     }
 
+    MOZ_ASSERT(mRecvd);
+    MOZ_ASSERT(mRecvd->is_reply(), "expected reply");
+    MOZ_ASSERT(!mRecvd->is_reply_error());
+    MOZ_ASSERT(mRecvd->type() == replyType, "wrong reply type");
+    MOZ_ASSERT(mRecvd->seqno() == seqno);
+    MOZ_ASSERT(mRecvd->is_sync());
+
+    *aReply = Move(*mRecvd);
+    mRecvd = nullptr;
     return true;
 }
 

@@ -13,6 +13,7 @@ MOCHITEST_MANIFESTS += ['mochitests/mochitest.ini']
 
 XPCSHELL_TESTS_MANIFESTS += [
     'unit/xpcshell.ini',
+    'unit/xpcshell_b2g.ini',
     'unit_ipc/xpcshell.ini',
 ]
 

@@ -7367,6 +7367,12 @@ Parser<ParseHandler>::comprehensionFor(GeneratorKind comprehensionKind)
         report(ParseError, false, null(), JSMSG_LET_COMP_BINDING);
         return null();
     }
+    Node assignLhs = newName(name);
+    if (!assignLhs)
+        return null();
+    Node lhs = newName(name);
+    if (!lhs)
+        return null();
     bool matched;
     if (!tokenStream.matchContextualKeyword(&matched, context->names().of))
         return null();
@@ -7389,9 +7395,6 @@ Parser<ParseHandler>::comprehensionFor(GeneratorKind comprehensionKind)
     if (!blockObj)
         return null();
     data.initLexical(DontHoistVars, blockObj, JSMSG_TOO_MANY_LOCALS);
-    Node lhs = newName(name);
-    if (!lhs)
-        return null();
     Node decls = handler.newList(PNK_LET, lhs);
     if (!decls)
         return null();
@@ -7403,9 +7406,6 @@ Parser<ParseHandler>::comprehensionFor(GeneratorKind comprehensionKind)
         return null();
     handler.setLexicalScopeBody(letScope, decls);
 
-    Node assignLhs = newName(name);
-    if (!assignLhs)
-        return null();
     if (!noteNameUse(name, assignLhs))
         return null();
     handler.setOp(assignLhs, JSOP_SETNAME);

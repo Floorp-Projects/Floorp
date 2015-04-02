@@ -36,6 +36,7 @@ function crashBrowser(browser) {
     Cu.import("resource://gre/modules/ctypes.jsm");
 
     let dies = function() {
+      privateNoteIntentionalCrash();
       let zero = new ctypes.intptr_t(8);
       let badptr = ctypes.cast(zero, ctypes.PointerType(ctypes.int32_t));
       badptr.contents

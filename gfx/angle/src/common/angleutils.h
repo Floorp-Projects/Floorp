@@ -145,7 +145,7 @@ size_t FormatStringIntoVector(const char *fmt, va_list vararg, std::vector<char>
 std::string FormatString(const char *fmt, va_list vararg);
 std::string FormatString(const char *fmt, ...);
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && _MSC_VER < 1900
 #define snprintf _snprintf
 #endif
 
