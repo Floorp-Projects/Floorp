@@ -94,9 +94,6 @@ protected:
 
 private:
   nsCOMPtr<nsIOutputStream> mOutputStream;
-#ifdef DEBUG
-  void* mWriteThread;
-#endif
 };
 
 } // namespace dom

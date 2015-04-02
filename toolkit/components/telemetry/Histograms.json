@@ -353,7 +353,7 @@
     "description": "Use of SpiderMonkey's deprecated language extensions in web content: ForEach=0, DestructuringForIn=1, LegacyGenerator=2, ExpressionClosure=3, LetBlock=4, LetExpression=5, NoSuchMethod=6, FlagsArgument=7"
   },
   "TELEMETRY_PING": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
@@ -361,7 +361,7 @@
     "description": "Time taken to submit telemetry info (ms)"
   },
   "TELEMETRY_SUCCESS": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "boolean",
     "description": "Successful telemetry submission"
   },
@@ -4531,7 +4531,7 @@
   },
   "RANGE_CHECKSUM_ERRORS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
@@ -4540,7 +4540,7 @@
   },
   "BUCKET_ORDER_ERRORS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
@@ -4549,7 +4549,7 @@
   },
   "TOTAL_COUNT_HIGH_ERRORS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
@@ -4558,7 +4558,7 @@
   },
   "TOTAL_COUNT_LOW_ERRORS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "exponential",
     "high": "3000",
     "n_buckets": 10,
@@ -4572,55 +4572,55 @@
     "description": "Count of discarded content payloads."
   },
   "TELEMETRY_FILES_EVICTED": {
-    "alert_emails": ["rvitillo@mozilla.com"],
-    "expires_in_version": "36",
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com", "rvitillo@mozilla.com"],
+    "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 30,
     "description": "Number of telemetry pings evicted at startup"
   },
   "TELEMETRY_TEST_FLAG": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "flag",
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_COUNT": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "count",
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_KEYED_FLAG": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "flag",
     "keyed": true,
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_KEYED_COUNT": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_RELEASE_OPTOUT": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "flag",
     "releaseChannelCollection": "opt-out",
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_RELEASE_OPTIN": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "flag",
     "releaseChannelCollection": "opt-in",
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_KEYED_RELEASE_OPTIN": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "flag",
     "keyed": true,
     "releaseChannelCollection": "opt-in",
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_KEYED_RELEASE_OPTOUT": {
-    "expires_in_version": "default",
+    "expires_in_version": "never",
     "kind": "flag",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
@@ -4946,7 +4946,7 @@
   },
   "READ_SAVED_PING_SUCCESS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "expires_in_version": "40",
+    "expires_in_version": "never",
     "kind": "boolean",
     "description": "Successfully reading a saved ping file"
   },
