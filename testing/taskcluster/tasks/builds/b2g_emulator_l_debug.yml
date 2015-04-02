@@ -1,7 +1,7 @@
 $inherits:
   from: 'tasks/builds/b2g_emulator_base.yml'
   variables:
-    build_name: 'emualtor-l'
+    build_name: 'emulator-l'
     build_type: 'opt'
 task:
   workerType: emulator-l-debug

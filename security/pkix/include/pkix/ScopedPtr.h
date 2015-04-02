@@ -25,8 +25,6 @@
 #ifndef mozilla_pkix_ScopedPtr_h
 #define mozilla_pkix_ScopedPtr_h
 
-#include "pkix/stdkeywords.h"
-
 namespace mozilla { namespace pkix {
 
 // Similar to boost::scoped_ptr and std::unique_ptr. Does not support copying

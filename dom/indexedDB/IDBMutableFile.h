@@ -102,12 +102,6 @@ public:
   virtual already_AddRefed<nsISupports>
   CreateStream(bool aReadOnly) override;
 
-  virtual void
-  SetThreadLocals() override;
-
-  virtual void
-  UnsetThreadLocals() override;
-
   // nsWrapperCache
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

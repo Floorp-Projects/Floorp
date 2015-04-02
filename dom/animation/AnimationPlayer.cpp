@@ -406,7 +406,7 @@ AnimationPlayer::CanThrottle() const
   // finishing, we need an unthrottled sample so we can apply the correct
   // end-of-animation behavior on the main thread (either removing the
   // animation style or applying the fill mode).
-  return mIsPreviousStateFinished;
+  return mFinishedAtLastComposeStyle;
 }
 
 void
@@ -462,7 +462,9 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
     AutoRestore<Nullable<TimeDuration>> restoreHoldTime(mHoldTime);
     bool updatedHoldTime = false;
 
-    if (PlayState() == AnimationPlayState::Pending &&
+    AnimationPlayState playState = PlayState();
+
+    if (playState == AnimationPlayState::Pending &&
         mHoldTime.IsNull() &&
         !mStartTime.IsNull()) {
       Nullable<TimeDuration> timeToUse = mPendingReadyTime;
@@ -485,6 +487,8 @@ AnimationPlayer::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
     if (updatedHoldTime) {
       UpdateTiming();
     }
+
+    mFinishedAtLastComposeStyle = (playState == AnimationPlayState::Finished);
   }
 }
 
