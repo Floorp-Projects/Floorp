@@ -1064,6 +1064,8 @@ pref("browser.sessionstore.restore_hidden_tabs", false);
 pref("browser.sessionstore.restore_pinned_tabs_on_demand", false);
 // The version at which we performed the latest upgrade backup
 pref("browser.sessionstore.upgradeBackup.latestBuildID", "");
+// How many upgrade backups should be kept
+pref("browser.sessionstore.upgradeBackup.maxUpgradeBackups", 3);
 // End-users should not run sessionstore in debug mode
 pref("browser.sessionstore.debug", false);
 // Forget closed windows/tabs after two weeks
