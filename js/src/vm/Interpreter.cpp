@@ -10,6 +10,7 @@
 
 #include "vm/Interpreter-inl.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
@@ -51,6 +52,13 @@
 #include "vm/Probes-inl.h"
 #include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"
+
+#if defined(XP_UNIX)
+#include <sys/resource.h>
+#elif defined(XP_WIN)
+#include <Processthreadsapi.h>
+#include <Windows.h>
+#endif // defined(XP_UNIX) || defined(XP_WIN)
 
 using namespace js;
 using namespace js::gc;
@@ -382,11 +390,233 @@ ExecuteState::pushInterpreterFrame(JSContext* cx)
     return cx->runtime()->interpreterStack().pushExecuteFrame(cx, script_, thisv_, scopeChain_,
                                                               type_, evalInFrame_);
 }
+namespace js {
+
+// Implementation of per-performance group performance measurement.
+//
+//
+// All mutable state is stored in `Runtime::stopwatch` (per-process
+// performance stats and logistics) and in `PerformanceGroup` (per
+// group performance stats).
+struct AutoStopwatch final
+{
+    // If the stopwatch is active, constructing an instance of
+    // AutoStopwatch causes it to become the current owner of the
+    // stopwatch.
+    //
+    // Previous owner is restored upon destruction.
+    explicit inline AutoStopwatch(JSContext *cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : compartment_(nullptr)
+      , runtime_(nullptr)
+      , iteration_(0)
+      , isActive_(false)
+      , isTop_(false)
+      , userTimeStart_(0)
+      , systemTimeStart_(0)
+      , CPOWTimeStart_(0)
+    {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        runtime_ = cx->runtime();
+        if (!runtime_->stopwatch.isActive())
+            return;
+        compartment_ = cx->compartment();
+        MOZ_ASSERT(compartment_);
+        if (compartment_->scheduledForDestruction)
+            return;
+        iteration_ = runtime_->stopwatch.iteration;
+
+        PerformanceGroup *group = compartment_->performanceMonitoring.getGroup();
+        MOZ_ASSERT(group);
+
+        if (group->hasStopwatch(iteration_)) {
+            // Someone is already monitoring this group during this
+            // tick, no need for further monitoring.
+            return;
+        }
+
+        // Start the stopwatch.
+        if (!this->getTimes(&userTimeStart_, &systemTimeStart_))
+            return;
+        isActive_ = true;
+        CPOWTimeStart_ = runtime_->stopwatch.performance.totalCPOWTime;
+
+        // We are now in charge of monitoring this group for the tick,
+        // until destruction of `this` or until we enter a nested event
+        // loop and `iteration_` is incremented.
+        group->acquireStopwatch(iteration_, this);
+
+        if (runtime_->stopwatch.isEmpty) {
+            // This is the topmost stopwatch on the stack.
+            // It will be in charge of updating the per-process
+            // performance data.
+            runtime_->stopwatch.isEmpty = false;
+            runtime_->stopwatch.performance.ticks++;
+            isTop_ = true;
+        }
+    }
+    inline ~AutoStopwatch() {
+        if (!isActive_) {
+            // We are not in charge of monitoring anything.
+            return;
+        }
+
+        MOZ_ASSERT(!compartment_->scheduledForDestruction);
+
+        if (!runtime_->stopwatch.isActive()) {
+            // Monitoring has been stopped while we were
+            // executing the code. Drop everything.
+            return;
+        }
+
+        if (iteration_ != runtime_->stopwatch.iteration) {
+            // We have entered a nested event loop at some point.
+            // Any information we may have is obsolete.
+            return;
+        }
+
+        PerformanceGroup *group = compartment_->performanceMonitoring.getGroup();
+        MOZ_ASSERT(group);
+
+        // Compute time spent.
+        group->releaseStopwatch(iteration_, this);
+        uint64_t userTimeEnd, systemTimeEnd;
+        if (!this->getTimes(&userTimeEnd, &systemTimeEnd))
+            return;
+
+        uint64_t userTimeDelta = userTimeEnd - userTimeStart_;
+        uint64_t systemTimeDelta = systemTimeEnd - systemTimeStart_;
+        uint64_t CPOWTimeDelta = runtime_->stopwatch.performance.totalCPOWTime - CPOWTimeStart_;
+        group->data.totalUserTime += userTimeDelta;
+        group->data.totalSystemTime += systemTimeDelta;
+        group->data.totalCPOWTime += CPOWTimeDelta;
+
+        uint64_t totalTimeDelta = userTimeDelta + systemTimeDelta;
+        updateDurations(totalTimeDelta, group->data.durations);
+        group->data.ticks++;
+
+        if (isTop_) {
+            // This is the topmost stopwatch on the stack.
+            // Record the timing information.
+            runtime_->stopwatch.performance.totalUserTime = userTimeEnd;
+            runtime_->stopwatch.performance.totalSystemTime = systemTimeEnd;
+            updateDurations(totalTimeDelta, runtime_->stopwatch.performance.durations);
+            runtime_->stopwatch.isEmpty = true;
+        }
+    }
+
+ private:
+
+    // Update an array containing the number of times we have missed
+    // at least 2^0 successive ms, 2^1 successive ms, ...
+    // 2^i successive ms.
+    template<int N>
+    void updateDurations(uint64_t totalTimeDelta, uint64_t (&array)[N]) const {
+        // Duration of one frame, i.e. 16ms in museconds
+        size_t i = 0;
+        uint64_t duration = 1000;
+        for (i = 0, duration = 1000;
+             i < N && duration < totalTimeDelta;
+             ++i, duration *= 2) {
+            array[i]++;
+        }
+    }
+
+    // Get the OS-reported time spent in userland/systemland,
+    // in microseconds.
+    bool getTimes(uint64_t *userTime, uint64_t *systemTime) const {
+        MOZ_ASSERT(userTime);
+        MOZ_ASSERT(systemTime);
+
+#if defined(XP_UNIX)
+
+        struct rusage rusage;
+#if defined(RUSAGE_THREAD)
+        // Under Linux, we can obtain per-thread statistics
+        int err = getrusage(RUSAGE_THREAD, &rusage);
+#else
+        // Under other Unices, including MacOS X, we need to
+        // do with more noisy per-process statistics.
+        int err = getrusage(RUSAGE_SELF, &rusage);
+#endif // defined(RUSAGE_THREAD)
+        MOZ_ASSERT(!err);
+        if (err)
+            return false;
+
+        *userTime = rusage.ru_utime.tv_usec
+            + rusage.ru_utime.tv_sec * 1000000;
+        *systemTime = rusage.ru_stime.tv_usec
+            + rusage.ru_stime.tv_sec * 1000000;
+
+#elif defined(XP_WIN)
+        // Under Windows, we can obtain per-thread statistics,
+        // although experience seems to suggest that they are
+        // not very good under Windows XP.
+        FILETIME creationFileTime; // Ignored
+        FILETIME exitFileTime; // Ignored
+        FILETIME kernelFileTime;
+        FILETIME userFileTime;
+        BOOL success = GetThreadTimes(GetCurrentThread(),
+                                      &creationFileTime, &exitFileTime,
+                                      &kernelFileTime, &userFileTime);
+        MOZ_ASSERT(success);
+        if (!success)
+            return false;
+
+        ULARGE_INTEGER kernelTimeInt;
+        ULARGE_INTEGER userTimeInt;
+        kernelTimeInt.LowPart = kernelFileTime.dwLowDateTime;
+        kernelTimeInt.HighPart = kernelFileTime.dwHighDateTime;
+        *systemTime = kernelTimeInt.QuadPart / 10; // 100 ns to 1 us
+
+        userTimeInt.LowPart = userFileTime.dwLowDateTime;
+        userTimeInt.HighPart = userFileTime.dwHighDateTime;
+        *userTime = userTimeInt.QuadPart / 10; // 100 ns to 1 us
+#endif // defined(XP_UNIX) || defined(XP_WIN)
+
+        return true;
+    }
+
+  private:
+    // The compartment with which this object was initialized.
+    // Non-null.
+    JSCompartment *compartment_;
+
+    // The runtime with which this object was initialized.
+    // Non-null.
+    JSRuntime *runtime_;
+
+    // An indication of the number of times we have entered the event
+    // loop.  Used only for comparison.
+    uint64_t iteration_;
+
+    // `true` if this object is currently used to monitor performance,
+    // `false` otherwise, i.e. if the stopwatch mechanism is off or if
+    // another stopwatch is already in charge of monitoring for the
+    // same PerformanceGroup.
+    bool isActive_;
+
+    // `true` if this stopwatch is the topmost stopwatch on the stack
+    // for this event, `false` otherwise.
+    bool isTop_;
+
+    // Timestamps captured while starting the stopwatch.
+    uint64_t userTimeStart_;
+    uint64_t systemTimeStart_;
+    uint64_t CPOWTimeStart_;
+
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+}
 
 bool
 js::RunScript(JSContext* cx, RunState& state)
 {
     JS_CHECK_RECURSION(cx, return false);
+
+#if defined(NIGHTLY_BUILD)
+    js::AutoStopwatch stopwatch(cx);
+#endif // defined(NIGHTLY_BUILD)
 
     SPSEntryMarker marker(cx->runtime(), state.script());
 

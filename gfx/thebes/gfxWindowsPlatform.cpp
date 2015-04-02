@@ -1875,7 +1875,6 @@ gfxWindowsPlatform::InitD3D11Devices()
   MOZ_ASSERT(!mD3D11Device);
 
   bool useWARP = false;
-  ScopedGfxFeatureReporter reporterWARP("D3D11-WARP", gfxPrefs::LayersD3D11ForceWARP());
 
   nsCOMPtr<nsIGfxInfo> gfxInfo = do_GetService("@mozilla.org/gfx/info;1");
   if (gfxInfo) {
@@ -1962,6 +1961,7 @@ gfxWindowsPlatform::InitD3D11Devices()
     MOZ_ASSERT(!mD3D11Device);
     MOZ_ASSERT(!adapter);
 
+    ScopedGfxFeatureReporter reporterWARP("D3D11-WARP", gfxPrefs::LayersD3D11ForceWARP());
     hr = d3d11CreateDevice(nullptr, D3D_DRIVER_TYPE_WARP, nullptr,
                            // Use
                            // D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS

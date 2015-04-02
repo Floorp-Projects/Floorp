@@ -75,7 +75,7 @@ static RedirEntry kRedirMap[] = {
     nsIAboutModule::ALLOW_SCRIPT
   },
   {
-    "compartments", "chrome://global/content/aboutCompartments.xhtml",
+    "performance", "chrome://global/content/aboutPerformance.xhtml",
     nsIAboutModule::ALLOW_SCRIPT
   },
   {

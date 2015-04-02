@@ -518,6 +518,7 @@ public:
     double X() { return mX; }
     double Y() { return mY; }
     double Z() { return mZ; }
+    double W() { return mW; }
     const nsIntRect& Rect() { return mRect; }
     nsAString& Characters() { return mCharacters; }
     nsAString& CharactersExtra() { return mCharactersExtra; }
@@ -591,7 +592,7 @@ protected:
     int mRangeType, mRangeStyles, mRangeLineStyle;
     bool mRangeBoldLine;
     int mRangeForeColor, mRangeBackColor, mRangeLineColor;
-    double mX, mY, mZ;
+    double mX, mY, mZ, mW;
     int mPointerIndex;
     nsString mCharacters, mCharactersExtra, mData;
     nsRefPtr<nsGeoPosition> mGeoPosition;
@@ -648,6 +649,7 @@ protected:
     static jfieldID jXField;
     static jfieldID jYField;
     static jfieldID jZField;
+    static jfieldID jWField;
     static jfieldID jDistanceField;
     static jfieldID jRectField;
     static jfieldID jNativeWindowField;

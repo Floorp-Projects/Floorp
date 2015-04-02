@@ -2833,6 +2833,13 @@ bool
 MergeTypes(MIRType* ptype, TemporaryTypeSet** ptypeSet,
            MIRType newType, TemporaryTypeSet* newTypeSet);
 
+bool
+TypeSetIncludes(TypeSet* types, MIRType input, TypeSet* inputTypes);
+
+bool
+EqualTypes(MIRType type1, TemporaryTypeSet* typeset1,
+           MIRType type2, TemporaryTypeSet* typeset2);
+
 // Helper class to assert all GC pointers embedded in MIR instructions are
 // tenured. Off-thread Ion compilation and nursery GCs can happen in parallel,
 // so it's invalid to store pointers to nursery things. There's no need to root
