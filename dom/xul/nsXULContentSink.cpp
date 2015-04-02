@@ -869,8 +869,7 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
       const nsDependentString key(aAttributes[0]);
       if (key.EqualsLiteral("src")) {
           src.Assign(aAttributes[1]);
-      }
-      else if (key.EqualsLiteral("type")) {
+      } else if (key.EqualsLiteral("type")) {
           nsDependentString str(aAttributes[1]);
           nsContentTypeParser parser(str);
           nsAutoString mimeType;
@@ -903,8 +902,7 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
                   return rv;
               }
           }
-      }
-      else if (key.EqualsLiteral("language")) {
+      } else if (key.EqualsLiteral("language")) {
           // Language is deprecated, and the impl in nsScriptLoader ignores the
           // various version strings anyway.  So we make no attempt to support
           // languages other than JS for language=
@@ -1071,8 +1069,7 @@ XULContentSinkImpl::AddText(const char16_t* aText,
         if (NS_OK != rv) {
             return rv;
         }
-      }
-      else {
+      } else {
         mTextSize += aLength;
         mText = (char16_t *) realloc(mText, sizeof(char16_t) * mTextSize);
         if (nullptr == mText) {
