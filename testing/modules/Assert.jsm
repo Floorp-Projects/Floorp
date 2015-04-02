@@ -17,6 +17,7 @@ this.EXPORTED_SYMBOLS = [
 ];
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://gre/modules/ObjectUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Promise",
                                   "resource://gre/modules/Promise.jsm");
@@ -258,94 +259,8 @@ proto.notEqual = function notEqual(actual, expected, message) {
  *        (string) Short explanation of the expected result
  */
 proto.deepEqual = function deepEqual(actual, expected, message) {
-  this.report(!_deepEqual(actual, expected), actual, expected, message, "deepEqual");
+  this.report(!ObjectUtils.deepEqual(actual, expected), actual, expected, message, "deepEqual");
 };
-
-function _deepEqual(actual, expected) {
-  // 7.1. All identical values are equivalent, as determined by ===.
-  if (actual === expected) {
-    return true;
-  // 7.2. If the expected value is a Date object, the actual value is
-  // equivalent if it is also a Date object that refers to the same time.
-  } else if (instanceOf(actual, "Date") && instanceOf(expected, "Date")) {
-    if (isNaN(actual.getTime()) && isNaN(expected.getTime()))
-      return true;
-    return actual.getTime() === expected.getTime();
-  // 7.3 If the expected value is a RegExp object, the actual value is
-  // equivalent if it is also a RegExp object with the same source and
-  // properties (`global`, `multiline`, `lastIndex`, `ignoreCase`).
-  } else if (instanceOf(actual, "RegExp") && instanceOf(expected, "RegExp")) {
-    return actual.source === expected.source &&
-           actual.global === expected.global &&
-           actual.multiline === expected.multiline &&
-           actual.lastIndex === expected.lastIndex &&
-           actual.ignoreCase === expected.ignoreCase;
-  // 7.4. Other pairs that do not both pass typeof value == "object",
-  // equivalence is determined by ==.
-  } else if (typeof actual != "object" && typeof expected != "object") {
-    return actual == expected;
-  // 7.5 For all other Object pairs, including Array objects, equivalence is
-  // determined by having the same number of owned properties (as verified
-  // with Object.prototype.hasOwnProperty.call), the same set of keys
-  // (although not necessarily the same order), equivalent values for every
-  // corresponding key, and an identical 'prototype' property. Note: this
-  // accounts for both named and indexed properties on Arrays.
-  } else {
-    return objEquiv(actual, expected);
-  }
-}
-
-function isUndefinedOrNull(value) {
-  return value === null || value === undefined;
-}
-
-function isArguments(object) {
-  return instanceOf(object, "Arguments");
-}
-
-function objEquiv(a, b) {
-  if (isUndefinedOrNull(a) || isUndefinedOrNull(b)) {
-    return false;
-  }
-  // An identical 'prototype' property.
-  if (a.prototype !== b.prototype) {
-    return false;
-  }
-  // Object.keys may be broken through screwy arguments passing. Converting to
-  // an array solves the problem.
-  if (isArguments(a)) {
-    if (!isArguments(b)) {
-      return false;
-    }
-    a = pSlice.call(a);
-    b = pSlice.call(b);
-    return _deepEqual(a, b);
-  }
-  let ka, kb, key, i;
-  try {
-    ka = Object.keys(a);
-    kb = Object.keys(b);
-  } catch (e) {
-    // Happens when one is a string literal and the other isn't
-    return false;
-  }
-  // Having the same number of owned properties (keys incorporates
-  // hasOwnProperty)
-  if (ka.length != kb.length)
-    return false;
-  // The same set of keys (although not necessarily the same order),
-  ka.sort();
-  kb.sort();
-  // Equivalent values for every corresponding key, and possibly expensive deep 
-  // test
-  for (i = ka.length - 1; i >= 0; i--) {
-    key = ka[i];
-    if (!_deepEqual(a[key], b[key])) {
-      return false;
-    }
-  }
-  return true;
-}
 
 /**
  * 8. The non-equivalence assertion tests for any deep inequality.
