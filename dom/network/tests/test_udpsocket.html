@@ -321,6 +321,9 @@ function testOpenWithoutClose() {
     closed.push(socket.closed);
   }
 
+  SpecialPowers.gc();
+  info('all unrefereced socket should be closed right after GC');
+
   return Promise.all(closed);
 }
 
