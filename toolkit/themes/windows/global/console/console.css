@@ -206,3 +206,15 @@ toolbar#ToolbarMode .toolbarbutton-text {
   -moz-padding-start: 0px;
   -moz-padding-end: 5px;
 }
+
+%ifdef XP_WIN
+@media not all and (-moz-os-version: windows-xp) {
+  #ToolbarMode {
+    -moz-appearance: -moz-win-browsertabbar-toolbox;
+  }
+
+  #ToolbarEval {
+    -moz-appearance: toolbox;
+  }
+}
+%endif

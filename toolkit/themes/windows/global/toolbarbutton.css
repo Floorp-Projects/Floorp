@@ -88,6 +88,13 @@ toolbarbutton[checked="true"]:not([disabled="true"]) {
     color: inherit;
     text-shadow: inherit;
   }
+
+  @media not all and (-moz-os-version: windows-xp) {
+    toolbarbutton:-moz-lwtheme:not([disabled="true"]) {
+      color: inherit;
+      text-shadow: inherit;
+    }
+  }
 }
 
 @media not all and (-moz-windows-default-theme) {
