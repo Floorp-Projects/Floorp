@@ -365,7 +365,8 @@ NS_IMETHODIMP nsWindowDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResou
         if (NS_FAILED(rv)) return(rv);
         if (!indexInt) return(NS_ERROR_FAILURE);
 
-        return CallQueryInterface(indexInt, _retval);
+        indexInt.forget(_retval);
+        return NS_OK;
     }
 
     return mInner->GetTarget(aSource, aProperty, aTruthValue, _retval);

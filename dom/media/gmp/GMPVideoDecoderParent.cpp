@@ -11,7 +11,7 @@
 #include "GMPUtils.h"
 #include "GMPVideoEncodedFrameImpl.h"
 #include "GMPVideoi420FrameImpl.h"
-#include "GMPParent.h"
+#include "GMPContentParent.h"
 #include "GMPMessageUtils.h"
 #include "mozilla/gmp/GMPTypes.h"
 
@@ -43,7 +43,7 @@ namespace gmp {
 //    on Shutdown -> Dead
 // Dead: mIsOpen == false
 
-GMPVideoDecoderParent::GMPVideoDecoderParent(GMPParent* aPlugin)
+GMPVideoDecoderParent::GMPVideoDecoderParent(GMPContentParent* aPlugin)
   : GMPSharedMemManager(aPlugin)
   , mIsOpen(false)
   , mShuttingDown(false)
@@ -332,6 +332,13 @@ GMPVideoDecoderParent::RecvError(const GMPErr& aError)
   // Ignore any return code. It is OK for this to fail without killing the process.
   mCallback->Error(aError);
 
+  return true;
+}
+
+bool
+GMPVideoDecoderParent::RecvShutdown()
+{
+  Shutdown();
   return true;
 }
 

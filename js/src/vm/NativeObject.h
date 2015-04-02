@@ -506,7 +506,10 @@ class NativeObject : public JSObject
 
     void invalidateSlotRange(uint32_t start, uint32_t length) {
 #ifdef DEBUG
-        HeapSlot* fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+        HeapSlot* fixedStart;
+        HeapSlot* fixedEnd;
+        HeapSlot* slotsStart;
+        HeapSlot* slotsEnd;
         getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
         Debug_SetSlotRangeToCrashOnTouch(fixedStart, fixedEnd);
         Debug_SetSlotRangeToCrashOnTouch(slotsStart, slotsEnd);
@@ -691,12 +694,8 @@ class NativeObject : public JSObject
 
     /* Change the given property into a sibling with the same id in this scope. */
     static Shape*
-    changeProperty(ExclusiveContext* cx, HandleNativeObject obj,
-                   HandleShape shape, unsigned attrs, unsigned mask,
-                   JSGetterOp getter, JSSetterOp setter);
-
-    static inline bool changePropertyAttributes(JSContext* cx, HandleNativeObject obj,
-                                                HandleShape shape, unsigned attrs);
+    changeProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleShape shape,
+                   unsigned attrs, JSGetterOp getter, JSSetterOp setter);
 
     /* Remove the property named by id from this object. */
     bool removeProperty(ExclusiveContext* cx, jsid id);

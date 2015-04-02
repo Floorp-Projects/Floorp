@@ -611,7 +611,10 @@ js::Nursery::traceObject(MinorCollectionTracer* trc, JSObject* obj)
     if (!nobj->hasEmptyElements() && !nobj->denseElementsAreCopyOnWrite())
         markSlots(trc, nobj->getDenseElements(), nobj->getDenseInitializedLength());
 
-    HeapSlot* fixedStart, *fixedEnd, *dynStart, *dynEnd;
+    HeapSlot* fixedStart;
+    HeapSlot* fixedEnd;
+    HeapSlot* dynStart;
+    HeapSlot* dynEnd;
     nobj->getSlotRange(0, nobj->slotSpan(), &fixedStart, &fixedEnd, &dynStart, &dynEnd);
     markSlots(trc, fixedStart, fixedEnd);
     markSlots(trc, dynStart, dynEnd);
@@ -690,7 +693,8 @@ js::Nursery::moveObjectToTenured(MinorCollectionTracer* trc,
 
     js_memcpy(dst, src, srcSize);
     if (src->isNative()) {
-        NativeObject* ndst = &dst->as<NativeObject>(), *nsrc = &src->as<NativeObject>();
+        NativeObject* ndst = &dst->as<NativeObject>();
+        NativeObject* nsrc = &src->as<NativeObject>();
         tenuredSize += moveSlotsToTenured(ndst, nsrc, dstKind);
         tenuredSize += moveElementsToTenured(ndst, nsrc, dstKind);
 
