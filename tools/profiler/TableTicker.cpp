@@ -369,6 +369,41 @@ void TableTicker::StreamJSObject(JSStreamWriter& b)
   b.EndObject();
 }
 
+void TableTicker::FlushOnJSShutdown(JSRuntime* aRuntime)
+{
+  SetPaused(true);
+
+  {
+    mozilla::MutexAutoLock lock(*sRegisteredThreadsMutex);
+
+    for (size_t i = 0; i < sRegisteredThreads->size(); i++) {
+      // Thread not being profiled, skip it.
+      if (!sRegisteredThreads->at(i)->Profile()) {
+        continue;
+      }
+
+      // Thread not profiling the runtime that's going away, skip it.
+      if (sRegisteredThreads->at(i)->Profile()->GetPseudoStack()->mRuntime != aRuntime) {
+        continue;
+      }
+
+      MutexAutoLock lock(*sRegisteredThreads->at(i)->Profile()->GetMutex());
+      sRegisteredThreads->at(i)->Profile()->FlushSamplesAndMarkers();
+    }
+  }
+
+  SetPaused(false);
+}
+
+void PseudoStack::flushSamplerOnJSShutdown()
+{
+  MOZ_ASSERT(mRuntime);
+  TableTicker* t = tlsTicker.get();
+  if (t) {
+    t->FlushOnJSShutdown(mRuntime);
+  }
+}
+
 // END SaveProfileTask et al
 ////////////////////////////////////////////////////////////////////////
 

@@ -349,10 +349,16 @@ public:
     return sMin(mStackPointer, mozilla::sig_safe_t(mozilla::ArrayLength(mStack)));
   }
 
-  void sampleRuntime(JSRuntime *runtime) {
+  void sampleRuntime(JSRuntime* runtime) {
+    if (mRuntime && !runtime) {
+      // On JS shut down, flush the current buffer as stringifying JIT samples
+      // requires a live JSRuntime.
+      flushSamplerOnJSShutdown();
+    }
+
     mRuntime = runtime;
+
     if (!runtime) {
-      // JS shut down
       return;
     }
 
@@ -361,7 +367,7 @@ public:
     js::SetRuntimeProfilingStack(runtime,
                                  (js::ProfileEntry*) mStack,
                                  (uint32_t*) &mStackPointer,
-                                 uint32_t(mozilla::ArrayLength(mStack)));
+                                 (uint32_t) mozilla::ArrayLength(mStack));
     if (mStartJSSampling)
       enableJSSampling();
   }
@@ -414,6 +420,8 @@ public:
   // No copying.
   PseudoStack(const PseudoStack&) = delete;
   void operator=(const PseudoStack&) = delete;
+
+  void flushSamplerOnJSShutdown();
 
   // Keep a list of pending markers that must be moved
   // to the circular buffer
