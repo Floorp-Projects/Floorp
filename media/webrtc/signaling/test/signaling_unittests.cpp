@@ -31,6 +31,8 @@
 #include "mozilla/Services.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsNetUtil.h"
+#include "nsIIOService.h"
 #include "nsIDNSService.h"
 #include "nsWeakReference.h"
 #include "nricectx.h"
@@ -2110,9 +2112,6 @@ public:
   uint16_t stun_port_;
 };
 
-#if !defined(MOZILLA_XPCOMRT_API)
-// FIXME XPCOMRT doesn't support nsPrefService
-// See Bug 1129188 - Create standalone libpref for use in standalone WebRTC
 static void SetIntPrefOnMainThread(nsCOMPtr<nsIPrefBranch> prefs,
   const char *pref_name,
   int new_value) {
@@ -2162,7 +2161,6 @@ class FsFrPrefClearer {
   private:
     nsCOMPtr<nsIPrefBranch> mPrefs;
 };
-#endif // !defined(MOZILLA_XPCOMRT_API)
 
 TEST_P(SignalingTest, JustInit)
 {
@@ -3910,10 +3908,6 @@ TEST_P(SignalingTest, hugeSdp)
   a2_->CreateAnswer(OFFER_AV);
 }
 
-#if !defined(MOZILLA_XPCOMRT_API)
-// FIXME XPCOMRT doesn't support nsPrefService
-// See Bug 1129188 - Create standalone libpref for use in standalone WebRTC
-
 // Test max_fs and max_fr prefs have proper impact on SDP offer
 TEST_P(SignalingTest, MaxFsFrInOffer)
 {
@@ -4048,7 +4042,6 @@ TEST_P(SignalingTest, MaxFsFrCallerCodec)
   ASSERT_EQ(video_conduit->SendingMaxFs(), (unsigned short) 600);
   ASSERT_EQ(video_conduit->SendingMaxFr(), (unsigned short) 60);
 }
-#endif // !defined(MOZILLA_XPCOMRT_API)
 
 // Validate offer with multiple video codecs
 TEST_P(SignalingTest, ValidateMultipleVideoCodecsInOffer)

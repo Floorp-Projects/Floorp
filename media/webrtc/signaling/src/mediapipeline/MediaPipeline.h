@@ -27,7 +27,7 @@
 #include "runnable_utils.h"
 #include "transportflow.h"
 
-#if defined(MOZILLA_INTERNAL_API)
+#ifdef MOZILLA_INTERNAL_API
 #include "VideoSegment.h"
 #endif
 
@@ -406,7 +406,7 @@ public:
   // written and used from MainThread
   virtual bool IsVideo() const override { return is_video_; }
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+#ifdef MOZILLA_INTERNAL_API
   // when the principal of the PeerConnection changes, it calls through to here
   // so that we can determine whether to enable stream transmission
   virtual void UpdateSinkIdentity_m(nsIPrincipal* principal,
@@ -449,7 +449,7 @@ public:
         samples_10ms_buffer_(nullptr),
         buffer_current_(0),
         samplenum_10ms_(0)
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+#ifdef MOZILLA_INTERNAL_API
         , last_img_(-1)
 #endif // MOZILLA_INTERNAL_API
     {
@@ -494,7 +494,7 @@ public:
 
     virtual void ProcessAudioChunk(AudioSessionConduit *conduit,
                                    TrackRate rate, AudioChunk& chunk);
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+#ifdef MOZILLA_INTERNAL_API
     virtual void ProcessVideoChunk(VideoSessionConduit *conduit,
                                    VideoChunk& chunk);
 #endif
@@ -525,7 +525,7 @@ public:
     // The number of samples in a 10ms audio chunk.
     int64_t samplenum_10ms_;
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+#ifdef MOZILLA_INTERNAL_API
     int32_t last_img_; // serial number of last Image
 #endif // MOZILLA_INTERNAL_API
   };
@@ -746,9 +746,7 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
    private:
     int width_;
     int height_;
-#if defined(MOZILLA_XPCOMRT_API)
-    nsRefPtr<mozilla::SimpleImageBuffer> image_;
-#elif defined(MOZILLA_INTERNAL_API)
+#ifdef MOZILLA_INTERNAL_API
     nsRefPtr<layers::ImageContainer> image_container_;
     nsRefPtr<layers::Image> image_;
 #endif
