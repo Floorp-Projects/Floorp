@@ -1,82 +1,67 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
-///////////////////
-//
-// Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed. 
-//
-thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Unknown sheet source");
+// Test that the style sheet list can be navigated with keyboard.
 
 const TESTCASE_URI = TEST_BASE_HTTP + "four.html";
 
-let gUI;
+add_task(function* () {
+  let { panel, ui } = yield openStyleEditorForURL(TESTCASE_URI);
 
-function test()
-{
-  waitForExplicitFinish();
+  info("Waiting for source editor to load.");
+  yield ui.editors[0].getSourceEditor();
 
-  addTabAndOpenStyleEditors(4, runTests);
+  let selected = ui.once("editor-selected");
 
-  content.location = TESTCASE_URI;
-}
+  info("Testing keyboard navigation on the sheet list.");
+  testKeyboardNavigation(ui.editors[0], panel);
 
-function runTests(panel)
-{
-  gUI = panel.UI;
-  gUI.editors[0].getSourceEditor().then(onEditor0Attach);
-  gUI.editors[2].getSourceEditor().then(onEditor2Attach);
-}
+  info("Waiting for editor #2 to be selected due to keyboard navigation.");
+  yield selected;
+
+  ok(ui.editors[2].sourceEditor.hasFocus(), "Editor #2 has focus.");
+});
 
 function getStylesheetNameLinkFor(aEditor)
 {
   return aEditor.summary.querySelector(".stylesheet-name");
 }
 
-function onEditor0Attach(aEditor)
+function testKeyboardNavigation(aEditor, panel)
 {
+  let panelWindow = panel.panelWindow;
+  let ui = panel.UI;
   waitForFocus(function () {
     let summary = aEditor.summary;
-    EventUtils.synthesizeMouseAtCenter(summary, {}, gPanelWindow);
+    EventUtils.synthesizeMouseAtCenter(summary, {}, panelWindow);
 
-    let item = getStylesheetNameLinkFor(gUI.editors[0]);
-    is(gPanelWindow.document.activeElement, item,
+    let item = getStylesheetNameLinkFor(ui.editors[0]);
+    is(panelWindow.document.activeElement, item,
        "editor 0 item is the active element");
 
-    EventUtils.synthesizeKey("VK_DOWN", {}, gPanelWindow);
-    item = getStylesheetNameLinkFor(gUI.editors[1]);
-    is(gPanelWindow.document.activeElement, item,
+    EventUtils.synthesizeKey("VK_DOWN", {}, panelWindow);
+    item = getStylesheetNameLinkFor(ui.editors[1]);
+    is(panelWindow.document.activeElement, item,
        "editor 1 item is the active element");
 
-    EventUtils.synthesizeKey("VK_HOME", {}, gPanelWindow);
-    item = getStylesheetNameLinkFor(gUI.editors[0]);
-    is(gPanelWindow.document.activeElement, item,
+    EventUtils.synthesizeKey("VK_HOME", {}, panelWindow);
+    item = getStylesheetNameLinkFor(ui.editors[0]);
+    is(panelWindow.document.activeElement, item,
        "fist editor item is the active element");
 
-    EventUtils.synthesizeKey("VK_END", {}, gPanelWindow);
-    item = getStylesheetNameLinkFor(gUI.editors[3]);
-    is(gPanelWindow.document.activeElement, item,
+    EventUtils.synthesizeKey("VK_END", {}, panelWindow);
+    item = getStylesheetNameLinkFor(ui.editors[3]);
+    is(panelWindow.document.activeElement, item,
        "last editor item is the active element");
 
-    EventUtils.synthesizeKey("VK_UP", {}, gPanelWindow);
-    item = getStylesheetNameLinkFor(gUI.editors[2]);
-    is(gPanelWindow.document.activeElement, item,
+    EventUtils.synthesizeKey("VK_UP", {}, panelWindow);
+    item = getStylesheetNameLinkFor(ui.editors[2]);
+    is(panelWindow.document.activeElement, item,
        "editor 2 item is the active element");
 
-    EventUtils.synthesizeKey("VK_RETURN", {}, gPanelWindow);
+    EventUtils.synthesizeKey("VK_RETURN", {}, panelWindow);
     // this will attach and give focus editor 2
-  }, gPanelWindow);
-}
-
-function onEditor2Attach(aEditor)
-{
-  // Wait for the focus to be set.
-  executeSoon(function () {
-    ok(aEditor.sourceEditor.hasFocus(),
-       "editor 2 has focus");
-
-    gUI = null;
-    finish();
-  });
+  }, panelWindow);
 }
