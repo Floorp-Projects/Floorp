@@ -9,6 +9,8 @@ const gIsMac = ("@mozilla.org/xpcom/mac-utils;1" in Components.classes);
 const gIsAndroid =  ("@mozilla.org/android/bridge;1" in Components.classes);
 const gIsGonk = ("@mozilla.org/cellbroadcast/gonkservice;1" in Components.classes);
 
+const HAS_DATAREPORTINGSERVICE = "@mozilla.org/datareporting/service;1" in Components.classes;
+
 let gOldAppInfo = null;
 let gGlobalScope = this;
 
