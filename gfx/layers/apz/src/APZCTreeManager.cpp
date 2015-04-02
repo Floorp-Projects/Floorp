@@ -880,7 +880,7 @@ APZCTreeManager::ProcessWheelEvent(WidgetWheelEvent& aEvent,
                                    uint64_t* aOutInputBlockId)
 {
   ScrollWheelInput::ScrollMode scrollMode = ScrollWheelInput::SCROLLMODE_INSTANT;
-  if (gfxPrefs::SmoothScrollEnabled() && gfxPrefs::WheelSmoothScrollEnabled()) {
+  if (Preferences::GetBool("general.smoothScroll")) {
     scrollMode = ScrollWheelInput::SCROLLMODE_SMOOTH;
   }
 

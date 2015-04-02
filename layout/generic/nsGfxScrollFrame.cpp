@@ -1606,6 +1606,10 @@ public:
     mRange = aRange;
   }
 
+  bool IsFinished(TimeStamp aTime) {
+    return aTime > mStartTime + mDuration; // XXX or if we've hit the wall
+  }
+
   // Most recent scroll origin.
   nsCOMPtr<nsIAtom> mOrigin;
 

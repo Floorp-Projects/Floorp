@@ -16,8 +16,6 @@
 namespace mozilla {
 namespace layers {
 
-class WheelScrollAnimation;
-
 class AsyncPanZoomAnimation {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncPanZoomAnimation)
 
@@ -59,11 +57,6 @@ public:
    * at the end of the animation.
    */
   TimeDuration mRepaintInterval;
-
-public:
-  virtual WheelScrollAnimation* AsWheelScrollAnimation() {
-    return nullptr;
-  }
 
 protected:
   // Protected destructor, to discourage deletion outside of Release():

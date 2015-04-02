@@ -231,7 +231,6 @@ UNIFIED_SOURCES += [
     'apz/src/InputQueue.cpp',
     'apz/src/OverscrollHandoffState.cpp',
     'apz/src/TaskThrottler.cpp',
-    'apz/src/WheelScrollAnimation.cpp',
     'apz/testutil/APZTestData.cpp',
     'apz/util/ActiveElementManager.cpp',
     'apz/util/APZCCallbackHelper.cpp',
