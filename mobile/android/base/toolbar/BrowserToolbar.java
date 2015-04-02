@@ -562,20 +562,19 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
     private void toggleTabs() {
         if (activity.areTabsShown()) {
-            if (activity.hasTabsSideBar())
-                activity.hideTabs();
+            return;
+        }
+
+        if (hideVirtualKeyboard()) {
+            getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
+                @Override
+                public void onGlobalLayout() {
+                    getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                    showSelectedTabs();
+                }
+            });
         } else {
-            if (hideVirtualKeyboard()) {
-                getViewTreeObserver().addOnGlobalLayoutListener(new OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                        showSelectedTabs();
-                    }
-                });
-            } else {
-                showSelectedTabs();
-            }
+            showSelectedTabs();
         }
     }
 
