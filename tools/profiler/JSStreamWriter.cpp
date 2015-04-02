@@ -125,6 +125,37 @@ JSStreamWriter::EndArray()
 }
 
 void
+JSStreamWriter::BeginBareList()
+{
+  MOZ_ASSERT(!mNeedsName);
+  MOZ_ASSERT(mStack.GetSize() == 0);
+  mNeedsComma = false;
+  mStack.Push(ARRAY);
+}
+
+void
+JSStreamWriter::EndBareList()
+{
+  MOZ_ASSERT(!mNeedsName);
+  MOZ_ASSERT(mStack.Peek() == ARRAY);
+  mNeedsComma = true;
+  mStack.Pop();
+  MOZ_ASSERT(mStack.GetSize() == 0);
+}
+
+void
+JSStreamWriter::SpliceArrayElements(const char* aElements)
+{
+  MOZ_ASSERT(!mNeedsName);
+  MOZ_ASSERT(mStack.Peek() == ARRAY);
+  if (mNeedsComma) {
+    mStream << ",";
+  }
+  mStream << aElements;
+  mNeedsComma = true;
+}
+
+void
 JSStreamWriter::Name(const char *aName)
 {
   MOZ_ASSERT(mNeedsName);
