@@ -627,8 +627,44 @@ DefinePropertyOnTypedArray(JSContext* cx, HandleObject obj, HandleId id,
     MOZ_ASSERT(IsAnyTypedArray(obj));
     // Steps 3.a-c.
     uint64_t index;
-    if (IsTypedArrayIndex(id, &index))
-        return DefineTypedArrayElement(cx, obj, index, desc, result);
+    if (IsTypedArrayIndex(id, &index)) {
+        // These are all substeps of 3.c.
+        // Steps i-vi.
+        // We (wrongly) ignore out of range defines with a value.
+        if (index >= AnyTypedArrayLength(obj))
+            return result.succeed();
+
+        // Step vii.
+        if (desc.isAccessorDescriptor())
+            return result.fail(JSMSG_CANT_REDEFINE_PROP);
+
+        // Step viii.
+        if (desc.hasConfigurable() && desc.configurable())
+            return result.fail(JSMSG_CANT_REDEFINE_PROP);
+
+        // Step ix.
+        if (desc.hasEnumerable() && !desc.enumerable())
+            return result.fail(JSMSG_CANT_REDEFINE_PROP);
+
+        // Step x.
+        if (desc.hasWritable() && !desc.writable())
+            return result.fail(JSMSG_CANT_REDEFINE_PROP);
+
+        // Step xi.
+        if (desc.hasValue()) {
+            double d;
+            if (!ToNumber(cx, desc.value(), &d))
+                return false;
+
+            if (obj->is<TypedArrayObject>())
+                TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
+            else
+                SharedTypedArrayObject::setElement(obj->as<SharedTypedArrayObject>(), index, d);
+        }
+
+        // Step xii.
+        return result.succeed();
+    }
 
     // Step 4.
     return DefinePropertyOnObject(cx, obj.as<NativeObject>(), id, desc, result);
@@ -814,9 +850,9 @@ js::CheckPropertyDescriptorAccessors(JSContext* cx, Handle<PropertyDescriptor> d
 void
 js::CompletePropertyDescriptor(MutableHandle<PropertyDescriptor> desc)
 {
-    desc.assertValid();
-
     if (desc.isGenericDescriptor() || desc.isDataDescriptor()) {
+        if (!desc.hasValue())
+            desc.value().setUndefined();
         if (!desc.hasWritable())
             desc.attributesRef() |= JSPROP_READONLY;
         desc.attributesRef() &= ~(JSPROP_IGNORE_READONLY | JSPROP_IGNORE_VALUE);
@@ -827,11 +863,11 @@ js::CompletePropertyDescriptor(MutableHandle<PropertyDescriptor> desc)
             desc.setSetterObject(nullptr);
         desc.attributesRef() |= JSPROP_GETTER | JSPROP_SETTER | JSPROP_SHARED;
     }
+    if (!desc.hasEnumerable())
+        desc.attributesRef() &= ~JSPROP_ENUMERATE;
     if (!desc.hasConfigurable())
         desc.attributesRef() |= JSPROP_PERMANENT;
     desc.attributesRef() &= ~(JSPROP_IGNORE_PERMANENT | JSPROP_IGNORE_ENUMERATE);
-
-    desc.assertComplete();
 }
 
 bool
@@ -3087,12 +3123,8 @@ bool
 js::GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
                              MutableHandle<PropertyDescriptor> desc)
 {
-    if (GetOwnPropertyOp op = obj->getOps()->getOwnPropertyDescriptor) {
-        bool ok = op(cx, obj, id, desc);
-        if (ok)
-            desc.assertCompleteIfFound();
-        return ok;
-    }
+    if (GetOwnPropertyOp op = obj->getOps()->getOwnPropertyDescriptor)
+        return op(cx, obj, id, desc);
 
     RootedShape shape(cx);
     if (!NativeLookupOwnProperty<CanGC>(cx, obj.as<NativeObject>(), id, &shape))
@@ -3142,7 +3174,6 @@ js::GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
 
     desc.value().set(value);
     desc.object().set(obj);
-    desc.assertComplete();
     return true;
 }
 
@@ -3150,7 +3181,6 @@ bool
 js::DefineProperty(JSContext* cx, HandleObject obj, HandleId id, Handle<PropertyDescriptor> desc,
                    ObjectOpResult& result)
 {
-    desc.assertValid();
     if (DefinePropertyOp op = obj->getOps()->defineProperty)
         return op(cx, obj, id, desc, result);
     return NativeDefineProperty(cx, obj.as<NativeObject>(), id, desc, result);
@@ -3258,12 +3288,8 @@ js::GetPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
     RootedObject pobj(cx);
 
     for (pobj = obj; pobj;) {
-        if (pobj->is<ProxyObject>()) {
-            bool ok = Proxy::getPropertyDescriptor(cx, pobj, id, desc);
-            if (ok)
-                desc.assertCompleteIfFound();
-            return ok;
-        }
+        if (pobj->is<ProxyObject>())
+            return Proxy::getPropertyDescriptor(cx, pobj, id, desc);
 
         if (!GetOwnPropertyDescriptor(cx, pobj, id, desc))
             return false;

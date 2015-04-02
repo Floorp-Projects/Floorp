@@ -691,8 +691,12 @@ class NativeObject : public JSObject
 
     /* Change the given property into a sibling with the same id in this scope. */
     static Shape*
-    changeProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleShape shape,
-                   unsigned attrs, JSGetterOp getter, JSSetterOp setter);
+    changeProperty(ExclusiveContext* cx, HandleNativeObject obj,
+                   HandleShape shape, unsigned attrs, unsigned mask,
+                   JSGetterOp getter, JSSetterOp setter);
+
+    static inline bool changePropertyAttributes(JSContext* cx, HandleNativeObject obj,
+                                                HandleShape shape, unsigned attrs);
 
     /* Remove the property named by id from this object. */
     bool removeProperty(ExclusiveContext* cx, jsid id);
