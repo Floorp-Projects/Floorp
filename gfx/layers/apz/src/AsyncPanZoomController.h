@@ -10,6 +10,7 @@
 #include "CrossProcessMutex.h"
 #include "mozilla/layers/GeckoContentController.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/AsyncPanZoomAnimation.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Monitor.h"
@@ -1074,61 +1075,6 @@ private:
   // Flag to track whether or not the APZ transform is not used. This
   // flag is recomputed for every composition frame.
   bool mAsyncTransformAppliedToContent;
-};
-
-class AsyncPanZoomAnimation {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncPanZoomAnimation)
-
-public:
-  explicit AsyncPanZoomAnimation(const TimeDuration& aRepaintInterval =
-                                 TimeDuration::Forever())
-    : mRepaintInterval(aRepaintInterval)
-  { }
-
-  virtual bool DoSample(FrameMetrics& aFrameMetrics,
-                        const TimeDuration& aDelta) = 0;
-
-  bool Sample(FrameMetrics& aFrameMetrics,
-              const TimeDuration& aDelta) {
-    // In some situations, particularly when handoff is involved, it's possible
-    // for |aDelta| to be negative on the first call to sample. Ignore such a
-    // sample here, to avoid each derived class having to deal with this case.
-    if (aDelta.ToMilliseconds() <= 0) {
-      return true;
-    }
-
-    return DoSample(aFrameMetrics, aDelta);
-  }
-
-  /**
-   * Get the deferred tasks in |mDeferredTasks|. See |mDeferredTasks|
-   * for more information.
-   * Clears |mDeferredTasks|.
-   */
-  Vector<Task*> TakeDeferredTasks() {
-    Vector<Task*> result;
-    mDeferredTasks.swap(result);
-    return result;
-  }
-
-  /**
-   * Specifies how frequently (at most) we want to do repaints during the
-   * animation sequence. TimeDuration::Forever() will cause it to only repaint
-   * at the end of the animation.
-   */
-  TimeDuration mRepaintInterval;
-
-protected:
-  // Protected destructor, to discourage deletion outside of Release():
-  virtual ~AsyncPanZoomAnimation()
-  { }
-
-  /**
-   * Tasks scheduled for execution after the APZC's mMonitor is released.
-   * Derived classes can add tasks here in Sample(), and the APZC can call
-   * ExecuteDeferredTasks() to execute them.
-   */
-  Vector<Task*> mDeferredTasks;
 };
 
 }
