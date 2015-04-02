@@ -320,6 +320,19 @@ NO_RUN_TEST_EMPTY_TEST = '''
 // This is an empty test file.
 '''
 
+NO_RUN_TEST_ADD_TEST_FAIL = '''
+add_test(function no_run_test_add_test_fail() {
+  do_check_true(false);
+  run_next_test();
+});
+'''
+
+NO_RUN_TEST_ADD_TASK_FAIL = '''
+add_task(function no_run_test_add_task_fail() {
+  do_check_true(false);
+});
+'''
+
 
 class XPCShellTestsTests(unittest.TestCase):
     """
@@ -982,6 +995,34 @@ tail =
         self.assertEquals(0, self.x.failCount)
         self.assertInLog(TEST_PASS_STRING)
         self.assertNotInLog(TEST_FAIL_STRING)
+
+    def testNoRunTestAddTestFail(self):
+        """
+        Check that test fails on using add_test() without run_test().
+        """
+        self.writeFile("test_noRunTestAddTestFail.js", NO_RUN_TEST_ADD_TEST_FAIL)
+        self.writeManifest(["test_noRunTestAddTestFail.js"])
+
+        self.assertTestResult(False)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(0, self.x.passCount)
+        self.assertEquals(1, self.x.failCount)
+        self.assertInLog(TEST_FAIL_STRING)
+        self.assertNotInLog(TEST_PASS_STRING)
+
+    def testNoRunTestAddTaskFail(self):
+        """
+        Check that test fails on using add_task() without run_test().
+        """
+        self.writeFile("test_noRunTestAddTaskFail.js", NO_RUN_TEST_ADD_TASK_FAIL)
+        self.writeManifest(["test_noRunTestAddTaskFail.js"])
+
+        self.assertTestResult(False)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(0, self.x.passCount)
+        self.assertEquals(1, self.x.failCount)
+        self.assertInLog(TEST_FAIL_STRING)
+        self.assertNotInLog(TEST_PASS_STRING)
 
 if __name__ == "__main__":
     unittest.main(verbosity=3)
