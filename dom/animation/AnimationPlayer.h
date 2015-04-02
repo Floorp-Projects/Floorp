@@ -57,6 +57,7 @@ public:
     , mPendingState(PendingState::NotPending)
     , mIsRunningOnCompositor(false)
     , mIsPreviousStateFinished(false)
+    , mFinishedAtLastComposeStyle(false)
     , mIsRelevant(false)
   {
   }
@@ -332,6 +333,7 @@ protected:
   // Indicates whether we were in the finished state during our
   // most recent unthrottled sample (our last ComposeStyle call).
   bool mIsPreviousStateFinished; // Spec calls this "previous finished state"
+  bool mFinishedAtLastComposeStyle;
   // Indicates that the animation should be exposed in an element's
   // getAnimations() list.
   bool mIsRelevant;
