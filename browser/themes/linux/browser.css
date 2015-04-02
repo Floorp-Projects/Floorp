@@ -1099,7 +1099,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   border: none;
   background: none;
   min-width: 0;
-  list-style-image: url("chrome://global/skin/icons/question-16.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-question?size=16");
   cursor: pointer;
 }
 
@@ -1255,7 +1255,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 
 .default-notification-icon,
 #default-notification-icon {
-  list-style-image: url(chrome://global/skin/icons/information-16.png);
+  list-style-image: url(moz-icon://stock/gtk-dialog-info?size=16);
 }
 
 .identity-notification-icon,
@@ -1274,7 +1274,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
 
 .indexedDB-notification-icon,
 #indexedDB-notification-icon {
-  list-style-image: url(chrome://global/skin/icons/question-16.png);
+  list-style-image: url(moz-icon://stock/gtk-dialog-question?size=16);
 }
 
 #password-notification-icon {
