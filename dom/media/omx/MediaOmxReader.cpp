@@ -190,9 +190,7 @@ MediaOmxReader::Shutdown()
 
   // Wait for the superclass to finish tearing things down before releasing
   // the decoder on the main thread.
-  nsCOMPtr<nsIThread> mt;
-  NS_GetMainThread(getter_AddRefs(mt));
-  p->Then(mt.get(), __func__, this, &MediaOmxReader::ReleaseDecoder, &MediaOmxReader::ReleaseDecoder);
+  p->Then(AbstractThread::MainThread(), __func__, this, &MediaOmxReader::ReleaseDecoder, &MediaOmxReader::ReleaseDecoder);
 
   return p;
 }
