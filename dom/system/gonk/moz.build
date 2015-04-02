@@ -98,6 +98,7 @@ if CONFIG['MOZ_B2G_RIL']:
         'ril_consts.js',
         'ril_worker.js',
         'ril_worker_buf_object.js',
+        'ril_worker_telephony_request_queue.js',
         'RILSystemMessenger.jsm',
     ]
     if not CONFIG['DISABLE_MOZ_RIL_GEOLOC']:
