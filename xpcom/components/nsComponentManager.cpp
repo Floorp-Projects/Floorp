@@ -396,6 +396,7 @@ nsComponentManagerImpl::Init()
 
 #if defined(MOZILLA_XPCOMRT_API)
   RegisterModule(&kXPCOMRTModule, nullptr);
+  RegisterModule(&kNeckoStandaloneModule, nullptr);
 #else
   RegisterModule(&kXPCOMModule, nullptr);
 #endif // defined(MOZILLA_XPCOMRT_API)
