@@ -1,58 +1,26 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
 
-///////////////////
-//
-// Whitelisting this test.
-// As part of bug 1077403, the leaking uncaught rejection should be fixed. 
-//
-thisTestLeaksUncaughtRejectionsAndShouldBeFixed("Error: Unknown sheet source");
+// Test that StyleEditorUI.selectStyleSheet selects the correct sheet, line and
+// column.
 
 const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
-const NEW_URI = TEST_BASE_HTTPS + "media.html";
 
 const LINE_NO = 5;
 const COL_NO  = 0;
 
-let gContentWin;
-let gUI;
+add_task(function* () {
+  let { ui } = yield openStyleEditorForURL(TESTCASE_URI);
+  let editor = ui.editors[1];
 
-function test()
-{
-  waitForExplicitFinish();
+  info("Selecting style sheet #1.");
+  yield ui.selectStyleSheet(editor.styleSheet.href, LINE_NO);
 
-  addTabAndOpenStyleEditors(2, function(panel) {
-    gContentWin = gBrowser.selectedBrowser.contentWindow.wrappedJSObject;
-    gUI = panel.UI;
-    gUI.editors[0].getSourceEditor().then(runTests);
-  });
+  is(ui.selectedEditor, ui.editors[1], "Second editor is selected.");
+  let {line, ch} = ui.selectedEditor.sourceEditor.getCursor();
 
-  content.location = TESTCASE_URI;
-}
-
-function runTests()
-{
-  let count = 0;
-
-  // Make sure Editor doesn't go into an infinite loop when
-  // column isn't passed. See bug 941018.
-  gUI.on("editor-selected", function editorSelected(event, editor) {
-    if (editor.styleSheet != gUI.editors[1].styleSheet) {
-      return;
-    }
-    gUI.off("editor-selected", editorSelected);
-
-    editor.getSourceEditor().then(() => {
-      is(gUI.selectedEditor, gUI.editors[1], "second editor is selected");
-      let {line, ch} = gUI.selectedEditor.sourceEditor.getCursor();
-
-      is(line, LINE_NO, "correct line selected");
-      is(ch, COL_NO, "correct column selected");
-
-      gUI = null;
-      finish();
-    });
-  });
-  gUI.selectStyleSheet(gUI.editors[1].styleSheet.href, LINE_NO);
-}
+  is(line, LINE_NO, "correct line selected");
+  is(ch, COL_NO, "correct column selected");
+});
