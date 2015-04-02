@@ -15,15 +15,18 @@ namespace hal {
 /**
  * Enumeration of sensor types.  They are used to specify type while
  * register or unregister an observer for a sensor of given type.
+ * If you add or change any here, do the same in GeckoHalDefines.java.
  */
 enum SensorType {
   SENSOR_UNKNOWN = -1,
-  SENSOR_ORIENTATION,
-  SENSOR_ACCELERATION,
-  SENSOR_PROXIMITY,
-  SENSOR_LINEAR_ACCELERATION,
-  SENSOR_GYROSCOPE,
-  SENSOR_LIGHT,
+  SENSOR_ORIENTATION = 0,
+  SENSOR_ACCELERATION = 1,
+  SENSOR_PROXIMITY = 2,
+  SENSOR_LINEAR_ACCELERATION = 3,
+  SENSOR_GYROSCOPE = 4,
+  SENSOR_LIGHT = 5,
+  SENSOR_ROTATION_VECTOR = 6,
+  SENSOR_GAME_ROTATION_VECTOR = 7,
   NUM_SENSOR_TYPE
 };
 
