@@ -1743,7 +1743,8 @@ GCMarker::processMarkStackOther(uintptr_t tag, uintptr_t addr)
     } else if (tag == SavedValueArrayTag) {
         MOZ_ASSERT(!(addr & CellMask));
         NativeObject* obj = reinterpret_cast<NativeObject*>(addr);
-        HeapValue* vp, *end;
+        HeapValue* vp;
+        HeapValue* end;
         if (restoreValueArray(obj, (void**)&vp, (void**)&end))
             pushValueArray(obj, vp, end);
         else
@@ -1783,7 +1784,8 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
      * object directly. It allows to eliminate the tail recursion and
      * significantly improve the marking performance, see bug 641025.
      */
-    HeapSlot* vp, *end;
+    HeapSlot* vp;
+    HeapSlot* end;
     JSObject* obj;
 
     const int32_t* unboxedTraceList;

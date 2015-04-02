@@ -137,9 +137,10 @@ class OrderedHashTable
     }
 
     ~OrderedHashTable() {
-        for (Range* r = ranges, *next; r; r = next) {
-            next = r->next;
+        for (Range* r = ranges; r; ) {
+            Range* next = r->next;
             r->onTableDestroyed();
+            r = next;
         }
         alloc.free_(hashTable);
         freeData(data, dataLength);
@@ -593,7 +594,8 @@ class OrderedHashTable
     void rehashInPlace() {
         for (uint32_t i = 0, N = hashBuckets(); i < N; i++)
             hashTable[i] = nullptr;
-        Data* wp = data, *end = data + dataLength;
+        Data* wp = data;
+        Data* end = data + dataLength;
         for (Data* rp = data; rp != end; rp++) {
             if (!Ops::isEmpty(Ops::getKey(rp->element))) {
                 HashNumber h = prepareHash(Ops::getKey(rp->element)) >> hashShift;
@@ -642,7 +644,8 @@ class OrderedHashTable
         }
 
         Data* wp = newData;
-        for (Data* p = data, *end = data + dataLength; p != end; p++) {
+        Data* end = data + dataLength;
+        for (Data* p = data; p != end; p++) {
             if (!Ops::isEmpty(Ops::getKey(p->element))) {
                 HashNumber h = prepareHash(Ops::getKey(p->element)) >> newHashShift;
                 new (wp) Data(Move(p->element), newHashTable[h]);

@@ -1179,6 +1179,8 @@ pref("dom.ipc.plugins.enabled.x86_64", true);
 pref("dom.ipc.plugins.enabled", true);
 #endif
 
+pref("dom.ipc.shims.enabledWarnings", false);
+
 // Start the browser in e10s mode
 pref("browser.tabs.remote.autostart", false);
 pref("browser.tabs.remote.desktopbehavior", true);

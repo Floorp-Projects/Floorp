@@ -86,13 +86,13 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
   if (nullptr == aResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsXMLContentSink* it = new nsXMLContentSink();
+  nsRefPtr<nsXMLContentSink> it = new nsXMLContentSink();
   
-  nsCOMPtr<nsIXMLContentSink> kungFuDeathGrip = it;
   nsresult rv = it->Init(aDoc, aURI, aContainer, aChannel);
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  return CallQueryInterface(it, aResult);
+
+  it.forget(aResult);
+  return NS_OK;
 }
 
 nsXMLContentSink::nsXMLContentSink()
