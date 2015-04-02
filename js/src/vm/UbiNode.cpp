@@ -228,8 +228,6 @@ Concrete<JSObject>::jsObjectClassName() const
     return Concrete::get().getClass()->name;
 }
 
-template<> const char16_t TracerConcrete<JSObject>::concreteTypeName[] =
-    MOZ_UTF16("JSObject");
 template<> const char16_t TracerConcrete<JSString>::concreteTypeName[] =
     MOZ_UTF16("JSString");
 template<> const char16_t TracerConcrete<JS::Symbol>::concreteTypeName[] =
