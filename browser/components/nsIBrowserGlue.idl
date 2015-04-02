@@ -23,7 +23,7 @@ interface nsIDOMWindow;
  *
  */ 
 
-[scriptable, uuid(781df699-17dc-4237-b3d7-876ddb7085e3)]
+[scriptable, uuid(ea083cb7-6b9d-4695-8b34-2e8f6ce2a860)]
 interface nsIBrowserGlue : nsISupports
 {
   /** 
@@ -34,11 +34,6 @@ interface nsIBrowserGlue : nsISupports
    *
    */
   void sanitize(in nsIDOMWindow aParentWindow);
-
-  /**
-   * Add Smart Bookmarks special queries to bookmarks menu and toolbar folder.
-   */
-  void ensurePlacesDefaultQueriesInitialized();
 
   /**
    * Gets the most recent window that's a browser (but not a popup)
