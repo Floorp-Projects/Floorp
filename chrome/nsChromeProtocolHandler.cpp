@@ -24,6 +24,7 @@
 #include "nsIStandardURL.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
+#include "nsStandardURL.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -69,32 +70,28 @@ nsChromeProtocolHandler::NewURI(const nsACString &aSpec,
                                 nsIURI *aBaseURI,
                                 nsIURI **result)
 {
-    nsresult rv;
 
     // Chrome: URLs (currently) have no additional structure beyond that provided
     // by standard URLs, so there is no "outer" given to CreateInstance
 
-    nsCOMPtr<nsIStandardURL> surl(do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsRefPtr<nsStandardURL> surl = new nsStandardURL();
 
-    rv = surl->Init(nsIStandardURL::URLTYPE_STANDARD, -1, aSpec, aCharset, aBaseURI);
+    nsresult rv = surl->Init(nsIStandardURL::URLTYPE_STANDARD, -1, aSpec,
+                             aCharset, aBaseURI);
     if (NS_FAILED(rv))
         return rv;
-
-    nsCOMPtr<nsIURL> url(do_QueryInterface(surl, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
 
     // Canonify the "chrome:" URL; e.g., so that we collapse
     // "chrome://navigator/content/" and "chrome://navigator/content"
     // and "chrome://navigator/content/navigator.xul".
 
-    rv = nsChromeRegistry::Canonify(url);
+    rv = nsChromeRegistry::Canonify(surl);
     if (NS_FAILED(rv))
         return rv;
 
     surl->SetMutable(false);
 
-    NS_ADDREF(*result = url);
+    surl.forget(result);
     return NS_OK;
 }
 
