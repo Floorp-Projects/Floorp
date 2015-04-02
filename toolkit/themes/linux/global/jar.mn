@@ -65,6 +65,3 @@ toolkit.jar:
    skin/classic/global/in-content/help-glyph.svg               (../../shared/in-content/help-glyph.svg)
    skin/classic/global/in-content/radio.svg                    (../../shared/in-content/radio.svg)
 +  skin/classic/global/toolbar/spring.png                      (toolbar/spring.png)
-
-% override chrome://global/skin/icons/question-16.png          moz-icon://stock/gtk-dialog-question?size=16
-% override chrome://global/skin/icons/information-16.png       moz-icon://stock/gtk-dialog-info?size=16
