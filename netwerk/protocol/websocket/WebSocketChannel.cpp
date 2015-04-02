@@ -2703,7 +2703,7 @@ WebSocketChannel::OnProxyAvailable(nsICancelable *aRequest, nsIChannel *aChannel
     // call DNS callback directly without DNS resolver
     OnLookupComplete(nullptr, nullptr, NS_ERROR_FAILURE);
   } else {
-    LOG(("WebSocketChannel::OnProxyAvailable[%] checking DNS resolution\n", this));
+    LOG(("WebSocketChannel::OnProxyAvailable[%p] checking DNS resolution\n", this));
     nsresult rv = DoAdmissionDNS();
     if (NS_FAILED(rv)) {
       LOG(("WebSocket OnProxyAvailable [%p] DNS lookup failed\n", this));
