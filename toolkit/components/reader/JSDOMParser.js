@@ -37,6 +37,39 @@
     dump("JSDOMParser error: " + m + "\n");
   }
 
+  // XML only defines these and the numeric ones:
+
+  var entityTable = {
+    "lt": "<",
+    "gt": ">",
+    "amp": "&",
+    "quot": '"',
+    "apos": "'",
+  };
+
+  var reverseEntityTable = {
+    "<": "&lt;",
+    ">": "&gt;",
+    "&": "&amp;",
+    '"': "&quot;",
+    "'": "&apos;",
+  };
+
+  function encodeHTML(s) {
+    return s.replace(/[&<>'"]/g, function(x) {
+      return reverseEntityTable[x];
+    });
+  }
+
+  function decodeHTML(str) {
+    return str.replace(/&(quot|amp|apos|lt|gt);/g, function(match, tag) {
+      return entityTable[tag];
+    }).replace(/&#(?:x([0-9a-z]{1,4})|([0-9]{1,4}));/gi, function(match, hex, numStr) {
+      var num = parseInt(hex || numStr, hex ? 16 : 10); // read num
+      return String.fromCharCode(num);
+    });
+  }
+
   // When a style is set in JS, map it to the corresponding CSS attribute
   var styleMap = {
     "alignmentBaseline": "alignment-baseline",
@@ -447,7 +480,9 @@
         }
         return oldNode;
       }
-    }
+    },
+
+    __JSDOMParser__: true,
   };
 
   for (var i in nodeTypes) {
@@ -456,7 +491,27 @@
 
   var Attribute = function (name, value) {
     this.name = name;
-    this.value = value;
+    this._value = value;
+  };
+
+  Attribute.prototype = {
+    get value() {
+      return this._value;
+    },
+    setValue: function(newValue) {
+      this._value = newValue;
+      delete this._decodedValue;
+    },
+    setDecodedValue: function(newValue) {
+      this._value = encodeHTML(newValue);
+      this._decodedValue = newValue;
+    },
+    getDecodedValue: function() {
+      if (typeof this._decodedValue === "undefined") {
+        this._decodedValue = (this._value && decodeHTML(this._value)) || "";
+      }
+      return this._decodedValue;
+    },
   };
 
   var Comment = function () {
@@ -479,7 +534,27 @@
 
     nodeName: "#text",
     nodeType: Node.TEXT_NODE,
-    textContent: ""
+    get textContent() {
+      if (typeof this._textContent === "undefined") {
+        this._textContent = decodeHTML(this._innerHTML || "");
+      }
+      return this._textContent;
+    },
+    get innerHTML() {
+      if (typeof this._innerHTML === "undefined") {
+        this._innerHTML = encodeHTML(this._textContent || "");
+      }
+      return this._innerHTML;
+    },
+
+    set innerHTML(newHTML) {
+      this._innerHTML = newHTML;
+      delete this._textContent;
+    },
+    set textContent(newText) {
+      this._textContent = newText;
+      delete this._innerHTML;
+    },
   }
 
   var Document = function () {
@@ -582,13 +657,15 @@
             // serialize attribute list
             for (var j = 0; j < child.attributes.length; j++) {
               var attr = child.attributes[j];
-              var quote = (attr.value.indexOf('"') === -1 ? '"' : "'");
-              arr.push(" " + attr.name + '=' + quote + attr.value + quote);
+              // the attribute value will be HTML escaped.
+              var val = attr.value;
+              var quote = (val.indexOf('"') === -1 ? '"' : "'");
+              arr.push(" " + attr.name + '=' + quote + val + quote);
             }
 
             if (child.localName in voidElems) {
               // if this is a self-closing element, end it here
-              arr.push("/>");
+              arr.push(">");
             } else {
               // otherwise, add its children
               arr.push(">");
@@ -596,7 +673,8 @@
               arr.push("</" + child.localName + ">");
             }
           } else {
-            arr.push(child.textContent);
+            // This is a text node, so asking for innerHTML won't recurse.
+            arr.push(child.innerHTML);
           }
         }
       }
@@ -615,6 +693,7 @@
         this.childNodes[i].parentNode = null;
       }
       this.childNodes = node.childNodes;
+      this.children = node.children;
       for (var i = this.childNodes.length; --i >= 0;) {
         this.childNodes[i].parentNode = this;
       }
@@ -628,6 +707,7 @@
 
       var node = new Text();
       this.childNodes = [ node ];
+      this.children = [];
       node.textContent = text;
       node.parentNode = this;
     },
@@ -656,7 +736,7 @@
       for (var i = this.attributes.length; --i >= 0;) {
         var attr = this.attributes[i];
         if (attr.name === name)
-          return attr.value;
+          return attr.getDecodedValue();
       }
       return undefined;
     },
@@ -665,11 +745,11 @@
       for (var i = this.attributes.length; --i >= 0;) {
         var attr = this.attributes[i];
         if (attr.name === name) {
-          attr.value = value;
+          attr.setDecodedValue(value);
           return;
         }
       }
-      this.attributes.push(new Attribute(name, value));
+      this.attributes.push(new Attribute(name, encodeHTML(value)));
     },
 
     removeAttribute: function (name) {
@@ -820,9 +900,6 @@
       // Read the attribute value (and consume the matching quote)
       var value = this.readString(c);
 
-      if (!value)
-        return;
-
       node.attributes.push(new Attribute(name, value));
 
       return;
@@ -892,7 +969,7 @@
      */
     match: function (str) {
       var strlen = str.length;
-      if (this.html.substr(this.currentChar, strlen) === str) {
+      if (this.html.substr(this.currentChar, strlen).toLowerCase() === str.toLowerCase()) {
         this.currentChar += strlen;
         return true;
       }
@@ -924,14 +1001,59 @@
     },
 
     readScript: function (node) {
-      var index = this.html.indexOf("</script>", this.currentChar);
-      if (index === -1) {
-        index = this.html.length;
+      while (this.currentChar < this.html.length) {
+        var c = this.nextChar();
+        var nextC = this.peekNext();
+        if (c === "<") {
+          if (nextC === "!" || nextC === "?") {
+            // We're still before the ! or ? that is starting this comment:
+            this.currentChar++;
+            node.appendChild(this.discardNextComment());
+            continue;
+          }
+          if (nextC === "/" && this.html.substr(this.currentChar, 8 /*"/script>".length */).toLowerCase() == "/script>") {
+            // Go back before the '<' so we find the end tag.
+            this.currentChar--;
+            // Done with this script tag, the caller will close:
+            return;
+          }
+        }
+        // Either c wasn't a '<' or it was but we couldn't find either a comment
+        // or a closing script tag, so we should just parse as text until the next one
+        // comes along:
+
+        var haveTextNode = node.lastChild && node.lastChild.nodeType === Node.TEXT_NODE;
+        var textNode = haveTextNode ? node.lastChild : new Text();
+        var n = this.html.indexOf("<", this.currentChar);
+        // Decrement this to include the current character *afterwards* so we don't get stuck
+        // looking for the same < all the time.
+        this.currentChar--;
+        if (n === -1) {
+          textNode.innerHTML += this.html.substring(this.currentChar, this.html.length);
+          this.currentChar = this.html.length;
+        } else {
+          textNode.innerHTML += this.html.substring(this.currentChar, n);
+          this.currentChar = n;
+        }
+        if (!haveTextNode)
+          node.appendChild(textNode);
       }
-      var txt = new Text();
-      txt.textContent = this.html.substring(this.currentChar, index === -1 ? this.html.length : index);
-      node.appendChild(txt);
-      this.currentChar = index;
+    },
+
+    discardNextComment: function() {
+      if (this.match("--")) {
+        this.discardTo("-->");
+      } else {
+        var c = this.nextChar();
+        while (c !== ">") {
+          if (c === undefined)
+            return null;
+          if (c === '"' || c === "'")
+            this.readString(c);
+          c = this.nextChar();
+        }
+      }
+      return new Comment();
     },
 
 
@@ -943,7 +1065,7 @@
      */
     readNode: function () {
       var c = this.nextChar();
- 
+
       if (c === undefined)
         return null;
 
@@ -953,10 +1075,10 @@
         var node = new Text();
         var n = this.html.indexOf("<", this.currentChar);
         if (n === -1) {
-          node.textContent = this.html.substring(this.currentChar, this.html.length);
+          node.innerHTML = this.html.substring(this.currentChar, this.html.length);
           this.currentChar = this.html.length;
         } else {
-          node.textContent = this.html.substring(this.currentChar, n);
+          node.innerHTML = this.html.substring(this.currentChar, n);
           this.currentChar = n;
         }
         return node;
@@ -969,20 +1091,9 @@
       // them away in readChildren()). So just returning an empty Comment node
       // here is sufficient.
       if (c === "!" || c === "?") {
+        // We're still before the ! or ? that is starting this comment:
         this.currentChar++;
-        if (this.match("--")) {
-          this.discardTo("-->");
-        } else {
-          var c = this.nextChar();
-          while (c !== ">") {
-            if (c === undefined)
-              return null;
-            if (c === '"' || c === "'")
-              this.readString(c);
-            c = this.nextChar();
-          }
-        }
-        return new Comment();
+        return this.discardNextComment();
       }
 
       // If we're reading a closing tag, return null. This means we've reached
