@@ -5,7 +5,7 @@
 
 #include "StreamFunctions.h"
 #include "nsZipDataStream.h"
-#include "nsIStringStream.h"
+#include "nsStringStream.h"
 #include "nsISeekableStream.h"
 #include "nsDeflateConverter.h"
 #include "nsNetUtil.h"
@@ -138,12 +138,12 @@ nsresult nsZipDataStream::ProcessData(nsIRequest *aRequest,
                           reinterpret_cast<const unsigned char*>(aBuffer),
                           aCount);
 
-    nsresult rv;
-    nsCOMPtr<nsIStringInputStream> stream =
-             do_CreateInstance("@mozilla.org/io/string-input-stream;1", &rv);
+    MOZ_ASSERT(aCount <= INT32_MAX);
+    nsCOMPtr<nsIInputStream> stream;
+    nsresult rv = NS_NewByteInputStream(getter_AddRefs(stream),
+					aBuffer, aCount);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    stream->ShareData(aBuffer, aCount);
     rv = mOutput->OnDataAvailable(aRequest, aContext, stream, aOffset, aCount);
     mHeader->mUSize += aCount;
 
