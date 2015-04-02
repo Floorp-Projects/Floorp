@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Prefetcher",
                                   "resource://gre/modules/Prefetcher.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "CompatWarning",
+                                  "resource://gre/modules/CompatWarning.jsm");
 
 // Similar to Python. Returns dict[key] if it exists. Otherwise,
 // sets dict[key] to default_ and returns default_.
@@ -174,6 +176,8 @@ let CategoryManagerInterposition = new Interposition("CategoryManagerInterpositi
 CategoryManagerInterposition.methods.addCategoryEntry =
   function(addon, target, category, entry, value, persist, replace) {
     if (category == "content-policy") {
+      CompatWarning.warn("content-policy should be added from the child process only.",
+                         CompatWarning.chromeScriptSections.nsIContentPolicy);
       ContentPolicyParent.addContentPolicy(addon, entry, value);
     }
 
@@ -183,6 +187,8 @@ CategoryManagerInterposition.methods.addCategoryEntry =
 CategoryManagerInterposition.methods.deleteCategoryEntry =
   function(addon, target, category, entry, persist) {
     if (category == "content-policy") {
+      CompatWarning.warn("content-policy should be removed from the child process only.",
+                         CompatWarning.chromeScriptSections.nsIContentPolicy);
       ContentPolicyParent.removeContentPolicy(addon, entry);
     }
 
@@ -289,6 +295,10 @@ let ComponentRegistrarInterposition = new Interposition("ComponentRegistrarInter
 ComponentRegistrarInterposition.methods.registerFactory =
   function(addon, target, class_, className, contractID, factory) {
     if (contractID && contractID.startsWith("@mozilla.org/network/protocol/about;1?")) {
+      CompatWarning.warn("nsIAboutModule should be registered in the content process" +
+                         " as well as the chrome process. (If you do that already, ignore" +
+                         " this warning.)",
+                         CompatWarning.chromeScriptSections.nsIAboutModule);
       AboutProtocolParent.registerFactory(addon, class_, className, contractID, factory);
     }
 
@@ -368,6 +378,8 @@ ObserverInterposition.methods.addObserver =
       ObserverParent.addObserver(addon, observer, topic);
     }
 
+    CompatWarning.warn(`${topic} observer should be added from the child process only.`,
+                       CompatWarning.chromeScriptSections.observers);
     target.addObserver(observer, topic, ownsWeak);
   };
 
@@ -603,6 +615,9 @@ let EventTargetInterposition = new Interposition("EventTargetInterposition");
 
 EventTargetInterposition.methods.addEventListener =
   function(addon, target, type, listener, useCapture, wantsUntrusted) {
+    CompatWarning.warn("Registering an event listener on content DOM nodes" +
+                        " needs to happen in the content process.",
+                       CompatWarning.chromeScriptSections.DOM_events);
     EventTargetParent.addEventListener(addon, target, type, listener, useCapture, wantsUntrusted);
     target.addEventListener(type, makeFilteringListener(type, listener), useCapture, wantsUntrusted);
   };
@@ -662,6 +677,8 @@ let SandboxParent = {
   componentsMap: new WeakMap(),
 
   makeContentSandbox: function(chromeGlobal, principals, ...rest) {
+    CompatWarning.warn("This sandbox should be created from the child process.",
+                       CompatWarning.chromeScriptSections.sandboxes);
     if (rest.length) {
       // Do a shallow copy of the options object into the child
       // process. This way we don't have to access it through a Chrome
@@ -769,6 +786,8 @@ let RemoteBrowserElementInterposition = new Interposition("RemoteBrowserElementI
                                                           EventTargetInterposition);
 
 RemoteBrowserElementInterposition.getters.docShell = function(addon, target) {
+  CompatWarning.warn("Direct access to content docshell will no longer work in the chrome process.",
+                     CompatWarning.chromeScriptSections.content);
   let remoteChromeGlobal = RemoteAddonsParent.browserToGlobal.get(target);
   if (!remoteChromeGlobal) {
     // We may not have any messages from this tab yet.
@@ -798,10 +817,14 @@ function makeDummyContentWindow(browser) {
 }
 
 RemoteBrowserElementInterposition.getters.contentWindow = function(addon, target) {
+  CompatWarning.warn("Direct access to content objects will no longer work in the chrome process.",
+                      CompatWarning.chromeScriptSections.content);
+
   // If we don't have a CPOW yet, just return something we can use for
   // setting the location. This is useful for tests that create a tab
   // and immediately set contentWindow.location.
   if (!target.contentWindowAsCPOW) {
+    CompatWarning.warn("CPOW to the content window does not exist yet, dummy content window is created.");
     return makeDummyContentWindow(target);
   }
   return target.contentWindowAsCPOW;
@@ -822,6 +845,9 @@ function getContentDocument(addon, browser)
 }
 
 RemoteBrowserElementInterposition.getters.contentDocument = function(addon, target) {
+  CompatWarning.warn("Direct access to content objects will no longer work in the chrome process.",
+                      CompatWarning.chromeScriptSections.content);
+
   return getContentDocument(addon, target);
 };
 
@@ -829,6 +855,9 @@ let TabBrowserElementInterposition = new Interposition("TabBrowserElementInterpo
                                                        EventTargetInterposition);
 
 TabBrowserElementInterposition.getters.contentWindow = function(addon, target) {
+  CompatWarning.warn("Direct access to content objects will no longer work in the chrome process.",
+                      CompatWarning.chromeScriptSections.content);
+
   if (!target.selectedBrowser.contentWindowAsCPOW) {
     return makeDummyContentWindow(target.selectedBrowser);
   }
@@ -836,6 +865,9 @@ TabBrowserElementInterposition.getters.contentWindow = function(addon, target) {
 };
 
 TabBrowserElementInterposition.getters.contentDocument = function(addon, target) {
+  CompatWarning.warn("Direct access to content objects will no longer work in the chrome process.",
+                      CompatWarning.chromeScriptSections.content);
+
   let browser = target.selectedBrowser;
   return getContentDocument(addon, browser);
 };
@@ -847,6 +879,9 @@ let ChromeWindowInterposition = new Interposition("ChromeWindowInterposition",
 // that should be using content instead.
 ChromeWindowInterposition.getters.content =
 ChromeWindowInterposition.getters._content = function(addon, target) {
+  CompatWarning.warn("Direct access to content objects will no longer work in the chrome process.",
+                      CompatWarning.chromeScriptSections.content);
+
   let browser = target.gBrowser.selectedBrowser;
   if (!browser.contentWindowAsCPOW) {
     return makeDummyContentWindow(browser);
