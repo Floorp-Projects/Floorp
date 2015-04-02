@@ -916,62 +916,64 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
   nsCOMPtr<nsIDocument> doc(do_QueryReferent(mDocument));
 
   // Don't process scripts that aren't known
-  if (langID != nsIProgrammingLanguage::UNKNOWN) {
-      nsCOMPtr<nsIScriptGlobalObject> globalObject;
-      if (doc)
-          globalObject = do_QueryInterface(doc->GetWindow());
-      nsRefPtr<nsXULPrototypeScript> script =
-          new nsXULPrototypeScript(aLineNumber, version);
-      if (! script)
-          return NS_ERROR_OUT_OF_MEMORY;
+  if (langID == nsIProgrammingLanguage::UNKNOWN) {
+      return NS_OK;
+  }
 
-      // If there is a SRC attribute...
-      if (! src.IsEmpty()) {
-          // Use the SRC attribute value to load the URL
-          rv = NS_NewURI(getter_AddRefs(script->mSrcURI), src, nullptr, mDocumentURL);
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  if (doc)
+      globalObject = do_QueryInterface(doc->GetWindow());
+  nsRefPtr<nsXULPrototypeScript> script =
+      new nsXULPrototypeScript(aLineNumber, version);
+  if (! script)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-          // Check if this document is allowed to load a script from this source
-          // NOTE: if we ever allow scripts added via the DOM to run, we need to
-          // add a CheckLoadURI call for that as well.
+  // If there is a SRC attribute...
+  if (! src.IsEmpty()) {
+      // Use the SRC attribute value to load the URL
+      rv = NS_NewURI(getter_AddRefs(script->mSrcURI), src, nullptr, mDocumentURL);
+
+      // Check if this document is allowed to load a script from this source
+      // NOTE: if we ever allow scripts added via the DOM to run, we need to
+      // add a CheckLoadURI call for that as well.
+      if (NS_SUCCEEDED(rv)) {
+          if (!mSecMan)
+              mSecMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
           if (NS_SUCCEEDED(rv)) {
-              if (!mSecMan)
-                  mSecMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-              if (NS_SUCCEEDED(rv)) {
-                  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument, &rv);
+              nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument, &rv);
 
-                  if (NS_SUCCEEDED(rv)) {
-                      rv = mSecMan->
-                          CheckLoadURIWithPrincipal(doc->NodePrincipal(),
-                                                    script->mSrcURI,
-                                                    nsIScriptSecurityManager::ALLOW_CHROME);
-                  }
+              if (NS_SUCCEEDED(rv)) {
+                  rv = mSecMan->
+                      CheckLoadURIWithPrincipal(doc->NodePrincipal(),
+                                                script->mSrcURI,
+                                                nsIScriptSecurityManager::ALLOW_CHROME);
               }
           }
-
-          if (NS_FAILED(rv)) {
-              return rv;
-          }
-
-          // Attempt to deserialize an out-of-line script from the FastLoad
-          // file right away.  Otherwise we'll end up reloading the script and
-          // corrupting the FastLoad file trying to serialize it, in the case
-          // where it's already there.
-          script->DeserializeOutOfLine(nullptr, mPrototype);
       }
 
-      nsPrototypeArray* children = nullptr;
-      rv = mContextStack.GetTopChildren(&children);
       if (NS_FAILED(rv)) {
           return rv;
       }
 
-      children->AppendElement(script);
-
-      mConstrainSize = false;
-
-      mContextStack.Push(script, mState);
-      mState = eInScript;
+      // Attempt to deserialize an out-of-line script from the FastLoad
+      // file right away.  Otherwise we'll end up reloading the script and
+      // corrupting the FastLoad file trying to serialize it, in the case
+      // where it's already there.
+      script->DeserializeOutOfLine(nullptr, mPrototype);
   }
+
+  nsPrototypeArray* children = nullptr;
+  rv = mContextStack.GetTopChildren(&children);
+  if (NS_FAILED(rv)) {
+      return rv;
+  }
+
+  children->AppendElement(script);
+
+  mConstrainSize = false;
+
+  mContextStack.Push(script, mState);
+  mState = eInScript;
 
   return NS_OK;
 }
