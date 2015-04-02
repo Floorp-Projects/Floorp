@@ -194,11 +194,10 @@ OptionParser::printHelp(const char* progname)
         static const char fmt[] = "  %s ";
         size_t fmtChars = sizeof(fmt) - 2;
         size_t lhsLen = 0;
-        for (Option** it = arguments.begin(), **end = arguments.end(); it != end; ++it)
-            lhsLen = Max(lhsLen, strlen((*it)->longflag) + fmtChars);
+        for (Option* arg : arguments)
+            lhsLen = Max(lhsLen, strlen(arg->longflag) + fmtChars);
 
-        for (Option** it = arguments.begin(), **end = arguments.end(); it != end; ++it) {
-            Option* arg = *it;
+        for (Option* arg : arguments) {
             size_t chars = printf(fmt, arg->longflag);
             for (; chars < lhsLen; ++chars)
                 putchar(' ');
@@ -213,8 +212,7 @@ OptionParser::printHelp(const char* progname)
 
         /* Calculate sizes for column alignment. */
         size_t lhsLen = 0;
-        for (Option** it = options.begin(), **end = options.end(); it != end; ++it) {
-            Option* opt = *it;
+        for (Option* opt : options) {
             size_t longflagLen = strlen(opt->longflag);
 
             size_t fmtLen;
@@ -227,8 +225,7 @@ OptionParser::printHelp(const char* progname)
         }
 
         /* Print option help text. */
-        for (Option** it = options.begin(), **end = options.end(); it != end; ++it) {
-            Option* opt = *it;
+        for (Option* opt : options) {
             size_t fmtLen;
             const char* fmt = OptionFlagsToFormatInfo(opt->shortflag, opt->isValued(), &fmtLen);
             size_t chars;
@@ -469,18 +466,18 @@ OptionParser::getMultiStringOption(const char* longflag) const
 
 OptionParser::~OptionParser()
 {
-    for (Option** it = options.begin(), **end = options.end(); it != end; ++it)
-        js_delete<Option>(*it);
-    for (Option** it = arguments.begin(), **end = arguments.end(); it != end; ++it)
-        js_delete<Option>(*it);
+    for (Option* opt : options)
+        js_delete<Option>(opt);
+    for (Option* arg : arguments)
+        js_delete<Option>(arg);
 }
 
 Option*
 OptionParser::findOption(char shortflag)
 {
-    for (Option** it = options.begin(), **end = options.end(); it != end; ++it) {
-        if ((*it)->shortflag == shortflag)
-            return *it;
+    for (Option* opt : options) {
+        if (opt->shortflag == shortflag)
+            return opt;
     }
 
     if (versionOption.shortflag == shortflag)
@@ -498,9 +495,9 @@ OptionParser::findOption(char shortflag) const
 Option*
 OptionParser::findOption(const char* longflag)
 {
-    for (Option** it = options.begin(), **end = options.end(); it != end; ++it) {
-        const char* target = (*it)->longflag;
-        if ((*it)->isValued()) {
+    for (Option* opt : options) {
+        const char* target = opt->longflag;
+        if (opt->isValued()) {
             size_t targetLen = strlen(target);
             /* Permit a trailing equals sign on the longflag argument. */
             for (size_t i = 0; i < targetLen; ++i) {
@@ -508,10 +505,10 @@ OptionParser::findOption(const char* longflag)
                     goto no_match;
             }
             if (longflag[targetLen] == '\0' || longflag[targetLen] == '=')
-                return *it;
+                return opt;
         } else {
             if (strcmp(target, longflag) == 0)
-                return *it;
+                return opt;
         }
   no_match:;
     }

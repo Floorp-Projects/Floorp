@@ -186,7 +186,8 @@ CodeGenerator::visitValueToInt32(LValueToInt32* lir)
 
         // We can only handle strings in truncation contexts, like bitwise
         // operations.
-        Label* stringEntry, *stringRejoin;
+        Label* stringEntry;
+        Label* stringRejoin;
         Register stringReg;
         if (input->mightBeType(MIRType_String)) {
             stringReg = ToRegister(lir->temp());
@@ -8958,7 +8959,8 @@ CodeGenerator::visitClampVToUint8(LClampVToUint8* lir)
     Register output = ToRegister(lir->output());
     MDefinition* input = lir->mir()->input();
 
-    Label* stringEntry, *stringRejoin;
+    Label* stringEntry;
+    Label* stringRejoin;
     if (input->mightBeType(MIRType_String)) {
         OutOfLineCode* oolString = oolCallVM(StringToNumberInfo, lir, (ArgList(), output),
                                              StoreFloatRegisterTo(tempFloat));

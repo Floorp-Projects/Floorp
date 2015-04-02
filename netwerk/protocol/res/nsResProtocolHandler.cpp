@@ -237,10 +237,9 @@ nsResProtocolHandler::NewURI(const nsACString &aSpec,
 {
     nsresult rv;
 
-    nsResURL *resURL = new nsResURL();
+    nsRefPtr<nsResURL> resURL = new nsResURL();
     if (!resURL)
         return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(resURL);
 
     // unescape any %2f and %2e to make sure nsStandardURL coalesces them.
     // Later net_GetFileFromURLSpec() will do a full unescape and we want to
@@ -272,9 +271,9 @@ nsResProtocolHandler::NewURI(const nsACString &aSpec,
       spec.Append(last, src-last);
 
     rv = resURL->Init(nsIStandardURL::URLTYPE_STANDARD, -1, spec, aCharset, aBaseURI);
-    if (NS_SUCCEEDED(rv))
-        rv = CallQueryInterface(resURL, result);
-    NS_RELEASE(resURL);
+    if (NS_SUCCEEDED(rv)) {
+        resURL.forget(result);
+    }
     return rv;
 }
 

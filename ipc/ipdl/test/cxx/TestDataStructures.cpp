@@ -494,7 +494,7 @@ TestDataStructuresChild::RecvStart()
     Test15();
     Test16();
     Test17();
-    if (OtherProcess() != 0) {
+    if (OtherPid() != base::GetCurrentProcId()) {
         //FIXME/bug 703317 allocation of nsIntRegion uses a global
         //region pool which breaks threads
         Test18();

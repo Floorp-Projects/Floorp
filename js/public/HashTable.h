@@ -870,7 +870,8 @@ class HashTable : private AllocPolicy
                 ++cur;
         }
 
-        Entry* cur, *end;
+        Entry* cur;
+        Entry* end;
 #ifdef JS_DEBUG
         const HashTable* table_;
         uint64_t mutationCount;
@@ -1090,7 +1091,8 @@ class HashTable : private AllocPolicy
 
     static void destroyTable(AllocPolicy& alloc, Entry* oldTable, uint32_t capacity)
     {
-        for (Entry* e = oldTable, *end = e + capacity; e < end; ++e)
+        Entry* end = oldTable + capacity;
+        for (Entry* e = oldTable; e < end; ++e)
             e->destroyIfLive();
         alloc.free_(oldTable);
     }
@@ -1346,7 +1348,8 @@ class HashTable : private AllocPolicy
         table = newTable;
 
         // Copy only live entries, leaving removed ones behind.
-        for (Entry* src = oldTable, *end = src + oldCap; src < end; ++src) {
+        Entry* end = oldTable + oldCap;
+        for (Entry* src = oldTable; src < end; ++src) {
             if (src->isLive()) {
                 HashNumber hn = src->getKeyHash();
                 findFreeEntry(hn).setLive(
@@ -1480,7 +1483,8 @@ class HashTable : private AllocPolicy
             memset(table, 0, sizeof(*table) * capacity());
         } else {
             uint32_t tableCapacity = capacity();
-            for (Entry* e = table, *end = table + tableCapacity; e < end; ++e)
+            Entry* end = table + tableCapacity;
+            for (Entry* e = table; e < end; ++e)
                 e->clear();
         }
         removedCount = 0;

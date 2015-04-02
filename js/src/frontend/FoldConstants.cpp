@@ -617,7 +617,9 @@ Fold(ExclusiveContext* cx, ParseNode** pnp,
      bool inGenexpLambda, SyntacticContext sc)
 {
     ParseNode* pn = *pnp;
-    ParseNode* pn1 = nullptr, *pn2 = nullptr, *pn3 = nullptr;
+    ParseNode* pn1 = nullptr;
+    ParseNode* pn2 = nullptr;
+    ParseNode* pn3 = nullptr;
 
     JS_CHECK_RECURSION(cx, return false);
 

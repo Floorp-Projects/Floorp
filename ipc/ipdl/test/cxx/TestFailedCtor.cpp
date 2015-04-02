@@ -110,7 +110,7 @@ TestFailedCtorChild::DeallocPTestFailedCtorSubChild(PTestFailedCtorSubChild* act
 void
 TestFailedCtorChild::ProcessingError(Result aCode, const char* aReason)
 {
-    if (OtherProcess() != 0) // thread-mode
+    if (OtherPid() != base::GetCurrentProcId()) // thread-mode
         _exit(0);
 }
 
