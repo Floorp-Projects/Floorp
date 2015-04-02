@@ -1919,7 +1919,7 @@ nsHtml5Tokenizer::stateLoop(int32_t state, char16_t c, int32_t pos, char16_t* bu
             case '&': {
               flushChars(buf, pos);
               clearStrBufAndAppend(c);
-              additional = '\0';
+              setAdditionalAndRememberAmpersandLocation('\0');
               returnState = state;
               state = P::transition(mViewSource, NS_HTML5TOKENIZER_CONSUME_CHARACTER_REFERENCE, reconsume, pos);
               NS_HTML5_CONTINUE(stateloop);

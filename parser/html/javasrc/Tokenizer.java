@@ -3593,7 +3593,7 @@ public class Tokenizer implements Locator {
                                  */
                                 flushChars(buf, pos);
                                 clearStrBufAndAppend(c);
-                                additional = '\u0000';
+                                setAdditionalAndRememberAmpersandLocation('\u0000');
                                 returnState = state;
                                 state = transition(state, Tokenizer.CONSUME_CHARACTER_REFERENCE, reconsume, pos);
                                 continue stateloop;
