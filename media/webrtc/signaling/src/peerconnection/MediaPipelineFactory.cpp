@@ -16,7 +16,7 @@
 #include "signaling/src/jsep/JsepTransport.h"
 #include "signaling/src/common/PtrVector.h"
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+#ifdef MOZILLA_INTERNAL_API
 #include "MediaStreamTrack.h"
 #include "nsIPrincipal.h"
 #include "nsIDocument.h"
@@ -503,7 +503,7 @@ MediaPipelineFactory::CreateMediaPipelineSending(
       aRtcpFlow,
       aFilter);
 
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+#ifdef MOZILLA_INTERNAL_API
   // implement checking for peerIdentity (where failure == black/silence)
   nsIDocument* doc = mPC->GetWindow()->GetExtantDoc();
   if (doc) {
@@ -771,7 +771,7 @@ nsresult
 MediaPipelineFactory::ConfigureVideoCodecMode(const JsepTrack& aTrack,
                                               VideoSessionConduit& aConduit)
 {
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+#ifdef MOZILLA_INTERNAL_API
   nsRefPtr<LocalSourceStreamInfo> stream =
     mPCMedia->GetLocalStreamById(aTrack.GetStreamId());
 
@@ -842,7 +842,7 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
 #ifdef MOZ_WEBRTC_OMX
       encoder =
           OMXVideoCodec::CreateEncoder(OMXVideoCodec::CodecType::CODEC_H264);
-#elif !defined(MOZILLA_XPCOMRT_API)
+#else
       encoder = GmpVideoCodec::CreateEncoder();
 #endif
       if (encoder) {
@@ -851,11 +851,11 @@ MediaPipelineFactory::EnsureExternalCodec(VideoSessionConduit& aConduit,
         return kMediaConduitInvalidSendCodec;
       }
     } else {
-      VideoDecoder* decoder = nullptr;
+      VideoDecoder* decoder;
 #ifdef MOZ_WEBRTC_OMX
       decoder =
           OMXVideoCodec::CreateDecoder(OMXVideoCodec::CodecType::CODEC_H264);
-#elif !defined(MOZILLA_XPCOMRT_API)
+#else
       decoder = GmpVideoCodec::CreateDecoder();
 #endif
       if (decoder) {
