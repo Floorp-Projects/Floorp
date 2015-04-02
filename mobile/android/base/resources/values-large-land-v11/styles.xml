@@ -35,17 +35,6 @@
     </style>
 
     <!-- Tabs panel -->
-    <style name="TabsPanelFrame" parent="TabsPanelFrameBase">
-        <item name="android:paddingTop">32dp</item>
-        <!-- Additional spacing set via margins on TabsPanelSection. -->
-        <item name="android:paddingLeft">0dp</item>
-        <item name="android:paddingRight">0dp</item>
-    </style>
-
-    <style name="TabsPanelFrame.PrivateTabs">
-        <!-- We set values in tablet portrait. -->
-    </style>
-
     <style name="TabsPanelSection" parent="TabsPanelSectionBase">
         <item name="android:layout_marginLeft">20dp</item>
         <item name="android:layout_marginRight">20dp</item>
@@ -59,13 +48,8 @@
         <!-- We set values in tablet portrait. -->
     </style>
 
-
     <style name="TabsPanelItem" parent="TabsPanelItemBase">
         <!-- To override the values-land style. -->
-    </style>
-
-    <style name="TabsPanelItem.TextAppearance.Header.PrivateTabs">
-        <item name="android:visibility">visible</item>
     </style>
 
     <style name="TabsPanelItem.TextAppearance.Linkified.LearnMore">
