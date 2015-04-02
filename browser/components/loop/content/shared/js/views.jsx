@@ -93,6 +93,17 @@ loop.shared.views = (function(_, l10n) {
       state: React.PropTypes.string.isRequired,
     },
 
+    getInitialState: function() {
+      var os = loop.shared.utils.getOS();
+      var osVersion = loop.shared.utils.getOSVersion();
+      // Disable screensharing on older OSX and Windows versions.
+      if ((os.indexOf("mac") > -1 && osVersion.major <= 10 && osVersion.minor <= 6) ||
+          (os.indexOf("win") > -1 && osVersion.major <= 5 && osVersion.minor <= 2)) {
+        return { windowSharingDisabled: true };
+      }
+      return { windowSharingDisabled: false };
+    },
+
     handleClick: function() {
       if (this.props.state === SCREEN_SHARE_STATES.ACTIVE) {
         this.props.dispatcher.dispatch(
@@ -144,6 +155,9 @@ loop.shared.views = (function(_, l10n) {
         "conversation-window-dropdown": true,
         "visually-hidden": !this.state.showMenu
       });
+      var windowSharingClasses = cx({
+        "disabled": this.state.windowSharingDisabled
+      });
 
       return (
         <div>
@@ -156,7 +170,7 @@ loop.shared.views = (function(_, l10n) {
             <li onClick={this._handleShareTabs}>
               {l10n.get("share_tabs_button_title")}
             </li>
-            <li onClick={this._handleShareWindows}>
+            <li onClick={this._handleShareWindows} className={windowSharingClasses}>
               {l10n.get("share_windows_button_title")}
             </li>
           </ul>
