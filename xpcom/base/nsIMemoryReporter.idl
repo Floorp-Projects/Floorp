@@ -516,7 +516,7 @@ nsresult RegisterNonJSSizeOfTab(NonJSSizeOfTabFn aSizeOfTabFn);
 
 }
 
-#if defined(MOZ_DMD) && !defined(MOZILLA_XPCOMRT_API)
+#if defined(MOZ_DMD)
 namespace mozilla {
 namespace dmd {
 // This runs all the memory reporters in the current process but does nothing
