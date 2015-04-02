@@ -683,12 +683,7 @@ public:
                  aSpringConstant, aDampingRatio)
    , mYAxisModel(aInitialPosition.y, aDestination.y, aInitialVelocity.y,
                  aSpringConstant, aDampingRatio)
-   , mSource(aSource)
-   , mAllowOverscroll(true)
   {
-    if (mSource == ScrollSource::Wheel) {
-      mAllowOverscroll = mApzc.AllowScrollHandoffInWheelTransaction();
-    }
   }
 
   /**
@@ -733,11 +728,7 @@ public:
     ParentLayerPoint overscroll;
     ParentLayerPoint adjustedOffset;
     mApzc.mX.AdjustDisplacement(displacement.x, adjustedOffset.x, overscroll.x);
-
-    bool forceVerticalOverscroll = mSource == ScrollSource::Wheel &&
-                                   !aFrameMetrics.AllowVerticalScrollWithWheel();
-    mApzc.mY.AdjustDisplacement(displacement.y, adjustedOffset.y, overscroll.y,
-                                forceVerticalOverscroll);
+    mApzc.mY.AdjustDisplacement(displacement.y, adjustedOffset.y, overscroll.y);
 
     aFrameMetrics.ScrollBy(adjustedOffset / zoom);
 
@@ -745,7 +736,7 @@ public:
     // This can happen if either the layout.css.scroll-behavior.damping-ratio
     // preference is set to less than 1 (underdamped) or if a smooth scroll
     // inherits velocity from a fling gesture.
-    if (!IsZero(overscroll) && mAllowOverscroll) {
+    if (!IsZero(overscroll)) {
       // Hand off a fling with the remaining momentum to the next APZC in the
       // overscroll handoff chain.
 
@@ -782,8 +773,6 @@ public:
 private:
   AsyncPanZoomController& mApzc;
   AxisPhysicsMSDModel mXAxisModel, mYAxisModel;
-  ScrollSource mSource;
-  bool mAllowOverscroll;
 };
 
 void
