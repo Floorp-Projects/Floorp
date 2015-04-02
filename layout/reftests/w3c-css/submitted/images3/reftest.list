@@ -173,7 +173,7 @@ skip-if(B2G) == object-fit-scale-down-svg-002o.html object-fit-scale-down-svg-00
 == object-fit-scale-down-svg-006o.html object-fit-scale-down-svg-006-ref.html
 == object-fit-scale-down-svg-006p.html object-fit-scale-down-svg-006-ref.html
 fails == object-position-png-001c.html object-position-png-001-ref.html # bug 1105150
-== object-position-png-001e.html object-position-png-001-ref.html
+fuzzy-if(Mulet,2,20) == object-position-png-001e.html object-position-png-001-ref.html # Bug 1150536
 == object-position-png-001i.html object-position-png-001-ref.html
 fuzzy-if(Mulet,2,20) == object-position-png-001o.html object-position-png-001-ref.html # Bug 1150492
 == object-position-png-001p.html object-position-png-001-ref.html
