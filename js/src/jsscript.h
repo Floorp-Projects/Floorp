@@ -1013,9 +1013,12 @@ class JSScript : public js::gc::TenuredCell
     // correctly.
     bool typesGeneration_:1;
 
-    // Do not relazify this script. This is only used by the relazify()
-    // testing function for scripts that are on the stack. Usually we don't
-    // relazify functions in compartments with scripts on the stack.
+    // Do not relazify this script. This is used by the relazify() testing
+    // function for scripts that are on the stack and also by the AutoDelazify
+    // RAII class. Usually we don't relazify functions in compartments with
+    // scripts on the stack, but the relazify() testing function overrides that,
+    // and sometimes we're working with a cross-compartment function and need to
+    // keep it from relazifying.
     bool doNotRelazify_:1;
 
     // Add padding so JSScript is gc::Cell aligned. Make padding protected
@@ -1697,6 +1700,50 @@ class JSScript : public js::gc::TenuredCell
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SCRIPT; }
 
     void markChildren(JSTracer* trc);
+
+    // A helper class to prevent relazification of the given function's script
+    // while it's holding on to it.  This class automatically roots the script.
+    class AutoDelazify;
+    friend class AutoDelazify;
+
+    class AutoDelazify
+    {
+        JS::RootedScript script_;
+        JSContext* cx_;
+        bool oldDoNotRelazify_;
+      public:
+        explicit AutoDelazify(JSContext* cx, JS::HandleFunction fun = JS::NullPtr())
+            : script_(cx)
+            , cx_(cx)
+        {
+            holdScript(fun);
+        }
+
+        ~AutoDelazify()
+        {
+            dropScript();
+        }
+
+        void operator=(JS::HandleFunction fun)
+        {
+            dropScript();
+            holdScript(fun);
+        }
+
+        operator JS::HandleScript() const { return script_; }
+        explicit operator bool() const { return script_; }
+
+      private:
+        void holdScript(JS::HandleFunction fun);
+
+        void dropScript()
+        {
+            if (script_) {
+                script_->setDoNotRelazify(oldDoNotRelazify_);
+                script_ = nullptr;
+            }
+        }
+    };
 };
 
 /* If this fails, add/remove padding within JSScript. */
