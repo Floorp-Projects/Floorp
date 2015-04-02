@@ -113,6 +113,13 @@ class MachineState
     mozilla::Array<FloatRegisters::RegisterContent*, FloatRegisters::Total> fpregs_;
 
   public:
+    MachineState() {
+        for (unsigned i = 0; i < Registers::Total; i++)
+            regs_[i] = reinterpret_cast<Registers::RegisterContent*>(i + 0x100);
+        for (unsigned i = 0; i < FloatRegisters::Total; i++)
+            fpregs_[i] = reinterpret_cast<FloatRegisters::RegisterContent*>(i + 0x200);
+    }
+
     static MachineState FromBailout(RegisterDump::GPRArray& regs, RegisterDump::FPUArray& fpregs);
 
     void setRegisterLocation(Register reg, uintptr_t* up) {
