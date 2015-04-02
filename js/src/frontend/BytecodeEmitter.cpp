@@ -2280,7 +2280,8 @@ BytecodeEmitter::emitPropLHS(ParseNode* pn, JSOp op)
      */
     if (pn2->isKind(PNK_DOT)) {
         ParseNode* pndot = pn2;
-        ParseNode* pnup = nullptr, *pndown;
+        ParseNode* pnup = nullptr;
+        ParseNode* pndown;
         ptrdiff_t top = offset();
         for (;;) {
             /* Reverse pndot->pn_expr to point up, not down. */
@@ -6673,8 +6674,8 @@ BytecodeEmitter::emitDefaults(ParseNode* pn)
 {
     MOZ_ASSERT(pn->isKind(PNK_ARGSBODY));
 
-    ParseNode* arg, *pnlast = pn->last();
-    for (arg = pn->pn_head; arg != pnlast; arg = arg->pn_next) {
+    ParseNode* pnlast = pn->last();
+    for (ParseNode* arg = pn->pn_head; arg != pnlast; arg = arg->pn_next) {
         if (!(arg->pn_dflags & PND_DEFAULT))
             continue;
         if (!bindNameToSlot(arg))

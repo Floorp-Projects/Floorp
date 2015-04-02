@@ -342,7 +342,8 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
         MOZ_ASSERT(mir->isRecoveredOnBailout());
         uint32_t index = 0;
         LRecoverInfo* recoverInfo = snapshot->recoverInfo();
-        MNode** it = recoverInfo->begin(), **end = recoverInfo->end();
+        MNode** it = recoverInfo->begin();
+        MNode** end = recoverInfo->end();
         while (it != end && mir != *it) {
             ++it;
             ++index;
@@ -487,8 +488,8 @@ CodeGeneratorShared::encode(LRecoverInfo* recover)
 
     RecoverOffset offset = recovers_.startRecover(numInstructions, resumeAfter);
 
-    for (MNode** it = recover->begin(), **end = recover->end(); it != end; ++it)
-        recovers_.writeInstruction(*it);
+    for (MNode* insn : *recover)
+        recovers_.writeInstruction(insn);
 
     recovers_.endRecover();
     recover->setRecoverOffset(offset);
@@ -572,18 +573,15 @@ CodeGeneratorShared::assignBailoutId(LSnapshot* snapshot)
 void
 CodeGeneratorShared::encodeSafepoints()
 {
-    for (SafepointIndex* it = safepointIndices_.begin(), *end = safepointIndices_.end();
-         it != end;
-         ++it)
-    {
-        LSafepoint* safepoint = it->safepoint();
+    for (SafepointIndex& index : safepointIndices_) {
+        LSafepoint* safepoint = index.safepoint();
 
         if (!safepoint->encoded()) {
             safepoint->fixupOffset(&masm);
             safepoints_.encode(safepoint);
         }
 
-        it->resolve();
+        index.resolve();
     }
 }
 

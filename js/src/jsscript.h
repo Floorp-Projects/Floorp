@@ -314,6 +314,9 @@ class Bindings
         return !callObjShape_->isEmptyShape();
     }
 
+    Binding* begin() const { return bindingArray(); }
+    Binding* end() const { return bindingArray() + count(); }
+
     static js::ThingRootKind rootKind() { return js::THING_ROOT_BINDINGS; }
     void trace(JSTracer* trc);
 };
@@ -1781,7 +1784,9 @@ class BindingIter
  */
 class AliasedFormalIter
 {
-    const Binding* begin_, *p_, *end_;
+    const Binding* begin_;
+    const Binding* p_;
+    const Binding* end_;
     unsigned slot_;
 
     void settle() {
@@ -1809,7 +1814,7 @@ class LazyScript : public gc::TenuredCell
   public:
     class FreeVariable
     {
-        // Free variable names are possible tagged JSAtom* s.
+        // Variable name is stored as a tagged JSAtom pointer.
         uintptr_t bits_;
 
         static const uintptr_t HOISTED_USE_BIT = 0x1;

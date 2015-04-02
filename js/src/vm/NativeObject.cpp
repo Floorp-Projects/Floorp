@@ -163,7 +163,10 @@ js::NativeObject::initializeSlotRange(uint32_t start, uint32_t length)
      * No bounds check, as this is used when the object's shape does not
      * reflect its allocated slots (updateSlotsForSpan).
      */
-    HeapSlot* fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+    HeapSlot* fixedStart;
+    HeapSlot* fixedEnd;
+    HeapSlot* slotsStart;
+    HeapSlot* slotsEnd;
     getSlotRangeUnchecked(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
 
     uint32_t offset = start;
@@ -176,7 +179,10 @@ js::NativeObject::initializeSlotRange(uint32_t start, uint32_t length)
 void
 js::NativeObject::initSlotRange(uint32_t start, const Value* vector, uint32_t length)
 {
-    HeapSlot* fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+    HeapSlot* fixedStart;
+    HeapSlot* fixedEnd;
+    HeapSlot* slotsStart;
+    HeapSlot* slotsEnd;
     getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
     for (HeapSlot* sp = fixedStart; sp < fixedEnd; sp++)
         sp->init(this, HeapSlot::Slot, start++, *vector++);
@@ -188,7 +194,10 @@ void
 js::NativeObject::copySlotRange(uint32_t start, const Value* vector, uint32_t length)
 {
     JS::Zone* zone = this->zone();
-    HeapSlot* fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+    HeapSlot* fixedStart;
+    HeapSlot* fixedEnd;
+    HeapSlot* slotsStart;
+    HeapSlot* slotsEnd;
     getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
     for (HeapSlot* sp = fixedStart; sp < fixedEnd; sp++)
         sp->set(zone, this, HeapSlot::Slot, start++, *vector++);

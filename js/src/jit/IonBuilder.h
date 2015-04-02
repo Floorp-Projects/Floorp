@@ -1030,7 +1030,9 @@ class IonBuilder
         return analysis_;
     }
 
-    TemporaryTypeSet* thisTypes, *argTypes, *typeArray;
+    TemporaryTypeSet* thisTypes;
+    TemporaryTypeSet* argTypes;
+    TemporaryTypeSet* typeArray;
     uint32_t typeArrayHint;
     uint32_t* bytecodeTypeMap;
 

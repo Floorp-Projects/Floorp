@@ -270,7 +270,8 @@ class TryNoteIter
     const InterpreterRegs& regs;
     RootedScript script; /* TryNotIter is always stack allocated. */
     uint32_t pcOffset;
-    JSTryNote* tn, *tnEnd;
+    JSTryNote* tn;
+    JSTryNote* tnEnd;
 
     void settle();
 
