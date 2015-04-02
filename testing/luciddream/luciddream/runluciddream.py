@@ -76,7 +76,7 @@ class LucidDreamTestRunner(BaseMarionetteTestRunner):
         self.test_handlers = [LucidDreamTestCase]
 
 
-def start_browser(browserPath):
+def start_browser(browserPath, app_args):
     '''
     Start a Firefox browser and return a Marionette instance that
     can talk to it.
@@ -86,6 +86,8 @@ def start_browser(browserPath):
         # Need to avoid the browser and emulator's ports stepping
         # on each others' toes.
         port=2929,
+        app_args=app_args,
+        gecko_log="firefox.log"
     )
     runner = marionette.runner
     if runner:
@@ -98,14 +100,7 @@ def start_browser(browserPath):
 
 #TODO: make marionette/client/marionette/runtests.py importable so we can
 # just use cli from there. A lot of this is copy/paste from that function.
-def main():
-    try:
-        args = parse_args(sys.argv[1:])
-    except CommandLineError as e:
-        return 1
-
-    logger = structured.commandline.setup_logging(
-        'luciddream', args, {"tbpl": sys.stdout})
+def main(firefox=None, b2g_desktop=None, emulator=None, emulator_arch=None, gaia_profile=None, manifest=None, browser_args=None, **kwargs):
 
     # It's sort of debatable here whether the marionette instance managed
     # by the test runner should be the browser or the emulator. Right now
@@ -113,39 +108,43 @@ def main():
     # that, but longer-term if we want to run tests against different
     # (non-B2G) targets this won't match up very well, so maybe it ought to
     # be the browser?
-    browser = start_browser(args.browserPath)
-    kwargs = {
-        'browser': browser,
-        'logger': logger,
-    }
-    if args.b2gPath:
-        kwargs['homedir'] = args.b2gPath
-        kwargs['emulator'] = args.emulator
-    elif args.b2gDesktopPath:
+    browser = start_browser(firefox, browser_args)
+
+    kwargs["browser"] = browser
+    if not "logger" in kwargs:
+        logger = structured.commandline.setup_logging(
+            "luciddream", kwargs, {"tbpl": sys.stdout})
+        kwargs["logger"] = logger
+
+    if emulator:
+        kwargs['homedir'] = emulator
+        kwargs['emulator'] = emulator_arch
+    elif b2g_desktop:
         # Work around bug 859952
-        if '-bin' not in args.b2gDesktopPath:
-            if args.b2gDesktopPath.endswith('.exe'):
-                newpath = args.b2gDesktopPath[:-4] + '-bin.exe'
+        if '-bin' not in b2g_desktop:
+            if b2g_desktop.endswith('.exe'):
+                newpath = b2g_desktop[:-4] + '-bin.exe'
             else:
-                newpath = args.b2gDesktopPath + '-bin'
+                newpath = b2g_desktop + '-bin'
             if os.path.exists(newpath):
-                args.b2gDesktopPath = newpath
-        kwargs['binary'] = args.b2gDesktopPath
+                b2g_desktop = newpath
+        kwargs['binary'] = b2g_desktop
         kwargs['app'] = 'b2gdesktop'
-        if args.gaiaProfile:
-            kwargs['profile'] = args.gaiaProfile
+        if gaia_profile:
+            kwargs['profile'] = gaia_profile
         else:
             kwargs['profile'] = os.path.join(
-                os.path.dirname(args.b2gDesktopPath),
+                os.path.dirname(b2g_desktop),
                 'gaia',
                 'profile'
             )
     runner = LucidDreamTestRunner(**kwargs)
-    runner.run_tests([args.manifest])
+    runner.run_tests([manifest])
     if runner.failed > 0:
         sys.exit(10)
     sys.exit(0)
 
 
 if __name__ == '__main__':
-    main()
+    args = parse_args(sys.argv[1:])
+    main(args)
