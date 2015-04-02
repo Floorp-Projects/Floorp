@@ -9,7 +9,6 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoApplication;
-import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -121,11 +120,7 @@ public class TabsPanel extends LinearLayout
     }
 
     private void inflateLayout(Context context) {
-        if (NewTabletUI.isEnabled(context)) {
-            LayoutInflater.from(context).inflate(R.layout.tabs_panel_default, this);
-        } else {
-            LayoutInflater.from(context).inflate(R.layout.tabs_panel, this);
-        }
+        LayoutInflater.from(context).inflate(R.layout.tabs_panel_default, this);
     }
 
     private void initialize() {
