@@ -424,6 +424,10 @@ protected:
 
   bool mCorsIncludeCredentials;
   uint32_t mCorsMode;
+
+  // This parameter is used to ensure that we do not call OnStartRequest more
+  // than once.
+  bool mOnStartRequestCalled;
 };
 
 // Share some code while working around C++'s absurd inability to handle casting
