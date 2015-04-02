@@ -120,7 +120,7 @@ let AddonWatcher = {
 
       let limits = {
         // By default, warn if we have a total time of 1s of CPOW per 15 seconds
-        totalCPOWTime: Math.round(Preferences.get("browser.addon-watch.limits.totalCPOWTime", 1000) * this._interval / 15000),
+        totalCPOWTime: Math.round(Preferences.get("browser.addon-watch.limits.totalCPOWTime", 1000000) * this._interval / 15000),
         // By default, warn if we have skipped 4 consecutive frames
         // at least once during the latest slice.
         longestDuration: Math.round(Math.log2(Preferences.get("browser.addon-watch.limits.longestDuration", 7))),
