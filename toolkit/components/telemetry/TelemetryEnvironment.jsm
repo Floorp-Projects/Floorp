@@ -18,6 +18,7 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/ObjectUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
                                   "resource://gre/modules/ctypes.jsm");
@@ -366,58 +367,46 @@ EnvironmentAddonBuilder.prototype = {
 
   // AddonListener
   onEnabled: function() {
-    this._onChange();
+    this._onAddonChange();
   },
   onDisabled: function() {
-    this._onChange();
+    this._onAddonChange();
   },
   onInstalled: function() {
-    this._onChange();
+    this._onAddonChange();
   },
   onUninstalling: function() {
-    this._onChange();
+    this._onAddonChange();
   },
 
-  _onChange: function() {
-    if (this._pendingTask) {
-      this._environment._log.trace("_onChange - task already pending");
-      return;
-    }
-
-    this._environment._log.trace("_onChange");
-    this._pendingTask = this._updateAddons().then(
-      (changed) => {
-        this._pendingTask = null;
-        if (changed) {
-          this._environment._onEnvironmentChange("addons-changed");
-        }
-      },
-      (err) => {
-        this._pendingTask = null;
-        this._environment._log.error("Error collecting addons", err);
-      });
+  _onAddonChange: function() {
+    this._environment._log.trace("_onAddonChange");
+    this._checkForChanges("addons-changed");
   },
 
   // nsIObserver
   observe: function (aSubject, aTopic, aData) {
     this._environment._log.trace("observe - Topic " + aTopic);
+    this._checkForChanges("experiment-changed");
+  },
 
-    if (aTopic == EXPERIMENTS_CHANGED_TOPIC) {
-      if (this._pendingTask) {
-        return;
-      }
-      this._pendingTask = this._updateAddons().then(
-        (changed) => {
-          this._pendingTask = null;
-          if (changed) {
-            this._environment._onEnvironmentChange("experiment-changed");
-          }
-        },
-        (err) => {
-          this._pendingTask = null;
-          this._environment._log.error("observe: Error collecting addons", err);
-        });
+  _checkForChanges: function(changeReason) {
+    if (this._pendingTask) {
+      this._environment._log.trace("_checkForChanges - task already pending, dropping change with reason " + changeReason);
+      return;
     }
+
+    this._pendingTask = this._updateAddons().then(
+      (result) => {
+        this._pendingTask = null;
+        if (result.changed) {
+          this._environment._onEnvironmentChange(changeReason, result.oldEnvironment);
+        }
+      },
+      (err) => {
+        this._pendingTask = null;
+        this._environment._log.error("_checkForChanges: Error collecting addons", err);
+      });
   },
 
   _shutdownBlocker: function() {
@@ -434,7 +423,9 @@ EnvironmentAddonBuilder.prototype = {
    * This should only be called from _pendingTask; otherwise we risk
    * running this during addon manager shutdown.
    *
-   * @returns Promise<bool> whether the environment changed.
+   * @returns Promise<Object> This returns a Promise resolved with a status object with the following members:
+   *   changed - Whether the environment changed.
+   *   oldEnvironment - Only set if a change occured, contains the environment data before the change.
    */
   _updateAddons: Task.async(function* () {
     this._environment._log.trace("_updateAddons");
@@ -455,14 +446,17 @@ EnvironmentAddonBuilder.prototype = {
       persona: personaId,
     };
 
-    if (JSON.stringify(addons) !=
-        JSON.stringify(this._environment._currentEnvironment.addons)) {
+    let result = {
+      changed: !ObjectUtils.deepEqual(addons, this._environment._currentEnvironment.addons),
+    };
+
+    if (result.changed) {
       this._environment._log.trace("_updateAddons: addons differ");
+      result.oldEnvironment = Cu.cloneInto(this._environment._currentEnvironment, myScope);
       this._environment._currentEnvironment.addons = addons;
-      return true;
     }
-    this._environment._log.trace("_updateAddons: no changes found");
-    return false;
+
+    return result;
   }),
 
   /**
@@ -695,7 +689,8 @@ EnvironmentCache.prototype = {
    * Register a listener for environment changes.
    * @param name The name of the listener. If a new listener is registered
    *             with the same name, the old listener will be replaced.
-   * @param listener function(reason, environment)
+   * @param listener function(reason, oldEnvironment) - Will receive a reason for
+                     the change and the environment data before the change.
    */
   registerChangeListener: function (name, listener) {
     this._log.trace("registerChangeListener for " + name);
@@ -772,8 +767,9 @@ EnvironmentCache.prototype = {
 
   _onPrefChanged: function() {
     this._log.trace("_onPrefChanged");
+    let oldEnvironment = Cu.cloneInto(this._currentEnvironment, myScope);
     this._updateSettings();
-    this._onEnvironmentChange("pref-changed");
+    this._onEnvironmentChange("pref-changed", oldEnvironment);
   },
 
   /**
@@ -1059,17 +1055,20 @@ EnvironmentCache.prototype = {
     };
   },
 
-  _onEnvironmentChange: function (what) {
+  _onEnvironmentChange: function (what, oldEnvironment) {
     this._log.trace("_onEnvironmentChange for " + what);
     if (this._shutdown) {
       this._log.trace("_onEnvironmentChange - Already shut down.");
       return;
     }
 
+    // We are already skipping change events in _checkChanges if there is a pending change task running.
+    // Further throttling is coming in bug 1143714.
+
     for (let [name, listener] of this._changeListeners) {
       try {
         this._log.debug("_onEnvironmentChange - calling " + name);
-        listener(what, this.currentEnvironment);
+        listener(what, oldEnvironment);
       } catch (e) {
         this._log.error("_onEnvironmentChange - listener " + name + " caught error", e);
       }
