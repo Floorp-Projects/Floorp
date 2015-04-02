@@ -1,7 +1,7 @@
 $inherits:
   from: 'tasks/builds/b2g_emulator_x86_base.yml'
   variables:
-    build_name: 'emualtor-x86-kk'
+    build_name: 'emulator-x86-kk'
     build_type: 'opt'
 task:
   workerType: emualtor-x86-kk
