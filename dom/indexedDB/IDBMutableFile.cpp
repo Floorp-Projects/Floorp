@@ -275,23 +275,6 @@ IDBMutableFile::CreateStream(bool aReadOnly)
   return result.forget();
 }
 
-void
-IDBMutableFile::SetThreadLocals()
-{
-  MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
-  MOZ_ASSERT(mDatabase->GetOwner(), "Should have owner!");
-
-  QuotaManager::SetCurrentWindow(mDatabase->GetOwner());
-}
-
-void
-IDBMutableFile::UnsetThreadLocals()
-{
-  MOZ_ASSERT(IndexedDatabaseManager::IsMainProcess());
-
-  QuotaManager::SetCurrentWindow(nullptr);
-}
-
 JSObject*
 IDBMutableFile::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
