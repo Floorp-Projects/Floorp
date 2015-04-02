@@ -53,13 +53,9 @@ let ToolbarView = {
       menuitem.setAttribute("flex", "1");
       menuitem.setAttribute("label", markerDetails.label);
       menuitem.setAttribute("marker-type", markerName);
+      menuitem.className = markerDetails.colorName;
 
       menuitem.addEventListener("command", this._onHiddenMarkersChanged);
-
-      // Style used by pseudo element ::before in performance.inc.css
-      let bulletStyle = `--bullet-bg: ${markerDetails.fill};`
-      bulletStyle += `--bullet-border: ${markerDetails.stroke}`;
-      menuitem.setAttribute("style", bulletStyle);
 
       $("#performance-filter-menupopup").appendChild(menuitem);
     }

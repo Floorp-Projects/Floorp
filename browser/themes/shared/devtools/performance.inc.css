@@ -57,10 +57,7 @@
   width: 8px;
   height: 8px;
   margin: 0 8px;
-  border: 1px solid;
   border-radius: 1px;
-  background-color: var(--bullet-bg);
-  border-color: var(--bullet-border);
 }
 
 /* Recording Notice */
@@ -380,7 +377,6 @@
   height: 8px;
   -moz-margin-start: 8px;
   -moz-margin-end: 6px;
-  border: 1px solid;
   border-radius: 1px;
 }
 
@@ -391,20 +387,14 @@
 
 .waterfall-marker-bar {
   height: 9px;
-  border: 1px solid;
-  border-radius: 1px;
   transform-origin: left center;
+  border-radius: 1px;
 }
 
 .waterfall-marker-container.selected > .waterfall-sidebar,
 .waterfall-marker-container.selected > .waterfall-marker-item {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
-}
-
-.waterfall-marker-container.selected .waterfall-marker-bullet,
-.waterfall-marker-container.selected .waterfall-marker-bar {
-  border-color: initial !important;
 }
 
 .waterfall-marker-location {
@@ -426,8 +416,32 @@
 .marker-details-bullet {
   width: 8px;
   height: 8px;
-  border: 1px solid;
   border-radius: 1px;
+}
+
+#performance-filter-menupopup > menuitem.highlight-pink:before,
+.marker-details-bullet.highlight-pink,
+.waterfall-marker-bar.highlight-pink,
+.waterfall-marker-bullet.highlight-pink {
+  background-color: var(--theme-highlight-pink);
+}
+#performance-filter-menupopup > menuitem.highlight-bluegrey:before,
+.marker-details-bullet.highlight-bluegrey,
+.waterfall-marker-bar.highlight-bluegrey,
+.waterfall-marker-bullet.highlight-bluegrey {
+  background-color: var(--theme-highlight-bluegrey);
+}
+#performance-filter-menupopup > menuitem.highlight-green:before,
+.marker-details-bullet.highlight-green,
+.waterfall-marker-bar.highlight-green,
+.waterfall-marker-bullet.highlight-green {
+  background-color: var(--theme-highlight-green);
+}
+#performance-filter-menupopup > menuitem.highlight-lightorange:before,
+.marker-details-bullet.highlight-lightorange,
+.waterfall-marker-bar.highlight-lightorange,
+.waterfall-marker-bullet.highlight-lightorange {
+  background-color: var(--theme-highlight-lightorange);
 }
 
 #waterfall-details > * {
