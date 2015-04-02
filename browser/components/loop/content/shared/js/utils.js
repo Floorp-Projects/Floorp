@@ -142,6 +142,116 @@ loop.shared.utils = (function(mozL10n) {
   }
 
   /**
+   * Helper to get the Operating System name.
+   *
+   * @param {String}  [platform]    The platform this is running on, will fall
+   *                                back to navigator.oscpu and navigator.userAgent
+   *                                respectively if not supplied.
+   * @param {Boolean} [withVersion] Optional flag to keep the version number
+   *                                included in the resulting string. Defaults to
+   *                                `false`.
+   * @return {String} The platform we're currently running on, in lower-case.
+   */
+  var getOS = _.memoize(function(platform, withVersion) {
+    if (!platform) {
+      if ("oscpu" in window.navigator) {
+        // See https://developer.mozilla.org/en-US/docs/Web/API/Navigator/oscpu
+        platform = window.navigator.oscpu.split(";")[0].trim();
+      } else {
+        // Fall back to navigator.userAgent as a last resort.
+        platform = window.navigator.userAgent;
+      }
+    }
+
+    if (!platform) {
+      return "unknown";
+    }
+
+    // Support passing in navigator.userAgent.
+    var platformPart = platform.match(/\((.*)\)/);
+    if (platformPart) {
+      platform = platformPart[1];
+    }
+    platform = platform.toLowerCase().split(";");
+    if (/macintosh/.test(platform[0]) || /x11/.test(platform[0])) {
+      platform = platform[1];
+    } else {
+      if (platform[0].indexOf("win") > -1 && platform.length > 4) {
+        // Skip the security notation.
+        platform = platform[2];
+      } else {
+        platform = platform[0];
+      }
+    }
+
+    if (!withVersion) {
+      platform = platform.replace(/\s[0-9.]+/g, "");
+    }
+
+    return platform.trim();
+  }, function(platform, withVersion) {
+    // Cache the return values with the following key.
+    return (platform + "") + (withVersion + "");
+  });
+
+  /**
+   * Helper to get the Operating System version.
+   * See http://en.wikipedia.org/wiki/Windows_NT for a table of Windows NT
+   * versions.
+   *
+   * @param {String} [platform] The platform this is running on, will fall back
+   *                            to navigator.oscpu and navigator.userAgent
+   *                            respectively if not supplied.
+   * @return {String} The current version of the platform we're currently running
+   *                  on.
+   */
+  var getOSVersion = _.memoize(function(platform) {
+    var os = getOS(platform, true);
+    var digitsRE = /\s([0-9.]+)/;
+
+    var version = os.match(digitsRE);
+    if (!version) {
+      if (os.indexOf("win") > -1) {
+        if (os.indexOf("xp")) {
+          return { major: 5, minor: 2 };
+        } else if (os.indexOf("vista") > -1) {
+          return { major: 6, minor: 0 };
+        }
+      }
+    } else {
+      version = version[1];
+      // Windows versions have an interesting scheme.
+      if (os.indexOf("win") > -1) {
+        switch (parseFloat(version)) {
+          case 98:
+            return { major: 4, minor: 1 };
+          case 2000:
+            return { major: 5, minor: 0 };
+          case 2003:
+            return { major: 5, minor: 2 };
+          case 7:
+          case 2008:
+          case 2011:
+            return { major: 6, minor: 1 };
+          case 8:
+            return { major: 6, minor: 2 };
+          case 8.1:
+          case 2012:
+            return { major: 6, minor: 3 };
+        }
+      }
+
+      version = version.split(".");
+      return {
+        major: parseInt(version[0].trim(), 10),
+        minor: parseInt(version[1] ? version[1].trim() : 0, 10)
+      };
+    }
+
+    return { major: Infinity, minor: 0 };
+  });
+
+  /**
    * Helper to allow getting some of the location data in a way that's compatible
    * with stubbing for unit tests.
    */
@@ -418,6 +528,8 @@ loop.shared.utils = (function(mozL10n) {
     composeCallUrlEmail: composeCallUrlEmail,
     formatDate: formatDate,
     getBoolPreference: getBoolPreference,
+    getOS: getOS,
+    getOSVersion: getOSVersion,
     isChrome: isChrome,
     isFirefox: isFirefox,
     isFirefoxOS: isFirefoxOS,
