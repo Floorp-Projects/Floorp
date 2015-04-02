@@ -198,7 +198,10 @@ public:
       MOZ_ASSERT(channels == segmentChannelCount);
       output.SetLength(channels);
       bufferPtrs.SetLength(channels);
+#if !defined(MOZILLA_XPCOMRT_API)
+// FIXME Bug 1126414 - XPCOMRT does not support dom::WebAudioUtils::SpeexResamplerProcess
       uint32_t inFrames = c.mDuration;
+#endif // !defined(MOZILLA_XPCOMRT_API)
       // Round up to allocate; the last frame may not be used.
       NS_ASSERTION((UINT32_MAX - aInRate + 1) / c.mDuration >= aOutRate,
                    "Dropping samples");
@@ -208,10 +211,13 @@ public:
         T* out = output[i].AppendElements(outSize);
         uint32_t outFrames = outSize;
 
+#if !defined(MOZILLA_XPCOMRT_API)
+// FIXME Bug 1126414 - XPCOMRT does not support dom::WebAudioUtils::SpeexResamplerProcess
         dom::WebAudioUtils::SpeexResamplerProcess(aResampler, i,
                                                   in, &inFrames,
                                                   out, &outFrames);
         MOZ_ASSERT(inFrames == c.mDuration);
+#endif // !defined(MOZILLA_XPCOMRT_API)
         bufferPtrs[i] = out;
         output[i].SetLength(outFrames);
       }

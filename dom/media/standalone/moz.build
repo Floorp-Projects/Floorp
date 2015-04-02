@@ -1,0 +1,47 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
+    Library('media_standalone')
+
+UNIFIED_SOURCES += [
+    '../AudioChannelFormat.cpp',
+    '../AudioSegment.cpp',
+    '../SimpleImageBuffer.cpp',
+    '../VideoSegment.cpp',
+]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    UNIFIED_SOURCES += ['../systemservices/OSXRunLoopSingleton.cpp']
+
+MSVC_ENABLE_PGO = True
+
+LOCAL_INCLUDES += [
+    '/caps',
+    '/dom/base',
+    '/dom/camera',
+    '/layout/generic',
+    '/layout/xul',
+    '/netwerk/base',
+]
+
+if CONFIG['MOZ_WEBRTC']:
+    LOCAL_INCLUDES += [
+        '/media/webrtc/signaling/src/common',
+        '/media/webrtc/trunk',
+    ]
+
+DEFINES['MOZILLA_INTERNAL_API'] = True
+DEFINES['MOZILLA_XPCOMRT_API'] = True
+DEFINES['MOZILLA_EXTERNAL_LINKAGE'] = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+# Suppress some GCC warnings being treated as errors:
+#  - about attributes on forward declarations for types that are already
+#    defined, which complains about an important MOZ_EXPORT for android::AString
+if CONFIG['GNU_CC']:
+    CXXFLAGS += ['-Wno-error=attributes']
