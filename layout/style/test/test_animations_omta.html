@@ -201,6 +201,7 @@ window.done_div = function() {
 };
 
 SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(2);
 runOMTATest(function() {
   var onAbort = function() {
     if (gDiv) {

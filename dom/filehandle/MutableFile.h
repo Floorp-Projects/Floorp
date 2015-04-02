@@ -20,8 +20,7 @@ class FileService;
 
 /**
  * This class provides a base for MutableFile implementations.
- * The subclasses can override implementation of IsInvalid, CreateStream,
- * SetThreadLocals and UnsetThreadLocals.
+ * The subclasses can override implementation of IsInvalid and CreateStream.
  * (for example IDBMutableFile provides IndexedDB specific implementation).
  */
 class MutableFileBase
@@ -49,15 +48,6 @@ public:
   virtual already_AddRefed<nsISupports>
   CreateStream(bool aReadOnly);
 
-  virtual void
-  SetThreadLocals()
-  {
-  }
-
-  virtual void
-  UnsetThreadLocals()
-  {
-  }
 
 protected:
   MutableFileBase();
