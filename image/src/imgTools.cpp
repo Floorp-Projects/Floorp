@@ -45,9 +45,10 @@ imgTools::~imgTools()
   /* destructor code */
 }
 
-NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
-                                        const nsACString& aMimeType,
-                                        imgIContainer **aContainer)
+NS_IMETHODIMP
+imgTools::DecodeImageData(nsIInputStream* aInStr,
+                          const nsACString& aMimeType,
+                          imgIContainer** aContainer)
 {
   MOZ_ASSERT(*aContainer == nullptr,
              "Cannot provide an existing image container to DecodeImageData");
@@ -55,9 +56,10 @@ NS_IMETHODIMP imgTools::DecodeImageData(nsIInputStream* aInStr,
   return DecodeImage(aInStr, aMimeType, aContainer);
 }
 
-NS_IMETHODIMP imgTools::DecodeImage(nsIInputStream* aInStr,
-                                    const nsACString& aMimeType,
-                                    imgIContainer **aContainer)
+NS_IMETHODIMP
+imgTools::DecodeImage(nsIInputStream* aInStr,
+                      const nsACString& aMimeType,
+                      imgIContainer** aContainer)
 {
   nsresult rv;
 
@@ -68,16 +70,18 @@ NS_IMETHODIMP imgTools::DecodeImage(nsIInputStream* aInStr,
   nsRefPtr<image::Image> image = ImageFactory::CreateAnonymousImage(mimeType);
   nsRefPtr<ProgressTracker> tracker = image->GetProgressTracker();
 
-  if (image->HasError())
+  if (image->HasError()) {
     return NS_ERROR_FAILURE;
+  }
 
   // Prepare the input stream.
   nsCOMPtr<nsIInputStream> inStream = aInStr;
   if (!NS_InputStreamIsBuffered(aInStr)) {
     nsCOMPtr<nsIInputStream> bufStream;
     rv = NS_NewBufferedInputStream(getter_AddRefs(bufStream), aInStr, 1024);
-    if (NS_SUCCEEDED(rv))
+    if (NS_SUCCEEDED(rv)) {
       inStream = bufStream;
+    }
   }
 
   // Figure out how much data we've been passed.
@@ -87,7 +91,8 @@ NS_IMETHODIMP imgTools::DecodeImage(nsIInputStream* aInStr,
   NS_ENSURE_TRUE(length <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
 
   // Send the source data to the Image.
-  rv = image->OnImageDataAvailable(nullptr, nullptr, inStream, 0, uint32_t(length));
+  rv = image->OnImageDataAvailable(nullptr, nullptr, inStream, 0,
+                                   uint32_t(length));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Let the Image know we've sent all the data.
@@ -106,10 +111,11 @@ NS_IMETHODIMP imgTools::DecodeImage(nsIInputStream* aInStr,
  * GetDataSurface on such surfaces since that may incure a conversion to
  * SurfaceType::DATA which we don't need.
  */
-static nsresult EncodeImageData(DataSourceSurface* aDataSurface,
-                                const nsACString& aMimeType,
-                                const nsAString& aOutputOptions,
-                                nsIInputStream **aStream)
+static nsresult
+EncodeImageData(DataSourceSurface* aDataSurface,
+                const nsACString& aMimeType,
+                const nsAString& aOutputOptions,
+                nsIInputStream** aStream)
 {
   MOZ_ASSERT(aDataSurface->GetFormat() ==  SurfaceFormat::B8G8R8A8,
              "We're assuming B8G8R8A8");
@@ -119,8 +125,9 @@ static nsresult EncodeImageData(DataSourceSurface* aDataSurface,
     NS_LITERAL_CSTRING("@mozilla.org/image/encoder;2?type=") + aMimeType);
 
   nsCOMPtr<imgIEncoder> encoder = do_CreateInstance(encoderCID.get());
-  if (!encoder)
+  if (!encoder) {
     return NS_IMAGELIB_ERROR_NO_ENCODER;
+  }
 
   DataSourceSurface::MappedSurface map;
   if (!aDataSurface->Map(DataSourceSurface::MapType::READ, &map)) {
@@ -145,10 +152,11 @@ static nsresult EncodeImageData(DataSourceSurface* aDataSurface,
   return NS_OK;
 }
 
-NS_IMETHODIMP imgTools::EncodeImage(imgIContainer *aContainer,
-                                    const nsACString& aMimeType,
-                                    const nsAString& aOutputOptions,
-                                    nsIInputStream **aStream)
+NS_IMETHODIMP
+imgTools::EncodeImage(imgIContainer* aContainer,
+                      const nsACString& aMimeType,
+                      const nsAString& aOutputOptions,
+                      nsIInputStream** aStream)
 {
   // Use frame 0 from the image container.
   RefPtr<SourceSurface> frame =
@@ -172,12 +180,13 @@ NS_IMETHODIMP imgTools::EncodeImage(imgIContainer *aContainer,
   return EncodeImageData(dataSurface, aMimeType, aOutputOptions, aStream);
 }
 
-NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
-                                          const nsACString& aMimeType,
-                                          int32_t aScaledWidth,
-                                          int32_t aScaledHeight,
-                                          const nsAString& aOutputOptions,
-                                          nsIInputStream **aStream)
+NS_IMETHODIMP
+imgTools::EncodeScaledImage(imgIContainer* aContainer,
+                            const nsACString& aMimeType,
+                            int32_t aScaledWidth,
+                            int32_t aScaledHeight,
+                            const nsAString& aOutputOptions,
+                            nsIInputStream** aStream)
 {
   NS_ENSURE_ARG(aScaledWidth >= 0 && aScaledHeight >= 0);
 
@@ -238,14 +247,15 @@ NS_IMETHODIMP imgTools::EncodeScaledImage(imgIContainer *aContainer,
   return EncodeImageData(dataSurface, aMimeType, aOutputOptions, aStream);
 }
 
-NS_IMETHODIMP imgTools::EncodeCroppedImage(imgIContainer *aContainer,
-                                           const nsACString& aMimeType,
-                                           int32_t aOffsetX,
-                                           int32_t aOffsetY,
-                                           int32_t aWidth,
-                                           int32_t aHeight,
-                                           const nsAString& aOutputOptions,
-                                           nsIInputStream **aStream)
+NS_IMETHODIMP
+imgTools::EncodeCroppedImage(imgIContainer* aContainer,
+                             const nsACString& aMimeType,
+                             int32_t aOffsetX,
+                             int32_t aOffsetY,
+                             int32_t aWidth,
+                             int32_t aHeight,
+                             const nsAString& aOutputOptions,
+                             nsIInputStream** aStream)
 {
   NS_ENSURE_ARG(aOffsetX >= 0 && aOffsetY >= 0 && aWidth >= 0 && aHeight >= 0);
 
@@ -300,7 +310,8 @@ NS_IMETHODIMP imgTools::EncodeCroppedImage(imgIContainer *aContainer,
                                      map.mStride,
                                      SurfaceFormat::B8G8R8A8);
   if (!dt) {
-    gfxWarning() << "imgTools::EncodeCroppedImage failed in CreateDrawTargetForData";
+    gfxWarning() <<
+      "imgTools::EncodeCroppedImage failed in CreateDrawTargetForData";
     return NS_ERROR_OUT_OF_MEMORY;
   }
   dt->CopySurface(frame,
@@ -312,8 +323,9 @@ NS_IMETHODIMP imgTools::EncodeCroppedImage(imgIContainer *aContainer,
   return EncodeImageData(dataSurface, aMimeType, aOutputOptions, aStream);
 }
 
-NS_IMETHODIMP imgTools::CreateScriptedObserver(imgIScriptedNotificationObserver* aInner,
-                                               imgINotificationObserver** aObserver)
+NS_IMETHODIMP
+imgTools::CreateScriptedObserver(imgIScriptedNotificationObserver* aInner,
+                                 imgINotificationObserver** aObserver)
 {
   NS_ADDREF(*aObserver = new ScriptedNotificationObserver(aInner));
   return NS_OK;
