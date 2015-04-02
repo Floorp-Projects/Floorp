@@ -252,9 +252,9 @@ assertDecl("function foo(...rest) { }",
            funDecl(ident("foo"), [], blockStmt([]), [], ident("rest")));
 
 assertDecl("function foo(a=4) { }", funDecl(ident("foo"), [ident("a")], blockStmt([]), [lit(4)]));
-assertDecl("function foo(a, b=4) { }", funDecl(ident("foo"), [ident("a"), ident("b")], blockStmt([]), [lit(4)]));
+assertDecl("function foo(a, b=4) { }", funDecl(ident("foo"), [ident("a"), ident("b")], blockStmt([]), [null, lit(4)]));
 assertDecl("function foo(a, b=4, ...rest) { }",
-           funDecl(ident("foo"), [ident("a"), ident("b")], blockStmt([]), [lit(4)], ident("rest")));
+           funDecl(ident("foo"), [ident("a"), ident("b")], blockStmt([]), [null, lit(4), null], ident("rest")));
 assertDecl("function foo(a=(function () {})) { function a() {} }",
            funDecl(ident("foo"), [ident("a")], blockStmt([funDecl(ident("a"), [], blockStmt([]))]),
                    [funExpr(null, [], blockStmt([]))]));
@@ -1462,6 +1462,8 @@ var fourAC = nested.body[0].expression.left.right.arguments[0].right;
 
 Pattern({ source: "quad.js", start: { line: 1, column: 20 }, end: { line: 1, column: 29 } }).match(fourAC.loc);
 
+var generator = Reflect.parse("[ for \n(x of a) x+1 ]");
+Pattern({ start: { line: 2, column: 1 }, end: { line: 2, column: 2 } }).match(generator.body[0].expression.blocks[0].left.loc);
 
 // No source location
 

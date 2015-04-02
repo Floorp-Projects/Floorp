@@ -596,7 +596,6 @@ nsresult GStreamerReader::CheckSupportedFormats()
       }
       case GST_ITERATOR_RESYNC:
         unsupported = false;
-        done = false;
         break;
       case GST_ITERATOR_ERROR:
         done = true;
@@ -606,6 +605,8 @@ nsresult GStreamerReader::CheckSupportedFormats()
         break;
     }
   }
+
+  gst_iterator_free(it);
 
   return unsupported ? NS_ERROR_FAILURE : NS_OK;
 }

@@ -830,9 +830,9 @@ GeckoDriver.prototype.createExecuteSandbox = function(win, mn, sp) {
   sb.testUtils = utils;
 
   mn.exports.forEach(function(fn) {
-    try {
+    if (typeof mn[fn] === 'function') {
       sb[fn] = mn[fn].bind(mn);
-    } catch(e) {
+    } else {
       sb[fn] = mn[fn];
     }
   });
