@@ -712,7 +712,9 @@ static bool
 env_enumerate(JSContext* cx, HandleObject obj)
 {
     static bool reflected;
-    char** evp, *name, *value;
+    char** evp;
+    char* name;
+    char* value;
     RootedString valstr(cx);
     bool ok;
 

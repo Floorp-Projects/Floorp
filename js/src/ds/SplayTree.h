@@ -25,7 +25,9 @@ class SplayTree
 {
     struct Node {
         T item;
-        Node* left, *right, *parent;
+        Node* left;
+        Node* right;
+        Node* parent;
 
         explicit Node(const T& item)
           : item(item), left(nullptr), right(nullptr), parent(nullptr)
@@ -33,7 +35,8 @@ class SplayTree
     };
 
     LifoAlloc* alloc;
-    Node* root, *freeList;
+    Node* root;
+    Node* freeList;
 
 #ifdef DEBUG
     bool enableCheckCoherency;
@@ -124,7 +127,8 @@ class SplayTree
         // Find another node which can be swapped in for the root: either the
         // rightmost child of the root's left, or the leftmost child of the
         // root's right.
-        Node* swap, *swapChild;
+        Node* swap;
+        Node* swapChild;
         if (root->left) {
             swap = root->left;
             while (swap->right)
@@ -167,7 +171,8 @@ class SplayTree
     Node* lookup(const T& v)
     {
         MOZ_ASSERT(root);
-        Node* node = root, *parent;
+        Node* node = root;
+        Node* parent;
         do {
             parent = node;
             int c = C::compare(v, node->item);
