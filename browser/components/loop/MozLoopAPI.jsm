@@ -172,6 +172,7 @@ const injectObjectAPI = function(api, targetWindow) {
           lastParam = cloneValueInto(lastParam, api);
           return cloneValueInto(api[func](...params, lastParam), targetWindow);
         } catch (ex) {
+          MozLoopService.log.error(func + " error: ", ex, params, lastParam);
           return cloneValueInto(ex, targetWindow);
         }
       }
