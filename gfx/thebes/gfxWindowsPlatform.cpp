@@ -1973,7 +1973,7 @@ gfxWindowsPlatform::InitD3D11Devices()
     if (FAILED(hr)) {
       // This should always succeed... in theory.
       gfxCriticalError() << "Failed to initialize WARP D3D11 device!" << hr;
-      MOZ_CRASH();
+      return;
     }
 
     mIsWARP = true;
