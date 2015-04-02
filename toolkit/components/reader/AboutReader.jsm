@@ -22,6 +22,13 @@ function dump(s) {
 let gStrings = Services.strings.createBundle("chrome://global/locale/aboutReader.properties");
 
 let AboutReader = function(mm, win) {
+  let queryArgs = this._decodeQueryString(win.location.href);
+  if (!(queryArgs.url.startsWith("http://") || queryArgs.url.startsWith("https://"))) {
+    Cu.reportError("Only http:// and https:// URLs can be loaded in about:reader");
+    win.location.href = "about:blank";
+    return;
+  }
+
   let doc = win.document;
 
   this._mm = mm;
@@ -112,8 +119,6 @@ let AboutReader = function(mm, win) {
   let fontSize = Services.prefs.getIntPref("reader.font_size");
   this._setupSegmentedButton("font-size-buttons", fontSizeOptions, fontSize, this._setFontSize.bind(this));
   this._setFontSize(fontSize);
-
-  let queryArgs = this._decodeQueryString(win.location.href);
 
   // Track status of reader toolbar add/remove toggle button
   this._isReadingListItem = -1;
