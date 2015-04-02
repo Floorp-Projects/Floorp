@@ -11,6 +11,7 @@ describe("loop.standaloneRoomViews", function() {
 
   var ROOM_STATES = loop.store.ROOM_STATES;
   var FEEDBACK_STATES = loop.store.FEEDBACK_STATES;
+  var ROOM_INFO_FAILURES = loop.shared.utils.ROOM_INFO_FAILURES;
   var sharedActions = loop.shared.actions;
 
   var sandbox, dispatcher, activeRoomStore, feedbackStore, dispatch;
@@ -36,6 +37,44 @@ describe("loop.standaloneRoomViews", function() {
 
   afterEach(function() {
     sandbox.restore();
+  });
+
+  describe("StandaloneRoomContextView", function() {
+    beforeEach(function() {
+      sandbox.stub(navigator.mozL10n, "get").returnsArg(0);
+    });
+
+    function mountTestComponent(props) {
+      return TestUtils.renderIntoDocument(
+        React.createElement(
+          loop.standaloneRoomViews.StandaloneRoomContextView, props));
+    }
+
+    it("should display the room name if no failures are known", function() {
+      var view = mountTestComponent({
+        roomName: "Mike's room"
+      });
+
+      expect(view.getDOMNode().textContent).eql("Mike's room");
+    });
+
+    it("should display an unsupported browser message if crypto is unsupported", function() {
+      var view = mountTestComponent({
+        roomName: "Mark's room",
+        roomInfoFailure: ROOM_INFO_FAILURES.WEB_CRYPTO_UNSUPPORTED
+      });
+
+      expect(view.getDOMNode().textContent).match(/unsupported/);
+    });
+
+    it("should display a general error message for any other failure", function() {
+      var view = mountTestComponent({
+        roomName: "Mark's room",
+        roomInfoFailure: ROOM_INFO_FAILURES.NO_DATA
+      });
+
+      expect(view.getDOMNode().textContent).match(/not_available/);
+    });
   });
 
   describe("StandaloneRoomView", function() {
