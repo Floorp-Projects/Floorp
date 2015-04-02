@@ -360,7 +360,6 @@ gbjar.sources += [
     'menu/MenuPopup.java',
     'menu/QuickShareBarActionView.java',
     'MotionEventInterceptor.java',
-    'NewTabletUI.java',
     'NotificationClient.java',
     'NotificationHandler.java',
     'NotificationHelper.java',
