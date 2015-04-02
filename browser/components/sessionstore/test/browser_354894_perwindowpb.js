@@ -141,6 +141,10 @@ function test() {
    */
   function setPrefs() {
     gPrefService.setIntPref("browser.startup.page", 3);
+    gPrefService.setBoolPref(
+      "browser.privatebrowsing.keep_current_session",
+      true
+    );
     gPrefService.setBoolPref("browser.tabs.warnOnClose", false);
   }
 
@@ -166,9 +170,13 @@ function test() {
       Services.obs.removeObserver(observer, o);
 
     // Reset the prefs we touched
-    let pref = "browser.startup.page",
-    if (gPrefService.prefHasUserValue(pref))
-      gPrefService.clearUserPref(pref);
+    [
+      "browser.startup.page",
+      "browser.privatebrowsing.keep_current_session"
+    ].forEach(function (pref) {
+      if (gPrefService.prefHasUserValue(pref))
+        gPrefService.clearUserPref(pref);
+    });
     gPrefService.setBoolPref("browser.tabs.warnOnClose", oldWarnTabsOnClose);
 
     // Reset the window type
