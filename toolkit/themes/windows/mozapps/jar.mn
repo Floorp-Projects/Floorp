@@ -18,8 +18,6 @@ toolkit.jar:
         skin/classic/mozapps/extensions/category-searchengines.png (extensions/category-searchengines.png)
         skin/classic/mozapps/extensions/category-plugins.png       (extensions/category-plugins.png)
         skin/classic/mozapps/extensions/category-service.png       (extensions/category-service.png)
-        skin/classic/mozapps/extensions/category-dictionaries.png  (extensions/category-dictionaries.png)
-        skin/classic/mozapps/extensions/category-experiments.png   (extensions/category-experiments.png)
         skin/classic/mozapps/extensions/category-recent.png        (extensions/category-recent.png)
         skin/classic/mozapps/extensions/category-available.png     (extensions/category-available.png)
         skin/classic/mozapps/extensions/discover-logo.png          (extensions/discover-logo.png)
@@ -81,18 +79,13 @@ toolkit.jar:
         skin/classic/mozapps/downloads/downloadIcon-XP.png         (downloads/downloadIcon-XP.png)
         skin/classic/mozapps/extensions/category-discover-XP.png   (extensions/category-discover-XP.png)
         skin/classic/mozapps/extensions/category-plugins-XP.png    (extensions/category-plugins-XP.png)
-        skin/classic/mozapps/extensions/category-dictionaries-XP.png (extensions/category-dictionaries-XP.png)
-        skin/classic/mozapps/extensions/category-experiments-XP.png (extensions/category-experiments-XP.png)
         skin/classic/mozapps/extensions/category-recent-XP.png     (extensions/category-recent-XP.png)
         skin/classic/mozapps/extensions/category-available-XP.png  (extensions/category-available-XP.png)
         skin/classic/mozapps/extensions/extensionGeneric-XP.png    (extensions/extensionGeneric-XP.png)
         skin/classic/mozapps/extensions/extensionGeneric-16-XP.png (extensions/extensionGeneric-16-XP.png)
         skin/classic/mozapps/extensions/themeGeneric-XP.png        (extensions/themeGeneric-XP.png)
         skin/classic/mozapps/extensions/themeGeneric-16-XP.png     (extensions/themeGeneric-16-XP.png)
-        skin/classic/mozapps/extensions/dictionaryGeneric-XP.png   (extensions/dictionaryGeneric-XP.png)
-        skin/classic/mozapps/extensions/dictionaryGeneric-16-XP.png (extensions/dictionaryGeneric-16-XP.png)
         skin/classic/mozapps/extensions/localeGeneric-XP.png       (extensions/localeGeneric-XP.png)
-        skin/classic/mozapps/extensions/experimentGeneric-XP.png   (extensions/experimentGeneric-XP.png)
         skin/classic/mozapps/plugins/pluginGeneric-XP.png          (plugins/pluginGeneric-XP.png)
         skin/classic/mozapps/plugins/pluginBlocked-XP.png          (plugins/pluginBlocked-XP.png)
         skin/classic/mozapps/plugins/pluginGeneric-16-XP.png       (plugins/pluginGeneric-16-XP.png)
@@ -103,18 +96,13 @@ toolkit.jar:
 % override chrome://mozapps/skin/downloads/downloadIcon.png               chrome://mozapps/skin/downloads/downloadIcon-XP.png           osversion<6
 % override chrome://mozapps/skin/extensions/category-discover.png         chrome://mozapps/skin/extensions/category-discover-XP.png     osversion<6
 % override chrome://mozapps/skin/extensions/category-plugins.png          chrome://mozapps/skin/extensions/category-plugins-XP.png      osversion<6
-% override chrome://mozapps/skin/extensions/category-dictionaries.png     chrome://mozapps/skin/extensions/category-dictionaries-XP.png osversion<6
-% override chrome://mozapps/skin/extensions/category-experiments.png      chrome://mozapps/skin/extensions/category-experiments-XP.png  osversion<6
 % override chrome://mozapps/skin/extensions/category-recent.png           chrome://mozapps/skin/extensions/category-recent-XP.png       osversion<6
 % override chrome://mozapps/skin/extensions/category-available.png        chrome://mozapps/skin/extensions/category-available-XP.png    osversion<6
 % override chrome://mozapps/skin/extensions/extensionGeneric.png          chrome://mozapps/skin/extensions/extensionGeneric-XP.png      osversion<6
 % override chrome://mozapps/skin/extensions/extensionGeneric-16.png       chrome://mozapps/skin/extensions/extensionGeneric-16-XP.png   osversion<6
 % override chrome://mozapps/skin/extensions/themeGeneric.png              chrome://mozapps/skin/extensions/themeGeneric-XP.png          osversion<6
 % override chrome://mozapps/skin/extensions/themeGeneric-16.png           chrome://mozapps/skin/extensions/themeGeneric-16-XP.png       osversion<6
-% override chrome://mozapps/skin/extensions/dictionaryGeneric.png         chrome://mozapps/skin/extensions/dictionaryGeneric-XP.png     osversion<6
-% override chrome://mozapps/skin/extensions/dictionaryGeneric-16.png      chrome://mozapps/skin/extensions/dictionaryGeneric-16-XP.png  osversion<6
 % override chrome://mozapps/skin/extensions/localeGeneric.png             chrome://mozapps/skin/extensions/localeGeneric-XP.png         osversion<6
-% override chrome://mozapps/skin/extensions/experimentGeneric.png         chrome://mozapps/skin/extensions/experimentGeneric-XP.png     osversion<6
 % override chrome://mozapps/skin/plugins/pluginGeneric.png                chrome://mozapps/skin/plugins/pluginGeneric-XP.png            osversion<6
 % override chrome://mozapps/skin/plugins/pluginBlocked.png                chrome://mozapps/skin/plugins/pluginBlocked-XP.png            osversion<6
 % override chrome://mozapps/skin/plugins/pluginGeneric-16.png             chrome://mozapps/skin/plugins/pluginGeneric-16-XP.png         osversion<6
@@ -122,6 +110,8 @@ toolkit.jar:
 % override chrome://mozapps/skin/update/downloadButtons.png               chrome://mozapps/skin/update/downloadButtons-XP.png           osversion<6
 #endif
 
+% override chrome://mozapps/skin/extensions/category-dictionaries.png     chrome://mozapps/skin/extensions/dictionaryGeneric.png
+% override chrome://mozapps/skin/extensions/category-experiments.png      chrome://mozapps/skin/extensions/experimentGeneric.png
 % override chrome://mozapps/skin/extensions/category-extensions.png       chrome://mozapps/skin/extensions/extensionGeneric.png
 % override chrome://mozapps/skin/extensions/category-languages.png        chrome://mozapps/skin/extensions/localeGeneric.png
 % override chrome://mozapps/skin/extensions/category-themes.png           chrome://mozapps/skin/extensions/themeGeneric.png
