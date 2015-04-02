@@ -20,11 +20,12 @@ add_task(function* test_send_report_manual_nocert() {
 
 // creates a promise of the message in an error page
 function createNetworkErrorMessagePromise(aBrowser) {
-  return new Promise(function(resolve, reject) {
+  let progressListener;
+  let promise = new Promise(function(resolve, reject) {
     // Error pages do not fire "load" events, so use a progressListener.
     let originalDocumentURI = aBrowser.contentDocument.documentURI;
 
-    let progressListener = {
+    progressListener = {
       onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
         // Make sure nothing other than an error page is loaded.
         if (!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE)) {
@@ -65,7 +66,16 @@ function createNetworkErrorMessagePromise(aBrowser) {
             Ci.nsIWebProgress.NOTIFY_LOCATION |
             Ci.nsIWebProgress.NOTIFY_STATE_REQUEST);
   });
+
+  // Ensure the weak progress listener is kept alive as long as the promise.
+  createNetworkErrorMessagePromise.listeners.set(promise, progressListener);
+
+  return promise;
 }
+
+// Keep a map of promises to their progress listeners so
+// the weak progress listeners aren't GCed too early.
+createNetworkErrorMessagePromise.listeners = new WeakMap();
 
 // check we can set the 'automatically send' pref
 add_task(function* test_set_automatic() {
