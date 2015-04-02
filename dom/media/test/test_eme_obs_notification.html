@@ -10,6 +10,7 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+SimpleTest.requestCompleteLog();
 var manager = new MediaTestManager;
 
 var videos = new Set();
@@ -52,7 +53,14 @@ function startTest(test, token)
     manager.finished(token);
   });
 
-  LoadTest(test, v, token);
+  LoadTest(test, v, token)
+  .then(function() {
+    info(TimeStamp(token) + " - Finished loading.");
+  })
+  .catch(function() {
+    ok(false, TimeStamp(token) + " - Cannot load.");
+    manager.finished(token);
+  });
 }
 
 function beginTest() {
