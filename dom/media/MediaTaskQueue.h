@@ -27,13 +27,18 @@ typedef MediaPromise<bool, bool, false> ShutdownPromise;
 // they're received, and are guaranteed to not be executed concurrently.
 // They may be executed on different threads, and a memory barrier is used
 // to make this threadsafe for objects that aren't already threadsafe.
-class MediaTaskQueue {
+class MediaTaskQueue : public AbstractThread {
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaTaskQueue)
-
   explicit MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool);
 
   nsresult Dispatch(TemporaryRef<nsIRunnable> aRunnable);
+
+  // For AbstractThread.
+  nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable) override
+  {
+    RefPtr<nsIRunnable> r(aRunnable);
+    return ForceDispatch(r);
+  }
 
   // This should only be used for things that absolutely can't afford to be
   // flushed. Normal operations should use Dispatch.
@@ -60,7 +65,7 @@ public:
 
   // Returns true if the current thread is currently running a Runnable in
   // the task queue. This is for debugging/validation purposes only.
-  bool IsCurrentThreadIn();
+  bool IsCurrentThreadIn() override;
 
 protected:
   virtual ~MediaTaskQueue();
