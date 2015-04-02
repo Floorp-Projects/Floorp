@@ -60,9 +60,6 @@ public class WebappImpl extends GeckoApp implements InstallCallback {
     @Override
     public int getLayout() { return R.layout.web_app; }
 
-    @Override
-    public boolean hasTabsSideBar() { return false; }
-
     public WebappImpl() {
         GeckoProfile.setBrowserDBFactory(new BrowserDB.Factory() {
             @Override
