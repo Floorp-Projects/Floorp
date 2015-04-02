@@ -620,7 +620,9 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
          */
         if (argCount > 0) {
             if (efs->format) {
-                char16_t* buffer, *fmt, *out;
+                char16_t* buffer;
+                char16_t* fmt;
+                char16_t* out;
                 int expandedArgs = 0;
                 size_t expandedLength;
                 size_t len = strlen(efs->format);

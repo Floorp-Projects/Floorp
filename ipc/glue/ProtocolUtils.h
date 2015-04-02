@@ -72,7 +72,6 @@ const base::ProcessId kInvalidProcessId = kuint32max;
 const base::ProcessHandle kInvalidProcessHandle = -1;
 const base::ProcessId kInvalidProcessId = -1;
 #endif
-const base::ProcessId kCurrentProcessId = base::GetCurrentProcId();
 
 // Scoped base::ProcessHandle to ensure base::CloseProcessHandle is called.
 struct ScopedProcessHandleTraits

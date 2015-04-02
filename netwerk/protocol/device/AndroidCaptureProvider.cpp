@@ -289,7 +289,8 @@ nsresult AndroidCaptureProvider::Init(nsACString& aContentType,
   } else {
     NS_NOTREACHED("Should not have asked Android for this type!");
   }
-  return CallQueryInterface(stream, aStream);
+  stream.forget(aStream);
+  return NS_OK;
 }
 
 already_AddRefed<AndroidCaptureProvider> GetAndroidCaptureProvider() {

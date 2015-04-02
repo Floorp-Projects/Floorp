@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from marionette import MarionetteTestCase
+from marionette.marionette_test import MarionetteTestCase, skip_if_b2g
 
-#TODO use @skip_if_b2g when Bug 875921 is fixed
+@skip_if_b2g
 class TestTitleChrome(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
@@ -30,4 +30,3 @@ class TestTitle(MarionetteTestCase):
         test_html = self.marionette.absolute_url("test.html")
         self.marionette.navigate(test_html)
         self.assertEqual('Marionette Test', self.marionette.title)
-

@@ -72,7 +72,7 @@
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);
 
       // Focus the window.
-      window.focus();
+      SpecialPowers.focus(window);
 
       is(plugin1.getFocusState(), true, "(3) Plugin should still have focus.");
       is(plugin1.getFocusEventCount(), expectedEventCount, "Focus event count should be " + expectedEventCount);

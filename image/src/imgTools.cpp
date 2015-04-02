@@ -141,7 +141,8 @@ static nsresult EncodeImageData(DataSourceSurface* aDataSurface,
   aDataSurface->Unmap();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return CallQueryInterface(encoder, aStream);
+  encoder.forget(aStream);
+  return NS_OK;
 }
 
 NS_IMETHODIMP imgTools::EncodeImage(imgIContainer *aContainer,
