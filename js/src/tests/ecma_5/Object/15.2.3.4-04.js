@@ -16,7 +16,7 @@ print(BUGNUMBER + ": " + summary);
  **************/
 
 var actual = Object.getOwnPropertyNames(/a/);
-var expected = ["lastIndex"];
+var expected = ["lastIndex", "source"];
 
 for (var i = 0; i < expected.length; i++)
 {
