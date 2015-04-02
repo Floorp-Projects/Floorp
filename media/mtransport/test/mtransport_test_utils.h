@@ -36,7 +36,7 @@
 #include "XPCOMRTInit.h"
 class ScopedXPCOM {
 public:
-  ScopedXPCOM(const char*)
+  explicit ScopedXPCOM(const char*)
   {
     NS_InitXPCOMRT();
   }
