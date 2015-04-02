@@ -249,7 +249,7 @@ body.loaded {
 
 .content ul {
   -moz-padding-start: 30px;
-  list-style: disk;
+  list-style: disc;
 }
 
 .content ol {
