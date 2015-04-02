@@ -168,10 +168,14 @@ RegExpInitialize(JSContext* cx, RegExpObjectBuilder& builder,
             return false;
     }
 
+    RootedAtom escapedPatternStr(cx, EscapeRegExpPattern(cx, pattern));
+    if (!escapedPatternStr)
+        return false;
+
     /* Steps 9-10. */
     CompileOptions options(cx);
     frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
-    if (!irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), pattern))
+    if (!irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), escapedPatternStr))
         return false;
 
     if (staticsUse == UseRegExpStatics) {
@@ -182,7 +186,7 @@ RegExpInitialize(JSContext* cx, RegExpObjectBuilder& builder,
     }
 
     /* Steps 11-15. */
-    RootedObject reobj(cx, builder.build(pattern, flags));
+    RootedObject reobj(cx, builder.build(escapedPatternStr, flags));
     if (!reobj)
         return false;
 
@@ -209,7 +213,7 @@ CompileRegExpObject(JSContext* cx, RegExpObjectBuilder& builder, CallArgs args,
         if (!res)
             return false;
 
-        RootedAtom empty(cx, cx->runtime()->emptyString);
+        RootedAtom empty(cx, cx->names().emptyRegExp);
         RegExpObject* reobj = builder.build(empty, res->getFlags());
         if (!reobj)
             return false;
@@ -240,7 +244,6 @@ CompileRegExpObject(JSContext* cx, RegExpObjectBuilder& builder, CallArgs args,
          */
         RootedObject patternObj(cx, &patternValue.toObject());
 
-        RootedAtom sourceAtom(cx);
         RegExpFlag flags;
         {
             /*
@@ -252,7 +255,6 @@ CompileRegExpObject(JSContext* cx, RegExpObjectBuilder& builder, CallArgs args,
             RegExpGuard g(cx);
             if (!RegExpToShared(cx, patternObj, &g))
                 return false;
-            sourceAtom = g->getSource();
 
             if (args.hasDefined(1)) {
                 /* 21.2.3.1 step 5.c. */
@@ -270,6 +272,18 @@ CompileRegExpObject(JSContext* cx, RegExpObjectBuilder& builder, CallArgs args,
                 flags = g->getFlags();
             }
         }
+
+        /*
+         * 'toSource' is a permanent read-only property, so this is equivalent
+         * to executing RegExpObject::getSource on the unwrapped object.
+         */
+        RootedValue v(cx);
+        if (!GetProperty(cx, patternObj, patternObj, cx->names().source, &v))
+            return false;
+
+        // For proxies like CPOWs, we can't assume the result of a property get
+        // for 'source' is atomized.
+        Rooted<JSAtom*> sourceAtom(cx, AtomizeString(cx, v.toString()));
 
         /*
          * 21.2.3.1 steps 8-10.
@@ -495,35 +509,6 @@ regexp_multiline(JSContext* cx, unsigned argc, JS::Value* vp)
     return CallNonGenericMethod<IsRegExpObject, regexp_multiline_impl>(cx, args);
 }
 
-/* ES6 draft rev32 21.2.5.10. */
-MOZ_ALWAYS_INLINE bool
-regexp_source_impl(JSContext* cx, CallArgs args)
-{
-    MOZ_ASSERT(IsRegExpObject(args.thisv()));
-    Rooted<RegExpObject*> reObj(cx, &args.thisv().toObject().as<RegExpObject>());
-
-    /* Step 5. */
-    RootedAtom src(cx, reObj->getSource());
-    if (!src)
-        return false;
-
-    /* Step 7. */
-    RootedString str(cx, EscapeRegExpPattern(cx, src));
-    if (!str)
-        return false;
-
-    args.rval().setString(str);
-    return true;
-}
-
-static bool
-regexp_source(JSContext* cx, unsigned argc, JS::Value* vp)
-{
-    /* Steps 1-4. */
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsRegExpObject, regexp_source_impl>(cx, args);
-}
-
 /* ES6 draft rev32 21.2.5.12. */
 MOZ_ALWAYS_INLINE bool
 regexp_sticky_impl(JSContext* cx, CallArgs args)
@@ -549,7 +534,6 @@ const JSPropertySpec js::regexp_properties[] = {
     JS_PSG("global", regexp_global, 0),
     JS_PSG("ignoreCase", regexp_ignoreCase, 0),
     JS_PSG("multiline", regexp_multiline, 0),
-    JS_PSG("source", regexp_source, 0),
     JS_PSG("sticky", regexp_sticky, 0),
     JS_PS_END
 };
@@ -693,7 +677,7 @@ js::CreateRegExpPrototype(JSContext* cx, JSProtoKey key)
         return nullptr;
     proto->NativeObject::setPrivate(nullptr);
 
-    HandlePropertyName empty = cx->names().empty;
+    HandlePropertyName empty = cx->names().emptyRegExp;
     RegExpObjectBuilder builder(cx, proto);
     if (!builder.build(empty, RegExpFlag(0)))
         return nullptr;
