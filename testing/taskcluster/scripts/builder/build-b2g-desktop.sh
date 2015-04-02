@@ -38,6 +38,9 @@ mv *.linux-x86_64.tar.bz2   $HOME/artifacts/target.linux-x86_64.tar.bz2
 mv *.linux-x86_64.json      $HOME/artifacts/target.linux-x86_64.json
 mv *.tests.zip              $HOME/artifacts/target.tests.zip
 
+# If the simulator does not exist don't fail
+mv fxos-simulator*          $HOME/artifacts/fxos-simulator.xpi || :
+
 ccache -s
 
 ################################### build.sh ###################################
