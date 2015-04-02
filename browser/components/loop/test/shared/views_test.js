@@ -16,7 +16,7 @@ describe("loop.shared.views", function() {
   var sharedViews = loop.shared.views;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
   var getReactElementByClass = TestUtils.findRenderedDOMComponentWithClass;
-  var sandbox, fakeAudioXHR, dispatcher;
+  var sandbox, fakeAudioXHR, dispatcher, OS, OSVersion;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
@@ -40,6 +40,15 @@ describe("loop.shared.views", function() {
       response: new ArrayBuffer(10),
       onload: null
     };
+
+    OS = "mac";
+    OSVersion = { major: 10, minor: 10 };
+    sandbox.stub(loop.shared.utils, "getOS", function() {
+      return OS;
+    });
+    sandbox.stub(loop.shared.utils, "getOSVersion", function() {
+      return OSVersion;
+    });
   });
 
   afterEach(function() {
@@ -185,6 +194,48 @@ describe("loop.shared.views", function() {
         sinon.assert.calledWithExactly(dispatcher.dispatch,
           new sharedActions.StartScreenShare({ type: "window" }));
       });
+
+    it("should have the 'window' option enabled", function() {
+      var comp = TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.ScreenShareControlButton, {
+          dispatcher: dispatcher,
+          visible: true,
+          state: SCREEN_SHARE_STATES.INACTIVE
+        }));
+
+      var node = comp.getDOMNode().querySelector(".conversation-window-dropdown > li:last-child");
+      expect(node.classList.contains("disabled")).eql(false);
+    });
+
+    it("should disable the 'window' option on Windows XP", function() {
+      OS = "win";
+      OSVersion = { major: 5, minor: 1 };
+
+      var comp = TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.ScreenShareControlButton, {
+          dispatcher: dispatcher,
+          visible: true,
+          state: SCREEN_SHARE_STATES.INACTIVE
+        }));
+
+      var node = comp.getDOMNode().querySelector(".conversation-window-dropdown > li:last-child");
+      expect(node.classList.contains("disabled")).eql(true);
+    });
+
+    it("should disable the 'window' option on OSX 10.6", function() {
+      OS = "mac";
+      OSVersion = { major: 10, minor: 6 };
+
+      var comp = TestUtils.renderIntoDocument(
+        React.createElement(sharedViews.ScreenShareControlButton, {
+          dispatcher: dispatcher,
+          visible: true,
+          state: SCREEN_SHARE_STATES.INACTIVE
+        }));
+
+      var node = comp.getDOMNode().querySelector(".conversation-window-dropdown > li:last-child");
+      expect(node.classList.contains("disabled")).eql(true);
+    });
 
     it("should dispatch a EndScreenShare action on click when the state is active",
       function() {
