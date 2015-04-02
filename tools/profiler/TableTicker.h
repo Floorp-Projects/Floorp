@@ -200,6 +200,7 @@ class TableTicker: public Sampler {
   virtual JSObject *ToJSObject(JSContext *aCx);
   void StreamMetaJSCustomObject(JSStreamWriter& b);
   void StreamTaskTracer(JSStreamWriter& b);
+  void FlushOnJSShutdown(JSRuntime* aRuntime);
   bool HasUnwinderThread() const { return mUnwinderThread; }
   bool ProfileJS() const { return mProfileJS; }
   bool ProfileJava() const { return mProfileJava; }
