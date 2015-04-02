@@ -4606,6 +4606,15 @@ LogE10sBlockedReason(const char *reason) {
 }
 #endif
 
+enum {
+  kE10sEnabledByUser = 0,
+  kE10sEnabledByDefault = 1,
+  kE10sDisabledByUser = 2,
+  kE10sDisabledInSafeMode = 3,
+  kE10sDisabledForAccessibility = 4,
+  kE10sDisabledForMacGfx = 5,
+};
+
 bool
 mozilla::BrowserTabsRemoteAutostart()
 {
@@ -4616,6 +4625,14 @@ mozilla::BrowserTabsRemoteAutostart()
   bool optInPref = Preferences::GetBool("browser.tabs.remote.autostart", false);
   bool trialPref = Preferences::GetBool("browser.tabs.remote.autostart.2", false);
   bool prefEnabled = optInPref || trialPref;
+  int status;
+  if (optInPref) {
+    status = kE10sEnabledByUser;
+  } else if (trialPref) {
+    status = kE10sEnabledByDefault;
+  } else {
+    status = kE10sDisabledByUser;
+  }
 #if !defined(NIGHTLY_BUILD)
   // When running tests with 'layers.offmainthreadcomposition.testing.enabled' and
   // autostart set to true, return enabled.  These tests must be allowed to run
@@ -4633,8 +4650,10 @@ mozilla::BrowserTabsRemoteAutostart()
 
   if (prefEnabled) {
     if (gSafeMode) {
+      status = kE10sDisabledInSafeMode;
       LogE10sBlockedReason("Safe mode");
     } else if (disabledForA11y) {
+      status = kE10sDisabledForAccessibility;
       LogE10sBlockedReason("An accessibility tool is or was active. See bug 1115956.");
     } else if (disabledForVR) {
       LogE10sBlockedReason("Experimental VR interfaces are enabled");
@@ -4677,6 +4696,7 @@ mozilla::BrowserTabsRemoteAutostart()
     if (accelDisabled) {
       gBrowserTabsRemoteAutostart = false;
 
+      status = kE10sDisabledForMacGfx;
 #ifdef NIGHTLY_BUILD
       LogE10sBlockedReason("Hardware acceleration is disabled");
 #endif
@@ -4685,6 +4705,7 @@ mozilla::BrowserTabsRemoteAutostart()
 #endif // defined(XP_MACOSX)
 
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_AUTOSTART, gBrowserTabsRemoteAutostart);
+  mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_AUTOSTART_STATUS, status);
   if (Preferences::GetBool("browser.enabledE10SFromPrompt", false)) {
     mozilla::Telemetry::Accumulate(mozilla::Telemetry::E10S_STILL_ACCEPTED_FROM_PROMPT,
                                     gBrowserTabsRemoteAutostart);
