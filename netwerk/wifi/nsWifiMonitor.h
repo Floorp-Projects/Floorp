@@ -13,6 +13,7 @@
 #include "nsIRunnable.h"
 #include "nsCOMArray.h"
 #include "nsIWifiListener.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "prlog.h"
 #include "nsIObserver.h"
@@ -68,7 +69,8 @@ class nsWifiMonitor final : nsIRunnable, nsIWifiMonitor, nsIObserver
   nsresult CallWifiListeners(const nsCOMArray<nsWifiAccessPoint> &aAccessPoints,
                              bool aAccessPointsChanged);
 
-  bool mKeepGoing;
+  mozilla::Atomic<bool> mKeepGoing;
+  mozilla::Atomic<bool> mThreadComplete;
   nsCOMPtr<nsIThread> mThread;
 
   nsTArray<nsWifiListener> mListeners;
