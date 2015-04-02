@@ -98,16 +98,16 @@ MediaOmxCommonDecoder::PauseStateMachine()
   MOZ_ASSERT(NS_IsMainThread());
   GetReentrantMonitor().AssertCurrentThreadIn();
   DECODER_LOG(PR_LOG_DEBUG, ("%s", __PRETTY_FUNCTION__));
-  if (!mDecoderStateMachine) {
+  if (!GetStateMachine()) {
     return;
   }
   // enter dormant state
   RefPtr<nsRunnable> event =
     NS_NewRunnableMethodWithArg<bool>(
-      mDecoderStateMachine,
+      GetStateMachine(),
       &MediaDecoderStateMachine::SetDormant,
       true);
-  mDecoderStateMachine->TaskQueue()->Dispatch(event);
+  GetStateMachine()->TaskQueue()->Dispatch(event);
 }
 
 void
@@ -118,7 +118,7 @@ MediaOmxCommonDecoder::ResumeStateMachine()
   DECODER_LOG(PR_LOG_DEBUG, ("%s current time %f", __PRETTY_FUNCTION__,
       mCurrentTime));
 
-  if (!mDecoderStateMachine) {
+  if (!GetStateMachine()) {
     return;
   }
 
@@ -134,10 +134,10 @@ MediaOmxCommonDecoder::ResumeStateMachine()
   // exit dormant state
   RefPtr<nsRunnable> event =
     NS_NewRunnableMethodWithArg<bool>(
-      mDecoderStateMachine,
+      GetStateMachine(),
       &MediaDecoderStateMachine::SetDormant,
       false);
-  mDecoderStateMachine->TaskQueue()->Dispatch(event);
+  GetStateMachine()->TaskQueue()->Dispatch(event);
 }
 
 void
