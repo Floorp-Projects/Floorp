@@ -268,7 +268,7 @@ body {
 
 .content ul {
   -moz-padding-start: 30px !important;
-  list-style: disk !important;
+  list-style: disc !important;
 }
 
 .content ol {
