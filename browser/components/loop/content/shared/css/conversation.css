@@ -972,11 +972,14 @@ html, .fx-embedded, #main,
   max-width: 400px;
 }
 
-.standalone .room-conversation h2.room-name {
+.standalone .room-conversation h2.room-name,
+.standalone .room-conversation h2.room-info-failure {
   position: absolute;
   display: inline-block;
   top: 0;
-  right: 0;
+  right: 10px;
+  /* 20px is 10px for left and right margins. */
+  width: calc(25% - 20px);
   color: #fff;
   z-index: 2000000;
   font-size: 1.2em;

@@ -909,7 +909,7 @@
 
 .line-graph-widget-tooltip {
   position: absolute;
-  background: rgba(255,255,255,0.75);
+  background: rgba(255,255,255,0.9);
   border-radius: 2px;
   line-height: 15px;
   -moz-padding-start: 6px;

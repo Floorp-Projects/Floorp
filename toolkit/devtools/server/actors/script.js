@@ -2605,44 +2605,22 @@ SourceActor.prototype = {
     return DevToolsUtils.yieldingEach(mappings._array, m => {
       let mapping = {
         generated: {
-          line: m.generatedLine,
-          column: m.generatedColumn
+          line: m.originalLine,
+          column: m.originalColumn
         }
       };
       if (m.source) {
         mapping.source = m.source;
         mapping.original = {
-          line: m.originalLine,
-          column: m.originalColumn
+          line: m.generatedLine,
+          column: m.generatedColumn
         };
         mapping.name = m.name;
       }
       generator.addMapping(mapping);
     }).then(() => {
       generator.setSourceContent(this.url, code);
-      const consumer = SourceMapConsumer.fromSourceMap(generator);
-
-      // XXX bug 918802: Monkey punch the source map consumer, because iterating
-      // over all mappings and inverting each of them, and then creating a new
-      // SourceMapConsumer is slow.
-
-      const getOrigPos = consumer.originalPositionFor.bind(consumer);
-      const getGenPos = consumer.generatedPositionFor.bind(consumer);
-
-      consumer.originalPositionFor = ({ line, column }) => {
-        const location = getGenPos({
-          line: line,
-          column: column,
-          source: this.url
-        });
-        location.source = this.url;
-        return location;
-      };
-
-      consumer.generatedPositionFor = ({ line, column }) => getOrigPos({
-        line: line,
-        column: column
-      });
+      let consumer = SourceMapConsumer.fromSourceMap(generator);
 
       return {
         code: code,
@@ -2823,113 +2801,189 @@ SourceActor.prototype = {
         return actualLocation;
       }
 
+      // There were no scripts that matched the given location, so we need to
+      // perform breakpoint sliding. We try to slide the breakpoint by column
+      // first, and if that fails, by line instead.
       if (!this.isSourceMapped) {
-        // There were no scripts that matched the given location, so we need to
-        // perform breakpoint sliding.
-        if (originalColumn === undefined) {
-          // To perform breakpoint sliding for line breakpoints, we need to build
-          // a map from line numbers to a list of entry points for each line,
-          // implemented as a sparse array. An entry point is a (script, offsets)
-          // pair, and represents all offsets in that script that are entry points
-          // for the corresponding line.
-          let lineToEntryPointsMap = [];
+        if (originalColumn !== undefined) {
+          // To perform breakpoint sliding for column breakpoints, we need to
+          // build a map from column numbers to a list of entry points for each
+          // column, implemented as a sparse array. An entry point is a (script,
+          // offsets) pair, and represents all offsets in that script that are
+          // entry points for the corresponding column.
+          let columnToEntryPointsMap = [];
 
-          // Iterate over all scripts that correspond to this source actor.
-          let scripts = this.scripts.getScriptsBySourceActor(this);
+          // Iterate over all scripts that correspond to this source actor and
+          // line number.
+          let scripts = this.scripts.getScriptsBySourceActor(this, originalLine);
           for (let script of scripts) {
-            // Get all offsets for each line in the current script. This returns
-            // a map from line numbers fo a list of offsets for each line,
-            // implemented as a sparse array.
-            let lineToOffsetsMap = script.getAllOffsets();
+            let columnToOffsetMap = script.getAllColumnOffsets()
+                                          .filter(({ lineNumber }) => {
+              return lineNumber === originalLine;
+            })
 
-            // Iterate over each line, and add their list of offsets to the map
-            // from line numbers to entry points by forming a (script, offsets)
-            // pair, where script is the current script, and offsets is the list
-            // of offsets for the current line.
-            for (let line = 0; line < lineToOffsetsMap.length; ++line) {
-              let offsets = lineToOffsetsMap[line];
-              if (offsets) {
-                let entryPoints = lineToEntryPointsMap[line];
-                if (!entryPoints) {
-                  // We dont have a list of entry points for the current line
-                  // number yet, so create it and add it to the map.
-                  entryPoints = [];
-                  lineToEntryPointsMap[line] = entryPoints;
-                }
-                entryPoints.push({ script, offsets });
+            // Iterate over each column, and add their list of offsets to the
+            // map from column numbers to entry points by forming a (script,
+            // offsets) pair, where script is the current script, and offsets is
+            // the list of offsets for the current column.
+            for (let { columnNumber: column, offset } of columnToOffsetMap) {
+              let entryPoints = columnToEntryPointsMap[column];
+              if (!entryPoints) {
+                // We dont have a list of entry points for the current column
+                // number yet, so create it and add it to the map.
+                entryPoints = [];
+                columnToEntryPointsMap[column] = entryPoints;
               }
+              entryPoints.push({ script, offsets: [offset] });
             }
           }
 
-          // Now that we have a map from line numbers to a list of entry points
-          // for each line, we can use it to perform breakpoint sliding. Start
-          // at the original line of the breakpoint actor, and keep incrementing
-          // it by one, until either we find a line that has at least one entry
-          // point, or we go past the last line in the map.
+          // Now that we have a map from column numbers to a list of entry points
+          // for each column, we can use it to perform breakpoint sliding. Start
+          // at the original column of the breakpoint actor, and keep
+          // incrementing it by one, until either we find a line that has at
+          // least one entry point, or we go past the last column in the map.
           //
           // Note that by computing the entire map up front, and implementing it
-          // as a sparse array, we can easily tell when we went past the last line
-          // in the map.
-          let actualLine = originalLine + 1;
-          while (actualLine < lineToEntryPointsMap.length) {
-            let entryPoints = lineToEntryPointsMap[actualLine];
+          // as a sparse array, we can easily tell when we went past the last
+          // column in the map.
+          let actualColumn = originalColumn + 1;
+          while (actualColumn < columnToEntryPointsMap.length) {
+            let entryPoints = columnToEntryPointsMap[actualColumn];
             if (entryPoints) {
               setBreakpointAtEntryPoints(actor, entryPoints);
-              break;
+              return new OriginalLocation(
+                originalSourceActor,
+                originalLine,
+                actualColumn
+              );
             }
-            ++actualLine;
+            ++actualColumn;
           }
-          if (actualLine >= lineToEntryPointsMap.length) {
-            // We went past the last line in the map, so breakpoint sliding
-            // failed. Keep the BreakpointActor in the BreakpointActorMap as a
-            // pending breakpoint, so we can try again whenever a new script is
-            // introduced.
-            return originalLocation;
-          }
+        }
 
-          return new OriginalLocation(
-            originalSourceActor,
-            actualLine
-          );
-        } else {
-          // TODO: Implement breakpoint sliding for column breakpoints
+        // To perform breakpoint sliding for line breakpoints, we need to build
+        // a map from line numbers to a list of entry points for each line,
+        // implemented as a sparse array. An entry point is a (script, offsets)
+        // pair, and represents all offsets in that script that are entry points
+        // for the corresponding line.
+        let lineToEntryPointsMap = [];
+
+        // Iterate over all scripts that correspond to this source actor.
+        let scripts = this.scripts.getScriptsBySourceActor(this);
+        for (let script of scripts) {
+          // Get all offsets for each line in the current script. This returns
+          // a map from line numbers fo a list of offsets for each line,
+          // implemented as a sparse array.
+          let lineToOffsetsMap = script.getAllOffsets();
+
+          // Iterate over each line, and add their list of offsets to the map
+          // from line numbers to entry points by forming a (script, offsets)
+          // pair, where script is the current script, and offsets is the list
+          // of offsets for the current line.
+          for (let line = 0; line < lineToOffsetsMap.length; ++line) {
+            let offsets = lineToOffsetsMap[line];
+            if (offsets) {
+              let entryPoints = lineToEntryPointsMap[line];
+              if (!entryPoints) {
+                // We dont have a list of entry points for the current line
+                // number yet, so create it and add it to the map.
+                entryPoints = [];
+                lineToEntryPointsMap[line] = entryPoints;
+              }
+              entryPoints.push({ script, offsets });
+            }
+          }
+        }
+
+        // Now that we have a map from line numbers to a list of entry points
+        // for each line, we can use it to perform breakpoint sliding. Start
+        // at the original line of the breakpoint actor, and keep incrementing
+        // it by one, until either we find a line that has at least one entry
+        // point, or we go past the last line in the map.
+        //
+        // Note that by computing the entire map up front, and implementing it
+        // as a sparse array, we can easily tell when we went past the last line
+        // in the map.
+        let actualLine = originalLine + 1;
+        while (actualLine < lineToEntryPointsMap.length) {
+          let entryPoints = lineToEntryPointsMap[actualLine];
+          if (entryPoints) {
+            setBreakpointAtEntryPoints(actor, entryPoints);
+            break;
+          }
+          ++actualLine;
+        }
+        if (actualLine >= lineToEntryPointsMap.length) {
+          // We went past the last line in the map, so breakpoint sliding
+          // failed. Keep the BreakpointActor in the BreakpointActorMap as a
+          // pending breakpoint, so we can try again whenever a new script is
+          // introduced.
           return originalLocation;
         }
+
+        return new OriginalLocation(
+          originalSourceActor,
+          actualLine
+        );
       } else {
-        if (originalColumn === undefined) {
-          let loop = (actualLocation) => {
-            let {
-              originalLine: actualLine,
-              originalColumn: actualColumn
-            } = actualLocation;
+        let slideByColumn = (actualColumn) => {
+          return this.sources.getAllGeneratedLocations(new OriginalLocation(
+            this,
+            originalLine,
+            actualColumn
+          )).then((generatedLocations) => {
+            // Because getAllGeneratedLocations will always return the list of
+            // generated locations for the closest column that is greater than
+            // the one we are searching for if no exact match can be found, if
+            // the list of generated locations is empty, we've reached the end
+            // of the original line, and sliding continues by line.
+            if (generatedLocations.length === 0) {
+              return slideByLine(originalLine + 1);
+            }
 
-            return this.threadActor.sources.getAllGeneratedLocations(actualLocation)
-                                           .then((generatedLocations) => {
-              // Because getAllGeneratedLocations will always return the list of
-              // generated locations for the closest line that is greater than
-              // the one we are searching for if no exact match can be found, if
-              // the list of generated locations is empty, we've reached the end
-              // of the original source, and breakpoint sliding failed.
-              if (generatedLocations.length === 0) {
-                return originalLocation;
-              }
+            // If at least one script has an offset that matches one of the
+            // generated locations in the list, then breakpoint sliding
+            // succeeded.
+            if (this._setBreakpointAtAllGeneratedLocations(actor, generatedLocations)) {
+              return this.threadActor.sources.getOriginalLocation(generatedLocations[0]);
+            }
 
-              // If at least one script has an offset that matches one of the
-              // generated locations in the list, then breakpoint sliding
-              // succeeded.
-              if (this._setBreakpointAtAllGeneratedLocations(actor, generatedLocations)) {
-                return this.threadActor.sources.getOriginalLocation(generatedLocations[0]);
-              }
+            // Try the next column in the original source.
+            return slideByColumn(actualColumn + 1);
+          });
+        };
 
-              // Try the next line in the original source.
-              return loop(new OriginalLocation(this, actualLine + 1));
-            });
-          };
+        let slideByLine = (actualLine) => {
+          return this.sources.getAllGeneratedLocations(new OriginalLocation(
+            this,
+            actualLine
+          )).then((generatedLocations) => {
+            // Because getAllGeneratedLocations will always return the list of
+            // generated locations for the closest line that is greater than
+            // the one we are searching for if no exact match can be found, if
+            // the list of generated locations is empty, we've reached the end
+            // of the original source, and breakpoint sliding failed.
+            if (generatedLocations.length === 0) {
+              return originalLocation;
+            }
 
-          return loop(new OriginalLocation(this, originalLine + 1));
+            // If at least one script has an offset that matches one of the
+            // generated locations in the list, then breakpoint sliding
+            // succeeded.
+            if (this._setBreakpointAtAllGeneratedLocations(actor, generatedLocations)) {
+              return this.threadActor.sources.getOriginalLocation(generatedLocations[0]);
+            }
+
+            // Try the next line in the original source.
+            return slideByLine(actualLine + 1);
+          });
+        };
+
+        if (originalColumn !== undefined) {
+          return slideByColumn(originalColumn + 1);
         } else {
-          // TODO: Implement breakpoint sliding for column breakpoints
-          return originalLocation;
+          return slideByLine(originalLine + 1);
         }
       }
     }).then((actualLocation) => {
@@ -3040,8 +3094,6 @@ SourceActor.prototype = {
           return lineNumber === generatedLine;
         });
         for (let { columnNumber: column, offset } of columnToOffsetMap) {
-          // TODO: What we are actually interested in here is a range of
-          // columns, rather than a single one.
           if (column >= generatedColumn && column <= generatedLastColumn) {
             entryPoints.push({ script, offsets: [offset] });
           }
