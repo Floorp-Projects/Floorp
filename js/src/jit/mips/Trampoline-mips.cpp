@@ -1322,7 +1322,7 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext* cx)
     masm.bind(&handle_IonAccessorIC);
     {
         // scratch2 := StackPointer + Descriptor.size + JitFrameLayout::Size()
-        masm.ma_addu(StackPointer, scratch1, scratch2);
+        masm.ma_addu(scratch2, StackPointer, scratch1);
         masm.addPtr(Imm32(JitFrameLayout::Size()), scratch2);
 
         // scratch3 := AccFrame-Descriptor.Size
@@ -1346,7 +1346,7 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext* cx)
 
         // lastProfilingFrame := AccessorFrame + AccFrame-Descriptor.Size +
         //                       IonAccessorICFrameLayout::Size()
-        masm.ma_addu(scratch2, scratch3, scratch1);
+        masm.ma_addu(scratch1, scratch2, scratch3);
         masm.addPtr(Imm32(IonAccessorICFrameLayout::Size()), scratch1);
         masm.storePtr(scratch1, lastProfilingFrame);
         masm.ret();
