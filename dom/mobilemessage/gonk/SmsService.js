@@ -308,6 +308,8 @@ SmsService.prototype = {
                                          null,
                                          (aRv, aDomMessage) => {
           // TODO bug 832140 handle !Components.isSuccessCode(aRv)
+          this._broadcastSmsSystemMessage(
+            Ci.nsISmsMessenger_new.NOTIFICATION_TYPE_SENT_FAILED, aDomMessage);
           aRequest.notifySendMessageFailed(error, aDomMessage);
           Services.obs.notifyObservers(aDomMessage, kSmsFailedObserverTopic, null);
         });
@@ -373,16 +375,16 @@ SmsService.prototype = {
                                        (aRv, aDomMessage) => {
         // TODO bug 832140 handle !Components.isSuccessCode(aRv)
 
-        let topic = (aResponse.deliveryStatus ==
-                     RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS)
-                    ? kSmsDeliverySuccessObserverTopic
-                    : kSmsDeliveryErrorObserverTopic;
+        let [topic, notificationType] =
+          (aResponse.deliveryStatus == RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS)
+            ? [kSmsDeliverySuccessObserverTopic,
+               Ci.nsISmsMessenger.NOTIFICATION_TYPE_DELIVERY_SUCCESS]
+            : [kSmsDeliveryErrorObserverTopic,
+               Ci.nsISmsMessenger_new.NOTIFICATION_TYPE_DELIVERY_ERROR];
 
-        // Broadcasting a "sms-delivery-success" system message to open apps.
-        if (topic == kSmsDeliverySuccessObserverTopic) {
-          this._broadcastSmsSystemMessage(
-            Ci.nsISmsMessenger.NOTIFICATION_TYPE_DELIVERY_SUCCESS, aDomMessage);
-        }
+        // Broadcasting a "sms-delivery-success/sms-delivery-error" system
+        // message to open apps.
+        this._broadcastSmsSystemMessage(notificationType, aDomMessage);
 
         // Notifying observers the delivery status is updated.
         Services.obs.notifyObservers(aDomMessage, topic, null);
@@ -861,6 +863,8 @@ SmsService.prototype = {
     let saveSendingMessageCallback = (aRv, aSendingMessage) => {
       if (!Components.isSuccessCode(aRv)) {
         if (DEBUG) debug("Error! Fail to save sending message! aRv = " + aRv);
+        this._broadcastSmsSystemMessage(
+          Ci.nsISmsMessenger_new.NOTIFICATION_TYPE_SENT_FAILED, aSendingMessage);
         aRequest.notifySendMessageFailed(
           gMobileMessageDatabaseService.translateCrErrorToMessageCallbackError(aRv),
           aSendingMessage);
@@ -904,6 +908,8 @@ SmsService.prototype = {
                                          null,
                                          (aRv, aDomMessage) => {
           // TODO bug 832140 handle !Components.isSuccessCode(aRv)
+          this._broadcastSmsSystemMessage(
+            Ci.nsISmsMessenger_new.NOTIFICATION_TYPE_SENT_FAILED, aDomMessage);
           aRequest.notifySendMessageFailed(errorCode, aDomMessage);
           Services.obs.notifyObservers(aDomMessage, kSmsFailedObserverTopic, null);
         });
