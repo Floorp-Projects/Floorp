@@ -1,0 +1,33 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXPORTS += [
+    'gfxVR.h',
+]
+
+LOCAL_INCLUDES += [
+    '/gfx/thebes',
+]
+
+UNIFIED_SOURCES += [
+    'gfxVR.cpp',
+    'gfxVRCardboard.cpp',
+    'gfxVROculus.cpp',
+]
+
+CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+CXXFLAGS += CONFIG['TK_CFLAGS']
+CFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
+CFLAGS += CONFIG['TK_CFLAGS']
+
+FAIL_ON_WARNINGS = not CONFIG['_MSC_VER']
+
+MSVC_ENABLE_PGO = True
+
+include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'
+

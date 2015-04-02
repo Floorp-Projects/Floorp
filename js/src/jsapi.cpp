@@ -270,29 +270,77 @@ JS_GetEmptyString(JSRuntime* rt)
     return rt->emptyString;
 }
 
-JS_PUBLIC_API(bool)
-JS_GetCompartmentStats(JSRuntime* rt, CompartmentStatsVector& stats)
-{
-    for (CompartmentsIter c(rt, WithAtoms); !c.done(); c.next()) {
-        if (!stats.growBy(1))
-            return false;
+namespace js {
 
-        CompartmentTimeStats* stat = &stats.back();
-        stat->time = c.get()->totalTime;
-        stat->compartment = c.get();
-        stat->addonId = c.get()->addonId;
-        if (rt->compartmentNameCallback) {
-            (*rt->compartmentNameCallback)(rt, stat->compartment,
-                                           stat->compartmentName,
-                                           MOZ_ARRAY_LENGTH(stat->compartmentName));
+JS_PUBLIC_API(bool)
+GetPerformanceStats(JSRuntime* rt,
+                    PerformanceStatsVector& stats,
+                    PerformanceStats& processStats)
+{
+    // As a PerformanceGroup is typically associated to several
+    // compartments, use a HashSet to make sure that we only report
+    // each PerformanceGroup once.
+    typedef HashSet<js::PerformanceGroup*,
+                    js::DefaultHasher<js::PerformanceGroup*>,
+                    js::SystemAllocPolicy> Set;
+    Set set;
+    if (!set.init(100)) {
+        return false;
+    }
+
+    for (CompartmentsIter c(rt, WithAtoms); !c.done(); c.next()) {
+        JSCompartment* compartment = c.get();
+        if (!compartment->performanceMonitoring.isLinked()) {
+            // Don't report compartments that do not even have a PerformanceGroup.
+            continue;
+        }
+        PerformanceGroup* group = compartment->performanceMonitoring.getGroup();
+
+        if (group->data.ticks == 0) {
+            // Don't report compartments that have never been used.
+            continue;
+        }
+
+        Set::AddPtr ptr = set.lookupForAdd(group);
+        if (ptr) {
+            // Don't report the same group twice.
+            continue;
+        }
+
+        if (!stats.growBy(1)) {
+            // Memory issue
+            return false;
+        }
+        PerformanceStats* stat = &stats.back();
+        stat->isSystem = compartment->isSystem();
+        if (compartment->addonId)
+            stat->addonId = compartment->addonId;
+
+        if (compartment->addonId || !compartment->isSystem()) {
+            if (rt->compartmentNameCallback) {
+                (*rt->compartmentNameCallback)(rt, compartment,
+                                               stat->name,
+                                               mozilla::ArrayLength(stat->name));
+            } else {
+                strcpy(stat->name, "<unknown>");
+            }
         } else {
-            strcpy(stat->compartmentName, "<unknown>");
+            strcpy(stat->name, "<platform>");
+        }
+        stat->performance = group->data;
+        if (!set.add(ptr, group)) {
+            // Memory issue
+            return false;
         }
     }
+
+    strcpy(processStats.name, "<process>");
+    processStats.addonId = nullptr;
+    processStats.isSystem = true;
+    processStats.performance = rt->stopwatch.performance;
+
     return true;
 }
-
-namespace js {
 
 void
 AssertHeapIsIdle(JSRuntime* rt)

@@ -94,6 +94,59 @@ BlockComputesConstant(MBasicBlock* block, MDefinition* value)
     return true;
 }
 
+// Find phis that are redudant:
+//
+// 1) phi(a, a)
+//     can get replaced by a
+//
+// 2) phi(filtertypeset(a, type1), filtertypeset(a, type1))
+//     equals filtertypeset(a, type1)
+//
+// 3) phi(a, filtertypeset(a, type1))
+//     equals filtertypeset(a, type1 union type(a))
+//     equals filtertypeset(a, type(a))
+//     equals a
+//
+// 4) phi(filtertypeset(a, type1), filtertypeset(a, type2))
+//    equals filtertypeset(a, type1 union type2)
+//
+//    This is the special case. We can only replace this with 'a' iif
+//    type(a) == type1 union type2. Since optimizations could have
+//    happened based on a more specific phi type.
+static bool
+IsPhiRedudantFilter(MPhi* phi)
+{
+    // Handle (1) and (2)
+    if (phi->operandIfRedundant())
+        return true;
+
+    // Handle (3)
+    bool onlyFilters = false;
+    MDefinition* a = phi->getOperand(0);
+    if (a->isFilterTypeSet()) {
+        a = a->toFilterTypeSet()->input();
+        onlyFilters = true;
+    }
+
+    for (size_t i = 1; i < phi->numOperands(); i++) {
+        MDefinition* operand = phi->getOperand(i);
+        if (operand == a) {
+            onlyFilters = false;
+            continue;
+        }
+        if (operand->isFilterTypeSet() && operand->toFilterTypeSet()->input() == a)
+            continue;
+        return false;
+    }
+    if (!onlyFilters)
+        return true;
+
+    // Handle (4)
+    MOZ_ASSERT(onlyFilters);
+    return EqualTypes(a->type(), a->resultTypeSet(),
+                      phi->type(), phi->resultTypeSet());
+}
+
 // Determine whether phiBlock/testBlock simply compute a phi and perform a
 // test on it.
 static bool
@@ -131,8 +184,13 @@ BlockIsSingleTest(MBasicBlock* phiBlock, MBasicBlock* testBlock, MPhi** pphi, MT
     }
 
     for (MPhiIterator iter = phiBlock->phisBegin(); iter != phiBlock->phisEnd(); ++iter) {
-        if (*iter != phi)
-            return false;
+        if (*iter == phi)
+            continue;
+
+        if (IsPhiRedudantFilter(*iter))
+            continue;
+
+        return false;
     }
 
     if (phiBlock != testBlock && !testBlock->phisEmpty())
@@ -257,6 +315,23 @@ MaybeFoldConditionBlock(MIRGraph& graph, MBasicBlock* initialBlock)
 
     // OK, we found the desired pattern, now transform the graph.
 
+    // Patch up phis that filter their input.
+    for (MPhiIterator iter = phiBlock->phisBegin(); iter != phiBlock->phisEnd(); ++iter) {
+        if (*iter == phi)
+            continue;
+
+        MOZ_ASSERT(IsPhiRedudantFilter(*iter));
+        MDefinition* redundant = (*iter)->operandIfRedundant();
+
+        if (!redundant) {
+            redundant = (*iter)->getOperand(0);
+            if (redundant->isFilterTypeSet())
+                redundant = redundant->toFilterTypeSet()->input();
+        }
+
+        (*iter)->replaceAllUsesWith(redundant);
+    }
+
     // Remove the phi from phiBlock.
     phiBlock->discardPhi(*phiBlock->phisBegin());
 
@@ -305,112 +380,11 @@ MaybeFoldConditionBlock(MIRGraph& graph, MBasicBlock* initialBlock)
     graph.removeBlock(testBlock);
 }
 
-static void
-MaybeFoldAndOrBlock(MIRGraph& graph, MBasicBlock* initialBlock)
-{
-    // Optimize the MIR graph to improve the code generated for && and ||
-    // operations when they are used in tests. This is very similar to the
-    // above method for folding condition blocks, though the two are
-    // separated (with as much common code as possible) for clarity. This
-    // normally requires three blocks. The final test can always be eliminated,
-    // though we don't try to constant fold away the branch block as well.
-
-    // Look for a triangle pattern:
-    //
-    //       initialBlock
-    //         /     |
-    // branchBlock   |
-    //         \     |
-    //         phiBlock
-    //            |
-    //        testBlock
-    //
-    // Where phiBlock contains a single phi combining values pushed onto the
-    // stack by initialBlock and testBlock, and testBlock contains a test on
-    // that phi. phiBlock and testBlock may be the same block; generated code
-    // will use different blocks if the &&/|| is in an inlined function.
-
-    MInstruction* ins = initialBlock->lastIns();
-    if (!ins->isTest())
-        return;
-    MTest* initialTest = ins->toTest();
-
-    bool branchIsTrue = true;
-    MBasicBlock* branchBlock = initialTest->ifTrue();
-    MBasicBlock* phiBlock = initialTest->ifFalse();
-    if (branchBlock->numSuccessors() != 1 || branchBlock->getSuccessor(0) != phiBlock) {
-        branchIsTrue = false;
-        branchBlock = initialTest->ifFalse();
-        phiBlock = initialTest->ifTrue();
-    }
-
-    if (branchBlock->numSuccessors() != 1 || branchBlock->getSuccessor(0) != phiBlock)
-        return;
-    if (branchBlock->numPredecessors() != 1 || phiBlock->numPredecessors() != 2)
-        return;
-
-    if (initialBlock->isLoopBackedge() || branchBlock->isLoopBackedge())
-        return;
-
-    MBasicBlock* testBlock = phiBlock;
-    if (testBlock->numSuccessors() == 1) {
-        if (testBlock->isLoopBackedge())
-            return;
-        testBlock = testBlock->getSuccessor(0);
-        if (testBlock->numPredecessors() != 1)
-            return;
-    }
-
-    // Make sure the test block does not have any outgoing loop backedges.
-    if (!SplitCriticalEdgesForBlock(graph, testBlock))
-        CrashAtUnhandlableOOM("MaybeFoldAndOrBlock");
-
-    MPhi* phi;
-    MTest* finalTest;
-    if (!BlockIsSingleTest(phiBlock, testBlock, &phi, &finalTest))
-        return;
-
-    MDefinition* branchResult = phi->getOperand(phiBlock->indexForPredecessor(branchBlock));
-    MDefinition* initialResult = phi->getOperand(phiBlock->indexForPredecessor(initialBlock));
-
-    if (initialResult != initialTest->input())
-        return;
-
-    // OK, we found the desired pattern, now transform the graph.
-
-    // Remove the phi from phiBlock.
-    phiBlock->discardPhi(*phiBlock->phisBegin());
-
-    // Change the end of the initial and branch blocks to a test that jumps
-    // directly to successors of testBlock, rather than to testBlock itself.
-
-    UpdateTestSuccessors(graph.alloc(), initialBlock, initialResult,
-                         branchIsTrue ? branchBlock : finalTest->ifTrue(),
-                         branchIsTrue ? finalTest->ifFalse() : branchBlock,
-                         testBlock);
-
-    UpdateTestSuccessors(graph.alloc(), branchBlock, branchResult,
-                         finalTest->ifTrue(), finalTest->ifFalse(), testBlock);
-
-    // Remove phiBlock, if different from testBlock.
-    if (phiBlock != testBlock) {
-        testBlock->removePredecessor(phiBlock);
-        graph.removeBlock(phiBlock);
-    }
-
-    // Remove testBlock itself.
-    finalTest->ifTrue()->removePredecessor(testBlock);
-    finalTest->ifFalse()->removePredecessor(testBlock);
-    graph.removeBlock(testBlock);
-}
-
 void
 jit::FoldTests(MIRGraph& graph)
 {
-    for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++) {
+    for (MBasicBlockIterator block(graph.begin()); block != graph.end(); block++)
         MaybeFoldConditionBlock(graph, *block);
-        MaybeFoldAndOrBlock(graph, *block);
-    }
 }
 
 static void
@@ -475,8 +449,11 @@ jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph)
             // parameter passing might be live. Rewriting uses of these terms
             // in resume points may affect the interpreter's behavior. Rather
             // than doing a more sophisticated analysis, just ignore these.
-            if (ins->isUnbox() || ins->isParameter() || ins->isTypeBarrier() || ins->isComputeThis())
+            if (ins->isUnbox() || ins->isParameter() || ins->isTypeBarrier() ||
+                ins->isComputeThis() || ins->isFilterTypeSet())
+            {
                 continue;
+            }
 
             // Early intermediate values captured by resume points, such as
             // TypedObject, ArrayState and its allocation, may be legitimately

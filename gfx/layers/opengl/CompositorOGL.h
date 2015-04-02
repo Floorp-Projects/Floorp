@@ -178,6 +178,7 @@ struct CompositorOGLVRObjects {
   GLint mUTexture[2];
   GLint mUVREyeToSource[2];
   GLint mUVRDestionatinScaleAndOffset[2];
+  GLint mUHeight[2];
 };
 
 // If you want to make this class not final, first remove calls to virtual
