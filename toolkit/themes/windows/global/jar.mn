@@ -31,7 +31,7 @@ toolkit.jar:
         skin/classic/global/groupbox.css
 *       skin/classic/global/inContentUI.css
         skin/classic/global/linkTree.css
-        skin/classic/global/listbox.css
+*       skin/classic/global/listbox.css
 *       skin/classic/global/menu.css
         skin/classic/global/menulist.css
         skin/classic/global/netError.css
@@ -56,7 +56,7 @@ toolkit.jar:
         skin/classic/global/textbox.css
         skin/classic/global/toolbar.css
         skin/classic/global/toolbarbutton.css
-        skin/classic/global/tree.css
+*       skin/classic/global/tree.css
         skin/classic/global/wizard.css
         skin/classic/global/alerts/alert.css                     (alerts/alert.css)
         skin/classic/global/alerts/notification-48.png           (alerts/notification-48.png)
@@ -83,7 +83,7 @@ toolkit.jar:
         skin/classic/global/arrow/panelarrow-vertical-themed.svg   (arrow/panelarrow-vertical-themed.svg)
         skin/classic/global/checkbox/cbox-check.gif              (checkbox/cbox-check.gif)
         skin/classic/global/checkbox/cbox-check-dis.gif          (checkbox/cbox-check-dis.gif)
-        skin/classic/global/console/console.css                  (console/console.css)
+*       skin/classic/global/console/console.css                  (console/console.css)
         skin/classic/global/console/console-toolbar.png          (console/console-toolbar.png)
         skin/classic/global/console/console-error-caret.gif      (console/console-error-caret.gif)
         skin/classic/global/console/console-error-dash.gif       (console/console-error-dash.gif)
@@ -206,17 +206,6 @@ toolkit.jar:
         skin/classic/global/tree/twisty-open.png                 (tree/twisty-open.png)
 
 #ifdef XP_WIN
-*       skin/classic/global/autocomplete-aero.css                        (autocomplete-aero.css)
-*       skin/classic/global/inContentUI-aero.css                         (inContentUI-aero.css)
-*       skin/classic/global/listbox-aero.css                             (listbox-aero.css)
-*       skin/classic/global/menu-aero.css                                (menu-aero.css)
-*       skin/classic/global/menulist-aero.css                            (menulist-aero.css)
-*       skin/classic/global/notification-aero.css                        (notification-aero.css)
-*       skin/classic/global/popup-aero.css                               (popup-aero.css)
-*       skin/classic/global/textbox-aero.css                             (textbox-aero.css)
-*       skin/classic/global/toolbarbutton-aero.css                       (toolbarbutton-aero.css)
-*       skin/classic/global/tree-aero.css                                (tree-aero.css)
-*       skin/classic/global/console/console-aero.css                     (console/console-aero.css)
         skin/classic/global/console/console-toolbar-aero.png             (console/console-toolbar-aero.png)
         skin/classic/global/dirListing/folder-aero.png                   (dirListing/folder-aero.png)
         skin/classic/global/dirListing/local-aero.png                    (dirListing/local-aero.png)
@@ -271,17 +260,6 @@ toolkit.jar:
         skin/classic/global/tree/twisty-open-hover-aero.png              (tree/twisty-open-hover-aero.png)
         skin/classic/global/tree/twisty-open-hover-rtl-aero.png          (tree/twisty-open-hover-rtl-aero.png)
 
-% override chrome://global/skin/autocomplete.css                  chrome://global/skin/autocomplete-aero.css                 osversion>=6
-% override chrome://global/skin/inContentUI.css                   chrome://global/skin/inContentUI-aero.css                  osversion>=6
-% override chrome://global/skin/listbox.css                       chrome://global/skin/listbox-aero.css                      osversion>=6
-% override chrome://global/skin/menu.css                          chrome://global/skin/menu-aero.css                         osversion>=6
-% override chrome://global/skin/menulist.css                      chrome://global/skin/menulist-aero.css                     osversion>=6
-% override chrome://global/skin/notification.css                  chrome://global/skin/notification-aero.css                 osversion>=6
-% override chrome://global/skin/popup.css                         chrome://global/skin/popup-aero.css                        osversion>=6
-% override chrome://global/skin/textbox.css                       chrome://global/skin/textbox-aero.css                      osversion>=6
-% override chrome://global/skin/toolbarbutton.css                 chrome://global/skin/toolbarbutton-aero.css                osversion>=6
-% override chrome://global/skin/tree.css                          chrome://global/skin/tree-aero.css                         osversion>=6
-% override chrome://global/skin/console/console.css               chrome://global/skin/console/console-aero.css              osversion>=6
 % override chrome://global/skin/console/console-toolbar.png       chrome://global/skin/console/console-toolbar-aero.png      osversion>=6
 % override chrome://global/skin/dirListing/folder.png             chrome://global/skin/dirListing/folder-aero.png            osversion>=6
 % override chrome://global/skin/dirListing/local.png              chrome://global/skin/dirListing/local-aero.png             osversion>=6
