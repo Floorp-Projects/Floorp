@@ -35,6 +35,7 @@
 #include "LayersLogging.h"
 #include "mozilla/unused.h"
 #include "mozilla/ReverseIterator.h"
+#include "mozilla/Move.h"
 
 #include <algorithm>
 
@@ -250,56 +251,6 @@ static inline MaskLayerImageCache* GetMaskLayerImageCache()
   return gMaskLayerImageCache;
 }
 
-/**
- * A wrapper for nsIntRegion that can express infinite regions.
- */
-struct PossiblyInfiniteRegion
-{
-  PossiblyInfiniteRegion() : mIsInfinite(false) {}
-  MOZ_IMPLICIT PossiblyInfiniteRegion(const nsIntRegion& aRegion)
-   : mRegion(aRegion)
-   , mIsInfinite(false)
-  {}
-  MOZ_IMPLICIT PossiblyInfiniteRegion(const nsIntRect& aRect)
-   : mRegion(aRect)
-   , mIsInfinite(false)
-  {}
-
-  // Create an infinite region.
-  static PossiblyInfiniteRegion InfiniteRegion()
-  {
-    PossiblyInfiniteRegion r;
-    r.mIsInfinite = true;
-    return r;
-  }
-
-  bool IsInfinite() const { return mIsInfinite; }
-  bool Intersects(const nsIntRegion& aRegion) const
-  {
-    if (IsInfinite()) {
-      return true;
-    }
-    return !mRegion.Intersect(aRegion).IsEmpty();
-  }
-
-  void AccumulateAndSimplifyOutward(const PossiblyInfiniteRegion& aRegion)
-  {
-    if (!IsInfinite()) {
-      if (aRegion.IsInfinite()) {
-        mIsInfinite = true;
-        mRegion.SetEmpty();
-      } else {
-        mRegion.OrWith(aRegion.mRegion);
-        mRegion.SimplifyOutward(8);
-      }
-    }
-  }
-
-protected:
-  nsIntRegion mRegion;
-  bool mIsInfinite;
-};
-
 struct AssignedDisplayItem
 {
   AssignedDisplayItem(nsDisplayItem* aItem,
@@ -328,7 +279,6 @@ class PaintedLayerData {
 public:
   PaintedLayerData() :
     mAnimatedGeometryRoot(nullptr),
-    mIsScrollable(false),
     mFixedPosFrameForLayerData(nullptr),
     mReferenceFrame(nullptr),
     mLayer(nullptr),
@@ -397,21 +347,15 @@ public:
    */
   already_AddRefed<ImageContainer> CanOptimizeImageLayer(nsDisplayListBuilder* aBuilder);
 
+  bool VisibleAboveRegionIntersects(const nsIntRect& aRect) const
+  { return mVisibleAboveRegion.Intersects(aRect); }
   bool VisibleAboveRegionIntersects(const nsIntRegion& aRegion) const
-  {
-    return mVisibleAboveRegion.Intersects(aRegion);
-  }
+  { return !mVisibleAboveRegion.Intersect(aRegion).IsEmpty(); }
 
   bool VisibleRegionIntersects(const nsIntRect& aRect) const
-  {
-    return IsSubjectToScrollTransforms() || mVisibleRegion.Intersects(aRect);
-  }
-
-  bool IsSubjectToScrollTransforms() const
-  {
-    return mFixedPosFrameForLayerData || mSingleItemFixedToViewport ||
-           mIsScrollable;
-  }
+  { return mVisibleRegion.Intersects(aRect); }
+  bool VisibleRegionIntersects(const nsIntRegion& aRegion) const
+  { return !mVisibleRegion.Intersect(aRegion).IsEmpty(); }
 
   /**
    * The region of visible content in the layer, relative to the
@@ -467,12 +411,6 @@ public:
    * The offset between mAnimatedGeometryRoot and the reference frame.
    */
   nsPoint mAnimatedGeometryRootOffset;
-  /**
-   * Whether or not this layer is scrollable (sync or async). If it is, that means display
-   * items above this layer should not end up in a layer below this one, as they
-   * might be obscured when they shouldn't be.
-   */
-  bool mIsScrollable;
   /**
    * If non-null, the frame from which we'll extract "fixed positioning"
    * metadata for this layer. This can be a position:fixed frame or a viewport
@@ -562,12 +500,10 @@ public:
   nsIntRect mBounds;
   /**
    * The region of visible content above the layer and below the
-   * next PaintedLayerData currently in the stack, if any. Note that not
-   * all PaintedLayers for the container are in the PaintedLayerData stack.
-   * Same coordinate system as mVisibleRegion.
+   * next PaintedLayerData currently in the stack, if any.
    * This is a conservative approximation: it contains the true region.
    */
-  PossiblyInfiniteRegion mVisibleAboveRegion;
+  nsIntRegion mVisibleAboveRegion;
   /**
    * All the display items that have been assigned to this painted layer.
    * These items get added by Accumulate().
@@ -618,6 +554,313 @@ struct NewLayerEntry {
   bool mPropagateComponentAlphaFlattening;
 };
 
+class PaintedLayerDataTree;
+
+/**
+ * This is tree node type for PaintedLayerDataTree.
+ * Each node corresponds to a different animated geometry root, and contains
+ * a stack of PaintedLayerDatas, in bottom-to-top order.
+ * There is at most one node per animated geometry root. The ancestor and
+ * descendant relations in PaintedLayerDataTree tree mirror those in the frame
+ * tree.
+ * Each node can have clip that describes the potential extents that items in
+ * this node can cover. If mHasClip is false, it means that the node's contents
+ * can move anywhere.
+ * Testing against the clip instead of the node's actual contents has the
+ * advantage that the node's contents can move or animate without affecting
+ * content in other nodes. So we don't need to re-layerize during animations
+ * (sync or async), and during async animations everything is guaranteed to
+ * look correct.
+ * The contents of a node's PaintedLayerData stack all share the node's
+ * animated geometry root. The child nodes are on top of the PaintedLayerData
+ * stack, in z-order, and the clip rects of the child nodes are allowed to
+ * intersect with the visible region or visible above region of their parent
+ * node's PaintedLayerDatas.
+ */
+class PaintedLayerDataNode {
+public:
+  PaintedLayerDataNode(PaintedLayerDataTree& aTree,
+                       PaintedLayerDataNode* aParent,
+                       const nsIFrame* aAnimatedGeometryRoot);
+  ~PaintedLayerDataNode();
+
+  const nsIFrame* AnimatedGeometryRoot() const { return mAnimatedGeometryRoot; }
+
+  /**
+   * Whether this node's contents can potentially intersect aRect.
+   * aRect is in our tree's ContainerState's coordinate space.
+   */
+  bool Intersects(const nsIntRect& aRect) const
+    { return !mHasClip || mClipRect.Intersects(aRect); }
+
+  /**
+   * Create a PaintedLayerDataNode for aAnimatedGeometryRoot, add it to our
+   * children, and return it.
+   */
+  PaintedLayerDataNode* AddChildNodeFor(const nsIFrame* aAnimatedGeometryRoot);
+
+  /**
+   * Find a PaintedLayerData in our mPaintedLayerDataStack that aItem can be
+   * added to. Creates a new PaintedLayerData by calling
+   * aNewPaintedLayerCallback if necessary.
+   */
+  template<typename NewPaintedLayerCallbackType>
+  PaintedLayerData* FindPaintedLayerFor(const nsIntRect& aVisibleRect,
+                                        NewPaintedLayerCallbackType aNewPaintedLayerCallback);
+
+  /**
+   * Find an opaque background color for aRegion. Pulls a color from the parent
+   * geometry root if appropriate, but only if that color is present underneath
+   * the whole clip of this node, so that this node's contents can animate or
+   * move (possibly async) without having to change the background color.
+   * @param aUnderIndex Searching will start in mPaintedLayerDataStack right
+   *                    below aUnderIndex.
+   */
+  enum { ABOVE_TOP = -1 };
+  nscolor FindOpaqueBackgroundColor(const nsIntRegion& aRegion,
+                                    int32_t aUnderIndex = ABOVE_TOP) const;
+  /**
+   * Same as FindOpaqueBackgroundColor, but only returns a color if absolutely
+   * nothing is in between, so that it can be used for a layer that can move
+   * anywhere inside our clip.
+   */
+  nscolor FindOpaqueBackgroundColorCoveringEverything() const;
+
+  /**
+   * Adds aRect to this node's top PaintedLayerData's mVisibleAboveRegion,
+   * or mVisibleAboveBackgroundRegion if mPaintedLayerDataStack is empty.
+   */
+  void AddToVisibleAboveRegion(const nsIntRect& aRect);
+  /**
+   * Call this if all of our existing content can potentially be covered, so
+   * nothing can merge with it and all new content needs to create new items
+   * on top. This will finish all of our children and pop our whole
+   * mPaintedLayerDataStack.
+   */
+  void SetAllDrawingAbove();
+
+  /**
+   * Finish this node: Finish all children, finish our PaintedLayer contents,
+   * and (if requested) adjust our parent's visible above region to include
+   * our clip.
+   */
+  void Finish(bool aParentNeedsAccurateVisibleAboveRegion);
+
+  /**
+   * Finish any children that intersect aRect.
+   */
+  void FinishChildrenIntersecting(const nsIntRect& aRect);
+
+  /**
+   * Finish all children.
+   */
+  void FinishAllChildren() { FinishAllChildren(true); }
+
+protected:
+  /**
+   * Finish the topmost item in mPaintedLayerDataStack and pop it from the
+   * stack.
+   */
+  void PopPaintedLayerData();
+  /**
+   * Finish all items in mPaintedLayerDataStack and clear the stack.
+   */
+  void PopAllPaintedLayerData();
+  /**
+   * Finish all of our child nodes, but don't touch mPaintedLayerDataStack.
+   */
+  void FinishAllChildren(bool aThisNodeNeedsAccurateVisibleAboveRegion);
+  /**
+   * Pass off opaque background color searching to our parent node, if we have
+   * one.
+   */
+  nscolor FindOpaqueBackgroundColorInParentNode() const;
+
+  PaintedLayerDataTree& mTree;
+  PaintedLayerDataNode* mParent;
+  const nsIFrame* mAnimatedGeometryRoot;
+
+  /**
+   * Our contents: a PaintedLayerData stack and our child nodes.
+   */
+  nsTArray<PaintedLayerData> mPaintedLayerDataStack;
+
+  /**
+   * UniquePtr is used here in the sense of "unique ownership", i.e. there is
+   * only one owner. Not in the sense of "this is the only pointer to the
+   * node": There are two other, non-owning, pointers to our child nodes: The
+   * node's respective children point to their parent node with their mParent
+   * pointer, and the tree keeps a map of animated geometry root to node in its
+   * mNodes member. These outside pointers are the reason that mChildren isn't
+   * just an nsTArray<PaintedLayerDataNode> (since the pointers would become
+   * invalid whenever the array expands its capacity).
+   */
+  nsTArray<UniquePtr<PaintedLayerDataNode>> mChildren;
+
+  /**
+   * The region that's covered between our "background" and the bottom of
+   * mPaintedLayerDataStack. This is used to indicate whether we can pull
+   * a background color from our parent node. If mVisibleAboveBackgroundRegion
+   * should be considered infinite, mAllDrawingAboveBackground will be true and
+   * the value of mVisibleAboveBackgroundRegion will be meaningless.
+   */
+  nsIntRegion mVisibleAboveBackgroundRegion;
+
+  /**
+   * Our clip, if we have any. If not, that means we can move anywhere, and
+   * mHasClip will be false and mClipRect will be meaningless.
+   */
+  nsIntRect mClipRect;
+  bool mHasClip;
+
+  /**
+   * Whether mVisibleAboveBackgroundRegion should be considered infinite.
+   */
+  bool mAllDrawingAboveBackground;
+};
+
+class ContainerState;
+
+/**
+ * A tree of PaintedLayerDataNodes. At any point in time, the tree only
+ * contains nodes for animated geometry roots that new items can potentially
+ * merge into. Any time content is added on top that overlaps existing things
+ * in such a way that we no longer want to merge new items with some existing
+ * content, that existing content gets "finished".
+ * The public-facing methods of this class are FindPaintedLayerFor,
+ * AddingOwnLayer, and Finish. The other public methods are for
+ * PaintedLayerDataNode.
+ * The tree calls out to its containing ContainerState for some things.
+ * All coordinates / rects in the tree or the tree nodes are in the
+ * ContainerState's coordinate space, i.e. relative to the reference frame and
+ * in layer pixels.
+ * The clip rects of sibling nodes never overlap. This is ensured by finishing
+ * existing nodes before adding new ones, if this property were to be violated.
+ * The root tree node doesn't get finished until the ContainerState is
+ * finished.
+ * The tree's root node is always the root reference frame of the builder. We
+ * don't stop at the container state's mContainerAnimatedGeometryRoot because
+ * some of our contents can have animated geometry roots that are not
+ * descendants of the container's animated geometry root. Every animated
+ * geometry root we encounter for our contents needs to have a defined place in
+ * the tree.
+ */
+class PaintedLayerDataTree {
+public:
+  PaintedLayerDataTree(ContainerState& aContainerState,
+                       nscolor& aBackgroundColor)
+    : mContainerState(aContainerState)
+    , mContainerUniformBackgroundColor(aBackgroundColor)
+  {}
+
+  ~PaintedLayerDataTree()
+  {
+    MOZ_ASSERT(!mRoot);
+    MOZ_ASSERT(mNodes.Count() == 0);
+  }
+
+  /**
+   * Notify our contents that some non-PaintedLayer content has been added.
+   * *aRect needs to be a rectangle that doesn't move with respect to
+   * aAnimatedGeometryRoot and that contains the added item.
+   * If aRect is null, the extents will be considered infinite.
+   * If aOutUniformBackgroundColor is non-null, it will be set to an opaque
+   * color that can be pulled into the background of the added content, or
+   * transparent if that is not possible.
+   */
+  void AddingOwnLayer(const nsIFrame* aAnimatedGeometryRoot,
+                      const nsIntRect* aRect,
+                      nscolor* aOutUniformBackgroundColor);
+
+  /**
+   * Find a PaintedLayerData for aItem. This can either be an existing
+   * PaintedLayerData from inside a node in our tree, or a new one that gets
+   * created by a call out to aNewPaintedLayerCallback.
+   */
+  template<typename NewPaintedLayerCallbackType>
+  PaintedLayerData* FindPaintedLayerFor(const nsIFrame* aAnimatedGeometryRoot,
+                                        const nsIntRect& aVisibleRect,
+                                        bool aShouldFixToViewport,
+                                        NewPaintedLayerCallbackType aNewPaintedLayerCallback);
+
+  /**
+   * Finish everything.
+   */
+  void Finish();
+
+  /**
+   * Get the parent animated geometry root of aAnimatedGeometryRoot.
+   * That's either aAnimatedGeometryRoot's animated geometry root, or, if
+   * that's aAnimatedGeometryRoot itself, then it's the animated geometry
+   * root for aAnimatedGeometryRoot's cross-doc parent frame.
+   */
+  const nsIFrame* GetParentAnimatedGeometryRoot(const nsIFrame* aAnimatedGeometryRoot);
+
+  /**
+   * Whether aAnimatedGeometryRoot has an intrinsic clip that doesn't move with
+   * respect to aAnimatedGeometryRoot's parent animated geometry root.
+   * If aAnimatedGeometryRoot is a scroll frame, this will be the scroll frame's
+   * scroll port, otherwise there is no clip.
+   * This method doesn't have much to do with PaintedLayerDataTree, but this is
+   * where we have easy access to a display list builder, which we use to get
+   * the clip rect result into the right coordinate space.
+   */
+  bool IsClippedWithRespectToParentAnimatedGeometryRoot(const nsIFrame* aAnimatedGeometryRoot,
+                                                        nsIntRect* aOutClip);
+
+  /**
+   * Called by PaintedLayerDataNode when it is finished, so that we can drop
+   * our pointers to it.
+   */
+  void NodeWasFinished(const nsIFrame* aAnimatedGeometryRoot);
+
+  nsDisplayListBuilder* Builder() const;
+  ContainerState& ContState() const { return mContainerState; }
+  nscolor UniformBackgroundColor() const { return mContainerUniformBackgroundColor; }
+
+protected:
+  /**
+   * Finish all nodes that potentially intersect *aRect, where *aRect is a rect
+   * that doesn't move with respect to aAnimatedGeometryRoot.
+   * If aRect is null, *aRect will be considered infinite.
+   */
+  void FinishPotentiallyIntersectingNodes(const nsIFrame* aAnimatedGeometryRoot,
+                                          const nsIntRect* aRect);
+
+  /**
+   * Make sure that there is a node for aAnimatedGeometryRoot and all of its
+   * ancestor geometry roots. Return the node for aAnimatedGeometryRoot.
+   */
+  PaintedLayerDataNode* EnsureNodeFor(const nsIFrame* aAnimatedGeometryRoot);
+
+  /**
+   * Find an existing node in the tree for an ancestor of aAnimatedGeometryRoot.
+   * *aOutAncestorChild will be set to the last ancestor that was encountered
+   * in the search up from aAnimatedGeometryRoot; it will be a child animated
+   * geometry root of the result, if neither are null.
+   */
+  PaintedLayerDataNode*
+    FindNodeForAncestorAnimatedGeometryRoot(const nsIFrame* aAnimatedGeometryRoot,
+                                            const nsIFrame** aOutAncestorChild);
+
+  ContainerState& mContainerState;
+  UniquePtr<PaintedLayerDataNode> mRoot;
+
+  /**
+   * The uniform opaque color from behind this container layer, or
+   * NS_RGBA(0,0,0,0) if the background behind this container layer is not
+   * uniform and opaque. This color can be pulled into PaintedLayers that are
+   * directly above the background.
+   */
+  nscolor mContainerUniformBackgroundColor;
+
+  /**
+   * A hash map for quick access the node belonging to a particular animated
+   * geometry root.
+   */
+  nsDataHashtable<nsPtrHashKey<const nsIFrame>, PaintedLayerDataNode*> mNodes;
+};
+
 /**
  * This is a helper object used to build up the layer children for
  * a ContainerLayer.
@@ -640,7 +883,7 @@ public:
     mContainerLayer(aContainerLayer),
     mContainerBounds(aContainerBounds),
     mParameters(aParameters),
-    mContainerUniformBackgroundColor(aBackgroundColor),
+    mPaintedLayerDataTree(*this, aBackgroundColor),
     mFlattenToSingleLayer(aFlattenToSingleLayer)
   {
     nsPresContext* presContext = aContainerFrame->PresContext();
@@ -648,9 +891,13 @@ public:
     mContainerReferenceFrame =
       const_cast<nsIFrame*>(aContainerItem ? aContainerItem->ReferenceFrameForChildren() :
                                              mBuilder->FindReferenceFrameFor(mContainerFrame));
-    mContainerAnimatedGeometryRoot = aContainerItem
-      ? nsLayoutUtils::GetAnimatedGeometryRootFor(aContainerItem, aBuilder, aManager)
-      : mContainerReferenceFrame;
+    bool isAtRoot = !aContainerItem || (aContainerItem->Frame() == mBuilder->RootReferenceFrame());
+    MOZ_ASSERT_IF(isAtRoot, mContainerReferenceFrame == mBuilder->RootReferenceFrame());
+    mContainerAnimatedGeometryRoot = isAtRoot
+      ? mContainerReferenceFrame
+      : nsLayoutUtils::GetAnimatedGeometryRootFor(aContainerItem, aBuilder, aManager);
+    MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(mBuilder->RootReferenceFrame(),
+                                                      mContainerAnimatedGeometryRoot));
     NS_ASSERTION(!aContainerItem || !aContainerItem->ShouldFixToViewport(aManager),
                  "Container items never return true for ShouldFixToViewport");
     mContainerFixedPosFrame =
@@ -733,6 +980,7 @@ public:
   }
 
   nsIFrame* GetContainerFrame() const { return mContainerFrame; }
+  nsDisplayListBuilder* Builder() const { return mBuilder; }
 
   /**
    * Sets aOuterVisibleRegion as aLayer's visible region. aOuterVisibleRegion
@@ -753,6 +1001,25 @@ public:
   {
     mHoistedItems.AppendElements(aItems);
   }
+
+  /**
+   * Try to determine whether the PaintedLayer aData has a single opaque color
+   * covering aRect. If successful, return that color, otherwise return
+   * NS_RGBA(0,0,0,0).
+   * If aRect turns out not to intersect any content in the layer,
+   * *aOutIntersectsLayer will be set to false.
+   */
+  nscolor FindOpaqueBackgroundColorInLayer(const PaintedLayerData* aData,
+                                           const nsIntRect& aRect,
+                                           bool* aOutIntersectsLayer) const;
+
+  /**
+   * Indicate that we are done adding items to the PaintedLayer represented by
+   * aData. Make sure that a real PaintedLayer exists for it, and set the final
+   * visible region and opaque-content.
+   */
+  template<typename FindOpaqueBackgroundColorCallbackType>
+  void FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueBackgroundColorCallbackType aFindOpaqueBackgroundColor);
 
 protected:
   friend class PaintedLayerData;
@@ -819,17 +1086,6 @@ protected:
    */
   void InvalidateForLayerChange(nsDisplayItem* aItem,
                                 PaintedLayer* aNewLayer);
-
-  /**
-   * Try to determine whether a layer with visible region aTargetVisibleRegion
-   * has a single opaque color behind it, over the entire bounds of its visible
-   * region. The target layer is assumed to be on top of all thebes layers in
-   * the thebes layer data stack that have a stack index < aUnderPaintedLayerIndex.
-   * If successful, return the color, otherwise return NS_RGBA(0,0,0,0).
-   * aTargetVisibleRegion is relative to the the container reference frame.
-   */
-  nscolor FindOpaqueBackgroundColorFor(const nsIntRegion& aTargetVisibleRegion,
-                                       int32_t aUnderPaintedLayerIndex);
   /**
    * Find the fixed-pos frame, if any, containing (or equal to)
    * aAnimatedGeometryRoot. Only return a fixed-pos frame if its viewport
@@ -886,48 +1142,23 @@ protected:
                                 bool* aOpaqueForAnimatedGeometryRootParent);
 
   /**
-   * Indicate that we are done adding items to the PaintedLayer at the top of
-   * mPaintedLayerDataStack. Set the final visible region and opaque-content
-   * flag, and pop it off the stack.
+   * Return a PaintedLayerData object that is initialized for a layer that
+   * aItem will be assigned to.
+   * @param  aItem                 The item that is going to be added.
+   * @param  aVisibleRect          The visible rect of the item.
+   * @param  aAnimatedGeometryRoot The item's animated geometry root.
+   * @param  aTopLeft              The offset between aAnimatedGeometryRoot and
+   *                               the reference frame.
+   * @param aShouldFixToViewport   If true, aAnimatedGeometryRoot is the
+   *                               viewport and we will be adding fixed-pos
+   *                               metadata for this layer because the display
+   *                               item returned true from ShouldFixToViewport.
    */
-  void PopPaintedLayerData();
-  /**
-   * Check if any of the animated geometry roots from aAnimatedGeometryRoot up
-   * to and including mContainerAnimatedGeometryRoot are async scrollable. If
-   * so, return true. This is used to flag a particular PaintedLayer as being
-   * subject to async transforms.
-   */
-  bool HasScrollableGeometryInContainer(const nsIFrame* aAnimatedGeometryRoot);
-  /**
-   * Find the PaintedLayer to which we should assign the next display item.
-   * We scan the PaintedLayerData stack to find the topmost PaintedLayer
-   * that is compatible with the display item (i.e., has the same
-   * active scrolled root), and that has no content from other layers above
-   * it and intersecting the aVisibleRect.
-   * Returns the layer, and also updates the PaintedLayerData. Will
-   * push a new PaintedLayerData onto the stack if no suitable existing
-   * layer is found. If we choose a PaintedLayer that's already on the
-   * PaintedLayerData stack, later elements on the stack will be popped off.
-   * @param aVisibleRect the area of the next display item that's visible
-   * @param aAnimatedGeometryRoot the active scrolled root for the next
-   * display item
-   * @param aOpaqueRect if non-null, a region of the display item that is opaque
-   * @param aSolidColor if non-null, indicates that every pixel in aVisibleRect
-   * will be painted with aSolidColor by the item
-   * @param aShouldFixToViewport if true, aAnimatedGeometryRoot is the viewport
-   * and we will be adding fixed-pos metadata for this layer because the
-   * display item returned true from ShouldFixToViewport.
-   */
-  PaintedLayerData* FindPaintedLayerFor(nsDisplayItem* aItem,
-                                      const nsIntRect& aVisibleRect,
-                                      const nsIFrame* aAnimatedGeometryRoot,
-                                      const nsPoint& aTopLeft,
-                                      bool aShouldFixToViewport);
-  PaintedLayerData* GetTopPaintedLayerData()
-  {
-    return mPaintedLayerDataStack.IsEmpty() ? nullptr
-        : mPaintedLayerDataStack[mPaintedLayerDataStack.Length() - 1].get();
-  }
+  PaintedLayerData NewPaintedLayerData(nsDisplayItem* aItem,
+                                       const nsIntRect& aVisibleRect,
+                                       const nsIFrame* aAnimatedGeometryRoot,
+                                       const nsPoint& aTopLeft,
+                                       bool aShouldFixToViewport);
 
   /* Build a mask layer to represent the clipping region. Will return null if
    * there is no clipping specified or a mask layer cannot be built.
@@ -947,31 +1178,6 @@ protected:
   bool ChooseAnimatedGeometryRoot(const nsDisplayList& aList,
                                   const nsIFrame **aAnimatedGeometryRoot);
 
-  /**
-   * When adding a new layer above the topmost PaintedLayerData layer in our
-   * PaintedLayerDataStack, update the visible above region of the topmost
-   * PaintedLayerData item.
-   * @param aVisibleRect   The visible rect of the newly-added display item
-   * @param aCanMoveFreely Whether the visible area of the item can change
-   *                       without new layer building.
-   * @param aClipRectIfAny A clip rect, if the layer is clipped, or nullptr.
-   */
-  void UpdateVisibleAboveRegionForNewItem(const nsIntRect& aVisibleRect,
-                                          bool aCanMoveFreely,
-                                          const nsIntRect* aClipRectIfAny);
-
-  /**
-   * When popping aData from the PaintedLayerDataStack, update the next
-   * PaintedLayerData item's visible above region to take the popped layer
-   * into account.
-   * @param aData                 The layer data that is getting popped from
-   *                              the stack.
-   * @param aNextPaintedLayerData The next lower item in the stack, or nullptr
-   *                              if there is none.
-   */
-  void UpdateVisibleAboveRegionOnPop(PaintedLayerData* aData,
-                                     PaintedLayerData* aNextPaintedLayerData);
-
   nsDisplayListBuilder*            mBuilder;
   LayerManager*                    mManager;
   FrameLayerBuilder*               mLayerBuilder;
@@ -988,7 +1194,7 @@ protected:
    * we recycle one.
    */
   nsIntRegion                      mInvalidPaintedContent;
-  nsAutoTArray<nsAutoPtr<PaintedLayerData>,1>  mPaintedLayerDataStack;
+  PaintedLayerDataTree             mPaintedLayerDataTree;
   /**
    * We collect the list of children in here. During ProcessDisplayItems,
    * the layers in this array either have mContainerLayer as their parent,
@@ -1003,19 +1209,7 @@ protected:
   nsTHashtable<nsRefPtrHashKey<PaintedLayer>> mPaintedLayersAvailableForRecycling;
   nsDataHashtable<nsPtrHashKey<Layer>, nsRefPtr<ImageLayer> >
     mRecycledMaskImageLayers;
-  /**
-   * The visible region of all visible content in this container layer under
-   * first PaintedLayerData layer in the PaintedLayerDataStack.
-   */
-  PossiblyInfiniteRegion           mVisibleAboveBackgroundRegion;
   nscoord                          mAppUnitsPerDevPixel;
-  /**
-   * The uniform opaque color from behind this container layer, or
-   * NS_RGBA(0,0,0,0) if the background behind this container layer is not
-   * uniform and opaque. This color can be pulled into PaintedLayers that are
-   * directly above the background.
-   */
-  nscolor                          mContainerUniformBackgroundColor;
   bool                             mSnappingEnabled;
   bool                             mFlattenToSingleLayer;
   /**
@@ -2025,75 +2219,128 @@ ContainerState::SetOuterVisibleRegionForLayer(Layer* aLayer,
 }
 
 nscolor
-ContainerState::FindOpaqueBackgroundColorFor(const nsIntRegion& aTargetVisibleRegion,
-                                             int32_t aUnderPaintedLayerIndex)
+ContainerState::FindOpaqueBackgroundColorInLayer(const PaintedLayerData* aData,
+                                                 const nsIntRect& aRect,
+                                                 bool* aOutIntersectsLayer) const
 {
-  for (int32_t i = aUnderPaintedLayerIndex - 1; i >= 0; --i) {
-    PaintedLayerData* candidate = mPaintedLayerDataStack[i];
+  *aOutIntersectsLayer = true;
+
+  // Scan the candidate's display items.
+  nsIntRect deviceRect = aRect;
+  nsRect appUnitRect = deviceRect.ToAppUnits(mAppUnitsPerDevPixel);
+  appUnitRect.ScaleInverseRoundOut(mParameters.mXScale, mParameters.mYScale);
+
+  for (auto& assignedItem : Reversed(aData->mAssignedDisplayItems)) {
+    nsDisplayItem* item = assignedItem.mItem;
+    bool snap;
+    nsRect bounds = item->GetBounds(mBuilder, &snap);
+    if (snap && mSnappingEnabled) {
+      nsIntRect snappedBounds = ScaleToNearestPixels(bounds);
+      if (!snappedBounds.Intersects(deviceRect))
+        continue;
+
+      if (!snappedBounds.Contains(deviceRect))
+        return NS_RGBA(0,0,0,0);
+
+    } else {
+      // The layer's visible rect is already (close enough to) pixel
+      // aligned, so no need to round out and in here.
+      if (!bounds.Intersects(appUnitRect))
+        continue;
+
+      if (!bounds.Contains(appUnitRect))
+        return NS_RGBA(0,0,0,0);
+    }
+
+    if (item->IsInvisibleInRect(appUnitRect)) {
+      continue;
+    }
+
+    if (assignedItem.mClip.IsRectAffectedByClip(deviceRect,
+                                                mParameters.mXScale,
+                                                mParameters.mYScale,
+                                                mAppUnitsPerDevPixel)) {
+      return NS_RGBA(0,0,0,0);
+    }
+
+    nscolor color;
+    if (item->IsUniform(mBuilder, &color) && NS_GET_A(color) == 255)
+      return color;
+
+    return NS_RGBA(0,0,0,0);
+  }
+
+  *aOutIntersectsLayer = false;
+  return NS_RGBA(0,0,0,0);
+}
+
+nscolor
+PaintedLayerDataNode::FindOpaqueBackgroundColor(const nsIntRegion& aTargetVisibleRegion,
+                                                int32_t aUnderIndex) const
+{
+  if (aUnderIndex == ABOVE_TOP) {
+    aUnderIndex = mPaintedLayerDataStack.Length();
+  }
+  for (int32_t i = aUnderIndex - 1; i >= 0; --i) {
+    const PaintedLayerData* candidate = &mPaintedLayerDataStack[i];
     if (candidate->VisibleAboveRegionIntersects(aTargetVisibleRegion)) {
       // Some non-PaintedLayer content between target and candidate; this is
       // hopeless
       return NS_RGBA(0,0,0,0);
     }
 
-    nsIntRegion intersection;
-    intersection.And(candidate->mVisibleRegion, aTargetVisibleRegion);
-    if (intersection.IsEmpty()) {
+    if (!candidate->VisibleRegionIntersects(aTargetVisibleRegion)) {
       // The layer doesn't intersect our target, ignore it and move on
       continue;
     }
 
-    // The candidate intersects our target. If any layer has a solid-color
-    // area behind our target, this must be it. Scan its display items.
-    nsIntRect deviceRect = aTargetVisibleRegion.GetBounds();
-    nsRect appUnitRect = deviceRect.ToAppUnits(mAppUnitsPerDevPixel);
-    appUnitRect.ScaleInverseRoundOut(mParameters.mXScale, mParameters.mYScale);
-
-    for (auto& assignedItem : Reversed(candidate->mAssignedDisplayItems)) {
-      nsDisplayItem* item = assignedItem.mItem;
-      bool snap;
-      nsRect bounds = item->GetBounds(mBuilder, &snap);
-      if (snap && mSnappingEnabled) {
-        nsIntRect snappedBounds = ScaleToNearestPixels(bounds);
-        if (!snappedBounds.Intersects(deviceRect))
-          continue;
-
-        if (!snappedBounds.Contains(deviceRect))
-          return NS_RGBA(0,0,0,0);
-
-      } else {
-        // The layer's visible rect is already (close enough to) pixel
-        // aligned, so no need to round out and in here.
-        if (!bounds.Intersects(appUnitRect))
-          continue;
-
-        if (!bounds.Contains(appUnitRect))
-          return NS_RGBA(0,0,0,0);
-      }
-
-      if (item->IsInvisibleInRect(appUnitRect)) {
-        continue;
-      }
-
-      if (item->GetClip().IsRectAffectedByClip(deviceRect,
-                                               mParameters.mXScale,
-                                               mParameters.mYScale,
-                                               mAppUnitsPerDevPixel)) {
-        return NS_RGBA(0,0,0,0);
-      }
-
-      nscolor color;
-      if (item->IsUniform(mBuilder, &color) && NS_GET_A(color) == 255)
-        return color;
-
-      return NS_RGBA(0,0,0,0);
+    bool intersectsLayer = true;
+    nsIntRect rect = aTargetVisibleRegion.GetBounds();
+    nscolor color = mTree.ContState().FindOpaqueBackgroundColorInLayer(
+                                        candidate, rect, &intersectsLayer);
+    if (!intersectsLayer) {
+      continue;
     }
+    return color;
   }
-  if (mVisibleAboveBackgroundRegion.Intersects(aTargetVisibleRegion)) {
-    // Some non-Thebes content is between container background and target.
+  if (mAllDrawingAboveBackground ||
+      !mVisibleAboveBackgroundRegion.Intersect(aTargetVisibleRegion).IsEmpty()) {
+    // Some non-PaintedLayer content is between this node's background and target.
     return NS_RGBA(0,0,0,0);
   }
-  return mContainerUniformBackgroundColor;
+  return FindOpaqueBackgroundColorInParentNode();
+}
+
+nscolor
+PaintedLayerDataNode::FindOpaqueBackgroundColorCoveringEverything() const
+{
+  if (!mPaintedLayerDataStack.IsEmpty() ||
+      !mVisibleAboveBackgroundRegion.IsEmpty()) {
+    return NS_RGBA(0,0,0,0);
+  }
+  return FindOpaqueBackgroundColorInParentNode();
+}
+
+nscolor
+PaintedLayerDataNode::FindOpaqueBackgroundColorInParentNode() const
+{
+  if (mParent) {
+    if (mHasClip) {
+      // Check whether our parent node has uniform content behind our whole
+      // clip.
+      // There's one tricky case here: If our parent node is also a scrollable,
+      // and is currently scrolled in such a way that this inner one is
+      // clipped by it, then it's not really clear how we should determine
+      // whether we have a uniform background in the parent: There might be
+      // non-uniform content in the parts that our scroll port covers in the
+      // parent and that are currently outside the parent's clip.
+      // For now, we'll fail to pull a background color in that case.
+      return mParent->FindOpaqueBackgroundColor(mClipRect);
+    }
+    return mParent->FindOpaqueBackgroundColorCoveringEverything();
+  }
+  // We are the root.
+  return mTree.UniformBackgroundColor();
 }
 
 void
@@ -2116,6 +2363,326 @@ PaintedLayerData::CanOptimizeImageLayer(nsDisplayListBuilder* aBuilder)
   }
 
   return mImage->GetContainer(mLayer->Manager(), aBuilder);
+}
+
+PaintedLayerDataNode::PaintedLayerDataNode(PaintedLayerDataTree& aTree,
+                                           PaintedLayerDataNode* aParent,
+                                           const nsIFrame* aAnimatedGeometryRoot)
+  : mTree(aTree)
+  , mParent(aParent)
+  , mAnimatedGeometryRoot(aAnimatedGeometryRoot)
+  , mAllDrawingAboveBackground(false)
+{
+  MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(mTree.Builder()->RootReferenceFrame(), mAnimatedGeometryRoot));
+  mHasClip = mTree.IsClippedWithRespectToParentAnimatedGeometryRoot(mAnimatedGeometryRoot, &mClipRect);
+}
+
+PaintedLayerDataNode::~PaintedLayerDataNode()
+{
+  MOZ_ASSERT(mPaintedLayerDataStack.IsEmpty());
+  MOZ_ASSERT(mChildren.IsEmpty());
+}
+
+PaintedLayerDataNode*
+PaintedLayerDataNode::AddChildNodeFor(const nsIFrame* aAnimatedGeometryRoot)
+{
+  MOZ_ASSERT(mTree.GetParentAnimatedGeometryRoot(aAnimatedGeometryRoot) == mAnimatedGeometryRoot);
+  UniquePtr<PaintedLayerDataNode> child =
+    MakeUnique<PaintedLayerDataNode>(mTree, this, aAnimatedGeometryRoot);
+  mChildren.AppendElement(Move(child));
+  return mChildren.LastElement().get();
+}
+
+template<typename NewPaintedLayerCallbackType>
+PaintedLayerData*
+PaintedLayerDataNode::FindPaintedLayerFor(const nsIntRect& aVisibleRect,
+                                          NewPaintedLayerCallbackType aNewPaintedLayerCallback)
+{
+  if (!mPaintedLayerDataStack.IsEmpty()) {
+    if (mPaintedLayerDataStack[0].mSingleItemFixedToViewport) {
+      MOZ_ASSERT(mPaintedLayerDataStack.Length() == 1);
+      SetAllDrawingAbove();
+      MOZ_ASSERT(mPaintedLayerDataStack.IsEmpty());
+    } else {
+      PaintedLayerData* lowestUsableLayer = nullptr;
+      for (auto& data : Reversed(mPaintedLayerDataStack)) {
+        if (data.VisibleAboveRegionIntersects(aVisibleRect)) {
+          break;
+        }
+        MOZ_ASSERT(!data.mSingleItemFixedToViewport);
+        lowestUsableLayer = &data;
+        if (data.VisibleRegionIntersects(aVisibleRect)) {
+          break;
+        }
+      }
+      if (lowestUsableLayer) {
+        return lowestUsableLayer;
+      }
+    }
+  }
+  return mPaintedLayerDataStack.AppendElement(aNewPaintedLayerCallback());
+}
+
+void
+PaintedLayerDataNode::FinishChildrenIntersecting(const nsIntRect& aRect)
+{
+  for (int32_t i = mChildren.Length() - 1; i >= 0; i--) {
+    if (mChildren[i]->Intersects(aRect)) {
+      mChildren[i]->Finish(true);
+      mChildren.RemoveElementAt(i);
+    }
+  }
+}
+
+void
+PaintedLayerDataNode::FinishAllChildren(bool aThisNodeNeedsAccurateVisibleAboveRegion)
+{
+  for (int32_t i = mChildren.Length() - 1; i >= 0; i--) {
+    mChildren[i]->Finish(aThisNodeNeedsAccurateVisibleAboveRegion);
+  }
+  mChildren.Clear();
+}
+
+void
+PaintedLayerDataNode::Finish(bool aParentNeedsAccurateVisibleAboveRegion)
+{
+  // Skip "visible above region" maintenance, because this node is going away.
+  FinishAllChildren(false);
+
+  PopAllPaintedLayerData();
+
+  if (mParent && aParentNeedsAccurateVisibleAboveRegion) {
+    if (mHasClip) {
+      mParent->AddToVisibleAboveRegion(mClipRect);
+    } else {
+      mParent->SetAllDrawingAbove();
+    }
+  }
+  mTree.NodeWasFinished(mAnimatedGeometryRoot);
+}
+
+void
+PaintedLayerDataNode::AddToVisibleAboveRegion(const nsIntRect& aRect)
+{
+  nsIntRegion& visibleAboveRegion = mPaintedLayerDataStack.IsEmpty()
+    ? mVisibleAboveBackgroundRegion
+    : mPaintedLayerDataStack.LastElement().mVisibleAboveRegion;
+  visibleAboveRegion.Or(visibleAboveRegion, aRect);
+  visibleAboveRegion.SimplifyOutward(8);
+}
+
+void
+PaintedLayerDataNode::SetAllDrawingAbove()
+{
+  PopAllPaintedLayerData();
+  mAllDrawingAboveBackground = true;
+  mVisibleAboveBackgroundRegion.SetEmpty();
+}
+
+void
+PaintedLayerDataNode::PopPaintedLayerData()
+{
+  MOZ_ASSERT(!mPaintedLayerDataStack.IsEmpty());
+  size_t lastIndex = mPaintedLayerDataStack.Length() - 1;
+  PaintedLayerData& data = mPaintedLayerDataStack[lastIndex];
+  mTree.ContState().FinishPaintedLayerData(data, [this, &data, lastIndex]() {
+    return this->FindOpaqueBackgroundColor(data.mVisibleRegion, lastIndex);
+  });
+  mPaintedLayerDataStack.RemoveElementAt(lastIndex);
+}
+
+void
+PaintedLayerDataNode::PopAllPaintedLayerData()
+{
+  while (!mPaintedLayerDataStack.IsEmpty()) {
+    PopPaintedLayerData();
+  }
+}
+
+nsDisplayListBuilder*
+PaintedLayerDataTree::Builder() const
+{
+  return mContainerState.Builder();
+}
+
+const nsIFrame*
+PaintedLayerDataTree::GetParentAnimatedGeometryRoot(const nsIFrame* aAnimatedGeometryRoot)
+{
+  MOZ_ASSERT(aAnimatedGeometryRoot);
+  MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(Builder()->RootReferenceFrame(), aAnimatedGeometryRoot));
+
+  if (aAnimatedGeometryRoot == Builder()->RootReferenceFrame()) {
+    return nullptr;
+  }
+
+  nsIFrame* agr = Builder()->FindAnimatedGeometryRootFor(
+    const_cast<nsIFrame*>(aAnimatedGeometryRoot), Builder()->RootReferenceFrame());
+  MOZ_ASSERT_IF(agr, nsLayoutUtils::IsAncestorFrameCrossDoc(Builder()->RootReferenceFrame(), agr));
+  if (agr != aAnimatedGeometryRoot) {
+    return agr;
+  }
+  // aAnimatedGeometryRoot is its own animated geometry root.
+  // Find the animated geometry root for its cross-doc parent frame.
+  nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(aAnimatedGeometryRoot);
+  if (!parent) {
+    return nullptr;
+  }
+  return Builder()->FindAnimatedGeometryRootFor(parent, Builder()->RootReferenceFrame());
+}
+
+void
+PaintedLayerDataTree::Finish()
+{
+  if (mRoot) {
+    mRoot->Finish(false);
+  }
+  MOZ_ASSERT(mNodes.Count() == 0);
+  mRoot = nullptr;
+}
+
+void
+PaintedLayerDataTree::NodeWasFinished(const nsIFrame* aAnimatedGeometryRoot)
+{
+  mNodes.Remove(aAnimatedGeometryRoot);
+}
+
+void
+PaintedLayerDataTree::AddingOwnLayer(const nsIFrame* aAnimatedGeometryRoot,
+                                     const nsIntRect* aRect,
+                                     nscolor* aOutUniformBackgroundColor)
+{
+  FinishPotentiallyIntersectingNodes(aAnimatedGeometryRoot, aRect);
+  PaintedLayerDataNode* node = EnsureNodeFor(aAnimatedGeometryRoot);
+  if (aRect) {
+    if (aOutUniformBackgroundColor) {
+      *aOutUniformBackgroundColor = node->FindOpaqueBackgroundColor(*aRect);
+    }
+    node->AddToVisibleAboveRegion(*aRect);
+  } else {
+    if (aOutUniformBackgroundColor) {
+      *aOutUniformBackgroundColor = node->FindOpaqueBackgroundColorCoveringEverything();
+    }
+    node->SetAllDrawingAbove();
+  }
+}
+
+template<typename NewPaintedLayerCallbackType>
+PaintedLayerData*
+PaintedLayerDataTree::FindPaintedLayerFor(const nsIFrame* aAnimatedGeometryRoot,
+                                          const nsIntRect& aVisibleRect,
+                                          bool aShouldFixToViewport,
+                                          NewPaintedLayerCallbackType aNewPaintedLayerCallback)
+{
+  const nsIntRect* bounds = aShouldFixToViewport ? nullptr : &aVisibleRect;
+  FinishPotentiallyIntersectingNodes(aAnimatedGeometryRoot, bounds);
+  PaintedLayerDataNode* node = EnsureNodeFor(aAnimatedGeometryRoot);
+  if (aShouldFixToViewport) {
+    node->SetAllDrawingAbove();
+  }
+  return node->FindPaintedLayerFor(aVisibleRect, aNewPaintedLayerCallback);
+}
+
+void
+PaintedLayerDataTree::FinishPotentiallyIntersectingNodes(const nsIFrame* aAnimatedGeometryRoot,
+                                                         const nsIntRect* aRect)
+{
+  const nsIFrame* ancestorThatIsChildOfCommonAncestor = nullptr;
+  PaintedLayerDataNode* ancestorNode =
+    FindNodeForAncestorAnimatedGeometryRoot(aAnimatedGeometryRoot,
+                                            &ancestorThatIsChildOfCommonAncestor);
+  if (!ancestorNode) {
+    // None of our ancestors are in the tree. This should only happen if this
+    // is the very first item we're looking at.
+    MOZ_ASSERT(!mRoot);
+    return;
+  }
+
+  if (ancestorNode->AnimatedGeometryRoot() == aAnimatedGeometryRoot) {
+    // aAnimatedGeometryRoot already has a node in the tree.
+    // This is the common case.
+    MOZ_ASSERT(!ancestorThatIsChildOfCommonAncestor);
+    if (aRect) {
+      ancestorNode->FinishChildrenIntersecting(*aRect);
+    } else {
+      ancestorNode->FinishAllChildren();
+    }
+    return;
+  }
+
+  // We have found an existing ancestor, but it's a proper ancestor of our
+  // animated geometry root.
+  // ancestorThatIsChildOfCommonAncestor is the last animated geometry root
+  // encountered on the way up from aAnimatedGeometryRoot to ancestorNode.
+  MOZ_ASSERT(ancestorThatIsChildOfCommonAncestor);
+  MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(ancestorThatIsChildOfCommonAncestor, aAnimatedGeometryRoot));
+  MOZ_ASSERT(GetParentAnimatedGeometryRoot(ancestorThatIsChildOfCommonAncestor) == ancestorNode->AnimatedGeometryRoot());
+
+  // ancestorThatIsChildOfCommonAncestor is not in the tree yet!
+  MOZ_ASSERT(!mNodes.Get(ancestorThatIsChildOfCommonAncestor));
+
+  // We're about to add a node for ancestorThatIsChildOfCommonAncestor, so we
+  // finish all intersecting siblings.
+  nsIntRect clip;
+  if (IsClippedWithRespectToParentAnimatedGeometryRoot(ancestorThatIsChildOfCommonAncestor, &clip)) {
+    ancestorNode->FinishChildrenIntersecting(clip);
+  } else {
+    ancestorNode->FinishAllChildren();
+  }
+}
+
+PaintedLayerDataNode*
+PaintedLayerDataTree::EnsureNodeFor(const nsIFrame* aAnimatedGeometryRoot)
+{
+  MOZ_ASSERT(aAnimatedGeometryRoot);
+  PaintedLayerDataNode* node = mNodes.Get(aAnimatedGeometryRoot);
+  if (node) {
+    return node;
+  }
+
+  const nsIFrame* parentAnimatedGeometryRoot = GetParentAnimatedGeometryRoot(aAnimatedGeometryRoot);
+  if (!parentAnimatedGeometryRoot) {
+    MOZ_ASSERT(!mRoot);
+    MOZ_ASSERT(aAnimatedGeometryRoot == Builder()->RootReferenceFrame());
+    mRoot = MakeUnique<PaintedLayerDataNode>(*this, nullptr, aAnimatedGeometryRoot);
+    node = mRoot.get();
+  } else {
+    PaintedLayerDataNode* parentNode = EnsureNodeFor(parentAnimatedGeometryRoot);
+    MOZ_ASSERT(parentNode);
+    node = parentNode->AddChildNodeFor(aAnimatedGeometryRoot);
+  }
+  MOZ_ASSERT(node);
+  mNodes.Put(aAnimatedGeometryRoot, node);
+  return node;
+}
+
+bool
+PaintedLayerDataTree::IsClippedWithRespectToParentAnimatedGeometryRoot(const nsIFrame* aAnimatedGeometryRoot,
+                                                                       nsIntRect* aOutClip)
+{
+  nsIScrollableFrame* scrollableFrame = nsLayoutUtils::GetScrollableFrameFor(aAnimatedGeometryRoot);
+  if (!scrollableFrame) {
+    return false;
+  }
+  nsIFrame* scrollFrame = do_QueryFrame(scrollableFrame);
+  nsRect scrollPort = scrollableFrame->GetScrollPortRect() + Builder()->ToReferenceFrame(scrollFrame);
+  *aOutClip = mContainerState.ScaleToNearestPixels(scrollPort);
+  return true;
+}
+
+PaintedLayerDataNode*
+PaintedLayerDataTree::FindNodeForAncestorAnimatedGeometryRoot(const nsIFrame* aAnimatedGeometryRoot,
+                                                              const nsIFrame** aOutAncestorChild)
+{
+  if (!aAnimatedGeometryRoot) {
+    return nullptr;
+  }
+  PaintedLayerDataNode* node = mNodes.Get(aAnimatedGeometryRoot);
+  if (node) {
+    return node;
+  }
+  *aOutAncestorChild = aAnimatedGeometryRoot;
+  return FindNodeForAncestorAnimatedGeometryRoot(
+    GetParentAnimatedGeometryRoot(aAnimatedGeometryRoot), aOutAncestorChild);
 }
 
 const nsIFrame*
@@ -2222,13 +2789,11 @@ static int32_t FindIndexOfLayerIn(nsTArray<NewLayerEntry>& aArray,
 }
 #endif
 
-void
-ContainerState::PopPaintedLayerData()
-{
-  NS_ASSERTION(!mPaintedLayerDataStack.IsEmpty(), "Can't pop");
 
-  int32_t lastIndex = mPaintedLayerDataStack.Length() - 1;
-  PaintedLayerData* data = mPaintedLayerDataStack[lastIndex];
+template<typename FindOpaqueBackgroundColorCallbackType>
+void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueBackgroundColorCallbackType aFindOpaqueBackgroundColor)
+{
+  PaintedLayerData* data = &aData;
 
   if (!data->mLayer) {
     // No layer was recycled, so we create a new one.
@@ -2358,7 +2923,7 @@ ContainerState::PopPaintedLayerData()
   if (layer == data->mLayer) {
     nscolor backgroundColor = NS_RGBA(0,0,0,0);
     if (!isOpaque) {
-      backgroundColor = FindOpaqueBackgroundColorFor(data->mVisibleRegion, lastIndex);
+      backgroundColor = aFindOpaqueBackgroundColor();
       if (NS_GET_A(backgroundColor) == 255) {
         isOpaque = true;
       }
@@ -2486,16 +3051,6 @@ ContainerState::PopPaintedLayerData()
 
     layer->SetEventRegions(regions);
   }
-
-  // Since we're going to pop off the last PaintedLayerData, the
-  // mVisibleAboveRegion of the second-to-last item will need to include
-  // the regions of the last item. If we're emptying the PaintedLayerDataStack,
-  // we instead need to accumulate the regions into the container's
-  // mVisibleAboveBackgroundRegion.
-  UpdateVisibleAboveRegionOnPop(data,
-    lastIndex > 0 ? mPaintedLayerDataStack[lastIndex - 1].get() : nullptr);
-
-  mPaintedLayerDataStack.RemoveElementAt(lastIndex);
 }
 
 static bool
@@ -2658,111 +3213,32 @@ PaintedLayerData::Accumulate(ContainerState* aState,
   }
 }
 
-bool
-ContainerState::HasScrollableGeometryInContainer(const nsIFrame* aAnimatedGeometryRoot)
+PaintedLayerData
+ContainerState::NewPaintedLayerData(nsDisplayItem* aItem,
+                                    const nsIntRect& aVisibleRect,
+                                    const nsIFrame* aAnimatedGeometryRoot,
+                                    const nsPoint& aTopLeft,
+                                    bool aShouldFixToViewport)
 {
-  const nsIFrame* f = aAnimatedGeometryRoot;
-  while (f) {
-    nsIScrollableFrame* sf = nsLayoutUtils::GetScrollableFrameFor(f);
-    if (sf && sf->IsScrollingActive(mBuilder)) {
-      return true;
-    }
-    if (f == mContainerAnimatedGeometryRoot) {
-      break;
-    }
-    nsIFrame* fParent = nsLayoutUtils::GetCrossDocParentFrame(f);
-    if (!fParent) {
-      break;
-    }
-    f = nsLayoutUtils::GetAnimatedGeometryRootForFrame(
-          this->mBuilder, fParent, mContainerAnimatedGeometryRoot);
-  }
-  return false;
-}
+  PaintedLayerData data;
+  data.mAnimatedGeometryRoot = aAnimatedGeometryRoot;
+  data.mAnimatedGeometryRootOffset = aTopLeft;
+  data.mFixedPosFrameForLayerData =
+    FindFixedPosFrameForLayerData(aAnimatedGeometryRoot, aShouldFixToViewport);
+  data.mReferenceFrame = aItem->ReferenceFrame();
+  data.mSingleItemFixedToViewport = aShouldFixToViewport;
 
-PaintedLayerData*
-ContainerState::FindPaintedLayerFor(nsDisplayItem* aItem,
-                                   const nsIntRect& aVisibleRect,
-                                   const nsIFrame* aAnimatedGeometryRoot,
-                                   const nsPoint& aTopLeft,
-                                   bool aShouldFixToViewport)
-{
-  int32_t i;
-  int32_t lowestUsableLayerWithScrolledRoot = -1;
-  int32_t topmostLayerWithScrolledRoot = -1;
-  for (i = mPaintedLayerDataStack.Length() - 1; i >= 0; --i) {
-    // Don't let should-fix-to-viewport items share a layer with any other items.
-    if (aShouldFixToViewport) {
-      ++i;
-      break;
-    }
-    PaintedLayerData* data = mPaintedLayerDataStack[i];
-    // Give up if there is content visible above (in z-order) this layer that
-    // intersects aItem's visible region; aItem must be placed in a
-    // layer above this layer.
-    if (data->VisibleAboveRegionIntersects(aVisibleRect)) {
-      ++i;
-      break;
-    }
-    // If the animated scrolled roots are the same and we can share this layer
-    // with the item, note this as a usable layer.
-    if (data->mAnimatedGeometryRoot == aAnimatedGeometryRoot &&
-        !data->mSingleItemFixedToViewport) {
-      lowestUsableLayerWithScrolledRoot = i;
-      if (topmostLayerWithScrolledRoot < 0) {
-        topmostLayerWithScrolledRoot = i;
-      }
-    }
-    // If the layer's visible region intersects the item, stop now since no
-    // lower layer will be usable. Do the same if the layer is subject to
-    // async transforms, since we don't know where it will really be drawn.
-    if (data->VisibleRegionIntersects(aVisibleRect))
-      break;
-  }
-  if (topmostLayerWithScrolledRoot < 0) {
-    --i;
-    for (; i >= 0; --i) {
-      PaintedLayerData* data = mPaintedLayerDataStack[i];
-      if (data->mAnimatedGeometryRoot == aAnimatedGeometryRoot) {
-        topmostLayerWithScrolledRoot = i;
-        break;
-      }
-    }
-  }
+  data.mNewChildLayersIndex = mNewChildLayers.Length();
+  NewLayerEntry* newLayerEntry = mNewChildLayers.AppendElement();
+  newLayerEntry->mAnimatedGeometryRoot = aAnimatedGeometryRoot;
+  newLayerEntry->mFixedPosFrameForLayerData = data.mFixedPosFrameForLayerData;
+  // newLayerEntry->mOpaqueRegion is filled in later from
+  // paintedLayerData->mOpaqueRegion, if necessary.
 
-  if (topmostLayerWithScrolledRoot >= 0) {
-    while (uint32_t(topmostLayerWithScrolledRoot + 1) < mPaintedLayerDataStack.Length()) {
-      PopPaintedLayerData();
-    }
-  }
+  // Allocate another entry for this layer's optimization to ColorLayer/ImageLayer
+  mNewChildLayers.AppendElement();
 
-  PaintedLayerData* paintedLayerData = nullptr;
-  if (lowestUsableLayerWithScrolledRoot < 0) {
-    paintedLayerData = new PaintedLayerData();
-    mPaintedLayerDataStack.AppendElement(paintedLayerData);
-    paintedLayerData->mAnimatedGeometryRoot = aAnimatedGeometryRoot;
-    paintedLayerData->mAnimatedGeometryRootOffset = aTopLeft;
-    paintedLayerData->mFixedPosFrameForLayerData =
-      FindFixedPosFrameForLayerData(aAnimatedGeometryRoot, aShouldFixToViewport);
-    paintedLayerData->mIsScrollable =
-      HasScrollableGeometryInContainer(aAnimatedGeometryRoot);
-    paintedLayerData->mReferenceFrame = aItem->ReferenceFrame();
-    paintedLayerData->mSingleItemFixedToViewport = aShouldFixToViewport;
-
-    paintedLayerData->mNewChildLayersIndex = mNewChildLayers.Length();
-    NewLayerEntry* newLayerEntry = mNewChildLayers.AppendElement();
-    newLayerEntry->mAnimatedGeometryRoot = aAnimatedGeometryRoot;
-    newLayerEntry->mFixedPosFrameForLayerData = paintedLayerData->mFixedPosFrameForLayerData;
-    // newLayerEntry->mOpaqueRegion is filled in later from
-    // paintedLayerData->mOpaqueRegion, if necessary.
-
-    // Allocate another entry for this layer's optimization to ColorLayer/ImageLayer
-    mNewChildLayers.AppendElement();
-  } else {
-    paintedLayerData = mPaintedLayerDataStack[lowestUsableLayerWithScrolledRoot];
-  }
-
-  return paintedLayerData;
+  return data;
 }
 
 #ifdef MOZ_DUMP_PAINTING
@@ -2940,51 +3416,6 @@ ContainerState::ComputeOpaqueRect(nsDisplayItem* aItem,
     }
   }
   return opaquePixels;
-}
-
-void
-ContainerState::UpdateVisibleAboveRegionForNewItem(const nsIntRect& aVisibleRect,
-                                                   bool aCanMoveFreely,
-                                                   const nsIntRect* aClipRectIfAny)
-{
-  PaintedLayerData* data = GetTopPaintedLayerData();
-  PossiblyInfiniteRegion& visibleAboveRegion = data
-    ? data->mVisibleAboveRegion : mVisibleAboveBackgroundRegion;
-
-  if (aCanMoveFreely) {
-    // Prerendered transform items can be updated without layer building
-    // (async animations or an empty transaction), so we need to put items
-    // that the transform item can potentially move under into a layer above
-    // this item. We do this by making the visible above region infinite.
-    // If we have a clip, the transform can't escape from the clip rect, and
-    // the clip rect can't change without new layer building. In that case we
-    // can add just the clip rect to the visible above region.
-    visibleAboveRegion.AccumulateAndSimplifyOutward(
-      aClipRectIfAny ? *aClipRectIfAny : PossiblyInfiniteRegion::InfiniteRegion());
-  } else {
-    visibleAboveRegion.AccumulateAndSimplifyOutward(aVisibleRect);
-  }
-}
-
-void
-ContainerState::UpdateVisibleAboveRegionOnPop(PaintedLayerData* aData,
-                                              PaintedLayerData* aNextPaintedLayerData)
-{
-  PossiblyInfiniteRegion& visibleAboveRegion = aNextPaintedLayerData ?
-    aNextPaintedLayerData->mVisibleAboveRegion : mVisibleAboveBackgroundRegion;
-
-  // If aData has a draw region and is subject to scroll transforms then the
-  // layer can potentially be moved arbitrarily on the compositor. So we
-  // should avoid moving display items from on top of the layer to below the
-  // layer, which we do by making the visibleAboveRegion infinite. Note that
-  // if the visible region is empty (such as when aData has only event-regions
-  // items) then we don't need to do this.
-  if (aData->IsSubjectToScrollTransforms() && !aData->mVisibleRegion.IsEmpty()) {
-    visibleAboveRegion.AccumulateAndSimplifyOutward(PossiblyInfiniteRegion::InfiniteRegion());
-  } else {
-    visibleAboveRegion.AccumulateAndSimplifyOutward(aData->mVisibleAboveRegion);
-    visibleAboveRegion.AccumulateAndSimplifyOutward(aData->mVisibleRegion);
-  }
 }
 
 /*
@@ -3183,10 +3614,43 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       bool mayDrawOutOfOrder = itemType == nsDisplayItem::TYPE_TRANSFORM &&
         (item->Frame()->Preserves3D() || item->Frame()->Preserves3DChildren());
 
-      // Pull up a uniform background color into the layer if possible.
-      mParameters.mBackgroundColor = (prerenderedTransform || mayDrawOutOfOrder)
-        ? NS_RGBA(0,0,0,0)
-        : FindOpaqueBackgroundColorFor(itemVisibleRect, mPaintedLayerDataStack.Length());
+      // Let mPaintedLayerDataTree know about this item, so that
+      // FindPaintedLayerFor and FindOpaqueBackgroundColor are aware of this
+      // item, even though it's not in any PaintedLayerDataStack.
+      // Ideally we'd only need the "else" case here and have
+      // mPaintedLayerDataTree figure out the right clip from the animated
+      // geometry root that we give it, but it can't easily figure about
+      // overflow:hidden clips on ancestors just by looking at the frame.
+      // So we'll do a little hand holding and pass the clip instead of the
+      // visible rect for the two important cases.
+      nscolor uniformColor = NS_RGBA(0,0,0,0);
+      nscolor* uniformColorPtr = !mayDrawOutOfOrder ? &uniformColor : nullptr;
+      nsIntRect* clipPtr = itemClip.HasClip() ? &clipRect : nullptr;
+      if (animatedGeometryRoot == item->Frame() &&
+          animatedGeometryRoot != mBuilder->RootReferenceFrame()) {
+        // This is the case for scrollbar thumbs, for example. In that case the
+        // clip we care about is the overflow:hidden clip on the scrollbar.
+        const nsIFrame* clipAnimatedGeometryRoot =
+          mPaintedLayerDataTree.GetParentAnimatedGeometryRoot(animatedGeometryRoot);
+        mPaintedLayerDataTree.AddingOwnLayer(clipAnimatedGeometryRoot,
+                                             clipPtr, uniformColorPtr);
+      } else if (prerenderedTransform) {
+        mPaintedLayerDataTree.AddingOwnLayer(animatedGeometryRoot,
+                                             clipPtr, uniformColorPtr);
+      } else {
+        // Using itemVisibleRect here isn't perfect. itemVisibleRect can be
+        // larger or smaller than the potential bounds of item's contents in
+        // animatedGeometryRoot: It's too large if there's a clipped display
+        // port somewhere among item's contents (see bug 1147673), and it can
+        // be too small if the contents can move, because it only looks at the
+        // contents' current bounds and doesn't anticipate any animations.
+        // Time will tell whether this is good enough, or whether we need to do
+        // something more sophisticated here.
+        mPaintedLayerDataTree.AddingOwnLayer(animatedGeometryRoot,
+                                             &itemVisibleRect, uniformColorPtr);
+      }
+
+      mParameters.mBackgroundColor = uniformColor;
 
       // Just use its layer.
       // Set layerContentsVisibleRect.width/height to -1 to indicate we
@@ -3231,13 +3695,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       } else {
         ownLayer->SetClipRect(nullptr);
       }
-
-      // Update the "visible above region" of the topmost PaintedLayerData item
-      // (or of the container's background) so that FindPaintedLayerFor and
-      // FindOpaqueBackgroundColorFor are aware of this item, even though it's
-      // not in the PaintedLayerDataStack.
-      UpdateVisibleAboveRegionForNewItem(itemVisibleRect, prerenderedTransform,
-                                         itemClip.HasClip() ? &clipRect : nullptr);
 
       // rounded rectangle clipping using mask layers
       // (must be done after visible rect is set on layer)
@@ -3305,8 +3762,11 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
                                          topLeft, nullptr);
     } else {
       PaintedLayerData* paintedLayerData =
-        FindPaintedLayerFor(item, itemVisibleRect, animatedGeometryRoot, topLeft,
-                           shouldFixToViewport);
+        mPaintedLayerDataTree.FindPaintedLayerFor(animatedGeometryRoot, itemVisibleRect,
+                                                  shouldFixToViewport, [&]() {
+          return NewPaintedLayerData(item, itemVisibleRect, animatedGeometryRoot,
+                                     topLeft, shouldFixToViewport);
+        });
 
       if (itemType == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
         nsDisplayLayerEventRegions* eventRegions =
@@ -3915,9 +4375,7 @@ ContainerState::Finish(uint32_t* aTextContentFlags, LayerManagerData* aData,
                        const nsIntRect& aContainerPixelBounds,
                        nsDisplayList* aChildItems, bool& aHasComponentAlphaChildren)
 {
-  while (!mPaintedLayerDataStack.IsEmpty()) {
-    PopPaintedLayerData();
-  }
+  mPaintedLayerDataTree.Finish();
 
   NS_ASSERTION(mContainerBounds.IsEqualInterior(mAccumulatedChildBounds),
                "Bounds computation mismatch");
