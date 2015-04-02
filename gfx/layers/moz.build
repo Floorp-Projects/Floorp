@@ -94,7 +94,6 @@ EXPORTS.mozilla.layers += [
     # proper interface for the code there
     'apz/src/APZCTreeManager.h',
     'apz/src/APZUtils.h',
-    'apz/src/AsyncPanZoomAnimation.h',
     'apz/testutil/APZTestData.h',
     'apz/util/ActiveElementManager.h',
     'apz/util/APZCCallbackHelper.h',
