@@ -172,7 +172,6 @@ JitcodeGlobalEntry::BaselineEntry::callStackAtAddr(JSRuntime* rt, void* ptr,
                                                    uint32_t maxResults) const
 {
     MOZ_ASSERT(containsPointer(ptr));
-    MOZ_ASSERT(script_->hasBaselineScript());
     MOZ_ASSERT(maxResults >= 1);
 
     results[0] = str();
