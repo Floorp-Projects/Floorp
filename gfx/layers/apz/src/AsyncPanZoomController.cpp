@@ -1416,17 +1416,20 @@ AsyncPanZoomController::ConvertToGecko(const ParentLayerPoint& aPoint, CSSPoint*
   return false;
 }
 
-LayoutDevicePoint
-AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) const
+void
+AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent,
+                                            double& aOutDeltaX,
+                                            double& aOutDeltaY) const
 {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
-  LayoutDevicePoint delta(aEvent.mDeltaX, aEvent.mDeltaY);
+  aOutDeltaX = aEvent.mDeltaX;
+  aOutDeltaY = aEvent.mDeltaY;
   switch (aEvent.mDeltaType) {
     case ScrollWheelInput::SCROLLDELTA_LINE: {
       LayoutDeviceIntSize scrollAmount = mFrameMetrics.GetLineScrollAmount();
-      delta.x *= scrollAmount.width;
-      delta.y *= scrollAmount.height;
+      aOutDeltaX *= scrollAmount.width;
+      aOutDeltaY *= scrollAmount.height;
       break;
     }
     default:
@@ -1438,38 +1441,38 @@ AsyncPanZoomController::GetScrollWheelDelta(const ScrollWheelInput& aEvent) cons
     double hfactor = double(gfxPrefs::MouseWheelRootHScrollDeltaFactor()) / 100;
     double vfactor = double(gfxPrefs::MouseWheelRootVScrollDeltaFactor()) / 100;
     if (vfactor > 1.0) {
-      delta.x *= hfactor;
+      aOutDeltaX *= hfactor;
     }
     if (hfactor > 1.0) {
-      delta.y *= vfactor;
+      aOutDeltaY *= vfactor;
     }
   }
 
   LayoutDeviceIntSize pageScrollSize = mFrameMetrics.GetPageScrollAmount();
-  if (Abs(delta.x) > pageScrollSize.width) {
-    delta.x = (delta.x >= 0)
-              ? pageScrollSize.width
-              : -pageScrollSize.width;
+  if (Abs(aOutDeltaX) > pageScrollSize.width) {
+    aOutDeltaX = (aOutDeltaX >= 0)
+                 ? pageScrollSize.width
+                 : -pageScrollSize.width;
   }
-  if (Abs(delta.y) > pageScrollSize.height) {
-    delta.y = (delta.y >= 0)
-              ? pageScrollSize.height
-              : -pageScrollSize.height;
+  if (Abs(aOutDeltaY) > pageScrollSize.height) {
+    aOutDeltaY = (aOutDeltaY >= 0)
+                 ? pageScrollSize.height
+                 : -pageScrollSize.height;
   }
-
-  return delta;
 }
 
 // Return whether or not the underlying layer can be scrolled on either axis.
 bool
 AsyncPanZoomController::CanScroll(const ScrollWheelInput& aEvent) const
 {
-  LayoutDevicePoint delta = GetScrollWheelDelta(aEvent);
-  if (!delta.x && !delta.y) {
+  double deltaX, deltaY;
+  GetScrollWheelDelta(aEvent, deltaX, deltaY);
+
+  if (!deltaX && !deltaY) {
     return false;
   }
 
-  return CanScroll(delta.x, delta.y);
+  return CanScroll(deltaX, deltaY);
 }
 
 bool
@@ -1488,10 +1491,11 @@ AsyncPanZoomController::AllowScrollHandoffInWheelTransaction() const
 
 nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEvent)
 {
-  LayoutDevicePoint delta = GetScrollWheelDelta(aEvent);
+  double deltaX, deltaY;
+  GetScrollWheelDelta(aEvent, deltaX, deltaY);
 
-  if ((delta.x || delta.y) &&
-      !CanScroll(delta.x, delta.y) &&
+  if ((deltaX || deltaY) &&
+      !CanScroll(deltaX, deltaY) &&
       mInputQueue->GetCurrentWheelTransaction())
   {
     // We can't scroll this apz anymore, so we simply drop the event.
@@ -1517,15 +1521,16 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
       // wheel and touchpad scroll gestures, so we invert x/y here. Since the
       // zoom includes any device : css pixel zoom, we convert to CSS pixels
       // before applying the zoom.
-      ParentLayerPoint panDelta = (-delta / mFrameMetrics.GetDevPixelsPerCSSPixel()) *
+      LayoutDevicePoint devicePixelDelta(-deltaX, -deltaY);
+      ParentLayerPoint delta = (devicePixelDelta / mFrameMetrics.GetDevPixelsPerCSSPixel()) *
                                mFrameMetrics.GetZoom();
 
       PanGestureInput move(PanGestureInput::PANGESTURE_PAN, aEvent.mTime, aEvent.mTimeStamp,
                            aEvent.mOrigin,
-                           ToScreenCoordinates(panDelta, aEvent.mLocalOrigin),
+                           ToScreenCoordinates(delta, aEvent.mLocalOrigin),
                            aEvent.modifiers);
       move.mLocalPanStartPoint = aEvent.mLocalOrigin;
-      move.mLocalPanDisplacement = panDelta;
+      move.mLocalPanDisplacement = delta;
       OnPan(move, ScrollSource::Wheel, false);
 
       PanGestureInput end(PanGestureInput::PANGESTURE_END, aEvent.mTime, aEvent.mTimeStamp,
@@ -1548,13 +1553,13 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
 
       // Cast velocity from ParentLayerPoints/ms to CSSPoints/ms then convert to
       // appunits/second
-      nsPoint deltaInAppUnits =
-        CSSPoint::ToAppUnits(delta / mFrameMetrics.GetDevPixelsPerCSSPixel());
+      nsPoint delta =
+        CSSPoint::ToAppUnits(LayoutDevicePoint(deltaX, deltaY) / mFrameMetrics.GetDevPixelsPerCSSPixel());
       nsPoint velocity =
         CSSPoint::ToAppUnits(CSSPoint(mX.GetVelocity(), mY.GetVelocity())) * 1000.0f;
 
       WheelScrollAnimation* animation = mAnimation->AsWheelScrollAnimation();
-      animation->Update(aEvent.mTimeStamp, deltaInAppUnits, nsSize(velocity.x, velocity.y));
+      animation->Update(aEvent.mTimeStamp, delta, nsSize(velocity.x, velocity.y));
       break;
     }
   }
