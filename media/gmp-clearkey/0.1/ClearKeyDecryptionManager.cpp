@@ -1,19 +1,30 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/*
+ * Copyright 2015, Mozilla Foundation and contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include <string.h>
 #include <vector>
 
 #include "ClearKeyDecryptionManager.h"
 #include "gmp-decryption.h"
-#include "mozilla/Assertions.h"
-#include "mozilla/Attributes.h"
+#include <assert.h>
 
 class ClearKeyDecryptor : public RefCounted
 {
 public:
-  MOZ_IMPLICIT ClearKeyDecryptor();
+  ClearKeyDecryptor();
 
   void InitKey(const Key& aKey);
   bool HasKey() const { return !!mKey.size(); }
@@ -84,7 +95,7 @@ ClearKeyDecryptionManager::HasKeyForKeyId(const KeyId& aKeyId) const
 const Key&
 ClearKeyDecryptionManager::GetDecryptionKey(const KeyId& aKeyId)
 {
-  MOZ_ASSERT(HasKeyForKeyId(aKeyId));
+  assert(HasKeyForKeyId(aKeyId));
   return mDecryptors[aKeyId]->DecryptionKey();
 }
 
@@ -111,7 +122,7 @@ void
 ClearKeyDecryptionManager::ReleaseKeyId(KeyId aKeyId)
 {
   CK_LOGD("ClearKeyDecryptionManager::ReleaseKeyId");
-  MOZ_ASSERT(HasKeyForKeyId(aKeyId));
+  assert(HasKeyForKeyId(aKeyId));
 
   ClearKeyDecryptor* decryptor = mDecryptors[aKeyId];
   if (!decryptor->Release()) {
@@ -178,7 +189,7 @@ ClearKeyDecryptor::Decrypt(uint8_t* aBuffer, uint32_t aBufferSize,
     memcpy(&tmp[0], aBuffer, aBufferSize);
   }
 
-  MOZ_ASSERT(aMetadata->IVSize() == 8 || aMetadata->IVSize() == 16);
+  assert(aMetadata->IVSize() == 8 || aMetadata->IVSize() == 16);
   std::vector<uint8_t> iv(aMetadata->IV(), aMetadata->IV() + aMetadata->IVSize());
   iv.insert(iv.end(), CLEARKEY_KEY_LEN - aMetadata->IVSize(), 0);
 
