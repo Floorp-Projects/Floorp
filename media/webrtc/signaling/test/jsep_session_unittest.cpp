@@ -28,7 +28,7 @@
 #include "signaling/src/jsep/JsepSessionImpl.h"
 #include "signaling/src/jsep/JsepTrack.h"
 
-#include "TestHarness.h"
+#include "mtransport_test_utils.h"
 
 namespace mozilla {
 static const char* kCandidates[] = {

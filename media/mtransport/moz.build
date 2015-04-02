@@ -1,0 +1,11 @@
+DIRS += [
+    '/media/mtransport/third_party',
+    '/media/mtransport/build',
+    '/media/mtransport/testlib',
+]
+if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
+    DIRS += [
+        '/media/mtransport/standalone',
+    ]
+
+
