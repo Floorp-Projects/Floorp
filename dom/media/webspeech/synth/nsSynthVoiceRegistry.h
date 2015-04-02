@@ -11,6 +11,7 @@
 #include "nsISynthVoiceRegistry.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTArray.h"
+#include "MediaStreamGraph.h"
 
 class nsISpeechService;
 
@@ -73,6 +74,8 @@ private:
   nsRefPtrHashtable<nsStringHashKey, VoiceData> mUriVoiceMap;
 
   SpeechSynthesisChild* mSpeechSynthChild;
+
+  nsRefPtr<ProcessedMediaStream> mStream;
 };
 
 } // namespace dom
