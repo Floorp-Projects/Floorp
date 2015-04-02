@@ -9,6 +9,13 @@ The environment data may also be submitted by other ping types.
 
 *Note:* This is not submitted with all ping types due to privacy concerns. This and other data is inspected under the `data collection policy <https://wiki.mozilla.org/Firefox/Data_Collection>`_.
 
+Some parts of the environment must be fetched asynchronously at startup. We don't want other Telemetry components to block on waiting for the environment, so some items may be missing from it until the async fetching finished.
+This currently affects the following sections:
+
+- profile
+- addons
+
+
 Structure::
 
     {
@@ -182,8 +189,3 @@ Structure::
         persona: <string>, // id of the current persona, null on GONK
       },
     }
-
-Some parts of the environment must be fetched asynchronously at startup. If a session is very short or terminates early, the following items may be missing from the environment:
-
-- profile
-- addons
