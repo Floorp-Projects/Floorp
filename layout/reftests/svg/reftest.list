@@ -178,6 +178,7 @@ fails-if(Android||B2G) pref(security.fileuri.strict_origin_policy,true) == filte
 fuzzy-if(Android,18,600) == foreignObject-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
 == foreignObject-fixedpos-02.html foreignObject-fixedpos-ref.html
 == foreignObject-dynamic-fixedpos-01.html foreignObject-dynamic-abspos-01-ref.html
+== foreignObject-vertical-01.svg foreignObject-vertical-01-ref.svg
 == g-transform-01.svg pass.svg
 == getElementById-a-element-01.svg pass.svg
 fuzzy-if(Android||B2G,9,980) skip-if(Mulet) == gradient-live-01a.svg gradient-live-01-ref.svg # Initial mulet triage: parity with B2G/B2G Desktop # TC: Bug 1144079 - Re-enable Mulet mochitests and reftests taskcluster-specific disables.

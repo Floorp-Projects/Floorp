@@ -37,13 +37,16 @@ SamplerState Linear
   AddressV = Clamp;
 };
 
+/*
+ * Oculus basic distortion, with chroma aberration correction
+ */
 VS_VR_OUTPUT OculusVRDistortionVS(const VS_VR_INPUT aVertex)
 {
   VS_VR_OUTPUT res;
 
-  float2 tc0 = VREyeToSource.xy * aVertex.vTexCoord0 + VREyeToSource.zw;
-  float2 tc1 = VREyeToSource.xy * aVertex.vTexCoord1 + VREyeToSource.zw;
-  float2 tc2 = VREyeToSource.xy * aVertex.vTexCoord2 + VREyeToSource.zw;
+  float2 tc0 = aVertex.vTexCoord0 * VREyeToSource.zw + VREyeToSource.xy;
+  float2 tc1 = aVertex.vTexCoord1 * VREyeToSource.zw + VREyeToSource.xy;
+  float2 tc2 = aVertex.vTexCoord2 * VREyeToSource.zw + VREyeToSource.xy;
 
   //res.vPosition.xy = aVertex.vPosition.xy;
   res.vPosition.xy = aVertex.vPosition.xy * VRDestinationScaleAndOffset.zw + VRDestinationScaleAndOffset.xy;

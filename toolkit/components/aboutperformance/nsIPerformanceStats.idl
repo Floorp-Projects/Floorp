@@ -1,0 +1,111 @@
+/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*-*/
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+#include "nsIArray.idl"
+
+/**
+ * Mechanisms for querying the current process about performance
+ * information.
+ *
+ * JavaScript clients should rather use PerformanceStats.jsm.
+ */
+
+/**
+ * Snapshot of the performance of a component, e.g. an add-on, a web
+ * page, system built-ins, or the entire process itself.
+ *
+ * All values are monotonic and are updated only when
+ * `nsIPerformanceStatsService.isStopwatchActive` is `true`.
+ */
+[scriptable, uuid(f015cbad-e16f-4982-a080-67e4e69a5b2e)]
+interface nsIPerformanceStats: nsISupports {
+  /**
+   * The name of the component:
+   * - for the process itself, "<process>";
+   * - for platform code, "<platform>";
+   * - for an add-on, the identifier of the addon (e.g. "myaddon@foo.bar");
+   * - for a webpage, the url of the page.
+   */
+  readonly attribute AString name;
+
+  /**
+   * If the component is an add-on, the ID of the addon,
+   * otherwise an empty string.
+   */
+  readonly attribute AString addonId;
+
+  /**
+   * Total amount of time spent executing code in this group, in
+   * microseconds.
+   */
+  readonly attribute unsigned long long totalUserTime;
+  readonly attribute unsigned long long totalSystemTime;
+  readonly attribute unsigned long long totalCPOWTime;
+
+  /**
+   * Total number of times code execution entered this group,
+   * since process launch. This may be greater than the number
+   * of times we have entered the event loop.
+   */
+  readonly attribute unsigned long long ticks;
+
+  /**
+   * `true` if this component is executed with system privileges
+   * (e.g. the platform itself or an add-on), `false` otherwise
+   * (e.g. webpages).
+   */
+  readonly attribute bool isSystem;
+
+  /**
+   * Jank indicator.
+   *
+   * durations[i] == number of times execution of this group
+   * lasted at lest 2^i ms.
+   */
+  void getDurations([optional] out unsigned long aCount,
+                    [retval, array, size_is(aCount)]out unsigned long long aNumberOfOccurrences);
+};
+
+/**
+ * A snapshot of the performance data of the process.
+ */
+[scriptable, uuid(29ecebd0-908a-4b34-8f62-a6015dea1141)]
+interface nsIPerformanceSnapshot: nsISupports {
+  /**
+   * Data on all individual components.
+   */
+  nsIArray getComponentsData();
+
+  /**
+   * Information on the process itself.
+   *
+   * This contains the total amount of time spent executing JS code,
+   * the total amount of time spent waiting for system calls while
+   * executing JS code, the total amount of time performing blocking
+   * inter-process calls, etc.
+   */
+  nsIPerformanceStats getProcessData();
+};
+
+[scriptable, builtinclass, uuid(5795113a-39a1-4087-ba09-98b7d07d025a)]
+interface nsIPerformanceStatsService : nsISupports {
+  /**
+   * `true` if we should monitor performance, `false` otherwise.
+   */
+  [implicit_jscontext] attribute bool isStopwatchActive;
+
+  /**
+   * Capture a snapshot of the performance data.
+   */
+  nsIPerformanceSnapshot getSnapshot();
+};
+
+%{C++
+#define NS_TOOLKIT_PERFORMANCESTATSSERVICE_CID {0xfd7435d4, 0x9ec4, 0x4699, \
+      {0xad, 0xd4, 0x1b, 0xe8, 0x3d, 0xd6, 0x8e, 0xf3} }
+#define NS_TOOLKIT_PERFORMANCESTATSSERVICE_CONTRACTID "@mozilla.org/toolkit/performance-stats-service;1"
+%}

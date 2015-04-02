@@ -8,6 +8,10 @@ function test() {
   Harness.installsCompletedCallback = finish_test;
   Harness.setup();
 
+  var prefs = Cc["@mozilla.org/preferences-service;1"].
+                        getService(Ci.nsIPrefBranch);
+  prefs.setIntPref("network.auth.allow-subresource-auth", 2);
+
   var pm = Services.perms;
   pm.add(makeURI("http://example.com/"), "install", pm.ALLOW_ACTION);
 

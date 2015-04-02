@@ -206,7 +206,7 @@ class IonBuilder
 
         static CFGState If(jsbytecode* join, MTest* test);
         static CFGState IfElse(jsbytecode* trueEnd, jsbytecode* falseEnd, MTest* test);
-        static CFGState AndOr(jsbytecode* join, MBasicBlock* joinStart);
+        static CFGState AndOr(jsbytecode* join, MBasicBlock* lhs);
         static CFGState TableSwitch(jsbytecode* exitpc, MTableSwitch* ins);
         static CFGState CondSwitch(IonBuilder* builder, jsbytecode* exitpc, jsbytecode* defaultTarget);
         static CFGState Label(jsbytecode* exitpc);
@@ -1350,8 +1350,6 @@ class CallInfo
             getArg(i)->setImplicitlyUsedUnchecked();
     }
 };
-
-bool TypeSetIncludes(TypeSet* types, MIRType input, TypeSet* inputTypes);
 
 bool NeedsPostBarrier(CompileInfo& info, MDefinition* value);
 
