@@ -12832,6 +12832,18 @@ IonBuilder::storeReferenceTypedObjectValue(MDefinition* typedObj,
 MConstant*
 IonBuilder::constant(const Value& v)
 {
+    // For performance reason (TLS) and error code handling (AtomizeString), we
+    // should prefer the specialized frunction constantMaybeAtomize instead of
+    // constant.
+    MOZ_ASSERT(!v.isString() || v.toString()->isAtom(),
+               "To handle non-atomized strings, you should use constantMaybeAtomize instead of constant.");
+    if (v.isString() && MOZ_UNLIKELY(!v.toString()->isAtom())) {
+        MConstant *cst = constantMaybeAtomize(v);
+        if (!cst)
+            js::CrashAtUnhandlableOOM("Use constantMaybeAtomize.");
+        return cst;
+    }
+
     MConstant* c = MConstant::New(alloc(), v, constraints());
     current->add(c);
     return c;
@@ -12841,6 +12853,19 @@ MConstant*
 IonBuilder::constantInt(int32_t i)
 {
     return constant(Int32Value(i));
+}
+
+MConstant*
+IonBuilder::constantMaybeAtomize(const Value& v)
+{
+    if (!v.isString() || v.toString()->isAtom())
+        return constant(v);
+
+    JSContext* cx = GetJitContext()->cx;
+    JSAtom* atom = js::AtomizeString(cx, v.toString());
+    if (!atom)
+        return nullptr;
+    return constant(StringValue(atom));
 }
 
 MDefinition*
