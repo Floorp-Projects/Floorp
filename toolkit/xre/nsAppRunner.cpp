@@ -4627,11 +4627,16 @@ mozilla::BrowserTabsRemoteAutostart()
   // Nightly builds, update gBrowserTabsRemoteAutostart based on all the
   // e10s remote relayed prefs we watch.
   bool disabledForA11y = Preferences::GetBool("browser.tabs.remote.autostart.disabled-because-using-a11y", false);
+  // Disable for VR
+  bool disabledForVR = Preferences::GetBool("dom.vr.enabled", false);
+
   if (prefEnabled) {
     if (gSafeMode) {
       LogE10sBlockedReason("Safe mode");
     } else if (disabledForA11y) {
       LogE10sBlockedReason("An accessibility tool is or was active. See bug 1115956.");
+    } else if (disabledForVR) {
+      LogE10sBlockedReason("Experimental VR interfaces are enabled");
     } else {
       gBrowserTabsRemoteAutostart = true;
     }

@@ -48,6 +48,7 @@
 #include "nsIMemoryReporter.h"
 #include "nsIParentalControlsService.h"
 #include "nsINetworkLinkService.h"
+#include "nsHttpChannelAuthProvider.h"
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -285,6 +286,8 @@ nsHttpHandler::Init()
         prefBranch->AddObserver(SAFE_HINT_HEADER_VALUE, this, true);
         PrefsChanged(prefBranch, nullptr);
     }
+
+    nsHttpChannelAuthProvider::InitializePrefs();
 
     mMisc.AssignLiteral("rv:" MOZILLA_UAVERSION);
 

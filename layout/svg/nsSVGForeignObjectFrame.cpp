@@ -539,7 +539,7 @@ nsSVGForeignObjectFrame::DoReflow()
   WritingMode wm = kid->GetWritingMode();
   nsHTMLReflowState reflowState(presContext, kid,
                                 &renderingContext,
-                                LogicalSize(wm, GetLogicalSize(wm).ISize(wm),
+                                LogicalSize(wm, ISize(wm),
                                             NS_UNCONSTRAINEDSIZE));
   nsHTMLReflowMetrics desiredSize(reflowState);
   nsReflowStatus status;
@@ -550,9 +550,9 @@ nsSVGForeignObjectFrame::DoReflow()
                reflowState.ComputedPhysicalMargin() == nsMargin(0, 0, 0, 0),
                "style system should ensure that :-moz-svg-foreign-content "
                "does not get styled");
-  NS_ASSERTION(reflowState.ComputedWidth() == mRect.width,
+  NS_ASSERTION(reflowState.ComputedISize() == ISize(wm),
                "reflow state made child wrong size");
-  reflowState.SetComputedHeight(mRect.height);
+  reflowState.SetComputedBSize(BSize(wm));
 
   ReflowChild(kid, presContext, desiredSize, reflowState, 0, 0,
               NS_FRAME_NO_MOVE_FRAME, status);

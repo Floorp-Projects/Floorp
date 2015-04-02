@@ -15,6 +15,10 @@
 
 #include "jspubtd.h"
 
+namespace js {
+    struct PerformanceGroup;
+}
+
 struct JSPrincipals {
     /* Don't call "destroy"; use reference counting macros below. */
     mozilla::Atomic<int32_t> refcount;

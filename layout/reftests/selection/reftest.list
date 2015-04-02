@@ -34,3 +34,4 @@ random-if(Android||B2G||Mulet) fails-if(cocoaWidget) needs-focus == themed-widge
 == splitText-normalize.html splitText-normalize-ref.html
 == modify-range.html modify-range-ref.html
 == dom-mutations.html dom-mutations-ref.html
+fuzzy-if(OSX==1010,9,1) == trailing-space-1.html trailing-space-1-ref.html

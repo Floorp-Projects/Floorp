@@ -439,7 +439,7 @@ GeneratedLocation.prototype = {
 
   equals: function (other) {
     return this.generatedSourceActor.url == other.generatedSourceActor.url &&
-           this.generatedLine === other.originalLine;
+           this.generatedLine === other.generatedLine;
   },
 
   toJSON: function () {
