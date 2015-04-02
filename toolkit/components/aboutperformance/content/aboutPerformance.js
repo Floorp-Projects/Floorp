@@ -54,9 +54,11 @@ let State = {
     let newData = new Map();
     let deltas = [];
     for (let componentNew of snapshot.componentsData) {
-      let componentOld = State._componentsData.get(componentNew.name);
+      let {name, addonId, isSystem} = componentNew;
+      let key = JSON.stringify({name, addonId, isSystem});
+      let componentOld = State._componentsData.get(key);
       deltas.push(componentNew.substract(componentOld));
-      newData.set(componentNew.name, componentNew);
+      newData.set(key, componentNew);
     }
     State._componentsData = newData;
     let now = window.performance.now();
