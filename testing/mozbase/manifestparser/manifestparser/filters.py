@@ -312,6 +312,13 @@ class tags(InstanceFilter):
     InstanceFilter's __eq__ method, so multiple instances can be added.
     Multiple tag filters is equivalent to joining tags with the AND operator.
 
+    To define a tag in a manifest, add a `tags` attribute to a test or DEFAULT
+    section. Tests can have multiple tags, in which case they should be
+    whitespace delimited. For example:
+
+    [test_foobar.html]
+    tags = foo bar
+
     :param tags: A tag or list of tags to filter tests on
     """
     unique = False
@@ -327,7 +334,7 @@ class tags(InstanceFilter):
             if 'tags' not in test:
                 continue
 
-            test_tags = [t.strip() for t in test['tags'].split(',')]
+            test_tags = [t.strip() for t in test['tags'].split()]
             if any(t in self.tags for t in test_tags):
                 yield test
 
