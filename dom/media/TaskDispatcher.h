@@ -44,6 +44,12 @@ public:
   virtual void AddTask(AbstractThread* aThread,
                        already_AddRefed<nsIRunnable> aRunnable,
                        bool aAssertDispatchSuccess = true) = 0;
+
+#ifdef DEBUG
+  void AssertIsTailDispatcherIfRequired();
+#else
+  void AssertIsTailDispatcherIfRequired() {}
+#endif
 };
 
 /*
@@ -140,6 +146,18 @@ private:
 
   // Task groups, organized by thread.
   nsTArray<UniquePtr<PerThreadTaskGroup>> mTaskGroups;
+};
+
+// Little utility class to allow declaring AutoTaskDispatcher as a default
+// parameter for methods that take a TaskDispatcher&.
+template<typename T>
+class PassByRef
+{
+public:
+  PassByRef() {}
+  operator T&() { return mVal; }
+private:
+  T mVal;
 };
 
 } // namespace mozilla
