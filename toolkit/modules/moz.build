@@ -30,7 +30,6 @@ EXTRA_JS_MODULES += [
     'LoadContextInfo.jsm',
     'Log.jsm',
     'NewTabUtils.jsm',
-    'ObjectUtils.jsm',
     'PageMenu.jsm',
     'PageMetadata.jsm',
     'PerformanceStats.jsm',
