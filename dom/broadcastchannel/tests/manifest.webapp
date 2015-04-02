@@ -1,6 +1,0 @@
-{
-  "name": "BroadcastChannel",
-  "description": "BroadcastChannel app",
-  "launch_path": "/tests/dom/broadcastchannel/tests/TESTTOKEN",
-  "icons": { "128": "default_icon" }
-}
