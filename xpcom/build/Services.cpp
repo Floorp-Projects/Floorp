@@ -6,16 +6,17 @@
 #include "mozilla/Likely.h"
 #include "mozilla/Services.h"
 #include "nsComponentManager.h"
+#include "nsIObserverService.h"
+#include "nsNetCID.h"
+#include "nsObserverService.h"
+#include "nsXPCOMPrivate.h"
+#if !defined(MOZILLA_XPCOMRT_API)
 #include "nsIIOService.h"
 #include "nsIDirectoryService.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
 #include "nsIChromeRegistry.h"
-#include "nsIObserverService.h"
-#include "nsNetCID.h"
-#include "nsObserverService.h"
-#include "nsXPCOMPrivate.h"
 #include "nsIStringBundle.h"
 #include "nsIToolkitChromeRegistry.h"
 #include "nsIXULOverlayProvider.h"
@@ -25,6 +26,7 @@
 #include "nsIPermissionManager.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsIAsyncShutdown.h"
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
 using namespace mozilla;
 using namespace mozilla::services;

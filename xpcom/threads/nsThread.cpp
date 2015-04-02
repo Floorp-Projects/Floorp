@@ -6,7 +6,9 @@
 
 #include "nsThread.h"
 
+#if !defined(MOZILLA_XPCOMRT_API)
 #include "base/message_loop.h"
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
 // Chromium's logging can sometimes leak through...
 #ifdef LOG
@@ -22,13 +24,16 @@
 #include "pratom.h"
 #include "prlog.h"
 #include "nsIObserverService.h"
+#if !defined(MOZILLA_XPCOMRT_API)
 #include "mozilla/HangMonitor.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/ipc/MessageChannel.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#endif // defined(MOZILLA_XPCOMRT_API)
 #include "mozilla/Services.h"
 #include "nsXPCOMPrivate.h"
 #include "mozilla/ChaosMode.h"
-#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/TimeStamp.h"
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsServiceManagerUtils.h"
@@ -265,7 +270,9 @@ public:
   NS_IMETHOD Run()
   {
     mThread->mShutdownContext = mShutdownContext;
+#if !defined(MOZILLA_XPCOMRT_API)
     MessageLoop::current()->Quit();
+#endif // !defined(MOZILLA_XPCOMRT_API)
     return NS_OK;
   }
 private:
@@ -316,7 +323,9 @@ SetupCurrentThreadForChaosMode()
 /*static*/ void
 nsThread::ThreadFunc(void* aArg)
 {
+#if !defined(MOZILLA_XPCOMRT_API)
   using mozilla::ipc::BackgroundChild;
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
   nsThread* self = static_cast<nsThread*>(aArg);  // strong reference
   self->mThread = PR_GetCurrentThread();
@@ -329,7 +338,9 @@ nsThread::ThreadFunc(void* aArg)
     static_cast<void*>(nsThreadManager::get()->GetCurrentThreadStatusInfo());
 #endif
 
+#if !defined(MOZILLA_XPCOMRT_API)
   mozilla::IOInterposer::RegisterCurrentThread();
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
   // Wait for and process startup event
   nsCOMPtr<nsIRunnable> event;
@@ -341,6 +352,11 @@ nsThread::ThreadFunc(void* aArg)
   event = nullptr;
 
   {
+#if defined(MOZILLA_XPCOMRT_API)
+    while(!self->mShutdownContext) {
+      NS_ProcessNextEvent();
+    }
+#else
     // Scope for MessageLoop.
     nsAutoPtr<MessageLoop> loop(
       new MessageLoop(MessageLoop::TYPE_MOZILLA_NONMAINTHREAD));
@@ -349,6 +365,7 @@ nsThread::ThreadFunc(void* aArg)
     loop->Run();
 
     BackgroundChild::CloseForCurrentThread();
+#endif // defined(MOZILLA_XPCOMRT_API)
 
     // Do NS_ProcessPendingEvents but with special handling to set
     // mEventsAreDoomed atomically with the removal of the last event. The key
@@ -371,7 +388,9 @@ nsThread::ThreadFunc(void* aArg)
     }
   }
 
+#if !defined(MOZILLA_XPCOMRT_API)
   mozilla::IOInterposer::UnregisterCurrentThread();
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
   // Inform the threadmanager that this thread is going away
   nsThreadManager::get()->UnregisterCurrentThread(self);
@@ -743,9 +762,11 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 {
   LOG(("THRD(%p) ProcessNextEvent [%u %u]\n", this, aMayWait, mRunningEvent));
 
+#if !defined(MOZILLA_XPCOMRT_API)
   // If we're on the main thread, we shouldn't be dispatching CPOWs.
   MOZ_RELEASE_ASSERT(mIsMainThread != MAIN_THREAD ||
                      !ipc::ParentProcessIsBlocked());
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
   if (NS_WARN_IF(PR_GetCurrentThread() != mThread)) {
     return NS_ERROR_NOT_SAME_THREAD;
@@ -761,9 +782,11 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
   // and repeat the nested event loop since its state change hasn't happened yet.
   bool reallyWait = aMayWait && (mRunningEvent > 0 || !ShuttingDown());
 
+#if !defined(MOZILLA_XPCOMRT_API)
   if (MAIN_THREAD == mIsMainThread && reallyWait) {
     HangMonitor::Suspend();
   }
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
   // Fire a memory pressure notification, if we're the main thread and one is
   // pending.
@@ -842,9 +865,11 @@ nsThread::ProcessNextEvent(bool aMayWait, bool* aResult)
 
     if (event) {
       LOG(("THRD(%p) running [%p]\n", this, event.get()));
+#if !defined(MOZILLA_XPCOMRT_API)
       if (MAIN_THREAD == mIsMainThread) {
         HangMonitor::NotifyActivity();
       }
+#endif // !defined(MOZILLA_XPCOMRT_API)
       event->Run();
     } else if (aMayWait) {
       MOZ_ASSERT(ShuttingDown(),

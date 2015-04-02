@@ -7,7 +7,9 @@
 #define ManifestParser_h
 
 #include "nsComponentManager.h"
+#if !defined(MOZILLA_XPCOMRT_API)
 #include "nsChromeRegistry.h"
+#endif // !defined(MOZILLA_XPCOMRT_API)
 #include "mozilla/FileLocation.h"
 
 class nsIFile;
