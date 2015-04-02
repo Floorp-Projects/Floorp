@@ -461,7 +461,7 @@ SourceBuffer::AppendData(LargeDataBuffer* aData, double aTimestampOffset,
   }
 
   mPendingAppend.Begin(mTrackBuffer->AppendData(aData, aTimestampOffset * USECS_PER_S)
-                       ->RefableThen(NS_GetCurrentThread(), __func__, this,
+                       ->RefableThen(AbstractThread::MainThread(), __func__, this,
                                      &SourceBuffer::AppendDataCompletedWithSuccess,
                                      &SourceBuffer::AppendDataErrored));
 }
