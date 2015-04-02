@@ -278,6 +278,9 @@ let Impl = {
   // This is a private barrier blocked by pending async ping activity (sending & saving).
   _connectionsBarrier: new AsyncShutdown.Barrier("TelemetryPing: Waiting for pending ping activity"),
 
+  // This tracks all pending ping requests to the server.
+  _pendingPingRequests: new Map(),
+
   /**
    * Get the data for the "application" section of the ping.
    */
@@ -583,6 +586,8 @@ let Impl = {
     request.overrideMimeType("text/plain");
     request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
 
+    this._pendingPingRequests.set(url, request);
+
     let startTime = new Date();
     let deferred = PromiseUtils.defer();
 
@@ -595,6 +600,7 @@ let Impl = {
         }
       };
 
+      this._pendingPingRequests.delete(url);
       this.onPingRequestFinished(success, startTime, ping, isPersisted)
         .then(() => onCompletion(),
               (error) => {
@@ -819,6 +825,18 @@ let Impl = {
       return;
     }
 
+    // Abort any pending ping XHRs.
+    for (let [url, request] of this._pendingPingRequests) {
+      this._log.trace("_cleanupOnShutdown - aborting ping request for " + url);
+      try {
+        request.abort();
+      } catch (e) {
+        this._log.error("_cleanupOnShutdown - failed to abort request to " + url, e);
+      }
+    }
+    this._pendingPingRequests.clear();
+
+    // Now do an orderly shutdown.
     try {
       // First wait for clients processing shutdown.
       yield this._shutdownBarrier.wait();
@@ -829,7 +847,7 @@ let Impl = {
       try {
         yield TelemetryEnvironment.shutdown();
       } catch (e) {
-        this._log.error("shutdown - environment shutdown failure", e);
+        this._log.error("_cleanupOnShutdown - environment shutdown failure", e);
       }
     } finally {
       // Reset state.
