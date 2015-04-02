@@ -132,12 +132,8 @@ function checkCertErrorGeneric(certdb, cert, expectedError, usage) {
   let verifiedChain = {};
   let error = certdb.verifyCertNow(cert, usage, NO_FLAGS, verifiedChain,
                                    hasEVPolicy);
-  // expected error == -1 is a special marker for any error is OK
-  if (expectedError != -1 ) {
-    do_check_eq(error, expectedError);
-  } else {
-    do_check_neq(error, PRErrorCodeSuccess);
-  }
+  Assert.equal(error, expectedError,
+               "Actual and expected error should match");
 }
 
 function _getLibraryFunctionWithNoArguments(functionName, libraryName) {
@@ -293,7 +289,8 @@ function add_connection_test(aHost, aExpectedResult,
       try {
         // this will throw if the stream has been closed by an error
         let str = NetUtil.readInputStreamToString(aStream, aStream.available());
-        do_check_eq(str, "0");
+        Assert.equal(str, "0",
+                     "Should have received ASCII '0' from server");
         this.inputStream.close();
         this.outputStream.close();
         this.result = Cr.NS_OK;
@@ -339,9 +336,11 @@ function add_connection_test(aHost, aExpectedResult,
     }
     connectTo(aHost).then(function(conn) {
       do_print("handling " + aHost);
-      do_check_eq(conn.result, aExpectedResult == PRErrorCodeSuccess
-                               ? Cr.NS_OK
-                               : getXPCOMStatusFromNSS(aExpectedResult));
+      let expectedNSResult = aExpectedResult == PRErrorCodeSuccess
+                           ? Cr.NS_OK
+                           : getXPCOMStatusFromNSS(aExpectedResult);
+      Assert.equal(conn.result, expectedNSResult,
+                   "Actual and expected connection result should match");
       if (aWithSecurityInfo) {
         aWithSecurityInfo(conn.transport.securityInfo
                               .QueryInterface(Ci.nsITransportSecurityInfo));
@@ -372,7 +371,7 @@ function _getBinaryUtil(binaryUtilName) {
     utilBin.initWithPath("/data/local/xpcb/");
     utilBin.append(binaryUtilName);
   }
-  do_check_true(utilBin.exists());
+  Assert.ok(utilBin.exists(), `Binary util ${binaryUtilName} should exist`);
   return utilBin;
 }
 
@@ -416,7 +415,7 @@ function _setupTLSServerTest(serverBinName)
   process.init(serverBin);
   let certDir = directoryService.get("CurWorkD", Ci.nsILocalFile);
   certDir.append("tlsserver");
-  do_check_true(certDir.exists());
+  Assert.ok(certDir.exists(), "tlsserver folder should exist");
   // Using "sql:" causes the SQL DB to be used so we can run tests on Android.
   process.run(false, [ "sql:" + certDir.path ], 1);
 
@@ -451,7 +450,7 @@ function generateOCSPResponses(ocspRespArray, nssDBlocation)
                     .createInstance(Ci.nsIProcess);
     process.init(ocspGenBin);
     process.run(true, argArray, 5);
-    do_check_eq(0, process.exitValue);
+    Assert.equal(0, process.exitValue, "Process exit value should be 0");
     let ocspFile = do_get_file(i.toString() + ".ocsp", false);
     retArray.push(readFile(ocspFile));
     ocspFile.remove(false);
@@ -465,7 +464,7 @@ function generateOCSPResponses(ocspRespArray, nssDBlocation)
 function getFailingHttpServer(serverPort, serverIdentities) {
   let httpServer = new HttpServer();
   httpServer.registerPrefixHandler("/", function(request, response) {
-    do_check_true(false);
+    Assert.ok(false, "HTTP responder should not have been queried");
   });
   httpServer.identity.setPrimary("http", serverIdentities.shift(), serverPort);
   serverIdentities.forEach(function(identity) {
@@ -489,7 +488,7 @@ function getFailingHttpServer(serverPort, serverIdentities) {
 // identity is the http hostname that will answer the OCSP requests
 // invalidIdentities is an array of identities that if used an
 //   will cause a test failure
-// nssDBlocaion is the location of the NSS database from where the OCSP
+// nssDBLocation is the location of the NSS database from where the OCSP
 //   responses will be generated (assumes appropiate keys are present)
 // expectedCertNames is an array of nicks of the certs to be responsed
 // expectedBasePaths is an optional array that is used to indicate
@@ -513,16 +512,20 @@ function startOCSPResponder(serverPort, identity, invalidIdentities,
   httpServer.registerPrefixHandler("/",
     function handleServerCallback(aRequest, aResponse) {
       invalidIdentities.forEach(function(identity) {
-        do_check_neq(aRequest.host, identity)
+        Assert.notEqual(aRequest.host, identity,
+                        "Request host and invalid identity should not match")
       });
       do_print("got request for: " + aRequest.path);
       let basePath = aRequest.path.slice(1).split("/")[0];
       if (expectedBasePaths.length >= 1) {
-        do_check_eq(basePath, expectedBasePaths.shift());
+        Assert.equal(basePath, expectedBasePaths.shift(),
+                     "Actual and expected base path should match");
       }
-      do_check_true(expectedCertNames.length >= 1);
+      Assert.ok(expectedCertNames.length >= 1,
+                "expectedCertNames should contain >= 1 entries");
       if (expectedMethods && expectedMethods.length >= 1) {
-        do_check_eq(aRequest.method, expectedMethods.shift());
+        Assert.equal(aRequest.method, expectedMethods.shift(),
+                     "Actual and expected fetch method should match");
       }
       aResponse.setStatusLine(aRequest.httpVersion, 200, "OK");
       aResponse.setHeader("Content-Type", "application/ocsp-response");
@@ -536,15 +539,19 @@ function startOCSPResponder(serverPort, identity, invalidIdentities,
   return {
     stop: function(callback) {
       // make sure we consumed each expected response
-      do_check_eq(ocspResponses.length, 0);
+      Assert.equal(ocspResponses.length, 0,
+                   "Should have 0 remaining expected OCSP responses");
       if (expectedMethods) {
-        do_check_eq(expectedMethods.length, 0);
+        Assert.equal(expectedMethods.length, 0,
+                     "Should have 0 remaining expected fetch methods");
       }
       if (expectedBasePaths) {
-        do_check_eq(expectedBasePaths.length, 0);
+        Assert.equal(expectedBasePaths.length, 0,
+                     "Should have 0 remaining expected base paths");
       }
       if (expectedResponseTypes) {
-        do_check_eq(expectedResponseTypes.length, 0);
+        Assert.equal(expectedResponseTypes.length, 0,
+                     "Should have 0 remaining expected response types");
       }
       httpServer.stop(callback);
     }
