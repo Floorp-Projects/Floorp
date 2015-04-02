@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Scrolling shouldn't invalidate the fixed layer</title>
+
+<style>
+
+.content {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  border: 1px solid black;
+}
+
+.fixed {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+}
+
+.reftest-no-paint {
+  border-color: lime;
+}
+
+.distanceFromTop {
+  margin-top: 240px;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  height: 3000px;
+}
+
+
+</style>
+
+<div class="distanceFromTop content">
+  <!--
+    This is just a non-uniform item that will be scrolled so that it's between
+    the page background and the fixed layer.
+  -->
+</div>
+
+<div class="fixed reftest-no-paint content">
+  <!--
+    This fixed layer gets its own PaintedLayer above the page.
+
+    It shouldn't attempt to pull up an opaque background color from the page,
+    because the page can move under it.
+  -->
+</div>
+
+<script>
+
+function doTest() {
+  document.documentElement.scrollTop = 100;
+  document.documentElement.removeAttribute("class");
+}
+document.documentElement.scrollTop = 0;
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>
