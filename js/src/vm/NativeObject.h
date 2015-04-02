@@ -506,7 +506,10 @@ class NativeObject : public JSObject
 
     void invalidateSlotRange(uint32_t start, uint32_t length) {
 #ifdef DEBUG
-        HeapSlot* fixedStart, *fixedEnd, *slotsStart, *slotsEnd;
+        HeapSlot* fixedStart;
+        HeapSlot* fixedEnd;
+        HeapSlot* slotsStart;
+        HeapSlot* slotsEnd;
         getSlotRange(start, length, &fixedStart, &fixedEnd, &slotsStart, &slotsEnd);
         Debug_SetSlotRangeToCrashOnTouch(fixedStart, fixedEnd);
         Debug_SetSlotRangeToCrashOnTouch(slotsStart, slotsEnd);

@@ -795,7 +795,8 @@ class MOZ_STACK_CLASS Rooted : public js::RootedBase<T>
      * example, Rooted<JSObject> and Rooted<JSFunction>, which use the same
      * stack head pointer for different classes.
      */
-    Rooted<void*>** stack, *prev;
+    Rooted<void*>** stack;
+    Rooted<void*>* prev;
 
     /*
      * |ptr| must be the last field in Rooted because the analysis treats all

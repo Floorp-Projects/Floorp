@@ -300,7 +300,8 @@ GetNameOperation(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc, MutableHan
         obj = &obj->global();
 
     Shape* shape = nullptr;
-    JSObject* scope = nullptr, *pobj = nullptr;
+    JSObject* scope = nullptr;
+    JSObject* pobj = nullptr;
     if (LookupNameNoGC(cx, name, obj, &scope, &pobj, &shape)) {
         if (FetchNameNoGC(pobj, shape, vp))
             return CheckUninitializedLexical(cx, name, vp);
@@ -1504,7 +1505,7 @@ AddOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, Muta
 
     bool lIsString, rIsString;
     if ((lIsString = lhs.isString()) | (rIsString = rhs.isString())) {
-        JSString* lstr, *rstr;
+        JSString* lstr;
         if (lIsString) {
             lstr = lhs.toString();
         } else {
@@ -1512,6 +1513,8 @@ AddOperation(JSContext* cx, MutableHandleValue lhs, MutableHandleValue rhs, Muta
             if (!lstr)
                 return false;
         }
+
+        JSString* rstr;
         if (rIsString) {
             rstr = rhs.toString();
         } else {
@@ -2448,7 +2451,8 @@ END_CASE(JSOP_ADD)
 
 CASE(JSOP_SUB)
 {
-    RootedValue& lval = rootValue0, &rval = rootValue1;
+    RootedValue& lval = rootValue0;
+    RootedValue& rval = rootValue1;
     lval = REGS.sp[-2];
     rval = REGS.sp[-1];
     MutableHandleValue res = REGS.stackHandleAt(-2);
@@ -2460,7 +2464,8 @@ END_CASE(JSOP_SUB)
 
 CASE(JSOP_MUL)
 {
-    RootedValue& lval = rootValue0, &rval = rootValue1;
+    RootedValue& lval = rootValue0;
+    RootedValue& rval = rootValue1;
     lval = REGS.sp[-2];
     rval = REGS.sp[-1];
     MutableHandleValue res = REGS.stackHandleAt(-2);
@@ -2472,7 +2477,8 @@ END_CASE(JSOP_MUL)
 
 CASE(JSOP_DIV)
 {
-    RootedValue& lval = rootValue0, &rval = rootValue1;
+    RootedValue& lval = rootValue0;
+    RootedValue& rval = rootValue1;
     lval = REGS.sp[-2];
     rval = REGS.sp[-1];
     MutableHandleValue res = REGS.stackHandleAt(-2);
@@ -2484,7 +2490,8 @@ END_CASE(JSOP_DIV)
 
 CASE(JSOP_MOD)
 {
-    RootedValue& lval = rootValue0, &rval = rootValue1;
+    RootedValue& lval = rootValue0;
+    RootedValue& rval = rootValue1;
     lval = REGS.sp[-2];
     rval = REGS.sp[-1];
     MutableHandleValue res = REGS.stackHandleAt(-2);
@@ -2601,7 +2608,8 @@ CASE(JSOP_TOID)
      * but we need to avoid the observable stringification the second time.
      * There must be an object value below the id, which will not be popped.
      */
-    RootedValue& objval = rootValue0, &idval = rootValue1;
+    RootedValue& objval = rootValue0;
+    RootedValue& idval = rootValue1;
     objval = REGS.sp[-2];
     idval = REGS.sp[-1];
 

@@ -111,7 +111,8 @@ class BytecodeRange {
 
   private:
     RootedScript script;
-    jsbytecode* pc, *end;
+    jsbytecode* pc;
+    jsbytecode* end;
 };
 
 }

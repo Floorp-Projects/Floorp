@@ -282,7 +282,8 @@ class RegExpParser
     frontend::TokenStream& ts;
     LifoAlloc* alloc;
     RegExpCaptureVector* captures_;
-    const CharT* next_pos_, *end_;
+    const CharT* next_pos_;
+    const CharT* end_;
     widechar current_;
     // The capture count is only valid after we have scanned for captures.
     int capture_count_;

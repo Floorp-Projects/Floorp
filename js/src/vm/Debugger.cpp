@@ -4164,7 +4164,9 @@ Debugger::drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
             return false;
 
         if (textId != TraceLogger_Stop) {
-            const char* filename, *lineno, *colno;
+            const char* filename;
+            const char* lineno;
+            const char* colno;
             size_t filename_len, lineno_len, colno_len;
             logger->extractScriptDetails(textId, &filename, &filename_len, &lineno, &lineno_len,
                                          &colno, &colno_len);

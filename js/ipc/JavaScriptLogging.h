@@ -98,7 +98,8 @@ class Logging
     }
 
     void formatObject(bool incoming, bool local, ObjectId id, nsCString& out) {
-        const char* side, *objDesc;
+        const char* side;
+        const char* objDesc;
         void* ptr;
 
         if (local == incoming) {

@@ -726,9 +726,6 @@ DisassembleAtPC(JSContext* cx, JSScript* scriptArg, bool lines,
     RootedScript script(cx, scriptArg);
     BytecodeParser parser(cx, script);
 
-    jsbytecode* next, *end;
-    unsigned len;
-
     if (showAll && !parser.parse())
         return false;
 
@@ -753,8 +750,8 @@ DisassembleAtPC(JSContext* cx, JSScript* scriptArg, bool lines,
         sp->put("----");
     sp->put("  --\n");
 
-    next = script->code();
-    end = script->codeEnd();
+    jsbytecode* next = script->code();
+    jsbytecode* end = script->codeEnd();
     while (next < end) {
         if (next == script->main())
             sp->put("main:\n");
@@ -783,7 +780,7 @@ DisassembleAtPC(JSContext* cx, JSScript* scriptArg, bool lines,
             else
                 Sprint(sp, "      ");
         }
-        len = Disassemble1(cx, script, next, script->pcToOffset(next), lines, sp);
+        unsigned len = Disassemble1(cx, script, next, script->pcToOffset(next), lines, sp);
         if (!len)
             return false;
         next += len;
