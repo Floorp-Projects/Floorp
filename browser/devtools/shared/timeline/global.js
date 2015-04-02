@@ -18,9 +18,11 @@ const L10N = new ViewHelpers.L10N(STRINGS_URI);
  * to marker names, while the values are objects with the following format:
  *   - group: the row index in the timeline overview graph; multiple markers
  *            can be added on the same row. @see <overview.js/buildGraphImage>
- *   - fill: a fill color used when drawing the marker
- *   - stroke: a stroke color used when drawing the marker
  *   - label: the label used in the waterfall to identify the marker
+ *   - colorName: the name of the DevTools color used for this marker. If adding
+ *                a new color, be sure to check that there's an entry for
+ *                `.marker-details-bullet.{COLORNAME}` for the equivilent entry.
+ *                https://developer.mozilla.org/en-US/docs/Tools/DevToolsColors
  *
  * Whenever this is changed, browser_timeline_waterfall-styles.js *must* be
  * updated as well.
@@ -28,38 +30,32 @@ const L10N = new ViewHelpers.L10N(STRINGS_URI);
 const TIMELINE_BLUEPRINT = {
   "Styles": {
     group: 0,
-    fill: "hsl(285,50%,68%)",
-    stroke: "hsl(285,50%,48%)",
+    colorName: "highlight-pink",
     label: L10N.getStr("timeline.label.styles2")
   },
   "Reflow": {
     group: 0,
-    fill: "hsl(285,50%,68%)",
-    stroke: "hsl(285,50%,48%)",
+    colorName: "highlight-pink",
     label: L10N.getStr("timeline.label.reflow2")
   },
   "Paint": {
     group: 0,
-    fill: "hsl(104,57%,71%)",
-    stroke: "hsl(104,57%,51%)",
+    colorName: "highlight-green",
     label: L10N.getStr("timeline.label.paint")
   },
   "DOMEvent": {
     group: 1,
-    fill: "hsl(39,82%,69%)",
-    stroke: "hsl(39,82%,49%)",
+    colorName: "highlight-lightorange",
     label: L10N.getStr("timeline.label.domevent")
   },
   "Javascript": {
     group: 1,
-    fill: "hsl(39,82%,69%)",
-    stroke: "hsl(39,82%,49%)",
+    colorName: "highlight-lightorange",
     label: L10N.getStr("timeline.label.javascript2")
   },
   "ConsoleTime": {
     group: 2,
-    fill: "hsl(0,0%,80%)",
-    stroke: "hsl(0,0%,60%)",
+    colorName: "highlight-bluegrey",
     label: L10N.getStr("timeline.label.consoleTime")
   },
 };
