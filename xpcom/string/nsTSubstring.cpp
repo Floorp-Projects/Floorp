@@ -18,7 +18,9 @@ nsTSubstring_CharT::nsTSubstring_CharT(char_type* aData, size_type aLength,
 {
   if (aFlags & F_OWNED) {
     STRING_STAT_INCREMENT(Adopt);
-    MOZ_LOG_CTOR(mData, "StringAdopt", 1);
+#ifdef NS_BUILD_REFCNT_LOGGING
+    NS_LogCtor(mData, "StringAdopt", 1);
+#endif
   }
 }
 #endif /* XPCOM_STRING_CONSTRUCTOR_OUT_OF_LINE */
@@ -458,9 +460,11 @@ nsTSubstring_CharT::Adopt(char_type* aData, size_type aLength)
     SetDataFlags(F_TERMINATED | F_OWNED);
 
     STRING_STAT_INCREMENT(Adopt);
+#ifdef NS_BUILD_REFCNT_LOGGING
     // Treat this as construction of a "StringAdopt" object for leak
     // tracking purposes.
-    MOZ_LOG_CTOR(mData, "StringAdopt", 1);
+    NS_LogCtor(mData, "StringAdopt", 1);
+#endif // NS_BUILD_REFCNT_LOGGING
   } else {
     SetIsVoid(true);
   }

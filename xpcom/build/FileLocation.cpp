@@ -3,10 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileLocation.h"
-#if !defined(MOZILLA_XPCOMRT_API)
 #include "nsZipArchive.h"
 #include "nsURLHelper.h"
-#endif // !defined(MOZILLA_XPCOMRT_API)
 
 namespace mozilla {
 
@@ -33,12 +31,9 @@ FileLocation::FileLocation(const FileLocation& aFile, const char* aPath)
   if (aFile.IsZip()) {
     if (aFile.mBaseFile) {
       Init(aFile.mBaseFile, aFile.mPath.get());
-    }
-#if !defined(MOZILLA_XPCOMRT_API)
-    else {
+    } else {
       Init(aFile.mBaseZip, aFile.mPath.get());
     }
-#endif
     if (aPath) {
       int32_t i = mPath.RFindChar('/');
       if (kNotFound == i) {
@@ -76,9 +71,7 @@ FileLocation::FileLocation(const FileLocation& aFile, const char* aPath)
 void
 FileLocation::Init(nsIFile* aFile)
 {
-#if !defined(MOZILLA_XPCOMRT_API)
   mBaseZip = nullptr;
-#endif //!defined(MOZILLA_XPCOMRT_API)
   mBaseFile = aFile;
   mPath.Truncate();
 }
@@ -86,9 +79,7 @@ FileLocation::Init(nsIFile* aFile)
 void
 FileLocation::Init(nsIFile* aFile, const char* aPath)
 {
-#if !defined(MOZILLA_XPCOMRT_API)
   mBaseZip = nullptr;
-#endif // !defined(MOZILLA_XPCOMRT_API)
   mBaseFile = aFile;
   mPath = aPath;
 }
@@ -96,9 +87,7 @@ FileLocation::Init(nsIFile* aFile, const char* aPath)
 void
 FileLocation::Init(nsZipArchive* aZip, const char* aPath)
 {
-#if !defined(MOZILLA_XPCOMRT_API)
   mBaseZip = aZip;
-#endif // !defined(MOZILLA_XPCOMRT_API)
   mBaseFile = nullptr;
   mPath = aPath;
 }
@@ -106,7 +95,6 @@ FileLocation::Init(nsZipArchive* aZip, const char* aPath)
 void
 FileLocation::GetURIString(nsACString& aResult) const
 {
-#if !defined(MOZILLA_XPCOMRT_API)
   if (mBaseFile) {
     net_GetURLSpecFromActualFile(mBaseFile, aResult);
   } else if (mBaseZip) {
@@ -118,13 +106,11 @@ FileLocation::GetURIString(nsACString& aResult) const
     aResult += "!/";
     aResult += mPath;
   }
-#endif // !defined(MOZILLA_XPCOMRT_API)
 }
 
 already_AddRefed<nsIFile>
 FileLocation::GetBaseFile()
 {
-#if !defined(MOZILLA_XPCOMRT_API)
   if (IsZip() && mBaseZip) {
     nsRefPtr<nsZipHandle> handler = mBaseZip->GetFD();
     if (handler) {
@@ -132,7 +118,6 @@ FileLocation::GetBaseFile()
     }
     return nullptr;
   }
-#endif // !defined(MOZILLA_XPCOMRT_API)
 
   nsCOMPtr<nsIFile> file = mBaseFile;
   return file.forget();
@@ -152,7 +137,6 @@ FileLocation::Equals(const FileLocation& aFile) const
 
   const FileLocation* a = this;
   const FileLocation* b = &aFile;
-#if !defined(MOZILLA_XPCOMRT_API)
   if (a->mBaseZip) {
     nsRefPtr<nsZipHandle> handler = a->mBaseZip->GetFD();
     a = &handler->mFile;
@@ -161,15 +145,12 @@ FileLocation::Equals(const FileLocation& aFile) const
     nsRefPtr<nsZipHandle> handler = b->mBaseZip->GetFD();
     b = &handler->mFile;
   }
-#endif // !defined(MOZILLA_XPCOMRT_API)
-
   return a->Equals(*b);
 }
 
 nsresult
 FileLocation::GetData(Data& aData)
 {
-#if !defined(MOZILLA_XPCOMRT_API)
   if (!IsZip()) {
     return mBaseFile->OpenNSPRFileDesc(PR_RDONLY, 0444, &aData.mFd.rwget());
   }
@@ -182,7 +163,6 @@ FileLocation::GetData(Data& aData)
   if (aData.mItem) {
     return NS_OK;
   }
-#endif // !defined(MOZILLA_XPCOMRT_API)
   return NS_ERROR_FILE_UNRECOGNIZED_PATH;
 }
 
@@ -201,13 +181,10 @@ FileLocation::Data::GetSize(uint32_t* aResult)
 
     *aResult = fileInfo.size;
     return NS_OK;
-  }
-#if !defined(MOZILLA_XPCOMRT_API)
-  else if (mItem) {
+  } else if (mItem) {
     *aResult = mItem->RealSize();
     return NS_OK;
   }
-#endif // !defined(MOZILLA_XPCOMRT_API)
   return NS_ERROR_NOT_INITIALIZED;
 }
 
@@ -224,16 +201,13 @@ FileLocation::Data::Copy(char* aBuf, uint32_t aLen)
       totalRead += read;
     }
     return NS_OK;
-  }
-#if !defined(MOZILLA_XPCOMRT_API)
-  else if (mItem) {
+  } else if (mItem) {
     nsZipCursor cursor(mItem, mZip, reinterpret_cast<uint8_t*>(aBuf),
                        aLen, true);
     uint32_t readLen;
     cursor.Copy(&readLen);
     return (readLen == aLen) ? NS_OK : NS_ERROR_FILE_CORRUPTED;
   }
-#endif // !defined(MOZILLA_XPCOMRT_API)
   return NS_ERROR_NOT_INITIALIZED;
 }
 
