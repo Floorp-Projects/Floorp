@@ -1034,7 +1034,7 @@ var gBrowserInit = {
     CombinedStopReload.init();
     gPrivateBrowsingUI.init();
     TabsInTitlebar.init();
-//     ReadingListUI.init();
+    ReadingListUI.init();
 
 #ifdef XP_WIN
     if (window.matchMedia("(-moz-os-version: windows-win8)").matches &&
@@ -1363,8 +1363,6 @@ var gBrowserInit = {
     gDevToolsBrowser.registerBrowserWindow(window);
 
     gMenuButtonUpdateBadge.init();
-
-    ReadingListUI.init();
 
     window.addEventListener("mousemove", MousePosTracker, false);
     window.addEventListener("dragover", MousePosTracker, false);
