@@ -1,9 +1,9 @@
-=== JSAPI Test Suite
+# JSAPI Test Suite
 
 The tests in this directory exercise the JSAPI.
 
 
---- Building and running the tests
+## Building and running the tests
 
 If you built JS, you already built the tests.
 
@@ -20,16 +20,18 @@ To run the tests in a debugger:
     cd $OBJDIR/dist/bin
     gdb ./jsapi-tests
 
---- Creating new tests
 
- 1. You can either add to an existing test*.cpp file or make a new one.
+## Creating new tests
+
+1.  You can either add to an existing test*.cpp file or make a new one.
     Copy an existing test and replace the body with your test code.
     The test harness provides `cx`, `rt`, and `global` for your use.
 
- 2. If you made a new .cpp file, add it to the CPPSRCS list in Makefile.in.
+2.  If you made a new .cpp file, add it to the UNIFIED_SOURCES list
+    in moz.build.
 
 
---- Writing test code
+## Writing test code
 
 Here is a sample test:
 
@@ -135,7 +137,7 @@ tests.h:
         Otherwise SameValue(a, b) iff a === b.
 
 
---- Custom test setup
+## Custom test setup
 
 Before executing each test, the test framework calls the tests' init() member
 function, which populates the rt, cx, and global member variables.

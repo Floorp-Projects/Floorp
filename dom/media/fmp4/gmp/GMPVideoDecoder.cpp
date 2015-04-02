@@ -157,29 +157,24 @@ GMPVideoDecoder::CreateFrame(mp4_demuxer::MP4Sample* aSample)
   return frame;
 }
 
-nsresult
-GMPVideoDecoder::Init()
+void
+GMPVideoDecoder::GetGMPAPI(GMPInitDoneRunnable* aInitDone)
 {
   MOZ_ASSERT(IsOnGMPThread());
 
-  mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
-  MOZ_ASSERT(mMPS);
-
   nsTArray<nsCString> tags;
   InitTags(tags);
-  nsresult rv = mMPS->GetGMPVideoDecoder(&tags, GetNodeId(), &mHost, &mGMP);
-  NS_ENSURE_SUCCESS(rv, rv);
-  MOZ_ASSERT(mHost && mGMP);
+  UniquePtr<GetGMPVideoDecoderCallback> callback(
+    new GMPInitDoneCallback(this, aInitDone));
+  if (NS_FAILED(mMPS->GetGMPVideoDecoder(&tags, GetNodeId(), Move(callback)))) {
+    aInitDone->Dispatch();
+  }
+}
 
-  // GMP implementations have interpreted the meaning of GMP_BufferLength32
-  // differently.  The OpenH264 GMP expects GMP_BufferLength32 to behave as
-  // specified in the GMP API, where each buffer is prefixed by a 32-bit
-  // host-endian buffer length that includes the size of the buffer length
-  // field.  Other existing GMPs currently expect GMP_BufferLength32 (when
-  // combined with kGMPVideoCodecH264) to mean "like AVCC but restricted to
-  // 4-byte NAL lengths" (i.e. buffer lengths are specified in big-endian
-  // and do not include the length of the buffer length field.
-  mConvertNALUnitLengths = mGMP->GetDisplayName().EqualsLiteral("gmpopenh264");
+void
+GMPVideoDecoder::GMPInitDone(GMPVideoDecoderProxy* aGMP, GMPVideoHost* aHost)
+{
+  MOZ_ASSERT(aHost && aGMP);
 
   GMPVideoCodec codec;
   memset(&codec, 0, sizeof(codec));
@@ -195,13 +190,48 @@ GMPVideoDecoder::Init()
   codecSpecific.AppendElements(mConfig.extra_data->Elements(),
                                mConfig.extra_data->Length());
 
-  rv = mGMP->InitDecode(codec,
-                        codecSpecific,
-                        mAdapter,
-                        PR_GetNumberOfProcessors());
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = aGMP->InitDecode(codec,
+                                 codecSpecific,
+                                 mAdapter,
+                                 PR_GetNumberOfProcessors());
+  if (NS_SUCCEEDED(rv)) {
+    mGMP = aGMP;
+    mHost = aHost;
 
-  return NS_OK;
+    // GMP implementations have interpreted the meaning of GMP_BufferLength32
+    // differently.  The OpenH264 GMP expects GMP_BufferLength32 to behave as
+    // specified in the GMP API, where each buffer is prefixed by a 32-bit
+    // host-endian buffer length that includes the size of the buffer length
+    // field.  Other existing GMPs currently expect GMP_BufferLength32 (when
+    // combined with kGMPVideoCodecH264) to mean "like AVCC but restricted to
+    // 4-byte NAL lengths" (i.e. buffer lengths are specified in big-endian
+    // and do not include the length of the buffer length field.
+    mConvertNALUnitLengths = mGMP->GetDisplayName().EqualsLiteral("gmpopenh264");
+  }
+}
+
+nsresult
+GMPVideoDecoder::Init()
+{
+  MOZ_ASSERT(IsOnGMPThread());
+
+  mMPS = do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+  MOZ_ASSERT(mMPS);
+
+  nsCOMPtr<nsIThread> gmpThread = NS_GetCurrentThread();
+
+  nsRefPtr<GMPInitDoneRunnable> initDone(new GMPInitDoneRunnable());
+  gmpThread->Dispatch(
+    NS_NewRunnableMethodWithArg<GMPInitDoneRunnable*>(this,
+                                                      &GMPVideoDecoder::GetGMPAPI,
+                                                      initDone),
+    NS_DISPATCH_NORMAL);
+
+  while (!initDone->IsDone()) {
+    NS_ProcessNextEvent(gmpThread, true);
+  }
+
+  return mGMP ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult

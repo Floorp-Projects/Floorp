@@ -28,13 +28,6 @@ NativeObject::fixedData(size_t nslots) const
     return reinterpret_cast<uint8_t*>(&fixedSlots()[nslots]);
 }
 
-/* static */ inline bool
-NativeObject::changePropertyAttributes(JSContext* cx, HandleNativeObject obj,
-                                       HandleShape shape, unsigned attrs)
-{
-    return !!changeProperty(cx, obj, shape, attrs, 0, shape->getter(), shape->setter());
-}
-
 inline void
 NativeObject::removeLastProperty(ExclusiveContext* cx)
 {

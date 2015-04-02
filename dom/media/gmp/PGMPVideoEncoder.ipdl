@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PGMP;
+include protocol PGMPContent;
 include GMPTypes;
 
 using GMPVideoCodec from "gmp-video-codec.h";
@@ -17,7 +17,7 @@ namespace gmp {
 
 intr protocol PGMPVideoEncoder
 {
-  manager PGMP;
+  manager PGMPContent;
 child:
   async InitEncode(GMPVideoCodec aCodecSettings,
                    uint8_t[] aCodecSpecific,
@@ -37,6 +37,7 @@ parent:
   async Encoded(GMPVideoEncodedFrameData aEncodedFrame,
                 uint8_t[] aCodecSpecificInfo);
   async Error(GMPErr aErr);
+  async Shutdown();
   async ParentShmemForPool(Shmem aFrameBuffer);
   // MUST be intr - if sync and we create a new Shmem, when the returned
   // Shmem is received in the Child it will fail to Deserialize
