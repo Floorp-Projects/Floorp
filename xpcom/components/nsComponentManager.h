@@ -70,7 +70,6 @@ extern const char staticComponentType[];
 #if defined(MOZILLA_XPCOMRT_API)
 extern const mozilla::Module kXPCOMRTModule;
 extern const mozilla::Module kNeckoStandaloneModule;
-extern const mozilla::Module kStunUDPSocketFilterHandlerModule;
 #else
 extern const mozilla::Module kXPCOMModule;
 #endif

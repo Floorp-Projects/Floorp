@@ -11,9 +11,7 @@
 #include "nscore.h"
 #ifdef MOZILLA_INTERNAL_API
 #include "nsString.h"
-#if !defined(MOZILLA_XPCOMRT_API)
 #include "mozilla/Preferences.h"
-#endif // !defined(MOZILLA_XPCOMRT_API)
 #else
 #include "nsStringAPI.h"
 #endif
@@ -59,13 +57,11 @@ static WebRtcTraceCallback gWebRtcCallback;
 #ifdef MOZILLA_INTERNAL_API
 void GetWebRtcLogPrefs(uint32_t *aTraceMask, nsACString* aLogFile, nsACString *aAECLogDir, bool *aMultiLog)
 {
-#if !defined(MOZILLA_XPCOMRT_API)
   *aMultiLog = mozilla::Preferences::GetBool("media.webrtc.debug.multi_log");
   *aTraceMask = mozilla::Preferences::GetUint("media.webrtc.debug.trace_mask");
   mozilla::Preferences::GetCString("media.webrtc.debug.log_file", aLogFile);
   mozilla::Preferences::GetCString("media.webrtc.debug.aec_log_dir", aAECLogDir);
   webrtc::Trace::set_aec_debug_size(mozilla::Preferences::GetUint("media.webrtc.debug.aec_dump_max_size"));
-#endif // !defined(MOZILLA_XPCOMRT_API)
 }
 #endif
 
@@ -145,7 +141,7 @@ void ConfigWebRtcLog(uint32_t trace_mask, nsCString &aLogFile, nsCString &aAECLo
       webrtc::Trace::SetTraceFile(aLogFile.get(), multi_log);
     }
   }
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+#ifdef MOZILLA_INTERNAL_API
   // Capture the final choices for the trace settings.
   mozilla::Preferences::SetCString("media.webrtc.debug.log_file", aLogFile);
   mozilla::Preferences::SetUint("media.webrtc.debug.trace_mask", trace_mask);
