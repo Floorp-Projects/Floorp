@@ -70,7 +70,6 @@ const PREF_SERVER = PREF_BRANCH + "server";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_FHR_SERVICE_ENABLED = "datareporting.healthreport.service.enabled";
 
-const HAS_DATAREPORTINGSERVICE = "@mozilla.org/datareporting/service;1" in Cc;
 const SESSION_RECORDER_EXPECTED = HAS_DATAREPORTINGSERVICE &&
                                   Preferences.get(PREF_FHR_SERVICE_ENABLED, true);
 
