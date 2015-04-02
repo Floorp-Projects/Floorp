@@ -101,7 +101,11 @@ InitializeOculusCAPI()
       searchPath.AppendPrintf("%s/Library/Frameworks/LibOVRRT_%d.framework/Versions/%d", PR_GetEnv("HOME"), LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
       libSearchPaths.AppendElement(searchPath);
     }
-    libName.AppendPrintf("LibOVRRT_%d", LIBOVR_PRODUCT_VERSION);
+    // The following will match the va_list overload of AppendPrintf if the product version is 0
+    // That's bad times.
+    //libName.AppendPrintf("LibOVRRT_%d", LIBOVR_PRODUCT_VERSION);
+    libName.Append("LibOVRRT_");
+    libName.AppendInt(LIBOVR_PRODUCT_VERSION);
 #else
     libSearchPaths.AppendElement(nsCString("/usr/local/lib"));
     libSearchPaths.AppendElement(nsCString("/usr/lib"));

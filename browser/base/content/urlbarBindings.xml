@@ -1,9 +1,11 @@
 <?xml version="1.0"?>
 
-# -*- Mode: HTML -*-
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+<!--
+-*- Mode: HTML -*-
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
 
 <!DOCTYPE bindings [
 <!ENTITY % notificationDTD SYSTEM "chrome://global/locale/notification.dtd">
@@ -49,6 +51,9 @@
     </content>
 
     <implementation implements="nsIObserver, nsIDOMEventListener">
+      <field name="AppConstants" readonly="true">
+        (Components.utils.import("resource://gre/modules/AppConstants.jsm", {})).AppConstants;
+      </field>
       <constructor><![CDATA[
         this._prefs = Components.classes["@mozilla.org/preferences-service;1"]
                                 .getService(Components.interfaces.nsIPrefService)
@@ -403,11 +408,9 @@
           // and only if we get a keyboard event, to match user expectations.
           if (/^\s*[^.:\/\s]+(?:\/.*|\s*)$/i.test(url) &&
               (aTriggeringEvent instanceof KeyEvent)) {
-#ifdef XP_MACOSX
-            let accel = aTriggeringEvent.metaKey;
-#else
-            let accel = aTriggeringEvent.ctrlKey;
-#endif
+            let accel = this.AppConstants.platform == "macosx" ?
+                        aTriggeringEvent.metaKey :
+                        aTriggeringEvent.ctrlKey;
             let shift = aTriggeringEvent.shiftKey;
 
             let suffix = "";
@@ -937,6 +940,10 @@
   <!-- Note: this binding is applied to the autocomplete popup used in the Search bar and in web page content -->
   <binding id="browser-autocomplete-result-popup" extends="chrome://global/content/bindings/autocomplete.xml#autocomplete-result-popup">
     <implementation>
+      <field name="AppConstants" readonly="true">
+        (Components.utils.import("resource://gre/modules/AppConstants.jsm", {})).AppConstants;
+      </field>
+
       <method name="openAutocompletePopup">
         <parameter name="aInput"/>
         <parameter name="aElement"/>
@@ -989,13 +996,11 @@
             var where = whereToOpenLink(aEvent, false, true);
 
             // But open ctrl/cmd clicks on autocomplete items in a new background tab.
+            let modifier = this.AppConstants.platform == "macosx" ?
+                           aEvent.metaKey :
+                           aEvent.ctrlKey;
             if (where == "tab" && (aEvent instanceof MouseEvent) &&
-                (aEvent.button == 1 ||
-#ifdef XP_MACOSX
-                 aEvent.metaKey))
-#else
-                 aEvent.ctrlKey))
-#endif
+                (aEvent.button == 1 || modifier))
               where = "tab-background";
 
             searchBar.doSearch(search, where);
