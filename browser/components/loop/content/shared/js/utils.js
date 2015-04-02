@@ -179,6 +179,12 @@ loop.shared.utils = (function(mozL10n) {
     );
   }
 
+  // We can alias `subarray` to `slice` when the latter is not available, because
+  // they're semantically identical.
+  if (!Uint8Array.prototype.slice) {
+    Uint8Array.prototype.slice = Uint8Array.prototype.subarray;
+  }
+
   /**
    * Binary-compatible Base64 decoding.
    *
