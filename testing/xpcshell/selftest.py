@@ -333,6 +333,18 @@ add_task(function no_run_test_add_task_fail() {
 });
 '''
 
+NO_RUN_TEST_ADD_TASK_MULTIPLE = '''
+Components.utils.import("resource://gre/modules/Promise.jsm");
+
+add_task(function test_task() {
+  yield Promise.resolve(true);
+});
+
+add_task(function test_2() {
+  yield Promise.resolve(true);
+});
+'''
+
 
 class XPCShellTestsTests(unittest.TestCase):
     """
@@ -1023,6 +1035,20 @@ tail =
         self.assertEquals(1, self.x.failCount)
         self.assertInLog(TEST_FAIL_STRING)
         self.assertNotInLog(TEST_PASS_STRING)
+
+    def testNoRunTestAddTaskMultiple(self):
+        """
+        Check that multple add_task() tests work without run_test().
+        """
+        self.writeFile("test_noRunTestAddTaskMultiple.js", NO_RUN_TEST_ADD_TASK_MULTIPLE)
+        self.writeManifest(["test_noRunTestAddTaskMultiple.js"])
+
+        self.assertTestResult(True)
+        self.assertEquals(1, self.x.testCount)
+        self.assertEquals(1, self.x.passCount)
+        self.assertEquals(0, self.x.failCount)
+        self.assertInLog(TEST_PASS_STRING)
+        self.assertNotInLog(TEST_FAIL_STRING)
 
 if __name__ == "__main__":
     unittest.main(verbosity=3)
