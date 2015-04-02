@@ -346,9 +346,15 @@ RegExpObject::assignInitialShape(ExclusiveContext* cx, Handle<RegExpObject*> sel
     MOZ_ASSERT(self->empty());
 
     JS_STATIC_ASSERT(LAST_INDEX_SLOT == 0);
+    JS_STATIC_ASSERT(SOURCE_SLOT == LAST_INDEX_SLOT + 1);
 
     /* The lastIndex property alone is writable but non-configurable. */
-    return self->addDataProperty(cx, cx->names().lastIndex, LAST_INDEX_SLOT, JSPROP_PERMANENT);
+    if (!self->addDataProperty(cx, cx->names().lastIndex, LAST_INDEX_SLOT, JSPROP_PERMANENT))
+        return nullptr;
+
+    /* Remaining instance property are non-writable and non-configurable. */
+    unsigned attrs = JSPROP_PERMANENT | JSPROP_READONLY;
+    return self->addDataProperty(cx, cx->names().source, SOURCE_SLOT, attrs);
 }
 
 bool
@@ -361,6 +367,8 @@ RegExpObject::init(ExclusiveContext* cx, HandleAtom source, RegExpFlag flags)
 
     MOZ_ASSERT(self->lookup(cx, NameToId(cx->names().lastIndex))->slot() ==
                LAST_INDEX_SLOT);
+    MOZ_ASSERT(self->lookup(cx, NameToId(cx->names().source))->slot() ==
+               SOURCE_SLOT);
 
     /*
      * If this is a re-initialization with an existing RegExpShared, 'flags'
