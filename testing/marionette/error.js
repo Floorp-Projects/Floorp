@@ -10,11 +10,7 @@ const errors = [
   "ElementNotVisibleError",
   "FrameSendFailureError",
   "FrameSendNotInitializedError",
-<<<<<<< dest
   "InvalidElementStateError",
-=======
-  "IllegalArgumentError",
->>>>>>> source
   "JavaScriptError",
   "NoAlertOpenError",
   "NoSuchElementError",
@@ -299,23 +295,11 @@ this.UnsupportedOperationError = function(msg) {
 };
 UnsupportedOperationError.prototype = Object.create(WebDriverError.prototype);
 
-this.IllegalArgumentError = function(msg) {
-  WebDriverError.call(this, msg);
-  this.name = "IllegalArgumentError";
-  this.status = "illegal argument";
-  this.code = 13;  // unknown error
-};
-IllegalArgumentError.prototype = Object.create(WebDriverError.prototype);
-
 const errorObjs = [
   this.ElementNotVisibleError,
   this.FrameSendFailureError,
   this.FrameSendNotInitializedError,
-<<<<<<< dest
   this.InvalidElementStateError,
-=======
-  this.IllegalArgumentError,
->>>>>>> source
   this.JavaScriptError,
   this.NoAlertOpenError,
   this.NoSuchElementError,
