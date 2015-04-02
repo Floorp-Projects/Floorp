@@ -14,6 +14,10 @@ extern "C" {
 #include "mozilla/net/DNS.h"
 #include "stun_udp_socket_filter.h"
 #include "nr_socket_prsock.h"
+#if defined(MOZILLA_XPCOMRT_API)
+#include "mozilla/Module.h"
+#include "mozilla/ModuleUtils.h"
+#endif
 
 namespace {
 
@@ -206,3 +210,26 @@ NS_IMETHODIMP nsStunUDPSocketFilterHandler::NewFilter(nsIUDPSocketFilter **resul
   NS_ADDREF(*result = ret);
   return NS_OK;
 }
+
+#if defined(MOZILLA_XPCOMRT_API)
+NS_DEFINE_NAMED_CID(NS_STUN_UDP_SOCKET_FILTER_HANDLER_CID)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStunUDPSocketFilterHandler)
+
+static const mozilla::Module::CIDEntry kCIDs[] = {
+  { &kNS_STUN_UDP_SOCKET_FILTER_HANDLER_CID, false, nullptr, nsStunUDPSocketFilterHandlerConstructor },
+  { nullptr }
+};
+
+static const mozilla::Module::ContractIDEntry kContracts[] = {
+  { NS_STUN_UDP_SOCKET_FILTER_HANDLER_CONTRACTID, &kNS_STUN_UDP_SOCKET_FILTER_HANDLER_CID },
+  { nullptr }
+};
+
+extern const mozilla::Module kStunUDPSocketFilterHandlerModule;
+const mozilla::Module kStunUDPSocketFilterHandlerModule = {
+  mozilla::Module::kVersion,
+  kCIDs,
+  kContracts
+};
+#endif

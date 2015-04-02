@@ -171,7 +171,7 @@ public:
                       mChannel(-1),
                       mCurSendCodecConfig(nullptr),
                       mCaptureDelay(150),
-#ifdef MOZILLA_INTERNAL_API
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
                       mLastTimestamp(0),
 #endif // MOZILLA_INTERNAL_API
                       mSamples(0),
@@ -282,7 +282,7 @@ private:
   // Current "capture" delay (really output plus input delay)
   int32_t mCaptureDelay;
 
-#ifdef MOZILLA_INTERNAL_API
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   uint32_t mLastTimestamp;
 #endif // MOZILLA_INTERNAL_API
 
