@@ -1,18 +1,7 @@
 [submodule "resources"]
 	path = resources
 	url = https://github.com/w3c/testharness.js.git
-  ignore = dirty
-[submodule "tools/wptserve"]
-	path = tools/wptserve
-	url = https://github.com/w3c/wptserve.git
 	ignore = dirty
-[submodule "tools/pywebsocket"]
-	path = tools/pywebsocket
-	url = https://github.com/w3c/pywebsocket.git
-	ignore = dirty
-[submodule "html5lib"]
-	path = tools/html5lib
-	url = https://github.com/html5lib/html5lib-python.git
-[submodule "tools/six"]
-	path = tools/six
-	url = https://github.com/jgraham/six.git
+[submodule "tools"]
+	path = tools
+	url = https://github.com/w3c/wpt-tools.git
