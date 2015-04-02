@@ -10,16 +10,10 @@
         Please refer to values/styles.xml for default styles.
     -->
 
-    <!-- TabWidget --> 
+    <!-- TabWidget -->
     <style name="TabWidget">
         <item name="android:layout_width">300dip</item>
         <item name="android:layout_height">48dip</item>
-    </style>
-
-    <!-- Tabs panel -->
-    <style name="TabsPanelFrame.RemoteTabs" parent="TabsPanelFrameBase">
-        <item name="android:paddingLeft">212dp</item>
-        <item name="android:paddingRight">212dp</item>
     </style>
 
     <style name="Widget.TopSitesListView" parent="Widget.BookmarksListView">
