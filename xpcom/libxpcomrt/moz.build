@@ -141,7 +141,6 @@ LOCAL_INCLUDES = [
     '../ds',
     '../glue',
     '../threads',
-    '/netwerk/standalone/',
     '/xpcom/reflect/xptinfo/',
 ]
 
