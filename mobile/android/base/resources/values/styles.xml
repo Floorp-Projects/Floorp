@@ -508,19 +508,11 @@
     </style>
 
     <!-- Tabs panel -->
-    <style name="TabsPanelFrameBase">
+    <style name="PrivateTabsPanelFrame">
         <item name="android:paddingLeft">16dp</item>
         <item name="android:paddingRight">16dp</item>
         <item name="android:paddingTop">32dp</item>
         <item name="android:orientation">vertical</item>
-    </style>
-
-    <style name="TabsPanelFrame" parent="TabsPanelFrameBase">
-        <!-- We set values in landscape. -->
-    </style>
-
-    <style name="TabsPanelFrame.PrivateTabs">
-        <!-- We set values on tablet. -->
     </style>
 
     <style name="TabsPanelSectionBase">
