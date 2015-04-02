@@ -94,7 +94,7 @@ this.ReaderMode = {
         continue;
       }
 
-      if (node.textContent.trim().length < 200) {
+      if (node.textContent.trim().length < 100) {
         continue;
       }
 
