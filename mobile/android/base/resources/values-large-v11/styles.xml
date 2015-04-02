@@ -127,11 +127,6 @@
     </style>
 
     <!-- Tabs panel -->
-    <style name="TabsPanelFrame.RemoteTabs" parent="TabsPanelFrameBase">
-        <item name="android:paddingLeft">112dp</item>
-        <item name="android:paddingRight">112dp</item>
-    </style>
-
     <style name="TabsPanelFrame.PrivateTabs">
         <item name="android:orientation">horizontal</item>
         <item name="android:paddingTop">0dp</item>
