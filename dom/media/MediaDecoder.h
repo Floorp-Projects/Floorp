@@ -680,6 +680,9 @@ public:
 
   bool OnDecodeTaskQueue() const override;
 
+  MediaDecoderStateMachine* GetStateMachine() { return mDecoderStateMachine; }
+  void SetStateMachine(MediaDecoderStateMachine* aStateMachine);
+
   // Returns the monitor for other threads to synchronise access to
   // state.
   ReentrantMonitor& GetReentrantMonitor() override;
@@ -1109,17 +1112,19 @@ protected:
    * The following member variables can be accessed from any thread.
    ******/
 
+  // Media data resource.
+  nsRefPtr<MediaResource> mResource;
+
+private:
   // The state machine object for handling the decoding. It is safe to
   // call methods of this object from other threads. Its internal data
   // is synchronised on a monitor. The lifetime of this object is
   // after mPlayState is LOADING and before mPlayState is SHUTDOWN. It
   // is safe to access it during this period.
+  //
+  // Explicitly prievate to force access via accessors.
   nsRefPtr<MediaDecoderStateMachine> mDecoderStateMachine;
 
-  // Media data resource.
-  nsRefPtr<MediaResource> mResource;
-
-private:
   // |ReentrantMonitor| for detecting when the video play state changes. A call
   // to |Wait| on this monitor will block the thread until the next state
   // change.  Explicitly private for force access via GetReentrantMonitor.
