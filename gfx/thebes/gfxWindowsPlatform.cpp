@@ -1872,7 +1872,17 @@ gfxWindowsPlatform::InitD3D11Devices()
 
   mD3D11DeviceInitialized = true;
 
-  MOZ_ASSERT(!mD3D11Device);
+  MOZ_ASSERT(!mD3D11Device); 
+
+  bool safeMode = false;
+  nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
+  if (xr) {
+    xr->GetInSafeMode(&safeMode);
+  }
+
+  if (safeMode) {
+    return;
+  }
 
   bool useWARP = false;
 

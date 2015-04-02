@@ -3498,6 +3498,10 @@ ASTSerializer::functionArgs(ParseNode* pn, ParseNode* pnargs, ParseNode* pndestr
     ParseNode* arg = pnargs ? pnargs->pn_head : nullptr;
     ParseNode* destruct = pndestruct ? pndestruct->pn_head : nullptr;
     RootedValue node(cx);
+    bool defaultsNull = true;
+    MOZ_ASSERT(defaults.empty(),
+               "must be initially empty for it to be proper to clear this "
+               "when there are no defaults");
 
     /*
      * Arguments are found in potentially two different places: 1) the
@@ -3509,8 +3513,11 @@ ASTSerializer::functionArgs(ParseNode* pn, ParseNode* pnargs, ParseNode* pndestr
      */
     while ((arg && arg != pnbody) || destruct) {
         if (destruct && destruct->pn_right->frameSlot() == i) {
-            if (!pattern(destruct->pn_left, &node) || !args.append(node))
+            if (!pattern(destruct->pn_left, &node) ||
+                !args.append(node) || !defaults.append(NullValue()))
+            {
                 return false;
+            }
             destruct = destruct->pn_next;
         } else if (arg && arg != pnbody) {
             /*
@@ -3533,9 +3540,13 @@ ASTSerializer::functionArgs(ParseNode* pn, ParseNode* pnargs, ParseNode* pndestr
             else if (!args.append(node))
                 return false;
             if (arg->pn_dflags & PND_DEFAULT) {
+                defaultsNull = false;
                 ParseNode* expr = arg->expr();
                 RootedValue def(cx);
                 if (!expression(expr, &def) || !defaults.append(def))
+                    return false;
+            } else {
+                if (!defaults.append(NullValue()))
                     return false;
             }
             arg = arg->pn_next;
@@ -3545,6 +3556,9 @@ ASTSerializer::functionArgs(ParseNode* pn, ParseNode* pnargs, ParseNode* pndestr
         ++i;
     }
     MOZ_ASSERT(!rest.isUndefined());
+
+    if (defaultsNull)
+        defaults.clear();
 
     return true;
 }

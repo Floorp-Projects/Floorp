@@ -382,6 +382,11 @@ BrowserGlue.prototype = {
         else if (data == "force-places-init") {
           this._initPlaces(false);
         }
+        else if (data == "smart-bookmarks-init") {
+          this.ensurePlacesDefaultQueriesInitialized().then(() => {
+            Services.obs.notifyObservers(null, "test-smart-bookmarks-done", null);
+          });
+        }
         break;
       case "initial-migration-will-import-default-bookmarks":
         this._migrationImportsDefaultBookmarks = true;
@@ -1497,7 +1502,7 @@ BrowserGlue.prototype = {
         // Now apply distribution customized bookmarks.
         // This should always run after Places initialization.
         this._distributionCustomizer.applyBookmarks();
-        this.ensurePlacesDefaultQueriesInitialized();
+        yield this.ensurePlacesDefaultQueriesInitialized();
       }
       else {
         // An import operation is about to run.
@@ -1532,7 +1537,7 @@ BrowserGlue.prototype = {
             this._distributionCustomizer.applyBookmarks();
             // Ensure that smart bookmarks are created once the operation is
             // complete.
-            this.ensurePlacesDefaultQueriesInitialized();
+            yield this.ensurePlacesDefaultQueriesInitialized();
           } catch (e) {
             Cu.reportError(e);
           }
@@ -1576,7 +1581,7 @@ BrowserGlue.prototype = {
                       .getHistogramById("PLACES_BACKUPS_DAYSFROMLAST")
                       .add(backupAge);
             } catch (ex) {
-              Components.utils.reportError("Unable to report telemetry.");
+              Cu.reportError("Unable to report telemetry.");
             }
 
             if (backupAge > BOOKMARKS_BACKUP_MAX_INTERVAL_DAYS)
@@ -2041,12 +2046,11 @@ BrowserGlue.prototype = {
     this._sanitizer.sanitize(aParentWindow);
   },
 
-  ensurePlacesDefaultQueriesInitialized:
-  function BG_ensurePlacesDefaultQueriesInitialized() {
-    // This is actual version of the smart bookmarks, must be increased every
-    // time smart bookmarks change.
+  ensurePlacesDefaultQueriesInitialized: Task.async(function* () {
+    // This is the current smart bookmarks version, it must be increased every
+    // time they change.
     // When adding a new smart bookmark below, its newInVersion property must
-    // be set to the version it has been added in, we will compare its value
+    // be set to the version it has been added in.  We will compare its value
     // to users' smartBookmarksVersion and add new smart bookmarks without
     // recreating old deleted ones.
     const SMART_BOOKMARKS_VERSION = 7;
@@ -2062,160 +2066,128 @@ BrowserGlue.prototype = {
       smartBookmarksCurrentVersion = Services.prefs.getIntPref(SMART_BOOKMARKS_PREF);
     } catch(ex) {}
 
-    // If version is current or smart bookmarks are disabled, just bail out.
+    // If version is current, or smart bookmarks are disabled, bail out.
     if (smartBookmarksCurrentVersion == -1 ||
         smartBookmarksCurrentVersion >= SMART_BOOKMARKS_VERSION) {
       return;
     }
 
-    let batch = {
-      runBatched: function BG_EPDQI_runBatched() {
-        let menuIndex = 0;
-        let toolbarIndex = 0;
-        let bundle = Services.strings.createBundle("chrome://browser/locale/places/places.properties");
+    try {
+      let menuIndex = 0;
+      let toolbarIndex = 0;
+      let bundle = Services.strings.createBundle("chrome://browser/locale/places/places.properties");
+      let queryOptions = Ci.nsINavHistoryQueryOptions;
 
-        let smartBookmarks = {
-          MostVisited: {
-            title: bundle.GetStringFromName("mostVisitedTitle"),
-            uri: NetUtil.newURI("place:sort=" +
-                                Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING +
-                                "&maxResults=" + MAX_RESULTS),
-            parent: PlacesUtils.toolbarFolderId,
-            get position() { return toolbarIndex++; },
-            newInVersion: 1
-          },
-          RecentlyBookmarked: {
-            title: bundle.GetStringFromName("recentlyBookmarkedTitle"),
-            uri: NetUtil.newURI("place:folder=BOOKMARKS_MENU" +
-                                "&folder=UNFILED_BOOKMARKS" +
-                                "&folder=TOOLBAR" +
-                                "&queryType=" +
-                                Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-                                "&sort=" +
-                                Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
-                                "&maxResults=" + MAX_RESULTS +
-                                "&excludeQueries=1"),
-            parent: PlacesUtils.bookmarksMenuFolderId,
-            get position() { return menuIndex++; },
-            newInVersion: 1
-          },
-          RecentTags: {
-            title: bundle.GetStringFromName("recentTagsTitle"),
-            uri: NetUtil.newURI("place:"+
-                                "type=" +
-                                Ci.nsINavHistoryQueryOptions.RESULTS_AS_TAG_QUERY +
-                                "&sort=" +
-                                Ci.nsINavHistoryQueryOptions.SORT_BY_LASTMODIFIED_DESCENDING +
-                                "&maxResults=" + MAX_RESULTS),
-            parent: PlacesUtils.bookmarksMenuFolderId,
-            get position() { return menuIndex++; },
-            newInVersion: 1
-          },
-        };
+      let smartBookmarks = {
+        MostVisited: {
+          title: bundle.GetStringFromName("mostVisitedTitle"),
+          url: "place:sort=" + queryOptions.SORT_BY_VISITCOUNT_DESCENDING +
+                    "&maxResults=" + MAX_RESULTS,
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+          newInVersion: 1
+        },
+        RecentlyBookmarked: {
+          title: bundle.GetStringFromName("recentlyBookmarkedTitle"),
+          url: "place:folder=BOOKMARKS_MENU" +
+                    "&folder=UNFILED_BOOKMARKS" +
+                    "&folder=TOOLBAR" +
+                    "&queryType=" + queryOptions.QUERY_TYPE_BOOKMARKS +
+                    "&sort=" + queryOptions.SORT_BY_DATEADDED_DESCENDING +
+                    "&maxResults=" + MAX_RESULTS +
+                    "&excludeQueries=1",
+          parentGuid: PlacesUtils.bookmarks.menuGuid,
+          newInVersion: 1
+        },
+        RecentTags: {
+          title: bundle.GetStringFromName("recentTagsTitle"),
+          url: "place:type=" + queryOptions.RESULTS_AS_TAG_QUERY +
+                    "&sort=" + queryOptions.SORT_BY_LASTMODIFIED_DESCENDING +
+                    "&maxResults=" + MAX_RESULTS,
+          parentGuid: PlacesUtils.bookmarks.menuGuid,
+          newInVersion: 1
+        },
+      };
 
-        if (Services.metro && Services.metro.supported) {
-          smartBookmarks.Windows8Touch = {
-            title: PlacesUtils.getString("windows8TouchTitle"),
-            get uri() {
-              let metroBookmarksRoot = PlacesUtils.annotations.getItemsWithAnnotation('metro/bookmarksRoot', {});
-              if (metroBookmarksRoot.length > 0) {
-                return NetUtil.newURI("place:folder=" +
-                                      metroBookmarksRoot[0] +
-                                      "&queryType=" +
-                                      Ci.nsINavHistoryQueryOptions.QUERY_TYPE_BOOKMARKS +
-                                      "&sort=" +
-                                      Ci.nsINavHistoryQueryOptions.SORT_BY_DATEADDED_DESCENDING +
-                                      "&maxResults=" + MAX_RESULTS +
-                                      "&excludeQueries=1")
-              }
-              return null;
-            },
-            parent: PlacesUtils.bookmarksMenuFolderId,
-            get position() { return menuIndex++; },
-            newInVersion: 7
-          };
-        }
-
-        // Set current itemId, parent and position if Smart Bookmark exists,
-        // we will use these informations to create the new version at the same
-        // position.
-        let smartBookmarkItemIds = PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
-        smartBookmarkItemIds.forEach(function (itemId) {
-          let queryId = PlacesUtils.annotations.getItemAnnotation(itemId, SMART_BOOKMARKS_ANNO);
-          if (queryId in smartBookmarks) {
-            let smartBookmark = smartBookmarks[queryId];
-            if (!smartBookmark.uri) {
-              PlacesUtils.bookmarks.removeItem(itemId);
-              return;
-            }
-            smartBookmark.itemId = itemId;
-            smartBookmark.parent = PlacesUtils.bookmarks.getFolderIdForItem(itemId);
-            smartBookmark.updatedPosition = PlacesUtils.bookmarks.getItemIndex(itemId);
-          }
-          else {
-            // We don't remove old Smart Bookmarks because user could still
-            // find them useful, or could have personalized them.
-            // Instead we remove the Smart Bookmark annotation.
-            PlacesUtils.annotations.removeItemAnnotation(itemId, SMART_BOOKMARKS_ANNO);
-          }
-        });
-
-        for (let queryId in smartBookmarks) {
+      // Set current guid, parentGuid and index of existing Smart Bookmarks.
+      // We will use those to create a new version of the bookmark at the same
+      // position.
+      let smartBookmarkItemIds = PlacesUtils.annotations.getItemsWithAnnotation(SMART_BOOKMARKS_ANNO);
+      for (let itemId of smartBookmarkItemIds) {
+        let queryId = PlacesUtils.annotations.getItemAnnotation(itemId, SMART_BOOKMARKS_ANNO);
+        if (queryId in smartBookmarks) {
+          // Known smart bookmark.
           let smartBookmark = smartBookmarks[queryId];
+          smartBookmark.guid = yield PlacesUtils.promiseItemGuid(itemId);
 
-          // We update or create only changed or new smart bookmarks.
-          // Also we respect user choices, so we won't try to create a smart
-          // bookmark if it has been removed.
-          if (smartBookmarksCurrentVersion > 0 &&
-              smartBookmark.newInVersion <= smartBookmarksCurrentVersion &&
-              !smartBookmark.itemId || !smartBookmark.uri)
+          if (!smartBookmark.url) {
+            yield PlacesUtils.bookmarks.remove(smartBookmark.guid);
             continue;
-
-          // Remove old version of the smart bookmark if it exists, since it
-          // will be replaced in place.
-          if (smartBookmark.itemId) {
-            PlacesUtils.bookmarks.removeItem(smartBookmark.itemId);
           }
 
-          // Create the new smart bookmark and store its updated itemId.
-          smartBookmark.itemId =
-            PlacesUtils.bookmarks.insertBookmark(smartBookmark.parent,
-                                                 smartBookmark.uri,
-                                                 smartBookmark.updatedPosition || smartBookmark.position,
-                                                 smartBookmark.title);
-          PlacesUtils.annotations.setItemAnnotation(smartBookmark.itemId,
-                                                    SMART_BOOKMARKS_ANNO,
-                                                    queryId, 0,
-                                                    PlacesUtils.annotations.EXPIRE_NEVER);
+          let bm = yield PlacesUtils.bookmarks.fetch(smartBookmark.guid);
+          smartBookmark.parentGuid = bm.parentGuid;
+          smartBookmark.index = bm.index;
         }
-
-        // If we are creating all Smart Bookmarks from ground up, add a
-        // separator below them in the bookmarks menu.
-        if (smartBookmarksCurrentVersion == 0 &&
-            smartBookmarkItemIds.length == 0) {
-          let id = PlacesUtils.bookmarks.getIdForItemAt(PlacesUtils.bookmarksMenuFolderId,
-                                                        menuIndex);
-          // Don't add a separator if the menu was empty or there is one already.
-          if (id != -1 &&
-              PlacesUtils.bookmarks.getItemType(id) != PlacesUtils.bookmarks.TYPE_SEPARATOR) {
-            PlacesUtils.bookmarks.insertSeparator(PlacesUtils.bookmarksMenuFolderId,
-                                                  menuIndex);
-          }
+        else {
+          // We don't remove old Smart Bookmarks because user could still
+          // find them useful, or could have personalized them.
+          // Instead we remove the Smart Bookmark annotation.
+          PlacesUtils.annotations.removeItemAnnotation(itemId, SMART_BOOKMARKS_ANNO);
         }
       }
-    };
 
-    try {
-      PlacesUtils.bookmarks.runInBatchMode(batch, null);
-    }
-    catch(ex) {
-      Components.utils.reportError(ex);
-    }
-    finally {
+      for (let queryId of Object.keys(smartBookmarks)) {
+        let smartBookmark = smartBookmarks[queryId];
+
+        // We update or create only changed or new smart bookmarks.
+        // Also we respect user choices, so we won't try to create a smart
+        // bookmark if it has been removed.
+        if (smartBookmarksCurrentVersion > 0 &&
+            smartBookmark.newInVersion <= smartBookmarksCurrentVersion &&
+            !smartBookmark.guid || !smartBookmark.url)
+          continue;
+
+        // Remove old version of the smart bookmark if it exists, since it
+        // will be replaced in place.
+        if (smartBookmark.guid) {
+          yield PlacesUtils.bookmarks.remove(smartBookmark.guid);
+        }
+
+        // Create the new smart bookmark and store its updated guid.
+        if (!("index" in smartBookmark)) {
+          if (smartBookmark.parentGuid == PlacesUtils.bookmarks.toolbarGuid)
+            smartBookmark.index = toolbarIndex++;
+          else if (smartBookmark.parentGuid == PlacesUtils.bookmarks.menuGuid)
+            smartBookmark.index = menuIndex++;
+        }
+        smartBookmark = yield PlacesUtils.bookmarks.insert(smartBookmark);
+        let itemId = yield PlacesUtils.promiseItemId(smartBookmark.guid);
+        PlacesUtils.annotations.setItemAnnotation(itemId,
+                                                  SMART_BOOKMARKS_ANNO,
+                                                  queryId, 0,
+                                                  PlacesUtils.annotations.EXPIRE_NEVER);
+      }
+
+      // If we are creating all Smart Bookmarks from ground up, add a
+      // separator below them in the bookmarks menu.
+      if (smartBookmarksCurrentVersion == 0 &&
+          smartBookmarkItemIds.length == 0) {
+        let bm = yield PlacesUtils.bookmarks.fetch({ parentGuid: PlacesUtils.bookmarks.menuGuid,
+                                                     index: menuIndex });
+        // Don't add a separator if the menu was empty or there is one already.
+        if (bm && bm.type != PlacesUtils.bookmarks.TYPE_SEPARATOR) {
+          yield PlacesUtils.bookmarks.insert({ type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+                                               parentGuid: PlacesUtils.bookmarks.menuGuid,
+                                               index: menuIndex });
+        }
+      }
+    } catch(ex) {
+      Cu.reportError(ex);
+    } finally {
       Services.prefs.setIntPref(SMART_BOOKMARKS_PREF, SMART_BOOKMARKS_VERSION);
       Services.prefs.savePrefFile(null);
     }
-  },
+  }),
 
   // this returns the most recent non-popup browser window
   getMostRecentBrowserWindow: function BG_getMostRecentBrowserWindow() {

@@ -12,6 +12,8 @@ loader.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
   "devtools/shared/profiler/global", true);
 loader.lazyRequireGetter(this, "CATEGORY_JIT",
   "devtools/shared/profiler/global", true);
+loader.lazyRequireGetter(this, "JITOptimizations",
+  "devtools/shared/profiler/jit", true);
 
 const CHROME_SCHEMES = ["chrome://", "resource://", "jar:file://"];
 const CONTENT_SCHEMES = ["http://", "https://", "file://", "app://"];
@@ -50,6 +52,8 @@ exports.FrameNode.isContent = isContent;
  *          - number endTime [optional]
  *          - boolean contentOnly [optional]
  *          - boolean invertTree [optional]
+ *          - object optimizations [optional]
+ *            The raw tracked optimizations array received from the backend.
  */
 function ThreadNode(threadSamples, options = {}) {
   this.samples = 0;
@@ -76,10 +80,12 @@ ThreadNode.prototype = {
    *          - number endTime: the latest sample to end at (in milliseconds)
    *          - boolean contentOnly: if platform frames shouldn't be used
    *          - boolean invertTree: if the call tree should be inverted
+   *          - object optimizations: The array of all indexable optimizations from the backend.
    */
   insert: function(sample, options = {}) {
     let startTime = options.startTime || 0;
     let endTime = options.endTime || Infinity;
+    let optimizations = options.optimizations;
     let sampleTime = sample.time;
     if (!sampleTime || sampleTime < startTime || sampleTime > endTime) {
       return;
@@ -112,7 +118,7 @@ ThreadNode.prototype = {
     this.duration += sampleDuration;
 
     FrameNode.prototype.insert(
-      sampleFrames, 0, sampleTime, sampleDuration, this.calls);
+      sampleFrames, optimizations, 0, sampleTime, sampleDuration, this.calls);
   },
 
   /**
@@ -125,6 +131,19 @@ ThreadNode.prototype = {
       functionName: L10N.getStr("table.root"),
       categoryData: {}
     };
+  },
+
+  /**
+   * Mimicks the interface of FrameNode, and a ThreadNode can never have
+   * optimization data (at the moment, anyway), so provide a function
+   * to return null so we don't need to check if a frame node is a thread
+   * or not everytime we fetch optimization data.
+   *
+   * @return {null}
+   */
+
+  hasOptimizations: function () {
+    return null;
   }
 };
 
@@ -153,6 +172,7 @@ function FrameNode({ location, line, column, category, allocations }) {
   this.samples = 0;
   this.duration = 0;
   this.calls = {};
+  this._optimizations = null;
 }
 
 FrameNode.prototype = {
@@ -168,6 +188,8 @@ FrameNode.prototype = {
    *                      C   D   F
    * @param frames
    *        The sample call stack.
+   * @param optimizations
+   *        The array of indexable optimizations.
    * @param index
    *        The index of the call in the stack representing this node.
    * @param number time
@@ -175,7 +197,7 @@ FrameNode.prototype = {
    * @param number duration
    *        The amount of time spent executing all functions on the stack.
    */
-  insert: function(frames, index, time, duration, _store = this.calls) {
+  insert: function(frames, optimizations, index, time, duration, _store = this.calls) {
     let frame = frames[index];
     if (!frame) {
       return;
@@ -185,18 +207,30 @@ FrameNode.prototype = {
     child.sampleTimes.push({ start: time, end: time + duration });
     child.samples++;
     child.duration += duration;
-    child.insert(frames, ++index, time, duration);
+    if (optimizations && frame.optsIndex != null) {
+      let opts = child._optimizations || (child._optimizations = new JITOptimizations(optimizations));
+      opts.addOptimizationSite(frame.optsIndex);
+    }
+    child.insert(frames, optimizations, index + 1, time, duration);
   },
 
   /**
-   * Parses the raw location of this function call to retrieve the actual
-   * function name and source url.
+   * Returns the parsed location and additional data describing
+   * this frame. Uses cached data if possible.
    *
    * @return object
    *         The computed { name, file, url, line } properties for this
    *         function call.
    */
   getInfo: function() {
+    return this._data || this._computeInfo();
+  },
+
+  /**
+   * Parses the raw location of this function call to retrieve the actual
+   * function name and source url.
+   */
+  _computeInfo: function() {
     // "EnterJIT" pseudoframes are special, not actually on the stack.
     if (this.location == "EnterJIT") {
       this.category = CATEGORY_JIT;
@@ -230,7 +264,7 @@ FrameNode.prototype = {
       url = null;
     }
 
-    return {
+    return this._data = {
       nodeType: "Frame",
       functionName: functionName,
       fileName: fileName,
@@ -241,6 +275,25 @@ FrameNode.prototype = {
       categoryData: categoryData,
       isContent: !!isContent(this)
     };
+  },
+
+  /**
+   * Returns whether or not the frame node has an JITOptimizations model.
+   *
+   * @return {Boolean}
+   */
+  hasOptimizations: function () {
+    return !!this._optimizations;
+  },
+
+  /**
+   * Returns the underlying JITOptimizations model representing
+   * the optimization attempts occuring in this frame.
+   *
+   * @return {JITOptimizations|null}
+   */
+  getOptimizations: function () {
+    return this._optimizations;
   }
 };
 
