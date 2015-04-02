@@ -85,7 +85,6 @@
 #include "nsIObserverService.h"
 #include "nsIOutputStream.h"
 #include "nsIProcess.h"
-#include "nsIProgrammingLanguage.h"
 #include "nsIProperties.h"
 #include "nsIPropertyBag2.h"
 #include "nsIRunnable.h"
