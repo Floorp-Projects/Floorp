@@ -403,9 +403,8 @@ gfxPlatform::gfxPlatform()
                      contentMask, BackendType::CAIRO);
     mTotalSystemMemory = mozilla::hal::GetTotalSystemMemory();
 
-    // give ovr_Initialize a chance to be called very early on; we don't
-    // care if it succeeds or not
-    VRHMDManagerOculus::PlatformInit();
+    // give HMDs a chance to be initialized very early on
+    VRHMDManager::ManagerInit();
 }
 
 gfxPlatform*
@@ -700,7 +699,7 @@ gfxPlatform::~gfxPlatform()
     mScreenReferenceDrawTarget = nullptr;
 
     // Clean up any VR stuff
-    VRHMDManagerOculus::Destroy();
+    VRHMDManager::ManagerDestroy();
 
     // The cairo folks think we should only clean up in debug builds,
     // but we're generally in the habit of trying to shut down as

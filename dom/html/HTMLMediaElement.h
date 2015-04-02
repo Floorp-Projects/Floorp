@@ -561,7 +561,6 @@ public:
   void DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
                          const nsAString& aInitDataType) override;
 
-
   bool IsEventAttributeName(nsIAtom* aName) override;
 
   // Returns the principal of the "top level" document; the origin displayed
@@ -1321,6 +1320,11 @@ protected:
 
   // True if the media has encryption information.
   bool mIsEncrypted;
+
+#ifdef MOZ_EME
+  // Init Data that needs to be sent in 'encrypted' events in MetadataLoaded().
+  EncryptionInfo mPendingEncryptedInitData;
+#endif // MOZ_EME
 
   // True if the media's channel's download has been suspended.
   bool mDownloadSuspendedByCache;

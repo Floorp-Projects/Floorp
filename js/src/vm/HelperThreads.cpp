@@ -336,7 +336,7 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
     if (!global)
         return false;
 
-    JS_SetCompartmentPrincipals(global->compartment(), cx->compartment()->principals);
+    JS_SetCompartmentPrincipals(global->compartment(), cx->compartment()->principals());
 
     RootedObject obj(cx);
 

@@ -136,11 +136,11 @@ public:
 
 #ifdef MOZ_EME
   // Dispatches a "encrypted" event to the HTMLMediaElement, with the
-  // provided init data.
+  // provided init data. Actual dispatch may be delayed until HAVE_METADATA.
   // Main thread only.
   virtual void DispatchEncrypted(const nsTArray<uint8_t>& aInitData,
                                  const nsAString& aInitDataType) = 0;
-#endif
+#endif // MOZ_EME
 };
 
 }

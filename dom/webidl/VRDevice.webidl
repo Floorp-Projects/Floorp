@@ -52,6 +52,20 @@ interface VRPositionState {
   readonly attribute DOMPoint? angularAcceleration;
 };
 
+[Pref="dom.vr.enabled",
+ HeaderFile="mozilla/dom/VRDevice.h"]
+interface VREyeParameters {
+  /* These values are expected to be static per-device/per-user */
+  [Constant, Cached] readonly attribute VRFieldOfView minimumFieldOfView;
+  [Constant, Cached] readonly attribute VRFieldOfView maximumFieldOfView;
+  [Constant, Cached] readonly attribute VRFieldOfView recommendedFieldOfView;
+  [Constant, Cached] readonly attribute DOMPoint eyeTranslation;
+
+  /* These values will vary after a FOV has been set */
+  [Constant, Cached] readonly attribute VRFieldOfView currentFieldOfView;
+  [Constant, Cached] readonly attribute DOMRect renderRect;
+};
+
 [Pref="dom.vr.enabled"]
 interface VRDevice {
   /**
@@ -59,38 +73,26 @@ interface VRDevice {
    * VR Device is a part of.  All VRDevice/Sensors that come
    * from the same hardware will have the same hardwareId
    */
-  [Pure] readonly attribute DOMString hardwareUnitId;
+  [Constant] readonly attribute DOMString hardwareUnitId;
 
   /**
    * An identifier for this distinct sensor/device on a physical
    * hardware device.  This shouldn't change across browser
    * restrats, allowing configuration data to be saved based on it.
    */
-  [Pure] readonly attribute DOMString deviceId;
+  [Constant] readonly attribute DOMString deviceId;
 
   /**
    * a device name, a user-readable name identifying it
    */
-  [Pure] readonly attribute DOMString deviceName;
+  [Constant] readonly attribute DOMString deviceName;
 };
 
 [Pref="dom.vr.enabled",
  HeaderFile="mozilla/dom/VRDevice.h"]
 interface HMDVRDevice : VRDevice {
-  /* The translation that should be applied to the view matrix for rendering each eye */
-  DOMPoint getEyeTranslation(VREye whichEye);
-
-  // the FOV that the HMD was configured with
-  [NewObject]
-  VRFieldOfView getCurrentEyeFieldOfView(VREye whichEye);
-
-  // the recommended FOV, per eye.
-  [NewObject]
-  VRFieldOfView getRecommendedEyeFieldOfView(VREye whichEye);
-
-  // the maximum FOV, per eye.  Above this, rendering will look broken.
-  [NewObject]
-  VRFieldOfView getMaximumEyeFieldOfView(VREye whichEye);
+  // Return the current VREyeParameters for the given eye
+  VREyeParameters getEyeParameters(VREye whichEye);
 
   // Set a field of view.  If either of the fields of view is null,
   // or if their values are all zeros, then the recommended field of view
@@ -99,34 +101,30 @@ interface HMDVRDevice : VRDevice {
                       optional VRFieldOfViewInit rightFOV,
                       optional double zNear = 0.01,
                       optional double zFar = 10000.0);
-
-  // return a recommended rect for this eye.  Only useful for Canvas rendering,
-  // the x/y coordinates will be the location in the canvas where this eye should
-  // begin, and the width/height are the dimensions.  Any canvas in the appropriate
-  // ratio will work.
-  DOMRect getRecommendedEyeRenderRect(VREye whichEye);
-
-  // hack for testing
-  void xxxToggleElementVR(Element element);
 };
 
 [Pref="dom.vr.enabled" ,
  HeaderFile="mozilla/dom/VRDevice.h"]
 interface PositionSensorVRDevice : VRDevice {
   /*
-   * Return a VRPositionState dictionary containing the state of this position sensor,
-   * at an optional past time or predicted for a future time if timeOffset is != 0.
+   * Return a VRPositionState dictionary containing the state of this position sensor
+   * for the current frame if within a requestAnimationFrame callback, or for the
+   * previous frame if not.
    *
    * The VRPositionState will contain the position, orientation, and velocity
    * and acceleration of each of these properties.  Use "hasPosition" and "hasOrientation"
    * to check if the associated members are valid; if these are false, those members
    * will be null.
    */
-  [NewObject]
-  VRPositionState getState(optional double timeOffset = 0.0);
+  [NewObject] VRPositionState getState();
 
-  /* Zero this sensor, treating its current position and orientation
+  /*
+   * Return the current instantaneous sensor state.
+   */
+  [NewObject] VRPositionState getImmediateState();
+
+  /* Reset this sensor, treating its current position and orientation
    * as the "origin/zero" values.
    */
-  void zeroSensor();
+  void resetSensor();
 };

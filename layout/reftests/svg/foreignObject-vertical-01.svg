@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <rect width="100" height="200" fill="red"/>
+  <foreignObject width="100" height="200" style="writing-mode: vertical-lr;">
+    <div xmlns="http://www.w3.org/1999/xhtml"
+         style="background:lime; display:block; width:100%; height:100%;"/>
+  </foreignObject>
+
+</svg>
