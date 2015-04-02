@@ -28,8 +28,7 @@ add_task(function*() {
   let widget = panel.playerWidgets[0];
   let front = widget.player;
 
-  yield waitForStateCondition(front, state => state.playState === "finished",
-                              "Waiting for the animation to finish");
+  yield waitForPlayState(front, "finished");
 
   is(widget.currentTimeEl.value, front.state.duration,
     "The timeline slider has the right value");
