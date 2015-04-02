@@ -434,7 +434,9 @@ protected:
    */
   nsEventStatus OnScrollWheel(const ScrollWheelInput& aEvent);
 
-  LayoutDevicePoint GetScrollWheelDelta(const ScrollWheelInput& aEvent) const;
+  void GetScrollWheelDelta(const ScrollWheelInput& aEvent,
+                           double& aOutDeltaX,
+                           double& aOutDeltaY) const;
 
   /**
    * Helper methods for long press gestures.
