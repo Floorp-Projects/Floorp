@@ -114,9 +114,11 @@ ReleaseData(void* aData, uint32_t aFlags)
   } else if (aFlags & nsSubstring::F_OWNED) {
     free(aData);
     STRING_STAT_INCREMENT(AdoptFree);
+#ifdef NS_BUILD_REFCNT_LOGGING
     // Treat this as destruction of a "StringAdopt" object for leak
     // tracking purposes.
-    MOZ_LOG_DTOR(aData, "StringAdopt", 1);
+    NS_LogDtor(aData, "StringAdopt", 1);
+#endif // NS_BUILD_REFCNT_LOGGING
   }
   // otherwise, nothing to do.
 }
