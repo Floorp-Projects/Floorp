@@ -7264,7 +7264,7 @@ NewMemoryInfoObject(JSContext* cx)
 
     for (size_t i = 0; i < mozilla::ArrayLength(getters); i++) {
         if (!JS_DefineProperty(cx, obj, getters[i].name, UndefinedHandleValue,
-                               JSPROP_ENUMERATE | JSPROP_SHARED,
+                               JSPROP_READONLY | JSPROP_SHARED | JSPROP_ENUMERATE,
                                getters[i].getter, nullptr))
         {
             return nullptr;
@@ -7294,7 +7294,7 @@ NewMemoryInfoObject(JSContext* cx)
 
     for (size_t i = 0; i < mozilla::ArrayLength(zoneGetters); i++) {
         if (!JS_DefineProperty(cx, zoneObj, zoneGetters[i].name, UndefinedHandleValue,
-                               JSPROP_ENUMERATE | JSPROP_SHARED,
+                               JSPROP_READONLY | JSPROP_SHARED | JSPROP_ENUMERATE,
                                zoneGetters[i].getter, nullptr))
         {
             return nullptr;

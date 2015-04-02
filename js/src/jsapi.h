@@ -2090,7 +2090,7 @@ inline int CheckIsSetterOp(JSSetterOp op);
    reinterpret_cast<To>(s))
 
 #define JS_CHECK_ACCESSOR_FLAGS(flags) \
-  (static_cast<mozilla::EnableIf<((flags) & ~(JSPROP_ENUMERATE | JSPROP_PERMANENT)) == 0>::Type>(0), \
+  (static_cast<mozilla::EnableIf<!((flags) & (JSPROP_READONLY | JSPROP_SHARED | JSPROP_PROPOP_ACCESSORS))>::Type>(0), \
    (flags))
 
 #define JS_PROPERTYOP_GETTER(v) \
@@ -2521,13 +2521,6 @@ class PropertyDescriptorOperations
         return (desc()->attrs & bits) != 0;
     }
 
-    bool hasAll(unsigned bits) const {
-        return (desc()->attrs & bits) == bits;
-    }
-
-    // Non-API attributes bit used internally for arguments objects.
-    enum { SHADOWABLE = JSPROP_INTERNAL_USE_BIT };
-
   public:
     // Descriptors with JSGetterOp/JSSetterOp are considered data
     // descriptors. It's complicated.
@@ -2575,59 +2568,6 @@ class PropertyDescriptorOperations
     unsigned attributes() const { return desc()->attrs; }
     JSGetterOp getter() const { return desc()->getter; }
     JSSetterOp setter() const { return desc()->setter; }
-
-    void assertValid() const {
-#ifdef DEBUG
-        MOZ_ASSERT((attributes() & ~(JSPROP_ENUMERATE | JSPROP_IGNORE_ENUMERATE |
-                                     JSPROP_PERMANENT | JSPROP_IGNORE_PERMANENT |
-                                     JSPROP_READONLY | JSPROP_IGNORE_READONLY |
-                                     JSPROP_IGNORE_VALUE |
-                                     JSPROP_GETTER |
-                                     JSPROP_SETTER |
-                                     JSPROP_SHARED |
-                                     JSPROP_REDEFINE_NONCONFIGURABLE |
-                                     SHADOWABLE)) == 0);
-        MOZ_ASSERT(!hasAll(JSPROP_IGNORE_ENUMERATE | JSPROP_ENUMERATE));
-        MOZ_ASSERT(!hasAll(JSPROP_IGNORE_PERMANENT | JSPROP_PERMANENT));
-        if (isAccessorDescriptor()) {
-            MOZ_ASSERT(has(JSPROP_SHARED));
-            MOZ_ASSERT(!has(JSPROP_READONLY));
-            MOZ_ASSERT(!has(JSPROP_IGNORE_READONLY));
-            MOZ_ASSERT(!has(JSPROP_IGNORE_VALUE));
-            MOZ_ASSERT(!has(SHADOWABLE));
-            MOZ_ASSERT(value().isUndefined());
-            MOZ_ASSERT_IF(!has(JSPROP_GETTER), !getter());
-            MOZ_ASSERT_IF(!has(JSPROP_SETTER), !setter());
-        } else {
-            MOZ_ASSERT(!hasAll(JSPROP_IGNORE_READONLY | JSPROP_READONLY));
-            MOZ_ASSERT_IF(has(JSPROP_IGNORE_VALUE), value().isUndefined());
-        }
-        MOZ_ASSERT(getter() != JS_PropertyStub);
-        MOZ_ASSERT(setter() != JS_StrictPropertyStub);
-#endif
-    }
-
-    void assertComplete() const {
-#ifdef DEBUG
-        assertValid();
-        MOZ_ASSERT((attributes() & ~(JSPROP_ENUMERATE |
-                                     JSPROP_PERMANENT |
-                                     JSPROP_READONLY |
-                                     JSPROP_GETTER |
-                                     JSPROP_SETTER |
-                                     JSPROP_SHARED |
-                                     JSPROP_REDEFINE_NONCONFIGURABLE |
-                                     SHADOWABLE)) == 0);
-        MOZ_ASSERT_IF(isAccessorDescriptor(), has(JSPROP_GETTER) && has(JSPROP_SETTER));
-#endif
-    }
-
-    void assertCompleteIfFound() const {
-#ifdef DEBUG
-        if (object())
-            assertComplete();
-#endif
-    }
 };
 
 template <typename Outer>
@@ -2693,19 +2633,7 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
         value().set(v);
     }
 
-    void setConfigurable(bool configurable) {
-        setAttributes((desc()->attrs & ~(JSPROP_IGNORE_PERMANENT | JSPROP_PERMANENT)) |
-                      (configurable ? 0 : JSPROP_PERMANENT));
-    }
-    void setEnumerable(bool enumerable) {
-        setAttributes((desc()->attrs & ~(JSPROP_IGNORE_ENUMERATE | JSPROP_ENUMERATE)) |
-                      (enumerable ? JSPROP_ENUMERATE : 0));
-    }
-    void setWritable(bool writable) {
-        MOZ_ASSERT(!(desc()->attrs & (JSPROP_GETTER | JSPROP_SETTER)));
-        setAttributes((desc()->attrs & ~(JSPROP_IGNORE_READONLY | JSPROP_READONLY)) |
-                      (writable ? 0 : JSPROP_READONLY));
-    }
+    void setEnumerable() { desc()->attrs |= JSPROP_ENUMERATE; }
     void setAttributes(unsigned attrs) { desc()->attrs = attrs; }
 
     void setGetter(JSGetterOp op) {
@@ -2716,16 +2644,8 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
         MOZ_ASSERT(op != JS_StrictPropertyStub);
         desc()->setter = op;
     }
-    void setGetterObject(JSObject* obj) {
-        desc()->getter = reinterpret_cast<JSGetterOp>(obj);
-        desc()->attrs &= ~(JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY);
-        desc()->attrs |= JSPROP_GETTER | JSPROP_SHARED;
-    }
-    void setSetterObject(JSObject* obj) {
-        desc()->setter = reinterpret_cast<JSSetterOp>(obj);
-        desc()->attrs &= ~(JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY);
-        desc()->attrs |= JSPROP_SETTER | JSPROP_SHARED;
-    }
+    void setGetterObject(JSObject* obj) { desc()->getter = reinterpret_cast<JSGetterOp>(obj); }
+    void setSetterObject(JSObject* obj) { desc()->setter = reinterpret_cast<JSSetterOp>(obj); }
 
     JS::MutableHandleObject getterObject() {
         MOZ_ASSERT(this->hasGetterObject());

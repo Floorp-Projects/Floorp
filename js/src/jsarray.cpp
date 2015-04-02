@@ -505,7 +505,7 @@ js::CanonicalizeArrayLengthValue(JSContext* cx, HandleValue v, uint32_t* newLen)
     return false;
 }
 
-/* ES6 draft rev 34 (2015 Feb 20) 9.4.2.4 ArraySetLength */
+/* ES6 20130308 draft 8.4.2.4 ArraySetLength */
 bool
 js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
                    unsigned attrs, HandleValue value, ObjectOpResult& result)
@@ -515,26 +515,26 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     if (!arr->maybeCopyElementsForWrite(cx))
         return false;
 
-    // Step 1.
+    /* Steps 1-2 are irrelevant in our implementation. */
+
+    /* Steps 3-5. */
     uint32_t newLen;
-    if (attrs & JSPROP_IGNORE_VALUE) {
-        // The spec has us calling OrdinaryDefineOwnProperty if
-        // Desc.[[Value]] is absent, but our implementation is so different that
-        // this is impossible. Instead, set newLen to the current length and
-        // proceed to step 9.
-        newLen = arr->length();
-    } else {
-        // Step 2 is irrelevant in our implementation.
+    if (!CanonicalizeArrayLengthValue(cx, value, &newLen))
+        return false;
 
-        // Steps 3-7.
-        MOZ_ASSERT_IF(attrs & JSPROP_IGNORE_VALUE, value.isUndefined());
-        if (!CanonicalizeArrayLengthValue(cx, value, &newLen))
-            return false;
+    // Abort if we're being asked to change enumerability or configurability.
+    // (The length property of arrays is non-configurable, so such attempts
+    // must fail.)  This behavior is spread throughout the ArraySetLength spec
+    // algorithm, but we only need check it once as our array implementation
+    // is internally so different from the spec algorithm.  (ES5 and ES6 define
+    // behavior by delegating to the default define-own-property algorithm --
+    // OrdinaryDefineOwnProperty in ES6, the default [[DefineOwnProperty]] in
+    // ES5 -- but we reimplement all the conflict-detection bits ourselves here
+    // so that we can use a customized length representation.)
+    if (!(attrs & JSPROP_PERMANENT) || (attrs & JSPROP_ENUMERATE))
+        return result.fail(JSMSG_CANT_REDEFINE_PROP);
 
-        // Step 8 is irrelevant in our implementation.
-    }
-
-    // Steps 9-11.
+    /* Steps 6-7. */
     bool lengthIsWritable = arr->lengthIsWritable();
 #ifdef DEBUG
     {
@@ -543,21 +543,10 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
         MOZ_ASSERT(lengthShape->writable() == lengthIsWritable);
     }
 #endif
+
     uint32_t oldLen = arr->length();
 
-    // Part of steps 1.a, 12.a, and 16: Fail if we're being asked to change
-    // enumerability or configurability, or otherwise break the object
-    // invariants. (ES6 checks these by calling OrdinaryDefineOwnProperty, but
-    // in SM, the array length property is hardly ordinary.)
-    if ((attrs & (JSPROP_PERMANENT | JSPROP_IGNORE_PERMANENT)) == 0 ||
-        (attrs & (JSPROP_ENUMERATE | JSPROP_IGNORE_ENUMERATE)) == JSPROP_ENUMERATE ||
-        (attrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0 ||
-        (!lengthIsWritable && (attrs & (JSPROP_READONLY | JSPROP_IGNORE_READONLY)) == 0))
-    {
-        return result.fail(JSMSG_CANT_REDEFINE_PROP);
-    }
-
-    // Steps 12-13 for arrays with non-writable length.
+    /* Steps 8-9 for arrays with non-writable length. */
     if (!lengthIsWritable) {
         if (newLen == oldLen)
             return result.succeed();
@@ -565,7 +554,7 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
         return result.fail(JSMSG_CANT_REDEFINE_ARRAY_LENGTH);
     }
 
-    // Step 19.
+    /* Step 8. */
     bool succeeded = true;
     do {
         // The initialized length and capacity of an array only need updating
@@ -627,10 +616,10 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
             // If we're removing a relatively small number of elements, just do
             // it exactly by the spec.
             while (newLen < oldLen) {
-                // Step 15a.
+                /* Step 15a. */
                 oldLen--;
 
-                // Steps 15b-d.
+                /* Steps 15b-d. */
                 ObjectOpResult deleteSucceeded;
                 if (!DeleteElement(cx, arr, oldLen, deleteSucceeded))
                     return false;
@@ -690,7 +679,7 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
                 MOZ_ASSERT(indexes[i] < index, "indexes should never repeat");
                 index = indexes[i];
 
-                // Steps 15b-d.
+                /* Steps 15b-d. */
                 ObjectOpResult deleteSucceeded;
                 if (!DeleteElement(cx, arr, index, deleteSucceeded))
                     return false;
@@ -703,24 +692,21 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
         }
     } while (false);
 
-    // Update array length. Technically we should have been doing this
-    // throughout the loop, in step 19.d.iii.
-    arr->setLength(cx, newLen);
+    /* Steps 12, 16. */
 
-    // Step 20.
-    if (attrs & JSPROP_READONLY) {
-        // Yes, we totally drop a non-stub getter/setter from a defineProperty
-        // API call on the floor here.  Given that getter/setter will go away in
-        // the long run, with accessors replacing them both internally and at the
-        // API level, just run with this.
-        RootedShape lengthShape(cx, arr->lookup(cx, id));
-        if (!NativeObject::changeProperty(cx, arr, lengthShape,
-                                          lengthShape->attributes() | JSPROP_READONLY,
-                                          array_length_getter, array_length_setter))
-        {
-            return false;
-        }
+    // Yes, we totally drop a non-stub getter/setter from a defineProperty
+    // API call on the floor here.  Given that getter/setter will go away in
+    // the long run, with accessors replacing them both internally and at the
+    // API level, just run with this.
+    RootedShape lengthShape(cx, arr->lookup(cx, id));
+    if (!NativeObject::changeProperty(cx, arr, lengthShape, attrs,
+                                      JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_SHARED,
+                                      array_length_getter, array_length_setter))
+    {
+        return false;
     }
+
+    arr->setLength(cx, newLen);
 
     // All operations past here until the |!succeeded| code must be infallible,
     // so that all element fields remain properly synchronized.

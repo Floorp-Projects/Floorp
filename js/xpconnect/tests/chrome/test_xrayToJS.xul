@@ -498,16 +498,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
        "Underlying object has getter");
     is(trickyObject.nonConfigurableGetterSetterProp, undefined,
        "Filtering properly over Xray here too");
-    is((trickyObject.nonConfigurableGetterSetterProp = 'redefined'), 'redefined',
-       "Assigning to non-configurable prop should fail silently in non-strict mode");
     checkThrows(function() {
-      "use strict";
-      trickyObject.nonConfigurableGetterSetterProp = 'redefined';
-    }, /config/, "Should throw when redefining non-configurable prop in strict mode");
+	trickyObject.nonConfigurableGetterSetterProp = 'redefined';
+    }, /config/, "Should throw when redefining non-configurable prop");
     is(trickyObject.nonConfigurableGetterSetterProp, undefined,
-       "Redefinition should have failed");
+       "Redefinition should have thrown");
     is(trickyObject.wrappedJSObject.nonConfigurableGetterSetterProp, 5,
-       "Redefinition really should have failed");
+       "Redefinition really should have thrown");
 
     checkThrows(function() { trickyObject.hasOwnProperty = 33; }, /shadow/,
                 "Should reject shadowing of pre-existing inherited properties over Xrays");

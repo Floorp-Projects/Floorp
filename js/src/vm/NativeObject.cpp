@@ -1103,6 +1103,118 @@ UpdateShapeTypeAndValue(ExclusiveContext* cx, NativeObject* obj, Shape* shape, c
 }
 
 static bool
+NativeSetExistingDataProperty(JSContext* cx, HandleNativeObject obj, HandleShape shape,
+                              HandleValue v, HandleValue receiver, ObjectOpResult& result);
+
+static inline bool
+DefinePropertyOrElement(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
+                        GetterOp getter, SetterOp setter, unsigned attrs, HandleValue value,
+                        bool callSetterAfterwards, ObjectOpResult& result)
+{
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
+
+    /* Use dense storage for new indexed properties where possible. */
+    if (JSID_IS_INT(id) &&
+        !getter &&
+        !setter &&
+        attrs == JSPROP_ENUMERATE &&
+        (!obj->isIndexed() || !obj->containsPure(id)) &&
+        !IsAnyTypedArray(obj))
+    {
+        uint32_t index = JSID_TO_INT(id);
+        if (WouldDefinePastNonwritableLength(obj, index))
+            return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
+
+        NativeObject::EnsureDenseResult edResult = obj->ensureDenseElements(cx, index, 1);
+        if (edResult == NativeObject::ED_FAILED)
+            return false;
+        if (edResult == NativeObject::ED_OK) {
+            obj->setDenseElementWithType(cx, index, value);
+            if (!CallAddPropertyHookDense(cx, obj, index, value))
+                return false;
+            return result.succeed();
+        }
+    }
+
+    if (obj->is<ArrayObject>()) {
+        Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
+        if (id == NameToId(cx->names().length)) {
+            if (!cx->shouldBeJSContext())
+                return false;
+            return ArraySetLength(cx->asJSContext(), arr, id, attrs, value, result);
+        }
+
+        uint32_t index;
+        if (IdIsIndex(id, &index)) {
+            if (WouldDefinePastNonwritableLength(obj, index))
+                return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
+        }
+    }
+
+    // Don't define new indexed properties on typed arrays.
+    if (IsAnyTypedArray(obj)) {
+        uint64_t index;
+        if (IsTypedArrayIndex(id, &index))
+            return result.succeed();
+    }
+
+    AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
+    RootedShape shape(cx, NativeObject::putProperty(cx, obj, id, getter, setter,
+                                                    SHAPE_INVALID_SLOT, attrs, 0));
+    if (!shape)
+        return false;
+
+    if (!UpdateShapeTypeAndValue(cx, obj, shape, value))
+        return false;
+
+    /*
+     * Clear any existing dense index after adding a sparse indexed property,
+     * and investigate converting the object to dense indexes.
+     */
+    if (JSID_IS_INT(id)) {
+        if (!obj->maybeCopyElementsForWrite(cx))
+            return false;
+
+        uint32_t index = JSID_TO_INT(id);
+        NativeObject::removeDenseElementForSparseIndex(cx, obj, index);
+        NativeObject::EnsureDenseResult edResult = NativeObject::maybeDensifySparseElements(cx, obj);
+        if (edResult == NativeObject::ED_FAILED)
+            return false;
+        if (edResult == NativeObject::ED_OK) {
+            MOZ_ASSERT(!setter);
+            if (!CallAddPropertyHookDense(cx, obj, index, value))
+                return false;
+            return result.succeed();
+        }
+    }
+
+    if (!CallAddPropertyHook(cx, obj, shape, value))
+        return false;
+
+    if (callSetterAfterwards && setter) {
+        MOZ_ASSERT(!(attrs & JSPROP_GETTER));
+        MOZ_ASSERT(!(attrs & JSPROP_SETTER));
+        if (!cx->shouldBeJSContext())
+            return false;
+        RootedValue receiver(cx, ObjectValue(*obj));
+        return NativeSetExistingDataProperty(cx->asJSContext(), obj, shape, value, receiver,
+                                             result);
+    }
+
+    return result.succeed();
+}
+
+static unsigned
+ApplyOrDefaultAttributes(unsigned attrs, const Shape* shape = nullptr)
+{
+    bool enumerable = shape ? shape->enumerable() : false;
+    bool writable = shape ? shape->writable() : false;
+    bool configurable = shape ? shape->configurable() : false;
+    return ApplyAttributes(attrs, enumerable, writable, configurable);
+}
+
+static bool
 PurgeProtoChain(ExclusiveContext* cx, JSObject* objArg, HandleId id)
 {
     /* Root locally so we can re-assign. */
@@ -1170,152 +1282,95 @@ PurgeScopeChain(ExclusiveContext* cx, HandleObject obj, HandleId id)
     return true;
 }
 
-static bool
-AddOrChangeProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
-                    Handle<PropertyDescriptor> desc)
+/*
+ * Check whether we're redefining away a non-configurable getter, and
+ * throw if so.
+ */
+static inline bool
+CheckAccessorRedefinition(ExclusiveContext* cx, HandleObject obj, HandleShape shape,
+                          GetterOp getter, SetterOp setter, HandleId id, unsigned attrs)
 {
-    desc.assertComplete();
+    MOZ_ASSERT(shape->isAccessorDescriptor());
+    if (shape->configurable() || (getter == shape->getter() && setter == shape->setter()))
+        return true;
 
-    if (!PurgeScopeChain(cx, obj, id))
-        return false;
-
-    // Use dense storage for new indexed properties where possible.
-    if (JSID_IS_INT(id) &&
-        !desc.getter() &&
-        !desc.setter() &&
-        desc.attributes() == JSPROP_ENUMERATE &&
-        (!obj->isIndexed() || !obj->containsPure(id)) &&
-        !IsAnyTypedArray(obj))
+    /*
+     *  Only allow redefining if JSPROP_REDEFINE_NONCONFIGURABLE is set _and_
+     *  the object is a non-DOM global.  The idea is that a DOM object can
+     *  never have such a thing on its proto chain directly on the web, so we
+     *  should be OK optimizing access to accessors found on such an object.
+     */
+    if ((attrs & JSPROP_REDEFINE_NONCONFIGURABLE) &&
+        obj->is<GlobalObject>() &&
+        !obj->getClass()->isDOMClass())
     {
-        uint32_t index = JSID_TO_INT(id);
-        NativeObject::EnsureDenseResult edResult = obj->ensureDenseElements(cx, index, 1);
-        if (edResult == NativeObject::ED_FAILED)
-            return false;
-        if (edResult == NativeObject::ED_OK) {
-            obj->setDenseElementWithType(cx, index, desc.value());
-            if (!CallAddPropertyHookDense(cx, obj, index, desc.value()))
-                return false;
-            return true;
-        }
-    }
-
-    RootedShape shape(cx, NativeObject::putProperty(cx, obj, id, desc.getter(), desc.setter(),
-                                                    SHAPE_INVALID_SLOT, desc.attributes(), 0));
-    if (!shape)
-        return false;
-
-    if (!UpdateShapeTypeAndValue(cx, obj, shape, desc.value()))
-        return false;
-
-    // Clear any existing dense index after adding a sparse indexed property,
-    // and investigate converting the object to dense indexes.
-    if (JSID_IS_INT(id)) {
-        if (!obj->maybeCopyElementsForWrite(cx))
-            return false;
-
-        uint32_t index = JSID_TO_INT(id);
-        NativeObject::removeDenseElementForSparseIndex(cx, obj, index);
-        NativeObject::EnsureDenseResult edResult =
-            NativeObject::maybeDensifySparseElements(cx, obj);
-        if (edResult == NativeObject::ED_FAILED)
-            return false;
-        if (edResult == NativeObject::ED_OK) {
-            MOZ_ASSERT(!desc.setter());
-            return CallAddPropertyHookDense(cx, obj, index, desc.value());
-        }
-    }
-
-    return CallAddPropertyHook(cx, obj, shape, desc.value());
-}
-
-static bool IsConfigurable(unsigned attrs) { return (attrs & JSPROP_PERMANENT) == 0; }
-static bool IsEnumerable(unsigned attrs) { return (attrs & JSPROP_ENUMERATE) != 0; }
-static bool IsWritable(unsigned attrs) { return (attrs & JSPROP_READONLY) == 0; }
-
-static bool IsAccessorDescriptor(unsigned attrs) {
-    return (attrs & (JSPROP_GETTER | JSPROP_SETTER)) != 0;
-}
-
-static bool IsDataDescriptor(unsigned attrs) {
-    MOZ_ASSERT((attrs & (JSPROP_IGNORE_VALUE | JSPROP_IGNORE_READONLY)) == 0);
-    return !IsAccessorDescriptor(attrs);
-}
-
-template <AllowGC allowGC>
-static MOZ_ALWAYS_INLINE bool
-GetExistingProperty(JSContext* cx,
-                    typename MaybeRooted<JSObject*, allowGC>::HandleType receiver,
-                    typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
-                    typename MaybeRooted<Shape*, allowGC>::HandleType shape,
-                    typename MaybeRooted<Value, allowGC>::MutableHandleType vp);
-
-static bool
-GetExistingPropertyValue(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
-                         HandleShape shape, MutableHandleValue vp)
-{
-    if (IsImplicitDenseOrTypedArrayElement(shape)) {
-        vp.set(obj->getDenseOrTypedArrayElement(JSID_TO_INT(id)));
         return true;
     }
-    if (!cx->shouldBeJSContext())
+
+    if (!cx->isJSContext())
         return false;
-    return GetExistingProperty<CanGC>(cx->asJSContext(), obj, obj, shape, vp);
+
+    return Throw(cx->asJSContext(), id, JSMSG_CANT_REDEFINE_PROP);
 }
 
 bool
 js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
-                         Handle<PropertyDescriptor> desc_,
+                         Handle<JSPropertyDescriptor> desc,
                          ObjectOpResult& result)
 {
-    desc_.assertValid();
+    GetterOp getter = desc.getter();
+    SetterOp setter = desc.setter();
+    unsigned attrs = desc.attributes();
+    MOZ_ASSERT(getter != JS_PropertyStub);
+    MOZ_ASSERT(setter != JS_StrictPropertyStub);
+    MOZ_ASSERT(!(attrs & JSPROP_PROPOP_ACCESSORS));
 
-    // Section numbers and step numbers below refer to ES6 draft rev 36
-    // (17 March 2015).
-    //
-    // This function aims to implement 9.1.6 [[DefineOwnProperty]] as well as
-    // the [[DefineOwnProperty]] methods described in 9.4.2.1 (arrays), 9.4.4.2
-    // (arguments), and 9.4.5.3 (typed array views).
+    AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
-    // Dispense with custom behavior of exotic native objects first.
-    if (obj->is<ArrayObject>()) {
-        // 9.4.2.1 step 2. Redefining an array's length is very special.
-        Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
-        if (id == NameToId(cx->names().length)) {
-            if (!cx->shouldBeJSContext())
-                return false;
-            return ArraySetLength(cx->asJSContext(), arr, id, desc_.attributes(), desc_.value(),
-                                  result);
-        }
-
-        // 9.4.2.1 step 3. Don't extend a fixed-length array.
-        uint32_t index;
-        if (IdIsIndex(id, &index)) {
-            if (WouldDefinePastNonwritableLength(obj, index))
-                return result.fail(JSMSG_CANT_DEFINE_PAST_ARRAY_LENGTH);
-        }
-    } else if (IsAnyTypedArray(obj)) {
-        // 9.4.5.3 step 3. Indexed properties of typed arrays are special.
-        uint64_t index;
-        if (IsTypedArrayIndex(id, &index)) {
-            if (!cx->shouldBeJSContext())
-                return false;
-            return DefineTypedArrayElement(cx->asJSContext(), obj, index, desc_, result);
-        }
-    } else if (obj->is<ArgumentsObject>()) {
-        if (id == NameToId(cx->names().length)) {
-            // Either we are resolving the .length property on this object, or
-            // redefining it. In the latter case only, we must set a bit. To
-            // distinguish the two cases, we note that when resolving, the
-            // property won't already exist; whereas the first time it is
-            // redefined, it will.
-            if (obj->containsPure(id))
-                obj->as<ArgumentsObject>().markLengthOverridden();
-        }
-    }
-
-    // 9.1.6.1 OrdinaryDefineOwnProperty steps 1-2.
     RootedShape shape(cx);
-    if (desc_.hasValue()) {
+    RootedValue updateValue(cx, desc.value());
+    bool shouldDefine = true;
+
+    /*
+     * If defining a getter or setter, we must check for its counterpart and
+     * update the attributes and property ops.  A getter or setter is really
+     * only half of a property.
+     */
+    if (desc.isAccessorDescriptor()) {
+        if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &shape))
+            return false;
+        if (shape) {
+            /*
+             * If we are defining a getter whose setter was already defined, or
+             * vice versa, finish the job via obj->changeProperty.
+             */
+            if (IsImplicitDenseOrTypedArrayElement(shape)) {
+                if (IsAnyTypedArray(obj)) {
+                    /* Ignore getter/setter properties added to typed arrays. */
+                    return result.succeed();
+                }
+                if (!NativeObject::sparsifyDenseElement(cx, obj, JSID_TO_INT(id)))
+                    return false;
+                shape = obj->lookup(cx, id);
+            }
+            if (shape->isAccessorDescriptor()) {
+                if (!CheckAccessorRedefinition(cx, obj, shape, getter, setter, id, attrs))
+                    return false;
+                attrs = ApplyOrDefaultAttributes(attrs, shape);
+                shape = NativeObject::changeProperty(cx, obj, shape, attrs,
+                                                     JSPROP_GETTER | JSPROP_SETTER,
+                                                     (attrs & JSPROP_GETTER)
+                                                     ? getter
+                                                     : shape->getter(),
+                                                     (attrs & JSPROP_SETTER)
+                                                     ? setter
+                                                     : shape->setter());
+                if (!shape)
+                    return false;
+                shouldDefine = false;
+            }
+        }
+    } else if (desc.hasValue()) {
         // If we did a normal lookup here, it would cause resolve hook recursion in
         // the following case. Suppose the first script we run in a lazy global is
         // |parseInt()|.
@@ -1329,146 +1384,93 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
         //
         // Therefore we do a special lookup that does not call the resolve hook.
         NativeLookupOwnPropertyNoResolve(cx, obj, id, &shape);
+
+        if (shape) {
+            // If any other JSPROP_IGNORE_* attributes are present, copy the
+            // corresponding JSPROP_* attributes from the existing property.
+            if (IsImplicitDenseOrTypedArrayElement(shape)) {
+                attrs = ApplyAttributes(attrs, true, true, !IsAnyTypedArray(obj));
+            } else {
+                attrs = ApplyOrDefaultAttributes(attrs, shape);
+
+                // Do not redefine a nonconfigurable accessor property.
+                if (shape->isAccessorDescriptor()) {
+                    if (!CheckAccessorRedefinition(cx, obj, shape, getter, setter, id, attrs))
+                        return false;
+                }
+            }
+        }
     } else {
+        // We have been asked merely to update some attributes. If the
+        // property already exists and it's a data property, we can just
+        // call JSObject::changeProperty.
         if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &shape))
             return false;
-    }
 
-    // From this point, the step numbers refer to
-    // 9.1.6.3, ValidateAndApplyPropertyDescriptor.
-    // Step 1 is a redundant assertion.
+        if (shape) {
+            // Don't forget about arrays.
+            if (IsImplicitDenseOrTypedArrayElement(shape)) {
+                if (IsAnyTypedArray(obj)) {
+                    /*
+                     * Silently ignore attempts to change individual index attributes.
+                     * FIXME: Uses the same broken behavior as for accessors. This should
+                     *        fail.
+                     */
+                    return result.succeed();
+                }
+                if (!NativeObject::sparsifyDenseElement(cx, obj, JSID_TO_INT(id)))
+                    return false;
+                shape = obj->lookup(cx, id);
+            }
 
-    // Filling in desc: Here we make a copy of the desc_ argument. We will turn
-    // it into a complete descriptor before updating obj. The spec algorithm
-    // does not explicitly do this, but the end result is the same. Search for
-    // "fill in" below for places where the filling-in actually occurs.
-    Rooted<PropertyDescriptor> desc(cx, desc_);
-
-    // Step 2.
-    if (!shape) {
-        if (!obj->nonProxyIsExtensible())
-            return result.fail(JSMSG_OBJECT_NOT_EXTENSIBLE);
-
-        // Fill in missing desc fields with defaults.
-        CompletePropertyDescriptor(&desc);
-
-        if (!AddOrChangeProperty(cx, obj, id, desc))
-            return false;
-        return result.succeed();
-    }
-
-    // Non-standard hack: Allow redefining non-configurable properties if
-    // JSPROP_REDEFINE_NONCONFIGURABLE is set _and_ the object is a non-DOM
-    // global. The idea is that a DOM object can never have such a thing on
-    // its proto chain directly on the web, so we should be OK optimizing
-    // access to accessors found on such an object. Bug 1105518 contemplates
-    // removing this hack.
-    bool skipRedefineChecks = (desc.attributes() & JSPROP_REDEFINE_NONCONFIGURABLE) &&
-                              obj->is<GlobalObject>() &&
-                              !obj->getClass()->isDOMClass();
-
-    // Steps 3-4 are redundant.
-
-    // Step 5. We use shapeAttrs as a stand-in for shape in many places below
-    // since shape might not be a pointer to a real Shape (see
-    // IsImplicitDenseOrTypedArrayElement).
-    unsigned shapeAttrs = GetShapeAttributes(obj, shape);
-    if (!IsConfigurable(shapeAttrs) && !skipRedefineChecks) {
-        if (desc.hasConfigurable() && desc.configurable())
-            return result.fail(JSMSG_CANT_REDEFINE_PROP);
-        if (desc.hasEnumerable() && desc.enumerable() != IsEnumerable(shapeAttrs))
-            return result.fail(JSMSG_CANT_REDEFINE_PROP);
-    }
-
-    // Fill in desc.[[Configurable]] and desc.[[Enumerable]] if missing.
-    if (!desc.hasConfigurable())
-        desc.setConfigurable(IsConfigurable(shapeAttrs));
-    if (!desc.hasEnumerable())
-        desc.setEnumerable(IsEnumerable(shapeAttrs));
-
-    // Steps 6-9.
-    if (desc.isGenericDescriptor()) {
-        // Step 6. No further validation is required.
-
-        // Fill in desc. A generic descriptor has none of these fields, so copy
-        // everything from shape.
-        MOZ_ASSERT(!desc.hasValue());
-        MOZ_ASSERT(!desc.hasWritable());
-        MOZ_ASSERT(!desc.hasGetterObject());
-        MOZ_ASSERT(!desc.hasSetterObject());
-        if (IsDataDescriptor(shapeAttrs)) {
-            RootedValue currentValue(cx);
-            if (!GetExistingPropertyValue(cx, obj, id, shape, &currentValue))
+            if (shape->isAccessorDescriptor() &&
+                !CheckAccessorRedefinition(cx, obj, shape, getter, setter, id, attrs))
+            {
                 return false;
-            desc.setValue(currentValue);
-            desc.setWritable(IsWritable(shapeAttrs));
-        } else {
-            desc.setGetterObject(shape->getterObject());
-            desc.setSetterObject(shape->setterObject());
-        }
-    } else if (desc.isDataDescriptor() != IsDataDescriptor(shapeAttrs)) {
-        // Step 7.
-        if (!IsConfigurable(shapeAttrs) && !skipRedefineChecks)
-            return result.fail(JSMSG_CANT_REDEFINE_PROP);
+            }
 
-        // Fill in desc fields with default values (steps 7.b.i and 7.c.i).
-        CompletePropertyDescriptor(&desc);
-    } else if (desc.isDataDescriptor()) {
-        // Step 8.
-        bool frozen = !IsConfigurable(shapeAttrs) && !IsWritable(shapeAttrs);
-        if (frozen && desc.hasWritable() && desc.writable() && !skipRedefineChecks)
-            return result.fail(JSMSG_CANT_REDEFINE_PROP);
+            attrs = ApplyOrDefaultAttributes(attrs, shape);
 
-        if (frozen || !desc.hasValue()) {
-            RootedValue currentValue(cx);
-            if (!GetExistingPropertyValue(cx, obj, id, shape, &currentValue))
-                return false;
-            if (!desc.hasValue()) {
-                // Fill in desc.[[Value]].
-                desc.setValue(currentValue);
+            if (shape->isAccessorDescriptor() && !(attrs & JSPROP_IGNORE_READONLY)) {
+                // ES6 draft 2014-10-14 9.1.6.3 step 7.c: Since [[Writable]]
+                // is present, change the existing accessor property to a data
+                // property.
+                updateValue = UndefinedValue();
             } else {
-                // Step 8.a.ii.1.
-                bool same;
-                if (!cx->shouldBeJSContext())
-                    return false;
-                if (!SameValue(cx->asJSContext(), desc.value(), currentValue, &same))
-                    return false;
-                if (!same && !skipRedefineChecks)
-                    return result.fail(JSMSG_CANT_REDEFINE_PROP);
+                // We are at most changing some attributes, and cannot convert
+                // from data descriptor to accessor, or vice versa. Take
+                // everything from the shape that we aren't changing.
+                uint32_t propMask = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+                attrs = (shape->attributes() & ~propMask) | (attrs & propMask);
+                getter = shape->getter();
+                setter = shape->setter();
+                if (shape->hasSlot())
+                    updateValue = obj->getSlot(shape->slot());
             }
-        }
-
-        if (!desc.hasWritable())
-            desc.setWritable(IsWritable(shapeAttrs));
-    } else {
-        // Step 9. The spec says to use SameValue, but since the values in
-        // question are objects, we can just compare pointers.
-        if (desc.hasSetterObject()) {
-            if (!IsConfigurable(shapeAttrs) &&
-                desc.setterObject() != shape->setterObject() &&
-                !skipRedefineChecks)
-            {
-                return result.fail(JSMSG_CANT_REDEFINE_PROP);
-            }
-        } else {
-            // Fill in desc.[[Set]] from shape.
-            desc.setSetterObject(shape->setterObject());
-        }
-        if (desc.hasGetterObject()) {
-            if (!IsConfigurable(shapeAttrs) &&
-                desc.getterObject() != shape->getterObject() &&
-                !skipRedefineChecks)
-            {
-                return result.fail(JSMSG_CANT_REDEFINE_PROP);
-            }
-        } else {
-            // Fill in desc.[[Get]] from shape.
-            desc.setGetterObject(shape->getterObject());
         }
     }
 
-    // Step 10.
-    if (!AddOrChangeProperty(cx, obj, id, desc))
+    /*
+     * Purge the property cache of any properties named by id that are about
+     * to be shadowed in obj's scope chain.
+     */
+    if (!PurgeScopeChain(cx, obj, id))
+        return false;
+
+    if (shouldDefine) {
+        // Handle the default cases here. Anyone that wanted to set non-default attributes has
+        // cleared the IGNORE flags by now. Since we can never get here with JSPROP_IGNORE_VALUE
+        // relevant, just clear it.
+        attrs = ApplyOrDefaultAttributes(attrs) & ~JSPROP_IGNORE_VALUE;
+        return DefinePropertyOrElement(cx, obj, id, getter, setter,
+                                       attrs, updateValue, false, result);
+    }
+
+    MOZ_ASSERT(shape);
+
+    JS_ALWAYS_TRUE(UpdateShapeTypeAndValue(cx, obj, shape, updateValue));
+
+    if (!CallAddPropertyHook(cx, obj, shape, updateValue))
         return false;
     return result.succeed();
 }
@@ -1947,55 +1949,6 @@ MaybeReportUndeclaredVarAssignment(JSContext* cx, JSString* propname)
 }
 
 /*
- * Finish assignment to a shapeful data property of a native object obj. This
- * conforms to no standard and there is a lot of legacy baggage here.
- */
-static bool
-NativeSetExistingDataProperty(JSContext* cx, HandleNativeObject obj, HandleShape shape,
-                              HandleValue v, HandleValue receiver, ObjectOpResult& result)
-{
-    MOZ_ASSERT(obj->isNative());
-    MOZ_ASSERT(shape->isDataDescriptor());
-
-    if (shape->hasDefaultSetter()) {
-        if (shape->hasSlot()) {
-            // The common path. Standard data property.
-
-            // Global properties declared with 'var' will be initially
-            // defined with an undefined value, so don't treat the initial
-            // assignments to such properties as overwrites.
-            bool overwriting = !obj->is<GlobalObject>() || !obj->getSlot(shape->slot()).isUndefined();
-            obj->setSlotWithType(cx, shape, v, overwriting);
-            return result.succeed();
-        }
-
-        // Bizarre: shared (slotless) property that's writable but has no
-        // JSSetterOp. JS code can't define such a property, but it can be done
-        // through the JSAPI. Treat it as non-writable.
-        return result.fail(JSMSG_GETTER_ONLY);
-    }
-
-    MOZ_ASSERT(!obj->is<DynamicWithObject>());  // See bug 1128681.
-
-    uint32_t sample = cx->runtime()->propertyRemovals;
-    RootedId id(cx, shape->propid());
-    RootedValue value(cx, v);
-    if (!CallJSSetterOp(cx, shape->setterOp(), obj, id, &value, result))
-        return false;
-
-    // Update any slot for the shape with the value produced by the setter,
-    // unless the setter deleted the shape.
-    if (shape->hasSlot() &&
-        (MOZ_LIKELY(cx->runtime()->propertyRemovals == sample) ||
-         obj->contains(cx, shape)))
-    {
-        obj->setSlot(shape->slot(), value);
-    }
-
-    return true;  // result is populated by CallJSSetterOp above.
-}
-
-/*
  * When a [[Set]] operation finds no existing property with the given id
  * or finds a writable data property on the prototype chain, we end up here.
  * Finish the [[Set]] by defining a new property on receiver.
@@ -2034,6 +1987,17 @@ js::SetPropertyByDefining(JSContext* cx, HandleObject obj, HandleId id, HandleVa
             return false;
     }
 
+    // If the property doesn't already exist, check for an inextensible
+    // receiver. (According to the specification, this is supposed to be
+    // enforced by [[DefineOwnProperty]], but we haven't implemented that yet.)
+    if (!existing) {
+        bool extensible;
+        if (!IsExtensible(cx, receiver, &extensible))
+            return false;
+        if (!extensible)
+            return result.fail(JSMSG_OBJECT_NOT_EXTENSIBLE);
+    }
+
     // Invalidate SpiderMonkey-specific caches or bail.
     const Class* clasp = receiver->getClass();
 
@@ -2050,32 +2014,13 @@ js::SetPropertyByDefining(JSContext* cx, HandleObject obj, HandleId id, HandleVa
     JSSetterOp setter = clasp->setProperty;
     MOZ_ASSERT(getter != JS_PropertyStub);
     MOZ_ASSERT(setter != JS_StrictPropertyStub);
-    if (!DefineProperty(cx, receiver, id, v, getter, setter, attrs, result))
-        return false;
+    if (!receiver->is<NativeObject>())
+        return DefineProperty(cx, receiver, id, v, getter, setter, attrs, result);
 
     // If the receiver is native, there is one more legacy wrinkle: the class
     // JSSetterOp is called after defining the new property.
-    if (setter && receiver->is<NativeObject>()) {
-        if (!result)
-            return true;
-
-        Rooted<NativeObject*> nativeReceiver(cx, &receiver->as<NativeObject>());
-        if (!cx->shouldBeJSContext())
-            return false;
-        RootedValue receiverValue(cx, ObjectValue(*receiver));
-
-        // This lookup is a bit unfortunate, but not nearly the most
-        // unfortunate thing about Class getters and setters. Since the above
-        // DefineProperty call succeeded, receiver is native, and the property
-        // has a setter (and thus can't be a dense element), this lookup is
-        // guaranteed to succeed.
-        RootedShape shape(cx, nativeReceiver->lookup(cx, id));
-        MOZ_ASSERT(shape);
-        return NativeSetExistingDataProperty(cx->asJSContext(), nativeReceiver, shape, v,
-                                             receiverValue, result);
-    }
-
-    return true;
+    Rooted<NativeObject*> nativeReceiver(cx, &receiver->as<NativeObject>());
+    return DefinePropertyOrElement(cx, nativeReceiver, id, getter, setter, attrs, v, true, result);
 }
 
 // When setting |id| for |receiver| and |obj| has no property for id, continue
@@ -2148,6 +2093,55 @@ SetDenseOrTypedArrayElement(JSContext* cx, HandleNativeObject obj, uint32_t inde
 
     obj->setDenseElementWithType(cx, index, v);
     return result.succeed();
+}
+
+/*
+ * Finish assignment to a shapeful data property of a native object obj. This
+ * conforms to no standard and there is a lot of legacy baggage here.
+ */
+static bool
+NativeSetExistingDataProperty(JSContext* cx, HandleNativeObject obj, HandleShape shape,
+                              HandleValue v, HandleValue receiver, ObjectOpResult& result)
+{
+    MOZ_ASSERT(obj->isNative());
+    MOZ_ASSERT(shape->isDataDescriptor());
+
+    if (shape->hasDefaultSetter()) {
+        if (shape->hasSlot()) {
+            // The common path. Standard data property.
+
+            // Global properties declared with 'var' will be initially
+            // defined with an undefined value, so don't treat the initial
+            // assignments to such properties as overwrites.
+            bool overwriting = !obj->is<GlobalObject>() || !obj->getSlot(shape->slot()).isUndefined();
+            obj->setSlotWithType(cx, shape, v, overwriting);
+            return result.succeed();
+        }
+
+        // Bizarre: shared (slotless) property that's writable but has no
+        // JSSetterOp. JS code can't define such a property, but it can be done
+        // through the JSAPI. Treat it as non-writable.
+        return result.fail(JSMSG_GETTER_ONLY);
+    }
+
+    MOZ_ASSERT(!obj->is<DynamicWithObject>());  // See bug 1128681.
+
+    uint32_t sample = cx->runtime()->propertyRemovals;
+    RootedId id(cx, shape->propid());
+    RootedValue value(cx, v);
+    if (!CallJSSetterOp(cx, shape->setterOp(), obj, id, &value, result))
+        return false;
+
+    // Update any slot for the shape with the value produced by the setter,
+    // unless the setter deleted the shape.
+    if (shape->hasSlot() &&
+        (MOZ_LIKELY(cx->runtime()->propertyRemovals == sample) ||
+         obj->contains(cx, shape)))
+    {
+        obj->setSlot(shape->slot(), value);
+    }
+
+    return true;  // result is populated by CallJSSetterOp above.
 }
 
 /*

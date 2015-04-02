@@ -55,7 +55,6 @@ BaseProxyHandler::get(JSContext* cx, HandleObject proxy, HandleObject receiver,
         vp.setUndefined();
         return true;
     }
-    desc.assertComplete();
     MOZ_ASSERT(desc.getter() != JS_PropertyStub);
     if (!desc.getter()) {
         vp.set(desc.value());
@@ -85,7 +84,6 @@ BaseProxyHandler::set(JSContext* cx, HandleObject proxy, HandleId id, HandleValu
     Rooted<PropertyDescriptor> ownDesc(cx);
     if (!getOwnPropertyDescriptor(cx, proxy, id, &ownDesc))
         return false;
-    ownDesc.assertCompleteIfFound();
 
     // The rest is factored out into a separate function with a weird name.
     // This algorithm continues just below.
@@ -187,8 +185,6 @@ BaseProxyHandler::getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy
         Rooted<PropertyDescriptor> desc(cx);
         if (!getOwnPropertyDescriptor(cx, proxy, id, &desc))
             return false;
-        desc.assertCompleteIfFound();
-
         if (desc.object() && desc.enumerable())
             props[i++].set(id);
     }

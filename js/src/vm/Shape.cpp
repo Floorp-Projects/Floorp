@@ -866,11 +866,13 @@ NativeObject::putProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId
 
 /* static */ Shape*
 NativeObject::changeProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleShape shape,
-                             unsigned attrs, GetterOp getter, SetterOp setter)
+                             unsigned attrs, unsigned mask, GetterOp getter, SetterOp setter)
 {
     MOZ_ASSERT(obj->containsPure(shape));
     MOZ_ASSERT(getter != JS_PropertyStub);
     MOZ_ASSERT(setter != JS_StrictPropertyStub);
+
+    attrs |= shape->attrs & mask;
     MOZ_ASSERT_IF(attrs & (JSPROP_GETTER | JSPROP_SETTER), attrs & JSPROP_SHARED);
 
     /* Allow only shared (slotless) => unshared (slotful) transition. */
