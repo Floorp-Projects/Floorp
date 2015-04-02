@@ -11,6 +11,9 @@
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
 
+// Turn off the authentication dialog blocking for this test.
+SpecialPowers.setIntPref("network.auth.allow-subresource-auth", 2)
+
 var tests = [
   // Not the same origin no CORS asked for, should have silence
   { url: "http://example.org:80/tests/dom/media/webaudio/test/small-shot.ogg",

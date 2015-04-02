@@ -179,6 +179,7 @@ public class GeckoEvent {
     private double mX;
     private double mY;
     private double mZ;
+    private double mW;
 
     private int mMetaState;
     private int mFlags;
@@ -509,7 +510,7 @@ public class GeckoEvent {
             event.mZ = s.values[2];
             break;
 
-        case 10 /* Requires API Level 9, so just use the raw value - Sensor.TYPE_LINEAR_ACCELEROMETER*/ :
+        case Sensor.TYPE_LINEAR_ACCELERATION:
             event = GeckoEvent.get(NativeGeckoEvent.SENSOR_EVENT);
             event.mFlags = GeckoHalDefines.SENSOR_LINEAR_ACCELERATION;
             event.mMetaState = HalSensorAccuracyFor(s.accuracy);
@@ -550,6 +551,35 @@ public class GeckoEvent {
             event.mFlags = GeckoHalDefines.SENSOR_LIGHT;
             event.mMetaState = HalSensorAccuracyFor(s.accuracy);
             event.mX = s.values[0];
+            break;
+
+        case Sensor.TYPE_ROTATION_VECTOR:
+            event = GeckoEvent.get(NativeGeckoEvent.SENSOR_EVENT);
+            event.mFlags = GeckoHalDefines.SENSOR_ROTATION_VECTOR;
+            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
+            event.mX = s.values[0];
+            event.mY = s.values[1];
+            event.mZ = s.values[2];
+            if (s.values.length >= 4) {
+                event.mW = s.values[3];
+            } else {
+                // s.values[3] was optional in API <= 18, so we need to compute it
+                // The values form a unit quaternion, so we can compute the angle of
+                // rotation purely based on the given 3 values.
+                event.mW = 1 - s.values[0]*s.values[0] - s.values[1]*s.values[1] - s.values[2]*s.values[2];
+                event.mW = (event.mW > 0.0) ? Math.sqrt(event.mW) : 0.0;
+            }
+            break;
+
+        // case Sensor.TYPE_GAME_ROTATION_VECTOR: // API >= 18
+        case 15:
+            event = GeckoEvent.get(NativeGeckoEvent.SENSOR_EVENT);
+            event.mFlags = GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR;
+            event.mMetaState = HalSensorAccuracyFor(s.accuracy);
+            event.mX = s.values[0];
+            event.mY = s.values[1];
+            event.mZ = s.values[2];
+            event.mW = s.values[3];
             break;
         }
         return event;

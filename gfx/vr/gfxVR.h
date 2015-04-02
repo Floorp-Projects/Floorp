@@ -19,6 +19,7 @@ namespace gfx {
 
 enum class VRHMDType : uint16_t {
   Oculus,
+  Cardboard,
   NumHMDTypes
 };
 
@@ -69,11 +70,7 @@ struct VRDistortionConstants {
 };
 
 struct VRDistortionVertex {
-  float pos[2];
-  float texR[2];
-  float texG[2];
-  float texB[2];
-  float genericAttribs[4];
+  float values[12];
 };
 
 struct VRDistortionMesh {
@@ -201,14 +198,27 @@ protected:
   nsCOMPtr<nsIScreen> mScreen;
 };
 
-class VRHMDManagerOculusImpl;
-class VRHMDManagerOculus {
-  static VRHMDManagerOculusImpl *mImpl;
+class VRHMDManager {
 public:
-  static bool PlatformInit();
-  static bool Init();
-  static void Destroy();
-  static void GetOculusHMDs(nsTArray<nsRefPtr<VRHMDInfo> >& aHMDResult);
+  static void ManagerInit();
+  static void ManagerDestroy();
+  static void GetAllHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult);
+
+protected:
+  typedef nsTArray<nsRefPtr<VRHMDManager>> VRHMDManagerArray;
+  static VRHMDManagerArray *sManagers;
+
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRHMDManager)
+
+  virtual bool PlatformInit() = 0;
+  virtual bool Init() = 0;
+  virtual void Destroy() = 0;
+  virtual void GetHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult) = 0;
+
+protected:
+  VRHMDManager() { }
+  virtual ~VRHMDManager() { }
 };
 
 } // namespace gfx

@@ -164,14 +164,10 @@ function promiseTableCount(aConnection) {
 function promiseEntityID(aUrl) {
   let deferred = Promise.defer();
   let entityID = "";
-  let channel = NetUtil.newChannel2(NetUtil.newURI(aUrl),
-                                    null,
-                                    null,
-                                    null,      // aLoadingNode
-                                    Services.scriptSecurityManager.getSystemPrincipal(),
-                                    null,      // aTriggeringPrincipal
-                                    Ci.nsILoadInfo.SEC_NORMAL,
-                                    Ci.nsIContentPolicy.TYPE_OTHER);
+  let channel = NetUtil.newChannel({
+    uri: NetUtil.newURI(aUrl),
+    loadUsingSystemPrincipal: true,
+  });
 
   channel.asyncOpen({
     onStartRequest: function (aRequest) {

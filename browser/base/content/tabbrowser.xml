@@ -3779,8 +3779,7 @@
                                         };
               let popup = browser.ownerDocument.getElementById("contentAreaContextMenu");
               let event = gContextMenuContentData.event;
-              let pos = browser.mapScreenCoordinatesFromContent(event.screenX, event.screenY);
-              popup.openPopupAtScreen(pos.x, pos.y, true);
+              popup.openPopupAtScreen(event.screenX, event.screenY, true);
               break;
             }
             case "DOMWebNotificationClicked": {

@@ -71,10 +71,10 @@ describe("loop.webapp", function() {
       }));
     });
 
-    it("should dispatch a ExtractTokenInfo action with the path",
+    it("should dispatch a ExtractTokenInfo action with the path and hash",
       function() {
         sandbox.stub(loop.shared.utils, "locationData").returns({
-          hash: "",
+          hash: "#fakeKey",
           pathname: "/c/faketoken"
         });
 
@@ -83,7 +83,8 @@ describe("loop.webapp", function() {
       sinon.assert.calledOnce(loop.Dispatcher.prototype.dispatch);
       sinon.assert.calledWithExactly(loop.Dispatcher.prototype.dispatch,
         new sharedActions.ExtractTokenInfo({
-          windowPath: "/c/faketoken"
+          windowPath: "/c/faketoken",
+          windowHash: "#fakeKey"
         }));
     });
   });
