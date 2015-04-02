@@ -913,21 +913,7 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
       aAttributes += 2;
   }
 
-  // Not all script languages have a "sandbox" concept.  At time of
-  // writing, Python is the only other language, and it does not.
-  // For such languages, neither any inline script nor remote script are
-  // safe to execute from untrusted sources.
-  // So for such languages, we only allow script when the document
-  // itself is from chrome.  We then don't bother to check the
-  // "src=" tag - we trust chrome to do the right thing.
-  // (See also similar code in nsScriptLoader.cpp)
   nsCOMPtr<nsIDocument> doc(do_QueryReferent(mDocument));
-  if (langID != nsIProgrammingLanguage::UNKNOWN && 
-      langID != nsIProgrammingLanguage::JAVASCRIPT &&
-      doc && !nsContentUtils::IsChromeDoc(doc)) {
-      langID = nsIProgrammingLanguage::UNKNOWN;
-      NS_WARNING("Non JS language called from non chrome - ignored");
-  }
 
   // Don't process scripts that aren't known
   if (langID != nsIProgrammingLanguage::UNKNOWN) {
