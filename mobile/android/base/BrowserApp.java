@@ -3087,14 +3087,6 @@ public class BrowserApp extends GeckoApp
     }
 
     private int resolveBookmarkIconID(final boolean isBookmark) {
-        if (NewTabletUI.isEnabled(this) && HardwareUtils.isLargeTablet()) {
-            if (isBookmark) {
-                return R.drawable.new_tablet_ic_menu_bookmark_remove;
-            } else {
-                return R.drawable.new_tablet_ic_menu_bookmark_add;
-            }
-        }
-
         if (isBookmark) {
             return R.drawable.ic_menu_bookmark_remove;
         } else {
@@ -3125,9 +3117,7 @@ public class BrowserApp extends GeckoApp
         // the frequency of use for various actions.
         Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.MENU, getResources().getResourceEntryName(itemId));
 
-        if (NewTabletUI.isEnabled(this)) {
-            mBrowserToolbar.cancelEdit();
-        }
+        mBrowserToolbar.cancelEdit();
 
         if (itemId == R.id.bookmark) {
             tab = Tabs.getInstance().getSelectedTab();
