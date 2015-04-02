@@ -61,9 +61,7 @@ DIRS += [
 if CONFIG['MOZ_WEBRTC']:
     DIRS += [
         '/media/webrtc',
-        '/media/mtransport/third_party',
-        '/media/mtransport/build',
-        '/media/mtransport/standalone',
+        '/media/mtransport',
     ]
 
 if CONFIG['MOZ_OMX_PLUGIN']:
@@ -192,5 +190,6 @@ if CONFIG['ENABLE_TESTS']:
     if CONFIG['MOZ_WEBRTC'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
             DIRS += [
                 '/media/webrtc/signaling/test',
+                '/media/webrtc/signaling/test/standalone',
                 '/media/mtransport/test',
             ]
