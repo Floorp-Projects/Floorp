@@ -142,7 +142,7 @@ JSScript::global() const
 inline JSPrincipals*
 JSScript::principals()
 {
-    return compartment()->principals;
+    return compartment()->principals();
 }
 
 inline void

@@ -9,22 +9,20 @@
 #include "prmem.h"
 #include "prenv.h"
 #include "gfxPrefs.h"
-#include "gfxVR.h"
 #include "nsString.h"
 #include "mozilla/Preferences.h"
 
-#include "ovr_capi_dynamic.h"
+#include "gfxVROculus.h"
 
 #include "nsServiceManagerUtils.h"
 #include "nsIScreenManager.h"
 
-#ifdef XP_WIN
-#include "gfxWindowsPlatform.h" // for gfxWindowsPlatform::GetDPIScale
-#endif
-
 #ifndef M_PI
 # define M_PI 3.14159265358979323846
 #endif
+
+using namespace mozilla::gfx;
+using namespace mozilla::gfx::impl;
 
 namespace {
 
@@ -58,17 +56,15 @@ static pfn_ovrMatrix4f_Projection ovrMatrix4f_Projection = nullptr;
 static pfn_ovrMatrix4f_OrthoSubProjection ovrMatrix4f_OrthoSubProjection = nullptr;
 static pfn_ovr_GetTimeInSeconds ovr_GetTimeInSeconds = nullptr;
 
-#if defined(XP_WIN)
-# ifdef HAVE_64BIT_BUILD
-#  define OVR_LIB_NAME "libovr64.dll"
-# else
-#  define OVR_LIB_NAME "libovr.dll"
-# endif
-#elif defined(XP_MACOSX)
-# define OVR_LIB_NAME "libovr.dylib"
+#ifdef HAVE_64BIT_BUILD
+#define BUILD_BITS 64
 #else
-# define OVR_LIB_NAME 0
+#define BUILD_BITS 32
 #endif
+
+#define LIBOVR_PRODUCT_VERSION 0
+#define LIBOVR_MAJOR_VERSION   5
+#define LIBOVR_MINOR_VERSION   0
 
 static bool
 InitializeOculusCAPI()
@@ -76,51 +72,82 @@ InitializeOculusCAPI()
   static PRLibrary *ovrlib = nullptr;
 
   if (!ovrlib) {
-    const char *libName = OVR_LIB_NAME;
+    nsTArray<nsCString> libSearchPaths;
+    nsCString libName;
+    nsCString searchPath;
+
+#if defined(_WIN32)
+    static const char dirSep = '\\';
+#else
+    static const char dirSep = '/';
+#endif
+
+#if defined(_WIN32)
+    static const int pathLen = 260;
+    searchPath.SetCapacity(pathLen);
+    int realLen = ::GetSystemDirectoryA(searchPath.BeginWriting(), pathLen);
+    if (realLen != 0 && realLen < pathLen) {
+      searchPath.SetLength(realLen);
+      libSearchPaths.AppendElement(searchPath);
+    }
+    libName.AppendPrintf("LibOVRRT%d_%d_%d.dll", BUILD_BITS, LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
+#elif defined(__APPLE__)
+    searchPath.Truncate();
+    searchPath.AppendPrintf("/Library/Frameworks/LibOVRRT_%d.framework/Versions/%d", LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
+    libSearchPaths.AppendElement(searchPath);
+
+    if (PR_GetEnv("HOME")) {
+      searchPath.Truncate();
+      searchPath.AppendPrintf("%s/Library/Frameworks/LibOVRRT_%d.framework/Versions/%d", PR_GetEnv("HOME"), LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
+      libSearchPaths.AppendElement(searchPath);
+    }
+    libName.AppendPrintf("LibOVRRT_%d", LIBOVR_PRODUCT_VERSION);
+#else
+    libSearchPaths.AppendElement(nsCString("/usr/local/lib"));
+    libSearchPaths.AppendElement(nsCString("/usr/lib"));
+    libName.AppendPrintf("LibOVRRT%d_%d.so.%d", BUILD_BITS, LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
+#endif
 
     // If the pref is present, we override libName
-    nsAdoptingCString prefLibName = mozilla::Preferences::GetCString("dom.vr.ovr_lib_path");
-    if (prefLibName && prefLibName.get()) {
-      libName = prefLibName.get();
+    nsAdoptingCString prefLibPath = mozilla::Preferences::GetCString("dom.vr.ovr_lib_path");
+    if (prefLibPath && prefLibPath.get()) {
+      libSearchPaths.InsertElementsAt(0, 1, prefLibPath);
     }
 
+    nsAdoptingCString prefLibName = mozilla::Preferences::GetCString("dom.vr.ovr_lib_name");
+    if (prefLibName && prefLibName.get()) {
+      libName.Assign(prefLibName);
+    }
+
+    // search the path/module dir
+    libSearchPaths.InsertElementsAt(0, 1, nsCString());
+
     // If the env var is present, we override libName
+    if (PR_GetEnv("OVR_LIB_PATH")) {
+      searchPath = PR_GetEnv("OVR_LIB_PATH");
+      libSearchPaths.InsertElementsAt(0, 1, searchPath);
+    }
+
     if (PR_GetEnv("OVR_LIB_NAME")) {
       libName = PR_GetEnv("OVR_LIB_NAME");
     }
 
-    if (!libName) {
-      printf_stderr("Don't know how to find Oculus VR library; missing dom.vr.ovr_lib_path or OVR_LIB_NAME\n");
-      return false;
-    }
-
-    ovrlib = PR_LoadLibrary(libName);
-
-    if (!ovrlib) {
-      // Not found? Try harder. Needed mainly on OSX/etc. where
-      // the binary location is not in the search path.
-      const char *xulName = "libxul.so";
-#if defined(XP_MACOSX)
-      xulName = "XUL";
-#endif
-
-      char *xulpath = PR_GetLibraryFilePathname(xulName, (PRFuncPtr) &InitializeOculusCAPI);
-      if (xulpath) {
-        char *xuldir = strrchr(xulpath, '/');
-        if (xuldir) {
-          *xuldir = 0;
-          xuldir = xulpath;
-
-          char *ovrpath = PR_GetLibraryName(xuldir, libName);
-          ovrlib = PR_LoadLibrary(ovrpath);
-          PR_Free(ovrpath);
-        }
-        PR_Free(xulpath);
+    for (uint32_t i = 0; i < libSearchPaths.Length(); ++i) {
+      nsCString& libPath = libSearchPaths[i];
+      nsCString fullName;
+      if (libPath.Length() == 0) {
+        fullName.Assign(libName);
+      } else {
+        fullName.AppendPrintf("%s%c%s", libPath.BeginReading(), dirSep, libName.BeginReading());
       }
+
+      ovrlib = PR_LoadLibrary(fullName.BeginReading());
+      if (ovrlib)
+        break;
     }
 
     if (!ovrlib) {
-      printf_stderr("Failed to load Oculus VR library, tried '%s'\n", libName);
+      printf_stderr("Failed to load Oculus VR library!\n");
       return false;
     }
   }
@@ -181,93 +208,7 @@ static bool InitializeOculusCAPI()
 }
 #endif
 
-} // anonymous namespace
-
-using namespace mozilla::gfx;
-
-// Dummy nsIScreen implementation, for when we just need to specify a size
-class FakeScreen : public nsIScreen
-{
-public:
-  explicit FakeScreen(const IntRect& aScreenRect)
-    : mScreenRect(aScreenRect)
-  { }
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD GetRect(int32_t *l, int32_t *t, int32_t *w, int32_t *h) override {
-    *l = mScreenRect.x;
-    *t = mScreenRect.y;
-    *w = mScreenRect.width;
-    *h = mScreenRect.height;
-    return NS_OK;
-  }
-  NS_IMETHOD GetAvailRect(int32_t *l, int32_t *t, int32_t *w, int32_t *h) override {
-    return GetRect(l, t, w, h);
-  }
-  NS_IMETHOD GetRectDisplayPix(int32_t *l, int32_t *t, int32_t *w, int32_t *h) override {
-    return GetRect(l, t, w, h);
-  }
-  NS_IMETHOD GetAvailRectDisplayPix(int32_t *l, int32_t *t, int32_t *w, int32_t *h) override {
-    return GetAvailRect(l, t, w, h);
-  }
-
-  NS_IMETHOD GetId(uint32_t* aId) override { *aId = (uint32_t)-1; return NS_OK; }
-  NS_IMETHOD GetPixelDepth(int32_t* aPixelDepth) override { *aPixelDepth = 24; return NS_OK; }
-  NS_IMETHOD GetColorDepth(int32_t* aColorDepth) override { *aColorDepth = 24; return NS_OK; }
-
-  NS_IMETHOD LockMinimumBrightness(uint32_t aBrightness) override { return NS_ERROR_NOT_AVAILABLE; }
-  NS_IMETHOD UnlockMinimumBrightness(uint32_t aBrightness) override { return NS_ERROR_NOT_AVAILABLE; }
-  NS_IMETHOD GetRotation(uint32_t* aRotation) override {
-    *aRotation = nsIScreen::ROTATION_0_DEG;
-    return NS_OK;
-  }
-  NS_IMETHOD SetRotation(uint32_t aRotation) override { return NS_ERROR_NOT_AVAILABLE; }
-  NS_IMETHOD GetContentsScaleFactor(double* aContentsScaleFactor) override {
-    *aContentsScaleFactor = 1.0;
-    return NS_OK;
-  }
-
-protected:
-  virtual ~FakeScreen() {}
-
-  IntRect mScreenRect;
-};
-
-NS_IMPL_ISUPPORTS(FakeScreen, nsIScreen)
-
-class HMDInfoOculus : public VRHMDInfo {
-  friend class VRHMDManagerOculusImpl;
-public:
-  explicit HMDInfoOculus(ovrHmd aHMD);
-
-  bool SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRight,
-              double zNear, double zFar) override;
-
-  bool StartSensorTracking() override;
-  VRHMDSensorState GetSensorState(double timeOffset) override;
-  void StopSensorTracking() override;
-  void ZeroSensor() override;
-
-  void FillDistortionConstants(uint32_t whichEye,
-                               const IntSize& textureSize, const IntRect& eyeViewport,
-                               const Size& destViewport, const Rect& destRect,
-                               VRDistortionConstants& values) override;
-
-  void Destroy();
-
-protected:
-  virtual ~HMDInfoOculus() {
-      Destroy();
-      MOZ_COUNT_DTOR_INHERITED(HMDInfoOculus, VRHMDInfo);
-  }
-
-  ovrHmd mHMD;
-  ovrFovPort mFOVPort[2];
-  uint32_t mStartCount;
-};
-
-static ovrFovPort
+ovrFovPort
 ToFovPort(const VRFieldOfView& aFOV)
 {
   ovrFovPort fovPort;
@@ -278,7 +219,7 @@ ToFovPort(const VRFieldOfView& aFOV)
   return fovPort;
 }
 
-static VRFieldOfView
+VRFieldOfView
 FromFovPort(const ovrFovPort& aFOV)
 {
   VRFieldOfView fovInfo;
@@ -289,11 +230,16 @@ FromFovPort(const ovrFovPort& aFOV)
   return fovInfo;
 }
 
+} // anonymous namespace
+
 HMDInfoOculus::HMDInfoOculus(ovrHmd aHMD)
   : VRHMDInfo(VRHMDType::Oculus)
   , mHMD(aHMD)
   , mStartCount(0)
 {
+  MOZ_ASSERT(sizeof(HMDInfoOculus::DistortionVertex) == sizeof(VRDistortionVertex),
+             "HMDInfoOculus::DistortionVertex must match the size of VRDistortionVertex");
+
   MOZ_COUNT_CTOR_INHERITED(HMDInfoOculus, VRHMDInfo);
 
   mSupportedSensorBits = 0;
@@ -345,7 +291,7 @@ HMDInfoOculus::SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRi
 
     // these values are negated so that content can add the adjustment to its camera position,
     // instead of subtracting
-    mEyeTranslation[eye] = Point3D(-renderDesc.ViewAdjust.x, -renderDesc.ViewAdjust.y, -renderDesc.ViewAdjust.z);
+    mEyeTranslation[eye] = Point3D(-renderDesc.HmdToEyeViewOffset.x, -renderDesc.HmdToEyeViewOffset.y, -renderDesc.HmdToEyeViewOffset.z);
 
     // note that we are using a right-handed coordinate system here, to match CSS
     ovrMatrix4f projMatrix = ovrMatrix4f_Projection(mFOVPort[eye], zNear, zFar, true);
@@ -365,7 +311,7 @@ HMDInfoOculus::SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRi
     mDistortionMesh[eye].mIndices.SetLength(mesh.IndexCount);
 
     ovrDistortionVertex *srcv = mesh.pVertexData;
-    VRDistortionVertex *destv = mDistortionMesh[eye].mVertices.Elements();
+    HMDInfoOculus::DistortionVertex *destv = reinterpret_cast<HMDInfoOculus::DistortionVertex*>(mDistortionMesh[eye].mVertices.Elements());
     memset(destv, 0, mesh.VertexCount * sizeof(VRDistortionVertex));
     for (uint32_t i = 0; i < mesh.VertexCount; ++i) {
       destv[i].pos[0] = srcv[i].ScreenPosNDC.x;
@@ -414,10 +360,10 @@ HMDInfoOculus::FillDistortionConstants(uint32_t whichEye,
 
   ovrHmd_GetRenderScaleAndOffset(mFOVPort[whichEye], texSize, eyePort, scaleOut);
 
-  values.eyeToSourceScaleAndOffset[0] = scaleOut[0].x;
-  values.eyeToSourceScaleAndOffset[1] = scaleOut[0].y;
-  values.eyeToSourceScaleAndOffset[2] = scaleOut[1].x;
-  values.eyeToSourceScaleAndOffset[3] = scaleOut[1].y;
+  values.eyeToSourceScaleAndOffset[0] = scaleOut[1].x;
+  values.eyeToSourceScaleAndOffset[1] = scaleOut[1].y;
+  values.eyeToSourceScaleAndOffset[2] = scaleOut[0].x;
+  values.eyeToSourceScaleAndOffset[3] = scaleOut[0].y;
 
   // These values are in clip space [-1..1] range, but we're providing
   // scaling in the 0..2 space for sanity.
@@ -513,71 +459,8 @@ HMDInfoOculus::GetSensorState(double timeOffset)
   return result;
 }
 
-namespace mozilla {
-namespace gfx {
-
-class VRHMDManagerOculusImpl {
-public:
-  VRHMDManagerOculusImpl() : mOculusInitialized(false), mOculusPlatformInitialized(false)
-  { }
-
-  bool PlatformInit();
-  bool Init();
-  void Destroy();
-  void GetOculusHMDs(nsTArray<nsRefPtr<VRHMDInfo> >& aHMDResult);
-protected:
-  nsTArray<nsRefPtr<HMDInfoOculus>> mOculusHMDs;
-  bool mOculusInitialized;
-  bool mOculusPlatformInitialized;
-};
-
-} // namespace gfx
-} // namespace mozilla
-
-VRHMDManagerOculusImpl *VRHMDManagerOculus::mImpl = nullptr;
-
-// These just forward to the Impl class, to have a non-static container for various
-// objects.
-
 bool
 VRHMDManagerOculus::PlatformInit()
-{
-  if (!mImpl) {
-    mImpl = new VRHMDManagerOculusImpl;
-  }
-  return mImpl->PlatformInit();
-}
-
-bool
-VRHMDManagerOculus::Init()
-{
-  if (!mImpl) {
-    mImpl = new VRHMDManagerOculusImpl;
-  }
-  return mImpl->Init();
-}
-
-void
-VRHMDManagerOculus::GetOculusHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult)
-{
-  if (!mImpl) {
-    mImpl = new VRHMDManagerOculusImpl;
-  }
-  mImpl->GetOculusHMDs(aHMDResult);
-}
-
-void
-VRHMDManagerOculus::Destroy()
-{
-  if (!mImpl)
-    return;
-  mImpl->Destroy();
-  delete mImpl;
-  mImpl = nullptr;
-}
-
-bool
-VRHMDManagerOculusImpl::PlatformInit()
 {
   if (mOculusPlatformInitialized)
     return true;
@@ -588,7 +471,13 @@ VRHMDManagerOculusImpl::PlatformInit()
   if (!InitializeOculusCAPI())
     return false;
 
-  bool ok = ovr_Initialize();
+  ovrInitParams params;
+  params.Flags = ovrInit_RequestVersion;
+  params.RequestedMinorVersion = LIBOVR_MINOR_VERSION;
+  params.LogCallback = nullptr;
+  params.ConnectionTimeoutMS = 0;
+
+  bool ok = ovr_Initialize(&params);
 
   if (!ok)
     return false;
@@ -598,7 +487,7 @@ VRHMDManagerOculusImpl::PlatformInit()
 }
 
 bool
-VRHMDManagerOculusImpl::Init()
+VRHMDManagerOculus::Init()
 {
   if (mOculusInitialized)
     return true;
@@ -610,10 +499,10 @@ VRHMDManagerOculusImpl::Init()
 
   for (int i = 0; i < count; ++i) {
     ovrHmd hmd = ovrHmd_Create(i);
-    if (!hmd)
-      continue;
-    nsRefPtr<HMDInfoOculus> oc = new HMDInfoOculus(hmd);
-    mOculusHMDs.AppendElement(oc);
+    if (hmd) {
+      nsRefPtr<HMDInfoOculus> oc = new HMDInfoOculus(hmd);
+      mOculusHMDs.AppendElement(oc);
+    }
   }
 
   // VRAddTestDevices == 1: add test device only if no real devices present
@@ -633,7 +522,7 @@ VRHMDManagerOculusImpl::Init()
 }
 
 void
-VRHMDManagerOculusImpl::Destroy()
+VRHMDManagerOculus::Destroy()
 {
   if (!mOculusInitialized)
     return;
@@ -649,7 +538,7 @@ VRHMDManagerOculusImpl::Destroy()
 }
 
 void
-VRHMDManagerOculusImpl::GetOculusHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult)
+VRHMDManagerOculus::GetHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult)
 {
   Init();
   for (size_t i = 0; i < mOculusHMDs.Length(); ++i) {

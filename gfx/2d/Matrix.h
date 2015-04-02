@@ -17,6 +17,8 @@
 namespace mozilla {
 namespace gfx {
 
+class Quaternion;
+
 static bool FuzzyEqual(Float aV1, Float aV2) {
   // XXX - Check if fabs does the smart thing and just negates the sign bit.
   return fabs(aV2 - aV1) < 1e-6;
@@ -389,6 +391,8 @@ public:
   Float _21, _22, _23, _24;
   Float _31, _32, _33, _34;
   Float _41, _42, _43, _44;
+
+  friend std::ostream& operator<<(std::ostream& aStream, const Matrix4x4& aMatrix);
 
   Point4D& operator[](int aIndex)
   {
@@ -871,6 +875,11 @@ public:
       *((&_31)+aIndex) = aVector.z;
       *((&_41)+aIndex) = aVector.w;
   }
+
+  // Sets this matrix to a rotation matrix given by aQuat.
+  // This quaternion *MUST* be normalized!
+  // Implemented in Quaternion.cpp
+  void SetRotationFromQuaternion(const Quaternion& aQuat);
 
   // Set all the members of the matrix to NaN
   void SetNAN();
