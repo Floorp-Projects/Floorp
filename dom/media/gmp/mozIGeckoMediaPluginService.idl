@@ -5,10 +5,9 @@
 
 #include "nsISupports.idl"
 #include "nsIThread.idl"
-#include "nsIPrincipal.idl"
-#include "nsIFile.idl"
 
 %{C++
+#include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 #include "nsStringGlue.h"
 class GMPAudioDecoderProxy;
@@ -16,17 +15,44 @@ class GMPDecryptorProxy;
 class GMPVideoDecoderProxy;
 class GMPVideoEncoderProxy;
 class GMPVideoHost;
+
+template<class T>
+class GMPGetterCallback
+{
+public:
+  GMPGetterCallback() { MOZ_COUNT_CTOR(GMPGetterCallback<T>); }
+  virtual ~GMPGetterCallback() { MOZ_COUNT_DTOR(GMPGetterCallback<T>); }
+  virtual void Done(T*) = 0;
+};
+template<class T>
+class GMPVideoGetterCallback
+{
+public:
+  GMPVideoGetterCallback() { MOZ_COUNT_CTOR(GMPVideoGetterCallback<T>); }
+  virtual ~GMPVideoGetterCallback() { MOZ_COUNT_DTOR(GMPVideoGetterCallback<T>); }
+  virtual void Done(T*, GMPVideoHost*) = 0;
+};
+typedef GMPGetterCallback<GMPDecryptorProxy> GetGMPDecryptorCallback;
+typedef GMPGetterCallback<GMPAudioDecoderProxy> GetGMPAudioDecoderCallback;
+typedef GMPVideoGetterCallback<GMPVideoDecoderProxy> GetGMPVideoDecoderCallback;
+typedef GMPVideoGetterCallback<GMPVideoEncoderProxy> GetGMPVideoEncoderCallback;
+class GetNodeIdCallback
+{
+public:
+  GetNodeIdCallback() { MOZ_COUNT_CTOR(GetNodeIdCallback); }
+  virtual ~GetNodeIdCallback() { MOZ_COUNT_DTOR(GetNodeIdCallback); }
+  virtual void Done(nsresult aResult, const nsACString& aNodeId) = 0;
+};
 %}
 
-[ptr] native GMPVideoDecoderProxy(GMPVideoDecoderProxy);
-[ptr] native GMPVideoEncoderProxy(GMPVideoEncoderProxy);
-[ptr] native GMPVideoHost(GMPVideoHost);
-[ptr] native MessageLoop(MessageLoop);
 [ptr] native TagArray(nsTArray<nsCString>);
-[ptr] native GMPDecryptorProxy(GMPDecryptorProxy);
-[ptr] native GMPAudioDecoderProxy(GMPAudioDecoderProxy);
+native GetGMPDecryptorCallback(mozilla::UniquePtr<GetGMPDecryptorCallback>&&);
+native GetGMPAudioDecoderCallback(mozilla::UniquePtr<GetGMPAudioDecoderCallback>&&);
+native GetGMPVideoDecoderCallback(mozilla::UniquePtr<GetGMPVideoDecoderCallback>&&);
+native GetGMPVideoEncoderCallback(mozilla::UniquePtr<GetGMPVideoEncoderCallback>&&);
+native GetNodeIdCallback(mozilla::UniquePtr<GetNodeIdCallback>&&);
 
-[scriptable, uuid(f71e6e57-5175-4cf3-8cc2-629273a75b67)]
+[scriptable, uuid(2b0c90e1-df89-4583-a123-8bdb2f5f7e39)]
 interface mozIGeckoMediaPluginService : nsISupports
 {
 
@@ -47,84 +73,78 @@ interface mozIGeckoMediaPluginService : nsISupports
    * Callable on any thread
    */
   [noscript]
-  ACString getPluginVersionForAPI(in ACString api,
-                                  in TagArray tags);
+  void getPluginVersionForAPI(in ACString api, in TagArray tags,
+                              out boolean hasPlugin, out ACString version);
 
   /**
    * Get a video decoder that supports the specified tags.
    * The array of tags should at least contain a codec tag, and optionally
    * other tags such as for EME keysystem.
    * Callable only on GMP thread.
+   * This is an asynchronous operation, the Done method of the callback object
+   * will be called on the GMP thread with the result (which might be null in
+   * the case of failure). This method always takes ownership of the callback
+   * object, but if this method returns an error then the Done method of the
+   * callback object will not be called at all.
    */
   [noscript]
-  GMPVideoDecoderProxy getGMPVideoDecoder(in TagArray tags,
-                                          [optional] in ACString nodeId,
-                                          out GMPVideoHost outVideoHost);
+  void getGMPVideoDecoder(in TagArray tags,
+                          [optional] in ACString nodeId,
+                          in GetGMPVideoDecoderCallback callback);
 
   /**
    * Get a video encoder that supports the specified tags.
    * The array of tags should at least contain a codec tag, and optionally
    * other tags.
    * Callable only on GMP thread.
+   * This is an asynchronous operation, the Done method of the callback object
+   * will be called on the GMP thread with the result (which might be null in
+   * the case of failure). This method always takes ownership of the callback
+   * object, but if this method returns an error then the Done method of the
+   * callback object will not be called at all.
    */
   [noscript]
-  GMPVideoEncoderProxy getGMPVideoEncoder(in TagArray tags,
-		                                      [optional] in ACString nodeId,
-		                                      out GMPVideoHost outVideoHost);
-
-  // Returns an audio decoder that supports the specified tags.
-  // The array of tags should at least contain a codec tag, and optionally
-  // other tags such as for EME keysystem.
-  // Callable only on GMP thread.
-  GMPAudioDecoderProxy getGMPAudioDecoder(in TagArray tags,
-                                          [optional] in ACString nodeId);
-
-  // Returns a decryption session manager that supports the specified tags.
-  // The array of tags should at least contain a key system tag, and optionally
-  // other tags.
-  // Callable only on GMP thread.
-  GMPDecryptorProxy getGMPDecryptor(in TagArray tags, in ACString nodeId);
+  void getGMPVideoEncoder(in TagArray tags,
+		                      [optional] in ACString nodeId,
+		                      in GetGMPVideoEncoderCallback callback);
 
   /**
-   * Add a directory to scan for gecko media plugins.
-   * @note Main-thread API.
+   * Returns an audio decoder that supports the specified tags.
+   * The array of tags should at least contain a codec tag, and optionally
+   * other tags such as for EME keysystem.
+   * Callable only on GMP thread.
+   * This is an asynchronous operation, the Done method of the callback object
+   * will be called on the GMP thread with the result (which might be null in
+   * the case of failure). This method always takes ownership of the callback
+   * object, but if this method returns an error then the Done method of the
+   * callback object will not be called at all.
    */
-  void addPluginDirectory(in AString directory);
+  [noscript]
+  void getGMPAudioDecoder(in TagArray tags,
+                          [optional] in ACString nodeId,
+                          in GetGMPAudioDecoderCallback callback);
 
   /**
-   * Remove a directory for gecko media plugins.
-   * @note Main-thread API.
+   * Returns a decryption session manager that supports the specified tags.
+   * The array of tags should at least contain a key system tag, and optionally
+   * other tags.
+   * Callable only on GMP thread.
+   * This is an asynchronous operation, the Done method of the callback object
+   * will be called on the GMP thread with the result (which might be null in
+   * the case of failure). This method always takes ownership of the callback
+   * object, but if this method returns an error then the Done method of the
+   * callback object will not be called at all.
    */
-  void removePluginDirectory(in AString directory);
-
-  /**
-   * Remove a directory for gecko media plugins and delete it from disk.
-   * @note Main-thread API.
-   */
-  void removeAndDeletePluginDirectory(in AString directory);
+  [noscript]
+  void getGMPDecryptor(in TagArray tags, in ACString nodeId,
+                       in GetGMPDecryptorCallback callback);
 
   /**
    * Gets the NodeId for a (origin, urlbarOrigin, isInprivateBrowsing) tuple.
    */
-  ACString getNodeId(in AString origin,
-                     in AString topLevelOrigin,
-                     in bool inPrivateBrowsingMode);
-
-  /**
-   * Clears storage data associated with the origin.
-   */
-  void forgetThisSite(in AString origin);
-
-  /**
-   * Returns true if the given node id is allowed to store things
-   * persistently on disk. Private Browsing and local content are not
-   * allowed to store persistent data.
-   */
-  bool isPersistentStorageAllowed(in ACString nodeId);
-
-  /**
-   * Returns the directory to use as the base for storing data about GMPs.
-   */
-  nsIFile getStorageDir();
-
+  [noscript]
+  void getNodeId(in AString origin,
+                 in AString topLevelOrigin,
+                 in bool inPrivateBrowsingMode,
+                 in GetNodeIdCallback callback);
 };

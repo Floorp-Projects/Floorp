@@ -60,7 +60,8 @@ class InlineMap
             MOZ_ASSERT(map.initialized());
         }
 
-        for (InlineElem* it = inl, *end = inl + inlNext; it != end; ++it) {
+        InlineElem* end = inl + inlNext;
+        for (InlineElem* it = inl; it != end; ++it) {
             if (it->key && !map.putNew(it->key, it->value))
                 return false;
         }
@@ -211,7 +212,8 @@ class InlineMap
         if (usingMap())
             return Ptr(map.lookup(key));
 
-        for (InlineElem* it = inl, *end = inl + inlNext; it != end; ++it) {
+        InlineElem* end = inl + inlNext;
+        for (InlineElem* it = inl; it != end; ++it) {
             if (it->key == key)
                 return Ptr(it);
         }
@@ -224,7 +226,8 @@ class InlineMap
         if (usingMap())
             return AddPtr(map.lookupForAdd(key));
 
-        for (InlineElem* it = inl, *end = inl + inlNext; it != end; ++it) {
+        InlineElem* end = inl + inlNext;
+        for (InlineElem* it = inl; it != end; ++it) {
             if (it->key == key)
                 return AddPtr(it, true);
         }

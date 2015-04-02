@@ -1058,7 +1058,9 @@ js::InitRuntimeNumberState(JSRuntime* rt)
     //     change its return type.
 #if !EXPOSE_INTL_API
     /* Copy locale-specific separators into the runtime strings. */
-    const char* thousandsSeparator, *decimalPoint, *grouping;
+    const char* thousandsSeparator;
+    const char* decimalPoint;
+    const char* grouping;
 #ifdef HAVE_LOCALECONV
     struct lconv* locale = localeconv();
     thousandsSeparator = locale->thousands_sep;

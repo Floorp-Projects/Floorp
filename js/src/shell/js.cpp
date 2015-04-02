@@ -2189,13 +2189,11 @@ static const char* const TryNoteNames[] = { "catch", "finally", "for-in", "for-o
 static bool
 TryNotes(JSContext* cx, HandleScript script, Sprinter* sp)
 {
-    JSTryNote* tn, *tnlimit;
-
     if (!script->hasTrynotes())
         return true;
 
-    tn = script->trynotes()->vector;
-    tnlimit = tn + script->trynotes()->length;
+    JSTryNote* tn = script->trynotes()->vector;
+    JSTryNote* tnlimit = tn + script->trynotes()->length;
     Sprint(sp, "\nException table:\nkind      stack    start      end\n");
     do {
         MOZ_ASSERT(tn->kind < ArrayLength(TryNoteNames));
@@ -2407,7 +2405,6 @@ DisassWithSrc(JSContext* cx, unsigned argc, jsval* vp)
     unsigned len, line1, line2, bupline;
     FILE* file;
     char linebuf[LINE_BUF_LEN];
-    jsbytecode* pc, *end;
     static const char sep[] = ";-------------------------";
 
     bool ok = true;
@@ -2431,8 +2428,8 @@ DisassWithSrc(JSContext* cx, unsigned argc, jsval* vp)
             return false;
         }
 
-        pc = script->code();
-        end = script->codeEnd();
+        jsbytecode* pc = script->code();
+        jsbytecode* end = script->codeEnd();
 
         Sprinter sprinter(cx);
         if (!sprinter.init()) {

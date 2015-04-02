@@ -35,7 +35,8 @@ ParseMapPool::checkInvariants()
 void
 ParseMapPool::purgeAll()
 {
-    for (void** it = all.begin(), **end = all.end(); it != end; ++it)
+    void** end = all.end();
+    for (void** it = all.begin(); it != end; ++it)
         js_delete<AtomMapT>(asAtomMap(*it));
 
     all.clearAndFree();
@@ -121,8 +122,8 @@ frontend::InitAtomMap(frontend::AtomIndexMap* indices, HeapPtrAtom* atoms)
             atoms[index].init(atom);
         }
     } else {
-        for (const AtomIndexMap::InlineElem* it = indices->asInline(), *end = indices->inlineEnd();
-             it != end; ++it) {
+        const AtomIndexMap::InlineElem* end = indices->inlineEnd();
+        for (const AtomIndexMap::InlineElem* it = indices->asInline(); it != end; ++it) {
             JSAtom* atom = it->key;
             if (!atom)
                 continue;

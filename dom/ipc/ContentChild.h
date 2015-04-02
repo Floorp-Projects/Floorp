@@ -115,6 +115,10 @@ public:
     AllocPContentBridgeChild(mozilla::ipc::Transport* transport,
                              base::ProcessId otherProcess) override;
 
+    PGMPServiceChild*
+    AllocPGMPServiceChild(mozilla::ipc::Transport* transport,
+                          base::ProcessId otherProcess) override;
+
     PCompositorChild*
     AllocPCompositorChild(mozilla::ipc::Transport* aTransport,
                           base::ProcessId aOtherProcess) override;
