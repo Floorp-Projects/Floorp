@@ -168,7 +168,7 @@ loop.shared.views = (function(_, l10n) {
           ), 
           React.createElement("ul", {ref: "menu", className: dropdownMenuClasses}, 
             React.createElement("li", {onClick: this._handleShareTabs}, 
-              l10n.get("share_tabs_button_title")
+              l10n.get("share_tabs_button_title2")
             ), 
             React.createElement("li", {onClick: this._handleShareWindows, className: windowSharingClasses}, 
               l10n.get("share_windows_button_title")
