@@ -7,7 +7,6 @@ package org.mozilla.gecko.toolbar;
 
 import java.util.Arrays;
 
-import org.mozilla.gecko.NewTabletUI;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -105,22 +104,8 @@ abstract class BrowserToolbarTabletBase extends BrowserToolbar {
     @Override
     protected void updateNavigationButtons(final Tab tab) {
         setButtonEnabled(backButton, canDoBack(tab));
-
-        final boolean isForwardEnabled = canDoForward(tab);
-        if (!NewTabletUI.isEnabled(getContext())) {
-            if (forwardButton.isEnabled() != isForwardEnabled) {
-                // Save the state on the forward button so that we can skip animations
-                // when there's nothing to change
-                setButtonEnabled(forwardButton, isForwardEnabled);
-                animateForwardButton(
-                        isForwardEnabled ? ForwardButtonAnimation.SHOW : ForwardButtonAnimation.HIDE);
-            }
-        } else {
-            // I don't know the implications of changing this code on old tablet
-            // (and no one is going to thoroughly test it) so duplicate the code.
-            animateForwardButton(
-                    isForwardEnabled ? ForwardButtonAnimation.SHOW : ForwardButtonAnimation.HIDE);
-        }
+        animateForwardButton(
+                canDoForward(tab) ? ForwardButtonAnimation.SHOW : ForwardButtonAnimation.HIDE);
     }
 
     @Override
