@@ -576,7 +576,7 @@ js::gc::GCRuntime::bufferGrayRoots()
 }
 
 void
-BufferGrayRootsTracer::appendGrayRoot(void* thing, JSGCTraceKind kind)
+BufferGrayRootsTracer::appendGrayRoot(Cell* thing, JSGCTraceKind kind)
 {
     MOZ_ASSERT(runtime()->isHeapBusy());
 
@@ -621,7 +621,8 @@ GCRuntime::markBufferedGrayRoots(JS::Zone* zone)
 #ifdef DEBUG
         marker.setTracingDetails(elem->debugPrinter, elem->debugPrintArg, elem->debugPrintIndex);
 #endif
-        MarkKind(&marker, &elem->thing, elem->kind);
+        TraceManuallyBarrieredGenericPointerEdge(&marker, reinterpret_cast<Cell**>(&elem->thing),
+                                                 "buffered gray root");
     }
 }
 
