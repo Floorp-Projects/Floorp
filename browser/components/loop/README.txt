@@ -40,6 +40,21 @@ Please be sure to execute
 
 from the top level before requesting review on a patch.
 
+Linting
+=======
+run-all-loop-tests.sh will take care of this for you automatically, after
+you've installed the dependencies by typing:
+
+  ( cd standalone ; make install )
+
+If you install eslint and the react plugin globally:
+
+  npm install -g eslint
+  npm install -g eslint-plugin-react
+
+You can also run it by hand in the browser/components/loop directory:
+
+  eslint .
 
 Front-End Unit Tests
 ====================

@@ -1442,6 +1442,7 @@ pref("devtools.performance.ui.show-platform-data", false);
 pref("devtools.performance.ui.show-idle-blocks", true);
 pref("devtools.performance.ui.enable-memory", false);
 pref("devtools.performance.ui.enable-framerate", true);
+pref("devtools.performance.ui.show-jit-optimizations", false);
 
 // The default cache UI setting
 pref("devtools.cache.disabled", false);
