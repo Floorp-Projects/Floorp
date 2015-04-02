@@ -742,6 +742,7 @@ protected:
                                  the finger is lifted. */
     SMOOTH_SCROLL,            /* Smooth scrolling to destination. Used by
                                  CSSOM-View smooth scroll-behavior */
+    WHEEL_SCROLL              /* Smooth scrolling to a destination for a wheel event. */
   };
 
   // This is in theory protected by |mMonitor|; that is, it should be held whenever
@@ -839,6 +840,11 @@ private:
   friend class FlingAnimation;
   friend class OverscrollAnimation;
   friend class SmoothScrollAnimation;
+  friend class WheelScrollAnimation;
+
+  // Returns the cached current frame time.
+  static TimeStamp GetFrameTime();
+
   // The initial velocity of the most recent fling.
   ParentLayerPoint mLastFlingVelocity;
   // The time at which the most recent fling started.
