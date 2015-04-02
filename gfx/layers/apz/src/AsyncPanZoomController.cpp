@@ -64,7 +64,6 @@
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nsThreadUtils.h"              // for NS_IsMainThread
 #include "SharedMemoryBasic.h"          // for SharedMemoryBasic
-#include "WheelScrollAnimation.h"
 
 // #define APZC_ENABLE_RENDERTRACE
 
@@ -394,9 +393,8 @@ static TimeStamp sFrameTime;
 // Counter used to give each APZC a unique id
 static uint32_t sAsyncPanZoomControllerCount = 0;
 
-TimeStamp
-AsyncPanZoomController::GetFrameTime()
-{
+static TimeStamp
+GetFrameTime() {
   if (sFrameTime.IsNull()) {
     return TimeStamp::Now();
   }
@@ -439,7 +437,7 @@ public:
     , mOverscrollHandoffChain(aOverscrollHandoffChain)
   {
     MOZ_ASSERT(mOverscrollHandoffChain);
-    TimeStamp now = AsyncPanZoomController::GetFrameTime();
+    TimeStamp now = GetFrameTime();
 
     // Drop any velocity on axes where we don't have room to scroll anyways.
     // This ensures that we don't take the 'overscroll' path in Sample()
@@ -1078,7 +1076,6 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
     case ANIMATING_ZOOM:
     case SMOOTH_SCROLL:
     case OVERSCROLL_ANIMATION:
-    case WHEEL_SCROLL:
       CurrentTouchBlock()->GetOverscrollHandoffChain()->CancelAnimations(ExcludeOverscroll);
       // Fall through.
     case NOTHING: {
@@ -1157,11 +1154,10 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
       NS_WARNING("Gesture listener should have handled pinching in OnTouchMove.");
       return nsEventStatus_eIgnore;
 
-    case WHEEL_SCROLL:
     case OVERSCROLL_ANIMATION:
       // Should not receive a touch-move in the OVERSCROLL_ANIMATION state
       // as touch blocks that begin in an overscrolled state cancel the
-      // animation. The same is true for wheel scroll animations.
+      // animation.
       NS_WARNING("Received impossible touch in OnTouchMove");
       break;
   }
@@ -1247,11 +1243,10 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     NS_WARNING("Gesture listener should have handled pinching in OnTouchEnd.");
     return nsEventStatus_eIgnore;
 
-  case WHEEL_SCROLL:
   case OVERSCROLL_ANIMATION:
     // Should not receive a touch-end in the OVERSCROLL_ANIMATION state
     // as touch blocks that begin in an overscrolled state cancel the
-    // animation. The same is true for WHEEL_SCROLL.
+    // animation.
     NS_WARNING("Received impossible touch in OnTouchEnd");
     break;
   }
@@ -1552,25 +1547,17 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
     }
 
     case ScrollWheelInput::SCROLLMODE_SMOOTH: {
-      if (mState != WHEEL_SCROLL) {
+      CSSPoint delta = LayoutDevicePoint(deltaX, deltaY) / mFrameMetrics.GetDevPixelsPerCSSPixel();
+
+      // If we're already in a smooth scroll animation, don't cancel it. This
+      // lets us preserve the existing scrolling velocity.
+      if (mState != SMOOTH_SCROLL) {
         CancelAnimation();
-        SetState(WHEEL_SCROLL);
-
-        nsPoint initialPosition = CSSPoint::ToAppUnits(mFrameMetrics.GetScrollOffset());
-        StartAnimation(new WheelScrollAnimation(
-          *this,
-          initialPosition));
+        mFrameMetrics.SetSmoothScrollOffset(mFrameMetrics.GetScrollOffset() + delta);
+      } else {
+        mFrameMetrics.SetSmoothScrollOffset(mFrameMetrics.GetSmoothScrollOffset() + delta);
       }
-
-      // Cast velocity from ParentLayerPoints/ms to CSSPoints/ms then convert to
-      // appunits/second
-      nsPoint delta =
-        CSSPoint::ToAppUnits(LayoutDevicePoint(deltaX, deltaY) / mFrameMetrics.GetDevPixelsPerCSSPixel());
-      nsPoint velocity =
-        CSSPoint::ToAppUnits(CSSPoint(mX.GetVelocity(), mY.GetVelocity())) * 1000.0f;
-
-      WheelScrollAnimation* animation = mAnimation->AsWheelScrollAnimation();
-      animation->Update(aEvent.mTimeStamp, delta, nsSize(velocity.x, velocity.y));
+      StartSmoothScroll(ScrollSource::Wheel);
       break;
     }
   }
