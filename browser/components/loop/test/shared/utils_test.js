@@ -218,4 +218,79 @@ describe("loop.shared.utils", function() {
       expect(result).eql("\uFDFD");
     });
   });
+
+  describe("#getOS", function() {
+    it("should recognize the OSX userAgent string", function() {
+      var UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0";
+      var result = sharedUtils.getOS(UA);
+
+      expect(result).eql("intel mac os x");
+    });
+
+    it("should recognize the OSX userAgent string with version", function() {
+      var UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0";
+      var result = sharedUtils.getOS(UA, true);
+
+      expect(result).eql("intel mac os x 10.10");
+    });
+
+    it("should recognize the Windows userAgent string with version", function() {
+      var UA = "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:10.0) Gecko/20100101 Firefox/10.0";
+      var result = sharedUtils.getOS(UA, true);
+
+      expect(result).eql("windows nt 6.1");
+    });
+
+    it("should recognize the Linux userAgent string", function() {
+      var UA = "Mozilla/5.0 (X11; Linux i686 on x86_64; rv:10.0) Gecko/20100101 Firefox/10.0";
+      var result = sharedUtils.getOS(UA);
+
+      expect(result).eql("linux i686 on x86_64");
+    });
+
+    it("should recognize the OSX oscpu string", function() {
+      var oscpu = "Intel Mac OS X 10.10";
+      var result = sharedUtils.getOS(oscpu, true);
+
+      expect(result).eql("intel mac os x 10.10");
+    });
+
+    it("should recognize the Windows oscpu string", function() {
+      var oscpu = "Windows NT 5.3; Win64; x64";
+      var result = sharedUtils.getOS(oscpu, true);
+
+      expect(result).eql("windows nt 5.3");
+    });
+  });
+
+  describe("#getOSVersion", function() {
+    it("should fetch the correct version info for OSX", function() {
+      var UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:37.0) Gecko/20100101 Firefox/37.0";
+      var result = sharedUtils.getOSVersion(UA);
+
+      expect(result).eql({ major: 10, minor: 10 });
+    });
+
+    it("should fetch the correct version info for Windows", function() {
+      var UA = "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:10.0) Gecko/20100101 Firefox/10.0";
+      var result = sharedUtils.getOSVersion(UA);
+
+      expect(result).eql({ major: 6, minor: 1 });
+    });
+
+    it("should fetch the correct version info for Windows XP", function() {
+      var oscpu = "Windows XP";
+      var result = sharedUtils.getOSVersion(oscpu);
+
+      expect(result).eql({ major: 5, minor: 2 });
+    });
+
+    it("should fetch the correct version info for Linux", function() {
+      var UA = "Mozilla/5.0 (X11; Linux i686 on x86_64; rv:10.0) Gecko/20100101 Firefox/10.0";
+      var result = sharedUtils.getOSVersion(UA);
+
+      // Linux version can't be determined correctly.
+      expect(result).eql({ major: Infinity, minor: 0 });
+    });
+  });
 });
