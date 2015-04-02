@@ -106,6 +106,8 @@ let AnimationsController = {
                                                          "setCurrentTime");
     this.hasMutationEvents = yield target.actorHasMethod("animations",
                                                          "stopAnimationPlayerUpdates");
+    this.hasSetPlaybackRate = yield target.actorHasMethod("animationplayer",
+                                                          "setPlaybackRate");
 
     this.onPanelVisibilityChange = this.onPanelVisibilityChange.bind(this);
     this.onNewNodeFront = this.onNewNodeFront.bind(this);
