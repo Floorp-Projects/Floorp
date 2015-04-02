@@ -887,12 +887,8 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
           if (nsContentUtils::IsJavascriptMIMEType(mimeType)) {
               langID = nsIProgrammingLanguage::JAVASCRIPT;
               version = JSVERSION_LATEST;
-          } else {
-              langID = nsIProgrammingLanguage::UNKNOWN;
-          }
 
-          if (langID != nsIProgrammingLanguage::UNKNOWN) {
-              // Get the version string, and ensure the language supports it.
+              // Get the version string, and ensure that JavaScript supports it.
               nsAutoString versionName;
               rv = parser.GetParameter("version", versionName);
 
@@ -901,6 +897,8 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
               } else if (rv != NS_ERROR_INVALID_ARG) {
                   return rv;
               }
+          } else {
+              langID = nsIProgrammingLanguage::UNKNOWN;
           }
       } else if (key.EqualsLiteral("language")) {
           // Language is deprecated, and the impl in nsScriptLoader ignores the
