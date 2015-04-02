@@ -103,6 +103,7 @@ browser.jar:
     content/browser/devtools/performance/views/details-memory-call-tree.js  (performance/views/details-memory-call-tree.js)
     content/browser/devtools/performance/views/details-memory-flamegraph.js (performance/views/details-memory-flamegraph.js)
     content/browser/devtools/performance/views/recordings.js           (performance/views/recordings.js)
+    content/browser/devtools/performance/views/jit-optimizations.js    (performance/views/jit-optimizations.js)
     content/browser/devtools/responsivedesign/resize-commands.js       (responsivedesign/resize-commands.js)
     content/browser/devtools/commandline.css                           (commandline/commandline.css)
     content/browser/devtools/commandlineoutput.xhtml                   (commandline/commandlineoutput.xhtml)

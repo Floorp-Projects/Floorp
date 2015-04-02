@@ -27,6 +27,7 @@
   <script type="application/javascript" src="performance/views/details-memory-flamegraph.js"/>
   <script type="application/javascript" src="performance/views/details.js"/>
   <script type="application/javascript" src="performance/views/recordings.js"/>
+  <script type="application/javascript" src="performance/views/jit-optimizations.js"/>
 
   <popupset id="performance-options-popupset">
     <menupopup id="performance-filter-menupopup"/>
@@ -61,6 +62,11 @@
                 data-pref="flatten-tree-recursion"
                 label="&profilerUI.flattenTreeRecursion;"
                 tooltiptext="&profilerUI.flattenTreeRecursion.tooltiptext;"/>
+      <menuitem id="option-show-jit-optimizations"
+                type="checkbox"
+                data-pref="show-jit-optimizations"
+                label="&profilerUI.showJITOptimizations;"
+                tooltiptext="&profilerUI.showJITOptimizations.tooltiptext;"/>
     </menupopup>
   </popupset>
 
@@ -162,35 +168,49 @@
                       height="150"/>
               </hbox>
 
-              <vbox id="js-calltree-view" flex="1">
-                <hbox class="call-tree-headers-container">
-                  <label class="plain call-tree-header"
-                         type="duration"
-                         crop="end"
-                         value="&profilerUI.table.totalDuration2;"/>
-                  <label class="plain call-tree-header"
-                         type="percentage"
-                         crop="end"
-                         value="&profilerUI.table.totalPercentage;"/>
-                  <label class="plain call-tree-header"
-                         type="self-duration"
-                         crop="end"
-                         value="&profilerUI.table.selfDuration2;"/>
-                  <label class="plain call-tree-header"
-                         type="self-percentage"
-                         crop="end"
-                         value="&profilerUI.table.selfPercentage;"/>
-                  <label class="plain call-tree-header"
-                         type="samples"
-                         crop="end"
-                         value="&profilerUI.table.samples;"/>
-                  <label class="plain call-tree-header"
-                         type="function"
-                         crop="end"
-                         value="&profilerUI.table.function;"/>
-                </hbox>
-                <vbox class="call-tree-cells-container" flex="1"/>
-              </vbox>
+              <hbox id="js-profile-view" flex="1">
+                <vbox id="js-calltree-view" flex="1">
+                  <hbox class="call-tree-headers-container">
+                    <label class="plain call-tree-header"
+                           type="duration"
+                           crop="end"
+                           value="&profilerUI.table.totalDuration2;"/>
+                    <label class="plain call-tree-header"
+                           type="percentage"
+                           crop="end"
+                           value="&profilerUI.table.totalPercentage;"/>
+                    <label class="plain call-tree-header"
+                           type="self-duration"
+                           crop="end"
+                           value="&profilerUI.table.selfDuration2;"/>
+                    <label class="plain call-tree-header"
+                           type="self-percentage"
+                           crop="end"
+                           value="&profilerUI.table.selfPercentage;"/>
+                    <label class="plain call-tree-header"
+                           type="samples"
+                           crop="end"
+                           value="&profilerUI.table.samples;"/>
+                    <label class="plain call-tree-header"
+                           type="function"
+                           crop="end"
+                           value="&profilerUI.table.function;"/>
+                  </hbox>
+                  <vbox class="call-tree-cells-container" flex="1"/>
+                </vbox>
+                <splitter id="js-call-tree-splitter" class="devtools-side-splitter"/>
+                <vbox id="jit-optimizations-view" hidden="true">
+                  <toolbar id="jit-optimizations-toolbar" class="devtools-toolbar">
+                    <hbox id="jit-optimizations-header">
+                      <span class="jit-optimizations-title">&profilerUI.JITOptimizationsTitle;</span>
+                      <span class="header-function-name" />
+                      <span class="header-file opt-url debugger-link" />
+                      <span class="header-line opt-line" />
+                    </hbox>
+                  </toolbar>
+                  <vbox id="jit-optimizations-raw-view"></vbox>
+                </vbox>
+              </hbox>
 
               <hbox id="js-flamegraph-view" flex="1">
               </hbox>

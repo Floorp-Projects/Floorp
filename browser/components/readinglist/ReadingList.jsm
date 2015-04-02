@@ -26,16 +26,6 @@ XPCOMUtils.defineLazyGetter(this, "SyncUtils", function() {
   return Utils;
 });
 
-{ // Prevent the parent log setup from leaking into the global scope.
-  let parentLog = Log.repository.getLogger("readinglist");
-  parentLog.level = Preferences.get("browser.readinglist.logLevel", Log.Level.Warn);
-  Preferences.observe("browser.readinglist.logLevel", value => {
-    parentLog.level = value;
-  });
-  let formatter = new Log.BasicFormatter();
-  parentLog.addAppender(new Log.ConsoleAppender(formatter));
-  parentLog.addAppender(new Log.DumpAppender(formatter));
-}
 let log = Log.repository.getLogger("readinglist.api");
 
 
@@ -100,6 +90,30 @@ const SYNC_STATUS_PROPERTIES_STATUS = `
   unread
 `.trim().split(/\s+/);
 
+function ReadingListError(message) {
+  this.message = message;
+  this.name = this.constructor.name;
+  this.stack = (new Error()).stack;
+
+  // Consumers can set this to an Error that this ReadingListError wraps.
+  this.originalError = null;
+}
+ReadingListError.prototype = new Error();
+ReadingListError.prototype.constructor = ReadingListError;
+
+function ReadingListExistsError(message) {
+  message = message || "The item already exists";
+  ReadingListError.call(this, message);
+}
+ReadingListExistsError.prototype = new ReadingListError();
+ReadingListExistsError.prototype.constructor = ReadingListExistsError;
+
+function ReadingListDeletedError(message) {
+  message = message || "The item has been deleted";
+  ReadingListError.call(this, message);
+}
+ReadingListDeletedError.prototype = new ReadingListError();
+ReadingListDeletedError.prototype.constructor = ReadingListDeletedError;
 
 /**
  * A reading list contains ReadingListItems.
@@ -160,6 +174,12 @@ function ReadingListImpl(store) {
 }
 
 ReadingListImpl.prototype = {
+
+  Error: {
+    Error: ReadingListError,
+    Exists: ReadingListExistsError,
+    Deleted: ReadingListDeletedError,
+  },
 
   ItemRecordProperties: ITEM_RECORD_PROPERTIES,
 
@@ -303,7 +323,7 @@ ReadingListImpl.prototype = {
   addItem: Task.async(function* (record) {
     record = normalizeRecord(record);
     if (!record.url) {
-      throw new Error("The item must have a url");
+      throw new ReadingListError("The item to be added must have a url");
     }
     if (!("addedOn" in record)) {
       record.addedOn = Date.now();
@@ -319,9 +339,9 @@ ReadingListImpl.prototype = {
       record.syncStatus = SYNC_STATUS_NEW;
     }
 
-    log.debug("addingItem with guid: ${guid}, url: ${url}", record);
+    log.debug("Adding item with guid: ${guid}, url: ${url}", record);
     yield this._store.addItem(record);
-    log.trace("added item with guid: ${guid}, url: ${url}", record);
+    log.trace("Added item with guid: ${guid}, url: ${url}", record);
     this._invalidateIterators();
     let item = this._itemFromRecord(record);
     this._callListeners("onItemAdded", item);
@@ -345,13 +365,16 @@ ReadingListImpl.prototype = {
    *         Error on error.
    */
   updateItem: Task.async(function* (item) {
+    if (item._deleted) {
+      throw new ReadingListDeletedError("The item to be updated has been deleted");
+    }
     if (!item._record.url) {
-      throw new Error("The item must have a url");
+      throw new ReadingListError("The item to be updated must have a url");
     }
     this._ensureItemBelongsToList(item);
-    log.debug("updatingItem with guid: ${guid}, url: ${url}", item._record);
+    log.debug("Updating item with guid: ${guid}, url: ${url}", item._record);
     yield this._store.updateItem(item._record);
-    log.trace("finished update of item guid: ${guid}, url: ${url}", item._record);
+    log.trace("Finished updating item with guid: ${guid}, url: ${url}", item._record);
     this._invalidateIterators();
     this._callListeners("onItemUpdated", item);
   }),
@@ -367,16 +390,23 @@ ReadingListImpl.prototype = {
    *         Error on error.
    */
   deleteItem: Task.async(function* (item) {
+    if (item._deleted) {
+      throw new ReadingListDeletedError("The item has already been deleted");
+    }
     this._ensureItemBelongsToList(item);
+
+    log.debug("Deleting item with guid: ${guid}, url: ${url}");
 
     // If the item is new and therefore hasn't been synced yet, delete it from
     // the store.  Otherwise mark it as deleted but don't actually delete it so
     // that its status can be synced.
     if (item._record.syncStatus == SYNC_STATUS_NEW) {
-      log.debug("deleteItem guid: ${guid}, url: ${url} - item is local so really deleting it", item._record);
+      log.debug("Item is new, truly deleting it", item._record);
       yield this._store.deleteItemByURL(item.url);
     }
     else {
+      log.debug("Item has been synced, only marking it as deleted",
+                item._record);
       // To prevent data leakage, only keep the record fields needed to sync
       // the deleted status: guid and syncStatus.
       let newRecord = {};
@@ -385,12 +415,12 @@ ReadingListImpl.prototype = {
       }
       newRecord.guid = item._record.guid;
       newRecord.syncStatus = SYNC_STATUS_DELETED;
-      log.debug("deleteItem guid: ${guid}, url: ${url} - item has been synced so updating to deleted state", item._record);
       yield this._store.updateItemByGUID(newRecord);
     }
 
-    log.trace("finished db operation deleting item with guid: ${guid}, url: ${url}", item._record);
+    log.trace("Finished deleting item with guid: ${guid}, url: ${url}", item._record);
     item.list = null;
+    item._deleted = true;
     // failing to remove the item from the map points at something bad!
     if (!this._itemsByNormalizedURL.delete(item.url)) {
       log.error("Failed to remove item from the map", item);
@@ -576,7 +606,7 @@ ReadingListImpl.prototype = {
 
   _ensureItemBelongsToList(item) {
     if (!item || !item._ensureBelongsToList) {
-      throw new Error("The item is not a ReadingListItem");
+      throw new ReadingListError("The item is not a ReadingListItem");
     }
     item._ensureBelongsToList();
   },
@@ -596,6 +626,7 @@ let _unserializable = () => {}; // See comments in the ReadingListItem ctor.
  */
 function ReadingListItem(record={}) {
   this._record = record;
+  this._deleted = false;
 
   // |this._unserializable| works around a problem when sending one of these
   // items via a message manager. If |this.list| is set, the item can't be
@@ -844,9 +875,11 @@ ReadingListItem.prototype = {
    * @return Promise<null> Resolved when the list has been updated.
    */
   delete: Task.async(function* () {
+    if (this._deleted) {
+      throw new ReadingListDeletedError("The item has already been deleted");
+    }
     this._ensureBelongsToList();
     yield this.list.deleteItem(this);
-    this.delete = () => Promise.reject("The item has already been deleted");
   }),
 
   toJSON() {
@@ -903,7 +936,7 @@ ReadingListItem.prototype = {
 
   _ensureBelongsToList() {
     if (!this.list) {
-      throw new Error("The item must belong to a reading list");
+      throw new ReadingListError("The item must belong to a list");
     }
   },
 };
@@ -996,7 +1029,7 @@ ReadingListItemIterator.prototype = {
 
   _ensureValid() {
     if (this.invalid) {
-      throw new Error("The iterator has been invalidated");
+      throw new ReadingListError("The iterator has been invalidated");
     }
   },
 };
@@ -1014,7 +1047,7 @@ function normalizeRecord(nonNormalizedRecord) {
   let record = {};
   for (let prop in nonNormalizedRecord) {
     if (ITEM_RECORD_PROPERTIES.indexOf(prop) < 0) {
-      throw new Error("Unrecognized item property: " + prop);
+      throw new ReadingListError("Unrecognized item property: " + prop);
     }
     switch (prop) {
     case "url":

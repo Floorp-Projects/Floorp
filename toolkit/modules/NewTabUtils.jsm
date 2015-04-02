@@ -1014,11 +1014,7 @@ let Links = {
           this._decrementSiteMap(siteMap, existingLink);
         } else {
           // Update our copy's properties.
-          for (let prop of this._sortProperties) {
-            if (prop in aLink) {
-              existingLink[prop] = aLink[prop];
-            }
-          }
+          Object.assign(existingLink, aLink);
 
           // Finally, reinsert our copy below.
           insertionLink = existingLink;

@@ -27,7 +27,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
  */
 this.SQLiteStore = function SQLiteStore(pathRelativeToProfileDir) {
   this.pathRelativeToProfileDir = pathRelativeToProfileDir;
-  this._ensureConnection(pathRelativeToProfileDir);
 };
 
 this.SQLiteStore.prototype = {
@@ -44,7 +43,7 @@ this.SQLiteStore.prototype = {
    *         Rejected with an Error on error.
    */
   count: Task.async(function* (userOptsList=[], controlOpts={}) {
-      let [sql, args] = sqlWhereFromOptions(userOptsList, controlOpts);
+    let [sql, args] = sqlWhereFromOptions(userOptsList, controlOpts);
     let count = 0;
     let conn = yield this._connectionPromise;
     yield conn.executeCached(`
@@ -91,9 +90,14 @@ this.SQLiteStore.prototype = {
       paramNames.push(`:${propName}`);
     }
     let conn = yield this._connectionPromise;
-    yield conn.executeCached(`
-      INSERT INTO items (${colNames}) VALUES (${paramNames});
-    `, item);
+    try {
+      yield conn.executeCached(`
+        INSERT INTO items (${colNames}) VALUES (${paramNames});
+      `, item);
+    }
+    catch (err) {
+      throwExistsError(err);
+    }
   }),
 
   /**
@@ -156,34 +160,39 @@ this.SQLiteStore.prototype = {
       this._destroyPromise = Task.spawn(function* () {
         let conn = yield this._connectionPromise;
         yield conn.close();
-        this._connectionPromise = Promise.reject("Store destroyed");
+        this.__connectionPromise = Promise.reject("Store destroyed");
       }.bind(this));
     }
     return this._destroyPromise;
   },
 
   /**
-   * Creates the database connection if it hasn't been created already.
-   *
-   * @param pathRelativeToProfileDir The path of the database file relative to
-   *        the profile directory.
+   * Promise<Sqlite.OpenedConnection>
    */
-  _ensureConnection: Task.async(function* (pathRelativeToProfileDir) {
-    if (!this._connectionPromise) {
-      this._connectionPromise = Task.spawn(function* () {
-        let conn = yield Sqlite.openConnection({
-          path: pathRelativeToProfileDir,
-          sharedMemoryCache: false,
-        });
-        Sqlite.shutdown.addBlocker("readinglist/SQLiteStore: Destroy",
-                                   this.destroy.bind(this));
-        yield conn.execute(`
-          PRAGMA locking_mode = EXCLUSIVE;
-        `);
-        yield this._checkSchema(conn);
-        return conn;
-      }.bind(this));
+  get _connectionPromise() {
+    if (!this.__connectionPromise) {
+      this.__connectionPromise = this._createConnection();
     }
+    return this.__connectionPromise;
+  },
+
+  /**
+   * Creates the database connection.
+   *
+   * @return Promise<Sqlite.OpenedConnection>
+   */
+  _createConnection: Task.async(function* () {
+    let conn = yield Sqlite.openConnection({
+      path: this.pathRelativeToProfileDir,
+      sharedMemoryCache: false,
+    });
+    Sqlite.shutdown.addBlocker("readinglist/SQLiteStore: Destroy",
+                               this.destroy.bind(this));
+    yield conn.execute(`
+      PRAGMA locking_mode = EXCLUSIVE;
+    `);
+    yield this._checkSchema(conn);
+    return conn;
   }),
 
   /**
@@ -203,15 +212,17 @@ this.SQLiteStore.prototype = {
     }
     let conn = yield this._connectionPromise;
     if (!item[keyProp]) {
-      throw new Error("Item must have " + keyProp);
+      throw new ReadingList.Error.Error("Item must have " + keyProp);
     }
-    yield conn.executeCached(`
-      UPDATE items SET ${assignments} WHERE ${keyProp} = :${keyProp};
-    `, item);
+    try {
+      yield conn.executeCached(`
+        UPDATE items SET ${assignments} WHERE ${keyProp} = :${keyProp};
+      `, item);
+    }
+    catch (err) {
+      throwExistsError(err);
+    }
   }),
-
-  // Promise<Sqlite.OpenedConnection>
-  _connectionPromise: null,
 
   // The current schema version.
   _schemaVersion: 1,
@@ -285,6 +296,26 @@ function itemFromRow(row) {
     item[name] = row.getResultByName(name);
   }
   return item;
+}
+
+/**
+ * If the given Error indicates that a unique constraint failed, then wraps that
+ * error in a ReadingList.Error.Exists and throws it.  Otherwise throws the
+ * given error.
+ *
+ * @param err An Error object.
+ */
+function throwExistsError(err) {
+  let match =
+    /UNIQUE constraint failed: items\.([a-zA-Z0-9_]+)/.exec(err.message);
+  if (match) {
+    let newErr = new ReadingList.Error.Exists(
+      "An item with the following property already exists: " + match[1]
+    );
+    newErr.originalError = err;
+    err = newErr;
+  }
+  throw err;
 }
 
 /**

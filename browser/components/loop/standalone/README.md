@@ -48,11 +48,6 @@ Then point your browser at:
 **Note:** the provided static file server for web contents is **not** intended
 for production use.
 
-Code linting
-------------
-
-    $ make lint
-
 License
 -------
 

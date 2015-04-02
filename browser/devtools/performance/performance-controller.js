@@ -17,6 +17,8 @@ devtools.lazyRequireGetter(this, "EventEmitter",
 devtools.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/toolkit/DevToolsUtils");
 
+devtools.lazyRequireGetter(this, "TreeWidget",
+  "devtools/shared/widgets/TreeWidget", true);
 devtools.lazyRequireGetter(this, "TIMELINE_BLUEPRINT",
   "devtools/shared/timeline/global", true);
 devtools.lazyRequireGetter(this, "L10N",
@@ -39,6 +41,8 @@ devtools.lazyRequireGetter(this, "ThreadNode",
   "devtools/shared/profiler/tree-model", true);
 devtools.lazyRequireGetter(this, "FrameNode",
   "devtools/shared/profiler/tree-model", true);
+devtools.lazyRequireGetter(this, "JITOptimizations",
+  "devtools/shared/profiler/jit", true);
 devtools.lazyRequireGetter(this, "OptionsView",
   "devtools/shared/options-view", true);
 
@@ -99,6 +103,11 @@ const EVENTS = {
 
   // When the PerformanceController has new recording data
   TIMELINE_DATA: "Performance:TimelineData",
+
+  // Emitted by the JITOptimizationsView when it renders new optimization
+  // data and clears the optimization data
+  OPTIMIZATIONS_RESET: "Performance:UI:OptimizationsReset",
+  OPTIMIZATIONS_RENDERED: "Performance:UI:OptimizationsRendered",
 
   // Emitted by the OverviewView when more data has been rendered
   OVERVIEW_RENDERED: "Performance:UI:OverviewRendered",

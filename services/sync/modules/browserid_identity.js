@@ -420,10 +420,9 @@ this.BrowserIDManager.prototype = {
    * The current state of the auth credentials.
    *
    * This essentially validates that enough credentials are available to use
-   * Sync, although it effectively ignores the state of the master-password -
-   * if that's locked and that's the only problem we can see, say everything
-   * is OK - unlockAndVerifyAuthState will be used to perform the unlock
-   * and re-verification if necessary.
+   * Sync. It doesn't check we have all the keys we need as the master-password
+   * may have been locked when we tried to get them - we rely on
+   * unlockAndVerifyAuthState to check that for us.
    */
   get currentAuthState() {
     if (this._authFailureReason) {
@@ -436,15 +435,6 @@ this.BrowserIDManager.prototype = {
     // username seems to make things fail fast so that's good.
     if (!this.username) {
       return LOGIN_FAILED_NO_USERNAME;
-    }
-
-    // No need to check this.syncKey as our getter for that attribute
-    // uses this.syncKeyBundle
-    // If bundle creation started, but failed due to any reason other than
-    // the MP being locked...
-    if (this._shouldHaveSyncKeyBundle && !this.syncKeyBundle && !Utils.mpLocked()) {
-      // Return a state that says a re-auth is necessary so we can get keys.
-      return LOGIN_FAILED_LOGIN_REJECTED;
     }
 
     return STATUS_OK;
@@ -467,11 +457,13 @@ this.BrowserIDManager.prototype = {
    */
   unlockAndVerifyAuthState: function() {
     if (this._canFetchKeys()) {
+      log.debug("unlockAndVerifyAuthState already has (or can fetch) sync keys");
       return Promise.resolve(STATUS_OK);
     }
     // so no keys - ensure MP unlocked.
     if (!Utils.ensureMPUnlocked()) {
       // user declined to unlock, so we don't know if they are stored there.
+      log.debug("unlockAndVerifyAuthState: user declined to unlock master-password");
       return Promise.resolve(MASTER_PASSWORD_LOCKED);
     }
     // now we are unlocked we must re-fetch the user data as we may now have
@@ -482,7 +474,9 @@ this.BrowserIDManager.prototype = {
         // If we still can't get keys it probably means the user authenticated
         // without unlocking the MP or cleared the saved logins, so we've now
         // lost them - the user will need to reauth before continuing.
-        return this._canFetchKeys() ? STATUS_OK : LOGIN_FAILED_LOGIN_REJECTED;
+        let result = this._canFetchKeys() ? STATUS_OK : LOGIN_FAILED_LOGIN_REJECTED;
+        log.debug("unlockAndVerifyAuthState re-fetched credentials and is returning", result);
+        return result;
       }
     );
   },
@@ -529,6 +523,7 @@ this.BrowserIDManager.prototype = {
     // return null for the token - sync calling unlockAndVerifyAuthState()
     // before actually syncing will setup the error states if necessary.
     if (!this._canFetchKeys()) {
+      log.info("Unable to fetch keys (master-password locked?), so aborting token fetch");
       return Promise.resolve(null);
     }
 
