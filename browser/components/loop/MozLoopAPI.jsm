@@ -149,11 +149,16 @@ const injectObjectAPI = function(api, targetWindow) {
       // If the last parameter is a function, assume its a callback
       // and wrap it differently.
       if (callbackIsFunction) {
-        api[func](...params, function(...results) {
+        api[func](...params, function callback(...results) {
           // When the function was garbage collected due to async events, like
           // closing a window, we want to circumvent a JS error.
           if (callbackIsFunction && typeof lastParam != "function") {
             MozLoopService.log.debug(func + ": callback function was lost.");
+            // Clean up event listeners.
+            if (func == "on" && api.off) {
+              api.off(results[0], callback);
+              return;
+            }
             // Assume the presence of a first result argument to be an error.
             if (results[0]) {
               MozLoopService.log.error(func + " error:", results[0]);
