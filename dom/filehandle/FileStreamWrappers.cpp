@@ -263,9 +263,6 @@ FileOutputStreamWrapper::FileOutputStreamWrapper(nsISupports* aFileStream,
                                                  uint64_t aLimit,
                                                  uint32_t aFlags)
 : FileStreamWrapper(aFileStream, aFileHelper, aOffset, aLimit, aFlags)
-#ifdef DEBUG
-, mWriteThread(nullptr)
-#endif
 {
   mOutputStream = do_QueryInterface(mFileStream);
   NS_ASSERTION(mOutputStream, "This should always succeed!");
@@ -281,12 +278,6 @@ FileOutputStreamWrapper::Close()
   NS_ASSERTION(!NS_IsMainThread(), "Wrong thread!");
 
   nsresult rv = NS_OK;
-
-  if (!mFirstTime) {
-    NS_ASSERTION(PR_GetCurrentThread() == mWriteThread,
-                 "Unsetting thread locals on wrong thread!");
-    mFileHelper->mMutableFile->UnsetThreadLocals();
-  }
 
   if (mFlags & NOTIFY_CLOSE) {
     nsCOMPtr<nsIRunnable> runnable = new CloseRunnable(mFileHelper);
@@ -312,11 +303,6 @@ FileOutputStreamWrapper::Write(const char* aBuf, uint32_t aCount,
 
   if (mFirstTime) {
     mFirstTime = false;
-
-#ifdef DEBUG
-    mWriteThread = PR_GetCurrentThread();
-#endif
-    mFileHelper->mMutableFile->SetThreadLocals();
 
     nsCOMPtr<nsISeekableStream> seekable = do_QueryInterface(mOutputStream);
     if (seekable) {
