@@ -33,6 +33,10 @@ public:
   // units, relative to the scroll frame.
   nsPoint PositionAt(TimeStamp aTime) const;
 
+  bool IsFinished(TimeStamp aTime) {
+    return aTime > mStartTime + mDuration;
+  }
+
 protected:
   double ProgressAt(TimeStamp aTime) const {
     return clamped((aTime - mStartTime) / mDuration, 0.0, 1.0);
