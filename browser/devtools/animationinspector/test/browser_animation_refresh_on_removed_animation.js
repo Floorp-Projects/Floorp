@@ -45,9 +45,7 @@ add_task(function*() {
 
   info("Wait until the animation finishes");
   let widget = panel.playerWidgets[0];
-  yield waitForStateCondition(widget.player, state => {
-    return state.playState === "finished";
-  }, "Waiting until animation finishes");
+  yield waitForPlayState(widget.player, "finished");
 
   is(panel.playersEl.querySelectorAll(".player-widget").length, 1,
     "There is still a player widget in the panel after the animation finished");
