@@ -322,6 +322,8 @@ struct JsepVideoCodecDescription : public JsepCodecDescription {
         mDefaultPt, SdpRtcpFbAttributeList::kNack, SdpRtcpFbAttributeList::pli);
     rtcpfb.PushEntry(
         mDefaultPt, SdpRtcpFbAttributeList::kCcm, SdpRtcpFbAttributeList::fir);
+    rtcpfb.PushEntry(
+        mDefaultPt, SdpRtcpFbAttributeList::kCcm, SdpRtcpFbAttributeList::tmmbr);
   }
 
   SdpFmtpAttributeList::H264Parameters
