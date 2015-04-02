@@ -141,11 +141,9 @@ public class GeckoMenuItem implements MenuItem {
     public View getActionView() {
         if (mActionProvider != null) {
             if (getActionEnum() == MenuItem.SHOW_AS_ACTION_IF_ROOM) {
-                return mActionProvider.onCreateActionView(SECONDARY_ACTION_BAR_HISTORY_SIZE,
-                        GeckoActionProvider.ActionViewType.DEFAULT);
+                return mActionProvider.onCreateActionView(SECONDARY_ACTION_BAR_HISTORY_SIZE, false);
             } else {
-                return mActionProvider.onCreateActionView(QUICK_SHARE_ACTION_BAR_HISTORY_SIZE,
-                        GeckoActionProvider.ActionViewType.QUICK_SHARE_ICON);
+                return mActionProvider.onCreateActionView(QUICK_SHARE_ACTION_BAR_HISTORY_SIZE, true);
             }
         }
 

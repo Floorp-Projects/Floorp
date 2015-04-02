@@ -90,31 +90,18 @@ public class GeckoActionProvider {
     /**
      * Creates the action view using the default history size.
      */
-    public View onCreateActionView(final ActionViewType viewType) {
-        return onCreateActionView(MAX_HISTORY_SIZE_DEFAULT, viewType);
+    public View onCreateActionView() {
+        return onCreateActionView(MAX_HISTORY_SIZE_DEFAULT, false);
     }
 
-    public View onCreateActionView(final int maxHistorySize, final ActionViewType viewType) {
+    public View onCreateActionView(final int maxHistorySize, final boolean isForQuickShareBar) {
         // Create the view and set its data model.
         ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
         final MenuItemActionView view;
-        switch (viewType) {
-            case DEFAULT:
-                view = new MenuItemActionView(mContext, null);
-                break;
-
-            case QUICK_SHARE_ICON:
-                view = new QuickShareBarActionView(mContext, null);
-                break;
-
-            case CONTEXT_MENU:
-                view = new MenuItemActionView(mContext, null);
-                view.initContextMenuStyles();
-                break;
-
-            default:
-                throw new IllegalArgumentException(
-                        "Unknown " + ActionViewType.class.getSimpleName() + ": " + viewType);
+        if (isForQuickShareBar) {
+            view = new QuickShareBarActionView(mContext, null);
+        } else {
+            view = new MenuItemActionView(mContext, null);
         }
         view.addActionButtonClickListener(mCallbacks);
 
@@ -263,11 +250,5 @@ public class GeckoActionProvider {
             // Context: Sharing via chrome mainmenu and content contextmenu quickshare (no explicit session is active)
             Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.BUTTON);
         }
-    }
-
-    public enum ActionViewType {
-        DEFAULT,
-        QUICK_SHARE_ICON,
-        CONTEXT_MENU,
     }
 }
