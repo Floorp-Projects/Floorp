@@ -28,7 +28,15 @@ add_task(function*() {
   let widget = panel.playerWidgets[0];
   let front = widget.player;
 
-  yield waitForPlayState(front, "finished");
+  let def = promise.defer();
+  let onStateChanged = () => {
+    if (front.state.playState === "finished") {
+      front.off(front.AUTO_REFRESH_EVENT, onStateChanged);
+      def.resolve();
+    }
+  };
+  front.on(front.AUTO_REFRESH_EVENT, onStateChanged);
+  yield def.promise;
 
   is(widget.currentTimeEl.value, front.state.duration,
     "The timeline slider has the right value");

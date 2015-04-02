@@ -99,6 +99,13 @@ body {
   }
 }
 
+/* Disabled playerWidget when the animation has ended */
+
+.finished {
+  pointer-events: none;
+  opacity: .5;
+}
+
 /* Animation title gutter, contains the name, duration, iteration */
 
 .animation-title {

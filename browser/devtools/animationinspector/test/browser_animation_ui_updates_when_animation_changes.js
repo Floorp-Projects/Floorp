@@ -16,10 +16,6 @@ add_task(function*() {
 
   info("Get the player widget");
   let widget = panel.playerWidgets[0];
-  let player = widget.player;
-
-  info("Wait for paused playState");
-  let onPaused = waitForPlayState(player, "paused");
 
   info("Pause the animation via the content DOM");
   yield executeInContent("Test:ToggleAnimationPlayer", {
@@ -28,14 +24,12 @@ add_task(function*() {
     pause: true
   });
 
-  yield onPaused;
+  info("Wait for the next state update");
+  yield onceNextPlayerRefresh(widget.player);
 
-  is(player.state.playState, "paused", "The AnimationPlayerFront is paused");
+  is(widget.player.state.playState, "paused", "The AnimationPlayerFront is paused");
   ok(widget.el.classList.contains("paused"), "The button's state has changed");
   ok(!widget.rafID, "The smooth timeline animation has been stopped");
-
-  info("Wait for running playState");
-  let onRunning = waitForPlayState(player, "running");
 
   info("Play the animation via the content DOM");
   yield executeInContent("Test:ToggleAnimationPlayer", {
@@ -44,9 +38,10 @@ add_task(function*() {
     pause: false
   });
 
-  yield onRunning;
+  info("Wait for the next state update");
+  yield onceNextPlayerRefresh(widget.player);
 
-  is(player.state.playState, "running", "The AnimationPlayerFront is running");
+  is(widget.player.state.playState, "running", "The AnimationPlayerFront is running");
   ok(widget.el.classList.contains("running"), "The button's state has changed");
   ok(widget.rafID, "The smooth timeline animation has been started");
 });
