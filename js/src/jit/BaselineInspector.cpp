@@ -256,7 +256,8 @@ CanUseInt32Compare(ICStub::Kind kind)
 MCompare::CompareType
 BaselineInspector::expectedCompareType(jsbytecode* pc)
 {
-    ICStub* first = monomorphicStub(pc), *second = nullptr;
+    ICStub* first = monomorphicStub(pc);
+    ICStub* second = nullptr;
     if (!first && !dimorphicStub(pc, &first, &second))
         return MCompare::Compare_Unknown;
 

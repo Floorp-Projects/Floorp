@@ -116,7 +116,7 @@ def main(argv):
         %sChild** child =
             reinterpret_cast<%sChild**>(&gChildActor);
         *child = new %sChild();
-        (*child)->Open(transport, parent, worker);
+        (*child)->Open(transport, parentPid, worker);
         return;
     }
 '''% (t, t, t, t) for t in unittests+extras ])

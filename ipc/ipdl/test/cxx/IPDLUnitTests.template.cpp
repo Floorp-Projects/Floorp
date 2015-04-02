@@ -181,7 +181,7 @@ ${PARENT_ENABLED_CASES_PROC}
     if (!transport)
         fail("no transport");
 
-    base::ProcessHandle child = gSubprocess->GetChildProcessHandle();
+    base::ProcessId child = base::GetProcId(gSubprocess->GetChildProcessHandle());
 
     switch (test) {
 //-----------------------------------------------------------------------------

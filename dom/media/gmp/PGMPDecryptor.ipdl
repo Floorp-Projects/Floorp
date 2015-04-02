@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PGMP;
+include protocol PGMPContent;
 include GMPTypes;
 
 using GMPSessionMessageType from  "gmp-decryption.h";
@@ -17,7 +17,7 @@ namespace gmp {
 
 async protocol PGMPDecryptor
 {
-  manager PGMP;
+  manager PGMPContent;
 child:
 
   Init();
@@ -84,6 +84,8 @@ parent:
   SetCaps(uint64_t aCaps);
 
   Decrypted(uint32_t aId, GMPErr aResult, uint8_t[] aBuffer);
+
+  async Shutdown();
 };
 
 } // namespace gmp

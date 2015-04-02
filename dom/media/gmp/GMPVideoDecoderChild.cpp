@@ -5,7 +5,7 @@
 
 #include "GMPVideoDecoderChild.h"
 #include "GMPVideoi420FrameImpl.h"
-#include "GMPChild.h"
+#include "GMPContentChild.h"
 #include <stdio.h>
 #include "mozilla/unused.h"
 #include "GMPVideoEncodedFrameImpl.h"
@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace gmp {
 
-GMPVideoDecoderChild::GMPVideoDecoderChild(GMPChild* aPlugin)
+GMPVideoDecoderChild::GMPVideoDecoderChild(GMPContentChild* aPlugin)
 : GMPSharedMemManager(aPlugin),
   mPlugin(aPlugin),
   mVideoDecoder(nullptr),

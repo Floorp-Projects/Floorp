@@ -1957,7 +1957,7 @@ ChildImpl::OpenMainProcessActorRunnable::Run()
   }
 
   // Make sure the parent knows it is same process.
-  parentActor->SetOtherProcessId(kCurrentProcessId);
+  parentActor->SetOtherProcessId(base::GetCurrentProcId());
 
   // Now that Open() has succeeded transfer the ownership of the actors to IPDL.
   unused << parentActor.forget();

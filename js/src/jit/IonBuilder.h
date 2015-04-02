@@ -353,6 +353,9 @@ class IonBuilder
     MConstant* constant(const Value& v);
     MConstant* constantInt(int32_t i);
 
+    // Note: This function might return nullptr in case of failure.
+    MConstant* constantMaybeAtomize(const Value& v);
+
     // Improve the type information at tests
     bool improveTypesAtTest(MDefinition* ins, bool trueBranch, MTest* test);
     bool improveTypesAtCompare(MCompare* ins, bool trueBranch, MTest* test);
@@ -1030,7 +1033,9 @@ class IonBuilder
         return analysis_;
     }
 
-    TemporaryTypeSet* thisTypes, *argTypes, *typeArray;
+    TemporaryTypeSet* thisTypes;
+    TemporaryTypeSet* argTypes;
+    TemporaryTypeSet* typeArray;
     uint32_t typeArrayHint;
     uint32_t* bytecodeTypeMap;
 

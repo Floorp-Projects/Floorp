@@ -172,7 +172,7 @@ nsXULCommandDispatcher::GetFocusedWindow(nsIDOMWindow** aWindow)
   if (domdoc && !nsContentUtils::CanCallerAccess(domdoc))
     return NS_ERROR_DOM_SECURITY_ERR;
 
-  CallQueryInterface(window, aWindow);
+  window.forget(aWindow);
   return NS_OK;
 }
 

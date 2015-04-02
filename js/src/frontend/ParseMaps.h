@@ -60,14 +60,14 @@ class ParseMapPool
 #ifdef DEBUG
         bool ok = false;
         /* Make sure the map is in |all| but not already in |recyclable|. */
-        for (void** it = all.begin(), **end = all.end(); it != end; ++it) {
+        for (void** it = all.begin(); it != all.end(); ++it) {
             if (*it == map) {
                 ok = true;
                 break;
             }
         }
         MOZ_ASSERT(ok);
-        for (void** it = recyclable.begin(), **end = recyclable.end(); it != end; ++it)
+        for (void** it = recyclable.begin(); it != recyclable.end(); ++it)
             MOZ_ASSERT(*it != map);
 #endif
         MOZ_ASSERT(recyclable.length() < all.length());

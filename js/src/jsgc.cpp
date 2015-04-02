@@ -2599,8 +2599,8 @@ GCRuntime::updatePointersToRelocatedCells(Zone* zone)
 void
 GCRuntime::protectRelocatedArenas()
 {
-    for (ArenaHeader* arena = relocatedArenasToRelease, *next; arena; arena = next) {
-        next = arena->next;
+    for (ArenaHeader* arena = relocatedArenasToRelease; arena; ) {
+        ArenaHeader* next = arena->next;
 #if defined(XP_WIN)
         DWORD oldProtect;
         if (!VirtualProtect(arena, ArenaSize, PAGE_NOACCESS, &oldProtect))
@@ -2609,6 +2609,7 @@ GCRuntime::protectRelocatedArenas()
         if (mprotect(arena, ArenaSize, PROT_NONE))
             MOZ_CRASH();
 #endif
+        arena = next;
     }
 }
 
@@ -7264,7 +7265,7 @@ NewMemoryInfoObject(JSContext* cx)
 
     for (size_t i = 0; i < mozilla::ArrayLength(getters); i++) {
         if (!JS_DefineProperty(cx, obj, getters[i].name, UndefinedHandleValue,
-                               JSPROP_READONLY | JSPROP_SHARED | JSPROP_ENUMERATE,
+                               JSPROP_ENUMERATE | JSPROP_SHARED,
                                getters[i].getter, nullptr))
         {
             return nullptr;
@@ -7294,7 +7295,7 @@ NewMemoryInfoObject(JSContext* cx)
 
     for (size_t i = 0; i < mozilla::ArrayLength(zoneGetters); i++) {
         if (!JS_DefineProperty(cx, zoneObj, zoneGetters[i].name, UndefinedHandleValue,
-                               JSPROP_READONLY | JSPROP_SHARED | JSPROP_ENUMERATE,
+                               JSPROP_ENUMERATE | JSPROP_SHARED,
                                zoneGetters[i].getter, nullptr))
         {
             return nullptr;

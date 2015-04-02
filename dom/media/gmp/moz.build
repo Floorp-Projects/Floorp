@@ -7,6 +7,7 @@
 XPIDL_MODULE = 'content_geckomediaplugins'
 
 XPIDL_SOURCES += [
+    'mozIGeckoMediaPluginChromeService.idl',
     'mozIGeckoMediaPluginService.idl',
 ]
 
@@ -35,6 +36,8 @@ EXPORTS += [
     'GMPAudioHost.h',
     'GMPCallbackBase.h',
     'GMPChild.h',
+    'GMPContentChild.h',
+    'GMPContentParent.h',
     'GMPDecryptorChild.h',
     'GMPDecryptorParent.h',
     'GMPDecryptorProxy.h',
@@ -46,6 +49,8 @@ EXPORTS += [
     'GMPProcessChild.h',
     'GMPProcessParent.h',
     'GMPService.h',
+    'GMPServiceChild.h',
+    'GMPServiceParent.h',
     'GMPSharedMemManager.h',
     'GMPStorageChild.h',
     'GMPStorageParent.h',
@@ -76,6 +81,8 @@ UNIFIED_SOURCES += [
     'GMPAudioDecoderParent.cpp',
     'GMPAudioHost.cpp',
     'GMPChild.cpp',
+    'GMPContentChild.cpp',
+    'GMPContentParent.cpp',
     'GMPDecryptorChild.cpp',
     'GMPDecryptorParent.cpp',
     'GMPEncryptedBufferDataImpl.cpp',
@@ -84,6 +91,8 @@ UNIFIED_SOURCES += [
     'GMPProcessChild.cpp',
     'GMPProcessParent.cpp',
     'GMPService.cpp',
+    'GMPServiceChild.cpp',
+    'GMPServiceParent.cpp',
     'GMPSharedMemManager.cpp',
     'GMPStorageChild.cpp',
     'GMPStorageParent.cpp',
@@ -108,7 +117,9 @@ IPDL_SOURCES += [
   'GMPTypes.ipdlh',
   'PGMP.ipdl',
   'PGMPAudioDecoder.ipdl',
+  'PGMPContent.ipdl',
   'PGMPDecryptor.ipdl',
+  'PGMPService.ipdl',
   'PGMPStorage.ipdl',
   'PGMPTimer.ipdl',
   'PGMPVideoDecoder.ipdl',

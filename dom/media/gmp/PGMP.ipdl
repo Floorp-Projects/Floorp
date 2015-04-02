@@ -3,11 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PGMPVideoDecoder;
-include protocol PGMPVideoEncoder;
 include protocol PCrashReporter;
-include protocol PGMPDecryptor;
-include protocol PGMPAudioDecoder;
+include protocol PGMPContent;
 include protocol PGMPTimer;
 include protocol PGMPStorage;
 
@@ -18,10 +15,8 @@ namespace gmp {
 
 intr protocol PGMP
 {
-  manages PGMPAudioDecoder;
-  manages PGMPDecryptor;
-  manages PGMPVideoDecoder;
-  manages PGMPVideoEncoder;
+  parent opens PGMPContent;
+
   manages PCrashReporter;
   manages PGMPTimer;
   manages PGMPStorage;
@@ -31,19 +26,17 @@ parent:
   async PGMPTimer();
   async PGMPStorage();
 
+  async PGMPContentChildDestroyed();
+
   async AsyncShutdownComplete();
   async AsyncShutdownRequired();
 
 child:
-  async PGMPAudioDecoder();
-  async PGMPDecryptor();
-  async PGMPVideoDecoder();
-  async PGMPVideoEncoder();
-
-  async SetNodeId(nsCString nodeId);
-  async StartPlugin();
   async BeginAsyncShutdown();
   async CrashPluginNow();
+  async StartPlugin();
+  async SetNodeId(nsCString nodeId);
+  async CloseActive();
 };
 
 } // namespace gmp
