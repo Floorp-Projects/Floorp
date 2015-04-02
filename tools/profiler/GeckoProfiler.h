@@ -50,6 +50,7 @@
 #define SAMPLER_H
 
 #include "js/TypeDecls.h"
+#include "mozilla/GuardObjects.h"
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
