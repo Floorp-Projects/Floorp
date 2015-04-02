@@ -10,10 +10,10 @@
 #include <vector>
 
 #include "../ClearKeyBase64.cpp"
+#include "../ArrayUtils.h"
 
 
 using namespace std;
-using namespace mozilla;
 
 struct B64Test {
   const char* b64;

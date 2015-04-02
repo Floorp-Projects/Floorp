@@ -21,9 +21,8 @@
 #include "ClearKeyDecryptionManager.h"
 #include "ClearKeyUtils.h"
 #include "gmp-task-utils.h"
-#include "mozilla/Endian.h"
+#include "Endian.h"
 #include "VideoDecoder.h"
-#include "mozilla/Move.h"
 
 using namespace wmf;
 
@@ -196,11 +195,10 @@ VideoDecoder::DecodeTask(GMPVideoEncodedFrame* aInput)
       MaybeRunOnMainThread(
         WrapTask(this,
                  &VideoDecoder::ReturnOutput,
-                 CComPtr<IMFSample>(mozilla::Move(output)),
+                 CComPtr<IMFSample>(output),
                  mDecoder->GetFrameWidth(),
                  mDecoder->GetFrameHeight(),
                  mDecoder->GetStride()));
-      assert(!output.Get());
     }
     if (hr == MF_E_TRANSFORM_NEED_MORE_INPUT) {
       AutoLock lock(mMutex);
@@ -351,11 +349,10 @@ VideoDecoder::DrainTask()
       MaybeRunOnMainThread(
         WrapTask(this,
                  &VideoDecoder::ReturnOutput,
-                 CComPtr<IMFSample>(mozilla::Move(output)),
+                 CComPtr<IMFSample>(output),
                  mDecoder->GetFrameWidth(),
                  mDecoder->GetFrameHeight(),
                  mDecoder->GetStride()));
-      assert(!output.Get());
     }
   }
   MaybeRunOnMainThread(WrapTask(mCallback, &GMPVideoDecoderCallback::DrainComplete));
