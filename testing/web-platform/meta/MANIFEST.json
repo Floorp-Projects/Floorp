@@ -8956,11 +8956,6 @@
         "url": "/IndexedDB/key_invalid.htm"
       },
       {
-        "path": "IndexedDB/key_valid.html",
-        "timeout": "long",
-        "url": "/IndexedDB/key_valid.html"
-      },
-      {
         "path": "IndexedDB/keygenerator-constrainterror.htm",
         "url": "/IndexedDB/keygenerator-constrainterror.htm"
       },
@@ -9819,38 +9814,6 @@
       {
         "path": "content-security-policy/img-src/img-src-4_1.html",
         "url": "/content-security-policy/img-src/img-src-4_1.html"
-      },
-      {
-        "path": "content-security-policy/media-src/media-src-7_1.html",
-        "url": "/content-security-policy/media-src/media-src-7_1.html"
-      },
-      {
-        "path": "content-security-policy/media-src/media-src-7_1_2.html",
-        "url": "/content-security-policy/media-src/media-src-7_1_2.html"
-      },
-      {
-        "path": "content-security-policy/media-src/media-src-7_2.html",
-        "url": "/content-security-policy/media-src/media-src-7_2.html"
-      },
-      {
-        "path": "content-security-policy/media-src/media-src-7_2_2.html",
-        "url": "/content-security-policy/media-src/media-src-7_2_2.html"
-      },
-      {
-        "path": "content-security-policy/media-src/media-src-7_3.html",
-        "url": "/content-security-policy/media-src/media-src-7_3.html"
-      },
-      {
-        "path": "content-security-policy/media-src/media-src-7_3_2.html",
-        "url": "/content-security-policy/media-src/media-src-7_3_2.html"
-      },
-      {
-        "path": "content-security-policy/object-src/object-src-2_1.html",
-        "url": "/content-security-policy/object-src/object-src-2_1.html"
-      },
-      {
-        "path": "content-security-policy/object-src/object-src-2_2.html",
-        "url": "/content-security-policy/object-src/object-src-2_2.html"
       },
       {
         "path": "content-security-policy/script-src/script-src-1_1.html",
@@ -14191,10 +14154,6 @@
       {
         "path": "html/semantics/forms/the-textarea-element/textarea-type.html",
         "url": "/html/semantics/forms/the-textarea-element/textarea-type.html"
-      },
-      {
-        "path": "html/semantics/grouping-content/the-blockquote-element/grouping-blockquote.sub.html",
-        "url": "/html/semantics/grouping-content/the-blockquote-element/grouping-blockquote.sub.html"
       },
       {
         "path": "html/semantics/grouping-content/the-dd-element/grouping-dd.html",
@@ -18804,6 +18763,11 @@
         "url": "/IndexedDB/idbobjectstore_createIndex8-valid_keys.htm"
       },
       {
+        "path": "IndexedDB/key_valid.html",
+        "timeout": "long",
+        "url": "/IndexedDB/key_valid.html"
+      },
+      {
         "path": "IndexedDB/keypath_maxsize.htm",
         "timeout": "long",
         "url": "/IndexedDB/keypath_maxsize.htm"
@@ -18827,6 +18791,46 @@
         "path": "ambient-light/AmbientLight_tests.html",
         "timeout": "long",
         "url": "/ambient-light/AmbientLight_tests.html"
+      },
+      {
+        "path": "content-security-policy/media-src/media-src-7_1.html",
+        "timeout": "long",
+        "url": "/content-security-policy/media-src/media-src-7_1.html"
+      },
+      {
+        "path": "content-security-policy/media-src/media-src-7_1_2.html",
+        "timeout": "long",
+        "url": "/content-security-policy/media-src/media-src-7_1_2.html"
+      },
+      {
+        "path": "content-security-policy/media-src/media-src-7_2.html",
+        "timeout": "long",
+        "url": "/content-security-policy/media-src/media-src-7_2.html"
+      },
+      {
+        "path": "content-security-policy/media-src/media-src-7_2_2.html",
+        "timeout": "long",
+        "url": "/content-security-policy/media-src/media-src-7_2_2.html"
+      },
+      {
+        "path": "content-security-policy/media-src/media-src-7_3.html",
+        "timeout": "long",
+        "url": "/content-security-policy/media-src/media-src-7_3.html"
+      },
+      {
+        "path": "content-security-policy/media-src/media-src-7_3_2.html",
+        "timeout": "long",
+        "url": "/content-security-policy/media-src/media-src-7_3_2.html"
+      },
+      {
+        "path": "content-security-policy/object-src/object-src-2_1.html",
+        "timeout": "long",
+        "url": "/content-security-policy/object-src/object-src-2_1.html"
+      },
+      {
+        "path": "content-security-policy/object-src/object-src-2_2.html",
+        "timeout": "long",
+        "url": "/content-security-policy/object-src/object-src-2_2.html"
       },
       {
         "path": "cors/status-async.htm",
@@ -19500,66 +19504,7 @@
   },
   "local_changes": {
     "deleted": [],
-    "items": {
-      "testharness": {
-        "content-security-policy/media-src/media-src-7_1.html": [
-          {
-            "path": "content-security-policy/media-src/media-src-7_1.html",
-            "timeout": "long",
-            "url": "/content-security-policy/media-src/media-src-7_1.html"
-          }
-        ],
-        "content-security-policy/media-src/media-src-7_1_2.html": [
-          {
-            "path": "content-security-policy/media-src/media-src-7_1_2.html",
-            "timeout": "long",
-            "url": "/content-security-policy/media-src/media-src-7_1_2.html"
-          }
-        ],
-        "content-security-policy/media-src/media-src-7_2.html": [
-          {
-            "path": "content-security-policy/media-src/media-src-7_2.html",
-            "timeout": "long",
-            "url": "/content-security-policy/media-src/media-src-7_2.html"
-          }
-        ],
-        "content-security-policy/media-src/media-src-7_2_2.html": [
-          {
-            "path": "content-security-policy/media-src/media-src-7_2_2.html",
-            "timeout": "long",
-            "url": "/content-security-policy/media-src/media-src-7_2_2.html"
-          }
-        ],
-        "content-security-policy/media-src/media-src-7_3.html": [
-          {
-            "path": "content-security-policy/media-src/media-src-7_3.html",
-            "timeout": "long",
-            "url": "/content-security-policy/media-src/media-src-7_3.html"
-          }
-        ],
-        "content-security-policy/media-src/media-src-7_3_2.html": [
-          {
-            "path": "content-security-policy/media-src/media-src-7_3_2.html",
-            "timeout": "long",
-            "url": "/content-security-policy/media-src/media-src-7_3_2.html"
-          }
-        ],
-        "content-security-policy/object-src/object-src-2_1.html": [
-          {
-            "path": "content-security-policy/object-src/object-src-2_1.html",
-            "timeout": "long",
-            "url": "/content-security-policy/object-src/object-src-2_1.html"
-          }
-        ],
-        "content-security-policy/object-src/object-src-2_2.html": [
-          {
-            "path": "content-security-policy/object-src/object-src-2_2.html",
-            "timeout": "long",
-            "url": "/content-security-policy/object-src/object-src-2_2.html"
-          }
-        ]
-      }
-    },
+    "items": {},
     "reftest_nodes": {}
   },
   "reftest_nodes": {
@@ -24628,7 +24573,7 @@
       }
     ]
   },
-  "rev": "1defdd7213b52589e4b7a259e53f4fff359c301a",
+  "rev": "1bb38c25b4720fbfd8ca086ef9275ac3e465c659",
   "url_base": "/",
   "version": 2
 }
