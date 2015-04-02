@@ -203,116 +203,110 @@ toolkit.jar:
         skin/classic/global/tree/sort-asc-classic.png            (tree/sort-asc-classic.png)
         skin/classic/global/tree/sort-dsc-classic.png            (tree/sort-dsc-classic.png)
         skin/classic/global/tree/twisty-clsd.png                 (tree/twisty-clsd.png)
+        skin/classic/global/tree/twisty-clsd-rtl.png             (tree/twisty-clsd-rtl.png)
+        skin/classic/global/tree/twisty-clsd-hover.png           (tree/twisty-clsd-hover.png)
+        skin/classic/global/tree/twisty-clsd-hover-rtl.png       (tree/twisty-clsd-hover-rtl.png)
         skin/classic/global/tree/twisty-open.png                 (tree/twisty-open.png)
+        skin/classic/global/tree/twisty-open-rtl.png             (tree/twisty-open-rtl.png)
+        skin/classic/global/tree/twisty-open-hover.png           (tree/twisty-open-hover.png)
+        skin/classic/global/tree/twisty-open-hover-rtl.png       (tree/twisty-open-hover-rtl.png)
 
 #ifdef XP_WIN
-        skin/classic/global/console/console-toolbar-aero.png             (console/console-toolbar-aero.png)
-        skin/classic/global/dirListing/folder-aero.png                   (dirListing/folder-aero.png)
-        skin/classic/global/dirListing/local-aero.png                    (dirListing/local-aero.png)
-        skin/classic/global/dirListing/remote-aero.png                   (dirListing/remote-aero.png)
-        skin/classic/global/dirListing/up-aero.png                       (dirListing/up-aero.png)
-        skin/classic/global/icons/autoscroll-aero.png                    (icons/autoscroll-aero.png)
-        skin/classic/global/icons/blacklist_favicon-aero.png             (icons/blacklist_favicon-aero.png)
-        skin/classic/global/icons/blacklist_large-aero.png               (icons/blacklist_large-aero.png)
-        skin/classic/global/icons/Error-aero.png                         (icons/Error-aero.png)
-        skin/classic/global/icons/error-16-aero.png                      (icons/error-16-aero.png)
-        skin/classic/global/icons/error-24-aero.png                      (icons/error-24-aero.png)
-        skin/classic/global/icons/error-48-aero.png                      (icons/error-48-aero.png)
-        skin/classic/global/icons/error-64-aero.png                      (icons/error-64-aero.png)
-        skin/classic/global/icons/find-aero.png                          (icons/find-aero.png)
-        skin/classic/global/icons/folder-item-aero.png                   (icons/folder-item-aero.png)
-        skin/classic/global/icons/information-16-aero.png                (icons/information-16-aero.png)
-        skin/classic/global/icons/information-24-aero.png                (icons/information-24-aero.png)
-        skin/classic/global/icons/information-32-aero.png                (icons/information-32-aero.png)
-        skin/classic/global/icons/information-48-aero.png                (icons/information-48-aero.png)
-        skin/classic/global/icons/information-64-aero.png                (icons/information-64-aero.png)
-        skin/classic/global/icons/Print-preview-aero.png                 (icons/Print-preview-aero.png)
-        skin/classic/global/icons/Portrait-aero.png                      (icons/Portrait-aero.png)
-        skin/classic/global/icons/Landscape-aero.png                     (icons/Landscape-aero.png)
-        skin/classic/global/icons/Question-aero.png                      (icons/Question-aero.png)
-        skin/classic/global/icons/question-16-aero.png                   (icons/question-16-aero.png)
-        skin/classic/global/icons/question-24-aero.png                   (icons/question-24-aero.png)
-        skin/classic/global/icons/question-48-aero.png                   (icons/question-48-aero.png)
-        skin/classic/global/icons/question-64-aero.png                   (icons/question-64-aero.png)
-        skin/classic/global/icons/Search-close-aero.png                  (icons/Search-close-aero.png)
-        skin/classic/global/icons/Search-glass-aero.png                  (icons/Search-glass-aero.png)
-        skin/classic/global/icons/sslWarning-aero.png                    (icons/sslWarning-aero.png)
-        skin/classic/global/icons/Warning-aero.png                       (icons/Warning-aero.png)
-        skin/classic/global/icons/warning-large-aero.png                 (icons/warning-large-aero.png)
-        skin/classic/global/icons/warning-16-aero.png                    (icons/warning-16-aero.png)
-        skin/classic/global/icons/warning-24-aero.png                    (icons/warning-24-aero.png)
-        skin/classic/global/icons/warning-64-aero.png                    (icons/warning-64-aero.png)
-        skin/classic/global/icons/windowControls-aero.png                (icons/windowControls-aero.png)
-        skin/classic/global/icons/wrap-aero.png                          (icons/wrap-aero.png)
-        skin/classic/global/printpreview/arrow-left-aero.png             (printpreview/arrow-left-aero.png)
-        skin/classic/global/printpreview/arrow-left-end-aero.png         (printpreview/arrow-left-end-aero.png)
-        skin/classic/global/printpreview/arrow-right-aero.png            (printpreview/arrow-right-aero.png)
-        skin/classic/global/printpreview/arrow-right-end-aero.png        (printpreview/arrow-right-end-aero.png)
-        skin/classic/global/toolbar/spring-aero.png                      (toolbar/spring-aero.png)
-        skin/classic/global/tree/sort-asc-aero.png                       (tree/sort-asc-aero.png)
-        skin/classic/global/tree/sort-dsc-aero.png                       (tree/sort-dsc-aero.png)
-        skin/classic/global/tree/twisty-clsd-aero.png                    (tree/twisty-clsd-aero.png)
-        skin/classic/global/tree/twisty-clsd-rtl-aero.png                (tree/twisty-clsd-rtl-aero.png)
-        skin/classic/global/tree/twisty-clsd-hover-aero.png              (tree/twisty-clsd-hover-aero.png)
-        skin/classic/global/tree/twisty-clsd-hover-rtl-aero.png          (tree/twisty-clsd-hover-rtl-aero.png)
-        skin/classic/global/tree/twisty-open-aero.png                    (tree/twisty-open-aero.png)
-        skin/classic/global/tree/twisty-open-rtl-aero.png                (tree/twisty-open-rtl-aero.png)
-        skin/classic/global/tree/twisty-open-hover-aero.png              (tree/twisty-open-hover-aero.png)
-        skin/classic/global/tree/twisty-open-hover-rtl-aero.png          (tree/twisty-open-hover-rtl-aero.png)
+        skin/classic/global/console/console-toolbar-XP.png             (console/console-toolbar-XP.png)
+        skin/classic/global/dirListing/folder-XP.png                   (dirListing/folder-XP.png)
+        skin/classic/global/dirListing/local-XP.png                    (dirListing/local-XP.png)
+        skin/classic/global/dirListing/remote-XP.png                   (dirListing/remote-XP.png)
+        skin/classic/global/dirListing/up-XP.png                       (dirListing/up-XP.png)
+        skin/classic/global/icons/autoscroll-XP.png                    (icons/autoscroll-XP.png)
+        skin/classic/global/icons/blacklist_favicon-XP.png             (icons/blacklist_favicon-XP.png)
+        skin/classic/global/icons/blacklist_large-XP.png               (icons/blacklist_large-XP.png)
+        skin/classic/global/icons/Error-XP.png                         (icons/Error-XP.png)
+        skin/classic/global/icons/error-16-XP.png                      (icons/error-16-XP.png)
+        skin/classic/global/icons/error-24-XP.png                      (icons/error-24-XP.png)
+        skin/classic/global/icons/error-48-XP.png                      (icons/error-48-XP.png)
+        skin/classic/global/icons/error-64-XP.png                      (icons/error-64-XP.png)
+        skin/classic/global/icons/find-XP.png                          (icons/find-XP.png)
+        skin/classic/global/icons/folder-item-XP.png                   (icons/folder-item-XP.png)
+        skin/classic/global/icons/information-16-XP.png                (icons/information-16-XP.png)
+        skin/classic/global/icons/information-24-XP.png                (icons/information-24-XP.png)
+        skin/classic/global/icons/information-32-XP.png                (icons/information-32-XP.png)
+        skin/classic/global/icons/information-48-XP.png                (icons/information-48-XP.png)
+        skin/classic/global/icons/information-64-XP.png                (icons/information-64-XP.png)
+        skin/classic/global/icons/Print-preview-XP.png                 (icons/Print-preview-XP.png)
+        skin/classic/global/icons/Portrait-XP.png                      (icons/Portrait-XP.png)
+        skin/classic/global/icons/Landscape-XP.png                     (icons/Landscape-XP.png)
+        skin/classic/global/icons/Question-XP.png                      (icons/Question-XP.png)
+        skin/classic/global/icons/question-16-XP.png                   (icons/question-16-XP.png)
+        skin/classic/global/icons/question-24-XP.png                   (icons/question-24-XP.png)
+        skin/classic/global/icons/question-48-XP.png                   (icons/question-48-XP.png)
+        skin/classic/global/icons/question-64-XP.png                   (icons/question-64-XP.png)
+        skin/classic/global/icons/Search-close-XP.png                  (icons/Search-close-XP.png)
+        skin/classic/global/icons/Search-glass-XP.png                  (icons/Search-glass-XP.png)
+        skin/classic/global/icons/sslWarning-XP.png                    (icons/sslWarning-XP.png)
+        skin/classic/global/icons/Warning-XP.png                       (icons/Warning-XP.png)
+        skin/classic/global/icons/warning-large-XP.png                 (icons/warning-large-XP.png)
+        skin/classic/global/icons/warning-16-XP.png                    (icons/warning-16-XP.png)
+        skin/classic/global/icons/warning-24-XP.png                    (icons/warning-24-XP.png)
+        skin/classic/global/icons/warning-64-XP.png                    (icons/warning-64-XP.png)
+        skin/classic/global/icons/windowControls-XP.png                (icons/windowControls-XP.png)
+        skin/classic/global/icons/wrap-XP.png                          (icons/wrap-XP.png)
+        skin/classic/global/printpreview/arrow-left-XP.png             (printpreview/arrow-left-XP.png)
+        skin/classic/global/printpreview/arrow-left-end-XP.png         (printpreview/arrow-left-end-XP.png)
+        skin/classic/global/printpreview/arrow-right-XP.png            (printpreview/arrow-right-XP.png)
+        skin/classic/global/printpreview/arrow-right-end-XP.png        (printpreview/arrow-right-end-XP.png)
+        skin/classic/global/toolbar/spring-XP.png                      (toolbar/spring-XP.png)
+        skin/classic/global/tree/sort-asc-XP.png                       (tree/sort-asc-XP.png)
+        skin/classic/global/tree/sort-dsc-XP.png                       (tree/sort-dsc-XP.png)
+        skin/classic/global/tree/twisty-clsd-XP.png                    (tree/twisty-clsd-XP.png)
+        skin/classic/global/tree/twisty-open-XP.png                    (tree/twisty-open-XP.png)
 
-% override chrome://global/skin/console/console-toolbar.png       chrome://global/skin/console/console-toolbar-aero.png      osversion>=6
-% override chrome://global/skin/dirListing/folder.png             chrome://global/skin/dirListing/folder-aero.png            osversion>=6
-% override chrome://global/skin/dirListing/local.png              chrome://global/skin/dirListing/local-aero.png             osversion>=6
-% override chrome://global/skin/dirListing/remote.png             chrome://global/skin/dirListing/remote-aero.png            osversion>=6
-% override chrome://global/skin/dirListing/up.png                 chrome://global/skin/dirListing/up-aero.png                osversion>=6
-% override chrome://global/skin/icons/autoscroll.png              chrome://global/skin/icons/autoscroll-aero.png             osversion>=6
-% override chrome://global/skin/icons/blacklist_favicon.png       chrome://global/skin/icons/blacklist_favicon-aero.png      osversion>=6
-% override chrome://global/skin/icons/blacklist_large.png         chrome://global/skin/icons/blacklist_large-aero.png        osversion>=6
-% override chrome://global/skin/icons/Error.png                   chrome://global/skin/icons/Error-aero.png                  osversion>=6
-% override chrome://global/skin/icons/error-16.png                chrome://global/skin/icons/error-16-aero.png               osversion>=6
-% override chrome://global/skin/icons/error-24.png                chrome://global/skin/icons/error-24-aero.png               osversion>=6
-% override chrome://global/skin/icons/error-48.png                chrome://global/skin/icons/error-48-aero.png               osversion>=6
-% override chrome://global/skin/icons/error-64.png                chrome://global/skin/icons/error-64-aero.png               osversion>=6
-% override chrome://global/skin/icons/find.png                    chrome://global/skin/icons/find-aero.png                   osversion>=6
-% override chrome://global/skin/icons/folder-item.png             chrome://global/skin/icons/folder-item-aero.png            osversion>=6
-% override chrome://global/skin/icons/information-16.png          chrome://global/skin/icons/information-16-aero.png         osversion>=6
-% override chrome://global/skin/icons/information-24.png          chrome://global/skin/icons/information-24-aero.png         osversion>=6
-% override chrome://global/skin/icons/information-32.png          chrome://global/skin/icons/information-32-aero.png         osversion>=6
-% override chrome://global/skin/icons/information-48.png          chrome://global/skin/icons/information-48-aero.png         osversion>=6
-% override chrome://global/skin/icons/information-64.png          chrome://global/skin/icons/information-64-aero.png         osversion>=6
-% override chrome://global/skin/icons/Print-preview.png           chrome://global/skin/icons/Print-preview-aero.png          osversion>=6
-% override chrome://global/skin/icons/Portrait.png                chrome://global/skin/icons/Portrait-aero.png               osversion>=6
-% override chrome://global/skin/icons/Landscape.png               chrome://global/skin/icons/Landscape-aero.png              osversion>=6
-% override chrome://global/skin/icons/Question.png                chrome://global/skin/icons/Question-aero.png               osversion>=6
-% override chrome://global/skin/icons/question-16.png             chrome://global/skin/icons/question-16-aero.png            osversion>=6
-% override chrome://global/skin/icons/question-24.png             chrome://global/skin/icons/question-24-aero.png            osversion>=6
-% override chrome://global/skin/icons/question-48.png             chrome://global/skin/icons/question-48-aero.png            osversion>=6
-% override chrome://global/skin/icons/question-64.png             chrome://global/skin/icons/question-64-aero.png            osversion>=6
-% override chrome://global/skin/icons/Search-close.png            chrome://global/skin/icons/Search-close-aero.png           osversion>=6
-% override chrome://global/skin/icons/Search-glass.png            chrome://global/skin/icons/Search-glass-aero.png           osversion>=6
-% override chrome://global/skin/icons/sslWarning.png              chrome://global/skin/icons/sslWarning-aero.png             osversion>=6
-% override chrome://global/skin/icons/Warning.png                 chrome://global/skin/icons/Warning-aero.png                osversion>=6
-% override chrome://global/skin/icons/warning-large.png           chrome://global/skin/icons/warning-large-aero.png          osversion>=6
-% override chrome://global/skin/icons/warning-16.png              chrome://global/skin/icons/warning-16-aero.png             osversion>=6
-% override chrome://global/skin/icons/warning-24.png              chrome://global/skin/icons/warning-24-aero.png             osversion>=6
-% override chrome://global/skin/icons/warning-64.png              chrome://global/skin/icons/warning-64-aero.png             osversion>=6
-% override chrome://global/skin/icons/windowControls.png          chrome://global/skin/icons/windowControls-aero.png         osversion>=6
-% override chrome://global/skin/icons/wrap.png                    chrome://global/skin/icons/wrap-aero.png                   osversion>=6
-% override chrome://global/skin/printpreview/arrow-left.png       chrome://global/skin/printpreview/arrow-left-aero.png      osversion>=6
-% override chrome://global/skin/printpreview/arrow-left-end.png   chrome://global/skin/printpreview/arrow-left-end-aero.png  osversion>=6
-% override chrome://global/skin/printpreview/arrow-right.png      chrome://global/skin/printpreview/arrow-right-aero.png     osversion>=6
-% override chrome://global/skin/printpreview/arrow-right-end.png  chrome://global/skin/printpreview/arrow-right-end-aero.png osversion>=6
-% override chrome://global/skin/toolbar/spring.png                chrome://global/skin/toolbar/spring-aero.png               osversion>=6
-% override chrome://global/skin/tree/sort-asc.png                 chrome://global/skin/tree/sort-asc-aero.png                osversion>=6
-% override chrome://global/skin/tree/sort-dsc.png                 chrome://global/skin/tree/sort-dsc-aero.png                osversion>=6
-% override chrome://global/skin/tree/twisty-clsd.png              chrome://global/skin/tree/twisty-clsd-aero.png             osversion>=6
-% override chrome://global/skin/tree/twisty-clsd-rtl.png          chrome://global/skin/tree/twisty-clsd-rtl-aero.png         osversion>=6
-% override chrome://global/skin/tree/twisty-clsd-hover.png        chrome://global/skin/tree/twisty-clsd-hover-aero.png       osversion>=6
-% override chrome://global/skin/tree/twisty-clsd-hover-rtl.png    chrome://global/skin/tree/twisty-clsd-hover-rtl-aero.png   osversion>=6
-% override chrome://global/skin/tree/twisty-open.png              chrome://global/skin/tree/twisty-open-aero.png             osversion>=6
-% override chrome://global/skin/tree/twisty-open-rtl.png          chrome://global/skin/tree/twisty-open-rtl-aero.png         osversion>=6
-% override chrome://global/skin/tree/twisty-open-hover.png        chrome://global/skin/tree/twisty-open-hover-aero.png       osversion>=6
-% override chrome://global/skin/tree/twisty-open-hover-rtl.png    chrome://global/skin/tree/twisty-open-hover-rtl-aero.png   osversion>=6
+% override chrome://global/skin/console/console-toolbar.png       chrome://global/skin/console/console-toolbar-XP.png      osversion<6
+% override chrome://global/skin/dirListing/folder.png             chrome://global/skin/dirListing/folder-XP.png            osversion<6
+% override chrome://global/skin/dirListing/local.png              chrome://global/skin/dirListing/local-XP.png             osversion<6
+% override chrome://global/skin/dirListing/remote.png             chrome://global/skin/dirListing/remote-XP.png            osversion<6
+% override chrome://global/skin/dirListing/up.png                 chrome://global/skin/dirListing/up-XP.png                osversion<6
+% override chrome://global/skin/icons/autoscroll.png              chrome://global/skin/icons/autoscroll-XP.png             osversion<6
+% override chrome://global/skin/icons/blacklist_favicon.png       chrome://global/skin/icons/blacklist_favicon-XP.png      osversion<6
+% override chrome://global/skin/icons/blacklist_large.png         chrome://global/skin/icons/blacklist_large-XP.png        osversion<6
+% override chrome://global/skin/icons/Error.png                   chrome://global/skin/icons/Error-XP.png                  osversion<6
+% override chrome://global/skin/icons/error-16.png                chrome://global/skin/icons/error-16-XP.png               osversion<6
+% override chrome://global/skin/icons/error-24.png                chrome://global/skin/icons/error-24-XP.png               osversion<6
+% override chrome://global/skin/icons/error-48.png                chrome://global/skin/icons/error-48-XP.png               osversion<6
+% override chrome://global/skin/icons/error-64.png                chrome://global/skin/icons/error-64-XP.png               osversion<6
+% override chrome://global/skin/icons/find.png                    chrome://global/skin/icons/find-XP.png                   osversion<6
+% override chrome://global/skin/icons/folder-item.png             chrome://global/skin/icons/folder-item-XP.png            osversion<6
+% override chrome://global/skin/icons/information-16.png          chrome://global/skin/icons/information-16-XP.png         osversion<6
+% override chrome://global/skin/icons/information-24.png          chrome://global/skin/icons/information-24-XP.png         osversion<6
+% override chrome://global/skin/icons/information-32.png          chrome://global/skin/icons/information-32-XP.png         osversion<6
+% override chrome://global/skin/icons/information-48.png          chrome://global/skin/icons/information-48-XP.png         osversion<6
+% override chrome://global/skin/icons/information-64.png          chrome://global/skin/icons/information-64-XP.png         osversion<6
+% override chrome://global/skin/icons/Print-preview.png           chrome://global/skin/icons/Print-preview-XP.png          osversion<6
+% override chrome://global/skin/icons/Portrait.png                chrome://global/skin/icons/Portrait-XP.png               osversion<6
+% override chrome://global/skin/icons/Landscape.png               chrome://global/skin/icons/Landscape-XP.png              osversion<6
+% override chrome://global/skin/icons/Question.png                chrome://global/skin/icons/Question-XP.png               osversion<6
+% override chrome://global/skin/icons/question-16.png             chrome://global/skin/icons/question-16-XP.png            osversion<6
+% override chrome://global/skin/icons/question-24.png             chrome://global/skin/icons/question-24-XP.png            osversion<6
+% override chrome://global/skin/icons/question-48.png             chrome://global/skin/icons/question-48-XP.png            osversion<6
+% override chrome://global/skin/icons/question-64.png             chrome://global/skin/icons/question-64-XP.png            osversion<6
+% override chrome://global/skin/icons/Search-close.png            chrome://global/skin/icons/Search-close-XP.png           osversion<6
+% override chrome://global/skin/icons/Search-glass.png            chrome://global/skin/icons/Search-glass-XP.png           osversion<6
+% override chrome://global/skin/icons/sslWarning.png              chrome://global/skin/icons/sslWarning-XP.png             osversion<6
+% override chrome://global/skin/icons/Warning.png                 chrome://global/skin/icons/Warning-XP.png                osversion<6
+% override chrome://global/skin/icons/warning-large.png           chrome://global/skin/icons/warning-large-XP.png          osversion<6
+% override chrome://global/skin/icons/warning-16.png              chrome://global/skin/icons/warning-16-XP.png             osversion<6
+% override chrome://global/skin/icons/warning-24.png              chrome://global/skin/icons/warning-24-XP.png             osversion<6
+% override chrome://global/skin/icons/warning-64.png              chrome://global/skin/icons/warning-64-XP.png             osversion<6
+% override chrome://global/skin/icons/windowControls.png          chrome://global/skin/icons/windowControls-XP.png         osversion<6
+% override chrome://global/skin/icons/wrap.png                    chrome://global/skin/icons/wrap-XP.png                   osversion<6
+% override chrome://global/skin/printpreview/arrow-left.png       chrome://global/skin/printpreview/arrow-left-XP.png      osversion<6
+% override chrome://global/skin/printpreview/arrow-left-end.png   chrome://global/skin/printpreview/arrow-left-end-XP.png  osversion<6
+% override chrome://global/skin/printpreview/arrow-right.png      chrome://global/skin/printpreview/arrow-right-XP.png     osversion<6
+% override chrome://global/skin/printpreview/arrow-right-end.png  chrome://global/skin/printpreview/arrow-right-end-XP.png osversion<6
+% override chrome://global/skin/toolbar/spring.png                chrome://global/skin/toolbar/spring-XP.png               osversion<6
+% override chrome://global/skin/tree/sort-asc.png                 chrome://global/skin/tree/sort-asc-XP.png                osversion<6
+% override chrome://global/skin/tree/sort-dsc.png                 chrome://global/skin/tree/sort-dsc-XP.png                osversion<6
+% override chrome://global/skin/tree/twisty-clsd.png              chrome://global/skin/tree/twisty-clsd-XP.png             osversion<6
+% override chrome://global/skin/tree/twisty-open.png              chrome://global/skin/tree/twisty-open-XP.png             osversion<6
 #endif
 
 % override chrome://global/skin/arrow/arrow-lft-hov.gif           chrome://global/skin/arrow/arrow-lft.gif

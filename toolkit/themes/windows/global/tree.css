@@ -394,15 +394,6 @@ treechildren::-moz-tree-cell-text(selected, editing) {
     width: 9px;
   }
 
-  /*
-    Please note that the following RTL icons are only available in Aero themes:
-     * chrome://global/skin/tree/twisty-clsd-hover.png
-     * chrome://global/skin/tree/twisty-open-hover.png
-     * chrome://global/skin/tree/twisty-clsd-rtl.png
-     * chrome://global/skin/tree/twisty-open-rtl.png
-     * chrome://global/skin/tree/twisty-clsd-hover-rtl.png
-     * chrome://global/skin/tree/twisty-open-hover-rtl.png
-  */
   treechildren::-moz-tree-twisty(hover) {
     list-style-image: url("chrome://global/skin/tree/twisty-clsd-hover.png");
   }
