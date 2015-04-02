@@ -4,20 +4,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsSocketTransportService2.h"
-#if !defined(MOZILLA_XPCOMRT_API)
 #include "nsSocketTransport2.h"
-#include "NetworkActivityMonitor.h"
-#include "mozilla/Preferences.h"
-#endif // !defined(MOZILLA_XPCOMRT_API)
-#include "nsASocketHandler.h"
 #include "nsError.h"
 #include "prnetdb.h"
 #include "prerror.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
+#include "NetworkActivityMonitor.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PublicSSL.h"
 #include "mozilla/ChaosMode.h"
@@ -563,9 +560,7 @@ nsSocketTransportService::Shutdown()
         obsSvc->RemoveObserver(this, "last-pb-context-exited");
     }
 
-#if !defined(MOZILLA_XPCOMRT_API)
     mozilla::net::NetworkActivityMonitor::Shutdown();
-#endif // !defined(MOZILLA_XPCOMRT_API)
 
     mInitialized = false;
     mShuttingDown = false;
@@ -639,10 +634,6 @@ nsSocketTransportService::CreateTransport(const char **types,
                                           nsIProxyInfo *proxyInfo,
                                           nsISocketTransport **result)
 {
-#if defined(MOZILLA_XPCOMRT_API)
-    NS_WARNING("nsSocketTransportService::CreateTransport not implemented");
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
     NS_ENSURE_TRUE(port >= 0 && port <= 0xFFFF, NS_ERROR_ILLEGAL_VALUE);
 
@@ -654,17 +645,12 @@ nsSocketTransportService::CreateTransport(const char **types,
 
     trans.forget(result);
     return NS_OK;
-#endif // defined(MOZILLA_XPCOMRT_API)
 }
 
 NS_IMETHODIMP
 nsSocketTransportService::CreateUnixDomainTransport(nsIFile *aPath,
                                                     nsISocketTransport **result)
 {
-#if defined(MOZILLA_XPCOMRT_API)
-    NS_WARNING("nsSocketTransportService::CreateUnixDomainTransport not implemented");
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     nsresult rv;
 
     NS_ENSURE_TRUE(mInitialized, NS_ERROR_NOT_INITIALIZED);
@@ -682,7 +668,6 @@ nsSocketTransportService::CreateUnixDomainTransport(nsIFile *aPath,
 
     trans.forget(result);
     return NS_OK;
-#endif // defined(MOZILLA_XPCOMRT_API)
 }
 
 NS_IMETHODIMP
@@ -747,9 +732,7 @@ nsSocketTransportService::Run()
 
     SOCKET_LOG(("STS thread init\n"));
 
-#if !defined(MOZILLA_XPCOMRT_API)
     psm::InitializeSSLServerCertVerificationThreads();
-#endif // !defined(MOZILLA_XPCOMRT_API)
 
     gSocketThread = PR_GetCurrentThread();
 
@@ -918,9 +901,7 @@ nsSocketTransportService::Run()
 
     gSocketThread = nullptr;
 
-#if !defined(MOZILLA_XPCOMRT_API)
     psm::StopSSLServerCertVerificationThreads();
-#endif // !defined(MOZILLA_XPCOMRT_API)
 
     SOCKET_LOG(("STS thread exit\n"));
     return NS_OK;
@@ -1104,10 +1085,6 @@ nsSocketTransportService::DoPollIteration(bool wait, TimeDuration *pollDuration)
 nsresult
 nsSocketTransportService::UpdatePrefs()
 {
-#if defined(MOZILLA_XPCOMRT_API)
-    NS_WARNING("nsSocketTransportService::UpdatePrefs not implemented");
-    return NS_ERROR_NOT_IMPLEMENTED;
-#else
     mSendBufferSize = 0;
     
     nsCOMPtr<nsIPrefBranch> tmpPrefService = do_GetService(NS_PREFSERVICE_CONTRACTID);
@@ -1169,7 +1146,6 @@ nsSocketTransportService::UpdatePrefs()
     }
     
     return NS_OK;
-#endif // defined(MOZILLA_XPCOMRT_API)
 }
 
 void
@@ -1214,7 +1190,6 @@ nsSocketTransportService::Observe(nsISupports *subject,
                                   const char *topic,
                                   const char16_t *data)
 {
-#if !defined(MOZILLA_XPCOMRT_API)
     if (!strcmp(topic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
         UpdatePrefs();
         return NS_OK;
@@ -1228,7 +1203,6 @@ nsSocketTransportService::Observe(nsISupports *subject,
 
         return net::NetworkActivityMonitor::Init(blipInterval);
     }
-#endif // !defined(MOZILLA_XPCOMRT_API)
 
     if (!strcmp(topic, "last-pb-context-exited")) {
         nsCOMPtr<nsIRunnable> ev =
@@ -1262,9 +1236,7 @@ nsSocketTransportService::ClosePrivateConnections()
         }
     }
 
-#if !defined(MOZILLA_XPCOMRT_API)
     mozilla::ClearPrivateSSLState();
-#endif // !defined(MOZILLA_XPCOMRT_API)
 }
 
 NS_IMETHODIMP
