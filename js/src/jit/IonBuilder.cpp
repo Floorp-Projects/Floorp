@@ -595,7 +595,8 @@ IonBuilder::analyzeNewLoopTypes(MBasicBlock* entry, jsbytecode* start, jsbytecod
     }
     loopHeaders_.append(LoopHeader(start, entry));
 
-    jsbytecode* last = nullptr, *earlier = nullptr;
+    jsbytecode* last = nullptr;
+    jsbytecode* earlier = nullptr;
     for (jsbytecode* pc = start; pc != end; earlier = last, last = pc, pc += GetBytecodeLength(pc)) {
         uint32_t slot;
         if (*pc == JSOP_SETLOCAL)
@@ -2577,7 +2578,8 @@ IonBuilder::processForUpdateEnd(CFGState& state)
 IonBuilder::DeferredEdge*
 IonBuilder::filterDeadDeferredEdges(DeferredEdge* edge)
 {
-    DeferredEdge* head = edge, *prev = nullptr;
+    DeferredEdge* head = edge;
+    DeferredEdge* prev = nullptr;
 
     while (edge) {
         if (edge->block->isDead()) {
@@ -7931,7 +7933,8 @@ IonBuilder::pushScalarLoadFromTypedObject(MDefinition* obj,
     MOZ_ASSERT(size == ScalarTypeDescr::alignment(elemType));
 
     // Find location within the owner object.
-    MDefinition* elements, *scaledOffset;
+    MDefinition* elements;
+    MDefinition* scaledOffset;
     int32_t adjustment;
     loadTypedObjectElements(obj, byteOffset, size, &elements, &scaledOffset, &adjustment);
 
@@ -7970,7 +7973,8 @@ IonBuilder::pushReferenceLoadFromTypedObject(MDefinition* typedObj,
                                              PropertyName* name)
 {
     // Find location within the owner object.
-    MDefinition* elements, *scaledOffset;
+    MDefinition* elements;
+    MDefinition* scaledOffset;
     int32_t adjustment;
     size_t alignment = ReferenceTypeDescr::alignment(type);
     loadTypedObjectElements(typedObj, byteOffset, alignment, &elements, &scaledOffset, &adjustment);
@@ -12748,7 +12752,8 @@ IonBuilder::storeScalarTypedObjectValue(MDefinition* typedObj,
                                         MDefinition* value)
 {
     // Find location within the owner object.
-    MDefinition* elements, *scaledOffset;
+    MDefinition* elements;
+    MDefinition* scaledOffset;
     int32_t adjustment;
     size_t alignment = ScalarTypeDescr::alignment(type);
     loadTypedObjectElements(typedObj, byteOffset, alignment, &elements, &scaledOffset, &adjustment);
@@ -12792,7 +12797,8 @@ IonBuilder::storeReferenceTypedObjectValue(MDefinition* typedObj,
     }
 
     // Find location within the owner object.
-    MDefinition* elements, *scaledOffset;
+    MDefinition* elements;
+    MDefinition* scaledOffset;
     int32_t adjustment;
     size_t alignment = ReferenceTypeDescr::alignment(type);
     loadTypedObjectElements(typedObj, byteOffset, alignment, &elements, &scaledOffset, &adjustment);
@@ -12826,6 +12832,18 @@ IonBuilder::storeReferenceTypedObjectValue(MDefinition* typedObj,
 MConstant*
 IonBuilder::constant(const Value& v)
 {
+    // For performance reason (TLS) and error code handling (AtomizeString), we
+    // should prefer the specialized frunction constantMaybeAtomize instead of
+    // constant.
+    MOZ_ASSERT(!v.isString() || v.toString()->isAtom(),
+               "To handle non-atomized strings, you should use constantMaybeAtomize instead of constant.");
+    if (v.isString() && MOZ_UNLIKELY(!v.toString()->isAtom())) {
+        MConstant *cst = constantMaybeAtomize(v);
+        if (!cst)
+            js::CrashAtUnhandlableOOM("Use constantMaybeAtomize.");
+        return cst;
+    }
+
     MConstant* c = MConstant::New(alloc(), v, constraints());
     current->add(c);
     return c;
@@ -12835,6 +12853,19 @@ MConstant*
 IonBuilder::constantInt(int32_t i)
 {
     return constant(Int32Value(i));
+}
+
+MConstant*
+IonBuilder::constantMaybeAtomize(const Value& v)
+{
+    if (!v.isString() || v.toString()->isAtom())
+        return constant(v);
+
+    JSContext* cx = GetJitContext()->cx;
+    JSAtom* atom = js::AtomizeString(cx, v.toString());
+    if (!atom)
+        return nullptr;
+    return constant(StringValue(atom));
 }
 
 MDefinition*

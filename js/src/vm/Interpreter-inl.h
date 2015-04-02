@@ -687,7 +687,8 @@ ProcessCallSiteObjOperation(JSContext* cx, RootedObject& cso, RootedObject& raw,
             if (!ToPrimitive(cx, JSTYPE_NUMBER, rhs))                         \
                 return false;                                                 \
             if (lhs.isString() && rhs.isString()) {                           \
-                JSString* l = lhs.toString(), *r = rhs.toString();            \
+                JSString* l = lhs.toString();                                 \
+                JSString* r = rhs.toString();                                 \
                 int32_t result;                                               \
                 if (!CompareStrings(cx, l, r, &result))                       \
                     return false;                                             \

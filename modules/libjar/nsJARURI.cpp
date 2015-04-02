@@ -504,7 +504,8 @@ nsJARURI::Clone(nsIURI **result)
     rv = CloneWithJARFileInternal(mJARFile, eHonorRef, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
-    return CallQueryInterface(uri, result);
+    uri.forget(result);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -516,7 +517,8 @@ nsJARURI::CloneIgnoringRef(nsIURI **result)
     rv = CloneWithJARFileInternal(mJARFile, eIgnoreRef, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
-    return CallQueryInterface(uri, result);
+    uri.forget(result);
+    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -248,7 +248,8 @@ static uint32_t quorem2(Bigint* b, int32_t k)
 {
     ULong mask;
     ULong result;
-    ULong* bx, *bxe;
+    ULong* bx;
+    ULong* bxe;
     int32_t w;
     int32_t n = k >> 5;
     k &= 0x1F;
@@ -365,9 +366,10 @@ js_dtobasestr(DtoaState* state, int base, double dinput)
         /* We have a fraction. */
         int e, bbits;
         int32_t s2, done;
-        Bigint* b, *s, *mlo, *mhi;
-
-        b = s = mlo = mhi = nullptr;
+        Bigint* b = nullptr;
+        Bigint* s = nullptr;
+        Bigint* mlo = nullptr;
+        Bigint* mhi = nullptr;
 
         *p++ = '.';
         b = d2b(PASS_STATE df, &e, &bbits);

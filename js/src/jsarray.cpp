@@ -699,8 +699,9 @@ js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
     // the long run, with accessors replacing them both internally and at the
     // API level, just run with this.
     RootedShape lengthShape(cx, arr->lookup(cx, id));
-    if (!NativeObject::changeProperty(cx, arr, lengthShape, attrs,
-                                      JSPROP_PERMANENT | JSPROP_READONLY | JSPROP_SHARED,
+    if (!NativeObject::changeProperty(cx, arr, lengthShape,
+                                      attrs | JSPROP_PERMANENT | JSPROP_SHARED |
+                                      (lengthShape->attributes() & JSPROP_READONLY),
                                       array_length_getter, array_length_setter))
     {
         return false;

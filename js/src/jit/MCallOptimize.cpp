@@ -2688,13 +2688,20 @@ IonBuilder::inlineBoundFunction(CallInfo& nativeCallInfo, JSFunction* target)
 
     CallInfo callInfo(alloc(), nativeCallInfo.constructing());
     callInfo.setFun(constant(ObjectValue(*scriptedTarget)));
-    callInfo.setThis(constant(target->getBoundFunctionThis()));
+    MConstant* thisConst = constantMaybeAtomize(thisVal);
+    if (!thisConst)
+        return InliningStatus_Error;
+    callInfo.setThis(thisConst);
 
     if (!callInfo.argv().reserve(argc))
         return InliningStatus_Error;
 
-    for (size_t i = 0; i < target->getBoundFunctionArgumentCount(); i++)
-        callInfo.argv().infallibleAppend(constant(target->getBoundFunctionArgument(i)));
+    for (size_t i = 0; i < target->getBoundFunctionArgumentCount(); i++) {
+        MConstant* argConst = constantMaybeAtomize(target->getBoundFunctionArgument(i));
+        if (!argConst)
+            return InliningStatus_Error;
+        callInfo.argv().infallibleAppend(argConst);
+    }
     for (size_t i = 0; i < nativeCallInfo.argc(); i++)
         callInfo.argv().infallibleAppend(nativeCallInfo.getArg(i));
 

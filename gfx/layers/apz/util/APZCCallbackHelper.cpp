@@ -628,6 +628,9 @@ APZCCallbackHelper::SendSetTargetAPZCNotification(nsIWidget* aWidget,
                                                   uint64_t aInputBlockId,
                                                   const nsRefPtr<SetTargetAPZCCallback>& aCallback)
 {
+  if (!aWidget || !aDocument) {
+    return;
+  }
   if (nsIPresShell* shell = aDocument->GetShell()) {
     if (nsIFrame* rootFrame = shell->GetRootFrame()) {
       bool waitForRefresh = false;

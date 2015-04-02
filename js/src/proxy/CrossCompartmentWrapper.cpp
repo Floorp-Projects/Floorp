@@ -580,10 +580,8 @@ js::RemapAllWrappersForObject(JSContext* cx, JSObject* oldTargetArg,
         }
     }
 
-    for (WrapperValue* begin = toTransplant.begin(), *end = toTransplant.end();
-         begin != end; ++begin)
-    {
-        if (!RemapWrapper(cx, &begin->toObject(), newTarget))
+    for (const WrapperValue& v : toTransplant) {
+        if (!RemapWrapper(cx, &v.toObject(), newTarget))
             MOZ_CRASH();
     }
 
@@ -619,9 +617,8 @@ js::RecomputeWrappers(JSContext* cx, const CompartmentFilter& sourceFilter,
     }
 
     // Recompute all the wrappers in the list.
-    for (WrapperValue* begin = toRecompute.begin(), *end = toRecompute.end(); begin != end; ++begin)
-    {
-        JSObject* wrapper = &begin->toObject();
+    for (const WrapperValue& v : toRecompute) {
+        JSObject* wrapper = &v.toObject();
         JSObject* wrapped = Wrapper::wrappedObject(wrapper);
         if (!RemapWrapper(cx, wrapper, wrapped))
             MOZ_CRASH();
