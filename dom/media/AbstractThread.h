@@ -36,6 +36,14 @@ public:
   virtual bool IsCurrentThreadIn() = 0;
 
   template<typename TargetType> static AbstractThread* Create(TargetType* aTarget);
+
+  // Convenience method for getting an AbstractThread for the main thread.
+  //
+  // EnsureMainThreadSingleton must be called on the main thread before any
+  // other threads that might use MainThread() are spawned.
+  static AbstractThread* MainThread();
+  static void EnsureMainThreadSingleton();
+
 protected:
   virtual ~AbstractThread() {}
 };
