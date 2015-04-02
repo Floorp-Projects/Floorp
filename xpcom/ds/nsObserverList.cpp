@@ -104,11 +104,13 @@ nsObserverList::NotifyObservers(nsISupports* aSubject,
 void
 nsObserverList::UnmarkGrayStrongObservers()
 {
+#if !defined(MOZILLA_XPCOMRT_API)
   for (uint32_t i = 0; i < mObservers.Length(); ++i) {
     if (!mObservers[i].isWeakRef) {
       xpc_TryUnmarkWrappedGrayObject(mObservers[i].asObserver());
     }
   }
+#endif // !defined(MOZILLA_XPCOMRT_API)
 }
 
 NS_IMPL_ISUPPORTS(nsObserverEnumerator, nsISimpleEnumerator)
