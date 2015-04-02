@@ -31,6 +31,7 @@ NS_IMPL_ISUPPORTS(nsWifiMonitor,
 
 nsWifiMonitor::nsWifiMonitor()
 : mKeepGoing(true)
+, mThreadComplete(false)
 , mReentrantMonitor("nsWifiMonitor.mReentrantMonitor")
 {
 #if defined(PR_LOGGING)
@@ -54,10 +55,11 @@ nsWifiMonitor::Observe(nsISupports *subject, const char *topic,
 {
   if (!strcmp(topic, "xpcom-shutdown")) {
     LOG(("Shutting down\n"));
-    mKeepGoing = false;
 
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    mKeepGoing = false;
     mon.Notify();
+    mThread = nullptr;
   }
   return NS_OK;
 }
@@ -65,19 +67,34 @@ nsWifiMonitor::Observe(nsISupports *subject, const char *topic,
 
 NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener *aListener)
 {
+  LOG(("nsWifiMonitor::StartWatching %p thread %p listener %p\n",
+       this, mThread.get(), aListener));
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!aListener)
     return NS_ERROR_NULL_POINTER;
+  if (!mKeepGoing) {
+      return NS_ERROR_NOT_AVAILABLE;
+  }
 
   nsresult rv = NS_OK;
+
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  if (mThreadComplete) {
+      // generally there is just one thread for the lifetime of the service,
+      // but if DoScan returns with an error before shutdown (i.e. !mKeepGoing)
+      // then we will respawn the thread.
+      LOG(("nsWifiMonitor::StartWatching %p restarting thread\n", this));
+      mThreadComplete = false;
+      mThread = nullptr;
+  }
+
   if (!mThread) {
     rv = NS_NewThread(getter_AddRefs(mThread), this);
     if (NS_FAILED(rv))
       return rv;
   }
 
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-  mKeepGoing = true;
 
   mListeners.AppendElement(nsWifiListener(new nsMainThreadPtrHolder<nsIWifiListener>(aListener)));
 
@@ -88,10 +105,12 @@ NS_IMETHODIMP nsWifiMonitor::StartWatching(nsIWifiListener *aListener)
 
 NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener *aListener)
 {
+  LOG(("nsWifiMonitor::StopWatching %p thread %p listener %p\n",
+       this, mThread.get(), aListener));
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (!aListener)
     return NS_ERROR_NULL_POINTER;
-
-  LOG(("removing listener\n"));
 
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
 
@@ -101,12 +120,6 @@ NS_IMETHODIMP nsWifiMonitor::StopWatching(nsIWifiListener *aListener)
       mListeners.RemoveElementAt(i);
       break;
     }
-  }
-
-  if (mListeners.Length() == 0) {
-    mKeepGoing = false;
-    mon.Notify();
-    mThread = nullptr;
   }
 
   return NS_OK;
@@ -151,16 +164,23 @@ NS_IMETHODIMP nsWifiMonitor::Run()
   PR_SetCurrentThreadName("Wifi Monitor");
 
   nsresult rv = DoScan();
+  LOG(("@@@@@ wifi monitor run::doscan complete %x\n", rv));
 
-  if (mKeepGoing && NS_FAILED(rv)) {
-    nsAutoPtr<WifiListenerArray> currentListeners(
-                           new WifiListenerArray(mListeners.Length()));
-    if (!currentListeners)
-      return NS_ERROR_OUT_OF_MEMORY;
+  nsAutoPtr<WifiListenerArray> currentListeners;
+  bool doError = false;
 
-    for (uint32_t i = 0; i < mListeners.Length(); i++)
-      currentListeners->AppendElement(mListeners[i].mListener);
+  {
+      ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+      if (mKeepGoing && NS_FAILED(rv)) {
+          doError = true;
+          currentListeners = new WifiListenerArray(mListeners.Length());
+          for (uint32_t i = 0; i < mListeners.Length(); i++)
+              currentListeners->AppendElement(mListeners[i].mListener);
+      }
+      mThreadComplete = true;
+  }
 
+  if (doError) {
     nsCOMPtr<nsIThread> thread = do_GetMainThread();
     if (!thread)
       return NS_ERROR_UNEXPECTED;
@@ -172,6 +192,7 @@ NS_IMETHODIMP nsWifiMonitor::Run()
     thread->Dispatch(runnable, NS_DISPATCH_SYNC);
   }
 
+  LOG(("@@@@@ wifi monitor run complete\n"));
   return NS_OK;
 }
 
@@ -209,13 +230,11 @@ nsresult
 nsWifiMonitor::CallWifiListeners(const nsCOMArray<nsWifiAccessPoint> &aAccessPoints,
                                  bool aAccessPointsChanged)
 {
-    nsAutoPtr<WifiListenerArray> currentListeners(
-                           new WifiListenerArray(mListeners.Length()));
-    if (!currentListeners)
-      return NS_ERROR_OUT_OF_MEMORY;
-
+    nsAutoPtr<WifiListenerArray> currentListeners;
     {
       ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+
+      currentListeners = new WifiListenerArray(mListeners.Length());
 
       for (uint32_t i = 0; i < mListeners.Length(); i++) {
         if (!mListeners[i].mHasSentData || aAccessPointsChanged) {
