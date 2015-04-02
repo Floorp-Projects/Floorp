@@ -13,6 +13,7 @@ EXTRA_COMPONENTS += [
 ]
 
 EXTRA_JS_MODULES += [
+    'CompatWarning.jsm',
     'Prefetcher.jsm',
     'RemoteAddonsChild.jsm',
     'RemoteAddonsParent.jsm',
