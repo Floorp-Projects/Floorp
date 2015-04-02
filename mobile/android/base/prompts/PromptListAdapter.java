@@ -179,8 +179,7 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
         final GeckoActionProvider provider = GeckoActionProvider.getForType(item.getIntent().getType(), getContext());
         provider.setIntent(item.getIntent());
 
-        final MenuItemActionView view = (MenuItemActionView) provider.onCreateActionView(
-                GeckoActionProvider.ActionViewType.CONTEXT_MENU);
+        final MenuItemActionView view = (MenuItemActionView) provider.onCreateActionView();
         // If a quickshare button is clicked, we need to close the dialog.
         view.addActionButtonClickListener(new View.OnClickListener() {
             @Override
