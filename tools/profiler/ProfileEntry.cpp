@@ -280,12 +280,47 @@ public:
 
   void operator()(JS::TrackedStrategy strategy, JS::TrackedOutcome outcome) override {
     mWriter.BeginObject();
-    {
       // Stringify the reasons for now; could stream enum values in the future
       // to save space.
       mWriter.NameValue("strategy", JS::TrackedStrategyString(strategy));
       mWriter.NameValue("outcome", JS::TrackedOutcomeString(outcome));
-    }
+    mWriter.EndObject();
+  }
+};
+
+class StreamJSFramesOp : public JS::ForEachProfiledFrameOp
+{
+  JSRuntime* mRuntime;
+  void* mReturnAddress;
+  UniqueJITOptimizations& mUniqueOpts;
+  JSStreamWriter& mWriter;
+
+public:
+  StreamJSFramesOp(JSRuntime* aRuntime, void* aReturnAddr, UniqueJITOptimizations& aUniqueOpts,
+                   JSStreamWriter& aWriter)
+   : mRuntime(aRuntime)
+   , mReturnAddress(aReturnAddr)
+   , mUniqueOpts(aUniqueOpts)
+   , mWriter(aWriter)
+  { }
+
+  void operator()(const char* label, bool mightHaveTrackedOptimizations) override {
+    mWriter.BeginObject();
+      mWriter.NameValue("location", label);
+      JS::ProfilingFrameIterator::FrameKind frameKind =
+        JS::GetProfilingFrameKindFromNativeAddr(mRuntime, mReturnAddress);
+      MOZ_ASSERT(frameKind == JS::ProfilingFrameIterator::Frame_Ion ||
+                 frameKind == JS::ProfilingFrameIterator::Frame_Baseline);
+      const char* jitLevelString =
+        (frameKind == JS::ProfilingFrameIterator::Frame_Ion) ? "ion"
+                                                             : "baseline";
+      mWriter.NameValue("implementation", jitLevelString);
+      if (mightHaveTrackedOptimizations) {
+        Maybe<unsigned> optsIndex = mUniqueOpts.getIndex(mReturnAddress, mRuntime);
+        if (optsIndex.isSome()) {
+          mWriter.NameValue("optsIndex", optsIndex.value());
+        }
+      }
     mWriter.EndObject();
   }
 };
@@ -473,6 +508,10 @@ void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JS
                       incBy++;
                     }
                   b.EndObject();
+                } else if (frame.mTagName == 'J') {
+                  void* pc = frame.mTagPtr;
+                  StreamJSFramesOp framesOp(rt, pc, aUniqueOpts, b);
+                  JS::ForEachProfiledFrame(rt, pc, framesOp);
                 }
                 framePos = (framePos + incBy) % mEntrySize;
               }

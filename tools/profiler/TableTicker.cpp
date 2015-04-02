@@ -550,11 +550,18 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
                                         registerState,
                                         startBufferGen);
       for (; jsCount < maxFrames && !jsIter.done(); ++jsIter) {
-        uint32_t extracted = jsIter.extractStack(jsFrames, jsCount, maxFrames);
-        MOZ_ASSERT(extracted <= (maxFrames - jsCount));
-        jsCount += extracted;
-        if (jsCount == maxFrames)
-          break;
+        // See note below regarding 'J' entries.
+        if (aSample->isSamplingCurrentThread || jsIter.isAsmJS()) {
+          uint32_t extracted = jsIter.extractStack(jsFrames, jsCount, maxFrames);
+          jsCount += extracted;
+          if (jsCount == maxFrames)
+            break;
+        } else {
+          mozilla::Maybe<JS::ProfilingFrameIterator::Frame> frame =
+            jsIter.getPhysicalFrameWithoutLabel();
+          if (frame.isSome())
+            jsFrames[jsCount++] = frame.value();
+        }
       }
     }
   }
@@ -641,15 +648,10 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
     if (jsStackAddr > nativeStackAddr) {
       MOZ_ASSERT(jsIndex >= 0);
       const JS::ProfilingFrameIterator::Frame& jsFrame = jsFrames[jsIndex];
-      addDynamicTag(aProfile, 'c', jsFrame.label);
 
-      // Stringifying optimization information and the JIT tier is delayed
-      // until streaming time. To re-lookup the entry in the
-      // JitcodeGlobalTable, we need to store the JIT code address in the
-      // circular buffer.
-      //
-      // Frames which may have optimization information are tagged by an 'O'
-      // entry. Otherwise they are tagged by a 'J' entry.
+      // Stringifying non-asm.js JIT frames is delayed until streaming
+      // time. To re-lookup the entry in the JitcodeGlobalTable, we need to
+      // store the JIT code address ('J') in the circular buffer.
       //
       // Note that we cannot do this when we are sychronously sampling the
       // current thread; that is, when called from profiler_get_backtrace. The
@@ -660,11 +662,13 @@ void mergeStacksIntoProfile(ThreadProfile& aProfile, TickSample* aSample, Native
       // its JIT code. This means that if we inserted such 'J' entries into
       // the buffer, nsRefreshDriver would now be holding on to a backtrace
       // with stale JIT code return addresses.
-      if (!aSample->isSamplingCurrentThread &&
-          (jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
-           jsFrame.kind == JS::ProfilingFrameIterator::Frame_Baseline)) {
-        char entryTag = jsFrame.mightHaveTrackedOptimizations ? 'O' : 'J';
-        aProfile.addTag(ProfileEntry(entryTag, jsFrames[jsIndex].returnAddress));
+      if (aSample->isSamplingCurrentThread ||
+          jsFrame.kind == JS::ProfilingFrameIterator::Frame_AsmJS) {
+        addDynamicTag(aProfile, 'c', jsFrame.label);
+      } else {
+        MOZ_ASSERT(jsFrame.kind == JS::ProfilingFrameIterator::Frame_Ion ||
+                   jsFrame.kind == JS::ProfilingFrameIterator::Frame_Baseline);
+        aProfile.addTag(ProfileEntry('J', jsFrames[jsIndex].returnAddress));
       }
 
       jsIndex--;
