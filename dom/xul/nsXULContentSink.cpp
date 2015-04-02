@@ -81,12 +81,10 @@ nsresult
 XULContentSinkImpl::ContextStack::Push(nsXULPrototypeNode* aNode, State aState)
 {
     Entry* entry = new Entry;
-    if (! entry)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     entry->mNode  = aNode;
     entry->mState = aState;
     entry->mNext  = mTop;
+
     mTop = entry;
 
     ++mDepth;
@@ -388,9 +386,6 @@ XULContentSinkImpl::FlushText(bool aCreateTextNode)
             break;
 
         nsXULPrototypeText* text = new nsXULPrototypeText();
-        if (! text)
-            return NS_ERROR_OUT_OF_MEMORY;
-
         text->mValue.Assign(mText, mTextLength);
         if (stripWhitespace)
             text->mValue.Trim(" \t\n\r");
@@ -440,11 +435,8 @@ XULContentSinkImpl::CreateElement(mozilla::dom::NodeInfo *aNodeInfo,
                                   nsXULPrototypeElement** aResult)
 {
     nsXULPrototypeElement* element = new nsXULPrototypeElement();
-    if (! element)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     element->mNodeInfo    = aNodeInfo;
-    
+
     *aResult = element;
     return NS_OK;
 }
@@ -636,9 +628,6 @@ XULContentSinkImpl::HandleProcessingInstruction(const char16_t *aTarget,
 
     // Note: the created nsXULPrototypePI has mRefCnt == 1
     nsRefPtr<nsXULPrototypePI> pi = new nsXULPrototypePI();
-    if (!pi)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     pi->mTarget = target;
     pi->mData = data;
 
@@ -923,8 +912,6 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
       globalObject = do_QueryInterface(doc->GetWindow());
   nsRefPtr<nsXULPrototypeScript> script =
       new nsXULPrototypeScript(aLineNumber, version);
-  if (! script)
-      return NS_ERROR_OUT_OF_MEMORY;
 
   // If there is a SRC attribute...
   if (! src.IsEmpty()) {
@@ -988,8 +975,6 @@ XULContentSinkImpl::AddAttributes(const char16_t** aAttributes,
   nsXULPrototypeAttribute* attrs = nullptr;
   if (aAttrLen > 0) {
     attrs = new nsXULPrototypeAttribute[aAttrLen];
-    if (! attrs)
-      return NS_ERROR_OUT_OF_MEMORY;
   }
 
   aElement->mAttributes    = attrs;
