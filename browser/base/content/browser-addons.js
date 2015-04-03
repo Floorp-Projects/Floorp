@@ -258,7 +258,7 @@ const gXPInstallObserver = {
           label: gNavigatorBundle.getString("addonInstallRestartButton"),
           accessKey: gNavigatorBundle.getString("addonInstallRestartButton.accesskey"),
           callback: function() {
-            Application.restart();
+            BrowserUtils.restartApplication();
           }
         };
       }
@@ -374,7 +374,7 @@ var LightWeightThemeWebInstaller = {
           label: gNavigatorBundle.getString("lwthemeNeedsRestart.button"),
           accessKey: gNavigatorBundle.getString("lwthemeNeedsRestart.accesskey"),
           callback: function () {
-            Application.restart();
+            BrowserUtils.restartApplication();
           }
         };
 
