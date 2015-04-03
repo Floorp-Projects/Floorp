@@ -496,7 +496,7 @@ nsSVGOuterSVGFrame::DidReflow(nsPresContext*   aPresContext,
 
   // Make sure elements styled by :hover get updated if script/animation moves
   // them under or out from under the pointer:
-  PresContext()->PresShell()->SynthesizeMouseMove(false);
+  PresContext()->PresShell()->SynthesizeMouseMove(false, false);
 }
 
 /* virtual */ bool
