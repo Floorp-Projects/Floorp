@@ -570,7 +570,7 @@ HandleExceptionBaseline(JSContext* cx, const JitFrameIterator& frame, ResumeFrom
 
     RootedValue exception(cx);
     if (cx->isExceptionPending() && cx->compartment()->isDebuggee() &&
-        cx->getPendingException(&exception) && !exception.isMagic(JS_GENERATOR_CLOSING))
+        !cx->isClosingGenerator())
     {
         switch (Debugger::onExceptionUnwind(cx, frame.baselineFrame())) {
           case JSTRAP_ERROR:
@@ -633,9 +633,7 @@ HandleExceptionBaseline(JSContext* cx, const JitFrameIterator& frame, ResumeFrom
             if (cx->isExceptionPending()) {
                 // If we're closing a legacy generator, we have to skip catch
                 // blocks.
-                if (!cx->getPendingException(&exception))
-                    continue;
-                if (exception.isMagic(JS_GENERATOR_CLOSING))
+                if (cx->isClosingGenerator())
                     continue;
 
                 // Ion can compile try-catch, but bailing out to catch

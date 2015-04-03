@@ -428,6 +428,7 @@ struct JSContext : public js::ExclusiveContext,
     bool getPendingException(JS::MutableHandleValue rval);
 
     bool isThrowingOutOfMemory();
+    bool isClosingGenerator();
 
     void setPendingException(js::Value v);
 
