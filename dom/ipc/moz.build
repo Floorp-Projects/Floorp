@@ -111,6 +111,12 @@ FAIL_ON_WARNINGS = True
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
+
+if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_TARGET'] == 'Darwin':
+    USE_LIBS += [
+        'mozsandbox',
+    ]
+
 LOCAL_INCLUDES += [
     '/caps',
     '/chrome',
