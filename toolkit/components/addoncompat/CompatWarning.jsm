@@ -15,8 +15,18 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "console",
                                   "resource://gre/modules/devtools/Console.jsm");
 
+function section(number, url)
+{
+  const baseURL = "https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox/Limitations_of_chrome_scripts";
+  return { number, url: baseURL + url };
+}
+
 let CompatWarning = {
-  warn: function CompatWarning_warn(msg, url) {
+  warn: function(msg, addon, warning) {
+    if (addon) {
+      let histogram = Services.telemetry.getKeyedHistogramById("ADDON_SHIM_USAGE");
+      histogram.add(addon, warning ? warning.number : 0);
+    }
 
     if (!Preferences.get("dom.ipc.shims.enabledWarnings", false))
       return;
@@ -39,7 +49,7 @@ let CompatWarning = {
     }
 
     let message = `Warning: ${msg}`;
-    if (url)
+    if (warning)
       message += `\nMore info at: ${url}`;
 
     error.init(
@@ -53,30 +63,17 @@ let CompatWarning = {
     Services.console.logMessage(error);
   },
 
-  chromeScriptSections: ((baseURL) => {
-    return {
-      content: baseURL + "#gBrowser.contentWindow.2C_window.content...",
-      limitations_of_CPOWs: baseURL + "#Limitations_of_CPOWs",
-      nsIContentPolicy : baseURL + "#nsIContentPolicy",
-      nsIWebProgressListener: baseURL + "#nsIWebProgressListener",
-      observers : baseURL + "#Observers_in_the_chrome_process",
-      DOM_events : baseURL + "#DOM_Events",
-      sandboxes : baseURL + "#Sandboxes",
-      JSMs : baseURL + "#JavaScript_code_modules_(JSMs)",
-      nsIAboutModule: baseURL + "#nsIAboutModule"
-    };
-  })("https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox/Limitations_of_chrome_scripts"),
-
-  frameScriptSections: ((baseURL) => {
-    return {
-      file_IO : baseURL + "#File_I.2FO",
-      XUL_and_browser_UI: baseURL + "#XUL_and_browser_UI",
-      chrome_windows: baseURL + "#Chrome_windows",
-      places_API: baseURL + "#Places_API",
-      observers: baseURL + "#Observers_in_the_content_process",
-      QI: baseURL + "#QI_from_content_window_to_chrome_window",
-      nsIAboutModule: baseURL + "#nsIAboutModule",
-      JSMs: baseURL + "#JavaScript_code_modules_(JSMs)"
-    };
-  })("https://developer.mozilla.org/en-US/Firefox/Multiprocess_Firefox/Limitations_of_frame_scripts")
+  warnings: {
+    content: section(1, "#gBrowser.contentWindow.2C_window.content..."),
+    limitations_of_CPOWs: section(2, "#Limitations_of_CPOWs"),
+    nsIContentPolicy: section(3, "#nsIContentPolicy"),
+    nsIWebProgressListener: section(4, "#nsIWebProgressListener"),
+    observers: section(5, "#Observers_in_the_chrome_process"),
+    DOM_events: section(6, "#DOM_Events"),
+    sandboxes: section(7, "#Sandboxes"),
+    JSMs: section(8, "#JavaScript_code_modules_(JSMs)"),
+    nsIAboutModule: section(9, "#nsIAboutModule"),
+    // If more than 14 values appear here, you need to change the
+    // ADDON_SHIM_USAGE histogram definition in Histograms.json.
+  },
 };
