@@ -98,7 +98,7 @@ RematerializedFrame::FreeInVector(Vector<RematerializedFrame*>& frames)
 {
     for (size_t i = 0; i < frames.length(); i++) {
         RematerializedFrame* f = frames[i];
-        Debugger::assertNotInFrameMaps(f);
+        MOZ_ASSERT(!Debugger::inFrameMaps(f));
         f->RematerializedFrame::~RematerializedFrame();
         js_free(f);
     }
