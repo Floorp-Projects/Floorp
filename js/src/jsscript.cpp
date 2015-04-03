@@ -581,7 +581,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enc
         OwnSource,
         ExplicitUseStrict,
         SelfHosted,
-        IsCompileAndGo,
         HasSingleton,
         TreatAsRunOnce,
         HasLazyScript,
@@ -611,6 +610,22 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enc
     if (mode == XDR_ENCODE) {
         script = scriptp.get();
         MOZ_ASSERT_IF(enclosingScript, enclosingScript->compartment() == script->compartment());
+        MOZ_ASSERT(script->functionNonDelazifying() == fun);
+
+        if (!fun && script->treatAsRunOnce()) {
+            // This is a toplevel or eval script that's runOnce.  We want to
+            // make sure that we're not XDR-saving an object we emitted for
+            // JSOP_OBJECT that then got modified.  So throw if we're not
+            // cloning in JSOP_OBJECT or if we ever didn't clone in it in the
+            // past.
+            const JS::CompartmentOptions& opts = JS::CompartmentOptionsRef(cx);
+            if (!opts.cloneSingletons() || !opts.getSingletonsAsTemplates()) {
+                JS_ReportError(cx,
+                               "Can't serialize a run-once non-function script "
+                               "when we're not doing singleton cloning");
+                return false;
+            }
+        }
 
         nargs = script->bindings.numArgs();
         nblocklocals = script->bindings.numBlockScoped();
@@ -695,8 +710,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enc
             scriptBits |= (1 << IsLegacyGenerator);
         if (script->isStarGenerator())
             scriptBits |= (1 << IsStarGenerator);
-        if (script->compileAndGo())
-            scriptBits |= (1 << IsCompileAndGo);
         if (script->hasSingletons())
             scriptBits |= (1 << HasSingleton);
         if (script->treatAsRunOnce())
@@ -816,8 +829,6 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enc
             script->setNeedsArgsObj(true);
         if (scriptBits & (1 << IsGeneratorExp))
             script->isGeneratorExp_ = true;
-        if (scriptBits & (1 << IsCompileAndGo))
-            script->compileAndGo_ = true;
         if (scriptBits & (1 << HasSingleton))
             script->hasSingletons_ = true;
         if (scriptBits & (1 << TreatAsRunOnce))
@@ -2396,10 +2407,10 @@ JSScript::Create(ExclusiveContext* cx, HandleObject enclosingScope, bool savedCa
     script->savedCallerFun_ = savedCallerFun;
     script->initCompartment(cx);
 
-    script->compileAndGo_ = options.compileAndGo;
     script->hasPollutedGlobalScope_ = options.hasPollutedGlobalScope;
     script->selfHosted_ = options.selfHostingMode;
     script->noScriptRval_ = options.noScriptRval;
+    script->treatAsRunOnce_ = options.isRunOnce;
 
     script->version = options.version;
     MOZ_ASSERT(script->getVersion() == options.version);     // assert that no overflow occurred
@@ -2962,6 +2973,12 @@ js::CloneScript(JSContext* cx, HandleObject enclosingScope, HandleFunction fun, 
                 PollutedGlobalScopeOption polluted /* = HasCleanGlobalScope */,
                 NewObjectKind newKind /* = GenericObject */)
 {
+    if (src->treatAsRunOnce() && !src->functionNonDelazifying()) {
+        // Toplevel run-once scripts may not be cloned.
+        JS_ReportError(cx, "No cloning toplevel run-once scripts");
+        return nullptr;
+    }
+
     /* NB: Keep this in sync with XDRScript. */
 
     /* Some embeddings are not careful to use ExposeObjectToActiveJS as needed. */
@@ -3086,7 +3103,6 @@ js::CloneScript(JSContext* cx, HandleObject enclosingScope, HandleFunction fun, 
 
     CompileOptions options(cx);
     options.setMutedErrors(src->mutedErrors())
-           .setCompileAndGo(src->compileAndGo())
            .setHasPollutedScope(src->hasPollutedGlobalScope() ||
                                 polluted == HasPollutedGlobalScope)
            .setSelfHostingMode(src->selfHosted())
@@ -3186,6 +3202,8 @@ js::CloneFunctionScript(JSContext* cx, HandleFunction original, HandleFunction c
     RootedScript script(cx, clone->nonLazyScript());
     MOZ_ASSERT(script);
     MOZ_ASSERT(script->compartment() == original->compartment());
+    MOZ_ASSERT(cx->compartment() == clone->compartment(),
+               "Otherwise we could relazify clone below!");
 
     // The only scripts with enclosing static scopes that may be cloned across
     // compartments are non-strict, indirect eval scripts, as their dynamic
@@ -4005,4 +4023,17 @@ LazyScriptHashPolicy::match(JSScript* script, const Lookup& lookup)
     size_t begin = script->sourceStart();
     size_t length = script->sourceEnd() - begin;
     return !memcmp(scriptChars + begin, lazyChars + begin, length);
+}
+
+void
+JSScript::AutoDelazify::holdScript(JS::HandleFunction fun)
+{
+    if (fun) {
+        JSAutoCompartment ac(cx_, fun);
+        script_ = fun->getOrCreateScript(cx_);
+        if (script_) {
+            oldDoNotRelazify_ = script_->doNotRelazify_;
+            script_->setDoNotRelazify(true);
+        }
+    }
 }

@@ -140,23 +140,13 @@ function addTabWithToolbarRunTests(win) {
         output: new RegExp("^Copied to clipboard.$"),
       },
       post: function() {
-        try {
-          clip.getData(trans, clipid.kGlobalClipboard);
-          let str = new Object();
-          let strLength = new Object();
-          trans.getTransferData("image/png", str, strLength);
+        clip.getData(trans, clipid.kGlobalClipboard);
+        let str = new Object();
+        let strLength = new Object();
+        trans.getTransferData("image/png", str, strLength);
 
-          ok(str.value, "screenshot exists");
-          ok(strLength.value > 0, "screenshot has length");
-        }
-        finally {
-          Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session", true);
-
-          // Recent PB changes to the test I'm modifying removed the 'pb'
-          // variable, but left this line in tact. This seems so obviously
-          // wrong that I'm leaving this in in case the analysis is wrong
-          // pb.privateBrowsingEnabled = true;
-        }
+        ok(str.value, "screenshot exists");
+        ok(strLength.value > 0, "screenshot has length");
       }
     },
   ]);

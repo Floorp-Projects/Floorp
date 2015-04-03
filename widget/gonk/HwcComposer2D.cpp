@@ -735,13 +735,6 @@ HwcComposer2D::TryHwComposition()
             // GPU or partial OVERLAY Composition
             return false;
         } else if (blitComposite) {
-            // Some EGLSurface implementations require glClear() on blit composition.
-            // See bug 1029856.
-            if (mGLContext) {
-                mGLContext->MakeCurrent();
-                mGLContext->fClearColor(0.0, 0.0, 0.0, 0.0);
-                mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
-            }
             // BLIT Composition, flip FB target
             GetGonkDisplay()->UpdateFBSurface(mDpy, mSur);
             FramebufferSurface* fbsurface = (FramebufferSurface*)(GetGonkDisplay()->GetFBSurface());

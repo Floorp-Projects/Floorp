@@ -930,9 +930,6 @@ class JSScript : public js::gc::TenuredCell
     // Code has "use strict"; explicitly.
     bool explicitUseStrict_:1;
 
-    // See Parser::compileAndGo.
-    bool compileAndGo_:1;
-
     // True if the script has a non-syntactic scope on its dynamic scope chain.
     // That is, there are objects about which we know nothing between the
     // outermost syntactic scope and the global.
@@ -955,7 +952,9 @@ class JSScript : public js::gc::TenuredCell
     // Script has singleton objects.
     bool hasSingletons_:1;
 
-    // Script is a lambda to treat as running once.
+    // Script is a lambda to treat as running once or a global or eval script
+    // that will only run once.  Which one it is can be disambiguated by
+    // checking whether function_ is null.
     bool treatAsRunOnce_:1;
 
     // If treatAsRunOnce, whether script has executed.
@@ -1013,9 +1012,12 @@ class JSScript : public js::gc::TenuredCell
     // correctly.
     bool typesGeneration_:1;
 
-    // Do not relazify this script. This is only used by the relazify()
-    // testing function for scripts that are on the stack. Usually we don't
-    // relazify functions in compartments with scripts on the stack.
+    // Do not relazify this script. This is used by the relazify() testing
+    // function for scripts that are on the stack and also by the AutoDelazify
+    // RAII class. Usually we don't relazify functions in compartments with
+    // scripts on the stack, but the relazify() testing function overrides that,
+    // and sometimes we're working with a cross-compartment function and need to
+    // keep it from relazifying.
     bool doNotRelazify_:1;
 
     // Add padding so JSScript is gc::Cell aligned. Make padding protected
@@ -1069,6 +1071,12 @@ class JSScript : public js::gc::TenuredCell
     void setLength(size_t length) { length_ = length; }
 
     jsbytecode* codeEnd() const { return code() + length(); }
+
+    jsbytecode* lastPC() const {
+        jsbytecode* pc = codeEnd() - js::JSOP_RETRVAL_LENGTH;
+        MOZ_ASSERT(*pc == JSOP_RETRVAL);
+        return pc;
+    }
 
     bool containsPC(const jsbytecode* pc) const {
         return pc >= code() && pc < codeEnd();
@@ -1162,10 +1170,6 @@ class JSScript : public js::gc::TenuredCell
 
     bool explicitUseStrict() const { return explicitUseStrict_; }
 
-    bool compileAndGo() const {
-        return compileAndGo_;
-    }
-
     bool hasPollutedGlobalScope() const {
         return hasPollutedGlobalScope_;
     }
@@ -1201,6 +1205,10 @@ class JSScript : public js::gc::TenuredCell
         MOZ_ASSERT(isActiveEval() && !isCachedEval());
         isActiveEval_ = false;
         isCachedEval_ = true;
+        // IsEvalCacheCandidate will make sure that there's nothing in this
+        // script that would prevent reexecution even if isRunOnce is
+        // true.  So just pretend like we never ran this script.
+        hasRunOnce_ = false;
     }
 
     void uncacheForEval() {
@@ -1697,6 +1705,50 @@ class JSScript : public js::gc::TenuredCell
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SCRIPT; }
 
     void markChildren(JSTracer* trc);
+
+    // A helper class to prevent relazification of the given function's script
+    // while it's holding on to it.  This class automatically roots the script.
+    class AutoDelazify;
+    friend class AutoDelazify;
+
+    class AutoDelazify
+    {
+        JS::RootedScript script_;
+        JSContext* cx_;
+        bool oldDoNotRelazify_;
+      public:
+        explicit AutoDelazify(JSContext* cx, JS::HandleFunction fun = JS::NullPtr())
+            : script_(cx)
+            , cx_(cx)
+        {
+            holdScript(fun);
+        }
+
+        ~AutoDelazify()
+        {
+            dropScript();
+        }
+
+        void operator=(JS::HandleFunction fun)
+        {
+            dropScript();
+            holdScript(fun);
+        }
+
+        operator JS::HandleScript() const { return script_; }
+        explicit operator bool() const { return script_; }
+
+      private:
+        void holdScript(JS::HandleFunction fun);
+
+        void dropScript()
+        {
+            if (script_) {
+                script_->setDoNotRelazify(oldDoNotRelazify_);
+                script_ = nullptr;
+            }
+        }
+    };
 };
 
 /* If this fails, add/remove padding within JSScript. */

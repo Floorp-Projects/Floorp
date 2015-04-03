@@ -606,6 +606,13 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, bool frame
 {
     Handle<GlobalObject*> global = cx->global();
 
+    // The onPop handler and associated clean up logic should not run multiple
+    // times on the same frame. If slowPathOnLeaveFrame has already been
+    // called, the frame will not be present in the Debugger frame maps.
+    FrameRange frameRange(frame, global);
+    if (frameRange.empty())
+        return frameOk;
+
     /* Save the frame's completion value. */
     JSTrapStatus status;
     RootedValue value(cx);
@@ -618,8 +625,8 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, bool frame
     if (!cx->isThrowingOverRecursed() && !cx->isThrowingOutOfMemory()) {
         /* Build a list of the recipients. */
         AutoObjectVector frames(cx);
-        for (FrameRange r(frame, global); !r.empty(); r.popFront()) {
-            if (!frames.append(r.frontFrame())) {
+        for (; !frameRange.empty(); frameRange.popFront()) {
+            if (!frames.append(frameRange.frontFrame())) {
                 cx->clearPendingException();
                 return false;
             }
@@ -4998,13 +5005,11 @@ Debugger::replaceFrameGuts(JSContext* cx, AbstractFramePtr from, AbstractFramePt
     return true;
 }
 
-/* static */ void
-Debugger::assertNotInFrameMaps(AbstractFramePtr frame)
+/* static */ bool
+Debugger::inFrameMaps(AbstractFramePtr frame)
 {
-#ifdef DEBUG
     FrameRange r(frame);
-    MOZ_ASSERT(r.empty());
-#endif
+    return !r.empty();
 }
 
 /* static */ void
@@ -6148,8 +6153,8 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, HandleValue thisv, AbstractFrameP
     if (!staticScope)
         return false;
     CompileOptions options(cx);
-    options.setCompileAndGo(true)
-           .setHasPollutedScope(true)
+    options.setHasPollutedScope(true)
+           .setIsRunOnce(true)
            .setForEval(true)
            .setNoScriptRval(false)
            .setFileAndLine(filename, lineno)

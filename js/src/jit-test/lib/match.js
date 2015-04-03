@@ -1,1 +1,1 @@
-loadRelativeToScript("../../tests/js1_8_5/extensions/shell.js");
+loadRelativeToScript("../../tests/js1_8_5/reflect-parse/Match.js");

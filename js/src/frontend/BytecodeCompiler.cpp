@@ -146,10 +146,9 @@ static inline bool
 CanLazilyParse(ExclusiveContext* cx, const ReadOnlyCompileOptions& options)
 {
     return options.canLazilyParse &&
-        options.compileAndGo &&
-        !options.hasPollutedGlobalScope &&
-        !cx->compartment()->options().discardSource() &&
-        !options.sourceIsLazy;
+           !options.hasPollutedGlobalScope &&
+           !cx->compartment()->options().discardSource() &&
+           !options.sourceIsLazy;
 }
 
 static void
@@ -234,7 +233,7 @@ frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject sco
      * The scripted callerFrame can only be given for compile-and-go scripts
      * and non-zero static level requires callerFrame.
      */
-    MOZ_ASSERT_IF(evalCaller, options.compileAndGo);
+    MOZ_ASSERT_IF(evalCaller, options.isRunOnce);
     MOZ_ASSERT_IF(evalCaller, options.forEval);
     MOZ_ASSERT_IF(evalCaller && evalCaller->strict(), options.strictOption);
     MOZ_ASSERT_IF(staticLevel != 0, evalCaller);
@@ -467,7 +466,6 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     options.setMutedErrors(lazy->mutedErrors())
            .setFileAndLine(lazy->filename(), lazy->lineno())
            .setColumn(lazy->column())
-           .setCompileAndGo(true)
            .setNoScriptRval(false)
            .setSelfHostingMode(false);
 
@@ -537,6 +535,8 @@ CompileFunctionBody(JSContext* cx, MutableHandleFunction fun, const ReadOnlyComp
                     const AutoNameVector& formals, SourceBufferHolder& srcBuf,
                     HandleObject enclosingStaticScope, GeneratorKind generatorKind)
 {
+    MOZ_ASSERT(!options.isRunOnce);
+
     js::TraceLoggerThread* logger = js::TraceLoggerForMainThread(cx->runtime());
     js::TraceLoggerEvent event(logger, TraceLogger_AnnotateScripts, options);
     js::AutoTraceLog scriptLogger(logger, event);

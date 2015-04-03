@@ -21,11 +21,6 @@ function runAsyncTests(tests, dontResetBefore = false) {
   cps = Cc["@mozilla.org/content-pref/service;1"].
         getService(Ci.nsIContentPrefService2);
 
-  // Without this the private-browsing service tries to open a dialog when you
-  // change its enabled state.
-  Services.prefs.setBoolPref("browser.privatebrowsing.keep_current_session",
-                             true);
-
   let s = {};
   Cu.import("resource://test/AsyncRunner.jsm", s);
   asyncRunner = new s.AsyncRunner({

@@ -2335,7 +2335,6 @@ EvalReturningScope(JSContext* cx, unsigned argc, jsval* vp)
     JS::CompileOptions options(cx);
     options.setFileAndLine(filename.get(), lineno);
     options.setNoScriptRval(true);
-    options.setCompileAndGo(false);
     options.setHasPollutedScope(true);
 
     JS::SourceBufferHolder srcBuf(src, srclen, JS::SourceBufferHolder::NoOwnership);
@@ -2407,7 +2406,6 @@ ShellCloneAndExecuteScript(JSContext* cx, unsigned argc, Value* vp)
     JS::CompileOptions options(cx);
     options.setFileAndLine(filename.get(), lineno);
     options.setNoScriptRval(true);
-    options.setCompileAndGo(false);
 
     JS::SourceBufferHolder srcBuf(src, srclen, JS::SourceBufferHolder::NoOwnership);
     RootedScript script(cx);

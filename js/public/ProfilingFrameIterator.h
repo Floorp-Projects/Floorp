@@ -8,6 +8,7 @@
 #define js_ProfilingFrameIterator_h
 
 #include "mozilla/Alignment.h"
+#include "mozilla/Maybe.h"
 
 #include <stdint.h>
 
@@ -22,6 +23,7 @@ namespace js {
     namespace jit {
         class JitActivation;
         class JitProfilingFrameIterator;
+        class JitcodeGlobalEntry;
     }
 }
 
@@ -109,18 +111,22 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
         void* returnAddress;
         void* activation;
         const char* label;
-        bool mightHaveTrackedOptimizations;
     };
+
+    bool isAsmJS() const;
+    bool isJit() const;
+
     uint32_t extractStack(Frame* frames, uint32_t offset, uint32_t end) const;
 
+    mozilla::Maybe<Frame> getPhysicalFrameWithoutLabel() const;
+
   private:
+    mozilla::Maybe<Frame> getPhysicalFrameAndEntry(js::jit::JitcodeGlobalEntry* entry) const;
+
     void iteratorConstruct(const RegisterState& state);
     void iteratorConstruct();
     void iteratorDestroy();
     bool iteratorDone();
-
-    bool isAsmJS() const;
-    bool isJit() const;
 };
 
 extern JS_PUBLIC_API(ProfilingFrameIterator::FrameKind)
@@ -140,6 +146,15 @@ IsProfilingEnabledForRuntime(JSRuntime* runtime);
 JS_FRIEND_API(void)
 UpdateJSRuntimeProfilerSampleBufferGen(JSRuntime* runtime, uint32_t generation,
                                        uint32_t lapCount);
+
+struct ForEachProfiledFrameOp
+{
+    // Called once per frame.
+    virtual void operator()(const char* label, bool mightHaveTrackedOptimizations) = 0;
+};
+
+JS_PUBLIC_API(void)
+ForEachProfiledFrame(JSRuntime* rt, void* addr, ForEachProfiledFrameOp& op);
 
 } // namespace JS
 

@@ -102,7 +102,7 @@ class BuiltinFilters(unittest.TestCase):
         {"name": "test4", "disabled": "some reason"},
         {"name": "test5", "subsuite": "baz"},
         {"name": "test6", "subsuite": "baz,foo == 'bar'"},
-        {"name": "test7", "tags": "foo, bar"},
+        {"name": "test7", "tags": "foo bar"},
     )
 
     def test_skip_if(self):
