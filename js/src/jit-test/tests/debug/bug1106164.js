@@ -14,4 +14,4 @@ evaluate("\
             }\
         }\
     }\
-", { noScriptRval : true, compileAndGo : true });
+", { noScriptRval : true, isRunOnce: true });

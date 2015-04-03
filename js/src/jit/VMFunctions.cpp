@@ -709,16 +709,17 @@ DebugEpilogueOnBaselineReturn(JSContext* cx, BaselineFrame* frame, jsbytecode* p
 bool
 DebugEpilogue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool ok)
 {
-    // Unwind scope chain to stack depth 0.
-    ScopeIter si(cx, frame, pc);
-    UnwindAllScopesInFrame(cx, si);
-    jsbytecode* unwindPc = frame->script()->main();
-    frame->setOverridePc(unwindPc);
-
     // If Debugger::onLeaveFrame returns |true| we have to return the frame's
     // return value. If it returns |false|, the debugger threw an exception.
     // In both cases we have to pop debug scopes.
     ok = Debugger::onLeaveFrame(cx, frame, ok);
+
+    // Unwind to the outermost scope and set pc to the end of the script,
+    // regardless of error.
+    ScopeIter si(cx, frame, pc);
+    UnwindAllScopesInFrame(cx, si);
+    JSScript* script = frame->script();
+    frame->setOverridePc(script->lastPC());
 
     if (frame->isNonEvalFunctionFrame()) {
         MOZ_ASSERT_IF(ok, frame->hasReturnValue());

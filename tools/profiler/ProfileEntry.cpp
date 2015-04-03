@@ -150,6 +150,12 @@ void ProfileBuffer::deleteExpiredStoredMarkers() {
   }
 }
 
+void ProfileBuffer::reset() {
+  mGeneration += 2;
+  mReadPos = mWritePos = 0;
+  deleteExpiredStoredMarkers();
+}
+
 #define DYNAMIC_MAX_STRING 512
 
 char* ProfileBuffer::processDynamicTag(int readPos,
@@ -274,12 +280,47 @@ public:
 
   void operator()(JS::TrackedStrategy strategy, JS::TrackedOutcome outcome) override {
     mWriter.BeginObject();
-    {
       // Stringify the reasons for now; could stream enum values in the future
       // to save space.
       mWriter.NameValue("strategy", JS::TrackedStrategyString(strategy));
       mWriter.NameValue("outcome", JS::TrackedOutcomeString(outcome));
-    }
+    mWriter.EndObject();
+  }
+};
+
+class StreamJSFramesOp : public JS::ForEachProfiledFrameOp
+{
+  JSRuntime* mRuntime;
+  void* mReturnAddress;
+  UniqueJITOptimizations& mUniqueOpts;
+  JSStreamWriter& mWriter;
+
+public:
+  StreamJSFramesOp(JSRuntime* aRuntime, void* aReturnAddr, UniqueJITOptimizations& aUniqueOpts,
+                   JSStreamWriter& aWriter)
+   : mRuntime(aRuntime)
+   , mReturnAddress(aReturnAddr)
+   , mUniqueOpts(aUniqueOpts)
+   , mWriter(aWriter)
+  { }
+
+  void operator()(const char* label, bool mightHaveTrackedOptimizations) override {
+    mWriter.BeginObject();
+      mWriter.NameValue("location", label);
+      JS::ProfilingFrameIterator::FrameKind frameKind =
+        JS::GetProfilingFrameKindFromNativeAddr(mRuntime, mReturnAddress);
+      MOZ_ASSERT(frameKind == JS::ProfilingFrameIterator::Frame_Ion ||
+                 frameKind == JS::ProfilingFrameIterator::Frame_Baseline);
+      const char* jitLevelString =
+        (frameKind == JS::ProfilingFrameIterator::Frame_Ion) ? "ion"
+                                                             : "baseline";
+      mWriter.NameValue("implementation", jitLevelString);
+      if (mightHaveTrackedOptimizations) {
+        Maybe<unsigned> optsIndex = mUniqueOpts.getIndex(mReturnAddress, mRuntime);
+        if (optsIndex.isSome()) {
+          mWriter.NameValue("optsIndex", optsIndex.value());
+        }
+      }
     mWriter.EndObject();
   }
 };
@@ -318,222 +359,187 @@ Maybe<unsigned> UniqueJITOptimizations::getIndex(void* addr, JSRuntime* rt)
 
 void UniqueJITOptimizations::stream(JSStreamWriter& b, JSRuntime* rt)
 {
-  b.BeginArray();
-    for (size_t i = 0; i < mOpts.length(); i++) {
-      b.BeginObject();
-        b.Name("types");
-        b.BeginArray();
-          StreamOptimizationTypeInfoOp typeInfoOp(b);
-          JS::ForEachTrackedOptimizationTypeInfo(rt, mOpts[i].mEntryAddr, mOpts[i].mIndex,
-                                                 typeInfoOp);
-        b.EndArray();
+  for (size_t i = 0; i < mOpts.length(); i++) {
+    b.BeginObject();
+    b.Name("types");
+    b.BeginArray();
+    StreamOptimizationTypeInfoOp typeInfoOp(b);
+    JS::ForEachTrackedOptimizationTypeInfo(rt, mOpts[i].mEntryAddr, mOpts[i].mIndex,
+                                           typeInfoOp);
+    b.EndArray();
 
-        b.Name("attempts");
-        b.BeginArray();
-          JSScript *script;
-          jsbytecode *pc;
-          StreamOptimizationAttemptsOp attemptOp(b);
-          JS::ForEachTrackedOptimizationAttempt(rt, mOpts[i].mEntryAddr, mOpts[i].mIndex,
-                                                attemptOp, &script, &pc);
-        b.EndArray();
+    b.Name("attempts");
+    b.BeginArray();
+    JSScript *script;
+    jsbytecode *pc;
+    StreamOptimizationAttemptsOp attemptOp(b);
+    JS::ForEachTrackedOptimizationAttempt(rt, mOpts[i].mEntryAddr, mOpts[i].mIndex,
+                                          attemptOp, &script, &pc);
+    b.EndArray();
 
-        unsigned line, column;
-        line = JS_PCToLineNumber(script, pc, &column);
-        b.NameValue("line", line);
-        b.NameValue("column", column);
-      b.EndObject();
-    }
-  b.EndArray();
+    unsigned line, column;
+    line = JS_PCToLineNumber(script, pc, &column);
+    b.NameValue("line", line);
+    b.NameValue("column", column);
+    b.EndObject();
+  }
 }
 
 void ProfileBuffer::StreamSamplesToJSObject(JSStreamWriter& b, int aThreadId, JSRuntime* rt,
                                             UniqueJITOptimizations& aUniqueOpts)
 {
-  b.BeginArray();
+  bool sample = false;
+  int readPos = mReadPos;
+  int currentThreadID = -1;
+  while (readPos != mWritePos) {
+    ProfileEntry entry = mEntries[readPos];
+    if (entry.mTagName == 'T') {
+      currentThreadID = entry.mTagInt;
+    }
+    if (currentThreadID == aThreadId) {
+      switch (entry.mTagName) {
+        case 'r':
+          {
+            if (sample) {
+              b.NameValue("responsiveness", entry.mTagFloat);
+            }
+          }
+          break;
+        case 'p':
+          {
+            if (sample) {
+              b.NameValue("power", entry.mTagFloat);
+            }
+          }
+          break;
+        case 'R':
+          {
+            if (sample) {
+              b.NameValue("rss", entry.mTagFloat);
+            }
+          }
+          break;
+        case 'U':
+          {
+            if (sample) {
+              b.NameValue("uss", entry.mTagFloat);
+            }
+          }
+          break;
+        case 'f':
+          {
+            if (sample) {
+              b.NameValue("frameNumber", entry.mTagInt);
+            }
+          }
+          break;
+        case 't':
+          {
+            if (sample) {
+              b.NameValue("time", entry.mTagFloat);
+            }
+          }
+          break;
+        case 's':
+          {
+            // end the previous sample if there was one
+            if (sample) {
+              b.EndObject();
+            }
+            // begin the next sample
+            b.BeginObject();
 
-    bool sample = false;
-    int readPos = mReadPos;
-    int currentThreadID = -1;
-    while (readPos != mWritePos) {
-      ProfileEntry entry = mEntries[readPos];
-      if (entry.mTagName == 'T') {
-        currentThreadID = entry.mTagInt;
-      }
-      if (currentThreadID == aThreadId) {
-        switch (entry.mTagName) {
-          case 'r':
-            {
-              if (sample) {
-                b.NameValue("responsiveness", entry.mTagFloat);
-              }
-            }
-            break;
-          case 'p':
-            {
-              if (sample) {
-                b.NameValue("power", entry.mTagFloat);
-              }
-            }
-            break;
-          case 'R':
-            {
-              if (sample) {
-                b.NameValue("rss", entry.mTagFloat);
-              }
-            }
-            break;
-          case 'U':
-            {
-              if (sample) {
-                b.NameValue("uss", entry.mTagFloat);
-              }
-            }
-            break;
-          case 'f':
-            {
-              if (sample) {
-                b.NameValue("frameNumber", entry.mTagInt);
-              }
-            }
-            break;
-          case 't':
-            {
-              if (sample) {
-                b.NameValue("time", entry.mTagFloat);
-              }
-            }
-            break;
-          case 's':
-            {
-              // end the previous sample if there was one
-              if (sample) {
-                b.EndObject();
-              }
-              // begin the next sample
+            sample = true;
+
+            // Seek forward through the entire sample, looking for frames
+            // this is an easier approach to reason about than adding more
+            // control variables and cases to the loop that goes through the buffer once
+            b.Name("frames");
+            b.BeginArray();
+
               b.BeginObject();
+                b.NameValue("location", "(root)");
+              b.EndObject();
 
-              sample = true;
+              int framePos = (readPos + 1) % mEntrySize;
+              ProfileEntry frame = mEntries[framePos];
+              while (framePos != mWritePos && frame.mTagName != 's' && frame.mTagName != 'T') {
+                int incBy = 1;
+                frame = mEntries[framePos];
 
-              // Seek forward through the entire sample, looking for frames
-              // this is an easier approach to reason about than adding more
-              // control variables and cases to the loop that goes through the buffer once
-              b.Name("frames");
-              b.BeginArray();
+                // Read ahead to the next tag, if it's a 'd' tag process it now
+                const char* tagStringData = frame.mTagData;
+                int readAheadPos = (framePos + 1) % mEntrySize;
+                char tagBuff[DYNAMIC_MAX_STRING];
+                // Make sure the string is always null terminated if it fills up
+                // DYNAMIC_MAX_STRING-2
+                tagBuff[DYNAMIC_MAX_STRING-1] = '\0';
 
-                b.BeginObject();
-                  b.NameValue("location", "(root)");
-                b.EndObject();
-
-                int framePos = (readPos + 1) % mEntrySize;
-                ProfileEntry frame = mEntries[framePos];
-                while (framePos != mWritePos && frame.mTagName != 's' && frame.mTagName != 'T') {
-                  int incBy = 1;
-                  frame = mEntries[framePos];
-
-                  // Read ahead to the next tag, if it's a 'd' tag process it now
-                  const char* tagStringData = frame.mTagData;
-                  int readAheadPos = (framePos + 1) % mEntrySize;
-                  char tagBuff[DYNAMIC_MAX_STRING];
-                  // Make sure the string is always null terminated if it fills up
-                  // DYNAMIC_MAX_STRING-2
-                  tagBuff[DYNAMIC_MAX_STRING-1] = '\0';
-
-                  if (readAheadPos != mWritePos && mEntries[readAheadPos].mTagName == 'd') {
-                    tagStringData = processDynamicTag(framePos, &incBy, tagBuff);
-                  }
-
-                  // Write one frame. It can have either
-                  // 1. only location - 'l' containing a memory address
-                  // 2. location and line number - 'c' followed by 'd's,
-                  // an optional 'n' and an optional 'y'
-                  if (frame.mTagName == 'l') {
-                    b.BeginObject();
-                      // Bug 753041
-                      // We need a double cast here to tell GCC that we don't want to sign
-                      // extend 32-bit addresses starting with 0xFXXXXXX.
-                      unsigned long long pc = (unsigned long long)(uintptr_t)frame.mTagPtr;
-                      snprintf(tagBuff, DYNAMIC_MAX_STRING, "%#llx", pc);
-                      b.NameValue("location", tagBuff);
-                    b.EndObject();
-                  } else if (frame.mTagName == 'c') {
-                    b.BeginObject();
-                      b.NameValue("location", tagStringData);
-                      readAheadPos = (framePos + incBy) % mEntrySize;
-                      if (readAheadPos != mWritePos &&
-                          mEntries[readAheadPos].mTagName == 'n') {
-                        b.NameValue("line", mEntries[readAheadPos].mTagInt);
-                        incBy++;
-                      }
-                      readAheadPos = (framePos + incBy) % mEntrySize;
-                      if (readAheadPos != mWritePos &&
-                          mEntries[readAheadPos].mTagName == 'y') {
-                        b.NameValue("category", mEntries[readAheadPos].mTagInt);
-                        incBy++;
-                      }
-                      readAheadPos = (framePos + incBy) % mEntrySize;
-                      if (readAheadPos != mWritePos &&
-                          (mEntries[readAheadPos].mTagName == 'J' ||
-                           mEntries[readAheadPos].mTagName == 'O')) {
-                        void* pc = mEntries[readAheadPos].mTagPtr;
-
-                        // TODOshu: cannot stream tracked optimization info if
-                        // the JS engine has already shut down when streaming.
-                        if (rt) {
-                          JS::ProfilingFrameIterator::FrameKind frameKind =
-                            JS::GetProfilingFrameKindFromNativeAddr(rt, pc);
-                          MOZ_ASSERT(frameKind == JS::ProfilingFrameIterator::Frame_Ion ||
-                                     frameKind == JS::ProfilingFrameIterator::Frame_Baseline);
-                          const char* jitLevelString =
-                            (frameKind == JS::ProfilingFrameIterator::Frame_Ion) ? "ion"
-                                                                                 : "baseline";
-                          b.NameValue("implementation", jitLevelString);
-
-                          // Sampled JIT optimizations are deduplicated by
-                          // aUniqueOpts to save space. Stream an index that
-                          // references into the optimizations array.
-                          bool mightHaveTrackedOpts = mEntries[readAheadPos].mTagName == 'O';
-                          if (mightHaveTrackedOpts) {
-                            Maybe<unsigned> optsIndex = aUniqueOpts.getIndex(pc, rt);
-                            if (optsIndex.isSome()) {
-                              b.NameValue("optsIndex", optsIndex.value());
-                            }
-                          }
-                        }
-
-                        incBy++;
-                      }
-                    b.EndObject();
-                  }
-                  framePos = (framePos + incBy) % mEntrySize;
+                if (readAheadPos != mWritePos && mEntries[readAheadPos].mTagName == 'd') {
+                  tagStringData = processDynamicTag(framePos, &incBy, tagBuff);
                 }
-              b.EndArray();
-            }
-            break;
-        }
+
+                // Write one frame. It can have either
+                // 1. only location - 'l' containing a memory address
+                // 2. location and line number - 'c' followed by 'd's,
+                // an optional 'n' and an optional 'y'
+                if (frame.mTagName == 'l') {
+                  b.BeginObject();
+                    // Bug 753041
+                    // We need a double cast here to tell GCC that we don't want to sign
+                    // extend 32-bit addresses starting with 0xFXXXXXX.
+                    unsigned long long pc = (unsigned long long)(uintptr_t)frame.mTagPtr;
+                    snprintf(tagBuff, DYNAMIC_MAX_STRING, "%#llx", pc);
+                    b.NameValue("location", tagBuff);
+                  b.EndObject();
+                } else if (frame.mTagName == 'c') {
+                  b.BeginObject();
+                    b.NameValue("location", tagStringData);
+                    readAheadPos = (framePos + incBy) % mEntrySize;
+                    if (readAheadPos != mWritePos &&
+                        mEntries[readAheadPos].mTagName == 'n') {
+                      b.NameValue("line", mEntries[readAheadPos].mTagInt);
+                      incBy++;
+                    }
+                    readAheadPos = (framePos + incBy) % mEntrySize;
+                    if (readAheadPos != mWritePos &&
+                        mEntries[readAheadPos].mTagName == 'y') {
+                      b.NameValue("category", mEntries[readAheadPos].mTagInt);
+                      incBy++;
+                    }
+                  b.EndObject();
+                } else if (frame.mTagName == 'J') {
+                  void* pc = frame.mTagPtr;
+                  StreamJSFramesOp framesOp(rt, pc, aUniqueOpts, b);
+                  JS::ForEachProfiledFrame(rt, pc, framesOp);
+                }
+                framePos = (framePos + incBy) % mEntrySize;
+              }
+            b.EndArray();
+          }
+          break;
       }
-      readPos = (readPos + 1) % mEntrySize;
     }
-    if (sample) {
-      b.EndObject();
-    }
-  b.EndArray();
+    readPos = (readPos + 1) % mEntrySize;
+  }
+  if (sample) {
+    b.EndObject();
+  }
 }
 
 void ProfileBuffer::StreamMarkersToJSObject(JSStreamWriter& b, int aThreadId)
 {
-  b.BeginArray();
-    int readPos = mReadPos;
-    int currentThreadID = -1;
-    while (readPos != mWritePos) {
-      ProfileEntry entry = mEntries[readPos];
-      if (entry.mTagName == 'T') {
-        currentThreadID = entry.mTagInt;
-      } else if (currentThreadID == aThreadId && entry.mTagName == 'm') {
-        entry.getMarker()->StreamJSObject(b);
-      }
-      readPos = (readPos + 1) % mEntrySize;
+  int readPos = mReadPos;
+  int currentThreadID = -1;
+  while (readPos != mWritePos) {
+    ProfileEntry entry = mEntries[readPos];
+    if (entry.mTagName == 'T') {
+      currentThreadID = entry.mTagInt;
+    } else if (currentThreadID == aThreadId && entry.mTagName == 'm') {
+      entry.getMarker()->StreamJSObject(b);
     }
-  b.EndArray();
+    readPos = (readPos + 1) % mEntrySize;
+  }
 }
 
 int ProfileBuffer::FindLastSampleOfThread(int aThreadId)
@@ -658,18 +664,86 @@ void ThreadProfile::StreamJSObject(JSStreamWriter& b)
     }
     b.NameValue("tid", static_cast<int>(mThreadId));
 
-    b.Name("samples");
     UniqueJITOptimizations uniqueOpts;
-    mBuffer->StreamSamplesToJSObject(b, mThreadId, mPseudoStack->mRuntime, uniqueOpts);
 
-    if (!uniqueOpts.empty()) {
+    b.Name("samples");
+    b.BeginArray();
+      if (!mSavedStreamedSamples.empty()) {
+        b.SpliceArrayElements(mSavedStreamedSamples.c_str());
+        mSavedStreamedSamples.clear();
+      }
+      mBuffer->StreamSamplesToJSObject(b, mThreadId, mPseudoStack->mRuntime, uniqueOpts);
+    b.EndArray();
+
+    // Having saved streamed optimizations implies the JS engine has
+    // shutdown. If the JS engine is gone, we shouldn't have any new JS
+    // samples, and thus no optimizations.
+    if (!mSavedStreamedOptimizations.empty()) {
+      MOZ_ASSERT(uniqueOpts.empty());
       b.Name("optimizations");
-      uniqueOpts.stream(b, mPseudoStack->mRuntime);
+      b.BeginArray();
+        b.SpliceArrayElements(mSavedStreamedOptimizations.c_str());
+        mSavedStreamedOptimizations.clear();
+      b.EndArray();
+    } else if (!uniqueOpts.empty()) {
+      b.Name("optimizations");
+      b.BeginArray();
+        uniqueOpts.stream(b, mPseudoStack->mRuntime);
+      b.EndArray();
     }
 
     b.Name("markers");
-    mBuffer->StreamMarkersToJSObject(b, mThreadId);
+    b.BeginArray();
+      if (!mSavedStreamedMarkers.empty()) {
+        b.SpliceArrayElements(mSavedStreamedMarkers.c_str());
+        mSavedStreamedMarkers.clear();
+      }
+      mBuffer->StreamMarkersToJSObject(b, mThreadId);
+    b.EndArray();
   b.EndObject();
+}
+
+void ThreadProfile::FlushSamplesAndMarkers()
+{
+  // This function is used to serialize the current buffer just before
+  // JSRuntime destruction.
+  MOZ_ASSERT(mPseudoStack->mRuntime);
+
+  // Unlike StreamJSObject, do not surround the samples in brackets by calling
+  // b.{Begin,End}Array. The result string will be a comma-separated list of
+  // JSON object literals that will prepended by StreamJSObject into an
+  // existing array.
+  std::stringstream ss;
+  JSStreamWriter b(ss);
+  UniqueJITOptimizations uniqueOpts;
+  b.BeginBareList();
+    mBuffer->StreamSamplesToJSObject(b, mThreadId, mPseudoStack->mRuntime, uniqueOpts);
+  b.EndBareList();
+  mSavedStreamedSamples = ss.str();
+
+  // Reuse the stringstream.
+  ss.str("");
+  ss.clear();
+
+  if (!uniqueOpts.empty()) {
+    b.BeginBareList();
+      uniqueOpts.stream(b, mPseudoStack->mRuntime);
+    b.EndBareList();
+    mSavedStreamedOptimizations = ss.str();
+  }
+
+  // Reuse the stringstream.
+  ss.str("");
+  ss.clear();
+
+  b.BeginBareList();
+    mBuffer->StreamMarkersToJSObject(b, mThreadId);
+  b.EndBareList();
+  mSavedStreamedMarkers = ss.str();
+
+  // Reset the buffer. Attempting to symbolicate JS samples after mRuntime has
+  // gone away will crash.
+  mBuffer->reset();
 }
 
 JSObject* ThreadProfile::ToJSObject(JSContext *aCx)

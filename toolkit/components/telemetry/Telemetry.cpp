@@ -42,6 +42,7 @@
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsBaseHashtable.h"
+#include "nsClassHashtable.h"
 #include "nsXULAppAPI.h"
 #include "nsReadableUtils.h"
 #include "nsThreadUtils.h"

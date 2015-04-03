@@ -225,6 +225,12 @@ the compartment to which the handler method belongs.
     how execution should proceed. On newly created frames, this property's
     value is `undefined`.
 
+    When this handler is called, this frame's current execution location, as
+    reflected in its `offset` and `environment` properties, is the operation
+    which caused it to be unwound. In frames returning or throwing an
+    exception, the location is often a return or a throw statement. In frames
+    propagating exceptions, the location is a call.
+
     When an `onPop` call reports the completion of a construction call
     (that is, a function called via the `new` operator), the completion
     value passed to the handler describes the value returned by the

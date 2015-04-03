@@ -55,6 +55,7 @@
 #include "nsICommandLineRunner.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
+#include "nsIConsoleService.h"
 #include "nsIContentHandler.h"
 #include "nsIDialogParamBlock.h"
 #include "nsIDOMWindow.h"

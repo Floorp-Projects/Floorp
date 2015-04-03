@@ -61,6 +61,7 @@ with Files('nsVideoFrame.*'):
     BUG_COMPONENT = ('Core', 'Video/Audio')
 
 EXPORTS += [
+    'AsyncScrollBase.h',
     'nsCanvasFrame.h',
     'nsContainerFrame.h',
     'nsDirection.h',
@@ -104,6 +105,7 @@ EXPORTS.mozilla.layout += [
 ]
 
 UNIFIED_SOURCES += [
+    'AsyncScrollBase.cpp',
     'FrameChildList.cpp',
     'MathMLTextRunFactory.cpp',
     'nsAbsoluteContainingBlock.cpp',

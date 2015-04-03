@@ -143,6 +143,9 @@ var ignoreFunctions = {
     // generic to ignore by itself.
     "void* std::_Locale_impl::~_Locale_impl(int32)" : true,
 
+    // Bug 1056410 - devirtualization prevents the standard nsISupports::Release heuristic from working
+    "uint32 nsXPConnect::Release()" : true,
+
     // FIXME!
     "NS_LogInit": true,
     "NS_LogTerm": true,
