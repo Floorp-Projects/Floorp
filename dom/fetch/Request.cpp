@@ -34,7 +34,6 @@ Request::Request(nsIGlobalObject* aOwner, InternalRequest* aRequest)
   , mOwner(aOwner)
   , mRequest(aRequest)
 {
-  SetMimeType();
 }
 
 Request::~Request()
@@ -265,7 +264,7 @@ Request::Constructor(const GlobalObject& aGlobal,
   }
 
   nsRefPtr<Request> domRequest = new Request(global, request);
-  domRequest->SetMimeType();
+  domRequest->SetMimeType(aRv);
   return domRequest.forget();
 }
 
