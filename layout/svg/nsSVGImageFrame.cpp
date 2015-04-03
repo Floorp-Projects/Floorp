@@ -365,13 +365,20 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
 
     if (mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
       // Package up the attributes of this image element which can override the
-      // attributes of mImageContainer's internal SVG document.
+      // attributes of mImageContainer's internal SVG document.  The 'width' &
+      // 'height' values we're passing in here are in CSS units (though they
+      // come from width/height *attributes* in SVG). They influence the region
+      // of the SVG image's internal document that is visible, in combination
+      // with preserveAspectRatio and viewBox.
       SVGImageContext context(CSSIntSize(width, height),
                               Some(imgElem->mPreserveAspectRatio.GetAnimValue()));
 
-      nsRect destRect(0, 0,
-                      appUnitsPerDevPx * width,
-                      appUnitsPerDevPx * height);
+      // For the actual draw operation to draw crisply (and at the right size),
+      // our destination rect needs to be |width|x|height|, *in dev pixels*.
+      LayoutDeviceSize devPxSize(width, height);
+      nsRect destRect(nsPoint(),
+                      LayoutDevicePixel::ToAppUnits(devPxSize,
+                                                    appUnitsPerDevPx));
 
       // Note: Can't use DrawSingleUnscaledImage for the TYPE_VECTOR case.
       // That method needs our image to have a fixed native width & height,
