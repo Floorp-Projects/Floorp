@@ -205,13 +205,17 @@ nsObserverService::~nsObserverService(void)
 void
 nsObserverService::RegisterReporter()
 {
+#if !defined(MOZILLA_XPCOMRT_API)
   RegisterWeakMemoryReporter(this);
+#endif // !defined(MOZILLA_XPCOMRT_API)
 }
 
 void
 nsObserverService::Shutdown()
 {
+#if !defined(MOZILLA_XPCOMRT_API)
   UnregisterWeakMemoryReporter(this);
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
   mShuttingDown = true;
 
