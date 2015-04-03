@@ -6247,18 +6247,6 @@ nsLayoutUtils::GetWholeImageDestination(const nsSize& aWholeImageSize,
                 nsSize(wholeSizeX, wholeSizeY));
 }
 
-/* static */ nsRect
-nsLayoutUtils::GetWholeImageDestination(const nsIntSize& aWholeImageSize,
-                                        const nsRect& aImageSourceArea,
-                                        const nsRect& aDestArea)
-{
-  nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
-  return GetWholeImageDestination(nsSize(aWholeImageSize.width * appUnitsPerCSSPixel,
-                                         aWholeImageSize.height * appUnitsPerCSSPixel),
-                                  aImageSourceArea,
-                                  aDestArea);
-}
-
 /* static */ already_AddRefed<imgIContainer>
 nsLayoutUtils::OrientImage(imgIContainer* aContainer,
                            const nsStyleImageOrientation& aOrientation)
