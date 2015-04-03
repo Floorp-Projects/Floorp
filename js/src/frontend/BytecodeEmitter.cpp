@@ -1680,7 +1680,7 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
 
     if (dn->pn_cookie.isFree()) {
         if (evalCaller) {
-            MOZ_ASSERT(script->compileAndGo());
+            MOZ_ASSERT(script->treatAsRunOnce() || sc->isFunctionBox());
 
             /*
              * Don't generate upvars on the left side of a for loop. See
@@ -2073,10 +2073,16 @@ BytecodeEmitter::isInLoop()
 bool
 BytecodeEmitter::checkSingletonContext()
 {
-    if (!script->compileAndGo() || sc->isFunctionBox() || isInLoop())
+    if (!script->treatAsRunOnce() || sc->isFunctionBox() || isInLoop())
         return false;
     hasSingletons = true;
     return true;
+}
+
+bool
+BytecodeEmitter::checkRunOnceContext()
+{
+    return checkSingletonContext() || (!isInLoop() && isRunOnceLambda());
 }
 
 bool
@@ -2268,7 +2274,7 @@ BytecodeEmitter::emitNameOp(ParseNode* pn, bool callContext)
 }
 
 bool
-BytecodeEmitter::emitPropLHS(ParseNode* pn, JSOp op)
+BytecodeEmitter::emitPropLHS(ParseNode* pn)
 {
     MOZ_ASSERT(pn->isKind(PNK_DOT));
     ParseNode* pn2 = pn->maybeExpr();
@@ -2321,7 +2327,7 @@ BytecodeEmitter::emitPropOp(ParseNode* pn, JSOp op)
 {
     MOZ_ASSERT(pn->isArity(PN_NAME));
 
-    if (!emitPropLHS(pn, op))
+    if (!emitPropLHS(pn))
         return false;
 
     if (op == JSOP_CALLPROP && !emit1(JSOP_DUP))
@@ -2344,8 +2350,7 @@ BytecodeEmitter::emitPropIncDec(ParseNode* pn)
     bool post;
     JSOp binop = GetIncDecInfo(pn->getKind(), &post);
 
-    JSOp get = JSOP_GETPROP;
-    if (!emitPropLHS(pn->pn_kid, get))              // OBJ
+    if (!emitPropLHS(pn->pn_kid))                   // OBJ
         return false;
     if (!emit1(JSOP_DUP))                           // OBJ OBJ
         return false;
@@ -5194,10 +5199,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
      * make a deep clone of its contents.
      */
     if (fun->isInterpreted()) {
-        bool singleton =
-            script->compileAndGo() &&
-            fun->isInterpreted() &&
-            (checkSingletonContext() || (!isInLoop() && isRunOnceLambda()));
+        bool singleton = checkRunOnceContext();
         if (!JSFunction::setTypeForScriptedFunction(cx, fun, singleton))
             return false;
 
@@ -5220,7 +5222,6 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             Rooted<JSScript*> parent(cx, script);
             CompileOptions options(cx, parser->options());
             options.setMutedErrors(parent->mutedErrors())
-                   .setCompileAndGo(parent->compileAndGo())
                    .setHasPollutedScope(parent->hasPollutedGlobalScope())
                    .setSelfHostingMode(parent->selfHosted())
                    .setNoScriptRval(false)
@@ -6088,7 +6089,7 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
          * will just cause the inner scripts to be repeatedly cloned.
          */
         MOZ_ASSERT(!emittingRunOnceLambda);
-        if (checkSingletonContext() || (!isInLoop() && isRunOnceLambda())) {
+        if (checkRunOnceContext()) {
             emittingRunOnceLambda = true;
             if (!emitTree(pn2))
                 return false;
@@ -6147,7 +6148,7 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
             return false;
     }
     if (pn->pn_xflags & PNX_SETCALL) {
-        if (!emit1(JSOP_SETCALL))
+        if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_BAD_LEFTSIDE_OF_ASS))
             return false;
     }
     return true;

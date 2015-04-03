@@ -868,9 +868,6 @@ nsAnimationManager::WillRefresh(mozilla::TimeStamp aTime)
 void
 nsAnimationManager::FlushAnimations(FlushFlags aFlags)
 {
-  // FIXME: check that there's at least one style rule that's not
-  // in its "done" state, and if there isn't, remove ourselves from
-  // the refresh driver (but leave the animations!).
   TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
   bool didThrottle = false;
   for (PRCList *l = PR_LIST_HEAD(&mElementCollections);
@@ -901,6 +898,8 @@ nsAnimationManager::FlushAnimations(FlushFlags aFlags)
   if (didThrottle) {
     mPresContext->Document()->SetNeedStyleFlush();
   }
+
+  MaybeStartOrStopObservingRefreshDriver();
 
   DispatchEvents(); // may destroy us
 }

@@ -1220,7 +1220,7 @@ public:
     : BaseAction(aManager, aListenerId, aRequestId)
     , mNamespace(aNamespace)
     , mKey(aKey)
-    , mCacheId(0)
+    , mCacheId(INVALID_CACHE_ID)
   { }
 
   virtual nsresult
@@ -1276,7 +1276,7 @@ public:
     , mNamespace(aNamespace)
     , mKey(aKey)
     , mCacheDeleted(false)
-    , mCacheId(0)
+    , mCacheId(INVALID_CACHE_ID)
   { }
 
   virtual nsresult
@@ -1411,9 +1411,7 @@ Manager::RemoveListener(Listener* aListener)
   mListeners.RemoveElement(aListener, ListenerEntryListenerComparator());
   MOZ_ASSERT(!mListeners.Contains(aListener,
                                   ListenerEntryListenerComparator()));
-  if (mListeners.IsEmpty() && mContext) {
-    mContext->AllowToClose();
-  }
+  MaybeAllowContextToClose();
 }
 
 void
@@ -1422,6 +1420,12 @@ Manager::RemoveContext(Context* aContext)
   NS_ASSERT_OWNINGTHREAD(Manager);
   MOZ_ASSERT(mContext);
   MOZ_ASSERT(mContext == aContext);
+
+  // Whether the Context destruction was triggered from the Manager going
+  // idle or the underlying storage being invalidated, we should be invalid
+  // when the context is destroyed.
+  MOZ_ASSERT(!mValid);
+
   mContext = nullptr;
 
   // If we're trying to shutdown, then note that we're done.  This is the
@@ -1483,6 +1487,7 @@ Manager::ReleaseCacheId(CacheId aCacheId)
           context->Dispatch(mIOThread, action);
         }
       }
+      MaybeAllowContextToClose();
       return;
     }
   }
@@ -1524,6 +1529,7 @@ Manager::ReleaseBodyId(const nsID& aBodyId)
           context->Dispatch(mIOThread, action);
         }
       }
+      MaybeAllowContextToClose();
       return;
     }
   }
@@ -1903,6 +1909,29 @@ Manager::NoteOrphanedBodyIdList(const nsTArray<nsID>& aDeletedBodyIdList)
     nsRefPtr<Action> action = new DeleteOrphanedBodyAction(deleteNowList);
     nsRefPtr<Context> context = CurrentContext();
     context->Dispatch(mIOThread, action);
+  }
+}
+
+void
+Manager::MaybeAllowContextToClose()
+{
+  NS_ASSERT_OWNINGTHREAD(Manager);
+
+  // If we have an active context, but we have no more users of the Manager,
+  // then let it shut itself down.  We must wait for all possible users of
+  // Cache state information to complete before doing this.  Once we allow
+  // the Context to close we may not reliably get notified of storage
+  // invalidation.
+  if (mContext && mListeners.IsEmpty()
+               && mCacheIdRefs.IsEmpty()
+               && mBodyIdRefs.IsEmpty()) {
+
+    // Mark this Manager as invalid so that it won't get used again.  We don't
+    // want to start any new operations once we allow the Context to close since
+    // it may race with the underlying storage getting invalidated.
+    mValid = false;
+
+    mContext->AllowToClose();
   }
 }
 

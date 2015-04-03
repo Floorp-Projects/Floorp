@@ -35,8 +35,7 @@ if (typeof clone == 'function')
                    "    function h() { return h_peer(); }\n" +
                    "    function h_peer() { return (x + cnCOMMA + y); }\n" +
                    "    return h;\n" +
-                   "})",
-                   {compileAndGo: false});
+                   "})");
   var g = clone(f);
   g.prototype = new Object;
   var h = g(5,6);

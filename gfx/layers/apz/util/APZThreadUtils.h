@@ -6,6 +6,8 @@
 #ifndef mozilla_layers_APZThreadUtils_h
 #define mozilla_layers_APZThreadUtils_h
 
+#include "base/message_loop.h"
+
 class Task;
 
 namespace mozilla {
