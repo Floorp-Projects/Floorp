@@ -606,6 +606,13 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, bool frame
 {
     Handle<GlobalObject*> global = cx->global();
 
+    // The onPop handler and associated clean up logic should not run multiple
+    // times on the same frame. If slowPathOnLeaveFrame has already been
+    // called, the frame will not be present in the Debugger frame maps.
+    FrameRange frameRange(frame, global);
+    if (frameRange.empty())
+        return frameOk;
+
     /* Save the frame's completion value. */
     JSTrapStatus status;
     RootedValue value(cx);
@@ -618,8 +625,8 @@ Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame, bool frame
     if (!cx->isThrowingOverRecursed() && !cx->isThrowingOutOfMemory()) {
         /* Build a list of the recipients. */
         AutoObjectVector frames(cx);
-        for (FrameRange r(frame, global); !r.empty(); r.popFront()) {
-            if (!frames.append(r.frontFrame())) {
+        for (; !frameRange.empty(); frameRange.popFront()) {
+            if (!frames.append(frameRange.frontFrame())) {
                 cx->clearPendingException();
                 return false;
             }
