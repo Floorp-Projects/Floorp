@@ -426,15 +426,13 @@ js::MarkInterpreterActivations(JSRuntime* rt, JSTracer* trc)
 
 /*****************************************************************************/
 
-// Unlike the other methods of this calss, this method is defined here so that
+// Unlike the other methods of this class, this method is defined here so that
 // we don't have to #include jsautooplen.h in vm/Stack.h.
 void
 InterpreterRegs::setToEndOfScript()
 {
-    JSScript* script = fp()->script();
     sp = fp()->base();
-    pc = script->codeEnd() - JSOP_RETRVAL_LENGTH;
-    MOZ_ASSERT(*pc == JSOP_RETRVAL);
+    pc = fp()->script()->lastPC();
 }
 
 /*****************************************************************************/

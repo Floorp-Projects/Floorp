@@ -1072,6 +1072,12 @@ class JSScript : public js::gc::TenuredCell
 
     jsbytecode* codeEnd() const { return code() + length(); }
 
+    jsbytecode* lastPC() const {
+        jsbytecode* pc = codeEnd() - js::JSOP_RETRVAL_LENGTH;
+        MOZ_ASSERT(*pc == JSOP_RETRVAL);
+        return pc;
+    }
+
     bool containsPC(const jsbytecode* pc) const {
         return pc >= code() && pc < codeEnd();
     }
