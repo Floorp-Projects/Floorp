@@ -1667,7 +1667,7 @@ public:
   static DrawResult DrawBackgroundImage(gfxContext&         aContext,
                                         nsPresContext*      aPresContext,
                                         imgIContainer*      aImage,
-                                        const nsIntSize&    aImageSize,
+                                        const CSSIntSize&   aImageSize,
                                         GraphicsFilter      aGraphicsFilter,
                                         const nsRect&       aDest,
                                         const nsRect&       aFill,

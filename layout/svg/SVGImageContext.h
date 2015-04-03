@@ -8,6 +8,7 @@
 
 #include "mozilla/Maybe.h"
 #include "SVGPreserveAspectRatio.h"
+#include "Units.h"
 
 namespace mozilla {
 
@@ -23,7 +24,7 @@ public:
     : mGlobalOpacity(1.0)
   { }
 
-  SVGImageContext(nsIntSize aViewportSize,
+  SVGImageContext(CSSIntSize aViewportSize,
                   Maybe<SVGPreserveAspectRatio> aPreserveAspectRatio,
                   gfxFloat aOpacity = 1.0)
     : mViewportSize(aViewportSize)
@@ -31,7 +32,7 @@ public:
     , mGlobalOpacity(aOpacity)
   { }
 
-  const nsIntSize& GetViewportSize() const {
+  const CSSIntSize& GetViewportSize() const {
     return mViewportSize;
   }
 
@@ -65,7 +66,7 @@ private:
     return aPAR.Hash();
   }
 
-  nsIntSize                     mViewportSize;
+  CSSIntSize                    mViewportSize;
   Maybe<SVGPreserveAspectRatio> mPreserveAspectRatio;
   gfxFloat                      mGlobalOpacity;
 };
