@@ -2901,14 +2901,15 @@ BaselineCompiler::emit_JSOP_TYPEOFEXPR()
     return emit_JSOP_TYPEOF();
 }
 
-typedef bool (*SetCallFn)(JSContext*);
-static const VMFunction SetCallInfo = FunctionInfo<SetCallFn>(js::SetCallOperation);
+typedef bool (*ThrowMsgFn)(JSContext*, const unsigned);
+static const VMFunction ThrowMsgInfo = FunctionInfo<ThrowMsgFn>(js::ThrowMsgOperation);
 
 bool
-BaselineCompiler::emit_JSOP_SETCALL()
+BaselineCompiler::emit_JSOP_THROWMSG()
 {
     prepareVMCall();
-    return callVM(SetCallInfo);
+    pushArg(Imm32(GET_UINT16(pc)));
+    return callVM(ThrowMsgInfo);
 }
 
 typedef bool (*ThrowFn)(JSContext*, HandleValue);
