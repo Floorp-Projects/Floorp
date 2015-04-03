@@ -41,23 +41,3 @@ add_task(function*() {
 
   yield checkPausedAt(widget, 2000);
 });
-
-function* checkPausedAt(widget, time) {
-  info("Wait for the next auto-update");
-
-  let onPaused = promise.defer();
-  widget.player.on(widget.player.AUTO_REFRESH_EVENT, function onRefresh() {
-    info("Still waiting for the player to pause");
-    if (widget.player.state.playState === "paused") {
-      ok(true, "The player's playState is paused");
-      widget.player.off(widget.player.AUTO_REFRESH_EVENT, onRefresh);
-      onPaused.resolve();
-    }
-  });
-  yield onPaused.promise;
-
-  ok(widget.el.classList.contains("paused"), "The widget is in paused mode");
-  is(widget.player.state.currentTime, time,
-    "The player front's currentTime was set to " + time);
-  is(widget.currentTimeEl.value, time, "The input's value was set to " + time);
-}
