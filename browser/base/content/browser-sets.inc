@@ -149,7 +149,7 @@
                  sidebarurl="chrome://browser/content/history/history-panel.xul"
                  oncommand="SidebarUI.toggle('viewHistorySidebar');"/>
 
-    <broadcaster id="readingListSidebar" hidden="true" autoCheck="false"
+    <broadcaster id="readingListSidebar" hidden="true" autoCheck="false" disabled="true"
                  sidebartitle="&readingList.label;" type="checkbox" group="sidebar"
                  sidebarurl="chrome://browser/content/readinglist/sidebar.xhtml"
                  oncommand="SidebarUI.toggle('readingListSidebar');"/>
