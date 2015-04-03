@@ -23,7 +23,6 @@ browser.jar:
         skin/classic/browser/aboutTabCrashed.css                     (../shared/aboutTabCrashed.css)
         skin/classic/browser/actionicon-tab.png
 *       skin/classic/browser/browser.css
-*       skin/classic/browser/browser-aero.css
 *       skin/classic/browser/devedition.css
 *       skin/classic/browser/browser-lightweightTheme.css
         skin/classic/browser/click-to-play-warning-stripes.png
@@ -524,7 +523,6 @@ browser.jar:
 % override chrome://browser/skin/aboutSessionRestore-window-icon.png  chrome://browser/skin/preferences/application.png                 os=WINNT osversion<6
 % override chrome://browser/skin/aboutSessionRestore-window-icon.png  chrome://browser/skin/aboutSessionRestore-window-icon-aero.png    os=WINNT osversion>=6
 
-% override chrome://browser/skin/browser.css                          chrome://browser/skin/browser-aero.css                            os=WINNT osversion>=6
 % override chrome://browser/skin/Info.png                             chrome://browser/skin/Info-aero.png                               os=WINNT osversion>=6
 % override chrome://browser/skin/identity.png                         chrome://browser/skin/identity-aero.png                           os=WINNT osversion>=6
 % override chrome://browser/skin/livemark-folder.png                  chrome://browser/skin/livemark-folder-aero.png                    os=WINNT osversion>=6
