@@ -966,8 +966,8 @@ nsRefreshDriver::GetRegularTimerInterval(bool *outIsDefault) const
   return 1000.0 / rate;
 }
 
-double
-nsRefreshDriver::GetThrottledTimerInterval() const
+/* static */ double
+nsRefreshDriver::GetThrottledTimerInterval()
 {
   int32_t rate = Preferences::GetInt("layout.throttled_frame_rate", -1);
   if (rate <= 0) {
@@ -1020,6 +1020,8 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
     mPendingTransaction(0),
     mCompletedTransaction(0),
     mFreezeCount(0),
+    mThrottledFrameRequestInterval(TimeDuration::FromMilliseconds(
+                                     GetThrottledTimerInterval())),
     mThrottled(false),
     mTestControllingRefreshes(false),
     mViewManagerFlushIsPending(false),
@@ -1031,6 +1033,7 @@ nsRefreshDriver::nsRefreshDriver(nsPresContext* aPresContext)
   mMostRecentRefreshEpochTime = JS_Now();
   mMostRecentRefresh = TimeStamp::Now();
   mMostRecentTick = mMostRecentRefresh;
+  mNextThrottledFrameRequestTick = mMostRecentTick;
 }
 
 nsRefreshDriver::~nsRefreshDriver()
@@ -1254,13 +1257,15 @@ DisableHighPrecisionTimersCallback(nsITimer *aTimer, void *aClosure)
 void
 nsRefreshDriver::ConfigureHighPrecision()
 {
-  bool haveFrameRequestCallbacks = mFrameRequestCallbackDocs.Length() > 0;
+  bool haveUnthrottledFrameRequestCallbacks =
+    mFrameRequestCallbackDocs.Length() > 0;
 
   // if the only change that's needed is that we need high precision,
   // then just set that
-  if (!mThrottled && !mRequestedHighPrecision && haveFrameRequestCallbacks) {
+  if (!mThrottled && !mRequestedHighPrecision &&
+      haveUnthrottledFrameRequestCallbacks) {
     SetHighPrecisionTimersEnabled(true);
-  } else if (mRequestedHighPrecision && !haveFrameRequestCallbacks) {
+  } else if (mRequestedHighPrecision && !haveUnthrottledFrameRequestCallbacks) {
     SetHighPrecisionTimersEnabled(false);
   }
 }
@@ -1328,6 +1333,7 @@ nsRefreshDriver::ObserverCount() const
   sum += mStyleFlushObservers.Length();
   sum += mLayoutFlushObservers.Length();
   sum += mFrameRequestCallbackDocs.Length();
+  sum += mThrottledFrameRequestCallbackDocs.Length();
   sum += mViewManagerFlushIsPending;
   return sum;
 }
@@ -1453,6 +1459,105 @@ static void GetProfileTimelineSubDocShells(nsDocShell* aRootDocShell,
   };
 }
 
+static void
+TakeFrameRequestCallbacksFrom(nsIDocument* aDocument,
+                              nsTArray<DocumentFrameCallbacks>& aTarget)
+{
+  aTarget.AppendElement(aDocument);
+  aDocument->TakeFrameRequestCallbacks(aTarget.LastElement().mCallbacks);
+}
+
+void
+nsRefreshDriver::RunFrameRequestCallbacks(int64_t aNowEpoch, TimeStamp aNowTime)
+{
+  // Grab all of our frame request callbacks up front.
+  nsTArray<DocumentFrameCallbacks>
+    frameRequestCallbacks(mFrameRequestCallbackDocs.Length() +
+                          mThrottledFrameRequestCallbackDocs.Length());
+
+  // First, grab throttled frame request callbacks.
+  {
+    nsTArray<nsIDocument*> docsToRemove;
+
+    // We always tick throttled frame requests if the entire refresh driver is
+    // throttled, because in that situation throttled frame requests tick at the
+    // same frequency as non-throttled frame requests.
+    bool tickThrottledFrameRequests = mThrottled;
+
+    if (!tickThrottledFrameRequests &&
+        aNowTime >= mNextThrottledFrameRequestTick) {
+      mNextThrottledFrameRequestTick = aNowTime + mThrottledFrameRequestInterval;
+      tickThrottledFrameRequests = true;
+    }
+
+    for (nsIDocument* doc : mThrottledFrameRequestCallbackDocs) {
+      if (tickThrottledFrameRequests) {
+        // We're ticking throttled documents, so grab this document's requests.
+        // We don't bother appending to docsToRemove because we're going to
+        // clear mThrottledFrameRequestCallbackDocs anyway.
+        TakeFrameRequestCallbacksFrom(doc, frameRequestCallbacks);
+      } else if (!doc->ShouldThrottleFrameRequests()) {
+        // This document is no longer throttled, so grab its requests even
+        // though we're not ticking throttled frame requests right now. If
+        // this is the first unthrottled document with frame requests, we'll
+        // enter high precision mode the next time the callback is scheduled.
+        TakeFrameRequestCallbacksFrom(doc, frameRequestCallbacks);
+        docsToRemove.AppendElement(doc);
+      }
+    }
+
+    // Remove all the documents we're ticking from
+    // mThrottledFrameRequestCallbackDocs so they can be readded as needed.
+    if (tickThrottledFrameRequests) {
+      mThrottledFrameRequestCallbackDocs.Clear();
+    } else {
+      // XXX(seth): We're using this approach to avoid concurrent modification
+      // of mThrottledFrameRequestCallbackDocs. docsToRemove usually has either
+      // zero elements or a very small number, so this should be OK in practice.
+      for (nsIDocument* doc : docsToRemove) {
+        mThrottledFrameRequestCallbackDocs.RemoveElement(doc);
+      }
+    }
+  }
+
+  // Now grab unthrottled frame request callbacks.
+  for (nsIDocument* doc : mFrameRequestCallbackDocs) {
+    TakeFrameRequestCallbacksFrom(doc, frameRequestCallbacks);
+  }
+
+  // Reset mFrameRequestCallbackDocs so they can be readded as needed.
+  mFrameRequestCallbackDocs.Clear();
+
+  profiler_tracing("Paint", "Scripts", TRACING_INTERVAL_START);
+  int64_t eventTime = aNowEpoch / PR_USEC_PER_MSEC;
+  for (uint32_t i = 0; i < frameRequestCallbacks.Length(); ++i) {
+    const DocumentFrameCallbacks& docCallbacks = frameRequestCallbacks[i];
+    // XXXbz Bug 863140: GetInnerWindow can return the outer
+    // window in some cases.
+    nsPIDOMWindow* innerWindow = docCallbacks.mDocument->GetInnerWindow();
+    DOMHighResTimeStamp timeStamp = 0;
+    if (innerWindow && innerWindow->IsInnerWindow()) {
+      nsPerformance* perf = innerWindow->GetPerformance();
+      if (perf) {
+        timeStamp = perf->GetDOMTiming()->TimeStampToDOMHighRes(aNowTime);
+      }
+      // else window is partially torn down already
+    }
+    for (uint32_t j = 0; j < docCallbacks.mCallbacks.Length(); ++j) {
+      const nsIDocument::FrameRequestCallbackHolder& holder =
+        docCallbacks.mCallbacks[j];
+      nsAutoMicroTask mt;
+      if (holder.HasWebIDLCallback()) {
+        ErrorResult ignored;
+        holder.GetWebIDLCallback()->Call(timeStamp, ignored);
+      } else {
+        holder.GetXPCOMCallback()->Sample(eventTime);
+      }
+    }
+  }
+  profiler_tracing("Paint", "Scripts", TRACING_INTERVAL_END);
+}
+
 void
 nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 {
@@ -1543,46 +1648,7 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     if (i == 0) {
       // This is the Flush_Style case.
 
-      // Grab all of our frame request callbacks up front.
-      nsTArray<DocumentFrameCallbacks>
-        frameRequestCallbacks(mFrameRequestCallbackDocs.Length());
-      for (uint32_t i = 0; i < mFrameRequestCallbackDocs.Length(); ++i) {
-        frameRequestCallbacks.AppendElement(mFrameRequestCallbackDocs[i]);
-        mFrameRequestCallbackDocs[i]->
-          TakeFrameRequestCallbacks(frameRequestCallbacks.LastElement().mCallbacks);
-      }
-      // OK, now reset mFrameRequestCallbackDocs so they can be
-      // readded as needed.
-      mFrameRequestCallbackDocs.Clear();
-
-      profiler_tracing("Paint", "Scripts", TRACING_INTERVAL_START);
-      int64_t eventTime = aNowEpoch / PR_USEC_PER_MSEC;
-      for (uint32_t i = 0; i < frameRequestCallbacks.Length(); ++i) {
-        const DocumentFrameCallbacks& docCallbacks = frameRequestCallbacks[i];
-        // XXXbz Bug 863140: GetInnerWindow can return the outer
-        // window in some cases.
-        nsPIDOMWindow* innerWindow = docCallbacks.mDocument->GetInnerWindow();
-        DOMHighResTimeStamp timeStamp = 0;
-        if (innerWindow && innerWindow->IsInnerWindow()) {
-          nsPerformance* perf = innerWindow->GetPerformance();
-          if (perf) {
-            timeStamp = perf->GetDOMTiming()->TimeStampToDOMHighRes(aNowTime);
-          }
-          // else window is partially torn down already
-        }
-        for (uint32_t j = 0; j < docCallbacks.mCallbacks.Length(); ++j) {
-          const nsIDocument::FrameRequestCallbackHolder& holder =
-            docCallbacks.mCallbacks[j];
-          nsAutoMicroTask mt;
-          if (holder.HasWebIDLCallback()) {
-            ErrorResult ignored;
-            holder.GetWebIDLCallback()->Call(timeStamp, ignored);
-          } else {
-            holder.GetXPCOMCallback()->Sample(eventTime);
-          }
-        }
-      }
-      profiler_tracing("Paint", "Scripts", TRACING_INTERVAL_END);
+      RunFrameRequestCallbacks(aNowEpoch, aNowTime);
 
       if (mPresContext && mPresContext->GetPresShell()) {
         bool tracingStyleFlush = false;
@@ -2025,9 +2091,15 @@ void
 nsRefreshDriver::ScheduleFrameRequestCallbacks(nsIDocument* aDocument)
 {
   NS_ASSERTION(mFrameRequestCallbackDocs.IndexOf(aDocument) ==
-               mFrameRequestCallbackDocs.NoIndex,
+               mFrameRequestCallbackDocs.NoIndex &&
+               mThrottledFrameRequestCallbackDocs.IndexOf(aDocument) ==
+               mThrottledFrameRequestCallbackDocs.NoIndex,
                "Don't schedule the same document multiple times");
-  mFrameRequestCallbackDocs.AppendElement(aDocument);
+  if (aDocument->ShouldThrottleFrameRequests()) {
+    mThrottledFrameRequestCallbackDocs.AppendElement(aDocument);
+  } else {
+    mFrameRequestCallbackDocs.AppendElement(aDocument);
+  }
 
   // make sure that the timer is running
   ConfigureHighPrecision();
@@ -2038,6 +2110,7 @@ void
 nsRefreshDriver::RevokeFrameRequestCallbacks(nsIDocument* aDocument)
 {
   mFrameRequestCallbackDocs.RemoveElement(aDocument);
+  mThrottledFrameRequestCallbackDocs.RemoveElement(aDocument);
   ConfigureHighPrecision();
   // No need to worry about restarting our timer in slack mode if it's already
   // running; that will happen automatically when it fires.
