@@ -578,6 +578,7 @@ private:
     nsACString::const_iterator end(aEnd);
     const char* beginning = aStart.get();
     if (FindInReadable(aBoundaryString, aStart, end)) {
+      MOZ_ASSERT(aStart.size_forward() >= aBoundaryString.Length());
       // We either should find the body immediately, or after 2 chars with the
       // 2 chars being '-', everything else is failure.
       if ((aStart.get() - beginning) == 0) {
