@@ -577,14 +577,6 @@ LookupPropertyInline(ExclusiveContext* cx,
 }
 
 inline bool
-NativeLookupProperty(ExclusiveContext* cx, HandleNativeObject obj, PropertyName* name,
-                     MutableHandleObject objp, MutableHandleShape propp)
-{
-    RootedId id(cx, NameToId(name));
-    return NativeLookupProperty<CanGC>(cx, obj, id, objp, propp);
-}
-
-inline bool
 WarnIfNotConstructing(JSContext* cx, const CallArgs& args, const char* builtinName)
 {
     if (args.isConstructing())
