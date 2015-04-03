@@ -3661,15 +3661,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
 #notification-popup-box {
   border-radius: 2px 0 0 2px;
-
 }
-
-@media (min-resolution: 2dppx) {
-  #notification-popup-box {
-    border-image: url("chrome://browser/skin/urlbar-arrow@2x.png") 0 16 0 0 fill;
-  }
-}
-
 
 .notification-anchor-icon:-moz-focusring {
   box-shadow: 0 0 2px 1px -moz-mac-focusring inset,
@@ -3680,157 +3672,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   height: 16px;
 }
 
-@media (min-resolution: 2dppx) {
-  .default-notification-icon,
-  #default-notification-icon {
-    list-style-image: url(chrome://global/skin/icons/information-32.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .geo-notification-icon,
-  #geo-notification-icon {
-    list-style-image: url(chrome://browser/skin/Geolocation-16@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .indexedDB-notification-icon,
-  #indexedDB-notification-icon {
-    list-style-image: url(chrome://global/skin/icons/question-32.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  #addons-notification-icon {
-    list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  #password-notification-icon {
-    list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .webapps-notification-icon,
-  #webapps-notification-icon {
-    list-style-image: url(chrome://global/skin/icons/webapps-16@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  #plugins-notification-icon {
-    list-style-image: url(chrome://browser/skin/notification-pluginNormal@2x.png);
-  }
-
-  #plugins-notification-icon.plugin-hidden {
-    list-style-image: url(chrome://browser/skin/notification-pluginAlert@2x.png);
-  }
-
-  #plugins-notification-icon.plugin-blocked {
-    list-style-image: url(chrome://browser/skin/notification-pluginBlocked@2x.png);
-  }
-
-  #plugins-notification-icon {
-    -moz-image-region: rect(0, 32px, 32px, 0);
-  }
-
-  #plugins-notification-icon:hover {
-    -moz-image-region: rect(0, 64px, 32px, 32px);
-  }
-
-  #plugins-notification-icon:active {
-    -moz-image-region: rect(0, 96px, 32px, 64px);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  #bad-content-blocked-notification-icon {
-    list-style-image: url(chrome://browser/skin/bad-content-blocked-16@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  #bad-content-unblocked-notification-icon {
-    list-style-image: url(chrome://browser/skin/bad-content-unblocked-16@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .webRTC-shareDevices-notification-icon,
-  #webRTC-shareDevices-notification-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .webRTC-sharingDevices-notification-icon,
-  #webRTC-sharingDevices-notification-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-sharingDevice-16@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .webRTC-shareMicrophone-notification-icon,
-  #webRTC-shareMicrophone-notification-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-shareMicrophone-16@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .webRTC-sharingMicrophone-notification-icon,
-  #webRTC-sharingMicrophone-notification-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-sharingMicrophone-16@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .webRTC-shareScreen-notification-icon,
-  #webRTC-shareScreen-notification-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-shareScreen-16@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .webRTC-sharingScreen-notification-icon,
-  #webRTC-sharingScreen-notification-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-sharingScreen-16@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .web-notifications-notification-icon,
-  #web-notifications-notification-icon {
-    list-style-image: url(chrome://browser/skin/notification-16@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .pointerLock-notification-icon,
-  #pointerLock-notification-icon {
-    list-style-image: url(chrome://browser/skin/pointerLock-16@2x.png);
-  }
-}
-
 /* Translation */
-
-@media (min-resolution: 2dppx) {
-  .translate-notification-icon,
-  #translate-notification-icon {
-    list-style-image: url(chrome://browser/skin/translation-16@2x.png);
-    -moz-image-region: rect(0px, 32px, 32px, 0px);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .translated-notification-icon,
-  #translated-notification-icon {
-    list-style-image: url(chrome://browser/skin/translation-16@2x.png);
-    -moz-image-region: rect(0px, 64px, 32px, 32px);
-  }
-}
 
 %include ../shared/translation/infobar.inc.css
 
@@ -3984,18 +3826,6 @@ notification[value="loop-sharing-notification"] .messageImage {
   }
 }
 
-@media (min-resolution: 2dppx) {
-  .popup-notification-icon[popupid="geolocation"] {
-    list-style-image: url(chrome://browser/skin/Geolocation-64@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .popup-notification-icon[popupid="web-notifications"] {
-    list-style-image: url(chrome://browser/skin/notification-64@2x.png);
-  }
-}
-
 .popup-notification-description[popupid="addon-progress"],
 .popup-notification-description[popupid="addon-install-confirmation"] {
   width: 27em;
@@ -4014,47 +3844,8 @@ notification[value="loop-sharing-notification"] .messageImage {
   -moz-margin-start: 0 !important; /* override default label margin to match description margin */
 }
 
-@media (min-resolution: 2dppx) {
-  .popup-notification-icon[popupid="bad-content"] {
-    list-style-image: url(chrome://browser/skin/bad-content-blocked-64@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .popup-notification-icon[popupid="bad-content"][mixedblockdisabled],
-  .popup-notification-icon[popupid="bad-content"][trackingblockdisabled] {
-    list-style-image: url(chrome://browser/skin/bad-content-unblocked-64@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .popup-notification-icon[popupid="pointerLock"] {
-    list-style-image: url(chrome://browser/skin/pointerLock-64@2x.png);
-  }
-}
 #pointerLock-cancel {
   margin: 0px;
-}
-
-@media (min-resolution: 2dppx) {
-  .popup-notification-icon[popupid="webRTC-sharingDevices"],
-  .popup-notification-icon[popupid="webRTC-shareDevices"] {
-    list-style-image: url(chrome://browser/skin/webRTC-shareDevice-64@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .popup-notification-icon[popupid="webRTC-sharingMicrophone"],
-  .popup-notification-icon[popupid="webRTC-shareMicrophone"] {
-    list-style-image: url(chrome://browser/skin/webRTC-shareMicrophone-64@2x.png);
-  }
-}
-
-@media (min-resolution: 2dppx) {
-  .popup-notification-icon[popupid="webRTC-sharingScreen"],
-  .popup-notification-icon[popupid="webRTC-shareScreen"] {
-    list-style-image: url(chrome://browser/skin/webRTC-shareScreen-64@2x.png);
-  }
 }
 
 /* Popup Buttons */
@@ -4275,15 +4066,6 @@ notification[value="loop-sharing-notification"] .messageImage {
   text-shadow: none;
   background-image: linear-gradient(#B4211B, #8A1915);
   border-radius: 1px;
-}
-
-@media (min-resolution: 2dppx) {
-  .popup-notification-icon[popupid="servicesInstall"] {
-    list-style-image: url(chrome://browser/skin/social/services-64@2x.png);
-  }
-  #servicesInstall-notification-icon {
-    list-style-image: url(chrome://browser/skin/social/services-16@2x.png);
-  }
 }
 
 #social-undoactivation-button {
