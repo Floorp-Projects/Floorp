@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Scrollboxes with uniform backgrounds should pull that color into their contents, even if those contents have an animated position</title>
+
+<style>
+
+div {
+  min-height: 50px;
+  box-model: border-box;
+}
+
+.first, .second {
+  border: 1px solid blue;
+  margin: 50px 0;
+  position: relative;
+}
+
+.border {
+  border: 1px solid black;
+}
+
+.scrollable {
+  height: auto;
+  overflow: auto;
+}
+
+.scrollarea {
+  width: 5000px;
+  border: none;
+  padding: 10px 0 20px;
+  height: auto;
+}
+
+.scrolled {
+  margin-left: 220px;
+  width: 100px;
+  height: 100px;
+  border-color: red;
+}
+
+.animated-position {
+  position: relative;
+  left: 20px;
+}
+
+body {
+  margin: 0;
+  padding: 0 100px;
+  height: 3000px;
+}
+
+</style>
+
+<div class="first" reftest-assigned-layer="page-background">
+  <!--
+    This is just a regular box, it should end up in the page background layer.
+  -->
+</div>
+
+<div class="scrollable border">
+  <div class="scrollarea">
+    <div class="scrolled border animated-position reftest-no-paint reftest-opaque-layer">
+      <!--
+        The background of .scrollable is uniform and opaque,
+        .scrolled should be able to pull up that background color and become
+        opaque itself.
+      -->
+    </div>
+  </div>
+</div>
+
+<div class="second" reftest-assigned-layer="page-background">
+  <!--
+    This should share a layer with .first and the page background.
+  -->
+</div>
+
+<script>
+
+var scrollable = document.querySelector(".scrollable");
+
+// Make .scrollable start out with active scrolling.
+scrollable.scrollLeft = 0;
+scrollable.scrollLeft = 20;
+
+
+var animatedLeft = document.querySelector(".animated-position");
+
+function doTest() {
+  animatedLeft.style.left = "100px";
+  document.documentElement.removeAttribute("class");
+}
+
+// Layerize #animatedLeft
+animatedLeft.offsetLeft;
+animatedLeft.style.left = "40px";
+animatedLeft.offsetLeft;
+animatedLeft.style.left = "60px";
+animatedLeft.offsetLeft;
+
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>
+

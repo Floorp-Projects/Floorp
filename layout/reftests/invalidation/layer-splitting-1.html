@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Moving the transform under the absolutely-positioned layer should cause that to invalidate</title>
+
+<style>
+
+.content {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  border: 1px solid black;
+}
+
+.absolute {
+  position: absolute;
+  z-index: 2;
+  top: 20px;
+  left: 240px;
+}
+
+.reftest-no-paint {
+  border-color: lime;
+}
+
+.transform {
+  will-change: transform;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  height: 3000px;
+}
+
+</style>
+
+<div class="transform content" id="aboutToMoveUnderAbsolute">
+  <!--
+    This transform is active + prerendered, and will move under the
+    absolutely-positioned item.
+  -->
+</div>
+
+<div class="absolute reftest-no-paint content">
+  <!--
+    This absolutely-positioned element should get its own PaintedLayer above the
+    transform.
+
+    It shouldn't attempt to pull up an opaque background color from the page,
+    because the transform can move under it.
+  -->
+</div>
+
+<script>
+
+function doTest() {
+  document.querySelector("#aboutToMoveUnderAbsolute").style.transform = "translateX(100px)";
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>

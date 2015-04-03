@@ -28,9 +28,6 @@ nsEnvironment::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   }
 
   nsEnvironment* obj = new nsEnvironment();
-  if (!obj) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   rv = obj->QueryInterface(aIID, aResult);
   if (NS_FAILED(rv)) {
