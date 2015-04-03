@@ -945,7 +945,7 @@ this.PlacesUtils = {
        FROM moz_keywords k
        JOIN moz_places h ON h.id = k.place_id
        WHERE k.keyword = :keyword`);
-    stmt.params.keyword = aKeyword;
+    stmt.params.keyword = aKeyword.toLowerCase();
     try {
       if (!stmt.executeStep())
         return [ null, null ];
