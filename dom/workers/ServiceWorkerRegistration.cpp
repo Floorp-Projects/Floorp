@@ -19,6 +19,8 @@
 #include "nsISupportsPrimitives.h"
 #include "nsPIDOMWindow.h"
 
+#include "Workers.h"
+
 #ifndef MOZ_SIMPLEPUSH
 #include "mozilla/dom/PushManagerBinding.h"
 #endif
@@ -28,32 +30,17 @@ using namespace mozilla::dom::workers;
 namespace mozilla {
 namespace dom {
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistration)
+NS_IMPL_ADDREF_INHERITED(ServiceWorkerRegistrationBase, DOMEventTargetHelper)
+NS_IMPL_RELEASE_INHERITED(ServiceWorkerRegistrationBase, DOMEventTargetHelper)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationBase)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
-NS_IMPL_ADDREF_INHERITED(ServiceWorkerRegistration, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(ServiceWorkerRegistration, DOMEventTargetHelper)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationBase,
+                                   DOMEventTargetHelper, mCCDummy);
 
-#ifdef MOZ_SIMPLEPUSH
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistration,
-                                   DOMEventTargetHelper,
-                                   mInstallingWorker,
-                                   mWaitingWorker,
-                                   mActiveWorker)
-
-#else
-
-NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistration,
-                                   DOMEventTargetHelper,
-                                   mInstallingWorker,
-                                   mWaitingWorker,
-                                   mActiveWorker,
-                                   mPushManager)
-#endif
-
-ServiceWorkerRegistration::ServiceWorkerRegistration(nsPIDOMWindow* aWindow,
-                                                     const nsAString& aScope)
+ServiceWorkerRegistrationBase::ServiceWorkerRegistrationBase(nsPIDOMWindow* aWindow,
+                                                             const nsAString& aScope)
   : DOMEventTargetHelper(aWindow)
   , mScope(aScope)
   , mListeningForEvents(false)
@@ -64,27 +51,110 @@ ServiceWorkerRegistration::ServiceWorkerRegistration(nsPIDOMWindow* aWindow,
   StartListeningForEvents();
 }
 
-ServiceWorkerRegistration::~ServiceWorkerRegistration()
+ServiceWorkerRegistrationBase::~ServiceWorkerRegistrationBase()
 {
   StopListeningForEvents();
 }
 
 void
-ServiceWorkerRegistration::DisconnectFromOwner()
+ServiceWorkerRegistrationBase::DisconnectFromOwner()
 {
   StopListeningForEvents();
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
-JSObject*
-ServiceWorkerRegistration::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+// XXXnsm, maybe this can be optimized to only add when a event handler is
+// registered.
+void
+ServiceWorkerRegistrationBase::StartListeningForEvents()
 {
+  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
+  if (swm) {
+    swm->AddRegistrationEventListener(mScope, this);
+    mListeningForEvents = true;
+  }
+}
+
+void
+ServiceWorkerRegistrationBase::StopListeningForEvents()
+{
+  if (!mListeningForEvents) {
+    return;
+  }
+
+  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
+  if (swm) {
+    swm->RemoveRegistrationEventListener(mScope, this);
+    mListeningForEvents = false;
+  }
+}
+
+////////////////////////////////////////////////////
+// Main Thread implementation
+NS_IMPL_ADDREF_INHERITED(ServiceWorkerRegistrationMainThread, ServiceWorkerRegistrationBase)
+NS_IMPL_RELEASE_INHERITED(ServiceWorkerRegistrationMainThread, ServiceWorkerRegistrationBase)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationMainThread)
+NS_INTERFACE_MAP_END_INHERITING(ServiceWorkerRegistrationBase)
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationMainThread, ServiceWorkerRegistrationBase,
+#ifndef MOZ_SIMPLEPUSH
+                                   mPushManager,
+#endif
+                                   mInstallingWorker, mWaitingWorker, mActiveWorker);
+
+already_AddRefed<workers::ServiceWorker>
+ServiceWorkerRegistrationMainThread::GetWorkerReference(WhichServiceWorker aWhichOne)
+{
+  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+  if (!window) {
+    return nullptr;
+  }
+
+  nsresult rv;
+  nsCOMPtr<nsIServiceWorkerManager> swm =
+    do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsISupports> serviceWorker;
+  switch(aWhichOne) {
+    case WhichServiceWorker::INSTALLING_WORKER:
+      rv = swm->GetInstalling(window, mScope, getter_AddRefs(serviceWorker));
+      break;
+    case WhichServiceWorker::WAITING_WORKER:
+      rv = swm->GetWaiting(window, mScope, getter_AddRefs(serviceWorker));
+      break;
+    case WhichServiceWorker::ACTIVE_WORKER:
+      rv = swm->GetActive(window, mScope, getter_AddRefs(serviceWorker));
+      break;
+    default:
+      MOZ_CRASH("Invalid enum value");
+  }
+
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv) || rv == NS_ERROR_DOM_NOT_FOUND_ERR,
+                   "Unexpected error getting service worker instance from ServiceWorkerManager");
+  if (NS_FAILED(rv)) {
+    return nullptr;
+  }
+
+  nsRefPtr<ServiceWorker> ref =
+    static_cast<ServiceWorker*>(serviceWorker.get());
+  return ref.forget();
+}
+
+JSObject*
+ServiceWorkerRegistrationMainThread::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+{
+  AssertIsOnMainThread();
   return ServiceWorkerRegistrationBinding::Wrap(aCx, this, aGivenProto);
 }
 
 already_AddRefed<workers::ServiceWorker>
-ServiceWorkerRegistration::GetInstalling()
+ServiceWorkerRegistrationMainThread::GetInstalling()
 {
+  AssertIsOnMainThread();
   if (!mInstallingWorker) {
     mInstallingWorker = GetWorkerReference(WhichServiceWorker::INSTALLING_WORKER);
   }
@@ -94,8 +164,9 @@ ServiceWorkerRegistration::GetInstalling()
 }
 
 already_AddRefed<workers::ServiceWorker>
-ServiceWorkerRegistration::GetWaiting()
+ServiceWorkerRegistrationMainThread::GetWaiting()
 {
+  AssertIsOnMainThread();
   if (!mWaitingWorker) {
     mWaitingWorker = GetWorkerReference(WhichServiceWorker::WAITING_WORKER);
   }
@@ -105,14 +176,32 @@ ServiceWorkerRegistration::GetWaiting()
 }
 
 already_AddRefed<workers::ServiceWorker>
-ServiceWorkerRegistration::GetActive()
+ServiceWorkerRegistrationMainThread::GetActive()
 {
+  AssertIsOnMainThread();
   if (!mActiveWorker) {
     mActiveWorker = GetWorkerReference(WhichServiceWorker::ACTIVE_WORKER);
   }
 
   nsRefPtr<ServiceWorker> ret = mActiveWorker;
   return ret.forget();
+}
+
+void
+ServiceWorkerRegistrationMainThread::InvalidateWorkerReference(WhichServiceWorker aWhichOnes)
+{
+  AssertIsOnMainThread();
+  if (aWhichOnes & WhichServiceWorker::INSTALLING_WORKER) {
+    mInstallingWorker = nullptr;
+  }
+
+  if (aWhichOnes & WhichServiceWorker::WAITING_WORKER) {
+    mWaitingWorker = nullptr;
+  }
+
+  if (aWhichOnes & WhichServiceWorker::ACTIVE_WORKER) {
+    mActiveWorker = nullptr;
+  }
 }
 
 namespace {
@@ -159,18 +248,20 @@ NS_IMPL_ISUPPORTS(UnregisterCallback, nsIServiceWorkerUnregisterCallback)
 } // anonymous namespace
 
 void
-ServiceWorkerRegistration::Update()
+ServiceWorkerRegistrationMainThread::Update()
 {
+  AssertIsOnMainThread();
   nsCOMPtr<nsIServiceWorkerManager> swm =
     mozilla::services::GetServiceWorkerManager();
   MOZ_ASSERT(swm);
-  // The spec defines ServiceWorkerRegistration.update() exactly as Soft Update.
+  // The spec defines ServiceWorkerRegistrationBase.update() exactly as Soft Update.
   swm->SoftUpdate(mScope);
 }
 
 already_AddRefed<Promise>
-ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
+ServiceWorkerRegistrationMainThread::Unregister(ErrorResult& aRv)
 {
+  AssertIsOnMainThread();
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(GetOwner());
   if (!go) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -234,91 +325,8 @@ ServiceWorkerRegistration::Unregister(ErrorResult& aRv)
   return promise.forget();
 }
 
-already_AddRefed<workers::ServiceWorker>
-ServiceWorkerRegistration::GetWorkerReference(WhichServiceWorker aWhichOne)
-{
-  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
-  if (!window) {
-    return nullptr;
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsIServiceWorkerManager> swm =
-    do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsISupports> serviceWorker;
-  switch(aWhichOne) {
-    case WhichServiceWorker::INSTALLING_WORKER:
-      rv = swm->GetInstalling(window, mScope, getter_AddRefs(serviceWorker));
-      break;
-    case WhichServiceWorker::WAITING_WORKER:
-      rv = swm->GetWaiting(window, mScope, getter_AddRefs(serviceWorker));
-      break;
-    case WhichServiceWorker::ACTIVE_WORKER:
-      rv = swm->GetActive(window, mScope, getter_AddRefs(serviceWorker));
-      break;
-    default:
-      MOZ_CRASH("Invalid enum value");
-  }
-
-  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv) || rv == NS_ERROR_DOM_NOT_FOUND_ERR,
-                   "Unexpected error getting service worker instance from ServiceWorkerManager");
-  if (NS_FAILED(rv)) {
-    return nullptr;
-  }
-
-  nsRefPtr<ServiceWorker> ref =
-    static_cast<ServiceWorker*>(serviceWorker.get());
-  return ref.forget();
-}
-
-void
-ServiceWorkerRegistration::InvalidateWorkerReference(WhichServiceWorker aWhichOnes)
-{
-  if (aWhichOnes & WhichServiceWorker::INSTALLING_WORKER) {
-    mInstallingWorker = nullptr;
-  }
-
-  if (aWhichOnes & WhichServiceWorker::WAITING_WORKER) {
-    mWaitingWorker = nullptr;
-  }
-
-  if (aWhichOnes & WhichServiceWorker::ACTIVE_WORKER) {
-    mActiveWorker = nullptr;
-  }
-}
-
-// XXXnsm, maybe this can be optimized to only add when a event handler is
-// registered.
-void
-ServiceWorkerRegistration::StartListeningForEvents()
-{
-  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
-  if (swm) {
-    swm->AddRegistrationEventListener(mScope, this);
-    mListeningForEvents = true;
-  }
-}
-
-void
-ServiceWorkerRegistration::StopListeningForEvents()
-{
-  if (!mListeningForEvents) {
-    return;
-  }
-
-  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
-  if (swm) {
-    swm->RemoveRegistrationEventListener(mScope, this);
-    mListeningForEvents = false;
-  }
-}
-
 already_AddRefed<PushManager>
-ServiceWorkerRegistration::GetPushManager(ErrorResult& aRv)
+ServiceWorkerRegistrationMainThread::GetPushManager(ErrorResult& aRv)
 {
   AssertIsOnMainThread();
 
@@ -365,6 +373,51 @@ ServiceWorkerRegistration::GetPushManager(ErrorResult& aRv)
   return ret.forget();
 
   #endif /* ! MOZ_SIMPLEPUSH */
+}
+
+////////////////////////////////////////////////////
+// Worker Thread implementation
+NS_IMPL_ADDREF_INHERITED(ServiceWorkerRegistrationWorkerThread, ServiceWorkerRegistrationBase)
+NS_IMPL_RELEASE_INHERITED(ServiceWorkerRegistrationWorkerThread, ServiceWorkerRegistrationBase)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationWorkerThread)
+NS_INTERFACE_MAP_END_INHERITING(ServiceWorkerRegistrationBase)
+
+NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationWorkerThread,
+                                   ServiceWorkerRegistrationBase, mCCDummyWorkerThread);
+
+JSObject*
+ServiceWorkerRegistrationWorkerThread::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+{
+  AssertIsOnMainThread();
+  return ServiceWorkerRegistrationBinding_workers::Wrap(aCx, this, aGivenProto);
+}
+
+already_AddRefed<workers::ServiceWorker>
+ServiceWorkerRegistrationWorkerThread::GetInstalling()
+{
+  MOZ_CRASH("FIXME");
+  return nullptr;
+}
+
+already_AddRefed<workers::ServiceWorker>
+ServiceWorkerRegistrationWorkerThread::GetWaiting()
+{
+  MOZ_CRASH("FIXME");
+  return nullptr;
+}
+
+already_AddRefed<workers::ServiceWorker>
+ServiceWorkerRegistrationWorkerThread::GetActive()
+{
+  MOZ_CRASH("FIXME");
+  return nullptr;
+}
+
+void
+ServiceWorkerRegistrationWorkerThread::InvalidateWorkerReference(WhichServiceWorker aWhichOnes)
+{
+  MOZ_CRASH("FIXME");
 }
 
 } // dom namespace

@@ -383,9 +383,9 @@ public:
   void
   UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo) override
   {
-    nsRefPtr<ServiceWorkerRegistration> swr =
-      new ServiceWorkerRegistration(mWindow,
-          NS_ConvertUTF8toUTF16(aInfo->mScope));
+    nsRefPtr<ServiceWorkerRegistrationMainThread> swr =
+      new ServiceWorkerRegistrationMainThread(mWindow,
+                                              NS_ConvertUTF8toUTF16(aInfo->mScope));
     mPromise->MaybeResolve(swr);
   }
 
@@ -1247,7 +1247,7 @@ public:
       return NS_OK;
     }
 
-    nsTArray<nsRefPtr<ServiceWorkerRegistration>> array;
+    nsTArray<nsRefPtr<ServiceWorkerRegistrationMainThread>> array;
 
     bool isNullPrincipal = true;
     nsresult rv = principal->GetIsNullPrincipal(&isNullPrincipal);
@@ -1276,8 +1276,8 @@ public:
         continue;
       }
 
-      nsRefPtr<ServiceWorkerRegistration> swr =
-        new ServiceWorkerRegistration(mWindow, scope);
+      nsRefPtr<ServiceWorkerRegistrationMainThread> swr =
+        new ServiceWorkerRegistrationMainThread(mWindow, scope);
 
       array.AppendElement(swr);
     }
@@ -1379,8 +1379,8 @@ public:
     }
 
     NS_ConvertUTF8toUTF16 scope(registration->mScope);
-    nsRefPtr<ServiceWorkerRegistration> swr =
-      new ServiceWorkerRegistration(mWindow, scope);
+    nsRefPtr<ServiceWorkerRegistrationMainThread> swr =
+      new ServiceWorkerRegistrationMainThread(mWindow, scope);
     mPromise->MaybeResolve(swr);
 
     return NS_OK;
@@ -1679,8 +1679,8 @@ ServiceWorkerManager::CheckReadyPromise(nsPIDOMWindow* aWindow,
 
   if (registration && registration->mActiveWorker) {
     NS_ConvertUTF8toUTF16 scope(registration->mScope);
-    nsRefPtr<ServiceWorkerRegistration> swr =
-      new ServiceWorkerRegistration(aWindow, scope);
+    nsRefPtr<ServiceWorkerRegistrationMainThread> swr =
+      new ServiceWorkerRegistrationMainThread(aWindow, scope);
     aPromise->MaybeResolve(swr);
     return true;
   }
@@ -2190,7 +2190,7 @@ ServiceWorkerManager::AddRegistrationEventListener(const nsAString& aScope, nsID
   nsAutoCString scope = NS_ConvertUTF16toUTF8(aScope);
 
   // TODO: this is very very bad:
-  ServiceWorkerRegistration* registration = static_cast<ServiceWorkerRegistration*>(aListener);
+  ServiceWorkerRegistrationBase* registration = static_cast<ServiceWorkerRegistrationBase*>(aListener);
   MOZ_ASSERT(!mServiceWorkerRegistrations.Contains(registration));
 #ifdef DEBUG
   // Ensure a registration is only listening for it's own scope.
@@ -2208,7 +2208,7 @@ ServiceWorkerManager::RemoveRegistrationEventListener(const nsAString& aScope, n
 {
   AssertIsOnMainThread();
   nsCString scope = NS_ConvertUTF16toUTF8(aScope);
-  ServiceWorkerRegistration* registration = static_cast<ServiceWorkerRegistration*>(aListener);
+  ServiceWorkerRegistrationBase* registration = static_cast<ServiceWorkerRegistrationBase*>(aListener);
   MOZ_ASSERT(mServiceWorkerRegistrations.Contains(registration));
 #ifdef DEBUG
   // Ensure a registration is unregistering for it's own scope.
@@ -2228,9 +2228,9 @@ ServiceWorkerManager::FireEventOnServiceWorkerRegistrations(
 {
   AssertIsOnMainThread();
 
-  nsTObserverArray<ServiceWorkerRegistration*>::ForwardIterator it(mServiceWorkerRegistrations);
+  nsTObserverArray<ServiceWorkerRegistrationBase*>::ForwardIterator it(mServiceWorkerRegistrations);
   while (it.HasMore()) {
-    nsRefPtr<ServiceWorkerRegistration> target = it.GetNext();
+    nsRefPtr<ServiceWorkerRegistrationBase> target = it.GetNext();
     nsAutoString regScope;
     target->GetScope(regScope);
     MOZ_ASSERT(!regScope.IsEmpty());
@@ -2764,9 +2764,9 @@ ServiceWorkerManager::InvalidateServiceWorkerRegistrationWorker(ServiceWorkerReg
                                                                 WhichServiceWorker aWhichOnes)
 {
   AssertIsOnMainThread();
-  nsTObserverArray<ServiceWorkerRegistration*>::ForwardIterator it(mServiceWorkerRegistrations);
+  nsTObserverArray<ServiceWorkerRegistrationBase*>::ForwardIterator it(mServiceWorkerRegistrations);
   while (it.HasMore()) {
-    nsRefPtr<ServiceWorkerRegistration> target = it.GetNext();
+    nsRefPtr<ServiceWorkerRegistrationBase> target = it.GetNext();
     nsAutoString regScope;
     target->GetScope(regScope);
     MOZ_ASSERT(!regScope.IsEmpty());

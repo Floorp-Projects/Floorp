@@ -23,52 +23,12 @@ namespace workers {
 class ServiceWorker;
 }
 
-class ServiceWorkerRegistration final : public DOMEventTargetHelper
+// This class exists solely so that we can satisfy some WebIDL Func= attribute
+// constraints. Func= converts the function name to a header file to include, in
+// this case "ServiceWorkerRegistration.h".
+class ServiceWorkerRegistration final
 {
 public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistration,
-                                           DOMEventTargetHelper)
-
-  IMPL_EVENT_HANDLER(updatefound)
-
-  ServiceWorkerRegistration(nsPIDOMWindow* aWindow,
-                            const nsAString& aScope);
-
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  already_AddRefed<workers::ServiceWorker>
-  GetInstalling();
-
-  already_AddRefed<workers::ServiceWorker>
-  GetWaiting();
-
-  already_AddRefed<workers::ServiceWorker>
-  GetActive();
-
-  void
-  GetScope(nsAString& aScope) const
-  {
-    aScope = mScope;
-  }
-
-  void
-  Update();
-
-  already_AddRefed<Promise>
-  Unregister(ErrorResult& aRv);
-
-  // Useful methods for ServiceWorkerManager:
-  void
-  InvalidateWorkerReference(WhichServiceWorker aWhichOnes);
-
-  // DOMEventTargethelper
-  virtual void DisconnectFromOwner() override;
-
-  already_AddRefed<PushManager>
-  GetPushManager(ErrorResult& aRv);
-
   // Something that we can feed into the Func webidl property to ensure that
   // SetScope is never exposed to the user.
   static bool
@@ -76,17 +36,103 @@ public:
     return false;
   }
 
+};
+
+class ServiceWorkerRegistrationBase : public DOMEventTargetHelper
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistrationBase,
+                                           DOMEventTargetHelper)
+
+  IMPL_EVENT_HANDLER(updatefound)
+
+  ServiceWorkerRegistrationBase(nsPIDOMWindow* aWindow,
+                                const nsAString& aScope);
+
+  JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override = 0;
+
+  virtual already_AddRefed<workers::ServiceWorker>
+  GetInstalling() = 0;
+
+  virtual already_AddRefed<workers::ServiceWorker>
+  GetWaiting() = 0;
+
+  virtual already_AddRefed<workers::ServiceWorker>
+  GetActive() = 0;
+
+  void
+  GetScope(nsAString& aScope) const
+  {
+    aScope = mScope;
+  }
+
+  // Useful methods for ServiceWorkerManager:
+  virtual void
+  InvalidateWorkerReference(WhichServiceWorker aWhichOnes) = 0;
+
+  // DOMEventTargethelper
+  virtual void DisconnectFromOwner() override;
+
+protected:
+  virtual ~ServiceWorkerRegistrationBase();
+
+  const nsString mScope;
 private:
-  ~ServiceWorkerRegistration();
-
-  already_AddRefed<workers::ServiceWorker>
-  GetWorkerReference(WhichServiceWorker aWhichOne);
-
   void
   StartListeningForEvents();
 
   void
   StopListeningForEvents();
+
+  bool mListeningForEvents;
+
+  nsCOMPtr<nsISupports> mCCDummy;
+};
+
+class ServiceWorkerRegistrationMainThread final : public ServiceWorkerRegistrationBase
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistrationMainThread,
+                                           ServiceWorkerRegistrationBase)
+
+  ServiceWorkerRegistrationMainThread(nsPIDOMWindow* aWindow,
+                                      const nsAString& aScope)
+    : ServiceWorkerRegistrationBase(aWindow, aScope)
+  {}
+
+  void
+  Update();
+
+  already_AddRefed<Promise>
+  Unregister(ErrorResult& aRv);
+
+  JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+
+  already_AddRefed<workers::ServiceWorker>
+  GetInstalling() override;
+
+  already_AddRefed<workers::ServiceWorker>
+  GetWaiting() override;
+  
+  already_AddRefed<workers::ServiceWorker>
+  GetActive() override;
+  
+  already_AddRefed<PushManager>
+  GetPushManager(ErrorResult& aRv);
+
+  void
+  InvalidateWorkerReference(WhichServiceWorker aWhichOnes) override;
+
+private:
+  ~ServiceWorkerRegistrationMainThread()
+  {}
+
+  already_AddRefed<workers::ServiceWorker>
+  GetWorkerReference(WhichServiceWorker aWhichOne);
 
   // The following properties are cached here to ensure JS equality is satisfied
   // instead of acquiring a new worker instance from the ServiceWorkerManager
@@ -99,9 +145,53 @@ private:
 #ifndef MOZ_SIMPLEPUSH
   nsRefPtr<PushManager> mPushManager;
 #endif
+};
 
-  const nsString mScope;
-  bool mListeningForEvents;
+class ServiceWorkerRegistrationWorkerThread final : public ServiceWorkerRegistrationBase
+{
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistrationWorkerThread,
+                                           ServiceWorkerRegistrationBase)
+
+  ServiceWorkerRegistrationWorkerThread(nsPIDOMWindow* aWindow,
+                                        const nsAString& aScope)
+    : ServiceWorkerRegistrationBase(aWindow, aScope)
+  {}
+
+  void
+  Update()
+  {
+    MOZ_CRASH("FIXME");
+  }
+
+  already_AddRefed<Promise>
+  Unregister(ErrorResult& aRv)
+  {
+    MOZ_CRASH("FIXME");
+    return nullptr;
+  }
+
+  JSObject*
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+
+  already_AddRefed<workers::ServiceWorker>
+  GetInstalling() override;
+
+  already_AddRefed<workers::ServiceWorker>
+  GetWaiting() override;
+
+  already_AddRefed<workers::ServiceWorker>
+  GetActive() override;
+
+  void
+  InvalidateWorkerReference(WhichServiceWorker aWhichOnes) override;
+
+private:
+  ~ServiceWorkerRegistrationWorkerThread()
+  {}
+
+  nsCOMPtr<nsISupports> mCCDummyWorkerThread;
 };
 
 } // namespace dom
