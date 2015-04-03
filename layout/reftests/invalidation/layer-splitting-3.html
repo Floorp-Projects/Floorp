@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Scrolling shouldn't invalidate the fixed items</title>
+
+<style>
+
+.content {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  border: 1px solid black;
+}
+
+.fixed {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+}
+
+.reftest-no-paint {
+  border-color: lime;
+}
+
+.distanceFromTop {
+  margin-top: 240px;
+}
+
+.clip {
+  width: 200px;
+  height: 200px;
+  overflow: hidden;
+}
+
+.transform {
+  position: relative;
+  will-change: transform;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  height: 3000px;
+}
+
+
+</style>
+
+<div class="fixed reftest-no-paint content">
+  <!--
+    This fixed layer gets its own PaintedLayer above the page.
+  -->
+</div>
+
+<div class="distanceFromTop clip">
+  <!--
+    This clip determines the potential pixels that can be affected by the
+    animated transform, *in relation to the scrolled page*. If the page
+    is scrolled, the clip moves relative to the fixed items, so the fixed
+    items need to anticipate the transform getting between them.
+  -->
+
+  <div class="transform content">
+    <!--
+      This is an animated transform item. It can move freely but will be
+      clipped by the .clip element.
+    -->
+  </div>
+
+</div>
+
+<div class="fixed reftest-no-paint content">
+  <!--
+    This fixed layer is above the animated transform, in z-order. The
+    transform is clipped in such a way that initially, the clip doesn't
+    intersect the fixed items, but once the page is scrolled, it does.
+    So this fixed item must not share a layer with the lower fixed item.
+  -->
+</div>
+
+<script>
+
+function doTest() {
+  document.documentElement.scrollTop = 100;
+  document.documentElement.removeAttribute("class");
+}
+document.documentElement.scrollTop = 0;
+document.addEventListener("MozReftestInvalidate", doTest, false);
+// setTimeout(doTest, 500);
+
+</script>

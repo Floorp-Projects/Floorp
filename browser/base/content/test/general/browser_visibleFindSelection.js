@@ -1,33 +1,36 @@
+add_task(function*() {
+  const childContent = "<div style='position: absolute; left: 2200px; background: green; width: 200px; height: 200px;'>" +
+                       "div</div><div  style='position: absolute; left: 0px; background: red; width: 200px; height: 200px;'>" +
+                       "<span id='s'>div</span></div>";
 
-function test() {
-  waitForExplicitFinish();
+  let tab = gBrowser.selectedTab = gBrowser.addTab();
 
-  let tab = gBrowser.addTab();
-  gBrowser.selectedTab = tab;
-  tab.linkedBrowser.addEventListener("load", function(aEvent) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
+  yield promiseTabLoadEvent(tab, "data:text/html," + escape(childContent));
+  yield SimpleTest.promiseFocus(gBrowser.selectedBrowser.contentWindowAsCPOW);
 
-    ok(true, "Load listener called");
-    waitForFocus(onFocus, content);
-  }, true);
-
-  content.location = "data:text/html,<div style='position: absolute; left: 2200px; background: green; width: 200px; height: 200px;'>div</div><div style='position: absolute; left: 0px; background: red; width: 200px; height: 200px;'><span id='s'>div</span></div>";
-}
-
-function onFocus() {
+  let findBarOpenPromise = promiseWaitForEvent(gBrowser, "findbaropen");
   EventUtils.synthesizeKey("f", { accelKey: true });
+  yield findBarOpenPromise;
+
   ok(gFindBarInitialized, "find bar is now initialized");
 
+  // Finds the div in the green box.
+  let scrollPromise = promiseWaitForEvent(gBrowser, "scroll");
   EventUtils.synthesizeKey("d", {});
   EventUtils.synthesizeKey("i", {});
   EventUtils.synthesizeKey("v", {});
-  // finds the div in the green box
+  yield scrollPromise;
 
+  // Finds the div in the red box.
+  scrollPromise = promiseWaitForEvent(gBrowser, "scroll");
   EventUtils.synthesizeKey("g", { accelKey: true });
-  // finds the div in the red box
+  yield scrollPromise;
 
-  var rect = content.document.getElementById("s").getBoundingClientRect();
-  ok(rect.left >= 0, "scroll should include find result");
+  let scrollLeftPos = yield ContentTask.spawn(gBrowser.selectedBrowser, { }, function* (arg) {
+    return content.document.getElementById("s").getBoundingClientRect().left;
+  });
+
+  ok(scrollLeftPos >= 0, "scroll should include find result");
 
   // clear the find bar
   EventUtils.synthesizeKey("a", { accelKey: true });
@@ -35,5 +38,5 @@ function onFocus() {
 
   gFindBar.close();
   gBrowser.removeCurrentTab();
-  finish();
-}
+});
+

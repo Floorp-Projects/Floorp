@@ -1937,6 +1937,7 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
   , mHasBeenScrolledRecently(false)
   , mCollapsedResizer(false)
   , mShouldBuildScrollableLayer(false)
+  , mIsScrollableLayerInRootContainer(false)
   , mHasBeenScrolled(false)
   , mIsResolutionSet(false)
   , mIgnoreMomentumScroll(false)
@@ -2940,6 +2941,14 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // adjusted by the APZC automatically.
     bool usingDisplayPort = aBuilder->IsPaintingToWindow() &&
         nsLayoutUtils::GetDisplayPort(mOuter->GetContent());
+
+    if (usingDisplayPort) {
+      // There is a display port for this frame, so we want to appear as having
+      // active scrolling, so that animated geometry roots are assigned correctly.
+      mShouldBuildScrollableLayer = true;
+      mIsScrollableLayerInRootContainer = true;
+    }
+
     bool addScrollBars = mIsRoot && usingDisplayPort && !aBuilder->IsForEventDelivery();
 
     if (addScrollBars) {
@@ -3221,7 +3230,7 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
     *aClipRect = scrollport;
   }
 
-  if (!mShouldBuildScrollableLayer) {
+  if (!mShouldBuildScrollableLayer || mIsScrollableLayerInRootContainer) {
     return;
   }
 
