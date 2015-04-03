@@ -73,6 +73,11 @@ if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_TARGET'] == 'Linux':
     if '-flto' in CONFIG['OS_CXXFLAGS'] and not CONFIG['CLANG_CXX']:
 	LDFLAGS += ['--param lto-partitions=1']
 
+if CONFIG['MOZ_SANDBOX'] and CONFIG['OS_TARGET'] == 'Darwin':
+    USE_LIBS += [
+        'mozsandbox',
+    ]
+
 if CONFIG['_MSC_VER']:
     # Always enter a Windows program through wmain, whether or not we're
     # a console application.

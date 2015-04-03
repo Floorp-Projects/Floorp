@@ -1235,13 +1235,14 @@ StartMacOSContentSandbox()
 
   MacSandboxInfo info;
   info.type = MacSandboxType_Content;
-  info.appPath.Assign(appPath);
-  info.appBinaryPath.Assign(appBinaryPath);
-  info.appDir.Assign(appDir);
+  info.level = Preferences::GetInt("security.sandbox.content.level");
+  info.appPath.assign(appPath.get());
+  info.appBinaryPath.assign(appBinaryPath.get());
+  info.appDir.assign(appDir.get());
 
-  nsAutoCString err;
+  std::string err;
   if (!mozilla::StartMacSandbox(info, err)) {
-    NS_WARNING(err.get());
+    NS_WARNING(err.c_str());
     MOZ_CRASH("sandbox_init() failed");
   }
 }
