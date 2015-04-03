@@ -26,8 +26,8 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-const int32_t DBSchema::kMaxWipeSchemaVersion = 5;
-const int32_t DBSchema::kLatestSchemaVersion = 5;
+const int32_t DBSchema::kMaxWipeSchemaVersion = 6;
+const int32_t DBSchema::kLatestSchemaVersion = 6;
 const int32_t DBSchema::kMaxEntriesPerStatement = 255;
 
 // If any of the static_asserts below fail, it means that you have changed
@@ -186,9 +186,11 @@ DBSchema::CreateSchema(mozIStorageConnection* aConn)
     // For now, the caches table mainly exists for data integrity with
     // foreign keys, but could be expanded to contain additional cache object
     // information.
+    //
+    // AUTOINCREMENT is necessary to prevent CacheId values from being reused.
     rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
       "CREATE TABLE caches ("
-        "id INTEGER NOT NULL PRIMARY KEY "
+        "id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT "
       ");"
     ));
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -337,7 +339,7 @@ DBSchema::CreateCache(mozIStorageConnection* aConn, CacheId* aCacheIdOut)
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
   if (NS_WARN_IF(!hasMoreData)) { return NS_ERROR_UNEXPECTED; }
 
-  rv = state->GetInt32(0, aCacheIdOut);
+  rv = state->GetInt64(0, aCacheIdOut);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   return rv;
@@ -368,7 +370,7 @@ DBSchema::DeleteCache(mozIStorageConnection* aConn, CacheId aCacheId,
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, aCacheId);
+  rv = state->BindInt64Parameter(0, aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->Execute();
@@ -395,7 +397,7 @@ DBSchema::IsCacheOrphaned(mozIStorageConnection* aConn,
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, aCacheId);
+  rv = state->BindInt64Parameter(0, aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   bool hasMoreData = false;
@@ -588,7 +590,7 @@ DBSchema::StorageMatch(mozIStorageConnection* aConn,
   if (!aParams.cacheName().EqualsLiteral("")) {
     bool foundCache = false;
     // no invalid CacheId, init to least likely real value
-    CacheId cacheId = INT32_MAX;
+    CacheId cacheId = INVALID_CACHE_ID;
     rv = StorageGetCacheId(aConn, aNamespace, aParams.cacheName(), &foundCache,
                            &cacheId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
@@ -616,8 +618,8 @@ DBSchema::StorageMatch(mozIStorageConnection* aConn,
 
   bool hasMoreData = false;
   while (NS_SUCCEEDED(state->ExecuteStep(&hasMoreData)) && hasMoreData) {
-    CacheId cacheId = INT32_MAX;
-    rv = state->GetInt32(0, &cacheId);
+    CacheId cacheId = INVALID_CACHE_ID;
+    rv = state->GetInt64(0, &cacheId);
     if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
     cacheIdList.AppendElement(cacheId);
   }
@@ -670,7 +672,7 @@ DBSchema::StorageGetCacheId(mozIStorageConnection* aConn, Namespace aNamespace,
     return rv;
   }
 
-  rv = state->GetInt32(0, aCacheIdOut);
+  rv = state->GetInt64(0, aCacheIdOut);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   *aFoundCacheOut = true;
@@ -697,7 +699,7 @@ DBSchema::StoragePutCache(mozIStorageConnection* aConn, Namespace aNamespace,
   rv = state->BindStringParameter(1, aKey);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(2, aCacheId);
+  rv = state->BindInt64Parameter(2, aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->Execute();
@@ -774,7 +776,7 @@ DBSchema::QueryAll(mozIStorageConnection* aConn, CacheId aCacheId,
   ), getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, aCacheId);
+  rv = state->BindInt64Parameter(0, aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   bool hasMoreData = false;
@@ -830,7 +832,7 @@ DBSchema::QueryCache(mozIStorageConnection* aConn, CacheId aCacheId,
   nsresult rv = aConn->CreateStatement(query, getter_AddRefs(state));
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(0, aCacheId);
+  rv = state->BindInt64Parameter(0, aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->BindStringParameter(1, urlToMatch);
@@ -1165,7 +1167,7 @@ DBSchema::InsertEntry(mozIStorageConnection* aConn, CacheId aCacheId,
                                 aResponse.securityInfo().Length());
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
-  rv = state->BindInt32Parameter(18, aCacheId);
+  rv = state->BindInt64Parameter(18, aCacheId);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = state->Execute();

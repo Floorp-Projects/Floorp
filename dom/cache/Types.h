@@ -26,7 +26,8 @@ enum Namespace
 typedef uintptr_t RequestId;
 static const RequestId INVALID_REQUEST_ID = 0;
 
-typedef int32_t CacheId;
+typedef int64_t CacheId;
+static const CacheId INVALID_CACHE_ID = -1;
 
 struct QuotaInfo
 {
