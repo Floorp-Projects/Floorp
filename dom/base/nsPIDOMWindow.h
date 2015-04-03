@@ -63,8 +63,8 @@ enum UIStateChangeType
 };
 
 #define NS_PIDOMWINDOW_IID \
-{ 0x4178bd68, 0xa3f7, 0x4ff7, \
-  { 0xa6, 0x27, 0x4a, 0x99, 0xa1, 0xe0, 0x42, 0x37 } }
+{ 0x2485d4d7, 0xf7cb, 0x481e, \
+  { 0x9c, 0x89, 0xb2, 0xa8, 0x12, 0x67, 0x7f, 0x97 } }
 
 class nsPIDOMWindow : public nsIDOMWindowInternal
 {
@@ -159,6 +159,8 @@ public:
 
     mMutationBits |= aType;
   }
+
+  virtual void MaybeUpdateTouchState() {}
 
   nsIDocument* GetExtantDoc() const
   {
@@ -448,6 +450,18 @@ public:
     return mMayHavePaintEventListener;
   }
   
+  /**
+   * Call this to indicate that some node (this window, its document,
+   * or content in that document) has a touch event listener.
+   */
+  void SetHasTouchEventListeners()
+  {
+    if (!mMayHaveTouchEventListener) {
+      mMayHaveTouchEventListener = true;
+      MaybeUpdateTouchState();
+    }
+  }
+
   /**
    * Moves the top-level window into fullscreen mode if aIsFullScreen is true,
    * otherwise exits fullscreen. If aRequireTrust is true, this method only
@@ -768,6 +782,7 @@ protected:
   bool                   mIsHandlingResizeEvent;
   bool                   mIsInnerWindow;
   bool                   mMayHavePaintEventListener;
+  bool                   mMayHaveTouchEventListener;
   bool                   mMayHaveMouseEnterLeaveEventListener;
   bool                   mMayHavePointerEnterLeaveEventListener;
 
