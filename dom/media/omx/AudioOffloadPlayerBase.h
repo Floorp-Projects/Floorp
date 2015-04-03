@@ -66,8 +66,6 @@ public:
   {
     return MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
   }
-
-  virtual nsRefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget) = 0;
 };
 
 } // namespace mozilla
