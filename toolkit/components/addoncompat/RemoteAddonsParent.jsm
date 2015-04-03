@@ -10,6 +10,7 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/RemoteWebProgress.jsm");
 Cu.import('resource://gre/modules/Services.jsm');
 
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
@@ -877,6 +878,70 @@ TabBrowserElementInterposition.getters.contentDocument = function(addon, target)
 
   let browser = target.selectedBrowser;
   return getContentDocument(addon, browser);
+};
+
+// This function returns a wrapper around an
+// nsIWebProgressListener. When the wrapper is invoked, it calls the
+// real listener but passes CPOWs for the nsIWebProgress and
+// nsIRequest arguments.
+let progressListeners = {global: new WeakMap(), tabs: new WeakMap()};
+function wrapProgressListener(kind, listener)
+{
+  if (progressListeners[kind].has(listener)) {
+    return progressListeners[kind].get(listener);
+  }
+
+  let ListenerHandler = {
+    get: function(target, name) {
+      if (name.startsWith("on")) {
+        return function(...args) {
+          listener[name].apply(listener, RemoteWebProgressManager.argumentsForAddonListener(kind, args));
+        };
+      }
+
+      return listener[name];
+    }
+  };
+  let listenerProxy = new Proxy(listener, ListenerHandler);
+
+  progressListeners[kind].set(listener, listenerProxy);
+  return listenerProxy;
+}
+
+TabBrowserElementInterposition.methods.addProgressListener = function(addon, target, listener) {
+  if (!target.ownerDocument.defaultView.gMultiProcessBrowser) {
+    return target.addProgressListener(listener);
+  }
+
+  NotificationTracker.add(["web-progress", addon]);
+  return target.addProgressListener(wrapProgressListener("global", listener));
+};
+
+TabBrowserElementInterposition.methods.removeProgressListener = function(addon, target, listener) {
+  if (!target.ownerDocument.defaultView.gMultiProcessBrowser) {
+    return target.removeProgressListener(listener);
+  }
+
+  NotificationTracker.remove(["web-progress", addon]);
+  return target.removeProgressListener(wrapProgressListener("global", listener));
+};
+
+TabBrowserElementInterposition.methods.addTabsProgressListener = function(addon, target, listener) {
+  if (!target.ownerDocument.defaultView.gMultiProcessBrowser) {
+    return target.addTabsProgressListener(listener);
+  }
+
+  NotificationTracker.add(["web-progress", addon]);
+  return target.addTabsProgressListener(wrapProgressListener("tabs", listener));
+};
+
+TabBrowserElementInterposition.methods.removeTabsProgressListener = function(addon, target, listener) {
+  if (!target.ownerDocument.defaultView.gMultiProcessBrowser) {
+    return target.removeTabsProgressListener(listener);
+  }
+
+  NotificationTracker.remove(["web-progress", addon]);
+  return target.removeTabsProgressListener(wrapProgressListener("tabs", listener));
 };
 
 let ChromeWindowInterposition = new Interposition("ChromeWindowInterposition",
