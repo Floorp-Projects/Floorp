@@ -360,8 +360,8 @@ ArrayBufferObject::fun_transfer(JSContext* cx, unsigned argc, Value* vp)
     if (oldBufferObj->is<ArrayBufferObject>()) {
         oldBuffer = &oldBufferObj->as<ArrayBufferObject>();
     } else {
-        JSObject* unwrapped = CheckedUnwrap(oldBuffer);
-        if (!unwrapped->is<ArrayBufferObject>()) {
+        JSObject* unwrapped = CheckedUnwrap(oldBufferObj);
+        if (!unwrapped || !unwrapped->is<ArrayBufferObject>()) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return false;
         }
