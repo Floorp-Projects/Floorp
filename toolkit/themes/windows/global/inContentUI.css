@@ -24,7 +24,6 @@ html|html {
   font: message-box;
 }
 
-%ifdef WINDOWS_AERO
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-vista),
        (-moz-windows-default-theme) and (-moz-os-version: windows-win7) {
   *|*:root {
@@ -58,7 +57,6 @@ html|html {
                       url("chrome://global/skin/inContentUI/background-texture.png");
   }
 }
-%endif
 
 /* Use the new in-content colors for #contentAreaDownloadsView. After landing
    of bug 989469 the colors can be moved to *|*:root */
@@ -77,15 +75,17 @@ html|html {
   border: 1px solid #C3CEDF;
 }
 
-%ifdef WINDOWS_AERO
-@media (-moz-os-version: windows-vista),
+%ifdef XP_WIN
+@media (-moz-os-version: windows-xp),
+       (-moz-os-version: windows-vista),
        (-moz-os-version: windows-win7) {
 %endif
   *|*.main-content {
     border-radius: 5px;
   }
-%ifdef WINDOWS_AERO
+%ifdef XP_WIN
 }
+%endif
 
 @media (-moz-windows-glass) {
   /* Buttons */
@@ -152,7 +152,6 @@ html|html {
     list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
   }
 }
-%endif
 
 colorpicker[type="button"] {
   margin: 1px 5px 2px 5px;

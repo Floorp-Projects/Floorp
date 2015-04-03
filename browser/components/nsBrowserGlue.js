@@ -122,13 +122,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
 #endif
 
-
-#if defined(MOZ_UPDATE_CHANNEL) && MOZ_UPDATE_CHANNEL != release
-#define MOZ_DEBUG_UA // Shorthand define for subsequent conditional sections.
-XPCOMUtils.defineLazyModuleGetter(this, "UserAgentOverrides",
-                                  "resource://gre/modules/UserAgentOverrides.jsm");
-#endif
-
 XPCOMUtils.defineLazyGetter(this, "ShellService", function() {
   try {
     return Cc["@mozilla.org/browser/shell-service;1"].
@@ -727,11 +720,6 @@ BrowserGlue.prototype = {
     Services.prefs.addObserver(POLARIS_ENABLED, this, false);
 #endif
 
-#ifdef MOZ_DEBUG_UA
-    UserAgentOverrides.init();
-    DebugUserAgent.init();
-#endif
-
 #ifndef RELEASE_BUILD
     let themeName = gBrowserBundle.GetStringFromName("deveditionTheme.name");
     let vendorShortName = gBrandBundle.GetStringFromName("vendorShortName");
@@ -1003,9 +991,6 @@ BrowserGlue.prototype = {
     if (Services.prefs.getBoolPref("dom.identity.enabled")) {
       SignInToWebsiteUX.uninit();
     }
-#endif
-#ifdef MOZ_DEBUG_UA
-    UserAgentOverrides.uninit();
 #endif
     webrtcUI.uninit();
     FormValidationHandler.uninit();
@@ -1501,7 +1486,7 @@ BrowserGlue.prototype = {
       if (!importBookmarks) {
         // Now apply distribution customized bookmarks.
         // This should always run after Places initialization.
-        this._distributionCustomizer.applyBookmarks();
+        yield this._distributionCustomizer.applyBookmarks();
         yield this.ensurePlacesDefaultQueriesInitialized();
       }
       else {
@@ -1534,7 +1519,7 @@ BrowserGlue.prototype = {
           try {
             // Now apply distribution customized bookmarks.
             // This should always run after Places initialization.
-            this._distributionCustomizer.applyBookmarks();
+            yield this._distributionCustomizer.applyBookmarks();
             // Ensure that smart bookmarks are created once the operation is
             // complete.
             yield this.ensurePlacesDefaultQueriesInitialized();
@@ -2975,36 +2960,3 @@ let globalMM = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessag
 globalMM.addMessageListener("UITour:onPageEvent", function(aMessage) {
   UITour.onPageEvent(aMessage, aMessage.data);
 });
-
-#ifdef MOZ_DEBUG_UA
-// Modify the user agent string for specific domains
-// to route debug information through their logging.
-var DebugUserAgent = {
-  DEBUG_UA: null,
-  DOMAINS: [
-    'youtube.com',
-    'www.youtube.com',
-    'youtube-nocookie.com',
-    'www.youtube-nocookie.com',
-  ],
-
-  init: function() {
-    // Only run if the MediaSource Extension API is available.
-    if (!Services.prefs.getBoolPref("media.mediasource.enabled")) {
-      return;
-    }
-    // Install our override filter.
-    UserAgentOverrides.addComplexOverride(this.onRequest.bind(this));
-    let ua = Cc["@mozilla.org/network/protocol;1?name=http"]
-                .getService(Ci.nsIHttpProtocolHandler).userAgent;
-    this.DEBUG_UA = ua + " Build/" + Services.appinfo.appBuildID;
-  },
-
-  onRequest: function(channel, defaultUA) {
-    if (this.DOMAINS.indexOf(channel.URI.host) != -1) {
-      return this.DEBUG_UA;
-    }
-    return null;
-  },
-};
-#endif // MOZ_DEBUG_UA

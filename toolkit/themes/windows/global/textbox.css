@@ -36,6 +36,14 @@ html|*.textbox-textarea {
   font: inherit;
 }
 
+@media (-moz-windows-default-theme) {
+  @media not all and (-moz-os-version: windows-xp) {
+    textbox html|*.textbox-input::-moz-placeholder {
+      font-style: italic;
+    }
+  }
+}
+
 .textbox-contextmenu {
   cursor: default;
 }

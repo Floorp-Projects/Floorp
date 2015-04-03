@@ -14,6 +14,7 @@ const DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC =
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 
@@ -85,114 +86,118 @@ DistributionCustomizer.prototype = {
     return this._ioSvc.newURI(spec, null, null);
   },
 
-  _parseBookmarksSection:
-  function DIST_parseBookmarksSection(parentId, section) {
-    let keys = [];
-    for (let i in enumerate(this._ini.getKeys(section)))
-      keys.push(i);
-    keys.sort();
-
+  _parseBookmarksSection: Task.async(function* (parentGuid, section) {
+    let keys = Array.from(enumerate(this._ini.getKeys(section))).sort();
+    let re = /^item\.(\d+)\.(\w+)\.?(\w*)/;
     let items = {};
-    let defaultItemId = -1;
-    let maxItemId = -1;
+    let defaultIndex = -1;
+    let maxIndex = -1;
 
-    for (let i = 0; i < keys.length; i++) {
-      let m = /^item\.(\d+)\.(\w+)\.?(\w*)/.exec(keys[i]);
+    for (let key of keys) {
+      let m = re.exec(key);
       if (m) {
-        let [foo, iid, iprop, ilocale] = m;
-        iid = parseInt(iid);
+        let [foo, itemIndex, iprop, ilocale] = m;
+        itemIndex = parseInt(itemIndex);
 
         if (ilocale)
           continue;
 
-        if (!items[iid])
-          items[iid] = {};
-        if (keys.indexOf(keys[i] + "." + this._locale) >= 0) {
-          items[iid][iprop] = this._ini.getString(section, keys[i] + "." +
-                                                  this._locale);
-        } else {
-          items[iid][iprop] = this._ini.getString(section, keys[i]);
+        if (keys.indexOf(key + "." + this._locale) >= 0) {
+          key += "." + this._locale;
         }
 
-        if (iprop == "type" && items[iid]["type"] == "default")
-          defaultItemId = iid;
+        if (!items[itemIndex])
+          items[itemIndex] = {};
+        items[itemIndex][iprop] = this._ini.getString(section, key);
 
-        if (maxItemId < iid)
-          maxItemId = iid;
+        if (iprop == "type" && items[itemIndex]["type"] == "default")
+          defaultIndex = itemIndex;
+
+        if (maxIndex < itemIndex)
+          maxIndex = itemIndex;
       } else {
-        dump("Key did not match: " + keys[i] + "\n");
+        dump(`Key did not match: ${key}\n`);
       }
     }
 
     let prependIndex = 0;
-    for (let iid = 0; iid <= maxItemId; iid++) {
-      if (!items[iid])
+    for (let itemIndex = 0; itemIndex <= maxIndex; itemIndex++) {
+      if (!items[itemIndex])
         continue;
 
       let index = PlacesUtils.bookmarks.DEFAULT_INDEX;
-      let newId;
+      let item = items[itemIndex];
 
-      switch (items[iid]["type"]) {
+      switch (item.type) {
       case "default":
         break;
 
       case "folder":
-        if (iid < defaultItemId)
+        if (itemIndex < defaultIndex)
           index = prependIndex++;
 
-        newId = PlacesUtils.bookmarks.createFolder(parentId,
-                                                   items[iid]["title"],
-                                                   index);
+        let folder = yield PlacesUtils.bookmarks.insert({
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+          parentGuid, index, title: item.title
+        });
 
-        this._parseBookmarksSection(newId, "BookmarksFolder-" +
-                                    items[iid]["folderId"]);
+        yield this._parseBookmarksSection(folder.guid,
+                                          "BookmarksFolder-" + item.folderId);
 
-        if (items[iid]["description"])
-          PlacesUtils.annotations.setItemAnnotation(newId,
+        if (item.description) {
+          let folderId = yield PlacesUtils.promiseItemId(folder.guid);
+          PlacesUtils.annotations.setItemAnnotation(folderId,
                                                     "bookmarkProperties/description",
-                                                    items[iid]["description"], 0,
+                                                    item.description, 0,
                                                     PlacesUtils.annotations.EXPIRE_NEVER);
+        }
 
         break;
 
       case "separator":
-        if (iid < defaultItemId)
+        if (itemIndex < defaultIndex)
           index = prependIndex++;
-        PlacesUtils.bookmarks.insertSeparator(parentId, index);
+
+        yield PlacesUtils.bookmarks.insert({
+          type: PlacesUtils.bookmarks.TYPE_SEPARATOR,
+          parentGuid, index
+        });
         break;
 
       case "livemark":
-        if (iid < defaultItemId)
+        if (itemIndex < defaultIndex)
           index = prependIndex++;
 
         // Don't bother updating the livemark contents on creation.
-        PlacesUtils.livemarks.addLivemark({ title: items[iid]["title"]
-                                          , parentId: parentId
-                                          , index: index
-                                          , feedURI: this._makeURI(items[iid]["feedLink"])
-                                          , siteURI: this._makeURI(items[iid]["siteLink"])
-                                          }).then(null, Cu.reportError);
+        let parentId = yield PlacesUtils.promiseItemId(parentGuid);
+        yield PlacesUtils.livemarks.addLivemark({
+          feedURI: this._makeURI(item.feedLink),
+          siteURI: this._makeURI(item.siteLink),
+          parentId, index, title: item.title
+        });
         break;
 
       case "bookmark":
       default:
-        if (iid < defaultItemId)
+        if (itemIndex < defaultIndex)
           index = prependIndex++;
 
-        newId = PlacesUtils.bookmarks.insertBookmark(parentId,
-                                                     this._makeURI(items[iid]["link"]),
-                                                     index, items[iid]["title"]);
+        let bm = yield PlacesUtils.bookmarks.insert({
+          parentGuid, index, title: item.title, url: item.link
+        });
 
-        if (items[iid]["description"])
-          PlacesUtils.annotations.setItemAnnotation(newId,
+        if (item.description) {
+          let bmId = yield PlacesUtils.promiseItemId(bm.guid);
+          PlacesUtils.annotations.setItemAnnotation(bmId,
                                                     "bookmarkProperties/description",
-                                                    items[iid]["description"], 0,
+                                                    item.description, 0,
                                                     PlacesUtils.annotations.EXPIRE_NEVER);
+        }
 
         break;
       }
     }
-  },
+  }),
 
   _customizationsApplied: false,
   applyCustomizations: function DIST_applyCustomizations() {
@@ -208,20 +213,26 @@ DistributionCustomizer.prototype = {
   },
 
   _bookmarksApplied: false,
-  applyBookmarks: function DIST_applyBookmarks() {
+  applyBookmarks: Task.async(function* () {
+    yield this._doApplyBookmarks();
     this._bookmarksApplied = true;
+    this._checkCustomizationComplete();
+  }),
+
+  _doApplyBookmarks: Task.async(function* () {
     if (!this._iniFile)
-      return this._checkCustomizationComplete();
+      return;
 
     let sections = enumToObject(this._ini.getSections());
 
     // The global section, and several of its fields, is required
     // (we also check here to be consistent with applyPrefDefaults below)
     if (!sections["Global"])
-      return this._checkCustomizationComplete();
+      return;
+
     let globalPrefs = enumToObject(this._ini.getKeys("Global"));
     if (!(globalPrefs["id"] && globalPrefs["version"] && globalPrefs["about"]))
-      return this._checkCustomizationComplete();
+      return;
 
     let bmProcessedPref;
     try {
@@ -241,15 +252,14 @@ DistributionCustomizer.prototype = {
 
     if (!bmProcessed) {
       if (sections["BookmarksMenu"])
-        this._parseBookmarksSection(PlacesUtils.bookmarksMenuFolderId,
-                                    "BookmarksMenu");
+        yield this._parseBookmarksSection(PlacesUtils.bookmarks.menuGuid,
+                                          "BookmarksMenu");
       if (sections["BookmarksToolbar"])
-        this._parseBookmarksSection(PlacesUtils.toolbarFolderId,
-                                    "BookmarksToolbar");
+        yield this._parseBookmarksSection(PlacesUtils.bookmarks.toolbarGuid,
+                                          "BookmarksToolbar");
       this._prefs.setBoolPref(bmProcessedPref, true);
     }
-    return this._checkCustomizationComplete();
-  },
+  }),
 
   _prefDefaultsApplied: false,
   applyPrefDefaults: function DIST_applyPrefDefaults() {
@@ -291,7 +301,7 @@ DistributionCustomizer.prototype = {
     }
 
     if (sections["Preferences"]) {
-      for (let key in enumerate(this._ini.getKeys("Preferences"))) {
+      for (let key of enumerate(this._ini.getKeys("Preferences"))) {
         try {
           let value = eval(this._ini.getString("Preferences", key));
           switch (typeof value) {
@@ -320,7 +330,7 @@ DistributionCustomizer.prototype = {
       createInstance(Ci.nsIPrefLocalizedString);
 
     if (sections["LocalizablePreferences"]) {
-      for (let key in enumerate(this._ini.getKeys("LocalizablePreferences"))) {
+      for (let key of enumerate(this._ini.getKeys("LocalizablePreferences"))) {
         try {
           let value = eval(this._ini.getString("LocalizablePreferences", key));
           value = value.replace(/%LOCALE%/g, this._locale);
@@ -331,7 +341,7 @@ DistributionCustomizer.prototype = {
     }
 
     if (sections["LocalizablePreferences-" + this._locale]) {
-      for (let key in enumerate(this._ini.getKeys("LocalizablePreferences-" + this._locale))) {
+      for (let key of enumerate(this._ini.getKeys("LocalizablePreferences-" + this._locale))) {
         try {
           let value = eval(this._ini.getString("LocalizablePreferences-" + this._locale, key));
           localizedStr.data = "data:text/plain," + key + "=" + value;
@@ -354,14 +364,14 @@ DistributionCustomizer.prototype = {
   }
 };
 
-function enumerate(UTF8Enumerator) {
+function* enumerate(UTF8Enumerator) {
   while (UTF8Enumerator.hasMore())
     yield UTF8Enumerator.getNext();
 }
 
 function enumToObject(UTF8Enumerator) {
   let ret = {};
-  for (let i in enumerate(UTF8Enumerator))
+  for (let i of enumerate(UTF8Enumerator))
     ret[i] = 1;
   return ret;
 }

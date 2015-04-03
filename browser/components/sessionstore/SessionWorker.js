@@ -78,18 +78,25 @@ let Agent = {
   state: null,
 
   /**
+   * Number of old upgrade backups that are being kept
+   */
+  maxUpgradeBackups: null,
+
+  /**
    * Initialize (or reinitialize) the worker
    *
    * @param {string} origin Which of sessionstore.js or its backups
    *   was used. One of the `STATE_*` constants defined above.
    * @param {object} paths The paths at which to find the various files.
+   * @param {number} maxUpgradeBackups The number of old upgrade backups that should be kept.
    */
-  init: function (origin, paths) {
+  init: function (origin, paths, maxUpgradeBackups) {
     if (!(origin in paths || origin == STATE_EMPTY)) {
       throw new TypeError("Invalid origin: " + origin);
     }
     this.state = origin;
     this.Paths = paths;
+    this.maxUpgradeBackups = maxUpgradeBackups || 3;
     this.upgradeBackupNeeded = paths.nextUpgradeBackup != paths.upgradeBackup;
     return {result: true};
   },
@@ -180,6 +187,38 @@ let Agent = {
       } catch (ex) {
         // Don't throw immediately
         exn = exn || ex;
+      }
+
+      // Find all backups
+      let iterator;
+      let backups = [];  // array that will contain the paths to all upgrade backup
+      let upgradeBackupPrefix = this.Paths.upgradeBackupPrefix;  // access for forEach callback
+
+      try {
+        iterator = new File.DirectoryIterator(this.Paths.backups);
+        iterator.forEach(function (file) {
+          if (file.path.startsWith(upgradeBackupPrefix)) {
+            backups.push(file.path);
+          }
+        }, this);
+      } catch (ex) {
+          // Don't throw immediately
+          exn = exn || ex;
+      } finally {
+        if (iterator) {
+          iterator.close();
+        }
+      }
+
+      // If too many backups exist, delete them
+      if (backups.length > this.maxUpgradeBackups) {
+        // Use alphanumerical sort since dates are in YYYYMMDDHHMMSS format
+        backups.sort().forEach((file, i) => {
+          // remove backup file if it is among the first (n-maxUpgradeBackups) files
+          if (i < backups.length - this.maxUpgradeBackups) {
+            File.remove(file);
+          }
+        });
       }
     }
 

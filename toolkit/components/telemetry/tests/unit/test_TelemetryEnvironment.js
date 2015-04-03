@@ -27,6 +27,9 @@ let gHttpRoot = null;
 // The URL of the data directory, on the webserver.
 let gDataRoot = null;
 
+let gNow = new Date(2010, 1, 1, 12, 0, 0);
+fakeNow(gNow);
+
 const PLATFORM_VERSION = "1.9.2";
 const APP_VERSION = "1";
 const APP_ID = "xpcshell@tests.mozilla.org";
@@ -43,7 +46,6 @@ const PARTNER_ID = "NicePartner-ID-3785";
 const GFX_VENDOR_ID = "0xabcd";
 const GFX_DEVICE_ID = "0x1234";
 
-const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 // The profile reset date, in milliseconds (Today)
 const PROFILE_RESET_DATE_MS = Date.now();
 // The profile creation date, in milliseconds (Yesterday).
@@ -173,10 +175,6 @@ function spoofPartnerInfo() {
   for (let pref in prefsToSpoof) {
     Preferences.set(pref, prefsToSpoof[pref]);
   }
-}
-
-function truncateToDays(aMsec) {
-  return Math.floor(aMsec / MILLISECONDS_PER_DAY);
 }
 
 /**
@@ -601,105 +599,59 @@ add_task(function* asyncSetup() {
   yield spoofProfileReset();
 });
 
-add_task(function* test_initAndShutdown() {
-  // Check that init and shutdown work properly.
-  TelemetryEnvironment.init();
-  yield TelemetryEnvironment.shutdown();
-  TelemetryEnvironment.init();
-  yield TelemetryEnvironment.shutdown();
-
-  // A double init should be silently handled.
-  TelemetryEnvironment.init();
-  TelemetryEnvironment.init();
-
-  // getEnvironmentData should return a sane result.
-  let data = yield TelemetryEnvironment.getEnvironmentData();
-  Assert.ok(!!data);
-
-  // The change listener registration should silently fail after shutdown.
-  yield TelemetryEnvironment.shutdown();
-  TelemetryEnvironment.registerChangeListener("foo", () => {});
-  TelemetryEnvironment.unregisterChangeListener("foo");
-
-  // Shutting down again should be ignored.
-  yield TelemetryEnvironment.shutdown();
-
-  // Getting the environment data should reject after shutdown.
-  Assert.ok(yield isRejected(TelemetryEnvironment.getEnvironmentData()));
-});
-
-add_task(function* test_changeNotify() {
-  TelemetryEnvironment.init();
-
-  // Register some listeners
-  let results = new Array(4).fill(false);
-  for (let i=0; i<results.length; ++i) {
-    let k = i;
-    TelemetryEnvironment.registerChangeListener("test"+k, () => results[k] = true);
-  }
-  // Trigger environment change notifications.
-  // TODO: test with proper environment changes, not directly.
-  TelemetryEnvironment._onEnvironmentChange("foo");
-  Assert.ok(results.every(val => val), "All change listeners should have been notified.");
-  results.fill(false);
-  TelemetryEnvironment._onEnvironmentChange("bar");
-  Assert.ok(results.every(val => val), "All change listeners should have been notified.");
-
-  // Unregister listeners
-  for (let i=0; i<4; ++i) {
-    TelemetryEnvironment.unregisterChangeListener("test"+i);
-  }
-});
-
 add_task(function* test_checkEnvironment() {
-  yield TelemetryEnvironment.init();
-  let environmentData = yield TelemetryEnvironment.getEnvironmentData();
-
+  let environmentData = yield TelemetryEnvironment.onInitialized();
   checkEnvironmentData(environmentData);
-
-  yield TelemetryEnvironment.shutdown();
 });
 
 add_task(function* test_prefWatchPolicies() {
   const PREF_TEST_1 = "toolkit.telemetry.test.pref_new";
   const PREF_TEST_2 = "toolkit.telemetry.test.pref1";
   const PREF_TEST_3 = "toolkit.telemetry.test.pref2";
+  const PREF_TEST_4 = "toolkit.telemetry.test.pref_old";
 
   const expectedValue = "some-test-value";
+  gNow = futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE);
+  fakeNow(gNow);
 
   let prefsToWatch = {};
   prefsToWatch[PREF_TEST_1] = TelemetryEnvironment.RECORD_PREF_VALUE;
   prefsToWatch[PREF_TEST_2] = TelemetryEnvironment.RECORD_PREF_STATE;
   prefsToWatch[PREF_TEST_3] = TelemetryEnvironment.RECORD_PREF_STATE;
+  prefsToWatch[PREF_TEST_4] = TelemetryEnvironment.RECORD_PREF_VALUE;
 
-  yield TelemetryEnvironment.init();
+  Preferences.set(PREF_TEST_4, expectedValue);
 
   // Set the Environment preferences to watch.
   TelemetryEnvironment._watchPreferences(prefsToWatch);
   let deferred = PromiseUtils.defer();
-  TelemetryEnvironment.registerChangeListener("testWatchPrefs", deferred.resolve);
+
+  // Check that the pref values are missing or present as expected
+  Assert.strictEqual(TelemetryEnvironment.currentEnvironment.settings.userPrefs[PREF_TEST_1], undefined);
+  Assert.strictEqual(TelemetryEnvironment.currentEnvironment.settings.userPrefs[PREF_TEST_4], expectedValue);
+
+  TelemetryEnvironment.registerChangeListener("testWatchPrefs",
+    (reason, data) => deferred.resolve(data));
+  let oldEnvironmentData = TelemetryEnvironment.currentEnvironment;
 
   // Trigger a change in the watched preferences.
   Preferences.set(PREF_TEST_1, expectedValue);
   Preferences.set(PREF_TEST_2, false);
-  yield deferred.promise;
+  let eventEnvironmentData = yield deferred.promise;
 
   // Unregister the listener.
   TelemetryEnvironment.unregisterChangeListener("testWatchPrefs");
 
   // Check environment contains the correct data.
-  let environmentData = yield TelemetryEnvironment.getEnvironmentData();
-
-  let userPrefs = environmentData.settings.userPrefs;
+  Assert.deepEqual(oldEnvironmentData, eventEnvironmentData);
+  let userPrefs = TelemetryEnvironment.currentEnvironment.settings.userPrefs;
 
   Assert.equal(userPrefs[PREF_TEST_1], expectedValue,
                "Environment contains the correct preference value.");
-  Assert.equal(userPrefs[PREF_TEST_2], null,
-               "Report that the pref was user set and has no value.");
+  Assert.equal(userPrefs[PREF_TEST_2], "<user-set>",
+               "Report that the pref was user set but the value is not shown.");
   Assert.ok(!(PREF_TEST_3 in userPrefs),
             "Do not report if preference not user set.");
-
-  yield TelemetryEnvironment.shutdown();
 });
 
 add_task(function* test_prefWatch_prefReset() {
@@ -710,20 +662,24 @@ add_task(function* test_prefWatch_prefReset() {
   // Set the preference to a non-default value.
   Preferences.set(PREF_TEST, false);
 
-  yield TelemetryEnvironment.init();
+  gNow = futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE);
+  fakeNow(gNow);
 
   // Set the Environment preferences to watch.
   TelemetryEnvironment._watchPreferences(prefsToWatch);
   let deferred = PromiseUtils.defer();
   TelemetryEnvironment.registerChangeListener("testWatchPrefs_reset", deferred.resolve);
 
+  Assert.strictEqual(TelemetryEnvironment.currentEnvironment.settings.userPrefs[PREF_TEST], "<user-set>");
+
   // Trigger a change in the watched preferences.
   Preferences.reset(PREF_TEST);
   yield deferred.promise;
 
+  Assert.strictEqual(TelemetryEnvironment.currentEnvironment.settings.userPrefs[PREF_TEST], undefined);
+
   // Unregister the listener.
   TelemetryEnvironment.unregisterChangeListener("testWatchPrefs_reset");
-  yield TelemetryEnvironment.shutdown();
 });
 
 add_task(function* test_addonsWatch_InterestingChange() {
@@ -732,13 +688,15 @@ add_task(function* test_addonsWatch_InterestingChange() {
   // We only expect a single notification for each install, uninstall, enable, disable.
   const EXPECTED_NOTIFICATIONS = 4;
 
-  yield TelemetryEnvironment.init();
   let deferred = PromiseUtils.defer();
   let receivedNotifications = 0;
 
   let registerCheckpointPromise = (aExpected) => {
+    gNow = futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE);
+    fakeNow(gNow);
     return new Promise(resolve => TelemetryEnvironment.registerChangeListener(
-      "testWatchAddons_Changes" + aExpected, () => {
+      "testWatchAddons_Changes" + aExpected, (reason, data) => {
+        Assert.equal(reason, "addons-changed");
         receivedNotifications++;
         resolve();
       }));
@@ -754,24 +712,26 @@ add_task(function* test_addonsWatch_InterestingChange() {
   yield AddonTestUtils.installXPIFromURL(ADDON_INSTALL_URL);
   yield checkpointPromise;
   assertCheckpoint(1);
-  
+  Assert.ok(ADDON_ID in TelemetryEnvironment.currentEnvironment.addons.activeAddons);
+
   checkpointPromise = registerCheckpointPromise(2);
   let addon = yield AddonTestUtils.getAddonById(ADDON_ID);
   addon.userDisabled = true;
   yield checkpointPromise;
   assertCheckpoint(2);
+  Assert.ok(!(ADDON_ID in TelemetryEnvironment.currentEnvironment.addons.activeAddons));
 
   checkpointPromise = registerCheckpointPromise(3);
   addon.userDisabled = false;
   yield checkpointPromise;
   assertCheckpoint(3);
+  Assert.ok(ADDON_ID in TelemetryEnvironment.currentEnvironment.addons.activeAddons);
 
   checkpointPromise = registerCheckpointPromise(4);
   yield AddonTestUtils.uninstallAddonByID(ADDON_ID);
   yield checkpointPromise;
   assertCheckpoint(4);
-
-  yield TelemetryEnvironment.shutdown();
+  Assert.ok(!(ADDON_ID in TelemetryEnvironment.currentEnvironment.addons.activeAddons));
 
   Assert.equal(receivedNotifications, EXPECTED_NOTIFICATIONS,
                "We must only receive the notifications we expect.");
@@ -783,15 +743,19 @@ add_task(function* test_pluginsWatch_Add() {
     return;
   }
 
-  yield TelemetryEnvironment.init();
+  gNow = futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE);
+  fakeNow(gNow);
+
+  Assert.equal(TelemetryEnvironment.currentEnvironment.addons.activePlugins.length, 1);
 
   let newPlugin = new PluginTag(PLUGIN2_NAME, PLUGIN2_DESC, PLUGIN2_VERSION, true);
   gInstalledPlugins.push(newPlugin);
 
   let deferred = PromiseUtils.defer();
   let receivedNotifications = 0;
-  let callback = () => {
+  let callback = (reason, data) => {
     receivedNotifications++;
+    Assert.equal(reason, "addons-changed");
     deferred.resolve();
   };
   TelemetryEnvironment.registerChangeListener("testWatchPlugins_Add", callback);
@@ -799,8 +763,9 @@ add_task(function* test_pluginsWatch_Add() {
   Services.obs.notifyObservers(null, PLUGIN_UPDATED_TOPIC, null);
   yield deferred.promise;
 
+  Assert.equal(TelemetryEnvironment.currentEnvironment.addons.activePlugins.length, 2);
+
   TelemetryEnvironment.unregisterChangeListener("testWatchPlugins_Add");
-  yield TelemetryEnvironment.shutdown();
 
   Assert.equal(receivedNotifications, 1, "We must only receive one notification.");
 });
@@ -811,7 +776,8 @@ add_task(function* test_pluginsWatch_Remove() {
     return;
   }
 
-  yield TelemetryEnvironment.init();
+  gNow = futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE);
+  fakeNow(gNow);
 
   // Find the test plugin.
   let plugin = gInstalledPlugins.find(plugin => (plugin.name == PLUGIN2_NAME));
@@ -832,7 +798,6 @@ add_task(function* test_pluginsWatch_Remove() {
   yield deferred.promise;
 
   TelemetryEnvironment.unregisterChangeListener("testWatchPlugins_Remove");
-  yield TelemetryEnvironment.shutdown();
 
   Assert.equal(receivedNotifications, 1, "We must only receive one notification.");
 });
@@ -841,19 +806,28 @@ add_task(function* test_addonsWatch_NotInterestingChange() {
   // We are not interested to dictionary addons changes.
   const DICTIONARY_ADDON_INSTALL_URL = gDataRoot + "dictionary.xpi";
   const INTERESTING_ADDON_INSTALL_URL = gDataRoot + "restartless.xpi";
-  yield TelemetryEnvironment.init();
 
-  let receivedNotifications = 0;
+  gNow = futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE);
+  fakeNow(gNow);
+
+  let receivedNotification = false;
+  let deferred = PromiseUtils.defer();
   TelemetryEnvironment.registerChangeListener("testNotInteresting",
-                                              () => receivedNotifications++);
+    () => {
+      Assert.ok(!receivedNotification, "Should not receive multiple notifications");
+      receivedNotification = true;
+      deferred.resolve();
+    });
 
   yield AddonTestUtils.installXPIFromURL(DICTIONARY_ADDON_INSTALL_URL);
   yield AddonTestUtils.installXPIFromURL(INTERESTING_ADDON_INSTALL_URL);
 
-  Assert.equal(receivedNotifications, 1, "We must receive only one notification.");
+  yield deferred.promise;
+  Assert.ok(!("telemetry-dictionary@tests.mozilla.org" in
+              TelemetryEnvironment.currentEnvironment.addons.activeAddons),
+            "Dictionaries should not appear in active addons.");
 
   TelemetryEnvironment.unregisterChangeListener("testNotInteresting");
-  yield TelemetryEnvironment.shutdown();
 });
 
 add_task(function* test_addonsAndPlugins() {
@@ -884,12 +858,10 @@ add_task(function* test_addonsAndPlugins() {
     clicktoplay: true,
   };
 
-  yield TelemetryEnvironment.init();
-
   // Install an addon so we have some data.
   yield AddonTestUtils.installXPIFromURL(ADDON_INSTALL_URL);
 
-  let data = yield TelemetryEnvironment.getEnvironmentData();
+  let data = TelemetryEnvironment.currentEnvironment;
   checkEnvironmentData(data);
 
   // Check addon data.
@@ -919,8 +891,45 @@ add_task(function* test_addonsAndPlugins() {
 
   let personaId = (gIsGonk) ? null : PERSONA_ID;
   Assert.equal(data.addons.persona, personaId, "The correct Persona Id must be reported.");
+});
 
-  yield TelemetryEnvironment.shutdown();
+add_task(function* test_changeThrottling() {
+  const PREF_TEST = "toolkit.telemetry.test.pref1";
+  let prefsToWatch = {};
+  prefsToWatch[PREF_TEST] = TelemetryEnvironment.RECORD_PREF_STATE;
+  Preferences.reset(PREF_TEST);
+
+  gNow = futureDate(gNow, 10 * MILLISECONDS_PER_MINUTE);
+  fakeNow(gNow);
+
+  // Set the Environment preferences to watch.
+  TelemetryEnvironment._watchPreferences(prefsToWatch);
+  let deferred = PromiseUtils.defer();
+  let changeCount = 0;
+  TelemetryEnvironment.registerChangeListener("testWatchPrefs_throttling", () => {
+    ++changeCount;
+    deferred.resolve();
+  });
+
+  // The first pref change should trigger a notification.
+  Preferences.set(PREF_TEST, 1);
+  yield deferred.promise;
+  Assert.equal(changeCount, 1);
+
+  // We should only get a change notification for second of the following changes.
+  deferred = PromiseUtils.defer();
+  gNow = futureDate(gNow, MILLISECONDS_PER_MINUTE);
+  fakeNow(gNow);
+  Preferences.set(PREF_TEST, 2);
+  gNow = futureDate(gNow, 5 * MILLISECONDS_PER_MINUTE);
+  fakeNow(gNow);
+  Preferences.set(PREF_TEST, 3);
+  yield deferred.promise;
+
+  Assert.equal(changeCount, 2);
+
+  // Unregister the listener.
+  TelemetryEnvironment.unregisterChangeListener("testWatchPrefs_throttling");
 });
 
 add_task(function*() {
