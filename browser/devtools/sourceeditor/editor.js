@@ -220,6 +220,11 @@ function Editor(config) {
     cm.replaceSelection(" ".repeat(num), "end", "+input");
   };
 
+  // Allow add-ons to inject scripts for their editor instances
+  if (!this.config.externalScripts) {
+    this.config.externalScripts = [];
+  }
+
   events.decorate(this);
 }
 
@@ -258,9 +263,11 @@ Editor.prototype = {
       if (!this.config.themeSwitching)
         win.document.documentElement.setAttribute("force-theme", "light");
 
-      CM_SCRIPTS.forEach((url) =>
-        Services.scriptloader.loadSubScript(url, win, "utf8"));
-
+      let scriptsToInject = CM_SCRIPTS.concat(this.config.externalScripts);
+      scriptsToInject.forEach((url) => {
+        if (url.startsWith("chrome://"))
+          Services.scriptloader.loadSubScript(url, win, "utf8");
+      });
       // Replace the propertyKeywords, colorKeywords and valueKeywords
       // properties of the CSS MIME type with the values provided by Gecko.
       let cssSpec = win.CodeMirror.resolveMode("text/css");
@@ -335,6 +342,11 @@ Editor.prototype = {
       this._prefObserver.on(ENABLE_CODE_FOLDING, this.reloadPreferences);
 
       this.reloadPreferences();
+
+      win.editor = this;
+      let editorReadyEvent = new win.CustomEvent("editorReady");
+      win.dispatchEvent(editorReadyEvent);
+
       def.resolve();
     };
 
