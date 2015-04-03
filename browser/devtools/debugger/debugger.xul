@@ -156,6 +156,17 @@
     </menupopup>
   </popupset>
 
+  <popupset id="debuggerSourcesPopupset">
+    <menupopup id="debuggerSourcesContextMenu">
+      <menuitem id="debugger-sources-context-newtab"
+                label="&debuggerUI.context.newTab;"
+                accesskey="&debuggerUI.context.newTab.accesskey;"/>
+      <menuitem id="debugger-sources-context-copyurl"
+                label="&debuggerUI.context.copyUrl;"
+                accesskey="&debuggerUI.context.copyUrl.accesskey;"/>
+    </menupopup>
+  </popupset>
+
   <keyset id="debuggerKeys">
     <key id="nextSourceKey"
          keycode="VK_DOWN"
