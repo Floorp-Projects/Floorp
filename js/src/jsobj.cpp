@@ -627,44 +627,8 @@ DefinePropertyOnTypedArray(JSContext* cx, HandleObject obj, HandleId id,
     MOZ_ASSERT(IsAnyTypedArray(obj));
     // Steps 3.a-c.
     uint64_t index;
-    if (IsTypedArrayIndex(id, &index)) {
-        // These are all substeps of 3.c.
-        // Steps i-vi.
-        // We (wrongly) ignore out of range defines with a value.
-        if (index >= AnyTypedArrayLength(obj))
-            return result.succeed();
-
-        // Step vii.
-        if (desc.isAccessorDescriptor())
-            return result.fail(JSMSG_CANT_REDEFINE_PROP);
-
-        // Step viii.
-        if (desc.hasConfigurable() && desc.configurable())
-            return result.fail(JSMSG_CANT_REDEFINE_PROP);
-
-        // Step ix.
-        if (desc.hasEnumerable() && !desc.enumerable())
-            return result.fail(JSMSG_CANT_REDEFINE_PROP);
-
-        // Step x.
-        if (desc.hasWritable() && !desc.writable())
-            return result.fail(JSMSG_CANT_REDEFINE_PROP);
-
-        // Step xi.
-        if (desc.hasValue()) {
-            double d;
-            if (!ToNumber(cx, desc.value(), &d))
-                return false;
-
-            if (obj->is<TypedArrayObject>())
-                TypedArrayObject::setElement(obj->as<TypedArrayObject>(), index, d);
-            else
-                SharedTypedArrayObject::setElement(obj->as<SharedTypedArrayObject>(), index, d);
-        }
-
-        // Step xii.
-        return result.succeed();
-    }
+    if (IsTypedArrayIndex(id, &index))
+        return DefineTypedArrayElement(cx, obj, index, desc, result);
 
     // Step 4.
     return DefinePropertyOnObject(cx, obj.as<NativeObject>(), id, desc, result);

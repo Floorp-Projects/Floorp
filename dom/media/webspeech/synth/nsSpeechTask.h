@@ -45,6 +45,8 @@ public:
 
   void SetIndirectAudio(bool aIndirectAudio) { mIndirectAudio = aIndirectAudio; }
 
+  void BindStream(ProcessedMediaStream* aStream);
+
 protected:
   virtual ~nsSpeechTask();
 
@@ -77,6 +79,8 @@ private:
   void SendAudioImpl(nsRefPtr<mozilla::SharedBuffer>& aSamples, uint32_t aDataLen);
 
   nsRefPtr<SourceMediaStream> mStream;
+
+  nsRefPtr<MediaInputPort> mPort;
 
   nsCOMPtr<nsISpeechTaskCallback> mCallback;
 
