@@ -1209,7 +1209,6 @@ function do_load_child_test_harness()
 
   let command =
         "const _HEAD_JS_PATH=" + uneval(_HEAD_JS_PATH) + "; "
-      + "const _HTTPD_JS_PATH=" + uneval(_HTTPD_JS_PATH) + "; "
       + "const _HEAD_FILES=" + uneval(_HEAD_FILES) + "; "
       + "const _TAIL_FILES=" + uneval(_TAIL_FILES) + "; "
       + "const _TEST_NAME=" + uneval(_TEST_NAME) + "; "
