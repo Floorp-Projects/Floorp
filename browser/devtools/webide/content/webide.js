@@ -204,16 +204,15 @@ let UI = {
         this.updateProjectEditorHeader();
         projectList.update();
         break;
-      case "runtime-targets":
       case "project-removed":
-        projectList.update(details);
+        projectList.update();
         break;
       case "install-progress":
         this.updateProgress(Math.round(100 * details.bytesSent / details.totalBytes));
         break;
       case "runtime-targets":
         this.autoSelectProject();
-        projectList.update();
+        projectList.update(details);
         break;
       case "pre-package":
         this.prePackageLog(details);

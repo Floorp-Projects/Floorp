@@ -134,6 +134,14 @@ nsSynthVoiceRegistry::~nsSynthVoiceRegistry()
   // mSpeechSynthChild's lifecycle is managed by the Content protocol.
   mSpeechSynthChild = nullptr;
 
+  if (mStream) {
+    if (!mStream->IsDestroyed()) {
+     mStream->Destroy();
+   }
+
+   mStream = nullptr;
+  }
+
   mUriVoiceMap.Clear();
 }
 
@@ -568,6 +576,11 @@ nsSynthVoiceRegistry::Speak(const nsAString& aText,
 
   if (serviceType == nsISpeechService::SERVICETYPE_INDIRECT_AUDIO) {
     aTask->SetIndirectAudio(true);
+  } else {
+    if (!mStream) {
+      mStream = MediaStreamGraph::GetInstance()->CreateTrackUnionStream(nullptr);
+    }
+    aTask->BindStream(mStream);
   }
 
   voice->mService->Speak(aText, voice->mUri, aRate, aPitch, aTask);

@@ -731,9 +731,8 @@ function setupTestCommon() {
 
   do_test_pending();
 
-  if (gTestID) {
-    do_throw("setupTestCommon should only be called once!");
-  }
+  Assert.strictEqual(gTestID, undefined, "gTestID should be 'undefined' (" +
+                     "setupTestCommon should only be called once)");
 
   let caller = Components.stack.caller;
   gTestID = caller.filename.toString().split("/").pop().split(".")[0];
@@ -1041,7 +1040,6 @@ function pathHandler(aMetadata, aResponse) {
  * application.ini file.
  *
  * @return  The version string from the application.ini file.
- * @throws  If the application.ini file is not found.
  */
 function getAppVersion() {
   // Read the application.ini and use its application version.
@@ -1050,10 +1048,8 @@ function getAppVersion() {
   if (!iniFile.exists()) {
     iniFile = gGREBinDirOrig.clone();
     iniFile.append(FILE_APPLICATION_INI);
-    if (!iniFile.exists()) {
-      do_throw("Unable to find application.ini!");
-    }
   }
+  Assert.ok(iniFile.exists(), "the application.ini file should exist");
   let iniParser = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
                   getService(Ci.nsIINIParserFactory).
                   createINIParser(iniFile);
@@ -1137,8 +1133,8 @@ function getStageDirFile(aRelPath, aAllowNonexistent) {
         }
       }
     }
-    if (!aAllowNonexistent && !file.exists()) {
-      do_throw(file.path + " does not exist");
+    if (!aAllowNonexistent) {
+      Assert.ok(file.exists(), file.path + " should exist");
     }
     return file;
   }
@@ -1197,8 +1193,7 @@ function getSpecialFolderDir(aCSIDL) {
     return null;
   }
   debugDump("SHGetSpecialFolderPath returned path: " + path);
-  let dir = Cc["@mozilla.org/file/local;1"].
-            createInstance(Ci.nsILocalFile);
+  let dir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
   dir.initWithPath(path);
   return dir;
 }
@@ -1436,10 +1431,8 @@ function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
   if (!updater.exists()) {
     updater = binDir.clone();
     updater.append(FILE_UPDATER_BIN);
-    if (!updater.exists()) {
-      do_throw("Unable to find updater binary!");
-    }
   }
+  Assert.ok(updater.exists(), "updater or updater.app should exist");
 
   let updatesDir = getUpdatesPatchDir();
   updater.copyToFollowingLinks(updatesDir, updater.leafName);
@@ -1449,9 +1442,7 @@ function runUpdate(aExpectedExitValue, aExpectedStatus, aCallback) {
     updateBin.append("Contents");
     updateBin.append("MacOS");
     updateBin.append("updater");
-    if (!updateBin.exists()) {
-      do_throw("Unable to find the updater executable!");
-    }
+    Assert.ok(updateBin.exists(), updateBin.path + " should exist");
   }
 
   let applyToDir = getApplyDirFile(null, true);
@@ -1565,18 +1556,17 @@ function shouldRunServiceTest(aFirstTest) {
   let binDir = getGREBinDir();
   let updaterBin = binDir.clone();
   updaterBin.append(FILE_UPDATER_BIN);
-  if (!updaterBin.exists()) {
-    do_throw("Unable to find updater binary!");
-  }
+  Assert.ok(updaterBin.exists(), updaterBin.path + " should exist");
 
   let updaterBinPath = updaterBin.path;
   if (/ /.test(updaterBinPath)) {
     updaterBinPath = '"' + updaterBinPath + '"';
   }
 
+  let isBinSigned = isBinarySigned(updaterBinPath);
+
   const REG_PATH = "SOFTWARE\\Mozilla\\MaintenanceService\\" +
                    "3932ecacee736d366d6436db0f55bce4";
-
   let key = Cc["@mozilla.org/windows-registry-key;1"].
             createInstance(Ci.nsIWindowsRegKey);
   try {
@@ -1584,13 +1574,16 @@ function shouldRunServiceTest(aFirstTest) {
              Ci.nsIWindowsRegKey.ACCESS_READ | key.WOW64_64);
   } catch (e) {
     // The build system could sign the files and not have the test registry key
-    // in which case we should fail the test by throwing so it can be fixed.
-    if (IS_AUTHENTICODE_CHECK_ENABLED && isBinarySigned(updaterBinPath)) {
-      do_throw("binary is signed but the test registry key does not exists!");
+    // in which case we should fail the test if the updater binary is signed so
+    // the build system can be fixed by adding the registry key.
+    if (IS_AUTHENTICODE_CHECK_ENABLED) {
+      Assert.ok(isBinSigned, "the updater.exe binary should not be signed " +
+                "when the test registry key doesn't exist (if not, build " +
+                "system configuration bug?)");
     }
 
     logTestInfo("this test can only run on the buildbot build system at this " +
-                "time.");
+                "time");
     return false;
   }
 
@@ -1602,26 +1595,23 @@ function shouldRunServiceTest(aFirstTest) {
   process.init(helperBin);
   debugDump("checking if the service exists on this machine.");
   process.run(true, args, args.length);
-  if (process.exitValue == 0xEE) {
-    do_throw("test registry key exists but this test can only run on systems " +
-             "with the maintenance service installed.");
-  } else {
-    debugDump("service exists, return value: " + process.exitValue);
-  }
+  Assert.notEqual(process.exitValue, 0xEE, "the maintenance service should " +
+                  "be installed (if not, build system configuration bug?)");
 
   // If this is the first test in the series, then there is no reason the
-  // service should be anything but stopped, so be strict here and throw
-  // an error.
-  if (aFirstTest && process.exitValue != 0) {
-    do_throw("First test, check for service stopped state returned error " +
-             process.exitValue);
+  // service should be anything but stopped, so be strict here and fail the
+  // test.
+  if (aFirstTest) {
+    Assert.equal(process.exitValue, 0, "service should not be running for " +
+                 "the first test");
   }
 
-  if (IS_AUTHENTICODE_CHECK_ENABLED && !isBinarySigned(updaterBinPath)) {
-    logTestInfo("test registry key exists but this test can only run on " +
-                "builds with signed binaries when " +
-                "DISABLE_UPDATER_AUTHENTICODE_CHECK is not defined");
-    do_throw("this test can only run on builds with signed binaries.");
+  if (IS_AUTHENTICODE_CHECK_ENABLED) {
+    // The test registry key exists and IS_AUTHENTICODE_CHECK_ENABLED is true
+    // so the binaries should be signed. To run the test locally
+    // DISABLE_UPDATER_AUTHENTICODE_CHECK can be defined.
+    Assert.ok(isBinSigned, "the updater.exe binary should be signed (if not, " +
+              "build system configuration bug?)");
   }
 
   // In case the machine is running an old maintenance service or if it
@@ -1665,7 +1655,7 @@ function setupAppFilesAsync() {
   } catch (e) {
     if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
       do_throw("Exceeded MAX_TIMEOUT_RUNS while trying to setup application " +
-               "files. Exception: " + e);
+               "files! Exception: " + e);
     }
     do_timeout(TEST_CHECK_TIMEOUT, setupAppFilesAsync);
     return;
@@ -1688,7 +1678,7 @@ function setupAppFiles() {
     try {
       destDir.create(Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
     } catch (e) {
-      logTestInfo("unable to create directory, Path: " + destDir.path +
+      logTestInfo("unable to create directory! Path: " + destDir.path +
                   ", Exception: " + e);
       do_throw(e);
     }
@@ -1782,10 +1772,7 @@ function copyFileToTestAppDir(aFileRelPath, aInGreDir) {
     fileRelPath = fileRelPath + ".app";
   }
 
-  if (!srcFile.exists()) {
-    do_throw("Unable to copy file since it doesn't exist! Path: " +
-             srcFile.path);
-  }
+  Assert.ok(srcFile.exists(), srcFile.path + " should exist");
 
   // Symlink libraries. Note that the XUL library on Mac OS X doesn't have a
   // file extension and shouldSymlink will always be false on Windows.
@@ -1854,15 +1841,14 @@ function attemptServiceInstall() {
                 "directory path: " + maintSvcDir.path);
     }
   }
-  if (!maintSvcDir || !maintSvcDir.exists()) {
-    do_throw("maintenance service install directory doesn't exist!");
-  }
+  Assert.ok(!!maintSvcDir, "maintenance service install directory should " +
+            "exist");
+  Assert.ok(maintSvcDir.exists(), "maintenance service install directory " +
+            "should exist");
   let oldMaintSvcBin = maintSvcDir.clone();
   oldMaintSvcBin.append(FILE_MAINTENANCE_SERVICE_BIN);
-  if (!oldMaintSvcBin.exists()) {
-    do_throw("maintenance service install directory binary doesn't exist! " +
-             "Path: " + oldMaintSvcBin.path);
-  }
+  Assert.ok(oldMaintSvcBin.exists(), "maintenance service install directory " +
+            "binary should exist. Path: " + oldMaintSvcBin.path);
   let buildMaintSvcBin = getGREBinDir();
   buildMaintSvcBin.append(FILE_MAINTENANCE_SERVICE_BIN);
   if (readFileBytes(oldMaintSvcBin) == readFileBytes(buildMaintSvcBin)) {
@@ -1888,11 +1874,9 @@ function attemptServiceInstall() {
         backupMaintSvcBin.moveTo(maintSvcDir, FILE_MAINTENANCE_SERVICE_BIN);
       }
     }
-    logTestInfo("unable to copy new maintenance service into the " +
-                "maintenance service directory: " + maintSvcDir.path + ", " +
-                "Exception: " + e);
-    do_throw("The account running the tests on the build systems should have " +
-             "write access to the maintenance service directory!");
+    Assert.ok(false, "should be able copy the test maintenance service to " +
+              "the maintenance service directory (if not, build system " +
+              "configuration bug?). Path: " + maintSvcDir.path);
   }
 
   return true;
@@ -1948,24 +1932,25 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
     helperBinProcess.init(helperBin);
     debugDump("stopping service...");
     helperBinProcess.run(true, helperBinArgs, helperBinArgs.length);
-    if (helperBinProcess.exitValue == 0xEE) {
-      do_throw("The service does not exist on this machine.  Return value: " +
-               helperBinProcess.exitValue);
-    } else if (helperBinProcess.exitValue != 0) {
+    Assert.notEqual(helperBinProcess.exitValue, 0xEE, "the maintenance " +
+                    "service should exist");
+
+    if (helperBinProcess.exitValue != 0) {
       if (aFailTest) {
-        do_throw("maintenance service did not stop, last state: " +
-                 helperBinProcess.exitValue + ". Forcing test failure.");
-      } else {
-        logTestInfo("maintenance service did not stop, last state: " +
-                    helperBinProcess.exitValue + ".  May cause failures.");
+        Assert.ok(false, "maintenance service should stop! Process " +
+                  "exitValue: " + helperBinProcess.exitValue);
       }
+
+      logTestInfo("maintenance service did not stop which may cause test " +
+                  "failures later. Process exitValue: " +
+                  helperBinProcess.exitValue);
     } else {
       debugDump("service stopped");
     }
     waitServiceApps();
   }
   function waitForApplicationStop(aApplication) {
-    debugDump("waiting for " + aApplication + " to stop if necessary..");
+    debugDump("waiting for " + aApplication + " to stop if necessary");
     // Use the helper bin to ensure the application is stopped.
     // If not, then wait for it to be stopped (at most 120 seconds)
     let helperBin = getTestDirFile(FILE_HELPER_BIN);
@@ -1976,10 +1961,8 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
                            createInstance(Ci.nsIProcess);
     helperBinProcess.init(helperBin);
     helperBinProcess.run(true, helperBinArgs, helperBinArgs.length);
-    if (helperBinProcess.exitValue != 0) {
-      do_throw(aApplication + " did not stop, last state: " +
-               helperBinProcess.exitValue + ". Forcing test failure.");
-    }
+    Assert.equal(helperBinProcess.exitValue, 0, "the process for " +
+                 aApplication + " should stop");
   }
 
   // Make sure the service from the previous test is already stopped.
@@ -2114,7 +2097,6 @@ function runUpdateUsingService(aInitialStatus, aExpectedStatus, aCheckSvcLog) {
  * it doesn't end up in the test log.
  *
  * @return  nsIFile for the shell binary to launch using nsIProcess.
- * @throws  if the shell binary doesn't exist.
  */
 function getLaunchBin() {
   let launchBin;
@@ -2127,10 +2109,7 @@ function getLaunchBin() {
                 createInstance(Ci.nsILocalFile);
     launchBin.initWithPath("/bin/sh");
   }
-
-  if (!launchBin.exists()) {
-    do_throw(launchBin.path + " must exist to run this test!");
-  }
+  Assert.ok(launchBin.exists(), launchBin.path + " should exist");
 
   return launchBin;
 }
@@ -3432,9 +3411,10 @@ const gProcessObserver = {
       gAppTimer.cancel();
       gAppTimer = null;
     }
-    if (aTopic != "process-finished" || gProcess.exitValue != 0) {
-      do_throw("Failed to launch application");
-    }
+    Assert.equal(gProcess.exitValue, 0, "the exitValue for the application " +
+                 "process should be '0'");
+    Assert.equal(aTopic, "process-finished", "the application process " +
+                 "observer topic should be 'process-finished'");
     do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver])
@@ -3450,7 +3430,7 @@ const gTimerCallback = {
       logTestInfo("attempt to kill process");
       gProcess.kill();
     }
-    do_throw("launch application timer expired");
+    Assert.ok(false, "Launch application timer expired")
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITimerCallback])
 };

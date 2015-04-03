@@ -16,7 +16,7 @@ add_task(function*() {
   let widget = panel.playerWidgets[0];
 
   info("Click the toggle button to pause all animations");
-  let onRefresh = widget.player.once(widget.player.AUTO_REFRESH_EVENT);
+  let onRefresh = onceNextPlayerRefresh(widget.player);
   yield panel.toggleAll();
   yield onRefresh;
 
@@ -25,7 +25,7 @@ add_task(function*() {
   ok(widget.el.classList.contains("paused"), "The widget's UI is in paused state");
 
   info("Click the toggle button to play all animations");
-  onRefresh = widget.player.once(widget.player.AUTO_REFRESH_EVENT);
+  onRefresh = onceNextPlayerRefresh(widget.player);
   yield panel.toggleAll();
   yield onRefresh;
 

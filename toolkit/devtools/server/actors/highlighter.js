@@ -48,6 +48,16 @@ const SIMPLE_OUTLINE_SHEET = ".__fx-devtools-hide-shortcut__ {" +
 const GEOMETRY_SIZE_ARROW_OFFSET = .25; // 25%
 const GEOMETRY_LABEL_SIZE = 6;
 
+// Maximum size, in pixel, for the horizontal ruler and vertical ruler
+// used by RulersHighlighter
+const RULERS_MAX_X_AXIS = 10000;
+const RULERS_MAX_Y_AXIS = 15000;
+// Number of steps after we add a graduation, marker and text in
+// RulersHighliter; currently the unit is in pixel.
+const RULERS_GRADUATION_STEP = 5;
+const RULERS_MARKER_STEP = 50;
+const RULERS_TEXT_STEP = 100;
+
 /**
  * The registration mechanism for highlighters provide a quick way to
  * have modular highlighters, instead of a hard coded list.
@@ -2608,6 +2618,227 @@ GeometryEditorHighlighter.prototype = Heritage.extend(AutoRefreshHighlighter.pro
 });
 register(GeometryEditorHighlighter);
 exports.GeometryEditorHighlighter = GeometryEditorHighlighter;
+
+/**
+ * The RulersHighlighter is a class that displays both horizontal and
+ * vertical rules on the page, along the top and left edges, with pixel
+ * graduations, useful for users to quickly check distances
+ */
+function RulersHighlighter(tabActor) {
+  this.win = tabActor.window;
+  this.markup = new CanvasFrameAnonymousContentHelper(tabActor,
+    this._buildMarkup.bind(this));
+
+  this.win.addEventListener("scroll", this, true);
+  this.win.addEventListener("pagehide", this, true);
+}
+
+RulersHighlighter.prototype =  {
+  typeName: "RulersHighlighter",
+
+  ID_CLASS_PREFIX: "rulers-highlighter-",
+
+  _buildMarkup: function() {
+    let prefix = this.ID_CLASS_PREFIX;
+    let window = this.win;
+
+    function createRuler(axis, size) {
+      let width, height;
+      let isHorizontal = true;
+
+      if (axis === "x") {
+        width = size;
+        height = 16;
+      } else if (axis === "y") {
+        width = 16;
+        height = size;
+        isHorizontal = false;
+      } else {
+        throw new Error(`Invalid type of axis given; expected "x" or "y" but got "${axis}"`);
+      }
+
+      let g = createSVGNode(window, {
+        nodeType: "g",
+        attributes: {
+          id: `${axis}-axis`
+        },
+        parent: svg,
+        prefix
+      });
+
+      createSVGNode(window, {
+        nodeType: "rect",
+        attributes: {
+          y: isHorizontal ? 0 : 16,
+          width,
+          height
+        },
+        parent: g
+      });
+
+      let gRule = createSVGNode(window, {
+        nodeType: "g",
+        attributes: {
+          id: `${axis}-axis-ruler`
+        },
+        parent: g,
+        prefix
+      });
+
+      let pathGraduations = createSVGNode(window, {
+        nodeType: "path",
+        attributes: {
+          "class": "ruler-graduations",
+          width,
+          height
+        },
+        parent: gRule,
+        prefix
+      });
+
+      let pathMarkers = createSVGNode(window, {
+        nodeType: "path",
+        attributes: {
+          "class": "ruler-markers",
+          width,
+          height
+        },
+        parent: gRule,
+        prefix
+      });
+
+      let gText = createSVGNode(window, {
+        nodeType: "g",
+        attributes: {
+          id: `${axis}-axis-text`,
+          "class": (isHorizontal ? "horizontal" : "vertical") + "-labels"
+        },
+        parent: g,
+        prefix
+      });
+
+      let dGraduations = "";
+      let dMarkers = "";
+      let graduationLength;
+
+      for (let i = 0; i < size; i+=RULERS_GRADUATION_STEP) {
+        if (i === 0) continue;
+
+        graduationLength = (i % 2 === 0) ? 6 : 4;
+
+        if (i % RULERS_TEXT_STEP === 0) {
+          graduationLength = 8;
+          createSVGNode(window, {
+            nodeType: "text",
+            parent: gText,
+            attributes: {
+              x: isHorizontal ? 2 + i : -i - 1,
+              y: 5
+            }
+          }).textContent = i;
+        }
+
+        if (isHorizontal) {
+          if (i % RULERS_MARKER_STEP === 0)
+            dMarkers += `M${i} 0 L${i} ${graduationLength}`;
+          else
+            dGraduations += `M${i} 0 L${i} ${graduationLength} `;
+
+        } else {
+          if (i % 50 === 0)
+            dMarkers += `M0 ${i} L${graduationLength} ${i}`;
+          else
+            dGraduations += `M0 ${i} L${graduationLength} ${i}`;
+        }
+      }
+
+      pathGraduations.setAttribute("d", dGraduations);
+      pathMarkers.setAttribute("d", dMarkers);
+
+      return g;
+    }
+
+    let container = createNode(window, {
+      attributes: {"class": "highlighter-container"}
+    });
+
+    let root = createNode(window, {
+      parent: container,
+      attributes: {
+        "id": "root",
+        "class": "root"
+      },
+      prefix
+    });
+
+    let svg = createSVGNode(window, {
+      nodeType: "svg",
+      parent: root,
+      attributes: {
+        id: "elements",
+        "class": "elements",
+        width: "100%",
+        height: "100%",
+        hidden: "true"
+      },
+      prefix
+    });
+
+    createRuler("x", RULERS_MAX_X_AXIS);
+    createRuler("y", RULERS_MAX_Y_AXIS);
+
+    return container;
+  },
+
+  handleEvent: function(event) {
+    switch (event.type) {
+      case "scroll":
+        this._onScroll(event);
+        break;
+      case "pagehide":
+        this.destroy();
+        break;
+    }
+  },
+
+  _onScroll: function(event) {
+    let prefix = this.ID_CLASS_PREFIX;
+    let { scrollX, scrollY } = event.view;
+
+    this.markup.getElement(`${prefix}x-axis-ruler`)
+                        .setAttribute("transform", `translate(${-scrollX})`);
+    this.markup.getElement(`${prefix}x-axis-text`)
+                        .setAttribute("transform", `translate(${-scrollX})`);
+    this.markup.getElement(`${prefix}y-axis-ruler`)
+                        .setAttribute("transform", `translate(0, ${-scrollY})`);
+    this.markup.getElement(`${prefix}y-axis-text`)
+                        .setAttribute("transform", `translate(0, ${-scrollY})`);
+  },
+
+  destroy: function() {
+    this.hide();
+
+    this.win.removeEventListener("scroll", this, true);
+    this.win.removeEventListener("pagehide", this, true);
+
+    this.markup.destroy();
+
+    events.emit(this, "destroy");
+  },
+
+  show: function() {
+    this.markup.removeAttributeForElement(this.ID_CLASS_PREFIX + "elements",
+      "hidden");
+  },
+
+  hide: function() {
+    this.markup.setAttributeForElement(this.ID_CLASS_PREFIX + "elements",
+      "hidden", "true");
+  }
+};
+
+register(RulersHighlighter);
+exports.RulersHighlighter = RulersHighlighter;
 
 /**
  * The SimpleOutlineHighlighter is a class that has the same API than the

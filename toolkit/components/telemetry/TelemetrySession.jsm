@@ -47,9 +47,7 @@ const REASON_SHUTDOWN = "shutdown";
 
 const ENVIRONMENT_CHANGE_LISTENER = "TelemetrySession::onEnvironmentChange";
 
-const SEC_IN_ONE_DAY  = 24 * 60 * 60;
-const MS_IN_ONE_DAY   = SEC_IN_ONE_DAY * 1000;
-
+const MS_IN_ONE_HOUR  = 60 * 60 * 1000;
 const MIN_SUBSESSION_LENGTH_MS = 10 * 60 * 1000;
 
 // This is the HG changeset of the Histogram.json file, used to associate
@@ -86,6 +84,8 @@ const TELEMETRY_DELAY = 60000;
 const TELEMETRY_TEST_DELAY = 100;
 // Execute a scheduler tick every 5 minutes.
 const SCHEDULER_TICK_INTERVAL_MS = 5 * 60 * 1000;
+// When user is idle, execute a scheduler tick every 60 minutes.
+const SCHEDULER_TICK_IDLE_INTERVAL_MS = 60 * 60 * 1000;
 // The maximum number of times a scheduled operation can fail.
 const SCHEDULER_RETRY_ATTEMPTS = 3;
 
@@ -195,6 +195,17 @@ function areTimesClose(t1, t2, tolerance) {
 }
 
 /**
+ * Get the next midnight for a date.
+ * @param {Object} date The date object to check.
+ * @return {Object} The Date object representing the next midnight.
+ */
+function getNextMidnight(date) {
+  let nextMidnight = new Date(truncateToDays(date));
+  nextMidnight.setDate(nextMidnight.getDate() + 1);
+  return nextMidnight;
+}
+
+/**
  * Get the midnight which is closer to the provided date.
  * @param {Object} date The date object to check.
  * @return {Object} The Date object representing the closes midnight, or null if midnight
@@ -206,8 +217,7 @@ function getNearestMidnight(date) {
     return lastMidnight;
   }
 
-  let nextMidnightDate = new Date(lastMidnight);
-  nextMidnightDate.setDate(nextMidnightDate.getDate() + 1);
+  const nextMidnightDate = getNextMidnight(date);
   if (areTimesClose(date.getTime(), nextMidnightDate.getTime(), SCHEDULER_MIDNIGHT_TOLERANCE_MS)) {
     return nextMidnightDate;
   }
@@ -416,7 +426,10 @@ let TelemetryScheduler = {
 
   // The timer which drives the scheduler.
   _schedulerTimer: null,
+  // The interval used by the scheduler timer.
+  _schedulerInterval: 0,
   _shuttingDown: true,
+  _isUserIdle: false,
 
   /**
    * Initialises the scheduler and schedules the first daily/aborted session pings.
@@ -425,19 +438,21 @@ let TelemetryScheduler = {
     this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, "TelemetryScheduler::");
     this._log.trace("init");
     this._shuttingDown = false;
+    this._isUserIdle = false;
     // Initialize the last daily ping and aborted session last due times to the current time.
     // Otherwise, we might end up sending daily pings even if the subsession is not long enough.
     let now = Policy.now();
     this._lastDailyPingTime = now.getTime();
     this._lastSessionCheckpointTime = now.getTime();
     this._rescheduleTimeout();
+    idleService.addIdleObserver(this, IDLE_TIMEOUT_SECONDS);
   },
 
   /**
    * Reschedules the tick timer.
    */
   _rescheduleTimeout: function() {
-    this._log.trace("_rescheduleTimeout");
+    this._log.trace("_rescheduleTimeout - isUserIdle: " + this._isUserIdle);
     if (this._shuttingDown) {
       this._log.warn("_rescheduleTimeout - already shutdown");
       return;
@@ -447,8 +462,31 @@ let TelemetryScheduler = {
       Policy.clearSchedulerTickTimeout(this._schedulerTimer);
     }
 
+    const now = Policy.now();
+    let timeout = SCHEDULER_TICK_INTERVAL_MS;
+
+    // When the user is idle we want to fire the timer less often.
+    if (this._isUserIdle) {
+      timeout = SCHEDULER_TICK_IDLE_INTERVAL_MS;
+      // We need to make sure though that we don't miss sending pings around
+      // midnight when we use the longer idle intervals.
+      const nextMidnight = getNextMidnight(now);
+      timeout = Math.min(timeout, nextMidnight.getTime() - now.getTime());
+    }
+
+    this._log.trace("_rescheduleTimeout - scheduling next tick for " + new Date(now.getTime() + timeout));
     this._schedulerTimer =
-      Policy.setSchedulerTickTimeout(() => this._onSchedulerTick(), SCHEDULER_TICK_INTERVAL_MS);
+      Policy.setSchedulerTickTimeout(() => this._onSchedulerTick(), timeout);
+  },
+
+  _sentDailyPingToday: function(nowDate) {
+    // This is today's date and also the previous midnight (0:00).
+    const todayDate = truncateToDays(nowDate);
+    const nearestMidnight = getNearestMidnight(nowDate);
+    // If we are close to midnight, we check against that, otherwise against the last midnight.
+    const checkDate = nearestMidnight || todayDate;
+    // We consider a ping sent for today if it occured after midnight, or prior within the tolerance.
+    return (this._lastDailyPingTime >= (checkDate.getTime() - SCHEDULER_MIDNIGHT_TOLERANCE_MS));
   },
 
   /**
@@ -457,31 +495,37 @@ let TelemetryScheduler = {
    * @return {Boolean} True if we can send the daily ping, false otherwise.
    */
   _isDailyPingDue: function(nowDate) {
-    let nearestMidnight = getNearestMidnight(nowDate);
-    if (nearestMidnight) {
-      let subsessionLength = Math.abs(nowDate.getTime() - this._lastDailyPingTime);
-      if (subsessionLength < MIN_SUBSESSION_LENGTH_MS) {
-        // Generating a daily ping now would create a very short subsession.
-        return false;
-      } else if (areTimesClose(this._lastDailyPingTime, nearestMidnight.getTime(),
-                               SCHEDULER_MIDNIGHT_TOLERANCE_MS)) {
-        // We've already sent a ping for this midnight.
-        return false;
-      }
+    const sentPingToday = this._sentDailyPingToday(nowDate);
+
+    // The daily ping is not due if we already sent one today.
+    if (sentPingToday) {
+      this._log.trace("_isDailyPingDue - already sent one today");
+      return false;
+    }
+
+    const nearestMidnight = getNearestMidnight(nowDate);
+    if (!sentPingToday && !nearestMidnight) {
+      // Computer must have gone to sleep, the daily ping is overdue.
+      this._log.trace("_isDailyPingDue - daily ping is overdue... computer went to sleep?");
       return true;
     }
 
-    let lastDailyPingDate = truncateToDays(new Date(this._lastDailyPingTime));
-    // This is today's date and also the previous midnight (0:00).
-    let todayDate = truncateToDays(nowDate);
-    // Check that _lastDailyPingTime isn't today nor within SCHEDULER_MIDNIGHT_TOLERANCE_MS of the
-    // *previous* midnight.
-    if ((lastDailyPingDate.getTime() != todayDate.getTime()) &&
-        !areTimesClose(this._lastDailyPingTime, todayDate.getTime(), SCHEDULER_MIDNIGHT_TOLERANCE_MS)) {
-      // Computer must have gone to sleep, the daily ping is overdue.
-      return true;
+    // Avoid overly short sessions.
+    const timeSinceLastDaily = nowDate.getTime() - this._lastDailyPingTime;
+    if (timeSinceLastDaily < MIN_SUBSESSION_LENGTH_MS) {
+      this._log.trace("_isDailyPingDue - delaying daily to keep minimum session length");
+      return false;
     }
-    return false;
+
+    // To fight jank, we allow daily pings to be collected on user idle before midnight
+    // within the tolerance interval.
+    if (!this._isUserIdle && (nowDate.getTime() < nearestMidnight.getTime())) {
+      this._log.trace("_isDailyPingDue - waiting for user idle period");
+      return false;
+    }
+
+    this._log.trace("_isDailyPingDue - is due");
+    return true;
   },
 
   /**
@@ -499,6 +543,25 @@ let TelemetryScheduler = {
   },
 
   /**
+   * The notifications handler.
+   */
+  observe: function(aSubject, aTopic, aData) {
+    this._log.trace("observe - aTopic: " + aTopic);
+    switch(aTopic) {
+      case "idle":
+        // If the user is idle, increase the tick interval.
+        this._isUserIdle = true;
+        return this._onSchedulerTick();
+        break;
+      case "active":
+        // User is back to work, restore the original tick interval.
+        this._isUserIdle = false;
+        return this._onSchedulerTick();
+        break;
+    }
+  },
+
+  /**
    * Performs a scheduler tick. This function manages Telemetry recurring operations.
    * @return {Promise} A promise, only used when testing, resolved when the scheduled
    *                   operation completes.
@@ -506,7 +569,7 @@ let TelemetryScheduler = {
   _onSchedulerTick: function() {
     if (this._shuttingDown) {
       this._log.warn("_onSchedulerTick - already shutdown.");
-      return;
+      return Promise.reject(new Error("Already shutdown."));
     }
 
     let promise = Promise.resolve();
@@ -649,6 +712,8 @@ let TelemetryScheduler = {
       Policy.clearSchedulerTickTimeout(this._schedulerTimer);
       this._schedulerTimer = null;
     }
+
+    idleService.removeIdleObserver(this, IDLE_TIMEOUT_SECONDS);
 
     this._shuttingDown = true;
   }
@@ -1517,7 +1582,7 @@ let Impl = {
         yield this._checkAbortedSessionPing();
 
         TelemetryEnvironment.registerChangeListener(ENVIRONMENT_CHANGE_LISTENER,
-                                                    () => this._onEnvironmentChange());
+                                                    (reason, data) => this._onEnvironmentChange(reason, data));
         // Write the first aborted-session ping as early as possible. Just do that
         // if we are not testing, since calling Telemetry.reset() will make a previous
         // aborted ping a pending ping.
@@ -1531,7 +1596,7 @@ let Impl = {
 
         this._delayedInitTaskDeferred.resolve();
       } catch (e) {
-        this._delayedInitTaskDeferred.reject();
+        this._delayedInitTaskDeferred.reject(e);
       } finally {
         this._delayedInitTask = null;
         this._delayedInitTaskDeferred = null;
@@ -1922,7 +1987,8 @@ let Impl = {
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
     // If required, also save the payload as an aborted session.
     if (saveAsAborted) {
-      return promise.then(() => this._saveAbortedSessionPing(payload));
+      let abortedPromise = this._saveAbortedSessionPing(payload);
+      promise = promise.then(() => abortedPromise);
     }
 #endif
     return promise;
@@ -1983,8 +2049,8 @@ let Impl = {
     }
   }),
 
-  _onEnvironmentChange: function() {
-    this._log.trace("_onEnvironmentChange");
+  _onEnvironmentChange: function(reason, oldEnvironment) {
+    this._log.trace("_onEnvironmentChange", reason);
     let payload = this.getSessionPayload(REASON_ENVIRONMENT_CHANGE, true);
 
     let clonedPayload = Cu.cloneInto(payload, myScope);
@@ -1994,6 +2060,7 @@ let Impl = {
       retentionDays: RETENTION_DAYS,
       addClientId: true,
       addEnvironment: true,
+      overrideEnvironment: oldEnvironment,
     };
     TelemetryPing.send(getPingType(payload), payload, options);
   },
@@ -2028,8 +2095,13 @@ let Impl = {
     const FILE_PATH = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIRECTORY,
                                    ABORTED_SESSION_FILE_NAME);
     try {
+      this._log.trace("_removeAbortedSessionPing - success");
       return OS.File.remove(FILE_PATH);
-    } catch (ex if ex.becauseNoSuchFile) { }
+    } catch (ex if ex.becauseNoSuchFile) {
+      this._log.trace("_removeAbortedSessionPing - no such file");
+    } catch (ex) {
+      this._log.error("_removeAbortedSessionPing - error removing ping", ex)
+    }
     return Promise.resolve();
   },
 

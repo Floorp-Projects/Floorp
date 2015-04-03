@@ -687,6 +687,9 @@ DownloadsDataCtor.prototype = {
                                                         : Downloads.PUBLIC);
     promiseList.then(list => list.removeFinished())
                .then(null, Cu.reportError);
+    let indicatorData = this._isPrivate ? PrivateDownloadsIndicatorData
+                                        : DownloadsIndicatorData;
+    indicatorData.attention = false;
   },
 
   //////////////////////////////////////////////////////////////////////////////

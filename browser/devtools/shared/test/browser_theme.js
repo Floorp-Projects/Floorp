@@ -37,8 +37,8 @@ function testSetTheme () {
 }
 
 function testGetColor () {
-  let BLUE_DARK = "#3689b2";
-  let BLUE_LIGHT = "hsl(208,56%,40%)";
+  let BLUE_DARK = "#46afe3";
+  let BLUE_LIGHT = "#0088cc";
   let originalTheme = getTheme();
 
   setTheme("dark");

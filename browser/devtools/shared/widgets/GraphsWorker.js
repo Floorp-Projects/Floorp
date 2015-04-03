@@ -56,9 +56,6 @@ function getMinMaxSum(source) {
  * Takes a list of numbers and plots them on a line graph representing
  * the rate of occurences in a specified interval.
  *
- * XXX: Copied almost verbatim from toolkit/devtools/server/actors/framerate.js
- * Remove that dead code after the Performance panel lands, bug 1075567.
- *
  * @param array timestamps
  *        A list of numbers representing time, ordered ascending. For example,
  *        this can be the raw data received from the framerate actor, which

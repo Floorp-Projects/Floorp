@@ -296,6 +296,36 @@ addMessageListener("Test:HasPseudoClassLock", function(msg) {
 });
 
 /**
+ * Scrolls the window to a particular set of coordinates in the document, or
+ * by the given amount if `relative` is set to `true`.
+ *
+ * @param {Object} data
+ * - {Number} x
+ * - {Number} y
+ * - {Boolean} relative
+ *
+ * @return {Object} An object with x / y properties, representing the number
+ * of pixels that the document has been scrolled horizontally and vertically.
+ */
+addMessageListener("Test:ScrollWindow", function(msg) {
+  let {x, y, relative} = msg.data;
+
+  if (isNaN(x) || isNaN(y)) {
+    sendAsyncMessage("Test:ScrollWindow", {});
+    return;
+  }
+
+  content.addEventListener("scroll", function onScroll(event) {
+    this.removeEventListener("scroll", onScroll);
+
+    let data = {x: content.scrollX, y: content.scrollY};
+    sendAsyncMessage("Test:ScrollWindow", data);
+  });
+
+  content[relative ? "scrollBy" : "scrollTo"](x, y);
+});
+
+/**
  * Like document.querySelector but can go into iframes too.
  * ".container iframe || .sub-container div" will first try to find the node
  * matched by ".container iframe" in the root document, then try to get the

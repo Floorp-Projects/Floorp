@@ -29,15 +29,15 @@ public class testStumblerSetting extends BaseTest {
 
         blockForGeckoReady();
 
-        selectMenuItem(StringHelper.SETTINGS_LABEL);
-        mAsserter.ok(mSolo.waitForText(StringHelper.SETTINGS_LABEL),
-                "The Settings menu did not load", StringHelper.SETTINGS_LABEL);
+        selectMenuItem(mStringHelper.SETTINGS_LABEL);
+        mAsserter.ok(mSolo.waitForText(mStringHelper.SETTINGS_LABEL),
+                "The Settings menu did not load", mStringHelper.SETTINGS_LABEL);
 
-        String section = "^" + StringHelper.MOZILLA_SECTION_LABEL + "$";
+        String section = "^" + mStringHelper.MOZILLA_SECTION_LABEL + "$";
         waitForEnabledText(section);
         mSolo.clickOnText(section);
 
-        String itemTitle = "^" + StringHelper.LOCATION_SERVICES_LABEL + "$";
+        String itemTitle = "^" + mStringHelper.LOCATION_SERVICES_LABEL + "$";
         boolean foundText = waitForPreferencesText(itemTitle);
         mAsserter.ok(foundText, "Waiting for settings item " + itemTitle + " in section " + section,
                 "The " + itemTitle + " option is present in section " + section);

@@ -79,7 +79,13 @@ menulist:focus:not([open="true"]) > .menulist-label-box {
 }
 
 menulist:-moz-focusring:not([open="true"]) > .menulist-label-box {
-  border: 1px dotted #F5DB95;
+  border: 1px dotted ThreeDDarkShadow;
+}
+
+@media (-moz-os-version: windows-xp) {
+  menulist:-moz-focusring:not([open="true"]) > .menulist-label-box {
+    border: 1px dotted #F5DB95;
+  }
 }
 
 /* ..... disabled state ..... */
@@ -104,4 +110,34 @@ html|*.menulist-editable-input {
   padding: 0px !important;
   background: inherit;
   font: inherit;
+}
+
+@media (-moz-windows-default-theme) {
+  @media not all and (-moz-os-version: windows-xp) {
+    .menulist-label-box {
+      background-color: transparent !important;
+      color: inherit !important;
+    }
+
+    .menulist-label {
+      margin-top: -1px !important;
+      margin-bottom: -1px !important;
+      -moz-margin-start: 0 !important;
+    }
+
+    .menulist-description {
+      -moz-margin-start: 1ex !important;
+    }
+
+    menulist:not([editable="true"]) > .menulist-dropmarker {
+      margin-top: -2px;
+      -moz-margin-start: 3px;
+      -moz-margin-end: -3px;
+    }
+
+    .menulist-icon {
+      margin-top: -1px;
+      margin-bottom: -1px;
+    }
+  }
 }

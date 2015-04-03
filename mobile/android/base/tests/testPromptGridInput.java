@@ -40,9 +40,9 @@ public class testPromptGridInput extends BaseTest {
 
     public void test(final int num) {
         // Load about:blank between each test to ensure we reset state
-        loadUrl(StringHelper.ABOUT_BLANK_URL);
-        mAsserter.ok(waitForText(StringHelper.ABOUT_BLANK_URL), "Loaded blank page",
-                StringHelper.ABOUT_BLANK_URL);
+        loadUrl(mStringHelper.ABOUT_BLANK_URL);
+        mAsserter.ok(waitForText(mStringHelper.ABOUT_BLANK_URL), "Loaded blank page",
+                mStringHelper.ABOUT_BLANK_URL);
 
         loadUrl("chrome://roboextender/content/robocop_prompt_gridinput.html#test" + num);
     }

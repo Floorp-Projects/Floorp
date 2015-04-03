@@ -38,6 +38,8 @@ SimpleTest.registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webide.autoinstallFxdtAdapters");
   Services.prefs.clearUserPref("devtools.webide.sidebars");
   Services.prefs.clearUserPref("devtools.webide.busyTimeout");
+  Services.prefs.clearUserPref("devtools.webide.lastSelectedProject");
+  Services.prefs.clearUserPref("devtools.webide.lastConnectedRuntime");
 });
 
 function openWebIDE(autoInstallAddons) {
