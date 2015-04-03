@@ -304,9 +304,6 @@ nsTimerImpl::Startup()
   nsTimerEvent::Init();
 
   gThread = new TimerThread();
-  if (!gThread) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
 
   NS_ADDREF(gThread);
   rv = gThread->InitLocks();
@@ -827,9 +824,6 @@ NS_NewTimer(nsITimer** aResult, nsTimerCallbackFunc aCallback, void* aClosure,
             uint32_t aDelay, uint32_t aType)
 {
   nsTimerImpl* timer = new nsTimerImpl();
-  if (!timer) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   NS_ADDREF(timer);
 
   nsresult rv = timer->InitWithFuncCallback(aCallback, aClosure,

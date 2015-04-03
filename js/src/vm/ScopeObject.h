@@ -674,7 +674,7 @@ class ClonedBlockObject : public BlockObject
      * Create a new ClonedBlockObject with the same enclosing scope and
      * variable values as this.
      */
-    static ClonedBlockObject* clone(ExclusiveContext* cx, Handle<ClonedBlockObject*> block);
+    static ClonedBlockObject* clone(JSContext* cx, Handle<ClonedBlockObject*> block);
 };
 
 // Internal scope object used by JSOP_BINDNAME upon encountering an
