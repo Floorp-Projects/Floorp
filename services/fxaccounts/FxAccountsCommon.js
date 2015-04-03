@@ -66,6 +66,7 @@ exports.FXACCOUNTS_PERMISSION = "firefox-accounts";
 
 exports.DATA_FORMAT_VERSION = 1;
 exports.DEFAULT_STORAGE_FILENAME = "signedInUser.json";
+exports.DEFAULT_OAUTH_TOKENS_FILENAME = "signedInUserOAuthTokens.json";
 
 // Token life times.
 // Having this parameter be short has limited security value and can cause
