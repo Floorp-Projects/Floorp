@@ -7,7 +7,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
-#include "mozilla/XPCOM.h"
 
 namespace mozilla {
 

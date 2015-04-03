@@ -154,7 +154,7 @@ class CreateSyncPatch(Step):
         sync_tree = state.sync_tree
 
         local_tree.create_patch("web-platform-tests_update_%s" % sync_tree.rev,
-                                "Update web-platform-tests to revision %s" % sync_tree.rev)
+                                "Update %s to revision %s" % (state.suite_name, sync_tree.rev))
         local_tree.add_new(os.path.relpath(state.tests_path,
                                            local_tree.root))
         updated = local_tree.update_patch(include=[state.tests_path,

@@ -71,7 +71,7 @@ static char* GetKeyValue(void* verbuf, const WCHAR* key,
 {
   WCHAR keybuf[64]; // plenty for the template below, with the longest key
                     // we use (currently "FileDescription")
-  const WCHAR keyFormat[] = L"\\StringFileInfo\\%04X%04X\\%s";
+  const WCHAR keyFormat[] = L"\\StringFileInfo\\%04X%04X\\%ls";
   WCHAR *buf = nullptr;
   UINT blen;
 

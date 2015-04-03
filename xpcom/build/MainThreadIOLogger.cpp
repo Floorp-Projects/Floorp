@@ -12,6 +12,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "nsAutoPtr.h"
+#include "nsNativeCharsetUtils.h"
 
 /**
  * This code uses NSPR stuff and STL containers because it must be detached
