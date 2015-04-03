@@ -8304,7 +8304,7 @@ Parser<ParseHandler>::propertyList(PropListType type)
                     return null();
             } else if (tt == TOK_LP) {
                 tokenStream.ungetToken();
-                if (!methodDefinition(type, propList, propname, Normal, Method,
+                if (!methodDefinition(type, propList, propname, Normal,
                                       isGenerator ? StarGenerator : NotGenerator, isStatic, op)) {
                     return null();
                 }
@@ -8313,9 +8313,8 @@ Parser<ParseHandler>::propertyList(PropListType type)
                 return null();
             }
         } else {
-            /* NB: Getter function in { get x(){} } is unnamed. */
             if (!methodDefinition(type, propList, propname, op == JSOP_INITPROP_GETTER ? Getter : Setter,
-                                  Expression, NotGenerator, isStatic, op)) {
+                                  NotGenerator, isStatic, op)) {
                 return null();
             }
         }
@@ -8346,17 +8345,17 @@ Parser<ParseHandler>::propertyList(PropListType type)
 template <typename ParseHandler>
 bool
 Parser<ParseHandler>::methodDefinition(PropListType listType, Node propList, Node propname,
-                                       FunctionType type, FunctionSyntaxKind kind,
-                                       GeneratorKind generatorKind,
+                                       FunctionType type, GeneratorKind generatorKind,
                                        bool isStatic, JSOp op)
 {
+    /* NB: Getter function in { get x(){} } is unnamed. */
     RootedPropertyName funName(context);
-    if (kind == Method && tokenStream.isCurrentTokenType(TOK_NAME))
+    if (type == Normal && tokenStream.isCurrentTokenType(TOK_NAME))
         funName = tokenStream.currentName();
     else
         funName = nullptr;
 
-    Node fn = functionDef(funName, type, kind, generatorKind);
+    Node fn = functionDef(funName, type, Method, generatorKind);
     if (!fn)
         return false;
 
