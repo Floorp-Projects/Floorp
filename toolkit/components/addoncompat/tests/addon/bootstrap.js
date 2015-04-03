@@ -494,6 +494,50 @@ function testAboutModuleRegistration()
   });
 }
 
+function testProgressListener()
+{
+  const url = baseURL + "browser_addonShims_testpage.html";
+
+  let sawGlobalLocChange = false;
+  let sawTabsLocChange = false;
+
+  let globalListener = {
+    onLocationChange: function(webProgress, request, uri) {
+      if (uri.spec == url) {
+        sawGlobalLocChange = true;
+        ok(request instanceof Ci.nsIHttpChannel, "Global listener channel is an HTTP channel");
+      }
+    },
+  };
+
+  let tabsListener = {
+    onLocationChange: function(browser, webProgress, request, uri) {
+      if (uri.spec == url) {
+        sawTabsLocChange = true;
+        ok(request instanceof Ci.nsIHttpChannel, "Tab listener channel is an HTTP channel");
+      }
+    },
+  };
+
+  gBrowser.addProgressListener(globalListener);
+  gBrowser.addTabsProgressListener(tabsListener);
+  info("Added progress listeners");
+
+  return new Promise(function(resolve, reject) {
+    let tab = gBrowser.addTab(url);
+    gBrowser.selectedTab = tab;
+    addLoadListener(tab.linkedBrowser, function handler() {
+      ok(sawGlobalLocChange, "Saw global onLocationChange");
+      ok(sawTabsLocChange, "Saw tabs onLocationChange");
+
+      gBrowser.removeTab(tab);
+      gBrowser.removeProgressListener(globalListener);
+      gBrowser.removeTabsProgressListener(tabsListener);
+      resolve();
+    });
+  });
+}
+
 function runTests(win, funcs)
 {
   ok = funcs.ok;
@@ -509,7 +553,9 @@ function runTests(win, funcs)
     then(testObserver).
     then(testSandbox).
     then(testAddonContent).
-    then(testAboutModuleRegistration);
+    then(testAboutModuleRegistration).
+    then(testProgressListener).
+    then(Promise.resolve());
 }
 
 /*
