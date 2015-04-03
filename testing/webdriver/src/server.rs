@@ -1,5 +1,6 @@
-use std::old_io::net::ip::IpAddr;
+use std::net::IpAddr;
 use std::num::FromPrimitive;
+use std::io::{Write, Read};
 use std::sync::Mutex;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
@@ -153,10 +154,10 @@ impl Handler for HttpHandler {
         let mut req = req;
         let mut res = res;
 
-        let body = match req.method {
-            Method::Post => req.read_to_string().unwrap(),
-            _ => "".to_string()
-        };
+        let mut body = String::new();
+        if let Method::Post = req.method {
+            req.read_to_string(&mut body).unwrap();
+        }
         debug!("Got request {} {:?}", req.method, req.uri);
         match req.uri {
             AbsolutePath(path) => {
@@ -214,9 +215,9 @@ impl Handler for HttpHandler {
                     *status_code = FromPrimitive::from_u32(status).unwrap();
                 }
                 res.headers_mut().set(ContentLength(resp_body.len() as u64));
-                let mut stream = res.start();
-                stream.write_str(&resp_body[..]).unwrap();
-                stream.unwrap().end().unwrap();
+                let mut stream = res.start().unwrap();
+                stream.write_all(&resp_body.as_bytes()).unwrap();
+                stream.end().unwrap();
             },
             _ => {}
         }
@@ -224,15 +225,15 @@ impl Handler for HttpHandler {
 }
 
 pub fn start<T: 'static+WebDriverHandler>(ip_address: IpAddr, port: u16, handler: T) {
-    let server = Server::http(ip_address, port);
-
     let (msg_send, msg_recv) = channel();
+
+    let api = WebDriverHttpApi::new();
+    let http_handler = HttpHandler::new(api, msg_send);
+    let server = Server::http(http_handler);
 
     thread::spawn(move || {
         let mut dispatcher = Dispatcher::new(handler);
         dispatcher.run(msg_recv)
     });
-    let api = WebDriverHttpApi::new();
-    let http_handler = HttpHandler::new(api, msg_send.clone());
-    server.listen(http_handler).unwrap();
+    server.listen(ip_address, port).unwrap();
 }
