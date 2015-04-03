@@ -17,7 +17,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 #include "nsGkAtoms.h"
-#include "nsILanguageAtomService.h"
 #include "nsUnicodeProperties.h"
 #include "nsUnicodeRange.h"
 #include "nsDirectoryServiceUtils.h"
