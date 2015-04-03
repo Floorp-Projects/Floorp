@@ -23,6 +23,7 @@
 #include "nsITimer.h"
 #include "nsCRT.h"
 #include "nsIWidgetListener.h"
+#include "nsLanguageAtomService.h"
 #include "FramePropertyTable.h"
 #include "nsGkAtoms.h"
 #include "nsCycleCollectionParticipant.h"
@@ -51,7 +52,6 @@ class nsIPrintSettings;
 class nsDocShell;
 class nsIDocShell;
 class nsIDocument;
-class nsILanguageAtomService;
 class nsITheme;
 class nsIContent;
 class nsIFrame;
@@ -1363,7 +1363,7 @@ protected:
   int32_t               mAutoQualityMinFontSizePixelsPref;
 
   nsCOMPtr<nsITheme> mTheme;
-  nsCOMPtr<nsILanguageAtomService> mLangService;
+  nsLanguageAtomService* mLangService;
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
   nsCOMPtr<nsITimer>    mPrefChangedTimer;
 
