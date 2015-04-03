@@ -420,8 +420,7 @@ class Build(MachCommandBase):
                 self.log(logging.INFO, 'ccache',
                          {'msg': ccache_diff.hit_rate_message()}, "{msg}")
 
-        moz_nospam = os.environ.get('MOZ_NOSPAM')
-        if monitor.elapsed > 300 and not moz_nospam:
+        if monitor.elapsed > 300:
             # Display a notification when the build completes.
             self.notify('Build complete')
 
@@ -823,7 +822,10 @@ class Package(MachCommandBase):
     @Command('package', category='post-build',
         description='Package the built product for distribution as an APK, DMG, etc.')
     def package(self):
-        return self._run_make(directory=".", target='package', ensure_exit_code=False)
+        ret = self._run_make(directory=".", target='package', ensure_exit_code=False)
+        if ret == 0:
+            self.notify('Packaging complete')
+        return ret
 
 @CommandProvider
 class Install(MachCommandBase):
@@ -832,7 +834,10 @@ class Install(MachCommandBase):
     @Command('install', category='post-build',
         description='Install the package on the machine, or on a device.')
     def install(self):
-        return self._run_make(directory=".", target='install', ensure_exit_code=False)
+        ret = self._run_make(directory=".", target='install', ensure_exit_code=False)
+        if ret == 0:
+            self.notify('Install complete')
+        return ret
 
 @CommandProvider
 class RunProgram(MachCommandBase):
