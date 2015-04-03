@@ -106,6 +106,12 @@
   background-position: 100% 0, calc(100% - 1px) 0, calc(100% - 2px) 0;
 }
 
+#PanelUI-menu-button[update-status="succeeded"] .toolbarbutton-badge::after {
+  content: url(chrome://browser/skin/update-badge.svg);
+  background-color: #74BF43;
+  height: 10px;
+}
+
 .panel-subviews {
   padding: 4px;
   background-clip: padding-box;
