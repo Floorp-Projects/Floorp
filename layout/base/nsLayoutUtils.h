@@ -135,6 +135,7 @@ public:
   typedef FrameMetrics::ViewID ViewID;
   typedef mozilla::CSSPoint CSSPoint;
   typedef mozilla::CSSSize CSSSize;
+  typedef mozilla::CSSIntSize CSSIntSize;
   typedef mozilla::ScreenMargin ScreenMargin;
   typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
 
@@ -1802,7 +1803,7 @@ public:
    * have less information about the frame tree.
    */
   static void ComputeSizeForDrawing(imgIContainer* aImage,
-                                    mozilla::CSSIntSize& aImageSize,
+                                    CSSIntSize&    aImageSize,
                                     nsSize&        aIntrinsicRatio,
                                     bool&          aGotWidth,
                                     bool&          aGotHeight);
@@ -1815,7 +1816,7 @@ public:
    * after trying all these methods, no value is available for one or both
    * dimensions, the corresponding dimension of aFallbackSize is used instead.
    */
-  static mozilla::CSSIntSize
+  static CSSIntSize
   ComputeSizeForDrawingWithFallback(imgIContainer* aImage,
                                     const nsSize&  aFallbackSize);
 
@@ -1826,10 +1827,6 @@ public:
    * the aDest parameter of DrawImage, when we want to draw a subimage
    * of an overall image.
    */
-  static nsRect GetWholeImageDestination(const nsIntSize& aWholeImageSize,
-                                         const nsRect& aImageSourceArea,
-                                         const nsRect& aDestArea);
-
   static nsRect GetWholeImageDestination(const nsSize& aWholeImageSize,
                                          const nsRect& aImageSourceArea,
                                          const nsRect& aDestArea);

@@ -208,6 +208,11 @@ struct CSSPixel {
                    NSToCoordRoundWithClamp(float(aPoint.y) * float(AppUnitsPerCSSPixel())));
   }
 
+  static nsSize ToAppUnits(const CSSIntSize& aSize) {
+    return nsSize(NSToCoordRoundWithClamp(float(aSize.width)  * float(AppUnitsPerCSSPixel())),
+                  NSToCoordRoundWithClamp(float(aSize.height) * float(AppUnitsPerCSSPixel())));
+  }
+
   static nsRect ToAppUnits(const CSSRect& aRect) {
     return nsRect(NSToCoordRoundWithClamp(aRect.x * float(AppUnitsPerCSSPixel())),
                   NSToCoordRoundWithClamp(aRect.y * float(AppUnitsPerCSSPixel())),
