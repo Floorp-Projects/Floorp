@@ -364,6 +364,60 @@ class MozbuildObject(ProcessExecutionMixin):
 
         return subprocess.check_output(args, cwd=topsrcdir).strip()
 
+    def notify(self, msg):
+        """Show a desktop notification with the supplied message
+
+        On Linux and Mac, this will show a desktop notification with the message,
+        but on Windows we can only flash the screen.
+        """
+        moz_nospam = os.environ.get('MOZ_NOSPAM')
+        if moz_nospam:
+            return
+
+        try:
+            if sys.platform.startswith('darwin'):
+                try:
+                    notifier = which.which('terminal-notifier')
+                except which.WhichError:
+                    raise Exception('Install terminal-notifier to get '
+                        'a notification when the build finishes.')
+                self.run_process([notifier, '-title',
+                    'Mozilla Build System', '-group', 'mozbuild',
+                    '-message', msg], ensure_exit_code=False)
+            elif sys.platform.startswith('linux'):
+                try:
+                    import dbus
+                except ImportError:
+                    raise Exception('Install the python dbus module to '
+                        'get a notification when the build finishes.')
+                bus = dbus.SessionBus()
+                notify = bus.get_object('org.freedesktop.Notifications',
+                                        '/org/freedesktop/Notifications')
+                method = notify.get_dbus_method('Notify',
+                                                'org.freedesktop.Notifications')
+                method('Mozilla Build System', 0, '', msg, '', [], [], -1)
+            elif sys.platform.startswith('win'):
+                from ctypes import Structure, windll, POINTER, sizeof
+                from ctypes.wintypes import DWORD, HANDLE, WINFUNCTYPE, BOOL, UINT
+                class FLASHWINDOW(Structure):
+                    _fields_ = [("cbSize", UINT),
+                                ("hwnd", HANDLE),
+                                ("dwFlags", DWORD),
+                                ("uCount", UINT),
+                                ("dwTimeout", DWORD)]
+                FlashWindowExProto = WINFUNCTYPE(BOOL, POINTER(FLASHWINDOW))
+                FlashWindowEx = FlashWindowExProto(("FlashWindowEx", windll.user32))
+                FLASHW_CAPTION = 0x01
+                FLASHW_TRAY = 0x02
+                FLASHW_TIMERNOFG = 0x0C
+                params = FLASHWINDOW(sizeof(FLASHWINDOW),
+                                    windll.kernel32.GetConsoleWindow(),
+                                    FLASHW_CAPTION | FLASHW_TRAY | FLASHW_TIMERNOFG, 3, 0)
+                FlashWindowEx(params)
+        except Exception as e:
+            self.log(logging.WARNING, 'notifier-failed', {'error':
+                e.message}, 'Notification center failed: {error}')
+
     @property
     def _config_guess(self):
         if self._config_guess_output is None:
