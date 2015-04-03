@@ -6,9 +6,10 @@ var correct;
 dbg.onEnterFrame = function (f) {
   if (f.callee && f.callee.name == "f") {
     f.onPop = function() {
-      // The scope at the point of onPop is the outermost.
-      correct = (f.environment.getVariable("e") === undefined &&
-                 f.environment.getVariable("outer") === 43);
+      // The scope at the point of onPop is at the point of popping (the
+      // noSuchFn call).
+      correct = (f.environment.getVariable("e") === 42 &&
+                 f.environment.getVariable("outer") === undefined);
     };
   }
 };

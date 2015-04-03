@@ -1,4 +1,5 @@
 // |reftest| skip-if(!xulRuntime.shell)
+// |reftest| skip-if(!xulRuntime.shell)
 // bug 963641
 
 Reflect.parse("({ __proto__: null });");

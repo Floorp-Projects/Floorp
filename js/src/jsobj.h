@@ -397,29 +397,20 @@ class JSObject : public js::gc::Cell
     bool shouldSplicePrototype(JSContext* cx);
 
     /*
-     * Parents and scope chains.
+     * Scope chains.
      *
-     * All script-accessible objects with a nullptr parent are global objects,
-     * and all global objects have a nullptr parent. Some builtin objects
-     * which are not script-accessible also have a nullptr parent, such as
-     * parser created functions for non-compileAndGo scripts.
+     * The scope chain of an object is the link in the search path when a script
+     * does a name lookup on a scope object. For JS internal scope objects ---
+     * Call, DeclEnv, Block, and With --- the chain is stored in the first fixed
+     * slot of the object.  For other scope objects, the chain goes directly to
+     * the global.
      *
-     * Except for the non-script-accessible builtins, the global with which an
-     * object is associated can be reached by following parent links to that
-     * global (see global()).
-     *
-     * The scope chain of an object is the link in the search path when a
-     * script does a name lookup on a scope object. For JS internal scope
-     * objects --- Call, DeclEnv and Block --- the chain is stored in
-     * the first fixed slot of the object, and the object's parent is the
-     * associated global. For other scope objects, the chain is stored in the
-     * object's parent.
-     *
-     * In compileAndGo code, scope chains can contain only internal scope
-     * objects with a global object at the root as the scope of the outermost
-     * non-function script. In non-compileAndGo code, the scope of the
-     * outermost non-function script might not be a global object, and can have
-     * a mix of other objects above it before the global object is reached.
+     * In code which is not marked hasPollutedGlobalScope, scope chains can
+     * contain only syntactic scope objects (see IsSyntacticScope) with a global
+     * object at the root as the scope of the outermost non-function script. In
+     * hasPollutedGlobalScope code, the scope of the outermost non-function
+     * script might not be a global object, and can have a mix of other objects
+     * above it before the global object is reached.
      */
 
     /*

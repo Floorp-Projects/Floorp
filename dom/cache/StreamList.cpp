@@ -18,7 +18,7 @@ namespace cache {
 StreamList::StreamList(Manager* aManager, Context* aContext)
   : mManager(aManager)
   , mContext(aContext)
-  , mCacheId(0)
+  , mCacheId(INVALID_CACHE_ID)
   , mStreamControl(nullptr)
   , mActivated(false)
 {
@@ -58,7 +58,7 @@ StreamList::Activate(CacheId aCacheId)
 {
   NS_ASSERT_OWNINGTHREAD(StreamList);
   MOZ_ASSERT(!mActivated);
-  MOZ_ASSERT(!mCacheId);
+  MOZ_ASSERT(mCacheId == INVALID_CACHE_ID);
   mActivated = true;
   mCacheId = aCacheId;
   mManager->AddRefCacheId(mCacheId);

@@ -66,7 +66,7 @@ def create_parser(product_choices=None):
                         type=abs_path, help="Binary to run tests against")
     parser.add_argument("--webdriver-binary", action="store", metavar="BINARY",
                         type=abs_path, help="WebDriver server binary to use")
-    parser.add_argument("--processes", action="store", type=int, default=1,
+    parser.add_argument("--processes", action="store", type=int, default=None,
                         help="Number of simultaneous processes to use")
 
     parser.add_argument("--run-by-dir", type=int, nargs="?", default=False,
@@ -83,7 +83,7 @@ def create_parser(product_choices=None):
                         help="Don't capture stdio and write to logging")
 
     parser.add_argument("--product", action="store", choices=product_choices,
-                        default="firefox", help="Browser against which to run tests")
+                        default=None, help="Browser against which to run tests")
 
     parser.add_argument("--list-test-groups", action="store_true",
                         default=False,
@@ -170,6 +170,7 @@ def set_from_config(kwargs):
         config_path = kwargs["config"]
 
     kwargs["config_path"] = config_path
+
     kwargs["config"] = config.read(kwargs["config_path"])
 
     keys = {"paths": [("prefs", "prefs_root", True),
@@ -203,6 +204,8 @@ def set_from_config(kwargs):
         if "/" not in kwargs["test_paths"]:
             kwargs["test_paths"]["/"] = {}
         kwargs["test_paths"]["/"]["metadata_path"] = kwargs["metadata_root"]
+
+    kwargs["suite_name"] = kwargs["config"].get("web-platform-tests", {}).get("name", "web-platform-tests")
 
 
 def get_test_paths(config):
@@ -250,6 +253,9 @@ def check_args(kwargs):
                 print "Fatal: %s path %s is not a directory" % (name, path)
                 sys.exit(1)
 
+    if kwargs["product"] is None:
+        kwargs["product"] = "firefox"
+
     if kwargs["test_list"]:
         if kwargs["include"] is not None:
             kwargs["include"].extend(kwargs["test_list"])
@@ -267,6 +273,9 @@ def check_args(kwargs):
             kwargs["chunk_type"] = "equal_time"
         else:
             kwargs["chunk_type"] = "none"
+
+    if kwargs["processes"] is None:
+        kwargs["processes"] = 1
 
     if kwargs["debugger"] is not None:
         debug_args, interactive = debugger_arguments(kwargs["debugger"],

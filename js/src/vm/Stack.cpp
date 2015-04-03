@@ -26,6 +26,7 @@
 
 using namespace js;
 
+using mozilla::Maybe;
 using mozilla::PodCopy;
 
 /*****************************************************************************/
@@ -425,15 +426,13 @@ js::MarkInterpreterActivations(JSRuntime* rt, JSTracer* trc)
 
 /*****************************************************************************/
 
-// Unlike the other methods of this calss, this method is defined here so that
+// Unlike the other methods of this class, this method is defined here so that
 // we don't have to #include jsautooplen.h in vm/Stack.h.
 void
 InterpreterRegs::setToEndOfScript()
 {
-    JSScript* script = fp()->script();
     sp = fp()->base();
-    pc = script->codeEnd() - JSOP_RETRVAL_LENGTH;
-    MOZ_ASSERT(*pc == JSOP_RETRVAL);
+    pc = fp()->script()->lastPC();
 }
 
 /*****************************************************************************/
@@ -1861,68 +1860,84 @@ JS::ProfilingFrameIterator::stackAddress() const
     return jitIter().stackAddress();
 }
 
+Maybe<JS::ProfilingFrameIterator::Frame>
+JS::ProfilingFrameIterator::getPhysicalFrameAndEntry(jit::JitcodeGlobalEntry* entry) const
+{
+    void* stackAddr = stackAddress();
+
+    if (isAsmJS()) {
+        Frame frame;
+        frame.kind = Frame_AsmJS;
+        frame.stackAddress = stackAddr;
+        frame.returnAddress = nullptr;
+        frame.activation = activation_;
+        frame.label = nullptr;
+        return mozilla::Some(frame);
+    }
+
+    MOZ_ASSERT(isJit());
+
+    // Look up an entry for the return address.
+    void* returnAddr = jitIter().returnAddressToFp();
+    jit::JitcodeGlobalTable* table = rt_->jitRuntime()->getJitcodeGlobalTable();
+    if (hasSampleBufferGen())
+        table->lookupForSampler(returnAddr, entry, rt_, sampleBufferGen_);
+    else
+        table->lookupInfallible(returnAddr, entry, rt_);
+
+    MOZ_ASSERT(entry->isIon() || entry->isIonCache() || entry->isBaseline() || entry->isDummy());
+
+    // Dummy frames produce no stack frames.
+    if (entry->isDummy())
+        return mozilla::Nothing();
+
+    Frame frame;
+    frame.kind = entry->isBaseline() ? Frame_Baseline : Frame_Ion;
+    frame.stackAddress = stackAddr;
+    frame.returnAddress = returnAddr;
+    frame.activation = activation_;
+    frame.label = nullptr;
+    return mozilla::Some(frame);
+}
+
 uint32_t
 JS::ProfilingFrameIterator::extractStack(Frame* frames, uint32_t offset, uint32_t end) const
 {
     if (offset >= end)
         return 0;
 
-    void* stackAddr = stackAddress();
+    jit::JitcodeGlobalEntry entry;
+    Maybe<Frame> physicalFrame = getPhysicalFrameAndEntry(&entry);
+
+    // Dummy frames produce no stack frames.
+    if (physicalFrame.isNothing())
+        return 0;
 
     if (isAsmJS()) {
-        frames[offset].kind = Frame_AsmJS;
-        frames[offset].stackAddress = stackAddr;
-        frames[offset].returnAddress = nullptr;
-        frames[offset].activation = activation_;
+        frames[offset] = physicalFrame.value();
         frames[offset].label = asmJSIter().label();
-        frames[offset].mightHaveTrackedOptimizations = false;
         return 1;
     }
 
-    MOZ_ASSERT(isJit());
-    void* returnAddr = jitIter().returnAddressToFp();
-
-    // Look up an entry for the return address.
-    jit::JitcodeGlobalTable* table = rt_->jitRuntime()->getJitcodeGlobalTable();
-    jit::JitcodeGlobalEntry entry;
-    table->lookupInfallible(returnAddr, &entry, rt_);
-    if (hasSampleBufferGen())
-        table->lookupForSampler(returnAddr, &entry, rt_, sampleBufferGen_);
-    else
-        table->lookup(returnAddr, &entry, rt_);
-
-    MOZ_ASSERT(entry.isIon() || entry.isIonCache() || entry.isBaseline() || entry.isDummy());
-
-    // Dummy frames produce no stack frames.
-    if (entry.isDummy())
-        return 0;
-
-    FrameKind kind = entry.isBaseline() ? Frame_Baseline : Frame_Ion;
-
     // Extract the stack for the entry.  Assume maximum inlining depth is <64
     const char* labels[64];
-    uint32_t depth = entry.callStackAtAddr(rt_, returnAddr, labels, 64);
+    uint32_t depth = entry.callStackAtAddr(rt_, jitIter().returnAddressToFp(), labels, 64);
     MOZ_ASSERT(depth < 64);
     for (uint32_t i = 0; i < depth; i++) {
         if (offset + i >= end)
             return i;
-        frames[offset + i].kind = kind;
-        frames[offset + i].stackAddress = stackAddr;
-        frames[offset + i].returnAddress = returnAddr;
-        frames[offset + i].activation = activation_;
+        frames[offset + i] = physicalFrame.value();
         frames[offset + i].label = labels[i];
-        frames[offset + i].mightHaveTrackedOptimizations = false;
     }
 
-    // A particular return address might have tracked optimizations only if
-    // there are any optimizations at all.
-    //
-    // All inlined Ion frames will have the same optimization information by
-    // virtue of sharing the JitcodeGlobalEntry, but such information is only
-    // interpretable on the youngest frame.
-    frames[offset].mightHaveTrackedOptimizations = entry.hasTrackedOptimizations();
-
     return depth;
+}
+
+Maybe<JS::ProfilingFrameIterator::Frame>
+JS::ProfilingFrameIterator::getPhysicalFrameWithoutLabel() const
+{
+    jit::JitcodeGlobalEntry unused;
+    return getPhysicalFrameAndEntry(&unused);
 }
 
 bool
@@ -1936,4 +1951,23 @@ bool
 JS::ProfilingFrameIterator::isJit() const
 {
     return activation_->isJit();
+}
+
+JS_PUBLIC_API(void)
+JS::ForEachProfiledFrame(JSRuntime* rt, void* addr, ForEachProfiledFrameOp& op)
+{
+    jit::JitcodeGlobalTable* table = rt->jitRuntime()->getJitcodeGlobalTable();
+    jit::JitcodeGlobalEntry entry;
+    table->lookupInfallible(addr, &entry, rt);
+
+    // Extract the stack for the entry.  Assume maximum inlining depth is <64
+    const char* labels[64];
+    uint32_t depth = entry.callStackAtAddr(rt, addr, labels, 64);
+    MOZ_ASSERT(depth < 64);
+    for (uint32_t i = depth; i != 0; i--) {
+        // All inlined frames will have the same optimization information by
+        // virtue of sharing the JitcodeGlobalEntry, but such information is
+        // only interpretable on the youngest frame.
+        op(labels[i - 1], i == 1 && entry.hasTrackedOptimizations());
+    }
 }
