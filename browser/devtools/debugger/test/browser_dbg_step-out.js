@@ -45,7 +45,7 @@ function testNormalReturn() {
 
 function testReturnWithException() {
   waitForCaretAndScopes(gPanel, 24).then(() => {
-    waitForCaretAndScopes(gPanel, 27).then(() => {
+    waitForCaretAndScopes(gPanel, 26).then(() => {
       let innerScope = gVars.getScopeAtIndex(0);
       let exceptionVar = innerScope.get("<exception>");
 
