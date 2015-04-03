@@ -687,7 +687,7 @@ TestRunner.testFinished = function(tests) {
 
     // TODO : replace this by a function that returns the mem data as an object
     // that's dumped later with the test_end message
-    MemoryStats.dump(TestRunner.structuredLogger, TestRunner._currentTest,
+    MemoryStats.dump(TestRunner._currentTest,
                      TestRunner.currentTestURL,
                      TestRunner.dumpOutputDirectory,
                      TestRunner.dumpAboutMemoryAfterTest,
