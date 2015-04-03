@@ -216,7 +216,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(XULContentSinkImpl)
 //----------------------------------------------------------------------
 // nsIContentSink interface
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 XULContentSinkImpl::WillBuildModel(nsDTDMode aDTDMode)
 {
 #if FIXME
@@ -230,7 +230,7 @@ XULContentSinkImpl::WillBuildModel(nsDTDMode aDTDMode)
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 XULContentSinkImpl::DidBuildModel(bool aTerminated)
 {
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
@@ -245,21 +245,21 @@ XULContentSinkImpl::DidBuildModel(bool aTerminated)
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 XULContentSinkImpl::WillInterrupt(void)
 {
     // XXX Notify the docshell, if necessary
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 XULContentSinkImpl::WillResume(void)
 {
     // XXX Notify the docshell, if necessary
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 XULContentSinkImpl::SetParser(nsParserBase* aParser)
 {
     NS_IF_RELEASE(mParser);
@@ -268,14 +268,14 @@ XULContentSinkImpl::SetParser(nsParserBase* aParser)
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 XULContentSinkImpl::SetDocumentCharset(nsACString& aCharset)
 {
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
     if (doc) {
         doc->SetDocumentCharacterSet(aCharset);
     }
-  
+
     return NS_OK;
 }
 
@@ -283,7 +283,7 @@ nsISupports *
 XULContentSinkImpl::GetTarget()
 {
     nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument);
-    return doc;    
+    return doc;
 }
 
 //----------------------------------------------------------------------
@@ -295,7 +295,7 @@ XULContentSinkImpl::Init(nsIDocument* aDocument,
     NS_PRECONDITION(aDocument != nullptr, "null ptr");
     if (! aDocument)
         return NS_ERROR_NULL_POINTER;
-    
+
     nsresult rv;
 
     mDocument    = do_GetWeakReference(aDocument);
@@ -444,19 +444,19 @@ XULContentSinkImpl::CreateElement(mozilla::dom::NodeInfo *aNodeInfo,
 /**** BEGIN NEW APIs ****/
 
 
-NS_IMETHODIMP 
-XULContentSinkImpl::HandleStartElement(const char16_t *aName, 
+NS_IMETHODIMP
+XULContentSinkImpl::HandleStartElement(const char16_t *aName,
                                        const char16_t **aAtts,
-                                       uint32_t aAttsCount, 
+                                       uint32_t aAttsCount,
                                        uint32_t aLineNumber)
-{ 
+{
   // XXX Hopefully the parser will flag this before we get here. If
   // we're in the epilog, there should be no new elements
   NS_PRECONDITION(mState != eInEpilog, "tag in XUL doc epilog");
   NS_PRECONDITION(aAttsCount % 2 == 0, "incorrect aAttsCount");
   // Adjust aAttsCount so it's the actual number of attributes
   aAttsCount /= 2;
-  
+
   if (mState == eInEpilog)
       return NS_ERROR_UNEXPECTED;
 
@@ -472,7 +472,7 @@ XULContentSinkImpl::HandleStartElement(const char16_t *aName,
   nsRefPtr<mozilla::dom::NodeInfo> nodeInfo;
   nodeInfo = mNodeInfoManager->GetNodeInfo(localName, prefix, nameSpaceID,
                                            nsIDOMNode::ELEMENT_NODE);
-  
+
   nsresult rv = NS_OK;
   switch (mState) {
   case eInProlog:
@@ -496,7 +496,7 @@ XULContentSinkImpl::HandleStartElement(const char16_t *aName,
   return rv;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 XULContentSinkImpl::HandleEndElement(const char16_t *aName)
 {
     // Never EVER return anything but NS_OK or
@@ -583,32 +583,32 @@ XULContentSinkImpl::HandleEndElement(const char16_t *aName)
     return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 XULContentSinkImpl::HandleComment(const char16_t *aName)
 {
    FlushText();
    return NS_OK;
 }
 
-NS_IMETHODIMP 
+NS_IMETHODIMP
 XULContentSinkImpl::HandleCDataSection(const char16_t *aData, uint32_t aLength)
 {
     FlushText();
     return AddText(aData, aLength);
 }
 
-NS_IMETHODIMP 
-XULContentSinkImpl::HandleDoctypeDecl(const nsAString & aSubset, 
-                                      const nsAString & aName, 
-                                      const nsAString & aSystemId, 
+NS_IMETHODIMP
+XULContentSinkImpl::HandleDoctypeDecl(const nsAString & aSubset,
+                                      const nsAString & aName,
+                                      const nsAString & aSystemId,
                                       const nsAString & aPublicId,
                                       nsISupports* aCatalogData)
 {
     return NS_OK;
 }
 
-NS_IMETHODIMP 
-XULContentSinkImpl::HandleCharacterData(const char16_t *aData, 
+NS_IMETHODIMP
+XULContentSinkImpl::HandleCharacterData(const char16_t *aData,
                                         uint32_t aLength)
 {
   if (aData && mState != eInProlog && mState != eInEpilog) {
@@ -617,8 +617,8 @@ XULContentSinkImpl::HandleCharacterData(const char16_t *aData,
   return NS_OK;
 }
 
-NS_IMETHODIMP 
-XULContentSinkImpl::HandleProcessingInstruction(const char16_t *aTarget, 
+NS_IMETHODIMP
+XULContentSinkImpl::HandleProcessingInstruction(const char16_t *aTarget,
                                                 const char16_t *aData)
 {
     FlushText();
@@ -661,7 +661,7 @@ XULContentSinkImpl::HandleXMLDeclaration(const char16_t *aVersion,
 
 
 NS_IMETHODIMP
-XULContentSinkImpl::ReportError(const char16_t* aErrorText, 
+XULContentSinkImpl::ReportError(const char16_t* aErrorText,
                                 const char16_t* aSourceText,
                                 nsIScriptError *aError,
                                 bool *_retval)
@@ -698,26 +698,26 @@ XULContentSinkImpl::ReportError(const char16_t* aErrorText,
   nsAutoString parsererror(errorNs);
   parsererror.Append((char16_t)0xFFFF);
   parsererror.AppendLiteral("parsererror");
-  
+
   rv = HandleStartElement(parsererror.get(), noAtts, 0, 0);
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = HandleCharacterData(aErrorText, NS_strlen(aErrorText));
-  NS_ENSURE_SUCCESS(rv,rv);  
-  
+  NS_ENSURE_SUCCESS(rv,rv);
+
   nsAutoString sourcetext(errorNs);
   sourcetext.Append((char16_t)0xFFFF);
   sourcetext.AppendLiteral("sourcetext");
 
   rv = HandleStartElement(sourcetext.get(), noAtts, 0, 0);
   NS_ENSURE_SUCCESS(rv,rv);
-  
+
   rv = HandleCharacterData(aSourceText, NS_strlen(aSourceText));
   NS_ENSURE_SUCCESS(rv,rv);
-  
+
   rv = HandleEndElement(sourcetext.get());
-  NS_ENSURE_SUCCESS(rv,rv); 
-  
+  NS_ENSURE_SUCCESS(rv,rv);
+
   rv = HandleEndElement(parsererror.get());
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -725,8 +725,8 @@ XULContentSinkImpl::ReportError(const char16_t* aErrorText,
 }
 
 nsresult
-XULContentSinkImpl::OpenRoot(const char16_t** aAttributes, 
-                             const uint32_t aAttrLen, 
+XULContentSinkImpl::OpenRoot(const char16_t** aAttributes,
+                             const uint32_t aAttrLen,
                              mozilla::dom::NodeInfo *aNodeInfo)
 {
     NS_ASSERTION(mState == eInProlog, "how'd we get here?");
@@ -735,7 +735,7 @@ XULContentSinkImpl::OpenRoot(const char16_t** aAttributes,
 
     nsresult rv;
 
-    if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML) || 
+    if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML) ||
         aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XUL)) {
         PR_LOG(gContentSinkLog, PR_LOG_ERROR,
                ("xul: script tag not allowed as root content element"));
@@ -779,7 +779,7 @@ XULContentSinkImpl::OpenRoot(const char16_t** aAttributes,
 }
 
 nsresult
-XULContentSinkImpl::OpenTag(const char16_t** aAttributes, 
+XULContentSinkImpl::OpenTag(const char16_t** aAttributes,
                             const uint32_t aAttrLen,
                             const uint32_t aLineNumber,
                             mozilla::dom::NodeInfo *aNodeInfo)
@@ -819,7 +819,7 @@ XULContentSinkImpl::OpenTag(const char16_t** aAttributes,
 
     children->AppendElement(element);
 
-    if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML) || 
+    if (aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XHTML) ||
         aNodeInfo->Equals(nsGkAtoms::script, kNameSpaceID_XUL)) {
         // Do scripty things now
         rv = OpenScript(aAttributes, aLineNumber);
@@ -828,7 +828,7 @@ XULContentSinkImpl::OpenTag(const char16_t** aAttributes,
         NS_ASSERTION(mState == eInScript || mState == eInDocumentElement,
                      "Unexpected state");
         if (mState == eInScript) {
-            // OpenScript has pushed the nsPrototypeScriptElement onto the 
+            // OpenScript has pushed the nsPrototypeScriptElement onto the
             // stack, so we're done.
             return NS_OK;
         }
@@ -964,8 +964,8 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
 }
 
 nsresult
-XULContentSinkImpl::AddAttributes(const char16_t** aAttributes, 
-                                  const uint32_t aAttrLen, 
+XULContentSinkImpl::AddAttributes(const char16_t** aAttributes,
+                                  const uint32_t aAttrLen,
                                   nsXULPrototypeElement* aElement)
 {
   // Add tag attributes to the element
@@ -1013,7 +1013,7 @@ XULContentSinkImpl::AddAttributes(const char16_t** aAttributes,
 }
 
 nsresult
-XULContentSinkImpl::AddText(const char16_t* aText, 
+XULContentSinkImpl::AddText(const char16_t* aText,
                             int32_t aLength)
 {
   // Create buffer when we first need it
@@ -1047,7 +1047,7 @@ XULContentSinkImpl::AddText(const char16_t* aText,
       }
     }
     memcpy(&mText[mTextLength],aText + offset, sizeof(char16_t) * amount);
-    
+
     mTextLength += amount;
     offset += amount;
     aLength -= amount;
