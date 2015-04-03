@@ -167,17 +167,21 @@
 
 .progress-label,
 #footer-label {
-%ifdef WINDOWS_AERO
-  font-style: italic;
-%endif
   color: GrayText;
 }
 
-%ifdef WINDOWS_AERO
-@media (-moz-windows-default-theme) {
-  #footer {
-    background-color: #f1f5fb;
-    box-shadow: 0px 1px 2px rgb(204,214,234) inset;
+%ifdef XP_WIN
+@media not all and (-moz-os-version: windows-xp) {
+  .progress-label,
+  #footer-label {
+    font-style: italic;
+  }
+
+  @media (-moz-windows-default-theme) {
+    #footer {
+      background-color: #f1f5fb;
+      box-shadow: 0px 1px 2px rgb(204,214,234) inset;
+    }
   }
 }
 %endif

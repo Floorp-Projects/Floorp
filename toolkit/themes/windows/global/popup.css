@@ -63,15 +63,15 @@ panel[type="arrow"][side="right"] {
   margin: 4px;
 }
 
-%ifdef WINDOWS_AERO
-@media (-moz-os-version: windows-vista),
+%ifdef XP_WIN
+@media (-moz-os-version: windows-xp),
+       (-moz-os-version: windows-vista),
        (-moz-os-version: windows-win7) {
 %endif
-/* < Win8 */
 .panel-arrowcontent {
   border-radius: 4px;
 }
-%ifdef WINDOWS_AERO
+%ifdef XP_WIN
 }
 %endif
 

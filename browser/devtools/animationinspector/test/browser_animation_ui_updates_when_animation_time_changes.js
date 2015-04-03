@@ -25,7 +25,7 @@ add_task(function*() {
     animationIndex: 0,
     pause: true
   });
-  yield widget.player.once(widget.player.AUTO_REFRESH_EVENT);
+  yield onceNextPlayerRefresh(widget.player);
 
   ok(widget.el.classList.contains("paused"), "The widget is in pause mode");
 
@@ -35,7 +35,7 @@ add_task(function*() {
     animationIndex: 0,
     currentTime: 0
   });
-  yield widget.player.once(widget.player.AUTO_REFRESH_EVENT);
+  yield onceNextPlayerRefresh(widget.player);
 
   is(widget.currentTimeEl.value, 0, "The currentTime slider's value was changed");
 
@@ -45,7 +45,7 @@ add_task(function*() {
     animationIndex: 0,
     currentTime: 300
   });
-  yield widget.player.once(widget.player.AUTO_REFRESH_EVENT);
+  yield onceNextPlayerRefresh(widget.player);
 
   is(widget.currentTimeEl.value, 300,
     "The currentTime slider's value was changed again");

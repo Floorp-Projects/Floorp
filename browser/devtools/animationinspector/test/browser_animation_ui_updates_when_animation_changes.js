@@ -25,7 +25,7 @@ add_task(function*() {
   });
 
   info("Wait for the next state update");
-  yield widget.player.once(widget.player.AUTO_REFRESH_EVENT);
+  yield onceNextPlayerRefresh(widget.player);
 
   is(widget.player.state.playState, "paused", "The AnimationPlayerFront is paused");
   ok(widget.el.classList.contains("paused"), "The button's state has changed");
@@ -39,7 +39,7 @@ add_task(function*() {
   });
 
   info("Wait for the next state update");
-  yield widget.player.once(widget.player.AUTO_REFRESH_EVENT);
+  yield onceNextPlayerRefresh(widget.player);
 
   is(widget.player.state.playState, "running", "The AnimationPlayerFront is running");
   ok(widget.el.classList.contains("running"), "The button's state has changed");

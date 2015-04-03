@@ -28,7 +28,7 @@ public class testInputConnection extends UITest {
     public void testInputConnection() throws InterruptedException {
         GeckoHelper.blockForReady();
 
-        final String url = StringHelper.ROBOCOP_INPUT_URL + "#" + INITIAL_TEXT;
+        final String url = mStringHelper.ROBOCOP_INPUT_URL + "#" + INITIAL_TEXT;
         NavigationHelper.enterAndLoadUrl(url);
         mToolbar.assertTitle(url);
 

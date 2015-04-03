@@ -68,8 +68,12 @@ this.ReaderMode = {
    * @return boolean Whether or not we should show the reader mode button.
    */
   isProbablyReaderable: function(doc) {
-    let uri = Services.io.newURI(doc.location.href, null, null);
+    // Only care about 'real' HTML documents:
+    if (doc.mozSyntheticDocument || !(doc instanceof doc.defaultView.HTMLDocument)) {
+      return false;
+    }
 
+    let uri = Services.io.newURI(doc.location.href, null, null);
     if (!this._shouldCheckUri(uri)) {
       return false;
     }
@@ -94,7 +98,7 @@ this.ReaderMode = {
         continue;
       }
 
-      if (node.textContent.trim().length < 200) {
+      if (node.textContent.trim().length < 100) {
         continue;
       }
 

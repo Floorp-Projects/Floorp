@@ -223,3 +223,57 @@
   text-anchor: middle;
   dominant-baseline: middle;
 }
+
+/* Rules highlighter */
+
+:-moz-native-anonymous .rulers-highlighter-elements {
+  shape-rendering: crispEdges;
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+:-moz-native-anonymous .rulers-highlighter-elements > g {
+  opacity: 0.8;
+}
+
+:-moz-native-anonymous .rulers-highlighter-elements > g > rect {
+  fill: #fff;
+}
+
+/*
+  Setting `stroke-width` with a low floating point number, ensure that `path`
+  draws always 1px despites the zoom level, with `crispEdges` on the ancestor.
+*/
+:-moz-native-anonymous .rulers-highlighter-ruler-graduations,
+:-moz-native-anonymous .rulers-highlighter-ruler-markers {
+  stroke-width: 0.0001;
+}
+
+:-moz-native-anonymous .rulers-highlighter-ruler-graduations {
+  stroke: #bebebe;
+}
+
+:-moz-native-anonymous .rulers-highlighter-ruler-markers {
+  stroke: #202020;
+}
+
+:-moz-native-anonymous .rulers-highlighter-horizontal-labels > text,
+:-moz-native-anonymous .rulers-highlighter-vertical-labels > text {
+  stroke: none;
+  fill: #202020;
+  font: message-box;
+  font-size: 9px;
+  dominant-baseline: hanging;
+}
+
+:-moz-native-anonymous .rulers-highlighter-horizontal-labels > text {
+  text-anchor: left;
+}
+
+:-moz-native-anonymous .rulers-highlighter-vertical-labels > text {
+  transform: rotate(-90deg);
+  text-anchor: end;
+}
+

@@ -21,12 +21,12 @@ public class testAddonManager extends PixelTest  {
     public void testAddonManager() {
         Actions.EventExpecter tabEventExpecter;
         Actions.EventExpecter contentEventExpecter;
-        final String aboutAddonsURL = StringHelper.ABOUT_ADDONS_URL;
+        final String aboutAddonsURL = mStringHelper.ABOUT_ADDONS_URL;
 
         blockForGeckoReady();
 
         // Use the menu to open the Addon Manger
-        selectMenuItem(StringHelper.ADDONS_LABEL);
+        selectMenuItem(mStringHelper.ADDONS_LABEL);
 
         // Set up listeners to catch the page load we're about to do
         tabEventExpecter = mActions.expectGeckoEvent("Tab:Added");
@@ -54,7 +54,7 @@ public class testAddonManager extends PixelTest  {
         contentEventExpecter = mActions.expectGeckoEvent("DOMContentLoaded");
 
         // Open a new tab
-        final String blankURL = getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_01_URL);
+        final String blankURL = getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_01_URL);
         addTab(blankURL);
 
         // Wait for the new tab and page to load
@@ -71,7 +71,7 @@ public class testAddonManager extends PixelTest  {
         verifyUrlBarTitle(blankURL);
 
         // Addons Manager is not opened 2 separate times when opened from the menu
-        selectMenuItem(StringHelper.ADDONS_LABEL);
+        selectMenuItem(mStringHelper.ADDONS_LABEL);
 
         // Verify tab count not increased
         verifyTabCount(2);

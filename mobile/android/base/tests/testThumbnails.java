@@ -34,7 +34,7 @@ public class testThumbnails extends BaseTest {
         mSolo.sleep(thumbnailDelay);
         inputAndLoadUrl(site2Url);
         mSolo.sleep(thumbnailDelay);
-        inputAndLoadUrl(StringHelper.ABOUT_HOME_URL);
+        inputAndLoadUrl(mStringHelper.ABOUT_HOME_URL);
         waitForCondition(new ThumbnailTest(site1Title, Color.GREEN), 5000);
         mAsserter.is(getTopSiteThumbnailColor(site1Title), Color.GREEN, "Top site thumbnail updated for HTTP 200");
         waitForCondition(new ThumbnailTest(site2Title, Color.GREEN), 5000);
@@ -45,7 +45,7 @@ public class testThumbnails extends BaseTest {
         mSolo.sleep(thumbnailDelay);
         inputAndLoadUrl(site2Url);
         mSolo.sleep(thumbnailDelay);
-        inputAndLoadUrl(StringHelper.ABOUT_HOME_URL);
+        inputAndLoadUrl(mStringHelper.ABOUT_HOME_URL);
         waitForCondition(new ThumbnailTest(site1Title, Color.RED), 5000);
         mAsserter.is(getTopSiteThumbnailColor(site1Title), Color.RED, "Top site thumbnail updated for HTTP 200");
         waitForCondition(new ThumbnailTest(site2Title, Color.GREEN), 5000);

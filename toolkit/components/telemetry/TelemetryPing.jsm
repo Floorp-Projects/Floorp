@@ -9,6 +9,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cr = Components.results;
 const Cu = Components.utils;
+const myScope = this;
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/debug.js", this);
@@ -16,6 +17,8 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
+Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
+Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/DeferredTask.jsm", this);
 Cu.import("resource://gre/modules/Preferences.jsm");
 
@@ -39,6 +42,8 @@ const TELEMETRY_DELAY = 60000;
 const TELEMETRY_TEST_DELAY = 100;
 // The number of days to keep pings serialised on the disk in case of failures.
 const DEFAULT_RETENTION_DAYS = 14;
+// Timeout after which we consider a ping submission failed.
+const PING_SUBMIT_TIMEOUT_MS = 2 * 60 * 1000;
 
 XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
                                    "@mozilla.org/base/telemetry;1",
@@ -171,6 +176,7 @@ this.TelemetryPing = Object.freeze({
    *                  id, false otherwise.
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
+   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    * @returns {Promise} A promise that resolves when the ping is sent.
    */
   send: function(aType, aPayload, aOptions = {}) {
@@ -194,6 +200,7 @@ this.TelemetryPing = Object.freeze({
    *                  id, false otherwise.
    * @param {Boolean} [aOptions.addEnvironment=false] true if the ping should contain the
    *                  environment data.
+   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    * @returns {Promise} A promise that resolves when the pings are saved.
    */
   savePendingPings: function(aType, aPayload, aOptions = {}) {
@@ -219,6 +226,7 @@ this.TelemetryPing = Object.freeze({
    *                  environment data.
    * @param {Boolean} [aOptions.overwrite=false] true overwrites a ping with the same name,
    *                  if found.
+   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    * @param {String} [aOptions.filePath] The path to save the ping to. Will save to default
    *                 ping location if not provided.
    *
@@ -266,7 +274,15 @@ let Impl = {
   // The deferred promise resolved when the initialization task completes.
   _delayedInitTaskDeferred: null,
 
+  // This is a public barrier Telemetry clients can use to add blockers to the shutdown
+  // of TelemetryPing.
+  // After this barrier, clients can not submit Telemetry pings anymore.
   _shutdownBarrier: new AsyncShutdown.Barrier("TelemetryPing: Waiting for clients."),
+  // This is a private barrier blocked by pending async ping activity (sending & saving).
+  _connectionsBarrier: new AsyncShutdown.Barrier("TelemetryPing: Waiting for pending ping activity"),
+
+  // This tracks all pending ping requests to the server.
+  _pendingPingRequests: new Map(),
 
   /**
    * Get the data for the "application" section of the ping.
@@ -310,12 +326,18 @@ let Impl = {
    *                  id, false otherwise.
    * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
    *                  environment data.
+   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    *
    * @returns Promise<Object> A promise that resolves when the ping is completely assembled.
    */
   assemblePing: function assemblePing(aType, aPayload, aOptions = {}) {
     this._log.trace("assemblePing - Type " + aType + ", Server " + this._server +
                     ", aOptions " + JSON.stringify(aOptions));
+
+    // Clone the payload data so we don't race against unexpected changes in subobjects that are
+    // still referenced by other code.
+    // We can't trust all callers to do this properly on their own.
+    let payload = Cu.cloneInto(aPayload, myScope);
 
     // Fill the common ping fields.
     let pingData = {
@@ -332,16 +354,10 @@ let Impl = {
     }
 
     if (aOptions.addEnvironment) {
-      return TelemetryEnvironment.getEnvironmentData().then(environment => {
-        pingData.environment = environment;
-        return pingData;
-      },
-      error => {
-        this._log.error("assemblePing - Rejection", error);
-      });
+      pingData.environment = aOptions.overrideEnvironment || TelemetryEnvironment.currentEnvironment;
     }
 
-    return Promise.resolve(pingData);
+    return pingData;
   },
 
   popPayloads: function popPayloads() {
@@ -362,6 +378,14 @@ let Impl = {
    */
   setServer: function (aServer) {
     this._server = aServer;
+  },
+
+  /**
+   * Track any pending ping send and save tasks through the promise passed here.
+   * This is needed to block shutdown on any outstanding ping activity.
+   */
+  _trackPendingPingTask: function (aPromise) {
+    this._connectionsBarrier.client.addBlocker("Waiting for ping task", aPromise);
   },
 
   /**
@@ -394,6 +418,7 @@ let Impl = {
    *                  false otherwise.
    * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
    *                  environment data.
+   * @param {Object}  aOptions.overrideEnvironment set to override the environment data.
    *
    * @returns {Promise} A promise that resolves when the ping is sent.
    */
@@ -401,28 +426,36 @@ let Impl = {
     this._log.trace("send - Type " + aType + ", Server " + this._server +
                     ", aOptions " + JSON.stringify(aOptions));
 
-    return this.assemblePing(aType, aPayload, aOptions)
-        .then(pingData => {
-          // Once ping is assembled, send it along with the persisted ping in the backlog.
-          let p = [
-            // Persist the ping if sending it fails.
-            this.doPing(pingData, false)
-                .catch(() => TelemetryFile.savePing(pingData, true)),
-            this.sendPersistedPings(),
-          ];
-          return Promise.all(p);
-        },
-        error => this._log.error("send - Rejection", error));
+    let pingData = this.assemblePing(aType, aPayload, aOptions);
+    // Once ping is assembled, send it along with the persisted pings in the backlog.
+    let p = [
+      // Persist the ping if sending it fails.
+      this.doPing(pingData, false)
+          .catch(() => TelemetryFile.savePing(pingData, true)),
+      this.sendPersistedPings(),
+    ];
+
+    let promise = Promise.all(p);
+    this._trackPendingPingTask(promise);
+    return promise;
   },
 
   /**
    * Send the persisted pings to the server.
+   *
+   * @return Promise A promise that is resolved when all pings finished sending or failed.
    */
   sendPersistedPings: function sendPersistedPings() {
     this._log.trace("sendPersistedPings");
+
     let pingsIterator = Iterator(this.popPayloads());
-    let p = [data for (data in pingsIterator)].map(data => this.doPing(data, true));
-    return Promise.all(p);
+    let p = [for (data of pingsIterator) this.doPing(data, true).catch((e) => {
+      this._log.error("sendPersistedPings - doPing rejected", e);
+    })];
+
+    let promise = Promise.all(p);
+    this._trackPendingPingTask(promise);
+    return promise;
   },
 
   /**
@@ -437,6 +470,7 @@ let Impl = {
    *                  false otherwise.
    * @param {Boolean} aOptions.addEnvironment true if the ping should contain the
    *                  environment data.
+   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    *
    * @returns {Promise} A promise that resolves when all the pings are saved to disk.
    */
@@ -444,9 +478,8 @@ let Impl = {
     this._log.trace("savePendingPings - Type " + aType + ", Server " + this._server +
                     ", aOptions " + JSON.stringify(aOptions));
 
-    return this.assemblePing(aType, aPayload, aOptions)
-        .then(pingData => TelemetryFile.savePendingPings(pingData),
-              error => this._log.error("savePendingPings - Rejection", error));
+    let pingData = this.assemblePing(aType, aPayload, aOptions);
+    return TelemetryFile.savePendingPings(pingData);
   },
 
   /**
@@ -464,6 +497,7 @@ let Impl = {
    * @param {Boolean} aOptions.overwrite true overwrites a ping with the same name, if found.
    * @param {String} [aOptions.filePath] The path to save the ping to. Will save to default
    *                 ping location if not provided.
+   * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    *
    * @returns {Promise} A promise that resolves with the ping id when the ping is saved to
    *                    disk.
@@ -472,20 +506,18 @@ let Impl = {
     this._log.trace("savePing - Type " + aType + ", Server " + this._server +
                     ", aOptions " + JSON.stringify(aOptions));
 
-    return this.assemblePing(aType, aPayload, aOptions)
-      .then(pingData => {
-        if ("filePath" in aOptions) {
-          return TelemetryFile.savePingToFile(pingData, aOptions.filePath, aOptions.overwrite)
-                              .then(() => { return pingData.id; });
-        } else {
-          return TelemetryFile.savePing(pingData, aOptions.overwrite)
-                              .then(() => { return pingData.id; });
-        }
-      }, error => this._log.error("savePing - Rejection", error));
+    let pingData = this.assemblePing(aType, aPayload, aOptions);
+    if ("filePath" in aOptions) {
+      return TelemetryFile.savePingToFile(pingData, aOptions.filePath, aOptions.overwrite)
+                          .then(() => { return pingData.id; });
+    } else {
+      return TelemetryFile.savePing(pingData, aOptions.overwrite)
+                          .then(() => { return pingData.id; });
+    }
   },
 
-  finishPingRequest: function finishPingRequest(success, startTime, ping, isPersisted) {
-    this._log.trace("finishPingRequest - Success " + success + ", Persisted " + isPersisted);
+  onPingRequestFinished: function(success, startTime, ping, isPersisted) {
+    this._log.trace("onPingRequestFinished - success: " + success + ", persisted: " + isPersisted);
 
     let hping = Telemetry.getHistogramById("TELEMETRY_PING");
     let hsuccess = Telemetry.getHistogramById("TELEMETRY_SUCCESS");
@@ -535,21 +567,27 @@ let Impl = {
 
   doPing: function doPing(ping, isPersisted) {
     this._log.trace("doPing - Server " + this._server + ", Persisted " + isPersisted);
-    let deferred = Promise.defer();
-    let isNewPing = isNewPingFormat(ping);
-    let version = isNewPing ? PING_FORMAT_VERSION : 1;
-    let url = this._server + this.submissionPath(ping) + "?v=" + version;
+
+    const isNewPing = isNewPingFormat(ping);
+    const version = isNewPing ? PING_FORMAT_VERSION : 1;
+    const url = this._server + this.submissionPath(ping) + "?v=" + version;
+
     let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                   .createInstance(Ci.nsIXMLHttpRequest);
     request.mozBackgroundRequest = true;
+    request.timeout = PING_SUBMIT_TIMEOUT_MS;
+
     request.open("POST", url, true);
     request.overrideMimeType("text/plain");
     request.setRequestHeader("Content-Type", "application/json; charset=UTF-8");
 
-    let startTime = new Date();
+    this._pendingPingRequests.set(url, request);
 
-    function handler(success) {
-      let handleCompletion = event => {
+    let startTime = new Date();
+    let deferred = PromiseUtils.defer();
+
+    let onRequestFinished = (success, event) => {
+      let onCompletion = () => {
         if (success) {
           deferred.resolve();
         } else {
@@ -557,18 +595,51 @@ let Impl = {
         }
       };
 
-      return function(event) {
-        this.finishPingRequest(success, startTime, ping, isPersisted)
-          .then(() => handleCompletion(event),
-                error => {
-                  this._log.error("doPing - Request Success " + success + ", Error " +
-                                  error);
-                  handleCompletion(event);
-                });
-      };
-    }
-    request.addEventListener("error", handler(false).bind(this), false);
-    request.addEventListener("load", handler(true).bind(this), false);
+      this._pendingPingRequests.delete(url);
+      this.onPingRequestFinished(success, startTime, ping, isPersisted)
+        .then(() => onCompletion(),
+              (error) => {
+                this._log.error("doPing - request success: " + success + ", error" + error);
+                onCompletion();
+              });
+    };
+
+    let errorhandler = (event) => {
+      this._log.error("doPing - error making request to " + url + ": " + event.type);
+      onRequestFinished(false, event);
+    };
+    request.onerror = errorhandler;
+    request.ontimeout = errorhandler;
+    request.onabort = errorhandler;
+
+    request.onload = (event) => {
+      let status = request.status;
+      let statusClass = status - (status % 100);
+      let success = false;
+
+      if (statusClass === 200) {
+        // We can treat all 2XX as success.
+        this._log.info("doPing - successfully loaded, status: " + status);
+        success = true;
+      } else if (statusClass === 400) {
+        // 4XX means that something with the request was broken.
+        this._log.error("doPing - error submitting to " + url + ", status: " + status
+                        + " - ping request broken?");
+        // TODO: we should handle this better, but for now we should avoid resubmitting
+        // broken requests by pretending success.
+        success = true;
+      } else if (statusClass === 500) {
+        // 5XX means there was a server-side error and we should try again later.
+        this._log.error("doPing - error submitting to " + url + ", status: " + status
+                        + " - server error, should retry later");
+      } else {
+        // We received an unexpected status codes.
+        this._log.error("doPing - error submitting to " + url + ", status: " + status
+                        + ", type: " + event.type);
+      }
+
+      onRequestFinished(success, event);
+    };
 
     // If that's a legacy ping format, just send its payload.
     let networkPayload = isNewPing ? ping : ping.payload;
@@ -582,6 +653,7 @@ let Impl = {
                         .createInstance(Ci.nsIStringInputStream);
     payloadStream.data = this.gzipCompressString(utf8Payload);
     request.send(payloadStream);
+
     return deferred.promise;
   },
 
@@ -698,8 +770,6 @@ let Impl = {
       try {
         this._initialized = true;
 
-        yield TelemetryEnvironment.init();
-
         yield TelemetryFile.loadSavedPings();
         // If we have any TelemetryPings lying around, we'll be aggressive
         // and try to send them all off ASAP.
@@ -742,20 +812,38 @@ let Impl = {
     return this._delayedInitTaskDeferred.promise;
   },
 
+  // Do proper shutdown waiting and cleanup.
+  _cleanupOnShutdown: Task.async(function*() {
+    if (!this._initialized) {
+      return;
+    }
+
+    // Abort any pending ping XHRs.
+    for (let [url, request] of this._pendingPingRequests) {
+      this._log.trace("_cleanupOnShutdown - aborting ping request for " + url);
+      try {
+        request.abort();
+      } catch (e) {
+        this._log.error("_cleanupOnShutdown - failed to abort request to " + url, e);
+      }
+    }
+    this._pendingPingRequests.clear();
+
+    // Now do an orderly shutdown.
+    try {
+      // First wait for clients processing shutdown.
+      yield this._shutdownBarrier.wait();
+      // Then wait for any outstanding async ping activity.
+      yield this._connectionsBarrier.wait();
+    } finally {
+      // Reset state.
+      this._initialized = false;
+      this._initStarted = false;
+    }
+  }),
+
   shutdown: function() {
     this._log.trace("shutdown");
-
-    let cleanup = () => {
-      if (!this._initialized) {
-        return;
-      }
-      let reset = () => {
-        this._initialized = false;
-        this._initStarted = false;
-      };
-      return this._shutdownBarrier.wait().then(
-               () => TelemetryEnvironment.shutdown().then(reset, reset));
-    };
 
     // We can be in one the following states here:
     // 1) setupTelemetry was never called
@@ -772,11 +860,11 @@ let Impl = {
     // This handles 4).
     if (!this._delayedInitTask) {
       // We already ran the delayed initialization.
-      return cleanup();
+      return this._cleanupOnShutdown();
     }
 
     // This handles 2) and 3).
-    return this._delayedInitTask.finalize().then(cleanup);
+    return this._delayedInitTask.finalize().then(() => this._cleanupOnShutdown());
   },
 
   /**
@@ -821,6 +909,8 @@ let Impl = {
       initialized: this._initialized,
       initStarted: this._initStarted,
       haveDelayedInitTask: !!this._delayedInitTask,
+      shutdownBarrier: this._shutdownBarrier.state,
+      connectionsBarrier: this._connectionsBarrier.state,
     };
   },
 };
