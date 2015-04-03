@@ -86,6 +86,7 @@ browser.jar:
   skin/classic/browser/Toolbar-inverted.png
   skin/classic/browser/Toolbar-small.png
   skin/classic/browser/undoCloseTab.png                        (../shared/undoCloseTab.png)
+  skin/classic/browser/update-badge.svg                        (../shared/update-badge.svg)
   skin/classic/browser/urlbar-arrow.png
   skin/classic/browser/session-restore.svg                  (../shared/incontent-icons/session-restore.svg)
   skin/classic/browser/tab-crashed.svg                      (../shared/incontent-icons/tab-crashed.svg)

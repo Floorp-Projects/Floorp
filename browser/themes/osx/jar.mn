@@ -131,6 +131,7 @@ browser.jar:
   skin/classic/browser/toolbarbutton-dropmarker.png
   skin/classic/browser/undoCloseTab.png                        (../shared/undoCloseTab.png)
   skin/classic/browser/undoCloseTab@2x.png                     (../shared/undoCloseTab@2x.png)
+  skin/classic/browser/update-badge.svg                        (../shared/update-badge.svg)
   skin/classic/browser/urlbar-history-dropmarker.png
   skin/classic/browser/urlbar-history-dropmarker@2x.png
   skin/classic/browser/urlbar-arrow.png
