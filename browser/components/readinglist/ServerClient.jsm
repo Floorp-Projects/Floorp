@@ -68,11 +68,6 @@ ServerClient.prototype = {
   },
 
   _removeToken(token) {
-    // XXX - remove this check once tokencaching landsin FxA.
-    if (!this.fxa.removeCachedOAuthToken) {
-      dump("XXX - token caching support is yet to land - can't remove token!");
-      return;
-    }
     return this.fxa.removeCachedOAuthToken({token});
   },
 
