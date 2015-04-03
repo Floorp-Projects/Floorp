@@ -144,9 +144,6 @@ GetStrokeDashData(SVGContentUtils::AutoStrokeOptions* aStrokeOptions,
   // stroke to essentially be continuous or to be nonexistent in which case
   // we can avoid expensive stroking operations (the underlying platform
   // graphics libraries don't seem to optimize for this).
-  if (totalLengthOfDashes <= 0 && totalLengthOfGaps <= 0) {
-    return eNoStroke;
-  }
   if (totalLengthOfGaps <= 0) {
     return eContinuousStroke;
   }
