@@ -10,7 +10,6 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-SimpleTest.requestCompleteLog();
 var manager = new MediaTestManager;
 
 function UsableKeyIdsMatch(usableKeyIds, expectedKeyIds) {
@@ -73,10 +72,6 @@ function startTest(test, token)
   var v = SetupEME(test, token,
     {
       onsessionupdated: function(session) {
-        // TODO: Remove this when onsessionupdated is fixed for multiple sessions
-        // in bug 1142379.
-        if (!session) { return; }
-
         Log(token, "Session created");
         var sessionId;
         initialSession = session;
@@ -152,14 +147,7 @@ function startTest(test, token)
     }
   );
 
-  LoadTest(test, v, token)
-  .then(function() {
-    info(TimeStamp(token) + " - Finished loading.");
-  })
-  .catch(function() {
-    ok(false, TimeStamp(token) + " - Cannot load.");
-    manager.finished(token);
-  });
+  LoadTest(test, v, token);
 }
 
 function beginTest() {

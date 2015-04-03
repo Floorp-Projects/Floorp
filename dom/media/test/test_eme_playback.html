@@ -10,7 +10,6 @@
 <body>
 <pre id="test">
 <script class="testbody" type="text/javascript">
-SimpleTest.requestCompleteLog();
 var manager = new MediaTestManager;
 
 
@@ -93,30 +92,6 @@ function startTest(test, token)
 
   LoadTest(test, v, token)
   .then(function() {
-    Log(token, "Loading complete -> Play");
-    var lastState = "(before play)";
-    var maxWait_ms = (test.duration * 2 + 1) * 1000;
-    var playTimer = setTimeout(function() {
-      if (lastState !== "ended") {
-        ok(false, TimeStamp(token) + " expected 'ended' around "
-                  + test.duration + "s, got '" + lastState
-                  + "' after " + (maxWait_ms / 1000) + "s");
-        manager.finished(token);
-      }
-    }, maxWait_ms);
-    v.addEventListener("ended", function(ev) {
-      clearTimeout(playTimer);
-      lastState = "ended";
-    });
-    [ "canplay", "canplaythrough", "error", "loadeddata",
-      "loadedmetadata", "loadstart", "pause", "play", "playing", "progress",
-      "stalled", "suspend", "waiting",
-    ].forEach(function(e) {
-      v.addEventListener(e, function(event) {
-        lastState = e;
-      });
-    });
-
     v.play();
   }).catch(function() {
     ok(false, token + " failed to load");
