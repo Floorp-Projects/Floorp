@@ -80,10 +80,11 @@ static bool gIsSandboxEnabled = false;
 
 class WinSandboxStarter : public mozilla::gmp::SandboxStarter {
 public:
-    virtual void Start(const char *aLibPath) override {
+    virtual bool Start(const char *aLibPath) override {
         if (gIsSandboxEnabled) {
             sandbox::SandboxFactory::GetTargetServices()->LowerToken();
         }
+        return true;
     }
 };
 #endif
@@ -101,23 +102,41 @@ public:
             return nullptr;
         }
     }
-    virtual void Start(const char *aLibPath) override {
+    virtual bool Start(const char *aLibPath) override {
         mozilla::SetMediaPluginSandbox(aLibPath);
+        return true;
     }
+};
+#endif
+
+#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
+class MacSandboxStarter : public mozilla::gmp::SandboxStarter {
+public:
+    virtual bool Start(const char *aLibPath) override {
+      std::string err;
+      bool rv = mozilla::StartMacSandbox(mInfo, err);
+      if (!rv) {
+        fprintf(stderr, "sandbox_init() failed! Error \"%s\"\n", err.c_str());
+      }
+      return rv;
+    }
+    virtual void SetSandboxInfo(MacSandboxInfo* aSandboxInfo) override {
+      mInfo = *aSandboxInfo;
+    }
+private:
+  MacSandboxInfo mInfo;
 };
 #endif
 
 mozilla::gmp::SandboxStarter*
 MakeSandboxStarter()
 {
-    // Note: MacOSX creates its SandboxStarter inside xul code; it
-    // needs to change to statically link its sandbox code into
-    // plugin-container. Once it does that, we can create the
-    // SandboxStarter for it here.
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
     return new WinSandboxStarter();
 #elif defined(XP_LINUX) && defined(MOZ_GMP_SANDBOX)
     return LinuxSandboxStarter::Make();
+#elif defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
+    return new MacSandboxStarter();
 #else
     return nullptr;
 #endif
