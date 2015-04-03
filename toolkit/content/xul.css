@@ -974,6 +974,14 @@ grippy {
   -moz-box-ordinal-group: 2147483646;
 }
 
+/******** scrollbar ********/
+
+slider {
+  /* This is a hint to layerization that the scrollbar thumb can never leave
+     the scrollbar track. */
+  overflow: hidden;
+}
+
 /******** scrollbox ********/
 
 scrollbox {

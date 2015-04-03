@@ -61,8 +61,8 @@ const RW_OWNER = parseInt("0600", 8);
 const NUMBER_OF_THREADS_TO_LAUNCH = 30;
 let gNumberOfThreadsLaunched = 0;
 
-const SEC_IN_ONE_DAY  = 24 * 60 * 60;
-const MS_IN_ONE_DAY   = SEC_IN_ONE_DAY * 1000;
+const MS_IN_ONE_HOUR  = 60 * 60 * 1000;
+const MS_IN_ONE_DAY   = 24 * MS_IN_ONE_HOUR;
 
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
@@ -70,7 +70,6 @@ const PREF_SERVER = PREF_BRANCH + "server";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 const PREF_FHR_SERVICE_ENABLED = "datareporting.healthreport.service.enabled";
 
-const HAS_DATAREPORTINGSERVICE = "@mozilla.org/datareporting/service;1" in Cc;
 const SESSION_RECORDER_EXPECTED = HAS_DATAREPORTINGSERVICE &&
                                   Preferences.get(PREF_FHR_SERVICE_ENABLED, true);
 
@@ -100,6 +99,13 @@ function generateUUID() {
   return str.substring(1, str.length - 1);
 }
 
+function truncateDateToDays(date) {
+  return new Date(date.getFullYear(),
+                  date.getMonth(),
+                  date.getDate(),
+                  0, 0, 0, 0);
+}
+
 function sendPing() {
   TelemetrySession.gatherStartup();
   if (gServerStarted) {
@@ -124,19 +130,15 @@ function wrapWithExceptionHandler(f) {
   return wrapper;
 }
 
-function futureDate(date, offset) {
-  return new Date(date.getTime() + offset);
-}
-
-function fakeNow(date) {
-  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
-  session.Policy.now = () => date;
-}
-
 function fakeGenerateUUID(sessionFunc, subsessionFunc) {
   let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
   session.Policy.generateSessionUUID = sessionFunc;
   session.Policy.generateSubsessionUUID = subsessionFunc;
+}
+
+function fakeIdleNotification(topic) {
+  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
+  return session.TelemetryScheduler.observe(null, topic, null);
 }
 
 function registerPingHandler(handler) {
@@ -1021,8 +1023,10 @@ add_task(function* test_dailyDuplication() {
   fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
   yield TelemetrySession.setup();
 
-  // Make sure the daily ping gets triggered just before midnight.
-  let firstDailyDue = new Date(2030, 1, 1, 23, 45, 0);
+  // Make sure the daily ping gets triggered at midnight.
+  // We need to make sure that we trigger this after the period where we wait for
+  // the user to become idle.
+  let firstDailyDue = new Date(2030, 1, 2, 0, 0, 0);
   fakeNow(firstDailyDue);
 
   // Run a scheduler tick: it should trigger the daily ping.
@@ -1044,7 +1048,6 @@ add_task(function* test_dailyDuplication() {
 
   // Set the current time to a bit after midnight.
   let secondDailyDue = new Date(firstDailyDue);
-  secondDailyDue.setDate(firstDailyDue.getDate() + 1);
   secondDailyDue.setHours(0);
   secondDailyDue.setMinutes(15);
   fakeNow(secondDailyDue);
@@ -1114,7 +1117,6 @@ add_task(function* test_environmentChange() {
   }
 
   let now = new Date(2040, 1, 1, 12, 0, 0);
-  let nowDay = new Date(2040, 1, 1, 0, 0, 0);
   let timerCallback = null;
   let timerDelay = null;
 
@@ -1145,31 +1147,39 @@ add_task(function* test_environmentChange() {
   keyed.add("b", 1);
 
   // Trigger and collect environment-change ping.
+  let startDay = truncateDateToDays(now);
+  now = futureDate(now, 10 * MILLISECONDS_PER_MINUTE);
+  fakeNow(now);
+
   Preferences.set(PREF_TEST, 1);
   let request = yield gRequestIterator.next();
   Assert.ok(!!request);
   let ping = decodeRequestPayload(request);
 
   Assert.equal(ping.type, PING_TYPE_MAIN);
-  Assert.equal(ping.environment.settings.userPrefs[PREF_TEST], 1);
+  Assert.equal(ping.environment.settings.userPrefs[PREF_TEST], undefined);
   Assert.equal(ping.payload.info.reason, REASON_ENVIRONMENT_CHANGE);
   let subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
-  Assert.equal(subsessionStartDate.toISOString(), nowDay.toISOString());
+  Assert.equal(subsessionStartDate.toISOString(), startDay.toISOString());
 
   Assert.equal(ping.payload.histograms[COUNT_ID].sum, 1);
   Assert.equal(ping.payload.keyedHistograms[KEYED_ID]["a"].sum, 1);
 
   // Trigger and collect another ping. The histograms should be reset.
+  startDay = truncateDateToDays(now);
+  now = futureDate(now, 10 * MILLISECONDS_PER_MINUTE);
+  fakeNow(now);
+
   Preferences.set(PREF_TEST, 2);
   request = yield gRequestIterator.next();
   Assert.ok(!!request);
   ping = decodeRequestPayload(request);
 
   Assert.equal(ping.type, PING_TYPE_MAIN);
-  Assert.equal(ping.environment.settings.userPrefs[PREF_TEST], 2);
+  Assert.equal(ping.environment.settings.userPrefs[PREF_TEST], 1);
   Assert.equal(ping.payload.info.reason, REASON_ENVIRONMENT_CHANGE);
   subsessionStartDate = new Date(ping.payload.info.subsessionStartDate);
-  Assert.equal(subsessionStartDate.toISOString(), nowDay.toISOString());
+  Assert.equal(subsessionStartDate.toISOString(), startDay.toISOString());
 
   Assert.equal(ping.payload.histograms[COUNT_ID].sum, 0);
   Assert.deepEqual(ping.payload.keyedHistograms[KEYED_ID], {});
@@ -1247,6 +1257,9 @@ add_task(function* test_savedSessionData() {
   // Start TelemetrySession so that it loads the session data file.
   yield TelemetrySession.reset();
   // Watch a test preference, trigger and environment change and wait for it to propagate.
+
+  // _watchPreferences triggers a subsession notification
+  fakeNow(new Date(2050, 1, 1, 12, 0, 0));
   TelemetryEnvironment._watchPreferences(prefsToWatch);
   let changePromise = new Promise(resolve =>
     TelemetryEnvironment.registerChangeListener("test_fake_change", resolve));
@@ -1486,7 +1499,7 @@ add_task(function* test_schedulerEnvironmentReschedules() {
   gRequestIterator = Iterator(new Request());
 
   // Set a fake current date and start Telemetry.
-  let nowDate = new Date(2009, 10, 18, 0, 00, 0);
+  let nowDate = new Date(2060, 10, 18, 0, 00, 0);
   fakeNow(nowDate);
   let schedulerTickCallback = null;
   fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
@@ -1605,6 +1618,102 @@ add_task(function* test_pingExtendedStats() {
             "addonManager must be sent if the extended set is on.");
   Assert.ok("UITelemetry" in ping.payload.simpleMeasurements,
             "UITelemetry must be sent if the extended set is on.");
+});
+
+add_task(function* test_schedulerUserIdle() {
+  if (gIsAndroid || gIsGonk) {
+    // We don't have the aborted session or the daily ping here.
+    return;
+  }
+
+  const SCHEDULER_TICK_INTERVAL_MS = 5 * 60 * 1000;
+  const SCHEDULER_TICK_IDLE_INTERVAL_MS = 60 * 60 * 1000;
+
+  let now = new Date(2010, 1, 1, 11, 0, 0);
+  fakeNow(now);
+
+  let schedulerTimeout = 0;
+  fakeSchedulerTimer((callback, timeout) => {
+    schedulerTimeout = timeout;
+  }, () => {});
+  yield TelemetrySession.reset();
+  gRequestIterator = Iterator(new Request());
+
+  // When not idle, the scheduler should have a 5 minutes tick interval.
+  Assert.equal(schedulerTimeout, SCHEDULER_TICK_INTERVAL_MS);
+
+  // Send an "idle" notification to the scheduler.
+  fakeIdleNotification("idle");
+
+  // When idle, the scheduler should have a 1hr tick interval.
+  Assert.equal(schedulerTimeout, SCHEDULER_TICK_IDLE_INTERVAL_MS);
+
+  // Send an "active" notification to the scheduler.
+  fakeIdleNotification("active");
+
+  // When user is back active, the scheduler tick should be 5 minutes again.
+  Assert.equal(schedulerTimeout, SCHEDULER_TICK_INTERVAL_MS);
+
+  // We should not miss midnight when going to idle.
+  now.setHours(23);
+  now.setMinutes(50);
+  fakeIdleNotification("idle");
+  Assert.equal(schedulerTimeout, 10 * 60 * 1000);
+
+  yield TelemetrySession.shutdown();
+});
+
+add_task(function* test_sendDailyOnIdle() {
+  if (gIsAndroid || gIsGonk) {
+    // We don't have the aborted session or the daily ping here.
+    return;
+  }
+
+  let now = new Date(2040, 1, 1, 11, 0, 0);
+  fakeNow(now);
+
+  let schedulerTickCallback = 0;
+  fakeSchedulerTimer((callback, timeout) => {
+    schedulerTickCallback = callback;
+  }, () => {});
+  yield TelemetrySession.reset();
+
+  // Make sure we are not sending a daily before midnight when active.
+  now = new Date(2040, 1, 1, 23, 55, 0);
+  fakeNow(now);
+  registerPingHandler((req, res) => {
+    Assert.ok(false, "No daily ping should be received yet when the user is active.");
+  });
+  yield fakeIdleNotification("active");
+
+  // The Request constructor restores the previous ping handler.
+  gRequestIterator = Iterator(new Request());
+
+  // We should receive a daily ping after midnight.
+  now = new Date(2040, 1, 2, 0, 05, 0);
+  fakeNow(now);
+  yield schedulerTickCallback();
+
+  let request = yield gRequestIterator.next();
+  Assert.ok(!!request);
+  let ping = decodeRequestPayload(request);
+
+  Assert.equal(ping.type, PING_TYPE_MAIN);
+  Assert.equal(ping.payload.info.reason, REASON_DAILY);
+
+  // We should also trigger a ping when going idle shortly before next midnight.
+  now = new Date(2040, 1, 2, 23, 55, 0);
+  fakeNow(now);
+  yield fakeIdleNotification("idle");
+
+  request = yield gRequestIterator.next();
+  Assert.ok(!!request);
+  ping = decodeRequestPayload(request);
+
+  Assert.equal(ping.type, PING_TYPE_MAIN);
+  Assert.equal(ping.payload.info.reason, REASON_DAILY);
+
+  yield TelemetrySession.shutdown();
 });
 
 add_task(function* stopServer(){

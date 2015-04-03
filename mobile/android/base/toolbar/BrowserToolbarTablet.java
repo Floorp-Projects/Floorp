@@ -5,6 +5,9 @@
 
 package org.mozilla.gecko.toolbar;
 
+import android.graphics.Rect;
+import android.view.TouchDelegate;
+import android.view.ViewTreeObserver;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
@@ -50,6 +53,27 @@ class BrowserToolbarTablet extends BrowserToolbarTabletBase {
         setButtonEnabled(forwardButton, true);
 
         updateForwardButtonState(ForwardButtonState.HIDDEN);
+
+        getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            @Override
+            public boolean onPreDraw() {
+                // We do this in an onPreDrawListener because we need the Views
+                // to be laid out before we can make size calculations.
+                getViewTreeObserver().removeOnPreDrawListener(this);
+
+                final Rect r = new Rect();
+                r.left = menuButton.getLeft();
+                r.right = getWidth();
+                r.top = 0;
+                r.bottom = getHeight();
+
+                // Redirect touch events between the 3-dot menu button
+                // and the edge of the screen to the right of the button.
+                setTouchDelegate(new TouchDelegate(r, menuButton));
+
+                return true;
+            }
+        });
     }
 
     private void updateForwardButtonState(final ForwardButtonState state) {

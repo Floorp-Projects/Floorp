@@ -65,16 +65,16 @@ function hasLowPrecision() {
   let [sysName, sysVersion] = [Services.sysinfo.getPropertyAsAString("name"), Services.sysinfo.getPropertyAsDouble("version")];
   do_print(`Running ${sysName} version ${sysVersion}`);
 
-  if (sysName != "Windows_NT") {
-    do_print("Not running Windows, precision should be good.");
-    return false;
+  if (sysName == "Windows_NT" && sysVersion < 6) {
+    do_print("Running old Windows, need to deactivate tests due to bad precision.");
+    return true;
   }
-  if (sysVersion >= 6) {
-    do_print("Running a recent version of Windows, precision should be good.");
-    return false;
+  if (sysName == "Linux" && sysVersion <= 2.6) {
+    do_print("Running old Linux, need to deactivate tests due to bad precision.");
+    return true;
   }
-  do_print("Running old Windows, need to deactivate tests due to bad precision.");
-  return true;
+  do_print("This platform has good precision.")
+  return false;
 }
 
 add_task(function* test_measure() {

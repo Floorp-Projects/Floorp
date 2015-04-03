@@ -4,23 +4,23 @@
 
 package org.mozilla.gecko.tests;
 
-
 public class testPictureLinkContextMenu extends ContentContextMenuTest {
 
     // Test website strings
     private static String PICTURE_PAGE_URL;
     private static String BLANK_PAGE_URL;
-    private static final String PICTURE_PAGE_TITLE = StringHelper.ROBOCOP_PICTURE_LINK_TITLE;
     private static final String tabs [] = { "Image", "Link" };
     private static final String photoMenuItems [] = { "Copy Image Location", "Share Image", "Set Image As", "Save Image" };
-    private static final String linkMenuItems [] = StringHelper.CONTEXT_MENU_ITEMS_IN_NORMAL_TAB;
     private static final String imageTitle = "^Image$";
 
     public void testPictureLinkContextMenu() {
+        final String PICTURE_PAGE_TITLE = mStringHelper.ROBOCOP_PICTURE_LINK_TITLE;
+        final String linkMenuItems [] = mStringHelper.CONTEXT_MENU_ITEMS_IN_NORMAL_TAB;
+
         blockForGeckoReady();
 
-        PICTURE_PAGE_URL=getAbsoluteUrl(StringHelper.ROBOCOP_PICTURE_LINK_URL);
-        BLANK_PAGE_URL=getAbsoluteUrl(StringHelper.ROBOCOP_BLANK_PAGE_02_URL);
+        PICTURE_PAGE_URL=getAbsoluteUrl(mStringHelper.ROBOCOP_PICTURE_LINK_URL);
+        BLANK_PAGE_URL=getAbsoluteUrl(mStringHelper.ROBOCOP_BLANK_PAGE_02_URL);
         loadAndPaint(PICTURE_PAGE_URL);
         verifyUrlBarTitle(PICTURE_PAGE_URL);
 

@@ -21,7 +21,7 @@
 }
 
 .blockedIcon {
-  list-style-image: url("chrome://global/skin/icons/Error.png");
+  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=dialog");
 }
 
 .downloadTarget {

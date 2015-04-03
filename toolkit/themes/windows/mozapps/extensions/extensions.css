@@ -179,8 +179,9 @@
   overflow: hidden;
 }
 
-%ifdef WINDOWS_AERO
-@media (-moz-os-version: windows-vista),
+%ifdef XP_WIN
+@media (-moz-os-version: windows-xp),
+       (-moz-os-version: windows-vista),
        (-moz-os-version: windows-win7) {
 %endif
   .category:-moz-locale-dir(ltr) {
@@ -192,7 +193,7 @@
     border-top-right-radius: 5px;
     border-bottom-right-radius: 5px;
   }
-%ifdef WINDOWS_AERO
+%ifdef XP_WIN
 }
 %endif
 
@@ -311,14 +312,15 @@
     background-color: rgba(255, 255, 255, 0.4);
   }
 
-%ifdef WINDOWS_AERO
-@media (-moz-os-version: windows-vista),
+%ifdef XP_WIN
+@media (-moz-os-version: windows-xp),
+       (-moz-os-version: windows-vista),
        (-moz-os-version: windows-win7) {
 %endif
   #header-search {
     border-radius: 2.5px;
   }
-%ifdef WINDOWS_AERO
+%ifdef XP_WIN
 }
 %endif
 
@@ -1176,14 +1178,15 @@ button.button-link:not([disabled="true"]):active:hover {
               0 0 2px 1px rgba(255, 255, 255, 0.25) inset;
 }
 
-%ifdef WINDOWS_AERO
-@media (-moz-os-version: windows-vista),
+%ifdef XP_WIN
+@media (-moz-os-version: windows-xp),
+       (-moz-os-version: windows-vista),
        (-moz-os-version: windows-win7) {
 %endif
   .header-button {
     border-radius: 2.5px;
   }
-%ifdef WINDOWS_AERO
+%ifdef XP_WIN
 }
 %endif
 

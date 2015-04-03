@@ -11,7 +11,8 @@ const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/
 window.addEventListener("load", function onLoad() {
   window.removeEventListener("load", onLoad);
   document.querySelector("#aboutaddons").onclick = function() {
-    window.parent.UI.openInBrowser("about:addons");
+    let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
+    browserWin.BrowserOpenAddonsMgr("addons://list/extension");
   }
   document.querySelector("#close").onclick = CloseUI;
   GetAvailableAddons().then(BuildUI, (e) => {
