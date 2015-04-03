@@ -84,7 +84,8 @@ const ToolboxButtons = [
   { id: "command-button-tilt" },
   { id: "command-button-scratchpad" },
   { id: "command-button-eyedropper" },
-  { id: "command-button-screenshot" }
+  { id: "command-button-screenshot" },
+  { id: "command-button-rulers"}
 ];
 
 /**

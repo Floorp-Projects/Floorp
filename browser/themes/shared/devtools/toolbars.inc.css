@@ -678,6 +678,10 @@
   background-image: url("chrome://browser/skin/devtools/command-eyedropper.png");
 }
 
+#command-button-rulers > image {
+  background-image: url("chrome://browser/skin/devtools/command-rulers.png");
+}
+
 @media (min-resolution: 2dppx) {
   #command-button-paintflashing > image {
     background-image: url("chrome://browser/skin/devtools/command-paintflashing@2x.png");
@@ -713,6 +717,10 @@
 
   #command-button-eyedropper > image {
     background-image: url("chrome://browser/skin/devtools/command-eyedropper@2x.png");
+  }
+
+  #command-button-rulers > image {
+    background-image: url("chrome://browser/skin/devtools/command-rulers@2x.png");
   }
 }
 

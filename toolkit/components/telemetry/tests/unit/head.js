@@ -9,6 +9,12 @@ const gIsMac = ("@mozilla.org/xpcom/mac-utils;1" in Components.classes);
 const gIsAndroid =  ("@mozilla.org/android/bridge;1" in Components.classes);
 const gIsGonk = ("@mozilla.org/cellbroadcast/gonkservice;1" in Components.classes);
 
+const MILLISECONDS_PER_MINUTE = 60 * 1000;
+const MILLISECONDS_PER_HOUR = 60 * MILLISECONDS_PER_MINUTE;
+const MILLISECONDS_PER_DAY = 24 * MILLISECONDS_PER_HOUR;
+
+const HAS_DATAREPORTINGSERVICE = "@mozilla.org/datareporting/service;1" in Components.classes;
+
 let gOldAppInfo = null;
 let gGlobalScope = this;
 
@@ -83,6 +89,23 @@ function fakeSchedulerTimer(set, clear) {
   let session = Components.utils.import("resource://gre/modules/TelemetrySession.jsm");
   session.Policy.setSchedulerTickTimeout = set;
   session.Policy.clearSchedulerTickTimeout = clear;
+}
+
+// Fake the current date.
+function fakeNow(date) {
+  let session = Cu.import("resource://gre/modules/TelemetrySession.jsm");
+  session.Policy.now = () => date;
+  let environment = Cu.import("resource://gre/modules/TelemetryEnvironment.jsm");
+  environment.Policy.now = () => date;
+}
+
+// Return a date that is |offset| ms in the future from |date|.
+function futureDate(date, offset) {
+  return new Date(date.getTime() + offset);
+}
+
+function truncateToDays(aMsec) {
+  return Math.floor(aMsec / MILLISECONDS_PER_DAY);
 }
 
 // Set logging preferences for all the tests.

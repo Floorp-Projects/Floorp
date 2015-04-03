@@ -1486,7 +1486,7 @@ BrowserGlue.prototype = {
       if (!importBookmarks) {
         // Now apply distribution customized bookmarks.
         // This should always run after Places initialization.
-        this._distributionCustomizer.applyBookmarks();
+        yield this._distributionCustomizer.applyBookmarks();
         yield this.ensurePlacesDefaultQueriesInitialized();
       }
       else {
@@ -1519,7 +1519,7 @@ BrowserGlue.prototype = {
           try {
             // Now apply distribution customized bookmarks.
             // This should always run after Places initialization.
-            this._distributionCustomizer.applyBookmarks();
+            yield this._distributionCustomizer.applyBookmarks();
             // Ensure that smart bookmarks are created once the operation is
             // complete.
             yield this.ensurePlacesDefaultQueriesInitialized();
