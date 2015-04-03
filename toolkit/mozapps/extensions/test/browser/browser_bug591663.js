@@ -64,7 +64,7 @@ function check_list(aItem) {
 
   // Check the children of the list
   let list = gManagerWindow.document.getElementById(LIST_ID);
-  is(list.itemCount, aItem ? 1 : 0, "Should get expected number of items in list");
+  is(list.childNodes.length, aItem ? 1 : 0, "Should get expected number of items in list");
   if (aItem != null) {
     let itemName = list.firstChild.getAttribute("name");
     is(itemName, aItem.name, "List item should have correct name");
