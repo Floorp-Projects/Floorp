@@ -14,7 +14,7 @@ uuid = "0.1.10"
 git = "http://github.com/tailhook/rust-argparse.git"
 
 [dependencies.webdriver]
-git = "http://github.com/jgraham/webdriver-rust.git"
+git = "http://github.com/jgraham/webdriver-rust.git#6c891a20996ed866621eecae5ae29230f22f95fd"
 
 [dependencies.mozprofile]
 git = "http://github.com/jgraham/rust_mozprofile.git"
