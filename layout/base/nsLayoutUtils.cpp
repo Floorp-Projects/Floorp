@@ -5746,7 +5746,7 @@ struct SnappedImageDrawingParameters {
   // one has been explicitly specified. This is the same as |size| except that
   // it does not take into account any transformation on the gfxContext we're
   // drawing to - for example, CSS transforms are not taken into account.
-  nsIntSize svgViewportSize;
+  CSSIntSize svgViewportSize;
   // Whether there's anything to draw at all.
   bool shouldDraw;
 
@@ -5758,7 +5758,7 @@ struct SnappedImageDrawingParameters {
   SnappedImageDrawingParameters(const gfxMatrix&   aImageSpaceToDeviceSpace,
                                 const nsIntSize&   aSize,
                                 const ImageRegion& aRegion,
-                                const nsIntSize&   aSVGViewportSize)
+                                const CSSIntSize&  aSVGViewportSize)
    : imageSpaceToDeviceSpace(aImageSpaceToDeviceSpace)
    , size(aSize)
    , region(aRegion)
@@ -5884,10 +5884,10 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
                                     aGraphicsFilter, aImageFlags);
   gfxSize imageSize(intImageSize.width, intImageSize.height);
 
-  nsIntSize svgViewportSize = currentMatrix.IsIdentity()
-      ? intImageSize
-      : nsIntSize(NSAppUnitsToIntPixels(dest.width, aAppUnitsPerDevPixel),
-                  NSAppUnitsToIntPixels(dest.height, aAppUnitsPerDevPixel));
+  CSSIntSize svgViewportSize = currentMatrix.IsIdentity()
+    ? CSSIntSize(intImageSize.width, intImageSize.height)
+    : CSSIntSize(NSAppUnitsToIntPixels(dest.width, aAppUnitsPerDevPixel), //XXX BUG!
+                 NSAppUnitsToIntPixels(dest.height, aAppUnitsPerDevPixel)); //XXX BUG!
 
   // Compute the set of pixels that would be sampled by an ideal rendering
   gfxPoint subimageTopLeft =
@@ -6194,7 +6194,7 @@ nsLayoutUtils::ComputeSizeForDrawingWithFallback(imgIContainer* aImage,
 nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
                                    nsPresContext*      aPresContext,
                                    imgIContainer*      aImage,
-                                   const nsIntSize&    aImageSize,
+                                   const CSSIntSize&   aImageSize,
                                    GraphicsFilter      aGraphicsFilter,
                                    const nsRect&       aDest,
                                    const nsRect&       aFill,

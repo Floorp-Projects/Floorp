@@ -366,7 +366,7 @@ nsSVGImageFrame::PaintSVG(gfxContext& aContext,
     if (mImageContainer->GetType() == imgIContainer::TYPE_VECTOR) {
       // Package up the attributes of this image element which can override the
       // attributes of mImageContainer's internal SVG document.
-      SVGImageContext context(nsIntSize(width, height),
+      SVGImageContext context(CSSIntSize(width, height),
                               Some(imgElem->mPreserveAspectRatio.GetAnimValue()));
 
       nsRect destRect(0, 0,

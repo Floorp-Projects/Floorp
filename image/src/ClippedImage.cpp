@@ -345,7 +345,7 @@ UnclipViewport(const SVGImageContext& aOldContext,
 
   // Map the viewport to the inner image. (Note that we don't take the aSize
   // parameter of Draw into account, just the clipping region.)
-  nsIntSize vSize(aOldContext.GetViewportSize());
+  CSSIntSize vSize(aOldContext.GetViewportSize());
   vSize.width = ceil(vSize.width * double(innerSize.width) / clipSize.width);
   vSize.height = ceil(vSize.height * double(innerSize.height) / clipSize.height);
 
