@@ -8,10 +8,9 @@
 #include "nsUnicharUtils.h"
 #include "nsIAtom.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Services.h"
 #include "mozilla/intl/OSPreferences.h"
-#include "nsServiceManagerUtils.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/ClearOnShutdown.h"
 
 using namespace mozilla;
 using mozilla::intl::OSPreferences;
@@ -20,28 +19,33 @@ static constexpr nsUConvProp kLangGroups[] = {
 #include "langGroups.properties.h"
 };
 
-NS_IMPL_ISUPPORTS(nsLanguageAtomService, nsILanguageAtomService)
-
-nsLanguageAtomService::nsLanguageAtomService()
+// static
+nsLanguageAtomService*
+nsLanguageAtomService::GetService()
 {
+  static UniquePtr<nsLanguageAtomService> gLangAtomService;
+  if (!gLangAtomService) {
+    gLangAtomService = MakeUnique<nsLanguageAtomService>();
+    ClearOnShutdown(&gLangAtomService);
+  }
+  return gLangAtomService.get();
 }
 
 nsIAtom*
-nsLanguageAtomService::LookupLanguage(const nsACString &aLanguage,
-                                      nsresult *aError)
+nsLanguageAtomService::LookupLanguage(const nsACString &aLanguage)
 {
   nsAutoCString lowered(aLanguage);
   ToLowerCase(lowered);
 
   nsCOMPtr<nsIAtom> lang = NS_Atomize(lowered);
-  return GetLanguageGroup(lang, aError);
+  return GetLanguageGroup(lang);
 }
 
 already_AddRefed<nsIAtom>
 nsLanguageAtomService::LookupCharSet(const nsACString& aCharSet)
 {
   nsAutoCString group;
-  mozilla::dom::EncodingUtils::LangGroupForEncoding(aCharSet, group);
+  dom::EncodingUtils::LangGroupForEncoding(aCharSet, group);
   return NS_Atomize(group);
 }
 
@@ -62,16 +66,13 @@ nsLanguageAtomService::GetLocaleLanguage()
 }
 
 nsIAtom*
-nsLanguageAtomService::GetLanguageGroup(nsIAtom* aLanguage,
-                                        nsresult* aError)
+nsLanguageAtomService::GetLanguageGroup(nsIAtom *aLanguage)
 {
-  nsIAtom* retVal;
-
-  retVal = mLangToGroup.GetWeak(aLanguage);
+  nsIAtom *retVal = mLangToGroup.GetWeak(aLanguage);
 
   if (!retVal) {
     MOZ_ASSERT(NS_IsMainThread(), "Should not append to cache off main thread");
-    nsCOMPtr<nsIAtom> uncached = GetUncachedLanguageGroup(aLanguage, aError);
+    nsCOMPtr<nsIAtom> uncached = GetUncachedLanguageGroup(aLanguage);
     retVal = uncached.get();
 
     // The hashtable will keep an owning reference to the atom
@@ -82,18 +83,16 @@ nsLanguageAtomService::GetLanguageGroup(nsIAtom* aLanguage,
 }
 
 already_AddRefed<nsIAtom>
-nsLanguageAtomService::GetUncachedLanguageGroup(nsIAtom* aLanguage,
-                                                nsresult* aError) const
+nsLanguageAtomService::GetUncachedLanguageGroup(nsIAtom* aLanguage) const
 {
-  nsresult res = NS_OK;
-
   nsAutoCString langStr;
   aLanguage->ToUTF8String(langStr);
 
   nsAutoCString langGroupStr;
-  res = nsUConvPropertySearch::SearchPropertyValue(kLangGroups,
-                                                   ArrayLength(kLangGroups),
-                                                   langStr, langGroupStr);
+  nsresult res =
+    nsUConvPropertySearch::SearchPropertyValue(kLangGroups,
+                                               ArrayLength(kLangGroups),
+                                               langStr, langGroupStr);
   while (NS_FAILED(res)) {
     int32_t hyphen = langStr.RFindChar('-');
     if (hyphen <= 0) {
@@ -107,10 +106,6 @@ nsLanguageAtomService::GetUncachedLanguageGroup(nsIAtom* aLanguage,
   }
 
   nsCOMPtr<nsIAtom> langGroup = NS_Atomize(langGroupStr);
-
-  if (aError) {
-    *aError = res;
-  }
 
   return langGroup.forget();
 }
