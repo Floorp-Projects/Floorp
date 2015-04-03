@@ -271,6 +271,10 @@ add_test(function() {
     try {
       ok(!settings[6].hasAttribute("first-row"), "Not the first row");
       var button = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "button");
+
+      // Workaround for bug 1155324 - we need to ensure that the button is scrolled into view.
+      button.scrollIntoView();
+
       input = gManagerWindow.document.getAnonymousElementByAttribute(settings[6], "anonid", "input");
       is(input.value, "", "Label value should be empty");
       is(input.tooltipText, "", "Label tooltip should be empty");

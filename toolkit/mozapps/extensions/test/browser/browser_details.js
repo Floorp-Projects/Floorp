@@ -181,7 +181,7 @@ add_test(function() {
     is(get("detail-version").value, "2.1", "Version should be correct");
     is(get("detail-icon").src, "chrome://foo/skin/icon64.png", "Icon should be correct");
     is_element_hidden(get("detail-creator"), "Creator should be hidden");
-    is_element_hidden(get("detail-screenshot"), "Screenshot should be hidden");
+    is_element_hidden(get("detail-screenshot-box"), "Screenshot should be hidden");
     is(get("detail-screenshot").width, "", "Screenshot dimensions should not be set");
     is(get("detail-screenshot").height, "", "Screenshot dimensions should not be set");
     is(get("detail-desc").textContent, "Short description", "Description should be correct");
@@ -288,7 +288,7 @@ add_test(function() {
     is(get("detail-creator")._creatorName.value, "Mozilla", "Creator should be correct");
     is_element_hidden(get("detail-creator")._creatorLink, "Creator link should be hidden");
 
-    is_element_visible(get("detail-screenshot"), "Screenshot should be visible");
+    is_element_visible(get("detail-screenshot-box"), "Screenshot should be visible");
     is(get("detail-screenshot").src, "chrome://branding/content/about.png", "Should be showing the full sized screenshot");
     is(get("detail-screenshot").width, 200, "Screenshot dimensions should be set");
     is(get("detail-screenshot").height, 150, "Screenshot dimensions should be set");
@@ -345,7 +345,7 @@ add_test(function() {
     is(get("detail-creator")._creatorLink.value, "Mozilla", "Creator link should be correct");
     is(get("detail-creator")._creatorLink.href, "http://www.mozilla.org", "Creator link href should be correct");
 
-    is_element_visible(get("detail-screenshot"), "Screenshot should be visible");
+    is_element_visible(get("detail-screenshot-box"), "Screenshot should be visible");
     is(get("detail-screenshot").src, "chrome://branding/content/icon64.png", "Should be showing the thumbnail");
     is(get("detail-screenshot").width, 160, "Screenshot dimensions should be set");
     is(get("detail-screenshot").height, 120, "Screenshot dimensions should be set");
@@ -786,7 +786,7 @@ add_test(function() {
     is(get("detail-version").value, "2.5", "Version should be correct");
     is(get("detail-icon").src, "chrome://foo/skin/icon264.png", "Icon should be correct");
     is_element_hidden(get("detail-creator"), "Creator should be hidden");
-    is_element_hidden(get("detail-screenshot"), "Screenshot should be hidden");
+    is_element_hidden(get("detail-screenshot-box"), "Screenshot should be hidden");
     is(get("detail-desc").textContent, "Short description replacement", "Description should be correct");
     is(get("detail-fulldesc").textContent, "Longer description replacement", "Full description should be correct");
 

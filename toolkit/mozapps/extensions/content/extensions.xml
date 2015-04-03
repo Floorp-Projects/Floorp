@@ -787,7 +787,7 @@
         <xul:spacer flex="5000"/> <!-- Necessary to allow the message to wrap -->
       </xul:hbox>
 
-      <xul:hbox class="content-container">
+      <xul:hbox class="content-container" align="center">
         <xul:vbox class="icon-container">
           <xul:image anonid="icon" class="icon"/>
         </xul:vbox>
@@ -842,77 +842,77 @@
                             oncommand="document.getBindingParent(this).toggleReleaseNotes();"/>
               </xul:hbox>
             </xul:vbox>
-            <xul:vbox class="status-control-wrapper">
-              <xul:hbox class="status-container">
-                <xul:hbox anonid="checking-update" hidden="true">
-                  <xul:image class="spinner"/>
-                  <xul:label value="&addon.checkingForUpdates.label;"/>
-                </xul:hbox>
-                <xul:vbox anonid="update-available" class="update-available"
-                          hidden="true">
-                  <xul:checkbox anonid="include-update" class="include-update"
-                                label="&addon.includeUpdate.label;" checked="true"
-                                oncommand="document.getBindingParent(this).onIncludeUpdateChanged();"/>
-                  <xul:hbox class="update-info-container">
-                    <xul:label class="update-available-notice"
-                               value="&addon.updateAvailable.label;"/>
-                    <xul:button anonid="update-btn" class="addon-control update"
-                                label="&addon.updateNow.label;"
-                                tooltiptext="&addon.updateNow.tooltip;"
-                                oncommand="document.getBindingParent(this).upgrade();"/>
-                  </xul:hbox>
-                </xul:vbox>
-                <xul:hbox anonid="install-status" class="install-status"
-                          hidden="true"/>
-              </xul:hbox>
-              <xul:hbox anonid="control-container" class="control-container">
-                <xul:button anonid="preferences-btn"
-                            class="addon-control preferences"
-#ifdef XP_WIN
-                            label="&cmd.showPreferencesWin.label;"
-                            tooltiptext="&cmd.showPreferencesWin.tooltip;"
-#else
-                            label="&cmd.showPreferencesUnix.label;"
-                            tooltiptext="&cmd.showPreferencesUnix.tooltip;"
-#endif
-                            oncommand="document.getBindingParent(this).showPreferences();"/>
-                            <!-- label="&cmd.debugAddon.label;" -->
-                <xul:button anonid="debug-btn" class="addon-control debug"
-                            label="&cmd.debugAddon.label;"
-                            oncommand="document.getBindingParent(this).debug();"/>
-
-                <xul:button anonid="enable-btn"  class="addon-control enable"
-                            label="&cmd.enableAddon.label;"
-                            oncommand="document.getBindingParent(this).userDisabled = false;"/>
-                <xul:button anonid="disable-btn" class="addon-control disable"
-                            label="&cmd.disableAddon.label;"
-                            oncommand="document.getBindingParent(this).userDisabled = true;"/>
-                <xul:button anonid="remove-btn" class="addon-control remove"
-                            label="&cmd.uninstallAddon.label;"
-                            oncommand="document.getBindingParent(this).uninstall();"/>
-                <xul:menulist anonid="state-menulist"
-                              class="addon-control state"
-                              tooltiptext="&cmd.stateMenu.tooltip;">
-                  <xul:menupopup>
-                    <xul:menuitem anonid="ask-to-activate-menuitem"
-                                  class="addon-control"
-                                  label="&cmd.askToActivate.label;"
-                                  tooltiptext="&cmd.askToActivate.tooltip;"
-                                  oncommand="document.getBindingParent(this).userDisabled = AddonManager.STATE_ASK_TO_ACTIVATE;"/>
-                    <xul:menuitem anonid="always-activate-menuitem"
-                                  class="addon-control"
-                                  label="&cmd.alwaysActivate.label;"
-                                  tooltiptext="&cmd.alwaysActivate.tooltip;"
-                                  oncommand="document.getBindingParent(this).userDisabled = false;"/>
-                    <xul:menuitem anonid="never-activate-menuitem"
-                                  class="addon-control"
-                                  label="&cmd.neverActivate.label;"
-                                  tooltiptext="&cmd.neverActivate.tooltip;"
-                                  oncommand="document.getBindingParent(this).userDisabled = true;"/>
-                  </xul:menupopup>
-                </xul:menulist>
+          </xul:hbox>
+        </xul:vbox>
+        <xul:vbox class="status-control-wrapper">
+          <xul:hbox class="status-container">
+            <xul:hbox anonid="checking-update" hidden="true">
+              <xul:image class="spinner"/>
+              <xul:label value="&addon.checkingForUpdates.label;"/>
+            </xul:hbox>
+            <xul:vbox anonid="update-available" class="update-available"
+                      hidden="true">
+              <xul:checkbox anonid="include-update" class="include-update"
+                            label="&addon.includeUpdate.label;" checked="true"
+                            oncommand="document.getBindingParent(this).onIncludeUpdateChanged();"/>
+              <xul:hbox class="update-info-container">
+                <xul:label class="update-available-notice"
+                           value="&addon.updateAvailable.label;"/>
+                <xul:button anonid="update-btn" class="addon-control update"
+                            label="&addon.updateNow.label;"
+                            tooltiptext="&addon.updateNow.tooltip;"
+                            oncommand="document.getBindingParent(this).upgrade();"/>
               </xul:hbox>
             </xul:vbox>
+            <xul:hbox anonid="install-status" class="install-status"
+                      hidden="true"/>
+          </xul:hbox>
+          <xul:hbox anonid="control-container" class="control-container">
+            <xul:button anonid="preferences-btn"
+                        class="addon-control preferences"
+#ifdef XP_WIN
+                        label="&cmd.showPreferencesWin.label;"
+                        tooltiptext="&cmd.showPreferencesWin.tooltip;"
+#else
+                        label="&cmd.showPreferencesUnix.label;"
+                        tooltiptext="&cmd.showPreferencesUnix.tooltip;"
+#endif
+                        oncommand="document.getBindingParent(this).showPreferences();"/>
+                        <!-- label="&cmd.debugAddon.label;" -->
+            <xul:button anonid="debug-btn" class="addon-control debug"
+                        label="&cmd.debugAddon.label;"
+                        oncommand="document.getBindingParent(this).debug();"/>
+
+            <xul:button anonid="enable-btn"  class="addon-control enable"
+                        label="&cmd.enableAddon.label;"
+                        oncommand="document.getBindingParent(this).userDisabled = false;"/>
+            <xul:button anonid="disable-btn" class="addon-control disable"
+                        label="&cmd.disableAddon.label;"
+                        oncommand="document.getBindingParent(this).userDisabled = true;"/>
+            <xul:button anonid="remove-btn" class="addon-control remove"
+                        label="&cmd.uninstallAddon.label;"
+                        oncommand="document.getBindingParent(this).uninstall();"/>
+            <xul:menulist anonid="state-menulist"
+                          class="addon-control state"
+                          tooltiptext="&cmd.stateMenu.tooltip;">
+              <xul:menupopup>
+                <xul:menuitem anonid="ask-to-activate-menuitem"
+                              class="addon-control"
+                              label="&cmd.askToActivate.label;"
+                              tooltiptext="&cmd.askToActivate.tooltip;"
+                              oncommand="document.getBindingParent(this).userDisabled = AddonManager.STATE_ASK_TO_ACTIVATE;"/>
+                <xul:menuitem anonid="always-activate-menuitem"
+                              class="addon-control"
+                              label="&cmd.alwaysActivate.label;"
+                              tooltiptext="&cmd.alwaysActivate.tooltip;"
+                              oncommand="document.getBindingParent(this).userDisabled = false;"/>
+                <xul:menuitem anonid="never-activate-menuitem"
+                              class="addon-control"
+                              label="&cmd.neverActivate.label;"
+                              tooltiptext="&cmd.neverActivate.tooltip;"
+                              oncommand="document.getBindingParent(this).userDisabled = true;"/>
+              </xul:menupopup>
+            </xul:menulist>
           </xul:hbox>
         </xul:vbox>
       </xul:hbox>
