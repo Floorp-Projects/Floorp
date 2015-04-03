@@ -141,13 +141,16 @@ add_task(function* test() {
   monotinicity_tester(() => PerformanceStats.getSnapshot(), "parent process");
   monotinicity_tester(() => promiseContentResponseOrNull(browser, "compartments-test:getStatistics", null), "content process" );
 
+  let skipTotalUserTime = hasLowPrecision();
+
   while (true) {
     let stats = (yield promiseContentResponse(browser, "compartments-test:getStatistics", null));
     let found = stats.componentsData.find(stat => {
       return (stat.name.indexOf(URL) != -1)
-      && (stat.totalUserTime > 1000)
+      && (skipTotalUserTime || stat.totalUserTime > 1000)
     });
     if (found) {
+      info(`Expected totalUserTime > 1000, got ${found.totalUserTime}`);
       break;
     }
     yield new Promise(resolve => setTimeout(resolve, 100));
