@@ -20,7 +20,7 @@ public:
   typedef mozilla::TimeStamp TimeStamp;
   typedef mozilla::TimeDuration TimeDuration;
 
-  AsyncScrollBase(nsPoint aStartPos);
+  explicit AsyncScrollBase(nsPoint aStartPos);
 
   void Update(TimeStamp aTime,
               nsPoint aDestination,
