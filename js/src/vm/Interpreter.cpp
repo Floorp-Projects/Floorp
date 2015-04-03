@@ -1315,11 +1315,7 @@ HandleError(JSContext* cx, InterpreterRegs& regs)
   again:
     if (cx->isExceptionPending()) {
         /* Call debugger throw hooks. */
-        RootedValue exception(cx);
-        if (!cx->getPendingException(&exception))
-            goto again;
-
-        if (!exception.isMagic(JS_GENERATOR_CLOSING)) {
+        if (!cx->isClosingGenerator()) {
             JSTrapStatus status = Debugger::onExceptionUnwind(cx, regs.fp());
             switch (status) {
               case JSTRAP_ERROR:
@@ -1355,9 +1351,7 @@ HandleError(JSContext* cx, InterpreterRegs& regs)
             switch (tn->kind) {
               case JSTRY_CATCH:
                 /* Catch cannot intercept the closing of a generator. */
-                if (!cx->getPendingException(&exception))
-                    return ErrorReturnContinuation;
-                if (exception.isMagic(JS_GENERATOR_CLOSING))
+                if (cx->isClosingGenerator())
                     break;
                 return CatchContinuation;
 
@@ -1385,16 +1379,10 @@ HandleError(JSContext* cx, InterpreterRegs& regs)
          * Propagate the exception or error to the caller unless the exception
          * is an asynchronous return from a generator.
          */
-        if (cx->isExceptionPending()) {
-            RootedValue exception(cx);
-            if (!cx->getPendingException(&exception))
-                return ErrorReturnContinuation;
-
-            if (exception.isMagic(JS_GENERATOR_CLOSING)) {
-                cx->clearPendingException();
-                ok = true;
-                SetReturnValueForClosingGenerator(cx, regs.fp());
-            }
+        if (cx->isClosingGenerator()) {
+            cx->clearPendingException();
+            ok = true;
+            SetReturnValueForClosingGenerator(cx, regs.fp());
         }
     } else {
         // We may be propagating a forced return from the interrupt
