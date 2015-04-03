@@ -1460,12 +1460,6 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
                 return false;
 
             if (!desc.hasValue()) {
-                // We have been asked merely to update JSPROP_READONLY (and possibly
-                // JSPROP_CONFIGURABLE and/or JSPROP_ENUMERABLE, handled above).
-                // Take everything else from shape.
-                desc.setGetter(shape->getter());
-                desc.setSetter(shape->setter());
-
                 // Fill in desc.[[Value]].
                 desc.setValue(currentValue);
             } else {
