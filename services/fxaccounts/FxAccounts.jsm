@@ -81,6 +81,7 @@ AccountState.prototype = {
   whenVerifiedDeferred: null,
   whenKeysReadyDeferred: null,
   profile: null,
+  promiseInitialAccountData: null,
 
   get isCurrent() this.fxaInternal && this.fxaInternal.currentAccountState === this,
 
@@ -110,12 +111,20 @@ AccountState.prototype = {
   },
 
   getUserAccountData: function() {
-    // Skip disk if user is cached.
+    if (!this.isCurrent) {
+      return this.reject(new Error("Another user has signed in"));
+    }
+    if (this.promiseInitialAccountData) {
+      // We are still reading the data for the first and only time.
+      return this.promiseInitialAccountData;
+    }
+    // We've previously read it successfully (and possibly updated it since)
     if (this.signedInUser) {
       return this.resolve(this.signedInUser.accountData);
     }
 
-    return this.fxaInternal.signedInUserStorage.get().then(
+    // First and only read.
+    return this.promiseInitialAccountData = this.fxaInternal.signedInUserStorage.get().then(
       user => {
         if (logPII) {
           // don't stringify unless it will be written. We should replace this
@@ -126,9 +135,11 @@ AccountState.prototype = {
           log.debug("setting signed in user");
           this.signedInUser = user;
         }
+        this.promiseInitialAccountData = null;
         return this.resolve(user ? user.accountData : null);
       },
       err => {
+        this.promiseInitialAccountData = null;
         if (err instanceof OS.File.Error && err.becauseNoSuchFile) {
           // File hasn't been created yet.  That will be done
           // on the first call to getSignedInUser
@@ -140,15 +151,17 @@ AccountState.prototype = {
   },
 
   setUserAccountData: function(accountData) {
-    return this.fxaInternal.signedInUserStorage.get().then(record => {
-      if (!this.isCurrent) {
-        return this.reject(new Error("Another user has signed in"));
-      }
-      record.accountData = accountData;
-      this.signedInUser = record;
-      return this.fxaInternal.signedInUserStorage.set(record)
+    if (!this.isCurrent) {
+      return this.reject(new Error("Another user has signed in"));
+    }
+    if (this.promiseInitialAccountData) {
+      throw new Error("Can't set account data before it's been read.");
+    }
+    // Set our signedInUser before we start the write, so any updates to the
+    // data while the write completes are still captured.
+    this.signedInUser = {version: DATA_FORMAT_VERSION, accountData: accountData};
+    return this.fxaInternal.signedInUserStorage.set(this.signedInUser)
         .then(() => this.resolve(accountData));
-    });
   },
 
 
