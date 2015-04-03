@@ -4,18 +4,18 @@
 
 package org.mozilla.gecko.tests;
 
-
 public class testMailToContextMenu extends ContentContextMenuTest {
 
     // Test website strings
     private static String MAILTO_PAGE_URL;
-    private static final String MAILTO_PAGE_TITLE = StringHelper.ROBOCOP_BIG_MAILTO_TITLE;
     private static final String mailtoMenuItems [] = {"Copy Email Address", "Share Email Address"};
 
     public void testMailToContextMenu() {
+        final String MAILTO_PAGE_TITLE = mStringHelper.ROBOCOP_BIG_MAILTO_TITLE;
+
         blockForGeckoReady();
 
-        MAILTO_PAGE_URL=getAbsoluteUrl(StringHelper.ROBOCOP_BIG_MAILTO_URL);
+        MAILTO_PAGE_URL=getAbsoluteUrl(mStringHelper.ROBOCOP_BIG_MAILTO_URL);
         loadUrlAndWait(MAILTO_PAGE_URL);
         waitForText(MAILTO_PAGE_TITLE);
 

@@ -9,6 +9,7 @@ this.EXPORTED_SYMBOLS = [
 ];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+const myScope = this;
 
 Cu.import("resource://gre/modules/AddonManager.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -17,6 +18,7 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/PromiseUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/ObjectUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
                                   "resource://gre/modules/ctypes.jsm");
@@ -28,6 +30,111 @@ XPCOMUtils.defineLazyModuleGetter(this, "ProfileAge",
                                   "resource://gre/modules/ProfileAge.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
+
+const CHANGE_THROTTLE_INTERVAL_MS = 5 * 60 * 1000;
+
+/**
+ * This is a policy object used to override behavior for testing.
+ */
+let Policy = {
+  now: () => new Date(),
+};
+
+var gGlobalEnvironment;
+function getGlobal() {
+  if (!gGlobalEnvironment) {
+    gGlobalEnvironment = new EnvironmentCache();
+  }
+  return gGlobalEnvironment;
+}
+
+const TelemetryEnvironment = {
+  get currentEnvironment() {
+    return getGlobal().currentEnvironment;
+  },
+
+  onInitialized: function() {
+    return getGlobal().onInitialized();
+  },
+
+  registerChangeListener: function(name, listener) {
+    return getGlobal().registerChangeListener(name, listener);
+  },
+
+  unregisterChangeListener: function(name) {
+    return getGlobal().unregisterChangeListener(name);
+  },
+
+  // Policy to use when saving preferences. Exported for using them in tests.
+  RECORD_PREF_STATE: 1, // Don't record the preference value
+  RECORD_PREF_VALUE: 2, // We only record user-set prefs.
+  RECORD_PREF_NOTIFY_ONLY: 3, // Record nothing, just notify of changes.
+
+  // Testing method
+  _watchPreferences: function(prefMap) {
+    return getGlobal()._watchPreferences(prefMap);
+  },
+};
+
+const DEFAULT_ENVIRONMENT_PREFS = new Map([
+  ["app.feedback.baseURL", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["app.support.baseURL", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["accessibility.browsewithcaret", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["accessibility.force_disabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["app.update.auto", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["app.update.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["app.update.interval", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["app.update.service.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["app.update.silent", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["app.update.url", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["browser.cache.disk.enable", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["browser.cache.disk.capacity", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["browser.cache.memory.enable", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["browser.cache.offline.enable", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["browser.formfill.enable", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["browser.newtab.url", TelemetryEnvironment.RECORD_PREF_STATE],
+  ["browser.newtabpage.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["browser.newtabpage.enhanced", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["browser.polaris.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["browser.shell.checkDefaultBrowser", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["browser.startup.homepage", TelemetryEnvironment.RECORD_PREF_STATE],
+  ["browser.startup.page", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["devtools.chrome.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["devtools.debugger.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["devtools.debugger.remote-enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["dom.ipc.plugins.asyncInit", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["dom.ipc.plugins.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["experiments.manifest.uri", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["extensions.blocklist.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["extensions.blocklist.url", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["extensions.strictCompatibility", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["extensions.update.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["extensions.update.url", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["extensions.update.background.url", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["general.smoothScroll", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["gfx.direct2d.disabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["gfx.direct2d.force-enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["gfx.direct2d.use1_1", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["layers.acceleration.disabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["layers.acceleration.force-enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["layers.async-pan-zoom.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["layers.async-video-oop.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["layers.async-video.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["layers.componentalpha.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["layers.d3d11.disable-warp", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["layers.d3d11.force-warp", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["layers.prefer-d3d9", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["layers.prefer-opengl", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["layout.css.devPixelsPerPx", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["network.proxy.autoconfig_url", TelemetryEnvironment.RECORD_PREF_STATE],
+  ["network.proxy.http", TelemetryEnvironment.RECORD_PREF_STATE],
+  ["network.proxy.ssl", TelemetryEnvironment.RECORD_PREF_STATE],
+  ["pdfjs.disabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["places.history.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["privacy.trackingprotection.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["privacy.donottrackheader.enabled", TelemetryEnvironment.RECORD_PREF_VALUE],
+  ["services.sync.serverURL", TelemetryEnvironment.RECORD_PREF_STATE],
+]);
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 
@@ -141,9 +248,11 @@ function getGfxField(aPropertyName, aDefault) {
  * @return An object containing the adapter properties.
  */
 function getGfxAdapter(aSuffix = "") {
-  let memoryMB = getGfxField("adapterRAM" + aSuffix, null);
-  if (memoryMB) {
-    memoryMB = parseInt(memoryMB, 10);
+  // Note that gfxInfo, and so getGfxField, might return "Unknown" for the RAM on failures,
+  // not null.
+  let memoryMB = parseInt(getGfxField("adapterRAM" + aSuffix, null), 10);
+  if (Number.isNaN(memoryMB)) {
+    memoryMB = null;
   }
 
   return {
@@ -218,95 +327,389 @@ function getServicePack() {
 }
 #endif
 
-this.TelemetryEnvironment = {
-  _shutdown: true,
+/**
+ * Encapsulates the asynchronous magic interfacing with the addon manager. The builder
+ * is owned by a parent environment object and is an addon listener.
+ */
+function EnvironmentAddonBuilder(environment) {
+  this._environment = environment;
 
-  // A map of (sync) listeners that will be called on environment changes.
-  _changeListeners: new Map(),
-  // Async task for collecting the environment data.
-  _collectTask: null,
+  // The pending task blocks addon manager shutdown. It can either be the initial load
+  // or a change load.
+  this._pendingTask = null;
 
-  // Policy to use when saving preferences. Exported for using them in tests.
-  RECORD_PREF_STATE: 1, // Don't record the preference value
-  RECORD_PREF_VALUE: 2, // We only record user-set prefs.
-  RECORD_PREF_NOTIFY_ONLY: 3, // Record nothing, just notify of changes.
-
-  // A map of watched preferences which trigger an Environment change when modified.
-  // Every entry contains a recording policy (RECORD_PREF_*).
-  _watchedPrefs: null,
-
-  // The Addons change listener, init by |_startWatchingAddons| .
-  _addonsListener: null,
-
-  // AddonManager may shut down before us, in which case we cache the addons here.
-  // It is always null if the AM didn't shut down before us.
-  // If cached, it is an object containing the addon information, suitable for use
-  // in the environment data.
-  _cachedAddons: null,
-
+  // Set to true once initial load is complete and we're watching for changes.
+  this._loaded = false;
+}
+EnvironmentAddonBuilder.prototype = {
   /**
-   * Initialize TelemetryEnvironment.
+   * Get the initial set of addons.
+   * @returns Promise<void> when the initial load is complete.
    */
-  init: function () {
-    if (!this._shutdown) {
-      this._log.error("init - Already initialized");
-      return;
+  init: function() {
+    // Some tests don't initialize the addon manager. This accounts for the
+    // unfortunate reality of life.
+    try {
+      AddonManager.shutdown.addBlocker("EnvironmentAddonBuilder",
+        () => this._shutdownBlocker());
+    } catch (err) {
+      return Promise.reject(err);
     }
 
-    this._configureLog();
-    this._log.trace("init");
-    this._shutdown = false;
-    this._startWatchingPrefs();
-    this._startWatchingAddons();
+    this._pendingTask = this._updateAddons().then(
+      () => { this._pendingTask = null; },
+      (err) => {
+        this._environment._log.error("init - Exception in _updateAddons", err);
+        this._pendingTask = null;
+      }
+    );
 
-    AddonManager.shutdown.addBlocker("TelemetryEnvironment: caching addons",
-                                      () => this._blockAddonManagerShutdown(),
-                                      () => this._getState());
+    return this._pendingTask;
   },
 
   /**
-   * Shutdown TelemetryEnvironment.
-   * @return Promise<> that is resolved when shutdown is finished.
+   * Register an addon listener and watch for changes.
    */
-  shutdown: Task.async(function* () {
-    if (this._shutdown) {
-      if (this._log) {
-        this._log.error("shutdown - Already shut down");
-      } else {
-        Cu.reportError("TelemetryEnvironment.shutdown - Already shut down");
-      }
+  watchForChanges: function() {
+    this._loaded = true;
+    AddonManager.addAddonListener(this);
+    Services.obs.addObserver(this, EXPERIMENTS_CHANGED_TOPIC, false);
+  },
+
+  // AddonListener
+  onEnabled: function() {
+    this._onAddonChange();
+  },
+  onDisabled: function() {
+    this._onAddonChange();
+  },
+  onInstalled: function() {
+    this._onAddonChange();
+  },
+  onUninstalling: function() {
+    this._onAddonChange();
+  },
+
+  _onAddonChange: function() {
+    this._environment._log.trace("_onAddonChange");
+    this._checkForChanges("addons-changed");
+  },
+
+  // nsIObserver
+  observe: function (aSubject, aTopic, aData) {
+    this._environment._log.trace("observe - Topic " + aTopic);
+    this._checkForChanges("experiment-changed");
+  },
+
+  _checkForChanges: function(changeReason) {
+    if (this._pendingTask) {
+      this._environment._log.trace("_checkForChanges - task already pending, dropping change with reason " + changeReason);
       return;
     }
 
-    this._log.trace("shutdown");
-    this._shutdown = true;
-    this._stopWatchingPrefs();
-    this._stopWatchingAddons();
-    this._changeListeners.clear();
-    yield this._collectTask;
+    this._pendingTask = this._updateAddons().then(
+      (result) => {
+        this._pendingTask = null;
+        if (result.changed) {
+          this._environment._onEnvironmentChange(changeReason, result.oldEnvironment);
+        }
+      },
+      (err) => {
+        this._pendingTask = null;
+        this._environment._log.error("_checkForChanges: Error collecting addons", err);
+      });
+  },
 
-    this._cachedAddons = null;
+  _shutdownBlocker: function() {
+    if (this._loaded) {
+      AddonManager.removeAddonListener(this);
+      Services.obs.removeObserver(this, EXPERIMENTS_CHANGED_TOPIC);
+    }
+    return this._pendingTask;
+  },
+
+  /**
+   * Collect the addon data for the environment.
+   *
+   * This should only be called from _pendingTask; otherwise we risk
+   * running this during addon manager shutdown.
+   *
+   * @returns Promise<Object> This returns a Promise resolved with a status object with the following members:
+   *   changed - Whether the environment changed.
+   *   oldEnvironment - Only set if a change occured, contains the environment data before the change.
+   */
+  _updateAddons: Task.async(function* () {
+    this._environment._log.trace("_updateAddons");
+    let personaId = null;
+#ifndef MOZ_WIDGET_GONK
+    let theme = LightweightThemeManager.currentTheme;
+    if (theme) {
+      personaId = theme.id;
+    }
+#endif
+
+    let addons = {
+      activeAddons: yield this._getActiveAddons(),
+      theme: yield this._getActiveTheme(),
+      activePlugins: this._getActivePlugins(),
+      activeGMPlugins: yield this._getActiveGMPlugins(),
+      activeExperiment: this._getActiveExperiment(),
+      persona: personaId,
+    };
+
+    let result = {
+      changed: !ObjectUtils.deepEqual(addons, this._environment._currentEnvironment.addons),
+    };
+
+    if (result.changed) {
+      this._environment._log.trace("_updateAddons: addons differ");
+      result.oldEnvironment = Cu.cloneInto(this._environment._currentEnvironment, myScope);
+      this._environment._currentEnvironment.addons = addons;
+    }
+
+    return result;
   }),
 
-  _configureLog: function () {
-    if (this._log) {
-      return;
+  /**
+   * Get the addon data in object form.
+   * @return Promise<object> containing the addon data.
+   */
+  _getActiveAddons: Task.async(function* () {
+    // Request addons, asynchronously.
+    let allAddons = yield promiseGetAddonsByTypes(["extension", "service"]);
+
+    let activeAddons = {};
+    for (let addon of allAddons) {
+      // Skip addons which are not active.
+      if (!addon.isActive) {
+        continue;
+      }
+
+      // Make sure to have valid dates.
+      let installDate = new Date(Math.max(0, addon.installDate));
+      let updateDate = new Date(Math.max(0, addon.updateDate));
+
+      activeAddons[addon.id] = {
+        blocklisted: (addon.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
+        description: addon.description,
+        name: addon.name,
+        userDisabled: addon.userDisabled,
+        appDisabled: addon.appDisabled,
+        version: addon.version,
+        scope: addon.scope,
+        type: addon.type,
+        foreignInstall: addon.foreignInstall,
+        hasBinaryComponents: addon.hasBinaryComponents,
+        installDay: truncateToDays(installDate.getTime()),
+        updateDay: truncateToDays(updateDate.getTime()),
+      };
     }
-    this._log = Log.repository.getLoggerWithMessagePrefix(
-                                 LOGGER_NAME, "TelemetryEnvironment::");
+
+    return activeAddons;
+  }),
+
+  /**
+   * Get the currently active theme data in object form.
+   * @return Promise<object> containing the active theme data.
+   */
+  _getActiveTheme: Task.async(function* () {
+    // Request themes, asynchronously.
+    let themes = yield promiseGetAddonsByTypes(["theme"]);
+
+    let activeTheme = {};
+    // We only store information about the active theme.
+    let theme = themes.find(theme => theme.isActive);
+    if (theme) {
+      // Make sure to have valid dates.
+      let installDate = new Date(Math.max(0, theme.installDate));
+      let updateDate = new Date(Math.max(0, theme.updateDate));
+
+      activeTheme = {
+        id: theme.id,
+        blocklisted: (theme.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
+        description: theme.description,
+        name: theme.name,
+        userDisabled: theme.userDisabled,
+        appDisabled: theme.appDisabled,
+        version: theme.version,
+        scope: theme.scope,
+        foreignInstall: theme.foreignInstall,
+        hasBinaryComponents: theme.hasBinaryComponents,
+        installDay: truncateToDays(installDate.getTime()),
+        updateDay: truncateToDays(updateDate.getTime()),
+      };
+    }
+
+    return activeTheme;
+  }),
+
+  /**
+   * Get the plugins data in object form.
+   * @return Object containing the plugins data.
+   */
+  _getActivePlugins: function () {
+    let pluginTags =
+      Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost).getPluginTags({});
+
+    let activePlugins = [];
+    for (let tag of pluginTags) {
+      // Skip plugins which are not active.
+      if (tag.disabled) {
+        continue;
+      }
+
+      // Make sure to have a valid date.
+      let updateDate = new Date(Math.max(0, tag.lastModifiedTime));
+
+      activePlugins.push({
+        name: tag.name,
+        version: tag.version,
+        description: tag.description,
+        blocklisted: tag.blocklisted,
+        disabled: tag.disabled,
+        clicktoplay: tag.clicktoplay,
+        mimeTypes: tag.getMimeTypes({}),
+        updateDay: truncateToDays(updateDate.getTime()),
+      });
+    }
+
+    return activePlugins;
+  },
+
+  /**
+   * Get the GMPlugins data in object form.
+   * @return Object containing the GMPlugins data.
+   *
+   * This should only be called from _pendingTask; otherwise we risk
+   * running this during addon manager shutdown.
+   */
+  _getActiveGMPlugins: Task.async(function* () {
+    // Request plugins, asynchronously.
+    let allPlugins = yield promiseGetAddonsByTypes(["plugin"]);
+
+    let activeGMPlugins = {};
+    for (let plugin of allPlugins) {
+      // Only get GM Plugin info.
+      if (!plugin.isGMPlugin) {
+        continue;
+      }
+
+      activeGMPlugins[plugin.id] = {
+        version: plugin.version,
+        userDisabled: plugin.userDisabled,
+        applyBackgroundUpdates: plugin.applyBackgroundUpdates,
+      };
+    }
+
+    return activeGMPlugins;
+  }),
+
+  /**
+   * Get the active experiment data in object form.
+   * @return Object containing the active experiment data.
+   */
+  _getActiveExperiment: function () {
+    let experimentInfo = {};
+    try {
+      let scope = {};
+      Cu.import("resource:///modules/experiments/Experiments.jsm", scope);
+      let experiments = scope.Experiments.instance();
+      let activeExperiment = experiments.getActiveExperimentID();
+      if (activeExperiment) {
+        experimentInfo.id = activeExperiment;
+        experimentInfo.branch = experiments.getActiveExperimentBranch();
+      }
+    } catch(e) {
+      // If this is not Firefox, the import will fail.
+    }
+
+    return experimentInfo;
+  },
+};
+
+function EnvironmentCache() {
+  this._log = Log.repository.getLoggerWithMessagePrefix(
+    LOGGER_NAME, "TelemetryEnvironment::");
+  this._log.trace("constructor");
+
+  this._shutdown = false;
+
+  // A map of listeners that will be called on environment changes.
+  this._changeListeners = new Map();
+
+  // The last change date for the environment, used to throttle environment changes.
+  this._lastEnvironmentChangeDate = null;
+
+  // A map of watched preferences which trigger an Environment change when
+  // modified. Every entry contains a recording policy (RECORD_PREF_*).
+  this._watchedPrefs = DEFAULT_ENVIRONMENT_PREFS;
+
+  this._currentEnvironment = {
+    build: this._getBuild(),
+    partner: this._getPartner(),
+    system: this._getSystem(),
+  };
+
+  this._updateSettings();
+
+#ifndef MOZ_WIDGET_ANDROID
+  this._currentEnvironment.profile = {};
+#endif
+
+  // Build the remaining asynchronous parts of the environment. Don't register change listeners
+  // until the initial environment has been built.
+
+  this._addonBuilder = new EnvironmentAddonBuilder(this);
+
+  this._initTask = Promise.all([this._addonBuilder.init(), this._updateProfile()])
+    .then(
+      () => {
+        this._initTask = null;
+        this._startWatchingPrefs();
+        this._addonBuilder.watchForChanges();
+        return this.currentEnvironment;
+      },
+      (err) => {
+        // log errors but eat them for consumers
+        this._log.error("error while initializing", err);
+        this._initTask = null;
+        this._startWatchingPrefs();
+        this._addonBuilder.watchForChanges();
+        return this.currentEnvironment;
+      });
+}
+EnvironmentCache.prototype = {
+  /**
+   * The current environment data. The returned data is cloned to avoid
+   * unexpected sharing or mutation.
+   * @returns object
+   */
+  get currentEnvironment() {
+    return Cu.cloneInto(this._currentEnvironment, myScope);
+  },
+
+  /**
+   * Wait for the current enviroment to be fully initialized.
+   * @returns Promise<object>
+   */
+  onInitialized: function() {
+    if (this._initTask) {
+      return this._initTask;
+    }
+    return Promise.resolve(this.currentEnvironment);
   },
 
   /**
    * Register a listener for environment changes.
-   * It's fine to call this on an unitialized TelemetryEnvironment.
-   * @param name The name of the listener - good for debugging purposes.
-   * @param listener A JS callback function.
+   * @param name The name of the listener. If a new listener is registered
+   *             with the same name, the old listener will be replaced.
+   * @param listener function(reason, oldEnvironment) - Will receive a reason for
+                     the change and the environment data before the change.
    */
   registerChangeListener: function (name, listener) {
-    this._configureLog();
     this._log.trace("registerChangeListener for " + name);
     if (this._shutdown) {
-      this._log.warn("registerChangeListener - already shutdown")
+      this._log.warn("registerChangeListener - already shutdown");
       return;
     }
     this._changeListeners.set(name, listener);
@@ -318,10 +721,9 @@ this.TelemetryEnvironment = {
    * @param name The name of the listener to remove.
    */
   unregisterChangeListener: function (name) {
-    this._configureLog();
     this._log.trace("unregisterChangeListener for " + name);
     if (this._shutdown) {
-      this._log.warn("registerChangeListener - already shutdown")
+      this._log.warn("registerChangeListener - already shutdown");
       return;
     }
     this._changeListeners.delete(name);
@@ -332,11 +734,9 @@ this.TelemetryEnvironment = {
    * @param aPreferences A map of preferences names and their recording policy.
    */
   _watchPreferences: function (aPreferences) {
-    if (this._watchedPrefs) {
-      this._stopWatchingPrefs();
-    }
-
+    this._stopWatchingPrefs();
     this._watchedPrefs = aPreferences;
+    this._updateSettings();
     this._startWatchingPrefs();
   },
 
@@ -347,23 +747,19 @@ this.TelemetryEnvironment = {
    * @return An object containing the preferences values.
    */
   _getPrefData: function () {
-    if (!this._watchedPrefs) {
-      return {};
-    }
-
     let prefData = {};
     for (let pref in this._watchedPrefs) {
       // Only record preferences if they are non-default and policy allows recording.
       if (!Preferences.isSet(pref) ||
-          this._watchedPrefs[pref] == this.RECORD_PREF_NOTIFY_ONLY) {
+          this._watchedPrefs[pref] == TelemetryEnvironment.RECORD_PREF_NOTIFY_ONLY) {
         continue;
       }
 
       // Check the policy for the preference and decide if we need to store its value
       // or whether it changed from the default value.
       let prefValue = undefined;
-      if (this._watchedPrefs[pref] == this.RECORD_PREF_STATE) {
-        prefValue = null;
+      if (this._watchedPrefs[pref] == TelemetryEnvironment.RECORD_PREF_STATE) {
+        prefValue = "<user-set>";
       } else {
         prefValue = Preferences.get(pref, null);
       }
@@ -378,13 +774,16 @@ this.TelemetryEnvironment = {
   _startWatchingPrefs: function () {
     this._log.trace("_startWatchingPrefs - " + this._watchedPrefs);
 
-    if (!this._watchedPrefs) {
-      return;
-    }
-
     for (let pref in this._watchedPrefs) {
       Preferences.observe(pref, this._onPrefChanged, this);
     }
+  },
+
+  _onPrefChanged: function() {
+    this._log.trace("_onPrefChanged");
+    let oldEnvironment = Cu.cloneInto(this._currentEnvironment, myScope);
+    this._updateSettings();
+    this._onEnvironmentChange("pref-changed", oldEnvironment);
   },
 
   /**
@@ -393,20 +792,9 @@ this.TelemetryEnvironment = {
   _stopWatchingPrefs: function () {
     this._log.trace("_stopWatchingPrefs");
 
-    if (!this._watchedPrefs) {
-      return;
-    }
-
     for (let pref in this._watchedPrefs) {
       Preferences.ignore(pref, this._onPrefChanged, this);
     }
-
-    this._watchedPrefs = null;
-  },
-
-  _onPrefChanged: function () {
-    this._log.trace("_onPrefChanged");
-    this._onEnvironmentChange("pref-changed");
   },
 
   /**
@@ -470,16 +858,15 @@ this.TelemetryEnvironment = {
   },
 
   /**
-   * Get the settings data in object form.
-   * @return Object containing the settings.
+   * Update the cached settings data.
    */
-  _getSettings: function () {
+  _updateSettings: function () {
     let updateChannel = null;
     try {
       updateChannel = UpdateChannel.get();
     } catch (e) {}
 
-    return {
+    this._currentEnvironment.settings = {
       blocklistEnabled: Preferences.get(PREF_BLOCKLIST_ENABLED, true),
 #ifndef MOZ_WIDGET_ANDROID
       isDefaultBrowser: this._isDefaultBrowser(),
@@ -497,23 +884,20 @@ this.TelemetryEnvironment = {
   },
 
   /**
-   * Get the profile data in object form.
-   * @return Object containing the profile data.
+   * Update the cached profile data.
+   * @returns Promise<> resolved when the I/O is complete.
    */
-  _getProfile: Task.async(function* () {
+  _updateProfile: Task.async(function* () {
     let profileAccessor = new ProfileAge(null, this._log);
 
     let creationDate = yield profileAccessor.created;
     let resetDate = yield profileAccessor.reset;
 
-    let profileData = {
-      creationDate: truncateToDays(creationDate),
-    };
-
+    this._currentEnvironment.profile.creationDate =
+      truncateToDays(creationDate);
     if (resetDate) {
-      profileData.resetDate = truncateToDays(resetDate);
+      this._currentEnvironment.profile.resetDate = truncateToDays(resetDate);
     }
-    return profileData;
   }),
 
   /**
@@ -531,7 +915,7 @@ this.TelemetryEnvironment = {
 
     // Get the PREF_APP_PARTNER_BRANCH branch and append its children to partner data.
     let partnerBranch = Services.prefs.getBranch(PREF_APP_PARTNER_BRANCH);
-    partnerData.partnerNames = partnerBranch.getChildList("")
+    partnerData.partnerNames = partnerBranch.getChildList("");
 
     return partnerData;
   },
@@ -685,393 +1069,32 @@ this.TelemetryEnvironment = {
     };
   },
 
-  /**
-   * Get the addon data in object form.
-   * @return Object containing the addon data.
-   *
-   * This should only be called from the environment collection task
-   * or _blockAddonManagerShutdown, otherwise we risk running this
-   * during addon manager shutdown.
-   */
-  _getActiveAddons: Task.async(function* () {
-
-    // Request addons, asynchronously.
-    let allAddons = yield promiseGetAddonsByTypes(["extension", "service"]);
-
-    let activeAddons = {};
-    for (let addon of allAddons) {
-      // Skip addons which are not active.
-      if (!addon.isActive) {
-        continue;
-      }
-
-      // Make sure to have valid dates.
-      let installDate = new Date(Math.max(0, addon.installDate));
-      let updateDate = new Date(Math.max(0, addon.updateDate));
-
-      activeAddons[addon.id] = {
-        blocklisted: (addon.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
-        description: addon.description,
-        name: addon.name,
-        userDisabled: addon.userDisabled,
-        appDisabled: addon.appDisabled,
-        version: addon.version,
-        scope: addon.scope,
-        type: addon.type,
-        foreignInstall: addon.foreignInstall,
-        hasBinaryComponents: addon.hasBinaryComponents,
-        installDay: truncateToDays(installDate.getTime()),
-        updateDay: truncateToDays(updateDate.getTime()),
-      };
-    }
-
-    return activeAddons;
-  }),
-
-  /**
-   * Get the currently active theme data in object form.
-   * @return Object containing the active theme data.
-   *
-   * This should only be called from the environment collection task
-   * or _blockAddonManagerShutdown, otherwise we risk running this
-   * during addon manager shutdown.
-   */
-  _getActiveTheme: Task.async(function* () {
-    // Request themes, asynchronously.
-    let themes = yield promiseGetAddonsByTypes(["theme"]);
-
-    let activeTheme = {};
-    // We only store information about the active theme.
-    let theme = themes.find(theme => theme.isActive);
-    if (theme) {
-      // Make sure to have valid dates.
-      let installDate = new Date(Math.max(0, theme.installDate));
-      let updateDate = new Date(Math.max(0, theme.updateDate));
-
-      activeTheme = {
-        id: theme.id,
-        blocklisted: (theme.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
-        description: theme.description,
-        name: theme.name,
-        userDisabled: theme.userDisabled,
-        appDisabled: theme.appDisabled,
-        version: theme.version,
-        scope: theme.scope,
-        foreignInstall: theme.foreignInstall,
-        hasBinaryComponents: theme.hasBinaryComponents,
-        installDay: truncateToDays(installDate.getTime()),
-        updateDay: truncateToDays(updateDate.getTime()),
-      };
-    }
-
-    return activeTheme;
-  }),
-
-  /**
-   * Get the plugins data in object form.
-   * @return Object containing the plugins data.
-   */
-  _getActivePlugins: function () {
-    let pluginTags =
-      Cc["@mozilla.org/plugin/host;1"].getService(Ci.nsIPluginHost).getPluginTags({});
-
-    let activePlugins = [];
-    for (let tag of pluginTags) {
-      // Skip plugins which are not active.
-      if (tag.disabled) {
-        continue;
-      }
-
-      // Make sure to have a valid date.
-      let updateDate = new Date(Math.max(0, tag.lastModifiedTime));
-
-      activePlugins.push({
-        name: tag.name,
-        version: tag.version,
-        description: tag.description,
-        blocklisted: tag.blocklisted,
-        disabled: tag.disabled,
-        clicktoplay: tag.clicktoplay,
-        mimeTypes: tag.getMimeTypes({}),
-        updateDay: truncateToDays(updateDate.getTime()),
-      });
-    }
-
-    return activePlugins;
-  },
-
-  /**
-   * Get the GMPlugins data in object form.
-   * @return Object containing the GMPlugins data.
-   *
-   * This should only be called from the environment collection task
-   * or _blockAddonManagerShutdown, otherwise we risk running this
-   * during addon manager shutdown.
-   */
-  _getActiveGMPlugins: Task.async(function* () {
-    // Request plugins, asynchronously.
-    let allPlugins = yield promiseGetAddonsByTypes(["plugin"]);
-
-    let activeGMPlugins = {};
-    for (let plugin of allPlugins) {
-      // Only get GM Plugin info.
-      if (!plugin.isGMPlugin) {
-        continue;
-      }
-
-      activeGMPlugins[plugin.id] = {
-        version: plugin.version,
-        userDisabled: plugin.userDisabled,
-        applyBackgroundUpdates: plugin.applyBackgroundUpdates,
-      };
-    }
-
-    return activeGMPlugins;
-  }),
-
-  /**
-   * Get the active experiment data in object form.
-   * @return Object containing the active experiment data.
-   */
-  _getActiveExperiment: function () {
-    let experimentInfo = {};
-    try {
-      let scope = {};
-      Cu.import("resource:///modules/experiments/Experiments.jsm", scope);
-      let experiments = scope.Experiments.instance()
-      let activeExperiment = experiments.getActiveExperimentID();
-      if (activeExperiment) {
-        experimentInfo.id = activeExperiment;
-        experimentInfo.branch = experiments.getActiveExperimentBranch();
-      }
-    } catch(e) {
-      // If this is not Firefox, the import will fail.
-      return experimentInfo;
-    }
-
-    return experimentInfo;
-  },
-
-  /**
-   * Get the addon data in object form.
-   * @return Object containing the addon data.
-   *
-   * This should only be called from the environment collection task
-   * or _blockAddonManagerShutdown, otherwise we risk running this
-   * during addon manager shutdown.
-   */
-  _getAddons: Task.async(function* () {
-    // AddonManager may have shutdown already, in which case we should have cached addon data.
-    // It can't shutdown during the collection here because we have a blocker on the AMs
-    // shutdown barrier that waits for the collect task.
-    let addons = this._cachedAddons || {};
-    if (!this._cachedAddons) {
-      addons.activeAddons = yield this._getActiveAddons();
-      addons.activeTheme = yield this._getActiveTheme();
-      addons.activeGMPlugins = yield this._getActiveGMPlugins();
-    }
-
-    let personaId = null;
-#ifndef MOZ_WIDGET_GONK
-    let theme = LightweightThemeManager.currentTheme;
-    if (theme) {
-      personaId = theme.id;
-    }
-#endif
-
-    let addonData = {
-      activeAddons: addons.activeAddons,
-      theme: addons.activeTheme,
-      activePlugins: this._getActivePlugins(),
-      activeGMPlugins: addons.activeGMPlugins,
-      activeExperiment: this._getActiveExperiment(),
-      persona: personaId,
-    };
-
-    return addonData;
-  }),
-
-  /**
-   * Start watching the addons for changes.
-   */
-  _startWatchingAddons: function () {
-    // Define a listener to catch addons changes from the AddonManager. This part is
-    // tricky, as we only want to detect when the set of active addons changes without
-    // getting double notifications.
-    //
-    // We identified the following cases:
-    //
-    // * onEnabled:   Gets called when a restartless addon is enabled. Doesn't get called
-    //                if the restartless addon is installed and directly enabled.
-    // * onDisabled:  Gets called when disabling a restartless addon or can get called when
-    //                uninstalling a restartless addon from the UI (see bug 612168).
-    // * onInstalled: Gets called for all addon installs.
-    // * onUninstalling: Called the moment before addon uninstall happens.
-
-    this._addonsListener = {
-      onEnabled: addon => {
-        this._log.trace("_addonsListener - onEnabled " + addon.id);
-        this._onActiveAddonsChanged(addon)
-      },
-      onDisabled: addon => {
-        this._log.trace("_addonsListener - onDisabled " + addon.id);
-        this._onActiveAddonsChanged(addon);
-      },
-      onInstalled: addon => {
-        this._log.trace("_addonsListener - onInstalled " + addon.id +
-                        ", isActive: " + addon.isActive);
-        if (addon.isActive) {
-          this._onActiveAddonsChanged(addon);
-        }
-      },
-      onUninstalling: (addon, requiresRestart) => {
-        this._log.trace("_addonsListener - onUninstalling " + addon.id +
-                        ", isActive: " + addon.isActive +
-                        ", requiresRestart: " + requiresRestart);
-        if (!addon.isActive || requiresRestart) {
-          return;
-        }
-        this._onActiveAddonsChanged(addon);
-      },
-    };
-
-    AddonManager.addAddonListener(this._addonsListener);
-
-    // Watch for experiment changes as well.
-    Services.obs.addObserver(this, EXPERIMENTS_CHANGED_TOPIC, false);
-  },
-
-  /**
-   * Stop watching addons for changes.
-   */
-  _stopWatchingAddons: function () {
-    if (this._addonsListener) {
-      AddonManager.removeAddonListener(this._addonsListener);
-      Services.obs.removeObserver(this, EXPERIMENTS_CHANGED_TOPIC);
-    }
-    this._addonsListener = null;
-  },
-
-  /**
-   * Triggered when an addon changes its state.
-   * @param aAddon The addon which triggered the change.
-   */
-  _onActiveAddonsChanged: function (aAddon) {
-    const INTERESTING_ADDONS = [ "extension", "plugin", "service", "theme" ];
-
-    this._log.trace("_onActiveAddonsChanged - id " + aAddon.id + ", type " + aAddon.type);
-
-    if (INTERESTING_ADDONS.find(addon => addon == aAddon.type)) {
-      this._onEnvironmentChange("addons-changed");
-    }
-  },
-
-  /**
-   * Handle experiment change notifications.
-   */
-  observe: function (aSubject, aTopic, aData) {
-    this._log.trace("observe - Topic " + aTopic);
-
-    if (aTopic == EXPERIMENTS_CHANGED_TOPIC) {
-      this._onEnvironmentChange("experiment-changed");
-    }
-  },
-
-  /**
-   * Get the environment data in object form.
-   * @return Promise<Object> Resolved with the data on success, otherwise rejected.
-   */
-  getEnvironmentData: function() {
-    if (this._shutdown) {
-      this._log.error("getEnvironmentData - Already shut down");
-      return Promise.reject("Already shutdown");
-    }
-
-    this._log.trace("getEnvironmentData");
-    if (this._collectTask) {
-      return this._collectTask;
-    }
-
-    this._collectTask = this._doGetEnvironmentData();
-    let clear = () => this._collectTask = null;
-    this._collectTask.then(clear, clear);
-    return this._collectTask;
-  },
-
-  _doGetEnvironmentData: Task.async(function* () {
-    this._log.trace("getEnvironmentData");
-
-    // Define the data collection function for each section.
-    let sections = {
-      "build" : () => this._getBuild(),
-      "settings": () => this._getSettings(),
-#ifndef MOZ_WIDGET_ANDROID
-      "profile": () => this._getProfile(),
-#endif
-      "partner": () => this._getPartner(),
-      "system": () => this._getSystem(),
-      "addons": () => this._getAddons(),
-    };
-
-    let data = {};
-    // Recover from exceptions in the collection functions and populate the data
-    // object. We want to recover so that, in the worst-case, we only lose some data
-    // sections instead of all.
-    for (let s in sections) {
-      try {
-        data[s] = yield sections[s]();
-      } catch (e) {
-        this._log.error("_doGetEnvironmentData - There was an exception collecting " + s, e);
-      }
-    }
-
-    return data;
-  }),
-
-  _onEnvironmentChange: function (what) {
+  _onEnvironmentChange: function (what, oldEnvironment) {
     this._log.trace("_onEnvironmentChange for " + what);
     if (this._shutdown) {
       this._log.trace("_onEnvironmentChange - Already shut down.");
       return;
     }
 
+    // We are already skipping change events in _checkChanges if there is a pending change task running.
+    let now = Policy.now();
+    if (this._lastEnvironmentChangeDate &&
+        (CHANGE_THROTTLE_INTERVAL_MS >=
+         (now.getTime() - this._lastEnvironmentChangeDate.getTime()))) {
+      this._log.trace("_onEnvironmentChange - throttling changes, now: " + now +
+                      ", last change: " + this._lastEnvironmentChangeDate);
+      return;
+    }
+
+    this._lastEnvironmentChangeDate = now;
+
     for (let [name, listener] of this._changeListeners) {
       try {
         this._log.debug("_onEnvironmentChange - calling " + name);
-        listener();
+        listener(what, oldEnvironment);
       } catch (e) {
-        this._log.warning("_onEnvironmentChange - listener " + name + " caught error", e);
+        this._log.error("_onEnvironmentChange - listener " + name + " caught error", e);
       }
     }
-  },
-
-  /**
-   * This blocks the AddonManager shutdown barrier, it caches addons we might need later.
-   * It also lets an active collect task finish first as it may still access the AM.
-   */
-  _blockAddonManagerShutdown: Task.async(function*() {
-    this._log.trace("_blockAddonManagerShutdown");
-
-    this._stopWatchingAddons();
-
-    this._cachedAddons = {
-      activeAddons: yield this._getActiveAddons(),
-      activeTheme: yield this._getActiveTheme(),
-      activeGMPlugins: yield this._getActiveGMPlugins(),
-    };
-
-    yield this._collectTask;
-  }),
-
-  /**
-   * Get an object describing the current state of this module for AsyncShutdown diagnostics.
-   */
-  _getState: function() {
-    return {
-      shutdown: this._shutdown,
-      hasCollectTask: !!this._collectTask,
-      hasAddonsListener: !!this._addonsListener,
-      hasCachedAddons: !!this._cachedAddons,
-    };
   },
 };

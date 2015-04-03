@@ -34,6 +34,41 @@ window.onload = function() {
 
   var {FramerateFront} = devtools.require("devtools/server/actors/framerate");
 
+  function plotFPS(ticks, interval = 100, clamp = 60) {
+    var timeline = [];
+    var totalTicks = ticks.length;
+
+    // If the refresh driver didn't get a chance to tick before the
+    // recording was stopped, assume framerate was 0.
+    if (totalTicks == 0) {
+      timeline.push({ delta: 0, value: 0 });
+      timeline.push({ delta: interval, value: 0 });
+      return timeline;
+    }
+
+    var frameCount = 0;
+    var prevTime = ticks[0];
+
+    for (var i = 1; i < totalTicks; i++) {
+      var currTime = ticks[i];
+      frameCount++;
+
+      var elapsedTime = currTime - prevTime;
+      if (elapsedTime < interval) {
+        continue;
+      }
+
+      var framerate = Math.min(1000 / (elapsedTime / frameCount), clamp);
+      timeline.push({ delta: prevTime, value: framerate });
+      timeline.push({ delta: currTime, value: framerate });
+
+      frameCount = 0;
+      prevTime = currTime;
+    }
+
+    return timeline;
+  };
+
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
     DebuggerServer.addBrowserActors();
@@ -60,7 +95,7 @@ window.onload = function() {
   function onRecordingStopped(front, rawData) {
     ok(rawData, "There should be a recording available.");
 
-    var timeline = FramerateFront.plotFPS(rawData);
+    var timeline = plotFPS(rawData);
     ok(timeline.length >= 2,
       "There should be at least one measurement available, with two entries.");
 

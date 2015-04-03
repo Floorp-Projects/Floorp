@@ -1,3 +1,5 @@
+"use strict";
+
 let badChainURL = "https://badchain.include-subdomains.pinning.example.com";
 let noCertURL = "https://fail-handshake.example.com";
 let enabledPref = false;
@@ -6,24 +8,24 @@ let urlPref = "security.ssl.errorReporting.url";
 let enforcement_level = 1;
 let ROOT = getRootDirectory(gTestPath);
 
-add_task(function*(){
-  waitForExplicitFinish();
-  SimpleTest.requestCompleteLog();
-  yield testSendReportDisabled();
+SimpleTest.requestCompleteLog();
+
+add_task(function* test_send_report_manual_badchain() {
   yield testSendReportManual(badChainURL, "succeed");
+});
+
+add_task(function* test_send_report_manual_nocert() {
   yield testSendReportManual(noCertURL, "nocert");
-  yield testSendReportAuto();
-  yield testSendReportError();
-  yield testSetAutomatic();
 });
 
 // creates a promise of the message in an error page
 function createNetworkErrorMessagePromise(aBrowser) {
-  return new Promise(function(resolve, reject) {
+  let progressListener;
+  let promise = new Promise(function(resolve, reject) {
     // Error pages do not fire "load" events, so use a progressListener.
     let originalDocumentURI = aBrowser.contentDocument.documentURI;
 
-    let progressListener = {
+    progressListener = {
       onLocationChange: function(aWebProgress, aRequest, aLocation, aFlags) {
         // Make sure nothing other than an error page is loaded.
         if (!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE)) {
@@ -64,10 +66,19 @@ function createNetworkErrorMessagePromise(aBrowser) {
             Ci.nsIWebProgress.NOTIFY_LOCATION |
             Ci.nsIWebProgress.NOTIFY_STATE_REQUEST);
   });
+
+  // Ensure the weak progress listener is kept alive as long as the promise.
+  createNetworkErrorMessagePromise.listeners.set(promise, progressListener);
+
+  return promise;
 }
 
+// Keep a map of promises to their progress listeners so
+// the weak progress listeners aren't GCed too early.
+createNetworkErrorMessagePromise.listeners = new WeakMap();
+
 // check we can set the 'automatically send' pref
-let testSetAutomatic = function*() {
+add_task(function* test_set_automatic() {
   setup();
   let tab = gBrowser.addTab(badChainURL, {skipAnimation: true});
   let browser = tab.linkedBrowser;
@@ -116,7 +127,7 @@ let testSetAutomatic = function*() {
 
   gBrowser.removeTab(tab);
   cleanup();
-};
+});
 
 // test that manual report sending (with button clicks) works
 let testSendReportManual = function*(testURL, suffix) {
@@ -180,7 +191,7 @@ let testSendReportManual = function*(testURL, suffix) {
 };
 
 // test that automatic sending works
-let testSendReportAuto = function*() {
+add_task(function* test_send_report_auto() {
   setup();
   Services.prefs.setBoolPref("security.ssl.errorReporting.enabled", true);
   Services.prefs.setBoolPref("security.ssl.errorReporting.automatic", true);
@@ -227,10 +238,10 @@ let testSendReportAuto = function*() {
 
   gBrowser.removeTab(tab);
   cleanup();
-};
+});
 
 // test that an error is shown if there's a problem with the report server
-let testSendReportError = function*() {
+add_task(function* test_send_report_error() {
   setup();
   // set up prefs so error send is automatic and an error will occur
   Services.prefs.setBoolPref("security.ssl.errorReporting.enabled", true);
@@ -265,9 +276,9 @@ let testSendReportError = function*() {
 
   gBrowser.removeTab(tab);
   cleanup();
-};
+});
 
-let testSendReportDisabled = function*() {
+add_task(function* test_send_report_disabled() {
   setup();
   Services.prefs.setBoolPref("security.ssl.errorReporting.enabled", false);
   Services.prefs.setCharPref("security.ssl.errorReporting.url", "https://offdomain.com");
@@ -307,7 +318,7 @@ let testSendReportDisabled = function*() {
 
   gBrowser.removeTab(tab);
   cleanup();
-};
+});
 
 function setup() {
   // ensure the relevant prefs are set

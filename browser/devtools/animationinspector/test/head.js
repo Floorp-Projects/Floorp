@@ -259,6 +259,12 @@ function executeInContent(name, data={}, objects={}, expectResponse=true) {
   }
 }
 
+function onceNextPlayerRefresh(player) {
+  let onRefresh = promise.defer();
+  player.once(player.AUTO_REFRESH_EVENT, onRefresh.resolve);
+  return onRefresh.promise;
+}
+
 /**
  * Simulate a click on the playPause button of a playerWidget.
  */

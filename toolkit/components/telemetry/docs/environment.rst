@@ -9,6 +9,13 @@ The environment data may also be submitted by other ping types.
 
 *Note:* This is not submitted with all ping types due to privacy concerns. This and other data is inspected under the `data collection policy <https://wiki.mozilla.org/Firefox/Data_Collection>`_.
 
+Some parts of the environment must be fetched asynchronously at startup. We don't want other Telemetry components to block on waiting for the environment, so some items may be missing from it until the async fetching finished.
+This currently affects the following sections:
+
+- profile
+- addons
+
+
 Structure::
 
     {
@@ -36,8 +43,11 @@ Structure::
           autoDownload: <bool>, // true on failure
         },
         userPrefs: {
-          // Two possible behaviours: values of the whitelisted prefs, or for some prefs we
-          // only record they are present with value being set to null.
+          // Only prefs which are changed from the default value are listed
+          // in this block
+          "pref.name.value": value // some prefs send the value
+          "pref.name.url": "<user-set>" // For some privacy-sensitive prefs
+            // only the fact that the value has been changed is recorded
         },
       },
       profile: { // This section is not available on Android.

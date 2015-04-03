@@ -33,6 +33,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.res.AssetManager;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.SystemClock;
@@ -518,8 +519,8 @@ abstract class BaseTest extends BaseRobocopTest {
         mAsserter.isnot(url, null, "The url argument is not null");
 
         final String expected;
-        if (StringHelper.ABOUT_HOME_URL.equals(url)) {
-            expected = StringHelper.ABOUT_HOME_TITLE;
+        if (mStringHelper.ABOUT_HOME_URL.equals(url)) {
+            expected = mStringHelper.ABOUT_HOME_TITLE;
         } else if (url.startsWith(URL_HTTP_PREFIX)) {
             expected = url.substring(URL_HTTP_PREFIX.length());
         } else {
@@ -564,9 +565,9 @@ abstract class BaseTest extends BaseRobocopTest {
         mSolo.clickLongOnText(gridItemTitle);
         boolean dialogOpened = mSolo.waitForDialogToOpen();
         mAsserter.ok(dialogOpened, "Pin site dialog opened: " + gridItemTitle, null);
-        boolean pinSiteFound = waitForText(StringHelper.CONTEXT_MENU_PIN_SITE);
+        boolean pinSiteFound = waitForText(mStringHelper.CONTEXT_MENU_PIN_SITE);
         mAsserter.ok(pinSiteFound, "Found pin site menu item", null);
-        mSolo.clickOnText(StringHelper.CONTEXT_MENU_PIN_SITE);
+        mSolo.clickOnText(mStringHelper.CONTEXT_MENU_PIN_SITE);
         verifyPinned(true, gridItemTitle);
     }
 
@@ -575,9 +576,9 @@ abstract class BaseTest extends BaseRobocopTest {
         mSolo.clickLongOnText(gridItemTitle);
         boolean dialogOpened = mSolo.waitForDialogToOpen();
         mAsserter.ok(dialogOpened, "Pin site dialog opened: " + gridItemTitle, null);
-        boolean unpinSiteFound = waitForText(StringHelper.CONTEXT_MENU_UNPIN_SITE);
+        boolean unpinSiteFound = waitForText(mStringHelper.CONTEXT_MENU_UNPIN_SITE);
         mAsserter.ok(unpinSiteFound, "Found unpin site menu item", null);
-        mSolo.clickOnText(StringHelper.CONTEXT_MENU_UNPIN_SITE);
+        mSolo.clickOnText(mStringHelper.CONTEXT_MENU_UNPIN_SITE);
         verifyPinned(false, gridItemTitle);
     }
 
@@ -764,7 +765,7 @@ abstract class BaseTest extends BaseRobocopTest {
     }
 
     public void clearPrivateData() {
-        selectSettingsItem(StringHelper.PRIVACY_SECTION_LABEL, StringHelper.CLEAR_PRIVATE_DATA_LABEL);
+        selectSettingsItem(mStringHelper.PRIVACY_SECTION_LABEL, mStringHelper.CLEAR_PRIVATE_DATA_LABEL);
         Actions.EventExpecter clearData = mActions.expectGeckoEvent("Sanitize:Finished");
         mSolo.clickOnText("Clear data");
         clearData.blockForEvent();
