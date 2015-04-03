@@ -52,6 +52,8 @@
 #include "js/TypeDecls.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/GuardObjects.h"
+#include "ProfilerBacktrace.h"
 
 namespace mozilla {
 class TimeStamp;
@@ -65,7 +67,7 @@ enum TracingMetadata {
   TRACING_EVENT_BACKTRACE
 };
 
-#ifndef MOZ_ENABLE_PROFILER_SPS
+#if !defined(MOZ_ENABLE_PROFILER_SPS) || defined(MOZILLA_XPCOMRT_API)
 
 #include <stdint.h>
 #include <stdarg.h>
