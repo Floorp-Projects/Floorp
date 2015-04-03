@@ -170,7 +170,6 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        getWindow().setWindowAnimations(0);
         setContentView(R.layout.overlay_share_dialog);
 
         LocalBroadcastManager.getInstance(this).registerReceiver(uiEventListener,
@@ -254,6 +253,11 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
         serviceStartupIntent.setAction(OverlayConstants.ACTION_PREPARE_SHARE);
         startService(serviceStartupIntent);
 
+        // Start the slide-up animation.
+        getWindow().setWindowAnimations(0);
+        final Animation anim = AnimationUtils.loadAnimation(this, R.anim.overlay_slide_up);
+        findViewById(R.id.sharedialog).startAnimation(anim);
+
         // If provided, we use the subject text to give us something nice to display.
         // If not, we wing it with the URL.
 
@@ -306,10 +310,6 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
 
         final LocalBrowserDB browserDB = new LocalBrowserDB(getCurrentProfile());
         setButtonState(url, browserDB);
-
-        // Start the slide-up animation.
-        final Animation anim = AnimationUtils.loadAnimation(this, R.anim.overlay_slide_up);
-        findViewById(R.id.sharedialog).startAnimation(anim);
     }
 
     @Override
