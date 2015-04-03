@@ -83,7 +83,7 @@ function testSetBreakpointBlankLine() {
     ok(!aResponse.error,
       "Should be able to set a breakpoint in a coffee source file on a blank line.");
     ok(aResponse.actualLocation,
-      "Because 3 is empty, we should have an actualLocation.");
+      "Because 7 is empty, we should have an actualLocation.");
     is(aResponse.actualLocation.source.url, COFFEE_URL,
       "actualLocation.actor should be source mapped to the coffee file.");
     is(aResponse.actualLocation.line, 8,
