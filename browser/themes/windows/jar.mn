@@ -25,7 +25,6 @@ browser.jar:
 *       skin/classic/browser/browser.css
 *       skin/classic/browser/browser-aero.css
 *       skin/classic/browser/devedition.css
-*       skin/classic/browser/devedition-aero.css
 *       skin/classic/browser/browser-lightweightTheme.css
         skin/classic/browser/click-to-play-warning-stripes.png
         skin/classic/browser/content-contextmenu.svg
@@ -166,15 +165,13 @@ browser.jar:
         skin/classic/browser/customizableui/menuPanel-customizeFinish.png  (../shared/customizableui/menuPanel-customizeFinish.png)
         skin/classic/browser/customizableui/panelarrow-customizeTip.png  (../shared/customizableui/panelarrow-customizeTip.png)
 *       skin/classic/browser/customizableui/panelUIOverlay.css       (customizableui/panelUIOverlay.css)
-*       skin/classic/browser/customizableui/panelUIOverlay-aero.css  (customizableui/panelUIOverlay-aero.css)
         skin/classic/browser/customizableui/subView-arrow-back-inverted.png  (../shared/customizableui/subView-arrow-back-inverted.png)
         skin/classic/browser/customizableui/subView-arrow-back-inverted-rtl.png  (../shared/customizableui/subView-arrow-back-inverted-rtl.png)
         skin/classic/browser/customizableui/whimsy.png  (../shared/customizableui/whimsy.png)
         skin/classic/browser/customizableui/whimsy@2x.png  (../shared/customizableui/whimsy@2x.png)
         skin/classic/browser/customizableui/whimsy-bw.png  (../shared/customizableui/whimsy-bw.png)
         skin/classic/browser/customizableui/whimsy-bw@2x.png  (../shared/customizableui/whimsy-bw@2x.png)
-*       skin/classic/browser/downloads/allDownloadsViewOverlay.css   (downloads/allDownloadsViewOverlay.css)
-*       skin/classic/browser/downloads/allDownloadsViewOverlay-aero.css (downloads/allDownloadsViewOverlay-aero.css)
+        skin/classic/browser/downloads/allDownloadsViewOverlay.css   (downloads/allDownloadsViewOverlay.css)
         skin/classic/browser/downloads/buttons.png                   (downloads/buttons.png)
         skin/classic/browser/downloads/buttons-aero.png              (downloads/buttons-aero.png)
         skin/classic/browser/downloads/contentAreaDownloadsView.css  (downloads/contentAreaDownloadsView.css)
@@ -182,8 +179,7 @@ browser.jar:
         skin/classic/browser/downloads/download-notification-finish.png (downloads/download-notification-finish.png)
         skin/classic/browser/downloads/download-notification-start.png (downloads/download-notification-start.png)
         skin/classic/browser/downloads/download-summary.png          (downloads/download-summary.png)
-*       skin/classic/browser/downloads/downloads.css                 (downloads/downloads.css)
-*       skin/classic/browser/downloads/downloads-aero.css            (downloads/downloads-aero.css)
+        skin/classic/browser/downloads/downloads.css                 (downloads/downloads.css)
         skin/classic/browser/feeds/feedIcon.png                      (feeds/feedIcon.png)
         skin/classic/browser/feeds/feedIcon16.png                    (feeds/feedIcon16.png)
         skin/classic/browser/feeds/feedIcon-aero.png                 (feeds/feedIcon-aero.png)
@@ -196,9 +192,7 @@ browser.jar:
         skin/classic/browser/panic-panel/header-small.png            (../shared/panic-panel/header-small.png)
         skin/classic/browser/panic-panel/icons.png                   (../shared/panic-panel/icons.png)
         skin/classic/browser/places/places.css                       (places/places.css)
-*       skin/classic/browser/places/places-aero.css                  (places/places-aero.css)
 *       skin/classic/browser/places/organizer.css                    (places/organizer.css)
-*       skin/classic/browser/places/organizer-aero.css               (places/organizer-aero.css)
         skin/classic/browser/places/bookmark.png                     (places/bookmark.png)
         skin/classic/browser/places/bookmark-aero.png                (places/bookmark-aero.png)
         skin/classic/browser/places/query.png                        (places/query.png)
@@ -531,7 +525,6 @@ browser.jar:
 % override chrome://browser/skin/aboutSessionRestore-window-icon.png  chrome://browser/skin/aboutSessionRestore-window-icon-aero.png    os=WINNT osversion>=6
 
 % override chrome://browser/skin/browser.css                          chrome://browser/skin/browser-aero.css                            os=WINNT osversion>=6
-% override chrome://browser/skin/devedition.css                       chrome://browser/skin/devedition-aero.css                         os=WINNT osversion>=6
 % override chrome://browser/skin/Info.png                             chrome://browser/skin/Info-aero.png                               os=WINNT osversion>=6
 % override chrome://browser/skin/identity.png                         chrome://browser/skin/identity-aero.png                           os=WINNT osversion>=6
 % override chrome://browser/skin/livemark-folder.png                  chrome://browser/skin/livemark-folder-aero.png                    os=WINNT osversion>=6
@@ -542,14 +535,9 @@ browser.jar:
 % override chrome://browser/skin/Privacy-32.png                       chrome://browser/skin/Privacy-32-aero.png                         os=WINNT osversion>=6
 % override chrome://browser/skin/searchbar-dropdown-arrow.png         chrome://browser/skin/searchbar-dropdown-arrow-aero.png           os=WINNT osversion>=6
 % override chrome://browser/skin/Secure24.png                         chrome://browser/skin/Secure24-aero.png                           os=WINNT osversion>=6
-% override chrome://browser/skin/customizableui/panelUIOverlay.css    chrome://browser/skin/customizableui/panelUIOverlay-aero.css      os=WINNT osversion>=6
-% override chrome://browser/skin/downloads/allDownloadsViewOverlay.css  chrome://browser/skin/downloads/allDownloadsViewOverlay-aero.css  os=WINNT osversion>=6
 % override chrome://browser/skin/downloads/buttons.png                chrome://browser/skin/downloads/buttons-aero.png                  os=WINNT osversion>=6
-% override chrome://browser/skin/downloads/downloads.css              chrome://browser/skin/downloads/downloads-aero.css                os=WINNT osversion>=6
 % override chrome://browser/skin/feeds/feedIcon.png                   chrome://browser/skin/feeds/feedIcon-aero.png                     os=WINNT osversion>=6
 % override chrome://browser/skin/feeds/feedIcon16.png                 chrome://browser/skin/feeds/feedIcon16-aero.png                   os=WINNT osversion>=6
-% override chrome://browser/skin/places/places.css                    chrome://browser/skin/places/places-aero.css                      os=WINNT osversion>=6
-% override chrome://browser/skin/places/organizer.css                 chrome://browser/skin/places/organizer-aero.css                   os=WINNT osversion>=6
 % override chrome://browser/skin/places/bookmark.png                  chrome://browser/skin/places/bookmark-aero.png                    os=WINNT osversion>=6
 % override chrome://browser/skin/places/query.png                     chrome://browser/skin/places/query-aero.png                       os=WINNT osversion>=6
 % override chrome://browser/skin/places/bookmarksMenu.png             chrome://browser/skin/places/bookmarksMenu-aero.png               os=WINNT osversion>=6
