@@ -531,15 +531,11 @@
         <body><![CDATA[
           var rv = true;
 
-          if (!aBrowser)
-            aBrowser = this.mCurrentBrowser;
-
-          if (aCallGlobalListeners != false &&
-              aBrowser == this.mCurrentBrowser) {
-            for (let p of this.mProgressListeners) {
+          function callListeners(listeners, args) {
+            for (let p of listeners) {
               if (aMethod in p) {
                 try {
-                  if (!p[aMethod].apply(p, aArguments))
+                  if (!p[aMethod].apply(p, args))
                     rv = false;
                 } catch (e) {
                   // don't inhibit other listeners
@@ -549,20 +545,18 @@
             }
           }
 
+          if (!aBrowser)
+            aBrowser = this.mCurrentBrowser;
+
+          if (aCallGlobalListeners != false &&
+              aBrowser == this.mCurrentBrowser) {
+            callListeners(this.mProgressListeners, aArguments);
+          }
+
           if (aCallTabsListeners != false) {
             aArguments.unshift(aBrowser);
 
-            for (let p of this.mTabsProgressListeners) {
-              if (aMethod in p) {
-                try {
-                  if (!p[aMethod].apply(p, aArguments))
-                    rv = false;
-                } catch (e) {
-                  // don't inhibit other listeners
-                  Components.utils.reportError(e);
-                }
-              }
-            }
+            callListeners(this.mTabsProgressListeners, aArguments);
           }
 
           return rv;

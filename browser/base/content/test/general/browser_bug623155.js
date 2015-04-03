@@ -115,7 +115,7 @@ function delayed(aIsSelectedTab) {
 
   if (!aIsSelectedTab) {
     // If this was a background request, go on a foreground request.
-    content.location = REDIRECT_FROM + "#FG";
+    gBrowser.selectedBrowser.loadURI(REDIRECT_FROM + "#FG");
   }
   else {
     // Othrewise, nothing to do remains.
