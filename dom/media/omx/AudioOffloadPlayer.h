@@ -78,27 +78,25 @@ public:
   ~AudioOffloadPlayer();
 
   // Caller retains ownership of "aSource".
-  virtual void SetSource(const android::sp<MediaSource> &aSource) override;
+  void SetSource(const android::sp<MediaSource> &aSource);
 
   // Start the source if it's not already started and open the AudioSink to
   // create an offloaded audio track
-  virtual status_t Start(bool aSourceAlreadyStarted = false) override;
+  status_t Start(bool aSourceAlreadyStarted = false);
 
-  virtual status_t ChangeState(MediaDecoder::PlayState aState) override;
-
-  virtual void SetVolume(double aVolume) override;
-
-  virtual double GetMediaTimeSecs() override;
+  double GetMediaTimeSecs();
 
   // To update progress bar when the element is visible
-  virtual void SetElementVisibility(bool aIsVisible) override;;
+  void SetElementVisibility(bool aIsVisible);
+
+  status_t ChangeState(MediaDecoder::PlayState aState);
+
+  void SetVolume(double aVolume);
 
   // Update ready state based on current play state. Not checking data
   // availability since offloading is currently done only when whole compressed
   // data is available
-  virtual MediaDecoderOwner::NextFrameStatus GetNextFrameStatus() override;
-
-  virtual nsRefPtr<MediaDecoder::SeekPromise> Seek(SeekTarget aTarget) override;
+  MediaDecoderOwner::NextFrameStatus GetNextFrameStatus();
 
   void TimeUpdate();
 
@@ -114,11 +112,27 @@ private:
   // Used only in main thread
   bool mPlaying;
 
+  // Set when playstate is seeking and reset when FillBUffer() acknowledged
+  // seeking by seeking audio source. Used in main thread and offload
+  // callback thread, protected by Mutex mLock
+  bool mSeeking;
+
   // Once playback reached end of stream (last ~100ms), position provided by DSP
   // may be reset/corrupted. This bool is used to avoid that.
   // Used in main thread and offload callback thread, protected by Mutex
   // mLock
   bool mReachedEOS;
+
+  // Set when there is a seek request during pause.
+  // Used in main thread and offload callback thread, protected by Mutex
+  // mLock
+  bool mSeekDuringPause;
+
+  // Seek can be triggered internally or by MediaDecoder. This bool is to
+  // to track seek triggered by MediaDecoder so that we can send back
+  // SeekingStarted and SeekingStopped events.
+  // Used in main thread and offload callback thread, protected by Mutex mLock
+  bool mDispatchSeekEvents;
 
   // Set when the HTML Audio Element is visible to the user.
   // Used only in main thread
@@ -141,15 +155,10 @@ private:
   // mLock
   int64_t mStartPosUs;
 
-  // The target of current seek when there is a request to seek
+  // Given seek time when there is a request to seek
   // Used in main thread and offload callback thread, protected by Mutex
   // mLock
-  SeekTarget mSeekTarget;
-
-  // MediaPromise of current seek.
-  // Used in main thread and offload callback thread, protected by Mutex
-  // mLock
-  MediaPromiseHolder<MediaDecoder::SeekPromise> mSeekPromise;
+  int64_t mSeekTimeUs;
 
   // Positions obtained from offlaoded tracks (DSP)
   // Used in main thread and offload callback thread, protected by Mutex
@@ -212,15 +221,15 @@ private:
 
   bool IsSeeking();
 
-  // Set mSeekTarget to the given position and restart the sink. Actual seek
-  // happens in FillBuffer(). If mSeekPromise is not empty, send
+  // Set mSeekTime to the given position and restart the sink. Actual seek
+  // happens in FillBuffer(). If aDispatchSeekEvents is true, send
   // SeekingStarted event always and SeekingStopped event when the play state is
   // paused to MediaDecoder.
   // When decoding and playing happens separately, if there is a seek during
   // pause, we can decode and keep data ready.
   // In case of offload player, no way to seek during pause. So just fake that
   // seek is done.
-  status_t DoSeek();
+  status_t SeekTo(int64_t aTimeUs, bool aDispatchSeekEvents = false);
 
   // Start/Resume the audio sink so that callback will start being called to get
   // compressed data

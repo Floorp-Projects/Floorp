@@ -1215,10 +1215,9 @@ void MediaDecoder::UpdateReadyStateForData()
   mOwner->UpdateReadyStateForData(frameStatus);
 }
 
-void MediaDecoder::OnSeekResolved(SeekResolveValue aVal)
+void MediaDecoder::OnSeekResolvedInternal(bool aAtEnd, MediaDecoderEventVisibility aEventVisibility)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mSeekRequest.Complete();
 
   if (mShuttingDown)
     return;
@@ -1235,20 +1234,20 @@ void MediaDecoder::OnSeekResolved(SeekResolveValue aVal)
       seekWasAborted = true;
     } else {
       UnpinForSeek();
-      fireEnded = aVal.mAtEnd;
-      if (aVal.mAtEnd) {
+      fireEnded = aAtEnd;
+      if (aAtEnd) {
         ChangeState(PLAY_STATE_ENDED);
-      } else if (aVal.mEventVisibility != MediaDecoderEventVisibility::Suppressed) {
-        ChangeState(aVal.mAtEnd ? PLAY_STATE_ENDED : mNextState);
+      } else if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
+        ChangeState(aAtEnd ? PLAY_STATE_ENDED : mNextState);
       }
     }
   }
 
-  PlaybackPositionChanged(aVal.mEventVisibility);
+  PlaybackPositionChanged(aEventVisibility);
 
   if (mOwner) {
     UpdateReadyStateForData();
-    if (!seekWasAborted && (aVal.mEventVisibility != MediaDecoderEventVisibility::Suppressed)) {
+    if (!seekWasAborted && (aEventVisibility != MediaDecoderEventVisibility::Suppressed)) {
       mOwner->SeekCompleted();
       if (fireEnded) {
         mOwner->PlaybackEnded();
