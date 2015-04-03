@@ -6,7 +6,7 @@
 
 if (typeof evalcx == 'function') {
     var src = 'try {\n' +
-    '    for (var [e] = /x/ in d) {\n' +
+    '    for (var [e] in d) {\n' +
     '        (function () {});\n' +
     '    }\n' +
     '} catch (e) {}\n' +
