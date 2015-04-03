@@ -421,7 +421,6 @@ class XPCShellTestThread(Thread):
             '-r', self.httpdManifest,
             '-m',
             '-s',
-            '-e', 'const _HTTPD_JS_PATH = "%s";' % self.httpdJSPath,
             '-e', 'const _HEAD_JS_PATH = "%s";' % self.headJSPath
         ]
 
