@@ -905,7 +905,7 @@ RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList)
         }
       }
       if ((hint & nsChangeHint_UpdateCursor) && !didUpdateCursor) {
-        mPresContext->PresShell()->SynthesizeMouseMove(false);
+        mPresContext->PresShell()->SynthesizeMouseMove(false, false);
         didUpdateCursor = true;
       }
     }

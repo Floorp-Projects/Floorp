@@ -2320,7 +2320,7 @@ ScrollFrameHelper::ScrollActivityCallback(nsITimer *aTimer, void* anInstance)
   // Fire the synth mouse move.
   self->mScrollActivityTimer->Cancel();
   self->mScrollActivityTimer = nullptr;
-  self->mOuter->PresContext()->PresShell()->SynthesizeMouseMove(true);
+  self->mOuter->PresContext()->PresShell()->SynthesizeMouseMove(true, false);
 }
 
 
