@@ -41,23 +41,25 @@ class StreamList;
 // Cache API.  This uniqueness is defined by the ManagerId equality operator.
 // The uniqueness is enforced by the Manager GetOrCreate() factory method.
 //
-// The Manager object can out live the IPC actors in the case where the child
-// process is killed; e.g a child process OOM.  The Manager object can
-// The Manager object can potentially use non-trivial resources.  Long lived
-// DOM objects and their actors should not maintain a reference to the Manager
-// while idle.  Transient DOM objects that may keep a reference for their
-// lifetimes.
+// The life cycle of Manager objects is somewhat complex.  While code may
+// hold a strong reference to the Manager, it will invalidate itself once it
+// believes it has become completely idle.  This is currently determined when
+// all of the following conditions occur:
 //
-// For example, once a CacheStorage DOM object is access it will live until its
-// global is released.  Therefore, CacheStorage should release its Manager
-// reference after operations complete and it becomes idle.  Cache objects,
-// however, can be GC'd once content are done using them and can therefore keep
-// their Manager reference alive.  Its expected that more operations are
-// performed on a Cache object, so keeping the Manager reference will help
-// minimize overhead for each reference.
+//  1) There are no more Manager::Listener objects registered with the Manager
+//     by performing a Cache or Storage operation.
+//  2) There are no more CacheId references noted via Manager::AddRefCacheId().
+//  3) There are no more BodyId references noted via Manager::AddRefBodyId().
+//
+// In order to keep your Manager alive you should perform an operation to set
+// a Listener, call AddRefCacheId(), or call AddRefBodyId().
+//
+// Even once a Manager becomes invalid, however, it may still continue to
+// exist.  This is allowed so that any in-progress Actions can gracefully
+// complete.
 //
 // As an invariant, all Manager objects must cease all IO before shutdown.  This
-// is enforced by the ShutdownObserver.  If content still holds references to
+// is enforced by the Manager::Factory.  If content still holds references to
 // Cache DOM objects during shutdown, then all operations will begin rejecting.
 class Manager final
 {
@@ -208,6 +210,8 @@ private:
   bool SetCacheIdOrphanedIfRefed(CacheId aCacheId);
   bool SetBodyIdOrphanedIfRefed(const nsID& aBodyId);
   void NoteOrphanedBodyIdList(const nsTArray<nsID>& aDeletedBodyIdList);
+
+  void MaybeAllowContextToClose();
 
   nsRefPtr<ManagerId> mManagerId;
   nsCOMPtr<nsIThread> mIOThread;
