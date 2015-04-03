@@ -116,6 +116,12 @@ MockStorage.prototype = Object.freeze({
   get: function () {
     return Promise.resolve(this.data);
   },
+  getOAuthTokens() {
+    return Promise.resolve(null);
+  },
+  setOAuthTokens(contents) {
+    return Promise.resolve();
+  },
 });
 
 /*
@@ -726,12 +732,125 @@ add_test(function test_getOAuthToken() {
 
 });
 
+add_test(function test_getOAuthTokenScoped() {
+  let fxa = new MockFxAccounts();
+  let alice = getTestUser("alice");
+  alice.verified = true;
+  let getTokenFromAssertionCalled = false;
+
+  fxa.internal._d_signCertificate.resolve("cert1");
+
+  // create a mock oauth client
+  let client = new FxAccountsOAuthGrantClient({
+    serverURL: "http://example.com/v1",
+    client_id: "abc123"
+  });
+  client.getTokenFromAssertion = function (assertion, scopeString) {
+    equal(scopeString, "foo bar");
+    getTokenFromAssertionCalled = true;
+    return Promise.resolve({ access_token: "token" });
+  };
+
+  fxa.setSignedInUser(alice).then(
+    () => {
+      fxa.getOAuthToken({ scope: ["foo", "bar"], client: client }).then(
+        (result) => {
+           do_check_true(getTokenFromAssertionCalled);
+           do_check_eq(result, "token");
+           run_next_test();
+        }
+      )
+    }
+  );
+
+});
+
+add_task(function* test_getOAuthTokenCached() {
+  let fxa = new MockFxAccounts();
+  let alice = getTestUser("alice");
+  alice.verified = true;
+  let numTokenFromAssertionCalls = 0;
+
+  fxa.internal._d_signCertificate.resolve("cert1");
+
+  // create a mock oauth client
+  let client = new FxAccountsOAuthGrantClient({
+    serverURL: "http://example.com/v1",
+    client_id: "abc123"
+  });
+  client.getTokenFromAssertion = function () {
+    numTokenFromAssertionCalls += 1;
+    return Promise.resolve({ access_token: "token" });
+  };
+
+  yield fxa.setSignedInUser(alice);
+  let result = yield fxa.getOAuthToken({ scope: "profile", client: client, service: "test-service" });
+  do_check_eq(numTokenFromAssertionCalls, 1);
+  do_check_eq(result, "token");
+
+  // requesting it again should not re-fetch the token.
+  result = yield fxa.getOAuthToken({ scope: "profile", client: client, service: "test-service" });
+  do_check_eq(numTokenFromAssertionCalls, 1);
+  do_check_eq(result, "token");
+  // But requesting the same service and a different scope *will* get a new one.
+  result = yield fxa.getOAuthToken({ scope: "something-else", client: client, service: "test-service" });
+  do_check_eq(numTokenFromAssertionCalls, 2);
+  do_check_eq(result, "token");
+});
+
+add_task(function* test_getOAuthTokenCachedScopeNormalization() {
+  let fxa = new MockFxAccounts();
+  let alice = getTestUser("alice");
+  alice.verified = true;
+  let numTokenFromAssertionCalls = 0;
+
+  fxa.internal._d_signCertificate.resolve("cert1");
+
+  // create a mock oauth client
+  let client = new FxAccountsOAuthGrantClient({
+    serverURL: "http://example.com/v1",
+    client_id: "abc123"
+  });
+  client.getTokenFromAssertion = function () {
+    numTokenFromAssertionCalls += 1;
+    return Promise.resolve({ access_token: "token" });
+  };
+
+  yield fxa.setSignedInUser(alice);
+  let result = yield fxa.getOAuthToken({ scope: ["foo", "bar"], client: client, service: "test-service" });
+  do_check_eq(numTokenFromAssertionCalls, 1);
+  do_check_eq(result, "token");
+
+  // requesting it again with the scope array in a different order not re-fetch the token.
+  result = yield fxa.getOAuthToken({ scope: ["bar", "foo"], client: client, service: "test-service" });
+  do_check_eq(numTokenFromAssertionCalls, 1);
+  do_check_eq(result, "token");
+  // requesting it again with the scope array in different case not re-fetch the token.
+  result = yield fxa.getOAuthToken({ scope: ["Bar", "Foo"], client: client, service: "test-service" });
+  do_check_eq(numTokenFromAssertionCalls, 1);
+  do_check_eq(result, "token");
+  // But requesting with a new entry in the array does fetch one.
+  result = yield fxa.getOAuthToken({ scope: ["foo", "bar", "etc"], client: client, service: "test-service" });
+  do_check_eq(numTokenFromAssertionCalls, 2);
+  do_check_eq(result, "token");
+});
+
 
 Services.prefs.setCharPref("identity.fxaccounts.remote.oauth.uri", "https://example.com/v1");
 add_test(function test_getOAuthToken_invalid_param() {
   let fxa = new MockFxAccounts();
 
   fxa.getOAuthToken()
+    .then(null, err => {
+       do_check_eq(err.message, "INVALID_PARAMETER");
+       run_next_test();
+    });
+});
+
+add_test(function test_getOAuthToken_invalid_scope_array() {
+  let fxa = new MockFxAccounts();
+
+  fxa.getOAuthToken({scope: []})
     .then(null, err => {
        do_check_eq(err.message, "INVALID_PARAMETER");
        run_next_test();
