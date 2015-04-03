@@ -13,6 +13,8 @@
 #include "nsDebugImpl.h"
 #include "nsIErrorService.h"
 #include "nsMemoryImpl.h"
+#include "nsNetCID.h"
+#include "nsNetModuleStandalone.h"
 #include "nsObserverService.h"
 #include "nsThreadManager.h"
 #include "nsThreadPool.h"
@@ -98,6 +100,8 @@ NS_InitXPCOMRT()
     return rv;
   }
 
+  mozilla::InitNetModuleStandalone();
+
   return NS_OK;
 }
 
@@ -151,6 +155,11 @@ NS_ShutdownXPCOMRT()
     nsTimerImpl::Shutdown();
 
     NS_ProcessPendingEvents(thread);
+
+    // Net module needs to be shutdown before the thread manager or else
+    // the thread manager will hang waiting for the socket transport
+    // service to shutdown.
+    mozilla::ShutdownNetModuleStandalone();
 
     // Shutdown all remaining threads.  This method does not return until
     // all threads created using the thread manager (with the exception of
