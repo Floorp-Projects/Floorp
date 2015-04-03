@@ -1919,7 +1919,15 @@ class LazyScript : public gc::TenuredCell
     // Create a LazyScript and initialize the freeVariables and the
     // innerFunctions with dummy values to be replaced in a later initialization
     // phase.
+    //
+    // The "script" argument to this function can be null.  If it's non-null,
+    // then this LazyScript should be associated with the given JSScript.
+    //
+    // The sourceObjectScript argument must be non-null and is the script that
+    // should be used to get the sourceObject_ of this lazyScript.
     static LazyScript* Create(ExclusiveContext* cx, HandleFunction fun,
+                              HandleScript script, HandleObject enclosingScope,
+                              HandleScript sourceObjectScript,
                               uint64_t packedData, uint32_t begin, uint32_t end,
                               uint32_t lineno, uint32_t column);
 

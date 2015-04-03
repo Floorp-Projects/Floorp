@@ -57,7 +57,11 @@ char* mozilla_sampler_get_profile();
 
 JSObject *mozilla_sampler_get_profile_data(JSContext *aCx);
 
-void mozilla_sampler_save_profile_to_file(const char* aFilename);
+// Make this function easily callable from a debugger in a build without
+// debugging information (work around http://llvm.org/bugs/show_bug.cgi?id=22211)
+extern "C" {
+  void mozilla_sampler_save_profile_to_file(const char* aFilename);
+}
 
 const char** mozilla_sampler_get_features();
 

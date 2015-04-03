@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>Scrolling shouldn't invalidate the relatively-positioned layer</title>
+
+<style>
+
+.content {
+  box-sizing: border-box;
+  width: 200px;
+  height: 200px;
+  border: 1px solid black;
+}
+
+.fixed {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+}
+
+.reftest-no-paint {
+  border-color: lime;
+}
+
+.distanceFromTop {
+  margin-top: 240px;
+}
+
+.relative {
+  position: relative;
+}
+
+body {
+  margin: 0;
+  padding: 20px;
+  height: 3000px;
+}
+
+
+</style>
+
+<div class="fixed reftest-no-paint content">
+  <!--
+    This fixed layer gets its own PaintedLayer above the page.
+
+    It shouldn't attempt to pull up an opaque background color from the page,
+    because the page can move under it.
+  -->
+</div>
+
+<div class="distanceFromTop relative reftest-no-paint content">
+  <!--
+    This item is above .fixed in z-order, but it starts out not intersecting
+    .fixed. It should still get its own layer from the start, because it can
+    get scrolled on top of .fixed.
+  -->
+</div>
+
+<script>
+
+function doTest() {
+  document.documentElement.scrollTop = 100;
+  document.documentElement.removeAttribute("class");
+}
+document.documentElement.scrollTop = 0;
+document.addEventListener("MozReftestInvalidate", doTest, false);
+
+</script>

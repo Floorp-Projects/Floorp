@@ -869,8 +869,7 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
       const nsDependentString key(aAttributes[0]);
       if (key.EqualsLiteral("src")) {
           src.Assign(aAttributes[1]);
-      }
-      else if (key.EqualsLiteral("type")) {
+      } else if (key.EqualsLiteral("type")) {
           nsDependentString str(aAttributes[1]);
           nsContentTypeParser parser(str);
           nsAutoString mimeType;
@@ -888,12 +887,8 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
           if (nsContentUtils::IsJavascriptMIMEType(mimeType)) {
               langID = nsIProgrammingLanguage::JAVASCRIPT;
               version = JSVERSION_LATEST;
-          } else {
-              langID = nsIProgrammingLanguage::UNKNOWN;
-          }
 
-          if (langID != nsIProgrammingLanguage::UNKNOWN) {
-              // Get the version string, and ensure the language supports it.
+              // Get the version string, and ensure that JavaScript supports it.
               nsAutoString versionName;
               rv = parser.GetParameter("version", versionName);
 
@@ -902,9 +897,10 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
               } else if (rv != NS_ERROR_INVALID_ARG) {
                   return rv;
               }
+          } else {
+              langID = nsIProgrammingLanguage::UNKNOWN;
           }
-      }
-      else if (key.EqualsLiteral("language")) {
+      } else if (key.EqualsLiteral("language")) {
           // Language is deprecated, and the impl in nsScriptLoader ignores the
           // various version strings anyway.  So we make no attempt to support
           // languages other than JS for language=
@@ -917,79 +913,67 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
       aAttributes += 2;
   }
 
-  // Not all script languages have a "sandbox" concept.  At time of
-  // writing, Python is the only other language, and it does not.
-  // For such languages, neither any inline script nor remote script are
-  // safe to execute from untrusted sources.
-  // So for such languages, we only allow script when the document
-  // itself is from chrome.  We then don't bother to check the
-  // "src=" tag - we trust chrome to do the right thing.
-  // (See also similar code in nsScriptLoader.cpp)
   nsCOMPtr<nsIDocument> doc(do_QueryReferent(mDocument));
-  if (langID != nsIProgrammingLanguage::UNKNOWN && 
-      langID != nsIProgrammingLanguage::JAVASCRIPT &&
-      doc && !nsContentUtils::IsChromeDoc(doc)) {
-      langID = nsIProgrammingLanguage::UNKNOWN;
-      NS_WARNING("Non JS language called from non chrome - ignored");
-  }
 
   // Don't process scripts that aren't known
-  if (langID != nsIProgrammingLanguage::UNKNOWN) {
-      nsCOMPtr<nsIScriptGlobalObject> globalObject;
-      if (doc)
-          globalObject = do_QueryInterface(doc->GetWindow());
-      nsRefPtr<nsXULPrototypeScript> script =
-          new nsXULPrototypeScript(aLineNumber, version);
-      if (! script)
-          return NS_ERROR_OUT_OF_MEMORY;
+  if (langID == nsIProgrammingLanguage::UNKNOWN) {
+      return NS_OK;
+  }
 
-      // If there is a SRC attribute...
-      if (! src.IsEmpty()) {
-          // Use the SRC attribute value to load the URL
-          rv = NS_NewURI(getter_AddRefs(script->mSrcURI), src, nullptr, mDocumentURL);
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  if (doc)
+      globalObject = do_QueryInterface(doc->GetWindow());
+  nsRefPtr<nsXULPrototypeScript> script =
+      new nsXULPrototypeScript(aLineNumber, version);
+  if (! script)
+      return NS_ERROR_OUT_OF_MEMORY;
 
-          // Check if this document is allowed to load a script from this source
-          // NOTE: if we ever allow scripts added via the DOM to run, we need to
-          // add a CheckLoadURI call for that as well.
+  // If there is a SRC attribute...
+  if (! src.IsEmpty()) {
+      // Use the SRC attribute value to load the URL
+      rv = NS_NewURI(getter_AddRefs(script->mSrcURI), src, nullptr, mDocumentURL);
+
+      // Check if this document is allowed to load a script from this source
+      // NOTE: if we ever allow scripts added via the DOM to run, we need to
+      // add a CheckLoadURI call for that as well.
+      if (NS_SUCCEEDED(rv)) {
+          if (!mSecMan)
+              mSecMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
           if (NS_SUCCEEDED(rv)) {
-              if (!mSecMan)
-                  mSecMan = do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-              if (NS_SUCCEEDED(rv)) {
-                  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument, &rv);
+              nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocument, &rv);
 
-                  if (NS_SUCCEEDED(rv)) {
-                      rv = mSecMan->
-                          CheckLoadURIWithPrincipal(doc->NodePrincipal(),
-                                                    script->mSrcURI,
-                                                    nsIScriptSecurityManager::ALLOW_CHROME);
-                  }
+              if (NS_SUCCEEDED(rv)) {
+                  rv = mSecMan->
+                      CheckLoadURIWithPrincipal(doc->NodePrincipal(),
+                                                script->mSrcURI,
+                                                nsIScriptSecurityManager::ALLOW_CHROME);
               }
           }
-
-          if (NS_FAILED(rv)) {
-              return rv;
-          }
-
-          // Attempt to deserialize an out-of-line script from the FastLoad
-          // file right away.  Otherwise we'll end up reloading the script and
-          // corrupting the FastLoad file trying to serialize it, in the case
-          // where it's already there.
-          script->DeserializeOutOfLine(nullptr, mPrototype);
       }
 
-      nsPrototypeArray* children = nullptr;
-      rv = mContextStack.GetTopChildren(&children);
       if (NS_FAILED(rv)) {
           return rv;
       }
 
-      children->AppendElement(script);
-
-      mConstrainSize = false;
-
-      mContextStack.Push(script, mState);
-      mState = eInScript;
+      // Attempt to deserialize an out-of-line script from the FastLoad
+      // file right away.  Otherwise we'll end up reloading the script and
+      // corrupting the FastLoad file trying to serialize it, in the case
+      // where it's already there.
+      script->DeserializeOutOfLine(nullptr, mPrototype);
   }
+
+  nsPrototypeArray* children = nullptr;
+  rv = mContextStack.GetTopChildren(&children);
+  if (NS_FAILED(rv)) {
+      return rv;
+  }
+
+  children->AppendElement(script);
+
+  mConstrainSize = false;
+
+  mContextStack.Push(script, mState);
+  mState = eInScript;
 
   return NS_OK;
 }
@@ -1071,8 +1055,7 @@ XULContentSinkImpl::AddText(const char16_t* aText,
         if (NS_OK != rv) {
             return rv;
         }
-      }
-      else {
+      } else {
         mTextSize += aLength;
         mText = (char16_t *) realloc(mText, sizeof(char16_t) * mTextSize);
         if (nullptr == mText) {

@@ -245,7 +245,7 @@ int ConvertToI420(VideoType src_video_type,
   if (src_video_type == kYV12) {
     // In gralloc buffer, yv12 color format's cb and cr's strides are aligned
     // to 16 Bytes boundary. See /system/core/include/system/graphics.h
-    int stride_y = src_width;
+    int stride_y = (src_width + 15) & ~0x0F;
     int stride_uv = (((stride_y + 1) / 2) + 15) & ~0x0F;
     return libyuv::I420Rotate(src_frame,
                               stride_y,
