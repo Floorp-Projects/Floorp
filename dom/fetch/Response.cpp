@@ -38,7 +38,6 @@ Response::Response(nsIGlobalObject* aGlobal, InternalResponse* aInternalResponse
   , mOwner(aGlobal)
   , mInternalResponse(aInternalResponse)
 {
-  SetMimeType();
 }
 
 Response::~Response()
@@ -189,7 +188,7 @@ Response::Constructor(const GlobalObject& aGlobal,
     }
   }
 
-  r->SetMimeType();
+  r->SetMimeType(aRv);
   return r.forget();
 }
 
