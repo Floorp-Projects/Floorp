@@ -253,6 +253,10 @@
          key="&debuggerUI.removeAllWatch.key;"
          modifiers="accel alt"
          command="removeAllWatchExpressionsCommand"/>
+    <key id="debuggerSourcesCopyUrl"
+         key="&debuggerUI.context.copyUrl.key;"
+         modifiers="accel"
+         oncommand="DebuggerView.Sources._onCopyUrlCommand()"/>
   </keyset>
 
   <vbox id="body"
