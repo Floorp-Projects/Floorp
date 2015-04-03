@@ -114,12 +114,6 @@ public:
   }
 
   already_AddRefed<Promise>
-  FormData(ErrorResult& aRv)
-  {
-    return ConsumeBody(CONSUME_FORMDATA, aRv);
-  }
-
-  already_AddRefed<Promise>
   Json(ErrorResult& aRv)
   {
     return ConsumeBody(CONSUME_JSON, aRv);
@@ -160,13 +154,13 @@ protected:
   virtual ~FetchBody();
 
   void
-  SetMimeType();
+  SetMimeType(ErrorResult& aRv);
 private:
   enum ConsumeType
   {
     CONSUME_ARRAYBUFFER,
     CONSUME_BLOB,
-    CONSUME_FORMDATA,
+    // FormData not supported right now,
     CONSUME_JSON,
     CONSUME_TEXT,
   };
