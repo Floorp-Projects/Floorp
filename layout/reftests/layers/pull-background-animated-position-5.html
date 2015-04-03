@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<meta charset="utf-8">
+<title>This test fails - Opacity containers should anticipate animations of the contents when deciding whether to pull a background color</title>
+
+<style>
+
+div {
+  min-height: 50px;
+  box-model: border-box;
+}
+
+.first, .second {
+  border: 1px solid blue;
+  margin: 50px 0;
+  position: relative;
+}
+
+.border {
+  border: 1px solid black;
+}
+
+.underlap {
+  border: 1px solid #088;
+  margin-left: 120px;
+  width: 80px;
+  margin-bottom: -30px;
+}
+
+.opacity {
+  opacity: 0.9;
+  height: auto;
+  padding: 10px 0 20px;
+}
+
+.animated-position {
+  position: relative;
+  left: 20px;
+  margin-left: 220px;
+  width: 100px;
+  height: 100px;
+  border-color: red;
+}
+
+body {
+  margin: 0;
+  padding: 0 100px;
+  height: 3000px;
+}
+
+</style>
+
+<div class="first" reftest-assigned-layer="page-background">
+  <!--
+    This is just a regular box, it should end up in the page background layer.
+  -->
+</div>
+
+<div class="underlap">
+  <!--
+    This item intersects with the scrollable box and is positioned below
+    .scrollable, in z-order.
+  -->
+</div>
+
+<div class="border">
+  <div class="opacity">
+    <div class="border animated-position reftest-no-paint">
+      <!--
+        This item start out above solid white background but will move to
+        intersect .underlap, so it shouldn't pull up the background color.
+        However, the opacity item that wraps this item only looks at the
+        current bounds of its contents, so this test will fail.
+      -->
+    </div>
+  </div>
+</div>
+
+<div class="second" reftest-assigned-layer="page-background">
+  <!--
+    This should share a layer with .first and the page background.
+  -->
+</div>
+
+<script>
+
+var animatedLeft = document.querySelector(".animated-position");
+
+function doTest() {
+  animatedLeft.style.left = "-40px";
+  document.documentElement.removeAttribute("class");
+}
+
+// Layerize #animatedLeft
+animatedLeft.offsetLeft;
+animatedLeft.style.left = "40px";
+animatedLeft.offsetLeft;
+animatedLeft.style.left = "60px";
+animatedLeft.offsetLeft;
+
+document.addEventListener("MozReftestInvalidate", doTest, false);
+setTimeout(doTest, 200);
+
+</script>
+
