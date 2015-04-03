@@ -20,6 +20,7 @@ Cu.import("resource://services-common/rest.js");
 Cu.importGlobalProperties(["URL"]);
 
 const AUTH_ENDPOINT = "/authorization";
+const DESTROY_ENDPOINT = "/destroy";
 
 /**
  * Create a new FxAccountsOAuthClient for browser some service.
@@ -73,6 +74,25 @@ this.FxAccountsOAuthGrantClient.prototype = {
     };
 
     return this._createRequest(AUTH_ENDPOINT, "POST", params);
+  },
+
+  /**
+   * Destroys a previously fetched OAuth access token.
+   *
+   * @param {String} token The previously fetched token
+   * @return Promise
+   *        Resolves: {Object} with the server response, which is typically
+   *        ignored.
+   */
+  destroyToken: function (token) {
+    if (!token) {
+      throw new Error("Missing 'token' parameter");
+    }
+    let params = {
+      token: token,
+    };
+
+    return this._createRequest(DESTROY_ENDPOINT, "POST", params);
   },
 
   /**
