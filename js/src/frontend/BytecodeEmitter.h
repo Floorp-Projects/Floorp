@@ -469,7 +469,7 @@ struct BytecodeEmitter
     bool emitYieldOp(JSOp op);
     bool emitYieldStar(ParseNode* iter, ParseNode* gen);
 
-    bool emitPropLHS(ParseNode* pn, JSOp op);
+    bool emitPropLHS(ParseNode* pn);
     bool emitPropOp(ParseNode* pn, JSOp op);
     bool emitPropIncDec(ParseNode* pn);
 
