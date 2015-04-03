@@ -7243,7 +7243,7 @@ ZoneGCNumberGetter(JSContext* cx, unsigned argc, Value* vp)
 
 #ifdef JS_MORE_DETERMINISTIC
 static bool
-DummyGetter((JSContext* cx, unsigned argc, Value* vp)
+DummyGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     args.rval().setUndefined();
