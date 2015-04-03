@@ -18,7 +18,6 @@ XPIDL_SOURCES += [
     'nsIGenKeypairInfoDlg.idl',
     'nsIKeygenThread.idl',
     'nsIKeyModule.idl',
-    'nsINSSCertCache.idl',
     'nsINSSVersion.idl',
     'nsIPK11Token.idl',
     'nsIPK11TokenDB.idl',
