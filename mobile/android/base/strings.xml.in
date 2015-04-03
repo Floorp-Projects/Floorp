@@ -528,5 +528,7 @@
 
   <string name="colon">&colon;</string>
 
+  <string name="percent">&percent;</string>
+
   <string name="remote_tabs_last_synced">&remote_tabs_last_synced;</string>
 </resources>
