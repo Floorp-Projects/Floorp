@@ -205,6 +205,10 @@
 
     <dimen name="horizontal_drag_area">256dp</dimen>
 
+    <!-- ZoomedView dimensions. -->
+    <dimen name="zoomed_view_toolbar_height">44dp</dimen>
+    <dimen name="drawable_dropshadow_size">3dp</dimen>
+
     <!-- Find-In-Page dialog dimensions. -->
     <dimen name="find_in_page_text_margin_left">5dip</dimen>
     <dimen name="find_in_page_text_margin_right">12dip</dimen>

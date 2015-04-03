@@ -10,24 +10,37 @@
     android:id="@+id/zoomed_view_container"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_alignParentLeft="true"
-    android:layout_alignParentTop="true"
-    android:background="@android:color/white"
-    android:visibility="gone" >
+    android:background="@drawable/dropshadow"
+    android:padding="@dimen/drawable_dropshadow_size"
+    android:visibility="gone">
 
-
-    <ImageView
-        android:id="@+id/zoomed_image_view"
+    <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:background="#000000"
-        android:padding="1dip" />
-
-    <ImageView
-        android:id="@+id/dialog_close"
-        android:background="@drawable/close"
-        android:layout_height="20dp"
-        android:layout_width="20dp"
-        android:layout_gravity ="top|right" />
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/toolbar_grey_round">
+        <TextView
+            android:id="@+id/change_zoom_factor"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/zoomed_view_toolbar_height"
+            android:background="@android:color/transparent"
+            android:padding="12dip"
+            android:layout_alignLeft="@+id/zoomed_image_view"
+            android:textSize="16sp"
+            android:textColor="@color/text_and_tabs_tray_grey"/>
+        <ImageView
+            android:id="@+id/dialog_close"
+            android:scaleType="center"
+            android:layout_width="@dimen/zoomed_view_toolbar_height"
+            android:layout_height="@dimen/zoomed_view_toolbar_height"
+            android:layout_alignRight="@id/zoomed_image_view"
+            android:src="@drawable/close_edit_mode_selector"/>
+        <ImageView
+            android:id="@id/zoomed_image_view"
+            android:layout_below="@id/change_zoom_factor"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </RelativeLayout>
 
 </org.mozilla.gecko.ZoomedView>
