@@ -1220,7 +1220,7 @@ public:
     : BaseAction(aManager, aListenerId, aRequestId)
     , mNamespace(aNamespace)
     , mKey(aKey)
-    , mCacheId(0)
+    , mCacheId(INVALID_CACHE_ID)
   { }
 
   virtual nsresult
@@ -1276,7 +1276,7 @@ public:
     , mNamespace(aNamespace)
     , mKey(aKey)
     , mCacheDeleted(false)
-    , mCacheId(0)
+    , mCacheId(INVALID_CACHE_ID)
   { }
 
   virtual nsresult
