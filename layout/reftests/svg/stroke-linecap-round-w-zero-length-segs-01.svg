@@ -152,4 +152,10 @@ path.coverer {
     <circle cy="80" r="8"/>
     <path class="circles-expected" d="M0,0v81" stroke-dasharray="0 40" />
   </g>
+  <g transform="translate(575,25)">
+    <circle cy="0" r="8"/>
+    <circle cy="40" r="8"/>
+    <circle cy="80" r="8"/>
+    <path class="circles-expected" d="M0,0v81" stroke-dasharray="0" />
+  </g>
 </svg>
