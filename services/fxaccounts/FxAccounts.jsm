@@ -1008,11 +1008,11 @@ FxAccountsInternal.prototype = {
    *          AUTH_ERROR
    *          UNKNOWN_ERROR
    */
-  getOAuthToken: function (options = {}) {
+  getOAuthToken: Task.async(function* (options = {}) {
     log.debug("getOAuthToken enter");
 
     if (!options.scope) {
-      return this._error(ERROR_INVALID_PARAMETER, "Missing 'scope' option");
+      throw this._error(ERROR_INVALID_PARAMETER, "Missing 'scope' option");
     }
 
     let oAuthURL = Services.urlFormatter.formatURLPref("identity.fxaccounts.remote.oauth.uri");
@@ -1025,29 +1025,31 @@ FxAccountsInternal.prototype = {
           client_id: FX_OAUTH_CLIENT_ID
         });
       } catch (e) {
-        return this._error(ERROR_INVALID_PARAMETER, e);
+        throw this._error(ERROR_INVALID_PARAMETER, e);
       }
     }
 
-    return this._getVerifiedAccountOrReject()
-      .then(() => this.getAssertion(oAuthURL))
-      .then(assertion => client.getTokenFromAssertion(assertion, options.scope))
-      .then(result => result.access_token)
-      .then(null, err => this._errorToErrorClass(err));
-  },
+    try {
+      yield this._getVerifiedAccountOrReject();
+      let assertion = yield this.getAssertion(oAuthURL);
+      let result = yield client.getTokenFromAssertion(assertion, options.scope);
+      return result.access_token;
+    } catch (err) {
+      throw this._errorToErrorClass(err);
+    }
+  }),
 
-  _getVerifiedAccountOrReject: function () {
-    return this.currentAccountState.getUserAccountData().then(data => {
-      if (!data) {
-        // No signed-in user
-        return this._error(ERROR_NO_ACCOUNT);
-      }
-      if (!this.isUserEmailVerified(data)) {
-        // Signed-in user has not verified email
-        return this._error(ERROR_UNVERIFIED_ACCOUNT);
-      }
-    });
-  },
+  _getVerifiedAccountOrReject: Task.async(function* () {
+    let data = yield this.currentAccountState.getUserAccountData();
+    if (!data) {
+      // No signed-in user
+      throw this._error(ERROR_NO_ACCOUNT);
+    }
+    if (!this.isUserEmailVerified(data)) {
+      // Signed-in user has not verified email
+      throw this._error(ERROR_UNVERIFIED_ACCOUNT);
+    }
+  }),
 
   /*
    * Coerce an error into one of the general error cases:
@@ -1068,7 +1070,7 @@ FxAccountsInternal.prototype = {
         (aError.message === "INVALID_PARAMETER" ||
         aError.message === "NO_ACCOUNT" ||
         aError.message === "UNVERIFIED_ACCOUNT")) {
-      return Promise.reject(aError);
+      return aError;
     }
     return this._error(ERROR_UNKNOWN, aError);
   },
@@ -1079,7 +1081,7 @@ FxAccountsInternal.prototype = {
     if (aDetails) {
       reason.details = aDetails;
     }
-    return Promise.reject(reason);
+    return reason;
   },
 
   /**
@@ -1115,7 +1117,7 @@ FxAccountsInternal.prototype = {
         log.error("Could not retrieve profile data", error);
         return accountState.reject(error);
       })
-      .then(null, err => this._errorToErrorClass(err));
+      .then(null, err => Promise.reject(this._errorToErrorClass(err)));
   },
 };
 
