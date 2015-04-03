@@ -23,19 +23,11 @@ function *promiseTabLoadEvent(tab, url)
 
 // Load a new blank tab
 add_task(function *() {
-  let tab;
+  let tab = gBrowser.addTab();
+  gBrowser.selectedTab = tab;
 
-  yield new Promise(resolve => {
-    gBrowser.addEventListener("TabSwitchDone", function onSwitch() {
-      gBrowser.removeEventListener("TabSwitchDone", onSwitch);
-      executeSoon(resolve);
-    });
-    tab = gBrowser.selectedTab = gBrowser.addTab();
-  });
+  let browser = gBrowser.getBrowserForTab(tab);
 
-  gURLBar.focus();
-
-  let browser = gBrowser.selectedBrowser;
   yield SimpleTest.promiseFocus(browser.contentWindowAsCPOW, true);
 
   is(document.activeElement, browser, "Browser is focused when about:blank is loaded");
