@@ -5168,6 +5168,8 @@ PresShell::PaintRangePaintInfo(nsTArray<nsAutoPtr<RangePaintInfo> >* aItems,
 
     pixelArea.width = NSToIntFloor(float(pixelArea.width) * scale);
     pixelArea.height = NSToIntFloor(float(pixelArea.height) * scale);
+    if (!pixelArea.width || !pixelArea.height)
+      return nullptr;
 
     // adjust the screen position based on the rescaled size
     nscoord left = rootScreenRect.x + pixelArea.x;
