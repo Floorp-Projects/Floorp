@@ -677,15 +677,16 @@
     macro(JSOP_STRICTNE,  73, "strictne",   "!==",        1,  2,  1, JOF_BYTE|JOF_DETECTING|JOF_LEFTASSOC|JOF_ARITH) \
     \
     /*
-     * Sometimes web pages do 'o.Item(i) = j'. This is not an early SyntaxError,
-     * for web compatibility. Instead we emit JSOP_SETCALL after the function
-     * call, an opcode that always throws.
+     * Sometimes we know when emitting that an operation will always throw.
+     *
+     * Throws the indicated JSMSG.
+     *
      *   Category: Statements
-     *   Type: Function
-     *   Operands:
+     *   Type: Exceptions
+     *   Operands: uint16_t msgNumber
      *   Stack: =>
      */ \
-    macro(JSOP_SETCALL,   74, "setcall",    NULL,         1,  0,  0, JOF_BYTE) \
+    macro(JSOP_THROWMSG,   74, "throwmsg",    NULL,         3,  0,  0, JOF_UINT16) \
     \
     /*
      * Sets up a for-in or for-each-in loop using the JSITER_* flag bits in

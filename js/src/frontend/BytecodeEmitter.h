@@ -248,6 +248,10 @@ struct BytecodeEmitter
     bool isInLoop();
     bool checkSingletonContext();
 
+    // Check whether our function is in a run-once context (a toplevel
+    // run-one script or a run-once lambda).
+    bool checkRunOnceContext();
+
     bool needsImplicitThis();
 
     void tellDebuggerAboutCompiledScript(ExclusiveContext* cx);
@@ -465,7 +469,7 @@ struct BytecodeEmitter
     bool emitYieldOp(JSOp op);
     bool emitYieldStar(ParseNode* iter, ParseNode* gen);
 
-    bool emitPropLHS(ParseNode* pn, JSOp op);
+    bool emitPropLHS(ParseNode* pn);
     bool emitPropOp(ParseNode* pn, JSOp op);
     bool emitPropIncDec(ParseNode* pn);
 

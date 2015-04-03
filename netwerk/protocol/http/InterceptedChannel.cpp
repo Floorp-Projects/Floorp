@@ -56,8 +56,11 @@ void
 InterceptedChannelBase::DoNotifyController()
 {
     nsresult rv = mController->ChannelIntercepted(this);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      rv = ResetInterception();
+      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to resume intercepted network request");
+    }
     mController = nullptr;
-    NS_ENSURE_SUCCESS_VOID(rv);
 }
 
 NS_IMETHODIMP

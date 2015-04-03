@@ -7241,6 +7241,16 @@ ZoneGCNumberGetter(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+#ifdef JS_MORE_DETERMINISTIC
+static bool
+DummyGetter((JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setUndefined();
+    return true;
+}
+#endif
+
 } /* namespace MemInfo */
 
 JSObject*
@@ -7264,9 +7274,14 @@ NewMemoryInfoObject(JSContext* cx)
     };
 
     for (size_t i = 0; i < mozilla::ArrayLength(getters); i++) {
+ #ifdef JS_MORE_DETERMINISTIC
+        JSNative getter = DummyGetter;
+#else
+        JSNative getter = getters[i].getter;
+#endif
         if (!JS_DefineProperty(cx, obj, getters[i].name, UndefinedHandleValue,
                                JSPROP_ENUMERATE | JSPROP_SHARED,
-                               getters[i].getter, nullptr))
+                               getter, nullptr))
         {
             return nullptr;
         }
@@ -7294,9 +7309,14 @@ NewMemoryInfoObject(JSContext* cx)
     };
 
     for (size_t i = 0; i < mozilla::ArrayLength(zoneGetters); i++) {
+ #ifdef JS_MORE_DETERMINISTIC
+        JSNative getter = DummyGetter;
+#else
+        JSNative getter = zoneGetters[i].getter;
+#endif
         if (!JS_DefineProperty(cx, zoneObj, zoneGetters[i].name, UndefinedHandleValue,
                                JSPROP_ENUMERATE | JSPROP_SHARED,
-                               zoneGetters[i].getter, nullptr))
+                               getter, nullptr))
         {
             return nullptr;
         }

@@ -127,18 +127,6 @@ CSS_PROP_ALIAS(-moz-font-language-override,
                font_language_override,
                MozFontLanguageOverride,
                "layout.css.prefixes.font-features")
-CSS_PROP_ALIAS(-moz-text-decoration-color,
-               text_decoration_color,
-               MozTextDecorationColor,
-               "")
-CSS_PROP_ALIAS(-moz-text-decoration-line,
-               text_decoration_line,
-               MozTextDecorationLine,
-               "")
-CSS_PROP_ALIAS(-moz-text-decoration-style,
-               text_decoration_style,
-               MozTextDecorationStyle,
-               "")
 CSS_PROP_ALIAS(padding-inline-end,
                padding_end,
                PaddingInlineEnd,

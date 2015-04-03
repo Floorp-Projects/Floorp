@@ -25,7 +25,6 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIFormControl.h"
-#include "nsIProgrammingLanguage.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -82,12 +81,10 @@ nsresult
 XULContentSinkImpl::ContextStack::Push(nsXULPrototypeNode* aNode, State aState)
 {
     Entry* entry = new Entry;
-    if (! entry)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     entry->mNode  = aNode;
     entry->mState = aState;
     entry->mNext  = mTop;
+
     mTop = entry;
 
     ++mDepth;
@@ -389,9 +386,6 @@ XULContentSinkImpl::FlushText(bool aCreateTextNode)
             break;
 
         nsXULPrototypeText* text = new nsXULPrototypeText();
-        if (! text)
-            return NS_ERROR_OUT_OF_MEMORY;
-
         text->mValue.Assign(mText, mTextLength);
         if (stripWhitespace)
             text->mValue.Trim(" \t\n\r");
@@ -441,11 +435,8 @@ XULContentSinkImpl::CreateElement(mozilla::dom::NodeInfo *aNodeInfo,
                                   nsXULPrototypeElement** aResult)
 {
     nsXULPrototypeElement* element = new nsXULPrototypeElement();
-    if (! element)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     element->mNodeInfo    = aNodeInfo;
-    
+
     *aResult = element;
     return NS_OK;
 }
@@ -637,9 +628,6 @@ XULContentSinkImpl::HandleProcessingInstruction(const char16_t *aTarget,
 
     // Note: the created nsXULPrototypePI has mRefCnt == 1
     nsRefPtr<nsXULPrototypePI> pi = new nsXULPrototypePI();
-    if (!pi)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     pi->mTarget = target;
     pi->mData = data;
 
@@ -859,7 +847,7 @@ nsresult
 XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
                                const uint32_t aLineNumber)
 {
-  uint32_t langID = nsIProgrammingLanguage::JAVASCRIPT;
+  bool isJavaScript = true;
   uint32_t version = JSVERSION_LATEST;
   nsresult rv;
 
@@ -876,8 +864,8 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
           rv = parser.GetType(mimeType);
           if (NS_FAILED(rv)) {
               if (rv == NS_ERROR_INVALID_ARG) {
-                  // Might as well bail out now instead of setting langID to
-                  // nsIProgrammingLanguage::UNKNOWN and bailing out later.
+                  // Fail immediately rather than checking if later things
+                  // are okay.
                   return NS_OK;
               }
               // We do want the warning here
@@ -885,7 +873,7 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
           }
 
           if (nsContentUtils::IsJavascriptMIMEType(mimeType)) {
-              langID = nsIProgrammingLanguage::JAVASCRIPT;
+              isJavaScript = true;
               version = JSVERSION_LATEST;
 
               // Get the version string, and ensure that JavaScript supports it.
@@ -898,7 +886,7 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
                   return rv;
               }
           } else {
-              langID = nsIProgrammingLanguage::UNKNOWN;
+              isJavaScript = false;
           }
       } else if (key.EqualsLiteral("language")) {
           // Language is deprecated, and the impl in nsScriptLoader ignores the
@@ -906,27 +894,24 @@ XULContentSinkImpl::OpenScript(const char16_t** aAttributes,
           // languages other than JS for language=
           nsAutoString lang(aAttributes[1]);
           if (nsContentUtils::IsJavaScriptLanguage(lang)) {
+              isJavaScript = true;
               version = JSVERSION_DEFAULT;
-              langID = nsIProgrammingLanguage::JAVASCRIPT;
           }
       }
       aAttributes += 2;
   }
 
-  nsCOMPtr<nsIDocument> doc(do_QueryReferent(mDocument));
-
-  // Don't process scripts that aren't known
-  if (langID == nsIProgrammingLanguage::UNKNOWN) {
+  // Don't process scripts that aren't JavaScript.
+  if (!isJavaScript) {
       return NS_OK;
   }
 
+  nsCOMPtr<nsIDocument> doc(do_QueryReferent(mDocument));
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   if (doc)
       globalObject = do_QueryInterface(doc->GetWindow());
   nsRefPtr<nsXULPrototypeScript> script =
       new nsXULPrototypeScript(aLineNumber, version);
-  if (! script)
-      return NS_ERROR_OUT_OF_MEMORY;
 
   // If there is a SRC attribute...
   if (! src.IsEmpty()) {
@@ -990,8 +975,6 @@ XULContentSinkImpl::AddAttributes(const char16_t** aAttributes,
   nsXULPrototypeAttribute* attrs = nullptr;
   if (aAttrLen > 0) {
     attrs = new nsXULPrototypeAttribute[aAttrLen];
-    if (! attrs)
-      return NS_ERROR_OUT_OF_MEMORY;
   }
 
   aElement->mAttributes    = attrs;
