@@ -1628,7 +1628,7 @@ OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
 {
     OutlineTypedObject& typedObj = object->as<OutlineTypedObject>();
 
-    MarkShape(trc, &typedObj.shape_, "OutlineTypedObject_shape");
+    TraceEdge(trc, &typedObj.shape_, "OutlineTypedObject_shape");
 
     if (!typedObj.owner_)
         return;
@@ -1641,7 +1641,7 @@ OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
 
     // Mark the owner, watching in case it is moved by the tracer.
     JSObject* oldOwner = typedObj.owner_;
-    gc::MarkObjectUnbarriered(trc, &typedObj.owner_, "typed object owner");
+    TraceManuallyBarrieredEdge(trc, &typedObj.owner_, "typed object owner");
     JSObject* owner = typedObj.owner_;
 
     uint8_t* oldData = typedObj.outOfLineTypedMem();
@@ -2141,7 +2141,7 @@ InlineTypedObject::obj_trace(JSTracer* trc, JSObject* object)
 {
     InlineTypedObject& typedObj = object->as<InlineTypedObject>();
 
-    MarkShape(trc, &typedObj.shape_, "InlineTypedObject_shape");
+    TraceEdge(trc, &typedObj.shape_, "InlineTypedObject_shape");
 
     // Inline transparent objects do not have references and do not need more
     // tracing. If there is an entry in the compartment's LazyArrayBufferTable,
@@ -2946,7 +2946,7 @@ MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem)
       {
         HeapPtrObject* objectPtr = reinterpret_cast<js::HeapPtrObject*>(mem);
         if (*objectPtr)
-            gc::MarkObject(trace_, objectPtr, "reference-obj");
+            TraceEdge(trace_, objectPtr, "reference-obj");
         return;
       }
 
@@ -2954,7 +2954,7 @@ MemoryTracingVisitor::visitReference(ReferenceTypeDescr& descr, uint8_t* mem)
       {
         HeapPtrString* stringPtr = reinterpret_cast<js::HeapPtrString*>(mem);
         if (*stringPtr)
-            gc::MarkString(trace_, stringPtr, "reference-str");
+            TraceEdge(trace_, stringPtr, "reference-str");
         return;
       }
     }

@@ -62,12 +62,12 @@ TraceManuallyBarrieredEdge(JSTracer* trc, T* thingp, const char* name);
 // Trace all edges contained in the given array.
 template <typename T>
 void
-TraceRange(JSTracer* trc, size_t len, BarrieredBase<T>* thingp, const char* name);
+TraceRange(JSTracer* trc, size_t len, BarrieredBase<T>* vec, const char* name);
 
 // Trace all root edges in the given array.
 template <typename T>
 void
-TraceRootRange(JSTracer* trc, size_t len, T* thingp, const char* name);
+TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name);
 
 // Trace an edge that crosses compartment boundaries. If the compartment of the
 // destination thing is not being GC'd, then the edge will not be traced.
@@ -142,37 +142,6 @@ bool Is##base##AboutToBeFinalized(type** thingp);                               
 bool Is##base##AboutToBeFinalized(BarrieredBase<type*>* thingp);                                  \
 type* Update##base##IfRelocated(JSRuntime* rt, BarrieredBase<type*>* thingp);                     \
 type* Update##base##IfRelocated(JSRuntime* rt, type** thingp);
-
-DeclMarker(BaseShape, BaseShape)
-DeclMarker(BaseShape, UnownedBaseShape)
-DeclMarker(JitCode, jit::JitCode)
-DeclMarker(Object, NativeObject)
-DeclMarker(Object, ArrayObject)
-DeclMarker(Object, ArgumentsObject)
-DeclMarker(Object, ArrayBufferObject)
-DeclMarker(Object, ArrayBufferObjectMaybeShared)
-DeclMarker(Object, ArrayBufferViewObject)
-DeclMarker(Object, DebugScopeObject)
-DeclMarker(Object, GlobalObject)
-DeclMarker(Object, JSObject)
-DeclMarker(Object, JSFunction)
-DeclMarker(Object, NestedScopeObject)
-DeclMarker(Object, PlainObject)
-DeclMarker(Object, SavedFrame)
-DeclMarker(Object, ScopeObject)
-DeclMarker(Object, SharedArrayBufferObject)
-DeclMarker(Object, SharedTypedArrayObject)
-DeclMarker(Script, JSScript)
-DeclMarker(LazyScript, LazyScript)
-DeclMarker(Shape, Shape)
-DeclMarker(String, JSAtom)
-DeclMarker(String, JSString)
-DeclMarker(String, JSFlatString)
-DeclMarker(String, JSLinearString)
-DeclMarker(String, PropertyName)
-DeclMarker(Symbol, JS::Symbol)
-DeclMarker(ObjectGroup, ObjectGroup)
-
 #undef DeclMarker
 
 void
@@ -206,18 +175,7 @@ MarkGCThingRoot(JSTracer* trc, void** thingp, const char* name);
 void
 MarkGCThingUnbarriered(JSTracer* trc, void** thingp, const char* name);
 
-/*** Value Marking ***/
-
-bool
-IsValueMarked(Value* v);
-
-bool
-IsValueAboutToBeFinalized(Value* v);
-
 /*** Slot Marking ***/
-
-bool
-IsSlotMarked(HeapSlot* s);
 
 void
 MarkObjectSlots(JSTracer* trc, NativeObject* obj, uint32_t start, uint32_t nslots);
@@ -238,48 +196,28 @@ PushArena(GCMarker* gcmarker, ArenaHeader* aheader);
 /*** Generic ***/
 
 template <typename T>
-static bool
-IsMarked(T** thingp);
+bool
+IsMarkedUnbarriered(T* thingp);
 
-inline bool
-IsMarked(BarrieredBase<Value>* v)
-{
-    if (!v->isMarkable())
-        return true;
-    return IsValueMarked(v->unsafeGet());
-}
+template <typename T>
+bool
+IsMarked(BarrieredBase<T>* thingp);
 
-inline bool
-IsMarked(BarrieredBase<JSObject*>* objp)
-{
-    return IsObjectMarked(objp);
-}
+template <typename T>
+bool
+IsMarked(ReadBarriered<T>* thingp);
 
-inline bool
-IsMarked(BarrieredBase<JSScript*>* scriptp)
-{
-    return IsScriptMarked(scriptp);
-}
+template <typename T>
+bool
+IsAboutToBeFinalizedUnbarriered(T* thingp);
 
-inline bool
-IsAboutToBeFinalized(BarrieredBase<Value>* v)
-{
-    if (!v->isMarkable())
-        return false;
-    return IsValueAboutToBeFinalized(v->unsafeGet());
-}
+template <typename T>
+bool
+IsAboutToBeFinalized(BarrieredBase<T>* thingp);
 
-inline bool
-IsAboutToBeFinalized(BarrieredBase<JSObject*>* objp)
-{
-    return IsObjectAboutToBeFinalized(objp);
-}
-
-inline bool
-IsAboutToBeFinalized(BarrieredBase<JSScript*>* scriptp)
-{
-    return IsScriptAboutToBeFinalized(scriptp);
-}
+template <typename T>
+bool
+IsAboutToBeFinalized(ReadBarriered<T>* thingp);
 
 inline bool
 IsAboutToBeFinalized(const js::jit::VMFunction** vmfunc)
@@ -289,12 +227,6 @@ IsAboutToBeFinalized(const js::jit::VMFunction** vmfunc)
      * iff the JitCode has been marked.
      */
     return false;
-}
-
-inline bool
-IsAboutToBeFinalized(ReadBarrieredJitCode code)
-{
-    return IsJitCodeAboutToBeFinalized(code.unsafeGet());
 }
 
 inline Cell*

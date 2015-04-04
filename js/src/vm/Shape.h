@@ -1360,16 +1360,16 @@ Shape::searchLinear(jsid id)
 inline void
 Shape::markChildren(JSTracer* trc)
 {
-    MarkBaseShape(trc, &base_, "base");
+    TraceEdge(trc, &base_, "base");
     TraceEdge(trc, &propidRef(), "propid");
     if (parent)
-        MarkShape(trc, &parent, "parent");
+        TraceEdge(trc, &parent, "parent");
 
     if (hasGetterObject())
-        gc::MarkObjectUnbarriered(trc, &asAccessorShape().getterObj, "getter");
+        TraceManuallyBarrieredEdge(trc, &asAccessorShape().getterObj, "getter");
 
     if (hasSetterObject())
-        gc::MarkObjectUnbarriered(trc, &asAccessorShape().setterObj, "setter");
+        TraceManuallyBarrieredEdge(trc, &asAccessorShape().setterObj, "setter");
 }
 
 /*

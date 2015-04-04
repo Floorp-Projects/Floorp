@@ -399,41 +399,59 @@ t_6_v</textarea>
 
 SimpleTest.waitForExplicitFinish();
 
-var myFile1, myFile2, emptyFile;
+const placeholder_myFile1 = {};
+const placeholder_myFile2 = {};
+const placeholder_emptyFile = {};
 
-(function setFileNames() {
+var myFile1, myFile2, emptyFile;
+let openerURL = SimpleTest.getTestFileURL("formSubmission_chrome.js");
+let opener = SpecialPowers.loadChromeScript(openerURL);
+
+{
   let xhr = new XMLHttpRequest;
   xhr.open("GET", "/dynamic/getMyDirectory.sjs", false);
   xhr.send();
-  var basePath = xhr.responseText;
+  let basePath = xhr.responseText;
 
-  singleFile = basePath + "file_formSubmission_text.txt";
-  multiFile = [basePath + "file_formSubmission_text.txt",
-               basePath + "file_formSubmission_img.jpg"];
+  opener.addMessageListener("files.opened", onFilesOpened);
+  opener.sendAsyncMessage("files.open", [
+    basePath + "file_formSubmission_text.txt",
+    basePath + "file_formSubmission_img.jpg",
+  ]);
+}
+
+function onFilesOpened(files) {
+  let [textFile, imageFile] = files;
+  opener.destroy();
+
+  let singleFile = textFile;
+  let multiFile = [textFile, imageFile];
 
   var addList = document.getElementsByClassName("setfile");
   let i = 0;
   var input;
   while (input = addList[i++]) {
     if (input.classList.contains("multi")) {
-      SpecialPowers.wrap(input).mozSetFileNameArray(multiFile, multiFile.length);
+      SpecialPowers.wrap(input).mozSetFileArray(multiFile);
     }
     else {
-      SpecialPowers.wrap(input).value = singleFile;
+      SpecialPowers.wrap(input).mozSetFileArray([singleFile]);
     }
   }
 
   input = document.createElement("input");
   input.type = "file";
   input.multiple = true;
-  SpecialPowers.wrap(input).mozSetFileNameArray(multiFile, multiFile.length);
+  SpecialPowers.wrap(input).mozSetFileArray(multiFile);
   myFile1 = input.files[0];
   myFile2 = input.files[1];
   is(myFile1.size, 20, "File1 size");
   is(myFile2.size, 2711, "File2 size");
   emptyFile = { name: "", type: "application/octet-stream" };
-})();
 
+  // Now, actually run the tests; see below.
+  onFilesSet();
+};
 
 var expectedSub = [
   // Default input
@@ -495,13 +513,13 @@ var expectedSub = [
   // Reset button
   // Unknown button
   // File
-  { name: "file_1", value: myFile1 },
-  { name: "file_2", value: emptyFile },
+  { name: "file_1", value: placeholder_myFile1 },
+  { name: "file_2", value: placeholder_emptyFile },
   // Multiple file
-  { name: "file_3", value: myFile1 },
-  { name: "file_4", value: myFile1 },
-  { name: "file_4", value: myFile2 },
-  { name: "file_5", value: emptyFile },
+  { name: "file_3", value: placeholder_myFile1 },
+  { name: "file_4", value: placeholder_myFile1 },
+  { name: "file_4", value: placeholder_myFile2 },
+  { name: "file_5", value: placeholder_emptyFile },
   // Textarea
   { name: "t1", value: "t_1_v" },
   { name: "t2", value: "" },
@@ -562,12 +580,12 @@ var expectedSub = [
   { name: "msel_31", value: "msel_31_v1" },
 ];
 
-expectedAugment = [
+var expectedAugment = [
   { name: "aName", value: "aValue" },
   //{ name: "aNameBool", value: "false" },
   { name: "aNameNum", value: "9.2" },
-  { name: "aNameFile1", value: myFile1 },
-  { name: "aNameFile2", value: myFile2 },
+  { name: "aNameFile1", value: placeholder_myFile1 },
+  { name: "aNameFile2", value: placeholder_myFile2 },
   //{ name: "aNameObj", value: "[object XMLHttpRequest]" },
   //{ name: "aNameNull", value: "null" },
   //{ name: "aNameUndef", value: "undefined" },
@@ -661,10 +679,13 @@ function setDisabled(list, state) {
   });
 }
 
-var gen = runTest();
-addLoadEvent(function() {
-  gen.next();
-});
+var gen;
+function onFilesSet() {
+  gen = runTest();
+  addLoadEvent(function() {
+    gen.next();
+  });
+}
 
 function runTest() {
   // Set up the expectedSub array
@@ -676,17 +697,17 @@ function runTest() {
   yield undefined; // Wait for both FileReaders. We don't care which order they finish.
   yield undefined;
   function fileFixup(o) {
-    if (o.value == myFile1) {
+    if (o.value === placeholder_myFile1) {
       o.value = fileReader1.result;
       o.fileName = myFile1.name;
       o.contentType = myFile1.type;
     }
-    else if (o.value == myFile2) {
+    else if (o.value === placeholder_myFile2) {
       o.value = fileReader2.result;
       o.fileName = myFile2.name;
       o.contentType = myFile2.type;
     }
-    else if (o.value == emptyFile) {
+    else if (o.value === placeholder_emptyFile) {
       o.value = "";
       o.fileName = emptyFile.name;
       o.contentType = emptyFile.type;
