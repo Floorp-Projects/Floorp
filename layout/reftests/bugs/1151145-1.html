@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" class="reftest-wait">
+<title>Test for bug 1151145</title>
+
+<div style="height: 300px"></div>
+
+<div style="width: 33em; border: solid white; transform: translate(100px) rotate(20deg);"></div>
+
+<div style="height: 1000px"></div>
+
+<script>
+
+function doTest() {
+  document.documentElement.scrollTop = 0;
+  document.documentElement.removeAttribute("class");
+}
+
+document.documentElement.scrollTop = 255;
+window.addEventListener("MozReftestInvalidate", doTest);
+
+</script>
