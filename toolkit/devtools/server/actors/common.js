@@ -360,7 +360,10 @@ OriginalLocation.prototype = {
 
   equals: function (other) {
     return this.originalSourceActor.url == other.originalSourceActor.url &&
-           this.originalLine === other.originalLine;
+           this.originalLine === other.originalLine &&
+           (this.originalColumn === undefined ||
+            other.originalColumn === undefined ||
+            this.originalColumn === other.originalColumn);
   },
 
   toJSON: function () {
@@ -439,7 +442,10 @@ GeneratedLocation.prototype = {
 
   equals: function (other) {
     return this.generatedSourceActor.url == other.generatedSourceActor.url &&
-           this.generatedLine === other.generatedLine;
+           this.generatedLine === other.generatedLine &&
+           (this.generatedColumn === undefined ||
+            other.generatedColumn === undefined ||
+            this.generatedColumn === other.generatedColumn);
   },
 
   toJSON: function () {

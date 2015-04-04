@@ -6,6 +6,8 @@ const Ci = Components.interfaces;
 const Cc = Components.classes;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
+                                  "resource://gre/modules/Deprecated.jsm");
 
 const APPLICATION_CID = Components.ID("fe74cf80-aa2d-11db-abbd-0800200c9a66");
 const APPLICATION_CONTRACTID = "@mozilla.org/fuel/application;1";
@@ -734,6 +736,9 @@ var ApplicationFactory = {
 //=================================================
 // Application constructor
 function Application() {
+  Deprecated.warning("FUEL is deprecated, you should use the add-on SDK instead.",
+                     "https://developer.mozilla.org/Add-ons/SDK/");
+
   this.initToolkitHelpers();
 }
 
