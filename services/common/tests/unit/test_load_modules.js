@@ -13,8 +13,11 @@ const shared_modules = [
 ];
 
 const non_android_modules = [
-  "bagheeraclient.js",
   "tokenserverclient.js",
+];
+
+const non_android_healthreport_modules = [
+  "bagheeraclient.js",
 ];
 
 const TEST_BASE = "resource://testing-common/services/common/";
@@ -23,8 +26,11 @@ const shared_test_modules = [
 ];
 
 const non_android_test_modules = [
-  "bagheeraserver.js",
   "storageserver.js",
+];
+
+const non_android_healthreport_test_modules = [
+  "bagheeraserver.js",
 ];
 
 function expectImportsToSucceed(mm, base=MODULE_BASE) {
@@ -56,8 +62,14 @@ function run_test() {
   if (AppConstants.platform != "android") {
     expectImportsToSucceed(non_android_modules);
     expectImportsToSucceed(non_android_test_modules, base=TEST_BASE);
+    if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
+      expectImportsToSucceed(non_android_healthreport_modules);
+      expectImportsToSucceed(non_android_healthreport_test_modules, base=TEST_BASE);
+    }
   } else {
     expectImportsToFail(non_android_modules);
     expectImportsToFail(non_android_test_modules, base=TEST_BASE);
+    expectImportsToFail(non_android_healthreport_modules);
+    expectImportsToFail(non_android_healthreport_test_modules, base=TEST_BASE);
   }
 }
