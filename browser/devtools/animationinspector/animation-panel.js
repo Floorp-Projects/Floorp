@@ -187,8 +187,12 @@ function PlayerWidget(player, containerEl) {
   this.onRewindBtnClick = this.onRewindBtnClick.bind(this);
   this.onFastForwardBtnClick = this.onFastForwardBtnClick.bind(this);
   this.onCurrentTimeChanged = this.onCurrentTimeChanged.bind(this);
+  this.onPlaybackRateChanged = this.onPlaybackRateChanged.bind(this);
 
   this.metaDataComponent = new PlayerMetaDataHeader();
+  if (AnimationsController.hasSetPlaybackRate) {
+    this.rateComponent = new PlaybackRateSelector();
+  }
 }
 
 PlayerWidget.prototype = {
@@ -211,6 +215,9 @@ PlayerWidget.prototype = {
     this.stopTimelineAnimation();
     this.stopListeners();
     this.metaDataComponent.destroy();
+    if (this.rateComponent) {
+      this.rateComponent.destroy();
+    }
 
     this.el.remove();
     this.playPauseBtnEl = this.rewindBtnEl = this.fastForwardBtnEl = null;
@@ -226,6 +233,9 @@ PlayerWidget.prototype = {
       this.fastForwardBtnEl.addEventListener("click", this.onFastForwardBtnClick);
       this.currentTimeEl.addEventListener("input", this.onCurrentTimeChanged);
     }
+    if (this.rateComponent) {
+      this.rateComponent.on("rate-changed", this.onPlaybackRateChanged);
+    }
   },
 
   stopListeners: function() {
@@ -235,6 +245,9 @@ PlayerWidget.prototype = {
       this.rewindBtnEl.removeEventListener("click", this.onRewindBtnClick);
       this.fastForwardBtnEl.removeEventListener("click", this.onFastForwardBtnClick);
       this.currentTimeEl.removeEventListener("input", this.onCurrentTimeChanged);
+    }
+    if (this.rateComponent) {
+      this.rateComponent.off("rate-changed", this.onPlaybackRateChanged);
     }
   },
 
@@ -247,7 +260,7 @@ PlayerWidget.prototype = {
       }
     });
 
-    this.metaDataComponent.createMarkup(this.el);
+    this.metaDataComponent.init(this.el);
     this.metaDataComponent.render(state);
 
     // Timeline widget.
@@ -291,6 +304,11 @@ PlayerWidget.prototype = {
           "class": "ff devtools-button"
         }
       });
+    }
+
+    if (this.rateComponent) {
+      this.rateComponent.init(playbackControlsEl);
+      this.rateComponent.render(state);
     }
 
     // Sliders container.
@@ -379,18 +397,29 @@ PlayerWidget.prototype = {
   },
 
   /**
+   * Executed when the playback rate dropdown value changes in the playbackrate
+   * component.
+   */
+  onPlaybackRateChanged: function(e, rate) {
+    this.setPlaybackRate(rate);
+  },
+
+  /**
    * Whenever a player state update is received.
    */
   onStateChanged: function() {
     let state = this.player.state;
+
     this.updateWidgetState(state);
     this.metaDataComponent.render(state);
+    if (this.rateComponent) {
+      this.rateComponent.render(state);
+    }
 
     switch (state.playState) {
       case "finished":
         this.stopTimelineAnimation();
-        this.displayTime(this.player.state.duration);
-        this.stopListeners();
+        this.displayTime(this.player.state.currentTime);
         break;
       case "running":
         this.startTimelineAnimation();
@@ -398,6 +427,10 @@ PlayerWidget.prototype = {
       case "paused":
         this.stopTimelineAnimation();
         this.displayTime(this.player.state.currentTime);
+        break;
+      case "idle":
+        this.stopTimelineAnimation();
+        this.displayTime(0);
         break;
     }
   },
@@ -430,15 +463,24 @@ PlayerWidget.prototype = {
   }),
 
   /**
+   * Set the playback rate of the animation.
+   * @param {Number} rate.
+   * @return {Promise} Resolves when the rate has been set.
+   */
+  setPlaybackRate: function(rate) {
+    if (!AnimationsController.hasSetPlaybackRate) {
+      throw new Error("This server version doesn't support setting animations' playbackRate");
+    }
+
+    return this.player.setPlaybackRate(rate);
+  },
+
+  /**
    * Pause the animation player via this widget.
    * @return {Promise} Resolves when the player is paused, the button is
    * switched to the right state, and the timeline animation is stopped.
    */
   pause: function() {
-    if (this.player.state.playState === "finished") {
-      return;
-    }
-
     // Switch to the right className on the element right away to avoid waiting
     // for the next state update to change the playPause icon.
     this.updateWidgetState({playState: "paused"});
@@ -452,10 +494,6 @@ PlayerWidget.prototype = {
    * switched to the right state, and the timeline animation is started.
    */
   play: function() {
-    if (this.player.state.playState === "finished") {
-      return;
-    }
-
     // Switch to the right className on the element right away to avoid waiting
     // for the next state update to change the playPause icon.
     this.updateWidgetState({playState: "running"});
@@ -479,7 +517,8 @@ PlayerWidget.prototype = {
     let start = performance.now();
     let loop = () => {
       this.rafID = requestAnimationFrame(loop);
-      let now = state.currentTime + performance.now() - start;
+      let delta = (performance.now() - start) * state.playbackRate;
+      let now = state.currentTime + delta;
       this.displayTime(now);
     };
 
@@ -540,7 +579,7 @@ function PlayerMetaDataHeader() {
 }
 
 PlayerMetaDataHeader.prototype = {
-  createMarkup: function(containerEl) {
+  init: function(containerEl) {
     // The main title element.
     this.el = createNode({
       parent: containerEl,
@@ -680,6 +719,87 @@ PlayerMetaDataHeader.prototype = {
     }
 
     this.state = state;
+  }
+};
+
+/**
+ * UI component responsible for displaying the playback rate drop-down in each
+ * player widget, updating it when the state changes, and emitting events when
+ * the user selects a new value.
+ * The parent UI component for this should drive its updates by calling
+ * render(state) whenever it wants the component to update.
+ */
+function PlaybackRateSelector() {
+  this.currentRate = null;
+  this.onSelectionChanged = this.onSelectionChanged.bind(this);
+  EventEmitter.decorate(this);
+}
+
+PlaybackRateSelector.prototype = {
+  PRESETS: [.1, .5, 1, 2, 5, 10],
+
+  init: function(containerEl) {
+    // This component is simple enough that we can re-create the markup every
+    // time it's rendered. So here we only store the parentEl.
+    this.parentEl = containerEl;
+  },
+
+  destroy: function() {
+    this.removeSelect();
+    this.parentEl = this.el = null;
+  },
+
+  removeSelect: function() {
+    if (this.el) {
+      this.el.removeEventListener("change", this.onSelectionChanged);
+      this.el.remove();
+    }
+  },
+
+  /**
+   * Get the ordered list of presets, including the current playbackRate if
+   * different from the existing presets.
+   */
+  getCurrentPresets: function({playbackRate}) {
+    return [...new Set([...this.PRESETS, playbackRate])].sort((a,b) => a > b);
+  },
+
+  render: function(state) {
+    if (state.playbackRate === this.currentRate) {
+      return;
+    }
+
+    this.removeSelect();
+
+    this.el = createNode({
+      parent: this.parentEl,
+      nodeType: "select",
+      attributes: {
+        "class": "rate devtools-button"
+      }
+    });
+
+    for (let preset of this.getCurrentPresets(state)) {
+      let option = createNode({
+        parent: this.el,
+        nodeType: "option",
+        attributes: {
+          value: preset,
+        }
+      });
+      option.textContent = L10N.getFormatStr("player.playbackRateLabel", preset);
+      if (preset === state.playbackRate) {
+        option.setAttribute("selected", "");
+      }
+    }
+
+    this.el.addEventListener("change", this.onSelectionChanged);
+
+    this.currentRate = state.playbackRate;
+  },
+
+  onSelectionChanged: function(e) {
+    this.emit("rate-changed", parseFloat(this.el.value));
   }
 };
 

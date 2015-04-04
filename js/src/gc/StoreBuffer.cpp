@@ -69,7 +69,7 @@ StoreBuffer::CellPtrEdge::mark(JSTracer* trc) const
         return;
 
     MOZ_ASSERT(GetGCThingTraceKind(*edge) == JSTRACE_OBJECT);
-    MarkObjectRoot(trc, reinterpret_cast<JSObject**>(edge), "store buffer edge");
+    TraceRoot(trc, reinterpret_cast<JSObject**>(edge), "store buffer edge");
 }
 
 void

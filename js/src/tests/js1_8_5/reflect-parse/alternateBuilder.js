@@ -49,7 +49,7 @@ return {
     literal: function(val) {
         return ["LiteralExpr", { value: val }];
     },
-    expressionStatement: function(expr) expr,
+    expressionStatement: expr => expr,
     conditionalExpression: function(test, cons, alt) {
         return ["ConditionalExpr", {}, test, cons, alt];
     },
@@ -140,7 +140,7 @@ return {
     yieldExpression: reject,
     letExpression: reject,
 
-    emptyStatement: function() ["EmptyStmt", {}],
+    emptyStatement: () => ["EmptyStmt", {}],
     blockStatement: function(stmts) {
         stmts.unshift("BlockStmt", {});
         return stmts;
@@ -190,7 +190,7 @@ return {
     throwStatement: function(expr) {
         return ["ThrowStmt", {}, expr];
     },
-    debuggerStatement: function() ["DebuggerStmt", {}],
+    debuggerStatement: () => ["DebuggerStmt", {}],
     letStatement: reject,
     switchCase: function(expr, stmts) {
         if (expr)
