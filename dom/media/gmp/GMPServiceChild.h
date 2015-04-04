@@ -34,6 +34,7 @@ public:
   NS_IMETHOD GetNodeId(const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,
                        bool aInPrivateBrowsingMode,
+                       const nsACString& aVersion,
                        UniquePtr<GetNodeIdCallback>&& aCallback) override;
 
   NS_DECL_NSIOBSERVER
