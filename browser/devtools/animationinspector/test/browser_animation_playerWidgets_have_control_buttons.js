@@ -25,6 +25,8 @@ add_task(function*() {
     "The second button is the rewind button");
   ok(container.children[2].classList.contains("ff"),
     "The third button is the fast-forward button");
+  ok(container.querySelector("select"),
+    "The container contains the playback rate select");
 
   info("Faking an older server version by setting " +
     "AnimationsController.hasSetCurrentTime to false");
@@ -46,4 +48,23 @@ add_task(function*() {
 
   yield selectNode("body", inspector);
   controller.hasSetCurrentTime = true;
+
+  info("Faking an older server version by setting " +
+    "AnimationsController.hasSetPlaybackRate to false");
+
+  yield selectNode("body", inspector);
+  controller.hasSetPlaybackRate = false;
+
+  info("Selecting the animated node again");
+  yield selectNode(".animated", inspector);
+
+  widget = panel.playerWidgets[0];
+  container = widget.el.querySelector(".playback-controls");
+
+  ok(container, "The control buttons container still exists");
+  ok(!container.querySelector("select"),
+    "The playback rate select does not exist");
+
+  yield selectNode("body", inspector);
+  controller.hasSetPlaybackRate = true;
 });

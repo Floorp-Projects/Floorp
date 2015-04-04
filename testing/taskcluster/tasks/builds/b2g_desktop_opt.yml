@@ -5,7 +5,11 @@ $inherits:
     build_type: 'opt'
 task:
   scopes:
-      - 'docker-worker:cache:workspace-b2g-desktop-objects-opt'
+    - 'docker-worker:cache:workspace-b2g-desktop-objects-opt'
+  routes:
+    - 'index.buildbot.branches.{{project}}.linux64_gecko'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64_gecko'
+
   workerType: b2g-desktop-opt
   payload:
     cache:

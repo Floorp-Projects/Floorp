@@ -14,6 +14,7 @@ const Cu = Components.utils;
 const Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js", this);
+Cu.import("resource://gre/modules/ClientID.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/TelemetryPing.jsm", this);
@@ -40,12 +41,7 @@ const Telemetry = Cc["@mozilla.org/base/telemetry;1"].getService(Ci.nsITelemetry
 let gHttpServer = new HttpServer();
 let gServerStarted = false;
 let gRequestIterator = null;
-let gDataReportingClientID = null;
-
-XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
-  () => Cc["@mozilla.org/datareporting/service;1"]
-          .getService(Ci.nsISupports)
-          .wrappedJSObject);
+let gClientID = null;
 
 function sendPing(aSendClientId, aSendEnvironment) {
   if (gServerStarted) {
@@ -175,28 +171,19 @@ function run_test() {
   Services.prefs.setBoolPref(PREF_ENABLED, true);
   Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, true);
 
-  // Send the needed startup notifications to the datareporting service
-  // to ensure that it has been initialized.
-  if (HAS_DATAREPORTINGSERVICE) {
-    gDatareportingService.observe(null, "app-startup", null);
-    gDatareportingService.observe(null, "profile-after-change", null);
-  }
-
   Telemetry.asyncFetchTelemetryData(wrapWithExceptionHandler(run_next_test));
 }
 
 add_task(function* asyncSetup() {
   yield TelemetryPing.setup();
 
-  if (HAS_DATAREPORTINGSERVICE) {
-    gDataReportingClientID = yield gDatareportingService.getClientID();
+  gClientID = yield ClientID.getClientID();
 
-    // We should have cached the client id now. Lets confirm that by
-    // checking the client id before the async ping setup is finished.
-    let promisePingSetup = TelemetryPing.reset();
-    do_check_eq(TelemetryPing.clientID, gDataReportingClientID);
-    yield promisePingSetup;
-  }
+  // We should have cached the client id now. Lets confirm that by
+  // checking the client id before the async ping setup is finished.
+  let promisePingSetup = TelemetryPing.reset();
+  do_check_eq(TelemetryPing.clientID, gClientID);
+  yield promisePingSetup;
 });
 
 // Ensure that not overwriting an existing file fails silently
@@ -240,7 +227,7 @@ add_task(function* test_pingHasClientId() {
 
   if (HAS_DATAREPORTINGSERVICE &&
       Services.prefs.getBoolPref(PREF_FHR_UPLOAD_ENABLED)) {
-    Assert.equal(ping.clientId, gDataReportingClientID,
+    Assert.equal(ping.clientId, gClientID,
                  "The correct clientId must be reported.");
   }
 });
@@ -268,7 +255,7 @@ add_task(function* test_pingHasEnvironmentAndClientId() {
   // Test that we have the correct clientId.
   if (HAS_DATAREPORTINGSERVICE &&
       Services.prefs.getBoolPref(PREF_FHR_UPLOAD_ENABLED)) {
-    Assert.equal(ping.clientId, gDataReportingClientID,
+    Assert.equal(ping.clientId, gClientID,
                  "The correct clientId must be reported.");
   }
 });

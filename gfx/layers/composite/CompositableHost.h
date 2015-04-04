@@ -156,6 +156,12 @@ public:
     SetLayer(aLayer);
     mAttached = true;
     mKeepAttached = aFlags & KEEP_ATTACHED;
+
+    // If we already have a textureHost before, use that in this moment.
+    RefPtr<TextureHost> frontBuffer = GetAsTextureHost();
+    if (frontBuffer) {
+      UseTextureHost(frontBuffer);
+    }
   }
   // Detach this compositable host from its layer.
   // If we are used for async video, then it is not safe to blindly detach since

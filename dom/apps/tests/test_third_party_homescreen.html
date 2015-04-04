@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={1097468}
+-->
+<head>
+  <title>Test for Bug {1097468}</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={1097468}">Mozilla Bug {1097468}</a>
+
+<script class="testbody" type="application/javascript;version=1.7">
+
+var gManifestURL = "http://test/tests/dom/apps/tests/file_app.sjs?apptype=hosted&getmanifest=true";
+var gGenerator = runTest();
+
+const { Services } = SpecialPowers.Cu.import('resource://gre/modules/Services.jsm', {});
+
+function runApp(aApp, aCallback) {
+  var ifr = document.createElement('iframe');
+  ifr.setAttribute('mozbrowser', 'true');
+  ifr.setAttribute('mozapp', aApp.manifestURL);
+  ifr.src = Services.io.newURI(aApp.manifestURL, null, null)
+                       .resolve(aApp.manifest.launch_path);
+
+  ifr.addEventListener('mozbrowsershowmodalprompt', function onAlert(e) {
+    var message = e.detail.message;
+    info("Got message " + message);
+
+    if (message.startsWith("OK: ")) {
+      ok(true, message.substring(4, message.length));
+    } else if (message.startsWith("ERROR: ")) {
+      ok(false, message.substring(7, message.length));
+    } else if (message == "DONE") {
+      ifr.removeEventListener('mozbrowsershowmodalprompt', onAlert, false);
+      loadFrameScript(mm);
+    }
+  }, false);
+
+  document.body.appendChild(ifr);
+
+  var mm = SpecialPowers.getBrowserFrameMessageManager(ifr);
+  ok(mm, "mm is not null");
+  mm.addMessageListener('OK', function(msg) {
+    ok(true, "Message from app: " + SpecialPowers.wrap(msg).json);
+  });
+  mm.addMessageListener('KO', function(msg) {
+    ok(false, "Message from app: " + SpecialPowers.wrap(msg).json);
+  });
+  mm.addMessageListener('DONE', function() {
+    ok(true, "Message from app: complete");
+    document.body.removeChild(ifr);
+    aCallback();
+  });
+
+  // Test permission |homescreen-webapps-manage|
+  function frameScript()
+  {
+    function ok(p, msg) {
+      if (p) {
+      sendAsyncMessage("OK", msg);
+      } else {
+      sendAsyncMessage("KO", msg);
+      }
+    }
+
+    function is(a, b, msg) {
+      if (a == b) {
+        sendAsyncMessage("OK", a + " == " + b + " - " + msg);
+      } else {
+        sendAsyncMessage("KO", a + " != " + b + " - " + msg);
+      }
+    }
+
+    function finish() {
+      sendAsyncMessage("DONE", "");
+    }
+
+    if ('mgmt' in content.window.navigator.mozApps) {
+      ok(true, "get mgmt");
+      var mgmt = content.window.navigator.mozApps.mgmt;
+      is(typeof mgmt.getAll, "function", "get getAll");
+      is(typeof mgmt.uninstall, "function", "get uninstall");
+      is(typeof mgmt.oninstall, "object", "get oninstall");
+      is(typeof mgmt.onuninstall, "object", "get onuninstall");
+      is(typeof mgmt.onenabledstatechange, "object", "get onenabledstatechange");
+
+      [
+        "getNotInstalled",
+        "applyDownload",
+        "import",
+        "extractManifest",
+        "setEnabled"
+      ].forEach(function(func) {
+         is(typeof mgmt[func], "undefined", "shouldn't get" + func);
+       });
+    } else {
+      ok(false, "can not get mgmt");
+    }
+    finish();
+  }
+
+  function loadFrameScript(mm) {
+    var script = "data:,(" + frameScript.toString() + ")();";
+    mm.loadFrameScript(script, /* allowDelayedLoad = */ false);
+  }
+}
+
+function go() {
+  SpecialPowers.pushPermissions(
+    [{ "type": "webapps-manage", "allow": 1, "context": document },
+     { "type": "browser", "allow": 1, "context": document },
+     { "type": "embed-apps", "allow": 1, "context": document }],
+    function() {
+      SpecialPowers.pushPrefEnv({'set': [["dom.mozBrowserFramesEnabled", true],
+                                         ["dom.mozApps.homescreenURL",
+                                          gManifestURL]]},  continueTest)});
+}
+
+function continueTest() {
+  try {
+    gGenerator.next();
+  } catch (e if e instanceof StopIteration) {
+    finish();
+  }
+}
+
+function finish() {
+  SimpleTest.finish();
+}
+
+function cbError(aEvent) {
+  ok(false, "Error callback invoked " +
+            aEvent.target.error.name + " " + aEvent.target.error.message);
+  finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+
+/**
+ * Test third-party homescreen (permission |homescreen-webapps-manage|)
+ */
+function runTest() {
+  SpecialPowers.setAllAppsLaunchable(true);
+
+  SpecialPowers.autoConfirmAppInstall(continueTest);
+  yield undefined;
+
+  SpecialPowers.autoConfirmAppUninstall(continueTest);
+  yield undefined;
+
+  // Install a app.
+  var request = navigator.mozApps.install(gManifestURL, { });
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+
+  var app = request.result;
+  ok(app, "App is non-null");
+  is(app.manifestURL, gManifestURL, "App manifest url is correct.");
+
+  var context = {"manifestURL": app.manifestURL, "isInBrowserElement": false};
+
+  SpecialPowers.pushPermissions([{"type": "homescreen-webapps-manage",
+                                  "allow": 1,
+                                  "context": context}], continueTest);
+  yield undefined;
+
+  // Launch the app.
+  info("Running " + app.manifestURL);
+  runApp(app, continueTest);
+  yield undefined;
+
+  SpecialPowers.popPermissions(continueTest);
+  yield undefined;
+
+  // Uninstall the app to cleanup after ourself.
+  navigator.mozApps.mgmt.onuninstall = function(event) {
+    var app = event.application;
+    is(app.manifestURL, gManifestURL, "App uninstall event ok.");
+    is(app.manifest.name, "Really Rapid Release (hosted)",
+       "App uninstall manifest ok.");
+    continueTest();
+  }
+  request = navigator.mozApps.mgmt.uninstall(app);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  yield undefined;
+  is(request.result, gManifestURL, "App uninstalled.");
+  navigator.mozApps.mgmt.onuninstall = null;
+}
+
+addLoadEvent(go);
+
+</script>
+</pre>
+</body>
+</html>

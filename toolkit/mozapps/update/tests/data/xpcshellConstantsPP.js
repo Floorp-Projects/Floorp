@@ -30,11 +30,6 @@ const IS_WIN = false;
 
 #ifdef XP_MACOSX
 const IS_MACOSX = true;
-#ifdef MOZ_SHARK
-const IS_SHARK = true;
-#else
-const IS_SHARK = false;
-#endif
 #else
 const IS_MACOSX = false;
 #endif
