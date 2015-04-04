@@ -76,6 +76,10 @@ public:
   // normal shutdown or unexpected shutdown/crash.
   void CloseActive(bool aDieWhenUnloaded);
 
+  // Tell the plugin to die after shutdown.
+  void MarkForDeletion();
+  bool IsMarkedForDeletion();
+
   // Called by the GMPService to forcibly close active de/encoders at shutdown
   void Shutdown();
 
@@ -136,6 +140,9 @@ public:
 
   void AbortAsyncShutdown();
 
+  // Called when the child process has died.
+  void ChildTerminated();
+
 private:
   ~GMPParent();
   nsRefPtr<GeckoMediaPluginService> mService;
@@ -186,6 +193,7 @@ private:
   GMPProcessParent* mProcess;
   bool mDeleteProcessOnlyOnUnload;
   bool mAbnormalShutdownInProgress;
+  bool mIsBlockingDeletion;
 
   nsTArray<nsRefPtr<GMPVideoDecoderParent>> mVideoDecoders;
   nsTArray<nsRefPtr<GMPVideoEncoderParent>> mVideoEncoders;

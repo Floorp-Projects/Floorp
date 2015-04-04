@@ -101,7 +101,8 @@ private:
 
   void AddOnGMPThread(const nsAString& aDirectory);
   void RemoveOnGMPThread(const nsAString& aDirectory,
-                         const bool aDeleteFromDisk);
+                         const bool aDeleteFromDisk,
+                         const bool aCanDefer);
 
   nsresult SetAsyncShutdownTimeout();
 
@@ -116,7 +117,8 @@ private:
 
 protected:
   friend class GMPParent;
-  void ReAddOnGMPThread(nsRefPtr<GMPParent>& aOld);
+  void ReAddOnGMPThread(const nsRefPtr<GMPParent>& aOld);
+  void PluginTerminated(const nsRefPtr<GMPParent>& aOld);
 private:
   GMPParent* ClonePlugin(const GMPParent* aOriginal);
   nsresult EnsurePluginsOnDiskScanned();
@@ -132,10 +134,11 @@ private:
     };
 
     PathRunnable(GeckoMediaPluginService* aService, const nsAString& aPath,
-                 EOperation aOperation)
+                 EOperation aOperation, bool aDefer = false)
       : mService(aService)
       , mPath(aPath)
       , mOperation(aOperation)
+      , mDefer(aDefer)
     { }
 
     NS_DECL_NSIRUNNABLE
@@ -144,6 +147,7 @@ private:
     nsRefPtr<GeckoMediaPluginService> mService;
     nsString mPath;
     EOperation mOperation;
+    bool mDefer;
   };
 
   Mutex mMutex; // Protects mGMPThread and mShuttingDown and mPlugins
@@ -176,6 +180,8 @@ private:
   MainThreadOnly<bool> mWaitingForPluginsAsyncShutdown;
 
   nsTArray<nsRefPtr<GMPParent>> mAsyncShutdownPlugins; // GMP Thread only.
+
+  nsTArray<nsString> mPluginsWaitingForDeletion;
 
   nsCOMPtr<nsIFile> mStorageBaseDir;
 
