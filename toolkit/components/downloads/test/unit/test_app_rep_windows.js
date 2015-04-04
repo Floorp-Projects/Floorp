@@ -228,13 +228,13 @@ add_task(function test_setup()
     do_print("Request length: " + buf.length);
     // A garbage response. By default this produces NS_CANNOT_CONVERT_DATA as
     // the callback status.
-    let blob = "this is not a serialized protocol buffer";
+    let blob = "this is not a serialized protocol buffer (the length doesn't match our hard-coded values)";
     // We can't actually parse the protocol buffer here, so just switch on the
     // length instead of inspecting the contents.
-    if (buf.length == 65) {
+    if (buf.length == 67) {
       // evil.com
       blob = createVerdict(true);
-    } else if (buf.length == 71) {
+    } else if (buf.length == 73) {
       // mozilla.com
       blob = createVerdict(false);
     }

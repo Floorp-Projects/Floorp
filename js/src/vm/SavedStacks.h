@@ -338,7 +338,7 @@ class SavedStacks {
 
         void trace(JSTracer* trc) {
             if (source)
-                gc::MarkString(trc, &source, "SavedStacks::LocationValue::source");
+                TraceEdge(trc, &source, "SavedStacks::LocationValue::source");
         }
 
         PreBarrieredAtom source;

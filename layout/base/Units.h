@@ -208,6 +208,11 @@ struct CSSPixel {
                    NSToCoordRoundWithClamp(float(aPoint.y) * float(AppUnitsPerCSSPixel())));
   }
 
+  static nsSize ToAppUnits(const CSSIntSize& aSize) {
+    return nsSize(NSToCoordRoundWithClamp(float(aSize.width)  * float(AppUnitsPerCSSPixel())),
+                  NSToCoordRoundWithClamp(float(aSize.height) * float(AppUnitsPerCSSPixel())));
+  }
+
   static nsRect ToAppUnits(const CSSRect& aRect) {
     return nsRect(NSToCoordRoundWithClamp(aRect.x * float(AppUnitsPerCSSPixel())),
                   NSToCoordRoundWithClamp(aRect.y * float(AppUnitsPerCSSPixel())),
@@ -275,6 +280,11 @@ struct LayoutDevicePixel {
   static nsSize ToAppUnits(const LayoutDeviceIntSize& aSize, nscoord aAppUnitsPerDevPixel) {
     return nsSize(aSize.width * aAppUnitsPerDevPixel,
                   aSize.height * aAppUnitsPerDevPixel);
+  }
+
+  static nsSize ToAppUnits(const LayoutDeviceSize& aSize, nscoord aAppUnitsPerDevPixel) {
+    return nsSize(NSFloatPixelsToAppUnits(aSize.width, aAppUnitsPerDevPixel),
+                  NSFloatPixelsToAppUnits(aSize.height, aAppUnitsPerDevPixel));
   }
 
   static nsRect ToAppUnits(const LayoutDeviceRect& aRect, nscoord aAppUnitsPerDevPixel) {
