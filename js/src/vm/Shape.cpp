@@ -1252,7 +1252,7 @@ JSCompartment::sweepBaseShapeTable()
 
     for (BaseShapeSet::Enum e(baseShapes); !e.empty(); e.popFront()) {
         UnownedBaseShape* base = e.front().unbarrieredGet();
-        if (IsBaseShapeAboutToBeFinalized(&base)) {
+        if (IsAboutToBeFinalizedUnbarriered(&base)) {
             e.removeFront();
         } else if (base != e.front().unbarrieredGet()) {
             ReadBarriered<UnownedBaseShape*> b(base);
@@ -1537,8 +1537,8 @@ JSCompartment::sweepInitialShapeTable()
             const InitialShapeEntry& entry = e.front();
             Shape* shape = entry.shape.unbarrieredGet();
             JSObject* proto = entry.proto.raw();
-            if (IsShapeAboutToBeFinalized(&shape) ||
-                (entry.proto.isObject() && IsObjectAboutToBeFinalized(&proto)))
+            if (IsAboutToBeFinalizedUnbarriered(&shape) ||
+                (entry.proto.isObject() && IsAboutToBeFinalizedUnbarriered(&proto)))
             {
                 e.removeFront();
             } else {
@@ -1583,7 +1583,7 @@ void
 AutoRooterGetterSetter::Inner::trace(JSTracer* trc)
 {
     if ((attrs & JSPROP_GETTER) && *pgetter)
-        gc::MarkObjectRoot(trc, (JSObject**) pgetter, "AutoRooterGetterSetter getter");
+        TraceRoot(trc, (JSObject**) pgetter, "AutoRooterGetterSetter getter");
     if ((attrs & JSPROP_SETTER) && *psetter)
-        gc::MarkObjectRoot(trc, (JSObject**) psetter, "AutoRooterGetterSetter setter");
+        TraceRoot(trc, (JSObject**) psetter, "AutoRooterGetterSetter setter");
 }

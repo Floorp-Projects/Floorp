@@ -134,12 +134,12 @@ AsmJSModule::trace(JSTracer* trc)
         globals_[i].trace(trc);
     for (unsigned i = 0; i < exits_.length(); i++) {
         if (exitIndexToGlobalDatum(i).fun)
-            MarkObject(trc, &exitIndexToGlobalDatum(i).fun, "asm.js imported function");
+            TraceEdge(trc, &exitIndexToGlobalDatum(i).fun, "asm.js imported function");
     }
     for (unsigned i = 0; i < exports_.length(); i++)
         exports_[i].trace(trc);
     for (unsigned i = 0; i < names_.length(); i++)
-        MarkStringUnbarriered(trc, &names_[i].name(), "asm.js module function name");
+        TraceManuallyBarrieredEdge(trc, &names_[i].name(), "asm.js module function name");
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
     for (unsigned i = 0; i < profiledFunctions_.length(); i++)
         profiledFunctions_[i].trace(trc);
@@ -149,13 +149,13 @@ AsmJSModule::trace(JSTracer* trc)
         perfProfiledBlocksFunctions_[i].trace(trc);
 #endif
     if (globalArgumentName_)
-        MarkStringUnbarriered(trc, &globalArgumentName_, "asm.js global argument name");
+        TraceManuallyBarrieredEdge(trc, &globalArgumentName_, "asm.js global argument name");
     if (importArgumentName_)
-        MarkStringUnbarriered(trc, &importArgumentName_, "asm.js import argument name");
+        TraceManuallyBarrieredEdge(trc, &importArgumentName_, "asm.js import argument name");
     if (bufferArgumentName_)
-        MarkStringUnbarriered(trc, &bufferArgumentName_, "asm.js buffer argument name");
+        TraceManuallyBarrieredEdge(trc, &bufferArgumentName_, "asm.js buffer argument name");
     if (maybeHeap_)
-        gc::MarkObject(trc, &maybeHeap_, "asm.js heap");
+        TraceEdge(trc, &maybeHeap_, "asm.js heap");
 }
 
 void

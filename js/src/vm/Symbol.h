@@ -58,7 +58,7 @@ class Symbol : public js::gc::TenuredCell
     static inline js::ThingRootKind rootKind() { return js::THING_ROOT_SYMBOL; }
     inline void markChildren(JSTracer* trc) {
         if (description_)
-            js::gc::MarkStringUnbarriered(trc, &description_, "description");
+            js::TraceManuallyBarrieredEdge(trc, &description_, "description");
     }
     inline void finalize(js::FreeOp*) {}
 

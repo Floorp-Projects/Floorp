@@ -1128,7 +1128,7 @@ ObjectBox::trace(JSTracer* trc)
 {
     ObjectBox* box = this;
     while (box) {
-        MarkObjectRoot(trc, &box->object, "parser.object");
+        TraceRoot(trc, &box->object, "parser.object");
         if (box->isFunctionBox())
             box->asFunctionBox()->bindings.trace(trc);
         box = box->traceLink;

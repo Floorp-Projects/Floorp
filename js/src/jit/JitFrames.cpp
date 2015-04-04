@@ -972,13 +972,13 @@ MarkCalleeToken(JSTracer* trc, CalleeToken token)
       case CalleeToken_FunctionConstructing:
       {
         JSFunction* fun = CalleeTokenToFunction(token);
-        MarkObjectRoot(trc, &fun, "jit-callee");
+        TraceRoot(trc, &fun, "jit-callee");
         return CalleeToToken(fun, tag == CalleeToken_FunctionConstructing);
       }
       case CalleeToken_Script:
       {
         JSScript* script = CalleeTokenToScript(token);
-        MarkScriptRoot(trc, &script, "jit-script");
+        TraceRoot(trc, &script, "jit-script");
         return CalleeToToken(script);
       }
       default:
@@ -1219,7 +1219,7 @@ MarkIonAccessorICFrame(JSTracer* trc, const JitFrameIterator& frame)
 {
     MOZ_ASSERT(frame.type() == JitFrame_IonAccessorIC);
     IonAccessorICFrameLayout* layout = (IonAccessorICFrameLayout*)frame.fp();
-    gc::MarkJitCodeRoot(trc, layout->stubCode(), "ion-ic-accessor-code");
+    TraceRoot(trc, layout->stubCode(), "ion-ic-accessor-code");
 }
 
 void
@@ -1327,7 +1327,7 @@ MarkJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
     if (frame.isExitFrameLayout<IonOOLNativeExitFrameLayout>()) {
         IonOOLNativeExitFrameLayout* oolnative =
             frame.exitFrame()->as<IonOOLNativeExitFrameLayout>();
-        gc::MarkJitCodeRoot(trc, oolnative->stubCode(), "ion-ool-native-code");
+        TraceRoot(trc, oolnative->stubCode(), "ion-ool-native-code");
         TraceRoot(trc, oolnative->vp(), "iol-ool-native-vp");
         size_t len = oolnative->argc() + 1;
         TraceRootRange(trc, len, oolnative->thisp(), "ion-ool-native-thisargs");
@@ -1344,26 +1344,26 @@ MarkJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
             frame.isExitFrameLayout<IonOOLPropertyOpExitFrameLayout>()
             ? frame.exitFrame()->as<IonOOLPropertyOpExitFrameLayout>()
             : frame.exitFrame()->as<IonOOLSetterOpExitFrameLayout>();
-        gc::MarkJitCodeRoot(trc, oolgetter->stubCode(), "ion-ool-property-op-code");
+        TraceRoot(trc, oolgetter->stubCode(), "ion-ool-property-op-code");
         TraceRoot(trc, oolgetter->vp(), "ion-ool-property-op-vp");
         TraceRoot(trc, oolgetter->id(), "ion-ool-property-op-id");
-        gc::MarkObjectRoot(trc, oolgetter->obj(), "ion-ool-property-op-obj");
+        TraceRoot(trc, oolgetter->obj(), "ion-ool-property-op-obj");
         return;
     }
 
     if (frame.isExitFrameLayout<IonOOLProxyExitFrameLayout>()) {
         IonOOLProxyExitFrameLayout* oolproxy = frame.exitFrame()->as<IonOOLProxyExitFrameLayout>();
-        gc::MarkJitCodeRoot(trc, oolproxy->stubCode(), "ion-ool-proxy-code");
+        TraceRoot(trc, oolproxy->stubCode(), "ion-ool-proxy-code");
         TraceRoot(trc, oolproxy->vp(), "ion-ool-proxy-vp");
         TraceRoot(trc, oolproxy->id(), "ion-ool-proxy-id");
-        gc::MarkObjectRoot(trc, oolproxy->proxy(), "ion-ool-proxy-proxy");
-        gc::MarkObjectRoot(trc, oolproxy->receiver(), "ion-ool-proxy-receiver");
+        TraceRoot(trc, oolproxy->proxy(), "ion-ool-proxy-proxy");
+        TraceRoot(trc, oolproxy->receiver(), "ion-ool-proxy-receiver");
         return;
     }
 
     if (frame.isExitFrameLayout<IonDOMExitFrameLayout>()) {
         IonDOMExitFrameLayout* dom = frame.exitFrame()->as<IonDOMExitFrameLayout>();
-        gc::MarkObjectRoot(trc, dom->thisObjAddress(), "ion-dom-args");
+        TraceRoot(trc, dom->thisObjAddress(), "ion-dom-args");
         if (dom->isMethodFrame()) {
             IonDOMMethodExitFrameLayout* method =
                 reinterpret_cast<IonDOMMethodExitFrameLayout*>(dom);
@@ -1380,7 +1380,7 @@ MarkJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
         LazyLinkExitFrameLayout* ll = frame.exitFrame()->as<LazyLinkExitFrameLayout>();
         JitFrameLayout* layout = ll->jsFrame();
 
-        gc::MarkJitCodeRoot(trc, ll->stubCode(), "lazy-link-code");
+        TraceRoot(trc, ll->stubCode(), "lazy-link-code");
         layout->replaceCalleeToken(MarkCalleeToken(trc, layout->calleeToken()));
         MarkThisAndArguments(trc, layout);
         return;
@@ -1392,7 +1392,7 @@ MarkJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
         return;
     }
 
-    MarkJitCodeRoot(trc, footer->addressOfJitCode(), "ion-exit-code");
+    TraceRoot(trc, footer->addressOfJitCode(), "ion-exit-code");
 
     const VMFunction* f = footer->function();
     if (f == nullptr)
@@ -1408,15 +1408,15 @@ MarkJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
             // Sometimes we can bake in HandleObjects to nullptr.
             JSObject** pobj = reinterpret_cast<JSObject**>(argBase);
             if (*pobj)
-                gc::MarkObjectRoot(trc, pobj, "ion-vm-args");
+                TraceRoot(trc, pobj, "ion-vm-args");
             break;
           }
           case VMFunction::RootString:
           case VMFunction::RootPropertyName:
-            gc::MarkStringRoot(trc, reinterpret_cast<JSString**>(argBase), "ion-vm-args");
+            TraceRoot(trc, reinterpret_cast<JSString**>(argBase), "ion-vm-args");
             break;
           case VMFunction::RootFunction:
-            gc::MarkObjectRoot(trc, reinterpret_cast<JSFunction**>(argBase), "ion-vm-args");
+            TraceRoot(trc, reinterpret_cast<JSFunction**>(argBase), "ion-vm-args");
             break;
           case VMFunction::RootValue:
             TraceRoot(trc, reinterpret_cast<Value*>(argBase), "ion-vm-args");
@@ -1443,14 +1443,14 @@ MarkJitExitFrame(JSTracer* trc, const JitFrameIterator& frame)
           case VMFunction::RootNone:
             MOZ_CRASH("Handle outparam must have root type");
           case VMFunction::RootObject:
-            gc::MarkObjectRoot(trc, footer->outParam<JSObject*>(), "ion-vm-out");
+            TraceRoot(trc, footer->outParam<JSObject*>(), "ion-vm-out");
             break;
           case VMFunction::RootString:
           case VMFunction::RootPropertyName:
-            gc::MarkStringRoot(trc, footer->outParam<JSString*>(), "ion-vm-out");
+            TraceRoot(trc, footer->outParam<JSString*>(), "ion-vm-out");
             break;
           case VMFunction::RootFunction:
-            gc::MarkObjectRoot(trc, footer->outParam<JSFunction*>(), "ion-vm-out");
+            TraceRoot(trc, footer->outParam<JSFunction*>(), "ion-vm-out");
             break;
           case VMFunction::RootValue:
             TraceRoot(trc, footer->outParam<Value>(), "ion-vm-outvp");

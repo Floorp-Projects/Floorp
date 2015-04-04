@@ -5746,7 +5746,7 @@ struct SnappedImageDrawingParameters {
   // one has been explicitly specified. This is the same as |size| except that
   // it does not take into account any transformation on the gfxContext we're
   // drawing to - for example, CSS transforms are not taken into account.
-  nsIntSize svgViewportSize;
+  CSSIntSize svgViewportSize;
   // Whether there's anything to draw at all.
   bool shouldDraw;
 
@@ -5758,7 +5758,7 @@ struct SnappedImageDrawingParameters {
   SnappedImageDrawingParameters(const gfxMatrix&   aImageSpaceToDeviceSpace,
                                 const nsIntSize&   aSize,
                                 const ImageRegion& aRegion,
-                                const nsIntSize&   aSVGViewportSize)
+                                const CSSIntSize&  aSVGViewportSize)
    : imageSpaceToDeviceSpace(aImageSpaceToDeviceSpace)
    , size(aSize)
    , region(aRegion)
@@ -5884,10 +5884,10 @@ ComputeSnappedImageDrawingParameters(gfxContext*     aCtx,
                                     aGraphicsFilter, aImageFlags);
   gfxSize imageSize(intImageSize.width, intImageSize.height);
 
-  nsIntSize svgViewportSize = currentMatrix.IsIdentity()
-      ? intImageSize
-      : nsIntSize(NSAppUnitsToIntPixels(dest.width, aAppUnitsPerDevPixel),
-                  NSAppUnitsToIntPixels(dest.height, aAppUnitsPerDevPixel));
+  CSSIntSize svgViewportSize = currentMatrix.IsIdentity()
+    ? CSSIntSize(intImageSize.width, intImageSize.height)
+    : CSSIntSize(NSAppUnitsToIntPixels(dest.width, aAppUnitsPerDevPixel), //XXX BUG!
+                 NSAppUnitsToIntPixels(dest.height, aAppUnitsPerDevPixel)); //XXX BUG!
 
   // Compute the set of pixels that would be sampled by an ideal rendering
   gfxPoint subimageTopLeft =
@@ -6042,7 +6042,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(gfxContext&          aContext,
                                        uint32_t             aImageFlags,
                                        const nsRect*        aSourceArea)
 {
-  nsIntSize imageSize;
+  CSSIntSize imageSize;
   aImage->GetWidth(&imageSize.width);
   aImage->GetHeight(&imageSize.height);
   if (imageSize.width < 1 || imageSize.height < 1) {
@@ -6050,10 +6050,7 @@ nsLayoutUtils::DrawSingleUnscaledImage(gfxContext&          aContext,
     return DrawResult::TEMPORARY_ERROR;
   }
 
-  nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
-  nsSize size(imageSize.width*appUnitsPerCSSPixel,
-              imageSize.height*appUnitsPerCSSPixel);
-
+  nsSize size(CSSPixel::ToAppUnits(imageSize));
   nsRect source;
   if (aSourceArea) {
     source = *aSourceArea;
@@ -6092,9 +6089,7 @@ nsLayoutUtils::DrawSingleImage(gfxContext&            aContext,
     return DrawResult::TEMPORARY_ERROR;
   }
 
-  nsSize imageSize(pixelImageSize.width * appUnitsPerCSSPixel,
-                   pixelImageSize.height * appUnitsPerCSSPixel);
-
+  nsSize imageSize(CSSPixel::ToAppUnits(pixelImageSize));
   nsRect source;
   nsCOMPtr<imgIContainer> image;
   if (aSourceArea) {
@@ -6194,7 +6189,7 @@ nsLayoutUtils::ComputeSizeForDrawingWithFallback(imgIContainer* aImage,
 nsLayoutUtils::DrawBackgroundImage(gfxContext&         aContext,
                                    nsPresContext*      aPresContext,
                                    imgIContainer*      aImage,
-                                   const nsIntSize&    aImageSize,
+                                   const CSSIntSize&   aImageSize,
                                    GraphicsFilter      aGraphicsFilter,
                                    const nsRect&       aDest,
                                    const nsRect&       aFill,
@@ -6245,18 +6240,6 @@ nsLayoutUtils::GetWholeImageDestination(const nsSize& aWholeImageSize,
   nscoord wholeSizeY = NSToCoordRound(aWholeImageSize.height*scaleY);
   return nsRect(aDestArea.TopLeft() - nsPoint(destOffsetX, destOffsetY),
                 nsSize(wholeSizeX, wholeSizeY));
-}
-
-/* static */ nsRect
-nsLayoutUtils::GetWholeImageDestination(const nsIntSize& aWholeImageSize,
-                                        const nsRect& aImageSourceArea,
-                                        const nsRect& aDestArea)
-{
-  nscoord appUnitsPerCSSPixel = nsDeviceContext::AppUnitsPerCSSPixel();
-  return GetWholeImageDestination(nsSize(aWholeImageSize.width * appUnitsPerCSSPixel,
-                                         aWholeImageSize.height * appUnitsPerCSSPixel),
-                                  aImageSourceArea,
-                                  aDestArea);
 }
 
 /* static */ already_AddRefed<imgIContainer>
