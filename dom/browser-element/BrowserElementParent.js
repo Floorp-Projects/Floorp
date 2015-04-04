@@ -214,7 +214,8 @@ BrowserElementParent.prototype = {
       "metachange": this._fireEventFromMsg,
       "resize": this._fireEventFromMsg,
       "activitydone": this._fireEventFromMsg,
-      "scroll": this._fireEventFromMsg
+      "scroll": this._fireEventFromMsg,
+      "opentab": this._fireEventFromMsg
     };
 
     this._mm.addMessageListener('browser-element-api:call', function(aMsg) {
