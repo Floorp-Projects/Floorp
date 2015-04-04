@@ -14,6 +14,7 @@
  Exposed=ServiceWorker]
 interface ServiceWorkerGlobalScope : WorkerGlobalScope {
   readonly attribute Clients clients;
+  readonly attribute ServiceWorkerRegistration registration;
 
   attribute EventHandler oninstall;
   attribute EventHandler onactivate;

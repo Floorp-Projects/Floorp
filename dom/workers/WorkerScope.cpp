@@ -39,6 +39,7 @@
 #include "WorkerRunnable.h"
 #include "Performance.h"
 #include "ServiceWorkerClients.h"
+#include "ServiceWorkerRegistration.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -430,7 +431,7 @@ SharedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
 }
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerGlobalScope, WorkerGlobalScope,
-                                   mClients)
+                                   mClients, mRegistration)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ServiceWorkerGlobalScope)
 NS_INTERFACE_MAP_END_INHERITING(WorkerGlobalScope)
 
@@ -471,6 +472,16 @@ ServiceWorkerGlobalScope::Clients()
   }
 
   return mClients;
+}
+
+ServiceWorkerRegistrationWorkerThread*
+ServiceWorkerGlobalScope::Registration()
+{
+  //if (!mRegistration) {
+  //  mRegistration = new ServiceWorkerRegistrationWorkerThread(this);
+  //}
+
+  return mRegistration;
 }
 
 WorkerDebuggerGlobalScope::WorkerDebuggerGlobalScope(
