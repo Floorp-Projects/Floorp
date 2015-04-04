@@ -60,6 +60,7 @@ GMPParent::GMPParent()
   , mProcess(nullptr)
   , mDeleteProcessOnlyOnUnload(false)
   , mAbnormalShutdownInProgress(false)
+  , mIsBlockingDeletion(false)
   , mAsyncShutdownRequired(false)
   , mAsyncShutdownInProgress(false)
 {
@@ -340,6 +341,19 @@ GMPParent::CloseActive(bool aDieWhenUnloaded)
 }
 
 void
+GMPParent::MarkForDeletion()
+{
+  mDeleteProcessOnlyOnUnload = true;
+  mIsBlockingDeletion = true;
+}
+
+bool
+GMPParent::IsMarkedForDeletion()
+{
+  return mIsBlockingDeletion;
+}
+
+void
 GMPParent::Shutdown()
 {
   LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
@@ -385,6 +399,17 @@ public:
 };
 
 void
+GMPParent::ChildTerminated()
+{
+  nsRefPtr<GMPParent> self(this);
+  GMPThread()->Dispatch(NS_NewRunnableMethodWithArg<nsRefPtr<GMPParent>>(
+                          mService,
+                          &GeckoMediaPluginService::PluginTerminated,
+                          self),
+                        NS_DISPATCH_NORMAL);
+}
+
+void
 GMPParent::DeleteProcess()
 {
   LOGD(("%s::%s: %p", __CLASS__, __FUNCTION__, this));
@@ -395,7 +420,7 @@ GMPParent::DeleteProcess()
     mState = GMPStateClosing;
     Close();
   }
-  mProcess->Delete();
+  mProcess->Delete(NS_NewRunnableMethod(this, &GMPParent::ChildTerminated));
   LOGD(("%s::%s: Shut down process %p", __CLASS__, __FUNCTION__, (void *) mProcess));
   mProcess = nullptr;
   mState = GMPStateNotLoaded;
