@@ -2051,7 +2051,6 @@ WaitForServiceFinishThread(void *param)
   // We wait at most 10 minutes, we already waited 5 seconds previously
   // before deciding to show this UI.
   WaitForServiceStop(SVC_NAME, 595);
-  LOG(("calling QuitProgressUI"));
   QuitProgressUI();
 }
 #endif
