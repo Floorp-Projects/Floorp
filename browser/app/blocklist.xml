@@ -2982,6 +2982,14 @@
     <gfxBlacklistEntry  blockID="g511">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>DIRECT3D_9_LAYERS, WEBGL_ANGLE</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>6.14.10.5218</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
     </gfxItems>
 
+  <certItems>
+        <certItem issuerName="MIGQMQswCQYDVQQGEwJHQjEbMBkGA1UECBMSR3JlYXRlciBNYW5jaGVzdGVyMRAwDgYDVQQHEwdTYWxmb3JkMRowGAYDVQQKExFDT01PRE8gQ0EgTGltaXRlZDE2MDQGA1UEAxMtQ09NT0RPIFJTQSBEb21haW4gVmFsaWRhdGlvbiBTZWN1cmUgU2VydmVyIENB">
+      <serialNumber>D9UltDPl4XVfSSqQOvdiwQ==</serialNumber>
+    </certItem>
+        <certItem issuerName="MDIxCzAJBgNVBAYTAkNOMQ4wDAYDVQQKEwVDTk5JQzETMBEGA1UEAxMKQ05OSUMgUk9PVA==">
+      <serialNumber>STMAjg==</serialNumber>
+    </certItem>
+      </certItems>
 
 
 </blocklist>
