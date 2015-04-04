@@ -23,6 +23,9 @@ namespace workers {
 class ServiceWorker;
 }
 
+bool
+ServiceWorkerRegistrationVisible(JSContext* aCx, JSObject* aObj);
+
 // This class exists solely so that we can satisfy some WebIDL Func= attribute
 // constraints. Func= converts the function name to a header file to include, in
 // this case "ServiceWorkerRegistration.h".
@@ -99,9 +102,7 @@ public:
                                            ServiceWorkerRegistrationBase)
 
   ServiceWorkerRegistrationMainThread(nsPIDOMWindow* aWindow,
-                                      const nsAString& aScope)
-    : ServiceWorkerRegistrationBase(aWindow, aScope)
-  {}
+                                      const nsAString& aScope);
 
   void
   Update();
@@ -128,8 +129,7 @@ public:
   InvalidateWorkerReference(WhichServiceWorker aWhichOnes) override;
 
 private:
-  ~ServiceWorkerRegistrationMainThread()
-  {}
+  ~ServiceWorkerRegistrationMainThread();
 
   already_AddRefed<workers::ServiceWorker>
   GetWorkerReference(WhichServiceWorker aWhichOne);

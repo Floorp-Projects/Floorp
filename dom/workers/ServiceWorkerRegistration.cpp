@@ -30,6 +30,22 @@ using namespace mozilla::dom::workers;
 namespace mozilla {
 namespace dom {
 
+bool
+ServiceWorkerRegistrationVisible(JSContext* aCx, JSObject* aObj)
+{
+  if (NS_IsMainThread()) {
+    return Preferences::GetBool("dom.serviceWorkers.enabled", false);
+  }
+
+  // Otherwise check the pref via the work private helper
+  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
+  if (!workerPrivate) {
+    return false;
+  }
+
+  return workerPrivate->ServiceWorkersEnabled();
+}
+
 NS_IMPL_ADDREF_INHERITED(ServiceWorkerRegistrationBase, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(ServiceWorkerRegistrationBase, DOMEventTargetHelper)
 
@@ -102,6 +118,16 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationMainThread, ServiceW
                                    mPushManager,
 #endif
                                    mInstallingWorker, mWaitingWorker, mActiveWorker);
+
+ServiceWorkerRegistrationMainThread::ServiceWorkerRegistrationMainThread(nsPIDOMWindow* aWindow,
+                                                                         const nsAString& aScope)
+  : ServiceWorkerRegistrationBase(aWindow, aScope)
+{
+}
+
+ServiceWorkerRegistrationMainThread::~ServiceWorkerRegistrationMainThread()
+{
+}
 
 already_AddRefed<workers::ServiceWorker>
 ServiceWorkerRegistrationMainThread::GetWorkerReference(WhichServiceWorker aWhichOne)
