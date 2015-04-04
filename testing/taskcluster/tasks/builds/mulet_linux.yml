@@ -9,6 +9,11 @@ task:
     description: Mulet Linux
 
   workerType: mulet-opt
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.linux64-mulet'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-mulet'
+
   scopes:
     - 'docker-worker:cache:build-mulet-linux-workspace'
     - 'docker-worker:cache:tooltool-cache'
