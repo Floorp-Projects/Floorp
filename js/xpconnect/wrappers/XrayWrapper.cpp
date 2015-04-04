@@ -301,11 +301,29 @@ bool JSXrayTraits::getOwnPropertyFromTargetIfSafe(JSContext* cx,
             return ReportWrapperDenial(cx, id, WrapperDenialForXray, "value not same-origin with target");
         }
 
-        // Disallow non-Xrayable objects.
+        // Disallow (most) non-Xrayable objects.
         XrayType xrayType = GetXrayType(propObj);
         if (xrayType == NotXray || xrayType == XrayForOpaqueObject) {
-            JSAutoCompartment ac(cx, wrapper);
-            return ReportWrapperDenial(cx, id, WrapperDenialForXray, "value not Xrayable");
+            if (IdentifyStandardInstance(propObj) == JSProto_ArrayBuffer) {
+                // Given that non-Xrayable objects are now opaque by default,
+                // this restriction is somewhat more draconian than it needs to
+                // be. It's true that script can't do much with an opaque
+                // object, so in general it doesn't make much of a difference.
+                // But one place it _does_ make a difference is in the
+                // structured clone algorithm. When traversing an object to
+                // clone it, the algorithm dutifully traverses inspects the
+                // security wrapper without unwrapping it, so it won't see
+                // properties we restrict here. But there are some object types
+                // that the structured clone algorithm can handle safely even
+                // without Xrays (i.e. ArrayBuffer, where it just clones the
+                // underlying byte array).
+                //
+                // So we make some special cases here for such situations. Pass
+                // them through.
+            } else {
+                JSAutoCompartment ac(cx, wrapper);
+                return ReportWrapperDenial(cx, id, WrapperDenialForXray, "value not Xrayable");
+            }
         }
 
         // Disallow callables.
