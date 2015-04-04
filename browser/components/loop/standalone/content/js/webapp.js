@@ -610,10 +610,11 @@ loop.webapp = (function($, _, OT, mozL10n) {
   var StartConversationView = React.createClass({displayName: "StartConversationView",
     render: function() {
       document.title = mozL10n.get("clientShortname2");
-      return React.createElement(InitiateConversationView, React.__spread({}, 
-        this.props, 
-        {title: mozL10n.get("initiate_call_button_label2"), 
-        callButtonLabel: mozL10n.get("initiate_audio_video_call_button2")})
+      return (
+        React.createElement(InitiateConversationView, React.__spread({}, 
+          this.props, 
+          {title: mozL10n.get("initiate_call_button_label2"), 
+          callButtonLabel: mozL10n.get("initiate_audio_video_call_button2")}))
       );
     }
   });
@@ -629,10 +630,12 @@ loop.webapp = (function($, _, OT, mozL10n) {
       document.title = mozL10n.get("standalone_title_with_status",
                                    {clientShortname: mozL10n.get("clientShortname2"),
                                     currentStatus: mozL10n.get("status_error")});
-      return React.createElement(InitiateConversationView, React.__spread({}, 
-        this.props, 
-        {title: mozL10n.get("call_failed_title"), 
-        callButtonLabel: mozL10n.get("retry_call_button")}));
+      return (
+        React.createElement(InitiateConversationView, React.__spread({}, 
+          this.props, 
+          {title: mozL10n.get("call_failed_title"), 
+          callButtonLabel: mozL10n.get("retry_call_button")}))
+      );
     }
   });
 
