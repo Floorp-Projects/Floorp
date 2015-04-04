@@ -6,6 +6,7 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/ClientID.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://services-common/utils.js");
@@ -64,13 +65,6 @@ this.DataReportingService = function () {
 
   this._os = Cc["@mozilla.org/observer-service;1"]
                .getService(Ci.nsIObserverService);
-
-  this._clientID = null;
-  this._loadClientIdTask = null;
-  this._saveClientIdTask = null;
-
-  this._stateDir = null;
-  this._stateFilePath = null;
 
   // Used for testing only, when true results in getSessionRecorder() returning
   // undefined. Controlled via simulate* methods.
@@ -139,9 +133,6 @@ DataReportingService.prototype = Object.freeze({
           // We can't interact with prefs until after the profile is present.
           let policyPrefs = new Preferences(POLICY_BRANCH);
           this.policy = new DataReportingPolicy(policyPrefs, this._prefs, this);
-
-          this._stateDir = OS.Path.join(OS.Constants.Path.profileDir, "datareporting");
-          this._stateFilePath = OS.Path.join(this._stateDir, "state.json");
 
           this._os.addObserver(this, "sessionstore-windows-restored", true);
         } catch (ex) {
@@ -302,68 +293,6 @@ DataReportingService.prototype = Object.freeze({
     }.bind(this));
   },
 
-  _loadClientID: function () {
-    if (this._loadClientIdTask) {
-      return this._loadClientIdTask;
-    }
-
-    this._loadClientIdTask = Task.spawn(function* () {
-      // Previously we had the stable client ID managed in FHR.
-      // As we want to start correlating FHR and telemetry data (and moving towards
-      // unifying the two), we moved the ID management to the datareporting
-      // service. Consequently, we try to import the FHR ID first, so we can keep
-      // using it.
-
-      // Try to load the client id from the DRS state file first.
-      try {
-        let state = yield CommonUtils.readJSON(this._stateFilePath);
-        if (state && 'clientID' in state && typeof(state.clientID) == 'string') {
-          this._clientID = state.clientID;
-          this._loadClientIdTask = null;
-          return this._clientID;
-        }
-      } catch (e) {
-        // fall through to next option
-      }
-
-      // If we dont have DRS state yet, try to import from the FHR state.
-      try {
-        let fhrStatePath = OS.Path.join(OS.Constants.Path.profileDir, "healthreport", "state.json");
-        let state = yield CommonUtils.readJSON(fhrStatePath);
-        if (state && 'clientID' in state && typeof(state.clientID) == 'string') {
-          this._clientID = state.clientID;
-          this._loadClientIdTask = null;
-          this._saveClientID();
-          return this._clientID;
-        }
-      } catch (e) {
-        // fall through to next option
-      }
-
-      // We dont have an id from FHR yet, generate a new ID.
-      this._clientID = CommonUtils.generateUUID();
-      this._loadClientIdTask = null;
-      this._saveClientIdTask = this._saveClientID();
-
-      // Wait on persisting the id. Otherwise failure to save the ID would result in
-      // the client creating and subsequently sending multiple IDs to the server.
-      // This would appear as multiple clients submitting similar data, which would
-      // result in orphaning.
-      yield this._saveClientIdTask;
-
-      return this._clientID;
-    }.bind(this));
-
-    return this._loadClientIdTask;
-  },
-
-  _saveClientID: Task.async(function* () {
-    let obj = { clientID: this._clientID };
-    yield OS.File.makeDir(this._stateDir);
-    yield CommonUtils.writeJSON(obj, this._stateFilePath);
-    this._saveClientIdTask = null;
-  }),
-
   /**
    * This returns a promise resolving to the the stable client ID we use for
    * data reporting (FHR & Telemetry). Previously exising FHR client IDs are
@@ -372,11 +301,7 @@ DataReportingService.prototype = Object.freeze({
    * @return Promise<string> The stable client ID.
    */
   getClientID: function() {
-    if (!this._clientID) {
-      return this._loadClientID();
-    }
-
-    return Promise.resolve(this._clientID);
+    return ClientID.getClientID();
   },
 
   /**
@@ -385,14 +310,7 @@ DataReportingService.prototype = Object.freeze({
    * @return Promise<string> The new client ID.
    */
   resetClientID: Task.async(function* () {
-    yield this._loadClientIdTask;
-    yield this._saveClientIdTask;
-
-    this._clientID = CommonUtils.generateUUID();
-    this._saveClientIdTask = this._saveClientID();
-    yield this._saveClientIdTask;
-
-    return this._clientID;
+    return ClientID.resetClientID();
   }),
 
   /**
@@ -413,15 +331,6 @@ DataReportingService.prototype = Object.freeze({
   simulateRestoreSessionRecorder() {
     this._simulateNoSessionRecorder = false;
   },
-
-  /*
-   * Simulate a restart of the service. This is for testing only.
-   */
-  _reset: Task.async(function* () {
-    yield this._loadClientIdTask;
-    yield this._saveClientIdTask;
-    this._clientID = null;
-  }),
 });
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([DataReportingService]);

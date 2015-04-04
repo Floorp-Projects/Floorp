@@ -17,6 +17,7 @@ EXTRA_JS_MODULES += [
     'BinarySearch.jsm',
     'BrowserUtils.jsm',
     'CharsetMenu.jsm',
+    'ClientID.jsm',
     'debug.js',
     'DeferredTask.jsm',
     'Deprecated.jsm',

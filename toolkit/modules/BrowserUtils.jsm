@@ -23,6 +23,21 @@ this.BrowserUtils = {
   },
 
   /**
+   * restartApplication: Restarts the application, keeping it in
+   * safe mode if it is already in safe mode.
+   */
+  restartApplication: function() {
+    let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"]
+                       .getService(Ci.nsIAppStartup);
+    //if already in safe mode restart in safe mode
+    if (Services.appinfo.inSafeMode) {
+      appStartup.restartInSafeMode(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
+      return;
+    }
+    appStartup.quit(Ci.nsIAppStartup.eAttemptQuit | Ci.nsIAppStartup.eRestart);
+  },
+
+  /**
    * urlSecurityCheck: JavaScript wrapper for checkLoadURIWithPrincipal
    * and checkLoadURIStrWithPrincipal.
    * If |aPrincipal| is not allowed to link to |aURL|, this function throws with

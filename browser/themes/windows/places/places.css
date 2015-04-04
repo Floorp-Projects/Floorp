@@ -24,6 +24,25 @@
   cursor: default;
 }
 
+/* Style Places sidebars as Vista media collection */
+@media not all and (-moz-os-version: windows-xp) {
+  @media (-moz-windows-default-theme) {
+    #bookmarksPanel,
+    #history-panel {
+      background-color: #EEF3FA;
+    }
+
+    .sidebar-placesTree {
+      background-color: transparent;
+      border-top: none;
+    }
+
+    .sidebar-placesTreechildren::-moz-tree-cell-text(leaf, hover) {
+      text-decoration: none;
+    }
+  }
+}
+
 /* Trees */
 treechildren::-moz-tree-image(title) {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");

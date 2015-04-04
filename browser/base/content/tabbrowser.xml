@@ -3924,8 +3924,8 @@
       <!-- Deprecated stuff, implemented for backwards compatibility. -->
       <method name="enterTabbedMode">
         <body>
-          Application.console.log("enterTabbedMode is an obsolete method and " +
-                                  "will be removed in a future release.");
+          Services.console.logStringMessage("enterTabbedMode is an obsolete method and " +
+                                            "will be removed in a future release.");
         </body>
       </method>
       <field name="mTabbedMode" readonly="true">true</field>

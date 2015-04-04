@@ -83,6 +83,17 @@ add_test(function successfulResponse () {
     );
 });
 
+add_test(function successfulDestroy () {
+  let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
+  let response = {
+    success: true,
+    status: STATUS_SUCCESS,
+    body: "{}",
+  };
+
+  client._Request = new mockResponse(response);
+  client.destroyToken("deadbeef").then(run_next_test);
+});
 
 add_test(function parseErrorResponse () {
   let client = new FxAccountsOAuthGrantClient(CLIENT_OPTIONS);
