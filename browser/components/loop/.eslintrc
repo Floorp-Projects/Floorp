@@ -4,7 +4,19 @@
   ],
   "ecmaFeatures": {
     "forOf": true,
-    "jsx": true
+    "jsx": true,
+    // These are on for this directory for .jsm and content/js files.
+    // If adding more items here, consider turning them off for the following
+    // files if they aren't supported by all browsers.
+    // content/shared/.eslintrc
+    // content/standalone/.eslintrc
+    "blockBindings": true,
+    "arrowFunctions": true,
+    "destructuring": true,
+    "generators": true,
+    "spread": true,
+    "restParams": true,
+    "objectLiteralShorthandMethods": true
   },
   "env": {
     "browser": true,
@@ -39,6 +51,7 @@
     "dot-notation": 0,
     "eol-last": 0,
     "eqeqeq": 0,
+    "global-strict": 0,
     "key-spacing": 0,
     "new-cap": 0,
     "no-catch-shadow": 0,
