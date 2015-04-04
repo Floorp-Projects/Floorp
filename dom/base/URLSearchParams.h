@@ -80,6 +80,17 @@ public:
     Serialize(aRetval);
   }
 
+  typedef void (*ParamFunc)(const nsString& aName, const nsString& aValue,
+                            void* aClosure);
+
+  void
+  ForEach(ParamFunc aFunc, void* aClosure)
+  {
+    for (uint32_t i = 0; i < mSearchParams.Length(); ++i) {
+      aFunc(mSearchParams[i].mKey, mSearchParams[i].mValue, aClosure);
+    }
+  }
+
 private:
   void AppendInternal(const nsAString& aName, const nsAString& aValue);
 

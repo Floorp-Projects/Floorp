@@ -17,8 +17,8 @@ interface Body {
   Promise<ArrayBuffer> arrayBuffer();
   [Throws]
   Promise<Blob> blob();
-  // FIXME(nsm): Bug 739173 FormData is not supported in workers.
-  // Promise<FormData> formData();
+  [Throws]
+  Promise<FormData> formData();
   [Throws]
   Promise<JSON> json();
   [Throws]
