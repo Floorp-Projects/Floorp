@@ -42,6 +42,7 @@ public:
   NS_IMETHOD GetNodeId(const nsAString& aOrigin,
                        const nsAString& aTopLevelOrigin,
                        bool aInPrivateBrowsingMode,
+                       const nsACString& aVersion,
                        UniquePtr<GetNodeIdCallback>&& aCallback) override;
 
   NS_DECL_MOZIGECKOMEDIAPLUGINCHROMESERVICE
@@ -69,7 +70,8 @@ private:
                                   size_t* aOutPluginIndex);
 
   nsresult GetNodeId(const nsAString& aOrigin, const nsAString& aTopLevelOrigin,
-                     bool aInPrivateBrowsing, nsACString& aOutId);
+                     bool aInPrivateBrowsing, const nsACString& aVersion,
+                     nsACString& aOutId);
 
   void UnloadPlugins();
   void CrashPlugins();
@@ -80,7 +82,8 @@ private:
 
   void AddOnGMPThread(const nsAString& aDirectory);
   void RemoveOnGMPThread(const nsAString& aDirectory,
-                         const bool aDeleteFromDisk);
+                         const bool aDeleteFromDisk,
+                         const bool aCanDefer);
 
   nsresult SetAsyncShutdownTimeout();
 
@@ -95,7 +98,8 @@ private:
 
 protected:
   friend class GMPParent;
-  void ReAddOnGMPThread(nsRefPtr<GMPParent>& aOld);
+  void ReAddOnGMPThread(const nsRefPtr<GMPParent>& aOld);
+  void PluginTerminated(const nsRefPtr<GMPParent>& aOld);
   virtual void InitializePlugins() override;
   virtual bool GetContentParentFrom(const nsACString& aNodeId,
                                     const nsCString& aAPI,
@@ -117,10 +121,11 @@ private:
     };
 
     PathRunnable(GeckoMediaPluginServiceParent* aService, const nsAString& aPath,
-                 EOperation aOperation)
+                 EOperation aOperation, bool aDefer = false)
       : mService(aService)
       , mPath(aPath)
       , mOperation(aOperation)
+      , mDefer(aDefer)
     { }
 
     NS_DECL_NSIRUNNABLE
@@ -129,6 +134,7 @@ private:
     nsRefPtr<GeckoMediaPluginServiceParent> mService;
     nsString mPath;
     EOperation mOperation;
+    bool mDefer;
   };
 
   // Protected by mMutex from the base class.
@@ -157,6 +163,8 @@ private:
   MainThreadOnly<bool> mWaitingForPluginsAsyncShutdown;
 
   nsTArray<nsRefPtr<GMPParent>> mAsyncShutdownPlugins; // GMP Thread only.
+
+  nsTArray<nsString> mPluginsWaitingForDeletion;
 
   nsCOMPtr<nsIFile> mStorageBaseDir;
 
@@ -191,6 +199,7 @@ public:
   virtual bool RecvGetGMPNodeId(const nsString& aOrigin,
                                 const nsString& aTopLevelOrigin,
                                 const bool& aInPrivateBrowsing,
+                                const nsCString& aVersion,
                                 nsCString* aID) override;
   static bool RecvGetGMPPluginVersionForAPI(const nsCString& aAPI,
                                             nsTArray<nsCString>&& aTags,
