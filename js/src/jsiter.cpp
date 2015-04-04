@@ -58,14 +58,14 @@ void
 NativeIterator::mark(JSTracer* trc)
 {
     for (HeapPtrFlatString* str = begin(); str < end(); str++)
-        MarkString(trc, str, "prop");
+        TraceEdge(trc, str, "prop");
     if (obj)
-        MarkObject(trc, &obj, "obj");
+        TraceEdge(trc, &obj, "obj");
 
     // The SuppressDeletedPropertyHelper loop can GC, so make sure that if the
     // GC removes any elements from the list, it won't remove this one.
     if (iterObj_)
-        MarkObjectUnbarriered(trc, &iterObj_, "iterObj");
+        TraceManuallyBarrieredEdge(trc, &iterObj_, "iterObj");
 }
 
 struct IdHashPolicy {

@@ -17,11 +17,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=345339
          src="http://mochi.test:8888/tests/dom/base/test/345339_iframe.html">
  </iframe>
 <pre id="test">
-<script class="testbody" type="text/javascript">
+<script class="testbody" type="text/javascript;version=1.7">
 /** Test for Bug 345339 **/
 SimpleTest.waitForExplicitFinish();
 
-var filePath;
+const testData = "Test data\n";
+let file = new File([testData],
+                    "345339_test.file",
+                    { type: "text/plain" });
 
 function afterLoad() {
     var iframeDoc = $("testframe").contentDocument;
@@ -32,15 +35,7 @@ function afterLoad() {
     iframeDoc.getElementById("password").value = "123456";
     iframeDoc.getElementById("hidden").value = "gecko";
 
-    var file = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
-             .getService(SpecialPowers.Ci.nsIProperties)
-             .get("TmpD", SpecialPowers.Ci.nsILocalFile);
-    file.append("345339_test.file");
-    // Only the file's path is used, so it doesn't need to be created.
-    // See also bug 1058977.
-    filePath = file.path;
-
-    SpecialPowers.wrap(iframeDoc).getElementById("file").value = filePath;
+    SpecialPowers.wrap(iframeDoc).getElementById("file").mozSetFileArray([file]);
 
     /* Reload the page */
     $("testframe").setAttribute("onload", "afterReload()");
@@ -62,10 +57,26 @@ function afterReload() {
        "password field value forgotten");
     is(iframeDoc.getElementById("hidden").value, "gecko",
        "hidden field value preserved");
-    is(SpecialPowers.wrap(iframeDoc).getElementById("file").value, filePath,
-       "file field value preserved");
 
-    SimpleTest.finish();
+    // The new file object isn't ===, but it's extensionally equal:
+    let newFile = iframeDoc.getElementById("file").files[0];
+    for (let prop of ["name", "lastModified", "size", "type"]) {
+        is(newFile[prop], file[prop],
+           "file field " + prop + " property preserved");
+    }
+    let reader = new FileReader();
+    reader.onloadend = function() {
+        SimpleTest.finish();
+    };
+    reader.onload = function() {
+        is(reader.result, testData,
+           "file field contents preserved")
+    };
+    reader.onerror = function() {
+        is(reader.error, null,
+           "FileReader error");
+    };
+    reader.readAsText(newFile);
 }
 </script>
 </pre>

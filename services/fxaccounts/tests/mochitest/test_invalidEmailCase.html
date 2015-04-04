@@ -45,6 +45,12 @@ MockStorage.prototype = Object.freeze({
   get: function () {
     return Promise.resolve(this.data);
   },
+  getOAuthTokens() {
+    return Promise.resolve(null);
+  },
+  setOAuthTokens(contents) {
+    return Promise.resolve();
+  },
 });
 
 function MockFxAccounts() {

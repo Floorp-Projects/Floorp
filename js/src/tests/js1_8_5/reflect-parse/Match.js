@@ -36,7 +36,7 @@ var Match =
             }
         },
 
-        toString: function() "[object Pattern]"
+        toString: () => "[object Pattern]"
     };
 
     Pattern.ANY = new Pattern;

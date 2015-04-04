@@ -1405,17 +1405,17 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
             bool remove = false;
             if (!key.type.isUnknown() && key.type.isGroup()) {
                 ObjectGroup* group = key.type.groupNoBarrier();
-                if (IsObjectGroupAboutToBeFinalized(&group))
+                if (IsAboutToBeFinalizedUnbarriered(&group))
                     remove = true;
                 else
                     key.type = TypeSet::ObjectType(group);
             }
             if (key.proto && key.proto != TaggedProto::LazyProto &&
-                IsObjectAboutToBeFinalized(&key.proto))
+                IsAboutToBeFinalizedUnbarriered(&key.proto))
             {
                 remove = true;
             }
-            if (IsObjectGroupAboutToBeFinalized(e.front().value().unsafeGet()))
+            if (IsAboutToBeFinalized(&e.front().value()))
                 remove = true;
 
             if (remove)
@@ -1431,27 +1431,18 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
             PlainObjectEntry& entry = e.front().value();
 
             bool remove = false;
-            if (IsObjectGroupAboutToBeFinalized(entry.group.unsafeGet()))
+            if (IsAboutToBeFinalized(&entry.group))
                 remove = true;
-            if (IsShapeAboutToBeFinalized(entry.shape.unsafeGet()))
+            if (IsAboutToBeFinalized(&entry.shape))
                 remove = true;
             for (unsigned i = 0; !remove && i < key.nproperties; i++) {
-                if (JSID_IS_STRING(key.properties[i])) {
-                    JSString* str = JSID_TO_STRING(key.properties[i]);
-                    if (IsStringAboutToBeFinalized(&str))
-                        remove = true;
-                    MOZ_ASSERT(AtomToId((JSAtom*)str) == key.properties[i]);
-                } else if (JSID_IS_SYMBOL(key.properties[i])) {
-                    JS::Symbol* sym = JSID_TO_SYMBOL(key.properties[i]);
-                    if (IsSymbolAboutToBeFinalized(&sym))
-                        remove = true;
-                }
+                if (gc::IsAboutToBeFinalizedUnbarriered(&key.properties[i]))
+                    remove = true;
 
                 MOZ_ASSERT(!entry.types[i].isSingleton());
-                ObjectGroup* group = nullptr;
                 if (entry.types[i].isGroup()) {
-                    group = entry.types[i].groupNoBarrier();
-                    if (IsObjectGroupAboutToBeFinalized(&group))
+                    ObjectGroup* group = entry.types[i].groupNoBarrier();
+                    if (IsAboutToBeFinalizedUnbarriered(&group))
                         remove = true;
                     else if (group != entry.types[i].groupNoBarrier())
                         entry.types[i] = TypeSet::ObjectType(group);
@@ -1469,8 +1460,8 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
     if (allocationSiteTable) {
         for (AllocationSiteTable::Enum e(*allocationSiteTable); !e.empty(); e.popFront()) {
             AllocationSiteKey key = e.front().key();
-            bool keyDying = IsScriptAboutToBeFinalized(&key.script);
-            bool valDying = IsObjectGroupAboutToBeFinalized(e.front().value().unsafeGet());
+            bool keyDying = IsAboutToBeFinalizedUnbarriered(&key.script);
+            bool valDying = IsAboutToBeFinalized(&e.front().value());
             if (keyDying || valDying)
                 e.removeFront();
             else if (key.script != e.front().key().script)
@@ -1488,8 +1479,8 @@ ObjectGroupCompartment::sweepNewTable(NewTable* table)
     if (table && table->initialized()) {
         for (NewTable::Enum e(*table); !e.empty(); e.popFront()) {
             NewEntry entry = e.front();
-            if (IsObjectGroupAboutToBeFinalized(entry.group.unsafeGet()) ||
-                (entry.associated && IsObjectAboutToBeFinalized(&entry.associated)))
+            if (IsAboutToBeFinalized(&entry.group) ||
+                (entry.associated && IsAboutToBeFinalizedUnbarriered(&entry.associated)))
             {
                 e.removeFront();
             } else {
