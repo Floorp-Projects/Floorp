@@ -1,32 +1,17 @@
 /* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
+"use strict";
+
+// Test that style sheets can be disabled and enabled.
 
 // https rather than chrome to improve coverage
 const TESTCASE_URI = TEST_BASE_HTTPS + "simple.html";
 
-function test()
-{
-  waitForExplicitFinish();
+add_task(function* () {
+  let { panel, ui } = yield openStyleEditorForURL(TESTCASE_URI);
+  let editor = yield ui.editors[0].getSourceEditor();
 
-  let count = 0;
-  addTabAndOpenStyleEditors(2, function(panel) {
-    // we test against first stylesheet after all are ready
-    let UI = panel.UI;
-    let editor = UI.editors[0];
-    editor.getSourceEditor().then(runTests.bind(this, UI, editor));
-  });
-
-  content.location = TESTCASE_URI;
-}
-
-function runTests(UI, editor)
-{
-  testEnabledToggle(UI, editor);
-}
-
-function testEnabledToggle(UI, editor)
-{
   let summary = editor.summary;
   let enabledToggle = summary.querySelector(".stylesheet-enabled");
   ok(enabledToggle, "enabled toggle button exists");
@@ -37,34 +22,34 @@ function testEnabledToggle(UI, editor)
   is(summary.classList.contains("disabled"), false,
      "first stylesheet is initially enabled, UI does not have DISABLED class");
 
-  let disabledToggleCount = 0;
-  editor.on("property-change", function(event, property) {
-    if (property != "disabled") {
-      return;
-    }
-    disabledToggleCount++;
+  info("Disabling the first stylesheet.");
+  yield toggleEnabled(editor, enabledToggle, panel.panelWindow);
 
-    if (disabledToggleCount == 1) {
-      is(editor.styleSheet.disabled, true, "first stylesheet is now disabled");
-      is(summary.classList.contains("disabled"), true,
-         "first stylesheet is now disabled, UI has DISABLED class");
+  is(editor.styleSheet.disabled, true, "first stylesheet is now disabled");
+  is(summary.classList.contains("disabled"), true,
+     "first stylesheet is now disabled, UI has DISABLED class");
 
-      // now toggle it back to enabled
-      waitForFocus(function () {
-        EventUtils.synthesizeMouseAtCenter(enabledToggle, {}, gPanelWindow);
-      }, gPanelWindow);
-      return;
-    }
+  info("Enabling the first stylesheet again.");
+  yield toggleEnabled(editor, enabledToggle, panel.panelWindow);
 
-    // disabledToggleCount == 2
-    is(editor.styleSheet.disabled, false, "first stylesheet is now enabled again");
-    is(summary.classList.contains("disabled"), false,
-       "first stylesheet is now enabled again, UI does not have DISABLED class");
+  is(editor.styleSheet.disabled, false, "first stylesheet is now enabled again");
+  is(summary.classList.contains("disabled"), false,
+     "first stylesheet is now enabled again, UI does not have DISABLED class");
+});
 
-    finish();
-  });
+function* toggleEnabled(editor, enabledToggle, panelWindow) {
+  let changed = editor.once("property-change");
 
-  waitForFocus(function () {
-    EventUtils.synthesizeMouseAtCenter(enabledToggle, {}, gPanelWindow);
-  }, gPanelWindow);
+  info("Waiting for focus.");
+  yield SimpleTest.promiseFocus(panelWindow);
+
+  info("Clicking on the toggle.");
+  EventUtils.synthesizeMouseAtCenter(enabledToggle, {}, panelWindow);
+
+  info("Waiting for stylesheet to be disabled.");
+  let property = yield changed;
+  while (property !== "disabled") {
+    info("Ignoring property-change for '" + property + "'.");
+    property = yield editor.once("property-change");
+  }
 }
