@@ -360,8 +360,8 @@ ArrayBufferObject::fun_transfer(JSContext* cx, unsigned argc, Value* vp)
     if (oldBufferObj->is<ArrayBufferObject>()) {
         oldBuffer = &oldBufferObj->as<ArrayBufferObject>();
     } else {
-        JSObject* unwrapped = CheckedUnwrap(oldBuffer);
-        if (!unwrapped->is<ArrayBufferObject>()) {
+        JSObject* unwrapped = CheckedUnwrap(oldBufferObj);
+        if (!unwrapped || !unwrapped->is<ArrayBufferObject>()) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
             return false;
         }
@@ -969,7 +969,7 @@ ArrayBufferObject::trace(JSTracer* trc, JSObject* obj)
     JSObject* view = MaybeForwarded(buf.firstView());
     MOZ_ASSERT(view && view->is<InlineTransparentTypedObject>());
 
-    gc::MarkObjectUnbarriered(trc, &view, "array buffer inline typed object owner");
+    TraceManuallyBarrieredEdge(trc, &view, "array buffer inline typed object owner");
     buf.setSlot(DATA_SLOT, PrivateValue(view->as<InlineTransparentTypedObject>().inlineTypedMem()));
 }
 
@@ -1090,12 +1090,12 @@ InnerViewTable::removeViews(ArrayBufferObject* obj)
 bool
 InnerViewTable::sweepEntry(JSObject** pkey, ViewVector& views)
 {
-    if (IsObjectAboutToBeFinalized(pkey))
+    if (IsAboutToBeFinalizedUnbarriered(pkey))
         return true;
 
     MOZ_ASSERT(!views.empty());
     for (size_t i = 0; i < views.length(); i++) {
-        if (IsObjectAboutToBeFinalized(&views[i])) {
+        if (IsAboutToBeFinalizedUnbarriered(&views[i])) {
             views[i--] = views.back();
             views.popBack();
         }
@@ -1191,7 +1191,7 @@ ArrayBufferViewObject::trace(JSTracer* trc, JSObject* objArg)
             JSObject* view = buf.firstView();
 
             // Mark the object to move it into the tenured space.
-            MarkObjectUnbarriered(trc, &view, "typed array nursery owner");
+            TraceManuallyBarrieredEdge(trc, &view, "typed array nursery owner");
             MOZ_ASSERT(view->is<InlineTypedObject>() && view != obj);
 
             void* srcData = obj->getPrivate();

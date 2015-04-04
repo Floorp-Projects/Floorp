@@ -726,7 +726,7 @@ JSFunction::trace(JSTracer* trc)
     }
 
     if (atom_)
-        MarkString(trc, &atom_, "atom");
+        TraceEdge(trc, &atom_, "atom");
 
     if (isInterpreted()) {
         // Functions can be be marked as interpreted despite having no script
@@ -752,13 +752,13 @@ JSFunction::trace(JSTracer* trc)
             {
                 relazify(trc);
             } else {
-                MarkScriptUnbarriered(trc, &u.i.s.script_, "script");
+                TraceManuallyBarrieredEdge(trc, &u.i.s.script_, "script");
             }
         } else if (isInterpretedLazy() && u.i.s.lazy_) {
-            MarkLazyScriptUnbarriered(trc, &u.i.s.lazy_, "lazyScript");
+            TraceManuallyBarrieredEdge(trc, &u.i.s.lazy_, "lazyScript");
         }
         if (u.i.env_)
-            MarkObjectUnbarriered(trc, &u.i.env_, "fun_environment");
+            TraceManuallyBarrieredEdge(trc, &u.i.env_, "fun_environment");
     }
 }
 
@@ -1530,7 +1530,7 @@ JSFunction::relazify(JSTracer* trc)
     // The result is that no function marks the script, but the canonical
     // function expects it to be valid.
     if (script->functionNonDelazifying()->hasScript())
-        MarkScriptUnbarriered(trc, &u.i.s.script_, "script");
+        TraceManuallyBarrieredEdge(trc, &u.i.s.script_, "script");
 
     flags_ &= ~INTERPRETED;
     flags_ |= INTERPRETED_LAZY;
@@ -1543,7 +1543,7 @@ JSFunction::relazify(JSTracer* trc)
         // be freed.
         if (lazy->maybeScript() == script)
             lazy->resetScript();
-        MarkLazyScriptUnbarriered(trc, &u.i.s.lazy_, "lazyScript");
+        TraceManuallyBarrieredEdge(trc, &u.i.s.lazy_, "lazyScript");
     } else {
         MOZ_ASSERT(isSelfHostedBuiltin());
         MOZ_ASSERT(isExtended());

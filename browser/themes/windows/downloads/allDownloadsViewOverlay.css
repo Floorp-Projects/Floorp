@@ -10,19 +10,25 @@
 
 #downloadsRichListBox > richlistitem.download {
   height: 6em;
-%ifndef WINDOWS_AERO
-  padding: 5px 8px;
-%endif
+}
+
+@media (-moz-os-version: windows-xp) {
+  #downloadsRichListBox > richlistitem.download {
+    padding: 5px 8px;
+  }
 }
 
 .downloadTypeIcon {
   -moz-margin-end: 8px;
-%ifdef WINDOWS_AERO
-  -moz-margin-start: 8px;
-%endif
   /* explicitly size the icon, so size doesn't vary on hidpi systems */
   height: 32px;
   width: 32px;
+}
+
+@media not all and (-moz-os-version: windows-xp) {
+  .downloadTypeIcon {
+    -moz-margin-start: 8px;
+  }
 }
 
 .blockedIcon {
@@ -105,56 +111,86 @@ richlistitem.download:hover > .downloadButton.downloadRetry:active {
   -moz-image-region: rect(32px, 64px, 48px, 48px);
 }
 
-%ifndef WINDOWS_AERO
-richlistitem.download[selected] > .downloadButton.downloadConfirmBlock,
-richlistitem.download[selected] > .downloadButton.downloadCancel {
-  -moz-image-region: rect(0px, 80px, 16px, 64px);
+@media (-moz-os-version: windows-xp) {
+  richlistitem.download[selected] > .downloadButton.downloadConfirmBlock,
+  richlistitem.download[selected] > .downloadButton.downloadCancel {
+    -moz-image-region: rect(0px, 80px, 16px, 64px);
+  }
+
+  richlistitem.download[selected]:hover > .downloadButton.downloadConfirmBlock,
+  richlistitem.download[selected]:hover > .downloadButton.downloadCancel {
+    -moz-image-region: rect(0px, 96px, 16px, 80px);
+  }
+
+  richlistitem.download[selected]:hover > .downloadButton.downloadConfirmBlock:hover,
+  richlistitem.download[selected]:hover > .downloadButton.downloadCancel:hover {
+    -moz-image-region: rect(0px, 112px, 16px, 96px);
+  }
+
+  richlistitem.download[selected]:hover > .downloadButton.downloadConfirmBlock:active,
+  richlistitem.download[selected]:hover > .downloadButton.downloadCancel:active {
+    -moz-image-region: rect(0px, 128px, 16px, 112px);
+  }
+
+  richlistitem.download[selected] > .downloadButton.downloadShow {
+    -moz-image-region: rect(16px, 80px, 32px, 64px);
+  }
+
+  richlistitem.download[selected]:hover > .downloadButton.downloadShow {
+    -moz-image-region: rect(16px, 96px, 32px, 80px);
+  }
+
+  richlistitem.download[selected]:hover > .downloadButton.downloadShow:hover {
+    -moz-image-region: rect(16px, 112px, 32px, 96px);
+  }
+
+  richlistitem.download[selected]:hover > .downloadButton.downloadShow:active {
+    -moz-image-region: rect(16px, 128px, 32px, 112px);
+  }
+
+  richlistitem.download[selected] > .downloadButton.downloadRetry {
+    -moz-image-region: rect(32px, 80px, 48px, 64px);
+  }
+
+  richlistitem.download[selected]:hover > .downloadButton.downloadRetry {
+    -moz-image-region: rect(32px, 96px, 48px, 80px);
+  }
+
+  richlistitem.download[selected]:hover > .downloadButton.downloadRetry:hover {
+    -moz-image-region: rect(32px, 112px, 48px, 96px);
+  }
+
+  richlistitem.download[selected]:hover > .downloadButton.downloadRetry:active {
+    -moz-image-region: rect(32px, 128px, 48px, 112px);
+  }
 }
 
-richlistitem.download[selected]:hover > .downloadButton.downloadConfirmBlock,
-richlistitem.download[selected]:hover > .downloadButton.downloadCancel {
-  -moz-image-region: rect(0px, 96px, 16px, 80px);
-}
+@media not all and (-moz-os-version: windows-xp) {
+  @media (-moz-windows-default-theme) {
+    /*
+    -moz-appearance: menuitem is almost right, but the hover effect is not
+    transparent and is lighter than desired.
 
-richlistitem.download[selected]:hover > .downloadButton.downloadConfirmBlock:hover,
-richlistitem.download[selected]:hover > .downloadButton.downloadCancel:hover {
-  -moz-image-region: rect(0px, 112px, 16px, 96px);
-}
+    Copied from the autocomplete richlistbox styling in
+    toolkit/themes/windows/global/autocomplete.css
 
-richlistitem.download[selected]:hover > .downloadButton.downloadConfirmBlock:active,
-richlistitem.download[selected]:hover > .downloadButton.downloadCancel:active {
-  -moz-image-region: rect(0px, 128px, 16px, 112px);
+    This styling should be kept in sync with the style from the above file.
+    */
+    #downloadsRichListBox > richlistitem.download[selected] {
+      color: inherit;
+      background-color: transparent;
+      /* four gradients for the bevel highlights on each edge, one for blue background */
+      background-image:
+        linear-gradient(to bottom, rgba(255,255,255,0.9) 3px, transparent 3px),
+        linear-gradient(to right, rgba(255,255,255,0.5) 3px, transparent 3px),
+        linear-gradient(to left, rgba(255,255,255,0.5) 3px, transparent 3px),
+        linear-gradient(to top, rgba(255,255,255,0.4) 3px, transparent 3px),
+        linear-gradient(to bottom, rgba(163,196,247,0.3), rgba(122,180,246,0.3));
+      background-clip: content-box;
+      border-radius: 6px;
+      outline: 1px solid rgb(124,163,206);
+      -moz-outline-radius: 3px;
+      outline-offset: -2px;
+    }
+  }
 }
-
-richlistitem.download[selected] > .downloadButton.downloadShow {
-  -moz-image-region: rect(16px, 80px, 32px, 64px);
-}
-
-richlistitem.download[selected]:hover > .downloadButton.downloadShow {
-  -moz-image-region: rect(16px, 96px, 32px, 80px);
-}
-
-richlistitem.download[selected]:hover > .downloadButton.downloadShow:hover {
-  -moz-image-region: rect(16px, 112px, 32px, 96px);
-}
-
-richlistitem.download[selected]:hover > .downloadButton.downloadShow:active {
-  -moz-image-region: rect(16px, 128px, 32px, 112px);
-}
-
-richlistitem.download[selected] > .downloadButton.downloadRetry {
-  -moz-image-region: rect(32px, 80px, 48px, 64px);
-}
-
-richlistitem.download[selected]:hover > .downloadButton.downloadRetry {
-  -moz-image-region: rect(32px, 96px, 48px, 80px);
-}
-
-richlistitem.download[selected]:hover > .downloadButton.downloadRetry:hover {
-  -moz-image-region: rect(32px, 112px, 48px, 96px);
-}
-
-richlistitem.download[selected]:hover > .downloadButton.downloadRetry:active {
-  -moz-image-region: rect(32px, 128px, 48px, 112px);
-}
-%endif

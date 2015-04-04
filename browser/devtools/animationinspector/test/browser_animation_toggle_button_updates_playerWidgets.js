@@ -14,22 +14,25 @@ add_task(function*() {
   info("Select an animated node");
   yield selectNode(".animated", inspector);
   let widget = panel.playerWidgets[0];
+  let player = widget.player;
 
-  info("Click the toggle button to pause all animations");
-  let onRefresh = onceNextPlayerRefresh(widget.player);
+  info("Listen to animation state changes and click the toggle button to " +
+    "pause all animations");
+  let onPaused = waitForPlayState(player, "paused");
   yield panel.toggleAll();
-  yield onRefresh;
+  yield onPaused;
 
   info("Checking the selected node's animation player widget's state");
-  is(widget.player.state.playState, "paused", "The player front's state is paused");
+  is(player.state.playState, "paused", "The player front's state is paused");
   ok(widget.el.classList.contains("paused"), "The widget's UI is in paused state");
 
-  info("Click the toggle button to play all animations");
-  onRefresh = onceNextPlayerRefresh(widget.player);
+  info("Listen to animation state changes and click the toggle button to " +
+    "play all animations");
+  let onRunning = waitForPlayState(player, "running");
   yield panel.toggleAll();
-  yield onRefresh;
+  yield onRunning;
 
   info("Checking the selected node's animation player widget's state again");
-  is(widget.player.state.playState, "running", "The player front's state is running");
+  is(player.state.playState, "running", "The player front's state is running");
   ok(widget.el.classList.contains("running"), "The widget's UI is in running state");
 });

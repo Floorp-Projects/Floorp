@@ -141,8 +141,11 @@ private:
   // NULLs.
   nsCString mResponse;
 
-  // Returns true if the file is likely to be binary on Windows.
+  // Returns true if the file is likely to be binary.
   bool IsBinaryFile();
+
+  // Returns the type of download binary for the file.
+  ClientDownloadRequest::DownloadType GetDownloadType(const nsAString& aFilename);
 
   // Clean up and call the callback. PendingLookup must not be used after this
   // function is called.
@@ -375,9 +378,10 @@ PendingLookup::IsBinaryFile()
   LOG(("Suggested filename: %s [this = %p]",
        NS_ConvertUTF16toUTF8(fileName).get(), this));
   return
-    // Executable extensions for MS Windows, from
-    // https://code.google.com/p/chromium/codesearch#chromium/src/chrome/common/safe_browsing/download_protection_util.cc&l=14
+    // From https://code.google.com/p/chromium/codesearch#chromium/src/chrome/common/safe_browsing/download_protection_util.cc&l=14
+    // Android extensions
     StringEndsWith(fileName, NS_LITERAL_STRING(".apk")) ||
+    // Windows extensions
     StringEndsWith(fileName, NS_LITERAL_STRING(".bas")) ||
     StringEndsWith(fileName, NS_LITERAL_STRING(".bat")) ||
     StringEndsWith(fileName, NS_LITERAL_STRING(".cab")) ||
@@ -391,7 +395,32 @@ PendingLookup::IsBinaryFile()
     StringEndsWith(fileName, NS_LITERAL_STRING(".scr")) ||
     StringEndsWith(fileName, NS_LITERAL_STRING(".vb")) ||
     StringEndsWith(fileName, NS_LITERAL_STRING(".vbs")) ||
+    // Mac extensions
+    StringEndsWith(fileName, NS_LITERAL_STRING(".app")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".dmg")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".osx")) ||
+    StringEndsWith(fileName, NS_LITERAL_STRING(".pkg")) ||
+    // Archives _may_ contain binaries
     StringEndsWith(fileName, NS_LITERAL_STRING(".zip"));
+}
+
+ClientDownloadRequest::DownloadType
+PendingLookup::GetDownloadType(const nsAString& aFilename) {
+  MOZ_ASSERT(IsBinaryFile());
+
+  // From https://code.google.com/p/chromium/codesearch#chromium/src/chrome/common/safe_browsing/download_protection_util.cc&l=46
+  if (StringEndsWith(aFilename, NS_LITERAL_STRING(".zip"))) {
+    return ClientDownloadRequest::ZIPPED_EXECUTABLE;
+  } else if (StringEndsWith(aFilename, NS_LITERAL_STRING(".apk"))) {
+    return ClientDownloadRequest::ANDROID_APK;
+  } else if (StringEndsWith(aFilename, NS_LITERAL_STRING(".app")) ||
+             StringEndsWith(aFilename, NS_LITERAL_STRING(".dmg")) ||
+             StringEndsWith(aFilename, NS_LITERAL_STRING(".osx")) ||
+             StringEndsWith(aFilename, NS_LITERAL_STRING(".pkg"))) {
+    return ClientDownloadRequest::MAC_EXECUTABLE;
+  }
+
+  return ClientDownloadRequest::WIN_EXECUTABLE; // default to Windows binaries
 }
 
 nsresult
@@ -876,6 +905,7 @@ PendingLookup::SendRemoteQueryInternal()
   rv = mQuery->GetSuggestedFileName(fileName);
   NS_ENSURE_SUCCESS(rv, rv);
   mRequest.set_file_basename(NS_ConvertUTF16toUTF8(fileName).get());
+  mRequest.set_download_type(GetDownloadType(fileName));
 
   if (mRequest.signature().trusted()) {
     LOG(("Got signed binary for remote application reputation check "
@@ -892,8 +922,8 @@ PendingLookup::SendRemoteQueryInternal()
   if (!mRequest.SerializeToString(&serialized)) {
     return NS_ERROR_UNEXPECTED;
   }
-  LOG(("Serialized protocol buffer [this = %p]: %s", this,
-       serialized.c_str()));
+  LOG(("Serialized protocol buffer [this = %p]: (length=%d) %s", this,
+       serialized.length(), serialized.c_str()));
 
   // Set the input stream to the serialized protocol buffer
   nsCOMPtr<nsIStringInputStream> sstream =

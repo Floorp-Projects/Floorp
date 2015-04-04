@@ -15,6 +15,7 @@ const Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js", this);
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/ClientID.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/LightweightThemeManager.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -86,7 +87,7 @@ XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", function() {
 let gHttpServer = new HttpServer();
 let gServerStarted = false;
 let gRequestIterator = null;
-let gDataReportingClientID = null;
+let gClientID = null;
 
 XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
   () => Cc["@mozilla.org/datareporting/service;1"]
@@ -543,15 +544,10 @@ add_task(function* asyncSetup() {
   if (HAS_DATAREPORTINGSERVICE) {
     // Restore normal behavior for getSessionRecorder()
     gDatareportingService.simulateRestoreSessionRecorder();
-
-    gDataReportingClientID = yield gDatareportingService.getClientID();
-
-    // We should have cached the client id now. Lets confirm that by
-    // checking the client id before the async ping setup is finished.
-    let promisePingSetup = TelemetryPing.reset();
-    do_check_eq(TelemetryPing.clientID, gDataReportingClientID);
-    yield promisePingSetup;
   }
+
+  // Load the client ID from the client ID provider to check for pings sanity.
+  gClientID = yield ClientID.getClientID();
 });
 
 // Ensures that expired histograms are not part of the payload.
@@ -1221,7 +1217,7 @@ add_task(function* test_savedPingsOnShutdown() {
 
     checkPingFormat(ping, ping.type, true, true);
     Assert.equal(ping.payload.info.reason, expectedReason);
-    Assert.equal(ping.clientId, gDataReportingClientID);
+    Assert.equal(ping.clientId, gClientID);
   }
 });
 
