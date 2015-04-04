@@ -207,6 +207,10 @@ private:
 
   RefPtr<SourceSurfaceCGContext> mSnapshot;
   bool mMayContainInvalidPremultipliedData;
+
+#ifdef DEBUG
+  std::vector<CGRect> mSavedClipBounds;
+#endif
 };
 
 }
