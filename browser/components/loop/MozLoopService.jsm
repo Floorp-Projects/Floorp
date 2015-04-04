@@ -165,10 +165,14 @@ let MozLoopServiceInternal = {
    */
   deferredRegistrations: new Map(),
 
-  get pushHandler() this.mocks.pushHandler || MozLoopPushHandler,
+  get pushHandler() {
+    return this.mocks.pushHandler || MozLoopPushHandler
+  },
 
   // The uri of the Loop server.
-  get loopServerUri() Services.prefs.getCharPref("loop.server"),
+  get loopServerUri() {
+    return Services.prefs.getCharPref("loop.server")
+  },
 
   /**
    * The initial delay for push registration. This ensures we don't start
@@ -1200,7 +1204,7 @@ this.MozLoopService = {
     },
     error => {
       // If we get a non-object then setError was already called for a different error type.
-      if (typeof(error) == "object") {
+      if (typeof error == "object") {
         MozLoopServiceInternal.setError("initialization", error, () => MozLoopService.delayedInitialize(Promise.defer()));
       }
     });
@@ -1511,7 +1515,7 @@ this.MozLoopService = {
     });
   },
 
-  openFxASettings: Task.async(function() {
+  openFxASettings: Task.async(function* () {
     try {
       let fxAOAuthClient = yield MozLoopServiceInternal.promiseFxAOAuthClient();
       if (!fxAOAuthClient) {
