@@ -2,10 +2,18 @@
 
 loadRelativeToScript('PatternBuilders.js');
 
-function localSrc(src) "(function(){ " + src + " })"
-function localPatt(patt) program([exprStmt(funExpr(null, [], blockStmt([patt])))])
-function blockSrc(src) "(function(){ { " + src + " } })"
-function blockPatt(patt) program([exprStmt(funExpr(null, [], blockStmt([blockStmt([patt])])))])
+function localSrc(src) {
+    return "(function(){ " + src + " })";
+}
+function localPatt(patt) {
+    return program([exprStmt(funExpr(null, [], blockStmt([patt])))]);
+}
+function blockSrc(src) {
+    return "(function(){ { " + src + " } })";
+}
+function blockPatt(patt) {
+    return program([exprStmt(funExpr(null, [], blockStmt([blockStmt([patt])])))]);
+}
 
 function assertBlockStmt(src, patt) {
     blockPatt(patt).assert(Reflect.parse(blockSrc(src)));
