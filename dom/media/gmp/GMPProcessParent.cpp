@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * vim: sw=4 ts=4 et :
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=2 et :
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -68,18 +68,23 @@ GMPProcessParent::Launch(int32_t aTimeoutMs)
 }
 
 void
-GMPProcessParent::Delete()
+GMPProcessParent::Delete(nsCOMPtr<nsIRunnable> aCallback)
 {
-  MessageLoop* currentLoop = MessageLoop::current();
-  MessageLoop* ioLoop = XRE_GetIOMessageLoop();
+  mDeletedCallback = aCallback;
+  XRE_GetIOMessageLoop()->PostTask(FROM_HERE, NewRunnableMethod(this, &GMPProcessParent::DoDelete));
+}
 
-  if (currentLoop == ioLoop) {
-    Join();
-    delete this;
-    return;
+void
+GMPProcessParent::DoDelete()
+{
+  MOZ_ASSERT(MessageLoop::current() == XRE_GetIOMessageLoop());
+  Join();
+
+  if (mDeletedCallback) {
+    mDeletedCallback->Run();
   }
 
-  ioLoop->PostTask(FROM_HERE, NewRunnableMethod(this, &GMPProcessParent::Delete));
+  delete this;
 }
 
 } // namespace gmp

@@ -26,7 +26,7 @@ class GMPVideoHost;
 [ptr] native GMPDecryptorProxy(GMPDecryptorProxy);
 [ptr] native GMPAudioDecoderProxy(GMPAudioDecoderProxy);
 
-[scriptable, uuid(23ae33ba-661b-4cc8-8095-813971ecdc6b)]
+[scriptable, uuid(d520197c-efcf-47c7-8ef9-1589d0c0f588)]
 interface mozIGeckoMediaPluginService : nsISupports
 {
 
@@ -99,16 +99,19 @@ interface mozIGeckoMediaPluginService : nsISupports
 
   /**
    * Remove a directory for gecko media plugins and delete it from disk.
+   * If |defer| is true, wait until the plugin is unused before removing.
    * @note Main-thread API.
    */
-  void removeAndDeletePluginDirectory(in AString directory);
+  void removeAndDeletePluginDirectory(in AString directory,
+                                      [optional] in bool defer);
 
   /**
    * Gets the NodeId for a (origin, urlbarOrigin, isInprivateBrowsing) tuple.
    */
   ACString getNodeId(in AString origin,
                      in AString topLevelOrigin,
-                     in bool inPrivateBrowsingMode);
+                     in bool inPrivateBrowsingMode,
+                     in ACString version);
 
   /**
    * Clears storage data associated with the site.
