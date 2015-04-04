@@ -176,10 +176,11 @@ loop.roomViews = (function(mozL10n) {
 
     _renderInvitationOverlay: function() {
       if (this.state.roomState !== ROOM_STATES.HAS_PARTICIPANTS) {
-        return <DesktopRoomInvitationView
-          roomStore={this.props.roomStore}
-          dispatcher={this.props.dispatcher}
-        />;
+        return (
+          <DesktopRoomInvitationView
+            roomStore={this.props.roomStore}
+            dispatcher={this.props.dispatcher} />
+        );
       }
       return null;
     },
@@ -248,14 +249,16 @@ loop.roomViews = (function(mozL10n) {
         case ROOM_STATES.FULL: {
           // Note: While rooms are set to hold a maximum of 2 participants, the
           //       FULL case should never happen on desktop.
-          return <loop.conversationViews.GenericFailureView
-            cancelCall={this.closeWindow}
-          />;
+          return (
+            <loop.conversationViews.GenericFailureView
+              cancelCall={this.closeWindow} />
+          );
         }
         case ROOM_STATES.ENDED: {
-          return <sharedViews.FeedbackView
-            onAfterFeedbackReceived={this.closeWindow}
-          />;
+          return (
+            <sharedViews.FeedbackView
+              onAfterFeedbackReceived={this.closeWindow} />
+          );
         }
         default: {
           return (
