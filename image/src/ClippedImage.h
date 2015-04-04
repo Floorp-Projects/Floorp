@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_IMAGELIB_CLIPPEDIMAGE_H_
-#define MOZILLA_IMAGELIB_CLIPPEDIMAGE_H_
+#ifndef mozilla_image_src_ClippedImage_h
+#define mozilla_image_src_ClippedImage_h
 
 #include "ImageWrapper.h"
 #include "mozilla/gfx/2D.h"
@@ -49,7 +49,8 @@ public:
                                uint32_t aFlags) override;
   NS_IMETHOD RequestDiscard() override;
   NS_IMETHOD_(Orientation) GetOrientation() override;
-  NS_IMETHOD_(nsIntRect) GetImageSpaceInvalidationRect(const nsIntRect& aRect) override;
+  NS_IMETHOD_(nsIntRect) GetImageSpaceInvalidationRect(const nsIntRect& aRect)
+    override;
   nsIntSize OptimalImageSizeForDest(const gfxSize& aDest,
                                     uint32_t aWhichFrame,
                                     GraphicsFilter aFilter,
@@ -88,4 +89,4 @@ private:
 } // namespace image
 } // namespace mozilla
 
-#endif // MOZILLA_IMAGELIB_CLIPPEDIMAGE_H_
+#endif // mozilla_image_src_ClippedImage_h
