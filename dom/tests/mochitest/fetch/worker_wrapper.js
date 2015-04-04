@@ -1,3 +1,5 @@
+importScripts("utils.js");
+
 function ok(a, msg) {
   postMessage({type: 'status', status: !!a, msg: a + ": " + msg });
 }
