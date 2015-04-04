@@ -400,7 +400,7 @@ GMPWrapper.prototype = {
     if (this._gmpPath) {
       this._log.info("onPrefVersionChanged() - unregistering gmp directory " +
                      this._gmpPath);
-      gmpService.removeAndDeletePluginDirectory(this._gmpPath);
+      gmpService.removeAndDeletePluginDirectory(this._gmpPath, true /* can defer */);
     }
     AddonManagerPrivate.callAddonListeners("onUninstalled", this);
 
