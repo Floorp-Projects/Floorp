@@ -28,6 +28,9 @@ function test() {
 
     yield selectTabProject(win);
 
+    ok(win.UI.toolboxPromise, "Toolbox promise exists");
+    yield win.UI.toolboxPromise;
+
     let project = win.AppManager.selectedProject;
     is(project.location, TEST_URI, "Location is correct");
     is(project.name, "example.com: Test Tab", "Name is correct");
@@ -61,6 +64,8 @@ function selectTabProject(win) {
     yield waitForUpdate(win, "runtime-targets");
     let tabsNode = win.document.querySelector("#project-panel-tabs");
     let tabNode = tabsNode.querySelectorAll(".panel-item")[1];
+    let project = waitForUpdate(win, "project");
     tabNode.click();
+    yield project;
   });
 }
