@@ -161,7 +161,7 @@ PropertyTree::getChild(ExclusiveContext* cx, Shape* parentArg, StackShape& unroo
              * pointers.
              */
             Shape* tmp = existingShape;
-            MarkShapeUnbarriered(zone->barrierTracer(), &tmp, "read barrier");
+            TraceManuallyBarrieredEdge(zone->barrierTracer(), &tmp, "read barrier");
             MOZ_ASSERT(tmp == existingShape);
         } else if (zone->isGCSweeping() && !existingShape->isMarked() &&
                    !existingShape->arenaHeader()->allocatedDuringIncremental)

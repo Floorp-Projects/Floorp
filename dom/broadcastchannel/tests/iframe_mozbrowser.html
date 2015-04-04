@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MozBrowser iframe</title>
+</head>
+<body>
+  <script type="application/javascript;version=1.7">
+
+var bc = new BroadcastChannel('foobar');
+bc.postMessage('This is wrong!');
+
+  </script>
+</body>
+</html>

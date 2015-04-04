@@ -203,7 +203,7 @@ js::MarkAtoms(JSTracer* trc)
 
         JSAtom* atom = entry.asPtr();
         bool tagged = entry.isTagged();
-        MarkStringRoot(trc, &atom, "interned_atom");
+        TraceRoot(trc, &atom, "interned_atom");
         if (entry.asPtr() != atom)
             e.rekeyFront(AtomHasher::Lookup(atom), AtomStateEntry(atom, tagged));
     }
@@ -255,7 +255,7 @@ JSRuntime::sweepAtoms()
     for (AtomSet::Enum e(*atoms_); !e.empty(); e.popFront()) {
         AtomStateEntry entry = e.front();
         JSAtom* atom = entry.asPtr();
-        bool isDying = IsStringAboutToBeFinalized(&atom);
+        bool isDying = IsAboutToBeFinalizedUnbarriered(&atom);
 
         /* Pinned or interned key cannot be finalized. */
         MOZ_ASSERT_IF(hasContexts() && entry.isTagged(), !isDying);

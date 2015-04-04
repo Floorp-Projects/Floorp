@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 STATIC_FILES = emulator-jb.ini \
+		autophone-media.ini \
 		$(NULL)
 STATIC_DEST = $(DEPTH)/_tests/$(relativesrcdir)
 INSTALL_TARGETS += STATIC

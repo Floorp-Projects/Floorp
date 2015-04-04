@@ -314,18 +314,7 @@ function checkInputRequiredValidityForFile()
   element.type = 'file'
   document.forms[0].appendChild(element);
 
-  function createFile(fileName) {
-    var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
-                              .getService(SpecialPowers.Ci.nsIProperties);
-    var testFile = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
-    testFile.append(fileName);
-    // Only the file's path is used, so it doesn't need to be created.
-    // See also bug 1058977.
-
-    return testFile;
-  }
-
-  var file = createFile("345822_file");
+  var file = new File([""], "345822_file");
 
   SpecialPowers.wrap(element).value = "";
   element.required = false;
@@ -334,7 +323,7 @@ function checkInputRequiredValidityForFile()
   element.required = true;
   checkSufferingFromBeingMissing(element, true);
 
-  SpecialPowers.wrap(element).value = file.path;
+  SpecialPowers.wrap(element).mozSetFileArray([file]);
   checkNotSufferingFromBeingMissing(element);
 
   SpecialPowers.wrap(element).value = "";
@@ -344,7 +333,7 @@ function checkInputRequiredValidityForFile()
   checkNotSufferingFromBeingMissing(element);
 
   element.focus();
-  SpecialPowers.wrap(element).value = file.path;
+  SpecialPowers.wrap(element).mozSetFileArray([file]);
   element.required = true;
   element.blur();
   element.form.reset();
