@@ -15,7 +15,7 @@ LOOPDIR=browser/components/loop
 ESLINT=standalone/node_modules/.bin/eslint
 if [ -x "${LOOPDIR}/${ESLINT}" ]; then
   echo 'running eslint; see http://eslint.org/docs/rules/ for error info'
-  (cd ${LOOPDIR} && ./${ESLINT} --ext .js --ext .jsx .)
+  (cd ${LOOPDIR} && ./${ESLINT} --ext .js --ext .jsm --ext .jsx .)
   if [ $? != 0 ]; then
     exit 1;
   fi

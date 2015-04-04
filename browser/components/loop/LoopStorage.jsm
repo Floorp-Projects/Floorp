@@ -349,23 +349,25 @@ this.LoopStorage = Object.freeze({
       return;
     }
 
+    function handleCallback(err) {
+      if (callbackCalled) {
+        return;
+      }
+
+      if (err) {
+        onDone(err);
+        callbackCalled = true;
+        return;
+      }
+
+      if (++done === len) {
+        onDone();
+        callbackCalled = true;
+      }
+    }
+
     for (; i < len; ++i) {
-      onItem(list[i], function handler(err) {
-        if (callbackCalled) {
-          return;
-        }
-
-        if (err) {
-          onDone(err);
-          callbackCalled = true;
-          return;
-        }
-
-        if (++done === len) {
-          onDone();
-          callbackCalled = true;
-        }
-      }, i);
+      onItem(list[i], handleCallback, i);
     }
   },
 
