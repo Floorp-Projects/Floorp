@@ -8,7 +8,7 @@
 this.EXPORTED_SYMBOLS = ["AppConstants"];
 
 // Immutable for export.
-let AppConstants = Object.freeze({
+this.AppConstants = Object.freeze({
   // See this wiki page for more details about channel specific build
   // defines: https://wiki.mozilla.org/Platform/Channel-specific_build_defines
   NIGHTLY_BUILD:
@@ -103,6 +103,13 @@ let AppConstants = Object.freeze({
 
   MOZ_CRASHREPORTER:
 #ifdef MOZ_CRASHREPORTER
+  true,
+#else
+  false,
+#endif
+
+  MOZ_MAINTENANCE_SERVICE:
+#ifdef MOZ_MAINTENANCE_SERVICE
   true,
 #else
   false,
