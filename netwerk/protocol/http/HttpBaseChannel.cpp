@@ -82,6 +82,7 @@ HttpBaseChannel::HttpBaseChannel()
   , mForcePending(false)
   , mCorsIncludeCredentials(false)
   , mCorsMode(nsIHttpChannelInternal::CORS_MODE_NO_CORS)
+  , mOnStartRequestCalled(false)
 {
   LOG(("Creating HttpBaseChannel @%x\n", this));
 
@@ -2053,8 +2054,13 @@ void
 HttpBaseChannel::DoNotifyListener()
 {
   if (mListener) {
+    MOZ_ASSERT(!mOnStartRequestCalled,
+               "We should not call OnStartRequest twice");
+
     nsCOMPtr<nsIStreamListener> listener = mListener;
     listener->OnStartRequest(this, mListenerContext);
+
+    mOnStartRequestCalled = true;
   }
 
   // Make sure mIsPending is set to false. At this moment we are done from

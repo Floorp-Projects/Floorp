@@ -44,7 +44,7 @@ public:
   void ShutdownComplete() override;
 
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
-  void StartMacSandbox();
+  bool SetMacSandboxInfo();
 #endif
 
 private:
@@ -89,9 +89,6 @@ private:
   MessageLoop* mGMPMessageLoop;
   std::string mPluginPath;
   std::string mVoucherPath;
-#if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
-  nsCString mPluginBinaryPath;
-#endif
   std::string mNodeId;
   GMPLoader* mGMPLoader;
   nsTArray<uint8_t> mPluginVoucher;

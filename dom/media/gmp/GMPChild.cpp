@@ -228,32 +228,31 @@ GetAppPaths(nsCString &aAppPath, nsCString &aAppBinaryPath)
   return true;
 }
 
-void
-GMPChild::StartMacSandbox()
+bool
+GMPChild::SetMacSandboxInfo()
 {
+  if (!mGMPLoader) {
+    return false;
+  }
   nsAutoCString pluginDirectoryPath, pluginFilePath;
   if (!GetPluginPaths(mPluginPath, pluginDirectoryPath, pluginFilePath)) {
-    MOZ_CRASH("Error scanning plugin path");
+    return false;
   }
   nsAutoCString appPath, appBinaryPath;
   if (!GetAppPaths(appPath, appBinaryPath)) {
-    MOZ_CRASH("Error resolving child process path");
+    return false;
   }
 
   MacSandboxInfo info;
   info.type = MacSandboxType_Plugin;
   info.pluginInfo.type = MacSandboxPluginType_GMPlugin_Default;
-  info.pluginInfo.pluginPath.Assign(pluginDirectoryPath);
-  mPluginBinaryPath.Assign(pluginFilePath);
-  info.pluginInfo.pluginBinaryPath.Assign(pluginFilePath);
-  info.appPath.Assign(appPath);
-  info.appBinaryPath.Assign(appBinaryPath);
+  info.pluginInfo.pluginPath.assign(pluginDirectoryPath.get());
+  info.pluginInfo.pluginBinaryPath.assign(pluginFilePath.get());
+  info.appPath.assign(appPath.get());
+  info.appBinaryPath.assign(appBinaryPath.get());
 
-  nsAutoCString err;
-  if (!mozilla::StartMacSandbox(info, err)) {
-    NS_WARNING(err.get());
-    MOZ_CRASH("sandbox_init() failed");
-  }
+  mGMPLoader->SetSandboxInfo(&info);
+  return true;
 }
 #endif // XP_MACOSX && MOZ_GMP_SANDBOX
 
@@ -364,24 +363,6 @@ GMPChild::PreLoadLibraries(const std::string& aPluginPath)
 }
 #endif
 
-#if defined(MOZ_GMP_SANDBOX)
-
-#if defined(XP_MACOSX)
-class MacOSXSandboxStarter : public SandboxStarter {
-public:
-  explicit MacOSXSandboxStarter(GMPChild* aGMPChild)
-    : mGMPChild(aGMPChild)
-  {}
-  virtual void Start(const char* aLibPath) override {
-    mGMPChild->StartMacSandbox();
-  }
-private:
-  GMPChild* mGMPChild;
-};
-#endif
-
-#endif // MOZ_GMP_SANDBOX
-
 bool
 GMPChild::GetLibPath(nsACString& aOutLibPath)
 {
@@ -427,8 +408,10 @@ GMPChild::RecvStartPlugin()
   }
 
 #if defined(MOZ_GMP_SANDBOX) && defined(XP_MACOSX)
-  nsAutoPtr<SandboxStarter> starter(new MacOSXSandboxStarter(this));
-  mGMPLoader->SetStartSandboxStarter(starter);
+  if (!SetMacSandboxInfo()) {
+    NS_WARNING("Failed to set Mac GMP sandbox info");
+    return false;
+  }
 #endif
 
   if (!mGMPLoader->Load(libPath.get(),

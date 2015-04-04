@@ -3,10 +3,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// The Mac sandbox module is a static library (a Library in moz.build terms)
+// that can be linked into any binary (for example plugin-container or XUL).
+// It must not have dependencies on any other Mozilla module.  This is why,
+// for example, it has its own OS X version detection code, rather than
+// linking to nsCocoaFeatures.mm in XUL.
+
 #include "Sandbox.h"
 
-#include "nsCocoaFeatures.h"
-#include "mozilla/Preferences.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <CoreFoundation/CoreFoundation.h>
 
 // XXX There are currently problems with the /usr/include/sandbox.h file on
 // some/all of the Macs in Mozilla's build system.  For the time being (until
@@ -14,6 +21,106 @@
 // rather than including it here.
 extern "C" int sandbox_init(const char *profile, uint64_t flags, char **errorbuf);
 extern "C" void sandbox_free_error(char *errorbuf);
+
+#define MAC_OS_X_VERSION_10_0_HEX  0x00001000
+#define MAC_OS_X_VERSION_10_6_HEX  0x00001060
+#define MAC_OS_X_VERSION_10_7_HEX  0x00001070
+#define MAC_OS_X_VERSION_10_8_HEX  0x00001080
+#define MAC_OS_X_VERSION_10_9_HEX  0x00001090
+#define MAC_OS_X_VERSION_10_10_HEX 0x000010A0
+
+// Note about "major", "minor" and "bugfix" in the following code:
+//
+// The code decomposes an OS X version number into these components, and in
+// doing so follows Apple's terminology in Gestalt.h.  But this is very
+// misleading, because in other contexts Apple uses the "minor" component of
+// an OS X version number to indicate a "major" release (for example the "9"
+// in OS X 10.9.5), and the "bugfix" component to indicate a "minor" release
+// (for example the "5" in OS X 10.9.5).
+
+class OSXVersion {
+public:
+  static bool OnLionOrLater();
+  static int32_t OSXVersionMinor();
+
+private:
+  static void GetSystemVersion(int32_t& aMajor, int32_t& aMinor, int32_t& aBugFix);
+  static int32_t GetVersionNumber();
+  static int32_t mOSXVersion;
+};
+
+int32_t OSXVersion::mOSXVersion = -1;
+
+bool OSXVersion::OnLionOrLater()
+{
+  return (GetVersionNumber() >= MAC_OS_X_VERSION_10_7_HEX);
+}
+
+int32_t OSXVersion::OSXVersionMinor()
+{
+  return (GetVersionNumber() & 0xF0) >> 4;
+}
+
+void
+OSXVersion::GetSystemVersion(int32_t& aMajor, int32_t& aMinor, int32_t& aBugFix)
+{
+  SInt32 major = 0, minor = 0, bugfix = 0;
+
+  CFURLRef url =
+    CFURLCreateWithString(kCFAllocatorDefault,
+                          CFSTR("file:///System/Library/CoreServices/SystemVersion.plist"),
+                          NULL);
+  CFReadStreamRef stream =
+    CFReadStreamCreateWithFile(kCFAllocatorDefault, url);
+  CFReadStreamOpen(stream);
+  CFDictionaryRef sysVersionPlist = (CFDictionaryRef)
+    CFPropertyListCreateWithStream(kCFAllocatorDefault,
+                                   stream, 0, kCFPropertyListImmutable,
+                                   NULL, NULL);
+  CFReadStreamClose(stream);
+  CFRelease(stream);
+  CFRelease(url);
+
+  CFStringRef versionString = (CFStringRef)
+    CFDictionaryGetValue(sysVersionPlist, CFSTR("ProductVersion"));
+  CFArrayRef versions =
+    CFStringCreateArrayBySeparatingStrings(kCFAllocatorDefault,
+                                           versionString, CFSTR("."));
+  CFIndex count = CFArrayGetCount(versions);
+  if (count > 0) {
+    CFStringRef component = (CFStringRef) CFArrayGetValueAtIndex(versions, 0);
+    major = CFStringGetIntValue(component);
+    if (count > 1) {
+      component = (CFStringRef) CFArrayGetValueAtIndex(versions, 1);
+      minor = CFStringGetIntValue(component);
+      if (count > 2) {
+        component = (CFStringRef) CFArrayGetValueAtIndex(versions, 2);
+        bugfix = CFStringGetIntValue(component);
+      }
+    }
+  }
+  CFRelease(sysVersionPlist);
+  CFRelease(versions);
+
+  // If 'major' isn't what we expect, assume the oldest version of OS X we
+  // currently support (OS X 10.6).
+  if (major != 10) {
+    aMajor = 10; aMinor = 6; aBugFix = 0;
+  } else {
+    aMajor = major; aMinor = minor; aBugFix = bugfix;
+  }
+}
+
+int32_t
+OSXVersion::GetVersionNumber()
+{
+  if (mOSXVersion == -1) {
+    int32_t major, minor, bugfix;
+    GetSystemVersion(major, minor, bugfix);
+    mOSXVersion = MAC_OS_X_VERSION_10_0_HEX + (minor << 4) + bugfix;
+  }
+  return mOSXVersion;
+}
 
 namespace mozilla {
 
@@ -47,7 +154,6 @@ static const char contentSandboxRules[] =
   "(version 1)\n"
   "\n"
   "(define sandbox-level %d)\n"
-  "(define macosMajorVersion %d)\n"
   "(define macosMinorVersion %d)\n"
   "(define appPath \"%s\")\n"
   "(define appBinaryPath \"%s\")\n"
@@ -293,47 +399,63 @@ static const char contentSandboxRules[] =
   "  )\n"
   ")\n";
 
-bool StartMacSandbox(MacSandboxInfo aInfo, nsCString &aErrorMessage)
+bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
 {
-  nsAutoCString profile;
+  char *profile = NULL;
   if (aInfo.type == MacSandboxType_Plugin) {
-    if (nsCocoaFeatures::OnLionOrLater()) {
-      profile.AppendPrintf(pluginSandboxRules, "", ";",
-                           aInfo.pluginInfo.pluginPath.get(),
-                           aInfo.pluginInfo.pluginBinaryPath.get(),
-                           aInfo.appPath.get(),
-                           aInfo.appBinaryPath.get());
+    if (OSXVersion::OnLionOrLater()) {
+      asprintf(&profile, pluginSandboxRules, "", ";",
+               aInfo.pluginInfo.pluginPath.c_str(),
+               aInfo.pluginInfo.pluginBinaryPath.c_str(),
+               aInfo.appPath.c_str(),
+               aInfo.appBinaryPath.c_str());
     } else {
-      profile.AppendPrintf(pluginSandboxRules, ";", "",
-                           aInfo.pluginInfo.pluginPath.get(),
-                           aInfo.pluginInfo.pluginBinaryPath.get(),
-                           aInfo.appPath.get(),
-                           aInfo.appBinaryPath.get());
+      asprintf(&profile, pluginSandboxRules, ";", "",
+               aInfo.pluginInfo.pluginPath.c_str(),
+               aInfo.pluginInfo.pluginBinaryPath.c_str(),
+               aInfo.appPath.c_str(),
+               aInfo.appBinaryPath.c_str());
     }
   }
   else if (aInfo.type == MacSandboxType_Content) {
-    profile.AppendPrintf(contentSandboxRules,
-                         Preferences::GetInt("security.sandbox.content.level"),
-                         nsCocoaFeatures::OSXVersionMajor(),
-                         nsCocoaFeatures::OSXVersionMinor(),
-                         aInfo.appPath.get(),
-                         aInfo.appBinaryPath.get(),
-                         aInfo.appDir.get(),
-                         getenv("HOME"));
+    asprintf(&profile, contentSandboxRules, aInfo.level,
+             OSXVersion::OSXVersionMinor(),
+             aInfo.appPath.c_str(),
+             aInfo.appBinaryPath.c_str(),
+             aInfo.appDir.c_str(),
+             getenv("HOME"));
   }
   else {
-    aErrorMessage.AppendPrintf("Unexpected sandbox type %u", aInfo.type);
+    char *msg = NULL;
+    asprintf(&msg, "Unexpected sandbox type %u", aInfo.type);
+    if (msg) {
+      aErrorMessage.assign(msg);
+      free(msg);
+    }
+    return false;
+  }
+
+  if (!profile) {
+    fprintf(stderr, "Out of memory in StartMacSandbox()!\n");
     return false;
   }
 
   char *errorbuf = NULL;
-  if (sandbox_init(profile.get(), 0, &errorbuf)) {
+  int rv = sandbox_init(profile, 0, &errorbuf);
+  if (rv) {
     if (errorbuf) {
-      aErrorMessage.AppendPrintf("sandbox_init() failed with error \"%s\"",
-                                 errorbuf);
-      printf("profile: %s\n", profile.get());
+      char *msg = NULL;
+      asprintf(&msg, "sandbox_init() failed with error \"%s\"", errorbuf);
+      if (msg) {
+        aErrorMessage.assign(msg);
+        free(msg);
+      }
+      fprintf(stderr, "profile: %s\n", profile);
       sandbox_free_error(errorbuf);
     }
+  }
+  free(profile);
+  if (rv) {
     return false;
   }
 

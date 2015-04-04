@@ -172,6 +172,11 @@ BrowserElementChild.prototype = {
                      /* useCapture = */ true,
                      /* wantsUntrusted = */ false);
 
+    addEventListener('click',
+                     this._ClickHandler.bind(this),
+                     /* useCapture = */ false,
+                     /* wantsUntrusted = */ false);
+
     // This listens to unload events from our message manager, but /not/ from
     // the |content| window.  That's because the window's unload event doesn't
     // bubble, and we're not using a capturing listener.  If we'd used
@@ -577,6 +582,18 @@ BrowserElementChild.prototype = {
       state: e.state,
     };
     sendAsyncMsg('scrollviewchange', detail);
+  },
+
+  _ClickHandler: function(e) {
+    let elem = e.target;
+    if (elem instanceof Ci.nsIDOMHTMLAnchorElement && elem.href) {
+      // Open in a new tab if middle click or ctrl/cmd-click.
+      if ((Services.appinfo.OS == 'Darwin' && e.metaKey) ||
+          (Services.appinfo.OS != 'Darwin' && e.ctrlKey) ||
+           e.button == 1) {
+        sendAsyncMsg('opentab', {url: elem.href});
+      }
+    }
   },
 
   _selectionStateChangedHandler: function(e) {
@@ -1085,7 +1102,7 @@ BrowserElementChild.prototype = {
 
   _updateVisibility: function() {
     var visible = this._forcedVisible && this._ownerVisible;
-    if (docShell.isActive !== visible) {
+    if (docShell && docShell.isActive !== visible) {
       docShell.isActive = visible;
       sendAsyncMsg('visibilitychange', {visible: visible});
     }

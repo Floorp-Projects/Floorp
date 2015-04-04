@@ -719,11 +719,16 @@ struct SVGDrawingParameters
     , region(aRegion)
     , filter(aFilter)
     , svgContext(aSVGContext)
-    , viewportSize(aSVGContext ? aSVGContext->GetViewportSize() : aSize)
+    , viewportSize(aSize)
     , animationTime(aAnimationTime)
     , flags(aFlags)
     , opacity(aSVGContext ? aSVGContext->GetGlobalOpacity() : 1.0)
-  { }
+  {
+    if (aSVGContext) {
+      CSSIntSize sz = aSVGContext->GetViewportSize();
+      viewportSize = nsIntSize(sz.width, sz.height); // XXX losing unit
+    }
+  }
 
   gfxContext*                   context;
   IntSize                       size;
