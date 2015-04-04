@@ -53,6 +53,27 @@ addMessageListener("Test:SetAnimationPlayerCurrentTime", function(msg) {
 });
 
 /**
+ * Change the playbackRate of one of the animation players of a given node.
+ * @param {Object} data
+ * - {String} selector The CSS selector to get the node (can be a "super"
+ *   selector).
+ * - {Number} animationIndex The index of the node's animationPlayers to change.
+ * - {Number} playbackRate The rate to set.
+ */
+addMessageListener("Test:SetAnimationPlayerPlaybackRate", function(msg) {
+  let {selector, animationIndex, playbackRate} = msg.data;
+  let node = superQuerySelector(selector);
+  if (!node) {
+    return;
+  }
+
+  let player = node.getAnimations()[animationIndex];
+  player.playbackRate = playbackRate;
+
+  sendAsyncMessage("Test:SetAnimationPlayerPlaybackRate");
+});
+
+/**
  * Get the current playState of an animation player on a given node.
  * @param {Object} data
  * - {String} selector The CSS selector to get the node (can be a "super"
