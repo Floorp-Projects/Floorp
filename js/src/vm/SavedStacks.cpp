@@ -251,14 +251,14 @@ uint32_t
 SavedFrame::getLine()
 {
     const Value& v = getReservedSlot(JSSLOT_LINE);
-    return v.toInt32();
+    return v.toPrivateUint32();
 }
 
 uint32_t
 SavedFrame::getColumn()
 {
     const Value& v = getReservedSlot(JSSLOT_COLUMN);
-    return v.toInt32();
+    return v.toPrivateUint32();
 }
 
 JSAtom*
@@ -304,8 +304,8 @@ SavedFrame::initFromLookup(SavedFrame::HandleLookup lookup)
     MOZ_ASSERT(getReservedSlot(JSSLOT_SOURCE).isUndefined());
     setReservedSlot(JSSLOT_SOURCE, StringValue(lookup->source));
 
-    setReservedSlot(JSSLOT_LINE, NumberValue(lookup->line));
-    setReservedSlot(JSSLOT_COLUMN, NumberValue(lookup->column));
+    setReservedSlot(JSSLOT_LINE, PrivateUint32Value(lookup->line));
+    setReservedSlot(JSSLOT_COLUMN, PrivateUint32Value(lookup->column));
     setReservedSlot(JSSLOT_FUNCTIONDISPLAYNAME,
                     lookup->functionDisplayName
                         ? StringValue(lookup->functionDisplayName)
