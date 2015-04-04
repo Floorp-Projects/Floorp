@@ -166,7 +166,8 @@ ProcessGlobal.prototype = {
       let args = message.arguments;
       let stackTrace = '';
 
-      if (message.level == 'assert' || message.level == 'error' || message.level == 'trace') {
+      if (message.stacktrace &&
+          (message.level == 'assert' || message.level == 'error' || message.level == 'trace')) {
         stackTrace = Array.map(message.stacktrace, formatStackFrame).join('\n');
       } else {
         stackTrace = formatStackFrame(message);

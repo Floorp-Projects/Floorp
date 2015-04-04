@@ -613,7 +613,7 @@ ProxyObject::trace(JSTracer* trc, JSObject* obj)
 {
     ProxyObject* proxy = &obj->as<ProxyObject>();
 
-    MarkShape(trc, &proxy->shape, "ProxyObject_shape");
+    TraceEdge(trc, &proxy->shape, "ProxyObject_shape");
 
 #ifdef DEBUG
     if (trc->runtime()->gc.isStrictProxyCheckingEnabled() && proxy->is<WrapperObject>()) {

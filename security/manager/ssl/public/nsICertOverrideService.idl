@@ -49,28 +49,28 @@ interface nsICertOverrideService : nsISupports {
    *  @param aCert The cert that should always be accepted
    *  @param aOverrideBits The errors we want to be overriden
    */
-  void rememberValidityOverride(in ACString aHostName, 
+  void rememberValidityOverride(in ACString aHostName,
                                 in int32_t aPort,
                                 in nsIX509Cert aCert,
                                 in uint32_t aOverrideBits,
                                 in boolean aTemporary);
 
   /**
-   *  The given cert should always be accepted for the given hostname:port,
-   *  regardless of errors verifying the cert.
-   *  Host:Port is a primary key, only one entry per host:port can exist.
-   *  The implementation will store a fingerprint of the cert.
-   *  The implementation will decide which fingerprint alg is used.
+   *  Return whether this host, port, cert triple has a stored override.
+   *  If so, the outparams will contain the specific errors that were
+   *  overridden, and whether the override is permanent, or only for the current
+   *  session.
    *
    *  @param aHostName The host (punycode) this mapping belongs to
-   *  @param aPort The port this mapping belongs to, if it is -1 then it 
-   *          is internaly treated as 443
-   *  @param aCert The cert that should always be accepted
-   *  @param aOverrideBits The errors that are currently overriden
-   *  @return whether an override entry for aHostNameWithPort is currently on file
-   *          that matches the given certificate
+   *  @param aPort The port this mapping belongs to, if it is -1 then it
+   *         is internally treated as 443
+   *  @param aCert The certificate this mapping belongs to
+   *  @param aOverrideBits The errors that are currently overridden
+   *  @param aIsTemporary Whether the stored override is session-only,
+   *         or permanent
+   *  @return Whether an override has been stored for this host+port+cert
    */
-  boolean hasMatchingOverride(in ACString aHostName, 
+  boolean hasMatchingOverride(in ACString aHostName,
                               in int32_t aPort,
                               in nsIX509Cert aCert,
                               out uint32_t aOverrideBits,

@@ -151,7 +151,7 @@ partial interface HTMLInputElement {
   [ChromeOnly]
   sequence<DOMString> mozGetFileNameArray();
 
-  [ChromeOnly]
+  [ChromeOnly, Throws]
   void mozSetFileNameArray(sequence<DOMString> fileNames);
 
   [ChromeOnly]

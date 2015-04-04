@@ -6,7 +6,7 @@
 #ifndef mozilla_Sandbox_h
 #define mozilla_Sandbox_h
 
-#include "nsString.h"
+#include <string>
 
 enum MacSandboxType {
   MacSandboxType_Default = 0,
@@ -26,24 +26,32 @@ enum MacSandboxPluginType {
 typedef struct _MacSandboxPluginInfo {
   _MacSandboxPluginInfo()
     : type(MacSandboxPluginType_Default) {}
+  _MacSandboxPluginInfo(const struct _MacSandboxPluginInfo& other)
+    : type(other.type), pluginPath(other.pluginPath),
+      pluginBinaryPath(other.pluginBinaryPath) {}
   MacSandboxPluginType type;
-  nsCString pluginPath;
-  nsCString pluginBinaryPath;
+  std::string pluginPath;
+  std::string pluginBinaryPath;
 } MacSandboxPluginInfo;
 
 typedef struct _MacSandboxInfo {
   _MacSandboxInfo()
-    : type(MacSandboxType_Default) {}
+    : type(MacSandboxType_Default), level(0) {}
+  _MacSandboxInfo(const struct _MacSandboxInfo& other)
+    : type(other.type), level(other.level), pluginInfo(other.pluginInfo),
+      appPath(other.appPath), appBinaryPath(other.appBinaryPath),
+      appDir(other.appDir) {}
   MacSandboxType type;
+  int32_t level;
   MacSandboxPluginInfo pluginInfo;
-  nsCString appPath;
-  nsCString appBinaryPath;
-  nsCString appDir;
+  std::string appPath;
+  std::string appBinaryPath;
+  std::string appDir;
 } MacSandboxInfo;
 
 namespace mozilla {
 
-bool StartMacSandbox(MacSandboxInfo aInfo, nsCString &aErrorMessage);
+bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage);
 
 } // namespace mozilla
 

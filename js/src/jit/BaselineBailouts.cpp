@@ -487,12 +487,10 @@ HasLiveIteratorAtStackDepth(JSScript* script, jsbytecode* pc, uint32_t stackDept
         if (tn->kind == JSTRY_FOR_IN && stackDepth == tn->stackDepth)
             return true;
 
-        // For-of loops have both the iterator and the result on stack.
-        if (tn->kind == JSTRY_FOR_OF &&
-            (stackDepth == tn->stackDepth || stackDepth == tn->stackDepth - 1))
-        {
+        // For-of loops have both the iterator and the result object on
+        // stack. The iterator is below the result object.
+        if (tn->kind == JSTRY_FOR_OF && stackDepth == tn->stackDepth - 1)
             return true;
-        }
     }
 
     return false;

@@ -4,13 +4,14 @@ fuzzy-if(cocoaWidget,2,6) random-if(Android&&!browserIsRemote) == component-alph
 != pull-background-2.html about:blank
 != pull-background-3.html about:blank # fails with non-overlay scrollbars and event regions due to bug 1148515
 != pull-background-4.html about:blank # fails with non-overlay scrollbars and event regions due to bug 1148515
-skip-if(asyncPanZoom) != pull-background-5.html about:blank # Fails with event regions
+skip-if(asyncPanZoom) != pull-background-5.html about:blank # Fails with event regions, bug 1150941
 != pull-background-6.html about:blank
-skip-if(asyncPanZoom) != pull-background-animated-position-1.html about:blank # Fails with event regions
-!= pull-background-animated-position-2.html about:blank
-fails != pull-background-animated-position-3.html about:blank # Fails because PaintedLayer item assignment doesn't recognize overflow:hidden clips
-fails != pull-background-animated-position-4.html about:blank # Fails because PaintedLayer item assignment and background pulling don't recognize overflow:hidden clips
-fails-if(!asyncPanZoom&&!Android) != pull-background-animated-position-5.html about:blank # Fails because ownLayer bounds don't anticipate changes of animated contents, but doesn't fail with event regions
+# The animated-position tests are disabled for intermittent failures / passes, bug 1150941
+skip != pull-background-animated-position-1.html about:blank # Fails with event regions
+skip != pull-background-animated-position-2.html about:blank
+skip != pull-background-animated-position-3.html about:blank # Fails because PaintedLayer item assignment doesn't recognize overflow:hidden clips
+skip != pull-background-animated-position-4.html about:blank # Fails because PaintedLayer item assignment and background pulling don't recognize overflow:hidden clips
+skip != pull-background-animated-position-5.html about:blank # Fails because ownLayer bounds don't anticipate changes of animated contents, but doesn't fail with event regions
 skip-if(!asyncPanZoom) != pull-background-displayport-1.html about:blank
 skip-if(!asyncPanZoom) != pull-background-displayport-2.html about:blank
 skip-if(!asyncPanZoom) != pull-background-displayport-3.html about:blank # fails with non-overlay scrollbars and event regions due to bug 1148515

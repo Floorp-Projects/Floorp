@@ -241,7 +241,7 @@ static SVGImageContext
 OrientViewport(const SVGImageContext& aOldContext,
                const Orientation& aOrientation)
 {
-  nsIntSize viewportSize(aOldContext.GetViewportSize());
+  CSSIntSize viewportSize(aOldContext.GetViewportSize());
   if (aOrientation.SwapsWidthAndHeight()) {
     swap(viewportSize.width, viewportSize.height);
   }

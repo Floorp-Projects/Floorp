@@ -1352,27 +1352,6 @@ NativeLookupOwnProperty(ExclusiveContext* cx,
                         typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp);
 
 /*
- * On success, and if id was found, return true with *objp non-null and with a
- * property of *objp stored in *propp. If successful but id was not found,
- * return true with both *objp and *propp null.
- */
-template <AllowGC allowGC>
-extern bool
-NativeLookupProperty(ExclusiveContext* cx,
-                     typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
-                     typename MaybeRooted<jsid, allowGC>::HandleType id,
-                     typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
-                     typename MaybeRooted<Shape*, allowGC>::MutableHandleType propp);
-
-inline bool
-NativeLookupProperty(ExclusiveContext* cx, HandleNativeObject obj, PropertyName* name,
-                     MutableHandleObject objp, MutableHandleShape propp);
-
-extern bool
-NativeLookupElement(JSContext* cx, HandleNativeObject obj, uint32_t index,
-                    MutableHandleObject objp, MutableHandleShape propp);
-
-/*
  * Get a property from `receiver`, after having already done a lookup and found
  * the property on a native object `obj`.
  *
