@@ -66,6 +66,28 @@
     "space-infix-ops": 0,
     "space-return-throw-case": 0,
     "strict": 0,
-    "yoda": 0
+    "yoda": 0,
+    // eslint-plugin-react rules. These are documented at
+    // <https://github.com/yannickcr/eslint-plugin-react#list-of-supported-rules>
+    "react/jsx-quotes": [2, "double", "avoid-escape"],
+    "react/jsx-no-undef": 2,
+    // Need to fix instances where this is failing.
+    "react/jsx-sort-props": 0,
+    "react/jsx-uses-vars": 2,
+    // Need to fix the couple of instances which don't
+    // currently pass this rule.
+    "react/no-did-mount-set-state": 0,
+    "react/no-did-update-set-state": 2,
+    "react/no-unknown-property": 2,
+    // Need to fix instances where this is currently failing
+    "react/prop-types": 0,
+    "react/self-closing-comp": 2,
+    "react/wrap-multilines": 2,
+    // Not worth it: React is defined globally
+    "react/jsx-uses-react": 0,
+    "react/react-in-jsx-scope": 0,
+    // These ones we don't want to ever enable
+    "react/display-name": 0,
+    "react/no-multi-comp": 0
   }
 }
