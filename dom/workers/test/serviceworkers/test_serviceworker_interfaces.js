@@ -159,6 +159,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "ServiceWorkerGlobalScope",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    "ServiceWorkerRegistration",
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "TextDecoder",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "TextEncoder",

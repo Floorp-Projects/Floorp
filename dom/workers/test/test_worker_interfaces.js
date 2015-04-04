@@ -147,6 +147,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Response",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    { name: "ServiceWorkerRegistration", pref: "dom.serviceWorkers.enabled" },
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "TextDecoder",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "TextEncoder",

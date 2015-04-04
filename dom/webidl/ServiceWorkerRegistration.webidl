@@ -8,8 +8,8 @@
  *
  */
 
-[Pref="dom.serviceWorkers.enabled",
- Exposed=Window]
+[Func="mozilla::dom::ServiceWorkerRegistrationVisible",
+ Exposed=(Window,Worker)]
 interface ServiceWorkerRegistration : EventTarget {
   [Unforgeable] readonly attribute ServiceWorker? installing;
   [Unforgeable] readonly attribute ServiceWorker? waiting;
