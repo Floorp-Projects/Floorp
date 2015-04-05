@@ -110,14 +110,13 @@ def rect_is_empty(valobj):
 def summarize_region(valobj, internal_dict):
     # This function makes use of the synthetic children generated for ns(Int)Regions.
     bounds = valobj.GetChildMemberWithName("bounds")
-    num_rects = valobj.GetChildMemberWithName("numRects").GetValueAsUnsigned(0)
-    if num_rects == 0:
-        return "empty"
     bounds_summary = summarize_rect(bounds, internal_dict)
-    if num_rects == 1:
+    num_rects = valobj.GetChildMemberWithName("numRects").GetValueAsUnsigned(0)
+    if num_rects <= 1:
         if rect_is_empty(bounds):
             return "empty"
-        return "one rect: " + bounds_summary
+        if num_rects == 1:
+            return "one rect: " + bounds_summary
     return str(num_rects) + " rects, bounds: " + bounds_summary
 
 def init(debugger):
