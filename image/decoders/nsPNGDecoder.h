@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsPNGDecoder_h
-#define nsPNGDecoder_h
+#ifndef mozilla_image_decoders_nsPNGDecoder_h
+#define mozilla_image_decoders_nsPNGDecoder_h
 
 #include "Decoder.h"
 
@@ -129,4 +129,4 @@ public:
 } // namespace image
 } // namespace mozilla
 
-#endif // nsPNGDecoder_h
+#endif // mozilla_image_decoders_nsPNGDecoder_h
