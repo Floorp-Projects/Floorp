@@ -586,7 +586,6 @@ Process(JSContext* cx, const char* filename, bool forceTTY)
         if (!file) {
             JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr,
                                  JSSMSG_CANT_OPEN, filename, strerror(errno));
-            gExitCode = EXITCODE_FILE_NOT_FOUND;
             return;
         }
     }
@@ -1398,7 +1397,6 @@ FileAsString(JSContext* cx, const char* pathname)
                         JS::UTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(buf, len), &len).get();
                     if (!ucbuf) {
                         JS_ReportError(cx, "Invalid UTF-8 in file '%s'", pathname);
-                        gExitCode = EXITCODE_RUNTIME_ERROR;
                         return nullptr;
                     }
                     str = JS_NewUCStringCopyN(cx, ucbuf, len);
