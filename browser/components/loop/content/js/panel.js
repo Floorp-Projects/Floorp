@@ -259,11 +259,13 @@ loop.panel = (function(_, mozL10n) {
             )
           ),
         });
-        return React.createElement("div", {id: "powered-by-wrapper"}, 
-          this.renderPartnerLogo(), 
-          React.createElement("p", {className: "terms-service", 
-             dangerouslySetInnerHTML: {__html: tosHTML}})
-         );
+        return (
+          React.createElement("div", {id: "powered-by-wrapper"}, 
+            this.renderPartnerLogo(), 
+            React.createElement("p", {className: "terms-service", 
+               dangerouslySetInnerHTML: {__html: tosHTML}})
+           )
+        );
       } else {
         return React.createElement("div", null);
       }
@@ -660,10 +662,12 @@ loop.panel = (function(_, mozL10n) {
           React.createElement("h1", null, this._getListHeading()), 
           React.createElement("div", {className: "room-list"}, 
             this.state.rooms.map(function(room, i) {
-              return React.createElement(RoomEntry, {
-                key: room.roomToken, 
-                dispatcher: this.props.dispatcher, 
-                room: room}
+              return (
+                React.createElement(RoomEntry, {
+                  key: room.roomToken, 
+                  dispatcher: this.props.dispatcher, 
+                  room: room}
+                )
               );
             }, this)
           ), 
