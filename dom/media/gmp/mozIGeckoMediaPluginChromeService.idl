@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 #include "nsIFile.idl"
 
-[scriptable, uuid(5878366c-73f6-486e-ad2f-9aca602864e4)]
+[scriptable, uuid(4d50f2df-736d-41b8-9292-9067f6bcd892)]
 interface mozIGeckoMediaPluginChromeService : nsISupports
 {
   /**
@@ -28,9 +28,9 @@ interface mozIGeckoMediaPluginChromeService : nsISupports
   void removeAndDeletePluginDirectory(in AString directory);
 
   /**
-   * Clears storage data associated with the origin.
+   * Clears storage data associated with the site.
    */
-  void forgetThisSite(in AString origin);
+  void forgetThisSite(in AString site);
 
   /**
    * Returns true if the given node id is allowed to store things
