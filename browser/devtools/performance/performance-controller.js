@@ -199,7 +199,9 @@ let PerformanceController = {
     this._nonBooleanPrefs = new ViewHelpers.Prefs("devtools.performance", {
       "hidden-markers": ["Json", "timeline.hidden-markers"],
       "memory-sample-probability": ["Float", "memory.sample-probability"],
-      "memory-max-log-length": ["Int", "memory.max-log-length"]
+      "memory-max-log-length": ["Int", "memory.max-log-length"],
+      "profiler-buffer-size": ["Int", "profiler.buffer-size"],
+      "profiler-sample-frequency": ["Int", "profiler.sample-frequency-khz"]
     });
 
     this._nonBooleanPrefs.registerObserver();
@@ -290,7 +292,9 @@ let PerformanceController = {
       withTicks: this.getOption("enable-framerate"),
       withAllocations: this.getOption("enable-memory"),
       allocationsSampleProbability: this.getPref("memory-sample-probability"),
-      allocationsMaxLogLength: this.getPref("memory-max-log-length")
+      allocationsMaxLogLength: this.getPref("memory-max-log-length"),
+      bufferSize: this.getPref("profiler-buffer-size"),
+      sampleInterval: 1 / (this.getPref("profiler-sample-frequency") || 1)
     });
 
     this.emit(EVENTS.RECORDING_WILL_START, recording);

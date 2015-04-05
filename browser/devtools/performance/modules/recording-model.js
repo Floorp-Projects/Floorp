@@ -26,7 +26,9 @@ const RecordingModel = function (options={}) {
     withMemory: options.withMemory || false,
     withAllocations: options.withAllocations || false,
     allocationsSampleProbability: options.allocationsSampleProbability || 0,
-    allocationsMaxLogLength: options.allocationsMaxLogLength || 0
+    allocationsMaxLogLength: options.allocationsMaxLogLength || 0,
+    bufferSize: options.bufferSize || 0,
+    sampleInterval: options.sampleInterval || 1
   };
 };
 
