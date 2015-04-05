@@ -1,9 +1,15 @@
+# We still need to fix warnings in this file.
 MozLoopWorker.js
+# This file currently uses es7 features
+MozLoopAPI.jsm
+# Libs we don't need to check
 content/libs
 content/shared/libs
 standalone/content/libs
 standalone/node_modules
+# We should look at turning these on when we fix the warnings
 test/xpcshell
 test/mochitest
+# Libs we don't need to check
 test/shared/vendor
 
