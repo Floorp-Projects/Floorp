@@ -189,7 +189,7 @@ private:
 };
 
 nsresult ReadSalt(nsIFile* aPath, nsACString& aOutData);
-bool MatchOrigin(nsIFile* aPath, const nsACString& aOrigin);
+bool MatchOrigin(nsIFile* aPath, const nsACString& aSite);
 
 } // namespace gmp
 } // namespace mozilla
