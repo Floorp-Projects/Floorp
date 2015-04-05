@@ -26,7 +26,7 @@ class GMPVideoHost;
 [ptr] native GMPDecryptorProxy(GMPDecryptorProxy);
 [ptr] native GMPAudioDecoderProxy(GMPAudioDecoderProxy);
 
-[scriptable, uuid(f71e6e57-5175-4cf3-8cc2-629273a75b67)]
+[scriptable, uuid(23ae33ba-661b-4cc8-8095-813971ecdc6b)]
 interface mozIGeckoMediaPluginService : nsISupports
 {
 
@@ -111,9 +111,9 @@ interface mozIGeckoMediaPluginService : nsISupports
                      in bool inPrivateBrowsingMode);
 
   /**
-   * Clears storage data associated with the origin.
+   * Clears storage data associated with the site.
    */
-  void forgetThisSite(in AString origin);
+  void forgetThisSite(in AString site);
 
   /**
    * Returns true if the given node id is allowed to store things
