@@ -1023,8 +1023,30 @@ GeckoMediaPluginServiceParent::GetNodeId(const nsAString& aOrigin,
   return rv;
 }
 
+static bool
+ExtractHostName(const nsACString& aOrigin, nsACString& aOutData)
+{
+  nsCString str;
+  str.Assign(aOrigin);
+  int begin = str.Find("://");
+  // The scheme is missing!
+  if (begin == -1) {
+    return false;
+  }
+
+  int end = str.RFind(":");
+  // Remove the port number
+  if (end != begin) {
+    str.SetLength(end);
+  }
+
+  nsDependentCSubstring host(str, begin + 3);
+  aOutData.Assign(host);
+  return true;
+}
+
 bool
-MatchOrigin(nsIFile* aPath, const nsACString& aOrigin)
+MatchOrigin(nsIFile* aPath, const nsACString& aSite)
 {
   // http://en.wikipedia.org/wiki/Domain_Name_System#Domain_name_syntax
   static const uint32_t MaxDomainLength = 253;
@@ -1032,11 +1054,11 @@ MatchOrigin(nsIFile* aPath, const nsACString& aOrigin)
   nsresult rv;
   nsCString str;
   rv = ReadFromFile(aPath, NS_LITERAL_CSTRING("origin"), str, MaxDomainLength);
-  if (NS_SUCCEEDED(rv) && aOrigin.Equals(str)) {
+  if (NS_SUCCEEDED(rv) && ExtractHostName(str, str) && str.Equals(aSite)) {
     return true;
   }
   rv = ReadFromFile(aPath, NS_LITERAL_CSTRING("topLevelOrigin"), str, MaxDomainLength);
-  if (NS_SUCCEEDED(rv) && aOrigin.Equals(str)) {
+  if (NS_SUCCEEDED(rv) && ExtractHostName(str, str) && str.Equals(aSite)) {
     return true;
   }
   return false;
@@ -1191,19 +1213,19 @@ GeckoMediaPluginServiceParent::ClearNodeIdAndPlugin(DirectoryFilter& aFilter)
 }
 
 void
-GeckoMediaPluginServiceParent::ForgetThisSiteOnGMPThread(const nsACString& aOrigin)
+GeckoMediaPluginServiceParent::ForgetThisSiteOnGMPThread(const nsACString& aSite)
 {
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
-  LOGD(("%s::%s: origin=%s", __CLASS__, __FUNCTION__, aOrigin.Data()));
+  LOGD(("%s::%s: origin=%s", __CLASS__, __FUNCTION__, aSite.Data()));
 
   struct OriginFilter : public DirectoryFilter {
-    explicit OriginFilter(const nsACString& aOrigin) : mOrigin(aOrigin) {}
+    explicit OriginFilter(const nsACString& aSite) : mSite(aSite) {}
     virtual bool operator()(nsIFile* aPath) {
-      return MatchOrigin(aPath, mOrigin);
+      return MatchOrigin(aPath, mSite);
     }
   private:
-    const nsACString& mOrigin;
-  } filter(aOrigin);
+    const nsACString& mSite;
+  } filter(aSite);
 
   ClearNodeIdAndPlugin(filter);
 }
@@ -1296,12 +1318,12 @@ GeckoMediaPluginServiceParent::ClearRecentHistoryOnGMPThread(PRTime aSince)
 }
 
 NS_IMETHODIMP
-GeckoMediaPluginServiceParent::ForgetThisSite(const nsAString& aOrigin)
+GeckoMediaPluginServiceParent::ForgetThisSite(const nsAString& aSite)
 {
   MOZ_ASSERT(NS_IsMainThread());
   return GMPDispatch(NS_NewRunnableMethodWithArg<nsCString>(
       this, &GeckoMediaPluginServiceParent::ForgetThisSiteOnGMPThread,
-      NS_ConvertUTF16toUTF8(aOrigin)));
+      NS_ConvertUTF16toUTF8(aSite)));
 }
 
 static bool IsNodeIdValid(GMPParent* aParent) {
