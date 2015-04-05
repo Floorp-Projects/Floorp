@@ -538,8 +538,10 @@ loop.contacts = (function(_, mozL10n) {
       let cx = React.addons.classSet;
 
       let viewForItem = item => {
-        return <ContactDetail key={item._guid} contact={item}
-                              handleContactAction={this.handleContactAction} />
+        return (
+          <ContactDetail key={item._guid} contact={item}
+                         handleContactAction={this.handleContactAction} />
+        );
       };
 
       let shownContacts = _.groupBy(this.contacts, function(contact) {

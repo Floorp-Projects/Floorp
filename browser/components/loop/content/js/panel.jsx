@@ -259,11 +259,13 @@ loop.panel = (function(_, mozL10n) {
             </a>
           ),
         });
-        return <div id="powered-by-wrapper">
-          {this.renderPartnerLogo()}
-          <p className="terms-service"
-             dangerouslySetInnerHTML={{__html: tosHTML}}></p>
-         </div>;
+        return (
+          <div id="powered-by-wrapper">
+            {this.renderPartnerLogo()}
+            <p className="terms-service"
+               dangerouslySetInnerHTML={{__html: tosHTML}}></p>
+           </div>
+        );
       } else {
         return <div />;
       }
@@ -660,11 +662,13 @@ loop.panel = (function(_, mozL10n) {
           <h1>{this._getListHeading()}</h1>
           <div className="room-list">{
             this.state.rooms.map(function(room, i) {
-              return <RoomEntry
-                key={room.roomToken}
-                dispatcher={this.props.dispatcher}
-                room={room}
-              />;
+              return (
+                <RoomEntry
+                  key={room.roomToken}
+                  dispatcher={this.props.dispatcher}
+                  room={room}
+                />
+              );
             }, this)
           }</div>
           <div>
