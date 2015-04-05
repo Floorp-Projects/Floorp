@@ -170,7 +170,7 @@ private:
 };
 
 nsresult ReadSalt(nsIFile* aPath, nsACString& aOutData);
-bool MatchOrigin(nsIFile* aPath, const nsACString& aOrigin);
+bool MatchOrigin(nsIFile* aPath, const nsACString& aSite);
 
 class GMPServiceParent final : public PGMPServiceParent
 {
