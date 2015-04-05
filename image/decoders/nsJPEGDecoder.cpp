@@ -190,8 +190,9 @@ nsJPEGDecoder::InitInternal()
   mSourceMgr.term_source = term_source;
 
   // Record app markers for ICC data
-  for (uint32_t m = 0; m < 16; m++)
+  for (uint32_t m = 0; m < 16; m++) {
     jpeg_save_markers(&mInfo, JPEG_APP0 + m, 0xFFFF);
+  }
 }
 
 void
