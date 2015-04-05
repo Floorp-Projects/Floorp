@@ -2315,6 +2315,7 @@ nscolor
 PaintedLayerDataNode::FindOpaqueBackgroundColorCoveringEverything() const
 {
   if (!mPaintedLayerDataStack.IsEmpty() ||
+      mAllDrawingAboveBackground ||
       !mVisibleAboveBackgroundRegion.IsEmpty()) {
     return NS_RGBA(0,0,0,0);
   }
