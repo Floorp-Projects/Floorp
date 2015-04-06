@@ -519,7 +519,7 @@ nsHttpConnection::SetupNPNList(nsISSLSocketControl *ssl, uint32_t caps)
         ssl->SetAuthenticationPort(authPort);
     }
 
-    if (mConnInfo->GetRelaxed()) { // http:// over tls
+    if (mConnInfo->GetInsecureScheme()) { // http:// over tls
         if (authHost.IsEmpty() || authHost.Equals(mConnInfo->GetHost())) {
             LOG(("nsHttpConnection::SetupSSL %p TLS-Relaxed "
                  "with Same Host Auth Bypass", this));
@@ -555,10 +555,10 @@ nsHttpConnection::AddTransaction(nsAHttpTransaction *httpTransaction,
          needTunnel ? " over tunnel" : ""));
 
     // do a runtime check here just for defense in depth
-    if (transCI->GetRelaxed() &&
+    if (transCI->GetInsecureScheme() &&
         httpTransaction->RequestHead() && httpTransaction->RequestHead()->IsHTTPS()) {
-        LOG(("This Cannot happen - https on relaxed tls stream\n"));
-        MOZ_ASSERT(false, "https:// on tls relaxed");
+        LOG(("This Cannot happen - https on insecure scheme tls stream\n"));
+        MOZ_ASSERT(false, "https:// on tls insecure scheme");
         return NS_ERROR_FAILURE;
     }
 
