@@ -125,6 +125,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "DevToolsUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
   "resource://gre/modules/ShortcutUtils.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
+  "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
+
 Object.defineProperty(this, "NetworkHelper", {
   get: function() {
     return devtools.require("devtools/toolkit/webconsole/network-helper");

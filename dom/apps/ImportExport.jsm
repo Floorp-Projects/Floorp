@@ -26,6 +26,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "PermissionsInstaller",
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
   "resource://gre/modules/Task.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+  "resource://gre/modules/osfile.jsm");
+
 this.EXPORTED_SYMBOLS = ["ImportExport"];
 
 const kAppArchiveMimeType  = "application/openwebapp+zip";
@@ -225,7 +228,12 @@ this.ImportExport = {
     // |file| now points to application.zip, open it.
     let appZipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
                          .createInstance(Ci.nsIZipReader);
-    appZipReader.open(file);
+    try {
+      appZipReader.open(file);
+    } catch(e) {
+      throw "InvalidZip";
+    }
+
     if (!appZipReader.hasEntry("manifest.webapp")) {
       throw "NoManifestFound";
     }
@@ -233,10 +241,35 @@ this.ImportExport = {
     return [readObjectFromZip(appZipReader, "manifest.webapp"), file];
   },
 
+  // Returns a promise that resolves to the temp file path.
+  _writeBlobToTempFile: function(aBlob) {
+    // Save the blob to a temp file.
+    debug("_writeBlobToTempFile");
+    let path;
+    return new Promise((aResolve, aReject) => {
+      let reader = Cc['@mozilla.org/files/filereader;1']
+                     .createInstance(Ci.nsIDOMFileReader);
+      reader.onloadend = () => {
+        path = OS.Path.join(OS.Constants.Path.tmpDir, "app-blob.zip");
+        debug("onloadend path=" + path);
+        OS.File.openUnique(path).then(obj => {
+          path = obj.path;
+          let file = obj.file;
+          debug("openUnique path=" + path);
+          return file.write(new Uint8Array(reader.result))
+                 .then(file.close.bind(file))
+        })
+        .then(() => aResolve(path))
+        .catch(aReject);
+      }
+      reader.readAsArrayBuffer(aBlob);
+    });
+  },
+
   // Imports a blob, returning a Promise that resolves to
   // [manifestURL, manifest]
   // Possible errors are:
-  // NoBlobFound, UnsupportedBlobArchive, MissingMetadataFile, IncorrectVersion,
+  // NoBlobFound, InvalidZip, MissingMetadataFile, IncorrectVersion,
   // AppAlreadyInstalled, DontImportCertifiedApps, InvalidManifest,
   // InvalidPrivilegeLevel, InvalidOrigin, DuplicateOrigin
   import: Task.async(function*(aBlob) {
@@ -246,15 +279,15 @@ this.ImportExport = {
       throw "NoBlobFound";
     }
 
-    let isFile = aBlob instanceof Ci.nsIDOMFile;
-    if (!isFile) {
-      // XXX: TODO Store the blob on disk.
-      throw "UnsupportedBlobArchive";
-    }
-
+    let isFileBlob = aBlob instanceof Ci.nsIDOMFile;
     // We can't QI the DOMFile to nsIFile, so we need to create one.
     let zipFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    zipFile.initWithPath(aBlob.mozFullPath);
+    if (!isFileBlob) {
+      let path = yield this._writeBlobToTempFile(aBlob);
+      zipFile.initWithPath(path);
+    } else {
+      zipFile.initWithPath(aBlob.mozFullPath);
+    }
 
     debug("Importing from " + zipFile.path);
 
@@ -263,8 +296,13 @@ this.ImportExport = {
     let manifest;
     let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
                       .createInstance(Ci.nsIZipReader);
-    zipReader.open(zipFile);
     try {
+      try {
+        zipReader.open(zipFile);
+      } catch(e) {
+        throw "InvalidZip";
+      }
+
       // Do some sanity checks on the metadata.json and manifest.webapp files.
       if (!zipReader.hasEntry("metadata.json")) {
         throw "MissingMetadataFile";
@@ -431,6 +469,9 @@ this.ImportExport = {
       throw e;
     } finally {
       zipReader.close();
+      if (!isFileBlob) {
+        zipFile.remove(false);
+      }
     }
 
     return [meta.manifestURL, manifest];
@@ -439,31 +480,37 @@ this.ImportExport = {
   // Extracts the manifest from a blob, returning a Promise that resolves to
   // the manifest
   // Possible errors are:
-  // NoBlobFound, UnsupportedBlobArchive, MissingMetadataFile.
+  // NoBlobFound, InvalidZip, MissingMetadataFile.
   extractManifest: Task.async(function*(aBlob) {
     // First, do we even have a blob?
     if (!aBlob || !aBlob instanceof Ci.nsIDOMBlob) {
       throw "NoBlobFound";
     }
 
-    let isFile = aBlob instanceof Ci.nsIDOMFile;
-    if (!isFile) {
-      // XXX: TODO Store the blob on disk.
-      throw "UnsupportedBlobArchive";
-    }
-
+    let isFileBlob = aBlob instanceof Ci.nsIDOMFile;
     // We can't QI the DOMFile to nsIFile, so we need to create one.
     let zipFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
-    zipFile.initWithPath(aBlob.mozFullPath);
+    if (!isFileBlob) {
+      let path = yield this._writeBlobToTempFile(aBlob);
+      zipFile.initWithPath(path);
+    } else {
+      zipFile.initWithPath(aBlob.mozFullPath);
+    }
+
     debug("extractManifest from " + zipFile.path);
 
     // Do some sanity checks on the metadata.json and manifest.webapp files.
     let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"]
                       .createInstance(Ci.nsIZipReader);
-    zipReader.open(zipFile);
 
     let manifest;
     try {
+      try {
+        zipReader.open(zipFile);
+      } catch(e) {
+        throw "InvalidZip";
+      }
+
       if (zipReader.hasEntry("manifest.webapp")) {
         manifest = readObjectFromZip(zipReader, "manifest.webapp");
         if (!manifest) {
@@ -484,6 +531,9 @@ this.ImportExport = {
       }
     } finally {
       zipReader.close();
+      if (!isFileBlob) {
+        zipFile.remove(false);
+      }
     }
 
     return manifest;

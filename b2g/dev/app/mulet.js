@@ -17,3 +17,4 @@ pref("devtools.toolbox.sidebar.width", 800);
 // nor the system app OOP, but only inner apps
 pref("browser.tabs.remote.autostart", false);
 pref("browser.tabs.remote.autostart.1", false);
+pref("browser.tabs.remote.autostart.2", false);

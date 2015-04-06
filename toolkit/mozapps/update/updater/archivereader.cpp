@@ -15,12 +15,15 @@
 #include "updatehelper.h"
 #endif
 
-#ifdef XP_WIN
 // These are generated at compile time based on the DER file for the channel
 // being used
+#ifdef MOZ_VERIFY_MAR_SIGNATURE
+#ifdef UPDATER_XPCSHELL_CERT
+#include "../xpcshellCert.h"
+#else
 #include "primaryCert.h"
 #include "secondaryCert.h"
-#include "xpcshellCert.h"
+#endif
 #endif
 
 #define UPDATER_NO_STRING_GLUE_STL
@@ -38,9 +41,6 @@ static int outbuf_size = 262144;
 static char *inbuf  = nullptr;
 static char *outbuf = nullptr;
 
-#ifdef XP_WIN
-#include "resource.h"
-
 /**
  * Performs a verification on the opened MAR file with the passed in
  * certificate name ID and type ID.
@@ -53,16 +53,19 @@ template<uint32_t SIZE>
 int
 VerifyLoadedCert(MarFile *archive, const uint8_t (&certData)[SIZE])
 {
+  (void)archive;
+  (void)certData;
+
+#ifdef MOZ_VERIFY_MAR_SIGNATURE
   const uint32_t size = SIZE;
-  const uint8_t * const data = &certData[0];
-  if (mar_verify_signaturesW(archive, &data, &size, 1)) {
+  const uint8_t* const data = &certData[0];
+  if (mar_verify_signatures(archive, &data, &size, 1)) {
     return CERT_VERIFY_ERROR;
   }
+#endif
 
   return OK;
 }
-#endif
-
 
 /**
  * Performs a verification on the opened MAR file.  Both the primary and backup 
@@ -79,21 +82,18 @@ ArchiveReader::VerifySignature()
     return ARCHIVE_NOT_OPEN;
   }
 
-#ifdef XP_WIN
-  // If the fallback key exists we're running an XPCShell test and we should
-  // use the XPCShell specific cert for the signed MAR.
-  int rv;
-  if (DoesFallbackKeyExist()) {
-    rv = VerifyLoadedCert(mArchive, xpcshellCertData);
-  } else {
-    rv = VerifyLoadedCert(mArchive, primaryCertData);
-    if (rv != OK) {
-      rv = VerifyLoadedCert(mArchive, secondaryCertData);
-    }
-  }
-  return rv;
-#else
+#ifndef MOZ_VERIFY_MAR_SIGNATURE
   return OK;
+#else
+#ifdef UPDATER_XPCSHELL_CERT
+  int rv = VerifyLoadedCert(mArchive, xpcshellCertData);
+#else
+  int rv = VerifyLoadedCert(mArchive, primaryCertData);
+  if (rv != OK) {
+    rv = VerifyLoadedCert(mArchive, secondaryCertData);
+  }
+#endif
+  return rv;
 #endif
 }
 
