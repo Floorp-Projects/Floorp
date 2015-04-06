@@ -398,10 +398,6 @@ CommonAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
     return nullptr;
   }
 
-  // FIXME: Remove this assignment.  See bug 1061364.
-  if (!IsAnimationManager()) {
-    collection->mNeedsRefreshes = true;
-  }
   collection->EnsureStyleRuleFor(
     mPresContext->RefreshDriver()->MostRecentRefresh(),
     EnsureStyleRule_IsNotThrottled);
