@@ -130,7 +130,6 @@ SOURCES += [
 ]
 
 LOCAL_INCLUDES += [
-    '/caps',
     '/dom/broadcastchannel',
     '/dom/indexedDB',
     '/xpcom/build',
