@@ -1152,7 +1152,7 @@ ShouldMarkCrossCompartment(JSTracer* trc, JSObject* src, Value val)
 void
 gc::MarkValueForBarrier(JSTracer* trc, Value* valuep, const char* name)
 {
-    MOZ_ASSERT(!trc->runtime()->isHeapBusy());
+    MOZ_ASSERT(!trc->runtime()->isHeapCollecting());
     TraceManuallyBarrieredEdge(trc, valuep, name);
 }
 
