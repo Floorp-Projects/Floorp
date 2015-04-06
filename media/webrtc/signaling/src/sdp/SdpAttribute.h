@@ -8,6 +8,7 @@
 #define _SDPATTRIBUTE_H_
 
 #include <algorithm>
+#include <cctype>
 #include <vector>
 #include <ostream>
 #include <sstream>
@@ -307,10 +308,15 @@ public:
   // For use by application programmers. Enforces that it's a known and
   // non-crazy algorithm.
   void
-  PushEntry(const std::string& algorithm_str,
+  PushEntry(std::string algorithm_str,
             const std::vector<uint8_t>& fingerprint,
             bool enforcePlausible = true)
   {
+    std::transform(algorithm_str.begin(),
+                   algorithm_str.end(),
+                   algorithm_str.begin(),
+                   ::tolower);
+
     SdpFingerprintAttributeList::HashAlgorithm algorithm =
         SdpFingerprintAttributeList::kUnknownAlgorithm;
 
