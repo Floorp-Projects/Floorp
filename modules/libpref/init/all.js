@@ -4649,17 +4649,13 @@ pref("reader.toolbar.vertical", true);
 pref("media.gmp.insecure.allow", false);
 #endif
 
-// Use vsync aligned rendering. b2g prefs are in b2g.js
-// Only supported on windows, os x, and b2g
-#if defined(XP_MACOSX) || defined(XP_WIN)
+// Use vsync aligned rendering. b2g prefs are in b2g.js.
+// Hardware vsync supported on windows, os x, and b2g.
+// Linux and fennec will use software vsync.
+#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX)
 pref("gfx.vsync.hw-vsync.enabled", true);
 pref("gfx.vsync.compositor", true);
 pref("gfx.vsync.refreshdriver", true);
-#endif
-
-#if defined(XP_LINUX)
-pref("gfx.vsync.hw-vsync.enabled", true);
-pref("gfx.vsync.compositor", true);
 #endif
 
 // Secure Element API
