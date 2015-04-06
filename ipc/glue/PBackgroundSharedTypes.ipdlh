@@ -20,17 +20,11 @@ struct SystemPrincipalInfo
 struct NullPrincipalInfo
 { };
 
-struct ExpandedPrincipalInfo
-{
-  PrincipalInfo[] whitelist;
-};
-
 union PrincipalInfo
 {
   ContentPrincipalInfo;
   SystemPrincipalInfo;
   NullPrincipalInfo;
-  ExpandedPrincipalInfo;
 };
 
 union OptionalPrincipalInfo
