@@ -616,10 +616,8 @@ protected:
   void RecordMouseLocation(mozilla::WidgetGUIEvent* aEvent);
   class nsSynthMouseMoveEvent final : public nsARefreshObserver {
   public:
-    nsSynthMouseMoveEvent(PresShell* aPresShell, bool aFromScroll,
-                          bool aIsSynthesizedForTests)
-      : mPresShell(aPresShell), mFromScroll(aFromScroll)
-      , mIsSynthesizedForTests(aIsSynthesizedForTests) {
+    nsSynthMouseMoveEvent(PresShell* aPresShell, bool aFromScroll)
+      : mPresShell(aPresShell), mFromScroll(aFromScroll) {
       NS_ASSERTION(mPresShell, "null parameter");
     }
 
@@ -642,16 +640,14 @@ protected:
     virtual void WillRefresh(mozilla::TimeStamp aTime) override {
       if (mPresShell) {
         nsRefPtr<PresShell> shell = mPresShell;
-        shell->ProcessSynthMouseMoveEvent(mFromScroll, mIsSynthesizedForTests);
+        shell->ProcessSynthMouseMoveEvent(mFromScroll);
       }
     }
   private:
     PresShell* mPresShell;
     bool mFromScroll;
-    bool mIsSynthesizedForTests;
   };
-  void ProcessSynthMouseMoveEvent(bool aFromScroll,
-                                  bool aIsSynthesizedForTests);
+  void ProcessSynthMouseMoveEvent(bool aFromScroll);
 
   void QueryIsActive();
   nsresult UpdateImageLockingState();
@@ -707,8 +703,7 @@ protected:
   void FireResizeEvent();
   static void AsyncResizeEventCallback(nsITimer* aTimer, void* aPresShell);
 
-  virtual void SynthesizeMouseMove(bool aFromScroll,
-                                   bool aIsSynthesizedForTests) override;
+  virtual void SynthesizeMouseMove(bool aFromScroll) override;
 
   PresShell* GetRootPresShell();
 

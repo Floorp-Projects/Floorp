@@ -4004,7 +4004,7 @@ PresShell::UnsuppressAndInvalidate()
     win->SetReadyForFocus();
 
   if (!mHaveShutDown) {
-    SynthesizeMouseMove(false, false);
+    SynthesizeMouseMove(false);
     ScheduleImageVisibilityUpdate();
   }
 }
@@ -5563,8 +5563,7 @@ void PresShell::SetRenderingState(const RenderingState& aState)
   mResolution = aState.mResolution;
 }
 
-void PresShell::SynthesizeMouseMove(bool aFromScroll,
-                                    bool aIsSynthesizedForTests)
+void PresShell::SynthesizeMouseMove(bool aFromScroll)
 {
   if (!sSynthMouseMove)
     return;
@@ -5576,7 +5575,7 @@ void PresShell::SynthesizeMouseMove(bool aFromScroll,
   if (!mPresContext->IsRoot()) {
     nsIPresShell* rootPresShell = GetRootPresShell();
     if (rootPresShell) {
-      rootPresShell->SynthesizeMouseMove(aFromScroll, aIsSynthesizedForTests);
+      rootPresShell->SynthesizeMouseMove(aFromScroll);
     }
     return;
   }
@@ -5586,7 +5585,7 @@ void PresShell::SynthesizeMouseMove(bool aFromScroll,
 
   if (!mSynthMouseMoveEvent.IsPending()) {
     nsRefPtr<nsSynthMouseMoveEvent> ev =
-        new nsSynthMouseMoveEvent(this, aFromScroll, aIsSynthesizedForTests);
+        new nsSynthMouseMoveEvent(this, aFromScroll);
 
     if (!GetPresContext()->RefreshDriver()->AddRefreshObserver(ev,
                                                                Flush_Display)) {
@@ -5671,8 +5670,7 @@ static nsView* FindViewContaining(nsView* aView, nsPoint aPt)
 }
 
 void
-PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll,
-                                      bool aIsSynthesizedForTests)
+PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll)
 {
   // If drag session has started, we shouldn't synthesize mousemove event.
   nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
@@ -5748,7 +5746,6 @@ PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll,
                          WidgetMouseEvent::eSynthesized);
   event.refPoint = LayoutDeviceIntPoint::FromAppUnitsToNearest(refpoint, viewAPD);
   event.time = PR_IntervalNow();
-  event.mFlags.mIsSynthesizedForTests = aIsSynthesizedForTests;
   // XXX set event.modifiers ?
   // XXX mnakano I think that we should get the latest information from widget.
 
@@ -6755,7 +6752,7 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
            this, mMouseLocation.x, mMouseLocation.y);
 #endif
     if (aEvent->message == NS_MOUSE_ENTER)
-      SynthesizeMouseMove(false, aEvent->mFlags.mIsSynthesizedForTests);
+      SynthesizeMouseMove(false);
   } else if (aEvent->message == NS_MOUSE_EXIT) {
     // Although we only care about the mouse moving into an area for which this
     // pres shell doesn't receive mouse move events, we don't check which widget
@@ -8970,7 +8967,7 @@ PresShell::DidDoReflow(bool aInterruptible, bool aWasInterrupted)
   }
 
   if (sSynthMouseMove) {
-    SynthesizeMouseMove(false, false);
+    SynthesizeMouseMove(false);
   }
 
   if (mTouchCaret) {
