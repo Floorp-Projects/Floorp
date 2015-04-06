@@ -2126,10 +2126,11 @@ public:
 
   /**
    * Returns true if the content node has any current animations or transitions
-   * for the specified property.
+   * for any of the specified properties.
    */
-  static bool HasCurrentAnimationsForProperty(nsIContent* aContent,
-                                              nsCSSProperty aProperty);
+  static bool HasCurrentAnimationsForProperties(nsIContent* aContent,
+                                                const nsCSSProperty* aProperties,
+                                                size_t aPropertyCount);
 
   /**
    * Checks if off-main-thread animations are enabled.

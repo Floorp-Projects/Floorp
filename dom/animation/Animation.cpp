@@ -282,6 +282,18 @@ Animation::GetAnimationOfProperty(nsCSSProperty aProperty) const
   return nullptr;
 }
 
+bool
+Animation::HasAnimationOfProperties(const nsCSSProperty* aProperties,
+                                    size_t aPropertyCount) const
+{
+  for (size_t i = 0; i < aPropertyCount; i++) {
+    if (HasAnimationOfProperty(aProperties[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void
 Animation::ComposeStyle(nsRefPtr<css::AnimValuesStyleRule>& aStyleRule,
                         nsCSSPropertySet& aSetProperties)
