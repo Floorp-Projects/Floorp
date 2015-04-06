@@ -3901,8 +3901,16 @@ this.DOMApplicationRegistry = {
                     ? Ci.nsIPrincipal.APP_STATUS_PRIVILEGED
                     : Ci.nsIPrincipal.APP_STATUS_INSTALLED;
 
+    let allowUnsignedLangpack = false;
+    try  {
+      allowUnsignedLangpack =
+        Services.prefs.getBoolPref("dom.apps.allow_unsigned_langpacks");
+    } catch(e) {}
+    let isLangPack = newManifest.role === "langpack" &&
+                     (aIsSigned || allowUnsignedLangpack);
+
     let status = AppsUtils.getAppManifestStatus(newManifest);
-    if (status > maxStatus) {
+    if (status > maxStatus && !isLangPack) {
       throw "INVALID_SECURITY_LEVEL";
     }
 

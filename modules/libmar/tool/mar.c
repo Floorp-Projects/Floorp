@@ -19,6 +19,8 @@
 #endif
 
 #if !defined(NO_SIGN_VERIFY) && (!defined(XP_WIN) || defined(MAR_NSS))
+#include "cert.h"
+#include "pk11pub.h"
 int NSSInitCryptoContext(const char *NSSConfigDir);
 #endif
 
@@ -115,25 +117,23 @@ int main(int argc, char **argv) {
   const char *certNames[MAX_SIGNATURES];
   char *MARChannelID = MAR_CHANNEL_ID;
   char *productVersion = MOZ_APP_VERSION;
-  uint32_t i, k;
+  uint32_t k;
   int rv = -1;
   uint32_t certCount = 0;
   int32_t sigIndex = -1;
 
-#if defined(XP_WIN) && !defined(MAR_NSS) && !defined(NO_SIGN_VERIFY)
-  HANDLE certFile;
-  uint8_t *certBuffers[MAX_SIGNATURES];
-#endif
-#if !defined(NO_SIGN_VERIFY) && ((!defined(MAR_NSS) && defined(XP_WIN)) || \
-                                 defined(XP_MACOSX))
-  char* DERFilePaths[MAX_SIGNATURES];
+#if !defined(NO_SIGN_VERIFY)
   uint32_t fileSizes[MAX_SIGNATURES];
-  uint32_t read;
+  const uint8_t* certBuffers[MAX_SIGNATURES];
+  char* DERFilePaths[MAX_SIGNATURES];
+#if (!defined(XP_WIN) && !defined(XP_MACOSX)) || defined(MAR_NSS)
+  CERTCertificate* certs[MAX_SIGNATURES];
+#endif
 #endif
 
-  memset(certNames, 0, sizeof(certNames));
+  memset((void*)certNames, 0, sizeof(certNames));
 #if defined(XP_WIN) && !defined(MAR_NSS) && !defined(NO_SIGN_VERIFY)
-  memset(certBuffers, 0, sizeof(certBuffers));
+  memset((void*)certBuffers, 0, sizeof(certBuffers));
 #endif
 #if !defined(NO_SIGN_VERIFY) && ((!defined(MAR_NSS) && defined(XP_WIN)) || \
                                  defined(XP_MACOSX))
@@ -319,43 +319,68 @@ int main(int argc, char **argv) {
     return import_signature(argv[2], sigIndex, argv[3], argv[4]);
 
   case 'v':
-
-#if defined(XP_WIN) && !defined(MAR_NSS)
     if (certCount == 0) {
       print_usage();
       return -1;
     }
 
-    for (k = 0; k < certCount; ++k) {
-      /* If the mar program was built using CryptoAPI, then read in the buffer
-        containing the cert from disk. */
-      certFile = CreateFileA(DERFilePaths[k], GENERIC_READ,
-                             FILE_SHARE_READ |
-                             FILE_SHARE_WRITE |
-                             FILE_SHARE_DELETE,
-                             NULL,
-                             OPEN_EXISTING,
-                             0, NULL);
-      if (INVALID_HANDLE_VALUE == certFile) {
-        return -1;
-      }
-      fileSizes[k] = GetFileSize(certFile, NULL);
-      certBuffers[k] = malloc(fileSizes[k]);
-      if (!ReadFile(certFile, certBuffers[k], fileSizes[k], &read, NULL) ||
-          fileSizes[k] != read) {
-        CloseHandle(certFile);
-        for (i = 0; i <= k; i++) {
-          free(certBuffers[i]);
-        }
-        return -1;
-      }
-      CloseHandle(certFile);
+#if (!defined(XP_WIN) && !defined(XP_MACOSX)) || defined(MAR_NSS)
+    if (!NSSConfigDir || certCount == 0) {
+      print_usage();
+      return -1;
     }
 
-    rv = mar_verify_signatures(argv[2], certBuffers, fileSizes,
-                               NULL, certCount);
+    if (NSSInitCryptoContext(NSSConfigDir)) {
+      fprintf(stderr, "ERROR: Could not initialize crypto library.\n");
+      return -1;
+    }
+#endif
+
+    rv = 0;
     for (k = 0; k < certCount; ++k) {
-      free(certBuffers[k]);
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && !defined(MAR_NSS)
+      rv = mar_read_entire_file(DERFilePaths[k], MAR_MAX_CERT_SIZE,
+                                &certBuffers[k], &fileSizes[k]);
+#else
+      /* It is somewhat circuitous to look up a CERTCertificate and then pass
+       * in its DER encoding just so we can later re-create that
+       * CERTCertificate to extract the public key out of it. However, by doing
+       * things this way, we maximize the reuse of the mar_verify_signatures
+       * function and also we keep the control flow as similar as possible
+       * between programs and operating systems, at least for the functions
+       * that are critically important to security.
+       */
+      certs[k] = PK11_FindCertFromNickname(certNames[k], NULL);
+      if (certs[k]) {
+        certBuffers[k] = certs[k]->derCert.data;
+        fileSizes[k] = certs[k]->derCert.len;
+      } else {
+        rv = -1;
+      }
+#endif
+      if (rv) {
+        fprintf(stderr, "ERROR: could not read file %s", DERFilePaths[k]);
+        break;
+      }
+    }
+
+    if (!rv) {
+      MarFile *mar = mar_open(argv[2]);
+      if (mar) {
+        rv = mar_verify_signatures(mar, certBuffers, fileSizes, certCount);
+        mar_close(mar);
+      } else {
+        fprintf(stderr, "ERROR: Could not open MAR file.\n");
+        rv = -1;
+      }
+    }
+    for (k = 0; k < certCount; ++k) {
+#if (defined(XP_WIN) || defined(XP_MACOSX)) && !defined(MAR_NSS)
+      free((void*)certBuffers[k]);
+#else
+      /* certBuffers[k] is owned by certs[k] so don't free it */
+      CERT_DestroyCertificate(certs[k]);
+#endif
     }
     if (rv) {
       /* Determine if the source MAR file has the new fields for signing */
@@ -369,26 +394,8 @@ int main(int argc, char **argv) {
       }
       return -1;
     }
-
     return 0;
 
-#elif defined(XP_MACOSX)
-    return mar_verify_signatures(argv[2], (const uint8_t* const*)DERFilePaths,
-                                 0, NULL, certCount);
-#else
-    if (!NSSConfigDir || certCount == 0) {
-      print_usage();
-      return -1;
-    }
-
-    if (NSSInitCryptoContext(NSSConfigDir)) {
-      fprintf(stderr, "ERROR: Could not initialize crypto library.\n");
-      return -1;
-    }
-
-    return mar_verify_signatures(argv[2], NULL, 0, certNames, certCount);
-
-#endif /* defined(XP_WIN) && !defined(MAR_NSS) */
   case 's':
     if (!NSSConfigDir || certCount == 0 || argc < 4) {
       print_usage();
