@@ -17,7 +17,7 @@ const TEST_PATH = "http://example.com/browser/browser/base/content/test/general/
 
 let readerButton = document.getElementById("reader-mode-button");
 
-add_task(function* () {
+add_task(function* test_reader_button() {
   registerCleanupFunction(function() {
     // Reset test prefs.
     TEST_PREFS.forEach(([name, value]) => {
@@ -89,4 +89,17 @@ add_task(function* () {
   gBrowser.removeCurrentTab();
   yield promiseWaitForCondition(() => !readerButton.hidden);
   is_element_visible(readerButton, "Reader mode button is present on a reader-able page");
+});
+
+add_task(function* test_getOriginalUrl() {
+  let { ReaderMode } = Cu.import("resource://gre/modules/ReaderMode.jsm", {});
+  let url = "http://foo.com/article.html";
+
+  is(ReaderMode.getOriginalUrl("about:reader?url=" + encodeURIComponent(url)), url, "Found original URL from encoded URL");
+  is(ReaderMode.getOriginalUrl("about:reader?foobar"), null, "Did not find original URL from malformed reader URL");
+  is(ReaderMode.getOriginalUrl(url), null, "Did not find original URL from non-reader URL");
+
+  let badUrl = "http://foo.com/?;$%^^";
+  is(ReaderMode.getOriginalUrl("about:reader?url=" + encodeURIComponent(badUrl)), badUrl, "Found original URL from encoded malformed URL");
+  is(ReaderMode.getOriginalUrl("about:reader?url=" + badUrl), badUrl, "Found original URL from non-encoded malformed URL");
 });
