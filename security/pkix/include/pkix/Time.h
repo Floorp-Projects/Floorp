@@ -107,6 +107,7 @@ private:
   {
   }
   friend Time TimeFromElapsedSecondsAD(uint64_t);
+  friend class Duration;
 
   uint64_t elapsedSecondsAD;
 };
@@ -120,6 +121,30 @@ Time Now();
 
 // Note the epoch is the unix epoch (ie 00:00:00 UTC, 1 January 1970)
 Time TimeFromEpochInSeconds(uint64_t secondsSinceEpoch);
+
+class Duration final
+{
+public:
+  Duration(Time timeA, Time timeB)
+    : durationInSeconds(timeA < timeB
+                        ? timeB.elapsedSecondsAD - timeA.elapsedSecondsAD
+                        : timeA.elapsedSecondsAD - timeB.elapsedSecondsAD)
+  {
+  }
+
+  explicit Duration(uint64_t durationInSeconds)
+    : durationInSeconds(durationInSeconds)
+  {
+  }
+
+  bool operator<(const Duration& other) const
+  {
+    return durationInSeconds < other.durationInSeconds;
+  }
+
+private:
+  uint64_t durationInSeconds;
+};
 
 } } // namespace mozilla::pkix
 

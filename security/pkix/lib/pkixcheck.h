@@ -45,6 +45,10 @@ Result CheckNameConstraints(Input encodedNameConstraints,
                             const BackCert& firstChild,
                             KeyPurposeId requiredEKUIfPresent);
 
+Result CheckValidity(Input encodedValidity, Time time,
+                     /*optional out*/ Time* notBeforeOut = nullptr,
+                     /*optional out*/ Time* notAfterOut = nullptr);
+
 } } // namespace mozilla::pkix
 
 #endif // mozilla_pkix_pkixcheck_h

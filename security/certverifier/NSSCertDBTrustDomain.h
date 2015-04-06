@@ -53,6 +53,7 @@ public:
   NSSCertDBTrustDomain(SECTrustType certDBTrustType, OCSPFetching ocspFetching,
                        OCSPCache& ocspCache, void* pinArg,
                        CertVerifier::OcspGetConfig ocspGETConfig,
+                       uint32_t certShortLifetimeInDays,
                        CertVerifier::PinningMode pinningMode,
                        unsigned int minRSABits,
           /*optional*/ const char* hostname = nullptr,
@@ -96,6 +97,7 @@ public:
                    mozilla::pkix::EndEntityOrCA endEntityOrCA,
                    const mozilla::pkix::CertID& certID,
                    mozilla::pkix::Time time,
+                   mozilla::pkix::Duration validityDuration,
       /*optional*/ const mozilla::pkix::Input* stapledOCSPResponse,
       /*optional*/ const mozilla::pkix::Input* aiaExtension)
                    override;
@@ -127,6 +129,7 @@ private:
   OCSPCache& mOCSPCache; // non-owning!
   void* mPinArg; // non-owning!
   const CertVerifier::OcspGetConfig mOCSPGetConfig;
+  const uint32_t mCertShortLifetimeInDays;
   CertVerifier::PinningMode mPinningMode;
   const unsigned int mMinRSABits;
   const char* mHostname; // non-owning - only used for pinning checks
