@@ -834,7 +834,7 @@
                 <image id="reader-mode-button"
                        class="urlbar-icon"
                        hidden="true"
-                       onclick="ReaderParent.toggleReaderMode(event);"/>
+                       onclick="ReaderParent.buttonClick(event);"/>
               </hbox>
               <toolbarbutton id="urlbar-go-button"
                              class="chromeclass-toolbar-additional"
