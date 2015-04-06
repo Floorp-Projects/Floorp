@@ -23,6 +23,7 @@ MediaTaskQueue::InitStatics()
 MediaTaskQueue::MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool)
   : mPool(aPool)
   , mQueueMonitor("MediaTaskQueue::Queue")
+  , mTailDispatcher(nullptr)
   , mIsRunning(false)
   , mIsShutdown(false)
   , mIsFlushing(false)
@@ -42,6 +43,14 @@ MediaTaskQueue::Dispatch(TemporaryRef<nsIRunnable> aRunnable)
 {
   MonitorAutoLock mon(mQueueMonitor);
   return DispatchLocked(aRunnable, AbortIfFlushing);
+}
+
+TaskDispatcher&
+MediaTaskQueue::TailDispatcher()
+{
+  MOZ_ASSERT(IsCurrentThreadIn());
+  MOZ_ASSERT(mTailDispatcher);
+  return *mTailDispatcher;
 }
 
 nsresult
