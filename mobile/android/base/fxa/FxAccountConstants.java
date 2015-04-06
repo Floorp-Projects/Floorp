@@ -52,7 +52,7 @@ public class FxAccountConstants {
    * can be received only by Firefox channels sharing the same Android Firefox
    * Account type.
    * <p>
-   * See {@link org.mozilla.gecko.fxa.AndroidFxAccount#makeDeletedAccountIntent(android.content.Context, android.accounts.Account)}
+   * See {@link org.mozilla.gecko.fxa.AndroidFxAccount#makeDeletedAccountIntent()}
    * for contents of the intent.
    *
    * See bug 790931 for additional information in the context of Sync.
@@ -66,6 +66,8 @@ public class FxAccountConstants {
 
   public static final String ACCOUNT_DELETED_INTENT_VERSION_KEY = "account_deleted_intent_version";
   public static final String ACCOUNT_DELETED_INTENT_ACCOUNT_KEY = "account_deleted_intent_account";
+  public static final String ACCOUNT_OAUTH_SERVICE_ENDPOINT_KEY = "account_oauth_service_endpoint";
+  public static final String ACCOUNT_DELETED_INTENT_ACCOUNT_AUTH_TOKENS = "account_deleted_intent_auth_tokens";
 
   /**
    * This signing-level permission protects broadcast intents that should be
