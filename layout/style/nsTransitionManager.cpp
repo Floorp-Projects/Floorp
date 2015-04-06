@@ -831,7 +831,7 @@ nsTransitionManager::FlushTransitions(FlushFlags aFlags)
             // a non-animation style change that would affect it, we need
             // to know not to start a new transition for the transition
             // from the almost-completed value to the final value.
-            player->GetEffect()->SetIsFinishedTransition();
+            player->GetEffect()->SetIsFinishedTransition(true);
             collection->UpdateAnimationGeneration(mPresContext);
             transitionStartedOrEnded = true;
           } else if ((computedTiming.mPhase ==
