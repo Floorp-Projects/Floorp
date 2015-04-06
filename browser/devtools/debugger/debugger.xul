@@ -156,6 +156,17 @@
     </menupopup>
   </popupset>
 
+  <popupset id="debuggerSourcesPopupset">
+    <menupopup id="debuggerSourcesContextMenu">
+      <menuitem id="debugger-sources-context-newtab"
+                label="&debuggerUI.context.newTab;"
+                accesskey="&debuggerUI.context.newTab.accesskey;"/>
+      <menuitem id="debugger-sources-context-copyurl"
+                label="&debuggerUI.context.copyUrl;"
+                accesskey="&debuggerUI.context.copyUrl.accesskey;"/>
+    </menupopup>
+  </popupset>
+
   <keyset id="debuggerKeys">
     <key id="nextSourceKey"
          keycode="VK_DOWN"
@@ -242,6 +253,10 @@
          key="&debuggerUI.removeAllWatch.key;"
          modifiers="accel alt"
          command="removeAllWatchExpressionsCommand"/>
+    <key id="debuggerSourcesCopyUrl"
+         key="&debuggerUI.context.copyUrl.key;"
+         modifiers="accel"
+         oncommand="DebuggerView.Sources._onCopyUrlCommand()"/>
   </keyset>
 
   <vbox id="body"

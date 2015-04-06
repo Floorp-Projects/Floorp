@@ -189,5 +189,11 @@
         <attr name="overrideScaleType" format="boolean" />
     </declare-styleable>
 
+    <declare-styleable name="OverlayDialogButton">
+        <attr name="drawable" format="reference" />
+        <attr name="enabledText" format="string" />
+        <attr name="disabledText" format="string" />
+    </declare-styleable>
+
 </resources>
 

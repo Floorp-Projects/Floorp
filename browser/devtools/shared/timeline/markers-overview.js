@@ -169,12 +169,8 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
       let top = headerHeight + style.group * groupHeight + groupPadding / 2;
       let height = groupHeight - groupPadding;
 
-      let gradient = ctx.createLinearGradient(0, top, 0, top + height);
-      gradient.addColorStop(OVERVIEW_MARKERS_COLOR_STOPS[0], style.stroke);
-      gradient.addColorStop(OVERVIEW_MARKERS_COLOR_STOPS[1], style.fill);
-      gradient.addColorStop(OVERVIEW_MARKERS_COLOR_STOPS[2], style.fill);
-      gradient.addColorStop(OVERVIEW_MARKERS_COLOR_STOPS[3], style.stroke);
-      ctx.fillStyle = gradient;
+      let color = getColor(style.colorName, this.theme);
+      ctx.fillStyle = color;
       ctx.beginPath();
 
       for (let { start, end } of batch) {
@@ -226,7 +222,7 @@ MarkersOverview.prototype = Heritage.extend(AbstractCanvasGraph.prototype, {
    * to see the effects.
    */
   setTheme: function (theme) {
-    theme = theme || "light";
+    this.theme = theme = theme || "light";
     this.backgroundColor = getColor("body-background", theme);
     this.selectionBackgroundColor = setAlpha(getColor("selection-background", theme), 0.25);
     this.selectionStripesColor = setAlpha("#fff", 0.1);
