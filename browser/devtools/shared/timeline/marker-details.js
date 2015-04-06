@@ -64,9 +64,7 @@ MarkerDetails.prototype = {
     hbox.setAttribute("align", "center");
 
     let bullet = this._document.createElement("hbox");
-    bullet.className = "marker-details-bullet";
-    bullet.style.backgroundColor = blueprint.fill;
-    bullet.style.borderColor = blueprint.stroke;
+    bullet.className = `marker-details-bullet ${blueprint.colorName}`;
 
     let label = this._document.createElement("label");
     label.className = "marker-details-type";
