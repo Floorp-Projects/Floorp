@@ -233,6 +233,7 @@ var sd; // Scrolled Div
 var lastScrollTop;
 var lastScrollLeft;
 var stopFrameCount;
+var winUtils = SpecialPowers.DOMWindowUtils;
 
 function doTest() {
   var testCase = testCases[step];
@@ -255,21 +256,38 @@ function doTest() {
                   testCase.mousePosition.y + testCase.mouseOffset.y,
                   { type: "mousemove" });
 
-  window.requestAnimationFrame(function() {
-    isnot("(" + sc.scrollLeft + "," + sc.scrollTop + ")",
-          "(" + testCase.startScroll.x +"," + testCase.startScroll.y + ")",
-          "Step " + step + ": Synthesized mouse events move scroll position. ("
-            + testCase.description + ")");
+  stopFrameCount = 0;
+  waitForScrollStart();
+}
 
-    window.setTimeout(function() {
-      synthesizeMouse(sc,
-                      testCase.mousePosition.x + testCase.mouseOffset.x,
-                      testCase.mousePosition.y + testCase.mouseOffset.y,
-                      { type: "mouseup" });
+function waitForScrollStart() {
+  // Wait for up to 30 frames for scrolling to start
+  var testCase = testCases[step];
+  if (testCase.startScroll.y != sc.scrollTop
+      || testCase.startScroll.x != sc.scrollLeft
+      || ++stopFrameCount < 30) {
+    window.requestAnimationFrame(doMouseUp);
+  } else {
+    window.requestAnimationFrame(waitForScrollStart);
+  }
+}
 
-      window.requestAnimationFrame(waitForScrollStop);
-    }, testCase.duration);
-  });
+function doMouseUp() {
+  var testCase = testCases[step];
+  isnot("(" + sc.scrollLeft + "," + sc.scrollTop + ")",
+        "(" + testCase.startScroll.x +"," + testCase.startScroll.y + ")",
+        "Step " + step + ": Synthesized mouse events move scroll position. ("
+          + testCase.description + ")");
+
+  window.setTimeout(function() {
+    synthesizeMouse(sc,
+                    testCase.mousePosition.x + testCase.mouseOffset.x,
+                    testCase.mousePosition.y + testCase.mouseOffset.y,
+                    { type: "mouseup" });
+
+    stopFrameCount = 0;
+    window.requestAnimationFrame(waitForScrollStop);
+  }, testCase.duration);
 }
 
 function waitForScrollStop() {
