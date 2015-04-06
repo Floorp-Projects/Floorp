@@ -47,6 +47,18 @@
     </menupopup>
   </popupset>
 
+  <commandset>
+    <command id="freeTextFilterCommand"
+             oncommand="NetMonitorView.RequestsMenu.freetextFilterBox.focus()"/>
+  </commandset>
+
+  <keyset>
+    <key id="freeTextFilterKey"
+         key="&netmonitorUI.footer.filterFreetext.key;"
+         modifiers="accel"
+         command="freeTextFilterCommand"/>
+  </keyset>
+
   <deck id="body" class="theme-sidebar" flex="1">
 
     <vbox id="network-inspector-view" flex="1">
@@ -752,6 +764,14 @@
                 data-key="other"
                 label="&netmonitorUI.footer.filterOther;">
         </button>
+        <spacer id="requests-menu-spacer-textbox"
+                class="requests-menu-footer-spacer"
+                flex="0"/>
+        <textbox id="requests-menu-filter-freetext-text"
+                 class="requests-menu-footer-textbox devtools-searchinput"
+                 type="search"
+                 required="true"
+                 placeholder="&netmonitorUI.footer.filterFreetext.label;"/>
         <spacer id="requests-menu-spacer"
                 class="requests-menu-footer-spacer"
                 flex="100"/>
