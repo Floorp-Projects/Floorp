@@ -2772,7 +2772,12 @@ let E10SUINotification = {
           return;
         }
 
+        // The user has just voluntarily disabled e10s. Subtract one from displayedE10SNotice
+        // so that the next time e10s is activated (either by the user or forced by us), they
+        // can see the notice again.
+        Services.prefs.setIntPref("browser.displayedE10SNotice", this.CURRENT_NOTICE_COUNT - 1);
         Services.prefs.clearUserPref("browser.requestE10sFeedback");
+
         let url = Services.urlFormatter.formatURLPref("app.feedback.baseURL");
         url += "?utm_source=tab&utm_campaign=e10sfeedback";
 
