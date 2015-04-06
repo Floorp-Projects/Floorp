@@ -277,15 +277,15 @@ body.loaded {
   display: block;
   background-size: 24px 24px;
   background-repeat: no-repeat;
+  color: #333;
+  background-color: #fbfbfb;
   height: 40px;
   padding: 0;
 }
 
 .toolbar .button {
-  color: white;
   width: 40px;
   background-position: center;
-  background-color: #fbfbfb;
   margin-right: -1px;
   border-top: 0;
   border-left: 0;
@@ -467,15 +467,11 @@ body.loaded {
   text-align: center;
   padding: 12px 0;
   box-sizing: border-box;
-  box-shadow: 0 9px 9px -9px #c1c1c1 inset;
+  box-shadow: 0 3px 3px -3px rgba(0, 0, 0, 0.35) inset;
 }
 
 .sepia .footer {
   background-color: #dedad4;
-}
-
-.dark .footer {
-  background-color: #777;
 }
 
 .remove-button {
