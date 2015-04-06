@@ -180,9 +180,6 @@ bool LaunchApp(const std::vector<std::string>& argv,
   if (!spawn_succeeded || !process_handle_valid) {
     retval = false;
   } else {
-    gProcessLog.print("==> process %d launched child process %d\n",
-                      GetCurrentProcId(), pid);
-
     if (wait)
       HANDLE_EINTR(waitpid(pid, 0, 0));
 
