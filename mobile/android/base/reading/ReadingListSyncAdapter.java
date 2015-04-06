@@ -260,6 +260,11 @@ public class ReadingListSyncAdapter extends AbstractThreadedSyncAdapter {
         }
       }
 
+      if (result == null) {
+        // The poll timed out. Let's call this an error.
+        result = Result.Error;
+      }
+
       switch (result) {
       case Success:
         requestPeriodicSync(account, ReadingListSyncAdapter.AFTER_SUCCESS_SYNC_DELAY_SECONDS);
