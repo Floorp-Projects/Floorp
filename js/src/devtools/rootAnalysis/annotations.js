@@ -314,6 +314,11 @@ function listNonGCTypes() {
 
 function listNonGCPointers() {
     return [
+        // Both of these are safe only because jsids are currently only made
+        // from "interned" (pinned) strings. Once that changes, both should be
+        // removed from the list.
+        'NPIdentifier',
+        'XPCNativeMember',
     ];
 }
 
