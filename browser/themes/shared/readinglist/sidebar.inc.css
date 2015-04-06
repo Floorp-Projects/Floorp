@@ -3,7 +3,6 @@
 % file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 :root, body {
-  height: 100%;
   overflow-x: hidden;
 }
 
@@ -19,11 +18,6 @@ body {
   cursor: default;
   padding: 3em 1em;
   text-align: center;
-}
-
-#list {
-  height: 100%;
-  overflow-x: auto;
 }
 
 .item {
