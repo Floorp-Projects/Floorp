@@ -20,8 +20,10 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedCertVerifier)
 
   SharedCertVerifier(OcspDownloadConfig odc, OcspStrictConfig osc,
-                     OcspGetConfig ogc, PinningMode pinningMode)
-    : mozilla::psm::CertVerifier(odc, osc, ogc, pinningMode)
+                     OcspGetConfig ogc, uint32_t certShortLifetimeInDays,
+                     PinningMode pinningMode)
+    : mozilla::psm::CertVerifier(odc, osc, ogc, certShortLifetimeInDays,
+                                 pinningMode)
   {
   }
 };
