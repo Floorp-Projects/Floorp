@@ -2375,6 +2375,25 @@ TEST_F(JsepSessionTest, ValidateAnsweredCodecParams)
 #endif
 }
 
+static void
+Replace(const std::string& toReplace,
+        const std::string& with,
+        std::string* in)
+{
+  size_t pos = in->find(toReplace);
+  ASSERT_NE(std::string::npos, pos);
+  in->replace(pos, toReplace.size(), with);
+}
+
+static void ReplaceAll(const std::string& toReplace,
+                       const std::string& with,
+                       std::string* in)
+{
+  while (in->find(toReplace) != std::string::npos) {
+    Replace(toReplace, with, in);
+  }
+}
+
 TEST_P(JsepSessionTest, TestRejectMline)
 {
   AddTracks(mSessionOff);
@@ -2621,6 +2640,20 @@ TEST_F(JsepSessionTest, TestUniquePayloadTypes)
   ASSERT_NE(0U,
       answerPairs[2].mReceiving->GetNegotiatedDetails()->
       GetUniquePayloadTypes().size());
+}
+
+TEST_F(JsepSessionTest, UnknownFingerprintAlgorithm)
+{
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(mSessionOff, "audio");
+  AddTracks(mSessionAns, "audio");
+
+  std::string offer(CreateOffer());
+  SetLocalOffer(offer);
+  ReplaceAll("fingerprint:sha", "fingerprint:foo", &offer);
+  nsresult rv = mSessionAns.SetRemoteDescription(kJsepSdpOffer, offer);
+  ASSERT_NE(NS_OK, rv);
+  ASSERT_NE("", mSessionAns.GetLastError());
 }
 
 } // namespace mozilla
