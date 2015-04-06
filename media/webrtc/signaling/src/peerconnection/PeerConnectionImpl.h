@@ -206,7 +206,7 @@ class RTCStatsQuery {
     bool internalStats;
     nsTArray<mozilla::RefPtr<mozilla::MediaPipeline>> pipelines;
     mozilla::RefPtr<NrIceCtx> iceCtx;
-    nsTArray<mozilla::RefPtr<NrIceMediaStream>> streams;
+    bool grabAllLevels;
     DOMHighResTimeStamp now;
 };
 #endif // MOZILLA_INTERNAL_API

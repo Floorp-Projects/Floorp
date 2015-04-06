@@ -323,7 +323,8 @@ namespace mozilla {
 #ifdef MOZILLA_INTERNAL_API
 RTCStatsQuery::RTCStatsQuery(bool internal) :
   failed(false),
-  internalStats(internal) {
+  internalStats(internal),
+  grabAllLevels(false) {
 }
 
 RTCStatsQuery::~RTCStatsQuery() {
@@ -2882,31 +2883,8 @@ PeerConnectionImpl::BuildStatsQuery_m(
     }
   }
 
-  // From the list of MediaPipelines, determine the set of NrIceMediaStreams
-  // we are interested in.
-  std::set<size_t> levelsToGrab;
-  if (aSelector) {
-    for (size_t p = 0; p < query->pipelines.Length(); ++p) {
-      size_t level = query->pipelines[p]->level();
-      levelsToGrab.insert(level);
-    }
-  } else {
-    // We want to grab all streams, so ignore the pipelines (this also ends up
-    // grabbing DataChannel streams, which is what we want)
-    for (size_t s = 0; s < mMedia->num_ice_media_streams(); ++s) {
-      levelsToGrab.insert(s);
-    }
-  }
-
-  for (auto s = levelsToGrab.begin(); s != levelsToGrab.end(); ++s) {
-    // TODO(bcampen@mozilla.com): I may need to revisit this for bundle.
-    // (Bug 786234)
-    RefPtr<NrIceMediaStream> temp(mMedia->ice_media_stream(*s));
-    RefPtr<TransportFlow> flow(mMedia->GetTransportFlow(*s, false));
-    // flow can be null for unused levels, such as unused DataChannels
-    if (temp && flow) {
-      query->streams.AppendElement(temp);
-    }
+  if (!aSelector) {
+    query->grabAllLevels = true;
   }
 
   return rv;
@@ -3181,20 +3159,32 @@ PeerConnectionImpl::ExecuteStatsQuery_s(RTCStatsQuery *query) {
         break;
       }
     }
+
+    if (!query->grabAllLevels) {
+      // If we're grabbing all levels, that means we want datachannels too,
+      // which don't have pipelines.
+      if (query->iceCtx->GetStream(p)) {
+        RecordIceStats_s(*query->iceCtx->GetStream(p),
+                         query->internalStats,
+                         query->now,
+                         query->report);
+      }
+    }
   }
 
-  // Gather stats from ICE
-  for (size_t s = 0; s != query->streams.Length(); ++s) {
-    RecordIceStats_s(*query->streams[s],
-                     query->internalStats,
-                     query->now,
-                     query->report);
+  if (query->grabAllLevels) {
+    for (size_t i = 0; i < query->iceCtx->GetStreamCount(); ++i) {
+      if (query->iceCtx->GetStream(i)) {
+        RecordIceStats_s(*query->iceCtx->GetStream(i),
+                         query->internalStats,
+                         query->now,
+                         query->report);
+      }
+    }
   }
 
-  // NrIceCtx and NrIceMediaStream must be destroyed on STS, so it is not safe
-  // to dispatch them back to main.
-  // We clear streams first to maintain destruction order
-  query->streams.Clear();
+  // NrIceCtx must be destroyed on STS, so it is not safe
+  // to dispatch it back to main.
   query->iceCtx = nullptr;
   return NS_OK;
 }
