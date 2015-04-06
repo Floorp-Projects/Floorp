@@ -4,9 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Program('updater')
+Program('updater-xpcshell')
 
-updater_rel_path = ''
-include('updater-common.build')
-DIRS += ['updater-xpcshell']
-FAIL_ON_WARNINGS = True
+updater_rel_path = '../'
+DEFINES['UPDATER_XPCSHELL_CERT'] = True
+include('../updater-common.build')
