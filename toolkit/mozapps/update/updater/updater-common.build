@@ -1,0 +1,130 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+srcs = [
+    'archivereader.cpp',
+    'bspatch.cpp',
+    'updater.cpp',
+]
+
+have_progressui = 0
+
+if CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
+    USE_LIBS += [
+        'verifymar',
+    ]
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    have_progressui = 1
+    srcs += [
+        'loaddlls.cpp',
+        'progressui_win.cpp',
+        'win_dirent.cpp',
+    ]
+    RCINCLUDE = '%supdater.rc' % updater_rel_path
+    DEFINES['UNICODE'] = True
+    DEFINES['_UNICODE'] = True
+    DEFINES['NOMINMAX'] = True
+    USE_STATIC_LIBS = True
+
+    # Pick up nsWindowsRestart.cpp
+    LOCAL_INCLUDES += [
+        '/toolkit/xre',
+    ]
+    USE_LIBS += [
+        'updatecommon-standalone',
+    ]
+    OS_LIBS += [
+        'comctl32',
+        'ws2_32',
+        'shell32',
+        'shlwapi',
+        'crypt32',
+        'advapi32',
+    ]
+elif CONFIG['OS_ARCH'] == 'Linux' and CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
+    USE_LIBS += [
+        'nss',
+        'signmar',
+        'updatecommon',
+    ]
+    OS_LIBS += CONFIG['nspr']
+else:
+    USE_LIBS += [
+        'updatecommon',
+    ]
+
+USE_LIBS += [
+    'mar',
+]
+
+if CONFIG['MOZ_NATIVE_BZ2']:
+    OS_LIBS += CONFIG['MOZ_BZ2_LIBS']
+else:
+    USE_LIBS += [
+        'bz2',
+    ]
+
+if CONFIG['MOZ_ENABLE_GTK']:
+    have_progressui = 1
+    srcs += [
+        'progressui_gtk.cpp',
+    ]
+
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    have_progressui = 1
+    srcs += [
+        'launchchild_osx.mm',
+        'progressui_osx.mm',
+    ]
+    OS_LIBS += [
+        '-framework Cocoa',
+        '-framework Security',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    have_progressui = 1
+    srcs += [
+        'automounter_gonk.cpp',
+        'progressui_gonk.cpp',
+    ]
+    DISABLE_STL_WRAPPING = True
+    OS_LIBS += [
+        'cutils',
+        'sysutils',
+    ]
+
+if have_progressui == 0:
+    srcs += [
+        'progressui_null.cpp',
+    ]
+
+SOURCES += ['%s%s' % (updater_rel_path, f) for f in sorted(srcs)]
+
+DEFINES['NS_NO_XPCOM'] = True
+DISABLE_STL_WRAPPING = True
+for var in ('MAR_CHANNEL_ID', 'MOZ_APP_VERSION'):
+    DEFINES[var] = '"%s"' % CONFIG[var]
+
+LOCAL_INCLUDES += [
+    '/toolkit/mozapps/update/common',
+    '/xpcom/glue',
+]
+
+DELAYLOAD_DLLS += [
+    'crypt32.dll',
+    'comctl32.dll',
+    'userenv.dll',
+    'wsock32.dll',
+]
+
+if CONFIG['_MSC_VER']:
+    WIN32_EXE_LDFLAGS += ['-ENTRY:wmainCRTStartup']
+elif CONFIG['OS_ARCH'] == 'WINNT':
+    WIN32_EXE_LDFLAGS += ['-municode']
+
+if CONFIG['MOZ_WIDGET_GTK']:
+    CXXFLAGS += CONFIG['TK_CFLAGS']
+    OS_LIBS += CONFIG['TK_LIBS']

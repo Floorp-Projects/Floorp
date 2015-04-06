@@ -212,9 +212,10 @@ CryptoMac_VerifyUpdate(CryptoX_SignatureHandle* aInputData, void* aBuf,
 
 CryptoX_Result
 CryptoMac_LoadPublicKey(const unsigned char* aCertData,
+                        unsigned int aDataSize,
                         CryptoX_PublicKey* aPublicKey)
 {
-  if (!aCertData || !aPublicKey) {
+  if (!aCertData || aDataSize == 0 || !aPublicKey) {
     return CryptoX_Error;
   }
   *aPublicKey = NULL;
@@ -261,121 +262,30 @@ CryptoMac_LoadPublicKey(const unsigned char* aCertData,
       }
       sCspHandle = cspHandle;
     }
-
-    FILE* certFile = NULL;
-    long certFileSize = 0;
-    uint8* certBuffer = NULL;
-
-    certFile = fopen((char*)aCertData, "rb");
-    if (!certFile) {
-      return CryptoX_Error;
-    }
-    if (fseek(certFile, 0, SEEK_END)) {
-      fclose(certFile);
-      return CryptoX_Error;
-    }
-    certFileSize = ftell(certFile);
-    if (certFileSize < 0) {
-      fclose(certFile);
-      return CryptoX_Error;
-    }
-    certBuffer = (uint8*)malloc(certFileSize);
-    if (fseek(certFile, 0, SEEK_SET)) {
-      free(certBuffer);
-      fclose(certFile);
-      return CryptoX_Error;
-    }
-    uint readResult = fread(certBuffer, sizeof(uint8), certFileSize, certFile);
-    if (readResult != certFileSize) {
-      free(certBuffer);
-      fclose(certFile);
-      return CryptoX_Error;
-    }
-    fclose(certFile);
-
-    CFDataRef certData = CFDataCreate(kCFAllocatorDefault,
-                                      certBuffer,
-                                      certFileSize);
-    free(certBuffer);
-    if (!certData) {
-      return CryptoX_Error;
-    }
-
-    SecCertificateRef cert = SecCertificateCreateWithData(kCFAllocatorDefault,
-                                                          certData);
-    CFRelease(certData);
-    if (!cert) {
-      return CryptoX_Error;
-    }
-
-    SecKeyRef publicKey;
-    OSStatus status = SecCertificateCopyPublicKey(cert, (SecKeyRef*)&publicKey);
-    CFRelease(cert);
-    if (status) {
-      return CryptoX_Error;
-    }
-
-    *aPublicKey = (void*)publicKey;
-    return CryptoX_Success;
   }
 
-  CFURLRef url =
-    CFURLCreateFromFileSystemRepresentation(kCFAllocatorDefault,
-                                            aCertData,
-                                            strlen((char*)aCertData),
-                                            false);
-  if (!url) {
-    return CryptoX_Error;
-  }
-
-  CFReadStreamRef stream = CFReadStreamCreateWithFile(kCFAllocatorDefault, url);
-  if (!stream) {
-    CFRelease(url);
-    return CryptoX_Error;
-  }
-
-  SecTransformRef readTransform =
-    SecTransformCreateReadTransformWithReadStreamPtr(stream);
-  if (!readTransform) {
-    CFRelease(url);
-    CFRelease(stream);
-    return CryptoX_Error;
-  }
-
-  CFErrorRef error;
-  CFDataRef tempCertData = (CFDataRef)SecTransformExecutePtr(readTransform,
-                                                             &error);
-  if (!tempCertData || error) {
-    CFRelease(url);
-    CFRelease(stream);
-    CFRelease(readTransform);
+  CFDataRef certData = CFDataCreate(kCFAllocatorDefault,
+                                    aCertData,
+                                    aDataSize);
+  if (!certData) {
     return CryptoX_Error;
   }
 
   SecCertificateRef cert = SecCertificateCreateWithData(kCFAllocatorDefault,
-                                                        tempCertData);
+                                                        certData);
+  CFRelease(certData);
   if (!cert) {
-    CFRelease(url);
-    CFRelease(stream);
-    CFRelease(readTransform);
-    CFRelease(tempCertData);
     return CryptoX_Error;
   }
 
-  CryptoX_Result result = CryptoX_Error;
   OSStatus status = SecCertificateCopyPublicKey(cert,
                                                 (SecKeyRef*)aPublicKey);
-  if (status == 0) {
-    result = CryptoX_Success;
+  CFRelease(cert);
+  if (status != 0) {
+    return CryptoX_Error;
   }
 
-  CFRelease(url);
-  CFRelease(stream);
-  CFRelease(readTransform);
-  CFRelease(tempCertData);
-  CFRelease(cert);
-
-  return result;
+  return CryptoX_Success;
 }
 
 CryptoX_Result

@@ -206,7 +206,7 @@ nsConsoleService::LogMessageWithMode(nsIConsoleMessage* aMessage,
   {
     MutexAutoLock lock(mLock);
 
-#if defined(ANDROID)
+#if defined(ANDROID) && !defined(RELEASE_BUILD)
     if (aOutputMode == OutputToLog) {
       nsCString msg;
       aMessage->ToString(msg);
