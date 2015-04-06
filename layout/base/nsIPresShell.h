@@ -1422,8 +1422,7 @@ public:
    * this PresShell is visible. This is used when the contents of the page
    * moved (aFromScroll is false) or scrolled (aFromScroll is true).
    */
-  virtual void SynthesizeMouseMove(bool aFromScroll,
-                                   bool aIsSynthesizedForTests) = 0;
+  virtual void SynthesizeMouseMove(bool aFromScroll) = 0;
 
   enum PaintFlags {
     /* Update the layer tree and paint PaintedLayers. If this is not specified,
