@@ -4,6 +4,7 @@
 
 #include "ActiveLayerTracker.h"
 
+#include "mozilla/ArrayUtils.h"
 #include "nsExpirationTracker.h"
 #include "nsContainerFrame.h"
 #include "nsIContent.h"
@@ -287,7 +288,7 @@ ActiveLayerTracker::IsStyleAnimated(nsDisplayListBuilder* aBuilder,
   }
   nsIContent* content = aFrame->GetContent();
   if (content) {
-    return nsLayoutUtils::HasCurrentAnimationsForProperty(content, aProperty);
+    return nsLayoutUtils::HasCurrentAnimationsForProperties(content, &aProperty, 1);
   }
 
   return false;
@@ -306,6 +307,23 @@ ActiveLayerTracker::IsOffsetOrMarginStyleAnimated(nsIFrame* aFrame)
         layerActivity->mMarginTopRestyleCount >= 2 ||
         layerActivity->mMarginRightRestyleCount >= 2 ||
         layerActivity->mMarginBottomRestyleCount >= 2) {
+      return true;
+    }
+  }
+  nsIContent* content = aFrame->GetContent();
+  if (content) {
+    static const nsCSSProperty properties[] = {
+      eCSSProperty_left,
+      eCSSProperty_top,
+      eCSSProperty_right,
+      eCSSProperty_bottom,
+      eCSSProperty_margin_left,
+      eCSSProperty_margin_top,
+      eCSSProperty_margin_right,
+      eCSSProperty_margin_bottom
+    };
+    if (nsLayoutUtils::HasCurrentAnimationsForProperties(
+          content, properties, MOZ_ARRAY_LENGTH(properties))) {
       return true;
     }
   }

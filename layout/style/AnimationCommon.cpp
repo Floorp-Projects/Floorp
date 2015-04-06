@@ -939,15 +939,16 @@ AnimationPlayerCollection::HasCurrentAnimations() const
 }
 
 bool
-AnimationPlayerCollection::HasCurrentAnimationsForProperty(nsCSSProperty
-                                                             aProperty) const
+AnimationPlayerCollection::HasCurrentAnimationsForProperties(
+                              const nsCSSProperty* aProperties,
+                              size_t aPropertyCount) const
 {
   for (size_t playerIdx = mPlayers.Length(); playerIdx-- != 0; ) {
     const AnimationPlayer& player = *mPlayers[playerIdx];
     const Animation* anim = player.GetSource();
     if (anim &&
         anim->IsCurrent(player) &&
-        anim->HasAnimationOfProperty(aProperty)) {
+        anim->HasAnimationOfProperties(aProperties, aPropertyCount)) {
       return true;
     }
   }

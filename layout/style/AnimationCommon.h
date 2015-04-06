@@ -430,9 +430,10 @@ struct AnimationPlayerCollection : public PRCList
 
   // Returns true if there is an animation that has yet to finish.
   bool HasCurrentAnimations() const;
-  // Returns true if there is an animation of the specified property that
-  // has yet to finish.
-  bool HasCurrentAnimationsForProperty(nsCSSProperty aProperty) const;
+  // Returns true if there is an animation of any of the specified properties
+  // that has yet to finish.
+  bool HasCurrentAnimationsForProperties(const nsCSSProperty* aProperties,
+                                         size_t aPropertyCount) const;
 
   // The refresh time associated with mStyleRule.
   TimeStamp mStyleRuleRefreshTime;
