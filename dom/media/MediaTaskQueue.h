@@ -14,6 +14,7 @@
 #include "SharedThreadPool.h"
 #include "nsThreadUtils.h"
 #include "MediaPromise.h"
+#include "TaskDispatcher.h"
 
 class nsIRunnable;
 
@@ -40,6 +41,12 @@ public:
   explicit MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool);
 
   nsresult Dispatch(TemporaryRef<nsIRunnable> aRunnable);
+
+  // Returns a TaskDispatcher that will dispatch its tasks when the currently-
+  // running tasks pops off the stack.
+  //
+  // May only be called when running within the task queue it is invoked up.
+  TaskDispatcher& TailDispatcher();
 
   // For AbstractThread.
   nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable) override
@@ -112,22 +119,32 @@ protected:
   RefPtr<nsIThread> mRunningThread;
 
   // RAII class that gets instantiated for each dispatched task.
-  class AutoTaskGuard
+  class AutoTaskGuard : public AutoTaskDispatcher
   {
   public:
-    explicit AutoTaskGuard(MediaTaskQueue* aQueue)
+    explicit AutoTaskGuard(MediaTaskQueue* aQueue) : mQueue(aQueue)
     {
       // NB: We don't hold the lock to aQueue here. Don't do anything that
       // might require it.
+      MOZ_ASSERT(!mQueue->mTailDispatcher);
+      mQueue->mTailDispatcher = this;
+
       MOZ_ASSERT(sCurrentQueueTLS.get() == nullptr);
       sCurrentQueueTLS.set(aQueue);
+
     }
 
     ~AutoTaskGuard()
     {
       sCurrentQueueTLS.set(nullptr);
+      mQueue->mTailDispatcher = nullptr;
     }
+
+  private:
+  MediaTaskQueue* mQueue;
   };
+
+  TaskDispatcher* mTailDispatcher;
 
   // True if we've dispatched an event to the pool to execute events from
   // the queue.
