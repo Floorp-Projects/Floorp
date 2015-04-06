@@ -6,6 +6,7 @@
 # For changes here, also consider ../Makefile.in
 
 XPCSHELLTESTROOT = $(abspath $(DEPTH))/_tests/xpcshell/toolkit/mozapps/update/tests
+MOCHITESTROOT = $(abspath $(DEPTH))/_tests/testing/mochitest/chrome/toolkit/mozapps/update/tests
 
 ifndef MOZ_PROFILE_GENERATE
 ifdef COMPILE_ENVIRONMENT
@@ -34,6 +35,7 @@ endif
 
 libs::
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
+	# Copy for xpcshell tests
 	$(NSINSTALL) -D $(XPCSHELLTESTROOT)/data/updater-xpcshell.app
 	rsync -a -C --exclude '*.in' $(srcdir)/../macbuild/Contents $(XPCSHELLTESTROOT)/data/updater-xpcshell.app
 	sed -e 's/%APP_NAME%/$(MOZ_APP_DISPLAYNAME)/' $(srcdir)/../macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | \
@@ -41,10 +43,15 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	$(NSINSTALL) -D $(XPCSHELLTESTROOT)/data/updater-xpcshell.app/Contents/MacOS/updater-xpcshell
 	$(NSINSTALL) $(XPCSHELLTESTROOT)/data/updater-xpcshell $(XPCSHELLTESTROOT)/data/updater-xpcshell.app/Contents/MacOS
 	rm -f $(XPCSHELLTESTROOT)/data/updater-xpcshell
+	rm -Rf $(XPCSHELLTESTROOT)/data/updater.app
 	mv $(XPCSHELLTESTROOT)/data/updater-xpcshell.app $(XPCSHELLTESTROOT)/data/updater.app
 	mv $(XPCSHELLTESTROOT)/data/updater.app/Contents/MacOS/updater-xpcshell $(XPCSHELLTESTROOT)/data/updater.app/Contents/MacOS/updater
+
+	# Copy for mochitest chrome tests
+	rsync -a -C $(XPCSHELLTESTROOT)/data/updater.app $(MOCHITESTROOT)/data/updater.app
 else
 	mv $(XPCSHELLTESTROOT)/data/updater-xpcshell$(BIN_SUFFIX) $(XPCSHELLTESTROOT)/data/updater$(BIN_SUFFIX)
+	cp $(XPCSHELLTESTROOT)/data/updater$(BIN_SUFFIX) $(MOCHITESTROOT)/data/updater$(BIN_SUFFIX)
 endif
 
 CXXFLAGS += $(MOZ_BZ2_CFLAGS)
