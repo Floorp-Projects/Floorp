@@ -268,6 +268,7 @@ public:
 
   virtual Result CheckRevocation(EndEntityOrCA endEntityOrCA,
                                  const CertID& certID, Time time,
+                                 Duration validityDuration,
                     /*optional*/ const Input* stapledOCSPresponse,
                     /*optional*/ const Input* aiaExtension) = 0;
 
