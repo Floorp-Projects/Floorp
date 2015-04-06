@@ -9,11 +9,7 @@ DIRS += ['src']
 if CONFIG['MOZ_ENABLE_SIGNMAR']:
     DIRS += ['sign', 'verify']
     TEST_DIRS += ['tests']
-elif CONFIG['OS_ARCH'] == 'WINNT':
-    # On Windows we don't verify with NSS and updater needs to link to it
-    DIRS += ['verify']
-elif CONFIG['OS_ARCH'] == 'Darwin':
-    # On OSX we don't verify with NSS and updater needs to link to it.
+elif CONFIG['MOZ_VERIFY_MAR_SIGNATURE']:
     DIRS += ['verify']
 
 # If we are building ./sign and ./verify then ./tool must come after it

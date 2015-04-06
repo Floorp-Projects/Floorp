@@ -223,6 +223,7 @@ class RefTest(object):
 
     #Don't use auto-enabled e10s
     prefs['browser.tabs.remote.autostart.1'] = False
+    prefs['browser.tabs.remote.autostart.2'] = False
     if options.e10s:
       prefs['browser.tabs.remote.autostart'] = True
 
