@@ -115,6 +115,10 @@ public final class PrefsHelper {
     }
 
     public static void setPref(String pref, Object value) {
+        setPref(pref, value, false);
+    }
+
+    public static void setPref(String pref, Object value, boolean flush) {
         if (pref == null || pref.length() == 0) {
             throw new IllegalArgumentException("Pref name must be non-empty");
         }
@@ -122,6 +126,8 @@ public final class PrefsHelper {
         try {
             JSONObject jsonPref = new JSONObject();
             jsonPref.put("name", pref);
+            jsonPref.put("flush", flush);
+
             if (value instanceof Boolean) {
                 jsonPref.put("type", "bool");
                 jsonPref.put("value", ((Boolean)value).booleanValue());
