@@ -32,6 +32,7 @@ public class FxAccountOAuthClient10 extends FxAccountAbstractClient {
   protected static final String JSON_KEY_RESPONSE_TYPE = "response_type";
   protected static final String JSON_KEY_SCOPE = "scope";
   protected static final String JSON_KEY_STATE = "state";
+  protected static final String JSON_KEY_TOKEN = "token";
   protected static final String JSON_KEY_TOKEN_TYPE = "token_type";
 
   // access_token: A string that can be used for authorized requests to service providers.
@@ -96,6 +97,33 @@ public class FxAccountOAuthClient10 extends FxAccountAbstractClient {
       requestBody.put(JSON_KEY_STATE, state);
     }
 
+    post(resource, requestBody, delegate);
+  }
+
+  public void deleteToken(final String token, final RequestDelegate<Void> delegate) {
+    final BaseResource resource;
+    try {
+      resource = new BaseResource(new URI(serverURI + "destroy"));
+    } catch (URISyntaxException e) {
+      invokeHandleError(delegate, e);
+      return;
+    }
+
+    resource.delegate = new ResourceDelegate<Void>(resource, delegate) {
+      @Override
+      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) {
+        try {
+          delegate.handleSuccess(null);
+          return;
+        } catch (Exception e) {
+          delegate.handleError(e);
+          return;
+        }
+      }
+    };
+
+    final ExtendedJSONObject requestBody = new ExtendedJSONObject();
+    requestBody.put(JSON_KEY_TOKEN, token);
     post(resource, requestBody, delegate);
   }
 }
