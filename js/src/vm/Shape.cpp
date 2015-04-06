@@ -1503,6 +1503,10 @@ EmptyShape::insertInitialShape(ExclusiveContext* cx, HandleShape shape, HandleOb
 
     InitialShapeEntry& entry = const_cast<InitialShapeEntry&>(*p);
 
+    // The metadata callback can end up causing redundant changes of the initial shape.
+    if (entry.shape == shape)
+        return;
+
     /* The new shape had better be rooted at the old one. */
 #ifdef DEBUG
     Shape* nshape = shape;
