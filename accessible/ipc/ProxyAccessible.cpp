@@ -181,11 +181,13 @@ ProxyAccessible::SelectionCount()
   return count;
 }
 
-void
+bool
 ProxyAccessible::TextSubstring(int32_t aStartOffset, int32_t aEndOfset,
                                nsString& aText) const
 {
-  unused << mDoc->SendTextSubstring(mID, aStartOffset, aEndOfset, &aText);
+  bool valid;
+  unused << mDoc->SendTextSubstring(mID, aStartOffset, aEndOfset, &aText, &valid);
+  return valid;
 }
 
 void
@@ -333,34 +335,44 @@ ProxyAccessible::ReplaceText(const nsString& aText)
   unused << mDoc->SendReplaceText(mID, aText);
 }
 
-void
+bool
 ProxyAccessible::InsertText(const nsString& aText, int32_t aPosition)
 {
-  unused << mDoc->SendInsertText(mID, aText, aPosition);
+  bool valid;
+  unused << mDoc->SendInsertText(mID, aText, aPosition, &valid);
+  return valid;
 }
 
-void
+bool
 ProxyAccessible::CopyText(int32_t aStartPos, int32_t aEndPos)
 {
-  unused << mDoc->SendCopyText(mID, aStartPos, aEndPos);
+  bool valid;
+  unused << mDoc->SendCopyText(mID, aStartPos, aEndPos, &valid);
+  return valid;
 }
 
-void
+bool
 ProxyAccessible::CutText(int32_t aStartPos, int32_t aEndPos)
 {
-  unused << mDoc->SendCutText(mID, aStartPos, aEndPos);
+  bool valid;
+  unused << mDoc->SendCutText(mID, aStartPos, aEndPos, &valid);
+  return valid;
 }
 
-void
+bool
 ProxyAccessible::DeleteText(int32_t aStartPos, int32_t aEndPos)
 {
-  unused << mDoc->SendDeleteText(mID, aStartPos, aEndPos);
+  bool valid;
+  unused << mDoc->SendDeleteText(mID, aStartPos, aEndPos, &valid);
+  return valid;
 }
 
-void
+bool
 ProxyAccessible::PasteText(int32_t aPosition)
 {
-  unused << mDoc->SendPasteText(mID, aPosition);
+  bool valid;
+  unused << mDoc->SendPasteText(mID, aPosition, &valid);
+  return valid;
 }
 
 nsIntPoint
