@@ -158,7 +158,7 @@ let AddonWatcher = {
         }
         if (diff.totalCPOWTime > 0) {
           Telemetry.getKeyedHistogramById("MISBEHAVING_ADDONS_CPOW_TIME_MS").
-            add(addonId, diff.totalCPOWTime);
+            add(addonId, diff.totalCPOWTime / 1000);
         }
 
         // Report mibehaviors to the user.

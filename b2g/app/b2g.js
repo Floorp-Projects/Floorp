@@ -29,6 +29,7 @@ pref("browser.sessionstore.restore_on_demand", false);
 pref("browser.sessionstore.resume_from_crash", false);
 // No e10s on mulet
 pref("browser.tabs.remote.autostart.1", false);
+pref("browser.tabs.remote.autostart.2", false);
 #endif
 
 // Bug 945235: Prevent all bars to be considered visible:
@@ -1037,6 +1038,7 @@ pref("apz.fling_curve_function_y2", "1.0");
 pref("apz.fling_curve_threshold_inches_per_ms", "0.01");
 pref("apz.fling_friction", "0.0019");
 pref("apz.max_velocity_inches_per_ms", "0.07");
+pref("apz.touch_start_tolerance", "0.1");
 
 // Tweak default displayport values to reduce the risk of running out of
 // memory when zooming in

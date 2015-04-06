@@ -17,10 +17,8 @@ function spawnTest () {
   for (let [key, value] of Iterator(TIMELINE_BLUEPRINT)) {
     ok("group" in value,
       "Each entry in the timeline blueprint contains a `group` key.");
-    ok("fill" in value,
-      "Each entry in the timeline blueprint contains a `fill` key.");
-    ok("stroke" in value,
-      "Each entry in the timeline blueprint contains a `stroke` key.");
+    ok("colorName" in value,
+      "Each entry in the timeline blueprint contains a `colorName` key.");
     ok("label" in value,
       "Each entry in the timeline blueprint contains a `label` key.");
   }

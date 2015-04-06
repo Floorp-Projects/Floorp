@@ -38,38 +38,6 @@ int get_mar_file_info(const char *path,
                       uint32_t *offsetAdditionalBlocks,
                       uint32_t *numAdditionalBlocks);
 
-/**
- * Verifies a MAR file by verifying each signature with the corresponding
- * certificate. That is, the first signature will be verified using the first
- * certificate given, the second signature will be verified using the second
- * certificate given, etc. The signature count must exactly match the number of
- * certificates given, and all signature verifications must succeed.
- * This is only used by the signmar program when used with arguments to verify 
- * a MAR. This should not be used to verify a MAR that will be extracted in the 
- * same operation by updater code. This function prints the error message if 
- * verification fails.
- * 
- * @param pathToMAR     The path of the MAR file whose signature should be
- *                      checked
- * @param certData      Pointer to the first element in an array of certificate
- *                      file data.
- * @param certDataSizes Pointer to the first element in an array for size of
- *                      the cert data.
- * @param certNames     Pointer to the first element in an array of certificate
- *                      names.
- *                      Used only if compiled with NSS support
- * @param certCount     The number of elements in certData, certDataSizes,
- *                      and certNames
- * @return 0 on success
- *         a negative number if there was an error
- *         a positive number if the signature does not verify
- */
-int mar_verify_signatures(const char *pathToMAR,
-                          const uint8_t * const *certData,
-                          const uint32_t *certDataSizes,
-                          const char * const *certNames,
-                          uint32_t certCount);
-
 /** 
  * Reads the product info block from the MAR file's additional block section.
  * The caller is responsible for freeing the fields in infoBlock

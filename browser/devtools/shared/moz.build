@@ -42,7 +42,6 @@ EXTRA_JS_MODULES.devtools.shared.timeline += [
     'timeline/global.js',
     'timeline/marker-details.js',
     'timeline/markers-overview.js',
-    'timeline/memory-overview.js',
     'timeline/waterfall.js',
 ]
 

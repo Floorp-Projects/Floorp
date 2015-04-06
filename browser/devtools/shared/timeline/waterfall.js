@@ -432,9 +432,7 @@ Waterfall.prototype = {
     sidebar.setAttribute("align", "center");
 
     let bullet = this._document.createElement("hbox");
-    bullet.className = "waterfall-marker-bullet";
-    bullet.style.backgroundColor = blueprint.fill;
-    bullet.style.borderColor = blueprint.stroke;
+    bullet.className = `waterfall-marker-bullet ${blueprint.colorName}`;
     bullet.setAttribute("type", marker.name);
     sidebar.appendChild(bullet);
 
@@ -483,12 +481,8 @@ Waterfall.prototype = {
     let offset = this._isRTL ? this._waterfallWidth : 0;
 
     let bar = this._document.createElement("hbox");
-    bar.className = "waterfall-marker-bar";
-    bar.style.backgroundColor = blueprint.fill;
-    bar.style.borderColor = blueprint.stroke;
+    bar.className = `waterfall-marker-bar ${blueprint.colorName}`;
     bar.style.transform = "translateX(" + (start - offset) + "px)";
-    // Save border color. It will change when marker is selected.
-    bar.setAttribute("borderColor", blueprint.stroke);
     bar.setAttribute("type", marker.name);
     bar.setAttribute("width", Math.max(width, WATERFALL_MARKER_BAR_WIDTH_MIN));
     waterfall.appendChild(bar);

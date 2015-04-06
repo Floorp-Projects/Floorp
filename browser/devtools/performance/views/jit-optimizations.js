@@ -5,7 +5,7 @@
 
 const URL_LABEL_TOOLTIP = L10N.getStr("table.url.tooltiptext");
 const OPTIMIZATION_FAILURE = L10N.getStr("jit.optimizationFailure");
-const JIT_SAMPLES = L10N.getStr("jit.samples");
+const JIT_SAMPLES = L10N.getStr("jit.samples2");
 const JIT_EMPTY_TEXT = L10N.getStr("jit.empty");
 
 /**
@@ -209,7 +209,8 @@ let JITOptimizationsView = {
       node.appendChild(icon);
     }
 
-    desc.textContent = `${lastStrategy} - (${site.samples} ${JIT_SAMPLES})`;
+    let sampleString = PluralForm.get(site.samples, JIT_SAMPLES).replace("#1", site.samples);
+    desc.textContent = `${lastStrategy} – (${sampleString})`;
     line.textContent = site.data.line;
     line.className = "opt-line";
     column.textContent = site.data.column;
