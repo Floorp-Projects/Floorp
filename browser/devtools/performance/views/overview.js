@@ -11,11 +11,9 @@ const OVERVIEW_UPDATE_INTERVAL = 200; // ms
 const FRAMERATE_GRAPH_LOW_RES_INTERVAL = 100; // ms
 const FRAMERATE_GRAPH_HIGH_RES_INTERVAL = 16; // ms
 
-const FRAMERATE_GRAPH_HEIGHT = 40; // px
 const MARKERS_GRAPH_HEADER_HEIGHT = 14; // px
 const MARKERS_GRAPH_ROW_HEIGHT = 10; // px
 const MARKERS_GROUP_VERTICAL_PADDING = 4; // px
-const MEMORY_GRAPH_HEIGHT = 30; // px
 
 /**
  * View handler for the overview panel's time view, displaying
@@ -100,6 +98,11 @@ let OverviewView = {
    */
   setTheme: function (options={}) {
     let theme = options.theme || PerformanceController.getTheme();
+
+    if (this.framerateGraph) {
+      this.framerateGraph.setTheme(theme);
+      this.framerateGraph.refresh({ force: options.redraw });
+    }
 
     if (this.markersOverview) {
       this.markersOverview.setTheme(theme);
@@ -191,8 +194,7 @@ let OverviewView = {
       yield this.memoryOverview.ready();
       return true;
     }
-    this.memoryOverview = new MemoryOverview($("#memory-overview"));
-    this.memoryOverview.fixedHeight = MEMORY_GRAPH_HEIGHT;
+    this.memoryOverview = new MemoryGraph($("#memory-overview"));
     yield this.memoryOverview.ready();
     this.setTheme();
 
@@ -216,10 +218,9 @@ let OverviewView = {
       yield this.framerateGraph.ready();
       return true;
     }
-    let metric = L10N.getStr("graphs.fps");
-    this.framerateGraph = new LineGraphWidget($("#time-framerate"), { metric });
-    this.framerateGraph.fixedHeight = FRAMERATE_GRAPH_HEIGHT;
+    this.framerateGraph = new FramerateGraph($("#time-framerate"));
     yield this.framerateGraph.ready();
+    this.setTheme();
 
     CanvasGraphUtils.linkAnimation(this.markersOverview, this.framerateGraph);
     CanvasGraphUtils.linkSelection(this.markersOverview, this.framerateGraph);
