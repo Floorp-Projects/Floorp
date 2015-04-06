@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from __future__ import print_function, unicode_literals
+from mozbuild.base import MozbuildObject
 
 import argparse
 import os
@@ -26,6 +27,9 @@ def get_official_milestone(path):
     """
     Returns the contents of the first line in `path` that starts with a digit.
     """
+    if path is None:
+        build = MozbuildObject.from_environment()
+        path = os.path.join(build.topsrcdir,'config','milestone.txt')
 
     with open(path) as fp:
         for line in fp:
@@ -48,10 +52,10 @@ def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('--uaversion', default=False, action='store_true')
     parser.add_argument('--symbolversion', default=False, action='store_true')
-    parser.add_argument('--topsrcdir', metavar='TOPSRCDIR', required=True)
     options = parser.parse_args(args)
 
-    milestone_file = os.path.join(options.topsrcdir, 'config', 'milestone.txt')
+    build = MozbuildObject.from_environment()
+    milestone_file = os.path.join(build.topsrcdir, 'config', 'milestone.txt')
 
     milestone = get_official_milestone(milestone_file)
 
