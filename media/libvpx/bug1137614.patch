@@ -1,0 +1,23 @@
+diff --git a/media/libvpx/vp8/encoder/block.h b/media/libvpx/vp8/encoder/block.h
+--- a/media/libvpx/vp8/encoder/block.h
++++ b/media/libvpx/vp8/encoder/block.h
+@@ -93,17 +93,18 @@ typedef struct macroblock
+     int rddiv;
+     int rdmult;
+     unsigned int * mb_activity_ptr;
+     int * mb_norm_activity_ptr;
+     signed int act_zbin_adj;
+     signed int last_act_zbin_adj;
+ 
+     int *mvcost[2];
+-    int *mvsadcost[2];
++    /* MSVC generates code that thinks this is 16-byte aligned */
++    DECLARE_ALIGNED(16, int*, mvsadcost[2]);
+     int (*mbmode_cost)[MB_MODE_COUNT];
+     int (*intra_uv_mode_cost)[MB_MODE_COUNT];
+     int (*bmode_costs)[10][10];
+     int *inter_bmode_costs;
+     int (*token_costs)[COEF_BANDS][PREV_COEF_CONTEXTS]
+     [MAX_ENTROPY_TOKENS];
+ 
+     /* These define limits to motion vector components to prevent
