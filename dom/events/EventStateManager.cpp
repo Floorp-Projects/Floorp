@@ -3681,8 +3681,6 @@ CreateMouseOrPointerWidgetEvent(WidgetMouseEvent* aMouseEvent,
   aNewEvent->pressure = aMouseEvent->pressure;
   aNewEvent->mPluginEvent = aMouseEvent->mPluginEvent;
   aNewEvent->inputSource = aMouseEvent->inputSource;
-  aNewEvent->mFlags.mIsSynthesizedForTests =
-    aMouseEvent->mFlags.mIsSynthesizedForTests;
 }
 
 nsIFrame*
@@ -4451,7 +4449,6 @@ EventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
     event.time = aEvent->time;
     event.timeStamp = aEvent->timeStamp;
     event.mFlags.mNoContentDispatch = notDispatchToContents;
-    event.mFlags.mIsSynthesizedForTests = aEvent->mFlags.mIsSynthesizedForTests;
     event.button = aEvent->button;
     event.inputSource = aEvent->inputSource;
 
@@ -4483,8 +4480,6 @@ EventStateManager::CheckForAndDispatchClick(nsPresContext* aPresContext,
         event2.modifiers = aEvent->modifiers;
         event2.buttons = aEvent->buttons;
         event2.mFlags.mNoContentDispatch = notDispatchToContents;
-        event2.mFlags.mIsSynthesizedForTests =
-          aEvent->mFlags.mIsSynthesizedForTests;
         event2.button = aEvent->button;
         event2.inputSource = aEvent->inputSource;
 
