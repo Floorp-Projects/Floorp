@@ -103,6 +103,7 @@
 <!ENTITY cmd.uninstallAddon.label             "Remove">
 <!ENTITY cmd.uninstallAddon.accesskey         "R">
 <!ENTITY cmd.debugAddon.label                 "Debug">
+<!ENTITY cmd.debugAddon.accesskey             "B">
 <!ENTITY cmd.showPreferencesWin.label         "Options">
 <!ENTITY cmd.showPreferencesWin.tooltip       "Change this add-on's options">
 <!ENTITY cmd.showPreferencesUnix.label        "Preferences">
