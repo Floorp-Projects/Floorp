@@ -228,6 +228,8 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id)
       APPEND_DEVICE(0x0a72);
       APPEND_DEVICE(0x0a7a);
       APPEND_DEVICE(0x0caf);
+      APPEND_DEVICE(0x0dd2);
+      APPEND_DEVICE(0x0dd3);
       // GF180M ids
       APPEND_DEVICE(0x0de3);
       APPEND_DEVICE(0x0de8);
@@ -246,6 +248,11 @@ const GfxDeviceFamily* GfxDriverInfo::GetDeviceFamily(DeviceFamily id)
       APPEND_DEVICE(0x0df5);
       APPEND_DEVICE(0x0df6);
       APPEND_DEVICE(0x0df7);
+      APPEND_DEVICE(0x1050);
+      APPEND_DEVICE(0x1051);
+      APPEND_DEVICE(0x1052);
+      APPEND_DEVICE(0x1054);
+      APPEND_DEVICE(0x1055);
       break;
     case AMDRadeonHD5800:
       APPEND_DEVICE(0x6899);
