@@ -299,6 +299,21 @@ function runTest() {
   is(request.result, miniManifestURL, "Packaged App uninstalled.");
   navigator.mozApps.mgmt.onuninstall = null;
 
+
+  // Check that we support memory backed blobs.
+  // The blob here is not a valid app, but that's fine for this test.
+  let blob = new Blob(["This is a test blob."]);
+  navigator.mozApps.mgmt.import(blob)
+    .then(() => {
+      ok(false, "This is not an app!");
+      continueTest();
+    })
+    .catch(aError => {
+      is(aError.name, "InvalidZip", "Memory blob processed.");
+      continueTest();
+    });
+  yield undefined;
+
   // Check that we restored the app registry.
   request = navigator.mozApps.mgmt.getAll();
   request.onerror = cbError;
