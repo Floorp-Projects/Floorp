@@ -315,6 +315,8 @@ public:
   bool HasAnimationOfProperty(nsCSSProperty aProperty) const {
     return GetAnimationOfProperty(aProperty) != nullptr;
   }
+  bool HasAnimationOfProperties(const nsCSSProperty* aProperties,
+                                size_t aPropertyCount) const;
   const InfallibleTArray<AnimationProperty>& Properties() const {
     return mProperties;
   }
