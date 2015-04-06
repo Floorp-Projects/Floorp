@@ -15,7 +15,9 @@
 
 #if defined(MAR_NSS)
 
-#include "nss_secutil.h"
+#include "cert.h"
+#include "keyhi.h"
+#include "cryptohi.h"
 
 #define CryptoX_InvalidHandleValue NULL
 #define CryptoX_ProviderHandle void*
@@ -26,9 +28,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-CryptoX_Result NSS_LoadPublicKey(const char *certNickname,
-                                 SECKEYPublicKey **publicKey,
-                                 CERTCertificate **cert);
+CryptoX_Result NSS_LoadPublicKey(const unsigned char* certData,
+                                 unsigned int certDataSize,
+                                 SECKEYPublicKey** publicKey);
 CryptoX_Result NSS_VerifyBegin(VFYContext **ctx,
                                SECKEYPublicKey * const *publicKey);
 CryptoX_Result NSS_VerifySignature(VFYContext * const *ctx ,
@@ -46,9 +48,8 @@ CryptoX_Result NSS_VerifySignature(VFYContext * const *ctx ,
   VFY_DestroyContext(*SignatureHandle, PR_TRUE)
 #define CryptoX_VerifyUpdate(SignatureHandle, buf, len) \
   VFY_Update(*SignatureHandle, (const unsigned char*)(buf), len)
-#define CryptoX_LoadPublicKey(CryptoHandle, certData, dataSize, \
-                              publicKey, certName, cert) \
-  NSS_LoadPublicKey(certName, publicKey, cert)
+#define CryptoX_LoadPublicKey(CryptoHandle, certData, dataSize, publicKey) \
+  NSS_LoadPublicKey(certData, dataSize, publicKey)
 #define CryptoX_VerifySignature(hash, publicKey, signedData, len) \
   NSS_VerifySignature(hash, (const unsigned char *)(signedData), len)
 #define CryptoX_FreePublicKey(key) \
@@ -73,6 +74,7 @@ CryptoX_Result CryptoMac_VerifyBegin(CryptoX_SignatureHandle* aInputData);
 CryptoX_Result CryptoMac_VerifyUpdate(CryptoX_SignatureHandle* aInputData,
                                       void* aBuf, unsigned int aLen);
 CryptoX_Result CryptoMac_LoadPublicKey(const unsigned char* aCertData,
+                                       unsigned int aDataSize,
                                        CryptoX_PublicKey* aPublicKey);
 CryptoX_Result CryptoMac_VerifySignature(CryptoX_SignatureHandle* aInputData,
                                          CryptoX_PublicKey* aPublicKey,
@@ -91,8 +93,8 @@ void CryptoMac_FreePublicKey(CryptoX_PublicKey* aPublicKey);
 #define CryptoX_VerifyUpdate(aInputData, aBuf, aLen) \
   CryptoMac_VerifyUpdate(aInputData, aBuf, aLen)
 #define CryptoX_LoadPublicKey(aProviderHandle, aCertData, aDataSize, \
-                              aPublicKey, aCertName, aCert) \
-  CryptoMac_LoadPublicKey(aCertData, aPublicKey)
+                              aPublicKey) \
+  CryptoMac_LoadPublicKey(aCertData, aDataSize, aPublicKey)
 #define CryptoX_VerifySignature(aInputData, aPublicKey, aSignature, \
                                 aSignatureLen) \
   CryptoMac_VerifySignature(aInputData, aPublicKey, aSignature, aSignatureLen)
@@ -111,8 +113,7 @@ CryptoX_Result CryptoAPI_InitCryptoContext(HCRYPTPROV *provider);
 CryptoX_Result CryptoAPI_LoadPublicKey(HCRYPTPROV hProv, 
                                        BYTE *certData,
                                        DWORD sizeOfCertData,
-                                       HCRYPTKEY *publicKey,
-                                       HCERTSTORE *cert);
+                                       HCRYPTKEY *publicKey);
 CryptoX_Result CryptoAPI_VerifyBegin(HCRYPTPROV provider, HCRYPTHASH* hash);
 CryptoX_Result CryptoAPI_VerifyUpdate(HCRYPTHASH* hash, 
                                       BYTE *buf, DWORD len);
@@ -133,10 +134,8 @@ CryptoX_Result CyprtoAPI_VerifySignature(HCRYPTHASH *hash,
 #define CryptoX_FreeSignatureHandle(SignatureHandle)
 #define CryptoX_VerifyUpdate(SignatureHandle, buf, len) \
   CryptoAPI_VerifyUpdate(SignatureHandle, (BYTE *)(buf), len)
-#define CryptoX_LoadPublicKey(CryptoHandle, certData, dataSize, \
-                              publicKey, certName, cert) \
-  CryptoAPI_LoadPublicKey(CryptoHandle, (BYTE*)(certData), \
-                          dataSize, publicKey, cert)
+#define CryptoX_LoadPublicKey(CryptoHandle, certData, dataSize, publicKey) \
+  CryptoAPI_LoadPublicKey(CryptoHandle, (BYTE*)(certData), dataSize, publicKey)
 #define CryptoX_VerifySignature(hash, publicKey, signedData, len) \
   CyprtoAPI_VerifySignature(hash, publicKey, signedData, len)
 #define CryptoX_FreePublicKey(key) \
@@ -163,8 +162,7 @@ CryptoX_Result CyprtoAPI_VerifySignature(HCRYPTHASH *hash,
   CryptoX_Error
 #define CryptoX_FreeSignatureHandle(SignatureHandle)
 #define CryptoX_VerifyUpdate(SignatureHandle, buf, len) CryptoX_Error
-#define CryptoX_LoadPublicKey(CryptoHandle, certData, dataSize, \
-                              publicKey, certName, cert) \
+#define CryptoX_LoadPublicKey(CryptoHandle, certData, dataSize, publicKey) \
   CryptoX_Error
 #define CryptoX_VerifySignature(hash, publicKey, signedData, len) CryptoX_Error
 #define CryptoX_FreePublicKey(key) CryptoX_Error
