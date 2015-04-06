@@ -859,8 +859,17 @@ FindScrolledLayerRecursive(Layer* aScrollbar, const LayerMetricsWrapper& aSubtre
   if (LayerIsScrollbarTarget(aSubtreeRoot, aScrollbar)) {
     return aSubtreeRoot;
   }
-  for (LayerMetricsWrapper child = aSubtreeRoot.GetFirstChild(); child;
-         child = child.GetNextSibling()) {
+
+  for (LayerMetricsWrapper child = aSubtreeRoot.GetFirstChild();
+       child;
+       child = child.GetNextSibling())
+  {
+    // Do not recurse into RefLayers, since our initial aSubtreeRoot is the
+    // root (or RefLayer root) of a single layer space to search.
+    if (child.AsRefLayer()) {
+      continue;
+    }
+
     LayerMetricsWrapper target = FindScrolledLayerRecursive(aScrollbar, child);
     if (target) {
       return target;
@@ -872,22 +881,24 @@ FindScrolledLayerRecursive(Layer* aScrollbar, const LayerMetricsWrapper& aSubtre
 static LayerMetricsWrapper
 FindScrolledLayerForScrollbar(Layer* aScrollbar, bool* aOutIsAncestor)
 {
-  // Search ancestors first.
+  // First check if the scrolled layer is an ancestor of the scrollbar layer.
+  LayerMetricsWrapper root(aScrollbar->Manager()->GetRoot());
   LayerMetricsWrapper scrollbar(aScrollbar);
-  for (LayerMetricsWrapper ancestor = scrollbar; ancestor; ancestor = ancestor.GetParent()) {
+  for (LayerMetricsWrapper ancestor(aScrollbar); ancestor; ancestor = ancestor.GetParent()) {
+    // Don't walk into remote layer trees; the scrollbar will always be in
+    // the same layer space.
+    if (ancestor.AsRefLayer()) {
+      root = ancestor;
+      break;
+    }
+
     if (LayerIsScrollbarTarget(ancestor, aScrollbar)) {
       *aOutIsAncestor = true;
       return ancestor;
     }
   }
 
-  // If the scrolled target is not an ancestor, search the whole layer tree.
-  // XXX It would be much better to search the APZC tree instead of the layer
-  // tree. That way we would ignore non-scrollable layers, and we'd only visit
-  // each scroll ID once. In the end we only need the APZC and the FrameMetrics
-  // of the scrolled target.
-  *aOutIsAncestor = false;
-  LayerMetricsWrapper root(aScrollbar->Manager()->GetRoot());
+  // Search the entire layer space of the scrollbar.
   return FindScrolledLayerRecursive(aScrollbar, root);
 }
 
