@@ -516,15 +516,18 @@ private:
    * Recursive helper for ResolvePositions below.
    *
    * @param aContent The current node.
-   * @param aIndex The current character index.
+   * @param aIndex (in/out) The current character index.
    * @param aInTextPath Whether we are currently under a <textPath> element.
-   * @param aForceStartOfChunk Whether the next character we find should start a
-   *   new anchored chunk.
-   * @return The character index we got up to.
+   * @param aForceStartOfChunk (in/out) Whether the next character we find
+   *   should start a new anchored chunk.
+   * @param aDeltas (in/out) Receives the resolved dx/dy values for each
+   *   character.
+   * @return false if we discover that mPositions did not have enough
+   *   elements; true otherwise.
    */
-  uint32_t ResolvePositions(nsIContent* aContent, uint32_t aIndex,
-                            bool aInTextPath, bool& aForceStartOfChunk,
-                            nsTArray<gfxPoint>& aDeltas);
+  bool ResolvePositionsForNode(nsIContent* aContent, uint32_t& aIndex,
+                               bool aInTextPath, bool& aForceStartOfChunk,
+                               nsTArray<gfxPoint>& aDeltas);
 
   /**
    * Initializes mPositions with character position information based on
@@ -532,9 +535,13 @@ private:
    * was not given for that character.  Also fills aDeltas with values based on
    * dx/dy attributes.
    *
+   * @param aDeltas (in/out) Receives the resolved dx/dy values for each
+   *   character.
    * @param aRunPerGlyph Whether mPositions should record that a new run begins
    *   at each glyph.
-   * @return True if we recorded any positions.
+   * @return false if we did not record any positions (due to having no
+   *   displayed characters) or if we discover that mPositions did not have
+   *   enough elements; true otherwise.
    */
   bool ResolvePositions(nsTArray<gfxPoint>& aDeltas, bool aRunPerGlyph);
 
