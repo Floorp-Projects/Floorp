@@ -697,6 +697,9 @@ AnimationPlayer::UpdateFinishedState(bool aSeekFlag)
   } else if (!currentFinishedState && mIsPreviousStateFinished) {
     // Clear finished promise. We'll create a new one lazily.
     mFinished = nullptr;
+    if (mEffect->AsTransition()) {
+      mEffect->SetIsFinishedTransition(false);
+    }
   }
   mIsPreviousStateFinished = currentFinishedState;
   // We must recalculate the current time to take account of any mHoldTime
