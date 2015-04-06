@@ -39,6 +39,7 @@ LOCAL_INCLUDES += [
     '/accessible/base',
     '/accessible/generic',
     '/accessible/html',
+    '/accessible/windows',
     '/accessible/windows/msaa',
     '/accessible/xpcom',
     '/accessible/xul',
