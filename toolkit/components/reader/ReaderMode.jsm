@@ -68,6 +68,31 @@ this.ReaderMode = {
   },
 
   /**
+   * Returns original URL from an about:reader URL.
+   *
+   * @param url An about:reader URL.
+   * @return The original URL for the article, or null if we did not find
+   *         a properly formatted about:reader URL.
+   */
+  getOriginalUrl: function(url) {
+    if (!url.startsWith("about:reader?")) {
+      return null;
+    }
+
+    let searchParams = new URLSearchParams(url.substring("about:reader?".length));
+    if (!searchParams.has("url")) {
+      return null;
+    }
+    let encodedURL = searchParams.get("url");
+    try {
+      return decodeURIComponent(encodedURL);
+    } catch (e) {
+      Cu.reportError("Error decoding original URL: " + e);
+      return encodedURL;
+    }
+  },
+
+  /**
    * Decides whether or not a document is reader-able without parsing the whole thing.
    *
    * @param doc A document to parse.
