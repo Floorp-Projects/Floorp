@@ -117,23 +117,23 @@ int main(int argc, char **argv) {
   const char *certNames[MAX_SIGNATURES];
   char *MARChannelID = MAR_CHANNEL_ID;
   char *productVersion = MOZ_APP_VERSION;
-  uint32_t i, k;
+  uint32_t k;
   int rv = -1;
   uint32_t certCount = 0;
   int32_t sigIndex = -1;
 
 #if !defined(NO_SIGN_VERIFY)
   uint32_t fileSizes[MAX_SIGNATURES];
-  uint8_t* certBuffers[MAX_SIGNATURES];
+  const uint8_t* certBuffers[MAX_SIGNATURES];
   char* DERFilePaths[MAX_SIGNATURES];
 #if (!defined(XP_WIN) && !defined(XP_MACOSX)) || defined(MAR_NSS)
   CERTCertificate* certs[MAX_SIGNATURES];
 #endif
 #endif
 
-  memset(certNames, 0, sizeof(certNames));
+  memset((void*)certNames, 0, sizeof(certNames));
 #if defined(XP_WIN) && !defined(MAR_NSS) && !defined(NO_SIGN_VERIFY)
-  memset(certBuffers, 0, sizeof(certBuffers));
+  memset((void*)certBuffers, 0, sizeof(certBuffers));
 #endif
 #if !defined(NO_SIGN_VERIFY) && ((!defined(MAR_NSS) && defined(XP_WIN)) || \
                                  defined(XP_MACOSX))
@@ -376,7 +376,7 @@ int main(int argc, char **argv) {
     }
     for (k = 0; k < certCount; ++k) {
 #if (defined(XP_WIN) || defined(XP_MACOSX)) && !defined(MAR_NSS)
-      free(certBuffers[k]);
+      free((void*)certBuffers[k]);
 #else
       /* certBuffers[k] is owned by certs[k] so don't free it */
       CERT_DestroyCertificate(certs[k]);
