@@ -20,11 +20,7 @@ import sys
 
 from buildconfig import substs
 
-# This is the staging server
-url = 'https://crash-stats.allizom.org/symbols/upload'
-# This is the production server, we'll switch this
-# once we're comfortable this works.
-#url = 'https://crash-stats.mozilla.com/symbols/upload'
+url = 'https://crash-stats.mozilla.com/symbols/upload'
 
 def main():
     if len(sys.argv) != 2:
