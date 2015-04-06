@@ -161,7 +161,7 @@
               }
             }
           } else {
-            let originalUrl = ReaderParent.parseReaderUrl(aValue);
+            let originalUrl = ReaderMode.getOriginalUrl(aValue);
             if (originalUrl) {
               returnValue = originalUrl;
             }
