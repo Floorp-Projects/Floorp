@@ -99,9 +99,9 @@ public:
     bool          GetAnonymous() const   { return mHashKey.CharAt(2) == 'A'; }
     void          SetPrivate(bool priv)  { mHashKey.SetCharAt(priv ? 'P' : '.', 3); }
     bool          GetPrivate() const     { return mHashKey.CharAt(3) == 'P'; }
-    void          SetRelaxed(bool relaxed)
-                                       { mHashKey.SetCharAt(relaxed ? 'R' : '.', 4); }
-    bool          GetRelaxed() const   { return mHashKey.CharAt(4) == 'R'; }
+    void          SetInsecureScheme(bool insecureScheme)
+                                       { mHashKey.SetCharAt(insecureScheme ? 'I' : '.', 4); }
+    bool          GetInsecureScheme() const   { return mHashKey.CharAt(4) == 'I'; }
 
     void          SetNoSpdy(bool aNoSpdy)
                                        { mHashKey.SetCharAt(aNoSpdy ? 'X' : '.', 5); }

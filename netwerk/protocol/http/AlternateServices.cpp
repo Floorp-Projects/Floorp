@@ -230,9 +230,7 @@ AltSvcMapping::GetConnectionInfo(nsHttpConnectionInfo **outCI,
   nsRefPtr<nsHttpConnectionInfo> ci =
     new nsHttpConnectionInfo(mAlternateHost, mAlternatePort, mNPNToken,
                              mUsername, pi, mOriginHost, mOriginPort);
-  if (!mHttps) {
-    ci->SetRelaxed(true);
-  }
+  ci->SetInsecureScheme(!mHttps);
   ci->SetPrivate(mPrivate);
   ci.forget(outCI);
 }
@@ -330,6 +328,13 @@ public:
          this, socketControl.get(), bypassAuth));
 
     if (bypassAuth) {
+      if (mMapping->HTTPS()) {
+        MOZ_ASSERT(false); // cannot happen but worth the runtime sanity check
+        LOG(("AltSvcTransaction::MaybeValidate %p"
+             "somehow indicates bypassAuth on https:// origin\n", this));
+        return;
+      }
+
       LOG(("AltSvcTransaction::MaybeValidate() %p "
            "validating alternate service because relaxed", this));
       mMapping->SetValidated(true);

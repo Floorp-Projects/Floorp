@@ -2186,7 +2186,7 @@ Http2Session::RecvAltSvc(Http2Session *self)
     nsAutoCString specifiedOriginHost;
     if (origin.EqualsIgnoreCase("https://", 8)) {
       specifiedOriginHost.Assign(origin.get() + 8, origin.Length() - 8);
-      if (ci->GetRelaxed()) {
+      if (ci->GetInsecureScheme()) {
         // technically this is ok because it will still be confirmed before being used
         // but let's not support it.
         okToReroute = false;
