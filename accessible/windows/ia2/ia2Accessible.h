@@ -13,6 +13,7 @@
 
 namespace mozilla {
 namespace a11y {
+class Attribute;
 
 class ia2Accessible : public IAccessible2_2
 {
@@ -105,6 +106,8 @@ public:
 
   // Helper method
   static HRESULT ConvertToIA2Attributes(nsIPersistentProperties* aAttributes,
+                                        BSTR* aIA2Attributes);
+  static HRESULT ConvertToIA2Attributes(nsTArray<Attribute>* aAttributes,
                                         BSTR* aIA2Attributes);
 };
 

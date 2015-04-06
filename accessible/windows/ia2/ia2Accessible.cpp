@@ -619,22 +619,7 @@ ia2Accessible::get_attributes(BSTR* aAttributes)
 
   nsTArray<Attribute> attrs;
   acc->Proxy()->Attributes(&attrs);
-  nsString attrStr;
-  size_t attrCount = attrs.Length();
-  for (size_t i = 0; i < attrCount; i++) {
-    EscapeAttributeChars(attrs[i].Name());
-    EscapeAttributeChars(attrs[i].Value());
-    AppendUTF8toUTF16(attrs[i].Name(), attrStr);
-    attrStr.Append(':');
-    attrStr.Append(attrs[i].Value());
-    attrStr.Append(';');
-  }
-
-  if (attrStr.IsEmpty())
-    return S_FALSE;
-
-  *aAttributes = ::SysAllocStringLen(attrStr.get(), attrStr.Length());
-  return *aAttributes ? S_OK : E_OUTOFMEMORY;
+  return ConvertToIA2Attributes(&attrs, aAttributes);
 
   A11Y_TRYBLOCK_END
 }
@@ -745,6 +730,28 @@ EscapeAttributeChars(String& aStr)
     aStr.Insert('\\', offset);
     offset += 2;
   }
+}
+
+HRESULT
+ia2Accessible::ConvertToIA2Attributes(nsTArray<Attribute>* aAttributes,
+                                      BSTR* aIA2Attributes)
+{
+  nsString attrStr;
+  size_t attrCount = aAttributes->Length();
+  for (size_t i = 0; i < attrCount; i++) {
+    EscapeAttributeChars(aAttributes->ElementAt(i).Name());
+    EscapeAttributeChars(aAttributes->ElementAt(i).Value());
+    AppendUTF8toUTF16(aAttributes->ElementAt(i).Name(), attrStr);
+    attrStr.Append(':');
+    attrStr.Append(aAttributes->ElementAt(i).Value());
+    attrStr.Append(';');
+  }
+
+  if (attrStr.IsEmpty())
+    return S_FALSE;
+
+  *aIA2Attributes = ::SysAllocStringLen(attrStr.get(), attrStr.Length());
+  return *aIA2Attributes ? S_OK : E_OUTOFMEMORY;
 }
 
 HRESULT
