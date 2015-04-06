@@ -159,6 +159,13 @@ let ReaderParent = {
     }
   },
 
+  buttonClick: function(event) {
+    if (event.button != 0) {
+      return;
+    }
+    this.toggleReaderMode(event);
+  },
+
   toggleReaderMode: function(event) {
     let win = event.target.ownerDocument.defaultView;
     let browser = win.gBrowser.selectedBrowser;
