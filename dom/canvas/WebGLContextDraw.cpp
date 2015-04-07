@@ -48,7 +48,9 @@ WebGLContext::DrawInstanced_check(const char* info)
     return true;
 }
 
-bool WebGLContext::DrawArrays_check(GLint first, GLsizei count, GLsizei primcount, const char* info)
+bool
+WebGLContext::DrawArrays_check(GLint first, GLsizei count, GLsizei primcount,
+                               const char* info)
 {
     if (first < 0 || count < 0) {
         ErrorInvalidValue("%s: negative first or count", info);
