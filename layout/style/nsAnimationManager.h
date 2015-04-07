@@ -166,12 +166,10 @@ public:
   }
 
   static mozilla::AnimationPlayerCollection*
-  GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty,
-                             mozilla::GetCompositorAnimationOptions aFlags
-                               = mozilla::GetCompositorAnimationOptions(0))
+  GetAnimationsForCompositor(nsIContent* aContent, nsCSSProperty aProperty)
   {
     return mozilla::css::CommonAnimationManager::GetAnimationsForCompositor(
-      aContent, nsGkAtoms::animationsProperty, aProperty, aFlags);
+      aContent, nsGkAtoms::animationsProperty, aProperty);
   }
 
   void UpdateStyleAndEvents(mozilla::AnimationPlayerCollection* aEA,
