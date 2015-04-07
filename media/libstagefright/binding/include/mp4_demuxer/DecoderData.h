@@ -45,30 +45,28 @@ struct PsshInfo
 class CryptoFile
 {
 public:
-  CryptoFile() {}
+  CryptoFile() : valid(false) {}
   CryptoFile(const CryptoFile& aCryptoFile) : valid(aCryptoFile.valid)
   {
     pssh.AppendElements(aCryptoFile.pssh);
   }
 
-  void Update(stagefright::sp<stagefright::MetaData>& aMetaData)
+  void Update(const uint8_t* aData, size_t aLength)
   {
-    valid = DoUpdate(aMetaData);
+    valid = DoUpdate(aData, aLength);
   }
 
   bool valid;
   nsTArray<PsshInfo> pssh;
 
 private:
-  bool DoUpdate(stagefright::sp<stagefright::MetaData>& aMetaData);
+  bool DoUpdate(const uint8_t* aData, size_t aLength);
 };
 
 class CryptoTrack
 {
 public:
   CryptoTrack() : valid(false) {}
-  void Update(stagefright::sp<stagefright::MetaData>& aMetaData);
-
   bool valid;
   int32_t mode;
   int32_t iv_size;
@@ -78,12 +76,9 @@ public:
 class CryptoSample : public CryptoTrack
 {
 public:
-  void Update(stagefright::sp<stagefright::MetaData>& aMetaData);
-
   nsTArray<uint16_t> plain_sizes;
   nsTArray<uint32_t> encrypted_sizes;
   nsTArray<uint8_t> iv;
-
   nsTArray<nsCString> session_ids;
 };
 

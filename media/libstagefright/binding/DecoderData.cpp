@@ -81,19 +81,9 @@ FindData(sp<MetaData>& aMetaData, uint32_t aKey, ByteBuffer* aDest)
 }
 
 bool
-CryptoFile::DoUpdate(sp<MetaData>& aMetaData)
+CryptoFile::DoUpdate(const uint8_t* aData, size_t aLength)
 {
-  const void* data;
-  size_t size;
-  uint32_t type;
-
-  // There's no point in checking that the type matches anything because it
-  // isn't set consistently in the MPEG4Extractor.
-  if (!aMetaData->findData(kKeyPssh, &type, &data, &size)) {
-    return false;
-  }
-
-  ByteReader reader(reinterpret_cast<const uint8_t*>(data), size);
+  ByteReader reader(aData, aLength);
   while (reader.Remaining()) {
     PsshInfo psshInfo;
     if (!reader.ReadArray(psshInfo.uuid, 16)) {
@@ -114,30 +104,15 @@ CryptoFile::DoUpdate(sp<MetaData>& aMetaData)
 }
 
 void
-CryptoTrack::Update(sp<MetaData>& aMetaData)
-{
-  valid = aMetaData->findInt32(kKeyCryptoMode, &mode) &&
-          aMetaData->findInt32(kKeyCryptoDefaultIVSize, &iv_size) &&
-          FindData(aMetaData, kKeyCryptoKey, &key);
-}
-
-void
-CryptoSample::Update(sp<MetaData>& aMetaData)
-{
-  CryptoTrack::Update(aMetaData);
-  valid = valid && FindData(aMetaData, kKeyPlainSizes, &plain_sizes) &&
-          FindData(aMetaData, kKeyEncryptedSizes, &encrypted_sizes) &&
-          FindData(aMetaData, kKeyCryptoIV, &iv);
-}
-
-void
 TrackConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
 {
   mime_type = aMimeType;
   duration = FindInt64(aMetaData, kKeyDuration);
   media_time = FindInt64(aMetaData, kKeyMediaTime);
   mTrackId = FindInt32(aMetaData, kKeyTrackID);
-  crypto.Update(aMetaData);
+  crypto.valid = aMetaData->findInt32(kKeyCryptoMode, &crypto.mode) &&
+    aMetaData->findInt32(kKeyCryptoDefaultIVSize, &crypto.iv_size) &&
+    FindData(aMetaData, kKeyCryptoKey, &crypto.key);
 }
 
 void
