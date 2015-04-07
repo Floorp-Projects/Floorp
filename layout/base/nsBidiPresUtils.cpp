@@ -1396,16 +1396,19 @@ nsBidiPresUtils::IsFirstOrLast(nsIFrame* aFrame,
   }
 }
 
-void
+/* static */ nscoord
 nsBidiPresUtils::RepositionFrame(nsIFrame* aFrame,
                                  bool aIsEvenLevel,
-                                 nscoord& aStart,
+                                 nscoord aStartOrEnd,
                                  const nsContinuationStates* aContinuationStates,
                                  WritingMode aContainerWM,
+                                 bool aContainerReverseDir,
                                  nscoord aContainerISize)
 {
+  NS_ASSERTION(aContainerISize != NS_UNCONSTRAINEDSIZE,
+               "Unconstrained inline line size in bidi frame reordering");
   if (!aFrame)
-    return;
+    return 0;
 
   bool isFirst, isLast;
   WritingMode frameWM = aFrame->GetWritingMode();
@@ -1425,8 +1428,18 @@ nsBidiPresUtils::RepositionFrame(nsIFrame* aFrame,
   // This method is called from nsBlockFrame::PlaceLine via the call to
   // bidiUtils->ReorderFrames, so this is guaranteed to be after the inlines
   // have been reflowed, which is required for GetUsedMargin/Border/Padding
+  nscoord frameISize = aFrame->ISize();
   LogicalMargin frameMargin = aFrame->GetLogicalUsedMargin(frameWM);
   LogicalMargin borderPadding = aFrame->GetLogicalUsedBorderAndPadding(frameWM);
+  // Since the visual order of frame could be different from the
+  // continuation order, we need to remove any border/padding first,
+  // so that we can get the correct isize of the current frame.
+  if (!aFrame->GetPrevContinuation()) {
+    frameISize -= borderPadding.IStart(frameWM);
+  }
+  if (!aFrame->GetNextContinuation()) {
+    frameISize -= borderPadding.IEnd(frameWM);
+  }
   if (!isFirst) {
     frameMargin.IStart(frameWM) = 0;
     borderPadding.IStart(frameWM) = 0;
@@ -1435,67 +1448,51 @@ nsBidiPresUtils::RepositionFrame(nsIFrame* aFrame,
     frameMargin.IEnd(frameWM) = 0;
     borderPadding.IEnd(frameWM) = 0;
   }
-  LogicalMargin margin = frameMargin.ConvertTo(aContainerWM, frameWM);
-  aStart += margin.IStart(aContainerWM);
+  frameISize += borderPadding.IStartEnd(frameWM);
 
-  nscoord start = aStart;
-
+  bool reverseDir = aIsEvenLevel != frameWM.IsBidiLTR();
+  nscoord icoord = 0;
   if (!IsBidiLeaf(aFrame)) {
-    // If the resolved direction of the container is different from the
-    // direction of the frame, we need to traverse the child list in reverse
-    // order, to make it O(n) we store the list locally and iterate the list
-    // in reverse
-    bool reverseOrder = aIsEvenLevel != frameWM.IsBidiLTR();
-    nsTArray<nsIFrame*> childList;
-    nsIFrame *frame = aFrame->GetFirstPrincipalChild();
-    if (frame && reverseOrder) {
-      childList.AppendElement((nsIFrame*)nullptr);
-      while (frame) {
-        childList.AppendElement(frame);
-        frame = frame->GetNextSibling();
-      }
-      frame = childList[childList.Length() - 1];
-    }
-
+    icoord += reverseDir ?
+      borderPadding.IEnd(frameWM) : borderPadding.IStart(frameWM);
     // Reposition the child frames
-    int32_t index = 0;
-    nscoord iCoord = borderPadding.IStart(frameWM);
-
-    while (frame) {
-      RepositionFrame(frame,
-                      aIsEvenLevel,
-                      iCoord,
-                      aContinuationStates,
-                      frameWM,
-                      aFrame->ISize());
-      index++;
-      frame = reverseOrder ?
-                childList[childList.Length() - index - 1] :
-                frame->GetNextSibling();
+    for (nsFrameList::Enumerator e(aFrame->PrincipalChildList());
+         !e.AtEnd(); e.Next()) {
+      icoord += RepositionFrame(e.get(), aIsEvenLevel, icoord,
+                                aContinuationStates,
+                                frameWM, reverseDir, frameISize);
     }
-
-    aStart += iCoord + borderPadding.IEnd(frameWM);
+    icoord += reverseDir ?
+      borderPadding.IStart(frameWM) : borderPadding.IEnd(frameWM);
   } else {
-    aStart += aFrame->ISize(aContainerWM);
+    icoord +=
+      frameWM.IsOrthogonalTo(aContainerWM) ? aFrame->BSize() : frameISize;
   }
 
   // LogicalRect doesn't correctly calculate the vertical position
   // in vertical writing modes with right-to-left direction (Bug 1131451).
   // This does the correct calculation ad hoc pending the fix for that.
   nsRect rect = aFrame->GetRect();
-  NS_ASSERTION(aContainerWM.IsBidiLTR() || aContainerISize != NS_UNCONSTRAINEDSIZE,
-               "Unconstrained inline line size in bidi frame reordering");
 
-  nscoord frameIStart =
-    aContainerWM.IsBidiLTR() ? start : aContainerISize - aStart;
-  nscoord frameISize = aStart - start;
-
-  (aContainerWM.IsVertical() ? rect.y : rect.x) = frameIStart;
-  (aContainerWM.IsVertical() ? rect.height : rect.width) = frameISize;
-
+  LogicalMargin margin = frameMargin.ConvertTo(aContainerWM, frameWM);
+  // In the following variables, if aContainerReverseDir is true, i.e.
+  // the container is positioning its children in reverse of its logical
+  // direction, the "StartOrEnd" refers to the distance from the frame
+  // to the inline end edge of the container, elsewise, it refers to the
+  // distance to the inline start edge.
+  nscoord marginStartOrEnd = aContainerReverseDir ?
+    margin.IEnd(aContainerWM) : margin.IStart(aContainerWM);
+  nscoord frameStartOrEnd = aStartOrEnd + marginStartOrEnd;
+  // Whether we are placing frames from right to left.
+  // e.g. If the frames are placed reversely in LTR mode, they are
+  // actually placed from right to left.
+  bool orderingRTL = aContainerReverseDir == aContainerWM.IsBidiLTR();
+  (aContainerWM.IsVertical() ? rect.y : rect.x) = orderingRTL ?
+    aContainerISize - (frameStartOrEnd + icoord) : frameStartOrEnd;
+  (aContainerWM.IsVertical() ? rect.height : rect.width) = icoord;
   aFrame->SetRect(rect);
 
-  aStart += margin.IEnd(aContainerWM);
+  return icoord + margin.IStartEnd(aContainerWM);
 }
 
 void
@@ -1550,12 +1547,10 @@ nsBidiPresUtils::RepositionInlineFrames(BidiLineData *aBld,
   }
   for (; index != limit; index += step) {
     frame = aBld->VisualFrameAt(index);
-    RepositionFrame(frame,
-                    !(IS_LEVEL_RTL(aBld->mLevels[aBld->mIndexMap[index]])),
-                    start,
-                    &continuationStates,
-                    aLineWM,
-                    aContainerISize);
+    start += RepositionFrame(
+      frame, !(IS_LEVEL_RTL(aBld->mLevels[aBld->mIndexMap[index]])),
+      start, &continuationStates,
+      aLineWM, false, aContainerISize);
   }
 }
 
