@@ -128,7 +128,7 @@
   <!-- Stock Android things -->
   <project name="platform/external/icu4c" path="external/icu4c" revision="2bb01561780583cc37bc667f0ea79f48a122d8a2"/>
   <!-- dolphin specific things -->
-  <project name="device/sprd" path="device/sprd" revision="1eb575040af22c58a16f90ecd04b6e1ebdee5c80"/>
+  <project name="device/sprd" path="device/sprd" revision="a26ba0ab998133ad590102be1e5950818b86ce82"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="2ea7f18a7bc45e16cb97a835dc86ee64d2d6b0b3"/>
   <project name="platform/frameworks/av" path="frameworks/av" revision="fd359e3a74a658d9eaab1c683440ba5412535777"/>
   <project name="platform/hardware/akm" path="hardware/akm" revision="6d3be412647b0eab0adff8a2768736cf4eb68039"/>
