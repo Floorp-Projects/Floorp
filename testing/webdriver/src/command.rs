@@ -328,7 +328,7 @@ trait Parameters {
 
 #[derive(PartialEq)]
 pub struct GetParameters {
-    url: String
+    pub url: String
 }
 
 impl Parameters for GetParameters {
