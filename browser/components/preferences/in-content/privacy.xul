@@ -133,7 +133,7 @@
   <deck id="historyPane">
     <vbox id="historyRememberPane">
       <hbox align="center" flex="1">
-        <vbox>
+        <vbox flex="1">
           <description>&rememberDescription.label;</description>
           <separator class="thin"/>
           <description>&rememberActions.pre.label;<html:a
@@ -146,7 +146,7 @@
     </vbox>
     <vbox id="historyDontRememberPane">
       <hbox align="center" flex="1">
-        <vbox>
+        <vbox flex="1">
           <description>&dontrememberDescription.label;</description>
           <separator class="thin"/>
           <description>&dontrememberActions.pre.label;<html:a
