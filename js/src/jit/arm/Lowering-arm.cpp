@@ -655,6 +655,15 @@ LIRGeneratorARM::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
     MDefinition* ptr = ins->ptr();
     MOZ_ASSERT(ptr->type() == MIRType_Int32);
 
+    if (byteSize(ins->accessType()) != 4 && !HasLDSTREXBHD()) {
+        LAsmJSCompareExchangeCallout* lir =
+            new(alloc()) LAsmJSCompareExchangeCallout(useRegister(ptr),
+                                                      useRegister(ins->oldValue()),
+                                                      useRegister(ins->newValue()));
+        defineFixed(lir, ins, LAllocation(AnyRegister(ReturnReg)));
+        return;
+    }
+
     LAsmJSCompareExchangeHeap* lir =
         new(alloc()) LAsmJSCompareExchangeHeap(useRegister(ptr),
                                                useRegister(ins->oldValue()),
@@ -670,6 +679,13 @@ LIRGeneratorARM::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 
     MDefinition* ptr = ins->ptr();
     MOZ_ASSERT(ptr->type() == MIRType_Int32);
+
+    if (byteSize(ins->accessType()) != 4 && !HasLDSTREXBHD()) {
+        LAsmJSAtomicBinopCallout* lir =
+            new(alloc()) LAsmJSAtomicBinopCallout(useRegister(ptr), useRegister(ins->value()));
+        defineFixed(lir, ins, LAllocation(AnyRegister(ReturnReg)));
+        return;
+    }
 
     if (!ins->hasUses()) {
         LAsmJSAtomicBinopHeapForEffect* lir =

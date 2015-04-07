@@ -44,6 +44,14 @@ bool atomics_futexWait(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_futexWake(JSContext* cx, unsigned argc, Value* vp);
 bool atomics_futexWakeOrRequeue(JSContext* cx, unsigned argc, Value* vp);
 
+/* asm.js callouts */
+int32_t atomics_add_asm_callout(int32_t vt, int32_t offset, int32_t value);
+int32_t atomics_sub_asm_callout(int32_t vt, int32_t offset, int32_t value);
+int32_t atomics_and_asm_callout(int32_t vt, int32_t offset, int32_t value);
+int32_t atomics_or_asm_callout(int32_t vt, int32_t offset, int32_t value);
+int32_t atomics_xor_asm_callout(int32_t vt, int32_t offset, int32_t value);
+int32_t atomics_cmpxchg_asm_callout(int32_t vt, int32_t offset, int32_t oldval, int32_t newval);
+
 class FutexRuntime
 {
 public:

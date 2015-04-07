@@ -465,6 +465,53 @@ class LAsmJSLoadFuncPtr : public LInstructionHelper<1, 1, 1>
     }
 };
 
+class LAsmJSCompareExchangeCallout : public LInstructionHelper<1, 3, 0>
+{
+  public:
+    LIR_HEADER(AsmJSCompareExchangeCallout)
+    LAsmJSCompareExchangeCallout(const LAllocation& ptr, const LAllocation& oldval,
+                                 const LAllocation& newval)
+    {
+        setOperand(0, ptr);
+        setOperand(1, oldval);
+        setOperand(2, newval);
+    }
+    const LAllocation* ptr() {
+        return getOperand(0);
+    }
+    const LAllocation* oldval() {
+        return getOperand(1);
+    }
+    const LAllocation* newval() {
+        return getOperand(2);
+    }
+
+    const MAsmJSCompareExchangeHeap* mir() const {
+        return mir_->toAsmJSCompareExchangeHeap();
+    }
+};
+
+class LAsmJSAtomicBinopCallout : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(AsmJSAtomicBinopCallout)
+    LAsmJSAtomicBinopCallout(const LAllocation& ptr, const LAllocation& value)
+    {
+        setOperand(0, ptr);
+        setOperand(1, value);
+    }
+    const LAllocation* ptr() {
+        return getOperand(0);
+    }
+    const LAllocation* value() {
+        return getOperand(1);
+    }
+
+    const MAsmJSAtomicBinopHeap* mir() const {
+        return mir_->toAsmJSAtomicBinopHeap();
+    }
+};
+
 } // namespace jit
 } // namespace js
 
