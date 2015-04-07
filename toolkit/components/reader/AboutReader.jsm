@@ -48,7 +48,7 @@ let AboutReader = function(mm, win, articlePromise) {
   this._domainElementRef = Cu.getWeakReference(doc.getElementById("reader-domain"));
   this._titleElementRef = Cu.getWeakReference(doc.getElementById("reader-title"));
   this._creditsElementRef = Cu.getWeakReference(doc.getElementById("reader-credits"));
-  this._contentElementRef = Cu.getWeakReference(doc.getElementById("reader-content"));
+  this._contentElementRef = Cu.getWeakReference(doc.getElementById("moz-reader-content"));
   this._toolbarElementRef = Cu.getWeakReference(doc.getElementById("reader-toolbar"));
   this._messageElementRef = Cu.getWeakReference(doc.getElementById("reader-message"));
 
@@ -354,13 +354,13 @@ AboutReader.prototype = {
   },
 
   _setFontSize: function Reader_setFontSize(newFontSize) {
-    let htmlClasses = this._doc.documentElement.classList;
+    let containerClasses = this._doc.getElementById("container").classList;
 
     if (this._fontSize > 0)
-      htmlClasses.remove("font-size" + this._fontSize);
+      containerClasses.remove("font-size" + this._fontSize);
 
     this._fontSize = newFontSize;
-    htmlClasses.add("font-size" + this._fontSize);
+    containerClasses.add("font-size" + this._fontSize);
 
     this._mm.sendAsyncMessage("Reader:SetIntPref", {
       name: "reader.font_size",
