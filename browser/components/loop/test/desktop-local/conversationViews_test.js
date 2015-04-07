@@ -13,6 +13,7 @@ describe("loop.conversationViews", function () {
 
   var CALL_STATES = loop.store.CALL_STATES;
   var CALL_TYPES = loop.shared.utils.CALL_TYPES;
+  var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var REST_ERRNOS = loop.shared.utils.REST_ERRNOS;
   var WEBSOCKET_REASONS = loop.shared.utils.WEBSOCKET_REASONS;
 
@@ -448,6 +449,15 @@ describe("loop.conversationViews", function () {
         sinon.assert.calledWithExactly(document.mozL10n.get,
           "contact_unavailable_title",
           {contactName: loop.conversationViews._getContactDisplayName(contact)});
+      });
+
+    it("should show 'no media' when the reason is FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA",
+      function () {
+        store.setStoreState({callStateReason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA});
+
+        view = mountTestComponent({contact: contact});
+
+        sinon.assert.calledWithExactly(document.mozL10n.get, "no_media_failure_message");
       });
 
     it("should display a generic contact unavailable msg when the reason is" +
@@ -887,6 +897,11 @@ describe("loop.conversationViews", function () {
   describe("GenericFailureView", function() {
     var view, fakeAudio;
 
+    function mountTestComponent(props) {
+      return TestUtils.renderIntoDocument(
+        React.createElement(loop.conversationViews.GenericFailureView, props));
+    }
+
     beforeEach(function() {
       fakeAudio = {
         play: sinon.spy(),
@@ -895,14 +910,11 @@ describe("loop.conversationViews", function () {
       };
       navigator.mozLoop.doNotDisturb = false;
       sandbox.stub(window, "Audio").returns(fakeAudio);
-
-      view = TestUtils.renderIntoDocument(
-        React.createElement(loop.conversationViews.GenericFailureView, {
-          cancelCall: function() {}
-        }));
     });
 
     it("should play a failure sound, once", function() {
+      view = mountTestComponent({cancelCall: function() {}});
+
       sinon.assert.calledOnce(navigator.mozLoop.getAudioBlob);
       sinon.assert.calledWithExactly(navigator.mozLoop.getAudioBlob,
                                      "failure", sinon.match.func);
@@ -911,7 +923,24 @@ describe("loop.conversationViews", function () {
     });
 
     it("should set the title to generic_failure_title", function() {
+      view = mountTestComponent({cancelCall: function() {}});
+
       expect(fakeWindow.document.title).eql("generic_failure_title");
+    });
+
+    it("should show 'no media' for FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA reason", function() {
+      view = mountTestComponent({
+        cancelCall: function() {},
+        failureReason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
+      });
+
+      expect(view.getDOMNode().querySelector("h2").textContent).eql("no_media_failure_message");
+    });
+
+    it("should show 'generic_failure_title' when no reason is specified", function() {
+      view = mountTestComponent({cancelCall: function() {}});
+
+      expect(view.getDOMNode().querySelector("h2").textContent).eql("generic_failure_title");
     });
   });
 });
