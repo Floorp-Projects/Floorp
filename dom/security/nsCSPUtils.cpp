@@ -540,10 +540,11 @@ nsCSPHostSrc::appendPath(const nsAString& aPath)
 /* ===== nsCSPKeywordSrc ===================== */
 
 nsCSPKeywordSrc::nsCSPKeywordSrc(enum CSPKeyword aKeyword)
+ : mKeyword(aKeyword)
+ , mInvalidated(false)
 {
   NS_ASSERTION((aKeyword != CSP_SELF),
                "'self' should have been replaced in the parser");
-  mKeyword = aKeyword;
 }
 
 nsCSPKeywordSrc::~nsCSPKeywordSrc()
@@ -553,8 +554,16 @@ nsCSPKeywordSrc::~nsCSPKeywordSrc()
 bool
 nsCSPKeywordSrc::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const
 {
-  CSPUTILSLOG(("nsCSPKeywordSrc::allows, aKeyWord: %s, a HashOrNonce: %s",
-              CSP_EnumToKeyword(aKeyword), NS_ConvertUTF16toUTF8(aHashOrNonce).get()));
+  CSPUTILSLOG(("nsCSPKeywordSrc::allows, aKeyWord: %s, aHashOrNonce: %s, mInvalidated: %s",
+              CSP_EnumToKeyword(aKeyword),
+              NS_ConvertUTF16toUTF8(aHashOrNonce).get(),
+              mInvalidated ? "yes" : "false"));
+  // if unsafe-inline should be ignored, then bail early
+  if (mInvalidated) {
+    NS_ASSERTION(mKeyword == CSP_UNSAFE_INLINE,
+                 "should only invalidate unsafe-inline within script-src");
+    return false;
+  }
   return mKeyword == aKeyword;
 }
 
@@ -562,6 +571,14 @@ void
 nsCSPKeywordSrc::toString(nsAString& outStr) const
 {
   outStr.AppendASCII(CSP_EnumToKeyword(mKeyword));
+}
+
+void
+nsCSPKeywordSrc::invalidate()
+{
+  mInvalidated = true;
+  NS_ASSERTION(mInvalidated == CSP_UNSAFE_INLINE,
+               "invalidate 'unsafe-inline' only within script-src");
 }
 
 /* ===== nsCSPNonceSrc ==================== */
