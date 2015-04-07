@@ -1017,6 +1017,11 @@ MSimdBinaryComp::printOpcode(FILE* fp) const
 {
     PrintOpcodeOperation(this, fp);
 }
+void
+MSimdShift::printOpcode(FILE *fp) const
+{
+    PrintOpcodeOperation(this, fp);
+}
 
 void
 MSimdInsertElement::printOpcode(FILE* fp) const

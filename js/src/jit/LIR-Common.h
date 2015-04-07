@@ -566,6 +566,9 @@ class LSimdShift : public LInstructionHelper<1, 2, 0>
     MSimdShift::Operation operation() const {
         return mir_->toSimdShift()->operation();
     }
+    const char* extraName() const {
+        return MSimdShift::OperationName(operation());
+    }
     MSimdShift* mir() const {
         return mir_->toSimdShift();
     }
