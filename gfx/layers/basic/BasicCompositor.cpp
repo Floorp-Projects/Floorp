@@ -455,6 +455,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
 #endif
         );
     if (NS_WARN_IF(!temp)) {
+      buffer->PopClip();
       return;
     }
 
