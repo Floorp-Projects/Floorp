@@ -603,7 +603,7 @@ MP4Reader::DisableHardwareAcceleration()
     mSharedDecoderManager->DisableHardwareAcceleration();
 
     const VideoDecoderConfig& video = mDemuxer->VideoConfig();
-    if (!mSharedDecoderManager->Recreate(video, mLayersBackendType, mDecoder->GetImageContainer())) {
+    if (!mSharedDecoderManager->Recreate(video)) {
       MonitorAutoLock mon(mVideo.mMonitor);
       mVideo.mError = true;
       if (mVideo.HasPromise()) {

@@ -42,9 +42,7 @@ public:
   friend class SharedDecoderCallback;
 
   void DisableHardwareAcceleration();
-  bool Recreate(const mp4_demuxer::VideoDecoderConfig& aConfig,
-                layers::LayersBackend aLayersBackend,
-                layers::ImageContainer* aImageContainer);
+  bool Recreate(const mp4_demuxer::VideoDecoderConfig& aConfig);
 
 private:
   virtual ~SharedDecoderManager();
@@ -52,6 +50,8 @@ private:
 
   nsRefPtr<PlatformDecoderModule> mPDM;
   nsRefPtr<MediaDataDecoder> mDecoder;
+  layers::LayersBackend mLayersBackend;
+  nsRefPtr<layers::ImageContainer> mImageContainer;
   nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
   SharedDecoderProxy* mActiveProxy;
   MediaDataDecoderCallback* mActiveCallback;
