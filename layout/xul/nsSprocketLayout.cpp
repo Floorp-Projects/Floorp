@@ -397,12 +397,7 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
           nextY += (childBoxSize->right);
         else 
           nextY -= (childBoxSize->left);
-        if (GetFrameDirection(aBox) == NS_STYLE_DIRECTION_LTR) {
-          childRect.x = originalClientRect.x;
-        } else {
-          // keep the right edge of the box the same
-          childRect.x = clientRect.x + originalClientRect.width - childRect.width;
-        }
+        childRect.x = originalClientRect.x;
       }
       
       // If we encounter a completely bogus box size, we just leave this child completely
@@ -532,13 +527,6 @@ nsSprocketLayout::Layout(nsIFrame* aBox, nsBoxLayoutState& aState)
             newChildRect.x = childRect.XMost() - newChildRect.width;
           else
             newChildRect.y = childRect.YMost() - newChildRect.height;
-        }
-
-        if (!(frameState & NS_STATE_IS_HORIZONTAL)) {
-          if (GetFrameDirection(aBox) != NS_STYLE_DIRECTION_LTR) {
-            // keep the right edge the same
-            newChildRect.x = childRect.XMost() - newChildRect.width;
-          }
         }
 
         // If the child resized then recompute its position.
