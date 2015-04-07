@@ -324,9 +324,15 @@ var NodeActor = exports.NodeActor = protocol.ActorClass({
    * Is the node's display computed style value other than "none"
    */
   get isDisplayed() {
+    // Consider all non-element nodes as displayed.
+    if (this.rawNode.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ||
+        this.isAfterPseudoElement ||
+        this.isBeforePseudoElement) {
+      return true;
+    }
+
     let style = this.computedStyle;
     if (!style) {
-      // Consider all non-element nodes as displayed
       return true;
     } else {
       return style.display !== "none";
