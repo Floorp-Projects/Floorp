@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Bug 1151993 - sizing of orthogonal block</title>
+    <style>
+    .outer {
+      width: 400px;
+      height: 300px;
+      border: 1px solid silver;
+      overflow: visible;
+      display: inline-block;
+      margin: 10px;
+      vertical-align: top;
+    }
+    .v-lr {
+      writing-mode: vertical-lr;
+      background: yellow;
+      font-weight: bold;
+      width: 100px;
+    }
+    span {
+      display: inline-block;
+      height: 40px;
+    }
+    </style>
+  </head>
+  <body>
+    <div class="outer">
+      <p>Lorem ipsum dolor sit amet, illum harum sed cu, ex mea delectus recteque.
+      Sit aperiri incorrupte cu. Et eam ullum minim disputando, no usu stet postea.</p>
+      <div class="v-lr"><span class="test"></span></div> <!-- single line: shrink-wrapped -->
+      <p>Cu ornatus accusam nam, minim impedit omittantur vel ne.
+      Qui detraxit temporibus contentiones te.</p>
+    </div>
+    <div class="outer">
+      <p>Lorem ipsum dolor sit amet, illum harum sed cu, ex mea delectus recteque.
+      Sit aperiri incorrupte cu. Et eam ullum minim disputando, no usu stet postea.</p>
+      <div class="v-lr">
+        <span></span> <span></span> <span></span> <span></span> <span></span>
+        <span></span> <span></span> <span></span> <span></span> <span></span>
+        <span></span> <span></span> <span></span> <span></span> <span></span>
+      </div> <!-- multi-line: use containing block's height as inline size -->
+      <p>Cu ornatus accusam nam, minim impedit omittantur vel ne.
+      Qui detraxit temporibus contentiones te.</p>
+    </div>
+  </body>
+</html>
