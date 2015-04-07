@@ -156,6 +156,7 @@ MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
   , mFoundSPSForTelemetry(false)
   , mIsEncrypted(false)
   , mIndexReady(false)
+  , mLastSeenEnd(-1)
   , mDemuxerMonitor("MP4 Demuxer")
 #if defined(MP4_READER_DORMANT_HEURISTIC)
   , mDormantEnabled(Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false))
@@ -1110,6 +1111,41 @@ MP4Reader::SetSharedDecoderManager(SharedDecoderManager* aManager)
 #if !defined(MOZ_WIDGET_ANDROID)
   mSharedDecoderManager = aManager;
 #endif
+}
+
+void
+MP4Reader::NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (mShutdown) {
+    return;
+  }
+
+  if (mLastSeenEnd < 0) {
+    MonitorAutoLock mon(mDemuxerMonitor);
+    mLastSeenEnd = mDecoder->GetResource()->GetLength();
+    if (mLastSeenEnd < 0) {
+      // We dont have a length. Demuxer would have been blocking already.
+      return;
+    }
+  }
+  int64_t end = aOffset + aLength;
+  if (end <= mLastSeenEnd) {
+    return;
+  }
+  mLastSeenEnd = end;
+
+  if (HasVideo()) {
+    auto& decoder = GetDecoderData(kVideo);
+    MonitorAutoLock lock(decoder.mMonitor);
+    decoder.mDemuxEOS = false;
+  }
+  if (HasAudio()) {
+    auto& decoder = GetDecoderData(kAudio);
+    MonitorAutoLock lock(decoder.mMonitor);
+    decoder.mDemuxEOS = false;
+  }
 }
 
 } // namespace mozilla
