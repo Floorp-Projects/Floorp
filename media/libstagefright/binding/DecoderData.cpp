@@ -175,7 +175,8 @@ bool
 AudioDecoderConfig::IsValid()
 {
   return channel_count > 0 && samples_per_second > 0 && frequency_index > 0 &&
-         (!mime_type.Equals(MEDIA_MIMETYPE_AUDIO_AAC) || aac_profile > 0);
+         (!mime_type.Equals(MEDIA_MIMETYPE_AUDIO_AAC) ||
+          aac_profile > 0 || extended_profile > 0);
 }
 
 void
