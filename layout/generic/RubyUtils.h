@@ -9,7 +9,6 @@
 
 #include "nsTArray.h"
 #include "nsGkAtoms.h"
-#include "nsRubyTextContainerFrame.h"
 
 #define RTC_ARRAY_SIZE 1
 
@@ -18,6 +17,7 @@ class nsRubyBaseFrame;
 class nsRubyTextFrame;
 class nsRubyContentFrame;
 class nsRubyBaseContainerFrame;
+class nsRubyTextContainerFrame;
 
 namespace mozilla {
 
@@ -68,23 +68,14 @@ public:
 };
 
 /**
- * This class iterates all ruby text containers paired with
- * the given ruby base container.
+ * This array stores all ruby text containers of the ruby segment
+ * of the given ruby base container.
  */
-class MOZ_STACK_CLASS RubyTextContainerIterator
+class MOZ_STACK_CLASS AutoRubyTextContainerArray final
+  : public nsAutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE>
 {
 public:
-  explicit RubyTextContainerIterator(nsRubyBaseContainerFrame* aBaseContainer);
-
-  void Next();
-  bool AtEnd() const { return !mFrame; }
-  nsRubyTextContainerFrame* GetTextContainer() const
-  {
-    return static_cast<nsRubyTextContainerFrame*>(mFrame);
-  }
-
-private:
-  nsIFrame* mFrame;
+  explicit AutoRubyTextContainerArray(nsRubyBaseContainerFrame* aBaseContainer);
 };
 
 /**
@@ -127,7 +118,7 @@ class MOZ_STACK_CLASS RubyColumnEnumerator
 {
 public:
   RubyColumnEnumerator(nsRubyBaseContainerFrame* aRBCFrame,
-                       const nsTArray<nsRubyTextContainerFrame*>& aRTCFrames);
+                       const AutoRubyTextContainerArray& aRTCFrames);
 
   void Next();
   bool AtEnd() const;
