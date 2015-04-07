@@ -46,6 +46,7 @@
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "WorkerPrivate.h"
 #include "nsDOMClassInfo.h"
+#include "ipc/ErrorIPCUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -147,6 +148,31 @@ ErrorResult::ThrowErrorWithMessage(va_list ap, const dom::ErrNum errorNumber,
     message->mArgs.AppendElement(*va_arg(ap, nsString*));
   }
   mMessage = message;
+}
+
+void
+ErrorResult::SerializeMessage(IPC::Message* aMsg) const
+{
+  using namespace IPC;
+  MOZ_ASSERT(mMessage);
+  WriteParam(aMsg, mMessage->mArgs);
+  WriteParam(aMsg, mMessage->mErrorNumber);
+}
+
+bool
+ErrorResult::DeserializeMessage(const IPC::Message* aMsg, void** aIter)
+{
+  using namespace IPC;
+  nsAutoPtr<Message> readMessage(new Message());
+  if (!ReadParam(aMsg, aIter, &readMessage->mArgs) ||
+      !ReadParam(aMsg, aIter, &readMessage->mErrorNumber)) {
+    return false;
+  }
+  if (mMessage) {
+    delete mMessage;
+  }
+  mMessage = readMessage.forget();
+  return true;
 }
 
 void
