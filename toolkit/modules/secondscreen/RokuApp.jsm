@@ -10,6 +10,7 @@ this.EXPORTED_SYMBOLS = ["RokuApp"];
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 
 const WEBRTC_PLAYER_NAME = "WebRTC Player";
 const MIRROR_PORT = 8011;
@@ -28,11 +29,7 @@ const PROTOCOL_VERSION = 1;
 function RokuApp(service) {
   this.service = service;
   this.resourceURL = this.service.location;
-#ifdef RELEASE_BUILD
-  this.app = "Firefox";
-#else
-  this.app = "Firefox Nightly";
-#endif
+  this.app = AppConstants.RELEASE_BUILD ? "Firefox" : "Firefox Nightly";
   this.mediaAppID = -1;
   this.mirrorAppID = -1;
 }
