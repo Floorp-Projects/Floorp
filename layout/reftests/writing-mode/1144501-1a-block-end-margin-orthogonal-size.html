@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bug 1144501 testcase</title>
+  <meta charset="utf-8">
+  <style type="text/css">
+  .outer {
+    width: 300px;
+    height: 100px;
+    border: 1px solid silver;
+    margin: 8px 0;
+    display: inline-block;
+    vertical-align: top;
+  }
+  p {
+    margin: 0;
+    background: #eee;
+  }
+  .hr {
+    background-color: green;
+    border: transparent none 0px;
+    height: 10px;
+    margin: 0px;
+    width: 100%;
+    writing-mode: vertical-lr;
+  }
+  </style>
+</head>
+<body>
+  <div class="outer">
+    <p style="margin-top:20px">
+      There should be a horizontal green bar the full width of the div.
+    </p>
+    <div class="hr"></div>
+  </div>
+  <div class="outer">
+    <p style="margin-right:20px">
+      There should be a horizontal green bar the full width of the div.
+    </p>
+    <div class="hr"></div>
+  </div>
+  <br>
+  <div class="outer">
+    <p style="margin-bottom:20px">
+      There should be a horizontal green bar the full width of the div.
+    </p>
+    <div class="hr"></div>
+  </div>
+  <div class="outer">
+    <p style="margin-left:20px">
+      There should be a horizontal green bar the full width of the div.
+    </p>
+    <div class="hr"></div>
+  </div>
+</body>
+</html>
