@@ -7,7 +7,9 @@
 /* rendering object for CSS "display: ruby-base-container" */
 
 #include "nsRubyBaseContainerFrame.h"
-
+#include "nsRubyTextContainerFrame.h"
+#include "nsRubyBaseFrame.h"
+#include "nsRubyTextFrame.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/WritingModes.h"
