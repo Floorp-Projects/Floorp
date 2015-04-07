@@ -700,8 +700,10 @@ js::Nursery::moveObjectToTenured(MinorCollectionTracer* trc,
 
         // The shape's list head may point into the old object. This can only
         // happen for dictionaries, which are native objects.
-        if (&nsrc->shape_ == ndst->shape_->listp)
+        if (&nsrc->shape_ == ndst->shape_->listp) {
+            MOZ_ASSERT(nsrc->shape_->inDictionary());
             ndst->shape_->listp = &ndst->shape_;
+        }
     }
 
     if (src->is<InlineTypedObject>())
