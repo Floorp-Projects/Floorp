@@ -223,6 +223,7 @@ private:
                                                       int64_t aTolerance /* microseconds */,
                                                       const nsTArray<nsRefPtr<SourceBufferDecoder>>& aTrackDecoders);
   bool HaveData(int64_t aTarget, MediaData::Type aType);
+  already_AddRefed<SourceBufferDecoder> FirstDecoder(MediaData::Type aType);
 
   void AttemptSeek();
   bool IsSeeking() { return mPendingSeekTime != -1; }

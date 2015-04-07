@@ -168,12 +168,16 @@ MediaSourceReader::RequestAudioData()
                                             &MediaSourceReader::CompleteAudioSeekAndRejectPromise));
       break;
     case SOURCE_NONE:
-      if (mLastAudioTime) {
+      if (!mLastAudioTime) {
+        // This is the first call to RequestAudioData.
+        // Fallback to using decoder with earliest data.
+        mAudioSourceDecoder = FirstDecoder(MediaData::AUDIO_DATA);
+      }
+      if (mLastAudioTime || !mAudioSourceDecoder) {
         CheckForWaitOrEndOfStream(MediaData::AUDIO_DATA, mLastAudioTime);
         break;
       }
-      // Fallback to using first reader
-      mAudioSourceDecoder = mAudioTrack->Decoders()[0];
+      // Fallback to getting first frame from first decoder.
     default:
       DoAudioRequest();
       break;
@@ -338,12 +342,16 @@ MediaSourceReader::RequestVideoData(bool aSkipToNextKeyframe, int64_t aTimeThres
                                            &MediaSourceReader::CompleteVideoSeekAndRejectPromise));
       break;
     case SOURCE_NONE:
-      if (mLastVideoTime) {
+      if (!mLastVideoTime) {
+        // This is the first call to RequestVideoData.
+        // Fallback to using decoder with earliest data.
+        mVideoSourceDecoder = FirstDecoder(MediaData::VIDEO_DATA);
+      }
+      if (mLastVideoTime || !mVideoSourceDecoder) {
         CheckForWaitOrEndOfStream(MediaData::VIDEO_DATA, mLastVideoTime);
         break;
       }
-      // Fallback to using first reader.
-      mVideoSourceDecoder = mVideoTrack->Decoders()[0];
+      // Fallback to getting first frame from first decoder.
     default:
       DoVideoRequest();
       break;
@@ -1033,6 +1041,36 @@ MediaSourceReader::GetBuffered(dom::TimeRanges* aBuffered)
   return NS_OK;
 }
 
+already_AddRefed<SourceBufferDecoder>
+MediaSourceReader::FirstDecoder(MediaData::Type aType)
+{
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
+  TrackBuffer* trackBuffer =
+    aType == MediaData::AUDIO_DATA ? mAudioTrack : mVideoTrack;
+  MOZ_ASSERT(trackBuffer);
+  const nsTArray<nsRefPtr<SourceBufferDecoder>>& decoders = trackBuffer->Decoders();
+  if (decoders.IsEmpty()) {
+    return nullptr;
+  }
+
+  nsRefPtr<SourceBufferDecoder> firstDecoder;
+  double lowestStartTime = PositiveInfinity<double>();
+
+  for (uint32_t i = 0; i < decoders.Length(); ++i) {
+    nsRefPtr<TimeRanges> r = new TimeRanges();
+    decoders[i]->GetBuffered(r);
+    double start = r->GetStartTime();
+    if (start < 0) {
+      continue;
+    }
+    if (start < lowestStartTime) {
+      firstDecoder = decoders[i];
+      lowestStartTime = start;
+    }
+  }
+  return firstDecoder.forget();
+}
+
 nsRefPtr<MediaDecoderReader::WaitForDataPromise>
 MediaSourceReader::WaitForData(MediaData::Type aType)
 {
@@ -1053,13 +1091,23 @@ MediaSourceReader::MaybeNotifyHaveData()
   // The next Request*Data will handle END_OF_STREAM or going back into waiting
   // mode.
   if (!IsSeeking() && mAudioTrack) {
-    haveAudio = HaveData(mLastAudioTime, MediaData::AUDIO_DATA);
+    if (!mLastAudioTime) {
+      nsRefPtr<SourceBufferDecoder> d = FirstDecoder(MediaData::AUDIO_DATA);
+      haveAudio = !!d;
+    } else {
+      haveAudio = HaveData(mLastAudioTime, MediaData::AUDIO_DATA);
+    }
     if (ended || haveAudio) {
       WaitPromise(MediaData::AUDIO_DATA).ResolveIfExists(MediaData::AUDIO_DATA, __func__);
     }
   }
   if (!IsSeeking() && mVideoTrack) {
-    haveVideo = HaveData(mLastVideoTime, MediaData::VIDEO_DATA);
+    if (!mLastVideoTime) {
+      nsRefPtr<SourceBufferDecoder> d = FirstDecoder(MediaData::VIDEO_DATA);
+      haveVideo = !!d;
+    } else {
+      haveVideo = HaveData(mLastVideoTime, MediaData::VIDEO_DATA);
+    }
     if (ended || haveVideo) {
       WaitPromise(MediaData::VIDEO_DATA).ResolveIfExists(MediaData::VIDEO_DATA, __func__);
     }
