@@ -40,7 +40,7 @@
  *
  * Only PL_DHashTableFinish needs to allow this special value.
  */
-#define IMMUTABLE_RECURSION_LEVEL ((uint16_t)-1)
+#define IMMUTABLE_RECURSION_LEVEL UINT32_MAX
 
 #define RECURSION_LEVEL_SAFE_TO_FINISH(table_)                                \
     (table_->mRecursionLevel == 0 ||                                          \
@@ -48,14 +48,16 @@
 
 #define INCREMENT_RECURSION_LEVEL(table_)                                     \
     do {                                                                      \
-        if (table_->mRecursionLevel != IMMUTABLE_RECURSION_LEVEL)             \
-            ++table_->mRecursionLevel;                                        \
+        if (table_->mRecursionLevel != IMMUTABLE_RECURSION_LEVEL) {           \
+            const uint32_t oldRecursionLevel = table_->mRecursionLevel++;     \
+            MOZ_ASSERT(oldRecursionLevel < IMMUTABLE_RECURSION_LEVEL - 1);    \
+        }                                                                     \
     } while(0)
 #define DECREMENT_RECURSION_LEVEL(table_)                                     \
     do {                                                                      \
         if (table_->mRecursionLevel != IMMUTABLE_RECURSION_LEVEL) {           \
-            MOZ_ASSERT(table_->mRecursionLevel > 0);                          \
-            --table_->mRecursionLevel;                                        \
+            const uint32_t oldRecursionLevel = table_->mRecursionLevel--;     \
+            MOZ_ASSERT(oldRecursionLevel > 0);                                \
         }                                                                     \
     } while(0)
 
@@ -512,9 +514,6 @@ PLDHashTable::ChangeTable(int aDeltaLog2)
   }
 
   /* We can't fail from here on, so update table parameters. */
-#ifdef DEBUG
-  uint32_t recursionLevelTmp = mRecursionLevel;
-#endif
   mHashShift = PL_DHASH_BITS - newLog2;
   mRemovedCount = 0;
   mGeneration++;
@@ -526,9 +525,6 @@ PLDHashTable::ChangeTable(int aDeltaLog2)
   oldEntryAddr = oldEntryStore = mEntryStore;
   mEntryStore = newEntryStore;
   PLDHashMoveEntry moveEntry = mOps->moveEntry;
-#ifdef DEBUG
-  mRecursionLevel = recursionLevelTmp;
-#endif
 
   /* Copy only live entries, leaving removed ones behind. */
   uint32_t oldCapacity = 1u << oldLog2;
