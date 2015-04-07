@@ -796,6 +796,7 @@ MediaDecoderStateMachine::OnAudioDecoded(AudioData* aAudioSample)
 void
 MediaDecoderStateMachine::Push(AudioData* aSample)
 {
+  MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(aSample);
   // TODO: Send aSample to MSG and recalculate readystate before pushing,
   // otherwise AdvanceFrame may pop the sample before we have a chance
@@ -813,6 +814,7 @@ MediaDecoderStateMachine::Push(AudioData* aSample)
 void
 MediaDecoderStateMachine::Push(VideoData* aSample)
 {
+  MOZ_ASSERT(OnTaskQueue());
   MOZ_ASSERT(aSample);
   // TODO: Send aSample to MSG and recalculate readystate before pushing,
   // otherwise AdvanceFrame may pop the sample before we have a chance
@@ -1175,6 +1177,7 @@ void MediaDecoderStateMachine::StopPlayback()
 
 void MediaDecoderStateMachine::MaybeStartPlayback()
 {
+  MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
   if (IsPlaying()) {
     // Logging this case is really spammy - don't do it.
@@ -1231,6 +1234,7 @@ void MediaDecoderStateMachine::UpdatePlaybackPositionInternal(int64_t aTime)
 
 void MediaDecoderStateMachine::UpdatePlaybackPosition(int64_t aTime)
 {
+  MOZ_ASSERT(OnTaskQueue());
   UpdatePlaybackPositionInternal(aTime);
 
   bool fragmentEnded = mFragmentEndTime >= 0 && GetMediaTime() >= mFragmentEndTime;
@@ -1732,6 +1736,7 @@ MediaDecoderStateMachine::SetReaderIdle()
 void
 MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
 {
+  MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
 
   if (mState != DECODER_STATE_DECODING &&
@@ -2167,6 +2172,7 @@ MediaDecoderStateMachine::OnMetadataNotRead(ReadMetadataFailureReason aReason)
 void
 MediaDecoderStateMachine::EnqueueLoadedMetadataEvent()
 {
+  MOZ_ASSERT(OnTaskQueue());
   nsAutoPtr<MediaInfo> info(new MediaInfo());
   *info = mInfo;
   MediaDecoderEventVisibility visibility = mSentLoadedMetadataEvent?
@@ -2181,6 +2187,7 @@ MediaDecoderStateMachine::EnqueueLoadedMetadataEvent()
 void
 MediaDecoderStateMachine::EnqueueFirstFrameLoadedEvent()
 {
+  MOZ_ASSERT(OnTaskQueue());
   nsAutoPtr<MediaInfo> info(new MediaInfo());
   *info = mInfo;
   MediaDecoderEventVisibility visibility = mSentFirstFrameLoadedEvent?
