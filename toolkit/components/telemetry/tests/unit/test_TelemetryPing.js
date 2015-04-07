@@ -135,6 +135,7 @@ function run_test() {
 
   Services.prefs.setBoolPref(PREF_ENABLED, true);
   Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_FHR_SERVICE_ENABLED, true);
 
   Telemetry.asyncFetchTelemetryData(wrapWithExceptionHandler(run_next_test));
 }
