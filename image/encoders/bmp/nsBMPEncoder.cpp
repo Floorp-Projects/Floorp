@@ -206,7 +206,7 @@ nsBMPEncoder::AddImageFrame(const uint8_t* aData,
     }
   } else if (aInputFormat == INPUT_FORMAT_RGBA) {
     // simple RGBA, no conversion needed
-    for (int32_t y = 0; y < mBMPInfoHeader.height; y ++) {
+    for (int32_t y = 0; y < mBMPInfoHeader.height; y++) {
       if (mBMPInfoHeader.bpp == 24) {
         EncodeImageDataRow24(row);
       } else {
@@ -215,7 +215,7 @@ nsBMPEncoder::AddImageFrame(const uint8_t* aData,
     }
   } else if (aInputFormat == INPUT_FORMAT_RGB) {
     // simple RGB, no conversion needed
-    for (int32_t y = 0; y < mBMPInfoHeader.height; y ++) {
+    for (int32_t y = 0; y < mBMPInfoHeader.height; y++) {
       if (mBMPInfoHeader.bpp == 24) {
         EncodeImageDataRow24(&aData[y * aStride]);
       } else {
@@ -700,7 +700,7 @@ nsBMPEncoder::EncodeImageDataRow24(const uint8_t* aData)
 void
 nsBMPEncoder::EncodeImageDataRow32(const uint8_t* aData)
 {
-  for (int32_t x = 0; x < mBMPInfoHeader.width; x ++) {
+  for (int32_t x = 0; x < mBMPInfoHeader.width; x++) {
     uint32_t pos = x * BytesPerPixel(mBMPInfoHeader.bpp);
     SetPixel32(mImageBufferCurr, aData[pos], aData[pos + 1],
                aData[pos + 2], aData[pos + 3]);
@@ -708,7 +708,7 @@ nsBMPEncoder::EncodeImageDataRow32(const uint8_t* aData)
   }
 
   for (uint32_t x = 0; x < PaddingBytes(mBMPInfoHeader.bpp,
-                                        mBMPInfoHeader.width); x ++) {
+                                        mBMPInfoHeader.width); x++) {
     *mImageBufferCurr++ = 0;
   }
 }
