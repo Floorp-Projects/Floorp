@@ -60,7 +60,7 @@ X11TextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
 IntSize
 X11TextureSourceOGL::GetSize() const
 {
-  return ToIntSize(mSurface->GetSize());
+  return mSurface->GetSize();
 }
 
 SurfaceFormat

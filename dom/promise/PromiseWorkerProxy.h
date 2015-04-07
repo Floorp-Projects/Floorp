@@ -11,6 +11,8 @@
 #include "mozilla/dom/workers/bindings/WorkerFeature.h"
 #include "nsProxyRelease.h"
 
+#include "WorkerRunnable.h"
+
 namespace mozilla {
 namespace dom {
 
@@ -53,8 +55,12 @@ class WorkerPrivate;
 // dispatch a runnable to the worker. Use GetWorkerPrivate() to acquire the
 // worker. This might be null! In the WorkerRunnable's WorkerRun() use
 // GetWorkerPromise() to access the Promise and resolve/reject it. Then call
-// CleanUp() on the worker
-// thread.
+// CleanUp() on the worker thread.
+//
+// IMPORTANT: Dispatching the runnable to the worker thread may fail causing
+// the promise to leak. To successfully release the promise on the
+// worker thread in this case, use |PromiseWorkerProxyControlRunnable| to
+// dispatch a control runnable that will deref the object on the correct thread.
 
 class PromiseWorkerProxy : public PromiseNativeHandler,
                            public workers::WorkerFeature
@@ -77,6 +83,17 @@ public:
   void StoreISupports(nsISupports* aSupports);
 
   void CleanUp(JSContext* aCx);
+
+  Mutex& GetCleanUpLock()
+  {
+    return mCleanUpLock;
+  }
+
+  bool IsClean() const
+  {
+    mCleanUpLock.AssertCurrentThreadOwns();
+    return mCleanedUp;
+  }
 
 protected:
   virtual void ResolvedCallback(JSContext* aCx,
@@ -117,6 +134,30 @@ private:
 
   // Ensure the worker and the main thread won't race to access |mCleanedUp|.
   Mutex mCleanUpLock;
+};
+
+// Helper runnable used for releasing the proxied promise when the worker
+// is not accepting runnables and the promise object would leak.
+// See the instructions above.
+class PromiseWorkerProxyControlRunnable final : public workers::WorkerControlRunnable
+{
+  nsRefPtr<PromiseWorkerProxy> mProxy;
+
+public:
+  PromiseWorkerProxyControlRunnable(workers::WorkerPrivate* aWorkerPrivate,
+                                    PromiseWorkerProxy* aProxy)
+    : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
+    , mProxy(aProxy)
+  {
+    MOZ_ASSERT(aProxy);
+  }
+
+  virtual bool
+  WorkerRun(JSContext* aCx, workers::WorkerPrivate* aWorkerPrivate) override;
+
+private:
+  ~PromiseWorkerProxyControlRunnable()
+  {}
 };
 
 } // namespace dom

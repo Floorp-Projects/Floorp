@@ -6,7 +6,6 @@ import sys
 
 from marionette import marionette_test
 from marionette_driver import errors
-from marionette_driver.errors import ErrorCodes
 
 def fake_cause():
     try:
@@ -15,29 +14,26 @@ def fake_cause():
         return sys.exc_info()
 
 message = "foo"
-status = ErrorCodes.TIMEOUT
 cause = fake_cause()
 stacktrace = "first\nsecond"
 
-class TestMarionetteException(marionette_test.MarionetteTestCase):
+class TestExceptionType(marionette_test.MarionetteTestCase):
     def test_defaults(self):
         exc = errors.MarionetteException()
         self.assertIsNone(exc.msg)
-        self.assertEquals(exc.status, ErrorCodes.MARIONETTE_ERROR)
         self.assertIsNone(exc.cause)
         self.assertIsNone(exc.stacktrace)
 
     def test_construction(self):
         exc = errors.MarionetteException(
-            message=message, status=status, cause=cause, stacktrace=stacktrace)
+            message=message, cause=cause, stacktrace=stacktrace)
         self.assertEquals(exc.msg, message)
-        self.assertEquals(exc.status, status)
         self.assertEquals(exc.cause, cause)
         self.assertEquals(exc.stacktrace, stacktrace)
 
     def test_str(self):
         exc = errors.MarionetteException(
-            message=message, status=status, cause=cause, stacktrace=stacktrace)
+            message=message, cause=cause, stacktrace=stacktrace)
         r = str(exc)
         self.assertIn(message, r)
         self.assertIn(", caused by %r" % cause[0], r)
@@ -55,3 +51,28 @@ class TestMarionetteException(marionette_test.MarionetteTestCase):
         self.assertEqual(exc.cause, cause)
         r = str(exc)
         self.assertIn(", caused by %r" % cause[0], r)
+
+
+class TestLookup(marionette_test.MarionetteTestCase):
+    def test_by_known_number(self):
+        self.assertEqual(errors.NoSuchElementException, errors.lookup(7))
+
+    def test_by_unknown_number(self):
+        self.assertEqual(errors.MarionetteException, errors.lookup(123456))
+
+    def test_by_known_string(self):
+        self.assertEqual(errors.NoSuchElementException,
+            errors.lookup("no such element"))
+
+    def test_by_unknown_string(self):
+        self.assertEqual(errors.MarionetteException, errors.lookup("barbera"))
+
+
+class TestAllExceptions(marionette_test.MarionetteTestCase):
+    def test_properties(self):
+        for exc in errors.excs:
+            self.assertTrue(hasattr(exc, "code"),
+                "expected exception to have attribute `code'")
+            self.assertTrue(hasattr(exc, "status"),
+                "expected exception to have attribute `status'")
+            self.assertIsInstance(exc.code, tuple)

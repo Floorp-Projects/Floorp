@@ -81,6 +81,11 @@
       # 'standalone_static_library': 1,
       'conditions': [
         # TODO(fbarchard): Use gyp define to enable jpeg.
+        [ 'build_with_mozilla==1', {
+          'defines': [
+            'HAVE_JPEG'
+          ],
+        }],
         [ 'OS != "ios" and build_with_mozilla!=1', {
           'defines': [
             'HAVE_JPEG'

@@ -82,6 +82,7 @@ protected:
   ~MP4Demuxer();
 
 private:
+  void UpdateCrypto(const stagefright::MetaData* aMetaData);
   AudioDecoderConfig mAudioConfig;
   VideoDecoderConfig mVideoConfig;
   CryptoFile mCrypto;
