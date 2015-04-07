@@ -19,7 +19,6 @@
 #include <setjmp.h>
 #define HAVE_SETJMP
 #endif
-struct FILE;  // For jpeglib.h.
 
 // C++ build requires extern C for jpeg internals.
 #ifdef __cplusplus
