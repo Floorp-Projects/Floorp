@@ -278,6 +278,14 @@
   -  for the Copy Image As Data URI menu item displayed in the context menu for a request -->
 <!ENTITY netmonitorUI.context.copyImageAsDataUri.accesskey  "I">
 
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyResponse): This is the label displayed
+  -  on the context menu that copies the selected response as a string -->
+<!ENTITY netmonitorUI.context.copyResponse "Copy Response">
+
+<!-- LOCALIZATION NOTE (netmonitorUI.context.copyImageAsDataUri.accesskey): This is the access key
+  -  for the Copy Response menu item displayed in the context menu for a request -->
+<!ENTITY netmonitorUI.context.copyResponse.accesskey  "R">
+
 <!-- LOCALIZATION NOTE (netmonitorUI.summary.editAndResend): This is the label displayed
   -  on the button in the headers tab that opens a form to edit and resend the currently
      displayed request -->
@@ -285,7 +293,7 @@
 
 <!-- LOCALIZATION NOTE (netmonitorUI.summary.editAndResend.accesskey): This is the access key
   -  for the "Edit and Resend" menu item displayed in the context menu for a request -->
-<!ENTITY netmonitorUI.summary.editAndResend.accesskey "R">
+<!ENTITY netmonitorUI.summary.editAndResend.accesskey "E">
 
 <!-- LOCALIZATION NOTE (netmonitorUI.summary.rawHeaders): This is the label displayed
   -  on the button in the headers tab that toggle view for raw request/response headers
