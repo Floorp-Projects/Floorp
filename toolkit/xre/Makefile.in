@@ -13,7 +13,7 @@ milestone_txt = $(topsrcdir)/config/milestone.txt
 include $(topsrcdir)/config/rules.mk
 
 # Should version be optional or required ?
-TOOLKIT_EM_VERSION=$(shell $(PYTHON) $(topsrcdir)/python/mozbuild/mozbuild/milestone.py)
+TOOLKIT_EM_VERSION=$(shell $(PYTHON) $(topsrcdir)/python/mozbuild/mozbuild/milestone.py --topsrcdir=$(topsrcdir))
 $(call warnIfEmpty,TOOLKIT_EM_VERSION)
 
 # Valid if null: {warn,error}IfEmpty
