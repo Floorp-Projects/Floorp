@@ -73,4 +73,5 @@ MSG_DEF(MSG_INVALID_RESPONSE_STATUSCODE_ERROR, 0, JSEXN_RANGEERR, "Invalid respo
 MSG_DEF(MSG_INVALID_REDIRECT_STATUSCODE_ERROR, 0, JSEXN_RANGEERR, "Invalid redirect status code.")
 MSG_DEF(MSG_INVALID_URL_SCHEME, 2, JSEXN_TYPEERR, "{0} URL {1} must be either http:// or https://.")
 MSG_DEF(MSG_RESPONSE_URL_IS_NULL, 0, JSEXN_TYPEERR, "Cannot set Response.finalURL when Response.url is null.")
+MSG_DEF(MSG_RESPONSE_HAS_VARY_STAR, 0, JSEXN_TYPEERR, "Invalid Response object with a 'Vary: *' header.")
 MSG_DEF(MSG_BAD_FORMDATA, 0, JSEXN_TYPEERR, "Could not parse content as FormData.")

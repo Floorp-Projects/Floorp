@@ -267,10 +267,10 @@ FetchPut::FetchComplete(FetchObserver* aObserver,
       ToPCacheResponseWithoutBody(mStateList[i].mPCacheResponse,
                                   *aInternalResponse, rv);
       if (rv.Failed()) {
-        MaybeSetError(rv.ErrorCode());
-        return;
+        mResult = Move(rv);
+      } else {
+        aInternalResponse->GetBody(getter_AddRefs(mStateList[i].mResponseStream));
       }
-      aInternalResponse->GetBody(getter_AddRefs(mStateList[i].mResponseStream));
       mStateList[i].mFetchObserver = nullptr;
       MOZ_ASSERT(mPendingCount > 0);
       mPendingCount -= 1;
@@ -385,9 +385,9 @@ FetchPut::MatchInPutList(const PCacheRequest& aRequest,
       for (; token;
            token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
         nsDependentCString header(token);
-        if (header.EqualsLiteral("*")) {
-          continue;
-        }
+        MOZ_ASSERT(!header.EqualsLiteral("*"),
+                   "We should have already caught this in "
+                   "TypeUtils::ToPCacheResponseWithoutBody()");
 
         ErrorResult headerRv;
         nsAutoCString value;
