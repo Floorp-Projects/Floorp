@@ -353,7 +353,7 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
 
   RefPtr<DrawTarget> offscreenDT =
     gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-      ToIntSize(neededRect.Size()), SurfaceFormat::B8G8R8A8);
+      neededRect.Size(), SurfaceFormat::B8G8R8A8);
   if (!offscreenDT) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -417,7 +417,7 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
 
   RefPtr<DrawTarget> offscreenDT =
     gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
-      ToIntSize(neededRect.Size()), SurfaceFormat::B8G8R8A8);
+      neededRect.Size(), SurfaceFormat::B8G8R8A8);
   if (!offscreenDT) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

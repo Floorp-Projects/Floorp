@@ -81,11 +81,6 @@ inline Size ToSize(const gfxSize &aSize)
   return Size(Float(aSize.width), Float(aSize.height));
 }
 
-inline IntSize ToIntSize(const gfxIntSize &aSize)
-{
-  return IntSize(aSize.width, aSize.height);
-}
-
 inline Filter ToFilter(GraphicsFilter aFilter)
 {
   switch (aFilter) {
