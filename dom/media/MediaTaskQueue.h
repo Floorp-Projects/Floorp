@@ -10,6 +10,7 @@
 #include <queue>
 #include "mozilla/RefPtr.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/ThreadLocal.h"
 #include "SharedThreadPool.h"
 #include "nsThreadUtils.h"
 #include "MediaPromise.h"
@@ -28,7 +29,14 @@ typedef MediaPromise<bool, bool, false> ShutdownPromise;
 // They may be executed on different threads, and a memory barrier is used
 // to make this threadsafe for objects that aren't already threadsafe.
 class MediaTaskQueue : public AbstractThread {
+  static ThreadLocal<MediaTaskQueue*> sCurrentQueueTLS;
 public:
+  static void InitStatics();
+
+  // Returns the task queue that the caller is currently running in, or null
+  // if the caller is not running in a MediaTaskQueue.
+  static MediaTaskQueue* GetCurrentQueue() { return sCurrentQueueTLS.get(); }
+
   explicit MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool);
 
   nsresult Dispatch(TemporaryRef<nsIRunnable> aRunnable);
@@ -102,6 +110,24 @@ protected:
   // to this so that IsCurrentThreadIn() can tell if the current thread
   // is the thread currently running in the task queue.
   RefPtr<nsIThread> mRunningThread;
+
+  // RAII class that gets instantiated for each dispatched task.
+  class AutoTaskGuard
+  {
+  public:
+    explicit AutoTaskGuard(MediaTaskQueue* aQueue)
+    {
+      // NB: We don't hold the lock to aQueue here. Don't do anything that
+      // might require it.
+      MOZ_ASSERT(sCurrentQueueTLS.get() == nullptr);
+      sCurrentQueueTLS.set(aQueue);
+    }
+
+    ~AutoTaskGuard()
+    {
+      sCurrentQueueTLS.set(nullptr);
+    }
+  };
 
   // True if we've dispatched an event to the pool to execute events from
   // the queue.
