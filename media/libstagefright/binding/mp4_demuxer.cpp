@@ -117,7 +117,7 @@ MP4Demuxer::Init()
         return false;
       }
       mPrivate->mAudio = track;
-      mAudioConfig.Update(metaData, mimeType);
+      mAudioConfig.Update(metaData.get(), mimeType);
       nsRefPtr<Index> index = new Index(mPrivate->mAudio->exportIndex(),
                                         mSource, mAudioConfig.mTrackId,
                                         /* aIsAudio = */ true, mMonitor);
@@ -129,7 +129,7 @@ MP4Demuxer::Init()
         return false;
       }
       mPrivate->mVideo = track;
-      mVideoConfig.Update(metaData, mimeType);
+      mVideoConfig.Update(metaData.get(), mimeType);
       nsRefPtr<Index> index = new Index(mPrivate->mVideo->exportIndex(),
                                         mSource, mVideoConfig.mTrackId,
                                         /* aIsAudio = */ false, mMonitor);

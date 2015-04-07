@@ -15,7 +15,6 @@
 
 namespace stagefright
 {
-template <typename T> class sp;
 class MetaData;
 }
 
@@ -113,7 +112,7 @@ public:
   {
     return mType == kVideoTrack;
   }
-  void Update(stagefright::sp<stagefright::MetaData>& aMetaData,
+  void Update(const stagefright::MetaData* aMetaData,
               const char* aMimeType);
 };
 
@@ -142,7 +141,7 @@ public:
   nsRefPtr<ByteBuffer> extra_data;
   nsRefPtr<ByteBuffer> audio_specific_config;
 
-  void Update(stagefright::sp<stagefright::MetaData>& aMetaData,
+  void Update(const stagefright::MetaData* aMetaData,
               const char* aMimeType);
   bool IsValid();
 
@@ -171,7 +170,7 @@ public:
 
   nsRefPtr<ByteBuffer> extra_data;   // Unparsed AVCDecoderConfig payload.
 
-  void Update(stagefright::sp<stagefright::MetaData>& aMetaData,
+  void Update(const stagefright::MetaData* aMetaData,
               const char* aMimeType);
   bool IsValid();
 };
