@@ -1477,6 +1477,27 @@ byteSize(Type atype)
 }
 
 static inline bool
+isSignedIntType(Type atype) {
+    switch (atype) {
+      case Int8:
+      case Int16:
+      case Int32:
+      case Int32x4:
+        return true;
+      case Uint8:
+      case Uint8Clamped:
+      case Uint16:
+      case Uint32:
+      case Float32:
+      case Float64:
+      case Float32x4:
+        return false;
+      default:
+        MOZ_CRASH("invalid scalar type");
+    }
+}
+
+static inline bool
 isSimdType(Type atype) {
     switch (atype) {
       case Int8:

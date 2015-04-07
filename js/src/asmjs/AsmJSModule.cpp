@@ -43,6 +43,7 @@
 
 #include "jsobjinlines.h"
 
+#include "builtin/AtomicsObject.h"
 #include "frontend/ParseNode-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/Stack-inl.h"
@@ -690,6 +691,18 @@ AddressOf(AsmJSImmKind kind, ExclusiveContext* cx)
         return RedirectCall(FuncCast(__aeabi_idivmod), Args_General2);
       case AsmJSImm_aeabi_uidivmod:
         return RedirectCall(FuncCast(__aeabi_uidivmod), Args_General2);
+      case AsmJSImm_AtomicCmpXchg:
+        return RedirectCall(FuncCast<int32_t (int32_t, int32_t, int32_t, int32_t)>(js::atomics_cmpxchg_asm_callout), Args_General4);
+      case AsmJSImm_AtomicFetchAdd:
+        return RedirectCall(FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_add_asm_callout), Args_General3);
+      case AsmJSImm_AtomicFetchSub:
+        return RedirectCall(FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_sub_asm_callout), Args_General3);
+      case AsmJSImm_AtomicFetchAnd:
+        return RedirectCall(FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_and_asm_callout), Args_General3);
+      case AsmJSImm_AtomicFetchOr:
+        return RedirectCall(FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_or_asm_callout), Args_General3);
+      case AsmJSImm_AtomicFetchXor:
+        return RedirectCall(FuncCast<int32_t (int32_t, int32_t, int32_t)>(js::atomics_xor_asm_callout), Args_General3);
 #endif
       case AsmJSImm_ModD:
         return RedirectCall(FuncCast(NumberMod), Args_Double_DoubleDouble);
