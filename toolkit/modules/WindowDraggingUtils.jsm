@@ -2,23 +2,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifdef XP_WIN
-#define USE_HITTEST
-#elifdef MOZ_WIDGET_COCOA
-#define USE_HITTEST
-#endif
+Components.utils.import("resource://gre/modules/AppConstants.jsm");
+
+const USE_HITTEST = /^(win|macosx)/i.test(AppConstants.platform);
 
 this.EXPORTED_SYMBOLS = [ "WindowDraggingElement" ];
 
 this.WindowDraggingElement = function WindowDraggingElement(elem) {
   this._elem = elem;
   this._window = elem.ownerDocument.defaultView;
-#ifdef USE_HITTEST
-  if (!this.isPanel())
+
+  if (USE_HITTEST && !this.isPanel())
     this._elem.addEventListener("MozMouseHittest", this, false);
   else
-#endif
-  this._elem.addEventListener("mousedown", this, false);
+    this._elem.addEventListener("mousedown", this, false);
 };
 
 WindowDraggingElement.prototype = {
@@ -60,24 +57,23 @@ WindowDraggingElement.prototype = {
   },
   handleEvent: function(aEvent) {
     let isPanel = this.isPanel();
-#ifdef USE_HITTEST
-    if (!isPanel) {
+    if (USE_HITTEST && !isPanel) {
       if (this.shouldDrag(aEvent))
         aEvent.preventDefault();
       return;
     }
-#endif
 
     switch (aEvent.type) {
       case "mousedown":
         if (!this.shouldDrag(aEvent))
           return;
 
-#ifdef MOZ_WIDGET_GTK
-        // On GTK, there is a toolkit-level function which handles
-        // window dragging, which must be used.
-        this._window.beginWindowMove(aEvent, isPanel ? this._elem : null);
-#else
+        if (/^gtk/i.test(AppConstants.MOZ_WIDGET_TOOLKIT)) {
+          // On GTK, there is a toolkit-level function which handles
+          // window dragging, which must be used.
+          this._window.beginWindowMove(aEvent, isPanel ? this._elem : null);
+          break;
+        }
         if (isPanel) {
           let screenRect = this._elem.getOuterScreenRect();
           this._deltaX = aEvent.screenX - screenRect.left;
@@ -90,7 +86,6 @@ WindowDraggingElement.prototype = {
         this._draggingWindow = true;
         this._window.addEventListener("mousemove", this, false);
         this._window.addEventListener("mouseup", this, false);
-#endif
         break;
       case "mousemove":
         if (this._draggingWindow) {
