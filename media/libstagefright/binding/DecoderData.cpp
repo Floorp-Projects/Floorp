@@ -19,7 +19,7 @@ namespace mp4_demuxer
 {
 
 static int32_t
-FindInt32(sp<MetaData>& mMetaData, uint32_t mKey)
+FindInt32(const MetaData* mMetaData, uint32_t mKey)
 {
   int32_t value;
   if (!mMetaData->findInt32(mKey, &value))
@@ -28,7 +28,7 @@ FindInt32(sp<MetaData>& mMetaData, uint32_t mKey)
 }
 
 static int64_t
-FindInt64(sp<MetaData>& mMetaData, uint32_t mKey)
+FindInt64(const MetaData* mMetaData, uint32_t mKey)
 {
   int64_t value;
   if (!mMetaData->findInt64(mKey, &value))
@@ -38,7 +38,7 @@ FindInt64(sp<MetaData>& mMetaData, uint32_t mKey)
 
 template <typename T, size_t N>
 static bool
-FindData(sp<MetaData>& aMetaData, uint32_t aKey, mozilla::Vector<T, N>* aDest)
+FindData(const MetaData* aMetaData, uint32_t aKey, mozilla::Vector<T, N>* aDest)
 {
   const void* data;
   size_t size;
@@ -57,7 +57,7 @@ FindData(sp<MetaData>& aMetaData, uint32_t aKey, mozilla::Vector<T, N>* aDest)
 
 template <typename T>
 static bool
-FindData(sp<MetaData>& aMetaData, uint32_t aKey, nsTArray<T>* aDest)
+FindData(const MetaData* aMetaData, uint32_t aKey, nsTArray<T>* aDest)
 {
   const void* data;
   size_t size;
@@ -75,7 +75,7 @@ FindData(sp<MetaData>& aMetaData, uint32_t aKey, nsTArray<T>* aDest)
 }
 
 static bool
-FindData(sp<MetaData>& aMetaData, uint32_t aKey, ByteBuffer* aDest)
+FindData(const MetaData* aMetaData, uint32_t aKey, ByteBuffer* aDest)
 {
   return FindData(aMetaData, aKey, static_cast<nsTArray<uint8_t>*>(aDest));
 }
@@ -104,7 +104,7 @@ CryptoFile::DoUpdate(const uint8_t* aData, size_t aLength)
 }
 
 void
-TrackConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
+TrackConfig::Update(const MetaData* aMetaData, const char* aMimeType)
 {
   mime_type = aMimeType;
   duration = FindInt64(aMetaData, kKeyDuration);
@@ -116,7 +116,7 @@ TrackConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
 }
 
 void
-AudioDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
+AudioDecoderConfig::Update(const MetaData* aMetaData, const char* aMimeType)
 {
   TrackConfig::Update(aMetaData, aMimeType);
   channel_count = FindInt32(aMetaData, kKeyChannelCount);
@@ -154,7 +154,7 @@ AudioDecoderConfig::IsValid()
 }
 
 void
-VideoDecoderConfig::Update(sp<MetaData>& aMetaData, const char* aMimeType)
+VideoDecoderConfig::Update(const MetaData* aMetaData, const char* aMimeType)
 {
   TrackConfig::Update(aMetaData, aMimeType);
   display_width = FindInt32(aMetaData, kKeyDisplayWidth);
