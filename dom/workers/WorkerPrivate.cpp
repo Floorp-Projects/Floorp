@@ -5898,11 +5898,10 @@ WorkerPrivate::NotifyFeatures(JSContext* aCx, Status aStatus)
     CancelAllTimeouts(aCx);
   }
 
-  nsAutoTArray<WorkerFeature*, 30> features;
-  features.AppendElements(mFeatures);
-
-  for (uint32_t index = 0; index < features.Length(); index++) {
-    if (!features[index]->Notify(aCx, aStatus)) {
+  nsTObserverArray<WorkerFeature*>::ForwardIterator iter(mFeatures);
+  while (iter.HasMore()) {
+    WorkerFeature* feature = iter.GetNext();
+    if (!feature->Notify(aCx, aStatus)) {
       NS_WARNING("Failed to notify feature!");
     }
   }

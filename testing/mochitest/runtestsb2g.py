@@ -496,7 +496,7 @@ def run_desktop_mochitests(parser, options):
 def main():
     parser = B2GOptions()
     structured.commandline.add_logging_group(parser)
-    options, args = parser.parse_args()
+    options = parser.parse_args()
 
     if options.desktop:
         run_desktop_mochitests(parser, options)

@@ -1232,7 +1232,7 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind, Hand
     if (kind == Arrow)
         allocKind = JSFunction::ExtendedFinalizeKind;
     fun = NewFunctionWithProto(context, nullptr, 0, flags, NullPtr(), atom, proto,
-                               allocKind, MaybeSingletonObject);
+                               allocKind, TenuredObject);
     if (!fun)
         return nullptr;
     if (options().selfHostingMode)

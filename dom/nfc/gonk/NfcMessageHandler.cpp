@@ -105,6 +105,9 @@ NfcMessageHandler::ProcessNotification(int32_t aType, const Parcel& aParcel, Eve
     case NfcNotificationType::HciEventTransaction:
       result = HCIEventTransactionNotification(aParcel, aOptions);
       break;
+    case NfcNotificationType::NdefReceived:
+      result = NDEFReceivedNotification(aParcel, aOptions);
+      break;
     default:
       result = false;
       break;
@@ -301,6 +304,18 @@ NfcMessageHandler::HCIEventTransactionNotification(const Parcel& aParcel, EventO
   int32_t payloadLength = aParcel.readInt32();
   aOptions.mPayload.AppendElements(
     static_cast<const uint8_t*>(aParcel.readInplace(payloadLength)), payloadLength);
+
+  return true;
+}
+
+bool
+NfcMessageHandler::NDEFReceivedNotification(const Parcel& aParcel, EventOptions& aOptions)
+{
+  aOptions.mSessionId = aParcel.readInt32();
+  int32_t ndefMsgCount = aParcel.readInt32();
+  if (ndefMsgCount != 0) {
+    ReadNDEFMessage(aParcel, aOptions);
+  }
 
   return true;
 }

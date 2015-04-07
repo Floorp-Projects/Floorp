@@ -83,7 +83,7 @@ X11TextureHost::GetFormat() const
 IntSize
 X11TextureHost::GetSize() const
 {
-  return ToIntSize(mSurface->GetSize());
+  return mSurface->GetSize();
 }
 
 }

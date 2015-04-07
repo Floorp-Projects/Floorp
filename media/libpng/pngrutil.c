@@ -1,8 +1,8 @@
 
 /* pngrutil.c - utilities to read a PNG file
  *
- * Last changed in libpng 1.6.15 [November 20, 2014]
- * Copyright (c) 1998-2014 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.17 [March 25, 2015]
+ * Copyright (c) 1998-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -1520,8 +1520,10 @@ png_handle_iCCP(png_structrp png_ptr, png_inforp info_ptr, png_uint_32 length)
                                  else if (size > 0)
                                     errmsg = "truncated";
 
+#ifndef __COVERITY__
                                  else
                                     errmsg = png_ptr->zstream.msg;
+#endif
                               }
 
                               /* else png_icc_check_tag_table output an error */
@@ -2983,7 +2985,7 @@ png_handle_unknown(png_structrp png_ptr, png_inforp info_ptr,
                &png_ptr->unknown_chunk);
 
             /* ret is:
-             * negative: An error occured, png_chunk_error will be called.
+             * negative: An error occurred; png_chunk_error will be called.
              *     zero: The chunk was not handled, the chunk will be discarded
              *           unless png_set_keep_unknown_chunks has been used to set
              *           a 'keep' behavior for this particular chunk, in which

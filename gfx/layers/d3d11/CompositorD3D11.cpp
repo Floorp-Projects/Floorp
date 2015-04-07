@@ -1458,17 +1458,23 @@ CompositorD3D11::HandleError(HRESULT hr, Severity aSeverity)
   if (SUCCEEDED(hr)) {
     return;
   }
-  // XXX - It would be nice to use gfxCriticalError, but it needs to
-  // be made to work off the main thread first.
-  //MOZ_ASSERT(aSeverity != DebugAssert);
 
   if (aSeverity == Critical) {
     MOZ_CRASH("Unrecoverable D3D11 error");
   }
 
-  if (mDevice && hr == DXGI_ERROR_DEVICE_REMOVED) {
+  bool deviceRemoved = hr == DXGI_ERROR_DEVICE_REMOVED;
+
+  if (deviceRemoved && mDevice) {
     hr = mDevice->GetDeviceRemovedReason();
   }
+
+  // Device reset may not be an error on our side, but can mess things up so
+  // it's useful to see it in the reports.
+  gfxCriticalError(CriticalLog::DefaultOptions(!deviceRemoved))
+    << (deviceRemoved ? "[CompositorD3D11] device removed with error code: "
+                      : "[CompositorD3D11] error code: ")
+    << hexa(hr);
 
   // Always crash if we are making invalid calls
   if (hr == DXGI_ERROR_INVALID_CALL) {

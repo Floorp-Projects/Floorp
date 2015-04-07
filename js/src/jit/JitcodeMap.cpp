@@ -794,7 +794,7 @@ JitcodeGlobalTable::sweep(JSRuntime* rt)
         if (entry->baseEntry().isJitcodeAboutToBeFinalized())
             e.removeFront();
         else
-            entry->sweep();
+            entry->sweep(rt);
     }
 }
 
@@ -928,6 +928,22 @@ JitcodeGlobalEntry::IonEntry::isMarkedFromAnyThread()
     }
 
     return true;
+}
+
+bool
+JitcodeGlobalEntry::IonCacheEntry::markIfUnmarked(JSTracer* trc)
+{
+    JitcodeGlobalEntry entry;
+    RejoinEntry(trc->runtime(), *this, nativeStartAddr(), &entry);
+    return entry.markIfUnmarked(trc);
+}
+
+void
+JitcodeGlobalEntry::IonCacheEntry::sweep(JSRuntime* rt)
+{
+    JitcodeGlobalEntry entry;
+    RejoinEntry(rt, *this, nativeStartAddr(), &entry);
+    entry.sweep(rt);
 }
 
 bool

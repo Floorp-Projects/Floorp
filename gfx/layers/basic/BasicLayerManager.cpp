@@ -639,7 +639,7 @@ Transform(const gfxImageSurface* aDest,
     return;
   }
 
-  IntSize destSize = ToIntSize(aDest->GetSize());
+  IntSize destSize = aDest->GetSize();
   SkImageInfo destInfo = SkImageInfo::Make(destSize.width,
                                            destSize.height,
                                            kBGRA_8888_SkColorType,
@@ -697,7 +697,7 @@ Transform(const gfxImageSurface* aDest,
           const gfx3DMatrix& aTransform,
           gfxPoint aDestOffset)
 {
-  IntSize destSize = ToIntSize(aDest->GetSize());
+  IntSize destSize = aDest->GetSize();
   pixman_image_t* dest = pixman_image_create_bits(aDest->Format() == gfxImageFormat::ARGB32 ? PIXMAN_a8r8g8b8 : PIXMAN_x8r8g8b8,
                                                   destSize.width,
                                                   destSize.height,

@@ -1121,6 +1121,7 @@ TelephonyService.prototype = {
     if (callNum !== 1) {
       this._hangUpBackground(aClientId, aCallback);
     } else {
+      call.hangUpLocal = true;
       this._sendToRilWorker(aClientId, "udub", null,
                             this._defaultCallbackHandler.bind(this, aCallback));
     }

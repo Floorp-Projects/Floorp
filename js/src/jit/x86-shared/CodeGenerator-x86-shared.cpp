@@ -2071,11 +2071,6 @@ CodeGeneratorX86Shared::visitGuardObjectGroup(LGuardObjectGroup* guard)
 {
     Register obj = ToRegister(guard->input());
 
-    if (guard->mir()->checkUnboxedExpando()) {
-        masm.cmpPtr(Address(obj, UnboxedPlainObject::offsetOfExpando()), ImmWord(0));
-        bailoutIf(Assembler::NotEqual, guard->snapshot());
-    }
-
     masm.cmpPtr(Operand(obj, JSObject::offsetOfGroup()), ImmGCPtr(guard->mir()->group()));
 
     Assembler::Condition cond =
@@ -2396,7 +2391,10 @@ CodeGeneratorX86Shared::visitSimdGeneralShuffle(LSimdGeneralShuffleBase* ins, Re
     // This won't generate fast code, but it's fine because we expect users
     // to have used constant indices (and thus MSimdGeneralShuffle to be fold
     // into MSimdSwizzle/MSimdShuffle, which are fast).
-    masm.reserveStack(Simd128DataSize * numVectors);
+
+    // We need stack space for the numVectors inputs and for the output vector.
+    unsigned stackSpace = Simd128DataSize * (numVectors + 1);
+    masm.reserveStack(stackSpace);
 
     for (unsigned i = 0; i < numVectors; i++) {
         masm.storeAlignedVector<T>(ToFloatRegister(ins->vector(i)),
@@ -2408,7 +2406,7 @@ CodeGeneratorX86Shared::visitSimdGeneralShuffle(LSimdGeneralShuffleBase* ins, Re
     for (size_t i = 0; i < mir->numLanes(); i++) {
         Operand lane = ToOperand(ins->lane(i));
 
-        masm.cmp32(lane, Imm32(mir->numVectors() * mir->numLanes() - 1));
+        masm.cmp32(lane, Imm32(numVectors * mir->numLanes() - 1));
         masm.j(Assembler::Above, &bail);
 
         if (lane.kind() == Operand::REG) {
@@ -2430,13 +2428,13 @@ CodeGeneratorX86Shared::visitSimdGeneralShuffle(LSimdGeneralShuffleBase* ins, Re
 
     {
         masm.bind(&bail);
-        masm.freeStack(Simd128DataSize * numVectors);
+        masm.freeStack(stackSpace);
         bailout(ins->snapshot());
     }
 
     masm.bind(&join);
-    masm.setFramePushed(masm.framePushed() + Simd128DataSize * numVectors);
-    masm.freeStack(Simd128DataSize * numVectors);
+    masm.setFramePushed(masm.framePushed() + stackSpace);
+    masm.freeStack(stackSpace);
 }
 
 void

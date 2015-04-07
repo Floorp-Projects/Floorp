@@ -7,7 +7,6 @@
 
 #include "CompositableHost.h"           // for CompositableHost
 #include "LayersLogging.h"              // for AppendToString
-#include "gfx2DGlue.h"                  // for ToIntSize
 #include "mozilla/gfx/2D.h"             // for DataSourceSurface, Factory
 #include "mozilla/ipc/Shmem.h"          // for Shmem
 #include "mozilla/layers/CompositableTransactionParent.h" // for CompositableParentManager

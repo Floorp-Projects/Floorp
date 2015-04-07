@@ -552,8 +552,7 @@ nsContextMenu.prototype = {
 
     const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
     if (aNode.namespaceURI == xulNS ||
-        aNode.nodeType == Node.DOCUMENT_NODE ||
-        this.isDisabledForEvents(aNode)) {
+        aNode.nodeType == Node.DOCUMENT_NODE) {
       this.shouldDisplay = false;
       return;
     }
@@ -1532,16 +1531,6 @@ nsContextMenu.prototype = {
            "contextMenu.link       = " + this.link + "\n" +
            "contextMenu.inFrame    = " + this.inFrame + "\n" +
            "contextMenu.hasBGImage = " + this.hasBGImage + "\n";
-  },
-
-  isDisabledForEvents: function(aNode) {
-    let ownerDoc = aNode.ownerDocument;
-    return
-      ownerDoc.defaultView &&
-      ownerDoc.defaultView
-              .QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-              .getInterface(Components.interfaces.nsIDOMWindowUtils)
-              .isNodeDisabledForEvents(aNode);
   },
 
   isTargetATextBox: function(node) {
