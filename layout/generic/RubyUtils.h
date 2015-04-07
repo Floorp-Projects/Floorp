@@ -7,9 +7,16 @@
 #ifndef mozilla_RubyUtils_h_
 #define mozilla_RubyUtils_h_
 
+#include "nsTArray.h"
 #include "nsGkAtoms.h"
 #include "nsRubyTextContainerFrame.h"
 
+#define RTC_ARRAY_SIZE 1
+
+class nsRubyFrame;
+class nsRubyBaseFrame;
+class nsRubyTextFrame;
+class nsRubyContentFrame;
 class nsRubyBaseContainerFrame;
 
 namespace mozilla {
@@ -78,6 +85,64 @@ public:
 
 private:
   nsIFrame* mFrame;
+};
+
+/**
+ * This enumerator enumerates each ruby segment.
+ */
+class MOZ_STACK_CLASS RubySegmentEnumerator
+{
+public:
+  explicit RubySegmentEnumerator(nsRubyFrame* aRubyFrame);
+
+  void Next();
+  bool AtEnd() const { return !mBaseContainer; }
+
+  nsRubyBaseContainerFrame* GetBaseContainer() const
+  {
+    return mBaseContainer;
+  }
+
+private:
+  nsRubyBaseContainerFrame* mBaseContainer;
+};
+
+/**
+ * Ruby column is a unit consists of one ruby base and all ruby
+ * annotations paired with it.
+ * See http://dev.w3.org/csswg/css-ruby/#ruby-pairing
+ */
+struct MOZ_STACK_CLASS RubyColumn
+{
+  nsRubyBaseFrame* mBaseFrame;
+  nsAutoTArray<nsRubyTextFrame*, RTC_ARRAY_SIZE> mTextFrames;
+  bool mIsIntraLevelWhitespace;
+  RubyColumn() : mBaseFrame(nullptr), mIsIntraLevelWhitespace(false) { }
+};
+
+/**
+ * This enumerator enumerates ruby columns in a segment.
+ */
+class MOZ_STACK_CLASS RubyColumnEnumerator
+{
+public:
+  RubyColumnEnumerator(nsRubyBaseContainerFrame* aRBCFrame,
+                       const nsTArray<nsRubyTextContainerFrame*>& aRTCFrames);
+
+  void Next();
+  bool AtEnd() const;
+
+  uint32_t GetLevelCount() const { return mFrames.Length(); }
+  nsRubyContentFrame* GetFrameAtLevel(uint32_t aIndex) const;
+  void GetColumn(RubyColumn& aColumn) const;
+
+private:
+  // Frames in this array are NOT necessary part of the current column.
+  // When in doubt, use GetFrameAtLevel to access it.
+  // See GetFrameAtLevel() and Next() for more info.
+  nsAutoTArray<nsRubyContentFrame*, RTC_ARRAY_SIZE + 1> mFrames;
+  // Whether we are on a column for intra-level whitespaces
+  bool mAtIntraLevelWhitespace;
 };
 
 }
