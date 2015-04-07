@@ -77,6 +77,7 @@ public:
   virtual bool IsMediaSeekable() override;
 
   virtual int64_t GetEvictionOffset(double aTime) override;
+  virtual void NotifyDataArrived(const char* aBuffer, uint32_t aLength, int64_t aOffset) override;
 
   virtual nsresult GetBuffered(dom::TimeRanges* aBuffered) override;
 
@@ -289,6 +290,7 @@ private:
   bool mAreDecodersSetup;
 
   bool mIndexReady;
+  int64_t mLastSeenEnd;
   Monitor mDemuxerMonitor;
   nsRefPtr<SharedDecoderManager> mSharedDecoderManager;
 
