@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Test for intrinsic sizing of float around contents with border</title>
+    <style>
+      body { font-family: sans-serif; line-height: 1.4em; }
+      div { float: left; border: 2px solid blue; margin: 5px; padding: 1px; }
+      span { display: inline-block; }
+      br { clear: both; }
+      .h { writing-mode: horizontal-tb; }
+      .v-lr { writing-mode: vertical-lr; }
+      .v-rl { writing-mode: vertical-rl; }
+      .y { background: yellow; color: transparent; }
+      .i { inline-size: 2em; }
+      .b { block-size: 2em; inline-size: 100%; }
+    </style>
+  </head>
+  <body>
+    <p>In each case, the blue border should neatly enclose the text and its yellow border-block.</p>
+    <div class="h">
+      <span><span class="y i" style="inline-size:2em;">x</span>123321</span>
+    </div>
+    <div class="h">
+      <span>123321<span class="y i" style="inline-size:2em;">x</span></span>
+    </div>
+    <div class="h">
+      <span><span class="y b">x</span><br>123321</span>
+    </div>
+    <div class="h">
+      <span>123321<br><span class="y b">x</span></span>
+    </div>
+    <br>
+    <div class="v-lr">
+      <span><span class="y i" style="inline-size:2em;">x</span>123321</span>
+    </div>
+    <div class="v-lr">
+      <span>123321<span class="y i" style="inline-size:2em;">x</span></span>
+    </div>
+    <div class="v-lr">
+      <span><span class="y b">x</span><br>123321</span>
+    </div>
+    <div class="v-lr">
+      <span>123321<br><span class="y b">x</span></span>
+    </div>
+    <br>
+    <div class="v-rl">
+      <span><span class="y i" style="inline-size:2em;">x</span>123321</span>
+    </div>
+    <div class="v-rl">
+      <span>123321<span class="y i" style="inline-size:2em;">x</span></span>
+    </div>
+    <div class="v-rl">
+      <span><span class="y b">x</span><br>123321</span>
+    </div>
+    <div class="v-rl">
+      <span>123321<br><span class="y b">x</span></span>
+    </div>
+  </body>
+</html>

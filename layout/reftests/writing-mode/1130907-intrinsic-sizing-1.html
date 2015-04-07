@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Test for intrinsic sizing of float around contents with border</title>
+    <style>
+      body { font-family: sans-serif; line-height: 1.4em; }
+      div { float: left; border: 2px solid blue; margin: 5px; padding: 1px; }
+      span { display: inline-block; }
+      br { clear: both; }
+      .h { writing-mode: horizontal-tb; }
+      .v-lr { writing-mode: vertical-lr; }
+      .v-rl { writing-mode: vertical-rl; }
+      .a { border-inline-start: 2em solid #ff0; }
+      .b { border-inline-end: 2em solid #ff0; }
+      .c { border-block-start: 2em solid #ff0; }
+      .d { border-block-end: 2em solid #ff0; }
+    </style>
+  </head>
+  <body>
+    <p>In each case, the blue border should neatly enclose the text and its yellow border-block.</p>
+    <div class="h">
+      <span class="a">123321</span>
+    </div>
+    <div class="h">
+      <span class="b">123321</span>
+    </div>
+    <div class="h">
+      <span class="c">123321</span>
+    </div>
+    <div class="h">
+      <span class="d">123321</span>
+    </div>
+    <br>
+    <div class="v-lr">
+      <span class="a">123321</span>
+    </div>
+    <div class="v-lr">
+      <span class="b">123321</span>
+    </div>
+    <div class="v-lr">
+      <span class="c">123321</span>
+    </div>
+    <div class="v-lr">
+      <span class="d">123321</span>
+    </div>
+    <br>
+    <div class="v-rl">
+      <span class="a">123321</span>
+    </div>
+    <div class="v-rl">
+      <span class="b">123321</span>
+    </div>
+    <div class="v-rl">
+      <span class="c">123321</span>
+    </div>
+    <div class="v-rl">
+      <span class="d">123321</span>
+    </div>
+  </body>
+</html>
