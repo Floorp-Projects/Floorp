@@ -3404,6 +3404,7 @@ void MediaDecoderStateMachine::QueueMetadata(int64_t aPublishTime,
 
 void MediaDecoderStateMachine::OnAudioEndTimeUpdate(int64_t aAudioEndTime)
 {
+  MOZ_ASSERT(OnTaskQueue());
   ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   MOZ_ASSERT(aAudioEndTime >= mAudioEndTime);
   mAudioEndTime = aAudioEndTime;
@@ -3411,12 +3412,15 @@ void MediaDecoderStateMachine::OnAudioEndTimeUpdate(int64_t aAudioEndTime)
 
 void MediaDecoderStateMachine::OnPlaybackOffsetUpdate(int64_t aPlaybackOffset)
 {
+  MOZ_ASSERT(OnTaskQueue());
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   mDecoder->UpdatePlaybackOffset(aPlaybackOffset);
 }
 
 void MediaDecoderStateMachine::OnAudioSinkComplete()
 {
-  AssertCurrentThreadInMonitor();
+  MOZ_ASSERT(OnTaskQueue());
+  ReentrantMonitorAutoEnter mon(mDecoder->GetReentrantMonitor());
   if (mAudioCaptured) {
     return;
   }
