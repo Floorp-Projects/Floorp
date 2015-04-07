@@ -69,6 +69,9 @@ TestIterator()
   EXPECT_TRUE(iter1.GetSkippedOffset() == 0) <<
     "[3] Check initial skipped offset";
 
+  EXPECT_TRUE(iter1.IsOriginalCharSkipped() == false) <<
+    "[3a] Check IsOriginalCharSkipped for initial position";
+
   uint32_t expectSkipped1[] =
   {  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,
      9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
@@ -87,6 +90,18 @@ TestIterator()
   for (uint32_t i = 0; i < mozilla::ArrayLength(expectOriginal1); i++) {
     EXPECT_TRUE(iter1.ConvertSkippedToOriginal(i) == expectOriginal1[i]) <<
       "[5] Check mapping of skipped to original for " << i;
+  }
+
+  bool expectIsOriginalSkipped1[] =
+  {  false, false, false, false, false, false, false, false, false, true,
+     false, false, false, false, false, false, false, false, false, true,
+     false, false, false, false, false, false, false, false, false
+  };
+
+  for (uint32_t i = 0; i < mozilla::ArrayLength(expectIsOriginalSkipped1); i++) {
+    iter1.SetOriginalOffset(i);
+    EXPECT_TRUE(iter1.IsOriginalCharSkipped() == expectIsOriginalSkipped1[i]) <<
+      "[5.a] Check IsOriginalCharSkipped for " << i;
   }
 
   // Test a gfxSkipChars that starts with skipped chars
@@ -108,6 +123,9 @@ TestIterator()
   EXPECT_TRUE(iter2.GetSkippedOffset() == 0) <<
     "[8] Check initial skipped offset";
 
+  EXPECT_TRUE(iter2.IsOriginalCharSkipped() == true) <<
+    "[8a] Check IsOriginalCharSkipped for initial position";
+
   uint32_t expectSkipped2[] =
   {  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
      1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
@@ -123,6 +141,18 @@ TestIterator()
   for (uint32_t i = 0; i < mozilla::ArrayLength(expectOriginal2); i++) {
     EXPECT_TRUE(iter2.ConvertSkippedToOriginal(i) == expectOriginal2[i]) <<
       "[10] Check mapping of skipped to original for " << i;
+  }
+
+  bool expectIsOriginalSkipped2[] =
+  {  true, true, true, true, true, true, true, true, true, false,
+     true, true, true, true, true, true, true, true, true, false,
+     true, true, true, true, true, true, true, true, true
+  };
+
+  for (uint32_t i = 0; i < mozilla::ArrayLength(expectIsOriginalSkipped2); i++) {
+    iter2.SetOriginalOffset(i);
+    EXPECT_TRUE(iter2.IsOriginalCharSkipped() == expectIsOriginalSkipped2[i]) <<
+      "[10.a] Check IsOriginalCharSkipped for " << i;
   }
 
   return true;
