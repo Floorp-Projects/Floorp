@@ -65,51 +65,12 @@ nsRubyFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-/**
- * This enumerator enumerates each segment.
- */
-class MOZ_STACK_CLASS SegmentEnumerator
-{
-public:
-  explicit SegmentEnumerator(nsRubyFrame* aRubyFrame);
-
-  void Next();
-  bool AtEnd() const { return !mBaseContainer; }
-
-  nsRubyBaseContainerFrame* GetBaseContainer() const
-  {
-    return mBaseContainer;
-  }
-
-private:
-  nsRubyBaseContainerFrame* mBaseContainer;
-};
-
-SegmentEnumerator::SegmentEnumerator(nsRubyFrame* aRubyFrame)
-{
-  nsIFrame* frame = aRubyFrame->GetFirstPrincipalChild();
-  MOZ_ASSERT(!frame ||
-             frame->GetType() == nsGkAtoms::rubyBaseContainerFrame);
-  mBaseContainer = static_cast<nsRubyBaseContainerFrame*>(frame);
-}
-
-void
-SegmentEnumerator::Next()
-{
-  MOZ_ASSERT(mBaseContainer);
-  nsIFrame* frame = mBaseContainer->GetNextSibling();
-  while (frame && frame->GetType() != nsGkAtoms::rubyBaseContainerFrame) {
-    frame = frame->GetNextSibling();
-  }
-  mBaseContainer = static_cast<nsRubyBaseContainerFrame*>(frame);
-}
-
 /* virtual */ void
 nsRubyFrame::AddInlineMinISize(nsRenderingContext *aRenderingContext,
                                nsIFrame::InlineMinISizeData *aData)
 {
   for (nsIFrame* frame = this; frame; frame = frame->GetNextInFlow()) {
-    for (SegmentEnumerator e(static_cast<nsRubyFrame*>(frame));
+    for (RubySegmentEnumerator e(static_cast<nsRubyFrame*>(frame));
          !e.AtEnd(); e.Next()) {
       e.GetBaseContainer()->AddInlineMinISize(aRenderingContext, aData);
     }
@@ -121,7 +82,7 @@ nsRubyFrame::AddInlinePrefISize(nsRenderingContext *aRenderingContext,
                                 nsIFrame::InlinePrefISizeData *aData)
 {
   for (nsIFrame* frame = this; frame; frame = frame->GetNextInFlow()) {
-    for (SegmentEnumerator e(static_cast<nsRubyFrame*>(frame));
+    for (RubySegmentEnumerator e(static_cast<nsRubyFrame*>(frame));
          !e.AtEnd(); e.Next()) {
       e.GetBaseContainer()->AddInlinePrefISize(aRenderingContext, aData);
     }
@@ -169,7 +130,7 @@ nsRubyFrame::Reflow(nsPresContext* aPresContext,
                                       startEdge, availableISize, &mBaseline);
 
   aStatus = NS_FRAME_COMPLETE;
-  for (SegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
+  for (RubySegmentEnumerator e(this); !e.AtEnd(); e.Next()) {
     ReflowSegment(aPresContext, aReflowState, e.GetBaseContainer(), aStatus);
 
     if (NS_INLINE_IS_BREAK(aStatus)) {
