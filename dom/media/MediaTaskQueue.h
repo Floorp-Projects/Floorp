@@ -38,7 +38,7 @@ public:
   // if the caller is not running in a MediaTaskQueue.
   static MediaTaskQueue* GetCurrentQueue() { return sCurrentQueueTLS.get(); }
 
-  explicit MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool);
+  explicit MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool, bool aRequireTailDispatch = false);
 
   nsresult Dispatch(TemporaryRef<nsIRunnable> aRunnable);
 
@@ -47,6 +47,31 @@ public:
   //
   // May only be called when running within the task queue it is invoked up.
   TaskDispatcher& TailDispatcher();
+
+  // Returns true if this task queue requires all dispatches performed by its
+  // tasks to go through the tail dispatcher.
+  bool RequiresTailDispatch() { return mRequireTailDispatch; }
+
+#ifdef DEBUG
+  static void AssertInTailDispatchIfNeeded()
+  {
+    // See if we're currently running in a task queue that asserts tail
+    // dispatch.
+    MediaTaskQueue* currentQueue = MediaTaskQueue::GetCurrentQueue();
+    if (!currentQueue || !currentQueue->RequiresTailDispatch()) {
+      return;
+    }
+
+    // This is a bit tricky. The only moment when we're running in a task queue
+    // but don't have mTailDispatcher set is precisely the moment that we're
+    // doing tail dispatch (i.e. when AutoTaskGuard's destructor has already
+    // run and AutoTaskDispatcher's destructor is currently running).
+    MOZ_ASSERT(!currentQueue->mTailDispatcher,
+               "Not allowed to dispatch tasks directly from this task queue - use TailDispatcher()");
+  }
+#else
+  static void AssertInTailDispatchIfNeeded() {}
+#endif
 
   // For AbstractThread.
   nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable) override
@@ -156,6 +181,10 @@ protected:
 
   // True if we're flushing; we reject new tasks if we're flushing.
   bool mIsFlushing;
+
+  // True if we want to require that every task dispatched from tasks running in
+  // this queue go through our queue's tail dispatcher.
+  bool mRequireTailDispatch;
 
   class Runner : public nsRunnable {
   public:

@@ -20,6 +20,7 @@ template<>
 nsresult
 AbstractThreadImpl<nsIThread>::Dispatch(already_AddRefed<nsIRunnable> aRunnable)
 {
+  MediaTaskQueue::AssertInTailDispatchIfNeeded();
   nsCOMPtr<nsIRunnable> r = aRunnable;
   return mTarget->Dispatch(r, NS_DISPATCH_NORMAL);
 }
