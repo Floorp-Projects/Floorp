@@ -22,6 +22,8 @@ interface WindowClient : Client {
   readonly attribute VisibilityState visibilityState;
   readonly attribute boolean focused;
   readonly attribute FrameType frameType;
+
+  [Throws]
   Promise<WindowClient> focus();
 };
 
