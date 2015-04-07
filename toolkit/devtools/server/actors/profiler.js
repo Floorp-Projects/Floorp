@@ -7,16 +7,10 @@ const {Cc, Ci, Cu, Cr} = require("chrome");
 const Services = require("Services");
 const DevToolsUtils = require("devtools/toolkit/DevToolsUtils.js");
 
-let DEFAULT_PROFILER_BUFFER_SIZE = Services.prefs.getIntPref("devtools.performance.profiler.buffer-size");
-let DEFAULT_PROFILER_FREQ_KHZ = Services.prefs.getIntPref("devtools.performance.profiler.sample-frequency-khz");
-let DEFAULT_PROFILER_INTERVAL = 1 / (DEFAULT_PROFILER_FREQ_KHZ || 1);
-
-let DEFAULT_PROFILER_OPTIONS = {
-  entries: DEFAULT_PROFILER_BUFFER_SIZE,
-  interval: DEFAULT_PROFILER_INTERVAL,
-  features: ["js"],
-  threadFilters: ["GeckoMain"]
-};
+let DEFAULT_PROFILER_ENTRIES = 10000000;
+let DEFAULT_PROFILER_INTERVAL = 1;
+let DEFAULT_PROFILER_FEATURES = ["js"];
+let DEFAULT_PROFILER_THREADFILTERS = ["GeckoMain"];
 
 /**
  * The nsIProfiler is target agnostic and interacts with the whole platform.
@@ -63,14 +57,6 @@ ProfilerActor.prototype = {
   },
 
   /**
-   * Returns the configuration used that was originally passed in to start up the
-   * profiler. Used for tests, and does not account for others using nsIProfiler.
-   */
-  onGetStartOptions: function() {
-    return this._profilerStartOptions || {};
-  },
-
-  /**
    * Starts the nsIProfiler module. Doing so will discard any samples
    * that might have been accumulated so far.
    *
@@ -80,21 +66,13 @@ ProfilerActor.prototype = {
    * @param array:string threadFilters [description]
    */
   onStartProfiler: function(request = {}) {
-    let options = this._profilerStartOptions = {
-      entries: request.entries || DEFAULT_PROFILER_OPTIONS.entries,
-      interval: request.interval || DEFAULT_PROFILER_OPTIONS.interval,
-      features: request.features || DEFAULT_PROFILER_OPTIONS.features,
-      threadFilters: request.threadFilters || DEFAULT_PROFILER_OPTIONS.threadFilters,
-    };
-
     nsIProfilerModule.StartProfiler(
-      options.entries,
-      options.interval,
-      options.features,
-      options.features.length,
-      options.threadFilters,
-      options.threadFilters.length
-    );
+      (request.entries || DEFAULT_PROFILER_ENTRIES),
+      (request.interval || DEFAULT_PROFILER_INTERVAL),
+      (request.features || DEFAULT_PROFILER_FEATURES),
+      (request.features || DEFAULT_PROFILER_FEATURES).length,
+      (request.threadFilters || DEFAULT_PROFILER_THREADFILTERS),
+      (request.threadFilters || DEFAULT_PROFILER_THREADFILTERS).length);
 
     return { started: true };
   },
@@ -353,6 +331,5 @@ ProfilerActor.prototype.requestTypes = {
   "getSharedLibraryInformation": ProfilerActor.prototype.onGetSharedLibraryInformation,
   "getProfile": ProfilerActor.prototype.onGetProfile,
   "registerEventNotifications": ProfilerActor.prototype.onRegisterEventNotifications,
-  "unregisterEventNotifications": ProfilerActor.prototype.onUnregisterEventNotifications,
-  "getStartOptions": ProfilerActor.prototype.onGetStartOptions
+  "unregisterEventNotifications": ProfilerActor.prototype.onUnregisterEventNotifications
 };
