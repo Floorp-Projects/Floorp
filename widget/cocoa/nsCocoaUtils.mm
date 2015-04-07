@@ -484,8 +484,7 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
                           ceil(height * scaleFactor));
 
     RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
-      CreateOffscreenContentDrawTarget(ToIntSize(scaledSize),
-                                       SurfaceFormat::B8G8R8A8);
+      CreateOffscreenContentDrawTarget(scaledSize, SurfaceFormat::B8G8R8A8);
     if (!drawTarget) {
       NS_ERROR("Failed to create DrawTarget");
       return NS_ERROR_FAILURE;

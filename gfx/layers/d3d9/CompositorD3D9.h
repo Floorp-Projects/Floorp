@@ -152,7 +152,7 @@ private:
 
   virtual gfx::IntSize GetWidgetSize() const override
   {
-    return gfx::ToIntSize(mSize);
+    return mSize;
   }
 
   /* Device manager instance for this compositor */

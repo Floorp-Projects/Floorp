@@ -6841,7 +6841,7 @@ void nsWindow::SetupTranslucentWindowMemoryBitmap(nsTransparencyMode aMode)
 void nsWindow::ClearTranslucentWindow()
 {
   if (mTransparentSurface) {
-    IntSize size = ToIntSize(mTransparentSurface->GetSize());
+    IntSize size = mTransparentSurface->GetSize();
     RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
       CreateDrawTargetForSurface(mTransparentSurface, size);
     drawTarget->ClearRect(Rect(0, 0, size.width, size.height));

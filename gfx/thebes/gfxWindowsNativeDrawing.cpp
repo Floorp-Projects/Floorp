@@ -272,7 +272,7 @@ gfxWindowsNativeDrawing::PaintToContext()
         RefPtr<DataSourceSurface> source =
             Factory::CreateWrappingDataSourceSurface(black->Data(),
                                                      black->Stride(),
-                                                     ToIntSize(black->GetSize()),
+                                                     black->GetSize(),
                                                      SurfaceFormat::B8G8R8A8);
 
         mContext->Save();

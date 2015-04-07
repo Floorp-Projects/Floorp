@@ -144,7 +144,7 @@ TextureClientX11::BorrowDrawTarget()
   }
 
   if (!mDrawTarget) {
-    IntSize size = ToIntSize(mSurface->GetSize());
+    IntSize size = mSurface->GetSize();
     mDrawTarget = Factory::CreateDrawTargetForCairoSurface(mSurface->CairoSurface(), size);
   }
 

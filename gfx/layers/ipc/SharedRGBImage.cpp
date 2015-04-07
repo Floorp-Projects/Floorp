@@ -49,8 +49,7 @@ CreateSharedRGBImage(ImageContainer *aImageContainer,
   }
 
   nsRefPtr<SharedRGBImage> rgbImage = static_cast<SharedRGBImage*>(image.get());
-  if (!rgbImage->Allocate(gfx::ToIntSize(aSize),
-                          gfx::ImageFormatToSurfaceFormat(aImageFormat))) {
+  if (!rgbImage->Allocate(aSize, gfx::ImageFormatToSurfaceFormat(aImageFormat))) {
     NS_WARNING("Failed to allocate a shared image");
     return nullptr;
   }
