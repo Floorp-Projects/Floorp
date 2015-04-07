@@ -28,7 +28,6 @@
 #include "FrameMetrics.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/UserData.h"
-#include "gfxVR.h"
 
 #include <stdint.h>
 #include "nsTHashtable.h"
@@ -49,6 +48,9 @@ namespace layers {
 class Layer;
 class ImageLayer;
 class ImageContainer;
+} //namespace
+namespace gfx {
+class VRHMDInfo;
 } //namespace
 } //namespace
 
