@@ -24,6 +24,7 @@ DIRS += [
     'system',
     '../chrome',
     'build',
+    'libxpcomrt',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT' and CONFIG['MOZ_DEBUG']:

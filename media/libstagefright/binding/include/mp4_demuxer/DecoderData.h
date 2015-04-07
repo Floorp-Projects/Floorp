@@ -15,9 +15,7 @@
 
 namespace stagefright
 {
-template <typename T> class sp;
 class MetaData;
-class MediaBuffer;
 }
 
 namespace mp4_demuxer
@@ -46,30 +44,28 @@ struct PsshInfo
 class CryptoFile
 {
 public:
-  CryptoFile() {}
+  CryptoFile() : valid(false) {}
   CryptoFile(const CryptoFile& aCryptoFile) : valid(aCryptoFile.valid)
   {
     pssh.AppendElements(aCryptoFile.pssh);
   }
 
-  void Update(stagefright::sp<stagefright::MetaData>& aMetaData)
+  void Update(const uint8_t* aData, size_t aLength)
   {
-    valid = DoUpdate(aMetaData);
+    valid = DoUpdate(aData, aLength);
   }
 
   bool valid;
   nsTArray<PsshInfo> pssh;
 
 private:
-  bool DoUpdate(stagefright::sp<stagefright::MetaData>& aMetaData);
+  bool DoUpdate(const uint8_t* aData, size_t aLength);
 };
 
 class CryptoTrack
 {
 public:
   CryptoTrack() : valid(false) {}
-  void Update(stagefright::sp<stagefright::MetaData>& aMetaData);
-
   bool valid;
   int32_t mode;
   int32_t iv_size;
@@ -79,26 +75,44 @@ public:
 class CryptoSample : public CryptoTrack
 {
 public:
-  void Update(stagefright::sp<stagefright::MetaData>& aMetaData);
-
   nsTArray<uint16_t> plain_sizes;
   nsTArray<uint32_t> encrypted_sizes;
   nsTArray<uint8_t> iv;
-
   nsTArray<nsCString> session_ids;
 };
 
 class TrackConfig
 {
 public:
-  TrackConfig() : mTrackId(0), duration(0), media_time(0) {}
+  enum TrackType {
+    kUndefinedTrack,
+    kAudioTrack,
+    kVideoTrack,
+  };
+  explicit TrackConfig(TrackType aType)
+    : mTrackId(0)
+    , duration(0)
+    , media_time(0)
+    , mType(aType)
+  {
+  }
+
   nsAutoCString mime_type;
   uint32_t mTrackId;
   int64_t duration;
   int64_t media_time;
   CryptoTrack crypto;
+  TrackType mType;
 
-  void Update(stagefright::sp<stagefright::MetaData>& aMetaData,
+  bool IsAudioConfig() const
+  {
+    return mType == kAudioTrack;
+  }
+  bool IsVideoConfig() const
+  {
+    return mType == kVideoTrack;
+  }
+  void Update(const stagefright::MetaData* aMetaData,
               const char* aMimeType);
 };
 
@@ -106,7 +120,8 @@ class AudioDecoderConfig : public TrackConfig
 {
 public:
   AudioDecoderConfig()
-    : channel_count(0)
+    : TrackConfig(kAudioTrack)
+    , channel_count(0)
     , bits_per_sample(0)
     , samples_per_second(0)
     , frequency_index(0)
@@ -126,7 +141,7 @@ public:
   nsRefPtr<ByteBuffer> extra_data;
   nsRefPtr<ByteBuffer> audio_specific_config;
 
-  void Update(stagefright::sp<stagefright::MetaData>& aMetaData,
+  void Update(const stagefright::MetaData* aMetaData,
               const char* aMimeType);
   bool IsValid();
 
@@ -138,7 +153,8 @@ class VideoDecoderConfig : public TrackConfig
 {
 public:
   VideoDecoderConfig()
-    : display_width(0)
+    : TrackConfig(kVideoTrack)
+    , display_width(0)
     , display_height(0)
     , image_width(0)
     , image_height(0)
@@ -154,7 +170,7 @@ public:
 
   nsRefPtr<ByteBuffer> extra_data;   // Unparsed AVCDecoderConfig payload.
 
-  void Update(stagefright::sp<stagefright::MetaData>& aMetaData,
+  void Update(const stagefright::MetaData* aMetaData,
               const char* aMimeType);
   bool IsValid();
 };
@@ -167,10 +183,7 @@ public:
   MP4Sample();
   virtual ~MP4Sample();
   MP4Sample* Clone() const;
-  void Update(int64_t& aMediaTime);
   bool Pad(size_t aPaddingBytes);
-
-  stagefright::MediaBuffer* mMediaBuffer;
 
   Microseconds decode_timestamp;
   Microseconds composition_timestamp;

@@ -5,21 +5,21 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'AVCCDecoderModule.h',
     'MP4Decoder.h',
     'MP4Reader.h',
     'MP4Stream.h',
     'PlatformDecoderModule.h',
     'SharedDecoderManager.h',
+    'wrappers/H264Converter.h'
 ]
 
 UNIFIED_SOURCES += [
-    'AVCCDecoderModule.cpp',
     'BlankDecoderModule.cpp',
     'MP4Decoder.cpp',
     'MP4Stream.cpp',
     'PlatformDecoderModule.cpp',
     'SharedDecoderManager.cpp',
+    'wrappers/H264Converter.cpp'
 ]
 
 SOURCES += [

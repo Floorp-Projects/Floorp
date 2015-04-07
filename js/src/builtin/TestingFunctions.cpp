@@ -2494,17 +2494,24 @@ DumpStringRepresentation(JSContext* cx, unsigned argc, Value* vp)
 #endif
 
 static bool
-SetLazyParsingEnabled(JSContext* cx, unsigned argc, Value* vp)
+SetLazyParsingDisabled(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    if (argc < 1) {
-        JS_ReportError(cx, "setLazyParsingEnabled: need an argument");
-        return false;
-    }
+    bool disable = !args.hasDefined(0) || ToBoolean(args[0]);
+    JS::CompartmentOptionsRef(cx->compartment()).setDisableLazyParsing(disable);
 
-    bool arg = ToBoolean(args.get(0));
-    JS::CompartmentOptionsRef(cx->compartment()).setDiscardSource(!arg);
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+SetDiscardSource(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    bool discard = !args.hasDefined(0) || ToBoolean(args[0]);
+    JS::CompartmentOptionsRef(cx->compartment()).setDiscardSource(discard);
 
     args.rval().setUndefined();
     return true;
@@ -2902,9 +2909,15 @@ gc::ZealModeHelpText),
 "  Print a human-readable description of how the string |str| is represented.\n"),
 #endif
 
-    JS_FN_HELP("setLazyParsingEnabled", SetLazyParsingEnabled, 1, 0,
-"setLazyParsingEnabled(bool)",
-"  Enable or disable lazy parsing in the current compartment.  The default is enabled."),
+    JS_FN_HELP("setLazyParsingDisabled", SetLazyParsingDisabled, 1, 0,
+"setLazyParsingDisabled(bool)",
+"  Explicitly disable lazy parsing in the current compartment.  The default is that lazy "
+"  parsing is not explicitly disabled."),
+
+    JS_FN_HELP("setDiscardSource", SetDiscardSource, 1, 0,
+"setDiscardSource(bool)",
+"  Explicitly enable source discarding in the current compartment.  The default is that "
+"  source discarding is not explicitly enabled."),
 
     JS_FS_HELP_END
 };

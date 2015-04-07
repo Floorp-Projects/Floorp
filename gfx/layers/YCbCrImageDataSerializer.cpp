@@ -5,7 +5,6 @@
 
 #include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include <string.h>                     // for memcpy
-#include "gfx2DGlue.h"                  // for ToIntSize
 #include "mozilla/gfx/2D.h"             // for DataSourceSurface, Factory
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
 #include "mozilla/gfx/Logging.h"        // for gfxDebug

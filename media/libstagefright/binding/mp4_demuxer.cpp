@@ -22,17 +22,16 @@ namespace mp4_demuxer
 
 struct StageFrightPrivate
 {
-  sp<MPEG4Extractor> mExtractor;
-
+  StageFrightPrivate() : mCanSeek(false) {}
   sp<MediaSource> mAudio;
-  MediaSource::ReadOptions mAudioOptions;
   nsAutoPtr<SampleIterator> mAudioIterator;
 
   sp<MediaSource> mVideo;
-  MediaSource::ReadOptions mVideoOptions;
   nsAutoPtr<SampleIterator> mVideoIterator;
 
   nsTArray<nsRefPtr<Index>> mIndexes;
+
+  bool mCanSeek;
 };
 
 class DataSourceAdapter : public DataSource
@@ -79,7 +78,6 @@ MP4Demuxer::MP4Demuxer(Stream* source, Monitor* aMonitor)
   , mMonitor(aMonitor)
   , mNextKeyframeTime(-1)
 {
-  mPrivate->mExtractor = new MPEG4Extractor(new DataSourceAdapter(source));
 }
 
 MP4Demuxer::~MP4Demuxer()
@@ -96,7 +94,7 @@ bool
 MP4Demuxer::Init()
 {
   mMonitor->AssertCurrentThreadOwns();
-  sp<MediaExtractor> e = mPrivate->mExtractor;
+  sp<MediaExtractor> e = new MPEG4Extractor(new DataSourceAdapter(mSource));
 
   // Read the number of tracks. If we can't find any, make sure to bail now before
   // attempting any new reads to make the retry system work.
@@ -119,7 +117,7 @@ MP4Demuxer::Init()
         return false;
       }
       mPrivate->mAudio = track;
-      mAudioConfig.Update(metaData, mimeType);
+      mAudioConfig.Update(metaData.get(), mimeType);
       nsRefPtr<Index> index = new Index(mPrivate->mAudio->exportIndex(),
                                         mSource, mAudioConfig.mTrackId,
                                         /* aIsAudio = */ true, mMonitor);
@@ -131,7 +129,7 @@ MP4Demuxer::Init()
         return false;
       }
       mPrivate->mVideo = track;
-      mVideoConfig.Update(metaData, mimeType);
+      mVideoConfig.Update(metaData.get(), mimeType);
       nsRefPtr<Index> index = new Index(mPrivate->mVideo->exportIndex(),
                                         mSource, mVideoConfig.mTrackId,
                                         /* aIsAudio = */ false, mMonitor);
@@ -140,7 +138,7 @@ MP4Demuxer::Init()
     }
   }
   sp<MetaData> metaData = e->getMetaData();
-  mCrypto.Update(metaData);
+  UpdateCrypto(metaData.get());
 
   int64_t movieDuration;
   if (!mVideoConfig.duration && !mAudioConfig.duration &&
@@ -148,8 +146,24 @@ MP4Demuxer::Init()
     // No duration were found in either tracks, use movie extend header box one.
     mVideoConfig.duration = mAudioConfig.duration = movieDuration;
   }
+  mPrivate->mCanSeek = e->flags() & MediaExtractor::CAN_SEEK;
 
   return mPrivate->mAudio.get() || mPrivate->mVideo.get();
+}
+
+void
+MP4Demuxer::UpdateCrypto(const MetaData* aMetaData)
+{
+  const void* data;
+  size_t size;
+  uint32_t type;
+
+  // There's no point in checking that the type matches anything because it
+  // isn't set consistently in the MPEG4Extractor.
+  if (!aMetaData->findData(kKeyPssh, &type, &data, &size)) {
+    return;
+  }
+  mCrypto.Update(reinterpret_cast<const uint8_t*>(data), size);
 }
 
 bool
@@ -177,7 +191,7 @@ bool
 MP4Demuxer::CanSeek()
 {
   mMonitor->AssertCurrentThreadOwns();
-  return mPrivate->mExtractor->flags() & MediaExtractor::CAN_SEEK;
+  return mPrivate->mCanSeek;
 }
 
 void
@@ -186,9 +200,6 @@ MP4Demuxer::SeekAudio(Microseconds aTime)
   mMonitor->AssertCurrentThreadOwns();
   if (mPrivate->mAudioIterator) {
     mPrivate->mAudioIterator->Seek(aTime);
-  } else {
-    mPrivate->mAudioOptions.setSeekTo(
-      aTime, MediaSource::ReadOptions::SEEK_PREVIOUS_SYNC);
   }
 }
 
@@ -198,9 +209,6 @@ MP4Demuxer::SeekVideo(Microseconds aTime)
   mMonitor->AssertCurrentThreadOwns();
   if (mPrivate->mVideoIterator) {
     mPrivate->mVideoIterator->Seek(aTime);
-  } else {
-    mPrivate->mVideoOptions.setSeekTo(
-      aTime, MediaSource::ReadOptions::SEEK_PREVIOUS_SYNC);
   }
 }
 
@@ -208,29 +216,17 @@ MP4Sample*
 MP4Demuxer::DemuxAudioSample()
 {
   mMonitor->AssertCurrentThreadOwns();
-  if (mPrivate->mAudioIterator) {
-    nsAutoPtr<MP4Sample> sample(mPrivate->mAudioIterator->GetNext());
-    if (sample) {
-      if (sample->crypto.valid) {
-        sample->crypto.mode = mAudioConfig.crypto.mode;
-        sample->crypto.iv_size = mAudioConfig.crypto.iv_size;
-        sample->crypto.key.AppendElements(mAudioConfig.crypto.key);
-      }
-    }
-    return sample.forget();
-  }
-
-  nsAutoPtr<MP4Sample> sample(new MP4Sample());
-  status_t status =
-    mPrivate->mAudio->read(&sample->mMediaBuffer, &mPrivate->mAudioOptions);
-  mPrivate->mAudioOptions.clearSeekTo();
-
-  if (status < 0) {
+  if (!mPrivate->mAudioIterator) {
     return nullptr;
   }
-
-  sample->Update(mAudioConfig.media_time);
-
+  nsAutoPtr<MP4Sample> sample(mPrivate->mAudioIterator->GetNext());
+  if (sample) {
+    if (sample->crypto.valid) {
+      sample->crypto.mode = mAudioConfig.crypto.mode;
+      sample->crypto.iv_size = mAudioConfig.crypto.iv_size;
+      sample->crypto.key.AppendElements(mAudioConfig.crypto.key);
+    }
+  }
   return sample.forget();
 }
 
@@ -238,33 +234,20 @@ MP4Sample*
 MP4Demuxer::DemuxVideoSample()
 {
   mMonitor->AssertCurrentThreadOwns();
-  if (mPrivate->mVideoIterator) {
-    nsAutoPtr<MP4Sample> sample(mPrivate->mVideoIterator->GetNext());
-    if (sample) {
-      sample->extra_data = mVideoConfig.extra_data;
-      if (sample->crypto.valid) {
-        sample->crypto.mode = mVideoConfig.crypto.mode;
-        sample->crypto.key.AppendElements(mVideoConfig.crypto.key);
-      }
-      if (sample->composition_timestamp >= mNextKeyframeTime) {
-        mNextKeyframeTime = mPrivate->mVideoIterator->GetNextKeyframeTime();
-      }
-    }
-    return sample.forget();
-  }
-
-  nsAutoPtr<MP4Sample> sample(new MP4Sample());
-  status_t status =
-    mPrivate->mVideo->read(&sample->mMediaBuffer, &mPrivate->mVideoOptions);
-  mPrivate->mVideoOptions.clearSeekTo();
-
-  if (status < 0) {
+  if (!mPrivate->mVideoIterator) {
     return nullptr;
   }
-
-  sample->Update(mVideoConfig.media_time);
-  sample->extra_data = mVideoConfig.extra_data;
-
+  nsAutoPtr<MP4Sample> sample(mPrivate->mVideoIterator->GetNext());
+  if (sample) {
+    sample->extra_data = mVideoConfig.extra_data;
+    if (sample->crypto.valid) {
+      sample->crypto.mode = mVideoConfig.crypto.mode;
+      sample->crypto.key.AppendElements(mVideoConfig.crypto.key);
+    }
+    if (sample->composition_timestamp >= mNextKeyframeTime) {
+      mNextKeyframeTime = mPrivate->mVideoIterator->GetNextKeyframeTime();
+    }
+  }
   return sample.forget();
 }
 

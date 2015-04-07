@@ -856,6 +856,12 @@ enum AsmJSImmKind
 #if defined(JS_CODEGEN_ARM)
     AsmJSImm_aeabi_idivmod   = AsmJSExit::Builtin_IDivMod,
     AsmJSImm_aeabi_uidivmod  = AsmJSExit::Builtin_UDivMod,
+    AsmJSImm_AtomicCmpXchg   = AsmJSExit::Builtin_AtomicCmpXchg,
+    AsmJSImm_AtomicFetchAdd  = AsmJSExit::Builtin_AtomicFetchAdd,
+    AsmJSImm_AtomicFetchSub  = AsmJSExit::Builtin_AtomicFetchSub,
+    AsmJSImm_AtomicFetchAnd  = AsmJSExit::Builtin_AtomicFetchAnd,
+    AsmJSImm_AtomicFetchOr   = AsmJSExit::Builtin_AtomicFetchOr,
+    AsmJSImm_AtomicFetchXor  = AsmJSExit::Builtin_AtomicFetchXor,
 #endif
     AsmJSImm_ModD            = AsmJSExit::Builtin_ModD,
     AsmJSImm_SinD            = AsmJSExit::Builtin_SinD,

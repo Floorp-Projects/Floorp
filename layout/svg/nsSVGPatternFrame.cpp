@@ -361,9 +361,9 @@ nsSVGPatternFrame::PaintPattern(const DrawTarget* aDrawTarget,
       patternHeight != surfaceSize.height) {
     // scale drawing to pattern surface size
     gfxMatrix tempTM =
-      gfxMatrix(surfaceSize.width / patternWidth, 0.0f,
-                0.0f, surfaceSize.height / patternHeight,
-                0.0f, 0.0f);
+      gfxMatrix(surfaceSize.width / patternWidth, 0.0,
+                0.0, surfaceSize.height / patternHeight,
+                0.0, 0.0);
     patternWithChildren->mCTM->PreMultiply(tempTM);
 
     // and rescale pattern to compensate
@@ -639,23 +639,23 @@ nsSVGPatternFrame::ConstructCTM(const nsSVGViewBox& aViewBox,
                                 const Matrix &callerCTM,
                                 nsIFrame *aTarget)
 {
-  gfxMatrix tCTM;
   SVGSVGElement *ctx = nullptr;
   nsIContent* targetContent = aTarget->GetContent();
+  gfxFloat scaleX, scaleY;
 
   // The objectBoundingBox conversion must be handled in the CTM:
   if (IncludeBBoxScale(aViewBox, aPatternContentUnits, aPatternUnits)) {
-    tCTM.Scale(callerBBox.Width(), callerBBox.Height());
+    scaleX = callerBBox.Width();
+    scaleY = callerBBox.Height();
   } else {
     if (targetContent->IsSVGElement()) {
       ctx = static_cast<nsSVGElement*>(targetContent)->GetCtx();
     }
-    float scale = MaxExpansion(callerCTM);
-    tCTM.Scale(scale, scale);
+    scaleX = scaleY = MaxExpansion(callerCTM);
   }
 
   if (!aViewBox.IsExplicitlySet()) {
-    return tCTM;
+    return gfxMatrix(scaleX, 0.0, 0.0, scaleY, 0.0, 0.0);
   }
   const nsSVGViewBoxRect viewBoxRect = aViewBox.GetAnimValue();
 
@@ -685,12 +685,12 @@ nsSVGPatternFrame::ConstructCTM(const nsSVGViewBox& aViewBox,
   }
 
   Matrix tm = SVGContentUtils::GetViewBoxTransform(
-    viewportWidth, viewportHeight,
+    viewportWidth * scaleX, viewportHeight * scaleY,
     viewBoxRect.x, viewBoxRect.y,
     viewBoxRect.width, viewBoxRect.height,
     GetPreserveAspectRatio());
 
-  return ThebesMatrix(tm) * tCTM;
+  return ThebesMatrix(tm);
 }
 
 //----------------------------------------------------------------------

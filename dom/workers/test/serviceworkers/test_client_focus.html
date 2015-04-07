@@ -1,0 +1,94 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1130686 - Test service worker client.focus </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<!--
+  This test checks that client.focus is able to restore focus to the main window
+  when an iframe is holding the focus.
+-->
+</head>
+<body>
+<p id="display"></p>
+<div id="content"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  var registration;
+  var worker;
+
+  function start() {
+    return navigator.serviceWorker.register("client_focus_worker.js",
+                                            { scope: "./sw_clients/focus_stealing_client.html" })
+      .then((swr) => registration = swr);
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    });
+  }
+
+  function loseFocus() {
+    var p = new Promise(function(res, rej) {
+      window.onmessage = function(e) {
+        if (e.data == "READY") {
+          ok(true, "iframe created.");
+          iframe.contentWindow.focus();
+        }
+      }
+      window.onblur = function() {
+        ok(true, "blurred");
+        res();
+      }
+    });
+
+    content = document.getElementById("content");
+    ok(content, "parent exists.");
+
+    iframe = document.createElement("iframe");
+    content.appendChild(iframe);
+
+    iframe.setAttribute('src', "sw_clients/focus_stealing_client.html");
+    return p;
+  }
+
+  function testFocus() {
+    var p = new Promise(function(res, rej) {
+      navigator.serviceWorker.onmessage = function(e) {
+        ok(e.data, "client object is marked as focused.");
+        ok(document.hasFocus(), "document has focus.");
+        res();
+      }
+    });
+
+    ok(registration.active, "active worker exists.");
+    registration.active.postMessage("go");
+    return p;
+  }
+
+  function runTest() {
+     start()
+      .then(loseFocus)
+      .then(testFocus)
+      .then(unregister)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+

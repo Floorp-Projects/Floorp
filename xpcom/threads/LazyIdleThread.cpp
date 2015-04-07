@@ -179,8 +179,10 @@ LazyIdleThread::EnsureThread()
 void
 LazyIdleThread::InitThread()
 {
+#if !defined(MOZILLA_XPCOMRT_API)
   char aLocal;
   profiler_register_thread(mName.get(), &aLocal);
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
   PR_SetCurrentThreadName(mName.get());
 
@@ -211,7 +213,9 @@ LazyIdleThread::CleanupThread()
     mThreadIsShuttingDown = true;
   }
 
+#if !defined(MOZILLA_XPCOMRT_API)
   profiler_unregister_thread();
+#endif // !defined(MOZILLA_XPCOMRT_API)
 }
 
 void

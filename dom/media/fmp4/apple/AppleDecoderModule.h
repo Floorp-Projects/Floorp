@@ -32,9 +32,10 @@ public:
                      FlushableMediaTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) override;
 
-  virtual bool SupportsAudioMimeType(const nsACString& aMimeType) override;
-  virtual bool
-  DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig) override;
+  virtual bool SupportsMimeType(const nsACString& aMimeType) override;
+
+  virtual ConversionRequired
+  DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const override;
 
   static void Init();
   static nsresult CanDecode();
