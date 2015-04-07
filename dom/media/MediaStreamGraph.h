@@ -855,7 +855,7 @@ protected:
     }
 
     nsRefPtr<MediaTaskQueue> mTarget;
-    RefPtr<nsIRunnable> mRunnable;
+    nsCOMPtr<nsIRunnable> mRunnable;
   };
   enum TrackCommands {
     TRACK_CREATE = MediaStreamListener::TRACK_EVENT_CREATED,

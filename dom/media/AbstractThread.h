@@ -35,6 +35,11 @@ public:
   virtual nsresult Dispatch(already_AddRefed<nsIRunnable> aRunnable) = 0;
   virtual bool IsCurrentThreadIn() = 0;
 
+  // Convenience method for dispatching a runnable when we may be running on
+  // a thread that requires runnables to be dispatched with tail dispatch.
+  void MaybeTailDispatch(already_AddRefed<nsIRunnable> aRunnable,
+                         bool aAssertDispatchSuccess = true);
+
   template<typename TargetType> static AbstractThread* Create(TargetType* aTarget);
 
   // Convenience method for getting an AbstractThread for the main thread.
