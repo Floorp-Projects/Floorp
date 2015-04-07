@@ -1926,3 +1926,30 @@ Example
       "numSavedPasswords": 5,
       "enabled": 0,
     }
+
+Version 2
+^^^^^^^^^
+
+More detailed measurements of login forms & their behavior
+
+numNewSavedPasswordsInSession
+    Number of passwords saved to the password manager this session.
+
+numSuccessfulFills
+    Number of times the password manager filled in password fields for user this session.
+
+numTotalLoginsEncountered
+    Number of times a login form was encountered by the user in the session.
+
+Example
+^^^^^^^
+
+::
+    "org.mozilla.passwordmgr.passwordmgr": {
+      "_v": 2,
+      "numSavedPasswords": 32,
+      "enabled": 1,
+      "numNewSavedPasswords": 5,
+      "numSuccessfulFills": 11,
+      "totalLoginsEncountered": 23,
+    }
