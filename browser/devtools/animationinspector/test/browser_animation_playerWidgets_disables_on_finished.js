@@ -21,7 +21,15 @@ add_task(function*() {
   info("Wait for both animations to end");
 
   let promises = controller.animationPlayers.map(front => {
-    return waitForPlayState(front, "finished");
+    let def = promise.defer();
+    let onStateChanged = () => {
+      if (front.state.playState === "finished") {
+        front.off(front.AUTO_REFRESH_EVENT, onStateChanged);
+        def.resolve();
+      }
+    };
+    front.on(front.AUTO_REFRESH_EVENT, onStateChanged);
+    return def.promise;
   });
 
   yield promise.all(promises);
