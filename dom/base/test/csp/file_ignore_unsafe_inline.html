@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Bug 1004703 - ignore 'unsafe-inline' if nonce- or hash-source specified</title>
+</head>
+<body>
+<div id="testdiv">a</div>
+
+<!-- first script whitelisted by 'unsafe-inline' -->
+<script type="application/javascript">
+document.getElementById('testdiv').innerHTML += 'b';
+</script>
+
+<!-- second script whitelisted by hash -->
+<!-- sha256-uJXAPKP5NZxnVMZMUkDofh6a9P3UMRc1CRTevVPS/rI= -->
+<script type="application/javascript">
+document.getElementById('testdiv').innerHTML += 'c';
+</script>
+
+<!-- thrid script whitelisted by nonce -->
+<script type="application/javascript" nonce="FooNonce">
+document.getElementById('testdiv').innerHTML += 'd';
+</script>
+
+</body>
+</html>
