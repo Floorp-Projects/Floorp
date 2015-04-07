@@ -8,8 +8,9 @@
 #define mozilla_RubyUtils_h_
 
 #include "nsGkAtoms.h"
-#include "nsRubyBaseContainerFrame.h"
 #include "nsRubyTextContainerFrame.h"
+
+class nsRubyBaseContainerFrame;
 
 namespace mozilla {
 
