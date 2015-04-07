@@ -1950,7 +1950,7 @@ static const VMFunction DeepCloneObjectLiteralInfo =
 void
 CodeGenerator::visitCloneLiteral(LCloneLiteral* lir)
 {
-    pushArg(ImmWord(js::MaybeSingletonObject));
+    pushArg(ImmWord(TenuredObject));
     pushArg(ToRegister(lir->getObjectLiteral()));
     callVM(DeepCloneObjectLiteralInfo, lir);
 }
@@ -2261,69 +2261,70 @@ CodeGenerator::visitStoreSlotV(LStoreSlotV* lir)
     masm.storeValue(value, Address(base, offset));
 }
 
+static void
+GuardReceiver(MacroAssembler& masm, const ReceiverGuard::StackGuard& guard,
+              Register obj, Register scratch, Label* miss, bool checkNullExpando)
+{
+    if (guard.group) {
+        masm.branchTestObjGroup(Assembler::NotEqual, obj, guard.group, miss);
+
+        Address expandoAddress(obj, UnboxedPlainObject::offsetOfExpando());
+        if (guard.shape) {
+            masm.loadPtr(expandoAddress, scratch);
+            masm.branchPtr(Assembler::Equal, scratch, ImmWord(0), miss);
+            masm.branchTestObjShape(Assembler::NotEqual, scratch, guard.shape, miss);
+        } else if (checkNullExpando) {
+            masm.branchPtr(Assembler::NotEqual, expandoAddress, ImmWord(0), miss);
+        }
+    } else {
+        masm.branchTestObjShape(Assembler::NotEqual, obj, guard.shape, miss);
+    }
+}
+
 void
 CodeGenerator::emitGetPropertyPolymorphic(LInstruction* ins, Register obj, Register scratch,
                                           const TypedOrValueRegister& output)
 {
     MGetPropertyPolymorphic* mir = ins->mirRaw()->toGetPropertyPolymorphic();
 
-    size_t total = mir->numUnboxedGroups() + mir->numShapes();
-    MOZ_ASSERT(total > 1);
-
-    bool groupInScratch = mir->numUnboxedGroups() > 1;
-    bool shapeInScratch = mir->numShapes() > 1;
-
     Label done;
 
-    for (size_t i = 0; i < total; i++) {
-        bool unboxedGroup = i < mir->numUnboxedGroups();
-
-        ImmGCPtr comparePtr = unboxedGroup
-                              ? ImmGCPtr(mir->unboxedGroup(i))
-                              : ImmGCPtr(mir->objShape(i - mir->numUnboxedGroups()));
-        Address addr(obj, unboxedGroup ? JSObject::offsetOfGroup() : JSObject::offsetOfShape());
-
-        if ((i == 0 && groupInScratch) || (i == mir->numUnboxedGroups() && shapeInScratch))
-            masm.loadPtr(addr, scratch);
-
-        bool inScratch = unboxedGroup ? groupInScratch : shapeInScratch;
+    for (size_t i = 0; i < mir->numReceivers(); i++) {
+        ReceiverGuard::StackGuard receiver = mir->receiver(i);
 
         Label next;
-        if (i == total - 1) {
-            if (inScratch)
-                bailoutCmpPtr(Assembler::NotEqual, scratch, comparePtr, ins->snapshot());
-            else
-                bailoutCmpPtr(Assembler::NotEqual, addr, comparePtr, ins->snapshot());
-        } else {
-            if (inScratch)
-                masm.branchPtr(Assembler::NotEqual, scratch, comparePtr, &next);
-            else
-                masm.branchPtr(Assembler::NotEqual, addr, comparePtr, &next);
-        }
+        GuardReceiver(masm, receiver, obj, scratch, &next, /* checkNullExpando = */ false);
 
-        if (unboxedGroup) {
-            const UnboxedLayout::Property* property =
-                mir->unboxedGroup(i)->unboxedLayout().lookup(mir->name());
-            Address propertyAddr(obj, UnboxedPlainObject::offsetOfData() + property->offset);
+        if (receiver.shape) {
+            // If this is an unboxed expando access, GuardReceiver loaded the
+            // expando object into scratch.
+            Register target = receiver.group ? scratch : obj;
 
-            masm.loadUnboxedProperty(propertyAddr, property->type, output);
-        } else {
-            Shape* shape = mir->shape(i - mir->numUnboxedGroups());
+            Shape* shape = mir->shape(i);
             if (shape->slot() < shape->numFixedSlots()) {
                 // Fixed slot.
-                masm.loadTypedOrValue(Address(obj, NativeObject::getFixedSlotOffset(shape->slot())),
+                masm.loadTypedOrValue(Address(target, NativeObject::getFixedSlotOffset(shape->slot())),
                                       output);
             } else {
                 // Dynamic slot.
                 uint32_t offset = (shape->slot() - shape->numFixedSlots()) * sizeof(js::Value);
-                masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch);
+                masm.loadPtr(Address(target, NativeObject::offsetOfSlots()), scratch);
                 masm.loadTypedOrValue(Address(scratch, offset), output);
             }
+        } else {
+            const UnboxedLayout::Property* property =
+                receiver.group->unboxedLayout().lookup(mir->name());
+            Address propertyAddr(obj, UnboxedPlainObject::offsetOfData() + property->offset);
+
+            masm.loadUnboxedProperty(propertyAddr, property->type, output);
         }
 
-        if (i != total - 1)
+        if (i == mir->numReceivers() - 1) {
+            bailoutFrom(&next, ins->snapshot());
+        } else {
             masm.jump(&done);
-        masm.bind(&next);
+            masm.bind(&next);
+        }
     }
 
     masm.bind(&done);
@@ -2354,42 +2355,36 @@ CodeGenerator::emitSetPropertyPolymorphic(LInstruction* ins, Register obj, Regis
 {
     MSetPropertyPolymorphic* mir = ins->mirRaw()->toSetPropertyPolymorphic();
 
-    size_t total = mir->numUnboxedGroups() + mir->numShapes();
-    MOZ_ASSERT(total > 1);
-
-    bool groupInScratch = mir->numUnboxedGroups() > 1;
-    bool shapeInScratch = mir->numShapes() > 1;
-
     Label done;
-    for (size_t i = 0; i < total; i++) {
-        bool unboxedGroup = i < mir->numUnboxedGroups();
-
-        ImmGCPtr comparePtr = unboxedGroup
-                              ? ImmGCPtr(mir->unboxedGroup(i))
-                              : ImmGCPtr(mir->objShape(i - mir->numUnboxedGroups()));
-        Address addr(obj, unboxedGroup ? JSObject::offsetOfGroup() : JSObject::offsetOfShape());
-
-        if ((i == 0 && groupInScratch) || (i == mir->numUnboxedGroups() && shapeInScratch))
-            masm.loadPtr(addr, scratch);
-
-        bool inScratch = unboxedGroup ? groupInScratch : shapeInScratch;
+    for (size_t i = 0; i < mir->numReceivers(); i++) {
+        ReceiverGuard::StackGuard receiver = mir->receiver(i);
 
         Label next;
-        if (i == total - 1) {
-            if (inScratch)
-                bailoutCmpPtr(Assembler::NotEqual, scratch, comparePtr, ins->snapshot());
-            else
-                bailoutCmpPtr(Assembler::NotEqual, addr, comparePtr, ins->snapshot());
-        } else {
-            if (inScratch)
-                masm.branchPtr(Assembler::NotEqual, scratch, comparePtr, &next);
-            else
-                masm.branchPtr(Assembler::NotEqual, addr, comparePtr, &next);
-        }
+        GuardReceiver(masm, receiver, obj, scratch, &next, /* checkNullExpando = */ false);
 
-        if (unboxedGroup) {
+        if (receiver.shape) {
+            // If this is an unboxed expando access, GuardReceiver loaded the
+            // expando object into scratch.
+            Register target = receiver.group ? scratch : obj;
+
+            Shape* shape = mir->shape(i);
+            if (shape->slot() < shape->numFixedSlots()) {
+                // Fixed slot.
+                Address addr(target, NativeObject::getFixedSlotOffset(shape->slot()));
+                if (mir->needsBarrier())
+                    emitPreBarrier(addr);
+                masm.storeConstantOrRegister(value, addr);
+            } else {
+                // Dynamic slot.
+                masm.loadPtr(Address(target, NativeObject::offsetOfSlots()), scratch);
+                Address addr(scratch, (shape->slot() - shape->numFixedSlots()) * sizeof(js::Value));
+                if (mir->needsBarrier())
+                    emitPreBarrier(addr);
+                masm.storeConstantOrRegister(value, addr);
+            }
+        } else {
             const UnboxedLayout::Property* property =
-                mir->unboxedGroup(i)->unboxedLayout().lookup(mir->name());
+                receiver.group->unboxedLayout().lookup(mir->name());
             Address propertyAddr(obj, UnboxedPlainObject::offsetOfData() + property->offset);
 
             if (property->type == JSVAL_TYPE_OBJECT)
@@ -2400,27 +2395,14 @@ CodeGenerator::emitSetPropertyPolymorphic(LInstruction* ins, Register obj, Regis
                 MOZ_ASSERT(!UnboxedTypeNeedsPreBarrier(property->type));
 
             masm.storeUnboxedProperty(propertyAddr, property->type, value, nullptr);
-        } else {
-            Shape* shape = mir->shape(i - mir->numUnboxedGroups());
-            if (shape->slot() < shape->numFixedSlots()) {
-                // Fixed slot.
-                Address addr(obj, NativeObject::getFixedSlotOffset(shape->slot()));
-                if (mir->needsBarrier())
-                    emitPreBarrier(addr);
-                masm.storeConstantOrRegister(value, addr);
-            } else {
-                // Dynamic slot.
-                masm.loadPtr(Address(obj, NativeObject::offsetOfSlots()), scratch);
-                Address addr(scratch, (shape->slot() - shape->numFixedSlots()) * sizeof(js::Value));
-                if (mir->needsBarrier())
-                    emitPreBarrier(addr);
-                masm.storeConstantOrRegister(value, addr);
-            }
         }
 
-        if (i != total - 1)
+        if (i == mir->numReceivers() - 1) {
+            bailoutFrom(&next, ins->snapshot());
+        } else {
             masm.jump(&done);
-        masm.bind(&next);
+            masm.bind(&next);
+        }
     }
 
     masm.bind(&done);
@@ -2548,39 +2530,44 @@ CodeGenerator::visitGuardReceiverPolymorphic(LGuardReceiverPolymorphic* lir)
     Register obj = ToRegister(lir->object());
     Register temp = ToRegister(lir->temp());
 
-    MOZ_ASSERT(mir->numShapes() + mir->numUnboxedGroups() > 1);
-
     Label done;
 
-    if (mir->numShapes()) {
-        masm.loadObjShape(obj, temp);
+    for (size_t i = 0; i < mir->numReceivers(); i++) {
+        const ReceiverGuard::StackGuard& receiver = mir->receiver(i);
 
-        for (size_t i = 0; i < mir->numShapes(); i++) {
-            Shape* shape = mir->getShape(i);
-            if (i == mir->numShapes() - 1 && !mir->numUnboxedGroups())
-                bailoutCmpPtr(Assembler::NotEqual, temp, ImmGCPtr(shape), lir->snapshot());
-            else
-                masm.branchPtr(Assembler::Equal, temp, ImmGCPtr(shape), &done);
-        }
-    }
+        Label next;
+        GuardReceiver(masm, receiver, obj, temp, &next, /* checkNullExpando = */ true);
 
-    if (mir->numUnboxedGroups()) {
-        // The guard requires that unboxed objects not have expandos.
-        bailoutCmpPtr(Assembler::NotEqual, Address(obj, JSObject::offsetOfShape()),
-                      ImmWord(0), lir->snapshot());
-
-        masm.loadObjGroup(obj, temp);
-
-        for (size_t i = 0; i < mir->numUnboxedGroups(); i++) {
-            ObjectGroup* group = mir->getUnboxedGroup(i);
-            if (i == mir->numUnboxedGroups() - 1)
-                bailoutCmpPtr(Assembler::NotEqual, temp, ImmGCPtr(group), lir->snapshot());
-            else
-                masm.branchPtr(Assembler::Equal, temp, ImmGCPtr(group), &done);
+        if (i == mir->numReceivers() - 1) {
+            bailoutFrom(&next, lir->snapshot());
+        } else {
+            masm.jump(&done);
+            masm.bind(&next);
         }
     }
 
     masm.bind(&done);
+}
+
+void
+CodeGenerator::visitGuardUnboxedExpando(LGuardUnboxedExpando* lir)
+{
+    Label miss;
+
+    Register obj = ToRegister(lir->object());
+    masm.branchPtr(lir->mir()->requireExpando() ? Assembler::Equal : Assembler::NotEqual,
+                   Address(obj, UnboxedPlainObject::offsetOfExpando()), ImmWord(0), &miss);
+
+    bailoutFrom(&miss, lir->snapshot());
+}
+
+void
+CodeGenerator::visitLoadUnboxedExpando(LLoadUnboxedExpando* lir)
+{
+    Register obj = ToRegister(lir->object());
+    Register result = ToRegister(lir->getDef(0));
+
+    masm.loadPtr(Address(obj, UnboxedPlainObject::offsetOfExpando()), result);
 }
 
 void

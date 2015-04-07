@@ -258,8 +258,6 @@
 
         <activity android:name="org.mozilla.gecko.tabqueue.TabQueueDispatcher"
                   android:label="@MOZ_APP_DISPLAYNAME@"
-                  android:noHistory="true"
-                  android:excludeFromRecents="true"
                   android:launchMode="singleTask"
                   android:theme="@style/TabQueueActivity">
             <intent-filter>

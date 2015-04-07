@@ -260,6 +260,7 @@ nsInProcessTabChildGlobal::GetOwnerContent()
 nsresult
 nsInProcessTabChildGlobal::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
+  aVisitor.mForceContentDispatch = true;
   aVisitor.mCanHandle = true;
 
 #ifdef DEBUG

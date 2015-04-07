@@ -22,7 +22,7 @@ function hasGname(f, v, hasIt = true) {
 
 var x = "outer";
 
-setLazyParsingEnabled(false);
+setLazyParsingDisabled(true);
 {
     let x = "inner";
     eval("function g() { assertEq(x, 'inner');} g()");
@@ -43,7 +43,7 @@ eval(`
      }
      hasGname(g4(), 'x');
      `);
-setLazyParsingEnabled(true);
+setLazyParsingDisabled(false);
 
 {
     let x = "inner";
@@ -70,13 +70,13 @@ eval(`
      hasGname(h4(), 'x', false);
      `);
 
-setLazyParsingEnabled(false);
+setLazyParsingDisabled(true);
 with ({}) {
     let x = "inner";
     eval("function i() { assertEq(x, 'inner');} i()");
     eval("function i2() { (function nest() { assertEq(x, 'inner'); })(); } i2()");
 }
-setLazyParsingEnabled(true);
+setLazyParsingDisabled(false);
 
 with ({}) {
     let x = "inner";
@@ -84,13 +84,13 @@ with ({}) {
     eval("function j2() { (function nest() { assertEq(x, 'inner'); })(); } j2()");
 }
 
-setLazyParsingEnabled(false);
+setLazyParsingDisabled(true);
 (function () {
     var x = "inner";
     eval("function k() { assertEq(x, 'inner');} k()");
     eval("function k2() { (function nest() { assertEq(x, 'inner'); })(); } k2()");
 })();
-setLazyParsingEnabled(true);
+setLazyParsingDisabled(false);
 
 (function () {
     let x = "inner";
@@ -114,7 +114,7 @@ eval(`
      (function() { assertEq(y2, 6); })()
      `);
 
-setLazyParsingEnabled(false);
+setLazyParsingDisabled(true);
 
 var y3 = 5;
 eval(`
@@ -132,4 +132,4 @@ eval(`
      (function() { assertEq(y4, 6); })()
      `);
 
-setLazyParsingEnabled(true);
+setLazyParsingDisabled(false);

@@ -67,7 +67,12 @@ extern const char staticComponentType[];
 #endif
 ////////////////////////////////////////////////////////////////////////////////
 
+#if defined(MOZILLA_XPCOMRT_API)
+extern const mozilla::Module kXPCOMRTModule;
+extern const mozilla::Module kNeckoStandaloneModule;
+#else
 extern const mozilla::Module kXPCOMModule;
+#endif
 
 /**
  * This is a wrapper around mozilla::Mutex which provides runtime

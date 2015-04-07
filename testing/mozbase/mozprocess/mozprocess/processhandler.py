@@ -95,6 +95,16 @@ class ProcessHandlerMixin(object):
                     os.setpgid(0, 0)
                 preexec_fn = setpgidfn
 
+            if isinstance(env, dict):
+                tmp_env = {}
+                for k, v in env.iteritems():
+                    if isinstance(k, bytes):
+                        k = k.decode(sys.getfilesystemencoding() or 'utf-8', 'replace')
+                    if isinstance(v, bytes):
+                        v = v.decode(sys.getfilesystemencoding() or 'utf-8', 'replace')
+                    tmp_env[k] = v
+                env = tmp_env
+
             try:
                 subprocess.Popen.__init__(self, args, bufsize, executable,
                                           stdin, stdout, stderr,

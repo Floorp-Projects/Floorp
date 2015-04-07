@@ -1213,11 +1213,14 @@ IonTrackedOptimizationsTypeInfo::ForEachOpAdapter::readType(const IonTrackedType
             return;
         }
 
-        PutEscapedString(buf, bufsize, fun->displayAtom(), 0);
+        if (fun->displayAtom())
+            PutEscapedString(buf, bufsize, fun->displayAtom(), 0);
         const char* filename;
         unsigned lineno;
         InterpretedFunctionFilenameAndLineNumber(fun, &filename, &lineno);
-        op_.readType(tracked.constructor ? "constructor" : "function", buf, filename, lineno);
+        op_.readType(tracked.constructor ? "constructor" : "function",
+                     fun->displayAtom() ? buf : nullptr,
+                     filename, lineno);
         return;
     }
 

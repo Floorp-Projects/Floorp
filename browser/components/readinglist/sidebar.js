@@ -469,7 +469,10 @@ let RLSidebar = {
       this.activeItem = null;
     } else {
       ReadingList.itemForURL(msg.url).then(item => {
-        this.activeItem = this.itemNodesById.get(item.id);
+        let node;
+        if (item && (node = this.itemNodesById.get(item.id))) {
+          this.activeItem = node;
+        }
       });
     }
   }

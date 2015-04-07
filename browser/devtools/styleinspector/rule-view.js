@@ -3063,6 +3063,10 @@ function createMenuItem(aMenu, aAttributes) {
   item.setAttribute("accesskey", _strings.GetStringFromName(aAttributes.accesskey));
   item.addEventListener("command", aAttributes.command);
 
+  if (aAttributes.type) {
+    item.setAttribute("type", aAttributes.type);
+  }
+
   aMenu.appendChild(item);
 
   return item;

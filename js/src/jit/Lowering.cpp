@@ -3270,6 +3270,24 @@ LIRGenerator::visitGuardReceiverPolymorphic(MGuardReceiverPolymorphic* ins)
 }
 
 void
+LIRGenerator::visitGuardUnboxedExpando(MGuardUnboxedExpando* ins)
+{
+    LGuardUnboxedExpando* guard =
+        new(alloc()) LGuardUnboxedExpando(useRegister(ins->obj()));
+    assignSnapshot(guard, ins->bailoutKind());
+    add(guard, ins);
+    redefine(ins, ins->obj());
+}
+
+void
+LIRGenerator::visitLoadUnboxedExpando(MLoadUnboxedExpando* ins)
+{
+    LLoadUnboxedExpando* lir =
+        new(alloc()) LLoadUnboxedExpando(useRegisterAtStart(ins->object()));
+    define(lir, ins);
+}
+
+void
 LIRGenerator::visitAssertRange(MAssertRange* ins)
 {
     MDefinition* input = ins->input();
