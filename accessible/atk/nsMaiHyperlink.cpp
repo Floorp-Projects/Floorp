@@ -121,28 +121,11 @@ MaiHyperlink::GetAtkHyperlink(void)
     NS_ASSERTION(mMaiAtkHyperlink, "OUT OF MEMORY");
     NS_ENSURE_TRUE(mMaiAtkHyperlink, nullptr);
 
-    /* be sure to initialize it with "this" */
-    MaiHyperlink::Initialize(mMaiAtkHyperlink, this);
+    MAI_ATK_HYPERLINK(mMaiAtkHyperlink)->maiHyperlink = this;
 
     return mMaiAtkHyperlink;
 }
 
-/* static */
-
-/* remember to call this static function when a MaiAtkHyperlink
- * is created
- */
-
-nsresult
-MaiHyperlink::Initialize(AtkHyperlink *aObj, MaiHyperlink *aHyperlink)
-{
-    NS_ENSURE_ARG(MAI_IS_ATK_HYPERLINK(aObj));
-    NS_ENSURE_ARG(aHyperlink);
-
-    /* initialize hyperlink */
-    MAI_ATK_HYPERLINK(aObj)->maiHyperlink = aHyperlink;
-    return NS_OK;
-}
 
 /* static functions for ATK callbacks */
 
