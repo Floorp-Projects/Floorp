@@ -28,6 +28,7 @@
 #include "nsStyleTransformMatrix.h"
 #include "gfxMatrix.h"
 #include "gfxPrefs.h"
+#include "gfxVR.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
 #include "nsLayoutUtils.h"
