@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>white-space: nowrap; regressed in Firefox 29</title>
+<style>
+.tagcloud { width: 30em; padding: 1px; font-family: monospace; border: 1px solid blue; }
+.tagcloud > li { display: inline; white-space: nowrap; }
+.tagcloud > li.weight_1 { font-style: italic; }
+.tagcloud > li.weight_5 { font-size: 150%; }
+</style>
+</head>
+<body>
+<ul class="tagcloud">
+<li class="weight_1">short string</li>
+<li class="weight_1">short string</li>
+<li class="weight_1">short string</li>
+<li class="weight_5">why doesn't this move to the next line?</li>
+</ul>
+</body>
+</html>
