@@ -10,6 +10,11 @@
 #define nsRubyBaseContainerFrame_h___
 
 #include "nsContainerFrame.h"
+#include "nsRubyTextContainerFrame.h"
+#include "nsRubyBaseFrame.h"
+#include "nsRubyTextFrame.h"
+
+#define RTC_ARRAY_SIZE 1
 
 /**
  * Factory function.
@@ -63,6 +68,10 @@ protected:
     NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
   explicit nsRubyBaseContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
+
+  typedef nsTArray<nsRubyTextContainerFrame*> TextContainerArray;
+  typedef nsAutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE> AutoTextContainerArray;
+  void GetTextContainers(TextContainerArray& aTextContainers);
 
   struct ReflowState;
   nscoord ReflowColumns(const ReflowState& aReflowState,
