@@ -6128,6 +6128,38 @@ class LGuardReceiverPolymorphic : public LInstructionHelper<0, 1, 1>
     }
 };
 
+class LGuardUnboxedExpando : public LInstructionHelper<0, 1, 0>
+{
+  public:
+    LIR_HEADER(GuardUnboxedExpando)
+
+    explicit LGuardUnboxedExpando(const LAllocation& in) {
+        setOperand(0, in);
+    }
+    const LAllocation* object() {
+        return getOperand(0);
+    }
+    const MGuardUnboxedExpando* mir() const {
+        return mir_->toGuardUnboxedExpando();
+    }
+};
+
+class LLoadUnboxedExpando : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(LoadUnboxedExpando)
+
+    explicit LLoadUnboxedExpando(const LAllocation& in) {
+        setOperand(0, in);
+    }
+    const LAllocation* object() {
+        return getOperand(0);
+    }
+    const MLoadUnboxedExpando* mir() const {
+        return mir_->toLoadUnboxedExpando();
+    }
+};
+
 // Guard that a value is in a TypeSet.
 class LTypeBarrierV : public LInstructionHelper<0, BOX_PIECES, 1>
 {

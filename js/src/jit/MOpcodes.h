@@ -166,6 +166,8 @@ namespace jit {
     _(GuardObjectGroup)                                                     \
     _(GuardObjectIdentity)                                                  \
     _(GuardClass)                                                           \
+    _(GuardUnboxedExpando)                                                  \
+    _(LoadUnboxedExpando)                                                   \
     _(ArrayLength)                                                          \
     _(SetArrayLength)                                                       \
     _(TypedArrayLength)                                                     \

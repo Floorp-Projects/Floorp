@@ -401,13 +401,11 @@ class IonBuilder
     MDefinition* addMaybeCopyElementsForWrite(MDefinition* object);
     MInstruction* addBoundsCheck(MDefinition* index, MDefinition* length);
     MInstruction* addShapeGuard(MDefinition* obj, Shape* const shape, BailoutKind bailoutKind);
-    MInstruction* addGroupGuard(MDefinition* obj, ObjectGroup* group, BailoutKind bailoutKind,
-                                bool checkUnboxedExpando = false);
+    MInstruction* addGroupGuard(MDefinition* obj, ObjectGroup* group, BailoutKind bailoutKind);
+    MInstruction* addUnboxedExpandoGuard(MDefinition* obj, bool hasExpando, BailoutKind bailoutKind);
 
     MInstruction*
-    addGuardReceiverPolymorphic(MDefinition* obj,
-                                const BaselineInspector::ShapeVector& shapes,
-                                const BaselineInspector::ObjectGroupVector& unboxedGroups);
+    addGuardReceiverPolymorphic(MDefinition* obj, const BaselineInspector::ReceiverVector& receivers);
 
     MDefinition* convertShiftToMaskForStaticTypedArray(MDefinition* id,
                                                        Scalar::Type viewType);
@@ -921,8 +919,8 @@ class IonBuilder
 
     MDefinition*
     addShapeGuardsForGetterSetter(MDefinition* obj, JSObject* holder, Shape* holderShape,
-                                  const BaselineInspector::ShapeVector& receiverShapes,
-                                  const BaselineInspector::ObjectGroupVector& receiverGroups,
+                                  const BaselineInspector::ReceiverVector& receivers,
+                                  const BaselineInspector::ObjectGroupVector& convertUnboxedGroups,
                                   bool isOwnProperty);
 
     bool annotateGetPropertyCache(MDefinition* obj, MGetPropertyCache* getPropCache,
@@ -946,8 +944,7 @@ class IonBuilder
                                        MDefinition* value);
     bool freezePropTypeSets(TemporaryTypeSet* types,
                             JSObject* foundProto, PropertyName* name);
-    bool canInlinePropertyOpShapes(const BaselineInspector::ShapeVector& nativeShapes,
-                                   const BaselineInspector::ObjectGroupVector& unboxedGroups);
+    bool canInlinePropertyOpShapes(const BaselineInspector::ReceiverVector& receivers);
 
     TemporaryTypeSet* bytecodeTypes(jsbytecode* pc);
 
