@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Test for intrinsic sizing of float around contents with border</title>
+    <style>
+      body { font-family: sans-serif; line-height: 1.4em; }
+      .h, .v-lr, .v-rl { float: left; border: 2px solid blue; margin: 1.5em; padding: 1px; }
+      .sw { text-orientation: sideways-right; }
+      span { display: inline-block; }
+      br { clear: both; }
+      .h { writing-mode: horizontal-tb; }
+      .v-lr { writing-mode: vertical-lr; }
+      .v-rl { writing-mode: vertical-rl; }
+      .i { inline-size: 1.5em; }
+      .u { vertical-align: 0.75em; }
+      .d { vertical-align: -0.75em; }
+    </style>
+  </head>
+  <body>
+    <p>In each case, the blue border should neatly enclose the text.</p>
+    <div class="h">
+      <span>12<span class="i"></span><b>33</b>21</span>
+    </div>
+    <div class="h">
+      <span>12<b>33</b><span class="i"></span>21</span>
+    </div>
+    <div class="h">
+      <span>12<b>33</b>21</span>
+    </div>
+    <div class="h">
+      <span>12<b>33</b>21</span>
+    </div>
+    <br>
+    <div class="v-lr">
+      <span>12<span class="i"></span><b>33</b>21</span>
+    </div>
+    <div class="v-lr">
+      <span>12<b>33</b><span class="i"></span>21</span>
+    </div>
+    <div class="v-lr">
+      <span>12<b class="u">33</b>21</span>
+    </div>
+    <div class="v-lr">
+      <span>12<b class="d">33</b>21</span>
+    </div>
+    <div class="v-lr sw">
+      <span>12<b>33</b>21</span>
+    </div>
+    <div class="v-lr sw">
+      <span>12<b>33</b>21</span>
+    </div>
+    <br>
+    <div class="v-rl">
+      <span>12<span class="i"></span><b>33</b>21</span>
+    </div>
+    <div class="v-rl">
+      <span>12<b>33</b><span class="i"></span>21</span>
+    </div>
+    <div class="v-rl">
+      <span>12<b class="d">33</b>21</span>
+    </div>
+    <div class="v-rl">
+      <span>12<b class="u">33</b>21</span>
+    </div>
+    <div class="v-rl sw">
+      <span>12<b>33</b>21</span>
+    </div>
+    <div class="v-rl sw">
+      <span>12<b>33</b>21</span>
+    </div>
+  </body>
+</html>

@@ -147,6 +147,7 @@ CanLazilyParse(ExclusiveContext* cx, const ReadOnlyCompileOptions& options)
 {
     return options.canLazilyParse &&
            !options.hasPollutedGlobalScope &&
+           !cx->compartment()->options().disableLazyParsing() &&
            !cx->compartment()->options().discardSource() &&
            !options.sourceIsLazy;
 }

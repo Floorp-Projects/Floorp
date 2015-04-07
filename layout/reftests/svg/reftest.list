@@ -386,6 +386,7 @@ random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) == tspan-rotate-06.svg tspa
 == viewBox-and-pattern-01.svg pass.svg
 == viewBox-and-pattern-02.svg pass.svg
 == viewBox-and-pattern-03.svg pass.svg
+== viewBox-and-pattern-04.svg pass.svg
 == viewBox-invalid-01.svg pass.svg
 == viewBox-valid-01.svg pass.svg
 == viewBox-valid-02.xhtml pass.svg

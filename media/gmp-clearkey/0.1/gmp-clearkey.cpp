@@ -1,6 +1,18 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/*
+ * Copyright 2015, Mozilla Foundation and contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include <assert.h>
 #include <stdio.h>
@@ -9,12 +21,17 @@
 #include "ClearKeySessionManager.h"
 #include "gmp-api/gmp-decryption.h"
 #include "gmp-api/gmp-platform.h"
-#include "mozilla/Attributes.h"
 
 #if defined(ENABLE_WMF)
 #include "WMFUtils.h"
 #include "AudioDecoder.h"
 #include "VideoDecoder.h"
+#endif
+
+#if defined(WIN32)
+#define GMP_EXPORT __declspec(dllexport)
+#else
+#define GMP_EXPORT __attribute__((visibility("default")))
 #endif
 
 static GMPPlatformAPI* sPlatform = nullptr;
@@ -26,14 +43,14 @@ GetPlatform()
 
 extern "C" {
 
-MOZ_EXPORT GMPErr
+GMP_EXPORT GMPErr
 GMPInit(GMPPlatformAPI* aPlatformAPI)
 {
   sPlatform = aPlatformAPI;
   return GMPNoErr;
 }
 
-MOZ_EXPORT GMPErr
+GMP_EXPORT GMPErr
 GMPGetAPI(const char* aApiName, void* aHostAPI, void** aPluginAPI)
 {
   CK_LOGD("ClearKey GMPGetAPI |%s|", aApiName);
@@ -58,7 +75,7 @@ GMPGetAPI(const char* aApiName, void* aHostAPI, void** aPluginAPI)
   return *aPluginAPI ? GMPNoErr : GMPNotImplementedErr;
 }
 
-MOZ_EXPORT GMPErr
+GMP_EXPORT GMPErr
 GMPShutdown(void)
 {
   CK_LOGD("ClearKey GMPShutdown");

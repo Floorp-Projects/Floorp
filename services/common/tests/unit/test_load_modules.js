@@ -36,7 +36,15 @@ const non_android_healthreport_test_modules = [
 function expectImportsToSucceed(mm, base=MODULE_BASE) {
   for each (let m in mm) {
     let resource = base + m;
-    Components.utils.import(resource, {});
+    let succeeded = false;
+    try {
+      Components.utils.import(resource, {});
+      succeeded = true;
+    } catch (e) {}
+
+    if (!succeeded) {
+      throw "Importing " + resource + " should have succeeded!";
+    }
   }
 }
 
@@ -50,26 +58,26 @@ function expectImportsToFail(mm, base=MODULE_BASE) {
     } catch (e) {}
 
     if (succeeded) {
-      throw "Importing " + m + " should have failed!";
+      throw "Importing " + resource + " should have failed!";
     }
   }
 }
 
 function run_test() {
   expectImportsToSucceed(shared_modules);
-  expectImportsToSucceed(shared_test_modules, base=TEST_BASE);
+  expectImportsToSucceed(shared_test_modules, TEST_BASE);
 
   if (AppConstants.platform != "android") {
     expectImportsToSucceed(non_android_modules);
-    expectImportsToSucceed(non_android_test_modules, base=TEST_BASE);
+    expectImportsToSucceed(non_android_test_modules, TEST_BASE);
     if (AppConstants.MOZ_SERVICES_HEALTHREPORT) {
       expectImportsToSucceed(non_android_healthreport_modules);
-      expectImportsToSucceed(non_android_healthreport_test_modules, base=TEST_BASE);
+      expectImportsToSucceed(non_android_healthreport_test_modules, TEST_BASE);
     }
   } else {
     expectImportsToFail(non_android_modules);
-    expectImportsToFail(non_android_test_modules, base=TEST_BASE);
+    expectImportsToFail(non_android_test_modules, TEST_BASE);
     expectImportsToFail(non_android_healthreport_modules);
-    expectImportsToFail(non_android_healthreport_test_modules, base=TEST_BASE);
+    expectImportsToFail(non_android_healthreport_test_modules, TEST_BASE);
   }
 }

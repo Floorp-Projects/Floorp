@@ -124,6 +124,7 @@ this.WebDriverError = function(msg) {
   Error.call(this, msg);
   this.name = "WebDriverError";
   this.message = msg;
+  this.status = "webdriver error";
   this.code = 500;  // overridden
 };
 WebDriverError.prototype = Object.create(Error.prototype);

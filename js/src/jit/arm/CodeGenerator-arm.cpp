@@ -1664,12 +1664,6 @@ CodeGeneratorARM::visitGuardObjectGroup(LGuardObjectGroup* guard)
     Register tmp = ToRegister(guard->tempInt());
     MOZ_ASSERT(obj != tmp);
 
-    if (guard->mir()->checkUnboxedExpando()) {
-        masm.ma_ldr(DTRAddr(obj, DtrOffImm(UnboxedPlainObject::offsetOfExpando())), tmp);
-        masm.ma_cmp(tmp, ImmWord(0));
-        bailoutIf(Assembler::NotEqual, guard->snapshot());
-    }
-
     masm.ma_ldr(DTRAddr(obj, DtrOffImm(JSObject::offsetOfGroup())), tmp);
     masm.ma_cmp(tmp, ImmGCPtr(guard->mir()->group()));
 
@@ -1963,6 +1957,27 @@ CodeGeneratorARM::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
 }
 
 void
+CodeGeneratorARM::visitAsmJSCompareExchangeCallout(LAsmJSCompareExchangeCallout* ins)
+{
+    const MAsmJSCompareExchangeHeap* mir = ins->mir();
+    Scalar::Type viewType = mir->accessType();
+    Register ptr = ToRegister(ins->ptr());
+    Register oldval = ToRegister(ins->oldval());
+    Register newval = ToRegister(ins->newval());
+
+    MOZ_ASSERT(ToRegister(ins->output()) == ReturnReg);
+
+    masm.setupAlignedABICall(4);
+    masm.ma_mov(Imm32(viewType), ScratchRegister);
+    masm.passABIArg(ScratchRegister);
+    masm.passABIArg(ptr);
+    masm.passABIArg(oldval);
+    masm.passABIArg(newval);
+
+    masm.callWithABI(AsmJSImm_AtomicCmpXchg);
+}
+
+void
 CodeGeneratorARM::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
 {
     MOZ_ASSERT(ins->mir()->hasUses());
@@ -2039,6 +2054,41 @@ CodeGeneratorARM::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEff
     if (rejoin.used()) {
         masm.bind(&rejoin);
         masm.append(AsmJSHeapAccess(maybeCmpOffset));
+    }
+}
+
+void
+CodeGeneratorARM::visitAsmJSAtomicBinopCallout(LAsmJSAtomicBinopCallout* ins)
+{
+    const MAsmJSAtomicBinopHeap* mir = ins->mir();
+    Scalar::Type viewType = mir->accessType();
+    Register ptr = ToRegister(ins->ptr());
+    Register value = ToRegister(ins->value());
+
+    masm.setupAlignedABICall(3);
+    masm.ma_mov(Imm32(viewType), ScratchRegister);
+    masm.passABIArg(ScratchRegister);
+    masm.passABIArg(ptr);
+    masm.passABIArg(value);
+
+    switch (mir->operation()) {
+      case AtomicFetchAddOp:
+        masm.callWithABI(AsmJSImm_AtomicFetchAdd);
+        break;
+      case AtomicFetchSubOp:
+        masm.callWithABI(AsmJSImm_AtomicFetchSub);
+        break;
+      case AtomicFetchAndOp:
+        masm.callWithABI(AsmJSImm_AtomicFetchAnd);
+        break;
+      case AtomicFetchOrOp:
+        masm.callWithABI(AsmJSImm_AtomicFetchOr);
+        break;
+      case AtomicFetchXorOp:
+        masm.callWithABI(AsmJSImm_AtomicFetchXor);
+        break;
+      default:
+        MOZ_CRASH("Unknown op");
     }
 }
 

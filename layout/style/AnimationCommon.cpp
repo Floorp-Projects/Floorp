@@ -136,9 +136,8 @@ CommonAnimationManager::NeedsRefresh() const
 
 AnimationPlayerCollection*
 CommonAnimationManager::GetAnimationsForCompositor(nsIContent* aContent,
-  nsIAtom* aElementProperty,
-  nsCSSProperty aProperty,
-  GetCompositorAnimationOptions aFlags)
+                                                   nsIAtom* aElementProperty,
+                                                   nsCSSProperty aProperty)
 {
   if (!aContent->MayHaveAnimations())
     return nullptr;
@@ -153,23 +152,7 @@ CommonAnimationManager::GetAnimationsForCompositor(nsIContent* aContent,
     return nullptr;
   }
 
-  if (!(aFlags & GetCompositorAnimationOptions::NotifyActiveLayerTracker)) {
-    return collection;
-  }
-
   // This animation can be done on the compositor.
-  // Mark the frame as active, in case we are able to throttle this animation.
-  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(collection->mElement);
-  if (frame) {
-    const auto& info = sLayerAnimationInfo;
-    for (size_t i = 0; i < ArrayLength(info); i++) {
-      if (aProperty == info[i].mProperty) {
-        ActiveLayerTracker::NotifyAnimated(frame, aProperty);
-        break;
-      }
-    }
-  }
-
   return collection;
 }
 

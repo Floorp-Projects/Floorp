@@ -1753,11 +1753,6 @@ CodeGeneratorMIPS::visitGuardObjectGroup(LGuardObjectGroup* guard)
     Register tmp = ToRegister(guard->tempInt());
     MOZ_ASSERT(obj != tmp);
 
-    if (guard->mir()->checkUnboxedExpando()) {
-        masm.loadPtr(Address(obj, UnboxedPlainObject::offsetOfExpando()), tmp);
-        bailoutCmpPtr(Assembler::NotEqual, tmp, ImmWord(0), guard->snapshot());
-    }
-
     masm.loadPtr(Address(obj, JSObject::offsetOfGroup()), tmp);
     Assembler::Condition cond = guard->mir()->bailOnEquality()
                                 ? Assembler::Equal
