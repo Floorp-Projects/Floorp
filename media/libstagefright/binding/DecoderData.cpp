@@ -8,7 +8,6 @@
 #include "mp4_demuxer/DecoderData.h"
 #include <media/stagefright/foundation/ABitReader.h>
 #include "media/stagefright/MetaData.h"
-#include "media/stagefright/MediaBuffer.h"
 #include "media/stagefright/MediaDefs.h"
 #include "media/stagefright/Utils.h"
 #include "mozilla/ArrayUtils.h"
@@ -198,8 +197,7 @@ VideoDecoderConfig::IsValid()
 }
 
 MP4Sample::MP4Sample()
-  : mMediaBuffer(nullptr)
-  , decode_timestamp(0)
+  : decode_timestamp(0)
   , composition_timestamp(0)
   , duration(0)
   , byte_offset(0)
@@ -232,26 +230,6 @@ MP4Sample::Clone() const
 
 MP4Sample::~MP4Sample()
 {
-  if (mMediaBuffer) {
-    mMediaBuffer->release();
-  }
-}
-
-void
-MP4Sample::Update(int64_t& aMediaTime)
-{
-  sp<MetaData> m = mMediaBuffer->meta_data();
-  // XXXbholley - Why don't we adjust decode_timestamp for aMediaTime?
-  // According to k17e, this code path is no longer used - we should probably remove it.
-  decode_timestamp = FindInt64(m, kKeyDecodingTime);
-  composition_timestamp = FindInt64(m, kKeyTime) - aMediaTime;
-  duration = FindInt64(m, kKeyDuration);
-  byte_offset = FindInt64(m, kKey64BitFileOffset);
-  is_sync_point = FindInt32(m, kKeyIsSyncFrame);
-  data = reinterpret_cast<uint8_t*>(mMediaBuffer->data());
-  size = mMediaBuffer->range_length();
-
-  crypto.Update(m);
 }
 
 bool
@@ -259,25 +237,14 @@ MP4Sample::Pad(size_t aPaddingBytes)
 {
   size_t newSize = size + aPaddingBytes;
 
-  // If the existing MediaBuffer has enough space then we just recycle it. If
-  // not then we copy to a new buffer.
-  uint8_t* newData = mMediaBuffer && newSize <= mMediaBuffer->size()
-                       ? data
-                       : new (fallible) uint8_t[newSize];
+  uint8_t* newData = new (fallible) uint8_t[newSize];
   if (!newData) {
     return false;
   }
 
   memset(newData + size, 0, aPaddingBytes);
-
-  if (newData != data) {
-    memcpy(newData, data, size);
-    extra_buffer = data = newData;
-    if (mMediaBuffer) {
-      mMediaBuffer->release();
-      mMediaBuffer = nullptr;
-    }
-  }
+  memcpy(newData, data, size);
+  extra_buffer = data = newData;
 
   return true;
 }
@@ -287,11 +254,7 @@ MP4Sample::Prepend(const uint8_t* aData, size_t aSize)
 {
   size_t newSize = size + aSize;
 
-  // If the existing MediaBuffer has enough space then we just recycle it. If
-  // not then we copy to a new buffer.
-  uint8_t* newData = mMediaBuffer && newSize <= mMediaBuffer->size()
-                       ? data
-                       : new (fallible) uint8_t[newSize];
+  uint8_t* newData = new (fallible) uint8_t[newSize];
   if (!newData) {
     return false;
   }
@@ -299,14 +262,7 @@ MP4Sample::Prepend(const uint8_t* aData, size_t aSize)
   memmove(newData + aSize, data, size);
   memmove(newData, aData, aSize);
   size = newSize;
-
-  if (newData != data) {
-    extra_buffer = data = newData;
-    if (mMediaBuffer) {
-      mMediaBuffer->release();
-      mMediaBuffer = nullptr;
-    }
-  }
+  extra_buffer = data = newData;
 
   return true;
 }
@@ -314,25 +270,14 @@ MP4Sample::Prepend(const uint8_t* aData, size_t aSize)
 bool
 MP4Sample::Replace(const uint8_t* aData, size_t aSize)
 {
-  // If the existing MediaBuffer has enough space then we just recycle it. If
-  // not then we copy to a new buffer.
-  uint8_t* newData = mMediaBuffer && aSize <= mMediaBuffer->size()
-                       ? data
-                       : new (fallible) uint8_t[aSize];
+  uint8_t* newData = new (fallible) uint8_t[aSize];
   if (!newData) {
     return false;
   }
 
   memcpy(newData, aData, aSize);
   size = aSize;
-
-  if (newData != data) {
-    extra_buffer = data = newData;
-    if (mMediaBuffer) {
-      mMediaBuffer->release();
-      mMediaBuffer = nullptr;
-    }
-  }
+  extra_buffer = data = newData;
 
   return true;
 }
