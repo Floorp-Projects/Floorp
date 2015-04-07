@@ -802,6 +802,7 @@ public:
 
     void Ensure(mozilla::TimeStamp& aTarget)
     {
+      MOZ_ASSERT(mSelf->OnTaskQueue());
       if (IsScheduled() && mTarget <= aTarget) {
         return;
       }
