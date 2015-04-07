@@ -107,15 +107,59 @@ function testBasicKeys() {
 }
 
 function testStar() {
+  function ensurePromiseRejected(promise) {
+    return promise
+      .then(function() {
+        ok(false, "Promise should be rejected");
+      }, function(err) {
+        is(err.name, "TypeError", "Attempting to store a Response with a Vary:* header must fail");
+      });
+  }
   var test;
-  return setupTest({"WhatToVary": "*", "Cookie": "foo=bar"})
-    .then(function(t) {
-      test = t;
-      // Ensure that searching with a different Cookie header with Vary:* succeeds.
-      return test.cache.match(new Request(requestURL, {headers: {"Cookie": "bar=baz"}}));
-    }).then(function(r) {
-      return checkResponse(r, test.response, test.responseText);
+  return new Promise(function(resolve, reject) {
+    var cache;
+    caches.open(name).then(function(c) {
+      cache = c;
+      Promise.all([
+        ensurePromiseRejected(
+          cache.add(new Request(requestURL + "1", {headers: {"WhatToVary": "*"}}))),
+        ensurePromiseRejected(
+          cache.addAll([
+            new Request(requestURL + "2", {headers: {"WhatToVary": "*"}}),
+            requestURL + "3",
+          ])),
+        ensurePromiseRejected(
+          fetch(new Request(requestURL + "4", {headers: {"WhatToVary": "*"}}))
+            .then(function(response) {
+              return cache.put(requestURL + "4", response);
+            })),
+        ensurePromiseRejected(
+          cache.add(new Request(requestURL + "5", {headers: {"WhatToVary": "*,User-Agent"}}))),
+        ensurePromiseRejected(
+          cache.addAll([
+            new Request(requestURL + "6", {headers: {"WhatToVary": "*,User-Agent"}}),
+            requestURL + "7",
+          ])),
+        ensurePromiseRejected(
+          fetch(new Request(requestURL + "8", {headers: {"WhatToVary": "*,User-Agent"}}))
+            .then(function(response) {
+              return cache.put(requestURL + "8", response);
+            })),
+        ensurePromiseRejected(
+          cache.add(new Request(requestURL + "9", {headers: {"WhatToVary": "User-Agent,*"}}))),
+        ensurePromiseRejected(
+          cache.addAll([
+            new Request(requestURL + "10", {headers: {"WhatToVary": "User-Agent,*"}}),
+            requestURL + "10",
+          ])),
+        ensurePromiseRejected(
+          fetch(new Request(requestURL + "11", {headers: {"WhatToVary": "User-Agent,*"}}))
+            .then(function(response) {
+              return cache.put(requestURL + "11", response);
+            })),
+      ]).then(reject, resolve);
     });
+  });
 }
 
 function testMatch() {
@@ -129,23 +173,6 @@ function testMatch() {
       is(typeof r, "undefined", "Searching for a request with a non-matching Cookie header should not succeed");
       // Ensure that searching with the same Cookie header succeeds.
       return test.cache.match(new Request(requestURL, {headers: {"Cookie": "foo=bar"}}));
-    }).then(function(r) {
-      return checkResponse(r, test.response, test.responseText);
-    });
-}
-
-function testStarAndAnotherHeader() {
-  var test;
-  return setupTest({"WhatToVary": "*,User-Agent"})
-    .then(function(t) {
-      test = t;
-      // Ensure that searching with a different User-Agent header fails.
-      return test.cache.match(new Request(requestURL, {headers: {"User-Agent": "MyUA"}}));
-    }).then(function(r) {
-      is(typeof r, "undefined", "Searching for a request with a non-matching User-Agent header should not succeed");
-      // Ensure that searching with a different User-Agent header but with ignoreVary succeeds.
-      return test.cache.match(new Request(requestURL, {headers: {"User-Agent": "MyUA"}}),
-                              {ignoreVary: true});
     }).then(function(r) {
       return checkResponse(r, test.response, test.responseText);
     });
@@ -285,6 +312,8 @@ function testMultipleCacheEntries() {
 function step(testPromise) {
   return testPromise.then(function() {
     caches.delete(name);
+  }, function() {
+    caches.delete(name);
   });
 }
 
@@ -294,8 +323,6 @@ step(testBasics()).then(function() {
   return step(testStar());
 }).then(function() {
   return step(testMatch());
-}).then(function() {
-  return step(testStarAndAnotherHeader());
 }).then(function() {
   return step(testInvalidHeaderName());
 }).then(function() {
