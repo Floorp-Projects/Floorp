@@ -109,6 +109,8 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+# NOTE! XP_LINUX has to go after MOZ_WIDGET_ANDROID otherwise Android
+# builds will be misidentified as linux.
   platform:
 #ifdef MOZ_WIDGET_GTK
   "linux",
