@@ -30,6 +30,7 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 Cu.importGlobalProperties(["URL"]);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -54,14 +55,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "History",
 // refresh instead.
 const MIN_TRANSACTIONS_FOR_BATCH = 5;
 
-#ifdef XP_MACOSX
-// On Mac OSX, the transferable system converts "\r\n" to "\n\n", where we
-// really just want "\n".
-const NEWLINE= "\n";
-#else
-// On other platforms, the transferable system converts "\r\n" to "\n".
-const NEWLINE = "\r\n";
-#endif
+// On Mac OSX, the transferable system converts "\r\n" to "\n\n", where
+// we really just want "\n". On other platforms, the transferable system
+// converts "\r\n" to "\n".
+const NEWLINE = AppConstants.platform == "macosx" ? "\n" : "\r\n";
 
 function QI_node(aNode, aIID) {
   var result = null;
