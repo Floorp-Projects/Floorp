@@ -227,7 +227,7 @@ public final class ReadingListHelper implements NativeEventListener {
             @Override
             public void run() {
                 readingListAccessor.removeReadingListItemWithURL(context.getContentResolver(), url);
-                showToast(R.string.page_removed, Toast.LENGTH_SHORT);
+                showToast(R.string.reading_list_removed, Toast.LENGTH_SHORT);
             }
         });
     }
