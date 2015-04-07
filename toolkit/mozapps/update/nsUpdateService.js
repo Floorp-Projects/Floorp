@@ -117,6 +117,10 @@ const FILESYSTEM_MOUNT_READWRITE_ERROR     = 43;
 const SERVICE_COULD_NOT_COPY_UPDATER       = 49;
 const SERVICE_STILL_APPLYING_TERMINATED    = 50;
 const SERVICE_STILL_APPLYING_NO_EXIT_CODE  = 51;
+const SERVICE_UPDATER_SIGN_CALC_PATH       = 52;
+const SERVICE_UPDATER_SIGN_REG_OPEN        = 53;
+const SERVICE_UPDATER_SIGN_REG_QUERY       = 54;
+const SERVICE_UPDATER_SIGN_REG_ENUM        = 55;
 const WRITE_ERROR_FILE_COPY                = 61;
 const WRITE_ERROR_DELETE_FILE              = 62;
 const WRITE_ERROR_OPEN_PATCH_FILE          = 63;
@@ -156,7 +160,11 @@ const SERVICE_ERRORS = [SERVICE_UPDATER_COULD_NOT_BE_STARTED,
                         SERVICE_INSTALLDIR_ERROR,
                         SERVICE_COULD_NOT_COPY_UPDATER,
                         SERVICE_STILL_APPLYING_TERMINATED,
-                        SERVICE_STILL_APPLYING_NO_EXIT_CODE];
+                        SERVICE_STILL_APPLYING_NO_EXIT_CODE,
+                        SERVICE_UPDATER_SIGN_CALC_PATH,
+                        SERVICE_UPDATER_SIGN_REG_OPEN,
+                        SERVICE_UPDATER_SIGN_REG_QUERY,
+                        SERVICE_UPDATER_SIGN_REG_ENUM];
 
 // Error codes 80 through 99 are reserved for nsUpdateService.js and are not
 // defined in common/errors.h
