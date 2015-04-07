@@ -341,7 +341,7 @@ nsMozIconURI::SetHost(const nsACString& aHost)
 }
 
 NS_IMETHODIMP
-nsMozIconURI::GetPort(int32_t *aPort)
+nsMozIconURI::GetPort(int32_t* aPort)
 {
   return NS_ERROR_FAILURE;
 }
@@ -379,7 +379,7 @@ nsMozIconURI::SetRef(const nsACString& aRef)
 }
 
 NS_IMETHODIMP
-nsMozIconURI::Equals(nsIURI *other, bool* result)
+nsMozIconURI::Equals(nsIURI* other, bool* result)
 {
   NS_ENSURE_ARG_POINTER(other);
   NS_PRECONDITION(result, "null pointer");
@@ -498,7 +498,7 @@ nsMozIconURI::SetIconURL(nsIURL* aFileUrl)
 }
 
 NS_IMETHODIMP
-nsMozIconURI::GetImageSize(uint32_t * aImageSize)
+nsMozIconURI::GetImageSize(uint32_t* aImageSize)
               // measured by # of pixels in a row. defaults to 16.
 {
   *aImageSize = mSize;

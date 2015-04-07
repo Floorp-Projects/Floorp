@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsIconChannel_h_
-#define nsIconChannel_h_
+#ifndef mozilla_image_encoders_icon_qt_nsIconChannel_h
+#define mozilla_image_encoders_icon_qt_nsIconChannel_h
 
 #include "mozilla/Attributes.h"
 
@@ -37,4 +37,4 @@ class nsIconChannel final : public nsIChannel {
     nsCOMPtr<nsIChannel> mRealChannel;
 };
 
-#endif
+#endif // mozilla_image_encoders_icon_qt_nsIconChannel_h

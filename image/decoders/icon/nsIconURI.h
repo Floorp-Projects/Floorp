@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsMozIconURI_h__
-#define nsMozIconURI_h__
+#ifndef mozilla_image_decoders_icon_nsIconURI_h
+#define mozilla_image_decoders_icon_nsIconURI_h
 
 #include "nsIIconURI.h"
 #include "nsCOMPtr.h"
@@ -40,4 +40,4 @@ protected:
                        // kStateStrings
 };
 
-#endif // nsMozIconURI_h__
+#endif // mozilla_image_decoders_icon_nsIconURI_h
