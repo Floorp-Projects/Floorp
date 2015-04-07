@@ -1377,7 +1377,7 @@ BaselineCompiler::emit_JSOP_OBJECT()
 
         prepareVMCall();
 
-        pushArg(ImmWord(js::MaybeSingletonObject));
+        pushArg(ImmWord(TenuredObject));
         pushArg(ImmGCPtr(obj));
 
         if (!callVM(DeepCloneObjectLiteralInfo))
