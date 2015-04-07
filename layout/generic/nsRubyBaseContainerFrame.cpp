@@ -153,8 +153,7 @@ CalculateColumnPrefISize(nsRenderingContext* aRenderingContext,
 nsRubyBaseContainerFrame::AddInlineMinISize(
   nsRenderingContext *aRenderingContext, nsIFrame::InlineMinISizeData *aData)
 {
-  AutoTextContainerArray textContainers;
-  GetTextContainers(textContainers);
+  AutoRubyTextContainerArray textContainers(this);
 
   for (uint32_t i = 0, iend = textContainers.Length(); i < iend; i++) {
     if (textContainers[i]->IsSpanContainer()) {
@@ -202,8 +201,7 @@ nsRubyBaseContainerFrame::AddInlineMinISize(
 nsRubyBaseContainerFrame::AddInlinePrefISize(
   nsRenderingContext *aRenderingContext, nsIFrame::InlinePrefISizeData *aData)
 {
-  AutoTextContainerArray textContainers;
-  GetTextContainers(textContainers);
+  AutoRubyTextContainerArray textContainers(this);
 
   nscoord sum = 0;
   for (nsIFrame* frame = this; frame; frame = frame->GetNextInFlow()) {
@@ -233,15 +231,6 @@ nsRubyBaseContainerFrame::IsFrameOfType(uint32_t aFlags) const
   }
   return nsContainerFrame::IsFrameOfType(aFlags &
          ~(nsIFrame::eLineParticipant));
-}
-
-void
-nsRubyBaseContainerFrame::GetTextContainers(TextContainerArray& aTextContainers)
-{
-  MOZ_ASSERT(aTextContainers.IsEmpty());
-  for (RubyTextContainerIterator iter(this); !iter.AtEnd(); iter.Next()) {
-    aTextContainers.AppendElement(iter.GetTextContainer());
-  }
 }
 
 /* virtual */ bool
@@ -275,7 +264,7 @@ struct nsRubyBaseContainerFrame::ReflowState
 {
   bool mAllowInitialLineBreak;
   bool mAllowLineBreak;
-  const TextContainerArray& mTextContainers;
+  const AutoRubyTextContainerArray& mTextContainers;
   const nsHTMLReflowState& mBaseReflowState;
   const nsTArray<UniquePtr<nsHTMLReflowState>>& mTextReflowStates;
 };
@@ -298,11 +287,9 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     return;
   }
 
-  AutoTextContainerArray textContainers;
-  GetTextContainers(textContainers);
-
   MoveOverflowToChildList();
   // Ask text containers to drain overflows
+  AutoRubyTextContainerArray textContainers(this);
   const uint32_t rtcCount = textContainers.Length();
   for (uint32_t i = 0; i < rtcCount; i++) {
     textContainers[i]->MoveOverflowToChildList();
@@ -441,10 +428,10 @@ struct MOZ_STACK_CLASS nsRubyBaseContainerFrame::PullFrameState
 {
   ContinuationTraversingState mBase;
   nsAutoTArray<ContinuationTraversingState, RTC_ARRAY_SIZE> mTexts;
-  const TextContainerArray& mTextContainers;
+  const AutoRubyTextContainerArray& mTextContainers;
 
   PullFrameState(nsRubyBaseContainerFrame* aBaseContainer,
-                 const TextContainerArray& aTextContainers);
+                 const AutoRubyTextContainerArray& aTextContainers);
 };
 
 nscoord
@@ -695,7 +682,7 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
 
 nsRubyBaseContainerFrame::PullFrameState::PullFrameState(
     nsRubyBaseContainerFrame* aBaseContainer,
-    const TextContainerArray& aTextContainers)
+    const AutoRubyTextContainerArray& aTextContainers)
   : mBase(aBaseContainer)
   , mTextContainers(aTextContainers)
 {
@@ -711,7 +698,8 @@ nsRubyBaseContainerFrame::PullOneColumn(nsLineLayout* aLineLayout,
                                         RubyColumn& aColumn,
                                         bool& aIsComplete)
 {
-  const TextContainerArray& textContainers = aPullFrameState.mTextContainers;
+  const AutoRubyTextContainerArray& textContainers =
+    aPullFrameState.mTextContainers;
   const uint32_t rtcCount = textContainers.Length();
 
   nsIFrame* nextBase = GetNextInFlowChild(aPullFrameState.mBase);

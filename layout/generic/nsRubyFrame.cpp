@@ -177,10 +177,7 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
   NS_ASSERTION(!rubyWM.IsOrthogonalTo(lineWM),
                "Ruby frame writing-mode shouldn't be orthogonal to its line");
 
-  nsAutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE> textContainers;
-  for (RubyTextContainerIterator iter(aBaseContainer); !iter.AtEnd(); iter.Next()) {
-    textContainers.AppendElement(iter.GetTextContainer());
-  }
+  AutoRubyTextContainerArray textContainers(aBaseContainer);
   const uint32_t rtcCount = textContainers.Length();
 
   nsHTMLReflowMetrics baseMetrics(aReflowState);
