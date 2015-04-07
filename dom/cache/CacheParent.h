@@ -70,7 +70,7 @@ private:
 
   // FetchPut::Listener methods
   virtual void OnFetchPut(FetchPut* aFetchPut, RequestId aRequestId,
-                          nsresult aRv) override;
+                          const mozilla::ErrorResult& aRv) override;
 
   already_AddRefed<nsIInputStream>
   DeserializeCacheStream(const PCacheReadStreamOrVoid& aStreamOrVoid);
