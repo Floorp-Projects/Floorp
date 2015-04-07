@@ -34,6 +34,21 @@ AbstractThreadImpl<nsIThread>::IsCurrentThreadIn()
   return in;
 }
 
+void
+AbstractThread::MaybeTailDispatch(already_AddRefed<nsIRunnable> aRunnable,
+                                  bool aAssertDispatchSuccess)
+{
+  MediaTaskQueue* currentQueue = MediaTaskQueue::GetCurrentQueue();
+  if (currentQueue && currentQueue->RequiresTailDispatch()) {
+    currentQueue->TailDispatcher().AddTask(this, Move(aRunnable), aAssertDispatchSuccess);
+  } else {
+    nsresult rv = Dispatch(Move(aRunnable));
+    MOZ_DIAGNOSTIC_ASSERT(!aAssertDispatchSuccess || NS_SUCCEEDED(rv));
+    unused << rv;
+  }
+}
+
+
 AbstractThread*
 AbstractThread::MainThread()
 {

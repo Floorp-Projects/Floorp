@@ -47,6 +47,8 @@ using namespace mozilla::layers;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
+#define NS_DispatchToMainThread(...) CompileError_UseTailDispatchInstead
+
 // avoid redefined macro in unified build
 #undef DECODER_LOG
 #undef VERBOSE_LOG
@@ -252,7 +254,7 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   // Set up our task queue.
   RefPtr<SharedThreadPool> pool(GetMediaThreadPool());
   MOZ_DIAGNOSTIC_ASSERT(pool);
-  mTaskQueue = new MediaTaskQueue(pool.forget());
+  mTaskQueue = new MediaTaskQueue(pool.forget(), /* aAssertTailDispatch = */ true);
 
   static bool sPrefCacheInit = false;
   if (!sPrefCacheInit) {
@@ -862,10 +864,12 @@ MediaDecoderStateMachine::OnNotDecoded(MediaData::Type aType,
     MOZ_ASSERT(mReader->IsWaitForDataSupported(),
                "Readers that send WAITING_FOR_DATA need to implement WaitForData");
     WaitRequestRef(aType).Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
-                                               &MediaDecoderReader::WaitForData, aType)
+                                               &MediaDecoderReader::WaitForData, aType,
+                                               TailDispatcher())
       ->RefableThen(TaskQueue(), __func__, this,
                     &MediaDecoderStateMachine::OnWaitForDataResolved,
-                    &MediaDecoderStateMachine::OnWaitForDataRejected));
+                    &MediaDecoderStateMachine::OnWaitForDataRejected,
+                    TailDispatcher()));
     return;
   }
 
@@ -1083,12 +1087,9 @@ MediaDecoderStateMachine::CheckIfSeekComplete()
 
   if (audioSeekComplete && videoSeekComplete) {
     mDecodeToSeekTarget = false;
-    RefPtr<nsIRunnable> task(
+    nsCOMPtr<nsIRunnable> task(
       NS_NewRunnableMethod(this, &MediaDecoderStateMachine::SeekCompleted));
-    nsresult rv = TaskQueue()->Dispatch(task);
-    if (NS_FAILED(rv)) {
-      DecodeError();
-    }
+    TailDispatch(TaskQueue(), task.forget());
   }
 }
 
@@ -1229,7 +1230,7 @@ void MediaDecoderStateMachine::UpdatePlaybackPositionInternal(int64_t aTime)
     mEndTime = aTime;
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(mDecoder, &MediaDecoder::DurationChanged);
-    NS_DispatchToMainThread(event);
+    TailDispatch(AbstractThread::MainThread(), event.forget());
   }
 }
 
@@ -1246,7 +1247,7 @@ void MediaDecoderStateMachine::UpdatePlaybackPosition(int64_t aTime)
         mDecoder,
         &MediaDecoder::PlaybackPositionChanged,
         MediaDecoderEventVisibility::Observable);
-    NS_DispatchToMainThread(event);
+    TailDispatch(AbstractThread::MainThread(), event.forget());
   }
 
   mMetadataManager.DispatchMetadataIfNeeded(mDecoder, aTime);
@@ -1409,7 +1410,7 @@ void MediaDecoderStateMachine::SetDuration(int64_t aDuration)
       // Queue seek to new end position.
       nsCOMPtr<nsIRunnable> task =
         new SeekRunnable(mDecoder, double(mEndTime) / USECS_PER_S);
-      NS_DispatchToMainThread(task);
+      AbstractThread::MainThread()->MaybeTailDispatch(task.forget());
     }
   }
 }
@@ -1423,7 +1424,7 @@ void MediaDecoderStateMachine::UpdateEstimatedDuration(int64_t aDuration)
     SetDuration(aDuration);
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(mDecoder, &MediaDecoder::DurationChanged);
-    NS_DispatchToMainThread(event);
+    AbstractThread::MainThread()->MaybeTailDispatch(event.forget());
   }
 }
 
@@ -1486,8 +1487,8 @@ void MediaDecoderStateMachine::SetDormant(bool aDormant)
       // back to MediaDecoder when we come out of dormant?
       nsRefPtr<MediaDecoder::SeekPromise> unused = mQueuedSeek.mPromise.Ensure(__func__);
     }
-    mPendingSeek.RejectIfExists(__func__);
-    mCurrentSeek.RejectIfExists(__func__);
+    mPendingSeek.RejectIfExists(__func__, TailDispatcher());
+    mCurrentSeek.RejectIfExists(__func__, TailDispatcher());
     SetState(DECODER_STATE_DORMANT);
     if (IsPlaying()) {
       StopPlayback();
@@ -1501,9 +1502,8 @@ void MediaDecoderStateMachine::SetDormant(bool aDormant)
     // that run after ResetDecode are supposed to run with a clean slate. We rely
     // on that in other places (i.e. seeking), so it seems reasonable to rely on
     // it here as well.
-    DebugOnly<nsresult> rv = DecodeTaskQueue()->Dispatch(
-    NS_NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources));
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(mReader, &MediaDecoderReader::ReleaseMediaResources);
+    TailDispatch(DecodeTaskQueue(), r.forget());
     // There's now no possibility of mPendingWakeDecoder being needed again. Revoke it.
     mPendingWakeDecoder = nullptr;
     mDecoder->GetReentrantMonitor().NotifyAll();
@@ -1672,12 +1672,12 @@ MediaDecoderStateMachine::Seek(SeekTarget aTarget)
 
   if (mState < DECODER_STATE_DECODING) {
     DECODER_LOG("Seek() Not Enough Data to continue at this stage, queuing seek");
-    mQueuedSeek.RejectIfExists(__func__);
+    mQueuedSeek.RejectIfExists(__func__, TailDispatcher());
     mQueuedSeek.mTarget = aTarget;
     return mQueuedSeek.mPromise.Ensure(__func__);
   }
-  mQueuedSeek.RejectIfExists(__func__);
-  mPendingSeek.RejectIfExists(__func__);
+  mQueuedSeek.RejectIfExists(__func__, TailDispatcher());
+  mPendingSeek.RejectIfExists(__func__, TailDispatcher());
   mPendingSeek.mTarget = aTarget;
 
   DECODER_LOG("Changed state to SEEKING (to %lld)", mPendingSeek.mTarget.mTime);
@@ -1722,10 +1722,9 @@ MediaDecoderStateMachine::EnqueueDecodeFirstFrameTask()
   AssertCurrentThreadInMonitor();
   MOZ_ASSERT(mState == DECODER_STATE_DECODING_FIRSTFRAME);
 
-  RefPtr<nsIRunnable> task(
+  nsCOMPtr<nsIRunnable> task(
     NS_NewRunnableMethod(this, &MediaDecoderStateMachine::CallDecodeFirstFrame));
-  nsresult rv = TaskQueue()->Dispatch(task);
-  NS_ENSURE_SUCCESS(rv, rv);
+  TailDispatch(TaskQueue(), task.forget());
   return NS_OK;
 }
 
@@ -1797,12 +1796,9 @@ MediaDecoderStateMachine::DispatchDecodeTasksIfNeeded()
     DECODER_LOG("Dispatching SetReaderIdle() audioQueue=%lld videoQueue=%lld",
                 GetDecodedAudioDuration(),
                 VideoQueue().Duration());
-    RefPtr<nsIRunnable> event = NS_NewRunnableMethod(
+    nsCOMPtr<nsIRunnable> task = NS_NewRunnableMethod(
         this, &MediaDecoderStateMachine::SetReaderIdle);
-    nsresult rv = DecodeTaskQueue()->Dispatch(event.forget());
-    if (NS_FAILED(rv) && !IsShutdown()) {
-      DECODER_WARN("Failed to dispatch event to set decoder idle state");
-    }
+    TailDispatch(DecodeTaskQueue(), task.forget());
   }
 }
 
@@ -1812,7 +1808,7 @@ MediaDecoderStateMachine::InitiateSeek()
   MOZ_ASSERT(OnTaskQueue());
   AssertCurrentThreadInMonitor();
 
-  mCurrentSeek.RejectIfExists(__func__);
+  mCurrentSeek.RejectIfExists(__func__, TailDispatcher());
   mCurrentSeek.Steal(mPendingSeek);
 
   // Bound the seek time to be inside the media range.
@@ -1836,7 +1832,7 @@ MediaDecoderStateMachine::InitiateSeek()
                                                                &MediaDecoder::RecreateDecodedStream,
                                                                seekTime - mStartTime,
                                                                nullptr);
-    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+    TailDispatch(AbstractThread::MainThread(), event.forget());
   }
 
   mDropAudioUntilNextDiscontinuity = HasAudio();
@@ -1859,7 +1855,7 @@ MediaDecoderStateMachine::InitiateSeek()
         mDecoder,
         &MediaDecoder::SeekingStarted,
         mCurrentSeek.mTarget.mEventVisibility);
-  NS_DispatchToMainThread(startEvent, NS_DISPATCH_NORMAL);
+  TailDispatch(AbstractThread::MainThread(), startEvent.forget());
 
   // Reset our state machine and decoding pipeline before seeking.
   Reset();
@@ -1867,10 +1863,11 @@ MediaDecoderStateMachine::InitiateSeek()
   // Do the seek.
   mSeekRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
                                     &MediaDecoderReader::Seek, mCurrentSeek.mTarget.mTime,
-                                    GetEndTime())
+                                    GetEndTime(), TailDispatcher())
     ->RefableThen(TaskQueue(), __func__, this,
                   &MediaDecoderStateMachine::OnSeekCompleted,
-                  &MediaDecoderStateMachine::OnSeekFailed));
+                  &MediaDecoderStateMachine::OnSeekFailed,
+                  TailDispatcher()));
 }
 
 nsresult
@@ -1915,10 +1912,12 @@ MediaDecoderStateMachine::EnsureAudioDecodeTaskQueued()
              AudioQueue().GetSize(), mReader->SizeOfAudioQueueInFrames());
 
   mAudioDataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(),
-                                         __func__, &MediaDecoderReader::RequestAudioData)
+                                         __func__, &MediaDecoderReader::RequestAudioData,
+                                         TailDispatcher())
     ->RefableThen(TaskQueue(), __func__, this,
                   &MediaDecoderStateMachine::OnAudioDecoded,
-                  &MediaDecoderStateMachine::OnAudioNotDecoded));
+                  &MediaDecoderStateMachine::OnAudioNotDecoded,
+                  TailDispatcher()));
 
   return NS_OK;
 }
@@ -1975,10 +1974,11 @@ MediaDecoderStateMachine::EnsureVideoDecodeTaskQueued()
 
   mVideoDataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
                                          &MediaDecoderReader::RequestVideoData,
-                                         skipToNextKeyFrame, currentTime)
+                                         skipToNextKeyFrame, currentTime, TailDispatcher())
     ->RefableThen(TaskQueue(), __func__, this,
                   &MediaDecoderStateMachine::OnVideoDecoded,
-                  &MediaDecoderStateMachine::OnVideoNotDecoded));
+                  &MediaDecoderStateMachine::OnVideoNotDecoded,
+                  TailDispatcher()));
   return NS_OK;
 }
 
@@ -2113,7 +2113,7 @@ MediaDecoderStateMachine::DecodeError()
   // machine.
   nsCOMPtr<nsIRunnable> event =
     NS_NewRunnableMethod(mDecoder, &MediaDecoder::DecodeError);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  TailDispatch(AbstractThread::MainThread(), event.forget());
 }
 
 void
@@ -2184,7 +2184,7 @@ MediaDecoderStateMachine::EnqueueLoadedMetadataEvent()
                                     MediaDecoderEventVisibility::Observable;
   nsCOMPtr<nsIRunnable> metadataLoadedEvent =
     new MetadataEventRunner(mDecoder, info, mMetadataTags, visibility);
-  NS_DispatchToMainThread(metadataLoadedEvent, NS_DISPATCH_NORMAL);
+  TailDispatch(AbstractThread::MainThread(), metadataLoadedEvent.forget());
   mSentLoadedMetadataEvent = true;
 }
 
@@ -2199,7 +2199,7 @@ MediaDecoderStateMachine::EnqueueFirstFrameLoadedEvent()
                                     MediaDecoderEventVisibility::Observable;
   nsCOMPtr<nsIRunnable> event =
     new FirstFrameLoadedEventRunner(mDecoder, info, visibility);
-  NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+  TailDispatch(AbstractThread::MainThread(), event.forget());
   mSentFirstFrameLoadedEvent = true;
 }
 
@@ -2250,18 +2250,22 @@ MediaDecoderStateMachine::DecodeFirstFrame()
   } else {
     if (HasAudio()) {
       mAudioDataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(),
-                                             __func__, &MediaDecoderReader::RequestAudioData)
+                                             __func__, &MediaDecoderReader::RequestAudioData,
+                                             TailDispatcher())
         ->RefableThen(TaskQueue(), __func__, this,
                       &MediaDecoderStateMachine::OnAudioDecoded,
-                      &MediaDecoderStateMachine::OnAudioNotDecoded));
+                      &MediaDecoderStateMachine::OnAudioNotDecoded,
+                      TailDispatcher()));
     }
     if (HasVideo()) {
       mVideoDecodeStartTime = TimeStamp::Now();
       mVideoDataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(),
-                                             __func__, &MediaDecoderReader::RequestVideoData, false, int64_t(0))
+                                             __func__, &MediaDecoderReader::RequestVideoData, false,
+                                             int64_t(0), TailDispatcher())
         ->RefableThen(TaskQueue(), __func__, this,
                       &MediaDecoderStateMachine::OnVideoDecoded,
-                      &MediaDecoderStateMachine::OnVideoNotDecoded));
+                      &MediaDecoderStateMachine::OnVideoNotDecoded,
+                      TailDispatcher()));
     }
   }
 
@@ -2443,7 +2447,7 @@ MediaDecoderStateMachine::SeekCompleted()
   // if we need to buffer after the seek.
   mQuickBuffering = false;
 
-  mCurrentSeek.Resolve(mState == DECODER_STATE_COMPLETED, __func__);
+  mCurrentSeek.Resolve(mState == DECODER_STATE_COMPLETED, __func__, TailDispatcher());
   ScheduleStateMachine();
 
   if (video) {
@@ -2451,7 +2455,7 @@ MediaDecoderStateMachine::SeekCompleted()
     RenderVideoFrame(video, TimeStamp::Now());
     nsCOMPtr<nsIRunnable> event =
       NS_NewRunnableMethod(mDecoder, &MediaDecoder::Invalidate);
-    NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+    TailDispatch(AbstractThread::MainThread(), event.forget());
   }
 }
 
@@ -2524,7 +2528,8 @@ MediaDecoderStateMachine::FinishShutdown()
   TaskQueue()->BeginShutdown()->Then(AbstractThread::MainThread(), __func__,
                                      disposer.get(),
                                      &DecoderDisposer::OnTaskQueueShutdown,
-                                     &DecoderDisposer::OnTaskQueueShutdown);
+                                     &DecoderDisposer::OnTaskQueueShutdown,
+                                     TailDispatcher());
 }
 
 nsresult MediaDecoderStateMachine::RunStateMachine()
@@ -2550,9 +2555,9 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
     }
 
     case DECODER_STATE_SHUTDOWN: {
-      mQueuedSeek.RejectIfExists(__func__);
-      mPendingSeek.RejectIfExists(__func__);
-      mCurrentSeek.RejectIfExists(__func__);
+      mQueuedSeek.RejectIfExists(__func__, TailDispatcher());
+      mPendingSeek.RejectIfExists(__func__, TailDispatcher());
+      mCurrentSeek.RejectIfExists(__func__, TailDispatcher());
 
       if (IsPlaying()) {
         StopPlayback();
@@ -2562,10 +2567,9 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
 
       // Put a task in the decode queue to shutdown the reader.
       // the queue to spin down.
-      RefPtr<nsIRunnable> task;
-      task = NS_NewRunnableMethod(this, &MediaDecoderStateMachine::ShutdownReader);
-      DebugOnly<nsresult> rv = DecodeTaskQueue()->Dispatch(task);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
+      nsCOMPtr<nsIRunnable> task
+        = NS_NewRunnableMethod(this, &MediaDecoderStateMachine::ShutdownReader);
+      TailDispatch(DecodeTaskQueue(), task.forget());
 
       DECODER_LOG("Shutdown started");
       return NS_OK;
@@ -2590,10 +2594,11 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       if (!mMetadataRequest.Exists()) {
         DECODER_LOG("Dispatching CallReadMetadata");
         mMetadataRequest.Begin(ProxyMediaCall(DecodeTaskQueue(), mReader.get(), __func__,
-                                              &MediaDecoderReader::CallReadMetadata)
+                                              &MediaDecoderReader::CallReadMetadata, TailDispatcher())
           ->RefableThen(TaskQueue(), __func__, this,
                         &MediaDecoderStateMachine::OnMetadataRead,
-                        &MediaDecoderStateMachine::OnMetadataNotRead));
+                        &MediaDecoderStateMachine::OnMetadataNotRead,
+                        TailDispatcher()));
 
       }
       return NS_OK;
@@ -2715,7 +2720,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
 
         nsCOMPtr<nsIRunnable> event =
           NS_NewRunnableMethod(mDecoder, &MediaDecoder::PlaybackEnded);
-        NS_DispatchToMainThread(event, NS_DISPATCH_NORMAL);
+        TailDispatch(AbstractThread::MainThread(), event.forget());
 
         mSentPlaybackEndedEvent = true;
       }
@@ -2767,9 +2772,9 @@ MediaDecoderStateMachine::Reset()
   mVideoWaitRequest.DisconnectIfExists();
   mSeekRequest.DisconnectIfExists();
 
-  RefPtr<nsRunnable> resetTask =
+  nsCOMPtr<nsIRunnable> resetTask =
     NS_NewRunnableMethod(mReader, &MediaDecoderReader::ResetDecode);
-  DecodeTaskQueue()->Dispatch(resetTask);
+  TailDispatch(DecodeTaskQueue(), resetTask.forget());
 }
 
 void MediaDecoderStateMachine::RenderVideoFrame(VideoData* aData,
@@ -2799,7 +2804,9 @@ void MediaDecoderStateMachine::RenderVideoFrame(VideoData* aData,
           mReader->VideoIsHardwareAccelerated() &&
           frameStats.GetPresentedFrames() > 30 &&
           mCorruptFrames.mean() >= 1 /* 10% */) {
-        DecodeTaskQueue()->Dispatch(NS_NewRunnableMethod(mReader, &MediaDecoderReader::DisableHardwareAcceleration));
+        nsCOMPtr<nsIRunnable> task =
+          NS_NewRunnableMethod(mReader, &MediaDecoderReader::DisableHardwareAcceleration);
+        TailDispatch(DecodeTaskQueue(), task.forget());
         mDisabledHardwareAcceleration = true;
       }
     } else {
@@ -3202,7 +3209,7 @@ void MediaDecoderStateMachine::UpdateReadyState() {
    */
   nsCOMPtr<nsIRunnable> event;
   event = NS_NewRunnableMethod(mDecoder, &MediaDecoder::UpdateReadyStateForData);
-  NS_DispatchToMainThread(event);
+  AbstractThread::MainThread()->MaybeTailDispatch(event.forget());
 }
 
 bool MediaDecoderStateMachine::JustExitedQuickBuffering()
@@ -3293,11 +3300,9 @@ MediaDecoderStateMachine::ScheduleStateMachine() {
   }
   mDispatchedStateMachine = true;
 
-  RefPtr<nsIRunnable> task =
+  nsCOMPtr<nsIRunnable> task =
     NS_NewRunnableMethod(this, &MediaDecoderStateMachine::RunStateMachine);
-  nsresult rv = TaskQueue()->Dispatch(task);
-  MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
-  (void) rv;
+  TaskQueue()->MaybeTailDispatch(task.forget());
 }
 
 void
@@ -3476,3 +3481,5 @@ uint32_t MediaDecoderStateMachine::GetAmpleVideoFrames() const
 #undef VERBOSE_LOG
 #undef DECODER_WARN
 #undef DECODER_WARN_HELPER
+
+#undef NS_DispatchToMainThread
