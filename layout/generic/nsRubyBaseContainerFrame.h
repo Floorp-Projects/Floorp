@@ -9,7 +9,6 @@
 #ifndef nsRubyBaseContainerFrame_h___
 #define nsRubyBaseContainerFrame_h___
 
-#include "RubyUtils.h"
 #include "nsContainerFrame.h"
 
 /**
@@ -18,6 +17,10 @@
  */
 nsContainerFrame* NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
+
+namespace mozilla {
+struct RubyColumn;
+}
 
 class nsRubyBaseContainerFrame final : public nsContainerFrame
 {
@@ -60,10 +63,6 @@ protected:
     NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
                                  nsStyleContext* aContext);
   explicit nsRubyBaseContainerFrame(nsStyleContext* aContext) : nsContainerFrame(aContext) {}
-
-  typedef nsTArray<nsRubyTextContainerFrame*> TextContainerArray;
-  typedef nsAutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE> AutoTextContainerArray;
-  void GetTextContainers(TextContainerArray& aTextContainers);
 
   struct ReflowState;
   nscoord ReflowColumns(const ReflowState& aReflowState,

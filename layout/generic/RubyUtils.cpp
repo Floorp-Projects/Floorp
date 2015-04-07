@@ -9,6 +9,7 @@
 #include "nsRubyBaseFrame.h"
 #include "nsRubyTextFrame.h"
 #include "nsRubyBaseContainerFrame.h"
+#include "nsRubyTextContainerFrame.h"
 
 using namespace mozilla;
 
@@ -46,20 +47,13 @@ RubyUtils::GetReservedISize(nsIFrame* aFrame)
   return value.mCoord;
 }
 
-RubyTextContainerIterator::RubyTextContainerIterator(
+AutoRubyTextContainerArray::AutoRubyTextContainerArray(
   nsRubyBaseContainerFrame* aBaseContainer)
 {
-  mFrame = aBaseContainer;
-  Next();
-}
-
-void
-RubyTextContainerIterator::Next()
-{
-  MOZ_ASSERT(mFrame, "Should have checked AtEnd()");
-  mFrame = mFrame->GetNextSibling();
-  if (mFrame && mFrame->GetType() != nsGkAtoms::rubyTextContainerFrame) {
-    mFrame = nullptr;
+  for (nsIFrame* frame = aBaseContainer->GetNextSibling();
+       frame && frame->GetType() == nsGkAtoms::rubyTextContainerFrame;
+       frame = frame->GetNextSibling()) {
+    AppendElement(static_cast<nsRubyTextContainerFrame*>(frame));
   }
 }
 
@@ -84,7 +78,7 @@ RubySegmentEnumerator::Next()
 
 RubyColumnEnumerator::RubyColumnEnumerator(
   nsRubyBaseContainerFrame* aBaseContainer,
-  const nsTArray<nsRubyTextContainerFrame*>& aTextContainers)
+  const AutoRubyTextContainerArray& aTextContainers)
   : mAtIntraLevelWhitespace(false)
 {
   const uint32_t rtcCount = aTextContainers.Length();
