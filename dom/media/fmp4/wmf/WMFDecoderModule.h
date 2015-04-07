@@ -31,8 +31,7 @@ public:
                      FlushableMediaTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) override;
 
-  bool SupportsVideoMimeType(const nsACString& aMimeType) override;
-  bool SupportsAudioMimeType(const nsACString& aMimeType) override;
+  bool SupportsMimeType(const nsACString& aMimeType) override;
 
   virtual void DisableHardwareAcceleration() override
   {
@@ -40,6 +39,9 @@ public:
   }
 
   virtual bool SupportsSharedDecoders(const mp4_demuxer::VideoDecoderConfig& aConfig) const override;
+
+  virtual ConversionRequired
+  DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const override;
 
   // Accessors that report whether we have the required MFTs available
   // on the system to play various codecs. Windows Vista doesn't have the

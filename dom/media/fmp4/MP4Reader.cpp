@@ -344,7 +344,7 @@ MP4Reader::IsSupportedAudioMimeType(const nsACString& aMimeType)
 {
   return (aMimeType.EqualsLiteral("audio/mpeg") ||
           aMimeType.EqualsLiteral("audio/mp4a-latm")) &&
-         mPlatform->SupportsAudioMimeType(aMimeType);
+         mPlatform->SupportsMimeType(aMimeType);
 }
 
 bool
@@ -353,7 +353,7 @@ MP4Reader::IsSupportedVideoMimeType(const nsACString& aMimeType)
   return (aMimeType.EqualsLiteral("video/mp4") ||
           aMimeType.EqualsLiteral("video/avc") ||
           aMimeType.EqualsLiteral("video/x-vnd.on2.vp6")) &&
-         mPlatform->SupportsVideoMimeType(aMimeType);
+         mPlatform->SupportsMimeType(aMimeType);
 }
 
 void
@@ -514,9 +514,10 @@ MP4Reader::EnsureDecodersSetup()
     NS_ENSURE_TRUE(IsSupportedAudioMimeType(mDemuxer->AudioConfig().mime_type),
                    false);
 
-    mAudio.mDecoder = mPlatform->CreateAudioDecoder(mDemuxer->AudioConfig(),
-                                                    mAudio.mTaskQueue,
-                                                    mAudio.mCallback);
+    mAudio.mDecoder =
+      mPlatform->CreateDecoder(mDemuxer->AudioConfig(),
+                               mAudio.mTaskQueue,
+                               mAudio.mCallback);
     NS_ENSURE_TRUE(mAudio.mDecoder != nullptr, false);
     nsresult rv = mAudio.mDecoder->Init();
     NS_ENSURE_SUCCESS(rv, false);
@@ -535,11 +536,12 @@ MP4Reader::EnsureDecodersSetup()
                                                   mVideo.mTaskQueue,
                                                   mVideo.mCallback);
     } else {
-      mVideo.mDecoder = mPlatform->CreateVideoDecoder(mDemuxer->VideoConfig(),
-                                                      mLayersBackendType,
-                                                      mDecoder->GetImageContainer(),
-                                                      mVideo.mTaskQueue,
-                                                      mVideo.mCallback);
+      mVideo.mDecoder =
+        mPlatform->CreateDecoder(mDemuxer->VideoConfig(),
+                                 mVideo.mTaskQueue,
+                                 mVideo.mCallback,
+                                 mLayersBackendType,
+                                 mDecoder->GetImageContainer());
     }
     NS_ENSURE_TRUE(mVideo.mDecoder != nullptr, false);
     nsresult rv = mVideo.mDecoder->Init();

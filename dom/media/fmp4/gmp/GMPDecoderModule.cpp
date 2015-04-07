@@ -75,11 +75,15 @@ GMPDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aCon
   return wrapper.forget();
 }
 
-bool
-GMPDecoderModule::DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig)
+PlatformDecoderModule::ConversionRequired
+GMPDecoderModule::DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const
 {
   // GMPVideoCodecType::kGMPVideoCodecH264 specifies that encoded frames must be in AVCC format.
-  return true;
+  if (aConfig.IsVideoConfig()) {
+    return kNeedAVCC;
+  } else {
+    return kNeedNone;
+  }
 }
 
 } // namespace mozilla

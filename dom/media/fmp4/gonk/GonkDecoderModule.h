@@ -31,6 +31,9 @@ public:
                      MediaDataDecoderCallback* aCallback) override;
 
   static void Init();
+
+  virtual ConversionRequired
+  DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const override;
 };
 
 } // namespace mozilla
