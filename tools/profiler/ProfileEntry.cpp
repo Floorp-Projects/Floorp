@@ -153,7 +153,6 @@ void ProfileBuffer::deleteExpiredStoredMarkers() {
 void ProfileBuffer::reset() {
   mGeneration += 2;
   mReadPos = mWritePos = 0;
-  deleteExpiredStoredMarkers();
 }
 
 #define DYNAMIC_MAX_STRING 512
