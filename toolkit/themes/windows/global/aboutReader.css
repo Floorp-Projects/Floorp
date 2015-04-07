@@ -93,7 +93,7 @@ body.loaded {
   display: none;
   text-align: center;
   width: 100%;
-  font-size: 0.9rem;
+  font-size: 0.9em;
 }
 
 /* Header */
@@ -104,8 +104,8 @@ body.loaded {
 }
 
 .domain {
-  font-size: 0.9rem;
-  line-height: 1.33rem;
+  font-size: 0.9em;
+  line-height: 1.48em;
   padding-bottom: 4px;
   font-family: "Fira Sans", Helvetica, Arial, sans-serif;
   text-decoration: none;
@@ -123,16 +123,16 @@ body.loaded {
 }
 
 .header > h1 {
-  font-size: 1.33rem;
-  line-height: 1.66rem;
+  font-size: 1.33em;
+  line-height: 1.25em;
   width: 100%;
   margin: 30px 0;
   padding: 0;
 }
 
 .header > .credits {
-  font-size: 0.9rem;
-  line-height: 1.33rem;
+  font-size: 0.9em;
+  line-height: 1.48em;
   margin: 0 0 30px 0;
   padding: 0;
   font-style: italic;
@@ -140,10 +140,10 @@ body.loaded {
 
 /* Content */
 
-.content {
+#moz-reader-content {
   display: none;
-  font-size: 1rem;
-  line-height: 1.6rem;
+  font-size: 1em;
+  line-height: 1.6em;
 }
 
 .content h1,
@@ -152,19 +152,19 @@ body.loaded {
   font-weight: bold;
 }
 
-.content h1 {
-  font-size: 1.33rem;
-  line-height: 1.66rem;
+#moz-reader-content h1 {
+  font-size: 1.33em;
+  line-height: 1.25em;
 }
 
-.content h2 {
-  font-size: 1.1rem;
-  line-height: 1.66rem;
+#moz-reader-content h2 {
+  font-size: 1.1em;
+  line-height: 1.51em;
 }
 
-.content h3 {
-  font-size: 1rem;
-  line-height: 1.66rem;
+#moz-reader-content h3 {
+  font-size: 1em;
+  line-height: 1.66em;
 }
 
 .content a {
@@ -208,11 +208,11 @@ body.loaded {
   margin-right: auto;
 }
 
-.content .caption,
-.content .wp-caption-text,
-.content figcaption {
-  font-size: 0.9rem;
-  line-height: 1.33rem;
+#moz-reader-content .caption,
+#moz-reader-content .wp-caption-text,
+#moz-reader-content figcaption {
+  font-size: 0.9em;
+  line-height: 1.48em;
   font-style: italic;
 }
 
