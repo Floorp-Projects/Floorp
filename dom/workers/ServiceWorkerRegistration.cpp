@@ -7,6 +7,7 @@
 #include "ServiceWorkerRegistration.h"
 
 #include "mozilla/dom/Promise.h"
+#include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/ServiceWorkerRegistrationBinding.h"
 #include "mozilla/Services.h"
 #include "nsCycleCollectionParticipant.h"
@@ -284,9 +285,7 @@ public:
   {
     AssertIsOnMainThread();
 
-    AutoJSAPI api;
-    api.Init(mPromise->GetParentObject());
-    mPromise->MaybeReject(api.cx(), JS::UndefinedHandleValue);
+    mPromise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
     return NS_OK;
   }
 
@@ -297,6 +296,153 @@ private:
 
 NS_IMPL_ISUPPORTS(UnregisterCallback, nsIServiceWorkerUnregisterCallback)
 
+class FulfillUnregisterPromiseRunnable final : public WorkerRunnable
+{
+  nsRefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
+  Maybe<bool> mState;
+public:
+  FulfillUnregisterPromiseRunnable(WorkerPrivate* aWorkerPrivate,
+                                   PromiseWorkerProxy* aProxy,
+                                   Maybe<bool> aState)
+    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+    , mPromiseWorkerProxy(aProxy)
+    , mState(aState)
+  {
+    AssertIsOnMainThread();
+    MOZ_ASSERT(mPromiseWorkerProxy);
+  }
+
+  bool
+  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
+  {
+    Promise* promise = mPromiseWorkerProxy->GetWorkerPromise();
+    MOZ_ASSERT(promise);
+    if (mState.isSome()) {
+      promise->MaybeResolve(mState.value());
+    } else {
+      promise->MaybeReject(NS_ERROR_DOM_SECURITY_ERR);
+    }
+
+    mPromiseWorkerProxy->CleanUp(aCx);
+    return true;
+  }
+};
+
+class WorkerUnregisterCallback final : public nsIServiceWorkerUnregisterCallback
+{
+  nsRefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
+public:
+  NS_DECL_ISUPPORTS
+
+  explicit WorkerUnregisterCallback(PromiseWorkerProxy* aProxy)
+    : mPromiseWorkerProxy(aProxy)
+  {
+  }
+
+  NS_IMETHODIMP
+  UnregisterSucceeded(bool aState) override
+  {
+    AssertIsOnMainThread();
+    Finish(Some(aState));
+    return NS_OK;
+  }
+
+  NS_IMETHODIMP
+  UnregisterFailed() override
+  {
+    AssertIsOnMainThread();
+    Finish(Nothing());
+    return NS_OK;
+  }
+
+private:
+  ~WorkerUnregisterCallback()
+  { }
+
+  void
+  Finish(Maybe<bool> aState)
+  {
+    AssertIsOnMainThread();
+    if (!mPromiseWorkerProxy) {
+      return;
+    }
+
+    MutexAutoLock lock(mPromiseWorkerProxy->GetCleanUpLock());
+    if (mPromiseWorkerProxy->IsClean()) {
+      return;
+    }
+
+    nsRefPtr<WorkerRunnable> r =
+      new FulfillUnregisterPromiseRunnable(mPromiseWorkerProxy->GetWorkerPrivate(),
+                                           mPromiseWorkerProxy, aState);
+
+    AutoJSAPI jsapi;
+    jsapi.Init();
+    if (!r->Dispatch(jsapi.cx())) {
+      nsRefPtr<WorkerControlRunnable> cr =
+        new PromiseWorkerProxyControlRunnable(
+          mPromiseWorkerProxy->GetWorkerPrivate(),
+          mPromiseWorkerProxy);
+      cr->Dispatch(jsapi.cx());
+    }
+  }
+};
+
+NS_IMPL_ISUPPORTS(WorkerUnregisterCallback, nsIServiceWorkerUnregisterCallback);
+
+/*
+ * If the worker goes away, we still continue to unregister, but we don't try to
+ * resolve the worker Promise (which doesn't exist by that point).
+ */
+class StartUnregisterRunnable final : public nsRunnable
+{
+  nsRefPtr<PromiseWorkerProxy> mPromiseWorkerProxy;
+  const nsString mScope;
+
+public:
+  StartUnregisterRunnable(WorkerPrivate* aWorker, Promise* aPromise,
+                          const nsAString& aScope)
+    : mPromiseWorkerProxy(PromiseWorkerProxy::Create(aWorker, aPromise))
+    , mScope(aScope)
+  {
+    // mPromiseWorkerProxy may be null if AddFeature failed.
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    AssertIsOnMainThread();
+
+    nsRefPtr<WorkerUnregisterCallback> cb = new WorkerUnregisterCallback(mPromiseWorkerProxy);
+
+    // XXXnsm: There is a rare chance of this failing if the worker gets
+    // destroyed. In that case, unregister() called from a SW is no longer
+    // guaranteed to run. We should fix this by having a main thread proxy
+    // maintain a strongref to ServiceWorkerRegistrationInfo and use its
+    // principal. Can that be trusted?
+    nsCOMPtr<nsIPrincipal> principal;
+    {
+      MutexAutoLock lock(mPromiseWorkerProxy->GetCleanUpLock());
+      if (mPromiseWorkerProxy->IsClean()) {
+        return NS_OK;
+      }
+
+      WorkerPrivate* worker = mPromiseWorkerProxy->GetWorkerPrivate();
+      MOZ_ASSERT(worker);
+      principal = worker->GetPrincipal();
+    }
+    MOZ_ASSERT(principal);
+
+    nsCOMPtr<nsIServiceWorkerManager> swm =
+      mozilla::services::GetServiceWorkerManager();
+    nsresult rv = swm->Unregister(principal, cb, mScope);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      cb->UnregisterFailed();
+    }
+
+    return NS_OK;
+  }
+};
 } // anonymous namespace
 
 void
@@ -350,11 +496,7 @@ ServiceWorkerRegistrationMainThread::Unregister(ErrorResult& aRv)
   }
 
   nsCOMPtr<nsIServiceWorkerManager> swm =
-    do_GetService(SERVICEWORKERMANAGER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
+    mozilla::services::GetServiceWorkerManager();
 
   nsRefPtr<Promise> promise = Promise::Create(go, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
@@ -476,6 +618,32 @@ ServiceWorkerRegistrationWorkerThread::Update()
 #endif
   nsCOMPtr<nsIRunnable> r = new UpdateRunnable(mScope);
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+}
+
+already_AddRefed<Promise>
+ServiceWorkerRegistrationWorkerThread::Unregister(ErrorResult& aRv)
+{
+  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(worker);
+  worker->AssertIsOnWorkerThread();
+
+  if (!worker->IsServiceWorker()) {
+    // For other workers, the registration probably originated from
+    // getRegistration(), so we may have to validate origin etc. Let's do this
+    // this later.
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(worker->GlobalScope(), aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  nsRefPtr<StartUnregisterRunnable> r = new StartUnregisterRunnable(worker, promise, mScope);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+
+  return promise.forget();
 }
 
 } // dom namespace
