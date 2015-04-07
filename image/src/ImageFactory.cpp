@@ -48,6 +48,7 @@ ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
   bool isDiscardable = gfxPrefs::ImageMemDiscardable();
   bool doDecodeOnlyOnDraw = gfxPrefs::ImageDecodeOnlyOnDrawEnabled() &&
                             gfxPrefs::AsyncPanZoomEnabled();
+  bool doDecodeImmediately = gfxPrefs::ImageDecodeImmediatelyEnabled();
   bool doDownscaleDuringDecode = gfxPrefs::ImageDownscaleDuringDecodeEnabled();
 
   // We want UI to be as snappy as possible and not to flicker. Disable
@@ -74,6 +75,11 @@ ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
     doDecodeOnlyOnDraw = false;
   }
 
+  // If we're decoding immediately, disable decode-only-on-draw.
+  if (doDecodeImmediately) {
+    doDecodeOnlyOnDraw = false;
+  }
+
   // For multipart/x-mixed-replace, we basically want a direct channel to the
   // decoder. Disable everything for this case.
   if (isMultiPart) {
@@ -87,6 +93,9 @@ ComputeImageFlags(ImageURL* uri, const nsCString& aMimeType, bool isMultiPart)
   }
   if (doDecodeOnlyOnDraw) {
     imageFlags |= Image::INIT_FLAG_DECODE_ONLY_ON_DRAW;
+  }
+  if (doDecodeImmediately) {
+    imageFlags |= Image::INIT_FLAG_DECODE_IMMEDIATELY;
   }
   if (isMultiPart) {
     imageFlags |= Image::INIT_FLAG_TRANSIENT;
