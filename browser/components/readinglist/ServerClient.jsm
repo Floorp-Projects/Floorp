@@ -144,8 +144,8 @@ ServerClient.prototype = {
             result.body = JSON.parse(response.body);
           }
         } catch (e) {
-          log.info("Failed to parse JSON body |${body}|: ${e}",
-                    {body: response.body, e});
+          log.debug("Response is not JSON. First 1024 chars: |${body}|",
+                    { body: response.body.substr(0, 1024) });
           // We don't reject due to this (and don't even make a huge amount of
           // log noise - eg, a 50X error from a load balancer etc may not write
           // JSON.
