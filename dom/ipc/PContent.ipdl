@@ -582,6 +582,12 @@ child:
 
     async LoadProcessScript(nsString url);
 
+    /**
+     * Requests a full native update of a native plugin child window. This is
+     * a Windows specific call.
+     */
+    async UpdateWindow(uintptr_t aChildId);
+
 parent:
     /**
      * Tell the parent process a new accessible document has been created.

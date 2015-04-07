@@ -24,20 +24,11 @@ namespace plugins {
 class PluginWidgetParent : public PPluginWidgetParent
 {
 public:
-  /**
-   * Windows helper for firing off an update window request to a plugin.
-   *
-   * aWidget - the eWindowType_plugin_ipc_chrome widget associated with
-   *           this plugin window.
-   */
-  static void SendAsyncUpdate(nsIWidget* aWidget);
-
   PluginWidgetParent();
   virtual ~PluginWidgetParent();
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
   virtual bool RecvCreate(nsresult* aResult) override;
-  virtual bool RecvDestroy() override;
   virtual bool RecvSetFocus(const bool& aRaise) override;
   virtual bool RecvGetNativePluginPort(uintptr_t* value) override;
 
@@ -54,15 +45,7 @@ private:
   // The tab our connection is associated with.
   mozilla::dom::TabParent* GetTabParent();
 
-public:
-  // Identifies the side of the connection that initiates shutdown.
-  enum ShutdownType {
-    TAB_CLOSURE = 1,
-    CONTENT     = 2
-  };
-
 private:
-  void Shutdown(ShutdownType aType);
   void KillWidget();
 
   // The chrome side native widget.
