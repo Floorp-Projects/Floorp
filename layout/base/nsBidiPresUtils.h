@@ -159,11 +159,11 @@ public:
    * 
    * @lina 05/02/2000
    */
-  static void ReorderFrames(nsIFrame*            aFirstFrameOnLine,
-                            int32_t              aNumFramesOnLine,
+  static void ReorderFrames(nsIFrame* aFirstFrameOnLine,
+                            int32_t aNumFramesOnLine,
                             mozilla::WritingMode aLineWM,
-                            const nsSize&        aContainerSize,
-                            nscoord              aStart);
+                            nscoord aContainerISize,
+                            nscoord aStart);
 
   /**
    * Format Unicode text, taking into account bidi capabilities
@@ -426,12 +426,12 @@ private:
    *                             (after adding its inline-end margin)
    * @param aContinuationStates  A map from nsIFrame* to nsFrameContinuationState
    */
-  static void RepositionFrame(nsIFrame*              aFrame,
-                              bool                   aIsEvenLevel,
-                              nscoord&               aStart,
-                              nsContinuationStates*  aContinuationStates,
-                              mozilla::WritingMode   aContainerWM,
-                              const nsSize&          aContainerSize);
+  static void RepositionFrame(nsIFrame* aFrame,
+                              bool aIsEvenLevel,
+                              nscoord& aStart,
+                              const nsContinuationStates* aContinuationStates,
+                              mozilla::WritingMode aContainerWM,
+                              nscoord aContainerISize);
 
   /*
    * Initialize the continuation state(nsFrameContinuationState) to
@@ -468,11 +468,11 @@ private:
    * @param[out] aIsLast               TRUE means aFrame is last frame
    *                                    or continuation
    */
-   static void IsFirstOrLast(nsIFrame*              aFrame,
-                             nsContinuationStates*  aContinuationStates,
-                             bool                   aSpanInLineOrder /* in */,
-                             bool&                  aIsFirst /* out */,
-                             bool&                  aIsLast /* out */);
+   static void IsFirstOrLast(nsIFrame* aFrame,
+                             const nsContinuationStates* aContinuationStates,
+                             bool aSpanInLineOrder /* in */,
+                             bool& aIsFirst /* out */,
+                             bool& aIsLast /* out */);
 
   /**
    *  Adjust frame positions following their visual order
@@ -484,7 +484,7 @@ private:
   static void RepositionInlineFrames(BidiLineData* aBld,
                                      nsIFrame* aFirstChild,
                                      mozilla::WritingMode aLineWM,
-                                     const nsSize& aContainerSize,
+                                     nscoord aContainerISize,
                                      nscoord aStart);
   
   /**
