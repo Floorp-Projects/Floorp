@@ -92,11 +92,9 @@ class BaselineInspector
     bool dimorphicStub(jsbytecode* pc, ICStub** pfirst, ICStub** psecond);
 
   public:
-    typedef Vector<Shape*, 4, JitAllocPolicy> ShapeVector;
+    typedef Vector<ReceiverGuard::StackGuard, 4, JitAllocPolicy> ReceiverVector;
     typedef Vector<ObjectGroup*, 4, JitAllocPolicy> ObjectGroupVector;
-    bool maybeInfoForPropertyOp(jsbytecode* pc,
-                                ShapeVector& nativeShapes,
-                                ObjectGroupVector& unboxedGroups,
+    bool maybeInfoForPropertyOp(jsbytecode* pc, ReceiverVector& receivers,
                                 ObjectGroupVector& convertUnboxedGroups);
 
     SetElemICInspector setElemICInspector(jsbytecode* pc) {
@@ -126,10 +124,10 @@ class BaselineInspector
 
     bool commonGetPropFunction(jsbytecode* pc, JSObject** holder, Shape** holderShape,
                                JSFunction** commonGetter, Shape** globalShape, bool* isOwnProperty,
-                               ShapeVector& nativeShapes, ObjectGroupVector& unboxedGroups);
+                               ReceiverVector& receivers, ObjectGroupVector& convertUnboxedGroups);
     bool commonSetPropFunction(jsbytecode* pc, JSObject** holder, Shape** holderShape,
                                JSFunction** commonSetter, bool* isOwnProperty,
-                               ShapeVector& nativeShapes, ObjectGroupVector& unboxedGroups);
+                               ReceiverVector& receivers, ObjectGroupVector& convertUnboxedGroups);
 
     bool instanceOfData(jsbytecode* pc, Shape** shape, uint32_t* slot, JSObject** prototypeObject);
 };

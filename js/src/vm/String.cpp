@@ -751,6 +751,11 @@ JSFlatString::isIndexSlow(const char16_t* s, size_t length, uint32_t* indexp);
 const StaticStrings::SmallChar StaticStrings::toSmallChar[] = { R7(0) };
 #undef R
 
+#undef R2
+#undef R4
+#undef R6
+#undef R7
+
 bool
 StaticStrings::init(JSContext* cx)
 {

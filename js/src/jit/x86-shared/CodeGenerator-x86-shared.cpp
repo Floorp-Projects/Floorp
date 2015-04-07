@@ -2071,11 +2071,6 @@ CodeGeneratorX86Shared::visitGuardObjectGroup(LGuardObjectGroup* guard)
 {
     Register obj = ToRegister(guard->input());
 
-    if (guard->mir()->checkUnboxedExpando()) {
-        masm.cmpPtr(Address(obj, UnboxedPlainObject::offsetOfExpando()), ImmWord(0));
-        bailoutIf(Assembler::NotEqual, guard->snapshot());
-    }
-
     masm.cmpPtr(Operand(obj, JSObject::offsetOfGroup()), ImmGCPtr(guard->mir()->group()));
 
     Assembler::Condition cond =
