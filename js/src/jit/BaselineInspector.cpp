@@ -744,11 +744,15 @@ BaselineInspector::expectedPropertyAccessInputType(jsbytecode* pc)
           case ICStub::GetProp_CallDOMProxyNative:
           case ICStub::GetProp_CallDOMProxyWithGenerationNative:
           case ICStub::GetProp_DOMProxyShadowed:
-          case ICStub::GetElem_NativeSlot:
-          case ICStub::GetElem_NativePrototypeSlot:
-          case ICStub::GetElem_NativePrototypeCallNative:
-          case ICStub::GetElem_NativePrototypeCallScripted:
-          case ICStub::GetElem_UnboxedProperty:
+          case ICStub::GetElem_NativeSlotName:
+          case ICStub::GetElem_NativeSlotSymbol:
+          case ICStub::GetElem_NativePrototypeSlotName:
+          case ICStub::GetElem_NativePrototypeSlotSymbol:
+          case ICStub::GetElem_NativePrototypeCallNativeName:
+          case ICStub::GetElem_NativePrototypeCallNativeSymbol:
+          case ICStub::GetElem_NativePrototypeCallScriptedName:
+          case ICStub::GetElem_NativePrototypeCallScriptedSymbol:
+          case ICStub::GetElem_UnboxedPropertyName:
           case ICStub::GetElem_String:
           case ICStub::GetElem_Dense:
           case ICStub::GetElem_TypedArray:
