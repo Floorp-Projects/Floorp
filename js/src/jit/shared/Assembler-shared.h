@@ -889,6 +889,7 @@ enum AsmJSImmKind
     AsmJSImm_ReportOverRecursed,
     AsmJSImm_OnDetached,
     AsmJSImm_OnOutOfBounds,
+    AsmJSImm_OnImpreciseConversion,
     AsmJSImm_HandleExecutionInterrupt,
     AsmJSImm_InvokeFromAsmJS_Ignore,
     AsmJSImm_InvokeFromAsmJS_ToInt32,
