@@ -28,8 +28,8 @@ native NetAddr(mozilla::net::NetAddr);
  * NOTE: This is a free-threaded interface, meaning that the methods on
  * this interface may be called from any thread.
  */
-[scriptable, uuid(a0b3b547-d6f0-4b65-a3de-a99ffa368840)]
-interface nsISocketTransport : nsITransport 
+[scriptable, uuid(79221831-85e2-43a8-8152-05d77d6fde31)]
+interface nsISocketTransport : nsITransport
 {
     /**
      * Get the peer's host for the underlying socket connection.
@@ -43,6 +43,13 @@ interface nsISocketTransport : nsITransport
      * For Unix domain sockets, this is zero.
      */
     readonly attribute long port;
+
+    /**
+     * The platform-specific network interface id that this socket
+     * associated with. Note that this attribute can be only accessed
+     * in the socket thread.
+     */
+    attribute ACString networkInterfaceId;
 
     /**
      * Returns the IP address of the socket connection peer. This
@@ -207,6 +214,8 @@ interface nsISocketTransport : nsITransport
 
     /**
      * TCP keepalive configuration (support varies by platform).
+     * Note that the attribute as well as the setter can only accessed
+     * in the socket thread.
      */
     attribute boolean keepaliveEnabled;
     void setKeepaliveVals(in long keepaliveIdleTime,

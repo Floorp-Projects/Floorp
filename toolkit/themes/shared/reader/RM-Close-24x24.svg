@@ -1,8 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<svg version="1.1" id="Icons" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-      viewBox="0 0 24 24" enable-background="new 0 0 24 24" xml:space="preserve">
-<g>
-    <polygon fill-rule="evenodd" clip-rule="evenodd" fill="#808080" points="20,6.748 17.338,4.079 12.038,9.391 6.661,4 4,6.669
-        9.377,12.059 4.157,17.292 6.819,19.961 12.039,14.728 17.298,20 19.959,17.331 14.701,12.06 	"/>
-</g>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg viewBox="0 0 24 24"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <style type="text/css">
+      use:not(:target) {
+        display: none;
+      }
+
+      #close {
+        fill: #808080;
+      }
+      #close-hover {
+        fill: #FFFFFF;
+      }
+    </style>
+
+    <g id="close-shape">
+      <polygon points="20.477,6.551 20.477,17.449 11.992,17.449 11.992,20 23,20 23,4 11.992,4 11.992,6.551"/>
+      <polygon points="1,11.981 9.698,19.95 9.698,15.13 18.184,15.13 18.184,8.87 9.698,8.87 9.698,4.011"/>
+    </g>
+  </defs>
+
+  <use id="close"       xlink:href="#close-shape"/>
+  <use id="close-hover" xlink:href="#close-shape"/>
+
 </svg>

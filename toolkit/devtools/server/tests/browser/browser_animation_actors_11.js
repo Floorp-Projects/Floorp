@@ -27,21 +27,27 @@ add_task(function*() {
 
   ok(player.setCurrentTime, "Player has the setCurrentTime method");
 
-  info("Set the current time to currentTime + 5s");
-  yield player.setCurrentTime(player.initialState.currentTime + 5000);
+  info("Check that the setCurrentTime method can be called");
+  // Note that we don't check that it sets the animation to the right time here,
+  // this is too prone to intermittent failures, we'll do this later after
+  // pausing the animation. Here we merely test that the method doesn't fail.
+  yield player.setCurrentTime(player.initialState.currentTime + 1000);
 
-  // We're not really interested in making sure the currentTime is set precisely
-  // and doing this could lead to intermittents, so only check that the new time
-  // is now above the initial time.
-  let state = yield player.getCurrentState();
-  ok(state.currentTime > player.initialState.currentTime,
+  info("Pause the animation so we can really test if setCurrentTime works");
+  yield player.pause();
+  let pausedState = yield player.getCurrentState();
+
+  info("Set the current time to currentTime + 5s");
+  yield player.setCurrentTime(pausedState.currentTime + 5000);
+
+  let updatedState1 = yield player.getCurrentState();
+  is(Math.round(updatedState1.currentTime - pausedState.currentTime), 5000,
     "The currentTime was updated to +5s");
 
   info("Set the current time to currentTime - 2s");
-  yield player.setCurrentTime(state.currentTime - 2000);
-
-  let newState = yield player.getCurrentState();
-  ok(newState.currentTime < state.currentTime,
+  yield player.setCurrentTime(updatedState1.currentTime - 2000);
+  let updatedState2 = yield player.getCurrentState();
+  is(Math.round(updatedState2.currentTime - updatedState1.currentTime), -2000,
     "The currentTime was updated to -2s");
 
   yield closeDebuggerClient(client);

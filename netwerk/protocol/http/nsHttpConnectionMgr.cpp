@@ -3166,6 +3166,10 @@ nsHalfOpenSocket::SetupStreams(nsISocketTransport **transport,
 
     socketTransport->SetQoSBits(gHttpHandler->GetQoSBits());
 
+    if (!mEnt->mConnInfo->GetNetworkInterfaceId().IsEmpty()) {
+        socketTransport->SetNetworkInterfaceId(mEnt->mConnInfo->GetNetworkInterfaceId());
+    }
+
     rv = socketTransport->SetEventSink(this, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
 
