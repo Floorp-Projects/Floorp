@@ -3104,15 +3104,12 @@ CodeGeneratorX86Shared::visitSimdShift(LSimdShift* ins)
     FloatRegister out = ToFloatRegister(ins->output());
     MOZ_ASSERT(ToFloatRegister(ins->vector()) == out); // defineReuseInput(0);
 
-    // TODO: If the shift count is greater than 31, this will just zero all
-    // lanes by default for lsh and ursh, and set the count to 32 for rsh
-    // (which will just extend the sign bit to all bits). Plain JS doesn't do
-    // this: instead it only keeps the five low bits of the mask. Spec isn't
-    // clear about that topic so this might need to be fixed. See also bug
-    // 1068028.
+    // If the shift count is greater than 31, this will just zero all lanes by
+    // default for lsh and ursh, and for rsh extend the sign bit to all bits,
+    // per the SIMD.js spec (as of March 19th 2015).
     const LAllocation* val = ins->value();
     if (val->isConstant()) {
-        int32_t c = ToInt32(val);
+        uint32_t c = uint32_t(ToInt32(val));
         if (c > 31) {
             switch (ins->operation()) {
               case MSimdShift::lsh:
