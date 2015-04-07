@@ -182,7 +182,6 @@ toolkit.jar:
         skin/classic/global/radio/radio-check-dis.gif            (radio/radio-check-dis.gif)
         skin/classic/global/reader/RM-Add-24x24.svg              (../../shared/reader/RM-Add-24x24.svg)
         skin/classic/global/reader/RM-Close-24x24.svg            (../../shared/reader/RM-Close-24x24.svg)
-        skin/classic/global/reader/RM-Close-hover-24x24.svg      (../../shared/reader/RM-Close-hover-24x24.svg)
         skin/classic/global/reader/RM-Delete-24x24.svg           (../../shared/reader/RM-Delete-24x24.svg)
         skin/classic/global/reader/RM-Minus-24x24.svg            (../../shared/reader/RM-Minus-24x24.svg)
         skin/classic/global/reader/RM-Plus-24x24.svg             (../../shared/reader/RM-Plus-24x24.svg)

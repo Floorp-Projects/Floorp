@@ -17,8 +17,6 @@
   "bing.com": "\\(Mobile#(Android; Mobile",
   // bug 827626, magazineluiza.com.br
   "magazineluiza.com.br": "\\(Mobile#(Android; Mobile",
-  // bug 827628, groupon.com.br
-  "groupon.com.br": "\\(Mobile#(Android; Mobile",
   // bug 827633, hao123.com
   "hao123.com": "\\(Mobile#(Android; Mobile",
   // bug 827573, webmotors.com.br

@@ -154,7 +154,6 @@ AlertsService.prototype = {
               dir: listener.dir,
               id: listener.id,
               tag: listener.tag,
-              dbId: listener.dbId,
               timestamp: listener.timestamp,
               data: listener.dataObj || undefined,
             },

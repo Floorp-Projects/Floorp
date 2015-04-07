@@ -1,0 +1,21 @@
+$inherits:
+  from: 'tasks/builds/b2g_dolphin_base.yml'
+task:
+  scopes:
+    - 'docker-worker:cache:build-dolphin-opt'
+  metadata:
+    name: '[TC] B2G Dolphin Opt'
+
+  extra:
+    treeherder:
+      groupSymbol: Dolphin
+      groupName: Dolphin Device Image
+      machine:
+        platform: b2g-device-image
+
+  payload:
+    cache:
+      build-dolphin-opt: /home/worker/object-folder
+    env:
+      TARGET: 'dolphin'
+

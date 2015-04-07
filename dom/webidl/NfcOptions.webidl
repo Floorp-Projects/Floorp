@@ -39,7 +39,17 @@ enum NfcNotificationType {
   "initialized",
   "techDiscovered",
   "techLost",
-  "hciEventTransaction"
+  "hciEventTransaction",
+  "ndefReceived",
+};
+
+/**
+ * The source of HCI Transaction Event.
+ */
+enum HCIEventOrigin {
+  "SIM",
+  "eSE",
+  "ASSD"
 };
 
 dictionary NfcCommandOptions

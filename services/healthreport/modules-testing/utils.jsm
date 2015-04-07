@@ -130,8 +130,8 @@ this.createFakeCrash = function (submitted=false, date=new Date()) {
  *
  * The purpose of this type is to aid testing of startup and shutdown.
  */
-this.InspectedHealthReporter = function (branch, policy, recorder, stateLeaf) {
-  HealthReporter.call(this, branch, policy, recorder, stateLeaf);
+this.InspectedHealthReporter = function (branch, policy, stateLeaf) {
+  HealthReporter.call(this, branch, policy, stateLeaf);
 
   this.onStorageCreated = null;
   this.onProviderManagerInitialized = null;
@@ -212,7 +212,7 @@ this.getHealthReporter = function (name, uri=DUMMY_URI, inspected=false) {
   }
   let policy = new DataReportingPolicy(policyPrefs, prefs, listener);
   let type = inspected ? InspectedHealthReporter : HealthReporter;
-  reporter = new type(branch + "healthreport.", policy, null,
+  reporter = new type(branch + "healthreport.", policy,
                       "state-" + name + ".json");
 
   return reporter;

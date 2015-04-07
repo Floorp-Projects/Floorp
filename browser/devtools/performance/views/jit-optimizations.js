@@ -27,6 +27,9 @@ let JITOptimizationsView = {
     this._toggleVisibility = this._toggleVisibility.bind(this);
 
     this.el = $("#jit-optimizations-view");
+    this.$headerName = $("#jit-optimizations-header .header-function-name");
+    this.$headerFile = $("#jit-optimizations-header .header-file");
+    this.$headerLine = $("#jit-optimizations-header .header-line");
 
     this.tree = new TreeWidget($("#jit-optimizations-raw-view"), {
       sorted: false,
@@ -48,6 +51,7 @@ let JITOptimizationsView = {
    */
   destroy: function () {
     this.tree = null;
+    this.$headerName = this.$headerFile = this.$headerLine = this.el = null;
     PerformanceController.off(EVENTS.RECORDING_SELECTED, this.reset);
     PerformanceController.off(EVENTS.PREF_CHANGED, this._toggleVisibility);
     JsCallTreeView.off("focus", this._onFocusFrame);
@@ -125,7 +129,9 @@ let JITOptimizationsView = {
     this._setHeaders(frameData);
     this.clear();
 
-    if (!frameNode.hasOptimizations()) {
+    // If this frame node does not have optimizations, or if its a meta node in the
+    // case of only showing content, reset the view.
+    if (!frameNode.hasOptimizations() || frameNode.isMetaCategory) {
       this.reset();
       return;
     }
@@ -335,7 +341,8 @@ let JITOptimizationsView = {
       node.setAttribute("tooltiptext", URL_LABEL_TOOLTIP + " → " + url);
       node.addEventListener("click", () => viewSourceInDebugger(url, line));
     }
-    node.textContent = `@${fileName || url}`;
+    fileName = fileName || url || "";
+    node.textContent = fileName ? `@${fileName}` : "";
     return node;
   },
 
@@ -344,9 +351,17 @@ let JITOptimizationsView = {
    */
 
   _setHeaders: function (frameData) {
-    $("#jit-optimizations-header .header-function-name").textContent = frameData.functionName;
-    this._createDebuggerLinkNode(frameData.url, frameData.line, $("#jit-optimizations-header .header-file"));
-    $("#jit-optimizations-header .header-line").textContent = frameData.line;
+    let isMeta = frameData.isMetaCategory;
+    let name = isMeta ? frameData.categoryData.label : frameData.functionName;
+    let url = isMeta ? "" : frameData.url;
+    let line = isMeta ? "" : frameData.line;
+
+    this.$headerName.textContent = name;
+    this.$headerLine.textContent = line;
+    this._createDebuggerLinkNode(url, line, this.$headerFile);
+
+    this.$headerLine.hidden = isMeta;
+    this.$headerFile.hidden = isMeta;
   },
 
   /**

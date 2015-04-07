@@ -24,7 +24,7 @@ task:
         --gip-suite unit
         --gaia-repo https://hg.mozilla.org/integration/gaia-central
         --gaia-dir /home/worker
-        --xre-url https://s3-us-west-2.amazonaws.com/test-caching/packages/xre.linux-x86_64.zip
+        --xre-url https://s3-us-west-2.amazonaws.com/test-caching/xulrunner-sdk-40.zip
     artifacts:
       'public/build':
         type: directory

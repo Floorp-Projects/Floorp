@@ -3,18 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Cu = Components.utils;
-
-Cu.import("resource:///modules/devtools/ViewHelpers.jsm");
-Cu.import("resource:///modules/devtools/Graphs.jsm");
-const promise = Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
-const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
-const {EventEmitter} = Cu.import("resource://gre/modules/devtools/event-emitter.js", {});
-
-this.EXPORTED_SYMBOLS = [
-  "FlameGraph",
-  "FlameGraphUtils"
-];
+const { ViewHelpers } = require("resource:///modules/devtools/ViewHelpers.jsm");
+const { AbstractCanvasGraph, GraphArea, GraphAreaDragger } = require("resource:///modules/devtools/Graphs.jsm");
+const { Promise } = require("resource://gre/modules/Promise.jsm");
+const { Task } = require("resource://gre/modules/Task.jsm");
+const { getColor } = require("devtools/shared/theme");
+const EventEmitter = require("devtools/toolkit/event-emitter");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const GRAPH_SRC = "chrome://browser/content/devtools/graphs-frame.xhtml";
@@ -34,17 +28,14 @@ const TIMELINE_TICKS_MULTIPLE = 5; // ms
 const TIMELINE_TICKS_SPACING_MIN = 75; // px
 
 const OVERVIEW_HEADER_HEIGHT = 16; // px
-const OVERVIEW_HEADER_BACKGROUND = "rgba(255,255,255,0.7)";
-const OVERVIEW_HEADER_TEXT_COLOR = "#18191a";
 const OVERVIEW_HEADER_TEXT_FONT_SIZE = 9; // px
 const OVERVIEW_HEADER_TEXT_FONT_FAMILY = "sans-serif";
 const OVERVIEW_HEADER_TEXT_PADDING_LEFT = 6; // px
 const OVERVIEW_HEADER_TEXT_PADDING_TOP = 5; // px
-const OVERVIEW_TIMELINE_STROKES = "#ddd";
+const OVERVIEW_HEADER_TIMELINE_STROKE_COLOR = "rgba(128, 128, 128, 0.5)";
 
 const FLAME_GRAPH_BLOCK_BORDER = 1; // px
-const FLAME_GRAPH_BLOCK_TEXT_COLOR = "#000";
-const FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE = 8; // px
+const FLAME_GRAPH_BLOCK_TEXT_FONT_SIZE = 9; // px
 const FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY = "sans-serif";
 const FLAME_GRAPH_BLOCK_TEXT_PADDING_TOP = 0; // px
 const FLAME_GRAPH_BLOCK_TEXT_PADDING_LEFT = 3; // px
@@ -101,7 +92,9 @@ function FlameGraph(parent, sharpness) {
   EventEmitter.decorate(this);
 
   this._parent = parent;
-  this._ready = promise.defer();
+  this._ready = Promise.defer();
+
+  this.setTheme();
 
   AbstractCanvasGraph.createIframe(GRAPH_SRC, parent, iframe => {
     this._iframe = iframe;
@@ -216,14 +209,6 @@ FlameGraph.prototype = {
   }),
 
   /**
-   * Rendering options. Subclasses should override these.
-   */
-  overviewHeaderBackgroundColor: OVERVIEW_HEADER_BACKGROUND,
-  overviewHeaderTextColor: OVERVIEW_HEADER_TEXT_COLOR,
-  overviewTimelineStrokes: OVERVIEW_TIMELINE_STROKES,
-  blockTextColor: FLAME_GRAPH_BLOCK_TEXT_COLOR,
-
-  /**
    * Makes sure the canvas graph is of the specified width or height, and
    * doesn't flex to fit all the available space.
    */
@@ -330,14 +315,19 @@ FlameGraph.prototype = {
 
   /**
    * Updates this graph to reflect the new dimensions of the parent node.
+   *
+   * @param boolean options.force
+   *        Force redraw everything.
    */
-  refresh: function() {
+  refresh: function(options={}) {
     let bounds = this._parent.getBoundingClientRect();
     let newWidth = this.fixedWidth || bounds.width;
     let newHeight = this.fixedHeight || bounds.height;
 
-    // Prevent redrawing everything if the graph's width & height won't change.
-    if (this._width == newWidth * this._pixelRatio &&
+    // Prevent redrawing everything if the graph's width & height won't change,
+    // except if force=true.
+    if (!options.force &&
+        this._width == newWidth * this._pixelRatio &&
         this._height == newHeight * this._pixelRatio) {
       this.emit("refresh-cancelled");
       return;
@@ -352,6 +342,19 @@ FlameGraph.prototype = {
 
     this._shouldRedraw = true;
     this.emit("refresh");
+  },
+
+  /**
+   * Sets the theme via `theme` to either "light" or "dark",
+   * and updates the internal styling to match. Requires a redraw
+   * to see the effects.
+   */
+  setTheme: function (theme) {
+    theme = theme || "light";
+    this.overviewHeaderBackgroundColor = getColor("body-background", theme);
+    this.overviewHeaderTextColor = getColor("body-color", theme);
+    // Hard to get a color that is readable across both themes for the text on the flames
+    this.blockTextColor = getColor(theme === "dark" ? "selection-color" : "body-color", theme);
   },
 
   /**
@@ -385,8 +388,8 @@ FlameGraph.prototype = {
     let selection = this._selection;
     let selectionWidth = selection.end - selection.start;
     let selectionScale = canvasWidth / selectionWidth;
-    this._drawPyramid(this._data, this._verticalOffset, selection.start, selectionScale);
     this._drawTicks(selection.start, selectionScale);
+    this._drawPyramid(this._data, this._verticalOffset, selection.start, selectionScale);
 
     this._shouldRedraw = false;
   },
@@ -416,7 +419,7 @@ FlameGraph.prototype = {
     ctx.textBaseline = "top";
     ctx.font = fontSize + "px " + fontFamily;
     ctx.fillStyle = this.overviewHeaderTextColor;
-    ctx.strokeStyle = this.overviewTimelineStrokes;
+    ctx.strokeStyle = OVERVIEW_HEADER_TIMELINE_STROKE_COLOR;
     ctx.beginPath();
 
     for (let x = -scaledOffset % tickInterval; x < canvasWidth; x += tickInterval) {
@@ -926,14 +929,14 @@ FlameGraph.prototype = {
   }
 };
 
-const FLAME_GRAPH_BLOCK_HEIGHT = 11; // px
+const FLAME_GRAPH_BLOCK_HEIGHT = 12; // px
 
 const PALLETTE_SIZE = 10;
 const PALLETTE_HUE_OFFSET = Math.random() * 90;
 const PALLETTE_HUE_RANGE = 270;
-const PALLETTE_SATURATION = 60;
-const PALLETTE_BRIGHTNESS = 75;
-const PALLETTE_OPACITY = 0.7;
+const PALLETTE_SATURATION = 100;
+const PALLETTE_BRIGHTNESS = 65;
+const PALLETTE_OPACITY = 0.55;
 
 const COLOR_PALLETTE = Array.from(Array(PALLETTE_SIZE)).map((_, i) => "hsla" +
   "(" + ((PALLETTE_HUE_OFFSET + (i / PALLETTE_SIZE * PALLETTE_HUE_RANGE))|0 % 360) +
@@ -1114,3 +1117,7 @@ let FlameGraphUtils = {
     return hash;
   }
 };
+
+exports.FlameGraph = FlameGraph;
+exports.FlameGraphUtils = FlameGraphUtils;
+exports.FLAME_GRAPH_BLOCK_HEIGHT = FLAME_GRAPH_BLOCK_HEIGHT;
