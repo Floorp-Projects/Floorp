@@ -212,6 +212,9 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
   WritingMode lineWM = aReflowState.mLineLayout->GetWritingMode();
   LogicalSize availSize(lineWM, aReflowState.AvailableISize(),
                         aReflowState.AvailableBSize());
+  WritingMode rubyWM = GetWritingMode();
+  NS_ASSERTION(!rubyWM.IsOrthogonalTo(lineWM),
+               "Ruby frame writing-mode shouldn't be orthogonal to its line");
 
   nsAutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE> textContainers;
   for (RubyTextContainerIterator iter(aBaseContainer); !iter.AtEnd(); iter.Next()) {
@@ -305,10 +308,11 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
   LogicalRect offsetRect = baseRect;
   for (uint32_t i = 0; i < rtcCount; i++) {
     nsRubyTextContainerFrame* textContainer = textContainers[i];
+    WritingMode rtcWM = textContainer->GetWritingMode();
     nsReflowStatus textReflowStatus;
     nsHTMLReflowMetrics textMetrics(aReflowState);
-    nsHTMLReflowState textReflowState(aPresContext, aReflowState,
-                                      textContainer, availSize);
+    nsHTMLReflowState textReflowState(aPresContext, aReflowState, textContainer,
+                                      availSize.ConvertTo(rtcWM, lineWM));
     // FIXME We probably shouldn't be using the same nsLineLayout for
     //       the text containers. But it should be fine now as we are
     //       not actually using this line layout to reflow something,
@@ -321,12 +325,13 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     // handled when reflowing the base containers.
     NS_ASSERTION(textReflowStatus == NS_FRAME_COMPLETE,
                  "Ruby text container must not break itself inside");
-    nscoord isize = textMetrics.ISize(lineWM);
-    nscoord bsize = textMetrics.BSize(lineWM);
-    textContainer->SetSize(LogicalSize(lineWM, isize, bsize));
+    // The metrics is initialized with reflow state of this ruby frame,
+    // hence the writing-mode is tied to rubyWM instead of rtcWM.
+    LogicalSize size = textMetrics.Size(rubyWM).ConvertTo(lineWM, rubyWM);
+    textContainer->SetSize(lineWM, size);
 
     nscoord reservedISize = RubyUtils::GetReservedISize(textContainer);
-    segmentISize = std::max(segmentISize, isize + reservedISize);
+    segmentISize = std::max(segmentISize, size.ISize(lineWM) + reservedISize);
 
     uint8_t rubyPosition = textContainer->StyleText()->mRubyPosition;
     MOZ_ASSERT(rubyPosition == NS_STYLE_RUBY_POSITION_OVER ||
@@ -344,13 +349,13 @@ nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     LogicalPoint position(lineWM);
     if (side.isSome()) {
       if (side.value() == eLogicalSideBStart) {
-        offsetRect.BStart(lineWM) -= bsize;
-        offsetRect.BSize(lineWM) += bsize;
+        offsetRect.BStart(lineWM) -= size.BSize(lineWM);
+        offsetRect.BSize(lineWM) += size.BSize(lineWM);
         position = offsetRect.Origin(lineWM);
       } else if (side.value() == eLogicalSideBEnd) {
         position = offsetRect.Origin(lineWM) +
           LogicalPoint(lineWM, 0, offsetRect.BSize(lineWM));
-        offsetRect.BSize(lineWM) += bsize;
+        offsetRect.BSize(lineWM) += size.BSize(lineWM);
       } else {
         MOZ_ASSERT_UNREACHABLE("???");
       }
