@@ -20,13 +20,15 @@ MediaTaskQueue::InitStatics()
   }
 }
 
-MediaTaskQueue::MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool)
+MediaTaskQueue::MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool,
+                               bool aRequireTailDispatch)
   : mPool(aPool)
   , mQueueMonitor("MediaTaskQueue::Queue")
   , mTailDispatcher(nullptr)
   , mIsRunning(false)
   , mIsShutdown(false)
   , mIsFlushing(false)
+  , mRequireTailDispatch(aRequireTailDispatch)
 {
   MOZ_COUNT_CTOR(MediaTaskQueue);
 }
@@ -41,6 +43,7 @@ MediaTaskQueue::~MediaTaskQueue()
 nsresult
 MediaTaskQueue::Dispatch(TemporaryRef<nsIRunnable> aRunnable)
 {
+  AssertInTailDispatchIfNeeded(); // Do this before acquiring the monitor.
   MonitorAutoLock mon(mQueueMonitor);
   return DispatchLocked(aRunnable, AbortIfFlushing);
 }
@@ -56,6 +59,7 @@ MediaTaskQueue::TailDispatcher()
 nsresult
 MediaTaskQueue::ForceDispatch(TemporaryRef<nsIRunnable> aRunnable)
 {
+  AssertInTailDispatchIfNeeded(); // Do this before acquiring the monitor.
   MonitorAutoLock mon(mQueueMonitor);
   return DispatchLocked(aRunnable, Forced);
 }
@@ -178,6 +182,7 @@ FlushableMediaTaskQueue::Flush()
 nsresult
 FlushableMediaTaskQueue::FlushAndDispatch(TemporaryRef<nsIRunnable> aRunnable)
 {
+  AssertInTailDispatchIfNeeded(); // Do this before acquiring the monitor.
   MonitorAutoLock mon(mQueueMonitor);
   AutoSetFlushing autoFlush(this);
   FlushLocked();
