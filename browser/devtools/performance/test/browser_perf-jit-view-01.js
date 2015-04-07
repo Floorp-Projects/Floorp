@@ -30,7 +30,7 @@ function spawnTest () {
   yield injectAndRenderProfilerData();
 
   yield checkFrame(1, [0, 1]);
-  yield checkFrame(2, [1]);
+  yield checkFrame(2, [2]);
   yield checkFrame(3);
 
   let select = once(PerformanceController, EVENTS.RECORDING_SELECTED);
@@ -80,6 +80,18 @@ function spawnTest () {
       ok(!isEmpty, "JIT Optimizations view has no empty message.");
     }
 
+    // Get the frame info for the first opt site, since all opt sites
+    // share the same frame info
+    let frameInfo = gOpts[expectedOptsIndex[0]]._testFrameInfo;
+
+    let { $headerName, $headerLine, $headerFile } = JITOptimizationsView;
+    ok(!$headerName.hidden, "header function name should be shown");
+    ok(!$headerLine.hidden, "header line should be shown");
+    ok(!$headerFile.hidden, "header file should be shown");
+    is($headerName.textContent, frameInfo.name, "correct header function name.");
+    is($headerLine.textContent, frameInfo.line, "correct header line");
+    is($headerFile.textContent, frameInfo.file, "correct header file");
+
     // Need the value of the optimizations in its array, as its
     // an index used internally by the view to uniquely ID the opt
     for (let i of expectedOptsIndex) {
@@ -95,9 +107,9 @@ function spawnTest () {
           "found an ion type row");
       }
 
-      // The second optimization should display optimization failures.
+      // The second and third optimization should display optimization failures.
       let warningIcon = $(`.tree-widget-container li[data-id='["${i}"]'] .opt-icon[severity=warning]`);
-      if (i === 1) {
+      if (i === 1 || i === 2) {
         ok(warningIcon, "did find a warning icon for all strategies failing.");
       } else {
         ok(!warningIcon, "did not find a warning icon for no successful strategies");
@@ -111,7 +123,7 @@ let gSamples = [{
   frames: [
     { location: "(root)" },
     { location: "A (http://foo/bar/baz:12)", optsIndex: 0 },
-    { location: "B (http://foo/bar/baz:34)", optsIndex: 1 },
+    { location: "B (http://foo/bar/boo:34)", optsIndex: 2 },
     { location: "C (http://foo/bar/baz:56)" }
   ]
 }, {
@@ -119,14 +131,14 @@ let gSamples = [{
   frames: [
     { location: "(root)" },
     { location: "A (http://foo/bar/baz:12)" },
-    { location: "B (http://foo/bar/baz:34)" },
+    { location: "B (http://foo/bar/boo:34)" },
   ]
 }, {
   time: 5 + 1 + 2,
   frames: [
     { location: "(root)" },
     { location: "A (http://foo/bar/baz:12)", optsIndex: 1 },
-    { location: "B (http://foo/bar/baz:34)" },
+    { location: "B (http://foo/bar/boo:34)" },
   ]
 }, {
   time: 5 + 1 + 2 + 7,
@@ -140,6 +152,7 @@ let gSamples = [{
 
 // Array of OptimizationSites
 let gOpts = [{
+  _testFrameInfo: { name: "A", line: "12", file: "@baz" },
   line: 12,
   column: 2,
   types: [{ mirType: "Object", site: "A (http://foo/bar/bar:12)", types: [
@@ -152,6 +165,16 @@ let gOpts = [{
     { outcome: "Inlined", strategy: "SomeGetter3" },
   ]
 }, {
+  _testFrameInfo: { name: "A", line: "12", file: "@baz" },
+  line: 12,
+  types: [{ mirType: "Int32", site: "Receiver" }], // use no types
+  attempts: [
+    { outcome: "Failure1", strategy: "SomeGetter1" },
+    { outcome: "Failure2", strategy: "SomeGetter2" },
+    { outcome: "Failure3", strategy: "SomeGetter3" },
+  ]
+}, {
+  _testFrameInfo: { name: "B", line: "34", file: "@boo" },
   line: 34,
   types: [{ mirType: "Int32", site: "Receiver" }], // use no types
   attempts: [
