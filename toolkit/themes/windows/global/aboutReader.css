@@ -277,18 +277,19 @@ body.loaded {
   display: block;
   background-size: 24px 24px;
   background-repeat: no-repeat;
+  color: #333;
+  background-color: #fbfbfb;
   height: 40px;
   padding: 0;
 }
 
 .toolbar .button {
-  color: white;
   width: 40px;
   background-position: center;
-  background-color: #fbfbfb;
+  margin-right: -1px;
   border-top: 0;
   border-left: 0;
-  border-right: 0;
+  border-right: 1px solid #b5b5b5;
   border-bottom: 1px solid #c1c1c1;
 }
 
@@ -466,15 +467,11 @@ body.loaded {
   text-align: center;
   padding: 12px 0;
   box-sizing: border-box;
-  box-shadow: 0 9px 9px -9px #c1c1c1 inset;
+  box-shadow: 0 3px 3px -3px rgba(0, 0, 0, 0.35) inset;
 }
 
 .sepia .footer {
   background-color: #dedad4;
-}
-
-.dark .footer {
-  background-color: #777;
 }
 
 .remove-button {
@@ -498,15 +495,23 @@ body.loaded {
 }
 
 .close-button {
-  background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg");
+  background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg#close");
   height: 68px;
   background-position: center 8px;
 }
 
-.close-button:active,
 .close-button:hover {
-  background-image: url("chrome://global/skin/reader/RM-Close-hover-24x24.svg");
+  background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg#close-hover");
   background-color: #d94141;
+  border-bottom: 1px solid #d94141;
+  border-right: 1px solid #d94141;
+}
+
+.close-button:hover:active {
+  background-image: url("chrome://global/skin/reader/RM-Close-24x24.svg#close-hover");
+  background-color: #AE2325;
+  border-bottom: 1px solid #AE2325;
+  border-right: 1px solid #AE2325;
 }
 
 .style-button {
