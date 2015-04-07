@@ -159,16 +159,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistrationWorkerThread,
                                            ServiceWorkerRegistrationBase)
 
-  ServiceWorkerRegistrationWorkerThread(nsPIDOMWindow* aWindow,
-                                        const nsAString& aScope)
-    : ServiceWorkerRegistrationBase(aWindow, aScope)
+  ServiceWorkerRegistrationWorkerThread(const nsAString& aScope)
+    : ServiceWorkerRegistrationBase(nullptr, aScope)
   {}
 
   void
-  Update()
-  {
-    MOZ_CRASH("FIXME");
-  }
+  Update();
 
   already_AddRefed<Promise>
   Unregister(ErrorResult& aRv)
