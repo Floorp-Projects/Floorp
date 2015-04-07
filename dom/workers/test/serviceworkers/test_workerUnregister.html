@@ -1,0 +1,82 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 982728 - Test ServiceWorkerGlobalScope.unregister</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<div id="container"></div>
+<script class="testbody" type="text/javascript">
+
+  function simpleRegister() {
+    return navigator.serviceWorker.register("worker_unregister.js", { scope: "unregister/" }).then(function(swr) {
+      if (swr.installing) {
+        return new Promise(function(resolve, reject) {
+          swr.installing.onstatechange = function(e) {
+            if (swr.waiting) {
+              swr.waiting.onstatechange = function(e) {
+                if (swr.active) {
+                  resolve();
+                } else if (swr.waiting && swr.waiting.state == "redundant") {
+                  reject("Should not go into redundant");
+                }
+              }
+            } else {
+              if (swr.active) {
+                resolve();
+              } else {
+                reject("No waiting and no active!");
+              }
+            }
+          }
+        });
+      } else {
+        return Promise.reject("Installing should be non-null");
+      }
+    });
+  }
+
+  function waitForMessages(sw) {
+    var p = new Promise(function(resolve, reject) {
+      window.onmessage = function(e) {
+        if (e.data === "DONE") {
+          ok(true, "The worker has unregistered itself");
+        } else if (e.data === "ERROR") {
+          ok(false, "The worker has unregistered itself");
+        } else if (e.data === "FINISH") {
+          resolve();
+        }
+      }
+    });
+
+    var frame = document.createElement("iframe");
+    frame.setAttribute("src", "unregister/unregister.html");
+    document.body.appendChild(frame);
+
+    return p;
+  }
+
+  function runTest() {
+    simpleRegister().then(waitForMessages).catch(function(e) {
+      ok(false, "Something went wrong.");
+    }).then(function() {
+      SimpleTest.finish();
+    });
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true]
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+

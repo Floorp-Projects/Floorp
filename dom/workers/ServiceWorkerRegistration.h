@@ -167,11 +167,7 @@ public:
   Update();
 
   already_AddRefed<Promise>
-  Unregister(ErrorResult& aRv)
-  {
-    MOZ_CRASH("FIXME");
-    return nullptr;
-  }
+  Unregister(ErrorResult& aRv);
 
   JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
