@@ -63,9 +63,8 @@ public:
 
   bool IsValidObject();
 
-  // get/set the MaiHyperlink object for this AccessibleWrap
+  // get the MaiHyperlink object for this AccessibleWrap
   MaiHyperlink* GetMaiHyperlink(bool aCreate = true);
-  void SetMaiHyperlink(MaiHyperlink* aMaiHyperlink);
 
   static const char * ReturnString(nsAString &aString) {
     static nsCString returnedString;
