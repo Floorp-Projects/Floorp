@@ -1175,6 +1175,14 @@ ScriptedDirectProxyHandler::isConstructor(JSObject* obj) const
 const char ScriptedDirectProxyHandler::family = 0;
 const ScriptedDirectProxyHandler ScriptedDirectProxyHandler::singleton;
 
+bool
+IsRevokedScriptedProxy(JSObject* obj)
+{
+    obj = CheckedUnwrap(obj);
+    return obj && IsScriptedProxy(obj) && !obj->as<ProxyObject>().target();
+}
+
+// ES6 draft rc4 9.5.15.
 static bool
 NewScriptedProxy(JSContext* cx, CallArgs& args, const char* callerName)
 {
@@ -1183,26 +1191,48 @@ NewScriptedProxy(JSContext* cx, CallArgs& args, const char* callerName)
                              callerName, "1", "s");
         return false;
     }
+
+    // Step 1.
     RootedObject target(cx, NonNullObject(cx, args[0]));
     if (!target)
         return false;
+
+    // Step 2.
+    if (IsRevokedScriptedProxy(target)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_ARG_REVOKED, "1");
+        return false;
+    }
+
+    // Step 3.
     RootedObject handler(cx, NonNullObject(cx, args[1]));
     if (!handler)
         return false;
+
+    // Step 4.
+    if (IsRevokedScriptedProxy(handler)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_PROXY_ARG_REVOKED, "2");
+        return false;
+    }
+
+    // Steps 5-6, and 8 (reordered).
     RootedValue priv(cx, ObjectValue(*target));
     JSObject* proxy_ =
         NewProxyObject(cx, &ScriptedDirectProxyHandler::singleton,
                        priv, TaggedProto::LazyProto);
     if (!proxy_)
         return false;
+
+    // Step 9 (reordered).
     Rooted<ProxyObject*> proxy(cx, &proxy_->as<ProxyObject>());
     proxy->setExtra(ScriptedDirectProxyHandler::HANDLER_EXTRA, ObjectValue(*handler));
 
-    // Assign [[Call]] and [[Construct]]
+    // Step 7, Assign [[Call]] and [[Construct]].
     uint32_t callable = target->isCallable() ? ScriptedDirectProxyHandler::IS_CALLABLE : 0;
     uint32_t constructor = target->isConstructor() ? ScriptedDirectProxyHandler::IS_CONSTRUCTOR : 0;
     proxy->as<ProxyObject>().setExtra(ScriptedDirectProxyHandler::IS_CALLCONSTRUCT_EXTRA,
                                       PrivateUint32Value(callable | constructor));
+
+    // Step 10.
     args.rval().setObject(*proxy);
     return true;
 }
