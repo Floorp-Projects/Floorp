@@ -94,36 +94,25 @@ MaiHyperlink::MaiHyperlink(Accessible* aHyperLink) :
     mHyperlink(aHyperLink),
     mMaiAtkHyperlink(nullptr)
 {
-}
-
-MaiHyperlink::~MaiHyperlink()
-{
-    if (mMaiAtkHyperlink) {
-        MAI_ATK_HYPERLINK(mMaiAtkHyperlink)->maiHyperlink = nullptr;
-        g_object_unref(mMaiAtkHyperlink);
-    }
-}
-
-AtkHyperlink*
-MaiHyperlink::GetAtkHyperlink(void)
-{
-  NS_ENSURE_TRUE(mHyperlink, nullptr);
-
-  if (mMaiAtkHyperlink)
-    return mMaiAtkHyperlink;
-
   if (!mHyperlink->IsLink())
-    return nullptr;
+    return;
 
     mMaiAtkHyperlink =
         reinterpret_cast<AtkHyperlink *>
                         (g_object_new(mai_atk_hyperlink_get_type(), nullptr));
     NS_ASSERTION(mMaiAtkHyperlink, "OUT OF MEMORY");
-    NS_ENSURE_TRUE(mMaiAtkHyperlink, nullptr);
+    if (!mMaiAtkHyperlink)
+      return;
 
     MAI_ATK_HYPERLINK(mMaiAtkHyperlink)->maiHyperlink = this;
+}
 
-    return mMaiAtkHyperlink;
+MaiHyperlink::~MaiHyperlink()
+{
+  if (mMaiAtkHyperlink) {
+    MAI_ATK_HYPERLINK(mMaiAtkHyperlink)->maiHyperlink = nullptr;
+    g_object_unref(mMaiAtkHyperlink);
+  }
 }
 
 
