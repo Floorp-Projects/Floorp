@@ -27,7 +27,10 @@ class nsBlockInFlowLineIterator;
 class nsStyleContext;
 struct nsSize;
 template<class T> class nsTHashtable;
-namespace mozilla { class WritingMode; }
+namespace mozilla {
+  class WritingMode;
+  class LogicalMargin;
+}
 
 /**
  * A structure representing some continuation state for each frame on the line,
@@ -411,6 +414,15 @@ private:
                              nsBlockInFlowLineIterator* aLineIter,
                              nsIFrame*                  aCurrentFrame,
                              BidiParagraphData*         aBpd);
+
+  /*
+   * Position ruby frames. Called from RepositionFrame.
+   */
+  static nscoord RepositionRubyFrame(
+    nsIFrame* aFrame,
+    const nsContinuationStates* aContinuationStates,
+    const mozilla::WritingMode aContainerWM,
+    const mozilla::LogicalMargin& aBorderPadding);
 
   /*
    * Position aFrame and its descendants to their visual places. Also if aFrame
