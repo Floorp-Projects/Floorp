@@ -231,8 +231,8 @@ public:
     , mStartedTypeList(false)
   { }
 
-  void readType(const char *keyedBy, const char *name,
-                const char *location, unsigned lineno) override {
+  void readType(const char* keyedBy, const char* name,
+                const char* location, unsigned lineno) override {
     if (!mStartedTypeList) {
       mStartedTypeList = true;
       mWriter.BeginObject();
@@ -254,7 +254,7 @@ public:
     mWriter.EndObject();
   }
 
-  void operator()(JS::TrackedTypeSite site, const char *mirType) override {
+  void operator()(JS::TrackedTypeSite site, const char* mirType) override {
     if (mStartedTypeList) {
       mWriter.EndArray();
       mStartedTypeList = false;
