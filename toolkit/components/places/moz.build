@@ -70,9 +70,6 @@ if CONFIG['MOZ_PLACES']:
         'PlacesDBUtils.jsm',
         'PlacesSearchAutocompleteProvider.jsm',
         'PlacesTransactions.jsm',
-    ]
-
-    EXTRA_PP_JS_MODULES += [
         'PlacesUtils.jsm',
     ]
 
