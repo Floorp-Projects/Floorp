@@ -7,6 +7,7 @@
 #include "mp4_demuxer/Box.h"
 #include "mp4_demuxer/mp4_demuxer.h"
 #include "mozilla/Endian.h"
+#include <algorithm>
 
 using namespace mozilla;
 
@@ -91,11 +92,6 @@ Box::Box(BoxContext* aContext, uint64_t aOffset, const Box* aParent)
     return;
   }
 
-  nsTArray<uint8_t> content;
-  if (!Read(&content, boxRange)) {
-    return;
-  }
-
   mRange = boxRange;
 }
 
@@ -129,7 +125,15 @@ Box::Read(nsTArray<uint8_t>* aDest)
 bool
 Box::Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange)
 {
-  aDest->SetLength(aRange.mEnd - mChildOffset);
+  int64_t length;
+  if (!mContext->mSource->Length(&length)) {
+    // The HTTP server didn't give us a length to work with.
+    // Limit the read to 32MiB max.
+    length = std::min(aRange.mEnd - mChildOffset, uint64_t(32 * 1024 * 1024));
+  } else {
+    length = aRange.mEnd - mChildOffset;
+  }
+  aDest->SetLength(length);
   size_t bytes;
   if (!mContext->mSource->CachedReadAt(mChildOffset, aDest->Elements(),
                                        aDest->Length(), &bytes) ||
