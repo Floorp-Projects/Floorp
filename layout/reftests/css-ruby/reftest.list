@@ -1,7 +1,6 @@
 default-preferences pref(layout.css.ruby.enabled,true)
 
 == bidi-1.html bidi-1-ref.html
-== bidi-2.html bidi-2-ref.html
 == box-generation-1.html box-generation-1-ref.html
 == box-generation-2.html box-generation-2-ref.html
 == box-generation-3.html box-generation-3-ref.html

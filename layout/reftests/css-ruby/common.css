@@ -4,7 +4,6 @@
 }
 rbc {
   display: ruby-base-container;
-  unicode-bidi: -moz-isolate;
 }
 [pseudo] {
   font-size: inherit;

@@ -27,10 +27,7 @@ class nsBlockInFlowLineIterator;
 class nsStyleContext;
 struct nsSize;
 template<class T> class nsTHashtable;
-namespace mozilla {
-  class WritingMode;
-  class LogicalMargin;
-}
+namespace mozilla { class WritingMode; }
 
 /**
  * A structure representing some continuation state for each frame on the line,
@@ -162,11 +159,11 @@ public:
    * 
    * @lina 05/02/2000
    */
-  static void ReorderFrames(nsIFrame* aFirstFrameOnLine,
-                            int32_t aNumFramesOnLine,
+  static void ReorderFrames(nsIFrame*            aFirstFrameOnLine,
+                            int32_t              aNumFramesOnLine,
                             mozilla::WritingMode aLineWM,
-                            const nsSize& aContainerSize,
-                            nscoord aStart);
+                            const nsSize&        aContainerSize,
+                            nscoord              aStart);
 
   /**
    * Format Unicode text, taking into account bidi capabilities
@@ -416,15 +413,6 @@ private:
                              BidiParagraphData*         aBpd);
 
   /*
-   * Position ruby frames. Called from RepositionFrame.
-   */
-  static nscoord RepositionRubyFrame(
-    nsIFrame* aFrame,
-    const nsContinuationStates* aContinuationStates,
-    const mozilla::WritingMode aContainerWM,
-    const mozilla::LogicalMargin& aBorderPadding);
-
-  /*
    * Position aFrame and its descendants to their visual places. Also if aFrame
    * is not leaf, resize it to embrace its children.
    *
@@ -432,21 +420,18 @@ private:
    *                             going to be repositioned
    * @param aIsEvenLevel         TRUE means the embedding level of this frame
    *                             is even (LTR)
-   * @param aStartOrEnd          The distance to the start or the end of aFrame
-   *                             without considering its inline margin. If the
-   *                             container is reordering frames in reverse
-   *                             direction, it's the distance to the end,
-   *                             otherwise, it's the distance to the start.
+   * @param[in,out] aStart       IN value is the starting position of aFrame
+   *                             (without considering its inline-start margin)
+   *                             OUT value will be the ending position of aFrame
+   *                             (after adding its inline-end margin)
    * @param aContinuationStates  A map from nsIFrame* to nsFrameContinuationState
-   * @return                     The isize aFrame takes, including margins.
    */
-  static nscoord RepositionFrame(nsIFrame* aFrame,
-                                 bool aIsEvenLevel,
-                                 nscoord aStartOrEnd,
-                                 const nsContinuationStates* aContinuationStates,
-                                 mozilla::WritingMode aContainerWM,
-                                 bool aContainerReverseOrder,
-                                 const nsSize& aContainerSize);
+  static void RepositionFrame(nsIFrame*              aFrame,
+                              bool                   aIsEvenLevel,
+                              nscoord&               aStart,
+                              nsContinuationStates*  aContinuationStates,
+                              mozilla::WritingMode   aContainerWM,
+                              const nsSize&          aContainerSize);
 
   /*
    * Initialize the continuation state(nsFrameContinuationState) to
@@ -483,11 +468,11 @@ private:
    * @param[out] aIsLast               TRUE means aFrame is last frame
    *                                    or continuation
    */
-   static void IsFirstOrLast(nsIFrame* aFrame,
-                             const nsContinuationStates* aContinuationStates,
-                             bool aSpanInLineOrder /* in */,
-                             bool& aIsFirst /* out */,
-                             bool& aIsLast /* out */);
+   static void IsFirstOrLast(nsIFrame*              aFrame,
+                             nsContinuationStates*  aContinuationStates,
+                             bool                   aSpanInLineOrder /* in */,
+                             bool&                  aIsFirst /* out */,
+                             bool&                  aIsLast /* out */);
 
   /**
    *  Adjust frame positions following their visual order
