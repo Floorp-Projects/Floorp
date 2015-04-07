@@ -1532,7 +1532,6 @@ class ICGetElemNativeStub : public ICMonitoredStub
 
   protected:
     HeapReceiverGuard receiverGuard_;
-    HeapPtrPropertyName name_;
 
     static const unsigned NEEDS_ATOMIZE_SHIFT = 0;
     static const uint16_t NEEDS_ATOMIZE_MASK = 0x1;
@@ -1540,9 +1539,11 @@ class ICGetElemNativeStub : public ICMonitoredStub
     static const unsigned ACCESSTYPE_SHIFT = 1;
     static const uint16_t ACCESSTYPE_MASK = 0x3;
 
+    static const unsigned ISSYMBOL_SHIFT = 3;
+    static const uint16_t ISSYMBOL_MASK = 0x1;
+
     ICGetElemNativeStub(ICStub::Kind kind, JitCode* stubCode, ICStub* firstMonitorStub,
-                        ReceiverGuard guard, PropertyName* name, AccessType acctype,
-                        bool needsAtomize);
+                        ReceiverGuard guard, AccessType acctype, bool needsAtomize, bool isSymbol);
 
     ~ICGetElemNativeStub();
 
@@ -1554,13 +1555,6 @@ class ICGetElemNativeStub : public ICMonitoredStub
         return offsetof(ICGetElemNativeStub, receiverGuard_);
     }
 
-    HeapPtrPropertyName& name() {
-        return name_;
-    }
-    static size_t offsetOfName() {
-        return offsetof(ICGetElemNativeStub, name_);
-    }
-
     AccessType accessType() const {
         return static_cast<AccessType>((extra_ >> ACCESSTYPE_SHIFT) & ACCESSTYPE_MASK);
     }
@@ -1568,22 +1562,56 @@ class ICGetElemNativeStub : public ICMonitoredStub
     bool needsAtomize() const {
         return (extra_ >> NEEDS_ATOMIZE_SHIFT) & NEEDS_ATOMIZE_MASK;
     }
+
+    bool isSymbol() const {
+        return (extra_ >> ISSYMBOL_SHIFT) & ISSYMBOL_MASK;
+    }
 };
 
-class ICGetElemNativeSlotStub : public ICGetElemNativeStub
+template <class T>
+class ICGetElemNativeStubImpl : public ICGetElemNativeStub
+{
+  protected:
+    HeapPtr<T> key_;
+
+    ICGetElemNativeStubImpl(ICStub::Kind kind, JitCode* stubCode, ICStub* firstMonitorStub,
+                            ReceiverGuard guard, const T* key, AccessType acctype, bool needsAtomize)
+      : ICGetElemNativeStub(kind, stubCode, firstMonitorStub, guard, acctype, needsAtomize,
+                            mozilla::IsSame<T, JS::Symbol*>::value),
+        key_(*key)
+    {}
+
+  public:
+    HeapPtr<T>& key() {
+        return key_;
+    }
+    static size_t offsetOfKey() {
+        return offsetof(ICGetElemNativeStubImpl, key_);
+    }
+};
+
+typedef ICGetElemNativeStub::AccessType AccType;
+
+template <class T>
+class ICGetElemNativeSlotStub : public ICGetElemNativeStubImpl<T>
 {
   protected:
     uint32_t offset_;
 
     ICGetElemNativeSlotStub(ICStub::Kind kind, JitCode* stubCode, ICStub* firstMonitorStub,
-                            ReceiverGuard guard, PropertyName* name,
-                            AccessType acctype, bool needsAtomize, uint32_t offset)
-      : ICGetElemNativeStub(kind, stubCode, firstMonitorStub, guard, name, acctype, needsAtomize),
+                            ReceiverGuard guard, const T* key, AccType acctype, bool needsAtomize,
+                            uint32_t offset)
+      : ICGetElemNativeStubImpl<T>(kind, stubCode, firstMonitorStub, guard, key, acctype, needsAtomize),
         offset_(offset)
     {
-        MOZ_ASSERT(kind == GetElem_NativeSlot || kind == GetElem_NativePrototypeSlot ||
-                   kind == GetElem_UnboxedProperty);
-        MOZ_ASSERT(acctype == FixedSlot || acctype == DynamicSlot || acctype == UnboxedProperty);
+        MOZ_ASSERT(kind == ICStub::GetElem_NativeSlotName ||
+                   kind == ICStub::GetElem_NativeSlotSymbol ||
+                   kind == ICStub::GetElem_NativePrototypeSlotName ||
+                   kind == ICStub::GetElem_NativePrototypeSlotSymbol ||
+                   kind == ICStub::GetElem_UnboxedPropertyName);
+        MOZ_ASSERT(acctype == ICGetElemNativeStub::FixedSlot ||
+                   acctype == ICGetElemNativeStub::DynamicSlot ||
+                   acctype == ICGetElemNativeStub::UnboxedProperty);
     }
 
   public:
@@ -1596,15 +1624,16 @@ class ICGetElemNativeSlotStub : public ICGetElemNativeStub
     }
 };
 
-class ICGetElemNativeGetterStub : public ICGetElemNativeStub
+template <class T>
+class ICGetElemNativeGetterStub : public ICGetElemNativeStubImpl<T>
 {
   protected:
     HeapPtrFunction getter_;
     uint32_t pcOffset_;
 
     ICGetElemNativeGetterStub(ICStub::Kind kind, JitCode* stubCode, ICStub* firstMonitorStub,
-                              ReceiverGuard guard, PropertyName* name, AccessType acctype,
-                              bool needsAtomize, JSFunction* getter, uint32_t pcOffset);
+                              ReceiverGuard guard, const T* key, AccType acctype, bool needsAtomize,
+                              JSFunction* getter, uint32_t pcOffset);
 
   public:
     HeapPtrFunction& getter() {
@@ -1619,37 +1648,61 @@ class ICGetElemNativeGetterStub : public ICGetElemNativeStub
     }
 };
 
-class ICGetElem_NativeSlot : public ICGetElemNativeSlotStub
+template <class T>
+ICStub::Kind
+getGetElemStubKind(ICStub::Kind kind)
+{
+    MOZ_ASSERT(kind == ICStub::GetElem_NativeSlotName ||
+               kind == ICStub::GetElem_NativePrototypeSlotName ||
+               kind == ICStub::GetElem_NativePrototypeCallNativeName ||
+               kind == ICStub::GetElem_NativePrototypeCallScriptedName);
+    return static_cast<ICStub::Kind>(kind + mozilla::IsSame<T, JS::Symbol*>::value);
+}
+
+template <class T>
+class ICGetElem_NativeSlot : public ICGetElemNativeSlotStub<T>
 {
     friend class ICStubSpace;
-    ICGetElem_NativeSlot(JitCode* stubCode, ICStub* firstMonitorStub,
-                         ReceiverGuard guard, PropertyName* name,
-                         AccessType acctype, bool needsAtomize, uint32_t offset)
-      : ICGetElemNativeSlotStub(ICStub::GetElem_NativeSlot, stubCode, firstMonitorStub, guard,
-                                name, acctype, needsAtomize, offset)
+    ICGetElem_NativeSlot(JitCode* stubCode, ICStub* firstMonitorStub, ReceiverGuard guard,
+                         const T* key, AccType acctype, bool needsAtomize, uint32_t offset)
+      : ICGetElemNativeSlotStub<T>(getGetElemStubKind<T>(ICStub::GetElem_NativeSlotName),
+                                   stubCode, firstMonitorStub, guard,
+                                   key, acctype, needsAtomize, offset)
     {}
 };
 
-class ICGetElem_UnboxedProperty : public ICGetElemNativeSlotStub
+class ICGetElem_NativeSlotName :
+      public ICGetElem_NativeSlot<PropertyName*>
+{};
+class ICGetElem_NativeSlotSymbol :
+      public ICGetElem_NativeSlot<JS::Symbol*>
+{};
+
+template <class T>
+class ICGetElem_UnboxedProperty : public ICGetElemNativeSlotStub<T>
 {
     friend class ICStubSpace;
     ICGetElem_UnboxedProperty(JitCode* stubCode, ICStub* firstMonitorStub,
-                              ReceiverGuard guard, PropertyName* name,
-                              AccessType acctype, bool needsAtomize, uint32_t offset)
-      : ICGetElemNativeSlotStub(ICStub::GetElem_UnboxedProperty, stubCode, firstMonitorStub, guard,
-                                name, acctype, needsAtomize, offset)
-    {}
+                              ReceiverGuard guard, const T* key, AccType acctype,
+                              bool needsAtomize, uint32_t offset)
+      : ICGetElemNativeSlotStub<T>(ICStub::GetElem_UnboxedPropertyName, stubCode, firstMonitorStub,
+                                   guard, key, acctype, needsAtomize, offset)
+     {}
 };
 
-class ICGetElem_NativePrototypeSlot : public ICGetElemNativeSlotStub
+class ICGetElem_UnboxedPropertyName :
+      public ICGetElem_UnboxedProperty<PropertyName*>
+{};
+
+template <class T>
+class ICGetElem_NativePrototypeSlot : public ICGetElemNativeSlotStub<T>
 {
     friend class ICStubSpace;
     HeapPtrObject holder_;
     HeapPtrShape holderShape_;
 
-    ICGetElem_NativePrototypeSlot(JitCode* stubCode, ICStub* firstMonitorStub,
-                                  ReceiverGuard guard, PropertyName* name,
-                                  AccessType acctype, bool needsAtomize, uint32_t offset,
+    ICGetElem_NativePrototypeSlot(JitCode* stubCode, ICStub* firstMonitorStub, ReceiverGuard guard,
+                                  const T* key, AccType acctype, bool needsAtomize, uint32_t offset,
                                   JSObject* holder, Shape* holderShape);
 
   public:
@@ -1668,7 +1721,15 @@ class ICGetElem_NativePrototypeSlot : public ICGetElemNativeSlotStub
     }
 };
 
-class ICGetElemNativePrototypeCallStub : public ICGetElemNativeGetterStub
+class ICGetElem_NativePrototypeSlotName :
+      public ICGetElem_NativePrototypeSlot<PropertyName*>
+{};
+class ICGetElem_NativePrototypeSlotSymbol :
+      public ICGetElem_NativePrototypeSlot<JS::Symbol*>
+{};
+
+template <class T>
+class ICGetElemNativePrototypeCallStub : public ICGetElemNativeGetterStub<T>
 {
     friend class ICStubSpace;
     HeapPtrObject holder_;
@@ -1676,10 +1737,9 @@ class ICGetElemNativePrototypeCallStub : public ICGetElemNativeGetterStub
 
   protected:
     ICGetElemNativePrototypeCallStub(ICStub::Kind kind, JitCode* stubCode, ICStub* firstMonitorStub,
-                                     ReceiverGuard guard, PropertyName* name,
-                                     AccessType acctype, bool needsAtomize, JSFunction* getter,
-                                     uint32_t pcOffset, JSObject* holder,
-                                     Shape* holderShape);
+                                     ReceiverGuard guard, const T* key, AccType acctype,
+                                     bool needsAtomize, JSFunction* getter, uint32_t pcOffset,
+                                     JSObject* holder, Shape* holderShape);
 
   public:
     HeapPtrObject& holder() {
@@ -1697,64 +1757,81 @@ class ICGetElemNativePrototypeCallStub : public ICGetElemNativeGetterStub
     }
 };
 
-class ICGetElem_NativePrototypeCallNative : public ICGetElemNativePrototypeCallStub
+template <class T>
+class ICGetElem_NativePrototypeCallNative : public ICGetElemNativePrototypeCallStub<T>
 {
     friend class ICStubSpace;
 
     ICGetElem_NativePrototypeCallNative(JitCode* stubCode, ICStub* firstMonitorStub,
-                                        ReceiverGuard guard, PropertyName* name,
-                                        AccessType acctype, bool needsAtomize,
-                                        JSFunction* getter, uint32_t pcOffset,
+                                        ReceiverGuard guard, const T* key, AccType acctype,
+                                        bool needsAtomize, JSFunction* getter, uint32_t pcOffset,
                                         JSObject* holder, Shape* holderShape)
-      : ICGetElemNativePrototypeCallStub(GetElem_NativePrototypeCallNative,
-                                         stubCode, firstMonitorStub, guard, name,
-                                         acctype, needsAtomize, getter, pcOffset, holder,
-                                         holderShape)
+      : ICGetElemNativePrototypeCallStub<T>(getGetElemStubKind<T>(
+                                            ICStub::GetElem_NativePrototypeCallNativeName),
+                                            stubCode, firstMonitorStub, guard, key,
+                                            acctype, needsAtomize, getter, pcOffset, holder,
+                                            holderShape)
     {}
 
   public:
-    static ICGetElem_NativePrototypeCallNative* Clone(JSContext* cx, ICStubSpace* space,
-                                                      ICStub* firstMonitorStub,
-                                                      ICGetElem_NativePrototypeCallNative& other);
+    static ICGetElem_NativePrototypeCallNative<T>* Clone(JSContext* cx, ICStubSpace* space,
+                                                         ICStub* firstMonitorStub,
+                                                         ICGetElem_NativePrototypeCallNative<T>& other);
 };
 
-class ICGetElem_NativePrototypeCallScripted : public ICGetElemNativePrototypeCallStub
+class ICGetElem_NativePrototypeCallNativeName :
+      public ICGetElem_NativePrototypeCallNative<PropertyName*>
+{};
+class ICGetElem_NativePrototypeCallNativeSymbol :
+      public ICGetElem_NativePrototypeCallNative<JS::Symbol*>
+{};
+
+template <class T>
+class ICGetElem_NativePrototypeCallScripted : public ICGetElemNativePrototypeCallStub<T>
 {
     friend class ICStubSpace;
 
     ICGetElem_NativePrototypeCallScripted(JitCode* stubCode, ICStub* firstMonitorStub,
-                                          ReceiverGuard guard, PropertyName* name,
-                                          AccessType acctype, bool needsAtomize,
-                                          JSFunction* getter, uint32_t pcOffset,
+                                          ReceiverGuard guard, const T* key, AccType acctype,
+                                          bool needsAtomize, JSFunction* getter, uint32_t pcOffset,
                                           JSObject* holder, Shape* holderShape)
-      : ICGetElemNativePrototypeCallStub(GetElem_NativePrototypeCallScripted,
-                                         stubCode, firstMonitorStub, guard, name,
-                                         acctype, needsAtomize, getter, pcOffset, holder,
-                                         holderShape)
+      : ICGetElemNativePrototypeCallStub<T>(getGetElemStubKind<T>(
+                                            ICStub::GetElem_NativePrototypeCallScriptedName),
+                                            stubCode, firstMonitorStub, guard, key, acctype,
+                                            needsAtomize, getter, pcOffset, holder, holderShape)
     {}
 
   public:
-    static ICGetElem_NativePrototypeCallScripted*
+    static ICGetElem_NativePrototypeCallScripted<T>*
     Clone(JSContext* cx, ICStubSpace* space,
           ICStub* firstMonitorStub,
-          ICGetElem_NativePrototypeCallScripted& other);
+          ICGetElem_NativePrototypeCallScripted<T>& other);
 };
 
+class ICGetElem_NativePrototypeCallScriptedName :
+      public ICGetElem_NativePrototypeCallScripted<PropertyName*>
+{};
+class ICGetElem_NativePrototypeCallScriptedSymbol :
+      public ICGetElem_NativePrototypeCallScripted<JS::Symbol*>
+{};
+
 // Compiler for GetElem_NativeSlot and GetElem_NativePrototypeSlot stubs.
+template <class T>
 class ICGetElemNativeCompiler : public ICStubCompiler
 {
     bool isCallElem_;
     ICStub* firstMonitorStub_;
     HandleObject obj_;
     HandleObject holder_;
-    HandlePropertyName name_;
-    ICGetElemNativeStub::AccessType acctype_;
+    Handle<T> key_;
+    AccType acctype_;
     bool needsAtomize_;
     uint32_t offset_;
     JSValueType unboxedType_;
     HandleFunction getter_;
     uint32_t pcOffset_;
 
+    bool emitCheckKey(MacroAssembler& masm, Label& failure);
     bool emitCallNative(MacroAssembler& masm, Register objReg);
     bool emitCallScripted(MacroAssembler& masm, Register objReg);
     bool generateStubCode(MacroAssembler& masm);
@@ -1771,21 +1848,21 @@ class ICGetElemNativeCompiler : public ICStubCompiler
               (static_cast<int32_t>(needsAtomize_) << 18) |
               (static_cast<int32_t>(acctype_) << 19) |
               (static_cast<int32_t>(unboxedType_) << 22) |
-              (HeapReceiverGuard::keyBits(obj_) << 26);
+              (static_cast<int32_t>(mozilla::IsSame<JS::Symbol*, T>::value) << 26) |
+              (HeapReceiverGuard::keyBits(obj_) << 27);
     }
 
   public:
     ICGetElemNativeCompiler(JSContext* cx, ICStub::Kind kind, bool isCallElem,
                             ICStub* firstMonitorStub, HandleObject obj, HandleObject holder,
-                            HandlePropertyName name, ICGetElemNativeStub::AccessType acctype,
-                            bool needsAtomize, uint32_t offset,
+                            Handle<T> key, AccType acctype, bool needsAtomize, uint32_t offset,
                             JSValueType unboxedType = JSVAL_TYPE_MAGIC)
       : ICStubCompiler(cx, kind, Engine::Baseline),
         isCallElem_(isCallElem),
         firstMonitorStub_(firstMonitorStub),
         obj_(obj),
         holder_(holder),
-        name_(name),
+        key_(key),
         acctype_(acctype),
         needsAtomize_(needsAtomize),
         offset_(offset),
@@ -1795,15 +1872,15 @@ class ICGetElemNativeCompiler : public ICStubCompiler
     {}
 
     ICGetElemNativeCompiler(JSContext* cx, ICStub::Kind kind, ICStub* firstMonitorStub,
-                            HandleObject obj, HandleObject holder, HandlePropertyName name,
-                            ICGetElemNativeStub::AccessType acctype, bool needsAtomize,
-                            HandleFunction getter, uint32_t pcOffset, bool isCallElem)
+                            HandleObject obj, HandleObject holder, Handle<T> key, AccType acctype,
+                            bool needsAtomize, HandleFunction getter, uint32_t pcOffset,
+                            bool isCallElem)
       : ICStubCompiler(cx, kind, Engine::Baseline),
         isCallElem_(false),
         firstMonitorStub_(firstMonitorStub),
         obj_(obj),
         holder_(holder),
-        name_(name),
+        key_(key),
         acctype_(acctype),
         needsAtomize_(needsAtomize),
         offset_(0),
@@ -1814,39 +1891,44 @@ class ICGetElemNativeCompiler : public ICStubCompiler
 
     ICStub* getStub(ICStubSpace* space) {
         RootedReceiverGuard guard(cx, ReceiverGuard(obj_));
-        if (kind == ICStub::GetElem_NativeSlot) {
+        if (kind == ICStub::GetElem_NativeSlotName || kind == ICStub::GetElem_NativeSlotSymbol) {
             MOZ_ASSERT(obj_ == holder_);
-            return newStub<ICGetElem_NativeSlot>(
-                    space, getStubCode(), firstMonitorStub_, guard, name_, acctype_, needsAtomize_,
-                    offset_);
+            return newStub<ICGetElem_NativeSlot<T>>(
+                    space, getStubCode(), firstMonitorStub_, guard, key_.address(), acctype_,
+                    needsAtomize_, offset_);
         }
 
-        if (kind == ICStub::GetElem_UnboxedProperty) {
+	if (kind == ICStub::GetElem_UnboxedPropertyName) {
             MOZ_ASSERT(obj_ == holder_);
-            return newStub<ICGetElem_UnboxedProperty>(
-                    space, getStubCode(), firstMonitorStub_, guard, name_, acctype_, needsAtomize_,
-                    offset_);
+            return newStub<ICGetElem_UnboxedProperty<T>>(
+                    space, getStubCode(), firstMonitorStub_, guard, key_.address(), acctype_,
+                    needsAtomize_, offset_);
         }
 
         MOZ_ASSERT(obj_ != holder_);
         RootedShape holderShape(cx, holder_->as<NativeObject>().lastProperty());
-        if (kind == ICStub::GetElem_NativePrototypeSlot) {
-            return newStub<ICGetElem_NativePrototypeSlot>(
-                    space, getStubCode(), firstMonitorStub_, guard, name_, acctype_, needsAtomize_,
-                    offset_, holder_, holderShape);
+        if (kind == ICStub::GetElem_NativePrototypeSlotName ||
+            kind == ICStub::GetElem_NativePrototypeSlotSymbol)
+        {
+            return newStub<ICGetElem_NativePrototypeSlot<T>>(
+                    space, getStubCode(), firstMonitorStub_, guard, key_.address(), acctype_,
+                    needsAtomize_, offset_, holder_, holderShape);
         }
 
-        if (kind == ICStub::GetElem_NativePrototypeCallNative) {
-            return newStub<ICGetElem_NativePrototypeCallNative>(
-                    space, getStubCode(), firstMonitorStub_, guard, name_, acctype_, needsAtomize_,
-                    getter_, pcOffset_, holder_, holderShape);
+        if (kind == ICStub::GetElem_NativePrototypeCallNativeSymbol ||
+            kind == ICStub::GetElem_NativePrototypeCallNativeName) {
+            return newStub<ICGetElem_NativePrototypeCallNative<T>>(
+                    space, getStubCode(), firstMonitorStub_, guard, key_.address(), acctype_,
+                    needsAtomize_, getter_, pcOffset_, holder_, holderShape);
         }
 
-        MOZ_ASSERT(kind == ICStub::GetElem_NativePrototypeCallScripted);
-        if (kind == ICStub::GetElem_NativePrototypeCallScripted) {
-            return newStub<ICGetElem_NativePrototypeCallScripted>(
-                    space, getStubCode(), firstMonitorStub_, guard, name_, acctype_, needsAtomize_,
-                    getter_, pcOffset_, holder_, holderShape);
+        MOZ_ASSERT(kind == ICStub::GetElem_NativePrototypeCallScriptedName ||
+                   kind == ICStub::GetElem_NativePrototypeCallScriptedSymbol);
+        if (kind == ICStub::GetElem_NativePrototypeCallScriptedName ||
+            kind == ICStub::GetElem_NativePrototypeCallScriptedSymbol) {
+            return newStub<ICGetElem_NativePrototypeCallScripted<T>>(
+                    space, getStubCode(), firstMonitorStub_, guard, key_.address(), acctype_,
+                    needsAtomize_, getter_, pcOffset_, holder_, holderShape);
         }
 
         MOZ_CRASH("Invalid kind.");
