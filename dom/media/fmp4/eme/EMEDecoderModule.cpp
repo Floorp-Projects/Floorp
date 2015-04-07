@@ -253,11 +253,12 @@ EMEDecoderModule::CreateVideoDecoder(const VideoDecoderConfig& aConfig,
     return wrapper.forget();
   }
 
-  nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateVideoDecoder(aConfig,
-                                                              aLayersBackend,
-                                                              aImageContainer,
-                                                              aVideoTaskQueue,
-                                                              aCallback));
+  nsRefPtr<MediaDataDecoder> decoder(
+    mPDM->CreateDecoder(aConfig,
+                        aVideoTaskQueue,
+                        aCallback,
+                        aLayersBackend,
+                        aImageContainer));
   if (!decoder) {
     return nullptr;
   }
@@ -286,9 +287,8 @@ EMEDecoderModule::CreateAudioDecoder(const AudioDecoderConfig& aConfig,
     return wrapper.forget();
   }
 
-  nsRefPtr<MediaDataDecoder> decoder(mPDM->CreateAudioDecoder(aConfig,
-                                                              aAudioTaskQueue,
-                                                              aCallback));
+  nsRefPtr<MediaDataDecoder> decoder(
+    mPDM->CreateDecoder(aConfig, aAudioTaskQueue, aCallback));
   if (!decoder) {
     return nullptr;
   }
@@ -303,10 +303,14 @@ EMEDecoderModule::CreateAudioDecoder(const AudioDecoderConfig& aConfig,
   return emeDecoder.forget();
 }
 
-bool
-EMEDecoderModule::DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig)
+PlatformDecoderModule::ConversionRequired
+EMEDecoderModule::DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const
 {
-  return mCDMDecodesVideo && aConfig.crypto.valid;
+  if (aConfig.IsVideoConfig()) {
+    return kNeedAVCC;
+  } else {
+    return kNeedNone;
+  }
 }
 
 } // namespace mozilla

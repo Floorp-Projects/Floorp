@@ -42,8 +42,8 @@ public:
                      FlushableMediaTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) override;
 
-  virtual bool
-  DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig) override;
+  virtual ConversionRequired
+  DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const override;
 
 private:
   nsRefPtr<CDMProxy> mProxy;

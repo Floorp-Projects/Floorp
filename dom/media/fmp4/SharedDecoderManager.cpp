@@ -87,11 +87,12 @@ SharedDecoderManager::CreateVideoDecoder(
     // passed in, so that none of the objects sharing the decoder can shutdown
     // the task queue while we're potentially still using it for a *different*
     // object also sharing the decoder.
-    mDecoder = aPDM->CreateVideoDecoder(aConfig,
-                                        aLayersBackend,
-                                        aImageContainer,
-                                        mTaskQueue,
-                                        mCallback);
+    mDecoder =
+      aPDM->CreateDecoder(aConfig,
+                          mTaskQueue,
+                          mCallback,
+                          aLayersBackend,
+                          aImageContainer);
     if (!mDecoder) {
       mPDM = nullptr;
       return nullptr;
@@ -119,11 +120,11 @@ SharedDecoderManager::Recreate(const mp4_demuxer::VideoDecoderConfig& aConfig,
 {
   mDecoder->Flush();
   mDecoder->Shutdown();
-  mDecoder = mPDM->CreateVideoDecoder(aConfig,
-                                      aLayersBackend,
-                                      aImageContainer,
-                                      mTaskQueue,
-                                      mCallback);
+  mDecoder = mPDM->CreateDecoder(aConfig,
+                                 mTaskQueue,
+                                 mCallback,
+                                 aLayersBackend,
+                                 aImageContainer);
   if (!mDecoder) {
     return false;
   }

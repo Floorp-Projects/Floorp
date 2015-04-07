@@ -238,9 +238,15 @@ public:
   }
 
   virtual bool
-  SupportsAudioMimeType(const nsACString& aMimeType) override
+  SupportsMimeType(const nsACString& aMimeType) override
   {
     return true;
+  }
+
+  ConversionRequired
+  DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const
+  {
+    return kNeedNone;
   }
 
 };
