@@ -986,12 +986,7 @@ function mediaTestCleanup(callback) {
       removeNodeAndSource(A[i]);
       A[i] = null;
     }
-    var cb = function() {
-      if (callback) {
-        callback();
-      }
-    }
-    SpecialPowers.exactGC(window, cb);
+    SpecialPowers.exactGC(window, callback);
 }
 
 function setMediaTestsPrefs(callback, extraPrefs) {
