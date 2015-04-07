@@ -123,6 +123,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitMaybeCopyElementsForWrite(LMaybeCopyElementsForWrite* lir);
     void visitGuardObjectIdentity(LGuardObjectIdentity* guard);
     void visitGuardReceiverPolymorphic(LGuardReceiverPolymorphic* lir);
+    void visitGuardUnboxedExpando(LGuardUnboxedExpando* lir);
+    void visitLoadUnboxedExpando(LLoadUnboxedExpando* lir);
     void visitTypeBarrierV(LTypeBarrierV* lir);
     void visitTypeBarrierO(LTypeBarrierO* lir);
     void visitMonitorTypes(LMonitorTypes* lir);

@@ -192,15 +192,20 @@ AppleDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aC
 }
 
 bool
-AppleDecoderModule::SupportsAudioMimeType(const nsACString& aMimeType)
+AppleDecoderModule::SupportsMimeType(const nsACString& aMimeType)
 {
-  return aMimeType.EqualsLiteral("audio/mp4a-latm") || aMimeType.EqualsLiteral("audio/mpeg");
+  return aMimeType.EqualsLiteral("audio/mpeg") ||
+    PlatformDecoderModule::SupportsMimeType(aMimeType);
 }
 
-bool
-AppleDecoderModule::DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig)
+PlatformDecoderModule::ConversionRequired
+AppleDecoderModule::DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const
 {
-  return true;
+  if (aConfig.IsVideoConfig()) {
+    return kNeedAVCC;
+  } else {
+    return kNeedNone;
+  }
 }
 
 } // namespace mozilla

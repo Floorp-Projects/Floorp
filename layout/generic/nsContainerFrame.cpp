@@ -791,14 +791,11 @@ nsContainerFrame::DoInlineIntrinsicISize(nsRenderingContext *aRenderingContext,
   NS_PRECONDITION(aType == nsLayoutUtils::MIN_ISIZE ||
                   aType == nsLayoutUtils::PREF_ISIZE, "bad type");
 
-  mozilla::css::Side startSide, endSide;
-  if (StyleVisibility()->mDirection == NS_STYLE_DIRECTION_LTR) {
-    startSide = NS_SIDE_LEFT;
-    endSide = NS_SIDE_RIGHT;
-  } else {
-    startSide = NS_SIDE_RIGHT;
-    endSide = NS_SIDE_LEFT;
-  }
+  WritingMode wm = GetWritingMode();
+  mozilla::css::Side startSide =
+    wm.PhysicalSideForInlineAxis(eLogicalEdgeStart);
+  mozilla::css::Side endSide =
+    wm.PhysicalSideForInlineAxis(eLogicalEdgeEnd);
 
   const nsStylePadding *stylePadding = StylePadding();
   const nsStyleBorder *styleBorder = StyleBorder();

@@ -148,7 +148,7 @@ void TestTextureClientSurface(TextureClient* texture, gfxImageSurface* surface) 
 
   // client allocation
   ASSERT_TRUE(texture->CanExposeDrawTarget());
-  texture->AllocateForSurface(ToIntSize(surface->GetSize()));
+  texture->AllocateForSurface(surface->GetSize());
   ASSERT_TRUE(texture->IsAllocated());
 
   ASSERT_TRUE(texture->Lock(OpenMode::OPEN_READ_WRITE));

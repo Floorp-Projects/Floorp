@@ -177,7 +177,7 @@ public:
           mCurrentRangeIndex(-1),
           mOriginalStringToSkipCharsOffset(aOriginalStringToSkipCharsOffset)
     {
-          SetOriginalOffset(aOriginalStringOffset);
+        SetOriginalOffset(aOriginalStringOffset);
     }
 
     explicit gfxSkipCharsIterator(const gfxSkipChars& aSkipChars,
@@ -185,9 +185,12 @@ public:
         : mSkipChars(&aSkipChars),
           mOriginalStringOffset(0),
           mSkippedStringOffset(0),
-          mCurrentRangeIndex(-1),
           mOriginalStringToSkipCharsOffset(aOriginalStringToSkipCharsOffset)
-    { }
+    {
+        mCurrentRangeIndex =
+            mSkipChars->mRanges.IsEmpty() ||
+            mSkipChars->mRanges[0].Start() > 0 ? -1 : 0;
+    }
 
     gfxSkipCharsIterator(const gfxSkipCharsIterator& aIterator)
         : mSkipChars(aIterator.mSkipChars),

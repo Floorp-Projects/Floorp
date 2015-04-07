@@ -161,7 +161,7 @@ class MochitestRunner(MozbuildObject):
             from mochitest_options import B2GOptions
 
         parser = B2GOptions()
-        options = parser.parse_args([])[0]
+        options = parser.parse_args([])
 
         if test_path:
             if chrome:
@@ -322,7 +322,7 @@ class MochitestRunner(MozbuildObject):
             logging.getLogger().removeHandler(handler)
 
         opts = mochitest.MochitestOptions()
-        options, args = opts.parse_args([])
+        options = opts.parse_args([])
 
         options.subsuite = ''
         flavor = suite
@@ -1044,7 +1044,9 @@ class B2GCommands(MachCommandBase):
     def __init__(self, context):
         MachCommandBase.__init__(self, context)
 
-        for attr in ('b2g_home', 'xre_path', 'device_name', 'get_build_var'):
+        # These attributes are defined in:
+        # https://github.com/mozilla-b2g/B2G/blob/master/tools/mach_b2g_bootstrap.py
+        for attr in ('b2g_home', 'xre_path', 'device_name', 'target_out'):
             setattr(self, attr, getattr(context, attr, None))
 
     @Command(
@@ -1056,9 +1058,10 @@ class B2GCommands(MachCommandBase):
             is_emulator])
     @B2GCommand
     def run_mochitest_remote(self, test_paths, **kwargs):
-        if self.get_build_var:
+        if self.target_out:
             host_webapps_dir = os.path.join(
-                self.get_build_var('TARGET_OUT_DATA'),
+                self.target_out,
+                'data',
                 'local',
                 'webapps')
             if not os.path.isdir(

@@ -35,7 +35,10 @@ public:
   AndroidDecoderModule() {}
   virtual ~AndroidDecoderModule() {}
 
-  virtual bool SupportsAudioMimeType(const nsACString& aMimeType) override;
+  virtual bool SupportsMimeType(const nsACString& aMimeType) override;
+
+  virtual ConversionRequired
+  DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const override;
 };
 
 class MediaCodecDataDecoder : public MediaDataDecoder {
