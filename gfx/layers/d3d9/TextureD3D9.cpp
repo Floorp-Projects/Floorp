@@ -447,7 +447,7 @@ DataTextureSourceD3D9::Update(gfxWindowsSurface* aSurface)
     NS_WARNING("No D3D device to update the texture.");
     return false;
   }
-  mSize = ToIntSize(aSurface->GetSize());
+  mSize = aSurface->GetSize();
 
   uint32_t bpp = 0;
 

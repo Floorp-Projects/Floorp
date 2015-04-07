@@ -1,8 +1,8 @@
 
 /* pngrtran.c - transforms the data in a row for PNG readers
  *
- * Last changed in libpng 1.6.15 [November 20, 2014]
- * Copyright (c) 1998-2014 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.17 [March 25, 2015]
+ * Copyright (c) 1998-2015 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -394,7 +394,7 @@ png_set_alpha_mode(png_structrp png_ptr, int mode, double output_gamma)
 /* Dither file to 8-bit.  Supply a palette, the current number
  * of elements in the palette, the maximum number of elements
  * allowed, and a histogram if possible.  If the current number
- * of colors is greater then the maximum number, the palette will be
+ * of colors is greater than the maximum number, the palette will be
  * modified to fit in the maximum number.  "full_quantize" indicates
  * whether we need a quantizing cube set up for RGB images, or if we
  * simply are reducing the number of colors in a paletted image.
@@ -2357,7 +2357,7 @@ png_do_unshift(png_row_infop row_info, png_bytep row,
                if (++channel >= channels)
                   channel = 0;
                *bp++ = (png_byte)(value >> 8);
-               *bp++ = (png_byte)(value & 0xff);
+               *bp++ = (png_byte)value;
             }
             break;
          }
@@ -2662,9 +2662,9 @@ png_do_read_filler(png_row_infop row_info, png_bytep row,
    png_uint_32 row_width = row_info->width;
 
 #ifdef PNG_READ_16BIT_SUPPORTED
-   png_byte hi_filler = (png_byte)((filler>>8) & 0xff);
+   png_byte hi_filler = (png_byte)(filler>>8);
 #endif
-   png_byte lo_filler = (png_byte)(filler & 0xff);
+   png_byte lo_filler = (png_byte)filler;
 
    png_debug(1, "in png_do_read_filler");
 
@@ -2715,13 +2715,13 @@ png_do_read_filler(png_row_infop row_info, png_bytep row,
             png_bytep dp = sp  + (png_size_t)row_width * 2;
             for (i = 1; i < row_width; i++)
             {
-               *(--dp) = hi_filler;
                *(--dp) = lo_filler;
+               *(--dp) = hi_filler;
                *(--dp) = *(--sp);
                *(--dp) = *(--sp);
             }
-            *(--dp) = hi_filler;
             *(--dp) = lo_filler;
+            *(--dp) = hi_filler;
             row_info->channels = 2;
             row_info->pixel_depth = 32;
             row_info->rowbytes = row_width * 4;
@@ -2736,8 +2736,8 @@ png_do_read_filler(png_row_infop row_info, png_bytep row,
             {
                *(--dp) = *(--sp);
                *(--dp) = *(--sp);
-               *(--dp) = hi_filler;
                *(--dp) = lo_filler;
+               *(--dp) = hi_filler;
             }
             row_info->channels = 2;
             row_info->pixel_depth = 32;
@@ -2796,8 +2796,8 @@ png_do_read_filler(png_row_infop row_info, png_bytep row,
             png_bytep dp = sp  + (png_size_t)row_width * 2;
             for (i = 1; i < row_width; i++)
             {
-               *(--dp) = hi_filler;
                *(--dp) = lo_filler;
+               *(--dp) = hi_filler;
                *(--dp) = *(--sp);
                *(--dp) = *(--sp);
                *(--dp) = *(--sp);
@@ -2805,8 +2805,8 @@ png_do_read_filler(png_row_infop row_info, png_bytep row,
                *(--dp) = *(--sp);
                *(--dp) = *(--sp);
             }
-            *(--dp) = hi_filler;
             *(--dp) = lo_filler;
+            *(--dp) = hi_filler;
             row_info->channels = 4;
             row_info->pixel_depth = 64;
             row_info->rowbytes = row_width * 8;
@@ -2825,8 +2825,8 @@ png_do_read_filler(png_row_infop row_info, png_bytep row,
                *(--dp) = *(--sp);
                *(--dp) = *(--sp);
                *(--dp) = *(--sp);
-               *(--dp) = hi_filler;
                *(--dp) = lo_filler;
+               *(--dp) = hi_filler;
             }
 
             row_info->channels = 4;
@@ -3087,10 +3087,11 @@ png_do_rgb_to_gray(png_structrp png_ptr, png_row_infop row_info, png_bytep row)
             for (i = 0; i < row_width; i++)
             {
                png_uint_16 red, green, blue, w;
+               png_byte hi,lo;
 
-               red   = (png_uint_16)(((*(sp)) << 8) | *(sp + 1)); sp += 2;
-               green = (png_uint_16)(((*(sp)) << 8) | *(sp + 1)); sp += 2;
-               blue  = (png_uint_16)(((*(sp)) << 8) | *(sp + 1)); sp += 2;
+               hi=*(sp)++; lo=*(sp)++; red   = (png_uint_16)((hi << 8) | (lo));
+               hi=*(sp)++; lo=*(sp)++; green = (png_uint_16)((hi << 8) | (lo));
+               hi=*(sp)++; lo=*(sp)++; blue  = (png_uint_16)((hi << 8) | (lo));
 
                if (red == green && red == blue)
                {
@@ -3104,16 +3105,16 @@ png_do_rgb_to_gray(png_structrp png_ptr, png_row_infop row_info, png_bytep row)
 
                else
                {
-                  png_uint_16 red_1   = png_ptr->gamma_16_to_1[(red&0xff)
+                  png_uint_16 red_1   = png_ptr->gamma_16_to_1[(red & 0xff)
                       >> png_ptr->gamma_shift][red>>8];
                   png_uint_16 green_1 =
-                      png_ptr->gamma_16_to_1[(green&0xff) >>
+                      png_ptr->gamma_16_to_1[(green & 0xff) >>
                       png_ptr->gamma_shift][green>>8];
-                  png_uint_16 blue_1  = png_ptr->gamma_16_to_1[(blue&0xff)
+                  png_uint_16 blue_1  = png_ptr->gamma_16_to_1[(blue & 0xff)
                       >> png_ptr->gamma_shift][blue>>8];
                   png_uint_16 gray16  = (png_uint_16)((rc*red_1 + gc*green_1
                       + bc*blue_1 + 16384)>>15);
-                  w = png_ptr->gamma_16_from_1[(gray16&0xff) >>
+                  w = png_ptr->gamma_16_from_1[(gray16 & 0xff) >>
                       png_ptr->gamma_shift][gray16 >> 8];
                   rgb_error |= 1;
                }
@@ -3138,10 +3139,11 @@ png_do_rgb_to_gray(png_structrp png_ptr, png_row_infop row_info, png_bytep row)
             for (i = 0; i < row_width; i++)
             {
                png_uint_16 red, green, blue, gray16;
+               png_byte hi,lo;
 
-               red   = (png_uint_16)(((*(sp)) << 8) | *(sp + 1)); sp += 2;
-               green = (png_uint_16)(((*(sp)) << 8) | *(sp + 1)); sp += 2;
-               blue  = (png_uint_16)(((*(sp)) << 8) | *(sp + 1)); sp += 2;
+               hi=*(sp)++; lo=*(sp)++; red   = (png_uint_16)((hi << 8) | (lo));
+               hi=*(sp)++; lo=*(sp)++; green = (png_uint_16)((hi << 8) | (lo));
+               hi=*(sp)++; lo=*(sp)++; blue  = (png_uint_16)((hi << 8) | (lo));
 
                if (red != green || red != blue)
                   rgb_error |= 1;
@@ -3667,7 +3669,8 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structrp png_ptr)
                         if (optimize != 0)
                            w = v;
                         else
-                           w = gamma_16_from_1[(v&0xff) >> gamma_shift][v >> 8];
+                           w = gamma_16_from_1[(v & 0xff) >>
+                               gamma_shift][v >> 8];
                         *sp = (png_byte)((w >> 8) & 0xff);
                         *(sp + 1) = (png_byte)(w & 0xff);
                      }
@@ -3831,7 +3834,7 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structrp png_ptr)
                         v = gamma_16_to_1[*(sp + 1) >> gamma_shift][*sp];
                         png_composite_16(w, v, a, png_ptr->background_1.red);
                         if (optimize == 0)
-                           w = gamma_16_from_1[((w&0xff) >> gamma_shift)][w >>
+                           w = gamma_16_from_1[((w & 0xff) >> gamma_shift)][w >>
                                 8];
                         *sp = (png_byte)((w >> 8) & 0xff);
                         *(sp + 1) = (png_byte)(w & 0xff);
@@ -3839,7 +3842,7 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structrp png_ptr)
                         v = gamma_16_to_1[*(sp + 3) >> gamma_shift][*(sp + 2)];
                         png_composite_16(w, v, a, png_ptr->background_1.green);
                         if (optimize == 0)
-                           w = gamma_16_from_1[((w&0xff) >> gamma_shift)][w >>
+                           w = gamma_16_from_1[((w & 0xff) >> gamma_shift)][w >>
                                 8];
 
                         *(sp + 2) = (png_byte)((w >> 8) & 0xff);
@@ -3848,7 +3851,7 @@ png_do_compose(png_row_infop row_info, png_bytep row, png_structrp png_ptr)
                         v = gamma_16_to_1[*(sp + 5) >> gamma_shift][*(sp + 4)];
                         png_composite_16(w, v, a, png_ptr->background_1.blue);
                         if (optimize == 0)
-                           w = gamma_16_from_1[((w&0xff) >> gamma_shift)][w >>
+                           w = gamma_16_from_1[((w & 0xff) >> gamma_shift)][w >>
                                 8];
 
                         *(sp + 4) = (png_byte)((w >> 8) & 0xff);
@@ -4837,7 +4840,7 @@ png_do_read_transformations(png_structrp png_ptr, png_row_infop row_info)
       /* Because PNG_COMPOSE does the gamma transform if there is something to
        * do (if there is an alpha channel or transparency.)
        */
-       !((png_ptr->transformations & PNG_COMPOSE) &&
+       !((png_ptr->transformations & PNG_COMPOSE) != 0 &&
        ((png_ptr->num_trans != 0) ||
        (png_ptr->color_type & PNG_COLOR_MASK_ALPHA) != 0)) &&
 #endif

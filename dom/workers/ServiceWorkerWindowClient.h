@@ -47,7 +47,7 @@ public:
   }
 
   already_AddRefed<Promise>
-  Focus() const;
+  Focus(ErrorResult& aRv) const;
 
 private:
   ~ServiceWorkerWindowClient()

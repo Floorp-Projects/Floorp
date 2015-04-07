@@ -63,10 +63,6 @@ public:
   }
 
   virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override {
-    if (!mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
     return MediaCodecDataDecoder::Input(aSample);
   }
 
@@ -248,8 +244,13 @@ public:
 };
 
 
-bool AndroidDecoderModule::SupportsAudioMimeType(const nsACString& aMimeType) {
-  return static_cast<bool>(CreateDecoder(aMimeType));
+bool AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType)
+{
+  if (aMimeType.EqualsLiteral("video/mp4") ||
+      aMimeType.EqualsLiteral("video/avc")) {
+    return true;
+  }
+  return static_cast<bool>(mozilla::CreateDecoder(aMimeType));
 }
 
 already_AddRefed<MediaDataDecoder>
@@ -294,6 +295,16 @@ AndroidDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& 
 
   return decoder.forget();
 
+}
+
+PlatformDecoderModule::ConversionRequired
+AndroidDecoderModule::DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const
+{
+  if (aConfig.IsVideoConfig()) {
+    return kNeedAnnexB;
+  } else {
+    return kNeedNone;
+  }
 }
 
 MediaCodecDataDecoder::MediaCodecDataDecoder(MediaData::Type aType,

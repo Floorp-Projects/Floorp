@@ -51,4 +51,14 @@ GonkDecoderModule::CreateAudioDecoder(const mp4_demuxer::AudioDecoderConfig& aCo
   return decoder.forget();
 }
 
+PlatformDecoderModule::ConversionRequired
+GonkDecoderModule::DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const
+{
+  if (aConfig.IsVideoConfig()) {
+    return kNeedAVCC;
+  } else {
+    return kNeedNone;
+  }
+}
+
 } // namespace mozilla

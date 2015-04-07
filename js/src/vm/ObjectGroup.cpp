@@ -1553,7 +1553,7 @@ ObjectGroupCompartment::checkNewTableAfterMovingGC(NewTable* table)
 
         NewEntry::Lookup lookup(clasp, proto, entry.associated);
         NewTable::Ptr ptr = table->lookup(lookup);
-        MOZ_ASSERT(ptr.found() && &*ptr == &e.front());
+        MOZ_RELEASE_ASSERT(ptr.found() && &*ptr == &e.front());
     }
 }
 

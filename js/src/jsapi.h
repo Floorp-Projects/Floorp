@@ -2266,6 +2266,7 @@ class JS_PUBLIC_API(CompartmentOptions)
       , invisibleToDebugger_(false)
       , mergeable_(false)
       , discardSource_(false)
+      , disableLazyParsing_(false)
       , cloneSingletons_(false)
       , traceGlobal_(nullptr)
       , singletonsAsTemplates_(true)
@@ -2307,6 +2308,12 @@ class JS_PUBLIC_API(CompartmentOptions)
     bool discardSource() const { return discardSource_; }
     CompartmentOptions& setDiscardSource(bool flag) {
         discardSource_ = flag;
+        return *this;
+    }
+
+    bool disableLazyParsing() const { return disableLazyParsing_; }
+    CompartmentOptions& setDisableLazyParsing(bool flag) {
+        disableLazyParsing_ = flag;
         return *this;
     }
 
@@ -2362,6 +2369,7 @@ class JS_PUBLIC_API(CompartmentOptions)
     bool invisibleToDebugger_;
     bool mergeable_;
     bool discardSource_;
+    bool disableLazyParsing_;
     bool cloneSingletons_;
     Override extraWarningsOverride_;
     union {

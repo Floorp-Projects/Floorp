@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Test for intrinsic sizing of float around contents with border</title>
+    <style>
+      body { font-family: sans-serif; line-height: 1.4em; }
+      .h, .v-lr, .v-rl { float: left; border: 2px solid blue; margin: 1.5em; padding: 1px; }
+      .sw { text-orientation: sideways-right; }
+      span { display: inline-block; }
+      br { clear: both; }
+      .h { writing-mode: horizontal-tb; }
+      .v-lr { writing-mode: vertical-lr; }
+      .v-rl { writing-mode: vertical-rl; }
+      .a { border-inline-start: 1.5em solid transparent; }
+      .b { border-inline-end: 1.5em solid transparent; }
+      .c { border-block-start: 1.5em solid transparent; }
+      .d { border-block-end: 1.5em solid transparent; }
+    </style>
+  </head>
+  <body>
+    <p>In each case, the blue border should neatly enclose the text.</p>
+    <div class="h">
+      <span>12<b class="a">33</b>21</span>
+    </div>
+    <div class="h">
+      <span>12<b class="b">33</b>21</span>
+    </div>
+    <div class="h">
+      <span>12<b class="c">33</b>21</span>
+    </div>
+    <div class="h">
+      <span>12<b class="d">33</b>21</span>
+    </div>
+    <br>
+    <div class="v-lr">
+      <div>12<b class="a">33</b>21</div>
+    </div>
+    <div class="v-lr">
+      <div>12<b class="b">33</b>21</div>
+    </div>
+    <div class="v-lr">
+      <div>12<b class="c">33</b>21</div>
+    </div>
+    <div class="v-lr">
+      <div>12<b class="d">33</b>21</div>
+    </div>
+    <div class="v-lr sw">
+      <div>12<b class="c">33</b>21</div>
+    </div>
+    <div class="v-lr sw">
+      <div>12<b class="d">33</b>21</div>
+    </div>
+    <br>
+    <div class="v-rl">
+      <div>12<b class="a">33</b>21</div>
+    </div>
+    <div class="v-rl">
+      <div>12<b class="b">33</b>21</div>
+    </div>
+    <div class="v-rl">
+      <div>12<b class="c">33</b>21</div>
+    </div>
+    <div class="v-rl">
+      <div>12<b class="d">33</b>21</div>
+    </div>
+    <div class="v-rl sw">
+      <div>12<b class="c">33</b>21</div>
+    </div>
+    <div class="v-rl sw">
+      <div>12<b class="d">33</b>21</div>
+    </div>
+  </body>
+</html>

@@ -53,8 +53,10 @@ InitGlobals()
     }
 
     gInitialized = true;
+#if !defined(MOZILLA_XPCOMRT_API)
     Preferences::AddIntVarCache(&gMaxLength,
                                 "network.standard-url.max-length", 1048576);
+#endif
 }
 
 void
@@ -107,6 +109,10 @@ net_GetStdURLParser()
 nsresult
 net_GetURLSpecFromDir(nsIFile *aFile, nsACString &result)
 {
+#if defined(MOZILLA_XPCOMRT_API)
+    NS_WARNING("net_GetURLSpecFromDir not implemented");
+    return NS_ERROR_NOT_IMPLEMENTED;
+#else
     nsAutoCString escPath;
     nsresult rv = net_GetURLSpecFromActualFile(aFile, escPath);
     if (NS_FAILED(rv))
@@ -118,11 +124,16 @@ net_GetURLSpecFromDir(nsIFile *aFile, nsACString &result)
     
     result = escPath;
     return NS_OK;
+#endif // defined(MOZILLA_XPCOMRT_API)
 }
 
 nsresult
 net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
 {
+#if defined(MOZILLA_XPCOMRT_API)
+    NS_WARNING("net_GetURLSpecFromFile not implemented");
+    return NS_ERROR_NOT_IMPLEMENTED;
+#else
     nsAutoCString escPath;
     nsresult rv = net_GetURLSpecFromActualFile(aFile, escPath);
     if (NS_FAILED(rv))
@@ -142,6 +153,7 @@ net_GetURLSpecFromFile(nsIFile *aFile, nsACString &result)
     
     result = escPath;
     return NS_OK;
+#endif // defined(MOZILLA_XPCOMRT_API)
 }
 
 //----------------------------------------------------------------------------

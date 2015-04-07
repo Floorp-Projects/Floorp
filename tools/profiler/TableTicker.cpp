@@ -378,7 +378,8 @@ void TableTicker::FlushOnJSShutdown(JSRuntime* aRuntime)
 
     for (size_t i = 0; i < sRegisteredThreads->size(); i++) {
       // Thread not being profiled, skip it.
-      if (!sRegisteredThreads->at(i)->Profile()) {
+      if (!sRegisteredThreads->at(i)->Profile() ||
+          sRegisteredThreads->at(i)->IsPendingDelete()) {
         continue;
       }
 

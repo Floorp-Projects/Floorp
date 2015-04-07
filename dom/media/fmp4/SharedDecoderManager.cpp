@@ -83,15 +83,18 @@ SharedDecoderManager::CreateVideoDecoder(
   MediaDataDecoderCallback* aCallback)
 {
   if (!mDecoder) {
+    mLayersBackend = aLayersBackend;
+    mImageContainer = aImageContainer;
     // We use the manager's task queue for the decoder, rather than the one
     // passed in, so that none of the objects sharing the decoder can shutdown
     // the task queue while we're potentially still using it for a *different*
     // object also sharing the decoder.
-    mDecoder = aPDM->CreateVideoDecoder(aConfig,
-                                        aLayersBackend,
-                                        aImageContainer,
-                                        mTaskQueue,
-                                        mCallback);
+    mDecoder =
+      aPDM->CreateDecoder(aConfig,
+                          mTaskQueue,
+                          mCallback,
+                          mLayersBackend,
+                          mImageContainer);
     if (!mDecoder) {
       mPDM = nullptr;
       return nullptr;
@@ -113,17 +116,15 @@ SharedDecoderManager::DisableHardwareAcceleration()
 }
 
 bool
-SharedDecoderManager::Recreate(const mp4_demuxer::VideoDecoderConfig& aConfig,
-                               layers::LayersBackend aLayersBackend,
-                               layers::ImageContainer* aImageContainer)
+SharedDecoderManager::Recreate(const mp4_demuxer::VideoDecoderConfig& aConfig)
 {
   mDecoder->Flush();
   mDecoder->Shutdown();
-  mDecoder = mPDM->CreateVideoDecoder(aConfig,
-                                      aLayersBackend,
-                                      aImageContainer,
-                                      mTaskQueue,
-                                      mCallback);
+  mDecoder = mPDM->CreateDecoder(aConfig,
+                                 mTaskQueue,
+                                 mCallback,
+                                 mLayersBackend,
+                                 mImageContainer);
   if (!mDecoder) {
     return false;
   }

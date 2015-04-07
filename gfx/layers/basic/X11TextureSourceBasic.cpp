@@ -21,7 +21,7 @@ X11TextureSourceBasic::X11TextureSourceBasic(BasicCompositor* aCompositor, gfxXl
 IntSize
 X11TextureSourceBasic::GetSize() const
 {
-  return ToIntSize(mSurface->GetSize());
+  return mSurface->GetSize();
 }
 
 SurfaceFormat
