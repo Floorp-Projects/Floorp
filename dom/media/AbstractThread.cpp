@@ -6,6 +6,7 @@
 
 #include "AbstractThread.h"
 
+#include "MediaTaskQueue.h"
 #include "nsThreadUtils.h"
 
 #include "mozilla/ClearOnShutdown.h"
@@ -27,7 +28,9 @@ template<>
 bool
 AbstractThreadImpl<nsIThread>::IsCurrentThreadIn()
 {
-  return NS_GetCurrentThread() == mTarget;
+  bool in = NS_GetCurrentThread() == mTarget;
+  MOZ_ASSERT_IF(in, MediaTaskQueue::GetCurrentQueue() == nullptr);
+  return in;
 }
 
 AbstractThread*
