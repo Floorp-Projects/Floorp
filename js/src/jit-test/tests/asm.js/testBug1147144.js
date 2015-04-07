@@ -4,7 +4,7 @@ load(libdir + 'asserts.js');
 if (!isAsmJSCompilationAvailable())
     quit();
 
-setLazyParsingEnabled(false)
+setDiscardSource(true)
 assertEq(eval(`(function asmModule() { "use asm"; function asmFun() {} return asmFun })`).toString(), "function asmModule() {\n    [sourceless code]\n}");
 assertEq(eval(`(function asmModule() { "use asm"; function asmFun() {} return asmFun })`).toSource(), "(function asmModule() {\n    [sourceless code]\n})");
 assertEq(eval(`(function asmModule() { "use asm"; function asmFun() {} return asmFun })`)().toString(), "function asmFun() {\n    [sourceless code]\n}");
