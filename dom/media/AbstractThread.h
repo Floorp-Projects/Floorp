@@ -38,11 +38,10 @@ public:
   template<typename TargetType> static AbstractThread* Create(TargetType* aTarget);
 
   // Convenience method for getting an AbstractThread for the main thread.
-  //
-  // EnsureMainThreadSingleton must be called on the main thread before any
-  // other threads that might use MainThread() are spawned.
   static AbstractThread* MainThread();
-  static void EnsureMainThreadSingleton();
+
+  // Must be called exactly once during startup.
+  static void InitStatics();
 
 protected:
   virtual ~AbstractThread() {}

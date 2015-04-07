@@ -38,16 +38,15 @@ AbstractThread::MainThread()
 }
 
 void
-AbstractThread::EnsureMainThreadSingleton()
+AbstractThread::InitStatics()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!sMainThread) {
-    nsCOMPtr<nsIThread> mainThread;
-    NS_GetMainThread(getter_AddRefs(mainThread));
-    MOZ_DIAGNOSTIC_ASSERT(mainThread);
-    sMainThread = AbstractThread::Create(mainThread.get());
-    ClearOnShutdown(&sMainThread);
-  }
+  MOZ_ASSERT(!sMainThread);
+  nsCOMPtr<nsIThread> mainThread;
+  NS_GetMainThread(getter_AddRefs(mainThread));
+  MOZ_DIAGNOSTIC_ASSERT(mainThread);
+  sMainThread = AbstractThread::Create(mainThread.get());
+  ClearOnShutdown(&sMainThread);
 }
 
 } // namespace mozilla

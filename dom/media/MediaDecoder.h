@@ -298,6 +298,9 @@ public:
     PLAY_STATE_SHUTDOWN
   };
 
+  // Must be called exactly once, on the main thread, during startup.
+  static void InitStatics();
+
   MediaDecoder();
 
   // Reset the decoder and notify the media element that
