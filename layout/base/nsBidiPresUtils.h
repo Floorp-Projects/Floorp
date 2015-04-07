@@ -165,7 +165,7 @@ public:
   static void ReorderFrames(nsIFrame* aFirstFrameOnLine,
                             int32_t aNumFramesOnLine,
                             mozilla::WritingMode aLineWM,
-                            nscoord aContainerISize,
+                            const nsSize& aContainerSize,
                             nscoord aStart);
 
   /**
@@ -446,7 +446,7 @@ private:
                                  const nsContinuationStates* aContinuationStates,
                                  mozilla::WritingMode aContainerWM,
                                  bool aContainerReverseOrder,
-                                 nscoord aContainerISize);
+                                 const nsSize& aContainerSize);
 
   /*
    * Initialize the continuation state(nsFrameContinuationState) to
@@ -499,7 +499,7 @@ private:
   static void RepositionInlineFrames(BidiLineData* aBld,
                                      nsIFrame* aFirstChild,
                                      mozilla::WritingMode aLineWM,
-                                     nscoord aContainerISize,
+                                     const nsSize& aContainerSize,
                                      nscoord aStart);
   
   /**
