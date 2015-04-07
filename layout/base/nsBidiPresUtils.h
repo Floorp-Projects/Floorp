@@ -420,18 +420,21 @@ private:
    *                             going to be repositioned
    * @param aIsEvenLevel         TRUE means the embedding level of this frame
    *                             is even (LTR)
-   * @param[in,out] aStart       IN value is the starting position of aFrame
-   *                             (without considering its inline-start margin)
-   *                             OUT value will be the ending position of aFrame
-   *                             (after adding its inline-end margin)
+   * @param aStartOrEnd          The distance to the start or the end of aFrame
+   *                             without considering its inline margin. If the
+   *                             container is reordering frames in reverse
+   *                             direction, it's the distance to the end,
+   *                             otherwise, it's the distance to the start.
    * @param aContinuationStates  A map from nsIFrame* to nsFrameContinuationState
+   * @return                     The isize aFrame takes, including margins.
    */
-  static void RepositionFrame(nsIFrame* aFrame,
-                              bool aIsEvenLevel,
-                              nscoord& aStart,
-                              const nsContinuationStates* aContinuationStates,
-                              mozilla::WritingMode aContainerWM,
-                              nscoord aContainerISize);
+  static nscoord RepositionFrame(nsIFrame* aFrame,
+                                 bool aIsEvenLevel,
+                                 nscoord aStartOrEnd,
+                                 const nsContinuationStates* aContinuationStates,
+                                 mozilla::WritingMode aContainerWM,
+                                 bool aContainerReverseOrder,
+                                 nscoord aContainerISize);
 
   /*
    * Initialize the continuation state(nsFrameContinuationState) to
