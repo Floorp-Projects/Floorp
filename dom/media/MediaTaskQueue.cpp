@@ -10,6 +10,16 @@
 
 namespace mozilla {
 
+ThreadLocal<MediaTaskQueue*> MediaTaskQueue::sCurrentQueueTLS;
+
+/* static */ void
+MediaTaskQueue::InitStatics()
+{
+  if (!sCurrentQueueTLS.init()) {
+    MOZ_CRASH();
+  }
+}
+
 MediaTaskQueue::MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool)
   : mPool(aPool)
   , mQueueMonitor("MediaTaskQueue::Queue")
@@ -196,7 +206,9 @@ bool
 MediaTaskQueue::IsCurrentThreadIn()
 {
   MonitorAutoLock mon(mQueueMonitor);
-  return NS_GetCurrentThread() == mRunningThread;
+  bool in = NS_GetCurrentThread() == mRunningThread;
+  MOZ_ASSERT_IF(in, GetCurrentQueue() == this);
+  return in;
 }
 
 nsresult
@@ -223,7 +235,10 @@ MediaTaskQueue::Runner::Run()
   // fences enforced. This means that if the object we're calling wasn't
   // designed to be threadsafe, it will be, provided we're only calling it
   // in this task queue.
-  event->Run();
+  {
+    AutoTaskGuard g(mQueue);
+    event->Run();
+  }
 
   // Drop the reference to event. The event will hold a reference to the
   // object it's calling, and we don't want to keep it alive, it may be
