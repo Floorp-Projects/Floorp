@@ -98,7 +98,7 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   // Create a surface to draw into.
   RefPtr<DrawTarget> target =
     gfxPlatform::GetPlatform()->
-      CreateOffscreenContentDrawTarget(ToIntSize(size), surfaceFormat);
+      CreateOffscreenContentDrawTarget(size, surfaceFormat);
   if (!target) {
     NS_ERROR("Could not create a DrawTarget");
     return nullptr;

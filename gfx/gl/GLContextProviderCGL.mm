@@ -296,7 +296,7 @@ GLContextProviderCGL::CreateOffscreen(const gfxIntSize& size,
                                       bool requireCompatProfile)
 {
     nsRefPtr<GLContext> glContext = CreateHeadless(requireCompatProfile);
-    if (!glContext->InitOffscreen(ToIntSize(size), caps))
+    if (!glContext->InitOffscreen(size, caps))
         return nullptr;
 
     return glContext.forget();
