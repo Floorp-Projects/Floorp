@@ -34,8 +34,6 @@ public:
 protected:
   Accessible* mHyperlink;
   AtkHyperlink* mMaiAtkHyperlink;
-public:
-  static nsresult Initialize(AtkHyperlink *aObj, MaiHyperlink *aClass);
 };
 
 } // namespace a11y
