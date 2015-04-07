@@ -59,51 +59,7 @@ ServiceWorkerRegistrationBase::ServiceWorkerRegistrationBase(nsPIDOMWindow* aWin
                                                              const nsAString& aScope)
   : DOMEventTargetHelper(aWindow)
   , mScope(aScope)
-  , mListeningForEvents(false)
-{
-  MOZ_ASSERT(aWindow);
-  MOZ_ASSERT(aWindow->IsInnerWindow());
-
-  StartListeningForEvents();
-}
-
-ServiceWorkerRegistrationBase::~ServiceWorkerRegistrationBase()
-{
-  StopListeningForEvents();
-}
-
-void
-ServiceWorkerRegistrationBase::DisconnectFromOwner()
-{
-  StopListeningForEvents();
-  DOMEventTargetHelper::DisconnectFromOwner();
-}
-
-// XXXnsm, maybe this can be optimized to only add when a event handler is
-// registered.
-void
-ServiceWorkerRegistrationBase::StartListeningForEvents()
-{
-  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
-  if (swm) {
-    swm->AddRegistrationEventListener(mScope, this);
-    mListeningForEvents = true;
-  }
-}
-
-void
-ServiceWorkerRegistrationBase::StopListeningForEvents()
-{
-  if (!mListeningForEvents) {
-    return;
-  }
-
-  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
-  if (swm) {
-    swm->RemoveRegistrationEventListener(mScope, this);
-    mListeningForEvents = false;
-  }
-}
+{}
 
 ////////////////////////////////////////////////////
 // Main Thread implementation
@@ -122,12 +78,20 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationMainThread, ServiceW
 ServiceWorkerRegistrationMainThread::ServiceWorkerRegistrationMainThread(nsPIDOMWindow* aWindow,
                                                                          const nsAString& aScope)
   : ServiceWorkerRegistrationBase(aWindow, aScope)
+  , mListeningForEvents(false)
 {
+  AssertIsOnMainThread();
+  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aWindow->IsInnerWindow());
+  StartListeningForEvents();
 }
 
 ServiceWorkerRegistrationMainThread::~ServiceWorkerRegistrationMainThread()
 {
+  StopListeningForEvents();
+  MOZ_ASSERT(!mListeningForEvents);
 }
+
 
 already_AddRefed<workers::ServiceWorker>
 ServiceWorkerRegistrationMainThread::GetWorkerReference(WhichServiceWorker aWhichOne)
@@ -168,6 +132,35 @@ ServiceWorkerRegistrationMainThread::GetWorkerReference(WhichServiceWorker aWhic
   nsRefPtr<ServiceWorker> ref =
     static_cast<ServiceWorker*>(serviceWorker.get());
   return ref.forget();
+}
+
+// XXXnsm, maybe this can be optimized to only add when a event handler is
+// registered.
+void
+ServiceWorkerRegistrationMainThread::StartListeningForEvents()
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(!mListeningForEvents);
+  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
+  if (swm) {
+    swm->AddRegistrationEventListener(mScope, this);
+    mListeningForEvents = true;
+  }
+}
+
+void
+ServiceWorkerRegistrationMainThread::StopListeningForEvents()
+{
+  AssertIsOnMainThread();
+  if (!mListeningForEvents) {
+    return;
+  }
+
+  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
+  if (swm) {
+    swm->RemoveRegistrationEventListener(mScope, this);
+  }
+  mListeningForEvents = false;
 }
 
 JSObject*
@@ -415,7 +408,6 @@ NS_IMPL_CYCLE_COLLECTION_INHERITED(ServiceWorkerRegistrationWorkerThread,
 JSObject*
 ServiceWorkerRegistrationWorkerThread::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  AssertIsOnMainThread();
   return ServiceWorkerRegistrationBinding_workers::Wrap(aCx, this, aGivenProto);
 }
 
