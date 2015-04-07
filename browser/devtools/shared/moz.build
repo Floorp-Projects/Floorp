@@ -31,6 +31,7 @@ EXTRA_JS_MODULES.devtools += [
 ]
 
 EXTRA_JS_MODULES.devtools.shared.profiler += [
+    'profiler/frame-utils.js',
     'profiler/global.js',
     'profiler/jit.js',
     'profiler/tree-model.js',
