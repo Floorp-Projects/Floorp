@@ -835,6 +835,7 @@ LoginManagerPrompter.prototype = {
         callback: function(aNotifyObj, aButton) {
           promptHistogram.add(PROMPT_ADD);
           pwmgr.addLogin(aLogin);
+          Services.obs.notifyObservers(null, 'LoginStats:NewSavedPassword', null);
           browser.focus();
         }
       };
@@ -871,6 +872,8 @@ LoginManagerPrompter.prototype = {
           popup:     null,
           callback: function(aNotifyObj, aButton) {
             pwmgr.addLogin(aLogin);
+            Services.obs.notifyObservers(null, 'LoginStats:NewSavedPassword', null);
+
           }
         },
 
