@@ -137,6 +137,7 @@ using namespace mozilla::system;
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "CameraPreferences.h"
 #include "TouchManager.h"
+#include "MediaDecoder.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -313,6 +314,8 @@ nsLayoutStatics::Initialize()
   nsStyleContext::Initialize();
   mozilla::css::CommonAnimationManager::Initialize();
 #endif
+
+  MediaDecoder::InitStatics();
 
   return NS_OK;
 }
