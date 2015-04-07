@@ -60,6 +60,7 @@
 #include "ScopedGLHelpers.h"
 #include "HeapCopyOfStackArray.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/APZThreadUtils.h"
 #include "mozilla/layers/GLManager.h"
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/CompositorParent.h"
@@ -1888,6 +1889,14 @@ nsChildView::ConfigureAPZCTreeManager()
     [EventThreadRunner start];
   }
   gNumberOfWidgetsNeedingEventThread++;
+}
+
+void
+nsChildView::ConfigureAPZControllerThread()
+{
+  // On OS X the EventThreadRunner is the controller thread, but it doesn't
+  // have a MessageLoop.
+  APZThreadUtils::SetControllerThread(nullptr);
 }
 
 nsIntRect
