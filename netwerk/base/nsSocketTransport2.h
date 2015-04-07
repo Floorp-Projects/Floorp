@@ -296,6 +296,10 @@ private:
     bool mInputClosed;
     bool mOutputClosed;
 
+    // The platform-specific network interface id that this socket
+    // associated with.
+    nsCString mNetworkInterfaceId;
+
     // this flag is used to determine if the results of a host lookup arrive
     // recursively or not.  this flag is not protected by any lock.
     bool mResolving;

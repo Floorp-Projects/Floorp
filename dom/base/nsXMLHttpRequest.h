@@ -428,6 +428,11 @@ private:
 
   bool IsDeniedCrossSiteRequest();
 
+  // Tell our channel what network interface ID we were told to use.
+  // If it's an HTTP channel and we were told to use a non-default
+  // interface ID.
+  void PopulateNetworkInterfaceId();
+
 public:
   void Send(JSContext* /*aCx*/, ErrorResult& aRv)
   {
@@ -536,6 +541,16 @@ public:
   nsIChannel* GetChannel()
   {
     return mChannel;
+  }
+
+  void GetNetworkInterfaceId(nsACString& aId) const
+  {
+    aId = mNetworkInterfaceId;
+  }
+
+  void SetNetworkInterfaceId(const nsACString& aId)
+  {
+    mNetworkInterfaceId = aId;
   }
 
   // We need a GetInterface callable from JS for chrome JS
@@ -761,6 +776,10 @@ protected:
 
   bool mIsSystem;
   bool mIsAnon;
+
+  // A platform-specific identifer to represent the network interface
+  // that this request is associated with.
+  nsCString mNetworkInterfaceId;
 
   /**
    * Close the XMLHttpRequest's channels and dispatch appropriate progress

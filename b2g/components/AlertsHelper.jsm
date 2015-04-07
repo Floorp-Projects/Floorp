@@ -25,6 +25,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "appsService",
 XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
                                   "resource://gre/modules/SystemAppProxy.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "notificationStorage",
+                                   "@mozilla.org/notificationStorage;1",
+                                   "nsINotificationStorage");
+
 XPCOMUtils.defineLazyGetter(this, "ppmm", function() {
   return Cc["@mozilla.org/parentprocessmessagemanager;1"]
          .getService(Ci.nsIMessageListenerManager);
@@ -157,10 +161,13 @@ let AlertsHelper = {
           );
         }
       }
+      if (detail.type === kDesktopNotificationClose && listener.dbId) {
+        notificationStorage.delete(listener.manifestURL, listener.dbId);
+      }
     }
 
     // we"re done with this notification
-    if (topic === kTopicAlertFinished) {
+    if (detail.type === kDesktopNotificationClose) {
       delete this._listeners[uid];
     }
   },
@@ -285,6 +292,7 @@ let AlertsHelper = {
       imageURL: data.imageURL,
       lang: details.lang || undefined,
       id: details.id || undefined,
+      dbId: details.dbId || undefined,
       dir: details.dir || undefined,
       tag: details.tag || undefined,
       timestamp: details.timestamp || undefined,

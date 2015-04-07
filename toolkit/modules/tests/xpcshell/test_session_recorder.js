@@ -6,7 +6,7 @@
 const {utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/services/datareporting/sessions.jsm");
+Cu.import("resource://gre/modules/SessionRecorder.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/utils.js");
 

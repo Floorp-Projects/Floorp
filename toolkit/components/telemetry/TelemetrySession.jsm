@@ -972,24 +972,18 @@ let Impl = {
     }
 
     ret.activeTicks = -1;
-    if ("@mozilla.org/datareporting/service;1" in Cc) {
-      let drs = Cc["@mozilla.org/datareporting/service;1"]
-                  .getService(Ci.nsISupports)
-                  .wrappedJSObject;
-
-      let sr = drs.getSessionRecorder();
-      if (sr) {
-        let activeTicks = sr.activeTicks;
-        if (isSubsession) {
-          activeTicks = sr.activeTicks - this._subsessionStartActiveTicks;
-        }
-
-        if (clearSubsession) {
-          this._subsessionStartActiveTicks = activeTicks;
-        }
-
-        ret.activeTicks = activeTicks;
+    let sr = TelemetryPing.getSessionRecorder();
+    if (sr) {
+      let activeTicks = sr.activeTicks;
+      if (isSubsession) {
+        activeTicks = sr.activeTicks - this._subsessionStartActiveTicks;
       }
+
+      if (clearSubsession) {
+        this._subsessionStartActiveTicks = activeTicks;
+      }
+
+      ret.activeTicks = activeTicks;
     }
 
     ret.pingsOverdue = TelemetryFile.pingsOverdue;
