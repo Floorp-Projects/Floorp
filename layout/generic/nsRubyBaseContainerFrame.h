@@ -10,9 +10,6 @@
 #define nsRubyBaseContainerFrame_h___
 
 #include "nsContainerFrame.h"
-#include "nsRubyTextContainerFrame.h"
-#include "nsRubyBaseFrame.h"
-#include "nsRubyTextFrame.h"
 
 #define RTC_ARRAY_SIZE 1
 
@@ -26,6 +23,8 @@ nsContainerFrame* NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
 namespace mozilla {
 struct RubyColumn;
 }
+
+class nsRubyTextContainerFrame;
 
 class nsRubyBaseContainerFrame final : public nsContainerFrame
 {
