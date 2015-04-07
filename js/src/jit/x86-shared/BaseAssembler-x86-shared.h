@@ -331,6 +331,18 @@ public:
         }
     }
 
+    void addl_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("addl       $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_ADD);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_ADD);
+            m_formatter.immediate32(imm);
+        }
+    }
+
 #ifdef JS_CODEGEN_X64
     void addq_rr(RegisterID src, RegisterID dst)
     {
@@ -726,6 +738,18 @@ public:
         }
     }
 
+    void andl_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("andl       $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_AND);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_AND);
+            m_formatter.immediate32(imm);
+        }
+    }
+
 #ifdef JS_CODEGEN_X64
     void andq_rr(RegisterID src, RegisterID dst)
     {
@@ -892,6 +916,18 @@ public:
         }
     }
 
+    void orl_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("orl        $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_OR);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_OR);
+            m_formatter.immediate32(imm);
+        }
+    }
+
 #ifdef JS_CODEGEN_X64
     void negq_r(RegisterID dst)
     {
@@ -990,6 +1026,18 @@ public:
         }
     }
 
+    void subl_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("subl       $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_SUB);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_SUB);
+            m_formatter.immediate32(imm);
+        }
+    }
+
 #ifdef JS_CODEGEN_X64
     void subq_rr(RegisterID src, RegisterID dst)
     {
@@ -1070,6 +1118,18 @@ public:
     void xorl_im(int32_t imm, int32_t offset, RegisterID base)
     {
         spew("xorl       $0x%x, " MEM_ob, imm, ADDR_ob(offset, base));
+        if (CAN_SIGN_EXTEND_8_32(imm)) {
+            m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_XOR);
+            m_formatter.immediate8s(imm);
+        } else {
+            m_formatter.oneByteOp(OP_GROUP1_EvIz, offset, base, GROUP1_OP_XOR);
+            m_formatter.immediate32(imm);
+        }
+    }
+
+    void xorl_im(int32_t imm, int32_t offset, RegisterID base, RegisterID index, int scale)
+    {
+        spew("xorl       $%d, " MEM_obs, imm, ADDR_obs(offset, base, index, scale));
         if (CAN_SIGN_EXTEND_8_32(imm)) {
             m_formatter.oneByteOp(OP_GROUP1_EvIb, offset, base, GROUP1_OP_XOR);
             m_formatter.immediate8s(imm);
