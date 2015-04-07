@@ -221,6 +221,8 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitGuardObject(MGuardObject* ins);
     void visitGuardString(MGuardString* ins);
     void visitGuardReceiverPolymorphic(MGuardReceiverPolymorphic* ins);
+    void visitGuardUnboxedExpando(MGuardUnboxedExpando* ins);
+    void visitLoadUnboxedExpando(MLoadUnboxedExpando* ins);
     void visitPolyInlineGuard(MPolyInlineGuard* ins);
     void visitAssertRange(MAssertRange* ins);
     void visitCallGetProperty(MCallGetProperty* ins);

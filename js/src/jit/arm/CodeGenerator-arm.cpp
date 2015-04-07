@@ -1664,12 +1664,6 @@ CodeGeneratorARM::visitGuardObjectGroup(LGuardObjectGroup* guard)
     Register tmp = ToRegister(guard->tempInt());
     MOZ_ASSERT(obj != tmp);
 
-    if (guard->mir()->checkUnboxedExpando()) {
-        masm.ma_ldr(DTRAddr(obj, DtrOffImm(UnboxedPlainObject::offsetOfExpando())), tmp);
-        masm.ma_cmp(tmp, ImmWord(0));
-        bailoutIf(Assembler::NotEqual, guard->snapshot());
-    }
-
     masm.ma_ldr(DTRAddr(obj, DtrOffImm(JSObject::offsetOfGroup())), tmp);
     masm.ma_cmp(tmp, ImmGCPtr(guard->mir()->group()));
 

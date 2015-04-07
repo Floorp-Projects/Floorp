@@ -3873,6 +3873,10 @@ class ReceiverGuard
         ObjectGroup* group;
         Shape* shape;
 
+        StackGuard()
+          : group(nullptr), shape(nullptr)
+        {}
+
         MOZ_IMPLICIT StackGuard(const ReceiverGuard& guard)
           : group(guard.group_), shape(guard.shape_)
         {}
@@ -3881,31 +3885,15 @@ class ReceiverGuard
           : group(guard.group), shape(guard.shape)
         {}
 
-        explicit StackGuard(JSObject* obj)
-          : group(nullptr), shape(nullptr)
-        {
-            if (obj) {
-                if (obj->is<UnboxedPlainObject>()) {
-                    group = obj->group();
-                    if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando())
-                        shape = expando->lastProperty();
-                } else if (obj->is<TypedObject>()) {
-                    group = obj->group();
-                } else {
-                    shape = obj->maybeShape();
-                }
-            }
+        explicit StackGuard(JSObject* obj);
+        StackGuard(ObjectGroup* group, Shape* shape);
+
+        bool operator ==(const StackGuard& other) const {
+            return group == other.group && shape == other.shape;
         }
 
-        explicit StackGuard(Shape* shape)
-          : group(nullptr), shape(shape)
-        {}
-
-        Shape* ownShape() const {
-            // Get a shape belonging to the object itself, rather than an unboxed expando.
-            if (!group || !group->maybeUnboxedLayout())
-                return shape;
-            return nullptr;
+        bool operator !=(const StackGuard& other) const {
+            return !(*this == other);
         }
     };
 
@@ -3931,10 +3919,6 @@ class ReceiverGuard
         return group_;
     }
 
-    Shape* ownShape() const {
-        return StackGuard(*this).ownShape();
-    }
-
     static size_t offsetOfShape() {
         return offsetof(ReceiverGuard, shape_);
     }
@@ -3943,20 +3927,8 @@ class ReceiverGuard
     }
 
     // Bits to munge into IC compiler keys when that IC has a ReceiverGuard.
-    // This uses at two bits for data.
-    static int32_t keyBits(JSObject* obj) {
-        if (obj->is<UnboxedPlainObject>()) {
-            // Both the group and shape need to be guarded for unboxed objects.
-            return obj->as<UnboxedPlainObject>().maybeExpando() ? 0 : 1;
-        }
-        if (obj->is<TypedObject>()) {
-            // Only the group needs to be guarded for typed objects.
-            return 2;
-        }
-        // Other objects only need the shape to be guarded, except for ICs
-        // which always guard the group.
-        return 3;
-    }
+    // This uses at most two bits for data.
+    static int32_t keyBits(JSObject* obj);
 };
 
 // Base class for native GetProp stubs.
@@ -4807,7 +4779,9 @@ class ICSetProp_Native : public ICUpdatedStub
 
       protected:
         virtual int32_t getKey() const {
-            return static_cast<int32_t>(kind) | (static_cast<int32_t>(isFixedSlot_) << 16);
+            return static_cast<int32_t>(kind) |
+                   (static_cast<int32_t>(isFixedSlot_) << 16) |
+                   (static_cast<int32_t>(obj_->is<UnboxedPlainObject>()) << 17);
         }
 
         bool generateStubCode(MacroAssembler& masm);
@@ -4909,8 +4883,10 @@ class ICSetPropNativeAddCompiler : public ICStubCompiler
 
   protected:
     virtual int32_t getKey() const {
-        return static_cast<int32_t>(kind) | (static_cast<int32_t>(isFixedSlot_) << 16) |
-               (static_cast<int32_t>(protoChainDepth_) << 20);
+        return static_cast<int32_t>(kind) |
+               (static_cast<int32_t>(isFixedSlot_) << 16) |
+               (static_cast<int32_t>(obj_->is<UnboxedPlainObject>()) << 17) |
+               (static_cast<int32_t>(protoChainDepth_) << 18);
     }
 
     bool generateStubCode(MacroAssembler& masm);
@@ -4933,7 +4909,11 @@ class ICSetPropNativeAddCompiler : public ICStubCompiler
         if (newGroup == oldGroup_)
             newGroup = nullptr;
 
-        RootedShape newShape(cx, obj_->as<NativeObject>().lastProperty());
+        RootedShape newShape(cx);
+        if (obj_->isNative())
+            newShape = obj_->as<NativeObject>().lastProperty();
+        else
+            newShape = obj_->as<UnboxedPlainObject>().maybeExpando()->lastProperty();
 
         return ICStub::New<ICSetProp_NativeAddImpl<ProtoChainDepth>>(
                     space, getStubCode(), oldGroup_, shapes, newShape, newGroup, offset_);
