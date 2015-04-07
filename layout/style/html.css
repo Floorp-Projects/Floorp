@@ -822,7 +822,7 @@ marquee[direction="up"], marquee[direction="down"] {
   rtc > rt {
     font-size: inherit;
   }
-  ruby, rb, rt, rtc {
-    unicode-bidi: -moz-isolate;
+  ruby, rb, rt, rbc, rtc {
+    unicode-bidi: isolate;
   }
 }

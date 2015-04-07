@@ -7,17 +7,9 @@
 #ifndef mozilla_RubyUtils_h_
 #define mozilla_RubyUtils_h_
 
-#include "nsTArray.h"
 #include "nsGkAtoms.h"
-
-#define RTC_ARRAY_SIZE 1
-
-class nsRubyFrame;
-class nsRubyBaseFrame;
-class nsRubyTextFrame;
-class nsRubyContentFrame;
-class nsRubyBaseContainerFrame;
-class nsRubyTextContainerFrame;
+#include "nsRubyBaseContainerFrame.h"
+#include "nsRubyTextContainerFrame.h"
 
 namespace mozilla {
 
@@ -68,72 +60,23 @@ public:
 };
 
 /**
- * This array stores all ruby text containers of the ruby segment
- * of the given ruby base container.
+ * This class iterates all ruby text containers paired with
+ * the given ruby base container.
  */
-class MOZ_STACK_CLASS AutoRubyTextContainerArray final
-  : public nsAutoTArray<nsRubyTextContainerFrame*, RTC_ARRAY_SIZE>
+class MOZ_STACK_CLASS RubyTextContainerIterator
 {
 public:
-  explicit AutoRubyTextContainerArray(nsRubyBaseContainerFrame* aBaseContainer);
-};
-
-/**
- * This enumerator enumerates each ruby segment.
- */
-class MOZ_STACK_CLASS RubySegmentEnumerator
-{
-public:
-  explicit RubySegmentEnumerator(nsRubyFrame* aRubyFrame);
+  explicit RubyTextContainerIterator(nsRubyBaseContainerFrame* aBaseContainer);
 
   void Next();
-  bool AtEnd() const { return !mBaseContainer; }
-
-  nsRubyBaseContainerFrame* GetBaseContainer() const
+  bool AtEnd() const { return !mFrame; }
+  nsRubyTextContainerFrame* GetTextContainer() const
   {
-    return mBaseContainer;
+    return static_cast<nsRubyTextContainerFrame*>(mFrame);
   }
 
 private:
-  nsRubyBaseContainerFrame* mBaseContainer;
-};
-
-/**
- * Ruby column is a unit consists of one ruby base and all ruby
- * annotations paired with it.
- * See http://dev.w3.org/csswg/css-ruby/#ruby-pairing
- */
-struct MOZ_STACK_CLASS RubyColumn
-{
-  nsRubyBaseFrame* mBaseFrame;
-  nsAutoTArray<nsRubyTextFrame*, RTC_ARRAY_SIZE> mTextFrames;
-  bool mIsIntraLevelWhitespace;
-  RubyColumn() : mBaseFrame(nullptr), mIsIntraLevelWhitespace(false) { }
-};
-
-/**
- * This enumerator enumerates ruby columns in a segment.
- */
-class MOZ_STACK_CLASS RubyColumnEnumerator
-{
-public:
-  RubyColumnEnumerator(nsRubyBaseContainerFrame* aRBCFrame,
-                       const AutoRubyTextContainerArray& aRTCFrames);
-
-  void Next();
-  bool AtEnd() const;
-
-  uint32_t GetLevelCount() const { return mFrames.Length(); }
-  nsRubyContentFrame* GetFrameAtLevel(uint32_t aIndex) const;
-  void GetColumn(RubyColumn& aColumn) const;
-
-private:
-  // Frames in this array are NOT necessary part of the current column.
-  // When in doubt, use GetFrameAtLevel to access it.
-  // See GetFrameAtLevel() and Next() for more info.
-  nsAutoTArray<nsRubyContentFrame*, RTC_ARRAY_SIZE + 1> mFrames;
-  // Whether we are on a column for intra-level whitespaces
-  bool mAtIntraLevelWhitespace;
+  nsIFrame* mFrame;
 };
 
 }

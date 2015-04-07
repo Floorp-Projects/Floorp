@@ -10,6 +10,9 @@
 #define nsRubyTextContainerFrame_h___
 
 #include "nsBlockFrame.h"
+#include "nsRubyBaseFrame.h"
+#include "nsRubyTextFrame.h"
+#include "nsLineLayout.h"
 
 typedef nsContainerFrame nsRubyTextContainerFrameSuper;
 
