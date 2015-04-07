@@ -120,6 +120,7 @@ do
   assertEq(Object.getOwnPropertyDescriptor(r, "lastIndex").writable, false);
   try { r.exec("aabbbba"); } catch (e) { /* swallow error if thrown */ }
   assertEq(Object.getOwnPropertyDescriptor(r, "lastIndex").writable, false);
+  assertEq(Object.getOwnPropertyDescriptor(r, "source").writable, false);
 }
 while (Math.random() > 17); // fake loop to discourage RegExp object caching
 
