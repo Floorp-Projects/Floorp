@@ -20,7 +20,7 @@ task:
         --test-suite xpcshell
         --installer-url {{build_url}}
         --test-url {{tests_url}}
-        --xre-url https://s3-us-west-2.amazonaws.com/test-caching/packages/xre_linux_x86.zip
+        --xre-url https://s3-us-west-2.amazonaws.com/test-caching/xulrunner-sdk-40.zip
     artifacts:
       'public/build':
         type: directory
