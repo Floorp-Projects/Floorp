@@ -9,9 +9,8 @@
 #ifndef nsRubyBaseContainerFrame_h___
 #define nsRubyBaseContainerFrame_h___
 
+#include "RubyUtils.h"
 #include "nsContainerFrame.h"
-
-#define RTC_ARRAY_SIZE 1
 
 /**
  * Factory function.
@@ -19,12 +18,6 @@
  */
 nsContainerFrame* NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
                                                nsStyleContext* aContext);
-
-namespace mozilla {
-struct RubyColumn;
-}
-
-class nsRubyTextContainerFrame;
 
 class nsRubyBaseContainerFrame final : public nsContainerFrame
 {
