@@ -35,6 +35,7 @@
 #endif
 #include "prmjtime.h"
 
+#include "builtin/AtomicsObject.h"
 #include "frontend/Parser.h"
 #include "jit/IonCode.h"
 #include "js/Class.h"
@@ -43,7 +44,6 @@
 
 #include "jsobjinlines.h"
 
-#include "builtin/AtomicsObject.h"
 #include "frontend/ParseNode-inl.h"
 #include "vm/ArrayBufferObject-inl.h"
 #include "vm/Stack-inl.h"
