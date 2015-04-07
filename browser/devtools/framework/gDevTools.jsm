@@ -11,7 +11,6 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/devtools/Loader.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "promise",
                                   "resource://gre/modules/Promise.jsm", "Promise");
 
@@ -25,6 +24,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DebuggerServer",
 
 XPCOMUtils.defineLazyModuleGetter(this, "DebuggerClient",
                                   "resource://gre/modules/devtools/dbg-client.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
 
 const EventEmitter = devtools.require("devtools/toolkit/event-emitter");
 const Telemetry = devtools.require("devtools/shared/telemetry");
@@ -1218,8 +1219,8 @@ let gDevToolsBrowser = {
    */
   _connectToProfiler: function DT_connectToProfiler(event, toolbox) {
     let SharedPerformanceUtils = devtools.require("devtools/performance/front");
-    let connection = SharedPerformanceUtils.getPerformanceActorsConnection(toolbox.target);
-    connection.open();
+    this._performanceConnection = SharedPerformanceUtils.getPerformanceActorsConnection(toolbox.target);
+    this._performanceConnection.open();
   },
 
   /**
@@ -1329,11 +1330,15 @@ let gDevToolsBrowser = {
   /**
    * All browser windows have been closed, tidy up remaining objects.
    */
-  destroy: function() {
+  destroy: Task.async(function*() {
     gDevTools.off("toolbox-ready", gDevToolsBrowser._connectToProfiler);
     Services.prefs.removeObserver("devtools.", gDevToolsBrowser);
     Services.obs.removeObserver(gDevToolsBrowser.destroy, "quit-application");
-  },
+
+    if (this._performanceConnection) {
+      yield this._performanceConnection.destroy();
+    }
+  }),
 }
 
 this.gDevToolsBrowser = gDevToolsBrowser;
