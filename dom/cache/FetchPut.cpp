@@ -136,7 +136,6 @@ FetchPut::FetchPut(Listener* aListener, Manager* aManager,
   , mInitiatingThread(NS_GetCurrentThread())
   , mStateList(aRequests.Length())
   , mPendingCount(0)
-  , mResult(NS_OK)
 {
   MOZ_ASSERT(mListener);
   MOZ_ASSERT(mManager);
@@ -157,6 +156,7 @@ FetchPut::~FetchPut()
   MOZ_ASSERT(!mListener);
   mManager->RemoveListener(this);
   mManager->ReleaseCacheId(mCacheId);
+  mResult.ClearMessage(); // This may contain a TypeError.
 }
 
 nsresult
@@ -249,7 +249,7 @@ FetchPut::FetchComplete(FetchObserver* aObserver,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (aInternalResponse->IsError() && NS_SUCCEEDED(mResult)) {
+  if (aInternalResponse->IsError() && !mResult.Failed()) {
     MaybeSetError(NS_ERROR_FAILURE);
   }
 
@@ -291,7 +291,7 @@ FetchPut::DoPutOnWorkerThread()
 {
   MOZ_ASSERT(mInitiatingThread == NS_GetCurrentThread());
 
-  if (NS_FAILED(mResult)) {
+  if (mResult.Failed()) {
     MaybeNotifyListener();
     return;
   }
@@ -428,10 +428,10 @@ FetchPut::OnCachePutAll(RequestId aRequestId, nsresult aRv)
 void
 FetchPut::MaybeSetError(nsresult aRv)
 {
-  if (NS_FAILED(mResult) || NS_SUCCEEDED(aRv)) {
+  if (mResult.Failed() || NS_SUCCEEDED(aRv)) {
     return;
   }
-  mResult = aRv;
+  mResult.Throw(aRv);
 }
 
 void
@@ -442,6 +442,7 @@ FetchPut::MaybeNotifyListener()
     return;
   }
   mListener->OnFetchPut(this, mRequestId, mResult);
+  mResult.ClearMessage(); // This may contain a TypeError.
 }
 
 nsIGlobalObject*

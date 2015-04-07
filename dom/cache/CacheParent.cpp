@@ -23,6 +23,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
+using mozilla::dom::ErrNum;
 using mozilla::ipc::FileDescriptorSetParent;
 using mozilla::ipc::PFileDescriptorSetParent;
 
@@ -121,7 +122,10 @@ CacheParent::RecvAddAll(const RequestId& aRequestId,
                                  aRequests, requestStreams,
                                  getter_AddRefs(fetchPut));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (!SendAddAllResponse(aRequestId, rv)) {
+    MOZ_ASSERT(rv != NS_ERROR_TYPE_ERR);
+    ErrorResult error;
+    error.Throw(rv);
+    if (!SendAddAllResponse(aRequestId, error)) {
       // child process is gone, warn and allow actor to clean up normally
       NS_WARNING("Cache failed to send AddAll response.");
     }
@@ -256,7 +260,7 @@ CacheParent::OnCacheKeys(RequestId aRequestId, nsresult aRv,
 }
 
 void
-CacheParent::OnFetchPut(FetchPut* aFetchPut, RequestId aRequestId, nsresult aRv)
+CacheParent::OnFetchPut(FetchPut* aFetchPut, RequestId aRequestId, const ErrorResult& aRv)
 {
   aFetchPut->ClearListener();
   mFetchPutList.RemoveElement(aFetchPut);
