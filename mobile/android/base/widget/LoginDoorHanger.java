@@ -20,6 +20,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 import ch.boye.httpclientandroidlib.util.TextUtils;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -170,7 +171,7 @@ public class LoginDoorHanger extends DoorHanger {
                             } catch (JSONException e) {
                                 Log.e(LOGTAG, "Error creating doorhanger reply message");
                                 response = null;
-                                // TODO: Add a toast.
+                                Toast.makeText(mContext, mResources.getString(R.string.doorhanger_login_edit_toast_error), Toast.LENGTH_SHORT).show();
                             }
                             mOnButtonClickListener.onButtonClick(response, LoginDoorHanger.this);
                         }
