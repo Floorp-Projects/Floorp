@@ -18,6 +18,11 @@
 #include "nsStringGlue.h"
 #include "mozilla/Assertions.h"
 
+namespace IPC {
+class Message;
+template <typename> struct ParamTraits;
+}
+
 namespace mozilla {
 
 namespace dom {
@@ -160,6 +165,10 @@ private:
     Message* mMessage; // valid when IsErrorWithMessage()
     JS::Value mJSException; // valid when IsJSException()
   };
+
+  friend struct IPC::ParamTraits<ErrorResult>;
+  void SerializeMessage(IPC::Message* aMsg) const;
+  bool DeserializeMessage(const IPC::Message* aMsg, void** aIter);
 
 #ifdef DEBUG
   // Used to keep track of codepaths that might throw JS exceptions,
