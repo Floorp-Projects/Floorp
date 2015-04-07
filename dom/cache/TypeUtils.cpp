@@ -26,6 +26,8 @@
 #include "nsStreamUtils.h"
 #include "nsString.h"
 #include "nsURLParsers.h"
+#include "nsCRT.h"
+#include "nsHttp.h"
 
 namespace {
 
@@ -102,6 +104,29 @@ ProcessURL(nsAString& aUrl, bool* aSchemeValidOut,
   // We want everything before the query sine we already removed the trailing
   // fragment
   *aUrlWithoutQueryOut = Substring(aUrl, 0, queryPos - 1);
+}
+
+static bool
+HasVaryStar(mozilla::dom::InternalHeaders* aHeaders)
+{
+  nsAutoTArray<nsCString, 16> varyHeaders;
+  ErrorResult rv;
+  aHeaders->GetAll(NS_LITERAL_CSTRING("vary"), varyHeaders, rv);
+  MOZ_ALWAYS_TRUE(!rv.Failed());
+
+  for (uint32_t i = 0; i < varyHeaders.Length(); ++i) {
+    nsAutoCString varyValue(varyHeaders[i]);
+    char* rawBuffer = varyValue.BeginWriting();
+    char* token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer);
+    for (; token;
+         token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
+      nsDependentCString header(token);
+      if (header.EqualsLiteral("*")) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 void
@@ -266,6 +291,10 @@ TypeUtils::ToPCacheResponseWithoutBody(PCacheResponse& aOut,
   aOut.statusText() = aIn.GetStatusText();
   nsRefPtr<InternalHeaders> headers = aIn.UnfilteredHeaders();
   MOZ_ASSERT(headers);
+  if (HasVaryStar(headers)) {
+    aRv.ThrowTypeError(MSG_RESPONSE_HAS_VARY_STAR);
+    return;
+  }
   headers->GetPHeaders(aOut.headers());
   aOut.headersGuard() = headers->Guard();
   aOut.securityInfo() = aIn.GetSecurityInfo();
@@ -281,6 +310,9 @@ TypeUtils::ToPCacheResponse(PCacheResponse& aOut, Response& aIn, ErrorResult& aR
 
   nsRefPtr<InternalResponse> ir = aIn.GetInternalResponse();
   ToPCacheResponseWithoutBody(aOut, *ir, aRv);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return;
+  }
 
   nsCOMPtr<nsIInputStream> stream;
   aIn.GetBody(getter_AddRefs(stream));
