@@ -174,6 +174,7 @@ function run_test() {
 
   Services.prefs.setBoolPref(PREF_ENABLED, true);
   Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_FHR_SERVICE_ENABLED, true);
 
   // Send the needed startup notifications to the datareporting service
   // to ensure that it has been initialized.
