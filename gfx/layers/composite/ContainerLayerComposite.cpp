@@ -344,7 +344,8 @@ RenderLayers(ContainerT* aContainer,
     Layer* layer = layerToRender->GetLayer();
 
     gfxRGBA color;
-    if (LayerHasCheckerboardingAPZC(layer, &color)) {
+    if ((layer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
+        LayerHasCheckerboardingAPZC(layer, &color)) {
       // Ideally we would want to intersect the checkerboard region from the APZ with the layer bounds
       // and only fill in that area. However the layer bounds takes into account the base translation
       // for the painted layer whereas the checkerboard region does not. One does not simply

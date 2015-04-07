@@ -60,6 +60,14 @@ function testBailouts(uglyDuckling) {
     }
 }
 
+function testInt32x4SwizzleBailout() {
+    // Test out-of-bounds non-constant indices. This is expected to throw.
+    var i4 = SIMD.int32x4(1, 2, 3, 4);
+    for (var i = 0; i < 150; i++) {
+        assertEqX4(SIMD.int32x4.swizzle(i4, i, 3, 2, 0), [i + 1, 4, 3, 1]);
+    }
+}
+
 f();
 testBailouts(-1);
 testBailouts(4);
@@ -69,3 +77,10 @@ testBailouts(null);
 testBailouts({});
 testBailouts('one');
 testBailouts(true);
+
+try {
+    testInt32x4SwizzleBailout();
+    throw 'not caught';
+} catch(e) {
+    assertEq(e instanceof TypeError, true);
+}

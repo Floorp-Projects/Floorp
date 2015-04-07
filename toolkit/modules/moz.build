@@ -16,6 +16,7 @@ EXTRA_JS_MODULES += [
     'Battery.jsm',
     'BinarySearch.jsm',
     'BrowserUtils.jsm',
+    'CertUtils.jsm',
     'CharsetMenu.jsm',
     'ClientID.jsm',
     'debug.js',
@@ -25,6 +26,8 @@ EXTRA_JS_MODULES += [
     'FileUtils.jsm',
     'Finder.jsm',
     'Geometry.jsm',
+    'GMPInstallManager.jsm',
+    'GMPUtils.jsm',
     'Http.jsm',
     'InlineSpellChecker.jsm',
     'InlineSpellCheckerContent.jsm',
@@ -50,6 +53,8 @@ EXTRA_JS_MODULES += [
     'RemoteSecurityUI.jsm',
     'RemoteWebNavigation.jsm',
     'RemoteWebProgress.jsm',
+    'ResetProfile.jsm',
+    'secondscreen/RokuApp.jsm',
     'secondscreen/SimpleServiceDiscovery.jsm',
     'SelectContentHelper.jsm',
     'SelectParentHelper.jsm',
@@ -63,26 +68,22 @@ EXTRA_JS_MODULES += [
     'Task.jsm',
     'TelemetryTimestamps.jsm',
     'Timer.jsm',
+    'Troubleshoot.jsm',
     'WebChannel.jsm',
+    'WindowDraggingUtils.jsm',
     'ZipUtils.jsm',
 ]
 
 EXTRA_PP_JS_MODULES += [
-    'CertUtils.jsm',
-    'GMPInstallManager.jsm',
-    'GMPUtils.jsm',
-    'ResetProfile.jsm',
-    'secondscreen/RokuApp.jsm',
+    'AppConstants.jsm',
     'Services.jsm',
     'SessionRecorder.jsm',
-    'Troubleshoot.jsm',
     'UpdateChannel.jsm',
-    'WindowDraggingUtils.jsm',
     'WindowsPrefSync.jsm',
 ]
 
 if 'Android' != CONFIG['OS_TARGET']:
-    EXTRA_PP_JS_MODULES += [
+    EXTRA_JS_MODULES += [
         'LightweightThemeConsumer.jsm',
     ]
 else:
@@ -96,14 +97,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 
 for var in ('ANDROID_PACKAGE_NAME',
             'MOZ_APP_NAME',
-            'MOZ_APP_VERSION'):
+            'MOZ_APP_VERSION',
+            'MOZ_WIDGET_TOOLKIT'):
             DEFINES[var] = CONFIG[var]
 
 for var in ('MOZILLA_OFFICIAL',
-            'MOZ_TOOLKIT_SEARCH'):
+            'MOZ_TOOLKIT_SEARCH',
+            'MOZ_UPDATER'):
     if CONFIG[var]:
         DEFINES[var] = True
-
-EXTRA_PP_JS_MODULES += [
-    'AppConstants.jsm',
-]

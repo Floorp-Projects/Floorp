@@ -141,7 +141,7 @@ MOZ_ReportAssertionFailure(const char* aStr, const char* aFilename, int aLine)
                       aStr, aFilename, aLine);
 #else
   fprintf(stderr, "Assertion failure: %s, at %s:%d\n", aStr, aFilename, aLine);
-#ifdef MOZ_DUMP_ASSERTION_STACK
+#if defined (MOZ_DUMP_ASSERTION_STACK) && !defined(MOZILLA_XPCOMRT_API)
   nsTraceRefcnt::WalkTheStack(stderr);
 #endif
   fflush(stderr);
@@ -157,7 +157,7 @@ MOZ_ReportCrash(const char* aStr, const char* aFilename, int aLine)
                       "Hit MOZ_CRASH(%s) at %s:%d\n", aStr, aFilename, aLine);
 #else
   fprintf(stderr, "Hit MOZ_CRASH(%s) at %s:%d\n", aStr, aFilename, aLine);
-#ifdef MOZ_DUMP_ASSERTION_STACK
+#if defined(MOZ_DUMP_ASSERTION_STACK) && !defined(MOZILLA_XPCOMRT_API)
   nsTraceRefcnt::WalkTheStack(stderr);
 #endif
   fflush(stderr);

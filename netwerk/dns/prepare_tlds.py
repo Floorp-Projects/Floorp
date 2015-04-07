@@ -111,3 +111,6 @@ def main(output, effective_tld_filename):
     exception = boolStr(etld.exception())
     wild = boolStr(etld.wild())
     output.write('ETLD_ENTRY("%s", %s, %s)\n' % (etld.domain(), exception, wild))
+
+if __name__ == '__main__':
+    main(sys.stdout, sys.argv[1])

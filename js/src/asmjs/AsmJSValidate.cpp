@@ -8921,7 +8921,7 @@ GenerateBuiltinThunk(ModuleCompiler& m, AsmJSExit::BuiltinKind builtin)
     MOZ_ASSERT(masm.framePushed() == 0);
 
     MIRTypeVector argTypes(m.cx());
-    if (!argTypes.reserve(2))
+    if (!argTypes.reserve(5))
         return false;
 
     switch (builtin) {
@@ -8931,6 +8931,21 @@ GenerateBuiltinThunk(ModuleCompiler& m, AsmJSExit::BuiltinKind builtin)
 #if defined(JS_CODEGEN_ARM)
       case AsmJSExit::Builtin_IDivMod:
       case AsmJSExit::Builtin_UDivMod:
+        argTypes.infallibleAppend(MIRType_Int32);
+        argTypes.infallibleAppend(MIRType_Int32);
+        break;
+      case AsmJSExit::Builtin_AtomicCmpXchg:
+        argTypes.infallibleAppend(MIRType_Int32);
+        argTypes.infallibleAppend(MIRType_Int32);
+        argTypes.infallibleAppend(MIRType_Int32);
+        argTypes.infallibleAppend(MIRType_Int32);
+        break;
+      case AsmJSExit::Builtin_AtomicFetchAdd:
+      case AsmJSExit::Builtin_AtomicFetchSub:
+      case AsmJSExit::Builtin_AtomicFetchAnd:
+      case AsmJSExit::Builtin_AtomicFetchOr:
+      case AsmJSExit::Builtin_AtomicFetchXor:
+        argTypes.infallibleAppend(MIRType_Int32);
         argTypes.infallibleAppend(MIRType_Int32);
         argTypes.infallibleAppend(MIRType_Int32);
         break;

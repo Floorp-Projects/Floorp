@@ -80,6 +80,12 @@ namespace AsmJSExit
 #if defined(JS_CODEGEN_ARM)
         Builtin_IDivMod,
         Builtin_UDivMod,
+        Builtin_AtomicCmpXchg,
+        Builtin_AtomicFetchAdd,
+        Builtin_AtomicFetchSub,
+        Builtin_AtomicFetchAnd,
+        Builtin_AtomicFetchOr,
+        Builtin_AtomicFetchXor,
 #endif
         Builtin_ModD,
         Builtin_SinD,

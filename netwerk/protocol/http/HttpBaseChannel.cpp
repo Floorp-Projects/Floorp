@@ -899,6 +899,21 @@ HttpBaseChannel::SetRequestMethod(const nsACString& aMethod)
 }
 
 NS_IMETHODIMP
+HttpBaseChannel::GetNetworkInterfaceId(nsACString& aNetworkInterfaceId)
+{
+  aNetworkInterfaceId = mNetworkInterfaceId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetNetworkInterfaceId(const nsACString& aNetworkInterfaceId)
+{
+  ENSURE_CALLED_BEFORE_CONNECT();
+  mNetworkInterfaceId = aNetworkInterfaceId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetReferrer(nsIURI **referrer)
 {
   NS_ENSURE_ARG_POINTER(referrer);

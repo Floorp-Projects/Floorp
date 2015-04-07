@@ -184,6 +184,8 @@ public:
   NS_IMETHOD TakeAllSecurityMessages(nsCOMArray<nsISecurityConsoleMessage> &aMessages) override;
   NS_IMETHOD GetResponseTimeoutEnabled(bool *aEnable) override;
   NS_IMETHOD SetResponseTimeoutEnabled(bool aEnable) override;
+  NS_IMETHOD GetNetworkInterfaceId(nsACString& aNetworkInterfaceId);
+  NS_IMETHOD SetNetworkInterfaceId(const nsACString& aNetworkInterfaceId);
   NS_IMETHOD AddRedirect(nsIPrincipal *aRedirect) override;
   NS_IMETHOD ForcePending(bool aForcePending) override;
   NS_IMETHOD GetLastModifiedTime(PRTime* lastModifiedTime) override;
@@ -428,6 +430,9 @@ protected:
   // This parameter is used to ensure that we do not call OnStartRequest more
   // than once.
   bool mOnStartRequestCalled;
+
+  // The network interface id that's associated with this channel.
+  nsCString mNetworkInterfaceId;
 };
 
 // Share some code while working around C++'s absurd inability to handle casting
