@@ -213,22 +213,18 @@ public:
   HMDInfoVRDevice(nsISupports* aParent, gfx::VRHMDInfo* aHMD)
     : HMDVRDevice(aParent, aHMD)
   {
-    // XXX TODO use real names/IDs
-    uint64_t hmdid = reinterpret_cast<uint64_t>(aHMD);
+    uint64_t hmdid = aHMD->GetDeviceIndex() << 8;
+    uint64_t devid = hmdid | 0x00; // we generate a devid with low byte 0 for the HMD, 1 for the position sensor
 
     mHWID.Truncate();
-    mHWID.AppendPrintf("HMDInfo-0x%llx", hmdid);
+    mHWID.AppendPrintf("0x%llx", hmdid);
 
     mDeviceId.Truncate();
-    mDeviceId.AppendPrintf("HMDInfo-dev-0x%llx", hmdid);
+    mDeviceId.AppendPrintf("0x%llx", devid);
 
-    if (aHMD->GetType() == VRHMDType::Oculus) {
-      mDeviceName.AssignLiteral("VR HMD Device (oculus)");
-    } else if (aHMD->GetType() == VRHMDType::Cardboard) {
-      mDeviceName.AssignLiteral("VR HMD Device (cardboard)");
-    } else {
-      mDeviceName.AssignLiteral("VR HMD Device (unknown)");
-    }
+    mDeviceName.Truncate();
+    mDeviceName.Append(NS_ConvertASCIItoUTF16(aHMD->GetDeviceName()));
+    mDeviceName.AppendLiteral(" (HMD)");
 
     mValid = true;
   }
@@ -281,22 +277,19 @@ public:
     , mHMD(aHMD)
     , mTracking(false)
   {
-    // XXX TODO use real names/IDs
-    uint64_t hmdid = reinterpret_cast<uint64_t>(aHMD);
+
+    uint64_t hmdid = aHMD->GetDeviceIndex() << 8;
+    uint64_t devid = hmdid | 0x01; // we generate a devid with low byte 0 for the HMD, 1 for the position sensor
 
     mHWID.Truncate();
-    mHWID.AppendPrintf("HMDInfo-0x%llx", hmdid);
+    mHWID.AppendPrintf("0x%llx", hmdid);
 
     mDeviceId.Truncate();
-    mDeviceId.AppendPrintf("HMDInfo-dev-0x%llx", hmdid);
+    mDeviceId.AppendPrintf("0x%llx", devid);
 
-    if (aHMD->GetType() == VRHMDType::Oculus) {
-      mDeviceName.AssignLiteral("VR Position Device (oculus)");
-    } else if (aHMD->GetType() == VRHMDType::Cardboard) {
-      mDeviceName.AssignLiteral("VR Position Device (cardboard)");
-    } else {
-      mDeviceName.AssignLiteral("VR Position Device (unknown)");
-    }
+    mDeviceName.Truncate();
+    mDeviceName.Append(NS_ConvertASCIItoUTF16(aHMD->GetDeviceName()));
+    mDeviceName.AppendLiteral(" (Sensor)");
 
     mValid = true;
   }

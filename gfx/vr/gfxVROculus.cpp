@@ -246,6 +246,8 @@ HMDInfoOculus::HMDInfoOculus(ovrHmd aHMD)
 
   MOZ_COUNT_CTOR_INHERITED(HMDInfoOculus, VRHMDInfo);
 
+  mDeviceName.AssignLiteral("Oculus VR HMD");
+
   mSupportedSensorBits = 0;
   if (mHMD->TrackingCaps & ovrTrackingCap_Orientation)
     mSupportedSensorBits |= State_Orientation;
