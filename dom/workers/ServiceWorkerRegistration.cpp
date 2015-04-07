@@ -225,6 +225,39 @@ ServiceWorkerRegistrationMainThread::InvalidateWorkerReference(WhichServiceWorke
 
 namespace {
 
+void
+UpdateInternal(const nsAString& aScope)
+{
+  AssertIsOnMainThread();
+  nsCOMPtr<nsIServiceWorkerManager> swm =
+    mozilla::services::GetServiceWorkerManager();
+  MOZ_ASSERT(swm);
+  // The spec defines ServiceWorkerRegistration.update() exactly as Soft Update.
+  swm->SoftUpdate(aScope);
+}
+
+class UpdateRunnable final : public nsRunnable
+{
+public:
+  explicit UpdateRunnable(const nsAString& aScope)
+    : mScope(aScope)
+  {}
+
+  NS_IMETHOD
+  Run() override
+  {
+    AssertIsOnMainThread();
+    UpdateInternal(mScope);
+    return NS_OK;
+  }
+
+private:
+  ~UpdateRunnable()
+  {}
+
+  const nsString mScope;
+};
+
 class UnregisterCallback final : public nsIServiceWorkerUnregisterCallback
 {
   nsRefPtr<Promise> mPromise;
@@ -269,12 +302,7 @@ NS_IMPL_ISUPPORTS(UnregisterCallback, nsIServiceWorkerUnregisterCallback)
 void
 ServiceWorkerRegistrationMainThread::Update()
 {
-  AssertIsOnMainThread();
-  nsCOMPtr<nsIServiceWorkerManager> swm =
-    mozilla::services::GetServiceWorkerManager();
-  MOZ_ASSERT(swm);
-  // The spec defines ServiceWorkerRegistrationBase.update() exactly as Soft Update.
-  swm->SoftUpdate(mScope);
+  UpdateInternal(mScope);
 }
 
 already_AddRefed<Promise>
@@ -436,6 +464,18 @@ void
 ServiceWorkerRegistrationWorkerThread::InvalidateWorkerReference(WhichServiceWorker aWhichOnes)
 {
   MOZ_CRASH("FIXME");
+}
+
+void
+ServiceWorkerRegistrationWorkerThread::Update()
+{
+#ifdef DEBUG
+  WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(worker);
+  worker->AssertIsOnWorkerThread();
+#endif
+  nsCOMPtr<nsIRunnable> r = new UpdateRunnable(mScope);
+  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
 }
 
 } // dom namespace
