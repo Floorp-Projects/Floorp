@@ -2622,6 +2622,9 @@ void imgCacheValidator::AddProxy(imgRequestProxy *aProxy)
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
 NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt)
 {
+  // We may be holding on to a document, so ensure that it's released.
+  nsCOMPtr<nsISupports> context = mContext.forget();
+
   // If for some reason we don't still have an existing request (probably
   // because OnStartRequest got delivered more than once), just bail.
   if (!mRequest) {
@@ -2670,7 +2673,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
       // We don't need to load this any more.
       aRequest->Cancel(NS_BINDING_ABORTED);
 
-      mRequest->SetLoadId(mContext);
+      mRequest->SetLoadId(context);
       mRequest->SetValidator(nullptr);
 
       mRequest = nullptr;
@@ -2711,7 +2714,7 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
   nsCOMPtr<nsIURI> originalURI;
   channel->GetOriginalURI(getter_AddRefs(originalURI));
   mNewRequest->Init(originalURI, uri, mHadInsecureRedirect, aRequest, channel,
-                    mNewEntry, mContext, loadingPrincipal, corsmode, refpol);
+                    mNewEntry, context, loadingPrincipal, corsmode, refpol);
 
   mDestListener = new ProxyListener(mNewRequest);
 
@@ -2740,6 +2743,9 @@ NS_IMETHODIMP imgCacheValidator::OnStartRequest(nsIRequest *aRequest, nsISupport
 /* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult status); */
 NS_IMETHODIMP imgCacheValidator::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt, nsresult status)
 {
+  // Be sure we've released the document that we may have been holding on to.
+  mContext = nullptr;
+
   if (!mDestListener)
     return NS_OK;
 
