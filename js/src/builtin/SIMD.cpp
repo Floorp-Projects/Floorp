@@ -601,14 +601,23 @@ template<typename T>
 struct WithW {
     static inline T apply(int32_t lane, T scalar, T x) { return lane == 3 ? scalar : x; }
 };
+// For the following three operators, if the value v we're trying to shift is
+// such that v << bits can't fit in the int32 range, then we have undefined
+// behavior, according to C++11 [expr.shift]p2.
 struct ShiftLeft {
-    static inline int32_t apply(int32_t v, int32_t bits) { return v << bits; }
+    static inline int32_t apply(int32_t v, int32_t bits) {
+        return uint32_t(bits) >= 32 ? 0 : v << bits;
+    }
 };
-struct ShiftRight {
-    static inline int32_t apply(int32_t v, int32_t bits) { return v >> bits; }
+struct ShiftRightArithmetic {
+    static inline int32_t apply(int32_t v, int32_t bits) {
+        return v >> (uint32_t(bits) >= 32 ? 31 : bits);
+    }
 };
 struct ShiftRightLogical {
-    static inline int32_t apply(int32_t v, int32_t bits) { return uint32_t(v) >> (bits & 31); }
+    static inline int32_t apply(int32_t v, int32_t bits) {
+        return uint32_t(bits) >= 32 ? 0 : uint32_t(v) >> bits;
+    }
 };
 }
 

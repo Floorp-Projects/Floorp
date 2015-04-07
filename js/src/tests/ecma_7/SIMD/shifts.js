@@ -8,13 +8,13 @@
 var int32x4 = SIMD.int32x4;
 
 function lsh(a, b) {
-    return (a << b) | 0;
+    return (b >>> 0) >= 32 ? 0 : (a << b) | 0;
 }
 function rsh(a, b) {
-    return (a >> b) | 0;
+    return (a >> Math.min(b >>> 0, 31)) | 0;
 }
 function ursh(a, b) {
-    return (a >>> b) | 0;
+    return (b >>> 0) >= 32 ? 0 : (a >>> b) | 0;
 }
 
 function test() {
@@ -28,7 +28,7 @@ function test() {
             int32x4(INT32_MAX, INT32_MIN, INT32_MAX - 1, INT32_MIN + 1)
        ])
   {
-      for (var bits = 0; bits < 32; bits++) {
+      for (var bits = -2; bits < 36; bits++) {
           testBinaryScalarFunc(v, bits, int32x4.shiftLeftByScalar, lsh);
           testBinaryScalarFunc(v, bits, int32x4.shiftRightArithmeticByScalar, rsh);
           testBinaryScalarFunc(v, bits, int32x4.shiftRightLogicalByScalar, ursh);
