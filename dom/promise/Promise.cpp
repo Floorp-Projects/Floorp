@@ -1441,35 +1441,13 @@ PromiseWorkerProxy::StoreISupports(nsISupports* aSupports)
   mSupportsArray.AppendElement(supports);
 }
 
-namespace {
-
-class PromiseWorkerProxyControlRunnable final
-  : public WorkerControlRunnable
+bool
+PromiseWorkerProxyControlRunnable::WorkerRun(JSContext* aCx,
+                                             WorkerPrivate* aWorkerPrivate)
 {
-  nsRefPtr<PromiseWorkerProxy> mProxy;
-
-public:
-  PromiseWorkerProxyControlRunnable(WorkerPrivate* aWorkerPrivate,
-                                    PromiseWorkerProxy* aProxy)
-    : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
-    , mProxy(aProxy)
-  {
-    MOZ_ASSERT(aProxy);
-  }
-
-  virtual bool
-  WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
-  {
-    mProxy->CleanUp(aCx);
-    return true;
-  }
-
-private:
-  ~PromiseWorkerProxyControlRunnable()
-  {}
-};
-
-} // anonymous namespace
+  mProxy->CleanUp(aCx);
+  return true;
+}
 
 void
 PromiseWorkerProxy::RunCallback(JSContext* aCx,
