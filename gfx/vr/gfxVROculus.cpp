@@ -109,7 +109,7 @@ InitializeOculusCAPI()
 #else
     libSearchPaths.AppendElement(nsCString("/usr/local/lib"));
     libSearchPaths.AppendElement(nsCString("/usr/lib"));
-    libName.AppendPrintf("LibOVRRT%d_%d.so.%d", BUILD_BITS, LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
+    libName.AppendPrintf("libOVRRT%d_%d.so.%d", BUILD_BITS, LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
 #endif
 
     // If the pref is present, we override libName
