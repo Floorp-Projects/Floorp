@@ -56,8 +56,8 @@
 #if defined(XP_UNIX)
 #include <sys/resource.h>
 #elif defined(XP_WIN)
-#include <Processthreadsapi.h>
-#include <Windows.h>
+#include <processthreadsapi.h>
+#include <windows.h>
 #endif // defined(XP_UNIX) || defined(XP_WIN)
 
 using namespace js;
