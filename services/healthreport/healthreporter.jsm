@@ -28,6 +28,8 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/TelemetryStopwatch.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "TelemetryPing",
+                                  "resource://gre/modules/TelemetryPing.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
                                   "resource://gre/modules/UpdateChannel.jsm");
 
@@ -1187,11 +1189,11 @@ AbstractHealthReporter.prototype = Object.freeze({
  * @param policy
  *        (HealthReportPolicy) Policy driving execution of HealthReporter.
  */
-this.HealthReporter = function (branch, policy, sessionRecorder, stateLeaf=null) {
+this.HealthReporter = function (branch, policy, stateLeaf=null) {
   this._stateLeaf = stateLeaf;
   this._uploadInProgress = false;
 
-  AbstractHealthReporter.call(this, branch, policy, sessionRecorder);
+  AbstractHealthReporter.call(this, branch, policy, TelemetryPing.getSessionRecorder());
 
   if (!this.serverURI) {
     throw new Error("No server URI defined. Did you forget to define the pref?");
