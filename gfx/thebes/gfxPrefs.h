@@ -247,6 +247,7 @@ private:
   DECL_GFX_PREF(Once, "image.cache.size",                      ImageCacheSize, int32_t, 5*1024*1024);
   DECL_GFX_PREF(Once, "image.cache.timeweight",                ImageCacheTimeWeight, int32_t, 500);
   DECL_GFX_PREF(Live, "image.decode-only-on-draw.enabled",     ImageDecodeOnlyOnDrawEnabled, bool, true);
+  DECL_GFX_PREF(Live, "image.decode-immediately.enabled",      ImageDecodeImmediatelyEnabled, bool, false);
   DECL_GFX_PREF(Live, "image.downscale-during-decode.enabled", ImageDownscaleDuringDecodeEnabled, bool, false);
   DECL_GFX_PREF(Live, "image.high_quality_downscaling.enabled", ImageHQDownscalingEnabled, bool, false);
   DECL_GFX_PREF(Live, "image.high_quality_downscaling.min_factor", ImageHQDownscalingMinFactor, uint32_t, 1000);
