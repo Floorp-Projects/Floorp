@@ -51,19 +51,22 @@ public:
     return decoder.forget();
   }
 
-  virtual bool SupportsAudioMimeType(const nsACString& aMimeType) override
+  virtual bool SupportsMimeType(const nsACString& aMimeType) override
   {
-    return FFmpegAudioDecoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE;
+    return FFmpegAudioDecoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE ||
+      FFmpegH264Decoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE;
   }
 
-  virtual bool SupportsVideoMimeType(const nsACString& aMimeType) override
+  virtual ConversionRequired
+  DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const override
   {
-    return FFmpegH264Decoder<V>::GetCodecId(aMimeType) != AV_CODEC_ID_NONE;
-  }
-
-  virtual bool DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig) override
-  {
-    return true;
+    if (aConfig.IsVideoConfig() &&
+        (aConfig.mime_type.EqualsLiteral("video/avc") ||
+         aConfig.mime_type.EqualsLiteral("video/mp4"))) {
+      return PlatformDecoderModule::kNeedAVCC;
+    } else {
+      return kNeedNone;
+    }
   }
 
 };

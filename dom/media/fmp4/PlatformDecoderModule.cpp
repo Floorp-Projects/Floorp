@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PlatformDecoderModule.h"
-#include "AVCCDecoderModule.h"
 
 #ifdef XP_WIN
 #include "WMFDecoderModule.h"
@@ -31,6 +30,9 @@
 #endif
 #include "SharedThreadPool.h"
 #include "MediaTaskQueue.h"
+
+#include "mp4_demuxer/DecoderData.h"
+#include "H264Converter.h"
 
 namespace mozilla {
 
@@ -107,10 +109,7 @@ PlatformDecoderModule::CreateCDMWrapper(CDMProxy* aProxy,
   }
 
   nsRefPtr<PlatformDecoderModule> emepdm(
-    new AVCCDecoderModule(new EMEDecoderModule(aProxy,
-                                               pdm,
-                                               cdmDecodesAudio,
-                                               cdmDecodesVideo)));
+    new EMEDecoderModule(aProxy, pdm, cdmDecodesAudio, cdmDecodesVideo));
   return emepdm.forget();
 }
 #endif
@@ -151,13 +150,12 @@ PlatformDecoderModule::CreatePDM()
   if (sFFmpegDecoderEnabled) {
     nsRefPtr<PlatformDecoderModule> m = FFmpegRuntimeLinker::CreateDecoderModule();
     if (m) {
-      nsRefPtr<PlatformDecoderModule> m2(new AVCCDecoderModule(m));
-      return m2.forget();
+      return m.forget();
     }
   }
 #endif
 #ifdef MOZ_APPLEMEDIA
-  nsRefPtr<PlatformDecoderModule> m(new AVCCDecoderModule(new AppleDecoderModule()));
+  nsRefPtr<PlatformDecoderModule> m(new AppleDecoderModule());
   return m.forget();
 #endif
 #ifdef MOZ_GONK_MEDIACODEC
@@ -173,28 +171,55 @@ PlatformDecoderModule::CreatePDM()
   }
 #endif
   if (sGMPDecoderEnabled) {
-    nsRefPtr<PlatformDecoderModule> m(new AVCCDecoderModule(new GMPDecoderModule()));
+    nsRefPtr<PlatformDecoderModule> m(new GMPDecoderModule());
     return m.forget();
   }
   return nullptr;
 }
 
-bool
-PlatformDecoderModule::SupportsAudioMimeType(const nsACString& aMimeType)
+already_AddRefed<MediaDataDecoder>
+PlatformDecoderModule::CreateDecoder(const mp4_demuxer::TrackConfig& aConfig,
+                                     FlushableMediaTaskQueue* aTaskQueue,
+                                     MediaDataDecoderCallback* aCallback,
+                                     layers::LayersBackend aLayersBackend,
+                                     layers::ImageContainer* aImageContainer)
 {
-  return aMimeType.EqualsLiteral("audio/mp4a-latm");
+  nsRefPtr<MediaDataDecoder> m;
+
+  if (aConfig.IsAudioConfig()) {
+    m = CreateAudioDecoder(static_cast<const mp4_demuxer::AudioDecoderConfig&>(aConfig),
+                           aTaskQueue,
+                           aCallback);
+    return m.forget();
+  }
+
+  if (!aConfig.IsVideoConfig()) {
+    return nullptr;
+  }
+
+  if (H264Converter::IsH264(aConfig)) {
+    m = new H264Converter(this,
+                          static_cast<const mp4_demuxer::VideoDecoderConfig&>(aConfig),
+                          aLayersBackend,
+                          aImageContainer,
+                          aTaskQueue,
+                          aCallback);
+  } else {
+    m = CreateVideoDecoder(static_cast<const mp4_demuxer::VideoDecoderConfig&>(aConfig),
+                           aLayersBackend,
+                           aImageContainer,
+                           aTaskQueue,
+                           aCallback);
+  }
+  return m.forget();
 }
 
 bool
-PlatformDecoderModule::SupportsVideoMimeType(const nsACString& aMimeType)
+PlatformDecoderModule::SupportsMimeType(const nsACString& aMimeType)
 {
-  return aMimeType.EqualsLiteral("video/mp4") || aMimeType.EqualsLiteral("video/avc");
-}
-
-bool
-PlatformDecoderModule::DecoderNeedsAVCC(const mp4_demuxer::VideoDecoderConfig& aConfig)
-{
-  return false;
+  return aMimeType.EqualsLiteral("audio/mp4a-latm") ||
+    aMimeType.EqualsLiteral("video/mp4") ||
+    aMimeType.EqualsLiteral("video/avc");
 }
 
 } // namespace mozilla

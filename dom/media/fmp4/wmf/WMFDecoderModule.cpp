@@ -121,19 +121,26 @@ WMFDecoderModule::SupportsSharedDecoders(const mp4_demuxer::VideoDecoderConfig& 
 }
 
 bool
-WMFDecoderModule::SupportsVideoMimeType(const nsACString& aMimeType)
+WMFDecoderModule::SupportsMimeType(const nsACString& aMimeType)
 {
   return aMimeType.EqualsLiteral("video/mp4") ||
          aMimeType.EqualsLiteral("video/avc") ||
          aMimeType.EqualsLiteral("video/webm; codecs=vp8") ||
-         aMimeType.EqualsLiteral("video/webm; codecs=vp9");
+         aMimeType.EqualsLiteral("video/webm; codecs=vp9") ||
+         aMimeType.EqualsLiteral("audio/mp4a-latm") ||
+         aMimeType.EqualsLiteral("audio/mpeg");
 }
 
-bool
-WMFDecoderModule::SupportsAudioMimeType(const nsACString& aMimeType)
+PlatformDecoderModule::ConversionRequired
+WMFDecoderModule::DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const
 {
-  return aMimeType.EqualsLiteral("audio/mp4a-latm") ||
-         aMimeType.EqualsLiteral("audio/mpeg");
+  if (aConfig.IsVideoConfig() &&
+      (aConfig.mime_type.EqualsLiteral("video/avc") ||
+       aConfig.mime_type.EqualsLiteral("video/mp4"))) {
+    return kNeedAnnexB;
+  } else {
+    return kNeedNone;
+  }
 }
 
 static bool
