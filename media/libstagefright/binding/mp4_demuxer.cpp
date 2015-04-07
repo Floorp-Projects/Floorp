@@ -138,7 +138,7 @@ MP4Demuxer::Init()
     }
   }
   sp<MetaData> metaData = e->getMetaData();
-  mCrypto.Update(metaData);
+  UpdateCrypto(metaData.get());
 
   int64_t movieDuration;
   if (!mVideoConfig.duration && !mAudioConfig.duration &&
@@ -149,6 +149,21 @@ MP4Demuxer::Init()
   mPrivate->mCanSeek = e->flags() & MediaExtractor::CAN_SEEK;
 
   return mPrivate->mAudio.get() || mPrivate->mVideo.get();
+}
+
+void
+MP4Demuxer::UpdateCrypto(const MetaData* aMetaData)
+{
+  const void* data;
+  size_t size;
+  uint32_t type;
+
+  // There's no point in checking that the type matches anything because it
+  // isn't set consistently in the MPEG4Extractor.
+  if (!aMetaData->findData(kKeyPssh, &type, &data, &size)) {
+    return;
+  }
+  mCrypto.Update(reinterpret_cast<const uint8_t*>(data), size);
 }
 
 bool
