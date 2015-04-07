@@ -31,11 +31,7 @@ sync protocol PPluginWidget {
 
 parent:
   async __delete__();
-
-parent:
   sync Create() returns (nsresult aResult);
-
-  async Destroy();
   async SetFocus(bool aRaise);
 
   /**
@@ -45,18 +41,6 @@ parent:
    * native HWND of the plugin widget.
    */
   sync GetNativePluginPort() returns (uintptr_t value);
-
-child:
-  /**
-   * Event indicating the parent is shutting down.
-   * aWhichSide - indicates which side intititated the shutdown.
-   */
-  async ParentShutdown(uint16_t aWhichSide);
-
-  /**
-   * Requests a full update of the plugin window.
-   */
-  async UpdateWindow(uintptr_t aChildId);
 };
 
 }
