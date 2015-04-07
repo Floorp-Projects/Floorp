@@ -27,7 +27,7 @@ public:
   ~MaiHyperlink();
 
 public:
-  AtkHyperlink *GetAtkHyperlink(void);
+  AtkHyperlink* GetAtkHyperlink() const { return mMaiAtkHyperlink; }
   Accessible* GetAccHyperlink()
     { return mHyperlink && mHyperlink->IsLink() ? mHyperlink : nullptr; }
 
