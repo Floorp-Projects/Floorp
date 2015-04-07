@@ -3647,8 +3647,7 @@ TypeNewScript::maybeAnalyze(JSContext* cx, ObjectGroup* group, bool* regenerate,
     }
 
     RootedObjectGroup groupRoot(cx, group);
-    templateObject_ = NewObjectWithGroup<PlainObject>(cx, groupRoot, kind,
-                                                      MaybeSingletonObject);
+    templateObject_ = NewObjectWithGroup<PlainObject>(cx, groupRoot, kind, TenuredObject);
     if (!templateObject_)
         return false;
 

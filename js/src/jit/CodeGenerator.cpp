@@ -1950,7 +1950,7 @@ static const VMFunction DeepCloneObjectLiteralInfo =
 void
 CodeGenerator::visitCloneLiteral(LCloneLiteral* lir)
 {
-    pushArg(ImmWord(js::MaybeSingletonObject));
+    pushArg(ImmWord(TenuredObject));
     pushArg(ToRegister(lir->getObjectLiteral()));
     callVM(DeepCloneObjectLiteralInfo, lir);
 }
