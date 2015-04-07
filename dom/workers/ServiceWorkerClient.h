@@ -50,10 +50,10 @@ public:
 
   ServiceWorkerClient(nsISupports* aOwner,
                       const ServiceWorkerClientInfo& aClientInfo)
-    : mOwner(aOwner),
-      mId(aClientInfo.mClientId),
-      mWindowId(aClientInfo.mWindowId),
-      mUrl(aClientInfo.mUrl)
+    : mOwner(aOwner)
+    , mId(aClientInfo.mClientId)
+    , mUrl(aClientInfo.mUrl)
+    , mWindowId(aClientInfo.mWindowId)
   {
     MOZ_ASSERT(aOwner);
   }
@@ -89,8 +89,10 @@ protected:
 private:
   nsCOMPtr<nsISupports> mOwner;
   nsString mId;
-  uint64_t mWindowId;
   nsString mUrl;
+
+protected:
+  uint64_t mWindowId;
 };
 
 } // namespace workers

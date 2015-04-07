@@ -135,11 +135,6 @@ public:
     AllocPProcessHangMonitorChild(Transport* aTransport,
                                   ProcessId aOtherProcess) override;
 
-#if defined(XP_WIN) && defined(MOZ_CONTENT_SANDBOX)
-    // Cleans up any resources used by the process when sandboxed.
-    void CleanUpSandboxEnvironment();
-#endif
-
     virtual bool RecvSetProcessSandbox() override;
 
     PBackgroundChild*

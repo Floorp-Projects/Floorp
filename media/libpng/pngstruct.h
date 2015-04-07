@@ -1,11 +1,10 @@
 
 /* pngstruct.h - header file for PNG reference library
  *
+ * Last changed in libpng 1.6.1 [March 28, 2013]
  * Copyright (c) 1998-2013 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
- *
- * Last changed in libpng 1.6.1 [March 28, 2013]
  *
  * This code is released under the libpng license.
  * For conditions of distribution and use, see the disclaimer
@@ -101,7 +100,7 @@ typedef struct png_XYZ
 #endif /* COLORSPACE */
 
 #if defined(PNG_COLORSPACE_SUPPORTED) || defined(PNG_GAMMA_SUPPORTED)
-/* A colorspace is all the above plus, potentially, profile information,
+/* A colorspace is all the above plus, potentially, profile information;
  * however at present libpng does not use the profile internally so it is only
  * stored in the png_info struct (if iCCP is supported.)  The rendering intent
  * is retained here and is checked.

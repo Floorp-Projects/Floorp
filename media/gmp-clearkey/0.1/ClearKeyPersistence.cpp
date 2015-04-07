@@ -1,20 +1,32 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/*
+ * Copyright 2015, Mozilla Foundation and contributors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "ClearKeyPersistence.h"
 #include "ClearKeyUtils.h"
 #include "ClearKeyStorage.h"
 #include "ClearKeySessionManager.h"
-#include "mozilla/RefPtr.h"
+#include "RefCounted.h"
 
 #include <stdint.h>
 #include <string.h>
 #include <set>
 #include <vector>
 #include <sstream>
+#include <assert.h>
 
-using namespace mozilla;
 using namespace std;
 
 // Whether we've loaded the persistent session ids from GMPStorage yet.
@@ -36,7 +48,7 @@ ReadAllRecordsFromIterator(GMPRecordIterator* aRecordIterator,
                            void* aUserArg,
                            GMPErr aStatus)
 {
-  MOZ_ASSERT(sPersistentKeyState == LOADING);
+  assert(sPersistentKeyState == LOADING);
   if (GMP_SUCCEEDED(aStatus)) {
     // Extract the record names which are valid uint32_t's; they're
     // the persistent session ids.
@@ -44,7 +56,7 @@ ReadAllRecordsFromIterator(GMPRecordIterator* aRecordIterator,
     uint32_t len = 0;
     while (GMP_SUCCEEDED(aRecordIterator->GetName(&name, &len))) {
       if (ClearKeyUtils::IsValidSessionId(name, len)) {
-        MOZ_ASSERT(name[len] == 0);
+        assert(name[len] == 0);
         sPersistentSessionIds.insert(atoi(name));
       }
       aRecordIterator->NextRecord();

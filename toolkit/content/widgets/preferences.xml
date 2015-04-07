@@ -621,9 +621,11 @@
       <constructor>
       <![CDATA[
         if (this.type != "child") {
-          var psvc = Components.classes["@mozilla.org/preferences-service;1"]
-                               .getService(Components.interfaces.nsIPrefBranch);
-          this.instantApply = psvc.getBoolPref("browser.preferences.instantApply");
+          if (!this._instantApplyInitialized) {
+            let psvc = Components.classes["@mozilla.org/preferences-service;1"]
+                                 .getService(Components.interfaces.nsIPrefBranch);
+            this.instantApply = psvc.getBoolPref("browser.preferences.instantApply");
+          }
           if (this.instantApply) {
             var docElt = document.documentElement;
             var acceptButton = docElt.getButton("accept");
@@ -693,8 +695,13 @@
       ]]>
       </destructor>
 
+      <!-- Derived bindings can set this to true to cause us to skip
+           reading the browser.preferences.instantApply pref in the constructor.
+           Then they can set instantApply to their wished value. -->
+      <field name="_instantApplyInitialized">false</field>
+      <!-- Controls whether changed pref values take effect immediately. -->
       <field name="instantApply">false</field>
-      
+
       <property name="preferencePanes"
                 onget="return this.getElementsByTagName('prefpane');"/>
 

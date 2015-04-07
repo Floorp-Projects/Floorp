@@ -4342,17 +4342,10 @@ MGuardReceiverPolymorphic::congruentTo(const MDefinition* ins) const
 
     const MGuardReceiverPolymorphic* other = ins->toGuardReceiverPolymorphic();
 
-    if (numShapes() != other->numShapes())
+    if (numReceivers() != other->numReceivers())
         return false;
-    for (size_t i = 0; i < numShapes(); i++) {
-        if (getShape(i) != other->getShape(i))
-            return false;
-    }
-
-    if (numUnboxedGroups() != other->numUnboxedGroups())
-        return false;
-    for (size_t i = 0; i < numUnboxedGroups(); i++) {
-        if (getUnboxedGroup(i) != other->getUnboxedGroup(i))
+    for (size_t i = 0; i < numReceivers(); i++) {
+        if (receiver(i) != other->receiver(i))
             return false;
     }
 
@@ -4498,8 +4491,10 @@ MGetPropertyPolymorphic::mightAlias(const MDefinition* store) const
     if (!store->isStoreFixedSlot() && !store->isStoreSlot())
         return true;
 
-    for (size_t i = 0; i < numShapes(); i++) {
+    for (size_t i = 0; i < numReceivers(); i++) {
         const Shape* shape = this->shape(i);
+        if (!shape)
+            continue;
         if (shape->slot() < shape->numFixedSlots()) {
             // Fixed slot.
             uint32_t slot = shape->slot();
@@ -5119,8 +5114,7 @@ AddGroupGuard(TempAllocator& alloc, MBasicBlock* current, MDefinition* obj,
 
     if (key->isGroup()) {
         guard = MGuardObjectGroup::New(alloc, obj, key->group(), bailOnEquality,
-                                       Bailout_ObjectIdentityOrTypeGuard,
-                                       /* checkUnboxedExpando = */ false);
+                                       Bailout_ObjectIdentityOrTypeGuard);
     } else {
         MConstant* singletonConst = MConstant::NewConstraintlessObject(alloc, key->singleton());
         current->add(singletonConst);
