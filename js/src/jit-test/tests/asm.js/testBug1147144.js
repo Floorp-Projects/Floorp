@@ -1,4 +1,9 @@
 load(libdir + 'asm.js');
+load(libdir + 'asserts.js');
+
+if (!isAsmJSCompilationAvailable())
+    quit();
+
 setLazyParsingEnabled(false)
 assertEq(eval(`(function asmModule() { "use asm"; function asmFun() {} return asmFun })`).toString(), "function asmModule() {\n    [sourceless code]\n}");
 assertEq(eval(`(function asmModule() { "use asm"; function asmFun() {} return asmFun })`).toSource(), "(function asmModule() {\n    [sourceless code]\n})");
@@ -12,3 +17,4 @@ assertEq(asmCompile(USE_ASM + `function asmFun() {} return asmFun`).toString(), 
 assertEq(asmCompile(USE_ASM + `function asmFun() {} return asmFun`).toSource(), "(function anonymous() {\n    [sourceless code]\n})");
 assertEq(asmCompile(USE_ASM + `function asmFun() {} return asmFun`)().toString(), "function asmFun() {\n    [sourceless code]\n}");
 assertEq(asmCompile(USE_ASM + `function asmFun() {} return asmFun`)().toSource(), "function asmFun() {\n    [sourceless code]\n}");
+assertThrowsInstanceOf(()=>asmCompile('stdlib',USE_ASM + "var sin=stdlib.Math.sin;return {}")({Math:{}}), Error);
