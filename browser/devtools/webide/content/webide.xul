@@ -211,11 +211,11 @@
         <iframe id="deck-panel-devicepreferences" flex="1" lazysrc="devicepreferences.xhtml"/>
         <iframe id="deck-panel-devicesettings" flex="1" lazysrc="devicesettings.xhtml"/>
         <iframe id="deck-panel-logs" flex="1" src="logs.xhtml"/>
+        <iframe id="deck-panel-simulator" flex="1" lazysrc="simulator.xhtml"/>
       </deck>
     </hbox>
     <splitter hidden="true" class="devtools-horizontal-splitter" orient="vertical"/>
     <!-- toolbox iframe will be inserted here -->
   </notificationbox>
-
 
 </window>
