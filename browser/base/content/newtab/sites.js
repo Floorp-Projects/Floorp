@@ -133,7 +133,7 @@ Site.prototype = {
 
     if (this.link.targetedSite) {
       this.node.setAttribute("suggested", true);
-      let targetedSite = `<strong> ${this.link.targetedSite} </strong>`;
+      let targetedSite = `<strong> ${this.link.targetedName} </strong>`;
       this._querySelector(".newtab-suggested").innerHTML =
         `<div class='newtab-suggested-bounds'> ${newTabString("suggested.button", [targetedSite])} </div>`;
     }
