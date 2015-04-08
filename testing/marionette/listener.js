@@ -522,7 +522,8 @@ function createExecuteContentSandbox(aWindow, timeout) {
       inactivityTimeoutId = null;
     }
   };
-  sandbox.finish = function sandbox_finish() {
+
+  sandbox.finish = function() {
     if (asyncTestRunning) {
       sandbox.asyncComplete(marionette.generate_results(), sandbox.asyncTestCommandId);
     } else {
@@ -699,11 +700,6 @@ function executeWithCallback(msg, useFinish) {
   }
   sandbox.tag = script;
 
-  // Error code 28 is scriptTimeout, but spec says execute_async should return 21 (Timeout),
-  // see http://code.google.com/p/selenium/wiki/JsonWireProtocol#/session/:sessionId/execute_async.
-  // However Selenium code returns 28, see
-  // http://code.google.com/p/selenium/source/browse/trunk/javascript/firefox-driver/js/evaluate.js.
-  // We'll stay compatible with the Selenium code.
   asyncTestTimeoutId = curFrame.setTimeout(function() {
     sandbox.asyncComplete(new ScriptTimeoutError("timed out"), asyncTestCommandId);
   }, msg.json.timeout);
@@ -1445,7 +1441,7 @@ function isElementDisplayed(msg) {
  *               the element that will be checked
  *               'propertyName' is the CSS rule that is being requested
  */
-function getElementValueOfCssProperty(msg){
+function getElementValueOfCssProperty(msg) {
   let command_id = msg.json.command_id;
   let propertyName = msg.json.propertyName;
   try {
@@ -1617,6 +1613,11 @@ function clearElement(msg) {
     }
     sendOk(command_id);
   } catch (e) {
+    // Bug 964738: Newer atoms contain status codes which makes wrapping
+    // this in an error prototype that has a status property unnecessary
+    if (e.name == "InvalidElementStateError") {
+      e = new InvalidElementStateError(e.message);
+    }
     sendError(e, command_id);
   }
 }
