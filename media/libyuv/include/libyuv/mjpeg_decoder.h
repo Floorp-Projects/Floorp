@@ -161,6 +161,7 @@ class LIBYUV_API MJpegDecoder {
   static void term_source(jpeg_decompress_struct* cinfo);
 
   static void ErrorHandler(jpeg_common_struct* cinfo);
+  static void OutputHandler(jpeg_common_struct* cinfo);
 
   void AllocOutputBuffers(int num_outbufs);
   void DestroyOutputBuffers();
