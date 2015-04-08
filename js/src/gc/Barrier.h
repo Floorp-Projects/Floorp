@@ -287,11 +287,6 @@ ZoneOfIdFromAnyThread(const jsid& id)
 void
 ValueReadBarrier(const Value& value);
 
-#ifdef DEBUG
-void
-CheckGCIsSweepingZone(gc::Cell* cell);
-#endif
-
 template <typename T>
 struct InternalGCMethods {};
 
@@ -308,13 +303,6 @@ struct InternalGCMethods<T*>
     static void postBarrierRemove(T** vp) { T::writeBarrierPostRemove(*vp, vp); }
 
     static void readBarrier(T* v) { T::readBarrier(v); }
-
-#ifdef DEBUG
-    static void checkGCIsSweeping(T* v) {
-        if (v)
-            CheckGCIsSweepingZone(v);
-    }
-#endif
 };
 
 template <>
@@ -392,13 +380,6 @@ struct InternalGCMethods<Value>
     }
 
     static void readBarrier(const Value& v) { ValueReadBarrier(v); }
-
-#ifdef DEBUG
-    static void checkGCIsSweeping(const Value& v) {
-        if (v.isMarkable())
-            CheckGCIsSweepingZone(v.toGCThing());
-    }
-#endif
 };
 
 template <>
@@ -422,13 +403,6 @@ struct InternalGCMethods<jsid>
     static void postBarrier(jsid* idp) {}
     static void postBarrierRelocate(jsid* idp) {}
     static void postBarrierRemove(jsid* idp) {}
-
-#ifdef DEBUG
-    static void checkGCIsSweeping(jsid id) {
-        if (JSID_IS_GCTHING(id))
-            CheckGCIsSweepingZone(JSID_TO_GCTHING(id).asCell());
-    }
-#endif
 };
 
 template <typename T>
@@ -472,10 +446,6 @@ class BarrieredBase : public BarrieredBaseMixins<T>
   protected:
     void pre() { InternalGCMethods<T>::preBarrier(value); }
     void pre(Zone* zone) { InternalGCMethods<T>::preBarrier(zone, value); }
-
-#ifdef DEBUG
-    void checkGCIsSweeping() { InternalGCMethods<T>::checkGCIsSweeping(value); }
-#endif
 };
 
 template <>
@@ -523,16 +493,14 @@ class PreBarriered : public BarrieredBase<T>
 /*
  * A pre- and post-barriered heap pointer, for use inside the JS engine.
  *
- * It must only be stored in memory that has GC lifetime. HeapPtr must not be
- * used in contexts where it may be implicitly moved or deleted, e.g. most
- * containers.
- *
  * Not to be confused with JS::Heap<T>. This is a different class from the
  * external interface and implements substantially different semantics.
  *
  * The post-barriers implemented by this class are faster than those
  * implemented by RelocatablePtr<T> or JS::Heap<T> at the cost of not
- * automatically handling deletion or movement.
+ * automatically handling deletion or movement. It should generally only be
+ * stored in memory that has GC lifetime. HeapPtr must not be used in contexts
+ * where it may be implicitly moved or deleted, e.g. most containers.
  */
 template <class T>
 class HeapPtr : public BarrieredBase<T>
@@ -541,9 +509,6 @@ class HeapPtr : public BarrieredBase<T>
     HeapPtr() : BarrieredBase<T>(GCMethods<T>::initial()) {}
     explicit HeapPtr(T v) : BarrieredBase<T>(v) { post(); }
     explicit HeapPtr(const HeapPtr<T>& v) : BarrieredBase<T>(v) { post(); }
-#ifdef DEBUG
-    ~HeapPtr() { this->checkGCIsSweeping(); }
-#endif
 
     void init(T v) {
         this->value = v;
@@ -648,20 +613,9 @@ class RelocatablePtr : public BarrieredBase<T>
 
     DECLARE_POINTER_ASSIGN_OPS(RelocatablePtr, T);
 
-    /* Make this friend so it can access pre() and post(). */
-    template <class T1, class T2>
-    friend inline void
-    BarrieredSetPair(Zone* zone,
-                     RelocatablePtr<T1*>& v1, T1* val1,
-                     RelocatablePtr<T2*>& v2, T2* val2);
-
   protected:
     void set(const T& v) {
         this->pre();
-        postBarrieredSet(v);
-    }
-
-    void postBarrieredSet(const T& v) {
         if (GCMethods<T>::needsPostBarrier(v)) {
             this->value = v;
             post();
@@ -702,24 +656,6 @@ BarrieredSetPair(Zone* zone,
     v2.unsafeSet(val2);
     v1.post();
     v2.post();
-}
-
-/*
- * This is a hack for RegExpStatics::updateFromMatch. It allows us to do two
- * barriers with only one branch to check if we're in an incremental GC.
- */
-template <class T1, class T2>
-static inline void
-BarrieredSetPair(Zone* zone,
-                 RelocatablePtr<T1*>& v1, T1* val1,
-                 RelocatablePtr<T2*>& v2, T2* val2)
-{
-    if (T1::needWriteBarrierPre(zone)) {
-        v1.pre();
-        v2.pre();
-    }
-    v1.postBarrieredSet(val1);
-    v2.postBarrieredSet(val2);
 }
 
 /* Useful for hashtables with a HeapPtr as key. */
@@ -830,17 +766,9 @@ typedef PreBarriered<JSString*> PreBarrieredString;
 typedef PreBarriered<JSAtom*> PreBarrieredAtom;
 
 typedef RelocatablePtr<JSObject*> RelocatablePtrObject;
-typedef RelocatablePtr<JSFunction*> RelocatablePtrFunction;
-typedef RelocatablePtr<PlainObject*> RelocatablePtrPlainObject;
 typedef RelocatablePtr<JSScript*> RelocatablePtrScript;
 typedef RelocatablePtr<NativeObject*> RelocatablePtrNativeObject;
 typedef RelocatablePtr<NestedScopeObject*> RelocatablePtrNestedScopeObject;
-typedef RelocatablePtr<Shape*> RelocatablePtrShape;
-typedef RelocatablePtr<ObjectGroup*> RelocatablePtrObjectGroup;
-typedef RelocatablePtr<jit::JitCode*> RelocatablePtrJitCode;
-typedef RelocatablePtr<JSLinearString*> RelocatablePtrLinearString;
-typedef RelocatablePtr<JSString*> RelocatablePtrString;
-typedef RelocatablePtr<JSAtom*> RelocatablePtrAtom;
 
 typedef HeapPtr<NativeObject*> HeapPtrNativeObject;
 typedef HeapPtr<ArrayObject*> HeapPtrArrayObject;
