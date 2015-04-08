@@ -251,7 +251,8 @@ loop.roomViews = (function(mozL10n) {
           //       FULL case should never happen on desktop.
           return (
             React.createElement(loop.conversationViews.GenericFailureView, {
-              cancelCall: this.closeWindow})
+              cancelCall: this.closeWindow, 
+              failureReason: this.state.failureReason})
           );
         }
         case ROOM_STATES.ENDED: {

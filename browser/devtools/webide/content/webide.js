@@ -179,13 +179,22 @@ let UI = {
           UI.updateCommands();
           UI.updateProjectButton();
           UI.openProject();
-          UI.autoStartProject();
+          yield UI.autoStartProject();
+          UI.autoOpenToolbox();
           UI.saveLastSelectedProject();
           projectList.update();
         });
         return;
-      case "project-stopped":
       case "project-started":
+        this.updateCommands();
+        projectList.update();
+        UI.autoOpenToolbox();
+        break;
+      case "project-stopped":
+        UI.destroyToolbox();
+        this.updateCommands();
+        projectList.update();
+        break;
       case "runtime-global-actors":
         this.updateCommands();
         projectList.update();
@@ -657,7 +666,7 @@ let UI = {
     }, console.error);
   },
 
-  autoStartProject: function() {
+  autoStartProject: Task.async(function*() {
     let project = AppManager.selectedProject;
 
     if (!project) {
@@ -669,15 +678,27 @@ let UI = {
       return; // For something that is not an editable app, we're done.
     }
 
-    Task.spawn(function() {
-      // Do not force opening apps that are already running, as they may have
-      // some activity being opened and don't want to dismiss them.
-      if (project.type == "runtimeApp" && !AppManager.isProjectRunning()) {
-        yield UI.busyUntil(AppManager.launchRuntimeApp(), "running app");
-      }
-      yield UI.createToolbox();
-    });
-  },
+    // Do not force opening apps that are already running, as they may have
+    // some activity being opened and don't want to dismiss them.
+    if (project.type == "runtimeApp" && !AppManager.isProjectRunning()) {
+      yield UI.busyUntil(AppManager.launchRuntimeApp(), "running app");
+    }
+  }),
+
+  autoOpenToolbox: Task.async(function*() {
+    let project = AppManager.selectedProject;
+
+    if (!project) {
+      return;
+    }
+    if (!(project.type == "runtimeApp" ||
+          project.type == "mainProcess" ||
+          project.type == "tab")) {
+      return; // For something that is not an editable app, we're done.
+    }
+
+    yield UI.createToolbox();
+  }),
 
   importAndSelectApp: Task.async(function* (source) {
     let isPackaged = !!source.path;
@@ -1015,6 +1036,7 @@ let UI = {
     let panel = document.querySelector("#deck").selectedPanel;
     let nbox = document.querySelector("#notificationbox");
     if (panel && panel.id == "deck-panel-details" &&
+        AppManager.selectedProject &&
         AppManager.selectedProject.type != "packaged" &&
         this.toolboxIframe) {
       nbox.setAttribute("toolboxfullscreen", "true");
