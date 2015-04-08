@@ -86,6 +86,10 @@ HMDInfoCardboard::HMDInfoCardboard()
   MOZ_ASSERT(sizeof(HMDInfoCardboard::DistortionVertex) == sizeof(VRDistortionVertex),
              "HMDInfoCardboard::DistortionVertex must match the size of VRDistortionVertex");
 
+  MOZ_COUNT_CTOR_INHERITED(HMDInfoCardboard, VRHMDInfo);
+
+  mDeviceName.AssignLiteral("Phone Sensor (Cardboard) HMD");
+
   mSupportedSensorBits = State_Orientation;
 
   mRecommendedEyeFOV[Eye_Left] = VRFieldOfView(45.0, 45.0, 45.0, 45.0);

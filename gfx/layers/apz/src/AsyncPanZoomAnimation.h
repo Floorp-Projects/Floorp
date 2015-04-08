@@ -22,8 +22,7 @@ class AsyncPanZoomAnimation {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AsyncPanZoomAnimation)
 
 public:
-  explicit AsyncPanZoomAnimation(const TimeDuration& aRepaintInterval =
-                                 TimeDuration::Forever())
+  explicit AsyncPanZoomAnimation(const TimeDuration& aRepaintInterval)
     : mRepaintInterval(aRepaintInterval)
   { }
 

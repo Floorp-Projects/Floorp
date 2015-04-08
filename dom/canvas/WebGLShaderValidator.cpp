@@ -7,6 +7,7 @@
 
 #include "angle/ShaderLang.h"
 #include "GLContext.h"
+#include "mozilla/Preferences.h"
 #include "MurmurHash3.h"
 #include "nsPrintfCString.h"
 #include "nsTArray.h"
@@ -40,6 +41,18 @@ ChooseValidatorCompileOptions(const ShBuiltInResources& resources,
 
     if (resources.MaxExpressionComplexity > 0) {
         options |= SH_LIMIT_EXPRESSION_COMPLEXITY;
+    }
+
+    if (Preferences::GetBool("webgl.all-angle-options", false)) {
+        return options |
+               SH_VALIDATE_LOOP_INDEXING |
+               SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX |
+               SH_UNROLL_FOR_LOOP_WITH_SAMPLER_ARRAY_INDEX |
+               SH_EMULATE_BUILT_IN_FUNCTIONS |
+               SH_CLAMP_INDIRECT_ARRAY_BOUNDS |
+               SH_UNFOLD_SHORT_CIRCUIT |
+               SH_SCALARIZE_VEC_AND_MAT_CONSTRUCTOR_ARGS |
+               SH_REGENERATE_STRUCT_NAMES;
     }
 
 #ifndef XP_MACOSX

@@ -122,8 +122,9 @@ read_icc_profile (j_decompress_ptr cinfo,
    * any ICC markers and verifies the consistency of the marker numbering.
    */
 
-  for (seq_no = 1; seq_no <= MAX_SEQ_NO; seq_no++)
+  for (seq_no = 1; seq_no <= MAX_SEQ_NO; seq_no++) {
     marker_present[seq_no] = 0;
+  }
 
   for (marker = cinfo->marker_list; marker != NULL; marker = marker->next) {
     if (marker_is_icc(marker)) {

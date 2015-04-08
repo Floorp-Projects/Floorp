@@ -261,7 +261,8 @@ ProgressTracker::NotifyCurrentState(IProgressObserver* aObserver)
 
   aObserver->SetNotificationsDeferred(true);
 
-  nsCOMPtr<nsIRunnable> ev = new AsyncNotifyCurrentStateRunnable(this, aObserver);
+  nsCOMPtr<nsIRunnable> ev = new AsyncNotifyCurrentStateRunnable(this,
+                                                                 aObserver);
   NS_DispatchToCurrentThread(ev);
 }
 

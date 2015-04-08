@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1151186
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1151186</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 1151186 **/
+  SimpleTest.waitForExplicitFinish();
+
+  document.addEventListener("focus", () => {
+    document.getElementById("editor").focus();
+    SimpleTest.executeSoon(runTests);
+  });
+
+  function runTests()
+  {
+    is(document.activeElement, document.getElementById("editor"),
+       "The div element should be focused");
+    var utils = SpecialPowers.getDOMWindowUtils(window);
+    is(utils.IMEStatus, utils.IME_STATUS_ENABLED,
+       "IME should be enabled");
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151186">Mozilla Bug 1151186</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<div id="editor" contenteditable="true"></div>
+<pre id="test">
+</pre>
+</body>
+</html>

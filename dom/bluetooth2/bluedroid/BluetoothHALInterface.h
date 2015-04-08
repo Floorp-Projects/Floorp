@@ -69,7 +69,7 @@ public:
                 const nsAString& aPinCode,
                 BluetoothResultHandler* aRes);
 
-  void SspReply(const nsAString& aBdAddr, const nsAString& aVariant,
+  void SspReply(const nsAString& aBdAddr, BluetoothSspVariant aVariant,
                 bool aAccept, uint32_t aPasskey,
                 BluetoothResultHandler* aRes);
 

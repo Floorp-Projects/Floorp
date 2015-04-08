@@ -8,11 +8,13 @@
 
 #include "nsTArray.h"
 #include "nsIScreen.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsRefPtr.h"
 
 #include "mozilla/gfx/2D.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/Atomics.h"
 
 namespace mozilla {
 namespace gfx {
@@ -140,6 +142,8 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRHMDInfo)
 
   VRHMDType GetType() const { return mType; }
+  uint32_t GetDeviceIndex() const { return mDeviceIndex; }
+  const nsCString& GetDeviceName() const { return mDeviceName; }
 
   virtual const VRFieldOfView& GetRecommendedEyeFOV(uint32_t whichEye) { return mRecommendedEyeFOV[whichEye]; }
   virtual const VRFieldOfView& GetMaximumEyeFOV(uint32_t whichEye) { return mMaximumEyeFOV[whichEye]; }
@@ -179,11 +183,13 @@ public:
   virtual nsIScreen* GetScreen() { return mScreen; }
 
 protected:
-  explicit VRHMDInfo(VRHMDType aType) : mType(aType) { MOZ_COUNT_CTOR(VRHMDInfo); }
+  explicit VRHMDInfo(VRHMDType aType);
   virtual ~VRHMDInfo() { MOZ_COUNT_DTOR(VRHMDInfo); }
 
   VRHMDType mType;
   VRHMDConfiguration mConfiguration;
+  uint32_t mDeviceIndex;
+  nsCString mDeviceName;
 
   VRFieldOfView mEyeFOV[NumEyes];
   IntSize mEyeResolution;
@@ -203,10 +209,12 @@ public:
   static void ManagerInit();
   static void ManagerDestroy();
   static void GetAllHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult);
+  static uint32_t AllocateDeviceIndex();
 
 protected:
   typedef nsTArray<nsRefPtr<VRHMDManager>> VRHMDManagerArray;
   static VRHMDManagerArray *sManagers;
+  static Atomic<uint32_t> sDeviceBase;
 
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRHMDManager)

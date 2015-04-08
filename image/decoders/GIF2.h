@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef GIF2_H
-#define GIF2_H
+#ifndef mozilla_image_decoders_GIF2_H
+#define mozilla_image_decoders_GIF2_H
 
 #define MAX_LZW_BITS          12
 #define MAX_BITS            4097 // 2^MAX_LZW_BITS+1
@@ -31,7 +31,6 @@ typedef enum {
     gif_image_header,
     gif_image_header_continue,
     gif_image_colormap,
-    gif_image_body,
     gif_lzw_start,
     gif_lzw,
     gif_sub_block,
@@ -106,5 +105,4 @@ typedef struct gif_struct {
 
 } gif_struct;
 
-#endif // GIF2_H
-
+#endif // mozilla_image_decoders_GIF2_H

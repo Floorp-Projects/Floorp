@@ -54,6 +54,16 @@ SharedSurface_IOSurface::CopyTexImage2D(GLenum target, GLint level, GLenum inter
     if (width == 0 || height == 0)
         return false;
 
+    switch (internalformat) {
+    case LOCAL_GL_ALPHA:
+    case LOCAL_GL_LUMINANCE:
+    case LOCAL_GL_LUMINANCE_ALPHA:
+        break;
+
+    default:
+        return false;
+    }
+
     MOZ_ASSERT(mGL->IsCurrent());
 
     ScopedTexture destTex(mGL);
@@ -89,23 +99,22 @@ SharedSurface_IOSurface::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei hei
     // from that.
     MOZ_ASSERT(mGL->IsCurrent());
 
-
     ScopedTexture destTex(mGL);
     {
         ScopedFramebufferForTexture srcFB(mGL, ProdTexture(), ProdTextureTarget());
 
         ScopedBindFramebuffer bindFB(mGL, srcFB.FB());
         ScopedBindTexture bindTex(mGL, destTex.Texture());
-        mGL->fCopyTexImage2D(LOCAL_GL_TEXTURE_2D, 0,
-                             mHasAlpha ? LOCAL_GL_RGBA : LOCAL_GL_RGB,
-                             x, y,
-                             width, height, 0);
+        mGL->raw_fCopyTexImage2D(LOCAL_GL_TEXTURE_2D, 0,
+                                 mHasAlpha ? LOCAL_GL_RGBA : LOCAL_GL_RGB,
+                                 x, y,
+                                 width, height, 0);
     }
 
     ScopedFramebufferForTexture destFB(mGL, destTex.Texture());
 
     ScopedBindFramebuffer bindFB(mGL, destFB.FB());
-    mGL->fReadPixels(0, 0, width, height, format, type, pixels);
+    mGL->raw_fReadPixels(0, 0, width, height, format, type, pixels);
     return true;
 }
 

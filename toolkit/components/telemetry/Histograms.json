@@ -28,6 +28,13 @@
     "extended_statistics_ok": true,
     "description": "time spent updating accessibility (ms)"
   },
+  "ADDON_SHIM_USAGE": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 15,
+    "keyed": "true",
+    "description": "Reasons why add-on shims were used, keyed by add-on ID."
+  },
   "APPLICATION_REPUTATION_SHOULD_BLOCK": {
     "expires_in_version": "never",
     "kind": "boolean",

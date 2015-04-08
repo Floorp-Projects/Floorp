@@ -8,8 +8,8 @@
  * data in imagelib.
  */
 
-#ifndef MOZILLA_IMAGELIB_SURFACECACHE_H_
-#define MOZILLA_IMAGELIB_SURFACECACHE_H_
+#ifndef mozilla_image_src_SurfaceCache_h
+#define mozilla_image_src_SurfaceCache_h
 
 #include "mozilla/Maybe.h"           // for Maybe
 #include "mozilla/MemoryReporting.h" // for MallocSizeOf
@@ -177,16 +177,21 @@ struct SurfaceCache
    * this will never happen to persistent surfaces associated with a locked
    * image; the cache keeps a strong reference to such surfaces internally.
    *
-   * @param aImageKey    Key data identifying which image the surface belongs to.
-   * @param aSurfaceKey  Key data which uniquely identifies the requested surface.
+   * @param aImageKey       Key data identifying which image the surface belongs
+   *                        to.
+   *
+   * @param aSurfaceKey     Key data which uniquely identifies the requested
+   *                        surface.
+   *
    * @param aAlternateFlags If not Nothing(), a different set of flags than the
    *                        ones specified in @aSurfaceKey which are also
    *                        acceptable to the caller. This is more efficient
    *                        than calling Lookup() twice, which requires taking a
    *                        lock each time.
    *
-   * @return a DrawableFrameRef to the imgFrame wrapping the requested surface,
-   *         or an empty DrawableFrameRef if not found.
+   * @return                a DrawableFrameRef to the imgFrame wrapping the
+   *                        requested surface, or an empty DrawableFrameRef if
+   *                        not found.
    */
   static DrawableFrameRef Lookup(const ImageKey    aImageKey,
                                  const SurfaceKey& aSurfaceKey,
@@ -200,11 +205,11 @@ struct SurfaceCache
    * Returned surfaces may vary from the requested surface only in terms of
    * size, unless @aAlternateFlags is specified.
    *
-   * If the image associated with the surface is locked, then the surface will
-   * be locked before it is returned.
+   * @param aImageKey    Key data identifying which image the surface belongs
+   *                     to.
    *
-   * @param aImageKey    Key data identifying which image the surface belongs to.
    * @param aSurfaceKey  Key data which identifies the ideal surface to return.
+   *
    * @param aAlternateFlags If not Nothing(), a different set of flags than the
    *                        ones specified in @aSurfaceKey which are also
    *                        acceptable to the caller. This is much more
@@ -251,8 +256,10 @@ struct SurfaceCache
    *
    * @param aTarget      The new surface (wrapped in an imgFrame) to insert into
    *                     the cache.
-   * @param aImageKey    Key data identifying which image the surface belongs to.
-   * @param aSurfaceKey  Key data which uniquely identifies the requested surface.
+   * @param aImageKey    Key data identifying which image the surface belongs
+   *                     to.
+   * @param aSurfaceKey  Key data which uniquely identifies the requested
+   *                     surface.
    * @param aLifetime    Whether this is a transient surface that can always be
    *                     allowed to expire, or a persistent surface that
    *                     shouldn't expire if the image is locked.
@@ -355,8 +362,10 @@ struct SurfaceCache
    * Prefer RemoveImage() or DiscardAll() when they're applicable, as they have
    * much better performance than calling this function repeatedly.
    *
-   * @param aImageKey    Key data identifying which image the surface belongs to.
-   * @param aSurfaceKey  Key data which uniquely identifies the requested surface.
+   * @param aImageKey    Key data identifying which image the surface belongs
+                         to.
+   * @param aSurfaceKey  Key data which uniquely identifies the requested
+                         surface.
    */
   static void RemoveSurface(const ImageKey    aImageKey,
                             const SurfaceKey& aSurfaceKey);
@@ -406,4 +415,4 @@ private:
 } // namespace image
 } // namespace mozilla
 
-#endif // MOZILLA_IMAGELIB_SURFACECACHE_H_
+#endif // mozilla_image_src_SurfaceCache_h
