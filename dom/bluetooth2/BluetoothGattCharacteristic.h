@@ -15,6 +15,12 @@
 #include "nsWrapperCache.h"
 #include "nsPIDOMWindow.h"
 
+namespace mozilla {
+namespace dom {
+class Promise;
+}
+}
+
 BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothGattService;
@@ -52,6 +58,12 @@ public:
   {
     return mCharId.mInstanceId;
   }
+
+  /****************************************************************************
+   * Methods (Web API Implementation)
+   ***************************************************************************/
+  already_AddRefed<Promise> StartNotifications(ErrorResult& aRv);
+  already_AddRefed<Promise> StopNotifications(ErrorResult& aRv);
 
   /****************************************************************************
    * Others

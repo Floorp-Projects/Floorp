@@ -94,7 +94,20 @@ public:
                        BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode,
+  PinReplyInternal(const nsAString& aDeviceAddress,
+                   bool aAccept,
+                   const nsAString& aPinCode,
+                   BluetoothReplyRunnable* aRunnable)
+
+  virtual void
+  SspReplyInternal(const nsAString& aDeviceAddress,
+                   BluetoothSspVariant aVariant,
+                   bool aAccept,
+                   BluetoothReplyRunnable* aRunnable)
+
+  virtual void
+  SetPinCodeInternal(const nsAString& aDeviceAddress,
+                     const nsAString& aPinCode,
                      BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
@@ -102,7 +115,8 @@ public:
                      BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm,
+  SetPairingConfirmationInternal(const nsAString& aDeviceAddress,
+                                 bool aConfirm,
                                  BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
@@ -198,6 +212,20 @@ public:
   virtual void
   DiscoverGattServicesInternal(const nsAString& aAppUuid,
                                BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
+  GattClientStartNotificationsInternal(
+    const nsAString& aAppUuid,
+    const BluetoothGattServiceId& aServId,
+    const BluetoothGattId& aCharId,
+    BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
+  GattClientStopNotificationsInternal(
+    const nsAString& aAppUuid,
+    const BluetoothGattServiceId& aServId,
+    const BluetoothGattId& aCharId,
+    BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   UnregisterGattClientInternal(int aClientIf,
