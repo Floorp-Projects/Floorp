@@ -560,7 +560,6 @@ protected:
   }
 
   void ConfigureAPZCTreeManager() override;
-  void ConfigureAPZControllerThread() override;
 
   void DoRemoteComposition(const nsIntRect& aRenderRect);
 
