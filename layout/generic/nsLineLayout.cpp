@@ -25,6 +25,7 @@
 #include "nsStyleStructInlines.h"
 #include "nsBidiPresUtils.h"
 #include "nsRubyFrame.h"
+#include "nsRubyTextFrame.h"
 #include "RubyUtils.h"
 #include <algorithm>
 

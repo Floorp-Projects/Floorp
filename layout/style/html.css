@@ -724,7 +724,8 @@ area {
 
 iframe:-moz-full-screen {
   /* iframes in full-screen mode don't show a border. */
-  border: none;
+  border: none !important;
+  padding: 0 !important;
 }
 
 /* media elements */
@@ -822,7 +823,7 @@ marquee[direction="up"], marquee[direction="down"] {
   rtc > rt {
     font-size: inherit;
   }
-  ruby, rb, rt, rbc, rtc {
-    unicode-bidi: isolate;
+  ruby, rb, rt, rtc {
+    unicode-bidi: -moz-isolate;
   }
 }

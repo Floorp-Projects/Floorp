@@ -6,49 +6,47 @@
 package org.mozilla.gecko.widget;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.text.Html;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.URLSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.prompts.PromptInput;
-
-import java.util.List;
 
 public abstract class DoorHanger extends LinearLayout {
 
     public static DoorHanger Get(Context context, DoorhangerConfig config) {
         final Type type = config.getType();
-        if (type != null) {
-            switch (type) {
-                case LOGIN:
-                    return new LoginDoorHanger(context, config);
-                case SITE:
-                    return new DefaultDoorHanger(context, config, type);
-            }
+        switch (type) {
+            case LOGIN:
+                return new LoginDoorHanger(context, config);
+            case TRACKING:
+            case MIXED_CONTENT:
+                return new DefaultDoorHanger(context, config, type);
         }
-
-        return new DefaultDoorHanger(context, config);
+        return new DefaultDoorHanger(context, config, type);
     }
 
-    public static enum Type { DEFAULT, LOGIN, SITE }
+    public static enum Type { DEFAULT, LOGIN, TRACKING, MIXED_CONTENT}
 
     public interface OnButtonClickListener {
-        public void onButtonClick(DoorHanger dh, String tag);
+        public void onButtonClick(JSONObject response, DoorHanger doorhanger);
     }
 
-    private static final LayoutParams sButtonParams;
+    protected static final LayoutParams sButtonParams;
     static {
         sButtonParams = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, 1.0f);
     }
@@ -58,7 +56,8 @@ public abstract class DoorHanger extends LinearLayout {
     // Divider between doorhangers.
     private final View mDivider;
 
-    private final LinearLayout mButtonsContainer;
+    protected final LinearLayout mButtonsContainer;
+    protected final OnButtonClickListener mOnButtonClickListener;
 
     // The tab this doorhanger is associated with.
     private final int mTabId;
@@ -66,10 +65,13 @@ public abstract class DoorHanger extends LinearLayout {
     // DoorHanger identifier.
     private final String mIdentifier;
 
+    protected final Type mType;
+
     private final ImageView mIcon;
     private final TextView mMessage;
 
-    protected Context mContext;
+    protected final Context mContext;
+    protected final Resources mResources;
 
     protected int mDividerColor;
 
@@ -80,6 +82,7 @@ public abstract class DoorHanger extends LinearLayout {
     protected DoorHanger(Context context, DoorhangerConfig config, Type type) {
         super(context);
         mContext = context;
+        mResources = context.getResources();
         mTabId = config.getTabId();
         mIdentifier = config.getId();
 
@@ -96,16 +99,22 @@ public abstract class DoorHanger extends LinearLayout {
         mDivider = findViewById(R.id.divider_doorhanger);
         mIcon = (ImageView) findViewById(R.id.doorhanger_icon);
         mMessage = (TextView) findViewById(R.id.doorhanger_message);
-        if (type == Type.SITE) {
+
+        // TODO: Bug 1149359 - split this into DoorHanger subclasses.
+        if (type == Type.TRACKING || type == Type.MIXED_CONTENT) {
             mMessage.setTextAppearance(getContext(), R.style.TextAppearance_DoorHanger_Small);
         }
-        mButtonsContainer = (LinearLayout) findViewById(R.id.doorhanger_buttons);
 
-        mDividerColor = getResources().getColor(R.color.divider_light);
+        mType = type;
+
+        mButtonsContainer = (LinearLayout) findViewById(R.id.doorhanger_buttons);
+        mOnButtonClickListener = config.getButtonClickListener();
+
+        mDividerColor = mResources.getColor(R.color.divider_light);
         setOrientation(VERTICAL);
     }
 
-    abstract protected void loadConfig(DoorhangerConfig config);
+    protected abstract void loadConfig(DoorhangerConfig config);
 
     protected void setOptions(final JSONObject options) {
         final int persistence = options.optInt("persistence");
@@ -118,6 +127,21 @@ public abstract class DoorHanger extends LinearLayout {
         final long timeout = options.optLong("timeout");
         if (timeout > 0) {
             mTimeout = timeout;
+        }
+    }
+
+    protected void setButtons(DoorhangerConfig config) {
+        final JSONArray buttons = config.getButtons();
+        final OnButtonClickListener listener = config.getButtonClickListener();
+        for (int i = 0; i < buttons.length(); i++) {
+            try {
+                final JSONObject buttonObject = buttons.getJSONObject(i);
+                final String label = buttonObject.getString("label");
+                final int callbackId = buttonObject.getInt("callback");
+                addButtonToLayout(label, callbackId);
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Error creating doorhanger button", e);
+            }
         }
    }
 
@@ -166,18 +190,13 @@ public abstract class DoorHanger extends LinearLayout {
         mMessage.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
-    public void addButton(final String text, final String tag, final OnButtonClickListener listener) {
-        final Button button = (Button) LayoutInflater.from(getContext()).inflate(R.layout.doorhanger_button, null);
-        button.setText(text);
-        button.setTag(tag);
-
-        button.setOnClickListener(new Button.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                listener.onButtonClick(DoorHanger.this, tag);
-            }
-        });
-
+    /**
+     * Creates and adds a button into the DoorHanger.
+     * @param text Button text
+     * @param id Identifier associated with the button
+     */
+    private void addButtonToLayout(String text, int id) {
+        final Button button = createButtonInstance(text, id);
         if (mButtonsContainer.getChildCount() == 0) {
             // If this is the first button we're adding, make the choices layout visible.
             mButtonsContainer.setVisibility(View.VISIBLE);
@@ -194,6 +213,8 @@ public abstract class DoorHanger extends LinearLayout {
 
         mButtonsContainer.addView(button, sButtonParams);
     }
+
+    protected abstract Button createButtonInstance(String text, int id);
 
     /*
      * Checks with persistence and timeout options to see if it's okay to remove a doorhanger.
@@ -222,14 +243,4 @@ public abstract class DoorHanger extends LinearLayout {
 
         return true;
     }
-
-    // TODO: remove and expose through instance Button Handler.
-    public List<PromptInput> getInputs() {
-        return null;
-    }
-
-    public CheckBox getCheckBox() {
-        return null;
-    }
-
 }

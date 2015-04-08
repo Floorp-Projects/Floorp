@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsGIFDecoder2_h
-#define nsGIFDecoder2_h
+#ifndef mozilla_image_decoders_nsGIFDecoder2_h
+#define mozilla_image_decoders_nsGIFDecoder2_h
 
 #include "Decoder.h"
 
@@ -69,4 +69,4 @@ private:
 } // namespace image
 } // namespace mozilla
 
-#endif // nsGIFDecoder2_h
+#endif // mozilla_image_decoders_nsGIFDecoder2_h

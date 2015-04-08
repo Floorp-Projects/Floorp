@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ImageLogging_h
-#define ImageLogging_h
+#ifndef mozilla_image_public_ImageLogging_h
+#define mozilla_image_public_ImageLogging_h
 
 #include "prlog.h"
 #include "prinrval.h"
@@ -77,8 +77,8 @@ public:
                                 paramName, paramValue));
   }
 
-
-  ~LogScope() {
+  ~LogScope()
+  {
     PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s {EXIT}\n",
                                 GIVE_ME_MS_NOW(), mFrom, mFunc));
   }
@@ -88,7 +88,6 @@ private:
   void* mFrom;
   const char* mFunc;
 };
-
 
 class LogFunc {
 public:
@@ -156,8 +155,6 @@ public:
 
 #define LOG_STATIC_FUNC_WITH_PARAM(l, s, pn, pv) LogFunc(l, nullptr, s, pn, pv)
 
-
-
 #define LOG_MSG(l, s, m) LogMessage(l, this, s, m)
 
 #else
@@ -174,4 +171,4 @@ public:
 
 #define LOG_MSG_WITH_PARAM LOG_FUNC_WITH_PARAM
 
-#endif // ifndef ImageLogging_h
+#endif // mozilla_image_public_ImageLogging_h

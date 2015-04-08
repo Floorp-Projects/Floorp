@@ -9,10 +9,9 @@
 #include "nsDebug.h"
 #include "nsIWidget.h"
 #include <OpenGL/gl.h>
-#include "gfxPrefs.h"
 #include "gfxFailure.h"
+#include "gfxPrefs.h"
 #include "prenv.h"
-#include "mozilla/Preferences.h"
 #include "GeckoProfiler.h"
 #include "mozilla/gfx/MacIOSurface.h"
 
@@ -185,7 +184,11 @@ static const NSOpenGLPixelFormatAttribute kAttribs_doubleBuffered[] = {
 };
 
 static const NSOpenGLPixelFormatAttribute kAttribs_offscreen[] = {
-    NSOpenGLPFAPixelBuffer,
+    0
+};
+
+static const NSOpenGLPixelFormatAttribute kAttribs_offscreen_accel[] = {
+    NSOpenGLPFAAccelerated,
     0
 };
 
@@ -200,8 +203,10 @@ CreateWithFormat(const NSOpenGLPixelFormatAttribute* attribs)
 {
     NSOpenGLPixelFormat* format = [[NSOpenGLPixelFormat alloc]
                                    initWithAttributes:attribs];
-    if (!format)
+    if (!format) {
+        NS_WARNING("Failed to create NSOpenGLPixelFormat.");
         return nullptr;
+    }
 
     NSOpenGLContext* context = [[NSOpenGLContext alloc] initWithFormat:format
                                 shareContext:nullptr];
@@ -263,9 +268,14 @@ CreateOffscreenFBOContext(bool requireCompatProfile)
     }
     if (!context) {
         profile = ContextProfile::OpenGLCompatibility;
-        context = CreateWithFormat(kAttribs_offscreen);
+
+        if (gfxPrefs::RequireHardwareGL())
+            context = CreateWithFormat(kAttribs_offscreen_accel);
+        else
+            context = CreateWithFormat(kAttribs_offscreen);
     }
     if (!context) {
+        NS_WARNING("Failed to create NSOpenGLContext.");
         return nullptr;
     }
 
@@ -284,8 +294,10 @@ GLContextProviderCGL::CreateHeadless(bool requireCompatProfile)
     if (!gl)
         return nullptr;
 
-    if (!gl->Init())
+    if (!gl->Init()) {
+        NS_WARNING("Failed during Init.");
         return nullptr;
+    }
 
     return gl.forget();
 }
@@ -296,8 +308,10 @@ GLContextProviderCGL::CreateOffscreen(const gfxIntSize& size,
                                       bool requireCompatProfile)
 {
     nsRefPtr<GLContext> glContext = CreateHeadless(requireCompatProfile);
-    if (!glContext->InitOffscreen(size, caps))
+    if (!glContext->InitOffscreen(size, caps)) {
+        NS_WARNING("Failed during InitOffscreen.");
         return nullptr;
+    }
 
     return glContext.forget();
 }

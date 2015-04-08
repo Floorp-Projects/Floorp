@@ -18,6 +18,7 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIScreenManager.h"
 
+using namespace mozilla;
 using namespace mozilla::gfx;
 
 // Dummy nsIScreen implementation, for when we just need to specify a size
@@ -71,7 +72,18 @@ protected:
 
 NS_IMPL_ISUPPORTS(FakeScreen, nsIScreen)
 
+VRHMDInfo::VRHMDInfo(VRHMDType aType)
+  : mType(aType)
+{
+  MOZ_COUNT_CTOR(VRHMDInfo);
+
+  mDeviceIndex = VRHMDManager::AllocateDeviceIndex();
+  mDeviceName.AssignLiteral("Unknown Device");
+}
+
+
 VRHMDManager::VRHMDManagerArray *VRHMDManager::sManagers = nullptr;
+Atomic<uint32_t> VRHMDManager::sDeviceBase(0);
 
 /* static */ void
 VRHMDManager::ManagerInit()
@@ -115,4 +127,10 @@ VRHMDManager::GetAllHMDs(nsTArray<nsRefPtr<VRHMDInfo>>& aHMDResult)
   for (uint32_t i = 0; i < sManagers->Length(); ++i) {
     (*sManagers)[i]->GetHMDs(aHMDResult);
   }
+}
+
+/* static */ uint32_t
+VRHMDManager::AllocateDeviceIndex()
+{
+  return ++sDeviceBase;
 }

@@ -1929,9 +1929,13 @@ nsFocusManager::Focus(nsPIDOMWindow* aWindow,
       }
     }
 
-    nsPresContext* presContext = presShell->GetPresContext();
-    IMEStateManager::OnChangeFocus(presContext, nullptr,
-                                   GetFocusMoveActionCause(aFlags));
+    if (!mFocusedContent) {
+      // When there is no focused content, IMEStateManager needs to adjust IME
+      // enabled state with the document.
+      nsPresContext* presContext = presShell->GetPresContext();
+      IMEStateManager::OnChangeFocus(presContext, nullptr,
+                                     GetFocusMoveActionCause(aFlags));
+    }
 
     if (!aWindowRaised)
       aWindow->UpdateCommands(NS_LITERAL_STRING("focus"), nullptr, 0);

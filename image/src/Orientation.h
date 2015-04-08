@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_IMAGELIB_ORIENTATION_H_
-#define MOZILLA_IMAGELIB_ORIENTATION_H_
+#ifndef mozilla_image_src_Orientation_h
+#define mozilla_image_src_Orientation_h
 
 #include <stdint.h>
 
@@ -56,7 +56,7 @@ struct Orientation
   Flip  flip;
 };
 
-}
-}
+} // namespace image
+} // namespace mozilla
 
-#endif
+#endif // mozilla_image_src_Orientation_h

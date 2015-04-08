@@ -49,6 +49,7 @@
 #include "mozilla/layers/PCompositorChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
 
 #if defined(MOZ_CONTENT_SANDBOX)
@@ -2670,6 +2671,26 @@ ContentChild::GetBrowserOrId(TabChild* aTabChild)
     else {
         return PBrowserOrId(aTabChild->GetTabId());
     }
+}
+
+bool
+ContentChild::RecvUpdateWindow(const uintptr_t& aChildId)
+{
+#if defined(XP_WIN)
+  NS_ASSERTION(aChildId, "Expected child hwnd value for remote plugin instance.");
+  mozilla::plugins::PluginInstanceParent* parentInstance =
+    mozilla::plugins::PluginInstanceParent::LookupPluginInstanceByID(aChildId);
+  NS_ASSERTION(parentInstance, "Expected matching plugin instance");
+  if (parentInstance) {
+    // sync! update call to the plugin instance that forces the
+    // plugin to paint its child window.
+    parentInstance->CallUpdateWindow();
+  }
+  return true;
+#else
+  NS_NOTREACHED("ContentChild::RecvUpdateWindow calls unexpected on this platform.");
+  return false;
+#endif
 }
 
 // This code goes here rather than nsGlobalWindow.cpp because nsGlobalWindow.cpp

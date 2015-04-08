@@ -7,10 +7,6 @@
  * nsWindowGfx - Painting and aceleration.
  */
 
-// XXX Future: this should really be a stand alone class stored as
-// a member of nsWindow with getters and setters for things like render
-// mode and methods for handling paint.
-
 /**************************************************************
  **************************************************************
  **
@@ -21,10 +17,9 @@
  **************************************************************
  **************************************************************/
 
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 using mozilla::plugins::PluginInstanceParent;
-#include "mozilla/plugins/PluginWidgetParent.h"
-using mozilla::plugins::PluginWidgetParent;
 
 #include "nsWindowGfx.h"
 #include "nsAppRunner.h"
@@ -55,13 +50,6 @@ using mozilla::plugins::PluginWidgetParent;
 extern "C" {
 #define PIXMAN_DONT_DEFINE_STDINT
 #include "pixman.h"
-}
-
-namespace mozilla {
-namespace plugins {
-// For plugins with e10s
-extern const wchar_t* kPluginWidgetParentProperty;
-}
 }
 
 using namespace mozilla;
@@ -214,7 +202,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
 
     if (mWindowType == eWindowType_plugin_ipc_chrome) {
       // Fire off an async request to the plugin to paint its window
-      PluginWidgetParent::SendAsyncUpdate(this);
+      mozilla::dom::ContentParent::SendAsyncUpdate(this);
       ValidateRect(mWnd, nullptr);
       return true;
     }

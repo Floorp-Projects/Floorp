@@ -5,7 +5,9 @@
 
 package org.mozilla.gecko.widget;
 
+import android.util.Log;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.mozilla.gecko.widget.DoorHanger.Type;
@@ -24,23 +26,29 @@ public class DoorhangerConfig {
         }
     }
 
+    private static final String LOGTAG = "DoorhangerConfig";
+
     private final int tabId;
     private final String id;
-    private DoorHanger.Type type;
+    private final DoorHanger.OnButtonClickListener buttonClickListener;
+    private final DoorHanger.Type type;
     private String message;
     private JSONObject options;
     private Link link;
-    private JSONArray buttons;
+    private JSONArray buttons = new JSONArray();
 
-    public DoorhangerConfig() {
+    public DoorhangerConfig(Type type, DoorHanger.OnButtonClickListener listener) {
         // XXX: This should only be used by SiteIdentityPopup doorhangers which
         // don't need tab or id references, until bug 1141904 unifies doorhangers.
-        this(-1, null);
+
+        this(-1, null, type, listener);
     }
 
-    public DoorhangerConfig(int tabId, String id) {
+    public DoorhangerConfig(int tabId, String id, DoorHanger.Type type, DoorHanger.OnButtonClickListener buttonClickListener) {
         this.tabId = tabId;
         this.id = id;
+        this.type = type;
+        this.buttonClickListener = buttonClickListener;
     }
 
     public int getTabId() {
@@ -49,10 +57,6 @@ public class DoorhangerConfig {
 
     public String getId() {
         return id;
-    }
-
-    public void setType(Type type) {
-        this.type = type;
     }
 
     public Type getType() {
@@ -75,8 +79,33 @@ public class DoorhangerConfig {
         return options;
     }
 
-    public void setButtons(JSONArray buttons) {
-        this.buttons = buttons;
+    /**
+     * Add buttons from JSON to the Config object.
+     * @param buttons JSONArray of JSONObjects of the form { label: <label>, callback: <callback_id> }
+     */
+    public void appendButtonsFromJSON(JSONArray buttons) {
+        try {
+            for (int i = 0; i < buttons.length(); i++) {
+                this.buttons.put(buttons.get(i));
+            }
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Error parsing buttons from JSON", e);
+        }
+    }
+
+    public void appendButton(String label, int callbackId) {
+        final JSONObject button = new JSONObject();
+        try {
+            button.put("label", label);
+            button.put("callback", callbackId);
+            this.buttons.put(button);
+        } catch (JSONException e) {
+            Log.e(LOGTAG, "Error creating button", e);
+        }
+    }
+
+    public DoorHanger.OnButtonClickListener getButtonClickListener() {
+        return this.buttonClickListener;
     }
 
     public JSONArray getButtons() {

@@ -198,6 +198,7 @@ public:
     virtual bool RecvSetBackgroundColor(const nscolor& aValue) override;
     virtual bool RecvSetStatus(const uint32_t& aType, const nsString& aStatus) override;
     virtual bool RecvIsParentWindowMainWidgetVisible(bool* aIsVisible) override;
+    virtual bool RecvSynthesizeNativeMouseMove(const mozilla::LayoutDeviceIntPoint& aPoint) override;
     virtual bool RecvShowTooltip(const uint32_t& aX, const uint32_t& aY, const nsString& aTooltip) override;
     virtual bool RecvHideTooltip() override;
     virtual bool RecvGetDPI(float* aValue) override;

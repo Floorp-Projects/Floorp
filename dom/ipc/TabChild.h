@@ -267,7 +267,8 @@ public:
     Create(nsIContentChild* aManager, const TabId& aTabId, const TabContext& aContext, uint32_t aChromeFlags);
 
     bool IsRootContentDocument();
-
+    // Let managees query if it is safe to send messages.
+    bool IsDestroyed() { return mDestroyed; }
     const TabId GetTabId() const {
       MOZ_ASSERT(mUniqueId != 0);
       return mUniqueId;

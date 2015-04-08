@@ -592,7 +592,8 @@ class ZoomAnimation: public AsyncPanZoomAnimation {
 public:
   ZoomAnimation(CSSPoint aStartOffset, CSSToParentLayerScale2D aStartZoom,
                 CSSPoint aEndOffset, CSSToParentLayerScale2D aEndZoom)
-    : mTotalDuration(TimeDuration::FromMilliseconds(gfxPrefs::APZZoomAnimationDuration()))
+    : AsyncPanZoomAnimation(TimeDuration::Forever())
+    , mTotalDuration(TimeDuration::FromMilliseconds(gfxPrefs::APZZoomAnimationDuration()))
     , mStartOffset(aStartOffset)
     , mStartZoom(aStartZoom)
     , mEndOffset(aEndOffset)
@@ -650,7 +651,8 @@ private:
 class OverscrollAnimation: public AsyncPanZoomAnimation {
 public:
   explicit OverscrollAnimation(AsyncPanZoomController& aApzc, const ParentLayerPoint& aVelocity)
-    : mApzc(aApzc)
+    : AsyncPanZoomAnimation(TimeDuration::Forever())
+    , mApzc(aApzc)
   {
     mApzc.mX.SetVelocity(aVelocity.x);
     mApzc.mY.SetVelocity(aVelocity.y);

@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_IMAGELIB_PROGRESSOBSERVER_H_
-#define MOZILLA_IMAGELIB_PROGRESSOBSERVER_H_
+#ifndef mozilla_image_src_IProgressObserver_h
+#define mozilla_image_src_IProgressObserver_h
 
 #include "mozilla/WeakPtr.h"
 #include "nsISupports.h"
@@ -16,7 +16,7 @@ namespace image {
 /**
  * An interface for observing changes to image state, as reported by
  * ProgressTracker.
- * 
+ *
  * This is the ImageLib-internal version of imgINotificationObserver,
  * essentially, with implementation details that code outside of ImageLib
  * shouldn't see.
@@ -56,4 +56,4 @@ protected:
 } // namespace image
 } // namespace mozilla
 
-#endif // MOZILLA_IMAGELIB_PROGRESSOBSERVER_H_
+#endif // mozilla_image_src_IProgressObserver_h

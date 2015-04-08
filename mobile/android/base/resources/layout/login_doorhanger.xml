@@ -39,6 +39,7 @@
                       android:layout_width="match_parent"
                       android:layout_height="wrap_content"
                       android:textAppearance="@style/TextAppearance.DoorHanger.Medium"
+                      android:textColor="@color/link_blue"
                       android:paddingBottom="@dimen/doorhanger_section_padding_large"
                       android:visibility="gone"/>
 

@@ -123,7 +123,9 @@ nsCSPTokenizer::tokenizeCSPPolicy(const nsAString &aPolicyString,
 nsCSPParser::nsCSPParser(cspTokens& aTokens,
                          nsIURI* aSelfURI,
                          uint64_t aInnerWindowID)
- : mTokens(aTokens)
+ : mHasHashOrNonce(false)
+ , mUnsafeInlineKeywordSrc(nullptr)
+ , mTokens(aTokens)
  , mSelfURI(aSelfURI)
  , mInnerWindowID(aInnerWindowID)
 {
@@ -570,8 +572,22 @@ nsCSPParser::keywordSource()
     return CSP_CreateHostSrcFromURI(mSelfURI);
   }
 
-  if (CSP_IsKeyword(mCurToken, CSP_UNSAFE_INLINE) ||
-      CSP_IsKeyword(mCurToken, CSP_UNSAFE_EVAL)) {
+  if (CSP_IsKeyword(mCurToken, CSP_UNSAFE_INLINE)) {
+    // make sure script-src only contains 'unsafe-inline' once;
+    // ignore duplicates and log warning
+    if (mUnsafeInlineKeywordSrc) {
+      const char16_t* params[] = { mCurToken.get() };
+      logWarningErrorToConsole(nsIScriptError::warningFlag, "ignoringDuplicateSrc",
+                               params, ArrayLength(params));
+      return nullptr;
+    }
+    // cache if we encounter 'unsafe-inline' so we can invalidate (ignore) it in
+    // case that script-src directive also contains hash- or nonce-.
+    mUnsafeInlineKeywordSrc = new nsCSPKeywordSrc(CSP_KeywordToEnum(mCurToken));
+    return mUnsafeInlineKeywordSrc;
+  }
+
+  if (CSP_IsKeyword(mCurToken, CSP_UNSAFE_EVAL)) {
     return new nsCSPKeywordSrc(CSP_KeywordToEnum(mCurToken));
   }
   return nullptr;
@@ -676,6 +692,8 @@ nsCSPParser::nonceSource()
   if (dashIndex < 0) {
     return nullptr;
   }
+  // cache if encountering hash or nonce to invalidate unsafe-inline
+  mHasHashOrNonce = true;
   return new nsCSPNonceSrc(Substring(expr,
                                      dashIndex + 1,
                                      expr.Length() - dashIndex + 1));
@@ -708,6 +726,8 @@ nsCSPParser::hashSource()
 
   for (uint32_t i = 0; i < kHashSourceValidFnsLen; i++) {
     if (algo.LowerCaseEqualsASCII(kHashSourceValidFns[i])) {
+      // cache if encountering hash or nonce to invalidate unsafe-inline
+      mHasHashOrNonce = true;
       return new nsCSPHashSrc(algo, hash);
     }
   }
@@ -1003,6 +1023,11 @@ nsCSPParser::directive()
     return;
   }
 
+  // make sure to reset cache variables when trying to invalidate unsafe-inline;
+  // unsafe-inline might not only appear in script-src, but also in default-src
+  mHasHashOrNonce = false;
+  mUnsafeInlineKeywordSrc = nullptr;
+
   // Try to parse all the srcs by handing the array off to directiveValue
   nsTArray<nsCSPBaseSrc*> srcs;
   directiveValue(srcs);
@@ -1012,6 +1037,18 @@ nsCSPParser::directive()
   if (srcs.Length() == 0) {
     nsCSPKeywordSrc *keyword = new nsCSPKeywordSrc(CSP_NONE);
     srcs.AppendElement(keyword);
+  }
+
+  // if a hash or nonce is specified within script-src, then
+  // unsafe-inline should be ignored, see:
+  // http://www.w3.org/TR/CSP2/#directive-script-src
+  if (cspDir->equals(nsIContentSecurityPolicy::SCRIPT_SRC_DIRECTIVE) &&
+      mHasHashOrNonce && mUnsafeInlineKeywordSrc) {
+    mUnsafeInlineKeywordSrc->invalidate();
+    // log to the console that unsafe-inline will be ignored
+    const char16_t* params[] = { NS_LITERAL_STRING("'unsafe-inline'").get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "ignoringSrcWithinScriptSrc",
+                             params, ArrayLength(params));
   }
 
   // Add the newly created srcs to the directive and add the directive to the policy

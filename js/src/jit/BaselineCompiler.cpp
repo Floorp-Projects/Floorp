@@ -1714,7 +1714,7 @@ BaselineCompiler::emit_JSOP_CASE()
     masm.branch32(Assembler::Equal, payload, Imm32(0), &done);
     {
         // Pop the switch value if the case matches.
-        masm.addPtr(Imm32(sizeof(Value)), StackPointer);
+        masm.addToStackPtr(Imm32(sizeof(Value)));
         masm.jump(labelOf(target));
     }
     masm.bind(&done);
