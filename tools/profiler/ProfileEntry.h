@@ -217,10 +217,10 @@ private:
   void* const    mStackTop;
   ThreadResponsiveness mRespInfo;
 
-  // Only Linux is using a signal sender, instead of stopping the thread, so we
+  // Linux and OSX use a signal sender, instead of stopping the thread, so we
   // need some space to store the data which cannot be collected in the signal
   // handler code.
-#ifdef XP_LINUX
+#if defined(XP_LINUX) || defined(XP_MACOSX)
 public:
   int64_t        mRssMemory;
   int64_t        mUssMemory;
