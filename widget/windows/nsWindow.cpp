@@ -6548,6 +6548,12 @@ bool nsWindow::AutoErase(HDC dc)
 }
 
 bool
+nsWindow::IsPopup()
+{
+  return mWindowType == eWindowType_popup;
+}
+
++bool
 nsWindow::ShouldUseOffMainThreadCompositing()
 {
   // We don't currently support using an accelerated layer manager with
@@ -6570,7 +6576,11 @@ nsWindow::GetPreferredCompositorBackends(nsTArray<LayersBackend>& aHints)
   // transparent windows so don't even try. I'm also not sure if we even
   // want to support this case. See bug 593471
   if (!(prefs.mDisableAcceleration ||
-        mTransparencyMode == eTransparencyTransparent)) {
+        mTransparencyMode == eTransparencyTransparent ||
+        IsPopup())) {
+    // See bug 1150376, D3D11 composition can cause issues on some devices
+    // on windows 7 where presentation fails randomly for windows with drop
+    // shadows.
     if (prefs.mPreferOpenGL) {
       aHints.AppendElement(LayersBackend::LAYERS_OPENGL);
     }
