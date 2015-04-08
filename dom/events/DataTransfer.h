@@ -185,6 +185,7 @@ public:
   // converts the data into an array of nsITransferable objects to be used for
   // drag and drop or clipboard operations.
   already_AddRefed<nsISupportsArray> GetTransferables(nsIDOMNode* aDragTarget);
+  already_AddRefed<nsISupportsArray> GetTransferables(nsILoadContext* aLoadContext);
 
   // converts the data for a single item at aIndex into an nsITransferable object.
   already_AddRefed<nsITransferable> GetTransferable(uint32_t aIndex,
@@ -238,6 +239,9 @@ protected:
   // fills in the data field of aItem with the data from the drag service or
   // clipboard for a given index.
   void FillInExternalData(TransferItem& aItem, uint32_t aIndex);
+
+  friend class ContentParent;
+  void FillAllExternalData();
 
   void MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
                             mozilla::ErrorResult& aRv);
