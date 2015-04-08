@@ -174,6 +174,12 @@ protected:
   DoRequest(const DenyPairingConfirmationRequest& aRequest);
 
   bool
+  DoRequest(const PinReplyRequest& aRequest);
+
+  bool
+  DoRequest(const SspReplyRequest& aRequest);
+
+  bool
   DoRequest(const ConnectRequest& aRequest);
 
   bool
@@ -225,6 +231,12 @@ protected:
 
   bool
   DoRequest(const DiscoverGattServicesRequest& aRequest);
+
+  bool
+  DoRequest(const GattClientStartNotificationsRequest& aRequest);
+
+  bool
+  DoRequest(const GattClientStopNotificationsRequest& aRequest);
 
   bool
   DoRequest(const UnregisterGattClientRequest& aRequest);
