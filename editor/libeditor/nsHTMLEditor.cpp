@@ -5211,6 +5211,13 @@ nsHTMLEditor::IsAcceptableInputEvent(nsIDOMEvent* aEvent)
     return false;
   }
 
+  // While there is composition, all composition events in its top level window
+  // are always fired on the composing editor.  Therefore, if this editor has
+  // composition, the composition events should be handled in this editor.
+  if (mComposition && aEvent->GetInternalNSEvent()->AsCompositionEvent()) {
+    return true;
+  }
+
   NS_ENSURE_TRUE(mDocWeak, false);
 
   nsCOMPtr<nsIDOMEventTarget> target;

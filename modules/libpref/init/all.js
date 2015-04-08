@@ -649,7 +649,7 @@ pref("gfx.content.azure.backends", "direct2d1.1,direct2d,cairo");
 #else
 #ifdef XP_MACOSX
 pref("gfx.content.azure.backends", "cg");
-pref("gfx.canvas.azure.backends", "cg");
+pref("gfx.canvas.azure.backends", "skia");
 // Accelerated cg canvas where available (10.7+)
 pref("gfx.canvas.azure.accelerated", false);
 #else
@@ -3844,6 +3844,10 @@ pref("image.cache.timeweight", 500);
 // them to be decoded on demand when they are drawn.
 pref("image.decode-only-on-draw.enabled", true);
 
+// Decode all images automatically on load, ignoring our normal heuristics.
+// Overrides image.decode-only-on-draw.enabled.
+pref("image.decode-immediately.enabled", false);
+
 // Whether we attempt to downscale images during decoding.
 pref("image.downscale-during-decode.enabled", false);
 
@@ -3933,6 +3937,8 @@ pref("webgl.enable-draft-extensions", false);
 pref("webgl.enable-privileged-extensions", false);
 pref("webgl.bypass-shader-validation", false);
 pref("webgl.enable-prototype-webgl2", false);
+pref("gl.require-hardware", false);
+
 #ifdef XP_WIN
 pref("webgl.angle.try-d3d11", true);
 pref("webgl.angle.force-d3d11", false);

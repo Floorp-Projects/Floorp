@@ -518,25 +518,19 @@ DefinePropertyOnObject(JSContext* cx, HandleNativeObject obj, HandleId id,
         if (desc.hasEnumerable())
             changed |= JSPROP_ENUMERATE;
         if (desc.hasGetterObject())
-            changed |= JSPROP_GETTER | JSPROP_SHARED | JSPROP_READONLY;
+            changed |= JSPROP_GETTER | JSPROP_SHARED | JSPROP_READONLY | JSPROP_SHADOWABLE;
         if (desc.hasSetterObject())
-            changed |= JSPROP_SETTER | JSPROP_SHARED | JSPROP_READONLY;
+            changed |= JSPROP_SETTER | JSPROP_SHARED | JSPROP_READONLY | JSPROP_SHADOWABLE;
 
         attrs = (desc.attributes() & changed) | (shapeAttributes & ~changed);
-        if (desc.hasGetterObject()) {
+        if (desc.hasGetterObject())
             getter = desc.getter();
-        } else {
-            getter = (shapeHasDefaultGetter && !shapeHasGetterValue)
-                     ? nullptr
-                     : shape->getter();
-        }
-        if (desc.hasSetterObject()) {
+        else
+            getter = shapeHasGetterValue ? shape->getter() : nullptr;
+        if (desc.hasSetterObject())
             setter = desc.setter();
-        } else {
-            setter = (shapeHasDefaultSetter && !shapeHasSetterValue)
-                     ? nullptr
-                     : shape->setter();
-        }
+        else
+            setter = shapeHasSetterValue ? shape->setter() : nullptr;
     }
 
     /*

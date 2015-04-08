@@ -5,6 +5,8 @@
 loadRelativeToScript('utility.js');
 loadRelativeToScript('annotations.js');
 
+var annotatedGCPointers = [];
+
 function processCSU(csu, body)
 {
     if (!("DataField" in body))
@@ -17,6 +19,11 @@ function processCSU(csu, body)
             if (target.Kind == "CSU")
                 addNestedPointer(csu, target.Name, fieldName);
         }
+        if (type.Kind == "Array") {
+            var target = type.Type;
+            if (target.Kind == "CSU")
+                addNestedStructure(csu, target.Name, fieldName);
+        }
         if (type.Kind == "CSU") {
             // Ignore nesting in classes which are AutoGCRooters. We only consider
             // types with fields that may not be properly rooted.
@@ -25,6 +32,8 @@ function processCSU(csu, body)
             addNestedStructure(csu, type.Name, fieldName);
         }
     }
+    if (isGCPointer(csu))
+        annotatedGCPointers.push(csu);
 }
 
 var structureParents = {}; // Map from field => list of <parent, fieldName>
@@ -63,6 +72,8 @@ for (var csuIndex = minStream; csuIndex <= maxStream; csuIndex++) {
 
 var gcTypes = {}; // map from parent struct => Set of GC typed children
 var gcPointers = {}; // map from parent struct => Set of GC typed children
+var nonGCTypes = {}; // set of types that would ordinarily be GC types but we are suppressing
+var nonGCPointers = {}; // set of types that would ordinarily be GC pointers but we are suppressing
 var gcFields = {};
 
 // "typeName is a (pointer to a)*'depth' GC type because it contains a field
@@ -77,7 +88,6 @@ function markGCType(typeName, child, why, depth, ptrdness)
     // UniquePtr goes out of scope. So we say that a UniquePtr's memory is just
     // as unsafe as the stack for storing GC pointers.
     if (!ptrdness && isUnsafeStorage(typeName)) {
-        printErr("Unsafe! " + typeName);
         // The UniquePtr itself is on the stack but when you dereference the
         // contained pointer, you get to the unsafe memory that we are treating
         // as if it were the stack (aka depth 0). Note that
@@ -96,10 +106,14 @@ function markGCType(typeName, child, why, depth, ptrdness)
         return;
 
     if (depth == 0) {
+        if (typeName in nonGCTypes)
+            return;
         if (!(typeName in gcTypes))
             gcTypes[typeName] = new Set();
         gcTypes[typeName].add(why);
     } else if (depth == 1) {
+        if (typeName in nonGCPointers)
+            return;
         if (!(typeName in gcPointers))
             gcPointers[typeName] = new Set();
         gcPointers[typeName].add(why);
@@ -133,18 +147,17 @@ function addGCPointer(typeName)
     markGCType(typeName, 'annotation', '<pointer-annotation>', 1, 0);
 }
 
-addGCType('JSObject');
-addGCType('JSString');
-addGCType('js::Shape');
-addGCType('js::BaseShape');
-addGCType('JSScript');
-addGCType('js::LazyScript');
-addGCType('js::ion::IonCode');
-addGCPointer('JS::Value');
-addGCPointer('jsid');
+for (var type of listNonGCTypes())
+    nonGCTypes[type] = true;
+for (var type of listNonGCPointers())
+    nonGCPointers[type] = true;
+for (var type of listGCTypes())
+    addGCType(type);
+for (var type of listGCPointers())
+    addGCPointer(type);
 
-// AutoCheckCannotGC should also not be held live across a GC function.
-addGCPointer('JS::AutoCheckCannotGC');
+for (var typeName of annotatedGCPointers)
+    addGCPointer(typeName);
 
 function explain(csu, indent, seen) {
     if (!seen)

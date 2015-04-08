@@ -1113,7 +1113,7 @@ JitRuntime::generateBaselineDebugModeOSRHandler(JSContext* cx, uint32_t* noFrame
     CodeOffsetLabel noFrameRegPopOffset(masm.currentOffset());
 
     // Record the stack pointer for syncing.
-    masm.movePtr(StackPointer, syncedStackStart);
+    masm.moveStackPtrTo(syncedStackStart);
     masm.push(ReturnReg);
     masm.push(BaselineFrameReg);
 
@@ -1132,7 +1132,7 @@ JitRuntime::generateBaselineDebugModeOSRHandler(JSContext* cx, uint32_t* noFrame
     masm.pop(BaselineFrameReg);
     masm.pop(ReturnReg);
     masm.loadPtr(Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfScratchValue()), temp);
-    masm.addPtr(Address(temp, offsetof(BaselineDebugModeOSRInfo, stackAdjust)), StackPointer);
+    masm.addToStackPtr(Address(temp, offsetof(BaselineDebugModeOSRInfo, stackAdjust)));
 
     // Emit two tails for the case of returning from a callVM and all other
     // cases, as the state we need to restore differs depending on the case.

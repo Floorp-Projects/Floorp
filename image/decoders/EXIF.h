@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_IMAGELIB_EXIF_H
-#define MOZILLA_IMAGELIB_EXIF_H
+#ifndef mozilla_image_decoders_EXIF_h
+#define mozilla_image_decoders_EXIF_h
 
 #include <stdint.h>
 #include "nsDebug.h"
@@ -72,4 +72,4 @@ private:
 } // namespace image
 } // namespace mozilla
 
-#endif // MOZILLA_IMAGELIB_EXIF_H
+#endif // mozilla_image_decoders_EXIF_h

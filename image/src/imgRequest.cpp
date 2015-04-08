@@ -47,8 +47,9 @@ PRLogModuleInfo*
 GetImgLog()
 {
   static PRLogModuleInfo* sImgLog;
-  if (!sImgLog)
+  if (!sImgLog) {
     sImgLog = PR_NewLogModule("imgRequest");
+  }
   return sImgLog;
 }
 #define LOG_TEST(level) (GetImgLog() && PR_LOG_TEST(GetImgLog(), (level)))
@@ -88,21 +89,23 @@ imgRequest::~imgRequest()
   if (mURI) {
     nsAutoCString spec;
     mURI->GetSpec(spec);
-    LOG_FUNC_WITH_PARAM(GetImgLog(), "imgRequest::~imgRequest()", "keyuri", spec.get());
+    LOG_FUNC_WITH_PARAM(GetImgLog(), "imgRequest::~imgRequest()",
+                        "keyuri", spec.get());
   } else
     LOG_FUNC(GetImgLog(), "imgRequest::~imgRequest()");
 }
 
-nsresult imgRequest::Init(nsIURI *aURI,
-                          nsIURI *aCurrentURI,
-                          bool aHadInsecureRedirect,
-                          nsIRequest *aRequest,
-                          nsIChannel *aChannel,
-                          imgCacheEntry *aCacheEntry,
-                          nsISupports* aCX,
-                          nsIPrincipal* aLoadingPrincipal,
-                          int32_t aCORSMode,
-                          ReferrerPolicy aReferrerPolicy)
+nsresult
+imgRequest::Init(nsIURI *aURI,
+                 nsIURI *aCurrentURI,
+                 bool aHadInsecureRedirect,
+                 nsIRequest *aRequest,
+                 nsIChannel *aChannel,
+                 imgCacheEntry *aCacheEntry,
+                 nsISupports* aCX,
+                 nsIPrincipal* aLoadingPrincipal,
+                 int32_t aCORSMode,
+                 ReferrerPolicy aReferrerPolicy)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Cannot use nsIURI off main thread!");
 
@@ -137,7 +140,9 @@ nsresult imgRequest::Init(nsIURI *aURI,
     bool schemeLocal = false;
     if (NS_FAILED(aURI->SchemeIs("https", &isHttps)) ||
         NS_FAILED(aURI->SchemeIs("chrome", &isChrome)) ||
-        NS_FAILED(NS_URIChainHasFlags(aURI, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE , &schemeLocal))  ||
+        NS_FAILED(NS_URIChainHasFlags(
+                  aURI,
+                  nsIProtocolHandler::URI_IS_LOCAL_RESOURCE , &schemeLocal))  ||
         (!isHttps && !isChrome && !schemeLocal)) {
       mHadInsecureRedirect = true;
     }
@@ -167,7 +172,8 @@ nsresult imgRequest::Init(nsIURI *aURI,
   return NS_OK;
 }
 
-void imgRequest::ClearLoader() {
+void
+imgRequest::ClearLoader() {
   mLoader = nullptr;
 }
 
@@ -189,24 +195,27 @@ imgRequest::GetProgressTracker() const
   }
 }
 
-void imgRequest::SetCacheEntry(imgCacheEntry *entry)
+void imgRequest::SetCacheEntry(imgCacheEntry* entry)
 {
   mCacheEntry = entry;
 }
 
-bool imgRequest::HasCacheEntry() const
+bool
+imgRequest::HasCacheEntry() const
 {
   return mCacheEntry != nullptr;
 }
 
-void imgRequest::ResetCacheEntry()
+void
+imgRequest::ResetCacheEntry()
 {
   if (HasCacheEntry()) {
     mCacheEntry->SetDataSize(0);
   }
 }
 
-void imgRequest::AddProxy(imgRequestProxy *proxy)
+void
+imgRequest::AddProxy(imgRequestProxy* proxy)
 {
   NS_PRECONDITION(proxy, "null imgRequestProxy passed in");
   LOG_SCOPE_WITH_PARAM(GetImgLog(), "imgRequest::AddProxy", "proxy", proxy);
@@ -224,7 +233,8 @@ void imgRequest::AddProxy(imgRequestProxy *proxy)
   progressTracker->AddObserver(proxy);
 }
 
-nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
+nsresult
+imgRequest::RemoveProxy(imgRequestProxy* proxy, nsresult aStatus)
 {
   LOG_SCOPE_WITH_PARAM(GetImgLog(), "imgRequest::RemoveProxy", "proxy", proxy);
 
@@ -238,8 +248,9 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
   // before Cancel() returns, leaving the image in a different state then the
   // one it was in at this point.
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  if (!progressTracker->RemoveObserver(proxy))
+  if (!progressTracker->RemoveObserver(proxy)) {
     return NS_OK;
+  }
 
   if (progressTracker->ObserverCount() == 0) {
     // If we have no observers, there's nothing holding us alive. If we haven't
@@ -256,18 +267,22 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
     else {
       nsAutoCString spec;
       mURI->GetSpec(spec);
-      LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::RemoveProxy no cache entry", "uri", spec.get());
+      LOG_MSG_WITH_PARAM(GetImgLog(),
+                         "imgRequest::RemoveProxy no cache entry",
+                         "uri", spec.get());
     }
 #endif
 
-    /* If |aStatus| is a failure code, then cancel the load if it is still in progress.
-       Otherwise, let the load continue, keeping 'this' in the cache with no observers.
-       This way, if a proxy is destroyed without calling cancel on it, it won't leak
-       and won't leave a bad pointer in the observer list.
+    /* If |aStatus| is a failure code, then cancel the load if it is still in
+       progress.  Otherwise, let the load continue, keeping 'this' in the cache
+       with no observers.  This way, if a proxy is destroyed without calling
+       cancel on it, it won't leak and won't leave a bad pointer in the observer
+       list.
      */
     if (!(progressTracker->GetProgress() & FLAG_LAST_PART_COMPLETE) &&
         NS_FAILED(aStatus)) {
-      LOG_MSG(GetImgLog(), "imgRequest::RemoveProxy", "load in progress.  canceling");
+      LOG_MSG(GetImgLog(), "imgRequest::RemoveProxy",
+              "load in progress.  canceling");
 
       this->Cancel(NS_BINDING_ABORTED);
     }
@@ -278,13 +293,15 @@ nsresult imgRequest::RemoveProxy(imgRequestProxy *proxy, nsresult aStatus)
 
   // If a proxy is removed for a reason other than its owner being
   // changed, remove the proxy from the loadgroup.
-  if (aStatus != NS_IMAGELIB_CHANGING_OWNER)
+  if (aStatus != NS_IMAGELIB_CHANGING_OWNER) {
     proxy->RemoveFromLoadGroup(true);
+  }
 
   return NS_OK;
 }
 
-void imgRequest::CancelAndAbort(nsresult aStatus)
+void
+imgRequest::CancelAndAbort(nsresult aStatus)
 {
   LOG_SCOPE(GetImgLog(), "imgRequest::CancelAndAbort");
 
@@ -302,7 +319,7 @@ void imgRequest::CancelAndAbort(nsresult aStatus)
 class imgRequestMainThreadCancel : public nsRunnable
 {
 public:
-  imgRequestMainThreadCancel(imgRequest *aImgRequest, nsresult aStatus)
+  imgRequestMainThreadCancel(imgRequest* aImgRequest, nsresult aStatus)
     : mImgRequest(aImgRequest)
     , mStatus(aStatus)
   {
@@ -315,13 +332,14 @@ public:
     MOZ_ASSERT(NS_IsMainThread(), "I should be running on the main thread!");
     mImgRequest->ContinueCancel(mStatus);
     return NS_OK;
-  } 
+  }
 private:
   nsRefPtr<imgRequest> mImgRequest;
   nsresult mStatus;
 };
 
-void imgRequest::Cancel(nsresult aStatus)
+void
+imgRequest::Cancel(nsresult aStatus)
 {
   /* The Cancel() method here should only be called by this class. */
   LOG_SCOPE(GetImgLog(), "imgRequest::Cancel");
@@ -333,7 +351,8 @@ void imgRequest::Cancel(nsresult aStatus)
   }
 }
 
-void imgRequest::ContinueCancel(nsresult aStatus)
+void
+imgRequest::ContinueCancel(nsresult aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -350,7 +369,7 @@ void imgRequest::ContinueCancel(nsresult aStatus)
 class imgRequestMainThreadEvict : public nsRunnable
 {
 public:
-  explicit imgRequestMainThreadEvict(imgRequest *aImgRequest)
+  explicit imgRequestMainThreadEvict(imgRequest* aImgRequest)
     : mImgRequest(aImgRequest)
   {
     MOZ_ASSERT(!NS_IsMainThread(), "Create me off main thread only!");
@@ -368,7 +387,8 @@ private:
 };
 
 // EvictFromCache() is written to allowed to get called from any thread
-void imgRequest::EvictFromCache()
+void
+imgRequest::EvictFromCache()
 {
   /* The EvictFromCache() method here should only be called by this class. */
   LOG_SCOPE(GetImgLog(), "imgRequest::EvictFromCache");
@@ -381,7 +401,8 @@ void imgRequest::EvictFromCache()
 }
 
 // Helper-method used by EvictFromCache()
-void imgRequest::ContinueEvict()
+void
+imgRequest::ContinueEvict()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -402,7 +423,7 @@ imgRequest::IsDecodeRequested() const
   return mDecodeRequested;
 }
 
-nsresult imgRequest::GetURI(ImageURL **aURI)
+nsresult imgRequest::GetURI(ImageURL** aURI)
 {
   MOZ_ASSERT(aURI);
 
@@ -417,7 +438,8 @@ nsresult imgRequest::GetURI(ImageURL **aURI)
   return NS_ERROR_FAILURE;
 }
 
-nsresult imgRequest::GetCurrentURI(nsIURI **aURI)
+nsresult
+imgRequest::GetCurrentURI(nsIURI** aURI)
 {
   MOZ_ASSERT(aURI);
 
@@ -432,12 +454,14 @@ nsresult imgRequest::GetCurrentURI(nsIURI **aURI)
   return NS_ERROR_FAILURE;
 }
 
-nsresult imgRequest::GetImageErrorCode()
+nsresult
+imgRequest::GetImageErrorCode()
 {
   return mImageErrorCode;
 }
 
-nsresult imgRequest::GetSecurityInfo(nsISupports **aSecurityInfo)
+nsresult
+imgRequest::GetSecurityInfo(nsISupports** aSecurityInfo)
 {
   LOG_FUNC(GetImgLog(), "imgRequest::GetSecurityInfo");
 
@@ -490,12 +514,14 @@ int32_t imgRequest::Priority() const
 {
   int32_t priority = nsISupportsPriority::PRIORITY_NORMAL;
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mRequest);
-  if (p)
+  if (p) {
     p->GetPriority(&priority);
+  }
   return priority;
 }
 
-void imgRequest::AdjustPriority(imgRequestProxy *proxy, int32_t delta)
+void
+imgRequest::AdjustPriority(imgRequestProxy* proxy, int32_t delta)
 {
   // only the first proxy is allowed to modify the priority of this image load.
   //
@@ -505,12 +531,14 @@ void imgRequest::AdjustPriority(imgRequestProxy *proxy, int32_t delta)
   // of content such as link clicks, CSS, and JS.
   //
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  if (!progressTracker->FirstObserverIs(proxy))
+  if (!progressTracker->FirstObserverIs(proxy)) {
     return;
+  }
 
   nsCOMPtr<nsISupportsPriority> p = do_QueryInterface(mChannel);
-  if (p)
+  if (p) {
     p->AdjustPriority(delta);
+  }
 }
 
 bool
@@ -541,7 +569,8 @@ imgRequest::UpdateCacheEntrySize()
   mCacheEntry->SetDataSize(size);
 }
 
-void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aRequest)
+void
+imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aRequest)
 {
   /* get the expires info */
   if (aCacheEntry) {
@@ -558,14 +587,15 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aReq
 
           // Expiration time defaults to 0. We set the expiration time on our
           // entry if it hasn't been set yet.
-          if (aCacheEntry->GetExpiryTime() == 0)
+          if (aCacheEntry->GetExpiryTime() == 0) {
             aCacheEntry->SetExpiryTime(expiration);
+          }
         }
       }
     }
 
-    // Determine whether the cache entry must be revalidated when we try to use it.
-    // Currently, only HTTP specifies this information...
+    // Determine whether the cache entry must be revalidated when we try to use
+    // it. Currently, only HTTP specifies this information...
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aRequest));
     if (httpChannel) {
       bool bMustRevalidate = false;
@@ -589,8 +619,9 @@ void imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aReq
       // Cache entries default to not needing to validate. We ensure that
       // multiple calls to this function don't override an earlier decision to
       // validate by making validation a one-way decision.
-      if (bMustRevalidate)
+      if (bMustRevalidate) {
         aCacheEntry->SetMustValidate(bMustRevalidate);
+      }
     }
   }
 }
@@ -602,7 +633,8 @@ GetApplicationCache(nsIRequest* aRequest)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIApplicationCacheChannel> appCacheChan = do_QueryInterface(aRequest);
+  nsCOMPtr<nsIApplicationCacheChannel> appCacheChan =
+    do_QueryInterface(aRequest);
   if (!appCacheChan) {
     return nullptr;
   }
@@ -631,8 +663,9 @@ imgRequest::CacheChanged(nsIRequest* aNewRequest)
 
   // Application cache not involved at all or the same app cache involved
   // in both of the loads (original and new).
-  if (newAppCache == mApplicationCache)
+  if (newAppCache == mApplicationCache) {
     return false;
+  }
 
   // In a rare case it may happen that two objects still refer
   // the same application cache version.
@@ -645,8 +678,9 @@ imgRequest::CacheChanged(nsIRequest* aNewRequest)
     rv = newAppCache->GetClientID(newAppCacheClientId);
     NS_ENSURE_SUCCESS(rv, true);
 
-    if (oldAppCacheClientId == newAppCacheClientId)
+    if (oldAppCacheClientId == newAppCacheClientId) {
       return false;
+    }
   }
 
   // When we get here, app caches differ or app cache is involved
@@ -672,7 +706,8 @@ imgRequest::HadInsecureRedirect() const
 /** nsIRequestObserver methods **/
 
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
-NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt)
+NS_IMETHODIMP
+imgRequest::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
 {
   LOG_SCOPE(GetImgLog(), "imgRequest::OnStartRequest");
 
@@ -681,9 +716,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   // Figure out if we're multipart.
   nsCOMPtr<nsIMultiPartChannel> multiPartChannel = do_QueryInterface(aRequest);
   MOZ_ASSERT(multiPartChannel || !mIsMultiPartChannel,
-             "Stopped being multipart?");
-
-  {
+             "Stopped being multipart?"); {
     MutexAutoLock lock(mMutex);
     mNewPartPending = true;
     image = mImage;
@@ -716,10 +749,11 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
     channel->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
 
     /* Get our principal */
-    nsCOMPtr<nsIScriptSecurityManager> secMan = nsContentUtils::GetSecurityManager();
+    nsCOMPtr<nsIScriptSecurityManager>
+      secMan = nsContentUtils::GetSecurityManager();
     if (secMan) {
-      nsresult rv = secMan->GetChannelResultPrincipal(channel,
-                                                      getter_AddRefs(mPrincipal));
+      nsresult rv =
+        secMan->GetChannelResultPrincipal(channel, getter_AddRefs(mPrincipal));
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -730,7 +764,8 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
 
   mApplicationCache = GetApplicationCache(aRequest);
 
-  // Shouldn't we be dead already if this gets hit?  Probably multipart/x-mixed-replace...
+  // Shouldn't we be dead already if this gets hit?
+  // Probably multipart/x-mixed-replace...
   nsRefPtr<ProgressTracker> progressTracker = GetProgressTracker();
   if (progressTracker->ObserverCount() == 0) {
     this->Cancel(NS_IMAGELIB_ERROR_FAILURE);
@@ -758,8 +793,11 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   return NS_OK;
 }
 
-/* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult status); */
-NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt, nsresult status)
+/* void onStopRequest (in nsIRequest request, in nsISupports ctxt,
+                       nsresult status); */
+NS_IMETHODIMP
+imgRequest::OnStopRequest(nsIRequest* aRequest,
+                          nsISupports* ctxt, nsresult status)
 {
   LOG_FUNC(GetImgLog(), "imgRequest::OnStopRequest");
   MOZ_ASSERT(NS_IsMainThread(), "Can't send notifications off-main-thread");
@@ -783,8 +821,9 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
 
   bool lastPart = true;
   nsCOMPtr<nsIMultiPartChannel> mpchan(do_QueryInterface(aRequest));
-  if (mpchan)
+  if (mpchan) {
     mpchan->GetIsLastPart(&lastPart);
+  }
 
   bool isPartial = false;
   if (image && (status == NS_ERROR_NET_PARTIAL_TRANSFER)) {
@@ -802,8 +841,9 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
     // proceed as if nothing bad happened. However, we also want to give
     // precedence to failure status codes from necko, since presumably they're
     // more meaningful.
-    if (NS_FAILED(rv) && NS_SUCCEEDED(status))
+    if (NS_FAILED(rv) && NS_SUCCEEDED(status)) {
       status = rv;
+    }
   }
 
   // If the request went through, update the cache entry size. Otherwise,
@@ -812,12 +852,12 @@ NS_IMETHODIMP imgRequest::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt,
     // We update the cache entry size here because this is where we finish
     // loading compressed source data, which is part of our size calculus.
     UpdateCacheEntrySize();
-  }
-  else if (isPartial) {
+
+  } else if (isPartial) {
     // Remove the partial image from the cache.
     this->EvictFromCache();
-  }
-  else {
+
+  } else {
     mImageErrorCode = status;
 
     // if the error isn't "just" a partial transfer
@@ -845,8 +885,10 @@ struct mimetype_closure
 };
 
 /* prototype for these defined below */
-static NS_METHOD sniff_mimetype_callback(nsIInputStream* in, void* closure, const char* fromRawSegment,
-                                         uint32_t toOffset, uint32_t count, uint32_t *writeCount);
+static NS_METHOD
+sniff_mimetype_callback(nsIInputStream* in, void* closure,
+                        const char* fromRawSegment, uint32_t toOffset,
+                        uint32_t count, uint32_t* writeCount);
 
 /** nsThreadRetargetableStreamListener methods **/
 NS_IMETHODIMP
@@ -898,8 +940,9 @@ PrepareForNewPart(nsIRequest* aRequest, nsIInputStream* aInStr, uint32_t aCount,
     }
 
     if (NS_FAILED(rv)) {
-      PR_LOG(GetImgLog(), PR_LOG_ERROR,
-             ("imgRequest::PrepareForNewPart -- Content type unavailable from the channel\n"));
+      PR_LOG(GetImgLog(),
+             PR_LOG_ERROR, ("imgRequest::PrepareForNewPart "
+                            "-- Content type unavailable from the channel\n"));
       return result;
     }
   }
@@ -1000,7 +1043,8 @@ imgRequest::OnDataAvailable(nsIRequest* aRequest, nsISupports* aContext,
                             nsIInputStream* aInStr, uint64_t aOffset,
                             uint32_t aCount)
 {
-  LOG_SCOPE_WITH_PARAM(GetImgLog(), "imgRequest::OnDataAvailable", "count", aCount);
+  LOG_SCOPE_WITH_PARAM(GetImgLog(), "imgRequest::OnDataAvailable",
+                       "count", aCount);
 
   NS_ASSERTION(aRequest, "imgRequest::OnDataAvailable -- no request!");
 
@@ -1094,19 +1138,21 @@ imgRequest::SetProperties(const nsACString& aContentType,
   }
 }
 
-static NS_METHOD sniff_mimetype_callback(nsIInputStream* in,
-                                         void* data,
-                                         const char* fromRawSegment,
-                                         uint32_t toOffset,
-                                         uint32_t count,
-                                         uint32_t *writeCount)
+static NS_METHOD
+sniff_mimetype_callback(nsIInputStream* in,
+                        void* data,
+                        const char* fromRawSegment,
+                        uint32_t toOffset,
+                        uint32_t count,
+                        uint32_t* writeCount)
 {
   mimetype_closure* closure = static_cast<mimetype_closure*>(data);
 
   NS_ASSERTION(closure, "closure is null!");
 
-  if (count > 0)
+  if (count > 0) {
     imgLoader::GetMimeTypeFromContent(fromRawSegment, count, *closure->newType);
+  }
 
   *writeCount = 0;
   return NS_ERROR_FAILURE;
@@ -1116,24 +1162,27 @@ static NS_METHOD sniff_mimetype_callback(nsIInputStream* in,
 /** nsIInterfaceRequestor methods **/
 
 NS_IMETHODIMP
-imgRequest::GetInterface(const nsIID & aIID, void **aResult)
+imgRequest::GetInterface(const nsIID & aIID, void** aResult)
 {
-  if (!mPrevChannelSink || aIID.Equals(NS_GET_IID(nsIChannelEventSink)))
+  if (!mPrevChannelSink || aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
     return QueryInterface(aIID, aResult);
+  }
 
   NS_ASSERTION(mPrevChannelSink != this,
-               "Infinite recursion - don't keep track of channel sinks that are us!");
+    "Infinite recursion - don't keep track of channel sinks that are us!");
   return mPrevChannelSink->GetInterface(aIID, aResult);
 }
 
 /** nsIChannelEventSink methods **/
 NS_IMETHODIMP
-imgRequest::AsyncOnChannelRedirect(nsIChannel *oldChannel,
-                                   nsIChannel *newChannel, uint32_t flags,
-                                   nsIAsyncVerifyRedirectCallback *callback)
+imgRequest::AsyncOnChannelRedirect(nsIChannel* oldChannel,
+                                   nsIChannel* newChannel, uint32_t flags,
+                                   nsIAsyncVerifyRedirectCallback* callback)
 {
-  NS_ASSERTION(mRequest && mChannel, "Got a channel redirect after we nulled out mRequest!");
-  NS_ASSERTION(mChannel == oldChannel, "Got a channel redirect for an unknown channel!");
+  NS_ASSERTION(mRequest && mChannel,
+               "Got a channel redirect after we nulled out mRequest!");
+  NS_ASSERTION(mChannel == oldChannel,
+               "Got a channel redirect for an unknown channel!");
   NS_ASSERTION(newChannel, "Got a redirect to a NULL channel!");
 
   SetCacheValidation(mCacheEntry, oldChannel);
@@ -1176,9 +1225,11 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
 
   if (LOG_TEST(PR_LOG_DEBUG)) {
     nsAutoCString spec;
-    if (mCurrentURI)
+    if (mCurrentURI) {
       mCurrentURI->GetSpec(spec);
-    LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::OnChannelRedirect", "old", spec.get());
+    }
+    LOG_MSG_WITH_PARAM(GetImgLog(),
+                       "imgRequest::OnChannelRedirect", "old", spec.get());
   }
 
   // If the previous URI is a non-HTTPS URI, record that fact for later use by
@@ -1189,7 +1240,9 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
   bool schemeLocal = false;
   if (NS_FAILED(mCurrentURI->SchemeIs("https", &isHttps)) ||
       NS_FAILED(mCurrentURI->SchemeIs("chrome", &isChrome)) ||
-      NS_FAILED(NS_URIChainHasFlags(mCurrentURI, nsIProtocolHandler::URI_IS_LOCAL_RESOURCE , &schemeLocal))  ||
+      NS_FAILED(NS_URIChainHasFlags(mCurrentURI,
+                                    nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
+                                    &schemeLocal))  ||
       (!isHttps && !isChrome && !schemeLocal)) {
     MutexAutoLock lock(mMutex);
     mHadInsecureRedirect = true;
@@ -1200,20 +1253,24 @@ imgRequest::OnRedirectVerifyCallback(nsresult result)
 
   if (LOG_TEST(PR_LOG_DEBUG)) {
     nsAutoCString spec;
-    if (mCurrentURI)
+    if (mCurrentURI) {
       mCurrentURI->GetSpec(spec);
-    LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::OnChannelRedirect", "new", spec.get());
+    }
+    LOG_MSG_WITH_PARAM(GetImgLog(), "imgRequest::OnChannelRedirect",
+                       "new", spec.get());
   }
 
   // Make sure we have a protocol that returns data rather than opens an
   // external application, e.g. 'mailto:'.
   bool doesNotReturnData = false;
   nsresult rv =
-    NS_URIChainHasFlags(mCurrentURI, nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
+    NS_URIChainHasFlags(mCurrentURI,
+                        nsIProtocolHandler::URI_DOES_NOT_RETURN_DATA,
                         &doesNotReturnData);
 
-  if (NS_SUCCEEDED(rv) && doesNotReturnData)
+  if (NS_SUCCEEDED(rv) && doesNotReturnData) {
     rv = NS_ERROR_ABORT;
+  }
 
   if (NS_FAILED(rv)) {
     mRedirectCallback->OnRedirectVerifyCallback(rv);

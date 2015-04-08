@@ -855,6 +855,16 @@ PuppetWidget::SetCursor(nsCursor aCursor)
 }
 
 nsresult
+PuppetWidget::SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint)
+{
+  if (mTabChild &&
+      !mTabChild->SendSynthesizeNativeMouseMove(aPoint)) {
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+nsresult
 PuppetWidget::Paint()
 {
   MOZ_ASSERT(!mDirtyRegion.IsEmpty(), "paint event logic messed up");

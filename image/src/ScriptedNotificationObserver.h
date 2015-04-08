@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef ScriptedNotificationObserver_h
-#define ScriptedNotificationObserver_h
+#ifndef mozilla_image_src_ScriptedNotificationObserver_h
+#define mozilla_image_src_ScriptedNotificationObserver_h
 
 #include "imgINotificationObserver.h"
 #include "nsCOMPtr.h"
@@ -19,17 +19,19 @@ namespace image {
 class ScriptedNotificationObserver : public imgINotificationObserver
 {
 public:
-  explicit ScriptedNotificationObserver(imgIScriptedNotificationObserver* aInner);
+  explicit
+    ScriptedNotificationObserver(imgIScriptedNotificationObserver* aInner);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_IMGINOTIFICATIONOBSERVER
   NS_DECL_CYCLE_COLLECTION_CLASS(ScriptedNotificationObserver)
 
 private:
-  virtual ~ScriptedNotificationObserver() {}
+  virtual ~ScriptedNotificationObserver() { }
   nsCOMPtr<imgIScriptedNotificationObserver> mInner;
 };
 
-}}
+} // namespace image
+} // namespace mozilla
 
-#endif
+#endif // mozilla_image_src_ScriptedNotificationObserver_h

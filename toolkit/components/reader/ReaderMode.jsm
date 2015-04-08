@@ -18,6 +18,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderWorker", "resource://gre/modules/reader/ReaderWorker.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task", "resource://gre/modules/Task.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "Readability", function() {
+  let scope = {};
+  Services.scriptloader.loadSubScript("resource://gre/modules/reader/Readability.js", scope);
+  return scope["Readability"];
+});
+
 this.ReaderMode = {
   // Version of the cache schema.
   CACHE_VERSION: 1,
@@ -78,36 +84,7 @@ this.ReaderMode = {
       return false;
     }
 
-    let REGEXPS = {
-      unlikelyCandidates: /combx|comment|community|disqus|extra|foot|header|menu|remark|rss|shoutbox|sidebar|sponsor|ad-break|agegate|pagination|pager|popup|tweet|twitter/i,
-      okMaybeItsACandidate: /and|article|body|column|main|shadow/i,
-    };
-
-    let nodes = doc.getElementsByTagName("p");
-    if (nodes.length < 5) {
-      return false;
-    }
-
-    let possibleParagraphs = 0;
-    for (let i = 0; i < nodes.length; i++) {
-      let node = nodes[i];
-      let matchString = node.className + " " + node.id;
-
-      if (REGEXPS.unlikelyCandidates.test(matchString) &&
-          !REGEXPS.okMaybeItsACandidate.test(matchString)) {
-        continue;
-      }
-
-      if (node.textContent.trim().length < 100) {
-        continue;
-      }
-
-      possibleParagraphs++;
-      if (possibleParagraphs >= 5) {
-        return true;
-      }
-    }
-    return false;
+    return new Readability(uri, doc).isProbablyReaderable();
   },
 
   /**

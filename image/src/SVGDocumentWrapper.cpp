@@ -46,8 +46,7 @@ NS_IMPL_ISUPPORTS(SVGDocumentWrapper,
 SVGDocumentWrapper::SVGDocumentWrapper()
   : mIgnoreInvalidation(false),
     mRegisteredForXPCOMShutdown(false)
-{
-}
+{ }
 
 SVGDocumentWrapper::~SVGDocumentWrapper()
 {
@@ -99,8 +98,9 @@ SVGDocumentWrapper::FlushImageTransformInvalidation()
   MOZ_ASSERT(!mIgnoreInvalidation, "shouldn't be reentrant");
 
   SVGSVGElement* svgElem = GetRootSVGElem();
-  if (!svgElem)
+  if (!svgElem) {
     return;
+  }
 
   mIgnoreInvalidation = true;
   svgElem->FlushImageTransformInvalidation();
@@ -121,8 +121,9 @@ SVGDocumentWrapper::StartAnimation()
 {
   // Can be called for animated images during shutdown, after we've
   // already Observe()'d XPCOM shutdown and cleared out our mViewer pointer.
-  if (!mViewer)
+  if (!mViewer) {
     return;
+  }
 
   nsIDocument* doc = mViewer->GetDocument();
   if (doc) {
@@ -139,8 +140,9 @@ SVGDocumentWrapper::StopAnimation()
 {
   // Can be called for animated images during shutdown, after we've
   // already Observe()'d XPCOM shutdown and cleared out our mViewer pointer.
-  if (!mViewer)
+  if (!mViewer) {
     return;
+  }
 
   nsIDocument* doc = mViewer->GetDocument();
   if (doc) {
@@ -156,8 +158,9 @@ void
 SVGDocumentWrapper::ResetAnimation()
 {
   SVGSVGElement* svgElem = GetRootSVGElem();
-  if (!svgElem)
+  if (!svgElem) {
     return;
+  }
 
   svgElem->SetCurrentTime(0.0f);
 }
@@ -249,7 +252,7 @@ SVGDocumentWrapper::OnStopRequest(nsIRequest* aRequest, nsISupports* ctxt,
 NS_IMETHODIMP
 SVGDocumentWrapper::Observe(nsISupports* aSubject,
                             const char* aTopic,
-                            const char16_t *aData)
+                            const char16_t* aData)
 {
   if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
     // Sever ties from rendering observers to helper-doc's root SVG node
@@ -260,10 +263,12 @@ SVGDocumentWrapper::Observe(nsISupports* aSubject,
 
     // Clean up at XPCOM shutdown time.
     DestroyViewer();
-    if (mListener)
+    if (mListener) {
       mListener = nullptr;
-    if (mLoadGroup)
+    }
+    if (mLoadGroup) {
       mLoadGroup = nullptr;
+    }
 
     // Turn off "registered" flag, or else we'll try to unregister when we die.
     // (No need for that now, and the try would fail anyway -- it's too late.)
@@ -393,8 +398,9 @@ SVGDocumentWrapper::FlushLayout()
 nsIDocument*
 SVGDocumentWrapper::GetDocument()
 {
-  if (!mViewer)
+  if (!mViewer) {
     return nullptr;
+  }
 
   return mViewer->GetDocument(); // May be nullptr.
 }
@@ -402,12 +408,14 @@ SVGDocumentWrapper::GetDocument()
 SVGSVGElement*
 SVGDocumentWrapper::GetRootSVGElem()
 {
-  if (!mViewer)
+  if (!mViewer) {
     return nullptr; // Can happen during destruction
+  }
 
   nsIDocument* doc = mViewer->GetDocument();
-  if (!doc)
+  if (!doc) {
     return nullptr; // Can happen during destruction
+  }
 
   Element* rootElem = mViewer->GetDocument()->GetRootElement();
   if (!rootElem || !rootElem->IsSVGElement(nsGkAtoms::svg)) {

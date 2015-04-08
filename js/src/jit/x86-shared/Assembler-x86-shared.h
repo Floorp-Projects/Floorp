@@ -349,6 +349,10 @@ class AssemblerX86Shared : public AssemblerShared
         masm.setPrinter(sp);
     }
 
+    static const Register getStackPointer() {
+        return StackPointer;
+    }
+
     void executableCopy(void* buffer);
     void processCodeLabels(uint8_t* rawCode);
     static int32_t ExtractCodeLabelOffset(uint8_t* code) {

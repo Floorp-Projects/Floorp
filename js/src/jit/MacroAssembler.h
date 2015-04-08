@@ -936,6 +936,53 @@ class MacroAssembler : public MacroAssemblerSpecific
         branchTestClassIsProxy(proxy, scratch, label);
     }
 
+  public:
+#ifndef JS_CODEGEN_ARM64
+    // StackPointer manipulation functions.
+    // On ARM64, the StackPointer is implemented as two synchronized registers.
+    // Code shared across platforms must use these functions to be valid.
+    template <typename T>
+    void addToStackPtr(T t) { addPtr(t, getStackPointer()); }
+    template <typename T>
+    void addStackPtrTo(T t) { addPtr(getStackPointer(), t); }
+
+    template <typename T>
+    void subFromStackPtr(T t) { subPtr(t, getStackPointer()); }
+    template <typename T>
+    void subStackPtrFrom(T t) { subPtr(getStackPointer(), t); }
+
+    template <typename T>
+    void andToStackPtr(T t) { andPtr(t, getStackPointer()); }
+    template <typename T>
+    void andStackPtrTo(T t) { andPtr(getStackPointer(), t); }
+
+    template <typename T>
+    void moveToStackPtr(T t) { movePtr(t, getStackPointer()); }
+    template <typename T>
+    void moveStackPtrTo(T t) { movePtr(getStackPointer(), t); }
+
+    template <typename T>
+    void loadStackPtr(T t) { loadPtr(t, getStackPointer()); }
+    template <typename T>
+    void storeStackPtr(T t) { storePtr(getStackPointer(), t); }
+
+    // StackPointer testing functions.
+    // On ARM64, sp can function as the zero register depending on context.
+    // Code shared across platforms must use these functions to be valid.
+    template <typename T>
+    void branchTestStackPtr(Condition cond, T t, Label *label) {
+        branchTestPtr(cond, getStackPointer(), t, label);
+    }
+    template <typename T>
+    void branchStackPtr(Condition cond, T rhs, Label *label) {
+        branchPtr(cond, getStackPointer(), rhs, label);
+    }
+    template <typename T>
+    void branchStackPtrRhs(Condition cond, T lhs, Label *label) {
+        branchPtr(cond, lhs, getStackPointer(), label);
+    }
+#endif // !JS_CODEGEN_ARM64
+
   private:
     // These two functions are helpers used around call sites throughout the
     // assembler. They are called from the above call wrappers to emit the
@@ -1264,12 +1311,12 @@ class MacroAssembler : public MacroAssemblerSpecific
         uint32_t off = offset;
         while (off) {
             uint32_t lowestBit = 1 << mozilla::CountTrailingZeroes32(off);
-            branchTestPtr(Assembler::Zero, StackPointer, Imm32(lowestBit), &bad);
+            branchTestStackPtr(Assembler::Zero, Imm32(lowestBit), &bad);
             off ^= lowestBit;
         }
 
         // Check that all remaining bits are zero.
-        branchTestPtr(Assembler::Zero, StackPointer, Imm32((alignment - 1) ^ offset), &ok);
+        branchTestStackPtr(Assembler::Zero, Imm32((alignment - 1) ^ offset), &ok);
 
         bind(&bad);
         breakpoint();

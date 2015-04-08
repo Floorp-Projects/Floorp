@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef mozilla_image_encoders_ico_nsICOEncoder_h
+#define mozilla_image_encoders_ico_nsICOEncoder_h
+
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
 
@@ -96,3 +99,5 @@ protected:
   nsCOMPtr<nsIEventTarget> mCallbackTarget;
   uint32_t mNotifyThreshold;
 };
+
+#endif // mozilla_image_encoders_ico_nsICOEncoder_h

@@ -7,8 +7,8 @@
  * DecodePool manages the threads used for decoding raster images.
  */
 
-#ifndef MOZILLA_IMAGELIB_DECODEPOOL_H_
-#define MOZILLA_IMAGELIB_DECODEPOOL_H_
+#ifndef mozilla_image_src_DecodePool_h
+#define mozilla_image_src_DecodePool_h
 
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
@@ -112,4 +112,4 @@ private:
 } // namespace image
 } // namespace mozilla
 
-#endif // MOZILLA_IMAGELIB_DECODEPOOL_H_
+#endif // mozilla_image_src_DecodePool_h

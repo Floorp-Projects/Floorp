@@ -1556,7 +1556,7 @@ void
 MacroAssembler::linkExitFrame()
 {
     AbsoluteAddress jitTop(GetJitContext()->runtime->addressOfJitTop());
-    storePtr(StackPointer, jitTop);
+    storeStackPtr(jitTop);
 }
 
 static void
@@ -1669,7 +1669,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             popValue(R0);
 
             // Discard exit frame.
-            addPtr(Imm32(ExitFrameLayout::SizeWithFooter()), StackPointer);
+            addToStackPtr(Imm32(ExitFrameLayout::SizeWithFooter()));
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
             push(BaselineTailCallReg);
@@ -1707,7 +1707,7 @@ MacroAssembler::generateBailoutTail(Register scratch, Register bailoutInfo)
             popValue(R0);
 
             // Discard exit frame.
-            addPtr(Imm32(ExitFrameLayout::SizeWithFooter()), StackPointer);
+            addToStackPtr(Imm32(ExitFrameLayout::SizeWithFooter()));
 
             jump(jitcodeReg);
         }
@@ -2497,15 +2497,15 @@ MacroAssembler::alignJitStackBasedOnNArgs(Register nargs)
 #endif
     assertStackAlignment(sizeof(Value), 0);
     branchTestPtr(Assembler::NonZero, nargs, Imm32(1), &odd);
-    branchTestPtr(Assembler::NonZero, StackPointer, Imm32(JitStackAlignment - 1), maybeAssert);
-    subPtr(Imm32(sizeof(Value)), StackPointer);
+    branchTestStackPtr(Assembler::NonZero, Imm32(JitStackAlignment - 1), maybeAssert);
+    subFromStackPtr(Imm32(sizeof(Value)));
 #ifdef DEBUG
     bind(&assert);
 #endif
     assertStackAlignment(JitStackAlignment, sizeof(Value));
     jump(&end);
     bind(&odd);
-    andPtr(Imm32(~(JitStackAlignment - 1)), StackPointer);
+    andToStackPtr(Imm32(~(JitStackAlignment - 1)));
     bind(&end);
 }
 
@@ -2533,12 +2533,12 @@ MacroAssembler::alignJitStackBasedOnNArgs(uint32_t nargs)
     assertStackAlignment(sizeof(Value), 0);
     if (nargs % 2 == 0) {
         Label end;
-        branchTestPtr(Assembler::NonZero, StackPointer, Imm32(JitStackAlignment - 1), &end);
-        subPtr(Imm32(sizeof(Value)), StackPointer);
+        branchTestStackPtr(Assembler::NonZero, Imm32(JitStackAlignment - 1), &end);
+        subFromStackPtr(Imm32(sizeof(Value)));
         bind(&end);
         assertStackAlignment(JitStackAlignment, sizeof(Value));
     } else {
-        andPtr(Imm32(~(JitStackAlignment - 1)), StackPointer);
+        andToStackPtr(Imm32(~(JitStackAlignment - 1)));
     }
 }
 

@@ -228,6 +228,10 @@ class nsCSPParser {
     nsString           mCurToken;
     nsTArray<nsString> mCurDir;
 
+    // cache variables to ignore unsafe-inline if hash or nonce is specified
+    bool               mHasHashOrNonce; // false, if no hash or nonce is defined
+    nsCSPKeywordSrc*   mUnsafeInlineKeywordSrc; // null, otherwise invlidate()
+
     cspTokens          mTokens;
     nsIURI*            mSelfURI;
     nsCSPPolicy*       mPolicy;

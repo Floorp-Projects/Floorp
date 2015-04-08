@@ -179,7 +179,8 @@ DynamicImage::GetFrame(uint32_t aWhichFrame,
     CreateOffscreenContentDrawTarget(IntSize(size.width, size.height),
                                      SurfaceFormat::B8G8R8A8);
   if (!dt) {
-    gfxWarning() << "DynamicImage::GetFrame failed in CreateOffscreenContentDrawTarget";
+    gfxWarning() <<
+      "DynamicImage::GetFrame failed in CreateOffscreenContentDrawTarget";
     return nullptr;
   }
   nsRefPtr<gfxContext> context = new gfxContext(dt);
