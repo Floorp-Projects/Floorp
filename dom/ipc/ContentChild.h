@@ -396,6 +396,11 @@ public:
                                       const OptionalURIParams& aDomain) override;
     virtual bool RecvShutdown() override;
 
+    virtual bool
+    RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
+                          const uint32_t& aAction) override;
+    virtual bool RecvEndDragSession(const bool& aDoneDrag,
+                                    const bool& aUserCancelled) override;
 #ifdef ANDROID
     gfxIntSize GetScreenSize() { return mScreenSize; }
 #endif
