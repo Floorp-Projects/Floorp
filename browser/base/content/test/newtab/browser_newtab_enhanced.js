@@ -26,8 +26,11 @@ gDirectorySource = "data:application/json," + JSON.stringify({
 });
 
 function runTests() {
+  let origGetFrecentSitesName = DirectoryLinksProvider.getFrecentSitesName;
+  DirectoryLinksProvider.getFrecentSitesName = () => "";
   let origEnhanced = NewTabUtils.allPages.enhanced;
   registerCleanupFunction(() => {
+    DirectoryLinksProvider.getFrecentSitesName = origGetFrecentSitesName;
     Services.prefs.clearUserPref(PRELOAD_PREF);
     NewTabUtils.allPages.enhanced = origEnhanced;
   });
