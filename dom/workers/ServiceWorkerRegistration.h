@@ -41,6 +41,24 @@ public:
 
 };
 
+// Used by ServiceWorkerManager to notify ServiceWorkerRegistrations of
+// updatefound event and invalidating ServiceWorker instances.
+class ServiceWorkerRegistrationListener
+{
+public:
+  NS_IMETHOD_(MozExternalRefCountType) AddRef() = 0;
+  NS_IMETHOD_(MozExternalRefCountType) Release() = 0;
+
+  virtual void
+  UpdateFound() = 0;
+
+  virtual void
+  InvalidateWorkers(WhichServiceWorker aWhichOnes) = 0;
+
+  virtual void
+  GetScope(nsAString& aScope) const = 0;
+};
+
 class ServiceWorkerRegistrationBase : public DOMEventTargetHelper
 {
 public:
@@ -65,16 +83,6 @@ public:
   virtual already_AddRefed<workers::ServiceWorker>
   GetActive() = 0;
 
-  void
-  GetScope(nsAString& aScope) const
-  {
-    aScope = mScope;
-  }
-
-  // Useful methods for ServiceWorkerManager:
-  virtual void
-  InvalidateWorkerReference(WhichServiceWorker aWhichOnes) = 0;
-
 protected:
   virtual ~ServiceWorkerRegistrationBase()
   { }
@@ -84,7 +92,8 @@ private:
   nsCOMPtr<nsISupports> mCCDummy;
 };
 
-class ServiceWorkerRegistrationMainThread final : public ServiceWorkerRegistrationBase
+class ServiceWorkerRegistrationMainThread final : public ServiceWorkerRegistrationBase,
+                                                  public ServiceWorkerRegistrationListener
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -115,14 +124,24 @@ public:
   already_AddRefed<PushManager>
   GetPushManager(ErrorResult& aRv);
 
-  void
-  InvalidateWorkerReference(WhichServiceWorker aWhichOnes) override;
-
   // DOMEventTargethelper
   void DisconnectFromOwner() override
   {
     StopListeningForEvents();
     ServiceWorkerRegistrationBase::DisconnectFromOwner();
+  }
+
+  // ServiceWorkerRegistrationListener
+  void
+  UpdateFound() override;
+
+  void
+  InvalidateWorkers(WhichServiceWorker aWhichOnes) override;
+
+  void
+  GetScope(nsAString& aScope) const override
+  {
+    aScope = mScope;
   }
 
 private:
@@ -182,7 +201,10 @@ public:
   GetActive() override;
 
   void
-  InvalidateWorkerReference(WhichServiceWorker aWhichOnes) override;
+  GetScope(nsAString& aScope) const
+  {
+    aScope = mScope;
+  }
 
 private:
   ~ServiceWorkerRegistrationWorkerThread()

@@ -142,7 +142,7 @@ ServiceWorkerRegistrationMainThread::StartListeningForEvents()
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(!mListeningForEvents);
-  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
+  nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (swm) {
     swm->AddRegistrationEventListener(mScope, this);
     mListeningForEvents = true;
@@ -157,7 +157,7 @@ ServiceWorkerRegistrationMainThread::StopListeningForEvents()
     return;
   }
 
-  nsCOMPtr<nsIServiceWorkerManager> swm = do_GetService(SERVICEWORKERMANAGER_CONTRACTID);
+  nsRefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (swm) {
     swm->RemoveRegistrationEventListener(mScope, this);
   }
@@ -208,7 +208,13 @@ ServiceWorkerRegistrationMainThread::GetActive()
 }
 
 void
-ServiceWorkerRegistrationMainThread::InvalidateWorkerReference(WhichServiceWorker aWhichOnes)
+ServiceWorkerRegistrationMainThread::UpdateFound()
+{
+  DispatchTrustedEvent(NS_LITERAL_STRING("updatefound"));
+}
+
+void
+ServiceWorkerRegistrationMainThread::InvalidateWorkers(WhichServiceWorker aWhichOnes)
 {
   AssertIsOnMainThread();
   if (aWhichOnes & WhichServiceWorker::INSTALLING_WORKER) {
@@ -600,12 +606,6 @@ ServiceWorkerRegistrationWorkerThread::GetActive()
 {
   MOZ_CRASH("FIXME");
   return nullptr;
-}
-
-void
-ServiceWorkerRegistrationWorkerThread::InvalidateWorkerReference(WhichServiceWorker aWhichOnes)
-{
-  MOZ_CRASH("FIXME");
 }
 
 void

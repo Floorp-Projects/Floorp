@@ -33,7 +33,7 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, builtinclass, uuid(7e3c44bd-112f-4668-83a6-37d1089bb1f8)]
+[scriptable, builtinclass, uuid(ff6e13ae-ae34-4941-a81e-a82f3e0e7b6b)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -75,10 +75,6 @@ interface nsIServiceWorkerManager : nsISupports
   // Cause a fetch event to be dispatched to the worker global associated with the given document.
   void dispatchFetchEvent(in nsIDocument aDoc, in nsIInterceptedChannel aChannel,
                           in boolean aIsReload);
-
-  // aTarget MUST be a ServiceWorkerRegistration.
-  [noscript] void AddRegistrationEventListener(in DOMString aScope, in nsIDOMEventTarget aTarget);
-  [noscript] void RemoveRegistrationEventListener(in DOMString aScope, in nsIDOMEventTarget aTarget);
 
   /**
    * Call this to request that document `aDoc` be controlled by a ServiceWorker
