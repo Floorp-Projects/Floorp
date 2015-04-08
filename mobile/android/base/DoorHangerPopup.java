@@ -6,13 +6,10 @@
 package org.mozilla.gecko;
 
 import java.util.HashSet;
-import java.util.List;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.prompts.PromptInput;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.AnchoredPopup;
@@ -21,7 +18,6 @@ import org.mozilla.gecko.widget.DoorHanger;
 import android.content.Context;
 import android.util.Log;
 import android.view.View;
-import android.widget.CheckBox;
 import org.mozilla.gecko.widget.DoorhangerConfig;
 
 public class DoorHangerPopup extends AnchoredPopup
@@ -109,15 +105,16 @@ public class DoorHangerPopup extends AnchoredPopup
     private DoorhangerConfig makeConfigFromJSON(JSONObject json) throws JSONException {
         final int tabId = json.getInt("tabID");
         final String id = json.getString("value");
-        final DoorhangerConfig config = new DoorhangerConfig(tabId, id);
+
+        final String typeString = json.optString("category");
+        final boolean isLogin = DoorHanger.Type.LOGIN.toString().equals(typeString);
+        final DoorHanger.Type doorhangerType = isLogin ? DoorHanger.Type.LOGIN : DoorHanger.Type.DEFAULT;
+
+        final DoorhangerConfig config = new DoorhangerConfig(tabId, id, doorhangerType, this);
 
         config.setMessage(json.getString("message"));
-        config.setButtons(json.getJSONArray("buttons"));
+        config.appendButtonsFromJSON(json.getJSONArray("buttons"));
         config.setOptions(json.getJSONObject("options"));
-        final String typeString = json.optString("category");
-        if (DoorHanger.Type.LOGIN.toString().equals(typeString)) {
-            config.setType(DoorHanger.Type.LOGIN);
-        }
 
         return config;
     }
@@ -181,18 +178,6 @@ public class DoorHangerPopup extends AnchoredPopup
 
         final DoorHanger newDoorHanger = DoorHanger.Get(mContext, config);
 
-        final JSONArray buttons = config.getButtons();
-        for (int i = 0; i < buttons.length(); i++) {
-            try {
-                JSONObject buttonObject = buttons.getJSONObject(i);
-                String label = buttonObject.getString("label");
-                String tag = String.valueOf(buttonObject.getInt("callback"));
-                newDoorHanger.addButton(label, tag, this);
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Error creating doorhanger button", e);
-            }
-        }
-
         mDoorHangers.add(newDoorHanger);
         mContent.addView(newDoorHanger);
 
@@ -206,32 +191,10 @@ public class DoorHangerPopup extends AnchoredPopup
      * DoorHanger.OnButtonClickListener implementation
      */
     @Override
-    public void onButtonClick(DoorHanger dh, String tag) {
-        JSONObject response = new JSONObject();
-        try {
-            response.put("callback", tag);
-
-            CheckBox checkBox = dh.getCheckBox();
-            // If the checkbox is being used, pass its value
-            if (checkBox != null) {
-                response.put("checked", checkBox.isChecked());
-            }
-
-            List<PromptInput> doorHangerInputs = dh.getInputs();
-            if (doorHangerInputs != null) {
-                JSONObject inputs = new JSONObject();
-                for (PromptInput input : doorHangerInputs) {
-                    inputs.put(input.getId(), input.getValue());
-                }
-                response.put("inputs", inputs);
-            }
-        } catch (JSONException e) {
-            Log.e(LOGTAG, "Error creating onClick response", e);
-        }
-
+    public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
         GeckoEvent e = GeckoEvent.createBroadcastEvent("Doorhanger:Reply", response.toString());
         GeckoAppShell.sendEventToGecko(e);
-        removeDoorHanger(dh);
+        removeDoorHanger(doorhanger);
         updatePopup();
     }
 

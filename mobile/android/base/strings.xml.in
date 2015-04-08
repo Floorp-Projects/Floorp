@@ -345,6 +345,7 @@
   <string name="doorhanger_login_edit_username_hint">&doorhanger_login_edit_username_hint;</string>
   <string name="doorhanger_login_edit_password_hint">&doorhanger_login_edit_password_hint;</string>
   <string name="doorhanger_login_edit_toggle">&doorhanger_login_edit_toggle;</string>
+  <string name="doorhanger_login_edit_toast_error">&doorhanger_login_edit_toast_error;</string>
 
   <string name="pref_titlebar_mode">&pref_titlebar_mode;</string>
   <string name="pref_titlebar_mode_title">&pref_titlebar_mode_title;</string>

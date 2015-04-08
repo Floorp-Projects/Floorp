@@ -2232,7 +2232,11 @@ var NativeWindow = {
    *                     { text: <title>,
    *                       resource: <resource_url> }
    *
-   *        subtext:     A string to appear below the doorhanger message.
+   *        actionText:  An object that specifies a clickable string, a type of action,
+   *                     and a bundle blob for the consumer to create a click action.
+   *                     { text: <text>,
+   *                       type: <type>,
+   *                       bundle: <blob-object> }
    *
    * @param aCategory
    *        Doorhanger type to display (e.g., LOGIN)

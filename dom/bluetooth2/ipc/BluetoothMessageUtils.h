@@ -21,6 +21,14 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothObjectType>
 { };
 
 template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothSspVariant>
+  : public ContiguousEnumSerializer<
+             mozilla::dom::bluetooth::BluetoothSspVariant,
+             mozilla::dom::bluetooth::SSP_VARIANT_PASSKEY_CONFIRMATION,
+             mozilla::dom::bluetooth::SSP_VARIANT_PASSKEY_NOTIFICATION>
+{ };
+
+template <>
 struct ParamTraits<mozilla::dom::bluetooth::BluetoothStatus>
   : public ContiguousEnumSerializer<
              mozilla::dom::bluetooth::BluetoothStatus,

@@ -17,7 +17,6 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.widget.AnchoredPopup;
 import org.mozilla.gecko.widget.DoorHanger;
 import org.mozilla.gecko.widget.DoorHanger.OnButtonClickListener;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
@@ -34,6 +33,8 @@ import org.mozilla.gecko.widget.DoorhangerConfig;
  * an arrow panel popup hanging from the lock icon in the browser toolbar.
  */
 public class SiteIdentityPopup extends AnchoredPopup {
+    public static enum ButtonType { DISABLE, ENABLE, KEEP_BLOCKING };
+
     private static final String LOGTAG = "GeckoSiteIdentityPopup";
 
     private static final String MIXED_CONTENT_SUPPORT_URL =
@@ -142,7 +143,7 @@ public class SiteIdentityPopup extends AnchoredPopup {
         // Remove any existing mixed content notification.
         removeMixedContentNotification();
 
-        final DoorhangerConfig config = new DoorhangerConfig();
+        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.MIXED_CONTENT, mButtonClickListener);
         int icon;
         if (blocked) {
             icon = R.drawable.shield_enabled_doorhanger;
@@ -154,11 +155,11 @@ public class SiteIdentityPopup extends AnchoredPopup {
         }
 
         config.setLink(mContext.getString(R.string.learn_more), MIXED_CONTENT_SUPPORT_URL, "\n\n");
-        config.setType(DoorHanger.Type.SITE);
+        addNotificationButtons(config, blocked);
+
         mMixedContentNotification = DoorHanger.Get(mContext, config);
         mMixedContentNotification.setIcon(icon);
 
-        addNotificationButtons(mMixedContentNotification, blocked);
 
         mContent.addView(mMixedContentNotification);
         mDivider.setVisibility(View.VISIBLE);
@@ -175,7 +176,7 @@ public class SiteIdentityPopup extends AnchoredPopup {
         // Remove any existing tracking content notification.
         removeTrackingContentNotification();
 
-        final DoorhangerConfig config = new DoorhangerConfig();
+        final DoorhangerConfig config = new DoorhangerConfig(DoorHanger.Type.TRACKING, mButtonClickListener);
 
         int icon;
         if (blocked) {
@@ -189,12 +190,12 @@ public class SiteIdentityPopup extends AnchoredPopup {
         }
 
         config.setLink(mContext.getString(R.string.learn_more), TRACKING_CONTENT_SUPPORT_URL, "\n\n");
-        config.setType(DoorHanger.Type.SITE);
+        addNotificationButtons(config, blocked);
+
         mTrackingContentNotification = DoorHanger.Get(mContext, config);
 
         mTrackingContentNotification.setIcon(icon);
 
-        addNotificationButtons(mTrackingContentNotification, blocked);
 
         mContent.addView(mTrackingContentNotification);
         mDivider.setVisibility(View.VISIBLE);
@@ -207,13 +208,12 @@ public class SiteIdentityPopup extends AnchoredPopup {
         }
     }
 
-    private void addNotificationButtons(DoorHanger dh, boolean blocked) {
-        // TODO: Add support for buttons in DoorHangerConfig.
+    private void addNotificationButtons(DoorhangerConfig config, boolean blocked) {
         if (blocked) {
-            dh.addButton(mContext.getString(R.string.disable_protection), "disable", mButtonClickListener);
-            dh.addButton(mContext.getString(R.string.keep_blocking), "keepBlocking", mButtonClickListener);
+            config.appendButton(mContext.getString(R.string.disable_protection), ButtonType.DISABLE.ordinal());
+            config.appendButton(mContext.getString(R.string.keep_blocking), ButtonType.KEEP_BLOCKING.ordinal());
         } else {
-            dh.addButton(mContext.getString(R.string.enable_protection), "enable", mButtonClickListener);
+            config.appendButton(mContext.getString(R.string.enable_protection), ButtonType.ENABLE.ordinal());
         }
     }
 
@@ -290,18 +290,9 @@ public class SiteIdentityPopup extends AnchoredPopup {
 
     private class PopupButtonListener implements OnButtonClickListener {
         @Override
-        public void onButtonClick(DoorHanger dh, String tag) {
-            try {
-                JSONObject data = new JSONObject();
-                data.put("allowContent", tag.equals("disable"));
-                data.put("contentType", (dh == mMixedContentNotification ? "mixed" : "tracking"));
-
-                GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Reload", data.toString());
-                GeckoAppShell.sendEventToGecko(e);
-            } catch (JSONException e) {
-                Log.e(LOGTAG, "Exception creating message to enable/disable content blocking", e);
-            }
-
+        public void onButtonClick(JSONObject response, DoorHanger doorhanger) {
+            GeckoEvent e = GeckoEvent.createBroadcastEvent("Session:Reload", response.toString());
+            GeckoAppShell.sendEventToGecko(e);
             dismiss();
         }
     }
