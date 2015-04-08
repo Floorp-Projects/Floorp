@@ -19,7 +19,7 @@ public:
   NS_IMETHOD InvokeDragSession(nsIDOMNode* aDOMNode,
                                nsISupportsArray* anArrayTransferables,
                                nsIScriptableRegion* aRegion,
-                               uint32_t aActionType);
+                               uint32_t aActionType) override;
 private:
   virtual ~nsDragServiceProxy();
 };
