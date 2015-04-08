@@ -110,9 +110,6 @@ Convert(ConvertNamedValue& aIn, bt_property_t& aOut);
 nsresult
 Convert(const nsAString& aIn, bt_bdaddr_t& aOut);
 
-nsresult
-Convert(const nsAString& aIn, bt_ssp_variant_t& aOut);
-
 inline nsresult
 Convert(const bt_ssp_variant_t& aIn, BluetoothSspVariant& aOut)
 {
@@ -123,6 +120,24 @@ Convert(const bt_ssp_variant_t& aIn, BluetoothSspVariant& aOut)
     CONVERT(BT_SSP_VARIANT_CONSENT, SSP_VARIANT_CONSENT),
     CONVERT(BT_SSP_VARIANT_PASSKEY_NOTIFICATION,
       SSP_VARIANT_PASSKEY_NOTIFICATION)
+  };
+  if (aIn >= MOZ_ARRAY_LENGTH(sSspVariant)) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  aOut = sSspVariant[aIn];
+  return NS_OK;
+}
+
+inline nsresult
+Convert(const BluetoothSspVariant& aIn, bt_ssp_variant_t& aOut)
+{
+  static const bt_ssp_variant_t sSspVariant[] = {
+    CONVERT(SSP_VARIANT_PASSKEY_CONFIRMATION,
+      BT_SSP_VARIANT_PASSKEY_CONFIRMATION),
+    CONVERT(SSP_VARIANT_PASSKEY_ENTRY, BT_SSP_VARIANT_PASSKEY_ENTRY),
+    CONVERT(SSP_VARIANT_CONSENT, BT_SSP_VARIANT_CONSENT),
+    CONVERT(SSP_VARIANT_PASSKEY_NOTIFICATION,
+      BT_SSP_VARIANT_PASSKEY_NOTIFICATION)
   };
   if (aIn >= MOZ_ARRAY_LENGTH(sSspVariant)) {
     return NS_ERROR_ILLEGAL_VALUE;

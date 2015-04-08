@@ -81,15 +81,30 @@ public:
                        BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode,
+  PinReplyInternal(const nsAString& aDeviceAddress,
+                   bool aAccept,
+                   const nsAString& aPinCode,
+                   BluetoothReplyRunnable* aRunnable);
+
+  virtual void
+  SspReplyInternal(const nsAString& aDeviceAddress,
+                   BluetoothSspVariant aVariant,
+                   bool aAccept,
+                   BluetoothReplyRunnable* aRunnable);
+
+  virtual void
+  SetPinCodeInternal(const nsAString& aDeviceAddress,
+                     const nsAString& aPinCode,
                      BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey,
+  SetPasskeyInternal(const nsAString& aDeviceAddress,
+                     uint32_t aPasskey,
                      BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm,
+  SetPairingConfirmationInternal(const nsAString& aDeviceAddress,
+                                 bool aConfirm,
                                  BluetoothReplyRunnable* aRunnable);
 
   virtual void

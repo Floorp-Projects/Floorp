@@ -569,7 +569,7 @@ public:
     return rv;
   }
 
-  nsresult SspReplyCmd(const nsAString& aBdAddr, const nsAString& aVariant,
+  nsresult SspReplyCmd(const nsAString& aBdAddr, BluetoothSspVariant aVariant,
                        bool aAccept, uint32_t aPasskey,
                        BluetoothResultHandler* aRes)
   {
@@ -580,8 +580,7 @@ public:
 
     nsresult rv = PackPDU(
       PackConversion<nsAString, BluetoothAddress>(aBdAddr),
-      PackConversion<nsAString, BluetoothSspVariant>(aVariant),
-      aAccept, aPasskey, *pdu);
+      aVariant, aAccept, aPasskey, *pdu);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -2420,7 +2419,7 @@ BluetoothDaemonInterface::PinReply(const nsAString& aBdAddr, bool aAccept,
 
 void
 BluetoothDaemonInterface::SspReply(const nsAString& aBdAddr,
-                                   const nsAString& aVariant,
+                                   BluetoothSspVariant aVariant,
                                    bool aAccept, uint32_t aPasskey,
                                    BluetoothResultHandler* aRes)
 {
