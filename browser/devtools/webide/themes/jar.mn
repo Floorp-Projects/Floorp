@@ -18,3 +18,4 @@ webide.jar:
   skin/wifi-auth.css           (wifi-auth.css)
   skin/logs.css                (logs.css)
   skin/project-listing.css     (project-listing.css)
+  skin/simulator.css           (simulator.css)

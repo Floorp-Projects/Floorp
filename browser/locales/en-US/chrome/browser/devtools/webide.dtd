@@ -195,3 +195,16 @@
 
 <!-- Logs panel -->
 <!ENTITY logs_title "Pre-packaging Command Logs">
+
+<!-- Simulator Options -->
+<!ENTITY simulator_title "Simulator Options">
+<!ENTITY simulator_remove "Delete Simulator">
+<!ENTITY simulator_reset "Restore Defaults">
+<!ENTITY simulator_name "Name">
+<!ENTITY simulator_software "Software">
+<!ENTITY simulator_version "Version">
+<!ENTITY simulator_profile "Profile">
+<!ENTITY simulator_hardware "Hardware">
+<!ENTITY simulator_device "Device">
+<!ENTITY simulator_screenSize "Screen">
+<!ENTITY simulator_pixelRatio "Pixel Ratio">
