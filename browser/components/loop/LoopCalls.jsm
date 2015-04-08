@@ -284,7 +284,10 @@ let LoopCallsInternal = {
    */
   _startCall: function(callData) {
     const openChat = () => {
-      this.conversationInProgress.id = MozLoopService.openChatWindow(callData);
+      let windowId = MozLoopService.openChatWindow(callData);
+      if (windowId) {
+        this.conversationInProgress.id = windowId;
+      }
     };
 
     if (callData.type == "incoming" && ("callerId" in callData) &&

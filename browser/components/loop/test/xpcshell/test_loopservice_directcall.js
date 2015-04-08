@@ -19,6 +19,7 @@ add_task(function test_startDirectCall_opens_window() {
   let openedUrl;
   Chat.open = function(contentWindow, origin, title, url) {
     openedUrl = url;
+    return 1;
   };
 
   LoopCalls.startDirectCall(contact, "audio-video");
@@ -34,6 +35,7 @@ add_task(function test_startDirectCall_getConversationWindowData() {
   let openedUrl;
   Chat.open = function(contentWindow, origin, title, url) {
     openedUrl = url;
+    return 2;
   };
 
   LoopCalls.startDirectCall(contact, "audio-video");
@@ -46,6 +48,36 @@ add_task(function test_startDirectCall_getConversationWindowData() {
   do_check_eq(callData.contact, contact, "should have the contact details");
 
   // Stop the busy kicking in for following tests.
+  LoopCalls.clearCallInProgress(windowId);
+});
+
+add_task(function test_startDirectCall_not_busy_if_window_fails_to_open() {
+  let openedUrl;
+
+  // Simulate no window available to open.
+  Chat.open = function(contentWindow, origin, title, url) {
+    openedUrl = url;
+    return null;
+  };
+
+  LoopCalls.startDirectCall(contact, "audio-video");
+
+  do_check_true(!!openedUrl, "should have attempted to open chat window");
+
+  openedUrl = null;
+
+  // Window opens successfully this time.
+  Chat.open = function(contentWindow, origin, title, url) {
+    openedUrl = url;
+    return 3;
+  };
+
+  LoopCalls.startDirectCall(contact, "audio-video");
+
+  do_check_true(!!openedUrl, "should open a chat window");
+
+  // Stop the busy kicking in for following tests.
+  let windowId = openedUrl.match(/about:loopconversation\#(\d+)$/)[1];
   LoopCalls.clearCallInProgress(windowId);
 });
 
