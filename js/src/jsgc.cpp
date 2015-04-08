@@ -3457,6 +3457,8 @@ GCHelperState::doSweep(AutoLockGC& lock)
 
     do {
         while (!rt->gc.backgroundSweepZones.isEmpty()) {
+            AutoSetThreadIsSweeping threadIsSweeping;
+
             ZoneList zones;
             zones.transferFrom(rt->gc.backgroundSweepZones);
             LifoAlloc freeLifoAlloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE);
@@ -4695,21 +4697,33 @@ GCRuntime::endMarkingZoneGroup()
     marker.setMarkColorBlack();
 }
 
-#define MAKE_GC_PARALLEL_TASK(name) \
-    class name : public GCParallelTask {\
-        JSRuntime* runtime;\
-        virtual void run() override;\
-      public:\
-        explicit name (JSRuntime* rt) : runtime(rt) {}\
+class GCSweepTask : public GCParallelTask
+{
+    virtual void runFromHelperThread() override {
+        AutoSetThreadIsSweeping threadIsSweeping;
+        GCParallelTask::runFromHelperThread();
     }
-MAKE_GC_PARALLEL_TASK(SweepAtomsTask);
-MAKE_GC_PARALLEL_TASK(SweepInnerViewsTask);
-MAKE_GC_PARALLEL_TASK(SweepCCWrappersTask);
-MAKE_GC_PARALLEL_TASK(SweepBaseShapesTask);
-MAKE_GC_PARALLEL_TASK(SweepInitialShapesTask);
-MAKE_GC_PARALLEL_TASK(SweepObjectGroupsTask);
-MAKE_GC_PARALLEL_TASK(SweepRegExpsTask);
-MAKE_GC_PARALLEL_TASK(SweepMiscTask);
+  protected:
+    JSRuntime* runtime;
+  public:
+    explicit GCSweepTask(JSRuntime* rt) : runtime(rt) {}
+};
+
+#define MAKE_GC_SWEEP_TASK(name)                                              \
+    class name : public GCSweepTask {                                         \
+        virtual void run() override;                                          \
+      public:                                                                 \
+        explicit name (JSRuntime* rt) : GCSweepTask(rt) {}                    \
+    }
+MAKE_GC_SWEEP_TASK(SweepAtomsTask);
+MAKE_GC_SWEEP_TASK(SweepInnerViewsTask);
+MAKE_GC_SWEEP_TASK(SweepCCWrappersTask);
+MAKE_GC_SWEEP_TASK(SweepBaseShapesTask);
+MAKE_GC_SWEEP_TASK(SweepInitialShapesTask);
+MAKE_GC_SWEEP_TASK(SweepObjectGroupsTask);
+MAKE_GC_SWEEP_TASK(SweepRegExpsTask);
+MAKE_GC_SWEEP_TASK(SweepMiscTask);
+#undef MAKE_GC_SWEEP_TASK
 
 /* virtual */ void
 SweepAtomsTask::run()
@@ -5003,6 +5017,8 @@ GCRuntime::beginSweepPhase(bool destroyingRuntime)
 
     MOZ_ASSERT(!abortSweepAfterCurrentGroup);
 
+    AutoSetThreadIsSweeping threadIsSweeping;
+
     releaseHeldRelocatedArenas();
 
     computeNonIncrementalMarkingForValidation();
@@ -5105,6 +5121,8 @@ SweepArenaList(ArenaHeader** arenasToSweep, SliceBudget& sliceBudget, Args... ar
 GCRuntime::IncrementalProgress
 GCRuntime::sweepPhase(SliceBudget& sliceBudget)
 {
+    AutoSetThreadIsSweeping threadIsSweeping;
+
     gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP);
     FreeOp fop(rt);
 
@@ -5210,6 +5228,8 @@ GCRuntime::sweepPhase(SliceBudget& sliceBudget)
 void
 GCRuntime::endSweepPhase(bool destroyingRuntime)
 {
+    AutoSetThreadIsSweeping threadIsSweeping;
+
     gcstats::AutoPhase ap(stats, gcstats::PHASE_SWEEP);
     FreeOp fop(rt);
 
