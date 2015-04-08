@@ -5,6 +5,7 @@
 const TESTROOT = "http://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/";
 const TESTROOT2 = "http://example.org/browser/toolkit/mozapps/extensions/test/xpinstall/";
 const SECUREROOT = "https://example.com/browser/toolkit/mozapps/extensions/test/xpinstall/";
+const XPINSTALL_URL = "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul";
 const PREF_INSTALL_REQUIREBUILTINCERTS = "extensions.install.requireBuiltInCerts";
 const PROGRESS_NOTIFICATION = "addon-progress";
 
@@ -86,6 +87,52 @@ function wait_for_notification_close(aCallback) {
   }, false);
 }
 
+function wait_for_install_dialog(aCallback) {
+  if (Preferences.get("xpinstall.customConfirmationUI", false)) {
+    wait_for_notification("addon-install-confirmation", function(aPanel) {
+      aCallback();
+    });
+    return;
+  }
+
+  info("Waiting for install dialog");
+
+  Services.wm.addListener({
+    onOpenWindow: function(aXULWindow) {
+      info("Install dialog opened, waiting for focus");
+      Services.wm.removeListener(this);
+
+      var domwindow = aXULWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                                .getInterface(Ci.nsIDOMWindow);
+      waitForFocus(function() {
+        info("Saw install dialog");
+        is(domwindow.document.location.href, XPINSTALL_URL, "Should have seen the right window open");
+
+        // Override the countdown timer on the accept button
+        var button = domwindow.document.documentElement.getButton("accept");
+        button.disabled = false;
+
+        aCallback();
+      }, domwindow);
+    },
+
+    onCloseWindow: function(aXULWindow) {
+    },
+
+    onWindowTitleChange: function(aXULWindow, aNewTitle) {
+    }
+  });
+}
+
+function accept_install_dialog() {
+  if (Preferences.get("xpinstall.customConfirmationUI", false)) {
+    document.getElementById("addon-install-confirmation-accept").click();
+  } else {
+    let win = Services.wm.getMostRecentWindow("Addons:Install");
+    win.document.documentElement.acceptDialog();
+  }
+}
+
 function wait_for_single_notification(aCallback) {
   function inner_waiter() {
     info("Waiting for single notification");
@@ -165,7 +212,7 @@ function test_blocked_install() {
        "Should have seen the right message");
 
     // Wait for the install confirmation dialog
-    wait_for_notification("addon-install-confirmation", function(aPanel) {
+    wait_for_install_dialog(function() {
       // Wait for the complete notification
       wait_for_notification("addon-install-complete", function(aPanel) {
         let notification = aPanel.childNodes[0];
@@ -183,7 +230,7 @@ function test_blocked_install() {
         });
       });
 
-      document.getElementById("addon-install-confirmation-accept").click();
+      accept_install_dialog();
     });
 
     // Click on Allow
@@ -208,7 +255,7 @@ function test_whitelisted_install() {
     gBrowser.selectedTab = originalTab;
 
     // Wait for the install confirmation dialog
-    wait_for_notification("addon-install-confirmation", function(aPanel) {
+    wait_for_install_dialog(function() {
       is(gBrowser.selectedTab, tab,
          "tab selected in response to the addon-install-confirmation notification");
 
@@ -230,7 +277,7 @@ function test_whitelisted_install() {
         });
       });
 
-      document.getElementById("addon-install-confirmation-accept").click();
+      accept_install_dialog();
     });
   });
 
@@ -331,7 +378,7 @@ function test_restartless() {
   // Wait for the progress notification
   wait_for_progress_notification(function(aPanel) {
     // Wait for the install confirmation dialog
-    wait_for_notification("addon-install-confirmation", function(aPanel) {
+    wait_for_install_dialog(function() {
       // Wait for the complete notification
       wait_for_notification("addon-install-complete", function(aPanel) {
         let notification = aPanel.childNodes[0];
@@ -352,7 +399,7 @@ function test_restartless() {
         });
       });
 
-      document.getElementById("addon-install-confirmation-accept").click();
+      accept_install_dialog();
     });
   });
 
@@ -370,7 +417,7 @@ function test_multiple() {
   // Wait for the progress notification
   wait_for_progress_notification(function(aPanel) {
     // Wait for the install confirmation dialog
-    wait_for_notification("addon-install-confirmation", function(aPanel) {
+    wait_for_install_dialog(function() {
       // Wait for the complete notification
       wait_for_notification("addon-install-complete", function(aPanel) {
         let notification = aPanel.childNodes[0];
@@ -393,7 +440,7 @@ function test_multiple() {
         });
       });
 
-      document.getElementById("addon-install-confirmation-accept").click();
+      accept_install_dialog();
     });
   });
 
@@ -412,7 +459,7 @@ function test_url() {
   // Wait for the progress notification
   wait_for_progress_notification(function(aPanel) {
     // Wait for the install confirmation dialog
-    wait_for_notification("addon-install-confirmation", function(aPanel) {
+    wait_for_install_dialog(function() {
       // Wait for the complete notification
       wait_for_notification("addon-install-complete", function(aPanel) {
         let notification = aPanel.childNodes[0];
@@ -430,7 +477,7 @@ function test_url() {
         });
       });
 
-      document.getElementById("addon-install-confirmation-accept").click();
+      accept_install_dialog();
     });
   });
 
@@ -499,7 +546,7 @@ function test_reload() {
   // Wait for the progress notification
   wait_for_progress_notification(function(aPanel) {
     // Wait for the install confirmation dialog
-    wait_for_notification("addon-install-confirmation", function(aPanel) {
+    wait_for_install_dialog(function() {
       // Wait for the complete notification
       wait_for_notification("addon-install-complete", function(aPanel) {
         let notification = aPanel.childNodes[0];
@@ -534,7 +581,7 @@ function test_reload() {
         gBrowser.loadURI(TESTROOT2 + "enabled.html");
       });
 
-      document.getElementById("addon-install-confirmation-accept").click();
+      accept_install_dialog();
     });
   });
 
@@ -552,7 +599,7 @@ function test_theme() {
   // Wait for the progress notification
   wait_for_progress_notification(function(aPanel) {
     // Wait for the install confirmation dialog
-    wait_for_notification("addon-install-confirmation", function(aPanel) {
+    wait_for_install_dialog(function() {
       // Wait for the complete notification
       wait_for_notification("addon-install-complete", function(aPanel) {
         let notification = aPanel.childNodes[0];
@@ -577,7 +624,7 @@ function test_theme() {
         });
       });
 
-      document.getElementById("addon-install-confirmation-accept").click();
+      accept_install_dialog();
     });
   });
 
@@ -630,7 +677,7 @@ function test_renotify_installed() {
   // Wait for the progress notification
   wait_for_progress_notification(function(aPanel) {
     // Wait for the install confirmation dialog
-    wait_for_notification("addon-install-confirmation", function(aPanel) {
+    wait_for_install_dialog(function() {
       // Wait for the complete notification
       wait_for_notification("addon-install-complete", function(aPanel) {
         // Dismiss the notification
@@ -640,7 +687,7 @@ function test_renotify_installed() {
             // Wait for the progress notification
             wait_for_progress_notification(function(aPanel) {
               // Wait for the install confirmation dialog
-              wait_for_notification("addon-install-confirmation", function(aPanel) {
+              wait_for_install_dialog(function() {
                 info("Timeouts after this probably mean bug 589954 regressed");
 
                 // Wait for the complete notification
@@ -655,7 +702,7 @@ function test_renotify_installed() {
                   });
                 });
 
-                document.getElementById("addon-install-confirmation-accept").click();
+                accept_install_dialog();
               });
             });
 
@@ -667,7 +714,7 @@ function test_renotify_installed() {
         aPanel.hidePopup();
       });
 
-      document.getElementById("addon-install-confirmation-accept").click();
+      accept_install_dialog();
     });
   });
 
