@@ -186,7 +186,9 @@ nr_stun_message_has_attribute(nr_stun_message *msg, UINT2 type, nr_stun_message_
     { __code } \
     _status=0; \
   abort: \
-    if (_status) RFREE(attr); \
+    if (_status){ \
+      nr_stun_message_attribute_destroy(msg, &attr); \
+    } \
     return(_status); \
   }
 
