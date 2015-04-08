@@ -166,9 +166,6 @@ pref("dom.keyboardevent.code.enabled", true);
 // even if this is true).
 pref("dom.keyboardevent.dispatch_during_composition", false);
 
-// Whether the WebCrypto API is enabled
-pref("dom.webcrypto.enabled", true);
-
 // Whether the UndoManager API is enabled
 pref("dom.undo_manager.enabled", false);
 
