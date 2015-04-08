@@ -15,6 +15,7 @@
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/UIEvent.h"
@@ -81,6 +82,7 @@
 #include "nsIController.h"
 #include "nsICommandParams.h"
 #include "mozilla/Services.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/HTMLLabelElement.h"
 
 #include "mozilla/Preferences.h"
@@ -1109,6 +1111,29 @@ EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     *aStatus = nsEventStatus_eConsumeNoDefault;
     return remote->SendRealTouchEvent(*aEvent->AsTouchEvent());
   }
+  case eDragEventClass: {
+    if (remote->Manager()->IsContentParent()) {
+      remote->Manager()->AsContentParent()->MaybeInvokeDragSession(remote);
+    }
+
+    nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+    uint32_t dropEffect = nsIDragService::DRAGDROP_ACTION_NONE;
+    uint32_t action = nsIDragService::DRAGDROP_ACTION_NONE;
+    if (dragSession) {
+      dragSession->DragEventDispatchedToChildProcess();
+      dragSession->GetDragAction(&action);
+      nsCOMPtr<nsIDOMDataTransfer> initialDataTransfer;
+      dragSession->GetDataTransfer(getter_AddRefs(initialDataTransfer));
+      if (initialDataTransfer) {
+        initialDataTransfer->GetDropEffectInt(&dropEffect);
+      }
+    }
+
+    bool retval = remote->SendRealDragEvent(*aEvent->AsDragEvent(),
+                                            action, dropEffect);
+
+    return retval;
+  }
   default: {
     MOZ_CRASH("Attempt to send non-whitelisted event?");
   }
@@ -1164,6 +1189,13 @@ CrossProcessSafeEvent(const WidgetEvent& aEvent)
       return true;
     default:
       return false;
+    }
+  case eDragEventClass:
+    switch (aEvent.message) {
+    case NS_DRAGDROP_OVER:
+    case NS_DRAGDROP_EXIT:
+    case NS_DRAGDROP_DROP:
+      return true;
     }
   default:
     return false;
@@ -1496,6 +1528,12 @@ EventStateManager::BeginTrackingDragGesture(nsPresContext* aPresContext,
   }
 }
 
+void
+EventStateManager::BeginTrackingRemoteDragGesture(nsIContent* aContent)
+{
+  mGestureDownContent = aContent;
+  mGestureDownFrameOwner = aContent;
+}
 
 //
 // StopTrackingDragGesture
@@ -1597,8 +1635,9 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
       nsCOMPtr<nsIContent> eventContent, targetContent;
       mCurrentTarget->GetContentForEvent(aEvent, getter_AddRefs(eventContent));
       if (eventContent)
-        DetermineDragTarget(window, eventContent, dataTransfer,
-                            getter_AddRefs(selection), getter_AddRefs(targetContent));
+        DetermineDragTargetAndDefaultData(window, eventContent, dataTransfer,
+                                          getter_AddRefs(selection),
+                                          getter_AddRefs(targetContent));
 
       // Stop tracking the drag gesture now. This should stop us from
       // reentering GenerateDragGesture inside DOM event processing.
@@ -1694,11 +1733,11 @@ EventStateManager::GenerateDragGesture(nsPresContext* aPresContext,
 } // GenerateDragGesture
 
 void
-EventStateManager::DetermineDragTarget(nsPIDOMWindow* aWindow,
-                                       nsIContent* aSelectionTarget,
-                                       DataTransfer* aDataTransfer,
-                                       nsISelection** aSelection,
-                                       nsIContent** aTargetNode)
+EventStateManager::DetermineDragTargetAndDefaultData(nsPIDOMWindow* aWindow,
+                                                     nsIContent* aSelectionTarget,
+                                                     DataTransfer* aDataTransfer,
+                                                     nsISelection** aSelection,
+                                                     nsIContent** aTargetNode)
 {
   *aTargetNode = nullptr;
 
@@ -3151,6 +3190,7 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       // "none". This way, if the event is just ignored, no drop will be
       // allowed.
       uint32_t dropEffect = nsIDragService::DRAGDROP_ACTION_NONE;
+      uint32_t action = nsIDragService::DRAGDROP_ACTION_NONE;
       if (nsEventStatus_eConsumeNoDefault == *aStatus) {
         // if the event has a dataTransfer set, use it.
         if (dragEvent->dataTransfer) {
@@ -3168,7 +3208,6 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // based on the effectAllowed below.
           dataTransfer = initialDataTransfer;
 
-          uint32_t action;
           dragSession->GetDragAction(&action);
 
           // filter the drop effect based on the action. Use UNINITIALIZED as
@@ -3190,7 +3229,6 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         // effectAllowed state doesn't include that type of action. If the
         // dropEffect is "none", then the action will be 'none' so a drop will
         // not be allowed.
-        uint32_t action = nsIDragService::DRAGDROP_ACTION_NONE;
         if (effectAllowed == nsIDragService::DRAGDROP_ACTION_UNINITIALIZED ||
             dropEffect & effectAllowed)
           action = dropEffect;
@@ -3213,6 +3251,12 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       } else if (aEvent->message == NS_DRAGDROP_OVER && !isChromeDoc) {
         // No one called preventDefault(), so handle drop only in chrome.
         dragSession->SetOnlyChromeDrop(true);
+      }
+      if (ContentChild* child = ContentChild::GetSingleton()) {
+        child->SendUpdateDropEffect(action, dropEffect);
+      }
+      if (dispatchedToContentProcess) {
+        dragSession->SetCanDrop(true);
       }
 
       // now set the drop effect in the initial dataTransfer. This ensures
