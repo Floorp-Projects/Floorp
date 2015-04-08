@@ -78,6 +78,8 @@ const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/
  *           A |Connection| object from the DevTools |ConnectionManager|.
  *   @return Promise
  *           Resolved once you've called the |connection|'s connect() method.
+ * configure() OPTIONAL
+ *   Show a configuration screen if the runtime is configurable.
  */
 
 /* SCANNER REGISTRY */
