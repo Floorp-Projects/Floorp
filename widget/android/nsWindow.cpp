@@ -32,6 +32,7 @@ using mozilla::unused;
 #include "nsFocusManager.h"
 #include "nsIWidgetListener.h"
 #include "nsViewManager.h"
+#include "nsISelection.h"
 
 #include "nsIDOMSimpleGestureEvent.h"
 
@@ -2197,7 +2198,19 @@ nsWindow::PostFlushIMEChanges()
 void
 nsWindow::FlushIMEChanges()
 {
+    // Only send change notifications if we are *not* masking events,
+    // i.e. if we have a focused editor,
+    NS_ENSURE_TRUE_VOID(!mIMEMaskEventsCount);
+
+    nsCOMPtr<nsISelection> imeSelection;
+    nsCOMPtr<nsIContent> imeRoot;
+
+    // If we are receiving notifications, we must have selection/root content.
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(IMEStateManager::GetFocusSelectionAndRoot(
+            getter_AddRefs(imeSelection), getter_AddRefs(imeRoot))));
+
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
+
     for (uint32_t i = 0; i < mIMETextChanges.Length(); i++) {
         IMEChange &change = mIMETextChanges[i];
 
@@ -2213,8 +2226,8 @@ nsWindow::FlushIMEChanges()
             event.InitForQueryTextContent(change.mStart,
                                           change.mNewEnd - change.mStart);
             DispatchEvent(&event);
-            if (!event.mSucceeded)
-                return;
+            NS_ENSURE_TRUE_VOID(event.mSucceeded);
+            NS_ENSURE_TRUE_VOID(event.mReply.mContentsRoot == imeRoot.get());
         }
 
         GeckoAppShell::NotifyIMEChange(event.mReply.mString, change.mStart,
@@ -2227,8 +2240,8 @@ nsWindow::FlushIMEChanges()
         InitEvent(event, nullptr);
 
         DispatchEvent(&event);
-        if (!event.mSucceeded)
-            return;
+        NS_ENSURE_TRUE_VOID(event.mSucceeded);
+        NS_ENSURE_TRUE_VOID(event.mReply.mContentsRoot == imeRoot.get());
 
         GeckoAppShell::NotifyIMEChange(EmptyString(),
                                        int32_t(event.GetSelectionStart()),
