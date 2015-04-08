@@ -119,11 +119,11 @@ struct BaselineScript
 
   private:
     // Code pointer containing the actual method.
-    HeapPtrJitCode method_;
+    RelocatablePtrJitCode method_;
 
     // For heavyweight scripts, template objects to use for the call object and
     // decl env object (linked via the call object's enclosing scope).
-    HeapPtrObject templateScope_;
+    RelocatablePtrObject templateScope_;
 
     // Allocated space for fallback stubs.
     FallbackICStubSpace fallbackStubSpace_;
