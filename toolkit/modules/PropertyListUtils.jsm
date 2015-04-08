@@ -24,7 +24,7 @@
  * <data/>             NSData         TYPE_UINT8_ARRAY  Uint8Array
  * <array/>            NSArray        TYPE_ARRAY        Array
  * Not Available       NSSet          TYPE_ARRAY        Array  [2][4]
- * <dict/>             NSDictionary   TYPE_DICTIONARY   Dict (from Dict.jsm)
+ * <dict/>             NSDictionary   TYPE_DICTIONARY   Map
  *
  * Use PropertyListUtils.getObjectType to detect the type of a Property list
  * object.
@@ -39,7 +39,7 @@
  *    states that it supports storing both types.  However, the Cocoa APIs for
  *    serializing property lists do not seem to support either types (test with
  *    NSPropertyListSerialization::propertyList:isValidForFormat). Furthermore,
- *    if an array or a dictioanry contains a NSNull or a NSSet value, they cannot
+ *    if an array or a dictionary (Map) contains a NSNull or a NSSet value, they cannot
  *    be serialized to a property list.
  *    As for usage within OS X, not surprisingly there's no known usage of
  *    storing either of these types in a property list.  It seems that, for now,
@@ -64,8 +64,6 @@ const Cu = Components.utils;
 Cu.importGlobalProperties(['File']);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Dict",
-                                  "resource://gre/modules/Dict.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ctypes",
                                   "resource://gre/modules/ctypes.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
@@ -177,7 +175,7 @@ this.PropertyListUtils = Object.freeze({
     // would most likely be created in the caller's scope.
     let global = Cu.getGlobalForObject(aObject);
 
-    if (global.Dict && aObject instanceof global.Dict)
+    if (aObject instanceof global.Map)
       return this.TYPE_DICTIONARY;
     if (Array.isArray(aObject))
       return this.TYPE_ARRAY;
@@ -502,19 +500,18 @@ BinaryPropertyListReader.prototype = {
   },
 
   /**
-   * Reads dictionary from the buffer and wraps it as a Dict object (as defined
-   * in Dict.jsm).
+   * Reads dictionary from the buffer and wraps it as a Map object.
    * @param aObjectOffset
    *        the offset in the buffer at which the dictionary starts
    * @param aNumberOfObjects
    *        the number of keys in the dictionary
-   * @return Dict.jsm-style dictionary.
+   * @return Map-style dictionary.
    */
   _wrapDictionary: function(aObjectOffset, aNumberOfObjects) {
     // A dictionary in the binary format is stored as a list of references to
     // key-objects, followed by a list of references to the value-objects for
     // those keys. The size of each list is aNumberOfObjects * this._objectRefSize.
-    let dict = new Dict();
+    let dict = new Proxy(new Map(), LazyMapProxyHandler());
     if (aNumberOfObjects == 0)
       return dict;
 
@@ -526,6 +523,7 @@ BinaryPropertyListReader.prototype = {
     for (let i = 0; i < aNumberOfObjects; i++) {
       let key = this._readObject(keyObjsRefs[i]);
       let readBound = this._readObject.bind(this, valObjsRefs[i]);
+
       dict.setAsLazyGetter(key, readBound);
     }
     return dict;
@@ -723,7 +721,7 @@ XMLPropertyListReader.prototype = {
     // </dict>
     if (aDOMElt.children.length % 2 != 0)
       throw new Error("Invalid dictionary");
-    let dict = new Dict();
+    let dict = new Proxy(new Map(), LazyMapProxyHandler());
     for (let i = 0; i < aDOMElt.children.length; i += 2) {
       let keyElem = aDOMElt.children[i];
       let valElem = aDOMElt.children[i + 1];
@@ -733,6 +731,7 @@ XMLPropertyListReader.prototype = {
 
       let keyName = this._readObject(keyElem);
       let readBound = this._readObject.bind(this, valElem);
+
       dict.setAsLazyGetter(keyName, readBound);
     }
     return dict;
@@ -763,3 +762,54 @@ XMLPropertyListReader.prototype = {
     return array;
   }
 };
+
+/**
+   * Simple handler method to proxy calls to dict/Map objects to implement the
+   * setAsLazyGetter API. With this, a value can be set as a function that will
+   * evaluate its value and only be called when it's first retrieved.
+   * @member _lazyGetters
+   *         Set() object to hold keys invoking LazyGetter.
+   * @method get
+   *         Trap for getting property values. Ensures that if a lazyGetter is present
+   *         as value for key, then the function is evaluated, the value is cached,
+   *         and its value will be returned.
+   * @param  target
+   *         Target object. (dict/Map)
+   * @param  name
+   *         Name of operation to be invoked on target.
+   * @param  key
+   *         Key to be set, retrieved or deleted. Keys are checked for laziness.
+   * @return Returns value of "name" property of target by default. Otherwise returns
+   *         updated target.
+   */
+function LazyMapProxyHandler () {
+  return {
+    _lazyGetters: new Set(),
+    get: function(target, name) {
+      switch (name) {
+        case "setAsLazyGetter":
+          return (key, value) => {
+            this._lazyGetters.add(key);
+            target.set(key, value);
+          };
+        case "get":
+          return key => {
+            if (this._lazyGetters.has(key)) {
+              target.set(key, target.get(key)());
+              this._lazyGetters.delete(key);
+            }
+            return target.get(key);
+          };
+        case "delete":
+          return key => {
+            if (this._lazyGetters.has(key)) {
+              this._lazyGetters.delete(key);
+            }
+            return target.delete(key);
+          };
+        default:
+          return target[name];
+      }
+    }
+  }
+}
