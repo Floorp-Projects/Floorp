@@ -67,6 +67,10 @@ class TestLookup(marionette_test.MarionetteTestCase):
     def test_by_unknown_string(self):
         self.assertEqual(errors.MarionetteException, errors.lookup("barbera"))
 
+    def test_by_known_unicode_string(self):
+        self.assertEqual(errors.NoSuchElementException,
+            errors.lookup(u"no such element"))
+
 
 class TestAllExceptions(marionette_test.MarionetteTestCase):
     def test_properties(self):
