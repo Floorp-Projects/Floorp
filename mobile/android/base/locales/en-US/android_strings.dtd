@@ -381,6 +381,7 @@ size. -->
 <!ENTITY doorhanger_login_edit_username_hint "Username">
 <!ENTITY doorhanger_login_edit_password_hint "Password">
 <!ENTITY doorhanger_login_edit_toggle "Show password">
+<!ENTITY doorhanger_login_edit_toast_error "Failed to save login">
 
 <!ENTITY pref_titlebar_mode "Title bar">
 <!ENTITY pref_titlebar_mode_title "Show page title">

@@ -4,8 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 
-#ifndef nsICODecoder_h
-#define nsICODecoder_h
+#ifndef mozilla_image_decoders_nsICODecoder_h
+#define mozilla_image_decoders_nsICODecoder_h
 
 #include "nsAutoPtr.h"
 #include "Decoder.h"
@@ -56,19 +56,19 @@ private:
   // Sets the hotspot property of if we have a cursor
   void SetHotSpotIfCursor();
   // Creates a bitmap file header buffer, returns true if successful
-  bool FillBitmapFileHeaderBuffer(int8_t *bfh);
+  bool FillBitmapFileHeaderBuffer(int8_t* bfh);
   // Fixes the ICO height to match that of the BIH.
   // and also fixes the BIH height to be /2 of what it was.
   // See definition for explanation.
   // Returns false if invalid information is contained within.
-  bool FixBitmapHeight(int8_t *bih);
+  bool FixBitmapHeight(int8_t* bih);
   // Fixes the ICO width to match that of the BIH.
   // Returns false if invalid information is contained within.
-  bool FixBitmapWidth(int8_t *bih);
+  bool FixBitmapWidth(int8_t* bih);
   // Extract bitmap info header size count from BMP information header
-  int32_t ExtractBIHSizeFromBitmap(int8_t *bih);
+  int32_t ExtractBIHSizeFromBitmap(int8_t* bih);
   // Extract bit count from BMP information header
-  int32_t ExtractBPPFromBitmap(int8_t *bih);
+  int32_t ExtractBPPFromBitmap(int8_t* bih);
   // Calculates the row size in bytes for the AND mask table
   uint32_t CalcAlphaRowSize();
   // Obtains the number of colors from the BPP, mBPP must be filled in
@@ -101,4 +101,4 @@ private:
 } // namespace image
 } // namespace mozilla
 
-#endif // nsICODecoder_h
+#endif // mozilla_image_decoders_nsICODecoder_h

@@ -109,7 +109,7 @@ InitializeOculusCAPI()
 #else
     libSearchPaths.AppendElement(nsCString("/usr/local/lib"));
     libSearchPaths.AppendElement(nsCString("/usr/lib"));
-    libName.AppendPrintf("LibOVRRT%d_%d.so.%d", BUILD_BITS, LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
+    libName.AppendPrintf("libOVRRT%d_%d.so.%d", BUILD_BITS, LIBOVR_PRODUCT_VERSION, LIBOVR_MAJOR_VERSION);
 #endif
 
     // If the pref is present, we override libName
@@ -245,6 +245,8 @@ HMDInfoOculus::HMDInfoOculus(ovrHmd aHMD)
              "HMDInfoOculus::DistortionVertex must match the size of VRDistortionVertex");
 
   MOZ_COUNT_CTOR_INHERITED(HMDInfoOculus, VRHMDInfo);
+
+  mDeviceName.AssignLiteral("Oculus VR HMD");
 
   mSupportedSensorBits = 0;
   if (mHMD->TrackingCaps & ovrTrackingCap_Orientation)

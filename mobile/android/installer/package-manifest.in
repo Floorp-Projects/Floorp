@@ -328,8 +328,6 @@
 @BINPATH@/components/nsLoginInfo.js
 @BINPATH@/components/nsLoginManager.js
 @BINPATH@/components/nsLoginManagerPrompter.js
-@BINPATH@/components/SiteSpecificUserAgent.js
-@BINPATH@/components/SiteSpecificUserAgent.manifest
 @BINPATH@/components/storage-mozStorage.js
 @BINPATH@/components/crypto-SDR.js
 @BINPATH@/components/jsconsole-clhandler.manifest
@@ -621,6 +619,7 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/components/PromptService.js
 @BINPATH@/components/SessionStore.js
 @BINPATH@/components/Sidebar.js
+@BINPATH@/components/SiteSpecificUserAgent.js
 @BINPATH@/components/Snippets.js
 
 @BINPATH@/components/Payment.js

@@ -2,6 +2,32 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/**
+ * Test log warnings that happen before the test has started
+ * "Couldn't get the user appdata directory. Crash events may not be produced."
+ * in nsExceptionHandler.cpp (possibly bug 619104)
+ *
+ * Test log warnings that happen after the test has finished
+ * "OOPDeinit() without successful OOPInit()" in nsExceptionHandler.cpp
+ * (bug 619104)
+ * "XPCOM objects created/destroyed from static ctor/dtor" in nsTraceRefcnt.cpp
+ * (possibly bug 457479)
+ *
+ * Other warnings printed to the test logs
+ * "site security information will not be persisted" in
+ * nsSiteSecurityService.cpp and the error in nsSystemInfo.cpp preceding this
+ * error are due to not having a profile when running some of the xpcshell
+ * tests. Since most xpcshell tests also log these errors these tests don't
+ * call do_get_profile unless necessary for the test.
+ * The "This method is lossy. Use GetCanonicalPath !" warning on Windows in
+ * nsLocalFileWin.cpp is from the call to GetNSSProfilePath in
+ * nsNSSComponent.cpp due to it using GetNativeCanonicalPath.
+ * "!mMainThread" in nsThreadManager.cpp are due to using timers and it might be
+ * possible to fix some or all of these in the test itself.
+ * "NS_FAILED(rv)" in nsThreadUtils.cpp are due to using timers and it might be
+ * possible to fix some or all of these in the test itself.
+ */
+
 'use strict';
 
 const { classes: Cc, interfaces: Ci, manager: Cm, results: Cr,
@@ -781,6 +807,17 @@ function setupTestCommon() {
   // adjustGeneralPaths registers a cleanup function that calls end_test when
   // it is defined as a function.
   adjustGeneralPaths();
+
+  // This prevents a warning about not being able to find the greprefs.js file
+  // from being logged.
+  let grePrefsFile = getGREDir();
+  if (!grePrefsFile.exists()) {
+    grePrefsFile.create(Ci.nsIFile.DIRECTORY_TYPE, PERMS_DIRECTORY);
+  }
+  grePrefsFile.append("greprefs.js");
+  if (!grePrefsFile.exists()) {
+    grePrefsFile.create(Ci.nsILocalFile.NORMAL_FILE_TYPE, PERMS_FILE);
+  }
 
   // Remove the updates directory on Windows and Mac OS X which is located
   // outside of the application directory after the call to adjustGeneralPaths
@@ -1581,8 +1618,8 @@ function shouldRunServiceTest(aFirstTest) {
     // in which case we should fail the test if the updater binary is signed so
     // the build system can be fixed by adding the registry key.
     if (IS_AUTHENTICODE_CHECK_ENABLED) {
-      Assert.ok(isBinSigned, "the updater.exe binary should not be signed " +
-                "when the test registry key doesn't exist (if not, build " +
+      Assert.ok(!isBinSigned, "the updater.exe binary should not be signed " +
+                "when the test registry key doesn't exist (if it is, build " +
                 "system configuration bug?)");
     }
 

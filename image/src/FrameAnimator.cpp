@@ -403,6 +403,7 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
   // Calculate area that needs updating
   switch (prevFrameData.mDisposalMethod) {
     default:
+      MOZ_ASSERT_UNREACHABLE("Unexpected DisposalMethod");
     case DisposalMethod::NOT_SPECIFIED:
     case DisposalMethod::KEEP:
       *aDirtyRect = nextFrameData.mRect;
@@ -536,6 +537,9 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
         break;
 
       default:
+        MOZ_ASSERT_UNREACHABLE("Unexpected DisposalMethod");
+      case DisposalMethod::NOT_SPECIFIED:
+      case DisposalMethod::KEEP:
         // Copy previous frame into compositingFrame before we put the new
         // frame on top
         // Assumes that the previous frame represents a full frame (it could be
@@ -659,8 +663,10 @@ FrameAnimator::ClearFrame(uint8_t* aFrameData, const nsIntRect& aFrameRect,
 // Whether we succeed or fail will not cause a crash, and there's not much
 // we can do about a failure, so there we don't return a nsresult
 bool
-FrameAnimator::CopyFrameImage(const uint8_t* aDataSrc, const nsIntRect& aRectSrc,
-                              uint8_t* aDataDest, const nsIntRect& aRectDest)
+FrameAnimator::CopyFrameImage(const uint8_t* aDataSrc,
+                              const nsIntRect& aRectSrc,
+                              uint8_t* aDataDest,
+                              const nsIntRect& aRectDest)
 {
   uint32_t dataLengthSrc = aRectSrc.width * aRectSrc.height * 4;
   uint32_t dataLengthDest = aRectDest.width * aRectDest.height * 4;
@@ -706,7 +712,7 @@ FrameAnimator::DrawFrameTo(const uint8_t* aSrcData, const nsIntRect& aSrcRect,
 
     // clipped image size may be smaller than source, but not larger
     NS_ASSERTION((width <= aSrcRect.width) && (height <= aSrcRect.height),
-                 "FrameAnimator::DrawFrameTo: source must be smaller than dest");
+      "FrameAnimator::DrawFrameTo: source must be smaller than dest");
 
     // Get pointers to image data
     const uint8_t* srcPixels = aSrcData + aSrcPaletteLength;

@@ -8,17 +8,17 @@
  * whether shutdown has started.
  */
 
-#ifndef MOZILLA_IMAGELIB_SHUTDOWNTRACKER_H_
-#define MOZILLA_IMAGELIB_SHUTDOWNTRACKER_H_
+#ifndef mozilla_image_src_ShutdownTracker_h
+#define mozilla_image_src_ShutdownTracker_h
 
 namespace mozilla {
 namespace image {
 
 /**
  * ShutdownTracker is an imagelib-global service that allows callers to check
- * whether shutdown has started. It exists to avoid the need for registering many
- * 'xpcom-shutdown' notification observers on short-lived objects, which would
- * have an unnecessary performance cost.
+ * whether shutdown has started. It exists to avoid the need for registering
+ * many 'xpcom-shutdown' notification observers on short-lived objects, which
+ * would have an unnecessary performance cost.
  */
 struct ShutdownTracker
 {
@@ -43,4 +43,4 @@ private:
 } // namespace image
 } // namespace mozilla
 
-#endif // MOZILLA_IMAGELIB_SHUTDOWNTRACKER_H_
+#endif // mozilla_image_src_ShutdownTracker_h

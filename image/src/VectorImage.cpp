@@ -103,7 +103,7 @@ protected:
     if (!mInObserverList) {
       nsSVGEffects::AddRenderingObserver(elem, this);
       mInObserverList = true;
-    } 
+    }
   }
 
   // Private data
@@ -178,9 +178,12 @@ public:
     MOZ_ASSERT(mDocument, "Need an SVG document");
     MOZ_ASSERT(mImage, "Need an image");
 
-    mDocument->AddEventListener(NS_LITERAL_STRING("MozSVGAsImageDocumentLoad"), this, true, false);
-    mDocument->AddEventListener(NS_LITERAL_STRING("SVGAbort"), this, true, false);
-    mDocument->AddEventListener(NS_LITERAL_STRING("SVGError"), this, true, false);
+    mDocument->AddEventListener(NS_LITERAL_STRING("MozSVGAsImageDocumentLoad"),
+                                this, true, false);
+    mDocument->AddEventListener(NS_LITERAL_STRING("SVGAbort"), this, true,
+                                false);
+    mDocument->AddEventListener(NS_LITERAL_STRING("SVGError"), this, true,
+                                false);
   }
 
 private:
@@ -223,7 +226,9 @@ public:
   {
     MOZ_ASSERT(mDocument, "Duplicate call to Cancel");
     if (mDocument) {
-      mDocument->RemoveEventListener(NS_LITERAL_STRING("MozSVGAsImageDocumentLoad"), this, true);
+      mDocument
+        ->RemoveEventListener(NS_LITERAL_STRING("MozSVGAsImageDocumentLoad"),
+                              this, true);
       mDocument->RemoveEventListener(NS_LITERAL_STRING("SVGAbort"), this, true);
       mDocument->RemoveEventListener(NS_LITERAL_STRING("SVGError"), this, true);
       mDocument = nullptr;
@@ -248,7 +253,7 @@ public:
     , mViewport(aViewport)
     , mSize(aSize)
     , mImageFlags(aImageFlags)
-  {}
+  { }
   virtual bool operator()(gfxContext* aContext,
                           const gfxRect& aFillRect,
                           const GraphicsFilter& aFilter,
@@ -349,8 +354,9 @@ VectorImage::Init(const char* aMimeType,
                   uint32_t aFlags)
 {
   // We don't support re-initialization
-  if (mIsInitialized)
+  if (mIsInitialized) {
     return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   MOZ_ASSERT(!mIsFullyLoaded && !mHaveAnimations && !mError,
              "Flags unexpectedly set before initialization");
@@ -409,8 +415,9 @@ VectorImage::OnImageDataComplete(nsIRequest* aRequest,
   nsresult finalStatus = OnStopRequest(aRequest, aContext, aStatus);
 
   // Give precedence to Necko failure codes.
-  if (NS_FAILED(aStatus))
+  if (NS_FAILED(aStatus)) {
     finalStatus = aStatus;
+  }
 
   // Actually fire OnStopRequest.
   if (mProgressTracker) {
@@ -434,8 +441,9 @@ VectorImage::OnImageDataAvailable(nsIRequest* aRequest,
 nsresult
 VectorImage::StartAnimation()
 {
-  if (mError)
+  if (mError) {
     return NS_ERROR_FAILURE;
+  }
 
   MOZ_ASSERT(ShouldAnimate(), "Should not animate!");
 
@@ -562,19 +570,23 @@ VectorImage::GetHeight(int32_t* aHeight)
 NS_IMETHODIMP
 VectorImage::GetIntrinsicSize(nsSize* aSize)
 {
-  if (mError || !mIsFullyLoaded)
+  if (mError || !mIsFullyLoaded) {
     return NS_ERROR_FAILURE;
+  }
 
   nsIFrame* rootFrame = mSVGDocumentWrapper->GetRootLayoutFrame();
-  if (!rootFrame)
+  if (!rootFrame) {
     return NS_ERROR_FAILURE;
+  }
 
   *aSize = nsSize(-1, -1);
   IntrinsicSize rfSize = rootFrame->GetIntrinsicSize();
-  if (rfSize.width.GetUnit() == eStyleUnit_Coord)
+  if (rfSize.width.GetUnit() == eStyleUnit_Coord) {
     aSize->width = rfSize.width.GetCoordValue();
-  if (rfSize.height.GetUnit() == eStyleUnit_Coord)
+  }
+  if (rfSize.height.GetUnit() == eStyleUnit_Coord) {
     aSize->height = rfSize.height.GetCoordValue();
+  }
 
   return NS_OK;
 }
@@ -584,12 +596,14 @@ VectorImage::GetIntrinsicSize(nsSize* aSize)
 NS_IMETHODIMP
 VectorImage::GetIntrinsicRatio(nsSize* aRatio)
 {
-  if (mError || !mIsFullyLoaded)
+  if (mError || !mIsFullyLoaded) {
     return NS_ERROR_FAILURE;
+  }
 
   nsIFrame* rootFrame = mSVGDocumentWrapper->GetRootLayoutFrame();
-  if (!rootFrame)
+  if (!rootFrame) {
     return NS_ERROR_FAILURE;
+  }
 
   *aRatio = rootFrame->GetIntrinsicRatio();
   return NS_OK;
@@ -617,8 +631,9 @@ VectorImage::GetType(uint16_t* aType)
 NS_IMETHODIMP
 VectorImage::GetAnimated(bool* aAnimated)
 {
-  if (mError || !mIsFullyLoaded)
+  if (mError || !mIsFullyLoaded) {
     return NS_ERROR_FAILURE;
+  }
 
   *aAnimated = mSVGDocumentWrapper->IsAnimated();
   return NS_OK;
@@ -629,11 +644,13 @@ VectorImage::GetAnimated(bool* aAnimated)
 int32_t
 VectorImage::GetFirstFrameDelay()
 {
-  if (mError)
+  if (mError) {
     return -1;
+  }
 
-  if (!mSVGDocumentWrapper->IsAnimated())
+  if (!mSVGDocumentWrapper->IsAnimated()) {
     return -1;
+  }
 
   // We don't really have a frame delay, so just pretend that we constantly
   // need updates.
@@ -655,11 +672,13 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
 {
   MOZ_ASSERT(aWhichFrame <= FRAME_MAX_VALUE);
 
-  if (aWhichFrame > FRAME_MAX_VALUE)
+  if (aWhichFrame > FRAME_MAX_VALUE) {
     return nullptr;
+  }
 
-  if (mError || !mIsFullyLoaded)
+  if (mError || !mIsFullyLoaded) {
     return nullptr;
+  }
 
   // Look up height & width
   // ----------------------
@@ -668,7 +687,7 @@ VectorImage::GetFrame(uint32_t aWhichFrame,
                       "loading without errors");
   nsIntSize imageIntSize(svgElem->GetIntrinsicWidth(),
                          svgElem->GetIntrinsicHeight());
-  
+
   if (imageIntSize.IsEmpty()) {
     // We'll get here if our SVG doc has a percent-valued or negative width or
     // height.
@@ -787,8 +806,9 @@ VectorImage::Draw(gfxContext* aContext,
   AutoRestore<bool> autoRestoreIsDrawing(mIsDrawing);
   mIsDrawing = true;
 
-  float animTime = (aWhichFrame == FRAME_FIRST) ? 0.0f
-                                                : mSVGDocumentWrapper->GetCurrentTime();
+  float animTime =
+    (aWhichFrame == FRAME_FIRST) ? 0.0f
+                                 : mSVGDocumentWrapper->GetCurrentTime();
   AutoSVGRenderingState autoSVGState(aSVGContext, animTime,
                                      mSVGDocumentWrapper->GetRootSVGElem());
 
@@ -847,8 +867,9 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
                      mHaveAnimations ||
                      // The image is too big to fit in the cache:
                      !SurfaceCache::CanHold(aParams.size);
-  if (bypassCache)
+  if (bypassCache) {
     return Show(svgDrawable, aParams);
+  }
 
   // We're about to rerasterize, which may mean that some of the previous
   // surfaces we've rasterized aren't useful anymore. We can allow them to
@@ -869,14 +890,16 @@ VectorImage::CreateSurfaceAndShow(const SVGDrawingParameters& aParams)
   // If we couldn't create the frame, it was probably because it would end
   // up way too big. Generally it also wouldn't fit in the cache, but the prefs
   // could be set such that the cache isn't the limiting factor.
-  if (NS_FAILED(rv))
+  if (NS_FAILED(rv)) {
     return Show(svgDrawable, aParams);
+  }
 
   // Take a strong reference to the frame's surface and make sure it hasn't
   // already been purged by the operating system.
   RefPtr<SourceSurface> surface = frame->GetSurface();
-  if (!surface)
+  if (!surface) {
     return Show(svgDrawable, aParams);
+  }
 
   // Attempt to cache the frame.
   SurfaceCache::Insert(frame, ImageKey(this),
@@ -1022,8 +1045,9 @@ VectorImage::OnSurfaceDiscarded()
 NS_IMETHODIMP
 VectorImage::ResetAnimation()
 {
-  if (mError)
+  if (mError) {
     return NS_ERROR_FAILURE;
+  }
 
   if (!mIsFullyLoaded || !mHaveAnimations) {
     return NS_OK; // There are no animations to be reset.
@@ -1090,8 +1114,9 @@ NS_IMETHODIMP
 VectorImage::OnStopRequest(nsIRequest* aRequest, nsISupports* aCtxt,
                            nsresult aStatus)
 {
-  if (mError)
+  if (mError) {
     return NS_ERROR_FAILURE;
+  }
 
   return mSVGDocumentWrapper->OnStopRequest(aRequest, aCtxt, aStatus);
 }
@@ -1106,7 +1131,8 @@ VectorImage::OnSVGDocumentParsed()
     // This is an invalid SVG document. It may have failed to parse, or it may
     // be missing the <svg> root element, or the <svg> root element may not
     // declare the correct namespace. In any of these cases, we'll never be
-    // notified that the SVG finished loading, so we need to treat this as an error.
+    // notified that the SVG finished loading, so we need to treat this as an
+    // error.
     OnSVGDocumentError();
   }
 }
@@ -1187,8 +1213,9 @@ VectorImage::OnDataAvailable(nsIRequest* aRequest, nsISupports* aCtxt,
                              nsIInputStream* aInStr, uint64_t aSourceOffset,
                              uint32_t aCount)
 {
-  if (mError)
+  if (mError) {
     return NS_ERROR_FAILURE;
+  }
 
   return mSVGDocumentWrapper->OnDataAvailable(aRequest, aCtxt, aInStr,
                                               aSourceOffset, aCount);
@@ -1208,7 +1235,10 @@ VectorImage::InvalidateObserversOnNextRefreshDriverTick()
 }
 
 nsIntSize
-VectorImage::OptimalImageSizeForDest(const gfxSize& aDest, uint32_t aWhichFrame, GraphicsFilter aFilter, uint32_t aFlags)
+VectorImage::OptimalImageSizeForDest(const gfxSize& aDest,
+                                     uint32_t aWhichFrame,
+                                     GraphicsFilter aFilter,
+                                     uint32_t aFlags)
 {
   MOZ_ASSERT(aDest.width >= 0 || ceil(aDest.width) <= INT32_MAX ||
              aDest.height >= 0 || ceil(aDest.height) <= INT32_MAX,

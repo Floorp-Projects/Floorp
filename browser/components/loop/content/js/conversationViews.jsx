@@ -11,6 +11,7 @@ loop.conversationViews = (function(mozL10n) {
 
   var CALL_STATES = loop.store.CALL_STATES;
   var CALL_TYPES = loop.shared.utils.CALL_TYPES;
+  var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var REST_ERRNOS = loop.shared.utils.REST_ERRNOS;
   var WEBSOCKET_REASONS = loop.shared.utils.WEBSOCKET_REASONS;
   var sharedActions = loop.shared.actions;
@@ -322,7 +323,8 @@ loop.conversationViews = (function(mozL10n) {
     ],
 
     propTypes: {
-      cancelCall: React.PropTypes.func.isRequired
+      cancelCall: React.PropTypes.func.isRequired,
+      failureReason: React.PropTypes.string
     },
 
     componentDidMount: function() {
@@ -332,9 +334,18 @@ loop.conversationViews = (function(mozL10n) {
     render: function() {
       this.setTitle(mozL10n.get("generic_failure_title"));
 
+      var errorString;
+      switch (this.props.failureReason) {
+        case FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA:
+          errorString = mozL10n.get("no_media_failure_message");
+          break;
+        default:
+          errorString = mozL10n.get("generic_failure_title");
+      }
+
       return (
         <div className="call-window">
-          <h2>{mozL10n.get("generic_failure_title")}</h2>
+          <h2>{errorString}</h2>
 
           <div className="btn-group call-action-group">
             <button className="btn btn-cancel"
@@ -467,21 +478,22 @@ loop.conversationViews = (function(mozL10n) {
     },
 
     _getTitleMessage: function() {
-      var callStateReason =
-        this.getStoreState().callStateReason;
+      switch (this.getStoreState().callStateReason) {
+        case WEBSOCKET_REASONS.REJECT:
+        case WEBSOCKET_REASONS.BUSY:
+        case REST_ERRNOS.USER_UNAVAILABLE:
+          var contactDisplayName = _getContactDisplayName(this.props.contact);
+          if (contactDisplayName.length) {
+            return mozL10n.get(
+              "contact_unavailable_title",
+              {"contactName": contactDisplayName});
+          }
 
-      if (callStateReason === WEBSOCKET_REASONS.REJECT || callStateReason === WEBSOCKET_REASONS.BUSY ||
-          callStateReason === REST_ERRNOS.USER_UNAVAILABLE) {
-        var contactDisplayName = _getContactDisplayName(this.props.contact);
-        if (contactDisplayName.length) {
-          return mozL10n.get(
-            "contact_unavailable_title",
-            {"contactName": contactDisplayName});
-        }
-
-        return mozL10n.get("generic_contact_unavailable_title");
-      } else {
-        return mozL10n.get("generic_failure_title");
+          return mozL10n.get("generic_contact_unavailable_title");
+        case FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA:
+          return mozL10n.get("no_media_failure_message");
+        default:
+          return mozL10n.get("generic_failure_title");
       }
     },
 
