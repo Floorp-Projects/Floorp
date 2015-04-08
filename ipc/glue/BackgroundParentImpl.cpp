@@ -20,6 +20,7 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "mozilla/ipc/PBackgroundTestParent.h"
 #include "mozilla/layout/VsyncParent.h"
+#include "nsIAppsService.h"
 #include "nsNetUtil.h"
 #include "nsRefPtr.h"
 #include "nsThreadUtils.h"
@@ -288,30 +289,86 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
+    struct MOZ_STACK_CLASS RunRAII
+    {
+      explicit RunRAII(nsRefPtr<ContentParent>& aContentParent)
+        : mContentParent(aContentParent)
+      {}
+
+      ~RunRAII()
+      {
+        mContentParent = nullptr;
+      }
+
+      nsRefPtr<ContentParent>& mContentParent;
+    };
+
+    RunRAII raii(mContentParent);
+
     nsCOMPtr<nsIPrincipal> principal = PrincipalInfoToPrincipal(mPrincipalInfo);
     AssertAppPrincipal(mContentParent, principal);
 
     bool isNullPrincipal;
     nsresult rv = principal->GetIsNullPrincipal(&isNullPrincipal);
     if (NS_WARN_IF(NS_FAILED(rv)) || isNullPrincipal) {
-      mContentParent->KillHard("PBackground CheckPrincipal 1");
+      mContentParent->KillHard("BroadcastChannel killed: no null principal.");
       return NS_OK;
+    }
+
+    bool unknownAppId;
+    rv = principal->GetUnknownAppId(&unknownAppId);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      mContentParent->KillHard("BroadcastChannel killed: failed to get the app status.");
+      return NS_OK;
+    }
+
+    if (!unknownAppId) {
+      uint32_t appId;
+      rv = principal->GetAppId(&appId);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        mContentParent->KillHard("BroadcastChannel killed: failed to get the app id.");
+        return NS_OK;
+      }
+
+      // If the broadcastChannel is used by an app, the origin is the manifest URL.
+      if (appId != nsIScriptSecurityManager::NO_APP_ID) {
+        nsresult rv;
+        nsCOMPtr<nsIAppsService> appsService =
+          do_GetService("@mozilla.org/AppsService;1", &rv);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          mContentParent->KillHard("BroadcastChannel killed: appService getter failed.");
+          return NS_OK;
+        }
+
+        nsAutoString origin;
+        rv = appsService->GetManifestURLByLocalId(appId, origin);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          mContentParent->KillHard("BroadcastChannel killed: failed to retrieve the manifestURL.");
+          return NS_OK;
+        }
+
+        if (!origin.Equals(mOrigin)) {
+          mContentParent->KillHard("BroadcastChannel killed: origins do not match.");
+          return NS_OK;
+        }
+
+        return NS_OK;
+      }
     }
 
     nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), mOrigin);
     if (NS_FAILED(rv) || !uri) {
-      mContentParent->KillHard("PBackground CheckPrincipal 2");
+      mContentParent->KillHard("BroadcastChannel killed: invalid origin URI.");
       return NS_OK;
     }
 
     rv = principal->CheckMayLoad(uri, false, false);
     if (NS_FAILED(rv)) {
-      mContentParent->KillHard("PBackground CheckPrincipal 3");
+      mContentParent->KillHard("BroadcastChannel killed: the url cannot be loaded by the principal.");
       return NS_OK;
     }
 
-    mContentParent = nullptr;
     return NS_OK;
   }
 
