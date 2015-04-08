@@ -135,22 +135,5 @@ union BlobConstructorParams
   ParentBlobConstructorParams;
 };
 
-union IPCDataTransferData
-{
-  nsString;
-  PBlob;
-};
-
-struct IPCDataTransferItem
-{
-  nsCString flavor;
-  IPCDataTransferData data;
-};
-
-struct IPCDataTransfer
-{
-  IPCDataTransferItem[] items;
-};
-
 } // namespace dom
 } // namespace mozilla

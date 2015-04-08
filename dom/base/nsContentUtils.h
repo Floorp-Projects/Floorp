@@ -87,7 +87,6 @@ class nsIScriptGlobalObject;
 class nsIScriptSecurityManager;
 class nsIStringBundle;
 class nsIStringBundleService;
-class nsISupportsArray;
 class nsISupportsHashKey;
 class nsIURI;
 class nsIWidget;
@@ -121,10 +120,7 @@ namespace dom {
 class DocumentFragment;
 class Element;
 class EventTarget;
-class IPCDataTransfer;
 class NodeInfo;
-class nsIContentChild;
-class nsIContentParent;
 class Selection;
 class TabParent;
 } // namespace dom
@@ -2291,10 +2287,6 @@ public:
                                       CallOnRemoteChildFunction aCallback,
                                       void* aArg);
 
-  static void TransferablesToIPCTransferables(nsISupportsArray* aTransferables,
-                                              nsTArray<mozilla::dom::IPCDataTransfer>& aIPC,
-                                              mozilla::dom::nsIContentChild* aChild,
-                                              mozilla::dom::nsIContentParent* aParent);
 private:
   static bool InitializeEventTable();
 

@@ -19,7 +19,7 @@ interface nsIDOMDocument;
 interface nsIDOMNode;
 interface nsIDOMDataTransfer;
 
-[scriptable, uuid(25bce737-73f0-43c7-bc20-c71044a73c5a)]
+[scriptable, uuid(fde41f6a-c710-46f8-a0a8-1ff76ca4ff57)]
 interface nsIDragSession : nsISupports
 {
   /**
@@ -80,15 +80,7 @@ interface nsIDragSession : nsISupports
     * Check to set if any of the native data on the clipboard matches this data flavor
     */
   boolean isDataFlavorSupported ( in string aDataFlavor ) ;
-
-  void userCancelled();
-
-  void dragEventDispatchedToChildProcess();
-
-  // Called when nsIDragSession implementation should update the UI for the
-  // drag-and-drop based on the data got from the child process in response to
-  // NS_DRAGDROP_OVER sent from parent process to child process.
-  void updateDragEffect();
+  
 };
 
 
