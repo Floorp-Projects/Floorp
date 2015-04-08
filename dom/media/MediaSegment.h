@@ -265,6 +265,18 @@ public:
     MediaSegmentBase<C, Chunk>& mSegment;
     uint32_t mIndex;
   };
+  class ConstChunkIterator {
+  public:
+    explicit ConstChunkIterator(const MediaSegmentBase<C, Chunk>& aSegment)
+      : mSegment(aSegment), mIndex(0) {}
+    bool IsEnded() { return mIndex >= mSegment.mChunks.Length(); }
+    void Next() { ++mIndex; }
+    const Chunk& operator*() { return mSegment.mChunks[mIndex]; }
+    const Chunk* operator->() { return &mSegment.mChunks[mIndex]; }
+  private:
+    const MediaSegmentBase<C, Chunk>& mSegment;
+    uint32_t mIndex;
+  };
 
   void RemoveLeading(StreamTime aDuration)
   {
