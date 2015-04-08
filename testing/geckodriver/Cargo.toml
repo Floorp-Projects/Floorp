@@ -4,24 +4,19 @@ version = "0.0.1"
 authors = ["James Graham <james@hoppipolla.co.uk>"]
 
 [dependencies]
-log = "0.2.4"
+argparse = "0.1.0"
 env_logger = "0.2.2"
-regex = "0.1.15"
-rustc-serialize = "0.2.15"
-uuid = "0.1.10"
-
-[dependencies.argparse]
-git = "http://github.com/tailhook/rust-argparse.git"
+hyper = "0.3.0"
+log = "0.2.5"
+regex = "0.1.18"
+rustc-serialize = "0.3.4"
+uuid = "0.1.11"
 
 [dependencies.webdriver]
-git = "http://github.com/jgraham/webdriver-rust.git#6c891a20996ed866621eecae5ae29230f22f95fd"
+git = "http://github.com/jgraham/webdriver-rust.git"
 
 [dependencies.mozprofile]
 git = "http://github.com/jgraham/rust_mozprofile.git"
 
 [dependencies.mozrunner]
 git = "http://github.com/jgraham/rust_mozrunner.git"
-
-[dependencies.hyper]
-git = "https://github.com/hyperium/hyper"
-branch = "master"

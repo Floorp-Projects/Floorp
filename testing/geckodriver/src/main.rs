@@ -1,9 +1,9 @@
-//Until it's clear what the unstable things are replaced by
-
-#![feature(old_io)]
-#![feature(old_path)]
-#![feature(env)]
 #![feature(std_misc)]
+#![feature(io)]
+#![feature(net)]
+#![feature(path)]
+#![feature(exit_status)]
+#![feature(collections)]
 #[macro_use]
 extern crate log;
 extern crate "rustc-serialize" as rustc_serialize;
@@ -17,9 +17,9 @@ extern crate regex;
 extern crate webdriver;
 
 use std::env;
-use std::old_io::net::ip::SocketAddr;
+use std::net::SocketAddr;
 use std::str::FromStr;
-use std::old_path::Path;
+use std::path::PathBuf;
 
 use argparse::{ArgumentParser, StoreTrue, Store};
 use webdriver::server::start;
@@ -111,11 +111,11 @@ fn main() {
     let launcher = if opts.connect_existing {
         BrowserLauncher::None
     } else {
-        BrowserLauncher::BinaryLauncher(Path::new(opts.binary))
+        BrowserLauncher::BinaryLauncher(PathBuf::new(&opts.binary))
     };
 
     let settings = MarionetteSettings::new(opts.marionette_port, launcher);
 
     //TODO: what if binary isn't a valid path?
-    start(addr.ip, opts.webdriver_port, MarionetteHandler::new(settings));
+    start(addr.ip(), opts.webdriver_port, MarionetteHandler::new(settings));
 }
