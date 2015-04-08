@@ -184,8 +184,8 @@ public:
   NS_IMETHOD TakeAllSecurityMessages(nsCOMArray<nsISecurityConsoleMessage> &aMessages) override;
   NS_IMETHOD GetResponseTimeoutEnabled(bool *aEnable) override;
   NS_IMETHOD SetResponseTimeoutEnabled(bool aEnable) override;
-  NS_IMETHOD GetNetworkInterfaceId(nsACString& aNetworkInterfaceId);
-  NS_IMETHOD SetNetworkInterfaceId(const nsACString& aNetworkInterfaceId);
+  NS_IMETHOD GetNetworkInterfaceId(nsACString& aNetworkInterfaceId) override;
+  NS_IMETHOD SetNetworkInterfaceId(const nsACString& aNetworkInterfaceId) override;
   NS_IMETHOD AddRedirect(nsIPrincipal *aRedirect) override;
   NS_IMETHOD ForcePending(bool aForcePending) override;
   NS_IMETHOD GetLastModifiedTime(PRTime* lastModifiedTime) override;
