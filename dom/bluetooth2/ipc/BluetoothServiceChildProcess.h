@@ -219,6 +219,20 @@ public:
                                BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
+  GattClientStartNotificationsInternal(
+    const nsAString& aAppUuid,
+    const BluetoothGattServiceId& aServId,
+    const BluetoothGattId& aCharId,
+    BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
+  GattClientStopNotificationsInternal(
+    const nsAString& aAppUuid,
+    const BluetoothGattServiceId& aServId,
+    const BluetoothGattId& aCharId,
+    BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
   UnregisterGattClientInternal(int aClientIf,
                                BluetoothReplyRunnable* aRunnable) override;
 

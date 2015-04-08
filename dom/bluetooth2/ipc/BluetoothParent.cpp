@@ -260,6 +260,12 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_DisconnectGattClientRequest());
     case Request::TDiscoverGattServicesRequest:
       return actor->DoRequest(aRequest.get_DiscoverGattServicesRequest());
+    case Request::TGattClientStartNotificationsRequest:
+      return actor->DoRequest(
+        aRequest.get_GattClientStartNotificationsRequest());
+    case Request::TGattClientStopNotificationsRequest:
+      return actor->DoRequest(
+        aRequest.get_GattClientStopNotificationsRequest());
     case Request::TUnregisterGattClientRequest:
       return actor->DoRequest(aRequest.get_UnregisterGattClientRequest());
     case Request::TGattClientReadRemoteRssiRequest:
@@ -761,6 +767,36 @@ BluetoothRequestParent::DoRequest(const DiscoverGattServicesRequest& aRequest)
 
   mService->DiscoverGattServicesInternal(aRequest.appUuid(),
                                          mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(
+  const GattClientStartNotificationsRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TGattClientStartNotificationsRequest);
+
+  mService->GattClientStartNotificationsInternal(aRequest.appUuid(),
+                                                 aRequest.servId(),
+                                                 aRequest.charId(),
+                                                 mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(
+  const GattClientStopNotificationsRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TGattClientStopNotificationsRequest);
+
+  mService->GattClientStopNotificationsInternal(aRequest.appUuid(),
+                                                aRequest.servId(),
+                                                aRequest.charId(),
+                                                mReplyRunnable.get());
 
   return true;
 }

@@ -428,6 +428,24 @@ BluetoothServiceChildProcess::DiscoverGattServicesInternal(
 }
 
 void
+BluetoothServiceChildProcess::GattClientStartNotificationsInternal(
+  const nsAString& aAppUuid, const BluetoothGattServiceId& aServId,
+  const BluetoothGattId& aCharId, BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GattClientStartNotificationsRequest(nsString(aAppUuid), aServId, aCharId));
+}
+
+void
+BluetoothServiceChildProcess::GattClientStopNotificationsInternal(
+  const nsAString& aAppUuid, const BluetoothGattServiceId& aServId,
+  const BluetoothGattId& aCharId, BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,
+    GattClientStopNotificationsRequest(nsString(aAppUuid), aServId, aCharId));
+}
+
+void
 BluetoothServiceChildProcess::UnregisterGattClientInternal(
   int aClientIf, BluetoothReplyRunnable* aRunnable)
 {
