@@ -1178,6 +1178,22 @@ public:
     nsRefPtr<ContinueLifecycleRunnable> r =
       new ContinueLifecycleRunnable(mTask, false /* success */, mActivateImmediately);
     NS_DispatchToMainThread(r);
+
+    JS::Rooted<JSObject*> obj(aCx, workerPrivate->GlobalScope()->GetWrapper());
+    JS::ExposeValueToActiveJS(aValue);
+
+    js::ErrorReport report(aCx);
+    if (NS_WARN_IF(!report.init(aCx, aValue))) {
+      JS_ClearPendingException(aCx);
+      return;
+    }
+
+    nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
+    xpcReport->Init(report.report(), report.message(), /* aIsChrome = */ false, /* aWindowID = */ 0);
+
+    nsRefPtr<AsyncErrorReporter> aer =
+      new AsyncErrorReporter(CycleCollectedJSRuntime::Get()->Runtime(), xpcReport);
+    NS_DispatchToMainThread(aer);
   }
 };
 
@@ -1224,12 +1240,10 @@ LifecycleEventWorkerRunnable::DispatchLifecycleEvent(JSContext* aCx, WorkerPriva
     // Although the spec has different routines to deal with popping stuff
     // off it's internal queues, we can reuse the ContinueAfterInstallEvent()
     // logic.
-    waitUntilPromise = Promise::Reject(sgo, aCx,
-                                       JS::UndefinedHandleValue, result);
-  }
-
-  if (result.Failed()) {
-    return false;
+    nsRefPtr<ContinueLifecycleRunnable> r =
+      new ContinueLifecycleRunnable(mTask, false /* success */, false /* activate immediately */);
+    MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
+    return true;
   }
 
   nsRefPtr<LifecycleEventPromiseHandler> handler =
