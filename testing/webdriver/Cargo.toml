@@ -1,12 +1,12 @@
 [package]
 
 name = "webdriver"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["James Graham <james@hoppipolla.co.uk>"]
 
 [dependencies]
-log = "0.2.5"
-regex = "0.1.18"
-rustc-serialize = "0.3.4"
-uuid = "0.1.11"
-hyper = "0.3.0"
+log = "0.3.1"
+regex = "0.1.27"
+rustc-serialize = "0.3.12"
+uuid = "0.1.16"
+hyper = "0.3.10"

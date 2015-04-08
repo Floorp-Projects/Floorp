@@ -1,8 +1,7 @@
 use rustc_serialize::json::{Json, ToJson};
 use rustc_serialize::{Encodable, Encoder};
 use std::collections::BTreeMap;
-use std::error::{Error, FromError};
-use std::num::ToPrimitive;
+use std::error::Error;
 
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
 
@@ -122,10 +121,11 @@ impl FrameId {
     pub fn from_json(data: &Json) -> WebDriverResult<FrameId> {
         match data {
             &Json::U64(x) => {
-                let id = try_opt!(x.to_u16(),
-                                  ErrorStatus::NoSuchFrame,
-                                  "frame id out of range");
-                Ok(FrameId::Short(id))
+                if x > u16::max_value() as u64 || x < u16::min_value() as u64 {
+                    return Err(WebDriverError::new(ErrorStatus::NoSuchFrame,
+                                                   "frame id out of range"))
+                };
+                Ok(FrameId::Short(x as u16))
             },
             &Json::Null => Ok(FrameId::Null),
             &Json::Object(_) => Ok(FrameId::Element(

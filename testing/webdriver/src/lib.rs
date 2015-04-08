@@ -1,15 +1,10 @@
-#![feature(io)]
-#![feature(net)]
-#![feature(core)]
-#![feature(collections)]
 #![allow(non_snake_case)]
 
 #[macro_use]
 extern crate log;
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate rustc_serialize;
 extern crate hyper;
 extern crate regex;
-
 
 #[macro_use] pub mod macros;
 mod httpapi;

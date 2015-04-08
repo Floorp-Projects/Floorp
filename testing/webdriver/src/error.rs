@@ -1,7 +1,8 @@
-use rustc_serialize::json::{Json, ToJson, ParserError};
+use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
-use std::error::{Error, FromError};
+use std::error::Error;
 use std::fmt;
+use hyper::status::StatusCode;
 
 #[derive(PartialEq, Debug)]
 pub enum ErrorStatus {
@@ -82,32 +83,32 @@ impl WebDriverError {
         }
     }
 
-    pub fn http_status(&self) -> u32 {
+    pub fn http_status(&self) -> StatusCode {
         match self.status {
-            ErrorStatus::ElementNotSelectable => 400,
-            ErrorStatus::ElementNotVisible => 400,
-            ErrorStatus::InvalidArgument => 400,
-            ErrorStatus::InvalidCookieDomain => 400,
-            ErrorStatus::InvalidElementCoordinates => 400,
-            ErrorStatus::InvalidElementState => 400,
-            ErrorStatus::InvalidSelector => 400,
-            ErrorStatus::InvalidSessionId => 404,
-            ErrorStatus::JavascriptError => 500,
-            ErrorStatus::MoveTargetOutOfBounds => 500,
-            ErrorStatus::NoSuchAlert => 400,
-            ErrorStatus::NoSuchElement => 404,
-            ErrorStatus::NoSuchFrame => 400,
-            ErrorStatus::NoSuchWindow => 400,
-            ErrorStatus::ScriptTimeout => 408,
-            ErrorStatus::SessionNotCreated => 500,
-            ErrorStatus::StaleElementReference => 400,
-            ErrorStatus::Timeout => 408,
-            ErrorStatus::UnableToSetCookie => 500,
-            ErrorStatus::UnexpectedAlertOpen => 500,
-            ErrorStatus::UnknownError => 500,
-            ErrorStatus::UnknownPath => 404,
-            ErrorStatus::UnknownMethod => 405,
-            ErrorStatus::UnsupportedOperation => 500,
+            ErrorStatus::ElementNotSelectable => StatusCode::BadRequest,
+            ErrorStatus::ElementNotVisible => StatusCode::BadRequest,
+            ErrorStatus::InvalidArgument => StatusCode::BadRequest,
+            ErrorStatus::InvalidCookieDomain => StatusCode::BadRequest,
+            ErrorStatus::InvalidElementCoordinates => StatusCode::BadRequest,
+            ErrorStatus::InvalidElementState => StatusCode::BadRequest,
+            ErrorStatus::InvalidSelector => StatusCode::BadRequest,
+            ErrorStatus::InvalidSessionId => StatusCode::NotFound,
+            ErrorStatus::JavascriptError => StatusCode::InternalServerError,
+            ErrorStatus::MoveTargetOutOfBounds => StatusCode::InternalServerError,
+            ErrorStatus::NoSuchAlert => StatusCode::BadRequest,
+            ErrorStatus::NoSuchElement => StatusCode::NotFound,
+            ErrorStatus::NoSuchFrame => StatusCode::BadRequest,
+            ErrorStatus::NoSuchWindow => StatusCode::BadRequest,
+            ErrorStatus::ScriptTimeout => StatusCode::RequestTimeout,
+            ErrorStatus::SessionNotCreated => StatusCode::InternalServerError,
+            ErrorStatus::StaleElementReference => StatusCode::BadRequest,
+            ErrorStatus::Timeout => StatusCode::RequestTimeout,
+            ErrorStatus::UnableToSetCookie => StatusCode::InternalServerError,
+            ErrorStatus::UnexpectedAlertOpen => StatusCode::InternalServerError,
+            ErrorStatus::UnknownError => StatusCode::InternalServerError,
+            ErrorStatus::UnknownPath => StatusCode::NotFound,
+            ErrorStatus::UnknownMethod => StatusCode::MethodNotAllowed,
+            ErrorStatus::UnsupportedOperation => StatusCode::InternalServerError,
         }
     }
 
@@ -132,12 +133,5 @@ impl Error for WebDriverError {
 
     fn cause(&self) -> Option<&Error> {
         None
-    }
-}
-
-impl FromError<ParserError> for WebDriverError {
-    fn from_error(err: ParserError) -> WebDriverError {
-        let msg = format!("{:?}", err);
-        WebDriverError::new(ErrorStatus::UnknownError, &msg[..])
     }
 }
