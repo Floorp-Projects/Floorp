@@ -471,13 +471,14 @@ ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
   }
 
   // Check for updater.exe sign problems
-  int rv = OK;
+  BOOL updaterSignProblem = FALSE;
 #ifndef DISABLE_UPDATER_AUTHENTICODE_CHECK
-  rv = DoesBinaryMatchAllowedCertificates(installDir, argv[0]);
+  updaterSignProblem = !DoesBinaryMatchAllowedCertificates(installDir,
+                                                           argv[0]);
 #endif
 
   // Only proceed with the update if we have no signing problems
-  if (rv == OK) {
+  if (!updaterSignProblem) {
     BOOL updateProcessWasStarted = FALSE;
     if (StartUpdateProcess(argc, argv, installDir,
                            updateProcessWasStarted)) {
@@ -516,8 +517,9 @@ ProcessSoftwareUpdateCommand(DWORD argc, LPWSTR *argv)
 
     // When there is a certificate check error on the updater.exe application,
     // we want to write out the error.
-    if (!WriteStatusFailure(argv[1], rv)) {
-      LOG_WARN(("Could not write failed state to update.status.  (%d)",
+    if (!WriteStatusFailure(argv[1],
+                            SERVICE_UPDATER_SIGN_ERROR)) {
+      LOG_WARN(("Could not write pending state to update.status.  (%d)",
                 GetLastError()));
     }
   }
