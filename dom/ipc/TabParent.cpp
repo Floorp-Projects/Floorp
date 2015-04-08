@@ -12,11 +12,13 @@
 #include "mozIApplication.h"
 #include "mozilla/BrowserElementParent.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/DataTransfer.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/indexedDB/ActorsParent.h"
 #include "mozilla/plugins/PluginWidgetParent.h"
 #include "mozilla/EventStateManager.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/Hal.h"
 #include "mozilla/ipc/DocumentRendererParent.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
@@ -29,7 +31,9 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/unused.h"
+#include "BlobParent.h"
 #include "nsCOMPtr.h"
+#include "nsContentAreaDragDrop.h"
 #include "nsContentPermissionHelper.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"
@@ -76,6 +80,7 @@
 #include "nsNetCID.h"
 #include "nsIAuthInformation.h"
 #include "nsIAuthPromptCallback.h"
+#include "SourceSurfaceRawData.h"
 #include "nsAuthInformationHolder.h"
 #include "nsICancelable.h"
 #include "gfxPrefs.h"
@@ -274,6 +279,8 @@ TabParent::TabParent(nsIContentParent* aManager,
   , mAppPackageFileDescriptorSent(false)
   , mSendOfflineStatus(true)
   , mChromeFlags(aChromeFlags)
+  , mDragAreaX(0)
+  , mDragAreaY(0)
   , mInitedByParent(false)
   , mTabId(aTabId)
   , mCreatingWindow(false)
@@ -1200,6 +1207,17 @@ TabParent::GetLayoutDeviceToCSSScale()
   return LayoutDeviceToCSSScale(ctx
     ? (float)ctx->AppUnitsPerDevPixel() / nsPresContext::AppUnitsPerCSSPixel()
     : 0.0f);
+}
+
+bool
+TabParent::SendRealDragEvent(WidgetDragEvent& event, uint32_t aDragAction,
+                             uint32_t aDropEffect)
+{
+  if (mIsDestroyed) {
+    return false;
+  }
+  event.refPoint += GetChildProcessOffset();
+  return PBrowserParent::SendRealDragEvent(event, aDragAction, aDropEffect);
 }
 
 CSSPoint TabParent::AdjustTapToChildWidget(const CSSPoint& aPoint)
@@ -2926,6 +2944,109 @@ TabParent::RecvAsyncAuthPrompt(const nsCString& aUri,
                                 level, holder, getter_AddRefs(dummy));
 
   return rv == NS_OK;
+}
+
+bool
+TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
+                                 const uint32_t& aAction,
+                                 const nsCString& aVisualDnDData,
+                                 const uint32_t& aWidth, const uint32_t& aHeight,
+                                 const uint32_t& aStride, const uint8_t& aFormat,
+                                 const int32_t& aDragAreaX, const int32_t& aDragAreaY)
+{
+  mInitialDataTransferItems.Clear();
+  nsPresContext* pc = mFrameElement->OwnerDoc()->GetShell()->GetPresContext();
+  EventStateManager* esm = pc->EventStateManager();
+
+  for (uint32_t i = 0; i < aTransfers.Length(); ++i) {
+    auto& items = aTransfers[i].items();
+    nsTArray<DataTransferItem>* itemArray = mInitialDataTransferItems.AppendElement();
+    for (uint32_t j = 0; j < items.Length(); ++j) {
+      const IPCDataTransferItem& item = items[j];
+      DataTransferItem* localItem = itemArray->AppendElement();
+      localItem->mFlavor = item.flavor();
+      if (item.data().type() == IPCDataTransferData::TnsString) {
+        localItem->mType = DataTransferItem::DataType::eString;
+        localItem->mStringData = item.data().get_nsString();
+      } else {
+        localItem->mType = DataTransferItem::DataType::eBlob;
+        BlobParent* blobParent =
+          static_cast<BlobParent*>(item.data().get_PBlobParent());
+        if (blobParent) {
+          localItem->mBlobData = blobParent->GetBlobImpl();
+        }
+      }
+    }
+  }
+  if (Manager()->IsContentParent()) {
+    nsCOMPtr<nsIDragService> dragService =
+      do_GetService("@mozilla.org/widget/dragservice;1");
+    if (dragService) {
+      dragService->MaybeAddChildProcess(Manager()->AsContentParent());
+    }
+  }
+
+  if (aVisualDnDData.IsEmpty()) {
+    mDnDVisualization = nullptr;
+  } else {
+    mDnDVisualization =
+      new mozilla::gfx::SourceSurfaceRawData();
+    mozilla::gfx::SourceSurfaceRawData* raw =
+      static_cast<mozilla::gfx::SourceSurfaceRawData*>(mDnDVisualization.get());
+    raw->InitWrappingData(
+      reinterpret_cast<uint8_t*>(const_cast<nsCString&>(aVisualDnDData).BeginWriting()),
+      mozilla::gfx::IntSize(aWidth, aHeight), aStride,
+      static_cast<mozilla::gfx::SurfaceFormat>(aFormat), false);
+    raw->GuaranteePersistance();
+  }
+  mDragAreaX = aDragAreaX;
+  mDragAreaY = aDragAreaY;
+  
+  esm->BeginTrackingRemoteDragGesture(mFrameElement);
+
+  return true;
+}
+
+void
+TabParent::AddInitialDnDDataTo(DataTransfer* aDataTransfer)
+{
+  for (uint32_t i = 0; i < mInitialDataTransferItems.Length(); ++i) {
+    nsTArray<DataTransferItem>& itemArray = mInitialDataTransferItems[i];
+    for (uint32_t j = 0; j < itemArray.Length(); ++j) {
+      DataTransferItem& item = itemArray[j];
+      nsCOMPtr<nsIWritableVariant> variant =
+        do_CreateInstance(NS_VARIANT_CONTRACTID);
+      if (!variant) {
+        break;
+      }
+      // Special case kFilePromiseMime so that we get the right
+      // nsIFlavorDataProvider for it.
+      if (item.mFlavor.EqualsLiteral(kFilePromiseMime)) {
+        nsRefPtr<nsISupports> flavorDataProvider =
+          new nsContentAreaDragDropDataProvider();
+        variant->SetAsISupports(flavorDataProvider);
+      } else if (item.mType == DataTransferItem::DataType::eString) {
+        variant->SetAsAString(item.mStringData);
+      } else if (item.mType == DataTransferItem::DataType::eBlob) {
+        variant->SetAsISupports(item.mBlobData);
+      }
+      // Using system principal here, since once the data is on parent process
+      // side, it can be handled as being from browser chrome or OS.
+      aDataTransfer->SetDataWithPrincipal(NS_ConvertUTF8toUTF16(item.mFlavor),
+                                          variant, i,
+                                          nsContentUtils::GetSystemPrincipal());
+    }
+  }
+  mInitialDataTransferItems.Clear();
+}
+
+void
+TabParent::TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,
+                                 int32_t& aDragAreaX, int32_t& aDragAreaY)
+{
+  aSurface = mDnDVisualization.forget();
+  aDragAreaX = mDragAreaX;
+  aDragAreaY = mDragAreaY;
 }
 
 NS_IMETHODIMP
