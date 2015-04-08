@@ -794,27 +794,32 @@ class AsmJSHeapAccess
     // If 'cmp' equals 'insnOffset' or if it is not supplied then the
     // cmpDelta_ is zero indicating that there is no length to patch.
     AsmJSHeapAccess(uint32_t insnOffset, uint32_t after, uint32_t cmp = NoLengthCheck)
-      : insnOffset_(insnOffset),
-        opLength_(after - insnOffset),
-        cmpDelta_(cmp == NoLengthCheck ? 0 : insnOffset - cmp)
-    {}
+    {
+        mozilla::PodZero(this);  // zero padding for Valgrind
+        insnOffset_ = insnOffset;
+        opLength_ = after - insnOffset;
+        cmpDelta_ = cmp == NoLengthCheck ? 0 : insnOffset - cmp;
+    }
 #elif defined(JS_CODEGEN_X64)
     // If 'cmp' equals 'insnOffset' or if it is not supplied then the
     // cmpDelta_ is zero indicating that there is no length to patch.
     AsmJSHeapAccess(uint32_t insnOffset, WhatToDoOnOOB oob,
                     uint32_t cmp = NoLengthCheck,
                     uint32_t offsetWithinWholeSimdVector = 0)
-      : insnOffset_(insnOffset),
-        offsetWithinWholeSimdVector_(offsetWithinWholeSimdVector),
-        throwOnOOB_(oob == Throw),
-        cmpDelta_(cmp == NoLengthCheck ? 0 : insnOffset - cmp)
     {
+        mozilla::PodZero(this);  // zero padding for Valgrind
+        insnOffset_ = insnOffset;
+        offsetWithinWholeSimdVector_ = offsetWithinWholeSimdVector;
+        throwOnOOB_ = oob == Throw;
+        cmpDelta_ = cmp == NoLengthCheck ? 0 : insnOffset - cmp;
         MOZ_ASSERT(offsetWithinWholeSimdVector_ == offsetWithinWholeSimdVector);
     }
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS)
     explicit AsmJSHeapAccess(uint32_t insnOffset)
-      : insnOffset_(insnOffset)
-    {}
+    {
+        mozilla::PodZero(this);  // zero padding for Valgrind
+        insnOffset_ = insnOffset;
+    }
 #endif
 
     uint32_t insnOffset() const { return insnOffset_; }
