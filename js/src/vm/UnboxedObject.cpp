@@ -90,8 +90,8 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
 #ifdef JS_CODEGEN_X86
     propertiesReg = eax;
     newKindReg = ecx;
-    masm.loadPtr(Address(StackPointer, sizeof(void*)), propertiesReg);
-    masm.loadPtr(Address(StackPointer, 2 * sizeof(void*)), newKindReg);
+    masm.loadPtr(Address(masm.getStackPointer(), sizeof(void*)), propertiesReg);
+    masm.loadPtr(Address(masm.getStackPointer(), 2 * sizeof(void*)), newKindReg);
 #else
     propertiesReg = IntArgReg0;
     newKindReg = IntArgReg1;

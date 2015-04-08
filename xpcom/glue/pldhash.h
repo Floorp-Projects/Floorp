@@ -9,9 +9,11 @@
 /*
  * Double hashing, a la Knuth 6.
  */
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h" // for MOZ_ALWAYS_INLINE
 #include "mozilla/fallible.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/Move.h"
 #include "mozilla/Types.h"
 #include "nscore.h"
 
@@ -164,16 +166,6 @@ class PLDHashTable
 private:
   const PLDHashTableOps* mOps;        /* Virtual operations; see below. */
   int16_t             mHashShift;     /* multiplicative hash shift */
-  /*
-   * |mRecursionLevel| is only used in debug builds, but is present in opt
-   * builds to avoid binary compatibility problems when mixing DEBUG and
-   * non-DEBUG components.  (Actually, even if it were removed,
-   * sizeof(PLDHashTable) wouldn't change, due to struct padding.) Make it
-   * protected to suppress -Wunused-private-field warnings in opt builds.
-   */
-protected:
-  mutable uint16_t    mRecursionLevel;/* used to detect unsafe re-entry */
-private:
   uint32_t            mEntrySize;     /* number of bytes in an entry */
   uint32_t            mEntryCount;    /* number of entries in table */
   uint32_t            mRemovedCount;  /* removed entry sentinels in table */
@@ -202,6 +194,15 @@ private:
   } mStats;
 #endif
 
+#ifdef DEBUG
+  // We use an atomic counter here so that the various ++/-- operations can't
+  // get corrupted when a table is shared between threads. The associated
+  // assertions should in no way be taken to mean that thread safety is being
+  // validated! Proper synchronization and thread safety assertions must be
+  // employed by any consumers.
+  mutable mozilla::Atomic<uint32_t> mRecursionLevel;
+#endif
+
 public:
   // The most important thing here is that we zero |mOps| because it's used to
   // determine if Init() has been called. (The use of MOZ_CONSTEXPR means all
@@ -209,7 +210,6 @@ public:
   MOZ_CONSTEXPR PLDHashTable()
     : mOps(nullptr)
     , mHashShift(0)
-    , mRecursionLevel(0)
     , mEntrySize(0)
     , mEntryCount(0)
     , mRemovedCount(0)
@@ -218,7 +218,36 @@ public:
 #ifdef PL_DHASHMETER
     , mStats()
 #endif
+#ifdef DEBUG
+    , mRecursionLevel()
+#endif
   {}
+
+  PLDHashTable(PLDHashTable&& aOther) { *this = mozilla::Move(aOther); }
+
+  PLDHashTable& operator=(PLDHashTable&& aOther)
+  {
+    using mozilla::Move;
+
+    mOps = Move(aOther.mOps);
+    mHashShift = Move(aOther.mHashShift);
+    mEntrySize = Move(aOther.mEntrySize);
+    mEntryCount = Move(aOther.mEntryCount);
+    mRemovedCount = Move(aOther.mRemovedCount);
+    mGeneration = Move(aOther.mGeneration);
+    mEntryStore = Move(aOther.mEntryStore);
+
+#ifdef PL_DHASHMETER
+    mStats = Move(aOther.mStats);
+#endif
+
+#ifdef DEBUG
+    // Atomic<> doesn't have an |operator=(Atomic<>&&)|.
+    mRecursionLevel = uint32_t(aOther.mRecursionLevel);
+#endif
+
+    return *this;
+  }
 
   bool IsInitialized() const { return !!mOps; }
 
@@ -318,6 +347,9 @@ private:
   PLDHashEntryHdr* PL_DHASH_FASTCALL FindFreeEntry(PLDHashNumber aKeyHash);
 
   bool ChangeTable(int aDeltaLog2);
+
+  PLDHashTable(const PLDHashTable& aOther) = delete;
+  PLDHashTable& operator=(const PLDHashTable& aOther) = delete;
 };
 
 /*

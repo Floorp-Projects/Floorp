@@ -3,6 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef mozilla_image_encoders_jpeg_nsJPEGEncoder_h
+#define mozilla_image_encoders_jpeg_nsJPEGEncoder_h
+
 #include "imgIEncoder.h"
 
 #include "mozilla/ReentrantMonitor.h"
@@ -77,3 +80,5 @@ protected:
   // that only one thread dispatches a callback for each call to AsyncWait.
   ReentrantMonitor mReentrantMonitor;
 };
+
+#endif // mozilla_image_encoders_jpeg_nsJPEGEncoder_h

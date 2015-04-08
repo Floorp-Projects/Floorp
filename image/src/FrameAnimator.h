@@ -127,8 +127,8 @@ public:
   nsIntRect GetFirstFrameRefreshArea() const;
 
   /**
-   * If we have a composited frame for @aFrameNum, returns it. Otherwise, returns
-   * an empty DrawableFrameRef. It is an error to call this method with
+   * If we have a composited frame for @aFrameNum, returns it. Otherwise,
+   * returns an empty DrawableFrameRef. It is an error to call this method with
    * aFrameNum == 0, because the first frame is never composited.
    */
   DrawableFrameRef GetCompositedFrame(uint32_t aFrameNum);

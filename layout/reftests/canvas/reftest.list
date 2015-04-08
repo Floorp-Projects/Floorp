@@ -28,7 +28,7 @@ random-if(cocoaWidget) == subpixel-1.html about:blank
 == text-rtl-alignment-test.html text-rtl-alignment-ref.html
 
 fuzzy-if((B2G||Mulet)&&azureSkiaGL,1,256) == text-horzline-with-bottom.html text-horzline.html # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if((B2G||Mulet)&&azureSkiaGL,1,256) == text-horzline-with-top.html text-horzline.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if((B2G||Mulet)&&azureSkiaGL,1,256) fails-if(azureSkia&&OSX>=1008) == text-horzline-with-top.html text-horzline.html # Initial mulet triage: parity with B2G/B2G Desktop, Skia OS X failure tracked in bug 1152044
 
 != text-big-stroke.html text-blank.html
 != text-big-stroke.html text-big-fill.html
@@ -60,7 +60,8 @@ random-if(!d2d) != text-subpixel-1.html text-subpixel-1-ref.html
 ## (Marking "random" rather than "fails" because it would pass for people
 ## if they have an Emoji font installed when running the tests.)
 ## WAS: random-if(OSX==1007) != text-emoji.html text-emoji-notref.html
-random-if(!cocoaWidget||OSX==1006||OSX==1007) != text-emoji.html text-emoji-notref.html
+# With Skia canvas on OS X (bug 932958) it fails even on 10.8 and 10.10.
+random-if(cocoaWidget&&azureSkia) random-if(!cocoaWidget||OSX==1006||OSX==1007) != text-emoji.html text-emoji-notref.html
 
 # azure quartz uses CGDrawLinearGradient instead of DrawShading
 # so we have less control over degenerate behaviour as tested by this
@@ -85,7 +86,7 @@ skip-if(Mulet) fuzzy-if(azureSkia,9,470) random-if(Android) == dash-1.html dash-
 == ctm-singular-sanity.html data:text/html,<body>Pass
 == ctm-1.html ctm-1-ref.html
 
-fails-if(OSX==1006) == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient-ref.html # Bug 673333
+fails-if(azureQuartz&&OSX==1006) == 672646-alpha-radial-gradient.html 672646-alpha-radial-gradient-ref.html # Bug 673333
 == 674003-alpha-radial-gradient-superlum.html 674003-alpha-radial-gradient-superlum-ref.html
 
 != 693610-1.html 693610-1-notref.html # bug 693610: multiple glyph runs should not be overprinted

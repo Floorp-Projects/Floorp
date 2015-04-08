@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#ifndef mozilla_image_src_imgITools_h
+#define mozilla_image_src_imgITools_h
+
 #include "imgITools.h"
 
 #define NS_IMGTOOLS_CID \
@@ -25,3 +28,4 @@ public:
 private:
   virtual ~imgTools();
 };
+#endif // mozilla_image_src_imgITools_h

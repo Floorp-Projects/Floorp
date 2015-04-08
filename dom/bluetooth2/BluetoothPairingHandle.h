@@ -47,11 +47,15 @@ public:
     aPasskey = mPasskey;
   }
 
+  // Reply to the enterpincodereq pairing request
   already_AddRefed<Promise>
     SetPinCode(const nsAString& aPinCode, ErrorResult& aRv);
 
-  already_AddRefed<Promise>
-    SetPairingConfirmation(bool aConfirm, ErrorResult& aRv);
+  // Accept the pairingconfirmationreq or pairingconsentreq pairing request
+  already_AddRefed<Promise> Accept(ErrorResult& aRv);
+
+  // Reject the pairing request
+  already_AddRefed<Promise> Reject(ErrorResult& aRv);
 
 private:
   BluetoothPairingHandle(nsPIDOMWindow* aOwner,
@@ -59,6 +63,15 @@ private:
                          const nsAString& aType,
                          const nsAString& aPasskey);
   ~BluetoothPairingHandle();
+
+  /**
+   * Map mType into a BluetoothSspVariant enum value.
+   *
+   * @param aVariant [out] BluetoothSspVariant value mapped from mType.
+   * @return a boolean value to indicate whether mType can map into a
+   *         BluetoothSspVariant value.
+   */
+  bool GetSspVariant(BluetoothSspVariant& aVariant);
 
   nsCOMPtr<nsPIDOMWindow> mOwner;
   nsString mDeviceAddress;

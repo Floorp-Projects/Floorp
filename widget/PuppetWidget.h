@@ -123,12 +123,17 @@ public:
   NS_IMETHOD ReparentNativeWidget(nsIWidget* aNewParent) override
   { return NS_ERROR_UNEXPECTED; }
 
-  // PuppetWidgets don't have any concept of titles. 
+  // PuppetWidgets don't have any concept of titles.
   NS_IMETHOD SetTitle(const nsAString& aTitle) override
   { return NS_ERROR_UNEXPECTED; }
-  
+
   virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() override
   { return LayoutDeviceIntPoint::FromUntyped(GetWindowPosition() + GetChromeDimensions()); }
+
+  // Synthesized mouse events we need to forwarded to chrome. Event
+  // state manager uses this api to position the mouse in the center
+  // of the window for pointer lock.
+  virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint) override;
 
   void InitEvent(WidgetGUIEvent& aEvent, nsIntPoint* aPoint = nullptr);
 

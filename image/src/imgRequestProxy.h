@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef imgRequestProxy_h__
-#define imgRequestProxy_h__
+#ifndef mozilla_image_src_imgRequestProxy_h
+#define mozilla_image_src_imgRequestProxy_h
 
 #include "imgIRequest.h"
 #include "nsISecurityInfoProvider.h"
@@ -69,12 +69,14 @@ public:
   // Callers to Init or ChangeOwner are required to call NotifyListener after
   // (although not immediately after) doing so.
   nsresult Init(imgRequest* aOwner,
-                nsILoadGroup *aLoadGroup,
+                nsILoadGroup* aLoadGroup,
                 ImageURL* aURI,
-                imgINotificationObserver *aObserver);
+                imgINotificationObserver* aObserver);
 
-  nsresult ChangeOwner(imgRequest *aNewOwner); // this will change mOwner.  Do not call this if the previous
-                                               // owner has already sent notifications out!
+  nsresult ChangeOwner(imgRequest* aNewOwner); // this will change mOwner.
+                                               // Do not call this if the
+                                               // previous owner has already
+                                               // sent notifications out!
 
   void AddToLoadGroup();
   void RemoveFromLoadGroup(bool releaseLoadGroup);
@@ -124,10 +126,11 @@ public:
   // imgRequest::RemoveProxy
   void ClearAnimationConsumers();
 
-  virtual nsresult Clone(imgINotificationObserver* aObserver, imgRequestProxy** aClone);
+  virtual nsresult Clone(imgINotificationObserver* aObserver,
+                         imgRequestProxy** aClone);
   nsresult GetStaticRequest(imgRequestProxy** aReturn);
 
-  nsresult GetURI(ImageURL **aURI);
+  nsresult GetURI(ImageURL** aURI);
 
 protected:
   friend class mozilla::image::ProgressTracker;
@@ -141,7 +144,7 @@ protected:
     public:
       imgCancelRunnable(imgRequestProxy* owner, nsresult status)
         : mOwner(owner), mStatus(status)
-      {}
+      { }
 
       NS_IMETHOD Run() override {
         mOwner->DoCancel(mStatus);
@@ -240,4 +243,4 @@ protected:
   nsCOMPtr<nsIPrincipal> mPrincipal;
 };
 
-#endif // imgRequestProxy_h__
+#endif // mozilla_image_src_imgRequestProxy_h

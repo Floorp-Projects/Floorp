@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_IMAGELIB_DECODER_H_
-#define MOZILLA_IMAGELIB_DECODER_H_
+#ifndef mozilla_image_src_Decoder_h
+#define mozilla_image_src_Decoder_h
 
 #include "FrameAnimator.h"
 #include "RasterImage.h"
@@ -217,8 +217,11 @@ public:
   // is only 0 if we haven't begun any frames.
   uint32_t GetFrameCount() { return mFrameCount; }
 
-  // The number of complete frames we have (ie, not including anything in-progress).
-  uint32_t GetCompleteFrameCount() { return mInFrame ? mFrameCount - 1 : mFrameCount; }
+  // The number of complete frames we have (ie, not including anything
+  // in-progress).
+  uint32_t GetCompleteFrameCount() {
+    return mInFrame ? mFrameCount - 1 : mFrameCount;
+  }
 
   // Error tracking
   bool HasError() const { return HasDataError() || HasDecoderError(); }
@@ -244,8 +247,9 @@ public:
   bool WasAborted() const { return mDecodeAborted; }
 
   enum DecodeStyle {
-      PROGRESSIVE, // produce intermediate frames representing the partial state of the image
-      SEQUENTIAL // decode to final image immediately
+      PROGRESSIVE, // produce intermediate frames representing the partial
+                   // state of the image
+      SEQUENTIAL   // decode to final image immediately
   };
 
   void SetFlags(uint32_t aFlags) { mFlags = aFlags; }
@@ -286,8 +290,8 @@ public:
                     uint32_t width, uint32_t height,
                     gfx::SurfaceFormat format,
                     uint8_t palette_depth = 0);
-  virtual bool NeedsNewFrame() const { return mNeedsNewFrame; }
 
+  virtual bool NeedsNewFrame() const { return mNeedsNewFrame; }
 
   // Try to allocate a frame as described in mNewFrameData and return the
   // status code from that attempt. Clears mNewFrameData.
@@ -443,9 +447,9 @@ protected:
   nsIntRect mInvalidRect; // Tracks an invalidation region in the current frame.
   Progress mProgress;
 
-  uint8_t* mImageData;       // Pointer to image data in either Cairo or 8bit format
+  uint8_t* mImageData;  // Pointer to image data in either Cairo or 8bit format
   uint32_t mImageDataLength;
-  uint32_t* mColormap;       // Current colormap to be used in Cairo format
+  uint32_t* mColormap;  // Current colormap to be used in Cairo format
   uint32_t mColormapSize;
 
   // Telemetry data for this decoder.
@@ -498,4 +502,4 @@ private:
 } // namespace image
 } // namespace mozilla
 
-#endif // MOZILLA_IMAGELIB_DECODER_H_
+#endif // mozilla_image_src_Decoder_h

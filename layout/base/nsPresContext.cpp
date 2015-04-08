@@ -2184,7 +2184,10 @@ nsPresContext::UserFontSetUpdated(gfxUserFontEntry* aUpdatedFont)
   // it contains that specific font (i.e. the one chosen within the family
   // given the weight, width, and slant from the nsStyleFont). If it does,
   // mark that frame dirty and skip inspecting its descendants.
-  nsFontFaceUtils::MarkDirtyForFontChange(mShell->GetRootFrame(), aUpdatedFont);
+  nsIFrame* root = mShell->GetRootFrame();
+  if (root) {
+    nsFontFaceUtils::MarkDirtyForFontChange(root, aUpdatedFont);
+  }
 }
 
 FontFaceSet*

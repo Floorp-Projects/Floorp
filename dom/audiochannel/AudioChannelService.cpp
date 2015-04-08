@@ -37,6 +37,19 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::hal;
 
+// When a inner-window is destroyed we have to mute all the related
+// AudioChannelAgents. In order to do this we have to notify them after purging
+// AudioChannelService::mAgents.
+struct MOZ_STACK_CLASS WindowDestroyedEnumeratorData
+{
+  explicit WindowDestroyedEnumeratorData(uint64_t aInnerID)
+    : mInnerID(aInnerID)
+  {}
+
+  nsTArray<nsRefPtr<AudioChannelAgent>> mAgents;
+  uint64_t mInnerID;
+};
+
 StaticRefPtr<AudioChannelService> gAudioChannelService;
 
 // Mappings from 'mozaudiochannel' attribute strings to an enumeration.
@@ -775,11 +788,15 @@ AudioChannelService::WindowDestroyedEnumerator(AudioChannelAgent* aAgent,
                                                nsAutoPtr<AudioChannelAgentData>& aData,
                                                void* aPtr)
 {
-  uint64_t* innerID = static_cast<uint64_t*>(aPtr);
-  MOZ_ASSERT(innerID);
+  auto* data = static_cast<WindowDestroyedEnumeratorData*>(aPtr);
+  MOZ_ASSERT(data);
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aAgent->Window());
-  if (!window || window->WindowID() != *innerID) {
+  if (!window->IsInnerWindow()) {
+    window = window->GetCurrentInnerWindow();
+  }
+
+  if (!window || window->WindowID() != data->mInnerID) {
     return PL_DHASH_NEXT;
   }
 
@@ -788,6 +805,7 @@ AudioChannelService::WindowDestroyedEnumerator(AudioChannelAgent* aAgent,
 
   service->UnregisterType(aData->mChannel, aData->mElementHidden,
                           CONTENT_PROCESS_ID_MAIN, aData->mWithVideo);
+  data->mAgents.AppendElement(aAgent);
 
   return PL_DHASH_REMOVE;
 }
@@ -893,7 +911,11 @@ AudioChannelService::Observe(nsISupports* aSubject, const char* aTopic, const ch
       return rv;
     }
 
-    mAgents.Enumerate(WindowDestroyedEnumerator, &innerID);
+    WindowDestroyedEnumeratorData data(innerID);
+    mAgents.Enumerate(WindowDestroyedEnumerator, &data);
+    for (uint32_t i = 0, len = data.mAgents.Length(); i < len; ++i) {
+      data.mAgents[i]->NotifyAudioChannelStateChanged();
+    }
 
 #ifdef MOZ_WIDGET_GONK
     bool active = AnyAudioChannelIsActive();

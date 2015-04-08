@@ -1436,17 +1436,33 @@ nsDisplayImage::GetContainer(LayerManager* aManager,
   return mImage->GetImageContainer(aManager, flags);
 }
 
-gfxRect
-nsDisplayImage::GetDestRect()
+nsRect
+nsDisplayImage::GetDestRect(bool* aSnap)
 {
-  int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
+  // OK, we want to return the entire region painted by the image. But what is
+  // that region? It's the image's "dest rect" (the rect where a full copy of
+  // the image is mapped), clipped to the container's content box (which is what
+  // GetBounds() returns). So, we grab those rects and intersect them.
+  bool snap = true;
+  const nsRect frameContentBox = GetBounds(&snap);
+  if (aSnap) {
+    *aSnap = snap;
+  }
 
-  bool snap;
-  nsRect dest = GetBounds(&snap);
-  gfxRect destRect(dest.x, dest.y, dest.width, dest.height);
-  destRect.ScaleInverse(factor);
+  // Note: To get the "dest rect", we have to provide the "constraint rect"
+  // (which is the content-box, with the effects of fragmentation undone).
+  nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
+  nsRect constraintRect(frameContentBox.TopLeft(),
+                        imageFrame->mComputedSize);
+  constraintRect.y -= imageFrame->GetContinuationOffset();
 
-  return destRect;
+  const nsRect destRect =
+    nsLayoutUtils::ComputeObjectDestRect(constraintRect,
+                                         imageFrame->mIntrinsicSize,
+                                         imageFrame->mIntrinsicRatio,
+                                         imageFrame->StylePosition());
+
+  return destRect.Intersect(frameContentBox);
 }
 
 LayerState
@@ -1473,14 +1489,14 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
 
     NS_ASSERTION(imageWidth != 0 && imageHeight != 0, "Invalid image size!");
 
-    gfxRect destRect = GetDestRect();
-
-    destRect.width *= aParameters.mXScale;
-    destRect.height *= aParameters.mYScale;
+    const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
+    const LayoutDeviceRect destRect =
+      LayoutDeviceRect::FromAppUnits(GetDestRect(), factor);
+    const LayerRect destLayerRect = destRect * aParameters.Scale();
 
     // Calculate the scaling factor for the frame.
-    gfxSize scale = gfxSize(destRect.width / imageWidth,
-                            destRect.height / imageHeight);
+    const gfxSize scale = gfxSize(destLayerRect.width / imageWidth,
+                                  destLayerRect.height / imageHeight);
 
     // If we are not scaling at all, no point in separating this into a layer.
     if (scale.width == 1.0f && scale.height == 1.0f) {
@@ -1488,7 +1504,7 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
     }
 
     // If the target size is pretty small, no point in using a layer.
-    if (destRect.width * destRect.height < 64 * 64) {
+    if (destLayerRect.width * destLayerRect.height < 64 * 64) {
       return LAYER_NONE;
     }
   }
@@ -1511,28 +1527,8 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
 nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                 bool* aSnap)
 {
-  *aSnap = true;
   if (mImage && mImage->IsOpaque()) {
-    // OK, the entire region painted by the image is opaque. But what is that
-    // region? It's the image's "dest rect" (the rect where a full copy of
-    // the image is mapped), clipped to the container's content box (which is
-    // what GetBounds() returns). So, we grab those rects and intersect them.
-    const nsRect frameContentBox = GetBounds(aSnap);
-
-    // Note: To get the "dest rect", we have to provide the "constraint rect"
-    // (which is the content-box, with the effects of fragmentation undone).
-    nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
-    nsRect constraintRect(frameContentBox.TopLeft(),
-                          imageFrame->mComputedSize);
-    constraintRect.y -= imageFrame->GetContinuationOffset();
-
-    const nsRect destRect =
-      nsLayoutUtils::ComputeObjectDestRect(constraintRect,
-                                           imageFrame->mIntrinsicSize,
-                                           imageFrame->mIntrinsicRatio,
-                                           imageFrame->StylePosition());
-
-    return nsRegion(destRect.Intersect(frameContentBox));
+    return nsRegion(GetDestRect(aSnap));
   }
   return nsRegion();
 }
@@ -1560,12 +1556,13 @@ nsDisplayImage::BuildLayer(nsDisplayListBuilder* aBuilder,
       return nullptr;
   }
   layer->SetContainer(container);
-  ConfigureLayer(layer, aParameters.mOffset);
+  ConfigureLayer(layer, aParameters);
   return layer.forget();
 }
 
 void
-nsDisplayImage::ConfigureLayer(ImageLayer *aLayer, const nsIntPoint& aOffset)
+nsDisplayImage::ConfigureLayer(ImageLayer* aLayer,
+                               const ContainerLayerParameters& aParameters)
 {
   aLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(mFrame));
 
@@ -1582,9 +1579,17 @@ nsDisplayImage::ConfigureLayer(ImageLayer *aLayer, const nsIntPoint& aOffset)
                                                         DrawResult::SUCCESS);
   }
 
-  const gfxRect destRect = GetDestRect();
+  const int32_t factor = mFrame->PresContext()->AppUnitsPerDevPixel();
+  const LayoutDeviceRect destRect =
+    LayoutDeviceRect::FromAppUnits(GetDestRect(), factor);
 
-  gfxPoint p = destRect.TopLeft() + aOffset;
+  // XXX(seth): Right now we ignore aParameters.Scale() and
+  // aParameters.Offset(), because FrameLayerBuilder already applies
+  // aParameters.Scale() via the layer's post-transform, and
+  // aParameters.Offset() is always zero.
+  MOZ_ASSERT(aParameters.Offset() == LayerIntPoint(0,0));
+
+  const LayoutDevicePoint p = destRect.TopLeft();
   Matrix transform = Matrix::Translation(p.x, p.y);
   transform.PreScale(destRect.Width() / imageWidth,
                      destRect.Height() / imageHeight);
