@@ -51,4 +51,22 @@ IsAtkVersionAtLeast(int aMajor, int aMinor)
          (aMajor == atkMajorVersion && aMinor <= atkMinorVersion);
 }
 
+/**
+ * This MaiAtkObject is a thin wrapper, in the MAI namespace, for AtkObject
+ */
+struct MaiAtkObject
+{
+  AtkObject parent;
+  /*
+   * The AccessibleWrap whose properties and features are exported
+   * via this object instance.
+   */
+  uintptr_t accWrap;
+
+  /*
+   * Shutdown this AtkObject.
+   */
+  void Shutdown();
+};
+
 #endif /* __NS_MAI_H__ */
