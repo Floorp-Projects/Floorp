@@ -579,7 +579,9 @@ public class Tab {
                 if (url == null) {
                     return;
                 }
-
+                if (AboutPages.isAboutReader(url)) {
+                    url = ReaderModeUtils.getUrlFromAboutReader(url);
+                }
                 mDB.getReadingListAccessor().removeReadingListItemWithURL(getContentResolver(), url);
                 ThreadUtils.postToUiThread(new Runnable() {
                     @Override
