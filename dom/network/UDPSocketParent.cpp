@@ -18,6 +18,8 @@
 #include "nsNetUtil.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
+#include "nsIPermissionManager.h"
+#include "nsIScriptSecurityManager.h"
 
 namespace mozilla {
 namespace dom {
@@ -65,19 +67,40 @@ UDPSocketParent::OfflineNotification(nsISupports *aSubject)
 uint32_t
 UDPSocketParent::GetAppId()
 {
-  uint32_t appId = nsIScriptSecurityManager::UNKNOWN_APP_ID;
-  const PContentParent *content = Manager()->Manager();
-  const InfallibleTArray<PBrowserParent*>& browsers = content->ManagedPBrowserParent();
-  if (browsers.Length() > 0) {
-    TabParent *tab = TabParent::GetFrom(browsers[0]);
-    appId = tab->OwnAppId();
+  uint32_t appId;
+  if (!mPrincipal || NS_FAILED(mPrincipal->GetAppId(&appId))) {
+    return nsIScriptSecurityManager::UNKNOWN_APP_ID;
   }
   return appId;
 }
 
 bool
-UDPSocketParent::Init(const nsACString& aFilter)
+UDPSocketParent::Init(const IPC::Principal& aPrincipal,
+                      const nsACString& aFilter)
 {
+  mPrincipal = aPrincipal;
+  if (net::UsingNeckoIPCSecurity() &&
+      mPrincipal &&
+      !ContentParent::IgnoreIPCPrincipal()) {
+    if (!AssertAppPrincipal(Manager()->Manager(), mPrincipal)) {
+      return false;
+    }
+
+    nsCOMPtr<nsIPermissionManager> permMgr =
+      services::GetPermissionManager();
+    if (!permMgr) {
+      NS_WARNING("No PermissionManager available!");
+      return false;
+    }
+
+    uint32_t permission = nsIPermissionManager::DENY_ACTION;
+    permMgr->TestExactPermissionFromPrincipal(mPrincipal, "udp-socket",
+                                              &permission);
+    if (permission != nsIPermissionManager::ALLOW_ACTION) {
+      return false;
+    }
+  }
+
   if (!aFilter.IsEmpty()) {
     nsAutoCString contractId(NS_NETWORK_UDP_SOCKET_FILTER_HANDLER_PREFIX);
     contractId.Append(aFilter);
@@ -96,6 +119,12 @@ UDPSocketParent::Init(const nsACString& aFilter)
       return false;
     }
   }
+  // We don't have browser actors in xpcshell, and hence can't run automated
+  // tests without this loophole.
+  if (net::UsingNeckoIPCSecurity() && !mFilter && 
+      (!mPrincipal || ContentParent::IgnoreIPCPrincipal())) {
+    return false;
+  }
   return true;
 }
 
@@ -105,14 +134,6 @@ bool
 UDPSocketParent::RecvBind(const UDPAddressInfo& aAddressInfo,
                           const bool& aAddressReuse, const bool& aLoopback)
 {
-  // We don't have browser actors in xpcshell, and hence can't run automated
-  // tests without this loophole.
-  if (net::UsingNeckoIPCSecurity() && !mFilter &&
-      !AssertAppProcessPermission(Manager()->Manager(), "udp-socket")) {
-    FireInternalError(__LINE__);
-    return false;
-  }
-
   if (NS_FAILED(BindInternal(aAddressInfo.addr(), aAddressInfo.port(), aAddressReuse, aLoopback))) {
     FireInternalError(__LINE__);
     return true;
@@ -152,7 +173,8 @@ UDPSocketParent::BindInternal(const nsCString& aHost, const uint16_t& aPort,
   }
 
   if (aHost.IsEmpty()) {
-    rv = sock->Init(aPort, false, aAddressReuse, /* optional_argc = */ 1);
+    rv = sock->Init(aPort, false, mPrincipal, aAddressReuse,
+                    /* optional_argc = */ 1);
   } else {
     PRNetAddr prAddr;
     PR_InitializeNetAddr(PR_IpAddrAny, aPort, &prAddr);
@@ -163,7 +185,8 @@ UDPSocketParent::BindInternal(const nsCString& aHost, const uint16_t& aPort,
 
     mozilla::net::NetAddr addr;
     PRNetAddrToNetAddr(&prAddr, &addr);
-    rv = sock->InitWithAddress(&addr, aAddressReuse, /* optional_argc = */ 1);
+    rv = sock->InitWithAddress(&addr, mPrincipal, aAddressReuse,
+                               /* optional_argc = */ 1);
   }
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
