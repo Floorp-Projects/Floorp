@@ -702,9 +702,11 @@ public:
 
     // Step 4.6 "Queue a task..." for updatefound.
     nsCOMPtr<nsIRunnable> upr =
-      NS_NewRunnableMethodWithArg<ServiceWorkerRegistrationInfo*>(swm,
-                                                                  &ServiceWorkerManager::FireUpdateFound,
-                                                                  mRegistration);
+      NS_NewRunnableMethodWithArg<ServiceWorkerRegistrationInfo*>(
+        swm,
+        &ServiceWorkerManager::FireUpdateFoundOnServiceWorkerRegistrations,
+        mRegistration);
+
     NS_DispatchToMainThread(upr);
 
     nsRefPtr<ServiceWorker> serviceWorker;
@@ -2184,63 +2186,59 @@ ServiceWorkerManager::GetScopeForUrl(const nsAString& aUrl, nsAString& aScope)
 }
 
 NS_IMETHODIMP
-ServiceWorkerManager::AddRegistrationEventListener(const nsAString& aScope, nsIDOMEventTarget* aListener)
+ServiceWorkerManager::AddRegistrationEventListener(const nsAString& aScope,
+                                                   ServiceWorkerRegistrationListener* aListener)
 {
   AssertIsOnMainThread();
-  nsAutoCString scope = NS_ConvertUTF16toUTF8(aScope);
-
-  // TODO: this is very very bad:
-  ServiceWorkerRegistrationBase* registration = static_cast<ServiceWorkerRegistrationBase*>(aListener);
-  MOZ_ASSERT(!mServiceWorkerRegistrations.Contains(registration));
+  MOZ_ASSERT(aListener);
 #ifdef DEBUG
   // Ensure a registration is only listening for it's own scope.
   nsAutoString regScope;
-  registration->GetScope(regScope);
+  aListener->GetScope(regScope);
   MOZ_ASSERT(!regScope.IsEmpty());
-  MOZ_ASSERT(scope.Equals(NS_ConvertUTF16toUTF8(regScope)));
+  MOZ_ASSERT(aScope.Equals(regScope));
 #endif
-  mServiceWorkerRegistrations.AppendElement(registration);
+
+  MOZ_ASSERT(!mServiceWorkerRegistrationListeners.Contains(aListener));
+  mServiceWorkerRegistrationListeners.AppendElement(aListener);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-ServiceWorkerManager::RemoveRegistrationEventListener(const nsAString& aScope, nsIDOMEventTarget* aListener)
+ServiceWorkerManager::RemoveRegistrationEventListener(const nsAString& aScope,
+                                                      ServiceWorkerRegistrationListener* aListener)
 {
   AssertIsOnMainThread();
-  nsCString scope = NS_ConvertUTF16toUTF8(aScope);
-  ServiceWorkerRegistrationBase* registration = static_cast<ServiceWorkerRegistrationBase*>(aListener);
-  MOZ_ASSERT(mServiceWorkerRegistrations.Contains(registration));
+  MOZ_ASSERT(aListener);
 #ifdef DEBUG
   // Ensure a registration is unregistering for it's own scope.
   nsAutoString regScope;
-  registration->GetScope(regScope);
+  aListener->GetScope(regScope);
   MOZ_ASSERT(!regScope.IsEmpty());
-  MOZ_ASSERT(scope.Equals(NS_ConvertUTF16toUTF8(regScope)));
+  MOZ_ASSERT(aScope.Equals(regScope));
 #endif
-  mServiceWorkerRegistrations.RemoveElement(registration);
+
+  MOZ_ASSERT(mServiceWorkerRegistrationListeners.Contains(aListener));
+  mServiceWorkerRegistrationListeners.RemoveElement(aListener);
   return NS_OK;
 }
 
 void
-ServiceWorkerManager::FireEventOnServiceWorkerRegistrations(
-  ServiceWorkerRegistrationInfo* aRegistration,
-  const nsAString& aName)
+ServiceWorkerManager::FireUpdateFoundOnServiceWorkerRegistrations(
+  ServiceWorkerRegistrationInfo* aRegistration)
 {
   AssertIsOnMainThread();
 
-  nsTObserverArray<ServiceWorkerRegistrationBase*>::ForwardIterator it(mServiceWorkerRegistrations);
+  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mServiceWorkerRegistrationListeners);
   while (it.HasMore()) {
-    nsRefPtr<ServiceWorkerRegistrationBase> target = it.GetNext();
+    nsRefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
     nsAutoString regScope;
     target->GetScope(regScope);
     MOZ_ASSERT(!regScope.IsEmpty());
 
     NS_ConvertUTF16toUTF8 utf8Scope(regScope);
     if (utf8Scope.Equals(aRegistration->mScope)) {
-      nsresult rv = target->DispatchTrustedEvent(aName);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        // Warn only.
-      }
+      target->UpdateFound();
     }
   }
 }
@@ -2764,9 +2762,9 @@ ServiceWorkerManager::InvalidateServiceWorkerRegistrationWorker(ServiceWorkerReg
                                                                 WhichServiceWorker aWhichOnes)
 {
   AssertIsOnMainThread();
-  nsTObserverArray<ServiceWorkerRegistrationBase*>::ForwardIterator it(mServiceWorkerRegistrations);
+  nsTObserverArray<ServiceWorkerRegistrationListener*>::ForwardIterator it(mServiceWorkerRegistrationListeners);
   while (it.HasMore()) {
-    nsRefPtr<ServiceWorkerRegistrationBase> target = it.GetNext();
+    nsRefPtr<ServiceWorkerRegistrationListener> target = it.GetNext();
     nsAutoString regScope;
     target->GetScope(regScope);
     MOZ_ASSERT(!regScope.IsEmpty());
@@ -2774,7 +2772,7 @@ ServiceWorkerManager::InvalidateServiceWorkerRegistrationWorker(ServiceWorkerReg
     NS_ConvertUTF16toUTF8 utf8Scope(regScope);
 
     if (utf8Scope.Equals(aRegistration->mScope)) {
-      target->InvalidateWorkerReference(aWhichOnes);
+      target->InvalidateWorkers(aWhichOnes);
     }
   }
 }
