@@ -201,7 +201,7 @@ class Bindings
     friend class BindingIter;
     friend class AliasedFormalIter;
 
-    HeapPtrShape callObjShape_;
+    RelocatablePtrShape callObjShape_;
     uintptr_t bindingArrayAndFlag_;
     uint16_t numArgs_;
     uint16_t numBlockScoped_;
