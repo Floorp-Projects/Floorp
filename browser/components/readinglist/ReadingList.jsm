@@ -346,7 +346,7 @@ ReadingListImpl.prototype = {
     let item = this._itemFromRecord(record);
     this._callListeners("onItemAdded", item);
     let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
-    mm.broadcastAsyncMessage("Reader:Added", item);
+    mm.broadcastAsyncMessage("Reader:Added", item.toJSON());
     return item;
   }),
 
@@ -427,7 +427,7 @@ ReadingListImpl.prototype = {
     }
     this._invalidateIterators();
     let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
-    mm.broadcastAsyncMessage("Reader:Removed", item);
+    mm.broadcastAsyncMessage("Reader:Removed", item.toJSON());
     this._callListeners("onItemDeleted", item);
   }),
 
