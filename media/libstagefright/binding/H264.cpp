@@ -9,7 +9,6 @@
 #include "mp4_demuxer/ByteWriter.h"
 #include "mp4_demuxer/H264.h"
 #include <media/stagefright/foundation/ABitReader.h>
-#include <cmath>
 
 using namespace mozilla;
 
@@ -132,7 +131,7 @@ ConditionDimension(float aValue)
 {
   // This will exclude NaNs and too-big values.
   if (aValue > 1.0 && aValue <= INT32_MAX)
-    return int32_t(round(aValue));
+    return int32_t(aValue);
   return 0;
 }
 
