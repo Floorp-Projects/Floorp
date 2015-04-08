@@ -47,6 +47,7 @@ class ParentSingleton : public nsISupports
   {
   public:
     static const size_t DecodedLength = 18;
+    static const size_t EncodedLength = DecodedLength * 4 / 3;
 
     OriginKey(const nsACString& aKey, int64_t aSecondsStamp)
     : mKey(aKey)
@@ -67,7 +68,7 @@ class ParentSingleton : public nsISupports
       OriginKey* key;
       if (!mKeys.Get(aOrigin, &key)) {
         nsCString salt; // Make a new one
-        nsresult rv = GenerateRandomName(salt, key->DecodedLength * 4 / 3);
+        nsresult rv = GenerateRandomName(salt, key->EncodedLength);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
@@ -207,7 +208,7 @@ class ParentSingleton : public nsISupports
         const nsACString& origin = Substring(s, f+1);
 
         // Validate key
-        if (key.Length() != OriginKey::DecodedLength) {
+        if (key.Length() != OriginKey::EncodedLength) {
           continue;
         }
         nsCString dummy;
