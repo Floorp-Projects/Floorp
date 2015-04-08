@@ -373,6 +373,26 @@ public:
                                BluetoothReplyRunnable* aRunnable) = 0;
 
   /**
+   * Enable notifications of a given GATT characteristic.
+   * (platform specific implementation)
+   */
+  virtual void
+  GattClientStartNotificationsInternal(const nsAString& aAppUuid,
+                                       const BluetoothGattServiceId& aServId,
+                                       const BluetoothGattId& aCharId,
+                                       BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
+   * Disable notifications of a given GATT characteristic.
+   * (platform specific implementation)
+   */
+  virtual void
+  GattClientStopNotificationsInternal(const nsAString& aAppUuid,
+                                      const BluetoothGattServiceId& aServId,
+                                      const BluetoothGattId& aCharId,
+                                      BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
    * Unregister a GATT client. (platform specific implementation)
    */
   virtual void

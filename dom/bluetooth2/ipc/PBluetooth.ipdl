@@ -207,6 +207,20 @@ struct DiscoverGattServicesRequest
   nsString appUuid;
 };
 
+struct GattClientStartNotificationsRequest
+{
+  nsString appUuid;
+  BluetoothGattServiceId servId;
+  BluetoothGattId charId;
+};
+
+struct GattClientStopNotificationsRequest
+{
+  nsString appUuid;
+  BluetoothGattServiceId servId;
+  BluetoothGattId charId;
+};
+
 struct UnregisterGattClientRequest
 {
   int clientIf;
@@ -255,6 +269,8 @@ union Request
   ConnectGattClientRequest;
   DisconnectGattClientRequest;
   DiscoverGattServicesRequest;
+  GattClientStartNotificationsRequest;
+  GattClientStopNotificationsRequest;
   UnregisterGattClientRequest;
   GattClientReadRemoteRssiRequest;
 };

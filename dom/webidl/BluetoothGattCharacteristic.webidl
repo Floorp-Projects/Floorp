@@ -13,4 +13,13 @@ interface BluetoothGattCharacteristic
 
   readonly attribute DOMString                              uuid;
   readonly attribute unsigned short                         instanceId;
+
+  /**
+   * Start or stop subscribing notifications of this characteristic from the
+   * remote GATT server.
+   */
+  [NewObject]
+  Promise<void> startNotifications();
+  [NewObject]
+  Promise<void> stopNotifications();
 };
