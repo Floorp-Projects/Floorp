@@ -220,6 +220,7 @@ _GetTTLData_Windows(const char* aHost, uint16_t* aResult)
 }
 #endif
 
+#if defined(ANDROID) && ANDROID_VERSION >= 19
 // Make the same as nspr functions.
 static MOZ_ALWAYS_INLINE PRAddrInfo*
 _Android_GetAddrInfoForNetInterface(const char* hostname,
@@ -227,10 +228,6 @@ _Android_GetAddrInfoForNetInterface(const char* hostname,
                                    uint16_t flags,
                                    const char* aNetworkInterface)
 {
-#if !defined(ANDROID) || ANDROID_VERSION < 19
-  PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, 0);
-  return nullptr;
-#else
   if ((af != PR_AF_INET && af != PR_AF_UNSPEC) ||
       (flags & ~ PR_AI_NOCANONNAME) != PR_AI_ADDRCONFIG) {
     PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
@@ -284,8 +281,8 @@ _Android_GetAddrInfoForNetInterface(const char* hostname,
 
   PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, rv);
   return nullptr;
-#endif
 }
+#endif
 
 ////////////////////////////////////
 // PORTABLE RUNTIME IMPLEMENTATION//
