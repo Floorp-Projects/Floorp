@@ -309,6 +309,10 @@ struct LayerPixel {
     return nsIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
   }
 
+  static nsIntPoint ToUntyped(const LayerIntPoint& aPoint) {
+    return nsIntPoint(aPoint.x, aPoint.y);
+  }
+
   static gfx::IntRect ToUnknown(const LayerIntRect& aRect) {
     return gfx::IntRect(aRect.x, aRect.y, aRect.width, aRect.height);
   }
