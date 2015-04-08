@@ -97,7 +97,15 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
     return NS_ERROR_FAILURE;
   }
 
-  mWindow = aWindow;
+  if (aWindow) {
+    nsCOMPtr<nsPIDOMWindow> pWindow = do_QueryInterface(aWindow);
+    if (!pWindow->IsInnerWindow()) {
+      pWindow = pWindow->GetCurrentInnerWindow();
+    }
+
+    mWindow = pWindow.forget();
+  }
+
   mAudioChannelType = aChannelType;
 
   if (aUseWeakRef) {
