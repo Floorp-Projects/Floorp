@@ -251,6 +251,7 @@ class AsmJSModule
         friend class AsmJSModule;
 
         Global(Which which, PropertyName* name) {
+            mozilla::PodZero(&pod);  // zero padding for Valgrind
             pod.which_ = which;
             name_ = name;
             MOZ_ASSERT_IF(name_, name_->isTenured());
