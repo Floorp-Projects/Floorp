@@ -136,6 +136,7 @@ FetchPut::FetchPut(Listener* aListener, Manager* aManager,
   , mInitiatingThread(NS_GetCurrentThread())
   , mStateList(aRequests.Length())
   , mPendingCount(0)
+  , mResult(NS_OK)
 {
   MOZ_ASSERT(mListener);
   MOZ_ASSERT(mManager);
@@ -156,7 +157,6 @@ FetchPut::~FetchPut()
   MOZ_ASSERT(!mListener);
   mManager->RemoveListener(this);
   mManager->ReleaseCacheId(mCacheId);
-  mResult.ClearMessage(); // This may contain a TypeError.
 }
 
 nsresult
@@ -249,7 +249,7 @@ FetchPut::FetchComplete(FetchObserver* aObserver,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (aInternalResponse->IsError() && !mResult.Failed()) {
+  if (aInternalResponse->IsError() && NS_SUCCEEDED(mResult)) {
     MaybeSetError(NS_ERROR_FAILURE);
   }
 
@@ -259,10 +259,10 @@ FetchPut::FetchComplete(FetchObserver* aObserver,
       ToPCacheResponseWithoutBody(mStateList[i].mPCacheResponse,
                                   *aInternalResponse, rv);
       if (rv.Failed()) {
-        mResult = Move(rv);
-      } else {
-        aInternalResponse->GetBody(getter_AddRefs(mStateList[i].mResponseStream));
+        MaybeSetError(rv.ErrorCode());
+        return;
       }
+      aInternalResponse->GetBody(getter_AddRefs(mStateList[i].mResponseStream));
       mStateList[i].mFetchObserver = nullptr;
       MOZ_ASSERT(mPendingCount > 0);
       mPendingCount -= 1;
@@ -291,7 +291,7 @@ FetchPut::DoPutOnWorkerThread()
 {
   MOZ_ASSERT(mInitiatingThread == NS_GetCurrentThread());
 
-  if (mResult.Failed()) {
+  if (NS_FAILED(mResult)) {
     MaybeNotifyListener();
     return;
   }
@@ -377,9 +377,9 @@ FetchPut::MatchInPutList(const PCacheRequest& aRequest,
       for (; token;
            token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
         nsDependentCString header(token);
-        MOZ_ASSERT(!header.EqualsLiteral("*"),
-                   "We should have already caught this in "
-                   "TypeUtils::ToPCacheResponseWithoutBody()");
+        if (header.EqualsLiteral("*")) {
+          continue;
+        }
 
         ErrorResult headerRv;
         nsAutoCString value;
@@ -428,10 +428,10 @@ FetchPut::OnCachePutAll(RequestId aRequestId, nsresult aRv)
 void
 FetchPut::MaybeSetError(nsresult aRv)
 {
-  if (mResult.Failed() || NS_SUCCEEDED(aRv)) {
+  if (NS_FAILED(mResult) || NS_SUCCEEDED(aRv)) {
     return;
   }
-  mResult.Throw(aRv);
+  mResult = aRv;
 }
 
 void
@@ -442,7 +442,6 @@ FetchPut::MaybeNotifyListener()
     return;
   }
   mListener->OnFetchPut(this, mRequestId, mResult);
-  mResult.ClearMessage(); // This may contain a TypeError.
 }
 
 nsIGlobalObject*

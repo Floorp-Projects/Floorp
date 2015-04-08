@@ -146,13 +146,12 @@ CacheChild::RecvMatchAllResponse(const RequestId& requestId, const nsresult& aRv
 }
 
 bool
-CacheChild::RecvAddAllResponse(const RequestId& requestId,
-                               const mozilla::ErrorResult& aError)
+CacheChild::RecvAddAllResponse(const RequestId& requestId, const nsresult& aRv)
 {
   NS_ASSERT_OWNINGTHREAD(CacheChild);
   nsRefPtr<Cache> listener = mListener;
   if (listener) {
-    listener->RecvAddAllResponse(requestId, aError);
+    listener->RecvAddAllResponse(requestId, aRv);
   }
   return true;
 }
