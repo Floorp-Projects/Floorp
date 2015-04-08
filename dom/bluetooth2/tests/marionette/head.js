@@ -753,15 +753,13 @@ function addEventHandlerForPairingRequest(aAdapter, aSpecifiedBdAddress) {
 
     let device = evt.device;
     if (!aSpecifiedBdAddress || device.address == aSpecifiedBdAddress) {
-      let confirm = true;
-
-      evt.handle.setPairingConfirmation(confirm).then(
+      evt.handle.accept().then(
         function onResolve() {
-          log("  - 'setPairingConfirmation' resolve.");
+          log("  - 'accept' resolve.");
           cleanupPairingListener(aAdapter.pairingReqs);
         },
         function onReject() {
-          log("  - 'setPairingConfirmation' reject.");
+          log("  - 'accept' reject.");
           cleanupPairingListener(aAdapter.pairingReqs);
         });
     }
@@ -772,7 +770,15 @@ function addEventHandlerForPairingRequest(aAdapter, aSpecifiedBdAddress) {
 
     let device = evt.device;
     if (!aSpecifiedBdAddress || device.address == aSpecifiedBdAddress) {
-      cleanupPairingListener(aAdapter.pairingReqs);
+      evt.handle.accept().then(
+        function onResolve() {
+          log("  - 'accept' resolve.");
+          cleanupPairingListener(aAdapter.pairingReqs);
+        },
+        function onReject() {
+          log("  - 'accept' reject.");
+          cleanupPairingListener(aAdapter.pairingReqs);
+        });
     }
   };
 }
