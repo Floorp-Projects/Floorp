@@ -736,7 +736,7 @@ public:
   void DispatchOnPlaybackOffsetUpdate(int64_t aPlaybackOffset)
   {
     RefPtr<nsRunnable> r =
-      NS_NewRunnableMethodWithArg<int64_t>(this, &MediaDecoderStateMachine::DispatchOnPlaybackOffsetUpdate, aPlaybackOffset);
+      NS_NewRunnableMethodWithArg<int64_t>(this, &MediaDecoderStateMachine::OnPlaybackOffsetUpdate, aPlaybackOffset);
     TaskQueue()->Dispatch(r.forget());
   }
 
