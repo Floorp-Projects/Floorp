@@ -412,6 +412,11 @@ partial interface Navigator {
   readonly attribute TVManager? tv;
 };
 
+partial interface Navigator {
+  [Throws, Pref="dom.inputport.enabled", CheckPermissions="inputport", AvailableIn=CertifiedApps]
+  readonly attribute InputPortManager inputPortManager;
+};
+
 #ifdef MOZ_EME
 partial interface Navigator {
   [Pref="media.eme.apiVisible", NewObject]
