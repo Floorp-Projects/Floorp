@@ -115,7 +115,8 @@ protected:
                    const ipc::PrincipalInfo&  aTriggeringPrincipalInfo,
                    const uint32_t&            aSecurityFlags,
                    const uint32_t&            aContentPolicyType,
-                   const uint32_t&            aInnerWindowID);
+                   const uint32_t&            aInnerWindowID,
+                   const nsCString&           aSchedulingContextID);
 
   virtual bool RecvSetPriority(const uint16_t& priority) override;
   virtual bool RecvSetClassOfService(const uint32_t& cos) override;
