@@ -6,13 +6,13 @@ toolkit.jar:
 % skin global classic/1.0 %skin/classic/global/
   skin/classic/global/10pct_transparent_grey.png
   skin/classic/global/50pct_transparent_grey.png
-  skin/classic/global/about.css                                      (../../windows/global/about.css)
-  skin/classic/global/aboutCache.css                                 (../../windows/global/aboutCache.css)
-  skin/classic/global/aboutCacheEntry.css                            (../../windows/global/aboutCacheEntry.css)
-  skin/classic/global/aboutMemory.css                                (../../windows/global/aboutMemory.css)
-  skin/classic/global/aboutReader.css                                (../../windows/global/aboutReader.css)
-  skin/classic/global/aboutSupport.css                               (../../windows/global/aboutSupport.css)
-  skin/classic/global/appPicker.css                                  (../../windows/global/appPicker.css)
+  skin/classic/global/about.css                                      (../../shared/about.css)
+  skin/classic/global/aboutCache.css                                 (../../shared/aboutCache.css)
+  skin/classic/global/aboutCacheEntry.css                            (../../shared/aboutCacheEntry.css)
+  skin/classic/global/aboutMemory.css                                (../../shared/aboutMemory.css)
+  skin/classic/global/aboutReader.css                                (../../shared/aboutReader.css)
+  skin/classic/global/aboutSupport.css                               (../../shared/aboutSupport.css)
+  skin/classic/global/appPicker.css                                  (../../shared/appPicker.css)
   skin/classic/global/arrow.css
   skin/classic/global/autocomplete.css
   skin/classic/global/button.css
