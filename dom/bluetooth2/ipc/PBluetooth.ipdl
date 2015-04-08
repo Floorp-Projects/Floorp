@@ -64,6 +64,20 @@ struct UnpairRequest
   nsString address;
 };
 
+struct PinReplyRequest
+{
+  nsString address;
+  bool accept;
+  nsString pinCode;
+};
+
+struct SspReplyRequest
+{
+  nsString address;
+  BluetoothSspVariant variant;
+  bool accept;
+};
+
 struct SetPinCodeRequest
 {
   nsString path;
@@ -215,6 +229,8 @@ union Request
   StopDiscoveryRequest;
   PairRequest;
   UnpairRequest;
+  PinReplyRequest;
+  SspReplyRequest;
   SetPinCodeRequest;
   SetPasskeyRequest;
   ConfirmPairingConfirmationRequest;

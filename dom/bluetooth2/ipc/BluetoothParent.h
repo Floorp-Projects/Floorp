@@ -174,6 +174,12 @@ protected:
   DoRequest(const DenyPairingConfirmationRequest& aRequest);
 
   bool
+  DoRequest(const PinReplyRequest& aRequest);
+
+  bool
+  DoRequest(const SspReplyRequest& aRequest);
+
+  bool
   DoRequest(const ConnectRequest& aRequest);
 
   bool

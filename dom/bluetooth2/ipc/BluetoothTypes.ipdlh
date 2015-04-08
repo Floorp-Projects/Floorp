@@ -8,6 +8,8 @@ using mozilla::dom::bluetooth::BluetoothGattId
   from "mozilla/dom/bluetooth/BluetoothCommon.h";
 using mozilla::dom::bluetooth::BluetoothGattServiceId
   from "mozilla/dom/bluetooth/BluetoothCommon.h";
+using mozilla::dom::bluetooth::BluetoothSspVariant
+  from "mozilla/dom/bluetooth/BluetoothCommon.h";
 using mozilla::dom::bluetooth::BluetoothStatus
   from "mozilla/dom/bluetooth/BluetoothCommon.h";
 

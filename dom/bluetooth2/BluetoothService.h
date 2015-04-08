@@ -236,13 +236,35 @@ public:
                    BluetoothProfileManagerBase* aManager) = 0;
 
   virtual void
-  SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode,
+  PinReplyInternal(const nsAString& aDeviceAddress,
+                   bool aAccept,
+                   const nsAString& aPinCode,
+                   BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  SspReplyInternal(const nsAString& aDeviceAddress,
+                   BluetoothSspVariant aVariant,
+                   bool aAccept,
+                   BluetoothReplyRunnable* aRunnable) = 0;
+
+  /**
+   * Legacy method used by bluez only to reply pincode request.
+   */
+  virtual void
+  SetPinCodeInternal(const nsAString& aDeviceAddress,
+                     const nsAString& aPinCode,
                      BluetoothReplyRunnable* aRunnable) = 0;
 
+  /**
+   * Legacy method used by bluez only to reply passkey entry request.
+   */
   virtual void
   SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey,
                      BluetoothReplyRunnable* aRunnable) = 0;
 
+  /**
+   * Legacy method used by bluez only to reply pairing confirmation request.
+   */
   virtual void
   SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm,
                                  BluetoothReplyRunnable* aRunnable) = 0;

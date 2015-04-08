@@ -4277,6 +4277,10 @@ BluetoothDBusService::UpdateNotification(ControlEventId aEventId,
   DispatchToDBusThread(task);
 }
 
+//
+// Methods for BT APIv2 implementation which currently only supports bluedroid
+//
+
 void
 BluetoothDBusService::ConnectGattClientInternal(
   const nsAString& aAppUuid, const nsAString& aDeviceAddress,
@@ -4307,5 +4311,19 @@ void
 BluetoothDBusService::GattClientReadRemoteRssiInternal(
   int aClientIf, const nsAString& aDeviceAddress,
   BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
+BluetoothDBusService::PinReplyInternal(
+  const nsAString& aDeviceAddress, bool aAccept,
+  const nsAString& aPinCode, BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
+BluetoothDBusService::SspReplyInternal(
+  const nsAString& aDeviceAddress, BluetoothSspVariant aVariant,
+  bool aAccept, BluetoothReplyRunnable* aRunnable)
 {
 }
