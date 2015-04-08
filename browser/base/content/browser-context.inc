@@ -421,4 +421,5 @@
                 hidden="true"
                 label="&emeLearnMoreContextMenu.label;"
                 accesskey="&emeLearnMoreContextMenu.accesskey;"
-                onclick="gContextMenu.drmLearnMore(event);"/>
+                oncommand="gContextMenu.drmLearnMore(event);"
+                onclick="checkForMiddleClick(this, event);"/>
