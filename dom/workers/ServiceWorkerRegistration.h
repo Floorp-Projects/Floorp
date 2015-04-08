@@ -10,6 +10,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/dom/ServiceWorkerBinding.h"
 #include "mozilla/dom/ServiceWorkerCommon.h"
+#include "mozilla/dom/workers/bindings/WorkerFeature.h"
 
 class nsPIDOMWindow;
 
@@ -18,9 +19,11 @@ namespace dom {
 
 class Promise;
 class PushManager;
+class WorkerListener;
 
 namespace workers {
 class ServiceWorker;
+class WorkerPrivate;
 }
 
 bool
@@ -172,15 +175,15 @@ private:
 };
 
 class ServiceWorkerRegistrationWorkerThread final : public ServiceWorkerRegistrationBase
+                                                  , public workers::WorkerFeature
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistrationWorkerThread,
                                            ServiceWorkerRegistrationBase)
 
-  ServiceWorkerRegistrationWorkerThread(const nsAString& aScope)
-    : ServiceWorkerRegistrationBase(nullptr, aScope)
-  {}
+  ServiceWorkerRegistrationWorkerThread(workers::WorkerPrivate* aWorkerPrivate,
+                                        const nsAString& aScope);
 
   void
   Update();
@@ -206,11 +209,30 @@ public:
     aScope = mScope;
   }
 
-private:
-  ~ServiceWorkerRegistrationWorkerThread()
-  {}
+  bool
+  Notify(JSContext* aCx, workers::Status aStatus) override
+  {
+    ReleaseListener(WorkerIsGoingAway);
+    return true;
+  }
 
-  nsCOMPtr<nsISupports> mCCDummyWorkerThread;
+private:
+  enum Reason
+  {
+    RegistrationIsGoingAway = 0,
+    WorkerIsGoingAway,
+  };
+
+  ~ServiceWorkerRegistrationWorkerThread();
+
+  void
+  InitListener();
+
+  void
+  ReleaseListener(Reason aReason);
+
+  workers::WorkerPrivate* mWorkerPrivate;
+  nsRefPtr<WorkerListener> mListener;
 };
 
 } // namespace dom

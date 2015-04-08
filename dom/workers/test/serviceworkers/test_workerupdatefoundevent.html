@@ -1,0 +1,84 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1131327 - Test ServiceWorkerRegistration.onupdatefound on ServiceWorker</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<p id="display"></p>
+<div id="content"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+  var registration;
+  var promise;
+
+  function start() {
+    return navigator.serviceWorker.register("worker_updatefoundevent.js",
+                                            { scope: "./updatefoundevent.html" })
+      .then((swr) => registration = swr);
+  }
+
+  function startWaitForUpdateFound() {
+    registration.onupdatefound = function(e) {
+    }
+
+    promise = new Promise(function(resolve, reject) {
+      window.onmessage = function(e) {
+
+        if (e.data == "finish") {
+          ok(true, "Received updatefound");
+          resolve();
+        }
+      }
+    });
+
+    content = document.getElementById("content");
+    iframe = document.createElement("iframe");
+    content.appendChild(iframe);
+    iframe.setAttribute("src", "./updatefoundevent.html");
+
+    return Promise.resolve();
+  }
+
+  function registerNext() {
+    return navigator.serviceWorker.register("worker_updatefoundevent2.js",
+                                            { scope: "./updatefoundevent.html" });
+  }
+
+  function waitForUpdateFound() {
+    return promise;
+  }
+
+  function unregister() {
+    return registration.unregister().then(function(result) {
+      ok(result, "Unregister should return true.");
+    });
+  }
+
+  function runTest() {
+     start()
+      .then(startWaitForUpdateFound)
+      .then(registerNext)
+      .then(waitForUpdateFound)
+      .then(unregister)
+      .catch(function(e) {
+        ok(false, "Some test failed with error " + e);
+      }).then(SimpleTest.finish);
+  }
+
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPrefEnv({"set": [
+    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+    ["dom.serviceWorkers.enabled", true],
+    ["dom.serviceWorkers.testing.enabled", true],
+  ]}, runTest);
+</script>
+</pre>
+</body>
+</html>
+
