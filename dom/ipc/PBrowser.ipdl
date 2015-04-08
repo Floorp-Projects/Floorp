@@ -343,6 +343,14 @@ parent:
     sync SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint);
 
     /**
+     * Returns the offset of this tab from the top level window
+     * origin in device pixels.
+     *
+     * aPoint offset values in device pixels.
+     */
+    sync GetTabOffset() returns (LayoutDeviceIntPoint aPoint);
+
+    /**
      * Gets the DPI of the screen corresponding to this browser.
      */
     sync GetDPI() returns (float value);
