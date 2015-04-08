@@ -275,6 +275,8 @@ protected:
     apzc->UpdateZoomConstraints(ZoomConstraints(false, false, CSSToParentLayerScale(1.0f), CSSToParentLayerScale(1.0f)));
   }
 
+  void TestOverscroll();
+
   AsyncPanZoomController::GestureBehavior mGestureBehavior;
   TimeStamp testStartTime;
   nsRefPtr<MockContentControllerDelayed> mcc;
@@ -1133,9 +1135,8 @@ TEST_F(APZCBasicTester, PanningTransformNotifications) {
   check.Call("Done");
 }
 
-TEST_F(APZCBasicTester, OverScrollPanning) {
-  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
-
+void APZCBasicTester::TestOverscroll()
+{
   // Pan sufficiently to hit overscroll behavior
   int time = 0;
   int touchStart = 500;
@@ -1152,6 +1153,10 @@ TEST_F(APZCBasicTester, OverScrollPanning) {
     // The reported scroll offset should be the same throughout.
     EXPECT_EQ(ParentLayerPoint(0, 90), pointOut);
 
+    // Trigger computation of the overscroll tranform, to make sure
+    // no assetions fire during the calculation.
+    apzc->GetOverscrollTransform();
+
     if (!apzc->IsOverscrolled()) {
       recoveredFromOverscroll = true;
     }
@@ -1160,6 +1165,34 @@ TEST_F(APZCBasicTester, OverScrollPanning) {
   }
   EXPECT_TRUE(recoveredFromOverscroll);
   apzc->AssertStateIsReset();
+}
+
+
+TEST_F(APZCBasicTester, OverScrollPanning) {
+  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+
+  TestOverscroll();
+}
+
+// Tests that an overscroll animation doesn't trigger an assertion failure
+// in the case where a sample has a velocity of zero.
+TEST_F(APZCBasicTester, OverScroll_Bug1152051) {
+  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+
+  // Doctor the prefs to make the velocity zero at the end of the first sample.
+
+  // This ensures our incoming velocity to the overscroll animation is
+  // a round(ish) number, 4.9 (that being the distance of the pan before
+  // overscroll, which is 500 - 10 = 490 pixels, divided by the duration of
+  // the pan, which is 100 ms).
+  SCOPED_GFX_PREF(APZFlingFriction, float, 0);
+
+  // To ensure the velocity after the first sample is 0, set the spring
+  // stiffness to the incoming velocity (4.9) divided by the overscroll
+  // (400 pixels) times the step duration (1 ms).
+  SCOPED_GFX_PREF(APZOverscrollSpringStiffness, float, 0.01225f);
+
+  TestOverscroll();
 }
 
 TEST_F(APZCBasicTester, OverScrollAbort) {
