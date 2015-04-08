@@ -13,9 +13,7 @@
 #include "mozilla/dom/PFilePickerParent.h"
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/EventForwards.h"
-#include "mozilla/dom/File.h"
 #include "mozilla/WritingModes.h"
-#include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIAuthPromptProvider.h"
 #include "nsIBrowserDOMWindow.h"
@@ -54,17 +52,11 @@ namespace widget {
 struct IMENotification;
 }
 
-namespace gfx {
-class SourceSurface;
-class DataSourceSurface;
-}
-
 namespace dom {
 
 class ClonedMessageData;
 class nsIContentParent;
 class Element;
-class DataTransfer;
 struct StructuredCloneData;
 
 class TabParent final : public PBrowserParent
@@ -278,8 +270,6 @@ public:
                       int32_t aCharCode, int32_t aModifiers,
                       bool aPreventDefault);
     bool SendRealMouseEvent(mozilla::WidgetMouseEvent& event);
-    bool SendRealDragEvent(mozilla::WidgetDragEvent& aEvent, uint32_t aDragAction,
-                           uint32_t aDropEffect);
     bool SendMouseWheelEvent(mozilla::WidgetWheelEvent& event);
     bool SendRealKeyEvent(mozilla::WidgetKeyboardEvent& event);
     bool SendRealTouchEvent(WidgetTouchEvent& event);
@@ -376,18 +366,6 @@ public:
     bool RequestNotifyLayerTreeCleared();
     bool LayerTreeUpdate(bool aActive);
 
-    virtual bool
-    RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
-                          const uint32_t& aAction,
-                          const nsCString& aVisualDnDData,
-                          const uint32_t& aWidth, const uint32_t& aHeight,
-                          const uint32_t& aStride, const uint8_t& aFormat,
-                          const int32_t& aDragAreaX, const int32_t& aDragAreaY) override;
-
-    void AddInitialDnDDataTo(DataTransfer* aDataTransfer);
-
-    void TakeDragVisualization(RefPtr<mozilla::gfx::SourceSurface>& aSurface,
-                               int32_t& aDragAreaX, int32_t& aDragAreaY);
 protected:
     bool ReceiveMessage(const nsString& aMessage,
                         bool aSync,
@@ -492,24 +470,6 @@ private:
     bool mSendOfflineStatus;
 
     uint32_t mChromeFlags;
-
-    struct DataTransferItem
-    {
-      nsCString mFlavor;
-      nsString mStringData;
-      nsRefPtr<mozilla::dom::FileImpl> mBlobData;
-      enum DataType
-      {
-        eString,
-        eBlob
-      };
-      DataType mType;
-    };
-    nsTArray<nsTArray<DataTransferItem>> mInitialDataTransferItems;
-
-    mozilla::RefPtr<gfx::DataSourceSurface> mDnDVisualization;
-    int32_t mDragAreaX;
-    int32_t mDragAreaY;
 
     // When true, the TabParent is initialized without child side's request.
     // When false, the TabParent is initialized by window.open() from child side.

@@ -1260,9 +1260,7 @@
       </handler>
       <handler event="drop" group="system">
       <![CDATA[
-        // No need to handle "drop" in e10s, since nsDocShellTreeOwner.cpp in the child process
-        // handles that case using "@mozilla.org/content/dropped-link-handler;1" service.
-        if (!this.droppedLinkHandler || event.defaultPrevented || this.isRemoteBrowser)
+        if (!this.droppedLinkHandler || event.defaultPrevented)
           return;
 
         let name = { };

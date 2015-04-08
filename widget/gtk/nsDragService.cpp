@@ -485,10 +485,6 @@ nsDragService::EndDragSession(bool aDoneDrag)
 
     // unset our drag action
     SetDragAction(DRAGDROP_ACTION_NONE);
-    
-    // We're done with the drag context.
-    mTargetDragContextForRemote = nullptr;
-
     return nsBaseDragService::EndDragSession(aDoneDrag);
 }
 
@@ -1041,7 +1037,7 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor,
 }
 
 void
-nsDragService::ReplyToDragMotion(GdkDragContext* aDragContext)
+nsDragService::ReplyToDragMotion()
 {
     PR_LOG(sDragLm, PR_LOG_DEBUG,
            ("nsDragService::ReplyToDragMotion %d", mCanDrop));
@@ -1056,16 +1052,13 @@ nsDragService::ReplyToDragMotion(GdkDragContext* aDragContext)
         case DRAGDROP_ACTION_LINK:
           action = GDK_ACTION_LINK;
           break;
-        case DRAGDROP_ACTION_NONE:
-          action = (GdkDragAction)0;
-          break;
         default:
           action = GDK_ACTION_MOVE;
           break;
         }
     }
 
-    gdk_drag_status(aDragContext, action, mTargetTime);
+    gdk_drag_status(mTargetDragContext, action, mTargetTime);
 }
 
 void
@@ -1892,16 +1885,12 @@ nsDragService::RunScheduledTask()
     // protocol is used.
     if (task == eDragTaskMotion || positionHasChanged) {
         UpdateDragAction();
-        TakeDragEventDispatchedToChildProcess(); // Clear the old value.
         DispatchMotionEvents();
+
         if (task == eDragTaskMotion) {
-          if (TakeDragEventDispatchedToChildProcess()) {
-              mTargetDragContextForRemote = mTargetDragContext;
-          } else {
-              // Reply to tell the source whether we can drop and what
-              // action would be taken.
-              ReplyToDragMotion(mTargetDragContext);
-          }
+            // Reply to tell the source whether we can drop and what
+            // action would be taken.
+            ReplyToDragMotion();
         }
     }
 
@@ -1974,16 +1963,6 @@ nsDragService::UpdateDragAction()
 
     // update the drag information
     SetDragAction(action);
-}
-
-NS_IMETHODIMP
-nsDragService::UpdateDragEffect()
-{
-  if (mTargetDragContextForRemote) {
-    ReplyToDragMotion(mTargetDragContextForRemote);
-    mTargetDragContextForRemote = nullptr;
-  }
-  return NS_OK;
 }
 
 void
