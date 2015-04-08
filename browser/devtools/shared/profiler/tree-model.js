@@ -4,9 +4,7 @@
 "use strict";
 
 const {Cc, Ci, Cu, Cr} = require("chrome");
-const {extend} = require("sdk/util/object");
 
-loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "L10N",
   "devtools/shared/profiler/global", true);
 loader.lazyRequireGetter(this, "CATEGORY_MAPPINGS",
@@ -17,15 +15,12 @@ loader.lazyRequireGetter(this, "CATEGORY_JIT",
   "devtools/shared/profiler/global", true);
 loader.lazyRequireGetter(this, "JITOptimizations",
   "devtools/shared/profiler/jit", true);
-loader.lazyRequireGetter(this, "CATEGORY_OTHER",
-  "devtools/shared/profiler/global", true);
-
-const CHROME_SCHEMES = ["chrome://", "resource://", "jar:file://"];
-const CONTENT_SCHEMES = ["http://", "https://", "file://", "app://"];
+loader.lazyRequireGetter(this, "FrameUtils",
+  "devtools/shared/profiler/frame-utils");
 
 exports.ThreadNode = ThreadNode;
 exports.FrameNode = FrameNode;
-exports.FrameNode.isContent = isContent;
+exports.FrameNode.isContent = FrameUtils.isContent;
 
 /**
  * A call tree for a thread. This is essentially a linkage between all frames
@@ -102,7 +97,7 @@ ThreadNode.prototype = {
     // should be taken into consideration.
     if (options.contentOnly) {
       // The (root) node is not considered a content function, it'll be removed.
-      sampleFrames = filterPlatformData(sampleFrames);
+      sampleFrames = FrameUtils.filterPlatformData(sampleFrames);
     } else {
       // Remove the (root) node manually.
       sampleFrames = sampleFrames.slice(1);
@@ -253,42 +248,13 @@ FrameNode.prototype = {
     // default to an "unknown" category otherwise.
     let categoryData = CATEGORY_MAPPINGS[this.category] || {};
 
-    // Parse the `location` for the function name, source url, line, column etc.
-    let lineAndColumn = this.location.match(/((:\d+)*)\)?$/)[1];
-    let [, line, column] = lineAndColumn.split(":");
-    line = line || this.line;
-    column = column || this.column;
+    let parsedData = FrameUtils.parseLocation(this);
+    parsedData.nodeType = "Frame";
+    parsedData.categoryData = categoryData;
+    parsedData.isContent = FrameUtils.isContent(this);
+    parsedData.isMetaCategory = this.isMetaCategory;
 
-    let firstParenIndex = this.location.indexOf("(");
-    let lineAndColumnIndex = this.location.indexOf(lineAndColumn);
-    let resource = this.location.substring(firstParenIndex + 1, lineAndColumnIndex);
-
-    let url = resource.split(" -> ").pop();
-    let uri = nsIURL(url);
-    let functionName, fileName, hostName;
-
-    // If the URI digged out from the `location` is valid, this is a JS frame.
-    if (uri) {
-      functionName = this.location.substring(0, firstParenIndex - 1);
-      fileName = (uri.fileName + (uri.ref ? "#" + uri.ref : "")) || "/";
-      hostName = url.indexOf("jar:") == 0 ? "" : uri.host;
-    } else {
-      functionName = this.location;
-      url = null;
-    }
-
-    return this._data = {
-      nodeType: "Frame",
-      functionName: functionName,
-      fileName: fileName,
-      hostName: hostName,
-      url: url,
-      line: line,
-      column: column,
-      categoryData: categoryData,
-      isContent: !!isContent(this),
-      isMetaCategory: this.isMetaCategory
-    };
+    return this._data = parsedData;
   },
 
   /**
@@ -310,83 +276,3 @@ FrameNode.prototype = {
     return this._optimizations;
   }
 };
-
-/**
- * Checks if the specified function represents a chrome or content frame.
- *
- * @param object frame
- *        The { category, location } properties of the frame.
- * @return boolean
- *         True if a content frame, false if a chrome frame.
- */
-function isContent({ category, location }) {
-  // Only C++ stack frames have associated category information.
-  return !category &&
-    !CHROME_SCHEMES.find(e => location.contains(e)) &&
-    CONTENT_SCHEMES.find(e => location.contains(e));
-}
-
-/**
- * Helper for getting an nsIURL instance out of a string.
- */
-function nsIURL(url) {
-  let cached = gNSURLStore.get(url);
-  if (cached) {
-    return cached;
-  }
-  let uri = null;
-  try {
-    uri = Services.io.newURI(url, null, null).QueryInterface(Ci.nsIURL);
-  } catch(e) {
-    // The passed url string is invalid.
-  }
-  gNSURLStore.set(url, uri);
-  return uri;
-}
-
-// The cache used in the `nsIURL` function.
-let gNSURLStore = new Map();
-
-/**
- * This filters out platform data frames in a sample. With latest performance
- * tool in Fx40, when displaying only content, we still filter out all platform data,
- * except we generalize platform data that are leaves. We do this because of two
- * observations:
- *
- * 1. The leaf is where time is _actually_ being spent, so we _need_ to show it
- * to developers in some way to give them accurate profiling data. We decide to
- * split the platform into various category buckets and just show time spent in
- * each bucket.
- *
- * 2. The calls leading to the leaf _aren't_ where we are spending time, but
- * _do_ give the developer context for how they got to the leaf where they _are_
- * spending time. For non-platform hackers, the non-leaf platform frames don't
- * give any meaningful context, and so we can safely filter them out.
- *
- * Example transformations:
- * Before: PlatformA -> PlatformB -> ContentA -> ContentB
- * After:  ContentA -> ContentB
- *
- * Before: PlatformA -> ContentA -> PlatformB -> PlatformC
- * After:  ContentA -> Category(PlatformC)
- */
-function filterPlatformData (frames) {
-  let result = [];
-  let last = frames.length - 1;
-  let frame;
-
-  for (let i = 0; i < frames.length; i++) {
-    frame = frames[i];
-    if (isContent(frame)) {
-      result.push(frame);
-    } else if (last === i) {
-      // Extend here so we're not destructively editing
-      // the original profiler data. Set isMetaCategory `true`,
-      // and ensure we have a category set by default, because that's how
-      // the generalized frame nodes are organized.
-      result.push(extend({ isMetaCategory: true, category: CATEGORY_OTHER }, frame));
-    }
-  }
-
-  return result;
-}

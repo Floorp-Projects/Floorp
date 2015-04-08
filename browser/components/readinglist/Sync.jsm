@@ -21,6 +21,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "ReadingList",
 XPCOMUtils.defineLazyModuleGetter(this, "ServerClient",
   "resource:///modules/readinglist/ServerClient.jsm");
 
+// The maximum number of sub-requests per POST /batch supported by the server.
+// See http://readinglist.readthedocs.org/en/latest/api/batch.html.
+const BATCH_REQUEST_LIMIT = 25;
+
 // The Last-Modified header of server responses is stored here.
 const SERVER_LAST_MODIFIED_HEADER_PREF = "readinglist.sync.serverLastModified";
 
@@ -180,8 +184,6 @@ SyncImpl.prototype = {
 
     // Send the request.
     let request = {
-      method: "POST",
-      path: "/batch",
       body: {
         defaults: {
           method: "PATCH",
@@ -189,7 +191,7 @@ SyncImpl.prototype = {
         requests: requests,
       },
     };
-    let batchResponse = yield this._sendRequest(request);
+    let batchResponse = yield this._postBatch(request);
     if (batchResponse.status != 200) {
       this._handleUnexpectedResponse("uploading changes", batchResponse);
       return;
@@ -244,8 +246,6 @@ SyncImpl.prototype = {
 
     // Send the request.
     let request = {
-      method: "POST",
-      path: "/batch",
       body: {
         defaults: {
           method: "POST",
@@ -254,7 +254,7 @@ SyncImpl.prototype = {
         requests: requests,
       },
     };
-    let batchResponse = yield this._sendRequest(request);
+    let batchResponse = yield this._postBatch(request);
     if (batchResponse.status != 200) {
       this._handleUnexpectedResponse("uploading new items", batchResponse);
       return;
@@ -308,8 +308,6 @@ SyncImpl.prototype = {
 
     // Send the request.
     let request = {
-      method: "POST",
-      path: "/batch",
       body: {
         defaults: {
           method: "DELETE",
@@ -317,7 +315,7 @@ SyncImpl.prototype = {
         requests: requests,
       },
     };
-    let batchResponse = yield this._sendRequest(request);
+    let batchResponse = yield this._postBatch(request);
     if (batchResponse.status != 200) {
       this._handleUnexpectedResponse("uploading deleted items", batchResponse);
       return;
@@ -502,6 +500,50 @@ SyncImpl.prototype = {
     let response = yield this._client.request(req);
     log.debug("Received response", response);
     return response;
+  }),
+
+  /**
+   * The server limits the number of sub-requests in POST /batch'es to
+   * BATCH_REQUEST_LIMIT.  This method takes an arbitrarily big batch request
+   * and breaks it apart into many individual batch requests in order to stay
+   * within the limit.
+   *
+   * @param bigRequest The same type of request object that _sendRequest takes.
+   *        Since it's a POST /batch request, its `body` should have a
+   *        `requests` property whose value is an array of sub-requests.
+   *        `method` and `path` are automatically filled.
+   * @return Promise<response> Resolved when all requests complete with 200s, or
+   *         when the first response that is not a 200 is received.  In the
+   *         first case, the resolved response is a combination of all the
+   *         server responses, and response.body.responses contains the sub-
+   *         responses for all the sub-requests in bigRequest.  In the second
+   *         case, the resolved response is the non-200 response straight from
+   *         the server.
+   */
+  _postBatch: Task.async(function* (bigRequest) {
+    log.debug("Sending batch requests");
+    let allSubResponses = [];
+    let remainingSubRequests = bigRequest.body.requests;
+    while (remainingSubRequests.length) {
+      let request = Object.assign({}, bigRequest);
+      request.method = "POST";
+      request.path = "/batch";
+      request.body.requests =
+        remainingSubRequests.splice(0, BATCH_REQUEST_LIMIT);
+      let response = yield this._sendRequest(request);
+      if (response.status != 200) {
+        return response;
+      }
+      allSubResponses = allSubResponses.concat(response.body.responses);
+    }
+    let bigResponse = {
+      status: 200,
+      body: {
+        responses: allSubResponses,
+      },
+    };
+    log.debug("All batch requests successfully sent");
+    return bigResponse;
   }),
 
   _handleUnexpectedResponse(contextMsgFragment, response) {
