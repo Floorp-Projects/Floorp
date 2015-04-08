@@ -24,7 +24,7 @@
 
 # more serious tests, using SVG reference
 == border-circle-2.html border-circle-2-ref.xhtml
-fuzzy-if(gtk2Widget,7,437) fuzzy-if(azureQuartz,4,582) fuzzy-if(Android||B2G,36,264) fuzzy-if(d2d,51,323) fuzzy-if(winWidget&&!d2d,16,377) == curved-stripe-border.html curved-stripe-border-ref.svg # bug 459945
+fuzzy-if(gtk2Widget,7,437) fuzzy-if(cocoaWidget,4,582) fuzzy-if(Android||B2G,36,264) fuzzy-if(d2d,51,323) fuzzy-if(winWidget&&!d2d,16,377) == curved-stripe-border.html curved-stripe-border-ref.svg # bug 459945
 
 # Corners
 == corner-1.html corner-1-ref.svg # bottom corners different radius than top corners

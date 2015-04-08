@@ -48,7 +48,7 @@ fuzzy(1,2) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) == canvas-dr
 
 fuzzy-if(winWidget&&!d2d,1,10000) fuzzy-if(Android||B2G,1,10000) == canvas-drawImage-alpha-1.html canvas-drawImage-alpha-1-ref.html
 #Same as scale-2a but with globalAlpha:
-fuzzy(1,2) fuzzy-if(winWidget&&!d2d,1,40000) fuzzy-if(Android||B2G,1,40000) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) == canvas-drawImage-alpha-2.html canvas-drawImage-alpha-2-ref.html
+fuzzy(1,2) fuzzy-if(azureSkia,1,40000) fails-if(Android&&AndroidVersion<15&&AndroidVersion!=10) == canvas-drawImage-alpha-2.html canvas-drawImage-alpha-2-ref.html
 
 skip-if(B2G||Mulet) == canvas-drawImage-slice-1a.html lime100x100-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == canvas-drawImage-slice-1b.html lime100x100-ref.html
