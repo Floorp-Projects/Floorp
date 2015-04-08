@@ -256,7 +256,7 @@ MediaEngineCameraVideoSource::ChooseCapability(
     MediaTrackConstraintSet prefs;
     prefs.mWidth.SetAsLong() = aPrefs.GetWidth();
     prefs.mHeight.SetAsLong() = aPrefs.GetHeight();
-    prefs.mFrameRate.SetAsDouble() = aPrefs.mMinFPS;
+    prefs.mFrameRate.SetAsDouble() = aPrefs.mFPS;
 
     for (auto& candidate : candidateSet) {
       webrtc::CaptureCapability cap;
