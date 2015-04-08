@@ -13,6 +13,7 @@
 #include "mozilla/TimeStamp.h"
 #include "nsHttpRequestHead.h"
 #include "nsILoadGroup.h"
+#include "nsISchedulingContext.h"
 #include "nsString.h"
 #include "PSpdyPush.h"
 
@@ -42,7 +43,7 @@ public:
   nsresult ReadSegments(nsAHttpSegmentReader *,  uint32_t, uint32_t *) override;
   nsresult WriteSegments(nsAHttpSegmentWriter *, uint32_t, uint32_t *) override;
 
-  nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() override { return mLoadGroupCI; };
+  nsISchedulingContext *SchedulingContext() override { return mSchedulingContext; };
   void ConnectPushedStream(Http2Stream *consumer);
 
   bool TryOnPush();
@@ -65,7 +66,7 @@ private:
   Http2Stream *mConsumerStream; // paired request stream that consumes from
                                 // real http/2 one.. null until a match is made.
 
-  nsCOMPtr<nsILoadGroupConnectionInfo> mLoadGroupCI;
+  nsCOMPtr<nsISchedulingContext> mSchedulingContext;
 
   nsAHttpTransaction *mAssociatedTransaction;
 

@@ -67,9 +67,9 @@ public:
   bool HasRegisteredID() { return mStreamID != 0; }
 
   nsAHttpTransaction *Transaction() { return mTransaction; }
-  virtual nsILoadGroupConnectionInfo *LoadGroupConnectionInfo()
+  virtual nsISchedulingContext *SchedulingContext()
   {
-    return mTransaction ? mTransaction->LoadGroupConnectionInfo() : nullptr;
+    return mTransaction ? mTransaction->SchedulingContext() : nullptr;
   }
 
   void Close(nsresult reason);
