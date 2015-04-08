@@ -14,6 +14,7 @@
 #include "nsRegion.h"
 #include "nsDisplayList.h"
 #include "nsIReflowCallback.h"
+#include "Units.h"
 
 #ifdef XP_WIN
 #include <windows.h> // For HWND :(
@@ -220,6 +221,13 @@ protected:
   bool IsPaintedByGecko() const;
 
   nsIntPoint GetWindowOriginInPixels(bool aWindowless);
+  
+  /*
+   * If this frame is in a remote tab, return the tab offset to
+   * the origin of the chrome window. In non-e10s, this return 0,0.
+   * This api sends a sync ipc request so be careful about use.
+   */
+  mozilla::LayoutDeviceIntPoint GetRemoteTabChromeOffset();
 
   static void PaintPrintPlugin(nsIFrame* aFrame,
                                nsRenderingContext* aRenderingContext,
