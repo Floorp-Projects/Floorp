@@ -581,12 +581,7 @@ public:
     return mLoadInfo.mChannel.forget();
   }
 
-  nsIDocument*
-  GetDocument() const
-  {
-    AssertIsOnMainThread();
-    return mLoadInfo.mWindow ? mLoadInfo.mWindow->GetExtantDoc() : nullptr;
-  }
+  nsIDocument* GetDocument() const;
 
   nsPIDOMWindow*
   GetWindow()

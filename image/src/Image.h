@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef MOZILLA_IMAGELIB_IMAGE_H_
-#define MOZILLA_IMAGELIB_IMAGE_H_
+#ifndef mozilla_image_src_Image_h
+#define mozilla_image_src_Image_h
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
@@ -47,6 +47,9 @@ public:
    * INIT_FLAG_DECODE_ONLY_ON_DRAW: The container should decode on draw rather
    * than possibly being speculatively decoded earlier.
    *
+   * INIT_FLAG_DECODE_IMMEDIATELY: The container should decode as soon as
+   * possible, regardless of what our heuristics say.
+   *
    * INIT_FLAG_TRANSIENT: The container is likely to exist for only a short time
    * before being destroyed. (For example, containers for
    * multipart/x-mixed-replace image parts fall into this category.) If this
@@ -60,8 +63,9 @@ public:
   static const uint32_t INIT_FLAG_NONE                     = 0x0;
   static const uint32_t INIT_FLAG_DISCARDABLE              = 0x1;
   static const uint32_t INIT_FLAG_DECODE_ONLY_ON_DRAW      = 0x2;
-  static const uint32_t INIT_FLAG_TRANSIENT                = 0x4;
-  static const uint32_t INIT_FLAG_DOWNSCALE_DURING_DECODE  = 0x8;
+  static const uint32_t INIT_FLAG_DECODE_IMMEDIATELY       = 0x4;
+  static const uint32_t INIT_FLAG_TRANSIENT                = 0x8;
+  static const uint32_t INIT_FLAG_DOWNSCALE_DURING_DECODE  = 0x10;
 
   /**
    * Creates a new image container.
@@ -81,7 +85,7 @@ public:
    * ensure that something reasonable is always returned.
    */
   virtual size_t SizeOfSourceWithComputedFallback(
-                                          MallocSizeOf aMallocSizeOf) const = 0;
+    MallocSizeOf aMallocSizeOf) const = 0;
 
   /**
    * The size, in bytes, occupied by the image's decoded data.
@@ -235,4 +239,4 @@ protected:
 } // namespace image
 } // namespace mozilla
 
-#endif // MOZILLA_IMAGELIB_IMAGE_H_
+#endif // mozilla_image_src_Image_h

@@ -28,7 +28,6 @@
 #include "FrameMetrics.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/gfx/UserData.h"
-#include "gfxVR.h"
 
 #include <stdint.h>
 #include "nsTHashtable.h"
@@ -49,6 +48,9 @@ namespace layers {
 class Layer;
 class ImageLayer;
 class ImageContainer;
+} //namespace
+namespace gfx {
+class VRHMDInfo;
 } //namespace
 } //namespace
 
@@ -1960,6 +1962,8 @@ private:
 
 class nsDisplayImageContainer : public nsDisplayItem {
 public:
+  typedef mozilla::LayerIntPoint LayerIntPoint;
+  typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
   typedef mozilla::layers::ImageContainer ImageContainer;
   typedef mozilla::layers::ImageLayer ImageLayer;
 
@@ -1969,7 +1973,8 @@ public:
 
   virtual already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager,
                                                         nsDisplayListBuilder* aBuilder) = 0;
-  virtual void ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset) = 0;
+  virtual void ConfigureLayer(ImageLayer* aLayer,
+                              const ContainerLayerParameters& aParameters) = 0;
 
   virtual bool SupportsOptimizingToImage() override { return true; }
 };
@@ -2317,7 +2322,8 @@ public:
   
   virtual already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager,
                                                         nsDisplayListBuilder *aBuilder) override;
-  virtual void ConfigureLayer(ImageLayer* aLayer, const nsIntPoint& aOffset) override;
+  virtual void ConfigureLayer(ImageLayer* aLayer,
+                              const ContainerLayerParameters& aParameters) override;
 
   static nsRegion GetInsideClipRegion(nsDisplayItem* aItem, nsPresContext* aPresContext, uint8_t aClip,
                                       const nsRect& aRect, bool* aSnap);
@@ -2342,7 +2348,7 @@ protected:
   const nsStyleBackground* mBackgroundStyle;
   /* If this background can be a simple image layer, we store the format here. */
   nsRefPtr<ImageContainer> mImageContainer;
-  gfxRect mDestRect;
+  LayoutDeviceRect mDestRect;
   /* Bounds of this display item */
   nsRect mBounds;
   uint32_t mLayer;

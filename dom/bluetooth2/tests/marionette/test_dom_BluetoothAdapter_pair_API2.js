@@ -43,7 +43,7 @@
 //   - BluetoothPairingEvent.handle
 //
 //   - BluetoothPairingHandle.setPinCode()
-//   - BluetoothPairingHandle.setPairingConfirmation()
+//   - BluetoothPairingHandle.accept()
 //
 ///////////////////////////////////////////////////////////////////////////////
 

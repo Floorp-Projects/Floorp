@@ -3,8 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_imagelib_VectorImage_h_
-#define mozilla_imagelib_VectorImage_h_
+#ifndef mozilla_image_src_VectorImage_h
+#define mozilla_image_src_VectorImage_h
 
 #include "Image.h"
 #include "nsIStreamListener.h"
@@ -41,7 +41,8 @@ public:
   nsresult Init(const char* aMimeType,
                 uint32_t aFlags) override;
 
-  virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf) const override;
+  virtual size_t SizeOfSourceWithComputedFallback(MallocSizeOf aMallocSizeOf)
+    const override;
   virtual size_t SizeOfDecoded(gfxMemoryLocation aLocation,
                                MallocSizeOf aMallocSizeOf) const override;
 
@@ -105,9 +106,10 @@ private:
   /// Count of locks on this image (roughly correlated to visible instances).
   uint32_t mLockCount;
 
-  bool           mIsInitialized;          // Have we been initalized?
+  bool           mIsInitialized;          // Have we been initialized?
   bool           mDiscardable;            // Are we discardable?
-  bool           mIsFullyLoaded;          // Has the SVG document finished loading?
+  bool           mIsFullyLoaded;          // Has the SVG document finished
+                                          // loading?
   bool           mIsDrawing;              // Are we currently drawing?
   bool           mHaveAnimations;         // Is our SVG content SMIL-animated?
                                           // (Only set after mIsFullyLoaded.)
@@ -120,7 +122,7 @@ private:
   friend class ImageFactory;
 };
 
-inline NS_IMETHODIMP VectorImage::GetAnimationMode(uint16_t *aAnimationMode) {
+inline NS_IMETHODIMP VectorImage::GetAnimationMode(uint16_t* aAnimationMode) {
   return GetAnimationModeInternal(aAnimationMode);
 }
 
@@ -131,4 +133,4 @@ inline NS_IMETHODIMP VectorImage::SetAnimationMode(uint16_t aAnimationMode) {
 } // namespace image
 } // namespace mozilla
 
-#endif // mozilla_imagelib_VectorImage_h_
+#endif // mozilla_image_src_VectorImage_h

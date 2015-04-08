@@ -210,8 +210,9 @@ Decoder::Write(const char* aBuffer, uint32_t aCount)
   }
 
   // If a data error occured, just ignore future data.
-  if (HasDataError())
+  if (HasDataError()) {
     return;
+  }
 
   if (IsSizeDecode() && HasSize()) {
     // More data came in since we found the size. We have nothing to do here.
@@ -248,12 +249,14 @@ void
 Decoder::CompleteDecode()
 {
   // Implementation-specific finalization
-  if (!HasError())
+  if (!HasError()) {
     FinishInternal();
+  }
 
   // If the implementation left us mid-frame, finish that up.
-  if (mInFrame && !HasError())
+  if (mInFrame && !HasError()) {
     PostFrameStop();
+  }
 
   // If PostDecodeDone() has not been called, and this decoder wasn't aborted
   // early because of low-memory conditions or losing a race with another
@@ -603,9 +606,10 @@ Decoder::PostFrameStart()
 }
 
 void
-Decoder::PostFrameStop(Opacity aFrameOpacity /* = Opacity::TRANSPARENT */,
-                       DisposalMethod aDisposalMethod /* = DisposalMethod::KEEP */,
-                       int32_t aTimeout /* = 0 */,
+Decoder::PostFrameStop(Opacity aFrameOpacity    /* = Opacity::TRANSPARENT */,
+                       DisposalMethod aDisposalMethod
+                                                /* = DisposalMethod::KEEP */,
+                       int32_t aTimeout         /* = 0 */,
                        BlendMethod aBlendMethod /* = BlendMethod::OVER */)
 {
   // We should be mid-frame

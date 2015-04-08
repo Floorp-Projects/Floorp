@@ -1872,5 +1872,6 @@ skip-if(Mulet) == 1120431-2.html 1120431-2-ref.html # TC: Bug 1144079 - Re-enabl
 == 1128354-1.html 1128354-1-ref.html
 == 1130231-1-button-padding-rtl.html 1130231-1-button-padding-rtl-ref.html
 == 1130231-2-button-padding-rtl.html 1130231-2-button-padding-rtl-ref.html
+skip-if(B2G||Mulet) == 1150021-1.xul 1150021-1-ref.xul
 == 1151145-1.html 1151145-1-ref.html
 == 1151306-1.html 1151306-1-ref.html

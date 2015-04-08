@@ -64,7 +64,12 @@ this.Dispatcher = function(connId, transport, driverFactory, stopSignal) {
  * over those defined in this.driver.commands.
  */
 Dispatcher.prototype.onPacket = function(packet) {
-  logger.debug(`${this.id} -> ${packet.toSource()}`);
+  // Avoid using toSource and template strings (or touching the payload at all
+  // if not necessary) for the sake of memory use.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1150170
+  if (logger.level <= Log.Level.Debug) {
+    logger.debug(this.id + " -> (" + JSON.stringify(packet) + ")");
+  }
 
   if (this.requests && this.requests[packet.name]) {
     this.requests[packet.name].bind(this)(packet);
@@ -260,7 +265,12 @@ Dispatcher.prototype.sendToClient = function(payload, cmdId) {
  * and logs it.
  */
 Dispatcher.prototype.sendRaw = function(dest, payload) {
-  logger.debug(`${this.id} ${dest} <- ${payload.toSource()}`);
+  // Avoid using toSource and template strings (or touching the payload at all
+  // if not necessary) for the sake of memory use.
+  // See https://bugzilla.mozilla.org/show_bug.cgi?id=1150170
+  if (logger.level <= Log.Level.Debug) {
+    logger.debug(this.id + " " + dest + " <- (" + JSON.stringify(payload) + ")");
+  }
   this.conn.send(payload);
 };
 
