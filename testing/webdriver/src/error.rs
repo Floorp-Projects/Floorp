@@ -1,7 +1,8 @@
-use rustc_serialize::json::{Json, ToJson};
+use rustc_serialize::json::{Json, ToJson, ParserError};
 use std::collections::BTreeMap;
 use std::error::Error;
 use std::fmt;
+use std::convert::From;
 use hyper::status::StatusCode;
 
 #[derive(PartialEq, Debug)]
@@ -133,5 +134,12 @@ impl Error for WebDriverError {
 
     fn cause(&self) -> Option<&Error> {
         None
+    }
+}
+
+impl From<ParserError> for WebDriverError {
+    fn from(err: ParserError) -> WebDriverError {
+        let msg = format!("{:?}", err);
+        WebDriverError::new(ErrorStatus::UnknownError, &msg[..])
     }
 }
