@@ -66,6 +66,13 @@ CurrentThreadIsIonCompiling()
 {
     return TlsPerThreadData.get()->ionCompiling;
 }
+
+bool
+CurrentThreadIsGCSweeping()
+{
+    return js::TlsPerThreadData.get()->gcSweeping;
+}
+
 #endif // DEBUG
 
 bool
