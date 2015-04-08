@@ -371,7 +371,6 @@ public:
 
     virtual bool RecvFinishShutdown() override;
 
-    void MaybeInvokeDragSession(TabParent* aParent);
 protected:
     void OnChannelConnected(int32_t pid) override;
     virtual void ActorDestroy(ActorDestroyReason why) override;
@@ -823,8 +822,6 @@ private:
     virtual bool RecvPDocAccessibleConstructor(PDocAccessibleParent* aDoc,
                                                PDocAccessibleParent* aParentDoc, const uint64_t& aParentID) override;
 
-    virtual bool RecvUpdateDropEffect(const uint32_t& aDragAction,
-                                      const uint32_t& aDropEffect) override;
     // If you add strong pointers to cycle collected objects here, be sure to
     // release these objects in ShutDownProcess.  See the comment there for more
     // details.

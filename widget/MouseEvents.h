@@ -306,13 +306,6 @@ public:
 
 class WidgetDragEvent : public WidgetMouseEvent
 {
-private:
-  friend class mozilla::dom::PBrowserParent;
-  friend class mozilla::dom::PBrowserChild;
-protected:
-  WidgetDragEvent()
-  {
-  }
 public:
   virtual WidgetDragEvent* AsDragEvent() override { return this; }
 

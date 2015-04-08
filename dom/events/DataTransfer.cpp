@@ -24,7 +24,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDocument.h"
 #include "nsIScriptGlobalObject.h"
-#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DataTransferBinding.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/BindingUtils.h"
@@ -83,6 +82,7 @@ DataTransfer::DataTransfer(nsISupports* aParent, uint32_t aEventType,
     mDragImageX(0),
     mDragImageY(0)
 {
+  MOZ_ASSERT(mParent);
   // For these events, we want to be able to add data to the data transfer, so
   // clear the readonly state. Otherwise, the data is already present. For
   // external usage, cache the data from the native clipboard or drag.
@@ -300,16 +300,10 @@ DataTransfer::GetFiles(ErrorResult& aRv)
 
       nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
 
-      nsRefPtr<File> domFile;
-      if (file) {
-        domFile = File::CreateFromFile(GetParentObject(), file);
-      } else {
-        nsCOMPtr<FileImpl> fileImpl = do_QueryInterface(supports);
-        if (!fileImpl) {
-          continue;
-        }
-        domFile = new File(GetParentObject(), static_cast<FileImpl*>(fileImpl.get()));
-      }
+      if (!file)
+        continue;
+
+      nsRefPtr<File> domFile = File::CreateFromFile(GetParentObject(), file);
 
       if (!mFiles->Append(domFile)) {
         aRv.Throw(NS_ERROR_FAILURE);
@@ -861,6 +855,13 @@ DataTransfer::GetTransferables(nsIDOMNode* aDragTarget)
 {
   MOZ_ASSERT(aDragTarget);
 
+  nsCOMPtr<nsISupportsArray> transArray =
+    do_CreateInstance("@mozilla.org/supports-array;1");
+  if (!transArray) {
+    return nullptr;
+  }
+    
+
   nsCOMPtr<nsINode> dragNode = do_QueryInterface(aDragTarget);
   if (!dragNode) {
     return nullptr;
@@ -870,23 +871,12 @@ DataTransfer::GetTransferables(nsIDOMNode* aDragTarget)
   if (!doc) {
     return nullptr;
   }
-
-  return GetTransferables(doc->GetLoadContext());
-}
-
-already_AddRefed<nsISupportsArray>
-DataTransfer::GetTransferables(nsILoadContext* aLoadContext)
-{
-
-  nsCOMPtr<nsISupportsArray> transArray =
-    do_CreateInstance("@mozilla.org/supports-array;1");
-  if (!transArray) {
-    return nullptr;
-  }
+    
+  nsILoadContext* loadContext = doc->GetLoadContext();
 
   uint32_t count = mItems.Length();
   for (uint32_t i = 0; i < count; i++) {
-    nsCOMPtr<nsITransferable> transferable = GetTransferable(i, aLoadContext);
+    nsCOMPtr<nsITransferable> transferable = GetTransferable(i, loadContext);
     if (transferable) {
       transArray->AppendElement(transferable);
     }
@@ -1262,21 +1252,6 @@ DataTransfer::FillInExternalData(TransferItem& aItem, uint32_t aIndex)
 
     aItem.mData = variant;
   }
-
-void
-DataTransfer::FillAllExternalData()
-{
-  if (mIsExternal) {
-    for (uint32_t i = 0; i < mItems.Length(); ++i) {
-      nsTArray<TransferItem>& itemArray = mItems[i];
-      for (uint32_t j = 0; j < itemArray.Length(); ++j) {
-        if (!itemArray[j].mData) {
-          FillInExternalData(itemArray[j], i);
-        }
-      }
-    }
-  }
-}
 
 } // namespace dom
 } // namespace mozilla

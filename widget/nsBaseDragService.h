@@ -15,9 +15,7 @@
 #include "nsRect.h"
 #include "nsPoint.h"
 #include "mozilla/RefPtr.h"
-#include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
-#include "nsTArray.h"
 
 // translucency level for drag images
 #define DRAG_TRANSLUCENCY 0.65
@@ -114,15 +112,6 @@ protected:
    */
   void OpenDragPopup();
 
-  // Returns true if a drag event was dispatched to a child process after
-  // the previous TakeDragEventDispatchedToChildProcess() call.
-  bool TakeDragEventDispatchedToChildProcess()
-  {
-    bool retval = mDragEventDispatchedToChildProcess;
-    mDragEventDispatchedToChildProcess = false;
-    return retval;
-  }
-
   bool mCanDrop;
   bool mOnlyChromeDrop;
   bool mDoingDrag;
@@ -130,8 +119,6 @@ protected:
   bool mHasImage;
   // true if the user cancelled the drag operation
   bool mUserCancelled;
-
-  bool mDragEventDispatchedToChildProcess;
 
   uint32_t mDragAction;
   nsSize mTargetSize;
@@ -166,8 +153,6 @@ protected:
 
   // The input source of the drag event. Possible values are from nsIDOMMouseEvent.
   uint16_t mInputSource;
-
-  nsTArray<nsRefPtr<mozilla::dom::ContentParent>> mChildProcesses;
 };
 
 #endif // nsBaseDragService_h__
