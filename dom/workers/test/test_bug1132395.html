@@ -16,9 +16,11 @@
 SpecialPowers.pushPrefEnv({ set: [["dom.workers.sharedWorkers.enabled", true]] }, function() {
   var sw = new SharedWorker('bug1132395_sharedWorker.js');
   sw.port.onmessage = function(event) {
-     ok(true, "We didn't crash.");
+    ok(true, "We didn't crash.");
     SimpleTest.finish();
   }
+
+  sw.port.postMessage('go');
 });
 
 SimpleTest.waitForExplicitFinish();
