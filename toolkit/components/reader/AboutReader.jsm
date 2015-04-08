@@ -604,7 +604,7 @@ AboutReader.prototype = {
       return;
     }
 
-    if (article && article.url == url) {
+    if (article) {
       this._showContent(article);
     } else if (this._articlePromise) {
       // If we were promised an article, show an error message if there's a failure.
