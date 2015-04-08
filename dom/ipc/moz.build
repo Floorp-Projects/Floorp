@@ -136,6 +136,7 @@ LOCAL_INCLUDES += [
     '/embedding/components/printingui/ipc',
     '/extensions/cookie',
     '/extensions/spellcheck/src',
+    '/gfx/2d',
     '/hal/sandbox',
     '/layout/base',
     '/netwerk/base',
