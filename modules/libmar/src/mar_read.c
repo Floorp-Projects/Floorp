@@ -437,7 +437,7 @@ mar_read_product_info_block(MarFile *mar,
         return -1;
       }
 
-      if (fread(buf, additionalBlockSize, 1, mar->fp) != 1) {
+    if (fread(buf, additionalBlockSize, 1, mar->fp) != 1) {
         return -1;
       }
 

@@ -11,7 +11,6 @@
 #include "nsWindowsHelpers.h"
 #include "servicebase.h"
 #include "updatehelper.h"
-#include "errors.h"
 #define MAX_KEY_LENGTH 255
 
 /**
@@ -33,7 +32,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
   WCHAR maintenanceServiceKey[MAX_PATH + 1];
   if (!CalculateRegistryPathFromFilePath(basePathForUpdate, 
                                          maintenanceServiceKey)) {
-    return SERVICE_UPDATER_SIGN_CALC_PATH;
+    return FALSE;
   }
 
   // We use KEY_WOW64_64KEY to always force 64-bit view.
@@ -56,7 +55,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
                             KEY_READ | KEY_WOW64_64KEY, &baseKeyRaw);
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Could not open fallback key.  (%d)", retCode));
-      return SERVICE_UPDATER_SIGN_REG_OPEN;
+      return FALSE;
     } else if (allowFallbackKeySkip) {
       LOG_WARN(("Fallback key present, skipping VerifyCertificateTrustForFile "
                 "check and the certificate attribute registry matching "
@@ -73,7 +72,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
                              nullptr, nullptr);
   if (retCode != ERROR_SUCCESS) {
     LOG_WARN(("Could not query info key.  (%d)", retCode));
-    return SERVICE_UPDATER_SIGN_REG_QUERY;
+    return FALSE;
   }
 
   // Enumerate the subkeys, each subkey represents an allowed certificate.
@@ -85,7 +84,7 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
                             nullptr, nullptr, nullptr); 
     if (retCode != ERROR_SUCCESS) {
       LOG_WARN(("Could not enum certs.  (%d)", retCode));
-      return SERVICE_UPDATER_SIGN_REG_ENUM;
+      return FALSE;
     }
 
     // Open the subkey for the current certificate
@@ -141,9 +140,9 @@ DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate, LPCWSTR filePath,
     }
 
     // Raise the roof, we found a match!
-    return OK;
+    return TRUE; 
   }
   
   // No certificates match, :'(
-  return SERVICE_UPDATER_SIGN_ERROR;
+  return FALSE;
 }

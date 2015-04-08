@@ -7,8 +7,8 @@
 
 #include "certificatecheck.h"
 
-int DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate,
-                                       LPCWSTR filePath,
-                                       BOOL allowFallbackKeySkip = TRUE);
+BOOL DoesBinaryMatchAllowedCertificates(LPCWSTR basePathForUpdate,
+                                        LPCWSTR filePath,
+                                        BOOL allowFallbackKeySkip = TRUE);
 
 #endif
