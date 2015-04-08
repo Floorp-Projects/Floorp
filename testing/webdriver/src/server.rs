@@ -2,6 +2,7 @@ use std::io::{Write, Read};
 use std::sync::Mutex;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::thread;
+use std::net::SocketAddr;
 
 use hyper::header::ContentLength;
 use hyper::method::Method;
@@ -218,7 +219,7 @@ impl Handler for HttpHandler {
     }
 }
 
-pub fn start<T: 'static+WebDriverHandler>(ip_address: &str, port: u16, handler: T) {
+pub fn start<T: 'static+WebDriverHandler>(address: SocketAddr, handler: T) {
     let (msg_send, msg_recv) = channel();
 
     let api = WebDriverHttpApi::new();
@@ -229,5 +230,5 @@ pub fn start<T: 'static+WebDriverHandler>(ip_address: &str, port: u16, handler: 
         let mut dispatcher = Dispatcher::new(handler);
         dispatcher.run(msg_recv)
     });
-    server.listen(&(ip_address, port)).unwrap();
+    server.listen(&address).unwrap();
 }
