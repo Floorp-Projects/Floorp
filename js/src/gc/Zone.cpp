@@ -39,6 +39,9 @@ JS::Zone::Zone(JSRuntime* rt)
     gcState_(NoGC),
     gcScheduled_(false),
     gcPreserveCode_(false),
+#ifdef DEBUG
+    gcBackgroundSweeping_(false),
+#endif
     jitUsingBarriers_(false),
     listNext_(NotOnList)
 {
@@ -269,6 +272,15 @@ Zone::notifyObservingDebuggers()
             r.front()->debuggeeIsBeingCollected();
     }
 }
+
+#ifdef DEBUG
+void
+Zone::setGCBackgroundSweeping(bool newState)
+{
+    MOZ_ASSERT(gcBackgroundSweeping_ != newState);
+    gcBackgroundSweeping_ = newState;
+}
+#endif
 
 JS::Zone*
 js::ZoneOfValue(const JS::Value& value)
