@@ -15,6 +15,8 @@ This ping is triggered by different scenarios, which is documented by the ``reas
 
 Most reasons lead to a session split, initiating a new *subsession*. We reset important measurements for those subsessions.
 
+*Note:* ``saved-session`` is sent with a different ping type (``saved-session``, not ``main``), but otherwise has the same format as discussed here.
+
 Structure::
 
     {
