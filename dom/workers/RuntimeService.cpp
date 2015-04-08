@@ -777,9 +777,47 @@ AsmJSCacheOpenEntryForWrite(JS::Handle<JSObject*> aGlobal,
                                        aSize, aMemory, aHandle);
 }
 
-struct WorkerThreadRuntimePrivate : public PerThreadAtomCache
+class WorkerJSRuntime;
+
+class WorkerThreadRuntimePrivate : private PerThreadAtomCache
 {
+  friend class WorkerJSRuntime;
+
   WorkerPrivate* mWorkerPrivate;
+
+public:
+  // This can't return null, but we can't lose the "Get" prefix in the name or
+  // it will be ambiguous with the WorkerPrivate class name.
+  WorkerPrivate*
+  GetWorkerPrivate() const
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+    MOZ_ASSERT(mWorkerPrivate);
+
+    return mWorkerPrivate;
+  }
+
+private:
+  WorkerThreadRuntimePrivate(WorkerPrivate* aWorkerPrivate)
+    : mWorkerPrivate(aWorkerPrivate)
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    // Zero out the base class members.
+    memset(this, 0, sizeof(PerThreadAtomCache));
+
+    MOZ_ASSERT(mWorkerPrivate);
+  }
+
+  ~WorkerThreadRuntimePrivate()
+  {
+    MOZ_ASSERT(!NS_IsMainThread());
+  }
+
+  WorkerThreadRuntimePrivate(const WorkerThreadRuntimePrivate&) = delete;
+
+  WorkerThreadRuntimePrivate&
+  operator=(const WorkerThreadRuntimePrivate&) = delete;
 };
 
 JSContext*
@@ -827,11 +865,6 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
     NS_WARNING("Could not create new context!");
     return nullptr;
   }
-
-  auto rtPrivate = new WorkerThreadRuntimePrivate();
-  memset(rtPrivate, 0, sizeof(WorkerThreadRuntimePrivate));
-  rtPrivate->mWorkerPrivate = aWorkerPrivate;
-  JS_SetRuntimePrivate(aRuntime, rtPrivate);
 
   JS_SetErrorReporter(aRuntime, ErrorReporter);
 
@@ -920,16 +953,23 @@ public:
                               WORKER_DEFAULT_NURSERY_SIZE),
     mWorkerPrivate(aWorkerPrivate)
   {
-    js::SetPreserveWrapperCallback(Runtime(), PreserveWrapper);
-    JS_InitDestroyPrincipalsCallback(Runtime(), DestroyWorkerPrincipals);
-    JS_SetWrapObjectCallbacks(Runtime(), &WrapObjectCallbacks);
+    JSRuntime* rt = Runtime();
+    MOZ_ASSERT(rt);
+
+    JS_SetRuntimePrivate(rt, new WorkerThreadRuntimePrivate(aWorkerPrivate));
+
+    js::SetPreserveWrapperCallback(rt, PreserveWrapper);
+    JS_InitDestroyPrincipalsCallback(rt, DestroyWorkerPrincipals);
+    JS_SetWrapObjectCallbacks(rt, &WrapObjectCallbacks);
   }
 
   ~WorkerJSRuntime()
   {
-    auto rtPrivate = static_cast<WorkerThreadRuntimePrivate*>(JS_GetRuntimePrivate(Runtime()));
-    delete rtPrivate;
-    JS_SetRuntimePrivate(Runtime(), nullptr);
+    JSRuntime* rt = Runtime();
+    MOZ_ASSERT(rt);
+
+    delete static_cast<WorkerThreadRuntimePrivate*>(JS_GetRuntimePrivate(rt));
+    JS_SetRuntimePrivate(rt, nullptr);
 
     // The worker global should be unrooted and the shutdown cycle collection
     // should break all remaining cycles. The superclass destructor will run
@@ -1311,7 +1351,8 @@ GetWorkerPrivateFromContext(JSContext* aCx)
   void* rtPrivate = JS_GetRuntimePrivate(rt);
   MOZ_ASSERT(rtPrivate);
 
-  return static_cast<WorkerThreadRuntimePrivate*>(rtPrivate)->mWorkerPrivate;
+  return
+    static_cast<WorkerThreadRuntimePrivate*>(rtPrivate)->GetWorkerPrivate();
 }
 
 WorkerPrivate*
@@ -1330,7 +1371,8 @@ GetCurrentThreadWorkerPrivate()
   void* rtPrivate = JS_GetRuntimePrivate(rt);
   MOZ_ASSERT(rtPrivate);
 
-  return static_cast<WorkerThreadRuntimePrivate*>(rtPrivate)->mWorkerPrivate;
+  return
+    static_cast<WorkerThreadRuntimePrivate*>(rtPrivate)->GetWorkerPrivate();
 }
 
 bool
