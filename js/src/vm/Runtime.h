@@ -519,6 +519,9 @@ class PerThreadData : public PerThreadDataFriendFields
 #ifdef DEBUG
     // Whether this thread is actively Ion compiling.
     bool ionCompiling;
+
+    // Whether this thread is currently sweeping GC things.
+    bool gcSweeping;
 #endif
 
     // Number of active bytecode compilation on this thread.
