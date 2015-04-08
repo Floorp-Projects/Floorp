@@ -134,11 +134,28 @@ struct MaiAtkObject
    * via this object instance.
    */
   uintptr_t accWrap;
+
+  /*
+   * Shutdown this AtkObject.
+   */
+  void Shutdown();
 };
 
 // This is or'd with the pointer in MaiAtkObject::accWrap if the wrap-ee is a
 // proxy.
 static const uintptr_t IS_PROXY = 1;
+
+void
+MaiAtkObject::Shutdown()
+{
+  accWrap = 0;
+  MaiHyperlink* maiHyperlink =
+    (MaiHyperlink*)g_object_get_qdata(G_OBJECT(this), quark_mai_hyperlink);
+  if (maiHyperlink) {
+    delete maiHyperlink;
+    g_object_set_qdata(G_OBJECT(this), quark_mai_hyperlink, nullptr);
+  }
+}
 
 struct MaiAtkObjectClass
 {
@@ -253,16 +270,9 @@ AccessibleWrap::ShutdownAtkObject()
   if (!mAtkObject)
     return;
 
-  if (IS_MAI_OBJECT(mAtkObject)) {
-    MAI_ATK_OBJECT(mAtkObject)->accWrap = 0;
-    MaiHyperlink* maiHyperlink
-      = (MaiHyperlink*)g_object_get_qdata(G_OBJECT(mAtkObject),
-                                          quark_mai_hyperlink);
-    if (maiHyperlink) {
-      delete maiHyperlink;
-      g_object_set_qdata(G_OBJECT(mAtkObject), quark_mai_hyperlink, nullptr);
-    }
-  }
+  MOZ_ASSERT(IS_MAI_OBJECT(mAtkObject));
+  if (IS_MAI_OBJECT(mAtkObject))
+    MAI_ATK_OBJECT(mAtkObject)->Shutdown();
 
   g_object_unref(mAtkObject);
   mAtkObject = nullptr;
@@ -1086,7 +1096,7 @@ void
 a11y::ProxyDestroyed(ProxyAccessible* aProxy)
 {
   auto obj = reinterpret_cast<MaiAtkObject*>(aProxy->GetWrapper() & ~IS_PROXY);
-  obj->accWrap = 0;
+  obj->Shutdown();
   g_object_unref(obj);
   aProxy->SetWrapper(0);
 }
