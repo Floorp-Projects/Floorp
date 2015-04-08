@@ -944,9 +944,9 @@ DBSchema::MatchByVaryHeader(mozIStorageConnection* aConn,
     for (; token;
          token = nsCRT::strtok(rawBuffer, NS_HTTP_HEADER_SEPS, &rawBuffer)) {
       nsDependentCString header(token);
-      MOZ_ASSERT(!header.EqualsLiteral("*"),
-                 "We should have already caught this in "
-                 "TypeUtils::ToPCacheResponseWithoutBody()");
+      if (header.EqualsLiteral("*")) {
+        continue;
+      }
 
       ErrorResult errorResult;
       nsAutoCString queryValue;

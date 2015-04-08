@@ -9,7 +9,6 @@
 
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
 #include "mozilla/dom/cache/Manager.h"
 #include "mozilla/dom/cache/PCacheTypes.h"
 #include "mozilla/dom/cache/Types.h"
@@ -40,7 +39,7 @@ public:
   {
   public:
     virtual void
-    OnFetchPut(FetchPut* aFetchPut, RequestId aRequestId, const ErrorResult& aRv) = 0;
+    OnFetchPut(FetchPut* aFetchPut, RequestId aRequestId, nsresult aRv) = 0;
   };
 
   static nsresult
@@ -105,7 +104,7 @@ private:
   nsCOMPtr<nsIThread> mInitiatingThread;
   nsTArray<State> mStateList;
   uint32_t mPendingCount;
-  ErrorResult mResult;
+  nsresult mResult;
   nsCOMPtr<nsIRunnable> mRunnable;
 
 public:
