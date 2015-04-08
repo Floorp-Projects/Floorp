@@ -37,6 +37,7 @@
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/CellBroadcast.h"
 #include "mozilla/dom/IccManager.h"
+#include "mozilla/dom/InputPortManager.h"
 #include "mozilla/dom/MobileMessageManager.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
 #include "mozilla/dom/Telephony.h"
@@ -183,6 +184,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTelephony)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVoicemail)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTVManager)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInputPortManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mConnection)
 #ifdef MOZ_B2G_RIL
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMobileConnections)
@@ -275,6 +277,10 @@ Navigator::Invalidate()
 
   if (mTVManager) {
     mTVManager = nullptr;
+  }
+
+  if (mInputPortManager) {
+    mInputPortManager = nullptr;
   }
 
   if (mConnection) {
@@ -1633,6 +1639,23 @@ Navigator::GetTv()
   }
 
   return mTVManager;
+}
+
+InputPortManager*
+Navigator::GetInputPortManager(ErrorResult& aRv)
+{
+  if (!mInputPortManager) {
+    if (!mWindow) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+    mInputPortManager = InputPortManager::Create(mWindow, aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+  }
+
+  return mInputPortManager;
 }
 
 #ifdef MOZ_B2G
