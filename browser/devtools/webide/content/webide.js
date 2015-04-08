@@ -25,6 +25,7 @@ const Telemetry = require("devtools/shared/telemetry");
 const {RuntimeScanners, WiFiScanner} = require("devtools/webide/runtimes");
 const {showDoorhanger} = require("devtools/shared/doorhanger");
 const ProjectList = require("devtools/webide/project-list");
+const {Simulators} = require("devtools/webide/simulators");
 
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 
@@ -37,6 +38,7 @@ const MIN_ZOOM = 0.6;
 // Download remote resources early
 getJSON("devtools.webide.addonsURL", true);
 getJSON("devtools.webide.templatesURL", true);
+getJSON("devtools.devices.url", true);
 
 // See bug 989619
 console.log = console.log.bind(console);
@@ -117,12 +119,16 @@ let UI = {
     this.contentViewer.fullZoom = Services.prefs.getCharPref("devtools.webide.zoom");
 
     gDevToolsBrowser.isWebIDEInitialized.resolve();
+
+    this.configureSimulator = this.configureSimulator.bind(this);
+    Simulators.on("configure", this.configureSimulator);
   },
 
   destroy: function() {
     window.removeEventListener("focus", this.onfocus, true);
     AppManager.off("app-manager-update", this.appManagerUpdate);
     AppManager.destroy();
+    Simulators.off("configure", this.configureSimulator);
     projectList = null;
     window.removeEventListener("message", this.onMessage);
     this.updateConnectionTelemetry();
@@ -230,6 +236,10 @@ let UI = {
     this._updatePromise = promise.resolve();
   },
 
+  configureSimulator: function(event, simulator) {
+    UI.selectDeckPanel("simulator");
+  },
+
   openInBrowser: function(url) {
     // Open a URL in a Firefox window
     let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
@@ -255,7 +265,8 @@ let UI = {
   hidePanels: function() {
     let panels = document.querySelectorAll("panel");
     for (let p of panels) {
-      p.hidePopup();
+      // Sometimes in tests, p.hidePopup is not defined - Bug 1151796.
+      p.hidePopup && p.hidePopup();
     }
   },
 
