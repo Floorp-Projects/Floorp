@@ -2036,7 +2036,6 @@ HTMLMediaElement::LookupMediaElementURITable(nsIURI* aURI)
 
 HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
   : nsGenericHTMLElement(aNodeInfo),
-    mSrcStreamListener(nullptr),
     mCurrentLoadID(0),
     mNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY),
     mReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING),
@@ -2949,6 +2948,61 @@ private:
   bool mPendingNotifyOutput;
 };
 
+/**
+ * This listener observes the first video frame to arrive with a non-empty size,
+ * and calls HTMLMediaElement::ReceivedMediaStreamInitialSize() with that size.
+ */
+class HTMLMediaElement::StreamSizeListener : public MediaStreamListener {
+public:
+  explicit StreamSizeListener(HTMLMediaElement* aElement) :
+    mElement(aElement),
+    mMutex("HTMLMediaElement::StreamSizeListener")
+  {}
+  void Forget() { mElement = nullptr; }
+
+  void ReceivedSize()
+  {
+    if (!mElement) {
+      return;
+    }
+    gfxIntSize size;
+    {
+      MutexAutoLock lock(mMutex);
+      size = mInitialSize;
+    }
+    nsRefPtr<HTMLMediaElement> deathGrip = mElement;
+    mElement->UpdateInitialMediaSize(size);
+  }
+  virtual void NotifyQueuedTrackChanges(MediaStreamGraph* aGraph, TrackID aID,
+                                        StreamTime aTrackOffset,
+                                        uint32_t aTrackEvents,
+                                        const MediaSegment& aQueuedMedia) override
+  {
+    MutexAutoLock lock(mMutex);
+    if (mInitialSize != gfxIntSize(0,0) ||
+        aQueuedMedia.GetType() != MediaSegment::VIDEO) {
+      return;
+    }
+    const VideoSegment& video = static_cast<const VideoSegment&>(aQueuedMedia);
+    for (VideoSegment::ConstChunkIterator c(video); !c.IsEnded(); c.Next()) {
+      if (c->mFrame.GetIntrinsicSize() != gfxIntSize(0,0)) {
+        mInitialSize = c->mFrame.GetIntrinsicSize();
+        nsCOMPtr<nsIRunnable> event =
+          NS_NewRunnableMethod(this, &StreamSizeListener::ReceivedSize);
+        aGraph->DispatchToMainThreadAfterStreamStateUpdate(event.forget());
+      }
+    }
+  }
+
+private:
+  // These fields may only be accessed on the main thread
+  HTMLMediaElement* mElement;
+
+  // mMutex protects the fields below; they can be accessed on any thread
+  Mutex mMutex;
+  gfxIntSize mInitialSize;
+};
+
 class HTMLMediaElement::MediaStreamTracksAvailableCallback:
     public DOMMediaStream::OnTracksAvailableCallback
 {
@@ -2969,7 +3023,8 @@ private:
 
 void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
 {
-  NS_ASSERTION(!mSrcStream && !mSrcStreamListener, "Should have been ended already");
+  NS_ASSERTION(!mSrcStream && !mMediaStreamListener && !mMediaStreamSizeListener,
+               "Should have been ended already");
 
   mSrcStream = aStream;
 
@@ -3002,8 +3057,13 @@ void HTMLMediaElement::SetupSrcMediaStreamPlayback(DOMMediaStream* aStream)
 
   // XXX if we ever support capturing the output of a media element which is
   // playing a stream, we'll need to add a CombineWithPrincipal call here.
-  mSrcStreamListener = new StreamListener(this);
-  GetSrcMediaStream()->AddListener(mSrcStreamListener);
+  mMediaStreamListener = new StreamListener(this);
+  mMediaStreamSizeListener = new StreamSizeListener(this);
+
+  GetSrcMediaStream()->AddListener(mMediaStreamListener);
+  // Listen for an initial image size on mSrcStream so we can get results even
+  // if we block the mPlaybackStream.
+  stream->AddListener(mMediaStreamSizeListener);
   if (mPaused) {
     GetSrcMediaStream()->ChangeExplicitBlockerCount(1);
   }
@@ -3036,7 +3096,10 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback()
 {
   MediaStream* stream = GetSrcMediaStream();
   if (stream) {
-    stream->RemoveListener(mSrcStreamListener);
+    stream->RemoveListener(mMediaStreamListener);
+  }
+  if (mSrcStream->GetStream()) {
+    mSrcStream->GetStream()->RemoveListener(mMediaStreamSizeListener);
   }
   mSrcStream->DisconnectTrackListListeners(AudioTracks(), VideoTracks());
 
@@ -3045,8 +3108,10 @@ void HTMLMediaElement::EndSrcMediaStreamPlayback()
   }
 
   // Kill its reference to this element
-  mSrcStreamListener->Forget();
-  mSrcStreamListener = nullptr;
+  mMediaStreamListener->Forget();
+  mMediaStreamListener = nullptr;
+  mMediaStreamSizeListener->Forget();
+  mMediaStreamSizeListener = nullptr;
   if (stream) {
     stream->RemoveAudioOutput(this);
   }
@@ -3778,14 +3843,21 @@ void HTMLMediaElement::NotifyDecoderPrincipalChanged()
   }
 }
 
-void HTMLMediaElement::UpdateMediaSize(nsIntSize size)
+void HTMLMediaElement::UpdateMediaSize(const nsIntSize& aSize)
 {
-  if (IsVideo() && mReadyState != HAVE_NOTHING && mMediaSize != size) {
+  if (IsVideo() && mReadyState != HAVE_NOTHING && mMediaSize != aSize) {
     DispatchAsyncEvent(NS_LITERAL_STRING("resize"));
   }
 
-  mMediaSize = size;
+  mMediaSize = aSize;
   UpdateReadyStateForData(mLastNextFrameStatus);
+}
+
+void HTMLMediaElement::UpdateInitialMediaSize(const nsIntSize& aSize)
+{
+  if (mMediaSize == nsIntSize(-1, -1)) {
+    UpdateMediaSize(aSize);
+  }
 }
 
 void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendEvents)
