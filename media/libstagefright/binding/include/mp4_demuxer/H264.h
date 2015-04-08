@@ -40,6 +40,11 @@ struct SPSData
 
   float sample_ratio;
 
+  uint32_t crop_left;
+  uint32_t crop_right;
+  uint32_t crop_top;
+  uint32_t crop_bottom;
+
   /*
     H264 decoding parameters according to ITU-T H.264 (T-REC-H.264-201402-I/en)
    http://www.itu.int/rec/T-REC-H.264-201402-I/en
@@ -68,18 +73,25 @@ struct SPSData
   uint8_t seq_parameter_set_id;
 
   /*
-    When the value of chroma_format_idc is equal to 1, the nominal vertical
-    and horizontal relative locations of luma and chroma samples in frames are
-    shown in Figure 6-1. Alternative chroma sample relative locations may be
-    indicated in video usability information (see Annex E).
+    chroma_format_idc specifies the chroma sampling relative to the luma
+    sampling as specified in clause 6.2. The value of chroma_format_idc shall be
+    in the range of 0 to 3, inclusive. When chroma_format_idc is not present,
+    it shall be inferred to be equal to 1 (4:2:0 chroma format).
+    When profile_idc is equal to 183, chroma_format_idc shall be equal to 0
+    (4:0:0 chroma format).
    */
   uint8_t chroma_format_idc;
 
   /*
-    If separate_colour_plane_flag is equal to 0, each of the two chroma arrays
-    has the same height and width as the luma array. Otherwise
-    (separate_colour_plane_flag is equal to 1), the three colour planes are
-    separately processed as monochrome sampled pictures.
+    separate_colour_plane_flag equal to 1 specifies that the three colour
+    components of the 4:4:4 chroma format are coded separately.
+    separate_colour_plane_flag equal to 0 specifies that the colour components
+    are not coded separately. When separate_colour_plane_flag is not present,
+    it shall be inferred to be equal to 0. When separate_colour_plane_flag is
+    equal to 1, the primary coded picture consists of three separate components,
+    each of which consists of coded samples of one colour plane (Y, Cb or Cr)
+    that each use the monochrome coding syntax. In this case, each colour plane
+    is associated with a specific colour_plane_id value.
    */
   bool separate_colour_plane_flag;
 
