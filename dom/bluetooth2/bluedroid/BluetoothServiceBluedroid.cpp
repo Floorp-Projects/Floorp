@@ -1149,6 +1149,36 @@ BluetoothServiceBluedroid::DiscoverGattServicesInternal(
 }
 
 void
+BluetoothServiceBluedroid::GattClientStartNotificationsInternal(
+  const nsAString& aAppUuid, const BluetoothGattServiceId& aServId,
+  const BluetoothGattId& aCharId, BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->RegisterNotifications(aAppUuid, aServId, aCharId, aRunnable);
+}
+
+void
+BluetoothServiceBluedroid::GattClientStopNotificationsInternal(
+  const nsAString& aAppUuid, const BluetoothGattServiceId& aServId,
+  const BluetoothGattId& aCharId, BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->DeregisterNotifications(aAppUuid, aServId, aCharId, aRunnable);
+}
+
+void
 BluetoothServiceBluedroid::UnregisterGattClientInternal(
   int aClientIf, BluetoothReplyRunnable* aRunnable)
 {
