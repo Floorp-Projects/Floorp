@@ -401,7 +401,10 @@ public:
   virtual already_AddRefed<ImageContainer> GetContainer(LayerManager* aManager,
                                                         nsDisplayListBuilder* aBuilder) override;
 
-  nsRect GetDestRect();
+  /**
+   * @return the dest rect we'll use when drawing this image, in app units.
+   */
+  nsRect GetDestRect(bool* aSnap = nullptr);
 
   virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                    LayerManager* aManager,

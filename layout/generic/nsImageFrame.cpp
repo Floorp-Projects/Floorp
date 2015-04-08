@@ -1437,14 +1437,32 @@ nsDisplayImage::GetContainer(LayerManager* aManager,
 }
 
 nsRect
-nsDisplayImage::GetDestRect()
+nsDisplayImage::GetDestRect(bool* aSnap)
 {
-  // XXX(seth): This method will do something more interesting once the patch in
-  // bug 1150704 lands.
-  bool snap;
-  nsRect dest = GetBounds(&snap);
+  // OK, we want to return the entire region painted by the image. But what is
+  // that region? It's the image's "dest rect" (the rect where a full copy of
+  // the image is mapped), clipped to the container's content box (which is what
+  // GetBounds() returns). So, we grab those rects and intersect them.
+  bool snap = true;
+  const nsRect frameContentBox = GetBounds(&snap);
+  if (aSnap) {
+    *aSnap = snap;
+  }
 
-  return dest;
+  // Note: To get the "dest rect", we have to provide the "constraint rect"
+  // (which is the content-box, with the effects of fragmentation undone).
+  nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
+  nsRect constraintRect(frameContentBox.TopLeft(),
+                        imageFrame->mComputedSize);
+  constraintRect.y -= imageFrame->GetContinuationOffset();
+
+  const nsRect destRect =
+    nsLayoutUtils::ComputeObjectDestRect(constraintRect,
+                                         imageFrame->mIntrinsicSize,
+                                         imageFrame->mIntrinsicRatio,
+                                         imageFrame->StylePosition());
+
+  return destRect.Intersect(frameContentBox);
 }
 
 LayerState
@@ -1509,28 +1527,8 @@ nsDisplayImage::GetLayerState(nsDisplayListBuilder* aBuilder,
 nsDisplayImage::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                 bool* aSnap)
 {
-  *aSnap = true;
   if (mImage && mImage->IsOpaque()) {
-    // OK, the entire region painted by the image is opaque. But what is that
-    // region? It's the image's "dest rect" (the rect where a full copy of
-    // the image is mapped), clipped to the container's content box (which is
-    // what GetBounds() returns). So, we grab those rects and intersect them.
-    const nsRect frameContentBox = GetBounds(aSnap);
-
-    // Note: To get the "dest rect", we have to provide the "constraint rect"
-    // (which is the content-box, with the effects of fragmentation undone).
-    nsImageFrame* imageFrame = static_cast<nsImageFrame*>(mFrame);
-    nsRect constraintRect(frameContentBox.TopLeft(),
-                          imageFrame->mComputedSize);
-    constraintRect.y -= imageFrame->GetContinuationOffset();
-
-    const nsRect destRect =
-      nsLayoutUtils::ComputeObjectDestRect(constraintRect,
-                                           imageFrame->mIntrinsicSize,
-                                           imageFrame->mIntrinsicRatio,
-                                           imageFrame->StylePosition());
-
-    return nsRegion(destRect.Intersect(frameContentBox));
+    return nsRegion(GetDestRect(aSnap));
   }
   return nsRegion();
 }
