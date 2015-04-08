@@ -1,5 +1,3 @@
-use std::net::IpAddr;
-use std::num::FromPrimitive;
 use std::io::{Write, Read};
 use std::sync::Mutex;
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -9,6 +7,7 @@ use hyper::header::ContentLength;
 use hyper::method::Method;
 use hyper::server::{Server, Handler, Request, Response};
 use hyper::uri::RequestUri::AbsolutePath;
+use hyper::status::StatusCode;
 
 use command::{WebDriverMessage, WebDriverCommand};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
@@ -193,7 +192,7 @@ impl Handler for HttpHandler {
                         }
                         match recv_res.recv() {
                             Ok(data) => match data {
-                                Ok(response) => (200, response.to_json_string()),
+                                Ok(response) => (StatusCode::Ok, response.to_json_string()),
                                 Err(err) => (err.http_status(), err.to_json_string()),
                             },
                             Err(_) => panic!("Error reading response")
@@ -203,16 +202,11 @@ impl Handler for HttpHandler {
                         (err.http_status(), err.to_json_string())
                     }
                 };
-                if status != 200 {
-                    error!("Returning status code {}", status);
-                    error!("Returning body {}", resp_body);
-                } else {
-                    debug!("Returning status code {}", status);
-                    debug!("Returning body {}", resp_body);
-                }
+                error!("Returning status {:?}", status);
+                error!("Returning body {}", resp_body);
                 {
-                    let status_code = res.status_mut();
-                    *status_code = FromPrimitive::from_u32(status).unwrap();
+                    let resp_status = res.status_mut();
+                    *resp_status = status;
                 }
                 res.headers_mut().set(ContentLength(resp_body.len() as u64));
                 let mut stream = res.start().unwrap();
@@ -224,7 +218,7 @@ impl Handler for HttpHandler {
     }
 }
 
-pub fn start<T: 'static+WebDriverHandler>(ip_address: IpAddr, port: u16, handler: T) {
+pub fn start<T: 'static+WebDriverHandler>(ip_address: &str, port: u16, handler: T) {
     let (msg_send, msg_recv) = channel();
 
     let api = WebDriverHttpApi::new();
@@ -235,5 +229,5 @@ pub fn start<T: 'static+WebDriverHandler>(ip_address: IpAddr, port: u16, handler
         let mut dispatcher = Dispatcher::new(handler);
         dispatcher.run(msg_recv)
     });
-    server.listen(ip_address, port).unwrap();
+    server.listen(&(ip_address, port)).unwrap();
 }

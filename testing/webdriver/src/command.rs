@@ -1,7 +1,6 @@
 use regex::Captures;
 use rustc_serialize::json::{ToJson, Json};
 use std::collections::BTreeMap;
-use std::str::StrExt;
 
 use common::{Date, Nullable, WebElement, FrameId, LocatorStrategy};
 use error::{WebDriverResult, WebDriverError, ErrorStatus};
@@ -548,11 +547,12 @@ impl Parameters for SendKeysParameters {
            let str_value = try_opt!(x.as_string(),
                                     ErrorStatus::InvalidArgument,
                                     "Value was not a string");
-            if str_value.chars().collect::<Vec<char>>().len() != 1 {
+            let chars = str_value.chars().collect::<Vec<char>>();
+            if chars.len() != 1 {
                 return Err(WebDriverError::new(ErrorStatus::InvalidArgument,
                                                "Value was not a string"));
             }
-            Ok(str_value.char_at(0))
+            Ok(chars[0])
         }).collect::<Result<Vec<_>, _>>());
 
         Ok(SendKeysParameters {
