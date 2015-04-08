@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import traceback
+import types
 
 
 class MarionetteException(Exception):
@@ -173,7 +174,7 @@ class UnexpectedAlertOpen(MarionetteException):
     status = "unexpected alert open"
 
 excs = [
-    MarionetteException,
+  MarionetteException,
   TimeoutException,
   InvalidResponseException,
   JavascriptException,
@@ -210,7 +211,7 @@ def lookup(identifier):
     rv = None
     if isinstance(identifier, int):
         rv = filter(by_code, excs)
-    elif isinstance(identifier, str):
+    elif isinstance(identifier, types.StringTypes):
         rv = filter(by_status, excs)
 
     if not rv:
