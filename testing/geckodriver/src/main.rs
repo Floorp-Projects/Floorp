@@ -1,12 +1,6 @@
-#![feature(std_misc)]
-#![feature(io)]
-#![feature(net)]
-#![feature(path)]
-#![feature(exit_status)]
-#![feature(collections)]
 #[macro_use]
 extern crate log;
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate rustc_serialize;
 extern crate argparse;
 extern crate env_logger;
 extern crate hyper;
@@ -16,10 +10,10 @@ extern crate regex;
 #[macro_use]
 extern crate webdriver;
 
-use std::env;
+use std::process::exit;
 use std::net::SocketAddr;
 use std::str::FromStr;
-use std::path::PathBuf;
+use std::path::Path;
 
 use argparse::{ArgumentParser, StoreTrue, Store};
 use webdriver::server::start;
@@ -46,7 +40,7 @@ struct Options {
     connect_existing: bool
 }
 
-fn parse_args() -> Result<Options, ()> {
+fn parse_args() -> Options {
     let mut opts = Options {
         binary: "".to_string(),
         webdriver_port: 4444u16,
@@ -54,7 +48,6 @@ fn parse_args() -> Result<Options, ()> {
         connect_existing: false
     };
 
-    //Limit the scope of the opts borrow
     {
         let mut parser = ArgumentParser::new();
         parser.set_description("WebDriver to marionette proxy.");
@@ -70,13 +63,9 @@ fn parse_args() -> Result<Options, ()> {
         parser.refer(&mut opts.connect_existing)
             .add_option(&["--connect-existing"], StoreTrue,
                         "Connect to an existing firefox process");
-        if let Err(e) = parser.parse_args() {
-            env::set_exit_status(e);
-            return Err(())
-        };
+        parser.parse_args_or_exit()
     }
-
-    Ok(opts)
+    opts
 }
 
 
@@ -96,26 +85,23 @@ fn parse_addr(s: &str) -> Result<SocketAddr, String> {
 
 fn main() {
     env_logger::init().unwrap();
-    let opts = match parse_args() {
-        Ok(args) => args,
-        Err(_) => return
-    };
+    let opts = parse_args();
     let addr = match parse_addr(DEFAULT_ADDR) {
         Ok(x) => x,
         Err(e) => {
             println!("{}", e);
-            return
+            exit(1);
         }
     };
 
     let launcher = if opts.connect_existing {
         BrowserLauncher::None
     } else {
-        BrowserLauncher::BinaryLauncher(PathBuf::new(&opts.binary))
+        BrowserLauncher::BinaryLauncher(Path::new(&opts.binary).to_path_buf())
     };
 
     let settings = MarionetteSettings::new(opts.marionette_port, launcher);
 
     //TODO: what if binary isn't a valid path?
-    start(addr.ip(), opts.webdriver_port, MarionetteHandler::new(settings));
+    start(addr, MarionetteHandler::new(settings));
 }
