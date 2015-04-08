@@ -768,25 +768,18 @@ private:
 };
 
 void
-BluetoothServiceBluedroid::SetPinCodeInternal(
-  const nsAString& aDeviceAddress, const nsAString& aPinCode,
-  BluetoothReplyRunnable* aRunnable)
+BluetoothServiceBluedroid::PinReplyInternal(
+  const nsAString& aDeviceAddress, bool aAccept,
+  const nsAString& aPinCode, BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
 
-  sBtInterface->PinReply(aDeviceAddress, true, aPinCode,
-    new PinReplyResultHandler(aRunnable));
+  sBtInterface->PinReply(aDeviceAddress, aAccept, aPinCode,
+                         new PinReplyResultHandler(aRunnable));
 }
 
-void
-BluetoothServiceBluedroid::SetPasskeyInternal(
-  const nsAString& aDeviceAddress, uint32_t aPasskey,
-  BluetoothReplyRunnable* aRunnable)
-{
-  return;
-}
 
 class BluetoothServiceBluedroid::SspReplyResultHandler final
   : public BluetoothResultHandler
@@ -811,18 +804,42 @@ private:
 };
 
 void
-BluetoothServiceBluedroid::SetPairingConfirmationInternal(
-  const nsAString& aDeviceAddress, bool aConfirm,
-  BluetoothReplyRunnable* aRunnable)
+BluetoothServiceBluedroid::SspReplyInternal(
+  const nsAString& aDeviceAddress, BluetoothSspVariant aVariant,
+  bool aAccept, BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
 
-  sBtInterface->SspReply(aDeviceAddress,
-                         NS_ConvertUTF8toUTF16("PasskeyConfirmation"),
-                         aConfirm, 0, new SspReplyResultHandler(aRunnable));
+  sBtInterface->SspReply(aDeviceAddress, aVariant, aAccept, 0 /* passkey */,
+                         new SspReplyResultHandler(aRunnable));
 }
+
+void
+BluetoothServiceBluedroid::SetPinCodeInternal(
+  const nsAString& aDeviceAddress, const nsAString& aPinCode,
+  BluetoothReplyRunnable* aRunnable)
+{
+  // Legacy method used by bluez only.
+}
+
+void
+BluetoothServiceBluedroid::SetPasskeyInternal(
+  const nsAString& aDeviceAddress, uint32_t aPasskey,
+  BluetoothReplyRunnable* aRunnable)
+{
+  // Legacy method used by bluez only.
+}
+
+void
+BluetoothServiceBluedroid::SetPairingConfirmationInternal(
+  const nsAString& aDeviceAddress, bool aConfirm,
+  BluetoothReplyRunnable* aRunnable)
+{
+  // Legacy method used by bluez only.
+}
+
 
 void
 BluetoothServiceBluedroid::NextBluetoothProfileController()
@@ -1129,6 +1146,36 @@ BluetoothServiceBluedroid::DiscoverGattServicesInternal(
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
   gatt->Discover(aAppUuid, aRunnable);
+}
+
+void
+BluetoothServiceBluedroid::GattClientStartNotificationsInternal(
+  const nsAString& aAppUuid, const BluetoothGattServiceId& aServId,
+  const BluetoothGattId& aCharId, BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->RegisterNotifications(aAppUuid, aServId, aCharId, aRunnable);
+}
+
+void
+BluetoothServiceBluedroid::GattClientStopNotificationsInternal(
+  const nsAString& aAppUuid, const BluetoothGattServiceId& aServId,
+  const BluetoothGattId& aCharId, BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
+
+  BluetoothGattManager* gatt = BluetoothGattManager::Get();
+  ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
+
+  gatt->DeregisterNotifications(aAppUuid, aServId, aCharId, aRunnable);
 }
 
 void

@@ -584,25 +584,6 @@ Convert(const nsAString& aIn, BluetoothServiceName& aOut)
 }
 
 nsresult
-Convert(const nsAString& aIn, BluetoothSspVariant& aOut)
-{
-  if (aIn.EqualsLiteral("PasskeyConfirmation")) {
-    aOut = SSP_VARIANT_PASSKEY_CONFIRMATION;
-  } else if (aIn.EqualsLiteral("PasskeyEntry")) {
-    aOut = SSP_VARIANT_PASSKEY_ENTRY;
-  } else if (aIn.EqualsLiteral("Consent")) {
-    aOut = SSP_VARIANT_CONSENT;
-  } else if (aIn.EqualsLiteral("PasskeyNotification")) {
-    aOut = SSP_VARIANT_PASSKEY_NOTIFICATION;
-  } else {
-    BT_LOGR("Invalid SSP variant name: %s", NS_ConvertUTF16toUTF8(aIn).get());
-    aOut = SSP_VARIANT_PASSKEY_CONFIRMATION; // silences compiler warning
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  return NS_OK;
-}
-
-nsresult
 Convert(BluetoothAclState aIn, bool& aOut)
 {
   static const bool sBool[] = {

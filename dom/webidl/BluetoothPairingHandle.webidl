@@ -13,8 +13,22 @@ interface BluetoothPairingHandle
    */
   readonly attribute DOMString passkey;
 
+  /**
+   * Reply pin code for enterpincodereq. The promise will be rejected if the
+   * pairing request type is not enterpincodereq or operation fails.
+   */
   [NewObject]
   Promise<void> setPinCode(DOMString aPinCode);
+
+  /**
+   * Accept pairing requests. The promise will be rejected if the pairing
+   * request type is not pairingconfirmationreq or pairingconsentreq or
+   * operation fails.
+   */
   [NewObject]
-  Promise<void> setPairingConfirmation(boolean aConfirm);
+  Promise<void> accept();
+
+  // Reject pairing requests. The promise will be rejected if operation fails.
+  [NewObject]
+  Promise<void> reject();
 };
