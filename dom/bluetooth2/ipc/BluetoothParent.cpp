@@ -212,6 +212,10 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_ConnectedDevicePropertiesRequest());
     case Request::TFetchUuidsRequest:
       return actor->DoRequest(aRequest.get_FetchUuidsRequest());
+    case Request::TPinReplyRequest:
+      return actor->DoRequest(aRequest.get_PinReplyRequest());
+    case Request::TSspReplyRequest:
+      return actor->DoRequest(aRequest.get_SspReplyRequest());
     case Request::TSetPinCodeRequest:
       return actor->DoRequest(aRequest.get_SetPinCodeRequest());
     case Request::TSetPasskeyRequest:
@@ -256,6 +260,12 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_DisconnectGattClientRequest());
     case Request::TDiscoverGattServicesRequest:
       return actor->DoRequest(aRequest.get_DiscoverGattServicesRequest());
+    case Request::TGattClientStartNotificationsRequest:
+      return actor->DoRequest(
+        aRequest.get_GattClientStartNotificationsRequest());
+    case Request::TGattClientStopNotificationsRequest:
+      return actor->DoRequest(
+        aRequest.get_GattClientStopNotificationsRequest());
     case Request::TUnregisterGattClientRequest:
       return actor->DoRequest(aRequest.get_UnregisterGattClientRequest());
     case Request::TGattClientReadRemoteRssiRequest:
@@ -466,6 +476,34 @@ BluetoothRequestParent::DoRequest(const FetchUuidsRequest& aRequest)
     mService->FetchUuidsInternal(aRequest.address(), mReplyRunnable.get());
 
   NS_ENSURE_SUCCESS(rv, false);
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const PinReplyRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TPinReplyRequest);
+
+  mService->PinReplyInternal(aRequest.address(),
+                             aRequest.accept(),
+                             aRequest.pinCode(),
+                             mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const SspReplyRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TSspReplyRequest);
+
+  mService->SspReplyInternal(aRequest.address(),
+                             aRequest.variant(),
+                             aRequest.accept(),
+                             mReplyRunnable.get());
 
   return true;
 }
@@ -729,6 +767,36 @@ BluetoothRequestParent::DoRequest(const DiscoverGattServicesRequest& aRequest)
 
   mService->DiscoverGattServicesInternal(aRequest.appUuid(),
                                          mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(
+  const GattClientStartNotificationsRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TGattClientStartNotificationsRequest);
+
+  mService->GattClientStartNotificationsInternal(aRequest.appUuid(),
+                                                 aRequest.servId(),
+                                                 aRequest.charId(),
+                                                 mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(
+  const GattClientStopNotificationsRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TGattClientStopNotificationsRequest);
+
+  mService->GattClientStopNotificationsInternal(aRequest.appUuid(),
+                                                aRequest.servId(),
+                                                aRequest.charId(),
+                                                mReplyRunnable.get());
 
   return true;
 }

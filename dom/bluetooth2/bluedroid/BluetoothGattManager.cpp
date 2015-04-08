@@ -58,6 +58,8 @@ public:
     mDiscoverRunnable = nullptr;
     mUnregisterClientRunnable = nullptr;
     mReadRemoteRssiRunnable = nullptr;
+    mRegisterNotificationsRunnable = nullptr;
+    mDeregisterNotificationsRunnable = nullptr;
   }
 
   void NotifyDiscoverCompleted(bool aSuccess)
@@ -98,6 +100,8 @@ public:
   nsRefPtr<BluetoothReplyRunnable> mDisconnectRunnable;
   nsRefPtr<BluetoothReplyRunnable> mDiscoverRunnable;
   nsRefPtr<BluetoothReplyRunnable> mReadRemoteRssiRunnable;
+  nsRefPtr<BluetoothReplyRunnable> mRegisterNotificationsRunnable;
+  nsRefPtr<BluetoothReplyRunnable> mDeregisterNotificationsRunnable;
   nsRefPtr<BluetoothReplyRunnable> mUnregisterClientRunnable;
 
   /**
@@ -636,6 +640,151 @@ BluetoothGattManager::ReadRemoteRssi(int aClientIf,
     new ReadRemoteRssiResultHandler(client));
 }
 
+class BluetoothGattManager::RegisterNotificationsResultHandler final
+  : public BluetoothGattClientResultHandler
+{
+public:
+  RegisterNotificationsResultHandler(BluetoothGattClient* aClient)
+  : mClient(aClient)
+  {
+    MOZ_ASSERT(mClient);
+  }
+
+  void RegisterNotification() override
+  {
+    MOZ_ASSERT(mClient->mRegisterNotificationsRunnable);
+
+    /**
+     * Resolve the promise directly if we successfully issued this request to
+     * stack.
+     *
+     * We resolve the promise here since bluedroid stack always returns
+     * incorrect connId in |RegisterNotificationNotification| and we cannot map
+     * back to the target client because of it.
+     * Please see Bug 1149043 for more information.
+     */
+    DispatchReplySuccess(mClient->mRegisterNotificationsRunnable);
+    mClient->mRegisterNotificationsRunnable = nullptr;
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING(
+      "BluetoothGattClientInterface::RegisterNotifications failed: %d",
+      (int)aStatus);
+    MOZ_ASSERT(mClient->mRegisterNotificationsRunnable);
+
+    DispatchReplyError(mClient->mRegisterNotificationsRunnable,
+                       NS_LITERAL_STRING("RegisterNotifications failed"));
+    mClient->mRegisterNotificationsRunnable = nullptr;
+  }
+
+private:
+  nsRefPtr<BluetoothGattClient> mClient;
+};
+
+void
+BluetoothGattManager::RegisterNotifications(
+  const nsAString& aAppUuid, const BluetoothGattServiceId& aServId,
+  const BluetoothGattId& aCharId, BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  ENSURE_GATT_CLIENT_INTF_IS_READY_VOID(aRunnable);
+
+  size_t index = sClients->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  MOZ_ASSERT(index != sClients->NoIndex);
+
+  nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
+
+  // Reject the request if there is an ongoing request or client is already
+  // disconnected
+  if (client->mRegisterNotificationsRunnable || client->mConnId <= 0) {
+    DispatchReplyError(aRunnable,
+                       NS_LITERAL_STRING("RegisterNotifications failed"));
+    return;
+  }
+
+  client->mRegisterNotificationsRunnable = aRunnable;
+
+  sBluetoothGattClientInterface->RegisterNotification(
+    client->mClientIf, client->mDeviceAddr, aServId, aCharId,
+    new RegisterNotificationsResultHandler(client));
+}
+
+class BluetoothGattManager::DeregisterNotificationsResultHandler final
+  : public BluetoothGattClientResultHandler
+{
+public:
+  DeregisterNotificationsResultHandler(BluetoothGattClient* aClient)
+  : mClient(aClient)
+  {
+    MOZ_ASSERT(mClient);
+  }
+
+  void DeregisterNotification() override
+  {
+    MOZ_ASSERT(mClient->mDeregisterNotificationsRunnable);
+
+    /**
+     * Resolve the promise directly if we successfully issued this request to
+     * stack.
+     *
+     * We resolve the promise here since bluedroid stack always returns
+     * incorrect connId in |RegisterNotificationNotification| and we cannot map
+     * back to the target client because of it.
+     * Please see Bug 1149043 for more information.
+     */
+    DispatchReplySuccess(mClient->mDeregisterNotificationsRunnable);
+    mClient->mDeregisterNotificationsRunnable = nullptr;
+  }
+
+  void OnError(BluetoothStatus aStatus) override
+  {
+    BT_WARNING(
+      "BluetoothGattClientInterface::DeregisterNotifications failed: %d",
+      (int)aStatus);
+    MOZ_ASSERT(mClient->mDeregisterNotificationsRunnable);
+
+    DispatchReplyError(mClient->mDeregisterNotificationsRunnable,
+                       NS_LITERAL_STRING("DeregisterNotifications failed"));
+    mClient->mDeregisterNotificationsRunnable = nullptr;
+  }
+
+private:
+  nsRefPtr<BluetoothGattClient> mClient;
+};
+
+void
+BluetoothGattManager::DeregisterNotifications(
+  const nsAString& aAppUuid, const BluetoothGattServiceId& aServId,
+  const BluetoothGattId& aCharId, BluetoothReplyRunnable* aRunnable)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aRunnable);
+
+  ENSURE_GATT_CLIENT_INTF_IS_READY_VOID(aRunnable);
+
+  size_t index = sClients->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  MOZ_ASSERT(index != sClients->NoIndex);
+
+  nsRefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
+
+  // Reject the request if there is an ongoing request
+  if (client->mDeregisterNotificationsRunnable) {
+    DispatchReplyError(aRunnable,
+                       NS_LITERAL_STRING("DeregisterNotifications failed"));
+    return;
+  }
+
+  client->mDeregisterNotificationsRunnable = aRunnable;
+
+  sBluetoothGattClientInterface->DeregisterNotification(
+    client->mClientIf, client->mDeviceAddr, aServId, aCharId,
+    new DeregisterNotificationsResultHandler(client));
+}
+
 //
 // Notification Handlers
 //
@@ -999,7 +1148,25 @@ BluetoothGattManager::RegisterNotificationNotification(
   int aConnId, int aIsRegister, BluetoothGattStatus aStatus,
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharId)
-{ }
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  BT_LOGD("aStatus = %d, aConnId = %d, aIsRegister = %d",
+          aStatus, aConnId, aIsRegister);
+
+  /**
+   * FIXME: Bug 1149043
+   *
+   * aConnId reported by bluedroid stack is wrong, with these limited
+   * information we have, we currently cannot map back to the client from this
+   * callback. Therefore, we resolve/reject the Promise for registering or
+   * deregistering notifications in their result handlers instead of this
+   * callback.
+   * We should resolve/reject the Promise for registering or deregistering
+   * notifications here if this bluedroid stack bug is fixed.
+   *
+   * Please see Bug 1149043 for more information.
+   */
+}
 
 void
 BluetoothGattManager::NotifyNotification(
