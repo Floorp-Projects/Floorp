@@ -1,16 +1,15 @@
 [package]
 name = "wires"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["James Graham <james@hoppipolla.co.uk>"]
 
 [dependencies]
-argparse = "0.1.0"
-env_logger = "0.2.2"
-hyper = "0.3.0"
-log = "0.2.5"
-regex = "0.1.18"
-rustc-serialize = "0.3.4"
-uuid = "0.1.11"
+env_logger = "0.3.0"
+hyper = "0.3.10"
+log = "0.3.1"
+regex = "0.1.27"
+rustc-serialize = "0.3.12"
+uuid = "0.1.16"
 
 [dependencies.webdriver]
 git = "http://github.com/jgraham/webdriver-rust.git"
@@ -20,3 +19,6 @@ git = "http://github.com/jgraham/rust_mozprofile.git"
 
 [dependencies.mozrunner]
 git = "http://github.com/jgraham/rust_mozrunner.git"
+
+[dependencies.argparse]
+git = "https://github.com/tailhook/rust-argparse.git"

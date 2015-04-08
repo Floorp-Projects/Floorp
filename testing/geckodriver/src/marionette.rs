@@ -5,11 +5,11 @@ use std::io::prelude::*;
 use std::io::Result as IoResult;
 use std::io::Error as IoError;
 use std::io::ErrorKind;
+use std::error::Error;
 use std::net::TcpStream;
 use std::path::PathBuf;
 use std::sync::Mutex;
-use std::time::duration::Duration;
-use std::thread::park_timeout;
+use std::thread::sleep_ms;
 
 use mozrunner::runner::{Runner, FirefoxRunner};
 use mozprofile::preferences::{PrefValue};
@@ -534,9 +534,9 @@ impl MarionetteConnection {
     }
 
     pub fn connect(&mut self) -> IoResult<()> {
-        let timeout = 60 * 1000;
-        let poll_interval = Duration::milliseconds(100);
-        let poll_attempts = timeout / poll_interval.num_milliseconds();
+        let timeout = 60 * 1000; // milliseconds
+        let poll_interval = 100 * 1000; // milliseconds
+        let poll_attempts = timeout / poll_interval;
         let mut poll_attempt = 0;
         loop {
             match TcpStream::connect(&("127.0.0.1", self.port)) {
@@ -548,7 +548,7 @@ impl MarionetteConnection {
                     debug!("{}/{}", poll_attempt, poll_attempts);
                     if poll_attempt <= poll_attempts {
                         poll_attempt += 1;
-                        park_timeout(poll_interval);
+                        sleep_ms(poll_interval);
                     } else {
                         return Err(e);
                     }
@@ -634,7 +634,7 @@ impl MarionetteConnection {
             let byte = match num_read {
                 0 => {
                     return Err(IoError::new(ErrorKind::Other,
-                                            "EOF reading marionette message", None))
+                                            "EOF reading marionette message"))
                 },
                 1 => buf[0] as char,
                 _ => panic!("Expected one byte got more")
@@ -658,10 +658,12 @@ impl MarionetteConnection {
             let num_read = try!(stream.read(buf));
             if num_read == 0 {
                 return Err(IoError::new(ErrorKind::Other,
-                                        "EOF reading marionette message", None))
+                                        "EOF reading marionette message"))
             }
             total_read += num_read;
-            data.push_all(&buf[..num_read]);
+            for x in &buf[..num_read] {
+                data.push(*x);
+            }
         }
         debug!("Leaving read_resp");
         //Need to handle the error here
