@@ -81,8 +81,7 @@ public:
                          const PCacheResponseOrVoid& aResponse);
   void RecvMatchAllResponse(RequestId aRequestId, nsresult aRv,
                             const nsTArray<PCacheResponse>& aResponses);
-  void RecvAddAllResponse(RequestId aRequestId,
-                          const mozilla::ErrorResult& aError);
+  void RecvAddAllResponse(RequestId aRequestId, nsresult aRv);
   void RecvPutResponse(RequestId aRequestId, nsresult aRv);
 
   void RecvDeleteResponse(RequestId aRequestId, nsresult aRv,

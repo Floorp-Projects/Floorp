@@ -6,10 +6,6 @@
 
 TEST_DIRS += ['test']
 
-EXPORTS.ipc += [
-    'ErrorIPCUtils.h',
-]
-
 EXPORTS.mozilla += [
     'ErrorResult.h',
 ]
