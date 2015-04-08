@@ -222,9 +222,6 @@ nsresult
 Convert(const nsAString& aIn, BluetoothServiceName& aOut);
 
 nsresult
-Convert(const nsAString& aIn, BluetoothSspVariant& aOut);
-
-nsresult
 Convert(BluetoothAclState aIn, bool& aOut);
 
 nsresult

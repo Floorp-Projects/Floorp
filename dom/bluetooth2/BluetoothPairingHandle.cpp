@@ -75,7 +75,7 @@ BluetoothPairingHandle::SetPinCode(const nsAString& aPinCode, ErrorResult& aRv)
   nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
-  BT_ENSURE_TRUE_REJECT(mType.EqualsLiteral("enterpincodereq"),
+  BT_ENSURE_TRUE_REJECT(mType.EqualsLiteral(PAIRING_REQ_TYPE_ENTERPINCODE),
                         NS_ERROR_DOM_INVALID_STATE_ERR);
 
   BluetoothService* bs = BluetoothService::Get();
@@ -85,13 +85,13 @@ BluetoothPairingHandle::SetPinCode(const nsAString& aPinCode, ErrorResult& aRv)
     new BluetoothVoidReplyRunnable(nullptr /* DOMRequest */,
                                    promise,
                                    NS_LITERAL_STRING("SetPinCode"));
-  bs->SetPinCodeInternal(mDeviceAddress, aPinCode, result);
+  bs->PinReplyInternal(mDeviceAddress, true /* accept */, aPinCode, result);
 
   return promise.forget();
 }
 
 already_AddRefed<Promise>
-BluetoothPairingHandle::SetPairingConfirmation(bool aConfirm, ErrorResult& aRv)
+BluetoothPairingHandle::Accept(ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
   if (!global) {
@@ -102,8 +102,37 @@ BluetoothPairingHandle::SetPairingConfirmation(bool aConfirm, ErrorResult& aRv)
   nsRefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
-  BT_ENSURE_TRUE_REJECT(mType.EqualsLiteral("pairingconfirmationreq"),
+  BT_ENSURE_TRUE_REJECT(mType.EqualsLiteral(PAIRING_REQ_TYPE_CONFIRMATION) ||
+                        mType.EqualsLiteral(PAIRING_REQ_TYPE_CONSENT),
                         NS_ERROR_DOM_INVALID_STATE_ERR);
+
+  BluetoothService* bs = BluetoothService::Get();
+  BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
+
+  BluetoothSspVariant variant;
+  BT_ENSURE_TRUE_REJECT(GetSspVariant(variant), NS_ERROR_DOM_OPERATION_ERR);
+
+  nsRefPtr<BluetoothReplyRunnable> result =
+    new BluetoothVoidReplyRunnable(nullptr /* DOMRequest */,
+                                   promise,
+                                   NS_LITERAL_STRING("Accept"));
+  bs->SspReplyInternal(
+    mDeviceAddress, variant, true /* aAccept */, result);
+
+  return promise.forget();
+}
+
+already_AddRefed<Promise>
+BluetoothPairingHandle::Reject(ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsRefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, NS_ERROR_NOT_AVAILABLE);
@@ -111,13 +140,39 @@ BluetoothPairingHandle::SetPairingConfirmation(bool aConfirm, ErrorResult& aRv)
   nsRefPtr<BluetoothReplyRunnable> result =
     new BluetoothVoidReplyRunnable(nullptr /* DOMRequest */,
                                    promise,
-                                   NS_LITERAL_STRING(
-                                     "SetPairingConfirmation"));
+                                   NS_LITERAL_STRING("Reject"));
 
-  bs->SetPairingConfirmationInternal(mDeviceAddress,
-                                     aConfirm,
-                                     result);
+  if (mType.EqualsLiteral(PAIRING_REQ_TYPE_ENTERPINCODE)) { // Pin request
+    bs->PinReplyInternal(
+      mDeviceAddress, false /* aAccept */, EmptyString(), result);
+  } else { // Ssp request
+    BluetoothSspVariant variant;
+    BT_ENSURE_TRUE_REJECT(GetSspVariant(variant), NS_ERROR_DOM_OPERATION_ERR);
+
+    bs->SspReplyInternal(
+      mDeviceAddress, variant, false /* aAccept */, result);
+  }
+
   return promise.forget();
+}
+
+bool
+BluetoothPairingHandle::GetSspVariant(BluetoothSspVariant& aVariant)
+{
+  if (mType.EqualsLiteral(PAIRING_REQ_TYPE_DISPLAYPASSKEY)) {
+    aVariant = BluetoothSspVariant::SSP_VARIANT_PASSKEY_NOTIFICATION;
+  } else if (mType.EqualsLiteral(PAIRING_REQ_TYPE_CONFIRMATION)) {
+    aVariant = BluetoothSspVariant::SSP_VARIANT_PASSKEY_CONFIRMATION;
+  } else if (mType.EqualsLiteral(PAIRING_REQ_TYPE_CONSENT)) {
+    aVariant = BluetoothSspVariant::SSP_VARIANT_CONSENT;
+  } else {
+    BT_LOGR("Invalid SSP variant name: %s",
+            NS_ConvertUTF16toUTF8(mType).get());
+    aVariant = SSP_VARIANT_PASSKEY_CONFIRMATION; // silences compiler warning
+    return false;
+  }
+
+  return true;
 }
 
 JSObject*

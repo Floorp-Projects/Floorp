@@ -769,7 +769,7 @@ BluetoothHALInterface::PinReply(const nsAString& aBdAddr, bool aAccept,
 
 void
 BluetoothHALInterface::SspReply(const nsAString& aBdAddr,
-                                const nsAString& aVariant,
+                                BluetoothSspVariant aVariant,
                                 bool aAccept, uint32_t aPasskey,
                                 BluetoothResultHandler* aRes)
 {

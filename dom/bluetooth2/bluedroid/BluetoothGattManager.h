@@ -46,6 +46,16 @@ public:
                       const nsAString& aDeviceAddr,
                       BluetoothReplyRunnable* aRunnable);
 
+  void RegisterNotifications(const nsAString& aAppUuid,
+                             const BluetoothGattServiceId& aServId,
+                             const BluetoothGattId& aCharId,
+                             BluetoothReplyRunnable* aRunnable);
+
+  void DeregisterNotifications(const nsAString& aAppUuid,
+                               const BluetoothGattServiceId& aServId,
+                               const BluetoothGattId& aCharId,
+                               BluetoothReplyRunnable* aRunnable);
+
 private:
   class CleanupResultHandler;
   class CleanupResultHandlerRunnable;
@@ -56,6 +66,8 @@ private:
   class DisconnectResultHandler;
   class DiscoverResultHandler;
   class ReadRemoteRssiResultHandler;
+  class RegisterNotificationsResultHandler;
+  class DeregisterNotificationsResultHandler;
 
   BluetoothGattManager();
 
