@@ -53,7 +53,8 @@ const browserElementTestHelpers = {
       ['dom.ipc.processPriorityManager.BACKGROUND.LRUPoolLevels', 2],
       ['dom.ipc.processPriorityManager.FOREGROUND.LRUPoolLevels', 2],
       ['dom.ipc.processPriorityManager.testMode', true],
-      ['dom.ipc.processPriorityManager.enabled', true]
+      ['dom.ipc.processPriorityManager.enabled', true],
+      ['dom.ipc.processCount', 3]
     );
   },
 
@@ -219,6 +220,43 @@ function expectPriorityWithLRUSet(childID, expectedPriority, expectedLRU) {
            ' to change to ' + expectedLRU);
 
         if ((priority == expectedPriority) && (lru == expectedLRU)) {
+          resolve();
+        } else {
+          reject();
+        }
+      }
+    );
+  });
+}
+
+// Returns a promise which is resolved or rejected the next time the process
+// childID delays its priority change. We resolve if the priority matches
+// expectedPriority, and we reject otherwise.
+
+function expectPriorityDelay(childID, expectedPriority) {
+  return new Promise(function(resolve, reject) {
+    var observed = false;
+    browserElementTestHelpers.addProcessPriorityObserver(
+      'process-priority-delayed',
+      function(subject, topic, data) {
+        if (observed) {
+          return;
+        }
+
+        var [id, priority] = data.split(":");
+        if (id != childID) {
+          return;
+        }
+
+        // Make sure we run the is() calls in this observer only once, otherwise
+        // we'll expect /every/ priority change to match expectedPriority.
+        observed = true;
+
+        is(priority, expectedPriority,
+           'Expected delayed priority change of childID ' + childID +
+           ' to ' + expectedPriority);
+
+        if (priority == expectedPriority) {
           resolve();
         } else {
           reject();
