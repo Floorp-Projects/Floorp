@@ -4,16 +4,22 @@
 
 #include "nsISupports.idl"
 
-[scriptable, function, uuid(9f3ed2c0-aed9-11e1-8c3d-5310bd393466)]
-interface nsIAlarmFiredCb : nsISupports 
+[scriptable, function, uuid(53dec7f9-bb51-4c3a-98ab-80d5d750c9dd)]
+interface nsIAlarmFiredCb : nsISupports
 {
   void onAlarmFired();
 };
 
-[scriptable, function, uuid(0ca52e84-ba8f-11e1-87e8-63235527db9e)]
-interface nsITimezoneChangedCb : nsISupports 
+[scriptable, function, uuid(e6662911-c066-4358-9388-8661065c65a2)]
+interface nsITimezoneChangedCb : nsISupports
 {
   void onTimezoneChanged(in int32_t aTimezoneOffset);
+};
+
+[scriptable, function, uuid(46ece987-a3ec-4124-906f-d99c83296ac6)]
+interface nsISystemClockChangedCb : nsISupports
+{
+  void onSystemClockChanged(in int32_t aClockDeltaMS);
 };
 
 %{C++
@@ -21,12 +27,13 @@ interface nsITimezoneChangedCb : nsISupports
 #define ALARMHALSERVICE_CONTRACTID "@mozilla.org/alarmHalService;1"
 %}
 
-[scriptable, uuid(057b1ee4-f696-486d-bd55-205e21e88fab)]
+[scriptable, uuid(35074214-f50d-4f9a-b173-8d564dfa657d)]
 interface nsIAlarmHalService : nsISupports
 {
   bool setAlarm(in int32_t aSeconds, in int32_t aNanoseconds);
   void setAlarmFiredCb(in nsIAlarmFiredCb aAlarmFiredCb);
   void setTimezoneChangedCb(in nsITimezoneChangedCb aTimezoneChangedCb);
+  void setSystemClockChangedCb(in nsISystemClockChangedCb aSystemClockChangedCb);
 };
 
 
