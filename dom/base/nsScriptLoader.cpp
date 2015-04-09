@@ -66,6 +66,35 @@ using namespace mozilla::dom;
 // context, but it will AddRef and Release it on other threads.
 NS_IMPL_ISUPPORTS0(nsScriptLoadRequest)
 
+nsScriptLoadRequestList::~nsScriptLoadRequestList()
+{
+  Clear();
+}
+
+void
+nsScriptLoadRequestList::Clear()
+{
+  while (!isEmpty()) {
+    nsRefPtr<nsScriptLoadRequest> first = StealFirst();
+    // And just let it go out of scope and die.
+  }
+}
+
+#ifdef DEBUG
+bool
+nsScriptLoadRequestList::Contains(nsScriptLoadRequest* aElem)
+{
+  for (nsScriptLoadRequest* req = getFirst();
+       req; req = req->getNext()) {
+    if (req == aElem) {
+      return true;
+    }
+  }
+
+  return false;
+}
+#endif // DEBUG
+
 //////////////////////////////////////////////////////////////
 //
 //////////////////////////////////////////////////////////////
@@ -93,20 +122,25 @@ nsScriptLoader::~nsScriptLoader()
     mParserBlockingRequest->FireScriptAvailable(NS_ERROR_ABORT);
   }
 
-  for (uint32_t i = 0; i < mXSLTRequests.Length(); i++) {
-    mXSLTRequests[i]->FireScriptAvailable(NS_ERROR_ABORT);
+  for (nsScriptLoadRequest* req = mXSLTRequests.getFirst(); req;
+       req = req->getNext()) {
+    req->FireScriptAvailable(NS_ERROR_ABORT);
   }
 
-  for (uint32_t i = 0; i < mDeferRequests.Length(); i++) {
-    mDeferRequests[i]->FireScriptAvailable(NS_ERROR_ABORT);
+  for (nsScriptLoadRequest* req = mDeferRequests.getFirst(); req;
+       req = req->getNext()) {
+    req->FireScriptAvailable(NS_ERROR_ABORT);
   }
 
-  for (uint32_t i = 0; i < mAsyncRequests.Length(); i++) {
-    mAsyncRequests[i]->FireScriptAvailable(NS_ERROR_ABORT);
+  for (nsScriptLoadRequest* req = mAsyncRequests.getFirst(); req;
+       req = req->getNext()) {
+    req->FireScriptAvailable(NS_ERROR_ABORT);
   }
 
-  for (uint32_t i = 0; i < mNonAsyncExternalScriptInsertedRequests.Length(); i++) {
-    mNonAsyncExternalScriptInsertedRequests[i]->FireScriptAvailable(NS_ERROR_ABORT);
+  for(nsScriptLoadRequest* req = mNonAsyncExternalScriptInsertedRequests.getFirst();
+      req;
+      req = req->getNext()) {
+    req->FireScriptAvailable(NS_ERROR_ABORT);
   }
 
   // Unblock the kids, in case any of them moved to a different document
@@ -591,6 +625,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     request->mJSVersion = version;
 
     if (aElement->GetScriptAsync()) {
+      request->mIsAsync = true;
       mAsyncRequests.AppendElement(request);
       if (!request->mLoading) {
         // The script is available already. Run it ASAP when the event
@@ -603,6 +638,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       // Violate the HTML5 spec in order to make LABjs and the "order" plug-in
       // for RequireJS work with their Gecko-sniffed code path. See
       // http://lists.w3.org/Archives/Public/public-html/2010Oct/0088.html
+      request->mIsNonAsyncScriptInserted = true;
       mNonAsyncExternalScriptInsertedRequests.AppendElement(request);
       if (!request->mLoading) {
         // The script is available already. Run it ASAP when the event
@@ -631,6 +667,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       // Need to maintain order for XSLT-inserted scripts
       NS_ASSERTION(!mParserBlockingRequest,
           "Parser-blocking scripts and XSLT scripts in the same doc!");
+      request->mIsXSLT = true;
       mXSLTRequests.AppendElement(request);
       if (!request->mLoading) {
         // The script is available already. Run it ASAP when the event
@@ -651,7 +688,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
       // Web page.
       NS_ASSERTION(!mParserBlockingRequest,
           "There can be only one parser-blocking script at a time");
-      NS_ASSERTION(mXSLTRequests.IsEmpty(),
+      NS_ASSERTION(mXSLTRequests.isEmpty(),
           "Parser-blocking scripts and XSLT scripts in the same doc!");
       mParserBlockingRequest = request;
       ProcessPendingRequestsAsync();
@@ -661,7 +698,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     // The script will be run when it loads or the style sheet loads.
     NS_ASSERTION(!mParserBlockingRequest,
         "There can be only one parser-blocking script at a time");
-    NS_ASSERTION(mXSLTRequests.IsEmpty(),
+    NS_ASSERTION(mXSLTRequests.isEmpty(),
         "Parser-blocking scripts and XSLT scripts in the same doc!");
     mParserBlockingRequest = request;
     return true;
@@ -687,7 +724,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
   request->mLineNo = aElement->GetScriptLineNumber();
 
   if (aElement->GetParserCreated() == FROM_PARSER_XSLT &&
-      (!ReadyToExecuteScripts() || !mXSLTRequests.IsEmpty())) {
+      (!ReadyToExecuteScripts() || !mXSLTRequests.isEmpty())) {
     // Need to maintain order for XSLT-inserted scripts
     NS_ASSERTION(!mParserBlockingRequest,
         "Parser-blocking scripts and XSLT scripts in the same doc!");
@@ -706,7 +743,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
     NS_ASSERTION(!mParserBlockingRequest,
         "There can be only one parser-blocking script at a time");
     mParserBlockingRequest = request;
-    NS_ASSERTION(mXSLTRequests.IsEmpty(),
+    NS_ASSERTION(mXSLTRequests.isEmpty(),
         "Parser-blocking scripts and XSLT scripts in the same doc!");
     return true;
   }
@@ -1134,39 +1171,39 @@ nsScriptLoader::ProcessPendingRequests()
   }
 
   while (ReadyToExecuteScripts() && 
-         !mXSLTRequests.IsEmpty() && 
-         !mXSLTRequests[0]->mLoading) {
-    request.swap(mXSLTRequests[0]);
-    mXSLTRequests.RemoveElementAt(0);
+         !mXSLTRequests.isEmpty() &&
+         !mXSLTRequests.getFirst()->mLoading) {
+    request = mXSLTRequests.StealFirst();
     ProcessRequest(request);
   }
 
-  uint32_t i = 0;
-  while (mEnabled && i < mAsyncRequests.Length()) {
-    if (!mAsyncRequests[i]->mLoading) {
-      request.swap(mAsyncRequests[i]);
-      mAsyncRequests.RemoveElementAt(i);
+  // The refcounting here is dumb, but it's going away in the next
+  // patch in the queue.
+  nsRefPtr<nsScriptLoadRequest> req = mAsyncRequests.getFirst();
+  while (mEnabled && req && req->isInList()) {
+    if (!req->mLoading) {
+      nsRefPtr<nsScriptLoadRequest> next = req->getNext();
+      request = mAsyncRequests.Steal(req);
       ProcessRequest(request);
+      req.swap(next);
       continue;
     }
-    ++i;
+    req = req->getNext();
   }
 
-  while (mEnabled && !mNonAsyncExternalScriptInsertedRequests.IsEmpty() &&
-         !mNonAsyncExternalScriptInsertedRequests[0]->mLoading) {
+  while (mEnabled && !mNonAsyncExternalScriptInsertedRequests.isEmpty() &&
+         !mNonAsyncExternalScriptInsertedRequests.getFirst()->mLoading) {
     // Violate the HTML5 spec and execute these in the insertion order in
     // order to make LABjs and the "order" plug-in for RequireJS work with
     // their Gecko-sniffed code path. See
     // http://lists.w3.org/Archives/Public/public-html/2010Oct/0088.html
-    request.swap(mNonAsyncExternalScriptInsertedRequests[0]);
-    mNonAsyncExternalScriptInsertedRequests.RemoveElementAt(0);
+    request = mNonAsyncExternalScriptInsertedRequests.StealFirst();
     ProcessRequest(request);
   }
 
-  if (mDocumentParsingDone && mXSLTRequests.IsEmpty()) {
-    while (!mDeferRequests.IsEmpty() && !mDeferRequests[0]->mLoading) {
-      request.swap(mDeferRequests[0]);
-      mDeferRequests.RemoveElementAt(0);
+  if (mDocumentParsingDone && mXSLTRequests.isEmpty()) {
+    while (!mDeferRequests.isEmpty() && !mDeferRequests.getFirst()->mLoading) {
+      request = mDeferRequests.StealFirst();
       ProcessRequest(request);
     }
   }
@@ -1178,9 +1215,9 @@ nsScriptLoader::ProcessPendingRequests()
   }
 
   if (mDocumentParsingDone && mDocument &&
-      !mParserBlockingRequest && mAsyncRequests.IsEmpty() &&
-      mNonAsyncExternalScriptInsertedRequests.IsEmpty() &&
-      mXSLTRequests.IsEmpty() && mDeferRequests.IsEmpty()) {
+      !mParserBlockingRequest && mAsyncRequests.isEmpty() &&
+      mNonAsyncExternalScriptInsertedRequests.isEmpty() &&
+      mXSLTRequests.isEmpty() && mDeferRequests.isEmpty()) {
     if (MaybeRemovedDeferRequests()) {
       return ProcessPendingRequests();
     }
@@ -1386,11 +1423,27 @@ nsScriptLoader::OnStreamComplete(nsIStreamLoader* aLoader,
       mDocument->AddBlockedTrackingNode(cont);
     }
 
-    if (mDeferRequests.RemoveElement(request) ||
-        mAsyncRequests.RemoveElement(request) ||
-        mNonAsyncExternalScriptInsertedRequests.RemoveElement(request) ||
-        mXSLTRequests.RemoveElement(request)) {
-      FireScriptAvailable(rv, request);
+    if (request->mIsDefer) {
+      if (request->isInList()) {
+        nsRefPtr<nsScriptLoadRequest> req = mDeferRequests.Steal(request);
+        FireScriptAvailable(rv, req);
+      }
+    } else if (request->mIsAsync) {
+      if (request->isInList()) {
+        nsRefPtr<nsScriptLoadRequest> req = mAsyncRequests.Steal(request);
+        FireScriptAvailable(rv, req);
+      }
+    } else if (request->mIsNonAsyncScriptInserted) {
+      if (request->isInList()) {
+        nsRefPtr<nsScriptLoadRequest> req =
+          mNonAsyncExternalScriptInsertedRequests.Steal(request);
+        FireScriptAvailable(rv, req);
+      }
+    } else if (request->mIsXSLT) {
+      if (request->isInList()) {
+        nsRefPtr<nsScriptLoadRequest> req = mXSLTRequests.Steal(request);
+        FireScriptAvailable(rv, req);
+      }
     } else if (mParserBlockingRequest == request) {
       mParserBlockingRequest = nullptr;
       UnblockParser(request);
@@ -1562,9 +1615,10 @@ nsScriptLoader::PreloadURI(nsIURI *aURI, const nsAString &aCharset,
 void
 nsScriptLoader::AddDeferRequest(nsScriptLoadRequest* aRequest)
 {
+  aRequest->mIsDefer = true;
   mDeferRequests.AppendElement(aRequest);
-  if (mDeferEnabled && mDeferRequests.Length() == 1 && mDocument &&
-      !mBlockingDOMContentLoaded) {
+  if (mDeferEnabled && aRequest == mDeferRequests.getFirst() &&
+      mDocument && !mBlockingDOMContentLoaded) {
     MOZ_ASSERT(mDocument->GetReadyStateEnum() == nsIDocument::READYSTATE_LOADING);
     mBlockingDOMContentLoaded = true;
     mDocument->BlockDOMContentLoaded();
@@ -1574,7 +1628,7 @@ nsScriptLoader::AddDeferRequest(nsScriptLoadRequest* aRequest)
 bool
 nsScriptLoader::MaybeRemovedDeferRequests()
 {
-  if (mDeferRequests.Length() == 0 && mDocument &&
+  if (mDeferRequests.isEmpty() && mDocument &&
       mBlockingDOMContentLoaded) {
     mBlockingDOMContentLoaded = false;
     mDocument->UnblockDOMContentLoaded();
