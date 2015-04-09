@@ -256,6 +256,9 @@ description > html|a {
 #telemetryLearnMore,
 #FHRLearnMore,
 #crashReporterLearnMore {
+  /* provide some margin between the links and the label text */
+  /* !important is needed to override the rules defined in common.css */
+  -moz-margin-start: 20px !important;
   /* center the links */
   margin-top: 8px;
   margin-bottom: 8px;
