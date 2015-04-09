@@ -52,7 +52,6 @@ PluginContent.prototype = {
     global.addMessageListener("BrowserPlugins:ContextMenuCommand", this);
     global.addMessageListener("BrowserPlugins:NPAPIPluginProcessCrashed", this);
     global.addMessageListener("BrowserPlugins:CrashReportSubmitted", this);
-    global.addMessageListener("BrowserPlugins:Test:ClearCrashData", this);
   },
 
   uninit: function() {
@@ -108,11 +107,6 @@ PluginContent.prototype = {
           state: msg.data.state,
         })
         break;
-      case "BrowserPlugins:Test:ClearCrashData":
-        // This message should ONLY ever be sent by automated tests.
-        if (Services.prefs.getBoolPref("plugins.testmode")) {
-          this.pluginCrashData.clear();
-        }
     }
   },
 
