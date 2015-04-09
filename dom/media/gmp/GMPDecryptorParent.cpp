@@ -5,7 +5,7 @@
 
 #include "GMPDecryptorParent.h"
 #include "GMPContentParent.h"
-#include "mp4_demuxer/DecoderData.h"
+#include "MediaData.h"
 #include "mozilla/unused.h"
 
 namespace mozilla {
@@ -133,7 +133,7 @@ GMPDecryptorParent::SetServerCertificate(uint32_t aPromiseId,
 
 void
 GMPDecryptorParent::Decrypt(uint32_t aId,
-                            const mp4_demuxer::CryptoSample& aCrypto,
+                            const CryptoSample& aCrypto,
                             const nsTArray<uint8_t>& aBuffer)
 {
   if (!mIsOpen) {

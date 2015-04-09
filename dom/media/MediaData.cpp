@@ -15,6 +15,7 @@
 #ifdef MOZ_WIDGET_GONK
 #include <cutils/properties.h>
 #endif
+#include <stdint.h>
 
 namespace mozilla {
 
@@ -103,13 +104,15 @@ IsInEmulator()
 
 #endif
 
-VideoData::VideoData(int64_t aOffset, int64_t aTime, int64_t aDuration, int64_t aTimecode)
-  : MediaData(VIDEO_DATA, aOffset, aTime, aDuration),
-    mTimecode(aTimecode),
-    mDuplicate(true),
-    mKeyframe(false)
+VideoData::VideoData(int64_t aOffset,
+                     int64_t aTime,
+                     int64_t aDuration,
+                     int64_t aTimecode)
+  : MediaData(VIDEO_DATA, aOffset, aTime, aDuration)
+  , mDuplicate(true)
 {
   NS_ASSERTION(mDuration >= 0, "Frame must have non-negative duration.");
+  mTimecode = aTimecode;
 }
 
 VideoData::VideoData(int64_t aOffset,
@@ -118,13 +121,13 @@ VideoData::VideoData(int64_t aOffset,
                      bool aKeyframe,
                      int64_t aTimecode,
                      IntSize aDisplay)
-  : MediaData(VIDEO_DATA, aOffset, aTime, aDuration),
-    mDisplay(aDisplay),
-    mTimecode(aTimecode),
-    mDuplicate(false),
-    mKeyframe(aKeyframe)
+  : MediaData(VIDEO_DATA, aOffset, aTime, aDuration)
+  , mDisplay(aDisplay)
+  , mDuplicate(false)
 {
   NS_ASSERTION(mDuration >= 0, "Frame must have non-negative duration.");
+  mKeyframe = aKeyframe;
+  mTimecode = aTimecode;
 }
 
 VideoData::~VideoData()
@@ -474,5 +477,176 @@ VideoData::Create(VideoInfo& aInfo,
   return v.forget();
 }
 #endif  // MOZ_OMX_DECODER
+
+// Alignment value - 1. 0 means that data isn't aligned.
+// For 32-bytes aligned, use 31U.
+#define RAW_DATA_ALIGNMENT 31U
+
+#define RAW_DATA_DEFAULT_SIZE 4096
+
+MediaRawData::MediaRawData()
+  : MediaData(RAW_DATA)
+  , mData(nullptr)
+  , mSize(0)
+  , mBuffer(new LargeDataBuffer(RAW_DATA_DEFAULT_SIZE))
+  , mPadding(0)
+{
+}
+
+MediaRawData::MediaRawData(const uint8_t* aData, size_t aSize)
+  : MediaData(RAW_DATA)
+  , mData(nullptr)
+  , mSize(0)
+  , mBuffer(new LargeDataBuffer(RAW_DATA_DEFAULT_SIZE))
+  , mPadding(0)
+{
+  if (!EnsureCapacity(aSize)) {
+    return;
+  }
+  mBuffer->AppendElements(aData, aSize);
+  mBuffer->AppendElements(RAW_DATA_ALIGNMENT);
+  mSize = aSize;
+}
+
+already_AddRefed<MediaRawData>
+MediaRawData::Clone() const
+{
+  nsRefPtr<MediaRawData> s = new MediaRawData;
+  s->mTimecode = mTimecode;
+  s->mTime = mTime;
+  s->mDuration = mDuration;
+  s->mOffset = mOffset;
+  s->mKeyframe = mKeyframe;
+  s->mExtraData = mExtraData;
+  if (mSize) {
+    if (!s->EnsureCapacity(mSize)) {
+      return nullptr;
+    }
+    s->mBuffer->AppendElements(mData, mSize);
+    s->mBuffer->AppendElements(RAW_DATA_ALIGNMENT);
+    s->mSize = mSize;
+  }
+  return s.forget();
+}
+
+bool
+MediaRawData::EnsureCapacity(size_t aSize)
+{
+  if (mData && mBuffer->Capacity() >= aSize + RAW_DATA_ALIGNMENT * 2) {
+    return true;
+  }
+  if (!mBuffer->SetCapacity(aSize + RAW_DATA_ALIGNMENT * 2)) {
+    return false;
+  }
+  // Find alignment address.
+  const uintptr_t alignmask = RAW_DATA_ALIGNMENT;
+  mData = reinterpret_cast<uint8_t*>(
+    (reinterpret_cast<uintptr_t>(mBuffer->Elements()) + alignmask) & ~alignmask);
+  MOZ_ASSERT(uintptr_t(mData) % (RAW_DATA_ALIGNMENT+1) == 0);
+
+  // Shift old data according to new padding.
+  uint32_t oldpadding = int32_t(mPadding);
+  mPadding = mData - mBuffer->Elements();
+  int32_t shift = int32_t(mPadding) - int32_t(oldpadding);
+
+  if (shift == 0) {
+    // Nothing to do.
+  } else if (shift > 0) {
+    mBuffer->InsertElementsAt(oldpadding, shift);
+  } else {
+    mBuffer->RemoveElementsAt(mPadding, -shift);
+  }
+  return true;
+}
+
+MediaRawData::~MediaRawData()
+{
+}
+
+size_t
+MediaRawData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  size_t size = aMallocSizeOf(this);
+
+  if (mExtraData) {
+    size += mExtraData->SizeOfIncludingThis(aMallocSizeOf);
+  }
+  size += mBuffer->SizeOfIncludingThis(aMallocSizeOf);
+  return size;
+}
+
+MediaRawDataWriter*
+MediaRawData::CreateWriter()
+{
+  return new MediaRawDataWriter(this);
+}
+
+MediaRawDataWriter::MediaRawDataWriter(MediaRawData* aMediaRawData)
+  : mData(nullptr)
+  , mSize(0)
+  , mTarget(aMediaRawData)
+  , mBuffer(aMediaRawData->mBuffer.get())
+{
+  if (aMediaRawData->mData) {
+    mData = mBuffer->Elements() + mTarget->mPadding;
+    mSize = mTarget->mSize;
+  }
+}
+
+bool
+MediaRawDataWriter::EnsureSize(size_t aSize)
+{
+  if (aSize <= mSize) {
+    return true;
+  }
+  if (!mTarget->EnsureCapacity(aSize)) {
+    return false;
+  }
+  mData = mBuffer->Elements() + mTarget->mPadding;
+  return true;
+}
+
+bool
+MediaRawDataWriter::SetSize(size_t aSize)
+{
+  if (aSize > mTarget->mSize && !EnsureSize(aSize)) {
+    return false;
+  }
+  // Pad our buffer.
+  mBuffer->SetLength(aSize + mTarget->mPadding + RAW_DATA_ALIGNMENT);
+  mTarget->mSize = mSize = aSize;
+  return true;
+}
+
+bool
+MediaRawDataWriter::Prepend(const uint8_t* aData, size_t aSize)
+{
+  if (!EnsureSize(aSize + mTarget->mSize)) {
+    return false;
+  }
+  mBuffer->InsertElementsAt(mTarget->mPadding, aData, aSize);
+  mTarget->mSize += aSize;
+  mSize = mTarget->mSize;
+  return true;
+}
+
+bool
+MediaRawDataWriter::Replace(const uint8_t* aData, size_t aSize)
+{
+  if (!EnsureSize(aSize)) {
+    return false;
+  }
+  mBuffer->ReplaceElementsAt(mTarget->mPadding, mTarget->mSize, aData, aSize);
+  mTarget->mSize = mSize = aSize;
+  return true;
+}
+
+void
+MediaRawDataWriter::Clear()
+{
+  mBuffer->RemoveElementsAt(mTarget->mPadding, mTarget->mSize);
+  mTarget->mSize = mSize = 0;
+  mTarget->mData = mData = nullptr;
+}
 
 } // namespace mozilla

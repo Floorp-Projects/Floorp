@@ -7,6 +7,7 @@
 #include "gmp-audio-samples.h"
 #include "gmp-errors.h"
 #include "GMPEncryptedBufferDataImpl.h"
+#include "mp4_demuxer/DecoderData.h"
 
 namespace mozilla {
 namespace gmp {
@@ -105,7 +106,7 @@ GMPAudioSamplesImpl::GetDecryptionData() const
 }
 
 void
-GMPAudioSamplesImpl::InitCrypto(const mp4_demuxer::CryptoSample& aCrypto)
+GMPAudioSamplesImpl::InitCrypto(const CryptoSample& aCrypto)
 {
   if (!aCrypto.valid) {
     return;
