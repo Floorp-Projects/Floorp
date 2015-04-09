@@ -51,7 +51,6 @@
 #include "ImportManager.h"
 #include "mozilla/dom/EncodingUtils.h"
 
-#include "mozilla/CORSMode.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/unused.h"
 
@@ -61,65 +60,6 @@ static PRLogModuleInfo* gCspPRLog;
 
 using namespace mozilla;
 using namespace mozilla::dom;
-
-//////////////////////////////////////////////////////////////
-// Per-request data structure
-//////////////////////////////////////////////////////////////
-
-class nsScriptLoadRequest final : public nsISupports {
-  ~nsScriptLoadRequest()
-  {
-    js_free(mScriptTextBuf);
-  }
-
-public:
-  nsScriptLoadRequest(nsIScriptElement* aElement,
-                      uint32_t aVersion,
-                      CORSMode aCORSMode)
-    : mElement(aElement),
-      mLoading(true),
-      mIsInline(true),
-      mHasSourceMapURL(false),
-      mScriptTextBuf(nullptr),
-      mScriptTextLength(0),
-      mJSVersion(aVersion),
-      mLineNo(1),
-      mCORSMode(aCORSMode),
-      mReferrerPolicy(mozilla::net::RP_Default)
-  {
-  }
-
-  NS_DECL_THREADSAFE_ISUPPORTS
-
-  void FireScriptAvailable(nsresult aResult)
-  {
-    mElement->ScriptAvailable(aResult, mElement, mIsInline, mURI, mLineNo);
-  }
-  void FireScriptEvaluated(nsresult aResult)
-  {
-    mElement->ScriptEvaluated(aResult, mElement, mIsInline);
-  }
-
-  bool IsPreload()
-  {
-    return mElement == nullptr;
-  }
-
-  nsCOMPtr<nsIScriptElement> mElement;
-  bool mLoading;          // Are we still waiting for a load to complete?
-  bool mIsInline;         // Is the script inline or loaded?
-  bool mHasSourceMapURL;  // Does the HTTP header have a source map url?
-  nsString mSourceMapURL; // Holds source map url for loaded scripts
-  char16_t* mScriptTextBuf; // Holds script text for non-inline scripts. Don't
-  size_t mScriptTextLength; // use nsString so we can give ownership to jsapi.
-  uint32_t mJSVersion;
-  nsCOMPtr<nsIURI> mURI;
-  nsCOMPtr<nsIPrincipal> mOriginPrincipal;
-  nsAutoCString mURL;   // Keep the URI's filename alive during off thread parsing.
-  int32_t mLineNo;
-  const CORSMode mCORSMode;
-  mozilla::net::ReferrerPolicy mReferrerPolicy;
-};
 
 // The nsScriptLoadRequest is passed as the context to necko, and thus
 // it needs to be threadsafe. Necko won't do anything with this
