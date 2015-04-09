@@ -22,8 +22,6 @@ class BluetoothSocketResultHandler
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothSocketResultHandler)
 
-  virtual ~BluetoothSocketResultHandler() { }
-
   virtual void OnError(BluetoothStatus aStatus)
   {
     BT_WARNING("Received error code %d", (int)aStatus);
@@ -34,6 +32,9 @@ public:
                        int aConnectionState) { }
   virtual void Accept(int aSockFd, const nsAString& aBdAddress,
                       int aConnectionState) { }
+
+protected:
+  virtual ~BluetoothSocketResultHandler() { }
 };
 
 class BluetoothSocketInterface
@@ -68,8 +69,6 @@ protected:
 class BluetoothHandsfreeNotificationHandler
 {
 public:
-  virtual ~BluetoothHandsfreeNotificationHandler();
-
   virtual void
   ConnectionStateNotification(BluetoothHandsfreeConnectionState aState,
                               const nsAString& aBdAddr)
@@ -81,72 +80,85 @@ public:
   { }
 
   virtual void
-  VoiceRecognitionNotification(BluetoothHandsfreeVoiceRecognitionState aState)
+  VoiceRecognitionNotification(BluetoothHandsfreeVoiceRecognitionState aState,
+                               const nsAString& aBdAddr)
   { }
 
   virtual void
-  AnswerCallNotification()
+  AnswerCallNotification(const nsAString& aBdAddr)
   { }
 
   virtual void
-  HangupCallNotification()
+  HangupCallNotification(const nsAString& aBdAddr)
   { }
 
   virtual void
-  VolumeNotification(BluetoothHandsfreeVolumeType aType, int aVolume)
+  VolumeNotification(BluetoothHandsfreeVolumeType aType,
+                     int aVolume,
+                     const nsAString& aBdAddr)
   { }
 
   virtual void
-  DialCallNotification(const nsAString& aNumber)
+  DialCallNotification(const nsAString& aNumber,
+                       const nsAString& aBdAddr)
   { }
 
   virtual void
-  DtmfNotification(char aDtmf)
+  DtmfNotification(char aDtmf,
+                   const nsAString& aBdAddr)
   { }
 
   virtual void
-  NRECNotification(BluetoothHandsfreeNRECState aNrec)
+  NRECNotification(BluetoothHandsfreeNRECState aNrec,
+                   const nsAString& aBdAddr)
   { }
 
   virtual void
-  CallHoldNotification(BluetoothHandsfreeCallHoldType aChld)
+  WbsNotification(BluetoothHandsfreeWbsConfig aWbs,
+                  const nsAString& aBdAddr)
   { }
 
   virtual void
-  CnumNotification()
+  CallHoldNotification(BluetoothHandsfreeCallHoldType aChld,
+                       const nsAString& aBdAddr)
   { }
 
   virtual void
-  CindNotification()
+  CnumNotification(const nsAString& aBdAddr)
   { }
 
   virtual void
-  CopsNotification()
+  CindNotification(const nsAString& aBdAddr)
   { }
 
   virtual void
-  ClccNotification()
+  CopsNotification(const nsAString& aBdAddr)
   { }
 
   virtual void
-  UnknownAtNotification(const nsACString& aAtString)
+  ClccNotification(const nsAString& aBdAddr)
   { }
 
   virtual void
-  KeyPressedNotification()
+  UnknownAtNotification(const nsACString& aAtString,
+                        const nsAString& aBdAddr)
+  { }
+
+  virtual void
+  KeyPressedNotification(const nsAString& aBdAddr)
   { }
 
 protected:
   BluetoothHandsfreeNotificationHandler()
   { }
+
+  virtual ~BluetoothHandsfreeNotificationHandler();
 };
 
 class BluetoothHandsfreeResultHandler
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothHandsfreeResultHandler)
-
-  virtual ~BluetoothHandsfreeResultHandler() { }
 
   virtual void OnError(BluetoothStatus aStatus)
   {
@@ -174,6 +186,11 @@ public:
   virtual void AtResponse() { }
   virtual void ClccResponse() { }
   virtual void PhoneStateChange() { }
+
+  virtual void ConfigureWbs() { }
+
+protected:
+  virtual ~BluetoothHandsfreeResultHandler() { }
 };
 
 class BluetoothHandsfreeInterface
@@ -181,7 +198,7 @@ class BluetoothHandsfreeInterface
 public:
   virtual void Init(
     BluetoothHandsfreeNotificationHandler* aNotificationHandler,
-    BluetoothHandsfreeResultHandler* aRes) = 0;
+    int aMaxNumClients, BluetoothHandsfreeResultHandler* aRes) = 0;
   virtual void Cleanup(BluetoothHandsfreeResultHandler* aRes) = 0;
 
   /* Connect / Disconnect */
@@ -197,12 +214,15 @@ public:
 
   /* Voice Recognition */
 
-  virtual void StartVoiceRecognition(BluetoothHandsfreeResultHandler* aRes) = 0;
-  virtual void StopVoiceRecognition(BluetoothHandsfreeResultHandler* aRes) = 0;
+  virtual void StartVoiceRecognition(const nsAString& aBdAddr,
+                                     BluetoothHandsfreeResultHandler* aRes) = 0;
+  virtual void StopVoiceRecognition(const nsAString& aBdAddr,
+                                    BluetoothHandsfreeResultHandler* aRes) = 0;
 
   /* Volume */
 
   virtual void VolumeControl(BluetoothHandsfreeVolumeType aType, int aVolume,
+                             const nsAString& aBdAddr,
                              BluetoothHandsfreeResultHandler* aRes) = 0;
 
   /* Device status */
@@ -214,15 +234,17 @@ public:
 
   /* Responses */
 
-  virtual void CopsResponse(const char* aCops,
+  virtual void CopsResponse(const char* aCops, const nsAString& aBdAddr,
                             BluetoothHandsfreeResultHandler* aRes) = 0;
   virtual void CindResponse(int aSvc, int aNumActive, int aNumHeld,
                             BluetoothHandsfreeCallState aCallSetupState,
                             int aSignal, int aRoam, int aBattChg,
+                            const nsAString& aBdAddr,
                             BluetoothHandsfreeResultHandler* aRes) = 0;
-  virtual void FormattedAtResponse(const char* aRsp,
+  virtual void FormattedAtResponse(const char* aRsp, const nsAString& aBdAddr,
                                    BluetoothHandsfreeResultHandler* aRes) = 0;
-  virtual void AtResponse(BluetoothHandsfreeAtResponse aResponseCode, int aErrorCode,
+  virtual void AtResponse(BluetoothHandsfreeAtResponse aResponseCode,
+                          int aErrorCode, const nsAString& aBdAddr,
                           BluetoothHandsfreeResultHandler* aRes) = 0;
   virtual void ClccResponse(int aIndex, BluetoothHandsfreeCallDirection aDir,
                             BluetoothHandsfreeCallState aState,
@@ -230,6 +252,7 @@ public:
                             BluetoothHandsfreeCallMptyType aMpty,
                             const nsAString& aNumber,
                             BluetoothHandsfreeCallAddressType aType,
+                            const nsAString& aBdAddr,
                             BluetoothHandsfreeResultHandler* aRes) = 0;
 
   /* Phone State */
@@ -239,6 +262,11 @@ public:
                                 const nsAString& aNumber,
                                 BluetoothHandsfreeCallAddressType aType,
                                 BluetoothHandsfreeResultHandler* aRes) = 0;
+
+  /* Wide Band Speech */
+  virtual void ConfigureWbs(const nsAString& aBdAddr,
+                            BluetoothHandsfreeWbsConfig aConfig,
+                            BluetoothHandsfreeResultHandler* aRes) = 0;
 
 protected:
   BluetoothHandsfreeInterface();
@@ -252,8 +280,6 @@ protected:
 class BluetoothA2dpNotificationHandler
 {
 public:
-  virtual ~BluetoothA2dpNotificationHandler();
-
   virtual void
   ConnectionStateNotification(BluetoothA2dpConnectionState aState,
                               const nsAString& aBdAddr)
@@ -264,17 +290,23 @@ public:
                          const nsAString& aBdAddr)
   { }
 
+  virtual void
+  AudioConfigNotification(const nsAString& aBdAddr,
+                          uint32_t aSampleRate,
+                          uint8_t aChannelCount)
+  { }
+
 protected:
   BluetoothA2dpNotificationHandler()
   { }
+
+  virtual ~BluetoothA2dpNotificationHandler();
 };
 
 class BluetoothA2dpResultHandler
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothA2dpResultHandler)
-
-  virtual ~BluetoothA2dpResultHandler() { }
 
   virtual void OnError(BluetoothStatus aStatus)
   {
@@ -285,6 +317,9 @@ public:
   virtual void Cleanup() { }
   virtual void Connect() { }
   virtual void Disconnect() { }
+
+protected:
+  virtual ~BluetoothA2dpResultHandler() { }
 };
 
 class BluetoothA2dpInterface
@@ -311,8 +346,6 @@ protected:
 class BluetoothAvrcpNotificationHandler
 {
 public:
-  virtual ~BluetoothAvrcpNotificationHandler();
-
   virtual void
   GetPlayStatusNotification()
   { }
@@ -369,14 +402,14 @@ public:
 protected:
   BluetoothAvrcpNotificationHandler()
   { }
+
+  virtual ~BluetoothAvrcpNotificationHandler();
 };
 
 class BluetoothAvrcpResultHandler
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothAvrcpResultHandler)
-
-  virtual ~BluetoothAvrcpResultHandler() { }
 
   virtual void OnError(BluetoothStatus aStatus)
   {
@@ -402,6 +435,9 @@ public:
   virtual void RegisterNotificationRsp() { }
 
   virtual void SetVolume() { }
+
+protected:
+  virtual ~BluetoothAvrcpResultHandler() { }
 };
 
 class BluetoothAvrcpInterface
@@ -809,8 +845,6 @@ protected:
 class BluetoothNotificationHandler
 {
 public:
-  virtual ~BluetoothNotificationHandler();
-
   virtual void AdapterStateChangedNotification(bool aState) { }
   virtual void AdapterPropertiesNotification(
     BluetoothStatus aStatus, int aNumProperties,
@@ -845,17 +879,20 @@ public:
   virtual void LeTestModeNotification(BluetoothStatus aStatus,
                                       uint16_t aNumPackets) { }
 
+  virtual void EnergyInfoNotification(const BluetoothActivityEnergyInfo& aInfo)
+  { }
+
 protected:
   BluetoothNotificationHandler()
   { }
+
+  virtual ~BluetoothNotificationHandler();
 };
 
 class BluetoothResultHandler
 {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(BluetoothResultHandler)
-
-  virtual ~BluetoothResultHandler() { }
 
   virtual void OnError(BluetoothStatus aStatus)
   {
@@ -885,6 +922,8 @@ public:
   virtual void RemoveBond() { }
   virtual void CancelBond() { }
 
+  virtual void GetConnectionState() { }
+
   virtual void PinReply() { }
   virtual void SspReply() { }
 
@@ -892,6 +931,11 @@ public:
   virtual void DutModeSend() { }
 
   virtual void LeTestMode() { }
+
+  virtual void ReadEnergyInfo() { }
+
+protected:
+  virtual ~BluetoothResultHandler() { }
 };
 
 class BluetoothInterface
@@ -941,11 +985,17 @@ public:
   /* Bonds */
 
   virtual void CreateBond(const nsAString& aBdAddr,
+                          BluetoothTransport aTransport,
                           BluetoothResultHandler* aRes) = 0;
   virtual void RemoveBond(const nsAString& aBdAddr,
                           BluetoothResultHandler* aRes) = 0;
   virtual void CancelBond(const nsAString& aBdAddr,
                           BluetoothResultHandler* aRes) = 0;
+
+  /* Connection */
+
+  virtual void GetConnectionState(const nsAString& aBdAddr,
+                                  BluetoothResultHandler* aRes) = 0;
 
   /* Authentication */
 
@@ -968,6 +1018,10 @@ public:
 
   virtual void LeTestMode(uint16_t aOpcode, uint8_t* aBuf, uint8_t aLen,
                           BluetoothResultHandler* aRes) = 0;
+
+  /* Energy Info */
+
+  virtual void ReadEnergyInfo(BluetoothResultHandler* aRes) = 0;
 
   /* Profile Interfaces */
 
