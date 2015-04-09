@@ -423,6 +423,7 @@ gbjar.sources += [
     'Tab.java',
     'tabqueue/TabQueueDispatcher.java',
     'tabqueue/TabQueueHelper.java',
+    'tabqueue/TabQueuePrompt.java',
     'tabqueue/TabQueueService.java',
     'Tabs.java',
     'tabs/PrivateTabsPanel.java',
