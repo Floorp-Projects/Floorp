@@ -3238,7 +3238,7 @@ Widgets.ObjectRenderers.add({
 
   render: function()
   {
-    let { ownProperties, safeGetterValues } = this.objectActor.preview;
+    let { ownProperties, safeGetterValues } = this.objectActor.preview || {};
     if ((!ownProperties && !safeGetterValues) || this.options.concise) {
       this._renderConciseObject();
       return;
@@ -3274,7 +3274,7 @@ Widgets.ObjectRenderers.add({
 
   render: function()
   {
-    let { ownProperties, safeGetterValues } = this.objectActor.preview;
+    let { ownProperties, safeGetterValues } = this.objectActor.preview || {};
     if ((!ownProperties && !safeGetterValues) || this.options.concise) {
       this._renderConciseObject();
       return;
