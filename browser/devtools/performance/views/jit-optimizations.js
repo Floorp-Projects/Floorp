@@ -7,6 +7,7 @@ const URL_LABEL_TOOLTIP = L10N.getStr("table.url.tooltiptext");
 const OPTIMIZATION_FAILURE = L10N.getStr("jit.optimizationFailure");
 const JIT_SAMPLES = L10N.getStr("jit.samples2");
 const JIT_EMPTY_TEXT = L10N.getStr("jit.empty");
+const PROPNAME_MAX_LENGTH = 4;
 
 /**
  * View for rendering JIT Optimization data. The terminology and types
@@ -207,6 +208,16 @@ let JITOptimizationsView = {
     let attempts = site.getAttempts();
     let lastStrategy = attempts[attempts.length - 1].strategy;
 
+    let propString = "";
+    if (site.data.propertyName) {
+      if (site.data.propertyName.length > PROPNAME_MAX_LENGTH) {
+        propString = ` (.${site.data.propertyName.substr(0, PROPNAME_MAX_LENGTH)}…)`;
+        desc.setAttribute("tooltiptext", site.data.propertyName);
+      } else {
+        propString = ` (.${site.data.propertyName})`;
+      }
+    }
+
     if (!site.hasSuccessfulOutcome()) {
       let icon = document.createElement("span");
       icon.setAttribute("tooltiptext", OPTIMIZATION_FAILURE);
@@ -216,7 +227,7 @@ let JITOptimizationsView = {
     }
 
     let sampleString = PluralForm.get(site.samples, JIT_SAMPLES).replace("#1", site.samples);
-    desc.textContent = `${lastStrategy} – (${sampleString})`;
+    desc.textContent = `${lastStrategy}${propString} – (${sampleString})`;
     line.textContent = site.data.line;
     line.className = "opt-line";
     column.textContent = site.data.column;
