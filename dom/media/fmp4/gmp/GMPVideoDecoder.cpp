@@ -8,6 +8,8 @@
 #include "GMPVideoHost.h"
 #include "mozilla/Endian.h"
 #include "prsystem.h"
+#include "MediaData.h"
+#include "mp4_demuxer/DecoderData.h"
 
 namespace mozilla {
 
@@ -115,7 +117,7 @@ GMPVideoDecoder::GetNodeId()
 }
 
 GMPUnique<GMPVideoEncodedFrame>::Ptr
-GMPVideoDecoder::CreateFrame(mp4_demuxer::MP4Sample* aSample)
+GMPVideoDecoder::CreateFrame(MediaRawData* aSample)
 {
   GMPVideoFrame* ftmp = nullptr;
   GMPErr err = mHost->CreateFrame(kGMPEncodedVideoFrame, &ftmp);
@@ -125,13 +127,13 @@ GMPVideoDecoder::CreateFrame(mp4_demuxer::MP4Sample* aSample)
   }
 
   GMPUnique<GMPVideoEncodedFrame>::Ptr frame(static_cast<GMPVideoEncodedFrame*>(ftmp));
-  err = frame->CreateEmptyFrame(aSample->size);
+  err = frame->CreateEmptyFrame(aSample->mSize);
   if (GMP_FAILED(err)) {
     mCallback->Error();
     return nullptr;
   }
 
-  memcpy(frame->Buffer(), aSample->data, frame->Size());
+  memcpy(frame->Buffer(), aSample->mData, frame->Size());
 
   // Convert 4-byte NAL unit lengths to host-endian 4-byte buffer lengths to
   // suit the GMP API.
@@ -149,10 +151,10 @@ GMPVideoDecoder::CreateFrame(mp4_demuxer::MP4Sample* aSample)
 
   frame->SetEncodedWidth(mConfig.display_width);
   frame->SetEncodedHeight(mConfig.display_height);
-  frame->SetTimeStamp(aSample->composition_timestamp);
+  frame->SetTimeStamp(aSample->mTime);
   frame->SetCompleteFrame(true);
-  frame->SetDuration(aSample->duration);
-  frame->SetFrameType(aSample->is_sync_point ? kGMPKeyFrame : kGMPDeltaFrame);
+  frame->SetDuration(aSample->mDuration);
+  frame->SetFrameType(aSample->mKeyframe ? kGMPKeyFrame : kGMPDeltaFrame);
 
   return frame;
 }
@@ -235,17 +237,17 @@ GMPVideoDecoder::Init()
 }
 
 nsresult
-GMPVideoDecoder::Input(mp4_demuxer::MP4Sample* aSample)
+GMPVideoDecoder::Input(MediaRawData* aSample)
 {
   MOZ_ASSERT(IsOnGMPThread());
 
-  nsAutoPtr<mp4_demuxer::MP4Sample> sample(aSample);
+  nsRefPtr<MediaRawData> sample(aSample);
   if (!mGMP) {
     mCallback->Error();
     return NS_ERROR_FAILURE;
   }
 
-  mAdapter->SetLastStreamOffset(sample->byte_offset);
+  mAdapter->SetLastStreamOffset(sample->mOffset);
 
   GMPUnique<GMPVideoEncodedFrame>::Ptr frame = CreateFrame(sample);
   nsTArray<uint8_t> info; // No codec specific per-frame info to pass.

@@ -16,14 +16,11 @@ MP4AudioDemuxer::Seek(Microseconds aTime)
   mDemuxer->SeekAudio(aTime);
 }
 
-MediaSample*
+already_AddRefed<MediaRawData>
 MP4AudioDemuxer::DemuxSample()
 {
-  nsAutoPtr<MP4Sample> sample(mDemuxer->DemuxAudioSample());
-  if (!sample) {
-    return nullptr;
-  }
-  return new MediaSample(sample.forget());
+  nsRefPtr<MediaRawData> sample(mDemuxer->DemuxAudioSample());
+  return sample.forget();
 }
 
 Microseconds
@@ -38,14 +35,11 @@ MP4VideoDemuxer::Seek(Microseconds aTime)
   mDemuxer->SeekVideo(aTime);
 }
 
-MediaSample*
+already_AddRefed<MediaRawData>
 MP4VideoDemuxer::DemuxSample()
 {
-  nsAutoPtr<MP4Sample> sample(mDemuxer->DemuxVideoSample());
-  if (!sample) {
-    return nullptr;
-  }
-  return new MediaSample(sample.forget());
+  nsRefPtr<MediaRawData> sample(mDemuxer->DemuxVideoSample());
+  return sample.forget();
 }
 
 Microseconds

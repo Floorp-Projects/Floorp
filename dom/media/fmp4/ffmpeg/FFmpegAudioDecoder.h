@@ -26,12 +26,12 @@ public:
   virtual ~FFmpegAudioDecoder();
 
   virtual nsresult Init() override;
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override;
+  virtual nsresult Input(MediaRawData* aSample) override;
   virtual nsresult Drain() override;
   static AVCodecID GetCodecId(const nsACString& aMimeType);
 
 private:
-  void DecodePacket(mp4_demuxer::MP4Sample* aSample);
+  void DecodePacket(MediaRawData* aSample);
 
   MediaDataDecoderCallback* mCallback;
 };

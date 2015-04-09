@@ -21,7 +21,7 @@ public:
                  layers::ImageContainer* aImageContainer);
   virtual ~AppleVTDecoder();
   virtual nsresult Init() override;
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override;
+  virtual nsresult Input(MediaRawData* aSample) override;
   virtual nsresult Flush() override;
   virtual nsresult Drain() override;
   virtual nsresult Shutdown() override;
@@ -35,7 +35,7 @@ private:
   VTDecompressionSessionRef mSession;
 
   // Method to pass a frame to VideoToolbox for decoding.
-  nsresult SubmitFrame(mp4_demuxer::MP4Sample* aSample);
+  nsresult SubmitFrame(MediaRawData* aSample);
   // Method to set up the decompression session.
   nsresult InitializeSession();
   nsresult WaitForAsynchronousFrames();

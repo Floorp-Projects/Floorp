@@ -18,8 +18,6 @@
 typedef mozilla::layers::Image Image;
 typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
-typedef mp4_demuxer::MP4Sample MP4Sample;
-
 namespace mozilla
 {
 
@@ -50,23 +48,17 @@ FFmpegH264Decoder<LIBAV_VER>::Init()
 }
 
 FFmpegH264Decoder<LIBAV_VER>::DecodeResult
-FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(mp4_demuxer::MP4Sample* aSample)
+FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
 {
   AVPacket packet;
   av_init_packet(&packet);
 
-  if (!aSample->Pad(FF_INPUT_BUFFER_PADDING_SIZE)) {
-    NS_WARNING("FFmpeg h264 decoder failed to allocate sample.");
-    mCallback->Error();
-    return DecodeResult::DECODE_ERROR;
-  }
-
-  packet.data = aSample->data;
-  packet.size = aSample->size;
-  packet.dts = aSample->decode_timestamp;
-  packet.pts = aSample->composition_timestamp;
-  packet.flags = aSample->is_sync_point ? AV_PKT_FLAG_KEY : 0;
-  packet.pos = aSample->byte_offset;
+  packet.data = const_cast<uint8_t*>(aSample->mData);
+  packet.size = aSample->mSize;
+  packet.dts = aSample->mTimecode;
+  packet.pts = aSample->mTime;
+  packet.flags = aSample->mKeyframe ? AV_PKT_FLAG_KEY : 0;
+  packet.pos = aSample->mOffset;
 
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
@@ -112,11 +104,11 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(mp4_demuxer::MP4Sample* aSample)
 
     nsRefPtr<VideoData> v = VideoData::Create(info,
                                               mImageContainer,
-                                              aSample->byte_offset,
+                                              aSample->mOffset,
                                               mFrame->pkt_pts,
-                                              aSample->duration,
+                                              aSample->mDuration,
                                               b,
-                                              aSample->is_sync_point,
+                                              aSample->mKeyframe,
                                               -1,
                                               gfx::IntRect(0, 0, mCodecContext->width, mCodecContext->height));
     if (!v) {
@@ -131,7 +123,7 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(mp4_demuxer::MP4Sample* aSample)
 }
 
 void
-FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(mp4_demuxer::MP4Sample* aSample)
+FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(MediaRawData* aSample)
 {
   if (DoDecodeFrame(aSample) != DecodeResult::DECODE_ERROR &&
       mTaskQueue->IsEmpty()) {
@@ -245,12 +237,12 @@ FFmpegH264Decoder<LIBAV_VER>::AllocateYUV420PVideoBuffer(
 }
 
 nsresult
-FFmpegH264Decoder<LIBAV_VER>::Input(mp4_demuxer::MP4Sample* aSample)
+FFmpegH264Decoder<LIBAV_VER>::Input(MediaRawData* aSample)
 {
   mTaskQueue->Dispatch(
-    NS_NewRunnableMethodWithArg<nsAutoPtr<mp4_demuxer::MP4Sample>>(
+    NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
       this, &FFmpegH264Decoder<LIBAV_VER>::DecodeFrame,
-      nsAutoPtr<mp4_demuxer::MP4Sample>(aSample)));
+      nsRefPtr<MediaRawData>(aSample)));
 
   return NS_OK;
 }
@@ -258,7 +250,7 @@ FFmpegH264Decoder<LIBAV_VER>::Input(mp4_demuxer::MP4Sample* aSample)
 void
 FFmpegH264Decoder<LIBAV_VER>::DoDrain()
 {
-  nsAutoPtr<MP4Sample> empty(new MP4Sample());
+  nsRefPtr<MediaRawData> empty(new MediaRawData());
   while (DoDecodeFrame(empty) == DecodeResult::DECODE_FRAME) {
   }
   mCallback->DrainComplete();
