@@ -11,9 +11,9 @@
 
 
 /*----------------------------------------------------------------------------
-	GetLinebreakString
+  GetLinebreakString
 
-	Could make this inline
+  Could make this inline
 ----------------------------------------------------------------------------*/
 static const char*
 GetLinebreakString(nsLinebreakConverter::ELinebreakType aBreakType)
@@ -35,9 +35,9 @@ GetLinebreakString(nsLinebreakConverter::ELinebreakType aBreakType)
 
 
 /*----------------------------------------------------------------------------
-	AppendLinebreak
+  AppendLinebreak
 
-	Wee inline method to append a line break. Modifies ioDest.
+  Wee inline method to append a line break. Modifies ioDest.
 ----------------------------------------------------------------------------*/
 template<class T>
 void
@@ -51,9 +51,9 @@ AppendLinebreak(T*& aIoDest, const char* aLineBreakStr)
 }
 
 /*----------------------------------------------------------------------------
-	CountChars
+  CountChars
 
-	Counts occurrences of breakStr in aSrc
+  Counts occurrences of breakStr in aSrc
 ----------------------------------------------------------------------------*/
 template<class T>
 int32_t
@@ -85,9 +85,9 @@ CountLinebreaks(const T* aSrc, int32_t aInLen, const char* aBreakStr)
 
 
 /*----------------------------------------------------------------------------
-	ConvertBreaks
+  ConvertBreaks
 
-	ioLen *includes* a terminating null, if any
+  ioLen *includes* a terminating null, if any
 ----------------------------------------------------------------------------*/
 template<class T>
 static T*
@@ -270,7 +270,7 @@ ConvertUnknownBreaks(const T* aInSrc, int32_t& aIoLen, const char* aDestBreak)
 
 
 /*----------------------------------------------------------------------------
-	ConvertLineBreaks
+  ConvertLineBreaks
 
 ----------------------------------------------------------------------------*/
 char*
@@ -304,7 +304,7 @@ nsLinebreakConverter::ConvertLineBreaks(const char* aSrc,
 
 
 /*----------------------------------------------------------------------------
-	ConvertLineBreaksInSitu
+  ConvertLineBreaksInSitu
 
 ----------------------------------------------------------------------------*/
 nsresult
@@ -357,7 +357,7 @@ nsLinebreakConverter::ConvertLineBreaksInSitu(char** aIoBuffer,
 
 
 /*----------------------------------------------------------------------------
-	ConvertUnicharLineBreaks
+  ConvertUnicharLineBreaks
 
 ----------------------------------------------------------------------------*/
 char16_t*
@@ -391,7 +391,7 @@ nsLinebreakConverter::ConvertUnicharLineBreaks(const char16_t* aSrc,
 
 
 /*----------------------------------------------------------------------------
-	ConvertStringLineBreaks
+  ConvertStringLineBreaks
 
 ----------------------------------------------------------------------------*/
 nsresult
@@ -442,7 +442,7 @@ nsLinebreakConverter::ConvertUnicharLineBreaksInSitu(
 }
 
 /*----------------------------------------------------------------------------
-	ConvertStringLineBreaks
+  ConvertStringLineBreaks
 
 ----------------------------------------------------------------------------*/
 nsresult
