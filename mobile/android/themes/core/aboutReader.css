@@ -398,8 +398,8 @@ body {
   flex: 0;
   font-size: 24px;
   color: #000000;
-  margin-left: 40px;
-  margin-right: 40px;
+  margin-left: -20px;
+  margin-right: -20px;
 }
 
 .serif-button {
@@ -418,12 +418,10 @@ body {
 
 .minus-button {
   background-size: 24px 6px;
-  margin-left: 60px;
 }
 
 .plus-button {
   background-size: 24px 24px;
-  margin-right: 60px;
 }
 
 #color-scheme-buttons > button {
