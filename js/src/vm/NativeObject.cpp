@@ -1444,7 +1444,51 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
 
         // Fill in desc fields with default values (steps 7.b.i and 7.c.i).
         CompletePropertyDescriptor(&desc);
-    } else if (desc.isAccessorDescriptor()) {
+    } else if (desc.isDataDescriptor()) {
+        // Step 8.
+        if (desc.hasValue()) {
+            // If any other JSPROP_IGNORE_* attributes are present, copy the
+            // corresponding JSPROP_* attributes from the existing property.
+            if (IsImplicitDenseOrTypedArrayElement(shape)) {
+                desc.setAttributes(ApplyAttributes(desc.attributes(), true, true,
+                                                   !IsAnyTypedArray(obj)));
+            } else {
+                desc.setAttributes(ApplyOrDefaultAttributes(desc.attributes(), shape));
+            }
+        } else {
+            // We have been asked merely to update JSPROP_READONLY (and possibly
+            // JSPROP_CONFIGURABLE and/or JSPROP_ENUMERABLE, handled above).
+
+            // Don't forget about arrays.
+            if (IsImplicitDenseOrTypedArrayElement(shape)) {
+                if (IsAnyTypedArray(obj)) {
+                    // Silently ignore attempts to change individual index attributes.
+                    // FIXME: Uses the same broken behavior as for accessors. This should
+                    //        fail.
+                    return result.succeed();
+                }
+                if (!NativeObject::sparsifyDenseElement(cx, obj, JSID_TO_INT(id)))
+                    return false;
+                shape = obj->lookup(cx, id);
+            }
+
+            desc.setAttributes(ApplyOrDefaultAttributes(desc.attributes(), shape));
+
+            // We are at most changing some attributes, and cannot convert
+            // from data descriptor to accessor, or vice versa. Take
+            // everything from the shape that we aren't changing.
+            uint32_t propMask = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+            desc.setAttributes((shape->attributes() & ~propMask) |
+                               (desc.attributes() & propMask));
+            desc.setGetter(shape->getter());
+            desc.setSetter(shape->setter());
+            if (shape->hasSlot())
+                desc.value().set(obj->getSlot(shape->slot()));
+        }
+    } else {
+        // Step 9.
+        MOZ_ASSERT(desc.isAccessorDescriptor());
+
         // If defining a getter or setter, we must check for its counterpart
         // and update the attributes and property ops.  A getter or setter is
         // really only half of a property.
@@ -1473,44 +1517,6 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
         if (!CallAddPropertyHook(cx, obj, shape, desc.value()))
             return false;
         return result.succeed();
-    } else if (desc.hasValue()) {
-        // If any other JSPROP_IGNORE_* attributes are present, copy the
-        // corresponding JSPROP_* attributes from the existing property.
-        if (IsImplicitDenseOrTypedArrayElement(shape)) {
-            desc.setAttributes(ApplyAttributes(desc.attributes(), true, true,
-                                               !IsAnyTypedArray(obj)));
-        } else {
-            desc.setAttributes(ApplyOrDefaultAttributes(desc.attributes(), shape));
-        }
-    } else {
-        // We have been asked merely to update JSPROP_READONLY (and possibly
-        // JSPROP_CONFIGURABLE and/or JSPROP_ENUMERABLE, handled above).
-
-        // Don't forget about arrays.
-        if (IsImplicitDenseOrTypedArrayElement(shape)) {
-            if (IsAnyTypedArray(obj)) {
-                // Silently ignore attempts to change individual index attributes.
-                // FIXME: Uses the same broken behavior as for accessors. This should
-                //        fail.
-                return result.succeed();
-            }
-            if (!NativeObject::sparsifyDenseElement(cx, obj, JSID_TO_INT(id)))
-                return false;
-            shape = obj->lookup(cx, id);
-        }
-
-        desc.setAttributes(ApplyOrDefaultAttributes(desc.attributes(), shape));
-
-        // We are at most changing some attributes, and cannot convert
-        // from data descriptor to accessor, or vice versa. Take
-        // everything from the shape that we aren't changing.
-        uint32_t propMask = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
-        desc.setAttributes((shape->attributes() & ~propMask) |
-                           (desc.attributes() & propMask));
-        desc.setGetter(shape->getter());
-        desc.setSetter(shape->setter());
-        if (shape->hasSlot())
-            desc.value().set(obj->getSlot(shape->slot()));
     }
 
     // Dispense with any remaining JSPROP_IGNORE_* attributes. Any bits that
