@@ -658,7 +658,6 @@ pref("plugins.update.url", "https://www.mozilla.org/%LOCALE%/plugincheck/?utm_so
 pref("plugins.update.notifyUser", false);
 
 pref("plugins.click_to_play", true);
-pref("plugins.testmode", false);
 
 pref("plugin.default.state", 1);
 
