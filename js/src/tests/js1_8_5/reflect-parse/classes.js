@@ -11,14 +11,18 @@ function classesEnabled() {
 }
 
 function testClasses() {
-    function simpleMethod(id, kind, generator, args=[], isStatic=false) {
+    function methodFun(id, kind, generator, args, body = []) {
         assertEq(generator && kind === "method", generator);
         let idN = ident(id);
         let methodMaker = generator ? genFunExpr : funExpr;
         let methodName = kind !== "method" ? null : idN;
-        let methodFun = methodMaker(methodName, args.map(ident), blockStmt([]));
+        return methodMaker(methodName, args.map(ident), blockStmt(body));
+    }
 
-        return classMethod(idN, methodFun, kind, isStatic);
+    function simpleMethod(id, kind, generator, args=[], isStatic=false) {
+        return classMethod(ident(id),
+                           methodFun(id, kind, generator, args),
+                           kind, isStatic);
     }
     function emptyCPNMethod(id, isStatic) {
         return classMethod(computedName(lit(id)),
@@ -263,6 +267,158 @@ function testClasses() {
     assertClass("class NAME extends {}[foo] { constructor() { } }",
                 [simpleConstructor], memExpr(objExpr([]), ident("foo")));
 
+    /* SuperProperty */
+    // NOTE: Some of these tests involve object literals, as SuperProperty is a
+    // valid production in any method definition, including in objectl
+    // litterals. These tests still fall here, as |super| is not implemented in
+    // any form without classes.
+
+    function assertValidSuperProps(assertion, makeStr, makeExpr, type, generator, args, static,
+                                   extending)
+    {
+        let superProperty = superProp(ident("prop"));
+        let superMember = superElem(lit("prop"));
+
+        let situations = [
+            ["super.prop", superProperty],
+            ["super['prop']", superMember],
+            ["super.prop()", callExpr(superProperty, [])],
+            ["super['prop']()", callExpr(superMember, [])],
+            ["new super.prop()", newExpr(superProperty, [])],
+            ["new super['prop']()", newExpr(superMember, [])],
+            ["delete super.prop", unExpr("delete", superProperty)],
+            ["delete super['prop']", unExpr("delete", superMember)],
+            ["++super.prop", updExpr("++", superProperty, true)],
+            ["super['prop']--", updExpr("--", superMember, false)],
+            ["super.prop = 4", aExpr("=", superProperty, lit(4))],
+            ["super['prop'] = 4", aExpr("=", superMember, lit(4))],
+            ["super.prop += 4", aExpr("+=", superProperty, lit(4))],
+            ["super['prop'] += 4", aExpr("+=", superMember, lit(4))],
+            ["super.prop -= 4", aExpr("-=", superProperty, lit(4))],
+            ["super['prop'] -= 4", aExpr("-=", superMember, lit(4))],
+            ["super.prop *= 4", aExpr("*=", superProperty, lit(4))],
+            ["super['prop'] *= 4", aExpr("*=", superMember, lit(4))],
+            ["super.prop /= 4", aExpr("/=", superProperty, lit(4))],
+            ["super['prop'] /= 4", aExpr("/=", superMember, lit(4))],
+            ["super.prop %= 4", aExpr("%=", superProperty, lit(4))],
+            ["super['prop'] %= 4", aExpr("%=", superMember, lit(4))],
+            ["super.prop <<= 4", aExpr("<<=", superProperty, lit(4))],
+            ["super['prop'] <<= 4", aExpr("<<=", superMember, lit(4))],
+            ["super.prop >>= 4", aExpr(">>=", superProperty, lit(4))],
+            ["super['prop'] >>= 4", aExpr(">>=", superMember, lit(4))],
+            ["super.prop >>>= 4", aExpr(">>>=", superProperty, lit(4))],
+            ["super['prop'] >>>= 4", aExpr(">>>=", superMember, lit(4))],
+            ["super.prop |= 4", aExpr("|=", superProperty, lit(4))],
+            ["super['prop'] |= 4", aExpr("|=", superMember, lit(4))],
+            ["super.prop ^= 4", aExpr("^=", superProperty, lit(4))],
+            ["super['prop'] ^= 4", aExpr("^=", superMember, lit(4))],
+            ["super.prop &= 4", aExpr("&=", superProperty, lit(4))],
+            ["super['prop'] &= 4", aExpr("&=", superMember, lit(4))],
+
+            // We can also use super from inside arrow functions in method
+            // definitions
+            ["()=>super.prop", arrowExpr([], superProperty)],
+            ["()=>super['prop']", arrowExpr([], superMember)]];
+
+        for (let situation of situations) {
+            let sitStr = situation[0];
+            let sitExpr = situation[1];
+
+            let fun = methodFun("method", type, generator, args, [exprStmt(sitExpr)]);
+            let str = makeStr(sitStr, type, generator, args, static, extending);
+            assertion(str, makeExpr(fun, type, static), extending);
+        }
+    }
+
+    function assertValidSuperPropTypes(assertion, makeStr, makeExpr, static, extending) {
+        for (let type of ["method", "get", "set"]) {
+            if (type === "method") {
+                // methods can also be generators
+                assertValidSuperProps(assertion, makeStr, makeExpr, type, true, [], static, extending);
+                assertValidSuperProps(assertion, makeStr, makeExpr, type, false, [], static, extending);
+                continue;
+            }
+
+            // Setters require 1 argument, and getters require 0
+            assertValidSuperProps(assertion, makeStr, makeExpr, type, false,
+                                  type === "set" ? ["x"] : [], static, extending);
+        }
+    }
+
+    function makeSuperPropMethodStr(propStr, type, generator, args) {
+        return `${type === "method" ? "" : type} ${generator ? "*" : ""} method(${args.join(",")})
+                {
+                    ${propStr};
+                }`;
+    }
+
+    function makeClassSuperPropStr(propStr, type, generator, args, static, extending) {
+        return `class NAME ${extending ? "extends null" : ""} {
+                    constructor() { };
+                    ${static ? "static" : ""} ${makeSuperPropMethodStr(propStr, type, generator, args)}
+                }`;
+    }
+    function makeClassSuperPropExpr(fun, type, static) {
+        // We are going right into assertClass, so we don't have to build the
+        // entire statement.
+        return [simpleConstructor,
+                classMethod(ident("method"), fun, type, static)];
+    }
+    function doClassSuperPropAssert(str, expr, extending) {
+        assertClass(str, expr, extending ? lit(null) : null);
+    }
+    function assertValidClassSuperPropExtends(extending) {
+        // super.prop and super[prop] are valid, regardless of whether the
+        // method is static or not
+        assertValidSuperPropTypes(doClassSuperPropAssert, makeClassSuperPropStr, makeClassSuperPropExpr,
+                                  false, extending);
+        assertValidSuperPropTypes(doClassSuperPropAssert, makeClassSuperPropStr, makeClassSuperPropExpr,
+                                  true, extending);
+    }
+    function assertValidClassSuperProps() {
+        // super.prop and super[prop] are valid, regardless of class heritage
+        assertValidClassSuperPropExtends(false);
+        assertValidClassSuperPropExtends(true);
+    }
+
+    function makeOLSuperPropStr(propStr, type, generator, args) {
+        let str = `({ ${makeSuperPropMethodStr(propStr, type, generator, args)} })`;
+        return str;
+    }
+    function makeOLSuperPropExpr(fun) {
+        return objExpr([{ type: "Property", key: ident("method"), value: fun}]);
+    }
+    function assertValidOLSuperProps() {
+        assertValidSuperPropTypes(assertExpr, makeOLSuperPropStr, makeOLSuperPropExpr);
+    }
+
+
+    // Check all valid uses of SuperProperty
+    assertValidClassSuperProps();
+    assertValidOLSuperProps();
+
+    // SuperProperty is forbidden outside of method definitions.
+    assertError("function foo () { super.prop; }", SyntaxError);
+    assertError("(function () { super.prop; }", SyntaxError);
+    assertError("(()=>super.prop)", SyntaxError);
+    assertError("function *foo() { super.prop; }", SyntaxError);
+    assertError("super.prop", SyntaxError);
+    assertError("function foo () { super['prop']; }", SyntaxError);
+    assertError("(function () { super['prop']; }", SyntaxError);
+    assertError("(()=>super['prop'])", SyntaxError);
+    assertError("function *foo() { super['prop']; }", SyntaxError);
+    assertError("super['prop']", SyntaxError);
+    
+    // Or inside functions inside method definitions...
+    assertClassError("class NAME { constructor() { function nested() { super.prop; }}}", SyntaxError);
+    
+    // Bare super is forbidden
+    assertError("super", SyntaxError);
+
+    // Even where super is otherwise allowed
+    assertError("{ foo() { super } }", SyntaxError);
+    assertClassError("class NAME { constructor() { super; } }", SyntaxError);
+
     /* EOF */
     // Clipped classes should throw a syntax error
     assertClassError("class NAME {", SyntaxError);
@@ -280,7 +436,12 @@ function testClasses() {
     assertClassError("class NAME { static get", SyntaxError);
     assertClassError("class NAME { static get y", SyntaxError);
     assertClassError("class NAME extends", SyntaxError);
-
+    assertClassError("class NAME { constructor() { super", SyntaxError);
+    assertClassError("class NAME { constructor() { super.", SyntaxError);
+    assertClassError("class NAME { constructor() { super.x", SyntaxError);
+    assertClassError("class NAME { constructor() { super.m(", SyntaxError);
+    assertClassError("class NAME { constructor() { super[", SyntaxError);
+    assertClassError("class NAME { constructor() { super(", SyntaxError);
 }
 
 if (classesEnabled())

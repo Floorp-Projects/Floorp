@@ -424,35 +424,36 @@ ToIdOperation(JSContext* cx, HandleScript script, jsbytecode* pc, HandleValue ob
 }
 
 static MOZ_ALWAYS_INLINE bool
-GetObjectElementOperation(JSContext* cx, JSOp op, JS::HandleObject receiver,
+GetObjectElementOperation(JSContext* cx, JSOp op, JS::HandleObject obj, JS::HandleObject receiver,
                           HandleValue key, MutableHandleValue res)
 {
-    MOZ_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
+    MOZ_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM || op == JSOP_GETELEM_SUPER);
+    MOZ_ASSERT_IF(op == JSOP_GETELEM || op == JSOP_CALLELEM, obj == receiver);
 
     do {
         uint32_t index;
         if (IsDefinitelyIndex(key, &index)) {
-            if (GetElementNoGC(cx, receiver, receiver, index, res.address()))
+            if (GetElementNoGC(cx, obj, receiver, index, res.address()))
                 break;
 
-            if (!GetElement(cx, receiver, receiver, index, res))
+            if (!GetElement(cx, obj, receiver, index, res))
                 return false;
             break;
         }
 
         if (IsSymbolOrSymbolWrapper(key)) {
             RootedId id(cx, SYMBOL_TO_JSID(ToSymbolPrimitive(key)));
-            if (!GetProperty(cx, receiver, receiver, id, res))
+            if (!GetProperty(cx, obj, receiver, id, res))
                 return false;
             break;
         }
 
         if (JSAtom* name = ToAtom<NoGC>(cx, key)) {
             if (name->isIndex(&index)) {
-                if (GetElementNoGC(cx, receiver, receiver, index, res.address()))
+                if (GetElementNoGC(cx, obj, receiver, index, res.address()))
                     break;
             } else {
-                if (GetPropertyNoGC(cx, receiver, receiver, name->asPropertyName(), res.address()))
+                if (GetPropertyNoGC(cx, obj, receiver, name->asPropertyName(), res.address()))
                     break;
             }
         }
@@ -462,10 +463,10 @@ GetObjectElementOperation(JSContext* cx, JSOp op, JS::HandleObject receiver,
             return false;
 
         if (name->isIndex(&index)) {
-            if (!GetElement(cx, receiver, receiver, index, res))
+            if (!GetElement(cx, obj, receiver, index, res))
                 return false;
         } else {
-            if (!GetProperty(cx, receiver, receiver, name->asPropertyName(), res))
+            if (!GetProperty(cx, obj, receiver, name->asPropertyName(), res))
                 return false;
         }
     } while (false);
@@ -588,7 +589,7 @@ GetElementOperation(JSContext* cx, JSOp op, MutableHandleValue lref, HandleValue
         return GetPrimitiveElementOperation(cx, op, lref, rref, res);
 
     RootedObject thisv(cx, &lref.toObject());
-    return GetObjectElementOperation(cx, op, thisv, rref, res);
+    return GetObjectElementOperation(cx, op, thisv, thisv, rref, res);
 }
 
 static MOZ_ALWAYS_INLINE JSString*

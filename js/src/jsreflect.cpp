@@ -3020,6 +3020,16 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
                builder.memberExpression(false, expr, id, &pn->pn_pos, dst);
       }
 
+      case PNK_SUPERPROP:
+      {
+        RootedValue superBase(cx), id(cx);
+        RootedAtom superAtom(cx, cx->names().super);
+        RootedAtom pnAtom(cx, pn->pn_atom);
+        return identifier(superAtom, nullptr, &superBase) &&
+               identifier(pnAtom, nullptr, &id) &&
+               builder.memberExpression(false, superBase, id, &pn->pn_pos, dst);
+      }
+
       case PNK_ELEM:
       {
         MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_left->pn_pos));
@@ -3029,6 +3039,17 @@ ASTSerializer::expression(ParseNode* pn, MutableHandleValue dst)
         return expression(pn->pn_left, &left) &&
                expression(pn->pn_right, &right) &&
                builder.memberExpression(true, left, right, &pn->pn_pos, dst);
+      }
+
+      case PNK_SUPERELEM:
+      {
+        MOZ_ASSERT(pn->pn_pos.encloses(pn->pn_kid->pn_pos));
+
+        RootedValue superBase(cx), expr(cx);
+        RootedAtom superAtom(cx, cx->names().super);
+        return identifier(superAtom, nullptr, &superBase) &&
+               expression(pn->pn_kid, &expr) &&
+               builder.memberExpression(true, superBase, expr, &pn->pn_pos, dst);
       }
 
       case PNK_CALLSITEOBJ:
