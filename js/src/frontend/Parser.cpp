@@ -698,7 +698,8 @@ Parser<ParseHandler>::parse(JSObject* chain)
      *   protected from the GC by a root or a stack frame reference.
      */
     Directives directives(options().strictOption);
-    GlobalSharedContext globalsc(context, directives, options().extraWarningsOption);
+    GlobalSharedContext globalsc(context, directives, options().extraWarningsOption,
+                                 /* allowSuperProperty = */ false);
     ParseContext<ParseHandler> globalpc(this, /* parent = */ nullptr, ParseHandler::null(),
                                         &globalsc, /* newDirectives = */ nullptr,
                                         /* staticLevel = */ 0, /* bodyid = */ 0,
@@ -1229,7 +1230,7 @@ Parser<ParseHandler>::newFunction(HandleAtom atom, FunctionSyntaxKind kind, Hand
     }
     
     gc::AllocKind allocKind = JSFunction::FinalizeKind;
-    if (kind == Arrow)
+    if (kind == Arrow || kind == Method)
         allocKind = JSFunction::ExtendedFinalizeKind;
     fun = NewFunctionWithProto(context, nullptr, 0, flags, NullPtr(), atom, proto,
                                allocKind, TenuredObject);
@@ -4575,7 +4576,9 @@ Parser<FullParseHandler>::isValidForStatementLHS(ParseNode* pn1, JSVersion versi
       case PNK_ARRAY:
       case PNK_CALL:
       case PNK_DOT:
+      case PNK_SUPERPROP:
       case PNK_ELEM:
+      case PNK_SUPERELEM:
       case PNK_NAME:
       case PNK_OBJECT:
         return true;
@@ -6321,6 +6324,8 @@ Parser<FullParseHandler>::checkAndMarkAsAssignmentLhs(ParseNode* pn, AssignmentF
 
       case PNK_DOT:
       case PNK_ELEM:
+      case PNK_SUPERPROP:
+      case PNK_SUPERELEM:
         break;
 
       case PNK_ARRAY:
@@ -6489,6 +6494,8 @@ Parser<FullParseHandler>::checkAndMarkAsIncOperand(ParseNode* kid, TokenKind tt,
     // Check.
     if (!kid->isKind(PNK_NAME) &&
         !kid->isKind(PNK_DOT) &&
+        !kid->isKind(PNK_SUPERPROP) &&
+        !kid->isKind(PNK_SUPERELEM) &&
         !kid->isKind(PNK_ELEM) &&
         !(kid->isKind(PNK_CALL) &&
           (kid->isOp(JSOP_CALL) || kid->isOp(JSOP_SPREADCALL) ||
@@ -7675,6 +7682,24 @@ Parser<ParseHandler>::argumentList(Node listNode, bool* isSpread)
 }
 
 template <typename ParseHandler>
+bool
+Parser<ParseHandler>::checkAndMarkSuperScope()
+{
+    for (GenericParseContext* gpc = pc; gpc; gpc = gpc->parent) {
+        SharedContext* sc = gpc->sc;
+        if (sc->allowSuperProperty()) {
+            if (sc->isFunctionBox())
+                sc->asFunctionBox()->setNeedsHomeObject();
+            return true;
+        } else if (sc->isFunctionBox() && !sc->asFunctionBox()->function()->isArrow()) {
+            // super is not legal is normal functions.
+            break;
+        }
+    }
+    return false;
+}
+
+template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax, InvokedPrediction invoked)
 {
@@ -7683,6 +7708,9 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax, InvokedPred
     Node lhs;
 
     JS_CHECK_RECURSION(context, return null());
+
+    bool isSuper = false;
+    uint32_t superBegin;
 
     /* Check for new expression first. */
     if (tt == TOK_NEW) {
@@ -7708,6 +7736,10 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax, InvokedPred
             if (isSpread)
                 handler.setOp(lhs, JSOP_SPREADNEW);
         }
+    } else if (tt == TOK_SUPER) {
+        lhs = null();
+        isSuper = true;
+        superBegin = pos().begin;
     } else {
         lhs = primaryExpr(tt, invoked);
         if (!lhs)
@@ -7726,7 +7758,16 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax, InvokedPred
                 return null();
             if (tt == TOK_NAME) {
                 PropertyName* field = tokenStream.currentName();
-                nextMember = handler.newPropertyAccess(lhs, field, pos().end);
+                if (isSuper) {
+                    isSuper = false;
+                    if (!checkAndMarkSuperScope()) {
+                        report(ParseError, false, null(), JSMSG_BAD_SUPERPROP, "property");
+                        return null();
+                    }
+                    nextMember = handler.newSuperProperty(field, TokenPos(superBegin, pos().end));
+                } else {
+                    nextMember = handler.newPropertyAccess(lhs, field, pos().end);
+                }
                 if (!nextMember)
                     return null();
             } else {
@@ -7740,13 +7781,28 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax, InvokedPred
 
             MUST_MATCH_TOKEN(TOK_RB, JSMSG_BRACKET_IN_INDEX);
 
-            nextMember = handler.newPropertyByValue(lhs, propExpr, pos().end);
+            if (isSuper) {
+                isSuper = false;
+                if (!checkAndMarkSuperScope()) {
+                    report(ParseError, false, null(), JSMSG_BAD_SUPERPROP, "member");
+                    return null();
+                }
+                nextMember = handler.newSuperElement(propExpr, TokenPos(superBegin, pos().end));
+            } else {
+                nextMember = handler.newPropertyByValue(lhs, propExpr, pos().end);
+            }
             if (!nextMember)
                 return null();
         } else if ((allowCallSyntax && tt == TOK_LP) ||
                    tt == TOK_TEMPLATE_HEAD ||
                    tt == TOK_NO_SUBS_TEMPLATE)
         {
+            if (isSuper) {
+                // For now...
+                report(ParseError, false, null(), JSMSG_BAD_SUPER);
+                return null();
+            }
+
             JSOp op = JSOP_CALL;
             nextMember = handler.newList(tt == TOK_LP ? PNK_CALL : PNK_TAGGED_TEMPLATE, JSOP_CALL);
             if (!nextMember)
@@ -7765,6 +7821,12 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax, InvokedPred
                      */
                     if (pc->sc->isFunctionBox() && !pc->sc->strict())
                         pc->sc->asFunctionBox()->setHasExtensibleScope();
+
+                    // If we're in a method, mark the method as requiring
+                    // support for 'super', since direct eval code can use it.
+                    // (If we're not in a method, that's fine, so ignore the 
+                    // return value.)
+                    checkAndMarkSuperScope();
                 }
             } else if (JSAtom* atom = handler.isGetProp(lhs)) {
                 /* Select JSOP_FUNAPPLY given foo.apply(...). */
@@ -7798,12 +7860,22 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax, InvokedPred
             }
             handler.setOp(nextMember, op);
         } else {
+            if (isSuper) {
+                report(ParseError, false, null(), JSMSG_BAD_SUPER);
+                return null();
+            }
             tokenStream.ungetToken();
             return lhs;
         }
 
         lhs = nextMember;
     }
+
+    if (isSuper) {
+        report(ParseError, false, null(), JSMSG_BAD_SUPER);
+        return null();
+    }
+
     return lhs;
 }
 
