@@ -25,8 +25,7 @@ android {
     sourceSets {
         main {
             java {
-                // Thirdparty Adjust SDK code is included in the thirdparty_adjust_sdk project.
-                exclude 'com/adjust/**'
+                srcDir "${topsrcdir}/mobile/android/thirdparty/com/adjust"
             }
         }
     }

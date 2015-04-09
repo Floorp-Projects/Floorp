@@ -103,6 +103,9 @@ class MachCommands(MachCommandBase):
         srcdir('thirdparty/src/main/AndroidManifest.xml', 'mobile/android/gradle/thirdparty/AndroidManifest.xml')
         srcdir('thirdparty/src/main/java', 'mobile/android/thirdparty')
 
+        srcdir('thirdparty_adjust_sdk/build.gradle', 'mobile/android/gradle/thirdparty_adjust_sdk/build.gradle')
+        srcdir('thirdparty_adjust_sdk/src/main/AndroidManifest.xml', 'mobile/android/gradle/thirdparty_adjust_sdk/AndroidManifest.xml')
+
         srcdir('omnijar/build.gradle', 'mobile/android/gradle/omnijar/build.gradle')
         srcdir('omnijar/src/main/java/locales', 'mobile/android/locales')
         srcdir('omnijar/src/main/java/chrome', 'mobile/android/chrome')
