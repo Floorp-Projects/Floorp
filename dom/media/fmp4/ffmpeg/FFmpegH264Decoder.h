@@ -37,14 +37,14 @@ public:
   virtual ~FFmpegH264Decoder();
 
   virtual nsresult Init() override;
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override;
+  virtual nsresult Input(MediaRawData* aSample) override;
   virtual nsresult Drain() override;
   virtual nsresult Flush() override;
   static AVCodecID GetCodecId(const nsACString& aMimeType);
 
 private:
-  void DecodeFrame(mp4_demuxer::MP4Sample* aSample);
-  DecodeResult DoDecodeFrame(mp4_demuxer::MP4Sample* aSample);
+  void DecodeFrame(MediaRawData* aSample);
+  DecodeResult DoDecodeFrame(MediaRawData* aSample);
   void DoDrain();
   void OutputDelayedFrames();
 

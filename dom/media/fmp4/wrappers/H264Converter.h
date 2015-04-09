@@ -30,7 +30,7 @@ public:
   virtual ~H264Converter();
 
   virtual nsresult Init() override;
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override;
+  virtual nsresult Input(MediaRawData* aSample) override;
   virtual nsresult Flush() override;
   virtual nsresult Drain() override;
   virtual nsresult Shutdown() override;
@@ -48,9 +48,9 @@ private:
   // Returns NS_ERROR_FAILURE if error is permanent and can't be recovered and
   // will set mError accordingly.
   nsresult CreateDecoder();
-  nsresult CreateDecoderAndInit(mp4_demuxer::MP4Sample* aSample);
-  nsresult CheckForSPSChange(mp4_demuxer::MP4Sample* aSample);
-  void UpdateConfigFromExtraData(mp4_demuxer::ByteBuffer* aExtraData);
+  nsresult CreateDecoderAndInit(MediaRawData* aSample);
+  nsresult CheckForSPSChange(MediaRawData* aSample);
+  void UpdateConfigFromExtraData(DataBuffer* aExtraData);
 
   nsRefPtr<PlatformDecoderModule> mPDM;
   mp4_demuxer::VideoDecoderConfig mCurrentConfig;

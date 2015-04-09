@@ -7,56 +7,14 @@ Test if Nuwa process created successfully.
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
-<body>
+<body onload="setup()">
 
 <script type="application/javascript;version=1.7">
 "use strict";
 
-SimpleTest.waitForExplicitFinish();
-SimpleTest.requestFlakyTimeout("untriaged");
-
-function TestLoader() {}
-
-TestLoader.prototype = {
-  _waitingTask: 0,
-  onTestReady: null,
-  unlockTestReady: function() {
-    this._waitingTask--;
-    this._maybeLoadTest();
-  },
-  lockTestReady: function() {
-    this._waitingTask++;
-  },
-  _maybeLoadTest: function() {
-    if (this._waitingTask == 0) {
-      this.onTestReady();
-    }
-  }
-}
-
-var testLoader = new TestLoader();
-testLoader.lockTestReady();
-window.addEventListener('load', function() {
-  testLoader.unlockTestReady();
-});
-
-function setPref(pref, value) {
-  testLoader.lockTestReady();
-  if (value !== undefined && value !== null) {
-    SpecialPowers.pushPrefEnv({'set': [[pref, value]]}, function() { testLoader.unlockTestReady(); });
-  } else {
-    SpecialPowers.pushPrefEnv({'clear': [[pref]]}, function() { testLoader.unlockTestReady(); });
-  }
-}
-
-setPref('dom.ipc.processPriorityManager.testMode', true);
-setPref('dom.ipc.processPriorityManager.enabled', true);
-setPref('dom.ipc.processPriorityManager.BACKGROUND.LRUPoolLevels', 2);
-
 function runTest()
 {
-  // Shutdown preallocated process.
-  SpecialPowers.setBoolPref('dom.ipc.processPrelaunch.enabled', false);
+  info("Launch the Nuwa process");
   let cpmm = SpecialPowers.Cc["@mozilla.org/childprocessmessagemanager;1"]
                           .getService(SpecialPowers.Ci.nsISyncMessageSender);
   let seenNuwaReady = false;
@@ -70,19 +28,16 @@ function runTest()
       } else if (msg.name == 'TEST-ONLY:nuwa-add-new-process') {
         ok(true, "Got nuwa-add-new-process");
         is(seenNuwaReady, true, "Receive nuwa-add-new-process before nuwa-ready");
-        testEnd();
+        shutdown();
       }
     }
   };
-  let timeout = setTimeout(function() {
-    ok(false, "Nuwa process is not launched");
-    testEnd();
-  }, 240000);
 
-  function testEnd() {
+  function shutdown() {
+    info("Shut down the test case");
     cpmm.removeMessageListener("TEST-ONLY:nuwa-ready", msgHandler);
     cpmm.removeMessageListener("TEST-ONLY:nuwa-add-new-process", msgHandler);
-    clearTimeout(timeout);
+
     SimpleTest.finish();
   }
 
@@ -94,7 +49,19 @@ function runTest()
   SpecialPowers.setBoolPref('dom.ipc.processPrelaunch.enabled', true);
 }
 
-testLoader.onTestReady = runTest;
+function setup()
+{
+  info("Set up preferences for testing the Nuwa process.");
+  SimpleTest.waitForExplicitFinish();
+
+  SpecialPowers.pushPrefEnv({
+    'set': [
+      ['dom.ipc.processPrelaunch.enabled', false],
+      ['dom.ipc.preallocatedProcessManager.testMode', true]
+    ]
+  }, runTest);
+}
+
 </script>
 </body>
 </html>

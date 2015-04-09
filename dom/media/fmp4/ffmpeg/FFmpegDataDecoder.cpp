@@ -96,9 +96,9 @@ FFmpegDataDecoder<LIBAV_VER>::Init()
 
   if (mExtraData) {
     mCodecContext->extradata_size = mExtraData->Length();
-    for (int i = 0; i < FF_INPUT_BUFFER_PADDING_SIZE; i++) {
-      mExtraData->AppendElement(0);
-    }
+    // FFmpeg may use SIMD instructions to access the data which reads the
+    // data in 32 bytes block. Must ensure we have enough data to read.
+    mExtraData->AppendElements(FF_INPUT_BUFFER_PADDING_SIZE);
     mCodecContext->extradata = mExtraData->Elements();
   } else {
     mCodecContext->extradata_size = 0;

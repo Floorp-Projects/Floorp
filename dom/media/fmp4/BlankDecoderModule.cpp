@@ -41,7 +41,7 @@ public:
 
   class OutputEvent : public nsRunnable {
   public:
-    OutputEvent(mp4_demuxer::MP4Sample* aSample,
+    OutputEvent(MediaRawData* aSample,
                 MediaDataDecoderCallback* aCallback,
                 BlankMediaDataCreator* aCreator)
       : mSample(aSample)
@@ -51,19 +51,19 @@ public:
     }
     NS_IMETHOD Run() override
     {
-      nsRefPtr<MediaData> data = mCreator->Create(mSample->composition_timestamp,
-                                                  mSample->duration,
-                                                  mSample->byte_offset);
+      nsRefPtr<MediaData> data = mCreator->Create(mSample->mTime,
+                                                  mSample->mDuration,
+                                                  mSample->mOffset);
       mCallback->Output(data);
       return NS_OK;
     }
   private:
-    nsAutoPtr<mp4_demuxer::MP4Sample> mSample;
+    nsRefPtr<MediaRawData> mSample;
     BlankMediaDataCreator* mCreator;
     MediaDataDecoderCallback* mCallback;
   };
 
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override
+  virtual nsresult Input(MediaRawData* aSample) override
   {
     // The MediaDataDecoder must delete the sample when we're finished
     // with it, so the OutputEvent stores it in an nsAutoPtr and deletes

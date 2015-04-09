@@ -56,7 +56,7 @@ GMPVideoEncodedFrameImpl::~GMPVideoEncodedFrameImpl()
 }
 
 void
-GMPVideoEncodedFrameImpl::InitCrypto(const mp4_demuxer::CryptoSample& aCrypto)
+GMPVideoEncodedFrameImpl::InitCrypto(const CryptoSample& aCrypto)
 {
   mCrypto = new GMPEncryptedBufferDataImpl(aCrypto);
 }

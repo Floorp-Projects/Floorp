@@ -829,13 +829,12 @@ void WebGLFramebuffer::EnsureColorAttachPoints(size_t colorAttachmentId)
     if (colorAttachmentId < ColorAttachmentCount())
         return;
 
-    size_t colorAttachmentCount = ColorAttachmentCount();
-    while (colorAttachmentCount < WebGLContext::kMaxColorAttachments) {
-        GLenum nextAttachPoint = LOCAL_GL_COLOR_ATTACHMENT0 + colorAttachmentCount;
+    while (ColorAttachmentCount() < WebGLContext::kMaxColorAttachments) {
+        GLenum nextAttachPoint = LOCAL_GL_COLOR_ATTACHMENT0 + ColorAttachmentCount();
         mMoreColorAttachments.AppendElement(AttachPoint(this, nextAttachPoint));
     }
 
-    MOZ_ASSERT(colorAttachmentCount == ColorAttachmentCount());
+    MOZ_ASSERT(ColorAttachmentCount() == WebGLContext::kMaxColorAttachments);
 }
 
 static void
