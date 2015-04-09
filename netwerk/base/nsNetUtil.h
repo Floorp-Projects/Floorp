@@ -1956,13 +1956,10 @@ inline bool
 NS_IsOffline()
 {
     bool offline = true;
-    bool connectivity = true;
     nsCOMPtr<nsIIOService> ios = do_GetIOService();
-    if (ios) {
+    if (ios)
         ios->GetOffline(&offline);
-        ios->GetConnectivity(&connectivity);
-    }
-    return offline || !connectivity;
+    return offline;
 }
 
 inline bool
