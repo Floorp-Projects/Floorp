@@ -6649,6 +6649,13 @@ var PopupBlockerObserver = {
 
         let buttons = [
           {
+            label: strings.GetStringFromName("popup.dontShow"),
+            callback: function(aChecked) {
+              if (aChecked)
+                PopupBlockerObserver.allowPopupsForSite(false);
+            }
+          },
+          {
             label: strings.GetStringFromName("popup.show"),
             callback: function(aChecked) {
               // Set permission before opening popup windows
@@ -6656,13 +6663,6 @@ var PopupBlockerObserver = {
                 PopupBlockerObserver.allowPopupsForSite(true);
 
               PopupBlockerObserver.showPopupsForSite();
-            }
-          },
-          {
-            label: strings.GetStringFromName("popup.dontShow"),
-            callback: function(aChecked) {
-              if (aChecked)
-                PopupBlockerObserver.allowPopupsForSite(false);
             }
           }
         ];
@@ -6765,19 +6765,20 @@ var IndexedDB = {
       observer.observe(null, responseTopic, Ci.nsIPermissionManager.UNKNOWN_ACTION);
     }
 
-    let buttons = [{
-      label: strings.GetStringFromName("offlineApps.allow"),
-      callback: function() {
-        clearTimeout(timeoutId);
-        observer.observe(null, responseTopic, Ci.nsIPermissionManager.ALLOW_ACTION);
-      }
-    },
+    let buttons = [
     {
       label: strings.GetStringFromName("offlineApps.dontAllow2"),
       callback: function(aChecked) {
         clearTimeout(timeoutId);
         let action = aChecked ? Ci.nsIPermissionManager.DENY_ACTION : Ci.nsIPermissionManager.UNKNOWN_ACTION;
         observer.observe(null, responseTopic, action);
+      }
+    },
+    {
+      label: strings.GetStringFromName("offlineApps.allow"),
+      callback: function() {
+        clearTimeout(timeoutId);
+        observer.observe(null, responseTopic, Ci.nsIPermissionManager.ALLOW_ACTION);
       }
     }];
 
