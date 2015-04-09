@@ -5,6 +5,7 @@
 #ifndef DECODER_DATA_H_
 #define DECODER_DATA_H_
 
+#include "MediaData.h"
 #include "mozilla/Types.h"
 #include "mozilla/Vector.h"
 #include "nsAutoPtr.h"
@@ -62,25 +63,6 @@ private:
   bool DoUpdate(const uint8_t* aData, size_t aLength);
 };
 
-class CryptoTrack
-{
-public:
-  CryptoTrack() : valid(false) {}
-  bool valid;
-  int32_t mode;
-  int32_t iv_size;
-  nsTArray<uint8_t> key;
-};
-
-class CryptoSample : public CryptoTrack
-{
-public:
-  nsTArray<uint16_t> plain_sizes;
-  nsTArray<uint32_t> encrypted_sizes;
-  nsTArray<uint8_t> iv;
-  nsTArray<nsCString> session_ids;
-};
-
 class TrackConfig
 {
 public:
@@ -101,7 +83,7 @@ public:
   uint32_t mTrackId;
   int64_t duration;
   int64_t media_time;
-  CryptoTrack crypto;
+  mozilla::CryptoTrack crypto;
   TrackType mType;
 
   bool IsAudioConfig() const
@@ -194,7 +176,7 @@ public:
   uint8_t* data;
   size_t size;
 
-  CryptoSample crypto;
+  mozilla::CryptoSample crypto;
   nsRefPtr<ByteBuffer> extra_data;
 
   bool Prepend(const uint8_t* aData, size_t aSize);

@@ -10,12 +10,17 @@
 #include "gmp-audio-samples.h"
 #include "nsTArray.h"
 #include "gmp-decryption.h"
-#include "mp4_demuxer/DecoderData.h"
 #include "nsAutoPtr.h"
 #include "GMPEncryptedBufferDataImpl.h"
 #include "mozilla/gmp/GMPTypes.h"
 
+namespace mp4_demuxer {
+class MP4Sample;
+}
+
 namespace mozilla {
+class CryptoSample;
+
 namespace gmp {
 
 class GMPAudioSamplesImpl : public GMPAudioSamples {
@@ -37,7 +42,7 @@ public:
   virtual uint8_t* Buffer() override;
   virtual const GMPEncryptedBufferMetadata* GetDecryptionData() const override;
 
-  void InitCrypto(const mp4_demuxer::CryptoSample& aCrypto);
+  void InitCrypto(const CryptoSample& aCrypto);
 
   void RelinquishData(GMPAudioEncodedSampleData& aData);
 

@@ -5,6 +5,7 @@
 
 #include "GMPEncryptedBufferDataImpl.h"
 #include "mozilla/gmp/GMPTypes.h"
+#include "MediaData.h"
 
 namespace mozilla {
 namespace gmp {
