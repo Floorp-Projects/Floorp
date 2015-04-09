@@ -243,8 +243,8 @@ public:
     return true;
   }
 
-  ConversionRequired
-  DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const
+  virtual ConversionRequired
+  DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const override
   {
     return kNeedNone;
   }

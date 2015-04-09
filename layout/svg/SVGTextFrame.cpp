@@ -337,7 +337,8 @@ IsGlyphPositioningAttribute(nsIAtom* aAttribute)
 static nscoord
 GetBaselinePosition(nsTextFrame* aFrame,
                     gfxTextRun* aTextRun,
-                    uint8_t aDominantBaseline)
+                    uint8_t aDominantBaseline,
+                    float aFontSizeScaleFactor)
 {
   // use a dummy WritingMode, because nsTextFrame::GetLogicalBaseLine
   // doesn't use it anyway
@@ -356,6 +357,10 @@ GetBaselinePosition(nsTextFrame* aFrame,
     case NS_STYLE_DOMINANT_BASELINE_AUTO:
     case NS_STYLE_DOMINANT_BASELINE_ALPHABETIC:
       return aFrame->GetLogicalBaseline(writingMode);
+    case NS_STYLE_DOMINANT_BASELINE_MIDDLE:
+      return aFrame->GetLogicalBaseline(writingMode) -
+        SVGContentUtils::GetFontXHeight(aFrame) / 2.0 *
+        aFrame->PresContext()->AppUnitsPerCSSPixel() * aFontSizeScaleFactor;
   }
 
   gfxTextRun::Metrics metrics =
@@ -367,7 +372,6 @@ GetBaselinePosition(nsTextFrame* aFrame,
     case NS_STYLE_DOMINANT_BASELINE_IDEOGRAPHIC:
       return metrics.mAscent + metrics.mDescent;
     case NS_STYLE_DOMINANT_BASELINE_CENTRAL:
-    case NS_STYLE_DOMINANT_BASELINE_MIDDLE:
     case NS_STYLE_DOMINANT_BASELINE_MATHEMATICAL:
       return (metrics.mAscent + metrics.mDescent) / 2.0;
   }
@@ -1993,7 +1997,8 @@ TextRenderedRunIterator::Next()
     frame->EnsureTextRun(nsTextFrame::eInflated);
     baseline = GetBaselinePosition(frame,
                                    frame->GetTextRun(nsTextFrame::eInflated),
-                                   mFrameIterator.DominantBaseline());
+                                   mFrameIterator.DominantBaseline(),
+                                   mFontSizeScaleFactor);
 
     // Trim the offset/length to remove any leading/trailing white space.
     uint32_t untrimmedOffset = offset;
@@ -4607,7 +4612,8 @@ SVGTextFrame::DetermineCharPositions(nsTArray<nsPoint>& aPositions)
     if (textRun->IsRightToLeft()) {
       position.x += frame->GetRect().width;
     }
-    position.y += GetBaselinePosition(frame, textRun, frit.DominantBaseline());
+    position.y += GetBaselinePosition(frame, textRun, frit.DominantBaseline(),
+                                      mFontSizeScaleFactor);
 
     // Any characters not in a frame, e.g. when display:none.
     for (uint32_t i = 0; i < frit.UndisplayedCharacters(); i++) {
