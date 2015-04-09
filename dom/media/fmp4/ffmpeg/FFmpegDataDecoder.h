@@ -30,7 +30,7 @@ public:
   static bool Link();
 
   virtual nsresult Init() override;
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override = 0;
+  virtual nsresult Input(MediaRawData* aSample) override = 0;
   virtual nsresult Flush() override;
   virtual nsresult Drain() override = 0;
   virtual nsresult Shutdown() override;
@@ -41,7 +41,7 @@ protected:
   FlushableMediaTaskQueue* mTaskQueue;
   AVCodecContext* mCodecContext;
   AVFrame*        mFrame;
-  nsRefPtr<mp4_demuxer::ByteBuffer> mExtraData;
+  nsRefPtr<DataBuffer> mExtraData;
 
 private:
   static bool sFFmpegInitDone;

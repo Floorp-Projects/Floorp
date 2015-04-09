@@ -248,6 +248,10 @@ nsresult NrIceMediaStream::GetActivePair(int component,
   nr_ice_candidate *local_int;
   nr_ice_candidate *remote_int;
 
+  if (!stream_) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   r = nr_ice_media_stream_get_active(ctx_->peer(),
                                      stream_,
                                      component,
@@ -281,6 +285,9 @@ nsresult NrIceMediaStream::GetActivePair(int component,
 nsresult NrIceMediaStream::GetCandidatePairs(std::vector<NrIceCandidatePair>*
                                              out_pairs) const {
   MOZ_ASSERT(out_pairs);
+  if (!stream_) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   // Get the check_list on the peer stream (this is where the check_list
   // actually lives, not in stream_)
@@ -366,6 +373,10 @@ std::vector<std::string> NrIceMediaStream::GetCandidates() const {
   int r;
   std::vector<std::string> ret;
 
+  if (!stream_) {
+    return ret;
+  }
+
   r = nr_ice_media_stream_get_attributes(stream_,
                                          &attrs, &attrct);
   if (r) {
@@ -412,11 +423,19 @@ static nsresult GetCandidatesFromStream(
 
 nsresult NrIceMediaStream::GetLocalCandidates(
     std::vector<NrIceCandidate>* candidates) const {
+  if (!stream_) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   return GetCandidatesFromStream(stream_, candidates);
 }
 
 nsresult NrIceMediaStream::GetRemoteCandidates(
     std::vector<NrIceCandidate>* candidates) const {
+  if (!stream_) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nr_ice_media_stream* peer_stream;
   int r = nr_ice_peer_ctx_find_pstream(ctx_->peer(), stream_, &peer_stream);
   if (r != 0) {

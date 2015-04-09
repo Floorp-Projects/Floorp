@@ -55,7 +55,7 @@ PlatformDecoderModule::ConversionRequired
 GonkDecoderModule::DecoderNeedsConversion(const mp4_demuxer::TrackConfig& aConfig) const
 {
   if (aConfig.IsVideoConfig()) {
-    return kNeedAVCC;
+    return kNeedAnnexB;
   } else {
     return kNeedNone;
   }

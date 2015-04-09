@@ -570,6 +570,9 @@ child:
     prio(high) sync GetProfile()
       returns (nsCString aProfile);
 
+    InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action);
+
+    EndDragSession(bool aDoneDrag, bool aUserCancelled);
     NuwaFreeze();
 
     async DomainSetChanged(uint32_t aSetType, uint32_t aChangeType, OptionalURIParams aDomain);
@@ -941,6 +944,7 @@ parent:
      */
     async FinishShutdown();
 
+    UpdateDropEffect(uint32_t aDragAction, uint32_t aDropEffect);
 both:
      AsyncMessage(nsString aMessage, ClonedMessageData aData,
                   CpowEntry[] aCpows, Principal aPrincipal);

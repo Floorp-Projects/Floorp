@@ -15,6 +15,7 @@
 
 #include "mp4_demuxer/mp4_demuxer.h"
 #include "mp4_demuxer/DecoderData.h"
+#include "MediaData.h"
 
 class MediaTaskQueue;
 
@@ -22,7 +23,7 @@ namespace mozilla {
 
 class VP8Sample;
 
-typedef std::deque<VP8Sample*> VP8SampleQueue;
+typedef std::deque<nsRefPtr<VP8Sample>> VP8SampleQueue;
 
 class IntelWebMVideoDecoder : public WebMVideoDecoder, public MediaDataDecoderCallback
 {
@@ -50,13 +51,13 @@ private:
 
   bool Decode();
 
-  bool Demux(nsAutoPtr<VP8Sample>& aSample, bool* aEOS);
+  bool Demux(nsRefPtr<VP8Sample>& aSample, bool* aEOS);
 
   bool SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed);
 
   bool IsSupportedVideoMimeType(const nsACString& aMimeType);
 
-  VP8Sample* PopSample();
+  already_AddRefed<VP8Sample> PopSample();
 
   nsRefPtr<WebMReader> mReader;
   nsRefPtr<PlatformDecoderModule> mPlatform;
@@ -72,7 +73,7 @@ private:
   nsAutoPtr<mp4_demuxer::VideoDecoderConfig> mDecoderConfig;
 
   VP8SampleQueue mSampleQueue;
-  nsAutoPtr<VP8Sample> mQueuedVideoSample;
+  nsRefPtr<VP8Sample> mQueuedVideoSample;
   uint64_t mNumSamplesInput;
   uint64_t mNumSamplesOutput;
   uint64_t mLastReportedNumDecodedFrames;

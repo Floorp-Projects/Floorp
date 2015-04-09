@@ -487,7 +487,12 @@ private:
 already_AddRefed<mozilla::gfx::VsyncSource>
 gfxAndroidPlatform::CreateHardwareVsyncSource()
 {
-#ifdef MOZ_WIDGET_GONK
+    // Only enable true hardware vsync on kit-kat due to L HwcComposer issues
+    // Jelly Bean has inaccurate hardware vsync so disable on JB
+    // Android pre-JB doesn't have hardware vsync
+    // Once L HwcComposer issues have been resolved, re-enable for L devices
+    // L is andriod version 21, Kit-kat is 19, 20 is kit-kat for wearables
+#if defined(MOZ_WIDGET_GONK) && (ANDROID_VERSION == 19)
     nsRefPtr<GonkVsyncSource> vsyncSource = new GonkVsyncSource();
     VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
     display.EnableVsync();

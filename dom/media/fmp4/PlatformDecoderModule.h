@@ -17,12 +17,13 @@ namespace mp4_demuxer {
 class TrackConfig;
 class VideoDecoderConfig;
 class AudioDecoderConfig;
-class MP4Sample;
 }
 
 class nsIThreadPool;
 
 namespace mozilla {
+class MediaRawData;
+class DataBuffer;
 
 namespace layers {
 class ImageContainer;
@@ -219,10 +220,8 @@ public:
   // be done here so that it can be canceled by calling Shutdown()!
   virtual nsresult Init() = 0;
 
-  // Inserts a sample into the decoder's decode pipeline. The decoder must
-  // delete the sample once its been decoded. If Input() returns an error,
-  // aSample will be deleted by the caller.
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) = 0;
+  // Inserts a sample into the decoder's decode pipeline.
+  virtual nsresult Input(MediaRawData* aSample) = 0;
 
   // Causes all samples in the decoding pipeline to be discarded. When
   // this function returns, the decoder must be ready to accept new input
