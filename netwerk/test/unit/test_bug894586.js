@@ -24,6 +24,7 @@ ProtocolHandler.prototype = {
                       Ci.nsIProtocolHandler.URI_NON_PERSISTABLE |
                       Ci.nsIProtocolHandler.URI_SYNC_LOAD_IS_OK,
   newURI: function(aSpec, aOriginCharset, aBaseURI) this.uri,
+  newChannel2: function(aURI, aLoadInfo) this,
   newChannel: function(aURI) this,
   allowPort: function(port, scheme) port != -1,
 
