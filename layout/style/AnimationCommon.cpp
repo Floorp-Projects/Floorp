@@ -386,10 +386,12 @@ CommonAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
                      "should already have refreshed style rule");
   } else {
     // FIXME: Remove this assignment.  See bug 1061364.
-    collection->mNeedsRefreshes = true;
-    collection->EnsureStyleRuleFor(
-      mPresContext->RefreshDriver()->MostRecentRefresh(),
-      EnsureStyleRule_IsNotThrottled);
+    TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
+    if (collection->mStyleRuleRefreshTime.IsNull() ||
+        collection->mStyleRuleRefreshTime != now) {
+      collection->mNeedsRefreshes = true;
+    }
+    collection->EnsureStyleRuleFor(now, EnsureStyleRule_IsNotThrottled);
   }
 
   return collection->mStyleRule;
