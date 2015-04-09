@@ -1380,19 +1380,6 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
       mIsTextWidget = true;
       break;
     }
-    else if (selContent->IsElement()) {
-      nsRefPtr<nsStyleContext> styleContext =
-        nsComputedDOMStyle::GetStyleContextForElementNoFlush(selContent->AsElement(),
-                                                             nullptr, nullptr);
-      if (styleContext) {
-        const nsStyleText* textStyle = styleContext->StyleText();
-        if (textStyle->WhiteSpaceOrNewlineIsSignificant()) {
-          // Copy as plaintext for all preformatted elements
-          mIsTextWidget = true;
-        }
-        break;
-      }
-    }
   }
 
   // normalize selection if we are not in a widget
