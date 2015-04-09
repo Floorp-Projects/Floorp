@@ -18,6 +18,7 @@ from runner import (
         MarionetteTestResult,
         MarionetteTextTestRunner,
         MemoryEnduranceTestCaseMixin,
+        MozHttpd,
         OptionParser,
         TestManifest,
         TestResult,
