@@ -23,7 +23,7 @@ namespace dom {
 class TimeRanges;
 }
 
-typedef std::deque<MediaSample*> MediaSampleQueue;
+typedef std::deque<nsRefPtr<MediaRawData>> MediaSampleQueue;
 
 class MP4Stream;
 
@@ -121,8 +121,8 @@ private:
 
   // Blocks until the demuxer produces an sample of specified type.
   // Returns nullptr on error on EOS. Caller must delete sample.
-  MediaSample* PopSample(mp4_demuxer::TrackType aTrack);
-  MediaSample* PopSampleLocked(mp4_demuxer::TrackType aTrack);
+  already_AddRefed<MediaRawData> PopSample(mp4_demuxer::TrackType aTrack);
+  already_AddRefed<MediaRawData> PopSampleLocked(mp4_demuxer::TrackType aTrack);
 
   bool SkipVideoDemuxToNextKeyFrame(int64_t aTimeThreshold, uint32_t& parsed);
 
@@ -260,7 +260,7 @@ private:
 
   // Queued samples extracted by the demuxer, but not yet sent to the platform
   // decoder.
-  nsAutoPtr<MediaSample> mQueuedVideoSample;
+  nsRefPtr<MediaRawData> mQueuedVideoSample;
 
   // Returns true when the decoder for this track needs input.
   // aDecoder.mMonitor must be locked.
@@ -275,6 +275,10 @@ private:
   DecoderData& GetDecoderData(mp4_demuxer::TrackType aTrack);
 
   layers::LayersBackend mLayersBackendType;
+
+  // For use with InvokeAndRetry as an already_refed can't be converted to bool
+  nsRefPtr<MediaRawData> DemuxVideoSample();
+  nsRefPtr<MediaRawData> DemuxAudioSample();
 
   // True if we've read the streams' metadata.
   bool mDemuxerInitialized;

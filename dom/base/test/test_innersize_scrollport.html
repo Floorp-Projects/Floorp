@@ -27,10 +27,15 @@ function run()
   is(window.innerWidth, newWidth, "innerWidth not updated to scroll port width");
   is(window.innerHeight, newHeight, "innerHeight not updated to scroll port height");
 
+  var innerWidthGetter = Object.getOwnPropertyDescriptor(window, "innerWidth").get;
+  var innerHeightGetter = Object.getOwnPropertyDescriptor(window, "innerHeight").get;
+
   window.innerWidth = oldWidth;
   window.innerHeight = oldHeight;
-  is(window.innerWidth, newWidth, "innerWidth clobbered by direct set");
-  is(window.innerHeight, newHeight, "innerHeight clobbered by direct set");
+  is(window.innerWidth, oldWidth, "Should have redefined innerWidth");
+  is(window.innerHeight, oldHeight, "Should have redefined innerWidth");
+  is(innerWidthGetter.call(window), newWidth, "innerWidth clobbered by direct set");
+  is(innerHeightGetter.call(window), newHeight, "innerHeight clobbered by direct set");
 
   SimpleTest.finish();
 }

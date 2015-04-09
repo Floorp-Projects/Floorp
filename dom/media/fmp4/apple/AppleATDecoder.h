@@ -26,7 +26,7 @@ public:
   virtual ~AppleATDecoder();
 
   virtual nsresult Init() override;
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override;
+  virtual nsresult Input(MediaRawData* aSample) override;
   virtual nsresult Flush() override;
   virtual nsresult Drain() override;
   virtual nsresult Shutdown() override;
@@ -47,16 +47,16 @@ private:
   AudioStreamBasicDescription mOutputFormat;
   UInt32 mFormatID;
   AudioFileStreamID mStream;
-  nsTArray<nsAutoPtr<mp4_demuxer::MP4Sample>> mQueuedSamples;
+  nsTArray<nsRefPtr<MediaRawData>> mQueuedSamples;
 
-  void SubmitSample(nsAutoPtr<mp4_demuxer::MP4Sample> aSample);
-  nsresult DecodeSample(mp4_demuxer::MP4Sample* aSample);
+  void SubmitSample(MediaRawData* aSample);
+  nsresult DecodeSample(MediaRawData* aSample);
   nsresult GetInputAudioDescription(AudioStreamBasicDescription& aDesc,
                                     const nsTArray<uint8_t>& aExtraData);
   // Setup AudioConverter once all information required has been gathered.
   // Will return NS_ERROR_NOT_INITIALIZED if more data is required.
-  nsresult SetupDecoder(mp4_demuxer::MP4Sample* aSample);
-  nsresult GetImplicitAACMagicCookie(const mp4_demuxer::MP4Sample* aSample);
+  nsresult SetupDecoder(MediaRawData* aSample);
+  nsresult GetImplicitAACMagicCookie(const MediaRawData* aSample);
 };
 
 } // namespace mozilla

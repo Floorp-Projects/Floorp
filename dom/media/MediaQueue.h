@@ -176,7 +176,7 @@ private:
       , mTarget(aOther.mTarget)
     {
     }
-    RefPtr<nsIRunnable> mRunnable;
+    nsCOMPtr<nsIRunnable> mRunnable;
     RefPtr<MediaTaskQueue> mTarget;
   };
 
@@ -185,7 +185,8 @@ private:
   void NotifyPopListeners() {
     for (uint32_t i = 0; i < mPopListeners.Length(); i++) {
       Listener& l = mPopListeners[i];
-      l.mTarget->Dispatch(l.mRunnable);
+      nsCOMPtr<nsIRunnable> r = l.mRunnable;
+      l.mTarget->MaybeTailDispatch(r.forget());
     }
   }
 

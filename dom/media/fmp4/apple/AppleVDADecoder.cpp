@@ -104,20 +104,20 @@ AppleVDADecoder::Shutdown()
 }
 
 nsresult
-AppleVDADecoder::Input(mp4_demuxer::MP4Sample* aSample)
+AppleVDADecoder::Input(MediaRawData* aSample)
 {
   LOG("mp4 input sample %p pts %lld duration %lld us%s %d bytes",
       aSample,
-      aSample->composition_timestamp,
-      aSample->duration,
-      aSample->is_sync_point ? " keyframe" : "",
-      aSample->size);
+      aSample->mTime,
+      aSample->mDuration,
+      aSample->mKeyframe ? " keyframe" : "",
+      aSample->mSize);
 
   mTaskQueue->Dispatch(
-      NS_NewRunnableMethodWithArg<nsAutoPtr<mp4_demuxer::MP4Sample>>(
+      NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
           this,
           &AppleVDADecoder::SubmitFrame,
-          nsAutoPtr<mp4_demuxer::MP4Sample>(aSample)));
+          nsRefPtr<MediaRawData>(aSample)));
   return NS_OK;
 }
 
@@ -224,7 +224,7 @@ PlatformCallback(void* decompressionOutputRefCon,
 }
 
 AppleVDADecoder::AppleFrameRef*
-AppleVDADecoder::CreateAppleFrameRef(const mp4_demuxer::MP4Sample* aSample)
+AppleVDADecoder::CreateAppleFrameRef(const MediaRawData* aSample)
 {
   MOZ_ASSERT(aSample);
   return new AppleFrameRef(*aSample);
@@ -307,10 +307,10 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
 }
 
 nsresult
-AppleVDADecoder::SubmitFrame(mp4_demuxer::MP4Sample* aSample)
+AppleVDADecoder::SubmitFrame(MediaRawData* aSample)
 {
   AutoCFRelease<CFDataRef> block =
-    CFDataCreate(kCFAllocatorDefault, aSample->data, aSample->size);
+    CFDataCreate(kCFAllocatorDefault, aSample->mData, aSample->mSize);
   if (!block) {
     NS_ERROR("Couldn't create CFData");
     return NS_ERROR_FAILURE;
@@ -319,20 +319,20 @@ AppleVDADecoder::SubmitFrame(mp4_demuxer::MP4Sample* aSample)
   AutoCFRelease<CFNumberRef> pts =
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt64Type,
-                   &aSample->composition_timestamp);
+                   &aSample->mTime);
   AutoCFRelease<CFNumberRef> dts =
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt64Type,
-                   &aSample->decode_timestamp);
+                   &aSample->mTimecode);
   AutoCFRelease<CFNumberRef> duration =
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt64Type,
-                   &aSample->duration);
+                   &aSample->mDuration);
   AutoCFRelease<CFNumberRef> byte_offset =
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt64Type,
-                   &aSample->byte_offset);
-  char keyframe = aSample->is_sync_point ? 1 : 0;
+                   &aSample->mOffset);
+  char keyframe = aSample->mKeyframe ? 1 : 0;
   AutoCFRelease<CFNumberRef> cfkeyframe =
     CFNumberCreate(kCFAllocatorDefault,
                    kCFNumberSInt8Type,

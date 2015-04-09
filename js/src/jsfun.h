@@ -115,6 +115,7 @@ class JSFunction : public js::NativeObject
         return nonLazyScript()->hasAnyAliasedBindings() ||
                nonLazyScript()->funHasExtensibleScope() ||
                nonLazyScript()->funNeedsDeclEnvObject() ||
+               nonLazyScript()->needsHomeObject()       ||
                isGenerator();
     }
 
@@ -588,6 +589,8 @@ class FunctionExtended : public JSFunction
 
     /* Arrow functions store their lexical |this| in the first extended slot. */
     static const unsigned ARROW_THIS_SLOT = 0;
+
+    static const unsigned METHOD_HOMEOBJECT_SLOT = 0;
 
     static inline size_t offsetOfExtendedSlot(unsigned which) {
         MOZ_ASSERT(which < NUM_EXTENDED_SLOTS);

@@ -590,6 +590,13 @@ struct BytecodeEmitter
     bool emitForOf(StmtType type, ParseNode* pn, ptrdiff_t top);
 
     bool emitClass(ParseNode* pn);
+    bool emitSuperPropLHS(bool isCall = false);
+    bool emitSuperPropOp(ParseNode* pn, JSOp op, bool isCall = false);
+    bool emitSuperPropIncDec(ParseNode* pn);
+    enum SuperElemOptions { SuperElem_Get, SuperElem_Set, SuperElem_Call, SuperElem_IncDec };
+    bool emitSuperElemOperands(ParseNode* pn, SuperElemOptions opts = SuperElem_Get);
+    bool emitSuperElemOp(ParseNode* pn, JSOp op, bool isCall = false);
+    bool emitSuperElemIncDec(ParseNode* pn);
 };
 
 } /* namespace frontend */

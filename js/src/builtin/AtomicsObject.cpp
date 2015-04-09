@@ -55,97 +55,17 @@
 
 #include "prmjtime.h"
 
+#include "jit/AtomicOperations.h"
+
 #include "js/Class.h"
 #include "vm/GlobalObject.h"
 #include "vm/SharedTypedArrayObject.h"
 #include "vm/TypedArrayObject.h"
 
 #include "jsobjinlines.h"
+#include "jit/AtomicOperations-inl.h"
 
 using namespace js;
-
-#if defined(MOZ_HAVE_CXX11_ATOMICS)
-# define CXX11_ATOMICS
-#elif defined(__clang__) || defined(__GNUC__)
-# define GNU_ATOMICS
-#elif _MSC_VER >= 1700 && _MSC_VER < 1800
-// Visual Studion 2012
-# define CXX11_ATOMICS
-# include <atomic>
-#elif defined(_MSC_VER)
-// Visual Studio 2010
-# define GNU_ATOMICS
-static inline void
-__sync_synchronize()
-{
-# if JS_BITS_PER_WORD == 32
-    // If configured for SSE2+ we can use the MFENCE instruction, available
-    // through the _mm_mfence intrinsic.  But for non-SSE2 systems we have
-    // to do something else.  Linux uses "lock add [esp], 0", so why not?
-    __asm lock add [esp], 0;
-# else
-    _mm_mfence();
-# endif
-}
-
-# define MSC_CAS(T, U, cmpxchg) \
-    static inline T \
-    __sync_val_compare_and_swap(T* addr, T oldval, T newval) { \
-        return (T)cmpxchg((U volatile*)addr, (U)oldval, (U)newval); \
-    }
-
-MSC_CAS(int8_t, char, _InterlockedCompareExchange8)
-MSC_CAS(uint8_t, char, _InterlockedCompareExchange8)
-MSC_CAS(int16_t, short, _InterlockedCompareExchange16)
-MSC_CAS(uint16_t, short, _InterlockedCompareExchange16)
-MSC_CAS(int32_t, long, _InterlockedCompareExchange)
-MSC_CAS(uint32_t, long, _InterlockedCompareExchange)
-
-# define MSC_FETCHADDOP(T, U, xadd) \
-    static inline T \
-    __sync_fetch_and_add(T* addr, T val) { \
-        return (T)xadd((U volatile*)addr, (U)val); \
-    } \
-    static inline T \
-    __sync_fetch_and_sub(T* addr, T val) { \
-        return (T)xadd((U volatile*)addr, (U)-val); \
-    }
-
-MSC_FETCHADDOP(int8_t, char, _InterlockedExchangeAdd8)
-MSC_FETCHADDOP(uint8_t, char, _InterlockedExchangeAdd8)
-MSC_FETCHADDOP(int16_t, short, _InterlockedExchangeAdd16)
-MSC_FETCHADDOP(uint16_t, short, _InterlockedExchangeAdd16)
-MSC_FETCHADDOP(int32_t, long, _InterlockedExchangeAdd)
-MSC_FETCHADDOP(uint32_t, long, _InterlockedExchangeAdd)
-
-# define MSC_FETCHBITOP(T, U, andop, orop, xorop) \
-    static inline T \
-    __sync_fetch_and_and(T* addr, T val) { \
-        return (T)andop((U volatile*)addr, (U)val);  \
-    } \
-    static inline T \
-    __sync_fetch_and_or(T* addr, T val) { \
-        return (T)orop((U volatile*)addr, (U)val);  \
-    } \
-    static inline T \
-    __sync_fetch_and_xor(T* addr, T val) { \
-        return (T)xorop((U volatile*)addr, (U)val);  \
-    } \
-
-MSC_FETCHBITOP(int8_t, char, _InterlockedAnd8, _InterlockedOr8, _InterlockedXor8)
-MSC_FETCHBITOP(uint8_t, char, _InterlockedAnd8, _InterlockedOr8, _InterlockedXor8)
-MSC_FETCHBITOP(int16_t, short, _InterlockedAnd16, _InterlockedOr16, _InterlockedXor16)
-MSC_FETCHBITOP(uint16_t, short, _InterlockedAnd16, _InterlockedOr16, _InterlockedXor16)
-MSC_FETCHBITOP(int32_t, long,  _InterlockedAnd, _InterlockedOr, _InterlockedXor)
-MSC_FETCHBITOP(uint32_t, long, _InterlockedAnd, _InterlockedOr, _InterlockedXor)
-
-# undef MSC_CAS
-# undef MSC_FETCHADDOP
-# undef MSC_FETCHBITOP
-
-#elif defined(ENABLE_SHARED_ARRAY_BUFFER)
-# error "Either disable JS shared memory or use a compiler that supports C++11 atomics or GCC/clang atomics"
-#endif
 
 const Class AtomicsObject::class_ = {
     "Atomics",
@@ -193,11 +113,7 @@ GetSharedTypedArrayIndex(JSContext* cx, HandleValue v, Handle<SharedTypedArrayOb
 void
 js::atomics_fullMemoryBarrier()
 {
-#if defined(CXX11_ATOMICS)
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-#elif defined(GNU_ATOMICS)
-    __sync_synchronize();
-#endif
+    jit::AtomicOperations::fenceSeqCst();
 }
 
 static bool
@@ -219,72 +135,53 @@ static int32_t
 do_cmpxchg(Scalar::Type viewType, int32_t oldCandidate, int32_t newCandidate, void* viewData,
            uint32_t offset, bool* badArrayType)
 {
-    // CAS always sets oldval to the old value of the cell.
-    // addr must be a T*, and oldval and newval should be variables of type T
-
-#if defined(CXX11_ATOMICS)
-# define CAS(T, addr, oldval, newval)                                    \
-    do {                                                                \
-        std::atomic_compare_exchange_strong(reinterpret_cast<std::atomic<T>*>(addr), &oldval, newval); \
-    } while(0)
-#elif defined(GNU_ATOMICS)
-# define CAS(T, addr, oldval, newval)                                    \
-    do {                                                                \
-        oldval = __sync_val_compare_and_swap(addr, (oldval), (newval)); \
-    } while(0)
-#else
-# define CAS(a, b, c, newval)  (void)newval
-#endif
-
     switch (viewType) {
       case Scalar::Int8: {
           int8_t oldval = (int8_t)oldCandidate;
           int8_t newval = (int8_t)newCandidate;
-          CAS(int8_t, (int8_t*)viewData + offset, oldval, newval);
+          oldval = jit::AtomicOperations::compareExchangeSeqCst((int8_t*)viewData + offset, oldval, newval);
           return oldval;
       }
       case Scalar::Uint8: {
           uint8_t oldval = (uint8_t)oldCandidate;
           uint8_t newval = (uint8_t)newCandidate;
-          CAS(uint8_t, (uint8_t*)viewData + offset, oldval, newval);
+          oldval = jit::AtomicOperations::compareExchangeSeqCst((uint8_t*)viewData + offset, oldval, newval);
           return oldval;
       }
       case Scalar::Uint8Clamped: {
           uint8_t oldval = ClampIntForUint8Array(oldCandidate);
           uint8_t newval = ClampIntForUint8Array(newCandidate);
-          CAS(uint8_t, (uint8_t*)viewData + offset, oldval, newval);
+          oldval = jit::AtomicOperations::compareExchangeSeqCst((uint8_t*)viewData + offset, oldval, newval);
           return oldval;
       }
       case Scalar::Int16: {
           int16_t oldval = (int16_t)oldCandidate;
           int16_t newval = (int16_t)newCandidate;
-          CAS(int16_t, (int16_t*)viewData + offset, oldval, newval);
+          oldval = jit::AtomicOperations::compareExchangeSeqCst((int16_t*)viewData + offset, oldval, newval);
           return oldval;
       }
       case Scalar::Uint16: {
           uint16_t oldval = (uint16_t)oldCandidate;
           uint16_t newval = (uint16_t)newCandidate;
-          CAS(uint16_t, (uint16_t*)viewData + offset, oldval, newval);
+          oldval = jit::AtomicOperations::compareExchangeSeqCst((uint16_t*)viewData + offset, oldval, newval);
           return oldval;
       }
       case Scalar::Int32: {
           int32_t oldval = oldCandidate;
           int32_t newval = newCandidate;
-          CAS(int32_t, (int32_t*)viewData + offset, oldval, newval);
+          oldval = jit::AtomicOperations::compareExchangeSeqCst((int32_t*)viewData + offset, oldval, newval);
           return oldval;
       }
       case Scalar::Uint32: {
           uint32_t oldval = (uint32_t)oldCandidate;
           uint32_t newval = (uint32_t)newCandidate;
-          CAS(uint32_t, (uint32_t*)viewData + offset, oldval, newval);
+          oldval = jit::AtomicOperations::compareExchangeSeqCst((uint32_t*)viewData + offset, oldval, newval);
           return (int32_t)oldval;
       }
       default:
         *badArrayType = true;
         return 0;
     }
-
-    // Do not undef CAS, it is used later
 }
 
 bool
@@ -346,69 +243,41 @@ js::atomics_load(JSContext* cx, unsigned argc, Value* vp)
     if (!inRange)
         return atomics_fence_impl(cx, r);
 
-    // LOAD sets v to the value of *addr
-    // addr must be a T*, and v must be a variable of type T
-
-#if defined(CXX11_ATOMICS)
-# define LOAD(T, addr, v)                                                \
-    do {                                                                \
-        v = std::atomic_load(reinterpret_cast<std::atomic<T>*>(addr));  \
-    } while(0)
-#elif defined(GNU_ATOMICS)
-# define LOAD(T, addr, v)                        \
-    do {                                        \
-        __sync_synchronize();                   \
-        v = *(addr);                            \
-        __sync_synchronize();                   \
-    } while(0)
-#else
-# define LOAD(a, b, v)  v = 0
-#endif
-
     switch (view->type()) {
       case Scalar::Uint8:
       case Scalar::Uint8Clamped: {
-          uint8_t v;
-          LOAD(uint8_t, (uint8_t*)view->viewData() + offset, v);
+          uint8_t v = jit::AtomicOperations::loadSeqCst((uint8_t*)view->viewData() + offset);
           r.setInt32(v);
           return true;
       }
       case Scalar::Int8: {
-          int8_t v;
-          LOAD(int8_t, (int8_t*)view->viewData() + offset, v);
+          int8_t v = jit::AtomicOperations::loadSeqCst((uint8_t*)view->viewData() + offset);
           r.setInt32(v);
           return true;
       }
       case Scalar::Int16: {
-          int16_t v;
-          LOAD(int16_t, (int16_t*)view->viewData() + offset, v);
+          int16_t v = jit::AtomicOperations::loadSeqCst((int16_t*)view->viewData() + offset);
           r.setInt32(v);
           return true;
       }
       case Scalar::Uint16: {
-          uint16_t v;
-          LOAD(uint16_t, (uint16_t*)view->viewData() + offset, v);
+          uint16_t v = jit::AtomicOperations::loadSeqCst((uint16_t*)view->viewData() + offset);
           r.setInt32(v);
           return true;
       }
       case Scalar::Int32: {
-          int32_t v;
-          LOAD(int32_t, (int32_t*)view->viewData() + offset, v);
+          int32_t v = jit::AtomicOperations::loadSeqCst((int32_t*)view->viewData() + offset);
           r.setInt32(v);
           return true;
       }
       case Scalar::Uint32: {
-          uint32_t v;
-          LOAD(uint32_t, (uint32_t*)view->viewData() + offset, v);
+          uint32_t v = jit::AtomicOperations::loadSeqCst((uint32_t*)view->viewData() + offset);
           r.setNumber(v);
           return true;
       }
       default:
           return ReportBadArrayType(cx);
     }
-
-#undef LOAD
-
 }
 
 bool
@@ -437,73 +306,52 @@ js::atomics_store(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    // STORE stores value in *addr
-    // addr must be a T*, and value should be of type T
-
-#if defined(CXX11_ATOMICS)
-# define STORE(T, addr, value)                                           \
-    do {                                                                \
-        std::atomic_store(reinterpret_cast<std::atomic<T>*>(addr), (T)value); \
-} while(0)
-#elif defined(GNU_ATOMICS)
-# define STORE(T, addr, value)                   \
-    do {                                        \
-        __sync_synchronize();                   \
-        *(addr) = value;                        \
-        __sync_synchronize();                   \
-    } while(0)
-#else
-# define STORE(a, b, c)  (void)0
-#endif
-
     switch (view->type()) {
       case Scalar::Int8: {
           int8_t value = (int8_t)numberValue;
-          STORE(int8_t, (int8_t*)view->viewData() + offset, value);
+          jit::AtomicOperations::storeSeqCst((int8_t*)view->viewData() + offset, value);
           r.setInt32(value);
           return true;
       }
       case Scalar::Uint8: {
           uint8_t value = (uint8_t)numberValue;
-          STORE(uint8_t, (uint8_t*)view->viewData() + offset, value);
+          jit::AtomicOperations::storeSeqCst((uint8_t*)view->viewData() + offset, value);
           r.setInt32(value);
           return true;
       }
       case Scalar::Uint8Clamped: {
           uint8_t value = ClampIntForUint8Array(numberValue);
-          STORE(uint8_t, (uint8_t*)view->viewData() + offset, value);
+          jit::AtomicOperations::storeSeqCst((uint8_t*)view->viewData() + offset, value);
           r.setInt32(value);
           return true;
       }
       case Scalar::Int16: {
           int16_t value = (int16_t)numberValue;
-          STORE(int16_t, (int16_t*)view->viewData() + offset, value);
+          jit::AtomicOperations::storeSeqCst((int16_t*)view->viewData() + offset, value);
           r.setInt32(value);
           return true;
       }
       case Scalar::Uint16: {
           uint16_t value = (uint16_t)numberValue;
-          STORE(uint16_t, (uint16_t*)view->viewData() + offset, value);
+          jit::AtomicOperations::storeSeqCst((uint16_t*)view->viewData() + offset, value);
           r.setInt32(value);
           return true;
       }
       case Scalar::Int32: {
           int32_t value = numberValue;
-          STORE(int32_t, (int32_t*)view->viewData() + offset, value);
+          jit::AtomicOperations::storeSeqCst((int32_t*)view->viewData() + offset, value);
           r.setInt32(value);
           return true;
       }
       case Scalar::Uint32: {
           uint32_t value = (uint32_t)numberValue;
-          STORE(uint32_t, (uint32_t*)view->viewData() + offset, value);
+          jit::AtomicOperations::storeSeqCst((uint32_t*)view->viewData() + offset, value);
           r.setNumber((double)value);
           return true;
       }
       default:
         return ReportBadArrayType(cx);
     }
-
-#undef STORE
 }
 
 template<typename T>
@@ -548,8 +396,7 @@ atomics_binop_impl(JSContext* cx, HandleValue objv, HandleValue idxv, HandleValu
           for (;;) {
               uint8_t old = *loc;
               uint8_t result = (uint8_t)ClampIntForUint8Array(T::perform(old, value));
-              uint8_t tmp = old;  // tmp is overwritten by CAS
-              CAS(uint8_t, loc, tmp, result);
+              uint8_t tmp = jit::AtomicOperations::compareExchangeSeqCst(loc, old, result);
               if (tmp == old) {
                   r.setInt32(old);
                   break;
@@ -582,28 +429,18 @@ atomics_binop_impl(JSContext* cx, HandleValue objv, HandleValue idxv, HandleValu
     }
 }
 
-#define INTEGRAL_TYPES_FOR_EACH(NAME, TRANSFORM) \
-    static int8_t operate(int8_t* addr, int8_t v) { return NAME(TRANSFORM(int8_t, addr), v); } \
-    static uint8_t operate(uint8_t* addr, uint8_t v) { return NAME(TRANSFORM(uint8_t, addr), v); } \
-    static int16_t operate(int16_t* addr, int16_t v) { return NAME(TRANSFORM(int16_t, addr), v); } \
-    static uint16_t operate(uint16_t* addr, uint16_t v) { return NAME(TRANSFORM(uint16_t, addr), v); } \
-    static int32_t operate(int32_t* addr, int32_t v) { return NAME(TRANSFORM(int32_t, addr), v); } \
-    static uint32_t operate(uint32_t* addr, uint32_t v) { return NAME(TRANSFORM(uint32_t, addr), v); }
-
-#define CAST_ATOMIC(t, v) reinterpret_cast<std::atomic<t>*>(v)
-#define DO_NOTHING(t, v) v
-#define ZERO(t, v) 0
+#define INTEGRAL_TYPES_FOR_EACH(NAME) \
+    static int8_t operate(int8_t* addr, int8_t v) { return NAME(addr, v); } \
+    static uint8_t operate(uint8_t* addr, uint8_t v) { return NAME(addr, v); } \
+    static int16_t operate(int16_t* addr, int16_t v) { return NAME(addr, v); } \
+    static uint16_t operate(uint16_t* addr, uint16_t v) { return NAME(addr, v); } \
+    static int32_t operate(int32_t* addr, int32_t v) { return NAME(addr, v); } \
+    static uint32_t operate(uint32_t* addr, uint32_t v) { return NAME(addr, v); }
 
 class do_add
 {
 public:
-#if defined(CXX11_ATOMICS)
-    INTEGRAL_TYPES_FOR_EACH(std::atomic_fetch_add, CAST_ATOMIC)
-#elif defined(GNU_ATOMICS)
-    INTEGRAL_TYPES_FOR_EACH(__sync_fetch_and_add, DO_NOTHING)
-#else
-    INTEGRAL_TYPES_FOR_EACH(ZERO, DO_NOTHING)
-#endif
+    INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchAddSeqCst)
     static int32_t perform(int32_t x, int32_t y) { return x + y; }
 };
 
@@ -617,13 +454,7 @@ js::atomics_add(JSContext* cx, unsigned argc, Value* vp)
 class do_sub
 {
 public:
-#if defined(CXX11_ATOMICS)
-    INTEGRAL_TYPES_FOR_EACH(std::atomic_fetch_sub, CAST_ATOMIC)
-#elif defined(GNU_ATOMICS)
-    INTEGRAL_TYPES_FOR_EACH(__sync_fetch_and_sub, DO_NOTHING)
-#else
-    INTEGRAL_TYPES_FOR_EACH(ZERO, DO_NOTHING)
-#endif
+    INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchSubSeqCst)
     static int32_t perform(int32_t x, int32_t y) { return x - y; }
 };
 
@@ -637,13 +468,7 @@ js::atomics_sub(JSContext* cx, unsigned argc, Value* vp)
 class do_and
 {
 public:
-#if defined(CXX11_ATOMICS)
-    INTEGRAL_TYPES_FOR_EACH(std::atomic_fetch_and, CAST_ATOMIC)
-#elif defined(GNU_ATOMICS)
-    INTEGRAL_TYPES_FOR_EACH(__sync_fetch_and_and, DO_NOTHING)
-#else
-    INTEGRAL_TYPES_FOR_EACH(ZERO, DO_NOTHING)
-#endif
+    INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchAndSeqCst)
     static int32_t perform(int32_t x, int32_t y) { return x & y; }
 };
 
@@ -657,13 +482,7 @@ js::atomics_and(JSContext* cx, unsigned argc, Value* vp)
 class do_or
 {
 public:
-#if defined(CXX11_ATOMICS)
-    INTEGRAL_TYPES_FOR_EACH(std::atomic_fetch_or, CAST_ATOMIC)
-#elif defined(GNU_ATOMICS)
-    INTEGRAL_TYPES_FOR_EACH(__sync_fetch_and_or, DO_NOTHING)
-#else
-    INTEGRAL_TYPES_FOR_EACH(ZERO, DO_NOTHING)
-#endif
+    INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchOrSeqCst)
     static int32_t perform(int32_t x, int32_t y) { return x | y; }
 };
 
@@ -677,13 +496,7 @@ js::atomics_or(JSContext* cx, unsigned argc, Value* vp)
 class do_xor
 {
 public:
-#if defined(CXX11_ATOMICS)
-    INTEGRAL_TYPES_FOR_EACH(std::atomic_fetch_xor, CAST_ATOMIC)
-#elif defined(GNU_ATOMICS)
-    INTEGRAL_TYPES_FOR_EACH(__sync_fetch_and_xor, DO_NOTHING)
-#else
-    INTEGRAL_TYPES_FOR_EACH(ZERO, DO_NOTHING)
-#endif
+    INTEGRAL_TYPES_FOR_EACH(jit::AtomicOperations::fetchXorSeqCst)
     static int32_t perform(int32_t x, int32_t y) { return x ^ y; }
 };
 
@@ -693,11 +506,6 @@ js::atomics_xor(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     return atomics_binop_impl<do_xor>(cx, args.get(0), args.get(1), args.get(2), args.rval());
 }
-
-#undef INTEGRAL_TYPES_FOR_EACH
-#undef CAST_ATOMIC
-#undef DO_NOTHING
-#undef ZERO
 
 // asm.js callouts for platforms that do not have non-word-sized
 // atomics where we don't want to inline the logic for the atomics.

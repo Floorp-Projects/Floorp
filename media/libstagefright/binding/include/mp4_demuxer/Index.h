@@ -20,7 +20,7 @@ class SampleIterator
 {
 public:
   explicit SampleIterator(Index* aIndex);
-  MP4Sample* GetNext();
+  already_AddRefed<mozilla::MediaRawData> GetNext();
   void Seek(Microseconds aTime);
   Microseconds GetNextKeyframeTime();
 
