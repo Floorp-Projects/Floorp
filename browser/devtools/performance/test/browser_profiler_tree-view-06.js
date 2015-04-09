@@ -26,11 +26,6 @@ function spawnTest () {
   let eventItem = yield receivedLinkEvent;
   is(eventItem, D, "The 'link' event target is correct.");
 
-  let receivedZoomEvent = treeRoot.once("zoom");
-  EventUtils.sendMouseEvent({ type: "mousedown" }, D.target.querySelector(".call-tree-zoom"));
-
-  eventItem = yield receivedZoomEvent;
-  is(eventItem, D, "The 'zoom' event target is correct.");
   finish();
 }
 
