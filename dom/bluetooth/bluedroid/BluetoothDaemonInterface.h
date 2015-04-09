@@ -89,9 +89,15 @@ public:
                 const nsAString& aPinCode,
                 BluetoothResultHandler* aRes);
 
+#ifdef MOZ_B2G_BT_API_V2
+  void SspReply(const nsAString& aBdAddr, BluetoothSspVariant aVariant,
+                bool aAccept, uint32_t aPasskey,
+                BluetoothResultHandler* aRes);
+#else
   void SspReply(const nsAString& aBdAddr, const nsAString& aVariant,
                 bool aAccept, uint32_t aPasskey,
                 BluetoothResultHandler* aRes);
+#endif
 
   /* DUT Mode */
 
@@ -114,6 +120,12 @@ public:
   BluetoothHandsfreeInterface* GetBluetoothHandsfreeInterface() override;
   BluetoothA2dpInterface* GetBluetoothA2dpInterface() override;
   BluetoothAvrcpInterface* GetBluetoothAvrcpInterface() override;
+
+#ifdef MOZ_B2G_BT_API_V2
+  BluetoothGattInterface* GetBluetoothGattInterface() override;
+#else
+// TODO: Support GATT
+#endif
 
 protected:
   enum Channel {
