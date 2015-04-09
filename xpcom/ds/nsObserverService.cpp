@@ -344,10 +344,12 @@ NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports* aSubject,
 }
 
 static PLDHashOperator
-UnmarkGrayObserverEntry(nsObserverList* aObserverList, void* aClosure)
+AppendStrongObservers(nsObserverList* aObserverList, void* aClosure)
 {
+  nsCOMArray<nsIObserver>* array = static_cast<nsCOMArray<nsIObserver>*>(aClosure);
+
   if (aObserverList) {
-    aObserverList->UnmarkGrayStrongObservers();
+    aObserverList->AppendStrongObservers(*array);
   }
   return PL_DHASH_NEXT;
 }
@@ -357,7 +359,14 @@ nsObserverService::UnmarkGrayStrongObservers()
 {
   NS_ENSURE_VALIDCALL
 
-  mObserverTopicTable.EnumerateEntries(UnmarkGrayObserverEntry, nullptr);
+#if !defined(MOZILLA_XPCOMRT_API)
+  nsCOMArray<nsIObserver> strongObservers;
+  mObserverTopicTable.EnumerateEntries(AppendStrongObservers, &strongObservers);
+
+  for (uint32_t i = 0; i < strongObservers.Length(); ++i) {
+    xpc_TryUnmarkWrappedGrayObject(strongObservers[i]);
+  }
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
   return NS_OK;
 }

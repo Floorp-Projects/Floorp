@@ -71,9 +71,8 @@ public:
   // The array is filled in last-added-first order.
   void FillObserverArray(nsCOMArray<nsIObserver>& aArray);
 
-  // Unmark any strongly held observers implemented in JS so the cycle
-  // collector will not traverse them.
-  void UnmarkGrayStrongObservers();
+  // Like FillObserverArray(), but only for strongly held observers.
+  void AppendStrongObservers(nsCOMArray<nsIObserver>& aArray);
 
 private:
   nsTArray<ObserverRef> mObservers;
