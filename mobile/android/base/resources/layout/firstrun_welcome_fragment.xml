@@ -52,7 +52,7 @@
 
             <Button android:id="@+id/welcome_account"
                     style="@style/Widget.Firstrun.Button"
-                    android:background="@drawable/firstrun_button_background"
+                    android:background="@drawable/button_background_action_orange_round"
                     android:layout_gravity="center"
                     android:text="@string/firstrun_welcome_button_account"/>
 

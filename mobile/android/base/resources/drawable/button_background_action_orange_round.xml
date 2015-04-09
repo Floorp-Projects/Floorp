@@ -5,7 +5,7 @@
 
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="true"
-          android:drawable="@drawable/firstrun_button_pressed" />
+          android:drawable="@drawable/button_pressed_action_orange_round" />
     <item android:state_enabled="true"
-          android:drawable="@drawable/firstrun_button_enabled" />
+          android:drawable="@drawable/button_enabled_action_orange_round" />
 </selector>
