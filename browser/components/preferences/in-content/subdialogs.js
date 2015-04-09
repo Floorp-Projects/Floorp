@@ -16,7 +16,6 @@ let gSubDialog = {
                          "chrome://global/skin/in-content/common.css",
                          "chrome://browser/skin/preferences/in-content/preferences.css",
                          "chrome://browser/skin/preferences/in-content/dialog.css"],
-  _resizeObserver: null,
 
   init: function() {
     this._frame = document.getElementById("dialogFrame");
@@ -182,12 +181,8 @@ let gSubDialog = {
     let groupBoxBody = document.getAnonymousElementByAttribute(this._box, "class", "groupbox-body");
     let boxVerticalPadding = 2 * parseFloat(getComputedStyle(groupBoxBody).paddingTop);
     let boxHorizontalPadding = 2 * parseFloat(getComputedStyle(groupBoxBody).paddingLeft);
-    let frameMinWidth = docEl.scrollWidth + "px";
-    let frameWidth = docEl.getAttribute("width") ? docEl.getAttribute("width") + "px" :
-                     frameMinWidth;
-    let frameMinHeight = docEl.scrollHeight + "px";
-    let frameHeight = docEl.getAttribute("height") ? docEl.getAttribute("height") + "px" :
-                      frameMinHeight;
+    let frameWidth = docEl.style.width || docEl.scrollWidth + "px";
+    let frameHeight = docEl.style.height || docEl.scrollHeight + "px";
     let boxVerticalBorder = 2 * parseFloat(getComputedStyle(this._box).borderTopWidth);
     let boxHorizontalBorder = 2 * parseFloat(getComputedStyle(this._box).borderLeftWidth);
 
@@ -211,43 +206,15 @@ let gSubDialog = {
     this._frame.style.height = frameHeight;
     this._box.style.minHeight = "calc(" +
                                 (boxVerticalBorder + groupBoxTitleHeight + boxVerticalPadding) +
-                                "px + " + frameMinHeight + ")";
+                                "px + " + frameHeight + ")";
     this._box.style.minWidth = "calc(" +
                                (boxHorizontalBorder + boxHorizontalPadding) +
-                               "px + " + frameMinWidth + ")";
+                               "px + " + frameWidth + ")";
 
     this._overlay.style.visibility = "visible";
     this._overlay.style.opacity = ""; // XXX: focus hack continued from _onContentLoaded
 
-    this._resizeObserver = new MutationObserver(this._onResize);
-    this._resizeObserver.observe(this._box, {attributes: true});
-
     this._trapFocus();
-  },
-
-  _onResize: function(mutations) {
-    let frame = gSubDialog._frame;
-    // The width and height styles are needed for the initial
-    // layout of the frame, but afterward they need to be removed
-    // or their presence will restrict the contents of the <browser>
-    // from resizing to a smaller size.
-    frame.style.removeProperty("width");
-    frame.style.removeProperty("height");
-
-    let docEl = frame.contentDocument.documentElement;
-    let persistedAttributes = docEl.getAttribute("persist");
-    if (!persistedAttributes.contains("width") &&
-        !persistedAttributes.contains("height")) {
-      return;
-    }
-
-    for (let mutation of mutations) {
-      if (mutation.attributeName == "width") {
-        docEl.setAttribute("width", docEl.scrollWidth);
-      } else if (mutation.attributeName == "height") {
-        docEl.setAttribute("height", docEl.scrollHeight);
-      }
-    }
   },
 
   _onDialogClosing: function(aEvent) {
@@ -334,10 +301,6 @@ let gSubDialog = {
     this._frame.removeEventListener("load", this);
     this._frame.contentWindow.removeEventListener("dialogclosing", this);
     window.removeEventListener("keydown", this, true);
-    if (this._resizeObserver) {
-      this._resizeObserver.disconnect();
-      this._resizeObserver = null;
-    }
     this._untrapFocus();
   },
 
