@@ -170,7 +170,7 @@
           aTarget.src = this.src;
           aTarget.content.setAttribute("origin", this.content.getAttribute("origin"));
           aTarget.content.popupnotificationanchor.className = this.content.popupnotificationanchor.className;
-          this.content.swapDocShells(aTarget.content);
+          aTarget.content.swapDocShells(this.content);
         ]]></body>
       </method>
 

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tab_queue_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false">
+
+    <LinearLayout
+        android:layout_width="@dimen/tab_queue_container_width"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center"
+        android:background="@android:color/white"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="@dimen/tab_queue_content_width"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:fontFamily="sans-serif-light"
+            android:gravity="center_horizontal"
+            android:paddingTop="40dp"
+            android:text="@string/tab_queue_prompt_title"
+            android:textColor="@color/text_and_tabs_tray_grey"
+            android:textSize="20sp"
+
+            tools:text="Opening multiple links?" />
+
+        <TextView
+            android:id="@+id/text"
+            android:layout_width="@dimen/tab_queue_content_width"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:lineSpacingMultiplier="1.25"
+            android:paddingTop="20dp"
+            android:text="@string/tab_queue_prompt_text"
+            android:textColor="@color/placeholder_grey"
+            android:textSize="16sp"
+
+            tools:text="Open them without switching to Firefox each time." />
+
+        <TextView
+            android:id="@+id/tip_text"
+            android:layout_width="@dimen/tab_queue_content_width"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:paddingBottom="30dp"
+            android:paddingTop="20dp"
+            android:text="@string/tab_queue_prompt_tip_text"
+            android:textColor="@color/action_orange"
+            android:textSize="14sp"
+            android:textStyle="italic"
+
+            tools:text="you can change this later in Settings" />
+
+        <FrameLayout
+            android:id="@+id/bottom_container"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="40dp">
+
+            <ImageView
+                android:id="@+id/enabled_confirmation"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:src="@drawable/img_check"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/button_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/cancel_button"
+                    style="@style/Widget.BaseButton"
+                    android:layout_width="@dimen/tab_queue_button_width"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:background="@color/android:white"
+                    android:text="@string/tab_queue_prompt_negative_action_button"
+                    android:textColor="@drawable/tab_queue_dismiss_button_foreground"
+                    android:textSize="16sp"
+
+                    tools:text="Not now" />
+
+                <Button
+                    android:id="@+id/ok_button"
+                    style="@style/Widget.BaseButton"
+                    android:layout_width="@dimen/tab_queue_button_width"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:background="@drawable/button_background_action_orange_round"
+                    android:text="@string/tab_queue_prompt_positive_action_button"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+
+                    tools:text="Enable" />
+
+            </LinearLayout>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

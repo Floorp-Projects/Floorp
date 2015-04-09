@@ -218,7 +218,7 @@ SharedDecoderProxy::Init()
 }
 
 nsresult
-SharedDecoderProxy::Input(mp4_demuxer::MP4Sample* aSample)
+SharedDecoderProxy::Input(MediaRawData* aSample)
 {
   if (mManager->mActiveProxy != this) {
     mManager->Select(this);

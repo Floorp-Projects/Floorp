@@ -1,9 +1,6 @@
 _VSPATH="/c/tools/vs2013"
 export WIN32_REDIST_DIR=${_VSPATH}/VC/redist/x86/Microsoft.VC120.CRT
 
-## moz tools location for 64-bit builders ##
-export MOZ_TOOLS=C:/mozilla-build/moztools
-
 ## includes: win8.1 sdk includes, winrt headers for metro, msvc std library, directx sdk for d3d9 ##
 export INCLUDE=/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/include/shared:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/include/um:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/include/winrt:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/include/winrt/wrl:/c/Program\ Files\ \(x86\)/Windows\ Kits/8.1/include/winrt/wrl/wrappers:${_VSPATH}/vc/include:${_VSPATH}/vc/atlmfc/include:/c/tools/sdks/dx10/include
 
@@ -24,5 +21,3 @@ mk_export_correct_style LIBPATH
 mk_export_correct_style PATH
 mk_export_correct_style INCLUDE
 mk_export_correct_style WIN32_REDIST_DIR
-
-mk_add_options "export MOZ_TOOLS=$MOZ_TOOLS"

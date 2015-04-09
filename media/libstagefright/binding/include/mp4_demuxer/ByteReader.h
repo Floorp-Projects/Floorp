@@ -8,6 +8,7 @@
 #include "mozilla/Endian.h"
 #include "mozilla/Vector.h"
 #include "nsTArray.h"
+#include "MediaData.h"
 
 namespace mp4_demuxer {
 
@@ -30,6 +31,10 @@ public:
   }
   explicit ByteReader(const nsTArray<uint8_t>& aData)
     : mPtr(aData.Elements()), mRemaining(aData.Length()), mLength(aData.Length())
+  {
+  }
+  explicit ByteReader(const DataBuffer* aData)
+    : mPtr(aData->Elements()), mRemaining(aData->Length()), mLength(aData->Length())
   {
   }
 

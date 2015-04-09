@@ -10,11 +10,11 @@
 #include "mozilla/RefPtr.h"
 #include "gmp-decryption.h"
 #include "GMPDecryptorProxy.h"
-namespace mp4_demuxer {
-class CryptoSample;
-}
 
 namespace mozilla {
+
+class CryptoSample;
+
 namespace gmp {
 
 class GMPContentParent;
@@ -56,7 +56,7 @@ public:
                                     const nsTArray<uint8_t>& aServerCert) override;
 
   virtual void Decrypt(uint32_t aId,
-                       const mp4_demuxer::CryptoSample& aCrypto,
+                       const CryptoSample& aCrypto,
                        const nsTArray<uint8_t>& aBuffer) override;
 
   virtual void Close() override;

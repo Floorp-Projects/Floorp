@@ -35,9 +35,9 @@ public:
   virtual nsresult Flush() override;
 
 protected:
-  virtual bool PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) override;
+  virtual bool PerformFormatSpecificProcess(MediaRawData* aSample) override;
 
-  virtual status_t SendSampleToOMX(mp4_demuxer::MP4Sample* aSample) override;
+  virtual status_t SendSampleToOMX(MediaRawData* aSample) override;
 
 private:
 
