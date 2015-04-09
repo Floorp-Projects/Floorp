@@ -2612,15 +2612,19 @@ TextPropertyEditor.prototype = {
       this.element.removeAttribute("dirty");
     }
 
-    let colorSwatchClass = "ruleview-colorswatch";
-    let bezierSwatchClass = "ruleview-bezierswatch";
+    const sharedSwatchClass = "ruleview-swatch ";
+    const colorSwatchClass = "ruleview-colorswatch";
+    const bezierSwatchClass = "ruleview-bezierswatch";
+    const filterSwatchClass = "ruleview-filterswatch";
 
     let outputParser = this.ruleEditor.ruleView._outputParser;
     let frag = outputParser.parseCssProperty(name, val, {
-      colorSwatchClass: colorSwatchClass,
+      colorSwatchClass: sharedSwatchClass + colorSwatchClass,
       colorClass: "ruleview-color",
-      bezierSwatchClass: bezierSwatchClass,
+      bezierSwatchClass: sharedSwatchClass + bezierSwatchClass,
       bezierClass: "ruleview-bezier",
+      filterSwatchClass: sharedSwatchClass + filterSwatchClass,
+      filterClass: "ruleview-filter",
       defaultColorType: !propDirty,
       urlClass: "theme-link",
       baseURI: this.sheetURI
@@ -2651,6 +2655,20 @@ TextPropertyEditor.prototype = {
         let originalValue = this.valueSpan.textContent;
         // Adding this swatch to the list of swatches our colorpicker knows about
         this.ruleEditor.ruleView.tooltips.cubicBezier.addSwatch(span, {
+          onPreview: () => this._previewValue(this.valueSpan.textContent),
+          onCommit: () => this._applyNewValue(this.valueSpan.textContent),
+          onRevert: () => this._applyNewValue(originalValue, false)
+        });
+      }
+    }
+
+    // Attach the filter editor tooltip to the filter swatch
+    let span = this.valueSpan.querySelector("." + filterSwatchClass);
+    if (this.ruleEditor.isEditable) {
+      if(span) {
+        let originalValue = this.valueSpan.textContent;
+
+        this.ruleEditor.ruleView.tooltips.filterEditor.addSwatch(span, {
           onPreview: () => this._previewValue(this.valueSpan.textContent),
           onCommit: () => this._applyNewValue(this.valueSpan.textContent),
           onRevert: () => this._applyNewValue(originalValue, false)

@@ -67,8 +67,7 @@
   visibility: hidden;
 }
 
-.ruleview-rule[uneditable=true] .ruleview-colorswatch,
-.ruleview-rule[uneditable=true] .ruleview-bezierswatch {
+.ruleview-rule[uneditable=true] .ruleview-swatch {
   cursor: default;
 }
 
@@ -149,8 +148,7 @@
   -moz-margin-start: 35px;
 }
 
-.ruleview-colorswatch,
-.ruleview-bezierswatch {
+.ruleview-swatch {
   cursor: pointer;
   border-radius: 50%;
   width: 1em;
@@ -179,6 +177,11 @@
 
 .ruleview-bezierswatch {
   background: url("chrome://browser/skin/devtools/cubic-bezier-swatch.png");
+  background-size: 1em;
+}
+
+.ruleview-filterswatch {
+  background: url("chrome://browser/skin/devtools/filter-swatch.svg");
   background-size: 1em;
 }
 
