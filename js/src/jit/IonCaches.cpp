@@ -3076,11 +3076,10 @@ GenerateSetUnboxed(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& 
             MOZ_ASSERT(!UnboxedTypeNeedsPreBarrier(unboxedType));
     }
 
-    // If the unboxed object's type has known properties, then instances have
-    // never been converted to native objects and the type set check performed
-    // above ensures the value being written can be stored in the unboxed
-    // object.
-    Label* storeFailure = obj->group()->unknownProperties() ? &failure : nullptr;
+    // If unboxed objects in this group have have never been converted to
+    // native objects then the type set check performed above ensures the value
+    // being written can be stored in the unboxed object.
+    Label* storeFailure = obj->group()->unboxedLayout().nativeGroup() ? &failure : nullptr;
 
     masm.storeUnboxedProperty(address, unboxedType, value, storeFailure);
 
