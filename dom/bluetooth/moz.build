@@ -130,6 +130,11 @@ if CONFIG['MOZ_B2G_BT']:
                 LOCAL_INCLUDES += [
                     'bluedroid/hfp-fallback',
                 ]
+            if CONFIG['MOZ_B2G_BT_API_V2']:
+                SOURCES += [
+                    'bluedroid/BluetoothGattHALInterface.cpp',
+                    'bluedroid/BluetoothGattManager.cpp',
+                ]
 
             DEFINES['MOZ_B2G_BT_BLUEDROID'] = True
             if CONFIG['MOZ_B2G_BT_DAEMON']:
