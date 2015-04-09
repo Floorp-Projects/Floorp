@@ -157,8 +157,8 @@ let gTests = [{
                                              (aEvent) => dialogClosingCallback(deferredClose, aEvent));
     let dialog = yield dialogPromise;
 
-    ise(content.gSubDialog._frame.style.width, "32em", "Width should be set on the frame from the dialog");
-    ise(content.gSubDialog._frame.style.height, "40em", "Height should be set on the frame from the dialog");
+    ise(content.gSubDialog._frame.style.width, "528px", "Width should be set on the frame from the dialog");
+    ise(content.gSubDialog._frame.style.height, "280px", "Height should be set on the frame from the dialog");
 
     content.gSubDialog.close();
     yield deferredClose.promise;
