@@ -66,7 +66,7 @@ public:
     }
     nsresult rv = NS_DispatchToMainThread(runnable);
     if (NS_FAILED(rv)) {
-      BT_LOGR("NS_DispatchToMainThread failed: %X", rv);
+      BT_LOGR("NS_DispatchToMainThread failed: %X", unsigned(rv));
     }
   }
 
@@ -128,7 +128,7 @@ public:
     }
     nsresult rv = NS_DispatchToMainThread(runnable);
     if (NS_FAILED(rv)) {
-      BT_LOGR("NS_DispatchToMainThread failed: %X", rv);
+      BT_LOGR("NS_DispatchToMainThread failed: %X", unsigned(rv));
     }
   }
 
