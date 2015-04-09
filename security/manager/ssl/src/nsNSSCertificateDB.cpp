@@ -20,7 +20,6 @@
 #include "nsNSSCertificate.h"
 #include "nsNSSHelper.h"
 #include "nsNSSCertHelper.h"
-#include "nsNSSCertCache.h"
 #include "nsCRT.h"
 #include "nsICertificateDialogs.h"
 #include "nsNSSCertTrust.h"
