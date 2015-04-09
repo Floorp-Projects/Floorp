@@ -27,8 +27,8 @@
 }
 
 /* Square back and forward buttons */
-#back-button:not(:-moz-lwtheme) > .toolbarbutton-icon,
-#forward-button:not(:-moz-lwtheme) > .toolbarbutton-icon {
+#back-button > .toolbarbutton-icon,
+#forward-button > .toolbarbutton-icon {
   margin: 0;
   border: none;
   padding: 2px 6px;
