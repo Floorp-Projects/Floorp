@@ -6,28 +6,33 @@
 
 if CONFIG['MOZ_B2G_BT']:
     SOURCES += [
-        'BluetoothAdapter.cpp',
-        'BluetoothDevice.cpp',
-        'BluetoothHidManager.cpp',
-        'BluetoothInterface.cpp',
-        'BluetoothInterfaceHelpers.cpp',
-        'BluetoothManager.cpp',
-        'BluetoothProfileController.cpp',
-        'BluetoothPropertyContainer.cpp',
-        'BluetoothReplyRunnable.cpp',
-        'BluetoothService.cpp',
-        'BluetoothUtils.cpp',
-        'BluetoothUuid.cpp',
-        'ipc/BluetoothChild.cpp',
-        'ipc/BluetoothParent.cpp',
-        'ipc/BluetoothServiceChildProcess.cpp',
-        'ObexBase.cpp'
+        'bluetooth1/BluetoothAdapter.cpp',
+        'bluetooth1/BluetoothDevice.cpp',
+        'bluetooth1/BluetoothHidManager.cpp',
+        'bluetooth1/BluetoothInterface.cpp',
+        'bluetooth1/BluetoothInterfaceHelpers.cpp',
+        'bluetooth1/BluetoothManager.cpp',
+        'bluetooth1/BluetoothProfileController.cpp',
+        'bluetooth1/BluetoothPropertyContainer.cpp',
+        'bluetooth1/BluetoothReplyRunnable.cpp',
+        'bluetooth1/BluetoothService.cpp',
+        'bluetooth1/BluetoothUtils.cpp',
+        'bluetooth1/BluetoothUuid.cpp',
+        'bluetooth1/ipc/BluetoothChild.cpp',
+        'bluetooth1/ipc/BluetoothParent.cpp',
+        'bluetooth1/ipc/BluetoothServiceChildProcess.cpp',
+        'bluetooth1/ObexBase.cpp'
     ]
 
     if CONFIG['MOZ_B2G_RIL']:
         SOURCES += [
-            'BluetoothRilListener.cpp',
+            'bluetooth1/BluetoothRilListener.cpp',
         ]
+
+    LOCAL_INCLUDES += [
+        'bluetooth1',
+        'bluetooth1/ipc',
+    ]
 
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         if CONFIG['MOZ_B2G_BT_BLUEZ']:
@@ -104,25 +109,21 @@ if CONFIG['MOZ_B2G_BT']:
 
     FINAL_LIBRARY = 'xul'
 
-    LOCAL_INCLUDES += [
-        'ipc',
-    ]
-
 EXPORTS.mozilla.dom.bluetooth.ipc += [
-    'ipc/BluetoothMessageUtils.h',
+    'bluetooth1/ipc/BluetoothMessageUtils.h',
 ]
 
 EXPORTS.mozilla.dom.bluetooth += [
-    'BluetoothAdapter.h',
-    'BluetoothCommon.h',
-    'BluetoothDevice.h',
-    'BluetoothManager.h',
+    'bluetooth1/BluetoothAdapter.h',
+    'bluetooth1/BluetoothCommon.h',
+    'bluetooth1/BluetoothDevice.h',
+    'bluetooth1/BluetoothManager.h',
 ]
 
 IPDL_SOURCES += [
-    'ipc/BluetoothTypes.ipdlh',
-    'ipc/PBluetooth.ipdl',
-    'ipc/PBluetoothRequest.ipdl',
+    'bluetooth1/ipc/BluetoothTypes.ipdlh',
+    'bluetooth1/ipc/PBluetooth.ipdl',
+    'bluetooth1/ipc/PBluetoothRequest.ipdl',
 ]
 
 FAIL_ON_WARNINGS = True

@@ -398,6 +398,7 @@ MSVC_ENABLE_PGO = True
 LOCAL_INCLUDES += [
     '../battery',
     '../bluetooth',
+    '../bluetooth/bluetooth1',
     '../events',
     '../media',
     '../network',
