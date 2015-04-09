@@ -794,11 +794,13 @@ ContentChild::InitXPCOM()
         NS_WARNING("Couldn't register console listener for child process");
 
     bool isOffline;
+    bool isConnected;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
 
-    SendGetXPCOMProcessAttributes(&isOffline, &mAvailableDictionaries, &clipboardCaps, &domainPolicy);
+    SendGetXPCOMProcessAttributes(&isOffline, &isConnected, &mAvailableDictionaries, &clipboardCaps, &domainPolicy);
     RecvSetOffline(isOffline);
+    RecvSetConnectivity(isConnected);
 
     if (domainPolicy.active()) {
         nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
@@ -1823,6 +1825,18 @@ ContentChild::RecvSetOffline(const bool& offline)
     NS_ASSERTION(io, "IO Service can not be null");
 
     io->SetOffline(offline);
+
+    return true;
+}
+
+bool
+ContentChild::RecvSetConnectivity(const bool& connectivity)
+{
+    nsCOMPtr<nsIIOService> io(do_GetIOService());
+    nsCOMPtr<nsIIOServiceInternal> ioInternal(do_QueryInterface(io));
+    NS_ASSERTION(ioInternal, "IO Service can not be null");
+
+    ioInternal->SetConnectivity(connectivity);
 
     return true;
 }
