@@ -290,6 +290,12 @@ class FullParseHandler
     ParseNode* newClassNames(ParseNode* outer, ParseNode* inner, const TokenPos& pos) {
         return new_<ClassNames>(outer, inner, pos);
     }
+    ParseNode* newSuperProperty(JSAtom* atom, const TokenPos& pos) {
+        return new_<SuperProperty>(atom, pos);
+    }
+    ParseNode* newSuperElement(ParseNode* expr, const TokenPos& pos) {
+        return new_<SuperElement>(expr, pos);
+    }
 
     bool addPrototypeMutation(ParseNode* literal, uint32_t begin, ParseNode* expr) {
         // Object literals with mutated [[Prototype]] are non-constant so that

@@ -5,9 +5,9 @@
 #ifndef DECODER_DATA_H_
 #define DECODER_DATA_H_
 
+#include "MediaData.h"
 #include "mozilla/Types.h"
 #include "mozilla/Vector.h"
-#include "nsAutoPtr.h"
 #include "nsRefPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -22,16 +22,6 @@ namespace mp4_demuxer
 {
 
 class MP4Demuxer;
-
-template <typename T>
-class nsRcTArray : public nsTArray<T> {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsRcTArray);
-
-private:
-  ~nsRcTArray() {}
-};
-
-typedef nsRcTArray<uint8_t> ByteBuffer;
 
 struct PsshInfo
 {
@@ -62,25 +52,6 @@ private:
   bool DoUpdate(const uint8_t* aData, size_t aLength);
 };
 
-class CryptoTrack
-{
-public:
-  CryptoTrack() : valid(false) {}
-  bool valid;
-  int32_t mode;
-  int32_t iv_size;
-  nsTArray<uint8_t> key;
-};
-
-class CryptoSample : public CryptoTrack
-{
-public:
-  nsTArray<uint16_t> plain_sizes;
-  nsTArray<uint32_t> encrypted_sizes;
-  nsTArray<uint8_t> iv;
-  nsTArray<nsCString> session_ids;
-};
-
 class TrackConfig
 {
 public:
@@ -101,7 +72,7 @@ public:
   uint32_t mTrackId;
   int64_t duration;
   int64_t media_time;
-  CryptoTrack crypto;
+  mozilla::CryptoTrack crypto;
   TrackType mType;
 
   bool IsAudioConfig() const
@@ -127,8 +98,8 @@ public:
     , frequency_index(0)
     , aac_profile(0)
     , extended_profile(0)
-    , extra_data(new ByteBuffer)
-    , audio_specific_config(new ByteBuffer)
+    , extra_data(new mozilla::DataBuffer)
+    , audio_specific_config(new mozilla::DataBuffer)
   {
   }
 
@@ -138,8 +109,8 @@ public:
   int8_t frequency_index;
   int8_t aac_profile;
   int8_t extended_profile;
-  nsRefPtr<ByteBuffer> extra_data;
-  nsRefPtr<ByteBuffer> audio_specific_config;
+  nsRefPtr<mozilla::DataBuffer> extra_data;
+  nsRefPtr<mozilla::DataBuffer> audio_specific_config;
 
   void Update(const stagefright::MetaData* aMetaData,
               const char* aMimeType);
@@ -158,7 +129,7 @@ public:
     , display_height(0)
     , image_width(0)
     , image_height(0)
-    , extra_data(new ByteBuffer)
+    , extra_data(new mozilla::DataBuffer)
   {
   }
 
@@ -168,7 +139,7 @@ public:
   int32_t image_width;
   int32_t image_height;
 
-  nsRefPtr<ByteBuffer> extra_data;   // Unparsed AVCDecoderConfig payload.
+  nsRefPtr<mozilla::DataBuffer> extra_data;   // Unparsed AVCDecoderConfig payload.
 
   void Update(const stagefright::MetaData* aMetaData,
               const char* aMimeType);
@@ -176,34 +147,6 @@ public:
 };
 
 typedef int64_t Microseconds;
-
-class MP4Sample
-{
-public:
-  MP4Sample();
-  virtual ~MP4Sample();
-  MP4Sample* Clone() const;
-  bool Pad(size_t aPaddingBytes);
-
-  Microseconds decode_timestamp;
-  Microseconds composition_timestamp;
-  Microseconds duration;
-  int64_t byte_offset;
-  bool is_sync_point;
-
-  uint8_t* data;
-  size_t size;
-
-  CryptoSample crypto;
-  nsRefPtr<ByteBuffer> extra_data;
-
-  bool Prepend(const uint8_t* aData, size_t aSize);
-  bool Replace(const uint8_t* aData, size_t aSize);
-
-  nsAutoArrayPtr<uint8_t> extra_buffer;
-private:
-  MP4Sample(const MP4Sample&); // Not implemented
-};
 }
 
 #endif

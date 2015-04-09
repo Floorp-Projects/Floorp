@@ -15,7 +15,7 @@
 
 namespace mozilla {
 
-typedef std::queue<mp4_demuxer::MP4Sample*> SampleQueue;
+typedef std::queue<nsRefPtr<MediaRawData>> SampleQueue;
 
 class AndroidDecoderModule : public PlatformDecoderModule {
 public:
@@ -55,7 +55,7 @@ public:
   virtual nsresult Flush() override;
   virtual nsresult Drain() override;
   virtual nsresult Shutdown() override;
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample);
+  virtual nsresult Input(MediaRawData* aSample);
 
 protected:
   friend class AndroidDecoderModule;

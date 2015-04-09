@@ -966,10 +966,14 @@ public:
   void ScrollByPages(int32_t numPages,
                      const mozilla::dom::ScrollOptions& aOptions);
   void MozScrollSnap();
-  int32_t GetInnerWidth(mozilla::ErrorResult& aError);
-  void SetInnerWidth(int32_t aInnerWidth, mozilla::ErrorResult& aError);
-  int32_t GetInnerHeight(mozilla::ErrorResult& aError);
-  void SetInnerHeight(int32_t aInnerHeight, mozilla::ErrorResult& aError);
+  void GetInnerWidth(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
+                     mozilla::ErrorResult& aError);
+  void SetInnerWidth(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                     mozilla::ErrorResult& aError);
+  void GetInnerHeight(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
+                     mozilla::ErrorResult& aError);
+  void SetInnerHeight(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                      mozilla::ErrorResult& aError);
   int32_t GetScrollX(mozilla::ErrorResult& aError);
   int32_t GetPageXOffset(mozilla::ErrorResult& aError)
   {
@@ -981,14 +985,22 @@ public:
     return GetScrollY(aError);
   }
   void MozRequestOverfill(mozilla::dom::OverfillCallback& aCallback, mozilla::ErrorResult& aError);
-  int32_t GetScreenX(mozilla::ErrorResult& aError);
-  void SetScreenX(int32_t aScreenX, mozilla::ErrorResult& aError);
-  int32_t GetScreenY(mozilla::ErrorResult& aError);
-  void SetScreenY(int32_t aScreenY, mozilla::ErrorResult& aError);
-  int32_t GetOuterWidth(mozilla::ErrorResult& aError);
-  void SetOuterWidth(int32_t aOuterWidth, mozilla::ErrorResult& aError);
-  int32_t GetOuterHeight(mozilla::ErrorResult& aError);
-  void SetOuterHeight(int32_t aOuterHeight, mozilla::ErrorResult& aError);
+  void GetScreenX(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
+                  mozilla::ErrorResult& aError);
+  void SetScreenX(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                  mozilla::ErrorResult& aError);
+  void GetScreenY(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
+                  mozilla::ErrorResult& aError);
+  void SetScreenY(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                  mozilla::ErrorResult& aError);
+  void GetOuterWidth(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
+                     mozilla::ErrorResult& aError);
+  void SetOuterWidth(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                     mozilla::ErrorResult& aError);
+  void GetOuterHeight(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
+                      mozilla::ErrorResult& aError);
+  void SetOuterHeight(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                      mozilla::ErrorResult& aError);
   int32_t RequestAnimationFrame(mozilla::dom::FrameRequestCallback& aCallback,
                                 mozilla::ErrorResult& aError);
   void CancelAnimationFrame(int32_t aHandle, mozilla::ErrorResult& aError);
@@ -1087,6 +1099,41 @@ public:
                     mozilla::ErrorResult& aError);
 
 protected:
+  // Web IDL helpers
+
+  // Redefine the property called aPropName on this window object to be a value
+  // property with the value aValue, much like we would do for a [Replaceable]
+  // property in IDL.
+  void RedefineProperty(JSContext* aCx, const char* aPropName,
+                        JS::Handle<JS::Value> aValue,
+                        mozilla::ErrorResult& aError);
+
+  // Implementation guts for our writable IDL attributes that are really
+  // supposed to be readonly replaceable.
+  typedef int32_t (nsGlobalWindow::*WindowCoordGetter)(mozilla::ErrorResult&);
+  typedef void (nsGlobalWindow::*WindowCoordSetter)(int32_t,
+                                                    mozilla::ErrorResult&);
+  void GetReplaceableWindowCoord(JSContext* aCx, WindowCoordGetter aGetter,
+                                 JS::MutableHandle<JS::Value> aRetval,
+                                 mozilla::ErrorResult& aError);
+  void SetReplaceableWindowCoord(JSContext* aCx, WindowCoordSetter aSetter,
+                                 JS::Handle<JS::Value> aValue,
+                                 const char* aPropName,
+                                 mozilla::ErrorResult& aError);
+  // And the implementations of WindowCoordGetter/WindowCoordSetter.
+  int32_t GetInnerWidth(mozilla::ErrorResult& aError);
+  void SetInnerWidth(int32_t aInnerWidth, mozilla::ErrorResult& aError);
+  int32_t GetInnerHeight(mozilla::ErrorResult& aError);
+  void SetInnerHeight(int32_t aInnerHeight, mozilla::ErrorResult& aError);
+  int32_t GetScreenX(mozilla::ErrorResult& aError);
+  void SetScreenX(int32_t aScreenX, mozilla::ErrorResult& aError);
+  int32_t GetScreenY(mozilla::ErrorResult& aError);
+  void SetScreenY(int32_t aScreenY, mozilla::ErrorResult& aError);
+  int32_t GetOuterWidth(mozilla::ErrorResult& aError);
+  void SetOuterWidth(int32_t aOuterWidth, mozilla::ErrorResult& aError);
+  int32_t GetOuterHeight(mozilla::ErrorResult& aError);
+  void SetOuterHeight(int32_t aOuterHeight, mozilla::ErrorResult& aError);
+
   // Array of idle observers that are notified of idle events.
   nsTObserverArray<IdleObserverHolder> mIdleObservers;
 
