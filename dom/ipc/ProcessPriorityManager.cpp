@@ -38,6 +38,8 @@
 #undef LOG
 #endif
 
+#include <utility>
+
 // Use LOGP inside a ParticularProcessPriorityManager method; use LOG
 // everywhere else.  LOGP prints out information about the particular process
 // priority manager.
@@ -206,6 +208,26 @@ public:
    */
   void Unfreeze();
 
+  /**
+   * Return the number of processes that have
+   * PROCESS_PRIORITY_FOREGROUND priority.
+   */
+  uint32_t NumberOfForegroundProcesses();
+
+  /**
+   * Register a priority change to be performed at later time.
+   */
+  void ScheduleDelayedSetPriority(
+    ParticularProcessPriorityManager* aParticularManager,
+    hal::ProcessPriority aPriority);
+
+  /**
+   * Perform the registered priority change unless
+   * aLastParticularManager is the same as the registered one.
+   */
+  void PerformDelayedSetPriority(
+    ParticularProcessPriorityManager* aLastParticularManager);
+
 private:
   static bool sPrefListenersRegistered;
   static bool sInitialized;
@@ -240,6 +262,10 @@ private:
 
   /** Contains a pseudo-LRU list of foreground processes */
   ProcessLRUPool mForegroundLRUPool;
+
+  /** Contains the delayed priority change request */
+  std::pair<nsRefPtr<ParticularProcessPriorityManager>, hal::ProcessPriority>
+    mDelayedSetPriority;
 };
 
 /**
@@ -429,6 +455,7 @@ ProcessPriorityManagerImpl::ProcessPriorityManagerImpl()
 {
   MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default);
   RegisterWakeLockObserver(this);
+  mDelayedSetPriority = std::make_pair(nullptr, PROCESS_PRIORITY_UNKNOWN);
 }
 
 ProcessPriorityManagerImpl::~ProcessPriorityManagerImpl()
@@ -545,6 +572,10 @@ ProcessPriorityManagerImpl::ObserveContentParentDestroyed(nsISupports* aSubject)
     if (mHighPriorityChildIDs.Contains(childID)) {
       mHighPriorityChildIDs.RemoveEntry(childID);
     }
+
+    if (mDelayedSetPriority.first == pppm) {
+      mDelayedSetPriority = std::make_pair(nullptr, PROCESS_PRIORITY_UNKNOWN);
+    }
   }
 }
 
@@ -641,6 +672,55 @@ ProcessPriorityManagerImpl::Unfreeze()
   sFrozen = false;
   mParticularManagers.EnumerateRead(&UnfreezeParticularProcessPriorityManagers,
                                     nullptr);
+}
+
+static PLDHashOperator
+CountNumberOfForegroundProcesses(
+  const uint64_t& aKey,
+  nsRefPtr<ParticularProcessPriorityManager> aValue,
+  void* aUserData)
+{
+  uint32_t* accumulator = static_cast<uint32_t*>(aUserData);
+  if (aValue->CurrentPriority() == PROCESS_PRIORITY_FOREGROUND ||
+      aValue->CurrentPriority() == PROCESS_PRIORITY_FOREGROUND_HIGH) {
+    (*accumulator)++;
+  }
+  return PL_DHASH_NEXT;
+}
+
+uint32_t
+ProcessPriorityManagerImpl::NumberOfForegroundProcesses()
+{
+  uint32_t accumulator = 0;
+  mParticularManagers.EnumerateRead(&CountNumberOfForegroundProcesses,
+                                    &accumulator);
+  return accumulator;
+}
+
+void
+ProcessPriorityManagerImpl::ScheduleDelayedSetPriority(
+  ParticularProcessPriorityManager* aParticularManager,
+  ProcessPriority aPriority)
+{
+  mDelayedSetPriority = std::make_pair(aParticularManager, aPriority);
+}
+
+void
+ProcessPriorityManagerImpl::PerformDelayedSetPriority(
+  ParticularProcessPriorityManager* aLastParticularManager)
+{
+  nsRefPtr<ParticularProcessPriorityManager> pppm = mDelayedSetPriority.first;
+  ProcessPriority priority = mDelayedSetPriority.second;
+
+  mDelayedSetPriority = std::make_pair(nullptr, PROCESS_PRIORITY_UNKNOWN);
+
+  if (pppm == aLastParticularManager) {
+    return;
+  }
+
+  if (pppm && priority != PROCESS_PRIORITY_UNKNOWN) {
+    pppm->SetPriorityNow(priority);
+  }
 }
 
 NS_IMPL_ISUPPORTS(ParticularProcessPriorityManager,
@@ -1049,6 +1129,20 @@ ParticularProcessPriorityManager::SetPriorityNow(ProcessPriority aPriority,
 
   ProcessPriority oldPriority = mPriority;
 
+  if (oldPriority == PROCESS_PRIORITY_FOREGROUND &&
+      aPriority < PROCESS_PRIORITY_FOREGROUND &&
+      ProcessPriorityManagerImpl::GetSingleton()->
+        NumberOfForegroundProcesses() == 1) {
+    LOGP("Attempting to demote the last foreground process is delayed.");
+
+    ProcessPriorityManagerImpl::GetSingleton()->
+      ScheduleDelayedSetPriority(this, aPriority);
+
+    FireTestOnlyObserverNotification("process-priority-delayed",
+      ProcessPriorityToString(aPriority));
+    return;
+  }
+
   mPriority = aPriority;
   hal::SetProcessPriority(Pid(), mPriority);
 
@@ -1065,6 +1159,12 @@ ParticularProcessPriorityManager::SetPriorityNow(ProcessPriority aPriority,
 
   FireTestOnlyObserverNotification("process-priority-set",
     ProcessPriorityToString(mPriority));
+
+  if (aPriority >= PROCESS_PRIORITY_FOREGROUND) {
+    LOGP("More than one foreground processes. Run delayed priority change");
+    ProcessPriorityManagerImpl::GetSingleton()->
+      PerformDelayedSetPriority(this);
+  }
 }
 
 void
