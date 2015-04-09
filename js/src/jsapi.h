@@ -2701,7 +2701,14 @@ class MutablePropertyDescriptorOperations : public PropertyDescriptorOperations<
         value().set(v);
     }
 
-    void setEnumerable() { desc()->attrs |= JSPROP_ENUMERATE; }
+    void setConfigurable(bool configurable) {
+        setAttributes((desc()->attrs & ~(JSPROP_IGNORE_PERMANENT | JSPROP_PERMANENT)) |
+                      (configurable ? 0 : JSPROP_PERMANENT));
+    }
+    void setEnumerable(bool enumerable) {
+        setAttributes((desc()->attrs & ~(JSPROP_IGNORE_ENUMERATE | JSPROP_ENUMERATE)) |
+                      (enumerable ? JSPROP_ENUMERATE : 0));
+    }
     void setAttributes(unsigned attrs) { desc()->attrs = attrs; }
 
     void setGetter(JSGetterOp op) {
