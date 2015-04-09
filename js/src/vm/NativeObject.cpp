@@ -1427,13 +1427,11 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
             desc.setGetterObject(shape->getterObject());
             desc.setSetterObject(shape->setterObject());
         }
-    } else if (desc.isAccessorDescriptor()) {
-        // If defining a getter or setter, we must check for its counterpart
-        // and update the attributes and property ops.  A getter or setter is
-        // really only half of a property.
+    } else if (desc.isDataDescriptor() != IsDataDescriptor(shapeAttrs)) {
+        // Step 7.
+        if (!IsConfigurable(shapeAttrs) && !skipRedefineChecks)
+            return result.fail(JSMSG_CANT_REDEFINE_PROP);
 
-        // If we are defining a getter whose setter was already defined, or
-        // vice versa, finish the job via obj->changeProperty.
         if (IsImplicitDenseOrTypedArrayElement(shape)) {
             if (IsAnyTypedArray(obj)) {
                 // Ignore getter/setter properties added to typed arrays.
@@ -1443,35 +1441,38 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
                 return false;
             shape = obj->lookup(cx, id);
         }
-        if (shape->isAccessorDescriptor()) {
-            if (!CheckAccessorRedefinition(cx, obj, shape, desc))
-                return false;
 
-            desc.setAttributes(ApplyOrDefaultAttributes(desc.attributes(), shape));
-            if (!desc.hasGetterObject())
-                desc.setGetter(shape->getter());
-            if (!desc.hasSetterObject())
-                desc.setSetter(shape->setter());
-            desc.attributesRef() |= JSPROP_GETTER | JSPROP_SETTER;
-            desc.assertComplete();
+        // Fill in desc fields with default values (steps 7.b.i and 7.c.i).
+        CompletePropertyDescriptor(&desc);
+    } else if (desc.isAccessorDescriptor()) {
+        // If defining a getter or setter, we must check for its counterpart
+        // and update the attributes and property ops.  A getter or setter is
+        // really only half of a property.
 
-            shape = NativeObject::changeProperty(cx, obj, shape, desc.attributes(),
-                                                 desc.getter(), desc.setter());
-            if (!shape)
-                return false;
-            if (!PurgeScopeChain(cx, obj, id))
-                return false;
+        // If we are defining a getter whose setter was already defined, or
+        // vice versa, finish the job via obj->changeProperty.
+        if (!CheckAccessorRedefinition(cx, obj, shape, desc))
+            return false;
 
-            JS_ALWAYS_TRUE(UpdateShapeTypeAndValue(cx, obj, shape, desc.value()));
-            if (!CallAddPropertyHook(cx, obj, shape, desc.value()))
-                return false;
-            return result.succeed();
-        }
-
-        // Either we are converting a data property to an accessor property, or
-        // creating a new accessor property; either way [[Get]] and [[Set]]
-        // must both be filled in.
+        desc.setAttributes(ApplyOrDefaultAttributes(desc.attributes(), shape));
+        if (!desc.hasGetterObject())
+            desc.setGetter(shape->getter());
+        if (!desc.hasSetterObject())
+            desc.setSetter(shape->setter());
         desc.attributesRef() |= JSPROP_GETTER | JSPROP_SETTER;
+        desc.assertComplete();
+
+        shape = NativeObject::changeProperty(cx, obj, shape, desc.attributes(),
+                                             desc.getter(), desc.setter());
+        if (!shape)
+            return false;
+        if (!PurgeScopeChain(cx, obj, id))
+            return false;
+
+        JS_ALWAYS_TRUE(UpdateShapeTypeAndValue(cx, obj, shape, desc.value()));
+        if (!CallAddPropertyHook(cx, obj, shape, desc.value()))
+            return false;
+        return result.succeed();
     } else if (desc.hasValue()) {
         // If any other JSPROP_IGNORE_* attributes are present, copy the
         // corresponding JSPROP_* attributes from the existing property.
@@ -1480,15 +1481,10 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
                                                !IsAnyTypedArray(obj)));
         } else {
             desc.setAttributes(ApplyOrDefaultAttributes(desc.attributes(), shape));
-
-            // Do not redefine a nonconfigurable accessor property.
-            if (shape->isAccessorDescriptor()) {
-                if (!CheckAccessorRedefinition(cx, obj, shape, desc))
-                    return false;
-            }
         }
     } else {
-        // We have been asked merely to update JSPROP_PERMANENT and/or JSPROP_ENUMERATE.
+        // We have been asked merely to update JSPROP_READONLY (and possibly
+        // JSPROP_CONFIGURABLE and/or JSPROP_ENUMERABLE, handled above).
 
         // Don't forget about arrays.
         if (IsImplicitDenseOrTypedArrayElement(shape)) {
@@ -1503,31 +1499,18 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
             shape = obj->lookup(cx, id);
         }
 
-        if (shape->isAccessorDescriptor() &&
-            !CheckAccessorRedefinition(cx, obj, shape, desc))
-        {
-            return false;
-        }
-
         desc.setAttributes(ApplyOrDefaultAttributes(desc.attributes(), shape));
 
-        if (shape->isAccessorDescriptor() && desc.hasWritable()) {
-            // ES6 draft 2014-10-14 9.1.6.3 step 7.c: Since [[Writable]]
-            // is present, change the existing accessor property to a data
-            // property.
-            desc.value().setUndefined();
-        } else {
-            // We are at most changing some attributes, and cannot convert
-            // from data descriptor to accessor, or vice versa. Take
-            // everything from the shape that we aren't changing.
-            uint32_t propMask = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
-            desc.setAttributes((shape->attributes() & ~propMask) |
-                               (desc.attributes() & propMask));
-            desc.setGetter(shape->getter());
-            desc.setSetter(shape->setter());
-            if (shape->hasSlot())
-                desc.value().set(obj->getSlot(shape->slot()));
-        }
+        // We are at most changing some attributes, and cannot convert
+        // from data descriptor to accessor, or vice versa. Take
+        // everything from the shape that we aren't changing.
+        uint32_t propMask = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
+        desc.setAttributes((shape->attributes() & ~propMask) |
+                           (desc.attributes() & propMask));
+        desc.setGetter(shape->getter());
+        desc.setSetter(shape->setter());
+        if (shape->hasSlot())
+            desc.value().set(obj->getSlot(shape->slot()));
     }
 
     // Dispense with any remaining JSPROP_IGNORE_* attributes. Any bits that
