@@ -642,6 +642,8 @@ nsBlockReflowState::CanPlaceFloat(nscoord aFloatISize,
       aFloatISize;
 }
 
+// Return the inline-size that the float (including margins) will take up
+// in the writing mode of the containing block.
 static nscoord
 FloatMarginISize(const nsHTMLReflowState& aCBReflowState,
                  nscoord aFloatAvailableISize,
@@ -663,9 +665,11 @@ FloatMarginISize(const nsHTMLReflowState& aCBReflowState,
               aFloatOffsetState.ComputedLogicalPadding().Size(wm),
               nsIFrame::ComputeSizeFlags::eShrinkWrap);
 
-  return floatSize.ISize(wm) +
-         aFloatOffsetState.ComputedLogicalMargin().IStartEnd(wm) +
-         aFloatOffsetState.ComputedLogicalBorderPadding().IStartEnd(wm);
+  floatSize += aFloatOffsetState.ComputedLogicalMargin().Size(wm);
+  floatSize += aFloatOffsetState.ComputedLogicalBorderPadding().Size(wm);
+
+  WritingMode cbwm = aCBReflowState.GetWritingMode();
+  return floatSize.ConvertTo(cbwm, wm).ISize(cbwm);
 }
 
 bool
