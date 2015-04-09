@@ -37,7 +37,7 @@ exports.parseLocation = function parseLocation (frame) {
   if (uri) {
     functionName = frame.location.substring(0, firstParenIndex - 1);
     fileName = (uri.fileName + (uri.ref ? "#" + uri.ref : "")) || "/";
-    hostName = url.indexOf("jar:") == 0 ? "" : uri.host;
+    hostName = getHost(url, uri.host);
   } else {
     functionName = frame.location;
     url = null;
@@ -128,4 +128,15 @@ function nsIURL(url) {
   }
   gNSURLStore.set(url, uri);
   return uri;
+}
+
+/**
+ * Takes a `host` string from an nsIURL instance and
+ * returns the same string, or null, if it's an invalid host.
+ */
+function getHost (url, hostName) {
+  if (CHROME_SCHEMES.find(e => url.indexOf(e) === 0)) {
+    return null;
+  }
+  return hostName;
 }
