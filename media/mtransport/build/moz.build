@@ -25,7 +25,7 @@ EXPORTS.mtransport += [
     '../transportlayerprsock.h',
 ]
 
-include('../objs.mozbuild')
+include('../common.build')
 
 # These files cannot be built in unified mode because of the redefinition of
 # getLogModule, UNIMPLEMENTED, nr_socket_long_term_violation_time,
@@ -34,67 +34,7 @@ SOURCES += mtransport_cppsrcs
 
 FAIL_ON_WARNINGS = True
 
-LOCAL_INCLUDES += [
-    '/media/mtransport/',
-    '/media/mtransport/third_party/',
-    '/media/mtransport/third_party/nICEr/src/crypto',
-    '/media/mtransport/third_party/nICEr/src/ice',
-    '/media/mtransport/third_party/nICEr/src/net',
-    '/media/mtransport/third_party/nICEr/src/stun',
-    '/media/mtransport/third_party/nICEr/src/util',
-    '/media/mtransport/third_party/nrappkit/src/event',
-    '/media/mtransport/third_party/nrappkit/src/log',
-    '/media/mtransport/third_party/nrappkit/src/plugin',
-    '/media/mtransport/third_party/nrappkit/src/port/generic/include',
-    '/media/mtransport/third_party/nrappkit/src/registry',
-    '/media/mtransport/third_party/nrappkit/src/share',
-    '/media/mtransport/third_party/nrappkit/src/stats',
-    '/media/mtransport/third_party/nrappkit/src/util/libekr',
-]
-
-if CONFIG['OS_TARGET'] in ['Darwin', 'DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD']:
-    if CONFIG['OS_TARGET'] == 'Darwin':
-        DEFINES['DARWIN'] = True
-    else:
-        DEFINES['BSD'] = True
-    LOCAL_INCLUDES += [
-        '/media/mtransport/third_party/nrappkit/src/port/darwin/include',
-    ]
-elif CONFIG['OS_TARGET'] == 'Linux':
-    DEFINES['LINUX'] = True
-    DEFINES['USE_INTERFACE_PRIORITIZER'] = True
-    LOCAL_INCLUDES += [
-        '/media/mtransport/third_party/nrappkit/src/port/linux/include',
-    ]
-elif CONFIG['OS_TARGET'] == 'Android':
-    DEFINES['LINUX'] = True
-    DEFINES['ANDROID'] = True
-    LOCAL_INCLUDES += [
-        '/media/mtransport/third_party/nrappkit/src/port/android/include',
-    ]
-elif CONFIG['OS_TARGET'] == 'WINNT':
-    DEFINES['WIN'] = True
-    # for stun.h
-    DEFINES['WIN32'] = True
-    DEFINES['NOMINMAX'] = True
-    LOCAL_INCLUDES += [
-        '/media/mtransport/third_party/nrappkit/src/port/win32/include',
-    ]
-
 if CONFIG['GKMEDIAS_SHARED_LIBRARY']:
     NO_VISIBILITY_FLAGS = True
 
 FINAL_LIBRARY = 'xul'
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    DEFINES['USE_INTERFACE_PRIORITIZER'] = True
-
-for var in ('HAVE_STRDUP', 'NR_SOCKET_IS_VOID_PTR'):
-    DEFINES[var] = True
-
-DEFINES['R_DEFINED_INT2'] = 'int16_t'
-DEFINES['R_DEFINED_UINT2'] = 'uint16_t'
-DEFINES['R_DEFINED_INT4'] = 'int32_t'
-DEFINES['R_DEFINED_UINT4'] = 'uint32_t'
-DEFINES['R_DEFINED_INT8'] = 'int64_t'
-DEFINES['R_DEFINED_UINT8'] = 'uint64_t'

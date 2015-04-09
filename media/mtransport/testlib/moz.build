@@ -4,8 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-Library('mtransport_standalone')
-
 include('../common.build')
 
 # These files cannot be built in unified mode because of the redefinition of
@@ -13,8 +11,6 @@ include('../common.build')
 # nr_socket_short_term_violation_time.
 SOURCES += mtransport_cppsrcs
 
+Library('mtransport_s')
+
 FORCE_STATIC_LIB = True
-
-for var in ('MOZILLA_INTERNAL_API', 'MOZILLA_XPCOMRT_API', 'MOZILLA_EXTERNAL_LINKAGE'):
-    DEFINES[var] = True
-
