@@ -37,6 +37,8 @@ android {
                 if (!mozconfig.substs.MOZ_CRASHREPORTER) {
                     exclude 'org/mozilla/gecko/CrashReporter.java'
                 }
+                // Adjust helpers are included in the preprocessed_code project.
+                exclude 'org/mozilla/gecko/adjust/**'
             }
 
             res {
