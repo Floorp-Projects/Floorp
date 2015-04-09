@@ -62,11 +62,7 @@ const extend = function(target, source) {
  */
 const containsParticipant = function(room, participant) {
   for (let user of room.participants) {
-    // XXX until a bug 1100318 is implemented and deployed,
-    // we need to check the "id" field here as well - roomConnectionId is the
-    // official value for the interface.
-    if (user.roomConnectionId == participant.roomConnectionId &&
-        user.id == participant.id) {
+    if (user.roomConnectionId == participant.roomConnectionId) {
       return true;
     }
   }
@@ -451,10 +447,7 @@ let LoopRoomsInternal = {
 
     let origRoom = this.rooms.get(roomToken);
     let patchData = {
-      roomName: newRoomName,
-      // XXX We have to supply the max size and room owner due to bug 1099063.
-      maxSize: origRoom.maxSize,
-      roomOwner: origRoom.roomOwner
+      roomName: newRoomName
     };
     MozLoopService.hawkRequest(this.sessionType, url, "PATCH", patchData)
       .then(response => {

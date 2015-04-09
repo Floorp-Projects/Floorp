@@ -42,6 +42,7 @@ EXPORTS += [
 ]
 
 EXPORTS.mozilla += [
+    'AutoTimelineMarker.h',
     'IHistory.h',
     'LoadContext.h',
 ]
