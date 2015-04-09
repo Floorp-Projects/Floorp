@@ -1,17 +1,17 @@
 [root]
 name = "wires"
-version = "0.0.1"
+version = "0.1.0"
 dependencies = [
  "argparse 0.1.0 (git+https://github.com/tailhook/rust-argparse.git)",
  "env_logger 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "hyper 0.3.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "hyper 0.3.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "mozprofile 0.0.1 (git+http://github.com/jgraham/rust_mozprofile.git)",
- "mozrunner 0.0.1 (git+http://github.com/jgraham/rust_mozrunner.git)",
+ "mozprofile 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "mozrunner 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 0.1.27 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.1.16 (registry+https://github.com/rust-lang/crates.io-index)",
- "webdriver 0.1.0 (git+http://github.com/jgraham/webdriver-rust.git)",
+ "webdriver 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -56,7 +56,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "hyper"
-version = "0.3.10"
+version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "cookie 0.1.18 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -114,8 +114,8 @@ dependencies = [
 
 [[package]]
 name = "mozprofile"
-version = "0.0.1"
-source = "git+http://github.com/jgraham/rust_mozprofile.git#e08aea4cd544162761a9826757a24f86001ad36a"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "log 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "tempdir 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -123,11 +123,11 @@ dependencies = [
 
 [[package]]
 name = "mozrunner"
-version = "0.0.1"
-source = "git+http://github.com/jgraham/rust_mozrunner.git#d8ba3c5c3a923cc52cc792c35dcc6e03da090ea4"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "log 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "mozprofile 0.0.1 (git+http://github.com/jgraham/rust_mozprofile.git)",
+ "mozprofile 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -243,9 +243,9 @@ dependencies = [
 [[package]]
 name = "webdriver"
 version = "0.1.0"
-source = "git+http://github.com/jgraham/webdriver-rust.git#435bc91f1297b957798d52bf0f445cab754fc186"
+source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "hyper 0.3.10 (registry+https://github.com/rust-lang/crates.io-index)",
+ "hyper 0.3.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 0.1.27 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc-serialize 0.3.12 (registry+https://github.com/rust-lang/crates.io-index)",
