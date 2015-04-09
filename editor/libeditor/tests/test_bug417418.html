@@ -25,6 +25,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=417418
 /** Test for Bug 417418 **/
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(runTest);
+SimpleTest.expectAssertions(0, 1);
 
 function resetSelection() {
   window.getSelection().collapse(document.getElementById("coin"), 0);

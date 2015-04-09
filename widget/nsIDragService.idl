@@ -15,7 +15,17 @@ interface nsIDOMDragEvent;
 interface nsIDOMDataTransfer;
 interface nsISelection;
 
-[scriptable, uuid(82B58ADA-F490-4C3D-B737-1057C4F1D052), builtinclass]
+%{C++
+namespace mozilla {
+namespace dom {
+class ContentParent;
+} // namespace dom
+} // namespace mozilla
+%}
+
+[ptr] native ContentParentPtr(mozilla::dom::ContentParent);
+
+[scriptable, uuid(009d4489-4568-4896-9442-19717dd00f15), builtinclass]
 interface nsIDragService : nsISupports
 {
   const long DRAGDROP_ACTION_NONE = 0;
@@ -114,6 +124,8 @@ interface nsIDragService : nsISupports
   void unsuppress();
 
   [noscript] void dragMoved(in long aX, in long aY);
+
+  [notxpcom, nostdcall] boolean maybeAddChildProcess(in ContentParentPtr aChild);
 };
 
 

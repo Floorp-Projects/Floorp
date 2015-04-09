@@ -85,7 +85,7 @@ public:
   }
 
   virtual nsresult Init() override;
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override;
+  virtual nsresult Input(MediaRawData* aSample) override;
   virtual nsresult Flush() override;
   virtual nsresult Drain() override;
   virtual nsresult Shutdown() override;
@@ -93,7 +93,7 @@ public:
 protected:
   virtual void InitTags(nsTArray<nsCString>& aTags);
   virtual nsCString GetNodeId();
-  virtual GMPUnique<GMPVideoEncodedFrame>::Ptr CreateFrame(mp4_demuxer::MP4Sample* aSample);
+  virtual GMPUnique<GMPVideoEncodedFrame>::Ptr CreateFrame(MediaRawData* aSample);
 
 private:
   class GMPInitDoneRunnable : public nsRunnable

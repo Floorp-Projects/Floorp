@@ -31,7 +31,7 @@ function getConfigFile(req, res) {
     // XXX Update with the real marketplace url once the FxOS Loop app is
     //     uploaded to the marketplace bug 1053424
     "loop.config.marketplaceUrl = 'http://fake-market.herokuapp.com/iframe-install.html'",
-    "loop.config.brandWebsiteUrl = 'https://www.mozilla.org/firefox/';",
+    "loop.config.downloadFirefoxUrl = 'https://www.mozilla.org/firefox/new/?scene=2&utm_source=hello.firefox.com&utm_medium=referral&utm_campaign=non-webrtc-browser#download-fx';",
     "loop.config.privacyWebsiteUrl = 'https://www.mozilla.org/privacy/firefox-hello/';",
     "loop.config.learnMoreUrl = 'https://www.mozilla.org/hello/';",
     "loop.config.legalWebsiteUrl = 'https://www.mozilla.org/about/legal/terms/firefox-hello/';",

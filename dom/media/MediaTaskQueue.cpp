@@ -10,12 +10,25 @@
 
 namespace mozilla {
 
-MediaTaskQueue::MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool)
+ThreadLocal<MediaTaskQueue*> MediaTaskQueue::sCurrentQueueTLS;
+
+/* static */ void
+MediaTaskQueue::InitStatics()
+{
+  if (!sCurrentQueueTLS.init()) {
+    MOZ_CRASH();
+  }
+}
+
+MediaTaskQueue::MediaTaskQueue(TemporaryRef<SharedThreadPool> aPool,
+                               bool aRequireTailDispatch)
   : mPool(aPool)
   , mQueueMonitor("MediaTaskQueue::Queue")
+  , mTailDispatcher(nullptr)
   , mIsRunning(false)
   , mIsShutdown(false)
   , mIsFlushing(false)
+  , mRequireTailDispatch(aRequireTailDispatch)
 {
   MOZ_COUNT_CTOR(MediaTaskQueue);
 }
@@ -30,13 +43,23 @@ MediaTaskQueue::~MediaTaskQueue()
 nsresult
 MediaTaskQueue::Dispatch(TemporaryRef<nsIRunnable> aRunnable)
 {
+  AssertInTailDispatchIfNeeded(); // Do this before acquiring the monitor.
   MonitorAutoLock mon(mQueueMonitor);
   return DispatchLocked(aRunnable, AbortIfFlushing);
+}
+
+TaskDispatcher&
+MediaTaskQueue::TailDispatcher()
+{
+  MOZ_ASSERT(IsCurrentThreadIn());
+  MOZ_ASSERT(mTailDispatcher);
+  return *mTailDispatcher;
 }
 
 nsresult
 MediaTaskQueue::ForceDispatch(TemporaryRef<nsIRunnable> aRunnable)
 {
+  AssertInTailDispatchIfNeeded(); // Do this before acquiring the monitor.
   MonitorAutoLock mon(mQueueMonitor);
   return DispatchLocked(aRunnable, Forced);
 }
@@ -159,6 +182,7 @@ FlushableMediaTaskQueue::Flush()
 nsresult
 FlushableMediaTaskQueue::FlushAndDispatch(TemporaryRef<nsIRunnable> aRunnable)
 {
+  AssertInTailDispatchIfNeeded(); // Do this before acquiring the monitor.
   MonitorAutoLock mon(mQueueMonitor);
   AutoSetFlushing autoFlush(this);
   FlushLocked();
@@ -196,7 +220,9 @@ bool
 MediaTaskQueue::IsCurrentThreadIn()
 {
   MonitorAutoLock mon(mQueueMonitor);
-  return NS_GetCurrentThread() == mRunningThread;
+  bool in = NS_GetCurrentThread() == mRunningThread;
+  MOZ_ASSERT_IF(in, GetCurrentQueue() == this);
+  return in;
 }
 
 nsresult
@@ -223,7 +249,10 @@ MediaTaskQueue::Runner::Run()
   // fences enforced. This means that if the object we're calling wasn't
   // designed to be threadsafe, it will be, provided we're only calling it
   // in this task queue.
-  event->Run();
+  {
+    AutoTaskGuard g(mQueue);
+    event->Run();
+  }
 
   // Drop the reference to event. The event will hold a reference to the
   // object it's calling, and we don't want to keep it alive, it may be
@@ -267,5 +296,20 @@ MediaTaskQueue::Runner::Run()
 
   return NS_OK;
 }
+
+#ifdef DEBUG
+void
+TaskDispatcher::AssertIsTailDispatcherIfRequired()
+{
+  MediaTaskQueue* currentQueue = MediaTaskQueue::GetCurrentQueue();
+
+  // NB: Make sure not to use the TailDispatcher() accessor, since that
+  // asserts IsCurrentThreadIn(), which acquires the queue monitor, which
+  // triggers a deadlock during shutdown between the queue monitor and the
+  // MediaPromise monitor.
+  MOZ_ASSERT_IF(currentQueue && currentQueue->RequiresTailDispatch(),
+                this == currentQueue->mTailDispatcher);
+}
+#endif
 
 } // namespace mozilla

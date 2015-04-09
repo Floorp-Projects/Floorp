@@ -62,28 +62,6 @@ typedef uint8_t boolean;
 #endif
 #endif
 
-
-
-/**
- * __BEGIN_DECLS and __END_DECLS
- *
- * Define macros for compilation by C++ compiler
- */
-#ifndef __BEGIN_DECLS
-#ifdef __cplusplus
-#define __BEGIN_DECLS extern "C" {
-#else
-#define __BEGIN_DECLS
-#endif
-#endif
-
-#ifndef __END_DECLS
-#ifdef __cplusplus
-#define __END_DECLS   }
-#else
-#define __END_DECLS
-#endif
-#endif
 /**
  * Define TRUE/FALSE
  *     defined in several header files

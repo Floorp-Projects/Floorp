@@ -1020,6 +1020,8 @@ class JSScript : public js::gc::TenuredCell
     // keep it from relazifying.
     bool doNotRelazify_:1;
 
+    bool needsHomeObject_:1;
+
     // Add padding so JSScript is gc::Cell aligned. Make padding protected
     // instead of private to suppress -Wunused-private-field compiler warnings.
   protected:
@@ -1283,6 +1285,14 @@ class JSScript : public js::gc::TenuredCell
         MOZ_ASSERT(!isGenerator());
         generatorKindBits_ = GeneratorKindAsBits(kind);
     }
+
+    void setNeedsHomeObject() {
+        needsHomeObject_ = true;
+    }
+    bool needsHomeObject() const {
+        return needsHomeObject_;
+    }
+
 
     /*
      * As an optimization, even when argsHasLocalBinding, the function prologue

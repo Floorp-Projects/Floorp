@@ -4,7 +4,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg"
      xmlns:xlink="http://www.w3.org/1999/xlink"
-     viewBox="0 0 16 16"
+     viewBox="0 0 14 14"
      xml:space="preserve">
 
   <defs>
@@ -26,21 +26,21 @@
 
     <mask id="plus-mask">
       <rect width="100%" height="100%" fill="white"/>
-      <rect x="4" y="7.5" width="8" height="1"/>
-      <rect x="7.5" y="4" width="1" height="8"/>
+      <rect x="3" y="6" width="8" height="2"/>
+      <rect x="6" y="3" width="2" height="8"/>
     </mask>
 
     <mask id="minus-mask">
       <rect width="100%" height="100%" fill="white"/>
-      <rect x="4" y="7.5" width="8" height="1"/>
+      <rect x="3" y="6" width="8" height="2"/>
     </mask>
 
     <g id="addpage-shape">
-      <circle cx="8" cy="8" r="7" mask="url(#plus-mask)"/>
+      <circle cx="7" cy="7" r="6" mask="url(#plus-mask)"/>
     </g>
 
     <g id="removepage-shape">
-      <circle cx="8" cy="8" r="7" mask="url(#minus-mask)"/>
+      <circle cx="7" cy="7" r="6" mask="url(#minus-mask)"/>
     </g>
 
   </defs>
