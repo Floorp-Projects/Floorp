@@ -1087,6 +1087,15 @@ public:
                     mozilla::ErrorResult& aError);
 
 protected:
+  // Web IDL helpers
+
+  // Redefine the property called aPropName on this window object to be a value
+  // property with the value aValue, much like we would do for a [Replaceable]
+  // property in IDL.
+  void RedefineProperty(JSContext* aCx, const char* aPropName,
+                        JS::Handle<JS::Value> aValue,
+                        mozilla::ErrorResult& aError);
+
   // Array of idle observers that are notified of idle events.
   nsTObserverArray<IdleObserverHolder> mIdleObservers;
 
