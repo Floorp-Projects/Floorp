@@ -23,6 +23,10 @@ SimpleTest.waitForExplicitFinish();
 
 var previousX, previousY, previousWidth, previousHeight;
 
+["innerWidth", "innerHeight", "screenX", "screenY", "outerWidth",
+ "outerHeight"].map(function(name) {
+  window[name+"Getter"] = Object.getOwnPropertyDescriptor(window, name).get;
+});
 
 function backValues()
 {
@@ -86,14 +90,18 @@ function checkChangeIsDisabled(aWindow, aNext)
   // too much time. Worse thing that could happen is random green.
   var hits = 5;
 
-  var originalWidth = aWindow.innerWidth;
-  var originalHeight = aWindow.innerHeight;
+  function getProp(propName) {
+    return window[propName + "Getter"].call(aWindow);
+  }
 
-  var originalX = aWindow.screenX;
-  var originalY = aWindow.screenY;
+  var originalWidth = getProp("innerWidth");
+  var originalHeight = getProp("innerHeight");
 
-  var oWidth = aWindow.outerWidth;
-  var oHeight = aWindow.outerHeight;
+  var originalX = getProp("screenX");
+  var originalY = getProp("screenY");
+
+  var oWidth = getProp("outerWidth");
+  var oHeight = getProp("outerHeight");
 
   function changeCondition() {
     return aWindow.innerWidth != originalWidth ||
@@ -103,12 +111,18 @@ function checkChangeIsDisabled(aWindow, aNext)
   }
 
   function changeTest() {
-    is(aWindow.innerWidth, originalWidth, "Window width shouldn't have changed");
-    is(aWindow.innerHeight, originalHeight, "Window height shouldn't have changed");
-    is(aWindow.screenX, originalX, "Window x position shouldn't have changed");
-    is(aWindow.screenY, originalY, "Window y position shouldn't have changed");
-    is(aWindow.outerWidth, oWidth, "Window outerWidth shouldn't have changed");
-    is(aWindow.outerHeight, oHeight, "Window outerHeight shouldn't have changed");
+    ise(getProp("innerWidth"), originalWidth,
+        "Window width shouldn't have changed");
+    ise(getProp("innerHeight"), originalHeight,
+        "Window height shouldn't have changed");
+    ise(getProp("screenX"), originalX,
+        "Window x position shouldn't have changed");
+    ise(getProp("screenY"), originalY,
+        "Window y position shouldn't have changed");
+    ise(getProp("outerWidth"), oWidth,
+        "Window outerWidth shouldn't have changed");
+    ise(getProp("outerHeight"), oHeight,
+        "Window outerHeight shouldn't have changed");
   }
 
   /**

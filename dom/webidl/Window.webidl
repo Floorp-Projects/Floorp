@@ -176,10 +176,13 @@ partial interface Window {
   [Throws, UnsafeInPrerendering] void resizeBy(long x, long y);
 
   // viewport
-  //[Throws] readonly attribute double innerWidth;
-  //[Throws] readonly attribute double innerHeight;
-  [Throws] attribute long innerWidth;
-  [Throws] attribute long innerHeight;
+  // These are writable because we allow chrome to write them.  And they need
+  // to use 'any' as the type, because non-chrome writing them needs to act
+  // like a [Replaceable] attribute would, which needs the original JS value.
+  //[Replaceable, Throws] readonly attribute double innerWidth;
+  //[Replaceable, Throws] readonly attribute double innerHeight;
+  [Throws] attribute any innerWidth;
+  [Throws] attribute any innerHeight;
 
   // viewport scrolling
   void scroll(unrestricted double x, unrestricted double y);
@@ -205,14 +208,17 @@ partial interface Window {
   [Replaceable, Throws] readonly attribute long pageYOffset;
 
   // client
-  //[Throws] readonly attribute double screenX;
-  //[Throws] readonly attribute double screenY;
-  //[Throws] readonly attribute double outerWidth;
-  //[Throws] readonly attribute double outerHeight;
-  [Throws] attribute long screenX;
-  [Throws] attribute long screenY;
-  [Throws] attribute long outerWidth;
-  [Throws] attribute long outerHeight;
+  // These are writable because we allow chrome to write them.  And they need
+  // to use 'any' as the type, because non-chrome writing them needs to act
+  // like a [Replaceable] attribute would, which needs the original JS value.
+  //[Replaceable, Throws] readonly attribute double screenX;
+  //[Replaceable, Throws] readonly attribute double screenY;
+  //[Replaceable, Throws] readonly attribute double outerWidth;
+  //[Replaceable, Throws] readonly attribute double outerHeight;
+  [Throws] attribute any screenX;
+  [Throws] attribute any screenY;
+  [Throws] attribute any outerWidth;
+  [Throws] attribute any outerHeight;
 };
 
 /**
