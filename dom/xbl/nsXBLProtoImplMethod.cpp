@@ -294,7 +294,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement, JSAddonId* aAd
 
   // We are going to run script via JS::Call, so we need a script entry point,
   // but as this is XBL related it does not appear in the HTML spec.
-  dom::AutoEntryScript aes(global);
+  dom::AutoEntryScript aes(global, "XBL <constructor>/<destructor> invocation");
   aes.TakeOwnershipOfErrorReporting();
   JSContext* cx = aes.cx();
 

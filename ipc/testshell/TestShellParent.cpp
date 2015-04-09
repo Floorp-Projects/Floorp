@@ -72,7 +72,8 @@ TestShellCommandParent::RunCallback(const nsString& aResponse)
   // We're about to run script via JS_CallFunctionValue, so we need an
   // AutoEntryScript. This is just for testing and not in any spec.
   dom::AutoEntryScript aes(
-      xpc::NativeGlobal(js::GetGlobalForObjectCrossCompartment(&mCallback.toObject())));
+      xpc::NativeGlobal(js::GetGlobalForObjectCrossCompartment(&mCallback.toObject())),
+      "TestShellCommand");
   JSContext* cx = aes.cx();
   JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
 
