@@ -51,9 +51,6 @@ TestProtocolHandler.prototype = {
     uri.spec = spec;
     return uri;
   },
-  newChannel2: function(uri, aLoadInfo) {
-    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
-  },
   newChannel: function(uri) {
     throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
   },
