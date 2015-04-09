@@ -1007,6 +1007,7 @@ TokenStream::checkForKeyword(const KeywordInfo* kw, TokenKind* ttp)
 #ifndef JS_HAS_CLASSES
         || kw->tokentype == TOK_CLASS
         || kw->tokentype == TOK_EXTENDS
+        || kw->tokentype == TOK_SUPER
 #endif
         )
     {
