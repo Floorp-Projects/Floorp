@@ -535,6 +535,7 @@ private:
                                           bool* aIsForApp,
                                           bool* aIsForBrowser) override;
     virtual bool RecvGetXPCOMProcessAttributes(bool* aIsOffline,
+                                               bool* aIsConnected,
                                                InfallibleTArray<nsString>* dictionaries,
                                                ClipboardCapabilities* clipboardCaps,
                                                DomainPolicyClone* domainPolicy)

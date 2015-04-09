@@ -385,6 +385,7 @@ bool ContentParent::sNuwaReady = false;
 #endif
 
 #define NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC "ipc:network:set-offline"
+#define NS_IPC_IOSERVICE_SET_CONNECTIVITY_TOPIC "ipc:network:set-connectivity"
 
 class MemoryReportRequestParent : public PMemoryReportRequestParent
 {
@@ -599,6 +600,7 @@ static const char* sObserverTopics[] = {
     "xpcom-shutdown",
     "profile-before-change",
     NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC,
+    NS_IPC_IOSERVICE_SET_CONNECTIVITY_TOPIC,
     "child-memory-reporter-request",
     "memory-pressure",
     "child-gc-request",
@@ -2818,12 +2820,14 @@ ContentParent::RecvAddNewProcess(const uint32_t& aPid,
 
     // Update offline settings.
     bool isOffline;
+    bool isConnected;
     InfallibleTArray<nsString> unusedDictionaries;
     ClipboardCapabilities clipboardCaps;
     DomainPolicyClone domainPolicy;
-    RecvGetXPCOMProcessAttributes(&isOffline, &unusedDictionaries,
+    RecvGetXPCOMProcessAttributes(&isOffline, &isConnected, &unusedDictionaries,
                                   &clipboardCaps, &domainPolicy);
     mozilla::unused << content->SendSetOffline(isOffline);
+    mozilla::unused << content->SendSetConnectivity(isConnected);
     MOZ_ASSERT(!clipboardCaps.supportsSelectionClipboard() &&
                !clipboardCaps.supportsFindClipboard(),
                "Unexpected values");
@@ -2914,6 +2918,17 @@ ContentParent::Observe(nsISupports* aSubject,
           }
 #ifdef MOZ_NUWA_PROCESS
       }
+#endif
+    }
+    else if (!strcmp(aTopic, NS_IPC_IOSERVICE_SET_CONNECTIVITY_TOPIC)) {
+#ifdef MOZ_NUWA_PROCESS
+        if (!(IsNuwaReady() && IsNuwaProcess())) {
+#endif
+            if (!SendSetConnectivity(NS_LITERAL_STRING("true").Equals(aData))) {
+                return NS_ERROR_NOT_AVAILABLE;
+            }
+#ifdef MOZ_NUWA_PROCESS
+        }
 #endif
     }
     // listening for alert notifications
@@ -3164,6 +3179,7 @@ ContentParent::RecvGetProcessAttributes(ContentParentId* aCpId,
 
 bool
 ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
+                                             bool* aIsConnected,
                                              InfallibleTArray<nsString>* dictionaries,
                                              ClipboardCapabilities* clipboardCaps,
                                              DomainPolicyClone* domainPolicy)
@@ -3172,6 +3188,9 @@ ContentParent::RecvGetXPCOMProcessAttributes(bool* aIsOffline,
     MOZ_ASSERT(io, "No IO service?");
     DebugOnly<nsresult> rv = io->GetOffline(aIsOffline);
     MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed getting offline?");
+
+    rv = io->GetConnectivity(aIsConnected);
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed getting connectivity?");
 
     nsCOMPtr<nsISpellChecker> spellChecker(do_GetService(NS_SPELLCHECKER_CONTRACTID));
     MOZ_ASSERT(spellChecker, "No spell checker?");

@@ -476,6 +476,7 @@ child:
     RegisterChromeItem(ChromeRegistryItem item);
 
     async SetOffline(bool offline);
+    async SetConnectivity(bool connectivity);
 
     async NotifyVisited(URIParams uri);
 
@@ -616,7 +617,9 @@ parent:
     sync GetProcessAttributes()
         returns (ContentParentId cpId, bool isForApp, bool isForBrowser);
     sync GetXPCOMProcessAttributes()
-        returns (bool isOffline, nsString[] dictionaries,
+        returns (bool isOffline,
+                 bool isConnected,
+                 nsString[] dictionaries,
                  ClipboardCapabilities clipboardCaps,
                  DomainPolicyClone domainPolicy);
 
