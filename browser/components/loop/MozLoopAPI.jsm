@@ -23,6 +23,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "hookWindowCloseForPanelClose",
                                         "resource://gre/modules/MozSocialAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                         "resource://gre/modules/PluralForm.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
+                                        "resource://gre/modules/UpdateChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITour",
                                         "resource:///modules/UITour.jsm");
 XPCOMUtils.defineLazyGetter(this, "appInfo", function() {
@@ -710,13 +712,11 @@ function injectLoopAPI(targetWindow) {
       enumerable: true,
       get: function() {
         if (!appVersionInfo) {
-          let defaults = Services.prefs.getDefaultBranch(null);
-
           // If the lazy getter explodes, we're probably loaded in xpcshell,
           // which doesn't have what we need, so log an error.
           try {
             appVersionInfo = Cu.cloneInto({
-              channel: defaults.getCharPref("app.update.channel"),
+              channel: UpdateChannel.get(),
               version: appInfo.version,
               OS: appInfo.OS
             }, targetWindow);
