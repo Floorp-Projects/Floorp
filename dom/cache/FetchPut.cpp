@@ -441,6 +441,10 @@ FetchPut::MaybeNotifyListener()
   if (!mListener) {
     return;
   }
+  // CacheParent::OnFetchPut can lead to the destruction of |this| when the
+  // object is removed from CacheParent::mFetchPutList, so make sure that
+  // doesn't happen until this method returns.
+  nsRefPtr<FetchPut> kungFuDeathGrip(this);
   mListener->OnFetchPut(this, mRequestId, mResult);
 }
 
