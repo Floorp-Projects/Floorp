@@ -29,16 +29,16 @@ var OfflineApps = {
 
     let strings = Strings.browser;
     let buttons = [{
-      label: strings.GetStringFromName("offlineApps.allow"),
-      callback: function() {
-        OfflineApps.allowSite(aContentWindow.document);
-      }
-    },
-    {
       label: strings.GetStringFromName("offlineApps.dontAllow2"),
       callback: function(aChecked) {
         if (aChecked)
           OfflineApps.disallowSite(aContentWindow.document);
+      }
+    },
+    {
+      label: strings.GetStringFromName("offlineApps.allow"),
+      callback: function() {
+        OfflineApps.allowSite(aContentWindow.document);
       }
     }];
 
