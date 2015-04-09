@@ -7,27 +7,19 @@
 #include "nsISupports.idl"
 
 /**
- * Enumeration of Programming Languages
+ * Legacy constants for specifying programming languages.
+ *
+ * JAVASCRIPT is needed to avoid breaking addons that use it in nsIClassInfo
+ * to define fields that are no longer needed.
+ *
+ * UNKNOWN and JAVASCRIPT are also used in implementations of
+ * nsIStackFrame::language.
  */
 
-[scriptable, uuid(ea604e90-40ba-11d5-90bb-0010a4e73d9a)]
+[scriptable, uuid(02ad9f22-3c98-46f3-be4e-2f5c9299e29a)]
 interface nsIProgrammingLanguage : nsISupports
 {
-    /**
-     * Identifiers for programming languages.
-     */
     const uint32_t UNKNOWN     = 0;
-    const uint32_t CPLUSPLUS   = 1;
+    // 1 is unused.
     const uint32_t JAVASCRIPT  = 2;
-    const uint32_t PYTHON      = 3;
-    const uint32_t PERL        = 4;
-    const uint32_t JAVA        = 5;
-    const uint32_t ZX81_BASIC  = 6;  // it could happen :)
-    const uint32_t JAVASCRIPT2 = 7;
-    const uint32_t RUBY =        8;
-    const uint32_t PHP =         9;
-    const uint32_t TCL =         10;
-    // This list can grow indefinitely. Just don't ever change an existing item.
-    const uint32_t MAX         = 10; // keep this as the largest index.
-    
 };
