@@ -4,20 +4,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
-    GeckoCppUnitTests([
-        'jsep_session_unittest',
-        'mediaconduit_unittests',
-        'mediapipeline_unittest',
-        'sdp_unittests',
-        'signaling_unittests',
-    ])
-
-include('/ipc/chromium/chromium-config.mozbuild')
-include('common.build')
-
-USE_LIBS += [
-    '/media/webrtc/signalingtest/signaling_ecc/ecc',
-    'mtransport_s',
+DIRS += [
+    '/media/mtransport/third_party',
+    '/media/mtransport/build',
+    '/media/mtransport/testlib',
 ]
+if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
+    DIRS += [
+        '/media/mtransport/standalone',
+    ]
+
 
