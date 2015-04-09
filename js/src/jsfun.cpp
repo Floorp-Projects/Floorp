@@ -721,6 +721,8 @@ inline void
 JSFunction::trace(JSTracer* trc)
 {
     if (isExtended()) {
+        if (isMethod())
+            fprintf(stderr, "It's a method! %p\n", this);
         TraceRange(trc, ArrayLength(toExtended()->extendedSlots),
                    (HeapValue*)toExtended()->extendedSlots, "nativeReserved");
     }

@@ -735,8 +735,11 @@ js::Nursery::moveSlotsToTenured(NativeObject* dst, NativeObject* src, AllocKind 
 MOZ_ALWAYS_INLINE size_t
 js::Nursery::moveElementsToTenured(NativeObject* dst, NativeObject* src, AllocKind dstKind)
 {
+    fprintf(stderr, "dst: %p src: %p\n", dst, src);
     if (src->hasEmptyElements() || src->denseElementsAreCopyOnWrite())
         return 0;
+
+    fprintf(stderr, "got here: dst: %p src: %p\n", dst, src);
 
     Zone* zone = src->zone();
     ObjectElements* srcHeader = src->getElementsHeader();
