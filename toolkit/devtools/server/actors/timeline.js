@@ -184,7 +184,7 @@ let TimelineActor = exports.TimelineActor = protocol.ActorClass({
     let markers = [];
 
     for (let docShell of this.docShells) {
-      markers = [...markers, ...docShell.popProfileTimelineMarkers()];
+      markers.push(...docShell.popProfileTimelineMarkers());
     }
 
     // The docshell may return markers with stack traces attached.

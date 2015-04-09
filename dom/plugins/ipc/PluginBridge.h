@@ -17,7 +17,7 @@ namespace plugins {
 
 bool
 SetupBridge(uint32_t aPluginId, dom::ContentParent* aContentParent,
-            bool aForceBridgeNow, nsresult* rv);
+            bool aForceBridgeNow, nsresult* aResult, uint32_t* aRunID);
 
 bool
 FindPluginsForContent(uint32_t aPluginEpoch,

@@ -14,6 +14,8 @@
 #include "HwcComposer2D.h"
 #endif
 
+class nsIWidget;
+
 namespace mozilla {
 namespace gl {
 
@@ -45,6 +47,10 @@ public:
         MOZ_ASSERT(gl->GetContextType() == GLContextType::EGL);
         return static_cast<GLContextEGL*>(gl);
     }
+
+    static EGLSurface CreateSurfaceForWindow(nsIWidget* aWidget);
+
+    static void DestroySurface(EGLSurface aSurface);
 
     bool Init() override;
 

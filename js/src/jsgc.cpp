@@ -3208,6 +3208,27 @@ GCRuntime::expireChunksAndArenas(bool shouldShrink, AutoLockGC& lock)
         decommitArenas(lock);
 }
 
+// In debug builds, set/unset the background sweeping flag on the zone.
+struct AutoSetZoneBackgroundSweeping
+{
+#ifdef DEBUG
+    explicit AutoSetZoneBackgroundSweeping(Zone* zone)
+      : zone_(zone)
+    {
+        zone_->setGCBackgroundSweeping(true);
+    }
+
+    ~AutoSetZoneBackgroundSweeping() {
+        zone_->setGCBackgroundSweeping(false);
+    }
+
+  private:
+    Zone* zone_;
+#else
+    AutoSetZoneBackgroundSweeping(Zone* zone) {}
+#endif
+};
+
 void
 GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks, ThreadType threadType)
 {
@@ -3221,6 +3242,7 @@ GCRuntime::sweepBackgroundThings(ZoneList& zones, LifoAlloc& freeBlocks, ThreadT
     FreeOp fop(rt, threadType);
     for (unsigned phase = 0 ; phase < ArrayLength(BackgroundFinalizePhases) ; ++phase) {
         for (Zone* zone = zones.front(); zone; zone = zone->nextZone()) {
+            AutoSetZoneBackgroundSweeping zbs(zone);
             for (unsigned index = 0 ; index < BackgroundFinalizePhases[phase].length ; ++index) {
                 AllocKind kind = BackgroundFinalizePhases[phase].kinds[index];
                 ArenaHeader* arenas = zone->arenas.arenaListsToSweep[kind];

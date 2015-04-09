@@ -30,6 +30,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
+#include "mozilla/AutoTimelineMarker.h"
 #include "mozilla/Base64.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/DebugOnly.h"
@@ -4246,6 +4247,8 @@ nsContentUtils::ParseFragmentHTML(const nsAString& aSourceBuffer,
                                   bool aQuirks,
                                   bool aPreventScriptExecution)
 {
+  AutoTimelineMarker m(aTargetNode->OwnerDoc()->GetDocShell(), "Parse HTML");
+
   if (nsContentUtils::sFragmentParsingActive) {
     NS_NOTREACHED("Re-entrant fragment parsing attempted.");
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -4272,6 +4275,8 @@ nsContentUtils::ParseDocumentHTML(const nsAString& aSourceBuffer,
                                   nsIDocument* aTargetDocument,
                                   bool aScriptingEnabledForNoscriptParsing)
 {
+  AutoTimelineMarker m(aTargetDocument->GetDocShell(), "Parse HTML");
+
   if (nsContentUtils::sFragmentParsingActive) {
     NS_NOTREACHED("Re-entrant fragment parsing attempted.");
     return NS_ERROR_DOM_INVALID_STATE_ERR;
@@ -4297,6 +4302,8 @@ nsContentUtils::ParseFragmentXML(const nsAString& aSourceBuffer,
                                  bool aPreventScriptExecution,
                                  nsIDOMDocumentFragment** aReturn)
 {
+  AutoTimelineMarker m(aDocument->GetDocShell(), "Parse XML");
+
   if (nsContentUtils::sFragmentParsingActive) {
     NS_NOTREACHED("Re-entrant fragment parsing attempted.");
     return NS_ERROR_DOM_INVALID_STATE_ERR;
