@@ -297,14 +297,16 @@ final class GeckoEditable
             }
         }
 
+        /**
+         * Remove the head of the queue. Throw if queue is empty.
+         */
         void poll() {
             if (DEBUG) {
                 ThreadUtils.assertOnGeckoThread();
             }
-            if (mActions.isEmpty()) {
+            if (mActions.poll() == null) {
                 throw new IllegalStateException("empty actions queue");
             }
-            mActions.poll();
 
             synchronized(this) {
                 if (mActions.isEmpty()) {
@@ -313,12 +315,14 @@ final class GeckoEditable
             }
         }
 
+        /**
+         * Return, but don't remove, the head of the queue, or null if queue is empty.
+         *
+         * @return head of the queue or null if empty.
+         */
         Action peek() {
             if (DEBUG) {
                 ThreadUtils.assertOnGeckoThread();
-            }
-            if (mActions.isEmpty()) {
-                throw new IllegalStateException("empty actions queue");
             }
             return mActions.peek();
         }
@@ -669,7 +673,11 @@ final class GeckoEditable
             // GeckoEditableListener methods should all be called from the Gecko thread
             ThreadUtils.assertOnGeckoThread();
         }
+
         final Action action = mActionQueue.peek();
+        if (action == null) {
+            throw new IllegalStateException("empty actions queue");
+        }
 
         if (DEBUG) {
             Log.d(LOGTAG, "reply: Action(" +
@@ -834,8 +842,8 @@ final class GeckoEditable
         /* An event (keypress, etc.) has potentially changed the selection,
            synchronize the selection here. There is not a race with the IC thread
            because the IC thread should be blocked on the event action */
-        if (!mActionQueue.isEmpty() &&
-            mActionQueue.peek().mType == Action.TYPE_EVENT) {
+        final Action action = mActionQueue.peek();
+        if (action != null && action.mType == Action.TYPE_EVENT) {
             Selection.setSelection(mText, start, end);
             return;
         }
@@ -866,6 +874,11 @@ final class GeckoEditable
         // has the same spans as the original text, the spans will end up being deleted
         mText.delete(start, oldEnd);
         mText.insert(start, newText);
+    }
+
+    private boolean isSameText(int start, int oldEnd, CharSequence newText) {
+        return oldEnd - start == newText.length() &&
+               TextUtils.regionMatches(mText, start, newText, 0, oldEnd - start);
     }
 
     @Override
@@ -909,46 +922,51 @@ final class GeckoEditable
         TextUtils.copySpansFrom(mText, start, Math.min(oldEnd, newEnd),
                                 Object.class, mChangedText, 0);
 
-        if (!mActionQueue.isEmpty()) {
-            final Action action = mActionQueue.peek();
-            if ((action.mType == Action.TYPE_REPLACE_TEXT ||
-                    action.mType == Action.TYPE_COMPOSE_TEXT) &&
-                    start <= action.mStart &&
-                    action.mStart + action.mSequence.length() <= newEnd) {
+        final Action action = mActionQueue.peek();
+        if (action != null &&
+                (action.mType == Action.TYPE_REPLACE_TEXT ||
+                action.mType == Action.TYPE_COMPOSE_TEXT) &&
+                start <= action.mStart &&
+                action.mStart + action.mSequence.length() <= newEnd) {
 
-                // actionNewEnd is the new end of the original replacement action
-                final int actionNewEnd = action.mStart + action.mSequence.length();
-                int selStart = Selection.getSelectionStart(mText);
-                int selEnd = Selection.getSelectionEnd(mText);
+            // actionNewEnd is the new end of the original replacement action
+            final int actionNewEnd = action.mStart + action.mSequence.length();
+            int selStart = Selection.getSelectionStart(mText);
+            int selEnd = Selection.getSelectionEnd(mText);
 
-                // Replace old spans with new spans
-                mChangedText.replace(action.mStart - start, actionNewEnd - start,
-                                     action.mSequence);
-                geckoReplaceText(start, oldEnd, mChangedText);
+            // Replace old spans with new spans
+            mChangedText.replace(action.mStart - start, actionNewEnd - start,
+                                 action.mSequence);
+            geckoReplaceText(start, oldEnd, mChangedText);
 
-                // delete/insert above might have moved our selection to somewhere else
-                // this happens when the Gecko text change covers a larger range than
-                // the original replacement action. Fix selection here
-                if (selStart >= start && selStart <= oldEnd) {
-                    selStart = selStart < action.mStart ? selStart :
-                               selStart < action.mEnd   ? actionNewEnd :
-                                                          selStart + actionNewEnd - action.mEnd;
-                    mText.setSpan(Selection.SELECTION_START, selStart, selStart,
-                                  Spanned.SPAN_POINT_POINT);
-                }
-                if (selEnd >= start && selEnd <= oldEnd) {
-                    selEnd = selEnd < action.mStart ? selEnd :
-                             selEnd < action.mEnd   ? actionNewEnd :
-                                                      selEnd + actionNewEnd - action.mEnd;
-                    mText.setSpan(Selection.SELECTION_END, selEnd, selEnd,
-                                  Spanned.SPAN_POINT_POINT);
-                }
-            } else {
-                geckoReplaceText(start, oldEnd, mChangedText);
+            // delete/insert above might have moved our selection to somewhere else
+            // this happens when the Gecko text change covers a larger range than
+            // the original replacement action. Fix selection here
+            if (selStart >= start && selStart <= oldEnd) {
+                selStart = selStart < action.mStart ? selStart :
+                           selStart < action.mEnd   ? actionNewEnd :
+                                                      selStart + actionNewEnd - action.mEnd;
+                mText.setSpan(Selection.SELECTION_START, selStart, selStart,
+                              Spanned.SPAN_POINT_POINT);
             }
+            if (selEnd >= start && selEnd <= oldEnd) {
+                selEnd = selEnd < action.mStart ? selEnd :
+                         selEnd < action.mEnd   ? actionNewEnd :
+                                                  selEnd + actionNewEnd - action.mEnd;
+                mText.setSpan(Selection.SELECTION_END, selEnd, selEnd,
+                              Spanned.SPAN_POINT_POINT);
+            }
+
         } else {
+            // Gecko side initiated the text change.
+            if (isSameText(start, oldEnd, mChangedText)) {
+                // Nothing to do because the text is the same.
+                // This could happen when the composition is updated for example.
+                return;
+            }
             geckoReplaceText(start, oldEnd, mChangedText);
         }
+
         geckoPostToIc(new Runnable() {
             @Override
             public void run() {
