@@ -398,6 +398,9 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
     if (native == js::simd_float32x4_storeXYZ)
         return inlineSimdStore(callInfo, native, SimdTypeDescr::Float32x4, 3);
 
+    if (native == js::simd_int32x4_bool)
+        return inlineSimdBool(callInfo, native, SimdTypeDescr::Int32x4);
+
     // Reaching here means we tried to inline a native for which there is no
     // Ion specialization.
     trackOptimizationOutcome(TrackedOutcome::CantInlineNativeNoSpecialization);
