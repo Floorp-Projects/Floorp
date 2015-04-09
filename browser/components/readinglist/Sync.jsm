@@ -118,8 +118,11 @@ SyncImpl.prototype = {
   start() {
     if (!this.promise) {
       this.promise = Task.spawn(function* () {
-        yield this._start();
-        delete this.promise;
+        try {
+          yield this._start();
+        } finally {
+          delete this.promise;
+        }
       }.bind(this));
     }
     return this.promise;
