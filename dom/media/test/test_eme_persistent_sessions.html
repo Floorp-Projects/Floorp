@@ -74,7 +74,6 @@ function startTest(test, token)
       onsessionupdated: function(session) {
         Log(token, "Session created");
         var sessionId;
-        initialSession = session;
 
         // Once the session has loaded and has all its keys usable, close
         // all sessions without calling remove() on them.
@@ -151,7 +150,7 @@ function startTest(test, token)
 }
 
 function beginTest() {
-  manager.runTests(gEMETests, startTest);
+  manager.runTests(gEMETests.filter(t => t.sessionCount === 1), startTest);
 }
 
 var prefs = [
