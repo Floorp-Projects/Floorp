@@ -1323,13 +1323,24 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
     // 9.1.6.3, ValidateAndApplyPropertyDescriptor.
     // Step 1 is a redundant assertion.
 
-    // Step 2.a.
+    // Filling in desc: Here we make a copy of the desc_ argument. We will turn
+    // it into a complete descriptor before updating obj. The spec algorithm
+    // does not explicitly do this, but the end result is the same. Search for
+    // "fill in" below for places where the filling-in actually occurs.
+    Rooted<PropertyDescriptor> desc(cx, desc_);
+
+    // Step 2.
     if (!shape) {
         if (!obj->nonProxyIsExtensible())
             return result.fail(JSMSG_OBJECT_NOT_EXTENSIBLE);
-    }
 
-    Rooted<PropertyDescriptor> desc(cx, desc_);
+        // Fill in missing desc fields with defaults.
+        CompletePropertyDescriptor(&desc);
+
+        if (!AddOrChangeProperty(cx, obj, id, desc))
+            return false;
+        return result.succeed();
+    }
 
     // If defining a getter or setter, we must check for its counterpart and
     // update the attributes and property ops.  A getter or setter is really
