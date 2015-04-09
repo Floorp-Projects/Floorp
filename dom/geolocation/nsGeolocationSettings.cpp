@@ -241,7 +241,7 @@ nsGeolocationSettings::HandleGeolocationPerOriginSettingsChange(const JS::Value&
 
   // because the spec requires calling getters when enumerating the key of a
   // dictionary
-  AutoEntryScript aes(global);
+  AutoEntryScript aes(global, "geolocation.app_settings enumeration");
   aes.TakeOwnershipOfErrorReporting();
   JSContext *cx = aes.cx();
   JS::AutoIdArray ids(cx, JS_Enumerate(cx, obj));
@@ -317,7 +317,7 @@ nsGeolocationSettings::HandleGeolocationAlwaysPreciseChange(const JS::Value& aVa
   NS_ENSURE_TRUE_VOID(global && global->GetGlobalJSObject());
 
   // the spec requires calling getters when accessing array by index
-  AutoEntryScript aes(global);
+  AutoEntryScript aes(global, "geolocation.always_precise indexing");
   aes.TakeOwnershipOfErrorReporting();
   JSContext *cx = aes.cx();
 

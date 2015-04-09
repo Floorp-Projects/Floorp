@@ -297,7 +297,7 @@ WorkerRunnable::Run()
     MOZ_ASSERT(IsCanceled(), "Subclass Cancel() didn't set IsCanceled()!");
 
     return NS_OK;
- }
+  }
 
   // Track down the appropriate global to use for the AutoJSAPI/AutoEntryScript.
   nsCOMPtr<nsIGlobalObject> globalObject;
@@ -332,8 +332,9 @@ WorkerRunnable::Run()
   Maybe<mozilla::dom::AutoEntryScript> aes;
   JSContext* cx;
   if (globalObject) {
-    aes.emplace(globalObject, isMainThread, isMainThread ? nullptr :
-                                            GetCurrentThreadJSContext());
+    aes.emplace(globalObject, "Worker runnable",
+                isMainThread,
+                isMainThread ? nullptr : GetCurrentThreadJSContext());
     cx = aes->cx();
   } else {
     jsapi.Init();
@@ -352,7 +353,8 @@ WorkerRunnable::Run()
   // In the case of CompileScriptRunnnable, WorkerRun above can cause us to
   // lazily create a global, so we construct aes here before calling PostRun.
   if (targetIsWorkerThread && !aes && DefaultGlobalObject()) {
-    aes.emplace(DefaultGlobalObject(), false, GetCurrentThreadJSContext());
+    aes.emplace(DefaultGlobalObject(), "worker runnable",
+                false, GetCurrentThreadJSContext());
     cx = aes->cx();
   }
 

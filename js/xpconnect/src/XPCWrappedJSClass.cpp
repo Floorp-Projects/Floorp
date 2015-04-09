@@ -515,7 +515,8 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
       NativeGlobal(js::GetGlobalForObjectCrossCompartment(self->GetJSObject()));
     NS_ENSURE_TRUE(nativeGlobal, NS_ERROR_FAILURE);
     NS_ENSURE_TRUE(nativeGlobal->GetGlobalJSObject(), NS_ERROR_FAILURE);
-    AutoEntryScript aes(nativeGlobal, /* aIsMainThread = */ true);
+    AutoEntryScript aes(nativeGlobal, "XPCWrappedJS QueryInterface",
+                        /* aIsMainThread = */ true);
     XPCCallContext ccx(NATIVE_CALLER, aes.cx());
     if (!ccx.IsValid()) {
         *aInstancePtr = nullptr;
@@ -913,7 +914,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     // definitely will be when we turn off XPConnect for the web.
     nsIGlobalObject* nativeGlobal =
       NativeGlobal(js::GetGlobalForObjectCrossCompartment(wrapper->GetJSObject()));
-    AutoEntryScript aes(nativeGlobal, /* aIsMainThread = */ true);
+    AutoEntryScript aes(nativeGlobal, "XPCWrappedJS method call",
+                        /* aIsMainThread = */ true);
     XPCCallContext ccx(NATIVE_CALLER, aes.cx());
     if (!ccx.IsValid())
         return retval;
