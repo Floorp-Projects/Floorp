@@ -18,6 +18,7 @@ browser.jar:
   content/browser/loop/js/panel.js                  (content/js/panel.js)
   content/browser/loop/js/contacts.js               (content/js/contacts.js)
   content/browser/loop/js/conversationViews.js      (content/js/conversationViews.js)
+  content/browser/loop/js/roomStore.js              (content/js/roomStore.js)
   content/browser/loop/js/roomViews.js              (content/js/roomViews.js)
 
   # Desktop styles
@@ -71,7 +72,6 @@ browser.jar:
   content/browser/loop/shared/js/actions.js             (content/shared/js/actions.js)
   content/browser/loop/shared/js/conversationStore.js   (content/shared/js/conversationStore.js)
   content/browser/loop/shared/js/store.js               (content/shared/js/store.js)
-  content/browser/loop/shared/js/roomStore.js           (content/shared/js/roomStore.js)
   content/browser/loop/shared/js/roomStates.js          (content/shared/js/roomStates.js)
   content/browser/loop/shared/js/fxOSActiveRoomStore.js (content/shared/js/fxOSActiveRoomStore.js)
   content/browser/loop/shared/js/activeRoomStore.js     (content/shared/js/activeRoomStore.js)
