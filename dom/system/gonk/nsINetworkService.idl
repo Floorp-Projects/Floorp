@@ -159,7 +159,7 @@ interface nsIDhcpRequestCallback : nsISupports
 /**
  * Provide network services.
  */
-[scriptable, uuid(e40dd966-cb04-4dc7-ac4b-6382769c00b9)]
+[scriptable, uuid(a0f29630-c25c-11e4-8830-0800200c9a66)]
 interface nsINetworkService : nsISupports
 {
   const long MODIFY_ROUTE_ADD    = 0;
@@ -486,4 +486,17 @@ interface nsINetworkService : nsISupports
    */
   void destroyNetwork(in DOMString interfaceName,
                       in nsINativeCommandCallback callback);
+
+  /**
+   * Query the netId associated with given network interface name.
+   *
+   * @param interfaceName
+   *        The network interface name which we want to query.
+   *
+   * @return A deferred promise that resolves with a string to indicate.
+   *         the queried netId on success and rejects if the interface name
+   *         is invalid.
+   *
+   */
+  jsval getNetId(in DOMString interfaceName);
 };
