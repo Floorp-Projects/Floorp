@@ -1443,6 +1443,10 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
         CompletePropertyDescriptor(&desc);
     } else if (desc.isDataDescriptor()) {
         // Step 8.
+        bool frozen = !IsConfigurable(shapeAttrs) && !IsWritable(shapeAttrs);
+        if (frozen && desc.hasWritable() && desc.writable() && !skipRedefineChecks)
+            return result.fail(JSMSG_CANT_REDEFINE_PROP);
+
         if (desc.hasValue()) {
             // If any other JSPROP_IGNORE_* attributes are present, copy the
             // corresponding JSPROP_* attributes from the existing property.
