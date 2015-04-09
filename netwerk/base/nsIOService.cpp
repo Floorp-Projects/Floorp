@@ -59,7 +59,6 @@ using mozilla::net::IsNeckoChild;
 #define PORT_PREF(x)               PORT_PREF_PREFIX x
 #define AUTODIAL_PREF              "network.autodial-helper.enabled"
 #define MANAGE_OFFLINE_STATUS_PREF "network.manage-offline-status"
-#define OFFLINE_MIRRORS_CONNECTIVITY "network.offline-mirrors-connectivity"
 
 // Nb: these have been misnomers since bug 715770 removed the buffer cache.
 // "network.segment.count" and "network.segment.size" would be better names,
@@ -161,7 +160,6 @@ nsIOService::nsIOService()
     , mOfflineForProfileChange(false)
     , mManageLinkStatus(false)
     , mConnectivity(true)
-    , mOfflineMirrorsConnectivity(true)
     , mSettingOffline(false)
     , mSetOfflineValue(false)
     , mShutdown(false)
@@ -229,7 +227,6 @@ nsIOService::Init()
         NS_WARNING("failed to get observer service");
 
     Preferences::AddBoolVarCache(&sTelemetryEnabled, "toolkit.telemetry.enabled", false);
-    Preferences::AddBoolVarCache(&mOfflineMirrorsConnectivity, OFFLINE_MIRRORS_CONNECTIVITY, true);
 
     gIOService = this;
 
@@ -842,11 +839,7 @@ nsIOService::IsLinkUp()
 NS_IMETHODIMP
 nsIOService::GetOffline(bool *offline)
 {
-    if (mOfflineMirrorsConnectivity) {
-        *offline = mOffline || !mConnectivity;
-    } else {
-        *offline = mOffline;
-    }
+    *offline = mOffline;
     return NS_OK;
 }
 
