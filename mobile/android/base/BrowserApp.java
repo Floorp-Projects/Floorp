@@ -51,6 +51,7 @@ import org.mozilla.gecko.prompts.Prompt;
 import org.mozilla.gecko.prompts.PromptListItem;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
+import org.mozilla.gecko.tabqueue.TabQueuePrompt;
 import org.mozilla.gecko.tabs.TabHistoryController;
 import org.mozilla.gecko.tabs.TabHistoryController.OnShowTabHistory;
 import org.mozilla.gecko.tabs.TabHistoryFragment;
@@ -167,6 +168,7 @@ public class BrowserApp extends GeckoApp
 
     // Request ID for startActivityForResult.
     private static final int ACTIVITY_REQUEST_PREFERENCES = 1001;
+    private static final int ACTIVITY_REQUEST_TAB_QUEUE = 2001;
 
     @RobocopTarget
     public static final String EXTRA_SKIP_STARTPANE = "skipstartpane";
@@ -713,6 +715,8 @@ public class BrowserApp extends GeckoApp
         if (Intent.ACTION_VIEW.equals(action)) {
             // Show the target URL immediately in the toolbar.
             mBrowserToolbar.setTitle(intent.getDataString());
+
+            showTabQueuePromptIfApplicable(intent);
 
             Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.INTENT);
         } else if (GuestSession.NOTIFICATION_INTENT.equals(action)) {
@@ -2427,6 +2431,11 @@ public class BrowserApp extends GeckoApp
                     }
                 });
                 break;
+
+            case ACTIVITY_REQUEST_TAB_QUEUE:
+                TabQueueHelper.processTabQueuePromptResponse(resultCode, this);
+                break;
+
             default:
                 super.onActivityResult(requestCode, resultCode, data);
         }
@@ -3418,6 +3427,8 @@ public class BrowserApp extends GeckoApp
             Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, method);
         }
 
+        showTabQueuePromptIfApplicable(intent);
+
         super.onNewIntent(intent);
 
         if (AppConstants.MOZ_ANDROID_BEAM && NfcAdapter.ACTION_NDEF_DISCOVERED.equals(action)) {
@@ -3466,6 +3477,22 @@ public class BrowserApp extends GeckoApp
         } finally {
             StrictMode.setThreadPolicy(savedPolicy);
         }
+    }
+
+    private void showTabQueuePromptIfApplicable(final Intent intent) {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                // We only want to show the prompt if the browser has been opened from an external url
+                if (AppConstants.NIGHTLY_BUILD && AppConstants.MOZ_ANDROID_TAB_QUEUE
+                                               && mInitialized
+                                               && Intent.ACTION_VIEW.equals(intent.getAction())
+                                               && TabQueueHelper.shouldShowTabQueuePrompt(BrowserApp.this)) {
+                    Intent promptIntent = new Intent(BrowserApp.this, TabQueuePrompt.class);
+                    startActivityForResult(promptIntent, ACTIVITY_REQUEST_TAB_QUEUE);
+                }
+            }
+        });
     }
 
     @Override
