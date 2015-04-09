@@ -6,7 +6,6 @@
 
 #if !defined(GonkMediaDataDecoder_h_)
 #define GonkMediaDataDecoder_h_
-#include "mp4_demuxer/mp4_demuxer.h"
 #include "mozilla/RefPtr.h"
 #include "MP4Reader.h"
 
@@ -15,6 +14,7 @@ class MediaCodecProxy;
 } // namespace android
 
 namespace mozilla {
+class MediaRawData;
 
 // Manage the data flow from inputting encoded data and outputting decode data.
 class GonkDecoderManager {
@@ -28,7 +28,7 @@ public:
   virtual android::sp<android::MediaCodecProxy> Init(MediaDataDecoderCallback* aCallback) = 0;
 
   // Add samples into OMX decoder or queue them if decoder is out of input buffer.
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample);
+  virtual nsresult Input(MediaRawData* aSample);
 
   // Produces decoded output, it blocks until output can be produced or a timeout
   // is expired or until EOS. Returns NS_OK on success, or NS_ERROR_NOT_AVAILABLE
@@ -62,15 +62,15 @@ public:
 protected:
   // It performs special operation to MP4 sample, the real action is depended on
   // the codec type.
-  virtual bool PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample) { return true; }
+  virtual bool PerformFormatSpecificProcess(MediaRawData* aSample) { return true; }
 
   // It sends MP4Sample to OMX layer. It must be overrided by subclass.
-  virtual android::status_t SendSampleToOMX(mp4_demuxer::MP4Sample* aSample) = 0;
+  virtual android::status_t SendSampleToOMX(MediaRawData* aSample) = 0;
 
   // An queue with the MP4 samples which are waiting to be sent into OMX.
   // If an element is an empty MP4Sample, that menas EOS. There should not
   // any sample be queued after EOS.
-  nsTArray<nsAutoPtr<mp4_demuxer::MP4Sample>> mQueueSample;
+  nsTArray<nsRefPtr<MediaRawData>> mQueueSample;
 
   RefPtr<MediaTaskQueue> mTaskQueue;
 };
@@ -90,7 +90,7 @@ public:
 
   virtual nsresult Init() override;
 
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample);
+  virtual nsresult Input(MediaRawData* aSample);
 
   virtual nsresult Flush() override;
 
@@ -112,7 +112,7 @@ private:
   // extracts output if available, if aSample is null, it means there is
   // no data from source, it will notify the decoder EOS and flush all the
   // decoded frames.
-  void ProcessDecode(mp4_demuxer::MP4Sample* aSample);
+  void ProcessDecode(MediaRawData* aSample);
 
   // Called on the task queue. Extracts output if available, and delivers
   // it to the reader. Called after ProcessDecode() and ProcessDrain().

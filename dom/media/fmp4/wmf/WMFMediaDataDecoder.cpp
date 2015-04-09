@@ -75,18 +75,18 @@ WMFMediaDataDecoder::ProcessReleaseDecoder()
 
 // Inserts data into the decoder's pipeline.
 nsresult
-WMFMediaDataDecoder::Input(mp4_demuxer::MP4Sample* aSample)
+WMFMediaDataDecoder::Input(MediaRawData* aSample)
 {
   mTaskQueue->Dispatch(
-    NS_NewRunnableMethodWithArg<nsAutoPtr<mp4_demuxer::MP4Sample>>(
+    NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(
       this,
       &WMFMediaDataDecoder::ProcessDecode,
-      nsAutoPtr<mp4_demuxer::MP4Sample>(aSample)));
+      nsRefPtr<MediaRawData>(aSample)));
   return NS_OK;
 }
 
 void
-WMFMediaDataDecoder::ProcessDecode(mp4_demuxer::MP4Sample* aSample)
+WMFMediaDataDecoder::ProcessDecode(MediaRawData* aSample)
 {
   HRESULT hr = mMFTManager->Input(aSample);
   if (FAILED(hr)) {
@@ -95,7 +95,7 @@ WMFMediaDataDecoder::ProcessDecode(mp4_demuxer::MP4Sample* aSample)
     return;
   }
 
-  mLastStreamOffset = aSample->byte_offset;
+  mLastStreamOffset = aSample->mOffset;
 
   ProcessOutput();
 }

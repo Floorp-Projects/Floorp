@@ -14,10 +14,9 @@
 #include "nsIThread.h"
 #include "GMPDecryptorProxy.h"
 #include "mozilla/CDMCaps.h"
-#include "mp4_demuxer/DecoderData.h"
 
 namespace mozilla {
-
+class MediaRawData;
 class CDMCallbackProxy;
 
 namespace dom {
@@ -28,7 +27,7 @@ class DecryptionClient {
 public:
   virtual ~DecryptionClient() {}
   virtual void Decrypted(GMPErr aResult,
-                         mp4_demuxer::MP4Sample* aSample) = 0;
+                         MediaRawData* aSample) = 0;
 };
 
 // Proxies calls GMP/CDM, and proxies calls back.
@@ -142,8 +141,7 @@ public:
                        const nsAString& aMsg);
 
   // Threadsafe.
-  void Decrypt(mp4_demuxer::MP4Sample* aSample,
-               DecryptionClient* aSink);
+  void Decrypt(MediaRawData* aSample, DecryptionClient* aSink);
 
   // Reject promise with DOMException corresponding to aExceptionCode.
   // Can be called from any thread.
@@ -236,14 +234,13 @@ private:
   void gmp_RemoveSession(nsAutoPtr<SessionOpData> aData);
 
   struct DecryptJob {
-    DecryptJob(mp4_demuxer::MP4Sample* aSample,
-               DecryptionClient* aClient)
+    DecryptJob(MediaRawData* aSample, DecryptionClient* aClient)
       : mId(0)
       , mSample(aSample)
       , mClient(aClient)
     {}
     uint32_t mId;
-    nsAutoPtr<mp4_demuxer::MP4Sample> mSample;
+    nsRefPtr<MediaRawData> mSample;
     nsAutoPtr<DecryptionClient> mClient;
   };
   // GMP thread only.

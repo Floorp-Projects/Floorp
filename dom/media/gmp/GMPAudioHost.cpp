@@ -7,7 +7,7 @@
 #include "gmp-audio-samples.h"
 #include "gmp-errors.h"
 #include "GMPEncryptedBufferDataImpl.h"
-#include "mp4_demuxer/DecoderData.h"
+#include "MediaData.h"
 
 namespace mozilla {
 namespace gmp {
@@ -32,17 +32,17 @@ GMPAudioSamplesImpl::GMPAudioSamplesImpl(const GMPAudioEncodedSampleData& aData)
   }
 }
 
-GMPAudioSamplesImpl::GMPAudioSamplesImpl(mp4_demuxer::MP4Sample* aSample,
+GMPAudioSamplesImpl::GMPAudioSamplesImpl(MediaRawData* aSample,
                                          uint32_t aChannels,
                                          uint32_t aRate)
  : mFormat(kGMPAudioEncodedSamples)
- , mTimeStamp(aSample->composition_timestamp)
+ , mTimeStamp(aSample->mTime)
  , mChannels(aChannels)
  , mRate(aRate)
 {
-  mBuffer.AppendElements(aSample->data, aSample->size);
-  if (aSample->crypto.valid) {
-    mCrypto = new GMPEncryptedBufferDataImpl(aSample->crypto);
+  mBuffer.AppendElements(aSample->mData, aSample->mSize);
+  if (aSample->mCrypto.valid) {
+    mCrypto = new GMPEncryptedBufferDataImpl(aSample->mCrypto);
   }
 }
 

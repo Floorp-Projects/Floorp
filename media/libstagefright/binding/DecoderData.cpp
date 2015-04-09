@@ -75,7 +75,7 @@ FindData(const MetaData* aMetaData, uint32_t aKey, nsTArray<T>* aDest)
 }
 
 static bool
-FindData(const MetaData* aMetaData, uint32_t aKey, ByteBuffer* aDest)
+FindData(const MetaData* aMetaData, uint32_t aKey, mozilla::DataBuffer* aDest)
 {
   return FindData(aMetaData, aKey, static_cast<nsTArray<uint8_t>*>(aDest));
 }
@@ -169,91 +169,5 @@ bool
 VideoDecoderConfig::IsValid()
 {
   return display_width > 0 && display_height > 0;
-}
-
-MP4Sample::MP4Sample()
-  : decode_timestamp(0)
-  , composition_timestamp(0)
-  , duration(0)
-  , byte_offset(0)
-  , is_sync_point(0)
-  , data(nullptr)
-  , size(0)
-  , extra_data(nullptr)
-{
-}
-
-MP4Sample*
-MP4Sample::Clone() const
-{
-  nsAutoPtr<MP4Sample> s(new MP4Sample());
-  s->decode_timestamp = decode_timestamp;
-  s->composition_timestamp = composition_timestamp;
-  s->duration = duration;
-  s->byte_offset = byte_offset;
-  s->is_sync_point = is_sync_point;
-  s->size = size;
-  s->crypto = crypto;
-  s->extra_data = extra_data;
-  s->extra_buffer = s->data = new (fallible) uint8_t[size];
-  if (!s->extra_buffer) {
-    return nullptr;
-  }
-  memcpy(s->data, data, size);
-  return s.forget();
-}
-
-MP4Sample::~MP4Sample()
-{
-}
-
-bool
-MP4Sample::Pad(size_t aPaddingBytes)
-{
-  size_t newSize = size + aPaddingBytes;
-
-  uint8_t* newData = new (fallible) uint8_t[newSize];
-  if (!newData) {
-    return false;
-  }
-
-  memset(newData + size, 0, aPaddingBytes);
-  memcpy(newData, data, size);
-  extra_buffer = data = newData;
-
-  return true;
-}
-
-bool
-MP4Sample::Prepend(const uint8_t* aData, size_t aSize)
-{
-  size_t newSize = size + aSize;
-
-  uint8_t* newData = new (fallible) uint8_t[newSize];
-  if (!newData) {
-    return false;
-  }
-
-  memmove(newData + aSize, data, size);
-  memmove(newData, aData, aSize);
-  size = newSize;
-  extra_buffer = data = newData;
-
-  return true;
-}
-
-bool
-MP4Sample::Replace(const uint8_t* aData, size_t aSize)
-{
-  uint8_t* newData = new (fallible) uint8_t[aSize];
-  if (!newData) {
-    return false;
-  }
-
-  memcpy(newData, aData, aSize);
-  size = aSize;
-  extra_buffer = data = newData;
-
-  return true;
 }
 }

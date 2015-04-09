@@ -212,39 +212,39 @@ MP4Demuxer::SeekVideo(Microseconds aTime)
   }
 }
 
-MP4Sample*
+already_AddRefed<mozilla::MediaRawData>
 MP4Demuxer::DemuxAudioSample()
 {
   mMonitor->AssertCurrentThreadOwns();
   if (!mPrivate->mAudioIterator) {
     return nullptr;
   }
-  nsAutoPtr<MP4Sample> sample(mPrivate->mAudioIterator->GetNext());
+  nsRefPtr<mozilla::MediaRawData> sample(mPrivate->mAudioIterator->GetNext());
   if (sample) {
-    if (sample->crypto.valid) {
-      sample->crypto.mode = mAudioConfig.crypto.mode;
-      sample->crypto.iv_size = mAudioConfig.crypto.iv_size;
-      sample->crypto.key.AppendElements(mAudioConfig.crypto.key);
+    if (sample->mCrypto.valid) {
+      sample->mCrypto.mode = mAudioConfig.crypto.mode;
+      sample->mCrypto.iv_size = mAudioConfig.crypto.iv_size;
+      sample->mCrypto.key.AppendElements(mAudioConfig.crypto.key);
     }
   }
   return sample.forget();
 }
 
-MP4Sample*
+already_AddRefed<MediaRawData>
 MP4Demuxer::DemuxVideoSample()
 {
   mMonitor->AssertCurrentThreadOwns();
   if (!mPrivate->mVideoIterator) {
     return nullptr;
   }
-  nsAutoPtr<MP4Sample> sample(mPrivate->mVideoIterator->GetNext());
+  nsRefPtr<mozilla::MediaRawData> sample(mPrivate->mVideoIterator->GetNext());
   if (sample) {
-    sample->extra_data = mVideoConfig.extra_data;
-    if (sample->crypto.valid) {
-      sample->crypto.mode = mVideoConfig.crypto.mode;
-      sample->crypto.key.AppendElements(mVideoConfig.crypto.key);
+    sample->mExtraData = mVideoConfig.extra_data;
+    if (sample->mCrypto.valid) {
+      sample->mCrypto.mode = mVideoConfig.crypto.mode;
+      sample->mCrypto.key.AppendElements(mVideoConfig.crypto.key);
     }
-    if (sample->composition_timestamp >= mNextKeyframeTime) {
+    if (sample->mTime >= mNextKeyframeTime) {
       mNextKeyframeTime = mPrivate->mVideoIterator->GetNextKeyframeTime();
     }
   }

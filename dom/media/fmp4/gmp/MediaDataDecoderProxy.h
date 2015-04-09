@@ -8,8 +8,6 @@
 #define MediaDataDecoderProxy_h_
 
 #include "PlatformDecoderModule.h"
-#include "mp4_demuxer/DecoderData.h"
-#include "nsAutoPtr.h"
 #include "nsRefPtr.h"
 #include "nsThreadUtils.h"
 #include "nscore.h"
@@ -19,19 +17,19 @@ namespace mozilla {
 class InputTask : public nsRunnable {
 public:
   InputTask(MediaDataDecoder* aDecoder,
-            mp4_demuxer::MP4Sample* aSample)
+            MediaRawData* aSample)
    : mDecoder(aDecoder)
    , mSample(aSample)
   {}
 
   NS_IMETHOD Run() {
-    mDecoder->Input(mSample.forget());
+    mDecoder->Input(mSample);
     return NS_OK;
   }
 
 private:
   nsRefPtr<MediaDataDecoder> mDecoder;
-  nsAutoPtr<mp4_demuxer::MP4Sample> mSample;
+  nsRefPtr<MediaRawData> mSample;
 };
 
 class InitTask : public nsRunnable {
@@ -88,7 +86,7 @@ class MediaDataDecoderProxy;
 
 class MediaDataDecoderCallbackProxy : public MediaDataDecoderCallback {
 public:
-  explicit MediaDataDecoderCallbackProxy(MediaDataDecoderProxy* aProxyDecoder, MediaDataDecoderCallback* aCallback)
+  MediaDataDecoderCallbackProxy(MediaDataDecoderProxy* aProxyDecoder, MediaDataDecoderCallback* aCallback)
    : mProxyDecoder(aProxyDecoder)
    , mProxyCallback(aCallback)
   {
@@ -157,7 +155,7 @@ public:
   // asynchronously and responded to via the MediaDataDecoderCallback.
   // Note: the nsresults returned by the proxied decoder are lost.
   virtual nsresult Init() override;
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override;
+  virtual nsresult Input(MediaRawData* aSample) override;
   virtual nsresult Flush() override;
   virtual nsresult Drain() override;
   virtual nsresult Shutdown() override;
