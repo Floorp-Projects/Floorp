@@ -242,9 +242,6 @@ GonkDisplayJB::SwapBuffers(EGLDisplay dpy, EGLSurface sur)
 #if ANDROID_VERSION == 17
     mList->dpy = dpy;
     mList->sur = sur;
-#else
-    mList->outbuf = nullptr;
-    mList->outbufAcquireFenceFd = -1;
 #endif
     eglSwapBuffers(dpy, sur);
     return Post(mFBSurface->lastHandle, mFBSurface->GetPrevFBAcquireFd());
@@ -265,6 +262,10 @@ GonkDisplayJB::Post(buffer_handle_t buf, int fence)
     mList->retireFenceFd = -1;
     mList->numHwLayers = 2;
     mList->flags = HWC_GEOMETRY_CHANGED;
+#if ANDROID_VERSION >= 18
+    mList->outbuf = nullptr;
+    mList->outbufAcquireFenceFd = -1;
+#endif
     mList->hwLayers[0].compositionType = HWC_FRAMEBUFFER;
     mList->hwLayers[0].hints = 0;
     /* Skip this layer so the hwc module doesn't complain about null handles */
