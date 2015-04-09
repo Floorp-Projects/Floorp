@@ -1247,6 +1247,9 @@ AddOrChangeProperty(ExclusiveContext *cx, HandleNativeObject obj, HandleId id,
     return CallAddPropertyHook(cx, obj, shape, desc.value());
 }
 
+static bool IsConfigurable(unsigned attrs) { return (attrs & JSPROP_PERMANENT) == 0; }
+static bool IsEnumerable(unsigned attrs) { return (attrs & JSPROP_ENUMERATE) != 0; }
+
 bool
 js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
                          Handle<PropertyDescriptor> desc_,
@@ -1343,6 +1346,29 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
     }
 
     MOZ_ASSERT(shape);
+
+    // Non-standard hack: Allow redefining non-configurable properties if
+    // JSPROP_REDEFINE_NONCONFIGURABLE is set _and_ the object is a non-DOM
+    // global. The idea is that a DOM object can never have such a thing on
+    // its proto chain directly on the web, so we should be OK optimizing
+    // access to accessors found on such an object. Bug 1105518 contemplates
+    // removing this hack.
+    bool skipRedefineChecks = (desc.attributes() & JSPROP_REDEFINE_NONCONFIGURABLE) &&
+                              obj->is<GlobalObject>() &&
+                              !obj->getClass()->isDOMClass();
+
+    // Steps 3-4 are redundant.
+
+    // Step 5. We use shapeAttrs as a stand-in for shape in many places below
+    // since shape might not be a pointer to a real Shape (see
+    // IsImplicitDenseOrTypedArrayElement).
+    unsigned shapeAttrs = GetShapeAttributes(obj, shape);
+    if (!IsConfigurable(shapeAttrs) && !skipRedefineChecks) {
+        if (desc.hasConfigurable() && desc.configurable())
+            return result.fail(JSMSG_CANT_REDEFINE_PROP);
+        if (desc.hasEnumerable() && desc.enumerable() != IsEnumerable(shapeAttrs))
+            return result.fail(JSMSG_CANT_REDEFINE_PROP);
+    }
 
     // If defining a getter or setter, we must check for its counterpart and
     // update the attributes and property ops.  A getter or setter is really
