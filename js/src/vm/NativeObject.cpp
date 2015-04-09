@@ -1447,16 +1447,10 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
         if (frozen && desc.hasWritable() && desc.writable() && !skipRedefineChecks)
             return result.fail(JSMSG_CANT_REDEFINE_PROP);
 
-        if (desc.hasValue()) {
-            // If any other JSPROP_IGNORE_* attributes are present, copy the
-            // corresponding JSPROP_* attributes from the existing property.
-            if (IsImplicitDenseOrTypedArrayElement(shape)) {
-                desc.setAttributes(ApplyAttributes(desc.attributes(), true, true,
-                                                   !IsAnyTypedArray(obj)));
-            } else {
-                desc.setAttributes(ApplyOrDefaultAttributes(desc.attributes(), shape));
-            }
-        } else {
+        if (!desc.hasWritable())
+            desc.setWritable(IsWritable(shapeAttrs));
+
+        if (!desc.hasValue()) {
             // We have been asked merely to update JSPROP_READONLY (and possibly
             // JSPROP_CONFIGURABLE and/or JSPROP_ENUMERABLE, handled above).
 
@@ -1468,14 +1462,8 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
                 shape = obj->lookup(cx, id);
             }
 
-            desc.setAttributes(ApplyOrDefaultAttributes(desc.attributes(), shape));
-
-            // We are at most changing some attributes, and cannot convert
-            // from data descriptor to accessor, or vice versa. Take
-            // everything from the shape that we aren't changing.
-            uint32_t propMask = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
-            desc.setAttributes((shape->attributes() & ~propMask) |
-                               (desc.attributes() & propMask));
+            // We are at most changing some attributes. Take everything from
+            // the shape that we aren't changing.
             desc.setGetter(shape->getter());
             desc.setSetter(shape->setter());
             if (shape->hasSlot())
