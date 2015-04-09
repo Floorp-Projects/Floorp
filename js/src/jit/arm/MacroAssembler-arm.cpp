@@ -62,6 +62,21 @@ MacroAssemblerARM::convertInt32ToDouble(const Address& src, FloatRegister dest)
 }
 
 void
+MacroAssemblerARM::convertInt32ToDouble(const BaseIndex& src, FloatRegister dest)
+{
+    Register base = src.base;
+    uint32_t scale = Imm32::ShiftOf(src.scale).value;
+
+    if (src.offset != 0) {
+        ma_mov(base, ScratchRegister);
+        base = ScratchRegister;
+        ma_add(Imm32(src.offset), base);
+    }
+    ma_ldr(DTRAddr(base, DtrRegImmShift(src.index, LSL, scale)), ScratchRegister);
+    convertInt32ToDouble(ScratchRegister, dest);
+}
+
+void
 MacroAssemblerARM::convertUInt32ToDouble(Register src, FloatRegister dest_)
 {
     // Direct conversions aren't possible.
