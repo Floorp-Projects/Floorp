@@ -19,9 +19,9 @@ interface nsISocketProvider : nsISupports
      * @param aFamily
      *        The address family for this socket (PR_AF_INET or PR_AF_INET6).
      * @param aHost
-     *        The hostname for this connection.
+     *        The origin hostname for this connection.
      * @param aPort
-     *        The port for this connection.
+     *        The origin port for this connection.
      * @param aProxyHost
      *        If non-null, the proxy hostname for this connection.
      * @param aProxyPort
@@ -91,6 +91,13 @@ interface nsISocketProvider : nsISupports
      * connections to share state with each other.
      */
     const unsigned long NO_PERMANENT_STORAGE = 1 << 2;
+
+    /**
+     * This flag is an explicit opt-in that allows a normally secure socket
+     * provider to use, at its discretion, an insecure algorithm. e.g.
+     * a TLS socket without authentication.
+     */
+    const unsigned long MITM_OK = 1 << 3;
 };
 
 %{C++

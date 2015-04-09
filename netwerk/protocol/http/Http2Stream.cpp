@@ -464,9 +464,9 @@ Http2Stream::GenerateOpen()
       return NS_ERROR_UNEXPECTED;
     }
 
-    authorityHeader = ci->GetHost();
+    authorityHeader = ci->GetOrigin();
     authorityHeader.Append(':');
-    authorityHeader.AppendInt(ci->Port());
+    authorityHeader.AppendInt(ci->OriginPort());
   }
 
   mSession->Compressor()->EncodeHeaderBlock(mFlatHttpRequestHeaders,
