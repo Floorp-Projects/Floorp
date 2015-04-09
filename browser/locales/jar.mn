@@ -34,6 +34,8 @@
     locale/browser/devtools/debugger.dtd              (%chrome/browser/devtools/debugger.dtd)
     locale/browser/devtools/debugger.properties       (%chrome/browser/devtools/debugger.properties)
     locale/browser/devtools/device.properties         (%chrome/browser/devtools/device.properties)
+    locale/browser/devtools/filterwidget.properties   (%chrome/browser/devtools/filterwidget.properties)
+    locale/browser/devtools/filterwidget.dtd          (%chrome/browser/devtools/filterwidget.dtd)
     locale/browser/devtools/netmonitor.dtd            (%chrome/browser/devtools/netmonitor.dtd)
     locale/browser/devtools/netmonitor.properties     (%chrome/browser/devtools/netmonitor.properties)
     locale/browser/devtools/shadereditor.dtd          (%chrome/browser/devtools/shadereditor.dtd)
