@@ -103,6 +103,8 @@ OutputParser.prototype = {
     options.expectCubicBezier = ["transition", "transition-timing-function",
       "animation", "animation-timing-function"].indexOf(name) !== -1;
 
+    options.expectFilter = name === "filter";
+
     if (this._cssPropertySupportsValue(name, value)) {
       return this._parse(value, options);
     }
@@ -181,6 +183,11 @@ OutputParser.prototype = {
       if (i > MAX_ITERATIONS) {
         this._appendTextNode(text);
         text = "";
+        break;
+      }
+
+      if (options.expectFilter) {
+        this._appendFilter(text, options);
         break;
       }
 
@@ -406,6 +413,26 @@ OutputParser.prototype = {
       return true;
     }
     return false;
+  },
+
+  _appendFilter: function(filters, options={}) {
+    let container = this._createNode("span", {
+      "data-filters": filters
+    });
+
+    if (options.filterSwatchClass) {
+      let swatch = this._createNode("span", {
+        class: options.filterSwatchClass
+      });
+      container.appendChild(swatch);
+    }
+
+    let value = this._createNode("span", {
+      class: options.filterClass
+    }, filters);
+
+    container.appendChild(value);
+    this.parsed.push(container);
   },
 
    /**

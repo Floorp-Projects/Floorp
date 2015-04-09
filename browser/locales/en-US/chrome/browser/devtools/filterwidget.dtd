@@ -1,0 +1,14 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!-- LOCALIZATION NOTE : FILE These strings are used in the CSS Filter Editor Widget
+   - which can be found in a tooltip that appears in the Rule View when clicking
+   - on a filter swatch displayed next to CSS declarations like 'filter: blur(2px)'. -->
+
+<!-- LOCALIZATION NOTE (filterListSelectPlaceholder): This string is used as
+   - a preview option in the list of possible filters <select> -->
+<!ENTITY filterListSelectPlaceholder "Select a Filter">
+
+<!-- LOCALIZATION NOTE (addNewFilterButton): This string is displayed on a button used to add new filters -->
+<!ENTITY addNewFilterButton "Add">
