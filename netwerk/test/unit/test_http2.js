@@ -769,7 +769,7 @@ var tests = [ test_http2_post_big
             , test_http2_push2
             , test_http2_push3
             , test_http2_push4
-            // , test_http2_altsvc
+            , test_http2_altsvc
             , test_http2_doubleheader
             , test_http2_xhr
             , test_http2_header

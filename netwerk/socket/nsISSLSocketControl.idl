@@ -15,7 +15,7 @@ class nsCString;
 %}
 [ref] native nsCStringTArrayRef(nsTArray<nsCString>);
 
-[scriptable, builtinclass, uuid(c6acb521-df47-49aa-b9e8-51c4e984968a)]
+[scriptable, builtinclass, uuid(418265c8-654e-4fbb-ba62-4eed27de1f03)]
 interface nsISSLSocketControl : nsISupports {
     attribute nsIInterfaceRequestor     notificationCallbacks;
 
@@ -108,18 +108,10 @@ interface nsISSLSocketControl : nsISupports {
     attribute nsIX509Cert clientCert;
 
     /**
-     * If you wish to verify the host certificate using a different name than
-     * was used for the tcp connection, but without using proxy semantics, you
-     * can set authenticationName and authenticationPort
-     */
-    attribute ACString authenticationName;
-    [infallible] attribute long authenticationPort;
-
-    /**
-     * set bypassAuthentication to true if the server certificate checks should
+     * bypassAuthentication is true if the server certificate checks are
      * not be enforced. This is to enable non-secure transport over TLS.
      */
-    [infallible] attribute boolean bypassAuthentication;
+    [infallible] readonly attribute boolean bypassAuthentication;
 
     /*
      * failedVerification is true if any enforced certificate checks have failed.

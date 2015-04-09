@@ -317,12 +317,13 @@
 #define NS_SOCKETTRANSPORTSERVICE_CONTRACTID \
     "@mozilla.org/network/socket-transport-service;1"
 #define NS_SOCKETTRANSPORTSERVICE_CID                \
-{ /* c07e81e0-ef12-11d2-92b6-00105a1b0d64 */         \
-    0xc07e81e0,                                      \
-    0xef12,                                          \
-    0x11d2,                                          \
-    {0x92, 0xb6, 0x00, 0x10, 0x5a, 0x1b, 0x0d, 0x64} \
+{ /* ad56b25f-e6bb-4db3-9f7b-5b7db33fd2b1 */         \
+    0xad56b25f,                                      \
+    0xe6bb,                                          \
+    0x4db3,                                          \
+    {0x9f, 0x7b, 0x5b, 0x7d, 0xb3, 0x3f, 0xd2, 0xb1} \
 }
+
 
 // component implementing nsIServerSocket
 #define NS_SERVERSOCKET_CONTRACTID \

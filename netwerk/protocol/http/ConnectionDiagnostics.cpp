@@ -57,7 +57,7 @@ nsHttpConnectionMgr::PrintDiagnosticsCB(const nsACString &key,
   uint32_t i;
 
   self->mLogData.AppendPrintf(" ent host = %s hashkey = %s\n",
-                              ent->mConnInfo->Host(), ent->mConnInfo->HashKey().get());
+                              ent->mConnInfo->Origin(), ent->mConnInfo->HashKey().get());
   self->mLogData.AppendPrintf("   AtActiveConnectionLimit = %d\n",
                               self->AtActiveConnectionLimit(ent, NS_HTTP_ALLOW_KEEPALIVE));
   self->mLogData.AppendPrintf("   RestrictConnections = %d\n",

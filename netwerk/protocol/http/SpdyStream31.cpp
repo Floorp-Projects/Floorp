@@ -521,9 +521,9 @@ SpdyStream31::GenerateSynFrame()
       return NS_ERROR_UNEXPECTED;
     }
     nsAutoCString route;
-    route = ci->GetHost();
+    route = ci->GetOrigin();
     route.Append(':');
-    route.AppendInt(ci->Port());
+    route.AppendInt(ci->OriginPort());
     CompressToFrame(route);
   }
 

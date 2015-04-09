@@ -10,9 +10,9 @@
  * This is a private interface used by the internals of the networking library.
  * It will never be frozen.  Do not use it in external code.
  */
-[scriptable, uuid(bc5869e7-53a6-4195-8ab8-32e7116b87dd)]
+[scriptable, uuid(18f73bf1-b35b-4b7b-aa9a-11bcbdbc389c)]
 
-interface nsPISocketTransportService : nsISocketTransportService
+interface nsPISocketTransportService : nsIRoutedSocketTransportService
 {
   /**
    * init/shutdown routines.
