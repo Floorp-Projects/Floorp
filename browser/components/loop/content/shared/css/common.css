@@ -16,6 +16,7 @@ body {
   font: message-box;
   font-size: 12px;
   background: #fbfbfb;
+  overflow: hidden;
 }
 
 img {
@@ -406,4 +407,54 @@ p {
   height: 100px;
   background: transparent url(../img/firefox-logo.png) no-repeat center center;
   background-size: contain;
+}
+
+/* Dropdown menu */
+
+.dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background-color: #fdfdfd;
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  list-style: none;
+  padding: 5px;
+  border-radius: 2px;
+}
+
+body[dir=rtl] .dropdown-menu-item {
+  left: auto;
+  right: 10px;
+}
+
+.dropdown-menu-item {
+  text-align: start;
+  margin: .3em 0;
+  padding: .2em .5em;
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font-size: 1em;
+  white-space: nowrap;
+}
+
+.dropdown-menu-item:hover {
+  border: 1px solid #ccc;
+  background-color: #eee;
+}
+
+.dropdown-menu-item > .icon {
+  background-repeat: no-repeat;
+  display: inline-block;
+}
+
+.dropdown-menu-separator {
+  height: 1px;
+  margin: 2px -2px 1px -2px;
+  border-top: 1px solid #dedede;
+  background-color: #fff;
 }
