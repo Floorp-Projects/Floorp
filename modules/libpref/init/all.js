@@ -1162,11 +1162,6 @@ pref("network.warnOnAboutNetworking", true);
 // Example: make IMAP an exposed protocol
 // pref("network.protocol-handler.expose.imap", true);
 
-// Whether IOService.connectivity and NS_IsOffline depends on connectivity status
-pref("network.manage-offline-status", false);
-// If set to true, IOService.offline depends on IOService.connectivity
-pref("network.offline-mirrors-connectivity", true);
-
 // <http>
 pref("network.http.version", "1.1");      // default
 // pref("network.http.version", "1.0");   // uncomment this out in case of problems
