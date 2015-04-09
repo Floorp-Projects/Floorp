@@ -241,7 +241,11 @@
 
   <string name="pref_tab_queue_title">&pref_tab_queue_title;</string>
   <string name="pref_tab_queue_summary">&pref_tab_queue_summary;</string>
-
+  <string name="tab_queue_prompt_title">&tab_queue_prompt_title;</string>
+  <string name="tab_queue_prompt_text">&tab_queue_prompt_text;</string>
+  <string name="tab_queue_prompt_tip_text">&tab_queue_prompt_tip_text;</string>
+  <string name="tab_queue_prompt_positive_action_button">&tab_queue_prompt_positive_action_button;</string>
+  <string name="tab_queue_prompt_negative_action_button">&tab_queue_prompt_negative_action_button;</string>
   <string name="tab_queue_toast_message">&tab_queue_toast_message;</string>
   <string name="tab_queue_toast_action">&tab_queue_toast_action;</string>
   <string name="tab_queue_notification_text_singular">&tab_queue_notification_text_singular;</string>

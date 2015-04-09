@@ -70,6 +70,11 @@
   <color name="firstrun_tabstrip">#1193CB</color>
   <color name="firstrun_pager_background">#16A3DF</color>
 
+  <!-- Tab Queue -->
+  <color name="tab_queue_dismiss_button_foreground">#16A3DF</color>
+  <color name="tab_queue_dismiss_button_foreground_pressed">#1193CB</color>
+  <color name="tab_queue_background">#16A3DF</color>
+
   <!--
       Application theme colors
   -->

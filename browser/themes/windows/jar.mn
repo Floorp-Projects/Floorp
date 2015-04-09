@@ -107,8 +107,11 @@ browser.jar:
         skin/classic/browser/slowStartup-16.png
         skin/classic/browser/theme-switcher-icon.png                 (../shared/theme-switcher-icon.png)
         skin/classic/browser/Toolbar.png
+        skin/classic/browser/Toolbar@2x.png
         skin/classic/browser/Toolbar-aero.png
+        skin/classic/browser/Toolbar-aero@2x.png
         skin/classic/browser/Toolbar-inverted.png
+        skin/classic/browser/Toolbar-inverted@2x.png
         skin/classic/browser/Toolbar-lunaSilver.png
         skin/classic/browser/Toolbar-XP.png
         skin/classic/browser/toolbarbutton-dropdown-arrow.png
@@ -495,8 +498,11 @@ browser.jar:
         skin/classic/browser/syncProgress-horizontalbar-XPVista7.png
         skin/classic/browser/syncProgress-menuPanel.png
         skin/classic/browser/syncProgress-toolbar.png
+        skin/classic/browser/syncProgress-toolbar@2x.png
         skin/classic/browser/syncProgress-toolbar-inverted.png
+        skin/classic/browser/syncProgress-toolbar-inverted@2x.png
         skin/classic/browser/syncProgress-toolbar-XPVista7.png
+        skin/classic/browser/syncProgress-toolbar-XPVista7@2x.png
 #endif
         skin/classic/browser/devtools/tooltip/arrow-horizontal-dark.png   (../shared/devtools/tooltip/arrow-horizontal-dark.png)
         skin/classic/browser/devtools/tooltip/arrow-horizontal-dark@2x.png   (../shared/devtools/tooltip/arrow-horizontal-dark@2x.png)
@@ -557,6 +563,8 @@ browser.jar:
 
 % override chrome://browser/skin/sync-horizontalbar.png               chrome://browser/skin/sync-horizontalbar-XPVista7.png             os=WINNT osversion<=6.1
 % override chrome://browser/skin/syncProgress-horizontalbar.png       chrome://browser/skin/syncProgress-horizontalbar-XPVista7.png     os=WINNT osversion<=6.1
+% override chrome://browser/skin/syncProgress-toolbar.png             chrome://browser/skin/syncProgress-toolbar-XPVista7.png           os=WINNT osversion<=6.1
+% override chrome://browser/skin/syncProgress-toolbar@2x.png          chrome://browser/skin/syncProgress-toolbar-XPVista7@2x.png        os=WINNT osversion<=6.1
 % override chrome://browser/skin/toolbarbutton-dropdown-arrow.png     chrome://browser/skin/toolbarbutton-dropdown-arrow-XPVista7.png   os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab.png                chrome://browser/skin/tabbrowser/newtab-XPVista7.png              os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/tab-arrow-left.png        chrome://browser/skin/tabbrowser/tab-arrow-left-XPVista7.png      os=WINNT osversion<=6.1
@@ -565,6 +573,8 @@ browser.jar:
 % override chrome://browser/skin/menuPanel.png                        chrome://browser/skin/menuPanel-aero.png                          os=WINNT osversion=6.1
 % override chrome://browser/skin/menuPanel-small.png                  chrome://browser/skin/menuPanel-small-aero.png                    os=WINNT osversion=6
 % override chrome://browser/skin/menuPanel-small.png                  chrome://browser/skin/menuPanel-small-aero.png                    os=WINNT osversion=6.1
+% override chrome://browser/skin/Toolbar@2x.png                       chrome://browser/skin/Toolbar-aero@2x.png                         os=WINNT osversion=6
+% override chrome://browser/skin/Toolbar@2x.png                       chrome://browser/skin/Toolbar-aero@2x.png                         os=WINNT osversion=6.1
 % override chrome://browser/skin/loop/menuPanel.png                   chrome://browser/skin/loop/menuPanel-aero.png                     os=WINNT osversion=6
 % override chrome://browser/skin/loop/menuPanel.png                   chrome://browser/skin/loop/menuPanel-aero.png                     os=WINNT osversion=6.1
 

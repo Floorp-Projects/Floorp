@@ -9,6 +9,7 @@ import android.accounts.Account;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -38,6 +39,9 @@ public abstract class RemoteTabsBaseFragment extends HomeFragment implements Rem
     private static final String LOGTAG = "GeckoRemoteTabsBaseFragment";
 
     private static final String[] STAGES_TO_SYNC_ON_REFRESH = new String[] { "clients", "tabs" };
+
+    // Update the "Last synced:" timestamps this frequently.
+    private static final long LAST_SYNCED_TIME_UPDATE_INTERVAL_IN_MILLISECONDS = 60 * 1000; // Once a minute.
 
     // Cursor loader ID.
     protected static final int LOADER_ID_REMOTE_TABS = 0;
@@ -71,6 +75,12 @@ public abstract class RemoteTabsBaseFragment extends HomeFragment implements Rem
     // The footer view to display when there are hidden devices not shown.
     protected View mFooterView;
 
+    // Used to post update last synced time requests.  Should always execute on the main (UI) thread.
+    protected Handler mHandler;
+
+    // Runnable to update last synced time.
+    protected Runnable mLastSyncedTimeUpdateRunnable;
+
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -82,6 +92,9 @@ public abstract class RemoteTabsBaseFragment extends HomeFragment implements Rem
 
         mSyncStatusListener = new RemoteTabsSyncListener();
         FirefoxAccounts.addSyncStatusListener(mSyncStatusListener);
+
+        mHandler = new Handler(); // Attached to current (assumed to be UI) thread.
+        mLastSyncedTimeUpdateRunnable = new LastSyncTimeUpdateRunnable();
     }
 
     @Override
@@ -105,6 +118,12 @@ public abstract class RemoteTabsBaseFragment extends HomeFragment implements Rem
         if (mSyncStatusListener != null) {
             FirefoxAccounts.removeSyncStatusListener(mSyncStatusListener);
             mSyncStatusListener = null;
+        }
+
+        if (mLastSyncedTimeUpdateRunnable != null) {
+            mHandler.removeCallbacks(mLastSyncedTimeUpdateRunnable);
+            mLastSyncedTimeUpdateRunnable = null;
+            mHandler = null;
         }
     }
 
@@ -224,6 +243,7 @@ public abstract class RemoteTabsBaseFragment extends HomeFragment implements Rem
 
             mAdapter.replaceClients(clients);
             updateUiFromClients(clients, mHiddenClients);
+            scheduleLastSyncedTime();
         }
 
         @Override
@@ -277,5 +297,26 @@ public abstract class RemoteTabsBaseFragment extends HomeFragment implements Rem
             super(targetView, position, id);
             this.client = client;
         }
+    }
+
+    /**
+     * The Runnable that schedules a future update and updates the last synced time.
+     */
+    protected class LastSyncTimeUpdateRunnable implements Runnable  {
+        @Override
+        public void run() {
+            updateAndScheduleLastSyncedTime();
+        }
+    }
+
+    protected void scheduleLastSyncedTime() {
+        // Pushes back any existing schedule callback.
+        mHandler.postDelayed(mLastSyncedTimeUpdateRunnable, LAST_SYNCED_TIME_UPDATE_INTERVAL_IN_MILLISECONDS);
+    }
+
+    protected void updateAndScheduleLastSyncedTime() {
+        // This does not hit the database; it just makes consumers update their views.  Perfect!
+        mAdapter.notifyDataSetChanged();
+        scheduleLastSyncedTime();
     }
 }

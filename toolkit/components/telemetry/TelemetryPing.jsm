@@ -250,6 +250,15 @@ this.TelemetryPing = Object.freeze({
   },
 
   /**
+   * Send the persisted pings to the server.
+   *
+   * @return Promise A promise that is resolved when all pings finished sending or failed.
+   */
+  sendPersistedPings: function() {
+    return Impl.sendPersistedPings();
+  },
+
+  /**
    * The client id send with the telemetry ping.
    *
    * @return The client id as string, or null.
