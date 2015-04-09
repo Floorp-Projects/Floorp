@@ -45,7 +45,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
         );
       }
       return (
-        <a href={loop.config.brandWebsiteUrl} className="btn btn-info">
+        <a href={loop.config.downloadFirefoxUrl} className="btn btn-info">
           {mozL10n.get("rooms_room_full_call_to_action_nonFx_label", {
             brandShortname: mozL10n.get("brandShortname")
           })}
