@@ -178,5 +178,22 @@ function test() {
   is(frame7.getInfo().isContent, false,
     "The seventh frame node has the correct content flag.");
 
+  let frame8 = new FrameNode({
+    location: "chrome://browser/content/content.js",
+    line: 456,
+    column: 123
+  });
+
+  is(frame8.getInfo().hostName, null,
+    "The eighth frame node has the correct host name.");
+
+  let frame9 = new FrameNode({
+    location: "hello/<.world (resource://gre/foo.js:123:434)",
+    line: 456
+  });
+
+  is(frame9.getInfo().hostName, null,
+    "The ninth frame node has the correct host name.");
+
   finish();
 }
