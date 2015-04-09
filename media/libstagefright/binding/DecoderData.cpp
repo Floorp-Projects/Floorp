@@ -110,9 +110,9 @@ TrackConfig::Update(const MetaData* aMetaData, const char* aMimeType)
   duration = FindInt64(aMetaData, kKeyDuration);
   media_time = FindInt64(aMetaData, kKeyMediaTime);
   mTrackId = FindInt32(aMetaData, kKeyTrackID);
-  crypto.valid = aMetaData->findInt32(kKeyCryptoMode, &crypto.mode) &&
-    aMetaData->findInt32(kKeyCryptoDefaultIVSize, &crypto.iv_size) &&
-    FindData(aMetaData, kKeyCryptoKey, &crypto.key);
+  crypto.mValid = aMetaData->findInt32(kKeyCryptoMode, &crypto.mMode) &&
+    aMetaData->findInt32(kKeyCryptoDefaultIVSize, &crypto.mIVSize) &&
+    FindData(aMetaData, kKeyCryptoKey, &crypto.mKeyId);
 }
 
 void

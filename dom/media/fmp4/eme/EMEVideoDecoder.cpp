@@ -40,7 +40,7 @@ GMPUnique<GMPVideoEncodedFrame>::Ptr
 EMEVideoDecoder::CreateFrame(MediaRawData* aSample)
 {
   GMPUnique<GMPVideoEncodedFrame>::Ptr frame = GMPVideoDecoder::CreateFrame(aSample);
-  if (frame && aSample->mCrypto.valid) {
+  if (frame && aSample->mCrypto.mValid) {
     static_cast<gmp::GMPVideoEncodedFrameImpl*>(frame.get())->InitCrypto(aSample->mCrypto);
   }
   return frame;
