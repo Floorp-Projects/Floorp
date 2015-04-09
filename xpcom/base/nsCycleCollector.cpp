@@ -2120,7 +2120,7 @@ private:
   }
 
   NS_IMETHOD_(void) NoteChild(void* aChild, nsCycleCollectionParticipant* aCp,
-                              nsCString aEdgeName)
+                              nsCString& aEdgeName)
   {
     PtrInfo* childPi = AddNode(aChild, aCp);
     if (!childPi) {
