@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioDestinationNode.h"
-#include "AudioContext.h"
 #include "mozilla/dom/AudioDestinationNodeBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"
@@ -177,11 +176,9 @@ public:
 
     aNode->ResolvePromise(renderedBuffer);
 
-    nsRefPtr<OnCompleteTask> onCompleteTask =
+    nsRefPtr<OnCompleteTask> task =
       new OnCompleteTask(context, renderedBuffer);
-    NS_DispatchToMainThread(onCompleteTask);
-
-    context->OnStateChanged(nullptr, AudioContextState::Closed);
+    NS_DispatchToMainThread(task);
   }
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
@@ -369,10 +366,6 @@ AudioDestinationNode::AudioDestinationNode(AudioContext* aContext,
   mStream = graph->CreateAudioNodeStream(engine, MediaStreamGraph::EXTERNAL_STREAM);
   mStream->AddMainThreadListener(this);
   mStream->AddAudioOutput(&gWebAudioOutputKey);
-
-  if (!aIsOffline) {
-    graph->NotifyWhenGraphStarted(mStream->AsAudioNodeStream());
-  }
 
   if (aChannel != AudioChannel::Normal) {
     ErrorResult rv;

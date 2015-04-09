@@ -13057,8 +13057,7 @@ nsGlobalWindow::SuspendTimeouts(uint32_t aIncrease,
 
     // Suspend all of the AudioContexts for this window
     for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
-      ErrorResult dummy;
-      nsRefPtr<Promise> d = mAudioContexts[i]->Suspend(dummy);
+      mAudioContexts[i]->Suspend();
     }
   }
 
@@ -13118,8 +13117,7 @@ nsGlobalWindow::ResumeTimeouts(bool aThawChildren)
 
     // Resume all of the AudioContexts for this window
     for (uint32_t i = 0; i < mAudioContexts.Length(); ++i) {
-      ErrorResult dummy;
-      nsRefPtr<Promise> d = mAudioContexts[i]->Resume(dummy);
+      mAudioContexts[i]->Resume();
     }
 
     // Thaw all of the workers for this window.

@@ -13,7 +13,6 @@
 #include "AudioSegment.h"
 #include "SelfRef.h"
 #include "mozilla/Atomics.h"
-#include "AudioContext.h"
 
 struct cubeb_stream;
 
@@ -322,21 +321,6 @@ private:
   GraphTime mSlice;
 };
 
-struct StreamAndPromiseForOperation
-{
-  StreamAndPromiseForOperation(MediaStream* aStream,
-                               void* aPromise,
-                               dom::AudioContextOperation aOperation);
-  nsRefPtr<MediaStream> mStream;
-  void* mPromise;
-  dom::AudioContextOperation mOperation;
-};
-
-enum AsyncCubebOperation {
-  INIT,
-  SHUTDOWN
-};
-
 /**
  * This is a graph driver that is based on callback functions called by the
  * audio api. This ensures minimal audio latency, because it means there is no
@@ -408,12 +392,6 @@ public:
     return this;
   }
 
-  /* Enqueue a promise that is going to be resolved when a specific operation
-   * occurs on the cubeb stream. */
-  void EnqueueStreamAndPromiseForOperation(MediaStream* aStream,
-                                         void* aPromise,
-                                         dom::AudioContextOperation aOperation);
-
   bool IsSwitchingDevice() {
 #ifdef XP_MACOSX
     return mSelfReference;
@@ -436,8 +414,6 @@ public:
   /* Tell the driver whether this process is using a microphone or not. This is
    * thread safe. */
   void SetMicrophoneActive(bool aActive);
-
-  void CompleteAudioContextOperations(AsyncCubebOperation aOperation);
 private:
   /**
    * On certain MacBookPro, the microphone is located near the left speaker.
@@ -495,7 +471,6 @@ private:
   /* Thread for off-main-thread initialization and
    * shutdown of the audio stream. */
   nsCOMPtr<nsIThread> mInitShutdownThread;
-  nsAutoTArray<StreamAndPromiseForOperation, 1> mPromisesForOperation;
   dom::AudioChannel mAudioChannel;
   Atomic<bool> mInCallback;
   /* A thread has been created to be able to pause and restart the audio thread,
@@ -523,6 +498,12 @@ private:
 class AsyncCubebTask : public nsRunnable
 {
 public:
+  enum AsyncCubebOperation {
+    INIT,
+    SHUTDOWN,
+    SLEEP
+  };
+
 
   AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation aOperation);
 
