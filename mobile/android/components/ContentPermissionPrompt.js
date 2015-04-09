@@ -99,6 +99,16 @@ ContentPermissionPrompt.prototype = {
     let entityName = kEntities[perm.type];
 
     let buttons = [{
+      label: browserBundle.GetStringFromName(entityName + ".dontAllow"),
+      callback: function(aChecked) {
+        // If the user checked "Don't ask again", make a permanent exception
+        if (aChecked)
+          Services.perms.addFromPrincipal(request.principal, access, Ci.nsIPermissionManager.DENY_ACTION);
+
+        request.cancel();
+      }
+    },
+    {
       label: browserBundle.GetStringFromName(entityName + ".allow"),
       callback: function(aChecked) {
         // If the user checked "Don't ask again", make a permanent exception
@@ -110,16 +120,6 @@ ContentPermissionPrompt.prototype = {
         }
 
         request.allow();
-      }
-    },
-    {
-      label: browserBundle.GetStringFromName(entityName + ".dontAllow"),
-      callback: function(aChecked) {
-        // If the user checked "Don't ask again", make a permanent exception
-        if (aChecked)
-          Services.perms.addFromPrincipal(request.principal, access, Ci.nsIPermissionManager.DENY_ACTION);
-
-        request.cancel();
       }
     }];
 
