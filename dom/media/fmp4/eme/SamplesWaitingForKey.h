@@ -7,7 +7,6 @@
 #ifndef SamplesWaitingForKey_h_
 #define SamplesWaitingForKey_h_
 
-#include "mp4_demuxer/DecoderData.h"
 #include "MediaTaskQueue.h"
 #include "PlatformDecoderModule.h"
 
@@ -20,7 +19,6 @@ class CDMProxy;
 // Encapsulates the task of waiting for the CDMProxy to have the necessary
 // keys to decypt a given sample.
 class SamplesWaitingForKey {
-  typedef mp4_demuxer::MP4Sample MP4Sample;
 public:
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SamplesWaitingForKey)
@@ -33,7 +31,7 @@ public:
   // Will callback MediaDataDecoder::Input(aSample) on mDecoder once the
   // sample is ready to be decrypted. The order of input samples is
   // preserved.
-  bool WaitIfKeyNotUsable(MP4Sample* aSample);
+  bool WaitIfKeyNotUsable(MediaRawData* aSample);
 
   void NotifyUsable(const CencKeyId& aKeyId);
 
@@ -49,7 +47,7 @@ private:
   nsRefPtr<MediaDataDecoder> mDecoder;
   nsRefPtr<MediaTaskQueue> mTaskQueue;
   nsRefPtr<CDMProxy> mProxy;
-  nsTArray<nsAutoPtr<MP4Sample>> mSamples;
+  nsTArray<nsRefPtr<MediaRawData>> mSamples;
 };
 
 } // namespace mozilla

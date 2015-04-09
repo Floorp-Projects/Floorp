@@ -100,16 +100,5 @@ typedef int pid_t;
  */
 /* DONE defined in windef.h */
 
-/*
- * Define __BEGIN_DECLS and __END_DECLS
- */
-#ifdef __cplusplus
-#define __BEGIN_DECLS extern "C" {
-#define __END_DECLS   }
-#else
-#define __BEGIN_DECLS
-#define __END_DECLS
-#endif
-
 #endif // _CPR_WIN_TYPES_H_
 

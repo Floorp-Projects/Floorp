@@ -45,9 +45,9 @@
     macro(export, export, TOK_EXPORT, JSVERSION_DEFAULT) \
     macro(class, class_, TOK_CLASS, JSVERSION_DEFAULT) \
     macro(extends, extends, TOK_EXTENDS, JSVERSION_DEFAULT) \
+    macro(super, super, TOK_SUPER, JSVERSION_DEFAULT) \
     /* Reserved keywords. */ \
     macro(enum, enum_, TOK_RESERVED, JSVERSION_DEFAULT) \
-    macro(super, super, TOK_RESERVED, JSVERSION_DEFAULT) \
     /* Future reserved keywords, but only in strict mode. */ \
     macro(implements, implements, TOK_STRICT_RESERVED, JSVERSION_DEFAULT) \
     macro(interface, interface, TOK_STRICT_RESERVED, JSVERSION_DEFAULT) \

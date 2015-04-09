@@ -175,9 +175,7 @@ MOCHITEST = ("SimpleTest" in window);
 if (MOCHITEST) {
   SimpleTest.waitForExplicitFinish();
   window.addEventListener("load", function() {
-    SimpleTest.waitForFocus(function() {
-      SpecialPowers.pushPrefEnv({'set': [["dom.webcrypto.enabled", true]]}, start);
-    });
+    SimpleTest.waitForFocus(start);
   });
 }
 

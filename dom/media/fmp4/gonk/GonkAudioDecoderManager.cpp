@@ -19,6 +19,7 @@
 #include <stagefright/foundation/AMessage.h>
 #include <stagefright/foundation/ALooper.h>
 #include "media/openmax/OMX_Audio.h"
+#include "MediaData.h"
 
 #include <android/log.h>
 #define GADM_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "GonkAudioDecoderManager", __VA_ARGS__)
@@ -100,16 +101,16 @@ GonkAudioDecoderManager::Init(MediaDataDecoderCallback* aCallback)
 }
 
 status_t
-GonkAudioDecoderManager::SendSampleToOMX(mp4_demuxer::MP4Sample* aSample)
+GonkAudioDecoderManager::SendSampleToOMX(MediaRawData* aSample)
 {
-  return mDecoder->Input(reinterpret_cast<const uint8_t*>(aSample->data),
-                         aSample->size,
-                         aSample->composition_timestamp,
+  return mDecoder->Input(reinterpret_cast<const uint8_t*>(aSample->mData),
+                         aSample->mSize,
+                         aSample->mTime,
                          0);
 }
 
 bool
-GonkAudioDecoderManager::PerformFormatSpecificProcess(mp4_demuxer::MP4Sample* aSample)
+GonkAudioDecoderManager::PerformFormatSpecificProcess(MediaRawData* aSample)
 {
   if (aSample && mUseAdts) {
     int8_t frequency_index =

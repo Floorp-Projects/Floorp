@@ -83,6 +83,8 @@ protected:
   static uint32_t GetFitnessDistance(const webrtc::CaptureCapability& aCandidate,
                                      const dom::MediaTrackConstraintSet &aConstraints);
   static void TrimLessFitCandidates(CapabilitySet& set);
+  static void LogConstraints(const dom::MediaTrackConstraintSet& aConstraints,
+                             bool aAdvanced);
   virtual size_t NumCapabilities();
   virtual void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut);
   bool ChooseCapability(const dom::MediaTrackConstraints &aConstraints,

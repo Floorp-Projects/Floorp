@@ -1211,6 +1211,9 @@ public:
   }
 
   void
+  ClearMainEventQueue(WorkerRanOrNot aRanOrNot);
+
+  void
   OnProcessNextEvent(uint32_t aRecursionDepth);
 
   void
@@ -1251,9 +1254,6 @@ private:
                 const nsAString& aScriptURL, bool aIsChromeWorker,
                 WorkerType aWorkerType, const nsACString& aSharedWorkerName,
                 WorkerLoadInfo& aLoadInfo);
-
-  void
-  ClearMainEventQueue(WorkerRanOrNot aRanOrNot);
 
   bool
   MayContinueRunning()

@@ -7,8 +7,6 @@
 
 #include "cpr_types.h"
 
-__BEGIN_DECLS
-
 
 #include <string.h>
 
@@ -24,7 +22,5 @@ __BEGIN_DECLS
 #define cpr_strncasecmp strncasecmp
 
 #endif // _MSC_VER
-
-__END_DECLS
 
 #endif

@@ -7,7 +7,7 @@
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/ByteReader.h"
 #include "mp4_demuxer/ByteWriter.h"
-#include "mp4_demuxer/DecoderData.h"
+#include "MediaData.h"
 
 using namespace mozilla;
 
@@ -17,25 +17,25 @@ namespace mp4_demuxer
 static const uint8_t kAnnexBDelimiter[] = { 0, 0, 0, 1 };
 
 bool
-AnnexB::ConvertSampleToAnnexB(MP4Sample* aSample)
+AnnexB::ConvertSampleToAnnexB(mozilla::MediaRawData* aSample)
 {
   MOZ_ASSERT(aSample);
 
   if (!IsAVCC(aSample)) {
     return true;
   }
-  MOZ_ASSERT(aSample->data);
+  MOZ_ASSERT(aSample->mData);
 
   if (!ConvertSampleTo4BytesAVCC(aSample)) {
     return false;
   }
 
-  if (aSample->size < 4) {
+  if (aSample->mSize < 4) {
     // Nothing to do, it's corrupted anyway.
     return true;
   }
 
-  ByteReader reader(aSample->data, aSample->size);
+  ByteReader reader(aSample->mData, aSample->mSize);
 
   mozilla::Vector<uint8_t> tmp;
   ByteWriter writer(tmp);
@@ -51,15 +51,17 @@ AnnexB::ConvertSampleToAnnexB(MP4Sample* aSample)
     writer.Write(p, nalLen);
   }
 
-  if (!aSample->Replace(tmp.begin(), tmp.length())) {
+  nsAutoPtr<MediaRawDataWriter> samplewriter(aSample->CreateWriter());
+
+  if (!samplewriter->Replace(tmp.begin(), tmp.length())) {
     return false;
   }
 
   // Prepend the Annex B NAL with SPS and PPS tables to keyframes.
-  if (aSample->is_sync_point) {
-    nsRefPtr<ByteBuffer> annexB =
-      ConvertExtraDataToAnnexB(aSample->extra_data);
-    if (!aSample->Prepend(annexB->Elements(), annexB->Length())) {
+  if (aSample->mKeyframe) {
+    nsRefPtr<DataBuffer> annexB =
+      ConvertExtraDataToAnnexB(aSample->mExtraData);
+    if (!samplewriter->Prepend(annexB->Elements(), annexB->Length())) {
       return false;
     }
   }
@@ -67,8 +69,8 @@ AnnexB::ConvertSampleToAnnexB(MP4Sample* aSample)
   return true;
 }
 
-already_AddRefed<ByteBuffer>
-AnnexB::ConvertExtraDataToAnnexB(const ByteBuffer* aExtraData)
+already_AddRefed<mozilla::DataBuffer>
+AnnexB::ConvertExtraDataToAnnexB(const mozilla::DataBuffer* aExtraData)
 {
   // AVCC 6 byte header looks like:
   //     +------+------+------+------+------+------+------+------+
@@ -85,7 +87,7 @@ AnnexB::ConvertExtraDataToAnnexB(const ByteBuffer* aExtraData)
   // [5] | unused             | numSps                           |
   //     +------+------+------+------+------+------+------+------+
 
-  nsRefPtr<ByteBuffer> annexB = new ByteBuffer;
+  nsRefPtr<mozilla::DataBuffer> annexB = new mozilla::DataBuffer;
 
   ByteReader reader(*aExtraData);
   const uint8_t* ptr = reader.Read(5);
@@ -103,7 +105,7 @@ AnnexB::ConvertExtraDataToAnnexB(const ByteBuffer* aExtraData)
 
 void
 AnnexB::ConvertSPSOrPPS(ByteReader& aReader, uint8_t aCount,
-                        ByteBuffer* aAnnexB)
+                        mozilla::DataBuffer* aAnnexB)
 {
   for (int i = 0; i < aCount; i++) {
     uint16_t length = aReader.ReadU16();
@@ -212,7 +214,7 @@ ParseNALUnits(ByteWriter& aBw, ByteReader& aBr)
 }
 
 bool
-AnnexB::ConvertSampleToAVCC(MP4Sample* aSample)
+AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample)
 {
   if (IsAVCC(aSample)) {
     return ConvertSampleTo4BytesAVCC(aSample);
@@ -224,19 +226,20 @@ AnnexB::ConvertSampleToAVCC(MP4Sample* aSample)
 
   mozilla::Vector<uint8_t> nalu;
   ByteWriter writer(nalu);
-  ByteReader reader(aSample->data, aSample->size);
+  ByteReader reader(aSample->mData, aSample->mSize);
 
   ParseNALUnits(writer, reader);
-  return aSample->Replace(nalu.begin(), nalu.length());
+  nsAutoPtr<MediaRawDataWriter> samplewriter(aSample->CreateWriter());
+  return samplewriter->Replace(nalu.begin(), nalu.length());
 }
 
-already_AddRefed<ByteBuffer>
-AnnexB::ExtractExtraData(const MP4Sample* aSample)
+already_AddRefed<mozilla::DataBuffer>
+AnnexB::ExtractExtraData(const mozilla::MediaRawData* aSample)
 {
-  nsRefPtr<ByteBuffer> extradata = new ByteBuffer;
-  if (IsAVCC(aSample) && HasSPS(aSample->extra_data)) {
+  nsRefPtr<mozilla::DataBuffer> extradata = new mozilla::DataBuffer;
+  if (IsAVCC(aSample) && HasSPS(aSample->mExtraData)) {
     // We already have an explicit extradata, re-use it.
-    extradata = aSample->extra_data;
+    extradata = aSample->mExtraData;
     return extradata.forget();
   }
 
@@ -254,16 +257,15 @@ AnnexB::ExtractExtraData(const MP4Sample* aSample)
 
   int nalLenSize;
   if (IsAVCC(aSample)) {
-    nalLenSize = ((*aSample->extra_data)[4] & 3) + 1;
+    nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
   } else {
     // We do not have an extradata, assume it's AnnexB converted to AVCC via
     // ConvertSampleToAVCC.
     nalLenSize = 4;
   }
-  ByteReader reader(aSample->data, aSample->size);
+  ByteReader reader(aSample->mData, aSample->mSize);
 
   // Find SPS and PPS NALUs in AVCC data
-  uint8_t* d = aSample->data;
   while (reader.Remaining() > nalLenSize) {
     uint32_t nalLen;
     switch (nalLenSize) {
@@ -307,19 +309,19 @@ AnnexB::ExtractExtraData(const MP4Sample* aSample)
 }
 
 bool
-AnnexB::HasSPS(const MP4Sample* aSample)
+AnnexB::HasSPS(const mozilla::MediaRawData* aSample)
 {
-  return HasSPS(aSample->extra_data);
+  return HasSPS(aSample->mExtraData);
 }
 
 bool
-AnnexB::HasSPS(const ByteBuffer* aExtraData)
+AnnexB::HasSPS(const mozilla::DataBuffer* aExtraData)
 {
   if (!aExtraData) {
     return false;
   }
 
-  ByteReader reader(*aExtraData);
+  ByteReader reader(aExtraData);
   const uint8_t* ptr = reader.Read(5);
   if (!ptr || !reader.CanRead8()) {
     return false;
@@ -331,18 +333,18 @@ AnnexB::HasSPS(const ByteBuffer* aExtraData)
 }
 
 bool
-AnnexB::ConvertSampleTo4BytesAVCC(MP4Sample* aSample)
+AnnexB::ConvertSampleTo4BytesAVCC(mozilla::MediaRawData* aSample)
 {
   MOZ_ASSERT(IsAVCC(aSample));
 
-  int nalLenSize = ((*aSample->extra_data)[4] & 3) + 1;
+  int nalLenSize = ((*aSample->mExtraData)[4] & 3) + 1;
 
   if (nalLenSize == 4) {
     return true;
   }
   mozilla::Vector<uint8_t> dest;
   ByteWriter writer(dest);
-  ByteReader reader(aSample->data, aSample->size);
+  ByteReader reader(aSample->mData, aSample->mSize);
   while (reader.Remaining() > nalLenSize) {
     uint32_t nalLen;
     switch (nalLenSize) {
@@ -358,29 +360,30 @@ AnnexB::ConvertSampleTo4BytesAVCC(MP4Sample* aSample)
     writer.WriteU32(nalLen);
     writer.Write(p, nalLen);
   }
-  return aSample->Replace(dest.begin(), dest.length());
+  nsAutoPtr<MediaRawDataWriter> samplewriter(aSample->CreateWriter());
+  return samplewriter->Replace(dest.begin(), dest.length());
 }
 
 bool
-AnnexB::IsAVCC(const MP4Sample* aSample)
+AnnexB::IsAVCC(const mozilla::MediaRawData* aSample)
 {
-  return aSample->size >= 3 && aSample->extra_data &&
-    aSample->extra_data->Length() >= 7 && (*aSample->extra_data)[0] == 1;
+  return aSample->mSize >= 3 && aSample->mExtraData &&
+    aSample->mExtraData->Length() >= 7 && (*aSample->mExtraData)[0] == 1;
 }
 
 bool
-AnnexB::IsAnnexB(const MP4Sample* aSample)
+AnnexB::IsAnnexB(const mozilla::MediaRawData* aSample)
 {
-  if (aSample->size < 4) {
+  if (aSample->mSize < 4) {
     return false;
   }
-  uint32_t header = mozilla::BigEndian::readUint32(aSample->data);
+  uint32_t header = mozilla::BigEndian::readUint32(aSample->mData);
   return header == 0x00000001 || (header >> 8) == 0x000001;
 }
 
 bool
-AnnexB::CompareExtraData(const ByteBuffer* aExtraData1,
-                         const ByteBuffer* aExtraData2)
+AnnexB::CompareExtraData(const mozilla::DataBuffer* aExtraData1,
+                         const mozilla::DataBuffer* aExtraData2)
 {
   // Very crude comparison.
   return aExtraData1 == aExtraData2 || *aExtraData1 == *aExtraData2;

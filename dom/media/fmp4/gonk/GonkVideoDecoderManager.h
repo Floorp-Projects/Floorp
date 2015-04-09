@@ -58,7 +58,7 @@ public:
   static void RecycleCallback(TextureClient* aClient, void* aClosure);
 
 protected:
-  virtual android::status_t SendSampleToOMX(mp4_demuxer::MP4Sample* aSample) override;
+  virtual android::status_t SendSampleToOMX(MediaRawData* aSample) override;
 
 private:
   struct FrameInfo

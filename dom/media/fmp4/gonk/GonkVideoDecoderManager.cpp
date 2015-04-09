@@ -438,17 +438,17 @@ void GonkVideoDecoderManager::ReleaseVideoBuffer() {
 }
 
 status_t
-GonkVideoDecoderManager::SendSampleToOMX(mp4_demuxer::MP4Sample* aSample)
+GonkVideoDecoderManager::SendSampleToOMX(MediaRawData* aSample)
 {
-  // An empty MP4Sample is going to notify EOS to decoder. It doesn't need
+  // An empty MediaRawData is going to notify EOS to decoder. It doesn't need
   // to keep PTS and duration.
-  if (aSample->data && aSample->duration && aSample->composition_timestamp) {
-    QueueFrameTimeIn(aSample->composition_timestamp, aSample->duration);
+  if (aSample->mData && aSample->mDuration && aSample->mTime) {
+    QueueFrameTimeIn(aSample->mTime, aSample->mDuration);
   }
 
-  return mDecoder->Input(reinterpret_cast<const uint8_t*>(aSample->data),
-                         aSample->size,
-                         aSample->composition_timestamp,
+  return mDecoder->Input(reinterpret_cast<const uint8_t*>(aSample->mData),
+                         aSample->mSize,
+                         aSample->mTime,
                          0);
 }
 

@@ -43,23 +43,23 @@ TEST(MP4Demuxer, Seek)
 
   EXPECT_TRUE(d->Init());
 
-  nsTArray<nsAutoPtr<MP4Sample>> samples;
-  MP4Sample* sample;
+  nsTArray<nsRefPtr<MediaRawData>> samples;
+  nsRefPtr<MediaRawData> sample;
   while (!!(sample = d->DemuxVideoSample())) {
     samples.AppendElement(sample);
     if (samples.Length() >= 2) {
-      EXPECT_LT(samples[samples.Length() - 2]->decode_timestamp,
-                samples[samples.Length() - 1]->decode_timestamp);
+      EXPECT_LT(samples[samples.Length() - 2]->mTimecode,
+                samples[samples.Length() - 1]->mTimecode);
     }
   }
   Microseconds keyFrame = 0;
   for (size_t i = 0; i < samples.Length(); i++) {
-    if (samples[i]->is_sync_point) {
-      keyFrame = samples[i]->decode_timestamp;
+    if (samples[i]->mKeyframe) {
+      keyFrame = samples[i]->mTimecode;
     }
-    d->SeekVideo(samples[i]->composition_timestamp);
+    d->SeekVideo(samples[i]->mTime);
     sample = d->DemuxVideoSample();
-    EXPECT_EQ(keyFrame, sample->decode_timestamp);
+    EXPECT_EQ(keyFrame, sample->mTimecode);
   }
 }
 
@@ -67,19 +67,19 @@ static nsCString
 ToCryptoString(CryptoSample& aCrypto)
 {
   nsCString res;
-  if (aCrypto.valid) {
-    res.AppendPrintf("%d %d ", aCrypto.mode, aCrypto.iv_size);
-    for (size_t i = 0; i < aCrypto.key.Length(); i++) {
-      res.AppendPrintf("%02x", aCrypto.key[i]);
+  if (aCrypto.mValid) {
+    res.AppendPrintf("%d %d ", aCrypto.mMode, aCrypto.mIVSize);
+    for (size_t i = 0; i < aCrypto.mKeyId.Length(); i++) {
+      res.AppendPrintf("%02x", aCrypto.mKeyId[i]);
     }
     res.Append(" ");
-    for (size_t i = 0; i < aCrypto.iv.Length(); i++) {
-      res.AppendPrintf("%02x", aCrypto.iv[i]);
+    for (size_t i = 0; i < aCrypto.mIV.Length(); i++) {
+      res.AppendPrintf("%02x", aCrypto.mIV[i]);
     }
-    EXPECT_EQ(aCrypto.plain_sizes.Length(), aCrypto.encrypted_sizes.Length());
-    for (size_t i = 0; i < aCrypto.plain_sizes.Length(); i++) {
-      res.AppendPrintf(" %d,%d", aCrypto.plain_sizes[i],
-                       aCrypto.encrypted_sizes[i]);
+    EXPECT_EQ(aCrypto.mPlainSizes.Length(), aCrypto.mEncryptedSizes.Length());
+    for (size_t i = 0; i < aCrypto.mPlainSizes.Length(); i++) {
+      res.AppendPrintf(" %d,%d", aCrypto.mPlainSizes[i],
+                       aCrypto.mEncryptedSizes[i]);
     }
   } else {
     res.Append("no crypto");
@@ -158,10 +158,10 @@ TEST(MP4Demuxer, CENCFrag)
     "1 16 7e571d037e571d037e571d037e571d03 000000000000000000000000000019cd 5,2392",
   };
 
-  MP4Sample* sample;
+  nsRefPtr<MediaRawData> sample;
   size_t i = 0;
   while (!!(sample = d->DemuxVideoSample())) {
-    nsCString text = ToCryptoString(sample->crypto);
+    nsCString text = ToCryptoString(sample->mCrypto);
     EXPECT_STREQ(video[i++], text.get());
   }
   EXPECT_EQ(ArrayLength(video), i);
@@ -265,7 +265,7 @@ TEST(MP4Demuxer, CENCFrag)
 
   i = 0;
   while (!!(sample = d->DemuxAudioSample())) {
-    nsCString text = ToCryptoString(sample->crypto);
+    nsCString text = ToCryptoString(sample->mCrypto);
     EXPECT_STREQ(audio[i++], text.get());
   }
   EXPECT_EQ(ArrayLength(audio), i);
@@ -292,11 +292,11 @@ TEST(MP4Demuxer, GetNextKeyframe)
   // gizmp-frag has two keyframes; one at dts=cts=0, and another at
   // dts=cts=1000000. Verify we get expected results.
 
-  MP4Sample* sample;
+  nsRefPtr<MediaRawData> sample;
   size_t i = 0;
   const int64_t keyframe = 1000000;
   while (!!(sample = d->DemuxVideoSample())) {
-    int64_t expected = (sample->decode_timestamp < keyframe) ? keyframe : -1;
+    int64_t expected = (sample->mTimecode < keyframe) ? keyframe : -1;
     EXPECT_EQ(d->GetNextKeyframeTime(), expected);
     i++;
   }
