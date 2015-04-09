@@ -76,42 +76,6 @@ function registerPingHandler(handler) {
 				   wrapWithExceptionHandler(handler));
 }
 
-function decodeRequestPayload(request) {
-  let s = request.bodyInputStream;
-  let payload = null;
-  let decoder = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON)
-
-  if (request.getHeader("content-encoding") == "gzip") {
-    let observer = {
-      buffer: "",
-      onStreamComplete: function(loader, context, status, length, result) {
-        this.buffer = String.fromCharCode.apply(this, result);
-      }
-    };
-
-    let scs = Cc["@mozilla.org/streamConverters;1"]
-              .getService(Ci.nsIStreamConverterService);
-    let listener = Cc["@mozilla.org/network/stream-loader;1"]
-                  .createInstance(Ci.nsIStreamLoader);
-    listener.init(observer);
-    let converter = scs.asyncConvertData("gzip", "uncompressed",
-                                         listener, null);
-    converter.onStartRequest(null, null);
-    converter.onDataAvailable(null, null, s, 0, s.available());
-    converter.onStopRequest(null, null, null);
-    let unicodeConverter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
-    unicodeConverter.charset = "UTF-8";
-    let utf8string = unicodeConverter.ConvertToUnicode(observer.buffer);
-    utf8string += unicodeConverter.Finish();
-    payload = decoder.decode(utf8string);
-  } else {
-    payload = decoder.decodeFromStream(s, s.available());
-  }
-
-  return payload;
-}
-
 function checkPingFormat(aPing, aType, aHasClientId, aHasEnvironment) {
   const MANDATORY_PING_FIELDS = [
     "type", "id", "creationDate", "version", "application", "payload"
