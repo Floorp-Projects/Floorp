@@ -14,29 +14,30 @@
 <script type="application/javascript">
 /** Test for Bug 823283 **/
 
-function createTest(prop, typeStr, valCode)
+function createTest(prop, typeStr, valCode, replaceable)
 {
+  var newType = replaceable ? typeof(valCode) : typeStr;
   var code =
     'is(typeof ' + prop + ', "' + typeStr + '", "' + prop + ': bad unqualified before-state");\n' +
     'is(typeof window.' + prop + ', "' + typeStr + '", "' + prop + ': bad qualified before-state");\n' +
     '\n' +
     prop + ' = ' + valCode + ';\n' +
     '\n' +
-    'is(typeof ' + prop + ', "' + typeStr + '", "' + prop + ': bad unqualified after-state");\n' +
-    'is(typeof window.' + prop + ', "' + typeStr + '", "' + prop + ': bad qualified after-state");';
+    'is(typeof ' + prop + ', "' + newType + '", "' + prop + ': bad unqualified after-state");\n' +
+    'is(typeof window.' + prop + ', "' + newType + '", "' + prop + ': bad qualified after-state");';
 
   return Function(code);
 }
 
 [
-  ["innerHeight", "number", '"123"'],
-  ["innerWidth", "number", '"456"'],
-  ["outerHeight", "number", '"654"'],
-  ["outerWidth", "number", '"321"'],
-  ["screenX", "number", '"17"'],
-  ["screenY", "number", '"42"'],
-  ["status", "string", '{}'],
-  ["name", "string", '{}'],
+  ["innerHeight", "number", '"123"', true],
+  ["innerWidth", "number", '"456"', true],
+  ["outerHeight", "number", '"654"', true],
+  ["outerWidth", "number", '"321"', true],
+  ["screenX", "number", '"17"', true],
+  ["screenY", "number", '"42"', true],
+  ["status", "string", '{}', false],
+  ["name", "string", '{}', false],
 ].forEach(function(args)
 {
   createTest.apply(null, args)();
