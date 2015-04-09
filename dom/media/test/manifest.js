@@ -652,9 +652,9 @@ var gEMETests = [
       {
         name:"video",
         type:"video/mp4; codecs=\"avc1.64000d\"",
-        fragments:[ "bipbop-cenc-videoinit.mp4",
-                    "bipbop-cenc-video1.m4s",
-                    "bipbop-cenc-video2.m4s",
+        fragments:[ { file:"bipbop-cenc-videoinit.mp4", size:1058, bsd16:63578 },
+                    { file:"bipbop-cenc-video1.m4s", size:25211, bsd16:39494 },
+                    { file:"bipbop-cenc-video2.m4s", size:22934, bsd16:24908 },
                   ]
       }
     ],
@@ -673,9 +673,9 @@ var gEMETests = [
       {
         name:"video",
         type:"video/mp4; codecs=\"avc1.64000d\"",
-        fragments:[ "bipbop-cenc-videoinit.mp4",
-                    "bipbop-cenc-video1.m4s",
-                    "bipbop-cenc-video2.m4s",
+        fragments:[ { file:"bipbop-cenc-videoinit.mp4", size:1058, bsd16:63578 },
+                    { file:"bipbop-cenc-video1.m4s", size:25211, bsd16:39494 },
+                    { file:"bipbop-cenc-video2.m4s", size:22934, bsd16:24908 },
                   ]
       }
     ],
@@ -695,19 +695,19 @@ var gEMETests = [
       {
         name:"audio",
         type:"audio/mp4; codecs=\"mp4a.40.2\"",
-        fragments:[ "bipbop-cenc-audioinit.mp4",
-                    "bipbop-cenc-audio1.m4s",
-                    "bipbop-cenc-audio2.m4s",
-                    "bipbop-cenc-audio3.m4s",
+        fragments:[ { file:"bipbop-cenc-audioinit.mp4", size:1000, bsd16:50248 },
+                    { file:"bipbop-cenc-audio1.m4s", size:921, bsd16:21737 },
+                    { file:"bipbop-cenc-audio2.m4s", size:565, bsd16:14663 },
+                    { file:"bipbop-cenc-audio3.m4s", size:977, bsd16:38572 },
                   ],
       },
       {
         name:"video",
         type:"video/mp4; codecs=\"avc1.64000d\"",
-        fragments:[ "bipbop-cenc-videoinit.mp4",
-                    "bipbop-cenc-video1.m4s",
-                    "bipbop-cenc-video2.m4s",
-                  ],
+        fragments:[ { file:"bipbop-cenc-videoinit.mp4", size:1058, bsd16:63578 },
+                    { file:"bipbop-cenc-video1.m4s", size:25211, bsd16:39494 },
+                    { file:"bipbop-cenc-video2.m4s", size:22934, bsd16:24908 },
+                  ]
       },
     ],
     keys: {
@@ -725,19 +725,19 @@ var gEMETests = [
       {
         name:"audio",
         type:"audio/mp4; codecs=\"mp4a.40.2\"",
-        fragments:[ "bipbop-cenc-audioinit.mp4",
-                    "bipbop-cenc-audio1.m4s",
-                    "bipbop-cenc-audio2.m4s",
-                    "bipbop-cenc-audio3.m4s",
+        fragments:[ { file:"bipbop-cenc-audioinit.mp4", size:1000, bsd16:50248 },
+                    { file:"bipbop-cenc-audio1.m4s", size:921, bsd16:21737 },
+                    { file:"bipbop-cenc-audio2.m4s", size:565, bsd16:14663 },
+                    { file:"bipbop-cenc-audio3.m4s", size:977, bsd16:38572 },
                   ],
       },
       {
         name:"video",
         type:"video/mp4; codecs=\"avc1.64000d\"",
-        fragments:[ "bipbop-cenc-videoinit.mp4",
-                    "bipbop-cenc-video1.m4s",
-                    "bipbop-cenc-video2.m4s",
-                  ],
+        fragments:[ { file:"bipbop-cenc-videoinit.mp4", size:1058, bsd16:63578 },
+                    { file:"bipbop-cenc-video1.m4s", size:25211, bsd16:39494 },
+                    { file:"bipbop-cenc-video2.m4s", size:22934, bsd16:24908 },
+                  ]
       },
     ],
     keys: {
