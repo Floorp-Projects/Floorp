@@ -127,9 +127,6 @@ private:
     bool                                 mOfflineForProfileChange;
     bool                                 mManageLinkStatus;
     bool                                 mConnectivity;
-    // If true, the connectivity state will be mirrored by IOService.offline
-    // meaning if !mConnectivity, GetOffline() will return true
-    bool                                 mOfflineMirrorsConnectivity;
 
     // Used to handle SetOffline() reentrancy.  See the comment in
     // SetOffline() for more details.
