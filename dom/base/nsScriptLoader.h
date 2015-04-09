@@ -97,7 +97,7 @@ public:
   bool mIsInline;         // Is the script inline or loaded?
   bool mHasSourceMapURL;  // Does the HTTP header have a source map url?
   bool mIsDefer;          // True if we live in mDeferRequests.
-  bool mIsAsync;          // True if we live in mAsyncRequests.
+  bool mIsAsync;          // True if we live in mLoadingAsyncRequests or mLoadedAsyncRequests.
   bool mIsNonAsyncScriptInserted; // True if we live in mNonAsyncExternalScriptInsertedRequests
   bool mIsXSLT;           // True if we live in mXSLTRequests.
   nsString mSourceMapURL; // Holds source map url for loaded scripts
@@ -455,7 +455,10 @@ private:
   nsIDocument* mDocument;                   // [WEAK]
   nsCOMArray<nsIScriptLoaderObserver> mObservers;
   nsScriptLoadRequestList mNonAsyncExternalScriptInsertedRequests;
-  nsScriptLoadRequestList mAsyncRequests;
+  // mLoadingAsyncRequests holds async requests while they're loading; when they
+  // have been loaded they are moved to mLoadedAsyncRequests.
+  nsScriptLoadRequestList mLoadingAsyncRequests;
+  nsScriptLoadRequestList mLoadedAsyncRequests;
   nsScriptLoadRequestList mDeferRequests;
   nsScriptLoadRequestList mXSLTRequests;
   nsRefPtr<nsScriptLoadRequest> mParserBlockingRequest;
