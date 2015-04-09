@@ -683,6 +683,9 @@ class MacroAssemblerX86Shared : public Assembler
     void convertInt32ToDouble(const Address& src, FloatRegister dest) {
         convertInt32ToDouble(Operand(src), dest);
     }
+    void convertInt32ToDouble(const BaseIndex& src, FloatRegister dest) {
+        convertInt32ToDouble(Operand(src), dest);
+    }
     void convertInt32ToDouble(const Operand& src, FloatRegister dest) {
         // Clear the output register first to break dependencies; see above;
         zeroDouble(dest);
