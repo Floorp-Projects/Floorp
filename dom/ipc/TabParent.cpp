@@ -1222,7 +1222,7 @@ TabParent::SendRealDragEvent(WidgetDragEvent& event, uint32_t aDragAction,
 
 CSSPoint TabParent::AdjustTapToChildWidget(const CSSPoint& aPoint)
 {
-  return aPoint + (LayoutDevicePoint(mChildProcessOffsetAtTouchStart) * GetLayoutDeviceToCSSScale());
+  return aPoint + (LayoutDevicePoint(GetChildProcessOffset()) * GetLayoutDeviceToCSSScale());
 }
 
 bool TabParent::SendHandleSingleTap(const CSSPoint& aPoint, const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid)
@@ -1388,9 +1388,6 @@ bool TabParent::SendRealTouchEvent(WidgetTouchEvent& event)
 {
   if (mIsDestroyed) {
     return false;
-  }
-  if (event.message == NS_TOUCH_START) {
-    mChildProcessOffsetAtTouchStart = GetChildProcessOffset();
   }
 
   // PresShell::HandleEventInternal adds touches on touch end/cancel.  This
