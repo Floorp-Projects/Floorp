@@ -55,6 +55,13 @@ public:
     pc(peerConnection) {
   }
 
+  AFakePCObserver() :
+    state(stateNoResponse), addIceSuccessCount(0),
+    onAddStreamCalled(false),
+    name(""),
+    pc(nullptr) {
+  }
+
   virtual ~AFakePCObserver() {}
 
   std::vector<mozilla::DOMMediaStream *> GetStreams() { return streams; }
