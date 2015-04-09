@@ -167,7 +167,8 @@ loop.panel = (function(_, mozL10n) {
             <span>{availabilityText}</span>
             <i className={availabilityStatus}></i>
           </p>
-          <ul className={availabilityDropdown}>
+          <ul className={availabilityDropdown}
+              onMouseLeave={this.hideDropdownMenu}>
             <li onClick={this.changeAvailability("available")}
                 className="dropdown-menu-item dnd-make-available">
               <i className="status status-available"></i>
@@ -346,7 +347,8 @@ loop.panel = (function(_, mozL10n) {
         <div className="settings-menu dropdown">
           <a className="button-settings" onClick={this.showDropdownMenu}
              title={mozL10n.get("settings_menu_button_tooltip")} />
-          <ul className={cx({"dropdown-menu": true, hide: !this.state.showMenu})}>
+          <ul className={cx({"dropdown-menu": true, hide: !this.state.showMenu})}
+              onMouseLeave={this.hideDropdownMenu}>
             <SettingsDropdownEntry label={mozL10n.get("settings_menu_item_settings")}
                                    onClick={this.handleClickSettingsEntry}
                                    displayed={false}

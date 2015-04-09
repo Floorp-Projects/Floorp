@@ -98,78 +98,43 @@ loop.shared.mixins = (function() {
       this.setState({showMenu: false});
     },
 
-    _correctMenuPosition: function() {
-      var menu = this.refs.menu && this.refs.menu.getDOMNode();
+    componentDidMount: function() {
+      this.documentBody.addEventListener("click", this._onBodyClick);
+      this.documentBody.addEventListener("blur", this.hideDropdownMenu);
+
+      var menu = this.refs.menu;
       if (!menu) {
         return;
       }
 
-      // Correct the position of the menu only if necessary.
-      var x, y;
-      var menuNodeRect = menu.getBoundingClientRect();
-      var x = menuNodeRect.left;
-      var y = menuNodeRect.top;
-      // Amount of pixels that the dropdown needs to stay away from the edges of
-      // the page body.
-      var bodyMargin = 10;
+      // Correct the position of the menu if necessary.
+      var menuNode = menu.getDOMNode();
+      var menuNodeRect = menuNode.getBoundingClientRect();
       var bodyRect = {
-        height: this.documentBody.offsetHeight - bodyMargin,
-        width: this.documentBody.offsetWidth - bodyMargin
+        height: this.documentBody.offsetHeight,
+        width: this.documentBody.offsetWidth
       };
 
-      // If there's an anchor present, position it relative to it first.
-      var anchor = this.refs.anchor && this.refs.anchor.getDOMNode();
-      if (anchor) {
-        // XXXmikedeboer: at the moment we only support positioning centered above
-        //                anchor node. Please add more modes as necessary.
-        var anchorNodeRect = anchor.getBoundingClientRect();
-        // Because we're _correcting_ the position of the dropdown, we assume that
-        // the node is positioned absolute at 0,0 coordinates (top left).
-        x = anchorNodeRect.left - (menuNodeRect.width / 2) + (anchorNodeRect.width / 2);
-        y = anchorNodeRect.top - menuNodeRect.height - anchorNodeRect.height;
+      // First we check the vertical overflow.
+      var y = menuNodeRect.top + menuNodeRect.height;
+      if (y >= bodyRect.height) {
+        menuNode.style.marginTop = bodyRect.height - y + "px";
       }
 
-      var overflowX = false;
-      var overflowY = false;
-      // Check the horizontal overflow.
-      if (x + menuNodeRect.width > bodyRect.width) {
-        // Anchor positioning is already relative, so don't subtract it again.
-        x = bodyRect.width - ((anchor ? 0 : x) + menuNodeRect.width);
-        overflowX = true;
+      // Then we check the horizontal overflow.
+      var x = menuNodeRect.left + menuNodeRect.width;
+      if (x >= bodyRect.width) {
+        menuNode.style.marginLeft = bodyRect.width - x + "px";
       }
-      // Check the vertical overflow.
-      if (y + menuNodeRect.height > bodyRect.height) {
-        // Anchor positioning is already relative, so don't subtract it again.
-        y = bodyRect.height - ((anchor ? 0 : y) + menuNodeRect.height);
-        overflowY = true;
-      }
-
-      if (anchor || overflowX) {
-        menu.style.marginLeft = x + "px";
-      } else if (!menu.style.marginLeft) {
-        menu.style.marginLeft = "auto";
-      }
-
-      if (anchor || overflowY) {
-        menu.style.marginTop =  y + "px";
-      } else if (!menu.style.marginLeft) {
-        menu.style.marginTop = "auto";
-      }
-    },
-
-    componentDidMount: function() {
-      this.documentBody.addEventListener("click", this._onBodyClick);
-      rootObject.addEventListener("blur", this.hideDropdownMenu);
     },
 
     componentWillUnmount: function() {
       this.documentBody.removeEventListener("click", this._onBodyClick);
-      rootObject.removeEventListener("blur", this.hideDropdownMenu);
+      this.documentBody.removeEventListener("blur", this.hideDropdownMenu);
     },
 
     showDropdownMenu: function() {
       this.setState({showMenu: true});
-      rootObject.setTimeout(this._correctMenuPosition, 0);
     },
 
     hideDropdownMenu: function() {
@@ -177,7 +142,7 @@ loop.shared.mixins = (function() {
     },
 
     toggleDropdownMenu: function() {
-      this[this.state.showMenu ? "hideDropdownMenu" : "showDropdownMenu"]();
+      this.setState({showMenu: !this.state.showMenu});
     },
   };
 
