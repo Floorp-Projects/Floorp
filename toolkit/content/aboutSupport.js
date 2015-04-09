@@ -256,6 +256,7 @@ let snapshotFormatters = {
                    return $.new("tr", [$.new("th", val.header, "column"),
                                        $.new("td", val.message)]);
                  }));
+        delete data.indices;
       } else {
         $.append($("graphics-failures-tbody"),
           [$.new("tr", [$.new("th", "LogFailure", "column"),
@@ -264,7 +265,7 @@ let snapshotFormatters = {
                        }))])]);
       }
 
-	delete data.failures;
+      delete data.failures;
     }
 
     // graphics-tbody tbody
