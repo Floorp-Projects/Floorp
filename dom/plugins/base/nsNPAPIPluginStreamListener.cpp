@@ -332,6 +332,8 @@ nsNPAPIPluginStreamListener::OnStartBinding(nsPluginStreamListenerPeer* streamPe
   if (error != NPERR_NO_ERROR)
     return NS_ERROR_FAILURE;
 
+  mStreamState = eNewStreamCalled;
+
   if (streamType == nsPluginStreamListenerPeer::STREAM_TYPE_UNKNOWN) {
     SuspendRequest();
   }
