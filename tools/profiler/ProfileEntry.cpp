@@ -11,6 +11,7 @@
 
 // JS
 #include "jsapi.h"
+#include "jsfriendapi.h"
 #include "js/ProfilingFrameIterator.h"
 #include "js/TrackedOptimizationInfo.h"
 
@@ -369,12 +370,18 @@ void UniqueJITOptimizations::stream(JSStreamWriter& b, JSRuntime* rt)
 
     b.Name("attempts");
     b.BeginArray();
-    JSScript *script;
-    jsbytecode *pc;
+    JSScript* script;
+    jsbytecode* pc;
     StreamOptimizationAttemptsOp attemptOp(b);
     JS::ForEachTrackedOptimizationAttempt(rt, mOpts[i].mEntryAddr, mOpts[i].mIndex,
                                           attemptOp, &script, &pc);
     b.EndArray();
+
+    if (JSAtom* name = js::GetPropertyNameFromPC(script, pc)) {
+      char buf[512];
+      JS_PutEscapedFlatString(buf, mozilla::ArrayLength(buf), js::AtomToFlatString(name), 0);
+      b.NameValue("propertyName", buf);
+    }
 
     unsigned line, column;
     line = JS_PCToLineNumber(script, pc, &column);

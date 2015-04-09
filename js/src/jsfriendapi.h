@@ -186,6 +186,9 @@ AddRawValueRoot(JSContext* cx, JS::Value* vp, const char* name);
 JS_FRIEND_API(void)
 RemoveRawValueRoot(JSContext* cx, JS::Value* vp);
 
+JS_FRIEND_API(JSAtom*)
+GetPropertyNameFromPC(JSScript* script, jsbytecode* pc);
+
 #ifdef JS_DEBUG
 
 /*
@@ -869,6 +872,12 @@ MOZ_ALWAYS_INLINE JSLinearString*
 AtomToLinearString(JSAtom* atom)
 {
     return reinterpret_cast<JSLinearString*>(atom);
+}
+
+MOZ_ALWAYS_INLINE JSFlatString*
+AtomToFlatString(JSAtom* atom)
+{
+    return reinterpret_cast<JSFlatString*>(atom);
 }
 
 MOZ_ALWAYS_INLINE JSLinearString*

@@ -1253,3 +1253,11 @@ js::ForwardToNative(JSContext* cx, JSNative native, const CallArgs& args)
 {
     return native(cx, args.length(), args.base());
 }
+
+JS_FRIEND_API(JSAtom*)
+js::GetPropertyNameFromPC(JSScript* script, jsbytecode* pc)
+{
+    if (!IsGetPropPC(pc) && !IsSetPropPC(pc))
+        return nullptr;
+    return script->getName(pc);
+}
