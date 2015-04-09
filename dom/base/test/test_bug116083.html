@@ -32,6 +32,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=116083
 </div>
 <script type="application/javascript">
 
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+
+function hasExpectedFlavors() {
+  var flavors = [
+    "text/plain",
+    "text/html",
+    "application/x-moz-nativehtml",
+  ];
+  var cb = Cc["@mozilla.org/widget/clipboard;1"].
+           getService(Ci.nsIClipboard);
+  return cb.hasDataMatchingFlavors(flavors, flavors.length,
+                                   cb.kGlobalClipboard);
+}
+
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function nextTest() {
   var div = document.querySelector("#content>div");
@@ -47,6 +62,7 @@ SimpleTest.waitForFocus(function nextTest() {
     synthesizeKey("C", {accelKey: true});
   }, function() {
     ok(true, div.getAttribute("style") + " passed");
+    ok(hasExpectedFlavors(), "The clipboard has the expected flavors");
     div.parentNode.removeChild(div);
     nextTest();
   }, function() {
