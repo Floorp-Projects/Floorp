@@ -307,6 +307,22 @@ function LoadTest(test, elem, token)
   });
 }
 
+// Same as LoadTest, but manage a token+"_load" start&finished.
+// Also finish main token if loading fails.
+function LoadTestWithManagedLoadToken(test, elem, manager, token)
+{
+  manager.started(token + "_load");
+  return LoadTest(test, elem, token)
+  .catch(function (reason) {
+    ok(false, TimeStamp(token) + " - Error during load: " + reason);
+    manager.finished(token + "_load");
+    manager.finished(token);
+  })
+  .then(function () {
+    manager.finished(token + "_load");
+  });
+}
+
 function SetupEME(test, token, params)
 {
   var v = document.createElement("video");

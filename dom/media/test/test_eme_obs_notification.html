@@ -39,7 +39,6 @@ function startTest(test, token)
 {
   manager.started(token);
 
-
   var sessions = [];
 
   var v = SetupEME(test, token);
@@ -52,7 +51,7 @@ function startTest(test, token)
     manager.finished(token);
   });
 
-  LoadTest(test, v, token);
+  LoadTestWithManagedLoadToken(test, v, manager, token);
 }
 
 function beginTest() {
