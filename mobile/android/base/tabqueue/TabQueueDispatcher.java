@@ -7,6 +7,7 @@ package org.mozilla.gecko.tabqueue;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.preferences.GeckoPreferences;
@@ -29,6 +30,8 @@ public class TabQueueDispatcher extends Locales.LocaleAwareActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        GeckoAppShell.ensureCrashHandling();
 
         Intent intent = getIntent();
 
