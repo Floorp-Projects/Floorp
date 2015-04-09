@@ -32,7 +32,9 @@ FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   , mDisplayHeight(aConfig.display_height)
 {
   MOZ_COUNT_CTOR(FFmpegH264Decoder);
-  mExtraData = aConfig.extra_data;
+  // Use a new DataBuffer as the object will be modified during initialization.
+  mExtraData = new DataBuffer;
+  mExtraData->AppendElements(*aConfig.extra_data);
 }
 
 nsresult

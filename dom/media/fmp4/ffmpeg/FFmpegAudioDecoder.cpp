@@ -22,7 +22,9 @@ FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(
   , mCallback(aCallback)
 {
   MOZ_COUNT_CTOR(FFmpegAudioDecoder);
-  mExtraData = aConfig.audio_specific_config;
+  // Use a new DataBuffer as the object will be modified during initialization.
+  mExtraData = new DataBuffer;
+  mExtraData->AppendElements(*aConfig.audio_specific_config);
 }
 
 nsresult
