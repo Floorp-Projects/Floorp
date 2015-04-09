@@ -42,7 +42,7 @@ var unforgeableAttributes = [
   "top"
 ];
 
-var replacableAttributes = [
+var replaceableAttributes = [
   "self",
   "locationbar",
   "menubar",
@@ -51,7 +51,16 @@ var replacableAttributes = [
   "statusbar",
   "toolbar",
   "frames",
-  "length"
+  "parent",
+  "external",
+  "length",
+
+  // CSSOM-View
+  "screen",
+  "scrollX",
+  "scrollY",
+  "pageXOffset",
+  "pageYOffset",
 ];
 
 var methods = [
@@ -98,10 +107,8 @@ if ("showModalDialog" in window) {
 
 var readonlyAttributes = [
   "history",
-  "parent",
   "frameElement",
   "navigator",
-  "external",
   "applicationCache",
 
   // WindowSessionStorage
@@ -111,13 +118,8 @@ var readonlyAttributes = [
   "localStorage",
 
   // CSSOM-View
-  "screen",
   "innerWidth",
   "innerHeight",
-  "scrollX",
-  "pageXOffset",
-  "scrollY",
-  "pageYOffset",
   "screenX",
   "screenY",
   "outerWidth",
@@ -259,8 +261,7 @@ test(function() {
       assert_equals(window[id], EventTargetProto[id]);
       assert_data_propdesc(Object.getOwnPropertyDescriptor(EventTargetProto, id),
                            true, true, true);
-      assert_data_propdesc(Object.getOwnPropertyDescriptor(window, id),
-                           true, true, true);
+      assert_equals(Object.getOwnPropertyDescriptor(window, id), undefined);
     }, "EventTarget method: " + id);
   });
 }, "EventTarget interface");
@@ -303,7 +304,7 @@ test(function() {
                                id === "location", true, false);
     }, "Window unforgeable attribute: " + id);
   });
-  replacableAttributes.forEach(function(id) {
+  replaceableAttributes.forEach(function(id) {
     test(function() {
       var WindowProto = Window.prototype;
       assert_true(id in window, id + " in window");

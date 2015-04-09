@@ -4541,18 +4541,7 @@ nsGlobalWindow::SetOpener(JSContext* aCx, JS::Handle<JS::Value> aOpener,
   // get reset on navigation.  This is just like replaceable properties, but
   // we're not quite readonly.
   if (!aOpener.isNull() && !nsContentUtils::IsCallerChrome()) {
-    JS::Rooted<JSObject*> thisObj(aCx, GetWrapperPreserveColor());
-    if (!thisObj) {
-      aError.Throw(NS_ERROR_UNEXPECTED);
-      return;
-    }
-
-    if (!JS_WrapObject(aCx, &thisObj) ||
-        !JS_DefineProperty(aCx, thisObj, "opener", aOpener, JSPROP_ENUMERATE,
-                           JS_STUBGETTER, JS_STUBSETTER)) {
-      aError.Throw(NS_ERROR_FAILURE);
-    }
-
+    RedefineProperty(aCx, "opener", aOpener, aError);
     return;
   }
 
@@ -13974,18 +13963,9 @@ nsGlobalWindow::GetConsole(JSContext* aCx,
 NS_IMETHODIMP
 nsGlobalWindow::SetConsole(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
-  JS::Rooted<JSObject*> thisObj(aCx, GetWrapper());
-  if (!thisObj) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  if (!JS_WrapObject(aCx, &thisObj) ||
-      !JS_DefineProperty(aCx, thisObj, "console", aValue, JSPROP_ENUMERATE,
-                         JS_STUBGETTER, JS_STUBSETTER)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  ErrorResult rv;
+  RedefineProperty(aCx, "console", aValue, rv);
+  return rv.ErrorCode();
 }
 
 Console*
@@ -14144,6 +14124,24 @@ nsGlobalWindow::DisableNetworkEvent(uint32_t aType)
   }
 }
 #endif // MOZ_B2G
+
+void
+nsGlobalWindow::RedefineProperty(JSContext* aCx, const char* aPropName,
+                                 JS::Handle<JS::Value> aValue,
+                                 ErrorResult& aError)
+{
+  JS::Rooted<JSObject*> thisObj(aCx, GetWrapperPreserveColor());
+  if (!thisObj) {
+    aError.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  if (!JS_WrapObject(aCx, &thisObj) ||
+      !JS_DefineProperty(aCx, thisObj, aPropName, aValue, JSPROP_ENUMERATE,
+                         JS_STUBGETTER, JS_STUBSETTER)) {
+    aError.Throw(NS_ERROR_FAILURE);
+  }
+}
 
 #ifdef _WINDOWS_
 #error "Never include windows.h in this file!"
