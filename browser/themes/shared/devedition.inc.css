@@ -218,7 +218,7 @@ toolbar[brighttext] #downloads-indicator-counter {
 :root[devtoolstheme="dark"] .browserContainer > findbar .findbar-textbox {
   background-color: var(--url-and-searchbar-background-color) !important;
   background-image: none !important;
-  color: var(--url-and-searchbar-color);
+  color: var(--url-and-searchbar-color) !important;
   border: none !important;
   box-shadow: none !important;
 }
