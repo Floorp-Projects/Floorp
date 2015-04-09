@@ -44,7 +44,6 @@ LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/battery',
     '/dom/bluetooth',
-    '/dom/bluetooth/bluetooth1',
     '/dom/camera',
     '/dom/canvas',
     '/dom/geolocation',
@@ -88,6 +87,15 @@ include('/ipc/chromium/chromium-config.mozbuild')
 if CONFIG['MOZ_AUDIO_CHANNEL_MANAGER']:
     LOCAL_INCLUDES += [
         '/dom/system/gonk',
+    ]
+
+if CONFIG['MOZ_B2G_BT_API_V2']:
+    LOCAL_INCLUDES += [
+        '/dom/bluetooth/bluetooth2',
+    ]
+else:
+    LOCAL_INCLUDES += [
+        '/dom/bluetooth/bluetooth1',
     ]
 
 FINAL_LIBRARY = 'xul'
