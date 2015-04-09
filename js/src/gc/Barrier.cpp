@@ -67,53 +67,10 @@ CurrentThreadIsIonCompiling()
     return TlsPerThreadData.get()->ionCompiling;
 }
 
-static bool
-GCIsSweepingOnMainThread(JSRuntime* rt, Zone* zone)
+bool
+CurrentThreadIsGCSweeping()
 {
-    return rt->isHeapMajorCollecting() && rt->gc.state() == SWEEP &&
-        (zone->isGCSweeping() || rt->isAtomsZone(zone));
-}
-
-static bool
-GCIsSweepingOnBackgroundThread(JSRuntime* rt, Zone* zone)
-{
-    return rt->gc.isBackgroundSweeping() &&
-        (zone->isGCBackgroundSweeping() || rt->isAtomsZone(zone));
-}
-
-static bool
-ThingMayHaveDifferentRuntime(TenuredCell* cell)
-{
-    // Some GC things may be associated with another runtime.
-    AllocKind kind = cell->getAllocKind();
-    if (kind == AllocKind::STRING)
-        return static_cast<const JSString*>(cell)->isPermanentAtom();
-    else if (kind == AllocKind::SYMBOL)
-        return static_cast<const JS::Symbol*>(cell)->isWellKnownSymbol();
-
-    return false;
-}
-
-void
-CheckGCIsSweepingZone(gc::Cell* cell)
-{
-    MOZ_ASSERT(!IsInsideNursery(cell));
-    TenuredCell* tenured = &cell->asTenured();
-    if (ThingMayHaveDifferentRuntime(tenured))
-        return;
-
-    Zone* zone = tenured->zoneFromAnyThread();
-    JSRuntime* rt = zone->runtimeFromAnyThread();
-    if (CurrentThreadCanAccessRuntime(rt)) {
-        // We're on the main thread.
-        MOZ_ASSERT(GCIsSweepingOnMainThread(rt, zone));
-    } else {
-        // We're not on the main thread, so we're either on a helper thread run
-        // while the GC is active on the main thread or we are background
-        // sweeping.
-        MOZ_ASSERT(GCIsSweepingOnMainThread(rt, zone) ||
-                   GCIsSweepingOnBackgroundThread(rt, zone));
-    }
+    return js::TlsPerThreadData.get()->gcSweeping;
 }
 
 #endif // DEBUG
