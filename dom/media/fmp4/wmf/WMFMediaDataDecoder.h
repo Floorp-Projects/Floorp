@@ -13,10 +13,6 @@
 #include "MFTDecoder.h"
 #include "mozilla/RefPtr.h"
 
-namespace mp4_demuxer {
-class MP4Sample;
-}
-
 namespace mozilla {
 
 // Encapsulates the initialization of the MFTDecoder appropriate for decoding
@@ -33,7 +29,7 @@ public:
   // Submit a compressed sample for decoding.
   // This should forward to the MFTDecoder after performing
   // any required sample formatting.
-  virtual HRESULT Input(mp4_demuxer::MP4Sample* aSample) = 0;
+  virtual HRESULT Input(MediaRawData* aSample) = 0;
 
   // Produces decoded output, if possible. Blocks until output can be produced,
   // or until no more is able to be produced.
@@ -65,7 +61,7 @@ public:
 
   virtual nsresult Init() override;
 
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample);
+  virtual nsresult Input(MediaRawData* aSample);
 
   virtual nsresult Flush() override;
 
@@ -83,7 +79,7 @@ private:
 
   // Called on the task queue. Inserts the sample into the decoder, and
   // extracts output if available.
-  void ProcessDecode(mp4_demuxer::MP4Sample* aSample);
+  void ProcessDecode(MediaRawData* aSample);
 
   // Called on the task queue. Extracts output if available, and delivers
   // it to the reader. Called after ProcessDecode() and ProcessDrain().

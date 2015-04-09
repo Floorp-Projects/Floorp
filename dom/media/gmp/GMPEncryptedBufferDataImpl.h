@@ -7,11 +7,12 @@
 #define GMPEncryptedBufferDataImpl_h_
 
 #include "gmp-decryption.h"
-#include "mp4_demuxer/DecoderData.h"
 #include "nsTArray.h"
 #include "mozilla/gmp/GMPTypes.h"
 
 namespace mozilla {
+class CryptoSample;
+
 namespace gmp {
 
 class GMPStringListImpl : public GMPStringList
@@ -29,8 +30,6 @@ private:
 };
 
 class GMPEncryptedBufferDataImpl : public GMPEncryptedBufferMetadata {
-private:
-  typedef mp4_demuxer::CryptoSample CryptoSample;
 public:
   explicit GMPEncryptedBufferDataImpl(const CryptoSample& aCrypto);
   explicit GMPEncryptedBufferDataImpl(const GMPDecryptionData& aData);

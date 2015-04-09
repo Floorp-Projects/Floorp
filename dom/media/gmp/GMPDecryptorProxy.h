@@ -10,7 +10,7 @@
 #include "gmp-decryption.h"
 #include "nsString.h"
 
-namespace mp4_demuxer {
+namespace mozilla {
 class CryptoSample;
 }
 
@@ -86,7 +86,7 @@ public:
                                     const nsTArray<uint8_t>& aServerCert) = 0;
 
   virtual void Decrypt(uint32_t aId,
-                       const mp4_demuxer::CryptoSample& aCrypto,
+                       const mozilla::CryptoSample& aCrypto,
                        const nsTArray<uint8_t>& aBuffer) = 0;
 
   virtual void Close() = 0;
