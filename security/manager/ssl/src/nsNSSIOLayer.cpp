@@ -192,42 +192,10 @@ nsNSSSocketInfo::GetBypassAuthentication(bool* arg)
 }
 
 NS_IMETHODIMP
-nsNSSSocketInfo::SetBypassAuthentication(bool arg)
-{
-  mBypassAuthentication = arg;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsNSSSocketInfo::GetFailedVerification(bool* arg)
 {
   *arg = mFailedVerification;
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::GetAuthenticationName(nsACString& aAuthenticationName)
-{
-  aAuthenticationName = GetHostName();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::SetAuthenticationName(const nsACString& aAuthenticationName)
-{
-  return SetHostName(PromiseFlatCString(aAuthenticationName).get());
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::GetAuthenticationPort(int32_t* aAuthenticationPort)
-{
-  return GetPort(aAuthenticationPort);
-}
-
-NS_IMETHODIMP
-nsNSSSocketInfo::SetAuthenticationPort(int32_t aAuthenticationPort)
-{
-  return SetPort(aAuthenticationPort);
 }
 
 NS_IMETHODIMP
@@ -444,6 +412,12 @@ nsNSSSocketInfo::JoinConnection(const nsACString& npnProtocol,
   // Make sure NPN has been completed and matches requested npnProtocol
   if (!mNPNCompleted || !mNegotiatedNPN.Equals(npnProtocol))
     return NS_OK;
+
+  if (mBypassAuthentication) {
+    // An unauthenticated connection does not know whether or not it
+    // is acceptable for a particular hostname
+    return NS_OK;
+  }
 
   IsAcceptableForHost(hostname, _retval);
 
@@ -2497,6 +2471,11 @@ nsSSLIOLayerImportFD(PRFileDesc* fd,
                             (SSLGetClientAuthData) nsNSS_SSLGetClientAuthData,
                             infoObject);
   }
+  if (flags & nsISocketProvider::MITM_OK) {
+    PR_LOG(gPIPNSSLog, PR_LOG_DEBUG,
+           ("[%p] nsSSLIOLayerImportFD: bypass authentication flag\n", fd));
+    infoObject->SetBypassAuthentication(true);
+  }
   if (SECSuccess != SSL_AuthCertificateHook(sslSock, AuthCertificateHook,
                                             infoObject)) {
     NS_NOTREACHED("failed to configure AuthCertificateHook");
@@ -2585,6 +2564,9 @@ nsSSLIOLayerSetOptions(PRFileDesc* fd, bool forSTARTTLS,
   }
   if (flags & nsISocketProvider::NO_PERMANENT_STORAGE) {
     peerId.AppendLiteral("private:");
+  }
+  if (flags & nsISocketProvider::MITM_OK) {
+    peerId.AppendLiteral("bypassAuth:");
   }
   peerId.Append(host);
   peerId.Append(':');
