@@ -12,7 +12,7 @@
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="5fb8cf8d2cd889960d2060224ee52b9825516a40">
+  <project name="platform_build" path="build" remote="b2g" revision="52775e03a2d8532429dff579cb2cd56718e488c3">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="gaia" path="gaia" remote="mozillaorg" revision="7414321345bfbd5347bd9d291fd0d10374db671f"/>
@@ -122,7 +122,7 @@
   <project name="platform/libcore" path="libcore" revision="1a07f00d8163f497a785a3285ec55fe551ba95c1"/>
   <project name="platform/libnativehelper" path="libnativehelper" revision="4834b58ed7af3ee69523177e00e55603ac90ed50"/>
   <project name="platform/ndk" path="ndk" revision="869c05cab7b4315c2bc607493db3f5b18ead2580"/>
-  <project name="platform_prebuilts_misc" path="prebuilts/misc" remote="b2g" revision="f105a2d852c988fb1aa16a1e758ca7f93dd54fe9"/>
+  <project name="platform_prebuilts_misc" path="prebuilts/misc" remote="b2g" revision="da8b660db117e2a69a7624bfdca2f02cad397f2e"/>
   <project name="platform/prebuilts/ndk" path="prebuilts/ndk" revision="5fd638a4a0ff3677fc3c970fab038d6db1bb7665"/>
   <project name="platform_prebuilts_qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="2c0d193349c55337e37196a7f2d5cef37753ed3e"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="a982f43b7f2d5916dc3a859667a8ba78e50b6202"/>
@@ -134,19 +134,19 @@
   <project name="platform/system/netd" path="system/netd" revision="655392625db084a7122d65a15acf74db7f1da7f7"/>
   <project name="platform/system/security" path="system/security" revision="e6b3fdd892ad994ec3fd0b8959d630e31881801b"/>
   <project name="platform/system/vold" path="system/vold" revision="eb59d2afd5f6e1cbab2ef985a8dd1c7105b499e8"/>
-  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="e372b6a77f71c8f9fbbf6f8adbfa7bf8ef45dc60"/>
-  <project name="platform_frameworks_base" path="frameworks/base" remote="b2g" revision="04e26ebdc36ca83f4ee3e9e2082b3fcf04c5b971"/>
-  <project name="platform_frameworks_wilhelm" path="frameworks/wilhelm" remote="b2g" revision="0dbf5baafadf6d233c0a29e392fa3293f0121673"/>
-  <project name="platform_system_core" path="system/core" remote="b2g" revision="f594bc64eacac490857748b1139ffcb34c856bbd"/>
+  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="ea531874885eed7f68802048218ed86dde927f58"/>
+  <project name="platform_frameworks_base" path="frameworks/base" remote="b2g" revision="df7e0cfbbc7e954ed26c73ac17832a5ff035f046"/>
+  <project name="platform_frameworks_wilhelm" path="frameworks/wilhelm" remote="b2g" revision="73f7e7f12c8c5459f7a39e2fa343f083c942864d"/>
+  <project name="platform_system_core" path="system/core" remote="b2g" revision="4df51d9abf6cc9a6ec49b965e621699e0e6dc4fb"/>
   <default remote="caf" revision="refs/tags/android-5.0.0_r6" sync-j="4"/>
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="ba62cc8b78c30d36181b8060a2016cc8da166236"/>
-  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="48132ec0b0dfe9fc29c7c3f0e799066be8999198"/>
+  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="1b9f134d62536c5727575d1f0a5bd4eeb4747d66"/>
   <!-- external/qemu for emulator-l need to be updated in bug-1121378 -->
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="7639c5c496ffd207bb627f2a59b2c5203ae6fefc"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="16abda2258c9aa1ed78f00bb0a9b2b43b4cb919e"/>
   <project name="platform/development" path="development" revision="7ec1ce5e75f943a4a673aa12d8177d5cf2c0a4cf"/>
-  <project name="android-sdk" path="sdk" remote="b2g" revision="ff4190dc603f62a7caa48342aa268acf99863c5c"/>
+  <project name="android-sdk" path="sdk" remote="b2g" revision="94704df982a90d2ab74bd620d54155d148c415b2"/>
   <!-- hardware-ril for emulator-l need to be updated in bug-1113054 -->
   <project name="platform/hardware/ril" path="hardware/ril" revision="71dfa8228ad0d6cdf6bac0426ac59404ab74b7f3"/>
 </manifest>
