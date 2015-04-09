@@ -4608,7 +4608,7 @@ static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
     nsIContent *anc1 = aNode1;
     for (;;) {
       ++offset;
-      nsIContent* parent = anc1->GetParent();
+      nsIContent* parent = anc1->GetFlattenedTreeParent();
       if (!parent)
         break;
       anc1 = parent;
@@ -4616,7 +4616,7 @@ static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
     nsIContent *anc2 = aNode2;
     for (;;) {
       --offset;
-      nsIContent* parent = anc2->GetParent();
+      nsIContent* parent = anc2->GetFlattenedTreeParent();
       if (!parent)
         break;
       anc2 = parent;
@@ -4625,16 +4625,16 @@ static nsIContent* FindCommonAncestor(nsIContent *aNode1, nsIContent *aNode2)
       anc1 = aNode1;
       anc2 = aNode2;
       while (offset > 0) {
-        anc1 = anc1->GetParent();
+        anc1 = anc1->GetFlattenedTreeParent();
         --offset;
       }
       while (offset < 0) {
-        anc2 = anc2->GetParent();
+        anc2 = anc2->GetFlattenedTreeParent();
         ++offset;
       }
       while (anc1 != anc2) {
-        anc1 = anc1->GetParent();
-        anc2 = anc2->GetParent();
+        anc1 = anc1->GetFlattenedTreeParent();
+        anc2 = anc2->GetFlattenedTreeParent();
       }
       return anc1;
     }
@@ -4690,7 +4690,7 @@ EventStateManager::UpdateAncestorState(nsIContent* aStartNode,
                                        bool aAddState)
 {
   for (; aStartNode && aStartNode != aStopBefore;
-       aStartNode = aStartNode->GetParentElementCrossingShadowRoot()) {
+       aStartNode = aStartNode->GetFlattenedTreeParent()) {
     // We might be starting with a non-element (e.g. a text node) and
     // if someone is doing something weird might be ending with a
     // non-element too (e.g. a document fragment)
@@ -4718,7 +4718,7 @@ EventStateManager::UpdateAncestorState(nsIContent* aStartNode,
     // still be in hover state.  To handle this situation we need to
     // keep walking up the tree and any time we find a label mark its
     // corresponding node as still in our state.
-    for ( ; aStartNode; aStartNode = aStartNode->GetParentElementCrossingShadowRoot()) {
+    for ( ; aStartNode; aStartNode = aStartNode->GetFlattenedTreeParent()) {
       if (!aStartNode->IsElement()) {
         continue;
       }
