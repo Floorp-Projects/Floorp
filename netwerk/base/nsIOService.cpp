@@ -158,8 +158,7 @@ NS_IMPL_ISUPPORTS(nsAppOfflineInfo, nsIAppOfflineInfo)
 nsIOService::nsIOService()
     : mOffline(true)
     , mOfflineForProfileChange(false)
-    , mManageLinkStatus(false)
-    , mConnectivity(true)
+    , mManageOfflineStatus(false)
     , mSettingOffline(false)
     , mSetOfflineValue(false)
     , mShutdown(false)
@@ -285,10 +284,17 @@ nsIOService::InitializeNetworkLinkService()
     if (mNetworkLinkService) {
         mNetworkLinkServiceInitialized = true;
     }
+    else {
+        // We can't really determine if the machine has a usable network connection,
+        // so let's cross our fingers!
+        mManageOfflineStatus = false;
+    }
 
-    // After initializing the networkLinkService, query the connectivity state
-    OnNetworkLinkEvent(NS_NETWORK_LINK_DATA_UNKNOWN);
-
+    if (mManageOfflineStatus)
+        OnNetworkLinkEvent(NS_NETWORK_LINK_DATA_UNKNOWN);
+    else
+        SetOffline(false);
+    
     return rv;
 }
 
@@ -317,7 +323,6 @@ NS_IMPL_ISUPPORTS(nsIOService,
                   nsINetUtil,
                   nsISpeculativeConnect,
                   nsIObserver,
-                  nsIIOServiceInternal,
                   nsISupportsWeakReference)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -917,8 +922,7 @@ nsIOService::SetOffline(bool offline)
                 mProxyService->ReloadPAC();
 
             // don't care if notification fails
-            // Only send the ONLINE notification if there is connectivity
-            if (observerService && mConnectivity)
+            if (observerService)
                 observerService->NotifyObservers(subject,
                                                  NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
                                                  NS_LITERAL_STRING(NS_IOSERVICE_ONLINE).get());
@@ -944,72 +948,6 @@ nsIOService::SetOffline(bool offline)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsIOService::GetConnectivity(bool *aConnectivity)
-{
-    *aConnectivity = mConnectivity;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsIOService::SetConnectivity(bool aConnectivity)
-{
-    // This should only be called from ContentChild to pass the connectivity
-    // value from the chrome process to the content process.
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-    return SetConnectivityInternal(aConnectivity);
-}
-
-
-nsresult
-nsIOService::SetConnectivityInternal(bool aConnectivity)
-{
-    if (mConnectivity == aConnectivity) {
-        // Nothing to do here.
-        return NS_OK;
-    }
-    mConnectivity = aConnectivity;
-
-    nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-    if (!observerService) {
-        return NS_OK;
-    }
-    // This notification sends the connectivity to the child processes
-    if (XRE_GetProcessType() == GeckoProcessType_Default) {
-        observerService->NotifyObservers(nullptr,
-            NS_IPC_IOSERVICE_SET_CONNECTIVITY_TOPIC, aConnectivity ?
-            MOZ_UTF16("true") :
-            MOZ_UTF16("false"));
-    }
-
-    if (mOffline) {
-      // We don't need to send any notifications if we're offline
-      return NS_OK;
-    }
-
-    if (aConnectivity) {
-        // If we were previously offline due to connectivity=false,
-        // send the ONLINE notification
-        observerService->NotifyObservers(
-            static_cast<nsIIOService *>(this),
-            NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
-            NS_LITERAL_STRING(NS_IOSERVICE_ONLINE).get());
-    } else {
-        // If we were previously online and lost connectivity
-        // send the OFFLINE notification
-        const nsLiteralString offlineString(MOZ_UTF16(NS_IOSERVICE_OFFLINE));
-        observerService->NotifyObservers(static_cast<nsIIOService *>(this),
-                                         NS_IOSERVICE_GOING_OFFLINE_TOPIC,
-                                         offlineString.get());
-        observerService->NotifyObservers(static_cast<nsIIOService *>(this),
-                                         NS_IOSERVICE_OFFLINE_STATUS_TOPIC,
-                                         offlineString.get());
-    }
-    return NS_OK;
-}
 
 NS_IMETHODIMP
 nsIOService::AllowPort(int32_t inPort, const char *scheme, bool *_retval)
@@ -1238,8 +1176,11 @@ nsIOService::Observe(nsISupports *subject,
     } else if (!strcmp(topic, kProfileChangeNetRestoreTopic)) {
         if (mOfflineForProfileChange) {
             mOfflineForProfileChange = false;
-            SetOffline(false);
-        }
+            if (!mManageOfflineStatus ||
+                NS_FAILED(OnNetworkLinkEvent(NS_NETWORK_LINK_DATA_UNKNOWN))) {
+                SetOffline(false);
+            }
+        } 
     } else if (!strcmp(topic, kProfileDoChange)) { 
         if (data && NS_LITERAL_STRING("startup").Equals(data)) {
             // Lazy initialization of network link service (see bug 620472)
@@ -1247,10 +1188,6 @@ nsIOService::Observe(nsISupports *subject,
             // Set up the initilization flag regardless the actuall result.
             // If we fail here, we will fail always on.
             mNetworkLinkServiceInitialized = true;
-
-            // The browser starts off as offline. We go into online mode after this.
-            SetOffline(false);
-
             // And now reflect the preference setting
             nsCOMPtr<nsIPrefBranch> prefBranch;
             GetPrefBranch(getter_AddRefs(prefBranch));
@@ -1267,7 +1204,9 @@ nsIOService::Observe(nsISupports *subject,
         // Break circular reference.
         mProxyService = nullptr;
     } else if (!strcmp(topic, NS_NETWORK_LINK_TOPIC)) {
-        OnNetworkLinkEvent(NS_ConvertUTF16toUTF8(data).get());
+        if (!mOfflineForProfileChange && mManageOfflineStatus) {
+            OnNetworkLinkEvent(NS_ConvertUTF16toUTF8(data).get());
+        }
     } else if (!strcmp(topic, NS_WIDGET_WAKE_OBSERVER_TOPIC)) {
         // coming back alive from sleep
         nsCOMPtr<nsIObserverService> observerService =
@@ -1411,26 +1350,32 @@ nsIOService::NewSimpleNestedURI(nsIURI* aURI, nsIURI** aResult)
 NS_IMETHODIMP
 nsIOService::SetManageOfflineStatus(bool aManage)
 {
-    mManageLinkStatus = aManage;
+    nsresult rv = NS_OK;
 
-    // When detection is not activated, the default connectivity state is true.
-    if (!mManageLinkStatus) {
-        SetConnectivityInternal(true);
-        return NS_OK;
-    }
+    // SetManageOfflineStatus must throw when we fail to go from non-managed
+    // to managed.  Usually because there is no link monitoring service
+    // available.  Failure to do this switch is detected by a failure of
+    // OnNetworkLinkEvent().  When there is no network link available during
+    // call to InitializeNetworkLinkService(), application is put to offline
+    // mode.  And when we change mMangeOfflineStatus to false on the next line
+    // we get stuck on being offline even though the link becomes later
+    // available.
+    bool wasManaged = mManageOfflineStatus;
+    mManageOfflineStatus = aManage;
 
     InitializeNetworkLinkService();
-    // If the NetworkLinkService is already initialized, it does not call
-    // OnNetworkLinkEvent. This is needed, when mManageLinkStatus goes from
-    // false to true.
-    OnNetworkLinkEvent(NS_NETWORK_LINK_DATA_UNKNOWN);
-    return NS_OK;
+
+    if (mManageOfflineStatus && !wasManaged) {
+        rv = OnNetworkLinkEvent(NS_NETWORK_LINK_DATA_UNKNOWN);
+        if (NS_FAILED(rv))
+            mManageOfflineStatus = false;
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
-nsIOService::GetManageOfflineStatus(bool* aManage)
-{
-    *aManage = mManageLinkStatus;
+nsIOService::GetManageOfflineStatus(bool* aManage) {
+    *aManage = mManageOfflineStatus;
     return NS_OK;
 }
 
@@ -1444,7 +1389,7 @@ nsIOService::OnNetworkLinkEvent(const char *data)
     if (mShutdown)
         return NS_ERROR_NOT_AVAILABLE;
 
-    if (!mManageLinkStatus) {
+    if (!mManageOfflineStatus) {
       return NS_OK;
     }
 
@@ -1457,19 +1402,21 @@ nsIOService::OnNetworkLinkEvent(const char *data)
             // dial option is set to always autodial. If so, then we are
             // always up for the purposes of offline management.
             if (autodialEnabled) {
-                bool isUp = true;
 #if defined(XP_WIN)
                 // On Windows, we should first check with the OS to see if
                 // autodial is enabled.  If it is enabled then we are allowed
                 // to manage the offline state.
-                isUp = nsNativeConnectionHelper::IsAutodialEnabled();
+                if (nsNativeConnectionHelper::IsAutodialEnabled()) {
+                    return SetOffline(false);
+                }
+#else
+                return SetOffline(false);
 #endif
-                return SetConnectivityInternal(isUp);
             }
         }
     }
 
-    bool isUp = true;
+    bool isUp;
     if (!strcmp(data, NS_NETWORK_LINK_DATA_CHANGED)) {
         // CHANGED means UP/DOWN didn't change
         return NS_OK;
@@ -1485,7 +1432,7 @@ nsIOService::OnNetworkLinkEvent(const char *data)
         return NS_OK;
     }
 
-    return SetConnectivityInternal(isUp);
+    return SetOffline(!isUp);
 }
 
 NS_IMETHODIMP
