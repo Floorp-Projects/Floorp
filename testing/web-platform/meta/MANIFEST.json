@@ -710,6 +710,14 @@
         "url": "/html/semantics/forms/the-input-element/file-manual.html"
       },
       {
+        "path": "html/semantics/forms/the-textarea-element/textarea-select-event-manual.html",
+        "url": "/html/semantics/forms/the-textarea-element/textarea-select-event-manual.html"
+      },
+      {
+        "path": "html/semantics/forms/the-textarea-element/textarea-select-manual.html",
+        "url": "/html/semantics/forms/the-textarea-element/textarea-select-manual.html"
+      },
+      {
         "path": "html/semantics/grouping-content/the-li-element/grouping-li-novalue-manual.html",
         "url": "/html/semantics/grouping-content/the-li-element/grouping-li-novalue-manual.html"
       },
@@ -8408,10 +8416,6 @@
         "url": "/IndexedDB/idbdatabase_createObjectStore7.htm"
       },
       {
-        "path": "IndexedDB/idbdatabase_createObjectStore8-parameters.htm",
-        "url": "/IndexedDB/idbdatabase_createObjectStore8-parameters.htm"
-      },
-      {
         "path": "IndexedDB/idbdatabase_createObjectStore9-invalidparameters.htm",
         "url": "/IndexedDB/idbdatabase_createObjectStore9-invalidparameters.htm"
       },
@@ -9696,58 +9700,6 @@
         "url": "/XMLHttpRequest/xmlhttprequest-network-error.htm"
       },
       {
-        "path": "XMLHttpRequest/xmlhttprequest-timeout-aborted.html",
-        "url": "/XMLHttpRequest/xmlhttprequest-timeout-aborted.html"
-      },
-      {
-        "path": "XMLHttpRequest/xmlhttprequest-timeout-abortedonmain.html",
-        "url": "/XMLHttpRequest/xmlhttprequest-timeout-abortedonmain.html"
-      },
-      {
-        "path": "XMLHttpRequest/xmlhttprequest-timeout-overrides.html",
-        "url": "/XMLHttpRequest/xmlhttprequest-timeout-overrides.html"
-      },
-      {
-        "path": "XMLHttpRequest/xmlhttprequest-timeout-overridesexpires.html",
-        "url": "/XMLHttpRequest/xmlhttprequest-timeout-overridesexpires.html"
-      },
-      {
-        "path": "XMLHttpRequest/xmlhttprequest-timeout-simple.html",
-        "url": "/XMLHttpRequest/xmlhttprequest-timeout-simple.html"
-      },
-      {
-        "path": "XMLHttpRequest/xmlhttprequest-timeout-synconmain.html",
-        "url": "/XMLHttpRequest/xmlhttprequest-timeout-synconmain.html"
-      },
-      {
-        "path": "XMLHttpRequest/xmlhttprequest-timeout-twice.html",
-        "url": "/XMLHttpRequest/xmlhttprequest-timeout-twice.html"
-      },
-      {
-        "path": "XMLHttpRequest/xmlhttprequest-timeout-worker-aborted.html",
-        "url": "/XMLHttpRequest/xmlhttprequest-timeout-worker-aborted.html"
-      },
-      {
-        "path": "XMLHttpRequest/xmlhttprequest-timeout-worker-overrides.html",
-        "url": "/XMLHttpRequest/xmlhttprequest-timeout-worker-overrides.html"
-      },
-      {
-        "path": "XMLHttpRequest/xmlhttprequest-timeout-worker-overridesexpires.html",
-        "url": "/XMLHttpRequest/xmlhttprequest-timeout-worker-overridesexpires.html"
-      },
-      {
-        "path": "XMLHttpRequest/xmlhttprequest-timeout-worker-simple.html",
-        "url": "/XMLHttpRequest/xmlhttprequest-timeout-worker-simple.html"
-      },
-      {
-        "path": "XMLHttpRequest/xmlhttprequest-timeout-worker-synconworker.html",
-        "url": "/XMLHttpRequest/xmlhttprequest-timeout-worker-synconworker.html"
-      },
-      {
-        "path": "XMLHttpRequest/xmlhttprequest-timeout-worker-twice.html",
-        "url": "/XMLHttpRequest/xmlhttprequest-timeout-worker-twice.html"
-      },
-      {
         "path": "XMLHttpRequest/xmlhttprequest-unsent.htm",
         "url": "/XMLHttpRequest/xmlhttprequest-unsent.htm"
       },
@@ -10274,6 +10226,10 @@
       {
         "path": "dom/nodes/CharacterData-replaceData.html",
         "url": "/dom/nodes/CharacterData-replaceData.html"
+      },
+      {
+        "path": "dom/nodes/CharacterData-substringData.html",
+        "url": "/dom/nodes/CharacterData-substringData.html"
       },
       {
         "path": "dom/nodes/Comment-constructor.html",
@@ -11234,6 +11190,30 @@
       {
         "path": "ext-xhtml-pubid/the-xhtml-syntax/parsing-xhtml-documents/xhtml-pubid-1.html",
         "url": "/ext-xhtml-pubid/the-xhtml-syntax/parsing-xhtml-documents/xhtml-pubid-1.html"
+      },
+      {
+        "path": "fetch/nosniff/image.html",
+        "url": "/fetch/nosniff/image.html"
+      },
+      {
+        "path": "fetch/nosniff/importscripts.html",
+        "url": "/fetch/nosniff/importscripts.html"
+      },
+      {
+        "path": "fetch/nosniff/parsing-nosniff.html",
+        "url": "/fetch/nosniff/parsing-nosniff.html"
+      },
+      {
+        "path": "fetch/nosniff/script.html",
+        "url": "/fetch/nosniff/script.html"
+      },
+      {
+        "path": "fetch/nosniff/stylesheet.html",
+        "url": "/fetch/nosniff/stylesheet.html"
+      },
+      {
+        "path": "fetch/nosniff/worker.html",
+        "url": "/fetch/nosniff/worker.html"
       },
       {
         "path": "gamepad/idlharness.html",
@@ -16108,6 +16088,98 @@
         "url": "/selectors/attribute-selectors/attribute-case/syntax.html"
       },
       {
+        "path": "service-workers/cache-storage/common.https.html",
+        "url": "/service-workers/cache-storage/common.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/serviceworker/cache-add.https.html",
+        "url": "/service-workers/cache-storage/serviceworker/cache-add.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/serviceworker/cache-delete.https.html",
+        "url": "/service-workers/cache-storage/serviceworker/cache-delete.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/serviceworker/cache-match.https.html",
+        "url": "/service-workers/cache-storage/serviceworker/cache-match.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/serviceworker/cache-put.https.html",
+        "url": "/service-workers/cache-storage/serviceworker/cache-put.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/serviceworker/cache-storage-keys.https.html",
+        "url": "/service-workers/cache-storage/serviceworker/cache-storage-keys.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/serviceworker/cache-storage-match.https.html",
+        "url": "/service-workers/cache-storage/serviceworker/cache-storage-match.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/serviceworker/cache-storage.https.html",
+        "url": "/service-workers/cache-storage/serviceworker/cache-storage.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/window/cache-add.https.html",
+        "url": "/service-workers/cache-storage/window/cache-add.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/window/cache-delete.https.html",
+        "url": "/service-workers/cache-storage/window/cache-delete.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/window/cache-match.https.html",
+        "url": "/service-workers/cache-storage/window/cache-match.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/window/cache-put.https.html",
+        "url": "/service-workers/cache-storage/window/cache-put.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/window/cache-storage-keys.https.html",
+        "url": "/service-workers/cache-storage/window/cache-storage-keys.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/window/cache-storage-match.https.html",
+        "url": "/service-workers/cache-storage/window/cache-storage-match.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/window/cache-storage.https.html",
+        "url": "/service-workers/cache-storage/window/cache-storage.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/window/sandboxed-iframes.https.html",
+        "url": "/service-workers/cache-storage/window/sandboxed-iframes.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/worker/cache-add.https.html",
+        "url": "/service-workers/cache-storage/worker/cache-add.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/worker/cache-delete.https.html",
+        "url": "/service-workers/cache-storage/worker/cache-delete.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/worker/cache-match.https.html",
+        "url": "/service-workers/cache-storage/worker/cache-match.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/worker/cache-put.https.html",
+        "url": "/service-workers/cache-storage/worker/cache-put.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/worker/cache-storage-keys.https.html",
+        "url": "/service-workers/cache-storage/worker/cache-storage-keys.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/worker/cache-storage-match.https.html",
+        "url": "/service-workers/cache-storage/worker/cache-storage-match.https.html"
+      },
+      {
+        "path": "service-workers/cache-storage/worker/cache-storage.https.html",
+        "url": "/service-workers/cache-storage/worker/cache-storage.https.html"
+      },
+      {
         "path": "shadow-dom/elements-and-dom-objects/extensions-to-element-interface/attributes/test-001.html",
         "url": "/shadow-dom/elements-and-dom-objects/extensions-to-element-interface/attributes/test-001.html"
       },
@@ -18753,6 +18825,11 @@
         "url": "/IndexedDB/idbdatabase_createObjectStore10-1000ends.htm"
       },
       {
+        "path": "IndexedDB/idbdatabase_createObjectStore8-parameters.htm",
+        "timeout": "long",
+        "url": "/IndexedDB/idbdatabase_createObjectStore8-parameters.htm"
+      },
+      {
         "path": "IndexedDB/idbobjectstore_createIndex3-usable-right-away.htm",
         "timeout": "long",
         "url": "/IndexedDB/idbobjectstore_createIndex3-usable-right-away.htm"
@@ -18786,6 +18863,71 @@
         "path": "XMLHttpRequest/send-redirect-bogus.htm",
         "timeout": "long",
         "url": "/XMLHttpRequest/send-redirect-bogus.htm"
+      },
+      {
+        "path": "XMLHttpRequest/xmlhttprequest-timeout-aborted.html",
+        "timeout": "long",
+        "url": "/XMLHttpRequest/xmlhttprequest-timeout-aborted.html"
+      },
+      {
+        "path": "XMLHttpRequest/xmlhttprequest-timeout-abortedonmain.html",
+        "timeout": "long",
+        "url": "/XMLHttpRequest/xmlhttprequest-timeout-abortedonmain.html"
+      },
+      {
+        "path": "XMLHttpRequest/xmlhttprequest-timeout-overrides.html",
+        "timeout": "long",
+        "url": "/XMLHttpRequest/xmlhttprequest-timeout-overrides.html"
+      },
+      {
+        "path": "XMLHttpRequest/xmlhttprequest-timeout-overridesexpires.html",
+        "timeout": "long",
+        "url": "/XMLHttpRequest/xmlhttprequest-timeout-overridesexpires.html"
+      },
+      {
+        "path": "XMLHttpRequest/xmlhttprequest-timeout-simple.html",
+        "timeout": "long",
+        "url": "/XMLHttpRequest/xmlhttprequest-timeout-simple.html"
+      },
+      {
+        "path": "XMLHttpRequest/xmlhttprequest-timeout-synconmain.html",
+        "timeout": "long",
+        "url": "/XMLHttpRequest/xmlhttprequest-timeout-synconmain.html"
+      },
+      {
+        "path": "XMLHttpRequest/xmlhttprequest-timeout-twice.html",
+        "timeout": "long",
+        "url": "/XMLHttpRequest/xmlhttprequest-timeout-twice.html"
+      },
+      {
+        "path": "XMLHttpRequest/xmlhttprequest-timeout-worker-aborted.html",
+        "timeout": "long",
+        "url": "/XMLHttpRequest/xmlhttprequest-timeout-worker-aborted.html"
+      },
+      {
+        "path": "XMLHttpRequest/xmlhttprequest-timeout-worker-overrides.html",
+        "timeout": "long",
+        "url": "/XMLHttpRequest/xmlhttprequest-timeout-worker-overrides.html"
+      },
+      {
+        "path": "XMLHttpRequest/xmlhttprequest-timeout-worker-overridesexpires.html",
+        "timeout": "long",
+        "url": "/XMLHttpRequest/xmlhttprequest-timeout-worker-overridesexpires.html"
+      },
+      {
+        "path": "XMLHttpRequest/xmlhttprequest-timeout-worker-simple.html",
+        "timeout": "long",
+        "url": "/XMLHttpRequest/xmlhttprequest-timeout-worker-simple.html"
+      },
+      {
+        "path": "XMLHttpRequest/xmlhttprequest-timeout-worker-synconworker.html",
+        "timeout": "long",
+        "url": "/XMLHttpRequest/xmlhttprequest-timeout-worker-synconworker.html"
+      },
+      {
+        "path": "XMLHttpRequest/xmlhttprequest-timeout-worker-twice.html",
+        "timeout": "long",
+        "url": "/XMLHttpRequest/xmlhttprequest-timeout-worker-twice.html"
       },
       {
         "path": "ambient-light/AmbientLight_tests.html",
@@ -24573,7 +24715,7 @@
       }
     ]
   },
-  "rev": "1bb38c25b4720fbfd8ca086ef9275ac3e465c659",
+  "rev": "7311aa630534282885b9add15b1c30b2b59316dd",
   "url_base": "/",
   "version": 2
 }
