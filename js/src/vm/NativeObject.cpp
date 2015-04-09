@@ -1156,39 +1156,6 @@ PurgeScopeChain(ExclusiveContext* cx, HandleObject obj, HandleId id)
     return true;
 }
 
-/*
- * Check whether we're redefining away a non-configurable getter, and
- * throw if so.
- */
-static inline bool
-CheckAccessorRedefinition(ExclusiveContext* cx, HandleObject obj, HandleShape shape,
-                          Handle<PropertyDescriptor> desc)
-{
-    MOZ_ASSERT(shape->isAccessorDescriptor());
-    if (shape->configurable())
-        return true;
-    if (desc.getter() == shape->getter() && desc.setter() == shape->setter())
-        return true;
-
-    /*
-     *  Only allow redefining if JSPROP_REDEFINE_NONCONFIGURABLE is set _and_
-     *  the object is a non-DOM global.  The idea is that a DOM object can
-     *  never have such a thing on its proto chain directly on the web, so we
-     *  should be OK optimizing access to accessors found on such an object.
-     */
-    if ((desc.attributes() & JSPROP_REDEFINE_NONCONFIGURABLE) &&
-        obj->is<GlobalObject>() &&
-        !obj->getClass()->isDOMClass())
-    {
-        return true;
-    }
-
-    if (!cx->isJSContext())
-        return false;
-
-    return Throw(cx->asJSContext(), shape->propid(), JSMSG_CANT_REDEFINE_PROP);
-}
-
 static bool
 AddOrChangeProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId id,
                     Handle<PropertyDescriptor> desc)
@@ -1481,34 +1448,30 @@ js::NativeDefineProperty(ExclusiveContext* cx, HandleNativeObject obj, HandleId 
         MOZ_ASSERT(shape->isAccessorDescriptor());
         MOZ_ASSERT(desc.isAccessorDescriptor());
 
-        // If defining a getter or setter, we must check for its counterpart
-        // and update the attributes and property ops.  A getter or setter is
-        // really only half of a property.
-
-        // If we are defining a getter whose setter was already defined, or
-        // vice versa, finish the job via obj->changeProperty.
-        if (!CheckAccessorRedefinition(cx, obj, shape, desc))
-            return false;
-
-        desc.setAttributes(ApplyOrDefaultAttributes(desc.attributes(), shape));
-        if (!desc.hasGetterObject())
-            desc.setGetter(shape->getter());
-        if (!desc.hasSetterObject())
-            desc.setSetter(shape->setter());
-        desc.attributesRef() |= JSPROP_GETTER | JSPROP_SETTER;
-        desc.assertComplete();
-
-        shape = NativeObject::changeProperty(cx, obj, shape, desc.attributes(),
-                                             desc.getter(), desc.setter());
-        if (!shape)
-            return false;
-        if (!PurgeScopeChain(cx, obj, id))
-            return false;
-
-        JS_ALWAYS_TRUE(UpdateShapeTypeAndValue(cx, obj, shape, desc.value()));
-        if (!CallAddPropertyHook(cx, obj, shape, desc.value()))
-            return false;
-        return result.succeed();
+        // The spec says to use SameValue, but since the values in
+        // question are objects, we can just compare pointers.
+        if (desc.hasSetterObject()) {
+            if (!IsConfigurable(shapeAttrs) &&
+                desc.setterObject() != shape->setterObject() &&
+                !skipRedefineChecks)
+            {
+                return result.fail(JSMSG_CANT_REDEFINE_PROP);
+            }
+        } else {
+            // Fill in desc.[[Set]] from shape.
+            desc.setSetterObject(shape->setterObject());
+        }
+        if (desc.hasGetterObject()) {
+            if (!IsConfigurable(shapeAttrs) &&
+                desc.getterObject() != shape->getterObject() &&
+                !skipRedefineChecks)
+            {
+                return result.fail(JSMSG_CANT_REDEFINE_PROP);
+            }
+        } else {
+            // Fill in desc.[[Get]] from shape.
+            desc.setGetterObject(shape->getterObject());
+        }
     }
 
     // Dispense with any remaining JSPROP_IGNORE_* attributes. Any bits that
