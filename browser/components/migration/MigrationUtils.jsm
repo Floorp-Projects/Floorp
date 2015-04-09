@@ -16,8 +16,6 @@ const TOPIC_DID_IMPORT_BOOKMARKS = "initial-migration-did-import-default-bookmar
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Dict",
-                                  "resource://gre/modules/Dict.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
@@ -32,7 +30,7 @@ let gMigrationBundle = null;
 function getMigrationBundle() {
   if (!gMigrationBundle) {
     gMigrationBundle = Services.strings.createBundle(
-     "chrome://browser/locale/migration/migration.properties"); 
+     "chrome://browser/locale/migration/migration.properties");
   }
   return gMigrationBundle;
 }
@@ -198,7 +196,7 @@ this.MigratorPrototype = {
     function doMigrate() {
       // TODO: use Map (for the items) and Set (for the resources)
       // once they are iterable.
-      let resourcesGroupedByItems = new Dict();
+      let resourcesGroupedByItems = new Map();
       resources.forEach(function(resource) {
         if (resourcesGroupedByItems.has(resource.type))
           resourcesGroupedByItems.get(resource.type).push(resource);
@@ -206,7 +204,7 @@ this.MigratorPrototype = {
           resourcesGroupedByItems.set(resource.type, [resource]);
       });
 
-      if (resourcesGroupedByItems.count == 0)
+      if (resourcesGroupedByItems.size == 0)
         throw new Error("No items to import");
 
       let notify = function(aMsg, aItemType) {
@@ -214,28 +212,30 @@ this.MigratorPrototype = {
       }
 
       notify("Migration:Started");
-      resourcesGroupedByItems.listkeys().forEach(function(migrationType) {
-        let migrationTypeA = migrationType;
-        let itemResources = resourcesGroupedByItems.get(migrationType);
+      for (let [key, value] of resourcesGroupedByItems) {
+      	// TODO: (bug 449811).
+      	let migrationType = key, itemResources = value;
+
         notify("Migration:ItemBeforeMigrate", migrationType);
 
         let itemSuccess = false;
-        itemResources.forEach(function(resource) {
+        for (let res of itemResources) {
+          let resource = res;
           let resourceDone = function(aSuccess) {
             let resourceIndex = itemResources.indexOf(resource);
             if (resourceIndex != -1) {
               itemResources.splice(resourceIndex, 1);
               itemSuccess |= aSuccess;
               if (itemResources.length == 0) {
-                resourcesGroupedByItems.del(migrationType);
+                resourcesGroupedByItems.delete(migrationType);
                 notify(itemSuccess ?
                        "Migration:ItemAfterMigrate" : "Migration:ItemError",
                        migrationType);
-                if (resourcesGroupedByItems.count == 0)
+                if (resourcesGroupedByItems.size == 0)
                   notify("Migration:Ended");
               }
             }
-          };
+          }
 
           Services.tm.mainThread.dispatch(function() {
             // If migrate throws, an error occurred, and the callback
@@ -248,8 +248,8 @@ this.MigratorPrototype = {
               resourceDone(false);
             }
           }, Ci.nsIThread.DISPATCH_NORMAL);
-        });
-      });
+        }
+      }
     }
 
     if (MigrationUtils.isStartupMigration && !this.startupOnlyMigrator) {
@@ -440,7 +440,9 @@ this.MigrationUtils = Object.freeze({
       aParentId, label, PlacesUtils.bookmarks.DEFAULT_INDEX);
   },
 
-  get _migrators() gMigrators ? gMigrators : gMigrators = new Dict(),
+  get _migrators() {
+    return gMigrators ? gMigrators : gMigrators = new Map();
+  },
 
   /*
    * Returns the migrator for the given source, if any data is available
@@ -563,7 +565,6 @@ this.MigrationUtils = Object.freeze({
    *        migrator for it, or with the first option selected as a fallback
    *        (The first option is hardcoded to be the most common browser for
    *         the OS we run on.  See migration.xul).
-   *          
    * @throws if aMigratorKey is invalid or if it points to a non-existent
    *         source.
    */

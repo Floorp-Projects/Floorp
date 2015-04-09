@@ -256,6 +256,10 @@
 
         <service android:name="org.mozilla.gecko.tabqueue.TabQueueService" />
 
+        <activity android:name="org.mozilla.gecko.tabqueue.TabQueuePrompt"
+                  android:launchMode="singleTop"
+                  android:theme="@style/OverlayActivity" />
+
         <activity android:name="org.mozilla.gecko.tabqueue.TabQueueDispatcher"
                   android:label="@MOZ_APP_DISPLAYNAME@"
                   android:launchMode="singleTask"
@@ -428,7 +432,7 @@
              reused. Ideally we create a new instance but Android L breaks this (bug 1137928). -->
         <activity android:name="org.mozilla.gecko.overlays.ui.ShareDialog"
                   android:label="@string/overlay_share_label"
-                  android:theme="@style/ShareOverlayActivity"
+                  android:theme="@style/OverlayActivity"
                   android:configChanges="keyboard|keyboardHidden|mcc|mnc|locale|layoutDirection"
                   android:launchMode="singleTop"
                   android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
