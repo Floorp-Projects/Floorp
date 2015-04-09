@@ -141,12 +141,12 @@
   <default remote="caf" revision="refs/tags/android-5.0.0_r6" sync-j="4"/>
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="ba62cc8b78c30d36181b8060a2016cc8da166236"/>
-  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="1b9f134d62536c5727575d1f0a5bd4eeb4747d66"/>
+  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="48132ec0b0dfe9fc29c7c3f0e799066be8999198"/>
   <!-- external/qemu for emulator-l need to be updated in bug-1121378 -->
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="7639c5c496ffd207bb627f2a59b2c5203ae6fefc"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="16abda2258c9aa1ed78f00bb0a9b2b43b4cb919e"/>
   <project name="platform/development" path="development" revision="7ec1ce5e75f943a4a673aa12d8177d5cf2c0a4cf"/>
-  <project name="android-sdk" path="sdk" remote="b2g" revision="94704df982a90d2ab74bd620d54155d148c415b2"/>
+  <project name="android-sdk" path="sdk" remote="b2g" revision="ff4190dc603f62a7caa48342aa268acf99863c5c"/>
   <!-- hardware-ril for emulator-l need to be updated in bug-1113054 -->
   <project name="platform/hardware/ril" path="hardware/ril" revision="71dfa8228ad0d6cdf6bac0426ac59404ab74b7f3"/>
 </manifest>
