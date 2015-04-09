@@ -123,13 +123,6 @@ function letStmt(head, body) {
     return Pattern({ type: "LetStatement", head: head, body: body });
 }
 
-function superProp(id) {
-    return dotExpr(ident("super"), id);
-}
-function superElem(id) {
-    return memExpr(ident("super"), id);
-}
-
 function classStmt(id, heritage, body) {
     return Pattern({ type: "ClassStatement",
                      name: id,
