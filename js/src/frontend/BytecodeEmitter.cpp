@@ -1991,6 +1991,7 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
               case PNK_DOT:
               case PNK_CALL:
               case PNK_ELEM:
+              case PNK_SUPERELEM:
                 /* All these delete addressing modes have effects too. */
                 *answer = true;
                 return true;
@@ -2053,7 +2054,8 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         return checkSideEffects(pn->maybeExpr(), answer);
 
       case PN_NULLARY:
-        if (pn->isKind(PNK_DEBUGGER))
+        if (pn->isKind(PNK_DEBUGGER) ||
+            pn->isKind(PNK_SUPERPROP))
             *answer = true;
         return true;
     }
@@ -2323,6 +2325,18 @@ BytecodeEmitter::emitPropLHS(ParseNode* pn)
 }
 
 bool
+BytecodeEmitter::emitSuperPropLHS(bool isCall)
+{
+    if (!emit1(JSOP_THIS))
+        return false;
+    if (isCall && !emit1(JSOP_DUP))
+        return false;
+    if (!emit1(JSOP_SUPERBASE))
+        return false;
+    return true;
+}
+
+bool
 BytecodeEmitter::emitPropOp(ParseNode* pn, JSOp op)
 {
     MOZ_ASSERT(pn->isArity(PN_NAME));
@@ -2343,9 +2357,24 @@ BytecodeEmitter::emitPropOp(ParseNode* pn, JSOp op)
 }
 
 bool
+BytecodeEmitter::emitSuperPropOp(ParseNode* pn, JSOp op, bool isCall)
+{
+    if (!emitSuperPropLHS(isCall))
+        return false;
+
+    if (!emitAtomOp(pn, op))
+        return false;
+
+    if (isCall && !emit1(JSOP_SWAP))
+        return false;
+
+    return true;
+}
+
+bool
 BytecodeEmitter::emitPropIncDec(ParseNode* pn)
 {
-    MOZ_ASSERT(pn->pn_kid->getKind() == PNK_DOT);
+    MOZ_ASSERT(pn->pn_kid->isKind(PNK_DOT));
 
     bool post;
     JSOp binop = GetIncDecInfo(pn->getKind(), &post);
@@ -2376,6 +2405,50 @@ BytecodeEmitter::emitPropIncDec(ParseNode* pn)
     if (!emitAtomOp(pn->pn_kid, setOp))             // N? N+1
         return false;
     if (post && !emit1(JSOP_POP))                   // RESULT
+        return false;
+
+    return true;
+}
+
+bool
+BytecodeEmitter::emitSuperPropIncDec(ParseNode* pn)
+{
+    MOZ_ASSERT(pn->pn_kid->isKind(PNK_SUPERPROP));
+
+    bool post;
+    JSOp binop = GetIncDecInfo(pn->getKind(), &post);
+
+    if (!emitSuperPropLHS())                                // THIS OBJ
+        return false;
+
+    if (!emit1(JSOP_DUP2))                                  // THIS OBJ THIS OBJ
+        return false;
+    if (!emitAtomOp(pn->pn_kid, JSOP_GETPROP_SUPER))        // THIS OBJ V
+        return false;
+    if (!emit1(JSOP_POS))                                   // THIS OBJ N
+        return false;
+    if (post && !emit1(JSOP_DUP))                           // THIS OBJ N? N
+        return false;
+    if (!emit1(JSOP_ONE))                                   // THIS OBJ N? N 1
+        return false;
+    if (!emit1(binop))                                      // THIS OBJ N? N+1
+        return false;
+
+    if (post) {
+        if (!emit2(JSOP_PICK, (jsbytecode)3))               // OBJ N N+1 THIS
+            return false;
+        if (!emit1(JSOP_SWAP))                              // OBJ N THIS N+1
+            return false;
+        if (!emit2(JSOP_PICK, (jsbytecode)3))               // N THIS N+1 OBJ
+            return false;
+        if (!emit1(JSOP_SWAP))                              // N THIS OBJ N+1
+            return false;
+    }
+
+    JSOp setOp = sc->strict() ? JSOP_STRICTSETPROP_SUPER : JSOP_SETPROP_SUPER;
+    if (!emitAtomOp(pn->pn_kid, setOp))                     // N? N+1
+        return false;
+    if (post && !emit1(JSOP_POP))                           // RESULT
         return false;
 
     return true;
@@ -2423,15 +2496,58 @@ bool
 BytecodeEmitter::emitElemOperands(ParseNode* pn, JSOp op)
 {
     MOZ_ASSERT(pn->isArity(PN_BINARY));
+
     if (!emitTree(pn->pn_left))
         return false;
+
     if (op == JSOP_CALLELEM && !emit1(JSOP_DUP))
         return false;
+
     if (!emitTree(pn->pn_right))
         return false;
+
     bool isSetElem = op == JSOP_SETELEM || op == JSOP_STRICTSETELEM;
     if (isSetElem && !emit2(JSOP_PICK, (jsbytecode)2))
         return false;
+    return true;
+}
+
+bool
+BytecodeEmitter::emitSuperElemOperands(ParseNode* pn, SuperElemOptions opts)
+{
+    MOZ_ASSERT(pn->isKind(PNK_SUPERELEM));
+
+    // The ordering here is somewhat screwy. We need to evaluate the propval
+    // first, by spec. Do a little dance to not emit more than one JSOP_THIS.
+    // Since JSOP_THIS might throw in derived class constructors, we cannot
+    // just push it earlier as the receiver. We have to swap it down instead.
+
+    if (!emitTree(pn->pn_kid))
+        return false;
+
+    // We need to convert the key to an object id first, so that we do not do
+    // it inside both the GETELEM and the SETELEM.
+    if (opts == SuperElem_IncDec && !emit1(JSOP_TOID))
+        return false;
+
+    if (!emit1(JSOP_THIS))
+        return false;
+
+    if (opts == SuperElem_Call) {
+        if (!emit1(JSOP_SWAP))
+            return false;
+
+        // We need another |this| on top, also
+        if (!emitDupAt(this->stackDepth - 1 - 1))
+            return false;
+    }
+
+    if (!emit1(JSOP_SUPERBASE))
+        return false;
+
+    if (opts == SuperElem_Set && !emit2(JSOP_PICK, (jsbytecode)3))
+        return false;
+
     return true;
 }
 
@@ -2452,9 +2568,29 @@ BytecodeEmitter::emitElemOp(ParseNode* pn, JSOp op)
 }
 
 bool
+BytecodeEmitter::emitSuperElemOp(ParseNode* pn, JSOp op, bool isCall)
+{
+    SuperElemOptions opts = SuperElem_Get;
+    if (isCall)
+        opts = SuperElem_Call;
+    else if (op == JSOP_SETELEM_SUPER || op == JSOP_STRICTSETELEM_SUPER)
+        opts = SuperElem_Set;
+
+    if (!emitSuperElemOperands(pn, opts))
+        return false;
+    if (!emitElemOpBase(op))
+        return false;
+
+    if (isCall && !emit1(JSOP_SWAP))
+        return false;
+
+    return true;
+}
+
+bool
 BytecodeEmitter::emitElemIncDec(ParseNode* pn)
 {
-    MOZ_ASSERT(pn->pn_kid->getKind() == PNK_ELEM);
+    MOZ_ASSERT(pn->pn_kid->isKind(PNK_ELEM));
 
     if (!emitElemOperands(pn->pn_kid, JSOP_GETELEM))
         return false;
@@ -2500,6 +2636,55 @@ BytecodeEmitter::emitElemIncDec(ParseNode* pn)
     return true;
 }
 
+bool
+BytecodeEmitter::emitSuperElemIncDec(ParseNode* pn)
+{
+    MOZ_ASSERT(pn->pn_kid->isKind(PNK_SUPERELEM));
+
+    if (!emitSuperElemOperands(pn->pn_kid, SuperElem_IncDec))
+        return false;
+
+    bool post;
+    JSOp binop = GetIncDecInfo(pn->getKind(), &post);
+
+    // There's no such thing as JSOP_DUP3, so we have to be creative.
+    // Note that pushing things again is no fewer JSOps.
+    if (!emitDupAt(this->stackDepth - 1 - 2))       // KEY THIS OBJ KEY
+        return false;
+    if (!emitDupAt(this->stackDepth - 1 - 2))       // KEY THIS OBJ KEY THIS
+        return false;
+    if (!emitDupAt(this->stackDepth - 1 - 2))       // KEY THIS OBJ KEY THIS OBJ
+        return false;
+    if (!emitElemOpBase(JSOP_GETELEM_SUPER))        // KEY THIS OBJ V
+        return false;
+    if (!emit1(JSOP_POS))                           // KEY THIS OBJ N
+        return false;
+    if (post && !emit1(JSOP_DUP))                   // KEY THIS OBJ N? N
+        return false;
+    if (!emit1(JSOP_ONE))                           // KEY THIS OBJ N? N 1
+        return false;
+    if (!emit1(binop))                              // KEY THIS OBJ N? N+1
+        return false;
+
+    if (post) {
+        if (!emit2(JSOP_PICK, (jsbytecode)4))       // THIS OBJ N N+1 KEY
+            return false;
+        if (!emit2(JSOP_PICK, (jsbytecode)4))       // OBJ N N+1 KEY THIS
+            return false;
+        if (!emit2(JSOP_PICK, (jsbytecode)4))       // N N+1 KEY THIS OBJ
+            return false;
+        if (!emit2(JSOP_PICK, (jsbytecode)3))       // N KEY THIS OBJ N+1
+            return false;
+    }
+
+    JSOp setOp = sc->strict() ? JSOP_STRICTSETELEM_SUPER : JSOP_SETELEM_SUPER;
+    if (!emitElemOpBase(setOp))                     // N? N+1
+        return false;
+    if (post && !emit1(JSOP_POP))                   // RESULT
+        return false;
+
+    return true;
+}
 bool
 BytecodeEmitter::emitNumberOp(double dval)
 {
@@ -3277,13 +3462,36 @@ BytecodeEmitter::emitDestructuringLHS(ParseNode* target, VarEmitOption emitOptio
             break;
           }
 
+          case PNK_SUPERPROP:
+          {
+            // See comment above at PNK_DOT. Pick up the pushed value, to fix ordering.
+            if (!emitSuperPropLHS())
+                return false;
+            if (!emit2(JSOP_PICK, 2))
+                return false;
+            JSOp setOp = sc->strict() ? JSOP_STRICTSETPROP_SUPER : JSOP_SETPROP_SUPER;
+            if (!emitAtomOp(target, setOp))
+                return false;
+            break;
+          }
+
           case PNK_ELEM:
           {
             // See the comment at `case PNK_DOT:` above. This case,
             // `[a[x]] = [b]`, is handled much the same way. The JSOP_SWAP
-            // is emitted by EmitElemOperands.
+            // is emitted by emitElemOperands.
             JSOp setOp = sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM;
             if (!emitElemOp(target, setOp))
+                return false;
+            break;
+          }
+
+          case PNK_SUPERELEM:
+          {
+            // See comment above in the PNK_ELEM case. Just as there, the
+            // reordering is handled by emitSuperElemOp.
+            JSOp setOp = sc->strict() ? JSOP_STRICTSETELEM_SUPER : JSOP_SETELEM_SUPER;
+            if (!emitSuperElemOp(target, setOp))
                 return false;
             break;
           }
@@ -3892,6 +4100,13 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
         if (!makeAtomIndex(lhs->pn_atom, &atomIndex))
             return false;
         break;
+      case PNK_SUPERPROP:
+        if (!emitSuperPropLHS())
+            return false;
+        offset += 2;
+        if (!makeAtomIndex(lhs->pn_atom, &atomIndex))
+            return false;
+        break;
       case PNK_ELEM:
         MOZ_ASSERT(lhs->isArity(PN_BINARY));
         if (!emitTree(lhs->pn_left))
@@ -3899,6 +4114,11 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
         if (!emitTree(lhs->pn_right))
             return false;
         offset += 2;
+        break;
+      case PNK_SUPERELEM:
+        if (!emitSuperElemOperands(lhs))
+            return false;
+        offset += 3;
         break;
       case PNK_ARRAY:
       case PNK_OBJECT:
@@ -3963,10 +4183,26 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
                 return false;
             break;
           }
+          case PNK_SUPERPROP:
+            if (!emit1(JSOP_DUP2))
+                return false;
+            if (!emitIndex32(JSOP_GETPROP_SUPER, atomIndex))
+                return false;
+            break;
           case PNK_ELEM:
             if (!emit1(JSOP_DUP2))
                 return false;
             if (!emitElemOpBase(JSOP_GETELEM))
+                return false;
+            break;
+          case PNK_SUPERELEM:
+            if (!emitDupAt(this->stackDepth - 1 - 2))
+                return false;
+            if (!emitDupAt(this->stackDepth - 1 - 2))
+                return false;
+            if (!emitDupAt(this->stackDepth - 1 - 2))
+                return false;
+            if (!emitElemOpBase(JSOP_GETELEM_SUPER))
                 return false;
             break;
           case PNK_CALL:
@@ -4032,6 +4268,13 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
             return false;
         break;
       }
+      case PNK_SUPERPROP:
+      {
+        JSOp setOp = sc->strict() ? JSOP_STRICTSETPROP_SUPER : JSOP_SETPROP_SUPER;
+        if (!emitIndexOp(setOp, atomIndex))
+            return false;
+        break;
+      }
       case PNK_CALL:
         /* Do nothing. The JSOP_SETCALL we emitted will always throw. */
         MOZ_ASSERT(lhs->pn_xflags & PNX_SETCALL);
@@ -4039,6 +4282,13 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
       case PNK_ELEM:
       {
         JSOp setOp = sc->strict() ? JSOP_STRICTSETELEM : JSOP_SETELEM;
+        if (!emit1(setOp))
+            return false;
+        break;
+      }
+      case PNK_SUPERELEM:
+      {
+        JSOp setOp = sc->strict() ? JSOP_STRICTSETELEM_SUPER : JSOP_SETELEM_SUPER;
         if (!emit1(setOp))
             return false;
         break;
@@ -5899,6 +6149,15 @@ BytecodeEmitter::emitDelete(ParseNode* pn)
             return false;
         break;
       }
+      case PNK_SUPERPROP:
+        // Still have to calculate the base, even though we are are going
+        // to throw unconditionally, as calculating the base could also
+        // throw.
+        if (!emit1(JSOP_SUPERBASE))
+            return false;
+        if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_CANT_DELETE_SUPER))
+            return false;
+        break;
       case PNK_ELEM:
       {
         JSOp delOp = sc->strict() ? JSOP_STRICTDELELEM : JSOP_DELELEM;
@@ -5906,6 +6165,21 @@ BytecodeEmitter::emitDelete(ParseNode* pn)
             return false;
         break;
       }
+      case PNK_SUPERELEM:
+        // Still have to calculate everything, even though we're gonna throw
+        // since it may have side effects
+        if (!emitTree(pn2->pn_kid))
+            return false;
+        if (!emit1(JSOP_SUPERBASE))
+            return false;
+        if (!emitUint16Operand(JSOP_THROWMSG, JSMSG_CANT_DELETE_SUPER))
+            return false;
+
+        // Another wrinkle: Balance the stack from the emitter's point of view.
+        // Execution will not reach here, as the last bytecode threw.
+        if (!emit1(JSOP_POP))
+            return false;
+        break;
       default:
       {
         /*
@@ -6069,6 +6343,10 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
         if (!emitPropOp(pn2, callop ? JSOP_CALLPROP : JSOP_GETPROP))
             return false;
         break;
+      case PNK_SUPERPROP:
+        if (!emitSuperPropOp(pn2, JSOP_GETPROP_SUPER, /* isCall = */ callop))
+            return false;
+        break;
       case PNK_ELEM:
         if (!emitElemOp(pn2, callop ? JSOP_CALLELEM : JSOP_GETELEM))
             return false;
@@ -6076,6 +6354,10 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
             if (!emit1(JSOP_SWAP))
                 return false;
         }
+        break;
+      case PNK_SUPERELEM:
+        if (!emitSuperElemOp(pn2, JSOP_GETELEM_SUPER, /* isCall = */ callop))
+            return false;
         break;
       case PNK_FUNCTION:
         /*
@@ -6220,8 +6502,16 @@ BytecodeEmitter::emitIncOrDec(ParseNode* pn)
         if (!emitPropIncDec(pn))
             return false;
         break;
+      case PNK_SUPERPROP:
+        if (!emitSuperPropIncDec(pn))
+            return false;
+        break;
       case PNK_ELEM:
         if (!emitElemIncDec(pn))
+            return false;
+        break;
+      case PNK_SUPERELEM:
+        if (!emitSuperElemIncDec(pn))
             return false;
         break;
       case PNK_CALL:
@@ -6449,6 +6739,14 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
 
         if (op == JSOP_INITPROP_GETTER || op == JSOP_INITPROP_SETTER)
             objp.set(nullptr);
+
+        if (propdef->pn_right->isKind(PNK_FUNCTION) &&
+            propdef->pn_right->pn_funbox->needsHomeObject())
+        {
+            MOZ_ASSERT(propdef->pn_right->pn_funbox->function()->isMethod());
+            if (!emit1(JSOP_INITHOMEOBJECT))
+                return false;
+        }
 
         if (isIndex) {
             objp.set(nullptr);
@@ -6777,27 +7075,38 @@ BytecodeEmitter::emitClass(ParseNode* pn)
             return false;
     }
 
+    // This is kind of silly. In order to the get the home object defined on
+    // the constructor, we have to make it second, but we want the prototype
+    // on top for EmitPropertyList, because we expect static properties to be
+    // rarer. The result is a few more swaps than we would like. Such is life.
     if (heritageExpression) {
         if (!emitTree(heritageExpression))
             return false;
         if (!emit1(JSOP_CLASSHERITAGE))
+            return false;
+        if (!emit1(JSOP_OBJWITHPROTO))
+            return false;
+
+        // JSOP_CLASSHERITAGE leaves both protos on the stack. After
+        // creating the prototype, swap it to the bottom to make the
+        // constructor.
+        if (!emit1(JSOP_SWAP))
+            return false;
+    } else {
+        if (!emitNewInit(JSProto_Object))
             return false;
     }
 
     if (!emitFunction(constructor, !!heritageExpression))
         return false;
 
-    if (heritageExpression) {
-        // JSOP_CLASSHERITAGE leaves both prototypes on the stack. After
-        // creating the constructor, trickly it to the bottom to make the object.
-        if (!emit1(JSOP_SWAP))
-            return false;
-        if (!emit1(JSOP_OBJWITHPROTO))
-            return false;
-    } else {
-        if (!emitNewInit(JSProto_Object))
+    if (constructor->pn_funbox->needsHomeObject()) {
+        if (!emit1(JSOP_INITHOMEOBJECT))
             return false;
     }
+
+    if (!emit1(JSOP_SWAP))
+        return false;
 
     if (!emit1(JSOP_DUP2))
         return false;
@@ -7144,8 +7453,18 @@ BytecodeEmitter::emitTree(ParseNode* pn)
         ok = emitPropOp(pn, JSOP_GETPROP);
         break;
 
+      case PNK_SUPERPROP:
+        if (!emitSuperPropOp(pn, JSOP_GETPROP_SUPER))
+            return false;
+        break;
+
       case PNK_ELEM:
         ok = emitElemOp(pn, JSOP_GETELEM);
+        break;
+
+      case PNK_SUPERELEM:
+        if (!emitSuperElemOp(pn, JSOP_GETELEM_SUPER))
+            return false;
         break;
 
       case PNK_NEW:

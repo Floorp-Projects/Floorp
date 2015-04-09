@@ -19,8 +19,8 @@ namespace mp4_demuxer
 class BitReader
 {
 public:
-  explicit BitReader(const ByteBuffer& aBuffer)
-  : mBitReader(aBuffer.Elements(), aBuffer.Length())
+  explicit BitReader(const mozilla::DataBuffer* aBuffer)
+    : mBitReader(aBuffer->Elements(), aBuffer->Length())
   {
   }
 
@@ -82,8 +82,8 @@ SPSData::SPSData()
   sample_ratio = 1.0;
 }
 
-/* static */ already_AddRefed<ByteBuffer>
-H264::DecodeNALUnit(const ByteBuffer* aNAL)
+/* static */ already_AddRefed<mozilla::DataBuffer>
+H264::DecodeNALUnit(const mozilla::DataBuffer* aNAL)
 {
   MOZ_ASSERT(aNAL);
 
@@ -91,8 +91,8 @@ H264::DecodeNALUnit(const ByteBuffer* aNAL)
     return nullptr;
   }
 
-  nsRefPtr<ByteBuffer> rbsp = new ByteBuffer;
-  ByteReader reader(*aNAL);
+  nsRefPtr<mozilla::DataBuffer> rbsp = new mozilla::DataBuffer;
+  ByteReader reader(aNAL);
   uint8_t nal_unit_type = reader.ReadU8() & 0x1f;
   uint32_t nalUnitHeaderBytes = 1;
   if (nal_unit_type == 14 || nal_unit_type == 20 || nal_unit_type == 21) {
@@ -138,10 +138,10 @@ ConditionDimension(float aValue)
 }
 
 /* static */ bool
-H264::DecodeSPS(const ByteBuffer* aSPS, SPSData& aDest)
+H264::DecodeSPS(const mozilla::DataBuffer* aSPS, SPSData& aDest)
 {
   MOZ_ASSERT(aSPS);
-  BitReader br(*aSPS);
+  BitReader br(aSPS);
 
   int32_t lastScale;
   int32_t nextScale;
@@ -461,12 +461,12 @@ H264::vui_parameters(BitReader& aBr, SPSData& aDest)
 }
 
 /* static */ bool
-H264::DecodeSPSFromExtraData(const ByteBuffer* aExtraData, SPSData& aDest)
+H264::DecodeSPSFromExtraData(const mozilla::DataBuffer* aExtraData, SPSData& aDest)
 {
   if (!AnnexB::HasSPS(aExtraData)) {
     return false;
   }
-  ByteReader reader(*aExtraData);
+  ByteReader reader(aExtraData);
 
   if (!reader.Read(5)) {
     return false;
@@ -490,10 +490,10 @@ H264::DecodeSPSFromExtraData(const ByteBuffer* aExtraData, SPSData& aDest)
     return false;
   }
 
-  nsRefPtr<ByteBuffer> rawNAL = new ByteBuffer;
+  nsRefPtr<mozilla::DataBuffer> rawNAL = new mozilla::DataBuffer;
   rawNAL->AppendElements(ptr, length);
 
-  nsRefPtr<ByteBuffer> sps = DecodeNALUnit(rawNAL);
+  nsRefPtr<mozilla::DataBuffer> sps = DecodeNALUnit(rawNAL);
 
   reader.DiscardRemaining();
 

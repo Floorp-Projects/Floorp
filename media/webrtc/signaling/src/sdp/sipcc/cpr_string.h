@@ -10,7 +10,9 @@
 #include "cpr_types.h"
 #include "cpr_strings.h"
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * sstrncpy
@@ -130,6 +132,8 @@ void flex_string_sprintf(flex_string *fs, const char *format, ...);
 char *
 cpr_strdup(const char *str);
 
-__END_DECLS
+#ifdef __cplusplus
+}
+#endif
 
 #endif

@@ -13,7 +13,9 @@
 #include "cpr_darwin_types.h"
 #endif
 
-__BEGIN_DECLS
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * CPR Return Codes
@@ -114,6 +116,8 @@ extern const cpr_ip_addr_t ip_addr_invalid;
 
 typedef const char *string_t;
 
-__END_DECLS
+#ifdef __cplusplus
+}
+#endif
 
 #endif
