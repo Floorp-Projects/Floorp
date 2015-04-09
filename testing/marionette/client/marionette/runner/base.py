@@ -14,19 +14,17 @@ import sys
 import time
 import traceback
 import unittest
-import warnings
 import xml.dom.minidom as dom
 
 from manifestparser import TestManifest
 from manifestparser.filters import tags
 from marionette_driver.marionette import Marionette
 from mixins.b2g import B2GTestResultMixin, get_b2g_pid, get_dm
+from mozhttpd import MozHttpd
 from mozlog.structured.structuredlog import get_default_logger
 from moztest.adapters.unit import StructuredTestRunner, StructuredTestResult
 from moztest.results import TestResultCollection, TestResult, relevant_line
 import mozversion
-
-import httpd
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -640,6 +638,24 @@ class BaseMarionetteTestRunner(object):
         self.skipped = 0
         self.failures = []
 
+    def start_httpd(self, need_external_ip):
+        if self.server_root is None or os.path.isdir(self.server_root):
+            host = '127.0.0.1'
+            if need_external_ip:
+                host = moznetwork.get_ip()
+            docroot = self.server_root or os.path.join(os.path.dirname(here), 'www')
+            if not os.path.isdir(docroot):
+                raise Exception('Server root %s is not a valid path' % docroot)
+            self.httpd = MozHttpd(host=host,
+                                  port=0,
+                                  docroot=docroot)
+            self.httpd.start()
+            self.marionette.baseurl = 'http://%s:%d/' % (host, self.httpd.httpd.server_port)
+            self.logger.info('running webserver on %s' % self.marionette.baseurl)
+        else:
+            self.marionette.baseurl = self.server_root
+            self.logger.info('using content from %s' % self.marionette.baseurl)
+
     def _build_kwargs(self):
         kwargs = {
             'device_serial': self.device_serial,
@@ -765,8 +781,6 @@ setReq.onerror = function() {
         if not self.httpd:
             self.logger.info("starting httpd")
             self.start_httpd(need_external_ip)
-            self.marionette.baseurl = self.httpd.get_url()
-            self.logger.info("running httpd on %s" % self.marionette.baseurl)
 
         for test in tests:
             self.add_test(test)
@@ -846,20 +860,6 @@ setReq.onerror = function() {
             self.logger.info("Using seed where seed is:%d" % self.shuffle_seed)
 
         self.logger.suite_end()
-
-    def start_httpd(self, need_external_ip):
-        warnings.warn("start_httpd has been deprecated in favour of create_httpd",
-            DeprecationWarning)
-        self.httpd = self.create_httpd(need_external_ip)
-        
-    def create_httpd(self, need_external_ip):
-        host = "127.0.0.1"
-        if need_external_ip:
-            host = moznetwork.get_ip()
-        root = self.server_root or os.path.join(os.path.dirname(here), "www")
-        rv = httpd.FixtureServer(root, host=host)
-        rv.start()
-        return rv
 
     def add_test(self, test, expected='pass', test_container=None):
         filepath = os.path.abspath(test)
