@@ -303,20 +303,20 @@ protected:
 class CryptoTrack
 {
 public:
-  CryptoTrack() : valid(false) {}
-  bool valid;
-  int32_t mode;
-  int32_t iv_size;
-  nsTArray<uint8_t> key;
+  CryptoTrack() : mValid(false) {}
+  bool mValid;
+  int32_t mMode;
+  int32_t mIVSize;
+  nsTArray<uint8_t> mKeyId;
 };
 
 class CryptoSample : public CryptoTrack
 {
 public:
-  nsTArray<uint16_t> plain_sizes;
-  nsTArray<uint32_t> encrypted_sizes;
-  nsTArray<uint8_t> iv;
-  nsTArray<nsCString> session_ids;
+  nsTArray<uint16_t> mPlainSizes;
+  nsTArray<uint32_t> mEncryptedSizes;
+  nsTArray<uint8_t> mIV;
+  nsTArray<nsCString> mSessionIds;
 };
 
 

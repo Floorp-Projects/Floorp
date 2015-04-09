@@ -11,11 +11,11 @@ namespace mozilla {
 namespace gmp {
 
 GMPEncryptedBufferDataImpl::GMPEncryptedBufferDataImpl(const CryptoSample& aCrypto)
-  : mKeyId(aCrypto.key)
-  , mIV(aCrypto.iv)
-  , mClearBytes(aCrypto.plain_sizes)
-  , mCipherBytes(aCrypto.encrypted_sizes)
-  , mSessionIdList(aCrypto.session_ids)
+  : mKeyId(aCrypto.mKeyId)
+  , mIV(aCrypto.mIV)
+  , mClearBytes(aCrypto.mPlainSizes)
+  , mCipherBytes(aCrypto.mEncryptedSizes)
+  , mSessionIdList(aCrypto.mSessionIds)
 {
 }
 
