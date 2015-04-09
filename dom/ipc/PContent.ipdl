@@ -633,7 +633,7 @@ parent:
      * via bridging. The corresponding PluginModuleChild will live in the plugin
      * process.
      */
-    sync LoadPlugin(uint32_t pluginId) returns (nsresult rv);
+    sync LoadPlugin(uint32_t aPluginId) returns (nsresult aResult, uint32_t aRunID);
 
     /**
      * This call is used by asynchronous plugin instantiation to notify the

@@ -25,7 +25,7 @@ class nsNPAPIPluginInstance;
  * interface to mirror this interface when changing it.
  */
 
-[scriptable, uuid(16c14177-52eb-49d3-9842-a1a0b92be11a)]
+[scriptable, uuid(5efbd411-5bbe-4de1-9f3a-1c3459696eb2)]
 interface nsIObjectLoadingContent : nsISupports
 {
   /**
@@ -188,4 +188,12 @@ interface nsIObjectLoadingContent : nsISupports
    * This method will disable the play-preview plugin state.
    */
   void cancelPlayPreview();
+
+  /**
+   * If this plugin runs out-of-process, it has a runID to differentiate
+   * between different times the plugin process has been instantiated.
+   *
+   * This throws NS_ERROR_NOT_IMPLEMENTED for in-process plugins.
+   */
+  readonly attribute unsigned long runID;
 };
