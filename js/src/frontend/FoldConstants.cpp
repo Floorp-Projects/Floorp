@@ -419,8 +419,6 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
       case PNK_CLASSMETHOD:
       case PNK_CLASSMETHODLIST:
       case PNK_CLASSNAMES:
-      case PNK_SUPERPROP:
-      case PNK_SUPERELEM:
         MOZ_CRASH("ContainsHoistedDeclaration should have indicated false on "
                   "some parent node without recurring to test this node");
 

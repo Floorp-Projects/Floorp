@@ -2625,7 +2625,6 @@ JSScript::fullyInitFromEmitter(ExclusiveContext* cx, HandleScript script, Byteco
     script->bindingsAccessedDynamically_ = bce->sc->bindingsAccessedDynamically();
     script->funHasExtensibleScope_ = funbox ? funbox->hasExtensibleScope() : false;
     script->funNeedsDeclEnvObject_ = funbox ? funbox->needsDeclEnvObject() : false;
-    script->needsHomeObject_       = funbox ? funbox->needsHomeObject() : false;
     script->hasSingletons_ = bce->hasSingletons;
 
     if (funbox) {

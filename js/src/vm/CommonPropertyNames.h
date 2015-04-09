@@ -191,7 +191,6 @@
     macro(strings, strings, "strings") \
     macro(StructType, StructType, "StructType") \
     macro(style, style, "style") \
-    macro(super, super, "super") \
     macro(test, test, "test") \
     macro(throw, throw_, "throw") \
     macro(timestamp, timestamp, "timestamp") \

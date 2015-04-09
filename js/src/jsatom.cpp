@@ -83,6 +83,7 @@ const char js_protected_str[]       = "protected";
 const char js_public_str[]          = "public";
 const char js_send_str[]            = "send";
 const char js_setter_str[]          = "setter";
+const char js_super_str[]           = "super";
 const char js_switch_str[]          = "switch";
 const char js_this_str[]            = "this";
 const char js_try_str[]             = "try";
