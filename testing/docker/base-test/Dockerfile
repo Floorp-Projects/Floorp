@@ -127,6 +127,6 @@ ENV           LOGNAME       worker
 
 # Declare default working folder
 WORKDIR       /home/worker
-  
+
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]
