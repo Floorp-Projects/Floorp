@@ -226,6 +226,9 @@ struct Zone : public JS::shadow::Zone,
     // For testing purposes, return the index of the zone group which this zone
     // was swept in in the last GC.
     unsigned lastZoneGroupIndex() { return gcLastZoneGroupIndex; }
+
+    void setGCBackgroundSweeping(bool newState);
+    bool isGCBackgroundSweeping() { return gcBackgroundSweeping_; }
 #endif
 
   private:
@@ -300,6 +303,9 @@ struct Zone : public JS::shadow::Zone,
     GCState gcState_;
     bool gcScheduled_;
     bool gcPreserveCode_;
+#ifdef DEBUG
+    bool gcBackgroundSweeping_;
+#endif
     bool jitUsingBarriers_;
 
     // Allow zones to be linked into a list

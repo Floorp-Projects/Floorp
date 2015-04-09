@@ -114,7 +114,7 @@ protected:
   nsresult GetCertsByType(uint32_t aType, nsCertCompareFunc aCertCmpFn,
                           void *aCertCmpFnArg);
 
-  nsresult GetCertsByTypeFromCache(nsINSSCertCache *aCache, uint32_t aType,
+  nsresult GetCertsByTypeFromCache(nsIX509CertList *aCache, uint32_t aType,
                                    nsCertCompareFunc aCertCmpFn, void *aCertCmpFnArg);
 private:
   nsTArray< mozilla::RefPtr<nsCertTreeDispInfo> > mDispInfo;
