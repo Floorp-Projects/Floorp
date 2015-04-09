@@ -28,17 +28,17 @@ SamplesWaitingForKey::~SamplesWaitingForKey()
 bool
 SamplesWaitingForKey::WaitIfKeyNotUsable(MediaRawData* aSample)
 {
-  if (!aSample || !aSample->mCrypto.valid || !mProxy) {
+  if (!aSample || !aSample->mCrypto.mValid || !mProxy) {
     return false;
   }
   CDMCaps::AutoLock caps(mProxy->Capabilites());
-  const auto& keyid = aSample->mCrypto.key;
+  const auto& keyid = aSample->mCrypto.mKeyId;
   if (!caps.IsKeyUsable(keyid)) {
     {
       MutexAutoLock lock(mMutex);
       mSamples.AppendElement(aSample);
     }
-    caps.NotifyWhenKeyIdUsable(aSample->mCrypto.key, this);
+    caps.NotifyWhenKeyIdUsable(aSample->mCrypto.mKeyId, this);
     return true;
   }
   return false;
@@ -50,7 +50,7 @@ SamplesWaitingForKey::NotifyUsable(const CencKeyId& aKeyId)
   MutexAutoLock lock(mMutex);
   size_t i = 0;
   while (i < mSamples.Length()) {
-    if (aKeyId == mSamples[i]->mCrypto.key) {
+    if (aKeyId == mSamples[i]->mCrypto.mKeyId) {
       RefPtr<nsIRunnable> task;
       task = NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData>>(mDecoder,
                                                      &MediaDataDecoder::Input,

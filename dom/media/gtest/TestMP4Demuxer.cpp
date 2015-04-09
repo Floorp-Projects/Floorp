@@ -67,19 +67,19 @@ static nsCString
 ToCryptoString(CryptoSample& aCrypto)
 {
   nsCString res;
-  if (aCrypto.valid) {
-    res.AppendPrintf("%d %d ", aCrypto.mode, aCrypto.iv_size);
-    for (size_t i = 0; i < aCrypto.key.Length(); i++) {
-      res.AppendPrintf("%02x", aCrypto.key[i]);
+  if (aCrypto.mValid) {
+    res.AppendPrintf("%d %d ", aCrypto.mMode, aCrypto.mIVSize);
+    for (size_t i = 0; i < aCrypto.mKeyId.Length(); i++) {
+      res.AppendPrintf("%02x", aCrypto.mKeyId[i]);
     }
     res.Append(" ");
-    for (size_t i = 0; i < aCrypto.iv.Length(); i++) {
-      res.AppendPrintf("%02x", aCrypto.iv[i]);
+    for (size_t i = 0; i < aCrypto.mIV.Length(); i++) {
+      res.AppendPrintf("%02x", aCrypto.mIV[i]);
     }
-    EXPECT_EQ(aCrypto.plain_sizes.Length(), aCrypto.encrypted_sizes.Length());
-    for (size_t i = 0; i < aCrypto.plain_sizes.Length(); i++) {
-      res.AppendPrintf(" %d,%d", aCrypto.plain_sizes[i],
-                       aCrypto.encrypted_sizes[i]);
+    EXPECT_EQ(aCrypto.mPlainSizes.Length(), aCrypto.mEncryptedSizes.Length());
+    for (size_t i = 0; i < aCrypto.mPlainSizes.Length(); i++) {
+      res.AppendPrintf(" %d,%d", aCrypto.mPlainSizes[i],
+                       aCrypto.mEncryptedSizes[i]);
     }
   } else {
     res.Append("no crypto");

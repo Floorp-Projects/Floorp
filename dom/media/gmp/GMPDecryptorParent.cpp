@@ -142,13 +142,13 @@ GMPDecryptorParent::Decrypt(uint32_t aId,
   }
 
   // Caller should ensure parameters passed in are valid.
-  MOZ_ASSERT(!aBuffer.IsEmpty() && aCrypto.valid);
+  MOZ_ASSERT(!aBuffer.IsEmpty() && aCrypto.mValid);
 
-  GMPDecryptionData data(aCrypto.key,
-                         aCrypto.iv,
-                         aCrypto.plain_sizes,
-                         aCrypto.encrypted_sizes,
-                         aCrypto.session_ids);
+  GMPDecryptionData data(aCrypto.mKeyId,
+                         aCrypto.mIV,
+                         aCrypto.mPlainSizes,
+                         aCrypto.mEncryptedSizes,
+                         aCrypto.mSessionIds);
 
   unused << SendDecrypt(aId, aBuffer, data);
 }

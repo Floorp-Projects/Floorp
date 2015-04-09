@@ -91,8 +91,8 @@ public:
       return NS_OK;
     }
 
-    mProxy->GetSessionIdsForKeyId(aSample->mCrypto.key,
-                                  aSample->mCrypto.session_ids);
+    mProxy->GetSessionIdsForKeyId(aSample->mCrypto.mKeyId,
+                                  aSample->mCrypto.mSessionIds);
 
     mProxy->Decrypt(aSample, new DeliverDecrypted(this, mTaskQueue));
     return NS_OK;
@@ -186,8 +186,8 @@ EMEMediaDataDecoderProxy::Input(MediaRawData* aSample)
     return NS_OK;
   }
 
-  mProxy->GetSessionIdsForKeyId(aSample->mCrypto.key,
-                                aSample->mCrypto.session_ids);
+  mProxy->GetSessionIdsForKeyId(aSample->mCrypto.mKeyId,
+                                aSample->mCrypto.mSessionIds);
 
   return MediaDataDecoderProxy::Input(aSample);
 }
@@ -244,7 +244,7 @@ EMEDecoderModule::CreateVideoDecoder(const VideoDecoderConfig& aConfig,
                                      FlushableMediaTaskQueue* aVideoTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
-  if (mCDMDecodesVideo && aConfig.crypto.valid) {
+  if (mCDMDecodesVideo && aConfig.crypto.mValid) {
     nsRefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback, mProxy, aVideoTaskQueue);
     wrapper->SetProxyTarget(new EMEVideoDecoder(mProxy,
                                                 aConfig,
@@ -265,7 +265,7 @@ EMEDecoderModule::CreateVideoDecoder(const VideoDecoderConfig& aConfig,
     return nullptr;
   }
 
-  if (!aConfig.crypto.valid) {
+  if (!aConfig.crypto.mValid) {
     return decoder.forget();
   }
 
@@ -280,7 +280,7 @@ EMEDecoderModule::CreateAudioDecoder(const AudioDecoderConfig& aConfig,
                                      FlushableMediaTaskQueue* aAudioTaskQueue,
                                      MediaDataDecoderCallback* aCallback)
 {
-  if (mCDMDecodesAudio && aConfig.crypto.valid) {
+  if (mCDMDecodesAudio && aConfig.crypto.mValid) {
     nsRefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback, mProxy, aAudioTaskQueue);
     wrapper->SetProxyTarget(new EMEAudioDecoder(mProxy,
                                                 aConfig,
@@ -295,7 +295,7 @@ EMEDecoderModule::CreateAudioDecoder(const AudioDecoderConfig& aConfig,
     return nullptr;
   }
 
-  if (!aConfig.crypto.valid) {
+  if (!aConfig.crypto.mValid) {
     return decoder.forget();
   }
 

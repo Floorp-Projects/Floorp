@@ -61,12 +61,12 @@ Adts::ConvertSample(uint16_t aChannelCount, int8_t aFrequencyIndex,
     return false;
   }
 
-  if (aSample->mCrypto.valid) {
-    if (aSample->mCrypto.plain_sizes.Length() == 0) {
-      aSample->mCrypto.plain_sizes.AppendElement(kADTSHeaderSize);
-      aSample->mCrypto.encrypted_sizes.AppendElement(aSample->mSize - kADTSHeaderSize);
+  if (aSample->mCrypto.mValid) {
+    if (aSample->mCrypto.mPlainSizes.Length() == 0) {
+      aSample->mCrypto.mPlainSizes.AppendElement(kADTSHeaderSize);
+      aSample->mCrypto.mEncryptedSizes.AppendElement(aSample->mSize - kADTSHeaderSize);
     } else {
-      aSample->mCrypto.plain_sizes[0] += kADTSHeaderSize;
+      aSample->mCrypto.mPlainSizes[0] += kADTSHeaderSize;
     }
   }
 
