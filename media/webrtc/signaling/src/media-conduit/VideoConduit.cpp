@@ -698,6 +698,7 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
 
   webrtc::ViEKeyFrameRequestMethod kf_request = webrtc::kViEKeyFrameRequestNone;
   bool use_nack_basic = false;
+  bool use_tmmbr = false;
 
   //Try Applying the codecs in the list
   // we treat as success if atleast one codec was applied and reception was
@@ -725,6 +726,11 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     if(codecConfigList[i]->RtcpFbNackIsSet(""))
     {
       use_nack_basic = true;
+    }
+
+    // Check whether TMMBR is requested
+    if (codecConfigList[i]->RtcpFbCcmIsSet("tmmbr")) {
+      use_tmmbr = true;
     }
 
     webrtc::VideoCodec  video_codec;
@@ -857,6 +863,16 @@ WebrtcVideoConduit::ConfigureRecvMediaCodecs(
     }
   }
   mUsingNackBasic = use_nack_basic;
+
+  if (use_tmmbr) {
+    CSFLogDebug(logTag, "Enabling TMMBR for video stream");
+    if (mPtrRTP->SetTMMBRStatus(mChannel, true) != 0) {
+      CSFLogError(logTag, "%s SetTMMBRStatus Failed %d ", __FUNCTION__,
+        mPtrViEBase->LastError());
+      return kMediaConduitTMMBRStatusError;
+    }
+  }
+  mUsingTmmbr = use_tmmbr;
 
   condError = StartReceiving();
   if (condError != kMediaConduitNoError) {
