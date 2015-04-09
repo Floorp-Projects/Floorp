@@ -276,6 +276,15 @@ body {
   list-style: decimal !important;
 }
 
+/* Hide elements with common "hidden" class names */
+#moz-reader-content .visually-hidden,
+#moz-reader-content .visuallyhidden,
+#moz-reader-content .hidden,
+#moz-reader-content .invisible,
+#moz-reader-content .sr-only {
+  display: none;
+}
+
 /*======= Controls toolbar =======*/
 
 .toolbar {
