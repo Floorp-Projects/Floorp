@@ -194,6 +194,11 @@
 
 <!ENTITY tab_queue_toast_message "Open later">
 <!ENTITY tab_queue_toast_action "Open now">
+<!ENTITY tab_queue_prompt_title "Opening multiple links?">
+<!ENTITY tab_queue_prompt_text "Open them without switching to Firefox each time.">
+<!ENTITY tab_queue_prompt_tip_text "you can change this later in Settings">
+<!ENTITY tab_queue_prompt_positive_action_button "Enable">
+<!ENTITY tab_queue_prompt_negative_action_button "Not now">
 <!-- Localization note (tab_queue_notification_text_plural) : The
      formatD is replaced with the number of tabs queued.  The
      number of tabs queued is always more than one.  We can't use

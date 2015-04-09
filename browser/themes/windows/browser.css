@@ -668,6 +668,22 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   transition-duration: 150ms;
 }
 
+toolbarbutton[cui-areatype="toolbar"] > :-moz-any(@nestedButtons@) > .toolbarbutton-icon,
+:-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])):not(:-moz-any(@nestedButtons@)) > .toolbarbutton-icon,
+:-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])) > .toolbarbutton-badge-container > .toolbarbutton-icon,
+:-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])) > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+#bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  width: 18px;
+}
+
+#nav-bar toolbarbutton[cui-areatype="toolbar"] > :-moz-any(@nestedButtons@) > .toolbarbutton-icon,
+#nav-bar :-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])) > .toolbarbutton-icon,
+#nav-bar :-moz-any(@primaryToolbarButtons@):-moz-any([cui-areatype="toolbar"],:not([cui-areatype])) > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
+#nav-bar #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
+  /* horizontal padding + border + actual icon width */
+  width: 32px;
+}
+
 @media (-moz-os-version: windows-xp),
        (-moz-os-version: windows-vista),
        (-moz-os-version: windows-win7) {
@@ -739,8 +755,14 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   -moz-border-end: none transparent;
 }
 
+#nav-bar #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  /* horizontal padding + border + actual icon width */
+  width: 31px;
+}
+
 #nav-bar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
-  padding: 8px 5px 7px;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 #nav-bar .toolbaritem-combined-buttons {
@@ -897,6 +919,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   border-radius: 0 !important;
   padding-left: 9px !important;
   padding-right: 3px !important;
+  width: 31px !important; /* horizontal padding + border + actual icon width */
 }
 
 @conditionalForwardWithUrlbar@:not([switchingtabs]) > #forward-button {
@@ -943,6 +966,7 @@ toolbarbutton[sdk-button="true"][cui-areatype="toolbar"] > .toolbarbutton-icon {
   background-color: hsla(210,25%,98%,.08) !important;
   padding: 6px !important;
   border-style: none !important;
+  width: 30px !important; /* horizontal padding + border + actual icon width */
   box-shadow: 0 1px 0 0 hsla(210,4%,10%,.25),
               0 0 0 1px hsla(210,4%,10%,.25);
   transition-property: background-color, box-shadow !important;

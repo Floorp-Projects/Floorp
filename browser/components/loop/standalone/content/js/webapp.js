@@ -105,7 +105,7 @@ loop.webapp = (function($, _, OT, mozL10n) {
           React.createElement("h3", null, mozL10n.get("promote_firefox_hello_heading", {brandShortname: mozL10n.get("brandShortname")})), 
           React.createElement("p", null, 
             React.createElement("a", {className: "btn btn-large btn-accept", 
-               href: loop.config.brandWebsiteUrl}, 
+               href: loop.config.downloadFirefoxUrl}, 
               mozL10n.get("get_firefox_button", {
                 brandShortname: mozL10n.get("brandShortname")
               })
