@@ -156,6 +156,17 @@ function MaybeCrossOriginURI(test, uri)
   }
 }
 
+function BSD16(a)
+{
+  var c = 0x1234;
+  var i = 0;
+  var l = a.length;
+  for (i = 0; i < l; i++) {
+    c = (((((c >>> 1) + ((c & 1) << 15)) | 0) + (a[i] & 0xff)) & 0xffff) | 0;
+  }
+  return c;
+};
+
 function AppendTrack(test, ms, track, token)
 {
   return new Promise(function(resolve, reject) {
@@ -172,15 +183,31 @@ function AppendTrack(test, ms, track, token)
         return;
       }
 
-      fragmentFile = MaybeCrossOriginURI(test, track.fragments[curFragment++]);
+      var fragment = track.fragments[curFragment++];
+      if (typeof fragment === "string") {
+        fragment = { file:fragment, size:-1, bsd16:-1 };
+      }
+
+      fragmentFile = MaybeCrossOriginURI(test, fragment.file);
 
       var req = new XMLHttpRequest();
       req.open("GET", fragmentFile);
       req.responseType = "arraybuffer";
 
       req.addEventListener("load", function() {
+        var u8array = new Uint8Array(req.response);
+        if (fragment.size !== undefined && fragment.size >= 0) {
+          is(u8array.length, fragment.size,
+             token + " fragment '" + fragmentFile + "' size: expected "
+             + fragment.size + ", got " + u8array.length);
+        }
+        if (fragment.bsd16 !== undefined && fragment.bsd16 >= 0) {
+          is(BSD16(u8array), fragment.bsd16,
+             token + " fragment '" + fragmentFile + "' checksum: expected "
+             + fragment.bsd16 + ", got " + BSD16(u8array));
+        }
         Log(token, track.name + ": fetch of " + fragmentFile + " complete, appending");
-        sb.appendBuffer(new Uint8Array(req.response));
+        sb.appendBuffer(u8array);
       });
 
       req.addEventListener("error", function(){info(token + " error fetching " + fragmentFile);});
