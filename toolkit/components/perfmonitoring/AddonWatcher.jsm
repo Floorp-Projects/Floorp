@@ -23,8 +23,16 @@ XPCOMUtils.defineLazyServiceGetter(this, "Telemetry",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 
+const FILTERS = ["longestDuration", "totalCPOWTime"];
+
 let AddonWatcher = {
   _previousPerformanceIndicators: {},
+
+  /**
+   * Stats, designed to be consumed by clients of AddonWatcher.
+   *
+   */
+  _stats: new Map(),
   _timer: Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer),
   _callback: null,
   /**
@@ -161,24 +169,36 @@ let AddonWatcher = {
             add(addonId, diff.totalCPOWTime / 1000);
         }
 
-        // Report mibehaviors to the user.
-        let reason = null;
+        // Store misbehaviors for about:performance and other clients
 
-        for (let k of ["longestDuration", "totalCPOWTime"]) {
-          if (limits[k] > 0 && diff[k] > limits[k]) {
-            reason = k;
+        let stats = this._stats.get(addonId);
+        if (!stats) {
+          stats = {
+            peaks: {},
+            alerts: {},
+          };
+          this._stats.set(addonId, stats);
+        }
+
+        // Report misbehaviors to the user.
+
+        for (let filter of FILTERS) {
+          dump(`Checking addon ${addonId} with filter ${filter}\n`);
+          let peak = stats.peaks[filter] || 0;
+          stats.peaks[filter] = Math.max(diff[filter], peak);
+
+          if (limits[filter] <= 0 || diff[filter] <= limits[filter]) {
+            continue;
           }
-        }
 
-        if (!reason) {
-          continue;
-        }
+          stats.alerts[filter] = (stats.alerts[filter] || 0) + 1;
 
-        try {
-          this._callback(addonId, reason);
-        } catch (ex) {
-          Cu.reportError("Error in AddonWatcher._checkAddons callback " + ex);
-          Cu.reportError(ex.stack);
+          try {
+            this._callback(addonId, filter);
+          } catch (ex) {
+            Cu.reportError("Error in AddonWatcher._checkAddons callback " + ex);
+            Cu.reportError(ex.stack);
+          }
         }
       }
     } catch (ex) {
@@ -200,5 +220,24 @@ let AddonWatcher = {
     } catch (ex) {
       Preferences.set("browser.addon-watch.ignore", JSON.stringify([addonid]));
     }
-  }
+  },
+  /**
+   * The list of alerts for this session.
+   *
+   * @type {Map<String, Object>} A map associating addonId to
+   *  objects with fields
+   *  - {Object} peaks The highest values encountered for each filter.
+   *    - {number} longestDuration
+   *    - {number} totalCPOWTime
+   *  - {Object} alerts The number of alerts for each filter.
+   *    - {number} longestDuration
+   *    - {number} totalCPOWTime
+   */
+  get alerts() {
+    let result = new Map();
+    for (let [k, v] of this._stats) {
+      result.set(k, Cu.cloneInto(v, this));
+    }
+    return result;
+  },
 };
