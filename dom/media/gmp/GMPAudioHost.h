@@ -14,12 +14,9 @@
 #include "GMPEncryptedBufferDataImpl.h"
 #include "mozilla/gmp/GMPTypes.h"
 
-namespace mp4_demuxer {
-class MP4Sample;
-}
-
 namespace mozilla {
 class CryptoSample;
+class MediaRawData;
 
 namespace gmp {
 
@@ -27,7 +24,7 @@ class GMPAudioSamplesImpl : public GMPAudioSamples {
 public:
   explicit GMPAudioSamplesImpl(GMPAudioFormat aFormat);
   explicit GMPAudioSamplesImpl(const GMPAudioEncodedSampleData& aData);
-  GMPAudioSamplesImpl(mp4_demuxer::MP4Sample* aSample,
+  GMPAudioSamplesImpl(MediaRawData* aSample,
                       uint32_t aChannels,
                       uint32_t aRate);
   virtual ~GMPAudioSamplesImpl();

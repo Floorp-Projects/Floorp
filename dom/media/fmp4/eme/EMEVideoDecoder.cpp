@@ -7,6 +7,7 @@
 #include "EMEVideoDecoder.h"
 #include "GMPVideoEncodedFrameImpl.h"
 #include "mozilla/CDMProxy.h"
+#include "MediaData.h"
 
 namespace mozilla {
 
@@ -36,11 +37,11 @@ EMEVideoDecoder::GetNodeId()
 }
 
 GMPUnique<GMPVideoEncodedFrame>::Ptr
-EMEVideoDecoder::CreateFrame(mp4_demuxer::MP4Sample* aSample)
+EMEVideoDecoder::CreateFrame(MediaRawData* aSample)
 {
   GMPUnique<GMPVideoEncodedFrame>::Ptr frame = GMPVideoDecoder::CreateFrame(aSample);
-  if (frame && aSample->crypto.valid) {
-    static_cast<gmp::GMPVideoEncodedFrameImpl*>(frame.get())->InitCrypto(aSample->crypto);
+  if (frame && aSample->mCrypto.valid) {
+    static_cast<gmp::GMPVideoEncodedFrameImpl*>(frame.get())->InitCrypto(aSample->mCrypto);
   }
   return frame;
 }

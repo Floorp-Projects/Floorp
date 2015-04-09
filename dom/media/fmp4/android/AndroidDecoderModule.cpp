@@ -62,7 +62,7 @@ public:
     mGLContext = nullptr;
   }
 
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override {
+  virtual nsresult Input(MediaRawData* aSample) override {
     return MediaCodecDataDecoder::Input(aSample);
   }
 
@@ -397,7 +397,7 @@ void MediaCodecDataDecoder::DecoderLoop()
   bool waitingEOF = false;
 
   AutoLocalJNIFrame frame(GetJNIForThread(), 1);
-  mp4_demuxer::MP4Sample* sample = nullptr;
+  nsRefPtr<MediaRawData> sample;
 
   MediaFormat::LocalRef outputFormat(frame.GetEnv());
   nsresult res;
@@ -464,7 +464,7 @@ void MediaCodecDataDecoder::DecoderLoop()
 
         void* directBuffer = frame.GetEnv()->GetDirectBufferAddress(buffer.Get());
 
-        MOZ_ASSERT(frame.GetEnv()->GetDirectBufferCapacity(buffer.Get()) >= sample->size,
+        MOZ_ASSERT(frame.GetEnv()->GetDirectBufferCapacity(buffer.Get()) >= sample->mSize,
           "Decoder buffer is not large enough for sample");
 
         {
@@ -473,14 +473,13 @@ void MediaCodecDataDecoder::DecoderLoop()
           mQueue.pop();
         }
 
-        PodCopy((uint8_t*)directBuffer, sample->data, sample->size);
+        PodCopy((uint8_t*)directBuffer, sample->mData, sample->mSize);
 
-        res = mDecoder->QueueInputBuffer(inputIndex, 0, sample->size,
-                                         sample->composition_timestamp, 0);
+        res = mDecoder->QueueInputBuffer(inputIndex, 0, sample->mSize,
+                                         sample->mTime, 0);
         HANDLE_DECODER_ERROR();
 
-        mDurations.push(sample->duration);
-        delete sample;
+        mDurations.push(sample->mDuration);
         sample = nullptr;
         outputDone = false;
       }
@@ -572,7 +571,6 @@ void MediaCodecDataDecoder::ClearQueue()
 {
   mMonitor.AssertCurrentThreadOwns();
   while (!mQueue.empty()) {
-    delete mQueue.front();
     mQueue.pop();
   }
   while (!mDurations.empty()) {
@@ -580,7 +578,7 @@ void MediaCodecDataDecoder::ClearQueue()
   }
 }
 
-nsresult MediaCodecDataDecoder::Input(mp4_demuxer::MP4Sample* aSample) {
+nsresult MediaCodecDataDecoder::Input(MediaRawData* aSample) {
   MonitorAutoLock lock(mMonitor);
   mQueue.push(aSample);
   lock.NotifyAll();

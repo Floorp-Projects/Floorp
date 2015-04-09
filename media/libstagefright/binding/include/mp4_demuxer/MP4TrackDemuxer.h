@@ -15,7 +15,7 @@ class MP4AudioDemuxer : public mozilla::TrackDemuxer {
 public:
   explicit MP4AudioDemuxer(MP4Demuxer* aDemuxer) : mDemuxer(aDemuxer) {}
   virtual void Seek(Microseconds aTime) override;
-  virtual mozilla::MediaSample* DemuxSample() override;
+  virtual already_AddRefed<mozilla::MediaRawData> DemuxSample() override;
   virtual Microseconds GetNextKeyframeTime() override;
 
 private:
@@ -26,7 +26,7 @@ class MP4VideoDemuxer : public mozilla::TrackDemuxer {
 public:
   explicit MP4VideoDemuxer(MP4Demuxer* aDemuxer) : mDemuxer(aDemuxer) {}
   virtual void Seek(Microseconds aTime) override;
-  virtual mozilla::MediaSample* DemuxSample() override;
+  virtual already_AddRefed<mozilla::MediaRawData> DemuxSample() override;
   virtual Microseconds GetNextKeyframeTime() override;
 
 private:

@@ -12,8 +12,6 @@
 
 #define MAX_CHANNELS 16
 
-typedef mp4_demuxer::MP4Sample MP4Sample;
-
 namespace mozilla
 {
 
@@ -83,19 +81,13 @@ CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumAFrames)
 }
 
 void
-FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
+FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
 {
   AVPacket packet;
   av_init_packet(&packet);
 
-  if (!aSample->Pad(FF_INPUT_BUFFER_PADDING_SIZE)) {
-    NS_WARNING("FFmpeg audio decoder failed to allocate sample.");
-    mCallback->Error();
-    return;
-  }
-
-  packet.data = aSample->data;
-  packet.size = aSample->size;
+  packet.data = const_cast<uint8_t*>(aSample->mData);
+  packet.size = aSample->mSize;
 
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg audio decoder failed to allocate frame.");
@@ -103,8 +95,8 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
     return;
   }
 
-  int64_t samplePosition = aSample->byte_offset;
-  Microseconds pts = aSample->composition_timestamp;
+  int64_t samplePosition = aSample->mOffset;
+  Microseconds pts = aSample->mTime;
 
   while (packet.size > 0) {
     int decoded;
@@ -153,10 +145,10 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MP4Sample* aSample)
 }
 
 nsresult
-FFmpegAudioDecoder<LIBAV_VER>::Input(MP4Sample* aSample)
+FFmpegAudioDecoder<LIBAV_VER>::Input(MediaRawData* aSample)
 {
-  mTaskQueue->Dispatch(NS_NewRunnableMethodWithArg<nsAutoPtr<MP4Sample> >(
-    this, &FFmpegAudioDecoder::DecodePacket, nsAutoPtr<MP4Sample>(aSample)));
+  mTaskQueue->Dispatch(NS_NewRunnableMethodWithArg<nsRefPtr<MediaRawData> >(
+    this, &FFmpegAudioDecoder::DecodePacket, nsRefPtr<MediaRawData>(aSample)));
 
   return NS_OK;
 }

@@ -34,12 +34,12 @@ public:
     int64_t byte_offset;
     bool is_sync_point;
 
-    explicit AppleFrameRef(const mp4_demuxer::MP4Sample& aSample)
-    : decode_timestamp(aSample.decode_timestamp)
-    , composition_timestamp(aSample.composition_timestamp)
-    , duration(aSample.duration)
-    , byte_offset(aSample.byte_offset)
-    , is_sync_point(aSample.is_sync_point)
+    explicit AppleFrameRef(const MediaRawData& aSample)
+      : decode_timestamp(aSample.mTimecode)
+      , composition_timestamp(aSample.mTime)
+      , duration(aSample.mDuration)
+      , byte_offset(aSample.mOffset)
+      , is_sync_point(aSample.mKeyframe)
     {
     }
 
@@ -48,11 +48,11 @@ public:
                   Microseconds aDuration,
                   int64_t aByte_offset,
                   bool aIs_sync_point)
-    : decode_timestamp(aDts)
-    , composition_timestamp(aPts)
-    , duration(aDuration)
-    , byte_offset(aByte_offset)
-    , is_sync_point(aIs_sync_point)
+      : decode_timestamp(aDts)
+      , composition_timestamp(aPts)
+      , duration(aDuration)
+      , byte_offset(aByte_offset)
+      , is_sync_point(aIs_sync_point)
     {
     }
   };
@@ -71,7 +71,7 @@ public:
                   layers::ImageContainer* aImageContainer);
   virtual ~AppleVDADecoder();
   virtual nsresult Init() override;
-  virtual nsresult Input(mp4_demuxer::MP4Sample* aSample) override;
+  virtual nsresult Input(MediaRawData* aSample) override;
   virtual nsresult Flush() override;
   virtual nsresult Drain() override;
   virtual nsresult Shutdown() override;
@@ -84,12 +84,12 @@ public:
                        nsAutoPtr<AppleFrameRef> aFrameRef);
 
  protected:
-  AppleFrameRef* CreateAppleFrameRef(const mp4_demuxer::MP4Sample* aSample);
+  AppleFrameRef* CreateAppleFrameRef(const MediaRawData* aSample);
   void DrainReorderedFrames();
   void ClearReorderedFrames();
   CFDictionaryRef CreateOutputConfiguration();
 
-  nsRefPtr<mp4_demuxer::ByteBuffer> mExtraData;
+  nsRefPtr<DataBuffer> mExtraData;
   nsRefPtr<FlushableMediaTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
   nsRefPtr<layers::ImageContainer> mImageContainer;
@@ -105,7 +105,7 @@ private:
   bool mIs106;
 
   // Method to pass a frame to VideoToolbox for decoding.
-  nsresult SubmitFrame(mp4_demuxer::MP4Sample* aSample);
+  nsresult SubmitFrame(MediaRawData* aSample);
   // Method to set up the decompression session.
   nsresult InitializeSession();
   CFDictionaryRef CreateDecoderSpecification();
