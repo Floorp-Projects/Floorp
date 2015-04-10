@@ -103,7 +103,7 @@ public:
 
   ~AutoImageBridgeParentAsyncMessageSender()
   {
-    mImageBridge->SendPendingAsyncMessges();
+    mImageBridge->SendPendingAsyncMessages();
   }
 private:
   ImageBridgeParent* mImageBridge;
@@ -339,10 +339,10 @@ ImageBridgeParent::SendFenceHandleIfPresent(PTextureParent* aTexture,
 }
 
 void
-ImageBridgeParent::SendFenceHandleToTrackerIfPresent(uint64_t aDestHolderId,
-                                                     uint64_t aTransactionId,
-                                                     PTextureParent* aTexture,
-                                                     CompositableHost* aCompositableHost)
+ImageBridgeParent::AppendDeliverFenceMessage(uint64_t aDestHolderId,
+                                             uint64_t aTransactionId,
+                                             PTextureParent* aTexture,
+                                             CompositableHost* aCompositableHost)
 {
   RefPtr<TextureHost> texture = TextureHost::AsTextureHost(aTexture);
   if (!texture) {
@@ -369,30 +369,30 @@ ImageBridgeParent::SendFenceHandleToTrackerIfPresent(uint64_t aDestHolderId,
 }
 
 /*static*/ void
-ImageBridgeParent::SendFenceHandleToTrackerIfPresent(base::ProcessId aChildProcessId,
-                                                     uint64_t aDestHolderId,
-                                                     uint64_t aTransactionId,
-                                                     PTextureParent* aTexture,
-                                                     CompositableHost* aCompositableHost)
+ImageBridgeParent::AppendDeliverFenceMessage(base::ProcessId aChildProcessId,
+                                             uint64_t aDestHolderId,
+                                             uint64_t aTransactionId,
+                                             PTextureParent* aTexture,
+                                             CompositableHost* aCompositableHost)
 {
   ImageBridgeParent* imageBridge = ImageBridgeParent::GetInstance(aChildProcessId);
   if (!imageBridge) {
     return;
   }
-  imageBridge->SendFenceHandleToTrackerIfPresent(aDestHolderId,
-                                                 aTransactionId,
-                                                 aTexture,
-                                                 aCompositableHost);
+  imageBridge->AppendDeliverFenceMessage(aDestHolderId,
+                                         aTransactionId,
+                                         aTexture,
+                                         aCompositableHost);
 }
 
 /*static*/ void
-ImageBridgeParent::SendPendingAsyncMessges(base::ProcessId aChildProcessId)
+ImageBridgeParent::SendPendingAsyncMessages(base::ProcessId aChildProcessId)
 {
   ImageBridgeParent* imageBridge = ImageBridgeParent::GetInstance(aChildProcessId);
   if (!imageBridge) {
     return;
   }
-  imageBridge->SendPendingAsyncMessges();
+  imageBridge->SendPendingAsyncMessages();
 }
 
 } // layers
