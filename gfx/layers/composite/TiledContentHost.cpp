@@ -225,23 +225,6 @@ TiledLayerBufferComposite::SetCompositor(Compositor* aCompositor)
   }
 }
 
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-void
-TiledLayerBufferComposite::SetReleaseFence(const android::sp<android::Fence>& aReleaseFence)
-{
-  for (size_t i = 0; i < mRetainedTiles.Length(); i++) {
-    if (!mRetainedTiles[i].mTextureHost) {
-      continue;
-    }
-    TextureHostOGL* texture = mRetainedTiles[i].mTextureHost->AsHostOGL();
-    if (!texture) {
-      continue;
-    }
-    texture->SetReleaseFence(new android::Fence(aReleaseFence->dup()));
-  }
-}
-#endif
-
 TiledContentHost::TiledContentHost(const TextureInfo& aTextureInfo)
   : ContentHost(aTextureInfo)
   , mTiledBuffer(TiledLayerBufferComposite())
