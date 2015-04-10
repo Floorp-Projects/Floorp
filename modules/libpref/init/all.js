@@ -270,10 +270,8 @@ pref("media.play-stand-alone", true);
 
 pref("media.hardware-video-decoding.enabled", true);
 
-#if defined(XP_WIN)
 pref("media.decoder.heuristic.dormant.enabled", true);
 pref("media.decoder.heuristic.dormant.timeout", 60000);
-#endif
 
 #ifdef MOZ_WMF
 pref("media.windows-media-foundation.enabled", true);
