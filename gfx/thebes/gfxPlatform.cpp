@@ -2161,6 +2161,7 @@ gfxPlatform::OptimalFormatForContent(gfxContentType aContent)
 static bool sLayersSupportsD3D9 = false;
 static bool sLayersSupportsD3D11 = false;
 static bool sLayersSupportsDXVA = false;
+static bool sANGLESupportsD3D11 = false;
 static bool sBufferRotationCheckPref = true;
 static bool sPrefBrowserTabsRemoteAutostart = false;
 
@@ -2207,6 +2208,11 @@ InitLayersAccelerationPrefs()
             sLayersSupportsDXVA = true;
           }
         }
+        if (NS_SUCCEEDED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE, &status))) {
+          if (status == nsIGfxInfo::FEATURE_STATUS_OK) {
+            sANGLESupportsD3D11 = true;
+          }
+        }
       }
     }
 #endif
@@ -2241,6 +2247,14 @@ gfxPlatform::CanUseDXVA()
   MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
   return sLayersSupportsDXVA;
 }
+
+bool
+gfxPlatform::CanUseDirect3D11ANGLE()
+{
+  MOZ_ASSERT(sLayersAccelerationPrefsInitialized);
+  return sANGLESupportsD3D11;
+}
+
 
 bool
 gfxPlatform::BufferRotationEnabled()
