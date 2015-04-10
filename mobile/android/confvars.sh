@@ -85,5 +85,8 @@ MOZ_ANDROID_MLS_STUMBLER=1
 # Enable adding to the system downloads list in pre-release builds.
 MOZ_ANDROID_DOWNLOADS_INTEGRATION=1
 
+# Enable Tab Queue
+MOZ_ANDROID_TAB_QUEUE=1
+
 # Use the low-memory GC tuning.
 export JS_GC_SMALL_CHUNK_SIZE=1
