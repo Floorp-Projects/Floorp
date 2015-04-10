@@ -86,8 +86,6 @@
 #include "mozilla/scache/StartupCache.h"
 #include "nsIGfxInfo.h"
 
-#include "base/histogram.h"
-
 #include "mozilla/unused.h"
 
 #ifdef XP_WIN
@@ -2931,7 +2929,9 @@ class XREMain
 {
 public:
   XREMain() :
-    mStartOffline(false)
+    mScopedXPCOM(nullptr)
+    , mAppData(nullptr)
+    , mStartOffline(false)
     , mShuttingDown(false)
 #ifdef MOZ_ENABLE_XREMOTE
     , mDisableRemote(false)
@@ -2942,9 +2942,13 @@ public:
   {};
 
   ~XREMain() {
-    mScopedXPCOM = nullptr;
-    mStatisticsRecorder = nullptr;
-    mAppData = nullptr;
+    if (mAppData) {
+      delete mAppData;
+    }
+    if (mScopedXPCOM) {
+      NS_WARNING("Scoped xpcom should have been deleted!");
+      delete mScopedXPCOM;
+    }
   }
 
   int XRE_main(int argc, char* argv[], const nsXREAppData* aAppData);
@@ -2961,10 +2965,8 @@ public:
   nsCOMPtr<nsIRemoteService> mRemoteService;
 #endif
 
-  UniquePtr<ScopedXPCOMStartup> mScopedXPCOM;
-  UniquePtr<base::StatisticsRecorder> mStatisticsRecorder;
-  nsAutoPtr<mozilla::ScopedAppData> mAppData;
-
+  ScopedXPCOMStartup* mScopedXPCOM;
+  ScopedAppData* mAppData;
   nsXREDirProvider mDirProvider;
   nsAutoCString mProfileName;
   nsAutoCString mDesktopStartupID;
@@ -3083,7 +3085,7 @@ XREMain::XRE_mainInit(bool* aExitFlag)
       return 1;
     }
 
-    rv = XRE_ParseAppData(overrideLF, mAppData.get());
+    rv = XRE_ParseAppData(overrideLF, mAppData);
     if (NS_FAILED(rv)) {
       Output(true, "Couldn't read override.ini");
       return 1;
@@ -4199,10 +4201,6 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 
   NS_ENSURE_TRUE(aAppData, 2);
 
-  // A initializer to initialize histogram collection, a chromium
-  // thing used by Telemetry.
-  mStatisticsRecorder = MakeUnique<base::StatisticsRecorder>();
-
   mAppData = new ScopedAppData(aAppData);
   if (!mAppData)
     return 1;
@@ -4240,7 +4238,7 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
   bool appInitiatedRestart = false;
 
   // Start the real application
-  mScopedXPCOM = MakeUnique<ScopedXPCOMStartup>();
+  mScopedXPCOM = new ScopedXPCOMStartup();
   if (!mScopedXPCOM)
     return 1;
 
@@ -4275,8 +4273,8 @@ XREMain::XRE_main(int argc, char* argv[], const nsXREAppData* aAppData)
 #endif /* MOZ_ENABLE_XREMOTE */
   }
 
+  delete mScopedXPCOM;
   mScopedXPCOM = nullptr;
-  mStatisticsRecorder = nullptr;
 
   // unlock the profile after ScopedXPCOMStartup object (xpcom) 
   // has gone out of scope.  see bug #386739 for more details
@@ -4354,7 +4352,7 @@ XRE_metroStartup(bool runXREMain)
     return NS_ERROR_FAILURE;
 
   // Start the real application
-  xreMainPtr->mScopedXPCOM = MakeUnique<ScopedXPCOMStartup>();
+  xreMainPtr->mScopedXPCOM = new ScopedXPCOMStartup();
   if (!xreMainPtr->mScopedXPCOM)
     return NS_ERROR_FAILURE;
 
@@ -4371,6 +4369,7 @@ XRE_metroStartup(bool runXREMain)
 void
 XRE_metroShutdown()
 {
+  delete xreMainPtr->mScopedXPCOM;
   xreMainPtr->mScopedXPCOM = nullptr;
 
 #ifdef MOZ_INSTRUMENT_EVENT_LOOP
