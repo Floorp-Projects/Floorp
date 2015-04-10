@@ -1,5 +1,8 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Tests for `History.remove`, as implemented in History.jsm
 
@@ -10,10 +13,6 @@ Cu.importGlobalProperties(["URL"]);
 
 // Test removing a single page
 add_task(function* test_remove_single() {
-  yield PlacesTestUtils.clearHistory();
-  yield PlacesUtils.bookmarks.eraseEverything();
-
-
   let WITNESS_URI = NetUtil.newURI("http://mozilla.com/test_browserhistory/test_remove/" + Math.random());
   yield PlacesTestUtils.addVisits(WITNESS_URI);
   Assert.ok(page_in_database(WITNESS_URI));
@@ -90,15 +89,13 @@ add_task(function* test_remove_single() {
     let removed = false;
     if (options.useCallback) {
       let onRowCalled = false;
-      let guid = do_get_guid_for_uri(uri);
-      let frecency = frecencyForUrl(uri);
       removed = yield PlacesUtils.history.remove(removeArg, page => {
         Assert.equal(onRowCalled, false, "Callback has not been called yet");
         onRowCalled = true;
         Assert.equal(page.url.href, uri.spec, "Callback provides the correct url");
-        Assert.equal(page.guid, guid, "Callback provides the correct guid");
+        Assert.equal(page.guid, do_get_guid_for_uri(uri), "Callback provides the correct guid");
         Assert.equal(page.title, title, "Callback provides the correct title");
-        Assert.equal(page.frecency, frecency, "Callback provides the correct frecency");
+        Assert.equal(page.frecency, frecencyForUrl(uri), "Callback provides the correct frecency");
       });
       Assert.ok(onRowCalled, "Callback has been called");
     } else {
@@ -141,9 +138,6 @@ add_task(function* test_remove_single() {
 // Test removing a list of pages
 add_task(function* test_remove_many() {
   const SIZE = 10;
-
-  yield PlacesTestUtils.clearHistory();
-  yield PlacesUtils.bookmarks.eraseEverything();
 
   do_print("Adding a witness page");
   let WITNESS_URI = NetUtil.newURI("http://mozilla.com/test_browserhistory/test_remove/" + Math.random());;
@@ -272,11 +266,10 @@ add_task(function* test_remove_many() {
 
   Assert.notEqual(visits_in_database(WITNESS_URI), 0, "Witness URI still has visits");
   Assert.notEqual(page_in_database(WITNESS_URI), 0, "Witness URI is still here");
-});
 
-add_task(function* cleanup() {
+  do_print("Cleaning up");
   yield PlacesTestUtils.clearHistory();
-  yield PlacesUtils.bookmarks.eraseEverything();  
+
 });
 
 // Test the various error cases
