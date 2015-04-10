@@ -243,17 +243,6 @@ ImageBridgeParent::DeallocPTextureParent(PTextureParent* actor)
 }
 
 void
-ImageBridgeParent::SendFenceHandle(AsyncTransactionTracker* aTracker,
-                                   PTextureParent* aTexture,
-                                   const FenceHandle& aFence)
-{
-  InfallibleTArray<AsyncParentMessageData> messages;
-  messages.AppendElement(OpDeliverFence(aTexture, nullptr,
-                                        aFence));
-  mozilla::unused << SendParentAsyncMessages(messages);
-}
-
-void
 ImageBridgeParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage)
 {
   mozilla::unused << SendParentAsyncMessages(aMessage);
@@ -262,32 +251,6 @@ ImageBridgeParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageDat
 bool
 ImageBridgeParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessageData>&& aMessages)
 {
-  for (AsyncChildMessageArray::index_type i = 0; i < aMessages.Length(); ++i) {
-    const AsyncChildMessageData& message = aMessages[i];
-
-    switch (message.type()) {
-      case AsyncChildMessageData::TOpDeliverFenceFromChild: {
-        const OpDeliverFenceFromChild& op = message.get_OpDeliverFenceFromChild();
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-        FenceHandle fence = FenceHandle(op.fence());
-        PTextureParent* parent = op.textureParent();
-
-        TextureHostOGL* hostOGL = nullptr;
-        RefPtr<TextureHost> texture = TextureHost::AsTextureHost(parent);
-        if (texture) {
-          hostOGL = texture->AsHostOGL();
-        }
-        if (hostOGL) {
-          hostOGL->SetAcquireFence(fence.mFence);
-        }
-#endif
-        break;
-      }
-      default:
-        NS_ERROR("unknown AsyncChildMessageData type");
-        return false;
-    }
-  }
   return true;
 }
 
