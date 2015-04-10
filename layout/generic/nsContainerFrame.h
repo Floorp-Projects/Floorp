@@ -235,10 +235,12 @@ public:
    * If the reflow status after reflowing the child is FULLY_COMPLETE then any
    * next-in-flows are deleted using DeleteNextInFlowChild().
    *
+   * @param aContainerWidth  width of the border-box of the containing frame
+   *
    * Flags:
    * NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
    *    don't want to automatically sync the frame and view
-   * NS_FRAME_NO_MOVE_FRAME - don't move the frame. aX and aY are ignored in this
+   * NS_FRAME_NO_MOVE_FRAME - don't move the frame. aPos is ignored in this
    *    case. Also implies NS_FRAME_NO_MOVE_VIEW
    */
   void ReflowChild(nsIFrame*                      aChildFrame,
@@ -262,8 +264,10 @@ public:
    * - sets the view's visibility, opacity, content transparency, and clip
    * - invoked the DidReflow() function
    *
+   * @param aContainerWidth  width of the border-box of the containing frame
+   *
    * Flags:
-   * NS_FRAME_NO_MOVE_FRAME - don't move the frame. aX and aY are ignored in this
+   * NS_FRAME_NO_MOVE_FRAME - don't move the frame. aPos is ignored in this
    *    case. Also implies NS_FRAME_NO_MOVE_VIEW
    * NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
    *    don't want to automatically sync the frame and view
