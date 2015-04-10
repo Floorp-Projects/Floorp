@@ -8,6 +8,8 @@
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsXULAppAPI.h"
+#include "nsContentUtils.h"
+#include "nsStringStream.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -23,21 +25,15 @@ NS_IMETHODIMP
 nsClipboardProxy::SetData(nsITransferable *aTransferable,
                           nsIClipboardOwner *anOwner, int32_t aWhichClipboard)
 {
-  nsCOMPtr<nsISupports> tmp;
-  uint32_t len;
-  nsresult rv  = aTransferable->GetTransferData(kUnicodeMime, getter_AddRefs(tmp),
-                                                &len);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsISupportsString> supportsString = do_QueryInterface(tmp);
-  // No support for non-text data
-  NS_ENSURE_TRUE(supportsString, NS_ERROR_NOT_IMPLEMENTED);
-  nsAutoString buffer;
-  supportsString->GetData(buffer);
+  ContentChild* child = ContentChild::GetSingleton();
+
+  IPCDataTransfer ipcDataTransfer;
+  nsContentUtils::TransferableToIPCTransferable(aTransferable, &ipcDataTransfer,
+                                                child, nullptr);
 
   bool isPrivateData = false;
   aTransferable->GetIsPrivateData(&isPrivateData);
-  ContentChild::GetSingleton()->SendSetClipboardText(buffer, isPrivateData,
-                                                     aWhichClipboard);
+  child->SendSetClipboard(ipcDataTransfer, isPrivateData, aWhichClipboard);
 
   return NS_OK;
 }
@@ -45,25 +41,72 @@ nsClipboardProxy::SetData(nsITransferable *aTransferable,
 NS_IMETHODIMP
 nsClipboardProxy::GetData(nsITransferable *aTransferable, int32_t aWhichClipboard)
 {
-  nsAutoString buffer;
-  ContentChild::GetSingleton()->SendGetClipboardText(aWhichClipboard, &buffer);
+   nsTArray<nsCString> types;
+  
+  nsCOMPtr<nsISupportsArray> flavorList;
+  aTransferable->FlavorsTransferableCanImport(getter_AddRefs(flavorList));
+  if (flavorList) {
+    uint32_t flavorCount = 0;
+    flavorList->Count(&flavorCount);
+    for (uint32_t j = 0; j < flavorCount; ++j) {
+      nsCOMPtr<nsISupportsCString> flavor = do_QueryElementAt(flavorList, j);
+      if (flavor) {
+        nsAutoCString flavorStr;
+        flavor->GetData(flavorStr);
+        if (flavorStr.Length()) {
+          types.AppendElement(flavorStr);
+        }
+      }
+    }
+  }
 
   nsresult rv;
-  nsCOMPtr<nsISupportsString> dataWrapper =
-    do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  IPCDataTransfer dataTransfer;
+  ContentChild::GetSingleton()->SendGetClipboard(types, aWhichClipboard, &dataTransfer);
 
-  rv = dataWrapper->SetData(buffer);
-  NS_ENSURE_SUCCESS(rv, rv);
+  auto& items = dataTransfer.items();
+  for (uint32_t j = 0; j < items.Length(); ++j) {
+    const IPCDataTransferItem& item = items[j];
 
-  // If our data flavor has already been added, this will fail. But we don't care
-  aTransferable->AddDataFlavor(kUnicodeMime);
+    if (item.data().type() == IPCDataTransferData::TnsString) {
+      nsCOMPtr<nsISupportsString> dataWrapper =
+        do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsISupports> nsisupportsDataWrapper =
-    do_QueryInterface(dataWrapper);
-  rv = aTransferable->SetTransferData(kUnicodeMime, nsisupportsDataWrapper,
-                                      buffer.Length() * sizeof(char16_t));
-  NS_ENSURE_SUCCESS(rv, rv);
+      nsString data = item.data().get_nsString();
+      rv = dataWrapper->SetData(data);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper,
+                                          data.Length() * sizeof(char16_t));
+      NS_ENSURE_SUCCESS(rv, rv);
+    } else if (item.data().type() == IPCDataTransferData::TnsCString) {
+      // If this is an image, convert it into an nsIInputStream.
+      nsCString flavor = item.flavor();
+      if (flavor.EqualsLiteral(kJPEGImageMime) ||
+          flavor.EqualsLiteral(kJPGImageMime) ||
+          flavor.EqualsLiteral(kPNGImageMime) ||
+          flavor.EqualsLiteral(kGIFImageMime)) {
+        nsCOMPtr<nsIInputStream> stream;
+        NS_NewCStringInputStream(getter_AddRefs(stream), item.data().get_nsCString());
+
+        rv = aTransferable->SetTransferData(flavor.get(), stream, sizeof(nsISupports*));
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else if (flavor.EqualsLiteral(kNativeHTMLMime)) {
+        nsCOMPtr<nsISupportsCString> dataWrapper =
+          do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCString data = item.data().get_nsCString();
+        rv = dataWrapper->SetData(data);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        rv = aTransferable->SetTransferData(item.flavor().get(), dataWrapper,
+                                            data.Length());
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
+  }
 
   return NS_OK;
 }
@@ -77,11 +120,18 @@ nsClipboardProxy::EmptyClipboard(int32_t aWhichClipboard)
 
 NS_IMETHODIMP
 nsClipboardProxy::HasDataMatchingFlavors(const char **aFlavorList,
-                                    uint32_t aLength, int32_t aWhichClipboard,
-                                    bool *aHasText)
+                                         uint32_t aLength, int32_t aWhichClipboard,
+                                         bool *aHasType)
 {
-  *aHasText = false;
-  ContentChild::GetSingleton()->SendClipboardHasText(aWhichClipboard, aHasText);
+  *aHasType = false;
+
+  nsTArray<nsCString> types;
+  for (uint32_t j = 0; j < aLength; ++j) {
+    types.AppendElement(nsDependentCString(aFlavorList[j]));
+  }
+
+  ContentChild::GetSingleton()->SendClipboardHasType(types, aWhichClipboard, aHasType);
+
   return NS_OK;
 }
 
