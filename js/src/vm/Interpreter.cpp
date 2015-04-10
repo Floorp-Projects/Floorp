@@ -53,12 +53,14 @@
 #include "vm/ScopeObject-inl.h"
 #include "vm/Stack-inl.h"
 
-#if defined(XP_UNIX)
+#if defined(XP_MACOSX)
+#include <mach/mach.h>
+#elif defined(XP_UNIX)
 #include <sys/resource.h>
 #elif defined(XP_WIN)
 #include <processthreadsapi.h>
 #include <windows.h>
-#endif // defined(XP_UNIX) || defined(XP_WIN)
+#endif // defined(XP_MACOSX) || defined(XP_UNIX) || defined(XP_WIN)
 
 using namespace js;
 using namespace js::gc;
@@ -522,31 +524,52 @@ struct AutoStopwatch final
         }
     }
 
-    // Get the OS-reported time spent in userland/systemland,
-    // in microseconds.
-    bool getTimes(uint64_t *userTime, uint64_t *systemTime) const {
+    // Get the OS-reported time spent in userland/systemland, in
+    // microseconds. On most platforms, this data is per-thread,
+    // but on some platforms we need to fall back to per-process.
+    bool getTimes(uint64_t* userTime, uint64_t* systemTime) const {
         MOZ_ASSERT(userTime);
         MOZ_ASSERT(systemTime);
 
-#if defined(XP_UNIX)
+#if defined(XP_MACOSX)
+        // On MacOS X, to get we per-thread data, we need to
+        // reach into the kernel.
 
+        mach_msg_type_number_t count = THREAD_BASIC_INFO_COUNT;
+        thread_basic_info_data_t info;
+        mach_port_t port = mach_thread_self();
+        kern_return_t err =
+            thread_info(/* [in] targeted thread*/ port,
+                        /* [in] nature of information*/ THREAD_BASIC_INFO,
+                        /* [out] thread information */  (thread_info_t)&info,
+                        /* [inout] number of items */   &count);
+
+        // We do not need ability to communicate with the thread, so
+        // let's release the port.
+        mach_port_deallocate(mach_task_self(), port);
+
+        if (err != KERN_SUCCESS)
+            return false;
+
+        *userTime = info.user_time.microseconds + info.user_time.seconds * 1000000;
+        *systemTime = info.system_time.microseconds + info.system_time.seconds * 1000000;
+
+#elif defined(XP_UNIX)
         struct rusage rusage;
 #if defined(RUSAGE_THREAD)
         // Under Linux, we can obtain per-thread statistics
         int err = getrusage(RUSAGE_THREAD, &rusage);
 #else
-        // Under other Unices, including MacOS X, we need to
-        // do with more noisy per-process statistics.
+        // Under other Unices, we need to do with more noisy
+        // per-process statistics.
         int err = getrusage(RUSAGE_SELF, &rusage);
 #endif // defined(RUSAGE_THREAD)
-        MOZ_ASSERT(!err);
+
         if (err)
             return false;
 
-        *userTime = rusage.ru_utime.tv_usec
-            + rusage.ru_utime.tv_sec * 1000000;
-        *systemTime = rusage.ru_stime.tv_usec
-            + rusage.ru_stime.tv_sec * 1000000;
+        *userTime = rusage.ru_utime.tv_usec + rusage.ru_utime.tv_sec * 1000000;
+        *systemTime = rusage.ru_stime.tv_usec + rusage.ru_stime.tv_sec * 1000000;
 
 #elif defined(XP_WIN)
         // Under Windows, we can obtain per-thread statistics,
@@ -559,7 +582,7 @@ struct AutoStopwatch final
         BOOL success = GetThreadTimes(GetCurrentThread(),
                                       &creationFileTime, &exitFileTime,
                                       &kernelFileTime, &userFileTime);
-        MOZ_ASSERT(success);
+
         if (!success)
             return false;
 
@@ -575,7 +598,7 @@ struct AutoStopwatch final
         // Convert 100 ns to 1 us, make sure that the result is monotonic
         *userTime = runtime_-> stopwatch.userTimeFix.monotonize(userTimeInt.QuadPart / 10);
 
-#endif // defined(XP_UNIX) || defined(XP_WIN)
+#endif // defined(XP_MACOSX) || defined(XP_UNIX) || defined(XP_WIN)
 
         return true;
     }

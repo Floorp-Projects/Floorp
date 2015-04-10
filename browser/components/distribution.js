@@ -43,9 +43,17 @@ DistributionCustomizer.prototype = {
   _iniFile: null,
 
   get _ini() {
-    let ini = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
+    let ini = null;
+    try {
+      if (this._iniFile) {
+        ini = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
               getService(Ci.nsIINIParserFactory).
               createINIParser(this._iniFile);
+      }
+    } catch (e) {
+      // Unable to parse INI.
+      Cu.reportError("Unable to parse distribution.ini");
+    }
     this.__defineGetter__("_ini", function() ini);
     return this._ini;
   },
@@ -202,7 +210,7 @@ DistributionCustomizer.prototype = {
   _customizationsApplied: false,
   applyCustomizations: function DIST_applyCustomizations() {
     this._customizationsApplied = true;
-    if (!this._iniFile)
+    if (!this._ini)
       return this._checkCustomizationComplete();
 
     // nsPrefService loads very early.  Reload prefs so we can set
@@ -220,7 +228,7 @@ DistributionCustomizer.prototype = {
   }),
 
   _doApplyBookmarks: Task.async(function* () {
-    if (!this._iniFile)
+    if (!this._ini)
       return;
 
     let sections = enumToObject(this._ini.getSections());
@@ -264,7 +272,7 @@ DistributionCustomizer.prototype = {
   _prefDefaultsApplied: false,
   applyPrefDefaults: function DIST_applyPrefDefaults() {
     this._prefDefaultsApplied = true;
-    if (!this._iniFile)
+    if (!this._ini)
       return this._checkCustomizationComplete();
 
     let sections = enumToObject(this._ini.getSections());
@@ -354,7 +362,7 @@ DistributionCustomizer.prototype = {
   },
 
   _checkCustomizationComplete: function DIST__checkCustomizationComplete() {
-    let prefDefaultsApplied = this._prefDefaultsApplied || !this._iniFile;
+    let prefDefaultsApplied = this._prefDefaultsApplied || !this._ini;
     if (this._customizationsApplied && this._bookmarksApplied &&
         prefDefaultsApplied) {
       let os = Cc["@mozilla.org/observer-service;1"].

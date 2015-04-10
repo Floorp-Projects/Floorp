@@ -39,7 +39,7 @@ TelProtocolHandler.prototype = {
     return uri;
   },
 
-  newChannel: function Proto_newChannel(aURI) {
+  newChannel2: function Proto_newChannel(aURI, aLoadInfo) {
     let number = TelURIParser.parseURI('tel', aURI.spec);
 
     if (number) {
@@ -49,6 +49,10 @@ TelProtocolHandler.prototype = {
     }
 
     throw Components.results.NS_ERROR_ILLEGAL_VALUE;
+  },
+
+  newChannel: function Proto_newChannel(aURI) {
+    return newChannel2(aURI, null);
   },
 
   classID: Components.ID("{782775dd-7351-45ea-aff1-0ffa872cfdd2}"),

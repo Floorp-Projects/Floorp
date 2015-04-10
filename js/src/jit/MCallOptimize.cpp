@@ -398,6 +398,9 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
     if (native == js::simd_float32x4_storeXYZ)
         return inlineSimdStore(callInfo, native, SimdTypeDescr::Float32x4, 3);
 
+    if (native == js::simd_int32x4_bool)
+        return inlineSimdBool(callInfo, native, SimdTypeDescr::Int32x4);
+
     // Reaching here means we tried to inline a native for which there is no
     // Ion specialization.
     trackOptimizationOutcome(TrackedOutcome::CantInlineNativeNoSpecialization);
@@ -2203,11 +2206,9 @@ IonBuilder::inlineHasClass(CallInfo& callInfo,
             }
 
             // Convert to bool with the '!!' idiom
-            MNot* resultInverted = MNot::New(alloc(), last);
-            resultInverted->cacheOperandMightEmulateUndefined(constraints());
+            MNot* resultInverted = MNot::New(alloc(), last, constraints());
             current->add(resultInverted);
-            MNot* result = MNot::New(alloc(), resultInverted);
-            result->cacheOperandMightEmulateUndefined(constraints());
+            MNot* result = MNot::New(alloc(), resultInverted, constraints());
             current->add(result);
             current->push(result);
         }
@@ -3366,6 +3367,34 @@ IonBuilder::inlineSimdStore(CallInfo& callInfo, JSNative native, SimdTypeDescr::
         return InliningStatus_Error;
 
     return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineSimdBool(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type)
+{
+    InlineTypedObject* templateObj = nullptr;
+    if (!checkInlineSimd(callInfo, native, type, 4, &templateObj))
+        return InliningStatus_NotInlined;
+
+    MOZ_ASSERT(type == SimdTypeDescr::Int32x4, "at the moment, only int32x4.bool is inlined");
+
+    MInstruction* operands[4];
+    for (unsigned i = 0; i < 4; i++) {
+        operands[i] = MNot::New(alloc(), callInfo.getArg(i), constraints());
+        current->add(operands[i]);
+    }
+
+    // Inline int32x4.bool(x, y, z, w) as int32x4(!x - 1, !y - 1, !z - 1, !w - 1);
+    MSimdValueX4* vector = MSimdValueX4::New(alloc(), MIRType_Int32x4, operands[0], operands[1],
+                                             operands[2], operands[3]);
+    current->add(vector);
+
+    MSimdConstant* one = MSimdConstant::New(alloc(), SimdConstant::SplatX4(1), MIRType_Int32x4);
+    current->add(one);
+
+    MSimdBinaryArith* result = MSimdBinaryArith::New(alloc(), vector, one, MSimdBinaryArith::Op_sub,
+                                                     MIRType_Int32x4);
+    return boxSimd(callInfo, result, templateObj);
 }
 
 } // namespace jit
