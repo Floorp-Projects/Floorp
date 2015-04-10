@@ -57,6 +57,7 @@ public class testCheck2 extends PixelTest {
             Thread.sleep(1000);
             completeness = mDriver.stopCheckerboardRecording();
         } catch (Exception e) {
+            e.printStackTrace();
             mAsserter.ok(false, "Exception while replaying events", e.toString());
         }
 
