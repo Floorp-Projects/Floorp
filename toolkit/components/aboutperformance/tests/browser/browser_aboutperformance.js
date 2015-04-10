@@ -16,7 +16,7 @@ function frameScript() {
     let hasURL = false;
 
     try {
-      let eltData = content.document.getElementById("liveData");
+      let eltData = content.document.getElementById("data");
       if (!eltData) {
         return;
       }
