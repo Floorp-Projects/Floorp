@@ -592,6 +592,14 @@ nsHttpConnection::Close(nsresult reason)
 
         mTLSFilter = nullptr;
 
+        // The connection and security errors clear out alt-svc mappings
+        // in case any previously validated ones are now invalid
+        if (((reason == NS_ERROR_NET_RESET) ||
+             (NS_ERROR_GET_MODULE(reason) == NS_ERROR_MODULE_SECURITY))
+            && mConnInfo) {
+            gHttpHandler->ConnMgr()->ClearHostMapping(mConnInfo);
+        }
+
         if (mSocketTransport) {
             mSocketTransport->SetEventSink(nullptr, nullptr);
 
