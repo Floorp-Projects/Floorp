@@ -23,6 +23,7 @@ function f(i) {
     return return_f(i);
   }
 
+  assertRecoveredOnBailout(g, true);
   return g();
 }
 
@@ -43,6 +44,8 @@ function lambdaCall(i) {
 
     if (uceFault_lambdaCall(i) || uceFault_lambdaCall(i))
         assertEq(g(), i);
+
+    assertRecoveredOnBailout(g, true);
 };
 
 
