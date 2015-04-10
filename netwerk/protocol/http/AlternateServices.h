@@ -38,7 +38,7 @@ class AltSvcMapping
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AltSvcMapping)
   friend class AltSvcCache;
 
-public:
+private: // ctor from ProcessHeader
   AltSvcMapping(const nsACString &originScheme,
                 const nsACString &originHost,
                 int32_t originPort,
@@ -49,6 +49,7 @@ public:
                 int32_t alternatePort,
                 const nsACString &npnToken);
 
+public:
   static void ProcessHeader(const nsCString &buf, const nsCString &originScheme,
                             const nsCString &originHost, int32_t originPort,
                             const nsACString &username, bool privateBrowsing,

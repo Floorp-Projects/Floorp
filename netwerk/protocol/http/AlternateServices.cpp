@@ -109,7 +109,15 @@ AltSvcMapping::ProcessHeader(const nsCString &buf, const nsCString &originScheme
                                                         username, privateBrowsing,
                                                         NowInSeconds() + maxage,
                                                         hostname, portno, npnToken);
-    gHttpHandler->UpdateAltServiceMapping(mapping, proxyInfo, callbacks, caps);
+    if (mapping->TTL() <= 0) {
+      LOG(("Alt Svc invalid map"));
+      mapping = nullptr;
+      // since this isn't a parse error, let's clear any existing mapping
+      // as that would have happened if we had accepted the parameters.
+      gHttpHandler->ConnMgr()->ClearHostMapping(originHost, originPort);
+    } else {
+      gHttpHandler->UpdateAltServiceMapping(mapping, proxyInfo, callbacks, caps);
+    }
   }
 }
 
@@ -151,6 +159,12 @@ AltSvcMapping::AltSvcMapping(const nsACString &originScheme,
 
   if (mAlternateHost.IsEmpty()) {
     mAlternateHost = mOriginHost;
+  }
+
+  if ((mAlternatePort == mOriginPort) &&
+      mAlternateHost.EqualsIgnoreCase(mOriginHost.get())) {
+    LOG(("Alt Svc is also origin Svc - ignoring\n"));
+    mExpiresAt = 0; // invalid
   }
 
   if (mExpiresAt) {
