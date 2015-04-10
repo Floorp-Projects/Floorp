@@ -3970,7 +3970,8 @@ END_CASE(JSOP_OBJWITHPROTO)
 
 CASE(JSOP_INITHOMEOBJECT)
 {
-    MOZ_ASSERT(REGS.stackDepth() >= 2);
+    unsigned skipOver = GET_UINT8(REGS.pc);
+    MOZ_ASSERT(REGS.stackDepth() >= skipOver + 2);
 
     /* Load the function to be initialized */
     RootedFunction& func = rootFunction0;
@@ -3979,7 +3980,7 @@ CASE(JSOP_INITHOMEOBJECT)
 
     /* Load the home object */
     RootedNativeObject& obj = rootNativeObject0;
-    obj = &REGS.sp[-2].toObject().as<NativeObject>();
+    obj = &REGS.sp[int(-2 - skipOver)].toObject().as<NativeObject>();
     MOZ_ASSERT(obj->is<PlainObject>() || obj->is<JSFunction>());
 
     func->setExtendedSlot(FunctionExtended::METHOD_HOMEOBJECT_SLOT, ObjectValue(*obj));
