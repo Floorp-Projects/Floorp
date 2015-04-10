@@ -123,40 +123,6 @@ H264Converter::IsWaitingMediaResources()
 }
 
 bool
-H264Converter::IsDormantNeeded()
-{
-  if (mNeedAVCC) {
-    return true;
-  }
-  return mDecoder ?
-    mDecoder->IsDormantNeeded() : MediaDataDecoder::IsDormantNeeded();
-}
-
-void
-H264Converter::AllocateMediaResources()
-{
-  if (mNeedAVCC) {
-    // Nothing to do, decoder will be allocated on the fly when required.
-    return;
-  }
-  if (mDecoder) {
-    mDecoder->AllocateMediaResources();
-  }
-}
-
-void
-H264Converter::ReleaseMediaResources()
-{
-  if (mNeedAVCC) {
-    Shutdown();
-    return;
-  }
-  if (mDecoder) {
-    mDecoder->ReleaseMediaResources();
-  }
-}
-
-bool
 H264Converter::IsHardwareAccelerated() const
 {
   if (mDecoder) {
@@ -219,7 +185,7 @@ H264Converter::CheckForSPSChange(MediaRawData* aSample)
   // The SPS has changed, signal to flush the current decoder and create a
   // new one.
   mDecoder->Flush();
-  ReleaseMediaResources();
+  Shutdown();
   return CreateDecoderAndInit(aSample);
 }
 

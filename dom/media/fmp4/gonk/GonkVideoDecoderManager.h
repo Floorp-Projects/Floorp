@@ -51,8 +51,6 @@ public:
 
   virtual nsresult Flush() override;
 
-  virtual void AllocateMediaResources();
-
   virtual void ReleaseMediaResources();
 
   static void RecycleCallback(TextureClient* aClient, void* aClosure);
@@ -146,7 +144,6 @@ private:
 
   android::sp<MediaCodecProxy> mDecoder;
   nsRefPtr<layers::ImageContainer> mImageContainer;
-  MediaDataDecoderCallback* mCallback;
 
   android::MediaBuffer* mVideoBuffer;
 
@@ -179,7 +176,6 @@ private:
   Vector<android::MediaBuffer*> mPendingVideoBuffers;
   // The lock protects mPendingVideoBuffers.
   Mutex mPendingVideoBuffersLock;
-
 };
 
 } // namespace mozilla
