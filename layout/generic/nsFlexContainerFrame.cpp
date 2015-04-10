@@ -250,6 +250,11 @@ public:
   }
 
 private:
+  // Delete copy-constructor & reassignment operator, to prevent accidental
+  // (unnecessary) copying.
+  FlexboxAxisTracker(const FlexboxAxisTracker&) = delete;
+  FlexboxAxisTracker& operator=(const FlexboxAxisTracker&) = delete;
+
   // Indicates whether the given AxisOrientationType is horizontal.
   // XXXdholbert This is private so that callers outside of FlexboxAxisTracker
   // don't depend on it. This lets us move away from AxisOrientationType to a
@@ -1722,15 +1727,11 @@ protected:
       mAxis(aAxis)
   {}
 
-private:
-  // Private copy-constructor, since we don't want any instances of our
-  // subclasses to be accidentally copied.
-  PositionTracker(const PositionTracker& aOther)
-    : mPosition(aOther.mPosition),
-      mAxis(aOther.mAxis)
-  {}
+  // Delete copy-constructor & reassignment operator, to prevent accidental
+  // (unnecessary) copying.
+  PositionTracker(const PositionTracker&) = delete;
+  PositionTracker& operator=(const PositionTracker&) = delete;
 
-protected:
   // Member data:
   nscoord mPosition;               // The position we're tracking
   const AxisOrientationType mAxis; // The axis along which we're moving
