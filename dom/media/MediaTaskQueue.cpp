@@ -219,7 +219,6 @@ MediaTaskQueue::IsEmpty()
 bool
 MediaTaskQueue::IsCurrentThreadIn()
 {
-  MonitorAutoLock mon(mQueueMonitor);
   bool in = NS_GetCurrentThread() == mRunningThread;
   MOZ_ASSERT_IF(in, GetCurrentQueue() == this);
   return in;
@@ -232,7 +231,6 @@ MediaTaskQueue::Runner::Run()
   {
     MonitorAutoLock mon(mQueue->mQueueMonitor);
     MOZ_ASSERT(mQueue->mIsRunning);
-    mQueue->mRunningThread = NS_GetCurrentThread();
     if (mQueue->mTasks.size() == 0) {
       mQueue->mIsRunning = false;
       mQueue->mShutdownPromise.ResolveIfExists(true, __func__);
@@ -268,7 +266,6 @@ MediaTaskQueue::Runner::Run()
       mQueue->mIsRunning = false;
       mQueue->mShutdownPromise.ResolveIfExists(true, __func__);
       mon.NotifyAll();
-      mQueue->mRunningThread = nullptr;
       return NS_OK;
     }
   }
@@ -291,7 +288,6 @@ MediaTaskQueue::Runner::Run()
       mQueue->mIsShutdown = true;
       mon.NotifyAll();
     }
-    mQueue->mRunningThread = nullptr;
   }
 
   return NS_OK;
@@ -302,13 +298,8 @@ void
 TaskDispatcher::AssertIsTailDispatcherIfRequired()
 {
   MediaTaskQueue* currentQueue = MediaTaskQueue::GetCurrentQueue();
-
-  // NB: Make sure not to use the TailDispatcher() accessor, since that
-  // asserts IsCurrentThreadIn(), which acquires the queue monitor, which
-  // triggers a deadlock during shutdown between the queue monitor and the
-  // MediaPromise monitor.
   MOZ_ASSERT_IF(currentQueue && currentQueue->RequiresTailDispatch(),
-                this == currentQueue->mTailDispatcher);
+                this == &currentQueue->TailDispatcher());
 }
 #endif
 
