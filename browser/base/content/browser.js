@@ -6181,20 +6181,13 @@ var IndexedDBPromptHelper = {
 
     var requestor = subject.QueryInterface(Ci.nsIInterfaceRequestor);
 
-    var contentWindow = requestor.getInterface(Ci.nsIDOMWindow);
-    var contentDocument = contentWindow.document;
-    var browserWindow =
-      OfflineApps._getBrowserWindowForContentWindow(contentWindow);
-
-    if (browserWindow != window) {
-      // Must belong to some other window.
+    var browser = requestor.getInterface(Ci.nsIDOMNode);
+    if (browser.ownerDocument.defaultView != window) {
+      // Only listen for notifications for browsers in our chrome window.
       return;
     }
 
-    var browser =
-      OfflineApps._getBrowserForContentWindow(browserWindow, contentWindow);
-
-    var host = contentDocument.documentURIObject.asciiHost;
+    var host = browser.currentURI.asciiHost;
 
     var message;
     var responseTopic;

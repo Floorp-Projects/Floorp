@@ -19,6 +19,7 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TypeTraits.h"
+#include "mozilla/dom/Element.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseFileChild.h"
@@ -528,9 +529,9 @@ class PermissionRequestMainProcessHelper final
 public:
   PermissionRequestMainProcessHelper(BackgroundFactoryRequestChild* aActor,
                                      IDBFactory* aFactory,
-                                     nsPIDOMWindow* aWindow,
+                                     Element* aOwnerElement,
                                      nsIPrincipal* aPrincipal)
-    : PermissionRequestBase(aWindow, aPrincipal)
+    : PermissionRequestBase(aOwnerElement, aPrincipal)
     , mActor(aActor)
     , mFactory(aFactory)
   {
@@ -1129,8 +1130,14 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
     nsCOMPtr<nsPIDOMWindow> window = mFactory->GetParentObject();
     MOZ_ASSERT(window);
 
+    nsCOMPtr<Element> ownerElement =
+      do_QueryInterface(window->GetChromeEventHandler());
+    if (NS_WARN_IF(!ownerElement)) {
+      return false;
+    }
+
     nsRefPtr<PermissionRequestMainProcessHelper> helper =
-      new PermissionRequestMainProcessHelper(this, mFactory, window, principal);
+      new PermissionRequestMainProcessHelper(this, mFactory, ownerElement, principal);
 
     PermissionRequestBase::PermissionValue permission;
     if (NS_WARN_IF(NS_FAILED(helper->PromptIfNeeded(&permission)))) {

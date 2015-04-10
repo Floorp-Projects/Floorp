@@ -7489,9 +7489,9 @@ class PermissionRequestHelper final
   bool mActorDestroyed;
 
 public:
-  PermissionRequestHelper(nsPIDOMWindow* aWindow,
+  PermissionRequestHelper(Element* aOwnerElement,
                           nsIPrincipal* aPrincipal)
-    : PermissionRequestBase(aWindow, aPrincipal)
+    : PermissionRequestBase(aOwnerElement, aPrincipal)
     , mActorDestroyed(false)
   { }
 
@@ -8161,13 +8161,13 @@ DeallocPBackgroundIDBFactoryParent(PBackgroundIDBFactoryParent* aActor)
 }
 
 PIndexedDBPermissionRequestParent*
-AllocPIndexedDBPermissionRequestParent(nsPIDOMWindow* aWindow,
+AllocPIndexedDBPermissionRequestParent(Element* aOwnerElement,
                                        nsIPrincipal* aPrincipal)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsRefPtr<PermissionRequestHelper> actor =
-    new PermissionRequestHelper(aWindow, aPrincipal);
+    new PermissionRequestHelper(aOwnerElement, aPrincipal);
   return actor.forget().take();
 }
 
