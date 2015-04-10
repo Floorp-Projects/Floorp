@@ -77,7 +77,15 @@ public:
   virtual void OnResponseEnd() override
   {
     mFetchPut->FetchComplete(this, mInternalResponse);
-    mFetchPut = nullptr;
+    if (mFetchPut->mInitiatingThread == NS_GetCurrentThread()) {
+      mFetchPut = nullptr;
+    } else {
+      nsCOMPtr<nsIThread> initiatingThread(mFetchPut->mInitiatingThread);
+      nsCOMPtr<nsIRunnable> runnable =
+        NS_NewNonOwningRunnableMethod(mFetchPut.forget().take(), &FetchPut::Release);
+      MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
+        initiatingThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL)));
+    }
   }
 
 protected:
