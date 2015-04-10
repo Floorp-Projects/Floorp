@@ -367,9 +367,13 @@ struct OpRemoveTextureAsync {
 };
 
 struct OpReplyRemoveTexture {
-  bool isMain;
   uint64_t holderId;
   uint64_t transactionId;
+};
+
+union MaybeFence {
+  FenceHandle;
+  null_t;
 };
 
 /**
@@ -379,6 +383,7 @@ struct OpReplyRemoveTexture {
 struct OpUseTexture {
   PCompositable compositable;
   PTexture texture;
+  MaybeFence fence;
 };
 
 struct OpUseComponentAlphaTextures {
@@ -393,26 +398,19 @@ union MaybeRegion {
 };
 
 struct OpDeliverFence {
-  uint64_t transactionId;
   PTexture texture;
   FenceHandle fence;
 };
 
 struct OpDeliverFenceToTracker {
-  uint64_t transactionId;
   uint64_t destHolderId;
   uint64_t destTransactionId;
   FenceHandle fence;
 };
 
 struct OpDeliverFenceFromChild {
-  uint64_t transactionId;
   PTexture texture;
   FenceHandle fence;
-};
-
-struct OpReplyDeliverFence {
-  uint64_t transactionId;
 };
 
 union CompositableOperation {
@@ -480,13 +478,11 @@ union EditReply {
 union AsyncParentMessageData {
   OpDeliverFence;
   OpDeliverFenceToTracker;
-  OpReplyDeliverFence;
   OpReplyRemoveTexture;
 };
 
 union AsyncChildMessageData {
   OpDeliverFenceFromChild;
-  OpReplyDeliverFence;
   OpRemoveTextureAsync;
 };
 
