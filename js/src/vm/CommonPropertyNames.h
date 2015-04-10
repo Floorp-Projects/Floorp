@@ -79,6 +79,7 @@
     macro(fieldTypes, fieldTypes, "fieldTypes") \
     macro(fileName, fileName, "fileName") \
     macro(fix, fix, "fix") \
+    macro(flags, flags, "flags") \
     macro(float32, float32, "float32") \
     macro(float32x4, float32x4, "float32x4") \
     macro(float64, float64, "float64") \
