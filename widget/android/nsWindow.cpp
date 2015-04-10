@@ -2422,29 +2422,6 @@ nsWindow::ScheduleComposite()
     }
 }
 
-bool
-nsWindow::IsCompositionPaused()
-{
-    return sCompositorPaused;
-}
-
-void
-nsWindow::SchedulePauseComposition()
-{
-    if (sCompositorParent) {
-        sCompositorParent->SchedulePauseOnCompositorThread();
-        sCompositorPaused = true;
-    }
-}
-
-void
-nsWindow::ScheduleResumeComposition()
-{
-    if (sCompositorParent && sCompositorParent->ScheduleResumeOnCompositorThread()) {
-        sCompositorPaused = false;
-    }
-}
-
 void
 nsWindow::ScheduleResumeComposition(int width, int height)
 {
