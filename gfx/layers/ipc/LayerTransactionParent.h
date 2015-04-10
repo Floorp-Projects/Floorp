@@ -89,10 +89,6 @@ public:
   virtual void SendFenceHandleIfPresent(PTextureParent* aTexture,
                                         CompositableHost* aCompositableHost) override;
 
-  virtual void SendFenceHandle(AsyncTransactionTracker* aTracker,
-                               PTextureParent* aTexture,
-                               const FenceHandle& aFence) override;
-
   virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
 
   virtual base::ProcessId GetChildProcessId() override

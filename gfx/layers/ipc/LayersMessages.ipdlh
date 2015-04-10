@@ -408,11 +408,6 @@ struct OpDeliverFenceToTracker {
   FenceHandle fence;
 };
 
-struct OpDeliverFenceFromChild {
-  PTexture texture;
-  FenceHandle fence;
-};
-
 union CompositableOperation {
   OpUpdatePictureRect;
 
@@ -482,7 +477,6 @@ union AsyncParentMessageData {
 };
 
 union AsyncChildMessageData {
-  OpDeliverFenceFromChild;
   OpRemoveTextureAsync;
 };
 

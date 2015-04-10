@@ -148,17 +148,6 @@ ImageBridgeChild::UseOverlaySource(CompositableClient* aCompositable,
 #endif
 
 void
-ImageBridgeChild::SendFenceHandle(AsyncTransactionTracker* aTracker,
-                                  PTextureChild* aTexture,
-                                  const FenceHandle& aFence)
-{
-  InfallibleTArray<AsyncChildMessageData> messages;
-  messages.AppendElement(OpDeliverFenceFromChild(nullptr, aTexture,
-                                                 aFence));
-  SendChildAsyncMessages(messages);
-}
-
-void
 ImageBridgeChild::UpdatePictureRect(CompositableClient* aCompositable,
                                     const nsIntRect& aRect)
 {
