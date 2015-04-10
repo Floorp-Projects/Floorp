@@ -247,7 +247,7 @@ PerformanceFront.prototype = {
   startRecording: Task.async(function*(options = {}) {
     // All actors are started asynchronously over the remote debugging protocol.
     // Get the corresponding start times from each one of them.
-    let profilerStartTime = yield this._startProfiler(options);
+    let profilerStartTime = yield this._startProfiler();
     let timelineStartTime = yield this._startTimeline(options);
     let memoryStartTime = yield this._startMemory(options);
 
@@ -286,7 +286,7 @@ PerformanceFront.prototype = {
   /**
    * Starts the profiler actor, if necessary.
    */
-  _startProfiler: Task.async(function *(options={}) {
+  _startProfiler: Task.async(function *() {
     // Start the profiler only if it wasn't already active. The built-in
     // nsIPerformance module will be kept recording, because it's the same instance
     // for all targets and interacts with the whole platform, so we don't want
@@ -297,13 +297,10 @@ PerformanceFront.prototype = {
       return profilerStatus.currentTime;
     }
 
-    // Translate options from the recording model into profiler-specific
-    // options for the nsIProfiler
-    let profilerOptions = {
-      entries: options.bufferSize,
-      interval: options.sampleFrequency ? (1000 / (options.sampleFrequency * 1000)) : void 0
-    };
-
+    // If this._customProfilerOptions is defined, use those to pass in
+    // to the profiler actor. The profiler actor handles all the defaults
+    // now, so this should only be used for tests.
+    let profilerOptions = this._customProfilerOptions || {};
     yield this._request("profiler", "startProfiler", profilerOptions);
 
     this.emit("profiler-activated");
