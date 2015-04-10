@@ -175,6 +175,8 @@ private:
   // bounds to correctly reflect the total clip. This is in device space.
   TemporaryRef<ID2D1Geometry> GetClippedGeometry(IntRect *aClipBounds);
 
+  TemporaryRef<ID2D1Geometry> GetInverseClippedGeometry();
+
   bool GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAligned);
 
   void PopAllClips();
