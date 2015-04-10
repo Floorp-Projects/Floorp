@@ -947,7 +947,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
   NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
   if (aWM.IsVerticalRL() || (!aWM.IsVertical() && !aWM.IsBidiLTR())) {
     NS_ASSERTION(aContainerWidth != NS_UNCONSTRAINEDSIZE,
-                 "FinishReflowChild with unconstrained container width!");
+                 "ReflowChild with unconstrained container width!");
   }
 
   // Position the child frame and its view if requested.
