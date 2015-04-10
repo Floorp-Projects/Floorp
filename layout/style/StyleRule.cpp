@@ -1009,7 +1009,7 @@ public:
 
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent) override;
   void DropReference(void);
-  virtual css::Declaration* GetCSSDeclaration(bool aAllocate) override;
+  virtual css::Declaration* GetCSSDeclaration(Operation aOperation) override;
   virtual nsresult SetCSSDeclaration(css::Declaration* aDecl) override;
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) override;
   virtual nsIDocument* DocToUpdate() override;
@@ -1114,7 +1114,7 @@ DOMCSSDeclarationImpl::DropReference(void)
 }
 
 css::Declaration*
-DOMCSSDeclarationImpl::GetCSSDeclaration(bool aAllocate)
+DOMCSSDeclarationImpl::GetCSSDeclaration(Operation aOperation)
 {
   if (mRule) {
     return mRule->GetDeclaration();
