@@ -1166,7 +1166,7 @@
      *   Operands: uint32_t lineno
      *   Stack: =>
      */ \
-    macro(JSOP_LINENO,    119,"lineno",     NULL,         3,  0,  0,  JOF_UINT16) \
+    macro(JSOP_LINENO,    119,"lineno",     NULL,         5,  0,  0,  JOF_UINT32) \
     \
     /*
      * This no-op appears after the bytecode for EXPR in 'switch (EXPR) {...}'
