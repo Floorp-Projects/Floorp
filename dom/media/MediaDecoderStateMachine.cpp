@@ -120,11 +120,10 @@ const int64_t NO_VIDEO_AMPLE_AUDIO_DIVISOR = 8;
 static const uint32_t LOW_VIDEO_FRAMES = 1;
 
 // Threshold in usecs that used to check if we are low on decoded video.
-// If the last video frame's end time |mDecodedVideoEndTime| doesn't exceed
-// |clock time + LOW_VIDEO_THRESHOLD_USECS*mPlaybackRate| calculation in
-// Advanceframe(), we are low on decoded video frames and trying to skip to next
-// keyframe.
-static const int32_t LOW_VIDEO_THRESHOLD_USECS = 16000;
+// If the last video frame's end time |mDecodedVideoEndTime| is more than
+// |LOW_VIDEO_THRESHOLD_USECS*mPlaybackRate| after the current clock in
+// Advanceframe(), the video decode is lagging, and we skip to next keyframe.
+static const int32_t LOW_VIDEO_THRESHOLD_USECS = 60000;
 
 // Arbitrary "frame duration" when playing only audio.
 static const int AUDIO_DURATION_USECS = 40000;
@@ -641,7 +640,7 @@ MediaDecoderStateMachine::NeedToSkipToNextKeyframe()
     return false;
   }
 
-  // We'll skip the video decode to the nearest keyframe if we're low on
+  // We'll skip the video decode to the next keyframe if we're low on
   // audio, or if we're low on video, provided we're not running low on
   // data to decode. If we're running low on downloaded data to decode,
   // we won't start keyframe skipping, as we'll be pausing playback to buffer
@@ -654,9 +653,10 @@ MediaDecoderStateMachine::NeedToSkipToNextKeyframe()
                              (GetDecodedAudioDuration() <
                               mLowAudioThresholdUsecs * mPlaybackRate);
   bool isLowOnDecodedVideo = !mIsVideoPrerolling &&
-                             (mDecodedVideoEndTime - GetClock() <
-                              LOW_VIDEO_THRESHOLD_USECS * mPlaybackRate);
+                             ((GetClock() - mDecodedVideoEndTime) * mPlaybackRate >
+                              LOW_VIDEO_THRESHOLD_USECS);
   bool lowUndecoded = HasLowUndecodedData();
+
   if ((isLowOnDecodedAudio || isLowOnDecodedVideo) && !lowUndecoded) {
     DECODER_LOG("Skipping video decode to the next keyframe lowAudio=%d lowVideo=%d lowUndecoded=%d async=%d",
                 isLowOnDecodedAudio, isLowOnDecodedVideo, lowUndecoded, mReader->IsAsync());

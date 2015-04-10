@@ -814,7 +814,7 @@ this.RequestSyncService = {
     this._pendingOperation = false;
 
     // managing the pending messages now that the initialization is completed.
-    while (this._pendingMessages.length) {
+    while (this._pendingMessages.length && !this._pendingOperation) {
       this.receiveMessage(this._pendingMessages.shift());
     }
   },

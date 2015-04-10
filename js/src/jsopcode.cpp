@@ -1041,6 +1041,10 @@ js::Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
         Sprint(sp, " %u", GET_LOCALNO(pc));
         break;
 
+      case JOF_UINT32:
+        Sprint(sp, " %u", GET_UINT32(pc));
+        break;
+
       {
         int i;
 
