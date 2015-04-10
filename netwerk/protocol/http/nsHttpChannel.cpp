@@ -4835,9 +4835,9 @@ nsHttpChannel::BeginConnect()
         (mapping = gHttpHandler->GetAltServiceMapping(scheme,
                                                       host, port,
                                                       mPrivateBrowsing))) {
-        LOG(("nsHttpChannel %p Alt Service Mapping Found %s://%s:%d\n", this,
-             scheme.get(), mapping->AlternateHost().get(),
-             mapping->AlternatePort()));
+        LOG(("nsHttpChannel %p Alt Service Mapping Found %s://%s:%d [%s]\n",
+             this, scheme.get(), mapping->AlternateHost().get(),
+             mapping->AlternatePort(), mapping->HashKey().get()));
 
         if (!(mLoadFlags & LOAD_ANONYMOUS) && !mPrivateBrowsing) {
             nsAutoCString altUsedLine(mapping->AlternateHost());
@@ -4988,6 +4988,7 @@ nsHttpChannel::BeginConnect()
     if (mLoadFlags & LOAD_FRESH_CONNECTION) {
         // just the initial document resets the whole pool
         if (mLoadFlags & LOAD_INITIAL_DOCUMENT_URI) {
+            gHttpHandler->ConnMgr()->ClearAltServiceMappings();
             gHttpHandler->ConnMgr()->DoShiftReloadConnectionCleanup(mConnectionInfo);
         }
         mCaps &= ~NS_HTTP_ALLOW_PIPELINING;

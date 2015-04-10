@@ -517,6 +517,14 @@ AltSvcCache::ClearHostMapping(const nsACString &host, int32_t port)
 }
 
 void
+AltSvcCache::ClearHostMapping(nsHttpConnectionInfo *ci)
+{
+  if (!ci->GetAuthenticationHost().IsEmpty()) {
+    ClearHostMapping(ci->GetAuthenticationHost(), ci->GetAuthenticationPort());
+  }
+}
+
+void
 AltSvcCache::ClearAltServiceMappings()
 {
     MOZ_ASSERT(NS_IsMainThread());
