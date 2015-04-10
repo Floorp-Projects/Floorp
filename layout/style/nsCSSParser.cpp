@@ -1608,13 +1608,6 @@ CSSParserImpl::ParseRule(const nsAString&        aRule,
   return rv;
 }
 
-// See Bug 723197
-#ifdef _MSC_VER
-#pragma optimize( "", off )
-#pragma warning( push )
-#pragma warning( disable : 4748 )
-#endif
-
 void
 CSSParserImpl::ParseProperty(const nsCSSProperty aPropID,
                              const nsAString& aPropValue,
@@ -1749,11 +1742,6 @@ CSSParserImpl::ParseVariable(const nsAString& aVariableName,
 
   ReleaseScanner();
 }
-
-#ifdef _MSC_VER
-#pragma warning( pop )
-#pragma optimize( "", on )
-#endif
 
 void
 CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
