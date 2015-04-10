@@ -9,17 +9,13 @@ from marionette_driver.keys import Keys
 class TestWindowHandles(MarionetteTestCase):
 
     def test_new_tab_window_handles(self):
-        keys = [Keys.SHIFT]
+
+        keys = []
         if self.marionette.session_capabilities['platformName'] == 'DARWIN':
             keys.append(Keys.META)
         else:
             keys.append(Keys.CONTROL)
-        keys.append('a')
-
-        # Put some history in the tab so this results in a fresh tab opening.
-        self.marionette.navigate("about:blank")
-        self.marionette.navigate("data:text/html, <div>Text</div>")
-        self.marionette.navigate("about:blank")
+        keys.append('t')
 
         origin_win = self.marionette.current_window_handle
 
@@ -30,9 +26,9 @@ class TestWindowHandles(MarionetteTestCase):
         self.wait_for_condition(lambda mn: len(mn.window_handles) == 2)
         handles = self.marionette.window_handles
         handles.remove(origin_win)
-        addons_page = handles.pop()
-        self.marionette.switch_to_window(addons_page)
-        self.assertEqual(self.marionette.get_url(), "about:addons")
+        new_tab = handles.pop()
+        self.marionette.switch_to_window(new_tab)
+        self.assertEqual(self.marionette.get_url(), "about:newtab")
         self.marionette.close()
 
         self.marionette.switch_to_window(origin_win)
