@@ -145,7 +145,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 
       if (!IsAsync() && ImageBridgeParent::GetInstance(GetChildProcessId())) {
         // send FenceHandle if present via ImageBridge.
-        ImageBridgeParent::SendFenceHandleToTrackerIfPresent(
+        ImageBridgeParent::AppendDeliverFenceMessage(
                              GetChildProcessId(),
                              op.holderId(),
                              op.transactionId(),
@@ -228,7 +228,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 }
 
 void
-CompositableParentManager::SendPendingAsyncMessges()
+CompositableParentManager::SendPendingAsyncMessages()
 {
   if (mPendingAsyncMessage.empty()) {
     return;
