@@ -41,7 +41,6 @@ using mozilla::layers::DiagnosticTypes from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
 using struct mozilla::layers::FenceHandle from "mozilla/layers/FenceUtils.h";
-using struct mozilla::layers::FenceHandleFromChild from "mozilla/layers/FenceUtils.h";
 using std::string from "string";
 
 namespace mozilla {
@@ -409,7 +408,7 @@ struct OpDeliverFenceToTracker {
 struct OpDeliverFenceFromChild {
   uint64_t transactionId;
   PTexture texture;
-  FenceHandleFromChild fence;
+  FenceHandle fence;
 };
 
 struct OpReplyDeliverFence {
