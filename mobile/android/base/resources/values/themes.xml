@@ -107,7 +107,7 @@
     <style name="GeckoStartPane" parent="GeckoBase"/>
 
     <!-- Make an activity appear like an overlay. -->
-    <style name="OverlayActivity">
+    <style name="OverlayActivity" parent="Gecko">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowIsTranslucent">true</item>
