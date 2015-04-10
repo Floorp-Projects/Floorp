@@ -7,7 +7,7 @@
 #include "ImageLogging.h"
 #include "imgRequestProxy.h"
 #include "imgIOnloadBlocker.h"
-#include "imgLoader.h"
+
 #include "Image.h"
 #include "ImageOps.h"
 #include "nsError.h"
