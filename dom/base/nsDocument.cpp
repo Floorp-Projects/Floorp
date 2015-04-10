@@ -3921,42 +3921,6 @@ nsIDocument::TakeFrameRequestCallbacks(FrameRequestCallbackList& aCallbacks)
   mFrameRequestCallbacks.Clear();
 }
 
-bool
-nsIDocument::ShouldThrottleFrameRequests()
-{
-  if (!mIsShowing) {
-    // We're not showing (probably in a background tab or the bf cache).
-    return true;
-  }
-
-  if (!mPresShell) {
-    return false;  // Can't do anything smarter.
-  }
-
-  nsIFrame* frame = mPresShell->GetRootFrame();
-  if (!frame) {
-    return false;  // Can't do anything smarter.
-  }
-
-  nsIFrame* displayRootFrame = nsLayoutUtils::GetDisplayRootFrame(frame);
-  if (!displayRootFrame) {
-    return false;  // Can't do anything smarter.
-  }
-
-  if (!displayRootFrame->DidPaintPresShell(mPresShell)) {
-    // We didn't get painted during the last paint, so we're not visible.
-    // Throttle. Note that because we have to paint this document at least
-    // once to unthrottle it, we will drop one requestAnimationFrame frame
-    // when a document that previously wasn't visible scrolls into view. This
-    // is acceptable since it would happen outside the viewport on APZ
-    // platforms and is unlikely to be human-perceivable on non-APZ platforms.
-    return true;
-  }
-
-  // We got painted during the last paint, so run at full speed.
-  return false;
-}
-
 PLDHashOperator RequestDiscardEnumerator(imgIRequest* aKey,
                                          uint32_t aData,
                                          void* userArg)
