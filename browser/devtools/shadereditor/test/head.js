@@ -36,6 +36,8 @@ waitForExplicitFinish();
 
 let gToolEnabled = Services.prefs.getBoolPref("devtools.shadereditor.enabled");
 
+gDevTools.testing = true;
+
 registerCleanupFunction(() => {
   info("finish() was called, cleaning up...");
   Services.prefs.setBoolPref("devtools.debugger.log", gEnableLogging);

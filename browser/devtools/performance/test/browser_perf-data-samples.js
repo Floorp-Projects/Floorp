@@ -13,10 +13,11 @@ function spawnTest () {
   let { panel } = yield initPerformance(SIMPLE_URL);
   let front = panel.panelWin.gFront;
 
-  yield front.startRecording();
+  let rec = yield front.startRecording();
   busyWait(WAIT_TIME); // allow the profiler module to sample some cpu activity
 
-  let { profile } = yield front.stopRecording();
+  yield front.stopRecording(rec);
+  let profile = rec.getProfile();
   let sampleCount = 0;
 
   for (let thread of profile.threads) {
