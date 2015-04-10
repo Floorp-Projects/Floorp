@@ -848,6 +848,8 @@ class IonBuilder
     InliningStatus inlineSimdStore(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type,
                                    unsigned numElems);
 
+    InliningStatus inlineSimdBool(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type);
+
     // Utility intrinsics.
     InliningStatus inlineIsCallable(CallInfo& callInfo);
     InliningStatus inlineIsObject(CallInfo& callInfo);

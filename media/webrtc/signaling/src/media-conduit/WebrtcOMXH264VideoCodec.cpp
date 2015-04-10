@@ -941,7 +941,7 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
     nsresult rv = mOMX->ConfigureDirect(format,
                                         OMXVideoEncoder::BlobFormat::AVC_NAL);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      CODEC_LOGE("WebrtcOMXH264VideoEncoder:%p FAILED configuring encoder %d", this, rv);
+      CODEC_LOGE("WebrtcOMXH264VideoEncoder:%p FAILED configuring encoder %d", this, int(rv));
       return WEBRTC_VIDEO_CODEC_ERROR;
     }
     mOMXConfigured = true;

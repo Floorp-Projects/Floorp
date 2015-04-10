@@ -78,7 +78,7 @@ function log(msg) {
 function Transport(port) {
   EventEmitter.decorate(this);
   try {
-    this.socket = new UDPSocket(port, false);
+    this.socket = new UDPSocket(port, false, Services.scriptSecurityManager.getSystemPrincipal());
     this.socket.joinMulticast(ADDRESS);
     this.socket.asyncListen(this);
   } catch(e) {

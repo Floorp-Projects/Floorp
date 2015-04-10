@@ -48,7 +48,8 @@ if CONFIG['MOZ_WEBRTC_SIGNALING']:
     GYP_DIRS['signaling'].input = 'signaling/signaling.gyp'
     GYP_DIRS['signaling'].variables = gyp_vars.copy()
     GYP_DIRS['signaling'].variables.update(
-        build_for_test=0
+        build_for_test=0,
+        build_for_standalone=0
     )
     GYP_DIRS['signaling'].sandbox_vars['FINAL_LIBRARY'] = 'xul'
     # Excluded for various symbol conflicts
@@ -92,7 +93,16 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
         GYP_DIRS['signalingtest'].input = 'signaling/signaling.gyp'
         GYP_DIRS['signalingtest'].variables = gyp_vars.copy()
         GYP_DIRS['signalingtest'].variables.update(
-            build_for_test=1
+            build_for_test=1,
+            build_for_standalone=0
         )
         GYP_DIRS['signalingtest'].non_unified_sources += signaling_non_unified_sources
+        GYP_DIRS += ['signalingstandalone']
+        GYP_DIRS['signalingstandalone'].input = 'signaling/signaling.gyp'
+        GYP_DIRS['signalingstandalone'].variables = gyp_vars.copy()
+        GYP_DIRS['signalingstandalone'].variables.update(
+            build_for_test=0,
+            build_for_standalone=1
+        )
+        GYP_DIRS['signalingstandalone'].non_unified_sources += signaling_non_unified_sources
 

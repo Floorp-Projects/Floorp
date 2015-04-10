@@ -63,6 +63,7 @@ ProtocolHandler.prototype =
     }
     return uri;
   },
+  newChannel2: function() { throw Cr.NS_ERROR_NOT_IMPLEMENTED },
   newChannel: function() { throw Cr.NS_ERROR_NOT_IMPLEMENTED },
   QueryInterface: XPCOMUtils.generateQI([
     Ci.nsIProtocolHandler

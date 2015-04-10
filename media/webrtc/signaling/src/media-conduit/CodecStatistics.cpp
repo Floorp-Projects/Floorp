@@ -5,7 +5,9 @@
 #include "CodecStatistics.h"
 
 #include "CSFLog.h"
+#if !defined(MOZILLA_XPCOMRT_API)
 #include "mozilla/Telemetry.h"
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
 using namespace mozilla;
 using namespace webrtc;
@@ -117,8 +119,10 @@ void VideoCodecStatistics::ReceiveStateChange(const int aChannel,
           TimeDuration timeDelta = TimeStamp::Now() - mReceiveFailureTime;
           CSFLogError(logTag, "Video error duration: %u ms",
                       static_cast<uint32_t>(timeDelta.ToMilliseconds()));
+#if !defined(MOZILLA_XPCOMRT_API)
           Telemetry::Accumulate(Telemetry::WEBRTC_VIDEO_ERROR_RECOVERY_MS,
                                 static_cast<uint32_t>(timeDelta.ToMilliseconds()));
+#endif //
 
           mRecoveredLosses++; // to calculate losses per minute
           mTotalLossTime += timeDelta;  // To calculate % time in recovery
@@ -140,16 +144,22 @@ void VideoCodecStatistics::EndOfCallStats()
     if (callDelta.ToSeconds() != 0) {
       uint32_t recovered_per_min = mRecoveredBeforeLoss/(callDelta.ToSeconds()/60);
       CSFLogError(logTag, "Video recovery before error per min %u", recovered_per_min);
+#if !defined(MOZILLA_XPCOMRT_API)
       Telemetry::Accumulate(Telemetry::WEBRTC_VIDEO_RECOVERY_BEFORE_ERROR_PER_MIN,
                             recovered_per_min);
+#endif // !defined(MOZILLA_XPCOMRT_API)
       uint32_t err_per_min = mRecoveredLosses/(callDelta.ToSeconds()/60);
       CSFLogError(logTag, "Video recovery after error per min %u", err_per_min);
+#if !defined(MOZILLA_XPCOMRT_API)
       Telemetry::Accumulate(Telemetry::WEBRTC_VIDEO_RECOVERY_AFTER_ERROR_PER_MIN,
                             err_per_min);
+#endif // !defined(MOZILLA_XPCOMRT_API)
       float percent = (mTotalLossTime.ToSeconds()*100)/callDelta.ToSeconds();
       CSFLogError(logTag, "Video error time percentage %f%%", percent);
+#if !defined(MOZILLA_XPCOMRT_API)
       Telemetry::Accumulate(Telemetry::WEBRTC_VIDEO_DECODE_ERROR_TIME_PERMILLE,
                             static_cast<uint32_t>(percent*10));
+#endif // !defined(MOZILLA_XPCOMRT_API)
     }
   }
 #endif

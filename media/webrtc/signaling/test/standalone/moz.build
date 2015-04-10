@@ -1,0 +1,58 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Standalone WebRTC does not link on Android.
+# See Bug 1127510 - Standalone WebRTC unit tests fail to link on Android
+if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and CONFIG['OS_TARGET'] != 'Android':
+    CppUnitTests([
+        'jsep_session_unittest_standalone',
+#       mediaconduit_unittests disabled for standalone build until GMP support added.
+#       See Bug 1121677 - Enable GMP for WebRTC standalone.
+#        'mediaconduit_unittests_standalone',
+        'mediapipeline_unittest_standalone',
+        'sdp_unittests_standalone',
+        'signaling_unittests_standalone',
+    ])
+
+include('/ipc/chromium/chromium-config.mozbuild')
+include('../common.build')
+
+for var in ('MOZILLA_INTERNAL_API', 'MOZILLA_XPCOMRT_API'):
+    DEFINES[var] = True
+
+if CONFIG['OS_TARGET'] == 'Linux':
+    USE_LIBS += [
+        'static:/nsprpub/lib/libc/src/plc4',
+    ]
+    OS_LIBS += [
+        '-lrt',
+    ]
+
+LOCAL_INCLUDES += [
+    '..',
+    '/xpcom/libxpcomrt',
+]
+
+USE_LIBS += [
+    '/media/webrtc/signalingstandalone/signaling_ecc/ecc',
+    'fallible',
+    'media_standalone',
+    'mfbt',
+    'mozglue',
+    'mtransport_standalone',
+    'necko_standalone',
+    'nspr',
+    'nss',
+    'unicharutil_standalone',
+    'xpcomrt',
+]
+
+if CONFIG['OS_TARGET'] == 'Android':
+    USE_LIBS += [
+        'freetype',
+    ]
+
+USE_LIBS += ['mozglue']
