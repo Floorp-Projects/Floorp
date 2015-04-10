@@ -7710,7 +7710,7 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax, InvokedPred
     JS_CHECK_RECURSION(context, return null());
 
     bool isSuper = false;
-    uint32_t superBegin;
+    uint32_t superBegin = pos().begin;
 
     /* Check for new expression first. */
     if (tt == TOK_NEW) {
@@ -7739,7 +7739,6 @@ Parser<ParseHandler>::memberExpr(TokenKind tt, bool allowCallSyntax, InvokedPred
     } else if (tt == TOK_SUPER) {
         lhs = null();
         isSuper = true;
-        superBegin = pos().begin;
     } else {
         lhs = primaryExpr(tt, invoked);
         if (!lhs)
