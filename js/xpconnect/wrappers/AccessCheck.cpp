@@ -110,13 +110,11 @@ IsPermitted(CrossOriginObjectType type, JSFlatString* prop, bool set)
 }
 
 static bool
-IsFrameId(JSContext* cx, JSObject* objArg, jsid idArg)
+IsFrameId(JSContext* cx, JSObject* obj, jsid idArg)
 {
-    RootedObject obj(cx, objArg);
+    MOZ_ASSERT(!js::IsWrapper(obj));
     RootedId id(cx, idArg);
 
-    obj = JS_ObjectToInnerObject(cx, obj);
-    MOZ_ASSERT(!js::IsWrapper(obj));
     nsGlobalWindow* win = WindowOrNull(obj);
     if (!win) {
         return false;
@@ -174,8 +172,7 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext* cx, HandleObject wrapper, H
                isCrossOriginAccessPermitted(cx, wrapper, id, Wrapper::SET);
     }
 
-    RootedObject obj(cx, Wrapper::wrappedObject(wrapper));
-
+    RootedObject obj(cx, js::UncheckedUnwrap(wrapper, /* stopAtOuter = */ false));
     CrossOriginObjectType type = IdentifyCrossOriginObject(obj);
     if (JSID_IS_STRING(id)) {
         if (IsPermitted(type, JSID_TO_FLAT_STRING(id), act == Wrapper::SET))
