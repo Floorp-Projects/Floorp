@@ -88,10 +88,10 @@ GridSampler.sampleGrid3 = function(image, dimension, transform) {
       for (var x = 0; x < max; x += 2) {
         var xpoint = Math.floor(points[x]) * 4 + Math.floor(points[x + 1]) * qrcode.width * 4;
         var bit = image[Math.floor(points[x]) + qrcode.width * Math.floor(points[x + 1])];
-        qrcode.imagedata.data[xpoint] = bit ? 255 : 0;
-        qrcode.imagedata.data[xpoint + 1] = bit ? 255 : 0;
-        qrcode.imagedata.data[xpoint + 2] = 0;
-        qrcode.imagedata.data[xpoint + 3] = 255;
+        qrcode.imagedata[xpoint] = bit ? 255 : 0;
+        qrcode.imagedata[xpoint + 1] = bit ? 255 : 0;
+        qrcode.imagedata[xpoint + 2] = 0;
+        qrcode.imagedata[xpoint + 3] = 255;
         if (bit) bits.set_Renamed(x >> 1, y);
       }
     } catch (aioobe) {
@@ -1388,7 +1388,7 @@ qrcode.decode = function(src) {
     var context = canvas_qr.getContext("2d");
     qrcode.width = canvas_qr.width;
     qrcode.height = canvas_qr.height;
-    qrcode.imagedata = context.getImageData(0, 0, qrcode.width, qrcode.height);
+    qrcode.imagedata = context.getImageData(0, 0, qrcode.width, qrcode.height).data;
     qrcode.result = qrcode.process(context);
     if (qrcode.callback != null) qrcode.callback(qrcode.result);
     return qrcode.result;
@@ -1411,7 +1411,7 @@ qrcode.decode = function(src) {
       qrcode.width = canvas_qr.width;
       qrcode.height = canvas_qr.height;
       try {
-        qrcode.imagedata = context.getImageData(0, 0, canvas_qr.width, canvas_qr.height);
+        qrcode.imagedata = context.getImageData(0, 0, canvas_qr.width, canvas_qr.height).data;
       } catch (e) {
         qrcode.result = "Cross domain image reading not supported in your browser! Save it to your computer then drag and drop the file!";
         if (qrcode.callback != null) qrcode.callback(qrcode.result);
@@ -1464,20 +1464,8 @@ qrcode.decode_utf8 = function(s) {
 
 qrcode.process = function(ctx) {
   var image = qrcode.grayScaleToBitmap(qrcode.grayscale());
-  if (qrcode.debug) {
-    for (var y = 0; y < qrcode.height; y++) {
-      for (var x = 0; x < qrcode.width; x++) {
-        var point = x * 4 + y * qrcode.width * 4;
-        qrcode.imagedata.data[point] = image[x + y * qrcode.width] ? 0 : 0;
-        qrcode.imagedata.data[point + 1] = image[x + y * qrcode.width] ? 0 : 0;
-        qrcode.imagedata.data[point + 2] = image[x + y * qrcode.width] ? 255 : 0;
-      }
-    }
-    ctx.putImageData(qrcode.imagedata, 0, 0);
-  }
   var detector = new Detector(image);
   var qRCodeMatrix = detector.detect();
-  if (qrcode.debug) ctx.putImageData(qrcode.imagedata, 0, 0);
   var reader = Decoder.decode(qRCodeMatrix.bits);
   var data = reader.DataByte;
   var str = "";
@@ -1495,7 +1483,7 @@ qrcode.getPixel = function(x, y) {
     throw "point error";
   }
   point = x * 4 + y * qrcode.width * 4;
-  p = (qrcode.imagedata.data[point] * 33 + qrcode.imagedata.data[point + 1] * 34 + qrcode.imagedata.data[point + 2] * 33) / 100;
+  p = (qrcode.imagedata[point] * 33 + qrcode.imagedata[point + 1] * 34 + qrcode.imagedata[point + 2] * 33) / 100;
   return p;
 };
 
@@ -1593,7 +1581,7 @@ module.exports = {
     var context = canvas.getContext("2d");
     qrcode.width = canvas.width;
     qrcode.height = canvas.height;
-    qrcode.imagedata = context.getImageData(0, 0, qrcode.width, qrcode.height);
+    qrcode.imagedata = context.getImageData(0, 0, qrcode.width, qrcode.height).data;
     var result = qrcode.process(context);
     if (cb) {
       cb(result);
