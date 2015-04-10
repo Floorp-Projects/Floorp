@@ -290,7 +290,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
   nsAutoAnimationMutationBatch mb(aElement);
 
   // build the animations list
-  dom::AnimationTimeline* timeline = aElement->OwnerDoc()->Timeline();
+  dom::DocumentTimeline* timeline = aElement->OwnerDoc()->Timeline();
   AnimationPlayerPtrArray newPlayers;
   if (!aStyleContext->IsInDisplayNoneSubtree()) {
     BuildAnimations(aStyleContext, aElement, timeline, newPlayers);
@@ -487,7 +487,7 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
 void
 nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
                                     dom::Element* aTarget,
-                                    dom::AnimationTimeline* aTimeline,
+                                    dom::DocumentTimeline* aTimeline,
                                     AnimationPlayerPtrArray& aPlayers)
 {
   MOZ_ASSERT(aPlayers.IsEmpty(), "expect empty array");
