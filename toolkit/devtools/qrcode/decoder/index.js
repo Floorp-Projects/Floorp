@@ -1551,7 +1551,7 @@ qrcode.grayScaleToBitmap = function(grayScale) {
 };
 
 qrcode.grayscale = function() {
-  let ret = new Array(imgWidth * imgHeight);
+  let ret = new Uint8ClampedArray(imgWidth * imgHeight);
   for (let y = 0; y < imgHeight; y++) {
     for (let x = 0; x < imgWidth; x++) {
       let gray = qrcode.getPixel(x, y);
