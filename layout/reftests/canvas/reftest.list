@@ -103,3 +103,5 @@ skip-if(Mulet) == 726951-shadow-clips.html 726951-shadow-clips-ref.html # TC: Bu
 fuzzy-if(azureQuartz,2,128) fuzzy-if(d2d,12,21) == 784573-1.html 784573-1-ref.html
 
 == 802658-1.html 802658-1-ref.html
+
+== 1151821-1.html 1151821-1-ref.html
