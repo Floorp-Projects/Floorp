@@ -33,11 +33,17 @@ use[id$="-white"] {
   fill: #fff;
 }
 
+use[id$="-darkgrey"] {
+  fill: #666;
+}
+
 use[id$="-disabled"] {
   fill: rgba(255,255,255,.6);
 }
 </style>
 <defs style="display:none">
+  <polygon id="add-shape" fill-rule="evenodd" clip-rule="evenodd" points="16,6.4 9.6,6.4 9.6,0 6.4,0 6.4,6.4 0,6.4 0,9.6
+    6.4,9.6 6.4,16 9.6,16 9.6,9.6 16,9.6"/>
   <path id="audio-shape" fill-rule="evenodd" clip-rule="evenodd" d="M11.429,6.857v2.286c0,1.894-1.535,3.429-3.429,3.429
     c-1.894,0-3.429-1.535-3.429-3.429V6.857H3.429v2.286c0,2.129,1.458,3.913,3.429,4.422v1.293H6.286
     c-0.746,0-1.379,0.477-1.615,1.143h6.658c-0.236-0.665-0.869-1.143-1.615-1.143H9.143v-1.293c1.971-0.508,3.429-2.292,3.429-4.422
@@ -84,6 +90,17 @@ use[id$="-disabled"] {
     l-0.272,0.567c-0.171,0.355,0.17,1.066,0.738,1.635c0.569,0.568,1.279,0.909,1.635,0.738l0.568-0.273
     c0.46,0.741,0.79,1.566,0.998,2.438l-0.584,0.205C15.032,6.452,14.77,7.196,14.77,8z M8.001,3.661C5.604,3.661,3.661,5.603,3.661,8
     c0,2.397,1.943,4.34,4.339,4.34c2.397,0,4.339-1.943,4.339-4.34C12.34,5.603,10.397,3.661,8.001,3.661z"/>
+  <g id="share-shape">
+    <path fill="transparent" d="M11.704,12.375H7.556c-0.183,0-0.353-0.071-0.48-0.199c-0.124-0.125-0.191-0.29-0.19-0.464V10.09h-2.59
+      c-0.37,0-0.671-0.296-0.671-0.661V4.286c0-0.365,0.301-0.661,0.671-0.661h3.384L7.817,3.73l1.299,1.254v0.927h1.851
+      l1.408,1.359v4.444C12.375,12.079,12.074,12.375,11.704,12.375z M7.635,11.625h3.989V7.588l-0.961-0.927H7.635V11.625z
+      M4.375,9.34h2.5V6.561c0-0.365,0.301-0.661,0.671-0.661h0.82V5.302L7.405,4.375h-3.03V9.34z"/>
+    <polygon fill="transparent" points="10.222,8 10.222,6.857 11.407,8"/>
+    <polygon fill="transparent" points="6.963,5.714 6.963,4.571 8.148,5.714"/>
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M8.999,10.654L8.69,10.6L8.999,16l2.56-3.754L8.999,10.654z
+      M8.658,10.041l0.341-0.043l6,2.898V0L1,10.998l4.55-0.569L8.999,16l-1.892-5.68l-0.283-0.05l0.256-0.032L7,9.998l6.999-8.003
+      L8.656,9.998L8.658,10.041z"/>
+  </g>
   <path id="tag-shape" fill-rule="evenodd" clip-rule="evenodd" d="M15.578,7.317L9.659,1.398
     C9.374,1.033,8.955,0.777,8.471,0.761L2.556,0C1.72-0.027-0.027,1.72,0,2.556l0.761,5.916c0.016,0.484,0.272,0.902,0.637,1.188
     l5.919,5.919c0.591,0.591,1.584,0.557,2.218-0.076l5.966-5.966C16.135,8.902,16.169,7.909,15.578,7.317z M4.222,4.163
@@ -148,6 +165,9 @@ use[id$="-disabled"] {
       0.81H5.25 c-0.8,0-1.45,0.68-1.45,1.51v4.91l-1.89,1.89l0.99,0.99l1-1l8.3-8.3L14.21,2.72z"/>
   </g>
 </defs>
+<use id="add"                 xlink:href="#add-shape"/>
+<use id="add-hover"           xlink:href="#add-shape"/>
+<use id="add-active"          xlink:href="#add-shape"/>
 <use id="audio"               xlink:href="#audio-shape"/>
 <use id="audio-hover"         xlink:href="#audio-shape"/>
 <use id="audio-active"        xlink:href="#audio-shape"/>
@@ -173,6 +193,7 @@ use[id$="-disabled"] {
 <use id="settings"            xlink:href="#settings-shape"/>
 <use id="settings-hover"      xlink:href="#settings-shape"/>
 <use id="settings-active"     xlink:href="#settings-shape"/>
+<use id="share-darkgrey"      xlink:href="#share-shape"/>
 <use id="tag"                 xlink:href="#tag-shape"/>
 <use id="tag-hover"           xlink:href="#tag-shape"/>
 <use id="tag-active"          xlink:href="#tag-shape"/>
