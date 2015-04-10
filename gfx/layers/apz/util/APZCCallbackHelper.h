@@ -66,6 +66,7 @@ public:
        to the actual scroll position. aMetrics' display port and scroll position
        will be updated with any modifications made. */
     static void UpdateRootFrame(nsIDOMWindowUtils* aUtils,
+                                nsIPresShell* aPresShell,
                                 FrameMetrics& aMetrics);
 
     /* Applies the scroll parameters from the given FrameMetrics object to the subframe
