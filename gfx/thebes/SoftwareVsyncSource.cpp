@@ -119,6 +119,7 @@ SoftwareDisplay::ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp)
   mozilla::TimeDuration delay = nextVsync - mozilla::TimeStamp::Now();
   if (delay.ToMilliseconds() < 0) {
     delay = mozilla::TimeDuration::FromMilliseconds(0);
+    nextVsync = mozilla::TimeStamp::Now();
   }
 
   mCurrentVsyncTask = NewRunnableMethod(this,
