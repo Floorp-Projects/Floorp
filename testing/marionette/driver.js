@@ -1925,7 +1925,7 @@ GeckoDriver.prototype.multiAction = function(cmd, resp) {
     case Context.CONTENT:
       this.addFrameCloseListener("multi action chain");
       yield this.listener.multiAction(
-          {value: value, max_len: maxlen} = cmd.parameters);
+          {value: cmd.parameters.value, maxlen: cmd.parameters.max_len});
       break;
   }
 };
