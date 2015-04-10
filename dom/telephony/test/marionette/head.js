@@ -1085,6 +1085,11 @@ let emulator = (function() {
     });
   }
 
+  function sendTone(tone, pause, serviceId) {
+    log("Send DTMF " + tone + " serviceId " + serviceId);
+    return telephony.sendTones(tone, pause, null, serviceId);
+  }
+
   /**
    * Config radio.
    *
@@ -1165,6 +1170,7 @@ let emulator = (function() {
   this.gRemoveCallInConference = removeCallInConference;
   this.gHangUpCallInConference = hangUpCallInConference;
   this.gHangUpConference = hangUpConference;
+  this.gSendTone = sendTone;
   this.gSetupConference = setupConference;
   this.gSetRadioEnabled = setRadioEnabled;
   this.gSetRadioEnabledAll = setRadioEnabledAll;

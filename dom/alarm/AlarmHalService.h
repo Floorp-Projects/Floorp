@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
- 
+
 #ifndef mozilla_dom_alarm_AlarmHalService_h
 #define mozilla_dom_alarm_AlarmHalService_h
 
@@ -17,13 +17,15 @@
 namespace mozilla {
 namespace dom {
 namespace alarm {
-  
+
 typedef Observer<void_t> AlarmObserver;
 typedef Observer<hal::SystemTimezoneChangeInformation> SystemTimezoneChangeObserver;
+typedef Observer<int64_t> SystemClockChangeObserver;
 
-class AlarmHalService : public nsIAlarmHalService, 
+class AlarmHalService : public nsIAlarmHalService,
                         public AlarmObserver,
-                        public SystemTimezoneChangeObserver
+                        public SystemTimezoneChangeObserver,
+                        public SystemClockChangeObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -39,6 +41,9 @@ public:
   // Implementing hal::SystemTimezoneChangeObserver
   void Notify(const hal::SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo) override;
 
+  // Implementing hal::SystemClockChangeObserver
+  void Notify(const int64_t& aClockDeltaMS);
+
 private:
   virtual ~AlarmHalService();
 
@@ -47,6 +52,7 @@ private:
 
   nsCOMPtr<nsIAlarmFiredCb> mAlarmFiredCb;
   nsCOMPtr<nsITimezoneChangedCb> mTimezoneChangedCb;
+  nsCOMPtr<nsISystemClockChangedCb> mSystemClockChangedCb;
 };
 
 } // namespace alarm

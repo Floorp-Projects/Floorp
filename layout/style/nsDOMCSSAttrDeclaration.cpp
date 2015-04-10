@@ -91,23 +91,13 @@ nsDOMCSSAttributeDeclaration::SetCSSDeclaration(css::Declaration* aDecl)
 nsIDocument*
 nsDOMCSSAttributeDeclaration::DocToUpdate()
 {
-  // XXXbz this is a bit of a hack, especially doing it before the
-  // BeginUpdate(), but this is a good chokepoint where we know we
-  // plan to modify the CSSDeclaration, so need to notify
-  // AttributeWillChange if this is inline style.
-  if (!mIsSMILOverride) {
-    nsNodeUtils::AttributeWillChange(mElement, kNameSpaceID_None,
-                                     nsGkAtoms::style,
-                                     nsIDOMMutationEvent::MODIFICATION);
-  }
- 
   // We need OwnerDoc() rather than GetCurrentDoc() because it might
   // be the BeginUpdate call that inserts mElement into the document.
   return mElement->OwnerDoc();
 }
 
 css::Declaration*
-nsDOMCSSAttributeDeclaration::GetCSSDeclaration(bool aAllocate)
+nsDOMCSSAttributeDeclaration::GetCSSDeclaration(Operation aOperation)
 {
   if (!mElement)
     return nullptr;
@@ -118,10 +108,31 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(bool aAllocate)
   else
     cssRule = mElement->GetInlineStyleRule();
 
+  // Notify observers that our style="" attribute is going to change
+  // unless:
+  //   * this is a declaration that holds SMIL animation values (which
+  //     aren't reflected in the DOM style="" attribute), or
+  //   * we're getting the declaration for reading, or
+  //   * we're getting it for property removal but we don't currently have
+  //     a declaration.
+
+  // XXXbz this is a bit of a hack, especially doing it before the
+  // BeginUpdate(), but this is a good chokepoint where we know we
+  // plan to modify the CSSDeclaration, so need to notify
+  // AttributeWillChange if this is inline style.
+  if (!mIsSMILOverride &&
+      ((aOperation == eOperation_Modify) ||
+       (aOperation == eOperation_RemoveProperty && cssRule))) {
+    nsNodeUtils::AttributeWillChange(mElement, kNameSpaceID_None,
+                                     nsGkAtoms::style,
+                                     nsIDOMMutationEvent::MODIFICATION);
+  }
+
   if (cssRule) {
     return cssRule->GetDeclaration();
   }
-  if (!aAllocate) {
+
+  if (aOperation != eOperation_Modify) {
     return nullptr;
   }
 
