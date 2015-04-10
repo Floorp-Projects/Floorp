@@ -980,8 +980,21 @@ nsExpandedPrincipal::IsOnCSSUnprefixingWhitelist()
 void
 nsExpandedPrincipal::GetScriptLocation(nsACString& aStr)
 {
-  // Is that a good idea to list it's principals?
   aStr.Assign(EXPANDED_PRINCIPAL_SPEC);
+  aStr.AppendLiteral(" (");
+
+  for (size_t i = 0; i < mPrincipals.Length(); ++i) {
+    if (i != 0) {
+      aStr.AppendLiteral(", ");
+    }
+
+    nsAutoCString spec;
+    nsJSPrincipals::get(mPrincipals.ElementAt(i))->GetScriptLocation(spec);
+
+    aStr.Append(spec);
+
+  }
+  aStr.Append(")");
 }
 
 #ifdef DEBUG
