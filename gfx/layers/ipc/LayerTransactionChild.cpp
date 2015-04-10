@@ -108,17 +108,6 @@ LayerTransactionChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessa
 }
 
 void
-LayerTransactionChild::SendFenceHandle(AsyncTransactionTracker* aTracker,
-                                       PTextureChild* aTexture,
-                                       const FenceHandle& aFence)
-{
-  InfallibleTArray<AsyncChildMessageData> messages;
-  messages.AppendElement(OpDeliverFenceFromChild(nullptr, aTexture,
-                                                 aFence));
-  SendChildAsyncMessages(messages);
-}
-
-void
 LayerTransactionChild::ActorDestroy(ActorDestroyReason why)
 {
   mDestroyed = true;

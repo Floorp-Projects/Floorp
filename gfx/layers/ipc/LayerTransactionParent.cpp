@@ -914,23 +914,6 @@ LayerTransactionParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessag
     const AsyncChildMessageData& message = aMessages[i];
 
     switch (message.type()) {
-      case AsyncChildMessageData::TOpDeliverFenceFromChild: {
-        const OpDeliverFenceFromChild& op = message.get_OpDeliverFenceFromChild();
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-        FenceHandle fence = FenceHandle(op.fence());
-        PTextureParent* parent = op.textureParent();
-
-        TextureHostOGL* hostOGL = nullptr;
-        RefPtr<TextureHost> texture = TextureHost::AsTextureHost(parent);
-        if (texture) {
-          hostOGL = texture->AsHostOGL();
-        }
-        if (hostOGL) {
-          hostOGL->SetAcquireFence(fence.mFence);
-        }
-#endif
-        break;
-      }
       case AsyncChildMessageData::TOpRemoveTextureAsync: {
         const OpRemoveTextureAsync& op = message.get_OpRemoveTextureAsync();
         CompositableHost* compositable = CompositableHost::FromIPDLActor(op.compositableParent());
@@ -969,7 +952,6 @@ LayerTransactionParent::RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessag
 void
 LayerTransactionParent::ActorDestroy(ActorDestroyReason why)
 {
-  DestroyAsyncTransactionTrackersHolder();
 }
 
 bool LayerTransactionParent::IsSameProcess() const
@@ -1001,17 +983,6 @@ LayerTransactionParent::SendFenceHandleIfPresent(PTextureParent* aTexture,
     mPendingAsyncMessage.push_back(OpDeliverFence(aTexture, nullptr,
                                                   fence));
   }
-}
-
-void
-LayerTransactionParent::SendFenceHandle(AsyncTransactionTracker* aTracker,
-                                        PTextureParent* aTexture,
-                                        const FenceHandle& aFence)
-{
-  InfallibleTArray<AsyncParentMessageData> messages;
-  messages.AppendElement(OpDeliverFence(aTexture, nullptr,
-                                        aFence));
-  mozilla::unused << SendParentAsyncMessages(messages);
 }
 
 void

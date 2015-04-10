@@ -47,10 +47,6 @@ public:
     mForwarder = aForwarder;
   }
 
-  virtual void SendFenceHandle(AsyncTransactionTracker* aTracker,
-                               PTextureChild* aTexture,
-                               const FenceHandle& aFence);
-
   uint64_t GetId() const { return mId; }
 
 protected:
