@@ -5,6 +5,7 @@
 
 #include "domstubs.idl"
 
+interface nsIArray;
 interface nsIDocument;
 interface nsIInterceptedChannel;
 interface nsIPrincipal;
@@ -19,7 +20,20 @@ interface nsIServiceWorkerUnregisterCallback : nsISupports
   [noscript] void UnregisterFailed();
 };
 
-[builtinclass, uuid(e4c8baa5-237a-4bf6-82d4-ea06eb4b76ba)]
+[scriptable, builtinclass, uuid(8ce0d197-5740-4ddf-aa4a-e5a63e611d03)]
+interface nsIServiceWorkerInfo : nsISupports
+{
+  readonly attribute nsIPrincipal principal;
+
+  readonly attribute DOMString scope;
+  readonly attribute DOMString scriptSpec;
+  readonly attribute DOMString currentWorkerURL;
+
+  readonly attribute DOMString activeCacheName;
+  readonly attribute DOMString waitingCacheName;
+};
+
+[scriptable, builtinclass, uuid(861b55e9-d6ac-47cf-a528-8590e9b44de6)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -103,6 +117,10 @@ interface nsIServiceWorkerManager : nsISupports
 
   // Testing
   DOMString getScopeForUrl(in DOMString path);
+
+  // This is meant to be used only by about:serviceworkers. It returns an array
+  // of nsIServiceWorkerInfo.
+  nsIArray getAllRegistrations();
 };
 
 %{ C++
