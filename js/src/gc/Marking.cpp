@@ -999,13 +999,6 @@ js::gc::TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, Cell** thingp, c
         return;
     TraceManuallyBarrieredEdgeFunctor f;
     CallTyped(f, (*thingp)->getTraceKind(), trc, thingp, name);
-
-//c:\builds\moz2_slave\try_w32-d_sm-compacting-000000\src\js\src\gc/Marking.cpp(974) : 
-//error C2893:
-//Failed to specialize function template 'unknown-type js::gc::CallTyped(F,JSGCTraceKind,Args &&...)'
-//With the following template arguments:
-//  'F=TraceManuallyBarrieredEdgeFunctor'
-//  'Args={JSTracer *&, js::gc::Cell **&, const char *&}' 
 }
 
 /*** Value Marking ***/
