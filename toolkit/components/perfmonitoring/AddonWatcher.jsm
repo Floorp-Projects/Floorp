@@ -134,6 +134,9 @@ let AddonWatcher = {
         longestDuration: Math.round(Math.log2(Preferences.get("browser.addon-watch.limits.longestDuration", 128))),
       };
 
+      // By default, warn only after an add-on has been spotted misbehaving 3 times.
+      let tolerance = Preferences.get("browser.addon-watch.tolerance", 3);
+
       for (let item of snapshot.componentsData) {
         let addonId = item.addonId;
         if (!item.isSystem || !addonId) {
@@ -191,6 +194,10 @@ let AddonWatcher = {
           }
 
           stats.alerts[filter] = (stats.alerts[filter] || 0) + 1;
+
+          if (stats.alerts[filter] % tolerance != 0) {
+            continue;
+          }
 
           try {
             this._callback(addonId, filter);
