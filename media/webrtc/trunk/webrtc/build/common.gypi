@@ -173,7 +173,12 @@
       }, {
         'include_alsa_audio%': 0,
       }],
-      ['OS=="solaris" or os_bsd==1', {
+      ['OS=="openbsd"', {
+        'include_sndio_audio%': 1,
+      }, {
+        'include_sndio_audio%': 0,
+      }],
+      ['OS=="solaris" or (OS!="openbsd" and os_bsd==1)', {
         'include_pulse_audio%': 1,
       }, {
         'include_pulse_audio%': 0,
@@ -323,6 +328,11 @@
         'defines': [
           # doesn't support pthread_condattr_setclock
           'WEBRTC_CLOCK_TYPE_REALTIME',
+        ],
+      }],
+      ['OS=="openbsd"', {
+        'defines' : [
+          'WEBRTC_AUDIO_SNDIO',
         ],
       }],
       # Mozilla: if we support Mozilla on MIPS, we'll need to mod the cflags entries here
