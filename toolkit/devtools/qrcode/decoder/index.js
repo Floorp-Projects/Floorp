@@ -1476,12 +1476,6 @@ qrcode.process = function(ctx) {
 };
 
 qrcode.getPixel = function(x, y) {
-  if (imgWidth < x) {
-    throw "point error";
-  }
-  if (imgHeight < y) {
-    throw "point error";
-  }
   let point = x * 4 + y * imgWidth * 4;
   let p = (imagedata[point] * 33 + imagedata[point + 1] * 34 + imagedata[point + 2] * 33) / 100;
   return p;
