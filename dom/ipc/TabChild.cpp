@@ -519,7 +519,10 @@ TabChildBase::ProcessUpdateFrame(const FrameMetrics& aFrameMetrics)
     nsCOMPtr<nsIDOMWindowUtils> utils(GetDOMWindowUtils());
 
     FrameMetrics newMetrics = aFrameMetrics;
-    APZCCallbackHelper::UpdateRootFrame(utils, newMetrics);
+    nsCOMPtr<nsIDocument> doc = GetDocument();
+    if (doc && doc->GetShell()) {
+      APZCCallbackHelper::UpdateRootFrame(utils, doc->GetShell(), newMetrics);
+    }
 
     CSSSize cssCompositedSize = newMetrics.CalculateCompositedSizeInCssPixels();
     // The BrowserElementScrolling helper must know about these updated metrics

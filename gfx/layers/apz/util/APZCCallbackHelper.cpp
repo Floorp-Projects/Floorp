@@ -181,12 +181,24 @@ SetDisplayPortMargins(nsIDOMWindowUtils* aUtils,
 
 void
 APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
+                                    nsIPresShell* aPresShell,
                                     FrameMetrics& aMetrics)
 {
   // Precondition checks
   MOZ_ASSERT(aUtils);
+  MOZ_ASSERT(aPresShell);
   MOZ_ASSERT(aMetrics.GetUseDisplayPortMargins());
   if (aMetrics.GetScrollId() == FrameMetrics::NULL_SCROLL_ID) {
+    return;
+  }
+
+  float presShellResolution = nsLayoutUtils::GetResolution(aPresShell);
+
+  // If the pres shell resolution has changed on the content side side
+  // the time this repaint request was fired, consider this request out of date
+  // and drop it; setting a zoom based on the out-of-date resolution can have
+  // the effect of getting us stuck with the stale resolution.
+  if (presShellResolution != aMetrics.GetPresShellResolution()) {
     return;
   }
 
@@ -207,8 +219,8 @@ APZCCallbackHelper::UpdateRootFrame(nsIDOMWindowUtils* aUtils,
 
   // The pres shell resolution is updated by the the async zoom since the
   // last paint.
-  float presShellResolution = aMetrics.GetPresShellResolution()
-                            * aMetrics.GetAsyncZoom().scale;
+  presShellResolution = aMetrics.GetPresShellResolution()
+                      * aMetrics.GetAsyncZoom().scale;
   aUtils->SetResolutionAndScaleTo(presShellResolution);
 
   SetDisplayPortMargins(aUtils, content, aMetrics);
