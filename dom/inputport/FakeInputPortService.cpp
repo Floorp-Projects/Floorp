@@ -59,7 +59,7 @@ public:
     , mIsConnected(aIsConnected)
   {}
 
-  NS_IMETHODIMP
+  NS_IMETHOD
   Notify(nsITimer* aTimer) override
   {
     InputPortData* portData = static_cast<InputPortData*>(mInputPortData.get());
