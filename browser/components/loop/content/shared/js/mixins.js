@@ -100,7 +100,7 @@ loop.shared.mixins = (function() {
 
     componentDidMount: function() {
       this.documentBody.addEventListener("click", this._onBodyClick);
-      this.documentBody.addEventListener("blur", this.hideDropdownMenu);
+      rootObject.addEventListener("blur", this.hideDropdownMenu);
 
       var menu = this.refs.menu;
       if (!menu) {
@@ -109,6 +109,9 @@ loop.shared.mixins = (function() {
 
       // Correct the position of the menu if necessary.
       var menuNode = menu.getDOMNode();
+      if (!menuNode) {
+        return;
+      }
       var menuNodeRect = menuNode.getBoundingClientRect();
       var bodyRect = {
         height: this.documentBody.offsetHeight,
@@ -130,7 +133,7 @@ loop.shared.mixins = (function() {
 
     componentWillUnmount: function() {
       this.documentBody.removeEventListener("click", this._onBodyClick);
-      this.documentBody.removeEventListener("blur", this.hideDropdownMenu);
+      rootObject.removeEventListener("blur", this.hideDropdownMenu);
     },
 
     showDropdownMenu: function() {
