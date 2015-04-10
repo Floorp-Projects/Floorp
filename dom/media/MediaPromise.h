@@ -311,8 +311,6 @@ public:
                                          ResolveMethodType aResolveMethod, RejectMethodType aRejectMethod,
                                          TaskDispatcher& aDispatcher = PassByRef<AutoTaskDispatcher>())
   {
-    MutexAutoLock lock(mMutex);
-
     // {Refable,}Then() rarely dispatch directly - they do so only in the case
     // where the promise has already been resolved by the time {Refable,}Then()
     // is invoked. This case is rare, but it _can_ happen, which makes it a ripe
@@ -322,6 +320,7 @@ public:
     // infrequently.
     aDispatcher.AssertIsTailDispatcherIfRequired();
 
+    MutexAutoLock lock(mMutex);
     MOZ_DIAGNOSTIC_ASSERT(!IsExclusive || !mHaveConsumer);
     mHaveConsumer = true;
     nsRefPtr<ThenValueBase> thenValue = new ThenValue<ThisType, ResolveMethodType, RejectMethodType>(
