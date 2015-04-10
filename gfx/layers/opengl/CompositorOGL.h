@@ -304,19 +304,6 @@ public:
   const gfx::Matrix4x4& GetProjMatrix() const {
     return mProjMatrix;
   }
-
-  void SetProjMatrix(const gfx::Matrix4x4& aProjMatrix) {
-    mProjMatrix = aProjMatrix;
-  }
-
-  const gfx::IntSize GetDestinationSurfaceSize() const {
-    return gfx::IntSize (mSurfaceSize.width, mSurfaceSize.height);
-  }
-
-  const ScreenPoint& GetScreenRenderOffset() const {
-    return mRenderOffset;
-  }
-
 private:
   virtual gfx::IntSize GetWidgetSize() const override
   {
