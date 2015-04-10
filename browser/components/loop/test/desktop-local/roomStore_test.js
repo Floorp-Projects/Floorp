@@ -246,8 +246,7 @@ describe("loop.store.RoomStore", function () {
         sinon.assert.calledWith(fakeMozLoop.rooms.create, {
           roomName: "Conversation 1",
           roomOwner: fakeOwner,
-          maxSize: store.maxRoomCreationSize,
-          expiresIn: store.defaultExpiresIn
+          maxSize: store.maxRoomCreationSize
         });
       });
 
