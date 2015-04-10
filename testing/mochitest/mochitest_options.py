@@ -440,6 +440,11 @@ class MochitestOptions(ArgumentParser):
                   "used multiple times in which case the test must contain "
                   "at least one of the given tags.",
           }],
+        [["--enable-cpow-warnings"],
+         {"action": "store_true",
+          "dest": "enableCPOWWarnings",
+          "help": "enable logging of unsafe CPOW usage, which is disabled by default for tests",
+          }],
     ]
 
     def __init__(self, **kwargs):
