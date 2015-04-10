@@ -31,7 +31,7 @@ public:
 
   // If GetCSSDeclaration returns non-null, then the decl it returns
   // is owned by our current style rule.
-  virtual mozilla::css::Declaration* GetCSSDeclaration(bool aAllocate) override;
+  virtual mozilla::css::Declaration* GetCSSDeclaration(Operation aOperation) override;
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) override;
   NS_IMETHOD GetParentRule(nsIDOMCSSRule **aParent) override;
 
