@@ -42,7 +42,7 @@ public:
   void Notify(const hal::SystemTimezoneChangeInformation& aSystemTimezoneChangeInfo) override;
 
   // Implementing hal::SystemClockChangeObserver
-  void Notify(const int64_t& aClockDeltaMS);
+  void Notify(const int64_t& aClockDeltaMS) override;
 
 private:
   virtual ~AlarmHalService();
