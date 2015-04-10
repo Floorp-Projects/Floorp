@@ -18,11 +18,7 @@ function spawnTest () {
   ok(memory, "memory should be mocked.");
   ok(timeline, "timeline should be mocked.");
 
-  let {
-    profilerStartTime,
-    timelineStartTime,
-    memoryStartTime
-  } = yield front.startRecording({
+  let recording = yield front.startRecording({
     withTicks: true,
     withMemory: true,
     withAllocations: true,
@@ -30,36 +26,22 @@ function spawnTest () {
     allocationsMaxLogLength: Services.prefs.getIntPref(MEMORY_MAX_LOG_LEN_PREF)
   });
 
-  ok(typeof profilerStartTime === "number",
-    "The front.startRecording() emits a profiler start time.");
-  ok(typeof timelineStartTime === "number",
-    "The front.startRecording() emits a timeline start time.");
-  ok(typeof memoryStartTime === "number",
-    "The front.startRecording() emits a memory start time.");
+  ok(typeof recording._profilerStartTime === "number",
+    "The front.startRecording() returns a recording with a profiler start time");
+  ok(typeof recording._timelineStartTime === "number",
+    "The front.startRecording() returns a recording with a timeline start time");
+  ok(typeof recording._memoryStartTime === "number",
+    "The front.startRecording() returns a recording with a memory start time");
 
   yield busyWait(WAIT_TIME);
 
-  let {
-    profilerEndTime,
-    timelineEndTime,
-    memoryEndTime
-  } = yield front.stopRecording({
-    withAllocations: true
-  });
+  yield front.stopRecording(recording);
 
-  ok(typeof profilerEndTime === "number",
-    "The front.stopRecording() emits a profiler end time.");
-  ok(typeof timelineEndTime === "number",
-    "The front.stopRecording() emits a timeline end time.");
-  ok(typeof memoryEndTime === "number",
-    "The front.stopRecording() emits a memory end time.");
+  ok(typeof recording.getDuration() === "number",
+    "The front.stopRecording() allows recording to get a duration.");
 
-  ok(profilerEndTime > profilerStartTime,
+  ok(recording.getDuration() >= 0,
     "The profilerEndTime is after profilerStartTime.");
-  is(timelineEndTime, timelineStartTime,
-    "The timelineEndTime is the same as timelineStartTime.");
-  is(memoryEndTime, memoryStartTime,
-    "The memoryEndTime is the same as memoryStartTime.");
 
   yield removeTab(target.tab);
   finish();
