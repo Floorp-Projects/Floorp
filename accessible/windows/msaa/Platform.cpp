@@ -11,6 +11,7 @@
 #include "HyperTextAccessibleWrap.h"
 #include "nsWinUtils.h"
 #include "mozilla/a11y/ProxyAccessible.h"
+#include "ProxyWrappers.h"
 
 #include "mozilla/ClearOnShutdown.h"
 
@@ -34,22 +35,6 @@ a11y::PlatformShutdown()
 
   nsWinUtils::ShutdownWindowEmulation();
 }
-
-class ProxyAccessibleWrap : public AccessibleWrap
-{
-  public:
-  ProxyAccessibleWrap(ProxyAccessible* aProxy) :
-    AccessibleWrap(nullptr, nullptr)
-  {
-    mType = eProxyType;
-    mBits.proxy = aProxy;
-  }
-
-  virtual void Shutdown() override
-  {
-    mBits.proxy = nullptr;
-  }
-};
 
 void
 a11y::ProxyCreated(ProxyAccessible* aProxy, uint32_t)

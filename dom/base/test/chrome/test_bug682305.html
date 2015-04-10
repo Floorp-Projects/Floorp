@@ -40,12 +40,14 @@ var ios = Cc["@mozilla.org/network/io-service;1"]
 var PROTOCOL_SCHEME = "jsproto";
 
 
-function CustomChannel(uri) {
+function CustomChannel(uri, loadInfo) {
 	this.URI = this.originalURI = uri;
+  this.loadInfo = loadInfo;
 }
 CustomChannel.prototype = {
   URI: null,
   originalURI: null,
+  loadInfo: null,
   contentCharset: "utf-8",
   contentLength: 0,
   contentType: "text/plain",
@@ -111,8 +113,11 @@ CustomProtocol.prototype = {
     uri.spec = spec;
     return uri.QueryInterface(Ci.nsIURI);
   },
-  newChannel: function newChannel(URI) {    
-    return new CustomChannel(URI);
+  newChannel2: function newChannel2(URI, loadInfo) {
+    return new CustomChannel(URI, loadInfo);
+  },
+  newChannel: function newChannel(URI) {
+    return newChannel2(URI);
   },
   QueryInterface: XPCOMUtils.generateQI([Ci.nsISupports,
                                          Ci.nsISupportsWeakReference,

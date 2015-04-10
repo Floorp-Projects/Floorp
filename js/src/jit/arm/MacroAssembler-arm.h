@@ -68,6 +68,7 @@ class MacroAssemblerARM : public Assembler
     void convertBoolToInt32(Register source, Register dest);
     void convertInt32ToDouble(Register src, FloatRegister dest);
     void convertInt32ToDouble(const Address& src, FloatRegister dest);
+    void convertInt32ToDouble(const BaseIndex& src, FloatRegister dest);
     void convertUInt32ToFloat32(Register src, FloatRegister dest);
     void convertUInt32ToDouble(Register src, FloatRegister dest);
     void convertDoubleToFloat32(FloatRegister src, FloatRegister dest,

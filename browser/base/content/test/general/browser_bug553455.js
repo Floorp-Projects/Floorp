@@ -731,7 +731,10 @@ function test_renotify_installed() {
 function test_cancel() {
   function complete_install(callback) {
     let url = TESTROOT + "slowinstall.sjs?continue=true"
-    NetUtil.asyncFetch(url, callback || (() => {}));
+    NetUtil.asyncFetch({
+      uri: url,
+      loadUsingSystemPrincipal: true
+    }, callback || (() => {}));
   }
 
   // Wait for the progress notification

@@ -2561,7 +2561,8 @@ TryOptimizeLoadObjectOrNull(MDefinition* def, MDefinitionVector* peliminateList)
                 return false;
             break;
           case MDefinition::Op_Unbox:
-            MOZ_ASSERT(ndef->type() == MIRType_Object);
+            if (ndef->type() != MIRType_Object)
+                return true;
             break;
           case MDefinition::Op_TypeBarrier:
             // For now, only handle type barriers which are not consumed

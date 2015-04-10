@@ -656,25 +656,28 @@ class MachCommandConditions(object):
         return False
 
     @staticmethod
-    def is_firefox_or_mulet(cls):
-        """Must have a Firefox or Mulet build."""
-        return (MachCommandConditions.is_firefox(cls) or
-                MachCommandConditions.is_mulet(cls))
-
-    @staticmethod
     def is_b2g(cls):
-        """Must have a Boot to Gecko build."""
+        """Must have a B2G build."""
         if hasattr(cls, 'substs'):
             return cls.substs.get('MOZ_WIDGET_TOOLKIT') == 'gonk'
         return False
 
     @staticmethod
     def is_b2g_desktop(cls):
-        """Must have a Boot to Gecko desktop build."""
+        """Must have a B2G desktop build."""
         if hasattr(cls, 'substs'):
             return cls.substs.get('MOZ_BUILD_APP') == 'b2g' and \
                    cls.substs.get('MOZ_WIDGET_TOOLKIT') != 'gonk'
         return False
+
+    @staticmethod
+    def is_emulator(cls):
+        """Must have a B2G build with an emulator configured."""
+        try:
+            return MachCommandConditions.is_b2g(cls) and \
+                   cls.device_name.startswith('emulator')
+        except AttributeError:
+            return False
 
     @staticmethod
     def is_android(cls):
