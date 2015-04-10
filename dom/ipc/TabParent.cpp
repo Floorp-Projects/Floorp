@@ -1121,19 +1121,12 @@ TabParent::AllocPIndexedDBPermissionRequestParent(const Principal& aPrincipal)
     MOZ_CRASH("Figure out security checks for bridged content!");
   }
 
-  nsCOMPtr<nsPIDOMWindow> window;
-  nsCOMPtr<nsIContent> frame = do_QueryInterface(mFrameElement);
-  if (frame) {
-    MOZ_ASSERT(frame->OwnerDoc());
-    window = do_QueryInterface(frame->OwnerDoc()->GetWindow());
-  }
-
-  if (!window) {
+  if (NS_WARN_IF(!mFrameElement)) {
     return nullptr;
   }
 
   return
-    mozilla::dom::indexedDB::AllocPIndexedDBPermissionRequestParent(window,
+    mozilla::dom::indexedDB::AllocPIndexedDBPermissionRequestParent(mFrameElement,
                                                                     principal);
 }
 

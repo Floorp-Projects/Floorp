@@ -7,6 +7,7 @@
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Services.h"
+#include "mozilla/dom/Element.h"
 #include "nsIDOMWindow.h"
 #include "nsIObserverService.h"
 #include "nsIPrincipal.h"
@@ -46,13 +47,13 @@ AssertSanity()
 
 } // anonymous namespace
 
-PermissionRequestBase::PermissionRequestBase(nsPIDOMWindow* aWindow,
+PermissionRequestBase::PermissionRequestBase(Element* aOwnerElement,
                                              nsIPrincipal* aPrincipal)
-  : mWindow(aWindow)
+  : mOwnerElement(aOwnerElement)
   , mPrincipal(aPrincipal)
 {
   AssertSanity();
-  MOZ_ASSERT(aWindow);
+  MOZ_ASSERT(aOwnerElement);
   MOZ_ASSERT(aPrincipal);
 }
 
@@ -125,8 +126,8 @@ PermissionRequestBase::PromptIfNeeded(PermissionValue* aCurrentValue)
 
   // Tricky, we want to release the window and principal in all cases except
   // when we successfully prompt.
-  nsCOMPtr<nsPIDOMWindow> window;
-  mWindow.swap(window);
+  nsCOMPtr<Element> element;
+  mOwnerElement.swap(element);
 
   nsCOMPtr<nsIPrincipal> principal;
   mPrincipal.swap(principal);
@@ -146,7 +147,7 @@ PermissionRequestBase::PromptIfNeeded(PermissionValue* aCurrentValue)
     }
 
     // We're about to prompt so swap the members back.
-    window.swap(mWindow);
+    element.swap(mOwnerElement);
     principal.swap(mPrincipal);
 
     rv = obsSvc->NotifyObservers(static_cast<nsIObserver*>(this),
@@ -154,7 +155,7 @@ PermissionRequestBase::PromptIfNeeded(PermissionValue* aCurrentValue)
                                  nullptr);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       // Finally release if we failed the prompt.
-      mWindow = nullptr;
+      mOwnerElement = nullptr;
       mPrincipal = nullptr;
       return rv;
     }
@@ -200,8 +201,8 @@ PermissionRequestBase::GetInterface(const nsIID& aIID,
     return QueryInterface(aIID, aResult);
   }
 
-  if (aIID.Equals(NS_GET_IID(nsIDOMWindow)) && mWindow) {
-    return mWindow->QueryInterface(aIID, aResult);
+  if (aIID.Equals(NS_GET_IID(nsIDOMNode)) && mOwnerElement) {
+    return mOwnerElement->QueryInterface(aIID, aResult);
   }
 
   *aResult = nullptr;
@@ -215,11 +216,11 @@ PermissionRequestBase::Observe(nsISupports* aSubject,
 {
   AssertSanity();
   MOZ_ASSERT(!strcmp(aTopic, kPermissionResponseTopic));
-  MOZ_ASSERT(mWindow);
+  MOZ_ASSERT(mOwnerElement);
   MOZ_ASSERT(mPrincipal);
 
-  nsCOMPtr<nsPIDOMWindow> window;
-  mWindow.swap(window);
+  nsCOMPtr<Element> element;
+  element.swap(mOwnerElement);
 
   nsCOMPtr<nsIPrincipal> principal;
   mPrincipal.swap(principal);
