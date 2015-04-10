@@ -5,17 +5,3 @@
 AUTOCFG_JS_EXPORTS = \
 		$(srcdir)/prefcalls.js \
 		$(NULL)
-
-ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-AUTOCFG_JS_EXPORTS += $(srcdir)/mac/platform.js
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT), windows)
-AUTOCFG_JS_EXPORTS += $(srcdir)/win/platform.js
-else
-ifeq ($(MOZ_WIDGET_TOOLKIT), beos)
-AUTOCFG_JS_EXPORTS += $(srcdir)/beos/platform.js
-else
-AUTOCFG_JS_EXPORTS += $(srcdir)/unix/platform.js
-endif
-endif
-endif
