@@ -270,7 +270,7 @@ GLLibraryEGL::EnsureInitialized()
             if (gfxPrefs::WebGLANGLEForceD3D11()) {
                 newDisplay = GetAndInitDisplay(*this,
                                                LOCAL_EGL_D3D11_ONLY_DISPLAY_ANGLE);
-            } else if (gfxPrefs::WebGLANGLETryD3D11()) {
+            } else if (gfxPrefs::WebGLANGLETryD3D11() && gfxPlatform::CanUseDirect3D11ANGLE()) {
                 newDisplay = GetAndInitDisplay(*this,
                                                LOCAL_EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE);
             }
