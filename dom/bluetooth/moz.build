@@ -160,10 +160,6 @@ if CONFIG['MOZ_B2G_BT']:
 # Exported interfaces
 #
 
-EXPORTS.mozilla.dom.bluetooth += [
-  'BluetoothCommon.h'
-]
-
 if CONFIG['MOZ_B2G_BT_API_V2']:
     EXPORTS.mozilla.dom.bluetooth.ipc += [
         'bluetooth2/ipc/BluetoothMessageUtils.h',
@@ -171,6 +167,7 @@ if CONFIG['MOZ_B2G_BT_API_V2']:
     EXPORTS.mozilla.dom.bluetooth += [
         'bluetooth2/BluetoothAdapter.h',
         'bluetooth2/BluetoothClassOfDevice.h',
+        'bluetooth2/BluetoothCommon.h',
         'bluetooth2/BluetoothDevice.h',
         'bluetooth2/BluetoothDiscoveryHandle.h',
         'bluetooth2/BluetoothGatt.h',
@@ -192,6 +189,7 @@ else:
     ]
     EXPORTS.mozilla.dom.bluetooth += [
         'bluetooth1/BluetoothAdapter.h',
+        'bluetooth1/BluetoothCommon.h',
         'bluetooth1/BluetoothDevice.h',
         'bluetooth1/BluetoothManager.h',
     ]
