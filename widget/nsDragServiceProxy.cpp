@@ -57,17 +57,21 @@ nsDragServiceProxy::InvokeDragSession(nsIDOMNode* aDOMNode,
     if (surface) {
       mozilla::RefPtr<mozilla::gfx::DataSourceSurface> dataSurface =
         surface->GetDataSurface();
-
-      size_t length;
-      int32_t stride;
-      const uint8_t* data = nsContentUtils::GetSurfaceData(dataSurface, &length, &stride);
-      nsDependentCString dragImage(reinterpret_cast<const char*>(data), length);
-
+      mozilla::gfx::DataSourceSurface::MappedSurface map;
+      dataSurface->Map(mozilla::gfx::DataSourceSurface::MapType::READ, &map);
       mozilla::gfx::IntSize size = dataSurface->GetSize();
+      mozilla::CheckedInt32 requiredBytes =
+        mozilla::CheckedInt32(map.mStride) * mozilla::CheckedInt32(size.height);
+      size_t bufLen = requiredBytes.isValid() ? requiredBytes.value() : 0;
+      mozilla::gfx::SurfaceFormat format = dataSurface->GetFormat();
+      // Surface data handling is totally nuts. This is the magic one needs to
+      // know to access the data.
+      bufLen = bufLen - map.mStride + (size.width * BytesPerPixel(format));
+      nsDependentCString dragImage(reinterpret_cast<char*>(map.mData), bufLen);
       mozilla::unused <<
         child->SendInvokeDragSession(dataTransfers, aActionType, dragImage,
-                                     size.width, size.height, stride,
-                                     static_cast<uint8_t>(dataSurface->GetFormat()),
+                                     size.width, size.height, map.mStride,
+                                     static_cast<uint8_t>(format),
                                      dragRect.x, dragRect.y);
       dataSurface->Unmap();
       StartDragSession();
