@@ -3970,8 +3970,8 @@ END_CASE(JSOP_OBJWITHPROTO)
 
 CASE(JSOP_INITHOMEOBJECT)
 {
-    uint8_t skipOver = GET_UINT8(REGS.pc);
-    MOZ_ASSERT(REGS.stackDepth() >= 2 + skipOver);
+    unsigned skipOver = GET_UINT8(REGS.pc);
+    MOZ_ASSERT(REGS.stackDepth() >= skipOver + 2);
 
     /* Load the function to be initialized */
     RootedFunction& func = rootFunction0;
