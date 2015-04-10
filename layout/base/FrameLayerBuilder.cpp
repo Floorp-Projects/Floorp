@@ -1510,6 +1510,7 @@ GetTranslationForPaintedLayer(PaintedLayer* aLayer)
 FrameLayerBuilder::RemoveFrameFromLayerManager(nsIFrame* aFrame,
                                                void* aPropertyValue)
 {
+  MOZ_RELEASE_ASSERT(!sDestroyedFrame);
   sDestroyedFrame = aFrame;
   nsTArray<DisplayItemData*> *array =
     reinterpret_cast<nsTArray<DisplayItemData*>*>(aPropertyValue);
