@@ -598,6 +598,9 @@ Convert(const nsAString& aIn, BluetoothServiceName& aOut)
   return NS_OK;
 }
 
+#ifdef MOZ_B2G_BT_API_V2
+// Removed in bluetooth2
+#else
 nsresult
 Convert(const nsAString& aIn, BluetoothSspVariant& aOut)
 {
@@ -616,6 +619,7 @@ Convert(const nsAString& aIn, BluetoothSspVariant& aOut)
   }
   return NS_OK;
 }
+#endif
 
 nsresult
 Convert(BluetoothAclState aIn, bool& aOut)
@@ -1031,6 +1035,23 @@ Convert(const ConvertArray<Tin>& aIn, Tout& aOut)
   }
   return NS_OK;
 }
+
+#ifdef MOZ_B2G_BT_API_V2
+nsresult
+Convert(nsresult aIn, BluetoothStatus& aOut)
+{
+  if (NS_SUCCEEDED(aIn)) {
+    aOut = STATUS_SUCCESS;
+  } else if (aIn == NS_ERROR_OUT_OF_MEMORY) {
+    aOut = STATUS_NOMEM;
+  } else {
+    aOut = STATUS_FAIL;
+  }
+  return NS_OK;
+}
+#else
+// Missing in bluetooth1
+#endif
 
 //
 // Packing

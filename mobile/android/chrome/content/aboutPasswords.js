@@ -35,8 +35,12 @@ function copyStringAndToast(string, notifyString) {
   }
 }
 
+// Delay filtering while typing in MS
+const FILTER_DELAY = 500;
+
 let Passwords = {
   _logins: [],
+  _filterTimer: null,
 
   _getLogins: function() {
     let logins;
@@ -66,7 +70,19 @@ let Passwords = {
     let filterInput = document.getElementById("filter-input");
     let filterContainer = document.getElementById("filter-input-container");
 
-    filterInput.addEventListener("input", this._filter.bind(this), false);
+    filterInput.addEventListener("input", (event) => {
+      // Stop any in-progress filter timer
+      if (this._filterTimer) {
+        clearTimeout(this._filterTimer);
+        this._filterTimer = null;
+      }
+
+      // Start a new timer
+      this._filterTimer = setTimeout(() => {
+        this._filter(event);
+      }, FILTER_DELAY);
+    }, false);
+
     filterInput.addEventListener("blur", (event) => {
       filterContainer.setAttribute("hidden", true);
     });
@@ -77,6 +93,12 @@ let Passwords = {
     }, false);
 
     document.getElementById("filter-clear").addEventListener("click", (event) => {
+      // Stop any in-progress filter timer
+      if (this._filterTimer) {
+        clearTimeout(this._filterTimer);
+        this._filterTimer = null;
+      }
+
       filterInput.blur();
       filterInput.value = "";
       this._loadList(this._logins);
@@ -123,55 +145,64 @@ let Passwords = {
     }
   },
 
+  _onLoginClick: function (event) {
+    let loginItem = event.currentTarget;
+    let login = loginItem.login;
+    if (!login) {
+      debug("No login!");
+      return;
+    }
+
+    let prompt = new Prompt({
+      window: window,
+    });
+    let menuItems = [
+      { label: gStringBundle.GetStringFromName("passwordsMenu.copyPassword") },
+      { label: gStringBundle.GetStringFromName("passwordsMenu.copyUsername") },
+      { label: gStringBundle.GetStringFromName("passwordsMenu.details") },
+      { label: gStringBundle.GetStringFromName("passwordsMenu.delete") }
+    ];
+
+    prompt.setSingleChoiceItems(menuItems);
+    prompt.show((data) => {
+      // Switch on indices of buttons, as they were added when creating login item.
+      switch (data.button) {
+        case 0:
+          copyStringAndToast(login.password, gStringBundle.GetStringFromName("passwordsDetails.passwordCopied"));
+          break;
+        case 1:
+          copyStringAndToast(login.username, gStringBundle.GetStringFromName("passwordsDetails.usernameCopied"));
+          break;
+        case 2:
+          this._showDetails(loginItem);
+          history.pushState({ id: login.guid }, document.title);
+          break;
+        case 3:
+          let confirmPrompt = new Prompt({
+            window: window,
+            message: gStringBundle.GetStringFromName("passwordsDialog.confirmDelete"),
+            buttons: [
+              gStringBundle.GetStringFromName("passwordsDialog.confirm"),
+              gStringBundle.GetStringFromName("passwordsDialog.cancel") ]
+          });
+          confirmPrompt.show((data) => {
+            switch (data.button) {
+              case 0:
+                // Corresponds to "confirm" button.
+                Services.logins.removeLogin(login);
+            }
+          });
+      }
+    });
+  },
+
   _createItemForLogin: function (login) {
     let loginItem = document.createElement("div");
 
     loginItem.setAttribute("loginID", login.guid);
     loginItem.className = "login-item list-item";
 
-    loginItem.addEventListener("click", () => {
-      let prompt = new Prompt({
-        window: window,
-      });
-      let menuItems = [
-        { label: gStringBundle.GetStringFromName("passwordsMenu.copyPassword") },
-        { label: gStringBundle.GetStringFromName("passwordsMenu.copyUsername") },
-        { label: gStringBundle.GetStringFromName("passwordsMenu.details") },
-        { label: gStringBundle.GetStringFromName("passwordsMenu.delete") } ];
-
-      prompt.setSingleChoiceItems(menuItems);
-      prompt.show((data) => {
-        // Switch on indices of buttons, as they were added when creating login item.
-        switch (data.button) {
-          case 0:
-            copyStringAndToast(login.password, gStringBundle.GetStringFromName("passwordsDetails.passwordCopied"));
-            break;
-          case 1:
-            copyStringAndToast(login.username, gStringBundle.GetStringFromName("passwordsDetails.usernameCopied"));
-            break;
-          case 2:
-            this._showDetails(loginItem);
-            history.pushState({ id: login.guid }, document.title);
-            break;
-          case 3:
-            let confirmPrompt = new Prompt({
-              window: window,
-              message: gStringBundle.GetStringFromName("passwordsDialog.confirmDelete"),
-              buttons: [
-                gStringBundle.GetStringFromName("passwordsDialog.confirm"),
-                gStringBundle.GetStringFromName("passwordsDialog.cancel") ]
-            });
-            confirmPrompt.show((data) => {
-              switch (data.button) {
-                case 0:
-                  // Corresponds to "confirm" button.
-                  Services.logins.removeLogin(login);
-              }
-            });
-        }
-      });
-
-    }, true);
+    loginItem.addEventListener("click", this, true);
 
     // Create item icon.
     let img = document.createElement("div");
@@ -228,6 +259,10 @@ let Passwords = {
     switch (event.type) {
       case "popstate": {
         this._onPopState(event);
+        break;
+      }
+      case "click": {
+        this._onLoginClick(event);
         break;
       }
     }

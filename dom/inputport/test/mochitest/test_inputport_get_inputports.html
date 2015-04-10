@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1026350
+-->
+<head>
+<meta charset="utf-8">
+<title>Inputport API Test</title>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1026350">Test Inputport API</a>
+<script type="application/javascript;version=1.8">
+
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+function testGetInputports() {
+  return new Promise(function(resolve, reject) {
+    var inputPortMgr = navigator.inputPortManager;
+    inputPortMgr.getInputPorts().then(
+      function(aPorts) {
+        ok(aPorts.length > 0, "Got at least 1 inputport.");
+        for (var i=0; i < aPorts.length; ++i) {
+          var port = aPorts[i];
+          ok(port instanceof InputPort, "Inputport " + i + " should be in the right type.");
+          ok('id' in port, "Inputport " + i + " should have an ID.");
+          ok('connected' in port, "Inputport " + i + " should have a connected property.");
+          ok(port.stream, "Inputport " + i + " should have non null stream.");
+          resolve();
+        }
+      },
+      function(aError) {
+        ok(false, "Fail to get input ports: " + aError);
+        resolve();
+      }
+    );
+  });
+}
+
+function runTest() {
+  ok(navigator.inputPortManager, 'should have navigator.inputPortManager');
+
+  testGetInputports()
+  .then(function() {
+    info('test finished');
+    SimpleTest.finish();
+  });
+}
+
+SpecialPowers.pushPrefEnv({"set": [["dom.inputport.enabled", true],
+                                    //to ignore app scope check.
+                                   ["dom.ignore_webidl_scope_checks", true]]}, function() {
+  SpecialPowers.pushPermissions(
+    [{'type': 'inputport', 'allow': true, 'context': document}], runTest);
+});
+
+ </script>
+ </pre>
+ </body>
+ </html>

@@ -123,7 +123,6 @@ LOCAL_INCLUDES += [
     '/docshell/base',
     '/dom/base',
     '/dom/bluetooth',
-    '/dom/bluetooth/ipc',
     '/dom/devicestorage',
     '/dom/filesystem',
     '/dom/fmradio/ipc',
@@ -160,6 +159,17 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gonk', 'qt'):
 
 if CONFIG['MOZ_TOOLKIT_SEARCH']:
     DEFINES['MOZ_TOOLKIT_SEARCH'] = True
+
+if CONFIG['MOZ_B2G_BT_API_V2']:
+    LOCAL_INCLUDES += [
+        '/dom/bluetooth/bluetooth2',
+        '/dom/bluetooth/bluetooth2/ipc',
+    ]
+else:
+    LOCAL_INCLUDES += [
+        '/dom/bluetooth/bluetooth1',
+        '/dom/bluetooth/bluetooth1/ipc',
+    ]
 
 JAR_MANIFESTS += ['jar.mn']
 
