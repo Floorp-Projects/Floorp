@@ -17,10 +17,10 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="e768af6558957ddb0f6a9ce579ea41c3e3d0b203"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="3c68964cb9fdba7cf0f6829b7f44562acaf1f1d7"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="509be3fac311d084ff31b83bbeb5108f69864a90"/>
-  <project name="moztt" path="external/moztt" remote="b2g" revision="ed2cf97a6c37a4bbd0bbbbffe06ec7136d8c79ff"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="1b1d86462d3150dceacff927536ded9fcc168419"/>
+  <project name="moztt" path="external/moztt" remote="b2g" revision="adb24954bf8068f21705b570450475d183336b2d"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="8a1ba73572c713e298ae53821d000fc3a5087b5f"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
   <!-- Stock Android things -->
@@ -130,7 +130,7 @@
   <project name="device-mako" path="device/lge/mako" remote="b2g" revision="78d17f0c117f0c66dd55ee8d5c5dde8ccc93ecba"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="3a9a17613cc685aa232432566ad6cc607eab4ec1"/>
   <project name="device/lge/mako-kernel" path="device/lge/mako-kernel" revision="d1729e53d71d711c8fde25eab8728ff2b9b4df0e"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="eb5edebf1c1c17ce7f325df388fed082ca788def"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="eb8b8828c412bf8d164ad42a39766becd39f9fb5"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="7d33aaf740bbf6c7c6e9c34a92b371eda311b66b"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="0e56e450367cd802241b27164a2979188242b95f"/>
   <project name="platform/hardware/broadcom/wlan" path="hardware/broadcom/wlan" revision="0e1929fa3aa38bf9d40e9e953d619fab8164c82e"/>

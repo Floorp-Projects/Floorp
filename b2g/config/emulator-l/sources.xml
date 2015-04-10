@@ -15,15 +15,15 @@
   <project name="platform_build" path="build" remote="b2g" revision="52775e03a2d8532429dff579cb2cd56718e488c3">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="e768af6558957ddb0f6a9ce579ea41c3e3d0b203"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="3c68964cb9fdba7cf0f6829b7f44562acaf1f1d7"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="509be3fac311d084ff31b83bbeb5108f69864a90"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
-  <project name="moztt" path="external/moztt" remote="b2g" revision="ed2cf97a6c37a4bbd0bbbbffe06ec7136d8c79ff"/>
+  <project name="moztt" path="external/moztt" remote="b2g" revision="adb24954bf8068f21705b570450475d183336b2d"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="1b1d86462d3150dceacff927536ded9fcc168419"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="8a1ba73572c713e298ae53821d000fc3a5087b5f"/>
   <!-- Stock Android things -->
   <project groups="pdk,linux" name="platform/prebuilts/clang/linux-x86/host/3.5" path="prebuilts/clang/linux-x86/host/3.5" revision="50d1ca4ab8add54523b7bc692860d57e8ee4c0d1"/>
   <project groups="pdk,linux,arm" name="platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" path="prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" revision="fb3845864573857677f9b500040a8f011eaf5078"/>

@@ -88,6 +88,9 @@ this.SystemMessagePermissionsTable = {
   "sms-delivery-success": {
     "sms": []
   },
+  "sms-delivery-error": {
+    "sms": []
+  },
   "sms-read-success": {
     "sms": []
   },
@@ -95,6 +98,9 @@ this.SystemMessagePermissionsTable = {
     "sms": []
   },
   "sms-sent": {
+    "sms": []
+  },
+  "sms-failed": {
     "sms": []
   },
   "telephony-new-call": {

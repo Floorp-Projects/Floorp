@@ -3978,6 +3978,9 @@ pref("layers.bench.enabled", false);
 #ifdef ANDROID
 // bug 838603 -- on Android, accidentally blacklisting OpenGL layers
 // means a startup crash for everyone.
+// Temporarily force-enable GL compositing.  This is default-disabled
+// deep within the bowels of the widgetry system.  Remove me when GL
+// compositing isn't default disabled in widget/android.
 pref("layers.acceleration.force-enabled", true);
 #else
 pref("layers.acceleration.force-enabled", false);

@@ -84,13 +84,19 @@ RILSystemMessenger.prototype = {
   },
 
   /**
-   * Wrapper to send 'sms-received', 'sms-delivery-success', 'sms-sent' system message.
+   * Wrapper to send 'sms-received', 'sms-delivery-success', 'sms-sent',
+   * 'sms-failed', 'sms-delivery-error' system message.
    */
   notifySms: function(aNotificationType, aId, aThreadId, aIccId, aDelivery,
                       aDeliveryStatus, aSender, aReceiver, aBody, aMessageClass,
                       aTimestamp, aSentTimestamp, aDeliveryTimestamp, aRead) {
-    let msgType =
-      ["sms-received", "sms-sent", "sms-delivery-success"][aNotificationType];
+    let msgType = [
+        "sms-received",
+        "sms-sent",
+        "sms-delivery-success",
+        "sms-failed",
+        "sms-delivery-error"
+      ][aNotificationType];
 
     if (!msgType) {
       throw new Error("Invalid Notification Type: " + aNotificationType);
