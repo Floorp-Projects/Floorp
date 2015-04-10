@@ -28,6 +28,7 @@ describe("loop.panel", function() {
 
     fakeWindow = {
       close: sandbox.stub(),
+      addEventListener: function() {},
       document: { addEventListener: function(){} }
     };
     loop.shared.mixins.setRootObject(fakeWindow);
