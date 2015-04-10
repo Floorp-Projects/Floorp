@@ -17,10 +17,10 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="e768af6558957ddb0f6a9ce579ea41c3e3d0b203"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="3c68964cb9fdba7cf0f6829b7f44562acaf1f1d7"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="509be3fac311d084ff31b83bbeb5108f69864a90"/>
-  <project name="moztt" path="external/moztt" remote="b2g" revision="ed2cf97a6c37a4bbd0bbbbffe06ec7136d8c79ff"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="1b1d86462d3150dceacff927536ded9fcc168419"/>
+  <project name="moztt" path="external/moztt" remote="b2g" revision="adb24954bf8068f21705b570450475d183336b2d"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="8a1ba73572c713e298ae53821d000fc3a5087b5f"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="daa61633c32b9606f58799a3186395fd2bbb8d8c"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="47f031c320888fe9f3e656602588565b52d43010"/>
   <!-- Stock Android things -->
@@ -135,7 +135,7 @@
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="c5f8d282efe4a4e8b1e31a37300944e338e60e4f"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="0e56e450367cd802241b27164a2979188242b95f"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="9f28c4faea3b2f01db227b2467b08aeba96d9bec"/>
-  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="eb5edebf1c1c17ce7f325df388fed082ca788def"/>
+  <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="eb8b8828c412bf8d164ad42a39766becd39f9fb5"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="8b1365af38c9a653df97349ee53a3f5d64fd590a"/>
   <project name="darwinstreamingserver" path="system/darwinstreamingserver" remote="b2g" revision="cf85968c7f85e0ec36e72c87ceb4837a943b8af6"/>
 </manifest>
