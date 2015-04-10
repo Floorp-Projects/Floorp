@@ -18,6 +18,7 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla.dom.workers += [
     'ServiceWorkerManager.h',
+    'ServiceWorkerPeriodicUpdater.h',
     'WorkerDebuggerManager.h',
     'Workers.h',
 ]
@@ -68,6 +69,7 @@ UNIFIED_SOURCES += [
     'ServiceWorkerContainer.cpp',
     'ServiceWorkerEvents.cpp',
     'ServiceWorkerManager.cpp',
+    'ServiceWorkerPeriodicUpdater.cpp',
     'ServiceWorkerRegistrar.cpp',
     'ServiceWorkerRegistration.cpp',
     'ServiceWorkerScriptCache.cpp',
