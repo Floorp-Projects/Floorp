@@ -59,6 +59,11 @@
             'WEBRTC_HARDWARE_AEC_NS',
           ],
         }],
+        ['include_sndio_audio==1', {
+          'include_dirs': [
+            'sndio',
+          ],
+        }], # include_sndio_audio==1
         ['OS=="linux" or include_alsa_audio==1 or include_pulse_audio==1', {
           'include_dirs': [
             'linux',
@@ -197,6 +202,19 @@
                   '-ldl','-lX11',
                 ],
               },
+            }],
+            ['include_sndio_audio==1', {
+              'link_settings': {
+                'libraries': [
+                  '-lsndio',
+                ],
+              },
+              'sources': [
+                'sndio/audio_device_sndio.cc',
+                'sndio/audio_device_sndio.h',
+                'sndio/audio_device_utility_sndio.cc',
+                'sndio/audio_device_utility_sndio.h',
+              ],
             }],
             ['include_alsa_audio==1', {
               'cflags_mozilla': [
