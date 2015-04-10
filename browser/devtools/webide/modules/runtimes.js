@@ -529,9 +529,12 @@ WiFiRuntime.prototype = {
 
     // |openDialog| is typically a blocking API, so |executeSoon| to get around this
     DevToolsUtils.executeSoon(() => {
+      // Height determines the size of the QR code.  Force a minimum size to
+      // improve scanability.
+      const MIN_HEIGHT = 600;
       let win = Services.wm.getMostRecentWindow("devtools:webide");
       let width = win.outerWidth * 0.8;
-      let height = win.outerHeight * 0.5;
+      let height = Math.max(win.outerHeight * 0.5, MIN_HEIGHT);
       win.openDialog("chrome://webide/content/wifi-auth.xhtml",
                      WINDOW_ID,
                      "modal=yes,width=" + width + ",height=" + height, session);

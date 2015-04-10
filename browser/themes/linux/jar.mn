@@ -269,7 +269,7 @@ browser.jar:
   skin/classic/browser/devtools/webconsole_networkpanel.css     (devtools/webconsole_networkpanel.css)
   skin/classic/browser/devtools/webconsole.png                  (../shared/devtools/images/webconsole.png)
   skin/classic/browser/devtools/webconsole@2x.png               (../shared/devtools/images/webconsole@2x.png)
-  skin/classic/browser/devtools/commandline.css              (devtools/commandline.css)
+  skin/classic/browser/devtools/commandline.css              (../shared/devtools/commandline.css)
   skin/classic/browser/devtools/markup-view.css       (../shared/devtools/markup-view.css)
   skin/classic/browser/devtools/editor-error.png       (../shared/devtools/images/editor-error.png)
   skin/classic/browser/devtools/editor-breakpoint.png  (../shared/devtools/images/editor-breakpoint.png)
