@@ -24,11 +24,15 @@ FAIL_ON_WARNINGS = True
 
 LOCAL_INCLUDES += [
     '../base',
+    '../ipc',
     '../workers',
 ]
+
+include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
 
 MOCHITEST_MANIFESTS += ['tests/mochitest.ini']
 
 MOCHITEST_CHROME_MANIFESTS += ['tests/chrome.ini']
+BROWSER_CHROME_MANIFESTS += ['tests/browser.ini']
