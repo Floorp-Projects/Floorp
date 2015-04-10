@@ -173,7 +173,9 @@ APZController::RequestContentRepaint(const FrameMetrics& aFrameMetrics)
     utils = do_GetInterface(window);
     if (utils) {
       FrameMetrics metrics = aFrameMetrics;
-      mozilla::layers::APZCCallbackHelper::UpdateRootFrame(utils, metrics);
+      if (subDocument->GetShell()) {
+        mozilla::layers::APZCCallbackHelper::UpdateRootFrame(utils, subDocument->GetShell(), metrics);
+      }
 
 #ifdef DEBUG_CONTROLLER
       WinUtils::Log("APZController: %I64d mDisplayPortMargins: %0.2f %0.2f %0.2f %0.2f",
