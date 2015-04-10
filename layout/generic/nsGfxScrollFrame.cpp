@@ -3083,16 +3083,23 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
                                        nsTArray<FrameMetrics>* aOutput) const
 {
   nsPoint toReferenceFrame = mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
-  nsRect scrollport = mScrollPort + toReferenceFrame;
+  bool isRoot = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
   // If APZ is enabled, do not apply clips to the scroll ports of metrics
   // above the first one on a given layer. They will be applied by the
   // compositor instead, with async transforms for the scrollframes interspersed
   // between them.
   bool omitClip = gfxPrefs::AsyncPanZoomEnabled() && aOutput->Length() > 0;
   if (!omitClip && (!gfxPrefs::LayoutUseContainersForRootFrames() || mAddClipRectToLayer)) {
+    nsRect clip = nsRect(mScrollPort.TopLeft() + toReferenceFrame,
+                         nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
+    if (isRoot) {
+      double res = mOuter->PresContext()->PresShell()->GetResolution();
+      clip.width = NSToCoordRound(clip.width / res);
+      clip.height = NSToCoordRound(clip.height / res);
+    }
     // When using containers, the container layer contains the clip. Otherwise
     // we always include the clip.
-    *aClipRect = scrollport;
+    *aClipRect = clip;
   }
 
   if (!mShouldBuildScrollableLayer || mIsScrollableLayerInRootContainer) {
@@ -3101,8 +3108,7 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
 
   MOZ_ASSERT(mScrolledFrame->GetContent());
 
-  bool isRoot = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
-
+  nsRect scrollport = mScrollPort + toReferenceFrame;
   *aOutput->AppendElement() =
       nsDisplayScrollLayer::ComputeFrameMetrics(
         mScrolledFrame, mOuter, mOuter->GetContent(),
