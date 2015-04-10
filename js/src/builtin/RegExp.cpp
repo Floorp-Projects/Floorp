@@ -139,15 +139,66 @@ js::ExecuteRegExpLegacy(JSContext* cx, RegExpStatics* res, RegExpObject& reobj,
     return CreateRegExpMatchResult(cx, input, matches, rval);
 }
 
+/* ES6 draft rc4 21.2.3.2.2. */
+bool
+RegExpInitialize(JSContext* cx, RegExpObjectBuilder& builder,
+                 HandleValue patternValue, HandleValue flagsValue,
+                 RegExpStaticsUse staticsUse, MutableHandleObject result)
+{
+    RootedAtom pattern(cx);
+    if (patternValue.isUndefined()) {
+        /* Step 1. */
+        pattern = cx->runtime()->emptyString;
+    } else {
+        /* Steps 2-3. */
+        pattern = ToAtom<CanGC>(cx, patternValue);
+        if (!pattern)
+            return false;
+    }
+
+    /* Step 4. */
+    RegExpFlag flags = RegExpFlag(0);
+    if (!flagsValue.isUndefined()) {
+        /* Steps 5-6. */
+        RootedString flagStr(cx, ToString<CanGC>(cx, flagsValue));
+        if (!flagStr)
+            return false;
+        /* Step 7. */
+        if (!ParseRegExpFlags(cx, flagStr, &flags))
+            return false;
+    }
+
+    /* Steps 9-10. */
+    CompileOptions options(cx);
+    frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
+    if (!irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), pattern))
+        return false;
+
+    if (staticsUse == UseRegExpStatics) {
+        RegExpStatics* res = cx->global()->getRegExpStatics(cx);
+        if (!res)
+            return false;
+        flags = RegExpFlag(flags | res->getFlags());
+    }
+
+    /* Steps 11-15. */
+    RootedObject reobj(cx, builder.build(pattern, flags));
+    if (!reobj)
+        return false;
+
+    /* Step 16. */
+    result.set(reobj);
+    return true;
+}
+
 /*
  * Compile a new |RegExpShared| for the |RegExpObject|.
  */
 static bool
 CompileRegExpObject(JSContext* cx, RegExpObjectBuilder& builder, CallArgs args,
-                    RegExpStaticsUse staticsUse, RegExpCreationMode creationMode)
+                    RegExpCreationMode creationMode)
 {
     if (args.length() == 0) {
-        MOZ_ASSERT(staticsUse == UseRegExpStatics);
         RegExpStatics* res = cx->global()->getRegExpStatics(cx);
         if (!res)
             return false;
@@ -214,39 +265,8 @@ CompileRegExpObject(JSContext* cx, RegExpObjectBuilder& builder, CallArgs args,
         return true;
     }
 
-    RootedAtom source(cx);
-    if (sourceValue.isUndefined()) {
-        source = cx->runtime()->emptyString;
-    } else {
-        /* Coerce to string and compile. */
-        source = ToAtom<CanGC>(cx, sourceValue);
-        if (!source)
-            return false;
-    }
-
-    RegExpFlag flags = RegExpFlag(0);
-    if (args.hasDefined(1)) {
-        RootedString flagStr(cx, ToString<CanGC>(cx, args[1]));
-        if (!flagStr)
-            return false;
-        if (!ParseRegExpFlags(cx, flagStr, &flags))
-            return false;
-    }
-
-    CompileOptions options(cx);
-    frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
-
-    if (!irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), source))
-        return false;
-
-    if (staticsUse == UseRegExpStatics) {
-        RegExpStatics* res = cx->global()->getRegExpStatics(cx);
-        if (!res)
-            return false;
-        flags = RegExpFlag(flags | res->getFlags());
-    }
-    RegExpObject* reobj = builder.build(source, flags);
-    if (!reobj)
+    RootedObject reobj(cx);
+    if (!RegExpInitialize(cx, builder, sourceValue, args.get(1), UseRegExpStatics, &reobj))
         return false;
 
     args.rval().setObject(*reobj);
@@ -292,7 +312,7 @@ regexp_compile_impl(JSContext* cx, CallArgs args)
 {
     MOZ_ASSERT(IsRegExpObject(args.thisv()));
     RegExpObjectBuilder builder(cx, &args.thisv().toObject().as<RegExpObject>());
-    return CompileRegExpObject(cx, builder, args, UseRegExpStatics, CreateForCompile);
+    return CompileRegExpObject(cx, builder, args, CreateForCompile);
 }
 
 static bool
@@ -323,7 +343,7 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     RegExpObjectBuilder builder(cx);
-    return CompileRegExpObject(cx, builder, args, UseRegExpStatics, CreateForConstruct);
+    return CompileRegExpObject(cx, builder, args, CreateForConstruct);
 }
 
 bool
@@ -337,7 +357,12 @@ js::regexp_construct_no_statics(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(!args.isConstructing());
 
     RegExpObjectBuilder builder(cx);
-    return CompileRegExpObject(cx, builder, args, DontUseRegExpStatics, CreateForConstruct);
+    RootedObject reobj(cx);
+    if (!RegExpInitialize(cx, builder, args[0], args.get(1), DontUseRegExpStatics, &reobj))
+        return false;
+
+    args.rval().setObject(*reobj);
+    return true;
 }
 
 /* ES6 draft rev32 21.2.5.4. */
