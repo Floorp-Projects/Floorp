@@ -32,7 +32,7 @@ function startTest(test, token)
     ok(false, TimeStamp(case1token) + " should never reach loadeddata, as setMediaKeys should fail");
   });
   manager.started(case1token);
-  LoadTestWithManagedLoadToken(test, v1, manager, case1token);
+  LoadTest(test, v1, case1token);
 
 
   // Case 2. creating a MediaElementSource on a media element with a MediaKeys should fail.
@@ -51,7 +51,7 @@ function startTest(test, token)
     manager.finished(case2token);
   });
   manager.started(case2token);
-  LoadTestWithManagedLoadToken(test, v2, manager, case2token);
+  LoadTest(test, v2, case2token);
 
 
   // Case 3. capturing a media element with mozCaptureStream that has a MediaKeys should fail.
@@ -69,7 +69,7 @@ function startTest(test, token)
     manager.finished(case3token);
   });
   manager.started(case3token);
-  LoadTestWithManagedLoadToken(test, v3, manager, case3token);
+  LoadTest(test, v3, case3token);
 }
 
 function beginTest() {
