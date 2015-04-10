@@ -82,7 +82,7 @@ child:
   prio(high) sync CharacterCount(uint64_t aID) returns(int32_t aCount);
   prio(high) sync SelectionCount(uint64_t aID) returns(int32_t aCount);
   prio(high) sync TextSubstring(uint64_t aID, int32_t aStartOffset, int32_t
-                                aEndOffset) returns(nsString aText);
+                                aEndOffset) returns(nsString aText, bool aValid);
   prio(high) sync GetTextAfterOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)
     returns(nsString aText, int32_t aStartOffset, int32_t aEndOffset);
   prio(high) sync GetTextAtOffset(uint64_t aID, int32_t aOffset, int32_t aBoundaryType)
@@ -124,11 +124,16 @@ child:
                          int32_t aX, int32_t aY);
 
   prio(high) sync ReplaceText(uint64_t aID, nsString aText);
-  prio(high) sync InsertText(uint64_t aID, nsString aText, int32_t aPosition);
-  prio(high) sync CopyText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
-  prio(high) sync CutText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
-  prio(high) sync DeleteText(uint64_t aID, int32_t aStartPos, int32_t aEndPos);
-  prio(high) sync PasteText(uint64_t aID, int32_t aPosition);
+  prio(high) sync InsertText(uint64_t aID, nsString aText, int32_t aPosition)
+    returns(bool aValid);
+  prio(high) sync CopyText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
+    returns(bool aValid);
+  prio(high) sync CutText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
+    returns(bool aValid);
+  prio(high) sync DeleteText(uint64_t aID, int32_t aStartPos, int32_t aEndPos)
+    returns(bool aValid);
+  prio(high) sync PasteText(uint64_t aID, int32_t aPosition)
+    returns(bool aValid);
 
   prio(high) sync ImagePosition(uint64_t aID, uint32_t aCoordType) returns(nsIntPoint aRetVal);
   prio(high) sync ImageSize(uint64_t aID) returns(IntSize aRetVal);

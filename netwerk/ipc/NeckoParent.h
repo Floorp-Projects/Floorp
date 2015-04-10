@@ -149,8 +149,11 @@ protected:
                                                const uint16_t& aBacklog,
                                                const nsString& aBinaryType) override;
   virtual bool DeallocPTCPServerSocketParent(PTCPServerSocketParent*) override;
-  virtual PUDPSocketParent* AllocPUDPSocketParent(const nsCString& aFilter) override;
-  virtual bool RecvPUDPSocketConstructor(PUDPSocketParent*, const nsCString& aFilter) override;
+  virtual PUDPSocketParent* AllocPUDPSocketParent(const Principal& aPrincipal,
+                                                  const nsCString& aFilter) override;
+  virtual bool RecvPUDPSocketConstructor(PUDPSocketParent*,
+                                         const Principal& aPrincipal,
+                                         const nsCString& aFilter) override;
   virtual bool DeallocPUDPSocketParent(PUDPSocketParent*) override;
   virtual PDNSRequestParent* AllocPDNSRequestParent(const nsCString& aHost,
                                                     const uint32_t& aFlags,

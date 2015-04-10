@@ -252,6 +252,8 @@
     _(storeXY)                       \
     _(storeXYZ)                      \
     _(check)
+#define ION_ONLY_INT32X4_SIMD_OP(_)  \
+    _(bool)
 #define FOREACH_COMMONX4_SIMD_OP(_)  \
     ION_COMMONX4_SIMD_OP(_)          \
     COMP_COMMONX4_TO_INT32X4_SIMD_OP(_)

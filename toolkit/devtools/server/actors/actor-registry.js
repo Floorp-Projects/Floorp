@@ -94,7 +94,10 @@ function request(uri) {
         "Can only register actors whose URI scheme is 'resource'."));
     }
 
-    NetUtil.asyncFetch(uri, (stream, status, req) => {
+    NetUtil.asyncFetch({
+      uri,
+      loadUsingSystemPrincipal: true,
+     }, (stream, status, req) => {
       if (!components.isSuccessCode(status)) {
         reject(new Error("Request failed with status code = "
                          + status

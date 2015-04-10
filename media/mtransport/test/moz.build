@@ -5,7 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
-    GeckoCppUnitTests([
+    CppUnitTests([
         'buffered_stun_socket_unittest',
         'ice_unittest',
         'nrappkit_unittest',
@@ -20,13 +20,13 @@ if CONFIG['OS_TARGET'] != 'WINNT' and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     ])
 
     if CONFIG['MOZ_SCTP']:
-        GeckoCppUnitTests([
+        CppUnitTests([
             'sctp_unittest',
         ])
 
 FAIL_ON_WARNINGS = True
 
-for var in ('HAVE_STRDUP', 'NR_SOCKET_IS_VOID_PTR', 'SCTP_DEBUG', 'INET'):
+for var in ('MOZILLA_INTERNAL_API', 'MOZILLA_XPCOMRT_API', 'MOZILLA_EXTERNAL_LINKAGE', 'HAVE_STRDUP', 'NR_SOCKET_IS_VOID_PTR', 'SCTP_DEBUG', 'INET'):
     DEFINES[var] = True
 
 if CONFIG['OS_TARGET'] == 'Android':
@@ -39,6 +39,12 @@ else:
 if CONFIG['OS_TARGET'] == 'Linux':
     LOCAL_INCLUDES += [
         '/media/mtransport/third_party/nrappkit/src/port/linux/include',
+    ]
+    USE_LIBS += [
+        'static:/nsprpub/lib/libc/src/plc4',
+    ]
+    OS_LIBS += [
+        '-lrt',
     ]
 
 if CONFIG['OS_TARGET'] == 'Darwin':
@@ -80,14 +86,22 @@ LOCAL_INCLUDES += [
     '/media/mtransport/third_party/nrappkit/src/util/libekr',
     '/media/webrtc/trunk/testing/gtest/include/',
     '/netwerk/sctp/src/',
+    '/xpcom/libxpcomrt',
 ]
 
 USE_LIBS += [
     '/media/webrtc/trunk/testing/gtest_gtest/gtest',
-    'mtransport_s',
+    'fallible',
+    'mfbt',
+    'mozglue',
+    'mtransport_standalone',
+    'necko_standalone',
     'nicer',
     'nrappkit',
+    'nspr',
     'nss',
+    'unicharutil_standalone',
+    'xpcomrt',
 ]
 
 if not CONFIG['MOZ_NATIVE_NSS'] and not CONFIG['MOZ_FOLD_LIBS']:
@@ -100,3 +114,5 @@ if CONFIG['MOZ_SCTP']:
     USE_LIBS += [
         'nksctp_s',
     ]
+
+USE_LIBS += ['mozglue']

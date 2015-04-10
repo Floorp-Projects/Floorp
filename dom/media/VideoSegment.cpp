@@ -39,6 +39,7 @@ VideoFrame::TakeFrom(VideoFrame* aFrame)
   mForceBlack = aFrame->GetForceBlack();
 }
 
+#if !defined(MOZILLA_XPCOMRT_API)
 /* static */ already_AddRefed<Image>
 VideoFrame::CreateBlackImage(const gfxIntSize& aSize)
 {
@@ -83,6 +84,7 @@ VideoFrame::CreateBlackImage(const gfxIntSize& aSize)
 
   return image.forget();
 }
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
 VideoChunk::VideoChunk()
 {}

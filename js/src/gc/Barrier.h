@@ -192,6 +192,9 @@ class JitCode;
 // a helper thread.
 bool
 CurrentThreadIsIonCompiling();
+
+bool
+CurrentThreadIsGCSweeping();
 #endif
 
 bool
@@ -287,11 +290,6 @@ ZoneOfIdFromAnyThread(const jsid& id)
 void
 ValueReadBarrier(const Value& value);
 
-#ifdef DEBUG
-void
-CheckGCIsSweepingZone(gc::Cell* cell);
-#endif
-
 template <typename T>
 struct InternalGCMethods {};
 
@@ -308,13 +306,6 @@ struct InternalGCMethods<T*>
     static void postBarrierRemove(T** vp) { T::writeBarrierPostRemove(*vp, vp); }
 
     static void readBarrier(T* v) { T::readBarrier(v); }
-
-#ifdef DEBUG
-    static void checkGCIsSweeping(T* v) {
-        if (v)
-            CheckGCIsSweepingZone(v);
-    }
-#endif
 };
 
 template <>
@@ -392,13 +383,6 @@ struct InternalGCMethods<Value>
     }
 
     static void readBarrier(const Value& v) { ValueReadBarrier(v); }
-
-#ifdef DEBUG
-    static void checkGCIsSweeping(const Value& v) {
-        if (v.isMarkable())
-            CheckGCIsSweepingZone(v.toGCThing());
-    }
-#endif
 };
 
 template <>
@@ -422,13 +406,6 @@ struct InternalGCMethods<jsid>
     static void postBarrier(jsid* idp) {}
     static void postBarrierRelocate(jsid* idp) {}
     static void postBarrierRemove(jsid* idp) {}
-
-#ifdef DEBUG
-    static void checkGCIsSweeping(jsid id) {
-        if (JSID_IS_GCTHING(id))
-            CheckGCIsSweepingZone(JSID_TO_GCTHING(id).asCell());
-    }
-#endif
 };
 
 template <typename T>
@@ -472,10 +449,6 @@ class BarrieredBase : public BarrieredBaseMixins<T>
   protected:
     void pre() { InternalGCMethods<T>::preBarrier(value); }
     void pre(Zone* zone) { InternalGCMethods<T>::preBarrier(zone, value); }
-
-#ifdef DEBUG
-    void checkGCIsSweeping() { InternalGCMethods<T>::checkGCIsSweeping(value); }
-#endif
 };
 
 template <>
@@ -542,7 +515,9 @@ class HeapPtr : public BarrieredBase<T>
     explicit HeapPtr(T v) : BarrieredBase<T>(v) { post(); }
     explicit HeapPtr(const HeapPtr<T>& v) : BarrieredBase<T>(v) { post(); }
 #ifdef DEBUG
-    ~HeapPtr() { this->checkGCIsSweeping(); }
+    ~HeapPtr() {
+        MOZ_ASSERT(CurrentThreadIsGCSweeping());
+    }
 #endif
 
     void init(T v) {
@@ -554,13 +529,6 @@ class HeapPtr : public BarrieredBase<T>
 
   protected:
     void post() { InternalGCMethods<T>::postBarrier(&this->value); }
-
-    /* Make this friend so it can access pre() and post(). */
-    template <class T1, class T2>
-    friend inline void
-    BarrieredSetPair(Zone* zone,
-                     HeapPtr<T1*>& v1, T1* val1,
-                     HeapPtr<T2*>& v2, T2* val2);
 
   private:
     void set(const T& v) {
@@ -683,26 +651,6 @@ class RelocatablePtr : public BarrieredBase<T>
         InternalGCMethods<T>::postBarrierRemove(&this->value);
     }
 };
-
-/*
- * This is a hack for RegExpStatics::updateFromMatch. It allows us to do two
- * barriers with only one branch to check if we're in an incremental GC.
- */
-template <class T1, class T2>
-static inline void
-BarrieredSetPair(Zone* zone,
-                 HeapPtr<T1*>& v1, T1* val1,
-                 HeapPtr<T2*>& v2, T2* val2)
-{
-    if (T1::needWriteBarrierPre(zone)) {
-        v1.pre();
-        v2.pre();
-    }
-    v1.unsafeSet(val1);
-    v2.unsafeSet(val2);
-    v1.post();
-    v2.post();
-}
 
 /*
  * This is a hack for RegExpStatics::updateFromMatch. It allows us to do two
@@ -841,6 +789,7 @@ typedef RelocatablePtr<jit::JitCode*> RelocatablePtrJitCode;
 typedef RelocatablePtr<JSLinearString*> RelocatablePtrLinearString;
 typedef RelocatablePtr<JSString*> RelocatablePtrString;
 typedef RelocatablePtr<JSAtom*> RelocatablePtrAtom;
+typedef RelocatablePtr<ArrayBufferObjectMaybeShared*> RelocatablePtrArrayBufferObjectMaybeShared;
 
 typedef HeapPtr<NativeObject*> HeapPtrNativeObject;
 typedef HeapPtr<ArrayObject*> HeapPtrArrayObject;

@@ -86,64 +86,6 @@ namespace gc {
 
 /*** Object Marking ***/
 
-/*
- * These functions expose marking functionality for all of the different GC
- * thing kinds. For each GC thing, there are several variants. As an example,
- * these are the variants generated for JSObject. They are listed from most to
- * least desirable for use:
- *
- * MarkObject(JSTracer* trc, const HeapPtrObject& thing, const char* name);
- *     This function should be used for marking JSObjects, in preference to all
- *     others below. Use it when you have HeapPtrObject, which automatically
- *     implements write barriers.
- *
- * MarkObjectRoot(JSTracer* trc, JSObject* thing, const char* name);
- *     This function is only valid during the root marking phase of GC (i.e.,
- *     when MarkRuntime is on the stack).
- *
- * MarkObjectUnbarriered(JSTracer* trc, JSObject* thing, const char* name);
- *     Like MarkObject, this function can be called at any time. It is more
- *     forgiving, since it doesn't demand a HeapPtr as an argument. Its use
- *     should always be accompanied by a comment explaining how write barriers
- *     are implemented for the given field.
- *
- * Additionally, the functions MarkObjectRange and MarkObjectRootRange are
- * defined for marking arrays of object pointers.
- *
- * The following functions are provided to test whether a GC thing is marked
- * under different circumstances:
- *
- * IsObjectAboutToBeFinalized(JSObject** thing);
- *     This function is indended to be used in code used to sweep GC things.  It
- *     indicates whether the object will will be finialized in the current group
- *     of compartments being swept.  Note that this will return false for any
- *     object not in the group of compartments currently being swept, as even if
- *     it is unmarked it may still become marked before it is swept.
- *
- * IsObjectMarked(JSObject** thing);
- *     This function is indended to be used in rare cases in code used to mark
- *     GC things.  It indicates whether the object is currently marked.
- *
- * UpdateObjectIfRelocated(JSObject** thingp);
- *     In some circumstances -- e.g. optional weak marking -- it is necessary
- *     to look at the pointer before marking it strongly or weakly. In these
- *     cases, the following must be called to update the pointer before use.
- */
-
-#define DeclMarker(base, type)                                                                    \
-void Mark##base(JSTracer* trc, BarrieredBase<type*>* thing, const char* name);                    \
-void Mark##base##Root(JSTracer* trc, type** thingp, const char* name);                            \
-void Mark##base##Unbarriered(JSTracer* trc, type** thingp, const char* name);                     \
-void Mark##base##Range(JSTracer* trc, size_t len, HeapPtr<type*>* thing, const char* name);       \
-void Mark##base##RootRange(JSTracer* trc, size_t len, type** thing, const char* name);            \
-bool Is##base##Marked(type** thingp);                                                             \
-bool Is##base##Marked(BarrieredBase<type*>* thingp);                                              \
-bool Is##base##AboutToBeFinalized(type** thingp);                                                 \
-bool Is##base##AboutToBeFinalized(BarrieredBase<type*>* thingp);                                  \
-type* Update##base##IfRelocated(JSRuntime* rt, BarrieredBase<type*>* thingp);                     \
-type* Update##base##IfRelocated(JSRuntime* rt, type** thingp);
-#undef DeclMarker
-
 void
 MarkPermanentAtom(JSTracer* trc, JSAtom* atom, const char* name);
 
@@ -218,16 +160,6 @@ IsAboutToBeFinalized(BarrieredBase<T>* thingp);
 template <typename T>
 bool
 IsAboutToBeFinalized(ReadBarriered<T>* thingp);
-
-inline bool
-IsAboutToBeFinalized(const js::jit::VMFunction** vmfunc)
-{
-    /*
-     * Preserves entries in the WeakCache<VMFunction, JitCode>
-     * iff the JitCode has been marked.
-     */
-    return false;
-}
 
 inline Cell*
 ToMarkable(const Value& v)

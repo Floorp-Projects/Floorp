@@ -1108,6 +1108,9 @@ pref("dom.udpsocket.enabled", true);
 // Enable TV Manager API
 pref("dom.tv.enabled", true);
 
+// Enable Inputport Manager API
+pref("dom.inputport.enabled", true);
+
 pref("dom.mozSettings.SettingsDB.debug.enabled", true);
 pref("dom.mozSettings.SettingsManager.debug.enabled", true);
 pref("dom.mozSettings.SettingsRequestManager.debug.enabled", true);

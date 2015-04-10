@@ -15,6 +15,7 @@
 #include "nsAutoPtr.h"
 #include "nsError.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
 #include "prnetdb.h"
 #include "prio.h"
 #include "nsNetAddr.h"
@@ -27,6 +28,10 @@
 #include "nsIDNSRecord.h"
 #include "nsIDNSService.h"
 #include "nsICancelable.h"
+
+#ifdef MOZ_WIDGET_GONK
+#include "NetStatistics.h"
+#endif
 
 using namespace mozilla::net;
 using namespace mozilla;
@@ -440,6 +445,8 @@ nsUDPMessage::GetDataAsTArray()
 nsUDPSocket::nsUDPSocket()
   : mLock("nsUDPSocket.mLock")
   , mFD(nullptr)
+  , mAppId(NECKO_UNKNOWN_APP_ID)
+  , mIsInBrowserElement(false)
   , mAttached(false)
   , mByteReadCount(0)
   , mByteWriteCount(0)
@@ -474,6 +481,7 @@ void
 nsUDPSocket::AddOutputBytes(uint64_t aBytes)
 {
   mByteWriteCount += aBytes;
+  SaveNetworkStats(false);
 }
 
 void
@@ -661,6 +669,7 @@ nsUDPSocket::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
     return;
   }
   mByteReadCount += count;
+  SaveNetworkStats(false);
 
   FallibleTArray<uint8_t> data;
   if(!data.AppendElements(buff, count)){
@@ -710,6 +719,7 @@ nsUDPSocket::OnSocketDetached(PRFileDesc *fd)
     }
     mFD = nullptr;
   }
+  SaveNetworkStats(true);
 
   if (mListener)
   {
@@ -746,7 +756,8 @@ NS_IMPL_ISUPPORTS(nsUDPSocket, nsIUDPSocket)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-nsUDPSocket::Init(int32_t aPort, bool aLoopbackOnly, bool aAddressReuse, uint8_t aOptionalArgc)
+nsUDPSocket::Init(int32_t aPort, bool aLoopbackOnly, nsIPrincipal *aPrincipal,
+                  bool aAddressReuse, uint8_t aOptionalArgc)
 {
   NetAddr addr;
 
@@ -761,11 +772,12 @@ nsUDPSocket::Init(int32_t aPort, bool aLoopbackOnly, bool aAddressReuse, uint8_t
   else
     addr.inet.ip = htonl(INADDR_ANY);
 
-  return InitWithAddress(&addr, aAddressReuse, aOptionalArgc);
+  return InitWithAddress(&addr, aPrincipal, aAddressReuse, aOptionalArgc);
 }
 
 NS_IMETHODIMP
-nsUDPSocket::InitWithAddress(const NetAddr *aAddr, bool aAddressReuse, uint8_t aOptionalArgc)
+nsUDPSocket::InitWithAddress(const NetAddr *aAddr, nsIPrincipal *aPrincipal,
+                             bool aAddressReuse, uint8_t aOptionalArgc)
 {
   NS_ENSURE_TRUE(mFD == nullptr, NS_ERROR_ALREADY_INITIALIZED);
 
@@ -781,6 +793,27 @@ nsUDPSocket::InitWithAddress(const NetAddr *aAddr, bool aAddressReuse, uint8_t a
     NS_WARNING("unable to create UDP socket");
     return NS_ERROR_FAILURE;
   }
+
+  if (aPrincipal) {
+    nsresult rv = aPrincipal->GetAppId(&mAppId);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    rv = aPrincipal->GetIsInBrowserElement(&mIsInBrowserElement);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+#ifdef MOZ_WIDGET_GONK
+  if (mAppId != NECKO_UNKNOWN_APP_ID) {
+    nsCOMPtr<nsINetworkInterface> activeNetwork;
+    GetActiveNetworkInterface(activeNetwork);
+    mActiveNetwork =
+      new nsMainThreadPtrHolder<nsINetworkInterface>(activeNetwork);
+  }
+#endif
 
   uint16_t port;
   if (NS_FAILED(net::GetPort(aAddr, &port))) {
@@ -850,6 +883,7 @@ nsUDPSocket::Close()
         PR_Close(mFD);
         mFD = nullptr;
       }
+      SaveNetworkStats(true);
       return NS_OK;
     }
   }
@@ -875,6 +909,34 @@ nsUDPSocket::GetLocalAddr(nsINetAddr * *aResult)
   result.forget(aResult);
 
   return NS_OK;
+}
+
+void
+nsUDPSocket::SaveNetworkStats(bool aEnforce)
+{
+#ifdef MOZ_WIDGET_GONK
+  if (!mActiveNetwork || mAppId == NECKO_UNKNOWN_APP_ID) {
+    return;
+  }
+
+  if (mByteReadCount == 0 && mByteWriteCount == 0) {
+    return;
+  }
+
+  uint64_t total = mByteReadCount + mByteWriteCount;
+  if (aEnforce || total > NETWORK_STATS_THRESHOLD) {
+    // Create the event to save the network statistics.
+    // the event is then dispathed to the main thread.
+    nsRefPtr<nsRunnable> event =
+      new SaveNetworkStatsEvent(mAppId, mIsInBrowserElement, mActiveNetwork,
+                                mByteReadCount, mByteWriteCount, false);
+    NS_DispatchToMainThread(event);
+
+    // Reset the counters after saving.
+    mByteReadCount = 0;
+    mByteWriteCount = 0;
+  }
+#endif
 }
 
 NS_IMETHODIMP
