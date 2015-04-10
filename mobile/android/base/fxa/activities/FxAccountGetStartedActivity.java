@@ -6,7 +6,6 @@ package org.mozilla.gecko.fxa.activities;
 
 import java.util.Locale;
 
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.background.common.log.Logger;
@@ -14,7 +13,6 @@ import org.mozilla.gecko.background.fxa.FxAccountAgeLockoutHelper;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.fxa.FxAccountServerConfiguration;
 import org.mozilla.gecko.sync.setup.activities.ActivityUtils;
 
 import android.accounts.AccountAuthenticatorActivity;
@@ -36,14 +34,6 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
   protected static final String LOG_TAG = FxAccountGetStartedActivity.class.getSimpleName();
 
   private static final int CHILD_REQUEST_CODE = 1;
-
-  // If the user clicks the email field this many times, the account sign up flow will start,
-  // using the stage server configuration.
-  @SuppressWarnings("unused")
-  private final int NUMBER_OF_CLICKS_TO_LAUNCH_STAGE_FLOW =
-      // !defined(MOZILLA_OFFICIAL) || defined(NIGHTLY_BUILD) || defined(MOZ_DEBUG)
-      (!AppConstants.MOZILLA_OFFICIAL || AppConstants.NIGHTLY_BUILD || AppConstants.DEBUG_BUILD) ? 5 : -1 /* infinite */;
-  private int stageFlowClickCount = 0;
 
   /**
    * {@inheritDoc}
@@ -73,19 +63,7 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
       }
     });
 
-    final View iconView = findViewById(R.id.icon);
-    animateIconIn(iconView);
-
-    iconView.setOnClickListener(new OnClickListener() {
-      @Override
-      public void onClick(View v) {
-        stageFlowClickCount += 1;
-        if (NUMBER_OF_CLICKS_TO_LAUNCH_STAGE_FLOW > 0 && stageFlowClickCount >= NUMBER_OF_CLICKS_TO_LAUNCH_STAGE_FLOW) {
-          stageFlowClickCount = 0;
-          startFlow(FxAccountServerConfiguration.Stage.toBundle());
-        }
-      }
-    });
+    animateIconIn();
   }
 
   /**
@@ -98,7 +76,7 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
    * measurement has happened first, which requires a (sometimes buggy)
    * onPreDrawListener.
    */
-  protected void animateIconIn(View iconView) {
+  protected void animateIconIn() {
     final AlphaAnimation a = new AlphaAnimation(0.0f, 1.0f);
     final TranslateAnimation t = new TranslateAnimation(
         Animation.RELATIVE_TO_SELF, 0.0f, Animation.RELATIVE_TO_SELF, 0.0f,
@@ -109,6 +87,7 @@ public class FxAccountGetStartedActivity extends AccountAuthenticatorActivity {
     animationSet.addAnimation(a);
     animationSet.addAnimation(t);
 
+    final View iconView = findViewById(R.id.icon);
     iconView.startAnimation(animationSet);
   }
 
