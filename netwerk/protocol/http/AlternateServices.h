@@ -126,6 +126,7 @@ public:
                                       int32_t port, bool pb);
   void ClearAltServiceMappings();
   void ClearHostMapping(const nsACString &host, int32_t port);
+  void ClearHostMapping(nsHttpConnectionInfo *ci);
 
 private:
   nsRefPtrHashtable<nsCStringHashKey, AltSvcMapping> mHash;
