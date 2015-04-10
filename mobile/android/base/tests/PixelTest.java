@@ -12,7 +12,7 @@ abstract class PixelTest extends BaseTest {
 
     protected final PaintedSurface loadAndGetPainted(String url) {
         Actions.RepeatedEventExpecter paintExpecter = mActions.expectPaint();
-        loadUrl(url);
+        loadUrlAndWait(url);
         verifyHomePagerHidden();
         paintExpecter.blockUntilClear(PAINT_CLEAR_DELAY);
         paintExpecter.unregisterListener();
