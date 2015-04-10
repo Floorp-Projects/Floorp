@@ -24,6 +24,8 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
 
     PerformanceController.on(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.on(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
+    PerformanceController.on(EVENTS.CONSOLE_RECORDING_STARTED, this._onRecordingStarted);
+    PerformanceController.on(EVENTS.CONSOLE_RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.on(EVENTS.RECORDING_IMPORTED, this._onRecordingImported);
     PerformanceController.on(EVENTS.RECORDINGS_CLEARED, this._onRecordingsCleared);
     this.widget.addEventListener("select", this._onSelect, false);
@@ -35,6 +37,8 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
   destroy: function() {
     PerformanceController.off(EVENTS.RECORDING_STARTED, this._onRecordingStarted);
     PerformanceController.off(EVENTS.RECORDING_STOPPED, this._onRecordingStopped);
+    PerformanceController.off(EVENTS.CONSOLE_RECORDING_STARTED, this._onRecordingStarted);
+    PerformanceController.off(EVENTS.CONSOLE_RECORDING_STOPPED, this._onRecordingStopped);
     PerformanceController.off(EVENTS.RECORDING_IMPORTED, this._onRecordingImported);
     PerformanceController.off(EVENTS.RECORDINGS_CLEARED, this._onRecordingsCleared);
     this.widget.removeEventListener("select", this._onSelect, false);
@@ -95,26 +99,18 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
    *        Model of the recording that was started.
    */
   _onRecordingStarted: function (_, recording) {
-    // Insert a "dummy" recording item, to hint that recording has now started.
-    let recordingItem;
-
-    // If a label is specified (e.g due to a call to `console.profile`),
-    // then try reusing a pre-existing recording item, if there is one.
-    // This is symmetrical to how `this.handleRecordingEnded` works.
-    let profileLabel = recording.getLabel();
-    if (profileLabel) {
-      recordingItem = this.getItemForAttachment(e => e.getLabel() == profileLabel);
-    }
-    // Otherwise, create a new empty recording item.
-    if (!recordingItem) {
-      recordingItem = this.addEmptyRecording(recording);
-    }
+    // TODO bug 1144388
+    // If a label is identical to an existing recording item,
+    // logically group them here.
+    // For now, insert a "dummy" recording item, to hint that recording has now started.
+    let recordingItem = this.addEmptyRecording(recording);
 
     // Mark the corresponding item as being a "record in progress".
     recordingItem.isRecording = true;
 
-    // If this is a manual recording, immediately select it.
-    if (!recording.getLabel()) {
+    // If this is a manual recording, immediately select it, or
+    // select a console profile if its the only one
+    if (!recording.isConsole() || this.selectedIndex === -1) {
       this.selectedItem = recordingItem;
     }
   },
@@ -126,26 +122,18 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
    *        The model of the recording that just stopped.
    */
   _onRecordingStopped: function (_, recording) {
-    let recordingItem;
-
-    // If a label is specified (e.g due to a call to `console.profileEnd`),
-    // then try reusing a pre-existing recording item, if there is one.
-    // This is symmetrical to how `this.handleRecordingStarted` works.
-    let profileLabel = recording.getLabel();
-    if (profileLabel) {
-      recordingItem = this.getItemForAttachment(e => e.getLabel() == profileLabel);
-    }
-    // Otherwise, just use the first available recording item.
-    if (!recordingItem) {
-      recordingItem = this.getItemForPredicate(e => e.isRecording);
-    }
+    let recordingItem = this.getItemForPredicate(e => e.attachment === recording);
 
     // Mark the corresponding item as being a "finished recording".
     recordingItem.isRecording = false;
 
     // Render the recording item with finalized information (timing, etc)
     this.finalizeRecording(recordingItem);
-    this.forceSelect(recordingItem);
+
+    // Select the recording if it was a manual recording only
+    if (!recording.isConsole()) {
+      this.forceSelect(recordingItem);
+    }
   },
 
   /**
@@ -195,21 +183,11 @@ let RecordingsView = Heritage.extend(WidgetMethods, {
    * The select listener for this container.
    */
   _onSelect: Task.async(function*({ detail: recordingItem }) {
-    // TODO 1120699
-    // show appropriate empty/recording panels for several scenarios below
     if (!recordingItem) {
       return;
     }
 
     let model = recordingItem.attachment;
-
-    // If recording, don't abort completely, as we still want to fire an event
-    // for selection so we can continue repainting the overview graphs.
-    if (recordingItem.isRecording) {
-      this.emit(EVENTS.RECORDING_SELECTED, model);
-      return;
-    }
-
     this.emit(EVENTS.RECORDING_SELECTED, model);
   }),
 
