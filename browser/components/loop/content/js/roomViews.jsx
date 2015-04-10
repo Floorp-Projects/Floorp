@@ -55,11 +55,110 @@ loop.roomViews = (function(mozL10n) {
     }
   };
 
+  var SocialShareDropdown = React.createClass({
+    mixins: [ActiveRoomStoreMixin],
+
+    propTypes: {
+      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      show: React.PropTypes.bool.isRequired
+    },
+
+    handleToolbarAddButtonClick: function(event) {
+      event.preventDefault();
+
+      this.props.dispatcher.dispatch(new sharedActions.AddSocialShareButton());
+    },
+
+    handleAddServiceClick: function(event) {
+      event.preventDefault();
+
+      this.props.dispatcher.dispatch(new sharedActions.AddSocialShareProvider());
+    },
+
+    handleProviderClick: function(event) {
+      event.preventDefault();
+
+      var origin = event.currentTarget.dataset.provider;
+      var provider = this.state.socialShareProviders.filter(function(provider) {
+        return provider.origin == origin;
+      })[0];
+
+      this.props.dispatcher.dispatch(new sharedActions.ShareRoomUrl({
+        provider: provider,
+        roomUrl: this.state.roomUrl,
+        previews: []
+      }));
+    },
+
+    render: function() {
+      // Don't render a thing when no data has been fetched yet.
+      if (!this.state.socialShareProviders) {
+        return null;
+      }
+
+      var cx = React.addons.classSet;
+      var shareDropdown = cx({
+        "share-service-dropdown": true,
+        "dropdown-menu": true,
+        "share-button-unavailable": !this.state.socialShareButtonAvailable,
+        "hide": !this.props.show
+      });
+
+      // When the button is not yet available, we offer to put it in the navbar
+      // for the user.
+      if (!this.state.socialShareButtonAvailable) {
+        return (
+          <div className={shareDropdown}>
+            <div className="share-panel-header">
+              {mozL10n.get("share_panel_header")}
+            </div>
+            <div className="share-panel-body">
+              {
+                mozL10n.get("share_panel_body", {
+                  brandShortname: mozL10n.get("brandShortname"),
+                  clientSuperShortname: mozL10n.get("clientSuperShortname"),
+                })
+              }
+            </div>
+            <button className="btn btn-info btn-toolbar-add"
+                    onClick={this.handleToolbarAddButtonClick}>
+              {mozL10n.get("add_to_toolbar_button")}
+            </button>
+          </div>
+        );
+      }
+
+      return (
+        <ul className={shareDropdown}>
+          <li className="dropdown-menu-item" onClick={this.handleAddServiceClick}>
+            <i className="icon icon-add-share-service"></i>
+            <span>{mozL10n.get("share_add_service_button")}</span>
+          </li>
+          {this.state.socialShareProviders.length ? <li className="dropdown-menu-separator"/> : null}
+          {
+            this.state.socialShareProviders.map(function(provider, idx) {
+              return (
+                <li className="dropdown-menu-item"
+                    key={"provider-" + idx}
+                    data-provider={provider.origin}
+                    onClick={this.handleProviderClick}>
+                  <img className="icon" src={provider.iconURL}/>
+                  <span>{provider.name}</span>
+                </li>
+              );
+            }.bind(this))
+          }
+        </ul>
+      );
+    }
+  });
+
   /**
    * Desktop room invitation view (overlay).
    */
   var DesktopRoomInvitationView = React.createClass({
-    mixins: [ActiveRoomStoreMixin, React.addons.LinkedStateMixin],
+    mixins: [ActiveRoomStoreMixin, React.addons.LinkedStateMixin,
+             sharedMixins.DropdownMenuMixin],
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired
@@ -117,6 +216,12 @@ loop.roomViews = (function(mozL10n) {
       this.setState({copiedUrl: true});
     },
 
+    handleShareButtonClick: function(event) {
+      event.preventDefault();
+
+      this.toggleDropdownMenu();
+    },
+
     onRoomError: function() {
       // Only update the state if we're mounted, to avoid the problem where
       // stopListening doesn't nuke the active listeners during a event
@@ -152,7 +257,16 @@ loop.roomViews = (function(mozL10n) {
               {this.state.copiedUrl ? mozL10n.get("copied_url_button") :
                                       mozL10n.get("copy_url_button2")}
             </button>
+            <button className="btn btn-info btn-share"
+                    ref="anchor"
+                    onClick={this.handleShareButtonClick}>
+              {mozL10n.get("share_button3")}
+            </button>
           </div>
+          <SocialShareDropdown dispatcher={this.props.dispatcher}
+                               roomStore={this.props.roomStore}
+                               show={this.state.showMenu}
+                               ref="menu"/>
         </div>
       );
     }
@@ -292,6 +406,7 @@ loop.roomViews = (function(mozL10n) {
 
   return {
     ActiveRoomStoreMixin: ActiveRoomStoreMixin,
+    SocialShareDropdown: SocialShareDropdown,
     DesktopRoomConversationView: DesktopRoomConversationView,
     DesktopRoomInvitationView: DesktopRoomInvitationView
   };
