@@ -5,7 +5,7 @@
 
 #include "PendingPlayerTracker.h"
 
-#include "mozilla/dom/AnimationTimeline.h"
+#include "mozilla/dom/DocumentTimeline.h"
 #include "nsIFrame.h"
 #include "nsIPresShell.h"
 
@@ -52,7 +52,7 @@ TriggerPlayerAtTime(nsRefPtrHashKey<dom::AnimationPlayer>* aKey,
                     void* aReadyTime)
 {
   dom::AnimationPlayer* player = aKey->GetKey();
-  dom::AnimationTimeline* timeline = player->Timeline();
+  dom::DocumentTimeline* timeline = player->Timeline();
 
   // When the timeline's refresh driver is under test control, its values
   // have no correspondance to wallclock times so we shouldn't try to convert
