@@ -14,6 +14,7 @@ class nsPIDOMWindow;
 namespace mozilla {
 namespace dom {
 
+class Element;
 class TabParent;
 
 namespace quota {
@@ -39,7 +40,7 @@ bool
 DeallocPBackgroundIDBFactoryParent(PBackgroundIDBFactoryParent* aActor);
 
 PIndexedDBPermissionRequestParent*
-AllocPIndexedDBPermissionRequestParent(nsPIDOMWindow* aWindow,
+AllocPIndexedDBPermissionRequestParent(Element* aOwnerElement,
                                        nsIPrincipal* aPrincipal);
 
 bool
