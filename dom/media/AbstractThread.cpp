@@ -64,7 +64,7 @@ AbstractThread::InitStatics()
   nsCOMPtr<nsIThread> mainThread;
   NS_GetMainThread(getter_AddRefs(mainThread));
   MOZ_DIAGNOSTIC_ASSERT(mainThread);
-  sMainThread = AbstractThread::Create(mainThread.get());
+  sMainThread = new AbstractThreadImpl<nsIThread>(mainThread.get());
   ClearOnShutdown(&sMainThread);
 }
 
