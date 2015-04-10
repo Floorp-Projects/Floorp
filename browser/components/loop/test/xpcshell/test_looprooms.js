@@ -92,7 +92,6 @@ const kRoomUpdates = {
 
 const kCreateRoomProps = {
   roomName: "UX Discussion",
-  expiresIn: 5,
   roomOwner: "Alexis",
   maxSize: 2
 };
