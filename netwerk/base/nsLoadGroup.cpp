@@ -14,11 +14,13 @@
 #include "prlog.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Telemetry.h"
+#include "nsAutoPtr.h"
+#include "mozilla/net/PSpdyPush.h"
 #include "nsITimedChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIRequestObserver.h"
-#include "nsISchedulingContext.h"
 #include "CacheObserver.h"
 #include "MainThreadUtils.h"
 
@@ -739,12 +741,12 @@ nsLoadGroup::SetNotificationCallbacks(nsIInterfaceRequestor *aCallbacks)
 }
 
 NS_IMETHODIMP
-nsLoadGroup::GetSchedulingContextID(nsID *aSCID)
+nsLoadGroup::GetConnectionInfo(nsILoadGroupConnectionInfo **aCI)
 {
-    if (!mSchedulingContext) {
-        return NS_ERROR_NOT_AVAILABLE;
-    }
-    return mSchedulingContext->GetID(aSCID);
+    NS_ENSURE_ARG_POINTER(aCI);
+    *aCI = mConnectionInfo;
+    NS_IF_ADDREF(*aCI);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1066,6 +1068,68 @@ nsresult nsLoadGroup::MergeLoadFlags(nsIRequest *aRequest, nsLoadFlags& outFlags
     return rv;
 }
 
+// nsLoadGroupConnectionInfo
+
+class nsLoadGroupConnectionInfo final : public nsILoadGroupConnectionInfo
+{
+    ~nsLoadGroupConnectionInfo() {}
+
+public:
+    NS_DECL_THREADSAFE_ISUPPORTS
+    NS_DECL_NSILOADGROUPCONNECTIONINFO
+
+    nsLoadGroupConnectionInfo();
+private:
+    Atomic<uint32_t>       mBlockingTransactionCount;
+    nsAutoPtr<mozilla::net::SpdyPushCache> mSpdyCache;
+};
+
+NS_IMPL_ISUPPORTS(nsLoadGroupConnectionInfo, nsILoadGroupConnectionInfo)
+
+nsLoadGroupConnectionInfo::nsLoadGroupConnectionInfo()
+    : mBlockingTransactionCount(0)
+{
+}
+
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::GetBlockingTransactionCount(uint32_t *aBlockingTransactionCount)
+{
+    NS_ENSURE_ARG_POINTER(aBlockingTransactionCount);
+    *aBlockingTransactionCount = mBlockingTransactionCount;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::AddBlockingTransaction()
+{
+    mBlockingTransactionCount++;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::RemoveBlockingTransaction(uint32_t *_retval)
+{
+    NS_ENSURE_ARG_POINTER(_retval);
+        mBlockingTransactionCount--;
+        *_retval = mBlockingTransactionCount;
+    return NS_OK;
+}
+
+/* [noscript] attribute SpdyPushCachePtr spdyPushCache; */
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::GetSpdyPushCache(mozilla::net::SpdyPushCache **aSpdyPushCache)
+{
+    *aSpdyPushCache = mSpdyCache.get();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroupConnectionInfo::SetSpdyPushCache(mozilla::net::SpdyPushCache *aSpdyPushCache)
+{
+    mSpdyCache = aSpdyPushCache;
+    return NS_OK;
+}
+
 nsresult nsLoadGroup::Init()
 {
     static const PLDHashTableOps hash_table_ops =
@@ -1080,14 +1144,7 @@ nsresult nsLoadGroup::Init()
     PL_DHashTableInit(&mRequests, &hash_table_ops,
                       sizeof(RequestMapEntry));
 
-    nsCOMPtr<nsISchedulingContextService> scsvc = do_GetService("@mozilla.org/network/scheduling-context-service;1");
-    if (scsvc) {
-        nsID schedulingContextID;
-        if (NS_SUCCEEDED(scsvc->NewSchedulingContextID(&schedulingContextID))) {
-            scsvc->GetSchedulingContext(schedulingContextID,
-                                        getter_AddRefs(mSchedulingContext));
-        }
-    }
+    mConnectionInfo = new nsLoadGroupConnectionInfo();
 
     return NS_OK;
 }

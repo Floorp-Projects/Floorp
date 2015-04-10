@@ -8,16 +8,6 @@
 #include "prprf.h"
 #include "nsMemory.h"
 
-void nsID::Clear()
-{
-  m0 = 0;
-  m1 = 0;
-  m2 = 0;
-  for (int i = 0; i < 8; ++i) {
-    m3[i] = 0;
-  }
-}
-
 /**
  * Multiplies the_int_var with 16 (0x10) and adds the value of the
  * hexadecimal digit the_char. If it fails it returns false from

@@ -468,17 +468,6 @@
     { 0xae, 0xcf, 0x05, 0xf8, 0xfa, 0xf0, 0x0c, 0x9b } \
 }
 
-// service implementing nsISchedulingContextService
-#define NS_SCHEDULINGCONTEXTSERVICE_CONTRACTID \
-    "@mozilla.org/network/scheduling-context-service;1"
-#define NS_SCHEDULINGCONTEXTSERVICE_CID \
-{ /* d5499fa7-7ba8-49ff-9e30-1858b99ace69 */ \
-    0xd5499fa7, \
-    0x7ba8, \
-    0x49ff, \
-    {0x93, 0x30, 0x18, 0x58, 0xb9, 0x9a, 0xce, 0x69} \
-}
-
 /******************************************************************************
  * netwerk/cache/ classes
  */
