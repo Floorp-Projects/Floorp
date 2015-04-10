@@ -31,7 +31,7 @@ public:
     MOZ_ASSERT(aDataList);
   }
 
-  NS_IMETHOD Run()
+  NS_IMETHOD Run() override
   {
     if (mErrorCode == nsIInputPortServiceCallback::INPUTPORT_ERROR_OK) {
       return mCallback->NotifySuccess(mDataList);
@@ -60,7 +60,7 @@ public:
   {}
 
   NS_IMETHODIMP
-  Notify(nsITimer* aTimer)
+  Notify(nsITimer* aTimer) override
   {
     InputPortData* portData = static_cast<InputPortData*>(mInputPortData.get());
     portData->SetConnected(mIsConnected);
