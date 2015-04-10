@@ -1479,24 +1479,6 @@ qrcode.process = function(ctx) {
   return qrcode.decode_utf8(str);
 };
 
-qrcode.getPixel = function(x, y) {
-  let point = x + y * imgWidth;
-  let rgba = imgU32[point];
-  let p = (rgba & 0xFF) + ((rgba >> 8) & 0xFF) + ((rgba >> 16) & 0xFF);
-  return p / 3;
-};
-
-qrcode.binarize = function(th) {
-  let ret = new Array(imgWidth * imgHeight);
-  for (let y = 0; y < imgHeight; y++) {
-    for (let x = 0; x < imgWidth; x++) {
-      let gray = qrcode.getPixel(x, y);
-      ret[x + y * imgWidth] = gray <= th ? true : false;
-    }
-  }
-  return ret;
-};
-
 qrcode.getMiddleBrightnessPerArea = function(image) {
   let numSqrtArea = 4;
   let areaWidth = Math.floor(imgWidth / numSqrtArea);
@@ -1554,8 +1536,10 @@ qrcode.grayscale = function() {
   let ret = new Uint8ClampedArray(imgWidth * imgHeight);
   for (let y = 0; y < imgHeight; y++) {
     for (let x = 0; x < imgWidth; x++) {
-      let gray = qrcode.getPixel(x, y);
-      ret[x + y * imgWidth] = gray;
+      let point = x + y * imgWidth;
+      let rgba = imgU32[point];
+      let p = (rgba & 0xFF) + ((rgba >> 8) & 0xFF) + ((rgba >> 16) & 0xFF);
+      ret[x + y * imgWidth] = p / 3;
     }
   }
   return ret;
