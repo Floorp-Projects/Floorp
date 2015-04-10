@@ -870,10 +870,10 @@
      * the set, and leaves both on the stack.
      *   Category: Literals
      *   Type: Object
-     *   Operands:
-     *   Stack: homeObject, fun => homeObject, fun
+     *   Operands: uint8_t n
+     *   Stack: homeObject, [...n], fun => homeObject, [...n], fun
      */\
-    macro(JSOP_INITHOMEOBJECT,  92, "inithomeobject",   NULL,         1,  2,  2, JOF_BYTE|JOF_SET|JOF_DETECTING) \
+    macro(JSOP_INITHOMEOBJECT,  92, "inithomeobject",   NULL,         2,  2,  2, JOF_UINT8) \
     \
     /*
      * Initialize a named property in an object literal, like '{a: x}'.
