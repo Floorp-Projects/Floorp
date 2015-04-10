@@ -20,6 +20,8 @@ toolkit.jar:
    content/global/aboutRights-unbranded.xhtml (aboutRights-unbranded.xhtml)
    content/global/aboutNetworking.js
    content/global/aboutNetworking.xhtml
+   content/global/aboutServiceWorkers.js
+   content/global/aboutServiceWorkers.xhtml
    content/global/aboutwebrtc/aboutWebrtc.css   (aboutwebrtc/aboutWebrtc.css)
    content/global/aboutwebrtc/aboutWebrtc.js    (aboutwebrtc/aboutWebrtc.js)
    content/global/aboutwebrtc/aboutWebrtc.xhtml (aboutwebrtc/aboutWebrtc.xhtml)

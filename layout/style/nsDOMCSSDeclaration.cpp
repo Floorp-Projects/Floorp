@@ -45,7 +45,7 @@ nsDOMCSSDeclaration::GetPropertyValue(const nsCSSProperty aPropID,
   NS_PRECONDITION(aPropID != eCSSProperty_UNKNOWN,
                   "Should never pass eCSSProperty_UNKNOWN around");
 
-  css::Declaration* decl = GetCSSDeclaration(false);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_Read);
 
   aValue.Truncate();
   if (decl) {
@@ -61,7 +61,7 @@ nsDOMCSSDeclaration::GetCustomPropertyValue(const nsAString& aPropertyName,
   MOZ_ASSERT(Substring(aPropertyName, 0,
                        CSS_CUSTOM_NAME_PREFIX_LENGTH).EqualsLiteral("--"));
 
-  css::Declaration* decl = GetCSSDeclaration(false);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_Read);
   if (!decl) {
     aValue.Truncate();
     return;
@@ -89,7 +89,7 @@ nsDOMCSSDeclaration::SetPropertyValue(const nsCSSProperty aPropID,
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetCssText(nsAString& aCssText)
 {
-  css::Declaration* decl = GetCSSDeclaration(false);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_Read);
   aCssText.Truncate();
 
   if (decl) {
@@ -104,7 +104,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 {
   // We don't need to *do* anything with the old declaration, but we need
   // to ensure that it exists, or else SetCSSDeclaration may crash.
-  css::Declaration* olddecl = GetCSSDeclaration(true);
+  css::Declaration* olddecl = GetCSSDeclaration(eOperation_Modify);
   if (!olddecl) {
     return NS_ERROR_FAILURE;
   }
@@ -139,7 +139,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
 NS_IMETHODIMP
 nsDOMCSSDeclaration::GetLength(uint32_t* aLength)
 {
-  css::Declaration* decl = GetCSSDeclaration(false);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_Read);
 
   if (decl) {
     *aLength = decl->Count();
@@ -161,7 +161,7 @@ nsDOMCSSDeclaration::GetPropertyCSSValue(const nsAString& aPropertyName, ErrorRe
 void
 nsDOMCSSDeclaration::IndexedGetter(uint32_t aIndex, bool& aFound, nsAString& aPropName)
 {
-  css::Declaration* decl = GetCSSDeclaration(false);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_Read);
   aFound = decl && decl->GetNthProperty(aIndex, aPropName);
 }
 
@@ -202,7 +202,7 @@ nsDOMCSSDeclaration::GetAuthoredPropertyValue(const nsAString& aPropertyName,
     return NS_OK;
   }
 
-  css::Declaration* decl = GetCSSDeclaration(false);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_Read);
   if (!decl) {
     return NS_ERROR_FAILURE;
   }
@@ -215,7 +215,7 @@ NS_IMETHODIMP
 nsDOMCSSDeclaration::GetPropertyPriority(const nsAString& aPropertyName,
                                          nsAString& aReturn)
 {
-  css::Declaration* decl = GetCSSDeclaration(false);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_Read);
 
   aReturn.Truncate();
   if (decl && decl->GetValueIsImportant(aPropertyName)) {
@@ -310,7 +310,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
                                         const nsAString& aPropValue,
                                         bool aIsImportant)
 {
-  css::Declaration* olddecl = GetCSSDeclaration(true);
+  css::Declaration* olddecl = GetCSSDeclaration(eOperation_Modify);
   if (!olddecl) {
     return NS_ERROR_FAILURE;
   }
@@ -351,7 +351,7 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
 {
   MOZ_ASSERT(nsCSSProps::IsCustomPropertyName(aPropertyName));
 
-  css::Declaration* olddecl = GetCSSDeclaration(true);
+  css::Declaration* olddecl = GetCSSDeclaration(eOperation_Modify);
   if (!olddecl) {
     return NS_ERROR_FAILURE;
   }
@@ -391,7 +391,7 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
 nsresult
 nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
 {
-  css::Declaration* decl = GetCSSDeclaration(false);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_RemoveProperty);
   if (!decl) {
     return NS_OK; // no decl, so nothing to remove
   }
@@ -414,7 +414,7 @@ nsDOMCSSDeclaration::RemoveCustomProperty(const nsAString& aPropertyName)
   MOZ_ASSERT(Substring(aPropertyName, 0,
                        CSS_CUSTOM_NAME_PREFIX_LENGTH).EqualsLiteral("--"));
 
-  css::Declaration* decl = GetCSSDeclaration(false);
+  css::Declaration* decl = GetCSSDeclaration(eOperation_RemoveProperty);
   if (!decl) {
     return NS_OK; // no decl, so nothing to remove
   }

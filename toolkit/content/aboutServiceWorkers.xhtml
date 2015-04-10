@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+
+<!DOCTYPE html [
+<!ENTITY % htmlDTD PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd"> %htmlDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd"> %globalDTD;
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd"> %brandDTD;
+<!ENTITY % serviceworkersDTD SYSTEM "chrome://global/locale/aboutServiceWorkers.dtd"> %serviceworkersDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>&aboutServiceWorkers.title;</title>
+        <link rel="stylesheet" href="chrome://global/skin/about.css" type="text/css" />
+        <link rel="stylesheet" href="chrome://mozapps/skin/aboutServiceWorkers.css" type="text/css" />
+        <script type="application/javascript;version=1.7" src="chrome://global/content/aboutServiceWorkers.js" />
+    </head>
+    <body id="body">
+        <div id="warning_not_enabled" class="warningBackground">
+            <div class="warningMessage">&aboutServiceWorkers.warning_not_enabled;</div>
+        </div>
+
+        <div id="warning_no_serviceworkers" class="warningBackground">
+            <div class="warningMessage">&aboutServiceWorkers.warning_no_serviceworkers;</div>
+        </div>
+
+        <div id="serviceworkers" class="tab active">
+          <h1>&aboutServiceWorkers.maintitle;</h1>
+        </div>
+    </body>
+</html>
