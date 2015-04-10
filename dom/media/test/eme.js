@@ -73,17 +73,6 @@ function Log(token, msg) {
   info(TimeStamp(token) + " " + msg);
 }
 
-function MediaErrorCodeToString(code)
-{
-  switch (code) {
-  case MediaError.MEDIA_ERROR_ABORTED         : return "MEDIA_ERROR_ABORTED";
-  case MediaError.MEDIA_ERR_NETWORK           : return "MEDIA_ERR_NETWORK";
-  case MediaError.MEDIA_ERR_DECODE            : return "MEDIA_ERR_DECODE";
-  case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED : return "MEDIA_ERR_SRC_NOT_SUPPORTED";
-  default: return String(code);
-  }
-}
-
 function TimeRangesToString(trs)
 {
   var l = trs.length;
@@ -100,12 +89,12 @@ function TimeRangesToString(trs)
 function SourceBufferToString(sb)
 {
   return ("SourceBuffer{"
-    + (sb
-       ? ((sb.updating ? " updating," : "")
-          + " buffered="
-          + (sb.buffered ? TimeRangesToString(sb.buffered) : "?"))
-       : " ?")
-    + " }");
+    + "AppendMode=" + (sb.AppendMode || "-")
+    + ", updating=" + (sb.updating ? "true" : "false")
+    + ", buffered=" + TimeRangesToString(sb.buffered)
+    + ", audioTracks=" + (sb.audioTracks ? sb.audioTracks.length : "-")
+    + ", videoTracks=" + (sb.videoTracks ? sb.videoTracks.length : "-")
+    + "}");
 }
 
 function SourceBufferListToString(sbl)
@@ -118,7 +107,7 @@ function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
     var msgStr = ArrayBufferToString(ev.message);
     var msg = JSON.parse(msgStr);
 
-    Log(token, "Session[" + ev.target.sessionId + "], got message from CDM: " + msgStr);
+    Log(token, "got message from CDM: " + msgStr);
     is(msg.type, sessionType, TimeStamp(token) + " key session type should match");
     ok(msg.kids, TimeStamp(token) + " message event should contain key ID array");
 
@@ -146,13 +135,13 @@ function UpdateSessionFunc(test, token, sessionType, resolve, reject) {
       "keys" : outKeys,
       "type" : msg.type
     });
-    Log(token, "Session[" + ev.target.sessionId + "], sending update message to CDM: " + update);
+    Log(token, "sending update message to CDM: " + update);
 
     ev.target.update(StringToArrayBuffer(update)).then(function() {
-      Log(token, "Session[" + ev.target.sessionId + "] update ok!");
+      Log(token, "MediaKeySession update ok!");
       resolve(ev.target);
     }).catch(function(reason) {
-      bail(token + " Session[" + ev.target.sessionId + "] update failed")(reason);
+      bail(token + " MediaKeySession update failed")(reason);
       reject();
     });
   }
@@ -167,17 +156,6 @@ function MaybeCrossOriginURI(test, uri)
   }
 }
 
-function BSD16(a)
-{
-  var c = 0x1234;
-  var i = 0;
-  var l = a.length;
-  for (i = 0; i < l; i++) {
-    c = (((((c >>> 1) + ((c & 1) << 15)) | 0) + (a[i] & 0xff)) & 0xffff) | 0;
-  }
-  return c;
-};
-
 function AppendTrack(test, ms, track, token)
 {
   return new Promise(function(resolve, reject) {
@@ -185,68 +163,36 @@ function AppendTrack(test, ms, track, token)
     var curFragment = 0;
     var resolved = false;
     var fragmentFile;
-    var appendBufferTimer = null;
 
     function addNextFragment() {
       if (curFragment >= track.fragments.length) {
         Log(token, track.name + ": end of track");
-        resolved = true;
-        sb.removeEventListener("updateend", handleUpdateEnd);
         resolve();
+        resolved = true;
         return;
       }
 
-      var fragment = track.fragments[curFragment++];
-      if (typeof fragment === "string") {
-        fragment = { file:fragment, size:-1, bsd16:-1 };
-      }
-
-      fragmentFile = MaybeCrossOriginURI(test, fragment.file);
+      fragmentFile = MaybeCrossOriginURI(test, track.fragments[curFragment++]);
 
       var req = new XMLHttpRequest();
       req.open("GET", fragmentFile);
       req.responseType = "arraybuffer";
-      req.timeout = 10 * 1000; // 10s should be plenty of time to get small fragments!
 
       req.addEventListener("load", function() {
-        var u8array = new Uint8Array(req.response);
-        if (fragment.size !== undefined && fragment.size >= 0) {
-          is(u8array.length, fragment.size,
-             token + " fragment '" + fragmentFile + "' size: expected "
-             + fragment.size + ", got " + u8array.length);
-        }
-        if (fragment.bsd16 !== undefined && fragment.bsd16 >= 0) {
-          is(BSD16(u8array), fragment.bsd16,
-             token + " fragment '" + fragmentFile + "' checksum: expected "
-             + fragment.bsd16 + ", got " + BSD16(u8array));
-        }
         Log(token, track.name + ": fetch of " + fragmentFile + " complete, appending");
-        appendBufferTimer = setTimeout(function () {
-          if (!appendBufferTimer) { return; }
-          sb.removeEventListener("updateend", handleUpdateEnd);
-          reject("Timeout appendBuffer with fragment '" + fragmentFile + "'");
-        }, 10 * 1000);
-        sb.appendBuffer(u8array);
+        sb.appendBuffer(new Uint8Array(req.response));
       });
 
-      ["error", "abort", "timeout"
-      ].forEach(function(issue) {
-        req.addEventListener(issue, function() {
-          info(token + " " + issue + " fetching " + fragmentFile + ", status='" + req.statusText + "'");
-          resolved = true;
-          reject(issue + " fetching " + fragmentFile);
-        });
-      });
+      req.addEventListener("error", function(){info(token + " error fetching " + fragmentFile);});
+      req.addEventListener("abort", function(){info(token + " aborted fetching " + fragmentFile);});
 
       Log(token, track.name + ": addNextFragment() fetching next fragment " + fragmentFile);
       req.send(null);
     }
 
-    function handleUpdateEnd() {
-      if (appendBufferTimer) {
-        clearTimeout(appendBufferTimer);
-        appendBufferTimer = null;
-      }
+    Log(token, track.name + ": addSourceBuffer(" + track.type + ")");
+    sb = ms.addSourceBuffer(track.type);
+    sb.addEventListener("updateend", function() {
       if (ms.readyState == "ended") {
         /* We can get another updateevent as a result of calling ms.endOfStream() if
            the highest end time of our source buffers is different from that of the
@@ -257,19 +203,15 @@ function AppendTrack(test, ms, track, token)
         if (!resolved) {
           // Needed if decoder knows this was the last fragment and ended by itself.
           Log(token, track.name + ": but promise not resolved yet -> end of track");
-          resolved = true;
           resolve();
+          resolved = true;
         }
         return;
       }
       Log(token, track.name + ": updateend for " + fragmentFile + ", " + SourceBufferToString(sb));
       addNextFragment();
-    }
+    });
 
-    Log(token, track.name + ": addSourceBuffer(" + track.type + ")");
-    sb = ms.addSourceBuffer(track.type);
-
-    sb.addEventListener("updateend", handleUpdateEnd);
     addNextFragment();
   });
 }
@@ -304,22 +246,6 @@ function LoadTest(test, elem, token)
         resolve();
       });
     })
-  });
-}
-
-// Same as LoadTest, but manage a token+"_load" start&finished.
-// Also finish main token if loading fails.
-function LoadTestWithManagedLoadToken(test, elem, manager, token)
-{
-  manager.started(token + "_load");
-  return LoadTest(test, elem, token)
-  .catch(function (reason) {
-    ok(false, TimeStamp(token) + " - Error during load: " + reason);
-    manager.finished(token + "_load");
-    manager.finished(token);
-  })
-  .then(function () {
-    manager.finished(token + "_load");
   });
 }
 
