@@ -18,7 +18,7 @@
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsHttpConnection.h"
-#include "nsISchedulingContext.h"
+#include "nsILoadGroup.h"
 #include "nsISupportsPriority.h"
 #include "prprf.h"
 #include "prnetdb.h"
@@ -1081,12 +1081,12 @@ SpdySession31::HandleSynStream(SpdySession31 *self)
     self->GenerateRstStream(RST_INVALID_STREAM, streamID);
 
   } else {
-    nsISchedulingContext *schedulingContext = associatedStream->SchedulingContext();
-    if (schedulingContext) {
-      schedulingContext->GetSpdyPushCache(&cache);
+    nsILoadGroupConnectionInfo *loadGroupCI = associatedStream->LoadGroupConnectionInfo();
+    if (loadGroupCI) {
+      loadGroupCI->GetSpdyPushCache(&cache);
       if (!cache) {
         cache = new SpdyPushCache();
-        if (!cache || NS_FAILED(schedulingContext->SetSpdyPushCache(cache))) {
+        if (!cache || NS_FAILED(loadGroupCI->SetSpdyPushCache(cache))) {
           delete cache;
           cache = nullptr;
         }
@@ -1094,7 +1094,7 @@ SpdySession31::HandleSynStream(SpdySession31 *self)
     }
     if (!cache) {
       // this is unexpected, but we can handle it just be refusing the push
-      LOG3(("SpdySession31::HandleSynStream Push Recevied without push cache\n"));
+      LOG3(("SpdySession31::HandleSynStream Push Recevied without loadgroup cache\n"));
       self->GenerateRstStream(RST_REFUSED_STREAM, streamID);
     }
     else {

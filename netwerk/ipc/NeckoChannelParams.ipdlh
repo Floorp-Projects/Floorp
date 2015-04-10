@@ -58,7 +58,6 @@ struct HttpChannelOpenArgs
   uint32_t                    securityFlags;
   uint32_t                    contentPolicyType;
   uint32_t                    innerWindowID;
-  nsCString                   schedulingContextID;
 };
 
 struct HttpChannelConnectArgs

@@ -363,10 +363,10 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
   // check the push cache for GET
   if (head->IsGet()) {
     // from :scheme, :authority, :path
-    nsISchedulingContext *schedulingContext = mTransaction->SchedulingContext();
+    nsILoadGroupConnectionInfo *loadGroupCI = mTransaction->LoadGroupConnectionInfo();
     SpdyPushCache *cache = nullptr;
-    if (schedulingContext) {
-      schedulingContext->GetSpdyPushCache(&cache);
+    if (loadGroupCI) {
+      loadGroupCI->GetSpdyPushCache(&cache);
     }
 
     Http2PushedStream *pushedStream = nullptr;
@@ -393,8 +393,8 @@ Http2Stream::ParseHttpRequestHeaders(const char *buf,
     }
 
     LOG3(("Pushed Stream Lookup "
-          "session=%p key=%s schedulingcontext=%p cache=%p hit=%p\n",
-          mSession, hashkey.get(), schedulingContext, cache, pushedStream));
+          "session=%p key=%s loadgroupci=%p cache=%p hit=%p\n",
+          mSession, hashkey.get(), loadGroupCI, cache, pushedStream));
 
     if (pushedStream) {
       LOG3(("Pushed Stream Match located id=0x%X key=%s\n",

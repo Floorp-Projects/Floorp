@@ -781,9 +781,8 @@ var tests = [ test_http2_post_big
             , test_http2_patch
             , test_http2_pushapi_1
             , test_http2_continuations
-            // Add new tests above here - best to add new tests before h1
-            // streams get too involved
             // These next two must always come in this order
+	    // best to add new tests before h1 streams get too involved
             , test_http2_h11required_stream
             , test_http2_h11required_session
             , test_http2_retry_rst

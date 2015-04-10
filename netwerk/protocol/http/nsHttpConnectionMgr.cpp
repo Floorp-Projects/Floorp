@@ -28,7 +28,6 @@
 #include "NullHttpTransaction.h"
 #include "nsIDNSRecord.h"
 #include "nsITransport.h"
-#include "nsISchedulingContext.h"
 #include "nsISocketTransportService.h"
 #include <algorithm>
 #include "Http2Compression.h"
@@ -1783,20 +1782,20 @@ nsHttpConnectionMgr::TryDispatchTransaction(nsConnectionEntry *ent,
         }
     }
 
-    // If this is not a blocking transaction and the scheduling context for it is
+    // If this is not a blocking transaction and the loadgroup for it is
     // currently processing one or more blocking transactions then we
     // need to just leave it in the queue until those are complete unless it is
     // explicitly marked as unblocked.
     if (!(caps & NS_HTTP_LOAD_AS_BLOCKING)) {
         if (!(caps & NS_HTTP_LOAD_UNBLOCKED)) {
-            nsISchedulingContext *schedulingContext = trans->SchedulingContext();
-            if (schedulingContext) {
+            nsILoadGroupConnectionInfo *loadGroupCI = trans->LoadGroupConnectionInfo();
+            if (loadGroupCI) {
                 uint32_t blockers = 0;
-                if (NS_SUCCEEDED(schedulingContext->GetBlockingTransactionCount(&blockers)) &&
+                if (NS_SUCCEEDED(loadGroupCI->GetBlockingTransactionCount(&blockers)) &&
                     blockers) {
                     // need to wait for blockers to clear
-                    LOG(("   blocked by scheduling context: [sc=%p trans=%p blockers=%d]\n",
-                         schedulingContext, trans, blockers));
+                    LOG(("   blocked by load group: [lgci=%p trans=%p blockers=%d]\n",
+                         loadGroupCI, trans, blockers));
                     return NS_ERROR_NOT_AVAILABLE;
                 }
             }

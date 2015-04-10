@@ -12,6 +12,7 @@
 #include "EventTokenBucket.h"
 #include "nsCOMPtr.h"
 #include "nsThreadUtils.h"
+#include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "TimingStruct.h"
 #include "Http2Push.h"
@@ -27,7 +28,6 @@ class nsIHttpActivityObserver;
 class nsIEventTarget;
 class nsIInputStream;
 class nsIOutputStream;
-class nsISchedulingContext;
 
 namespace mozilla { namespace net {
 
@@ -123,9 +123,9 @@ public:
     const TimeStamp GetPendingTime() { return mPendingTime; }
     bool UsesPipelining() const { return mCaps & NS_HTTP_ALLOW_PIPELINING; }
 
-    // overload of nsAHttpTransaction::SchedulingContext()
-    nsISchedulingContext *SchedulingContext() override { return mSchedulingContext.get(); }
-    void SetSchedulingContext(nsISchedulingContext *aSchedulingContext);
+    // overload of nsAHttpTransaction::LoadGroupConnectionInfo()
+    nsILoadGroupConnectionInfo *LoadGroupConnectionInfo() override { return mLoadGroupCI.get(); }
+    void SetLoadGroupConnectionInfo(nsILoadGroupConnectionInfo *aLoadGroupCI);
     void DispatchedAsBlocking();
     void RemoveDispatchedAsBlocking();
 
@@ -217,7 +217,7 @@ private:
     nsCOMPtr<nsISupports>           mSecurityInfo;
     nsCOMPtr<nsIAsyncInputStream>   mPipeIn;
     nsCOMPtr<nsIAsyncOutputStream>  mPipeOut;
-    nsCOMPtr<nsISchedulingContext>  mSchedulingContext;
+    nsCOMPtr<nsILoadGroupConnectionInfo> mLoadGroupCI;
 
     nsCOMPtr<nsISupports>             mChannel;
     nsCOMPtr<nsIHttpActivityObserver> mActivityDistributor;
