@@ -10,9 +10,6 @@ const LDAPSyncQueryContractID = "@mozilla.org/ldapsyncquery;1";
 const nsIPrefService = Components.interfaces.nsIPrefService;
 const PrefServiceContractID = "@mozilla.org/preferences-service;1";
 
-// set on a platform specific basis in platform.js
-platform = { value: "" };
-
 var gVersion;
 
 function getPrefBranch() {
