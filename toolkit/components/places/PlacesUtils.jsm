@@ -2303,7 +2303,6 @@ let GuidHelper = {
       return cached;
 
     let conn = yield PlacesUtils.promiseDBConnection();
-
     let rows = yield conn.executeCached(
       "SELECT b.id, b.guid from moz_bookmarks b WHERE b.guid = :guid LIMIT 1",
       { guid: aGuid });
@@ -2322,7 +2321,6 @@ let GuidHelper = {
       return cached;
 
     let conn = yield PlacesUtils.promiseDBConnection();
-
     let rows = yield conn.executeCached(
       "SELECT b.id, b.guid from moz_bookmarks b WHERE b.id = :id LIMIT 1",
       { id: aItemId });
