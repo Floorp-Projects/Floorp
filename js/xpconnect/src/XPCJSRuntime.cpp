@@ -521,6 +521,8 @@ EnableUniversalXPConnect(JSContext* cx)
     CompartmentPrivate* priv = CompartmentPrivate::Get(compartment);
     if (!priv)
         return true;
+    if (priv->universalXPConnectEnabled)
+        return true;
     priv->universalXPConnectEnabled = true;
 
     // Recompute all the cross-compartment wrappers leaving the newly-privileged
