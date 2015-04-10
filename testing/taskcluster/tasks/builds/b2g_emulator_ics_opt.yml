@@ -5,6 +5,9 @@ $inherits:
     build_name: 'emulator-ics'
 task:
   workerType: emulator-ics
+  routes:
+    - 'index.buildbot.branches.{{project}}.emulator-ics'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.emulator-ics'
   scopes:
     - 'docker-worker:cache:workspace-emulator-ics-opt'
   metadata:

@@ -110,7 +110,8 @@ function SmsService() {
   this.smsDefaultServiceId = this._getDefaultServiceId();
 
   this._portAddressedSmsApps = {};
-  this._portAddressedSmsApps[gWAP.WDP_PORT_PUSH] = this._handleSmsWdpPortPush.bind(this);
+  this._portAddressedSmsApps[gWAP.WDP_PORT_PUSH] =
+    (aMessage, aServiceId) => this._handleSmsWdpPortPush(aMessage, aServiceId);
 
   this._receivedSmsSegmentsMap = {};
 
@@ -202,7 +203,7 @@ SmsService.prototype = {
     }
     if (DEBUG) debug("Setting the timer for releasing the CPU wake lock.");
     this._smsHandledWakeLockTimer
-        .initWithCallback(this._releaseSmsHandledWakeLock.bind(this),
+        .initWithCallback(() => this._releaseSmsHandledWakeLock(),
                           SMS_HANDLED_WAKELOCK_TIMEOUT,
                           Ci.nsITimer.TYPE_ONE_SHOT);
   },
@@ -308,6 +309,8 @@ SmsService.prototype = {
                                          null,
                                          (aRv, aDomMessage) => {
           // TODO bug 832140 handle !Components.isSuccessCode(aRv)
+          this._broadcastSmsSystemMessage(
+            Ci.nsISmsMessenger_new.NOTIFICATION_TYPE_SENT_FAILED, aDomMessage);
           aRequest.notifySendMessageFailed(error, aDomMessage);
           Services.obs.notifyObservers(aDomMessage, kSmsFailedObserverTopic, null);
         });
@@ -373,16 +376,16 @@ SmsService.prototype = {
                                        (aRv, aDomMessage) => {
         // TODO bug 832140 handle !Components.isSuccessCode(aRv)
 
-        let topic = (aResponse.deliveryStatus ==
-                     RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS)
-                    ? kSmsDeliverySuccessObserverTopic
-                    : kSmsDeliveryErrorObserverTopic;
+        let [topic, notificationType] =
+          (aResponse.deliveryStatus == RIL.GECKO_SMS_DELIVERY_STATUS_SUCCESS)
+            ? [kSmsDeliverySuccessObserverTopic,
+               Ci.nsISmsMessenger.NOTIFICATION_TYPE_DELIVERY_SUCCESS]
+            : [kSmsDeliveryErrorObserverTopic,
+               Ci.nsISmsMessenger_new.NOTIFICATION_TYPE_DELIVERY_ERROR];
 
-        // Broadcasting a "sms-delivery-success" system message to open apps.
-        if (topic == kSmsDeliverySuccessObserverTopic) {
-          this._broadcastSmsSystemMessage(
-            Ci.nsISmsMessenger.NOTIFICATION_TYPE_DELIVERY_SUCCESS, aDomMessage);
-        }
+        // Broadcasting a "sms-delivery-success/sms-delivery-error" system
+        // message to open apps.
+        this._broadcastSmsSystemMessage(notificationType, aDomMessage);
 
         // Notifying observers the delivery status is updated.
         Services.obs.notifyObservers(aDomMessage, topic, null);
@@ -861,6 +864,8 @@ SmsService.prototype = {
     let saveSendingMessageCallback = (aRv, aSendingMessage) => {
       if (!Components.isSuccessCode(aRv)) {
         if (DEBUG) debug("Error! Fail to save sending message! aRv = " + aRv);
+        this._broadcastSmsSystemMessage(
+          Ci.nsISmsMessenger_new.NOTIFICATION_TYPE_SENT_FAILED, aSendingMessage);
         aRequest.notifySendMessageFailed(
           gMobileMessageDatabaseService.translateCrErrorToMessageCallbackError(aRv),
           aSendingMessage);
@@ -904,6 +909,8 @@ SmsService.prototype = {
                                          null,
                                          (aRv, aDomMessage) => {
           // TODO bug 832140 handle !Components.isSuccessCode(aRv)
+          this._broadcastSmsSystemMessage(
+            Ci.nsISmsMessenger_new.NOTIFICATION_TYPE_SENT_FAILED, aDomMessage);
           aRequest.notifySendMessageFailed(errorCode, aDomMessage);
           Services.obs.notifyObservers(aDomMessage, kSmsFailedObserverTopic, null);
         });
@@ -1042,7 +1049,7 @@ SmsService.prototype = {
                            this._processReceivedSmsSegment(segment));
     } else {
       gMobileMessageDatabaseService
-        .saveSmsSegment(segment, function notifyResult(aRv, aCompleteMessage) {
+        .saveSmsSegment(segment, (aRv, aCompleteMessage) => {
         handleReceivedAndAck(aRv,  // Ack according to the result after saving
                              aCompleteMessage);
       });

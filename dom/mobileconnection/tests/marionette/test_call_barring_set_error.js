@@ -4,107 +4,12 @@
 MARIONETTE_TIMEOUT = 60000;
 MARIONETTE_HEAD_JS = "head.js";
 
-const TEST_DATA = [
-  // Test passing invalid program.
-  {
-    options: {
-      "program": 5, /* Invalid program */
-      "enabled": true,
-      "password": "0000",
-      "serviceClass": 0
-    },
-    expectedError: "InvalidParameter"
-  }, {
-    options: {
-      "program": null,
-      "enabled": true,
-      "password": "0000",
-      "serviceClass": 0
-    },
-    expectedError: "InvalidParameter"
-  }, {
-    options: {
-      /* Undefined program */
-      "enabled": true,
-      "password": "0000",
-      "serviceClass": 0
-    },
-    expectedError: "InvalidParameter"
-  },
-  // Test passing invalid enabled.
-  {
-    options: {
-      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
-      "enabled": null,
-      "password": "0000",
-      "serviceClass": 0
-    },
-    expectedError: "InvalidParameter"
-  }, {
-    options: {
-      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
-      /* Undefined enabled */
-      "password": "0000",
-      "serviceClass": 0
-    },
-    expectedError: "InvalidParameter"
-  },
-  // Test passing invalid password.
-  {
-    options: {
-      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
-      "enabled": true,
-      "password": null,
-      "serviceClass": 0
-    },
-    expectedError: "InvalidParameter"
-  }, {
-    options: {
-      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
-      "enabled": true,
-      /* Undefined password */
-      "serviceClass": 0
-    },
-    expectedError: "InvalidParameter"
-  },
-  // Test passing invalid serviceClass.
-  {
-    options: {
-      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
-      "enabled": true,
-      "password": "0000",
-      "serviceClass": null
-    },
-    expectedError: "InvalidParameter"
-  }, {
-    options: {
-      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
-      "enabled": true,
-      "password": "0000",
-      /* Undefined serviceClass */
-    },
-    expectedError: "InvalidParameter"
-  },
-  // TODO: Bug 1027546 - [B2G][Emulator] Support call barring
-  // Currently emulator doesn't support call barring, so we expect to get a
-  // 'RequestNotSupported' error here.
-  {
-    options: {
-      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
-      "enabled": true,
-      "password": "0000",
-      "serviceClass": 0
-    },
-    expectedError: "RequestNotSupported"
-  }
-];
-
-function testSetCallBarringOption(aOptions, aExpectedError) {
-  log("Test setting call barring to " + JSON.stringify(aOptions));
+function testSetCallBarringOption(aExpectedError, aOptions) {
+  log("Test setCallBarringOption with " + JSON.stringify(aOptions));
 
   return setCallBarringOption(aOptions)
     .then(function resolve() {
-      ok(false, "changeCallBarringPassword success");
+      ok(false, "should be rejected");
     }, function reject(aError) {
       is(aError.name, aExpectedError, "failed to changeCallBarringPassword");
     });
@@ -112,11 +17,79 @@ function testSetCallBarringOption(aOptions, aExpectedError) {
 
 // Start tests
 startTestCommon(function() {
-  let promise = Promise.resolve();
-  for (let i = 0; i < TEST_DATA.length; i++) {
-    let data = TEST_DATA[i];
-    promise = promise.then(() => testSetCallBarringOption(data.options,
-                                                          data.expectedError));
-  }
-  return promise;
+  return Promise.resolve()
+
+    // Test program
+    .then(() => testSetCallBarringOption("InvalidParameter", {
+      "program": 5, /* Invalid program */
+      "enabled": true,
+      "password": "0000",
+      "serviceClass": 0
+    }))
+
+    .then(() => testSetCallBarringOption("InvalidParameter", {
+      "program": null,
+      "enabled": true,
+      "password": "0000",
+      "serviceClass": 0
+    }))
+
+    .then(() => testSetCallBarringOption("InvalidParameter", {
+      /* Undefined program */
+      "enabled": true,
+      "password": "0000",
+      "serviceClass": 0
+    }))
+
+    // Test enabled
+    .then(() => testSetCallBarringOption("InvalidParameter", {
+      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      "enabled": null, /* Invalid enabled */
+      "password": "0000",
+      "serviceClass": 0
+    }))
+
+    .then(() => testSetCallBarringOption("InvalidParameter", {
+      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      /* Undefined enabled */
+      "password": "0000",
+      "serviceClass": 0
+    }))
+
+    // Test password
+    .then(() => testSetCallBarringOption("InvalidParameter", {
+      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      "enabled": true,
+      "password": null, /* Invalid password */
+      "serviceClass": 0
+    }))
+
+    .then(() => testSetCallBarringOption("InvalidParameter", {
+      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      "enabled": true,
+      /* Undefined password */
+      "serviceClass": 0
+    }))
+
+    .then(() => testSetCallBarringOption("IncorrectPassword", {
+      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      "enabled": true,
+      "password": "1111", /* Incorrect password */
+      "serviceClass": 0
+    }))
+
+    // Test serviceClass
+    .then(() => testSetCallBarringOption("InvalidParameter", {
+      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      "enabled": true,
+      "password": "0000",
+      "serviceClass": null /* Invalid serviceClass */
+    }))
+
+    .then(() => testSetCallBarringOption("InvalidParameter", {
+      "program": MozMobileConnection.CALL_BARRING_PROGRAM_ALL_OUTGOING,
+      "enabled": true,
+      "password": "0000",
+      /* Undefined serviceClass */
+    }))
 });
