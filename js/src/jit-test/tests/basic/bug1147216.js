@@ -1,14 +1,25 @@
 // Ensure JSOP_LINENO (emitted after JSOP_EVAL) handles big line
 // numbers correctly.
-function f() {
+function getsource() {
     var s = "";
-    var stack;
     for (var i=0; i<66002; i++) {
 	s += "\n";
 	if (i === 66000)
 	    s += "eval('stack = Error().stack');";
     }
-    eval(s);
+    return s;
+}
+function test() {
+    var stack;
+    eval(getsource());
     assertEq(stack.indexOf("line 66002") > 0, true);
 }
-f();
+test();
+
+function testStrict() {
+    "use strict";
+    var stack;
+    eval(getsource());
+    assertEq(stack.indexOf("line 66002") > 0, true);
+}
+testStrict();
