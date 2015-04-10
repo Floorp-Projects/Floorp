@@ -25,12 +25,6 @@ loop.store = loop.store || {};
   var MAX_ROOM_CREATION_SIZE = loop.store.MAX_ROOM_CREATION_SIZE = 2;
 
   /**
-   * The number of hours for which the room will exist - default 8 weeks
-   * @type {Number}
-   */
-  var DEFAULT_EXPIRES_IN = loop.store.DEFAULT_EXPIRES_IN = 24 * 7 * 8;
-
-  /**
    * Room validation schema. See validate.js.
    * @type {Object}
    */
@@ -78,12 +72,6 @@ loop.store = loop.store || {};
      * @type {Number}
      */
     maxRoomCreationSize: MAX_ROOM_CREATION_SIZE,
-
-    /**
-     * The number of hours for which the room will exist - default 8 weeks
-     * @type {Number}
-     */
-    defaultExpiresIn: DEFAULT_EXPIRES_IN,
 
     /**
      * Registered actions.
@@ -275,8 +263,7 @@ loop.store = loop.store || {};
       var roomCreationData = {
         roomName:  this._generateNewRoomName(actionData.nameTemplate),
         roomOwner: actionData.roomOwner,
-        maxSize:   this.maxRoomCreationSize,
-        expiresIn: this.defaultExpiresIn
+        maxSize:   this.maxRoomCreationSize
       };
 
       this._notifications.remove("create-room-error");
