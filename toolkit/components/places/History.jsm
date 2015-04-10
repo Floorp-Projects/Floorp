@@ -84,47 +84,47 @@ Cu.importGlobalProperties(["URL"]);
 /**
  * Whenever we update or remove numerous pages, it is preferable
  * to yield time to the main thread every so often to avoid janking.
- * This constant determines the maximal number of notifications we
+ * These constants determine the maximal number of notifications we
  * may emit before we yield.
  */
 const NOTIFICATION_CHUNK_SIZE = 300;
+const ONRESULT_CHUNK_SIZE = 300;
 
 /**
  * Private shutdown barrier blocked by ongoing operations.
  */
 XPCOMUtils.defineLazyGetter(this, "operationsBarrier", () =>
-  new AsyncShutdown.Barrier("Sqlite.jsm: wait until all connections are closed")
+  new AsyncShutdown.Barrier("History.jsm: wait until all connections are closed")
 );
 
 /**
  * Shared connection
  */
-XPCOMUtils.defineLazyGetter(this, "DBConnPromised",
-  () => new Promise((resolve) => {
-    Sqlite.wrapStorageConnection({ connection: PlacesUtils.history.DBConnection } )
-          .then(db => {
-      try {
-        Sqlite.shutdown.addBlocker(
-          "Places History.jsm: Closing database wrapper",
-          Task.async(function*() {
-            yield operationsBarrier.wait();
-            gIsClosed = true;
-            yield db.close();
-          }),
-          () => ({
-            fetchState: () => ({
-              isClosed: gIsClosed,
-              operations: operationsBarrier.state,
-            })
-          }));
-      } catch (ex) {
-        // It's too late to block shutdown of Sqlite, so close the connection
-        // immediately.
-        db.close();
-        throw ex;
-      }
-      resolve(db);
-    });
+ XPCOMUtils.defineLazyGetter(this, "DBConnPromised", () =>
+  Task.spawn(function*() {
+    let db = yield PlacesUtils.promiseWrappedConnection();
+    try {
+      Sqlite.shutdown.addBlocker(
+        "Places History.jsm: Closing database wrapper",
+        Task.async(function*() {
+          yield operationsBarrier.wait();
+          gIsClosed = true;
+          yield db.close();
+        }),
+        () => ({
+          fetchState: () => ({
+            isClosed: gIsClosed,
+            operations: operationsBarrier.state,
+          })
+        })
+      );
+    } catch (ex) {
+      // It's too late to block shutdown of Sqlite, so close the connection
+      // immediately.
+      db.close();
+      throw ex;
+    }
+    return db;
   })
 );
 
@@ -320,6 +320,78 @@ this.History = Object.freeze({
   },
 
   /**
+   * Remove visits matching specific characteristics.
+   *
+   * Any change may be observed through nsINavHistoryObserver.
+   *
+   * @param filter: (object)
+   *      The `object` may contain some of the following
+   *      properties:
+   *          - beginDate: (Date) Remove visits that have
+   *                been added since this date (inclusive).
+   *          - endDate: (Date) Remove visits that have
+   *                been added before this date (inclusive).
+   *      If both `beginDate` and `endDate` are specified,
+   *      visits between `beginDate` (inclusive) and `end`
+   *      (inclusive) are removed.
+   *
+   * @param onResult: (function(VisitInfo), [optional])
+   *     A callback invoked for each visit found and removed.
+   *     Note that the referrer property of `VisitInfo`
+   *     is NOT populated.
+   *
+   * @return (Promise)
+   * @resolve (bool)
+   *      `true` if at least one visit was removed, `false`
+   *      otherwise.
+   * @throws (TypeError)
+   *      If `filter` does not have the expected type, in
+   *      particular if the `object` is empty.
+   */
+  removeVisitsByFilter: function(filter, onResult = null) {
+    ensureModuleIsOpen();
+
+    if (!filter || typeof filter != "object") {
+      throw new TypeError("Expected a filter");
+    }
+
+    let hasBeginDate = "beginDate" in filter;
+    let hasEndDate = "endDate" in filter;
+    if (hasBeginDate) {
+      ensureDate(filter.beginDate);
+    }
+    if (hasEndDate) {
+      ensureDate(filter.endDate);
+    }
+    if (hasBeginDate && hasEndDate && filter.beginDate > filter.endDate) {
+      throw new TypeError("`beginDate` should be at least as old as `endDate`");
+    }
+    if (!hasBeginDate && !hasEndDate) {
+      throw new TypeError("Expected a non-empty filter");
+    }
+
+    if (onResult && typeof onResult != "function") {
+      throw new TypeError("Invalid function: " + onResult);
+    }
+
+    return Task.spawn(function*() {
+      let promise = removeVisitsByFilter(filter, onResult);
+
+      operationsBarrier.client.addBlocker(
+        "History.removeVisitsByFilter",
+        promise
+      );
+
+      try {
+        return (yield promise);
+      } finally {
+        // Cleanup the barrier.
+        operationsBarrier.client.removeBlocker(promise);
+      }
+    });
+  },
+
+  /**
    * Determine if a page has been visited.
    *
    * @param pages: (URL or nsIURI)
@@ -440,6 +512,15 @@ function normalizeToURLOrGUID(key) {
 }
 
 /**
+ * Throw if an object is not a Date object.
+ */
+function ensureDate(arg) {
+  if (!arg || typeof arg != "object" || arg.constructor.name != "Date") {
+    throw new TypeError("Expected a Date, got " + arg);
+  }
+}
+
+/**
  * Convert a list of strings or numbers to its SQL
  * representation as a string.
  */
@@ -504,10 +585,220 @@ let clear = Task.async(function* () {
   notify(observers, "onManyFrecenciesChanged");
 });
 
+/**
+ * Remove a list of pages from `moz_places` by their id.
+ *
+ * @param db: (Sqlite connection)
+ *      The database.
+ * @param idList: (Array of integers)
+ *      The `moz_places` identifiers for the places to remove.
+ * @return (Promise)
+ */
+let removePagesById = Task.async(function*(db, idList) {
+  if (idList.length == 0) {
+    return;
+  }
+  yield db.execute(`DELETE FROM moz_places
+                    WHERE id IN ( ${ sqlList(idList) } )`);
+});
+
+/**
+ * Clean up pages whose history has been modified, by either
+ * removing them entirely (if they are marked for removal,
+ * typically because all visits have been removed and there
+ * are no more foreign keys such as bookmarks) or updating
+ * their frecency (otherwise).
+ *
+ * @param db: (Sqlite connection)
+ *      The database.
+ * @param pages: (Array of objects)
+ *      Pages that have been touched and that need cleaning up.
+ *      Each object should have the following properties:
+ *          - id: (number) The `moz_places` identifier for the place.
+ *          - hasVisits: (boolean) If `true`, there remains at least one
+ *              visit to this page, so the page should be kept and its
+ *              frecency updated.
+ *          - hasForeign: (boolean) If `true`, the page has at least
+ *              one foreign reference (i.e. a bookmark), so the page should
+ *              be kept and its frecency updated.
+ * @return (Promise)
+ */
+let cleanupPages = Task.async(function*(db, pages) {
+  yield invalidateFrecencies(db, [p.id for (p of pages) if (p.hasForeign || p.hasVisits)]);
+  yield removePagesById(db, [p.id for (p of pages) if (!p.hasForeign && !p.hasVisits)]);
+});
+
+/**
+ * Notify observers that pages have been removed/updated.
+ *
+ * @param db: (Sqlite connection)
+ *      The database.
+ * @param pages: (Array of objects)
+ *      Pages that have been touched and that need cleaning up.
+ *      Each object should have the following properties:
+ *          - id: (number) The `moz_places` identifier for the place.
+ *          - hasVisits: (boolean) If `true`, there remains at least one
+ *              visit to this page, so the page should be kept and its
+ *              frecency updated.
+ *          - hasForeign: (boolean) If `true`, the page has at least
+ *              one foreign reference (i.e. a bookmark), so the page should
+ *              be kept and its frecency updated.
+ * @return (Promise)
+ */
+let notifyCleanup = Task.async(function*(db, pages) {
+  let notifiedCount = 0;
+  let observers = PlacesUtils.history.getObservers();
+
+  let reason = Ci.nsINavHistoryObserver.REASON_DELETED;
+
+  for (let page of pages) {
+    let uri = NetUtil.newURI(page.url.href);
+    let guid = page.guid;
+    if (page.hasVisits) {
+      // For the moment, we do not have the necessary observer API
+      // to notify when we remove a subset of visits, see bug 937560.
+      continue;
+    }
+    if (page.hasForeign) {
+      // We have removed all visits, but the page is still alive, e.g.
+      // because of a bookmark.
+      notify(observers, "onDeleteVisits",
+        [uri, /*last visit*/0, guid, reason, -1]);
+    } else {
+      // The page has been entirely removed.
+      notify(observers, "onDeleteURI",
+        [uri, guid, reason]);
+    }
+    if (++notifiedCount % NOTIFICATION_CHUNK_SIZE == 0) {
+      // Every few notifications, yield time back to the main
+      // thread to avoid jank.
+      yield Promise.resolve();
+    }
+  }
+});
+
+/**
+ * Notify an `onResult` callback of a set of operations
+ * that just took place.
+ *
+ * @param data: (Array)
+ *      The data to send to the callback.
+ * @param onResult: (function [optional])
+ *      If provided, call `onResult` with `data[0]`, `data[1]`, etc.
+ *      Otherwise, do nothing.
+ */
+let notifyOnResult = Task.async(function*(data, onResult) {
+  if (!onResult) {
+    return;
+  }
+  let notifiedCount = 0;
+  for (let info of data) {
+    try {
+      onResult(info);
+    } catch (ex) {
+      // Errors should be reported but should not stop the operation.
+      Promise.reject(ex);
+    }
+    if (++notifiedCount % ONRESULT_CHUNK_SIZE == 0) {
+      // Every few notifications, yield time back to the main
+      // thread to avoid jank.
+      yield Promise.resolve();
+    }
+  }
+});
+
+// Inner implementation of History.removeVisitsByFilter.
+let removeVisitsByFilter = Task.async(function*(filter, onResult = null) {
+  let db = yield DBConnPromised;
+
+  // 1. Determine visits that took place during the interval.  Note
+  // that the database uses microseconds, while JS uses milliseconds,
+  // so we need to *1000 one way and /1000 the other way.
+  let dates = {
+    conditions: [],
+    args: {},
+  };
+  if ("beginDate" in filter) {
+    dates.conditions.push("visit_date >= :begin * 1000");
+    dates.args.begin = Number(filter.beginDate);
+  }
+  if ("endDate" in filter) {
+    dates.conditions.push("visit_date <= :end * 1000");
+    dates.args.end = Number(filter.endDate);
+  }
+
+  let visitsToRemove = [];
+  let pagesToInspect = new Set();
+  let onResultData = onResult ? [] : null;
+
+  yield db.executeCached(
+    `SELECT id, place_id, visit_date / 1000 AS date, visit_type FROM moz_historyvisits
+     WHERE ${ dates.conditions.join(" AND ") }`,
+     dates.args,
+     row => {
+       let id = row.getResultByName("id");
+       let place_id = row.getResultByName("place_id");
+       visitsToRemove.push(id);
+       pagesToInspect.add(place_id);
+
+       if (onResult) {
+         onResultData.push({
+           date: new Date(row.getResultByName("date")),
+           transition: row.getResultByName("visit_type")
+         });
+       }
+     }
+  );
+
+  try {
+    if (visitsToRemove.length == 0) {
+      // Nothing to do
+      return false;
+    }
+
+    let pages = [];
+    yield db.executeTransaction(function*() {
+      // 2. Remove all offending visits.
+      yield db.execute(`DELETE FROM moz_historyvisits
+                        WHERE id IN (${ sqlList(visitsToRemove) } )`);
+
+      // 3. Find out which pages have been orphaned
+      yield db.execute(
+        `SELECT id, url, guid,
+          (foreign_count != 0) AS has_foreign,
+          (last_visit_date NOTNULL) as has_visits
+         FROM moz_places
+         WHERE id IN (${ sqlList([...pagesToInspect]) })`,
+         null,
+         row => {
+           let page = {
+             id:  row.getResultByName("id"),
+             guid: row.getResultByName("guid"),
+             hasForeign: row.getResultByName("has_foreign"),
+             hasVisits: row.getResultByName("has_visits"),
+             url: new URL(row.getResultByName("url")),
+           };
+           pages.push(page);
+         });
+
+      // 4. Clean up and notify
+      yield cleanupPages(db, pages);
+    });
+
+    notifyCleanup(db, pages);
+    notifyOnResult(onResultData, onResult); // don't wait
+  } finally {
+    // Ensure we cleanup embed visits, even if we bailed out early.
+    PlacesUtils.history.clearEmbedVisits();
+  }
+
+  return visitsToRemove.length != 0;
+});
+
+
 // Inner implementation of History.remove.
 let remove = Task.async(function*({guids, urls}, onResult = null) {
   let db = yield DBConnPromised;
-
   // 1. Find out what needs to be removed
   let query =
     `SELECT id, url, guid, foreign_count, title, frecency FROM moz_places
@@ -515,79 +806,60 @@ let remove = Task.async(function*({guids, urls}, onResult = null) {
         OR url  IN (${ sqlList(urls)  })
      `;
 
+  let onResultData = onResult ? [] : null;
   let pages = [];
   let hasPagesToKeep = false;
   let hasPagesToRemove = false;
   yield db.execute(query, null, Task.async(function*(row) {
-    let toRemove = row.getResultByName("foreign_count") == 0;
-    if (toRemove) {
-      hasPagesToRemove = true;
-    } else {
+    let hasForeign = row.getResultByName("foreign_count") != 0;
+    if (hasForeign) {
       hasPagesToKeep = true;
+    } else {
+      hasPagesToRemove = true;
     }
     let id = row.getResultByName("id");
     let guid = row.getResultByName("guid");
     let url = row.getResultByName("url");
     let page = {
-      id: id,
-      guid: guid,
-      toRemove: toRemove,
-      uri: NetUtil.newURI(url),
+      id,
+      guid,
+      hasForeign,
+      hasVisits: false,
+      url: new URL(url),
     };
     pages.push(page);
     if (onResult) {
-      let pageInfo = {
+      onResultData.push({
         guid: guid,
         title: row.getResultByName("title"),
         frecency: row.getResultByName("frecency"),
         url: new URL(url)
-      };
-      try {
-        yield onResult(pageInfo);
-      } catch (ex) {
-        // Errors should be reported but should not stop `remove`.
-        Promise.reject(ex);
-      }
+      });
     }
   }));
 
-  if (pages.length == 0) {
-    // Nothing to do
-    return false;
-  }
-
-  yield db.executeTransaction(function*() {
-    // 2. Remove all visits to these pages.
-    yield db.execute(`DELETE FROM moz_historyvisits
-                      WHERE place_id IN (${ sqlList([p.id for (p of pages)]) })
-                     `);
-
-     // 3. For pages that should not be removed, invalidate frecencies.
-    if (hasPagesToKeep) {
-      yield invalidateFrecencies(db, [p.id for (p of pages) if (!p.toRemove)]);
+  try {
+    if (pages.length == 0) {
+      // Nothing to do
+      return false;
     }
 
-    // 4. For pages that should be removed, remove page.
-    if (hasPagesToRemove) {
-      let ids = [p.id for (p of pages) if (p.toRemove)];
-      yield db.execute(`DELETE FROM moz_places
-                        WHERE id IN (${ sqlList(ids) })
+    yield db.executeTransaction(function*() {
+      // 2. Remove all visits to these pages.
+      yield db.execute(`DELETE FROM moz_historyvisits
+                        WHERE place_id IN (${ sqlList([p.id for (p of pages)]) })
                        `);
-    }
 
-    // 5. Notify observers.
-    let observers = PlacesUtils.history.getObservers();
-    let reason = Ci.nsINavHistoryObserver.REASON_DELETED;
-    for (let {guid, uri, toRemove} of pages) {
-      if (toRemove) {
-        notify(observers, "onDeleteURI", [uri, guid, reason]);
-      } else {
-        notify(observers, "onDeleteVisits", [uri, 0, guid, reason, 0]);
-      }
-    }
-  });
+      // 3. Clean up and notify
+      yield cleanupPages(db, pages);
+    });
 
-  PlacesUtils.history.clearEmbedVisits();
+    notifyCleanup(db, pages);
+    notifyOnResult(onResultData, onResult); // don't wait
+  } finally {
+    // Ensure we cleanup embed visits, even if we bailed out early.
+    PlacesUtils.history.clearEmbedVisits();
+  }
 
   return hasPagesToRemove;
 });
