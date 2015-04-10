@@ -2928,7 +2928,7 @@ js::DescribeScriptedCallerForCompilation(JSContext* cx, MutableHandleScript mayb
                                             JSOp(*pc) == JSOP_STRICTSPREADEVAL;
         MOZ_ASSERT(*(pc + (isSpread ? JSOP_SPREADEVAL_LENGTH : JSOP_EVAL_LENGTH)) == JSOP_LINENO);
         *file = maybeScript->filename();
-        *linenop = GET_UINT16(pc + (JSOp(*pc) == JSOP_EVAL ? JSOP_EVAL_LENGTH
+        *linenop = GET_UINT32(pc + (JSOp(*pc) == JSOP_EVAL ? JSOP_EVAL_LENGTH
                                                            : JSOP_SPREADEVAL_LENGTH));
         *pcOffset = pc - maybeScript->code();
         *mutedErrors = maybeScript->mutedErrors();

@@ -523,11 +523,22 @@ BytecodeEmitter::checkTypeSet(JSOp op)
 }
 
 bool
-BytecodeEmitter::emitUint16Operand(JSOp op, uint32_t i)
+BytecodeEmitter::emitUint16Operand(JSOp op, uint32_t operand)
 {
-    MOZ_ASSERT(i <= UINT16_MAX);
-    if (!emit3(op, UINT16_HI(i), UINT16_LO(i)))
+    MOZ_ASSERT(operand <= UINT16_MAX);
+    if (!emit3(op, UINT16_HI(operand), UINT16_LO(operand)))
         return false;
+    checkTypeSet(op);
+    return true;
+}
+
+bool
+BytecodeEmitter::emitUint32Operand(JSOp op, uint32_t operand)
+{
+    ptrdiff_t off;
+    if (!emitN(op, 4, &off))
+        return false;
+    SET_UINT32(code(off), operand);
     checkTypeSet(op);
     return true;
 }
@@ -6426,7 +6437,7 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
         pn->isOp(JSOP_STRICTSPREADEVAL))
     {
         uint32_t lineNum = parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin);
-        if (!emitUint16Operand(JSOP_LINENO, lineNum))
+        if (!emitUint32Operand(JSOP_LINENO, lineNum))
             return false;
     }
     if (pn->pn_xflags & PNX_SETCALL) {
