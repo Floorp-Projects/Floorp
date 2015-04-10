@@ -13,6 +13,7 @@
 #include "nsIHttpChannelInternal.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "nsINetworkInterceptController.h"
+#include "nsIMutableArray.h"
 #include "nsPIDOMWindow.h"
 #include "nsScriptLoader.h"
 #include "nsDebug.h"
@@ -2817,6 +2818,130 @@ ServiceWorkerManager::RemoveRegistration(ServiceWorkerRegistrationInfo* aRegistr
     return;
   }
   mActor->SendUnregisterServiceWorker(principalInfo, NS_ConvertUTF8toUTF16(reg->mScope));
+}
+
+class ServiceWorkerDataInfo final : public nsIServiceWorkerInfo
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSISERVICEWORKERINFO
+
+  static already_AddRefed<ServiceWorkerDataInfo>
+  Create(const ServiceWorkerRegistrationData& aData);
+
+private:
+  ServiceWorkerDataInfo()
+  {}
+
+  ~ServiceWorkerDataInfo()
+  {}
+
+  nsCOMPtr<nsIPrincipal> mPrincipal;
+  nsString mScope;
+  nsString mScriptSpec;
+  nsString mCurrentWorkerURL;
+  nsString mActiveCacheName;
+  nsString mWaitingCacheName;
+};
+
+NS_IMPL_ISUPPORTS(ServiceWorkerDataInfo, nsIServiceWorkerInfo)
+
+/* static */ already_AddRefed<ServiceWorkerDataInfo>
+ServiceWorkerDataInfo::Create(const ServiceWorkerRegistrationData& aData)
+{
+  AssertIsOnMainThread();
+
+  nsRefPtr<ServiceWorkerDataInfo> info = new ServiceWorkerDataInfo();
+
+  info->mPrincipal = PrincipalInfoToPrincipal(aData.principal());
+  if (!info->mPrincipal) {
+    return nullptr;
+  }
+
+  CopyUTF8toUTF16(aData.scope(), info->mScope);
+  CopyUTF8toUTF16(aData.scriptSpec(), info->mScriptSpec);
+  CopyUTF8toUTF16(aData.currentWorkerURL(), info->mCurrentWorkerURL);
+  info->mActiveCacheName = aData.activeCacheName();
+  info->mWaitingCacheName = aData.waitingCacheName();
+
+  return info.forget();
+}
+
+NS_IMETHODIMP
+ServiceWorkerDataInfo::GetPrincipal(nsIPrincipal** aPrincipal)
+{
+  AssertIsOnMainThread();
+  NS_ADDREF(*aPrincipal = mPrincipal);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerDataInfo::GetScope(nsAString& aScope)
+{
+  AssertIsOnMainThread();
+  aScope = mScope;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerDataInfo::GetScriptSpec(nsAString& aScriptSpec)
+{
+  AssertIsOnMainThread();
+  aScriptSpec = mScriptSpec;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerDataInfo::GetCurrentWorkerURL(nsAString& aCurrentWorkerURL)
+{
+  AssertIsOnMainThread();
+  aCurrentWorkerURL = mCurrentWorkerURL;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerDataInfo::GetActiveCacheName(nsAString& aActiveCacheName)
+{
+  AssertIsOnMainThread();
+  aActiveCacheName = mActiveCacheName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerDataInfo::GetWaitingCacheName(nsAString& aWaitingCacheName)
+{
+  AssertIsOnMainThread();
+  aWaitingCacheName = mWaitingCacheName;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerManager::GetAllRegistrations(nsIArray** aResult)
+{
+  AssertIsOnMainThread();
+
+  nsRefPtr<ServiceWorkerRegistrar> swr = ServiceWorkerRegistrar::Get();
+  MOZ_ASSERT(swr);
+
+  nsTArray<ServiceWorkerRegistrationData> data;
+  swr->GetRegistrations(data);
+
+  nsCOMPtr<nsIMutableArray> array(do_CreateInstance(NS_ARRAY_CONTRACTID));
+  if (!array) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  for (uint32_t i = 0, len = data.Length(); i < len; ++i) {
+    nsCOMPtr<nsIServiceWorkerInfo> info = ServiceWorkerDataInfo::Create(data[i]);
+    if (!info) {
+      return NS_ERROR_FAILURE;
+    }
+
+    array->AppendElement(info, false);
+  }
+
+  array.forget(aResult);
+  return NS_OK;
 }
 
 void

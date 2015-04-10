@@ -543,7 +543,7 @@ nsComputedDOMStyle::GetPresShellForContent(nsIContent* aContent)
 // on a nsComputedDOMStyle object, but must be defined to avoid
 // compile errors.
 css::Declaration*
-nsComputedDOMStyle::GetCSSDeclaration(bool)
+nsComputedDOMStyle::GetCSSDeclaration(Operation)
 {
   NS_RUNTIMEABORT("called nsComputedDOMStyle::GetCSSDeclaration");
   return nullptr;
