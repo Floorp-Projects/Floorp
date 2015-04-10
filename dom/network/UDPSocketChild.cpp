@@ -6,6 +6,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/net/NeckoChild.h"
+#include "mozilla/dom/PermissionMessageUtils.h"
 
 using mozilla::net::gNeckoChild;
 
@@ -63,6 +64,7 @@ UDPSocketChild::~UDPSocketChild()
 
 NS_IMETHODIMP
 UDPSocketChild::Bind(nsIUDPSocketInternal* aSocket,
+                     nsIPrincipal* aPrincipal,
                      const nsACString& aHost,
                      uint16_t aPort,
                      bool aAddressReuse,
@@ -73,7 +75,8 @@ UDPSocketChild::Bind(nsIUDPSocketInternal* aSocket,
   mSocket = aSocket;
   AddIPDLReference();
 
-  gNeckoChild->SendPUDPSocketConstructor(this, mFilterName);
+  gNeckoChild->SendPUDPSocketConstructor(this, IPC::Principal(aPrincipal),
+                                         mFilterName);
 
   SendBind(UDPAddressInfo(nsCString(aHost), aPort), aAddressReuse, aLoopback);
   return NS_OK;

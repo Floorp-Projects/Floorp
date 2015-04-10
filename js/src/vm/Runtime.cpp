@@ -81,6 +81,7 @@ PerThreadData::PerThreadData(JSRuntime* runtime)
     suppressGC(0),
 #ifdef DEBUG
     ionCompiling(false),
+    gcSweeping(false),
 #endif
     activeCompilations(0)
 {}

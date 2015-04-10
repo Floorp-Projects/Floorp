@@ -47,6 +47,16 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
              'hardware/libhardware/include',
          ]
     ]
+    EXTRA_DSO_LDOPTS += [
+        '-lutils',
+        '-lstagefright',
+        '-lmedia',
+        '-lstagefright_omx',
+        '-lbinder',
+        '-lui',
+        '-lhardware',
+        '-lcutils',
+    ]
 else:
     USE_LIBS += [
         '/media/omx-plugin/lib/ics/libstagefright/stagefright',

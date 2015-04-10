@@ -5,29 +5,76 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 if CONFIG['MOZ_B2G_BT']:
-    SOURCES += [
-        'BluetoothAdapter.cpp',
-        'BluetoothDevice.cpp',
-        'BluetoothHidManager.cpp',
-        'BluetoothInterface.cpp',
-        'BluetoothInterfaceHelpers.cpp',
-        'BluetoothManager.cpp',
-        'BluetoothProfileController.cpp',
-        'BluetoothPropertyContainer.cpp',
-        'BluetoothReplyRunnable.cpp',
-        'BluetoothService.cpp',
-        'BluetoothUtils.cpp',
-        'BluetoothUuid.cpp',
-        'ipc/BluetoothChild.cpp',
-        'ipc/BluetoothParent.cpp',
-        'ipc/BluetoothServiceChildProcess.cpp',
-        'ObexBase.cpp'
-    ]
 
-    if CONFIG['MOZ_B2G_RIL']:
+    #
+    # Generic code
+    #
+
+    if CONFIG['MOZ_B2G_BT_API_V2']:
         SOURCES += [
-            'BluetoothRilListener.cpp',
+            'bluetooth2/BluetoothAdapter.cpp',
+            'bluetooth2/BluetoothClassOfDevice.cpp',
+            'bluetooth2/BluetoothDevice.cpp',
+            'bluetooth2/BluetoothDiscoveryHandle.cpp',
+            'bluetooth2/BluetoothGatt.cpp',
+            'bluetooth2/BluetoothGattCharacteristic.cpp',
+            'bluetooth2/BluetoothGattDescriptor.cpp',
+            'bluetooth2/BluetoothGattService.cpp',
+            'bluetooth2/BluetoothHidManager.cpp',
+            'bluetooth2/BluetoothInterface.cpp',
+            'bluetooth2/BluetoothManager.cpp',
+            'bluetooth2/BluetoothPairingHandle.cpp',
+            'bluetooth2/BluetoothPairingListener.cpp',
+            'bluetooth2/BluetoothProfileController.cpp',
+            'bluetooth2/BluetoothReplyRunnable.cpp',
+            'bluetooth2/BluetoothService.cpp',
+            'bluetooth2/BluetoothUtils.cpp',
+            'bluetooth2/BluetoothUuid.cpp',
+            'bluetooth2/ipc/BluetoothChild.cpp',
+            'bluetooth2/ipc/BluetoothParent.cpp',
+            'bluetooth2/ipc/BluetoothServiceChildProcess.cpp',
+            'bluetooth2/ObexBase.cpp'
         ]
+        if CONFIG['MOZ_B2G_RIL']:
+            SOURCES += [
+                'bluetooth2/BluetoothRilListener.cpp',
+            ]
+        LOCAL_INCLUDES += [
+            'bluetooth2',
+            'bluetooth2/ipc',
+        ]
+        DEFINES['MOZ_B2G_BT_API_V2'] = True
+    else:
+        SOURCES += [
+            'bluetooth1/BluetoothAdapter.cpp',
+            'bluetooth1/BluetoothDevice.cpp',
+            'bluetooth1/BluetoothHidManager.cpp',
+            'bluetooth1/BluetoothInterface.cpp',
+            'bluetooth1/BluetoothInterfaceHelpers.cpp',
+            'bluetooth1/BluetoothManager.cpp',
+            'bluetooth1/BluetoothProfileController.cpp',
+            'bluetooth1/BluetoothPropertyContainer.cpp',
+            'bluetooth1/BluetoothReplyRunnable.cpp',
+            'bluetooth1/BluetoothService.cpp',
+            'bluetooth1/BluetoothUtils.cpp',
+            'bluetooth1/BluetoothUuid.cpp',
+            'bluetooth1/ipc/BluetoothChild.cpp',
+            'bluetooth1/ipc/BluetoothParent.cpp',
+            'bluetooth1/ipc/BluetoothServiceChildProcess.cpp',
+            'bluetooth1/ObexBase.cpp'
+        ]
+        if CONFIG['MOZ_B2G_RIL']:
+            SOURCES += [
+                'bluetooth1/BluetoothRilListener.cpp',
+            ]
+        LOCAL_INCLUDES += [
+            'bluetooth1',
+            'bluetooth1/ipc',
+        ]
+
+    #
+    # Bluetooth backends
+    #
 
     if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         if CONFIG['MOZ_B2G_BT_BLUEZ']:
@@ -83,6 +130,11 @@ if CONFIG['MOZ_B2G_BT']:
                 LOCAL_INCLUDES += [
                     'bluedroid/hfp-fallback',
                 ]
+            if CONFIG['MOZ_B2G_BT_API_V2']:
+                SOURCES += [
+                    'bluedroid/BluetoothGattHALInterface.cpp',
+                    'bluedroid/BluetoothGattManager.cpp',
+                ]
 
             DEFINES['MOZ_B2G_BT_BLUEDROID'] = True
             if CONFIG['MOZ_B2G_BT_DAEMON']:
@@ -104,26 +156,48 @@ if CONFIG['MOZ_B2G_BT']:
 
     FINAL_LIBRARY = 'xul'
 
-    LOCAL_INCLUDES += [
-        'ipc',
+#
+# Exported interfaces
+#
+
+if CONFIG['MOZ_B2G_BT_API_V2']:
+    EXPORTS.mozilla.dom.bluetooth.ipc += [
+        'bluetooth2/ipc/BluetoothMessageUtils.h',
     ]
-
-EXPORTS.mozilla.dom.bluetooth.ipc += [
-    'ipc/BluetoothMessageUtils.h',
-]
-
-EXPORTS.mozilla.dom.bluetooth += [
-    'BluetoothAdapter.h',
-    'BluetoothCommon.h',
-    'BluetoothDevice.h',
-    'BluetoothManager.h',
-]
-
-IPDL_SOURCES += [
-    'ipc/BluetoothTypes.ipdlh',
-    'ipc/PBluetooth.ipdl',
-    'ipc/PBluetoothRequest.ipdl',
-]
+    EXPORTS.mozilla.dom.bluetooth += [
+        'bluetooth2/BluetoothAdapter.h',
+        'bluetooth2/BluetoothClassOfDevice.h',
+        'bluetooth2/BluetoothCommon.h',
+        'bluetooth2/BluetoothDevice.h',
+        'bluetooth2/BluetoothDiscoveryHandle.h',
+        'bluetooth2/BluetoothGatt.h',
+        'bluetooth2/BluetoothGattCharacteristic.h',
+        'bluetooth2/BluetoothGattDescriptor.h',
+        'bluetooth2/BluetoothGattService.h',
+        'bluetooth2/BluetoothManager.h',
+        'bluetooth2/BluetoothPairingHandle.h',
+        'bluetooth2/BluetoothPairingListener.h',
+    ]
+    IPDL_SOURCES += [
+        'bluetooth2/ipc/BluetoothTypes.ipdlh',
+        'bluetooth2/ipc/PBluetooth.ipdl',
+        'bluetooth2/ipc/PBluetoothRequest.ipdl',
+    ]
+else:
+    EXPORTS.mozilla.dom.bluetooth.ipc += [
+        'bluetooth1/ipc/BluetoothMessageUtils.h',
+    ]
+    EXPORTS.mozilla.dom.bluetooth += [
+        'bluetooth1/BluetoothAdapter.h',
+        'bluetooth1/BluetoothCommon.h',
+        'bluetooth1/BluetoothDevice.h',
+        'bluetooth1/BluetoothManager.h',
+    ]
+    IPDL_SOURCES += [
+        'bluetooth1/ipc/BluetoothTypes.ipdlh',
+        'bluetooth1/ipc/PBluetooth.ipdl',
+        'bluetooth1/ipc/PBluetoothRequest.ipdl',
+    ]
 
 FAIL_ON_WARNINGS = True
 

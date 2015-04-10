@@ -75,8 +75,8 @@ public:
 
   virtual bool RecvTextSubstring(const uint64_t& aID,
                                  const int32_t& aStartOffset,
-                                 const int32_t& aEndOffset, nsString* aText)
-    override;
+                                 const int32_t& aEndOffset, nsString* aText,
+                                 bool* aValid) override;
 
   virtual bool RecvGetTextAfterOffset(const uint64_t& aID,
                                       const int32_t& aOffset,
@@ -166,22 +166,22 @@ public:
 
   virtual bool RecvInsertText(const uint64_t& aID,
                               const nsString& aText,
-                              const int32_t& aPosition) override;
+                              const int32_t& aPosition, bool* aValid) override;
 
   virtual bool RecvCopyText(const uint64_t& aID,
                             const int32_t& aStartPos,
-                            const int32_t& aEndPos) override;
+                            const int32_t& aEndPos, bool* aValid) override;
 
   virtual bool RecvCutText(const uint64_t& aID,
                            const int32_t& aStartPos,
-                           const int32_t& aEndPos) override;
+                           const int32_t& aEndPos, bool* aValid) override;
 
   virtual bool RecvDeleteText(const uint64_t& aID,
                               const int32_t& aStartPos,
-                              const int32_t& aEndPos) override;
+                              const int32_t& aEndPos, bool* aValid) override;
 
   virtual bool RecvPasteText(const uint64_t& aID,
-                             const int32_t& aPosition) override;
+                             const int32_t& aPosition, bool* aValid) override;
 
   virtual bool RecvImagePosition(const uint64_t& aID,
                                  const uint32_t& aCoordType,

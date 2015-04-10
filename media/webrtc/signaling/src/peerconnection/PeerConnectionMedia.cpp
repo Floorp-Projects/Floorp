@@ -23,6 +23,7 @@
 #include "signaling/src/jsep/JsepSession.h"
 #include "signaling/src/jsep/JsepTransport.h"
 
+#if !defined(MOZILLA_XPCOMRT_API)
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsICancelable.h"
@@ -31,9 +32,11 @@
 #include "nsIContentPolicy.h"
 #include "nsIProxyInfo.h"
 #include "nsIProtocolProxyService.h"
+#endif // !defined(MOZILLA_XPCOMRT_API)
+
 #include "nsProxyRelease.h"
 
-#ifdef MOZILLA_INTERNAL_API
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
 #include "MediaStreamList.h"
 #include "nsIScriptGlobalObject.h"
 #include "mozilla/Preferences.h"
@@ -153,6 +156,7 @@ PeerConnectionImpl* PeerConnectionImpl::CreatePeerConnection()
   return pc;
 }
 
+#if !defined(MOZILLA_XPCOMRT_API)
 NS_IMETHODIMP PeerConnectionMedia::ProtocolProxyQueryHandler::
 OnProxyAvailable(nsICancelable *request,
                  nsIChannel *aChannel,
@@ -199,6 +203,7 @@ OnProxyAvailable(nsICancelable *request,
 }
 
 NS_IMPL_ISUPPORTS(PeerConnectionMedia::ProtocolProxyQueryHandler, nsIProtocolProxyCallback)
+#endif // !defined(MOZILLA_XPCOMRT_API)
 
 PeerConnectionMedia::PeerConnectionMedia(PeerConnectionImpl *parent)
     : mParent(parent),
@@ -217,6 +222,10 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
                                    const std::vector<NrIceTurnServer>& turn_servers)
 {
   nsresult rv;
+#if defined(MOZILLA_XPCOMRT_API)
+  // TODO(Bug 1126039) Standalone XPCOMRT does not currently support nsIProtocolProxyService or nsIIOService
+  mProxyResolveCompleted = true;
+#else
 
   nsCOMPtr<nsIProtocolProxyService> pps =
     do_GetService(NS_PROTOCOLPROXYSERVICE_CONTRACTID, &rv);
@@ -237,7 +246,7 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
 
   nsCOMPtr<nsIChannel> channel;
 
-#ifdef MOZILLA_INTERNAL_API
+#if defined(MOZILLA_INTERNAL_API)
   nsCOMPtr<nsIDocument> principal = mParent->GetWindow()->GetExtantDoc();
 #else
   // For unit-tests
@@ -256,7 +265,7 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
     CSFLogError(logTag, "%s: Failed to get systemPrincipal: %d", __FUNCTION__, (int)rv);
     return NS_ERROR_FAILURE;
   }
-#endif
+#endif // defined(MOZILLA_INTERNAL_API)
 
   rv = NS_NewChannel(getter_AddRefs(channel),
                      fakeHttpsLocation,
@@ -279,6 +288,7 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
     CSFLogError(logTag, "%s: Failed to resolve protocol proxy: %d", __FUNCTION__, (int)rv);
     return NS_ERROR_FAILURE;
   }
+#endif // defined(MOZILLA_XPCOMRT_API)
 
   // TODO(ekr@rtfm.com): need some way to set not offerer later
   // Looks like a bug in the NrIceCtx API.
@@ -296,7 +306,7 @@ nsresult PeerConnectionMedia::Init(const std::vector<NrIceStunServer>& stun_serv
     return rv;
   }
   // Give us a way to globally turn off TURN support
-#ifdef MOZILLA_INTERNAL_API
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   bool disabled = Preferences::GetBool("media.peerconnection.turn.disable", false);
 #else
   bool disabled = false;
@@ -1045,7 +1055,7 @@ LocalSourceStreamInfo::TakePipelineFrom(RefPtr<LocalSourceStreamInfo>& info,
   return NS_OK;
 }
 
-#ifdef MOZILLA_INTERNAL_API
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
 /**
  * Tells you if any local streams is isolated to a specific peer identity.
  * Obviously, we want all the streams to be isolated equally so that they can
@@ -1139,7 +1149,7 @@ SourceStreamInfo::AnyCodecHasPluginID(uint64_t aPluginID)
   return false;
 }
 
-#ifdef MOZILLA_INTERNAL_API
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
 nsRefPtr<mozilla::dom::VideoStreamTrack>
 SourceStreamInfo::GetVideoTrackByTrackId(const std::string& trackId)
 {

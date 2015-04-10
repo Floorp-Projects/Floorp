@@ -5086,7 +5086,8 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
       if (overflowLines) {
         prevSibLine = overflowLines->mLines.end();
         prevSiblingIndex = -1;
-        found = nsLineBox::RFindLineContaining(aPrevSibling, lineList->begin(),
+        found = nsLineBox::RFindLineContaining(aPrevSibling,
+                                               overflowLines->mLines.begin(),
                                                prevSibLine,
                                                overflowLines->mFrames.LastChild(),
                                                &prevSiblingIndex);
@@ -5097,7 +5098,7 @@ nsBlockFrame::AddFrames(nsFrameList& aFrameList, nsIFrame* aPrevSibling)
       } else {
         // Note: defensive code! RFindLineContaining must not return
         // false in this case, so if it does...
-        NS_NOTREACHED("prev sibling not in line list");
+        MOZ_ASSERT_UNREACHABLE("prev sibling not in line list");
         aPrevSibling = nullptr;
         prevSibLine = lineList->end();
       }

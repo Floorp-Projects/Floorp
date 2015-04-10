@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1026350
+-->
+<head>
+<meta charset="utf-8">
+<title>Test Inputport Connection Event</title>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1026350">Test Inputport Connection Event
+</a>
+<script type="application/javascript;version=1.8">
+
+'use strict';
+
+SimpleTest.waitForExplicitFinish();
+
+function testInputportConnectionEvent() {
+  return new Promise(function(resolve, reject) {
+    var inputPortMgr = navigator.inputPortManager;
+    inputPortMgr.getInputPorts().then(
+      function(aPorts) {
+        ok(aPorts.length > 0, "Got at least 1 inputport.");
+        var port0 = aPorts[0];
+        var port0_isConnected = port0.connected;
+        port0.onconnect = function(aEvent) {
+          var port = aEvent.target;
+          is(port.id, port0.id, "The inputport ID should be the same");
+          ok(port.connected, "The connected value matches the connect evnet purpose");
+          is(port.connected, !port0_isConnected, "The connected value should change");
+          resolve();
+        }
+        port0.ondisconnect = function (aEvent) {
+          var port = aEvent.target;
+          is(port.id, port0.id, "The inputport ID should be the same");
+          ok(!port.connected, "The connected value matches the disconnect evnet purpose");
+          is(port.connected, !port0_isConnected, "The connected value should change");
+          resolve();
+        }
+      },
+      function(aError) {
+        ok(false, "Fail to get input ports: " + aError);
+        resolve();
+      }
+    );
+  });
+}
+
+function runTest() {
+  ok(navigator.inputPortManager, 'should have navigator.inputPortManager');
+
+  testInputportConnectionEvent()
+  .then(function() {
+    info('test finished');
+    SimpleTest.finish();
+  });
+}
+
+SpecialPowers.pushPrefEnv({"set": [["dom.inputport.enabled", true],
+                                    //to ignore app scope check.
+                                   ["dom.ignore_webidl_scope_checks", true]]}, function() {
+  SpecialPowers.pushPermissions(
+    [{'type': 'inputport', 'allow': true, 'context': document}], runTest);
+});
+
+ </script>
+ </pre>
+ </body>
+ </html>

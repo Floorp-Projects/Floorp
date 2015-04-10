@@ -224,6 +224,7 @@
 @RESPATH@/components/dom_threads.xpt
 @RESPATH@/components/dom_traversal.xpt
 @RESPATH@/components/dom_tv.xpt
+@RESPATH@/components/dom_inputport.xpt
 @RESPATH@/components/dom_views.xpt
 @RESPATH@/components/dom_voicemail.xpt
 #ifdef MOZ_WEBSPEECH

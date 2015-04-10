@@ -4,6 +4,8 @@
   * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+Cu.import("resource://gre/modules/Services.jsm");
+
 const HELLO_WORLD = "Hello World";
 
 add_test(function test_udp_message_raw_data() {
@@ -11,7 +13,7 @@ add_test(function test_udp_message_raw_data() {
 
   let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
 
-  socket.init(-1, true);
+  socket.init(-1, true, Services.scriptSecurityManager.getSystemPrincipal());
   do_print("Port assigned : " + socket.port);
   socket.asyncListen({
     QueryInterface : XPCOMUtils.generateQI([Ci.nsIUDPSocketListener]),
@@ -38,7 +40,7 @@ add_test(function test_udp_send_stream() {
 
   let socket = Cc["@mozilla.org/network/udp-socket;1"].createInstance(Ci.nsIUDPSocket);
 
-  socket.init(-1, true);
+  socket.init(-1, true, Services.scriptSecurityManager.getSystemPrincipal());
   socket.asyncListen({
     QueryInterface : XPCOMUtils.generateQI([Ci.nsIUDPSocketListener]),
     onPacketReceived : function(aSocket, aMessage){

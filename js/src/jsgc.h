@@ -1026,7 +1026,7 @@ class GCParallelTask
     // This should be friended to HelperThread, but cannot be because it
     // would introduce several circular dependencies.
   public:
-    void runFromHelperThread();
+    virtual void runFromHelperThread();
 };
 
 struct GCChunkHasher {
