@@ -5038,6 +5038,7 @@ RilObject.prototype[REQUEST_QUERY_FACILITY_LOCK] = function REQUEST_QUERY_FACILI
 
   if (options.queryServiceClass) {
     options.enabled = (services & options.queryServiceClass) ? true : false;
+    options.serviceClass = options.queryServiceClass;
   } else {
     options.enabled = services ? true : false;
   }

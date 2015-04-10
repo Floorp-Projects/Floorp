@@ -488,6 +488,17 @@ class MochitestRunner(MozbuildObject):
 
         return result
 
+    def run_android_test(self, args):
+        self.tests_dir = os.path.join(self.topobjdir, '_tests')
+        self.mochitest_dir = os.path.join(self.tests_dir, 'testing', 'mochitest')
+        import imp
+        path = os.path.join(self.mochitest_dir, 'runtestsremote.py')
+        with open(path, 'r') as fh:
+            imp.load_module('runtestsremote', fh, path,
+                ('.py', 'r', imp.PY_SOURCE))
+        import runtestsremote
+
+        sys.exit(runtestsremote.main(args))
 
 def add_mochitest_general_args(parser):
     parser.add_argument(
@@ -784,6 +795,19 @@ def is_platform_in(*platforms):
         ' or '.join(platforms))
     return is_platform_supported
 
+def verify_host_bin():
+    # validate MOZ_HOST_BIN environment variables for Android tests
+    MOZ_HOST_BIN = os.environ.get('MOZ_HOST_BIN')
+    if not MOZ_HOST_BIN:
+        print('environment variable MOZ_HOST_BIN must be set to a directory containing host xpcshell')
+        return 1
+    elif not os.path.isdir(MOZ_HOST_BIN):
+        print('$MOZ_HOST_BIN does not specify a directory')
+        return 1
+    elif not os.path.isfile(os.path.join(MOZ_HOST_BIN, 'xpcshell')):
+        print('$MOZ_HOST_BIN/xpcshell does not exist')
+        return 1
+    return 0
 
 @CommandProvider
 class MachCommands(MachCommandBase):
@@ -797,7 +821,7 @@ class MachCommands(MachCommandBase):
     @Command(
         'mochitest-plain',
         category='testing',
-        conditions=[is_platform_in('firefox', 'mulet', 'b2g', 'b2g_desktop')],
+        conditions=[is_platform_in('firefox', 'mulet', 'b2g', 'b2g_desktop', 'android')],
         description='Run a plain mochitest (integration test, plain web page).',
         parser=_st_parser)
     def run_mochitest_plain(self, test_paths, **kwargs):
@@ -807,11 +831,13 @@ class MachCommands(MachCommandBase):
             return self.run_mochitest_remote(test_paths, **kwargs)
         elif conditions.is_b2g_desktop(self):
             return self.run_b2g_desktop(test_paths, **kwargs)
+        elif conditions.is_android(self):
+            return self.run_mochitest_android(test_paths, **kwargs)
 
     @Command(
         'mochitest-chrome',
         category='testing',
-        conditions=[is_platform_in('firefox', 'emulator')],
+        conditions=[is_platform_in('firefox', 'emulator', 'android')],
         description='Run a chrome mochitest (integration test with some XUL).',
         parser=_st_parser)
     def run_mochitest_chrome(self, test_paths, **kwargs):
@@ -819,6 +845,8 @@ class MachCommands(MachCommandBase):
             return self.run_mochitest(test_paths, 'chrome', **kwargs)
         elif conditions.is_b2g(self) and conditions.is_emulator(self):
             return self.run_mochitest_remote(test_paths, chrome=True, **kwargs)
+        elif conditions.is_android(self):
+            return self.run_mochitest_android(test_paths, chrome=True, **kwargs)
 
     @Command(
         'mochitest-browser',
@@ -1017,6 +1045,32 @@ class MachCommands(MachCommandBase):
         mochitest = self._spawn(MochitestRunner)
         return mochitest.run_b2g_test(test_paths=test_paths, **kwargs)
 
+    def run_mochitest_android(self, test_paths, chrome=False, **kwargs):
+        host_ret = verify_host_bin()
+        if host_ret != 0:
+            return host_ret
+
+        args = [
+            '--xre-path=' + os.environ.get('MOZ_HOST_BIN'),
+            '--dm_trans=adb',
+            '--deviceIP=',
+            '--console-level=INFO',
+            '--app=' + self.substs['ANDROID_PACKAGE_NAME'],
+            '--log-mach=-',
+            '--autorun',
+            '--close-when-done',
+            '--testing-modules-dir=' + os.path.join(self.topobjdir, '_tests', 'modules'),
+        ]
+        if test_paths:
+            if len(test_paths) > 1:
+                print('Warning: Only the first test path will be used.')
+            test_path = self._wrap_path_argument(test_paths[0]).relpath()
+            args.append('--test-path=%s' % test_path)
+        if chrome:
+            args.append('--chrome')
+
+        mochitest = self._spawn(MochitestRunner)
+        return mochitest.run_android_test(args)
 
 @CommandProvider
 class AndroidCommands(MachCommandBase):
@@ -1032,31 +1086,12 @@ class AndroidCommands(MachCommandBase):
         help='Test to run. Can be specified as a Robocop test name (like "testLoad"), '
         'or omitted. If omitted, the entire test suite is executed.')
     def run_robocop(self, test_path):
-        self.tests_dir = os.path.join(self.topobjdir, '_tests')
-        self.mochitest_dir = os.path.join(
-            self.tests_dir,
-            'testing',
-            'mochitest')
-        import imp
-        path = os.path.join(self.mochitest_dir, 'runtestsremote.py')
-        with open(path, 'r') as fh:
-            imp.load_module('runtestsremote', fh, path,
-                            ('.py', 'r', imp.PY_SOURCE))
-        import runtestsremote
-
-        MOZ_HOST_BIN = os.environ.get('MOZ_HOST_BIN')
-        if not MOZ_HOST_BIN:
-            print('environment variable MOZ_HOST_BIN must be set to a directory containing host xpcshell')
-            return 1
-        elif not os.path.isdir(MOZ_HOST_BIN):
-            print('$MOZ_HOST_BIN does not specify a directory')
-            return 1
-        elif not os.path.isfile(os.path.join(MOZ_HOST_BIN, 'xpcshell')):
-            print('$MOZ_HOST_BIN/xpcshell does not exist')
-            return 1
+        host_ret = verify_host_bin()
+        if host_ret != 0:
+            return host_ret
 
         args = [
-            '--xre-path=' + MOZ_HOST_BIN,
+            '--xre-path=' + os.environ.get('MOZ_HOST_BIN'),
             '--dm_trans=adb',
             '--deviceIP=',
             '--console-level=INFO',
@@ -1082,4 +1117,5 @@ class AndroidCommands(MachCommandBase):
         if test_path:
             args.append('--test-path=%s' % test_path)
 
-        sys.exit(runtestsremote.main(args))
+        mochitest = self._spawn(MochitestRunner)
+        return mochitest.run_android_test(args)

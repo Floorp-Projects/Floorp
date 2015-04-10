@@ -238,7 +238,8 @@ enum BluetoothStatus {
   STATUS_PARM_INVALID,
   STATUS_UNHANDLED,
   STATUS_AUTH_FAILURE,
-  STATUS_RMT_DEV_DOWN
+  STATUS_RMT_DEV_DOWN,
+  NUM_STATUS
 };
 
 enum BluetoothBondState {
@@ -287,7 +288,8 @@ enum BluetoothSspVariant {
   SSP_VARIANT_PASSKEY_CONFIRMATION,
   SSP_VARIANT_PASSKEY_ENTRY,
   SSP_VARIANT_CONSENT,
-  SSP_VARIANT_PASSKEY_NOTIFICATION
+  SSP_VARIANT_PASSKEY_NOTIFICATION,
+  NUM_SSP_VARIANT
 };
 
 struct BluetoothActivityEnergyInfo {
@@ -470,8 +472,7 @@ enum BluetoothObjectType {
   TYPE_MANAGER = 0,
   TYPE_ADAPTER = 1,
   TYPE_DEVICE = 2,
-
-  TYPE_INVALID
+  NUM_TYPE
 };
 
 enum BluetoothA2dpAudioState {

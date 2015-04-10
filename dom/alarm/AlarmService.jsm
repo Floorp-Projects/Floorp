@@ -8,8 +8,7 @@
 const DEBUG = false;
 
 function debug(aStr) {
-  if (DEBUG)
-    dump("AlarmService: " + aStr + "\n");
+  DEBUG && dump("AlarmService: " + aStr + "\n");
 }
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
@@ -63,6 +62,8 @@ this.AlarmService = {
 
     alarmHalService.setAlarmFiredCb(this._onAlarmFired.bind(this));
     alarmHalService.setTimezoneChangedCb(this._onTimezoneChanged.bind(this));
+    alarmHalService.setSystemClockChangedCb(
+      this._onSystemClockChanged.bind(this));
 
     // Add the messages to be listened to.
     this._messages = ["AlarmsManager:GetAll",
@@ -280,6 +281,11 @@ this.AlarmService = {
     debug("_onTimezoneChanged()");
 
     this._currentTimezoneOffset = aTimezoneOffset;
+    this._restoreAlarmsFromDb();
+  },
+
+  _onSystemClockChanged: function _onSystemClockChanged(aClockDeltaMS) {
+    debug("_onSystemClockChanged");
     this._restoreAlarmsFromDb();
   },
 
