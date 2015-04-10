@@ -21,7 +21,6 @@
 #include "nsIMIMEInfo.h"
 #include "nsColor.h"
 #include "gfxRect.h"
-#include "mozilla/gfx/Point.h"
 
 #include "nsIAndroidBridge.h"
 #include "nsIMobileMessageCallback.h"
@@ -265,7 +264,6 @@ public:
 
     void *AcquireNativeWindow(JNIEnv* aEnv, jobject aSurface);
     void ReleaseNativeWindow(void *window);
-    mozilla::gfx::IntSize GetNativeWindowSize(void* window);
 
     void *AcquireNativeWindowFromSurfaceTexture(JNIEnv* aEnv, jobject aSurface);
     void ReleaseNativeWindowForSurfaceTexture(void *window);
@@ -428,8 +426,6 @@ protected:
 
     int (* ANativeWindow_lock)(void *window, void *outBuffer, void *inOutDirtyBounds);
     int (* ANativeWindow_unlockAndPost)(void *window);
-    int (* ANativeWindow_getWidth)(void * window);
-    int (* ANativeWindow_getHeight)(void * window);
 
     int (* Surface_lock)(void* surface, void* surfaceInfo, void* region, bool block);
     int (* Surface_unlockAndPost)(void* surface);
@@ -443,15 +439,6 @@ private:
 public:
     void PostTaskToUiThread(Task* aTask, int aDelayMs);
     int64_t RunDelayedUiThreadTasks();
-
-    void* GetPresentationWindow();
-    void SetPresentationWindow(void* aPresentationWindow);
-
-    EGLSurface GetPresentationSurface();
-    void SetPresentationSurface(EGLSurface aPresentationSurface);
-private:
-    void* mPresentationWindow;
-    EGLSurface mPresentationSurface;
 };
 
 class AutoJNIClass {

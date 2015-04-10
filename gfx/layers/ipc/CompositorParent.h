@@ -223,7 +223,6 @@ public:
    * Returns true if a surface was obtained and the resume succeeded; false
    * otherwise.
    */
-  bool ScheduleResumeOnCompositorThread();
   bool ScheduleResumeOnCompositorThread(int width, int height);
 
   virtual void ScheduleComposition();
