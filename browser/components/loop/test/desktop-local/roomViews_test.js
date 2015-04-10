@@ -18,7 +18,8 @@ describe("loop.roomViews", function () {
 
     fakeMozLoop = {
       getAudioBlob: sinon.stub(),
-      getLoopPref: sinon.stub()
+      getLoopPref: sinon.stub(),
+      isSocialShareButtonAvailable: sinon.stub()
     };
 
     fakeWindow = {
@@ -28,7 +29,8 @@ describe("loop.roomViews", function () {
         mozLoop: fakeMozLoop
       },
       addEventListener: function() {},
-      removeEventListener: function() {}
+      removeEventListener: function() {},
+      setTimeout: function(callback) { callback(); }
     };
     loop.shared.mixins.setRootObject(fakeWindow);
 
@@ -196,6 +198,21 @@ describe("loop.roomViews", function () {
 
           // copied_url_button is the l10n string.
           expect(copyBtn.textContent).eql("copied_url_button");
+      });
+    });
+
+    describe("Share button", function() {
+      beforeEach(function() {
+        view = mountTestComponent();
+      });
+
+      it("should toggle the share dropdown when the share button is clicked", function() {
+        var shareBtn = view.getDOMNode().querySelector(".btn-share");
+
+        React.addons.TestUtils.Simulate.click(shareBtn);
+
+        expect(view.state.showMenu).to.eql(true);
+        expect(view.refs.menu.props.show).to.eql(true);
       });
     });
   });
@@ -431,6 +448,142 @@ describe("loop.roomViews", function () {
           expect(view.getDOMNode().querySelector(".local-stream-audio"))
             .not.eql(null);
         });
+    });
+  });
+
+  describe("SocialShareDropdown", function() {
+    var view, fakeProvider;
+
+    beforeEach(function() {
+      sandbox.stub(dispatcher, "dispatch");
+
+      fakeProvider = {
+        name: "foo",
+        origin: "https://foo",
+        iconURL: "http://example.com/foo.png"
+      };
+    });
+
+    afterEach(function() {
+      view = fakeProvider = null;
+    });
+
+    function mountTestComponent() {
+      return TestUtils.renderIntoDocument(
+        React.createElement(loop.roomViews.SocialShareDropdown, {
+          dispatcher: dispatcher,
+          roomStore: roomStore,
+          show: true
+        })
+      );
+    }
+
+    describe("#render", function() {
+      it("should show no contents when the Social Providers have not been fetched yet", function() {
+        view = mountTestComponent();
+
+        expect(view.getDOMNode()).to.eql(null);
+      });
+
+      it("should show different contents when the Share XUL button is not available", function() {
+        activeRoomStore.setStoreState({
+          socialShareProviders: []
+        });
+        view = mountTestComponent();
+
+        var node = view.getDOMNode();
+        expect(node.querySelector(".share-panel-header")).to.not.eql(null);
+      });
+
+      it("should show an empty list when no Social Providers are available", function() {
+        activeRoomStore.setStoreState({
+          socialShareButtonAvailable: true,
+          socialShareProviders: []
+        });
+
+        view = mountTestComponent();
+
+        var node = view.getDOMNode();
+        expect(node.querySelector(".icon-add-share-service")).to.not.eql(null);
+        expect(node.querySelectorAll(".dropdown-menu-item").length).to.eql(1);
+      });
+
+      it("should show a list of available Social Providers", function() {
+        activeRoomStore.setStoreState({
+          socialShareButtonAvailable: true,
+          socialShareProviders: [fakeProvider]
+        });
+
+        view = mountTestComponent();
+
+        var node = view.getDOMNode();
+        expect(node.querySelector(".icon-add-share-service")).to.not.eql(null);
+        expect(node.querySelector(".dropdown-menu-separator")).to.not.eql(null);
+
+        var dropdownNodes = node.querySelectorAll(".dropdown-menu-item");
+        expect(dropdownNodes.length).to.eql(2);
+        expect(dropdownNodes[1].querySelector("img").src).to.eql(fakeProvider.iconURL);
+        expect(dropdownNodes[1].querySelector("span").textContent)
+          .to.eql(fakeProvider.name);
+      });
+    });
+
+    describe("#handleToolbarAddButtonClick", function() {
+      it("should dispatch an action when the 'add to toolbar' button is clicked", function() {
+        activeRoomStore.setStoreState({
+          socialShareProviders: []
+        });
+
+        view = mountTestComponent();
+
+        var addButton = view.getDOMNode().querySelector(".btn-toolbar-add");
+        React.addons.TestUtils.Simulate.click(addButton);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.AddSocialShareButton());
+      });
+    });
+
+    describe("#handleAddServiceClick", function() {
+      it("should dispatch an action when the 'add provider' item is clicked", function() {
+        activeRoomStore.setStoreState({
+          socialShareProviders: [],
+          socialShareButtonAvailable: true
+        });
+
+        view = mountTestComponent();
+
+        var addItem = view.getDOMNode().querySelector(".dropdown-menu-item:first-child");
+        React.addons.TestUtils.Simulate.click(addItem);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.AddSocialShareProvider());
+      });
+    });
+
+    describe("#handleProviderClick", function() {
+      it("should dispatch an action when a provider item is clicked", function() {
+        activeRoomStore.setStoreState({
+          roomUrl: "http://example.com",
+          socialShareButtonAvailable: true,
+          socialShareProviders: [fakeProvider]
+        });
+
+        view = mountTestComponent();
+
+        var providerItem = view.getDOMNode().querySelector(".dropdown-menu-item:last-child");
+        React.addons.TestUtils.Simulate.click(providerItem);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ShareRoomUrl({
+            provider: fakeProvider,
+            roomUrl: activeRoomStore.getStoreState().roomUrl,
+            previews: []
+          }));
+      });
     });
   });
 });
