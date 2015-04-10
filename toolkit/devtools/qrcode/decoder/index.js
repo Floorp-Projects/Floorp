@@ -19,7 +19,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-let imagedata = null;
+let imgU8 = null;
+
+let imgU32 = null;
 
 let imgWidth = 0;
 
@@ -98,10 +100,10 @@ GridSampler.sampleGrid3 = function(image, dimension, transform) {
       for (let x = 0; x < max; x += 2) {
         let xpoint = Math.floor(points[x]) * 4 + Math.floor(points[x + 1]) * imgWidth * 4;
         let bit = image[Math.floor(points[x]) + imgWidth * Math.floor(points[x + 1])];
-        imagedata[xpoint] = bit ? 255 : 0;
-        imagedata[xpoint + 1] = bit ? 255 : 0;
-        imagedata[xpoint + 2] = 0;
-        imagedata[xpoint + 3] = 255;
+        imgU8[xpoint] = bit ? 255 : 0;
+        imgU8[xpoint + 1] = bit ? 255 : 0;
+        imgU8[xpoint + 2] = 0;
+        imgU8[xpoint + 3] = 255;
         if (bit) bits.set_Renamed(x >> 1, y);
       }
     } catch (aioobe) {
@@ -1384,7 +1386,8 @@ qrcode.decode = function(src) {
     let context = canvas_qr.getContext("2d");
     imgWidth = canvas_qr.width;
     imgHeight = canvas_qr.height;
-    imagedata = context.getImageData(0, 0, imgWidth, imgHeight).data;
+    imgU8 = context.getImageData(0, 0, imgWidth, imgHeight).data;
+    imgU32 = new Uint32Array(imgU8.buffer);
     qrcode.result = qrcode.process(context);
     if (qrcode.callback !== null) {
       qrcode.callback(qrcode.result);
@@ -1409,7 +1412,8 @@ qrcode.decode = function(src) {
       imgWidth = canvas_qr.width;
       imgHeight = canvas_qr.height;
       try {
-        imagedata = context.getImageData(0, 0, canvas_qr.width, canvas_qr.height).data;
+        imgU8 = context.getImageData(0, 0, canvas_qr.width, canvas_qr.height).data;
+        imgU32 = new Uint32Array(imgU8.buffer);
       } catch (e) {
         qrcode.result = "Cross domain image reading not supported in your browser! Save it to your computer then drag and drop the file!";
         if (qrcode.callback !== null) {
@@ -1476,9 +1480,10 @@ qrcode.process = function(ctx) {
 };
 
 qrcode.getPixel = function(x, y) {
-  let point = x * 4 + y * imgWidth * 4;
-  let p = (imagedata[point] * 33 + imagedata[point + 1] * 34 + imagedata[point + 2] * 33) / 100;
-  return p;
+  let point = x + y * imgWidth;
+  let rgba = imgU32[point];
+  let p = (rgba & 0xFF) + ((rgba >> 8) & 0xFF) + ((rgba >> 16) & 0xFF);
+  return p / 3;
 };
 
 qrcode.binarize = function(th) {
@@ -1575,7 +1580,8 @@ module.exports = {
     let context = canvas.getContext("2d");
     imgWidth = canvas.width;
     imgHeight = canvas.height;
-    imagedata = context.getImageData(0, 0, imgWidth, imgHeight).data;
+    imgU8 = context.getImageData(0, 0, imgWidth, imgHeight).data;
+    imgU32 = new Uint32Array(imgU8.buffer);
     let result = qrcode.process(context);
     if (cb) {
       cb(result);
