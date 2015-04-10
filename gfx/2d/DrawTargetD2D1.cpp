@@ -951,7 +951,40 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
 
   if (patternSupported) {
     if (D2DSupportsCompositeMode(aOp)) {
+      D2D1_RECT_F rect;
+      bool isAligned;
+      RefPtr<ID2D1Bitmap> tmpBitmap;
+      bool clipIsComplex = mPushedClips.size() && !GetDeviceSpaceClipRect(rect, isAligned);
+
+      if (clipIsComplex) {
+        // Make sure all clips are popped, and restore clipped out area if the
+        // operation is not bound by the mask.
+        PopAllClips();
+
+        if (!IsOperatorBoundByMask(aOp)) {
+          HRESULT hr = mDC->CreateBitmap(D2DIntSize(mSize), D2D1::BitmapProperties(D2DPixelFormat(mFormat)), byRef(tmpBitmap));
+          if (FAILED(hr)) {
+            gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(mSize))) << "[D2D1.1] 6CreateBitmap failure " << mSize << " Code: " << hexa(hr);
+            // For now, crash in this scenario; this should happen because tmpBitmap is
+            // null and CopyFromBitmap call below dereferences it.
+            // return;
+          }
+          mDC->Flush();
+
+          tmpBitmap->CopyFromBitmap(nullptr, mBitmap, nullptr);
+        }
+      }
       mDC->DrawImage(image, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2DCompositionMode(aOp));
+
+      if (tmpBitmap) {
+        RefPtr<ID2D1BitmapBrush> brush;
+        RefPtr<ID2D1Geometry> inverseGeom = GetInverseClippedGeometry();
+        mDC->CreateBitmapBrush(tmpBitmap, byRef(brush));
+
+        mDC->SetPrimitiveBlend(D2D1_PRIMITIVE_BLEND_COPY);
+        mDC->FillGeometry(inverseGeom, brush);
+        mDC->SetPrimitiveBlend(D2D1_PRIMITIVE_BLEND_SOURCE_OVER);
+      }
       return;
     }
 
@@ -1068,6 +1101,8 @@ DrawTargetD2D1::GetClippedGeometry(IntRect *aClipBounds)
     return mCurrentClippedGeometry;
   }
 
+  MOZ_ASSERT(mPushedClips.size());
+
   mCurrentClipBounds = IntRect(IntPoint(0, 0), mSize);
 
   // if pathGeom is null then pathRect represents the path.
@@ -1145,6 +1180,24 @@ DrawTargetD2D1::GetClippedGeometry(IntRect *aClipBounds)
   mCurrentClippedGeometry = pathGeom.forget();
   *aClipBounds = mCurrentClipBounds;
   return mCurrentClippedGeometry;
+}
+
+TemporaryRef<ID2D1Geometry>
+DrawTargetD2D1::GetInverseClippedGeometry()
+{
+  IntRect bounds;
+  RefPtr<ID2D1Geometry> geom = GetClippedGeometry(&bounds);
+  RefPtr<ID2D1RectangleGeometry> rectGeom;
+  RefPtr<ID2D1PathGeometry> inverseGeom;
+
+  factory()->CreateRectangleGeometry(D2D1::RectF(0, 0, mSize.width, mSize.height), byRef(rectGeom));
+  factory()->CreatePathGeometry(byRef(inverseGeom));
+  RefPtr<ID2D1GeometrySink> sink;
+  inverseGeom->Open(byRef(sink));
+  rectGeom->CombineWithGeometry(geom, D2D1_COMBINE_MODE_EXCLUDE, D2D1::IdentityMatrix(), sink);
+  sink->Close();
+
+  return inverseGeom;
 }
 
 void
