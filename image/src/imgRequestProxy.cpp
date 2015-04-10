@@ -695,11 +695,6 @@ imgRequestProxy::PerformClone(imgINotificationObserver* aObserver,
     return rv;
   }
 
-  if (GetOwner() && GetOwner()->GetValidator()) {
-    clone->SetNotificationsDeferred(true);
-    GetOwner()->GetValidator()->AddProxy(clone);
-  }
-
   // Assign to *aClone before calling Notify so that if the caller expects to
   // only be notified for requests it's already holding pointers to it won't be
   // surprised.
