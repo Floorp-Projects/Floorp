@@ -110,6 +110,14 @@ if CONFIG['MOZ_B2G_BT']:
     LOCAL_INCLUDES += [
         '/dom/bluetooth',
     ]
+    if CONFIG['MOZ_B2G_BT_API_V2']:
+        LOCAL_INCLUDES += [
+            '/dom/bluetooth/bluetooth2',
+        ]
+    else:
+        LOCAL_INCLUDES += [
+            '/dom/bluetooth/bluetooth1',
+        ]
 
 if CONFIG['MOZ_WEBSPEECH']:
     LOCAL_INCLUDES += [

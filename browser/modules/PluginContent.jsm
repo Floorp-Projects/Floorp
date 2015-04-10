@@ -34,6 +34,8 @@ PluginContent.prototype = {
     this.content = this.global.content;
     // Cache of plugin actions for the current page.
     this.pluginData = new Map();
+    // Cache of plugin crash information sent from the parent
+    this.pluginCrashData = new Map();
 
     // Note that the XBL binding is untrusted
     global.addEventListener("PluginBindingAttached", this, true, true);
@@ -48,9 +50,29 @@ PluginContent.prototype = {
     global.addMessageListener("BrowserPlugins:ActivatePlugins", this);
     global.addMessageListener("BrowserPlugins:NotificationShown", this);
     global.addMessageListener("BrowserPlugins:ContextMenuCommand", this);
+    global.addMessageListener("BrowserPlugins:NPAPIPluginProcessCrashed", this);
+    global.addMessageListener("BrowserPlugins:CrashReportSubmitted", this);
+    global.addMessageListener("BrowserPlugins:Test:ClearCrashData", this);
   },
 
   uninit: function() {
+    let global = this.global;
+
+    global.removeEventListener("PluginBindingAttached", this, true);
+    global.removeEventListener("PluginCrashed",         this, true);
+    global.removeEventListener("PluginOutdated",        this, true);
+    global.removeEventListener("PluginInstantiated",    this, true);
+    global.removeEventListener("PluginRemoved",         this, true);
+    global.removeEventListener("pagehide",              this, true);
+    global.removeEventListener("pageshow",              this, true);
+    global.removeEventListener("unload",                this);
+
+    global.removeMessageListener("BrowserPlugins:ActivatePlugins", this);
+    global.removeMessageListener("BrowserPlugins:NotificationShown", this);
+    global.removeMessageListener("BrowserPlugins:ContextMenuCommand", this);
+    global.removeMessageListener("BrowserPlugins:NPAPIPluginProcessCrashed", this);
+    global.removeMessageListener("BrowserPlugins:CrashReportSubmitted", this);
+    global.removeMessageListener("BrowserPlugins:Test:ClearCrashData", this);
     delete this.global;
     delete this.content;
   },
@@ -73,6 +95,24 @@ PluginContent.prototype = {
             break;
         }
         break;
+      case "BrowserPlugins:NPAPIPluginProcessCrashed":
+        this.NPAPIPluginProcessCrashed({
+          pluginName: msg.data.pluginName,
+          runID: msg.data.runID,
+          state: msg.data.state,
+        });
+        break;
+      case "BrowserPlugins:CrashReportSubmitted":
+        this.NPAPIPluginCrashReportSubmitted({
+          runID: msg.data.runID,
+          state: msg.data.state,
+        })
+        break;
+      case "BrowserPlugins:Test:ClearCrashData":
+        // This message should ONLY ever be sent by automated tests.
+        if (Services.prefs.getBoolPref("plugins.testmode")) {
+          this.pluginCrashData.clear();
+        }
     }
   },
 
@@ -97,7 +137,7 @@ PluginContent.prototype = {
     }
 
     this._finishRecordingFlashPluginTelemetry();
-    this.clearPluginDataCache();
+    this.clearPluginCaches();
   },
 
   getPluginUI: function (plugin, anonid) {
@@ -308,7 +348,7 @@ PluginContent.prototype = {
         !(event.target instanceof Ci.nsIObjectLoadingContent)) {
       // If the event target is not a plugin object (i.e., an <object> or
       // <embed> element), this call is for a window-global plugin.
-      this.pluginInstanceCrashed(event.target, event);
+      this.onPluginCrashed(event.target, event);
       return;
     }
 
@@ -339,7 +379,7 @@ PluginContent.prototype = {
     let shouldShowNotification = false;
     switch (eventType) {
       case "PluginCrashed":
-        this.pluginInstanceCrashed(plugin, event);
+        this.onPluginCrashed(plugin, event);
         break;
 
       case "PluginNotFound": {
@@ -520,24 +560,31 @@ PluginContent.prototype = {
     this.global.sendAsyncMessage("PluginContent:LinkClickCallback", { name: name });
   },
 
-  submitReport: function submitReport(pluginDumpID, browserDumpID, plugin) {
+  submitReport: function submitReport(plugin) {
     if (!AppConstants.MOZ_CRASHREPORTER) {
       return;
     }
-    let keyVals = {};
-    if (plugin) {
-      let userComment = this.getPluginUI(plugin, "submitComment").value.trim();
-      if (userComment)
-        keyVals.PluginUserComment = userComment;
-      if (this.getPluginUI(plugin, "submitURLOptIn").checked)
-        keyVals.PluginContentURL = plugin.ownerDocument.URL;
+    if (!plugin) {
+      Cu.reportError("Attempted to submit crash report without an associated plugin.");
+      return;
+    }
+    if (!(plugin instanceof Ci.nsIObjectLoadingContent)) {
+      Cu.reportError("Attempted to submit crash report on plugin that does not" +
+                     "implement nsIObjectLoadingContent.");
+      return;
     }
 
-    this.global.sendAsyncMessage("PluginContent:SubmitReport", {
-      pluginDumpID: pluginDumpID,
-      browserDumpID: browserDumpID,
-      keyVals: keyVals,
-    });
+    let runID = plugin.runID;
+    let submitURLOptIn = this.getPluginUI(plugin, "submitURLOptIn");
+    let keyVals = {};
+    let userComment = this.getPluginUI(plugin, "submitComment").value.trim();
+    if (userComment)
+      keyVals.PluginUserComment = userComment;
+    if (this.getPluginUI(plugin, "submitURLOptIn").checked)
+      keyVals.PluginContentURL = plugin.ownerDocument.URL;
+
+    this.global.sendAsyncMessage("PluginContent:SubmitReport",
+                                 { runID, keyVals, submitURLOptIn });
   },
 
   reloadPage: function () {
@@ -845,112 +892,134 @@ PluginContent.prototype = {
     this.global.sendAsyncMessage("PluginContent:RemoveNotification", { name: name });
   },
 
-  clearPluginDataCache: function () {
+  clearPluginCaches: function () {
     this.pluginData.clear();
+    this.pluginCrashData.clear();
   },
 
   hideNotificationBar: function (name) {
     this.global.sendAsyncMessage("PluginContent:HideNotificationBar", { name: name });
   },
 
-  // Crashed-plugin event listener. Called for every instance of a
-  // plugin in content.
-  pluginInstanceCrashed: function (target, aEvent) {
+  /**
+   * The PluginCrashed event handler. Note that the PluginCrashed event is
+   * fired for both NPAPI and Gecko Media plugins. In the latter case, the
+   * target of the event is the document that the GMP is being used in.
+   */
+  onPluginCrashed: function (target, aEvent) {
     if (!(aEvent instanceof this.content.PluginCrashedEvent))
       return;
 
-    let submittedReport = aEvent.submittedCrashReport;
-    let doPrompt        = true; // XXX followup for aEvent.doPrompt;
-    let submitReports   = true; // XXX followup for aEvent.submitReports;
-    let pluginName      = aEvent.pluginName;
-    let pluginDumpID    = aEvent.pluginDumpID;
-    let browserDumpID   = aEvent.browserDumpID;
-    let gmpPlugin       = aEvent.gmpPlugin;
-
-    // For non-GMP plugins, remap the plugin name to a more user-presentable form.
-    if (!gmpPlugin) {
-      pluginName = BrowserUtils.makeNicePluginName(pluginName);
+    if (aEvent.gmpPlugin) {
+      this.GMPCrashed(aEvent);
+      return;
     }
 
-    let messageString = gNavigatorBundle.formatStringFromName("crashedpluginsMessage.title", [pluginName], 1);
+    if (!(target instanceof Ci.nsIObjectLoadingContent))
+      return;
 
-    let plugin = null, doc;
-    if (target instanceof Ci.nsIObjectLoadingContent) {
-      plugin = target;
-      doc = plugin.ownerDocument;
-    } else {
-      doc = target.document;
-      if (!doc) {
-        return;
-      }
-      // doPrompt is specific to the crashed plugin overlay, and
-      // therefore is not applicable for window-global plugins.
-      doPrompt = false;
+    let crashData = this.pluginCrashData.get(target.runID);
+    if (!crashData) {
+      // We haven't received information from the parent yet about
+      // this crash, so we should hold off showing the crash report
+      // UI.
+      return;
     }
 
-    let status;
-    // Determine which message to show regarding crash reports.
-    if (submittedReport) { // submitReports && !doPrompt, handled in observer
-      status = "submitted";
-    }
-    else if (!submitReports && !doPrompt) {
-      status = "noSubmit";
-    }
-    else if (!pluginDumpID) {
-      // If we don't have a minidumpID, we can't (or didn't) submit anything.
-      // This can happen if the plugin is killed from the task manager.
-      status = "noReport";
-    }
-    else {
-      status = "please";
+    crashData.instances.delete(target);
+    if (crashData.instances.length == 0) {
+      this.pluginCrashData.delete(target.runID);
     }
 
-    // If we don't have a minidumpID, we can't (or didn't) submit anything.
-    // This can happen if the plugin is killed from the task manager.
-    if (!pluginDumpID) {
-        status = "noReport";
-    }
+    this.setCrashedNPAPIPluginState({
+      plugin: target,
+      state: crashData.state,
+      message: crashData.message,
+    });
+  },
 
-    // If we're showing the link to manually trigger report submission, we'll
-    // want to be able to update all the instances of the UI for this crash to
-    // show an updated message when a report is submitted.
-    if (AppConstants.MOZ_CRASHREPORTER && doPrompt) {
-      let observer = {
-        QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                               Ci.nsISupportsWeakReference]),
-        observe : (subject, topic, data) => {
-          let propertyBag = subject;
-          if (!(propertyBag instanceof Ci.nsIPropertyBag2))
-            return;
-          // Ignore notifications for other crashes.
-          if (propertyBag.get("minidumpID") != pluginDumpID)
-            return;
-          let statusDiv = this.getPluginUI(plugin, "submitStatus");
-          statusDiv.setAttribute("status", data);
-        },
+  NPAPIPluginProcessCrashed: function ({pluginName, runID, state}) {
+    let message =
+      gNavigatorBundle.formatStringFromName("crashedpluginsMessage.title",
+                                            [pluginName], 1);
 
-        handleEvent : function(event) {
-            // Not expected to be called, just here for the closure.
+    let contentWindow = this.global.content;
+    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+    let plugins = cwu.plugins;
+
+    for (let plugin of plugins) {
+      if (plugin instanceof Ci.nsIObjectLoadingContent &&
+          plugin.runID == runID) {
+        // The parent has told us that the plugin process has died.
+        // It's possible that this content process hasn't yet noticed,
+        // in which case we need to stash this data around until the
+        // PluginCrashed events get sent up.
+        if (plugin.pluginFallbackType == Ci.nsIObjectLoadingContent.PLUGIN_CRASHED) {
+          // This plugin has already been put into the crashed state by the
+          // content process, so we can tweak its crash UI without delay.
+          this.setCrashedNPAPIPluginState({plugin, state, message});
+        } else {
+          // The content process hasn't yet determined that the plugin has crashed.
+          // Stash the data in our map, and throw the plugin into a WeakSet. When
+          // the PluginCrashed event fires on the <object>/<embed>, we'll retrieve
+          // the information we need from the Map and remove the instance from the
+          // WeakSet. Once the WeakSet is empty, we can clear the map.
+          if (!this.pluginCrashData.has(runID)) {
+            this.pluginCrashData.set(runID, {
+              state: state,
+              message: message,
+              instances: new WeakSet(),
+            });
+          }
+          let crashData = this.pluginCrashData.get(runID);
+          crashData.instances.add(plugin);
         }
       }
-
-      // Use a weak reference, so we don't have to remove it...
-      Services.obs.addObserver(observer, "crash-report-status", true);
-      // ...alas, now we need something to hold a strong reference to prevent
-      // it from being GC. But I don't want to manually manage the reference's
-      // lifetime (which should be no greater than the page).
-      // Clever solution? Use a closue with an event listener on the document.
-      // When the doc goes away, so do the listener references and the closure.
-      doc.addEventListener("mozCleverClosureHack", observer, false);
     }
+  },
 
-    let isShowing = false;
+  setCrashedNPAPIPluginState: function ({plugin, state, message}) {
+    // Force a layout flush so the binding is attached.
+    plugin.clientTop;
+    let overlay = this.getPluginUI(plugin, "main");
+    let statusDiv = this.getPluginUI(plugin, "submitStatus");
+    let optInCB = this.getPluginUI(plugin, "submitURLOptIn");
 
-    if (plugin) {
-      // If there's no plugin (an <object> or <embed> element), this call is
-      // for a window-global plugin. In this case, there's no overlay to show.
-      isShowing = _setUpPluginOverlay.call(this, plugin, doPrompt);
+    this.getPluginUI(plugin, "submitButton")
+        .addEventListener("click", (event) => {
+          if (event.button != 0 || !event.isTrusted)
+            return;
+          this.submitReport(plugin);
+        });
+
+    let pref = Services.prefs.getBranch("dom.ipc.plugins.reportCrashURL");
+    optInCB.checked = pref.getBoolPref("");
+
+    statusDiv.setAttribute("status", state);
+
+    let helpIcon = this.getPluginUI(plugin, "helpIcon");
+    this.addLinkClickCallback(helpIcon, "openHelpPage");
+
+    let crashText = this.getPluginUI(plugin, "crashedText");
+    crashText.textContent = message;
+
+    let link = this.getPluginUI(plugin, "reloadLink");
+    this.addLinkClickCallback(link, "reloadPage");
+
+    let isShowing = this.shouldShowOverlay(plugin, overlay);
+
+    // Is the <object>'s size too small to hold what we want to show?
+    if (!isShowing) {
+      // First try hiding the crash report submission UI.
+      statusDiv.removeAttribute("status");
+
+      isShowing = this.shouldShowOverlay(plugin, overlay);
     }
+    this.setVisibility(plugin, overlay, isShowing);
+
+    let doc = plugin.ownerDocument;
+    let runID = plugin.runID;
 
     if (isShowing) {
       // If a previous plugin on the page was too small and resulted in adding a
@@ -962,66 +1031,63 @@ PluginContent.prototype = {
       // If another plugin on the page was large enough to show our UI, we don't
       // want to show a notification bar.
       if (!doc.mozNoPluginCrashedNotification) {
-        this.global.sendAsyncMessage("PluginContent:ShowPluginCrashedNotification", {
-          messageString: messageString,
-          pluginDumpID: pluginDumpID,
-          browserDumpID: browserDumpID,
-        });
+        this.global.sendAsyncMessage("PluginContent:ShowNPAPIPluginCrashedNotification",
+                                     { message, runID });
         // Remove the notification when the page is reloaded.
         doc.defaultView.top.addEventListener("unload", event => {
           this.hideNotificationBar("plugin-crashed");
         }, false);
       }
     }
+  },
 
-    // Configure the crashed-plugin placeholder.
-    // Returns true if the plugin overlay is visible.
-    function _setUpPluginOverlay(plugin, doPromptSubmit) {
-      if (!plugin) {
-        return false;
+  NPAPIPluginCrashReportSubmitted: function({ runID, state }) {
+    this.pluginCrashData.delete(runID);
+    let contentWindow = this.global.content;
+    let cwu = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+    let plugins = cwu.plugins;
+
+    for (let plugin of plugins) {
+      if (plugin instanceof Ci.nsIObjectLoadingContent &&
+          plugin.runID == runID) {
+        let statusDiv = this.getPluginUI(plugin, "submitStatus");
+        statusDiv.setAttribute("status", state);
       }
-
-      // Force a layout flush so the binding is attached.
-      plugin.clientTop;
-      let overlay = this.getPluginUI(plugin, "main");
-      let statusDiv = this.getPluginUI(plugin, "submitStatus");
-
-      if (doPromptSubmit) {
-        this.getPluginUI(plugin, "submitButton").addEventListener("click",
-        function (event) {
-          if (event.button != 0 || !event.isTrusted)
-            return;
-          this.submitReport(pluginDumpID, browserDumpID, plugin);
-          pref.setBoolPref("", optInCB.checked);
-        }.bind(this));
-        let optInCB = this.getPluginUI(plugin, "submitURLOptIn");
-        let pref = Services.prefs.getBranch("dom.ipc.plugins.reportCrashURL");
-        optInCB.checked = pref.getBoolPref("");
-      }
-
-      statusDiv.setAttribute("status", status);
-
-      let helpIcon = this.getPluginUI(plugin, "helpIcon");
-      this.addLinkClickCallback(helpIcon, "openHelpPage");
-
-      let crashText = this.getPluginUI(plugin, "crashedText");
-      crashText.textContent = messageString;
-
-      let link = this.getPluginUI(plugin, "reloadLink");
-      this.addLinkClickCallback(link, "reloadPage");
-
-      let isShowing = this.shouldShowOverlay(plugin, overlay);
-
-      // Is the <object>'s size too small to hold what we want to show?
-      if (!isShowing) {
-        // First try hiding the crash report submission UI.
-        statusDiv.removeAttribute("status");
-
-        isShowing = this.shouldShowOverlay(plugin, overlay);
-      }
-      this.setVisibility(plugin, overlay, isShowing);
-
-      return isShowing;
     }
-  }
+  },
+
+  /**
+   * Currently, GMP crash events are only handled in the non-e10s case.
+   * e10s support for GMP crash events is being tracked in bug 1146955.
+   */
+  GMPCrashed: function(aEvent) {
+    let target          = aEvent.target;
+    let submittedReport = aEvent.submittedCrashReport;
+    let pluginName      = aEvent.pluginName;
+    let pluginDumpID    = aEvent.pluginDumpID;
+    let browserDumpID   = aEvent.browserDumpID;
+    let gmpPlugin       = aEvent.gmpPlugin;
+    let doc             = target.document;
+
+    if (!gmpPlugin || !doc) {
+      // TODO: Throw exception? How did we get here?
+      return;
+    }
+
+    let messageString =
+      gNavigatorBundle.formatStringFromName("crashedpluginsMessage.title",
+                                            [pluginName], 1);
+
+    this.global.sendAsyncMessage("PluginContent:ShowGMPCrashedNotification", {
+      messageString: messageString,
+      pluginDumpID: pluginDumpID,
+      browserDumpID: browserDumpID,
+    });
+
+    // Remove the notification when the page is reloaded.
+    doc.defaultView.top.addEventListener("unload", event => {
+      this.hideNotificationBar("plugin-crashed");
+    }, false);
+  },
 };

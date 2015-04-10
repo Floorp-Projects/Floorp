@@ -614,7 +614,12 @@ this.AppsUtils = {
     aPrefBranch.setCharPref("gecko.mstone", mstone);
     aPrefBranch.setCharPref("gecko.buildID", buildID);
 
-    return ((mstone != savedmstone) || (buildID != savedBuildID));
+    if ((mstone != savedmstone) || (buildID != savedBuildID)) {
+      aPrefBranch.setBoolPref("dom.apps.reset-permissions", false);
+      return true;
+    } else {
+      return false;
+    }
   },
 
   /**

@@ -16,6 +16,7 @@ EXTRA_JS_MODULES += [
     'CastingApps.jsm',
     'Chat.jsm',
     'ContentClick.jsm',
+    'ContentCrashReporters.jsm',
     'ContentLinkHandler.jsm',
     'ContentObservers.jsm',
     'ContentSearch.jsm',
@@ -38,7 +39,6 @@ EXTRA_JS_MODULES += [
     'SelfSupportBackend.jsm',
     'SitePermissions.jsm',
     'Social.jsm',
-    'TabCrashReporter.jsm',
     'WebappManager.jsm',
     'webrtcUI.jsm',
 ]
