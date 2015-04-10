@@ -270,8 +270,9 @@ function testAboutModuleRegistration()
 
   let modulesToUnregister = new Map();
 
-  function TestChannel(uri, aboutName) {
+  function TestChannel(uri, aLoadInfo, aboutName) {
     this.aboutName = aboutName;
+    this.loadInfo = aLoadInfo;
     this.URI = this.originalURI = uri;
   }
 
@@ -361,8 +362,8 @@ function testAboutModuleRegistration()
       contractID: `@mozilla.org/network/protocol/about;1?what=${aboutName}`,
       QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
 
-      newChannel: (aURI) => {
-        return new TestChannel(aURI, aboutName);
+      newChannel: (aURI, aLoadInfo) => {
+        return new TestChannel(aURI, aLoadInfo, aboutName);
       },
 
       getURIFlags: (aURI) => {

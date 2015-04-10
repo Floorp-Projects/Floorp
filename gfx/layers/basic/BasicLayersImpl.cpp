@@ -44,13 +44,8 @@ PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer)
 {
   AutoMoz2DMaskData mask;
   if (GetMaskData(aMaskLayer, Point(), &mask)) {
-    if (aOpacity < 1.0) {
-      aContext->PushGroup(gfxContentType::COLOR_ALPHA);
-      aContext->Paint(aOpacity);
-      aContext->PopGroupToSource();
-    }
     aContext->SetMatrix(ThebesMatrix(mask.GetTransform()));
-    aContext->Mask(mask.GetSurface());
+    aContext->Mask(mask.GetSurface(), aOpacity);
     return;
   }
 

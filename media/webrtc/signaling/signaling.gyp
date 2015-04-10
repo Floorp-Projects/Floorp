@@ -77,8 +77,6 @@
         './src/media-conduit/CodecStatistics.h',
         './src/media-conduit/CodecStatistics.cpp',
         './src/media-conduit/RunningStat.h',
-        './src/media-conduit/GmpVideoCodec.cpp',
-        './src/media-conduit/WebrtcGmpVideoCodec.cpp',
         # Common
         './src/common/CommonTypes.h',
         './src/common/csf_common.h',
@@ -98,8 +96,6 @@
         # PeerConnection
         './src/peerconnection/MediaPipelineFactory.cpp',
         './src/peerconnection/MediaPipelineFactory.h',
-        './src/peerconnection/MediaStreamList.cpp',
-        './src/peerconnection/MediaStreamList.h',
         './src/peerconnection/PeerConnectionCtx.cpp',
         './src/peerconnection/PeerConnectionCtx.h',
         './src/peerconnection/PeerConnectionImpl.cpp',
@@ -220,11 +216,13 @@
             'MOZ_WEBRTC_OMX'
           ],
         }],
-        ['build_for_test==0', {
+        ['(build_for_test==0) and (build_for_standalone==0)', {
           'defines' : [
-            'MOZILLA_INTERNAL_API'
+            'MOZILLA_INTERNAL_API',
           ],
           'sources': [
+            './src/peerconnection/MediaStreamList.cpp',
+            './src/peerconnection/MediaStreamList.h',
             './src/peerconnection/WebrtcGlobalInformation.cpp',
             './src/peerconnection/WebrtcGlobalInformation.h',
           ],
@@ -236,7 +234,27 @@
           'defines' : [
             'NO_CHROMIUM_LOGGING',
             'USE_FAKE_MEDIA_STREAMS',
-            'USE_FAKE_PCOBSERVER'
+            'USE_FAKE_PCOBSERVER',
+            'MOZILLA_EXTERNAL_LINKAGE',
+          ],
+        }],
+        ['build_for_standalone==0', {
+          'sources': [
+            './src/media-conduit/GmpVideoCodec.cpp',
+            './src/media-conduit/WebrtcGmpVideoCodec.cpp',
+          ],
+        }],
+        ['build_for_standalone!=0', {
+          'include_dirs': [
+            './test'
+          ],
+          'defines' : [
+            'MOZILLA_INTERNAL_API',
+            'MOZILLA_XPCOMRT_API',
+            'MOZILLA_EXTERNAL_LINKAGE',
+            'NO_CHROMIUM_LOGGING',
+            'USE_FAKE_MEDIA_STREAMS',
+            'USE_FAKE_PCOBSERVER',
           ],
         }],
         ['(OS=="linux") or (OS=="android")', {

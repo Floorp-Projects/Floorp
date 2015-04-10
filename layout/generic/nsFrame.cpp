@@ -8857,22 +8857,6 @@ nsIFrame::GetPseudoElement(nsCSSPseudoElements::Type aType)
   return nullptr;
 }
 
-nsIFrame::ContentOffsets::ContentOffsets()
-{
-}
-
-nsIFrame::ContentOffsets::ContentOffsets(const ContentOffsets& rhs)
-  : content(rhs.content),
-    offset(rhs.offset),
-    secondaryOffset(rhs.secondaryOffset),
-    associate(rhs.associate)
-{
-}
-
-nsIFrame::ContentOffsets::~ContentOffsets()
-{
-}
-
 nsIFrame::CaretPosition::CaretPosition()
   : mContentOffset(0)
 {

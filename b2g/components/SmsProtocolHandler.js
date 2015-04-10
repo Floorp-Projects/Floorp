@@ -40,7 +40,7 @@ SmsProtocolHandler.prototype = {
     return uri;
   },
 
-  newChannel: function Proto_newChannel(aURI) {
+  newChannel2: function Proto_newChannel2(aURI, aLoadInfo) {
     let number = TelURIParser.parseURI('sms', aURI.spec);
     let body = "";
     let query = aURI.spec.split("?")[1];
@@ -63,6 +63,10 @@ SmsProtocolHandler.prototype = {
     }
 
     throw Components.results.NS_ERROR_ILLEGAL_VALUE;
+  },
+
+  newChannel: function Proto_newChannel(aURI) {
+    return newChannel2(aURI, null);
   },
 
   classID: Components.ID("{81ca20cb-0dad-4e32-8566-979c8998bd73}"),

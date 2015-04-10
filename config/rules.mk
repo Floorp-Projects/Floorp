@@ -16,10 +16,6 @@ $(error Do not include rules.mk twice!)
 endif
 INCLUDED_RULES_MK = 1
 
-# Make sure that anything that needs to be defined in moz.build wasn't
-# overwritten after including config.mk.
-_eval_for_side_effects := $(CHECK_MOZBUILD_VARIABLES)
-
 ifndef INCLUDED_CONFIG_MK
 include $(topsrcdir)/config/config.mk
 endif
@@ -1635,10 +1631,3 @@ endif
 export:: $(GENERATED_FILES)
 
 GARBAGE += $(GENERATED_FILES)
-
-# We may have modified "frozen" variables in rules.mk (we do that), but we don't
-# want Makefile.in doing that, so collect the possibly modified variables here,
-# and check them again in recurse.mk, which is always included after Makefile.in
-# contents.
-$(foreach var,$(_MOZBUILD_EXTERNAL_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))
-$(foreach var,$(_DEPRECATED_VARIABLES),$(eval $(var)_FROZEN := '$($(var))'))

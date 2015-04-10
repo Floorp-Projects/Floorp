@@ -31,12 +31,16 @@ MailtoProtocolHandler.prototype = {
     return uri;
   },
 
-  newChannel: function Proto_newChannel(aURI) {
+  newChannel2: function Proto_newChannel2(aURI, aLoadInfo) {
     cpmm.sendAsyncMessage("mail-handler", {
       URI: aURI.spec,
       type: "mail" });
 
     throw Components.results.NS_ERROR_ILLEGAL_VALUE;
+  },
+
+  newChannel: function Proto_newChannel(aURI) {
+    return newChannel2(aURI, null);
   },
 
   classID: Components.ID("{50777e53-0331-4366-a191-900999be386c}"),

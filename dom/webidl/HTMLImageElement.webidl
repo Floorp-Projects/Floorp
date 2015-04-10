@@ -62,7 +62,7 @@ partial interface HTMLImageElement {
            [SetterThrows, Pref="dom.image.picture.enabled"]
            attribute DOMString sizes;
            [Pref="dom.image.srcset.enabled"]
-  readonly attribute DOMString? currentSrc;
+  readonly attribute DOMString currentSrc;
 };
 
 // Mozilla extensions.
