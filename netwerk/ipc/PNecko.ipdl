@@ -31,6 +31,7 @@ include PBrowserOrId;
 
 using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
+using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 
 namespace mozilla {
 namespace net {
@@ -67,7 +68,7 @@ parent:
 
   PWebSocket(PBrowserOrId browser, SerializedLoadContext loadContext);
   PTCPServerSocket(uint16_t localPort, uint16_t backlog, nsString binaryType);
-  PUDPSocket(nsCString filter);
+  PUDPSocket(Principal principal, nsCString filter);
 
   PDNSRequest(nsCString hostName, uint32_t flags, nsCString networkInterface);
 

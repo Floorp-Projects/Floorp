@@ -5,9 +5,9 @@
  * Test if filtering items in the network table works correctly.
  */
 const BASIC_REQUESTS = [
-  { url: "sjs_content-type-test-server.sjs?fmt=html&res=undefined" },
-  { url: "sjs_content-type-test-server.sjs?fmt=css" },
-  { url: "sjs_content-type-test-server.sjs?fmt=js" },
+  { url: "sjs_content-type-test-server.sjs?fmt=html&res=undefined&text=sample" },
+  { url: "sjs_content-type-test-server.sjs?fmt=css&text=sample" },
+  { url: "sjs_content-type-test-server.sjs?fmt=js&text=sample" },
 ];
 
 const REQUESTS_WITH_MEDIA = BASIC_REQUESTS.concat([
@@ -23,6 +23,15 @@ const REQUESTS_WITH_MEDIA_AND_FLASH = REQUESTS_WITH_MEDIA.concat([
 
 function test() {
   initNetMonitor(FILTERING_URL).then(([aTab, aDebuggee, aMonitor]) => {
+
+    function setFreetextFilter(value) {
+      // Set the text and manually call all callbacks synchronously to avoid the timeout
+      RequestsMenu.freetextFilterBox.value = value;
+      RequestsMenu.requestsFreetextFilterEvent();
+      RequestsMenu.userInputTimer.cancel();
+      RequestsMenu.reFilterRequests();
+    }
+
     info("Starting test... ");
 
     let { $, NetMonitorView } = aMonitor.panelWin;
@@ -96,16 +105,37 @@ function test() {
           testFilterButtons(aMonitor, "all");
           return testContents([1, 1, 1, 1, 1, 1, 1, 1]);
         })
+        .then(() => {
+          // Text in filter box that matches nothing should hide all.
+          EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
+          setFreetextFilter("foobar");
+          return testContents([0, 0, 0, 0, 0, 0, 0, 0]);
+        })
+        .then(() => {
+          // Text in filter box that matches should filter out everything else.
+          EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-all-button"));
+          setFreetextFilter("sample");
+          return testContents([1, 1, 1, 0, 0, 0, 0, 0]);
+        })
         // ...then combine multiple filters together.
         .then(() => {
           // Enable filtering for html and css; should show request of both type.
+          setFreetextFilter("");
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-html-button"));
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-css-button"));
           testFilterButtonsCustom(aMonitor, [0, 1, 1, 0, 0, 0, 0, 0, 0, 0]);
           return testContents([1, 1, 0, 0, 0, 0, 0, 0]);
         })
         .then(() => {
+          // Html and css filter enabled and text filter should show just the html and css match.
+          // Should not show both the items that match the button plus the items that match the text.
+          setFreetextFilter("sample");
+          return testContents([1, 1, 0, 0, 0, 0, 0, 0]);
+        })
+
+        .then(() => {
           EventUtils.sendMouseEvent({ type: "click" }, $("#requests-menu-filter-flash-button"));
+          setFreetextFilter("");
           testFilterButtonsCustom(aMonitor, [0, 1, 1, 0, 0, 0, 0, 0, 1, 0]);
           return testContents([1, 1, 0, 0, 0, 0, 0, 1]);
         })

@@ -428,6 +428,15 @@ LOCAL_INCLUDES += [
     '/xpcom/ds',
 ]
 
+if CONFIG['MOZ_B2G_BT_API_V2']:
+    LOCAL_INCLUDES += [
+        '../bluetooth/bluetooth2',
+    ]
+else:
+    LOCAL_INCLUDES += [
+        '../bluetooth/bluetooth1',
+    ]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     LOCAL_INCLUDES += [
         '../fmradio',

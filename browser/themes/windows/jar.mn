@@ -326,7 +326,7 @@ browser.jar:
         skin/classic/browser/devtools/alerticon-warning.png         (../shared/devtools/images/alerticon-warning.png)
         skin/classic/browser/devtools/alerticon-warning@2x.png      (../shared/devtools/images/alerticon-warning@2x.png)
 *       skin/classic/browser/devtools/ruleview.css                  (../shared/devtools/ruleview.css)
-        skin/classic/browser/devtools/commandline.css               (devtools/commandline.css)
+        skin/classic/browser/devtools/commandline.css               (../shared/devtools/commandline.css)
         skin/classic/browser/devtools/command-paintflashing.png     (../shared/devtools/images/command-paintflashing.png)
         skin/classic/browser/devtools/command-paintflashing@2x.png  (../shared/devtools/images/command-paintflashing@2x.png)
         skin/classic/browser/devtools/command-screenshot.png        (../shared/devtools/images/command-screenshot.png)

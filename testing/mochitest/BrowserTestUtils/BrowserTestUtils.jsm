@@ -112,18 +112,26 @@ this.BrowserTestUtils = {
    *        {
    *          private: A boolean indicating if the window should be
    *                   private
+   *          remote:  A boolean indicating if the window should run
+   *                   remote browser tabs or not. If omitted, the window
+   *                   will choose the profile default state.
    *        }
    * @return {Promise}
    *         Resolves with the new window once it is loaded.
    */
-  openNewBrowserWindow(options) {
+  openNewBrowserWindow(options={}) {
     let argString = Cc["@mozilla.org/supports-string;1"].
                     createInstance(Ci.nsISupportsString);
     argString.data = "";
     let features = "chrome,dialog=no,all";
 
-    if (options && options.private || false) {
+    if (options.private) {
       features += ",private";
+    }
+
+    if (options.hasOwnProperty("remote")) {
+      let remoteState = options.remote ? "remote" : "non-remote";
+      features += `,${remoteState}`;
     }
 
     let win = Services.ww.openWindow(
