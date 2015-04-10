@@ -4,17 +4,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * https://w3c.github.io/web-animations/#animationtimeline
+ * https://w3c.github.io/web-animations/#documenttimeline
  *
  * Copyright © 2015 W3C® (MIT, ERCIM, Keio), All Rights Reserved. W3C
  * liability, trademark and document use rules apply.
  */
 
+// Not yet implemented:
+// [Constructor (DOMHighResTimeStamp originTime)]
 [Func="nsDocument::IsWebAnimationsEnabled"]
-interface AnimationTimeline {
-  [BinaryName="currentTimeAsDouble"]
-  readonly attribute double? currentTime;
-  // Not yet implemented:
-  // AnimationPlayer            play (optional TimedItem? source = null);
-  // sequence<AnimationPlayer>  getAnimations ();
+interface DocumentTimeline : AnimationTimeline {
 };
