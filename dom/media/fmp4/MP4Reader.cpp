@@ -157,7 +157,6 @@ MP4Reader::MP4Reader(AbstractMediaDecoder* aDecoder)
   , mDemuxerInitialized(false)
   , mFoundSPSForTelemetry(false)
   , mIsEncrypted(false)
-  , mAreDecodersSetup(false)
   , mIndexReady(false)
   , mLastSeenEnd(-1)
   , mDemuxerMonitor("MP4 Demuxer")
@@ -294,12 +293,6 @@ private:
 };
 #endif // MOZ_EME
 
-void MP4Reader::RequestCodecResource() {
-  if (mVideo.mDecoder) {
-    mVideo.mDecoder->AllocateMediaResources();
-  }
-}
-
 bool MP4Reader::IsWaitingMediaResources() {
   return mVideo.mDecoder && mVideo.mDecoder->IsWaitingMediaResources();
 }
@@ -357,14 +350,6 @@ MP4Reader::IsSupportedVideoMimeType(const nsACString& aMimeType)
          mPlatform->SupportsMimeType(aMimeType);
 }
 
-void
-MP4Reader::PreReadMetadata()
-{
-  if (mPlatform) {
-    RequestCodecResource();
-  }
-}
-
 bool
 MP4Reader::InitDemuxer()
 {
@@ -408,7 +393,6 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   } else if (mPlatform && !IsWaitingMediaResources()) {
     *aInfo = mInfo;
     *aTags = nullptr;
-    return NS_OK;
   }
 
   if (HasAudio()) {
@@ -461,7 +445,7 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   *aInfo = mInfo;
   *aTags = nullptr;
 
-  if (!IsWaitingMediaResources() && !IsWaitingOnCDMResource()) {
+  if (!IsWaitingOnCDMResource()) {
     NS_ENSURE_TRUE(EnsureDecodersSetup(), NS_ERROR_FAILURE);
   }
 
@@ -471,11 +455,28 @@ MP4Reader::ReadMetadata(MediaInfo* aInfo,
   return NS_OK;
 }
 
+bool MP4Reader::CheckIfDecoderSetup()
+{
+  if (!mDemuxerInitialized) {
+    return false;
+  }
+
+  if (HasAudio() && !mAudio.mDecoder) {
+    return false;
+  }
+
+  if (HasVideo() && !mVideo.mDecoder) {
+    return false;
+  }
+
+  return true;
+}
+
 bool
 MP4Reader::EnsureDecodersSetup()
 {
-  if (mAreDecodersSetup) {
-    return !!mPlatform;
+  if (CheckIfDecoderSetup()) {
+    return true;
   }
 
   if (mIsEncrypted) {
@@ -507,8 +508,11 @@ MP4Reader::EnsureDecodersSetup()
     return false;
 #endif
   } else {
-    mPlatform = PlatformDecoderModule::Create();
-    NS_ENSURE_TRUE(mPlatform, false);
+    // mPlatform doesn't need to be recreated when resuming from dormant.
+    if (!mPlatform) {
+      mPlatform = PlatformDecoderModule::Create();
+      NS_ENSURE_TRUE(mPlatform, false);
+    }
   }
 
   if (HasAudio()) {
@@ -549,7 +553,6 @@ MP4Reader::EnsureDecodersSetup()
     NS_ENSURE_SUCCESS(rv, false);
   }
 
-  mAreDecodersSetup = true;
   return true;
 }
 
@@ -1125,13 +1128,8 @@ MP4Reader::GetBuffered(dom::TimeRanges* aBuffered)
 
 bool MP4Reader::IsDormantNeeded()
 {
-#if defined(MP4_READER_DORMANT)
-  return
 #if defined(MP4_READER_DORMANT_HEURISTIC)
-        mDormantEnabled &&
-#endif
-        mVideo.mDecoder &&
-        mVideo.mDecoder->IsDormantNeeded();
+  return mDormantEnabled;
 #else
   return false;
 #endif
@@ -1146,7 +1144,8 @@ void MP4Reader::ReleaseMediaResources()
     container->ClearCurrentFrame();
   }
   if (mVideo.mDecoder) {
-    mVideo.mDecoder->ReleaseMediaResources();
+    mVideo.mDecoder->Shutdown();
+    mVideo.mDecoder = nullptr;
   }
 }
 
