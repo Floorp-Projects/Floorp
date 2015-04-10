@@ -1,3 +1,4 @@
+print("foo");
 var test = `
 
 // This is super weird. A super property reference in the spec contains two
@@ -17,12 +18,10 @@ class derived extends base {
     constructor() { }
     test(expected) { super.test(expected); }
     testArrow() { return (() => super.test(this)); }
-    ["testCPN"](expected) { super.test(expected); }
 }
 
 let derivedInstance = new derived();
 derivedInstance.test(derivedInstance);
-derivedInstance.testCPN(derivedInstance);
 
 let obj = { test: derivedInstance.test };
 obj.test(obj);
